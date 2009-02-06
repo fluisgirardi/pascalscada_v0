@@ -1,0 +1,9 @@
+[ResInfo]
+Target=/home/fabiolg/Desenvolvimento/HMI_SCADA/scada.lrs
+ResCount=2
+
+[ResID1]
+Type=D
+SubDir=No
+Pattern=*png
+Filename=/home/fabiolg/Desenvolvimento/HMI_SCADA/artwork/24x24

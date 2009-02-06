@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <PathDelim Value="\"/>
+    <Version Value="7"/>
+    <General>
+      <MainUnit Value="0"/>
+      <TargetFileExt Value=""/>
+      <Icon Value="0"/>
+      <UseXPManifest Value="True"/>
+      <ActiveEditorIndexAtStart Value="0"/>
+    </General>
+    <VersionInfo>
+      <ProjectVersion Value=""/>
+      <Language Value=""/>
+      <CharSet Value=""/>
+    </VersionInfo>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IgnoreBinaries Value="False"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|ppw|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+        <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="2">
+      <Item1>
+        <PackageName Value="FCL"/>
+        <MinVersion Major="1" Valid="True"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="LCL"/>
+      </Item2>
+    </RequiredPackages>
+    <Units Count="17">
+      <Unit0>
+        <Filename Value="lazresgui.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="lazresgui"/>
+        <UsageCount Value="61"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="umain.pas"/>
+        <ComponentName Value="Form1"/>
+        <IsPartOfProject Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uMain"/>
+        <CursorPos X="15" Y="441"/>
+        <TopLine Value="417"/>
+        <EditorIndex Value="0"/>
+        <UsageCount Value="61"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="../../../lazarus/tools/lazres.pp"/>
+        <UnitName Value="LazRes"/>
+        <CursorPos X="40" Y="114"/>
+        <TopLine Value="100"/>
+        <UsageCount Value="10"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="../../../lazarus/lcl/fileutil.pas"/>
+        <UnitName Value="FileUtil"/>
+        <CursorPos X="10" Y="194"/>
+        <TopLine Value="181"/>
+        <UsageCount Value="6"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="../../../lazarus/lcl/include/fileutil.inc"/>
+        <CursorPos X="35" Y="144"/>
+        <TopLine Value="142"/>
+        <UsageCount Value="6"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="../../fpcbuild/fpcsrc/rtl/objpas/sysutils/finah.inc"/>
+        <CursorPos X="10" Y="30"/>
+        <TopLine Value="15"/>
+        <UsageCount Value="6"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="../../fpcbuild/fpcsrc/rtl/objpas/sysutils/fina.inc"/>
+        <CursorPos X="24" Y="135"/>
+        <TopLine Value="126"/>
+        <UsageCount Value="6"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="../../../lazarus/lcl/lclproc.pas"/>
+        <UnitName Value="LCLProc"/>
+        <CursorPos X="11" Y="215"/>
+        <TopLine Value="196"/>
+        <UsageCount Value="10"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="../../../lazarus/lcl/include/control.inc"/>
+        <CursorPos X="1" Y="2095"/>
+        <TopLine Value="2084"/>
+        <UsageCount Value="7"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../../lazarus/lcl/include/speedbutton.inc"/>
+        <CursorPos X="1" Y="789"/>
+        <TopLine Value="779"/>
+        <UsageCount Value="7"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="../../../lazarus/lcl/interfaces/gtk2/gtk2int.pas"/>
+        <UnitName Value="Gtk2Int"/>
+        <CursorPos X="1" Y="481"/>
+        <TopLine Value="468"/>
+        <UsageCount Value="10"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="../../../lazarus/lcl/dialogs.pp"/>
+        <UnitName Value="Dialogs"/>
+        <CursorPos X="68" Y="38"/>
+        <TopLine Value="67"/>
+        <UsageCount Value="9"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="../../../lazarus/lcl/controls.pp"/>
+        <UnitName Value="Controls"/>
+        <CursorPos X="3" Y="52"/>
+        <TopLine Value="33"/>
+        <UsageCount Value="13"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="../../../lazarus/lcl/grids.pas"/>
+        <UnitName Value="Grids"/>
+        <CursorPos X="1" Y="8234"/>
+        <TopLine Value="8215"/>
+        <UsageCount Value="10"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="../../../lazarus/lcl/dynamicarray.pas"/>
+        <UnitName Value="DynamicArray"/>
+        <CursorPos X="1" Y="69"/>
+        <TopLine Value="50"/>
+        <UsageCount Value="10"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="../../fpcbuild/fpcsrc/rtl/unix/sysutils.pp"/>
+        <UnitName Value="sysutils"/>
+        <CursorPos X="14" Y="322"/>
+        <TopLine Value="321"/>
+        <UsageCount Value="10"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="../../fpcbuild/fpcsrc/rtl/unix/unixutil.pp"/>
+        <UnitName Value="unixutil"/>
+        <CursorPos X="10" Y="35"/>
+        <TopLine Value="39"/>
+        <UsageCount Value="10"/>
+      </Unit16>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="umain.pas"/>
+        <Caret Line="405" Column="83" TopLine="383"/>
+      </Position1>
+      <Position2>
+        <Filename Value="umain.pas"/>
+        <Caret Line="87" Column="27" TopLine="71"/>
+      </Position2>
+      <Position3>
+        <Filename Value="umain.pas"/>
+        <Caret Line="407" Column="25" TopLine="398"/>
+      </Position3>
+      <Position4>
+        <Filename Value="umain.pas"/>
+        <Caret Line="400" Column="31" TopLine="383"/>
+      </Position4>
+      <Position5>
+        <Filename Value="umain.pas"/>
+        <Caret Line="85" Column="28" TopLine="69"/>
+      </Position5>
+      <Position6>
+        <Filename Value="umain.pas"/>
+        <Caret Line="14" Column="17" TopLine="1"/>
+      </Position6>
+      <Position7>
+        <Filename Value="umain.pas"/>
+        <Caret Line="15" Column="82" TopLine="1"/>
+      </Position7>
+      <Position8>
+        <Filename Value="umain.pas"/>
+        <Caret Line="396" Column="35" TopLine="380"/>
+      </Position8>
+      <Position9>
+        <Filename Value="umain.pas"/>
+        <Caret Line="395" Column="18" TopLine="384"/>
+      </Position9>
+      <Position10>
+        <Filename Value="umain.pas"/>
+        <Caret Line="64" Column="47" TopLine="63"/>
+      </Position10>
+      <Position11>
+        <Filename Value="umain.pas"/>
+        <Caret Line="203" Column="18" TopLine="198"/>
+      </Position11>
+      <Position12>
+        <Filename Value="umain.pas"/>
+        <Caret Line="65" Column="47" TopLine="64"/>
+      </Position12>
+      <Position13>
+        <Filename Value="umain.pas"/>
+        <Caret Line="66" Column="47" TopLine="65"/>
+      </Position13>
+      <Position14>
+        <Filename Value="umain.pas"/>
+        <Caret Line="65" Column="47" TopLine="64"/>
+      </Position14>
+      <Position15>
+        <Filename Value="umain.pas"/>
+        <Caret Line="203" Column="3" TopLine="201"/>
+      </Position15>
+      <Position16>
+        <Filename Value="umain.pas"/>
+        <Caret Line="240" Column="62" TopLine="218"/>
+      </Position16>
+      <Position17>
+        <Filename Value="umain.pas"/>
+        <Caret Line="220" Column="3" TopLine="218"/>
+      </Position17>
+      <Position18>
+        <Filename Value="umain.pas"/>
+        <Caret Line="247" Column="97" TopLine="234"/>
+      </Position18>
+      <Position19>
+        <Filename Value="umain.pas"/>
+        <Caret Line="611" Column="5" TopLine="591"/>
+      </Position19>
+      <Position20>
+        <Filename Value="umain.pas"/>
+        <Caret Line="619" Column="15" TopLine="592"/>
+      </Position20>
+      <Position21>
+        <Filename Value="umain.pas"/>
+        <Caret Line="638" Column="27" TopLine="616"/>
+      </Position21>
+      <Position22>
+        <Filename Value="umain.pas"/>
+        <Caret Line="637" Column="61" TopLine="621"/>
+      </Position22>
+      <Position23>
+        <Filename Value="umain.pas"/>
+        <Caret Line="648" Column="8" TopLine="616"/>
+      </Position23>
+      <Position24>
+        <Filename Value="umain.pas"/>
+        <Caret Line="102" Column="17" TopLine="83"/>
+      </Position24>
+      <Position25>
+        <Filename Value="umain.pas"/>
+        <Caret Line="488" Column="79" TopLine="478"/>
+      </Position25>
+      <Position26>
+        <Filename Value="umain.pas"/>
+        <Caret Line="534" Column="103" TopLine="518"/>
+      </Position26>
+      <Position27>
+        <Filename Value="umain.pas"/>
+        <Caret Line="488" Column="82" TopLine="1"/>
+      </Position27>
+      <Position28>
+        <Filename Value="umain.pas"/>
+        <Caret Line="438" Column="23" TopLine="438"/>
+      </Position28>
+      <Position29>
+        <Filename Value="umain.pas"/>
+        <Caret Line="435" Column="19" TopLine="431"/>
+      </Position29>
+      <Position30>
+        <Filename Value="umain.pas"/>
+        <Caret Line="439" Column="23" TopLine="415"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="8"/>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)/"/>
+    </SearchPaths>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

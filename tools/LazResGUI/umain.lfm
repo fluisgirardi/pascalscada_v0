@@ -1,0 +1,330 @@
+object Form1: TForm1
+  Left = 248
+  Height = 481
+  Top = 116
+  Width = 738
+  ActiveControl = Panel1
+  Align = alNone
+  AllowDropFiles = False
+  AutoScroll = True
+  AutoSize = False
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'LazResource Creator'
+  ClientHeight = 462
+  ClientWidth = 738
+  DockSite = False
+  DragKind = dkDrag
+  DragMode = dmManual
+  Enabled = True
+  FormStyle = fsNormal
+  Menu = MainMenu1
+  OnCreate = FormCreate
+  ParentBiDiMode = True
+  ParentFont = False
+  Position = poDesigned
+  ShowInTaskBar = stDefault
+  UseDockManager = False
+  LCLVersion = '0.9.27'
+  WindowState = wsNormal
+  object Panel1: TPanel
+    Left = 0
+    Height = 72
+    Top = 0
+    Width = 738
+    Align = alTop
+    Alignment = taCenter
+    AutoSize = False
+    BevelInner = bvNone
+    BevelOuter = bvRaised
+    BevelWidth = 1
+    BorderWidth = 0
+    BorderStyle = bsNone
+    ClientHeight = 72
+    ClientWidth = 738
+    DockSite = False
+    DragCursor = crDrag
+    DragKind = dkDrag
+    DragMode = dmManual
+    Enabled = True
+    FullRepaint = True
+    ParentColor = True
+    ParentFont = True
+    ParentShowHint = True
+    TabOrder = 0
+    TabStop = False
+    Visible = True
+    object Label1: TLabel
+      Left = 2
+      Height = 16
+      Top = 8
+      Width = 165
+      Align = alNone
+      Alignment = taLeftJustify
+      AutoSize = True
+      Caption = 'Target resource file name:'
+      DragCursor = crDrag
+      DragMode = dmManual
+      Enabled = True
+      Layout = tlTop
+      ParentBidiMode = True
+      ParentColor = False
+      ParentFont = True
+      ParentShowHint = True
+      ShowAccelChar = True
+      Transparent = True
+      Visible = True
+      WordWrap = False
+      OptimalFill = False
+    end
+    object Label2: TLabel
+      Left = 2
+      Height = 16
+      Top = 56
+      Width = 62
+      Align = alNone
+      Alignment = taLeftJustify
+      AutoSize = True
+      Caption = 'Contents:'
+      DragCursor = crDrag
+      DragMode = dmManual
+      Enabled = True
+      Layout = tlTop
+      ParentBidiMode = True
+      ParentColor = False
+      ParentFont = True
+      ParentShowHint = True
+      ShowAccelChar = True
+      Transparent = True
+      Visible = True
+      WordWrap = False
+      OptimalFill = False
+    end
+    object FileNameEdit1: TFileNameEdit
+      Left = 2
+      Height = 23
+      Top = 26
+      Width = 560
+      DialogKind = dkSave
+      DialogOptions = []
+      Filter = 'Lazarus Resource (*.lrs)|*.lrs'
+      FilterIndex = 0
+      ButtonWidth = 23
+      DirectInput = True
+      ButtonOnlyWhenFocused = False
+      NumGlyphs = 0
+      Flat = False
+      Align = alNone
+      AutoSelect = False
+      AutoSize = False
+      Ctl3D = False
+      DragCursor = crDrag
+      DragMode = dmManual
+      Enabled = True
+      MaxLength = 0
+      ParentColor = False
+      ParentCtl3D = True
+      ParentFont = True
+      ParentShowHint = True
+      ReadOnly = False
+      TabOrder = 0
+      TabStop = True
+      Visible = True
+    end
+  end
+  object StringGrid1: TStringGrid
+    Left = 0
+    Height = 390
+    Top = 72
+    Width = 738
+    Align = alClient
+    AutoAdvance = aaRight
+    AutoEdit = True
+    AutoFillColumns = False
+    BorderStyle = bsSingle
+    ColCount = 5
+    Columns = <    
+      item
+        ReadOnly = True
+        Title.Caption = 'Type'
+        Width = 35
+      end    
+      item
+        MinSize = 105
+        Title.Caption = 'Resource Name'
+        Width = 105
+      end    
+      item
+        ButtonStyle = cbsPickList
+        MinSize = 50
+        MaxSize = 50
+        PickList.Strings = (
+          'Yes'
+          'No'
+        )
+        Title.Alignment = taCenter
+        Title.Caption = 'SubDir'
+        Width = 50
+        ValueChecked = 'Yes'
+        ValueUnchecked = 'No'
+      end    
+      item
+        Title.Caption = 'Pattern'
+      end    
+      item
+        MaxSize = 500
+        ReadOnly = True
+        Title.Caption = 'FileName'
+        Width = 460
+      end>
+    DefaultColWidth = 64
+    DefaultDrawing = True
+    DragCursor = crDrag
+    DragKind = dkDrag
+    DragMode = dmManual
+    Enabled = True
+    ExtendedSelect = True
+    FixedColor = clBtnFace
+    FixedCols = 0
+    FixedRows = 1
+    Flat = False
+    GridLineWidth = 1
+    HeaderHotZones = [gzFixedCols]
+    HeaderPushZones = [gzFixedCols]
+    MouseWheelOption = mwCursor
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goRowSelect, goSmoothScroll]
+    ParentFont = True
+    ParentShowHint = True
+    RowCount = 1
+    ScrollBars = ssAutoBoth
+    TabOrder = 1
+    TabStop = True
+    TitleStyle = tsLazarus
+    UseXORFeatures = False
+    Visible = True
+    OnEditingDone = StringGrid1EditingDone
+    OnGetEditText = StringGrid1GetEditText
+    OnSelectEditor = StringGrid1SelectEditor
+    OnSelectCell = StringGrid1SelectCell
+    OnSetEditText = StringGrid1SetEditText
+  end
+  object SelectDir: TSelectDirectoryDialog
+    left = 624
+    top = 8
+  end
+  object MainMenu1: TMainMenu
+    left = 656
+    top = 8
+    object MenuItem1: TMenuItem
+      Caption = '&File'
+      object MenuItem2: TMenuItem
+        Caption = '&New'
+        ShortCut = 16462
+        OnClick = MenuItem2Click
+      end
+      object MenuItem3: TMenuItem
+        Caption = '&Open'
+        ShortCut = 16463
+        OnClick = MenuItem3Click
+      end
+      object MenuItem4: TMenuItem
+        Caption = '&Save'
+        ShortCut = 16467
+        OnClick = MenuItem4Click
+      end
+      object MenuItem5: TMenuItem
+        Caption = 'Save as'
+        ShortCut = 24659
+        OnClick = MenuItem5Click
+      end
+      object MenuItem6: TMenuItem
+        Caption = '-'
+        Enabled = False
+      end
+      object MenuItem7: TMenuItem
+        Caption = 'Add file(s)'
+        ShortCut = 16454
+        OnClick = SpeedButton2Click
+      end
+      object MenuItem8: TMenuItem
+        Caption = 'Directory'
+        object MenuItem9: TMenuItem
+          Caption = 'Add directory'
+          ShortCut = 16452
+          OnClick = SpeedButton1Click
+        end
+        object subdirs: TMenuItem
+          AutoCheck = True
+          Caption = 'Include subdir'
+          Checked = True
+        end
+        object MenuItem10: TMenuItem
+          Caption = 'Set Filemask'
+          OnClick = MenuItem10Click
+        end
+      end
+      object MenuItem11: TMenuItem
+        Caption = '-'
+        Enabled = False
+      end
+      object MenuItem12: TMenuItem
+        Caption = 'Generate'
+        ShortCut = 16455
+        OnClick = SpeedButton3Click
+      end
+      object MenuItem20: TMenuItem
+        Caption = '-'
+        Enabled = False
+      end
+      object MenuItem21: TMenuItem
+        Caption = 'Exit'
+        OnClick = MenuItem21Click
+      end
+    end
+    object MenuItem13: TMenuItem
+      Caption = 'Edit'
+      object MenuItem17: TMenuItem
+        Caption = 'Remove invalid items'
+        ShortCut = 41033
+        OnClick = SpeedButton4Click
+      end
+      object MenuItem18: TMenuItem
+        Caption = 'Remove selected item'
+        ShortCut = 46
+        OnClick = SpeedButton5Click
+      end
+      object MenuItem19: TMenuItem
+        Caption = 'Remove all'
+        ShortCut = 41025
+        OnClick = MenuItem19Click
+      end
+    end
+  end
+  object DlgOpen: TOpenDialog
+    Filter = 'Lazarus Resource configuration|*.lrc'
+    left = 593
+    top = 41
+  end
+  object SelectFiles: TOpenDialog
+    Options = [ofAllowMultiSelect, ofFileMustExist, ofEnableSizing, ofViewDetail]
+    left = 593
+    top = 8
+  end
+  object DlgSave: TSaveDialog
+    Filter = 'Lazarus Resource configuration|*.lrc'
+    left = 624
+    top = 40
+  end
+  object ApplicationProperties1: TApplicationProperties
+    CaptureExceptions = True
+    HintColor = clInfoBk
+    HintHidePause = 2500
+    HintPause = 500
+    HintShortCuts = True
+    HintShortPause = 0
+    ShowHint = True
+    OnException = ApplicationProperties1Exception
+    left = 656
+    top = 41
+  end
+end

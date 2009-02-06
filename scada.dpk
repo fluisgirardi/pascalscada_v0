@@ -1,0 +1,79 @@
+package scada;
+
+{$R *.res}
+{$R 'scada.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'Componentes de controle e aquisição de dados FLGSCADA'}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  designide,
+  xmlrtl,
+  vclactnband,
+  vclx;
+
+contains
+  CommPort in 'CommPort.pas',
+  commtypes in 'commtypes.pas',
+  SerialPort in 'SerialPort.pas',
+  ProtocolDriver in 'ProtocolDriver.pas',
+  ModBusMasterDriver in 'ModBusMasterDriver.pas',
+  PLCMemoryMananger in 'PLCMemoryMananger.pas',
+  hsutils in 'hsutils.pas',
+  PLCTag in 'PLCTag.pas',
+  Tag in 'Tag.pas',
+  PLCNumber in 'PLCNumber.pas',
+  ValueProcessor in 'ValueProcessor.pas',
+  ProtocolTypes in 'ProtocolTypes.pas',
+  PLCTagNumber in 'PLCTagNumber.pas',
+  LinearScaleProcessor in 'LinearScaleProcessor.pas',
+  hsstrings in 'hsstrings.pas',
+  messagespool in 'messagespool.pas',
+  TagBlock in 'TagBlock.pas',
+  PLCBlock in 'PLCBlock.pas',
+  PLCBlockElement in 'PLCBlockElement.pas',
+  PLCString in 'PLCString.pas',
+  crossevent in 'crossevent.pas',
+  UserScale in 'UserScale.pas',
+  scadapropeditor in 'scadapropeditor.pas',
+  hmianimation in 'hmianimation.pas',
+  HMICheckBox in 'HMICheckBox.pas',
+  HMIEdit in 'HMIEdit.pas',
+  HMILabel in 'HMILabel.pas',
+  HMIProgressBar in 'HMIProgressBar.pas',
+  hmipropeditor in 'hmipropeditor.pas',
+  HMIRadioButton in 'HMIRadioButton.pas',
+  hmiradiogroup in 'hmiradiogroup.pas',
+  hmiscrollbar in 'hmiscrollbar.pas',
+  hmitext in 'hmitext.pas',
+  HMITrackBar in 'HMITrackBar.pas',
+  HMITypes in 'HMITypes.pas',
+  HMIUpDown in 'HMIUpDown.pas',
+  HMIZones in 'HMIZones.pas',
+  scadareg in 'scadareg.pas',
+  crc16utils in 'crc16utils.pas',
+  scadaapp in 'scadaapp.pas';
+
+end.

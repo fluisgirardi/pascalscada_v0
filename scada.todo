@@ -1,0 +1,4 @@
+{TODO 3 -oFabio -cProtocolos : Implementar drivers de comunicação (ModBUS, Siemens S7,  AB, Altus, GE Fanuc)}
+{TODO 5 -oFabio -cProtocolos : Criar o objetos de tela (botões, edits, labels, drop-dows, listviews)}
+{TODO 2 -oFabio -cProtocolos : Criar o objeto base de Tags de comunicação}
+{TODO 1 -oFabio -cProtocolos : Criar o objeto base de um protocolo de comunicação}

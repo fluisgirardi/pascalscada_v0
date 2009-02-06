@@ -1,0 +1,305 @@
+unit TagBit;
+
+{$IFDEF FPC}
+{$mode delphi}
+{$ENDIF}
+
+interface
+
+uses
+  SysUtils, Classes, PLCNumber, ProtocolTypes, variants, hsutils;
+
+type
+
+  //: Reprensenta um bit de uma palavra de 32 bits.
+  TBitRange = 0..31;
+
+  {:
+  Tag que representam um conjunto de bits dentro de um tag.
+
+  Por exemplo, digamos que o tag plc associado contenha o valor 5 (00000101 bin).
+  Com o StartBit=1 e Endbit=2, o valor do tag bit vai ser igual a 2 (10 bin).
+  Com o StartBit=0 e EndBit=2, o valor do tag bit é 5 (101).
+  Com o StartBit=0 e EndBit=1, o valor do tag bit é 1 (01).
+  Com o StartBit=0 e EndBit=0, o valor do tag bit é 1 (1).
+
+  StartBit é equivalente ao bit menos significativo da palavra representada
+  pelo tag, enquanto EndBit é o bit mais significativo. Logo Endbit tem que ser
+  maior ou igual a StartBit.
+  }
+
+  TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric)
+  private
+    PNumber:TPLCNumber;
+    PUseRaw:Boolean;
+    PStartBit:TBitRange;
+    PEndBit:TBitRange;
+    PNormalMask, PInvMask:Integer;
+    procedure SetNumber(number:TPLCNumber);
+    procedure SetUseRaw(use:Boolean);
+    procedure SetStartBit(b:TBitRange);
+    procedure SetEndBit(b:TBitRange);
+    procedure RemoveTag(Sender:TObject);
+
+    function  GetBits(value:double):Double;
+    function  SetBits(OriginalValue, Value:Double):Double;
+    function  GetBitMask:Integer;
+    function  GetInvBitMask:Integer;
+
+    function  GetValueRaw:Double;
+    function  GetValueAsText(Prefix, Sufix, Format:string):String;
+    function  GetVariantValue:Variant;
+    procedure SetVariantValue(V:Variant);
+    function  IsValidValue(Value:Variant):Boolean;
+    function  GetValueTimestamp:TDatetime;
+  protected
+    //: Método chamado pelo tag numérico para informar ao elemento de alterações de valores.
+    procedure ChangeCallback(Sender:TObject);
+    //: @seealso(TPLCNumber.GetValue)
+    function  GetValue:Double; override;
+    //: @seealso(TPLCNumber.GetValueDirect)
+    function  GetValueDirect:Double; override;
+    //: @seealso(TPLCNumber.SetValueRaw)
+    procedure SetValueRaw(bitValue:Double); override;
+    //: @seealso(TPLCNumber.SetValueDirectRaw)
+    procedure SetValueDirectRaw(Value:Double); override;
+    //: @seealso(TPLCTag.ScanRead)
+  public
+    //: @exclude
+    constructor Create(AOwner:TComponent); override;
+    //: @exclude
+    destructor  Destroy; override;
+  published
+    //: Bloco de comunicações que o elemento pertence.
+    property PLCTag:TPLCNumber read PNumber write SetNumber;
+    //: Usar o valor puro ou processado para extração de bits.
+    property UseRawValue:boolean read PUseRaw write SetUseRaw;
+    //: Qual o primeiro bit da palavra que vai ser extraido.
+    property StartBit:TBitRange read PStartBit write SetStartBit;
+    //: Qual o último bit da palavra que vai ser extraido.
+    property EndBit:TBitRange read PEndBit write SetEndBit;
+  end;
+
+implementation
+
+constructor TTagBit.Create(AOwner:TComponent);
+begin
+  inherited Create(AOwner);
+  ProtocolDriver := nil;
+  PNumber := nil;
+  AutoRead := false;
+  AutoWrite := false;
+  PNormalMask := GetBitMask;
+  PInvMask    := GetInvBitMask;
+end;
+
+destructor  TTagBit.Destroy;
+begin
+  if PNumber<>nil then
+     PNumber.RemoveChangeCallBack(ChangeCallback);
+  PNumber:=nil;
+  inherited Destroy;
+end;
+
+procedure TTagBit.SetNumber(number:TPLCNumber);
+begin
+  if ((number as ITagInterface)=nil) or ((number as ITagNumeric)=nil) then
+     raise Exception.Create('Tag inválido!');
+
+  //esta removendo do bloco.
+  if (number=nil) and (PNumber<>nil) then begin
+    PNumber.RemoveChangeCallBack(ChangeCallback);
+    PNumber := nil;
+    exit;
+  end;
+
+  //se esta setando o bloco
+  if (number<>nil) and (PNumber=nil) then begin
+    PNumber := number;
+    PNumber.AddChangeCallBack(ChangeCallback,RemoveTag);
+    ChangeCallback(self);
+    exit;
+  end;
+
+  //se esta setado o bloco, mas esta trocando
+  if number<>PNumber then begin
+    PNumber.RemoveChangeCallBack(ChangeCallback);
+    PNumber := number;
+    PNumber.AddChangeCallBack(ChangeCallback, RemoveTag);
+    ChangeCallback(self);
+  end;
+end;
+
+procedure TTagBit.RemoveTag(Sender:TObject);
+begin
+  if PNumber=sender then
+    PNumber := nil;
+end;
+
+function TTagBit.GetValueRaw:Double;
+begin
+  Result := PValueRaw ;
+end;
+
+function TTagBit.GetValueAsText(Prefix, Sufix, Format:string):String;
+begin
+   if Trim(Format)<>'' then
+      Result := Prefix + FormatFloat(Format,Value) + Sufix
+   else
+      Result := Prefix + FloatToStr(Value) + Sufix;
+end;
+
+function  TTagBit.GetVariantValue:Variant;
+begin
+   Result := Value;
+end;
+
+procedure TTagBit.SetVariantValue(V:Variant);
+var
+   aux:double;
+begin
+   if VarIsNumeric(v) then begin
+      Value := V
+   end else
+      if VarIsStr(V) then begin
+         if TryStrToFloat(V,aux) then
+            Value := aux
+         else
+            raise exception.Create('Valor inválido!');
+      end else
+         if VarIsType(V,varboolean) then begin
+            if V then
+               Value := 1
+            else
+               Value := 0;
+         end else
+            raise exception.Create('Valor inválido!');
+end;
+
+function  TTagBit.IsValidValue(Value:Variant):Boolean;
+var
+   aux:Double;
+begin
+   Result := VarIsNumeric(Value) or
+             (VarIsStr(Value) and TryStrToFloat(Value,aux)) or
+             VarIsType(Value, varboolean);
+end;
+
+function TTagBit.GetValueTimestamp:TDatetime;
+begin
+   Result := PValueTimeStamp;
+end;
+
+procedure TTagBit.ChangeCallback(Sender:TObject);
+var
+  notify:Boolean;
+  value, bitvalue :double;
+begin
+  if PNumber<>nil then begin
+    if PUseRaw then
+      value := PNumber.ValueRaw
+    else
+      value := PNumber.Value;
+
+    bitvalue := GetBits(value);
+
+    notify := PValueRaw<>bitvalue;
+
+    if notify then begin
+      PValueRaw:=bitvalue;
+      PValueTimeStamp := (PNumber as ITagInterface).ValueTimestamp;
+      NotifyChange();
+    end;
+  end;
+end;
+
+function  TTagBit.GetValue:Double;
+begin
+  if PScaleProcessor=nil then
+    Result := PValueRaw
+  else
+    Result := PScaleProcessor.SetInGetOut(self, PValueRaw);
+end;
+
+function  TTagBit.GetValueDirect:Double;
+begin
+  if Assigned(PScaleProcessor) then
+    Result := PScaleProcessor.SetInGetOut(self, GetValueDirectRaw)
+  else
+    Result := GetValueDirectRaw;
+end;
+
+procedure TTagBit.SetValueRaw(BitValue:Double);
+begin
+  if PNumber<>nil then
+     with PNumber as ITagNumeric do begin
+        ValueRaw := SetBits(ValueRaw,bitValue);
+     end;
+end;
+
+procedure TTagBit.SetValueDirectRaw(Value:Double);
+begin
+   SetValueRaw(Value);
+end;
+
+function  TTagBit.GetBits(value:double):Double;
+begin
+   Result:=((FloatToInteger(value) and PNormalMask) shr PStartBit);
+end;
+
+function  TTagBit.SetBits(OriginalValue, Value:Double):Double;
+begin
+   Result :=
+            ((FloatToInteger(OriginalValue) and PInvMask) or
+             (FloatToInteger(value) and PNormalMask));
+end;
+
+function  TTagBit.GetBitMask:Integer;
+var
+   c:Integer;
+begin
+   Result := 0;
+   for c:=PStartBit to PEndBit do begin
+      Result := Result or Power(2,c);
+   end;
+end;
+
+function  TTagBit.GetInvBitMask:Integer;
+var
+   c:Integer;
+begin
+   Result := $FFFFFFFF;
+   for c:=PStartBit to PEndBit do begin
+      Result := Result xor Power(2,c);
+   end;
+end;
+
+procedure TTagBit.SetUseRaw(use:Boolean);
+begin
+   if use<>PUseRaw then begin
+      PUseRaw := use;
+      ChangeCallback(self);
+   end;
+end;
+
+procedure TTagBit.SetStartBit(b:TBitRange);
+begin
+   if b<>PStartBit then begin
+      PStartBit:=b;
+      PNormalMask := GetBitMask;
+      PInvMask    := GetInvBitMask;
+      ChangeCallback(self);
+   end;
+end;
+
+procedure TTagBit.SetEndBit(b:TBitRange);
+begin
+   if b<>PEndBit then begin
+      PEndBit:=b;
+      PNormalMask := GetBitMask;
+      PInvMask    := GetInvBitMask;
+      ChangeCallback(self);
+   end
+end;
+
+end.

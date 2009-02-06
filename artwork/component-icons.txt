@@ -1,0 +1,49 @@
+TSerialPortDriver   - ok
+TModBusMasterDriver - ok
+TPIPE               - ok
+TUserScale          - ok
+TLinearScale        - ok
+TPLCTagNumber       - ok
+TPLCBlock           - ok
+TPLCBlockElement    - ok
+TPLCString          - ok
+THMIEdit            - ok
+THMILabel           - ok
+THMICheckBox        - ok
+THMIRadioButton     - ok
+THMITrackBar        - ok
+THMIProgressBar     - ok
+THMIRadioGroup      - ok
+THMIUpDown          - ok
+THMIScrollBar       - ok
+THMIAnimation       - ok
+THMIText            - ok
+
+Linha comando
+
+c:\lazarus\tools\lazres ..\..\scada.lrs
+
+
+
+tbitbtn.png
+tdatasource.png
+THMIAnimation.png
+THMICheckBox.png
+THMIEdit.png
+THMILabel.png
+THMIProgressBar.png
+THMIRadioButton.png
+THMIRadioGroup.png
+THMIScrollBar.png
+THMIText.png
+THMITrackBar.png
+THMIUpDown.png
+TLinearScaleProcessor.png
+TModBusMasterDriver.BMP
+TPIPE.bmp
+TPLCBlock.png
+TPLCBlockElement.png
+TPLCString.png
+TPLCTagNumber.png
+TSerialPortDriver.png
+TUserScale.png
