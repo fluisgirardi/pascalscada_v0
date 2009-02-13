@@ -87,7 +87,6 @@ type
     erro:Exception;
     FSpool:TMessageSpool;
     PScanUpdater:TScanUpdate;
-    procedure CheckScanWriteCmd;
     procedure SyncException;
   protected
     //: @exclude
@@ -97,6 +96,8 @@ type
     constructor Create(StartSuspended:Boolean; ScanUpdater:TScanUpdate);
     //: @exclude
     destructor Destroy; override;
+    //:Ordena a thread verificar se há comandos de escrita pendentes.
+    function CheckScanWriteCmd:Boolean;
     //: Ao chamar @name, espera a thread sinalizar a sua inicialização.
     procedure WaitInit;
     {:
@@ -334,6 +335,13 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+
+    {:
+      Verifica e executa os comandos de escritas que estiverem
+      esperando na fila. Retorna @true caso exista algum pedido
+      pendente.
+    }
+    function CheckWriteCmdInQueue:Boolean;
 
     {:
     Adiciona um tag ao scan do driver.
@@ -637,11 +645,12 @@ begin
   end;
 end;
 
-procedure TScanThread.CheckScanWriteCmd;
+function TScanThread.CheckScanWriteCmd:Boolean;
 var
   PMsg:TMsg;
   pkg:PScanWriteRec;
 begin
+   Result := false;
    //verifica se exite algum comando de escrita...
    while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANWRITE,WM_TAGSCANWRITE,true) do begin
       pkg := PScanWriteRec(PMsg.wParam);
@@ -653,6 +662,8 @@ begin
 
       if PScanUpdater<>nil then
          PScanUpdater.ScanWriteCallBack(pkg);
+
+      Result := true;
    end;
 end;
 
@@ -768,6 +779,11 @@ begin
   PCallersCS.Destroy;
   PPause.Destroy;
   inherited Destroy;
+end;
+
+function TProtocolDriver.CheckWriteCmdInQueue:Boolean;
+begin
+  Result := PScanThread.CheckScanWriteCmd;
 end;
 
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);

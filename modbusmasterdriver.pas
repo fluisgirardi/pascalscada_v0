@@ -989,7 +989,7 @@ begin
   //se nao fez leitura de nenhum bloco
   //faz atualiza o bloco que esta quase vencendo
   //o tempo de scan...
-  if (PReadAnyAlways) and ((not done) and (not first)) then begin
+  if (PReadAnyAlways) and ((not done) and (not first)) and (not CheckWriteCmdInQueue) then begin
     //compila o bloco do mais necessitado;
     BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
     pkg := EncodePkg(tr,nil,rl);
