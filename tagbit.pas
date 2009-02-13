@@ -233,7 +233,7 @@ procedure TTagBit.SetValueRaw(BitValue:Double);
 begin
   if PNumber<>nil then
      with PNumber as ITagNumeric do begin
-        ValueRaw := SetBits(ValueRaw,bitValue);
+        Value := SetBits(Value,bitValue);
      end;
 end;
 
@@ -251,7 +251,7 @@ function  TTagBit.SetBits(OriginalValue, Value:Double):Double;
 begin
    Result :=
             ((FloatToInteger(OriginalValue) and PInvMask) or
-             (FloatToInteger(value) and PNormalMask));
+             ((FloatToInteger(value) shl PStartBit) and PNormalMask));
 end;
 
 function  TTagBit.GetBitMask:Integer;

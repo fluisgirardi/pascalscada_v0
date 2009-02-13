@@ -76,8 +76,8 @@ end;
 
 destructor  TPLCBlockElement.Destroy;
 begin
-  if PBlock<>nil then;
-     PLCBlock.RemoveChangeCallBack(ChangeCallback);
+  if Assigned(PBlock) then;
+     PBlock.RemoveChangeCallBack(ChangeCallback);
   PBlock:=nil;
   inherited Destroy;
 end;
@@ -85,7 +85,7 @@ end;
 procedure TPLCBlockElement.SetBlock(blk:TPLCBlock);
 begin
   //esta removendo do bloco.
-  if (blk=nil) and (PBlock<>nil) then begin
+  if (blk=nil) and (Assigned(PBlock)) then begin
     PBlock.RemoveChangeCallBack(ChangeCallback);
     PBlock := nil;
     exit;
@@ -185,7 +185,7 @@ procedure TPLCBlockElement.ChangeCallback(Sender:TObject);
 var
   notify:Boolean;
 begin
-  if PBlock<>nil then begin
+  if Assigned(PBlock) then begin
     notify := (PValueRaw<>PBlock.ValueRaw[PIndex]);
     PValueRaw := PBlock.ValueRaw[PIndex];
     PValueDirectRaw := PValueRaw;
@@ -214,19 +214,19 @@ end;
 
 procedure TPLCBlockElement.SetValueRaw(Value:Double);
 begin
-  if PBlock<>nil then
+  if Assigned(PBlock) then
      PBlock.ValueRaw[PIndex] := Value;
 end;
 
 procedure TPLCBlockElement.SetValueDirectRaw(Value:Double);
 begin
-  if PBlock<>nil then
+  if Assigned(PBlock) then
      PBlock.ValueDirectRaw[PIndex] := Value;
 end;
 
 procedure TPLCBlockElement.ScanRead;
 begin
-  if PBlock<>nil then
+  if Assigned(PBlock) then
     PValueRaw := PBlock.ValueRaw[PIndex];
 
   PValueDirectRaw := PValueRaw;
@@ -234,13 +234,13 @@ end;
 
 procedure TPLCBlockElement.ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD);
 begin
-  if PBlock<>nil then
+  if Assigned(PBlock) then
     PBlock.ValueRaw[PIndex] := values[0]
 end;
 
 procedure TPLCBlockElement.Read;
 begin
-  if PBlock<>nil then
+  if Assigned(PBlock) then
     PValueRaw := PBlock.ValueDirectRaw[PIndex];
 
   PValueDirectRaw := PValueRaw;
@@ -248,7 +248,7 @@ end;
 
 procedure TPLCBlockElement.Write(Values:TArrayOfDouble; Count, Offset:DWORD);
 begin
-  if PBlock<>nil then
+  if Assigned(PBlock) then
     PBlock.ValueDirectRaw[PIndex] := values[0]
 end;
 
