@@ -996,6 +996,7 @@ begin
     if PCommPort<>nil then begin
       ResetASyncEvent;
       res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,0,CommPortAsyncCallBack,false);
+      CheckWriteCmdInQueue;
       if res<>0 then
         if WaitASyncEvent(120000)=wrSignaled then begin
           DecodePkg(ResultAsync,values);
