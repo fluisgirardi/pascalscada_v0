@@ -16,10 +16,6 @@ type
   protected
     //: Array que armazena os valores assincronos.
     PValues:TArrayOfDouble;
-    //: Array que armazena os valores a serem escritos.
-    PValuesToWrite:TArrayOfDouble;
-    //: Array que indices estão marcados para serem escritos.
-    PAssignedValues:array of Boolean;
     //: @seealso(TPLCTag.ScanRead)
     procedure ScanRead; override;
     //: @seealso(TPLCTag.ScanWrite)

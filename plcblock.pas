@@ -71,16 +71,12 @@ begin
    inherited Create(AOwner);
    PSize:=1;
    SetLength(PValues,PSize);
-   SetLength(PValuesToWrite,PSize);
-   SetLength(PAssignedValues,PSize);
 end;
 
 destructor TPLCBlock.Destroy;
 begin
    inherited Destroy;
    SetLength(PValues,0);
-   SetLength(PValuesToWrite,0);
-   SetLength(PAssignedValues,0);
 end;
 
 procedure TPLCBlock.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
@@ -99,7 +95,6 @@ begin
              //if (c+Offset)<Length(PValues) then begin
              notify := notify or (PValues[c+Offset]<>values[c]);
              PValues[c+Offset]:=values[c];
-             PValuesToWrite[c+Offset] := values[c];
              //end;
           end;
           PValueTimeStamp := ValuesTimeStamp;
@@ -156,8 +151,6 @@ begin
     old:=PSize;
     PSize := size;
     SetLength(PValues,PSize);
-    SetLength(PValuesToWrite, PSize);
-    SetLength(PAssignedValues, PSize);
     if PProtocolDriver<>nil then
        PProtocolDriver.TagChanges(self,tcSize,old,size);
   end;
@@ -174,8 +167,7 @@ procedure TPLCBlock.SetValue(index:Integer; Value:Double);
 var
   towrite:TArrayOfDouble;
 begin
-  PAssignedValues[index] := true;
-  PValuesToWrite[index] := Value;
+  PValues[index] := Value;
   SetLength(towrite,1);
   towrite[0] := Value;
   ScanWrite(towrite,1,index);
@@ -192,9 +184,6 @@ var
   towrite:TArrayOfDouble;
   c:Integer;
 begin
-  for c:=0 to Min(PSize,length(values))-1 do
-    PValuesToWrite[c] := values[c];
-    
   towrite := values;
   ScanWrite(towrite,PSize,0);
   SetLength(towrite,0);
@@ -206,13 +195,13 @@ var
 begin
   x:=PAutoWrite;
   PAutoWrite := true;
-  ScanWrite(PValuesToWrite,PSize,0);
+  ScanWrite(PValues,PSize,0);
   PAutoWrite := x;
 end;
 
 procedure TPLCBlock.WriteDirect;
 begin
-  Write(PValuesToWrite,PSize,0);
+  Write(PValues,PSize,0);
 end;
 
 procedure TPLCBlock.ScanRead;
