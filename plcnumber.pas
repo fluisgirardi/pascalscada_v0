@@ -42,8 +42,8 @@ type
     //: Evento chamado ao ocorrer uma mudança no valor do tag.
     property OnValueChange;
   public
-    procedure Write; virtual; overload;
-    procedure ScanWrite; virtual; overload;
+    procedure Write; overload; virtual;
+    procedure ScanWrite; overload; virtual;
     //: Remove a seqüência de processamento de escalas.
     procedure RemoveScaleProcessor;
     //: Valor do tag escalonado (processado) @bold(assincrono).
