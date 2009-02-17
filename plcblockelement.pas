@@ -195,9 +195,10 @@ end;
 
 procedure TPLCBlockElement.SetValueRaw(Value:Double);
 begin
-  PValueRaw:=Value;
   if Assigned(PBlock) then
-     PBlock.ValueRaw[PIndex] := Value;
+    PBlock.ValueRaw[PIndex] := Value
+  else
+    PValueRaw:=Value;
 end;
 
 procedure TPLCBlockElement.ScanRead;

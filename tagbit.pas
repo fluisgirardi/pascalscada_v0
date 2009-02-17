@@ -1,4 +1,4 @@
-unit TagBit;
+﻿unit TagBit;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -34,6 +34,7 @@ type
     PUseRaw:Boolean;
     PStartBit:TBitRange;
     PEndBit:TBitRange;
+    POldValue:Double;
     PNormalMask, PInvMask:Integer;
     procedure SetNumber(number:TPLCNumber);
     procedure SetUseRaw(use:Boolean);
@@ -195,8 +196,7 @@ end;
 
 procedure TTagBit.ChangeCallback(Sender:TObject);
 var
-  notify:Boolean;
-  value, bitvalue :double;
+  value, bold, bnew :double;
 begin
   if PNumber<>nil then begin
     if PUseRaw then
@@ -204,15 +204,16 @@ begin
     else
       value := PNumber.Value;
 
-    bitvalue := GetBits(value);
+    bold := GetBits(POldValue);
+    bnew := GetBits(value);
 
-    notify := PValueRaw<>bitvalue;
+    if bold<>bnew then begin
+       PValueRaw:=bnew;
+       PValueTimeStamp := Now;
 
-    if notify then begin
-      PValueRaw:=bitvalue;
-      PValueTimeStamp := (PNumber as ITagInterface).ValueTimestamp;
-      NotifyChange();
+       NotifyChange();
     end;
+    POldValue := value;
   end;
 end;
 
