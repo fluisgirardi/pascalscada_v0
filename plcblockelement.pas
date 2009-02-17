@@ -22,8 +22,7 @@ type
     procedure SetBlock(blk:TPLCBlock);
     procedure SetIndex(i:Cardinal);
     procedure RemoveTag(Sender:TObject);
-    
-    function  GetValueRaw:Double;
+
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
@@ -32,14 +31,17 @@ type
   protected
     //: Método chamado pelo bloco para informar ao elemento de alterações de valores.
     procedure ChangeCallback(Sender:TObject);
-    //: @seealso(TPLCNumber.GetValue)
-    function  GetValue:Double; override;
-    //: @seealso(TPLCNumber.GetValueDirect)
-    function  GetValueDirect:Double; override;
+    //: @seealso(TPLCNumber.GetValueRaw)
+    function  GetValueRaw:Double;
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(Value:Double); override;
-    //: @seealso(TPLCNumber.SetValueDirectRaw)
-    procedure SetValueDirectRaw(Value:Double); override;
+    //: @seealso(TPLCTag.TagCommandCallBack)
+    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
+  public
+    //: @exclude
+    constructor Create(AOwner:TComponent); override;
+    //: @exclude
+    destructor  Destroy; override;
     //: @seealso(TPLCTag.ScanRead)
     procedure ScanRead; override;
     //: @seealso(TPLCTag.ScanWrite)
@@ -48,13 +50,6 @@ type
     procedure Read; override;
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
-    //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
-  public
-    //: @exclude
-    constructor Create(AOwner:TComponent); override;
-    //: @exclude
-    destructor  Destroy; override;
   published
     //: Bloco de comunicações que o elemento pertence.
     property PLCBlock:TPLCBlock read PBlock write SetBlock;
@@ -129,7 +124,10 @@ end;
 
 function TPLCBlockElement.GetValueRaw:Double;
 begin
-  Result := PValueRaw ;
+  if Assigned(PBlock) then
+     Result := PBlock.ValueRaw[PIndex]
+  else
+     Result := PValueRaw ;
 end;
 
 function TPLCBlockElement.GetValueAsText(Prefix, Sufix, Format:string):String;
@@ -188,7 +186,6 @@ begin
   if Assigned(PBlock) then begin
     notify := (PValueRaw<>PBlock.ValueRaw[PIndex]);
     PValueRaw := PBlock.ValueRaw[PIndex];
-    PValueDirectRaw := PValueRaw;
     PValueTimeStamp := PBlock.ValueTimestamp;
 
     if notify then
@@ -196,66 +193,41 @@ begin
   end;
 end;
 
-function  TPLCBlockElement.GetValue:Double;
-begin
-  if PScaleProcessor=nil then
-    Result := PValueRaw
-  else
-    Result := PScaleProcessor.SetInGetOut(self, PValueRaw);
-end;
-
-function  TPLCBlockElement.GetValueDirect:Double;
-begin
-  if Assigned(PScaleProcessor) then
-    Result := PScaleProcessor.SetInGetOut(self, GetValueDirectRaw)
-  else
-    Result := GetValueDirectRaw;
-end;
-
 procedure TPLCBlockElement.SetValueRaw(Value:Double);
 begin
+  PValueRaw:=Value;
   if Assigned(PBlock) then
      PBlock.ValueRaw[PIndex] := Value;
-end;
-
-procedure TPLCBlockElement.SetValueDirectRaw(Value:Double);
-begin
-  if Assigned(PBlock) then
-     PBlock.ValueDirectRaw[PIndex] := Value;
 end;
 
 procedure TPLCBlockElement.ScanRead;
 begin
   if Assigned(PBlock) then
-    PValueRaw := PBlock.ValueRaw[PIndex];
-
-  PValueDirectRaw := PValueRaw;
+    PBlock.ScanRead;
 end;
 
 procedure TPLCBlockElement.ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD);
 begin
   if Assigned(PBlock) then
-    PBlock.ValueRaw[PIndex] := values[0]
+    PBlock.ScanWrite(values, 1, PIndex)
 end;
 
 procedure TPLCBlockElement.Read;
 begin
-  if Assigned(PBlock) then
-    PValueRaw := PBlock.ValueDirectRaw[PIndex];
-
-  PValueDirectRaw := PValueRaw;
+  if Assigned(PBlock) then begin
+    PBlock.Read;
+  end;
 end;
 
 procedure TPLCBlockElement.Write(Values:TArrayOfDouble; Count, Offset:DWORD);
 begin
   if Assigned(PBlock) then
-    PBlock.ValueDirectRaw[PIndex] := values[0]
+    PBlock.Write(values, 1, PIndex)
 end;
 
 procedure TPLCBlockElement.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
 begin
-
+  //do nothing...
 end;
-
 
 end.

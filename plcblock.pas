@@ -16,14 +16,10 @@ type
   private
     procedure SetSize(size:DWORD);
     function  GetValue(Index:Integer):Double;
-    function  GetValueDirect(Index:Integer):Double;
     procedure SetValue(index:Integer; Value:Double);
-    procedure SetValueDirect(index:Integer; Value:Double);
 
     function  GetValues:TArrayOfDouble;
-    function  GetValuesDirect:TArrayOfDouble;
     procedure SetValues(values:TArrayOfDouble);
-    procedure SetValuesDirect(values:TArrayOfDouble);    
   protected
     //: @seealso(TPLCTag.TagCommandCallBack)
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
@@ -44,14 +40,21 @@ type
     @bold(Só tem efeito caso AutoWrite = @false.)
     }
     procedure WriteDirect;
+
+    //: @seealso(TPLCTag.ScanRead)
+    procedure ScanRead; override;
+    //: @seealso(TPLCTag.ScanWrite)
+    procedure Read; override;
+
+    //: @seealso(TPLCTag.ScanWrite)
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    //: @seealso(TPLCTag.Write)
+    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+
     //: Lê/escreve um valor puro de modo assincrono em um item do bloco.
     property ValueRaw[index:Integer]:Double read GetValue write SetValue;
-    //: Lê/escreve um valor puro de modo sincrono em um item do bloco.
-    property ValueDirectRaw[index:Integer]:Double read GetValueDirect write SetValueDirect;
     //: Lê/escreve valores (array) puros de modo assincrono em um item do bloco.
     property ValuesRaw:TArrayOfDouble read GetValues write SetValues;
-    //: Lê/escreve valores (array) puros de modo sincrono em um item do bloco.
-    property ValuesDirectRaw:TArrayOfDouble read GetValuesDirect write SetValuesDirect;
   published
     //: Tamanho de elementos do bloco.
     property Size write SetSize;
@@ -96,7 +99,7 @@ begin
              //if (c+Offset)<Length(PValues) then begin
              notify := notify or (PValues[c+Offset]<>values[c]);
              PValues[c+Offset]:=values[c];
-             PValuesToWrite[c+Offset] := IfThen(PAssignedValues[c+Offset],PValuesToWrite[c+Offset],values[c]);
+             PValuesToWrite[c+Offset] := values[c];
              //end;
           end;
           PValueTimeStamp := ValuesTimeStamp;
@@ -167,14 +170,6 @@ begin
    Result := PValues[Index];
 end;
 
-function  TPLCBlock.GetValueDirect(Index:Integer):Double;
-begin
-   if ((index<0) or (Index>High(PValues))) then
-     raise Exception.Create('Fora dos limites!');
-   Read;
-   Result := PValues[Index];
-end;
-
 procedure TPLCBlock.SetValue(index:Integer; Value:Double);
 var
   towrite:TArrayOfDouble;
@@ -184,16 +179,6 @@ begin
   SetLength(towrite,1);
   towrite[0] := Value;
   ScanWrite(towrite,1,index);
-  SetLength(towrite,0);
-end;
-
-procedure TPLCBlock.SetValueDirect(index:Integer; Value:Double);
-var
-  towrite:TArrayOfDouble;
-begin
-  SetLength(towrite,1);
-  towrite[0] := Value;
-  Write(towrite,1,index);
   SetLength(towrite,0);
 end;
 
@@ -215,21 +200,6 @@ begin
   SetLength(towrite,0);
 end;
 
-function TPLCBlock.GetValuesDirect:TArrayOfDouble;
-begin
-  Read;
-  Result := PValues;
-end;
-
-procedure TPLCBlock.SetValuesDirect(values:TArrayOfDouble);
-var
-  towrite:TArrayOfDouble;
-begin
-  towrite:=values;
-  Write(towrite,PSize,0);
-  SetLength(towrite,0);
-end;
-
 procedure TPLCBlock.WriteByScan;
 var
   x:Boolean;
@@ -243,6 +213,26 @@ end;
 procedure TPLCBlock.WriteDirect;
 begin
   Write(PValuesToWrite,PSize,0);
+end;
+
+procedure TPLCBlock.ScanRead;
+begin
+  inherited ScanRead;
+end;
+
+procedure TPLCBlock.Read;
+begin
+  inherited Read;
+end;
+
+procedure TPLCBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD);
+begin
+  inherited ScanWrite(Values, Count, Offset);
+end;
+
+procedure TPLCBlock.Write(Values:TArrayOfDouble; Count, Offset:DWORD);
+begin
+  inherited Write(Values, Count, Offset);
 end;
 
 end.

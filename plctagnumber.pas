@@ -14,29 +14,16 @@ type
   //: Tag numérico com comunicação individual.
   TPLCTagNumber = class(TPLCNumber, ITagInterface, ITagNumeric)
   private
-    function  GetValueRaw:Double;
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
   protected
-    //: @seealso(TPLCNumber.GetValue)
-    function  GetValue:Double; override;
-    //: @seealso(TPLCNumber.GetValueDirect)
-    function  GetValueDirect:Double; override;
+    //: @seealso(TPLCNumber.SetValueRaw)
+    function  GetValueRaw:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(Value:Double); override;
-    //: @seealso(TPLCNumber.SetValueDirectRaw)
-    procedure SetValueDirectRaw(Value:Double); override;
-    //: @seealso(TPLCTag.ScanRead)
-    procedure ScanRead; override;
-    //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
-    //: @seealso(TPLCTag.Read)
-    procedure Read; override;
-    //: @seealso(TPLCTag.Write)
-    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
     //: @seealso(TTag.Size)
@@ -82,6 +69,15 @@ type
     property ValueTimestamp;
     //: @seealso(TTag.LongAddress)
     property LongAddress;
+  public
+    //: @seealso(TPLCTag.ScanRead)
+    procedure ScanRead; override;
+    //: @seealso(TPLCTag.ScanWrite)
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    //: @seealso(TPLCTag.Read)
+    procedure Read; override;
+    //: @seealso(TPLCTag.Write)
+    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
   end;
 
 implementation
@@ -90,7 +86,7 @@ uses PLCTag, Tag, Math;
 
 function TPLCTagNumber.GetValueRaw:Double;
 begin
-  Result := PValueRaw ;
+  Result := PValueRaw;
 end;
 
 function TPLCTagNumber.GetValueAsText(Prefix, Sufix, Format:string):String;
@@ -142,22 +138,6 @@ begin
    Result := PValueTimeStamp;
 end;
 
-function TPLCTagNumber.GetValue:Double;
-begin
-  if PScaleProcessor=nil then
-    Result := PValueRaw
-  else
-    Result := PScaleProcessor.SetInGetOut(self, PValueRaw);
-end;
-
-function TPLCTagNumber.GetValueDirect:Double;
-begin
-  if Assigned(PScaleProcessor) then
-    Result := PScaleProcessor.SetInGetOut(self, GetValueDirectRaw)
-  else
-    Result := GetValueDirectRaw;
-end;
-
 procedure TPLCTagNumber.SetValueRaw(Value:Double);
 var
   towrite:TArrayOfDouble;
@@ -165,16 +145,6 @@ begin
   SetLength(towrite,1);
   towrite[0] := Value;
   ScanWrite(towrite,1,0);
-  SetLength(towrite,0);
-end;
-
-procedure TPLCTagNumber.SetValueDirectRaw(Value:Double);
-var
-  towrite:TArrayOfDouble;
-begin
-  SetLength(towrite,1);
-  towrite[0] := Value;
-  Write(towrite,1,0);
   SetLength(towrite,0);
 end;
 
@@ -242,9 +212,8 @@ begin
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           //atualiza os dois valores (direto ou indireto) independende do caso do pedido.
-          notify := (PValueRaw<>values[0]) or (PValueDirectRaw<>values[0]);
+          notify := (PValueRaw<>values[0]);
           PValueRaw := values[0];
-          PValueDirectRaw := values[0];
           PValueTimeStamp := ValuesTimeStamp;
           if LastResult=ioOk then
              IncCommReadOK(1);
@@ -256,8 +225,7 @@ begin
         if LastResult in [ioOk, ioNullDriver]then begin
           if LastResult=ioOk then
              IncCommWriteOK(1);
-          notify := (PValueRaw<>values[0]) or (PValueDirectRaw<>values[0]);
-          PValueDirectRaw := values[0];
+          notify := (PValueRaw<>values[0]);
           PValueRaw := values[0];
         end else
           IncCommWriteFaults(1);

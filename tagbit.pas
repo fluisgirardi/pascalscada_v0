@@ -46,7 +46,7 @@ type
     function  GetBitMask:Integer;
     function  GetInvBitMask:Integer;
 
-    function  GetValueRaw:Double;
+
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
@@ -55,15 +55,10 @@ type
   protected
     //: Método chamado pelo tag numérico para informar ao elemento de alterações de valores.
     procedure ChangeCallback(Sender:TObject);
-    //: @seealso(TPLCNumber.GetValue)
-    function  GetValue:Double; override;
-    //: @seealso(TPLCNumber.GetValueDirect)
-    function  GetValueDirect:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(bitValue:Double); override;
-    //: @seealso(TPLCNumber.SetValueDirectRaw)
-    procedure SetValueDirectRaw(Value:Double); override;
-    //: @seealso(TPLCTag.ScanRead)
+    //: @seealso(TPLCNumber.GetValueRaw)
+    function  GetValueRaw:Double;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -137,8 +132,16 @@ begin
 end;
 
 function TTagBit.GetValueRaw:Double;
+var
+  x:ITagNumeric;
 begin
-  Result := PValueRaw ;
+  if Assigned(PNumber) and ((PNumber as ITagNumeric)<>nil) then begin
+    if PUseRaw then
+      Result := GetBits((PNumber as ITagNumeric).ValueRaw)
+    else
+      Result := GetBits((PNumber as ITagNumeric).Value);
+  end else
+    Result := PValueRaw;
 end;
 
 function TTagBit.GetValueAsText(Prefix, Sufix, Format:string):String;
@@ -213,33 +216,16 @@ begin
   end;
 end;
 
-function  TTagBit.GetValue:Double;
-begin
-  if PScaleProcessor=nil then
-    Result := PValueRaw
-  else
-    Result := PScaleProcessor.SetInGetOut(self, PValueRaw);
-end;
-
-function  TTagBit.GetValueDirect:Double;
-begin
-  if Assigned(PScaleProcessor) then
-    Result := PScaleProcessor.SetInGetOut(self, GetValueDirectRaw)
-  else
-    Result := GetValueDirectRaw;
-end;
-
 procedure TTagBit.SetValueRaw(BitValue:Double);
 begin
+  PValueRaw:=BitValue;
   if PNumber<>nil then
      with PNumber as ITagNumeric do begin
-        Value := SetBits(Value,bitValue);
+        if PUseRaw then
+          ValueRaw := SetBits(ValueRaw,bitValue)
+        else
+          Value := SetBits(Value,bitValue);
      end;
-end;
-
-procedure TTagBit.SetValueDirectRaw(Value:Double);
-begin
-   SetValueRaw(Value);
 end;
 
 function  TTagBit.GetBits(value:double):Double;

@@ -381,7 +381,7 @@ procedure THMICheckBox.SetValueTrue(v:Double);
 var
   itag:ITagNumeric;
 begin
-  if v=FValueFalse then
+  if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueFalse) then
     raise Exception.Create('O valor precisa ser diferente do valor FALSO!');
 
   itag := FTag as ITagNumeric;
@@ -398,7 +398,7 @@ procedure THMICheckBox.SetValueFalse(v:Double);
 var
    itag:ITagNumeric;
 begin
-  if v=FValueTrue then
+  if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueTrue) then
     raise Exception.Create('O valor precisa ser diferente do valor VERDADEIRO!');
 
   itag := FTag as ITagNumeric;
