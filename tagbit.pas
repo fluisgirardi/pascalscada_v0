@@ -58,7 +58,7 @@ type
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(bitValue:Double); override;
     //: @seealso(TPLCNumber.GetValueRaw)
-    function  GetValueRaw:Double;
+    function  GetValueRaw:Double; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;

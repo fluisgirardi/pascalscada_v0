@@ -32,7 +32,7 @@ type
     //: Método chamado pelo bloco para informar ao elemento de alterações de valores.
     procedure ChangeCallback(Sender:TObject);
     //: @seealso(TPLCNumber.GetValueRaw)
-    function  GetValueRaw:Double;
+    function  GetValueRaw:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(Value:Double); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
