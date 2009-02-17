@@ -28,6 +28,15 @@ type
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
     //: @seealso(TTag.Size)
     property Size nodefault;
+  public
+    //: @seealso(TPLCTag.ScanRead)
+    procedure ScanRead; override;
+    //: @seealso(TPLCTag.ScanWrite)
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    //: @seealso(TPLCTag.Read)
+    procedure Read; override;
+    //: @seealso(TPLCTag.Write)
+    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
   published
     //: @seealso(TTag.AutoRead)
     property AutoRead;
@@ -69,15 +78,6 @@ type
     property ValueTimestamp;
     //: @seealso(TTag.LongAddress)
     property LongAddress;
-  public
-    //: @seealso(TPLCTag.ScanRead)
-    procedure ScanRead; override;
-    //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
-    //: @seealso(TPLCTag.Read)
-    procedure Read; override;
-    //: @seealso(TPLCTag.Write)
-    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
   end;
 
 implementation

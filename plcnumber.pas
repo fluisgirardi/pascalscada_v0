@@ -36,11 +36,6 @@ type
     @seealso(ScaleProcessor)
     }
     procedure SetScaleProcessor(sp:TPIPE);
-  published
-    //: Seqüência de escalas do Tag.
-    property ScaleProcessor:TPIPE  read PScaleProcessor write SetScaleProcessor;
-    //: Evento chamado ao ocorrer uma mudança no valor do tag.
-    property OnValueChange;
   public
     procedure Write; overload; virtual;
     procedure ScanWrite; overload; virtual;
@@ -50,6 +45,11 @@ type
     property Value:Double read GetValue write SetValue;
     //: Valor do tag puro @bold(assincrono).
     property ValueRaw:Double read PValueRaw write SetValueRaw;
+  published
+    //: Seqüência de escalas do Tag.
+    property ScaleProcessor:TPIPE  read PScaleProcessor write SetScaleProcessor;
+    //: Evento chamado ao ocorrer uma mudança no valor do tag.
+    property OnValueChange;
   end;
 
 implementation
