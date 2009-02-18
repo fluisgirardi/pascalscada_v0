@@ -81,13 +81,18 @@ type
   TScanThread = class(TCrossThread)
   private
     FSTInitEventHandle:TCrossEvent;
+    FWaitToWrite:TCrossEvent;
+
     FDoScanRead:TNotifyEvent;
     FDoScanWrite:TScanWriteProc;
+
     FMinScan:DWORD;
     erro:Exception;
     FSpool:TMessageSpool;
     PScanUpdater:TScanUpdate;
+
     procedure SyncException;
+
   protected
     //: @exclude
     procedure Execute; override;
@@ -189,7 +194,8 @@ type
     PAcceptUnsolicitedMsgs:Boolean;
     PTagCount:Cardinal;
     PTags:array of TTag;
-    PScanThread:TScanThread;
+    PScanReadThread:TScanThread;
+    PScanWriteThread:TScanThread;
     PScanUpdateThread:TScanUpdate;
     procedure SetCommPort(CommPort:TCommPortDriver);
     procedure DoExceptionIndexOut(index:integer);
@@ -613,6 +619,7 @@ begin
   FSpool := TMessageSpool.Create;
   PScanUpdater       := ScanUpdater;
   FSTInitEventHandle := TCrossEvent.Create(nil,true,false,'ScanThreadInit'+IntToStr(UniqueID));
+  FWaitToWrite       := TCrossEvent.Create(nil,true,false,'WaitToWrite'+IntToStr(UniqueID));
   FMinScan := 0;
 end;
 
@@ -620,6 +627,7 @@ destructor TScanThread.Destroy;
 begin
   Terminate;
   FSTInitEventHandle.Destroy;
+  FWaitToWrite.Destroy;
   FSpool.Destroy;
   inherited Destroy;
 end;
@@ -650,21 +658,24 @@ var
   PMsg:TMsg;
   pkg:PScanWriteRec;
 begin
-   Result := false;
-   //verifica se exite algum comando de escrita...
-   while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANWRITE,WM_TAGSCANWRITE,true) do begin
-      pkg := PScanWriteRec(PMsg.wParam);
+  Result := false;
+  //verifica se exite algum comando de escrita...
+  if FWaitToWrite.WaitFor(1) = wrSignaled then begin
+    FWaitToWrite.ResetEvent;
+    while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANWRITE,WM_TAGSCANWRITE,true) do begin
+       pkg := PScanWriteRec(PMsg.wParam);
 
-      if Assigned(FDoScanWrite) then
+       if Assigned(FDoScanWrite) then
          pkg^.WriteResult := FDoScanWrite(pkg^.Tag,pkg^.ValuesToWrite)
-      else
+       else
          pkg^.WriteResult := ioDriverError;
 
-      if PScanUpdater<>nil then
+       if PScanUpdater<>nil then
          PScanUpdater.ScanWriteCallBack(pkg);
 
-      Result := true;
-   end;
+       Result := true;
+    end;
+  end;
 end;
 
 procedure TScanThread.SyncException;
@@ -687,6 +698,7 @@ begin
 
   //envia a mensagem
   FSpool.PostMessage(WM_TAGSCANWRITE,SWPkg,nil,true);
+  FWaitToWrite.SetEvent;
 end;
 
 procedure TScanThread.TagChanges(Tag:TTag; Change:TChangeType; oldValue, newValue:DWORD);
@@ -738,22 +750,31 @@ begin
   PSyncEventHandle := TCrossEvent.Create(nil,true,false,'IOCallBackSync'+Name+IntToStr(PDriverID));
   PASyncEventHandle := TCrossEvent.Create(nil,true,false,'IOCallBackASync'+Name+IntToStr(PDriverID));
 
-  PScanUpdateThread := TScanUpdate.Create(true);
-  PScanUpdateThread.Priority:=tpHighest;
-  PScanUpdateThread.OnGetValue := InternalDoGetValue;
+  if ComponentState*[csDesigning]=[] then begin
+    PScanUpdateThread := TScanUpdate.Create(true);
+    PScanUpdateThread.Priority:=tpHighest;
+    PScanUpdateThread.OnGetValue := InternalDoGetValue;
 
-  PScanThread := TScanThread.Create(true, PScanUpdateThread);
-  PScanThread.Priority:=tpHighest;
-  PScanThread.OnDoScanRead := InternalDoScanRead;
-  PScanThread.OnDoScanWrite := InternalDoScanWrite;
+    PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
+    //PScanReadThread.Priority:=tpHighest;
+    PScanReadThread.OnDoScanRead := InternalDoScanRead;
+    //PScanReadThread.OnDoScanWrite := InternalDoScanWrite;
 
-  //if not (csDesigning in ComponentState) then
-  PScanUpdateThread.Resume;
+    PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
+    PScanWriteThread.Priority:=tpHighest;
+    //PScanWriteThread.OnDoScanRead := InternalDoScanRead;
+    PScanWriteThread.OnDoScanWrite := InternalDoScanWrite;
 
-  //if not (csDesigning in ComponentState) then begin
-  PScanThread.Resume;
-  PScanThread.WaitInit;
-  //end;
+
+    PScanUpdateThread.Resume;
+
+    //if not (csDesigning in ComponentState) then begin
+    PScanReadThread.Resume;
+    PScanReadThread.WaitInit;
+
+    PScanWriteThread.Resume;
+    PScanWriteThread.WaitInit;
+  end;
 end;
 
 destructor TProtocolDriver.Destroy;
@@ -765,11 +786,13 @@ begin
 
   SetCommPort(nil);
 
-  //PScanThread.Terminate;
-  PScanThread.Destroy;
-  
-  PScanUpdateThread.Terminate;
-  PScanUpdateThread.WaitFor;
+  if ComponentState*[csDesigning]=[] then begin
+    PScanReadThread.Destroy;
+    PScanWriteThread.Destroy;
+
+    PScanUpdateThread.Terminate;
+    PScanUpdateThread.WaitFor;
+  end;
 
   PASyncEventHandle.Destroy;
   PSyncEventHandle.Destroy;
@@ -783,7 +806,7 @@ end;
 
 function TProtocolDriver.CheckWriteCmdInQueue:Boolean;
 begin
-  Result := PScanThread.CheckScanWriteCmd;
+  Result := PScanWriteThread.CheckScanWriteCmd;
 end;
 
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
@@ -982,7 +1005,7 @@ begin
        inc(FScanReadID);
 
     //posta uma mensagem de Leitura por Scan
-    if PScanUpdateThread<>nil then
+    if (ComponentState*[csDesigning]=[]) and (PScanUpdateThread<>nil) then
       PScanUpdateThread.ScanRead(tagrec);
 
     Result := FScanReadID;
@@ -1024,8 +1047,8 @@ begin
     pkg^.WriteResult:=ioNone;
 
     //posta uma mensagem de Escrita por Scan
-    if PScanThread<>nil then
-      PScanThread.ScanWrite(pkg);
+    if (ComponentState*[csDesigning]=[]) and (PScanWriteThread<>nil) then
+      PScanWriteThread.ScanWrite(pkg);
 
     Result := FScanWriteID;
   finally
