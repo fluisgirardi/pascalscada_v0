@@ -31,13 +31,14 @@ Constructor TSharedSection.Create(GroupCount:integer);
 var
   c:Integer;
 begin
+  Inherited Create;
   fcs:=TCriticalSection.Create;
   fcs.Enter;
   fOwner:=-1;
   SetLength(EventArray,GroupCount);
   SetLength(OwnersCount,GroupCount);
   for c:=0 to GroupCount-1 do begin
-    EventArray[c] := TCrossEvent.Create(nil,true,true,'');
+    EventArray[c] := TCrossEvent.Create(nil,true,false,'');
     EventArray[c].SetEvent;
     OwnersCount[c] := 0;
   end;

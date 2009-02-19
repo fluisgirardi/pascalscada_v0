@@ -1055,14 +1055,12 @@ var
   tempValues:TArrayOfDouble;
 begin
   try
-    Event:=TCrossEvent.Create(nil,true,false,'');
     pkg := EncodePkg(tagrec,values,rl);
     if PCommPort<>nil then begin
-      Event.ResetEvent;
 
       res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult);
 
-      if (res<>0) and (Event.WaitFor(120000)=wrSignaled) then
+      if (res<>0) then
         Result := DecodePkg(IOResult,tempValues);
 
     end else
@@ -1072,7 +1070,6 @@ begin
     SetLength(tempValues,0);
     SetLength(IOResult.BufferToRead,0);
     SetLength(IOResult.BufferToWrite,0);
-    Event.Destroy;
   end;
 end;
 
