@@ -1,12 +1,13 @@
 unit SharedSection;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+{$mode delphi}
+{$ENDIF}
 
 interface
 
 uses
-  Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs, CrossEvent,
-  syncobjs;
+  CrossEvent, syncobjs, SysUtils;
 
 type
   TSharedSection = class(TObject)

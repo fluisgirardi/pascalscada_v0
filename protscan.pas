@@ -1,4 +1,4 @@
-unit protscan;
+﻿unit protscan;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -42,7 +42,7 @@ type
     //: @exclude
     destructor Destroy; override;
     //:Ordena a thread verificar se há comandos de escrita pendentes.
-    function CheckScanWriteCmd:Boolean;
+    procedure CheckScanWriteCmd;
     //: Ao chamar @name, espera a thread sinalizar a sua inicialização.
     procedure WaitInit;
     {:
@@ -121,33 +121,27 @@ begin
           Synchronize(SyncException);
         end;
       end;
-    //FSTSuspendEventHandle.ResetEvent;
+
     if FMinScan>0 then
       Sleep(FMinScan);
   end;
 end;
 
-function TScanThread.CheckScanWriteCmd:Boolean;
+procedure TScanThread.CheckScanWriteCmd;
 var
   PMsg:TMsg;
   pkg:PScanWriteRec;
 begin
-  Result := false;
-  //verifica se exite algum comando de escrita...
-  if FWaitToWrite.WaitFor(1) = wrSignaled then begin
+  if Assigned(FDoScanWrite) then begin
+    FWaitToWrite.WaitFor(1);
     FWaitToWrite.ResetEvent;
     while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANWRITE,WM_TAGSCANWRITE,true) do begin
        pkg := PScanWriteRec(PMsg.wParam);
 
-       if Assigned(FDoScanWrite) then
-         pkg^.WriteResult := FDoScanWrite(pkg^.Tag,pkg^.ValuesToWrite)
-       else
-         pkg^.WriteResult := ioDriverError;
+       pkg^.WriteResult := FDoScanWrite(pkg^.Tag,pkg^.ValuesToWrite);
 
        if PScanUpdater<>nil then
          PScanUpdater.ScanWriteCallBack(pkg);
-
-       Result := true;
     end;
   end;
 end;

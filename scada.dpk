@@ -35,19 +35,19 @@ requires
   vclx;
 
 contains
-  CommPort in 'CommPort.pas',
+  commport in 'commport.pas',
   commtypes in 'commtypes.pas',
   SerialPort in 'SerialPort.pas',
   ProtocolDriver in 'ProtocolDriver.pas',
   ModBusMasterDriver in 'ModBusMasterDriver.pas',
   PLCMemoryMananger in 'PLCMemoryMananger.pas',
   hsutils in 'hsutils.pas',
-  PLCTag in 'PLCTag.pas',
+  plctag in 'plctag.pas',
   Tag in 'Tag.pas',
   PLCNumber in 'PLCNumber.pas',
   ValueProcessor in 'ValueProcessor.pas',
   ProtocolTypes in 'ProtocolTypes.pas',
-  PLCTagNumber in 'PLCTagNumber.pas',
+  plctagnumber in 'plctagnumber.pas',
   LinearScaleProcessor in 'LinearScaleProcessor.pas',
   hsstrings in 'hsstrings.pas',
   messagespool in 'messagespool.pas',
@@ -74,6 +74,9 @@ contains
   HMIZones in 'HMIZones.pas',
   scadareg in 'scadareg.pas',
   crc16utils in 'crc16utils.pas',
-  scadaapp in 'scadaapp.pas';
+  tagbit in 'tagbit.pas',
+  sharedsection in 'sharedsection.pas',
+  protscan in 'protscan.pas',
+  protscanupdate in 'protscanupdate.pas';
 
 end.
