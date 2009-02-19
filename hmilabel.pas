@@ -24,7 +24,6 @@ type
     function  GetHMITag:TPLCTag;
     procedure SetPrefix(s:String);
     procedure SetSufix(s:String);
-    procedure RefreshTagValue;
 
     function  GetCaption:TCaption;
 
@@ -37,6 +36,8 @@ type
     FTag:TPLCTag;
     //: @exclude
     procedure SetHMITag(t:TPLCTag); virtual;
+    //: @exclude
+    procedure RefreshTagValue; virtual;
     //: @exclude
     procedure HMINotifyChangeCallback(Sender:TObject); virtual;
   public

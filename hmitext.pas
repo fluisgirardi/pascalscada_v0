@@ -34,6 +34,8 @@ type
     procedure BlinkTimer(Sender:TObject);
   protected
     //: @exclude
+    procedure RefreshTagValue; override;
+    //: @exclude
     procedure SetValue(v:Double);
     //: @exclude
     procedure ShowZone(zone:TTextZone);
@@ -130,6 +132,11 @@ begin
       FTimer.Interval := FCurrentZone.BlinkTime;
       FTimer.Enabled := FCurrentZone.BlinkWith<>(-1);
    end;
+end;
+
+procedure THMIText.RefreshTagValue;
+begin
+  HMINotifyChangeCallback(self);
 end;
 
 procedure THMIText.ShowZone(zone:TTextZone);
