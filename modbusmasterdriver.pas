@@ -1047,7 +1047,6 @@ end;
 
 function  TModBusMasterDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
-  Event:TCrossEvent;
   IOResult:TIOPacket;
   pkg:BYTES;
   rl:Integer;
