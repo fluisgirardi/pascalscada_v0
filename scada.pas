@@ -15,13 +15,14 @@ uses
   PLCString, PLCTag, PLCTagNumber, ProtocolDriver, ProtocolTypes, 
   scadapropeditor, scadareg, SerialPort, Tag, TagBlock, UserScale, 
   ValueProcessor, TagBit, tagcollection, scadaapp, TCPIPClientPort, 
-  LazarusPackageIntf;
+  protscanupdate, protscan, SharedSection, LazarusPackageIntf;
 
 implementation
 
 procedure Register; 
 begin
   RegisterUnit('scadareg', @scadareg.Register); 
+  RegisterUnit('SharedSection', @SharedSection.Register); 
 end; 
 
 initialization

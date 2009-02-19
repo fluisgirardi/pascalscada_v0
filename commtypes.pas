@@ -82,6 +82,8 @@ type
     Received:DWORD;
     ReadRetries:DWORD;
     BufferToRead:BYTES;
+    Res1:TObject;
+    Res2:Pointer;
   end;
   {:
   Aponta para uma estrutura TIOPacket.

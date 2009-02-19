@@ -112,16 +112,18 @@ type
     procedure DoAddTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoDelTag)
     procedure DoDelTag(TagObj:TTag); override;
+    //: @seealso(TProtocolDriver.DoTagChange)
+    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
+
     //: @seealso(TProtocolDriver.DoScanRead)
     procedure DoScanRead(Sender:TObject); override;
     //: @seealso(TProtocolDriver.DoGetValue)
     procedure DoGetValue(TagObj:TTagRec; var values:TScanReadRec); override;
-    //: @seealso(TProtocolDriver.DoTagChange)
-    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
+
     //: @seealso(TProtocolDriver.EncodePkg)
-    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;
+    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
     //: @seealso(TProtocolDriver.DecodePkg)
-    function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult; override;
+    function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -170,21 +172,14 @@ destructor TModBusMasterDriver.Destroy;
 var
   plc:Integer;
 begin
-  try
-    PPause.ResetEvent;
-    PProtocolCS.Enter;
-    for plc:=0 to High(PModbusPLC) do begin
-        PModbusPLC[plc].Inputs.Destroy;
-        PModbusPLC[plc].OutPuts.Destroy;
-        PModbusPLC[plc].Registers.Destroy;
-        PModbusPLC[plc].AnalogReg.Destroy;
-    end;
-    SetLength(PModbusPLC,0);
-  finally
-    PProtocolCS.Leave;
-    PPause.SetEvent;
-  end;
   inherited Destroy;
+  for plc:=0 to High(PModbusPLC) do begin
+      PModbusPLC[plc].Inputs.Destroy;
+      PModbusPLC[plc].OutPuts.Destroy;
+      PModbusPLC[plc].Registers.Destroy;
+      PModbusPLC[plc].AnalogReg.Destroy;
+  end;
+  SetLength(PModbusPLC,0);
 end;
 
 
@@ -907,7 +902,7 @@ begin
         pkg := EncodePkg(tr,nil,rl);
         if PCommPort<>nil then begin
           ResetASyncEvent;
-          res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortAsyncCallBack,false);
+          res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false);
           if res<>0 then
             if WaitASyncEvent(120000)=wrSignaled then begin
               DecodePkg(ResultAsync,values);

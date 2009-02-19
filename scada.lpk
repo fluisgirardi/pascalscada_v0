@@ -10,15 +10,17 @@
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Parsing>
-        <Style Value="1"/>
         <SyntaxOptions>
           <SyntaxMode Value="Delphi"/>
+          <CStyleOperator Value="False"/>
           <StaticKeyword Value="True"/>
           <UseAnsiStrings Value="True"/>
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
+        <SmallerCode Value="True"/>
         <Optimizations>
+          <VariablesInRegisters Value="True"/>
           <OptimizationLevel Value="3"/>
         </Optimizations>
       </CodeGeneration>
@@ -29,11 +31,12 @@
         </Debugging>
       </Linking>
       <Other>
+        <WriteFPCLogo Value="False"/>
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
     <Version Minor="5"/>
-    <Files Count="44">
+    <Files Count="47">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -211,6 +214,19 @@
         <Filename Value="tcpipclientport.pas"/>
         <UnitName Value="TCPIPClientPort"/>
       </Item44>
+      <Item45>
+        <Filename Value="protscanupdate.pas"/>
+        <UnitName Value="protscanupdate"/>
+      </Item45>
+      <Item46>
+        <Filename Value="protscan.pas"/>
+        <UnitName Value="protscan"/>
+      </Item46>
+      <Item47>
+        <Filename Value="sharedsection.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="SharedSection"/>
+      </Item47>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="4">
