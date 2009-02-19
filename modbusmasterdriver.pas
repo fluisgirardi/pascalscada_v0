@@ -9,7 +9,8 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryMananger, crc16utils, hsutils, PLCBlock, PLCString, SyncObjs;
+  PLCMemoryMananger, crc16utils, hsutils, PLCBlock, PLCString, SyncObjs,
+  CrossEvent;
 
 type
   {:
@@ -107,6 +108,8 @@ type
     procedure SetRegisterMaxHole(v:DWORD);
     procedure BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
 
+    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
+    function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;
   protected
     //: @seealso(TProtocolDriver.DoAddTag)
     procedure DoAddTag(TagObj:TTag); override;
@@ -120,10 +123,10 @@ type
     //: @seealso(TProtocolDriver.DoGetValue)
     procedure DoGetValue(TagObj:TTagRec; var values:TScanReadRec); override;
 
-    //: @seealso(TProtocolDriver.EncodePkg)
-    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
-    //: @seealso(TProtocolDriver.DecodePkg)
-    function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;
+    //: @seealso(TProtocolDriver.DoWrite)
+    function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    //: @seealso(TProtocolDriver.DoRead)
+    function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -882,140 +885,113 @@ var
   lastBlock:TRegisterRange;
   lastPLC:Integer;
   tr:TTagRec;
-  pkg:BYTES;
-  rl:Integer;
-  res:DWORD;
   values:TArrayOfDouble;
 begin
-  minScan := -1;
-  first:=true;
-  done := false;
-  if (csDesigning in ComponentState) then begin
-    Sleep(1);
-    exit;
-  end;
-  for plc:= 0 to High(PModbusPLC) do begin
-    for block := 0 to High(PModBusPLC[plc].Outputs.Blocks) do
-      if PModBusPLC[plc].Outputs.Blocks[block].NeedRefresh then begin
-        done := true;
-        BuildTagRec(PModBusPLC[plc].Station,1,PModBusPLC[plc].Outputs.Blocks[block].AddressStart,PModBusPLC[plc].Outputs.Blocks[block].Size, tr);
-        pkg := EncodePkg(tr,nil,rl);
-        if PCommPort<>nil then begin
-          ResetASyncEvent;
-          res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false);
-          if res<>0 then
-            if WaitASyncEvent(120000)=wrSignaled then begin
-              DecodePkg(ResultAsync,values);
-              SetLength(values,0);
-              SetLength(ResultAsync.BufferToRead,0);
-              SetLength(ResultAsync.BufferToWrite,0);
-            end;
+  try
+    minScan := -1;
+    first:=true;
+    done := false;
+    if (csDesigning in ComponentState) then begin
+      Sleep(1);
+      exit;
+    end;
+    for plc:= 0 to High(PModbusPLC) do begin
+      for block := 0 to High(PModBusPLC[plc].Outputs.Blocks) do
+        if PModBusPLC[plc].Outputs.Blocks[block].NeedRefresh then begin
+          done := true;
+          BuildTagRec(PModBusPLC[plc].Station,1,PModBusPLC[plc].Outputs.Blocks[block].AddressStart,PModBusPLC[plc].Outputs.Blocks[block].Size, tr);
+          DoRead(tr,values,false);
+        end else begin
+          if first then begin
+            lastType := 1;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].Outputs.Blocks[block];
+            minScan := PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
+            lastType := 1;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].Outputs.Blocks[block];
+            minScan := PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
+          end;
         end;
-        SetLength(pkg,0);
-      end else begin
-        if first then begin
-          lastType := 1;
-          lastPLC := PModBusPLC[plc].Station;
-          lastBlock := PModBusPLC[plc].Outputs.Blocks[block];
-          minScan := PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
-          first:=False;
-        end;
-        if PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-          lastType := 1;
-          lastPLC := PModBusPLC[plc].Station;
-          lastBlock := PModBusPLC[plc].Outputs.Blocks[block];
-          minScan := PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
-        end;
-      end;
 
-    for block := 0 to High(PModBusPLC[plc].Inputs.Blocks) do
-      if PModBusPLC[plc].Inputs.Blocks[block].NeedRefresh then begin
-        done := true;
-        BuildTagRec(PModBusPLC[plc].Station,2,PModBusPLC[plc].Inputs.Blocks[block].AddressStart,PModBusPLC[plc].Inputs.Blocks[block].Size, tr);
-        pkg := EncodePkg(tr,nil,rl);
-        if PCommPort<>nil then begin
-          ResetASyncEvent;
-          res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortAsyncCallBack,false);
-          if res<>0 then
-            if WaitASyncEvent(120000)=wrSignaled then begin
-              DecodePkg(ResultAsync, values);
-              SetLength(values,0);
-              SetLength(ResultAsync.BufferToRead,0);
-              SetLength(ResultAsync.BufferToWrite,0);
-            end;
+      for block := 0 to High(PModBusPLC[plc].Inputs.Blocks) do
+        if PModBusPLC[plc].Inputs.Blocks[block].NeedRefresh then begin
+          done := true;
+          BuildTagRec(PModBusPLC[plc].Station,2,PModBusPLC[plc].Inputs.Blocks[block].AddressStart,PModBusPLC[plc].Inputs.Blocks[block].Size, tr);
+          DoRead(tr,values,false);
+        end else begin
+          if first then begin
+            lastType := 2;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].Inputs.Blocks[block];
+            minScan := PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
+            lastType := 2;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].Inputs.Blocks[block];
+            minScan := PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
+          end;
         end;
-        SetLength(pkg,0);
-      end else begin
-        if first then begin
-          lastType := 2;
-          lastPLC := PModBusPLC[plc].Station;
-          lastBlock := PModBusPLC[plc].Inputs.Blocks[block];
-          minScan := PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
-          first:=False;
-        end;
-        if PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-          lastType := 2;
-          lastPLC := PModBusPLC[plc].Station;
-          lastBlock := PModBusPLC[plc].Inputs.Blocks[block];
-          minScan := PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
-        end;
-      end;
 
-    for block := 0 to High(PModBusPLC[plc].Registers.Blocks) do
-      if PModBusPLC[plc].Registers.Blocks[block].NeedRefresh then begin
-        done := true;
-        BuildTagRec(PModBusPLC[plc].Station,3,PModBusPLC[plc].Registers.Blocks[block].AddressStart,PModBusPLC[plc].Registers.Blocks[block].Size, tr);
-        pkg := EncodePkg(tr,nil,rl);
-        if PCommPort<>nil then begin
-          ResetASyncEvent;
-          res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortAsyncCallBack,false);
-          if res<>0 then
-            if WaitASyncEvent(120000)=wrSignaled then begin
-              DecodePkg(ResultAsync,values);
-              SetLength(values,0);
-              SetLength(ResultAsync.BufferToRead,0);
-              SetLength(ResultAsync.BufferToWrite,0);
-            end;
+      for block := 0 to High(PModBusPLC[plc].Registers.Blocks) do
+        if PModBusPLC[plc].Registers.Blocks[block].NeedRefresh then begin
+          done := true;
+          BuildTagRec(PModBusPLC[plc].Station,3,PModBusPLC[plc].Registers.Blocks[block].AddressStart,PModBusPLC[plc].Registers.Blocks[block].Size, tr);
+          DoRead(tr,values,false);
+        end else begin
+          if first then begin
+            lastType := 3;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].Registers.Blocks[block];
+            minScan := PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
+            lastType := 3;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].Registers.Blocks[block];
+            minScan := PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
+          end;
         end;
-        SetLength(pkg,0);
-      end else begin
-        if first then begin
-          lastType := 3;
-          lastPLC := PModBusPLC[plc].Station;
-          lastBlock := PModBusPLC[plc].Registers.Blocks[block];
-          minScan := PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
-          first:=False;
-        end;
-        if PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-          lastType := 3;
-          lastPLC := PModBusPLC[plc].Station;
-          lastBlock := PModBusPLC[plc].Registers.Blocks[block];
-          minScan := PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
-        end;
-      end;
-  end;
-  //se nao fez leitura de nenhum bloco
-  //faz atualiza o bloco que esta quase vencendo
-  //o tempo de scan...
-  if (PReadAnyAlways) and ((not done) and (not first)) and (not CheckWriteCmdInQueue) then begin
-    //compila o bloco do mais necessitado;
-    BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
-    pkg := EncodePkg(tr,nil,rl);
-    if PCommPort<>nil then begin
-      ResetASyncEvent;
-      res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,0,CommPortAsyncCallBack,false);
-      CheckWriteCmdInQueue;
-      if res<>0 then
-        if WaitASyncEvent(120000)=wrSignaled then begin
-          DecodePkg(ResultAsync,values);
-          SetLength(values,0);
-          SetLength(ResultAsync.BufferToRead,0);
-          SetLength(ResultAsync.BufferToWrite,0);
+
+      for block := 0 to High(PModBusPLC[plc].AnalogReg.Blocks) do
+        if PModBusPLC[plc].AnalogReg.Blocks[block].NeedRefresh then begin
+          done := true;
+          BuildTagRec(PModBusPLC[plc].Station,4,PModBusPLC[plc].AnalogReg.Blocks[block].AddressStart,PModBusPLC[plc].AnalogReg.Blocks[block].Size, tr);
+          DoRead(tr,values,false);
+        end else begin
+          if first then begin
+            lastType := 4;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].AnalogReg.Blocks[block];
+            minScan := PModBusPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PModBusPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
+            lastType := 4;
+            lastPLC := PModBusPLC[plc].Station;
+            lastBlock := PModBusPLC[plc].AnalogReg.Blocks[block];
+            minScan := PModBusPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate;
+          end;
         end;
     end;
-    SetLength(pkg,0);
-  end else
-    Sleep(1);
+    //se nao fez leitura de nenhum bloco
+    //faz atualiza o bloco que esta quase vencendo
+    //o tempo de scan...
+    if (PReadAnyAlways) and ((not done) and (not first)) then begin
+      //compila o bloco do mais necessitado;
+      BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
+      DoRead(tr,values,false);
+    end else
+      Sleep(1);
+  finally
+    SetLength(values,0);
+  end;
 end;
 
 procedure TModBusMasterDriver.DoGetValue(TagObj:TTagRec; var values:TScanReadRec);
@@ -1067,6 +1043,68 @@ begin
   values.ReadsOK := 1;
   values.ReadFaults := 0;
   values.LastQueryResult := ioOk;
+end;
+
+function  TModBusMasterDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+var
+  Event:TCrossEvent;
+  IOResult:TIOPacket;
+  pkg:BYTES;
+  rl:Integer;
+  res:Integer;
+  tempValues:TArrayOfDouble;
+begin
+  try
+    Event:=TCrossEvent.Create(nil,true,false,'');
+    pkg := EncodePkg(tagrec,values,rl);
+    if PCommPort<>nil then begin
+      Event.ResetEvent;
+
+      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult);
+
+      if (res<>0) and (Event.WaitFor(120000)=wrSignaled) then
+        Result := DecodePkg(IOResult,tempValues);
+
+    end else
+      Result := ioNullDriver;
+  finally
+    SetLength(pkg,0);
+    SetLength(tempValues,0);
+    SetLength(IOResult.BufferToRead,0);
+    SetLength(IOResult.BufferToWrite,0);
+    Event.Destroy;
+  end;
+end;
+
+function  TModBusMasterDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+var
+  Event:TCrossEvent;
+  IOResult:TIOPacket;
+  pkg:BYTES;
+  rl:Integer;
+  res:Integer;
+begin
+  try
+    Event:=TCrossEvent.Create(nil,true,false,'');
+    pkg := EncodePkg(tagrec,nil,rl);
+    if PCommPort<>nil then begin
+      Event.ResetEvent;
+      if Sync then
+        res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult)
+      else
+        res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,Event,@IOResult);
+
+      if (res<>0) and (Sync or (Event.WaitFor(120000)=wrSignaled)) then
+        Result := DecodePkg(IOResult,values);
+
+    end else
+      Result := ioNullDriver;
+  finally
+    SetLength(pkg,0);
+    SetLength(IOResult.BufferToRead,0);
+    SetLength(IOResult.BufferToWrite,0);
+    Event.Destroy;
+  end;
 end;
 
 procedure TModBusMasterDriver.SetOutputMaxHole(v:DWORD);

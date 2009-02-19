@@ -21,8 +21,7 @@ implementation
 
 procedure Register; 
 begin
-  RegisterUnit('scadareg', @scadareg.Register); 
-  RegisterUnit('SharedSection', @SharedSection.Register); 
+  RegisterUnit('scadareg', @scadareg.Register);
 end; 
 
 initialization

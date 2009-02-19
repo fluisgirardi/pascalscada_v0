@@ -18,7 +18,7 @@ type
     procedure ExceptOutOfBounds(i:integer);
   public
     Constructor Create(GroupCount:integer);
-    destructor  Destroy;
+    destructor  Destroy; override;
     procedure   Enter(GroupID:Integer);
     procedure   Leave(GroupID:Integer);
   published
@@ -38,6 +38,7 @@ begin
   SetLength(OwnersCount,GroupCount);
   for c:=0 to GroupCount-1 do begin
     EventArray[c] := TCrossEvent.Create(nil,true,true,'');
+    EventArray[c].SetEvent;
     OwnersCount[c] := 0;
   end;
   fcs.Leave;

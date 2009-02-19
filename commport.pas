@@ -319,7 +319,8 @@ type
     }
     function IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                            BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
-                           CallBack:TDriverCallBack; IsWriteValue:Boolean):DWORD;
+                           CallBack:TDriverCallBack; IsWriteValue:Boolean;
+                           Res1:TObject; Res2:Pointer):DWORD;
 
     {:
     Faz um pedido de leitura/escrita assincrono para o driver (sua aplicação
@@ -347,7 +348,8 @@ type
     }
     function IOCommandASync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                             BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
-                            CallBack:TDriverCallBack; IsWriteValue:Boolean):DWORD;
+                            CallBack:TDriverCallBack; IsWriteValue:Boolean;
+                            Res1:TObject; Res2:Pointer):DWORD;
 
     {:
     Trava a porta para uso exclusivo
@@ -704,7 +706,8 @@ end;
 
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                                  BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
-                                 CallBack:TDriverCallBack; IsWriteValue:Boolean):DWORD;
+                                 CallBack:TDriverCallBack; IsWriteValue:Boolean;
+                                 Res1:TObject; Res2:Pointer):DWORD;
 var
   PPacket:TIOPacket;
 begin
@@ -736,6 +739,8 @@ begin
     PPacket.ToRead := BytesToRead;
     PPacket.Received := 0;
     PPacket.ReadRetries := 3;
+    PPacket.Res1 := Res1;
+    PPacket.Res2 := Res2;
     SetLength(PPacket.BufferToRead,BytesToRead);
 
     //novo suspend da thread espera a thread terminar os comandos e ficar livre
@@ -759,7 +764,8 @@ end;
 
 function TCommPortDriver.IOCommandASync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                            BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
-                           CallBack:TDriverCallBack; IsWriteValue:Boolean):DWORD;
+                           CallBack:TDriverCallBack; IsWriteValue:Boolean;
+                           Res1:TObject; Res2:Pointer):DWORD;
 var
   PCmdPackt:PCommandPacket;
 begin
@@ -793,6 +799,8 @@ begin
       Packet.ToRead := BytesToRead;
       Packet.Received := 0;
       Packet.ReadRetries := 3;
+      Packet.Res1 := Res1;
+      Packet.Res2 := Res2;
       SetLength(Packet.BufferToRead,BytesToRead);
     end;
     PCmdPackt^.Callback := CallBack;

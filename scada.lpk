@@ -224,7 +224,6 @@
       </Item46>
       <Item47>
         <Filename Value="sharedsection.pas"/>
-        <HasRegisterProc Value="True"/>
         <UnitName Value="SharedSection"/>
       </Item47>
     </Files>

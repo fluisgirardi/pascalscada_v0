@@ -106,7 +106,6 @@ type
     }
     procedure CommPortCallBack(var Result:TIOPacket); virtual;
 
-
     {:
     Método chamado pelo driver de protocolo para adicionar um tag ao scan driver.
     @param(TagObj TTag. Tag a adicionar como dependente do driver.)
@@ -247,10 +246,6 @@ var
    }
    DriverCount:Cardinal;
 
-const
-   grpApp    = 0;
-   grpDriver = 1;
-
 implementation
 
 uses PLCTag;
@@ -321,7 +316,7 @@ end;
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
 begin
   try
-    FSharedSection.Enter(grpApp);
+    FSharedSection.Enter(0);
     //se for a mesma porta cai fora...
     if CommPort=PCommPort then exit;
 
@@ -338,7 +333,7 @@ begin
     end;
     PCommPort := CommPort;
   finally
-    FSharedSection.Leave(grpApp);
+    FSharedSection.Leave(0);
   end;
 end;
 
@@ -382,10 +377,10 @@ begin
     exit;
 
   try
-    FSharedSection.Enter(grpApp);
+    FSharedSection.Enter(0);
     DoAddTag(TagObj);
   finally
-    FSharedSection.Leave(grpApp);
+    FSharedSection.Leave(0);
   end;
 end;
 
@@ -394,10 +389,10 @@ begin
   if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
     exit;
   try
-    FSharedSection.Enter(grpApp);
+    FSharedSection.Enter(0);
     DoDelTag(TagObj);
   finally
-    FSharedSection.Leave(grpApp);
+    FSharedSection.Leave(0);
   end;
 end;
 
@@ -454,10 +449,10 @@ begin
   if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
     exit;
   try
-    FSharedSection.Enter(grpApp);
+    FSharedSection.Enter(0);
     DoTagChange(TagObj,Change,oldValue,newValue);
   finally
-    FSharedSection.Leave(grpApp);
+    FSharedSection.Leave(0);
   end;
 end;
 
@@ -538,12 +533,12 @@ var
   Values:TArrayOfDouble;
 begin
   try
-    FSharedSection.Enter(grpApp);
+    FSharedSection.Enter(0);
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcRead,res,tagrec.OffSet);
   finally
-    FSharedSection.Leave(grpApp);
+    FSharedSection.Leave(0);
     SetLength(Values,0);
   end;
 end;
@@ -553,12 +548,12 @@ var
   res:TProtocolIOResult;
 begin
   try
-    FSharedSection.Enter(grpApp);
+    FSharedSection.Enter(0);
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcWrite,res,tagrec.OffSet);
   finally
-    FSharedSection.Leave(grpApp);
+    FSharedSection.Leave(0);
   end;
 end;
 
@@ -593,30 +588,30 @@ end;
 procedure TProtocolDriver.SafeScanRead(Sender:TObject);
 begin
    try
-      FSharedSection.Enter(grpDriver);
+      FSharedSection.Enter(1);
       DoScanRead(Sender);
    finally
-      FSharedSection.Leave(grpDriver);
+      FSharedSection.Leave(1);
    end;
 end;
 
 function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
 begin
    try
-      FSharedSection.Enter(grpDriver);
+      FSharedSection.Enter(1);
       Result := DoWrite(TagRec,values,false)
    finally
-      FSharedSection.Leave(grpDriver);
+      FSharedSection.Leave(1);
    end;
 end;
 
 procedure TProtocolDriver.SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
 begin
    try
-      FSharedSection.Enter(grpDriver);
+      FSharedSection.Enter(1);
       DoGetValue(TagRec,values);
    finally
-      FSharedSection.Leave(grpDriver);
+      FSharedSection.Leave(1);
    end;
 end;
 
