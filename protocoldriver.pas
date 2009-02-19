@@ -271,7 +271,7 @@ begin
   if ComponentState*[csDesigning]=[] then begin
 
     PScanUpdateThread := TScanUpdate.Create(true);
-    PScanUpdateThread.Priority:=tpHighest;
+    PScanUpdateThread.Priority:=tpTimeCritical;
     PScanUpdateThread.OnGetValue := SafeGetValue;
 
     PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
@@ -289,8 +289,8 @@ begin
     PScanReadThread.Resume;
     PScanReadThread.WaitInit;
 
-    //PScanWriteThread.Resume;
-    //PScanWriteThread.WaitInit;
+    PScanWriteThread.Resume;
+    PScanWriteThread.WaitInit;
   end;
 end;
 
@@ -619,11 +619,12 @@ end;
 function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
 begin
    try
-      FPause.WaitFor($FFFFFFFF);
+      FPause.ResetEvent;
       FCritical.Enter;
       Result := DoWrite(TagRec,values,false)
    finally
       FCritical.Leave;
+      FPause.SetEvent;
    end;
 end;
 
