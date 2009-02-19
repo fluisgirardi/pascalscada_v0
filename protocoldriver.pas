@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, CommPort, CommTypes, ProtocolTypes, protscanupdate,
-  protscan, CrossEvent, Tag, syncobjs, SharedSection;
+  protscan, CrossEvent, Tag, syncobjs;
 
 type
   {:
@@ -88,7 +88,9 @@ type
     //: Armazena o ID (número único) desses pedidos.
     FScanReadID, FScanWriteID, FReadID, FWriteID:DWORD;
     //: Armazena a evento usado para parar as threads do driver de protocolo.
-    FSharedSection:TSharedSection;
+    FCritical:TCriticalSection;
+    //: Forca a suspensão das threads.
+    FPause:TCrossEvent;
     //: Armazena a seção crítica que protege areas comuns a muitas threads.
     PCallersCS:TCriticalSection;
 
@@ -260,7 +262,9 @@ begin
   PDriverID := DriverCount;
   inc(DriverCount);
 
-  FSharedSection := TSharedSection.Create(2);
+  FCritical := TCriticalSection.Create;
+
+  FPause := TCrossEvent.Create(nil,true,true,'');
 
   PCallersCS := TCriticalSection.Create;
 
@@ -282,12 +286,11 @@ begin
 
     PScanUpdateThread.Resume;
 
-    //if not (csDesigning in ComponentState) then begin
     PScanReadThread.Resume;
     PScanReadThread.WaitInit;
 
-    PScanWriteThread.Resume;
-    PScanWriteThread.WaitInit;
+    //PScanWriteThread.Resume;
+    //PScanWriteThread.WaitInit;
   end;
 end;
 
@@ -295,10 +298,6 @@ destructor TProtocolDriver.Destroy;
 var
   c:Integer;
 begin
-  for c:=0 to High(PTags) do
-    TPLCTag(PTags[c]).RemoveDriver;
-
-  SetCommPort(nil);
 
   if ComponentState*[csDesigning]=[] then begin
     PScanReadThread.Destroy;
@@ -307,6 +306,15 @@ begin
     PScanUpdateThread.Terminate;
     PScanUpdateThread.WaitFor;
   end;
+
+  for c:=0 to High(PTags) do
+    TPLCTag(PTags[c]).RemoveDriver;
+
+  SetCommPort(nil);
+
+  FCritical.Destroy;
+
+  FPause.Destroy;
   
   SetLength(PTags,0);
   PCallersCS.Destroy;
@@ -316,7 +324,8 @@ end;
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
 begin
   try
-    FSharedSection.Enter(0);
+    FPause.ResetEvent;
+    FCritical.Enter;
     //se for a mesma porta cai fora...
     if CommPort=PCommPort then exit;
 
@@ -333,7 +342,8 @@ begin
     end;
     PCommPort := CommPort;
   finally
-    FSharedSection.Leave(0);
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
@@ -377,10 +387,12 @@ begin
     exit;
 
   try
-    FSharedSection.Enter(0);
+    FPause.ResetEvent;
+    FCritical.Enter;
     DoAddTag(TagObj);
   finally
-    FSharedSection.Leave(0);
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
@@ -389,10 +401,12 @@ begin
   if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
     exit;
   try
-    FSharedSection.Enter(0);
+    FPause.ResetEvent;
+    FCritical.Enter;
     DoDelTag(TagObj);
   finally
-    FSharedSection.Leave(0);
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
@@ -449,10 +463,12 @@ begin
   if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
     exit;
   try
-    FSharedSection.Enter(0);
+    FPause.ResetEvent;
+    FCritical.Enter;
     DoTagChange(TagObj,Change,oldValue,newValue);
   finally
-    FSharedSection.Leave(0);
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
@@ -533,12 +549,14 @@ var
   Values:TArrayOfDouble;
 begin
   try
-    FSharedSection.Enter(0);
+    FPause.ResetEvent;
+    FCritical.Enter;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcRead,res,tagrec.OffSet);
   finally
-    FSharedSection.Leave(0);
+    FCritical.Leave;
+    FPause.SetEvent;
     SetLength(Values,0);
   end;
 end;
@@ -548,12 +566,14 @@ var
   res:TProtocolIOResult;
 begin
   try
-    FSharedSection.Enter(0);
+    FPause.ResetEvent;
+    FCritical.Enter;
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcWrite,res,tagrec.OffSet);
   finally
-    FSharedSection.Leave(0);
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
@@ -588,30 +608,33 @@ end;
 procedure TProtocolDriver.SafeScanRead(Sender:TObject);
 begin
    try
-      FSharedSection.Enter(1);
+      FPause.WaitFor($FFFFFFFF);
+      FCritical.Enter;
       DoScanRead(Sender);
    finally
-      FSharedSection.Leave(1);
+      FCritical.Leave;
    end;
 end;
 
 function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
 begin
    try
-      FSharedSection.Enter(1);
+      FPause.WaitFor($FFFFFFFF);
+      FCritical.Enter;
       Result := DoWrite(TagRec,values,false)
    finally
-      FSharedSection.Leave(1);
+      FCritical.Leave;
    end;
 end;
 
 procedure TProtocolDriver.SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
 begin
    try
-      FSharedSection.Enter(1);
+      FPause.WaitFor($FFFFFFFF);
+      FCritical.Enter;
       DoGetValue(TagRec,values);
    finally
-      FSharedSection.Leave(1);
+      FCritical.Leave;
    end;
 end;
 

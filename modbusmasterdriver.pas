@@ -1026,8 +1026,10 @@ begin
       res := PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values);
     $02:
       res := PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values);
-    $03,$04:
+    $03:
       res := PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values);
+    $04:
+      res := PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values)
   end;
 
   if res<0 then begin

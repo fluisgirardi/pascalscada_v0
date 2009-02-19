@@ -38,7 +38,7 @@ contains
   commport in 'commport.pas',
   commtypes in 'commtypes.pas',
   SerialPort in 'SerialPort.pas',
-  ProtocolDriver in 'ProtocolDriver.pas',
+  ProtocolDriver in 'protocoldriver.pas',
   ModBusMasterDriver in 'ModBusMasterDriver.pas',
   PLCMemoryMananger in 'PLCMemoryMananger.pas',
   hsutils in 'hsutils.pas',
@@ -75,7 +75,6 @@ contains
   scadareg in 'scadareg.pas',
   crc16utils in 'crc16utils.pas',
   tagbit in 'tagbit.pas',
-  sharedsection in 'sharedsection.pas',
   protscan in 'protscan.pas',
   protscanupdate in 'protscanupdate.pas';
 
