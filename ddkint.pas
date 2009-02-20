@@ -249,7 +249,7 @@ end;
 function driversavefromres(const from:pchar;const tofile:pchar):integer;
 var HRs:HRSRC;
     HDrvRes,HFile:THandle;
-    size:Dword;
+    size:Cardinal;
     drv:pointer;
     cbr:cardinal;
 begin

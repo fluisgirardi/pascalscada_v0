@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, CrossEvent, protscanupdate, MessageSpool, syncobjs,
-  ProtocolTypes, Tag;
+  ProtocolTypes;
 
 type
 
@@ -26,7 +26,7 @@ type
     FDoScanRead:TNotifyEvent;
     FDoScanWrite:TScanWriteProc;
 
-    FMinScan:DWORD;
+    FMinScan:Cardinal;
     erro:Exception;
     FSpool:TMessageSpool;
     PScanUpdater:TScanUpdate;
@@ -59,8 +59,8 @@ type
     quando alguma propriedade de um tag sofre alguma mudança.
     @param(Tag TTag. Tag quem sofreu a mudança.)
     @param(Change TChangeType. Que propriedade sofreu a alteração.)
-    @param(oldValue DWORD. Valor antigo da propriedade.)
-    @param(newValue DWORD. Novo valor da propriedade.)
+    @param(oldValue Cardinal. Valor antigo da propriedade.)
+    @param(newValue Cardinal. Novo valor da propriedade.)
     @seealso(TProtocolDriver.TagChanges)
     }
   published
@@ -68,7 +68,7 @@ type
     Diz quantos milisegundos o driver esperar caso não seja feita nenhuma
     operação de scan, a fim de evitar alto consumo de processador inutilmente.
     }
-    property MinTimeOfScan:DWORD read FMinScan write FMinScan nodefault;
+    property MinTimeOfScan:Cardinal read FMinScan write FMinScan nodefault;
     //: Evento chamado para realizar a atualização do valores dos tags.
     property OnDoScanRead:TNotifyEvent read FDoScanRead write FDoScanRead;
     {:

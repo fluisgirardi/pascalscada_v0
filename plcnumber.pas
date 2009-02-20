@@ -54,8 +54,6 @@ type
 
 implementation
 
-uses Tag;
-
 function  TPLCNumber.GetValue:Double;
 begin
   if Assigned(PScaleProcessor) then

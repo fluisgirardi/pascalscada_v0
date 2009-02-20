@@ -36,7 +36,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="5"/>
-    <Files Count="47">
+    <Files Count="46">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -222,10 +222,6 @@
         <Filename Value="protscan.pas"/>
         <UnitName Value="protscan"/>
       </Item46>
-      <Item47>
-        <Filename Value="sharedsection.pas"/>
-        <UnitName Value="SharedSection"/>
-      </Item47>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="4">

@@ -23,8 +23,6 @@ uses
   Classes, SysUtils, CrossEvent, SyncObjs;
 
 type
-  //: @exclude
-  DWORD = Cardinal;
 
   {:
   Estrutura que identifica uma mensagem.
@@ -34,7 +32,7 @@ type
   @member Priority Identifica se é uma mensagem com alta prioridade.  
   }
   TMsg=record
-    MsgID:DWORD;
+    MsgID:Cardinal;
     lParam:Pointer;
     wParam:Pointer;
     Priority:Boolean;
@@ -87,9 +85,9 @@ type
     @bold(Caso a mensagem solicitada não esteja na fila, aguarda ela chegar.)
 
     @param(Msg TMsg. Variável onde é retornada a mensagem da fila.)
-    @param(uFilterMinMsg DWORD. Filtra mensagem com MsgID maiores ou iguais aos
+    @param(uFilterMinMsg Cardinal. Filtra mensagem com MsgID maiores ou iguais aos
            valores passados nesse parametro.)
-    @param(uFilterMaxMsg DWORD. Filtra mensagem com MsgID menores ou iguais aos
+    @param(uFilterMaxMsg Cardinal. Filtra mensagem com MsgID menores ou iguais aos
            valores passados nesse parametro.)
 
     @bold(Caso uFilterMinMsg e uFilterMaxMsg sejam iguais, procura as mensagens
@@ -100,7 +98,7 @@ type
     @seealso(PeekMessage)
     @seealso(PostMessage)
     }
-    function  GetMessage (var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:DWORD):Boolean;
+    function  GetMessage (var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal):Boolean;
 
     {:
     Procura uma mensagem podendo retirá-la ou não da fila. O critério de seleção
@@ -110,9 +108,9 @@ type
     uma mensagem chegar que bata com os seus critérios.)
 
     @param(Msg TMsg. Variável onde é retornada a mensagem da fila.)
-    @param(uFilterMinMsg DWORD. Filtra mensagem com MsgID maiores ou iguais aos
+    @param(uFilterMinMsg Cardinal. Filtra mensagem com MsgID maiores ou iguais aos
            valores passados nesse parametro.)
-    @param(uFilterMaxMsg DWORD. Filtra mensagem com MsgID menores ou iguais aos
+    @param(uFilterMaxMsg Cardinal. Filtra mensagem com MsgID menores ou iguais aos
            valores passados nesse parametro.)
     @param(Remove Boolean. @true se a mensagem encontrada deve ser removida
            da fila.)
@@ -126,12 +124,12 @@ type
     @seealso(GetMessage)
     @seealso(PostMessage)
     }
-    function  PeekMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:DWORD; Remove:Boolean):Boolean;
+    function  PeekMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
 
     {:
     Insere uma mensagem na Fila.
 
-    @param(MsgID DWORD. Número de classificação da mensagem.)
+    @param(MsgID Cardinal. Número de classificação da mensagem.)
     @param(wParam Pointer Ponteiro de dados.)
     @param(lParam Pointer Ponteiro de dados.)
     @param(Priority Boolean. @true se a mensagem encontrada deve ser colocada no
@@ -140,7 +138,7 @@ type
     @seealso(GetMessage)
     @seealso(PeekMessage)
     }
-    procedure PostMessage(MsgID:DWORD; wParam, lParam:Pointer; Priority:Boolean);
+    procedure PostMessage(MsgID:Cardinal; wParam, lParam:Pointer; Priority:Boolean);
   end;
 
 var
@@ -180,7 +178,7 @@ begin
   MSCount := MSCount - 1;
 end;
 
-function TMessageSpool.GetMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:DWORD):Boolean;
+function TMessageSpool.GetMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal):Boolean;
 begin
   if FMsgCount=0 then begin
     FHasMsg.ResetEvent;
@@ -191,7 +189,7 @@ begin
     Result := PeekMessage(Msg,uFilterMinMsg,uFilterMaxMsg,true);
 end;
 
-function TMessageSpool.PeekMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:DWORD; Remove:Boolean):Boolean;
+function TMessageSpool.PeekMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
 var
   curmsg, aux:PMsgPkg;
   found:Boolean;
@@ -261,7 +259,7 @@ begin
   FCs.Release;
 end;
 
-procedure TMessageSpool.PostMessage(MsgID:DWORD; wParam, lParam:Pointer; Priority:Boolean);
+procedure TMessageSpool.PostMessage(MsgID:Cardinal; wParam, lParam:Pointer; Priority:Boolean);
 var
   msg, aux:PMsgPkg;
   err:boolean;

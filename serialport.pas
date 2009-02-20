@@ -16,7 +16,7 @@ uses
   {$IFDEF FPC} LCLIntf, {$ENDIF} commtypes, CommPort, SysUtils, Classes,
   {$IF defined(WIN32) or defined(WIN64)} Windows,{$IFEND}
   {$IFDEF UNIX} Serial, Unix, BaseUnix, termio, {$ENDIF}
-  MessageSpool, DateUtils;
+  DateUtils;
 
 
 type
@@ -92,12 +92,10 @@ type
     PPortHandle:THandle;
     {$ELSE}
     LockOpen:Boolean;
-    LockFileHandle: TextFile;
     PPortHandle:TSerialHandle;
     PSavedState:TSerialState;
     {$IFEND}
     PBackupPortSettings:Boolean;
-    PPortEventName:String;
     PRWTimeout:Integer;    
     procedure SetTimeOut(v:Integer);
     procedure SetRWTimeout(v:Integer);
@@ -166,7 +164,7 @@ type
 
 
 {$IF defined(WIN32) or defined(WIN64)}
-function CTL_CODE( DeviceType, Func, Method, Access:DWORD):DWORD;
+function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
 
 const METHOD_BUFFERED         = 0;
 const METHOD_IN_DIRECT        = 1;
@@ -195,7 +193,7 @@ var PortPrefix:array[0..0] of string = ('cuad');
 implementation
 
 {$IF defined(WIN32) or defined(WIN64)}
-function CTL_CODE( DeviceType, Func, Method, Access:DWORD):DWORD;
+function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
 begin
   result := (((DeviceType) shl 16) or ((Access) shl 14) or ((Func) shl 2) or (Method));
 end;
@@ -234,8 +232,8 @@ end;
 procedure TSerialPortDriver.Read(Packet:PIOPacket);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  lidos:DWORD;
-  tentativas:DWORD;
+  lidos:Cardinal;
+  tentativas:Cardinal;
 begin
   tentativas := 0;
 
@@ -256,8 +254,8 @@ begin
 
 {$IFDEF UNIX}
 var
-  lidos:DWORD;
-  tentativas:DWORD;
+  lidos:Cardinal;
+  tentativas:Cardinal;
   start:TDateTime;
   FDS:Tfdset;
   res:cint;
@@ -301,7 +299,7 @@ end;
 procedure TSerialPortDriver.Write(Packet:PIOPacket);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  escritos:DWORD;
+  escritos:Cardinal;
 begin
   ResetEvent(POverlapped.hEvent);
   POverlapped.Offset := 0;
@@ -324,8 +322,8 @@ begin
 {$IFEND}
 {$IFDEF UNIX}
 var
-  escritos:DWORD;
-  tentativas:DWORD;
+  escritos:Cardinal;
+  tentativas:Cardinal;
 begin
   tentativas := 0;
 
@@ -797,8 +795,8 @@ end;
 procedure TSerialPortDriver.ClearALLBuffers;
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  IOCTL_SERIAL_CONFIG_SIZE:DWORD;
-  dwFlags,buf:DWORD;
+  IOCTL_SERIAL_CONFIG_SIZE:Cardinal;
+  dwFlags,buf:Cardinal;
   buf2:array[0..8192] of char;
 begin
   IOCTL_SERIAL_CONFIG_SIZE := CTL_CODE (FILE_DEVICE_SERIAL_PORT, 32, METHOD_BUFFERED, FILE_ANY_ACCESS);

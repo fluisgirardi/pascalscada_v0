@@ -121,7 +121,7 @@ type
       {:
       Espera um evento acontecer por um determinado tempo. Retorna caso o evento
       não seja sinalizado no tempo definido.
-      @param(Timeout DWORD. Tempo em milisegundos até o evento acontecer. Caso
+      @param(Timeout Cardinal. Tempo em milisegundos até o evento acontecer. Caso
              seja fornecido $FFFFFFFF, espera eternamente.)
       @returns(@bold(wrSignaled) caso o evento tenha sido sinalizado no tempo habil.
                @bold(wrTimeout) caso o evento não tenha sido sinalizado no tempo habil.

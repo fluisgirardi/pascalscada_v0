@@ -160,9 +160,9 @@ type
   TCommPortDriver = class(TComponent)
   private
     { @exclude }
-    PLockedBy:DWORD;
+    PLockedBy:Cardinal;
     {: @exclude }
-    PPacketID:DWORD;
+    PPacketID:Cardinal;
     {: @exclude }
     FReadActive:Boolean;
     {: @exclude }
@@ -302,9 +302,9 @@ type
     @param(Cmd TIOCommand. Informa a combinação de comandos de leitura/escrita a
            executar)
     @param(ToWrite BYTES. Conteudo que deseja escrever)
-    @param(BytesToRead DWORD. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
-    @param(BytesToWrite DWORD. Informa o número de @noAutoLink(bytes) a serem escritos)
-    @param(DelayBetweenCmds DWORD. Tempo em milisegundos entre comandos de
+    @param(BytesToRead Cardinal. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
+    @param(BytesToWrite Cardinal. Informa o número de @noAutoLink(bytes) a serem escritos)
+    @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
            leitura e escrita)
     @param(CallBack TDriverCallBack. Procedimento que será chamado para retorno
            dos dados lidos/escritos)
@@ -318,9 +318,9 @@ type
     @seealso(IOCommandASync)
     }
     function IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
-                           BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
+                           BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                            CallBack:TDriverCallBack; IsWriteValue:Boolean;
-                           Res1:TObject; Res2:Pointer):DWORD;
+                           Res1:TObject; Res2:Pointer):Cardinal;
 
     {:
     Faz um pedido de leitura/escrita assincrono para o driver (sua aplicação
@@ -329,9 +329,9 @@ type
     chamou sincronizá-lo.)
     @param(Cmd TIOCommand. Informa a combinação de comandos de leitura/escrita a executar)
     @param(ToWrite BYTES. Conteudo que deseja escrever)
-    @param(BytesToRead DWORD. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
-    @param(BytesToWrite DWORD. Informa o número de @noAutoLink(bytes) a serem escritos)
-    @param(DelayBetweenCmds DWORD. Tempo em milisegundos entre comandos de
+    @param(BytesToRead Cardinal. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
+    @param(BytesToWrite Cardinal. Informa o número de @noAutoLink(bytes) a serem escritos)
+    @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
            leitura e escrita)
     @param(CallBack TDriverCallBack. Procedimento que será chamado para retorno
            dos dados lidos/escritos)
@@ -347,24 +347,24 @@ type
     @seealso(IOCommandSync)
     }
     function IOCommandASync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
-                            BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
+                            BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                             CallBack:TDriverCallBack; IsWriteValue:Boolean;
-                            Res1:TObject; Res2:Pointer):DWORD;
+                            Res1:TObject; Res2:Pointer):Cardinal;
 
     {:
     Trava a porta para uso exclusivo
-    @param(DriverID DWORD. Identifica o quem deseja obter uso exclusivo.)
+    @param(DriverID Cardinal. Identifica o quem deseja obter uso exclusivo.)
     @returns(@true caso o função trave o driver para uso exclusivo, @false para o contrário)
     }
-    function Lock(DriverID:DWORD):Boolean;
+    function Lock(DriverID:Cardinal):Boolean;
     
     {:
     Remove a exclusividade de uso do driver de porta, deixando a porta para ser usada
     livremente por todos.
-    @param(DriverID DWORD. Identifica quem tem exclusividade sobre o driver.)
+    @param(DriverID Cardinal. Identifica quem tem exclusividade sobre o driver.)
     @returns(@true caso consiga remover o uso exclusivo do driver.)
     }
-    function Unlock(DriverID:DWORD):Boolean;
+    function Unlock(DriverID:Cardinal):Boolean;
 
     {:
     Coloca um método na lista dos procedimentos cancelados, a fim de evitar chamadas a
@@ -391,7 +391,7 @@ type
     //:Caso @true, limpa os buffers de leitura e escrita quando houver erros de comunicação!
     property ClearBuffersOnCommErrors:Boolean read PClearBufOnErr write PClearBufOnErr default true;
     //:Informa o ID (número único) de quem travou para uso exclusivo o driver de porta.
-    property LockedBy:DWORD read PLockedBy;
+    property LockedBy:Cardinal read PLockedBy;
     //:Caso @true, informa que o driver está sendo usado exclusivamente por alguem.
     property Locked:Boolean read GetLocked;
   end;
@@ -660,7 +660,7 @@ begin
   Result := (PLockedBy<>0);
 end;
 
-function TCommPortDriver.Lock(DriverID:DWORD):Boolean;
+function TCommPortDriver.Lock(DriverID:Cardinal):Boolean;
 begin
   if PLockedBy=0 then begin
     PLockedBy := DriverID;
@@ -669,7 +669,7 @@ begin
     Result := false;
 end;
 
-function TCommPortDriver.Unlock(DriverID:DWORD):Boolean;
+function TCommPortDriver.Unlock(DriverID:Cardinal):Boolean;
 begin
   if (PLockedBy=0) or (DriverID=PLockedBy) then begin
     PLockedBy := 0;
@@ -705,9 +705,9 @@ begin
 end;
 
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
-                                 BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
+                                 BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                                  CallBack:TDriverCallBack; IsWriteValue:Boolean;
-                                 Res1:TObject; Res2:Pointer):DWORD;
+                                 Res1:TObject; Res2:Pointer):Cardinal;
 var
   PPacket:TIOPacket;
 begin
@@ -763,9 +763,9 @@ begin
 end;
 
 function TCommPortDriver.IOCommandASync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
-                           BytesToWrite, DriverID, DelayBetweenCmds:DWORD;
+                           BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                            CallBack:TDriverCallBack; IsWriteValue:Boolean;
-                           Res1:TObject; Res2:Pointer):DWORD;
+                           Res1:TObject; Res2:Pointer):Cardinal;
 var
   PCmdPackt:PCommandPacket;
 begin

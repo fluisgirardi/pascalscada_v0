@@ -39,8 +39,6 @@ type
 
 implementation
 
-uses PLCNumber;
-
 constructor THMIRadioButton.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);

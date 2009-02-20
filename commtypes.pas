@@ -19,9 +19,6 @@ type
   }
   BYTES = array of Byte;
 
-  {: @exclude}
-  DWORD = cardinal;
-
   {:
   @name define os comandos e a ordem de execução em um pedido de Leitura/Escrita.
 
@@ -70,17 +67,17 @@ type
   @seealso(TCommPortDriver.IOCommandSync)
   }
   TIOPacket = record
-    PacketID:DWORD;
+    PacketID:Cardinal;
     WriteIOResult:TIOResult;
-    ToWrite:DWORD;
-    Wrote:DWORD;
-    WriteRetries:DWORD;
+    ToWrite:Cardinal;
+    Wrote:Cardinal;
+    WriteRetries:Cardinal;
     BufferToWrite:BYTES;
     DelayBetweenCommand:Integer;
     ReadIOResult:TIOResult;
-    ToRead:DWORD;
-    Received:DWORD;
-    ReadRetries:DWORD;
+    ToRead:Cardinal;
+    Received:Cardinal;
+    ReadRetries:Cardinal;
     BufferToRead:BYTES;
     Res1:TObject;
     Res2:Pointer;
@@ -195,7 +192,7 @@ type
 
   {:
   Converte uma mensagem interna para um grupo de commandos de leitura/escrita.
-  @param(wMessage DWORD. Mensagem a converter.)
+  @param(wMessage Cardinal. Mensagem a converter.)
   @return(Retorna um comando do tipo TIOCommand. Caso wMessage não feche com o
           case, retorna o padrão que é iocNone).
   @seealso(TIOCommand)
@@ -209,7 +206,7 @@ type
   @seealso(WM_WRITE_WRITEREAD)
   
   }
-  function WindowsMessageToIOCommand(wMessage:DWORD):TIOCommand;
+  function WindowsMessageToIOCommand(wMessage:Cardinal):TIOCommand;
   
   {:
   Converte um grupo de comandos de leitura/escrita para um Id de mensagem.
@@ -227,11 +224,11 @@ type
   @seealso(WM_WRITE_WRITEREAD)
 
   }
-  function IOCommandToWindowsMessage(ioCommand:TIOCommand; ToWrite:Boolean):DWORD;
+  function IOCommandToWindowsMessage(ioCommand:TIOCommand; ToWrite:Boolean):Cardinal;
 
 implementation
 
-function WindowsMessageToIOCommand(wMessage:DWORD):TIOCommand;
+function WindowsMessageToIOCommand(wMessage:Cardinal):TIOCommand;
 begin
   case wMessage of
     WM_READ_READ, WM_WRITE_READ:
@@ -251,7 +248,7 @@ begin
   end;
 end;
 
-function IOCommandToWindowsMessage(ioCommand:TIOCommand; ToWrite:Boolean):DWORD;
+function IOCommandToWindowsMessage(ioCommand:TIOCommand; ToWrite:Boolean):Cardinal;
 begin
   if ToWrite then
     case ioCommand of

@@ -8,7 +8,7 @@ unit TagBlock;
 interface
 
 uses
-  SysUtils, Classes, Tag, PLCTag, ProtocolTypes, Math;
+  SysUtils, Classes, PLCTag, ProtocolTypes;
 
 type
   //: Classe base para tags blocos.
@@ -19,11 +19,11 @@ type
     //: @seealso(TPLCTag.ScanRead)
     procedure ScanRead; override;
     //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
     //: @seealso(TPLCTag.Read)
     procedure Read; override;
     //: @seealso(TPLCTag.Write)
-    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
   published
     //: @seealso(TTag.AutoRead)
     property AutoRead;
@@ -77,7 +77,7 @@ begin
   end;
 end;
 
-procedure TTagBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TTagBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
 begin
@@ -87,7 +87,7 @@ begin
     if PAutoWrite then begin
       BuildTagRec(tr,Count,Offset);
       PProtocolDriver.ScanWrite(tr,Values);
-      TagCommandCallBack(Values,Now,tcScanWrite,ioOk,Offset);
+      //TagCommandCallBack(Values,Now,tcScanWrite,ioOk,Offset);
       Dec(PCommWriteOk);
     end;
   end else
@@ -105,7 +105,7 @@ begin
   end;
 end;
 
-procedure TTagBlock.Write(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TTagBlock.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
 begin

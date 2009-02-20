@@ -13,7 +13,7 @@ uses
   {$IF defined(WIN32) or defined(WIN64)}
   Windows,
   {$ELSE}
-  Serial, Unix, BaseUnix, termio,
+  Unix,
   {$IFEND}
   
   {$IFDEF FPC}

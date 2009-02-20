@@ -98,14 +98,14 @@ type
   private
     //PCheckCRC:Boolean;
     PReadAnyAlways:Boolean;
-    POutputMaxHole:DWORD;
-    PInputMaxHole:DWORD;
-    PRegistersMaxHole:DWORD;
+    POutputMaxHole:Cardinal;
+    PInputMaxHole:Cardinal;
+    PRegistersMaxHole:Cardinal;
     PModbusPLC:array of TModBusPLC;
     function GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:Integer):Boolean;
-    procedure SetOutputMaxHole(v:DWORD);
-    procedure SetInputMaxHole(v:DWORD);
-    procedure SetRegisterMaxHole(v:DWORD);
+    procedure SetOutputMaxHole(v:Cardinal);
+    procedure SetInputMaxHole(v:Cardinal);
+    procedure SetRegisterMaxHole(v:Cardinal);
     procedure BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
 
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
@@ -142,19 +142,19 @@ type
     de saidas continuo.
     @seealso(TPLCMemoryManager.MaxHole)
     }
-    property OutputMaxHole:DWORD read POutputMaxHole write SetOutputMaxHole default 50;
+    property OutputMaxHole:Cardinal read POutputMaxHole write SetOutputMaxHole default 50;
     {:
     Informa quantas entradas podem ficar sem serem declaradas para manter um bloco
     continuo.
     @seealso(TPLCMemoryManager.MaxHole)
     }
-    property InputMaxHole:DWORD read PInputMaxHole write SetInputMaxHole default 50;
+    property InputMaxHole:Cardinal read PInputMaxHole write SetInputMaxHole default 50;
     {:
     Informa quantos registradores podem ficar sem serem declaradas para manter
     um bloco continuo.
     @seealso(TPLCMemoryManager.MaxHole)
     }
-    property RegisterMaxHole:DWORD read PRegistersMaxHole write SetRegisterMaxHole default 10;
+    property RegisterMaxHole:Cardinal read PRegistersMaxHole write SetRegisterMaxHole default 10;
   end;
 
 implementation
@@ -528,7 +528,7 @@ end;
 
 function  TModBusMasterDriver.SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE;
 var
-  FunctionCode:DWORD;
+  FunctionCode:Cardinal;
 begin
   FunctionCode := 0;
   if (Tag is TPLCTagNumber) then begin
@@ -695,7 +695,7 @@ end;
 function TModBusMasterDriver.DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;
 var
    i,c,c2,plc:integer;
-   address, len:DWORD;
+   address, len:Cardinal;
    foundPLC:Boolean;
    aux:TPLCMemoryManager;
 begin
@@ -1105,7 +1105,7 @@ begin
   end;
 end;
 
-procedure TModBusMasterDriver.SetOutputMaxHole(v:DWORD);
+procedure TModBusMasterDriver.SetOutputMaxHole(v:Cardinal);
 var
   plc:Integer;
 begin
@@ -1113,7 +1113,7 @@ begin
     PModbusPLC[plc].OutPuts.MaxHole := v;
 end;
 
-procedure TModBusMasterDriver.SetInputMaxHole(v:DWORD);
+procedure TModBusMasterDriver.SetInputMaxHole(v:Cardinal);
 var
   plc:Integer;
 begin
@@ -1121,7 +1121,7 @@ begin
     PModbusPLC[plc].Inputs.MaxHole := v;
 end;
 
-procedure TModBusMasterDriver.SetRegisterMaxHole(v:DWORD);
+procedure TModBusMasterDriver.SetRegisterMaxHole(v:Cardinal);
 var
   plc:Integer;
 begin

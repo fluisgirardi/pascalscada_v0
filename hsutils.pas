@@ -7,7 +7,7 @@ unit hsutils;
 
 interface
 
-uses SysUtils, Math;
+uses SysUtils;
 //: Converte um valor Float para Int64, descartando a parte truncada.
 function FloatToInt64(Value:Extended):Int64;
 //: Realiza o cálculo de exponenciação.

@@ -12,8 +12,6 @@ uses {$IF defined(WIN32) or defined(WIN64)}Messages, {$IFEND}Tag, variants;
 
 
 type
-  //: @exclude
-  DWORD = Cardinal;
   //: Array dinamico de valores flutuantes.
   TArrayOfDouble = array of double;
   //: Ponteiro para um array dinamico de pontos flutuantes.
@@ -75,7 +73,7 @@ type
   @param(ValuesTimeStamp TDateTime: Data/Hora em que esses valores foram lidos/escritos.)
   @param(TagCommand TTagCommand: Tipo de comando.)
   @param(LastResult TProtocolIOResult: Resultado do driver ao processar o pedido.)
-  @param(Offset DWORD: Posição dentro do bloco onde os valores começam.)
+  @param(Offset Cardinal: Posição dentro do bloco onde os valores começam.)
   }
   TTagCommandCallBack = procedure(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:Integer) of object;
 
@@ -92,7 +90,7 @@ type
   TScanReadRec = record
     Values:TArrayOfDouble;
     ValuesTimestamp:TDateTime;
-    ReadsOK,ReadFaults:DWORD;
+    ReadsOK,ReadFaults:Cardinal;
     LastQueryResult:TProtocolIOResult;
     Offset:Integer;
   end;
@@ -108,7 +106,7 @@ type
   TTagChangeRec = record
     Tag:TTag;
     Change:TChangeType;
-    OldValue,NewValue:DWORD
+    OldValue,NewValue:Cardinal
   end;
   //: Ponteiro de mudanças de Tag.
   PTagChangeRec = ^TTagChangeRec;

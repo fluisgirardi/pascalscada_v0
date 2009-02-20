@@ -13,8 +13,6 @@ interface
 uses SysUtils, DateUtils, hsutils, ProtocolTypes, SyncObjs;
 
 type
-  //: @exclude
-  DWORD = Cardinal;
   //: Representa um bit.
   Binary = 0..1;
   //: Representa uma palavra de 4 bits.
@@ -25,10 +23,10 @@ type
   @value(ntNibble Nibble (4 bits).)
   @value(ntByte   Byte (8 bits).)
   @value(ntWord   Word (16 bits).)
-  @value(ntDWord  DWord (32 bits).)
+  @value(ntCardinal  Cardinal (32 bits).)
   @value(ntFloat  Ponto flutuate (32 ou 64 bits).)
   }
-  TNumType = (ntBinary, ntNibble, ntBYTE, ntWORD, ntDWORD, ntFloat);
+  TNumType = (ntBinary, ntNibble, ntBYTE, ntWORD, ntCardinal, ntFloat);
 
   {:
   Estrutura usada para cadastrar cada endereço único dentro do gerenciador de
@@ -52,10 +50,10 @@ type
     FStartAddress:Integer;
     FEndAddress:Integer;
     FLastUpdate:TDateTime;
-    FMinScanTime:DWORD;
-    FReadOK, FReadFault:DWORD;
-    procedure SetReadOK(value:DWORD);
-    procedure SetReadFault(value:DWORD);
+    FMinScanTime:Cardinal;
+    FReadOK, FReadFault:Cardinal;
+    procedure SetReadOK(value:Cardinal);
+    procedure SetReadFault(value:Cardinal);
     function GetSize:Integer;
     function GetMsecLastUpdate:Int64;
   protected
@@ -67,15 +65,15 @@ type
     LastError:TProtocolIOResult;
     {:
     Cria um bloco de memórias continuas.
-    @param(AdrStart DWORD. Endereço inicial do bloco.)
-    @param(AdrEnd DWORD. Endereço final do bloco.)
+    @param(AdrStart Cardinal. Endereço inicial do bloco.)
+    @param(AdrEnd Cardinal. Endereço final do bloco.)
     AdrStart e AdrEnd devem ser passados na menor unidade de memória disponível
     no CLP. Um exemplo q citar é os CLP´s da Siemens que utilizam a mesma area
-    de memória para bytes, words e dword. entao para adicionar a DW0, é necessário
+    de memória para bytes, words e Cardinal. entao para adicionar a DW0, é necessário
     passar 0 em AdrStart e 3 em AdrEnd, totalizando 4 bytes (que é a menor
     tamanho de palavra disponível no CLP) que são VB0, VB1, VB2, VB3.
     }
-    constructor Create(AdrStart,AdrEnd:DWORD); virtual;
+    constructor Create(AdrStart,AdrEnd:Cardinal); virtual;
     {:
     Lê/escreve o valor da memória especificada por Index no bloco.
     }
@@ -102,11 +100,11 @@ type
     //: @name diz quantos milisegundos se passaram desde a última atualização de dados.
     property MilisecondsFromLastUpdate:Int64 read GetMsecLastUpdate;
     //: Informa qual é o tempo de varredura desse bloco.
-    property ScanTime:DWORD read FMinScanTime write FMinScanTime;
+    property ScanTime:Cardinal read FMinScanTime write FMinScanTime;
     //: Informa quantas leituras de dados do dispositivo tiveram sucesso.
-    property ReadSuccess:DWORD read FReadOK write SetReadOK;
+    property ReadSuccess:Cardinal read FReadOK write SetReadOK;
     //: Informa quantas leituras de dados do dispositivo falharam.
-    property ReadFaults:DWORD read FReadFault write SetReadFault;
+    property ReadFaults:Cardinal read FReadFault write SetReadFault;
   end;
 
   {:
@@ -124,7 +122,7 @@ type
     procedure SetValue(index:Integer; v:Double); override;
   public
     //: @exclude
-    constructor Create(AdrStart,AdrEnd:DWORD); override;
+    constructor Create(AdrStart,AdrEnd:Cardinal); override;
     //: @exclude
     destructor  Destroy; override;
   end;
@@ -143,7 +141,7 @@ type
     procedure SetValue(index:Integer; v:Double); override;
   public
     //: @exclude
-    constructor Create(AdrStart,AdrEnd:DWORD); override;
+    constructor Create(AdrStart,AdrEnd:Cardinal); override;
     //: @exclude
     destructor  Destroy; override;
   end;
@@ -162,7 +160,7 @@ type
     procedure SetValue(index:Integer; v:Double); override;
   public
     //: @exclude
-    constructor Create(AdrStart,AdrEnd:DWORD); override;
+    constructor Create(AdrStart,AdrEnd:Cardinal); override;
     //: @exclude
     destructor  Destroy; override;
   end;
@@ -181,26 +179,26 @@ type
     procedure SetValue(index:Integer; v:Double); override;
   public
     //: @exclude
-    constructor Create(AdrStart,AdrEnd:DWORD); override;
+    constructor Create(AdrStart,AdrEnd:Cardinal); override;
     //: @exclude
     destructor  Destroy; override;
   end;
 
   {:
-  Classe que implementa uma área de DWords (32 bits) continua.
+  Classe que implementa uma área de Cardinals (32 bits) continua.
   @seealso(TPLCMemoryManager)
   }
-  TRegisterRangeDWord = class(TRegisterRange)
+  TRegisterRangeCardinal = class(TRegisterRange)
   protected
     //: @exclude
-    FValues:array of DWORD;
+    FValues:array of Cardinal;
     //: @exclude
     function  GetValue(index:Integer):Double; override;
     //: @exclude
     procedure SetValue(index:Integer; v:Double); override;
   public
     //: @exclude
-    constructor Create(AdrStart,AdrEnd:DWORD); override;
+    constructor Create(AdrStart,AdrEnd:Cardinal); override;
     //: @exclude
     destructor  Destroy; override;
   end;
@@ -220,7 +218,7 @@ type
     procedure SetValue(index:Integer; v:Double); override;
   public
     //: @exclude
-    constructor Create(AdrStart,AdrEnd:DWORD); override;
+    constructor Create(AdrStart,AdrEnd:Cardinal); override;
     //: @exclude
     destructor  Destroy; override;
   end;
@@ -257,10 +255,10 @@ type
     destructor Destroy; override;
     {:
     Adiciona uma ou mais memórias ao gerenciador.
-    @param(Address DWORD. Endereço inicial do(a) memória/bloco de memória.)
-    @param(Size DWORD. Quantidade de variáveis que estão sendo adicionadas ao bloco.)
-    @param(RegSize DWORD. Tamanho da variável em relação a menor palavra disponível na area.)
-    @param(Scan DWORD. Tempo de varredura da memória.)
+    @param(Address Cardinal. Endereço inicial do(a) memória/bloco de memória.)
+    @param(Size Cardinal. Quantidade de variáveis que estão sendo adicionadas ao bloco.)
+    @param(RegSize Cardinal. Tamanho da variável em relação a menor palavra disponível na area.)
+    @param(Scan Cardinal. Tempo de varredura da memória.)
     
     Por exemplo, para adicionar as VW0, VW2 e VW4 no Siemens (onde a menor palavra
     é o byte) com 1200ms de scan, você chamaria:
@@ -274,12 +272,12 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    procedure AddAddress(Address,Size,RegSize,Scan:DWORD); overload;
+    procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); overload;
     {:
     Remove uma ou mais variáveis do gerenciador.
-    @param(Address DWORD. Endereço inicial do(a) memória/bloco de memória.)
-    @param(Size DWORD. Quantidade de variáveis que estão sendo adicionadas ao bloco.)
-    @param(RegSize DWORD. Tamanho da variável em relação a menor palavra disponível na area.)
+    @param(Address Cardinal. Endereço inicial do(a) memória/bloco de memória.)
+    @param(Size Cardinal. Quantidade de variáveis que estão sendo adicionadas ao bloco.)
+    @param(RegSize Cardinal. Tamanho da variável em relação a menor palavra disponível na area.)
     
     Os parametros funcionam de maneira identica a função AddAddress.
 
@@ -287,13 +285,13 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    procedure RemoveAddress(Address,Size,RegSize:DWORD); overload;
+    procedure RemoveAddress(Address,Size,RegSize:Cardinal); overload;
     {:
     @name escreve valores em um intervalo de memórias, continuas ou não.
 
-    @param(AdrStart DWORD. Endereço inicial.)
-    @param(Len DWORD. Quantidade de variáveis a escrever.)
-    @param(RegSise DWORD. Tamanho da variavel em relação ao menor tamanho de palavra.)
+    @param(AdrStart Cardinal. Endereço inicial.)
+    @param(Len Cardinal. Quantidade de variáveis a escrever.)
+    @param(RegSise Cardinal. Tamanho da variavel em relação ao menor tamanho de palavra.)
 
     Cada valor representa a menor palavra do bloco.
 
@@ -314,13 +312,13 @@ type
     @seealso(RemoveAddress)
     @seealso(GetValues)
     }
-    function  SetValues(AdrStart,Len,RegSize:DWORD; Values:TArrayOfDouble):Integer;
+    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble):Integer;
     {:
     @name lê valores intervalo de memórias, continuas ou não.
 
-    @param(AdrStart DWORD. Endereço inicial.)
-    @param(Len DWORD. Quantidade de variáveis a escrever.)
-    @param(RegSise DWORD. Tamanho da variavel em relação ao menor tamanho de palavra.)
+    @param(AdrStart Cardinal. Endereço inicial.)
+    @param(Len Cardinal. Quantidade de variáveis a escrever.)
+    @param(RegSise Cardinal. Tamanho da variavel em relação ao menor tamanho de palavra.)
 
     Cada item da array retornado representa o valor da menor palavra daquela área.
 
@@ -329,20 +327,20 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    function  GetValues(AdrStart,Len,RegSize:DWORD; var Values:TArrayOfDouble):Integer;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble):Integer;
     {:
     @name escreve o status da última leitura, continuas ou não.
 
-    @param(AdrStart DWORD. Endereço inicial.)
-    @param(Len DWORD. Quantidade de variáveis a escrever.)
-    @param(RegSise DWORD. Tamanho da variavel em relação ao menor tamanho de palavra.)
+    @param(AdrStart Cardinal. Endereço inicial.)
+    @param(Len Cardinal. Quantidade de variáveis a escrever.)
+    @param(RegSise Cardinal. Tamanho da variavel em relação ao menor tamanho de palavra.)
     @param(Fault TProtocolIOResult. Status da última leitura.)
 
     Cada valor representa a menor palavra do bloco. Veja mais em SetValues.
 
     @seealso(SetValues)
     }
-    procedure SetFault(AdrStart,Len,RegSize:DWORD; Fault:TProtocolIOResult);
+    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
   published
     {:
     Define quantos endereços podem ficar sem serem usados para manter a
@@ -377,7 +375,7 @@ implementation
 
 uses Math;
 
-constructor TRegisterRange.Create(AdrStart,AdrEnd:DWORD);
+constructor TRegisterRange.Create(AdrStart,AdrEnd:Cardinal);
 begin
   FStartAddress := AdrStart;
   FEndAddress := AdrEnd;
@@ -408,12 +406,12 @@ begin
   Result := GetMsecLastUpdate>=aux;
 end;
 
-procedure TRegisterRange.SetReadOK(value:DWORD);
+procedure TRegisterRange.SetReadOK(value:Cardinal);
 begin
   FReadOK := Max(FReadOK,value);
 end;
 
-procedure TRegisterRange.SetReadFault(value:DWORD);
+procedure TRegisterRange.SetReadFault(value:Cardinal);
 begin
   FReadFault := Max(FReadFault,value);
 end;
@@ -422,7 +420,7 @@ end;
 //             inicio das declarações do TRegisterRangeBinary
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TRegisterRangeBinary.Create(AdrStart,AdrEnd:DWORD);
+constructor TRegisterRangeBinary.Create(AdrStart,AdrEnd:Cardinal);
 begin
   inherited Create(AdrStart,AdrEnd);
   SetLength(FValues,(AdrEnd-AdrStart)+1);
@@ -450,7 +448,7 @@ end;
 //             inicio das declarações do TRegisterRangeNibble
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TRegisterRangeNibble.Create(AdrStart,AdrEnd:DWORD);
+constructor TRegisterRangeNibble.Create(AdrStart,AdrEnd:Cardinal);
 begin
   inherited Create(AdrStart,AdrEnd);
   SetLength(FValues,(AdrEnd-AdrStart)+1);
@@ -475,7 +473,7 @@ end;
 //             inicio das declarações do TRegisterRangeByte
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TRegisterRangeByte.Create(AdrStart,AdrEnd:DWORD);
+constructor TRegisterRangeByte.Create(AdrStart,AdrEnd:Cardinal);
 begin
   inherited Create(AdrStart,AdrEnd);
   SetLength(FValues,(AdrEnd-AdrStart)+1);
@@ -500,7 +498,7 @@ end;
 //             inicio das declarações do TRegisterRangeWord
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TRegisterRangeWord.Create(AdrStart,AdrEnd:DWORD);
+constructor TRegisterRangeWord.Create(AdrStart,AdrEnd:Cardinal);
 begin
   inherited Create(AdrStart,AdrEnd);
   SetLength(FValues,(AdrEnd-AdrStart)+1);
@@ -522,35 +520,35 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeDWord
+//             inicio das declarações do TRegisterRangeCardinal
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TRegisterRangeDWord.Create(AdrStart,AdrEnd:DWORD);
+constructor TRegisterRangeCardinal.Create(AdrStart,AdrEnd:Cardinal);
 begin
   inherited Create(AdrStart,AdrEnd);
   SetLength(FValues,(AdrEnd-AdrStart)+1);
 end;
 
-destructor  TRegisterRangeDWord.Destroy;
+destructor  TRegisterRangeCardinal.Destroy;
 begin
   SetLength(FValues,0);
 end;
 
-function  TRegisterRangeDWord.GetValue(index:Integer):Double;
+function  TRegisterRangeCardinal.GetValue(index:Integer):Double;
 begin
   Result := FValues[index];
 end;
 
-procedure TRegisterRangeDWord.SetValue(index:Integer; v:Double);
+procedure TRegisterRangeCardinal.SetValue(index:Integer; v:Double);
 begin
   FValues[index] := Cardinal(FloatToInteger(v));
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeDWord
+//             inicio das declarações do TRegisterRangeCardinal
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TRegisterRangeFloat.Create(AdrStart,AdrEnd:DWORD);
+constructor TRegisterRangeFloat.Create(AdrStart,AdrEnd:Cardinal);
 begin
   inherited Create(AdrStart,AdrEnd);
   SetLength(FValues,(AdrEnd-AdrStart)+1);
@@ -818,16 +816,16 @@ begin
       Result := TRegisterRangeByte.Create(adrStart,adrEnd);
     ntWORD:
       Result := TRegisterRangeWord.Create(adrStart,adrEnd);
-    ntDWORD:
-      Result := TRegisterRangeDWord.Create(adrStart,adrEnd);
+    ntCardinal:
+      Result := TRegisterRangeCardinal.Create(adrStart,adrEnd);
     else
       Result := TRegisterRangeFloat.Create(adrStart,adrEnd);
   end;
 end;
 
-procedure TPLCMemoryManager.AddAddress(Address,Size,RegSize,Scan:DWORD);
+procedure TPLCMemoryManager.AddAddress(Address,Size,RegSize,Scan:Cardinal);
 var
-  c, items:DWORD;
+  c, items:Cardinal;
   len:Integer;
 begin
   FCriticalSection.Enter;
@@ -850,9 +848,9 @@ begin
   FCriticalSection.Leave;
 end;
 
-procedure TPLCMemoryManager.RemoveAddress(Address,Size,RegSize:DWORD);
+procedure TPLCMemoryManager.RemoveAddress(Address,Size,RegSize:Cardinal);
 var
-  c, items:DWORD;
+  c, items:Cardinal;
   len:Integer;
 begin
   FCriticalSection.Enter;
@@ -873,7 +871,7 @@ begin
   FCriticalSection.Leave;
 end;
 
-function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:DWORD; Values:TArrayOfDouble):Integer;
+function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble):Integer;
 var
   count, pos, blk,items,c:Integer;
   found_add:Boolean;
@@ -910,7 +908,7 @@ begin
   FCriticalSection.Leave;
 end;
 
-procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:DWORD; Fault:TProtocolIOResult);
+procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
 var
   items,c,blk:Integer;
 begin
@@ -930,7 +928,7 @@ begin
   FCriticalSection.Leave;
 end;
 
-function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:DWORD; var Values:TArrayOfDouble):Integer;
+function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble):Integer;
 var
   items,c,blk,pos:Integer;
   found_add:Boolean;

@@ -46,7 +46,6 @@ type
     procedure SetShowFocused(f:Boolean);
     procedure RepaintFocus;
     function  GetColor:TColor;
-    procedure SetColor(c:TColor);
     procedure FontChange(Sender: TObject);
     procedure SetPrefix(s:String);
     procedure SetSufix(s:String);
@@ -65,6 +64,8 @@ type
   protected
     //: @exclude
     procedure Loaded; override;
+    //: @exclude
+    procedure SetColor(c:TColor); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;

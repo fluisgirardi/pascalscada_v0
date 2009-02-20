@@ -32,11 +32,11 @@ type
     //: @seealso(TPLCTag.ScanRead)
     procedure ScanRead; override;
     //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
     //: @seealso(TPLCTag.Read)
     procedure Read; override;
     //: @seealso(TPLCTag.Write)
-    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
   published
     //: @seealso(TTag.AutoRead)
     property AutoRead;
@@ -81,8 +81,6 @@ type
   end;
 
 implementation
-
-uses PLCTag, Tag, Math;
 
 function TPLCTagNumber.GetValueRaw:Double;
 begin
@@ -159,7 +157,7 @@ begin
   end;
 end;
 
-procedure TPLCTagNumber.ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TPLCTagNumber.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
 begin
@@ -168,7 +166,7 @@ begin
      if PAutoWrite then begin
        BuildTagRec(tr,0,0);
        PProtocolDriver.ScanWrite(tr,Values);
-       TagCommandCallBack(Values,Now,tcScanWrite,ioOk,0);
+       //TagCommandCallBack(Values,Now,tcScanWrite,ioOk,0);
        Dec(PCommWriteOk);
      end
   end else
@@ -186,7 +184,7 @@ begin
   end;
 end;
 
-procedure TPLCTagNumber.Write(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TPLCTagNumber.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
 begin

@@ -52,7 +52,6 @@ type
     procedure FontChange(Sender:TObject);
 
     procedure SetCaption(c:TCaption);
-    procedure SetColor(c:TColor);
     procedure SetFont(f:TFont);
 
     function  GetAllowGrayed:Boolean;
@@ -66,6 +65,8 @@ type
     BlockOnChange:Boolean;
     //: @exclude
     LazLastState:TCheckBoxState;
+    //: @exclude
+    procedure SetColor(c:TColor); override;
     //: @exclude
     procedure DoOnChange; override;
     {$ELSE}
@@ -210,8 +211,6 @@ type
   end;
 
 implementation
-
-uses PLCNumber;
 
 constructor THMICheckBox.Create(AOwner:TComponent);
 begin

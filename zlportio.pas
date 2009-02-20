@@ -20,16 +20,16 @@
 {   zlportio.sys ddkint.pas                                                    }
 {   You must distribute zlportio.sys with your application                     }
 { Procedures and functions:                                                    }
-{   procedure zlioportread( const Port,DataType:dword ):dword;                 }
-{   procedure zlioportwrite( const Port,DataType,Data:dword );                 }
+{   procedure zlioportread( const Port,DataType:Cardinal ):Cardinal;                 }
+{   procedure zlioportwrite( const Port,DataType,Data:Cardinal );                 }
 {                                                                              }
-{  function portreadb( const Port:dword ):byte;                                }
-{  function portreadw( const Port:dword ):word;                                }
-{  function portreadl( const Port:dword ):dword;                               }
+{  function portreadb( const Port:Cardinal ):byte;                                }
+{  function portreadw( const Port:Cardinal ):word;                                }
+{  function portreadl( const Port:Cardinal ):Cardinal;                               }
 {                                                                              }
-{  procedure portwriteb( const Port:Dword;const Data:byte );                   }
-{  procedure portwritew( const Port:dword;const Data:word );                   }
-{  procedure portwritel( const Port,Data:dword );                              }
+{  procedure portwriteb( const Port:Cardinal;const Data:byte );                   }
+{  procedure portwritew( const Port:Cardinal;const Data:word );                   }
+{  procedure portwritel( const Port,Data:Cardinal );                              }
 {                                                                              }
 {   Examples:                                                                  }
 {    //  get data bits from LPT port                                           }
@@ -59,7 +59,7 @@ uses windows,sysutils,ddkint,dialogs;
 Const
   ZLIO_BYTE  = 0;
   ZLIO_WORD  = 1;
-  ZLIO_DWORD = 2;
+  ZLIO_Cardinal = 2;
 
 var
 
@@ -78,17 +78,17 @@ var
   HZLIO:THandle;
 
 
-function portreadb( const Port:dword ):byte;
-function portreadw( const Port:dword ):word;
-function portreadl( const Port:dword ):dword;
+function portreadb( const Port:Cardinal ):byte;
+function portreadw( const Port:Cardinal ):word;
+function portreadl( const Port:Cardinal ):Cardinal;
 
-procedure portwriteb( const Port:Dword;const Data:byte );
-procedure portwritew( const Port:dword;const Data:word );
-procedure portwritel( const Port,Data:dword );
+procedure portwriteb( const Port:Cardinal;const Data:byte );
+procedure portwritew( const Port:Cardinal;const Data:word );
+procedure portwritel( const Port,Data:Cardinal );
 
 
-procedure zlioportwrite( const Port,DataType,Data:dword );
-function zlioportread( const Port,DataType:dword ):dword;
+procedure zlioportwrite( const Port,DataType,Data:Cardinal );
+function zlioportread( const Port,DataType:Cardinal ):Cardinal;
 
 // if you need the best perfomance for your IO operations
 // call zliosetiopm(TRUE). This allow your application
@@ -114,11 +114,11 @@ var
 
 type
 TzlIOData = record
-  Port,DataType,Data:dword;
+  Port,DataType,Data:Cardinal;
 end;
 
 
-procedure zlioportwrite( const Port,DataType,Data:dword );
+procedure zlioportwrite( const Port,DataType,Data:Cardinal );
 var resdata:TZLIOData;
     cBR:cardinal;
 begin
@@ -133,59 +133,59 @@ begin
    Case DataType of
     ZLIO_BYTE : asm mov edx,Port;mov eax,data;out dx,al; end;
     ZLIO_WORD : asm mov edx,Port;mov eax,data;out dx,ax; end;
-    ZLIO_DWORD: asm mov edx,Port;mov eax,data;out dx,eax; end;
+    ZLIO_Cardinal: asm mov edx,Port;mov eax,data;out dx,eax; end;
    end;
  end;
 end;
 
-function zlioportread(const Port,DataType:dword):dword;
+function zlioportread(const Port,DataType:Cardinal):Cardinal;
 var resdata:TZLIOData;
-    cBR:cardinal;i:dword;
+    cBR:cardinal;i:Cardinal;
 begin
  if (not ZLIODirect) then begin
    resdata.Port := Port;
    resdata.DataType :=  DataType;
    if ZLIOStarted then
-    DeviceIoControl(HZLIO,IOCTL_ZLUNI_PORT_READ,@resdata,sizeof(resdata),@i,sizeof(dword),cBR,nil );
+    DeviceIoControl(HZLIO,IOCTL_ZLUNI_PORT_READ,@resdata,sizeof(resdata),@i,sizeof(Cardinal),cBR,nil );
  end
  else begin
    Case DataType of
     ZLIO_BYTE : asm mov edx,Port;xor eax,eax;in al,dx;mov i,eax; end;
     ZLIO_WORD : asm mov edx,Port;xor eax,eax;in ax,dx;mov i,eax; end;
-    ZLIO_DWORD: asm mov edx,Port;xor eax,eax;in eax,dx;mov i,eax end;
+    ZLIO_Cardinal: asm mov edx,Port;xor eax,eax;in eax,dx;mov i,eax end;
    end;
  end;
   result := i;
 end;
 
-function portreadb( const Port:dword ):byte;
+function portreadb( const Port:Cardinal ):byte;
 begin
  Result := zlioportread(Port,ZLIO_BYTE);
 end;
 
-function portreadw( const Port:dword ):word;
+function portreadw( const Port:Cardinal ):word;
 begin
  Result := zlioportread(Port,ZLIO_WORD);
 end;
 
-function portreadl( const Port:dword ):dword;
+function portreadl( const Port:Cardinal ):Cardinal;
 begin
- Result := zlioportread(Port,ZLIO_DWORD);
+ Result := zlioportread(Port,ZLIO_Cardinal);
 end;
 
-procedure portwriteb( const Port:Dword;const Data:byte );
+procedure portwriteb( const Port:Cardinal;const Data:byte );
 begin
  zlioportwrite(Port,ZLIO_BYTE,Data);
 end;
 
-procedure portwritew( const Port:dword;const Data:word );
+procedure portwritew( const Port:Cardinal;const Data:word );
 begin
  zlioportwrite(Port,ZLIO_WORD,Data);
 end;
 
-procedure portwritel( const Port,Data:dword );
+procedure portwritel( const Port,Data:Cardinal );
 begin
- zlioportwrite(Port,ZLIO_DWORD,Data);
+ zlioportwrite(Port,ZLIO_Cardinal,Data);
 end;
 
 procedure zliosetiopm( const Direct:boolean );

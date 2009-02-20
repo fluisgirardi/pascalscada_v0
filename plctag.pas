@@ -8,8 +8,7 @@ unit PLCTag;
 interface
 
 uses
-  SysUtils, ExtCtrls, Classes, Tag, ProtocolDriver, ProtocolTypes, Math,
-  syncobjs;
+  SysUtils, ExtCtrls, Classes, Tag, ProtocolDriver, ProtocolTypes, Math;
 
 type
   //: Classe base para tags de comunicação.
@@ -44,44 +43,44 @@ type
     procedure SetAutoWrite(v:Boolean); virtual;
     {:
     Seta o Hack do equipamento que contem a memória sendo mapeada.
-    @param(v DWORD. Hack do equipamento onde está a memória.)
+    @param(v Cardinal. Hack do equipamento onde está a memória.)
     }
-    procedure SetPLCHack(v:DWORD); virtual;
+    procedure SetPLCHack(v:Cardinal); virtual;
     {:
     Seta o Slot do equipamento que contem a memória sendo mapeada.
-    @param(v DWORD. Slot do equipamento onde está a memória.)
+    @param(v Cardinal. Slot do equipamento onde está a memória.)
     }
-    procedure SetPLCSlot(v:DWORD); virtual;
+    procedure SetPLCSlot(v:Cardinal); virtual;
     {:
     Seta o endereço do equipamento que contem a memória sendo mapeada.
-    @param(v DWORD. Endereço do equipamento onde está a memória.)
+    @param(v Cardinal. Endereço do equipamento onde está a memória.)
     }
-    procedure SetPLCStation(v:DWORD); virtual;
+    procedure SetPLCStation(v:Cardinal); virtual;
     {:
     Seta o Arquivo/DB que contem a memória sendo mapeada.
-    @param(v DWORD. Arquivo/DB que a memória mapeada pertence.)
+    @param(v Cardinal. Arquivo/DB que a memória mapeada pertence.)
     }
-    procedure SetMemFileDB(v:DWORD); virtual;
+    procedure SetMemFileDB(v:Cardinal); virtual;
     {:
     Seta o endereço da memória sendo mapeada.
-    @param(v DWORD. Endereço da memória sendo mapeada.)
+    @param(v Cardinal. Endereço da memória sendo mapeada.)
     }
-    procedure SetMemAddress(v:DWORD); virtual;
+    procedure SetMemAddress(v:Cardinal); virtual;
     {:
     Seta o sub-endereço da memória sendo mapeada.
-    @param(v DWORD. Sub-endereço da memória sendo mapeada.)
+    @param(v Cardinal. Sub-endereço da memória sendo mapeada.)
     }
-    procedure SetMemSubElement(v:DWORD); virtual;
+    procedure SetMemSubElement(v:Cardinal); virtual;
     {:
     Seta o função do driver para leitura da memória.
-    @param(v DWORD. Função do driver usada para leitura da memória.)
+    @param(v Cardinal. Função do driver usada para leitura da memória.)
     }
-    procedure SetMemReadFunction(v:DWORD); virtual;
+    procedure SetMemReadFunction(v:Cardinal); virtual;
     {:
     Seta o função do driver para escrita de valores da memória.
-    @param(v DWORD. Função do driver usada para escrita de valores da memória.)
+    @param(v Cardinal. Função do driver usada para escrita de valores da memória.)
     }
-    procedure SetMemWriteFunction(v:DWORD); virtual;
+    procedure SetMemWriteFunction(v:Cardinal); virtual;
     {:
     Seta o endereco longo (texto) do tag.
     @param(v String. Endereço longo (texto) do tag.)
@@ -89,9 +88,9 @@ type
     procedure SetPath(v:String); virtual;
     {:
     Seta o tempo de varredura (atualização) da memória em milisegundos.
-    @param(v DWORD. Tempo em milisegundos que a memória deve ser atualizada.)
+    @param(v Cardinal. Tempo em milisegundos que a memória deve ser atualizada.)
     }
-    procedure SetRefreshTime(v:DWORD); virtual;
+    procedure SetRefreshTime(v:Cardinal); virtual;
     {:
     Seta o driver de protocolo usado para a comunicação dessa memória.
     @param(p TProtocolDriver. Componente de protocolo usado para comunicação do tag.)
@@ -110,19 +109,19 @@ type
     {:
     Escreve valores de maneira @bold(assincrona).
     @param(Values TArrayOfDouble: Array de valores a serem escritos.)
-    @param(Count DWORD: Quantidade de valores a serem escritos.)
-    @param(Offset DWORD: A partir de qual elemento deve comecar a escrita.)
+    @param(Count Cardinal: Quantidade de valores a serem escritos.)
+    @param(Offset Cardinal: A partir de qual elemento deve comecar a escrita.)
     }
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); virtual; abstract;
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); virtual; abstract;
     //: Faz uma leitura @bold(sincrona) do valor do tag.
     procedure Read; virtual; abstract;
     {:
     Escreve valores de maneira @bold(sincrona).
     @param(Values TArrayOfDouble: Array de valores a serem escritos.)
-    @param(Count DWORD: Quantidade de valores a serem escritos.)
-    @param(Offset DWORD: A partir de qual elemento deve comecar a escrita.)
+    @param(Count Cardinal: Quantidade de valores a serem escritos.)
+    @param(Offset Cardinal: A partir de qual elemento deve comecar a escrita.)
     }
-    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); virtual; abstract;
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); virtual; abstract;
 
     //: @exclude
     procedure Loaded; override;
@@ -310,56 +309,56 @@ begin
   PAutoWrite := v;
 end;
 
-procedure TPLCTag.SetPLCHack(v:DWORD);
+procedure TPLCTag.SetPLCHack(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcPLCHack,PHack,v);
   PHack := v;
 end;
 
-procedure TPLCTag.SetPLCSlot(v:DWORD);
+procedure TPLCTag.SetPLCSlot(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcPLCSlot,PSlot,v);
   PSlot := v;
 end;
 
-procedure TPLCTag.SetPLCStation(v:DWORD);
+procedure TPLCTag.SetPLCStation(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcPLCStation,PStation,v);
   PStation := v;
 end;
 
-procedure TPLCTag.SetMemFileDB(v:DWORD);
+procedure TPLCTag.SetMemFileDB(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemFile_DB,PFile_DB,v);
   PFile_DB := v;
 end;
 
-procedure TPLCTag.SetMemAddress(v:DWORD);
+procedure TPLCTag.SetMemAddress(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemAddress,PAddress,v);
   PAddress := v;
 end;
 
-procedure TPLCTag.SetMemSubElement(v:DWORD);
+procedure TPLCTag.SetMemSubElement(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemSubElement,PSubElement,v);
   PSubElement := v;
 end;
 
-procedure TPLCTag.SetMemReadFunction(v:DWORD);
+procedure TPLCTag.SetMemReadFunction(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemReadFunction,PReadFunction,v);
   PReadFunction := v;
 end;
 
-procedure TPLCTag.SetMemWriteFunction(v:DWORD);
+procedure TPLCTag.SetMemWriteFunction(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemWriteFunction,PWriteFunction,v);
@@ -373,7 +372,7 @@ begin
   PPath := v;
 end;
 
-procedure TPLCTag.SetRefreshTime(v:DWORD);
+procedure TPLCTag.SetRefreshTime(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcScanTime,PScanTime,v);

@@ -14,7 +14,7 @@ type
   //: Tag para comunicação em blocos.
   TPLCBlock = class(TTagBlock)
   private
-    procedure SetSize(size:DWORD);
+    procedure SetSize(size:Cardinal);
     function  GetValue(Index:Integer):Double;
     procedure SetValue(index:Integer; Value:Double);
 
@@ -47,9 +47,9 @@ type
     procedure Read; override;
 
     //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
     //: @seealso(TPLCTag.Write)
-    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
     //: Lê/escreve um valor puro de modo assincrono em um item do bloco.
     property ValueRaw[index:Integer]:Double read GetValue write SetValue;
@@ -63,8 +63,6 @@ type
   end;
 
 implementation
-
-uses Tag, Math;
 
 constructor TPLCBlock.Create(AOwner:TComponent);
 begin
@@ -143,9 +141,9 @@ begin
   //faca alguma coisa q precise ser feita apos o tag ser carregado...
 end;
 
-procedure TPLCBlock.SetSize(size:DWORD);
+procedure TPLCBlock.SetSize(size:Cardinal);
 var
-  old:DWORD;
+  old:Cardinal;
 begin
   if size>0 then begin
     old:=PSize;
@@ -213,12 +211,12 @@ begin
   inherited Read;
 end;
 
-procedure TPLCBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TPLCBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
 begin
   inherited ScanWrite(Values, Count, Offset);
 end;
 
-procedure TPLCBlock.Write(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TPLCBlock.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 begin
   inherited Write(Values, Count, Offset);
 end;

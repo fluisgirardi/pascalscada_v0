@@ -45,11 +45,11 @@ type
     //: @seealso(TPLCTag.ScanRead)
     procedure ScanRead; override;
     //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
     //: @seealso(TPLCTag.Read)
     procedure Read; override;
     //: @seealso(TPLCTag.Write)
-    procedure Write(Values:TArrayOfDouble; Count, Offset:DWORD); override;
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
   published
     //: Bloco de comunicações que o elemento pertence.
     property PLCBlock:TPLCBlock read PBlock write SetBlock;
@@ -207,7 +207,7 @@ begin
     PBlock.ScanRead;
 end;
 
-procedure TPLCBlockElement.ScanWrite(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TPLCBlockElement.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
 begin
   if Assigned(PBlock) then
     PBlock.ScanWrite(values, 1, PIndex)
@@ -220,7 +220,7 @@ begin
   end;
 end;
 
-procedure TPLCBlockElement.Write(Values:TArrayOfDouble; Count, Offset:DWORD);
+procedure TPLCBlockElement.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 begin
   if Assigned(PBlock) then
     PBlock.Write(values, 1, PIndex)

@@ -17,8 +17,6 @@ type
     RemoveTag:TNotifyEvent;
   end;
 
-  //: @exclude
-  DWORD = cardinal;
   //: Classe base para todos os tags.
   TTag = class(TComponent)
   protected
@@ -27,37 +25,37 @@ type
     //: Booleano que armazena se o tag vai ter seu valor escrito automaticamente.
     PAutoWrite:Boolean;
     //: Conta os erros de leitura.
-    PCommReadErrors:DWORD;
+    PCommReadErrors:Cardinal;
     //: Conta as leituras com exito.
-    PCommReadOK:DWORD;
+    PCommReadOK:Cardinal;
     //: Conta os erros de escritas do tag.
-    PCommWriteErrors:DWORD;
+    PCommWriteErrors:Cardinal;
     //: Conta as escritas com sucesso do tag.
-    PCommWriteOk:DWORD;
+    PCommWriteOk:Cardinal;
     //: Armazena o Hack do equipamento da memória que está sendo mapeada.
-    PHack:DWORD;
+    PHack:Cardinal;
     //: Armazena o Slot do equipamento da memória que está sendo mapeada.
-    PSlot:DWORD;
+    PSlot:Cardinal;
     //: Armazena o endereço da estação da memória que está sendo mapeada.
-    PStation:DWORD;
+    PStation:Cardinal;
     //: Armazena o Arquivo/DB dentro do equipamento da memória que está sendo mapeada.
-    PFile_DB:DWORD;
+    PFile_DB:Cardinal;
     //: Armazena o endereço da memória no equipamento que está sendo mapeada.
-    PAddress:DWORD;
+    PAddress:Cardinal;
     //: Armazena o subendereço da memória no equipamento que está sendo mapeada.
-    PSubElement:DWORD;
+    PSubElement:Cardinal;
     //: Armazena o número de memórias que estão mapeadas.
-    PSize:DWORD;
+    PSize:Cardinal;
     //: Armazena o endereço completo da memória em formato texto.
     PPath:String;
     //: Armazena a função usada para leitura da memória.
-    PReadFunction:DWORD;
+    PReadFunction:Cardinal;
     //: Armazena a função usada para escrita da memória
-    PWriteFunction:DWORD;
+    PWriteFunction:Cardinal;
     //: Armazena o número de tentivas de leitura/escrita da memória.
-    PRetries:DWORD;
+    PRetries:Cardinal;
     //: Armazena o tempo de varredura a memória.
-    PScanTime:DWORD;
+    PScanTime:Cardinal;
     //: Armazena o evento chamado pelo quando uma leitura do tag tem sucesso.
     POnReadOk:TNotifyEvent;
     //: Armazena o evento chamado pelo tag quando uma leitura do tag falha.
@@ -90,13 +88,13 @@ type
     procedure NotifyChange;
 
     //: Incrementa o contador de leituras com sucesso.
-    procedure IncCommReadOK(value:DWORD);
+    procedure IncCommReadOK(value:Cardinal);
     //: Incrementa o contador de leituras com falha do tag.
-    procedure IncCommReadFaults(value:DWORD);
+    procedure IncCommReadFaults(value:Cardinal);
     //: Incrementa o contador de escritas com exito do tag.
-    procedure IncCommWriteOK(value:DWORD);
+    procedure IncCommWriteOK(value:Cardinal);
     //: Incrementa o contador de falhas de escrita do tag.
-    procedure IncCommWriteFaults(value:DWORD);
+    procedure IncCommWriteFaults(value:Cardinal);
 
     //: Caso @true, o tag será lido automaticamente.
     property AutoRead:Boolean read PAutoRead;
@@ -106,35 +104,35 @@ type
     }
     property AutoWrite:Boolean read PAutoWrite;
     //: Informa o total de erros de leitura do tag.
-    property CommReadErrors:DWORD read PCommReadErrors;
+    property CommReadErrors:Cardinal read PCommReadErrors;
     //: Informa o total de leituras com exito do tag.
-    property CommReadsOK:DWORD read PCommReadOK;
+    property CommReadsOK:Cardinal read PCommReadOK;
     //: Informa o total de erros de escrita do tag.
-    property CommWriteErrors:DWORD read PCommWriteErrors;
+    property CommWriteErrors:Cardinal read PCommWriteErrors;
     //: Informa o total de escritas com sucesso do tag.
-    property CommWritesOk:DWORD read PCommWriteOk;
+    property CommWritesOk:Cardinal read PCommWriteOk;
     //: Hack do equipamento que contem a memória que está sendo mapeada, se aplicável.
-    property PLCHack:DWORD read PHack;
+    property PLCHack:Cardinal read PHack;
     //: Slot do equipamento que contem a memória que está sendo mapeada, se aplicável.
-    property PLCSlot:DWORD read PSlot;
+    property PLCSlot:Cardinal read PSlot;
     //: Endereço da estação que contem a memória que está sendo mapeada, se aplicável.
-    property PLCStation:DWORD read PStation;
+    property PLCStation:Cardinal read PStation;
     //: Arquivo/DB dentro do equipamento que contem a memórias que está sendo mapeada, se aplicável.
-    property MemFile_DB:DWORD read PFile_DB;
+    property MemFile_DB:Cardinal read PFile_DB;
     //: Endereço da memória que está sendo mapeada.
-    property MemAddress:DWORD read PAddress;
+    property MemAddress:Cardinal read PAddress;
     //: Subendereço da memória que está sendo mapeada, se aplicável.
-    property MemSubElement:DWORD read PSubElement;
+    property MemSubElement:Cardinal read PSubElement;
     //: Função do driver responsável por realizar a leitura desse memória.
-    property MemReadFunction:DWORD read PReadFunction;
+    property MemReadFunction:Cardinal read PReadFunction;
     //: Função do driver responsável por realizar a escrita de valores dessa memória.
-    property MemWriteFunction:DWORD read PWriteFunction;
+    property MemWriteFunction:Cardinal read PWriteFunction;
     //: Número tentivas de leitura/escrita dessa memória.
-    property Retries:DWORD read PRetries;
+    property Retries:Cardinal read PRetries;
     //: Tempo de varredura (atualização) dessa memória em milisegundos.
-    property RefreshTime:DWORD read PScanTime;
+    property RefreshTime:Cardinal read PScanTime;
     //: Número de memórias que serão mapeadas, se aplicável.
-    property Size:DWORD read PSize;
+    property Size:Cardinal read PSize;
     //: Endereço longo (texto), se aplicável ao driver.
     property LongAddress:String read PPath;
 
@@ -261,28 +259,28 @@ begin
     POnWriteFail(self)
 end;
 
-procedure TTag.IncCommReadOK(value:DWORD);
+procedure TTag.IncCommReadOK(value:Cardinal);
 begin
   inc(PCommReadOK,value);
   if value>0 then
     NotifyReadOk;
 end;
 
-procedure TTag.IncCommReadFaults(value:DWORD);
+procedure TTag.IncCommReadFaults(value:Cardinal);
 begin
   inc(PCommReadErrors,value);
   if value>0 then
     NotifyReadFault;
 end;
 
-procedure TTag.IncCommWriteOK(value:DWORD);
+procedure TTag.IncCommWriteOK(value:Cardinal);
 begin
   inc(PCommWriteOk,value);
   if value>0 then
     NotifyWriteOk;
 end;
 
-procedure TTag.IncCommWriteFaults(value:DWORD);
+procedure TTag.IncCommWriteFaults(value:Cardinal);
 begin
   inc(PCommWriteErrors,value);
   if value>0 then

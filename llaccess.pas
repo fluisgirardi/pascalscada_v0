@@ -8,12 +8,12 @@ uses Windows , SysUtils, ddkint, Classes;
 Const
   ZLIO_BYTE  = 0;
   ZLIO_WORD  = 1;
-  ZLIO_DWORD = 2;
+  ZLIO_Cardinal = 2;
   ZLIODriverName = 'libio';
 
 type
 TzlIOData = record
-  Port,DataType,Data:dword;
+  Port,DataType,Data:Cardinal;
 end;
 
 type
@@ -36,14 +36,14 @@ type
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
 
-    function  portreadb(const Port:dword ):byte;
-    function  portreadw(const Port:dword ):word;
-    function  portreadl(const Port:dword ):dword;
-    procedure portwriteb(const Port:Dword;const Data:BYTE);
-    procedure portwritew(const Port:dword;const Data:WORD);
-    procedure portwritel(const Port,Data:DWORD);
-    procedure zlioportwrite(const Port,DataType,Data:DWORD);
-    function  zlioportread(const Port,DataType:dword ):DWORD;
+    function  portreadb(const Port:Cardinal ):byte;
+    function  portreadw(const Port:Cardinal ):word;
+    function  portreadl(const Port:Cardinal ):Cardinal;
+    procedure portwriteb(const Port:Cardinal;const Data:BYTE);
+    procedure portwritew(const Port:Cardinal;const Data:WORD);
+    procedure portwritel(const Port,Data:Cardinal);
+    procedure zlioportwrite(const Port,DataType,Data:Cardinal);
+    function  zlioportread(const Port,DataType:Cardinal ):Cardinal;
     procedure zliosetiopm(const Direct:boolean );
   published
     //property DriverName:String read ZLIODriverName write SetDriverName;
@@ -93,7 +93,7 @@ begin
   inherited Loaded;
 end;
 
-procedure TLLAccess.zlioportwrite( const Port,DataType,Data:dword );
+procedure TLLAccess.zlioportwrite( const Port,DataType,Data:Cardinal );
 var
   resdata:TZLIOData;
   cBR:cardinal;
@@ -108,59 +108,59 @@ begin
     Case DataType of
       ZLIO_BYTE : asm mov edx,Port;mov eax,data;out dx,al; end;
       ZLIO_WORD : asm mov edx,Port;mov eax,data;out dx,ax; end;
-      ZLIO_DWORD: asm mov edx,Port;mov eax,data;out dx,eax; end;
+      ZLIO_Cardinal: asm mov edx,Port;mov eax,data;out dx,eax; end;
     end;
   end;
 end;
 
-function TLLAccess.zlioportread(const Port,DataType:dword):dword;
+function TLLAccess.zlioportread(const Port,DataType:Cardinal):Cardinal;
 var
   resdata:TZLIOData;
-  cBR:cardinal;i:dword;
+  cBR:cardinal;i:Cardinal;
 begin
   if (not ZLIODirect) then begin
     resdata.Port := Port;
     resdata.DataType :=  DataType;
     if ZLIOStarted then
-      DeviceIoControl(HZLIO,IOCTL_ZLUNI_PORT_READ,@resdata,sizeof(resdata),@i,sizeof(dword),cBR,nil );
+      DeviceIoControl(HZLIO,IOCTL_ZLUNI_PORT_READ,@resdata,sizeof(resdata),@i,sizeof(Cardinal),cBR,nil );
   end else begin
     Case DataType of
       ZLIO_BYTE : asm mov edx,Port;xor eax,eax;in al,dx;mov i,eax; end;
       ZLIO_WORD : asm mov edx,Port;xor eax,eax;in ax,dx;mov i,eax; end;
-      ZLIO_DWORD: asm mov edx,Port;xor eax,eax;in eax,dx;mov i,eax end;
+      ZLIO_Cardinal: asm mov edx,Port;xor eax,eax;in eax,dx;mov i,eax end;
     end;
   end;
   result := i;
 end;
 
-function TLLAccess.portreadb( const Port:dword ):byte;
+function TLLAccess.portreadb( const Port:Cardinal ):byte;
 begin
   Result := zlioportread(Port,ZLIO_BYTE);
 end;
 
-function TLLAccess.portreadw( const Port:dword ):word;
+function TLLAccess.portreadw( const Port:Cardinal ):word;
 begin
   Result := zlioportread(Port,ZLIO_WORD);
 end;
 
-function TLLAccess.portreadl( const Port:dword ):dword;
+function TLLAccess.portreadl( const Port:Cardinal ):Cardinal;
 begin
-  Result := zlioportread(Port,ZLIO_DWORD);
+  Result := zlioportread(Port,ZLIO_Cardinal);
 end;
 
-procedure TLLAccess.portwriteb( const Port:Dword;const Data:byte );
+procedure TLLAccess.portwriteb( const Port:Cardinal;const Data:byte );
 begin
   zlioportwrite(Port,ZLIO_BYTE,Data);
 end;
 
-procedure TLLAccess.portwritew( const Port:dword;const Data:word );
+procedure TLLAccess.portwritew( const Port:Cardinal;const Data:word );
 begin
   zlioportwrite(Port,ZLIO_WORD,Data);
 end;
 
-procedure TLLAccess.portwritel( const Port,Data:dword );
+procedure TLLAccess.portwritel( const Port,Data:Cardinal );
 begin
-  zlioportwrite(Port,ZLIO_DWORD,Data);
+  zlioportwrite(Port,ZLIO_Cardinal,Data);
 end;
 
 procedure TLLAccess.zliosetiopm( const Direct:boolean );

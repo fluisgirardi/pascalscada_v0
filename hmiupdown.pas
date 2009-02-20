@@ -9,7 +9,7 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Forms, Controls, Graphics,
-  Dialogs, ExtCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes, ComCtrls;
+  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls;
 
 type
    //: Implementa um controle em forma de Up/Down para escrita de valores em tags numéricos.

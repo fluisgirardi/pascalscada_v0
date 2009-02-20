@@ -105,8 +105,8 @@ end;
 
 procedure TTCPIPClientPort.Read(Packet:PIOPacket);
 var
-  lidos:DWORD;
-  tentativas:DWORD;
+  lidos:Cardinal;
+  tentativas:Cardinal;
 begin
   ConnectionOK;
 
@@ -130,8 +130,8 @@ end;
 
 procedure TTCPIPClientPort.Write(Packet:PIOPacket);
 var
-  escritos:DWORD;
-  tentativas:DWORD;
+  escritos:Cardinal;
+  tentativas:Cardinal;
 begin
   ConnectionOK;
 

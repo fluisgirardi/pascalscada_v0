@@ -25,13 +25,13 @@ type
     PValue:String;
     PByteSize:Byte;
     PStringType:TPLCStringTypes;
-    PStringSize:DWORD;
+    PStringSize:Cardinal;
 
-    procedure SetBlockSize(size:DWORD);
-    procedure SetStringSize(size:DWORD);
+    procedure SetBlockSize(size:Cardinal);
+    procedure SetStringSize(size:Cardinal);
     procedure SetByteSize(bsize:Byte);
     procedure SetStringType(stype:TPLCStringTypes);
-    procedure SetDummySize(s:DWORD);
+    procedure SetDummySize(s:Cardinal);
 
     function  GetValue:String;
     function  GetValueDirect:String;
@@ -48,21 +48,21 @@ type
     function GetValueTimestamp:TDatetime;
   protected
     //: @seealso(TPLCTag.SetPLCHack)
-    procedure SetPLCHack(v:DWORD); override;
+    procedure SetPLCHack(v:Cardinal); override;
     //: @seealso(TPLCTag.SetPLCSlot)
-    procedure SetPLCSlot(v:DWORD); override;
+    procedure SetPLCSlot(v:Cardinal); override;
     //: @seealso(TPLCTag.SetPLCStation)
-    procedure SetPLCStation(v:DWORD); override;
+    procedure SetPLCStation(v:Cardinal); override;
     //: @seealso(TPLCTag.SetMemFileDB)
-    procedure SetMemFileDB(v:DWORD); override;
+    procedure SetMemFileDB(v:Cardinal); override;
     //: @seealso(TPLCTag.SetMemAddress)
-    procedure SetMemAddress(v:DWORD); override;
+    procedure SetMemAddress(v:Cardinal); override;
     //: @seealso(TPLCTag.SetMemSubElement)
-    procedure SetMemSubElement(v:DWORD); override;
+    procedure SetMemSubElement(v:Cardinal); override;
     //: @seealso(TPLCTag.SetMemReadFunction)
-    procedure SetMemReadFunction(v:DWORD); override;
+    procedure SetMemReadFunction(v:Cardinal); override;
     //: @seealso(TPLCTag.SetMemWriteFunction)
-    procedure SetMemWriteFunction(v:DWORD); override;
+    procedure SetMemWriteFunction(v:Cardinal); override;
     //: @seealso(TPLCTag.SetPath)
     procedure SetPath(v:String); override;
     //: @seealso(TPLCTag.SetProtocolDriver)
@@ -80,7 +80,7 @@ type
     property ValueDirect:String read GetValueDirect write SetValueDirect;
   published
     //: Quantidade máxima de caracteres da string.
-    property StringSize:DWORD read PStringSize write SetStringSize;
+    property StringSize:Cardinal read PStringSize write SetStringSize;
     {:
     Tipo da String.
     @seealso(TPLCStringTypes)
@@ -348,49 +348,49 @@ begin
    Result := Prefix + Value + Sufix;
 end;
 
-procedure TPLCString.SetPLCHack(v:DWORD);
+procedure TPLCString.SetPLCHack(v:Cardinal);
 begin
   inherited SetPLCHack(v);
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetPLCSlot(v:DWORD);
+procedure TPLCString.SetPLCSlot(v:Cardinal);
 begin
   inherited SetPLCSlot(v);
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetPLCStation(v:DWORD);
+procedure TPLCString.SetPLCStation(v:Cardinal);
 begin
   inherited SetPLCStation(v);
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetMemFileDB(v:DWORD);
+procedure TPLCString.SetMemFileDB(v:Cardinal);
 begin
   inherited SetMemFileDB(v);
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetMemAddress(v:DWORD);
+procedure TPLCString.SetMemAddress(v:Cardinal);
 begin
   inherited SetMemAddress(v);
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetMemSubElement(v:DWORD);
+procedure TPLCString.SetMemSubElement(v:Cardinal);
 begin
   inherited SetMemSubElement(v);
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetMemReadFunction(v:DWORD);
+procedure TPLCString.SetMemReadFunction(v:Cardinal);
 begin
   inherited SetMemReadFunction(v);
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetMemWriteFunction(v:DWORD);
+procedure TPLCString.SetMemWriteFunction(v:Cardinal);
 begin
   inherited SetMemWriteFunction(v);
   SetBlockSize(CalcBlockSize(false));
@@ -463,9 +463,9 @@ begin
   end;
 end;
 
-procedure TPLCString.SetBlockSize(size:DWORD);
+procedure TPLCString.SetBlockSize(size:Cardinal);
 var
-  old:DWORD;
+  old:Cardinal;
 begin
   if size>0 then begin
     old:=PSize;
@@ -476,7 +476,7 @@ begin
   end;
 end;
 
-procedure TPLCString.SetStringSize(size:DWORD);
+procedure TPLCString.SetStringSize(size:Cardinal);
 begin
    if size>255 then
      raise Exception.Create('Tamanho máximo da string fora dos limites!');
@@ -499,7 +499,7 @@ begin
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetDummySize(s:DWORD);
+procedure TPLCString.SetDummySize(s:Cardinal);
 begin
 
 end;

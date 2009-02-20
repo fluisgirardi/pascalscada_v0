@@ -86,7 +86,7 @@ type
     //: Armazena o driver de porta associado a esse driver de protocolo.
     PCommPort:TCommPortDriver;
     //: Armazena o ID (número único) desses pedidos.
-    FScanReadID, FScanWriteID, FReadID, FWriteID:DWORD;
+    FScanReadID, FScanWriteID, FReadID, FWriteID:Cardinal;
     //: Armazena a evento usado para parar as threads do driver de protocolo.
     FCritical:TCriticalSection;
     //: Forca a suspensão das threads.
@@ -126,8 +126,8 @@ type
 
     @param(TagObj TTag. Tag quem sofreu a mudança.)
     @param(Change TChangeType. Que propriedade sofreu a alteração.)
-    @param(oldValue DWORD. Valor antigo da propriedade.)
-    @param(newValue DWORD. Novo valor da propriedade.)
+    @param(oldValue Cardinal. Valor antigo da propriedade.)
+    @param(newValue Cardinal. Novo valor da propriedade.)
     @seealso(TagChanges)
     }
     procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); virtual; abstract; //realiza uma mundanca em alguma propriedade do tag;
@@ -173,11 +173,11 @@ type
     propriedade de um tag sofre alguma mudança.
     @param(TagObj TTag. Tag quem sofreu a mudança.)
     @param(Change TChangeType. Que propriedade sofreu a alteração.)
-    @param(oldValue DWORD. Valor antigo da propriedade.)
-    @param(newValue DWORD. Novo valor da propriedade.)
+    @param(oldValue Cardinal. Valor antigo da propriedade.)
+    @param(newValue Cardinal. Novo valor da propriedade.)
     @seealso(TProtocolDriver.TagChanges)
     }
-    procedure TagChanges(TagObj:TTag; Change:TChangeType; oldValue, newValue:DWORD);
+    procedure TagChanges(TagObj:TTag; Change:TChangeType; oldValue, newValue:Cardinal);
     {:
     Função que informa se o Tag está associado ao driver.
     @param(TagObj TTag. Tag que deseja saber se está associado ao driver.)
@@ -196,16 +196,16 @@ type
     {:
     Solicita a leitura por scan (assincrona) de um tag.
     @param(tagrec TTagRec. Estrutura com as informações do tag que se deseja ler.)
-    @returns(DWORD. Número único do pedido de leitura por scan.)
+    @returns(Cardinal. Número único do pedido de leitura por scan.)
     }
-    function  ScanRead(const tagrec:TTagRec):DWORD;
+    function  ScanRead(const tagrec:TTagRec):Cardinal;
     {:
     Solicita a escrita por scan (assincrona) de um tag.
     @param(tagrec TTagRec. Estrutura com as informações do tag que se deseja escrever.)
     @param(Values TArrayOfDouble Conjunto de valores a escrever.)
-    @returns(DWORD. Número único do pedido de escrita por scan.)
+    @returns(Cardinal. Número único do pedido de escrita por scan.)
     }
-    function  ScanWrite(const tagrec:TTagRec; const Values:TArrayOfDouble):DWORD;
+    function  ScanWrite(const tagrec:TTagRec; const Values:TArrayOfDouble):Cardinal;
     {:
     Solicita a leitura (sincrona) de um tag.
     @param(tagrec TTagRec. Estrutura com as informações do tag que se deseja ler.)
@@ -458,7 +458,7 @@ begin
     end;
 end;
 
-procedure TProtocolDriver.TagChanges(TagObj:TTag; Change:TChangeType; oldValue, newValue:DWORD);
+procedure TProtocolDriver.TagChanges(TagObj:TTag; Change:TChangeType; oldValue, newValue:Cardinal);
 begin
   if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
     exit;
@@ -472,7 +472,7 @@ begin
   end;
 end;
 
-function TProtocolDriver.ScanRead(const tagrec:TTagRec):DWORD;
+function TProtocolDriver.ScanRead(const tagrec:TTagRec):Cardinal;
 begin
   try
     PCallersCS.Enter;
@@ -502,7 +502,7 @@ begin
   end;
 end;
 
-function TProtocolDriver.ScanWrite(const tagrec:TTagRec; const Values:TArrayOfDouble):DWORD;
+function TProtocolDriver.ScanWrite(const tagrec:TTagRec; const Values:TArrayOfDouble):Cardinal;
 var
    pkg:PScanWriteRec;
 begin
