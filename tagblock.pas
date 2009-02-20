@@ -88,6 +88,9 @@ begin
       BuildTagRec(tr,Count,Offset);
       PProtocolDriver.ScanWrite(tr,Values);
       //TagCommandCallBack(Values,Now,tcScanWrite,ioOk,Offset);
+      //Dec(PCommWriteOk);
+    end else begin
+      TagCommandCallBack(Values,Now,tcScanWrite,ioOk,Offset);
       Dec(PCommWriteOk);
     end;
   end else

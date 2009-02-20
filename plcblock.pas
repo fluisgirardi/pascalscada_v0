@@ -179,7 +179,6 @@ end;
 procedure TPLCBlock.SetValues(values:TArrayOfDouble);
 var
   towrite:TArrayOfDouble;
-  c:Integer;
 begin
   towrite := values;
   ScanWrite(towrite,PSize,0);

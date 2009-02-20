@@ -38,7 +38,7 @@ contains
   commport in 'commport.pas',
   commtypes in 'commtypes.pas',
   SerialPort in 'SerialPort.pas',
-  ProtocolDriver in 'protocoldriver.pas',
+  protocoldriver in 'protocoldriver.pas',
   ModBusMasterDriver in 'ModBusMasterDriver.pas',
   PLCMemoryMananger in 'PLCMemoryMananger.pas',
   hsutils in 'hsutils.pas',

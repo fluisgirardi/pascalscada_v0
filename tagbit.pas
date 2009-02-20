@@ -1,4 +1,4 @@
-unit TagBit;
+﻿unit TagBit;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -133,8 +133,6 @@ begin
 end;
 
 function TTagBit.GetValueRaw:Double;
-var
-  x:ITagNumeric;
 begin
   if Assigned(PNumber) and ((PNumber as ITagNumeric)<>nil) then begin
     if PUseRaw then
