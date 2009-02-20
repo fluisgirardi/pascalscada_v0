@@ -66,13 +66,13 @@ type
     //: @exclude
     LazLastState:TCheckBoxState;
     //: @exclude
-    procedure SetColor(c:TColor); override;
-    //: @exclude
     procedure DoOnChange; override;
     {$ELSE}
     //: @exclude
     procedure Toggle; override;
     {$ENDIF}
+    //: @exclude
+    procedure SetColor(c:TColor); {$IFDEF FPC}override; {$ENDIF}
     //: @exclude
     function GetChecked: Boolean; override;
     //: @exclude

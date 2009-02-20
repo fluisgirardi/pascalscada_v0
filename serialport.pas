@@ -85,6 +85,7 @@ type
     PParity:TSerialParity;
     PDataBits:TSerialDataBits;
     {$IF defined(WIN32) or defined(WIN64)}
+    PPortEventName:String;
     PSavedDCB:DCB;
     PDCB:DCB;
     ComTimeouts:COMMTIMEOUTS;

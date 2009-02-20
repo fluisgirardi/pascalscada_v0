@@ -65,7 +65,7 @@ type
     //: @exclude
     procedure Loaded; override;
     //: @exclude
-    procedure SetColor(c:TColor); override;
+    procedure SetColor(c:TColor); {$IFDEF FPC}override; {$ENDIF}
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
