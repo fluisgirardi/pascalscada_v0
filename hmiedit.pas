@@ -191,7 +191,7 @@ end;
 procedure THMIEdit.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if ((t as ITagInterface)=nil) and ((t as ITagNumeric)=nil) and ((t as ITagString)=nil) then
+  if (t<>nil) and (((t as ITagInterface)=nil) and ((t as ITagNumeric)=nil) and ((t as ITagString)=nil)) then
      raise Exception.Create('Tag inválido!');
 
   //se ja estou associado a um tag, remove

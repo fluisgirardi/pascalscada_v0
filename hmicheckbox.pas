@@ -264,7 +264,7 @@ end;
 procedure THMICheckBox.SetHMITag(t:TPLCTag);
 begin
   //se o tag é um tag numerico.
-  if ((t as ITagNumeric)=nil) then
+  if (t<>nil) and ((t as ITagNumeric)=nil) then
      raise Exception.Create('Somente tags numéricos são aceitos!');
 
   //se ja estou associado a um tag, remove

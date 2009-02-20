@@ -116,7 +116,7 @@ end;
 procedure THMIRadioGroup.SetHMITag(t:TPLCTag);                    //seta um tag
 begin
    //se o tag esta entre um dos aceitos.
-   if ((t as ITagNumeric)=nil) then
+   if (t<>nil) and ((t as ITagNumeric)=nil) then
       raise Exception.Create('Somente tags numéricos são aceitos!');
 
    //se ja estou associado a um tag, remove

@@ -37,6 +37,9 @@ type
     }
     procedure SetScaleProcessor(sp:TPIPE);
   public
+    //: @exclude
+    destructor Destroy; override;
+
     procedure Write; overload; virtual;
     procedure ScanWrite; overload; virtual;
     //: Remove a seqüência de processamento de escalas.
@@ -53,6 +56,12 @@ type
   end;
 
 implementation
+
+destructor TPLCNumber.Destroy;
+begin
+  SetScaleProcessor(nil);
+  inherited Destroy;
+end;
 
 function  TPLCNumber.GetValue:Double;
 begin
