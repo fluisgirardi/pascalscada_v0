@@ -631,11 +631,12 @@ end;
 procedure TProtocolDriver.SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
 begin
    try
-      FPause.WaitFor($FFFFFFFF);
+      FPause.ResetEvent;
       FCritical.Enter;
       DoGetValue(TagRec,values);
    finally
       FCritical.Leave;
+      FPause.SetEvent;
    end;
 end;
 
