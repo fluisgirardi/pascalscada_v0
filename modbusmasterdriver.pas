@@ -346,8 +346,10 @@ begin
             PModbusPLC[plc].OutPuts.RemoveAddress(mem,size,1);
           2:
             PModbusPLC[plc].Inputs.RemoveAddress(mem,size,1);
-          3,4:
+          3:
             PModbusPLC[plc].Registers.RemoveAddress(mem,size,1);
+          4:
+            PModbusPLC[plc].AnalogReg.RemoveAddress(mem,size,1);
         end;
 
         //se o plc nao tem mais nenhuma memoria pra ler, elimina ele do scan;
@@ -381,10 +383,10 @@ begin
         PModbusPLC[plc].OutPuts.MaxBlockItems := 2016;
         PModbusPLC[plc].OutPuts.MaxHole := POutputMaxHole;
         PModbusPLC[plc].Registers := TPLCMemoryManager.Create(ntWORD);
-        PModbusPLC[plc].Registers.MaxBlockItems := 252;
+        PModbusPLC[plc].Registers.MaxBlockItems := 100;
         PModbusPLC[plc].Registers.MaxHole := PRegistersMaxHole;
         PModbusPLC[plc].AnalogReg := TPLCMemoryManager.Create(ntWORD);
-        PModbusPLC[plc].AnalogReg.MaxBlockItems := 252;
+        PModbusPLC[plc].AnalogReg.MaxBlockItems := 100;
         PModbusPLC[plc].AnalogReg.MaxHole := PRegistersMaxHole;
       end;
       case memtype of
@@ -865,11 +867,17 @@ begin
           if foundPLC then
             PModbusPLC[plc].Inputs.SetFault(address,len,1,Result);
         end;
-        $03,$04: begin
+        $03: begin
           address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
           len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
           if foundPLC then
             PModbusPLC[plc].Registers.SetFault(address,len,1,Result);
+        end;
+        $04: begin
+          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
+          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+          if foundPLC then
+            PModbusPLC[plc].AnalogReg.SetFault(address,len,1,Result);
         end;
       end;
     end;

@@ -277,11 +277,11 @@ begin
     PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
     //PScanReadThread.Priority:=tpHighest;
     PScanReadThread.OnDoScanRead := SafeScanRead;
-    //PScanReadThread.OnDoScanWrite := InternalDoScanWrite;
+    PScanReadThread.OnDoScanWrite := nil;
 
     PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
-    PScanWriteThread.Priority:=tpHighest;
-    //PScanWriteThread.OnDoScanRead := InternalDoScanRead;
+    PScanWriteThread.Priority:=tpTimeCritical;
+    PScanWriteThread.OnDoScanRead := nil;
     PScanWriteThread.OnDoScanWrite := SafeScanWrite;
 
     PScanUpdateThread.Resume;
