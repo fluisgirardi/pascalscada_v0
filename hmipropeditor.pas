@@ -17,7 +17,7 @@ uses
   {$ELSE}
     Types,
     //se for delphi 6 ou superior
-    {$IF defined(DELPHI6_UP}
+    {$IF defined(DELPHI6_UP)}
       DesignIntf, DesignEditors;
     {$ELSE}
       //delphi 5 e inferiores.
