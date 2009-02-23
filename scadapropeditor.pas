@@ -5,6 +5,8 @@ unit scadapropeditor;
 {$MODE Delphi}
 {$ENDIF}
 
+{$I delphiver.inc}
+
 interface
 
 uses
@@ -20,12 +22,12 @@ uses
     PropEdits;
   {$ELSE}
     Types,
-    //se for delphi 4 ou 5
-    {$IF defined(VER130) or defined(VER120)}
-      DsgnIntf;
+    //Delphi 6 ou superior
+    {$IF defined(DELPHI6_UP)}
+      DesignIntf, DesignEditors;
     {$ELSE}
       //demais versoes do delphi
-      DesignIntf, DesignEditors;
+      DsgnIntf;
     {$IFEND}
   {$ENDIF}
 
@@ -51,7 +53,9 @@ implementation
 function  TPortPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
    if GetComponent(0) is TSerialPortDriver then
-      Result := [paValueList{$IFDEF FPC}, paPickList{$ELSE}, paReadOnly, paValueEditable{$ENDIF}];
+      Result := [paValueList{$IFDEF FPC}, paPickList{$ELSE}
+                 {$IFDEF DELPHI2005_UP}, paReadOnly,
+                 paValueEditable{$ENDIF}{$ENDIF}];
 end;
 
 function  TPortPropertyEditor.GetValue: string;
@@ -99,7 +103,8 @@ end;
 function  TElementIndexPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
    if GetComponent(0) is TPLCBlockElement then
-      Result := [paValueList{$IFNDEF FPC}, paReadOnly, paValueEditable{$ENDIF}];
+      Result := [paValueList{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
+                 paValueEditable{$ENDIF}{$ENDIF}];
 end;
 
 procedure TElementIndexPropertyEditor.GetValues(Proc: TGetStrProc);
