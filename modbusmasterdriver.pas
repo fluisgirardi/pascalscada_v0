@@ -613,7 +613,7 @@ begin
     // Calcula o tamanho do pacote resposta
     case TagObj.ReadFunction of
       $01..$02:
-        ResultLen := 5 +(TagObj.Size div 8)+Integer((TagObj.Size mod 8)<>0);
+        ResultLen := 5 +(TagObj.Size div 8)+IfThen((TagObj.Size mod 8)<>0,1,0);
       $03..$04:
         ResultLen := 5+(TagObj.Size*2);
       $07:
@@ -682,9 +682,9 @@ begin
 
           inc(i);
           if i>7 then begin
-            Result[c2] := 0;
             i:=0;
             inc(c2);
+            Result[c2] := 0;
           end;
         end;
 
@@ -717,7 +717,7 @@ begin
     end;
     // Calcula o tamanho do pacote resposta
     case TagObj.WriteFunction of
-      $05,$06,$10:
+      $05,$06,$0F,$10:
         ResultLen := 8;
       else
       begin
