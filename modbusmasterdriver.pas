@@ -563,7 +563,7 @@ end;
 
 function  TModBusMasterDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var
-  i:Integer;
+  i, c, c2:Integer;
 begin
   //checa se é um pacote de escrita de valores ou de leitura
   //que está sendo codificado.
@@ -656,6 +656,39 @@ begin
         Result[4] := (FloatToInteger(ToWrite[0]) and $FF00) shr 8;
         Result[5] := FloatToInteger(ToWrite[0]) and $FF;
         // Calcula o CRC
+        Calcul_crc(Result);
+      end;
+
+      $0F: begin
+        //Num de saidas em bytes + 9 bytes fixos.
+        SetLength(Result,(TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0)+9);
+        Result[0] := TagObj.Station and $FF;
+        Result[1] := $0F;
+        Result[2] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
+        Result[3] := (TagObj.Address+TagObj.OffSet) and $FF;
+        Result[4] := (Min(TagObj.Size,Length(ToWrite)) and $FF00) shr 8;
+        Result[5] := Min(TagObj.Size,Length(ToWrite)) and $FF;
+        Result[6] := (TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0);
+
+        i := 0;
+        c := 0;
+        c2:= 7;
+        Result[7] := 0;
+
+        for c := 0 to Min(TagObj.Size,Length(ToWrite))-1 do begin
+          if ToWrite[c]<>0 then begin
+            Result[c2] := Result[c2]+ (1 shl i);
+          end;
+
+          inc(i);
+          if i>7 then begin
+            Result[c2] := 0;
+            i:=0;
+            inc(c2);
+          end;
+        end;
+
+        // Calcula CRC
         Calcul_crc(Result);
       end;
 
@@ -825,6 +858,29 @@ begin
     end;
     $08:
       Result := ioOk;
+    $0F: begin
+      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
+
+      SetLength(values,len);
+
+      i := 0;
+      c := 0;
+      c2:= 7;
+      while c2<(Length(pkg.BufferToWrite)-2) do begin
+        if (c=8) then begin
+          c:=0;
+          inc(c2);
+        end;
+        Values[i]:=IfThen(((Integer(pkg.BufferToWrite[c2]) and (1 shl c))=(1 shl c)),1,0);
+        inc(i);
+        inc(c);
+      end;
+
+      if foundPLC then
+        PModbusPLC[plc].OutPuts.SetValues(address,len,1,values);
+      Result := ioOk;
+    end;
     $10: begin
       address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
       len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
