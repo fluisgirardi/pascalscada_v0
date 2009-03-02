@@ -71,7 +71,7 @@ end;
 
 destructor  TPLCBlockElement.Destroy;
 begin
-  if Assigned(PBlock) then;
+  if Assigned(PBlock) then
      PBlock.RemoveChangeCallBack(ChangeCallback);
   PBlock:=nil;
   inherited Destroy;
