@@ -167,9 +167,11 @@ begin
   {$if defined(NeedCrossEvents)}
   pthread_mutex_lock(@FEvent.mutex);
   FEvent.IsDestroing := true;
-  FEvent.Isset       := true;
-  pthread_cond_signal(@FEvent.condvar);
+  pthread_cond_broadcast(@FEvent.condvar);
   pthread_mutex_unlock(@FEvent.mutex);
+
+  while (Waiters <> 0) do
+    cThreadSwitch;
 
   pthread_cond_destroy(@FEvent.condvar);
   pthread_mutex_destroy(@FEvent.mutex);
@@ -194,7 +196,7 @@ begin
   {$if defined(NeedCrossEvents)}
   pthread_mutex_lock(@FEvent.mutex);
   FEvent.isset:=true;
-  pthread_cond_signal(@FEvent.condvar);
+  pthread_cond_broadcast(@FEvent.condvar);
   pthread_mutex_unlock(@FEvent.mutex);
   {$ELSE}
   FEvent.SetEvent;
@@ -204,7 +206,6 @@ end;
 function   TCrossEvent.WaitFor(Timeout : Cardinal) : TWaitResult;
 {$if defined(NeedCrossEvents)}
 var
-  x:Integer;
   errres : cint;
   timespec : ttimespec;
   tnow : timeval;
@@ -221,8 +222,6 @@ begin
   end;
   
   inc(Waiters);
-
-  x:=GetLastOSError;
 
   //espera sem timeout
   if Timeout = $FFFFFFFF then begin
@@ -243,7 +242,10 @@ begin
     while (not FEvent.IsDestroing) and (not FEvent.isset) and (errres<>ESysETIMEDOUT) do
        errres:=pthread_cond_timedwait(@FEvent.condvar, @FEvent.mutex, @timespec);
   end;
-  
+
+  if (FManualReset=false) then
+    FEvent.isset := false;
+
   //checa os resultados...
   if FEvent.IsDestroing then
      Result := wrAbandoned
@@ -257,12 +259,9 @@ begin
          Result := wrError;
     end;
   
-  dec(Waiters);
-
-  if (Waiters=0) and (not FManualReset) then
-    FEvent.isset := false;
-  
   pthread_mutex_unlock(@FEvent.mutex);
+
+  InterLockedDecrement(Waiters);
   
   {$ELSE}
   Result := FEvent.WaitFor(Timeout);
