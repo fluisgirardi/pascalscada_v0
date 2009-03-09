@@ -786,7 +786,7 @@ begin
       i := 0;
       c := 0;
       c2:= 3;
-      while c2<(Length(pkg.BufferToRead)-2) do begin
+      while i<len do begin
         if (c=8) then begin
           c:=0;
           inc(c2);
@@ -867,7 +867,7 @@ begin
       i := 0;
       c := 0;
       c2:= 7;
-      while c2<(Length(pkg.BufferToWrite)-2) do begin
+      while i<len do begin
         if (c=8) then begin
           c:=0;
           inc(c2);
