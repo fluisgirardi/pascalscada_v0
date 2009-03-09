@@ -171,7 +171,7 @@ begin
   pthread_mutex_unlock(@FEvent.mutex);
 
   while (Waiters <> 0) do
-    cThreadSwitch;
+    ThreadSwitch;
 
   pthread_cond_destroy(@FEvent.condvar);
   pthread_mutex_destroy(@FEvent.mutex);
@@ -221,7 +221,7 @@ begin
      exit;
   end;
   
-  inc(Waiters);
+  InterLockedIncrement(Waiters);
 
   //espera sem timeout
   if Timeout = $FFFFFFFF then begin

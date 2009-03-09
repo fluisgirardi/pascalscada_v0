@@ -71,7 +71,7 @@ type
     //: Conta os callbacks que dependem desse tag.
     PChangeCallBackCount:integer;
     //: Armazena a zona critica dos callbacks.
-    PChangeCallBackCS:TCriticalSection;
+    //PChangeCallBackCS:TCriticalSection;
 
     //: Armazena o identificador desse tag. GUID
     PGUID:String;
