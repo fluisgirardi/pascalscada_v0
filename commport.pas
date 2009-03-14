@@ -168,7 +168,11 @@ type
     {: @exclude }
     PUpdater:TUpdateThread;
     {: @exclude }
-    PIOCmdCS:TCriticalSection;
+    PIOCmdCS, PLockCS:TCriticalSection;
+    {: @exclude }
+    PLockEvent:TCrossEvent;
+    {: @exclude }
+    PUnlocked:Integer;
     {: @exclude }
     function GetLocked:Boolean;
     {: @exclude }
@@ -554,6 +558,9 @@ constructor TCommPortDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   PIOCmdCS := TCriticalSection.Create;
+  PLockCS  := TCriticalSection.Create;
+  PLockEvent := TCrossEvent.Create(nil,True,True,Name);
+  PUnlocked:=0;
   PClearBufOnErr := true;
   PUpdater := TUpdateThread.Create(True);
   PUpdater.Priority:=tpHighest;
@@ -577,6 +584,8 @@ begin
   Active := false;
   SetLength(Protocols,0);
   PIOCmdCS.Destroy;
+  PLockCS.Destroy;
+  PLockEvent.Destroy;
   inherited Destroy;
 end;
 
@@ -662,20 +671,41 @@ end;
 
 function TCommPortDriver.Lock(DriverID:Cardinal):Boolean;
 begin
-  if PLockedBy=0 then begin
-    PLockedBy := DriverID;
-    Result := true;
-  end else
-    Result := false;
+  try
+    PLockCS.Enter;
+    if PLockedBy=0 then begin
+      PLockedBy := DriverID;
+      PLockEvent.ResetEvent;
+      Result := true;
+    end else
+      Result := false;
+  finally
+    PLockCS.Leave;
+  end;
+
+  //espera todos acabarem seus comandos.
+  while PUnlocked>0 do
+    {$IFDEF FPC}
+    ThreadSwitch;
+    {$ELSE}
+    SwitchToThread;
+    {$ENDIF}
+
 end;
 
 function TCommPortDriver.Unlock(DriverID:Cardinal):Boolean;
 begin
-  if (PLockedBy=0) or (DriverID=PLockedBy) then begin
-    PLockedBy := 0;
-    Result := true;
-  end else
-    Result := false;
+  try
+    PLockCS.Enter;
+    if (PLockedBy=0) or (DriverID=PLockedBy) then begin
+      PLockedBy := 0;
+      PLockEvent.SetEvent;
+      Result := true;
+    end else
+      Result := false;
+  finally
+    PLockCS.Leave;
+  end;
 end;
 
 procedure TCommPortDriver.SetActive(v:Boolean);
@@ -709,16 +739,29 @@ function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRea
                                  CallBack:TDriverCallBack; IsWriteValue:Boolean;
                                  Res1:TObject; Res2:Pointer):Cardinal;
 var
+  pid:Cardinal;
   PPacket:TIOPacket;
 begin
   try
-    PIOCmdCS.Enter;
+
+    if (csDestroying in ComponentState) then
+       exit;
+
     Result := 0;
 
-    if (csDestroying in ComponentState) or (not PActive) then begin
-       Result := 0;
-       exit;
+    //verify if another driver is the owner of the comm port...
+    PLockCS.Enter;
+    while (PLockedBy<>0) and (PLockedBy<>DriverID) do begin
+       PLockCS.Leave;
+       PLockEvent.WaitFor($FFFFFFFF);
+       PLockCS.Enter;
     end;
+    InterLockedIncrement(PUnlocked);
+    PLockCS.Leave;
+
+    PIOCmdCS.Enter;
+    if (not PActive) then
+       exit;
 
     inc(PPacketID);
 
@@ -729,9 +772,6 @@ begin
     PPacket.Wrote := 0;
     PPacket.WriteRetries := 3;
 
-    //SetLength(PPacket.BufferToWrite, length(ToWrite));
-    //for c:=low(ToWrite) to High(ToWrite) do
-    //  PPacket.BufferToWrite[c] := ToWrite[c];
     PPacket.BufferToWrite := ToWrite;
 
     PPacket.DelayBetweenCommand := DelayBetweenCmds;
@@ -756,9 +796,11 @@ begin
     SetLength(PPacket.BufferToRead, 0);
 
     //retorna o packet ID....
-    result := PPacketID;
+    Result := PPacketID;
   finally
+    PLockCS.Leave;
     PIOCmdCS.Leave;
+    InterLockedDecrement(PUnlocked);
   end;
 end;
 
@@ -770,9 +812,23 @@ var
   PCmdPackt:PCommandPacket;
 begin
   try
+
+    if (csDestroying in ComponentState) then
+       exit;
+
+    //verify if another driver is the owner of the comm port...
+    PLockCS.Enter;
+    while (PLockedBy<>0) and (PLockedBy<>DriverID) do begin
+       PLockCS.Leave;
+       PLockEvent.WaitFor($FFFFFFFF);
+       PLockCS.Enter;
+    end;
+    InterLockedIncrement(PUnlocked);
+    PLockCS.Leave;
+
     PIOCmdCS.Enter;
     Result := 0;
-    if (csDestroying in ComponentState) or (not PActive) then begin
+    if not PActive then begin
        Result := 0;
        exit;
     end;
@@ -813,7 +869,9 @@ begin
 
     result := PPacketID;
   finally
+    PLockCS.Leave;
     PIOCmdCS.Leave;
+    InterLockedDecrement(PUnlocked);
   end;
 end;
 

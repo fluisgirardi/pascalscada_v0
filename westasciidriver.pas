@@ -39,11 +39,11 @@ type
 {d} procedure AddressToChar(Addr:TWestAddressRange; var ret:BYTES);
 {d} function  WestToDouble(const buffer:BYTES; var Value:Double):TProtocolIOResult;
 {d} function  WestToDouble(const buffer:BYTES; var Value:Double; var dec:Byte):TProtocolIOResult;
-{d} function  DoubleToWest(var buffer:BYTES; const Value:Double):TProtocolIOResult;
-{d} function  DoubleToWest(var buffer:BYTES; const Value:Double; const dec:BYTE):TProtocolIOResult;
+{d} function  DoubleToWest(var buffer:BYTES; const Value:Double):TProtocolIOResult; overload;
+{d} function  DoubleToWest(var buffer:BYTES; const Value:Double; const dec:BYTE):TProtocolIOResult; overload;
 
-{d} function  ParameterValue (const DeviceID:TWestAddressRange; const Parameter:BYTE; var   Valor:Double; var   dec:BYTE):TProtocolIOResult;
-{d} function  ModifyParameter(const DeviceID:TWestAddressRange; const Parameter:BYTE; const Valor:Double; const dec:BYTE):TProtocolIOResult;
+{d} function  ParameterValue (const DeviceID:TWestAddressRange; const Parameter:BYTE; var   Value:Double; var   dec:BYTE):TProtocolIOResult;
+{d} function  ModifyParameter(const DeviceID:TWestAddressRange; const Parameter:BYTE; const Value:Double; const dec:BYTE):TProtocolIOResult;
 
     function  ScanTable(DeviceID:TWestAddressRange; var SP, PV, Output1, Status:Double; var cdSP, cdPV, cdOut1, cdStatus:Byte):TProtocolIOResult;
 
@@ -68,7 +68,7 @@ var
 
 implementation
 
-uses PLCTagNumber;
+uses PLCTagNumber, math;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin
@@ -141,29 +141,33 @@ begin
     buffer[4]:=Ord('?');
     buffer[5]:=Ord('*');
 
-    if PCommPort<>nil then begin
-
-      evento.ResetEvent;
-      PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
-
-      if evento.WaitFor(10000)=wrSignaled then begin
-
-        SetLength(buffer,0);
-        buffer := pkg.BufferToRead;
-
-        if (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Ord('?')) and (buffer[4]=Ord('A')) and (buffer[5]=Ord('*')) then begin
-          result := ioOk;
-          exit;
-        end;
-        if (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Ord('?')) and (buffer[3]=Ord('A')) and (buffer[4]=Ord('*')) then begin
-          result := ioOk;
-          exit;
-        end;
-        Result := ioCommError;
-      end else
-        Result := ioDriverError;
-    end else
+    if PCommPort=nil then begin
       Result := ioNullDriver;
+      exit;
+    end;
+
+    evento.ResetEvent;
+    PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
+
+    if evento.WaitFor(60000)<>wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
+
+    SetLength(buffer,0);
+    buffer := pkg.BufferToRead;
+
+    if (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Ord('?')) and (buffer[4]=Ord('A')) and (buffer[5]=Ord('*')) then begin
+      result := ioOk;
+      exit;
+    end;
+
+    if (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Ord('?')) and (buffer[3]=Ord('A')) and (buffer[4]=Ord('*')) then begin
+      result := ioOk;
+      exit;
+    end;
+
+    Result := ioCommError;
   finally
     SetLength(pkg.BufferToRead,0);
     SetLength(pkg.BufferToWrite,0);
@@ -274,7 +278,7 @@ var
 begin
   caso:=255;
 
-  if (Valor>=10000) or (Valor<=-10000) then begin
+  if (Value>=10000) or (Value<=-10000) then begin
     Result := ioIllegalValue;
     exit;
   end;
@@ -282,7 +286,7 @@ begin
   caso:=IfThen((Value>=1000) and (Value<10000),$30,caso);
   caso:=IfThen((Value>=100) and (Value<1000),$31,caso);
   caso:=IfThen((Value>=10) and (Value<100),$32,caso);
-  caso:=IfThen((Value>=0) and (ValueValor<10),$33,caso);
+  caso:=IfThen((Value>=0) and (Value<10),$33,caso);
 
   caso:=IfThen((Value<=-1000) and (Value>-10000),$35,caso);
   caso:=IfThen((Value<=-100) and (Value>-1000),$36,caso);
@@ -315,7 +319,7 @@ begin
    aux := FormatFloat('0000',Abs(numaux));
 
    for c:=0 to 3 do
-      buffer[c] := aux[1+c];
+      buffer[c] := Ord(aux[1+c]);
 
    buffer[4] := caso;
    Result := ioOk;
@@ -376,7 +380,7 @@ begin
    aux := FormatFloat('0000',Abs(numaux));
 
    for c:=0 to 3 do
-      buffer[c] := aux[1+c];
+      buffer[c] := ord(aux[1+c]);
 
    buffer[4] := caso;
    Result := ioOk;
@@ -384,7 +388,7 @@ end;
 
 function  TWestASCIIDriver.ParameterValue(const DeviceID:TWestAddressRange;
                                           const Parameter:BYTE;
-                                          var   Valor:Double;
+                                          var   Value:Double;
                                           var   dec:BYTE):TProtocolIOResult;
 var
   buffer, No:BYTES;
@@ -408,39 +412,41 @@ begin
     buffer[4]:=Ord('?');
     buffer[5]:=Ord('*');
 
-    if PCommPort<>nil then begin
+    if PCommPort=nil then begin
+      Result := ioNullDriver;
+      exit;
+    end;
 
-      evento.ResetEvent;
-      PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
+    evento.ResetEvent;
+    PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
 
-      if evento.WaitFor(10000)=wrSignaled then begin
+    if evento.WaitFor(60000)<>wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
 
-        SetLength(buffer,0);
-        buffer := pkg.BufferToRead;
+    SetLength(buffer,0);
+    buffer := pkg.BufferToRead;
 
-        b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=Ord('N')) and (buffer[10]=Ord('*'));
-        b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=Ord('N')) and (buffer[9]=Ord('*'));
-        if (b1 or b2) then
-          Result := ioIllegalFunction
+    b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=Ord('N')) and (buffer[10]=Ord('*'));
+    b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=Ord('N')) and (buffer[9]=Ord('*'));
+    if (b1 or b2) then
+      Result := ioIllegalFunction
+    else begin
+      b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=Ord('A')) and (buffer[10]=Ord('*'));
+      b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=Ord('A')) and (buffer[9]=Ord('*'));
+      if (b1 or b2) then begin
+
+        b1 := (buffer[4]=Ord('<')) and (buffer[5]=Ord('?')) and (buffer[6]=Ord('?')) and (buffer[7]=Ord('>'));
+
+        if b1 then
+          Result := ioIllegalValue
         else begin
-          b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=Ord('A')) and (buffer[10]=Ord('*'));
-          b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=Ord('A')) and (buffer[9]=Ord('*'));
-          if (b1 or b2) then begin
-
-            b1 := (buffer[4]=Ord('<')) and (buffer[5]=Ord('?')) and (buffer[6]=Ord('?')) and (buffer[7]=Ord('>'));
-
-            if b1 then
-              Result := ioIllegalValue
-            else begin
-              Result := WestToDouble(buffer[4],NovoValor);
-            end;
-          end else
-            Result := ioCommError;
+          Result := WestToDouble(@buffer[4],Value);
         end;
       end else
-        Result := ioDriverError;
-    end else
-      Result := ioNullDriver;
+        Result := ioCommError;
+    end;
   finally
     SetLength(pkg.BufferToRead,0);
     SetLength(pkg.BufferToWrite,0);
@@ -448,10 +454,9 @@ begin
     SetLength(No,0);
     evento.Destroy;
   end;
-  Result := err;
 end;
 
-function  TWestASCIIDriver.ModifyParameter(const DeviceID:TWestAddressRange; const Parameter:BYTE; const Valor:Double; const dec:BYTE):TProtocolIOResult;
+function  TWestASCIIDriver.ModifyParameter(const DeviceID:TWestAddressRange; const Parameter:BYTE; const Value:Double; const dec:BYTE):TProtocolIOResult;
 var
   buffer, respprog, No:BYTES;
   flag:Boolean;
@@ -466,7 +471,6 @@ begin
 
     SetLength(No,2);
     SetLength(buffer,20);
-    SetLength(resposta,12);
     SetLength(respprog,12);
 
     AddressToChar(DeviceID,No);
@@ -475,19 +479,29 @@ begin
     buffer[2] := No[1];
     buffer[3] := Parameter;
     buffer[4] := Ord('#');
-    DoubleToWest2(buffer[5],Valor,dec);
+    DoubleToWest(buffer[5],Value,dec);
     buffer[10] := '*';
 
     respprog[0] := Ord('L');
     respprog[1] := No[0];
     respprog[2] := No[1];
     respprog[3] := Parameter;
-    DoubleToWest2(respprog[4],Valor,dec);
+    DoubleToWest(respprog[4],Valor,dec);
     respprog[9] := 'I';
     respprog[10] := '*';
 
+    if PCommPort=nil then begin
+      Result := ioNullDriver;
+      exit;
+    end;
+
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 11, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+
+    if evento.WaitFor(60000)=wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
 
     for i:=0 to 10 do
       flag := flag and (respprog[i]=pkg.BufferToRead[i]);
@@ -513,6 +527,11 @@ begin
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
 
+    if evento.WaitFor(60000)<>wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
+
     if ((pkg.BufferToRead[8]=Ord('N')) or (pkg.BufferToRead[9]=Ord('N'))) then begin
       Result := ioIllegalFunction;
       exit;
@@ -531,18 +550,21 @@ end;
 function  TWestASCIIDriver.ScanTable(DeviceID:TWestAddressRange; var SP, PV, Output1, Status:Double; var cdSP, cdPV, cdOut1, cdStatus:Byte):TProtocolIOResult;
 var
    buffer, bufferb, No:BYTES;
-   dwIO:DWORD;
    err, cd:BYTE;
    b1, b2:Boolean;
    aux:Double;
-   i:integer;
+   pkg:TIOPacket;
+   evento:TCrossEvent;
+   i:Integer;
 begin
   try
+    evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
+
     SetLength(buffer,35);
     SetLength(bufferb,35);
     SetLength(No,2);
 
-    err := BYTE_to_Char(Controlador,No);
+    AddressToChar(DeviceID,No);
 
     buffer[0]:=Ord('L');
     buffer[1]:=No[0];
@@ -551,17 +573,17 @@ begin
     buffer[4]:=Ord('?');
     buffer[5]:=Ord('*');
 
-    WriteFile(HPorta,buffer,6,dwIO,nil);
-    CopyMemory(@bufferb[0], @buffer[0],35);
-    inc(PPacketsSent);
-    inc(PBytesSent,6);
-    FlushFileBuffers(HPorta);
-    Sleep(50);
-    FillMemory(@buffer[0],35,0);
+    if PCommPort<>nil then begin
+      Result := ioNullDriver;
+      exit;
+    end;
 
-    //lê os 6 primeiros para saber qtos bytes estão ainda para vir...
-    //ReadFile(HPorta,buffer,6,dwIO,nil);
-    dwIO := Read(buffer,6,3,10);
+    PCommPort.Lock(DriverID);
+
+    evento.ResetEvent;
+    PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+
+    buffer := pkg.BufferToRead;
 
     b1 := (buffer[0]='L') and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=']') and (buffer[4]='2');
     b2 := (buffer[0]='L') and (buffer[1]=No[1]) and (buffer[2]=']') and (buffer[3]='2');
@@ -570,22 +592,19 @@ begin
        if (b1) then begin
           case buffer[5] of
              '0': begin
-                //ReadFile(HPorta,buffer+6,22,dwIO,nil);
-                dwIO := Read(buffer[6],22,3,10);
+                //dwIO := Read(buffer[6],22,3,10);
+                PCommPort.IOCommandASync(iocRead, buffer, 22, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+                buffer:=pkg.BufferToRead;
+
                 if buffer[6]=' ' then
                   i := 1
                 else
                   i := 0;
 
                 if ((buffer[26+i]<>'A') or (buffer[27+i]<>'*')) then begin
-                   Reset();
-                   AddToLog(bufferb,buffer,6,35, true);
-                   Result := WEST_BAD_PACKET;
+                   Result := ioCommError;
                    exit;
                 end;
-
-                inc(PPacketsReceived);
-                inc(PBytesReceived,dwIO+6);
 
                 err := WestToDouble(buffer[6+i],aux, cdSP);
                 if (err=WEST_READY) then
@@ -785,7 +804,7 @@ begin
       exit;
     end;
   finally
-
+    evento.Destroy;
   end;
 end;
 
