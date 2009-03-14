@@ -15,7 +15,7 @@ uses
   PLCString, PLCTag, PLCTagNumber, ProtocolDriver, ProtocolTypes, 
   scadapropeditor, scadareg, SerialPort, Tag, TagBlock, UserScale, 
   ValueProcessor, TagBit, tagcollection, scadaapp, TCPIPClientPort, 
-  protscanupdate, protscan, LazarusPackageIntf;
+  protscanupdate, protscan, WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 

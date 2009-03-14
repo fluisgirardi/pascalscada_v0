@@ -81,6 +81,8 @@ type
     function  SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
   protected
+    //: Flag que informa ao driver se ao menos uma variavel deve ser lida a cada ciclo de scan do driver.
+    PReadSomethingAlways:Boolean;
     //: Armazena a ID (número único) do driver.
     PDriverID:Cardinal;
     //: Armazena o driver de porta associado a esse driver de protocolo.
@@ -151,6 +153,8 @@ type
     function DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; virtual; abstract;
     function DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; virtual; abstract;
 
+    //: Booleano que diz se o driver deve ler algum tag a todo scan.
+    property ReadSomethingAlways:Boolean read PReadSomethingAlways write PReadSomethingAlways default true;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -228,7 +232,6 @@ type
     property TagByName[Nome:String]:TTag read GetTagByName;
 
   published
-
     {:
     Driver de porta que será usado para realizar as operações de comunicação
     do protoloco.

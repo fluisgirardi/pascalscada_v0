@@ -96,8 +96,6 @@ type
   }
   TModBusMasterDriver = class(TProtocolDriver)
   private
-    //PCheckCRC:Boolean;
-    PReadAnyAlways:Boolean;
     POutputMaxHole:Cardinal;
     PInputMaxHole:Cardinal;
     PRegistersMaxHole:Cardinal;
@@ -135,8 +133,7 @@ type
     //: @seealso(TProtocolDriver.SizeOfTag)
     function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; override;
   published
-    //: Booleano que diz se o driver deve ler algum tag a todo scan.
-    property ReadAnyAlways:Boolean read PReadAnyAlways write PReadAnyAlways default true;
+    property ReadSomethingAlways;
     {:
     Informa quantas saidas podem ficar sem serem declaradas para manter um bloco
     de saidas continuo.
@@ -167,7 +164,7 @@ begin
   POutputMaxHole := 50;
   PInputMaxHole := 50;
   PRegistersMaxHole := 10;
-  PReadAnyAlways := true;
+  PReadSomethingAlways := true;
   SetLength(PModbusPLC,0);
 end;
 
@@ -1047,7 +1044,7 @@ begin
     //se nao fez leitura de nenhum bloco
     //faz atualiza o bloco que esta quase vencendo
     //o tempo de scan...
-    if (PReadAnyAlways) and ((not done) and (not first)) then begin
+    if (PReadSomethingAlways) and ((not done) and (not first)) then begin
       //compila o bloco do mais necessitado;
       BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
       DoRead(tr,values,false);
