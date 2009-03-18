@@ -34,18 +34,34 @@ type
     Registers:TWestRegisters;
   end;
 
+  TScanTableReg = record
+    Value:Double;
+    Decimal:Byte;
+    IOResult:TProtocolIOResult;
+  end;
+
+  TScanTable = record
+    PV,
+    SP,
+    Status,
+    Out1,
+    Out2:TScanTableReg;
+    HaveOut2:Boolean;
+  end;
+
   TWestASCIIDriver = class(TProtocolDriver)
   private
+    FWestDevices:TWestDevice;
 {d} procedure AddressToChar(Addr:TWestAddressRange; var ret:BYTES);
-{d} function  WestToDouble(const buffer:BYTES; var Value:Double):TProtocolIOResult;
-{d} function  WestToDouble(const buffer:BYTES; var Value:Double; var dec:Byte):TProtocolIOResult;
-{d} function  DoubleToWest(var buffer:BYTES; const Value:Double):TProtocolIOResult; overload;
-{d} function  DoubleToWest(var buffer:BYTES; const Value:Double; const dec:BYTE):TProtocolIOResult; overload;
+{d} function  WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult;
+{d} function  WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
+{d} function  DoubleToWest(var buffer:Array of Byte; const Value:Double):TProtocolIOResult; overload;
+{d} function  DoubleToWest(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult; overload;
 
 {d} function  ParameterValue (const DeviceID:TWestAddressRange; const Parameter:BYTE; var   Value:Double; var   dec:BYTE):TProtocolIOResult;
 {d} function  ModifyParameter(const DeviceID:TWestAddressRange; const Parameter:BYTE; const Value:Double; const dec:BYTE):TProtocolIOResult;
 
-    function  ScanTable(DeviceID:TWestAddressRange; var SP, PV, Output1, Status:Double; var cdSP, cdPV, cdOut1, cdStatus:Byte):TProtocolIOResult;
+{d} function  ScanTable(DeviceID:TWestAddressRange; var ScanTableValues:TScanTable):TProtocolIOResult;
 
   protected
     procedure DoAddTag(TagObj:TTag); override;
@@ -82,9 +98,16 @@ begin
 end;
 
 procedure TWestASCIIDriver.DoAddTag(TagObj:TTag);
+var
+  plc:Integer;
+  foundplc:boolean;
 begin
   if not (TagObj is TPLCTagNumber) then
     raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
+
+  foundplc:=false;
+  for plc:=0 to High(FWestDevices) do
+    if FWestDevices[plc].
 
   inherited DoAddTag(TagObj);
 
@@ -194,7 +217,7 @@ begin
   ret[1] := (48 + Unidades);
 end;
 
-function TWestASCIIDriver.WestToDouble(const buffer:BYTES; var Value:Double; var dec:Byte):TProtocolIOResult;
+function TWestASCIIDriver.WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
 var
   a,b,c,d,ok,r:BYTE;
   i, aux:Integer;
@@ -262,14 +285,14 @@ begin
   end;
 end;
 
-function  TWestASCIIDriver.WestToDouble(const buffer:BYTES; var Value:Double):TProtocolIOResult;
+function  TWestASCIIDriver.WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult;
 var
   cd:BYTE;
 begin
   Result :=  WestToDouble(buffer,Value,cd);
 end;
 
-function  TWestASCIIDriver.DoubleToWest(var buffer:BYTES; const Value:Double):TProtocolIOResult;
+function  TWestASCIIDriver.DoubleToWest(var buffer:Array of Byte; const Value:Double):TProtocolIOResult;
 var
    caso:BYTE;
    numaux:Extended;
@@ -325,7 +348,7 @@ begin
    Result := ioOk;
 end;
 
-function  TWestASCIIDriver.DoubleToWest(var buffer:BYTES; const Value:Double; const dec:BYTE):TProtocolIOResult;
+function  TWestASCIIDriver.DoubleToWest(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult;
 var
    caso:BYTE;
    c:Integer;
@@ -442,7 +465,7 @@ begin
         if b1 then
           Result := ioIllegalValue
         else begin
-          Result := WestToDouble(@buffer[4],Value);
+          Result := WestToDouble(buffer[4],Value);
         end;
       end else
         Result := ioCommError;
@@ -480,15 +503,15 @@ begin
     buffer[3] := Parameter;
     buffer[4] := Ord('#');
     DoubleToWest(buffer[5],Value,dec);
-    buffer[10] := '*';
+    buffer[10] := Ord('*');
 
     respprog[0] := Ord('L');
     respprog[1] := No[0];
     respprog[2] := No[1];
     respprog[3] := Parameter;
-    DoubleToWest(respprog[4],Valor,dec);
-    respprog[9] := 'I';
-    respprog[10] := '*';
+    DoubleToWest(respprog[4],Value,dec);
+    respprog[9] := Ord('I');
+    respprog[10] := Ord('*');
 
     if PCommPort=nil then begin
       Result := ioNullDriver;
@@ -517,12 +540,12 @@ begin
     SetLength(pkg.BufferToRead, 0);
     SetLength(pkg.BufferToWrite,0);
 
-    buffer[0] := 'L';
+    buffer[0] := Ord('L');
     buffer[1] := No[0];
     buffer[2] := No[1];
-    buffer[3] := Parametro;
-    buffer[4] := 'I';
-    buffer[5] := '*';
+    buffer[3] := Parameter;
+    buffer[4] := Ord('I');
+    buffer[5] := Ord('*');
 
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
@@ -547,7 +570,7 @@ begin
   end;
 end;
 
-function  TWestASCIIDriver.ScanTable(DeviceID:TWestAddressRange; var SP, PV, Output1, Status:Double; var cdSP, cdPV, cdOut1, cdStatus:Byte):TProtocolIOResult;
+function  TWestASCIIDriver.ScanTable(DeviceID:TWestAddressRange; var ScanTableValues:TScanTable):TProtocolIOResult;
 var
    buffer, bufferb, No:BYTES;
    err, cd:BYTE;
@@ -555,7 +578,7 @@ var
    aux:Double;
    pkg:TIOPacket;
    evento:TCrossEvent;
-   i:Integer;
+   OffsetSpace, OffsetNo:Integer;
 begin
   try
     evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
@@ -585,225 +608,89 @@ begin
 
     buffer := pkg.BufferToRead;
 
-    b1 := (buffer[0]='L') and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=']') and (buffer[4]='2');
-    b2 := (buffer[0]='L') and (buffer[1]=No[1]) and (buffer[2]=']') and (buffer[3]='2');
-    if (b1 or b2) then begin
-       //se respondeu com 2 digitos no endereco
-       if (b1) then begin
-          case buffer[5] of
-             '0': begin
-                //dwIO := Read(buffer[6],22,3,10);
-                PCommPort.IOCommandASync(iocRead, buffer, 22, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
-                buffer:=pkg.BufferToRead;
+    b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Ord(']')) and (buffer[4]=Ord('2'));
+    b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Ord(']')) and (buffer[3]=Ord('2'));
 
-                if buffer[6]=' ' then
-                  i := 1
-                else
-                  i := 0;
-
-                if ((buffer[26+i]<>'A') or (buffer[27+i]<>'*')) then begin
-                   Result := ioCommError;
-                   exit;
-                end;
-
-                err := WestToDouble(buffer[6+i],aux, cdSP);
-                if (err=WEST_READY) then
-                   SP := aux
-                ELSE
-                   SP:= -9999;
-
-                err := WestToDouble(buffer[11+i],aux, cdPV);
-                if (err=WEST_READY) then
-                   PV := aux
-                ELSE
-                   PV := -9999;
-
-                err := WestToDouble(buffer[16+i],aux, cd);
-                if (err=WEST_READY) then
-                   Output1 := aux
-                ELSE
-                   Output1:= -9999;
-
-                err := WestToDouble(buffer[21+i],aux, cd);
-                if (err=WEST_READY) then
-                   Status := aux
-                ELSE
-                   Status:= -9999;
-
-                Result := WEST_READY;
-                exit;
-             end;
-             '5': begin
-                //ReadFile(HPorta,buffer[6],27,dwIO,nil);
-                dwIO := Read(buffer[6],27,3,10);
-                if buffer[6]=' ' then
-                  i := 1
-                else
-                  i := 0;
-
-                if ((buffer[31+i]<>'A') or (buffer[32+i]<>'*')) then begin
-                   Reset();
-                   Result := WEST_BAD_PACKET;
-                   AddToLog(bufferb,buffer,6,35, true);
-                   exit;
-                end;
-
-                inc(PPacketsReceived);
-                inc(PBytesReceived,dwIO+6);
-
-                err := WestToDouble(buffer[6+i],aux, cdSP);
-                if (err=WEST_READY) then
-                   SP := aux
-                ELSE
-                   SP:= -9999;
-
-                err := WestToDouble(buffer[11+i],aux, cdPV);
-                if (err=WEST_READY) then
-                   PV := aux
-                ELSE
-                   PV:= -9999;
-
-                err := WestToDouble(buffer[16+i],aux, cd);
-                if (err=WEST_READY) then
-                   Output1 := aux
-                ELSE
-                   Output1:= -9999;
-
-                err := WestToDouble(buffer[21+i],aux, cd);
-                if (err=WEST_READY) then
-                   Output2 := aux
-                ELSE
-                   Output2:= -9999;
-
-                err := WestToDouble(buffer[26+i],aux, cd);
-                if (err=WEST_READY) then
-                   Status := aux
-                ELSE
-                   Status := -9999;
-
-                Result := WEST_READY;
-                exit;
-             end;
-             else begin
-                Reset();
-                Result := WEST_BAD_PACKET;
-                AddToLog(bufferb,buffer,6,35, true);
-             end;
-          end;
-       end else begin
-          case buffer[4] of
-             '0': begin
-                //ReadFile(HPorta,buffer[6],21,dwIO,nil);
-                dwIO := Read(buffer[6],21,3,10);
-                if buffer[5]=' ' then
-                  i := 1
-                else
-                  i := 0;
-
-                if ((buffer[25+i]<>'A') or (buffer[26+i]<>'*')) then begin
-                   Reset();
-                   Result := WEST_BAD_PACKET;
-                   AddToLog(bufferb,buffer,6,35, true);
-                   exit;
-                end;
-
-                inc(PPacketsReceived);
-                inc(PBytesReceived,dwIO+6);
-
-                err := WestToDouble(buffer[5+i],aux, cdSP);
-                if (err=WEST_READY) then
-                   SP := aux
-                ELSE
-                   SP:= -9999;
-
-                err := WestToDouble(buffer[10+i],aux, cdPV);
-                if (err=WEST_READY) then
-                   PV := aux
-                ELSE
-                   PV:= -9999;
-
-                err := WestToDouble(buffer[15+i],aux, cd);
-                if (err=WEST_READY) then
-                   Output1 := aux
-                ELSE
-                   Output1:= -9999;
-
-                err := WestToDouble(buffer[20+i],aux, cd);
-                if (err=WEST_READY) then
-                   Status := aux
-                ELSE
-                   Status:= -9999;
-
-                Result := WEST_READY;
-                exit;
-             end;
-             '5': begin
-
-                //ReadFile(HPorta,buffer[6],26,dwIO,nil);
-                dwIO := Read(buffer[6],26,3,10);
-                if buffer[5]=' ' then
-                  i := 1
-                else
-                  i := 0;
-
-                if ((buffer[30+i]<>'A') or (buffer[31+i]<>'*')) then begin
-                   Reset();
-                   Result := WEST_BAD_PACKET;
-                   AddToLog(bufferb,buffer,6,35, true);
-                   exit;
-                end;
-
-                inc(PPacketsReceived);
-                inc(PBytesReceived,dwIO+6);
-
-                err := WestToDouble(buffer[5+i],aux, cd);
-                if (err=WEST_READY) then
-                   SP := aux
-                ELSE
-                   SP:= -9999;
-
-                err := WestToDouble(buffer[10+i],aux, cd);
-                if (err=WEST_READY) then
-                   PV := aux
-                ELSE
-                   PV:= -9999;
-
-                err := WestToDouble(buffer[15+i],aux, cd);
-                if (err=WEST_READY) then
-                   Output1 := aux
-                ELSE
-                   Output1 := -9999;
-
-                err := WestToDouble(buffer[20+i],aux, cd);
-                if (err=WEST_READY) then
-                   Output2 := aux
-                ELSE
-                   Output2:= -9999;
-
-                err := WestToDouble(buffer[25+i],aux, cd);
-                if (err=WEST_READY) then
-                   Status := aux
-                ELSE
-                   Status:= -9999;
-
-                Result := WEST_READY;
-                exit;
-             end;
-             else begin
-                Reset();
-                Result := WEST_BAD_PACKET;
-                AddToLog(bufferb,buffer,6,35, true);
-                exit;
-             end;
-          end;
-       end;
-    end else begin
-      Reset();
-      Result := WEST_BAD_PACKET;
-      AddToLog(bufferb,buffer,6,35, true);
+    if (b1=false) and (b2=false) then begin
+      Result := ioCommError;
       exit;
     end;
+
+    //faz a leitura imediata do resto do pacote... termina em PCommPort.Unlock()
+
+    evento.ResetEvent;
+    //se respondeu o endereco com dois bytes, incrementa offset da array.
+    OffsetNo:=0;
+    if b2 then
+      OffsetNo:=1;
+
+    case Chr(buffer[4+OffsetNo]) of
+      '0':
+        PCommPort.IOCommandASync(iocRead, buffer, 21+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+      '5':
+        PCommPort.IOCommandASync(iocRead, buffer, 26+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+      else begin
+        Result := ioCommError;
+        exit;
+      end;
+    end;
+
+    if evento.WaitFor(60000)<>wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
+
+    PCommPort.Unlock(DriverID);
+
+    if Chr(buffer[4+OffsetNo]) in ['0','5'] then begin
+      if buffer[5+OffsetNo]=Ord(' ') then
+        OffsetSpace := 1
+      else
+        OffsetSpace := 0;
+
+      if ((buffer[25+OffsetNo+OffsetSpace]<>Ord('A')) or (buffer[26+OffsetNo+OffsetSpace]<>Ord('*'))) then begin
+        Result := ioCommError;
+        exit;
+      end;
+
+      Result := WestToDouble(buffer[5+OffsetNo+OffsetSpace], ScanTableValues.SP.Value, ScanTableValues.SP.Decimal);
+      if (Result=ioCommError) then
+        exit;
+      ScanTableValues.SP.IOResult:=Result;
+
+      Result := WestToDouble(buffer[10+OffsetNo+OffsetSpace], ScanTableValues.PV.Value, ScanTableValues.PV.Decimal);
+      if (Result=ioCommError) then
+        exit;
+      ScanTableValues.PV.IOResult:=Result;
+
+      Result := WestToDouble(buffer[15+OffsetNo+OffsetSpace], ScanTableValues.Out1.Value, ScanTableValues.Out1.Decimal);
+      if (Result=ioCommError) then
+        exit;
+      ScanTableValues.Out1.IOResult:=Result;
+
+      if Chr(buffer[4+OffsetNo])='0' then begin
+        Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
+        if (Result=ioCommError) then
+          exit;
+        ScanTableValues.Status.IOResult:=Result;
+      end else begin
+        Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Out2.Value, ScanTableValues.Out2.Decimal);
+        if (Result=ioCommError) then
+          exit;
+        ScanTableValues.Out2.IOResult:=Result;
+
+        Result := WestToDouble(buffer[25+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
+        if (Result=ioCommError) then
+          exit;
+        ScanTableValues.Status.IOResult:=Result;
+      end;
+      Result := ioOk;
+    end else
+      Result := ioCommError;
   finally
+    if PCommPort<>nil then
+      if PCommPort.LockedBy=DriverID then
+         PCommPort.Unlock(DriverID);
     evento.Destroy;
   end;
 end;
@@ -818,10 +705,10 @@ initialization
    ParameterList[$00].Decimal := 255;
 
    //PV
-   ParameterList[$01].Parametro := 'M'; //ID do Parametro
-   ParameterList[$01].FuncaoPermitida :=  2 ; //Funcao q pode usar, 0 := todas as funcoes
+   ParameterList[$01].ParameterID := 'M'; //ID do Parametro
+   ParameterList[$01].FunctionAllowed :=  2 ; //Funcao q pode usar, 0 := todas as funcoes
    ParameterList[$01].ReadOnly :=  true ; //ReadOnly 1 := yes?
-   ParameterList[$01].CasasDecimais := 255; // casas decimais variaveis...
+   ParameterList[$01].Decimal := 255; // casas decimais variaveis...
 
    //Power Output value
    ParameterList[$02].ParameterID := 'W';
