@@ -739,10 +739,12 @@ function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRea
                                  CallBack:TDriverCallBack; IsWriteValue:Boolean;
                                  Res1:TObject; Res2:Pointer):Cardinal;
 var
-  pid:Cardinal;
   PPacket:TIOPacket;
+  InLockCS, InIOCmdCS:Boolean;
 begin
   try
+    InLockCS:=false;
+    InIOCmdCS:=false;
 
     if (csDestroying in ComponentState) then
        exit;
@@ -751,15 +753,20 @@ begin
 
     //verify if another driver is the owner of the comm port...
     PLockCS.Enter;
+    InLockCS:=true;
     while (PLockedBy<>0) and (PLockedBy<>DriverID) do begin
        PLockCS.Leave;
+       InLockCS:=false;
        PLockEvent.WaitFor($FFFFFFFF);
        PLockCS.Enter;
+       InLockCS:=true;
     end;
     InterLockedIncrement(PUnlocked);
     PLockCS.Leave;
+    InLockCS:=false;
 
     PIOCmdCS.Enter;
+    InIOCmdCS:=true;
     if (not PActive) then
        exit;
 
@@ -798,8 +805,10 @@ begin
     //retorna o packet ID....
     Result := PPacketID;
   finally
-    PLockCS.Leave;
-    PIOCmdCS.Leave;
+    if InIOCmdCS then
+      PIOCmdCS.Leave;
+    if InLockCS then
+      PLockCS.Leave;
     InterLockedDecrement(PUnlocked);
   end;
 end;
@@ -810,23 +819,31 @@ function TCommPortDriver.IOCommandASync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRe
                            Res1:TObject; Res2:Pointer):Cardinal;
 var
   PCmdPackt:PCommandPacket;
+  InLockCS, InIOCmdCS:Boolean;
 begin
   try
+    InLockCS:=false;
+    InIOCmdCS:=false;
 
     if (csDestroying in ComponentState) then
        exit;
 
     //verify if another driver is the owner of the comm port...
     PLockCS.Enter;
+    InLockCS:=true;
     while (PLockedBy<>0) and (PLockedBy<>DriverID) do begin
        PLockCS.Leave;
+       InLockCS:=false;
        PLockEvent.WaitFor($FFFFFFFF);
        PLockCS.Enter;
+       InLockCS:=true;
     end;
     InterLockedIncrement(PUnlocked);
     PLockCS.Leave;
+    InLockCS:=false;
 
     PIOCmdCS.Enter;
+    InIOCmdCS:=true;
     Result := 0;
     if not PActive then begin
        Result := 0;
@@ -869,8 +886,10 @@ begin
 
     result := PPacketID;
   finally
-    PLockCS.Leave;
-    PIOCmdCS.Leave;
+    if InIOCmdCS then
+      PIOCmdCS.Leave;
+    if InLockCS then
+      PLockCS.Leave;
     InterLockedDecrement(PUnlocked);
   end;
 end;

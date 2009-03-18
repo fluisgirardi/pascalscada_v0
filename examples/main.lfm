@@ -1,0 +1,94 @@
+object Form1: TForm1
+  Left = 627
+  Height = 300
+  Top = 180
+  Width = 400
+  ActiveControl = Button1
+  Caption = 'Form1'
+  ClientHeight = 300
+  ClientWidth = 400
+  OnCreate = FormCreate
+  LCLVersion = '0.9.27'
+  object HMILabel1: THMILabel
+    Left = 160
+    Height = 17
+    Top = 11
+    Width = 65
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = ATS48Status
+  end
+  object Button1: TButton
+    Left = 240
+    Height = 25
+    Top = 11
+    Width = 75
+    Caption = 'Power On'
+    OnClick = Button1Click
+    TabOrder = 0
+  end
+  object Memo1: TMemo
+    Left = 8
+    Height = 256
+    Top = 40
+    Width = 384
+    Lines.Strings = (
+      'Memo1'
+    )
+    TabOrder = 1
+  end
+  object Button2: TButton
+    Left = 320
+    Height = 25
+    Top = 11
+    Width = 75
+    Caption = 'Power Off'
+    OnClick = Button2Click
+    TabOrder = 2
+  end
+  object SerialPortDriver1: TSerialPortDriver
+    Active = True
+    COMPort = 'ttyUSB0'
+    Timeout = 100
+    Paridade = spEven
+    left = 8
+    top = 8
+  end
+  object ModBusMasterDriver1: TModBusMasterDriver
+    CommunicationPort = SerialPortDriver1
+    left = 40
+    top = 8
+  end
+  object ATS48CMD: TPLCTagNumber
+    TagGUID = '{724F91B6-8419-4777-8144-473E16B8318F}'
+    OnValueChange = ATS48StatusValueChange
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 400
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusMasterDriver1
+    RefreshTime = 200
+    left = 80
+    top = 8
+  end
+  object ATS48Status: TPLCTagNumber
+    TagGUID = '{F8A77091-272A-4023-AA35-A3724828A32E}'
+    OnValueChange = ATS48StatusValueChange
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 458
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusMasterDriver1
+    RefreshTime = 200
+    left = 120
+    top = 8
+  end
+end
