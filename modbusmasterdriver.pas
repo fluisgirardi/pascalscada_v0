@@ -1049,7 +1049,7 @@ begin
       BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
       DoRead(tr,values,false);
     end else
-      Sleep(1);
+      ThreadSwitch;
   finally
     SetLength(values,0);
   end;

@@ -90,7 +90,7 @@ type
     Seta o tempo de varredura (atualização) da memória em milisegundos.
     @param(v Cardinal. Tempo em milisegundos que a memória deve ser atualizada.)
     }
-    procedure SetRefreshTime(v:Cardinal); virtual;
+    procedure SetRefreshTime(v:TRefreshTime); virtual;
     {:
     Seta o driver de protocolo usado para a comunicação dessa memória.
     @param(p TProtocolDriver. Componente de protocolo usado para comunicação do tag.)
@@ -372,7 +372,7 @@ begin
   PPath := v;
 end;
 
-procedure TPLCTag.SetRefreshTime(v:Cardinal);
+procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcScanTime,PScanTime,v);

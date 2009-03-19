@@ -18,21 +18,26 @@ type
     Decimal:Byte;
   end;
 
+  TScanTime = record
+    ScanTime, RefCount:integer;
+  end;
+
   TWestRegister = record
-    RefCount:Integer;
     Value:Double;
     Timestamp:TDateTime;
     LastReadResult, LastWriteResult:TProtocolIOResult;
-    ScanTime:Array of Integer;
+    ScanTimes:Array of TScanTime;
     MinScanTime:Integer;
   end;
   TWestRegisters = array[$00..$1b] of TWestRegister;
 
   TWestAddressRange = 0..99;
+
   TWestDevice = record
     Address:TWestAddressRange;
     Registers:TWestRegisters;
   end;
+  TWestDevices = array of TWestDevice;
 
   TScanTableReg = record
     Value:Double;
@@ -51,7 +56,7 @@ type
 
   TWestASCIIDriver = class(TProtocolDriver)
   private
-    FWestDevices:TWestDevice;
+    FWestDevices:TWestDevices;
 {d} procedure AddressToChar(Addr:TWestAddressRange; var ret:BYTES);
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult;
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
@@ -63,8 +68,10 @@ type
 
 {d} function  ScanTable(DeviceID:TWestAddressRange; var ScanTableValues:TScanTable):TProtocolIOResult;
 
+{d} procedure MinScanTimeOfReg(var WestReg:TWestRegister);
+
   protected
-    procedure DoAddTag(TagObj:TTag); override;
+{d} procedure DoAddTag(TagObj:TTag); override;
     procedure DoDelTag(TagObj:TTag); override;
     procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
     procedure DoScanRead(Sender:TObject); override;
@@ -99,23 +106,129 @@ end;
 
 procedure TWestASCIIDriver.DoAddTag(TagObj:TTag);
 var
-  plc:Integer;
-  foundplc:boolean;
+  plc, scanRate:Integer;
+  foundplc, foundScanRate:boolean;
+  plctagobj:TPLCTagNumber;
 begin
   if not (TagObj is TPLCTagNumber) then
     raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
 
-  foundplc:=false;
-  for plc:=0 to High(FWestDevices) do
-    if FWestDevices[plc].
+  plctagobj:=TPLCTagNumber(TagObj);
+
+  //se for um tag válido, registra ele no scan. senão só o coloca na lista de
+  //tags dependentes...
+  if (plctagobj.PLCStation in [1..99]) and (plctagobj.MemAddress in [$00..$1B]) then begin
+
+    foundplc:=false;
+    foundScanRate:=false;
+
+    for plc:=0 to High(FWestDevices) do
+      if FWestDevices[plc].Address=plctagobj.PLCStation then begin
+        foundplc:=true;
+        break;
+      end;
+
+    if not foundplc then begin
+      plc := Length(FWestDevices);
+      SetLength(FWestDevices,plc+1);
+    end;
+
+    with FWestDevices[plc].Registers[plctagobj.MemAddress] do
+      for scanRate := 0 to High(ScanTimes) do
+        if ScanTimes[scanRate].ScanTime=plctagobj.RefreshTime then begin
+          foundScanRate:=true;
+          inc(ScanTimes[scanRate].RefCount);
+          break;
+        end;
+
+    if not foundScanRate then
+      with FWestDevices[plc].Registers[plctagobj.MemAddress] do begin
+        scanRate:=Length(ScanTimes);
+        SetLength(ScanTimes,scanRate+1);
+        ScanTimes[scanRate].ScanTime:=plctagobj.RefreshTime;
+        ScanTimes[scanRate].RefCount:=1;
+      end;
+
+    with FWestDevices[plc].Registers[plctagobj.MemAddress] do
+     MinScanTime:=Min(MinScanTime, plctagobj.RefreshTime);
+  end;
 
   inherited DoAddTag(TagObj);
 
 end;
 
 procedure TWestASCIIDriver.DoDelTag(TagObj:TTag);
+var
+  plc, scanRate, reg, h:Integer;
+  foundplc, foundScanRate, foundActiveReg:boolean;
+  plctagobj:TPLCTagNumber;
 begin
-  inherited DoDelTag(TagObj);
+  try
+    if not (TagObj is TPLCTagNumber) then
+      raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
+
+    plctagobj:=TPLCTagNumber(TagObj);
+
+    if (plctagobj.PLCStation in [1..99]) and (plctagobj.MemAddress in [$00..$1B]) then begin
+
+      foundplc:=false;
+      foundScanRate:=false;
+
+      for plc:=0 to High(FWestDevices) do
+        if FWestDevices[plc].Address=plctagobj.PLCStation then begin
+          foundplc:=true;
+          break;
+        end;
+
+      //se nao encontrou o CLP, não há nada para fazer,
+      //pq se o clp nao existe, a memoria tbm nao existe.
+      if not foundplc then
+        exit;
+
+      with FWestDevices[plc].Registers[plctagobj.MemAddress] do begin
+        h:=High(ScanTimes);
+        for scanRate := 0 to High(ScanTimes) do
+          if ScanTimes[scanRate].ScanTime=plctagobj.RefreshTime then begin
+            foundScanRate:=true;
+
+            dec(ScanTimes[scanRate].RefCount);
+
+            //caso a taxa de atualização nao tenha mais dependentes, remove...
+            if ScanTimes[scanRate].RefCount=0 then begin
+              ScanTimes[scanRate] := ScanTimes[h];
+              SetLength(ScanTimes,h);
+              MinScanTime:=$7fffffff;
+            end;
+            break;
+          end;
+        end;
+
+      if not foundScanRate then
+        exit;
+
+      //procura por registros ativos no scan.
+      foundActiveReg:=false;
+      for reg:=0 to High(FWestDevices[plc].Registers) do
+        if Length(FWestDevices[plc].Registers[reg].ScanTimes)>0 then begin
+          foundActiveReg:=true;
+          break;
+        end;
+
+      if foundActiveReg then
+        MinScanTimeOfReg(FWestDevices[plc].Registers[plctagobj.MemAddress])
+      else
+        if (Length(FWestDevices)>0) then begin
+          //se nao encontrou mais nenhum outro registrador ativo
+          //no clp, é necessario elimintar tbm o CLP do scan.
+          h:=High(FWestDevices);
+          FWestDevices[plc]:=FWestDevices[h];
+          SetLength(FWestDevices,h);
+        end;
+
+    end;
+  finally
+    inherited DoDelTag(TagObj);
+  end;
 end;
 
 procedure TWestASCIIDriver.DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);
@@ -572,10 +685,8 @@ end;
 
 function  TWestASCIIDriver.ScanTable(DeviceID:TWestAddressRange; var ScanTableValues:TScanTable):TProtocolIOResult;
 var
-   buffer, bufferb, No:BYTES;
-   err, cd:BYTE;
+   buffer, No:BYTES;
    b1, b2:Boolean;
-   aux:Double;
    pkg:TIOPacket;
    evento:TCrossEvent;
    OffsetSpace, OffsetNo:Integer;
@@ -584,7 +695,7 @@ begin
     evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
 
     SetLength(buffer,35);
-    SetLength(bufferb,35);
+    //SetLength(bufferb,35);
     SetLength(No,2);
 
     AddressToChar(DeviceID,No);
@@ -692,6 +803,17 @@ begin
       if PCommPort.LockedBy=DriverID then
          PCommPort.Unlock(DriverID);
     evento.Destroy;
+  end;
+end;
+
+procedure TWestASCIIDriver.MinScanTimeOfReg(var WestReg:TWestRegister);
+var
+  srate:integer;
+begin
+  if Length(WestReg.ScanTimes)>0 then begin
+    WestReg.MinScanTime:=WestReg.ScanTimes[0].ScanTime;
+    for srate := 1 to High(WestReg.ScanTimes) do
+      WestReg.MinScanTime := Min(WestReg.MinScanTime, WestReg.ScanTimes[srate].ScanTime);
   end;
 end;
 

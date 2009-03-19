@@ -17,6 +17,8 @@ type
     RemoveTag:TNotifyEvent;
   end;
 
+  TRefreshTime = 1..$7FFFFFFF;
+
   //: Classe base para todos os tags.
   TTag = class(TComponent)
   protected
@@ -55,7 +57,7 @@ type
     //: Armazena o número de tentivas de leitura/escrita da memória.
     PRetries:Cardinal;
     //: Armazena o tempo de varredura a memória.
-    PScanTime:Cardinal;
+    PScanTime:TRefreshTime;
     //: Armazena o evento chamado pelo quando uma leitura do tag tem sucesso.
     POnReadOk:TNotifyEvent;
     //: Armazena o evento chamado pelo tag quando uma leitura do tag falha.
@@ -95,6 +97,8 @@ type
     procedure IncCommWriteOK(value:Cardinal);
     //: Incrementa o contador de falhas de escrita do tag.
     procedure IncCommWriteFaults(value:Cardinal);
+    //: @exclude
+    procedure Loaded; override;
 
     //: Caso @true, o tag será lido automaticamente.
     property AutoRead:Boolean read PAutoRead;
@@ -130,7 +134,7 @@ type
     //: Número tentivas de leitura/escrita dessa memória.
     property Retries:Cardinal read PRetries;
     //: Tempo de varredura (atualização) dessa memória em milisegundos.
-    property RefreshTime:Cardinal read PScanTime;
+    property RefreshTime:TRefreshTime read PScanTime;
     //: Número de memórias que serão mapeadas, se aplicável.
     property Size:Cardinal read PSize;
     //: Endereço longo (texto), se aplicável ao driver.
@@ -171,6 +175,7 @@ begin
   PCommReadOK := 0;
   PCommWriteErrors := 0;
   PCommWriteOk := 0;
+  PScanTime:=1000;
 
   if ComponentState*[csReading, csLoading]=[] then begin
     CreateGUID(x);
@@ -285,6 +290,13 @@ begin
   inc(PCommWriteErrors,value);
   if value>0 then
     NotifyWriteFault;
+end;
+
+procedure TTag.Loaded;
+begin
+  inherited Loaded;
+  if PScanTime<1 then
+    PScanTime:=1;
 end;
 
 end.
