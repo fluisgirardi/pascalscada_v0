@@ -8,7 +8,8 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  ProtocolDriver, Tag, ProtocolTypes, commtypes, CrossEvent, syncobjs;
+  ProtocolDriver, Tag, ProtocolTypes, commtypes, CrossEvent, syncobjs,
+  commtypes;
 
 type
   TParameter = record
@@ -24,6 +25,7 @@ type
 
   TWestRegister = record
     Value:Double;
+    Decimal:Byte;
     Timestamp:TDateTime;
     LastReadResult, LastWriteResult:TProtocolIOResult;
     ScanTimes:Array of TScanTime;
@@ -57,6 +59,7 @@ type
   TWestASCIIDriver = class(TProtocolDriver)
   private
     FWestDevices:TWestDevices;
+    function  IOResultToProtocolResult(IORes:TIOResult):TProtocolIOResult;
 {d} procedure AddressToChar(Addr:TWestAddressRange; var ret:BYTES);
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult;
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
@@ -72,11 +75,11 @@ type
 
   protected
 {d} procedure DoAddTag(TagObj:TTag); override;
-    procedure DoDelTag(TagObj:TTag); override;
-    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
+{d} procedure DoDelTag(TagObj:TTag); override;
+{d} procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
     procedure DoScanRead(Sender:TObject); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
-    function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{d} function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
@@ -233,6 +236,10 @@ end;
 
 procedure TWestASCIIDriver.DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);
 begin
+  if not (TagObj is TPLCTagNumber) then
+    raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
+  DoDelTag(TagObj);
+  DoAddTag(TagObj);
   inherited DoTagChange(TagObj,Change,oldValue,newValue);
 end;
 
@@ -247,8 +254,37 @@ begin
 end;
 
 function  TWestASCIIDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+var
+  plc:integer;
+  dec:BYTE;
+  foundplc:Boolean;
 begin
 
+  if ParameterList[tagrec.Address].Decimal=255 then begin
+    foundplc := false;
+    for plc:=0 to High(FWestDevices) do
+      if FWestDevices[plc].Address=tagrec.Station then begin
+        foundplc:=true;
+        dec := FWestDevices[plc].Registers[tagrec.Address].Decimal;
+        break;
+      end;
+    if not foundplc then
+      dec := 255;
+  end else
+    dec := ParameterList[tagrec.Address].Decimal;
+
+  if Length(Values)>0 then
+    Result := ModifyParameter(tagrec.Station,ParameterList[tagrec.Address].ParameterID,Values[0],dec)
+  else
+    Result := ioIllegalValue;
+
+  if foundplc then begin
+    if (Length(Values)>0) and (Result=ioOk) then begin
+      FWestDevices[plc].Registers[tagrec.Address].Value:=Values[0];
+      FWestDevices[plc].Registers[tagrec.Address].Timestamp:=Now;
+    end;
+    FWestDevices[plc].Registers[tagrec.Address].LastWriteResult:=Result;
+  end;
 end;
 
 function  TWestASCIIDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
@@ -561,6 +597,11 @@ begin
       exit;
     end;
 
+    Result := IOResultToProtocolResult(pkg.WriteIOResult);
+    if Result <> ioOk then exit;
+    Result := IOResultToProtocolResult(pkg.ReadIOResult);
+    if Result <> ioOk then exit;
+
     SetLength(buffer,0);
     buffer := pkg.BufferToRead;
 
@@ -597,11 +638,9 @@ var
   buffer, respprog, No:BYTES;
   flag:Boolean;
   pkg:TIOPacket;
-  evento:TCrossEvent;
   i:Integer;
 begin
   try
-    evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
 
     flag := true;
 
@@ -615,14 +654,26 @@ begin
     buffer[2] := No[1];
     buffer[3] := Parameter;
     buffer[4] := Ord('#');
-    DoubleToWest(buffer[5],Value,dec);
+    if dec=255 then
+      Result := DoubleToWest(buffer[5],Value)
+    else
+      Result := DoubleToWest(buffer[5],Value,dec);
+
+    if Result<>ioOk then exit;
+
     buffer[10] := Ord('*');
 
     respprog[0] := Ord('L');
     respprog[1] := No[0];
     respprog[2] := No[1];
     respprog[3] := Parameter;
-    DoubleToWest(respprog[4],Value,dec);
+    if dec=255 then
+      Result := DoubleToWest(respprog[4],Value)
+    else
+      Result := DoubleToWest(respprog[4],Value,dec);
+
+    if Result<>ioOk then exit;
+
     respprog[9] := Ord('I');
     respprog[10] := Ord('*');
 
@@ -631,13 +682,12 @@ begin
       exit;
     end;
 
-    evento.ResetEvent;
-    PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 11, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+    PCommPort.IOCommandSync(iocWriteRead, buffer, 11, 11, DriverID, 10, CommPortCallBack, false, nil, @pkg);
 
-    if evento.WaitFor(60000)=wrSignaled then begin
-      Result := ioDriverError;
-      exit;
-    end;
+    Result := IOResultToProtocolResult(pkg.WriteIOResult);
+    if Result <> ioOk then exit;
+    Result := IOResultToProtocolResult(pkg.ReadIOResult);
+    if Result <> ioOk then exit;
 
     for i:=0 to 10 do
       flag := flag and (respprog[i]=pkg.BufferToRead[i]);
@@ -660,13 +710,12 @@ begin
     buffer[4] := Ord('I');
     buffer[5] := Ord('*');
 
-    evento.ResetEvent;
-    PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+    PCommPort.IOCommandSync(iocWriteRead, buffer, 11, 6, DriverID, 10, CommPortCallBack, false, nil, @pkg);
 
-    if evento.WaitFor(60000)<>wrSignaled then begin
-      Result := ioDriverError;
-      exit;
-    end;
+    Result := IOResultToProtocolResult(pkg.WriteIOResult);
+    if Result <> ioOk then exit;
+    Result := IOResultToProtocolResult(pkg.ReadIOResult);
+    if Result <> ioOk then exit;
 
     if ((pkg.BufferToRead[8]=Ord('N')) or (pkg.BufferToRead[9]=Ord('N'))) then begin
       Result := ioIllegalFunction;
@@ -717,6 +766,16 @@ begin
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
 
+    if evento.WaitFor(60000)<>wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
+
+    Result := IOResultToProtocolResult(pkg.WriteIOResult);
+    if Result <> ioOk then exit;
+    Result := IOResultToProtocolResult(pkg.ReadIOResult);
+    if Result <> ioOk then exit;
+
     buffer := pkg.BufferToRead;
 
     b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Ord(']')) and (buffer[4]=Ord('2'));
@@ -752,6 +811,11 @@ begin
     end;
 
     PCommPort.Unlock(DriverID);
+
+    Result := IOResultToProtocolResult(pkg.WriteIOResult);
+    if Result <> ioOk then exit;
+    Result := IOResultToProtocolResult(pkg.ReadIOResult);
+    if Result <> ioOk then exit;
 
     if Chr(buffer[4+OffsetNo]) in ['0','5'] then begin
       if buffer[5+OffsetNo]=Ord(' ') then
@@ -814,6 +878,18 @@ begin
     WestReg.MinScanTime:=WestReg.ScanTimes[0].ScanTime;
     for srate := 1 to High(WestReg.ScanTimes) do
       WestReg.MinScanTime := Min(WestReg.MinScanTime, WestReg.ScanTimes[srate].ScanTime);
+  end;
+end;
+
+function  TWestASCIIDriver.IOResultToProtocolResult(IORes:TIOResult):TProtocolIOResult;
+begin
+  case IORes of
+    iorTimeOut:
+      Result := ioTimeOut;
+    iorNotReady, iorNone, iorPortError:
+      Result := ioDriverError;
+    iorOK:
+      Result := ioOk;
   end;
 end;
 
