@@ -1,4 +1,4 @@
-unit protscanupdate;
+﻿unit protscanupdate;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -113,7 +113,7 @@ end;
 
 procedure TScanUpdate.Execute;
 var
-  PMsg:TMsg;
+  PMsg:TMSMsg;
 begin
    //sinaliza q a fila de mensagens esta criada
    FInitEvent.SetEvent;
@@ -201,7 +201,7 @@ end;
 procedure TScanUpdate.CheckScanWrite;
 var
   x:PScanWriteRec;
-  PMsg:TMsg;
+  PMsg:TMSMsg;
 begin
    while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANWRITE,WM_TAGSCANWRITE,true) do begin
       //recupera o pacote

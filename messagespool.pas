@@ -31,14 +31,14 @@ type
   @member wParam Ponteiro para dados (caso necessário).
   @member Priority Identifica se é uma mensagem com alta prioridade.  
   }
-  TMsg=record
+  TMSMsg=record
     MsgID:Cardinal;
     lParam:Pointer;
     wParam:Pointer;
     Priority:Boolean;
   end;
   //: Aponta para uma mensagem
-  PMsg = ^TMsg;
+  PMSMsg = ^TMSMsg;
 
   {:
   Estrutura usada para montar uma fila de mensagens.
@@ -47,7 +47,7 @@ type
   @member PriorMsg Aponta para o elemento anterior da fila de mensagens. Tem o valor @code(nil) caso esse elemento seja o primeiro.
   }
   TMsgPkg = record
-    Msg:TMsg;
+    Msg:TMSMsg;
     NextMsg:Pointer;
     PriorMsg:Pointer;
   end;
@@ -98,7 +98,7 @@ type
     @seealso(PeekMessage)
     @seealso(PostMessage)
     }
-    function  GetMessage (var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal):Boolean;
+    function  GetMessage (var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal):Boolean;
 
     {:
     Procura uma mensagem podendo retirá-la ou não da fila. O critério de seleção
@@ -124,7 +124,7 @@ type
     @seealso(GetMessage)
     @seealso(PostMessage)
     }
-    function  PeekMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
+    function  PeekMessage(var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
 
     {:
     Insere uma mensagem na Fila.
@@ -178,7 +178,7 @@ begin
   MSCount := MSCount - 1;
 end;
 
-function TMessageSpool.GetMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal):Boolean;
+function TMessageSpool.GetMessage(var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal):Boolean;
 begin
   if FMsgCount=0 then begin
     FHasMsg.ResetEvent;
@@ -189,7 +189,7 @@ begin
     Result := PeekMessage(Msg,uFilterMinMsg,uFilterMaxMsg,true);
 end;
 
-function TMessageSpool.PeekMessage(var Msg:TMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
+function TMessageSpool.PeekMessage(var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
 var
   curmsg, aux:PMsgPkg;
   found:Boolean;

@@ -1,4 +1,4 @@
-unit protscan;
+﻿unit protscan;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -129,7 +129,7 @@ end;
 
 procedure TScanThread.CheckScanWriteCmd;
 var
-  PMsg:TMsg;
+  PMsg:TMSMsg;
   pkg:PScanWriteRec;
 begin
   if Assigned(FDoScanWrite) then begin

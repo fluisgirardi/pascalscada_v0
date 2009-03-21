@@ -8,7 +8,8 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs;
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs
+  {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
   {:
@@ -20,7 +21,7 @@ type
   }
   TUpdateThread = class(TCrossThread)
   private
-    PMsg:TMsg;
+    PMsg:TMSMsg;
     PCmdPacket:PCommandPacket;
     PInitEventHandle:TCrossEvent;
     PDoSomethingEventHandle:TCrossEvent;
@@ -92,7 +93,7 @@ type
     //: @exclude
     procedure Execute; override;
     //: @exclude
-    procedure DoIOCommand(PMsg:TMsg; commandpacket:PCommandPacket);
+    procedure DoIOCommand(PMsg:TMSMsg; commandpacket:PCommandPacket);
   public
     {:
     Cria uma nova thread de execução de pedidos de leitura/escrita.
@@ -1010,7 +1011,7 @@ end;
 procedure TThreadComm.Execute;
 var
   commandpacket:PCommandPacket;
-  PMsg:TMsg;
+  PMsg:TMSMsg;
 begin
   //sinaliza q a fila de mensagens esta criada
   PInitEventHandle.SetEvent;
@@ -1025,7 +1026,7 @@ begin
   end;
 end;
 
-procedure TThreadComm.DoIOCommand(PMsg:TMsg; commandpacket:PCommandPacket);
+procedure TThreadComm.DoIOCommand(PMsg:TMSMsg; commandpacket:PCommandPacket);
 var
    iocmd:TIOCommand;
 begin
@@ -1056,7 +1057,7 @@ end;
 procedure TThreadComm.CheckWriteCmd;
 var
   commandpacket:PCommandPacket;
-  PMsg:TMsg;
+  PMsg:TMSMsg;
 begin
   while (not Terminated) and FSpool.PeekMessage(PMsg,WM_WRITE_READ,WM_WRITE_WRITEREAD,true) do begin
     commandpacket := PCommandPacket(PMsg.wParam);

@@ -10,7 +10,7 @@ interface
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
   PLCMemoryMananger, crc16utils, hsutils, PLCBlock, PLCString, SyncObjs,
-  CrossEvent;
+  CrossEvent{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
   {:
@@ -953,7 +953,11 @@ begin
     first:=true;
     done := false;
     if (csDesigning in ComponentState) then begin
+      {$IFDEF FPC}
       ThreadSwitch;
+      {$ELSE}
+      SwitchToThread;
+      {$ENDIF}
       exit;
     end;
     for plc:= 0 to High(PModbusPLC) do begin
@@ -1049,7 +1053,11 @@ begin
       BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
       DoRead(tr,values,false);
     end else
+      {$IFDEF FPC}
       ThreadSwitch;
+      {$ELSE}
+      SwitchToThread;
+      {$ENDIF}
   finally
     SetLength(values,0);
   end;
