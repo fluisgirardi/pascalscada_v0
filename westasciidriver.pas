@@ -62,8 +62,8 @@ type
 {d} procedure AssignScanTableToReg(const stablereg:TScanTableReg; var WestReg:TWestRegister);
 {d} function  IOResultToProtocolResult(IORes:TIOResult):TProtocolIOResult;
 {d} procedure AddressToChar(Addr:TWestAddressRange; var ret:BYTES);
-{d} function  WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult;
-{d} function  WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
+{d} function  WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult; overload;
+{d} function  WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult; overload;
 {d} function  DoubleToWest(var buffer:Array of Byte; const Value:Double):TProtocolIOResult; overload;
 {d} function  DoubleToWest(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult; overload;
 

@@ -12,10 +12,10 @@ uses
   HMIRadioButton, HMIRadioGroup, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
   HMIUpDown, HMIZones, hsstrings, hsutils, LinearScaleProcessor, MessageSpool, 
   ModBusMasterDriver, PLCBlock, PLCBlockElement, PLCMemoryMananger, PLCNumber, 
-  PLCString, PLCTag, PLCTagNumber, ProtocolDriver, ProtocolTypes, 
-  scadapropeditor, scadareg, SerialPort, Tag, TagBlock, UserScale, 
-  ValueProcessor, TagBit, tagcollection, scadaapp, TCPIPClientPort, 
-  protscanupdate, protscan, WestASCIIDriver, LazarusPackageIntf;
+  PLCString, PLCTag, PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, 
+  protscanupdate, scadaapp, scadapropeditor, scadareg, SerialPort, Tag, 
+  TagBit, TagBlock, tagcollection, TCPIPClientPort, UserScale, ValueProcessor, 
+  WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 

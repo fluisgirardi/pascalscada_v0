@@ -170,57 +170,57 @@
         <UnitName Value="ProtocolTypes"/>
       </Item33>
       <Item34>
-        <Filename Value="scadapropeditor.pas"/>
-        <UnitName Value="scadapropeditor"/>
+        <Filename Value="protscan.pas"/>
+        <UnitName Value="protscan"/>
       </Item34>
       <Item35>
+        <Filename Value="protscanupdate.pas"/>
+        <UnitName Value="protscanupdate"/>
+      </Item35>
+      <Item36>
+        <Filename Value="scadaapp.pas"/>
+        <UnitName Value="scadaapp"/>
+      </Item36>
+      <Item37>
+        <Filename Value="scadapropeditor.pas"/>
+        <UnitName Value="scadapropeditor"/>
+      </Item37>
+      <Item38>
         <Filename Value="scadareg.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="scadareg"/>
-      </Item35>
-      <Item36>
-        <Filename Value="serialport.pas"/>
-        <UnitName Value="SerialPort"/>
-      </Item36>
-      <Item37>
-        <Filename Value="tag.pas"/>
-        <UnitName Value="Tag"/>
-      </Item37>
-      <Item38>
-        <Filename Value="tagblock.pas"/>
-        <UnitName Value="TagBlock"/>
       </Item38>
       <Item39>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="serialport.pas"/>
+        <UnitName Value="SerialPort"/>
       </Item39>
       <Item40>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="tag.pas"/>
+        <UnitName Value="Tag"/>
       </Item40>
       <Item41>
         <Filename Value="tagbit.pas"/>
         <UnitName Value="TagBit"/>
       </Item41>
       <Item42>
-        <Filename Value="tagcollection.pas"/>
-        <UnitName Value="tagcollection"/>
+        <Filename Value="tagblock.pas"/>
+        <UnitName Value="TagBlock"/>
       </Item42>
       <Item43>
-        <Filename Value="scadaapp.pas"/>
-        <UnitName Value="scadaapp"/>
+        <Filename Value="tagcollection.pas"/>
+        <UnitName Value="tagcollection"/>
       </Item43>
       <Item44>
         <Filename Value="tcpipclientport.pas"/>
         <UnitName Value="TCPIPClientPort"/>
       </Item44>
       <Item45>
-        <Filename Value="protscanupdate.pas"/>
-        <UnitName Value="protscanupdate"/>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
       </Item45>
       <Item46>
-        <Filename Value="protscan.pas"/>
-        <UnitName Value="protscan"/>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
       </Item46>
       <Item47>
         <Filename Value="westasciidriver.pas"/>
