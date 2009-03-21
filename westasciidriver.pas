@@ -8,8 +8,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  ProtocolDriver, Tag, ProtocolTypes, commtypes, CrossEvent, syncobjs,
-  commtypes;
+  ProtocolDriver, Tag, ProtocolTypes, commtypes, CrossEvent, syncobjs;
 
 type
   TParameter = record
@@ -45,6 +44,7 @@ type
     Value:Double;
     Decimal:Byte;
     IOResult:TProtocolIOResult;
+    TimeStamp:TDateTime;
   end;
 
   TScanTable = record
@@ -59,7 +59,8 @@ type
   TWestASCIIDriver = class(TProtocolDriver)
   private
     FWestDevices:TWestDevices;
-    function  IOResultToProtocolResult(IORes:TIOResult):TProtocolIOResult;
+{d} procedure AssignScanTableToReg(const stablereg:TScanTableReg; var WestReg:TWestRegister);
+{d} function  IOResultToProtocolResult(IORes:TIOResult):TProtocolIOResult;
 {d} procedure AddressToChar(Addr:TWestAddressRange; var ret:BYTES);
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult;
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
@@ -78,9 +79,9 @@ type
 {d} procedure DoDelTag(TagObj:TTag); override;
 {d} procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
     procedure DoScanRead(Sender:TObject); override;
-    procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
+{d} procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
 {d} function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
-    function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{d} function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -94,7 +95,7 @@ var
 
 implementation
 
-uses PLCTagNumber, math;
+uses PLCTagNumber, math, dateutils;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin
@@ -244,13 +245,106 @@ begin
 end;
 
 procedure TWestASCIIDriver.DoScanRead(Sender:TObject);
+var
+  plc, plcneedy, reg, regneedy, regini, usados, msbetween,minStime:Integer;
+  somethingdone,firstreg:boolean;
+  res:TProtocolIOResult;
+  stable:TScanTable;
+  tagrec:TTagRec;
+  values:TArrayOfDouble;
 begin
+  if (csDesigning in ComponentState) then begin
+    ThreadSwitch;
+    exit;
+  end;
+  somethingdone:=false;
+  SetLength(values,1);
+  firstreg:=true;
+  try
+    for plc := 0 to High(FWestDevices) do begin
+      regini := 0;
+      usados := 0;
+      with FWestDevices[plc] do begin
+        usados := ifthen((Length(Registers[0].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[0].Timestamp)>=Registers[0].MinScanTime),usados+1,0);
+        usados := ifthen((Length(Registers[1].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[1].Timestamp)>=Registers[1].MinScanTime),usados+1,0);
+        usados := ifthen((Length(Registers[2].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[2].Timestamp)>=Registers[2].MinScanTime),usados+1,0);
+        usados := ifthen((Length(Registers[3].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[3].Timestamp)>=Registers[3].MinScanTime),usados+1,0);
+      end;
 
+      tagrec.Station:=FWestDevices[plc].Address;
+
+      //if exist more than one register used, Read it using ScanTable
+      //command to reduce the use of bandwidth...
+      if usados>1 then begin
+        res := ScanTable(FWestDevices[plc].Address,stable);
+        if res = ioOk then begin
+          AssignScanTableToReg(stable.SP,FWestDevices[plc].Registers[0]);
+          AssignScanTableToReg(stable.PV,FWestDevices[plc].Registers[1]);
+          AssignScanTableToReg(stable.Out1,FWestDevices[plc].Registers[2]);
+          AssignScanTableToReg(stable.Status,FWestDevices[plc].Registers[3]);
+        end else begin
+          for reg := 0 to 3 do
+            FWestDevices[plc].Registers[reg].LastReadResult:=res;
+        end;
+        regini:=4;
+        somethingdone:=true;
+      end;
+
+      //le os
+      for reg := regini to High(FWestDevices[plc].Registers) do
+        with FWestDevices[plc].Registers[reg] do
+          if Length(ScanTimes)>0 then begin
+            msbetween:=MilliSecondsBetween(Now,Timestamp);
+            if msbetween>=MinScanTime then begin
+              tagrec.Address:=reg;
+              DoRead(tagrec, values, false);
+              somethingdone:=true;
+            end else begin
+              if firstreg then begin
+                minStime:=msbetween;
+                plcneedy:=plc;
+                regneedy:=reg;
+                firstreg:=false;
+              end else begin
+                if msbetween>minStime then begin
+                  minStime:=msbetween;
+                  plcneedy:=plc;
+                  regneedy:=reg;
+                end;
+              end;
+            end;
+          end;
+    end;
+
+    if (not somethingdone) and PReadSomethingAlways then begin
+      tagrec.Station:=FWestDevices[plcneedy].Address;
+      tagrec.Address:=regneedy;
+      DoRead(tagrec, values, false);
+    end else
+      ThreadSwitch;
+  finally
+    SetLength(values,0);
+  end
 end;
 
 procedure TWestASCIIDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
+var
+  plc:Integer;
 begin
+  if (tagrec.Station<1) or (tagrec.Station>99) then
+    exit;
 
+  if (tagrec.Address<$00) or (tagrec.Address>$1b) then
+    exit;
+
+  for plc:=0 to High(FWestDevices) do
+    if FWestDevices[plc].Address=TagRec.Station then begin
+      SetLength(values.Values,1);
+      values.Values[0]:=FWestDevices[plc].Registers[TagRec.Address].Value;
+      values.LastQueryResult:=FWestDevices[plc].Registers[TagRec.Address].LastReadResult;
+      values.ValuesTimestamp:=FWestDevices[plc].Registers[TagRec.Address].Timestamp;
+      break;
+    end;
 end;
 
 function  TWestASCIIDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
@@ -259,6 +353,15 @@ var
   dec:BYTE;
   foundplc:Boolean;
 begin
+  if (tagrec.Station<1) or (tagrec.Station>99) then begin
+    Result := ioIllegalStationAddress;
+    exit;
+  end;
+
+  if (tagrec.Address<$00) or (tagrec.Address>$1b) then begin
+    Result := ioIllegalRegAddress;
+    exit;
+  end;
 
   if ParameterList[tagrec.Address].Decimal=255 then begin
     foundplc := false;
@@ -274,22 +377,59 @@ begin
     dec := ParameterList[tagrec.Address].Decimal;
 
   if Length(Values)>0 then
-    Result := ModifyParameter(tagrec.Station,ParameterList[tagrec.Address].ParameterID,Values[0],dec)
+    Result := ModifyParameter(tagrec.Station,Ord(ParameterList[tagrec.Address].ParameterID),Values[0],dec)
   else
     Result := ioIllegalValue;
 
   if foundplc then begin
-    if (Length(Values)>0) and (Result=ioOk) then begin
-      FWestDevices[plc].Registers[tagrec.Address].Value:=Values[0];
-      FWestDevices[plc].Registers[tagrec.Address].Timestamp:=Now;
+    with FWestDevices[plc].Registers[tagrec.Address] do begin
+      if (Length(Values)>0) and (Result=ioOk) then begin
+        Value:=Values[0];
+        Timestamp:=Now;
+      end;
+      LastWriteResult:=Result;
     end;
-    FWestDevices[plc].Registers[tagrec.Address].LastWriteResult:=Result;
   end;
 end;
 
 function  TWestASCIIDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+var
+  plc:integer;
+  dec:Byte;
+  foundplc:Boolean;
 begin
+  if (tagrec.Station<1) or (tagrec.Station>99) then begin
+    Result := ioIllegalStationAddress;
+    exit;
+  end;
 
+  if (tagrec.Address<$00) or (tagrec.Address>$1b) then begin
+    Result := ioIllegalRegAddress;
+    exit;
+  end;
+
+  foundplc := false;
+  for plc:=0 to High(FWestDevices) do
+    if FWestDevices[plc].Address=tagrec.Station then begin
+      foundplc:=true;
+      break;
+    end;
+
+  if Length(Values)>0 then
+    Result := ParameterValue(tagrec.Station,Ord(ParameterList[tagrec.Address].ParameterID),Values[0],dec)
+  else begin
+    Result := ioDriverError;
+  end;
+
+  if foundplc then
+    with FWestDevices[plc].Registers[tagrec.Address] do begin
+      if (Length(Values)>0) and (Result=ioOk) then begin
+        Value:=Values[0];
+        Decimal := dec;
+        Timestamp:=Now;
+      end;
+      LastReadResult:=Result;
+    end;
 end;
 
 function TWestASCIIDriver.DeviceActive(DeviceID:TWestAddressRange):TProtocolIOResult;
@@ -325,6 +465,11 @@ begin
       Result := ioDriverError;
       exit;
     end;
+
+    Result := IOResultToProtocolResult(pkg.WriteIOResult);
+    if Result <> ioOk then exit;
+    Result := IOResultToProtocolResult(pkg.ReadIOResult);
+    if Result <> ioOk then exit;
 
     SetLength(buffer,0);
     buffer := pkg.BufferToRead;
@@ -728,7 +873,6 @@ begin
     SetLength(No,0);
     SetLength(buffer,0);
     SetLength(respprog,0);
-    evento.Destroy;
   end;
 end;
 
@@ -744,7 +888,6 @@ begin
     evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
 
     SetLength(buffer,35);
-    //SetLength(bufferb,35);
     SetLength(No,2);
 
     AddressToChar(DeviceID,No);
@@ -831,32 +974,38 @@ begin
       Result := WestToDouble(buffer[5+OffsetNo+OffsetSpace], ScanTableValues.SP.Value, ScanTableValues.SP.Decimal);
       if (Result=ioCommError) then
         exit;
+      ScanTableValues.SP.TimeStamp:=Now;
       ScanTableValues.SP.IOResult:=Result;
 
       Result := WestToDouble(buffer[10+OffsetNo+OffsetSpace], ScanTableValues.PV.Value, ScanTableValues.PV.Decimal);
       if (Result=ioCommError) then
         exit;
+      ScanTableValues.PV.TimeStamp:=Now;
       ScanTableValues.PV.IOResult:=Result;
 
       Result := WestToDouble(buffer[15+OffsetNo+OffsetSpace], ScanTableValues.Out1.Value, ScanTableValues.Out1.Decimal);
       if (Result=ioCommError) then
         exit;
+      ScanTableValues.Out1.TimeStamp:=Now;
       ScanTableValues.Out1.IOResult:=Result;
 
       if Chr(buffer[4+OffsetNo])='0' then begin
         Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
         if (Result=ioCommError) then
           exit;
+        ScanTableValues.Status.TimeStamp:=Now;
         ScanTableValues.Status.IOResult:=Result;
       end else begin
         Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Out2.Value, ScanTableValues.Out2.Decimal);
         if (Result=ioCommError) then
           exit;
+        ScanTableValues.Out2.TimeStamp:=Now;
         ScanTableValues.Out2.IOResult:=Result;
 
         Result := WestToDouble(buffer[25+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
         if (Result=ioCommError) then
           exit;
+        ScanTableValues.Status.TimeStamp:=Now;
         ScanTableValues.Status.IOResult:=Result;
       end;
       Result := ioOk;
@@ -891,6 +1040,16 @@ begin
     iorOK:
       Result := ioOk;
   end;
+end;
+
+procedure TWestASCIIDriver.AssignScanTableToReg(const stablereg:TScanTableReg; var WestReg:TWestRegister);
+begin
+  if stablereg.IOResult=ioOk then begin
+    WestReg.Value:=stablereg.Value;
+    WestReg.Timestamp:=stablereg.TimeStamp;
+    WestReg.Decimal:=stablereg.Decimal;
+  end;
+  WestReg.LastReadResult:=stablereg.IOResult;
 end;
 
 initialization

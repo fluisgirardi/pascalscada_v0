@@ -953,7 +953,7 @@ begin
     first:=true;
     done := false;
     if (csDesigning in ComponentState) then begin
-      Sleep(1);
+      ThreadSwitch;
       exit;
     end;
     for plc:= 0 to High(PModbusPLC) do begin

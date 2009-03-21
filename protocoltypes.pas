@@ -21,20 +21,22 @@ type
   Enumera todos os possíveis resultados de um pedido de leitura/escrita de um
   tag para um driver de protocolo (TProtocolDriver).
   
-  @value(ioDriverError       Erro interno do driver.)
-  @value(ioCommError         Erro de comunicação.)
-  @value(ioOk                Comando com sucesso.)
-  @value(ioTimeout           Timeout de comunicação.)
-  @value(ioIllegalFunction   Função de IO inválida.)
-  @value(ioIllegalRegAddress O endereco da memória é inválido.)
-  @value(ioIllegalValue      O valor é inválido.)
-  @value(ioPLCError          Erro no equipamento.)
-  @value(ioTagError          Erro interno do Tag.)
-  @value(ioNullDriver        Tag SEM DRIVER.)
+  @value(ioDriverError            Erro interno do driver.)
+  @value(ioCommError              Erro de comunicação.)
+  @value(ioOk                     Comando com sucesso.)
+  @value(ioTimeout                Timeout de comunicação.)
+  @value(ioIllegalFunction        Função de IO inválida.)
+  @value(ioIllegalRegAddress      O endereco da memória é inválido.)
+  @value(ioIllegalValue           O valor é inválido.)
+  @value(ioPLCError               Erro no equipamento.)
+  @value(ioTagError               Erro interno do Tag.)
+  @value(ioNullDriver             Tag SEM DRIVER.)
+  @value(ioIllegalStationAddress  Endereço do equipamento é inválido.)
   }
   TProtocolIOResult = (ioNone, ioDriverError, ioCommError, ioOk, ioTimeOut,
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
-                       ioPLCError, ioTagError, ioNullDriver);
+                       ioPLCError, ioTagError, ioNullDriver,
+                       ioIllegalStationAddress);
 
   {:
   Enumera os tipos de alterações que um tag pode sofrer. Usado internamente
