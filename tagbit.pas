@@ -1,4 +1,4 @@
-﻿unit TagBit;
+unit TagBit;
 
 {$IFDEF FPC}
 {$mode delphi}
