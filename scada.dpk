@@ -76,6 +76,7 @@ contains
   crc16utils in 'crc16utils.pas',
   tagbit in 'tagbit.pas',
   protscan in 'protscan.pas',
-  protscanupdate in 'protscanupdate.pas';
+  protscanupdate in 'protscanupdate.pas',
+  westasciidriver in 'westasciidriver.pas';
 
 end.

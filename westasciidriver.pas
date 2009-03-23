@@ -1,4 +1,4 @@
-unit WestASCIIDriver;
+﻿unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -7,8 +7,8 @@ unit WestASCIIDriver;
 interface
 
 uses
-  Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  ProtocolDriver, Tag, ProtocolTypes, commtypes, CrossEvent, syncobjs;
+  Classes, SysUtils, ProtocolDriver, Tag, ProtocolTypes, commtypes, CrossEvent,
+  syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
   TParameter = record
@@ -64,8 +64,8 @@ type
 {d} procedure AddressToChar(Addr:TWestAddressRange; var ret:BYTES);
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double):TProtocolIOResult; overload;
 {d} function  WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult; overload;
-{d} function  DoubleToWest(var buffer:Array of Byte; const Value:Double):TProtocolIOResult; overload;
-{d} function  DoubleToWest(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult; overload;
+{d} function  DoubleToWestAuto(var buffer:Array of Byte; const Value:Double):TProtocolIOResult;
+{d} function  DoubleToWestManual(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult;
 
 {d} function  ParameterValue (const DeviceID:TWestAddressRange; const Parameter:BYTE; var   Value:Double; var   dec:BYTE):TProtocolIOResult;
 {d} function  ModifyParameter(const DeviceID:TWestAddressRange; const Parameter:BYTE; const Value:Double; const dec:BYTE):TProtocolIOResult;
@@ -254,7 +254,11 @@ var
   values:TArrayOfDouble;
 begin
   if (csDesigning in ComponentState) then begin
+    {$IFDEF FPC}
     ThreadSwitch;
+    {$ELSE}
+    SwitchToThread;
+    {$ENDIF}
     exit;
   end;
   somethingdone:=false;
@@ -321,7 +325,11 @@ begin
       tagrec.Address:=regneedy;
       DoRead(tagrec, values, false);
     end else
+      {$IFDEF FPC}
       ThreadSwitch;
+      {$ELSE}
+      SwitchToThread;
+      {$ENDIF}
   finally
     SetLength(values,0);
   end
@@ -586,7 +594,7 @@ begin
   Result :=  WestToDouble(buffer,Value,cd);
 end;
 
-function  TWestASCIIDriver.DoubleToWest(var buffer:Array of Byte; const Value:Double):TProtocolIOResult;
+function  TWestASCIIDriver.DoubleToWestAuto(var buffer:Array of Byte; const Value:Double):TProtocolIOResult;
 var
    caso:BYTE;
    numaux:Extended;
@@ -642,7 +650,7 @@ begin
    Result := ioOk;
 end;
 
-function  TWestASCIIDriver.DoubleToWest(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult;
+function  TWestASCIIDriver.DoubleToWestManual(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult;
 var
    caso:BYTE;
    c:Integer;
@@ -800,9 +808,9 @@ begin
     buffer[3] := Parameter;
     buffer[4] := Ord('#');
     if dec=255 then
-      Result := DoubleToWest(buffer[5],Value)
+      Result := DoubleToWestAuto(buffer[5],Value)
     else
-      Result := DoubleToWest(buffer[5],Value,dec);
+      Result := DoubleToWestManual(buffer[5],Value,dec);
 
     if Result<>ioOk then exit;
 
@@ -813,9 +821,9 @@ begin
     respprog[2] := No[1];
     respprog[3] := Parameter;
     if dec=255 then
-      Result := DoubleToWest(respprog[4],Value)
+      Result := DoubleToWestAuto(respprog[4],Value)
     else
-      Result := DoubleToWest(respprog[4],Value,dec);
+      Result := DoubleToWestManual(respprog[4],Value,dec);
 
     if Result<>ioOk then exit;
 
