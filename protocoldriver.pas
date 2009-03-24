@@ -77,7 +77,7 @@ type
     function  GetTagByName(Nome:String):TTag;
 
     //metodos chamados pelas threads
-    procedure SafeScanRead(Sender:TObject);
+    procedure SafeScanRead(Sender:TObject; var NeedSleep:Integer);
     function  SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
   protected
@@ -95,6 +95,12 @@ type
     FPause:TCrossEvent;
     //: Armazena a seção crítica que protege areas comuns a muitas threads.
     PCallersCS:TCriticalSection;
+
+    {:
+    Cancela ações do driver que possam demorar.
+    Chamado quando o driver está sendo destruido.
+    }
+    procedure CancelPendingActions; virtual;
 
     //: Configura a porta de comunicação que será usada pelo driver.
     procedure SetCommPort(CommPort:TCommPortDriver);
@@ -139,7 +145,7 @@ type
     Método chamado pelas threads do driver de protocolo para realizar leitura dos
     tags a ele associado.
     }
-    procedure DoScanRead(Sender:TObject); virtual; abstract;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); virtual; abstract;
     {:
     Método chamado pelas threads do driver de protocolo para atualizar os valores
     dos tags.
@@ -301,7 +307,7 @@ destructor TProtocolDriver.Destroy;
 var
   c:Integer;
 begin
-
+  CancelPendingActions;
   if ComponentState*[csDesigning]=[] then begin
     PScanReadThread.Destroy;
     PScanWriteThread.Destroy;
@@ -322,6 +328,11 @@ begin
   SetLength(PTags,0);
   PCallersCS.Destroy;
   inherited Destroy;
+end;
+
+procedure TProtocolDriver.CancelPendingActions;
+begin
+  //nao faz nada...
 end;
 
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
@@ -608,12 +619,12 @@ begin
   Dest.Res2 := Source.Res2;
 end;
 
-procedure TProtocolDriver.SafeScanRead(Sender:TObject);
+procedure TProtocolDriver.SafeScanRead(Sender:TObject; var NeedSleep:Integer);
 begin
    try
       FPause.WaitFor($FFFFFFFF);
       FCritical.Enter;
-      DoScanRead(Sender);
+      DoScanRead(Sender, NeedSleep);
    finally
       FCritical.Leave;
    end;

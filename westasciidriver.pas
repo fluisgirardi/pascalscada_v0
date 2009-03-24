@@ -1,4 +1,4 @@
-﻿unit WestASCIIDriver;
+unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -58,6 +58,7 @@ type
 
   TWestASCIIDriver = class(TProtocolDriver)
   private
+    FEventWaiting:TCrossEvent;
     FWestDevices:TWestDevices;
 {d} procedure AssignScanTableToReg(const stablereg:TScanTableReg; var WestReg:TWestRegister);
 {d} function  IOResultToProtocolResult(IORes:TIOResult):TProtocolIOResult;
@@ -75,10 +76,11 @@ type
 {d} procedure MinScanTimeOfReg(var WestReg:TWestRegister);
 
   protected
+    procedure CancelPendingActions; override;
 {d} procedure DoAddTag(TagObj:TTag); override;
 {d} procedure DoDelTag(TagObj:TTag); override;
 {d} procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
-    procedure DoScanRead(Sender:TObject); override;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
 {d} procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
 {d} function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
 {d} function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
@@ -107,6 +109,12 @@ destructor  TWestASCIIDriver.Destroy;
 begin
   inherited Destroy;
   SetLength(FWestDevices,0);
+end;
+
+procedure TWestASCIIDriver.CancelPendingActions;
+begin
+  if FEventWaiting<>nil then
+    FEventWaiting.SetEvent;
 end;
 
 procedure TWestASCIIDriver.DoAddTag(TagObj:TTag);
@@ -246,7 +254,7 @@ begin
   inherited DoTagChange(TagObj,Change,oldValue,newValue);
 end;
 
-procedure TWestASCIIDriver.DoScanRead(Sender:TObject);
+procedure TWestASCIIDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);
 var
   plc, plcneedy, reg, regneedy, regini, usados, msbetween,minStime:Integer;
   somethingdone,firstreg:boolean;
@@ -329,11 +337,7 @@ begin
       tagrec.Address:=regneedy;
       DoRead(tagrec, values, false);
     end else
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF}
+      NeedSleep := 1;
   finally
     SetLength(values,0);
   end
@@ -900,6 +904,7 @@ var
 begin
   try
     evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
+    FEventWaiting := evento;;
 
     SetLength(buffer,35);
     SetLength(No,2);
@@ -924,6 +929,11 @@ begin
     PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
 
     if evento.WaitFor(5000)<>wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
+
+    if [csDestroying]*ComponentState<>[] then begin
       Result := ioDriverError;
       exit;
     end;
@@ -967,6 +977,11 @@ begin
     end;
 
     if evento.WaitFor(5000)<>wrSignaled then begin
+      Result := ioDriverError;
+      exit;
+    end;
+
+    if [csDestroying]*ComponentState<>[] then begin
       Result := ioDriverError;
       exit;
     end;
@@ -1027,6 +1042,7 @@ begin
     end;
     Result := ioOk;
   finally
+    FEventWaiting := nil;
     if PCommPort<>nil then
       if PCommPort.LockedBy=DriverID then
          PCommPort.Unlock(DriverID);

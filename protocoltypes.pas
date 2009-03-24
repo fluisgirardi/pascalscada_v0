@@ -181,6 +181,14 @@ type
   PScanWriteProc = ^TScanWriteProc;
 
   {:
+  Define o procedimento responsável por executar leituras por Scan.
+  @param(Sender TObject: thread do driver que está realizando o scan..)
+  @param(Sleep Integer: informa ao driver se ele deve dormir por um tempo, a fim
+                        de liberar processador.)
+  }
+  TScanReadProc = procedure(Sender:TObject; var NeedSleep:Integer) of object;
+
+  {:
   Define o procedimento responsável por buscar os valores de um tag.
   @param(Tag TTagRec: estrutura que contem as informações do tag que vai ser escrito.)
   @param(values TArrayOfDouble: Array onde serão retornados os valores do tag.)

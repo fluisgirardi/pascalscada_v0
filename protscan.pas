@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, CrossEvent, protscanupdate, MessageSpool, syncobjs,
-  ProtocolTypes;
+  ProtocolTypes{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
 
@@ -23,7 +23,7 @@ type
     FInitEvent:TCrossEvent;
     FWaitToWrite:TCrossEvent;
 
-    FDoScanRead:TNotifyEvent;
+    FDoScanRead:TScanReadProc;
     FDoScanWrite:TScanWriteProc;
 
     FMinScan:Cardinal;
@@ -70,7 +70,7 @@ type
     }
     property MinTimeOfScan:Cardinal read FMinScan write FMinScan nodefault;
     //: Evento chamado para realizar a atualização do valores dos tags.
-    property OnDoScanRead:TNotifyEvent read FDoScanRead write FDoScanRead;
+    property OnDoScanRead:TScanReadProc read FDoScanRead write FDoScanRead;
     {:
     Evento chamado para executar uma escrita por scan.
     @seealso(TScanWriteProc)
@@ -107,6 +107,8 @@ begin
 end;
 
 procedure TScanThread.Execute;
+var
+  NeedSleep:Integer;
 begin
   //sinaliza q a fila de mensagens esta criada
   FInitEvent.SetEvent;
@@ -114,7 +116,16 @@ begin
     CheckScanWriteCmd;
     if Assigned(FDoScanRead) then
       try
-        FDoScanRead(Self);
+        NeedSleep:=0;
+        FDoScanRead(Self, NeedSleep);
+        if NeedSleep>0 then
+          Sleep(NeedSleep);
+        if NeedSleep<0 then
+          {$IFDEF FPC}
+          ThreadSwitch;
+          {$ELSE}
+          SwitchToThread;
+          {$ENDIF}
       except
         on E: Exception do begin
           erro := E;

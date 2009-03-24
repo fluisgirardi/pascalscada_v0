@@ -117,7 +117,7 @@ type
     procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
 
     //: @seealso(TProtocolDriver.DoScanRead)
-    procedure DoScanRead(Sender:TObject); override;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
     //: @seealso(TProtocolDriver.DoGetValue)
     procedure DoGetValue(TagObj:TTagRec; var values:TScanReadRec); override;
 
@@ -937,7 +937,7 @@ begin
   end;
 end;
 
-procedure TModBusMasterDriver.DoScanRead(Sender:TObject);
+procedure TModBusMasterDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);
 var
   plc,block:Integer;
   done,first:Boolean;
@@ -1053,11 +1053,7 @@ begin
       BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
       DoRead(tr,values,false);
     end else
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF}
+      NeedSleep := 1;
   finally
     SetLength(values,0);
   end;
