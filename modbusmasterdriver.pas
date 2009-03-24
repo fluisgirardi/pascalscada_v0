@@ -1048,7 +1048,7 @@ begin
     //se nao fez leitura de nenhum bloco
     //faz atualiza o bloco que esta quase vencendo
     //o tempo de scan...
-    if (PReadSomethingAlways) and ((not done) and (not first)) then begin
+    if (PReadSomethingAlways) and (Length(PModbusPLC)>0) and ((not done) and (not first)) then begin
       //compila o bloco do mais necessitado;
       BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
       DoRead(tr,values,false);

@@ -1,4 +1,4 @@
-﻿unit WestASCIIDriver;
+unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -261,6 +261,8 @@ begin
     {$ENDIF}
     exit;
   end;
+  plcneedy:=0;
+  regneedy:=0;
   somethingdone:=false;
   SetLength(values,1);
   firstreg:=true;
@@ -320,7 +322,7 @@ begin
           end;
     end;
 
-    if (not somethingdone) and PReadSomethingAlways then begin
+    if (not somethingdone) and PReadSomethingAlways and (High(FWestDevices)>=plcneedy) then begin
       tagrec.Station:=FWestDevices[plcneedy].Address;
       tagrec.Address:=regneedy;
       DoRead(tagrec, values, false);

@@ -1,4 +1,4 @@
-﻿unit protscanupdate;
+unit protscanupdate;
 
 {$IFDEF FPC}
 {$mode delphi}
