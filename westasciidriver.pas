@@ -255,7 +255,7 @@ var
   tagrec:TTagRec;
   values:TArrayOfDouble;
 begin
-  if (csDesigning in ComponentState) then begin
+  if ([csDesigning, csDestroying]*ComponentState<>[]) then begin
     {$IFDEF FPC}
     ThreadSwitch;
     {$ELSE}
@@ -328,13 +328,12 @@ begin
       tagrec.Station:=FWestDevices[plcneedy].Address;
       tagrec.Address:=regneedy;
       DoRead(tagrec, values, false);
-    end else begin
+    end else
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
-      sleep(1);
+      SwitchToThread;
       {$ENDIF}
-    end;
   finally
     SetLength(values,0);
   end
@@ -924,7 +923,7 @@ begin
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
 
-    if evento.WaitFor(10000)<>wrSignaled then begin
+    if evento.WaitFor(5000)<>wrSignaled then begin
       Result := ioDriverError;
       exit;
     end;
@@ -967,7 +966,7 @@ begin
       end;
     end;
 
-    if evento.WaitFor(60000)<>wrSignaled then begin
+    if evento.WaitFor(5000)<>wrSignaled then begin
       Result := ioDriverError;
       exit;
     end;
