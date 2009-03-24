@@ -1,4 +1,4 @@
-unit WestASCIIDriver;
+﻿unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -106,6 +106,7 @@ end;
 destructor  TWestASCIIDriver.Destroy;
 begin
   inherited Destroy;
+  SetLength(FWestDevices,0);
 end;
 
 procedure TWestASCIIDriver.DoAddTag(TagObj:TTag);
@@ -135,6 +136,7 @@ begin
     if not foundplc then begin
       plc := Length(FWestDevices);
       SetLength(FWestDevices,plc+1);
+      FWestDevices[plc].Address := plctagobj.PLCStation;
     end;
 
     with FWestDevices[plc].Registers[plctagobj.MemAddress] do
@@ -271,10 +273,10 @@ begin
       regini := 0;
       usados := 0;
       with FWestDevices[plc] do begin
-        usados := ifthen((Length(Registers[0].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[0].Timestamp)>=Registers[0].MinScanTime),usados+1,0);
-        usados := ifthen((Length(Registers[1].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[1].Timestamp)>=Registers[1].MinScanTime),usados+1,0);
-        usados := ifthen((Length(Registers[2].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[2].Timestamp)>=Registers[2].MinScanTime),usados+1,0);
-        usados := ifthen((Length(Registers[3].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[3].Timestamp)>=Registers[3].MinScanTime),usados+1,0);
+        usados := ifthen((Length(Registers[0].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[0].Timestamp)>=Registers[0].MinScanTime),usados+1,usados);
+        usados := ifthen((Length(Registers[1].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[1].Timestamp)>=Registers[1].MinScanTime),usados+1,usados);
+        usados := ifthen((Length(Registers[2].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[2].Timestamp)>=Registers[2].MinScanTime),usados+1,usados);
+        usados := ifthen((Length(Registers[3].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[3].Timestamp)>=Registers[3].MinScanTime),usados+1,usados);
       end;
 
       tagrec.Station:=FWestDevices[plc].Address;
@@ -326,12 +328,13 @@ begin
       tagrec.Station:=FWestDevices[plcneedy].Address;
       tagrec.Address:=regneedy;
       DoRead(tagrec, values, false);
-    end else
+    end else begin
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
-      SwitchToThread;
+      sleep(1);
       {$ENDIF}
+    end;
   finally
     SetLength(values,0);
   end
@@ -526,11 +529,13 @@ var
   a,b,c,d,ok,r:BYTE;
   i, aux:Integer;
 begin
-  if ((buffer[0]=Ord('<')) and (buffer[1]=Ord('?')) and (buffer[2]=Ord('?')) and (buffer[3]=Ord('>'))) then
+  if ((buffer[0]=Ord('<')) and (buffer[1]=Ord('?')) and (buffer[2]=Ord('?')) and (buffer[3]=Ord('>'))) then begin
     Result := ioIllegalValue;
+    exit;
+  end;
 
   for i:=0 to 4 do begin
-    aux := (ord(buffer[i])-48);
+    aux := (buffer[i]-48);
     if ((aux<0) or (aux>9)) then begin
       Result := ioCommError;
       exit;
@@ -541,7 +546,7 @@ begin
   b := buffer[1]-48;
   c := buffer[2]-48;
   d := buffer[3]-48;
-  r := buffer[4]-48;
+  r := buffer[4];
 
   case r of
     $30: begin
@@ -774,7 +779,7 @@ begin
         if b1 then
           Result := ioIllegalValue
         else begin
-          Result := WestToDouble(buffer[4],Value);
+          Result := WestToDouble(buffer[4],Value,dec);
         end;
       end else
         Result := ioCommError;
@@ -892,7 +897,7 @@ var
    b1, b2:Boolean;
    pkg:TIOPacket;
    evento:TCrossEvent;
-   OffsetSpace, OffsetNo:Integer;
+   OffsetSpace, OffsetNo, OffsetSize:Integer;
 begin
   try
     evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
@@ -909,7 +914,7 @@ begin
     buffer[4]:=Ord('?');
     buffer[5]:=Ord('*');
 
-    if PCommPort<>nil then begin
+    if PCommPort=nil then begin
       Result := ioNullDriver;
       exit;
     end;
@@ -919,7 +924,7 @@ begin
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
 
-    if evento.WaitFor(60000)<>wrSignaled then begin
+    if evento.WaitFor(10000)<>wrSignaled then begin
       Result := ioDriverError;
       exit;
     end;
@@ -942,16 +947,20 @@ begin
     //faz a leitura imediata do resto do pacote... termina em PCommPort.Unlock()
 
     evento.ResetEvent;
-    //se respondeu o endereco com dois bytes, incrementa offset da array.
+    //se respondeu o endereco com um byte, incrementa offset da array.
     OffsetNo:=0;
     if b2 then
       OffsetNo:=1;
 
     case Chr(buffer[4+OffsetNo]) of
-      '0':
+      '0': begin
         PCommPort.IOCommandASync(iocRead, buffer, 21+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
-      '5':
+        OffsetSize := 0;
+      end;
+      '5': begin
         PCommPort.IOCommandASync(iocRead, buffer, 26+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+        OffsetSize := 5;
+      end;
       else begin
         Result := ioCommError;
         exit;
@@ -965,62 +974,59 @@ begin
 
     PCommPort.Unlock(DriverID);
 
-    Result := IOResultToProtocolResult(pkg.WriteIOResult);
-    if Result <> ioOk then exit;
     Result := IOResultToProtocolResult(pkg.ReadIOResult);
     if Result <> ioOk then exit;
 
-    if Chr(buffer[4+OffsetNo]) in ['0','5'] then begin
-      if buffer[5+OffsetNo]=Ord(' ') then
-        OffsetSpace := 1
-      else
-        OffsetSpace := 0;
+    if b2 and (pkg.BufferToRead[0]=Ord(' ')) then
+      OffsetSpace := 1
+    else
+      OffsetSpace := 0;
 
-      if ((buffer[25+OffsetNo+OffsetSpace]<>Ord('A')) or (buffer[26+OffsetNo+OffsetSpace]<>Ord('*'))) then begin
-        Result := ioCommError;
-        exit;
-      end;
+    buffer := pkg.BufferToRead;
 
-      Result := WestToDouble(buffer[5+OffsetNo+OffsetSpace], ScanTableValues.SP.Value, ScanTableValues.SP.Decimal);
-      if (Result=ioCommError) then
-        exit;
-      ScanTableValues.SP.TimeStamp:=Now;
-      ScanTableValues.SP.IOResult:=Result;
-
-      Result := WestToDouble(buffer[10+OffsetNo+OffsetSpace], ScanTableValues.PV.Value, ScanTableValues.PV.Decimal);
-      if (Result=ioCommError) then
-        exit;
-      ScanTableValues.PV.TimeStamp:=Now;
-      ScanTableValues.PV.IOResult:=Result;
-
-      Result := WestToDouble(buffer[15+OffsetNo+OffsetSpace], ScanTableValues.Out1.Value, ScanTableValues.Out1.Decimal);
-      if (Result=ioCommError) then
-        exit;
-      ScanTableValues.Out1.TimeStamp:=Now;
-      ScanTableValues.Out1.IOResult:=Result;
-
-      if Chr(buffer[4+OffsetNo])='0' then begin
-        Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
-        if (Result=ioCommError) then
-          exit;
-        ScanTableValues.Status.TimeStamp:=Now;
-        ScanTableValues.Status.IOResult:=Result;
-      end else begin
-        Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Out2.Value, ScanTableValues.Out2.Decimal);
-        if (Result=ioCommError) then
-          exit;
-        ScanTableValues.Out2.TimeStamp:=Now;
-        ScanTableValues.Out2.IOResult:=Result;
-
-        Result := WestToDouble(buffer[25+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
-        if (Result=ioCommError) then
-          exit;
-        ScanTableValues.Status.TimeStamp:=Now;
-        ScanTableValues.Status.IOResult:=Result;
-      end;
-      Result := ioOk;
-    end else
+    if ((buffer[20+OffsetSize+OffsetSpace]<>Ord('A')) or (buffer[21+OffsetSize+OffsetSpace]<>Ord('*'))) then begin
       Result := ioCommError;
+      exit;
+    end;
+
+    Result := WestToDouble(buffer[0+OffsetSpace], ScanTableValues.SP.Value, ScanTableValues.SP.Decimal);
+    if (Result=ioCommError) then
+      exit;
+    ScanTableValues.SP.TimeStamp:=Now;
+    ScanTableValues.SP.IOResult:=Result;
+
+    Result := WestToDouble(buffer[5+OffsetSpace], ScanTableValues.PV.Value, ScanTableValues.PV.Decimal);
+    if (Result=ioCommError) then
+      exit;
+    ScanTableValues.PV.TimeStamp:=Now;
+    ScanTableValues.PV.IOResult:=Result;
+
+    Result := WestToDouble(buffer[10+OffsetSpace], ScanTableValues.Out1.Value, ScanTableValues.Out1.Decimal);
+    if (Result=ioCommError) then
+      exit;
+    ScanTableValues.Out1.TimeStamp:=Now;
+    ScanTableValues.Out1.IOResult:=Result;
+
+    if OffsetSize=0 then begin
+      Result := WestToDouble(buffer[15+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
+      if (Result=ioCommError) then
+        exit;
+      ScanTableValues.Status.TimeStamp:=Now;
+      ScanTableValues.Status.IOResult:=Result;
+    end else begin
+      Result := WestToDouble(buffer[15+OffsetSpace], ScanTableValues.Out2.Value, ScanTableValues.Out2.Decimal);
+      if (Result=ioCommError) then
+        exit;
+      ScanTableValues.Out2.TimeStamp:=Now;
+      ScanTableValues.Out2.IOResult:=Result;
+
+      Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
+      if (Result=ioCommError) then
+        exit;
+      ScanTableValues.Status.TimeStamp:=Now;
+      ScanTableValues.Status.IOResult:=Result;
+    end;
+    Result := ioOk;
   finally
     if PCommPort<>nil then
       if PCommPort.LockedBy=DriverID then
