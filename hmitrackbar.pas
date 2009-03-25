@@ -163,7 +163,7 @@ begin
   inherited DoChange(msg);
 end;
 {$ELSE}
-procedure THMITrackBar.Changed; override;
+procedure THMITrackBar.Changed;
 begin
   FModified:=true;
   inherited Changed;

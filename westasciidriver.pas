@@ -1,4 +1,4 @@
-unit WestASCIIDriver;
+﻿unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -529,7 +529,7 @@ end;
 
 function TWestASCIIDriver.WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
 var
-  a,b,c,d,ok,r:BYTE;
+  a,b,c,d,r:BYTE;
   i, aux:Integer;
 begin
   if ((buffer[0]=Ord('<')) and (buffer[1]=Ord('?')) and (buffer[2]=Ord('?')) and (buffer[3]=Ord('>'))) then begin
@@ -608,7 +608,7 @@ function  TWestASCIIDriver.DoubleToWestAuto(var buffer:Array of Byte; const Valu
 var
    caso:BYTE;
    numaux:Extended;
-   c, l:Integer;
+   c:Integer;
    aux:String;
 begin
   caso:=255;
@@ -1066,10 +1066,10 @@ begin
   case IORes of
     iorTimeOut:
       Result := ioTimeOut;
-    iorNotReady, iorNone, iorPortError:
-      Result := ioDriverError;
     iorOK:
       Result := ioOk;
+    else
+      Result := ioDriverError;
   end;
 end;
 
