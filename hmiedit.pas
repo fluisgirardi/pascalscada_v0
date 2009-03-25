@@ -15,10 +15,6 @@ type
   //: Implementa um Edit para leitura/escrita de valores texto/numéricos em tags.
   THMIEdit = class(TEdit, IHMIInterface)
   private
-    FOnChange:TNotifyEvent;
-    FOnExit:TNotifyEvent;
-    FOnEnter:TNotifyEvent;
-    FOnKeyPress:TKeyEvent;
     FTag:TPLCTag;
     FShowFocused:Boolean;
     FDefFontColor:TColor;
@@ -50,11 +46,6 @@ type
     procedure SetPrefix(s:String);
     procedure SetSufix(s:String);
 
-    procedure MyKeyPress(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure MyLostFocus(Sender: TObject);
-    procedure MyEnterFocus(Sender: TObject);
-    procedure MyChange(Sender: TObject);
-
     procedure SendValue(txt:String);
     procedure HMINotifyChangeCallback(Sender:TObject);
     procedure RefreshHMISecurity;
@@ -62,6 +53,15 @@ type
     procedure SetHMIEnabled(v:Boolean);
     function  GetHMIEnabled:Boolean;
   protected
+    //: @exclude
+    procedure Change; override;
+    //: @exclude
+    procedure DoEnter; override;
+    //: @exclude
+    procedure DoExit; override;
+    //: @exclude
+    procedure KeyDown(var Key: Word; shift : TShiftState); override;
+
     //: @exclude
     procedure Loaded; override;
     //: @exclude
@@ -126,16 +126,6 @@ type
     o valor do tag no controle quando este tem o foco da aplicação.
     }
     property FreezeValueOnFocus:Boolean read FFreezeValue write FFreezeValue default true;
-
-    //: @exclude
-    property OnChange:TNotifyEvent read FOnChange write FOnChange;
-    //: @exclude
-    property OnEnter:TNotifyEvent read FOnEnter write FOnEnter;
-    //: @exclude
-    property OnExit:TNotifyEvent read FOnExit write FOnExit;
-    //: @exclude
-    property OnKeyDown:TKeyEvent read FOnKeyPress write FOnKeyPress;
-
   end;
 
 implementation
@@ -149,10 +139,7 @@ begin
     inherited Text := 'SEM TAG!';
     Modified := false;
   end;
-  inherited OnChange := MyChange;
-  inherited OnEnter := MyEnterFocus;
-  inherited OnExit := MyLostFocus;
-  inherited OnKeyDown := MyKeyPress;
+
   FFontChangeEvent := Font.OnChange;
   Font.OnChange := FontChange;
   {$IF defined(HasGTK2_0) or defined(GTK1)}
@@ -367,7 +354,7 @@ begin
   end;
 end;
 
-procedure THMIEdit.MyKeyPress(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure THMIEdit.KeyDown(var Key: Word; shift : TShiftState);
 begin
   if ((scPressEnter in FSend) and (key=VK_RETURN)) or
      ((scPressESC in FSend) and (key=VK_ESCAPE)) then begin
@@ -383,11 +370,10 @@ begin
      RefreshTagValue;
   end;
 
-  if Assigned(FOnKeyPress) then
-    FOnKeyPress(Sender,Key,Shift);
+  inherited KeyDown(Key, Shift);
 end;
 
-procedure THMIEdit.MyLostFocus(Sender: TObject);
+procedure THMIEdit.DoExit;
 begin
   HasFocus := false;
   RepaintFocus;
@@ -402,22 +388,20 @@ begin
   Modified := false;
   RefreshTagValue;
 
-  if Assigned(FOnExit) then
-    FOnExit(Sender);
+  inherited DoExit;
 end;
 
-procedure THMIEdit.MyEnterFocus(Sender: TObject);
+procedure THMIEdit.DoEnter;
 begin
   HasFocus := true;
   RepaintFocus;
   RefreshTagValue;
   SelStart:=0;
   SelLength := Length(Text);
-  if Assigned(FOnEnter) then
-    FOnEnter(Sender);
+  inherited DoEnter;
 end;
 
-procedure THMIEdit.MyChange(Sender: TObject);
+procedure THMIEdit.Change;
 var
   cursor:Integer;
   itag:ITagInterface;
@@ -440,8 +424,7 @@ begin
   if (scAnyChange in FSend) then
     SendValue(Text);
 
-  if Assigned(FOnChange) then
-    FOnChange(Sender);
+  inherited Change;
 end;
 
 procedure THMIEdit.SetHMIEnabled(v:Boolean);
