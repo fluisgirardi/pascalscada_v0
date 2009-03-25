@@ -67,8 +67,8 @@ implementation
 
 constructor THMIUpDown.Create(AOwner:TComponent);
 begin
-   inherited Create(AOwner);
-  if csDesigning	in ComponentState then begin
+  inherited Create(AOwner);
+  if csDesigning in ComponentState then begin
     FIncrement := 1;
     FPosition := 0;
     FMax := 100;

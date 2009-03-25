@@ -11,7 +11,8 @@ unit HMITrackBar;
 interface
 
 uses
-  SysUtils, Classes, Controls, ComCtrls, PLCTag, ProtocolTypes, HMITypes;
+  SysUtils, Classes, Controls, ComCtrls, PLCTag, ProtocolTypes, HMITypes
+  {$IFDEF FPC}, LMessages{$ENDIF};
 
 type
   {:
@@ -23,14 +24,6 @@ type
     Ftag:TPLCTag;
     FIsEnabled:Boolean;
     FModified:Boolean;
-
-    //eventos que serao sobrescritos
-    FMouseMove:TMouseMoveEvent;
-    FKeyUp:TKeyEvent;
-    FKeyDown:TKeyEvent;
-    FMouseUp:TMouseEvent;
-    FMouseDown:TMouseEvent;
-    FChange:TNotifyEvent;
     
     procedure RefreshTagValue;
     procedure HMINotifyChangeCallBack(Sender:TObject);
@@ -41,24 +34,20 @@ type
     procedure RefreshHMISecurity;
     procedure SetHMIEnabled(v:Boolean);
     function  GetHMIEnabled:Boolean;
-    
-    procedure LocalKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure LocalKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    
-    procedure LocalMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure LocalMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-
-    procedure LocalMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    
-    procedure LocalChange(Sender: TObject);
   protected
+    procedure KeyUp(var Key: Word; Shift: TShiftState); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    {$IFDEF FPC}
+    procedure DoChange(var msg); message LM_CHANGED;
+    {$ELSE}
+    procedure Changed; override;
+    {$ENDIF}
+
     //: @exclude
     procedure Loaded; override;
     //: @exclude
     procedure WriteValue;
   public
-    //: @exclude
-    constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
   published
@@ -73,42 +62,11 @@ type
     Property Position:Integer read GetPosition;
     //: Diz se o valor do controle sofreu alguma alteração.
     property Modified:Boolean read FModified;
-    
-    //--------------------------------------------------------------------------
-    //eventos sobrescritos
-    //--------------------------------------------------------------------------
-    //: @exclude
-    property OnChange:TNotifyEvent read FChange write FChange;
-    //atualiza o valor quando o usuário mover o mouse
-    //: @exclude
-    property OnMouseMove:TMouseMoveEvent read FMouseMove write FMouseMove;
-    
-    //: @exclude
-    property OnMouseDown: TMouseEvent read FMouseDown write FMouseDown;
-    //: @exclude
-    property OnMouseUp: TMouseEvent read FMouseUp write FMouseUp;
-
-    //: @exclude
-    property OnKeyUp:TKeyEvent read FKeyUp write FKeyUp;
-    //: @exclude
-    property OnKeyDown:TKeyEvent read FKeyDown write FKeyDown;
   end;
 
 implementation
 
 uses hsutils;
-
-constructor THMITrackBar.Create(AOwner:TComponent);
-begin
-   inherited Create(AOwner);
-   
-   inherited OnMouseMove:=LocalMouseMove;
-   inherited OnMouseDown:=LocalMouseDown;
-   inherited OnMouseUp  :=LocalMouseUp;
-   inherited OnKeyUp    :=LocalKeyUp;
-   inherited OnKeyDown  :=LocalKeyDown;
-   inherited OnChange   :=LocalChange;
-end;
 
 destructor THMITrackBar.Destroy;
 begin
@@ -182,48 +140,35 @@ end;
 //------------------------------------------------------------------------------
 // PROCESSAMENTO DE EVENTOS
 //------------------------------------------------------------------------------
-procedure THMITrackBar.LocalKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure THMITrackBar.KeyUp(var Key: Word; Shift: TShiftState);
 begin
    if Modified then
       WriteValue;
       
-   if assigned(FKeyUp) then
-      FKeyUp(Sender,Key,Shift);
+   inherited KeyUp(Key, Shift);
 end;
 
-procedure THMITrackBar.LocalKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-   if assigned(FKeyDown) then
-     FKeyDown(Sender,Key,Shift);
-end;
-
-procedure THMITrackBar.LocalMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure THMITrackBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
    if Modified then
       WriteValue;
       
-   if Assigned(FMouseUp) then
-      FMouseUp(Sender,Button,Shift,X,Y);
+   inherited MouseUp(Button, Shift, X, Y);
 end;
 
-procedure THMITrackBar.LocalMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-   if Assigned(FMouseDown) then
-      FMouseDown(Sender,Button,Shift,X,Y);
-end;
-
-procedure THMITrackBar.LocalMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-begin
-   if Assigned(FMouseMove) then
-      FMouseMove(Sender,Shift,X,Y);
-end;
-
-procedure THMITrackBar.LocalChange(Sender: TObject);
+{$IFDEF FPC}
+procedure THMITrackBar.DoChange(var msg);
 begin
   FModified:=true;
-  if Assigned(FChange) then
-     FChange(Sender);
+  inherited DoChange(msg);
 end;
+{$ELSE}
+procedure THMITrackBar.Changed; override;
+begin
+  FModified:=true;
+  inherited Changed;
+end;
+{$ENDIF}
 
 //------------------------------------------------------------------------------
 // FIM DO PROCESSAMENTO DE EVENTOS

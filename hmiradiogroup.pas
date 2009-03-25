@@ -19,10 +19,6 @@ type
     FIsEnabled:Boolean;
     FDefaultIndex:Integer;
     FIgnore, FLoaded:Boolean;
-    {$IFNDEF FPC}
-    FOnClick:TNotifyEvent;
-    procedure MyClick(Sender:TObject);
-    {$ENDIF}
     procedure HMINotifyChangeCallback(Sender:TObject); //notificação de change do valor do tag
     procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
     procedure RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
@@ -34,6 +30,9 @@ type
     function  GetIndex:Integer;
     procedure SetIndex(v:Integer);
   protected
+    {$IFNDEF FPC}
+    procedure Click; override;
+    {$ENDIF}
     //: @exclude
     procedure CheckItemIndexChanged; {$IFDEF FPC} override; {$ENDIF}
     //: @exclude
@@ -60,9 +59,6 @@ type
     de @name.
     }
     property  DefaultIndex:Integer read FDefaultIndex write SetDefaultIndex default -1;
-    {$IFNDEF FPC}
-    property  OnClick:TNotifyEvent read FOnClick write FOnClick;
-    {$ENDIF}
   end;
 
 implementation
@@ -73,9 +69,6 @@ begin
    FIgnore:=false;
    FLoaded:=false;
    FDefaultIndex:=-1;
-   {$IFNDEF FPC}
-   inherited OnClick:= MyClick;
-   {$ENDIF}
 end;
 
 destructor  THMIRadioGroup.Destroy;
@@ -188,11 +181,10 @@ begin
 end;
 
 {$IFNDEF FPC}
-procedure THMIRadioGroup.MyClick(Sender:TObject);
+procedure THMIRadioGroup.Click;
 begin
    CheckItemIndexChanged;
-   if Assigned(FOnClick) then
-      FOnClick(Sender);
+   inherited Click;
 end;
 {$ENDIF}
 
