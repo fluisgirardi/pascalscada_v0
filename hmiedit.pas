@@ -142,7 +142,7 @@ begin
 
   FFontChangeEvent := Font.OnChange;
   Font.OnChange := FontChange;
-  {$IF defined(HasGTK2_0) or defined(GTK1)}
+  {$IF defined(LCLGTK) or defined(LCLGTK2)}
      FShowFocused := false;
   {$ELSE}
      FShowFocused := true;
