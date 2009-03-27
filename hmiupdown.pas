@@ -192,7 +192,7 @@ end;
 
 procedure THMIUpDown.SetMax(v:Double);
 begin
-  if v<=FMin then
+  if ([csLoading]*ComponentState=[]) and (v<=FMin) then
      raise Exception.Create('O valor máximo precisa ser maior que o mínimo!');
 
   FMax := v;
@@ -200,7 +200,7 @@ end;
 
 procedure THMIUpDown.SetMin(v:Double);
 begin
-  if v>=FMax then
+  if ([csLoading]*ComponentState=[]) and (v>=FMax) then
      raise Exception.Create('O valor mínimo precisa ser menor que o máximo!');
 
   FMin := v;
