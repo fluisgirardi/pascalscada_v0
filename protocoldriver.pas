@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, CommPort, CommTypes, ProtocolTypes, protscanupdate,
-  protscan, CrossEvent, Tag, syncobjs;
+  protscan, CrossEvent, Tag, syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
   {:
@@ -548,8 +548,14 @@ begin
     pkg^.WriteResult:=ioNone;
 
     //posta uma mensagem de Escrita por Scan
-    if (ComponentState*[csDesigning]=[]) and (PScanWriteThread<>nil) then
+    if (ComponentState*[csDesigning]=[]) and (PScanWriteThread<>nil) then begin
       PScanWriteThread.ScanWrite(pkg);
+      {$IFDEF FPC}
+      ThreadSwitch;
+      {$ELSE}
+      SwitchToThread;
+      {$ENDIF}
+    end;
 
     Result := FScanWriteID;
   finally

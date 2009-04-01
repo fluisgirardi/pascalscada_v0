@@ -34,9 +34,7 @@ type
     procedure SetDummySize(s:Cardinal);
 
     function  GetValue:String;
-    function  GetValueDirect:String;
     procedure SetValue(Value:String);
-    procedure SetValueDirect(Value:String);
     function  CalcBlockSize(IsWrite:Boolean):Cardinal;
     function  EncodeValues(values:TArrayOfDouble):String;
     function  DecodeValue(value:String):TArrayOfDouble;
@@ -76,8 +74,6 @@ type
     destructor  Destroy; override;
     //: Lê/escreve uma string do equipamento de modo assincrono.
     property Value:String read PValue write SetValue;
-    //: Lê/escreve uma string do equipamento de modo sincrono.
-    property ValueDirect:String read GetValueDirect write SetValueDirect;
   published
     //: Quantidade máxima de caracteres da string.
     property StringSize:Cardinal read PStringSize write SetStringSize;
@@ -93,6 +89,8 @@ type
     property OnValueChange;
     //: Tamanho do bloco (somente-leitura).
     property Size write SetDummySize;
+    //: @seealso(TPLCTag.SyncWrites)
+    property SyncWrites;
   end;
 
 implementation
@@ -509,27 +507,15 @@ begin
   Result := PValue;
 end;
 
-function  TPLCString.GetValueDirect:String;
-begin
-  Read;
-  Result := PValue;
-end;
-
 procedure TPLCString.SetValue(Value:String);
 var
   x:TArrayOfDouble;
 begin
   x:=DecodeValue(Value);
-  ScanWrite(x,Length(x),0);
-  SetLength(x,0);
-end;
-
-procedure TPLCString.SetValueDirect(Value:String);
-var
-  x:TArrayOfDouble;
-begin
-  x:=DecodeValue(Value);
-  Write(x,Length(x),0);
+  if FSyncWrites then
+    Write(x,Length(x),0)
+  else
+    ScanWrite(x,Length(x),0);
   SetLength(x,0);
 end;
 

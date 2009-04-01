@@ -60,6 +60,8 @@ type
     property Size write SetSize;
     //: @seealso(TTag.OnValueChange)
     property OnValueChange;
+    //: @seealso(TPLCTag.SyncWrites)
+    property SyncWrites;
   end;
 
 implementation
@@ -167,7 +169,10 @@ var
 begin
   SetLength(towrite,1);
   towrite[0] := Value;
-  ScanWrite(towrite,1,index);
+  if FSyncWrites then
+    Write(towrite,1,index)
+  else
+    ScanWrite(towrite,1,index);
   SetLength(towrite,0);
 end;
 
@@ -181,7 +186,10 @@ var
   towrite:TArrayOfDouble;
 begin
   towrite := values;
-  ScanWrite(towrite,PSize,0);
+  if FSyncWrites then
+    Write(towrite,PSize,0)
+  else
+    ScanWrite(towrite,PSize,0);
   SetLength(towrite,0);
 end;
 

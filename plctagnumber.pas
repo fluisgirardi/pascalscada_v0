@@ -78,6 +78,8 @@ type
     property ValueTimestamp;
     //: @seealso(TTag.LongAddress)
     property LongAddress;
+    //: @seealso(TPLCTag.SyncWrites)
+    property SyncWrites;
   end;
 
 implementation
@@ -142,7 +144,10 @@ var
 begin
   SetLength(towrite,1);
   towrite[0] := Value;
-  ScanWrite(towrite,1,0);
+  if FSyncWrites then
+    Write(towrite,1,0)
+  else
+    ScanWrite(towrite,1,0);
   SetLength(towrite,0);
 end;
 

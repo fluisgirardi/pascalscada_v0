@@ -16,6 +16,8 @@ type
   private
     CScanTimer:TTimer;
   protected
+    //: A escrita do tag deve ser sincrona ou assincrona
+    FSyncWrites:Boolean;
     //: Armazena o driver de protocolo usado para comunicação do tag.
     PProtocolDriver:TProtocolDriver;
     //: Data/Hora da última atualização do valor do tag.
@@ -171,6 +173,8 @@ type
     property ValueTimestamp:TDateTime read PValueTimeStamp;
     //: Evento chamado pelo timer (TTimer interno) para atualizar o valor do tag.
     procedure DoScanTimerEvent(Sender:TObject);
+    //: A escrita do tag deve ser sincrona
+    property SyncWrites:Boolean read FSyncWrites write FSyncWrites default false ;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
