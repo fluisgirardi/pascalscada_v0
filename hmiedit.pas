@@ -15,6 +15,7 @@ type
   //: Implementa um Edit para leitura/escrita de valores texto/numéricos em tags.
   THMIEdit = class(TEdit, IHMIInterface)
   private
+    FAlignment:TAlignment;
     FTag:TPLCTag;
     FShowFocused:Boolean;
     FDefFontColor:TColor;
@@ -68,12 +69,20 @@ type
     procedure Loaded; override;
     //: @exclude
     procedure SetColor(c:TColor); {$IFDEF FPC}override; {$ENDIF}
+    {$IFNDEF FPC}
+    //: @exclude
+    procedure CreateParams(var Params: TCreateParams); override;
+    //: @exclude
+    procedure SetAlignment(Value: TAlignment);
+    {$ENDIF}
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
   published
+    //: @exclude
+    property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
     {:
     @name diz para o controle quando um valor alterado deve ser escrito no Tag.
     @seealso(TSendChange)
@@ -135,6 +144,7 @@ implementation
 constructor THMIEdit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FAlignment := taRightJustify;
   FIsEnabled := inherited Enabled;
   FSend := [scLostFocus, scPressEnter];
   if (csDesigning in ComponentState) then begin
@@ -159,6 +169,28 @@ begin
     FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
   inherited Destroy;
 end;
+
+{$IFNDEF FPC}
+procedure THMIEdit.CreateParams(var Params: TCreateParams);
+const Alignments: array[TAlignment] of Longint =
+      (ES_LEFT, ES_RIGHT, ES_CENTER);
+begin
+  inherited CreateParams(Params);
+
+  Params.Style := Params.Style or ES_MULTILINE or
+                  Alignments[FAlignment];
+end;
+
+procedure THMIEdit.SetAlignment(Value: TAlignment);
+begin
+  if FAlignment <> Value then
+  begin
+    FAlignment := Value;
+    Invalidate;
+  end;
+end;
+{$ENDIF}
+
 
 procedure THMIEdit.HMINotifyChangeCallback(Sender:TObject);
 begin
