@@ -41,7 +41,9 @@ type
     procedure SetSend(s:TSendChange);
     procedure SetShowFocused(f:Boolean);
     procedure RepaintFocus;
+    {$IFNDEF FPC}
     function  GetColor:TColor;
+    {$ENDIF}
     procedure FontChange(Sender: TObject);
     procedure SetPrefix(s:String);
     procedure SetSufix(s:String);
@@ -101,7 +103,7 @@ type
     {:
     @name é a cor de fundo do controle.
     }
-    property Color:TColor read GetColor Write SetColor;
+    property Color:TColor read {$IFDEF FPC} FColor {$ELSE} GetColor {$ENDIF} Write SetColor;
     {:
     @name faz com que o controle passe a cor do fundo para a cor da fonte e
     vice-versa quando ele estiver com o foco.
@@ -256,14 +258,20 @@ begin
   FBlockFontChange := false;
 end;
 
+{$IFNDEF FPC}
 function  THMIEdit.GetColor:TColor;
 begin
   Result := inherited Color;
 end;
+{$ENDIF}
 
 procedure THMIEdit.SetColor(c:TColor);
 begin
+  {$IFDEF FPC}
+  inherited SetColor(c);
+  {$ELSE}
   inherited Color := c;
+  {$ENDIF}
   FDefColor := c;
 end;
 
