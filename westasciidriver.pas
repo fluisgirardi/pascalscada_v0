@@ -1,4 +1,4 @@
-﻿unit WestASCIIDriver;
+unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}

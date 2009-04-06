@@ -72,7 +72,9 @@ type
     procedure Toggle; override;
     {$ENDIF}
     //: @exclude
-    procedure SetColor(c:TColor); {$IFDEF FPC}override; {$ENDIF}
+    function  IntGetColor:TColor;
+    //: @exclude
+    procedure IntSetColor(c:TColor);
     //: @exclude
     function GetChecked: Boolean; override;
     //: @exclude
@@ -137,7 +139,7 @@ type
     @seealso(ColorFalse)
     @seealso(ColorGrayed)
     }
-    property Color write SetColor stored false;
+    property Color read IntGetColor write IntSetColor stored false;
     {:
     @name é a cor do controle caso ele esteja desmarcado.
     @seealso(Color)
@@ -571,7 +573,7 @@ begin
   RefreshTagValue(GetTagValue);
 end;
 
-procedure THMICheckBox.SetColor(c:TColor);
+procedure THMICheckBox.IntSetColor(c:TColor);
 begin
   if not (csDesigning in ComponentState) then exit;
 
@@ -579,6 +581,11 @@ begin
   FColorGrayed := c;
   FColorTrue := c;
   RefreshTagValue(GetTagValue);
+end;
+
+function  THMICheckBox.IntGetColor:TColor;
+begin
+  Result := inherited Color;
 end;
 
 procedure THMICheckBox.SetFont(f:TFont);
