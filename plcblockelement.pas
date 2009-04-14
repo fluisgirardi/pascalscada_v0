@@ -198,7 +198,10 @@ begin
   if Assigned(PBlock) then
     PBlock.ValueRaw[PIndex] := Value
   else
-    PValueRaw:=Value;
+    if PValueRaw<>Value then begin
+      PValueRaw:=Value;
+      NotifyChange;
+    end;
 end;
 
 procedure TPLCBlockElement.ScanRead;
