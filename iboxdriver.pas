@@ -1,6 +1,8 @@
 unit IBoxDriver;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+{$mode delphi}
+{$ENDIF}
 
 interface
 
@@ -117,7 +119,7 @@ type
     //: @seealso(TProtocolDriver.DoRead)
     function DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
-    constructor Create(AOwner:TComponent); override;
+    //constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
   published
     { Published declarations }
@@ -125,7 +127,13 @@ type
 
 implementation
 
-uses PLCTagNumber, CrossEvent, syncobjs, dateutils;
+uses PLCTagNumber, CrossEvent, syncobjs, dateutils, math;
+
+destructor  TIBoxDriver.Destroy;
+begin
+  inherited Destroy;
+  SetLength(PStations,0);
+end;
 
 function TIBoxDriver.CheckSumOk(const pkg:BYTES):Boolean;
 var
@@ -166,13 +174,13 @@ begin
   if not (TagObj is TPLCTagNumber) then
     Raise Exception.Create('Tag Inválido!');
 
-  with TagObj as TPLCTagNumber do begin
-    if not (PLCStattion in [0..255]) then exit;
+  with TPLCTagNumber(TagObj) do begin
+    if not (PLCStation in [0..255]) then exit;
     if not (MemAddress in [0,96,168,200..205,247]) then exit;
 
     h:=High(PStations);
     for plc := 0 to h do
-      if PStations[c].Address=PLCStation then begin
+      if PStations[plc].Address=PLCStation then begin
         found := true;
         break;
       end;
@@ -186,7 +194,7 @@ begin
     case MemAddress of
       0: begin
         if not found then begin
-          PStations[plc].PIDo.RefCount:=0;
+          PStations[plc].PID0.RefCount:=0;
           PStations[plc].PID0.MinScanTime:= RefreshTime;
         end;
 
@@ -290,12 +298,12 @@ begin
     Raise Exception.Create('Tag Inválido!');
 
   with TagObj as TPLCTagNumber do begin
-    if not (PLCStattion in [0..255]) then exit;
+    if not (PLCStation in [0..255]) then exit;
     if not (MemAddress in [0,96,168,200..205,247]) then exit;
 
     h:=High(PStations);
     for plc := 0 to h do
-      if PStations[c].Address=PLCStation then begin
+      if PStations[plc].Address=PLCStation then begin
         found := true;
         break;
       end;
@@ -507,7 +515,7 @@ begin
   end;
 
   found := false;
-  for plc:=0 to High(PStations) of
+  for plc:=0 to High(PStations) do
     if PStations[plc].Address=tagrec.Station then begin
       found := true;
       break;
@@ -558,7 +566,7 @@ begin
 
         values[0]:= cmdpkg.BufferToRead[2]/2;
         Result := ioOk;
-        if found then
+        if found then begin
           PStations[plc].PID96.Value := Values[0];
           PStations[plc].PID96.LastReadResult:=Result;
         end;
@@ -591,7 +599,7 @@ begin
 
         Values[0] := (cmdpkg.BufferToRead[2]*256 + cmdpkg.BufferToRead[3])/20;
         Result := ioOk;
-        if found then
+        if found then begin
           PStations[plc].PID168.Value := Values[0];
           PStations[plc].PID168.LastReadResult:=Result;
         end;
@@ -630,7 +638,7 @@ begin
         //PStations[plc].PID168.Value:= (cmdpkg.BufferToRead[2]*256 + cmdpkg.BufferToRead[3])/20;
         //Result := ioOk;
 
-      end
+      end;
       //status do motor e reset.
       204, 205: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
