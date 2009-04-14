@@ -1,4 +1,4 @@
-unit IBoxDriver;
+﻿unit IBoxDriver;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -179,6 +179,7 @@ begin
     if not (MemAddress in [0,96,168,200..205,247]) then exit;
 
     h:=High(PStations);
+    found := false;
     for plc := 0 to h do
       if PStations[plc].Address=PLCStation then begin
         found := true;
@@ -542,7 +543,7 @@ begin
       96: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
+        if event.WaitFor(1000)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;
@@ -575,7 +576,7 @@ begin
       168: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
+        if event.WaitFor(1000)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;
@@ -610,7 +611,7 @@ begin
         PCommPort.Lock(PDriverID);
         PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
+        if event.WaitFor(1000)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;
@@ -643,7 +644,7 @@ begin
       204, 205: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
+        if event.WaitFor(1000)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;

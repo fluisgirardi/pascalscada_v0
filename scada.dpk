@@ -37,9 +37,9 @@ requires
 contains
   commport in 'commport.pas',
   commtypes in 'commtypes.pas',
-  SerialPort in 'SerialPort.pas',
+  SerialPort in 'serialport.pas',
   protocoldriver in 'protocoldriver.pas',
-  ModBusMasterDriver in 'ModBusMasterDriver.pas',
+  ModBusMasterDriver in 'modbusmasterdriver.pas',
   PLCMemoryMananger in 'PLCMemoryMananger.pas',
   hsutils in 'hsutils.pas',
   plctag in 'plctag.pas',
@@ -77,6 +77,7 @@ contains
   tagbit in 'tagbit.pas',
   protscan in 'protscan.pas',
   protscanupdate in 'protscanupdate.pas',
-  westasciidriver in 'westasciidriver.pas';
+  westasciidriver in 'westasciidriver.pas',
+  iboxdriver in 'iboxdriver.pas';
 
 end.
