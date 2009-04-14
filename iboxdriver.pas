@@ -21,17 +21,18 @@ type
     TimeStamp:TDateTime;
     LastReadResult:TProtocolIOResult;
     MinScantime:Cardinal;
-    ActiveZones:Byte;
-    ActiveAlarme:Byte;
-    ManufacturerAlarmCode:Byte;
+
+    ActiveZones,
+    ActiveAlarme,
+    ManufacturerAlarmCode,
 
     //1 caso a variavel tenha valor valido, 0 para invalidos
-    ReturnAir1Active:Byte;
-    Supply1Active:Byte;
-    SetPointActive:Byte;
-    EvaporatorCoilActive:v;
-    ReturnAir2Active:Byte;
-    Supply2Active:Byte;
+    ReturnAir1Active,
+    Supply1Active,
+    SetPointActive,
+    EvaporatorCoilActive,
+    ReturnAir2Active,
+    Supply2Active,
     OperatingModeActive:Byte;
 
     ReturnAir1:Double;
@@ -124,7 +125,7 @@ type
 
 implementation
 
-uses PLCTagNumber, CrossEvent, syncobjs;
+uses PLCTagNumber, CrossEvent, syncobjs, dateutils;
 
 function TIBoxDriver.CheckSumOk(const pkg:BYTES):Boolean;
 var
@@ -346,13 +347,138 @@ begin
 end;
 
 procedure TIBoxDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);
+var
+  plc:Integer;
+  dosomething:boolean;
+  tr:TTagRec;
+  dummyValue:TArrayOfDouble;
 begin
+  dosomething := false;
+  for plc:=0 to High(PStations) do begin
+    tr.Station:=PStations[plc].Address;
 
+    with PStations[plc].PID96 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=96;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+
+    with PStations[plc].PID168 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=168;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+
+    with PStations[plc].PID200 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=200;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+    with PStations[plc].PID201 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=201;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+    with PStations[plc].PID202 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=202;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+
+    with PStations[plc].PID203 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=203;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+
+    with PStations[plc].PID204 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=204;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+    //pid 205 é um comando, deixe-o fora do scan.
+    with PStations[plc].PID247 do
+      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+        tr.Address:=247;
+        dosomething:=true;
+        DoRead(tr,dummyValue,false);
+      end;
+  end;
+
+  //se nao ira fazer nada troca de thread para melhorar o desempenho.
+  if not dosomething then
+    NeedSleep:= -1;
 end;
 
 procedure TIBoxDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
+var
+  plc:Integer;
+  found:Boolean;
 begin
+  if not (tagrec.Station in [0..255]) then begin
+    values.LastQueryResult := ioIllegalStationAddress;
+    values.ValuesTimestamp :=now;
+    exit;
+  end;
 
+  if not (tagrec.Address in [0,96,168,200..205,247]) then begin
+    values.LastQueryResult := ioIllegalRegAddress;
+    values.ValuesTimestamp :=now;
+    exit;
+  end;
+
+  found := false;
+  for plc:=0 to High(PStations) do
+    if PStations[plc].Address=TagRec.Station then begin
+      found := true;
+      break;
+    end;
+
+  if not found then begin
+    values.LastQueryResult:=ioDriverError;
+    values.ValuesTimestamp :=now;
+    exit;
+  end;
+
+  SetLength(values.Values,1);
+  case TagRec.Address of
+    96: begin
+      values.Values[0]      :=PStations[plc].PID96.Value;
+      values.ValuesTimestamp:=PStations[plc].PID96.TimeStamp;
+      values.LastQueryResult:=PStations[plc].PID96.LastReadResult;
+    end;
+    168: begin
+      values.Values[0]      :=PStations[plc].PID168.Value;
+      values.ValuesTimestamp:=PStations[plc].PID168.TimeStamp;
+      values.LastQueryResult:=PStations[plc].PID168.LastReadResult;
+    end;
+    200..202: begin
+    end;
+    203: begin
+    end;
+    204: begin
+      values.Values[0]      :=PStations[plc].PID204.Value;
+      values.ValuesTimestamp:=PStations[plc].PID204.TimeStamp;
+      values.LastQueryResult:=PStations[plc].PID204.LastReadResult;
+    end;
+    205: begin
+      values.Values[0]      :=PStations[plc].PID205.Value;
+      values.ValuesTimestamp:=PStations[plc].PID205.TimeStamp;
+      values.LastQueryResult:=PStations[plc].PID205.LastReadResult;
+    end;
+    247: begin
+      values.Values[0]      :=PStations[plc].PID247.Value;
+      values.ValuesTimestamp:=PStations[plc].PID247.TimeStamp;
+      values.LastQueryResult:=PStations[plc].PID247.LastReadResult;
+    end;
+  end;
 end;
 
 function TIBoxDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
@@ -368,6 +494,7 @@ var
   event:TCrossEvent;
   plc:Integer;
   found:Boolean;
+  pid20x:TPID20xRegister;
 begin
   if not (tagrec.Station in [0..255]) then begin
     Result := ioIllegalStationAddress;
@@ -386,6 +513,7 @@ begin
       break;
     end;
 
+  SetLength(Values,1);
   event := TCrossEvent.Create(nil,true,false,'IBoxID'+IntToStr(PDriverID));
   try
 
@@ -402,6 +530,7 @@ begin
 
     event.ResetEvent;
     case tagrec.Address of
+      //Nível de combustivel.
       96: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
@@ -427,10 +556,14 @@ begin
           exit;
         end;
 
-        PStations[plc].PID96.Value:= cmdpkg.BufferToRead[2]/2;
+        values[0]:= cmdpkg.BufferToRead[2]/2;
         Result := ioOk;
-
+        if found then
+          PStations[plc].PID96.Value := Values[0];
+          PStations[plc].PID96.LastReadResult:=Result;
+        end;
       end;
+      //Voltagem da bateria.
       168: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
@@ -456,10 +589,89 @@ begin
           exit;
         end;
 
-        PStations[plc].PID168.Value:= (cmdpkg.BufferToRead[2]*256 + cmdpkg.BufferToRead[3])/20;
+        Values[0] := (cmdpkg.BufferToRead[2]*256 + cmdpkg.BufferToRead[3])/20;
         Result := ioOk;
+        if found then
+          PStations[plc].PID168.Value := Values[0];
+          PStations[plc].PID168.LastReadResult:=Result;
+        end;
+
 
       end;
+      200..202: begin
+        PCommPort.Lock(PDriverID);
+        PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
+
+        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
+          Result:=ioTimeOut;
+          exit;
+        end;
+
+        if not CheckSumOk(cmdpkg.BufferToRead) then begin
+          Result := ioCommError;
+          exit;
+        end;
+
+        if (cmdpkg.BufferToRead[0]<>cmdpkg.BufferToWrite[0]) or
+           (cmdpkg.BufferToRead[0]<>tagrec.Station) then begin
+          Result := ioCommError;
+          exit;
+        end;
+
+        if (cmdpkg.BufferToRead[1]<>cmdpkg.BufferToWrite[2]) or
+           (cmdpkg.BufferToRead[1]<>tagrec.Address) then begin
+          Result := ioCommError;
+          exit;
+        end;
+
+        //se chegou até aqui, a requisição aparentemente está ok
+
+
+        //PStations[plc].PID168.Value:= (cmdpkg.BufferToRead[2]*256 + cmdpkg.BufferToRead[3])/20;
+        //Result := ioOk;
+
+      end
+      //status do motor e reset.
+      204, 205: begin
+        PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
+
+        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
+          Result:=ioTimeOut;
+          exit;
+        end;
+
+        if not CheckSumOk(cmdpkg.BufferToRead) then begin
+          Result := ioCommError;
+          exit;
+        end;
+
+        if (cmdpkg.BufferToRead[0]<>cmdpkg.BufferToWrite[0]) or
+           (cmdpkg.BufferToRead[0]<>tagrec.Station) then begin
+          Result := ioCommError;
+          exit;
+        end;
+
+        if (cmdpkg.BufferToRead[1]<>cmdpkg.BufferToWrite[2]) or
+           (cmdpkg.BufferToRead[1]<>tagrec.Address) then begin
+          Result := ioCommError;
+          exit;
+        end;
+
+
+        Values[0]:= cmdpkg.BufferToRead[2];
+        Result := ioOk;
+
+        if found then begin
+          if tagrec.Address=204 then begin
+            PStations[plc].PID204.Value:= Values[0];
+            PStations[plc].PID204.LastReadResult:=Result;
+          end else begin
+            PStations[plc].PID205.Value:= Values[0];
+            PStations[plc].PID205.LastReadResult:=Result;
+          end;
+        end;
+      end;
+      //Horimetro do motor.
       247: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,7,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
@@ -485,8 +697,12 @@ begin
           exit;
         end;
 
-        PStations[plc].PID168.Value:= ((cmdpkg.BufferToRead[2]*16777216) + (cmdpkg.BufferToRead[3]*65536) + (cmdpkg.BufferToRead[4]*256) + cmdpkg.BufferToRead[5])/20;
+        Values[0]:= ((cmdpkg.BufferToRead[2]*16777216) + (cmdpkg.BufferToRead[3]*65536) + (cmdpkg.BufferToRead[4]*256) + cmdpkg.BufferToRead[5])/20;
         Result := ioOk;
+        if found then begin
+          PStations[plc].PID247.Value := Values[0];
+          PStations[plc].PID247.LastReadResult:=Result;
+        end;
 
       end;
     end;
