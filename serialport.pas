@@ -365,8 +365,8 @@ begin
   ComTimeouts.ReadIntervalTimeout := PTimeout;
   ComTimeouts.ReadTotalTimeoutMultiplier := 2;
   ComTimeouts.ReadTotalTimeoutConstant := (PTimeout div 4);
-  ComTimeouts.WriteTotalTimeoutMultiplier := 1;
-  ComTimeouts.WriteTotalTimeoutConstant := 1;
+  ComTimeouts.WriteTotalTimeoutMultiplier := 2;
+  ComTimeouts.WriteTotalTimeoutConstant := (PTimeout div 4);
 
   if not COMExist(PPortName) then
     goto erro1;
