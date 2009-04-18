@@ -13,7 +13,7 @@ uses
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
    HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
    HMIText, HMIZones, hmipropeditor, hsstrings, HMIButton, TagBit,
-   TCPIPClientPort, WestASCIIDriver,
+   TCPIPClientPort, WestASCIIDriver, IBoxDriver,
   {$IFDEF FPC}
     LResources, PropEdits;
   {$ELSE}
@@ -32,6 +32,7 @@ begin
   RegisterComponents(strPortsPallete,     [TTCPIPClientPort]);
   RegisterComponents(strProtocolsPallete, [TModBusMasterDriver]);
   RegisterComponents(strProtocolsPallete, [TWestASCIIDriver]);
+  RegisterComponents(strProtocolsPallete, [TIBoxDriver]);
   RegisterComponents(strUtilsPallete,     [TPIPE]);
   RegisterComponents(strUtilsPallete,     [TLinearScaleProcessor]);
   RegisterComponents(strUtilsPallete,     [TUserScale]);

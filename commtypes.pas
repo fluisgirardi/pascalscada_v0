@@ -224,9 +224,22 @@ type
   @seealso(WM_WRITE_WRITEREAD)
 
   }
+  function ConcatenateBYTES(const a,b:BYTES):BYTES;
   function IOCommandToWindowsMessage(ioCommand:TIOCommand; ToWrite:Boolean):Cardinal;
 
 implementation
+
+//concatenate two buffers of bytes.
+function ConcatenateBYTES(const a,b:BYTES):BYTES;
+var
+  c:Integer;
+begin
+  SetLength(Result,Length(a)+Length(b));
+  for c:=0 to High(a) do
+    Result[c]:=a[c];
+  for c:=0 to High(b) do
+    Result[c+Length(a)]:=b[c];
+end;
 
 function WindowsMessageToIOCommand(wMessage:Cardinal):TIOCommand;
 begin
