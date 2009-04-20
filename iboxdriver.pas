@@ -1,4 +1,4 @@
-unit IBoxDriver;
+﻿unit IBoxDriver;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -638,6 +638,7 @@ begin
         if found then begin
           PStations[plc].PID96.Value := Values[0];
           PStations[plc].PID96.LastReadResult:=Result;
+          PStations[plc].PID96.TimeStamp := Now;
         end;
       end;
       //Voltagem da bateria.
@@ -671,6 +672,7 @@ begin
         if found then begin
           PStations[plc].PID168.Value := Values[0];
           PStations[plc].PID168.LastReadResult:=Result;
+          PStations[plc].PID168.TimeStamp := Now;
         end;
       end;
       200..202: begin
@@ -696,11 +698,6 @@ begin
 
         if event.WaitFor(1000)<>wrSignaled then begin
           Result:=ioTimeOut;
-          exit;
-        end;
-
-        if not CheckSumOk(cmdpkg.BufferToRead) then begin
-          Result := ioCommError;
           exit;
         end;
 
@@ -737,13 +734,13 @@ begin
         //offset tbm diz se é necessario
         //ler mais um byte.
         bytesRemaim := offset;
-        b2 := ifthen((cmdpkg.BufferToRead[3+offset] and $02)=$02,bytesRemaim+1, bytesRemaim);
-        b3 := ifthen((cmdpkg.BufferToRead[3+offset] and $04)=$04,bytesRemaim+2, bytesRemaim);
-        b4 := ifthen((cmdpkg.BufferToRead[3+offset] and $08)=$08,bytesRemaim+2, bytesRemaim);
-        b5 := ifthen((cmdpkg.BufferToRead[3+offset] and $10)=$10,bytesRemaim+2, bytesRemaim);
-        b6 := ifthen((cmdpkg.BufferToRead[3+offset] and $20)=$20,bytesRemaim+2, bytesRemaim);
-        b7 := ifthen((cmdpkg.BufferToRead[3+offset] and $40)=$40,bytesRemaim+2, bytesRemaim);
-        b8 := ifthen((cmdpkg.BufferToRead[3+offset] and $80)=$80,bytesRemaim+2, bytesRemaim);
+        b2 := ifthen((cmdpkg.BufferToRead[3+offset] and $02)=$02,1, 0);
+        b3 := ifthen((cmdpkg.BufferToRead[3+offset] and $04)=$04,2, 0);
+        b4 := ifthen((cmdpkg.BufferToRead[3+offset] and $08)=$08,2, 0);
+        b5 := ifthen((cmdpkg.BufferToRead[3+offset] and $10)=$10,2, 0);
+        b6 := ifthen((cmdpkg.BufferToRead[3+offset] and $20)=$20,2, 0);
+        b7 := ifthen((cmdpkg.BufferToRead[3+offset] and $40)=$40,2, 0);
+        b8 := ifthen((cmdpkg.BufferToRead[3+offset] and $80)=$80,2, 0);
 
         inc(bytesRemaim, b2);
         inc(bytesRemaim, b3);
@@ -763,6 +760,8 @@ begin
 
         //se sobrou bytes oara ler...
         if bytesRemaim>0 then begin
+          //copia os primeiros bytes do pacote
+          pkg := cmdpkg.BufferToRead;
 
           event.ResetEvent;
           PCommPort.IOCommandASync(iocRead,nil,bytesRemaim,0,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
@@ -783,27 +782,27 @@ begin
           //incrementa o offset pra nao mudar os indices.
           //offset trabalha como cursor.
           if pid20x.ReturnAir1Active=1 then begin
-            pid20x.ReturnAir1:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/20;
+            pid20x.ReturnAir1:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/10;
             inc(offset,2);
           end;
           if pid20x.Supply1Active=1 then begin
-            pid20x.Supply1:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/20;
+            pid20x.Supply1:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/10;
             inc(offset,2);
           end;
           if pid20x.SetPointActive =1 then begin
-            pid20x.SetPoint:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/20;
+            pid20x.SetPoint:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/10;
             inc(offset,2);
           end;
           if pid20x.EvaporatorCoilActive=1 then begin
-            pid20x.EvaporatorCoil:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/20;
+            pid20x.EvaporatorCoil:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/10;
             inc(offset,2);
           end;
           if pid20x.ReturnAir2Active=1 then begin
-            pid20x.ReturnAir2:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/20;
+            pid20x.ReturnAir2:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/10;
             inc(offset,2);
           end;
           if pid20x.Supply2Active=1 then begin
-            pid20x.Supply2:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/20;
+            pid20x.Supply2:=((pkgtotal[4+offset]*256)+pkgtotal[5+offset])/10;
             inc(offset,2);
           end;
           if pid20x.OperatingModeActive=1 then begin
