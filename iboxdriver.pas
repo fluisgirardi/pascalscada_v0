@@ -1,4 +1,4 @@
-﻿unit IBoxDriver;
+unit IBoxDriver;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -363,6 +363,7 @@ var
   dummyValue:TArrayOfDouble;
 begin
   dosomething := false;
+  NeedSleep:=0;
   for plc:=0 to High(PStations) do begin
     //inicializa parte da estrutura de requisiçao.
     tr.Station:=PStations[plc].Address;
@@ -423,6 +424,8 @@ begin
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
+    if not dosomething then
+      NeedSleep:=-1;
   end;
 
   //se nao ira fazer nada troca de thread para melhorar o desempenho.
