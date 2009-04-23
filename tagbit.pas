@@ -1,4 +1,4 @@
-unit TagBit;
+﻿unit TagBit;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -99,7 +99,7 @@ end;
 
 procedure TTagBit.SetNumber(number:TPLCNumber);
 begin
-  if ((number as ITagInterface)=nil) or ((number as ITagNumeric)=nil) then
+  if (number<>nil) and (((number as ITagInterface)=nil) or ((number as ITagNumeric)=nil)) then
      raise Exception.Create('Tag inválido!');
 
   //esta removendo do bloco.
