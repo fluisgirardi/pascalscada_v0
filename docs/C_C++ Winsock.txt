@@ -1,0 +1,124 @@
+ WinSock Tutorial
+home: http://www.geocities.com/SiliconValley/Code/1219/
+e-mail: craterz@hotmail.com
+
+Note: As far as programming docs go, consider this an extreme early pre-alpha version. Just sorta slapped together info from a coding sample from FAQSYS, what pathetic info given in the Visual C++ help files, and a deep curiosity and intuition. Use at your own peril. :-)
+
+Header File and Import Library
+
+You require that you include the header file winsock2.h and link the file ws2_32.lib to the final executable.
+
+#include <windows.h>
+#include <winsock2.h>
+
+WinSock: Initializing
+
+The first step is to call WSAStartup to startup the interface to WinSock.
+
+WSADATA wsaData;
+WORD version;
+int error;
+
+version = MAKEWORD( 2, 0 );
+
+error = WSAStartup( version, &wsaData );
+
+/* check for error */
+if ( error != 0 )
+{
+    /* error occured */
+    return FALSE;
+}
+
+/* check for correct version */
+if ( LOBYTE( wsaData.wVersion ) != 2 ||
+     HIBYTE( wsaData.wVersion ) != 0 )
+{
+    /* incorrect WinSock version */
+    WSACleanup();
+    return FALSE;
+}
+
+/* WinSock has been initialized */
+
+Server: Create Socket
+
+SOCKET server;
+
+server = socket( AF_INET, SOCK_STREAM, 0 );
+
+Server: Starting Server
+
+struct sockaddr_in sin;
+
+memset( &sin, 0, sizeof sin );
+
+sin.sin_family = AF_INET;
+sin.sin_addr.s_addr = INADDR_ANY;
+sin.sin_port = htons( 21 );
+
+if ( bind( server, &sin, sizeof sin ) == SOCKET_ERROR )
+{
+    /* could not start server */
+    return FALSE;
+}
+
+Server: Listen for Client
+
+while ( listen( server, SOMAXCONN ) == SOCKET_ERROR );
+
+Server: Accepting Connection
+
+SOCKET client;
+int length;
+
+length = sizeof sin;
+client = accept( server, &sin, &length );
+
+Client: Create Socket
+
+SOCKET client;
+
+client = socket( AF_INET, SOCK_STREAM, 0 );
+
+Client: Get Host
+
+Now we can get to the real fun. On the client side, we are going to need to find our host based on their name. For example we may be trying to connect to the server async5-5.remote.ualberta.ca. We do this using the function gethostbyname.
+
+struct hostent host;
+
+host = gethostbyname( "async5-5.remote.ualberta.ca" );
+
+Client: Connecting to Server
+
+struct sockaddr_in sin;
+
+memset( &sin, 0, sizeof sin );
+
+sin.sin_family = AF_INET;
+sin.sin_addr.s_addr = ((struct in_addr *)(host->h_addr))->s_addr;
+sin.sin_point = htons( 21 );
+
+if ( connect( client, &sin, sizeof sin ) == SOCKET_ERROR )
+{
+    /* could not connect to server */
+    return FALSE;
+}
+
+Send and Recieve Data
+
+With a working socket connection we can now send data using the function send and receive data using the function recv.
+
+Closing Socket
+
+When we are finished with a socket, we can close it simply by calling the function closesocket. What could be easier?
+
+closesocket( server );
+
+WinSock: Shutdown
+
+Once finsished with the WinSock system, we need to shut it down by calling the function WSACleanup.
+
+WSACleanup();
+
+

@@ -13,7 +13,7 @@ uses
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
    HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
    HMIText, HMIZones, hmipropeditor, hsstrings, HMIButton, TagBit,
-   TCPIPClientPort, WestASCIIDriver, IBoxDriver,
+   tcp_udpport, WestASCIIDriver, IBoxDriver,
   {$IFDEF FPC}
     LResources, PropEdits;
   {$ELSE}
@@ -29,7 +29,7 @@ uses
 procedure Register;
 begin
   RegisterComponents(strPortsPallete,     [TSerialPortDriver]);
-  RegisterComponents(strPortsPallete,     [TTCPIPClientPort]);
+  RegisterComponents(strPortsPallete,     [TTCP_UDPPort]);
   RegisterComponents(strProtocolsPallete, [TModBusMasterDriver]);
   RegisterComponents(strProtocolsPallete, [TWestASCIIDriver]);
   RegisterComponents(strProtocolsPallete, [TIBoxDriver]);
