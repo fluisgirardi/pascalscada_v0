@@ -101,7 +101,7 @@ type
     PInputMaxHole:Cardinal;
     PRegistersMaxHole:Cardinal;
     PModbusPLC:array of TModBusPLC;
-    function GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:Integer):Boolean;
+    function  GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:Integer):Boolean;
     procedure SetOutputMaxHole(v:Cardinal);
     procedure SetInputMaxHole(v:Cardinal);
     procedure SetRegisterMaxHole(v:Cardinal);
@@ -1168,11 +1168,8 @@ begin
         FEventWaiting := Event;
       end;
 
-      if (res<>0) and (Sync or (Event.WaitFor(2000)=wrSignaled)) then begin
-        if not Sync then
-          FEventWaiting := nil;
+      if (res<>0) and (Sync or (Event.WaitFor(2000)=wrSignaled)) then
         Result := DecodePkg(IOResult,values);
-      end;
 
     end else
       Result := ioNullDriver;
@@ -1180,6 +1177,8 @@ begin
     SetLength(pkg,0);
     SetLength(IOResult.BufferToRead,0);
     SetLength(IOResult.BufferToWrite,0);
+    if Event=FEventWaiting then
+      FEventWaiting := nil;
     Event.Destroy;
   end;
 end;
