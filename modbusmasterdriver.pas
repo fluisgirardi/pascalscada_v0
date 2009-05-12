@@ -96,7 +96,6 @@ type
   }
   TModBusMasterDriver = class(TProtocolDriver)
   private
-    FEventWaiting:TCrossEvent;
     POutputMaxHole:Cardinal;
     PInputMaxHole:Cardinal;
     PRegistersMaxHole:Cardinal;
@@ -110,8 +109,6 @@ type
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
     function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;
   protected
-    //: @seealso(TProtocolDriver.CancelPendingActions)
-    procedure CancelPendingActions; override;
     //: @seealso(TProtocolDriver.DoAddTag)
     procedure DoAddTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoDelTag)
@@ -213,12 +210,6 @@ begin
     ScanTime := TPLCBlock(TagObj).RefreshTime;
     Result := found;
   end;
-end;
-
-procedure TModBusMasterDriver.CancelPendingActions;
-begin
-  if FEventWaiting<>nil then
-    FEventWaiting.Destroy;
 end;
 
 procedure TModBusMasterDriver.DoAddTag(TagObj:TTag);
@@ -1165,7 +1156,7 @@ begin
         res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult)
       else begin
         res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,Event,@IOResult);
-        FEventWaiting := Event;
+        AddPendingAction(Event);
       end;
 
       if (res<>0) and (Sync or (Event.WaitFor(2000)=wrSignaled)) then
@@ -1177,8 +1168,7 @@ begin
     SetLength(pkg,0);
     SetLength(IOResult.BufferToRead,0);
     SetLength(IOResult.BufferToWrite,0);
-    if Event=FEventWaiting then
-      FEventWaiting := nil;
+    RemovePendingAction(Event);
     Event.Destroy;
   end;
 end;

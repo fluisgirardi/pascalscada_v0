@@ -58,7 +58,6 @@ type
 
   TWestASCIIDriver = class(TProtocolDriver)
   private
-    FEventWaiting:TCrossEvent;
     FWestDevices:TWestDevices;
 {d} procedure AssignScanTableToReg(const stablereg:TScanTableReg; var WestReg:TWestRegister);
 {d} function  IOResultToProtocolResult(IORes:TIOResult):TProtocolIOResult;
@@ -76,7 +75,6 @@ type
 {d} procedure MinScanTimeOfReg(var WestReg:TWestRegister);
 
   protected
-    procedure CancelPendingActions; override;
 {d} procedure DoAddTag(TagObj:TTag); override;
 {d} procedure DoDelTag(TagObj:TTag); override;
 {d} procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
@@ -109,12 +107,6 @@ destructor  TWestASCIIDriver.Destroy;
 begin
   inherited Destroy;
   SetLength(FWestDevices,0);
-end;
-
-procedure TWestASCIIDriver.CancelPendingActions;
-begin
-  if FEventWaiting<>nil then
-    FEventWaiting.SetEvent;
 end;
 
 procedure TWestASCIIDriver.DoAddTag(TagObj:TTag);
@@ -904,7 +896,7 @@ var
 begin
   try
     evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
-    FEventWaiting := evento;;
+    AddPendingAction(evento);
 
     SetLength(buffer,35);
     SetLength(No,2);
@@ -1042,10 +1034,10 @@ begin
     end;
     Result := ioOk;
   finally
-    FEventWaiting := nil;
     if PCommPort<>nil then
       if PCommPort.LockedBy=DriverID then
          PCommPort.Unlock(DriverID);
+    RemovePendingAction(evento);
     evento.Destroy;
   end;
 end;

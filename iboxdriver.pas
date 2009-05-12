@@ -595,8 +595,8 @@ begin
 
   SetLength(Values,1);
   event := TCrossEvent.Create(nil,true,false,'IBoxID'+IntToStr(PDriverID));
+  AddPendingAction(event);
   try
-
     if PCommPort=nil then begin
       Result := ioNullDriver;
       exit;
@@ -952,6 +952,7 @@ begin
     SetLength(pkg,0);
     SetLength(cmdpkg.BufferToRead,0);
     SetLength(cmdpkg.BufferToWrite,0);
+    RemovePendingAction(event);
     event.Destroy;
   end;
 end;

@@ -96,11 +96,27 @@ type
     //: Armazena a seção crítica que protege areas comuns a muitas threads.
     PCallersCS:TCriticalSection;
 
+    //: Secao critica de acoes pendentes.
+    FPendingActionsCS:TCriticalSection;
+
+    //: Array de acoes pendentes.
+    FPendingActions:TArrayOfObject;
+
     {:
-    Cancela ações do driver que possam demorar.
+    Cancela ações pendentes do driver que possam demorar.
     Chamado quando o driver está sendo destruido.
     }
     procedure CancelPendingActions; virtual;
+
+    {:
+    Adiciona uma ação a lista de espera do driver.
+    }
+    procedure AddPendingAction(const Obj:TObject); virtual;
+
+    {:
+    Adiciona uma ação a lista de espera do driver.
+    }
+    function RemovePendingAction(const Obj:TObject):boolean; virtual;
 
     //: Configura a porta de comunicação que será usada pelo driver.
     procedure SetCommPort(CommPort:TCommPortDriver);
@@ -273,6 +289,8 @@ begin
 
   FCritical := TCriticalSection.Create;
 
+  FPendingActionsCS := TCriticalSection.Create;
+
   FPause := TCrossEvent.Create(nil,true,true,'');
 
   PCallersCS := TCriticalSection.Create;
@@ -323,16 +341,83 @@ begin
 
   FCritical.Destroy;
 
+  FPendingActionsCS.Destroy;
+
   FPause.Destroy;
   
   SetLength(PTags,0);
+  SetLength(FPendingActions,0);
   PCallersCS.Destroy;
   inherited Destroy;
 end;
 
 procedure TProtocolDriver.CancelPendingActions;
+var
+  c:Integer;
 begin
-  //nao faz nada...
+  FPendingActionsCS.Enter;
+  try
+    for c:=0 to High(FPendingActions) do begin
+      if ((FPendingActions[c]<>nil) and (FPendingActions[c] is TCrossEvent)) then
+        TCrossEvent(FPendingActions[c]).Destroy
+      else begin
+        if ((FPendingActions[c]<>nil) and (FPendingActions[c] is TObject)) then
+          TObject(FPendingActions[c]).Destroy;
+      end;
+    end;
+  finally
+    FPendingActionsCS.Leave;
+  end;
+end;
+
+procedure TProtocolDriver.AddPendingAction(const Obj:TObject);
+var
+  c,h:Integer;
+  found:Boolean;
+begin
+  FPendingActionsCS.Enter;
+  try
+    found := false;
+    for c:=0 to High(FPendingActions) do
+      if (FPendingActions[c]=Obj) then begin
+        found:=true;
+        break;
+      end;
+
+    if not found then begin
+      h := Length(FPendingActions);
+      SetLength(FPendingActions,h+1);
+      FPendingActions[h]:=Obj;
+    end;
+  finally
+    FPendingActionsCS.Leave;
+  end;
+end;
+
+function  TProtocolDriver.RemovePendingAction(const Obj:TObject):boolean;
+var
+  c,h:Integer;
+  found:Boolean;
+begin
+  FPendingActionsCS.Enter;
+  try
+    Result:=false;
+    found := false;
+    for c:=0 to High(FPendingActions) do
+      if (FPendingActions[c]=Obj) then begin
+        found:=true;
+        break;
+      end;
+
+    if found then begin
+      Result := true;
+      h := High(FPendingActions);
+      FPendingActions[c]:=FPendingActions[h];
+      SetLength(FPendingActions,h);
+    end;
+  finally
+    FPendingActionsCS.Leave;
+  end;
 end;
 
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);

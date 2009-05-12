@@ -17,6 +17,9 @@ type
   //: Ponteiro para um array dinamico de pontos flutuantes.
   PArrayOfDouble = ^TArrayOfDouble;
 
+  //: Array de objetos.
+  TArrayOfObject = array of TObject;
+
   {:
   Enumera todos os possíveis resultados de um pedido de leitura/escrita de um
   tag para um driver de protocolo (TProtocolDriver).
