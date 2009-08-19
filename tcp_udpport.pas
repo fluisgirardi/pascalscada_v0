@@ -17,7 +17,7 @@ type
   TTCP_UDPPort = class(TCommPortDriver)
   private
     FHostName:String;
-    FPortNumer:WORD;
+    FPortNumber:Integer;
     FTimeout:Integer;
 
     FSocket:Tsocket;
@@ -25,7 +25,7 @@ type
     FPortType:TPortType;
 
     procedure SetHostname(target:string);
-    procedure SetPortNumber(pn:WORD);
+    procedure SetPortNumber(pn:Integer);
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
   protected
@@ -42,7 +42,7 @@ type
     destructor  Destroy;
   published
     property Host:String read FHostName write SetHostname nodefault;
-    property Port:WORD read FPortNumer write SetPortNumber default 102;
+    property Port:Integer read FPortNumber write SetPortNumber default 102;
     property Timeout:Integer read FTimeout write SetTimeout default 1000;
     property PortType:TPortType read FPortType write SetPortType default ptTCP;
   end;
@@ -54,7 +54,7 @@ uses netdb;
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  FPortNumer:=102;
+  FPortNumber:=102;
   FSocket:=0;
 end;
 
@@ -69,11 +69,11 @@ begin
   FHostName:=target;
 end;
 
-procedure TTCP_UDPPort.SetPortNumber(pn:WORD);
+procedure TTCP_UDPPort.SetPortNumber(pn:Integer);
 begin
   DoExceptionInActive;
   if (pn>=1) or (pn<=65535) then
-    FPortNumer:=pn
+    FPortNumber:=pn
   else
     raise Exception.Create('Deve estar entre 1 e 65535!');
 end;
@@ -161,6 +161,7 @@ begin
 
   if not GetHostByName(FHostName,ServerAddr) then begin
     PActive:=false;
+    showmessage('Gethostbyname falhou');
     exit;
   end;
 
@@ -177,16 +178,18 @@ begin
 
   if FSocket<0 then begin
     PActive:=false;
+    showmessage('Socket falhou');
     exit;
   end;
 
   try
     channel.family          := AF_INET;
     channel.sin_addr.s_addr := ServerAddr.Addr.s_addr;
-    channel.sin_port        := htons(FPortNumer);
+    channel.sin_port        := htons(FPortNumber);
 
     if not Connect(FSocket,channel,sizeof(sockaddr_in)) then begin
       PActive:=false;
+      showmessage('Connect falhou');
       exit;
     end;
     Ok:=true;
@@ -209,7 +212,9 @@ end;
 
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
 begin
-  Result := (FHostName<>'') and (FPortNumer in [1..65535]);
+  Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
+  if not REsult then
+    ShowMessage('config invalida');
 end;
 
 function TTCP_UDPPort.CheckConnection:TIOResult;

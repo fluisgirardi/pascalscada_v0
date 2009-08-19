@@ -48,6 +48,13 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
   end;
 
+  {TComponentNameEditorEx = class(TComponentNamePropertyEditor)
+  public
+    function  GetAttributes: TPropertyAttributes; override;
+    function  GetValue: string; override;
+    procedure SetValue(const Value: string); override;
+  end;}
+
 implementation
 
 function  TPortPropertyEditor.GetAttributes: TPropertyAttributes;
@@ -116,6 +123,12 @@ begin
           Proc(IntToStr(i));
       end;
 end;
+
+
+{function  TComponentNameEditorEx.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paMultiSelect];
+end;}
 
 
 end.

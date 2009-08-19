@@ -142,6 +142,7 @@ var
 begin
   try
     Result := false;
+    if Length(pkg)<2 then exit;
     sum :=0;
     h:=High(pkg);
     for c:=0 to h-1 do
@@ -158,6 +159,7 @@ var
   c,h:Integer;
   sum:cardinal;
 begin
+  if Length(pkg)<2 then exit;
   sum :=0;
   h:=High(pkg);
   for c:=0 to h-1 do

@@ -83,7 +83,7 @@ end;
 
 {$IFDEF FPC}
 initialization
-  RegisterWSComponent(THMIRadioButton, FindWSComponentClass(TRadioButton));
+  //RegisterWSComponent(THMIRadioButton, FindWSComponentClass(TRadioButton));
 {$ENDIF}
 
 end.
