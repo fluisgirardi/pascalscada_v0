@@ -13,8 +13,8 @@ uses
   HMIUpDown, HMIZones, hsstrings, hsutils, LinearScaleProcessor, MessageSpool, 
   ModBusMasterDriver, PLCBlock, PLCBlockElement, PLCMemoryMananger, PLCNumber, 
   PLCString, PLCTag, PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, 
-  protscanupdate, scadaapp, scadapropeditor, scadareg, SerialPort, Tag, 
-  TagBit, TagBlock, tagcollection, tcp_udpport, UserScale, ValueProcessor, 
+  protscanupdate, scadapropeditor, scadareg, SerialPort, Tag, TagBit, 
+  TagBlock, tagcollection, tcp_udpport, UserScale, ValueProcessor, 
   WestASCIIDriver, IBoxDriver, LazarusPackageIntf;
 
 implementation

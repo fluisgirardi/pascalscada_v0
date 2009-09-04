@@ -1,0 +1,95 @@
+program Project1;
+{$mode objfpc}{$H+}
+uses
+  sockets, ERRORS; // use sockets_patched on Windows
+  
+var
+  sin,        // STANDARD IN
+  sout: text; // STANDARD OUT
+  socketABC:longint;
+  addr: TInetSockAddr;
+  line: string;
+
+begin
+  Addr.family:=AF_INET;
+  addr.port := 25 shl 8;
+  addr.addr := ((1 shl 24) or 127);
+  socketABC:= socket(AF_INET, SOCK_STREAM, 0);
+  if not Connect (socketABC,ADDR,SIN,SOUT) then
+  begin
+    Writeln ('Couldn''t connect to localhost');
+    Writeln ('Socket error : ', strerror(SocketError));
+    halt(1);
+  end else
+    Writeln ('Connected to localhost');
+  rewrite (sout);
+  reset(sin);
+  writeln(sout, 'HELO YourDomainName');
+  writeln(sout, 'QUIT');
+  flush(sout);
+  while not eof(sin) do
+  begin
+    readln (Sin,line);
+    writeln (line);
+  end;
+  close(sin);
+  close(sout);
+  writeln ('hit enter to exit');
+  readln;
+end.
+
+Note: if you don't have sendmail installed, then
+ apt-get install sendmail
+Do you want to send an email to an address to try sendmail?
+
+
+program Project1;
+
+{$mode objfpc}{$H+}
+
+uses
+  sockets, ERRORS; // use sockets_patched on Windows
+  
+var
+  sin,        // STANDARD IN
+  sout: text; // STANDARD OUT
+  socketABC:longint;
+
+  addr: TInetSockAddr;
+  line: string;
+
+begin
+  Addr.family:=AF_INET;
+  addr.port := 25 shl 8;
+  addr.addr := ((1 shl 24) or 127);
+  socketABC:= socket(AF_INET, SOCK_STREAM, 0);
+  if not Connect (socketABC,ADDR,SIN,SOUT) then
+  begin
+    Writeln ('Couldn''t connect to localhost');
+    Writeln ('Socket error : ', strerror(SocketError));
+    halt(1);
+  end else
+    Writeln ('Connected to localhost');
+
+  rewrite (sout);
+  reset(sin);
+  writeln(sout, 'HELO YourDomain');
+  writeln(sout, 'MAIL FROM: test@test.com'); //this can be anything
+  writeln(sout, 'RCPT TO: YourEmail@hotmail.com'); //your crappy hotmail address
+  writeln(sout, 'DATA'); 
+  writeln(sout, 'Testing email: hi self, how are you?');  //email text
+  writeln(sout, '.');    //end of message always ends with dot
+  writeln(sout, 'QUIT'); //ends connection
+  flush(sout);
+  while not eof(sin) do
+  begin
+    readln (Sin,line);
+    writeln (line);
+  end;
+
+  close(sin);
+  close(sout);
+
+  writeln('hit enter to exit');
+  readln;
+end.

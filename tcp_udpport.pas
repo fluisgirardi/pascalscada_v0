@@ -228,4 +228,9 @@ begin
   //verificar se ha como limpar os buffers de uma porta TCP...
 end;
 
+{$IFNDEF FPC}
+initialization
+  //inicialização Winsock
+{$ENDIF}
+
 end.

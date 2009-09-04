@@ -36,7 +36,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="5"/>
-    <Files Count="48">
+    <Files Count="47">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -178,72 +178,64 @@
         <UnitName Value="protscanupdate"/>
       </Item35>
       <Item36>
-        <Filename Value="scadaapp.pas"/>
-        <UnitName Value="scadaapp"/>
-      </Item36>
-      <Item37>
         <Filename Value="scadapropeditor.pas"/>
         <UnitName Value="scadapropeditor"/>
-      </Item37>
-      <Item38>
+      </Item36>
+      <Item37>
         <Filename Value="scadareg.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="scadareg"/>
-      </Item38>
-      <Item39>
+      </Item37>
+      <Item38>
         <Filename Value="serialport.pas"/>
         <UnitName Value="SerialPort"/>
-      </Item39>
-      <Item40>
+      </Item38>
+      <Item39>
         <Filename Value="tag.pas"/>
         <UnitName Value="Tag"/>
-      </Item40>
-      <Item41>
+      </Item39>
+      <Item40>
         <Filename Value="tagbit.pas"/>
         <UnitName Value="TagBit"/>
-      </Item41>
-      <Item42>
+      </Item40>
+      <Item41>
         <Filename Value="tagblock.pas"/>
         <UnitName Value="TagBlock"/>
-      </Item42>
-      <Item43>
+      </Item41>
+      <Item42>
         <Filename Value="tagcollection.pas"/>
         <UnitName Value="tagcollection"/>
-      </Item43>
-      <Item44>
+      </Item42>
+      <Item43>
         <Filename Value="tcp_udpport.pas"/>
         <UnitName Value="tcp_udpport"/>
-      </Item44>
-      <Item45>
+      </Item43>
+      <Item44>
         <Filename Value="userscale.pas"/>
         <UnitName Value="UserScale"/>
-      </Item45>
-      <Item46>
+      </Item44>
+      <Item45>
         <Filename Value="valueprocessor.pas"/>
         <UnitName Value="ValueProcessor"/>
-      </Item46>
-      <Item47>
+      </Item45>
+      <Item46>
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
-      </Item47>
-      <Item48>
+      </Item46>
+      <Item47>
         <Filename Value="iboxdriver.pas"/>
         <UnitName Value="IBoxDriver"/>
-      </Item48>
+      </Item47>
     </Files>
     <Type Value="RunAndDesignTime"/>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="2">
       <Item1>
-        <PackageName Value="zcomponent"/>
-        <MinVersion Major="7" Valid="True"/>
+        <PackageName Value="IDEIntf"/>
       </Item1>
       <Item2>
-        <PackageName Value="IDEIntf"/>
-      </Item2>
-      <Item3>
         <PackageName Value="LCL"/>
         <MinVersion Major="1" Valid="True"/>
-      </Item3>
+      </Item2>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)\"/>
