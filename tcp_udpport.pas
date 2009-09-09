@@ -49,7 +49,7 @@ type
 
 implementation
 
-uses netdb;
+uses netdb {$IFDEF UNIX}, Unix {$endif};
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
@@ -92,7 +92,7 @@ end;
 
 procedure TTCP_UDPPort.Read(Packet:PIOPacket);
 var
-  lidos:Cardinal;
+  lidos:Integer;
   tentativas:Cardinal;
 begin
 
@@ -121,7 +121,7 @@ end;
 
 procedure TTCP_UDPPort.Write(Packet:PIOPacket);
 var
-  escritos:Cardinal;
+  escritos:Integer;
   tentativas:Cardinal;
 begin
 
@@ -156,6 +156,9 @@ procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
 var
   ServerAddr:THostEntry;
   channel:sockaddr_in;
+  {$ifdef UNIX}
+  tv:timeval;
+  {$ENDIF}
 begin
   Ok:=false;
 
@@ -178,14 +181,25 @@ begin
 
   if FSocket<0 then begin
     PActive:=false;
-    showmessage('Socket falhou');
+    ShowMessage('Socket falhou');
     exit;
   end;
 
+  tv.tv_sec:=(FTimeout div 1000);
+  tv.tv_usec:=(FTimeout mod 1000) * 1000;
+
+  {$IFDEF UNIX}
+  SetSocketOptions(FSocket, SOL_SOCKET, SO_RCVTIMEO, tv, sizeof(tv));
+  SetSocketOptions(FSocket, SOL_SOCKET, SO_SNDTIMEO, tv, sizeof(tv));
+  {$ELSE}
+  SetSocketOptions(FSocket, SOL_SOCKET, SO_RCVTIMEO, FTimeout, sizeof(FTimeout));
+  SetSocketOptions(FSocket, SOL_SOCKET, SO_SNDTIMEO, FTimeout, sizeof(FTimeout));
+  {$ENDIF}
+
   try
-    channel.family          := AF_INET;
-    channel.sin_addr.s_addr := ServerAddr.Addr.s_addr;
-    channel.sin_port        := htons(FPortNumber);
+    channel.family   := AF_INET;
+    channel.addr     := htonl(ServerAddr.Addr.s_addr);
+    channel.sin_port := htons(FPortNumber);
 
     if not Connect(FSocket,channel,sizeof(sockaddr_in)) then begin
       PActive:=false;
@@ -213,7 +227,7 @@ end;
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
 begin
   Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
-  if not REsult then
+  if not Result then
     ShowMessage('config invalida');
 end;
 
