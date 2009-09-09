@@ -175,6 +175,10 @@ type
     {: @exclude }
     PUnlocked:Integer;
     {: @exclude }
+    FLastOSErrorNumber:Integer;
+    {: @exclude }
+    FLastOSErrorMessage:String;
+    {: @exclude }
     function GetLocked:Boolean;
     {: @exclude }
     procedure SetActive(v:Boolean);
@@ -273,6 +277,11 @@ type
        alterados com a porta ativa.
     }
     procedure DoExceptionInActive;
+    {:
+      @name atualiza as propriedades LastOSErrorNumber e LastOSErrorMessage com
+      o ultimo erro registrado pelo sistema operacional.
+    }
+    procedure RefreshLastOSError;
   public
     {:
     Cria o driver de porta, inicializando todas as threads e variaveis internas.
@@ -399,6 +408,10 @@ type
     property LockedBy:Cardinal read PLockedBy;
     //:Caso @true, informa que o driver está sendo usado exclusivamente por alguem.
     property Locked:Boolean read GetLocked;
+    //: Informa o codigo do ultimo erro registrado pelo sistema operacional.
+    property LastOSErrorNumber:Integer read FLastOSErrorNumber;
+    //: Informa a mensagem do ultimo erro registrado pelo sistema operacional.
+    property LastOSErrorMessage:String read FLastOSErrorMessage;
   end;
 
 implementation
@@ -558,6 +571,8 @@ end;
 constructor TCommPortDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FLastOSErrorMessage:='';
+  FLastOSErrorNumber:=0;
   PIOCmdCS := TCriticalSection.Create;
   PLockCS  := TCriticalSection.Create;
   PLockEvent := TCrossEvent.Create(nil,True,True,Name);
@@ -967,6 +982,30 @@ begin
   if PActive then
     raise Exception.Create('Impossível mudar propriedades de comunicação quando ativo!');
 end;
+
+procedure TCommPortDriver.RefreshLastOSError;
+{$IFNDEF FPC}
+{$IF defined(WIN32) or defined(WIN64)}
+var
+  buffer:PChar;
+{$ENDIF}
+{$ENDIF}
+begin
+{$IFDEF FPC}
+  FLastOSErrorNumber:=GetLastOSError;
+  FLastOSErrorMessage:=SysErrorMessage(FLastOSErrorNumber);
+{$ELSE}
+{$IF defined(WIN32) or defined(WIN64)}
+  FLastOSErrorNumber:=GetLastError;
+  if FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER+FORMAT_MESSAGE_FROM_SYSTEM,nil,FLastOSErrorNumber,LANG_NEUTRAL,@Buffer,0,nil)<>0 then begin
+    FLastOSErrorMessage:=Buffer;
+    Freemem(buffer);
+  end else
+    FLastOSErrorMessage:='Falha buscando a mensagem de erro do sistema operacional';
+{$ENDIF}
+{$ENDIF}
+end;
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 //  DECLARAÇÃO DA THREAD DE COMUNICAÇÃO
