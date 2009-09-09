@@ -78,6 +78,7 @@ contains
   protscan in 'protscan.pas',
   protscanupdate in 'protscanupdate.pas',
   westasciidriver in 'westasciidriver.pas',
-  iboxdriver in 'iboxdriver.pas';
+  iboxdriver in 'iboxdriver.pas',
+  tcp_udpport in 'tcp_udpport.pas';
 
 end.

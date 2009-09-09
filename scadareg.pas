@@ -13,7 +13,7 @@ uses
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
    HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
    HMIText, HMIZones, hmipropeditor, hsstrings, HMIButton, TagBit,
-   tcp_udpport, WestASCIIDriver, IBoxDriver,
+   WestASCIIDriver, IBoxDriver,
   {$IFDEF FPC}
     LResources, PropEdits;
   {$ELSE}

@@ -1,4 +1,4 @@
-unit tcp_udpport;
+﻿unit tcp_udpport;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -7,8 +7,8 @@ unit tcp_udpport;
 interface
 
 uses
-  Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs, CommPort,
-  commtypes{$IFDEF FPC}, Sockets {$ELSE} , Windows, WinSock {$ENDIF} ;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, CommPort,
+  commtypes{$IFDEF FPC}, LResources, Sockets {$ELSE} , Windows, WinSock {$ENDIF} ;
 
 type
 
@@ -49,7 +49,9 @@ type
 
 implementation
 
+{$ifdef fpc}
 uses netdb {$IFDEF UNIX}, Unix {$endif};
+{$ENDIF}
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
@@ -154,15 +156,23 @@ end;
 
 procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
 var
+{$IFDEF FPC}
   ServerAddr:THostEntry;
-  channel:sockaddr_in;
   {$ifdef UNIX}
   tv:timeval;
   {$ENDIF}
+{$ELSE}
+  ServerAddr:PHostEnt;
+{$ENDIF}
+  channel:sockaddr_in;
 begin
   Ok:=false;
-
+  {$IFDEF FPC}
   if not GetHostByName(FHostName,ServerAddr) then begin
+  {$ELSE}
+  ServerAddr := GetHostByName(PChar(FHostName));
+  if ServerAddr=nil then begin
+  {$ENDIF}
     PActive:=false;
     showmessage('Gethostbyname falhou');
     exit;
@@ -185,23 +195,31 @@ begin
     exit;
   end;
 
-  tv.tv_sec:=(FTimeout div 1000);
-  tv.tv_usec:=(FTimeout mod 1000) * 1000;
-
   {$IFDEF UNIX}
+  tv.tv_sec:=(FTimeout div 1000);
+  tv.tv_usec:=(FTimeout mod 1000) * 1000;  
+
   SetSocketOptions(FSocket, SOL_SOCKET, SO_RCVTIMEO, tv, sizeof(tv));
   SetSocketOptions(FSocket, SOL_SOCKET, SO_SNDTIMEO, tv, sizeof(tv));
   {$ELSE}
-  SetSocketOptions(FSocket, SOL_SOCKET, SO_RCVTIMEO, FTimeout, sizeof(FTimeout));
-  SetSocketOptions(FSocket, SOL_SOCKET, SO_SNDTIMEO, FTimeout, sizeof(FTimeout));
+  setsockopt(FSocket, SOL_SOCKET, SO_RCVTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
+  setsockopt(FSocket, SOL_SOCKET, SO_SNDTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
   {$ENDIF}
 
   try
-    channel.family   := AF_INET;
-    channel.addr     := htonl(ServerAddr.Addr.s_addr);
-    channel.sin_port := htons(FPortNumber);
+    channel.sin_family      := AF_INET;
+    {$IFDEF FPC}
+    channel.sin_addr.S_addr := htonl(ServerAddr.Addr.s_addr);
+    {$ELSE}
+    channel.sin_addr.S_addr := TInAddr(Serveraddr.h_addr).S_addr;
+    {$ENDIF}
+    channel.sin_port        := htons(FPortNumber);
 
+    {$IFDEF FPC}
     if not Connect(FSocket,channel,sizeof(sockaddr_in)) then begin
+    {$ELSE}
+    if Connect(FSocket,channel,sizeof(sockaddr_in))<>0 then begin
+    {$ENDIF}
       PActive:=false;
       showmessage('Connect falhou');
       exit;
@@ -243,8 +261,23 @@ begin
 end;
 
 {$IFNDEF FPC}
+var
+  wsaData:TWSAData;
+  version:WORD;
 initialization
-  //inicialização Winsock
-{$ENDIF}
 
+  //inicialização Winsock
+  version := MAKEWORD( 2, 0 );
+
+  //check for error
+  if WSAStartup( version, wsaData ) <> 0 then
+    raise Exception.Create('Falha inicializando WinSock!');
+
+  //check for correct version
+  if (LOBYTE(wsaData.wVersion) <> 2) or (HIBYTE(wsaData.wVersion)<>0) then begin
+    //incorrect WinSock version
+    WSACleanup();
+    raise Exception.Create('Versao incorreta da WinSock. Requerida versao 2.0');
+  end;
+{$ENDIF}
 end.
