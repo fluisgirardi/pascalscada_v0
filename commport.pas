@@ -988,7 +988,7 @@ procedure TCommPortDriver.RefreshLastOSError;
 {$IF defined(WIN32) or defined(WIN64)}
 var
   buffer:PChar;
-{$ENDIF}
+{$IFEND}
 {$ENDIF}
 begin
 {$IFDEF FPC}
@@ -1002,7 +1002,7 @@ begin
     Freemem(buffer);
   end else
     FLastOSErrorMessage:='Falha buscando a mensagem de erro do sistema operacional';
-{$ENDIF}
+{$IFEND}
 {$ENDIF}
 end;
 
