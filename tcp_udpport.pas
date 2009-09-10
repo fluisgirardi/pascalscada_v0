@@ -211,7 +211,7 @@ begin
     {$IFDEF FPC}
     channel.sin_addr.S_addr := htonl(ServerAddr.Addr.s_addr);
     {$ELSE}
-    channel.sin_addr.S_addr := TInAddr(Serveraddr.h_addr).S_addr;
+    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
     {$ENDIF}
     channel.sin_port        := htons(FPortNumber);
 
