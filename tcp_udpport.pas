@@ -234,11 +234,11 @@ end;
 
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
-  if FSocket<0 then begin
-    PActive:=false;
-    exit;
-  end;
-  CloseSocket(FSocket);
+  if FSocket>0 then
+    CloseSocket(FSocket);
+
+  PActive:=false;
+  Ok:=true;
   FSocket:=0
 end;
 
