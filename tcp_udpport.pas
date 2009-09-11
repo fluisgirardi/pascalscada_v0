@@ -216,10 +216,9 @@ begin
     {$ELSE}
     setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
     setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
-    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   bufsize,              sizeof(Integer));
-    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   bufsize,              sizeof(Integer));
-    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, flag,                 sizeof(Integer));
-
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   PAnsiChar(@bufsize),  sizeof(Integer));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   PAnsiChar(@bufsize),  sizeof(Integer));
+    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, PAnsiChar(@flag),     sizeof(Integer));
     {$ENDIF}
 
     channel.sin_family      := AF_INET;
