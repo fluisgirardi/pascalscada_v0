@@ -1,5 +1,5 @@
 //: Implementação do protocolo ModBus RTU
-unit ModBusMasterDriver;
+unit ModBusDriver;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -43,7 +43,7 @@ type
   end;
 
   {:
-  Classe do driver ModBus RTU
+  Classe do driver ModBus RTU (Serial e TCP)
   @author(Fabio Luis Girardi)
 
   Driver que implementa o protocolo ModBus RTU. Trabalha independentemente do
@@ -94,7 +94,7 @@ type
   É necessário que você conheças as funções ModBus que seu equipamento suporta.)
 
   }
-  TModBusMasterDriver = class(TProtocolDriver)
+  TModBusDriver = class(TProtocolDriver)
   private
     POutputMaxHole:Cardinal;
     PInputMaxHole:Cardinal;

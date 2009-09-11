@@ -1,5 +1,5 @@
-//: Implementação do protocolo ModBus RTU
-unit ModBusMasterDriver;
+//: Implementação do protocolo ModBus Serial
+unit ModBusSerial;
 
 {$IFDEF FPC}
 {$mode delphi}
