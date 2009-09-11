@@ -8,12 +8,12 @@ procedure Register;
 implementation
 
 uses
-  Classes, SerialPort, ModBusMasterDriver, LinearScaleProcessor, PLCTagNumber,
+  Classes, SerialPort, ModBusSerial, LinearScaleProcessor, PLCTagNumber,
   PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
    HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
    HMIText, HMIZones, hmipropeditor, hsstrings, HMIButton, TagBit,
-   WestASCIIDriver, IBoxDriver, tcp_udpport,
+   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP,
   {$IFDEF FPC}
     LResources, PropEdits;
   {$ELSE}
@@ -30,7 +30,8 @@ procedure Register;
 begin
   RegisterComponents(strPortsPallete,     [TSerialPortDriver]);
   RegisterComponents(strPortsPallete,     [TTCP_UDPPort]);
-  RegisterComponents(strProtocolsPallete, [TModBusMasterDriver]);
+  RegisterComponents(strProtocolsPallete, [TModBusRTUDriver]);
+  RegisterComponents(strProtocolsPallete, [TModBusTCPDriver]);  
   RegisterComponents(strProtocolsPallete, [TWestASCIIDriver]);
   RegisterComponents(strProtocolsPallete, [TIBoxDriver]);
   RegisterComponents(strUtilsPallete,     [TPIPE]);
