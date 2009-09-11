@@ -372,12 +372,16 @@ begin
     goto erro1;
 
   PPortHandle := CreateFile(PChar(PPortName), GENERIC_READ or GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH or FILE_FLAG_OVERLAPPED, 0);
-  if PPortHandle=INVALID_HANDLE_VALUE then
+  if PPortHandle=INVALID_HANDLE_VALUE then begin
+    RefreshLastOSError;
     goto erro1;
+  end;
 
   //seta o tamanho dos buffer se leitura e escrita
-  if not SetupComm(PPortHandle, 8192, 8192) then
+  if not SetupComm(PPortHandle, 8192, 8192) then begin
+    RefreshLastOSError;
     goto erro1;
+  end;
 
   InternalClearALLBuffers;
 
@@ -386,20 +390,26 @@ begin
   //zera a estrutura DCB (um bug conhecido, parametro incorreto!);
   FillMemory(@PDCB,sizeof(DCB),0);
   PDCB.DCBlength := sizeof(DCB);
-  if not BuildCommDCB(PChar(strdcb),PDCB) then
+  if not BuildCommDCB(PChar(strdcb),PDCB) then begin
+    RefreshLastOSError;
     goto erro2;
+  end;
 
   //faz backup da DCB que estava setada na porta
   if PBackupPortSettings then
     GetCommState(PPortHandle,PSavedDCB);
 
   //seta a nova estrutura DCB na porta de comunicação
-  if not SetCommState(PPortHandle,PDCB) then
+  if not SetCommState(PPortHandle,PDCB) then begin
+    RefreshLastOSError;
     goto erro3;
+  end;
 
   //Seta os timeouts
-  if not SetCommTimeouts(PPortHandle,ComTimeouts) then
+  if not SetCommTimeouts(PPortHandle,ComTimeouts) then begin
+    RefreshLastOSError;
     goto erro3;
+  end;
 
   ok := true;
   PActive := true;
@@ -428,6 +438,7 @@ begin
   //abre a porta
   PPortHandle := fpopen('/dev/'+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
   if PPortHandle<0 then begin
+     RefreshLastOSError;
      Ok := false;
      PActive := false;
      exit;
@@ -523,6 +534,7 @@ begin
 
   r := tcsetattr(PPortHandle, TCSANOW, tios);
   if (r = -1) then begin
+     RefreshLastOSError;
      Ok := false;
      PActive := false;
      exit;
@@ -645,6 +657,7 @@ begin
   dcbstring := MakeDCBString;
 
   if not BuildCommDCB(PChar(dcbstring),d) then begin
+    RefreshLastOSError;
     PBaundRate := old;
     raise Exception.Create('Modo Inválido!!');
   end;
@@ -669,6 +682,7 @@ begin
   dcbstring := MakeDCBString;
 
   if not BuildCommDCB(PChar(dcbstring),d) then begin
+    RefreshLastOSError;
     PStopBits := old;
     raise Exception.Create('Modo Inválido!!');
   end;
@@ -693,6 +707,7 @@ begin
   dcbstring := MakeDCBString;
 
   if not BuildCommDCB(PChar(dcbstring),d) then begin
+    RefreshLastOSError;
     PParity := old;
     raise Exception.Create('Modo Inválido!!');
   end;
@@ -717,6 +732,7 @@ begin
   dcbstring := MakeDCBString;
 
   if not BuildCommDCB(PChar(dcbstring),d) then begin
+    RefreshLastOSError;
     PDataBits := old;
     raise Exception.Create('Modo Invalido!!');
   end;

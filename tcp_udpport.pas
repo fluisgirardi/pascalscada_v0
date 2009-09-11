@@ -165,48 +165,63 @@ var
   ServerAddr:PHostEnt;
 {$ENDIF}
   channel:sockaddr_in;
+  flag, bufsize:Integer;
 begin
   Ok:=false;
-  {$IFDEF FPC}
-  if not GetHostByName(FHostName,ServerAddr) then begin
-  {$ELSE}
-  ServerAddr := GetHostByName(PChar(FHostName));
-  if ServerAddr=nil then begin
+  {$IFNDEF FPC}
+  ServerAddr:=nil;
   {$ENDIF}
-    PActive:=false;
-    showmessage('Gethostbyname falhou');
-    exit;
-  end;
-
-  case FPortType of
-    ptTCP:
-      FSocket := Socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    ptUDP:
-      FSocket := Socket(PF_INET, SOCK_STREAM, IPPROTO_UDP);
-    else begin
+  try
+    {$IFDEF FPC}
+    if not GetHostByName(FHostName,ServerAddr) then begin
+    {$ELSE}
+    ServerAddr := GetHostByName(PChar(FHostName));
+    if ServerAddr=nil then begin
+    {$ENDIF}
       PActive:=false;
+      RefreshLastOSError;
+      showmessage('Gethostbyname falhou');
       exit;
     end;
-  end;
 
-  if FSocket<0 then begin
-    PActive:=false;
-    ShowMessage('Socket falhou');
-    exit;
-  end;
+    case FPortType of
+      ptTCP:
+        FSocket := Socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+      ptUDP:
+        FSocket := Socket(PF_INET, SOCK_STREAM, IPPROTO_UDP);
+      else begin
+        PActive:=false;
+        exit;
+      end;
+    end;
 
-  {$IFDEF UNIX}
-  tv.tv_sec:=(FTimeout div 1000);
-  tv.tv_usec:=(FTimeout mod 1000) * 1000;  
+    if FSocket<0 then begin
+      PActive:=false;
+      RefreshLastOSError;
+      ShowMessage('Socket falhou');
+      exit;
+    end;
 
-  SetSocketOptions(FSocket, SOL_SOCKET, SO_RCVTIMEO, tv, sizeof(tv));
-  SetSocketOptions(FSocket, SOL_SOCKET, SO_SNDTIMEO, tv, sizeof(tv));
-  {$ELSE}
-  setsockopt(FSocket, SOL_SOCKET, SO_RCVTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
-  setsockopt(FSocket, SOL_SOCKET, SO_SNDTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
-  {$ENDIF}
+    flag:=1;
+    bufsize := 1024*16;
+    {$IFDEF UNIX}
+    tv.tv_sec:=(FTimeout div 1000);
+    tv.tv_usec:=(FTimeout mod 1000) * 1000;
 
-  try
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVTIMEO, tv,      sizeof(tv));
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDTIMEO, tv,      sizeof(tv));
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVBUF,   bufsize, sizeof(Integer));
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDBUF,   bufsize, sizeof(Integer));
+    SetSocketOptions(FSocket, IPPROTO_TCP, TCP_NODELAY, flag,    sizeof(Integer));
+    {$ELSE}
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   bufsize,              sizeof(Integer));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   bufsize,              sizeof(Integer));
+    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, flag,                 sizeof(Integer));
+
+    {$ENDIF}
+
     channel.sin_family      := AF_INET;
     {$IFDEF FPC}
     channel.sin_addr.S_addr := htonl(ServerAddr.Addr.s_addr);
@@ -221,12 +236,17 @@ begin
     if Connect(FSocket,channel,sizeof(sockaddr_in))<>0 then begin
     {$ENDIF}
       PActive:=false;
+      RefreshLastOSError;
       showmessage('Connect falhou');
       exit;
     end;
     Ok:=true;
     PActive:=true;
   finally
+    {$IFNDEF FPC}
+    if ServerAddr=nil then
+      Freemem(ServerAddr);
+    {$ENDIF}
     if not Ok then
       CloseSocket(FSocket);
   end;
@@ -279,5 +299,7 @@ initialization
     WSACleanup();
     raise Exception.Create('Versao incorreta da WinSock. Requerida versao 2.0');
   end;
+finalization
+  WSACleanup;
 {$ENDIF}
 end.
