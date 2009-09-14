@@ -36,7 +36,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="5"/>
-    <Files Count="47">
+    <Files Count="49">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -122,110 +122,118 @@
         <UnitName Value="hsutils"/>
       </Item21>
       <Item22>
-        <Filename Value="linearscaleprocessor.pas"/>
-        <UnitName Value="LinearScaleProcessor"/>
+        <Filename Value="iboxdriver.pas"/>
+        <UnitName Value="IBoxDriver"/>
       </Item22>
       <Item23>
-        <Filename Value="messagespool.pas"/>
-        <UnitName Value="MessageSpool"/>
+        <Filename Value="linearscaleprocessor.pas"/>
+        <UnitName Value="LinearScaleProcessor"/>
       </Item23>
       <Item24>
-        <Filename Value="modbusmasterdriver.pas"/>
-        <UnitName Value="ModBusMasterDriver"/>
+        <Filename Value="messagespool.pas"/>
+        <UnitName Value="MessageSpool"/>
       </Item24>
       <Item25>
-        <Filename Value="plcblock.pas"/>
-        <UnitName Value="PLCBlock"/>
+        <Filename Value="modbusdriver.pas"/>
+        <UnitName Value="ModBusDriver"/>
       </Item25>
       <Item26>
-        <Filename Value="plcblockelement.pas"/>
-        <UnitName Value="PLCBlockElement"/>
+        <Filename Value="modbusserial.pas"/>
+        <UnitName Value="ModBusSerial"/>
       </Item26>
       <Item27>
-        <Filename Value="plcmemorymananger.pas"/>
-        <UnitName Value="PLCMemoryMananger"/>
+        <Filename Value="modbustcp.pas"/>
+        <UnitName Value="ModBusTCP"/>
       </Item27>
       <Item28>
-        <Filename Value="plcnumber.pas"/>
-        <UnitName Value="PLCNumber"/>
+        <Filename Value="plcblock.pas"/>
+        <UnitName Value="PLCBlock"/>
       </Item28>
       <Item29>
-        <Filename Value="plcstring.pas"/>
-        <UnitName Value="PLCString"/>
+        <Filename Value="plcblockelement.pas"/>
+        <UnitName Value="PLCBlockElement"/>
       </Item29>
       <Item30>
-        <Filename Value="plctag.pas"/>
-        <UnitName Value="PLCTag"/>
+        <Filename Value="plcmemorymananger.pas"/>
+        <UnitName Value="PLCMemoryMananger"/>
       </Item30>
       <Item31>
-        <Filename Value="plctagnumber.pas"/>
-        <UnitName Value="PLCTagNumber"/>
+        <Filename Value="plcnumber.pas"/>
+        <UnitName Value="PLCNumber"/>
       </Item31>
       <Item32>
-        <Filename Value="protocoldriver.pas"/>
-        <UnitName Value="ProtocolDriver"/>
+        <Filename Value="plcstring.pas"/>
+        <UnitName Value="PLCString"/>
       </Item32>
       <Item33>
-        <Filename Value="protocoltypes.pas"/>
-        <UnitName Value="ProtocolTypes"/>
+        <Filename Value="plctag.pas"/>
+        <UnitName Value="PLCTag"/>
       </Item33>
       <Item34>
-        <Filename Value="protscan.pas"/>
-        <UnitName Value="protscan"/>
+        <Filename Value="plctagnumber.pas"/>
+        <UnitName Value="PLCTagNumber"/>
       </Item34>
       <Item35>
-        <Filename Value="protscanupdate.pas"/>
-        <UnitName Value="protscanupdate"/>
+        <Filename Value="protocoldriver.pas"/>
+        <UnitName Value="ProtocolDriver"/>
       </Item35>
       <Item36>
-        <Filename Value="scadapropeditor.pas"/>
-        <UnitName Value="scadapropeditor"/>
+        <Filename Value="protocoltypes.pas"/>
+        <UnitName Value="ProtocolTypes"/>
       </Item36>
       <Item37>
+        <Filename Value="protscan.pas"/>
+        <UnitName Value="protscan"/>
+      </Item37>
+      <Item38>
+        <Filename Value="protscanupdate.pas"/>
+        <UnitName Value="protscanupdate"/>
+      </Item38>
+      <Item39>
+        <Filename Value="scadapropeditor.pas"/>
+        <UnitName Value="scadapropeditor"/>
+      </Item39>
+      <Item40>
         <Filename Value="scadareg.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="scadareg"/>
-      </Item37>
-      <Item38>
-        <Filename Value="serialport.pas"/>
-        <UnitName Value="SerialPort"/>
-      </Item38>
-      <Item39>
-        <Filename Value="tag.pas"/>
-        <UnitName Value="Tag"/>
-      </Item39>
-      <Item40>
-        <Filename Value="tagbit.pas"/>
-        <UnitName Value="TagBit"/>
       </Item40>
       <Item41>
-        <Filename Value="tagblock.pas"/>
-        <UnitName Value="TagBlock"/>
+        <Filename Value="serialport.pas"/>
+        <UnitName Value="SerialPort"/>
       </Item41>
       <Item42>
-        <Filename Value="tagcollection.pas"/>
-        <UnitName Value="tagcollection"/>
+        <Filename Value="tag.pas"/>
+        <UnitName Value="Tag"/>
       </Item42>
       <Item43>
-        <Filename Value="tcp_udpport.pas"/>
-        <UnitName Value="tcp_udpport"/>
+        <Filename Value="tagbit.pas"/>
+        <UnitName Value="TagBit"/>
       </Item43>
       <Item44>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="tagblock.pas"/>
+        <UnitName Value="TagBlock"/>
       </Item44>
       <Item45>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="tagcollection.pas"/>
+        <UnitName Value="tagcollection"/>
       </Item45>
       <Item46>
-        <Filename Value="westasciidriver.pas"/>
-        <UnitName Value="WestASCIIDriver"/>
+        <Filename Value="tcp_udpport.pas"/>
+        <UnitName Value="tcp_udpport"/>
       </Item46>
       <Item47>
-        <Filename Value="iboxdriver.pas"/>
-        <UnitName Value="IBoxDriver"/>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
       </Item47>
+      <Item48>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item48>
+      <Item49>
+        <Filename Value="westasciidriver.pas"/>
+        <UnitName Value="WestASCIIDriver"/>
+      </Item49>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">

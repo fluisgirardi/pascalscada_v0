@@ -8,7 +8,7 @@ unit ModBusTCP;
 interface
 
 uses
-  ModBusDriver, ProtocolTypes, commtypes, crc16utils;
+  ModBusDriver, ProtocolTypes, commtypes;
 
 type
 
@@ -29,7 +29,7 @@ uses Math, hsutils, PLCMemoryMananger, SysUtils;
 
 function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var
-  i, c, c2:Integer;
+  i, c, c2, size:Integer;
 begin
   //checa se é um pacote de escrita de valores ou de leitura
   //que está sendo codificado.
@@ -40,36 +40,49 @@ begin
       $01,$02,$03,$04: begin
         //codifica pedido de leitura de entradas, saidas,
         //bloco de registradores e registrador simples.
-        SetLength(Result,8);
-        Result[0] := TagObj.Station and $FF;
-        Result[1] := TagObj.ReadFunction and $FF;
-        Result[2] := (TagObj.Address and $FF00) shr 8;
-        Result[3] := TagObj.Address and $FF;
-        Result[4] := (TagObj.Size and $FF00) shr 8;
-        Result[5] := TagObj.Size and $FF;
-        // Calcula CRC
-        Calcul_crc(Result);
+        SetLength(Result,12);
+        Result[00] := 0;
+        Result[01] := 0;
+        Result[02] := 0;
+        Result[03] := 0;
+        Result[04] := 0; //tamanho restante da mensagem, bHi
+        Result[05] := 6; //tamanho restante da mensagem, bLo
+        Result[06] := TagObj.Station and $FF;
+        Result[07] := TagObj.ReadFunction and $FF;
+        Result[08] := (TagObj.Address and $FF00) shr 8;
+        Result[09] := TagObj.Address and $FF;
+        Result[10] := (TagObj.Size and $FF00) shr 8;
+        Result[11] := TagObj.Size and $FF;
       end;
 
       $07: begin
         // Lê o Status
-        SetLength(Result,4);
-        Result[0] := TagObj.Station and $FF;
-        Result[1] := $07;
-        // Calcula o CRC
-        Calcul_crc(Result);
+        SetLength(Result,8);
+        Result[00] := 0;
+        Result[01] := 0;
+        Result[02] := 0;
+        Result[03] := 0;
+        Result[04] := 0; //tamanho restante da mensagem, bHi
+        Result[05] := 2; //tamanho restante da mensagem, bLo
+        Result[06] := TagObj.Station and $FF;
+        Result[07] := $07;
       end;
 
       $08: begin
         // Teste de Linha...
-        SetLength(Result,8);
-        Result[0] := TagObj.Station and $FF;
-        Result[1] := $08;
-        Result[2] := 0;
-        Result[3] := 0;
-        Result[4] := 0;
-        Result[5] := 0;
-        Calcul_crc(Result);
+        SetLength(Result,12);
+        Result[00] := 0;
+        Result[01] := 0;
+        Result[02] := 0;
+        Result[03] := 0;
+        Result[04] := 0; //tamanho restante da mensagem, bHi
+        Result[05] := 6; //tamanho restante da mensagem, bLo
+        Result[06] := TagObj.Station and $FF;
+        Result[07] := $08;
+        Result[08] := 0;
+        Result[09] := 0;
+        Result[10] := 0;
+        Result[11] := 0;
       end;
       else begin
         SetLength(Result,0);
@@ -79,13 +92,13 @@ begin
     // Calcula o tamanho do pacote resposta
     case TagObj.ReadFunction of
       $01..$02:
-        ResultLen := 5 +(TagObj.Size div 8)+IfThen((TagObj.Size mod 8)<>0,1,0);
+        ResultLen := 9 +(TagObj.Size div 8)+IfThen((TagObj.Size mod 8)<>0,1,0);
       $03..$04:
-        ResultLen := 5+(TagObj.Size*2);
+        ResultLen := 9+(TagObj.Size*2);
       $07:
-        ResultLen := 5;
+        ResultLen := 9;
       $08:
-        ResultLen := 8;
+        ResultLen := 12;
       else
       begin
         ResultLen := 0;
@@ -95,51 +108,67 @@ begin
     case TagObj.WriteFunction of
       $05: begin
         //escreve uma saida...
-        SetLength(Result,8);
-        Result[0] := TagObj.Station and $FF;
-        Result[1] := $05;
-        Result[2] := (TagObj.Address and $FF00) shr 8;
-        Result[3] := TagObj.Address and $FF;
+        SetLength(Result,12);
+        Result[00] := 0;
+        Result[01] := 0;
+        Result[02] := 0;
+        Result[03] := 0;
+        Result[04] := 0; //tamanho restante da mensagem, bHi
+        Result[05] := 6; //tamanho restante da mensagem, bLo
+        Result[06] := TagObj.Station and $FF;
+        Result[07] := $05;
+        Result[08] := (TagObj.Address and $FF00) shr 8;
+        Result[09] := TagObj.Address and $FF;
 
         if (ToWrite[0]=0) then begin
-           Result[4] := $00;
-           Result[5] := $00;
+           Result[10] := $00;
+           Result[11] := $00;
         end else begin
-           Result[4] := $FF;
-           Result[5] := $00;
+           Result[10] := $FF;
+           Result[11] := $00;
         end;
-        // Calcula CRC
-        Calcul_crc(Result);
       end;
 
       $06: begin
         // escreve 1 registro
-        SetLength(Result,8);
-        Result[0] := TagObj.Station and $FF;
-        Result[1] := $06;
-        Result[2] := (TagObj.Address and $FF00) shr 8;
-        Result[3] := TagObj.Address and $FF;
-        Result[4] := (FloatToInteger(ToWrite[0]) and $FF00) shr 8;
-        Result[5] := FloatToInteger(ToWrite[0]) and $FF;
-        // Calcula o CRC
-        Calcul_crc(Result);
+        SetLength(Result,12);
+        Result[00] := 0;
+        Result[01] := 0;
+        Result[02] := 0;
+        Result[03] := 0;
+        Result[04] := 0; //tamanho restante da mensagem, bHi
+        Result[05] := 6; //tamanho restante da mensagem, bLo
+        Result[06] := TagObj.Station and $FF;
+        Result[07] := $06;
+        Result[08] := (TagObj.Address and $FF00) shr 8;
+        Result[09] := TagObj.Address and $FF;
+        Result[10] := (FloatToInteger(ToWrite[0]) and $FF00) shr 8;
+        Result[11] := FloatToInteger(ToWrite[0]) and $FF;
       end;
 
       $0F: begin
         //Num de saidas em bytes + 9 bytes fixos.
-        SetLength(Result,(TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0)+9);
-        Result[0] := TagObj.Station and $FF;
-        Result[1] := $0F;
-        Result[2] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
-        Result[3] := (TagObj.Address+TagObj.OffSet) and $FF;
-        Result[4] := (Min(TagObj.Size,Length(ToWrite)) and $FF00) shr 8;
-        Result[5] := Min(TagObj.Size,Length(ToWrite)) and $FF;
-        Result[6] := (TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0);
+        size:=(TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0);
+        SetLength(Result,size+13); //13 = end+func+address 2b,num bits 2b, pkg len 1b + 6 modbus tcp
+
+        Result[00] := 0;
+        Result[01] := 0;
+        Result[02] := 0;
+        Result[03] := 0;
+        Result[04] := ((size + 7) and $FF00) div $100; //tamanho restante da mensagem, bHi
+        Result[05] := ((size + 7) and $FF);            //tamanho restante da mensagem, bLo
+        Result[06] := TagObj.Station and $FF;
+        Result[07] := $0F;
+        Result[08] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
+        Result[09] := (TagObj.Address+TagObj.OffSet) and $FF;
+        Result[10] := (Min(TagObj.Size,Length(ToWrite)) and $FF00) shr 8;
+        Result[11] := Min(TagObj.Size,Length(ToWrite)) and $FF;
+        Result[12] := (TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0);
 
         i := 0;
         c := 0;
-        c2:= 7;
-        Result[7] := 0;
+        c2:= 13;
+        Result[13] := 0;
 
         for c := 0 to Min(TagObj.Size,Length(ToWrite))-1 do begin
           if ToWrite[c]<>0 then begin
@@ -153,29 +182,33 @@ begin
             Result[c2] := 0;
           end;
         end;
-
-        // Calcula CRC
-        Calcul_crc(Result);
       end;
 
       $10: begin
         // Escreve X bytes
-        SetLength(Result,(TagObj.Size*2)+9);
-        Result[0] := TagObj.Station and $FF;
-        Result[1] := $10;
-        Result[2] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
-        Result[3] := (TagObj.Address+TagObj.OffSet) and $FF;
-        Result[4] := ((TagObj.Size and $FF00) shr 8);
-        Result[5] := TagObj.Size and $FF;
-        Result[6] := (TagObj.Size*2) and $FF;
+        size := (TagObj.Size*2);
+        SetLength(Result,size+13); //13 = end+func+address 2b,num bits 2b, pkg len 1b + 6 modbus tcp
+
+        Result[00] := 0;
+        Result[01] := 0;
+        Result[02] := 0;
+        Result[03] := 0;
+        Result[04] := ((size + 7) and $FF00) div $100; //tamanho restante da mensagem, bHi
+        Result[05] := ((size + 7) and $FF);            //tamanho restante da mensagem, bLo
+
+        Result[06] := TagObj.Station and $FF;
+        Result[07] := $10;
+        Result[08] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
+        Result[09] := (TagObj.Address+TagObj.OffSet) and $FF;
+        Result[10] := ((TagObj.Size and $FF00) shr 8);
+        Result[11] := TagObj.Size and $FF;
+        Result[12] := (TagObj.Size*2) and $FF;
         i := 0;
         while (i<TagObj.Size) do begin
-            Result[7+i*2] := ((FloatToInteger(ToWrite[i]) and $FF00) shr 8);
-            Result[8+i*2] := FloatToInteger(ToWrite[i]) and $FF;
+            Result[13+i*2] := ((FloatToInteger(ToWrite[i]) and $FF00) shr 8);
+            Result[14+i*2] := FloatToInteger(ToWrite[i]) and $FF;
             inc(i);
         end;
-        // Calcula o CRC
-        Calcul_crc(Result);
       end;
       else begin
         SetLength(Result,0);
@@ -184,7 +217,7 @@ begin
     // Calcula o tamanho do pacote resposta
     case TagObj.WriteFunction of
       $05,$06,$0F,$10:
-        ResultLen := 8;
+        ResultLen := 12;
       else
       begin
         ResultLen := 0;
@@ -207,13 +240,7 @@ begin
   end;
   
   //se o endereco retornado nao conferem com o selecionado...
-  if (pkg.BufferToWrite[0]<>pkg.BufferToRead[0]) then begin
-    Result := ioCommError;
-    exit;
-  end;
-
-  //se a checagem crc nao bate, sai
-  if (not Test_crc(pkg.BufferToWrite)) or (not Test_crc(pkg.BufferToRead)) then begin
+  if (pkg.BufferToWrite[6]<>pkg.BufferToRead[6]) then begin
     Result := ioCommError;
     exit;
   end;
@@ -221,38 +248,32 @@ begin
   //procura o plc
   foundPLC := false;
   for plc := 0 to High(PModbusPLC) do
-    if PModbusPLC[plc].Station = pkg.BufferToWrite[0] then begin
+    if PModbusPLC[plc].Station = pkg.BufferToWrite[6] then begin
       foundPLC := true;
       break;
     end;
 
-  //se nao encontrou o plc nos blocos de memória sai...
-  //if not found then begin
-    //Result := ioDriverError;
-    //exit;
-  //end;
-
   //comeca a decodificar o pacote...
 
   //leitura de bits das entradas ou saidas
-  case pkg.BufferToRead[1] of
+  case pkg.BufferToRead[7] of
     $01,$02: begin
       //acerta onde vao ser colocados os valores decodificados...
       if foundPLC then begin
-        if pkg.BufferToWrite[1]=$01 then
+        if pkg.BufferToWrite[7]=$01 then
           aux := PModbusPLC[plc].OutPuts
         else
           aux := PModbusPLC[plc].Inputs;
       end;
 
-      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+      address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
+      len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
       SetLength(Values,len);
 
       i := 0;
       c := 0;
-      c2:= 3;
-      while i<len do begin
+      c2:= 9;
+      while (i<len) and (c2<Length(pkg.BufferToRead)) do begin
         if (c=8) then begin
           c:=0;
           inc(c2);
@@ -270,19 +291,19 @@ begin
     $03,$04: begin
       //acerta onde vao ser colocados os valores decodificados...
       if foundPLC then begin
-        if pkg.BufferToWrite[1]=$03 then
+        if pkg.BufferToWrite[7]=$03 then
           aux := PModbusPLC[plc].Registers
         else
           aux := PModbusPLC[plc].AnalogReg;
       end;
 
-      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+      address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
+      len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
       SetLength(Values,len);
 
       // data are ok
       for i:=0 to Len-1 do begin
-        Values[i]:=(Integer(pkg.BufferToRead[3+(i*2)]) shl 8) + Integer(pkg.BufferToRead[4+i*2]);
+        Values[i]:=(Integer(pkg.BufferToRead[9+(i*2)]) shl 8) + Integer(pkg.BufferToRead[10+i*2]);
       end;
       if foundPLC then
         aux.SetValues(address,len,1,Values);
@@ -290,10 +311,10 @@ begin
     end;
 
     $05: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+      address := (pkg.BufferToWrite[8] * 256) + pkg.BufferToWrite[9];
       SetLength(values,1);
 
-      if (pkg.BufferToWrite[4]=0) and (pkg.BufferToWrite[5]=0) then
+      if (pkg.BufferToWrite[10]=0) and (pkg.BufferToWrite[11]=0) then
          values[0] := 0
       else
          values[0] := 1;
@@ -304,10 +325,10 @@ begin
       Result := ioOk;
     end;
     $06: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+      address := (pkg.BufferToWrite[8] * 256) + pkg.BufferToWrite[9];
       SetLength(values,1);
 
-      values[0] := pkg.BufferToWrite[4]*256+pkg.BufferToWrite[5];
+      values[0] := pkg.BufferToWrite[10]*256+pkg.BufferToWrite[11];
 
       if foundPLC then
         PModbusPLC[plc].Registers.SetValues(address,1,1,values);
@@ -316,7 +337,7 @@ begin
     end;
     $07: begin
       if foundPLC then begin
-         PModbusPLC[plc].Status07Value :=Integer(pkg.BufferToRead[2]);
+         PModbusPLC[plc].Status07Value :=Integer(pkg.BufferToRead[8]);
          PModbusPLC[plc].Status07TimeStamp := Now;
          PModbusPLC[plc].Status07LastError := ioOk;
       end;
@@ -325,15 +346,15 @@ begin
     $08:
       Result := ioOk;
     $0F: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
+      address := (pkg.BufferToWrite[08] * 256) + pkg.BufferToWrite[09];
+      len     := (pkg.BufferToWrite[10] * 256) + pkg.BufferToWrite[11];
 
       SetLength(values,len);
 
       i := 0;
       c := 0;
-      c2:= 7;
-      while i<len do begin
+      c2:= 13;
+      while (i<len) and (c2<Length(pkg.BufferToRead)) do begin
         if (c=8) then begin
           c:=0;
           inc(c2);
@@ -348,14 +369,14 @@ begin
       Result := ioOk;
     end;
     $10: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
+      address := (pkg.BufferToWrite[08] * 256) + pkg.BufferToWrite[09];
+      len     := (pkg.BufferToWrite[10] * 256) + pkg.BufferToWrite[11];
 
       SetLength(values,len);
 
       i := 0;
       while (i<len) do begin
-         values[i] := pkg.BufferToWrite[7+i*2]*256 + pkg.BufferToWrite[8+i*2];
+         values[i] := pkg.BufferToWrite[13+i*2]*256 + pkg.BufferToWrite[14+i*2];
          inc(i);
       end;
 
@@ -364,7 +385,7 @@ begin
       Result := ioOk;
     end;
     else begin
-      case pkg.BufferToRead[1] of
+      case pkg.BufferToRead[7] of
         $81:
           Result := ioIllegalFunction;
         $82:
@@ -376,28 +397,28 @@ begin
         else
           Result := ioCommError;
       end;
-      case pkg.BufferToWrite[1] of
+      case pkg.BufferToWrite[7] of
         $01: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+          address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
+          len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
           if foundPLC then
             PModbusPLC[plc].OutPuts.SetFault(address,len,1,Result);
         end;
         $02: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+          address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
+          len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
           if foundPLC then
             PModbusPLC[plc].Inputs.SetFault(address,len,1,Result);
         end;
         $03: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+          address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
+          len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
           if foundPLC then
             PModbusPLC[plc].Registers.SetFault(address,len,1,Result);
         end;
         $04: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+          address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
+          len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
           if foundPLC then
             PModbusPLC[plc].AnalogReg.SetFault(address,len,1,Result);
         end;

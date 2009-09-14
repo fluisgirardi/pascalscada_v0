@@ -252,7 +252,7 @@ begin
       i := 0;
       c := 0;
       c2:= 3;
-      while i<len do begin
+      while (i<len) and (c2<Length(pkg.BufferToRead)) do begin
         if (c=8) then begin
           c:=0;
           inc(c2);

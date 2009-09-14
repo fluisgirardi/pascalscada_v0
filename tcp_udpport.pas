@@ -174,15 +174,24 @@ begin
   try
     {$IFDEF FPC}
     if not GetHostByName(FHostName,ServerAddr) then begin
+      ServerAddr.Addr:=StrToHostAddr(FHostName);
+      if ServerAddr.Addr.s_addr=0 then begin
+        PActive:=false;
+        RefreshLastOSError;
+        showmessage('Gethostbyname falhou');
+        exit;
+      end;
+    end;
     {$ELSE}
     ServerAddr := GetHostByName(PChar(FHostName));
     if ServerAddr=nil then begin
-    {$ENDIF}
       PActive:=false;
       RefreshLastOSError;
       showmessage('Gethostbyname falhou');
       exit;
     end;
+    {$ENDIF}
+
 
     case FPortType of
       ptTCP:
