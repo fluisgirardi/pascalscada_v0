@@ -226,12 +226,6 @@ begin
       break;
     end;
 
-  //se nao encontrou o plc nos blocos de memória sai...
-  //if not found then begin
-    //Result := ioDriverError;
-    //exit;
-  //end;
-
   //comeca a decodificar o pacote...
 
   //leitura de bits das entradas ou saidas

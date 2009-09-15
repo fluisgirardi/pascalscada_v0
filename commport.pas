@@ -8,7 +8,7 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, ExtCtrls
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -178,6 +178,14 @@ type
     FLastOSErrorNumber:Integer;
     {: @exclude }
     FLastOSErrorMessage:String;
+    {: @exclude }
+    FTimer:TTimer;
+    {: @exclude }
+    FLastPkgId:Cardinal;
+    {: @exclude }
+    FCommandsSecond:Double;
+    {: @exclude }
+    procedure TimerStatistics(Sender:TObject);
     {: @exclude }
     function GetLocked:Boolean;
     {: @exclude }
@@ -412,6 +420,8 @@ type
     property LastOSErrorNumber:Integer read FLastOSErrorNumber;
     //: Informa a mensagem do ultimo erro registrado pelo sistema operacional.
     property LastOSErrorMessage:String read FLastOSErrorMessage;
+    //: Informa quantos comandos são processados por segundos. Atualizado a cada 10 segundos.
+    property CommandsPerSecond:Double read FCommandsSecond;
   end;
 
 implementation
@@ -571,6 +581,10 @@ end;
 constructor TCommPortDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FTimer := TTimer.Create(Self);
+  FTimer.OnTimer:=TimerStatistics;
+  FTimer.Enabled:=false;
+  FTimer.Interval:=10000;
   FLastOSErrorMessage:='';
   FLastOSErrorNumber:=0;
   PIOCmdCS := TCriticalSection.Create;
@@ -602,6 +616,7 @@ begin
   PIOCmdCS.Destroy;
   PLockCS.Destroy;
   PLockEvent.Destroy;
+  FTimer.Destroy;
   inherited Destroy;
 end;
 
@@ -680,6 +695,13 @@ begin
   SetActive(FReadActive);
 end;
 
+procedure TCommPortDriver.TimerStatistics(Sender:TObject);
+begin
+  if FLastPkgId<=PPacketID then
+    FCommandsSecond:=(PPacketID-FLastPkgId)/10;
+  FLastPkgId:=PPacketID;
+end;
+
 function TCommPortDriver.GetLocked:Boolean;
 begin
   Result := (PLockedBy<>0);
@@ -748,6 +770,7 @@ begin
   if (not v) and PActive then begin
      InternalPortStop(x);
   end;
+  FTimer.Enabled := PActive;
 end;
 
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
