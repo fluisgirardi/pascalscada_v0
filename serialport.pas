@@ -258,33 +258,23 @@ var
   lidos:Cardinal;
   tentativas:Cardinal;
   start:TDateTime;
-  FDS:Tfdset;
-  res:cint;
   Req, Rem:TimeSpec;
 begin
   tentativas := 0;
   start := Now;
-  fpfd_zero(FDS) ;
-  fpfd_set(PPortHandle,FDS);
 
+  Packet^.Received := 0;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
-     //res := fpSelect(1, @FDS, nil , nil , 10);
-     //if res=-1 then begin
-     //   Packet^.ReadIOResult := iorPortError;
-     //   exit;
-     //end;
-     //if res>0 then begin
-       lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
-       Packet^.Received := Packet^.Received + lidos;
-       if (MilliSecondsBetween(Now,start)>PTimeout) then begin
-          inc(tentativas);
-          start:=Now;
-       end;
-       //faz esperar 0,1ms
-       Req.tv_sec:=0;
-       Req.tv_nsec:=100000;
-       FpNanoSleep(@Req,@Rem);
-     //end;
+     lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
+     Packet^.Received := Packet^.Received + lidos;
+     if (MilliSecondsBetween(Now,start)>PTimeout) then begin
+        inc(tentativas);
+        start:=Now;
+     end;
+     //faz esperar 0,1ms
+     Req.tv_sec:=0;
+     Req.tv_nsec:=100000;
+     FpNanoSleep(@Req,@Rem);
   end;
 {$ENDIF}
 
@@ -328,6 +318,7 @@ var
 begin
   tentativas := 0;
 
+  Packet^.Wrote := 0;
   While (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
     escritos := SerWrite (PPortHandle,Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote);
     Packet^.Wrote := Packet^.Wrote + escritos;

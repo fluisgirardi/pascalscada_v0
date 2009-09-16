@@ -243,7 +243,6 @@ begin
     raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
   DoDelTag(TagObj);
   DoAddTag(TagObj);
-  inherited DoTagChange(TagObj,Change,oldValue,newValue);
 end;
 
 procedure TWestASCIIDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);

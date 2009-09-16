@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryMananger, crc16utils, hsutils, PLCBlock, PLCString, SyncObjs,
+  PLCMemoryMananger, PLCBlock, PLCString, SyncObjs,
   CrossEvent{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -156,7 +156,6 @@ type
 
 implementation
 
-uses Math;
 
 constructor TModBusDriver.Create(AOwner:TComponent);
 begin

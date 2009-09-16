@@ -7,8 +7,8 @@
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, CommPort,
-  commtypes{$IFDEF FPC}, LResources, Sockets {$ELSE} , Windows, WinSock {$ENDIF} ;
+  Classes, SysUtils, CommPort, commtypes
+  {$IFDEF FPC}, Sockets {$ELSE} , Windows, WinSock {$ENDIF};
 
 type
 
@@ -39,7 +39,7 @@ type
     function  CheckConnection:TIOResult; virtual;
   public
     constructor Create(AOwner:TComponent); override;
-    destructor  Destroy;
+    destructor  Destroy; override;
   published
     property Host:String read FHostName write SetHostname nodefault;
     property Port:Integer read FPortNumber write SetPortNumber default 102;
@@ -101,14 +101,14 @@ begin
   tentativas := 0;
   lidos := 0;
 
+  Packet^.Received := 0;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
     lidos := Recv(FSocket, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
     if lidos<0 then begin
       Packet^.ReadIOResult := CheckConnection;
       exit;
-    end;
-
-    Packet^.Received := Packet^.Received + lidos;
+    end else
+      Packet^.Received := Packet^.Received + lidos;
     inc(tentativas);
   end;
 
@@ -130,13 +130,14 @@ begin
   tentativas := 0;
   escritos := 0;
 
+  Packet^.Wrote := 0;
   while (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
     escritos := Send(FSocket, Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
     if escritos<0 then begin
       Packet^.ReadIOResult := CheckConnection;
       exit;
-    end;
-    Packet^.Wrote := Packet^.Wrote + escritos;
+    end else
+      Packet^.Wrote := Packet^.Wrote + escritos;
     inc(tentativas);
   end;
 
@@ -178,7 +179,6 @@ begin
       if ServerAddr.Addr.s_addr=0 then begin
         PActive:=false;
         RefreshLastOSError;
-        showmessage('Gethostbyname falhou');
         exit;
       end;
     end;
@@ -187,7 +187,6 @@ begin
     if ServerAddr=nil then begin
       PActive:=false;
       RefreshLastOSError;
-      showmessage('Gethostbyname falhou');
       exit;
     end;
     {$ENDIF}
@@ -207,21 +206,25 @@ begin
     if FSocket<0 then begin
       PActive:=false;
       RefreshLastOSError;
-      ShowMessage('Socket falhou');
       exit;
     end;
 
     flag:=1;
     bufsize := 1024*16;
+    {$IFDEF FPC}
     {$IFDEF UNIX}
     tv.tv_sec:=(FTimeout div 1000);
     tv.tv_usec:=(FTimeout mod 1000) * 1000;
 
     SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVTIMEO, tv,      sizeof(tv));
     SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDTIMEO, tv,      sizeof(tv));
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVBUF,   bufsize, sizeof(Integer));
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDBUF,   bufsize, sizeof(Integer));
-    SetSocketOptions(FSocket, IPPROTO_TCP, TCP_NODELAY, flag,    sizeof(Integer));
+    {$ELSE}
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVTIMEO, FTimeout, sizeof(FTimeout));
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDTIMEO, FTimeout, sizeof(FTimeout));
+    {$ENDIF}
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVBUF,   bufsize,  sizeof(Integer));
+    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDBUF,   bufsize,  sizeof(Integer));
+    SetSocketOptions(FSocket, IPPROTO_TCP, TCP_NODELAY, flag,     sizeof(Integer));
     {$ELSE}
     setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
     setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
@@ -245,14 +248,13 @@ begin
     {$ENDIF}
       PActive:=false;
       RefreshLastOSError;
-      showmessage('Connect falhou');
       exit;
     end;
     Ok:=true;
     PActive:=true;
   finally
     {$IFNDEF FPC}
-    if ServerAddr=nil then
+    if ServerAddr<>nil then
       Freemem(ServerAddr);
     {$ENDIF}
     if not Ok then
@@ -278,8 +280,6 @@ end;
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
 begin
   Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
-  if not Result then
-    ShowMessage('config invalida');
 end;
 
 function TTCP_UDPPort.CheckConnection:TIOResult;

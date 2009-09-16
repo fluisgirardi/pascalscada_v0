@@ -10,7 +10,7 @@ unit HMIZones;
 
 interface
 
-uses Classes, SysUtils, hsutils, Controls, Graphics, StdCtrls;
+uses Classes, SysUtils, hsutils, Controls, Graphics;
 
 type
   {:

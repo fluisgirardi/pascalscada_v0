@@ -8,7 +8,7 @@ unit HMIRadioButton;
 interface
 
 uses
-  HMICheckBox, Classes, Controls, {$IFDEF FPC}LCLIntf, LCLType, WSStdCtrls,
+  HMICheckBox, Classes, Controls, {$IFDEF FPC}LCLIntf, LCLType,
   WSLCLClasses,{$ELSE}Windows,{$ENDIF} StdCtrls, HMITypes;
 
 type

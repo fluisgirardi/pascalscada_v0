@@ -8,7 +8,7 @@ unit Tag;
 interface
 
 uses
-  SysUtils, Classes, SyncObjs;
+  SysUtils, Classes;
 
 type
   //: Estrutura de procedimentos internos dos tags.
