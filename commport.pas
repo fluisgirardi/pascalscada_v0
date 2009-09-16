@@ -584,7 +584,7 @@ begin
   FTimer := TTimer.Create(Self);
   FTimer.OnTimer:=TimerStatistics;
   FTimer.Enabled:=false;
-  FTimer.Interval:=10000;
+  FTimer.Interval:=1000;
   FLastOSErrorMessage:='';
   FLastOSErrorNumber:=0;
   PIOCmdCS := TCriticalSection.Create;
@@ -698,7 +698,7 @@ end;
 procedure TCommPortDriver.TimerStatistics(Sender:TObject);
 begin
   if FLastPkgId<=PPacketID then
-    FCommandsSecond:=(PPacketID-FLastPkgId)/10;
+    FCommandsSecond:=PPacketID-FLastPkgId;
   FLastPkgId:=PPacketID;
 end;
 

@@ -262,9 +262,14 @@ end;
 
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
-  if FSocket>0 then
+  if FSocket>0 then begin
+    {$IFDEF FPC}
+    Shutdown(FSocket,SHUT_RDWR);
+    {$ELSE}
+    Shutdown(FSocket,SD_BOTH);
+    {$ENDIF}
     CloseSocket(FSocket);
-
+  end;
   PActive:=false;
   Ok:=true;
   FSocket:=0
