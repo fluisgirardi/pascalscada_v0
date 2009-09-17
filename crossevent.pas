@@ -49,6 +49,8 @@ type
   @seealso(TCrossEvent)
   }
   TINTRTLEvent = record
+    EventAttr:Pointer;
+    Name:String;
     condvar: pthread_cond_t;
     mutex: pthread_mutex_t;
     isset: boolean;
@@ -157,6 +159,8 @@ begin
   pthread_mutex_init(@FEvent.mutex, nil);
   FEvent.isset:= InitialState;
   FEvent.IsDestroing := false;
+  FEvent.Name:=Name;
+  FEvent.EventAttr:=EventAttributes;
   {$ELSE}
   FEvent := TEvent.Create(EventAttributes,AManualReset,InitialState,Name);
   {$IFEND}

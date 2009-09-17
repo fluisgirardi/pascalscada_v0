@@ -10,7 +10,7 @@ unit HMIZones;
 
 interface
 
-uses Classes, SysUtils, hsutils, Controls, Graphics;
+uses Classes, SysUtils, hsutils, Controls, Graphics {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type
   {:

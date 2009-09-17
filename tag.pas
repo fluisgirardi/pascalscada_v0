@@ -97,8 +97,6 @@ type
     procedure IncCommWriteOK(value:Cardinal);
     //: Incrementa o contador de falhas de escrita do tag.
     procedure IncCommWriteFaults(value:Cardinal);
-    //: @exclude
-    procedure Loaded; override;
 
     //: Caso @true, o tag será lido automaticamente.
     property AutoRead:Boolean read PAutoRead;
@@ -290,13 +288,6 @@ begin
   inc(PCommWriteErrors,value);
   if value>0 then
     NotifyWriteFault;
-end;
-
-procedure TTag.Loaded;
-begin
-  inherited Loaded;
-  if PScanTime<1 then
-    PScanTime:=1;
 end;
 
 end.

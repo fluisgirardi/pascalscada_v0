@@ -19,11 +19,8 @@ type
     FHostName:String;
     FPortNumber:Integer;
     FTimeout:Integer;
-
     FSocket:Tsocket;
-
     FPortType:TPortType;
-
     procedure SetHostname(target:string);
     procedure SetPortNumber(pn:Integer);
     procedure SetTimeout(t:Integer);
@@ -103,7 +100,12 @@ begin
 
   Packet^.Received := 0;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
+    {$IFDEF FPC}
+    lidos := fprecv(FSocket, @Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
+    {$ELSE}
     lidos := Recv(FSocket, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
+    {$ENDIF}
+
     if lidos<0 then begin
       Packet^.ReadIOResult := CheckConnection;
       exit;
@@ -132,7 +134,12 @@ begin
 
   Packet^.Wrote := 0;
   while (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
+    {$IFDEF FPC}
+    escritos := fpsend(FSocket, @Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
+    {$ELSE}
     escritos := Send(FSocket, Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
+    {$ENDIF}
+
     if escritos<0 then begin
       Packet^.ReadIOResult := CheckConnection;
       exit;
@@ -166,7 +173,7 @@ var
   ServerAddr:PHostEnt;
 {$ENDIF}
   channel:sockaddr_in;
-  flag, bufsize:Integer;
+  flag, bufsize, sockType:Integer;
 begin
   Ok:=false;
   {$IFNDEF FPC}
@@ -194,13 +201,18 @@ begin
 
     case FPortType of
       ptTCP:
-        FSocket := Socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+        sockType := IPPROTO_TCP;
       ptUDP:
-        FSocket := Socket(PF_INET, SOCK_STREAM, IPPROTO_UDP);
+        sockType := IPPROTO_UDP;
       else begin
         PActive:=false;
         exit;
       end;
+      {$IFDEF FPC}
+      FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
+      {$ELSE}
+      FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
+      {$ENDIF}
     end;
 
     if FSocket<0 then begin
@@ -216,15 +228,15 @@ begin
     tv.tv_sec:=(FTimeout div 1000);
     tv.tv_usec:=(FTimeout mod 1000) * 1000;
 
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVTIMEO, tv,      sizeof(tv));
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDTIMEO, tv,      sizeof(tv));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, @tv,      sizeof(tv));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, @tv,      sizeof(tv));
     {$ELSE}
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVTIMEO, FTimeout, sizeof(FTimeout));
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDTIMEO, FTimeout, sizeof(FTimeout));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, @FTimeout, sizeof(FTimeout));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, @FTimeout, sizeof(FTimeout));
     {$ENDIF}
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_RCVBUF,   bufsize,  sizeof(Integer));
-    SetSocketOptions(FSocket, SOL_SOCKET,  SO_SNDBUF,   bufsize,  sizeof(Integer));
-    SetSocketOptions(FSocket, IPPROTO_TCP, TCP_NODELAY, flag,     sizeof(Integer));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   @bufsize,  sizeof(Integer));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   @bufsize,  sizeof(Integer));
+    fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, @flag,     sizeof(Integer));
     {$ELSE}
     setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
     setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
@@ -242,7 +254,7 @@ begin
     channel.sin_port        := htons(FPortNumber);
 
     {$IFDEF FPC}
-    if not Connect(FSocket,channel,sizeof(sockaddr_in)) then begin
+    if fpconnect(FSocket,@channel,sizeof(sockaddr_in))<>0 then begin
     {$ELSE}
     if Connect(FSocket,channel,sizeof(sockaddr_in))<>0 then begin
     {$ENDIF}
@@ -266,7 +278,7 @@ procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
   if FSocket>0 then begin
     {$IFDEF FPC}
-    Shutdown(FSocket,SHUT_RDWR);
+    fpshutdown(FSocket,SHUT_RDWR);
     {$ELSE}
     Shutdown(FSocket,SD_BOTH);
     {$ENDIF}

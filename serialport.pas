@@ -423,7 +423,7 @@ erro1:
 var
    paridade:TParityType;
    bps:Longint;
-   bytelen, databits, stopbits, r:Integer;
+   r:Integer;
    tios:termios;
 begin
   //abre a porta
