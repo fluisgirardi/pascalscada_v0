@@ -8,7 +8,13 @@ interface
 
 uses
   Classes, SysUtils, CommPort, commtypes
-  {$IFDEF FPC}, Sockets {$ELSE} , Windows, WinSock {$ENDIF};
+  {$IF defined(WIN32) or defined(WIN64)}
+  , Windows, WinSock
+  {$ELSE}
+  {$IFDEF FPC}
+  , Sockets
+  {$ENDIF}
+  {$IFEND};
 
 type
 
@@ -47,7 +53,9 @@ type
 implementation
 
 {$ifdef fpc}
-uses netdb {$IFDEF UNIX}, Unix {$endif};
+{$IFDEF UNIX}
+uses  netdb, Unix;
+{$endif}
 {$ENDIF}
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
@@ -100,11 +108,11 @@ begin
 
   Packet^.Received := 0;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
-    {$IFDEF FPC}
+    {$IF defined(UNIX) and defined(FPC)}
     lidos := fprecv(FSocket, @Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
     {$ELSE}
     lidos := Recv(FSocket, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
-    {$ENDIF}
+    {$IFEND}
 
     if lidos<0 then begin
       Packet^.ReadIOResult := CheckConnection;
@@ -134,11 +142,11 @@ begin
 
   Packet^.Wrote := 0;
   while (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
-    {$IFDEF FPC}
+    {$IF defined(UNIX) and defined(FPC)}
     escritos := fpsend(FSocket, @Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
     {$ELSE}
     escritos := Send(FSocket, Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
-    {$ENDIF}
+    {$IFEND}
 
     if escritos<0 then begin
       Packet^.ReadIOResult := CheckConnection;
@@ -164,23 +172,21 @@ end;
 
 procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
 var
-{$IFDEF FPC}
+{$IF defined(UNIX) and defined(FPC)}
   ServerAddr:THostEntry;
-  {$ifdef UNIX}
   tv:timeval;
-  {$ENDIF}
 {$ELSE}
   ServerAddr:PHostEnt;
-{$ENDIF}
+{$IFEND}
   channel:sockaddr_in;
   flag, bufsize, sockType:Integer;
 begin
   Ok:=false;
-  {$IFNDEF FPC}
+  {$IF defined(WIN32) or defined(WIN64)}
   ServerAddr:=nil;
-  {$ENDIF}
+  {$IFEND}
   try
-    {$IFDEF FPC}
+    {$IF defined(UNIX) and defined(FPC)}
     if not GetHostByName(FHostName,ServerAddr) then begin
       ServerAddr.Addr:=StrToHostAddr(FHostName);
       if ServerAddr.Addr.s_addr=0 then begin
@@ -196,7 +202,7 @@ begin
       RefreshLastOSError;
       exit;
     end;
-    {$ENDIF}
+    {$IFEND}
 
     case FPortType of
       ptTCP:
@@ -208,11 +214,11 @@ begin
         exit;
       end;
     end;
-    {$IFDEF FPC}
+    {$IF defined(UNIX) and defined(FPC)}
     FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
     {$ELSE}
     FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
-    {$ENDIF}
+    {$IFEND}
 
     if FSocket<0 then begin
       PActive:=false;
@@ -222,17 +228,12 @@ begin
 
     flag:=1;
     bufsize := 1024*16;
-    {$IFDEF FPC}
-    {$IFDEF UNIX}
+    {$IF defined(UNIX) and defined(FPC)}
     tv.tv_sec:=(FTimeout div 1000);
     tv.tv_usec:=(FTimeout mod 1000) * 1000;
 
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, @tv,      sizeof(tv));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, @tv,      sizeof(tv));
-    {$ELSE}
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, @FTimeout, sizeof(FTimeout));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, @FTimeout, sizeof(FTimeout));
-    {$ENDIF}
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, @flag,     sizeof(Integer));
@@ -242,21 +243,21 @@ begin
     setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   PAnsiChar(@bufsize),  sizeof(Integer));
     setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   PAnsiChar(@bufsize),  sizeof(Integer));
     setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, PAnsiChar(@flag),     sizeof(Integer));
-    {$ENDIF}
+    {$IFEND}
 
     channel.sin_family      := AF_INET;
-    {$IFDEF FPC}
+    {$IF defined(UNIX) and defined(FPC)}
     channel.sin_addr.S_addr := htonl(ServerAddr.Addr.s_addr);
     {$ELSE}
     channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
-    {$ENDIF}
+    {$IFEND}
     channel.sin_port        := htons(FPortNumber);
 
-    {$IFDEF FPC}
+    {$IF defined(UNIX) and defined(FPC)}
     if fpconnect(FSocket,@channel,sizeof(sockaddr_in))<>0 then begin
     {$ELSE}
     if Connect(FSocket,channel,sizeof(sockaddr_in))<>0 then begin
-    {$ENDIF}
+    {$IFEND}
       PActive:=false;
       RefreshLastOSError;
       exit;
@@ -264,9 +265,9 @@ begin
     Ok:=true;
     PActive:=true;
   finally
-    {$IFNDEF FPC}
-    if ServerAddr<>nil then
-      Freemem(ServerAddr);
+    {$IFDEF WINDOWS}
+    //if ServerAddr<>nil then
+    //  Freemem(ServerAddr);
     {$ENDIF}
     if not Ok then
       CloseSocket(FSocket);
@@ -276,11 +277,11 @@ end;
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
   if FSocket>0 then begin
-    {$IFDEF FPC}
+    {$IF defined(UNIX) and defined(FPC)}
     fpshutdown(FSocket,SHUT_RDWR);
     {$ELSE}
-    Shutdown(FSocket,SD_BOTH);
-    {$ENDIF}
+    Shutdown(FSocket,2);
+    {$IFEND}
     CloseSocket(FSocket);
   end;
   PActive:=false;
@@ -304,7 +305,7 @@ begin
   //verificar se ha como limpar os buffers de uma porta TCP...
 end;
 
-{$IFNDEF FPC}
+{$IF defined(WIN32) or defined(WIN64)}
 var
   wsaData:TWSAData;
   version:WORD;
@@ -325,5 +326,5 @@ initialization
   end;
 finalization
   WSACleanup;
-{$ENDIF}
+{$IFEND}
 end.
