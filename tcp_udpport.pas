@@ -198,7 +198,6 @@ begin
     end;
     {$ENDIF}
 
-
     case FPortType of
       ptTCP:
         sockType := IPPROTO_TCP;
@@ -208,12 +207,12 @@ begin
         PActive:=false;
         exit;
       end;
-      {$IFDEF FPC}
-      FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
-      {$ELSE}
-      FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
-      {$ENDIF}
     end;
+    {$IFDEF FPC}
+    FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
+    {$ELSE}
+    FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
+    {$ENDIF}
 
     if FSocket<0 then begin
       PActive:=false;
