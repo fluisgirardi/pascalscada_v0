@@ -68,12 +68,12 @@ begin
   {$ELSE}
   FloatToDecimal(x,Value,fvExtended,19,0);
   {$ENDIF}
-  while (c<20) and (x.Digits[c]<>#0) do
+  while (c<19) and (x.Digits[c]<>#0) do
     inc(c);
   t := c; //armazena o tamanho
   dec(c);
   pos := c;
-  while (c<20) and ((x.Digits[c]>='0') and (x.Digits[c]<='9')) do begin
+  while ((c>=0) and (c<19)) and and ((x.Digits[c]>='0') and (x.Digits[c]<='9')) do begin
     Result := Result + (Byte(x.Digits[c])-48) * power(10,pos - c);
     Dec(c);
   end;
