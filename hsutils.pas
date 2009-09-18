@@ -47,7 +47,7 @@ begin
   t := c; //armazena o tamanho
   dec(c);
   pos := c;
-  while (c<10) and ((x.Digits[c]>='0') and (x.Digits[c]<='9')) do begin
+  while ((c>=0) and (c<10)) and ((x.Digits[c]>='0') and (x.Digits[c]<='9')) do begin
     Result := Result + (Byte(x.Digits[c])-48) * power(10,pos - c);
     Dec(c);
   end;

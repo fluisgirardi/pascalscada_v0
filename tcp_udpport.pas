@@ -12,7 +12,7 @@ uses
   , Windows, WinSock
   {$ELSE}
   {$IFDEF FPC}
-  , Sockets
+  , Sockets, BaseUnix
   {$ENDIF}
   {$IFEND};
 
@@ -39,7 +39,7 @@ type
     procedure PortStop(var Ok:Boolean); override;
     function  ComSettingsOK:Boolean; override;
     procedure ClearALLBuffers; override;
-    function  CheckConnection:TIOResult; virtual;
+    function  CheckConnection(var CommResult:TIOResult):Boolean; virtual;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -115,8 +115,10 @@ begin
     {$IFEND}
 
     if lidos<0 then begin
-      Packet^.ReadIOResult := CheckConnection;
-      exit;
+      if CheckConnection(Packet^.ReadIOResult) then begin
+        inc(tentativas);
+        continue;
+      end;
     end else
       Packet^.Received := Packet^.Received + lidos;
     inc(tentativas);
@@ -149,8 +151,10 @@ begin
     {$IFEND}
 
     if escritos<0 then begin
-      Packet^.ReadIOResult := CheckConnection;
-      exit;
+      if CheckConnection(Packet^.WriteIOResult) then begin
+        inc(tentativas);
+        continue;
+      end;
     end else
       Packet^.Wrote := Packet^.Wrote + escritos;
     inc(tentativas);
@@ -247,7 +251,7 @@ begin
 
     channel.sin_family      := AF_INET;
     {$IF defined(UNIX) and defined(FPC)}
-    channel.sin_addr.S_addr := htonl(ServerAddr.Addr.s_addr);
+    channel.sin_addr.S_addr := longword(htonl(LongInt(ServerAddr.Addr.s_addr)));
     {$ELSE}
     channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
     {$IFEND}
@@ -294,10 +298,51 @@ begin
   Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
 end;
 
-function TTCP_UDPPort.CheckConnection:TIOResult;
+function TTCP_UDPPort.CheckConnection(var CommResult:TIOResult):Boolean;
 begin
-  //verificar erros de porta
-  Result := iorPortError;
+  //CommResult informa o resultado da IO
+  //Result informa se a acao deve ser retomada.
+  {$IF defined(WIN32) or defined(WIN64)}
+
+  {$ELSE}
+  case socketerror of
+    EsockEINTR, EsockEINVAL:
+      Result:= true;
+
+    EsockENOTCONN,
+    EsockENOTSOCK,
+    EsockEBADF,
+    ESysECONNRESET,
+    ESysECONNABORTED,
+    ESysECONNREFUSED: begin
+      PActive:=false;
+      CommResult:=iorNotReady;
+      Result:=false;
+    end;
+
+    EsockEFAULT,
+    EsockEACCESS,
+    EsockEMFILE,
+    EsockEMSGSIZE,
+    EsockENOBUFS,
+    ESysEIO: begin
+      CommResult:=iorPortError;
+      Result:=false;
+    end;
+
+    EsockEPROTONOSUPPORT: begin
+      PActive:=false;
+      CommResult:=iorPortError;
+      Result:=false;
+    end;
+
+    ESysEAGAIN,
+    ESysETIMEDOUT: begin
+      CommResult:=iorTimeOut;
+      Result:=true;
+    end;
+  end;
+  {$IFEND}
 end;
 
 procedure TTCP_UDPPort.ClearALLBuffers;

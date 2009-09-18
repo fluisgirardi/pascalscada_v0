@@ -253,7 +253,7 @@ function  TTagBit.GetInvBitMask:Integer;
 var
    c:Integer;
 begin
-   Result := $FFFFFFFF;
+   Result := -1;
    for c:=PStartBit to PEndBit do begin
       Result := Result xor Power(2,c);
    end;

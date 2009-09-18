@@ -377,6 +377,7 @@ uses Math;
 
 constructor TRegisterRange.Create(AdrStart,AdrEnd:Cardinal);
 begin
+  inherited Create;
   FStartAddress := AdrStart;
   FEndAddress := AdrEnd;
   FReadOK := 0;
@@ -429,6 +430,7 @@ end;
 destructor  TRegisterRangeBinary.Destroy;
 begin
   SetLength(FValues,0);
+  inherited Destroy;
 end;
 
 function  TRegisterRangeBinary.GetValue(index:Integer):Double;
@@ -457,6 +459,7 @@ end;
 destructor  TRegisterRangeNibble.Destroy;
 begin
   SetLength(FValues,0);
+  inherited Destroy;
 end;
 
 function  TRegisterRangeNibble.GetValue(index:Integer):Double;
@@ -482,6 +485,7 @@ end;
 destructor  TRegisterRangeByte.Destroy;
 begin
   SetLength(FValues,0);
+  inherited Destroy;
 end;
 
 function  TRegisterRangeByte.GetValue(index:Integer):Double;
@@ -507,15 +511,20 @@ end;
 destructor  TRegisterRangeWord.Destroy;
 begin
   SetLength(FValues,0);
+  inherited Destroy;
 end;
 
 function  TRegisterRangeWord.GetValue(index:Integer):Double;
 begin
+  if (index<0) or (index>High(FValues)) then
+    raise Exception.Create('fora dos limites');
   Result := FValues[index];
 end;
 
 procedure TRegisterRangeWord.SetValue(index:Integer; v:Double);
 begin
+  if (index<0) or (index>High(FValues)) then
+    raise Exception.Create('fora dos limites');
   FValues[index] := Word(FloatToInteger(v) and $FFFF);
 end;
 
@@ -532,6 +541,7 @@ end;
 destructor  TRegisterRangeCardinal.Destroy;
 begin
   SetLength(FValues,0);
+  inherited Destroy;
 end;
 
 function  TRegisterRangeCardinal.GetValue(index:Integer):Double;
@@ -557,6 +567,7 @@ end;
 destructor  TRegisterRangeFloat.Destroy;
 begin
   SetLength(FValues,0);
+  inherited Destroy;
 end;
 
 function  TRegisterRangeFloat.GetValue(index:Integer):Double;
@@ -665,7 +676,7 @@ var
 begin
   c:=0;
   //esse while para quando encontra o endereco desejado ou qdo acaba a lista!!
-  while (add>=FAddress[c].Address) and (c<=high(FAddress)) do
+  while (c<=high(FAddress)) and (add>=FAddress[c].Address) do
     inc(c);
   //se não encontrou cai fora...
   if (c>high(FAddress)) or (FAddress[c].Address<>Add) then exit;
