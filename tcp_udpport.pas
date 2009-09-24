@@ -12,7 +12,7 @@ uses
   , Windows, WinSock
   {$ELSE}
   {$IFDEF FPC}
-  , Sockets, BaseUnix
+  , Sockets, BaseUnix, LCLProc
   {$ENDIF}
   {$IFEND};
 
@@ -54,7 +54,7 @@ implementation
 
 {$ifdef fpc}
 {$IFDEF UNIX}
-uses  netdb, Unix;
+uses  netdb, Unix, termio;
 {$endif}
 {$ENDIF}
 
@@ -103,6 +103,12 @@ var
   tentativas:Cardinal;
 begin
 
+  if Packet=nil then begin
+    DebugLn('Nil pkg in TCPUDPPort.Write');
+    DumpStack;
+    exit;
+  end;
+
   tentativas := 0;
   lidos := 0;
 
@@ -138,6 +144,12 @@ var
   escritos:Integer;
   tentativas:Cardinal;
 begin
+
+  if Packet=nil then begin
+    DebugLn('Nil pkg in TCPUDPPort.Write');
+    DumpStack;
+    exit;
+  end;
 
   tentativas := 0;
   escritos := 0;
@@ -346,8 +358,11 @@ begin
 end;
 
 procedure TTCP_UDPPort.ClearALLBuffers;
+var
+  dummy:Boolean;
 begin
-  //verificar se ha como limpar os buffers de uma porta TCP...
+  PortStop(dummy);
+  PortStart(dummy);
 end;
 
 {$IF defined(WIN32) or defined(WIN64)}

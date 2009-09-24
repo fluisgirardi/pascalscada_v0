@@ -80,7 +80,7 @@ type
 
 implementation
 
-uses Forms;
+uses Forms, LCLProc;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
@@ -128,6 +128,8 @@ begin
           {$ENDIF}
       except
         on E: Exception do begin
+          DebugLn('TScanThread.Execute::' + e.Message);
+          DumpStack;
           erro := E;
           Synchronize(SyncException);
         end;

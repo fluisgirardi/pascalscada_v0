@@ -25,12 +25,12 @@ type
     PCmdPacket:PCommandPacket;
     PInitEventHandle:TCrossEvent;
     PDoSomethingEventHandle:TCrossEvent;
-    PCanceledCallbacks:array of TDriverCallBack;
+    PCanceledCallbacks:array of Pointer;
     PCanceledCount:Integer;
     FSpool:TMessageSpool;
     procedure DoSomething;
     procedure WaitToDoSomething;
-    function CanceledCallBack(CallBack:TDriverCallBack):Boolean;
+    function CanceledCallBack(CallBack:Pointer):Boolean;
   protected
     //: @exclude
     procedure Execute; override;
@@ -426,7 +426,7 @@ type
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings;
+uses SysUtils, ProtocolDriver, hsstrings, LCLProc;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -468,17 +468,18 @@ procedure TUpdateThread.Execute;
 var
   c:integer;
   found:Boolean;
-  dcallBack:TDriverCallBack;
+  dcallBack:Pointer;
 begin
   PInitEventHandle.SetEvent;
   while not Terminated do begin
-    WaitToDoSomething;
-    while FSpool.PeekMessage(PMsg,WM_CALLBACK,WM_CANCELCALLBACK,true) do begin
+    try
+      WaitToDoSomething;
+      while FSpool.PeekMessage(PMsg,WM_CALLBACK,WM_CANCELCALLBACK,true) do begin
         case PMsg.MsgID of
           WM_CALLBACK:
           begin
             PCmdPacket := PCommandPacket(PMsg.wParam);
-            if Assigned(PCmdPacket^.Callback) and (not CanceledCallBack(PCmdPacket^.Callback)) then
+            if Assigned(PCmdPacket^.Callback) and (not CanceledCallBack(@PCmdPacket^.Callback)) then
                PCmdPacket^.Callback(PCmdPacket^.Packet);
             SetLength(PCmdPacket^.Packet.BufferToWrite, 0);
             SetLength(PCmdPacket^.Packet.BufferToRead, 0);
@@ -487,9 +488,9 @@ begin
           WM_CANCELCALLBACK:
           begin
             found := false;
-            dcallBack := PDriverCallBack(PMsg.wParam)^;
+            dcallBack := PMsg.wParam;
             for c:=0 to High(PCanceledCallbacks) do
-              if (@dcallBack)=(@PCanceledCallbacks[c]) then begin
+              if dcallBack=PCanceledCallbacks[c] then begin
                 found := true;
                 break;
               end;
@@ -502,9 +503,9 @@ begin
           WM_RESUMECALLBACK:
           begin
             found := false;
-            dcallBack := PDriverCallBack(PMsg.wParam)^;
+            dcallBack := PMsg.wParam;
             for c:=0 to High(PCanceledCallbacks) do
-              if (@dcallBack)=(@PCanceledCallbacks[c]) then begin
+              if dcallBack=PCanceledCallbacks[c] then begin
                 found := true;
                 break;
               end;
@@ -515,20 +516,15 @@ begin
             end;
           end;
         end;
-//      except
-//      end;
+      end;
+    except
+      on e:Exception do begin
+        DebugLn('Exception in UpdateThread: '+ E.Message);
+        DumpStack;
+      end;
     end;
   end;
 end;
-
-//procedure TUpdateThread.CallCallBack;
-//begin
-//  try
-//    if Assigned(PCmdPacket^.Callback) then
-//      PCmdPacket^.Callback(PCmdPacket^.Packet^);
-//  except
-//  end;
-//end;
 
 procedure TUpdateThread.DoSomething;
 begin
@@ -560,13 +556,13 @@ begin
   DoSomething
 end;
 
-function TUpdateThread.CanceledCallBack(CallBack:TDriverCallBack):Boolean;
+function TUpdateThread.CanceledCallBack(CallBack:Pointer):Boolean;
 var
   c:Integer;
 begin
   Result := false;
   for c:=0 to High(PCanceledCallBacks) do
-    if (@PCanceledCallbacks[c])=(@CallBack) then begin
+    if PCanceledCallbacks[c]=CallBack then begin
       Result := true;
       break;
     end;
@@ -1078,12 +1074,19 @@ begin
   //sinaliza q a fila de mensagens esta criada
   PInitEventHandle.SetEvent;
   while (not Terminated) do begin
-    WaitToDoSomething;
-    CheckWriteCmd;
-    while (not Terminated) and FSpool.PeekMessage(PMsg,WM_READ_READ,WM_READ_WRITEREAD,true) do begin
+    try
+      WaitToDoSomething;
       CheckWriteCmd;
-      commandpacket := PCommandPacket(PMsg.wParam);
-      DoIOCommand(PMsg, commandpacket);
+      while (not Terminated) and FSpool.PeekMessage(PMsg,WM_READ_READ,WM_READ_WRITEREAD,true) do begin
+        CheckWriteCmd;
+        commandpacket := PCommandPacket(PMsg.wParam);
+        DoIOCommand(PMsg, commandpacket);
+      end;
+    except
+      on e:Exception do begin
+        DebugLn('Exception in TThreadComm: '+ E.Message);
+        DumpStack;
+      end;
     end;
   end;
 end;

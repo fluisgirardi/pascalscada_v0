@@ -96,6 +96,7 @@ type
   }
   TModBusDriver = class(TProtocolDriver)
   protected
+    FReadEvent:TCrossEvent;
     POutputMaxHole:Cardinal;
     PInputMaxHole:Cardinal;
     PRegistersMaxHole:Cardinal;
@@ -105,6 +106,8 @@ type
     procedure SetInputMaxHole(v:Cardinal);
     procedure SetRegisterMaxHole(v:Cardinal);
     procedure BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
+
+    procedure CancelPendingActions; override;
 
     //: Cria um pacote modbus
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; virtual;
@@ -160,6 +163,7 @@ implementation
 constructor TModBusDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FReadEvent := TCrossEvent.Create(nil,true,false,'');
   POutputMaxHole := 50;
   PInputMaxHole := 50;
   PRegistersMaxHole := 10;
@@ -179,6 +183,7 @@ begin
       PModbusPLC[plc].AnalogReg.Destroy;
   end;
   SetLength(PModbusPLC,0);
+  FReadEvent.Destroy;
 end;
 
 
@@ -770,25 +775,22 @@ end;
 
 function  TModBusDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
-  Event:TCrossEvent;
   IOResult:TIOPacket;
   pkg:BYTES;
   rl:Integer;
   res:Integer;
 begin
   try
-    Event:=TCrossEvent.Create(nil,true,false,'');
     pkg := EncodePkg(tagrec,nil,rl);
     if PCommPort<>nil then begin
-      Event.ResetEvent;
       if Sync then
         res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult)
       else begin
-        res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,Event,@IOResult);
-        AddPendingAction(Event);
+        FReadEvent.ResetEvent;
+        res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,FReadEvent,@IOResult);
       end;
 
-      if (res<>0) and (Sync or (Event.WaitFor(2000)=wrSignaled)) then
+      if (res<>0) and (Sync or (FReadEvent.WaitFor(60000)=wrSignaled)) then
         Result := DecodePkg(IOResult,values);
 
     end else
@@ -797,8 +799,6 @@ begin
     SetLength(pkg,0);
     SetLength(IOResult.BufferToRead,0);
     SetLength(IOResult.BufferToWrite,0);
-    RemovePendingAction(Event);
-    Event.Destroy;
   end;
 end;
 
@@ -824,6 +824,11 @@ var
 begin
   for plc:=0 to High(PModbusPLC) do
     PModbusPLC[plc].Registers.MaxHole := v;
+end;
+
+procedure TModBusDriver.CancelPendingActions;
+begin
+  FReadEvent.SetEvent;
 end;
 
 procedure TModBusDriver.BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);

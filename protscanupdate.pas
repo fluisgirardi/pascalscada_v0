@@ -72,7 +72,7 @@ type
 
 implementation
 
-uses Forms;
+uses LCLProc, Forms;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
@@ -143,6 +143,8 @@ begin
             TagCBack:=nil;
          except
             on E: Exception do begin
+               DebugLn('TScanUpdate.Execute:: ' + e.Message);
+               DumpStack;
                Ferro := E;
                Synchronize(SyncException);
             end;

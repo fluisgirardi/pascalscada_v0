@@ -18,18 +18,18 @@
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
-        <SmallerCode Value="True"/>
+        <SmartLinkUnit Value="True"/>
+        <Checks>
+          <IOChecks Value="True"/>
+          <RangeChecks Value="True"/>
+          <OverflowChecks Value="True"/>
+          <StackChecks Value="True"/>
+        </Checks>
+        <VerifyObjMethodCallValidity Value="True"/>
         <Optimizations>
-          <VariablesInRegisters Value="True"/>
-          <OptimizationLevel Value="3"/>
+          <OptimizationLevel Value="0"/>
         </Optimizations>
       </CodeGeneration>
-      <Linking>
-        <Debugging>
-          <GenerateDebugInfo Value="True"/>
-          <UseLineInfoUnit Value="False"/>
-        </Debugging>
-      </Linking>
       <Other>
         <WriteFPCLogo Value="False"/>
         <CompilerPath Value="$(CompPath)"/>
@@ -246,6 +246,7 @@
       </Item2>
     </RequiredPkgs>
     <UsageOptions>
+      <CustomOptions Value="-dUseCThreads"/>
       <UnitPath Value="$(PkgOutDir)\"/>
     </UsageOptions>
     <PublishOptions>
