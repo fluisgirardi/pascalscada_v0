@@ -790,7 +790,7 @@ begin
         res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,FReadEvent,@IOResult);
       end;
 
-      if (res<>0) and (Sync or (FReadEvent.WaitFor(60000)=wrSignaled)) then
+      if (res<>0) and (Sync or (FReadEvent.WaitFor($FFFFFFFF)=wrSignaled)) then
         Result := DecodePkg(IOResult,values);
 
     end else

@@ -1,7 +1,10 @@
-unit protscan;
+﻿unit protscan;
 
 {$IFDEF FPC}
 {$mode delphi}
+{$IFDEF DEBUG}
+  {$DEFINE FDEBUG}
+{$ENDIF}
 {$ENDIF}
 
 interface
@@ -80,7 +83,7 @@ type
 
 implementation
 
-uses Forms, LCLProc;
+uses Forms{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
@@ -128,8 +131,10 @@ begin
           {$ENDIF}
       except
         on E: Exception do begin
+          {$IFDEF FDEBUG}
           DebugLn('TScanThread.Execute::' + e.Message);
           DumpStack;
+          {$ENDIF}
           erro := E;
           Synchronize(SyncException);
         end;
@@ -174,7 +179,7 @@ end;
 
 procedure TScanThread.ScanWrite(SWPkg:PScanWriteRec);
 begin
-  if FInitEvent.WaitFor(50000)<>wrSignaled then
+  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
     raise Exception.Create('A thread está suspensa?');
 
   //envia a mensagem

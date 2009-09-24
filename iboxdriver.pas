@@ -1,4 +1,4 @@
-unit IBoxDriver;
+﻿unit IBoxDriver;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -616,7 +616,7 @@ begin
       96: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor(1000)<>wrSignaled then begin
+        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;
@@ -650,7 +650,7 @@ begin
       168: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor(1000)<>wrSignaled then begin
+        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;
@@ -701,7 +701,7 @@ begin
         PCommPort.Lock(PDriverID);
         PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor(1000)<>wrSignaled then begin
+        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;
@@ -771,7 +771,7 @@ begin
           event.ResetEvent;
           PCommPort.IOCommandASync(iocRead,nil,bytesRemaim,0,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-          if event.WaitFor(1000)<>wrSignaled then begin
+          if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
             Result:=ioTimeOut;
             exit;
           end;
@@ -877,7 +877,7 @@ begin
       204, 205: begin
         PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
 
-        if event.WaitFor(1000)<>wrSignaled then begin
+        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
           Result:=ioTimeOut;
           exit;
         end;

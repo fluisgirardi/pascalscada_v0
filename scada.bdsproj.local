@@ -3,5 +3,8 @@
 	<Transactions>
     <Transaction>2008/02/21 23:59:33.171.pas,C:\Documents and Settings\Fabio\Meus documentos\Desenvolvimento\HMI_SCADA\Unit1.pas=C:\Documents and Settings\Fabio\Meus documentos\Desenvolvimento\HMI_SCADA\UserScale.pas</Transaction>
     <Transaction>2009/02/17 08:48:12.075.pas,C:\HMI_SCADA\scadaapp.pas=</Transaction>
+    <Transaction>2009/09/11 12:12:36.160.pas,C:\HMI_SCADA\Unit1.pas=C:\HMI_SCADA\modbuscommon.pas</Transaction>
+    <Transaction>2009/09/11 13:08:59.691.pas,C:\HMI_SCADA\modbuscommon.pas=</Transaction>
+    <Transaction>2009/09/11 13:09:03.504.pas,C:\HMI_SCADA\modbustcpmaster.pas=</Transaction>
   </Transactions>
 </BorlandProject>

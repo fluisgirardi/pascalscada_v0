@@ -3,6 +3,9 @@ unit ModBusTCP;
 
 {$IFDEF FPC}
 {$mode delphi}
+{$IFDEF DEBUG}
+  {$DEFINE FDEBUG}
+{$ENDIF}
 {$ENDIF}
 
 interface
@@ -25,7 +28,7 @@ type
 
 implementation
 
-uses Math, hsutils, PLCMemoryMananger, SysUtils, LCLProc;
+uses Math, hsutils, PLCMemoryMananger, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var
@@ -232,22 +235,28 @@ var
    address, len:Cardinal;
    foundPLC:Boolean;
    aux:TPLCMemoryManager;
+   {$IFDEF FDEBUG}
    debug:string;
+   {$ENDIF}
 begin
   //se algumas das IOs falhou,
   if (pkg.ReadIOResult<>iorOK) or (pkg.WriteIOResult<>iorOK) then begin
+    {$IFDEF FDEBUG}
     DebugLn('Falha no pacote enviado e/ou recebido!');
+    {$ENDIF}
     Result := ioCommError;
     exit;
   end;
   
   //se o endereco retornado nao conferem com o selecionado...
   if (pkg.BufferToWrite[6]<>pkg.BufferToRead[6]) then begin
+    {$IFDEF FDEBUG}
     debug := '';
     for c := 0 to High(pkg.BufferToRead) do
       debug := debug + IntToHex(pkg.BufferToRead[c], 2);
     DebugLn('Pacotes diferem no endereço. Hex do pacote recebido:');
     DebugLn(debug);
+    {$ENDIF}    
     Result := ioCommError;
     exit;
   end;

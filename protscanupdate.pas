@@ -1,7 +1,10 @@
-unit protscanupdate;
+﻿unit protscanupdate;
 
 {$IFDEF FPC}
 {$mode delphi}
+{$IFDEF DEBUG}
+  {$DEFINE FDEBUG}
+{$ENDIF}
 {$ENDIF}
 
 interface
@@ -72,7 +75,7 @@ type
 
 implementation
 
-uses LCLProc, Forms;
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} Forms;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
@@ -143,8 +146,10 @@ begin
             TagCBack:=nil;
          except
             on E: Exception do begin
+               {$IFDEF FDEBUG}
                DebugLn('TScanUpdate.Execute:: ' + e.Message);
                DumpStack;
+               {$ENDIF}
                Ferro := E;
                Synchronize(SyncException);
             end;
@@ -163,7 +168,7 @@ procedure TScanUpdate.ScanRead(Tag:TTagRec);
 var
   tagpkg:PTagRec;
 begin
-  if FInitEvent.WaitFor(50000)<>wrSignaled then
+  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
     raise Exception.Create('A thread está suspensa?');
 
   New(tagpkg);
@@ -174,7 +179,7 @@ end;
 
 procedure TScanUpdate.ScanWriteCallBack(SWPkg:PScanWriteRec);
 begin
-  if FInitEvent.WaitFor(50000)<>wrSignaled then
+  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
     raise Exception.Create('A thread está suspensa?');
 
    FSpool.PostMessage(WM_TAGSCANWRITE,SWPkg,nil,true);

@@ -12,7 +12,7 @@ uses
   PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
    HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
-   HMIText, HMIZones, hmipropeditor, hsstrings, HMIButton, TagBit,
+   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit,
    WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP,
   {$IFDEF FPC}
     LResources, PropEdits;
@@ -31,7 +31,7 @@ begin
   RegisterComponents(strPortsPallete,     [TSerialPortDriver]);
   RegisterComponents(strPortsPallete,     [TTCP_UDPPort]);
   RegisterComponents(strProtocolsPallete, [TModBusRTUDriver]);
-  RegisterComponents(strProtocolsPallete, [TModBusTCPDriver]);  
+  RegisterComponents(strProtocolsPallete, [TModBusTCPDriver]);
   RegisterComponents(strProtocolsPallete, [TWestASCIIDriver]);
   RegisterComponents(strProtocolsPallete, [TIBoxDriver]);
   RegisterComponents(strUtilsPallete,     [TPIPE]);
@@ -54,7 +54,7 @@ begin
   RegisterComponents(strControlsPallete,  [THMIScrollBar]);
   RegisterComponents(strControlsPallete,  [THMIAnimation]);
   RegisterComponents(strControlsPallete,  [THMIText]);
-  RegisterComponents(strControlsPallete,  [THMIButton]);
+  //RegisterComponents(strControlsPallete,  [THMIButton]);
 
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,  'Index',   TElementIndexPropertyEditor);

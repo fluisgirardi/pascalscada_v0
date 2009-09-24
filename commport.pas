@@ -3,6 +3,9 @@ unit CommPort;
 
 {$IFDEF FPC}
 {$mode delphi}
+{$IFDEF DEBUG}
+  {$DEFINE FDEBUG}
+{$ENDIF}
 {$ENDIF}
 
 interface
@@ -426,7 +429,7 @@ type
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings, LCLProc;
+uses SysUtils, ProtocolDriver, hsstrings{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,7 +457,7 @@ end;
 
 procedure TUpdateThread.WaitInit;
 begin
-  if PInitEventHandle.WaitFor(60000)<>wrSignaled  then
+  if PInitEventHandle.WaitFor($FFFFFFFF)<>wrSignaled  then
     raise Exception.Create(strUpdateThreadWinit);
 end;
 
@@ -519,8 +522,10 @@ begin
       end;
     except
       on e:Exception do begin
+        {$IFDEF FDEBUG}
         DebugLn('Exception in UpdateThread: '+ E.Message);
         DumpStack;
+        {$ENDIF}
       end;
     end;
   end;
@@ -914,7 +919,7 @@ begin
     PCmdPackt^.Callback := CallBack;
 
     //espera a thread criar a fila de mensagens
-    if CommThread.WInitEvent.WaitFor(60000)<>wrSignaled then
+    if CommThread.WInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
       raise Exception.Create(strThreadSuspended);
 
     CommThread.IOCmd(Cmd,IsWriteValue,PCmdPackt);
@@ -1084,8 +1089,10 @@ begin
       end;
     except
       on e:Exception do begin
+        {$IFDEF FDEBUG}
         DebugLn('Exception in TThreadComm: '+ E.Message);
         DumpStack;
+        {$ENDIF}
       end;
     end;
   end;

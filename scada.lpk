@@ -35,7 +35,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Version Minor="5"/>
+    <Version Minor="6"/>
     <Files Count="49">
       <Item1>
         <Filename Value="commport.pas"/>

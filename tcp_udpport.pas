@@ -2,6 +2,9 @@
 
 {$IFDEF FPC}
 {$mode delphi}
+{$IFDEF DEBUG}
+  {$DEFINE FDEBUG}
+{$ENDIF}
 {$ENDIF}
 
 interface
@@ -12,7 +15,7 @@ uses
   , Windows, WinSock
   {$ELSE}
   {$IFDEF FPC}
-  , Sockets, BaseUnix, LCLProc
+  , Sockets, BaseUnix{$IFDEF FDEBUG}, LCLProc{$ENDIF}
   {$ENDIF}
   {$IFEND};
 
@@ -104,8 +107,10 @@ var
 begin
 
   if Packet=nil then begin
+    {$IFDEF FDEBUG}
     DebugLn('Nil pkg in TCPUDPPort.Write');
     DumpStack;
+    {$ENDIF}
     exit;
   end;
 
@@ -146,8 +151,10 @@ var
 begin
 
   if Packet=nil then begin
+    {$IFDEF FDEBUG}  
     DebugLn('Nil pkg in TCPUDPPort.Write');
     DumpStack;
+    {$ENDIF}
     exit;
   end;
 
@@ -315,7 +322,42 @@ begin
   //CommResult informa o resultado da IO
   //Result informa se a acao deve ser retomada.
   {$IF defined(WIN32) or defined(WIN64)}
+  case WSAGetLastError of
+    WSANOTINITIALISED,
+    WSAENETDOWN,
+    WSAEFAULT,
+    WSAENETRESET,
+    WSAENOTSOCK,
+    WSAECONNABORTED,
+    WSAENOTCONN,
+    WSAESHUTDOWN: begin
+      PActive:=false;
+      CommResult := iorNotReady;
+      Result := false;
+    end;
 
+    WSAEOPNOTSUPP: begin
+      PActive:=false;
+      CommResult:=iorPortError;
+      Result:=false;
+    end;
+
+    WSAEINVAL,
+    WSAEMSGSIZE: begin
+      Result := false;
+      CommResult := iorPortError;
+    end;
+
+    WSAEWOULDBLOCK:
+      Result := true;
+
+    WSAEINPROGRESS,    
+    WSAEINTR,
+    WSAETIMEDOUT: begin
+      CommResult:=iorTimeOut;
+      Result:=true;
+    end;
+  end;
   {$ELSE}
   case socketerror of
     EsockEINTR, EsockEINVAL:

@@ -1,4 +1,4 @@
-unit WestASCIIDriver;
+﻿unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -468,7 +468,7 @@ begin
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
 
-    if evento.WaitFor(60000)<>wrSignaled then begin
+    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
       Result := ioDriverError;
       exit;
     end;
@@ -746,7 +746,7 @@ begin
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
 
-    if evento.WaitFor(60000)<>wrSignaled then begin
+    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
       Result := ioDriverError;
       exit;
     end;
@@ -919,7 +919,7 @@ begin
     evento.ResetEvent;
     PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
 
-    if evento.WaitFor(5000)<>wrSignaled then begin
+    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
       Result := ioDriverError;
       exit;
     end;
@@ -967,7 +967,7 @@ begin
       end;
     end;
 
-    if evento.WaitFor(5000)<>wrSignaled then begin
+    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
       Result := ioDriverError;
       exit;
     end;
