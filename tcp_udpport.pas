@@ -401,10 +401,12 @@ end;
 
 procedure TTCP_UDPPort.ClearALLBuffers;
 var
-  dummy:Boolean;
+  dummy, initialState:Boolean;
 begin
+  initialState:=PActive;
   PortStop(dummy);
-  PortStart(dummy);
+  if initialState then
+    PortStart(dummy);
 end;
 
 {$IF defined(WIN32) or defined(WIN64)}
