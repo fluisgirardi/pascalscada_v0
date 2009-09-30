@@ -285,10 +285,6 @@ begin
     Ok:=true;
     PActive:=true;
   finally
-    {$IF defined(WIN32) or defined(WIN64)}
-    if ServerAddr<>nil then
-      FreeMemory(ServerAddr);
-    {$IFEND}
     if not Ok then
       CloseSocket(FSocket);
   end;
