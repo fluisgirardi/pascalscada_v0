@@ -81,8 +81,10 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+    {$IFNDEF FPC}
     //: @exclude
     property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
+    {$ENDIF}
     {:
     @name diz para o controle quando um valor alterado deve ser escrito no Tag.
     @seealso(TSendChange)
