@@ -1021,9 +1021,10 @@ begin
 {$ELSE}
 {$IF defined(WIN32) or defined(WIN64)}
   FLastOSErrorNumber:=GetLastError;
-  if FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER+FORMAT_MESSAGE_FROM_SYSTEM,nil,FLastOSErrorNumber,LANG_NEUTRAL,@Buffer,0,nil)<>0 then begin
+  GetMem(buffer, 512);
+  if FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM,nil,FLastOSErrorNumber,LANG_NEUTRAL,Buffer,512,nil)<>0 then begin
     FLastOSErrorMessage:=Buffer;
-    Freemem(buffer);
+    FreeMem(buffer);
   end else
     FLastOSErrorMessage:='Falha buscando a mensagem de erro do sistema operacional';
 {$IFEND}

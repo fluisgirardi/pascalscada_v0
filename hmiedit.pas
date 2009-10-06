@@ -42,9 +42,7 @@ type
     procedure SetSend(s:TSendChange);
     procedure SetShowFocused(f:Boolean);
     procedure RepaintFocus;
-    {$IFNDEF FPC}
     function  GetColor:TColor;
-    {$ENDIF}
     procedure FontChange(Sender: TObject);
     procedure SetPrefix(s:String);
     procedure SetSufix(s:String);
@@ -81,8 +79,10 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+    {$IFNDEF FPC}
     //: @exclude
     property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
+    {$ENDIF}
     {:
     @name diz para o controle quando um valor alterado deve ser escrito no Tag.
     @seealso(TSendChange)
@@ -112,7 +112,7 @@ type
     {:
     @name é a cor de fundo do controle.
     }
-    property Color:TColor read {$IFDEF FPC} FColor {$ELSE} GetColor {$ENDIF} Write SetColor;
+    property Color:TColor read GetColor Write SetColor;
     {:
     @name faz com que o controle passe a cor do fundo para a cor da fonte e
     vice-versa quando ele estiver com o foco.
@@ -154,13 +154,10 @@ begin
 
   FFontChangeEvent := Font.OnChange;
   Font.OnChange := FontChange;
-  {$IF defined(LCLGTK) or defined(LCLGTK2)}
-     FShowFocused := false;
-  {$ELSE}
-     FShowFocused := true;
-  {$IFEND}
+  FShowFocused := true;
   FFreezeValue := true;
   FNumberFormat := '#0.0';
+
 end;
 
 destructor  THMIEdit.Destroy;
@@ -206,7 +203,7 @@ procedure THMIEdit.Loaded;
 begin
   inherited Loaded;
   FDefFontColor := Font.Color;
-  FDefColor := Color;
+  FDefColor := inherited Color;
 end;
 
 procedure THMIEdit.SetHMITag(t:TPLCTag);
@@ -290,12 +287,10 @@ begin
   FBlockFontChange := false;
 end;
 
-{$IFNDEF FPC}
 function  THMIEdit.GetColor:TColor;
 begin
   Result := inherited Color;
 end;
-{$ENDIF}
 
 procedure THMIEdit.SetColor(c:TColor);
 begin
@@ -304,7 +299,8 @@ begin
   {$ELSE}
   inherited Color := c;
   {$ENDIF}
-  FDefColor := c;
+  if not FBlockFontChange then
+    FDefColor := c;
 end;
 
 procedure THMIEdit.SetPrefix(s:String);
@@ -433,11 +429,11 @@ end;
 
 procedure THMIEdit.DoEnter;
 begin
+  oldValue := Text;
   HasFocus := true;
   RepaintFocus;
   RefreshTagValue;
-  SelStart:=0;
-  SelLength := Length(Text);
+  SelectAll;
   inherited DoEnter;
 end;
 
@@ -454,9 +450,10 @@ begin
       if itag.IsValidValue(Text) then
         oldValue := Text
       else begin
-        cursor := SelStart;
+        FBlockChange:=true;
         inherited Text := oldValue;
-        SelStart := cursor-1;
+        FBlockChange:=false;
+        SelectAll;
       end;
     end;
   end;

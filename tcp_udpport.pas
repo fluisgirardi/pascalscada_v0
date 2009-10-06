@@ -205,9 +205,6 @@ var
   flag, bufsize, sockType:Integer;
 begin
   Ok:=false;
-  {$IF defined(WIN32) or defined(WIN64)}
-  ServerAddr:=nil;
-  {$IFEND}
   try
     {$IF defined(UNIX) and defined(FPC)}
     if not GetHostByName(FHostName,ServerAddr) then begin
@@ -288,10 +285,6 @@ begin
     Ok:=true;
     PActive:=true;
   finally
-    {$IFDEF WINDOWS}
-    //if ServerAddr<>nil then
-    //  Freemem(ServerAddr);
-    {$ENDIF}
     if not Ok then
       CloseSocket(FSocket);
   end;
