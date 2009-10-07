@@ -62,8 +62,6 @@ type
 
 implementation
 
-uses LCLProc, LCLIntf;
-
 destructor THMIScrollBar.Destroy;
 begin
    if FTag<>nil then
