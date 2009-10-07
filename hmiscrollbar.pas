@@ -27,6 +27,7 @@ type
     FUpdateOnMove:Boolean;
     FBusy:Boolean;
     FCmdCount:Integer;
+    FLastPosition:Integer;
     procedure HMINotifyChangeCallback(Sender:TObject); //notificação de change do valor do tag
     procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
     procedure RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
@@ -38,6 +39,9 @@ type
   protected
     //: @exclude
     procedure Scroll(ScrollCode: TScrollCode; var ScrollPos: Integer); override;
+    {$IF (not defined(WIN32)) and (not defined(WIN64))}
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    {$IFEND}
   public
     //: @exclude
     destructor Destroy; override;
@@ -57,6 +61,8 @@ type
   end;
 
 implementation
+
+uses LCLProc, LCLIntf;
 
 destructor THMIScrollBar.Destroy;
 begin
@@ -128,10 +134,14 @@ var
 begin
    WriteFlag:=false;
    Try
+      FLastPosition:=ScrollPos;
+
       if (ScrollCode=scEndScroll) then begin
+{$IF defined(WIN32) or defined(WIN64)}
          FBusy:=false;
          FCmdCount:=0;
          WriteFlag:=true;
+{$IFEND}
       end else begin
          inc(FCmdCount);
          if FCmdCount>5 then begin
@@ -140,7 +150,6 @@ begin
             FCmdCount:=0;
          end;
       end;
-      
       if WriteFlag then
          WriteValue(ScrollPos);
       
@@ -148,6 +157,17 @@ begin
       inherited Scroll(ScrollCode, ScrollPos);
    end;
 end;
+
+{$IF (not defined(WIN32)) and (not defined(WIN64))}
+procedure THMIScrollBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  try
+    WriteValue(FLastPosition);
+  finally
+    inherited MouseUp(Button, Shift, X, Y);
+  end;
+end;
+{$IFEND}
 
 procedure THMIScrollBar.WriteValue(Value:Integer);
 begin
