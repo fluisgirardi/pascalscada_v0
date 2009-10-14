@@ -62,10 +62,6 @@ type
   protected
     {$IFDEF FPC}
     //: @exclude
-    BlockOnChange:Boolean;
-    //: @exclude
-    LazLastState:TCheckBoxState;
-    //: @exclude
     procedure DoOnChange; override;
     {$ELSE}
     //: @exclude
@@ -79,11 +75,17 @@ type
     function GetChecked: Boolean; override;
     //: @exclude
     procedure SetChecked(Value: Boolean); override;
+    //: @exclude
+    procedure UpdateTagValue;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+    {$IFDEF FPC}
+    //: @exclude
+    procedure EditingDone; override;
+    {$ENDIF}
   published
     {:
     @name informa se o controle aceita o estado intermediário (Grayed).
@@ -225,20 +227,9 @@ begin
     FValueTrue := 0;
     FValueFalse := 0;
   end;
-  {$IFDEF FPC}
-  BlockOnChange := false;
-  //no lazarus essa propriedade tem q estar
-  //habilitada para q seja mostrado o controle
-  //no meio termo...o tratamento do meio termo
-  //esta em DoOnChange...
-  inherited AllowGrayed := true;
-  {$ELSE}
-  //no Delphi, mesmo desabilitada essa propriedade
-  //ele aceita por meio da prop State o meio termo
-  //processando ou não o meio termo de acordo
-  //com o valor dessa propriedade...
+
   inherited AllowGrayed := false;
-  {$ENDIF}
+
   FFontFalse  := TFont.Create;
   FFontFalse.OnChange := FontChange;
   FFontTrue   := TFont.Create;
@@ -262,6 +253,13 @@ begin
   FFontGrayed.Destroy;
   inherited Destroy;
 end;
+
+{$IFDEF FPC}
+procedure THMICheckBox.EditingDone;
+begin
+  UpdateTagValue;
+end;
+{$ENDIF}
 
 procedure THMICheckBox.SetHMITag(t:TPLCTag);
 begin
@@ -297,33 +295,27 @@ end;
 procedure THMICheckBox.RefreshTagValue(x:Double);
 begin
   if csDestroying in ComponentState then exit;
-  {$IFDEF FPC}
-  BlockOnChange := true;
-  {$ENDIF}
+
   if x=FValueTrue then begin
-    inherited SetChecked(true);
     inherited State := cbChecked;
     inherited Font.Assign(FFontTrue);
     inherited Color := FColorTrue;
     inherited Caption := FCaptionTrue;
-  end else
+  end else begin
     if x=FValueFalse then begin
-      inherited SetChecked(false);
       inherited State := cbUnchecked;
       inherited Font.Assign(FFontFalse);
       inherited Color := FColorFalse;
       inherited Caption := FCaptionFalse;
-    end else
+    end else begin
       case FOtherValues of
         isChecked: begin
-          inherited SetChecked(true);
           inherited State := cbChecked;
           inherited Font.Assign(FFontTrue);
           inherited Color := FColorTrue;
           inherited Caption := FCaptionTrue;
         end;
         isUnchecked: begin
-          inherited SetChecked(false);
           inherited State := cbUnchecked;
           inherited Font.Assign(FFontFalse);
           inherited Color := FColorFalse;
@@ -335,14 +327,9 @@ begin
           inherited Color := FColorGrayed;
           inherited Caption := FCaptionGrayed;
         end;
-        else begin
-          //do nothing... :D
-        end;
       end;
-  {$IFDEF FPC}
-  LazLastState := inherited State;
-  BlockOnChange := false;
-  {$ENDIF}
+    end;
+  end;
 end;
 
 procedure THMICheckBox.HMINotifyChangeCallback(Sender:TObject);
@@ -415,15 +402,19 @@ end;
 
 function THMICheckBox.GetChecked: Boolean;
 begin
-  if FTag=nil then begin
-    Result := false;
-    exit;
-  end;
-
-  Result := (GetTagValue=FValueTrue);
+  if FTag=nil then
+    Result := inherited GetChecked
+  else
+    Result := (GetTagValue=FValueTrue);
 end;
 
 procedure THMICheckBox.SetChecked(Value: Boolean);
+begin
+  inherited SetChecked(Value);
+  UpdateTagValue;
+end;
+
+procedure THMICheckBox.UpdateTagValue;
 var
    itag:ITagNumeric;
 begin
@@ -433,41 +424,35 @@ begin
   itag := FTag as ITagNumeric;
 
   if (itag<>nil) then
-    if Value then begin
+    if State=cbChecked then begin
       if FWriteTrue then begin
         itag.Value := FValueTrue;
-        RefreshTagValue(FValueTrue);
       end;
     end else begin
       if FWriteFalse then begin
         itag.Value := FValueFalse;
-        RefreshTagValue(FValueFalse);
       end;
     end;
-
-  inherited SetChecked(Value);
 end;
 
 {$IFDEF FPC}
 procedure THMICheckBox.DoOnChange;
 begin
-  try
-    if not BlockOnChange then
-      Inherited DoOnChange;
-  finally
-    if not BlockOnChange then begin
-      SetChecked((State=cbChecked) or (LazLastState=cbGrayed));
-      HMINotifyChangeCallback(Self);
-    end;
+  if [csLoading,csDestroying,csDesigning]*ComponentState<>[] then begin
+    exit;
   end;
+
+  EditingDone;
+
+  if Assigned(OnChange) then
+    OnChange(Self);
 end;
 
 {$ELSE}
 procedure THMICheckBox.Toggle;
 begin
   inherited Toggle;
-  SetChecked(State=cbChecked);
-  HMINotifyChangeCallback(Self);
+  UpdateTagValue;
 end;
 {$ENDIF}
 
@@ -610,7 +595,6 @@ end;
 
 procedure THMICheckBox.SetHMIEnabled(v:Boolean);
 begin
-   { todo: }
    inherited Enabled := v;
    FIsEnabled := v;
 end;
