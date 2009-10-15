@@ -93,6 +93,7 @@ procedure TZoneBlinkWithPropertyEditor.GetValues(Proc: TGetStrProc);
 var
    i:Integer;
 begin
+   Proc('-1');
    if (GetComponent(0) is TZone) and (TZone(GetComponent(0)).Collection is TZones) then
       for i := 0 to TZone(GetComponent(0)).Collection.Count-1 do begin
          if TZone(GetComponent(0)).Collection.Items[i]<>GetComponent(0) then

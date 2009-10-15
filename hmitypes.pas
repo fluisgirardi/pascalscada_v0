@@ -85,6 +85,20 @@ type
     property  Tag:TPLCTag read GetHMITag write SetHMITag;
   end;
 
+  IHMITagInterface = interface
+    ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
+    //: Chama o evento quando uma letura tem exito.
+    procedure NotifyReadOk;
+    //: Chama o evento quando uma leitura falha.
+    procedure NotifyReadFault;
+    //: Chama o evento quando uma escrita tem sucesso.
+    procedure NotifyWriteOk;
+    //: Chama o evento quando uma escrita do tag falha.
+    procedure NotifyWriteFault;
+    //: Chama o evento quando o valor do tag muda.
+    procedure NotifyChange;
+  end;
+
 implementation
 
 end.

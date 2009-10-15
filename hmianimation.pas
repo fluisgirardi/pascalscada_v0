@@ -19,9 +19,9 @@ type
     FTag:TPLCTag;
     FIsEnabled:Boolean;
     FTestValue:Double;
-    FCurrentZone:TGraphicZone;
+    FCurrentZone,
+    FOwnerZone:TGraphicZone;
     FTimer:TTimer;
-    FOwnerZoneShowed:Boolean;    
     procedure ZoneChange(Sender:TObject);
     function  GetAnimationZones:TGraphicZones;
     procedure SetAnimationZones(v:TGraphicZones);
@@ -139,13 +139,12 @@ end;
 
 procedure THMIAnimation.SetValue(v:Double);
 begin
-   FCurrentZone:=FAnimationZones.GetZoneFromValue(v) as TGraphicZone;
+   FOwnerZone:=FAnimationZones.GetZoneFromValue(v) as TGraphicZone;
    FTimer.Enabled:=false;
-   ShowZone(FCurrentZone);
-   FOwnerZoneShowed:=true;
+   ShowZone(FOwnerZone);
    if FCurrentZone<>nil then begin
-      FTimer.Interval := FCurrentZone.BlinkTime;
-      FTimer.Enabled := FCurrentZone.BlinkWith<>(-1);
+      FTimer.Interval := FOwnerZone.BlinkTime;
+      FTimer.Enabled := FOwnerZone.BlinkWith<>(-1);
    end;
 end;
 
@@ -155,6 +154,7 @@ var
    x:TPicture;
 {$ENDIF}
 begin
+   FCurrentZone:=zone;
    //limpa a imagem
    {$IFDEF FPC}
    Picture.Clear;
@@ -247,20 +247,14 @@ end;
 
 procedure THMIAnimation.BlinkTimer(Sender:TObject);
 begin
-   if FOwnerZoneShowed then begin
-      if FCurrentZone.BlinkWith<>(-1) then begin
-         ShowZone(TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]));
-         FTimer.Enabled:=false;
-         FTimer.Interval := TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
-         FTimer.Enabled:=true;
-      end
-   end else begin
-      ShowZone(FCurrentZone);
-      FTimer.Enabled:=false;
-      FTimer.Interval := FCurrentZone.BlinkTime;
-      FTimer.Enabled:=true;
-   end;
-   FOwnerZoneShowed:= not FOwnerZoneShowed;
+  if FCurrentZone.BlinkWith<0 then
+    FTimer.Enabled:=false
+  else begin
+    FTimer.Enabled:=false;
+    FTimer.Interval := TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
+    ShowZone(TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]));
+    FTimer.Enabled:=true;
+  end;
 end;
 
 end.
