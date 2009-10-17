@@ -203,7 +203,7 @@ end;
 
 procedure THMITrackBar.NotifyWriteFault;
 begin
-
+  RefreshTagValue;
 end;
 
 procedure THMITrackBar.NotifyTagChange(Sender:TObject);

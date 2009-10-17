@@ -182,7 +182,7 @@ end;
 
 procedure THMIScrollBar.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIScrollBar.NotifyTagChange(Sender:TObject);

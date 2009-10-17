@@ -279,7 +279,7 @@ end;
 
 procedure TTagBit.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure TTagBit.NotifyTagChange(Sender:TObject);

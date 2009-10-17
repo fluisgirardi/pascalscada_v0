@@ -188,7 +188,7 @@ end;
 
 procedure THMIRadioGroup.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIRadioGroup.NotifyTagChange(Sender:TObject);

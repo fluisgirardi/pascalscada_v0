@@ -259,7 +259,7 @@ end;
 
 procedure THMIAnimation.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIAnimation.NotifyTagChange(Sender:TObject);

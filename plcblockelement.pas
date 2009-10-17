@@ -236,7 +236,7 @@ end;
 
 procedure TPLCBlockElement.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure TPLCBlockElement.NotifyTagChange(Sender:TObject);

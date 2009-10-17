@@ -487,7 +487,7 @@ end;
 
 procedure THMIButton.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIButton.NotifyTagChange(Sender:TObject);

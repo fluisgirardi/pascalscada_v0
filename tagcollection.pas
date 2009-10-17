@@ -128,7 +128,7 @@ end;
 
 procedure TTagCollectionItem.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure TTagCollectionItem.NotifyTagChange(Sender:TObject);

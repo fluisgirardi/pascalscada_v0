@@ -138,7 +138,7 @@ end;
 
 procedure THMIProgressBar.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIProgressBar.NotifyTagChange(Sender:TObject);

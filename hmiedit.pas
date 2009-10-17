@@ -493,7 +493,7 @@ end;
 
 procedure THMIEdit.NotifyWriteFault;
 begin
-
+  RefreshTagValue;
 end;
 
 procedure THMIEdit.NotifyTagChange(Sender:TObject);

@@ -216,7 +216,7 @@ end;
 
 procedure THMIUpDown.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIUpDown.NotifyTagChange(Sender:TObject);

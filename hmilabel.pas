@@ -209,7 +209,7 @@ end;
 
 procedure THMILabel.NotifyWriteFault;
 begin
-
+  RefreshTagValue;
 end;
 
 procedure THMILabel.NotifyTagChange(Sender:TObject);
