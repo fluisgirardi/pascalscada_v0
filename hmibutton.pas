@@ -9,13 +9,13 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, LMessages, {$ENDIF}Forms, Controls,
-  Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes;
+  Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag;
 
 type
   {:
   Classe botão HMI que pode ser flat ou
   }
-  THMIButton = class(TSpeedButton, IHMIInterface)
+  THMIButton = class(TSpeedButton, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FClickFlag:Boolean;
@@ -28,6 +28,14 @@ type
     FCaptionDown, FCaptionUp, FCaptionGrayed:TCaption;
     function GetTagValue:Double;
     procedure SetValue(value:Double);
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     //: Evita o processamento da mensagem no botão.
     procedure CMButtonPressed(var Message: TMessage); message CM_BUTTONPRESSED;
@@ -36,12 +44,8 @@ type
     //: @exclude
     procedure SetButtonState(bs:TButtonState);
 
-    //: @seealso(IHMIInterface.HMINotifyChangeCallback)
-    procedure HMINotifyChangeCallback(Sender:TObject);
     //: @seealso(IHMIInterface.RefreshHMISecurity)
     procedure RefreshHMISecurity;
-    //: @seealso(IHMIInterface.RemoveHMITag)
-    procedure RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
@@ -211,7 +215,7 @@ end;
 destructor THMIButton.Destroy;
 begin
    if FTag<>nil then
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+      FTag.RemoveCallBacks(Self as IHMITagInterface);
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
@@ -284,36 +288,9 @@ begin
     (FTag as ITagNumeric).Value := value;
 end;
 
-procedure THMIButton.HMINotifyChangeCallback(Sender:TObject);
-var
-   value:Double;
-begin
-   value := GetTagValue;
-   if value = FValueDown then
-      SetButtonState(bsDown)
-   else begin
-      if value = FValueUp then
-         SetButtonState(bsUp)
-      else
-         case FOtherValues of
-            isChecked:
-               SetButtonState(bsDown);
-            isUnchecked:
-               SetButtonState(bsUp);
-            IsGrayed:
-               SetButtonState(bsDisabled);
-         end;
-   end;
-end;
-
 procedure THMIButton.RefreshHMISecurity;
 begin
   // TODO
-end;
-
-procedure THMIButton.RemoveHMITag(Sender:TObject);
-begin
-   FTag := nil;
 end;
 
 procedure THMIButton.SetHMITag(t:TPLCTag);
@@ -324,14 +301,14 @@ begin
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
-     FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+     FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
-     t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+     t.AddCallBacks(Self as IHMITagInterface);
      FTag := t;
-     HMINotifyChangeCallback(self);
+     NotifyTagChange(self);
   end;
   FTag := t;
 end;
@@ -401,7 +378,7 @@ end;
 procedure THMIButton.SetOtherValues(v: TOtherValues);
 begin
    FOtherValues:=V;
-   HMINotifyChangeCallback(self);
+   NotifyTagChange(self);
 end;
 
 procedure THMIButton.SetButtonType(v:TButtonType);
@@ -484,13 +461,60 @@ end;
 procedure THMIButton.SetValueDown(v:Double);
 begin
    FValueDown:=v;
-   HMINotifyChangeCallback(self);
+   NotifyTagChange(self);
 end;
 
 procedure THMIButton.SetValueUp(v:Double);
 begin
    FValueUp:=v;
-   HMINotifyChangeCallback(self);
+   NotifyTagChange(self);
+end;
+
+procedure THMIButton.NotifyReadOk;
+begin
+
+end;
+
+procedure THMIButton.NotifyReadFault;
+begin
+
+end;
+
+procedure THMIButton.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMIButton.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMIButton.NotifyTagChange(Sender:TObject);
+var
+   value:Double;
+begin
+   value := GetTagValue;
+   if value = FValueDown then
+      SetButtonState(bsDown)
+   else begin
+      if value = FValueUp then
+         SetButtonState(bsUp)
+      else
+         case FOtherValues of
+            isChecked:
+               SetButtonState(bsDown);
+            isUnchecked:
+               SetButtonState(bsUp);
+            IsGrayed:
+               SetButtonState(bsDisabled);
+         end;
+   end;
+end;
+
+procedure THMIButton.RemoveTag(Sender:TObject);
+begin
+   FTag := nil;
 end;
 
 end.

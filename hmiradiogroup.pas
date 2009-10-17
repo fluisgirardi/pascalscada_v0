@@ -9,19 +9,17 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Forms, Controls, Graphics,
-  Dialogs, ExtCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes;
+  Dialogs, ExtCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes, Tag;
 
 type
   //: Define um controle de opções para leitura/escrita de valores de tags numéricos.
-  THMIRadioGroup = class(TRadioGroup, IHMIInterface)
+  THMIRadioGroup = class(TRadioGroup, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FIsEnabled:Boolean;
     FDefaultIndex:Integer;
     FIgnore, FLoaded:Boolean;
-    procedure HMINotifyChangeCallback(Sender:TObject); //notificação de change do valor do tag
     procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
-    procedure RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
@@ -29,6 +27,14 @@ type
     procedure SetDefaultIndex(v:integer);
     function  GetIndex:Integer;
     procedure SetIndex(v:Integer);
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     {$IFNDEF FPC}
     procedure Click; override;
@@ -74,36 +80,13 @@ end;
 destructor  THMIRadioGroup.Destroy;
 begin
    if FTag<>nil then
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+      FTag.RemoveCallBacks(Self as IHMITagInterface);
    inherited Destroy;
-end;
-
-procedure THMIRadioGroup.HMINotifyChangeCallback(Sender:TObject); //notificação de change do valor do tag
-var
-   Value:Double;
-begin
-   Value := 0;
-   
-   if (FTag as ITagNumeric)<>nil then
-      Value := (FTag as ITagNumeric).Value;
-
-   FIgnore:=true;
-   if (Value>=0) and (Value<Items.Count) then
-      inherited ItemIndex:= FloatToInteger(Value)
-   else
-      inherited ItemIndex := FDefaultIndex;
-   FIgnore:=false;
 end;
 
 procedure THMIRadioGroup.RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
 begin
    //todo
-end;
-
-procedure THMIRadioGroup.RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
-begin
-  if FTag=Sender then
-    FTag := nil;
 end;
 
 procedure THMIRadioGroup.SetHMITag(t:TPLCTag);                    //seta um tag
@@ -114,14 +97,14 @@ begin
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+      FTag.RemoveCallBacks(Self as IHMITagInterface);
    end;
 
    //adiona o callback para o novo tag
    if t<>nil then begin
-      t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+      t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;
-      HMINotifyChangeCallback(self);
+      NotifyTagChange(self);
    end;
    FTag := t;
 end;
@@ -167,7 +150,7 @@ begin
      FDefaultIndex:=-1
   else
      FDefaultIndex:=v;
-  HMINotifyChangeCallback(Self);
+  NotifyTagChange(Self);
 end;
 
 function  THMIRadioGroup.GetIndex:Integer;
@@ -187,5 +170,48 @@ begin
    inherited Click;
 end;
 {$ENDIF}
+
+procedure THMIRadioGroup.NotifyReadOk;
+begin
+
+end;
+
+procedure THMIRadioGroup.NotifyReadFault;
+begin
+
+end;
+
+procedure THMIRadioGroup.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMIRadioGroup.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMIRadioGroup.NotifyTagChange(Sender:TObject);
+var
+   Value:Double;
+begin
+   Value := 0;
+
+   if (FTag as ITagNumeric)<>nil then
+      Value := (FTag as ITagNumeric).Value;
+
+   FIgnore:=true;
+   if (Value>=0) and (Value<Items.Count) then
+      inherited ItemIndex:= FloatToInteger(Value)
+   else
+      inherited ItemIndex := FDefaultIndex;
+   FIgnore:=false;
+end;
+
+procedure THMIRadioGroup.RemoveTag(Sender:TObject);
+begin
+  if FTag=Sender then
+    FTag := nil;
+end;
 
 end.

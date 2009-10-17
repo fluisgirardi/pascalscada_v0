@@ -61,8 +61,6 @@ type
   //: @name define a interface comum a todos os objetos de tela.
   IHMIInterface = interface
     ['{62FF1979-FA70-4965-B24F-347A69AC2EB1}']
-    //: Procedimento que o TPLCTag irá chamar para informar alterações em seu valor.
-    procedure HMINotifyChangeCallback(Sender:TObject);
     {:
     Procedimento que atualiza o componente de acordo com as regras atuais de
     segurança. É chamado quando um usuário faz login ou alguma regra de segurança
@@ -70,8 +68,6 @@ type
     }
     procedure RefreshHMISecurity;
     //: Força a remoção da referência ao TPLCTag. Chamado quando o Tag está sendo destruido.
-    procedure RemoveHMITag(Sender:TObject);
-    //: Seta o tag do controle, criando uma referência. @seealso(Tag)
     procedure SetHMITag(t:TPLCTag);
     //: Remove o tag do controle, eliminando a referência. @seealso(Tag)
     function  GetHMITag:TPLCTag;
@@ -83,20 +79,6 @@ type
     property  Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
     //: Propriedade criada para informar/setar o tag do controle através da interface.
     property  Tag:TPLCTag read GetHMITag write SetHMITag;
-  end;
-
-  IHMITagInterface = interface
-    ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
-    //: Chama o evento quando uma letura tem exito.
-    procedure NotifyReadOk;
-    //: Chama o evento quando uma leitura falha.
-    procedure NotifyReadFault;
-    //: Chama o evento quando uma escrita tem sucesso.
-    procedure NotifyWriteOk;
-    //: Chama o evento quando uma escrita do tag falha.
-    procedure NotifyWriteFault;
-    //: Chama o evento quando o valor do tag muda.
-    procedure NotifyChange;
   end;
 
 implementation

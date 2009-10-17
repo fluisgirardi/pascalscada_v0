@@ -9,20 +9,19 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Forms, Controls, Graphics,
-  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls;
+  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls, Tag;
 
 type
    //: Implementa um controle em forma de Up/Down para escrita de valores em tags numéricos.
-  THMIUpDown = class(TUpDown, IHMIInterface)
+  THMIUpDown = class(TUpDown, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FIsEnabled:Boolean;
     FPosition, FIncrement:Double;
     FMax,FMin:Double;
     FEnableMax, FEnableMin:Boolean;
-    procedure HMINotifyChangeCallback(Sender:TObject); //notificação de change do valor do tag
+
     procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
-    procedure RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
@@ -31,6 +30,14 @@ type
     procedure SetIncrement(v:Double);
     procedure SetMax(v:Double);
     procedure SetMin(v:Double);
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
     procedure Loaded; override;
@@ -87,27 +94,13 @@ end;
 destructor THMIUpDown.Destroy;
 begin
    if FTag<>nil then
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+      FTag.RemoveCallBacks(Self as IHMITagInterface);
    inherited Destroy;
-end;
-
-procedure THMIUpDown.HMINotifyChangeCallback(Sender:TObject);
-begin
-  if (FTag as ITagNumeric) <> nil then
-     FPosition := (FTag as ITagNumeric).Value;
-      
-  inherited Position:=50;
 end;
 
 procedure THMIUpDown.RefreshHMISecurity;
 begin
 
-end;
-
-procedure THMIUpDown.RemoveHMITag(Sender:TObject);
-begin
-  if FTag=Sender then
-    FTag := nil;
 end;
 
 procedure THMIUpDown.SetHMITag(t:TPLCTag);
@@ -118,14 +111,14 @@ begin
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+      FTag.RemoveCallBacks(Self as IHMITagInterface);
    end;
 
    //adiona o callback para o novo tag
    if t<>nil then begin
-      t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+      t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;
-      HMINotifyChangeCallback(self);
+      NotifyTagChange(self);
    end;
    FTag := t;
 end;
@@ -149,7 +142,7 @@ end;
 procedure THMIUpDown.Loaded;
 begin
   inherited Loaded;
-  HMINotifyChangeCallback(Self);
+  NotifyTagChange(Self);
 end;
 
 procedure THMIUpDown.Click(Button: TUDBtnType);
@@ -204,6 +197,40 @@ begin
      raise Exception.Create('O valor mínimo precisa ser menor que o máximo!');
 
   FMin := v;
+end;
+
+procedure THMIUpDown.NotifyReadOk;
+begin
+
+end;
+
+procedure THMIUpDown.NotifyReadFault;
+begin
+
+end;
+
+procedure THMIUpDown.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMIUpDown.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMIUpDown.NotifyTagChange(Sender:TObject);
+begin
+  if (FTag as ITagNumeric) <> nil then
+     FPosition := (FTag as ITagNumeric).Value;
+
+  inherited Position:=50;
+end;
+
+procedure THMIUpDown.RemoveTag(Sender:TObject);
+begin
+  if Ftag=Sender then
+    FTag:=nil;
 end;
 
 end.

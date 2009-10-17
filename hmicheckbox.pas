@@ -9,11 +9,11 @@ interface
 
 uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, Graphics,
-  ProtocolTypes;
+  ProtocolTypes, Tag;
 
 type
   //: @name é um controle booleano em forma de CheckBox que lê e escreve valores em Tags.
-  THMICheckBox = class(TCheckBox, IHMIInterface)
+  THMICheckBox = class(TCheckBox, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FValueTrue, FValueFalse:Double;
@@ -23,8 +23,6 @@ type
     FFontFalse, FFontTrue, FFontGrayed:TFont;
     FOtherValues:TOtherValues;
     FIsEnabled:Boolean;
-
-    procedure RemoveHMITag(Sender:TObject);
 
     function  GetTagValue:Double;
     procedure SetCaptionFalse(v:String);
@@ -48,7 +46,6 @@ type
     procedure SetHMITag(t:TPLCTag);
     function  GetHMITag:TPLCTag;
     procedure RefreshTagValue(x:Double);
-    procedure HMINotifyChangeCallback(Sender:TObject);
     procedure FontChange(Sender:TObject);
 
     procedure SetCaption(c:TCaption);
@@ -59,6 +56,14 @@ type
 
     procedure SetHMIEnabled(v:Boolean);
     function  GetHMIEnabled:Boolean;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     {$IFDEF FPC}
     //: @exclude
@@ -247,7 +252,7 @@ end;
 destructor THMICheckBox.Destroy;
 begin
   if FTag<>nil then
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   FFontFalse.Destroy;
   FFontTrue.Destroy;
   FFontGrayed.Destroy;
@@ -269,12 +274,12 @@ begin
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
-    t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+    t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
     RefreshTagValue(GetTagValue);
   end;
@@ -284,12 +289,6 @@ end;
 function  THMICheckBox.GetHMITag:TPLCTag;
 begin
    Result := FTag;
-end;
-
-procedure THMICheckBox.RemoveHMITag(Sender:TObject);
-begin
-  if FTag=Sender then
-    FTag := nil;
 end;
 
 procedure THMICheckBox.RefreshTagValue(x:Double);
@@ -330,15 +329,6 @@ begin
       end;
     end;
   end;
-end;
-
-procedure THMICheckBox.HMINotifyChangeCallback(Sender:TObject);
-begin
-  if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then begin
-    exit;
-  end;
-
-  RefreshTagValue(GetTagValue);
 end;
 
 procedure THMICheckBox.SetWriteTrue(v:Boolean);
@@ -602,6 +592,41 @@ end;
 function  THMICheckBox.GetHMIEnabled:Boolean;
 begin
    Result := FIsEnabled;
+end;
+
+procedure THMICheckBox.NotifyReadOk;
+begin
+
+end;
+
+procedure THMICheckBox.NotifyReadFault;
+begin
+
+end;
+
+procedure THMICheckBox.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMICheckBox.NotifyWriteFault;
+begin
+  NotifyTagChange(Self);
+end;
+
+procedure THMICheckBox.NotifyTagChange(Sender:TObject);
+begin
+  if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then begin
+    exit;
+  end;
+
+  RefreshTagValue(GetTagValue);
+end;
+
+procedure THMICheckBox.RemoveTag(Sender:TObject);
+begin
+  if Ftag=Sender then
+    FTag:=nil;
 end;
 
 end.

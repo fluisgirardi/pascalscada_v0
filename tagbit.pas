@@ -7,7 +7,7 @@
 interface
 
 uses
-  SysUtils, Classes, PLCNumber, ProtocolTypes, variants, hsutils;
+  SysUtils, Classes, PLCNumber, ProtocolTypes, variants, hsutils, Tag;
 
 type
 
@@ -28,7 +28,7 @@ type
   maior ou igual a StartBit.
   }
 
-  TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric)
+  TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
   private
     PNumber:TPLCNumber;
     PUseRaw:Boolean;
@@ -40,22 +40,26 @@ type
     procedure SetUseRaw(use:Boolean);
     procedure SetStartBit(b:TBitRange);
     procedure SetEndBit(b:TBitRange);
-    procedure RemoveTag(Sender:TObject);
 
     function  GetBits(value:double):Double;
     function  SetBits(OriginalValue, Value:Double):Double;
     function  GetBitMask:Integer;
     function  GetInvBitMask:Integer;
 
-
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
-    //: Método chamado pelo tag numérico para informar ao elemento de alterações de valores.
-    procedure ChangeCallback(Sender:TObject);
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(bitValue:Double); override;
     //: @seealso(TPLCNumber.GetValueRaw)
@@ -92,7 +96,7 @@ end;
 destructor  TTagBit.Destroy;
 begin
   if PNumber<>nil then
-     PNumber.RemoveChangeCallBack(ChangeCallback);
+     PNumber.RemoveCallBacks(Self as IHMITagInterface);
   PNumber:=nil;
   inherited Destroy;
 end;
@@ -104,7 +108,7 @@ begin
 
   //esta removendo do bloco.
   if (number=nil) and (PNumber<>nil) then begin
-    PNumber.RemoveChangeCallBack(ChangeCallback);
+    PNumber.RemoveCallBacks(Self as IHMITagInterface);
     PNumber := nil;
     exit;
   end;
@@ -112,24 +116,18 @@ begin
   //se esta setando o bloco
   if (number<>nil) and (PNumber=nil) then begin
     PNumber := number;
-    PNumber.AddChangeCallBack(ChangeCallback,RemoveTag);
-    ChangeCallback(self);
+    PNumber.AddCallBacks(Self as IHMITagInterface);
+    NotifyTagChange(self);
     exit;
   end;
 
   //se esta setado o bloco, mas esta trocando
   if number<>PNumber then begin
-    PNumber.RemoveChangeCallBack(ChangeCallback);
+    PNumber.RemoveCallBacks(Self as IHMITagInterface);
     PNumber := number;
-    PNumber.AddChangeCallBack(ChangeCallback, RemoveTag);
-    ChangeCallback(self);
+    PNumber.AddCallBacks(Self as IHMITagInterface);
+    NotifyTagChange(self);
   end;
-end;
-
-procedure TTagBit.RemoveTag(Sender:TObject);
-begin
-  if PNumber=sender then
-    PNumber := nil;
 end;
 
 function TTagBit.GetValueRaw:Double;
@@ -192,29 +190,6 @@ begin
    Result := PValueTimeStamp;
 end;
 
-procedure TTagBit.ChangeCallback(Sender:TObject);
-var
-  value, bold, bnew :double;
-begin
-  if PNumber<>nil then begin
-    if PUseRaw then
-      value := PNumber.ValueRaw
-    else
-      value := PNumber.Value;
-
-    bold := GetBits(POldValue);
-    bnew := GetBits(value);
-
-    if bold<>bnew then begin
-       PValueRaw:=bnew;
-       PValueTimeStamp := Now;
-
-       NotifyChange();
-    end;
-    POldValue := value;
-  end;
-end;
-
 procedure TTagBit.SetValueRaw(BitValue:Double);
 begin
   PValueRaw:=BitValue;
@@ -263,7 +238,7 @@ procedure TTagBit.SetUseRaw(use:Boolean);
 begin
    if use<>PUseRaw then begin
       PUseRaw := use;
-      ChangeCallback(self);
+      NotifyTagChange(self);
    end;
 end;
 
@@ -273,7 +248,7 @@ begin
       PStartBit:=b;
       PNormalMask := GetBitMask;
       PInvMask    := GetInvBitMask;
-      ChangeCallback(self);
+      NotifyTagChange(self);
    end;
 end;
 
@@ -283,8 +258,57 @@ begin
       PEndBit:=b;
       PNormalMask := GetBitMask;
       PInvMask    := GetInvBitMask;
-      ChangeCallback(self);
+      NotifyTagChange(self);
    end
+end;
+
+procedure TTagBit.NotifyReadOk;
+begin
+
+end;
+
+procedure TTagBit.NotifyReadFault;
+begin
+
+end;
+
+procedure TTagBit.NotifyWriteOk;
+begin
+
+end;
+
+procedure TTagBit.NotifyWriteFault;
+begin
+
+end;
+
+procedure TTagBit.NotifyTagChange(Sender:TObject);
+var
+  value, bold, bnew :double;
+begin
+  if PNumber<>nil then begin
+    if PUseRaw then
+      value := PNumber.ValueRaw
+    else
+      value := PNumber.Value;
+
+    bold := GetBits(POldValue);
+    bnew := GetBits(value);
+
+    if bold<>bnew then begin
+       PValueRaw:=bnew;
+       PValueTimeStamp := Now;
+
+       NotifyChange();
+    end;
+    POldValue := value;
+  end;
+end;
+
+procedure TTagBit.RemoveTag(Sender:TObject);
+begin
+  if PNumber=sender then
+    PNumber := nil;
 end;
 
 end.

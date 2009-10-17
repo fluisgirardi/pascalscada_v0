@@ -9,11 +9,11 @@ interface
 
 uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, Graphics, Dialogs,
-  {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes;
+  {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag;
 
 type
   //: Implementa um Edit para leitura/escrita de valores texto/numéricos em tags.
-  THMIEdit = class(TEdit, IHMIInterface)
+  THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
   private
     FAlignment:TAlignment;
     FTag:TPLCTag;
@@ -48,11 +48,18 @@ type
     procedure SetSufix(s:String);
 
     procedure SendValue(txt:String);
-    procedure HMINotifyChangeCallback(Sender:TObject);
     procedure RefreshHMISecurity;
 
     procedure SetHMIEnabled(v:Boolean);
     function  GetHMIEnabled:Boolean;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
     procedure Change; override;
@@ -157,13 +164,12 @@ begin
   FShowFocused := true;
   FFreezeValue := true;
   FNumberFormat := '#0.0';
-
 end;
 
 destructor  THMIEdit.Destroy;
 begin
   if FTag<>nil then
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   inherited Destroy;
 end;
 
@@ -188,12 +194,6 @@ begin
 end;
 {$ENDIF}
 
-
-procedure THMIEdit.HMINotifyChangeCallback(Sender:TObject);
-begin
-  RefreshTagValue;
-end;
-
 procedure THMIEdit.RefreshHMISecurity;
 begin
 
@@ -214,12 +214,12 @@ begin
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
-    t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+    t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
     RefreshTagValue;
   end;
@@ -474,6 +474,37 @@ end;
 function  THMIEdit.GetHMIEnabled:Boolean;
 begin
    Result := FIsEnabled;
+end;
+
+procedure THMIEdit.NotifyReadOk;
+begin
+
+end;
+
+procedure THMIEdit.NotifyReadFault;
+begin
+
+end;
+
+procedure THMIEdit.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMIEdit.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMIEdit.NotifyTagChange(Sender:TObject);
+begin
+  RefreshTagValue;
+end;
+
+procedure THMIEdit.RemoveTag(Sender:TObject);
+begin
+  if Ftag=Sender then
+    FTag:=nil;
 end;
 
 end.

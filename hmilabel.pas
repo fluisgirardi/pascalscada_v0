@@ -8,17 +8,15 @@ unit HMILabel;
 interface
 
 uses
-  SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes;
+  SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes, Tag;
 
 type
   //:@name implementa o controle para a exibir de valores de qualquer tipo de tag.
-  THMILabel = class(TLabel, IHMIInterface)
+  THMILabel = class(TLabel, IHMIInterface, IHMITagInterface)
   private
     FNumberFormat:string;
     FPrefix, FSufix:string;
     FIsEnabled:Boolean;
-
-    procedure RemoveHMITag(Sender:TObject);
 
     procedure SetFormat(f:string);
     function  GetHMITag:TPLCTag;
@@ -31,6 +29,13 @@ type
     function  GetHMIEnabled:Boolean;
 
     procedure RefreshHMISecurity;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
     FTag:TPLCTag;
@@ -38,8 +43,10 @@ type
     procedure SetHMITag(t:TPLCTag); virtual;
     //: @exclude
     procedure RefreshTagValue; virtual;
-    //: @exclude
-    procedure HMINotifyChangeCallback(Sender:TObject); virtual;
+
+    //IHMITagInterface
+    procedure NotifyTagChange(Sender:TObject); virtual;
+
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -94,7 +101,7 @@ end;
 destructor  THMILabel.Destroy;
 begin
   if FTag<>nil then
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   inherited Destroy;
 end;
 
@@ -117,12 +124,12 @@ begin
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
-    t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+    t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
     RefreshTagValue;
   end;
@@ -130,12 +137,6 @@ begin
   
   if (FTag=nil) and (csDesigning in ComponentState) then
     inherited Caption := 'SEM TAG!';
-end;
-
-procedure THMILabel.RemoveHMITag(Sender:TObject);
-begin
-  if FTag=Sender then
-    FTag := nil;
 end;
 
 procedure THMILabel.SetPrefix(s:String);
@@ -169,11 +170,6 @@ begin
     inherited Caption := itag.GetValueAsText(FPrefix, FSufix, FNumberFormat);
 end;
 
-procedure THMILabel.HMINotifyChangeCallback(Sender:TObject);
-begin
-  RefreshTagValue;
-end;
-
 function  THMILabel.GetCaption:TCaption;
 begin
   Result := inherited Caption;
@@ -194,6 +190,37 @@ end;
 procedure THMILabel.RefreshHMISecurity;
 begin
 
+end;
+
+procedure THMILabel.NotifyReadOk;
+begin
+
+end;
+
+procedure THMILabel.NotifyReadFault;
+begin
+
+end;
+
+procedure THMILabel.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMILabel.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMILabel.NotifyTagChange(Sender:TObject);
+begin
+  RefreshTagValue;
+end;
+
+procedure THMILabel.RemoveTag(Sender:TObject);
+begin
+  if FTag=Sender then
+    FTag := nil;
 end;
 
 end.

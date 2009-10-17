@@ -8,29 +8,34 @@ unit PLCBlockElement;
 interface
 
 uses
-  SysUtils, Classes, PLCNumber, PLCBlock, ProtocolTypes, variants;
+  SysUtils, Classes, PLCNumber, PLCBlock, ProtocolTypes, variants, Tag;
 
 type
   {:
   Classe de Tag Elemento de Bloco de comunicação.
   @seealso(TPLCBlock)
   }
-  TPLCBlockElement = class(TPLCNumber, ITagInterface, ITagNumeric)
+  TPLCBlockElement = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
   private
     PBlock:TPLCBlock;
     PIndex:Cardinal;
     procedure SetBlock(blk:TPLCBlock);
     procedure SetIndex(i:Cardinal);
-    procedure RemoveTag(Sender:TObject);
 
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
-    //: Método chamado pelo bloco para informar ao elemento de alterações de valores.
-    procedure ChangeCallback(Sender:TObject);
     //: @seealso(TPLCNumber.GetValueRaw)
     function  GetValueRaw:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
@@ -72,7 +77,7 @@ end;
 destructor  TPLCBlockElement.Destroy;
 begin
   if Assigned(PBlock) then
-     PBlock.RemoveChangeCallBack(ChangeCallback);
+     PBlock.RemoveCallBacks(Self as IHMITagInterface);
   PBlock:=nil;
   inherited Destroy;
 end;
@@ -81,7 +86,7 @@ procedure TPLCBlockElement.SetBlock(blk:TPLCBlock);
 begin
   //esta removendo do bloco.
   if (blk=nil) and (Assigned(PBlock)) then begin
-    PBlock.RemoveChangeCallBack(ChangeCallback);
+    PBlock.RemoveCallBacks(Self as IHMITagInterface);
     PBlock := nil;
     exit;
   end;
@@ -89,15 +94,15 @@ begin
   //se esta setando o bloco
   if (blk<>nil) and (PBlock=nil) then begin
     PBlock := blk;
-    PBlock.AddChangeCallBack(ChangeCallback,RemoveTag);
+    PBlock.AddCallBacks(Self as IHMITagInterface);
     exit;
   end;
 
   //se esta setado o bloco, mas esta trocando
   if blk<>PBlock then begin
-    PBlock.RemoveChangeCallBack(ChangeCallback);
+    PBlock.RemoveCallBacks(Self as IHMITagInterface);
     PBlock := blk;
-    PBlock.AddChangeCallBack(ChangeCallback, RemoveTag);
+    PBlock.AddCallBacks(Self as IHMITagInterface);
     if PIndex>=PBlock.Size then
       PIndex := PBlock.Size - 1;
   end;
@@ -114,12 +119,6 @@ begin
   if i>=PBlock.Size then
     raise Exception.Create('Fora dos limites!');
   PIndex := i;
-end;
-
-procedure TPLCBlockElement.RemoveTag(Sender:TObject);
-begin
-  if PBlock=sender then 
-    PBlock := nil;
 end;
 
 function TPLCBlockElement.GetValueRaw:Double;
@@ -179,20 +178,6 @@ begin
    Result := PValueTimeStamp;
 end;
 
-procedure TPLCBlockElement.ChangeCallback(Sender:TObject);
-var
-  notify:Boolean;
-begin
-  if Assigned(PBlock) then begin
-    notify := (PValueRaw<>PBlock.ValueRaw[PIndex]);
-    PValueRaw := PBlock.ValueRaw[PIndex];
-    PValueTimeStamp := PBlock.ValueTimestamp;
-
-    if notify then
-      NotifyChange();
-  end;
-end;
-
 procedure TPLCBlockElement.SetValueRaw(Value:Double);
 begin
   if Assigned(PBlock) then
@@ -232,6 +217,46 @@ end;
 procedure TPLCBlockElement.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
 begin
   //do nothing...
+end;
+
+procedure TPLCBlockElement.NotifyReadOk;
+begin
+
+end;
+
+procedure TPLCBlockElement.NotifyReadFault;
+begin
+
+end;
+
+procedure TPLCBlockElement.NotifyWriteOk;
+begin
+
+end;
+
+procedure TPLCBlockElement.NotifyWriteFault;
+begin
+
+end;
+
+procedure TPLCBlockElement.NotifyTagChange(Sender:TObject);
+var
+  notify:Boolean;
+begin
+  if Assigned(PBlock) then begin
+    notify := (PValueRaw<>PBlock.ValueRaw[PIndex]);
+    PValueRaw := PBlock.ValueRaw[PIndex];
+    PValueTimeStamp := PBlock.ValueTimestamp;
+
+    if notify then
+      NotifyChange();
+  end;
+end;
+
+procedure TPLCBlockElement.RemoveTag(Sender:TObject);
+begin
+  if PBlock=sender then
+    PBlock := nil;
 end;
 
 end.

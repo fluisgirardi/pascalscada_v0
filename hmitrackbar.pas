@@ -11,7 +11,7 @@ unit HMITrackBar;
 interface
 
 uses
-  SysUtils, Classes, Controls, ComCtrls, PLCTag, ProtocolTypes, HMITypes
+  SysUtils, Classes, Controls, ComCtrls, PLCTag, ProtocolTypes, HMITypes, Tag
   {$IFDEF FPC}, LMessages{$ENDIF};
 
 type
@@ -19,21 +19,27 @@ type
   Implementa um controle em forma de TrackBar para a leitura/escrita de valores
   numéricos de tags.
   }
-  THMITrackBar = class(TTrackBar, IHMIInterface)
+  THMITrackBar = class(TTrackBar, IHMIInterface, IHMITagInterface)
   private
     Ftag:TPLCTag;
     FIsEnabled:Boolean;
     FModified:Boolean;
     
     procedure RefreshTagValue;
-    procedure HMINotifyChangeCallBack(Sender:TObject);
-    procedure RemoveHMITag(Sender:TObject);
     procedure SetHMITag(t:TPLCTag);
     function  GetHMITag:TPLCTag;
     function  GetPosition:Integer;
     procedure RefreshHMISecurity;
     procedure SetHMIEnabled(v:Boolean);
     function  GetHMIEnabled:Boolean;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -71,7 +77,7 @@ uses hsutils;
 destructor THMITrackBar.Destroy;
 begin
   if Assigned(FTag) then
-    Ftag.RemoveChangeCallBack(HMINotifyChangeCallBack);
+    Ftag.RemoveCallBacks(self as IHMITagInterface);
   inherited Destroy;
 end;
 
@@ -81,22 +87,11 @@ begin
   RefreshTagValue;
 end;
 
-procedure THMITrackBar.RemoveHMITag(Sender:TObject);
-begin
-  if FTag=Sender then
-    FTag := nil;
-end;
-
 procedure THMITrackBar.RefreshTagValue;
 begin
    if (Ftag as ITagNumeric)<>nil then
       inherited Position := FloatToInteger((Ftag as ITagNumeric).Value);
    FModified:=false;
-end;
-
-procedure THMITrackBar.HMINotifyChangeCallback(Sender:TObject);
-begin
-  RefreshTagValue;
 end;
 
 procedure THMITrackBar.SetHMITag(t:TPLCTag);
@@ -107,12 +102,12 @@ begin
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
-    t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+    t.AddCallBacks(self as IHMITagInterface);
     FTag := t;
     RefreshTagValue;
   end;
@@ -189,6 +184,37 @@ end;
 function  THMITrackBar.GetHMIEnabled:Boolean;
 begin
    Result := FIsEnabled;
+end;
+
+procedure THMITrackBar.NotifyReadOk;
+begin
+
+end;
+
+procedure THMITrackBar.NotifyReadFault;
+begin
+
+end;
+
+procedure THMITrackBar.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMITrackBar.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMITrackBar.NotifyTagChange(Sender:TObject);
+begin
+  RefreshTagValue;
+end;
+
+procedure THMITrackBar.RemoveTag(Sender:TObject);
+begin
+  if Ftag=Sender then
+    FTag:=nil;
 end;
 
 end.

@@ -9,11 +9,11 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources,{$ENDIF} Forms, Controls, Graphics,
-  Dialogs, ExtCtrls, HMIZones, HMITypes, PLCTag, ProtocolTypes;
+  Dialogs, ExtCtrls, HMIZones, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
   //: Implementa o controle responsável por mostrar imagens em função do valor do tag associado.
-  THMIAnimation = class(TImage, IHMIInterface)
+  THMIAnimation = class(TImage, IHMIInterface, IHMITagInterface)
   private
     FAnimationZones:TGraphicZones;
     FTag:TPLCTag;
@@ -27,6 +27,14 @@ type
     procedure SetAnimationZones(v:TGraphicZones);
     procedure NeedComState(var CurState:TComponentState);
     procedure BlinkTimer(Sender:TObject);
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
     procedure SetValue(v:Double);
@@ -34,12 +42,8 @@ type
     procedure ShowZone(zone:TGraphicZone);
     //: @exclude
     procedure SetTestValue(v:Double);
-    //: @seealso(IHMIInterface.HMINotifyChangeCallback)
-    procedure HMINotifyChangeCallback(Sender:TObject);
     //: @seealso(IHMIInterface.RefreshHMISecurity)
     procedure RefreshHMISecurity;
-    //: @seealso(IHMIInterface.RemoveHMITag)
-    procedure RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
@@ -95,7 +99,7 @@ end;
 destructor THMIAnimation.Destroy;
 begin
    if FTag<>nil then
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+      FTag.RemoveCallBacks(Self as IHMITagInterface);
    FTimer.Destroy;
    FAnimationZones.Destroy;
    inherited Destroy;
@@ -105,7 +109,7 @@ procedure THMIAnimation.ZoneChange(Sender:TObject);
 begin
    if [csReading, csDesigning]*ComponentState<>[] then exit;
 
-   HMINotifyChangeCallback(self);
+   NotifyTagChange(self);
 end;
 
 function  THMIAnimation.GetAnimationZones:TGraphicZones;
@@ -121,20 +125,6 @@ end;
 procedure THMIAnimation.NeedComState(var CurState:TComponentState);
 begin
    CurState:=ComponentState;
-end;
-
-procedure THMIAnimation.HMINotifyChangeCallback(Sender:TObject);
-var
-   tag:ITagNumeric;
-begin
-   if [csDesigning, csReading]*ComponentState=[] then begin
-
-      if FTag=nil then exit;
-      
-      tag := FTag as ITagNumeric;
-      if Tag<>nil then
-         SetValue(Tag.Value)
-   end;
 end;
 
 procedure THMIAnimation.SetValue(v:Double);
@@ -197,11 +187,6 @@ begin
    //todo
 end;
 
-procedure THMIAnimation.RemoveHMITag(Sender:TObject);
-begin
-   FTag:=nil;
-end;
-
 procedure THMIAnimation.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
@@ -210,14 +195,14 @@ begin
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+      FTag.RemoveCallBacks(Self as IHMITagInterface);
    end;
 
    //adiona o callback para o novo tag
    if t<>nil then begin
-      t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+      t.AddCallBacks(Self As IHMITagInterface);
       FTag := t;
-      HMINotifyChangeCallback(self);
+      NotifyTagChange(self);
    end;
    FTag := t;
 end;
@@ -242,7 +227,7 @@ procedure THMIAnimation.Loaded;
 begin
   inherited Loaded;
   FAnimationZones.Loaded;
-  HMINotifyChangeCallback(Self);
+  NotifyTagChange(Self);
 end;
 
 procedure THMIAnimation.BlinkTimer(Sender:TObject);
@@ -255,6 +240,45 @@ begin
     ShowZone(TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]));
     FTimer.Enabled:=true;
   end;
+end;
+
+procedure THMIAnimation.NotifyReadOk;
+begin
+
+end;
+
+procedure THMIAnimation.NotifyReadFault;
+begin
+
+end;
+
+procedure THMIAnimation.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMIAnimation.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMIAnimation.NotifyTagChange(Sender:TObject);
+var
+   tag:ITagNumeric;
+begin
+   if [csDesigning, csReading]*ComponentState=[] then begin
+
+      if FTag=nil then exit;
+
+      tag := FTag as ITagNumeric;
+      if Tag<>nil then
+         SetValue(Tag.Value)
+   end;
+end;
+
+procedure THMIAnimation.RemoveTag(Sender:TObject);
+begin
+  FTag:=nil;
 end;
 
 end.

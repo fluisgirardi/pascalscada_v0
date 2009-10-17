@@ -9,7 +9,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, ComCtrls, HMITypes, PLCTag, hsutils,
-  ProtocolTypes;
+  ProtocolTypes, Tag;
 
 type
   {:
@@ -19,18 +19,24 @@ type
   @bold(Para maiores informações consulte a documentação de TProgressBar de seu
   ambiente de desenvolvimento.)
   }
-  THMIProgressBar = class(TProgressBar, IHMIInterface)
+  THMIProgressBar = class(TProgressBar, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FIsEnabled:Boolean;
-    procedure HMINotifyChangeCallback(Sender:TObject); //notificação de change do valor do tag
     procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
-    procedure RemoveHMITag(Sender:TObject);            //Forca a eliminação de referencia do tag.
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
     procedure SetHMIEnabled(v:Boolean);
     function  GetPosition:Double;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
     procedure Loaded; override;
@@ -56,34 +62,19 @@ implementation
 destructor THMIProgressBar.Destroy;
 begin
   if Assigned(FTag) then
-    Ftag.RemoveChangeCallBack(HMINotifyChangeCallBack);
+    Ftag.RemoveCallBacks(Self as IHMITagInterface);
   inherited Destroy;
 end;
 
 procedure THMIProgressBar.Loaded;
 begin
    inherited Loaded;
-   HMINotifyChangeCallback(Self);
-end;
-
-procedure THMIProgressBar.HMINotifyChangeCallback(Sender:TObject);
-begin
-  if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then
-    exit;
-
-  if ((FTag as ITagNumeric)<>nil) then
-    inherited Position := FloatToInteger((FTag as ITagNumeric).Value);
+   NotifyTagChange(Self);
 end;
 
 procedure THMIProgressBar.RefreshHMISecurity;
 begin
 
-end;
-
-procedure THMIProgressBar.RemoveHMITag(Sender:TObject);
-begin
-  if FTag=Sender then
-    FTag := nil;
 end;
 
 procedure THMIProgressBar.SetHMITag(t:TPLCTag);
@@ -94,14 +85,14 @@ begin
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
-    FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
-    t.AddChangeCallBack(HMINotifyChangeCallback, RemoveHMITag);
+    t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
-    HMINotifyChangeCallback(self);
+    NotifyTagChange(self);
   end;
   FTag := t;
 end;
@@ -128,6 +119,41 @@ begin
    if (FTag as ITagNumeric)<>nil then begin
       Result := (FTag as ITagNumeric).Value;
    end;
+end;
+
+procedure THMIProgressBar.NotifyReadOk;
+begin
+
+end;
+
+procedure THMIProgressBar.NotifyReadFault;
+begin
+
+end;
+
+procedure THMIProgressBar.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMIProgressBar.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMIProgressBar.NotifyTagChange(Sender:TObject);
+begin
+  if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then
+    exit;
+
+  if ((FTag as ITagNumeric)<>nil) then
+    inherited Position := FloatToInteger((FTag as ITagNumeric).Value);
+end;
+
+procedure THMIProgressBar.RemoveTag(Sender:TObject);
+begin
+  if FTag=Sender then
+    FTag := nil;
 end;
 
 end.

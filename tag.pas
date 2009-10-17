@@ -19,6 +19,25 @@ type
 
   TRefreshTime = 1..$7FFFFFFF;
 
+  IHMITagInterface = interface
+    ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
+    //: Chama o evento quando uma letura tem exito.
+    procedure NotifyReadOk;
+    //: Chama o evento quando uma leitura falha.
+    procedure NotifyReadFault;
+    //: Chama o evento quando uma escrita tem sucesso.
+    procedure NotifyWriteOk;
+    //: Chama o evento quando uma escrita do tag falha.
+    procedure NotifyWriteFault;
+    //: Chama o evento quando o valor do tag muda.
+    procedure NotifyTagChange(Sender:TObject);
+    {:
+    Notifica objetos dependentes que o tag
+    será removido.
+    }
+    procedure RemoveTag(Sender:TObject);
+  end;
+
   //: Classe base para todos os tags.
   TTag = class(TComponent)
   protected
@@ -69,7 +88,7 @@ type
     //: Armazena o evento chamado pelo tag quando o seu valor se altera.
     POnValueChange:TNotifyEvent;
     //: Armazena os procedimentos que o tag deve chamar quando o seu valor altera.
-    PChangeCallBacks:array of TTagProcedures;
+    PChangeCallBacks:array of IHMITagInterface;
     //: Conta os callbacks que dependem desse tag.
     PChangeCallBackCount:integer;
     //: Armazena a zona critica dos callbacks.
@@ -154,9 +173,9 @@ type
     //: @exclude
     destructor  Destroy; override;
     //: Adiciona um conjunto de notificação de alteracão para o tag.
-    procedure AddChangeCallBack(cback,remTag:TNotifyEvent);
+    procedure AddCallBacks(ITag:IHMITagInterface);
     //: Remove um conjunto de notificação de mundanças do tag.
-    procedure RemoveChangeCallBack(cback:TNotifyEvent);
+    procedure RemoveCallBacks(ITag:IHMITagInterface);
   end;
 
 
@@ -192,20 +211,19 @@ begin
   inherited Destroy;
 end;
 
-procedure TTag.AddChangeCallBack(cback, remTag:TNotifyEvent);
+procedure TTag.AddCallBacks(ITag:IHMITagInterface);
 //var
 //  c:integer;
 begin
-  if (Not Assigned(cback)) or (not Assigned(remTag)) then
-    raise Exception.Create('Nenhum dos notificadores pode ser nulo!');
+  if (ITag<>nil) and ((ITag as IHMITagInterface)=nil) then
+    raise Exception.Create('Interface invalida!');
   
   inc(PChangeCallBackCount);
   SetLength(PChangeCallBacks, PChangeCallBackCount);
-  PChangeCallBacks[PChangeCallBackCount-1].ChangeCallBack := cback;
-  PChangeCallBacks[PChangeCallBackCount-1].RemoveTag := remTag;
+  PChangeCallBacks[PChangeCallBackCount-1]:=ITag;
 end;
 
-procedure TTag.RemoveChangeCallBack(cback:TNotifyEvent);
+procedure TTag.RemoveCallBacks(ITag:IHMITagInterface);
 var
   c,h:Integer;
   found:Boolean;
@@ -213,7 +231,7 @@ begin
   found:=false;
   h := High(PChangeCallbacks);
   for c:=0 to h do
-    if (@cback)=(@PChangeCallBacks[c]) then begin
+    if (ITag)=(PChangeCallBacks[c]) then begin
       found := true;
       break;
     end;
@@ -230,7 +248,7 @@ var
 begin
   for c:=0 to High(PChangeCallBacks) do
     try
-      PChangeCallBacks[c].ChangeCallBack(self);
+      PChangeCallBacks[c].NotifyTagChange(self);
     except
     end;
   if Assigned(POnValueChange) then
@@ -239,25 +257,57 @@ begin
 end;
 
 procedure TTag.NotifyReadOk;
+var
+  c:Integer;
 begin
+  for c:=0 to High(PChangeCallBacks) do
+    try
+      PChangeCallBacks[c].NotifyReadOk;
+    except
+    end;
+
   if Assigned(POnReadOk) then
     POnReadOk(self)
 end;
 
 procedure TTag.NotifyReadFault;
+var
+  c:Integer;
 begin
+  for c:=0 to High(PChangeCallBacks) do
+    try
+      PChangeCallBacks[c].NotifyReadFault;
+    except
+    end;
+
   if Assigned(POnReadFail) then
     POnReadFail(self)
 end;
 
 procedure TTag.NotifyWriteOk;
+var
+  c:Integer;
 begin
+  for c:=0 to High(PChangeCallBacks) do
+    try
+      PChangeCallBacks[c].NotifyWriteOk;
+    except
+    end;
+
   if Assigned(POnWriteOk) then
     POnWriteOk(self)
 end;
 
 procedure TTag.NotifyWriteFault;
+var
+  c:Integer;
 begin
+  for c:=0 to High(PChangeCallBacks) do
+    try
+      PChangeCallBacks[c].NotifyWriteFault;
+    except
+    end;
+
   if Assigned(POnWriteFail) then
     POnWriteFail(self)
 end;

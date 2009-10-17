@@ -7,14 +7,24 @@ unit tagcollection;
 interface
 
 uses
-  Classes, SysUtils, PLCTag, HMIZones, ProtocolTypes;
+  Classes, SysUtils, PLCTag, HMIZones, ProtocolTypes, Tag;
 
 type
-  TTagCollectionItem=class(TCollectionItem)
+  TTagCollectionItem=class(TCollectionItem, IUnknown, IHMITagInterface)
   private
     FTag:TPLCTag;
     procedure SetTag(t:TPLCTag);
-    procedure TagChanges(Sender:TObject);
+
+    function QueryInterface(const IID: TGUID; out Obj): Hresult; virtual; stdcall;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+
+    //IHMITagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
   protected
     procedure NotifyChange;
@@ -57,7 +67,7 @@ end;
 destructor  TTagCollectionItem.Destroy;
 begin
   if FTag<>nil then
-    FTag.RemoveChangeCallBack(TagChanges);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
   Inherited Destroy;
 end;
 
@@ -69,26 +79,14 @@ begin
     raise Exception.Create('Tag inválido!');
 
   if Ftag<>nil then
-    FTag.RemoveChangeCallBack(TagChanges);
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
 
   if t<>nil then
-    FTag.AddChangeCallBack(TagChanges,RemoveTag);
+    FTag.AddCallBacks(Self as IHMITagInterface);
 
   FTag:=t;
 
   NotifyChange;
-end;
-
-procedure   TTagCollectionItem.TagChanges(Sender:TObject);
-begin
-  with Collection as TTagCollection do
-    if Assigned(OnValuesChange) then
-      OnValuesChange(Self);
-end;
-
-procedure   TTagCollectionItem.RemoveTag(Sender:TObject);
-begin
-  FTag:=nil;
 end;
 
 procedure   TTagCollectionItem.NotifyChange;
@@ -111,6 +109,57 @@ begin
   //called when collection owner is completly loaded.
   //use this to do some actions that need to be
   //run only when object is loaded.
+end;
+
+procedure TTagCollectionItem.NotifyReadOk;
+begin
+
+end;
+
+procedure TTagCollectionItem.NotifyReadFault;
+begin
+
+end;
+
+procedure TTagCollectionItem.NotifyWriteOk;
+begin
+
+end;
+
+procedure TTagCollectionItem.NotifyWriteFault;
+begin
+
+end;
+
+procedure TTagCollectionItem.NotifyTagChange(Sender:TObject);
+begin
+  with Collection as TTagCollection do
+    if Assigned(OnValuesChange) then
+      OnValuesChange(Self);
+end;
+
+procedure TTagCollectionItem.RemoveTag(Sender:TObject);
+begin
+  if FTag=sender then
+    FTag := nil;
+end;
+
+function TTagCollectionItem.QueryInterface(const IID: TGUID; out Obj): HResult;stdcall;
+begin
+  if GetInterface(IID, Obj) then
+    result:=S_OK
+  else
+    result:=E_NOINTERFACE;
+end;
+
+function TTagCollectionItem._AddRef: Integer;stdcall;
+begin
+  result:=-1;
+end;
+
+function TTagCollectionItem._Release: Integer;stdcall;
+begin
+  result:=-1;
 end;
 
 //******************************************************************************
@@ -141,7 +190,6 @@ begin
   for i:=0 to Count-1 do
     TZone(Items[i]).Loaded;
 end;
-
 
 end.
 

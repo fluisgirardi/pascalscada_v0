@@ -44,7 +44,7 @@ type
     //: @exclude
     procedure SetHMITag(t:TPLCTag); override;
     //: @exclude
-    procedure HMINotifyChangeCallback(Sender:TObject); override;
+    procedure NotifyTagChange(Sender:TObject); override;
     //: @exclude
     procedure Loaded; override;
   public
@@ -85,14 +85,12 @@ destructor THMIText.Destroy;
 begin
    FTimer.Destroy;
    FTextZones.Destroy;
-   if FTag<>nil then
-      FTag.RemoveChangeCallBack(HMINotifyChangeCallback);
    inherited Destroy;
 end;
 
 procedure THMIText.ZoneChange(Sender:TObject);
 begin
-   HMINotifyChangeCallback(Self);
+   NotifyTagChange(Self);
 end;
 
 procedure THMIText.NeedComState(var CurState:TComponentState);
@@ -109,7 +107,7 @@ begin
   inherited SetHMITag(t);
 end;
 
-procedure THMIText.HMINotifyChangeCallback(Sender:TObject);
+procedure THMIText.NotifyTagChange(Sender:TObject);
 var
    value:Double;
 begin
@@ -136,7 +134,7 @@ end;
 
 procedure THMIText.RefreshTagValue;
 begin
-  HMINotifyChangeCallback(self);
+  NotifyTagChange(self);
 end;
 
 procedure THMIText.ShowZone(zone:TTextZone);
@@ -166,7 +164,7 @@ procedure THMIText.Loaded;
 begin
    inherited Loaded;
    FTextZones.Loaded;
-   HMINotifyChangeCallback(Self);
+   NotifyTagChange(Self);
 end;
 
 procedure THMIText.BlinkTimer(Sender:TObject);
