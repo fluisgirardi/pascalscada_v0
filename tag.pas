@@ -206,8 +206,7 @@ var
   c:Integer;
 begin
   for c := 0 to High(PChangeCallBacks) do
-    if Assigned(PChangeCallBacks[c].RemoveTag) then
-      PChangeCallBacks[c].RemoveTag(Self);
+    PChangeCallBacks[c].RemoveTag(Self);
   inherited Destroy;
 end;
 
