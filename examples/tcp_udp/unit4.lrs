@@ -1,0 +1,68 @@
+{ This is an automatically generated lazarus resource file }
+
+LazarusResources.Add('TForm1','FORMDATA',[
+  'TPF0'#6'TForm1'#5'Form1'#4'Left'#3'w'#1#6'Height'#3#251#0#3'Top'#3'2'#1#5'Wi'
+  +'dth'#3#139#1#13'ActiveControl'#7#6'Panel1'#11'BorderIcons'#11#12'biSystemMe'
+  +'nu'#0#7'Caption'#6#5'TESTE'#12'ClientHeight'#3#251#0#11'ClientWidth'#3#139#1
+  +#10'LCLVersion'#6#6'0.9.29'#0#6'TPanel'#6'Panel1'#4'Left'#2#0#6'Height'#2'8'
+  +#3'Top'#2#0#5'Width'#3#139#1#5'Align'#7#5'alTop'#10'BevelOuter'#7#6'bvNone'
+  +#12'ClientHeight'#2'8'#11'ClientWidth'#3#139#1#8'TabOrder'#2#0#0#9'THMILabel'
+  +#9'HMILabel3'#4'Left'#3#200#0#6'Height'#2#17#3'Top'#2#8#5'Width'#2'A'#9'Alig'
+  +'nment'#7#14'taRightJustify'#11'ParentColor'#8#12'NumberFormat'#6#4'#0.0'#6
+  +'PLCTag'#7#13'PLCTagNumber3'#0#0#9'THMILabel'#9'HMILabel2'#4'Left'#2'x'#6'He'
+  +'ight'#2#17#3'Top'#2#8#5'Width'#2'A'#9'Alignment'#7#14'taRightJustify'#11'Pa'
+  +'rentColor'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#13'PLCTagNumber2'#0#0#9
+  +'THMILabel'#9'HMILabel1'#4'Left'#2#8#6'Height'#2#17#3'Top'#2#8#5'Width'#2'A'
+  +#9'Alignment'#7#14'taRightJustify'#11'ParentColor'#8#12'NumberFormat'#6#4'#0'
+  +'.0'#6'PLCTag'#7#13'PLCTagNumber1'#0#0#6'TLabel'#6'Label1'#4'Left'#3#24#1#6
+  +'Height'#2#17#3'Top'#2#8#5'Width'#2'A'#9'Alignment'#7#14'taRightJustify'#8'A'
+  +'utoSize'#8#7'Caption'#6#6'Label1'#11'ParentColor'#8#0#0#10'THMIUpDown'#10'H'
+  +'MIUpDown1'#4'Left'#2'P'#6'Height'#2#31#3'Top'#2#0#5'Width'#2#17#3'Min'#5#0#0
+  +#0#0#0#0#0#0#0#0#3'Max'#5#0#0#0#0#0#0#0#200#5'@'#9'Increment'#5#0#0#0#0#0#0#0
+  +#128#255'?'#8'Position'#5#0#0#0#0#0#0#0#0#0#0#8'TabOrder'#2#0#4'Wrap'#8#6'PL'
+  +'CTag'#7#13'PLCTagNumber1'#0#0#13'THMIScrollBar'#13'HMIScrollBar1'#4'Left'#3
+  +#24#1#6'Height'#2#15#3'Top'#2' '#5'Width'#2'q'#8'PageSize'#2#0#8'TabOrder'#2
+  +#1#6'PLCTag'#7#13'PLCTagNumber1'#0#0#8'THMIEdit'#8'HMIEdit1'#4'Left'#2'x'#6
+  +'Height'#2#21#3'Top'#2' '#5'Width'#2'A'#9'Alignment'#7#14'taRightJustify'#5
+  +'Color'#7#8'clWindow'#8'TabOrder'#2#2#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7
+  +#13'PLCTagNumber2'#0#0#8'THMIEdit'#8'HMIEdit2'#4'Left'#3#200#0#6'Height'#2#21
+  +#3'Top'#2' '#5'Width'#2'A'#9'Alignment'#7#14'taRightJustify'#5'Color'#7#8'cl'
+  +'Window'#8'TabOrder'#2#3#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#13'PLCTagNum'
+  +'ber3'#0#0#0#6'TChart'#6'Chart1'#4'Left'#2#0#6'Height'#3#195#0#3'Top'#2'8'#5
+  +'Width'#3#139#1#8'AxisList'#14#1#9'Alignment'#7#7'calLeft'#6'Offset'#5#0#0#0
+  +#0#0#0#0#0#0#0#5'Scale'#5#0#0#0#0#0#0#0#128#255'?'#22'Title.Font.Orientation'
+  +#3#132#3#0#1#9'Alignment'#7#9'calBottom'#6'Offset'#5#0#0#0#0#0#0#0#0#0#0#5'S'
+  +'cale'#5#0#0#0#0#0#0#0#128#255'?'#0#0#16'Foot.Brush.Color'#7#9'clBtnFace'#15
+  +'Foot.Font.Color'#7#6'clBlue'#17'Title.Brush.Color'#7#9'clBtnFace'#16'Title.'
+  +'Font.Color'#7#6'clBlue'#18'Title.Text.Strings'#1#6#7'TAChart'#0#5'Align'#7#8
+  +'alClient'#11'ParentColor'#8#0#11'TLineSeries'#17'Chart1LineSeries1'#13'Line'
+  +'Pen.Color'#7#6'clLime'#13'LinePen.Width'#2#2#11'SeriesColor'#7#6'clLime'#6
+  +'Source'#7#16'ListChartSource1'#0#0#5'TLine'#11'Chart1Line1'#9'Pen.Color'#7
+  +#23'clGradientActiveCaption'#8'Position'#5#0#0#0#0#0#0#128#187#12'@'#11'Seri'
+  +'esColor'#7#23'clGradientActiveCaption'#0#0#5'TLine'#11'Chart1Line2'#9'Pen.C'
+  +'olor'#7#5'clRed'#8'Position'#5#0#0#0#0#0#0#0#0#0#0#11'SeriesColor'#7#5'clRe'
+  +'d'#0#0#0#12'TTCP_UDPPort'#12'TCP_UDPPort1'#6'Active'#9#4'Host'#6#12'192.168'
+  +'.33.6'#4'Port'#3#222#5#7'Timeout'#2'2'#4'left'#2'('#0#0#16'TModBusTCPDriver'
+  +#16'ModBusTCPDriver1'#17'CommunicationPort'#7#12'TCP_UDPPort1'#4'left'#2'('#3
+  +'top'#2'0'#0#0#13'TPLCTagNumber'#13'PLCTagNumber1'#7'TagGUID'#6'&{7936BFBE-4'
+  +'7C7-4E4C-BDD9-486A041FACFE}'#7'PLCHack'#2#0#7'PLCSlot'#2#0#10'PLCStation'#2
+  +#1#10'MemFile_DB'#2#0#10'MemAddress'#2#1#13'MemSubElement'#2#0#15'MemReadFun'
+  +'ction'#2#3#16'MemWriteFunction'#2#16#14'ProtocolDriver'#7#16'ModBusTCPDrive'
+  +'r1'#11'RefreshTime'#3#200#0#4'left'#2'('#3'top'#2'`'#0#0#13'TPLCTagNumber'
+  +#13'PLCTagNumber2'#7'TagGUID'#6'&{700E2FC7-3E13-4AA4-B6DE-B0FB15356550}'#7'P'
+  +'LCHack'#2#0#7'PLCSlot'#2#0#10'PLCStation'#2#1#10'MemFile_DB'#2#0#10'MemAddr'
+  +'ess'#3#136#19#13'MemSubElement'#2#0#15'MemReadFunction'#2#3#16'MemWriteFunc'
+  +'tion'#2#16#14'ProtocolDriver'#7#16'ModBusTCPDriver1'#11'RefreshTime'#3#200#0
+  +#4'left'#3#208#0#3'top'#2'`'#0#0#13'TPLCTagNumber'#13'PLCTagNumber3'#7'TagGU'
+  +'ID'#6'&{7BA3B9FC-767E-47D7-AD1D-67D3E96EDB9D}'#7'PLCHack'#2#0#7'PLCSlot'#2#0
+  +#10'PLCStation'#2#1#10'MemFile_DB'#2#0#10'MemAddress'#3#137#19#13'MemSubElem'
+  +'ent'#2#0#15'MemReadFunction'#2#3#16'MemWriteFunction'#2#16#14'ProtocolDrive'
+  +'r'#7#16'ModBusTCPDriver1'#11'RefreshTime'#3#200#0#4'left'#2'('#3'top'#3#144
+  +#0#0#0#9'TPLCBlock'#9'PLCBlock1'#7'TagGUID'#6'&{D8FBEEFF-3341-4C0B-9691-EB3F'
+  +'EE200CAD}'#7'PLCHack'#2#0#7'PLCSlot'#2#0#10'PLCStation'#2#1#10'MemFile_DB'#2
+  +#0#10'MemAddress'#3#138#19#13'MemSubElement'#2#0#15'MemReadFunction'#2#3#16
+  +'MemWriteFunction'#2#16#14'ProtocolDriver'#7#16'ModBusTCPDriver1'#11'Refresh'
+  +'Time'#3#200#0#4'Size'#2'2'#4'left'#3#128#0#3'top'#3#144#0#0#0#6'TTimer'#6'T'
+  +'imer1'#7'OnTimer'#7#11'Timer1Timer'#4'left'#3#128#0#3'top'#2'`'#0#0#16'TLis'
+  +'tChartSource'#16'ListChartSource1'#4'left'#3#8#1#3'top'#2'G'#0#0#0
+]);

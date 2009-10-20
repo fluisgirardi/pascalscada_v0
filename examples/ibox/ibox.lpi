@@ -1,0 +1,269 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="7"/>
+    <General>
+      <MainUnit Value="0"/>
+      <TargetFileExt Value=""/>
+      <Icon Value="0"/>
+      <UseXPManifest Value="True"/>
+      <ActiveEditorIndexAtStart Value="1"/>
+    </General>
+    <VersionInfo>
+      <ProjectVersion Value=""/>
+      <Language Value=""/>
+      <CharSet Value=""/>
+    </VersionInfo>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IgnoreBinaries Value="False"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|ppw|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+        <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="3">
+      <Item1>
+        <PackageName Value="zcomponent"/>
+        <MinVersion Major="7" Valid="True"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="scada"/>
+        <MinVersion Minor="5" Valid="True"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
+    </RequiredPackages>
+    <Units Count="22">
+      <Unit0>
+        <Filename Value="ibox.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ibox"/>
+        <UsageCount Value="30"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="unit1.pas"/>
+        <ComponentName Value="Form1"/>
+        <IsPartOfProject Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Unit1"/>
+        <CursorPos X="34" Y="22"/>
+        <TopLine Value="13"/>
+        <EditorIndex Value="0"/>
+        <UsageCount Value="30"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="../../iboxdriver.pas"/>
+        <UnitName Value="IBoxDriver"/>
+        <CursorPos X="1" Y="1"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="13"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="../../protocoldriver.pas"/>
+        <UnitName Value="ProtocolDriver"/>
+        <CursorPos X="1" Y="4"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="13"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="../../commtypes.pas"/>
+        <UnitName Value="commtypes"/>
+        <CursorPos X="1" Y="1"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="13"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="../../protocoltypes.pas"/>
+        <UnitName Value="ProtocolTypes"/>
+        <CursorPos X="1" Y="1"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="13"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="unit1.lfm"/>
+        <CursorPos X="1" Y="1"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="LFM"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="../../tcpipclientport.pas"/>
+        <UnitName Value="TCPIPClientPort"/>
+        <CursorPos X="29" Y="11"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="../../../fpcbuild/fpcsrc/rtl/unix/sockets.pp"/>
+        <UnitName Value="Sockets"/>
+        <CursorPos X="1" Y="1"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="10"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../../ZeosLib/src/plain/ZPlainLoader.pas"/>
+        <UnitName Value="ZPlainLoader"/>
+        <CursorPos X="39" Y="183"/>
+        <TopLine Value="161"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="../../../ZeosLib/src/core/ZCompatibility.pas"/>
+        <UnitName Value="ZCompatibility"/>
+        <CursorPos X="28" Y="101"/>
+        <TopLine Value="91"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="../../../ZeosLib/src/plain/ZPlainDbLibMsSql7.pas"/>
+        <UnitName Value="ZPlainDbLibMsSql7"/>
+        <CursorPos X="1" Y="1"/>
+        <TopLine Value="51"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="../../../ZeosLib/src/component/ZPropertyEditor.pas"/>
+        <UnitName Value="ZPropertyEditor"/>
+        <CursorPos X="1" Y="1"/>
+        <TopLine Value="1"/>
+        <EditorIndex Value="1"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="../../../ZeosLib/src/component/ZComponentReg.pas"/>
+        <UnitName Value="ZComponentReg"/>
+        <CursorPos X="11" Y="58"/>
+        <TopLine Value="49"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="../../../ZeosLib/src/component/ZComponentReg.lrs"/>
+        <CursorPos X="17" Y="1"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="../../scadareg.pas"/>
+        <UnitName Value="scadareg"/>
+        <CursorPos X="10" Y="66"/>
+        <TopLine Value="32"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="../../scada.lrs"/>
+        <CursorPos X="13" Y="1"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="../../../../lazarus/lcl/lresources.pp"/>
+        <UnitName Value="LResources"/>
+        <CursorPos X="3" Y="432"/>
+        <TopLine Value="413"/>
+        <UsageCount Value="10"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="../../../ZeosLib/src/component/ZComponent.inc"/>
+        <CursorPos X="9" Y="56"/>
+        <TopLine Value="25"/>
+        <EditorIndex Value="2"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="../../../ZeosLib/src/Zeos.inc"/>
+        <CursorPos X="13" Y="302"/>
+        <TopLine Value="286"/>
+        <UsageCount Value="10"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="../../../ZeosLib/packages/lazarus/zplain.pas"/>
+        <UnitName Value="zplain"/>
+        <CursorPos X="2" Y="10"/>
+        <TopLine Value="1"/>
+        <UsageCount Value="10"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="../../../ZeosLib/src/plain/ZPlainFirebirdDriver.pas"/>
+        <UnitName Value="ZPlainFirebirdDriver"/>
+        <CursorPos X="39" Y="245"/>
+        <TopLine Value="228"/>
+        <UsageCount Value="10"/>
+        <SyntaxHighlighter Value="Delphi"/>
+      </Unit21>
+    </Units>
+    <JumpHistory Count="5" HistoryIndex="4">
+      <Position1>
+        <Filename Value="../../../ZeosLib/src/component/ZPropertyEditor.pas"/>
+        <Caret Line="1" Column="1" TopLine="51"/>
+      </Position1>
+      <Position2>
+        <Filename Value="../../../ZeosLib/src/component/ZPropertyEditor.pas"/>
+        <Caret Line="58" Column="13" TopLine="51"/>
+      </Position2>
+      <Position3>
+        <Filename Value="../../../ZeosLib/src/component/ZComponent.inc"/>
+        <Caret Line="56" Column="9" TopLine="25"/>
+      </Position3>
+      <Position4>
+        <Filename Value="../../../ZeosLib/src/component/ZPropertyEditor.pas"/>
+        <Caret Line="58" Column="13" TopLine="51"/>
+      </Position4>
+      <Position5>
+        <Filename Value="../../../ZeosLib/src/component/ZPropertyEditor.pas"/>
+        <Caret Line="1" Column="1" TopLine="1"/>
+      </Position5>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="8"/>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)/"/>
+    </SearchPaths>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <Compiler Value="/usr/local/bin/fpc" Date="1253190886"/>
+  <Params Value=" -MObjFPC -Scgi -O1 -gl -vewnhi -l -Fu/home/fabiolg/desenvolvimento/HMI_SCADA/lib/x86_64-linux/ -Fu/home/fabiolg/desenvolvimento/ZeosLib/packages/lazarus/build/ -Fu/home/fabiolg/lazarus/ideintf/units/x86_64-linux/ -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux/ -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux/gtk2/ -Fu/home/fabiolg/lazarus/packager/units/x86_64-linux/ -Fu/home/fabiolg/desenvolvimento/PesagemMilhoAlfa/ -Fu. -FE/home/fabiolg/desenvolvimento/PesagemMilhoAlfa/ -oPesagens -dUseCThreads -dLCL -dLCLgtk2 Pesagens.lpr"/>
+</CONFIG>

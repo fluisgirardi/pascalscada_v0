@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2009/10/15 09:53:16.468.pas,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\Unit2.pas=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uMain.pas</Transaction>
+    <Transaction>2009/10/15 09:53:16.468.dfm,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\Unit2.dfm=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uMain.dfm</Transaction>
+    <Transaction>2009/10/15 09:53:25.281.pas,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\Unit1.pas=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Pesagens.pas</Transaction>
+    <Transaction>2009/10/15 09:53:25.281.dfm,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\Unit1.dfm=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Pesagens.dfm</Transaction>
+    <Transaction>2009/10/15 09:53:53.015.pas,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Pesagens.pas=</Transaction>
+    <Transaction>2009/10/15 09:53:53.015.dfm,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Pesagens.dfm=</Transaction>
+    <Transaction>2009/10/15 09:54:02.156.bdsproj,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\Project2.bdsproj=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Pesagens.bdsproj</Transaction>
+    <Transaction>2009/10/15 09:54:15.734.pas,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uMain.pas=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uDM.pas</Transaction>
+    <Transaction>2009/10/15 09:54:15.734.dfm,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uMain.dfm=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uDM.dfm</Transaction>
+    <Transaction>2009/10/15 09:54:44.375.pas,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Unit1.pas=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uMain.pas</Transaction>
+    <Transaction>2009/10/15 09:54:44.375.dfm,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Unit1.dfm=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uMain.dfm</Transaction>
+    <Transaction>2009/10/15 10:02:20.625.pas,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Unit1.pas=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uDMImg.pas</Transaction>
+    <Transaction>2009/10/15 10:02:20.625.dfm,C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\Unit1.dfm=C:\Documents and Settings\Usuario\Meus documentos\Borland Studio Projects\PesagemMilhoAlfa\uDMImg.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

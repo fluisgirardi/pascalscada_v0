@@ -1,0 +1,232 @@
+object Form1: TForm1
+  Left = 375
+  Height = 251
+  Top = 306
+  Width = 395
+  ActiveControl = Panel1
+  BorderIcons = [biSystemMenu]
+  Caption = 'TESTE'
+  ClientHeight = 251
+  ClientWidth = 395
+  LCLVersion = '0.9.29'
+  object Panel1: TPanel
+    Left = 0
+    Height = 56
+    Top = 0
+    Width = 395
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 56
+    ClientWidth = 395
+    TabOrder = 0
+    object HMILabel3: THMILabel
+      Left = 200
+      Height = 17
+      Top = 8
+      Width = 65
+      Alignment = taRightJustify
+      ParentColor = False
+      NumberFormat = '#0.0'
+      PLCTag = PLCTagNumber3
+    end
+    object HMILabel2: THMILabel
+      Left = 120
+      Height = 17
+      Top = 8
+      Width = 65
+      Alignment = taRightJustify
+      ParentColor = False
+      NumberFormat = '#0.0'
+      PLCTag = PLCTagNumber2
+    end
+    object HMILabel1: THMILabel
+      Left = 8
+      Height = 17
+      Top = 8
+      Width = 65
+      Alignment = taRightJustify
+      ParentColor = False
+      NumberFormat = '#0.0'
+      PLCTag = PLCTagNumber1
+    end
+    object Label1: TLabel
+      Left = 280
+      Height = 17
+      Top = 8
+      Width = 65
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'Label1'
+      ParentColor = False
+    end
+    object HMIUpDown1: THMIUpDown
+      Left = 80
+      Height = 31
+      Top = 0
+      Width = 17
+      Min = 0
+      Max = 100
+      Increment = 1
+      Position = 0
+      TabOrder = 0
+      Wrap = False
+      PLCTag = PLCTagNumber1
+    end
+    object HMIScrollBar1: THMIScrollBar
+      Left = 280
+      Height = 15
+      Top = 32
+      Width = 113
+      PageSize = 0
+      TabOrder = 1
+      PLCTag = PLCTagNumber1
+    end
+    object HMIEdit1: THMIEdit
+      Left = 120
+      Height = 21
+      Top = 32
+      Width = 65
+      Alignment = taRightJustify
+      Color = clWindow
+      TabOrder = 2
+      NumberFormat = '#0.0'
+      PLCTag = PLCTagNumber2
+    end
+    object HMIEdit2: THMIEdit
+      Left = 200
+      Height = 21
+      Top = 32
+      Width = 65
+      Alignment = taRightJustify
+      Color = clWindow
+      TabOrder = 3
+      NumberFormat = '#0.0'
+      PLCTag = PLCTagNumber3
+    end
+  end
+  object Chart1: TChart
+    Left = 0
+    Height = 195
+    Top = 56
+    Width = 395
+    AxisList = <    
+      item
+        Alignment = calLeft
+        Offset = 0
+        Scale = 1
+        Title.Font.Orientation = 900
+      end    
+      item
+        Alignment = calBottom
+        Offset = 0
+        Scale = 1
+      end>
+    Foot.Brush.Color = clBtnFace
+    Foot.Font.Color = clBlue
+    Title.Brush.Color = clBtnFace
+    Title.Font.Color = clBlue
+    Title.Text.Strings = (
+      'TAChart'
+    )
+    Align = alClient
+    ParentColor = False
+    object Chart1LineSeries1: TLineSeries
+      LinePen.Color = clLime
+      LinePen.Width = 2
+      SeriesColor = clLime
+      Source = ListChartSource1
+    end
+    object Chart1Line1: TLine
+      Pen.Color = clGradientActiveCaption
+      Position = 12000
+      SeriesColor = clGradientActiveCaption
+    end
+    object Chart1Line2: TLine
+      Pen.Color = clRed
+      Position = 0
+      SeriesColor = clRed
+    end
+  end
+  object TCP_UDPPort1: TTCP_UDPPort
+    Active = True
+    Host = '192.168.33.6'
+    Port = 1502
+    Timeout = 50
+    left = 40
+  end
+  object ModBusTCPDriver1: TModBusTCPDriver
+    CommunicationPort = TCP_UDPPort1
+    left = 40
+    top = 48
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{7936BFBE-47C7-4E4C-BDD9-486A041FACFE}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 1
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    left = 40
+    top = 96
+  end
+  object PLCTagNumber2: TPLCTagNumber
+    TagGUID = '{700E2FC7-3E13-4AA4-B6DE-B0FB15356550}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 5000
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    left = 208
+    top = 96
+  end
+  object PLCTagNumber3: TPLCTagNumber
+    TagGUID = '{7BA3B9FC-767E-47D7-AD1D-67D3E96EDB9D}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 5001
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    left = 40
+    top = 144
+  end
+  object PLCBlock1: TPLCBlock
+    TagGUID = '{D8FBEEFF-3341-4C0B-9691-EB3FEE200CAD}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 5002
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    Size = 50
+    left = 128
+    top = 144
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    left = 128
+    top = 96
+  end
+  object ListChartSource1: TListChartSource
+    left = 264
+    top = 71
+  end
+end

@@ -1,0 +1,35 @@
+object Form1: TForm1
+  Left = 335
+  Height = 300
+  Top = 180
+  Width = 400
+  Caption = 'Form1'
+  LCLVersion = '0.9.29'
+  object TCP_UDPPort1: TTCP_UDPPort
+    Active = True
+    Host = 'localhost'
+    Port = 1102
+    Timeout = 0
+    left = 109
+    top = 136
+  end
+  object ModBusMasterDriver1: TModBusMasterDriver
+    CommunicationPort = TCP_UDPPort1
+    left = 109
+    top = 184
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{75E0B690-EA84-4E9F-8379-9AC95D8E4BEF}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusMasterDriver1
+    left = 109
+    top = 232
+  end
+end

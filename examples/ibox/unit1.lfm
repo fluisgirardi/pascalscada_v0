@@ -1,0 +1,94 @@
+object Form1: TForm1
+  Left = 380
+  Height = 371
+  Top = 164
+  Width = 400
+  Caption = 'Form1'
+  ClientHeight = 371
+  ClientWidth = 400
+  OnCreate = FormCreate
+  LCLVersion = '0.9.27'
+  object HMILabel1: THMILabel
+    Left = 176
+    Height = 17
+    Top = 144
+    Width = 65
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+  end
+  object HMILabel2: THMILabel
+    Left = 176
+    Height = 17
+    Top = 232
+    Width = 65
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber2
+  end
+  object HMILabel3: THMILabel
+    Left = 176
+    Height = 17
+    Top = 296
+    Width = 65
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber3
+  end
+  object SerialPortDriver1: TSerialPortDriver
+    Active = True
+    COMPort = 'ttyUSB0'
+    Timeout = 80
+    WriteReadDelay = 10
+    BaudRate = br9600
+    left = 30
+    top = 70
+  end
+  object IBoxDriver1: TIBoxDriver
+    CommunicationPort = SerialPortDriver1
+    left = 120
+    top = 70
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{BCD3AEB8-56AA-45D6-A3C7-52F668059F6A}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 149
+    MemFile_DB = 0
+    MemAddress = 96
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = IBoxDriver1
+    left = 85
+    top = 128
+  end
+  object PLCTagNumber2: TPLCTagNumber
+    TagGUID = '{BCD3AEB8-56AA-45D6-A3C7-52F668059F6A}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 149
+    MemFile_DB = 0
+    MemAddress = 168
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = IBoxDriver1
+    left = 85
+    top = 208
+  end
+  object PLCTagNumber3: TPLCTagNumber
+    TagGUID = '{BCD3AEB8-56AA-45D6-A3C7-52F668059F6A}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 149
+    MemFile_DB = 0
+    MemAddress = 247
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = IBoxDriver1
+    left = 85
+    top = 272
+  end
+end
