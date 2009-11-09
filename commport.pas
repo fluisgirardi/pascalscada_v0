@@ -1011,7 +1011,7 @@ procedure TCommPortDriver.RefreshLastOSError;
 {$IFNDEF FPC}
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  buffer:PChar;
+  buffer:PAnsiChar;
 {$IFEND}
 {$ENDIF}
 begin

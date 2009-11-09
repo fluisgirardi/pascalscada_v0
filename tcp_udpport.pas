@@ -216,7 +216,7 @@ begin
       end;
     end;
     {$ELSE}
-    ServerAddr := GetHostByName(PChar(FHostName));
+    ServerAddr := GetHostByName(PAnsiChar(FHostName));
     if ServerAddr=nil then begin
       PActive:=false;
       RefreshLastOSError;
