@@ -224,8 +224,13 @@ type
   @seealso(WM_WRITE_WRITEREAD)
 
   }
-  function ConcatenateBYTES(const a,b:BYTES):BYTES;
   function IOCommandToWindowsMessage(ioCommand:TIOCommand; ToWrite:Boolean):Cardinal;
+
+  {:
+  Concatena dois buffers de bytes.
+  @seealso(BYTES)
+  }
+  function ConcatenateBYTES(const a,b:BYTES):BYTES;
 
 implementation
 

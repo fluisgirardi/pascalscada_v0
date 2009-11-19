@@ -1,4 +1,8 @@
-//: Define um controle em forma de RadioButton
+{:
+  Define um controle em forma de RadioButton.
+  ATUALMENTE ESTE CONTROLE não funciona no Lazarus.
+}
+
 unit HMIRadioButton;
 
 {$IFDEF FPC}

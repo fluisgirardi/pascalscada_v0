@@ -87,7 +87,7 @@ type
     destructor  Destroy; override;
   published
     {$IFNDEF FPC}
-    //: @exclude
+    //: Alinhamento do texto dentro do Edit.
     property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
     {$ENDIF}
     {:

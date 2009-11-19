@@ -1,4 +1,8 @@
-﻿unit IBoxDriver;
+﻿{:
+  Driver de protocolo Ibox, usado para comunicar com unidades
+  de refrigeração da Thermo-King.
+}
+unit IBoxDriver;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -10,6 +14,14 @@ uses
   Classes, sysutils, ProtocolDriver, commtypes, Tag, ProtocolTypes;
 
 type
+  {:
+    Identifica um registro do Ibox.
+    @member RefCount Conta quantas vezes o registro foi referenciado.
+    @member MinScanTime Guarda o menor tempo de Scan dos tags que estão refeenciando o registro.
+    @member Value Guarda o último valor lido do registro.
+    @member TimeStamp Quando foi a última vez que o registro foi lido.
+    @member LastReadResult Qual foi o resultado da última tentativa de leitura.
+  }
   TIBoxRegister = record
     RefCount:Cardinal;
     MinScanTime:Cardinal;
@@ -18,6 +30,33 @@ type
     LastReadResult:TProtocolIOResult;
   end;
 
+  {:
+  Representa os registradores 200,201 e 202 do Ibox.
+    @member RefCount Conta quantas vezes o registro foi referenciado.
+    @member MinScanTime Guarda o menor tempo de Scan dos tags que estão refeenciando o registro.
+    @member TimeStamp Quando foi a última vez que o registro foi lido.
+    @member LastReadResult Qual foi o resultado da última tentativa de leitura.
+
+    @member ActiveZones Retornado apenas no PID 200. Informa se os pids 201 e 202 são validos.
+    @member ActiveAlarme Retorna a severidade do alarme. 15 o mais severo e 1 para o menos severo.
+    @member ManufacturerAlarmCode Retorna o código especifico de alarme (Alarme do fabricante).
+
+    @member ReturnAir1Active Informa se o sensor da temperatura do Retorno do Ar 1 está instalado. 1=Instalado, 0=Não instalado.
+    @member Supply1Active Informa se o sensor de entrada de Ar 1 está instalado. 1=Instalado, 0=Não instalado.
+    @member SetPointActive Informa se o setpoint está presente. 1=Presente, 0=Ausente.
+    @member EvaporatorCoilActive Informa se o sensor de temperatura da bobina do está instalado. 1=Instalado, 0=Não instalado.
+    @member ReturnAir2Active Informa se o sensor de temperatura do Retorno de Ar 2 está instalado. 1=Instalado, 0=Não instalado.
+    @member Supply2Active Informa se o sensor de entrada de Ar 2 está instalado. 1=Instalado, 0=Não instalado.
+    @member OperatingModeActive Informa se o modo de operação está disponível. 1=Disponível, 0=Indisponível.
+
+    @member ReturnAir1 Temperatura do Retorno de Ar 1, caso o sensor esteja instalado.
+    @member Supply1 Temperatura da Entrada de Ar 1, caso o sensor esteja instalado.
+    @member SetPoint Valor desejado de temperatura na camara fria.
+    @member EvaporatorCoil Temperatura da bobina do evaporador, caso o sensor esteja instalado.
+    @member ReturnAir2 Temperatura do Retorno de Ar 2, caso o sensor esteja instalado.
+    @member Supply2 Temperatura da Entrada de Ar 2, caso o sensor esteja instalado.
+    @member OperatingMode Modo de operação da unidade, caso essa informação esteja disponível.
+  }
   TPID20xRegister = Record
     RefCount:Cardinal;
     TimeStamp:TDateTime;
