@@ -17,7 +17,7 @@ type
     Button2: TButton;
     HMILabel1: THMILabel;
     Memo1: TMemo;
-    ModBusMasterDriver1: TModBusMasterDriver;
+    ModBusMasterDriver1: TModBusRTUDriver;
     ATS48CMD: TPLCTagNumber;
     ATS48Status: TPLCTagNumber;
     SerialPortDriver1: TSerialPortDriver;

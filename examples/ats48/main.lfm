@@ -54,7 +54,7 @@ object Form1: TForm1
     left = 8
     top = 8
   end
-  object ModBusMasterDriver1: TModBusMasterDriver
+  object ModBusMasterDriver1: TModBusRTUDriver
     CommunicationPort = SerialPortDriver1
     left = 40
     top = 8
