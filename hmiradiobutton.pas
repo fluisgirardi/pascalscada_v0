@@ -1,6 +1,7 @@
 {:
-  Define um controle em forma de RadioButton.
   ATUALMENTE ESTE CONTROLE não funciona no Lazarus.
+  @abstract(Implementa um controle um controle em forma de RadioButton.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 
 unit HMIRadioButton;

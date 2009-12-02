@@ -1,4 +1,7 @@
-//: Unit que implementa um controle CheckBox ligado a um Tag.
+{:
+  @abstract(Unit que implementa um controle CheckBox ligado a um Tag.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit HMICheckBox;
 
 {$IFDEF FPC}
@@ -12,7 +15,13 @@ uses
   ProtocolTypes, Tag;
 
 type
-  //: @name é um controle booleano em forma de CheckBox que lê e escreve valores em Tags.
+  {:
+   @name é a classe de um controle booleano em forma de CheckBox que lê e escreve valores em Tags.
+   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+   @bold(Para maiores informações consulte a documentação da classe TCheckBox
+   de seu ambiente de desenvolvimento.)
+  }
   THMICheckBox = class(TCheckBox, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;

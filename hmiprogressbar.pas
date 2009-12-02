@@ -1,4 +1,7 @@
-//: Implementa um controle para exibição de valores numéricos em forma de barra de progresso.
+{:
+  @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit HMIProgressBar;
 
 {$IFDEF FPC}
@@ -16,8 +19,8 @@ type
   Implementa um controle para exibição de valores numéricos em forma de barra de
   progresso.
   
-  @bold(Para maiores informações consulte a documentação de TProgressBar de seu
-  ambiente de desenvolvimento.)
+  @bold(Para maiores informações consulte a documentação da classe TProgressBar
+  de seu ambiente de desenvolvimento.)
   }
   THMIProgressBar = class(TProgressBar, IHMIInterface, IHMITagInterface)
   private

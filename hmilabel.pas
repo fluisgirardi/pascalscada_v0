@@ -1,4 +1,7 @@
-//: implementa um controle para a exibição de valores de quaisquer tags.
+{:
+  @abstract(Unit que implementa um controle para a exibição de valores de qualquer tag.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit HMILabel;
 
 {$IFDEF FPC}
@@ -11,7 +14,13 @@ uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes, Tag;
 
 type
-  //:@name implementa o controle para a exibir de valores de qualquer tipo de tag.
+  {:
+    @name implementa o controle para a exibir de valores de qualquer tipo de tag.
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+    @bold(Para maiores informações consulte a documentação da classe TLabel
+    de seu ambiente de desenvolvimento.)
+  }
   THMILabel = class(TLabel, IHMIInterface, IHMITagInterface)
   private
     FNumberFormat:string;

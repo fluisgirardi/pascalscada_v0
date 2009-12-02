@@ -1,4 +1,7 @@
-//: Implementação para Tags String.
+{:
+  @abstract(Implementação para Tags String.)
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+}
 unit PLCString;
 
 {$IFDEF FPC}
@@ -13,13 +16,19 @@ uses
 
 type
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Define os possíveis tipos de strings.
   @value(stSIEMENS String no formato SIEMENS, onde os dois primeiros bytes da
   cadeia informam o tamanho máximo e quantos bytes desse tamanho já foram usados.)
   @value(stC A string só termina quando o código ASCII 0 é encontrado.)
   }
   TPLCStringTypes = (stSIEMENS, stC);
-  //: Tag de comunicação em formato String.
+
+  {:
+  @abstract(Tag de comunicação em formato String.)
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  }
   TPLCString = class(TTagBlock, ITagInterface, ITagString)
   private
     PValue:String;

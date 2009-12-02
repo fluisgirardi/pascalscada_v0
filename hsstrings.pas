@@ -1,4 +1,7 @@
-//: @exclude
+{:
+  @abstract(Unit de tradução do PascalSCADA.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit hsstrings;
 
 {$IFDEF FPC}
@@ -12,11 +15,11 @@ resourcestring
   // PALHETAS DE COMPONENTES
   //////////////////////////////////////////////////////////////////////////////
   
-  strPortsPallete       = 'FLG SCADA Ports';
-  strProtocolsPallete   = 'FLG SCADA Protocols';
-  strTagsPallete        = 'FLG SCADA Tags';
-  strUtilsPallete       = 'FLG SCADA Utils';
-  strControlsPallete    = 'HCl - Acid Controls';
+  strPortsPallete       = 'PascalSCADA Ports';
+  strProtocolsPallete   = 'PascalSCADA Protocols';
+  strTagsPallete        = 'PascalSCADA Tags';
+  strUtilsPallete       = 'PascalSCADA Utils';
+  strControlsPallete    = 'PascalSCADA HCl';
   
   //////////////////////////////////////////////////////////////////////////////
   // Mensagens de exceptions.

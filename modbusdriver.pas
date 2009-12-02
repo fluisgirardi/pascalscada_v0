@@ -1,4 +1,8 @@
-//: Implementação do protocolo ModBus RTU
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  @abstract(Implementa a base para os drivers ModBus RTU e ModBus TCP.)
+}
 unit ModBusDriver;
 
 {$IFDEF FPC}
@@ -14,6 +18,8 @@ uses
 
 type
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
   Estrutura que simula as áreas de memória de um equipamento modbus escravo.
 
   @member Station Armazena o endereço do equipamento modbus.
@@ -43,13 +49,13 @@ type
   end;
 
   {:
-  Classe do driver ModBus RTU (Serial e TCP)
-  @author(Fabio Luis Girardi)
+  @abstract(Classe base do driver ModBus (RTU e TCP))
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  Driver que implementa o protocolo ModBus RTU. Trabalha independentemente do
+  Driver que implementa a base do protocolo ModBus. Trabalha independentemente do
   driver de porta (camadas abaixo da camada de aplicação).
 
-  Para configurar um tag para usar o ModBus RTU, é necessário configurar as
+  Para configurar um tag para usar o ModBus, é necessário configurar as
   seguintes propriedade do tag:
 
   @unorderedList(
@@ -91,8 +97,10 @@ type
   bloco, e todo o bloco for escrito de uma única vez, o driver fará uma emulação
   escrevendo elemento a elemento usando a função definida, mas não é recomendado.
 
-  É necessário que você conheças as funções ModBus que seu equipamento suporta.)
+  É necessário que você conheça as funções ModBus que seu equipamento suporta.)
 
+  @seealso(TModBusRTUDriver)
+  @seealso(TModBusTCPDriver)
   }
   TModBusDriver = class(TProtocolDriver)
   protected

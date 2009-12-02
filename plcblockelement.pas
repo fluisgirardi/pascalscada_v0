@@ -1,4 +1,8 @@
-//: Implementação de um elemento de bloco.
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  @abstract(Implementação de um elemento de um tag bloco de comunicação.)
+}
 unit PLCBlockElement;
 
 {$IFDEF FPC}
@@ -12,7 +16,11 @@ uses
 
 type
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
   Classe de Tag Elemento de Bloco de comunicação.
+  Usado para retirar uma informação de um conjunto (bloco) de informações.
+
   @seealso(TPLCBlock)
   }
   TPLCBlockElement = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)

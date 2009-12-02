@@ -1,4 +1,7 @@
-//: Implementa a base para Tags de comunicação.
+{:
+@abstract(Implementa a base para Tags de comunicação.)
+@author(Fabio Luis Girardi papelhigienico@gmail.com)
+}
 unit PLCTag;
 
 {$IFDEF FPC}
@@ -11,7 +14,10 @@ uses
   SysUtils, ExtCtrls, Classes, Tag, ProtocolDriver, ProtocolTypes, Math;
 
 type
-  //: Classe base para tags de comunicação.
+  {:
+  @abstract(Classe base para todos os tags de comunicação.)
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  }
   TPLCTag = class(TTag)
   private
     CScanTimer:TTimer;

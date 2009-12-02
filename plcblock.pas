@@ -1,4 +1,8 @@
-//: Implementação de um bloco de comunicação
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  @abstract(Implementação de um tag de bloco de comunicação.)
+}
 unit PLCBlock;
 
 {$IFDEF FPC}
@@ -11,7 +15,11 @@ uses
   SysUtils, Classes, TagBlock, ProtocolTypes;
 
 type
-  //: Tag para comunicação em blocos.
+  {:
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+    Tag para comunicação em blocos.
+  }
   TPLCBlock = class(TTagBlock)
   private
     procedure SetSize(size:Cardinal);

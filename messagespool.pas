@@ -2,7 +2,7 @@
  @abstract(Unit que implementa o enfileiramento de mensagens internas do programa,
            multiplataforma.)
  
- @author(Fabio Luis Girardi)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
  
  Feito para suprir a necessidade de comunicação inter-processos (threads) de
  forma independente de sistema operacional.
@@ -25,6 +25,8 @@ uses
 type
 
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
   Estrutura que identifica uma mensagem.
   @member MsgID Classifica a mensagem.
   @member lParam Ponteiro para dados (caso necessário).
@@ -41,6 +43,8 @@ type
   PMSMsg = ^TMSMsg;
 
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
   Estrutura usada para montar uma fila de mensagens.
   @member Msg Mensagem do elemento da fila.
   @member NextMsg Aponta para o próximo elemento da fila de mensagens. Tem o valor @code(nil) caso esse elemento seja o último.

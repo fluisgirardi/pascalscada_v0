@@ -1,4 +1,7 @@
-//: Implementa um tag PLC numérico.
+{:
+  @abstract(Implementa um tag PLC numérico para uso geral.)
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+}
 unit PLCNumber;
 
 {$IFDEF FPC}
@@ -11,7 +14,10 @@ uses
   SysUtils, Classes, PLCTag, ProtocolTypes, ValueProcessor;
 
 type
-  //: Classe base para tags numéricos.
+  {:
+    @abstract(Classe base para tags numéricos.)
+    @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  }
   TPLCNumber = class(TPLCTag)
   protected
     //: Armazena a seqüência de escalas aplicadas a esse tag.

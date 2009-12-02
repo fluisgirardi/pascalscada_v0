@@ -1,4 +1,8 @@
-//: Implementa o componente de escalonamento linear.
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  @abstract(Implementa o componente de escalonamento linear.)
+}
 unit LinearScaleProcessor;
 
 {$IFDEF FPC}
@@ -12,6 +16,8 @@ uses
 
 type
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
   Componente de escalas lineares.
   @seealso(TPIPE)
   @seealso(TScaleProcessor)

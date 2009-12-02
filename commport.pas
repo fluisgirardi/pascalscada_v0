@@ -1,4 +1,7 @@
-//: Unit que implementa as bases de um driver de porta de comunicação.
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @abstract(Unit que implementa as bases de um driver de porta de comunicação)
+}
 unit CommPort;
 
 {$IFDEF FPC}
@@ -16,6 +19,7 @@ uses
 
 type
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   @name é responsável por retornar os resultados de um grupo de comandos
   de leitura/escrita para quem fez o pedido.
   @bold(Retorna os resultados de maneira ASSINCRONA, sendo responsabilidade de
@@ -46,7 +50,7 @@ type
     constructor Create(IniciarSuspensa:Boolean);
     //: Destroi a thread de atualização e todos os seus recursos.
     destructor Destroy; override;
-    //: Aguarda 60 segundos pela inicialização da thread de atualização.
+    //: Aguarda pela inicialização da thread de atualização.
     procedure WaitInit;
     //: Termina a execução da thread.
     procedure Terminate;
@@ -67,18 +71,21 @@ type
     DoResumeCallBack. @bold(É chamado através de TCommPortDriver.CancelCallBack)
     @seealso(TDriverCallBack)
     @seealso(TCommPortDriver.CancelCallBack)
+    @seealso(TCommPortDriver.ResumeCallBack)
     }
     procedure DoCancelCallBack(CallBack:TDriverCallBack);
     {:
     Ativa um método de CallBack para que este se torne novamente um endereço
     válido.
     @seealso(TDriverCallBack)
+    @seealso(TCommPortDriver.CancelCallBack)
     @seealso(TCommPortDriver.ResumeCallBack)
     }
     procedure DoResumeCallBack(CallBack:TDriverCallBack);
   end;
 
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   Thread responsável por processar os pedidos de leitura/escrita.
   }
   TThreadComm = class(TCrossThread)
@@ -102,6 +109,8 @@ type
     Cria uma nova thread de execução de pedidos de leitura/escrita.
     É usada para processar os comandos de leitura/escrita assincronos de
     TCommPortDriver.
+    @bold(Geralmente uma instância dessa classe é criada quando é criado
+          uma instância de TCommPortDriver).
     @param(IniciarSuspensa Boolean. Caso @true a thread será criada suspensa
            (parada). Para iniciar a execução da thread chame o método Resume.)
     @param(Updater TUpdateThread. Informa a instância da thread responsável
@@ -477,9 +486,9 @@ begin
   while not Terminated do begin
     try
       WaitToDoSomething;
-      while FSpool.PeekMessage(PMsg,WM_CALLBACK,WM_CANCELCALLBACK,true) do begin
+      while FSpool.PeekMessage(PMsg,PSM_CALLBACK,PSM_CANCELCALLBACK,true) do begin
         case PMsg.MsgID of
-          WM_CALLBACK:
+          PSM_CALLBACK:
           begin
             PCmdPacket := PCommandPacket(PMsg.wParam);
             if Assigned(PCmdPacket^.Callback) and (not CanceledCallBack(@PCmdPacket^.Callback)) then
@@ -488,7 +497,7 @@ begin
             SetLength(PCmdPacket^.Packet.BufferToRead, 0);
             Dispose(PCmdPacket);
           end;
-          WM_CANCELCALLBACK:
+          PSM_CANCELCALLBACK:
           begin
             found := false;
             dcallBack := PMsg.wParam;
@@ -503,7 +512,7 @@ begin
               PCanceledCallbacks[PCanceledCount-1] := dcallBack;
             end;
           end;
-          WM_RESUMECALLBACK:
+          PSM_RESUMECALLBACK:
           begin
             found := false;
             dcallBack := PMsg.wParam;
@@ -545,19 +554,19 @@ end;
 
 procedure TUpdateThread.DoCallBack(CmdPacket:PCommandPacket);
 begin
-  FSpool.PostMessage(WM_CALLBACK,CmdPacket,nil,false);
+  FSpool.PostMessage(PSM_CALLBACK,CmdPacket,nil,false);
   DoSomething;
 end;
 
 procedure TUpdateThread.DoCancelCallBack(CallBack:TDriverCallBack);
 begin
-  FSpool.PostMessage(WM_CANCELCALLBACK,@CallBack,nil,true);
+  FSpool.PostMessage(PSM_CANCELCALLBACK,@CallBack,nil,true);
   DoSomething;
 end;
 
 procedure TUpdateThread.DoResumeCallBack(CallBack:TDriverCallBack);
 begin
-  FSpool.PostMessage(WM_RESUMECALLBACK,@CallBack,nil,true);
+  FSpool.PostMessage(PSM_RESUMECALLBACK,@CallBack,nil,true);
   DoSomething
 end;
 
@@ -1083,7 +1092,7 @@ begin
     try
       WaitToDoSomething;
       CheckWriteCmd;
-      while (not Terminated) and FSpool.PeekMessage(PMsg,WM_READ_READ,WM_READ_WRITEREAD,true) do begin
+      while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_READ_READ,PSM_READ_WRITEREAD,true) do begin
         CheckWriteCmd;
         commandpacket := PCommandPacket(PMsg.wParam);
         DoIOCommand(PMsg, commandpacket);
@@ -1132,7 +1141,7 @@ var
   commandpacket:PCommandPacket;
   PMsg:TMSMsg;
 begin
-  while (not Terminated) and FSpool.PeekMessage(PMsg,WM_WRITE_READ,WM_WRITE_WRITEREAD,true) do begin
+  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_WRITE_READ,PSM_WRITE_WRITEREAD,true) do begin
     commandpacket := PCommandPacket(PMsg.wParam);
     DoIOCommand(PMsg, commandpacket);
   end;

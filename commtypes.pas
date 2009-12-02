@@ -1,4 +1,7 @@
-//: Unit com os tipos que são usados frequentemente em drivers de portas de comunicação.
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @abstract(Unit com os tipos que são usados frequentemente em drivers de portas de comunicação.)
+}
 unit commtypes;
 
 {$IFDEF FPC}
@@ -6,10 +9,6 @@ unit commtypes;
 {$ENDIF}
 
 interface
-
-{$IF defined(WIN32) or defined(WIN64)}
-uses Messages;
-{$IFEND}
 
 type
   {:
@@ -29,6 +28,8 @@ type
   @value iocWriteRead Executa uma escrita e logo apos uma leitura;
   
   @seealso(TCommPortDriver)
+  @seealso(TCommPortDriver.IOCommandASync)
+  @seealso(TCommPortDriver.IOCommandSync)
   @seealso(TIOPacket)
   }
   TIOCommand = (iocNone, iocRead, iocReadWrite, iocWrite, iocWriteRead);
@@ -48,7 +49,7 @@ type
   {:
   Retorna os resultados de um pedido de leitura/escrita de um driver de porta.
 
-  @member PacketID Número único do pacote.
+  @member PacketID Número identificador do pacote.
   @member WriteIOResult Resultado do comando de escrita se existir. Caso não exista retorna iorNone.
   @member ToWrite Quantidade de @noAutoLink(bytes) a escrever.
   @member Wrote Quantidade de @noAutoLink(bytes) escritos.
@@ -146,49 +147,44 @@ type
   }  
   PCommandPacket = ^TCommandPacket;
 
-  {$IF not (defined(WIN32) or defined(WIN64))}
-  //: Define a constante de mensagens de usuário em ambientes Unix.
-  const WM_USER = 0;
-  {$IFEND}
-
   {:
   Ordena thread de atualização a chamar o TDriverCallBack solicitado informando
   dos resultados do pedido de leitura/escrita.
   @seealso(TDriverCallBack)
   @seealso(TIOPacket)
   }
-  const WM_CALLBACK       = WM_USER + 1;
+  const PSM_CALLBACK       = 1;
 
   {:
   Ordena thread de atualização a voltar a chamar TDriverCallBack fornecido.
   @seealso(TDriverCallBack)
   }
-  const WM_RESUMECALLBACK = WM_USER + 2;
+  const PSM_RESUMECALLBACK = 2;
   
   {:
   Ordena thread de atualização a não chamar mais TDriverCallBack fornecido a fim
   de evitar violações de acesso.
   @seealso(TDriverCallBack)
   }
-  const WM_CANCELCALLBACK = WM_USER + 3;
+  const PSM_CANCELCALLBACK = 3;
 
   //: Mensagem de pedido de leitura de @bold(baixa) prioridade
-  const WM_READ_READ      = WM_USER + 50;
+  const PSM_READ_READ      = 50;
   //: Mensagem de pedido de leitura e outro de escrita de @bold(baixa) prioridade
-  const WM_READ_READWRITE = WM_USER + 52;
+  const PSM_READ_READWRITE = 52;
   //: Mensagem de pedido de escrita de @bold(baixa) prioridade
-  const WM_READ_WRITE     = WM_USER + 54;
+  const PSM_READ_WRITE     = 54;
   //: Mensagem de pedido de escruta e outro de leitura de @bold(baixa) prioridade
-  const WM_READ_WRITEREAD = WM_USER + 56;
+  const PSM_READ_WRITEREAD = 56;
 
   //: Mensagem de pedido de leitura de @bold(alta) prioridade
-  const WM_WRITE_READ      = WM_USER + 60;
+  const PSM_WRITE_READ      = 60;
   //: Mensagem de pedido de leitura e outro de escrita de @bold(alta) prioridade
-  const WM_WRITE_READWRITE = WM_USER + 62;
+  const PSM_WRITE_READWRITE = 62;
   //: Mensagem de pedido de escrita de @bold(alta) prioridade
-  const WM_WRITE_WRITE     = WM_USER + 64;
+  const PSM_WRITE_WRITE     = 64;
   //: Mensagem de pedido de escruta e outro de leitura de @bold(alta) prioridade
-  const WM_WRITE_WRITEREAD = WM_USER + 66;
+  const PSM_WRITE_WRITEREAD = 66;
 
   {:
   Converte uma mensagem interna para um grupo de commandos de leitura/escrita.
@@ -196,14 +192,14 @@ type
   @return(Retorna um comando do tipo TIOCommand. Caso wMessage não feche com o
           case, retorna o padrão que é iocNone).
   @seealso(TIOCommand)
-  @seealso(WM_READ_READ)
-  @seealso(WM_READ_READWRITE)
-  @seealso(WM_READ_WRITE)
-  @seealso(WM_READ_WRITEREAD)
-  @seealso(WM_WRITE_READ)
-  @seealso(WM_WRITE_READWRITE)
-  @seealso(WM_WRITE_WRITE)
-  @seealso(WM_WRITE_WRITEREAD)
+  @seealso(PSM_READ_READ)
+  @seealso(PSM_READ_READWRITE)
+  @seealso(PSM_READ_WRITE)
+  @seealso(PSM_READ_WRITEREAD)
+  @seealso(PSM_WRITE_READ)
+  @seealso(PSM_WRITE_READWRITE)
+  @seealso(PSM_WRITE_WRITE)
+  @seealso(PSM_WRITE_WRITEREAD)
   
   }
   function WindowsMessageToIOCommand(wMessage:Cardinal):TIOCommand;
@@ -214,14 +210,14 @@ type
   @param(ToWrite Boolean. Indica se é um comando de escrita (alta prioridade).)
 
   @seealso(TIOCommand)
-  @seealso(WM_READ_READ)
-  @seealso(WM_READ_READWRITE)
-  @seealso(WM_READ_WRITE)
-  @seealso(WM_READ_WRITEREAD)
-  @seealso(WM_WRITE_READ)
-  @seealso(WM_WRITE_READWRITE)
-  @seealso(WM_WRITE_WRITE)
-  @seealso(WM_WRITE_WRITEREAD)
+  @seealso(PSM_READ_READ)
+  @seealso(PSM_READ_READWRITE)
+  @seealso(PSM_READ_WRITE)
+  @seealso(PSM_READ_WRITEREAD)
+  @seealso(PSM_WRITE_READ)
+  @seealso(PSM_WRITE_READWRITE)
+  @seealso(PSM_WRITE_WRITE)
+  @seealso(PSM_WRITE_WRITEREAD)
 
   }
   function IOCommandToWindowsMessage(ioCommand:TIOCommand; ToWrite:Boolean):Cardinal;
@@ -249,16 +245,16 @@ end;
 function WindowsMessageToIOCommand(wMessage:Cardinal):TIOCommand;
 begin
   case wMessage of
-    WM_READ_READ, WM_WRITE_READ:
+    PSM_READ_READ, PSM_WRITE_READ:
       Result:=iocRead;
 
-    WM_READ_READWRITE, WM_WRITE_READWRITE:
+    PSM_READ_READWRITE, PSM_WRITE_READWRITE:
       Result:=iocReadWrite;
 
-    WM_READ_WRITE, WM_WRITE_WRITE:
+    PSM_READ_WRITE, PSM_WRITE_WRITE:
       Result:=iocWrite;
 
-    WM_READ_WRITEREAD, WM_WRITE_WRITEREAD:
+    PSM_READ_WRITEREAD, PSM_WRITE_WRITEREAD:
       Result:=iocWriteRead;
 
     else
@@ -271,26 +267,26 @@ begin
   if ToWrite then
     case ioCommand of
       iocRead:
-        Result:=WM_WRITE_READ;
+        Result:=PSM_WRITE_READ;
       iocReadWrite:
-        Result:=WM_WRITE_READWRITE;
+        Result:=PSM_WRITE_READWRITE;
       iocWrite:
-        Result:=WM_WRITE_WRITE;
+        Result:=PSM_WRITE_WRITE;
       iocWriteRead:
-        Result:=WM_WRITE_WRITEREAD;
+        Result:=PSM_WRITE_WRITEREAD;
       else
         Result:=0;
     end
   else
     case ioCommand of
       iocRead:
-        Result:=WM_READ_READ;
+        Result:=PSM_READ_READ;
       iocReadWrite:
-        Result:=WM_READ_READWRITE;
+        Result:=PSM_READ_READWRITE;
       iocWrite:
-        Result:=WM_READ_WRITE;
+        Result:=PSM_READ_WRITE;
       iocWriteRead:
-        Result:=WM_READ_WRITEREAD;
+        Result:=PSM_READ_WRITEREAD;
       else
         Result:=0;
     end

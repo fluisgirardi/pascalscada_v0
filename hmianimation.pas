@@ -1,4 +1,7 @@
-//: Implementa o controle responsável por mostrar imagens em função do valor do tag associado.
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @abstract(Implementa o controle responsável por mostrar imagens em função do valor do tag associado.)
+}
 unit HMIAnimation;
 
 {$IFDEF FPC}
@@ -12,7 +15,14 @@ uses
   Dialogs, ExtCtrls, HMIZones, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
-  //: Implementa o controle responsável por mostrar imagens em função do valor do tag associado.
+  {:
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    Implementa o controle responsável por mostrar imagens em função do valor do
+    tag associado.
+
+    @bold(Para maiores informações consulte a documentação da classe TImage
+    de seu ambiente de desenvolvimento.)
+  }
   THMIAnimation = class(TImage, IHMIInterface, IHMITagInterface)
   private
     FAnimationZones:TGraphicZones;

@@ -1,4 +1,7 @@
-//: Implementa o tag PLC numérico com comunicação.
+{:
+@abstract(Implementa o tag PLC numérico com comunicação.)
+@author(Fabio Luis Girardi papelhigienico@gmail.com)
+}
 unit PLCTagNumber;
 
 {$IFDEF FPC}
@@ -11,7 +14,10 @@ uses
   SysUtils, Classes, PLCNumber, ProtocolTypes, variants;
 
 type
-  //: Tag numérico com comunicação individual.
+  {:
+  @abstract(Tag numérico com comunicação individual.)
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  }
   TPLCTagNumber = class(TPLCNumber, ITagInterface, ITagNumeric)
   private
     function  GetValueAsText(Prefix, Sufix, Format:string):String;

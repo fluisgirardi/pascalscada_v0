@@ -1,4 +1,7 @@
-//: Implementação de um driver de protocolo.
+{:
+@abstract(Implementação da base de um driver de protocolo.)
+@author(Fabio Luis Girardi papelhigienico@gmail.com)
+}
 unit ProtocolDriver;
 
 {$IFDEF FPC}
@@ -14,8 +17,9 @@ uses
 type
   {:
   Classe base para drivers de protocolo.
-  @author(Fabio Luis Girardi)
-  
+
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Para você criar um novo driver, basta sobrescrever alguns métodos e funções,
   de acordo com as necessidades de seu driver de protocolo. São eles:
   

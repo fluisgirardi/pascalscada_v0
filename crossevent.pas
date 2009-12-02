@@ -1,7 +1,7 @@
 {:
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
     @abstract(Unit de sincronização de threads por eventos.)
-    @author(FABIO LUIS GIRARDI)
-    
+
     Esta unit foi criada por motivos de compatibilidade
     (e performance) entre ambientes windows, linux e
     demais unix.
@@ -42,6 +42,7 @@ type
 {$if defined(NeedCrossEvents)}
   {:
   Estrutura usada por TCrossEvent para trabalhar em ambientes Unix.
+  Usada internamente por TCrossEvent em ambientes Unix-like.
   @member condvar Armazena uma condição.
   @member mutex Armazena uma zona critica.
   @member isset Armazena se o evento foi setado.

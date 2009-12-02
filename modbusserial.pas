@@ -1,4 +1,8 @@
-//: Implementação do protocolo ModBus Serial
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  @abstract(Implementa o driver ModBus RTU.)
+}
 unit ModBusSerial;
 
 {$IFDEF FPC}
@@ -11,7 +15,14 @@ uses
   ModBusDriver, ProtocolTypes, commtypes, crc16utils;
 
 type
+  {:
+  @abstract(Classe driver ModBus RTU.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
+  @bold(Para informações de como endereçar seus tags veja a classe TModBusDriver.)
+
+  @seealso(TModBusDriver)
+  }
   TModBusRTUDriver = class(TModBusDriver)
   protected
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;

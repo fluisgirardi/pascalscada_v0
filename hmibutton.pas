@@ -14,6 +14,9 @@ uses
 type
   {:
   Classe botão HMI que pode ser flat ou
+
+  @bold(Para maiores informações consulte a documentação da classe TSpeedButton
+  de seu ambiente de desenvolvimento.)
   }
   THMIButton = class(TSpeedButton, IHMIInterface, IHMITagInterface)
   private

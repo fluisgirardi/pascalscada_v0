@@ -1,5 +1,5 @@
 {:
-Unit de coleções de zonas gráficas e de texto.
+@abstract(Unit de coleções de zonas gráficas e de texto.)
 @author(Fabio Luis Girardi)
 }
 unit HMIZones;

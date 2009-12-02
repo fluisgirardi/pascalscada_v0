@@ -1,4 +1,7 @@
-//: Implementa funções uteis a todo o sistema.
+{:
+  Implementa funções uteis a todo o sistema.
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit hsutils;
 
 {$IFDEF FPC}
@@ -8,11 +11,20 @@ unit hsutils;
 interface
 
 uses SysUtils;
-//: Converte um valor Float para Int64, descartando a parte truncada.
+{:
+  Converte um valor Float para Int64, descartando a parte decimal.
+  @returns(O valor convertido para Int64.)
+}
 function FloatToInt64(Value:Extended):Int64;
-//: Realiza o cálculo de exponenciação.
+{:
+  Realiza o cálculo de exponenciação.
+  @returns(O resultado da exponenciação em Cardinal.)
+}
 function Power(Base, Expoent:Integer):Cardinal;
-//: Converte um valor Float para Integer, descartando a parte truncada.
+{:
+  Converte um valor Float para Integer, descartando a parte decimal.
+  @returns(O valor convertido para Integer.)
+}
 function FloatToInteger(Value:Extended):Integer;
 
 implementation

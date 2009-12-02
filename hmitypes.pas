@@ -1,4 +1,7 @@
-//: Define tipos usuais em controles de telas.
+{:
+  @abstract(Define tipos usuais em controles de telas.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit HMITypes;
 
 {$IFDEF FPC}

@@ -1,4 +1,7 @@
-//: Unit que implementa uma caixa para entrada de valores em Tags.
+{:
+  @abstract(Unit que implementa uma caixa para entrada de valores em Tags.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit HMIEdit;
 
 {$IFDEF FPC}
@@ -12,7 +15,13 @@ uses
   {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag;
 
 type
-  //: Implementa um Edit para leitura/escrita de valores texto/numéricos em tags.
+  {:
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    Implementa um Edit para leitura/escrita de valores texto/numéricos em tags.
+
+    @bold(Para maiores informações consulte a documentação da classe TEdit
+    de seu ambiente de desenvolvimento.)
+  }
   THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
   private
     FAlignment:TAlignment;
@@ -87,7 +96,7 @@ type
     destructor  Destroy; override;
   published
     {$IFNDEF FPC}
-    //: Alinhamento do texto dentro do Edit.
+    //: Alinhamento do texto dentro do Edit. Somente Delphi. Lazarus já oferece esse recurso.
     property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
     {$ENDIF}
     {:

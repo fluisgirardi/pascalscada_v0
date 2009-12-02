@@ -1,5 +1,5 @@
 {:
-  @abstract(Classes para organização de blocos de memória de um CLP).
+  @abstract(Classes para organização de blocos de memória de um CLP.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
 unit PLCMemoryMananger;
@@ -13,11 +13,19 @@ interface
 uses SysUtils, DateUtils, hsutils, ProtocolTypes, SyncObjs;
 
 type
-  //: Representa um bit.
+  {:
+    @abstract(Representa um bit.).
+    @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  }
   Binary = 0..1;
-  //: Representa uma palavra de 4 bits.
+  {:
+    @abstract(Representa uma palavra de 4 bits.)
+    @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  }
   Nibble  = 0..15;
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Enumera todos os possíveis tipos de dados numéricos.
   @value(ntBinary Binário (1 bit).)
   @value(ntNibble Nibble (4 bits).)
@@ -29,6 +37,8 @@ type
   TNumType = (ntBinary, ntNibble, ntBYTE, ntWORD, ntCardinal, ntFloat);
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Estrutura usada para cadastrar cada endereço único dentro do gerenciador de
   blocos de memória
   }
@@ -37,6 +47,8 @@ type
   end;
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Classe que representa um faixa de endereços de memória continuos (bloco).
   
   @bold(É altamente recomendável você que está desenvolvendo um driver de
@@ -108,6 +120,8 @@ type
   end;
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Classe que implementa uma área de dados binários continuas. Util para o
   protocolo ModBus onde cada entrada/saida digital tem um endereço.
   @seealso(TPLCMemoryManager)
@@ -128,6 +142,8 @@ type
   end;
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Classe que implementa uma área de nibbles (4 bits) continuas.
   @seealso(TPLCMemoryManager)
   }
@@ -147,6 +163,8 @@ type
   end;
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Classe que implementa uma área de bytes (8 bits) continua.
   @seealso(TPLCMemoryManager)
   }
@@ -166,6 +184,8 @@ type
   end;
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Classe que implementa uma área de Words (16 bits) continua.
   @seealso(TPLCMemoryManager)
   }
@@ -185,6 +205,8 @@ type
   end;
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Classe que implementa uma área de Cardinals (32 bits) continua.
   @seealso(TPLCMemoryManager)
   }
@@ -204,6 +226,8 @@ type
   end;
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
   Classe que implementa uma área de palavras de ponto flutuante (32/64 bits)
   continua.
   @seealso(TPLCMemoryManager)
@@ -226,7 +250,9 @@ type
   //: @exclude
   TRegisterRangeArray = array of TRegisterRange;
   {:
-  Classe que gerência blocos de memórias não continuos (fragmentados).
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+
+  @abstract(Classe que gerência blocos de memórias não continuos (fragmentados).)
   }
   TPLCMemoryManager = class
   private

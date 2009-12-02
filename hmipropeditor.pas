@@ -1,4 +1,8 @@
-//: @exclude
+{:
+  @abstract(Implementação dos editores de algumas propriedades de controles
+            do PascalSCADA.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit hmipropeditor;
 
 {$IFDEF FPC}
@@ -26,6 +30,7 @@ uses
   {$ENDIF}
 
 type
+  //: Editor da propriedade FileName da classe TGraphicZone.
   TZoneFileNamePropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
@@ -34,6 +39,7 @@ type
     procedure SetValue(const Value: string); override;
   end;
 
+  //: Editor da propriedade FileName da classe TZone.
   TZoneBlinkWithPropertyEditor = class(TIntegerProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;

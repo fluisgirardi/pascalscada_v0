@@ -1,4 +1,7 @@
-//: Define um controle de opções para leitura/escrita de valores de tags numéricos.
+{:
+  @abstract(Define um controle de opções para leitura/escrita de valores de tags numéricos.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit HMIRadioGroup;
 
 {$IFDEF FPC}

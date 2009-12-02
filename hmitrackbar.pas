@@ -1,6 +1,7 @@
 {:
-Implementa um controle em forma de TrackBar para a leitura/escrita de valores
-numéricos de tags.
+  @abstract(Implementa um controle em forma de TrackBar para a leitura/escrita de valores
+            numéricos de tags.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMITrackBar;
 

@@ -1,6 +1,8 @@
 ﻿{:
-  Driver de protocolo Ibox, usado para comunicar com unidades
-  de refrigeração da Thermo-King.
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  @abstract(Driver de protocolo Ibox, usado para comunicar com unidades
+  de refrigeração da Thermo-King.)
 }
 unit IBoxDriver;
 
@@ -15,7 +17,9 @@ uses
 
 type
   {:
-    Identifica um registro do Ibox.
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+    Identifica um registrador simples do Ibox.
     @member RefCount Conta quantas vezes o registro foi referenciado.
     @member MinScanTime Guarda o menor tempo de Scan dos tags que estão refeenciando o registro.
     @member Value Guarda o último valor lido do registro.
@@ -31,7 +35,9 @@ type
   end;
 
   {:
-  Representa os registradores 200,201 e 202 do Ibox.
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+    Representa os registradores 200,201 e 202 do Ibox.
     @member RefCount Conta quantas vezes o registro foi referenciado.
     @member MinScanTime Guarda o menor tempo de Scan dos tags que estão refeenciando o registro.
     @member TimeStamp Quando foi a última vez que o registro foi lido.
@@ -85,6 +91,39 @@ type
     OperatingMode:Double;
   end;
 
+  {:
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+    Estrutura que representa o registrador 203 do Ibox.
+    @member RefCount Conta quantas vezes o registro foi referenciado.
+    @member MinScanTime Guarda o menor tempo de Scan dos tags que estão refeenciando o registro.
+    @member TimeStamp Quando foi a última vez que o registro foi lido.
+    @member LastReadResult Qual foi o resultado da última tentativa de leitura.
+
+    @member DigitalInput0State Informa se a entrada Digital 0 está presente no Ibox.
+    @member DigitalInput1State Informa se a entrada Digital 1 está presente no Ibox.
+    @member DigitalInput2State Informa se a entrada Digital 2 está presente no Ibox.
+    @member DigitalInput3State Informa se a entrada Digital 3 está presente no Ibox.
+    @member DigitalInput0Value Caso a entrada digital 0 esteja presente no ibox, informa seu estado atual (0 desligado, 1 ligado).
+    @member DigitalInput1Value Caso a entrada digital 1 esteja presente no ibox, informa seu estado atual (0 desligado, 1 ligado).
+    @member DigitalInput2Value Caso a entrada digital 2 esteja presente no ibox, informa seu estado atual (0 desligado, 1 ligado).
+    @member DigitalInput3Value Caso a entrada digital 3 esteja presente no ibox, informa seu estado atual (0 desligado, 1 ligado).
+    @member Reserved Valor reservado.
+    @member Sensor1Active Informa se o sensor 1 esta instalado no Ibox.
+    @member Sensor2Active Informa se o sensor 2 esta instalado no Ibox.
+    @member Sensor3Active Informa se o sensor 3 esta instalado no Ibox.
+    @member Sensor4Active Informa se o sensor 4 esta instalado no Ibox.
+    @member Sensor5Active Informa se o sensor 5 esta instalado no Ibox.
+    @member Sensor6Active Informa se o sensor 6 esta instalado no Ibox.
+    @member HumidityActive Informa se o sensor de umidade esta instalado no Ibox.
+    @member Sensor1Value Caso o sensor 1 esteja instalado, informa o valor que foi lido.
+    @member Sensor2Value Caso o sensor 2 esteja instalado, informa o valor que foi lido.
+    @member Sensor3Value Caso o sensor 3 esteja instalado, informa o valor que foi lido.
+    @member Sensor4Value Caso o sensor 4 esteja instalado, informa o valor que foi lido.
+    @member Sensor5Value Caso o sensor 5 esteja instalado, informa o valor que foi lido.
+    @member Sensor6Value Caso o sensor 6 esteja instalado, informa o valor que foi lido.
+    @member HumidityValue Caso o sensor de umidade esteja instalado, informa o valor que foi lido.
+  }
   TPID203Register = record
     RefCount:Cardinal;
     TimeStamp:TDateTime;
@@ -116,10 +155,22 @@ type
     HumidityValue:Double;
   end;
 
-  //TPID243Register=record
-  //  Model:
-  //end;
+  {:
+   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
+   Identifica uma estação Ibox da ThermoKing.
+   @member PID0 Registrador PID0 do ibox.
+   @member PID96 Nível de combustível (em %).
+   @member PID168 Diferença de potencial da bateria do ThermoKing (em volts).
+   @member PID200 Pid 200. Ver TPID20xRegister.
+   @member PID201 Pid 201. Ver TPID20xRegister.
+   @member PID202 Pid 202. Ver TPID20xRegister.
+   @member PID203 Pid 203. Ver TPID203Register.
+   @member PID204 Estado do Thermo King
+   @member PID205 Reseta o circuito de Keep Alive no i-Box.
+   @member PID247 Total de horas trabalhadas pelo ThermoKing.
+   @seealso(
+  }
   TIBoxStation = record
     Address:Byte;
     PID0,
@@ -132,9 +183,30 @@ type
     PID204,PID205, PID247:TIBoxRegister;
   end;
 
+  {:
+   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+   Conjunto de estações i-Box.
+  }
   TIBoxStations=array of TIBoxStation;
 
+  {:
+   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
+   @abstract(Driver de comunicação para dispositivos i-Box.)
+
+   Suporta apenas tags da classe TPLCTagNumber.
+
+   Para endereçar um tag, preencha com os seguintes propriedades do tag:
+
+   @bold(PLCStation:) Endereço do i-Box. Aceita valores entre 0 e 255.
+   @bold(MemAddress:) Registrador (PID) que se deseja ler. Aceita os seguintes
+                      valores: 0, 96, 168, 200, 201, 202, 203, 204, 205 e 247.
+
+   @bold(MemSubElement:) Indice do item dentro da estrutura caso o seu registrador
+                         seja o 200, 201, 202 e 203. Comeca de zero e varia
+                         conforme o PID escolhido.
+
+  }
   TIBoxDriver = class(TProtocolDriver)
   private
     PStations:TIBoxStations;

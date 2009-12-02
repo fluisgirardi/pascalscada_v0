@@ -1,4 +1,8 @@
-//: Implementação do protocolo ModBus TCP
+{:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  @abstract(Implementa o driver ModBus TCP.)
+}
 unit ModBusTCP;
 
 {$IFDEF FPC}
@@ -14,7 +18,14 @@ uses
   ModBusDriver, ProtocolTypes, commtypes;
 
 type
+  {:
+  @abstract(Classe driver ModBus para TCP/IP.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
+  @bold(Para informações de como endereçar seus tags veja a classe TModBusDriver.)
+
+  @seealso(TModBusDriver)
+  }
   TModBusTCPDriver = class(TModBusDriver)
   protected
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;

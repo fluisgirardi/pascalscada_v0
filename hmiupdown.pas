@@ -1,4 +1,7 @@
-//: Implementa um controle em forma de Up/Down para escrita de valores em tags numéricos.
+{:
+  @abstract(Implementa um controle em forma de Up/Down para escrita de valores em tags numéricos.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit HMIUpDown;
 
 {$IFDEF FPC}

@@ -1,8 +1,8 @@
 {:
-Implementa um controle em forma de ScrollBar para a leitura/escrita de valores
-em tags numéricos.
+  @abstract(Implementa um controle em forma de ScrollBar para a leitura/escrita de valores
+            em tags numéricos.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
-
 unit HMIScrollBar;
 
 {$IFDEF FPC}
