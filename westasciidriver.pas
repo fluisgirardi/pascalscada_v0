@@ -1,4 +1,8 @@
-﻿unit WestASCIIDriver;
+﻿{:
+  @abstract(Implmentação do driver West n6100 ASCII.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
+unit WestASCIIDriver;
 
 {$IFDEF FPC}
 {$MODE DELPHI}

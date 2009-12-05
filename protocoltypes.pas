@@ -1,4 +1,7 @@
-//: Implementa tipos comuns para drivers de protocolos e tags.
+{:
+  @abstract(Implementa tipos comuns para drivers de protocolos e tags.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit ProtocolTypes;
 
 {$IFDEF FPC}

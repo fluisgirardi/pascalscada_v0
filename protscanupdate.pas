@@ -19,6 +19,7 @@ uses
 type
 
   {:
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   Classe de thread responsável por atualizar os tags após o driver processar
   leituras/escritas por scan. Usado por TProtocolDriver.
   @seealso(TProtocolDriver)

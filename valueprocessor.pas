@@ -1,4 +1,7 @@
-//: Implementação de processadores de escala.
+{:
+  @abstract(Implementação de processadores de escala.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit ValueProcessor;
 
 {$IFDEF FPC}
@@ -11,7 +14,10 @@ uses
   SysUtils, Classes, PLCTag;
 
 type
-  //: Classe base processadora de escalas.
+  {:
+    @abstract(Classe base processadora de escalas.)
+    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   TScaleProcessor = class(TComponent)
   private
     FValueIn:Double;

@@ -20,7 +20,7 @@ uses
 type
 
   {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   Classe de thread reponsável processar as escritas por scan e por manter os
   tags com seus valores atualizados o mais rápido possível. Usado por
   TProtocolDriver.

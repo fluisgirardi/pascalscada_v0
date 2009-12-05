@@ -1,4 +1,7 @@
-//: Escala definida pelo usuário.
+{:
+  @abstract(Escala definida pelo usuário.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit UserScale;
 
 {$IFDEF FPC}
@@ -13,7 +16,10 @@ uses
 type
    //: Evento chamado para processar valores.
    TScaleEvent = procedure(Sender:TObject; const Input:Double; var Output:Double) of object;
-   //: Classe para processamento de escalas personalizaveis pelo usuário.
+   {:
+   @abstract(Classe para processamento de escalas personalizaveis pelo usuário.)
+   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+   }
    TUserScale = class(TScaleProcessor)
    private
      PPLCToUser:TScaleEvent;

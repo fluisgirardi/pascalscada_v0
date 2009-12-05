@@ -1,4 +1,8 @@
-﻿unit tcp_udpport;
+﻿{:
+  @abstract(Unit que implementa uma porta de comunicação TCP/UDP sobre IP cliente.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
+unit tcp_udpport;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -20,9 +24,19 @@ uses
   {$IFEND};
 
 type
-
+  {:
+  Enumera os tipos de porta.
+  @value ptTCP = Porta cliente do tipo TCP.
+  @value ptUDP = Porta cliente do tipo UDP.
+  }
   TPortType = (ptTCP, ptUDP);
 
+  {:
+  @abstract(Driver genérico para portas TCP/UDP sobre IP. Atualmente funcionando
+            para Windows, Linux e FreeBSD.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @seealso(TCommPortDriver)
+  }
   TTCP_UDPPort = class(TCommPortDriver)
   private
     FHostName:String;
@@ -35,21 +49,43 @@ type
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
   protected
+    //: @seealso(TCommPortDriver.Read)
     procedure Read(Packet:PIOPacket); override;
+    //: @seealso(TCommPortDriver.Write)
     procedure Write(Packet:PIOPacket); override;
+    //: @seealso(TCommPortDriver.NeedSleepBetweenRW)
     procedure NeedSleepBetweenRW; override;
+    //: @seealso(TCommPortDriver.PortStart)
     procedure PortStart(var Ok:Boolean); override;
+    //: @seealso(TCommPortDriver.PortStop)
     procedure PortStop(var Ok:Boolean); override;
+    //: @seealso(TCommPortDriver.ComSettingsOK)
     function  ComSettingsOK:Boolean; override;
+    //: @seealso(TCommPortDriver.ClearALLBuffers)
     procedure ClearALLBuffers; override;
+    {:
+     Verifica o estado atual da conexao e sinaliza no pacote de resulta.
+     @param(CommResult TIOResult. Estrutra do pedido a ser sinalizado com o novo
+            estado da conexão.)
+     @returns(@true caso esteja conectado.)
+    }
     function  CheckConnection(var CommResult:TIOResult):Boolean; virtual;
   public
+    //: @exclude
     constructor Create(AOwner:TComponent); override;
+    //: @exclude
     destructor  Destroy; override;
   published
+    //: Nome ou endereço do servidor onde se deseja conectar.
     property Host:String read FHostName write SetHostname nodefault;
+    //: Porta do servidor que se deseja conectar. Para Modbus TCP use 502 e para Siemens ISOTCP use 102.
     property Port:Integer read FPortNumber write SetPortNumber default 102;
+    //: Timeout em milisegundos para operações de leitura/escrita.
     property Timeout:Integer read FTimeout write SetTimeout default 1000;
+    {:
+    Tipo da porta.
+    @seealso(TPortType).
+    }
     property PortType:TPortType read FPortType write SetPortType default ptTCP;
   end;
 
