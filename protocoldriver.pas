@@ -16,7 +16,7 @@ uses
 
 type
   {:
-  Classe base para drivers de protocolo.
+  @abstract(Classe base para drivers de protocolo.)
 
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
@@ -24,39 +24,43 @@ type
   de acordo com as necessidades de seu driver de protocolo. São eles:
   
   @code(procedure DoAddTag(TagObj:TTag);)
-  Procedimento por adicionar tags ao scan do driver. Não esqueça de chamar os
-  método herdado com @code(inherited DoAddTag(TagObj:TTag)).
+  Sobrescreva esse procedimento para adicionar tags ao scan do driver. Faça as
+  devidas verificações do tag nesse método e caso ele não seja um tag válido
+  gere uma excessão para abortar a adição do tag no driver.
+  Não esqueça chamar o método herdado com @code(inherited DoAddTag(TagObj:TTag))
+  para adicionar o tag na classe base (@name).
   
   @code(procedure DoDelTag(TagObj:TTag);)
-  Procedimento por remover tags do scan do driver. Não esqueça de chamar os
-  método herdado com @code(inherited DoDelTag(TagObj:TTag)).
+  Procedimento por remover tags do scan do driver. Não esqueça de chamar o
+  método herdado com @code(inherited DoDelTag(TagObj:TTag)) para remover o tag
+  da classe base (@name).
+
+  @code(procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);)
+  Procedimento usado para atualizar as informações do tag no driver.
+  Caso alguma alteração torne o tag inconsistente para o seu driver,
+  gere um excessão para abortar a mudança.
   
-  @code(procedure DoScanRead(Sender:TObject);)
+  @code(procedure DoScanRead(Sender:TObject; var NeedSleep:Integer);)
   Prodimento chamado para verificar se há algum tag necessitando ser lido.
   
   @code(procedure DoGetValue(TagObj:TTagRec; var values:TScanReadRec);)
   Procedimento chamado pelo driver para retornar os valores lidos que estão
   em algum gerenciador de memória para os tags.
-  
-  @code(procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);)
-  Procedimento usado para atualizar as informações dos tags dependentes do driver.
-  Caso alguma alteração torne o tag inconsistente, gere um Exception para abortar
-  a mudança.
-  
-  @code(function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;)
-  Função que codifica pedidos de leitura escrita dos tags em pacotes de dados
-  do protocolo para serem escritos em um driver de porta.
-  
-  @code(function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;)
-  Função que decodifica um pacote de dados retornado pelo driver de porta e retira
-  os valores presentes nesse pacote.
+
+  @code(function DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;)
+  Executa as escritas de valores sincronas e assincronas dos tags. É este método
+  que escreve os valores do tag no seu equipamento.
+
+  @code(function DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;)
+  Executa as leituras sincronas e assincronas dos tags. É o método que vai
+  buscar os valores no seu equipamento e vai levá-los até o seu tag.
   
   @code(function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; )
   Função responsável por informar o tamanho das palavras de dados em bits
   que o tag está referenciando.
-  
-  
-  Sobrescrevendo esses métodos e rotinas, seu driver estará pronto.
+
+  Sobrescrevendo esses métodos e rotinas, seu driver estará pronto. @bold(Veja
+  a documentação detalhada de cada método para enteder como cada um funciona.)
   }
 
   TProtocolDriver = class(TComponent)
@@ -85,7 +89,10 @@ type
     function  SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
   protected
-    //: Flag que informa ao driver se ao menos uma variavel deve ser lida a cada ciclo de scan do driver.
+    {:
+    Flag que informa ao driver se ao menos uma variavel deve ser lida a cada
+    ciclo de scan do driver.
+    }
     PReadSomethingAlways:Boolean;
     //: Armazena a ID (número único) do driver.
     PDriverID:Cardinal;
@@ -114,11 +121,14 @@ type
 
     {:
     Adiciona uma ação a lista de espera do driver.
+    @param(Obj TObject. Objeto que está esperando por alguma coisa acontecer.)
     }
     procedure AddPendingAction(const Obj:TObject); virtual;
 
     {:
-    Adiciona uma ação a lista de espera do driver.
+    Remove uma ação da lista de espera do driver.
+    @param(Obj TObject. Objeto que não está mais esperando por alguma
+           coisa acontecer.)
     }
     function RemovePendingAction(const Obj:TObject):boolean; virtual;
 
@@ -131,8 +141,11 @@ type
     }
     procedure CopyIOPacket(const Source:TIOPacket; var Dest:TIOPacket);
     {:
-    Callback @bold(assincrono) que o driver de porta (TCommPortDriver) irá chamar para
-    retornar os resultados de I/O.
+    Callback @bold(assincrono) que o driver de porta (TCommPortDriver) irá
+    chamar para retornar os resultados de I/O.
+    @param(Result TIOPacket. Estrutura com os dados de retorno da solicitação
+           de I/O. @bold(É automaticamente destruida após retornar desse
+           método.)
     }
     procedure CommPortCallBack(var Result:TIOPacket); virtual;
 
@@ -158,25 +171,53 @@ type
     @param(newValue Cardinal. Novo valor da propriedade.)
     @seealso(TagChanges)
     }
-    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); virtual; abstract; //realiza uma mundanca em alguma propriedade do tag;
+    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); virtual; abstract;
 
 
     {:
     Método chamado pelas threads do driver de protocolo para realizar leitura dos
     tags a ele associado.
+    @param(Sender TObject. Thread que está solicitando a varredura de atualização.)
+    @param(NeedSleep Integer. Caso o procedimento não encontrou nada que precise
+                              ser lido, escreva nesse valor um valor negativo a
+                              forçar o scheduler do seu sistema operacional a
+                              executar outra thread ou um valor positivo para
+                              fazer a thread de scan dormir. O tempo que ela
+                              ficará dormindo é o valor que você escreve nessa
+                              variável.
+                              Caso o seu driver encontrou algum tag necessitando
+                              de atualização, retorne 0 (Zero).)
     }
     procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); virtual; abstract;
     {:
     Método chamado pelas threads do driver de protocolo para atualizar os valores
     dos tags.
     @param(TagRec TTagRec. Estrutura com informações do tag.)
-    @param(values TArrayOfDouble. Armazena os valores que serão enviados ao tag.)
+    @param(values TScanReadRec. Armazena os valores que serão enviados ao tag.)
     }
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); virtual; abstract;
-    {: todo }
 
-    //funcoes que realmente executam a leitura/escrita de valores dos tags.
+    {:
+    Função chamada para escrever o valor de um tag (simples ou bloco) no
+    equipamento.
+
+    @param(tagrec TTagRec. Estrutura com informações do tag.)
+    @param(Values TArrayOfDouble. Valores a serem escritos no equipamento.)
+    @param(Sync Boolean. Flag que indica se a escrita deve ser sincrona ou assincrona.)
+
+    @returns(TProtocolIOResult).
+    }
     function DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; virtual; abstract;
+
+    {:
+    Função chamada para ler valores do equipamento.
+
+    @param(tagrec TTagRec. Estrutura com informações do tag.)
+    @param(Values TArrayOfDouble. Array que irá armazenar os valores lidos do equipamento.)
+    @param(Sync Boolean. Flag que indica se a leitura deve ser sincrona ou assincrona.)
+
+    @returns(TProtocolIOResult).
+    }
     function DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; virtual; abstract;
 
     //: Booleano que diz se o driver deve ler algum tag a todo scan.

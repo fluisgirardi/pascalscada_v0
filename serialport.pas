@@ -1,6 +1,6 @@
 {:
-Unit que implementa uma porta de comunicação serial multiplataforma.
-@author(Fabio Luis Girardi)
+  @abstract(Unit que implementa uma porta de comunicação serial multiplataforma.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit SerialPort;
 
@@ -71,9 +71,9 @@ type
   TSerialDataBits= (db5, db6, db7, db8);
 
   {:
-  Driver genérico para portas seriais. Atualmente funcionando para Windows, Linux
-  e FreeBSD.
-  @author(Fabio Luis Girardi)
+  @abstract(Driver genérico para portas seriais. Atualmente funcionando para
+            Windows, Linux e FreeBSD.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   @seealso(TCommPortDriver)
   }
   TSerialPortDriver = class(TCommPortDriver)
@@ -132,7 +132,7 @@ type
     No Windows é COMx, no Linux ttySx e no FreeBSD cuadx.
     }
     property COMPort:string read PPortName write SetCOMPort;
-    {: Informa o tempo em milisegundos de duração de uma ação leitura ou escrita. }
+    {: Informa a duração máxima de uma ação leitura ou escrita. }
     property Timeout:integer read PTimeout write SetTimeOut stored true default 5;
     {: Informa o tempo em milisegundos entre uma leitura e uma escrita. }
     property WriteReadDelay:integer read PRWTimeout write SetRWTimeout stored true default 20;

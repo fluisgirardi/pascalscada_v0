@@ -1,4 +1,7 @@
-//: Implementação da base de todos os tags.
+{:
+  @abstract(Implementação da base de todos os tags.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit Tag;
 
 {$IFDEF FPC}
@@ -19,6 +22,7 @@ type
 
   TRefreshTime = 1..$7FFFFFFF;
 
+  //: Interface de notificação de eventos do tag.
   IHMITagInterface = interface
     ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
     //: Chama o evento quando uma letura tem exito.

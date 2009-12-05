@@ -8,7 +8,7 @@ unit ProtocolTypes;
 interface
 
 
-uses {$IF defined(WIN32) or defined(WIN64)}Messages, {$IFEND}Tag, variants;
+uses Tag, variants;
 
 
 type
@@ -198,7 +198,7 @@ type
   }
   TGetValues = procedure(const Tag:TTagRec; var values:TScanReadRec) of object;
   
-  //: Interface para tags somente leitura.
+  //: Interface comum a todos os tags.
   ITagInterface = interface
     ['{188FEF6D-036D-4B01-A854-421973AA7D58}']
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
@@ -210,6 +210,7 @@ type
     property  ValueTimestamp:TDatetime read GetValueTimestamp;
   end;
 
+  //: Interface de tags numéricos.
   ITagNumeric = interface(ITagInterface)
     ['{F15D0CCC-7C97-4611-A7F4-AD1BEAFA2C96}']
     function  GetValue:Double;
@@ -220,7 +221,8 @@ type
     property Value:Double read GetValue write SetValue;
     property ValueRaw:Double read GetValueRaw write SetValueRaw;
   end;
-  
+
+  //: Interface de tags de texto.
   ITagString = interface(ITagInterface)
     ['{D2CB0A30-B93B-4D8D-BD98-248AE9FC5F22}']
     function  GetValue:String;
@@ -230,30 +232,26 @@ type
   end;
 
 const
-  {$IF not (defined(WIN32) or defined(WIN64))}
-  //: @exclude
-  WM_USER = 0;
-  {$IFEND}
   //: Constante de mensagem para adicionar um tag no scan.
-  WM_ADDTAG       = WM_USER + 200;
+  PSM_ADDTAG       =  200;
 
   //: Constante de mensagem para remover um tag do scan.
-  WM_DELTAG       = WM_USER + 201;
+  PSM_DELTAG       =  201;
 
   //: Constante de mensagem para sinalizar mudanças nas proprieadades do tag.
-  WM_TAGCHANGE    = WM_USER + 202;
+  PSM_TAGCHANGE    =  202;
 
   //: Constante de mensagem para suspensão de thread sincronizada.
-  WM_PROTSUSPEND  = WM_USER + 203;
+  PSM_PROTSUSPEND  =  203;
 
   //: Constante de mensagem para atualização de tag.
-  WM_UPDATETAG    = WM_USER + 204;
+  PSM_UPDATETAG    =  204;
 
   //: Constante de mensagem para leitura de tag por scan.
-  WM_TAGSCANREAD  = WM_USER + 205;
+  PSM_TAGSCANREAD  =  205;
 
   //: Constante de mensagem para escrita de valores de tags por scan
-  WM_TAGSCANWRITE = WM_USER + 206;
+  PSM_TAGSCANWRITE =  206;
 
 implementation
 

@@ -1,4 +1,7 @@
-//: Implementa a base para Tags Blocos.
+{:
+  @abstract(Implementa a base para Tags Blocos.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit TagBlock;
 
 {$IFDEF FPC}
@@ -11,7 +14,12 @@ uses
   SysUtils, Classes, PLCTag, ProtocolTypes;
 
 type
-  //: Classe base para tags blocos.
+  {:
+  @abstract(Classe base para tags blocos.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  Classe base para os tags TPLCBlock e TPLCString.
+  }
   TTagBlock = class(TPLCTag)
   protected
     //: Array que armazena os valores assincronos.

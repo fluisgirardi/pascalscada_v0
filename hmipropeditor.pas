@@ -30,7 +30,7 @@ uses
   {$ENDIF}
 
 type
-  //: Editor da propriedade FileName da classe TGraphicZone.
+  //: Editor da propriedade TGraphicZone.FileName
   TZoneFileNamePropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
@@ -39,7 +39,7 @@ type
     procedure SetValue(const Value: string); override;
   end;
 
-  //: Editor da propriedade FileName da classe TZone.
+  //: Editor da propriedade TZone.BlinkWith
   TZoneBlinkWithPropertyEditor = class(TIntegerProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;

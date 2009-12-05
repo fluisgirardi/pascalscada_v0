@@ -1,4 +1,8 @@
-﻿unit TagBit;
+﻿{:
+  @abstract(Implementação do tag de mapeamento de bits.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
+unit TagBit;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -15,7 +19,8 @@ type
   TBitRange = 0..31;
 
   {:
-  Tag que representam um conjunto de bits dentro de um tag.
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @abstract(Tag que representam um conjunto de bits dentro de um tag.)
 
   Por exemplo, digamos que o tag plc associado contenha o valor 5 (00000101 bin).
   Com o StartBit=1 e Endbit=2, o valor do tag bit vai ser igual a 2 (10 bin).
@@ -70,13 +75,13 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
-    //: Bloco de comunicações que o elemento pertence.
+    //: Tag usado para mapear os bits.
     property PLCTag:TPLCNumber read PNumber write SetNumber;
-    //: Usar o valor puro ou processado para extração de bits.
+    //: Usar o valor puro ou processado para mapeamento de bits.
     property UseRawValue:boolean read PUseRaw write SetUseRaw;
-    //: Qual o primeiro bit da palavra que vai ser extraido.
+    //: Qual o primeiro bit da palavra que vai ser mapeado.
     property StartBit:TBitRange read PStartBit write SetStartBit;
-    //: Qual o último bit da palavra que vai ser extraido.
+    //: Qual o último bit da palavra que vai ser mapeado.
     property EndBit:TBitRange read PEndBit write SetEndBit;
   end;
 

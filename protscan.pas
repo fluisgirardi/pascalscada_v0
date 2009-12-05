@@ -1,4 +1,8 @@
-﻿unit protscan;
+﻿{:
+@abstract(Processa os pedidos de leitura e escrita por scan.)
+@author(Fabio Luis Girardi papelhigienico@gmail.com)
+}
+unit protscan;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -16,6 +20,7 @@ uses
 type
 
   {:
+  @author(Fabio Luis Girardi papelhigienico@gmail.com)
   Classe de thread reponsável processar as escritas por scan e por manter os
   tags com seus valores atualizados o mais rápido possível. Usado por
   TProtocolDriver.
@@ -153,7 +158,7 @@ begin
   if Assigned(FDoScanWrite) then begin
     FWaitToWrite.WaitFor(1);
     FWaitToWrite.ResetEvent;
-    while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANWRITE,WM_TAGSCANWRITE,true) do begin
+    while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_TAGSCANWRITE,true) do begin
        pkg := PScanWriteRec(PMsg.wParam);
 
        pkg^.WriteResult := FDoScanWrite(pkg^.Tag,pkg^.ValuesToWrite);
@@ -183,7 +188,7 @@ begin
     raise Exception.Create('A thread está suspensa?');
 
   //envia a mensagem
-  FSpool.PostMessage(WM_TAGSCANWRITE,SWPkg,nil,true);
+  FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
   FWaitToWrite.SetEvent;
 end;
 

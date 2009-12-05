@@ -1,3 +1,7 @@
+{:
+  @abstract(Implementa uma coleção de tags.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit tagcollection;
 
 {$IFDEF FPC}
@@ -10,6 +14,10 @@ uses
   Classes, SysUtils, PLCTag, HMIZones, ProtocolTypes, Tag;
 
 type
+  {:
+  @abstract(Classe de um item na coleção de tags.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   TTagCollectionItem=class(TCollectionItem, IUnknown, IHMITagInterface)
   private
     FTag:TPLCTag;
@@ -27,16 +35,33 @@ type
     procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
   protected
+    //: Notifica a coleção de tags que um item teve alteração de valor.
     procedure NotifyChange;
+    //: Descrição do item na coleção.
     function  GetDisplayName: string; override;
   public
+    //: @exclude
     constructor Create(Collection: TCollection); override;
+    //: @exclude
     destructor  Destroy; override;
+    {:
+    Chamado quando o dono da coleção foi totalmente carregado.
+    Use este método para realizar ações que precisem ser feitas
+    com a coleção totalmente carregada.
+    }
     procedure   Loaded;
   published
+    //: Tag do item da coleção.
     property PLCTag:TPLCTag read FTag write SetTag;
   end;
 
+  {:
+  @abstract(Classe que representa uma coleção de tags.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  Use este componente em lugares que são necessarios mais de um tag, como
+  por exemplo históricos e receitas.
+  }
   TTagCollection=class(TCollection)
   private
     FOnItemChange:TNotifyEvent;
@@ -44,15 +69,26 @@ type
     FOnNeedCompState:TNeedCompStateEvent;
     FComponentState:TComponentState;
   protected
+    //: Retorna o estado atual do dono da coleção.
     function  GetComponentState:TComponentState;
+    //: Solicita o estado atual do dono da coleção.
     procedure NeedCurrentCompState;
   published
+    //: Evento que informa ao dono da coleção que um item foi alterado.
     property OnItemChange:TNotifyEvent read FOnItemChange write FOnItemChange;
+    //: Evento que informa ao dono da coleção que um item da coleção teve seu valor alterado.
     property OnValuesChange:TNotifyEvent read FOnValuesChange write FOnValuesChange;
+    //: Evento usado para repassar o estado do dono da coleção para a coleção.
     property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
   public
+    //: @exclude
     constructor Create(ItemClass: TCollectionItemClass);
+    {:
+    Método chamado pelo dono da coleção para sinalizar que ele foi totalmente
+    carregado.
+    }
     procedure Loaded;
+    //: Informa o estado atual da coleção de tags.
     property  ZonesState:TComponentState read GetComponentState;
   end;
 

@@ -814,6 +814,10 @@ procedure TModBusDriver.SetOutputMaxHole(v:Cardinal);
 var
   plc:Integer;
 begin
+  if v = POutputMaxHole then exit;
+
+  POutputMaxHole:=v;
+
   for plc:=0 to High(PModbusPLC) do
     PModbusPLC[plc].OutPuts.MaxHole := v;
 end;
@@ -822,6 +826,10 @@ procedure TModBusDriver.SetInputMaxHole(v:Cardinal);
 var
   plc:Integer;
 begin
+  if v = PInputMaxHole then exit;
+
+  PInputMaxHole:=v;
+
   for plc:=0 to High(PModbusPLC) do
     PModbusPLC[plc].Inputs.MaxHole := v;
 end;
@@ -830,6 +838,10 @@ procedure TModBusDriver.SetRegisterMaxHole(v:Cardinal);
 var
   plc:Integer;
 begin
+  if v = PRegistersMaxHole then exit;
+
+  PRegistersMaxHole:=v;
+
   for plc:=0 to High(PModbusPLC) do
     PModbusPLC[plc].Registers.MaxHole := v;
 end;

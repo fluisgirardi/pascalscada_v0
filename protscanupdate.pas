@@ -1,4 +1,8 @@
-﻿unit protscanupdate;
+﻿{:
+@abstract(Atualiza os valores dos tags.)
+@author(Fabio Luis Girardi papelhigienico@gmail.com)
+}
+unit protscanupdate;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -15,7 +19,7 @@ uses
 type
 
   {:
-  Classe de thread reponsável por atualizar os tags após o driver processar
+  Classe de thread responsável por atualizar os tags após o driver processar
   leituras/escritas por scan. Usado por TProtocolDriver.
   @seealso(TProtocolDriver)
   }
@@ -122,7 +126,7 @@ begin
    FInitEvent.SetEvent;
    while not Terminated do begin
       WaitToDoSomething;
-      while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANREAD,WM_TAGSCANREAD,true) do begin
+      while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANREAD,PSM_TAGSCANREAD,true) do begin
          try
             CheckScanWrite;
 
@@ -173,7 +177,7 @@ begin
 
   New(tagpkg);
   Move(tag,tagpkg^,sizeof(TTagRec));
-  FSpool.PostMessage(WM_TAGSCANREAD,tagpkg,nil,false);
+  FSpool.PostMessage(PSM_TAGSCANREAD,tagpkg,nil,false);
   DoSomething;
 end;
 
@@ -182,7 +186,7 @@ begin
   if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
     raise Exception.Create('A thread está suspensa?');
 
-   FSpool.PostMessage(WM_TAGSCANWRITE,SWPkg,nil,true);
+   FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
    DoSomething;
 end;
 
@@ -210,7 +214,7 @@ var
   x:PScanWriteRec;
   PMsg:TMSMsg;
 begin
-   while (not Terminated) and FSpool.PeekMessage(PMsg,WM_TAGSCANWRITE,WM_TAGSCANWRITE,true) do begin
+   while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_TAGSCANWRITE,true) do begin
       //recupera o pacote
       x := PScanWriteRec(PMsg.wParam);
 

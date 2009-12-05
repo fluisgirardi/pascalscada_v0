@@ -1,4 +1,7 @@
-//: @exclude
+{:
+  @abstract(Unit de registro de componentes do PascalSCADA. Para Delphi e Lazarus.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit scadareg;
 
 interface
