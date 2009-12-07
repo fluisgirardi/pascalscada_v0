@@ -93,7 +93,7 @@ implementation
 
 {$ifdef fpc}
 {$IFDEF UNIX}
-uses  netdb, Unix, termio;
+uses  netdb, Unix;
 {$endif}
 {$ENDIF}
 

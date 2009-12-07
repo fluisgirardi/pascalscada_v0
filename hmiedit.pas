@@ -448,7 +448,6 @@ end;
 
 procedure THMIEdit.Change;
 var
-  cursor:Integer;
   itag:ITagInterface;
 begin
   if FBlockChange then exit;

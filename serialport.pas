@@ -421,8 +421,6 @@ erro1:
 {$IFDEF UNIX}
 
 var
-   paridade:TParityType;
-   bps:Longint;
    r:Integer;
    tios:termios;
 begin
