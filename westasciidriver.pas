@@ -15,17 +15,35 @@ uses
   syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
+  {:
+  Identifica um parametro West n6100.
+  @member ParameterID identifica o parametro West.
+  @member FunctionAllowed funções West permitidas para esse parametro.
+  @member ReadOnly Identifica um parametro somente leitura.
+  @member Decimal Identifica quantas casas decimais o parametro tem por padrão.
+  }
   TParameter = record
-    ParameterID:Char;
+    ParameterID:Byte;
     FunctionAllowed:Byte;
     ReadOnly:Boolean;
     Decimal:Byte;
   end;
 
+  //: Tempos de scam de cada registrador West.
   TScanTime = record
     ScanTime, RefCount:integer;
   end;
 
+  {:
+  Identifica um registrador West n6100.
+  @member Value Valor do registrador.
+  @member Decimal Casas decimais do registrador.
+  @member Timestamp Data/Hora da última atualização do registrador.
+  @member LastReadResult Resultado da última tentativa de leitura do registrador.
+  @member LastWriteResult Resultado da última tentativa de escrita desse registrador.
+  @member ScanTimes Lista das taxas de atualização do registrador.
+  @member MinScanTime Menor taxa de atualização do registrador.
+  }
   TWestRegister = record
     Value:Double;
     Decimal:Byte;
@@ -34,16 +52,22 @@ type
     ScanTimes:Array of TScanTime;
     MinScanTime:Integer;
   end;
+  //: Lista de todos os registradores do West n6100.
   TWestRegisters = array[$00..$1b] of TWestRegister;
 
+  //: Identifica o intervalo de endereços do West n6100.
   TWestAddressRange = 0..99;
 
+  //: Identifica um controlador West n6100.
   TWestDevice = record
     Address:TWestAddressRange;
     Registers:TWestRegisters;
   end;
+
+  //: Identifica vários controladores West n6100.
   TWestDevices = array of TWestDevice;
 
+  //: Identifica cada item retornando pela Tabela de Scan (ScanTable) do West.
   TScanTableReg = record
     Value:Double;
     Decimal:Byte;
@@ -51,6 +75,7 @@ type
     TimeStamp:TDateTime;
   end;
 
+  //: Identifica os dados retornados por ScanTable do West n6100.
   TScanTable = record
     PV,
     SP,
@@ -60,6 +85,54 @@ type
     HaveOut2:Boolean;
   end;
 
+  {:
+  @abstract(Classe driver para West n6100 ASCII.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  Para usar este driver, basta configurar as seguintes propriedades do seu tag:
+
+  @unorderedList(
+    @item(@bold(TTag.MemAddress): Endereço do parametro West. Ver tabela abaixo;)
+    @item(@bold(TTag.PLCStation): Endereço do controlador West.)
+  )
+
+  Para a propriedade MemAddres, use os seguintes valores:
+
+  @table(
+    @rowHead( @cell(Valor MemAddres)       @cell(Parametro West) )
+    @row(     @cell(0)                     @cell(SetPoint - SP) )
+    @row(     @cell(1)                     @cell(Process Variable - PV) )
+    @row(     @cell(2)                     @cell(Power Output value) )
+    @row(     @cell(3)                     @cell(Controller status) )
+    @row(     @cell(4)                     @cell(Scale Range Max) )
+    @row(     @cell(5)                     @cell(Scale Range Min) )
+    @row(     @cell(6)                     @cell(Scale Range Decimal Point) )
+    @row(     @cell(7)                     @cell(Input filter time constant) )
+    @row(     @cell(8)                     @cell(Output 1 Power Limit) )
+    @row(     @cell(9)                     @cell(Output 1 cycle time) )
+    @row(     @cell(10)                    @cell(Output 2 cycle time) )
+    @row(     @cell(11)                    @cell(Recorder output scale max) )
+    @row(     @cell(12)                    @cell(Recorder output scale min) )
+    @row(     @cell(13)                    @cell(SetPoint ramp rate) )
+    @row(     @cell(14)                    @cell(Setpoint high limit) )
+    @row(     @cell(15)                    @cell(Setpoint low limit) )
+    @row(     @cell(16)                    @cell(Alarm 1 value) )
+    @row(     @cell(17)                    @cell(Alarm 2 value) )
+    @row(     @cell(18)                    @cell(Rate - Derivative time constant) )
+    @row(     @cell(19)                    @cell(Reset - Integral time constant) )
+    @row(     @cell(20)                    @cell(Manual time reset - BIAS) )
+    @row(     @cell(21)                    @cell(ON/OFF diferential) )
+    @row(     @cell(22)                    @cell(Overlap/Deadband) )
+    @row(     @cell(23)                    @cell(Proportional band 1 value) )
+    @row(     @cell(24)                    @cell(Proportional band 2 value) )
+    @row(     @cell(25)                    @cell(PV Offset) )
+    @row(     @cell(26)                    @cell(Arithmetic deviation) )
+    @row(     @cell(27)                    @cell(Arithmetic deviation) )
+  )
+
+  @bold(Caso um ou mais parametros possam ser lidos por scan table, o driver
+  irá fazer isso para ganhar algum desempenho.)
+  }
   TWestASCIIDriver = class(TProtocolDriver)
   private
     FWestDevices:TWestDevices;
@@ -79,18 +152,33 @@ type
 {d} procedure MinScanTimeOfReg(var WestReg:TWestRegister);
 
   protected
+    //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoAddTag(TagObj:TTag); override;
+    //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoDelTag(TagObj:TTag); override;
+    //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
+    //: @seealso(TProtocolDriver.DoAddTag)
     procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
+    //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
+    //: @seealso(TProtocolDriver.DoAddTag)
 {d} function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    //: @seealso(TProtocolDriver.DoAddTag)
 {d} function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
+    //: @exclude
     constructor Create(AOwner:TComponent); override;
+    //: @exclude
     destructor  Destroy; override;
+    {:
+    Verifique se um controlador West esta ativo na rede.
+    @param(DeviceID TWestAddressRange Endereço que se deseja verificar se está disponível na rede.)
+    @returns(ioOk caso o equipamento esteja operando na rede.)
+    }
     function    DeviceActive(DeviceID:TWestAddressRange):TProtocolIOResult;
   published
+    //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
   end;
 
@@ -1082,169 +1170,169 @@ initialization
 
    //Cria a lista de Parametros Validos...
    //SetPoint
-   ParameterList[$00].ParameterID := 'S';
+   ParameterList[$00].ParameterID := Ord('S');
    ParameterList[$00].FunctionAllowed :=  0;
    ParameterList[$00].ReadOnly :=  false;
    ParameterList[$00].Decimal := 255;
 
    //PV
-   ParameterList[$01].ParameterID := 'M'; //ID do Parametro
+   ParameterList[$01].ParameterID := Ord('M'); //ID do Parametro
    ParameterList[$01].FunctionAllowed :=  2 ; //Funcao q pode usar, 0 := todas as funcoes
    ParameterList[$01].ReadOnly :=  true ; //ReadOnly 1 := yes?
    ParameterList[$01].Decimal := 255; // casas decimais variaveis...
 
    //Power Output value
-   ParameterList[$02].ParameterID := 'W';
+   ParameterList[$02].ParameterID := Ord('W');
    ParameterList[$02].FunctionAllowed :=  0;
    ParameterList[$02].ReadOnly :=  false;
    ParameterList[$02].Decimal := 255;
 
    //Controller status
-   ParameterList[$03].ParameterID := 'L';
+   ParameterList[$03].ParameterID := Ord('L');
    ParameterList[$03].FunctionAllowed :=  2;
    ParameterList[$03].ReadOnly :=  true;
    ParameterList[$03].Decimal := 0;
 
    //Scale Range Max
-   ParameterList[$04].ParameterID := 'G';
+   ParameterList[$04].ParameterID := Ord('G');
    ParameterList[$04].FunctionAllowed :=  0;
    ParameterList[$04].ReadOnly :=  false;
    ParameterList[$04].Decimal := 255;
 
    //Scale Range Min
-   ParameterList[$05].ParameterID := 'H';
+   ParameterList[$05].ParameterID := Ord('H');
    ParameterList[$05].FunctionAllowed :=  0;
    ParameterList[$05].ReadOnly :=  false;
    ParameterList[$05].Decimal := 255;
 
    //Scale Range Dec. Point
-   ParameterList[$06].ParameterID := 'Q';
+   ParameterList[$06].ParameterID := Ord('Q');
    ParameterList[$06].FunctionAllowed :=  0;
    ParameterList[$06].ReadOnly :=  false;
    ParameterList[$06].Decimal := 0;
 
    //Input filter time constant
-   ParameterList[$07].ParameterID := 'm';
+   ParameterList[$07].ParameterID := Ord('m');
    ParameterList[$07].FunctionAllowed :=  0;
    ParameterList[$07].ReadOnly :=  false;
    ParameterList[$07].Decimal := 255;
 
    //Output 1 Power Limit
-   ParameterList[$08].ParameterID := 'B';
+   ParameterList[$08].ParameterID := Ord('B');
    ParameterList[$08].FunctionAllowed :=  0;
    ParameterList[$08].ReadOnly :=  false;
    ParameterList[$08].Decimal := 255;
 
    //Output 1 cycle time
-   ParameterList[$09].ParameterID := 'N';
+   ParameterList[$09].ParameterID := Ord('N');
    ParameterList[$09].FunctionAllowed :=  0;
    ParameterList[$09].ReadOnly :=  false;
    ParameterList[$09].Decimal := 1;
 
    //Output 2 cycle time
-   ParameterList[$0a].ParameterID := 'O';
+   ParameterList[$0a].ParameterID := Ord('O');
    ParameterList[$0a].FunctionAllowed :=  0;
    ParameterList[$0a].ReadOnly :=  false;
    ParameterList[$0a].Decimal := 1;
 
    //Recorder output scale max
-   ParameterList[$0b].ParameterID := '[';
+   ParameterList[$0b].ParameterID := Ord('[');
    ParameterList[$0b].FunctionAllowed :=  0;
    ParameterList[$0b].ReadOnly :=  false;
    ParameterList[$0b].Decimal := 255;
 
    //Recorder output scale min
-   ParameterList[$0c].ParameterID := '\';
+   ParameterList[$0c].ParameterID := Ord('\');
    ParameterList[$0c].FunctionAllowed :=  0;
    ParameterList[$0c].ReadOnly :=  false;
    ParameterList[$0c].Decimal := 255;
 
    //SetPoint ramp rate
-   ParameterList[$0d].ParameterID := '^';
+   ParameterList[$0d].ParameterID := Ord('^');
    ParameterList[$0d].FunctionAllowed :=  0;
    ParameterList[$0d].ReadOnly :=  false;
    ParameterList[$0d].Decimal := 255;
 
    //Setpoint high limit
-   ParameterList[$0e].ParameterID := 'A';
+   ParameterList[$0e].ParameterID := Ord('A');
    ParameterList[$0e].FunctionAllowed :=  0;
    ParameterList[$0e].ReadOnly :=  false;
    ParameterList[$0e].Decimal := 255;
 
    //Setpoint low limit
-   ParameterList[$0f].ParameterID := 'T';
+   ParameterList[$0f].ParameterID := Ord('T');
    ParameterList[$0f].FunctionAllowed :=  0;
    ParameterList[$0f].ReadOnly :=  false;
    ParameterList[$0f].Decimal := 255;
 
    //alarm 1 value
-   ParameterList[$10].ParameterID := 'C';
+   ParameterList[$10].ParameterID := Ord('C');
    ParameterList[$10].FunctionAllowed :=  0;
    ParameterList[$10].ReadOnly :=  false;
    ParameterList[$10].Decimal := 255;
 
    //alarm 2 value
-   ParameterList[$11].ParameterID := 'E';
+   ParameterList[$11].ParameterID := Ord('E');
    ParameterList[$11].FunctionAllowed :=  0;
    ParameterList[$11].ReadOnly :=  false;
    ParameterList[$11].Decimal := 255;
 
    //Rate (Derivative time constant)
-   ParameterList[$12].ParameterID := 'D';
+   ParameterList[$12].ParameterID := Ord('D');
    ParameterList[$12].FunctionAllowed :=  0;
    ParameterList[$12].ReadOnly :=  false;
    ParameterList[$12].Decimal := 2;
 
    //Reset (Integral time constant)
-   ParameterList[$13].ParameterID := 'I';
+   ParameterList[$13].ParameterID := Ord('I');
    ParameterList[$13].FunctionAllowed :=  0;
    ParameterList[$13].ReadOnly :=  false;
    ParameterList[$13].Decimal := 2;
 
    //Manual time reset (BIAS)
-   ParameterList[$14].ParameterID := 'J';
+   ParameterList[$14].ParameterID := Ord('J');
    ParameterList[$14].FunctionAllowed :=  0;
    ParameterList[$14].ReadOnly :=  false;
    ParameterList[$14].Decimal := 255;
 
    //ON/OFF diferential
-   ParameterList[$15].ParameterID := 'F';
+   ParameterList[$15].ParameterID := Ord('F');
    ParameterList[$15].FunctionAllowed :=  0;
    ParameterList[$15].ReadOnly :=  false;
    ParameterList[$15].Decimal := 1;
 
    //Overlap/Deadband
-   ParameterList[$16].ParameterID := 'K';
+   ParameterList[$16].ParameterID := Ord('K');
    ParameterList[$16].FunctionAllowed :=  0;
    ParameterList[$16].ReadOnly :=  false;
    ParameterList[$16].Decimal := 0;
 
    //Proportional band 1 value
-   ParameterList[$17].ParameterID := 'P';
+   ParameterList[$17].ParameterID := Ord('P');
    ParameterList[$17].FunctionAllowed :=  0;
    ParameterList[$17].ReadOnly :=  false;
    ParameterList[$17].Decimal := 1;
 
    //Proportional band 2 value
-   ParameterList[$18].ParameterID := 'U';
+   ParameterList[$18].ParameterID := Ord('U');
    ParameterList[$18].FunctionAllowed :=  0;
    ParameterList[$18].ReadOnly :=  false;
    ParameterList[$18].Decimal := 1;
 
    //PV Offset
-   ParameterList[$19].ParameterID := 'v';
+   ParameterList[$19].ParameterID := Ord('v');
    ParameterList[$19].FunctionAllowed :=  0 ; //todas as funcoes podem realizar operacoes com esse parametro
    ParameterList[$19].ReadOnly :=  false ;
    ParameterList[$19].Decimal := 255;
 
    //Arithmetic deviation
-   ParameterList[$1a].ParameterID := 'V';
+   ParameterList[$1a].ParameterID := Ord('V');
    ParameterList[$1a].FunctionAllowed :=  2;
    ParameterList[$1a].ReadOnly :=  true;
    ParameterList[$1a].Decimal := 255;
 
    //Arithmetic deviation
-   ParameterList[$1b].ParameterID := 'Z';
+   ParameterList[$1b].ParameterID := Ord('Z');
    ParameterList[$1b].FunctionAllowed :=  3;
    ParameterList[$1b].ReadOnly :=  false;
    ParameterList[$1b].Decimal := 0;
