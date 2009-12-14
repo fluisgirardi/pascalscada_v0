@@ -1,5 +1,9 @@
 TSerialPortDriver   - ok
-TModBusMasterDriver - ok
+TTCP_UDPPort        - ok
+TModBusRTUDriver    - ok
+TModBusTCPDriver    - ok
+TWestASCIIDriver    - ok
+TIBoxDriver         - ok
 TPIPE               - ok
 TUserScale          - ok
 TLinearScale        - ok
@@ -7,6 +11,7 @@ TPLCTagNumber       - ok
 TPLCBlock           - ok
 TPLCBlockElement    - ok
 TPLCString          - ok
+TTagBit             - ok
 THMIEdit            - ok
 THMILabel           - ok
 THMICheckBox        - ok
@@ -23,27 +28,6 @@ Linha comando
 
 c:\lazarus\tools\lazres ..\..\scada.lrs
 
+Exportar SVG para PNG
 
-
-tbitbtn.png
-tdatasource.png
-THMIAnimation.png
-THMICheckBox.png
-THMIEdit.png
-THMILabel.png
-THMIProgressBar.png
-THMIRadioButton.png
-THMIRadioGroup.png
-THMIScrollBar.png
-THMIText.png
-THMITrackBar.png
-THMIUpDown.png
-TLinearScaleProcessor.png
-TModBusMasterDriver.BMP
-TPIPE.bmp
-TPLCBlock.png
-TPLCBlockElement.png
-TPLCString.png
-TPLCTagNumber.png
-TSerialPortDriver.png
-TUserScale.png
+inkscape --file=./scalable/TTCP_UDPPort.svg --export-png=./24x24/TTCP_UDPPort.png --export-dpi=45
