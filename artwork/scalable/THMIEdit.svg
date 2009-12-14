@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
-   xmlns:ns="http://creativecommons.org/ns#"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
@@ -13,11 +13,10 @@
    height="48"
    id="svg2"
    sodipodi:version="0.32"
-   inkscape:version="0.46dev+devel"
+   inkscape:version="0.47pre4 r22446"
    version="1.0"
    sodipodi:docname="THMIEdit.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   sodipodi:docbase="G:\HMI_SCADA\artwork\scalable"
    inkscape:export-filename="C:\HMI_SCADA\artwork\24x24\THMIEdit.png"
    inkscape:export-xdpi="45"
    inkscape:export-ydpi="45">
@@ -60,17 +59,18 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="9.3812808"
-     inkscape:cx="24.785234"
+     inkscape:cx="38.061274"
      inkscape:cy="21.050725"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1024"
-     inkscape:window-height="753"
-     inkscape:window-x="88"
-     inkscape:window-y="13"
+     inkscape:window-width="1268"
+     inkscape:window-height="748"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
      showguides="true"
-     inkscape:guide-bbox="true">
+     inkscape:guide-bbox="true"
+     inkscape:window-maximized="1">
     <sodipodi:guide
        orientation="vertical"
        position="38.217391"
@@ -79,18 +79,18 @@
   <metadata
      id="metadata7">
     <rdf:RDF>
-      <ns:Work
+      <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-      </ns:Work>
-      <ns:Work
+      </cc:Work>
+      <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-      </ns:Work>
+      </cc:Work>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
@@ -119,7 +119,7 @@
          height="27.624956"
          width="42.515072"
          id="rect2171"
-         style="fill:none;fill-opacity:1;stroke:#646464;stroke-width:2.12715936;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="fill:#000000;fill-opacity:1;stroke:#646464;stroke-width:2.12715935999999983;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       <path
          sodipodi:nodetypes="ccc"
          id="rect4115"
@@ -129,11 +129,11 @@
          transform="scale(0.923181,1.0832112)"
          sodipodi:linespacing="125%"
          id="text4120"
-         y="31.057905"
+         y="30.567345"
          x="9.519454"
-         style="font-size:20.19024277000000100px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000064;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Verdana"
+         style="font-size:20.19024277px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Verdana"
          xml:space="preserve"><tspan
-           y="31.057905"
+           y="30.567345"
            x="9.519454"
            id="tspan4122"
            sodipodi:role="line">ab</tspan></text>
@@ -141,7 +141,7 @@
          transform="matrix(2.1271594,0,0,2.1271594,-14.274811,-26.002304)"
          id="g4130">
         <path
-           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
            d="M 22.217391,19.521739 L 24.434783,19.521739 L 24.434783,28.565217 L 22.26087,28.565217"
            id="path4124"
            sodipodi:nodetypes="cccc" />
@@ -149,7 +149,7 @@
            sodipodi:nodetypes="cccc"
            id="path4128"
            d="M 26.645918,19.521739 L 24.428526,19.521739 L 24.428526,28.565217 L 26.602439,28.565217"
-           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+           style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
       </g>
     </g>
   </g>

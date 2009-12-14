@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
-   xmlns:ns="http://creativecommons.org/ns#"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
@@ -13,7 +13,7 @@
    height="48"
    id="svg2"
    sodipodi:version="0.32"
-   inkscape:version="0.46dev+devel"
+   inkscape:version="0.47pre4 r22446"
    sodipodi:docname="TUserScale.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.0"
@@ -43,19 +43,20 @@
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      inkscape:window-width="1024"
-     inkscape:window-height="753"
+     inkscape:window-height="748"
      inkscape:window-x="0"
-     inkscape:window-y="0"
-     showgrid="false" />
+     inkscape:window-y="25"
+     showgrid="false"
+     inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
     <rdf:RDF>
-      <ns:Work
+      <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-      </ns:Work>
+      </cc:Work>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
@@ -70,14 +71,15 @@
      id="layer1">
     <text
        xml:space="preserve"
-       style="font-size:21.49164391px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-       x="-27.545263"
-       y="38.343555"
+       style="font-size:16.98314285px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Verdana;-inkscape-font-specification:Verdana"
+       x="-28.73737"
+       y="38.043736"
        id="text2178"
-       transform="matrix(0.7298481,-0.6850741,0.7298481,0.6850741,0,0)"><tspan
+       transform="matrix(0.72984808,-0.68507408,0.72984808,0.68507408,0,0)"
+       sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan2180"
-         x="-27.545263"
-         y="38.343555">y=f(x)</tspan></text>
+         x="-28.73737"
+         y="38.043736">y=f(x)</tspan></text>
   </g>
 </svg>
