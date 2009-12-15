@@ -84,14 +84,14 @@
      id="layer1">
     <text
        xml:space="preserve"
-       style="font-size:12.45975780000000022px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Verdana"
-       x="-0.11803117"
+       style="font-size:12.45975780000000022px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#008000;fill-opacity:1;stroke:none;font-family:Verdana"
+       x="-0.11803147"
        y="38.606735"
        id="text2383"
        sodipodi:linespacing="125%"
-       transform="matrix(0.7071068,-0.7071068,0.7071068,0.7071068,0,0)"><tspan
+       transform="matrix(0.70710678,-0.70710678,0.70710678,0.70710678,0,0)"><tspan
          sodipodi:role="line"
-         x="-0.11803103"
+         x="-0.11803147"
          y="38.606735"
          id="tspan2387">MODBUS</tspan></text>
     <text
