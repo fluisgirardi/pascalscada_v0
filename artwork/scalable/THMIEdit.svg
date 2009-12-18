@@ -131,7 +131,7 @@
          id="text4120"
          y="30.567345"
          x="9.519454"
-         style="font-size:20.19024277px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Verdana"
+         style="font-size:20.19024277000000112px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ececec;fill-opacity:1;stroke:none;font-family:Verdana"
          xml:space="preserve"><tspan
            y="30.567345"
            x="9.519454"
@@ -141,7 +141,7 @@
          transform="matrix(2.1271594,0,0,2.1271594,-14.274811,-26.002304)"
          id="g4130">
         <path
-           style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           style="fill:none;fill-rule:evenodd;stroke:#ececec;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
            d="M 22.217391,19.521739 L 24.434783,19.521739 L 24.434783,28.565217 L 22.26087,28.565217"
            id="path4124"
            sodipodi:nodetypes="cccc" />
@@ -149,7 +149,7 @@
            sodipodi:nodetypes="cccc"
            id="path4128"
            d="M 26.645918,19.521739 L 24.428526,19.521739 L 24.428526,28.565217 L 26.602439,28.565217"
-           style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+           style="fill:none;fill-rule:evenodd;stroke:#ececec;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
       </g>
     </g>
   </g>

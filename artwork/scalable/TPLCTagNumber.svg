@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
-   xmlns:ns="http://creativecommons.org/ns#"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
@@ -13,7 +13,7 @@
    height="48"
    id="svg3297"
    sodipodi:version="0.32"
-   inkscape:version="0.46dev+devel"
+   inkscape:version="0.47pre4 r22446"
    version="1.0"
    sodipodi:docname="TPLCTagNumber.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
@@ -46,9 +46,10 @@
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:window-width="1024"
-     inkscape:window-height="753"
+     inkscape:window-height="748"
      inkscape:window-x="0"
-     inkscape:window-y="0">
+     inkscape:window-y="25"
+     inkscape:window-maximized="0">
     <sodipodi:guide
        orientation="-0.69465837,0.7193398"
        position="49.674251,37.476659"
@@ -57,12 +58,12 @@
   <metadata
      id="metadata3302">
     <rdf:RDF>
-      <ns:Work
+      <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-      </ns:Work>
+      </cc:Work>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
@@ -90,7 +91,7 @@
          height="36.578533"
          width="25.861252"
          id="rect3277"
-         style="opacity:1;fill:#ffffff;fill-opacity:1" />
+         style="opacity:1;fill:#ececec;fill-opacity:1" />
     </g>
     <text
        xml:space="preserve"

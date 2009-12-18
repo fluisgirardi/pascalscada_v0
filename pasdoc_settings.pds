@@ -1,6 +1,6 @@
 [Main]
 StoreRelativePaths=1
-Language=0
+Language=7
 OutputDir=PasDoc
 GenerateFormat=0
 Verbosity=2
@@ -23,7 +23,7 @@ Sorting_6=1
 Sorting_7=1
 Sorting_8=1
 Sorting_9=1
-WriteUsesList=0
+WriteUsesList=1
 AutoAbstract=1
 AutoLink=1
 HandleMacros=1
@@ -31,8 +31,8 @@ UseTipueSearch=0
 LineBreakQuality=0
 SpecialMarkerTreatment=2
 Title=PascalScada
-VizGraphClasses=0
-VizGraphUses=0
+VizGraphClasses=1
+VizGraphUses=1
 CheckSpelling=0
 LatexGraphicsPackage=0
 

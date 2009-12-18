@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
-   xmlns:ns="http://creativecommons.org/ns#"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
@@ -13,7 +13,7 @@
    height="48"
    id="svg3943"
    sodipodi:version="0.32"
-   inkscape:version="0.46dev+devel"
+   inkscape:version="0.47pre4 r22446"
    version="1.0"
    sodipodi:docname="TPLCBlockElement.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
@@ -46,9 +46,10 @@
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:window-width="1024"
-     inkscape:window-height="753"
+     inkscape:window-height="748"
      inkscape:window-x="0"
-     inkscape:window-y="0">
+     inkscape:window-y="25"
+     inkscape:window-maximized="0">
     <sodipodi:guide
        orientation="-0.69465837,0.7193398"
        position="21.079225,31.976113"
@@ -57,12 +58,12 @@
   <metadata
      id="metadata3948">
     <rdf:RDF>
-      <ns:Work
+      <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-      </ns:Work>
+      </cc:Work>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
@@ -111,7 +112,7 @@
              id="path4747"
              sodipodi:nodetypes="cccccccccsssssc" />
           <rect
-             style="opacity:1;fill:#ffffff;fill-opacity:1"
+             style="opacity:1;fill:#ececec;fill-opacity:1"
              id="rect4749"
              width="25.861252"
              height="36.578533"
@@ -167,7 +168,7 @@
              height="36.578533"
              width="25.861252"
              id="rect4769"
-             style="opacity:1;fill:#ffffff;fill-opacity:1" />
+             style="opacity:1;fill:#ececec;fill-opacity:1" />
         </g>
       </g>
       <path
@@ -211,7 +212,7 @@
              id="path4787"
              sodipodi:nodetypes="cccccccccsssssc" />
           <rect
-             style="opacity:1;fill:#ffffff;fill-opacity:1"
+             style="opacity:1;fill:#ececec;fill-opacity:1"
              id="rect4789"
              width="25.861252"
              height="36.578533"
@@ -263,7 +264,7 @@
              height="36.578533"
              width="25.861252"
              id="rect4809"
-             style="opacity:1;fill:#ffffff;fill-opacity:1" />
+             style="opacity:1;fill:#ececec;fill-opacity:1" />
         </g>
       </g>
     </g>

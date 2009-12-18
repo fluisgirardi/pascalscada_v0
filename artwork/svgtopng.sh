@@ -9,9 +9,12 @@ rm -rf ./24x24bmp/*.xpm
 
 for l in `find ./scalable/ -iname "t*.svg"`; do
    outfile=`echo $l | cut -d"/" -f3 | cut -d"." -f1`;
-   echo "Gerando arquivo PNG => ./24x24png/$outfile.png";
+   echo "Creating file ./24x24png/$outfile.png";
    inkscape --file=$l --export-png=./24x24png/$outfile.png --export-dpi=45 > /dev/null
-   echo "Gerando arquivo BMP => ./24x24bmp/$outfile.bmp";
+   echo "Creating file ./24x24bmp/$outfile.bmp";
    convert -size 24x24 xc:"#c0c0c0" -background "#c0c0c0" +append ./24x24png/$outfile.png -layers merge ./24x24bmp/$outfile.bmp > /dev/null
-   echo "Gerando arquivo XPM => ./24x24xpm/$outfile.xpm";   
+   echo "Creating file ./24x24xpm/$outfile.xpm";
+   convert -size 24x24 xc:"#c0c0c0" -background "#c0c0c0" +append ./24x24png/$outfile.png -layers merge -transparent "#c0c0c0" -transparent-color "#ff00ff" ./24x24xpm/$outfile.xpm > /dev/null
 done;
+
+./generatelrs.sh
