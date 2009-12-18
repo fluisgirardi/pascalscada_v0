@@ -1,8 +1,8 @@
 #!/bin/sh
 
-echo "Gerando Lazarus Resource (scada.lrs)";
+echo "Creating Lazarus Resource (scada.lrs)";
 linha="";
-for l in `find ./24x24xpm/ -iname "t*.xpm"`; do
+for l in `find ./24x24png2/ -iname "t*.png"`; do
   linha="$linha $l";
 done;
 
