@@ -18,4 +18,4 @@ for l in `find ./scalable/ -iname "t*.svg"`; do
 done;
 
 ./generatelrs.sh
-./generatedcr.sh
+./generateres.sh

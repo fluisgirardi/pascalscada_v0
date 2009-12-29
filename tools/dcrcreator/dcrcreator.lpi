@@ -27,8 +27,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="scada.res THMIAnimation.bmp THMICheckBox.bmp"/>
-        <LaunchingApplication PathPlusParams="xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+        <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
     <RequiredPackages Count="2">
@@ -39,152 +38,49 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="16">
+    <Units Count="2">
       <Unit0>
         <Filename Value="dcrcreator.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="dcrcreator"/>
-        <CursorPos X="16" Y="28"/>
-        <TopLine Value="13"/>
+        <CursorPos X="12" Y="12"/>
+        <TopLine Value="1"/>
         <EditorIndex Value="0"/>
-        <UsageCount Value="29"/>
+        <UsageCount Value="20"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fv/src/resource.pas"/>
-        <UnitName Value="Resource"/>
-        <CursorPos X="1" Y="1"/>
-        <TopLine Value="1"/>
+        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-base/src/custapp.pp"/>
+        <UnitName Value="CustApp"/>
+        <CursorPos X="3" Y="537"/>
+        <TopLine Value="532"/>
         <UsageCount Value="10"/>
       </Unit1>
-      <Unit2>
-        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-res/src/reswriter.pp"/>
-        <UnitName Value="reswriter"/>
-        <CursorPos X="1" Y="197"/>
-        <TopLine Value="175"/>
-        <EditorIndex Value="1"/>
-        <UsageCount Value="12"/>
-        <Loaded Value="True"/>
-      </Unit2>
-      <Unit3>
-        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-res/src/resource.pp"/>
-        <UnitName Value="resource"/>
-        <CursorPos X="37" Y="163"/>
-        <TopLine Value="151"/>
-        <UsageCount Value="12"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-res/src/resdatastream.pp"/>
-        <UnitName Value="resdatastream"/>
-        <CursorPos X="3" Y="306"/>
-        <TopLine Value="304"/>
-        <UsageCount Value="12"/>
-      </Unit4>
-      <Unit5>
-        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-res/src/resreader.pp"/>
-        <UnitName Value="resreader"/>
-        <CursorPos X="1" Y="1"/>
-        <TopLine Value="21"/>
-        <UsageCount Value="10"/>
-      </Unit5>
-      <Unit6>
-        <Filename Value="unitresourcedetails.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="unitResourceDetails"/>
-        <CursorPos X="1" Y="31"/>
-        <TopLine Value="28"/>
-        <UsageCount Value="24"/>
-        <FoldState Value=" TKic2p1+"/>
-      </Unit6>
-      <Unit7>
-        <Filename Value="unitResFile.pas"/>
-        <UnitName Value="unitResFile"/>
-        <CursorPos X="13" Y="3"/>
-        <TopLine Value="1"/>
-        <UsageCount Value="11"/>
-      </Unit7>
-      <Unit8>
-        <Filename Value="unitResourceGraphics.pas"/>
-        <UnitName Value="unitResourceGraphics"/>
-        <CursorPos X="75" Y="19"/>
-        <TopLine Value="1"/>
-        <UsageCount Value="11"/>
-      </Unit8>
-      <Unit9>
-        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/inc/charset.pp"/>
-        <UnitName Value="charset"/>
-        <CursorPos X="1" Y="1"/>
-        <TopLine Value="1"/>
-        <UsageCount Value="10"/>
-      </Unit9>
-      <Unit10>
-        <Filename Value="unitExIcon.pas"/>
-        <UnitName Value="unitExIcon"/>
-        <CursorPos X="67" Y="45"/>
-        <TopLine Value="66"/>
-        <UsageCount Value="10"/>
-      </Unit10>
-      <Unit11>
-        <Filename Value="unitbmp.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="unitbmp"/>
-        <CursorPos X="24" Y="60"/>
-        <TopLine Value="39"/>
-        <UsageCount Value="22"/>
-      </Unit11>
-      <Unit12>
-        <Filename Value="../../../../lazarus/lcl/graphics.pp"/>
-        <UnitName Value="Graphics"/>
-        <CursorPos X="1" Y="1"/>
-        <TopLine Value="415"/>
-        <UsageCount Value="10"/>
-      </Unit12>
-      <Unit13>
-        <Filename Value="../../../../lazarus/lcl/lcltype.pp"/>
-        <UnitName Value="LCLType"/>
-        <CursorPos X="3" Y="102"/>
-        <TopLine Value="1081"/>
-        <UsageCount Value="10"/>
-      </Unit13>
-      <Unit14>
-        <Filename Value="../../../../lazarus/lcl/lclrescache.pas"/>
-        <UnitName Value="LCLResCache"/>
-        <CursorPos X="1" Y="1"/>
-        <TopLine Value="46"/>
-        <UsageCount Value="10"/>
-      </Unit14>
-      <Unit15>
-        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-res/src/bitmapresource.pp"/>
-        <UnitName Value="bitmapresource"/>
-        <CursorPos X="1" Y="1"/>
-        <TopLine Value="127"/>
-        <UsageCount Value="10"/>
-      </Unit15>
     </Units>
     <JumpHistory Count="6" HistoryIndex="5">
       <Position1>
         <Filename Value="dcrcreator.lpr"/>
-        <Caret Line="16" Column="9" TopLine="1"/>
+        <Caret Line="12" Column="12" TopLine="1"/>
       </Position1>
       <Position2>
         <Filename Value="dcrcreator.lpr"/>
-        <Caret Line="39" Column="73" TopLine="24"/>
+        <Caret Line="11" Column="11" TopLine="1"/>
       </Position2>
       <Position3>
         <Filename Value="dcrcreator.lpr"/>
-        <Caret Line="22" Column="9" TopLine="19"/>
+        <Caret Line="14" Column="12" TopLine="2"/>
       </Position3>
       <Position4>
         <Filename Value="dcrcreator.lpr"/>
-        <Caret Line="18" Column="37" TopLine="6"/>
+        <Caret Line="51" Column="45" TopLine="38"/>
       </Position4>
       <Position5>
         <Filename Value="dcrcreator.lpr"/>
-        <Caret Line="11" Column="9" TopLine="1"/>
+        <Caret Line="44" Column="17" TopLine="33"/>
       </Position5>
       <Position6>
         <Filename Value="dcrcreator.lpr"/>
-        <Caret Line="6" Column="1" TopLine="1"/>
+        <Caret Line="78" Column="36" TopLine="52"/>
       </Position6>
     </JumpHistory>
   </ProjectOptions>
@@ -192,7 +88,14 @@
     <Version Value="8"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)/"/>
+      <LCLWidgetType Value="nogui"/>
     </SearchPaths>
+    <Linking>
+      <Debugging>
+        <UseLineInfoUnit Value="False"/>
+        <StripSymbols Value="True"/>
+      </Debugging>
+    </Linking>
     <Other>
       <CompilerPath Value="$(CompPath)"/>
     </Other>
