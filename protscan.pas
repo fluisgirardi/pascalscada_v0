@@ -1,4 +1,4 @@
-﻿{:
+{:
 @abstract(Processa os pedidos de leitura e escrita por scan.)
 @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }

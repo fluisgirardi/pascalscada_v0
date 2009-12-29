@@ -1,4 +1,4 @@
-﻿{:
+{:
 @abstract(Atualiza os valores dos tags.)
 @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }

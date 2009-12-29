@@ -1,4 +1,4 @@
-﻿{:
+{:
   @abstract(Implementação do tag de mapeamento de bits.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }

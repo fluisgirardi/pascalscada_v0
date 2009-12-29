@@ -1,4 +1,4 @@
-﻿{:
+{:
   @abstract(Unit que implementa uma porta de comunicação TCP/UDP sobre IP cliente.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }

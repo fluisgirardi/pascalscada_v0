@@ -1,4 +1,4 @@
-﻿{:
+{:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
   @abstract(Driver de protocolo Ibox, usado para comunicar com unidades
