@@ -6,5 +6,6 @@
     <Transaction>2009/09/11 12:12:36.160.pas,C:\HMI_SCADA\Unit1.pas=C:\HMI_SCADA\modbuscommon.pas</Transaction>
     <Transaction>2009/09/11 13:08:59.691.pas,C:\HMI_SCADA\modbuscommon.pas=</Transaction>
     <Transaction>2009/09/11 13:09:03.504.pas,C:\HMI_SCADA\modbustcpmaster.pas=</Transaction>
+    <Transaction>2009/12/29 14:26:03.994.dcr,C:\pascalscada\scada.dcr=</Transaction>
   </Transactions>
 </BorlandProject>

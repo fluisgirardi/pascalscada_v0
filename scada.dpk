@@ -1,7 +1,6 @@
 package scada;
 
-{$R *.res}
-{$R 'scada.dcr'}
+{$R scada.res}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -23,7 +22,7 @@ package scada;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Componentes de controle e aquisição de dados FLGSCADA'}
+{$DESCRIPTION 'PascalSCADA'}
 {$IMPLICITBUILD OFF}
 
 requires
