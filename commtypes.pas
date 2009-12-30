@@ -1,6 +1,6 @@
 {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-  @abstract(Unit com os tipos que são usados frequentemente em drivers de portas de comunicação.)
+  @abstract(Unit com os tipos que sÃ£o usados frequentemente em drivers de portas de comunicaÃ§Ã£o.)
 }
 unit commtypes;
 
@@ -12,16 +12,16 @@ interface
 
 type
   {:
-  Representa uma seqüência de bytes.
+  Representa uma sequencia de bytes.
   @seealso(TCommPortDriver)
   @seealso(TIOPacket)
   }
   BYTES = array of Byte;
 
   {:
-  @name define os comandos e a ordem de execução em um pedido de Leitura/Escrita.
+  @name define os comandos e a ordem de execuÃ§Ã£o em um pedido de Leitura/Escrita.
 
-  @value iocNone Não faz nada;
+  @value iocNone NÃ£o faz nada;
   @value iocRead Executa uma leitura;
   @value iocReadWrite Executa uma leitura e logo apos uma escrita;
   @value iocWrite Executa uma escrita;
@@ -35,12 +35,12 @@ type
   TIOCommand = (iocNone, iocRead, iocReadWrite, iocWrite, iocWriteRead);
 
   {:
-  @name define os possíveis resultados de um pedido de Leitura/Escrita.
+  @name define os possiveis resultados de um pedido de Leitura/Escrita.
 
   @value iorOk O comando teve sucesso.
-  @value iorTimeOut O comando excedeu o tempo máximo de execução.
-  @value iorNotReady A porta não estava pronta para executar o comando. Ex: porta fechada.
-  @value iorNone O comando não foi processado;
+  @value iorTimeOut O comando excedeu o tempo mÃ¡ximo de execuÃ§Ã£o.
+  @value iorNotReady A porta nÃ£o estava pronta para executar o comando. Ex: porta fechada.
+  @value iorNone O comando nÃ£o foi processado;
   @value iorPortError Houve falha do driver de porta enquanto processava o comando.
   @seealso(TIOPacket)
   }
@@ -49,18 +49,18 @@ type
   {:
   Retorna os resultados de um pedido de leitura/escrita de um driver de porta.
 
-  @member PacketID Número identificador do pacote.
-  @member WriteIOResult Resultado do comando de escrita se existir. Caso não exista retorna iorNone.
+  @member PacketID NÃºmero identificador do pacote.
+  @member WriteIOResult Resultado do comando de escrita se existir. Caso nÃ£o exista retorna iorNone.
   @member ToWrite Quantidade de @noAutoLink(bytes) a escrever.
   @member Wrote Quantidade de @noAutoLink(bytes) escritos.
-  @member WriteRetries Número de tentativas para escrever ToWrite @noAutoLink(bytes).
-  @member BufferToWrite Seqüência de @noAutoLink(bytes) a escrever. @bold(Deve ter o tamanho mínimo de ToWrite @noAutoLink(bytes)).
+  @member WriteRetries NÃºmero de tentativas para escrever ToWrite @noAutoLink(bytes).
+  @member BufferToWrite Sequencia de @noAutoLink(bytes) a escrever. @bold(Deve ter o tamanho mÃ­nimo de ToWrite @noAutoLink(bytes)).
   @member DelayBetweenCommand Atraso em milisegundos entre comandos de leitura e escrita.
-  @member ReadIOResult Resultado do comando de leitura caso exista. Se não foi definido um comando de leitura retorna iorNone.
-  @member ToRead Quantidade de @noAutoLink(bytes) à ler da porta.
+  @member ReadIOResult Resultado do comando de leitura caso exista. Se nÃ£o foi definido um comando de leitura retorna iorNone.
+  @member ToRead Quantidade de @noAutoLink(bytes) a ler da porta.
   @member Received Quantidade de @noAutoLink(bytes) lidos da porta.
-  @member ReadRetries Número de tentativas para ler ToWrite @noAutoLink(bytes).
-  @member BufferToRead Buffer contendo os @noAutoLink(bytes) lidos na operação. Tem o tamanho ajustado para o valor passado em ToRead.
+  @member ReadRetries NÃºmero de tentativas para ler ToWrite @noAutoLink(bytes).
+  @member BufferToRead Buffer contendo os @noAutoLink(bytes) lidos na operaÃ§Ã£o. Tem o tamanho ajustado para o valor passado em ToRead.
 
   @seealso(TCommPortDriver)
   @seealso(TDriverCallBack)

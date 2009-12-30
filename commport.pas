@@ -1,6 +1,6 @@
 {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-  @abstract(Unit que implementa as bases de um driver de porta de comunicaÁ„o)
+  @abstract(Unit que implementa as bases de um driver de porta de comunica√ß√£o)
 }
 unit CommPort;
 
@@ -20,11 +20,11 @@ uses
 type
   {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-  @name È respons·vel por retornar os resultados de um grupo de comandos
+  @name √© respons√°vel por retornar os resultados de um grupo de comandos
   de leitura/escrita para quem fez o pedido.
   @bold(Retorna os resultados de maneira ASSINCRONA, sendo responsabilidade de
-  quem escreveu o procedimento de CallBack fazer a sincronizaÁ„o.)
-  … usado internamente por TCommPortDriver.
+  quem escreveu o procedimento de CallBack fazer a sincroniza√ß√£o.)
+  √â usado internamente por TCommPortDriver.
   }
   TUpdateThread = class(TCrossThread)
   private
@@ -43,21 +43,21 @@ type
     procedure Execute; override;
   public
     {:
-    Cria uma nova thread de atualizaÁ„o de resultados de leitura/escrita.
-    @param(IniciarSuspensa Boolean. Caso @true a thread ser· criada suspensa
-           (parada). Para iniciar a execuÁ„o da thread chame o mÈtodo Resume.)
+    Cria uma nova thread de atualiza√ß√£o de resultados de leitura/escrita.
+    @param(IniciarSuspensa Boolean. Caso @true a thread ser√° criada suspensa
+           (parada). Para iniciar a execu√ß√£o da thread chame o m√©todo Resume.)
     }
     constructor Create(IniciarSuspensa:Boolean);
-    //: Destroi a thread de atualizaÁ„o e todos os seus recursos.
+    //: Destroi a thread de atualiza√ß√£o e todos os seus recursos.
     destructor Destroy; override;
-    //: Aguarda pela inicializaÁ„o da thread de atualizaÁ„o.
+    //: Aguarda pela inicializa√ß√£o da thread de atualiza√ß√£o.
     procedure WaitInit;
-    //: Termina a execuÁ„o da thread.
+    //: Termina a execu√ß√£o da thread.
     procedure Terminate;
     {:
-    Da uma ordem de atualizaÁ„o de dados assincrona para thread, fazendo com que
+    Da uma ordem de atualiza√ß√£o de dados assincrona para thread, fazendo com que
     ela chame o Callback e passe os resultados do pedido de leitura/escrita.
-    N„o ir· executar o comando caso o CallBack fornecido em CmdPacket esteja
+    N√£o ir√° executar o comando caso o CallBack fornecido em CmdPacket esteja
     cancelado.
     @seealso(TCommandPacket)
     @seealso(DoCancelCallBack)
@@ -65,18 +65,18 @@ type
     }
     procedure DoCallBack(CmdPacket:PCommandPacket);
     {:
-    Suspende um mÈtodo de CallBack a fim de evitar chamadas a endereÁos inv·lidos.
-    Quando um mÈtodo È cancelado, todas as futuras chamadas feitas a ele n„o
-    ser„o mais realizadas atÈ que o CallBack seja ativado novamente atravÈs de
-    DoResumeCallBack. @bold(… chamado atravÈs de TCommPortDriver.CancelCallBack)
+    Suspende um m√©todo de CallBack a fim de evitar chamadas a endere√ßos inv√°lidos.
+    Quando um m√©todo √© cancelado, todas as futuras chamadas feitas a ele n√£o
+    ser√£o mais realizadas at√© que o CallBack seja ativado novamente atrav√©s de
+    DoResumeCallBack. @bold(√â chamado atrav√©s de TCommPortDriver.CancelCallBack)
     @seealso(TDriverCallBack)
     @seealso(TCommPortDriver.CancelCallBack)
     @seealso(TCommPortDriver.ResumeCallBack)
     }
     procedure DoCancelCallBack(CallBack:TDriverCallBack);
     {:
-    Ativa um mÈtodo de CallBack para que este se torne novamente um endereÁo
-    v·lido.
+    Ativa um m√©todo de CallBack para que este se torne novamente um endere√ßo
+    v√°lido.
     @seealso(TDriverCallBack)
     @seealso(TCommPortDriver.CancelCallBack)
     @seealso(TCommPortDriver.ResumeCallBack)
@@ -86,7 +86,7 @@ type
 
   {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-  Thread respons·vel por processar os pedidos de leitura/escrita.
+  Thread respons√°vel por processar os pedidos de leitura/escrita.
   }
   TThreadComm = class(TCrossThread)
   private
@@ -106,16 +106,16 @@ type
     procedure DoIOCommand(PMsg:TMSMsg; commandpacket:PCommandPacket);
   public
     {:
-    Cria uma nova thread de execuÁ„o de pedidos de leitura/escrita.
-    … usada para processar os comandos de leitura/escrita assincronos de
+    Cria uma nova thread de execu√ß√£o de pedidos de leitura/escrita.
+    √â usada para processar os comandos de leitura/escrita assincronos de
     TCommPortDriver.
-    @bold(Geralmente uma inst‚ncia dessa classe È criada quando È criado
-          uma inst‚ncia de TCommPortDriver).
-    @param(IniciarSuspensa Boolean. Caso @true a thread ser· criada suspensa
-           (parada). Para iniciar a execuÁ„o da thread chame o mÈtodo Resume.)
-    @param(Updater TUpdateThread. Informa a inst‚ncia da thread respons·vel
+    @bold(Geralmente uma inst√¢ncia dessa classe √© criada quando √© criado
+          uma inst√¢ncia de TCommPortDriver).
+    @param(IniciarSuspensa Boolean. Caso @true a thread ser√° criada suspensa
+           (parada). Para iniciar a execu√ß√£o da thread chame o m√©todo Resume.)
+    @param(Updater TUpdateThread. Informa a inst√¢ncia da thread respons√°vel
            por retornar os resultados dos comandos a quem fez o pedido de I/O.
-           Se @code(nil) for fornecido n„o haver· respostas dos resultados
+           Se @code(nil) for fornecido n√£o haver√° respostas dos resultados
            dos comandos de leitura/escrita.)
     @seealso(TUpdateThread)
     @seealso(TCommPortDriver)
@@ -123,13 +123,13 @@ type
     constructor Create(IniciarSuspensa:Boolean; Updater:TUpdateThread);
     //: Destroi a thread de processamento de leitura/escrita e libera todos os seus recursos.
     destructor Destroy; override;
-    //: Faz com que a thread termine a sua execuÁ„o.
+    //: Faz com que a thread termine a sua execu√ß√£o.
     procedure Terminate;
     {:
     Coloca na fila um pedido de leitura/escrita.
     Chamado por TCommPortDriver.IOCommandASync
     @param(cmd TIOCommand. Grupo de comandos a realizar.)
-    @param(IsWriteCmd Boolean. Caso @true indica se È um comando de escrita, ou
+    @param(IsWriteCmd Boolean. Caso @true indica se √© um comando de escrita, ou
            seja, tem mais prioridade sobre os demais comandos sendo colocado
            no inicio da fila.)
     @param(Pkg PCommandPacket. Dados e retorno dos comandos.)
@@ -145,30 +145,30 @@ type
   end;
 
   {:
-  @abstract(Classe base de drivers de portas de comunicaÁ„o)
+  @abstract(Classe base de drivers de portas de comunica√ß√£o)
 
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  Esta classe foi criada com o intuito de diminuir os esforÁos na criaÁ„o de
-  drivers de portas de comunicaÁıes tanto no modo mono-tarefa (single thread) quanto
-  no modo multi-tarefa (threads). Essa classe fornece dois mÈtodos de comunicaÁ„o,
+  Esta classe foi criada com o intuito de diminuir os esfor√ßos na cria√ß√£o de
+  drivers de portas de comunica√ß√µes tanto no modo mono-tarefa (single thread) quanto
+  no modo multi-tarefa (threads). Essa classe fornece dois m√©todos de comunica√ß√£o,
   um sincrono (sem threads) e outro assincrono (multitarefa).
 
-  As poucas partes a serem escritas s„o o override de trÍs mÈtodos virtuais que
-  fazem todo o trabalho (e È lÛgico as rotinas das propriedades e demais funÁıes
-  de comunicaÁ„o da sua porta). S„o eles:
+  As poucas partes a serem escritas s√£o o override de tr√™s m√©todos virtuais que
+  fazem todo o trabalho (e √© l√≥gico as rotinas das propriedades e demais fun√ß√µes
+  de comunica√ß√£o da sua porta). S√£o eles:
 
   @code(procedure IOCommand(cmd:TIOCommand; var Packet:TIOPacket); virtual;)
-  Realiza as rotinas de comunicaÁ„o
+  Realiza as rotinas de comunica√ß√£o
 
   @code(procedure PortStart(var Ok:Boolean); virtual;)
-  Abra a porta e retorne @true caso consiga abrir a porta de comunicaÁ„o.
+  Abra a porta e retorne @true caso consiga abrir a porta de comunica√ß√£o.
 
   @code(procedure PortStop(var Ok:Boolean); virtual;)
-  Feche a porta e retorne @true caso consiga fechar a porta de comunicaÁ„o.
+  Feche a porta e retorne @true caso consiga fechar a porta de comunica√ß√£o.
 
-  Tirando essas coisas, vocÍ n„o precisa se preocupar com threads e comunicaÁ„o
-  assincrona e sincrona, propriedades Active, elas j· est„o prontas para vocÍ!
+  Tirando essas coisas, voc√™ n√£o precisa se preocupar com threads e comunica√ß√£o
+  assincrona e sincrona, propriedades Active, elas j√° est√£o prontas para voc√™!
   }
   TCommPortDriver = class(TComponent)
   private
@@ -209,8 +209,8 @@ type
     {: @exclude }
     procedure InternalPortStop(var Ok:Boolean);
     {:
-    @name È o metodo chamado para realizar as leituras/escritas do driver.
-    Para a criaÁ„o de novos drivers, esse mÈtodo precisa ser sobrescrito.
+    @name √© o metodo chamado para realizar as leituras/escritas do driver.
+    Para a cria√ß√£o de novos drivers, esse m√©todo precisa ser sobrescrito.
 
     @param(cmd TIOCommand. Informa os comandos de Leitura/escrita e sua ordem)
     @param(Packet PIOPacket. Aponta para uma estrutura TIOPacket que contem os valores a
@@ -219,15 +219,15 @@ type
     }
     procedure IOCommand(cmd:TIOCommand; Packet:PIOPacket);
   protected
-    {: Vari·vel respons·vel por armazenar o estado atual do driver }
+    {: Vari√°vel respons√°vel por armazenar o estado atual do driver }
     PActive:Boolean;
-    {: Vari·vel respons·vel por armazenar se devem ser feitas limpezas apÛs algum erro de comunicaÁ„o }
+    {: Vari√°vel respons√°vel por armazenar se devem ser feitas limpezas ap√≥s algum erro de comunica√ß√£o }
     PClearBufOnErr:Boolean;
     {:
-     Thread respons·vel por realizar os comandos de leitura/escrita. Para manter
-     compatibilidade com outros sistemas operacionais, evite fazer a suspens„o
-     dela, pois em algums sistemas n„o È possÌvel suspender uma thread que j·
-     est· rodando.
+     Thread respons√°vel por realizar os comandos de leitura/escrita. Para manter
+     compatibilidade com outros sistemas operacionais, evite fazer a suspens√£o
+     dela, pois em algums sistemas n√£o √© poss√≠vel suspender uma thread que j√°
+     est√° rodando.
     }
     CommThread:TThreadComm;
     {:
@@ -236,17 +236,17 @@ type
     }
     Protocols:array of TComponent;
     {:
-    LÍ dados da porta. … necess·rio sobrescrever este mÈtodo para criar
+    L√™ dados da porta. √â necess√°rio sobrescrever este m√©todo para criar
     novos drivers de porta.
-    @param(Packet PIOPacket. Contem as informaÁıes necess·rias para executar
+    @param(Packet PIOPacket. Contem as informa√ß√µes necess√°rias para executar
            a leitura).
     @seealso(TIOPacket)
     }
     procedure Read(Packet:PIOPacket); virtual; abstract;
     {:
-    Escreve dados na porta. … necess·rio sobrescrever este mÈtodo para criar
+    Escreve dados na porta. √â necess√°rio sobrescrever este m√©todo para criar
     novos drivers de porta.
-    @param(Packet PIOPacket. Contem as informaÁıes necess·rias para executar
+    @param(Packet PIOPacket. Contem as informa√ß√µes necess√°rias para executar
            a escrita).
     @seealso(TIOPacket)
     }
@@ -257,34 +257,34 @@ type
     }
     procedure NeedSleepBetweenRW; virtual; abstract;
     {:
-    @name È o metodo chamado para realizar a abertura da porta.
-    Para a criaÁ„o de novos drivers, esse mÈtodo precisa ser sobrescrito.
+    @name √© o metodo chamado para realizar a abertura da porta.
+    Para a cria√ß√£o de novos drivers, esse m√©todo precisa ser sobrescrito.
 
-    @return(Retorne @true em Ok caso a porta tenha sido aberta com sucesso. @false caso contr·rio)
+    @return(Retorne @true em Ok caso a porta tenha sido aberta com sucesso. @false caso contr√°rio)
     @seealso(TDriverCommand)
     }
     procedure PortStart(var Ok:Boolean); virtual; abstract;
     {:
-    @name È o metodo chamado para fechar uma porta.
-    Para a criaÁ„o de novos drivers, esse mÈtodo precisa ser sobrescrito.
+    @name √© o metodo chamado para fechar uma porta.
+    Para a cria√ß√£o de novos drivers, esse m√©todo precisa ser sobrescrito.
 
-    @return(Retorne @true em Ok caso a porta tenha sido fechada com sucesso. @false caso contr·rio)
+    @return(Retorne @true em Ok caso a porta tenha sido fechada com sucesso. @false caso contr√°rio)
     @seealso(TDriverCaller)
     }
     procedure PortStop(var Ok:Boolean); virtual; abstract;
     {:
-    @name È o metodo chamado para validar o conjunto de configuraÁıes de uma porta.
-    Para a criaÁ„o de novos drivers, se essa funÁ„o n„o for sobrescrita, todas
-    as combinaÁıes de configuraÁıes ser„o aceitas como v·lidas.
+    @name √© o metodo chamado para validar o conjunto de configura√ß√µes de uma porta.
+    Para a cria√ß√£o de novos drivers, se essa fun√ß√£o n√£o for sobrescrita, todas
+    as combina√ß√µes de configura√ß√µes ser√£o aceitas como v√°lidas.
 
-    @return(Retorne @true caso as configuraÁıes da porta estejam Ok. @false caso contr·rio)
+    @return(Retorne @true caso as configura√ß√µes da porta estejam Ok. @false caso contr√°rio)
     @seealso(TDriverCaller)    
     }
     function  ComSettingsOK:Boolean; virtual;
     {:
-    @name È o mÈtodo respons·vel por fazer a limpeza dos buffers de leitura/escrita
+    @name √© o m√©todo respons√°vel por fazer a limpeza dos buffers de leitura/escrita
     da porta.
-    … altamente recomend·vel vocÍ escrever esse mÈtodo caso esteja criando um novo
+    √â altamente recomend√°vel voc√™ escrever esse m√©todo caso esteja criando um novo
     driver de porta.
     }
     procedure ClearALLBuffers; virtual; abstract;
@@ -292,8 +292,8 @@ type
     procedure Loaded; override;
     {: @exclude }
     procedure InternalClearALLBuffers;
-    {: @name gera uma exceÁ„o caso a porta esteja ativa. Use este mÈtodo para
-       evitar a mudanÁa de valores de certas propriedade que n„o podem ser
+    {: @name gera uma exce√ß√£o caso a porta esteja ativa. Use este m√©todo para
+       evitar a mudan√ßa de valores de certas propriedade que n√£o podem ser
        alterados com a porta ativa.
     }
     procedure DoExceptionInActive;
@@ -309,7 +309,7 @@ type
     constructor Create(AOwner:TComponent); override;
     {:
     Destroi o driver de porta, fechando e informando a todos os drivers de
-    protocolo dependentes sobre a destruiÁ„o, consequentemente a eliminaÁ„o da referÍncia com este
+    protocolo dependentes sobre a destrui√ß√£o, consequentemente a elimina√ß√£o da refer√™ncia com este
     driver de porta.
     @seealso(TProtocolDriver)
     @seealso(AddProtocol)
@@ -319,7 +319,7 @@ type
     {:
     Adiciona um driver de protocolo a lista de dependentes
     @param(Prot TProtocolDriver. Driver de protocolo a ser adicionado como dependente)
-    @raises(Exception caso Prot n„o seja descendente de TProtocolDriver)
+    @raises(Exception caso Prot n√£o seja descendente de TProtocolDriver)
     @seealso(TProtocolDriver)
     }
     procedure AddProtocol(Prot:TComponent);
@@ -331,21 +331,21 @@ type
     }
     procedure DelProtocol(Prot:TComponent);
     {:
-    Faz um pedido de leitura/escrita sincrono para o driver (sua aplicaÁ„o espera
+    Faz um pedido de leitura/escrita sincrono para o driver (sua aplica√ß√£o espera
     todo o comando terminar para continuar).
-    @param(Cmd TIOCommand. Informa a combinaÁ„o de comandos de leitura/escrita a
+    @param(Cmd TIOCommand. Informa a combina√ß√£o de comandos de leitura/escrita a
            executar)
     @param(ToWrite BYTES. Conteudo que deseja escrever)
-    @param(BytesToRead Cardinal. Informa o n˙mero de @noAutoLink(bytes) que dever„o ser lidos)
-    @param(BytesToWrite Cardinal. Informa o n˙mero de @noAutoLink(bytes) a serem escritos)
+    @param(BytesToRead Cardinal. Informa o n√∫mero de @noAutoLink(bytes) que dever√£o ser lidos)
+    @param(BytesToWrite Cardinal. Informa o n√∫mero de @noAutoLink(bytes) a serem escritos)
     @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
            leitura e escrita)
-    @param(CallBack TDriverCallBack. Procedimento que ser· chamado para retorno
+    @param(CallBack TDriverCallBack. Procedimento que ser√° chamado para retorno
            dos dados lidos/escritos)
-    @param(IsWriteValue Boolean. Caso @true informa ao driver se o conjunto de comandos È pra
+    @param(IsWriteValue Boolean. Caso @true informa ao driver se o conjunto de comandos √© pra
                         escrita de dados, dando prioridade em seu processamento.)
     @return(Retorna o ID do pacote caso tenha exito. Retorna 0 (zero) caso o
-            componente esteja sendo destruido ou a porta n„o esteja aberta.)
+            componente esteja sendo destruido ou a porta n√£o esteja aberta.)
     @seealso(TIOCommand)
     @seealso(BYTES)
     @seealso(TDriverCallBack)
@@ -357,24 +357,24 @@ type
                            Res1:TObject; Res2:Pointer):Cardinal;
 
     {:
-    Faz um pedido de leitura/escrita assincrono para o driver (sua aplicaÁ„o
-    @bold(N√O) espera todo o comando terminar para continuar). @bold(Retorna os
-    resultados tambÈm de maneira assincrona, sendo responsabilidade de quem o
-    chamou sincroniz·-lo.)
-    @param(Cmd TIOCommand. Informa a combinaÁ„o de comandos de leitura/escrita a executar)
+    Faz um pedido de leitura/escrita assincrono para o driver (sua aplica√ß√£o
+    @bold(N√ÉO) espera todo o comando terminar para continuar). @bold(Retorna os
+    resultados tamb√©m de maneira assincrona, sendo responsabilidade de quem o
+    chamou sincroniz√°-lo.)
+    @param(Cmd TIOCommand. Informa a combina√ß√£o de comandos de leitura/escrita a executar)
     @param(ToWrite BYTES. Conteudo que deseja escrever)
-    @param(BytesToRead Cardinal. Informa o n˙mero de @noAutoLink(bytes) que dever„o ser lidos)
-    @param(BytesToWrite Cardinal. Informa o n˙mero de @noAutoLink(bytes) a serem escritos)
+    @param(BytesToRead Cardinal. Informa o n√∫mero de @noAutoLink(bytes) que dever√£o ser lidos)
+    @param(BytesToWrite Cardinal. Informa o n√∫mero de @noAutoLink(bytes) a serem escritos)
     @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
            leitura e escrita)
-    @param(CallBack TDriverCallBack. Procedimento que ser· chamado para retorno
+    @param(CallBack TDriverCallBack. Procedimento que ser√° chamado para retorno
            dos dados lidos/escritos)
     @param(IsWriteValue Boolean. Caso @true informa ao driver se o conjunto de
-           comandos È pra escrita de dados, dando prioridade em seu processamento.)
+           comandos √© pra escrita de dados, dando prioridade em seu processamento.)
     @return(Retorna o ID do pacote caso tenha exito. Retorna 0 (zero) caso o
             componente esteja sendo destruido, a porta esteja fechada ou caso
-            o driver n„o consiga alocar memÛria para fazer o pedido.)
-    @raises(Exception caso o driver n„o tenha sido inicializado apÛs 60 segundos)
+            o driver n√£o consiga alocar mem√≥ria para fazer o pedido.)
+    @raises(Exception caso o driver n√£o tenha sido inicializado ap√≥s 60 segundos)
     @seealso(TIOCommand)
     @seealso(BYTES)
     @seealso(TDriverCallBack)
@@ -388,7 +388,7 @@ type
     {:
     Trava a porta para uso exclusivo
     @param(DriverID Cardinal. Identifica o quem deseja obter uso exclusivo.)
-    @returns(@true caso o funÁ„o trave o driver para uso exclusivo, @false para o contr·rio)
+    @returns(@true caso o fun√ß√£o trave o driver para uso exclusivo, @false para o contr√°rio)
     }
     function Lock(DriverID:Cardinal):Boolean;
     
@@ -401,10 +401,10 @@ type
     function Unlock(DriverID:Cardinal):Boolean;
 
     {:
-    Coloca um mÈtodo na lista dos procedimentos cancelados, a fim de evitar chamadas a
-    mÈtodos de objetos que foram destruidos. SÛ n„o faz isso caso o driver de porta
+    Coloca um m√©todo na lista dos procedimentos cancelados, a fim de evitar chamadas a
+    m√©todos de objetos que foram destruidos. S√≥ n√£o faz isso caso o driver de porta
     tenha sinalizado na propriedade ComponentState o flag csDestroying, ou seja,
-    tambÈm esteja sendo destuido.
+    tamb√©m esteja sendo destuido.
     @param(CallBack TDriverCallBack. Procedimento a ser inserido na lista de
            cancelados)
     @seealso(TDriverCallBack)
@@ -412,27 +412,27 @@ type
     procedure CancelCallBack(CallBack:TDriverCallBack);
 
     {:
-    Remove um mÈtodo da lista dos procedimentos cancelados, fazendo com que esse
-    mÈtodo seja chamado quando solicitado.
+    Remove um m√©todo da lista dos procedimentos cancelados, fazendo com que esse
+    m√©todo seja chamado quando solicitado.
     @param(CallBack TDriverCallBack. Procedimento a ser removido da lista de
-           mÈtodos cancelados)
+           m√©todos cancelados)
     @seealso(TDriverCallBack)
     }
     procedure ResumeCallBack(CallBack:TDriverCallBack);
   published
-    //:Se o valor da propriedade for @true, ativa (abre) a porta, caso contr·rio fecha.
+    //:Se o valor da propriedade for @true, ativa (abre) a porta, caso contr√°rio fecha.
     property Active:Boolean read PActive write SetActive stored true default false;
-    //:Caso @true, limpa os buffers de leitura e escrita quando houver erros de comunicaÁ„o!
+    //:Caso @true, limpa os buffers de leitura e escrita quando houver erros de comunica√ß√£o!
     property ClearBuffersOnCommErrors:Boolean read PClearBufOnErr write PClearBufOnErr default true;
-    //:Informa o ID (n˙mero ˙nico) de quem travou para uso exclusivo o driver de porta.
+    //:Informa o ID (n√∫mero √∫nico) de quem travou para uso exclusivo o driver de porta.
     property LockedBy:Cardinal read PLockedBy;
-    //:Caso @true, informa que o driver est· sendo usado exclusivamente por alguem.
+    //:Caso @true, informa que o driver est√° sendo usado exclusivamente por alguem.
     property Locked:Boolean read GetLocked;
     //: Informa o codigo do ultimo erro registrado pelo sistema operacional.
     property LastOSErrorNumber:Integer read FLastOSErrorNumber;
     //: Informa a mensagem do ultimo erro registrado pelo sistema operacional.
     property LastOSErrorMessage:String read FLastOSErrorMessage;
-    //: Informa quantos comandos s„o processados por segundos. Atualizado a cada 10 segundos.
+    //: Informa quantos comandos s√£o processados por segundos. Atualizado a cada 10 segundos.
     property CommandsPerSecond:Double read FCommandsSecond;
   end;
 
@@ -442,7 +442,7 @@ uses SysUtils, ProtocolDriver, hsstrings{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-//  DECLARA«√O DA THREAD DE CALLBACK
+//  DECLARA√á√ÉO DA THREAD DE CALLBACK
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -584,7 +584,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-//  DECLARA«√O DO COMPONENTE PORTA DE COMUNICA«√O
+//  DECLARA√á√ÉO DO COMPONENTE PORTA DE COMUNICA√á√ÉO
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -766,7 +766,7 @@ begin
     exit;
   end;
 
-  //evita a abertura/fechamento da porta em ediÁ„o
+  //evita a abertura/fechamento da porta em edi√ß√£o
   if csDesigning in ComponentState then begin
     if ComSettingsOK then
       PActive := v;
@@ -840,9 +840,9 @@ begin
     SetLength(PPacket.BufferToRead,BytesToRead);
 
     //novo suspend da thread espera a thread terminar os comandos e ficar livre
-    //a novos comandos, o que garante que n„o havera choque de comandos...
+    //a novos comandos, o que garante que n√£o havera choque de comandos...
     //CommThread.Suspend; besteira... no unix a thread nao pode ser suspensa...
-    //soluÁao: Critical Section na procedure que executa a leitura/escrita.
+    //solu√ßao: Critical Section na procedure que executa a leitura/escrita.
     InternalIOCommand(Cmd,@PPacket);
     if Assigned(CallBack) then
       CallBack(PPacket);
@@ -1013,7 +1013,7 @@ end;
 procedure TCommPortDriver.DoExceptionInActive;
 begin
   if PActive then
-    raise Exception.Create('ImpossÌvel mudar propriedades de comunicaÁ„o quando ativo!');
+    raise Exception.Create('Imposs√≠vel mudar propriedades de comunica√ß√£o quando ativo!');
 end;
 
 procedure TCommPortDriver.RefreshLastOSError;
@@ -1042,7 +1042,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-//  DECLARA«√O DA THREAD DE COMUNICA«√O
+//  DECLARA√á√ÉO DA THREAD DE COMUNICA√á√ÉO
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1115,7 +1115,7 @@ begin
   iocmd := WindowsMessageToIOCommand(PMsg.MsgID);
   if Assigned(PIOCommand) then begin
     try
-      //se entrou aqui sinaliza que n„o È necessario dar sleep apÛs as IOs
+      //se entrou aqui sinaliza que n√£o √© necessario dar sleep ap√≥s as IOs
       PneedSleep := false;
       //executa o commando de io...
       PIOCommand(iocmd, @commandpacket^.Packet);
@@ -1132,7 +1132,7 @@ begin
       commandpacket^.Packet.WriteIOResult := iorPortError;
   end;
 
-  //passa o pacote para a thread updater fazer a atualizaÁ„o
+  //passa o pacote para a thread updater fazer a atualiza√ß√£o
   PUpdater.DoCallBack(commandpacket);
 end;
 
