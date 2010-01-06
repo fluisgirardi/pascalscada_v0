@@ -1,5 +1,5 @@
 {:
-@abstract(Implementa o tag PLC numÈrico com comunicaÁ„o.)
+@abstract(Implementa o tag PLC num√©rico com comunica√ß√£o.)
 @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
 unit PLCTagNumber;
@@ -15,7 +15,7 @@ uses
 
 type
   {:
-  @abstract(Tag numÈrico com comunicaÁ„o individual.)
+  @abstract(Tag num√©rico com comunica√ß√£o individual.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
   }
   TPLCTagNumber = class(TPLCNumber, ITagInterface, ITagNumeric)
@@ -119,7 +119,7 @@ begin
          if TryStrToFloat(V,aux) then
             Value := aux
          else
-            raise exception.Create('Valor inv·lido!');
+            raise exception.Create('Valor inv√°lido!');
       end else
          if VarIsType(V,varboolean) then begin
             if V=true then
@@ -127,7 +127,7 @@ begin
             else
                Value := 0;
          end else
-            raise exception.Create('Valor inv·lido!');
+            raise exception.Create('Valor inv√°lido!');
 end;
 
 function  TPLCTagNumber.IsValidValue(Value:Variant):Boolean;
@@ -177,8 +177,6 @@ begin
      if PAutoWrite then begin
        BuildTagRec(tr,0,0);
        PProtocolDriver.ScanWrite(tr,Values);
-       //TagCommandCallBack(Values,Now,tcScanWrite,ioOk,0);
-       //Dec(PCommWriteOk);
      end else begin
        TagCommandCallBack(Values,Now,tcScanWrite,ioOk,0);
        Dec(PCommWriteOk);

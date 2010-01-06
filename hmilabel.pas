@@ -1,5 +1,5 @@
 {:
-  @abstract(Unit que implementa um controle para a exibição de valores de qualquer tag.)
+  @abstract(Unit que implementa um controle para a exibiÃ§Ã£o de valores de qualquer tag.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMILabel;
@@ -18,7 +18,7 @@ type
     @name implementa o controle para a exibir de valores de qualquer tipo de tag.
     @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-    @bold(Para maiores informações consulte a documentação da classe TLabel
+    @bold(Para maiores informaÃ§Ãµes consulte a documentaÃ§Ã£o da classe TLabel
     de seu ambiente de desenvolvimento.)
   }
   THMILabel = class(TLabel, IHMIInterface, IHMITagInterface)
@@ -63,20 +63,20 @@ type
     destructor  Destroy; override;
   published
     {:
-    @name informa o texto que está sendo exibido pelo controle.
+    @name informa o texto que estÃ¡ sendo exibido pelo controle.
     Inclui sufixo e prefixo.
     }
     property Caption:TCaption read GetCaption stored false;
     {:
-    Caso o tag associado ao controle seja numérico, especifica a formatação
-    numérica adotada.
+    Caso o tag associado ao controle seja numÃ©rico, especifica a formataÃ§Ã£o
+    numÃ©rica adotada.
 
-    Para maiores informações procure sobre a função FormatFloat de seu ambiente
+    Para maiores informaÃ§Ãµes procure sobre a funÃ§Ã£o FormatFloat de seu ambiente
     de desenvolvimento.
     }
     property NumberFormat:string read FNumberFormat write SetFormat;
     {:
-    Especifica o tag que será usado pelo controle.
+    Especifica o tag que serÃ¡ usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
@@ -84,12 +84,12 @@ type
     }
     property PLCTag:TPLCTag read FTag write SetHMITag;
     {:
-    @name é o texto que é exibido a esquerda (antes) do valor do tag.
+    @name Ã© o texto que Ã© exibido a esquerda (antes) do valor do tag.
     }
     property Prefix:string read FPrefix write SetPrefix;
     {:
-    @name é o texto que é exibido a direita (após) do valor do tag. Útil para
-    informar o tipo da grandeza exibida, por exemplo ºC.
+    @name Ã© o texto exibido a direita (apÃ³s) do valor do tag. Ãštil para informar
+    o tipo da grandeza exibida.
     }
     property Sufix:String read FSufix write SetSufix;
     //: @exclude
@@ -129,7 +129,7 @@ procedure THMILabel.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if (t<>nil) and ((t as ITagInterface)=nil) then
-     raise Exception.Create('Tag inválido!');
+     raise Exception.Create('Tag invÃ¡lido!');
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin

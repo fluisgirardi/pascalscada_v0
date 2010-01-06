@@ -1,5 +1,5 @@
 {:
-  @abstract(Unit que implementa uma porta de comunicaÁ„o serial multiplataforma.)
+  @abstract(Unit que implementa uma porta de comunica√ß√£o serial multiplataforma.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit SerialPort;
@@ -22,8 +22,8 @@ uses
 type
 
   {:
-  @name enumera as velocidades possÌveis de comunicaÁ„o serial (em bits/segundo).
-  Essas velocidade s„o suportados em todos os sistemas operacionais.
+  @name enumera as velocidades poss√≠veis de comunica√ß√£o serial (em bits/segundo).
+  Essas velocidade s√£o suportados em todos os sistemas operacionais.
   
   @value br110    = 110 bps
   @value br300    = 300 bps
@@ -41,8 +41,8 @@ type
                       br19200, br38400, br57600, br115200);
 
   {:
-  @name enumera todos as possÌveis quantidades de bits de parada.
-  Essas quantidades s„o suportados em todos os sistemas operacionais.
+  @name enumera todos as poss√≠veis quantidades de bits de parada.
+  Essas quantidades s√£o suportados em todos os sistemas operacionais.
 
   @value sb1 = 1 stop bit
   @value sb2 = 2 stop bit
@@ -50,28 +50,28 @@ type
   TSerialStopBits = (sb1, sb2);
 
   {:
-  @name enumera as possÌveis checagens de paridade.
-  Essas paridades s„o suportados em todos os sistemas operacionais.
+  @name enumera as poss√≠veis checagens de paridade.
+  Essas paridades s√£o suportados em todos os sistemas operacionais.
 
-  @value spNone N„o faz checagem de paridade.
+  @value spNone N√£o faz checagem de paridade.
   @value spOdd Checagem de erros por paridade impar.
   @value spEven Checagem de erros por paridade par.
   }
   TSerialParity = (spNone, spOdd, spEven);
 
   {:
-  @name enumera os possiveis tamanhos de palavra de dados.
-  Essas tamanhos s„o suportados em todos os sistemas operacionais.
+  @name enumera os poss√≠veis tamanhos de palavra de dados.
+  Essas tamanhos s√£o suportados em todos os sistemas operacionais.
 
-  @value db5 A palavra de dados ter· 5 bits de tamanho.
-  @value db6 A palavra de dados ter· 6 bits de tamanho.
-  @value db7 A palavra de dados ter· 7 bits de tamanho.
-  @value db8 A palavra de dados ter· 8 bits de tamanho.
+  @value db5 A palavra de dados ter√° 5 bits de tamanho.
+  @value db6 A palavra de dados ter√° 6 bits de tamanho.
+  @value db7 A palavra de dados ter√° 7 bits de tamanho.
+  @value db8 A palavra de dados ter√° 8 bits de tamanho.
   }
   TSerialDataBits= (db5, db6, db7, db8);
 
   {:
-  @abstract(Driver genÈrico para portas seriais. Atualmente funcionando para
+  @abstract(Driver gen√©rico para portas seriais. Atualmente funcionando para
             Windows, Linux e FreeBSD.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   @seealso(TCommPortDriver)
@@ -128,21 +128,21 @@ type
     destructor  Destroy; override;
   published
     {:
-    String que informa qual porta serial usar. Depende de cada sistema operacional.
-    No Windows È COMx, no Linux ttySx e no FreeBSD cuadx.
+    Nome da porta serial que ser√° usada. Depende de cada sistema operacional.
+    No Windows √© COMx, no Linux ttySx e no FreeBSD cuadx.
     }
     property COMPort:string read PPortName write SetCOMPort;
-    {: Informa a duraÁ„o m·xima de uma aÁ„o leitura ou escrita. }
+    {: Informa a dura√ß√£o m√°xima de uma a√ß√£o leitura ou escrita. }
     property Timeout:integer read PTimeout write SetTimeOut stored true default 5;
     {: Informa o tempo em milisegundos entre uma leitura e uma escrita. }
     property WriteReadDelay:integer read PRWTimeout write SetRWTimeout stored true default 20;
     {:
-    Velocidade de comunicaÁ„o da porta serial.
+    Velocidade de comunica√ß√£o da porta serial.
     @seealso(TSerialBaundRate)
     }
     property BaudRate:TSerialBaundRate read PBaundRate write SetBaundRate stored true default br19200;
     {:
-    Tamanho da palavra de comunicaÁ„o.
+    Tamanho da palavra de comunica√ß√£o.
     @seealso(TSerialDataBits)
     }
     property DataBits:TSerialDataBits read PDataBits write SetDataBits stored true default db8;
@@ -157,8 +157,8 @@ type
     }
     property StopBits:TSerialStopBits read PStopBits write SetStopBits stored true default sb1;
     {:
-    Caso @true diz ao driver que deve ser feito backup das configuraÁıes da porta serial
-    antes de comecar modifica-las e as restaura apÛs fechar a porta serial.
+    Caso @true o driver ir√° fazer um backup das configura√ß√µes da porta serial
+    antes de comecar modifica-las e as restaura ap√≥s fechar a porta serial.
     }
     property BackupPortSettings:Boolean read PBackupPortSettings write PBackupPortSettings stored true default false;
   end;
@@ -202,7 +202,7 @@ end;
 
 {:
 Cria um novo driver de porta serial. Tem como padrao 19200bps, 8 bits de dados,
-1 stop bits, sem verificaÁ„o de paridade e 100ms de timeout.
+1 stop bits, sem verifica√ß√£o de paridade e 100ms de timeout.
 @seealso(TCommPortDriver)
 }
 constructor TSerialPortDriver.Create(AOwner:TComponent);
@@ -390,7 +390,7 @@ begin
   if PBackupPortSettings then
     GetCommState(PPortHandle,PSavedDCB);
 
-  //seta a nova estrutura DCB na porta de comunicaÁ„o
+  //seta a nova estrutura DCB na porta de comunica√ß√£o
   if not SetCommState(PPortHandle,PDCB) then begin
     RefreshLastOSError;
     goto erro3;
@@ -595,7 +595,7 @@ begin
     if (v='(none)') and (csDesigning in ComponentState) then
        PPortName:=''
     else
-       raise Exception.Create('Porta COM inexistente!!');
+       raise Exception.Create('Porta serial inexistente!!');
 end;
 
 function TSerialPortDriver.COMExist(v:String):Boolean;
@@ -648,7 +648,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PBaundRate := old;
-    raise Exception.Create('Modo Inv·lido!!');
+    raise Exception.Create('Modo inv√°lido!!');
   end;
 {$IFEND}
 {$IFDEF UNIX}
@@ -673,7 +673,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PStopBits := old;
-    raise Exception.Create('Modo Inv·lido!!');
+    raise Exception.Create('Modo inv√°lido!!');
   end;
 {$IFEND}
 {$IFDEF UNIX}
@@ -698,7 +698,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PParity := old;
-    raise Exception.Create('Modo Inv·lido!!');
+    raise Exception.Create('Modo inv√°lido!!');
   end;
 {$IFEND}
 {$IFDEF UNIX}
@@ -723,7 +723,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PDataBits := old;
-    raise Exception.Create('Modo Invalido!!');
+    raise Exception.Create('Modo inv√°lido!!');
   end;
 {$IFEND}
 {$IFDEF UNIX}

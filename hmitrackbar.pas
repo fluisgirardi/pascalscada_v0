@@ -1,6 +1,6 @@
 {:
-  @abstract(Implementa um controle em forma de TrackBar para a leitura/escrita de valores
-            numÈricos de tags.)
+  @abstract(Implementa um controle em forma de TrackBar para a leitura/escrita
+            de valores num√©ricos de tags.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMITrackBar;
@@ -18,7 +18,7 @@ uses
 type
   {:
   Implementa um controle em forma de TrackBar para a leitura/escrita de valores
-  numÈricos de tags.
+  num√©ricos de tags.
   }
   THMITrackBar = class(TTrackBar, IHMIInterface, IHMITagInterface)
   private
@@ -59,15 +59,15 @@ type
     destructor  Destroy; override;
   published
     {:
-    Tag numÈrico que ser· usado pelo controle.
+    Tag num√©rico que ser√° pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
     }
     property PLCTag:TPLCTag read FTag write SetHMITag;
-    //: Informa a posiÁ„o atual da barra.
+    //: Informa a posi√ß√£o atual da barra.
     Property Position:Integer read GetPosition;
-    //: Diz se o valor do controle sofreu alguma alteraÁ„o.
+    //: Diz se o valor do controle sofreu alguma altera√ß√£o.
     property Modified:Boolean read FModified;
   end;
 
@@ -99,7 +99,7 @@ procedure THMITrackBar.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if (t<>nil) and ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numÈricos s„o aceitos!');
+     raise Exception.Create('Somente tags num√©ricos s√£o aceitos!');
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin

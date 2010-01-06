@@ -19,7 +19,7 @@ com o que deve estar armazenado nos últimos dois bytes
 do buffer.
 
 Caso o pacote tenha 10 bytes, ele irá calcular com os
-dez primeiros bytes e vai verificar se o calculo resultante
+oito primeiros bytes e vai verificar se o calculo resultante
 é igual aos bytes 9 e 10 de Pkg. Byte 9 é o mais significativo.
 
 @param(Pkg BYTES. Buffer que contem os dados que irá ser verificado

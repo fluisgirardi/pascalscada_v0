@@ -17,9 +17,9 @@ uses
 type
   {:
     @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-    Implementa um Edit para leitura/escrita de valores texto/numÈricos em tags.
+    Implementa um Edit para leitura/escrita de valores texto/num√©ricos em tags.
 
-    @bold(Para maiores informaÁıes consulte a documentaÁ„o da classe TEdit
+    @bold(Para maiores informa√ß√µes consulte a documenta√ß√£o da classe TEdit
     de seu ambiente de desenvolvimento.)
   }
   THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
@@ -96,7 +96,7 @@ type
     destructor  Destroy; override;
   published
     {$IFNDEF FPC}
-    //: Alinhamento do texto dentro do Edit. Somente Delphi. Lazarus j· oferece esse recurso.
+    //: Alinhamento do texto dentro do Edit. Somente Delphi. Lazarus j√° oferece esse recurso.
     property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
     {$ENDIF}
     {:
@@ -105,15 +105,15 @@ type
     }
     property SendValueWhen:TSendChange read FSend write SetSend stored true default [scLostFocus, scPressEnter];
     {:
-    Caso o tag associado ao controle seja numÈrico, especifica a formataÁ„o
-    numÈrica adotada.
+    Caso o tag associado ao controle seja num√©rico, especifica a formata√ß√£o
+    num√©rica adotada.
 
-    Para maiores informaÁıes procure sobre a funÁ„o FormatFloat de seu ambiente
+    Para maiores informa√ß√µes procure sobre a fun√ß√£o FormatFloat de seu ambiente
     de desenvolvimento.
     }
     property NumberFormat:string read FNumberFormat write SetFormat;
     {:
-    Especifica o tag que ser· usado pelo controle.
+    Especifica o tag que ser√° usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
@@ -121,36 +121,35 @@ type
     }
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
     {:
-    @name retorna o texto que est· sendo exibido pelo controle. Inclui sufixo,
-    prefixo e formataÁ„o.
+    @name retorna o texto que est√° sendo exibido pelo controle. Inclui sufixo,
+    prefixo e formata√ß√£o.
     }
     property Text:TCaption read GetText stored false;
     {:
-    @name È a cor de fundo do controle.
+    @name √© a cor de fundo do controle.
     }
     property Color:TColor read GetColor Write SetColor;
     {:
     @name faz com que o controle passe a cor do fundo para a cor da fonte e
     vice-versa quando ele estiver com o foco.
     
-    @bold(Deixe essa propriedade @false quando sua aplicaÁ„o estiver rodando
-    sobre os toolkits GTK1 e GTK2.)
+    @bold(Deixe essa propriedade @false quando sua aplica√ß√£o estiver rodando
+    sobre o toolkit GTK1.)
     }
     property ShowFocused:Boolean read FShowFocused write SetShowFocused default true;
     {:
-    @name È o texto que È exibido a esquerda (antes) do valor do tag quando o controle
-    @bold(n„o tem o foco).
+    @name √© o texto que √© exibido a esquerda (antes) do valor do tag quando o controle
+    @bold(n√£o tem o foco).
     }
     property Prefix:string read FPrefix write SetPrefix;
     {:
-    @name È o texto que È exibido a direita (apÛs) do valor do tag quando o controle
-    @bold(n„o tem o foco). ⁄til para informar o tipo da grandeza exibida, por
-    exemplo ∫C.
+    @name √© o texto que √© exibido a direita (ap√≥s) do valor do tag quando o controle
+    @bold(n√£o tem o foco). √ötil para informar o tipo da grandeza exibida.
     }
     property Sufix:String read FSufix write SetSufix;
     {:
     Caso o valor de @name seja @true, faz com que o controle pare de atualizar
-    o valor do tag no controle quando este tem o foco da aplicaÁ„o.
+    o valor do tag no controle quando este tem o foco da aplica√ß√£o
     }
     property FreezeValueOnFocus:Boolean read FFreezeValue write FFreezeValue default true;
   end;
@@ -219,7 +218,7 @@ procedure THMIEdit.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if (t<>nil) and (((t as ITagInterface)=nil) and ((t as ITagNumeric)=nil) and ((t as ITagString)=nil)) then
-     raise Exception.Create('Tag inv·lido!');
+     raise Exception.Create('Tag inv√°lido!');
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin

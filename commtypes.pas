@@ -59,7 +59,7 @@ type
   @member ReadIOResult Resultado do comando de leitura caso exista. Se n√£o foi definido um comando de leitura retorna iorNone.
   @member ToRead Quantidade de @noAutoLink(bytes) a ler da porta.
   @member Received Quantidade de @noAutoLink(bytes) lidos da porta.
-  @member ReadRetries N√∫mero de tentativas para ler ToWrite @noAutoLink(bytes).
+  @member ReadRetries N√∫mero de tentativas para ler ToRead @noAutoLink(bytes).
   @member BufferToRead Buffer contendo os @noAutoLink(bytes) lidos na opera√ß√£o. Tem o tamanho ajustado para o valor passado em ToRead.
 
   @seealso(TCommPortDriver)
@@ -92,7 +92,7 @@ type
   {:
   Procedimento de callback usado para retornar os resultados de um grupo de
   comandos de leitura/escrita feitos por TCommPortDriver.IOCommandASync e
-  TCommPortDriver.IOCommandSync. Passa os resultados atraves da vari·vel Result.
+  TCommPortDriver.IOCommandSync. Passa os resultados atraves da vari√°vel Result.
 
   @seealso(TCommPortDriver)
   @seealso(TIOPacket)  
@@ -108,11 +108,11 @@ type
   PDriverCallBack = ^TDriverCallBack;
 
   {:
-  Procedimento respons·vel por realizar os pedidos de leitura/escrita do driver.
-  DefiniÁ„o usada como evento internamente pelo driver de porta.
+  Procedimento respons√°vel por realizar os pedidos de leitura/escrita do driver.
+  Defini√ß√£o usada como evento internamente pelo driver de porta.
   
   @param(cmd TIOCommand. Grupo de comandos a executar.)
-  @param(Packet PIOPacket. Estrutura com os parametros de execuÁ„o e onde devem
+  @param(Packet PIOPacket. Estrutura com os parametros de execu√ß√£o e onde devem
          ser retornados os resultados dos comandos de leitura/escrita.)
 
   @seealso(TCommPortDriver.IOCommand)
@@ -121,9 +121,9 @@ type
   TDriverCommand  = procedure(cmd:TIOCommand; Packet:PIOPacket) of object;
 
   {:
-  Procedimento respons·vel por realizar os pedidos abertura/fechamento de portas
+  Procedimento respons√°vel por realizar os pedidos abertura/fechamento de portas
   do driver.
-  DefiniÁ„o usada como evento internamente pelo driver de porta.
+  Defini√ß√£o usada como evento internamente pelo driver de porta.
   @param(Ok Boolean. Indica se a porta foi aberta ou fechada com sucesso.)
 
   @seealso(TCommPortDriver.PortStart)
@@ -148,7 +148,7 @@ type
   PCommandPacket = ^TCommandPacket;
 
   {:
-  Ordena thread de atualizaÁ„o a chamar o TDriverCallBack solicitado informando
+  Ordena thread de atualiza√ß√£o a chamar o TDriverCallBack solicitado informando
   dos resultados do pedido de leitura/escrita.
   @seealso(TDriverCallBack)
   @seealso(TIOPacket)
@@ -156,14 +156,14 @@ type
   const PSM_CALLBACK       = 1;
 
   {:
-  Ordena thread de atualizaÁ„o a voltar a chamar TDriverCallBack fornecido.
+  Ordena thread de atualiza√ß√£o a voltar a chamar TDriverCallBack fornecido.
   @seealso(TDriverCallBack)
   }
   const PSM_RESUMECALLBACK = 2;
   
   {:
-  Ordena thread de atualizaÁ„o a n„o chamar mais TDriverCallBack fornecido a fim
-  de evitar violaÁıes de acesso.
+  Ordena thread de atualiza√ß√£o a n√£o chamar mais TDriverCallBack fornecido a fim
+  de evitar viola√ß√µes de acesso.
   @seealso(TDriverCallBack)
   }
   const PSM_CANCELCALLBACK = 3;
@@ -174,7 +174,7 @@ type
   const PSM_READ_READWRITE = 52;
   //: Mensagem de pedido de escrita de @bold(baixa) prioridade
   const PSM_READ_WRITE     = 54;
-  //: Mensagem de pedido de escruta e outro de leitura de @bold(baixa) prioridade
+  //: Mensagem de pedido de escrita e outro de leitura de @bold(baixa) prioridade
   const PSM_READ_WRITEREAD = 56;
 
   //: Mensagem de pedido de leitura de @bold(alta) prioridade
@@ -189,8 +189,8 @@ type
   {:
   Converte uma mensagem interna para um grupo de commandos de leitura/escrita.
   @param(wMessage Cardinal. Mensagem a converter.)
-  @return(Retorna um comando do tipo TIOCommand. Caso wMessage n„o feche com o
-          case, retorna o padr„o que È iocNone).
+  @return(Retorna um comando do tipo TIOCommand. Caso wMessage n√£o feche com o
+          case, retorna o padr√£o que √© iocNone).
   @seealso(TIOCommand)
   @seealso(PSM_READ_READ)
   @seealso(PSM_READ_READWRITE)
@@ -207,7 +207,7 @@ type
   {:
   Converte um grupo de comandos de leitura/escrita para um Id de mensagem.
   @param(ioCommand TIOCommand. Grupo de comandos a converter.)
-  @param(ToWrite Boolean. Indica se È um comando de escrita (alta prioridade).)
+  @param(ToWrite Boolean. Indica se √© um comando de escrita (alta prioridade).)
 
   @seealso(TIOCommand)
   @seealso(PSM_READ_READ)

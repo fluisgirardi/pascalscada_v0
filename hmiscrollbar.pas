@@ -1,6 +1,6 @@
 {:
   @abstract(Implementa um controle em forma de ScrollBar para a leitura/escrita de valores
-            em tags numÈricos.)
+            em tags num√©ricos.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMIScrollBar;
@@ -18,7 +18,7 @@ uses
 type
   {:
   Implementa um controle em forma de ScrollBar para a leitura/escrita de valores
-  em tags numÈricos.
+  em tags num√©ricos.
   }
   THMIScrollBar = class(TScrollBar, IHMIInterface, IHMITagInterface)
   private
@@ -28,7 +28,7 @@ type
     FBusy:Boolean;
     FCmdCount:Integer;
     FLastPosition:Integer;
-    procedure RefreshHMISecurity;                      //alquem efetuou login e È necessario verificar autorizaÁıes
+    procedure RefreshHMISecurity;                      //alquem efetuou login e √© necess√°rio verificar autoriza√ß√µes
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
@@ -53,15 +53,15 @@ type
     destructor Destroy; override;
   published
     {:
-    Tag numÈrico que ser· usado pelo controle.
+    Tag num√©rico que ser√° usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
     }
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
     {:
-    Caso @true, escreve seu valor para o tag ainda quando est· sendo movido.
-    Caso @false, escreve seu valor para o tag somente quando È solto.
+    Caso @true, escreve seu valor para o tag ainda quando est√° sendo movido.
+    Caso @false, escreve seu valor para o tag somente quando √© solto.
     }
     property UpdateOnMove:Boolean read FUpdateOnMove write FUpdateOnMove default false;
   end;
@@ -84,7 +84,7 @@ procedure THMIScrollBar.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
    if (t<>nil) and ((t as ITagNumeric)=nil) then
-      raise Exception.Create('Somente tags numÈricos s„o aceitos!');
+      raise Exception.Create('Somente tags num√©ricos s√£o aceitos!');
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin
@@ -125,11 +125,11 @@ begin
       FLastPosition:=ScrollPos;
 
       if (ScrollCode=scEndScroll) then begin
-{$IF defined(WIN32) or defined(WIN64)}
+         {$IF defined(WIN32) or defined(WIN64)}
          FBusy:=false;
          FCmdCount:=0;
          WriteFlag:=true;
-{$IFEND}
+         {$IFEND}
       end else begin
          inc(FCmdCount);
          if FCmdCount>5 then begin

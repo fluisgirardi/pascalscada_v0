@@ -17,47 +17,46 @@ type
   {:
   Define quando um valor deve ser escrito no Tag por um controle.
   @value(scLostFocus Quando o controle perde o foco.)
-  @value(scPressEnter Quando È precionado a tecla enter.)
-  @value(scPressESC Quando È precionado a tecla ESC.)
-  @value(scAnyChange O valor È escrito no tag apÛs qualquer alteraÁ„o.)
+  @value(scPressEnter Quando √© precionado a tecla enter.)
+  @value(scPressESC Quando √© precionado a tecla ESC.)
+  @value(scAnyChange O valor √© escrito no tag ap√≥s qualquer altera√ß√£o.)
   }
   TSendKind = (scLostFocus, scPressEnter, scPressESC, scAnyChange);
   {:
-  Define o conjunto de aÁıes de escrita de valor de um controle no seu tag.
+  Define o conjunto de a√ß√µes de escrita de valor de um controle no seu tag.
   @seealso(TSendKind)
   }
   TSendChange = set of TSendKind;
   {:
   Define como um controle booleano (CheckBox, RadioButton) deve interpretar
-  valores que s„o verdadeiros e nem falsos.
+  valores n√£o s√£o equivalentes ao valor falso e ao valor verdadeiro.
   
-  @value(isChecked o componente ir· aparecer marcado caso o valor do tag seja
+  @value(isChecked o componente ir√° aparecer marcado caso o valor do tag seja
   diferente de ValueFalse e ValueTrue.)
 
-  @value(isUnchecked o componente ir· aparecer desmarcado caso o valor do tag
+  @value(isUnchecked o componente ir√° aparecer desmarcado caso o valor do tag
   seja diferente de ValueFalse e ValueTrue.)
 
-  @value(isNone o componente n„o ir· mudar o seu estado caso o valor do tag
+  @value(isNone o componente n√£o ir√° mudar o seu estado caso o valor do tag
   seja diferente de ValueFalse e ValueTrue.)
 
-  @value(IsGrayed o componente ir· aparecer acinzentado caso o valor do tag
+  @value(IsGrayed o componente ir√° aparecer acinzentado caso o valor do tag
   seja diferente de ValueFalse e ValueTrue.)
   }
   TOtherValues = (isChecked, isUnchecked, isNone, IsGrayed);
 
   {:
-  Define os possÌveis tipos de botıes.
+  Define os poss√≠veis tipos de bot√µes.
 
-  @value(btJog o bot„o ir· ficar precionado enquanto ele estiver precionado.)
+  @value(btJog o bot√£o ir√° ficar precionado enquanto ele for mantido precionado.)
 
-  @value(btOnOff o bot„o fica precionado com um clique e com outro ele È
-  liberado.)
+  @value(btOnOff o bot√£o fica precionado com um clique e com outro ele √© liberado.)
 
-  @value(btMomentary O bot„o fica precionado por alguns instantes e logo
+  @value(btMomentary O bot√£o fica precionado por alguns instantes e logo
   em seguinda liberado, mesmo que ele seja mantido precionado.)
   
-  @value(btToogle O bot„o ir· inverter o valor do tag e manter a aparencia
-  solta (n„o precionado).)
+  @value(btToogle O bot√£o ir√° inverter o valor do tag e manter a apar√™ncia
+  solta (n√£o precionado).)
   }
   TButtonType = (btJog, btOnOff, btMomentary, btToogle);
 
@@ -66,21 +65,21 @@ type
     ['{62FF1979-FA70-4965-B24F-347A69AC2EB1}']
     {:
     Procedimento que atualiza o componente de acordo com as regras atuais de
-    seguranÁa. … chamado quando um usu·rio faz login ou alguma regra de seguranÁa
-    È alterada.
+    seguran√ßa. √â chamado quando um usu√°rio faz login ou alguma regra de seguran√ßa
+    √© alterada.
     }
     procedure RefreshHMISecurity;
-    //: ForÁa a remoÁ„o da referÍncia ao TPLCTag. Chamado quando o Tag est· sendo destruido.
+    //: For√ßa a remo√ß√£o da refer√™ncia ao TPLCTag. Chamado quando o Tag est√° sendo destruido.
     procedure SetHMITag(t:TPLCTag);
-    //: Remove o tag do controle, eliminando a referÍncia. @seealso(Tag)
+    //: Remove o tag do controle, eliminando a refer√™ncia. @seealso(Tag)
     function  GetHMITag:TPLCTag;
-    //: Informa se o controle est· habilitado. @seealso(Enabled)
+    //: Informa se o controle est√° habilitado. @seealso(Enabled)
     function  GetHMIEnabled:Boolean;
     //: Habilita/desabilita o controle. @seealso(Enabled)
     procedure SetHMIEnabled(v:Boolean);
-    //: Propriedade criada para informar/setar o estado do controle atravÈs da interface.
+    //: Propriedade criada para informar/setar o estado do controle atrav√©s da interface.
     property  Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
-    //: Propriedade criada para informar/setar o tag do controle atravÈs da interface.
+    //: Propriedade criada para informar/setar o tag do controle atrav√©s da interface.
     property  Tag:TPLCTag read GetHMITag write SetHMITag;
   end;
 

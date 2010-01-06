@@ -1,5 +1,5 @@
 {:
-  @abstract(Unit de traduÁ„o do PascalSCADA.)
+  @abstract(Unit de tradu√ß√£o do PascalSCADA.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit hsstrings;
@@ -25,9 +25,9 @@ resourcestring
   // Mensagens de exceptions.
   //////////////////////////////////////////////////////////////////////////////
   
-  strUpdateThreadWinit  = 'A thread n„o respondeu ao commando INIT';
-  strCompIsntADriver    = 'O componente n„o È um driver de protocolo v·lido';
-  strThreadSuspended    = 'A thread est· suspensa?';
+  strUpdateThreadWinit  = 'A thread n√£o respondeu ao commando INIT';
+  strCompIsntADriver    = 'O componente n√£o √© um driver de protocolo v√°lido';
+  strThreadSuspended    = 'A thread est√° suspensa?';
 
 implementation
 

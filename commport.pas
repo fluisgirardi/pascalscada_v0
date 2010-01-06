@@ -154,7 +154,7 @@ type
   no modo multi-tarefa (threads). Essa classe fornece dois métodos de comunicação,
   um sincrono (sem threads) e outro assincrono (multitarefa).
 
-  As poucas partes a serem escritas são o override de três métodos virtuais que
+  As poucas partes a serem escritas é sobreescrever de três métodos virtuais que
   fazem todo o trabalho (e é lógico as rotinas das propriedades e demais funções
   de comunicação da sua porta). São eles:
 
@@ -195,7 +195,14 @@ type
     {: @exclude }
     FLastPkgId:Cardinal;
     {: @exclude }
-    FCommandsSecond:Double;
+    FCommandsSecond:Integer;
+    {: @exclude }
+    FTXBytes,
+    FRXBytes,
+    FTXBytesLast,
+    FRXBytesLast,
+    FTXBytesSecond,
+    FRXBytesSecond:Int64;
     {: @exclude }
     procedure TimerStatistics(Sender:TObject);
     {: @exclude }
@@ -275,7 +282,7 @@ type
     {:
     @name é o metodo chamado para validar o conjunto de configurações de uma porta.
     Para a criação de novos drivers, se essa função não for sobrescrita, todas
-    as combinações de configurações serão aceitas como válidas.
+    as combinações de configurações serão inválidas.
 
     @return(Retorne @true caso as configurações da porta estejam Ok. @false caso contrário)
     @seealso(TDriverCaller)    
@@ -299,7 +306,7 @@ type
     procedure DoExceptionInActive;
     {:
       @name atualiza as propriedades LastOSErrorNumber e LastOSErrorMessage com
-      o ultimo erro registrado pelo sistema operacional.
+      o último erro registrado pelo sistema operacional.
     }
     procedure RefreshLastOSError;
   public
@@ -309,8 +316,8 @@ type
     constructor Create(AOwner:TComponent); override;
     {:
     Destroi o driver de porta, fechando e informando a todos os drivers de
-    protocolo dependentes sobre a destruição, consequentemente a eliminação da referência com este
-    driver de porta.
+    protocolo dependentes sobre a destruição, consequentemente a eliminação da
+    referência com este driver de porta.
     @seealso(TProtocolDriver)
     @seealso(AddProtocol)
     @seealso(DelProtocol)
@@ -342,8 +349,8 @@ type
            leitura e escrita)
     @param(CallBack TDriverCallBack. Procedimento que será chamado para retorno
            dos dados lidos/escritos)
-    @param(IsWriteValue Boolean. Caso @true informa ao driver se o conjunto de comandos é pra
-                        escrita de dados, dando prioridade em seu processamento.)
+    @param(IsWriteValue Boolean. Caso @true informa ao driver se o conjunto de comandos é para
+                        escrita de dados, aumentando a prioridade de seu processamento.)
     @return(Retorna o ID do pacote caso tenha exito. Retorna 0 (zero) caso o
             componente esteja sendo destruido ou a porta não esteja aberta.)
     @seealso(TIOCommand)
@@ -360,9 +367,9 @@ type
     Faz um pedido de leitura/escrita assincrono para o driver (sua aplicação
     @bold(NÃO) espera todo o comando terminar para continuar). @bold(Retorna os
     resultados também de maneira assincrona, sendo responsabilidade de quem o
-    chamou sincronizá-lo.)
+    chamou sincronizá-los.)
     @param(Cmd TIOCommand. Informa a combinação de comandos de leitura/escrita a executar)
-    @param(ToWrite BYTES. Conteudo que deseja escrever)
+    @param(ToWrite BYTES. Conteúdo que deseja escrever)
     @param(BytesToRead Cardinal. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
     @param(BytesToWrite Cardinal. Informa o número de @noAutoLink(bytes) a serem escritos)
     @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
@@ -370,11 +377,11 @@ type
     @param(CallBack TDriverCallBack. Procedimento que será chamado para retorno
            dos dados lidos/escritos)
     @param(IsWriteValue Boolean. Caso @true informa ao driver se o conjunto de
-           comandos é pra escrita de dados, dando prioridade em seu processamento.)
+           comandos é pra escrita de dados, aumentando a prioridade de seu processamento.)
     @return(Retorna o ID do pacote caso tenha exito. Retorna 0 (zero) caso o
             componente esteja sendo destruido, a porta esteja fechada ou caso
             o driver não consiga alocar memória para fazer o pedido.)
-    @raises(Exception caso o driver não tenha sido inicializado após 60 segundos)
+    @raises(Exception caso o driver não tenha sido inicializado corretamente.)
     @seealso(TIOCommand)
     @seealso(BYTES)
     @seealso(TDriverCallBack)
@@ -422,18 +429,26 @@ type
   published
     //:Se o valor da propriedade for @true, ativa (abre) a porta, caso contrário fecha.
     property Active:Boolean read PActive write SetActive stored true default false;
-    //:Caso @true, limpa os buffers de leitura e escrita quando houver erros de comunicação!
+    //:Caso @true, limpa os buffers de leitura e escrita quando houver erros de comunicação.
     property ClearBuffersOnCommErrors:Boolean read PClearBufOnErr write PClearBufOnErr default true;
     //:Informa o ID (número único) de quem travou para uso exclusivo o driver de porta.
     property LockedBy:Cardinal read PLockedBy;
     //:Caso @true, informa que o driver está sendo usado exclusivamente por alguem.
     property Locked:Boolean read GetLocked;
-    //: Informa o codigo do ultimo erro registrado pelo sistema operacional.
+    //: Informa o codigo do último erro registrado pelo sistema operacional.
     property LastOSErrorNumber:Integer read FLastOSErrorNumber;
-    //: Informa a mensagem do ultimo erro registrado pelo sistema operacional.
+    //: Informa a mensagem do último erro registrado pelo sistema operacional.
     property LastOSErrorMessage:String read FLastOSErrorMessage;
-    //: Informa quantos comandos são processados por segundos. Atualizado a cada 10 segundos.
-    property CommandsPerSecond:Double read FCommandsSecond;
+    //: Informa quantos comandos são processados por segundos. Atualizado a cada 1 segundo.
+    property CommandsPerSecond:Integer read FCommandsSecond;
+    //: Total de bytes transmitidos.
+    property TXBytes:Int64 read FTXBytes;
+    //: Total de bytes transmitidos no último segundo.
+    property TXBytesSecond:Int64 read FTXBytesSecond;
+    //: Total de bytes recebidos.
+    property RXBytes:Int64 read FRXBytes;
+    //: Total de bytes recebidos no último segundo.
+    property RXBytesSecond:Int64 read FRXBytesSecond;
   end;
 
 implementation
@@ -697,6 +712,8 @@ begin
         Read(Packet);
       end;
   end;
+  FRXBytes := FRXBytes + Packet.Received;
+  FTXBytes := FTXBytes + Packet.Wrote;
 end;
 
 procedure TCommPortDriver.Loaded;
@@ -707,9 +724,13 @@ end;
 
 procedure TCommPortDriver.TimerStatistics(Sender:TObject);
 begin
-  if FLastPkgId<=PPacketID then
-    FCommandsSecond:=PPacketID-FLastPkgId;
-  FLastPkgId:=PPacketID;
+  FCommandsSecond:= PPacketID - FLastPkgId;
+  FTXBytesSecond := FTXBytes  - FTXBytesLast;
+  FRXBytesSecond := FRXBytes  - FRXBytesLast;
+
+  FRXBytesLast := FRXBytes;
+  FTXBytesLast := FTXBytes;
+  FLastPkgId  := PPacketID;
 end;
 
 function TCommPortDriver.GetLocked:Boolean;

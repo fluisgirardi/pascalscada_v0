@@ -1,5 +1,6 @@
 {:
-  @abstract(Implementa um controle em forma de Up/Down para escrita de valores em tags numÈricos.)
+  @abstract(Implementa um controle em forma de Up/Down para escrita de valores
+            em tags num√©ricos.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMIUpDown;
@@ -15,7 +16,7 @@ uses
   Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls, Tag;
 
 type
-   //: Implementa um controle em forma de Up/Down para escrita de valores em tags numÈricos.
+   //: Implementa um controle em forma de Up/Down para escrita de valores em tags num√©ricos.
   THMIUpDown = class(TUpDown, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
@@ -24,7 +25,7 @@ type
     FMax,FMin:Double;
     FEnableMax, FEnableMin:Boolean;
 
-    procedure RefreshHMISecurity;                      //alquem efetuou login e È necessario verificar autorizaÁıes
+    procedure RefreshHMISecurity;                      //alquem efetuou login e √© necess√°rio verificar as autoriza√ß√µes.
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
@@ -53,23 +54,23 @@ type
     destructor  Destroy; override;
   published
     {:
-    Tag numÈrico que ser· usado pelo controle.
+    Tag num√©rico que ser√° usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
     }
     property PLCTag:TPLCTag read FTag write SetHMITag;
-    //: Valor m·ximo que o controle pode atingir caso EnableMax for igual a @true.
+    //: Valor m√°ximo que o controle pode atingir caso EnableMax for igual a @true.
     property Max:Double read FMax write SetMax;
     //: Valor minimo que o controle pode atingir caso EnableMin for igual a @true.
     property Min:Double read FMin write SetMin;
-    //: Valor que ser· incrementado/decrementado a cada clique no controle.
+    //: Valor que ser√° incrementado/decrementado a cada clique no controle.
     property Increment:Double read FIncrement write SetIncrement;
     //: Valor atual do controle.
     property Position:Double read FPosition write SetPosition;
-    //: Habilita/desabilita um valor m·ximo para o cotrole.
+    //: Habilita/desabilita o limite m√°ximo para o cotrole.
     property EnableMax:Boolean read FEnableMax write FEnableMax default false;
-    //: Habilita/desabilita um valor minimo para o cotrole.
+    //: Habilita/desabilita o limite minimo para o cotrole.
     property EnableMin:Boolean read FEnableMin write FEnableMin default false;    
   end;
 
@@ -110,7 +111,7 @@ procedure THMIUpDown.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
    if (t<>nil) and ((t as ITagNumeric)=nil) then
-      raise Exception.Create('Somente tags numÈricos s„o aceitos!');
+      raise Exception.Create('Somente tags num√©ricos s√£o aceitos!');
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin
@@ -181,7 +182,7 @@ end;
 procedure THMIUpDown.SetIncrement(v:Double);
 begin
    if (Increment<=0) and ([csReading, csLoading]*ComponentState=[]) then
-      raise Exception.Create('Incremento deve ser um valor maior q zero!');
+      raise Exception.Create('Incremento deve ser um valor maior que zero!');
 
    FIncrement := v;
 end;
@@ -189,7 +190,7 @@ end;
 procedure THMIUpDown.SetMax(v:Double);
 begin
   if ([csLoading]*ComponentState=[]) and (v<=FMin) then
-     raise Exception.Create('O valor m·ximo precisa ser maior que o mÌnimo!');
+     raise Exception.Create('O valor m√°ximo precisa ser maior que o minimo!');
 
   FMax := v;
 end;
@@ -197,7 +198,7 @@ end;
 procedure THMIUpDown.SetMin(v:Double);
 begin
   if ([csLoading]*ComponentState=[]) and (v>=FMax) then
-     raise Exception.Create('O valor mÌnimo precisa ser menor que o m·ximo!');
+     raise Exception.Create('O valor minimo precisa ser menor que o m√°ximo!');
 
   FMin := v;
 end;

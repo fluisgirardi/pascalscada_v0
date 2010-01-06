@@ -1,5 +1,5 @@
 {:
-  @abstract(ImplementaÁ„o de processadores de escala.)
+  @abstract(Implementa√ß√£o de processadores de escala.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit ValueProcessor;
@@ -41,25 +41,25 @@ type
     //: Remove um dependente desse processador de escalas.
     procedure DelPIPEItem(PIPEItem:TCollectionItem);
     {:
-    Fornece um valor processado a partir de um valor puro em funÁ„o dos
+    Fornece um valor processado a partir de um valor puro em fun√ß√£o dos
     parametros da escala, se existirem.
     
-    @bold(Geralmente È a informaÁ„o no sentido Equipamento -> Usu·rio.)
+    @bold(Geralmente √© a informa√ß√£o no sentido Equipamento -> Usu√°rio.)
 
-    @param(Sender TComponent: Quem est· solicitando esse processamento.)
+    @param(Sender TComponent: Quem est√° solicitando esse processamento.)
     @param(Input Double: Valor de entrada.)
-    @returns(Double. Valor processado em funÁ„o dos parametros da escala.)
+    @returns(Double. Valor processado em fun√ß√£o dos parametros da escala.)
     }
     function SetInGetOut(Sender:TComponent; Input:Double):Double; virtual;
     {:
-    Fornece um valor puro a partir de um valor processado em funÁ„o dos
+    Fornece um valor puro a partir de um valor processado em fun√ß√£o dos
     parametros da escala, se existirem.
 
-    @bold(Geralmente È a informaÁ„o no sentido Usu·rio -> Equipamento.)
+    @bold(Geralmente √© a informa√ß√£o no sentido Usu√°rio -> Equipamento.)
     
-    @param(Sender TComponent: Quem est· solicitando esse processamento.)
+    @param(Sender TComponent: Quem est√° solicitando esse processamento.)
     @param(Output Double: Valor processado da qual se deseja obter um valor puro.)
-    @returns(Double. Valor puro em funÁ„o dos parametros da escala.)
+    @returns(Double. Valor puro em fun√ß√£o dos parametros da escala.)
     }
     function SetOutGetIn(Sender:TComponent; Output:Double):Double; virtual;
     //: Retorna uma propriedade da escala da array de propriedades.
@@ -68,9 +68,9 @@ type
     {:
     Propriedade para testes da escala.
 
-    Se for escrito em @name, o valor processado ser· entregue em OutPut.
+    Se for escrito em @name, o valor processado ser√° entregue em OutPut.
 
-    Se for escrito em OutPut, o valor processado ser· entregue em @name.
+    Se for escrito em OutPut, o valor processado ser√° entregue em @name.
     
     @seealso(OutPut)
     }
@@ -78,16 +78,16 @@ type
     {:
     Propriedade para testes da escala.
 
-    Se for escrito em @name, o valor processado ser· entregue em InPut.
+    Se for escrito em @name, o valor processado ser√° entregue em InPut.
 
-    Se for escrito em InPut, o valor processado ser· entregue em @name.
+    Se for escrito em InPut, o valor processado ser√° entregue em @name.
 
     @seealso(Input)
     }
     property Output:Double read GetOutput write SetOutput Stored false;
   end;
   
-  //: Implementa um item de uma coleÁ„o de processadores de escala.
+  //: Implementa um item de uma cole√ß√£o de processadores de escala.
   TScalePIPEItem = class(TCollectionItem)
   private
     SProcessor:TScaleProcessor;
@@ -98,89 +98,89 @@ type
   public
     {:
     Procedimento chamado para remover a dependencia de um objeto de escalas que
-    est· sendo destroido.
+    est√° sendo destruido.
     }
     procedure RemoveScaleProcessor;
     {:
-    Repassa a chamada para o mÈtodo SetInGetOut do processador de escalas
+    Repassa a chamada para o m√©todo SetInGetOut do processador de escalas
     configurado em ScaleProcessor.
     
-    @param(Sender TComponent: Objeto que solicitante.)
-    @param(Input Double: Valor puro que ser· processado pela escala.)
+    @param(Sender TComponent: Objeto solicitante.)
+    @param(Input Double: Valor puro que ser√° processado pela escala.)
     
     @returns(O valor processado pela escala associada em ScaleProcessor. Caso
-    ScaleProcessor n„o tenha um objeto associado, retorna o valor passado
+    ScaleProcessor n√£o tenha um objeto associado, retorna o valor passado
     em Input.)
     
     @seealso(TScaleProcessor.SetInGetOut)
     }
     function SetInGetOut(Sender:TComponent; Input:Double):Double;
     {:
-    Repassa a chamada para o mÈtodo SetOutGetIn do processador de escalas
+    Repassa a chamada para o m√©todo SetOutGetIn do processador de escalas
     configurado em ScaleProcessor.
 
-    @param(Sender TComponent: Objeto que solicitante.)
+    @param(Sender TComponent: Objeto solicitante.)
     @param(Output Double: Valor processado que se deseja obter um valor puro.)
     
     @returns(O valor puro retornado pela escala associada em ScaleProcessor. Caso
-    ScaleProcessor n„o tenha um objeto associado, retorna o valor passado
+    ScaleProcessor n√£o tenha um objeto associado, retorna o valor passado
     em Output.)
 
     @seealso(TScaleProcessor.SetOutGetIn)
     }
     function SetOutGetIn(Sender:TComponent; Output:Double):Double;
   published
-    //: Objeto de escalas respons·vel por fazer os processamentos desse item.
+    //: Objeto de escalas respons√°vel por fazer os processamentos desse item.
     property ScaleProcessor:TScaleProcessor read SProcessor write SetScaleProcessor;
   end;
   
-  //: Implementa uma coleÁ„o de processadores de escala.
+  //: Implementa uma cole√ß√£o de processadores de escala.
   TScalePIPE = class(TCollection)
   public
     //: @exclude
     constructor Create;
     {:
-    Adiciona um novo item de processamento de escalas a coleÁ„o.
-    @returns(O novo item da coleÁ„o.)
+    Adiciona um novo item de processamento de escalas a cole√ß√£o.
+    @returns(O novo item da cole√ß√£o.)
     }
     function Add:TScalePIPEItem;
     {:
     Tranforma um valor puro (Entrada) em um valor processado pelas multiplas
-    escalas pertencentes a coleÁ„o (Saida).
+    escalas pertencentes a cole√ß√£o (Saida).
     
-    Para isso ele passa Input para o mÈtodo SetInGetOut do primeiro item da
-    coleÁ„o e o resultado ele repassa como parametro do prÛximo item coleÁ„o,
-    repetindo isso atÈ atingir o fim da coleÁ„o.
+    Para isso ele passa Input para o m√©todo SetInGetOut do primeiro item da
+    cole√ß√£o e o resultado ele repassa como parametro do pr√≥ximo item cole√ß√£o,
+    repetindo isso at√© atingir o fim da lista.
     
-    @bold(Logo, o primeiro item da lista È primeiro a ser chamado quando o valor
-    vem no sentido Equipamento -> Usu·rio assim como o ˙ltimo item da coleÁ„o È
-    primeiro a ser chamado quando o valor vai do Usu·rio -> Equipamento.)
+    @bold(Logo, o primeiro item da lista √© primeiro a ser chamado quando o valor
+    vem no sentido Equipamento -> Usu√°rio assim como o √∫ltimo item da cole√ß√£o √©
+    o primeiro a ser chamado quando o valor vai do Usu√°rio -> Equipamento.)
     
     @param(Sender TComponent: Quem chamou esse processamento.)
     @param(Input Double: Valor puro a processar.)
-    @returns(Retorna o valor processado em funÁ„o das escalas associadas aos
-             itens da coleÁ„o. Se n„o h· itens na coleÁ„o ou se os itens dela n„o
-             tiverem um processador de escala associado, Input È retornado.)
+    @returns(Retorna o valor processado em fun√ß√£o das escalas associadas aos
+             itens da cole√ß√£o. Se n√£o h√° itens na cole√ß√£o ou se os itens dela n√£o
+             tiverem um processador de escala associado, Input √© retornado.)
     @seealso(TScalePIPEItem.SetInGetOut)
     }
     function SetInGetOut(Sender:TComponent; Input:Double):Double;
     {:
-    Tranforma um valor processado pelas multiplas escalas da coleÁ„o (Saida) em
+    Tranforma um valor processado pelas multiplas escalas da cole√ß√£o (Saida) em
     um valor puro (Entrada).
     
-    Para isso ele passa Output para o mÈtodo SetOutGetIn do ˙ltimo item da
-    coleÁ„o e o resultado ele repassa como parametro do item que o antecede,
-    repetindo isso atÈ atingir o inicio da coleÁ„o.
+    Para isso ele passa Output para o m√©todo SetOutGetIn do √∫ltimo item da
+    cole√ß√£o e o resultado ele repassa como parametro do item que o antecede,
+    repetindo isso at√© atingir o inicio da cole√ß√£o.
     
-    @bold(Logo, o primeiro item da lista È primeiro a ser chamado quando o valor
-    vem no sentido Equipamento -> Usu·rio assim como o ˙ltimo item da coleÁ„o È
-    primeiro a ser chamado quando o valor vai do Usu·rio -> Equipamento.)
+    @bold(Logo, o primeiro item da lista √© primeiro a ser chamado quando o valor
+    vem no sentido Equipamento -> Usu√°rio assim como o √∫ltimo item da cole√ß√£o √©
+    o primeiro a ser chamado quando o valor vai do Usu√°rio -> Equipamento.)
 
     @param(Sender TComponent: Quem chamou esse processamento.)
     @param(Output Double: Valor processado da qual se deseja obter um valor puro.)
-    @returns(Retorna o valor puro em funÁ„o das escalas associadas aos
-             itens da coleÁ„o. Se n„o h· itens na coleÁ„o ou se os itens dela n„o
-             tiverem um processador de escala associado, Output È retornado.)
+    @returns(Retorna o valor puro em fun√ß√£o das escalas associadas aos
+             itens da cole√ß√£o. Se n√£o h√° itens na cole√ß√£o ou se os itens dela n√£o
+             tiverem um processador de escala associado, Output √© retornado.)
     @seealso(TScalePIPEItem.SetOutGetIn)
     }
     function SetOutGetIn(Sender:TComponent; Output:Double):Double;
@@ -207,7 +207,7 @@ type
     //: @seealso(TScalePIPE.SetOutGetIn)
     function SetOutGetIn(Sender:TComponent; Output:Double):Double;
   published
-    //: ColeÁ„o de escalas.
+    //: Cole√ß√£o de escalas.
     property Escalas:TScalePIPE read GetScalePIPE write SetScalePIPE stored true;
   end;
     
@@ -216,7 +216,7 @@ implementation
 uses PLCNumber;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementaÁ„o de TScalePIPEItem
+// implementa√ß√£o de TScalePIPEItem
 ////////////////////////////////////////////////////////////////////////////////
 procedure TScalePIPEItem.SetScaleProcessor(SP:TScaleProcessor);
 begin
@@ -262,7 +262,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementaÁ„o de TScalePIPE
+// implementa√ß√£o de TScalePIPE
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TScalePIPE.Create;
@@ -296,7 +296,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementaÁ„o de TPIPE
+// implementa√ß√£o de TPIPE
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TPIPE.Create(AOwner:TComponent);
@@ -327,7 +327,7 @@ var
   c:Integer;
 begin
   if not (tag is TPLCNumber) then
-    raise Exception.Create('Tipo do Tag inv·lido!');
+    raise Exception.Create('Tipo do Tag inv√°lido!');
 
   found := false;
   for c:=0 to High(FTags) do
@@ -373,7 +373,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementaÁ„o de TScaleProcessor
+// implementa√ß√£o de TScaleProcessor
 ////////////////////////////////////////////////////////////////////////////////
 constructor TScaleProcessor.Create(AOwner:TComponent);
 begin
@@ -398,7 +398,7 @@ var
   c:Integer;
 begin
   if not (PIPEItem is TScalePIPEItem) then
-    raise Exception.Create('Tipo inv·lido!');
+    raise Exception.Create('Tipo inv√°lido!');
 
   found := false;
   for c:=0 to High(FPIPEItens) do

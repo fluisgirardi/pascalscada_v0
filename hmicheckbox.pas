@@ -16,10 +16,10 @@ uses
 
 type
   {:
-   @name È a classe de um controle booleano em forma de CheckBox que lÍ e escreve valores em Tags.
+   @name √© a classe de um controle booleano em forma de CheckBox que l√™ e escreve valores em Tags.
    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-   @bold(Para maiores informaÁıes consulte a documentaÁ„o da classe TCheckBox
+   @bold(Para maiores informa√ß√µes consulte a documenta√ß√£o da classe TCheckBox
    de seu ambiente de desenvolvimento.)
   }
   THMICheckBox = class(TCheckBox, IHMIInterface, IHMITagInterface)
@@ -102,45 +102,45 @@ type
     {$ENDIF}
   published
     {:
-    @name informa se o controle aceita o estado intermedi·rio (Grayed).
-    O valor dessa propriedade depende principalmente da implementaÁ„o que est·
+    @name informa se o controle aceita o estado intermedi√°rio (Grayed).
+    O valor dessa propriedade depende principalmente da implementa√ß√£o que est√°
     sendo usada (Delphi ou Lazarus).
     }
     property AllowGrayed:Boolean read GetAllowGrayed stored false;
     {:
-    Use @name para ver/setar o estado do controle. Se escrito atravÈs dessa
-    propriedade, o valor ValueTrue/ValueFalse È escrito no Tag caso as
+    Use @name para ver/setar o estado do controle. Se escrito atrav√©s dessa
+    propriedade, o valor ValueTrue/ValueFalse √© escrito no Tag caso as
     propriedades WriteTrueValue/WriteFalseValue estejam em @true
     }
     property Checked stored false;
     {:
-    Tag numÈrico usado pelo controle.
+    Tag num√©rico usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCBlockElement)
     @seealso(TPLCTagNumber)
     }
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
     {:
-    @name mostra o CaptionTrue, CaptionFalse, CaptionGrayed de acordo com o estado
-    do componente ou escreve seu valor em CaptionTrue, CaptionFalse e
-    CaptionGrayed, para agilizar sua configuraÁ„o.
+    @name mostra o CaptionTrue, CaptionFalse, CaptionGrayed de acordo com o valor
+    to Tag ou escreve seu valor em CaptionTrue, CaptionFalse e CaptionGrayed para
+    agilizar sua configura√ß√£o.
     @seealso(CaptionTrue)
     @seealso(CaptionFalse)
     @seealso(CaptionGrayed)
     }
     property Caption write SetCaption stored false;
     {:
-    @name È texto que ser· mostrado no controle caso ele esteja desmarcado.
+    @name √© texto que ser√° mostrado no controle caso ele esteja desmarcado.
     @seealso(Caption)
     }
     property CaptionFalse:String read FCaptionFalse write SetCaptionFalse stored true nodefault;
     {:
-    @name È texto que ser· mostrado no controle caso ele esteja marcado.
+    @name √© texto que ser√° mostrado no controle caso ele esteja marcado.
     @seealso(Caption)
     }
     property CaptionTrue:String read FCaptionTrue write SetCaptionTrue stored true nodefault;
     {:
-    @name È texto que ser· mostrado no controle caso ele esteja no meio-termo
+    @name √© texto que ser√° mostrado no controle caso ele esteja no meio-termo
     (nem marcado e nem desmarcado).
     @seealso(Caption)
     }
@@ -148,80 +148,80 @@ type
 
 
     {:
-    @name mostra o ColorTrue, ColorFalse, ColorGrayed de acordo com o estado
-    do componente ou escreve seu valor em ColorTrue, ColorFalse e ColorGrayed,
-    para agilizar sua configuraÁ„o.
+    @name mostra o ColorTrue, ColorFalse, ColorGrayed de acordo com o valor do
+    tag ou escreve seu valor em ColorTrue, ColorFalse e ColorGrayed, para
+    agilizar sua configura√ß√£o.
     @seealso(ColorTrue)
     @seealso(ColorFalse)
     @seealso(ColorGrayed)
     }
     property Color read IntGetColor write IntSetColor stored false;
     {:
-    @name È a cor do controle caso ele esteja desmarcado.
+    @name √© a cor do controle caso ele esteja desmarcado.
     @seealso(Color)
     }
     property ColorFalse:TColor read FColorFalse write SetColorFalse stored true default clBtnFace;
     {:
-    @name È a cor do controle caso ele esteja marcado.
+    @name √© a cor do controle caso ele esteja marcado.
     @seealso(Color)
     }
     property ColorTrue:TColor read FColorTrue write SetColorTrue stored true default clBtnFace;
     {:
-    @name È a cor do controle caso ele esteja no meio-termo (nem marcado e nem
+    @name √© a cor do controle caso ele esteja no meio-termo (nem marcado e nem
     desmarcado).
     @seealso(Color)
     }
     property ColorGrayed:TColor read FColorGrayed write SetColorGrayed stored true default clBtnFace;
 
     {:
-    @name mostra o FontTrue, FontFalse ou FontGrayed de acordo com o estado
-    do componente ou escreve seu valor em FontTrue, FontFalse e FontGrayed,
-    para agilizar sua configuraÁ„o.
+    @name mostra o FontTrue, FontFalse ou FontGrayed de acordo com o valor do tag
+    ou escreve seu valor em FontTrue, FontFalse e FontGrayed  para agilizar sua
+    configura√ß√£o.
     @seealso(ColorTrue)
     @seealso(ColorFalse)
     @seealso(ColorGrayed)
     }
     property Font write SetFont stored false;
     {:
-    @name È a fonte que ser· usada pelo controle caso ele esteja desmarcado.
+    @name √© a fonte que ser√° usada pelo controle caso ele esteja desmarcado.
     @seealso(Font)
     }
     property FontFalse:TFont read FFontFalse write SetFontFalse stored true;
     {:
-    @name È a fonte que ser· usada pelo controle caso ele esteja marcado.
+    @name √© a fonte que ser√° usada pelo controle caso ele esteja marcado.
     @seealso(Font)
     }
     property FontTrue:TFont read FFontTrue write SetFontTrue stored true;
     {:
-    @name È a fonte que ser· usada pelo controle caso ele esteja  no meio-termo
+    @name √© a fonte que ser√° usada pelo controle caso ele esteja  no meio-termo
     (nem marcado e nem desmarcado).
     @seealso(Font)
     }
     property FontGrayed:TFont read FFontGrayed write SetFontGrayed stored true;
 
     {:
-    Diz como o controle ir· se comportar caso o valor do Tag n„o seja igual a
+    Diz como o controle ir√° se comportar caso o valor do Tag n√£o seja igual a
     ValueFalse e nem a ValueTrue.
 
     @seealso(TOtherValues)
     }
     property OtherValuesIS:TOtherValues read FOtherValues write SetOtherValues stored true default IsGrayed;
     {:
-    Caso o valor do Tag seja igual a @name, o controle È desmarcado.
+    Caso o valor do Tag seja igual a @name, o controle √© desmarcado.
     }
     property ValueFalse:Double read FValueFalse write SetValueFalse stored true;
     {:
-    Caso o valor do Tag seja igual a @name, o controle È marcado.
+    Caso o valor do Tag seja igual a @name, o controle √© marcado.
     }
     property ValueTrue:Double read FValueTrue write SetValueTrue stored true;
     {:
-    @name diz que qualquer aÁ„o feita pelo usu·rio que marque o controle, deve
-    tambÈm escrever ValueTrue no tag associado.
+    @name diz que qualquer a√ß√£o feita pelo usu√°rio que marque o controle, deve
+    tamb√©m escrever ValueTrue no tag associado.
     }
     property WriteTrueValue:Boolean read FWriteTrue write SetWriteTrue stored true default true;
     {:
-    @name diz que qualquer aÁ„o feita pelo usu·rio que desmarque o controle, deve
-    tambÈm escrever ValueFalse no tag associado.
+    @name diz que qualquer a√ß√£o feita pelo usu√°rio que desmarque o controle, deve
+    tamb√©m escrever ValueFalse no tag associado.
     }
     property WriteFalseValue:Boolean read FWriteFalse write SetWriteFalse stored true default true;
     //: Informa o atual estado do controle (marcado, desmarcado, acinzentado).
@@ -277,9 +277,9 @@ end;
 
 procedure THMICheckBox.SetHMITag(t:TPLCTag);
 begin
-  //se o tag È um tag numerico.
+  //se o tag √© um tag numerico.
   if (t<>nil) and ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numÈricos s„o aceitos!');
+     raise Exception.Create('Somente tags num√©ricos s√£o aceitos!');
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin

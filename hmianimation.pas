@@ -1,7 +1,8 @@
 {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-  @abstract(Implementa o controle respons·vel por mostrar imagens em funÁ„o do valor do tag associado.)
+  @abstract(Implementa o controle respons√°vel por mostrar imagens em fun√ß√£o do valor do tag associado.)
 }
+
 unit HMIAnimation;
 
 {$IFDEF FPC}
@@ -17,10 +18,10 @@ uses
 type
   {:
     @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-    Implementa o controle respons·vel por mostrar imagens em funÁ„o do valor do
+    Implementa o controle respons√°vel por mostrar imagens em fun√ß√£o do valor do
     tag associado.
 
-    @bold(Para maiores informaÁıes consulte a documentaÁ„o da classe TImage
+    @bold(Para maiores informa√ß√µes consulte a documenta√ß√£o da classe TImage
     de seu ambiente de desenvolvimento.)
   }
   THMIAnimation = class(TImage, IHMIInterface, IHMITagInterface)
@@ -72,11 +73,11 @@ type
   published
     {:
     Propriedade criada para testar o controle sem a necessidade de valores vindos
-    de um tag. @bold(SÛ pode ser usada em tempo de desenvolvimento.)
+    de um tag. @bold(S√≥ pode ser usada em tempo de desenvolvimento.)
     }
     property TestValue:Double read FTestValue write SetTestValue stored false;
     {:
-    ColeÁ„o de zonas (imagens) que podem ser exibidas em funÁ„o do valor do tag.
+    Cole√ß√£o de zonas (imagens) que podem ser exibidas em fun√ß√£o do valor do tag.
     @seealso(TZone)
     @seealso(TZones)
     @seealso(TGraphicZone)
@@ -84,8 +85,8 @@ type
     }
     property Zones:TGraphicZones read GetAnimationZones write SetAnimationZones;
     {:
-    Tag numÈrico que dispara eventos para o controle exibir imagens de acordo
-    com as configuraÁıes de zonas.
+    Tag num√©rico que dispara eventos para o controle exibir imagens de acordo
+    com as configura√ß√µes de zonas.
     @seealso(TPLCTag)
     @seealso(TPLCBlockElement)
     @seealso(TPLCTagNumber)
@@ -201,7 +202,7 @@ procedure THMIAnimation.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
    if (t<>nil) and ((t as ITagNumeric)=nil) then
-      raise Exception.Create('Somente tags numÈricos s„o aceitos!');
+      raise Exception.Create('Somente tags num√©ricos s√£o aceitos!');
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin

@@ -1,7 +1,7 @@
 {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  @abstract(Implementação de um elemento de um tag bloco de comunicação.)
+  @abstract(ImplementaÃ§Ã£o de um elemento de um tag bloco de comunicaÃ§Ã£o.)
 }
 unit PLCBlockElement;
 
@@ -18,8 +18,8 @@ type
   {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  Classe de Tag Elemento de Bloco de comunicação.
-  Usado para retirar uma informação de um conjunto (bloco) de informações.
+  Classe de Tag Elemento de Bloco de comunicaÃ§Ã£o.
+  Usado para retirar uma informaÃ§Ã£o de um conjunto (bloco) de informaÃ§Ãµes.
 
   @seealso(TPLCBlock)
   }
@@ -64,9 +64,9 @@ type
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
   published
-    //: Bloco de comunicações que o elemento pertence.
+    //: Bloco de comunicaÃ§Ãµes que o elemento pertence.
     property PLCBlock:TPLCBlock read PBlock write SetBlock;
-    //: Offset da elemento de memória dentro do bloco (indice).
+    //: Offset da elemento de memÃ³ria dentro do bloco (indice).
     property Index:Cardinal read PIndex write SetIndex;
   end;
 
@@ -161,7 +161,7 @@ begin
          if TryStrToFloat(V,aux) then
             Value := aux
          else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create('Valor invÃ¡lido!');
       end else
          if VarIsType(V,varboolean) then begin
             if V=true then
@@ -169,7 +169,7 @@ begin
             else
                Value := 0;
          end else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create('Valor invÃ¡lido!');
 end;
 
 function  TPLCBlockElement.IsValidValue(Value:Variant):Boolean;

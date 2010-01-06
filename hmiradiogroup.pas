@@ -1,5 +1,5 @@
 {:
-  @abstract(Define um controle de opções para leitura/escrita de valores de tags numéricos.)
+  @abstract(Define um controle de opÃ§Ãµes para leitura/escrita de valores de tags numÃ©ricos.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMIRadioGroup;
@@ -15,14 +15,14 @@ uses
   Dialogs, ExtCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes, Tag;
 
 type
-  //: Define um controle de opções para leitura/escrita de valores de tags numéricos.
+  //: Define um controle de opÃ§Ãµes para leitura/escrita de valores de tags numÃ©ricos.
   THMIRadioGroup = class(TRadioGroup, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FIsEnabled:Boolean;
     FDefaultIndex:Integer;
     FIgnore, FLoaded:Boolean;
-    procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
+    procedure RefreshHMISecurity;                      //alquem efetuou login e Ã© necessario verificar autorizaÃ§Ãµes
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
@@ -52,19 +52,19 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
-    //: @name retorna qual a opção selecionada.
+    //: @name retorna qual a opÃ§Ã£o selecionada.
     property  ItemIndex:Integer read GetIndex Write SetIndex;
     //: @exclude
     property  Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
     {:
-    Tag numérico que será usado pelo controle.
+    Tag numÃ©rico que serÃ¡ usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
     }
     property  PLCTag:TPLCTag read GetHMITag write SetHMITag;
     {:
-    Caso o valor inteiro do tag não esteja entre as opções oferecidas, usa o valor
+    Caso o valor inteiro do tag nÃ£o esteja entre as opÃ§Ãµes oferecidas, usa o valor
     de @name.
     }
     property  DefaultIndex:Integer read FDefaultIndex write SetDefaultIndex default -1;
@@ -87,7 +87,7 @@ begin
    inherited Destroy;
 end;
 
-procedure THMIRadioGroup.RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
+procedure THMIRadioGroup.RefreshHMISecurity;                      //alquem efetuou login e Ã© necessario verificar autorizaÃ§Ãµes.
 begin
    //todo
 end;
@@ -96,7 +96,7 @@ procedure THMIRadioGroup.SetHMITag(t:TPLCTag);                    //seta um tag
 begin
    //se o tag esta entre um dos aceitos.
    if (t<>nil) and ((t as ITagNumeric)=nil) then
-      raise Exception.Create('Somente tags numéricos são aceitos!');
+      raise Exception.Create('Somente tags numÃ©ricos sÃ£o aceitos!');
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin

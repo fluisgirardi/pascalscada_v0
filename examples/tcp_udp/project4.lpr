@@ -5,7 +5,6 @@ program project4;
 uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
-  cmem,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, scada, Unit4, LResources, TAChartLazarusPkg

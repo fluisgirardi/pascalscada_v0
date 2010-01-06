@@ -1,6 +1,6 @@
 {:
     @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-    @abstract(Unit de sincronizaÁ„o de threads por eventos.)
+    @abstract(Unit de sincroniza√ß√£o de threads por eventos.)
 
     Esta unit foi criada por motivos de compatibilidade
     (e performance) entre ambientes windows, linux e
@@ -43,10 +43,10 @@ type
   {:
   Estrutura usada por TCrossEvent para trabalhar em ambientes Unix.
   Usada internamente por TCrossEvent em ambientes Unix-like.
-  @member condvar Armazena uma condiÁ„o.
+  @member condvar Armazena uma condi√ß√£o.
   @member mutex Armazena uma zona critica.
   @member isset Armazena se o evento foi setado.
-  @member IsDestroing Armazena se o evento est· sendo destuido.
+  @member IsDestroing Armazena se o evento est√° sendo destuido.
   @seealso(TCrossEvent)
   }
   TINTRTLEvent = record
@@ -63,17 +63,17 @@ type
    private
      function GetUniqueID:Int64;
    public
-     //: Fornece o n˙mero unico da thread.
+     //: Fornece o n√∫mero √∫nico da thread.
      property UniqueID:Int64 read GetUniqueID;
   end;
 
   {:
-  Classe de sincronizaÁ„o de threads por eventos Multi-plataforma.
+  Classe de sincroniza√ß√£o de threads por eventos Multi-plataforma.
 
   Esta classe foi criada por motivos de compatibilidade (e performance)
   entre ambientes Windows e Unix.
   Simula eventos para qualquer sistema operacional. A parte Unix (Linux/FreeBSD)
-  È baseado nos eventos RTL do FreePascal.
+  √© baseado nos eventos RTL do FreePascal.
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   }
   TCrossEvent = class(TObject)
@@ -88,15 +88,15 @@ type
       function GetManualReset:Boolean;
    public
       {:
-      @name cria um novo evento. Seus parametros s„o iguais ao da classe TEvent
-      disponÌvel no FPC e no Delphi.
-      @param(EventAttributes PSecurityAttributes. Atributos de seguranÁa.
+      @name cria um novo evento. Seus parametros s√£o iguais ao da classe TEvent
+      dispon√≠vel no FPC e no Delphi.
+      @param(EventAttributes PSecurityAttributes. Atributos de seguran√ßa.
              Somente Windows, demais sistemas deixar @code(nil).)
-      @param(AManualReset Boolean. Caso @false o evento ir· se resetar
-             automaticamente assim que a ˙ltima thread sair da espera. Caso
-             @true È necess·rio resetar o evento atravÈs do mÈtodo ResetEvent.)
-      @param(InitialState Boolean. Diz se o evento ser· criado sinalizado ou n„o.
-             Caso @true, o evento È criado sinalizado.)
+      @param(AManualReset Boolean. Caso @false o evento ir√° se resetar
+             automaticamente assim que a primeira thread sair da espera. Caso
+             @true √© necess√°rio resetar o evento atrav√©s do m√©todo ResetEvent.)
+      @param(InitialState Boolean. Diz se o evento ser√° criado sinalizado ou n√£o.
+             Caso @true, o evento √© criado sinalizado.)
       @param(Name String. Nome do evento. Somente Windows.)
       @seealso(SetEvent)
       @seealso(ResetEvent)
@@ -122,13 +122,12 @@ type
       procedure SetEvent;
       
       {:
-      Espera um evento acontecer por um determinado tempo. Retorna caso o evento
-      n„o seja sinalizado no tempo definido.
-      @param(Timeout Cardinal. Tempo em milisegundos atÈ o evento acontecer. Caso
-             seja fornecido $FFFFFFFF, espera eternamente.)
-      @returns(@bold(wrSignaled) caso o evento tenha sido sinalizado no tempo habil.
-               @bold(wrTimeout) caso o evento n„o tenha sido sinalizado no tempo habil.
-               @bold(wrAbandoned) caso o evento esteja sendo destruido.
+      Espera um evento acontecer por um determinado tempo.
+      @param(Timeout Cardinal. Tempo em milisegundos at√© o evento acontecer. Caso
+             seja fornecido $FFFFFFFF, espera infinitamente ou at√© ser destruido.)
+      @returns(@bold(wrSignaled) caso o evento tenha sido sinalizado no tempo h√°bil.
+               @bold(wrTimeout) caso o evento n√£o tenha sido sinalizado no tempo habil.
+               @bold(wrAbandoned) caso o evento esteja sendo destru√≠do.
                @bold(wrError) caso tenha acontecido algum erro ao tentar esperar pelo evento.)
       
       @seealso(SetEvent)

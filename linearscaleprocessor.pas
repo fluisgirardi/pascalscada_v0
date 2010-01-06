@@ -39,25 +39,25 @@ type
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     {:
-    Fornece a saida em função de um valor de entrada.
-    @param(sender Objeto que chamou a função.)
+    Fornece a saida em funÃ§Ã£o de um valor de entrada.
+    @param(sender Objeto que chamou a funÃ§Ã£o.)
     @param(Entrada Valor a ser convertido para saida.)
     }
     function SetInGetOut(Sender:TComponent; Entrada:Double):Double; override;
     {:
-    Fornece a entrada em função de um valor de saida.
-    @param(sender Objeto que chamou a função.)
+    Fornece a entrada em funÃ§Ã£o um valor de saida.
+    @param(sender Objeto que chamou funÃ§Ã£o.)
     @param(Saida Valor a ser convertido para entrada.)
     }
     function SetOutGetIn(Sender:TComponent; Saida:Double):Double; override;
   published
-    //Valor mínimo de escala do sistema (Saida).
+    //Valor minimo de escala do sistema (Saida).
     property SysMin:Double read GetSysMin write SetSysMin Stored true;
-    //Valor máximo de escala do sistema (Saida).
+    //Valor mÃ¡ximo de escala do sistema (Saida).
     property SysMax:Double read GetSysMax write SetSysMax Stored true;
-    //Valor mínimo de escala do PLC (Entrada).
+    //Valor minimo de escala do PLC (Entrada).
     property PLCMin:Double read GetPLCMin write SetPLCMin Stored true;
-    //Valor máximo de escala do PLC (Entrada).
+    //Valor mÃ¡ximo de escala do PLC (Entrada).
     property PLCMax:Double read GetPLCMax write SetPLCMax Stored true;
   end;
 
@@ -102,28 +102,28 @@ end;
 procedure TLinearScaleProcessor.SetSysMin(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[1]) then
-    raise Exception.Create('As propriedades SysMin e SysMax tem de ser obrigatóriamente diferentes!');
+    raise Exception.Create('As propriedades SysMin e SysMax tem de ser obrigatoriamente diferentes!');
   FProperts[0] := v;
 end;
 
 procedure TLinearScaleProcessor.SetSysMax(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[0]) then
-    raise Exception.Create('As propriedades SysMin e SysMax tem de ser obrigatóriamente diferentes!');
+    raise Exception.Create('As propriedades SysMin e SysMax tem de ser obrigatoriamente diferentes!');
   FProperts[1] := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMin(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[3]) then
-    raise Exception.Create('As propriedades PLCMin e PLCMax tem de ser obrigatóriamente diferentes!');
+    raise Exception.Create('As propriedades PLCMin e PLCMax tem de ser obrigatoriamente diferentes!');
   FProperts[2] := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMax(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[2]) then
-    raise Exception.Create('As propriedades PLCMin e PLCMax tem de ser obrigatóriamente diferentes!');
+    raise Exception.Create('As propriedades PLCMin e PLCMax tem de ser obrigatoriamente diferentes!');
   FProperts[3] := v;
 end;
 
@@ -141,7 +141,7 @@ procedure TLinearScaleProcessor.Loaded;
 begin
   inherited Loaded;
   if (FProperts[0]=FProperts[1]) or (FProperts[2]=FProperts[3]) then
-    raise Exception.Create('Valor das propriedades inválido!!');
+    raise Exception.Create('Valor das propriedades invÃ¡lido!');
 end;
 
 end.

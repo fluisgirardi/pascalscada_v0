@@ -1,6 +1,6 @@
 {:
-  @abstract(Implementa o controle respons·vel por mostrar textos prÈ-definidos em funÁ„o
-            do valor do tag associado.)
+  @abstract(Implementa o controle respons√°vel por mostrar textos pr√©-definidos
+            em fun√ß√£o do valor do tag associado.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMIText;
@@ -17,7 +17,7 @@ uses
 
 type
   {:
-  Implementa o controle respons·vel por mostrar textos prÈ-definidos em funÁ„o
+  Implementa o controle respons√°vel por mostrar textos pr√©-definidos em fun√ß√£o
   do valor do tag associado.
   @seealso(THMILabel)
   }
@@ -56,11 +56,11 @@ type
   published
     {:
     Propriedade criada para testar o controle sem a necessidade de valores vindos
-    de um tag. @bold(SÛ pode ser usada em tempo de desenvolvimento.)
+    de um tag. @bold(S√≥ pode ser usada em tempo de desenvolvimento.)
     }
     property TestValue:Double read FTestValue write SetTestValue stored false;
     {:
-    ColeÁ„o de zonas (textos) que podem ser exibidos em funÁ„o do valor do tag.
+    Cole√ß√£o de zonas (textos) que podem ser exibidos em fun√ß√£o do valor do tag.
     @seealso(TZone)
     @seealso(TZones)
     @seealso(TTextZone)
@@ -103,7 +103,7 @@ procedure THMIText.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numÈricos s„o aceitos!');
+     raise Exception.Create('Somente tags num√©ricos s√£o aceitos!');
 
   inherited SetHMITag(t);
 end;

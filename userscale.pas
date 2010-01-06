@@ -1,5 +1,5 @@
 {:
-  @abstract(Escala definida pelo usu·rio.)
+  @abstract(Escala definida pelo usu√°rio.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit UserScale;
@@ -17,7 +17,7 @@ type
    //: Evento chamado para processar valores.
    TScaleEvent = procedure(Sender:TObject; const Input:Double; var Output:Double) of object;
    {:
-   @abstract(Classe para processamento de escalas personalizaveis pelo usu·rio.)
+   @abstract(Classe para processamento de escalas personalizaveis pelo usu√°rio.)
    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
    }
    TUserScale = class(TScaleProcessor)
@@ -37,32 +37,32 @@ type
      function SetOutGetIn(Sender:TComponent; Saida:Double):Double; override;
    published
      {:
-     Evento chamado atravÈs da funÁ„o SetInGetOut para o usu·rio fazer sua escala
-     customizada no sentido Equipamento -> Usu·rio.
+     Evento chamado atrav√©s da fun√ß√£o SetInGetOut para o usu√°rio fazer sua escala
+     customizada no sentido Equipamento -> Usu√°rio.
      
-     Os parametros do evento correspondem aos seguintes paramestros da funÁ„o
+     Os parametros do evento correspondem aos seguintes paramestros da fun√ß√£o
      SetSetInGetOut:
      
-     Sender => Sender da funÁ„o
+     Sender => Sender da fun√ß√£o.
      
-     Input  => Entrada da funÁ„o
+     Input  => Entrada da fun√ß√£o.
      
-     Output => Resultado da funÁ„o.
+     Output => Resultado da fun√ß√£o.
      
      }
      property OnPLCToUser:TScaleEvent read PPLCToUser write PPLCToUser;
      {:
-     Evento chamado atravÈs da funÁ„o SetOutGetIn para o usu·rio fazer sua escala
-     customizada no sentido Usu·rio -> Equipamento.
+     Evento chamado atrav√©s da fun√ß√£o SetOutGetIn para o usu√°rio fazer sua escala
+     customizada no sentido Usu√°rio -> Equipamento.
 
-     Os parametros do evento correspondem aos seguintes paramestros da funÁ„o
+     Os parametros do evento correspondem aos seguintes paramestros da fun√ß√£o
      SetSetInGetOut:
 
-     Sender => Sender da funÁ„o
+     Sender => Sender da fun√ß√£o.
 
-     Input  => Saida da funÁ„o
+     Input  => Saida da fun√ß√£o.
 
-     Output => Resultado da funÁ„o.
+     Output => Resultado da fun√ß√£o.
 
      }
      property OnUserToPLC:TScaleEvent read PUserToPLC write PUserToPLC;

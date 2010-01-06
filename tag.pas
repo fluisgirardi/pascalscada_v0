@@ -1,5 +1,5 @@
 {:
-  @abstract(ImplementaÁ„o da base de todos os tags.)
+  @abstract(Implementa√ß√£o da base de todos os tags.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit Tag;
@@ -22,7 +22,7 @@ type
 
   TRefreshTime = 1..$7FFFFFFF;
 
-  //: Interface de notificaÁ„o de eventos do tag.
+  //: Interface de notifica√ß√£o de eventos do tag.
   IHMITagInterface = interface
     ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
     //: Chama o evento quando uma letura tem exito.
@@ -37,7 +37,7 @@ type
     procedure NotifyTagChange(Sender:TObject);
     {:
     Notifica objetos dependentes que o tag
-    ser· removido.
+    ser√° removido.
     }
     procedure RemoveTag(Sender:TObject);
   end;
@@ -57,29 +57,29 @@ type
     PCommWriteErrors:Cardinal;
     //: Conta as escritas com sucesso do tag.
     PCommWriteOk:Cardinal;
-    //: Armazena o Hack do equipamento da memÛria que est· sendo mapeada.
+    //: Armazena o Hack do equipamento da mem√≥ria que est√° sendo mapeada.
     PHack:Cardinal;
-    //: Armazena o Slot do equipamento da memÛria que est· sendo mapeada.
+    //: Armazena o Slot do equipamento da mem√≥ria que est√° sendo mapeada.
     PSlot:Cardinal;
-    //: Armazena o endereÁo da estaÁ„o da memÛria que est· sendo mapeada.
+    //: Armazena o endere√ßo da esta√ß√£o da mem√≥ria que est√° sendo mapeada.
     PStation:Cardinal;
-    //: Armazena o Arquivo/DB dentro do equipamento da memÛria que est· sendo mapeada.
+    //: Armazena o Arquivo/DB dentro do equipamento da mem√≥ria que est√° sendo mapeada.
     PFile_DB:Cardinal;
-    //: Armazena o endereÁo da memÛria no equipamento que est· sendo mapeada.
+    //: Armazena o endere√ßo da mem√≥ria no equipamento que est√° sendo mapeada.
     PAddress:Cardinal;
-    //: Armazena o subendereÁo da memÛria no equipamento que est· sendo mapeada.
+    //: Armazena o subendere√ßo da mem√≥ria no equipamento que est√° sendo mapeada.
     PSubElement:Cardinal;
-    //: Armazena o n˙mero de memÛrias que est„o mapeadas.
+    //: Armazena o n√∫mero de mem√≥rias que est√£o mapeadas.
     PSize:Cardinal;
-    //: Armazena o endereÁo completo da memÛria em formato texto.
+    //: Armazena o endere√ßo completo da mem√≥ria em formato texto.
     PPath:String;
-    //: Armazena a funÁ„o usada para leitura da memÛria.
+    //: Armazena a fun√ß√£o usada para leitura da mem√≥ria.
     PReadFunction:Cardinal;
-    //: Armazena a funÁ„o usada para escrita da memÛria
+    //: Armazena a fun√ß√£o usada para escrita da mem√≥ria.
     PWriteFunction:Cardinal;
-    //: Armazena o n˙mero de tentivas de leitura/escrita da memÛria.
+    //: Armazena o n√∫mero de tentivas de leitura/escrita da mem√≥ria.
     PRetries:Cardinal;
-    //: Armazena o tempo de varredura a memÛria.
+    //: Armazena o tempo de varredura a mem√≥ria.
     PScanTime:TRefreshTime;
     //: Armazena o evento chamado pelo quando uma leitura do tag tem sucesso.
     POnReadOk:TNotifyEvent;
@@ -121,11 +121,11 @@ type
     //: Incrementa o contador de falhas de escrita do tag.
     procedure IncCommWriteFaults(value:Cardinal);
 
-    //: Caso @true, o tag ser· lido automaticamente.
+    //: Caso @true, o tag ser√° lido automaticamente.
     property AutoRead:Boolean read PAutoRead;
     {:
     Caso @true, toda a vez que ocorrerem escritas no tag,
-    ele ir· escrever o valor no equipamento.
+    ele ir√° escrever o valor no equipamento.
     }
     property AutoWrite:Boolean read PAutoWrite;
     //: Informa o total de erros de leitura do tag.
@@ -136,29 +136,29 @@ type
     property CommWriteErrors:Cardinal read PCommWriteErrors;
     //: Informa o total de escritas com sucesso do tag.
     property CommWritesOk:Cardinal read PCommWriteOk;
-    //: Hack do equipamento que contem a memÛria que est· sendo mapeada, se aplic·vel.
+    //: Hack do equipamento que contem a mem√≥ria que est√° sendo mapeada, se aplic√°vel.
     property PLCHack:Cardinal read PHack;
-    //: Slot do equipamento que contem a memÛria que est· sendo mapeada, se aplic·vel.
+    //: Slot do equipamento que contem a mem√≥ria que est√° sendo mapeada, se aplic√°vel.
     property PLCSlot:Cardinal read PSlot;
-    //: EndereÁo da estaÁ„o que contem a memÛria que est· sendo mapeada, se aplic·vel.
+    //: Endere√ßo da esta√ß√£o que contem a mem√≥ria que est√° sendo mapeada, se aplic√°vel.
     property PLCStation:Cardinal read PStation;
-    //: Arquivo/DB dentro do equipamento que contem a memÛrias que est· sendo mapeada, se aplic·vel.
+    //: Arquivo/DB dentro do equipamento que contem a mem√≥ria que est√° sendo mapeada, se aplic√°vel.
     property MemFile_DB:Cardinal read PFile_DB;
-    //: EndereÁo da memÛria que est· sendo mapeada.
+    //: Endere√ßo da mem√≥ria que est√° sendo mapeada.
     property MemAddress:Cardinal read PAddress;
-    //: SubendereÁo da memÛria que est· sendo mapeada, se aplic·vel.
+    //: Subendere√ßo da mem√≥ria que est√° sendo mapeada, se aplic√°vel.
     property MemSubElement:Cardinal read PSubElement;
-    //: FunÁ„o do driver respons·vel por realizar a leitura desse memÛria.
+    //: Fun√ß√£o do driver respons√°vel por realizar a leitura dessa mem√≥ria.
     property MemReadFunction:Cardinal read PReadFunction;
-    //: FunÁ„o do driver respons·vel por realizar a escrita de valores dessa memÛria.
+    //: Fun√ß√£o do driver respons√°vel por realizar a escrita de valores dessa mem√≥ria.
     property MemWriteFunction:Cardinal read PWriteFunction;
-    //: N˙mero tentivas de leitura/escrita dessa memÛria.
+    //: N√∫mero tentivas de leitura/escrita dessa mem√≥ria.
     property Retries:Cardinal read PRetries;
-    //: Tempo de varredura (atualizaÁ„o) dessa memÛria em milisegundos.
+    //: Tempo de varredura (atualiza√ß√£o) dessa mem√≥ria em milisegundos.
     property RefreshTime:TRefreshTime read PScanTime;
-    //: N˙mero de memÛrias que ser„o mapeadas, se aplic·vel.
+    //: N√∫mero de mem√≥rias que ser√£o mapeadas, se aplic√°vel.
     property Size:Cardinal read PSize;
-    //: EndereÁo longo (texto), se aplic·vel ao driver.
+    //: Endere√ßo longo (texto), se aplic√°vel ao driver.
     property LongAddress:String read PPath;
 
     //: Evento chamado quando uma leitura do tag tem exito.
@@ -169,16 +169,16 @@ type
     property OnWriteOk:TNotifyEvent     read POnWriteOk      write POnWriteOk;
     //: Evento chamado quando uma escrita do tag falha.
     property OnWriteFail:TNotifyEvent   read POnWriteFail    write POnWriteFail;
-    //: Evento chamado quando o valor do tag sofre alguma mudanÁa.
+    //: Evento chamado quando o valor do tag sofre alguma mudan√ßaW.
     property OnValueChange:TNotifyEvent read POnValueChange  write POnValueChange;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
-    //: Adiciona um conjunto de notificaÁ„o de alterac„o para o tag.
+    //: Adiciona um conjunto de notifica√ß√£o de altera√ß√£o para o tag.
     procedure AddCallBacks(ITag:IHMITagInterface);
-    //: Remove um conjunto de notificaÁ„o de mundanÁas do tag.
+    //: Remove um conjunto de notifica√ß√£o de mudan√ßas do tag.
     procedure RemoveCallBacks(ITag:IHMITagInterface);
   end;
 
@@ -215,11 +215,9 @@ begin
 end;
 
 procedure TTag.AddCallBacks(ITag:IHMITagInterface);
-//var
-//  c:integer;
 begin
   if (ITag<>nil) and ((ITag as IHMITagInterface)=nil) then
-    raise Exception.Create('Interface invalida!');
+    raise Exception.Create('Interface inv√°lida!');
   
   inc(PChangeCallBackCount);
   SetLength(PChangeCallBacks, PChangeCallBackCount);

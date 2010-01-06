@@ -24,20 +24,20 @@ type
   TArrayOfObject = array of TObject;
 
   {:
-  Enumera todos os possÌveis resultados de um pedido de leitura/escrita de um
+  Enumera todos os poss√≠veis resultados de um pedido de leitura/escrita de um
   tag para um driver de protocolo (TProtocolDriver).
   
   @value(ioDriverError            Erro interno do driver.)
-  @value(ioCommError              Erro de comunicaÁ„o.)
+  @value(ioCommError              Erro de comunica√ß√£o.)
   @value(ioOk                     Comando com sucesso.)
-  @value(ioTimeout                Timeout de comunicaÁ„o.)
-  @value(ioIllegalFunction        FunÁ„o de IO inv·lida.)
-  @value(ioIllegalRegAddress      O endereco da memÛria È inv·lido.)
-  @value(ioIllegalValue           O valor È inv·lido.)
+  @value(ioTimeout                Timeout de comunica√ß√£o.)
+  @value(ioIllegalFunction        Fun√ß√£o de IO inv√°lida.)
+  @value(ioIllegalRegAddress      O endereco da mem√≥ria √© inv√°lido.)
+  @value(ioIllegalValue           O valor √© inv√°lido.)
   @value(ioPLCError               Erro no equipamento.)
   @value(ioTagError               Erro interno do Tag.)
   @value(ioNullDriver             Tag SEM DRIVER.)
-  @value(ioIllegalStationAddress  EndereÁo do equipamento È inv·lido.)
+  @value(ioIllegalStationAddress  Endere√ßo do equipamento √© inv√°lido.)
   }
   TProtocolIOResult = (ioNone, ioDriverError, ioCommError, ioOk, ioTimeOut,
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
@@ -45,7 +45,7 @@ type
                        ioIllegalStationAddress);
 
   {:
-  Enumera os tipos de alteraÁıes que um tag pode sofrer. Usado internamente
+  Enumera os tipos de altera√ß√µes que um tag pode sofrer. Usado internamente
   pelos tags e drivers de protocolos (TProtocolDriver).
   
   @value(tcPLCHack           O tag teve a propriedade PLCHack alterada.)
@@ -65,10 +65,10 @@ type
                  tcScanTime, tcSize, tcPath);
                  
   {:
-  Enumera os possÌveis tipos de comandos aceitos pelo driver de protocolo (TProtocolDriver).
+  Enumera os poss√≠veis tipos de comandos aceitos pelo driver de protocolo (TProtocolDriver).
   
-  @value(tcScanRead  Leitura de valor atravÈs do scan do driver de protocolo (assincrona).)
-  @value(tcScanWrite Escrita de valor atravÈs do scan do driver de protocolo (assincrona).)
+  @value(tcScanRead  Leitura de valor atrav√©s do scan do driver de protocolo (assincrona).)
+  @value(tcScanWrite Escrita de valor atrav√©s do scan do driver de protocolo (assincrona).)
   @value(tcRead      Leitura de valor direta (sincrona).)
   @value(tcWrite     Escrita de valor direta (sincrona).)
   }
@@ -76,12 +76,12 @@ type
 
   {:
   Callback chamado pelo driver de protocolo (TProtocolDriver) para retornar o
-  resultado de uma solicitaÁ„o e os respectivos valores.
+  resultado de uma solicita√ß√£o e os respectivos valores.
   @param(Values TArrayOfDouble: Array com os valores lidos/escritos.)
   @param(ValuesTimeStamp TDateTime: Data/Hora em que esses valores foram lidos/escritos.)
   @param(TagCommand TTagCommand: Tipo de comando.)
   @param(LastResult TProtocolIOResult: Resultado do driver ao processar o pedido.)
-  @param(Offset Cardinal: PosiÁ„o dentro do bloco onde os valores comeÁam.)
+  @param(Offset Cardinal: Posi√ß√£o dentro do bloco onde os valores come√ßam.)
   }
   TTagCommandCallBack = procedure(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:Integer) of object;
 
@@ -90,9 +90,9 @@ type
   processar leitura por scan.
   @member Values Valores lidos pelo ScanRead.
   @member ValuesTimestamp Data/Hora dos valores lidos.
-  @member ReadsOK N˙mero de leituras com sucesso da area de memÛria.
-  @member ReadFaults N˙mero de leituras com falha da area de memÛria.
-  @member LastQueryResult Resulado do ˙ltimo pedido de leitura.
+  @member ReadsOK N√∫mero de leituras com sucesso da area de mem√≥ria.
+  @member ReadFaults N√∫mero de leituras com falha da area de mem√≥ria.
+  @member LastQueryResult Resulado do √∫ltimo pedido de leitura.
   @member Offset Indice dentro do bloco.
   }
   TScanReadRec = record
@@ -105,9 +105,9 @@ type
   PScanReadRec = ^TScanReadRec;
 
   {:
-  Estrutura usada para notificar o driver de protocolo sobre alteraÁıes nos tags.
-  @member Tag Tag que est· sofrendo a mudanÁa.
-  @member Change Tipo de mudanÁa.
+  Estrutura usada para notificar o driver de protocolo sobre altera√ß√µes nos tags.
+  @member Tag Tag que est√° sofrendo a mudan√ßa.
+  @member Change Tipo de mundan√ßa.
   @member OldValue Valor antigo da propriedade alterada.
   @member NewValue Novo valor da proprieadade alterada.
   }
@@ -116,13 +116,13 @@ type
     Change:TChangeType;
     OldValue,NewValue:Cardinal
   end;
-  //: Ponteiro de mudanÁas de Tag.
+  //: Ponteiro de mudan√ßas de Tag.
   PTagChangeRec = ^TTagChangeRec;
 
   {:
   Estrutura usada internamente pelos drivers de protocolo (TProtocolDriver) para
-  realizar leituras e escritas por Scan. Representa a configuraÁ„o do tag que
-  est· sendo tratado.
+  realizar leituras e escritas por Scan. Representa a configura√ß√£o do tag que
+  est√° sendo tratado.
   
   @member Hack Valor da propriedade PLCHack.
   @member Slot Valor da propriedade PLCSlot.
@@ -137,7 +137,7 @@ type
   @member WriteFunction Valor da propriedade MemWriteFunction.
   @member Retries Valor da propriedade Retries.
   @member ScanTime Valor da propriedade RefreshTime.
-  @member CallBack Procedimento que ser· chamado quando o comando for completado.
+  @member CallBack Procedimento que ser√° chamado quando o comando for completado.
   }
   TTagRec = record
     Hack:Integer;
@@ -161,8 +161,8 @@ type
   {:
   Estrutura usada internamente pelos drivers de protocolo (TProtocolDriver) para
   realizar escritas por scan (assincronas).
-  @member SWID IdentificaÁ„o do comando de escrita (n˙mero ˙nico).
-  @member Tag  Estrutura que contÈm as informaÁıes do Tag que ser· escrito.
+  @member SWID Identifica√ß√£o do comando de escrita (n√∫mero √∫nico).
+  @member Tag  Estrutura que cont√©m as informa√ß√µes do Tag que ser√° escrito.
   @member ValuesToWrite Array com os valores a serem escritos.
   @member WriteResult Resultado do comando de escrita.
   @member ValueTimeStamp Data/Hora em que os valores foram escritos.
@@ -177,27 +177,27 @@ type
   PScanWriteRec = ^TScanWriteRec;
   
   {:
-  Define a funÁ„o respons·vel por executar uma escrita por Scan.
-  @param(Tag TTagRec: estrutura que contem as informaÁıes do tag que vai ser escrito.)
+  Define a fun√ß√£o respons√°vel por executar uma escrita por Scan.
+  @param(Tag TTagRec: estrutura que contem as informa√ß√µes do tag que vai ser escrito.)
   @param(values TArrayOfDouble: Array com os valores que devem ser escritos.)
-  @returns(Todos os possÌveis retornos est„o definidos em TProtocolIOResult.)
+  @returns(Todos os poss√≠veis retornos est√£o definidos em TProtocolIOResult.)
   }
   TScanWriteProc = function(const Tag:TTagRec; const values:TArrayOfDouble):TProtocolIOResult of object;
-  //: Ponteiro para uma funÁ„o de escrita por Scan.
+  //: Ponteiro para uma fun√ß√£o de escrita por Scan.
   PScanWriteProc = ^TScanWriteProc;
 
   {:
-  Define o procedimento respons·vel por executar leituras por Scan.
-  @param(Sender TObject: thread do driver que est· realizando o scan..)
+  Define o procedimento respons√°vel por executar leituras por Scan.
+  @param(Sender TObject: thread do driver que est√° realizando o scan.)
   @param(Sleep Integer: informa ao driver se ele deve dormir por um tempo, a fim
                         de liberar processador.)
   }
   TScanReadProc = procedure(Sender:TObject; var NeedSleep:Integer) of object;
 
   {:
-  Define o procedimento respons·vel por buscar os valores de um tag.
-  @param(Tag TTagRec: estrutura que contem as informaÁıes do tag que vai ser escrito.)
-  @param(values TArrayOfDouble: Array onde ser„o retornados os valores do tag.)
+  Define o procedimento respons√°vel por buscar os valores de um tag.
+  @param(Tag TTagRec: estrutura que contem as informa√ß√µes do tag que vai ser escrito.)
+  @param(values TArrayOfDouble: Array onde ser√£o retornados os valores do tag.)
   }
   TGetValues = procedure(const Tag:TTagRec; var values:TScanReadRec) of object;
   
@@ -213,7 +213,7 @@ type
     property  ValueTimestamp:TDatetime read GetValueTimestamp;
   end;
 
-  //: Interface de tags numÈricos.
+  //: Interface de tags num√©ricos.
   ITagNumeric = interface(ITagInterface)
     ['{F15D0CCC-7C97-4611-A7F4-AD1BEAFA2C96}']
     function  GetValue:Double;
@@ -241,13 +241,13 @@ const
   //: Constante de mensagem para remover um tag do scan.
   PSM_DELTAG       =  201;
 
-  //: Constante de mensagem para sinalizar mudanÁas nas proprieadades do tag.
+  //: Constante de mensagem para sinalizar mudan√ßas nas proprieadades do tag.
   PSM_TAGCHANGE    =  202;
 
-  //: Constante de mensagem para suspens„o de thread sincronizada.
+  //: Constante de mensagem para suspens√£o de thread sincronizada.
   PSM_PROTSUSPEND  =  203;
 
-  //: Constante de mensagem para atualizaÁ„o de tag.
+  //: Constante de mensagem para atualiza√ß√£o de tag.
   PSM_UPDATETAG    =  204;
 
   //: Constante de mensagem para leitura de tag por scan.

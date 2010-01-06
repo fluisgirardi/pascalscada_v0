@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ExtCtrls, RTTIGrids, TAGraph, TASources, TASeries, tcp_udpport,
-  ModBusTCP, PLCTagNumber, PLCBlock, HMILabel, HMIUpDown, HMIScrollBar, HMIEdit;
+  ModBusTCP, PLCTagNumber, PLCBlock, HMILabel, HMIUpDown, HMIScrollBar, HMIEdit,
+  PLCBlockElement;
 
 type
 
@@ -26,13 +27,29 @@ type
     HMIScrollBar1: THMIScrollBar;
     HMIUpDown1: THMIUpDown;
     Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
     ListChartSource1: TListChartSource;
     ModBusTCPDriver1: TModBusTCPDriver;
     Panel1: TPanel;
     PLCBlock1: TPLCBlock;
-    PLCTagNumber1: TPLCTagNumber;
-    PLCTagNumber2: TPLCTagNumber;
-    PLCTagNumber3: TPLCTagNumber;
+    PLCBlock10: TPLCBlock;
+    PLCBlock11: TPLCBlock;
+    PLCBlock12: TPLCBlock;
+    PLCBlock13: TPLCBlock;
+    PLCBlock14: TPLCBlock;
+    PLCBlock15: TPLCBlock;
+    PLCBlock2: TPLCBlock;
+    PLCBlock3: TPLCBlock;
+    PLCBlock4: TPLCBlock;
+    PLCBlock5: TPLCBlock;
+    PLCBlock6: TPLCBlock;
+    PLCBlock7: TPLCBlock;
+    PLCBlock8: TPLCBlock;
+    PLCBlock9: TPLCBlock;
+    PLCBlockElement1: TPLCBlockElement;
+    PLCBlockElement2: TPLCBlockElement;
+    PLCBlockElement3: TPLCBlockElement;
     TCP_UDPPort1: TTCP_UDPPort;
     Timer1: TTimer;
     procedure Timer1Timer(Sender: TObject);
@@ -59,6 +76,8 @@ begin
   inc(px);
   ListChartSource1.Add(px,TCP_UDPPort1.CommandsPerSecond,IntToStr(px), clGreen);
   Label1.Caption:=FormatFloat('#0',TCP_UDPPort1.CommandsPerSecond);
+  Label2.Caption:='TX: '+FormatFloat('#0.0',TCP_UDPPort1.TXBytesSecond/1024)+' kb/s';
+  Label3.Caption:='RX: '+FormatFloat('#0.0',TCP_UDPPort1.RXBytesSecond/1024)+' kb/s';
 end;
 
 initialization

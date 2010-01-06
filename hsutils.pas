@@ -1,5 +1,5 @@
 {:
-  Implementa funções uteis a todo o sistema.
+  Implementa funÃ§Ãµes uteis a todo o sistema.
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit hsutils;
@@ -17,8 +17,8 @@ uses SysUtils;
 }
 function FloatToInt64(Value:Extended):Int64;
 {:
-  Realiza o cálculo de exponenciação.
-  @returns(O resultado da exponenciação em Cardinal.)
+  Realiza o cÃ¡lculo de exponenciaÃ§Ã£o.
+  @returns(O resultado da exponenciaÃ§Ã£o em Cardinal.)
 }
 function Power(Base, Expoent:Integer):Cardinal;
 {:

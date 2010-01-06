@@ -1,5 +1,5 @@
 {:
-@abstract(Unit de coleções de zonas gráficas e de texto.)
+@abstract(Unit de coleÃ§Ãµes de zonas grÃ¡ficas e de texto.)
 @author(Fabio Luis Girardi)
 }
 unit HMIZones;
@@ -14,14 +14,14 @@ uses Classes, SysUtils, hsutils, Controls, Graphics {$IFNDEF FPC}, StdCtrls{$END
 
 type
   {:
-  Define a condição de seleção de uma zona.
+  Define a condiÃ§Ã£o de seleÃ§Ã£o de uma zona.
   }
   TZoneTypes = (ztEqual, ztRange, ztBit, ztNotEqual, ztOutOfRange, ztGreaterThan, ztLessThan);
 
   {:
-  @name é classe que implementa a base de uma zona. Estas zonas são selecionadas
+  @name Ã© classe que implementa a base de uma zona. Estas zonas sÃ£o selecionadas
   atraves do valor do tag associado ao objeto dono do conjunto de zonas aplicado
-  a expressção de seleção da zona.
+  a expressÃ£o de seleÃ§Ã£o da zona.
   @seealso(TZones)
   }
   TZone = class(TCollectionItem)
@@ -65,7 +65,7 @@ type
      }
      property Value1:Double read FValue1 write SetV1;
      {:
-     Valor secundário.
+     Valor secundÃ¡rio.
      @seealso(ZoneType)
      }
      property Value2:Double read FValue2 write SetV2;
@@ -80,28 +80,28 @@ type
      }
      property IncludeValue2:Boolean read FIncludeV2 write SetIncV2;
      {:
-     @name informa o tempo em milisegundos que a zona ficara visivel. Após esse
-     tempo chama a próxima zona definida por BlinkWith.
+     @name informa o tempo em milisegundos que a zona ficara visivel. ApÃ³s esse
+     tempo chama a prÃ³xima zona definida por BlinkWith.
      @seealso(BlinkWith)
      }
      property BlinkTime:Cardinal read FBlinkTime write SetBlinkTime;
      {:
-     @name informa qual será a proxima zona a ser chamada para gerar o efeito de
-     pisca/animação após o tempo de exibição da zona.
+     @name informa qual serÃ¡ a prÃ³xima zona a ser chamada para gerar o efeito de
+     pisca/animaÃ§Ã£o apÃ³s o tempo de exibiÃ§Ã£o da zona.
      @seealso(BlinkTime)
      }
      property BlinkWith:Integer read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
      {:
-     Se @true torna a zona padrão, exibindo-a quando nenhuma zona for selecionada
-     em função do valor do tag.
+     Se @true torna a zona padrÃ£o, exibindo-a quando nenhuma zona for selecionada
+     em funÃ§Ã£o do valor do tag.
      @seealso(ZoneType)
      }
      property DefaultZone:Boolean read FDefaultZone write SetAsDefaultZone;
      {:
-     @name define qual vai ser a condição que vai selecionar ou descartar a zona
-     em questão.
+     @name define qual vai ser a condiÃ§Ã£o que vai selecionar ou descartar a zona
+     em questÃ£o.
      
-     Seus possíveis valores são:
+     Seus possÃ­veis valores sÃ£o:
      
      @bold(ztEqual:)       O valor do @noAutoLink(Tag) tem que ser igual ao valor
                            da propriedade Value1 da zona para ela ser selecionada.
@@ -109,36 +109,36 @@ type
      @bold(ztRange:)       O valor do @noAutoLink(Tag) tem que estar entre os
                            valores das propriedades Value1 e Value2 (maior que
                            Value1 E menor que Value2) da zona para ela ser
-                           selecionada. Value1 é o limite inferior e Value2 é o
+                           selecionada. Value1 Ã© o limite inferior e Value2 Ã© o
                            limite superior. Para incluir Value1 ou Value2  (maior
                            ou igual que Value1 E menor ou igual que Value2) use
                            as propriedades IncludeValue1 e IncludeValue2.
 
      @bold(ztBit:)         Para a zona ser selecionada, o bit Valor1 da palavra
-                           formada pelo @noAutoLink(tag) tem que ters eu valor
+                           formada pelo @noAutoLink(tag) tem que ter seu valor
                            booleano igual ao da propriedade IncludeValue1.
 
      @bold(ztNotEqual:)    Para a zona ser selecionada, o valor do @noAutoLink(tag)
                            tem que ser diferente do valor presente na propriedade
                            Value1.
                           
-     @bold(ztOutOfRange:)  O valor do @noAutoLink(Tag) não pode estar entre os
+     @bold(ztOutOfRange:)  O valor do @noAutoLink(Tag) nÃ£o pode estar entre os
                            valores das propriedades Value1 e Value2 (menor que
                            Value1 OU maior que Value2) da zona para ela ser
-                           selecionada. Value1 é o limite inferior e Value2 é o
-                           limite superior da exclusão do range. Para incluir
+                           selecionada. Value1 Ã© o limite inferior e Value2 Ã© o
+                           limite superior da exclusÃ£o do range. Para incluir
                            Value1 ou Value2 (menor ou igual que Value1 OU
                            maior ou igual que Value2) use as propriedades
                            IncludeValue1 e IncludeValue2.
      
      @bold(ztGreaterThan:) Para a zona ser selecionada, o valor do @noAutoLink(tag)
                            tem que ser maior que o valor da propriedade Value1.
-                           Para incluir o valor de Value1 na condição (maior ou
+                           Para incluir o valor de Value1 na condiÃ§Ã£o (maior ou
                            igual que) coloque o valor @true IncludeValue1.
 
      @bold(ztLessThan:)    Para a zona ser selecionada, o valor do @noAutoLink(tag)
                            tem que ser menor que o valor da propriedade Value1.
-                           Para incluir o valor de Value1 na condição (menor ou
+                           Para incluir o valor de Value1 na condiÃ§Ã£o (menor ou
                            igual que) coloque o valor @true IncludeValue1.
                            
      @seealso(Value1)
@@ -152,13 +152,13 @@ type
   end;
 
   {:
-  Evento chamado quando é necessário saber o atual estado do componente.
+  Evento chamado quando Ã© necessÃ¡rio saber o atual estado do componente.
   @seealso(TZones)
   }
   TNeedCompStateEvent = procedure(var CurState:TComponentState) of object;
 
   {:
-  @name implementa a classe base para uma coleção de zonas.
+  @name implementa a classe base para uma coleÃ§Ã£o de zonas.
   @seealso(TZone)
   }
   TZones = class(TCollection)
@@ -174,15 +174,15 @@ type
      procedure NeedCurrentCompState;
   published
      {:
-     @name é o evento chamado quando há alterações de alguma propriedade de
-     alguma zona. Use esse evento para calcular qual é a nova zona escolhida
-     em função dos novos parametros.
+     @name Ã© o evento chamado quando hÃ¡ alteraÃ§Ãµes de alguma propriedade de
+     alguma zona. Use esse evento para calcular qual Ã© a nova zona escolhida
+     em funÃ§Ã£o dos novos parametros.
      }
      property OnZoneChange:TNotifyEvent read FOnZoneChange write FOnZoneChange;
      {:
-     @name é o evento chamado uma zona ou a coleção de zonas precisa saber qual
-     é o atual estado do componente. Este evento também é chamado quando o
-     método NeedCurrentCompState é chamado.
+     @name Ã© o evento chamado quando uma zona ou a coleÃ§Ã£o de zonas precisa saber
+     qual Ã© o atual estado do componente. Este evento tambÃ©m Ã© chamado quando o
+     mÃ©todo NeedCurrentCompState Ã© chamado.
      @seealso(ZonesState)
      }
      property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
@@ -190,26 +190,26 @@ type
      //: @exclude
      constructor Create(ItemClass: TCollectionItemClass);
      {:
-     Este método deve ser chamado através do método Loaded de seu componente para
-     informar as zonas que a partir de agora elas devem operar normalmente e não
-     mais no modo de carga de configurações. @bold(Se este método não for chamado
-     as zonas não vão se comportar da maneira esperada).
+     Este mÃ©todo deve ser chamado atravÃ©s do mÃ©todo Loaded de seu componente para
+     informar para as zonas que a partir de agora elas devem operar normalmente e
+     nÃ£o mais no modo de carga de configuraÃ§Ãµes. @bold(Se este mÃ©todo nÃ£o for
+     chamado as zonas nÃ£o vÃ£o se comportar da maneira esperada).
      }
      procedure Loaded;
      {:
-     @name retorna uma zona em função do valor e dos critérios das zonas
-     pertencentes a coleção.
-     @param(v Double. Valor numérico a passar pelos critérios de seleção das
+     @name retorna uma zona em funÃ§Ã£o do valor e dos critÃ©rios das zonas
+     pertencentes a coleÃ§Ã£o.
+     @param(v Double. Valor numÃ©rico a passar pelos critÃ©rios de seleÃ§Ã£o das
             zonas.)
     
-     @return(@name retorna a primeira zona que tenha seu critério de seleção
-             satisfeito, ou caso não tenha nenhuma zona escolhida, traz a zona
-             marcada como padrão. Se não for escolhida nenhuma zona e não há
-             nenhuma zona padrão retorna @nil).
+     @return(@name retorna a primeira zona que tenha seu critÃ©rio de seleÃ§Ã£o
+             satisfeito, ou caso nÃ£o tenha nenhuma zona escolhida, traz a zona
+             marcada como padrÃ£o. Se nÃ£o for escolhida nenhuma zona e nÃ£o hÃ¡
+             nenhuma zona padrÃ£o retorna @nil).
      }
      function  GetZoneFromValue(v:Double):TZone; virtual;
      {:
-     Propriedade que lê o estado do componente e o repassa para a coleção de
+     Propriedade que lÃª o estado do componente e o repassa para a coleÃ§Ã£o de
      zonas. Usa o evento OnNeedCompState para obter o atual estado.
      @seealso(OnNeedCompState)
      }
@@ -217,7 +217,7 @@ type
   end;
 
   {:
-  Implementa uma zona de texto com várias opções de formatação.
+  Implementa uma zona de texto com vÃ¡rias opÃ§Ãµes de formataÃ§Ã£o.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TTextZones)
@@ -242,7 +242,7 @@ type
     constructor Create(Collection: TCollection); override;
   published
      {:
-     Alinhamento horizontal do texto da zona. Os valores possiveis são:
+     Alinhamento horizontal do texto da zona. Os valores possiveis sÃ£o:
 
      @bold(taLeftJustify:) Alinha o texto a esquerda do componente.
      
@@ -258,7 +258,7 @@ type
      }
      property  HorizontalAlignment:TAlignment read FHorAlignment write SetHorAlignment default taLeftJustify;
      {:
-     Alinhamento vertical do texto da zona. Os valores possíveis são:
+     Alinhamento vertical do texto da zona. Os valores possÃ­veis sÃ£o:
 
      @bold(tlTop:) Alinha o texto no topo do componente.
 
@@ -283,7 +283,7 @@ type
      }
      property  Text:TCaption read FText write SetText;
      {:
-     Cor de que será exibido no fundo da zona.
+     Cor que serÃ¡ exibida no fundo da zona.
      @seealso(Font)
      @seealso(Text)
      @seealso(Transparent)
@@ -302,7 +302,7 @@ type
      }
      property  Transparent:Boolean read FTransparent write SetTransparent;
      {:
-     Fonte de formatação do texto (forma, tamanho e cor).
+     Fonte de formataÃ§Ã£o do texto (forma, tamanho e cor).
      @seealso(Color)
      @seealso(Text)
      @seealso(Transparent)
@@ -313,7 +313,7 @@ type
   end;
 
   {:
-  Coleção de zonas de texto.
+  ColeÃ§Ã£o de zonas de texto.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TTextZone)
@@ -322,12 +322,12 @@ type
   public
     //: @exclude
     constructor Create;
-    //: Adiciona uma nova zona de texto a coleção.
+    //: Adiciona uma nova zona de texto na coleÃ§Ã£o.
     function Add:TTextZone;
   end;
 
   {:
-  Implementa uma zona gráfica.
+  Implementa uma zona grÃ¡fica.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TGraphicZones)
@@ -352,33 +352,33 @@ type
   published
      {:
      Caso as propriedades FileName, ImageList e ImageIndex estejam configuradas
-     corretamente, @name permite você escolher qual é será o recurso primário.
-     Caso @true, o recurso padrão de imagens é o ImageList, caso contrário torna
-     a busca de imagens do disco como padrão.
+     corretamente, @name permite vocÃª escolher qual serÃ¡ o recurso primÃ¡rio.
+     Caso @true, o recurso padrÃ£o de imagens Ã© o ImageList, caso contrÃ¡rio torna
+     a busca de imagens do disco como padrÃ£o.
      @seealso(FileName)
      @seealso(ImageList)
      @seealso(ImageIndex)
      }
      property ImageListAsDefault:Boolean read FILIsDefault write SetILAsDefault default true;
      {:
-     Caso a zona seja escolhida, exibe a imagem apontada por esse path.
+     Caso a zona seja escolhida, exibe a imagem apontada por esse caminho (caso exista).
      @seealso(ImageListAsDefault)
      }
      property FileName:String read FFileName write SetFileName nodefault;
      {:
-     Informa qual a lista de imagens que será usada pela zona gráfica.
+     Informa qual a lista de imagens que serÃ¡ usada pela zona grÃ¡fica.
      @seealso(ImageListAsDefault)
      @seealso(ImageIndex)
      }
      property ImageList:TImageList read FImageList write SetImageList;
      {:
-     Informa qual imagem do ImageList que será exibido pela zona gráfica.
+     Informa qual imagem do ImageList que serÃ¡ exibido pela zona grÃ¡fica.
      @seealso(ImageListAsDefault)
      @seealso(ImageList)
      }
      property ImageIndex:Integer read FImageIndex write SetImageIndex stored true nodefault;
      {:
-     Informa qual cor será interpretada como transparente pela zona gráfica caso
+     Informa qual cor serÃ¡ interpretada como transparente pela zona grÃ¡fica caso
      a propriedade Transparent esteja habilitada.
      @seealso(Transparent)
      }
@@ -391,7 +391,7 @@ type
   end;
 
   {:
-  Coleção de zonas gráficas.
+  ColeÃ§Ã£o de zonas grÃ¡ficas.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TGraphicZone)
@@ -400,7 +400,7 @@ type
   public
     //: @exclude
     constructor Create;
-    //: Adiciona uma nova zona gráfica a coleção.
+    //: Adiciona uma nova zona grÃ¡fica a coleÃ§Ã£o.
     function Add:TGraphicZone;
   end;
 
@@ -432,7 +432,7 @@ begin
    if v=FValue1 then exit;
    if ZoneType=ztBit then begin
       if (v>31) or (v<0) then
-         raise Exception.Create('Para o tipo de comparação bit, o valor máximo deve ser 31 e o mínimo deve ser 0!');
+         raise Exception.Create('Para o tipo de comparaÃ§Ã£o bit, o valor mÃ¡ximo deve ser 31 e o minimo deve ser 0 (ZERO)!');
       FValue1 := Int(v);
    end else begin
       if v>FValue2 then begin
@@ -461,7 +461,7 @@ begin
 
    if (v>=0) and (v<Collection.Count) then begin
       if Collection.Items[v]=Self then
-         raise Exception.Create('A zona escolhida para piscar não pode ser ela mesma!');
+         raise Exception.Create('A zona escolhida para piscar nÃ£o pode ser ela mesma!');
       FBlinkWith:=TZone(Collection.Items[v]);
       FBlinkWith.AddReference(Self);
    end else begin
@@ -556,7 +556,7 @@ begin
    if zt=FZoneType then exit;
    
    if (zt=ztBit) and ((FValue1>31) or (FValue1<0)) then
-      raise Exception.Create('Para a comparação do tipo ztBit o valor de Value1 precisa ser maior ou igual a 0 (Zero) e menor ou igual a 31!');
+      raise Exception.Create('Para a comparaÃ§Ã£o do tipo ztBit o valor de Value1 precisa ser maior ou igual a 0 (Zero) e menor ou igual a 31!');
    FZoneType:=zt;
    NotifyChange;
 end;
@@ -688,8 +688,8 @@ begin
    Result := FComponentState;
 end;
 
-//seleciona a zona de acordo com seu critério de seleçao
-//se duas zonas responderem a um valor, ele irá retornar
+//seleciona a zona de acordo com seu critÃ©rio de seleÃ§Ã£o
+//se duas zonas responderem a um valor, ele irÃ¡ retornar
 //a primeira zona encontrada
 function TZones.GetZoneFromValue(v:Double):TZone;
 var
@@ -853,7 +853,7 @@ var
    notify:Boolean;
 begin
    if not FileExists(fn) then
-      raise exception.Create('Arquivo inválido!');
+      raise exception.Create('Arquivo inexistente!');
       
    notify := (fn<>FFileName);
    FFileName := fn;

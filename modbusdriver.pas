@@ -20,21 +20,21 @@ type
   {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  Estrutura que simula as ·reas de memÛria de um equipamento modbus escravo.
+  Estrutura que simula as √°reas de mem√≥ria de um equipamento modbus escravo.
 
-  @member Station Armazena o endereÁo do equipamento modbus.
-  @member Inputs Gerenciador de blocos de memÛrias n„o continuas que mapeia
-          as entradas do equipamento modbus.
-  @member Outputs Gerenciador de blocos de memÛrias n„o continuas que mapeia
-          as saidas do equipamento modbus.
-  @member Registers Gerenciador de blocos de memÛrias n„o continuas que mapeia
+  @member Station Armazena o endere√ßo do equipamento modbus.
+  @member Inputs Gerenciador de blocos de mem√≥rias n√£o continuas que mapeia
+          as entradas digitais do equipamento modbus.
+  @member Outputs Gerenciador de blocos de mem√≥rias n√£o continuas que mapeia
+          as saidas digitais do equipamento modbus.
+  @member Registers Gerenciador de blocos de mem√≥rias n√£o continuas que mapeia
           as registradores do equipamento modbus.
-  @member AnalogReg Gerenciador de blocos de memÛrias n„o continuas que mapeia
-          as entradas analÛgicas do equipamento modbus.
-  @member Status07Value Guarda o valor retornado pela funÁ„o 07 do ModBus.
-  @member Status07TimeStamp Guarda a data/hora do status retornado pela funÁ„o
+  @member AnalogReg Gerenciador de blocos de mem√≥rias n√£o continuas que mapeia
+          as entradas anal√≥gicas do equipamento modbus.
+  @member Status07Value Guarda o valor retornado pela fun√ß√£o 07 do ModBus.
+  @member Status07TimeStamp Guarda a data/hora do status retornado pela fun√ß√£o
           07 do ModBus.
-  @member Status07LastError Guarda o status do driver ao executar a funÁ„o
+  @member Status07LastError Guarda o status do driver ao executar a fun√ß√£o
           07 do ModBus.
   }
   TModBusPLC = record
@@ -53,35 +53,35 @@ type
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
   Driver que implementa a base do protocolo ModBus. Trabalha independentemente do
-  driver de porta (camadas abaixo da camada de aplicaÁ„o).
+  driver de porta (camadas abaixo da camada de aplica√ß√£o.)
 
-  Para configurar um tag para usar o ModBus, È necess·rio configurar as
-  seguintes propriedade do tag:
+  Para configurar um tag para usar o ModBus, √© necess√°rio configurar as
+  seguintes propriedades do tag:
 
   @unorderedList(
-    @item(@bold(PLCStation): EndereÁo do equipamento modbus.)
-    @item(@bold(MemAddress): EndereÁo da entrada/saida/registrador que se deseja
-          lÍr/escrever.)
-    @item(@bold(MemReadFuntion): FunÁ„o que ser· usada para ler o tag. Veja
+    @item(@bold(PLCStation): Endere√ßo do equipamento modbus.)
+    @item(@bold(MemAddress): Endere√ßo da entrada/saida/registrador que se deseja
+          l√™r/escrever.)
+    @item(@bold(MemReadFuntion): Fun√ß√£o que ser√° usada para ler o tag. Veja
           tabela abaixo.)
-    @item(@bold(MemWriteFuntion): FunÁ„o que ser· usada para escrever valores do
+    @item(@bold(MemWriteFuntion): Fun√ß√£o que ser√° usada para escrever valores do
           tag. Veja tabela abaixo.)
   )
 
-  Para as propriedades MemReadFunction e MemWriteFunction s„o aceitos os seguintes
-  valores de acordo com a ·rea de memÛria desejada:
+  Para as propriedades MemReadFunction e MemWriteFunction s√£o aceitos os seguintes
+  valores de acordo com a √°rea de mem√≥ria desejada:
 
   @table(
-    @rowHead( @cell(¡rea desejada)       @cell(MemReadFunction) @cell(MemReadFunction) )
+    @rowHead( @cell(√Årea desejada)       @cell(MemReadFunction) @cell(MemReadFunction) )
     @row(     @cell(Entradas digitais)   @cell(2)               @cell(0) )
     @row(     @cell(Saidas digitais)     @cell(1)               @cell(5 (simples), 15 (bloco)) )
     @row(     @cell(Registradores)       @cell(3)               @cell(6 (simples), 16 (bloco)) )
-    @row(     @cell(Entradas analÛgicas) @cell(4)               @cell(0) )
+    @row(     @cell(Entradas anal√≥gicas) @cell(4)               @cell(0) )
     @row(     @cell(Status equipamento)  @cell(7)               @cell(0) )
   )
 
-  Esta tabela È apenas uma suget„o correta dos parametros para cada ·rea de dados.
-  VocÍ pode sem problemas configura um tag dessa maneira:
+  Esta tabela √© apenas uma sugest√£o correta dos parametros para cada √°rea de dados.
+  Voc√™ pode sem problemas configurar um tag dessa maneira:
 
   @unorderedList(
     @item(@bold(MemAddress): 0;)
@@ -89,15 +89,15 @@ type
     @item(@bold(MemWriteFuntion): 5;)
   )
 
-  O que ir· acontecer È que quando o tag for lido seu valor tem origem da
-  entrada n˙mero 0, mas quando for escrito este tag ir· ligar/desligar
+  O que vai acontecer √© que quando o tag for lido seu valor tem origem da
+  entrada n√∫mero 0, mas quando for escrito este tag ir√° ligar/desligar
   a saida 0 (depende do valor escrito para ligar/desligar);
 
-  @bold(Quando for usado um valor de escrita simples(funÁıes 5 e 6) em um tag
-  bloco, e todo o bloco for escrito de uma ˙nica vez, o driver far· uma emulaÁ„o
-  escrevendo elemento a elemento usando a funÁ„o definida, mas n„o È recomendado.
+  @bold(Quando for usado um valor de escrita simples(fun√ß√µes 5 e 6) em um tag
+  bloco, e todo o bloco for escrito de uma √∫nica vez, o driver far√° uma emula√ß√£o
+  escrevendo elemento a elemento usando a fun√ß√£o definida, mas n√£o √© recomendado.
 
-  … necess·rio que vocÍ conheÁa as funÁıes ModBus que seu equipamento suporta.)
+  √â necess√°rio que voc√™ conhe√ßa as fun√ß√µes ModBus que seu equipamento suporta.)
 
   @seealso(TModBusRTUDriver)
   @seealso(TModBusTCPDriver)
@@ -230,7 +230,7 @@ var
   found:boolean;
   plc:integer;
 begin
-  //Recupera as informaÁıes do tag;
+  //Recupera as informa√ß√µes do tag;
   station:=0;
   mem:=0;
   size:=0;
@@ -240,7 +240,7 @@ begin
   found := GetTagProperts(TagObj,station,mem,size,memtype,scantime);
 
   if found then
-    //se o endereco do plc esta numa faixa v·lida procura nos blocos de memÛria
+    //se o endereco do plc esta numa faixa v√°lida procura nos blocos de mem√≥ria.
     if station in [1..247] then begin
       found := false;
       for plc:=0 to High(PModbusPLC) do
@@ -248,7 +248,7 @@ begin
           found := true;
           break;
         end;
-      //precisa dizer mais??? se nao encontrou o plc, adiciona!!
+      //se nao encontrou o plc, adiciona!
       if not found then begin
         plc:=length(PModbusPLC);
         SetLength(PModbusPLC,plc+1);
@@ -287,7 +287,7 @@ var
   found:boolean;
   plc:Integer;
 begin
-  //Recupera as informaÁıes do tag;
+  //Recupera as informa√ß√µes do tag;
   station:=0;
   mem:=0;
   size:=0;
@@ -296,7 +296,7 @@ begin
   found := GetTagProperts(TagObj,station,mem,size,memtype,scantime);
 
   if found then
-    //se o endereco do plc esta numa faixa v·lida procura nos blocos de memÛria
+    //se o endereco do plc esta numa faixa v√°lida procura nos blocos de mem√≥ria.
     if station in [1..255] then begin
       found := false;
       for plc:=0 to High(PModbusPLC) do
@@ -328,7 +328,7 @@ var
   found:boolean;
   plc:Integer;
 begin
-  //Recupera as informaÁıes do tag;
+  //Recupera as informa√ß√µes do tag;
   station:=0;
   mem:=0;
   size:=0;
@@ -347,7 +347,7 @@ begin
           break;
         end;
 
-      //se essa faixa de enderecos ja estava associada a um plc
+      //se essa faixa de enderecos j√° estava associada a um plc
       //remove do plc antigo antes de registrar com o novo plc
       if found then begin
         case memtype of
@@ -361,7 +361,7 @@ begin
             PModbusPLC[plc].AnalogReg.RemoveAddress(mem,size,1);
         end;
 
-        //se o plc nao tem mais nenhuma memoria pra ler, elimina ele do scan;
+        //se o plc n√£o tem mais nenhuma memoria pra ler, elimina ele do scan;
         if (Length(PModbusPLC[plc].Inputs.Blocks)=0) and
            (Length(PModbusPLC[plc].OutPuts.Blocks)=0) and
            (Length(PModbusPLC[plc].Registers.Blocks)=0) then begin
@@ -380,7 +380,7 @@ begin
           break;
         end;
 
-      //se nao encontrou, adiciona!!
+      //se nao encontrou, adiciona!
       if not found then begin
         plc := Length(PModbusPLC);
         SetLength(PModbusPLC,plc+1);
@@ -472,10 +472,10 @@ begin
       end;
     end;
     tcScanTime : begin
-      //se o scantime que est· setado no tag
-      //È menor que o novo valor, sai, pq
-      //os blocos de memoria n„o aceitam valores de
-      //scan maiores que os que j· foram setados.
+      //se o scantime que est√° setado no tag
+      //√© menor que o novo valor, sai, pq
+      //os blocos de mem√≥ria n√£o aceitam valores de
+      //scan maiores que os que j√° foram setados.
       if scantime<newValue then exit;
       //procura pelo plc
       for plc:= 0 to High(PModbusPLC) do
@@ -483,7 +483,7 @@ begin
           found := true;
           break;
         end;
-      //adiciona caso encontre o plc, caso contrario do nothing :D...
+      //adiciona caso encontre o plc.
       if found then begin
         case memtype of
           1: begin
@@ -512,7 +512,7 @@ begin
           found := true;
           break;
         end;
-      //adiciona caso encontre o plc, caso contrario do nothing :D...
+      //adiciona caso encontre o plc
       if found then begin
         case memtype of
           1: begin
@@ -559,7 +559,7 @@ begin
 
 
   //retorna o tamanho em bits dos registradores lidos/escritos por
-  //cada tipo de funÁ„o de leitura/escrita
+  //cada tipo de fun√ß√£o de leitura/escrita
   case FunctionCode of
     1,2,5,15:
       Result := 1;

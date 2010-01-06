@@ -1,5 +1,5 @@
 {:
-  @abstract(ImplementaÁ„o para Tags String.)
+  @abstract(Implementa√ß√£o para Tags String.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
 unit PLCString;
@@ -18,15 +18,15 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Define os possÌveis tipos de strings.
+  Define os poss√≠veis tipos de strings.
   @value(stSIEMENS String no formato SIEMENS, onde os dois primeiros bytes da
-  cadeia informam o tamanho m·ximo e quantos bytes desse tamanho j· foram usados.)
-  @value(stC A string sÛ termina quando o cÛdigo ASCII 0 È encontrado.)
+  cadeia informam o tamanho m√°ximo e quantos bytes desse tamanho j√° foram usados.)
+  @value(stC A string s√≥ termina quando o c√≥digo ASCII 0 √© encontrado.)
   }
   TPLCStringTypes = (stSIEMENS, stC);
 
   {:
-  @abstract(Tag de comunicaÁ„o em formato String.)
+  @abstract(Tag de comunica√ß√£o em formato String.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
   }
   TPLCString = class(TTagBlock, ITagInterface, ITagString)
@@ -81,10 +81,10 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
-    //: LÍ/escreve uma string do equipamento de modo assincrono.
+    //: L√™/escreve uma string do equipamento de modo assincrono.
     property Value:String read PValue write SetValue;
   published
-    //: Quantidade m·xima de caracteres da string.
+    //: Quantidade m√°xima de caracteres da string.
     property StringSize:Cardinal read PStringSize write SetStringSize;
     {:
     Tipo da String.
@@ -171,7 +171,7 @@ begin
              strlen := min(strlen,ValueAux);
            end else begin
              Result := Result + char(ValueAux);
-             //se alcanÁou o tamanho da string.
+             //se alcan√ßou o tamanho da string.
              if Length(Result)>=strlen then
                exit;
            end;
@@ -486,7 +486,7 @@ end;
 procedure TPLCString.SetStringSize(size:Cardinal);
 begin
    if size>255 then
-     raise Exception.Create('Tamanho m·ximo da string fora dos limites!');
+     raise Exception.Create('Tamanho m√°ximo da string fora dos limites!');
    PStringSize := size;
    SetBlockSize(CalcBlockSize(false));
 end;

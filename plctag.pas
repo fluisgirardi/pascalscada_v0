@@ -1,5 +1,5 @@
 {:
-@abstract(Implementa a base para Tags de comunicação.)
+@abstract(Implementa a base para Tags de comunicaÃ§Ã£o.)
 @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
 unit PLCTag;
@@ -15,7 +15,7 @@ uses
 
 type
   {:
-  @abstract(Classe base para todos os tags de comunicação.)
+  @abstract(Classe base para todos os tags de comunicaÃ§Ã£o.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
   }
   TPLCTag = class(TTag)
@@ -24,91 +24,91 @@ type
   protected
     //: A escrita do tag deve ser sincrona ou assincrona
     FSyncWrites:Boolean;
-    //: Armazena o driver de protocolo usado para comunicação do tag.
+    //: Armazena o driver de protocolo usado para comunicaÃ§Ã£o do tag.
     PProtocolDriver:TProtocolDriver;
-    //: Data/Hora da última atualização do valor do tag.
+    //: Data/Hora da Ãºltima atualizaÃ§Ã£o do valor do tag.
     PValueTimeStamp:TDateTime;
-    //: Armazena o resultado da ultima leitura @bold(sincrona) realizada pelo tag.
+    //: Armazena o resultado da Ãºltima leitura @bold(sincrona) realizada pelo tag.
     PLastSyncReadCmdResult:TProtocolIOResult;
-    //: Armazena o resultado da ultima escrita sincrona realizada pelo tag.
+    //: Armazena o resultado da Ãºltima escrita sincrona realizada pelo tag.
     PLastSyncWriteCmdResult:TProtocolIOResult;
-    //: Armazena o resultado da ultima leitura @bold(assincrona) realizada pelo tag.
+    //: Armazena o resultado da Ãºltima leitura @bold(assincrona) realizada pelo tag.
     PLastASyncReadCmdResult:TProtocolIOResult;
-    //: Armazena o resultado da ultima escrita @bold(assincrona) realizada pelo tag.
+    //: Armazena o resultado da Ãºltima escrita @bold(assincrona) realizada pelo tag.
     PLastASyncWriteCmdResult:TProtocolIOResult;
 
     //: @exclude
     procedure SetGUID(v:String);
     {:
-    Habilita/Desabilita a leitura automática do tag.
+    Habilita/Desabilita a leitura automÃ¡tica do tag.
     @param(v Boolean: @true habilita, @false desabilita.)
     }
     procedure SetAutoRead(v:Boolean); virtual;
     {:
-    Habilita/Desabilita a escrita automática de velores do tag.
+    Habilita/Desabilita a escrita automÃ¡tica de valores do tag.
     @param(v Boolean: @true habilita, @false desabilita.)
     }
     procedure SetAutoWrite(v:Boolean); virtual;
     {:
-    Seta o Hack do equipamento que contem a memória sendo mapeada.
-    @param(v Cardinal. Hack do equipamento onde está a memória.)
+    Seta o Hack do equipamento que contem a memÃ³ria sendo mapeada.
+    @param(v Cardinal. Hack do equipamento onde estÃ¡ a memÃ³ria.)
     }
     procedure SetPLCHack(v:Cardinal); virtual;
     {:
-    Seta o Slot do equipamento que contem a memória sendo mapeada.
-    @param(v Cardinal. Slot do equipamento onde está a memória.)
+    Seta o Slot do equipamento que contem a memÃ³ria sendo mapeada.
+    @param(v Cardinal. Slot do equipamento onde estÃ¡ a memÃ³ria.)
     }
     procedure SetPLCSlot(v:Cardinal); virtual;
     {:
-    Seta o endereço do equipamento que contem a memória sendo mapeada.
-    @param(v Cardinal. Endereço do equipamento onde está a memória.)
+    Seta o endereÃ§o do equipamento que contem a memÃ³ria sendo mapeada.
+    @param(v Cardinal. EndereÃ§o do equipamento onde estÃ¡ a memÃ³ria.)
     }
     procedure SetPLCStation(v:Cardinal); virtual;
     {:
-    Seta o Arquivo/DB que contem a memória sendo mapeada.
-    @param(v Cardinal. Arquivo/DB que a memória mapeada pertence.)
+    Seta o Arquivo/DB que contem a memÃ³ria sendo mapeada.
+    @param(v Cardinal. Arquivo/DB que a memÃ³ria mapeada pertence.)
     }
     procedure SetMemFileDB(v:Cardinal); virtual;
     {:
-    Seta o endereço da memória sendo mapeada.
-    @param(v Cardinal. Endereço da memória sendo mapeada.)
+    Seta o endereÃ§o da memÃ³ria sendo mapeada.
+    @param(v Cardinal. EndereÃ§o da memÃ³ria sendo mapeada.)
     }
     procedure SetMemAddress(v:Cardinal); virtual;
     {:
-    Seta o sub-endereço da memória sendo mapeada.
-    @param(v Cardinal. Sub-endereço da memória sendo mapeada.)
+    Seta o sub-endereÃ§o da memÃ³ria sendo mapeada.
+    @param(v Cardinal. Sub-endereÃ§o da memÃ³ria sendo mapeada.)
     }
     procedure SetMemSubElement(v:Cardinal); virtual;
     {:
-    Seta o função do driver para leitura da memória.
-    @param(v Cardinal. Função do driver usada para leitura da memória.)
+    Seta o funÃ§Ã£o do driver para leitura da memÃ³ria.
+    @param(v Cardinal. FunÃ§Ã£o do driver usada para leitura da memÃ³ria.)
     }
     procedure SetMemReadFunction(v:Cardinal); virtual;
     {:
-    Seta o função do driver para escrita de valores da memória.
-    @param(v Cardinal. Função do driver usada para escrita de valores da memória.)
+    Seta o funÃ§Ã£o do driver para escrita de valores da memÃ³ria.
+    @param(v Cardinal. FunÃ§Ã£o do driver usada para escrita de valores da memÃ³ria.)
     }
     procedure SetMemWriteFunction(v:Cardinal); virtual;
     {:
-    Seta o endereco longo (texto) do tag.
-    @param(v String. Endereço longo (texto) do tag.)
+    Seta o endereÃ§o longo (texto) do tag.
+    @param(v String. EndereÃ§o longo (texto) do tag.)
     }
     procedure SetPath(v:String); virtual;
     {:
-    Seta o tempo de varredura (atualização) da memória em milisegundos.
-    @param(v Cardinal. Tempo em milisegundos que a memória deve ser atualizada.)
+    Seta o tempo de varredura (atualizaÃ§Ã£o) da memÃ³ria em milisegundos.
+    @param(v Cardinal. Tempo em milisegundos que a memÃ³ria deve ser atualizada.)
     }
     procedure SetRefreshTime(v:TRefreshTime); virtual;
     {:
-    Seta o driver de protocolo usado para a comunicação dessa memória.
-    @param(p TProtocolDriver. Componente de protocolo usado para comunicação do tag.)
+    Seta o driver de protocolo usado para a comunicaÃ§Ã£o dessa memÃ³ria.
+    @param(p TProtocolDriver. Componente de protocolo usado para comunicaÃ§Ã£o do tag.)
     }
     procedure SetProtocolDriver(p:TProtocolDriver); virtual;
 
-    //: Procedimento chamado pelo driver de protocolo para atualização de valores do tag.
+    //: Procedimento chamado pelo driver de protocolo para atualizaÃ§Ã£o de valores do tag.
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); virtual; abstract;
     {:
-    Compila uma estrutura com as informações do tag.
+    Compila uma estrutura com as informaÃ§Ãµes do tag.
     @seealso(TTagRec)
     }
     procedure BuildTagRec(var tr:TTagRec; const Count, OffSet:Integer);
@@ -171,7 +171,7 @@ type
     //: @seealso(TTag.LongAddress)
     property LongAddress write SetPath nodefault;
     {:
-    Driver de protocolo usado para comunicação do mapeamento de memória.
+    Driver de protocolo usado para comunicaÃ§Ã£o do mapeamento de memÃ³ria.
     @seealso(TProtocolDriver)
     }
     property ProtocolDriver:TProtocolDriver read PProtocolDriver write SetProtocolDriver;
@@ -187,7 +187,7 @@ type
     //: @exclude
     destructor Destroy; override;
     {:
-    Método chamado pelo driver de protocolo que elimina referências a ele.
+    MÃ©todo chamado pelo driver de protocolo que elimina referÃªncias a ele.
     }
     procedure RemoveDriver;
   published
@@ -196,22 +196,22 @@ type
     }
     property TagGUID:String read PGUID write SetGUID;
     {:
-    Resultado da última leitura @bold(sincrona) realizada pelo tag.
+    Resultado da Ãºltima leitura @bold(sincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
     property LastSyncReadStatus:TProtocolIOResult Read PLastSyncReadCmdResult;
     {:
-    Resultado da última escrita @bold(sincrona) realizada pelo tag.
+    Resultado da Ãºltima escrita @bold(sincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
     property LastSyncWriteStatus:TProtocolIOResult Read PLastSyncWriteCmdResult;
     {:
-    Resultado da última leitura @bold(assincrona) realizada pelo tag.
+    Resultado da Ãºltima leitura @bold(assincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
     property LastASyncReadStatus:TProtocolIOResult Read PLastASyncReadCmdResult;
     {:
-    Resultado da última escrita @bold(assincrona) realizada pelo tag.
+    Resultado da Ãºltima escrita @bold(assincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
     property LastASyncWriteStatus:TProtocolIOResult Read PLastASyncWriteCmdResult;

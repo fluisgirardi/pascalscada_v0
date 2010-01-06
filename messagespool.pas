@@ -4,10 +4,10 @@
  
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
  
- Feito para suprir a necessidade de comunicaÁ„o inter-processos (threads) de
+ Feito para suprir a necessidade de comunica√ß√£o inter-processos (threads) de
  forma independente de sistema operacional.
 
- Sua implementaÁ„o dos mÈtodos È semelhante ao sistema de mensagens do windows,
+ Sua implementa√ß√£o dos m√©todos √© semelhante ao sistema de mensagens do windows,
  porem com algumas melhorias, tais como prioridade de mensagens (mensagens que
  devem ser processadas antes de outras).
 }
@@ -29,9 +29,9 @@ type
 
   Estrutura que identifica uma mensagem.
   @member MsgID Classifica a mensagem.
-  @member lParam Ponteiro para dados (caso necess·rio).
-  @member wParam Ponteiro para dados (caso necess·rio).
-  @member Priority Identifica se È uma mensagem com alta prioridade.  
+  @member lParam Ponteiro para dados (caso necess√°rio).
+  @member wParam Ponteiro para dados (caso necess√°rio).
+  @member Priority Identifica se √© uma mensagem com alta prioridade.
   }
   TMSMsg=record
     MsgID:Cardinal;
@@ -47,7 +47,7 @@ type
 
   Estrutura usada para montar uma fila de mensagens.
   @member Msg Mensagem do elemento da fila.
-  @member NextMsg Aponta para o prÛximo elemento da fila de mensagens. Tem o valor @code(nil) caso esse elemento seja o ˙ltimo.
+  @member NextMsg Aponta para o pr√≥ximo elemento da fila de mensagens. Tem o valor @code(nil) caso esse elemento seja o √∫ltimo.
   @member PriorMsg Aponta para o elemento anterior da fila de mensagens. Tem o valor @code(nil) caso esse elemento seja o primeiro.
   }
   TMsgPkg = record
@@ -63,10 +63,10 @@ type
 
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  Classe criada para suprir a necessidade de comunicaÁ„o inter-processos (threads)
+  Classe criada para suprir a necessidade de comunica√ß√£o inter-processos (threads)
   de forma independente de sistema operacional.
 
-  Sua ImplementaÁ„o dos mÈtodos È semelhante ao sistema de mensagens do Windows,
+  Sua implementa√ß√£o √© semelhante ao sistema de mensagens do Windows,
   porem com algumas melhorias, tais como prioridade de mensagens (mensagens que
   devem ser processadas antes que outras).
   }
@@ -84,11 +84,11 @@ type
     //: Destroi um objeto de enfileiramento de mensagens.
     destructor  Destroy; override;
     {:
-    Retira uma mensagem da fila. O critÈrio de seleÁ„o È que o MsgID seja maior
+    Retira uma mensagem da fila. O crit√©rio de sele√ß√£o √© que o MsgID seja maior
     ou igual a uFilterMinMsg e menor ou igual a uFilterMaxMsg.
-    @bold(Caso a mensagem solicitada n„o esteja na fila, aguarda ela chegar.)
+    @bold(Caso a mensagem solicitada n√£o esteja na fila, aguarda ela chegar.)
 
-    @param(Msg TMsg. Vari·vel onde È retornada a mensagem da fila.)
+    @param(Msg TMsg. Vari√°vel onde √© retornada a mensagem da fila.)
     @param(uFilterMinMsg Cardinal. Filtra mensagem com MsgID maiores ou iguais aos
            valores passados nesse parametro.)
     @param(uFilterMaxMsg Cardinal. Filtra mensagem com MsgID menores ou iguais aos
@@ -105,13 +105,13 @@ type
     function  GetMessage (var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal):Boolean;
 
     {:
-    Procura uma mensagem podendo retir·-la ou n„o da fila. O critÈrio de seleÁ„o
-    È que o MsgID seja maior ou igual a uFilterMinMsg e menor ou igual a
-    uFilterMaxMsg. @bold(Caso n„o existam mensagens na fila com os critÈrios
-    informados, retorna imediatamente, ao contr·rio de GetMessage, que espera
-    uma mensagem chegar que bata com os seus critÈrios.)
+    Procura uma mensagem podendo retir√°-la ou n√£o da fila. O crit√©rio de sele√ß√£o
+    √© que o MsgID seja maior ou igual a uFilterMinMsg e menor ou igual a
+    uFilterMaxMsg. @bold(Caso n√£o existam mensagens na fila com os crit√©rios
+    informados, retorna imediatamente, ao contr√°rio de GetMessage, que espera
+    uma mensagem chegar que bata com os seus crit√©rios.)
 
-    @param(Msg TMsg. Vari·vel onde È retornada a mensagem da fila.)
+    @param(Msg TMsg. Vari√°vel onde √© retornada a mensagem da fila.)
     @param(uFilterMinMsg Cardinal. Filtra mensagem com MsgID maiores ou iguais aos
            valores passados nesse parametro.)
     @param(uFilterMaxMsg Cardinal. Filtra mensagem com MsgID menores ou iguais aos
@@ -123,7 +123,7 @@ type
           cujo o MsgID seja igual a esses dois parametros.)
 
     @return(Retorna imediatamente retornando @true caso encontre alguma mensagem
-    com os critÈrios informados ou @false caso n„o encontre nenhuma mensagem.) 
+    com os crit√©rios informados ou @false caso n√£o encontre nenhuma mensagem.)
 
     @seealso(GetMessage)
     @seealso(PostMessage)
@@ -133,11 +133,11 @@ type
     {:
     Insere uma mensagem na Fila.
 
-    @param(MsgID Cardinal. N˙mero de classificaÁ„o da mensagem.)
+    @param(MsgID Cardinal. N√∫mero de classifica√ß√£o da mensagem.)
     @param(wParam Pointer Ponteiro de dados.)
     @param(lParam Pointer Ponteiro de dados.)
     @param(Priority Boolean. @true se a mensagem encontrada deve ser colocada no
-           inicio da fila (Com Prioridade).)
+           in√≠cio da fila (Com Prioridade).)
 
     @seealso(GetMessage)
     @seealso(PeekMessage)
@@ -186,7 +186,7 @@ function TMessageSpool.GetMessage(var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:C
 begin
   if FMsgCount=0 then begin
     FHasMsg.ResetEvent;
-    //espera atÈ que uma mensagem chegue;
+    //espera at√© que uma mensagem chegue;
     while FHasMsg.WaitFor($FFFFFFFF)<>wrSignaled do ;
     Result := PeekMessage(Msg,uFilterMinMsg,uFilterMaxMsg,true);
   end else
@@ -221,17 +221,17 @@ begin
   
   if found then begin
     Msg := curmsg^.Msg;
-    //se a mensagens encontrada È a primeira,
-    //diz q a prÛxima msg È a primeira
+    //se a mensagens encontrada √© a primeira,
+    //diz q a pr√≥xima msg √© a primeira.
     if Remove and (curmsg = FirstMessage) then
       FirstMessage := curmsg^.NextMsg;
 
-    //se a mensagens encontrada È a ultima,
-    //diz q a msg anterior È a ultima
+    //se a mensagen encontrada √© a √∫ltima
+    //diz q a msg anterior √© a √∫ltima.
     if Remove and (curmsg = LastMsg) then
       LastMsg := curmsg^.PriorMsg;
 
-    //se a mensagem encontrada È a primeira normal
+    //se a mensagem encontrada √© a primeira normal
     //reaponta mensagens
     if Remove and (curmsg = NormalMsgs) then begin
       NormalMsgs := curmsg^.NextMsg;
@@ -245,13 +245,13 @@ begin
       aux^.NextMsg := curmsg^.NextMsg
     end;
 
-    //se existem mensagens apÛs essa msg
+    //se existem mensagens ap√≥s essa msg
     if Remove and (curmsg^.NextMsg<>nil) then begin
       aux := curmsg^.NextMsg;
       aux^.PriorMsg := curmsg^.PriorMsg
     end;
 
-    //libera a memÛria usada pela mensagem
+    //libera a mem√≥ria usada pela mensagem
     //caso a ordem seja para remover...
     if Remove then begin
       Dispose(curmsg);
@@ -268,14 +268,14 @@ var
   msg, aux:PMsgPkg;
   err:boolean;
 begin
-  //se esta sendo destroido o objeto, sai.
+  //se esta sendo destruido o objeto, sai.
   if FCs=nil then
      exit;
 
   //adiquire direiro sobre a fila.
   FCs.Acquire;
 
-  //cria uma mensagem na memÛria
+  //cria uma mensagem na mem√≥ria.
   err := false;
   try
      New(msg);
@@ -285,7 +285,7 @@ begin
      err:=true;
   end;
   if err then
-     raise Exception.Create('MemÛria insuficiente!');
+     raise Exception.Create('Mem√≥ria insuficiente!');
      
   msg^.Msg.MsgID := MsgID;
   msg^.Msg.lParam := lParam;
@@ -294,7 +294,7 @@ begin
   msg^.NextMsg := nil;
   msg^.PriorMsg := nil;
 
-  //se a primeira msg È nula,a fila esta vazia.
+  //se a primeira msg √© nula, a fila esta vazia.
   if FirstMessage=nil then begin
     FirstMessage := msg;
     LastMsg := msg;
@@ -303,7 +303,7 @@ begin
   end else begin
     //se existem msgs na fila.
 
-    //e se existe sÛ uma msg
+    //e se existe s√≥ uma msg
     if FirstMessage = LastMsg then begin
       FirstMessage^.NextMsg := msg;
       msg^.PriorMsg := FirstMessage;
@@ -319,7 +319,7 @@ begin
           LastMsg := msg;
         end else begin
           aux := NormalMsgs^.PriorMsg;
-          //se È nulo, È a primeira msg
+          //se √© nulo, √© a primeira msg
           if aux=nil then
             FirstMessage := msg
           else
@@ -338,7 +338,7 @@ begin
     end;
   end;
 
-  //sinaliza que h· mensagens na fila.
+  //sinaliza que h√° mensagens na fila.
   FMsgCount := FMsgCount + 1;
   FHasMsg.SetEvent;
 

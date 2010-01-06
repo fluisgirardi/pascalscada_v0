@@ -1,7 +1,7 @@
 {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  @abstract(Implementação de um tag de bloco de comunicação.)
+  @abstract(ImplementaÃ§Ã£o de um tag de bloco de comunicaÃ§Ã£o.)
 }
 unit PLCBlock;
 
@@ -18,7 +18,7 @@ type
   {:
     @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-    Tag para comunicação em blocos.
+    Tag para comunicaÃ§Ã£o em blocos.
   }
   TPLCBlock = class(TTagBlock)
   private
@@ -40,12 +40,12 @@ type
     destructor  Destroy; override;
     {:
     @name escreve assincronamente os valores atribuidos ao bloco.
-    @bold(Só tem efeito caso AutoWrite = @false.)
+    @bold(SÃ³ tem efeito caso AutoWrite = @false.)
     }
     procedure WriteByScan;
     {:
     @name escreve sincronamente os valores atribuidos ao bloco.
-    @bold(Só tem efeito caso AutoWrite = @false.)
+    @bold(SÃ³ tem efeito caso AutoWrite = @false.)
     }
     procedure WriteDirect;
 
@@ -59,9 +59,9 @@ type
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
-    //: Lê/escreve um valor puro de modo assincrono em um item do bloco.
+    //: LÃª/escreve um valor puro de modo assincrono em um item do bloco.
     property ValueRaw[index:Integer]:Double read GetValue write SetValue;
-    //: Lê/escreve valores (array) puros de modo assincrono em um item do bloco.
+    //: LÃª/escreve valores (array) puros de modo assincrono em um item do bloco.
     property ValuesRaw:TArrayOfDouble read GetValues write SetValues;
   published
     //: Tamanho de elementos do bloco.
@@ -100,14 +100,12 @@ begin
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           for c := 0 to High(Values) do begin
-             //if (c+Offset)<Length(PValues) then begin
-             notify := notify or (PValues[c+Offset]<>values[c]);
-             PValues[c+Offset]:=values[c];
-             //end;
+            notify := notify or (PValues[c+Offset]<>values[c]);
+            PValues[c+Offset]:=values[c];
           end;
           PValueTimeStamp := ValuesTimeStamp;
           if LastResult=ioOk then
-             IncCommReadOK(1);
+            IncCommReadOK(1);
         end else
           IncCommReadFaults(1);
       end;
@@ -115,12 +113,10 @@ begin
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           if LastResult=ioOk then
-             IncCommWriteOK(1);
+            IncCommWriteOK(1);
           for c := 0 to High(Values) do begin
-            //if (c+Offset)<Length(PValues) then begin
             notify := notify or (PValues[c+Offset]<>values[c]);
             PValues[c+Offset]:=values[c]
-            //end;
           end;
           PValueTimeStamp := ValuesTimeStamp;
         end else

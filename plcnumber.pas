@@ -1,5 +1,5 @@
 {:
-  @abstract(Implementa um tag PLC numérico para uso geral.)
+  @abstract(Implementa um tag PLC numÃ©rico para uso geral.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
 unit PLCNumber;
@@ -15,12 +15,12 @@ uses
 
 type
   {:
-    @abstract(Classe base para tags numéricos.)
+    @abstract(Classe base para tags numÃ©ricos.)
     @author(Fabio Luis Girardi papelhigienico@gmail.com)
   }
   TPLCNumber = class(TPLCTag)
   protected
-    //: Armazena a seqüência de escalas aplicadas a esse tag.
+    //: Armazena a sequÃªncia de escalas aplicadas a esse tag.
     PScaleProcessor:TPIPE;
     //: Armazena o valor puro (sem escalas) lido @bold(assincrono).
     PValueRaw:Double;
@@ -37,8 +37,8 @@ type
        @param(Value Double: Valor a escrever.) }
     procedure SetValueRaw(Value:Double); virtual; abstract;
     {:
-    Configura a sequencia de escalas.
-    @param(sp TPIPE: Nova seqüência de escalas.)
+    Configura a sequÃªncia de escalas.
+    @param(sp TPIPE: Nova sequÃªncia de escalas.)
     @seealso(ScaleProcessor)
     }
     procedure SetScaleProcessor(sp:TPIPE);
@@ -48,16 +48,16 @@ type
 
     procedure Write; overload; virtual;
     procedure ScanWrite; overload; virtual;
-    //: Remove a seqüência de processamento de escalas.
+    //: Remove a sequÃªncia de processamento de escalas.
     procedure RemoveScaleProcessor;
     //: Valor do tag escalonado (processado) @bold(assincrono).
     property Value:Double read GetValue write SetValue;
     //: Valor do tag puro @bold(assincrono).
     property ValueRaw:Double read PValueRaw write SetValueRaw;
   published
-    //: Seqüência de escalas do Tag.
+    //: SequÃªncia de escalas do Tag.
     property ScaleProcessor:TPIPE  read PScaleProcessor write SetScaleProcessor;
-    //: Evento chamado ao ocorrer uma mudança no valor do tag.
+    //: Evento chamado ao ocorrer uma mudanÃ§a no valor do tag.
     property OnValueChange;
   end;
 

@@ -1,5 +1,5 @@
 {:
-  @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)
+  @abstract(Implementa um controle para exibiÃ§Ã£o de valores numÃ©ricos em forma de barra de progresso.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMIProgressBar;
@@ -16,17 +16,17 @@ uses
 
 type
   {:
-  Implementa um controle para exibição de valores numéricos em forma de barra de
+  Implementa um controle para exibiÃ§Ã£o de valores numÃ©ricos em forma de barra de
   progresso.
   
-  @bold(Para maiores informações consulte a documentação da classe TProgressBar
+  @bold(Para maiores informaÃ§Ãµes consulte a documentaÃ§Ã£o da classe TProgressBar
   de seu ambiente de desenvolvimento.)
   }
   THMIProgressBar = class(TProgressBar, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FIsEnabled:Boolean;
-    procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
+    procedure RefreshHMISecurity;                      //alquem efetuou login e Ã© necessario verificar autorizaÃ§Ãµes.
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
@@ -47,12 +47,12 @@ type
     //: @exclude
     destructor Destroy; override;
   published
-    //: Informa a posição (valor do tag) atual.
+    //: Informa a posiÃ§Ã£o (valor do tag) atual.
     property Position:Double read GetPosition;
     //: @exclude
     property Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
     {:
-    Tag numérico que será usado pelo controle.
+    Tag numÃ©rico que serÃ¡ usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
@@ -84,7 +84,7 @@ procedure THMIProgressBar.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if (t<>nil) and ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numéricos são aceitos!');
+     raise Exception.Create('Somente tags numÃ©ricos sÃ£o aceitos!');
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin

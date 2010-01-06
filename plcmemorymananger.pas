@@ -1,5 +1,5 @@
 {:
-  @abstract(Classes para organização de blocos de memória de um CLP.)
+  @abstract(Classes para organizaÃ§Ã£o de blocos de memÃ³ria de um CLP.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
 unit PLCMemoryMananger;
@@ -26,21 +26,21 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Enumera todos os possíveis tipos de dados numéricos.
-  @value(ntBinary Binário (1 bit).)
+  Enumera todos os possÃ­veis tipos de dados numÃ©ricos.
+  @value(ntBinary BinÃ¡rio (1 bit).)
   @value(ntNibble Nibble (4 bits).)
   @value(ntByte   Byte (8 bits).)
   @value(ntWord   Word (16 bits).)
   @value(ntCardinal  Cardinal (32 bits).)
-  @value(ntFloat  Ponto flutuate (32 ou 64 bits).)
+  @value(ntFloat  Ponto flutuate (atÃ© 64 bits de precisÃ£o).)
   }
   TNumType = (ntBinary, ntNibble, ntBYTE, ntWORD, ntCardinal, ntFloat);
 
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Estrutura usada para cadastrar cada endereço único dentro do gerenciador de
-  blocos de memória
+  Estrutura usada para cadastrar cada endereÃ§o Ãºnico dentro do gerenciador de
+  blocos de memÃ³ria.
   }
   TMemoryRec = record
     Address, Count, MinScan:Integer;
@@ -49,11 +49,11 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Classe que representa um faixa de endereços de memória continuos (bloco).
+  Classe que representa um faixa de endereÃ§os de memÃ³ria continuos (bloco).
   
-  @bold(É altamente recomendável você que está desenvolvendo um driver de
-  comunicação, utilizar a classe TPLCMemoryManager, que implementa blocos de
-  memória não-continuas. Essa classe faz uso de @name e todos os seus descendentes.)
+  @bold(Ã‰ altamente recomendÃ¡vel a vocÃª que estÃ¡ desenvolvendo um driver de
+  comunicaÃ§Ã£o, utilizar a classe TPLCMemoryManager, que implementa blocos de
+  memÃ³ria nÃ£o-continuas. Essa classe faz uso de @name e todos os seus descendentes.)
   
   @seealso(TPLCMemoryManager)
   }
@@ -76,23 +76,23 @@ type
   public
     LastError:TProtocolIOResult;
     {:
-    Cria um bloco de memórias continuas.
-    @param(AdrStart Cardinal. Endereço inicial do bloco.)
-    @param(AdrEnd Cardinal. Endereço final do bloco.)
-    AdrStart e AdrEnd devem ser passados na menor unidade de memória disponível
-    no CLP. Um exemplo q citar é os CLP´s da Siemens que utilizam a mesma area
-    de memória para bytes, words e Cardinal. entao para adicionar a DW0, é necessário
-    passar 0 em AdrStart e 3 em AdrEnd, totalizando 4 bytes (que é a menor
-    tamanho de palavra disponível no CLP) que são VB0, VB1, VB2, VB3.
+    Cria um bloco de memÃ³rias continuas.
+    @param(AdrStart Cardinal. EndereÃ§o inicial do bloco.)
+    @param(AdrEnd Cardinal. EndereÃ§o final do bloco.)
+    AdrStart e AdrEnd devem ser passados na menor unidade de memÃ³ria disponÃ­vel
+    no CLP. Um exemplo sÃ£o os CLPs da Siemens que utilizam a mesma area
+    de memÃ³ria para bytes, words e DWORDs. entÃ£o para adicionar a DW0, Ã© necessÃ¡rio
+    passar 0 em AdrStart e 3 em AdrEnd, totalizando 4 bytes (que Ã© o menor
+    tamanho de palavra disponÃ­vel no CLP) que sÃ£o VB0, VB1, VB2, VB3.
     }
     constructor Create(AdrStart,AdrEnd:Cardinal); virtual;
     {:
-    Lê/escreve o valor da memória especificada por Index no bloco.
+    LÃª/escreve o valor da memÃ³ria especificada por Index no bloco.
     }
     property Values[Index:Integer]:Double read GetValue write SetValue;
     {:
-    Use @name para dizer que os dados estão atualizados. Utilize esse método logo
-    após fazer uma leitura de seu dispositivo.
+    Use @name para dizer que os dados estÃ£o atualizados. Utilize esse mÃ©todo logo
+    apÃ³s fazer uma leitura de seu dispositivo.
     }
     procedure Updated;
     {:
@@ -101,17 +101,17 @@ type
     }
     function NeedRefresh:Boolean;
   published
-    //: Informa o endereço inicial do bloco.
+    //: Informa o endereÃ§o inicial do bloco.
     property AddressStart:Integer read FStartAddress;
-    //: Informa o endereço final do bloco.
+    //: Informa o endereÃ§o final do bloco.
     property AddressEnd:Integer read FEndAddress;
     //: Informa o tamanho do bloco.
     property Size:Integer read GetSize;
-    //: @name informa quando foi a última atualização dos dados do bloco.
+    //: @name informa quando foi a Ãºltima atualizaÃ§Ã£o dos dados do bloco.
     property LastUpdate:TDateTime read FLastUpdate write FLastUpdate;
-    //: @name diz quantos milisegundos se passaram desde a última atualização de dados.
+    //: @name diz quantos milisegundos se passaram desde a Ãºltima atualizaÃ§Ã£o de dados.
     property MilisecondsFromLastUpdate:Int64 read GetMsecLastUpdate;
-    //: Informa qual é o tempo de varredura desse bloco.
+    //: Informa qual Ã© o tempo de varredura desse bloco.
     property ScanTime:Cardinal read FMinScanTime write FMinScanTime;
     //: Informa quantas leituras de dados do dispositivo tiveram sucesso.
     property ReadSuccess:Cardinal read FReadOK write SetReadOK;
@@ -122,8 +122,8 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Classe que implementa uma área de dados binários continuas. Util para o
-  protocolo ModBus onde cada entrada/saida digital tem um endereço.
+  Classe que implementa uma Ã¡rea de dados binÃ¡rios continuas. Ãštil para o
+  protocolo ModBus onde cada entrada/saida digital tem um endereÃ§o.
   @seealso(TPLCMemoryManager)
   }
   TRegisterRangeBinary = class(TRegisterRange)
@@ -144,7 +144,7 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Classe que implementa uma área de nibbles (4 bits) continuas.
+  Classe que implementa uma Ã¡rea de nibbles (4 bits) continuas.
   @seealso(TPLCMemoryManager)
   }
   TRegisterRangeNibble = class(TRegisterRange)
@@ -165,7 +165,7 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Classe que implementa uma área de bytes (8 bits) continua.
+  Classe que implementa uma Ã¡rea de bytes (8 bits) continua.
   @seealso(TPLCMemoryManager)
   }
   TRegisterRangeByte = class(TRegisterRange)
@@ -186,7 +186,7 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Classe que implementa uma área de Words (16 bits) continua.
+  Classe que implementa uma Ã¡rea de Words (16 bits) continua.
   @seealso(TPLCMemoryManager)
   }
   TRegisterRangeWord = class(TRegisterRange)
@@ -207,7 +207,7 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Classe que implementa uma área de Cardinals (32 bits) continua.
+  Classe que implementa uma Ã¡rea de Cardinals (32 bits) continua.
   @seealso(TPLCMemoryManager)
   }
   TRegisterRangeCardinal = class(TRegisterRange)
@@ -228,7 +228,7 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  Classe que implementa uma área de palavras de ponto flutuante (32/64 bits)
+  Classe que implementa uma Ã¡rea de palavras de ponto flutuante (32/64 bits)
   continua.
   @seealso(TPLCMemoryManager)
   }
@@ -252,7 +252,7 @@ type
   {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
-  @abstract(Classe que gerência blocos de memórias não continuos (fragmentados).)
+  @abstract(Classe que gerÃªncia blocos de memÃ³rias nÃ£o continuos (fragmentados).)
   }
   TPLCMemoryManager = class
   private
@@ -269,28 +269,28 @@ type
     function  GetSize:Integer;
     function  CreateRegisterRange(adrStart,adrEnd:Integer):TRegisterRange;
   public
-    //: Blocos de memória continuos.
+    //: Blocos de memÃ³ria continuos.
     Blocks:TRegisterRangeArray;
     {:
-    Cria um gerênciador de memórias não continuas.
-    @param(memType TNumType. Informa qual é o tipo de dados que o bloco está
+    Cria um gerenciador de memÃ³rias nÃ£o continuas.
+    @param(memType TNumType. Informa qual Ã© o tipo de dados que o bloco estÃ¡
     gerenciando).
     }
     constructor Create(memType:TNumType);
-    //: Destroi o gerenciador de blocos não continuos e todos os seus recursos.
+    //: Destroi o gerenciador de blocos nÃ£o continuos e todos os seus recursos.
     destructor Destroy; override;
     {:
-    Adiciona uma ou mais memórias ao gerenciador.
-    @param(Address Cardinal. Endereço inicial do(a) memória/bloco de memória.)
-    @param(Size Cardinal. Quantidade de variáveis que estão sendo adicionadas ao bloco.)
-    @param(RegSize Cardinal. Tamanho da variável em relação a menor palavra disponível na area.)
-    @param(Scan Cardinal. Tempo de varredura da memória.)
+    Adiciona uma ou mais memÃ³rias ao gerenciador.
+    @param(Address Cardinal. EndereÃ§o inicial do intervalo de memÃ³ria(s).)
+    @param(Size Cardinal. Quantidade de variÃ¡veis que estÃ£o sendo adicionadas ao bloco.)
+    @param(RegSize Cardinal. Tamanho da variÃ¡vel em relaÃ§Ã£o a menor palavra disponÃ­vel na Ã¡rea.)
+    @param(Scan Cardinal. Tempo de varredura da memÃ³ria.)
     
     Por exemplo, para adicionar as VW0, VW2 e VW4 no Siemens (onde a menor palavra
-    é o byte) com 1200ms de scan, você chamaria:
+    Ã© o byte) com 1200ms de scan, vocÃª chamaria:
     @code(AddAddress(0,3,2,1200);)
     
-    Já nos CLP´s Scheneider (onde a menor palvra é de 16 bits), para endereçar
+    JÃ¡ nos CLPs Scheneider (onde a menor palvra Ã© de 16 bits), para endereÃ§ar
     as words W0, W1 e W2 ficaria assim:
     @code(AddAddress(0,3,1,1200);)
     
@@ -300,12 +300,12 @@ type
     }
     procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); overload;
     {:
-    Remove uma ou mais variáveis do gerenciador.
-    @param(Address Cardinal. Endereço inicial do(a) memória/bloco de memória.)
-    @param(Size Cardinal. Quantidade de variáveis que estão sendo adicionadas ao bloco.)
-    @param(RegSize Cardinal. Tamanho da variável em relação a menor palavra disponível na area.)
+    Remove uma ou mais variÃ¡veis do gerenciador.
+    @param(Address Cardinal. EndereÃ§o inicial do intervalo de memÃ³ria(s).)
+    @param(Size Cardinal. Quantidade de variÃ¡veis que estÃ£o sendo adicionadas ao bloco.)
+    @param(RegSize Cardinal. Tamanho da variÃ¡vel em relaÃ§Ã£o a menor palavra disponÃ­vel na area.)
     
-    Os parametros funcionam de maneira identica a função AddAddress.
+    Os parametros funcionam de maneira identica a funÃ§Ã£o AddAddress.
 
     @seealso(AddAddress)
     @seealso(SetValues)
@@ -313,26 +313,26 @@ type
     }
     procedure RemoveAddress(Address,Size,RegSize:Cardinal); overload;
     {:
-    @name escreve valores em um intervalo de memórias, continuas ou não.
+    @name escreve valores em um intervalo de memÃ³rias, continuas ou nÃ£o.
 
-    @param(AdrStart Cardinal. Endereço inicial.)
-    @param(Len Cardinal. Quantidade de variáveis a escrever.)
-    @param(RegSise Cardinal. Tamanho da variavel em relação ao menor tamanho de palavra.)
+    @param(AdrStart Cardinal. EndereÃ§o inicial.)
+    @param(Len Cardinal. Quantidade de variÃ¡veis a escrever.)
+    @param(RegSise Cardinal. Tamanho da variÃ¡vel em relaÃ§Ã£o ao menor tamanho de palavra.)
 
     Cada valor representa a menor palavra do bloco.
 
-    Por exemplo: supondo que você esteja escrevendo em um S7-200 da Siemens, para
-    escrever na VW0 você chamaria:
+    Por exemplo: supondo que vocÃª esteja escrevendo em um S7-200 da Siemens, para
+    escrever na VW0 vocÃª chamaria:
     
     @code(SetValues(0,1,2,[valor_vb0,valor_vb1]);)
     
-    No Siemens a menor palavra é o Byte, e uma Word são dois bytes.
+    No Siemens a menor palavra Ã© o Byte, e uma Word sÃ£o dois bytes.
     
     Mas em um CLP Schneider ficaria:
     
     @code(SetValues(0,1,1,[valor_VW0]);)
 
-    Pois o menor tamanho de palavra nesses CLP´s é 16 bits.
+    Pois o menor tamanho de palavra nesses CLPs Ã© 16 bits.
 
     @seealso(AddAddress)
     @seealso(RemoveAddress)
@@ -340,13 +340,13 @@ type
     }
     function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble):Integer;
     {:
-    @name lê valores intervalo de memórias, continuas ou não.
+    @name lÃª valores intervalo de memÃ³rias, continuas ou nÃ£o.
 
-    @param(AdrStart Cardinal. Endereço inicial.)
-    @param(Len Cardinal. Quantidade de variáveis a escrever.)
-    @param(RegSise Cardinal. Tamanho da variavel em relação ao menor tamanho de palavra.)
+    @param(AdrStart Cardinal. EndereÃ§o inicial.)
+    @param(Len Cardinal. Quantidade de variÃ¡veis a escrever.)
+    @param(RegSise Cardinal. Tamanho da variÃ¡vel em relaÃ§Ã£o ao menor tamanho de palavra.)
 
-    Cada item da array retornado representa o valor da menor palavra daquela área.
+    Cada item da array retornado representa o valor da menor palavra daquela Ã¡rea.
 
     @seealso(AddAddress)
     @seealso(RemoveAddress)
@@ -355,44 +355,42 @@ type
     }
     function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble):Integer;
     {:
-    @name escreve o status da última leitura, continuas ou não.
+    @name escreve o status da Ãºltima leitura, continuas ou nÃ£o.
 
-    @param(AdrStart Cardinal. Endereço inicial.)
-    @param(Len Cardinal. Quantidade de variáveis a escrever.)
-    @param(RegSise Cardinal. Tamanho da variavel em relação ao menor tamanho de palavra.)
-    @param(Fault TProtocolIOResult. Status da última leitura.)
-
-    Cada valor representa a menor palavra do bloco. Veja mais em SetValues.
+    @param(AdrStart Cardinal. EndereÃ§o inicial.)
+    @param(Len Cardinal. Quantidade de variÃ¡veis a escrever.)
+    @param(RegSise Cardinal. Tamanho da variÃ¡vel em relaÃ§Ã£o ao menor tamanho de palavra.)
+    @param(Fault TProtocolIOResult. Status da Ãºltima leitura.)
 
     @seealso(SetValues)
     }
     procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
   published
     {:
-    Define quantos endereços podem ficar sem serem usados para manter a
-    continuidade de um bloco. Valores grandes formam um pequeno grupo de grandes
-    blocos, enquanto valores pequenos formam muitos grupos de pequenos blocos.
+    Define quantos endereÃ§os podem ficar sem serem usados para manter a
+    continuidade de um bloco. Valores grandes formam poucos grupos de tamanho
+    grande, enquanto valores pequenos formam muitos grupos de tamanho pequeno.
     
-    Digamos que sejam adicionados os endereços  0, 1, 3 ,4 e MaxHole=0, logo
-    serão formados dois blocos, o primeiro contendo os endereços [0, 1] e o
-    segundo os endereços [3, 4].
+    Digamos que sejam adicionados os endereÃ§os 0, 1, 3 ,4 e MaxHole=0, logo
+    serÃ£o formados dois blocos, o primeiro contendo os endereÃ§os [0, 1] e o
+    segundo os endereÃ§os [3, 4].
     
-    Já se for setado MaxHole=1 será criado um único grupo com os endereços
-    [0,1,2,3,4] sendo o endereço 2 adicionado automaticamente para manter a
+    JÃ¡ se for setado MaxHole=1 serÃ¡ criado um Ãºnico grupo com os endereÃ§os
+    [0,1,2,3,4] sendo o endereÃ§o 2 adicionado automaticamente para manter a
     continuidade do bloco.
     }
     property MaxHole:Integer read FMaxHole write SetHoleSize;
     {:
-    Define qual o tamanho máximo de cada bloco continuo. Se não há limite de
+    Define qual o tamanho mÃ¡ximo de cada bloco continuo. Se nÃ£o hÃ¡ limite de
     tamanho, use -1 nessa propriedade.
     
-    Supondo que foram adicionados os endereços [0,1,2,3,4] e @name=-1 será criado
-    um único bloco com esses mesmos endereços. Supondo que @name=3 serão criados
-    dois grupos, o primeiro com os endereços [0,1,2] e o segundo com os endereços
+    Supondo que foram adicionados os endereÃ§os [0,1,2,3,4] e @name=-1 serÃ¡ criado
+    um Ãºnico bloco com esses mesmos endereÃ§os. Supondo que @name=3 serÃ£o criados
+    dois grupos, o primeiro com os endereÃ§os [0,1,2] e o segundo com os endereÃ§os
     [3,4].
     }
     property MaxBlockItems:Integer read FMaxBlockSize write SetBlockSize;
-    //: Retorna a quantidade total de memórias gerenciadas pelo bloco.
+    //: Retorna a quantidade total de memÃ³rias gerenciadas pelo bloco.
     property Size:Integer read GetSize;
   end;
 
@@ -444,7 +442,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeBinary
+//             inicio da implementacao do TRegisterRangeBinary
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TRegisterRangeBinary.Create(AdrStart,AdrEnd:Cardinal);
@@ -473,7 +471,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeNibble
+//             inicio das implementacao do TRegisterRangeNibble
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TRegisterRangeNibble.Create(AdrStart,AdrEnd:Cardinal);
@@ -499,7 +497,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeByte
+//             inicio da implementacao do TRegisterRangeByte
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TRegisterRangeByte.Create(AdrStart,AdrEnd:Cardinal);
@@ -525,7 +523,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeWord
+//             inicio da implementacao do TRegisterRangeWord
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TRegisterRangeWord.Create(AdrStart,AdrEnd:Cardinal);
@@ -555,7 +553,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeCardinal
+//             inicio da implementacao do TRegisterRangeCardinal
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TRegisterRangeCardinal.Create(AdrStart,AdrEnd:Cardinal);
@@ -581,7 +579,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TRegisterRangeCardinal
+//             inicio da implementacao do TRegisterRangeCardinal
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TRegisterRangeFloat.Create(AdrStart,AdrEnd:Cardinal);
@@ -607,15 +605,15 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio das declarações do TPLCMemoryManager
+//             inicio da implementacao do TPLCMemoryManager
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TPLCMemoryManager.Create(memType:TNumType);
 begin
   FCriticalSection := TCriticalSection.Create;
   FMemType := memType;
-  FMaxHole := 5; //o bloco continua caso de endereços seja <= 5
-  FMaxBlockSize := 0; //o bloco tem seu tamanho restrito a x, 0 = sem restrição!
+  FMaxHole := 5; //o bloco continua caso de enderecos seja <= 5
+  FMaxBlockSize := 0; //o bloco tem seu tamanho restrito a x, 0 = sem restricao!
 end;
 
 destructor TPLCMemoryManager.Destroy;
@@ -677,16 +675,10 @@ begin
       h:=Length(FAddress);
       //adiciona mais um na array
       SetLength(FAddress,h+1);
-      //se se não chegou no fim, é pq é um endereco
+      //se se nÃ£o chegou no fim, Ã© pq Ã© um endereco
       //que deve ficar no meio da lista para mante-la
       //ordenada
       if c<High(FAddress) then
-         //for h := High(FAddress) downto c+1 do begin
-         //   FAddress[h].Address := FAddress[h-1].Address;
-         //   FAddress[h].Count := FAddress[h-1].Count;
-         //   FAddress[h].MinScan := FAddress[h-1].MinScan;
-         //end;
-         //testar esse move!
          Move(FAddress[c],FAddress[c+1],(high(FAddress)-c)*sizeof(TMemoryRec));
          
       FAddress[c].Address := add;
@@ -704,10 +696,10 @@ begin
   //esse while para quando encontra o endereco desejado ou qdo acaba a lista!!
   while (c<=high(FAddress)) and (add>=FAddress[c].Address) do
     inc(c);
-  //se não encontrou cai fora...
+  //se nÃ£o encontrou cai fora...
   if (c>high(FAddress)) or (FAddress[c].Address<>Add) then exit;
   dec(FAddress[c].Count);
-  //caso zerou um endereco, é necessário remover ele da lista...
+  //caso zerou um endereco, Ã© necessÃ¡rio remover ele da lista...
   if FAddress[c].Count=0 then
     if Length(FAddress)=1 then
         SetLength(FAddress,0)
@@ -729,7 +721,7 @@ procedure TPLCMemoryManager.SetBlockSize(size:Integer);
 begin
   if size=FMaxBlockSize then exit;
   FMaxBlockSize := size;
-  RebuildBlocks; //nao mudei endereços
+  RebuildBlocks; //nao mudei enderecos.
 end;
 
 procedure TPLCMemoryManager.RebuildBlocks;
@@ -775,7 +767,7 @@ begin
       mscan := FAddress[c].MinScan;
       BlockItems := 1;
     end else begin
-      //bloco continua, adiciona novos endereços
+      //bloco continua, adiciona novos enderecos.
       adrend := FAddress[c].Address;
       BlockEnd := adrend + FMaxHole + 1;
       mscan := min(mscan, FAddress[c].MinScan);
@@ -791,8 +783,8 @@ begin
   end;
 
   //copia os dados que estavam nos blocos antigos...
-  //baseia-se em varer a array de endereços, verificar em que bloco ela estava
-  //e para que bloco o endereço foi parar...
+  //baseia-se em varer a array de enderecos, verificar em que bloco ela estava
+  //e para que bloco o endereco foi parar...
 
   for c:=0 to High(FAddress) do begin
     found := false;
@@ -802,7 +794,7 @@ begin
         break;
       end;
 
-    //se não encontrou aqui é pq o endereco foi adicionado...
+    //se nÃ£o encontrou aqui Ã© pq o endereco foi adicionado...
     if not found then continue;
 
     found := false;
@@ -812,13 +804,13 @@ begin
         break;
       end;
 
-    //se  não encontrou aqui é pq o endereco foi deletado...
+    //se nÃ£o encontrou aqui Ã© pq o endereco foi deletado...
     if not found then continue;
     BlockOldOffset := FAddress[c].Address - Blocks[c2].AddressStart;
     BlockNewOffset := FAddress[c].Address - newBlocks[c3].AddressStart;
     newBlocks[c3].Values[BlockNewOffset] := Blocks[c2].Values[BlockOldOffset];
 
-    //coloca o menor tempo de atualização para priorizar quem necessita de refresh mais urgente..
+    //coloca o menor tempo de atualizaÃ§Ã£o para priorizar quem necessita de refresh mais urgente..
     newBlocks[c3].LastUpdate := Min(newBlocks[c3].LastUpdate,Blocks[c2].LastUpdate);
   end;
   //destroi os blocos antigos
@@ -869,7 +861,7 @@ begin
   if (Size<=0) or (RegSize<=0) then
     raise Exception.Create('Tamanho necessita ser no minimo 1!');
 
-  //captura o tamanho da array de endereços...
+  //captura o tamanho da array de enderecos...
   len := length(FAddress);
 
   c:=Address;
@@ -879,7 +871,7 @@ begin
     inc(c);
   end;
 
-  //dipara o rebuild blocks, pq foram adicionados endereços
+  //dipara o rebuild blocks, pq foram adicionados enderecos
   if len<>length(FAddress) then
     RebuildBlocks;
   FCriticalSection.Leave;
@@ -902,7 +894,7 @@ begin
     RemoveAddress(c);
     inc(c);
   end;
-  //dipara o rebuild blocks, pq foram adicionados endereços
+  //dipara o rebuild blocks, pq foram adicionados enderecos
   if len<>length(FAddress) then
     RebuildBlocks;
   FCriticalSection.Leave;
@@ -972,7 +964,7 @@ var
 begin
   FCriticalSection.Enter;
   //verifica o tamanho da array de retorno
-  //ajusta conforme necessário, e zera ela;
+  //ajusta conforme necessario, e zera ela;
   if Integer(Len)>Length(Values) then begin
     SetLength(Values,Integer(Len));
     for c:=0 to High(Values) do

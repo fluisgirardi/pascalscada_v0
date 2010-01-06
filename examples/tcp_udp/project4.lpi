@@ -7,7 +7,7 @@
       <TargetFileExt Value=""/>
       <Icon Value="0"/>
       <UseXPManifest Value="True"/>
-      <ActiveEditorIndexAtStart Value="0"/>
+      <ActiveEditorIndexAtStart Value="1"/>
     </General>
     <VersionInfo>
       <ProjectVersion Value=""/>
@@ -47,9 +47,9 @@
         <Filename Value="project4.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="project4"/>
-        <CursorPos X="1" Y="16"/>
+        <CursorPos X="12" Y="7"/>
         <TopLine Value="1"/>
-        <UsageCount Value="83"/>
+        <UsageCount Value="92"/>
       </Unit0>
       <Unit1>
         <Filename Value="unit4.pas"/>
@@ -57,10 +57,10 @@
         <ComponentName Value="Form1"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit4"/>
-        <CursorPos X="66" Y="9"/>
-        <TopLine Value="1"/>
+        <CursorPos X="54" Y="74"/>
+        <TopLine Value="44"/>
         <EditorIndex Value="0"/>
-        <UsageCount Value="83"/>
+        <UsageCount Value="92"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
@@ -68,7 +68,7 @@
         <UnitName Value="tcp_udpport"/>
         <CursorPos X="35" Y="1"/>
         <TopLine Value="1"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="18"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit2>
       <Unit3>
@@ -76,21 +76,21 @@
         <UnitName Value="Forms"/>
         <CursorPos X="15" Y="1218"/>
         <TopLine Value="1200"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="5"/>
       </Unit3>
       <Unit4>
         <Filename Value="../../../../lazarus/lcl/lclproc.pas"/>
         <UnitName Value="LCLProc"/>
         <CursorPos X="11" Y="197"/>
         <TopLine Value="179"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
       </Unit4>
       <Unit5>
         <Filename Value="../../commport.pas"/>
         <UnitName Value="CommPort"/>
-        <CursorPos X="38" Y="488"/>
-        <TopLine Value="488"/>
-        <UsageCount Value="17"/>
+        <CursorPos X="32" Y="716"/>
+        <TopLine Value="700"/>
+        <UsageCount Value="19"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit5>
       <Unit6>
@@ -98,7 +98,7 @@
         <UnitName Value="SerialPort"/>
         <CursorPos X="26" Y="819"/>
         <TopLine Value="784"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="12"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit6>
       <Unit7>
@@ -106,7 +106,7 @@
         <UnitName Value="ModBusTCP"/>
         <CursorPos X="31" Y="18"/>
         <TopLine Value="3"/>
-        <UsageCount Value="34"/>
+        <UsageCount Value="33"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit7>
       <Unit8>
@@ -114,7 +114,7 @@
         <UnitName Value="ModBusDriver"/>
         <CursorPos X="3" Y="165"/>
         <TopLine Value="163"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit8>
       <Unit9>
@@ -122,7 +122,7 @@
         <UnitName Value="Tag"/>
         <CursorPos X="1" Y="298"/>
         <TopLine Value="267"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit9>
       <Unit10>
@@ -130,7 +130,7 @@
         <UnitName Value="protscanupdate"/>
         <CursorPos X="48" Y="146"/>
         <TopLine Value="124"/>
-        <UsageCount Value="34"/>
+        <UsageCount Value="33"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit10>
       <Unit11>
@@ -138,7 +138,7 @@
         <UnitName Value="HMIZones"/>
         <CursorPos X="52" Y="13"/>
         <TopLine Value="1"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit11>
       <Unit12>
@@ -146,7 +146,7 @@
         <UnitName Value="HMIRadioButton"/>
         <CursorPos X="35" Y="83"/>
         <TopLine Value="1"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit12>
       <Unit13>
@@ -154,7 +154,7 @@
         <UnitName Value="HMIRadioGroup"/>
         <CursorPos X="24" Y="31"/>
         <TopLine Value="13"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit13>
       <Unit14>
@@ -162,7 +162,7 @@
         <UnitName Value="HMIUpDown"/>
         <CursorPos X="3" Y="16"/>
         <TopLine Value="51"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit14>
       <Unit15>
@@ -170,27 +170,27 @@
         <UnitName Value="PLCTagNumber"/>
         <CursorPos X="25" Y="15"/>
         <TopLine Value="1"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit15>
       <Unit16>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/unix/bunxovlh.inc"/>
         <CursorPos X="10" Y="74"/>
         <TopLine Value="56"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
       </Unit16>
       <Unit17>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/unix/genfdset.inc"/>
         <CursorPos X="3" Y="40"/>
         <TopLine Value="27"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
       </Unit17>
       <Unit18>
         <Filename Value="../../tagbit.pas"/>
         <UnitName Value="TagBit"/>
         <CursorPos X="5" Y="290"/>
         <TopLine Value="255"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit18>
       <Unit19>
@@ -198,7 +198,7 @@
         <UnitName Value="WestASCIIDriver"/>
         <CursorPos X="15" Y="922"/>
         <TopLine Value="905"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="11"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit19>
       <Unit20>
@@ -206,7 +206,7 @@
         <UnitName Value="ProtocolDriver"/>
         <CursorPos X="3" Y="358"/>
         <TopLine Value="354"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit20>
       <Unit21>
@@ -214,33 +214,33 @@
         <UnitName Value="CrossEvent"/>
         <CursorPos X="20" Y="271"/>
         <TopLine Value="247"/>
-        <UsageCount Value="32"/>
+        <UsageCount Value="31"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit21>
       <Unit22>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/inc/socketsh.inc"/>
         <CursorPos X="12" Y="179"/>
         <TopLine Value="170"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
       </Unit22>
       <Unit23>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/inc/sockovl.inc"/>
         <CursorPos X="3" Y="23"/>
         <TopLine Value="21"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
       </Unit23>
       <Unit24>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/linux/unixsock.inc"/>
         <CursorPos X="37" Y="158"/>
         <TopLine Value="148"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
       </Unit24>
       <Unit25>
         <Filename Value="../../hmilabel.pas"/>
         <UnitName Value="HMILabel"/>
         <CursorPos X="3" Y="15"/>
         <TopLine Value="61"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit25>
       <Unit26>
@@ -248,96 +248,98 @@
         <UnitName Value="Sockets"/>
         <CursorPos X="9" Y="32"/>
         <TopLine Value="12"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="3"/>
       </Unit26>
       <Unit27>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/sysutils/sysutilh.inc"/>
         <CursorPos X="14" Y="173"/>
         <TopLine Value="155"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit27>
       <Unit28>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/sysutils/sysutils.inc"/>
         <CursorPos X="10" Y="137"/>
         <TopLine Value="134"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit28>
       <Unit29>
         <Filename Value="../../../../lazarus/lcl/interfaces/gtk/gtkproc.inc"/>
         <CursorPos X="1" Y="434"/>
         <TopLine Value="399"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit29>
       <Unit30>
         <Filename Value="../../../../lazarus/lcl/include/wincontrol.inc"/>
         <CursorPos X="1" Y="7011"/>
         <TopLine Value="6993"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit30>
       <Unit31>
         <Filename Value="../../../../lazarus/lcl/include/application.inc"/>
         <CursorPos X="25" Y="1240"/>
         <TopLine Value="1205"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit31>
       <Unit32>
         <Filename Value="../../../../lazarus/lcl/interfacebase.pp"/>
         <UnitName Value="InterfaceBase"/>
         <CursorPos X="15" Y="79"/>
         <TopLine Value="79"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit32>
       <Unit33>
         <Filename Value="../../../../lazarus/lcl/include/interfacebase.inc"/>
         <CursorPos X="3" Y="49"/>
         <TopLine Value="47"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit33>
       <Unit34>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-base/src/custapp.pp"/>
         <UnitName Value="CustApp"/>
         <CursorPos X="3" Y="71"/>
         <TopLine Value="38"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="4"/>
       </Unit34>
       <Unit35>
         <Filename Value="../../protscan.pas"/>
         <UnitName Value="protscan"/>
         <CursorPos X="54" Y="131"/>
         <TopLine Value="113"/>
-        <UsageCount Value="34"/>
+        <UsageCount Value="33"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit35>
       <Unit36>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/classes/classesh.inc"/>
         <CursorPos X="15" Y="1431"/>
         <TopLine Value="1414"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
       </Unit36>
       <Unit37>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/classes/classes.inc"/>
         <CursorPos X="23" Y="118"/>
         <TopLine Value="116"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
       </Unit37>
       <Unit38>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/inc/objpash.inc"/>
         <CursorPos X="21" Y="204"/>
         <TopLine Value="187"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
       </Unit38>
       <Unit39>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/inc/objpas.inc"/>
         <CursorPos X="9" Y="591"/>
         <TopLine Value="588"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
       </Unit39>
       <Unit40>
         <Filename Value="../../plcmemorymananger.pas"/>
         <UnitName Value="PLCMemoryMananger"/>
-        <CursorPos X="1" Y="395"/>
-        <TopLine Value="378"/>
-        <UsageCount Value="14"/>
+        <CursorPos X="26" Y="941"/>
+        <TopLine Value="910"/>
+        <EditorIndex Value="1"/>
+        <UsageCount Value="13"/>
+        <Loaded Value="True"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit40>
       <Unit41>
@@ -345,41 +347,41 @@
         <UnitName Value="Serial"/>
         <CursorPos X="3" Y="17"/>
         <TopLine Value="1"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="12"/>
       </Unit41>
       <Unit42>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/linux/termios.inc"/>
         <CursorPos X="4" Y="994"/>
         <TopLine Value="977"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="11"/>
       </Unit42>
       <Unit43>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-base/src/syncobjs.pp"/>
         <UnitName Value="syncobjs"/>
         <CursorPos X="19" Y="31"/>
         <TopLine Value="14"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
       </Unit43>
       <Unit44>
         <Filename Value="../../iboxdriver.pas"/>
         <UnitName Value="IBoxDriver"/>
         <CursorPos X="18" Y="653"/>
         <TopLine Value="636"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit44>
       <Unit45>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/sysutils/sysstrh.inc"/>
         <CursorPos X="10" Y="118"/>
         <TopLine Value="101"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="10"/>
       </Unit45>
       <Unit46>
         <Filename Value="../../plcblock.pas"/>
         <UnitName Value="PLCBlock"/>
         <CursorPos X="17" Y="30"/>
         <TopLine Value="25"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit46>
       <Unit47>
@@ -387,7 +389,7 @@
         <UnitName Value="PLCNumber"/>
         <CursorPos X="24" Y="15"/>
         <TopLine Value="1"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit47>
       <Unit48>
@@ -395,7 +397,7 @@
         <UnitName Value="PLCTag"/>
         <CursorPos X="3" Y="218"/>
         <TopLine Value="216"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit48>
       <Unit49>
@@ -403,90 +405,122 @@
         <UnitName Value="TASources"/>
         <CursorPos X="14" Y="101"/>
         <TopLine Value="89"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
       </Unit49>
     </Units>
-    <JumpHistory Count="20" HistoryIndex="19">
+    <JumpHistory Count="28" HistoryIndex="27">
       <Position1>
         <Filename Value="unit4.pas"/>
-        <Caret Line="17" Column="20" TopLine="6"/>
+        <Caret Line="57" Column="3" TopLine="34"/>
       </Position1>
       <Position2>
         <Filename Value="unit4.pas"/>
-        <Caret Line="20" Column="22" TopLine="6"/>
+        <Caret Line="56" Column="3" TopLine="34"/>
       </Position2>
       <Position3>
         <Filename Value="unit4.pas"/>
-        <Caret Line="22" Column="27" TopLine="6"/>
+        <Caret Line="57" Column="3" TopLine="34"/>
       </Position3>
       <Position4>
         <Filename Value="unit4.pas"/>
-        <Caret Line="23" Column="20" TopLine="6"/>
+        <Caret Line="58" Column="3" TopLine="34"/>
       </Position4>
       <Position5>
         <Filename Value="unit4.pas"/>
-        <Caret Line="24" Column="26" TopLine="6"/>
+        <Caret Line="57" Column="3" TopLine="34"/>
       </Position5>
       <Position6>
         <Filename Value="unit4.pas"/>
-        <Caret Line="27" Column="22" TopLine="13"/>
+        <Caret Line="64" Column="9" TopLine="40"/>
       </Position6>
       <Position7>
         <Filename Value="unit4.pas"/>
-        <Caret Line="23" Column="20" TopLine="13"/>
+        <Caret Line="59" Column="54" TopLine="40"/>
       </Position7>
       <Position8>
         <Filename Value="unit4.pas"/>
-        <Caret Line="16" Column="24" TopLine="13"/>
+        <Caret Line="60" Column="54" TopLine="40"/>
       </Position8>
       <Position9>
         <Filename Value="unit4.pas"/>
-        <Caret Line="17" Column="26" TopLine="13"/>
+        <Caret Line="61" Column="54" TopLine="40"/>
       </Position9>
       <Position10>
         <Filename Value="unit4.pas"/>
-        <Caret Line="20" Column="28" TopLine="13"/>
+        <Caret Line="62" Column="54" TopLine="40"/>
       </Position10>
       <Position11>
         <Filename Value="unit4.pas"/>
-        <Caret Line="21" Column="20" TopLine="13"/>
+        <Caret Line="63" Column="54" TopLine="40"/>
       </Position11>
       <Position12>
         <Filename Value="unit4.pas"/>
-        <Caret Line="19" Column="26" TopLine="13"/>
+        <Caret Line="64" Column="54" TopLine="40"/>
       </Position12>
       <Position13>
         <Filename Value="unit4.pas"/>
-        <Caret Line="20" Column="28" TopLine="13"/>
+        <Caret Line="63" Column="54" TopLine="40"/>
       </Position13>
       <Position14>
         <Filename Value="unit4.pas"/>
-        <Caret Line="17" Column="20" TopLine="10"/>
+        <Caret Line="64" Column="54" TopLine="40"/>
       </Position14>
       <Position15>
         <Filename Value="unit4.pas"/>
-        <Caret Line="23" Column="40" TopLine="12"/>
+        <Caret Line="65" Column="54" TopLine="40"/>
       </Position15>
       <Position16>
         <Filename Value="unit4.pas"/>
-        <Caret Line="18" Column="24" TopLine="10"/>
+        <Caret Line="66" Column="54" TopLine="40"/>
       </Position16>
       <Position17>
         <Filename Value="unit4.pas"/>
-        <Caret Line="20" Column="36" TopLine="10"/>
+        <Caret Line="67" Column="54" TopLine="40"/>
       </Position17>
       <Position18>
         <Filename Value="unit4.pas"/>
-        <Caret Line="19" Column="24" TopLine="10"/>
+        <Caret Line="68" Column="54" TopLine="40"/>
       </Position18>
       <Position19>
         <Filename Value="unit4.pas"/>
-        <Caret Line="57" Column="21" TopLine="41"/>
+        <Caret Line="69" Column="54" TopLine="40"/>
       </Position19>
       <Position20>
         <Filename Value="unit4.pas"/>
-        <Caret Line="9" Column="66" TopLine="1"/>
+        <Caret Line="70" Column="54" TopLine="40"/>
       </Position20>
+      <Position21>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="71" Column="54" TopLine="40"/>
+      </Position21>
+      <Position22>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="72" Column="54" TopLine="41"/>
+      </Position22>
+      <Position23>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="73" Column="54" TopLine="44"/>
+      </Position23>
+      <Position24>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="72" Column="54" TopLine="44"/>
+      </Position24>
+      <Position25>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="71" Column="54" TopLine="44"/>
+      </Position25>
+      <Position26>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="70" Column="54" TopLine="44"/>
+      </Position26>
+      <Position27>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="72" Column="54" TopLine="44"/>
+      </Position27>
+      <Position28>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="73" Column="54" TopLine="44"/>
+      </Position28>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>

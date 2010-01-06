@@ -19,7 +19,7 @@ type
   @abstract(Classe driver ModBus RTU.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  @bold(Para informações de como endereçar seus tags veja a classe TModBusDriver.)
+  @bold(Para informaÃ§Ãµes de como endereÃ§ar seus tags veja a classe TModBusDriver.)
 
   @seealso(TModBusDriver)
   }
@@ -42,8 +42,8 @@ function  TModBusRTUDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var
 var
   i, c, c2:Integer;
 begin
-  //checa se é um pacote de escrita de valores ou de leitura
-  //que está sendo codificado.
+  //checa se Ã© um pacote de escrita de valores ou de leitura
+  //que estÃ¡ sendo codificado.
 
   //de leitura de valores...
   if ToWrite=nil then begin
@@ -63,7 +63,7 @@ begin
       end;
 
       $07: begin
-        // Lê o Status
+        // LÃª o Status
         SetLength(Result,4);
         Result[0] := TagObj.Station and $FF;
         Result[1] := $07;

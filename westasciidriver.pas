@@ -476,7 +476,7 @@ begin
     dec := ParameterList[tagrec.Address].Decimal;
 
   if Length(Values)>0 then
-    Result := ModifyParameter(tagrec.Station,Ord(ParameterList[tagrec.Address].ParameterID),Values[0],dec)
+    Result := ModifyParameter(tagrec.Station,ParameterList[tagrec.Address].ParameterID,Values[0],dec)
   else
     Result := ioIllegalValue;
 
@@ -515,7 +515,7 @@ begin
     end;
 
   if Length(Values)>0 then
-    Result := ParameterValue(tagrec.Station,Ord(ParameterList[tagrec.Address].ParameterID),Values[0],dec)
+    Result := ParameterValue(tagrec.Station,ParameterList[tagrec.Address].ParameterID,Values[0],dec)
   else begin
     Result := ioDriverError;
   end;
@@ -545,12 +545,12 @@ begin
 
     AddressToChar(DeviceID,No);
 
-    buffer[0]:=Ord('L');
+    buffer[0]:=$4C;
     buffer[1]:=No[0];
     buffer[2]:=No[1];
-    buffer[3]:=Ord('?');
-    buffer[4]:=Ord('?');
-    buffer[5]:=Ord('*');
+    buffer[3]:=$3F;
+    buffer[4]:=$3F;
+    buffer[5]:=$2A;
 
     if PCommPort=nil then begin
       Result := ioNullDriver;
@@ -573,12 +573,12 @@ begin
     SetLength(buffer,0);
     buffer := pkg.BufferToRead;
 
-    if (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Ord('?')) and (buffer[4]=Ord('A')) and (buffer[5]=Ord('*')) then begin
+    if (buffer[0]=$4C) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=$3F) and (buffer[4]=$41) and (buffer[5]=$2A) then begin
       result := ioOk;
       exit;
     end;
 
-    if (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Ord('?')) and (buffer[3]=Ord('A')) and (buffer[4]=Ord('*')) then begin
+    if (buffer[0]=$4C) and (buffer[1]=No[1]) and (buffer[2]=$3F) and (buffer[3]=$41) and (buffer[4]=$2A) then begin
       result := ioOk;
       exit;
     end;
@@ -615,7 +615,7 @@ var
   a,b,c,d,r:BYTE;
   i, aux:Integer;
 begin
-  if ((buffer[0]=Ord('<')) and (buffer[1]=Ord('?')) and (buffer[2]=Ord('?')) and (buffer[3]=Ord('>'))) then begin
+  if ((buffer[0]=$3C) and (buffer[1]=$3F) and (buffer[2]=$3F) and (buffer[3]=$3E)) then begin
     Result := ioIllegalValue;
     exit;
   end;
@@ -737,7 +737,7 @@ begin
    aux := FormatFloat('0000',Abs(numaux));
 
    for c:=0 to 3 do
-      buffer[c] := Ord(aux[1+c]);
+      buffer[c] := StrToInt(aux[1+c])+48;
 
    buffer[4] := caso;
    Result := ioOk;
@@ -798,7 +798,7 @@ begin
    aux := FormatFloat('0000',Abs(numaux));
 
    for c:=0 to 3 do
-      buffer[c] := ord(aux[1+c]);
+      buffer[c] := StrToInt(aux[1+c])+48;
 
    buffer[4] := caso;
    Result := ioOk;
@@ -823,12 +823,12 @@ begin
 
     AddressToChar(DeviceID,No);
 
-    buffer[0]:=Ord('L');
+    buffer[0]:=$4C;
     buffer[1]:=No[0];
     buffer[2]:=No[1];
     buffer[3]:=Parameter;
-    buffer[4]:=Ord('?');
-    buffer[5]:=Ord('*');
+    buffer[4]:=$3F;
+    buffer[5]:=$2A;
 
     if PCommPort=nil then begin
       Result := ioNullDriver;
@@ -851,16 +851,16 @@ begin
     SetLength(buffer,0);
     buffer := pkg.BufferToRead;
 
-    b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=Ord('N')) and (buffer[10]=Ord('*'));
-    b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=Ord('N')) and (buffer[9]=Ord('*'));
+    b1 := (buffer[0]=$4C) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=$4E) and (buffer[10]=$2A);
+    b2 := (buffer[0]=$4C) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=$4E) and (buffer[9]=$2A);
     if (b1 or b2) then
       Result := ioIllegalFunction
     else begin
-      b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=Ord('A')) and (buffer[10]=Ord('*'));
-      b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=Ord('A')) and (buffer[9]=Ord('*'));
+      b1 := (buffer[0]=$4C) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Parameter) and (buffer[9]=$41) and (buffer[10]=$2A);
+      b2 := (buffer[0]=$4C) and (buffer[1]=No[1]) and (buffer[2]=Parameter) and (buffer[8]=$41) and (buffer[9]=$2A);
       if (b1 or b2) then begin
 
-        b1 := (buffer[4]=Ord('<')) and (buffer[5]=Ord('?')) and (buffer[6]=Ord('?')) and (buffer[7]=Ord('>'));
+        b1 := (buffer[4]=$3C) and (buffer[5]=$3F) and (buffer[6]=$3F) and (buffer[7]=$3E);
 
         if b1 then
           Result := ioIllegalValue
@@ -895,11 +895,11 @@ begin
     SetLength(respprog,12);
 
     AddressToChar(DeviceID,No);
-    buffer[0] := Ord('L');
+    buffer[0] := $4C;
     buffer[1] := No[0];
     buffer[2] := No[1];
     buffer[3] := Parameter;
-    buffer[4] := Ord('#');
+    buffer[4] := $23;
     if dec=255 then
       Result := DoubleToWestAuto(buffer[5],Value)
     else
@@ -907,9 +907,9 @@ begin
 
     if Result<>ioOk then exit;
 
-    buffer[10] := Ord('*');
+    buffer[10] := $2A;
 
-    respprog[0] := Ord('L');
+    respprog[0] := $4C;
     respprog[1] := No[0];
     respprog[2] := No[1];
     respprog[3] := Parameter;
@@ -920,8 +920,8 @@ begin
 
     if Result<>ioOk then exit;
 
-    respprog[9] := Ord('I');
-    respprog[10] := Ord('*');
+    respprog[9] := $49;
+    respprog[10] := $2A;
 
     if PCommPort=nil then begin
       Result := ioNullDriver;
@@ -949,12 +949,12 @@ begin
     SetLength(pkg.BufferToRead, 0);
     SetLength(pkg.BufferToWrite,0);
 
-    buffer[0] := Ord('L');
+    buffer[0] := $4C;
     buffer[1] := No[0];
     buffer[2] := No[1];
     buffer[3] := Parameter;
-    buffer[4] := Ord('I');
-    buffer[5] := Ord('*');
+    buffer[4] := $49;
+    buffer[5] := $2A;
 
     PCommPort.IOCommandSync(iocWriteRead, buffer, 11, 6, DriverID, 10, CommPortCallBack, false, nil, @pkg);
 
@@ -963,7 +963,7 @@ begin
     Result := IOResultToProtocolResult(pkg.ReadIOResult);
     if Result <> ioOk then exit;
 
-    if ((pkg.BufferToRead[8]=Ord('N')) or (pkg.BufferToRead[9]=Ord('N'))) then begin
+    if ((pkg.BufferToRead[8]=$4E) or (pkg.BufferToRead[9]=$4E)) then begin
       Result := ioIllegalFunction;
       exit;
     end;
@@ -994,12 +994,12 @@ begin
 
     AddressToChar(DeviceID,No);
 
-    buffer[0]:=Ord('L');
+    buffer[0]:=$4C;
     buffer[1]:=No[0];
     buffer[2]:=No[1];
-    buffer[3]:=Ord(']');
-    buffer[4]:=Ord('?');
-    buffer[5]:=Ord('*');
+    buffer[3]:=$5D;
+    buffer[4]:=$3F;
+    buffer[5]:=$2A;
 
     if PCommPort=nil then begin
       Result := ioNullDriver;
@@ -1028,8 +1028,8 @@ begin
 
     buffer := pkg.BufferToRead;
 
-    b2 := (buffer[0]=Ord('L')) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=Ord(']')) and (buffer[4]=Ord('2'));
-    b1 := (buffer[0]=Ord('L')) and (buffer[1]=No[1]) and (buffer[2]=Ord(']')) and (buffer[3]=Ord('2'));
+    b2 := (buffer[0]=$4C) and (buffer[1]=No[0]) and (buffer[2]=No[1]) and (buffer[3]=$5D) and (buffer[4]=$32);
+    b1 := (buffer[0]=$4C) and (buffer[1]=No[1]) and (buffer[2]=$5D) and (buffer[3]=$32);
 
     if (b1=false) and (b2=false) then begin
       Result := ioCommError;
@@ -1074,14 +1074,14 @@ begin
     Result := IOResultToProtocolResult(pkg.ReadIOResult);
     if Result <> ioOk then exit;
 
-    if b2 and (pkg.BufferToRead[0]=Ord(' ')) then
+    if b2 and (pkg.BufferToRead[0]=$20) then
       OffsetSpace := 1
     else
       OffsetSpace := 0;
 
     buffer := pkg.BufferToRead;
 
-    if ((buffer[20+OffsetSize+OffsetSpace]<>Ord('A')) or (buffer[21+OffsetSize+OffsetSpace]<>Ord('*'))) then begin
+    if ((buffer[20+OffsetSize+OffsetSpace]<>$41) or (buffer[21+OffsetSize+OffsetSpace]<>$2A)) then begin
       Result := ioCommError;
       exit;
     end;
@@ -1170,169 +1170,169 @@ initialization
 
    //Cria a lista de Parametros Validos...
    //SetPoint
-   ParameterList[$00].ParameterID := Ord('S');
+   ParameterList[$00].ParameterID := $53;
    ParameterList[$00].FunctionAllowed :=  0;
    ParameterList[$00].ReadOnly :=  false;
    ParameterList[$00].Decimal := 255;
 
    //PV
-   ParameterList[$01].ParameterID := Ord('M'); //ID do Parametro
+   ParameterList[$01].ParameterID := $4D; //ID do Parametro
    ParameterList[$01].FunctionAllowed :=  2 ; //Funcao q pode usar, 0 := todas as funcoes
    ParameterList[$01].ReadOnly :=  true ; //ReadOnly 1 := yes?
    ParameterList[$01].Decimal := 255; // casas decimais variaveis...
 
    //Power Output value
-   ParameterList[$02].ParameterID := Ord('W');
+   ParameterList[$02].ParameterID := $57;
    ParameterList[$02].FunctionAllowed :=  0;
    ParameterList[$02].ReadOnly :=  false;
    ParameterList[$02].Decimal := 255;
 
    //Controller status
-   ParameterList[$03].ParameterID := Ord('L');
+   ParameterList[$03].ParameterID := $4C;
    ParameterList[$03].FunctionAllowed :=  2;
    ParameterList[$03].ReadOnly :=  true;
    ParameterList[$03].Decimal := 0;
 
    //Scale Range Max
-   ParameterList[$04].ParameterID := Ord('G');
+   ParameterList[$04].ParameterID := $47;
    ParameterList[$04].FunctionAllowed :=  0;
    ParameterList[$04].ReadOnly :=  false;
    ParameterList[$04].Decimal := 255;
 
    //Scale Range Min
-   ParameterList[$05].ParameterID := Ord('H');
+   ParameterList[$05].ParameterID := $48;
    ParameterList[$05].FunctionAllowed :=  0;
    ParameterList[$05].ReadOnly :=  false;
    ParameterList[$05].Decimal := 255;
 
    //Scale Range Dec. Point
-   ParameterList[$06].ParameterID := Ord('Q');
+   ParameterList[$06].ParameterID := $51;
    ParameterList[$06].FunctionAllowed :=  0;
    ParameterList[$06].ReadOnly :=  false;
    ParameterList[$06].Decimal := 0;
 
    //Input filter time constant
-   ParameterList[$07].ParameterID := Ord('m');
+   ParameterList[$07].ParameterID := $6D;
    ParameterList[$07].FunctionAllowed :=  0;
    ParameterList[$07].ReadOnly :=  false;
    ParameterList[$07].Decimal := 255;
 
    //Output 1 Power Limit
-   ParameterList[$08].ParameterID := Ord('B');
+   ParameterList[$08].ParameterID := $42;
    ParameterList[$08].FunctionAllowed :=  0;
    ParameterList[$08].ReadOnly :=  false;
    ParameterList[$08].Decimal := 255;
 
    //Output 1 cycle time
-   ParameterList[$09].ParameterID := Ord('N');
+   ParameterList[$09].ParameterID := $4E;
    ParameterList[$09].FunctionAllowed :=  0;
    ParameterList[$09].ReadOnly :=  false;
    ParameterList[$09].Decimal := 1;
 
    //Output 2 cycle time
-   ParameterList[$0a].ParameterID := Ord('O');
+   ParameterList[$0a].ParameterID := $4F;
    ParameterList[$0a].FunctionAllowed :=  0;
    ParameterList[$0a].ReadOnly :=  false;
    ParameterList[$0a].Decimal := 1;
 
    //Recorder output scale max
-   ParameterList[$0b].ParameterID := Ord('[');
+   ParameterList[$0b].ParameterID := $5B;
    ParameterList[$0b].FunctionAllowed :=  0;
    ParameterList[$0b].ReadOnly :=  false;
    ParameterList[$0b].Decimal := 255;
 
    //Recorder output scale min
-   ParameterList[$0c].ParameterID := Ord('\');
+   ParameterList[$0c].ParameterID := $5C;
    ParameterList[$0c].FunctionAllowed :=  0;
    ParameterList[$0c].ReadOnly :=  false;
    ParameterList[$0c].Decimal := 255;
 
    //SetPoint ramp rate
-   ParameterList[$0d].ParameterID := Ord('^');
+   ParameterList[$0d].ParameterID := $5E;
    ParameterList[$0d].FunctionAllowed :=  0;
    ParameterList[$0d].ReadOnly :=  false;
    ParameterList[$0d].Decimal := 255;
 
    //Setpoint high limit
-   ParameterList[$0e].ParameterID := Ord('A');
+   ParameterList[$0e].ParameterID := $41;
    ParameterList[$0e].FunctionAllowed :=  0;
    ParameterList[$0e].ReadOnly :=  false;
    ParameterList[$0e].Decimal := 255;
 
    //Setpoint low limit
-   ParameterList[$0f].ParameterID := Ord('T');
+   ParameterList[$0f].ParameterID := $54;
    ParameterList[$0f].FunctionAllowed :=  0;
    ParameterList[$0f].ReadOnly :=  false;
    ParameterList[$0f].Decimal := 255;
 
    //alarm 1 value
-   ParameterList[$10].ParameterID := Ord('C');
+   ParameterList[$10].ParameterID := $43;
    ParameterList[$10].FunctionAllowed :=  0;
    ParameterList[$10].ReadOnly :=  false;
    ParameterList[$10].Decimal := 255;
 
    //alarm 2 value
-   ParameterList[$11].ParameterID := Ord('E');
+   ParameterList[$11].ParameterID := $45;
    ParameterList[$11].FunctionAllowed :=  0;
    ParameterList[$11].ReadOnly :=  false;
    ParameterList[$11].Decimal := 255;
 
    //Rate (Derivative time constant)
-   ParameterList[$12].ParameterID := Ord('D');
+   ParameterList[$12].ParameterID := $44;
    ParameterList[$12].FunctionAllowed :=  0;
    ParameterList[$12].ReadOnly :=  false;
    ParameterList[$12].Decimal := 2;
 
    //Reset (Integral time constant)
-   ParameterList[$13].ParameterID := Ord('I');
+   ParameterList[$13].ParameterID := $49;
    ParameterList[$13].FunctionAllowed :=  0;
    ParameterList[$13].ReadOnly :=  false;
    ParameterList[$13].Decimal := 2;
 
    //Manual time reset (BIAS)
-   ParameterList[$14].ParameterID := Ord('J');
+   ParameterList[$14].ParameterID := $4A;
    ParameterList[$14].FunctionAllowed :=  0;
    ParameterList[$14].ReadOnly :=  false;
    ParameterList[$14].Decimal := 255;
 
    //ON/OFF diferential
-   ParameterList[$15].ParameterID := Ord('F');
+   ParameterList[$15].ParameterID := $46;
    ParameterList[$15].FunctionAllowed :=  0;
    ParameterList[$15].ReadOnly :=  false;
    ParameterList[$15].Decimal := 1;
 
    //Overlap/Deadband
-   ParameterList[$16].ParameterID := Ord('K');
+   ParameterList[$16].ParameterID := $4B;
    ParameterList[$16].FunctionAllowed :=  0;
    ParameterList[$16].ReadOnly :=  false;
    ParameterList[$16].Decimal := 0;
 
    //Proportional band 1 value
-   ParameterList[$17].ParameterID := Ord('P');
+   ParameterList[$17].ParameterID := $50;
    ParameterList[$17].FunctionAllowed :=  0;
    ParameterList[$17].ReadOnly :=  false;
    ParameterList[$17].Decimal := 1;
 
    //Proportional band 2 value
-   ParameterList[$18].ParameterID := Ord('U');
+   ParameterList[$18].ParameterID := $55;
    ParameterList[$18].FunctionAllowed :=  0;
    ParameterList[$18].ReadOnly :=  false;
    ParameterList[$18].Decimal := 1;
 
    //PV Offset
-   ParameterList[$19].ParameterID := Ord('v');
+   ParameterList[$19].ParameterID := $76;
    ParameterList[$19].FunctionAllowed :=  0 ; //todas as funcoes podem realizar operacoes com esse parametro
    ParameterList[$19].ReadOnly :=  false ;
    ParameterList[$19].Decimal := 255;
 
    //Arithmetic deviation
-   ParameterList[$1a].ParameterID := Ord('V');
+   ParameterList[$1a].ParameterID := $56;
    ParameterList[$1a].FunctionAllowed :=  2;
    ParameterList[$1a].ReadOnly :=  true;
    ParameterList[$1a].Decimal := 255;
 
    //Arithmetic deviation
-   ParameterList[$1b].ParameterID := Ord('Z');
+   ParameterList[$1b].ParameterID := $5A;
    ParameterList[$1b].FunctionAllowed :=  3;
    ParameterList[$1b].ReadOnly :=  false;
    ParameterList[$1b].Decimal := 0;

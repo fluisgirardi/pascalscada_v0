@@ -96,7 +96,7 @@ type
 
     Estrutura que representa o registrador 203 do Ibox.
     @member RefCount Conta quantas vezes o registro foi referenciado.
-    @member MinScanTime Guarda o menor tempo de Scan dos tags que estão refeenciando o registro.
+    @member MinScanTime Guarda o menor tempo de Scan dos tags que estão referenciando o registro.
     @member TimeStamp Quando foi a última vez que o registro foi lido.
     @member LastReadResult Qual foi o resultado da última tentativa de leitura.
 

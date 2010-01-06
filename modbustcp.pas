@@ -22,7 +22,7 @@ type
   @abstract(Classe driver ModBus para TCP/IP.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 
-  @bold(Para informações de como endereçar seus tags veja a classe TModBusDriver.)
+  @bold(Para informaÃ§Ãµes de como endereÃ§ar seus tags veja a classe TModBusDriver.)
 
   @seealso(TModBusDriver)
   }
@@ -45,8 +45,8 @@ function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var
 var
   i, c, c2, size:Integer;
 begin
-  //checa se é um pacote de escrita de valores ou de leitura
-  //que está sendo codificado.
+  //checa se Ã© um pacote de escrita de valores ou de leitura
+  //que estÃ¡ sendo codificado.
 
   //de leitura de valores...
   if ToWrite=nil then begin
@@ -70,7 +70,7 @@ begin
       end;
 
       $07: begin
-        // Lê o Status
+        // LÃª o Status
         SetLength(Result,8);
         Result[00] := 0;
         Result[01] := 0;
@@ -265,7 +265,7 @@ begin
     debug := '';
     for c := 0 to High(pkg.BufferToRead) do
       debug := debug + IntToHex(pkg.BufferToRead[c], 2);
-    DebugLn('Pacotes diferem no endereço. Hex do pacote recebido:');
+    DebugLn('Pacotes diferem no endereÃ§o. Hex do pacote recebido:');
     DebugLn(debug);
     {$ENDIF}    
     Result := ioCommError;
