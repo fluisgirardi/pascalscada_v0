@@ -14,29 +14,6 @@ uses SysUtils, DateUtils, hsutils, ProtocolTypes, SyncObjs;
 
 type
   {:
-    @abstract(Representa um bit.).
-    @author(Fabio Luis Girardi papelhigienico@gmail.com)
-  }
-  Binary = 0..1;
-  {:
-    @abstract(Representa uma palavra de 4 bits.)
-    @author(Fabio Luis Girardi papelhigienico@gmail.com)
-  }
-  Nibble  = 0..15;
-  {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
-
-  Enumera todos os possíveis tipos de dados numéricos.
-  @value(ntBinary Binário (1 bit).)
-  @value(ntNibble Nibble (4 bits).)
-  @value(ntByte   Byte (8 bits).)
-  @value(ntWord   Word (16 bits).)
-  @value(ntCardinal  Cardinal (32 bits).)
-  @value(ntFloat  Ponto flutuate (até 64 bits de precisão).)
-  }
-  TNumType = (ntBinary, ntNibble, ntBYTE, ntWORD, ntCardinal, ntFloat);
-
-  {:
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 
   Estrutura usada para cadastrar cada endereço único dentro do gerenciador de
@@ -70,10 +47,13 @@ type
     function GetMsecLastUpdate:Int64;
   protected
     //: @exclude
-    function  GetValue(index:Integer):Double; virtual; abstract;
+    function  GetValue(index:Integer):Double;
     //: @exclude
-    procedure SetValue(index:Integer; v:Double); virtual; abstract;
+    procedure SetValue(index:Integer; v:Double);
   public
+    //: Array que armazena os valores do bloco.
+    FValues:TArrayOfDouble;
+    //: Armazena o último erro ocorrido com o bloco.
     LastError:TProtocolIOResult;
     {:
     Cria um bloco de memórias continuas.
@@ -85,7 +65,7 @@ type
     passar 0 em AdrStart e 3 em AdrEnd, totalizando 4 bytes (que é o menor
     tamanho de palavra disponível no CLP) que são VB0, VB1, VB2, VB3.
     }
-    constructor Create(AdrStart,AdrEnd:Cardinal); virtual;
+    constructor Create(AdrStart,AdrEnd:Cardinal);
     {:
     Lê/escreve o valor da memória especificada por Index no bloco.
     }
@@ -119,134 +99,6 @@ type
     property ReadFaults:Cardinal read FReadFault write SetReadFault;
   end;
 
-  {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
-
-  Classe que implementa uma área de dados binários continuas. Útil para o
-  protocolo ModBus onde cada entrada/saida digital tem um endereço.
-  @seealso(TPLCMemoryManager)
-  }
-  TRegisterRangeBinary = class(TRegisterRange)
-  protected
-    //: @exclude
-    FValues:array of Binary;
-    //: @exclude
-    function  GetValue(index:Integer):Double; override;
-    //: @exclude
-    procedure SetValue(index:Integer; v:Double); override;
-  public
-    //: @exclude
-    constructor Create(AdrStart,AdrEnd:Cardinal); override;
-    //: @exclude
-    destructor  Destroy; override;
-  end;
-
-  {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
-
-  Classe que implementa uma área de nibbles (4 bits) continuas.
-  @seealso(TPLCMemoryManager)
-  }
-  TRegisterRangeNibble = class(TRegisterRange)
-  protected
-    //: @exclude
-    FValues:array of Nibble;
-    //: @exclude
-    function  GetValue(index:Integer):Double; override;
-    //: @exclude
-    procedure SetValue(index:Integer; v:Double); override;
-  public
-    //: @exclude
-    constructor Create(AdrStart,AdrEnd:Cardinal); override;
-    //: @exclude
-    destructor  Destroy; override;
-  end;
-
-  {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
-
-  Classe que implementa uma área de bytes (8 bits) continua.
-  @seealso(TPLCMemoryManager)
-  }
-  TRegisterRangeByte = class(TRegisterRange)
-  protected
-    //: @exclude
-    FValues:array of Byte;
-    //: @exclude
-    function  GetValue(index:Integer):Double; override;
-    //: @exclude
-    procedure SetValue(index:Integer; v:Double); override;
-  public
-    //: @exclude
-    constructor Create(AdrStart,AdrEnd:Cardinal); override;
-    //: @exclude
-    destructor  Destroy; override;
-  end;
-
-  {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
-
-  Classe que implementa uma área de Words (16 bits) continua.
-  @seealso(TPLCMemoryManager)
-  }
-  TRegisterRangeWord = class(TRegisterRange)
-  protected
-    //: @exclude
-    FValues:array of Word;
-    //: @exclude
-    function  GetValue(index:Integer):Double; override;
-    //: @exclude
-    procedure SetValue(index:Integer; v:Double); override;
-  public
-    //: @exclude
-    constructor Create(AdrStart,AdrEnd:Cardinal); override;
-    //: @exclude
-    destructor  Destroy; override;
-  end;
-
-  {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
-
-  Classe que implementa uma área de Cardinals (32 bits) continua.
-  @seealso(TPLCMemoryManager)
-  }
-  TRegisterRangeCardinal = class(TRegisterRange)
-  protected
-    //: @exclude
-    FValues:array of Cardinal;
-    //: @exclude
-    function  GetValue(index:Integer):Double; override;
-    //: @exclude
-    procedure SetValue(index:Integer; v:Double); override;
-  public
-    //: @exclude
-    constructor Create(AdrStart,AdrEnd:Cardinal); override;
-    //: @exclude
-    destructor  Destroy; override;
-  end;
-
-  {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
-
-  Classe que implementa uma área de palavras de ponto flutuante (32/64 bits)
-  continua.
-  @seealso(TPLCMemoryManager)
-  }
-  TRegisterRangeFloat = class(TRegisterRange)
-  protected
-    //: @exclude
-    FValues:array of Double;
-    //: @exclude
-    function  GetValue(index:Integer):Double; override;
-    //: @exclude
-    procedure SetValue(index:Integer; v:Double); override;
-  public
-    //: @exclude
-    constructor Create(AdrStart,AdrEnd:Cardinal); override;
-    //: @exclude
-    destructor  Destroy; override;
-  end;
-
   //: @exclude
   TRegisterRangeArray = array of TRegisterRange;
   {:
@@ -259,7 +111,6 @@ type
     FAddress:array of TMemoryRec;
     FMaxHole:Integer;
     FMaxBlockSize:Integer;
-    FMemType:TNumType;
     FCriticalSection:TCriticalSection;
     procedure AddAddress(Add,Scan:Integer); overload;
     procedure RemoveAddress(Add:Integer); overload;
@@ -276,7 +127,7 @@ type
     @param(memType TNumType. Informa qual é o tipo de dados que o bloco está
     gerenciando).
     }
-    constructor Create(memType:TNumType);
+    constructor Create;
     //: Destroi o gerenciador de blocos não continuos e todos os seus recursos.
     destructor Destroy; override;
     {:
@@ -406,11 +257,22 @@ begin
   FEndAddress := AdrEnd;
   FReadOK := 0;
   FReadFault := 0;
+  SetLength(FValues,(AdrEnd-AdrStart)+1);
 end;
 
 procedure TRegisterRange.Updated;
 begin
   FLastUpdate := now;
+end;
+
+function  TRegisterRange.GetValue(index:Integer):Double;
+begin
+  Result := FValues[index];
+end;
+
+procedure TRegisterRange.SetValue(index:Integer; v:Double);
+begin
+  FValues[index] := v;
 end;
 
 function TRegisterRange.GetSize:Integer;
@@ -442,176 +304,12 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-//             inicio da implementacao do TRegisterRangeBinary
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TRegisterRangeBinary.Create(AdrStart,AdrEnd:Cardinal);
-begin
-  inherited Create(AdrStart,AdrEnd);
-  SetLength(FValues,(AdrEnd-AdrStart)+1);
-end;
-
-destructor  TRegisterRangeBinary.Destroy;
-begin
-  SetLength(FValues,0);
-  inherited Destroy;
-end;
-
-function  TRegisterRangeBinary.GetValue(index:Integer):Double;
-begin
-  Result := FValues[index];
-end;
-
-procedure TRegisterRangeBinary.SetValue(index:Integer; v:Double);
-begin
-  if v<>0 then
-    FValues[index] := 1
-  else
-    FValues[index] := 0
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//             inicio das implementacao do TRegisterRangeNibble
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TRegisterRangeNibble.Create(AdrStart,AdrEnd:Cardinal);
-begin
-  inherited Create(AdrStart,AdrEnd);
-  SetLength(FValues,(AdrEnd-AdrStart)+1);
-end;
-
-destructor  TRegisterRangeNibble.Destroy;
-begin
-  SetLength(FValues,0);
-  inherited Destroy;
-end;
-
-function  TRegisterRangeNibble.GetValue(index:Integer):Double;
-begin
-  Result := FValues[index];
-end;
-
-procedure TRegisterRangeNibble.SetValue(index:Integer; v:Double);
-begin
-  FValues[index] := Nibble(FloatToInteger(v) and 15);
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//             inicio da implementacao do TRegisterRangeByte
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TRegisterRangeByte.Create(AdrStart,AdrEnd:Cardinal);
-begin
-  inherited Create(AdrStart,AdrEnd);
-  SetLength(FValues,(AdrEnd-AdrStart)+1);
-end;
-
-destructor  TRegisterRangeByte.Destroy;
-begin
-  SetLength(FValues,0);
-  inherited Destroy;
-end;
-
-function  TRegisterRangeByte.GetValue(index:Integer):Double;
-begin
-  Result := FValues[index];
-end;
-
-procedure TRegisterRangeByte.SetValue(index:Integer; v:Double);
-begin
-  FValues[index] := Byte(FloatToInteger(v) and $FF);
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//             inicio da implementacao do TRegisterRangeWord
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TRegisterRangeWord.Create(AdrStart,AdrEnd:Cardinal);
-begin
-  inherited Create(AdrStart,AdrEnd);
-  SetLength(FValues,(AdrEnd-AdrStart)+1);
-end;
-
-destructor  TRegisterRangeWord.Destroy;
-begin
-  SetLength(FValues,0);
-  inherited Destroy;
-end;
-
-function  TRegisterRangeWord.GetValue(index:Integer):Double;
-begin
-  if (index<0) or (index>High(FValues)) then
-    raise Exception.Create('fora dos limites');
-  Result := FValues[index];
-end;
-
-procedure TRegisterRangeWord.SetValue(index:Integer; v:Double);
-begin
-  if (index<0) or (index>High(FValues)) then
-    raise Exception.Create('fora dos limites');
-  FValues[index] := Word(FloatToInteger(v) and $FFFF);
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//             inicio da implementacao do TRegisterRangeCardinal
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TRegisterRangeCardinal.Create(AdrStart,AdrEnd:Cardinal);
-begin
-  inherited Create(AdrStart,AdrEnd);
-  SetLength(FValues,(AdrEnd-AdrStart)+1);
-end;
-
-destructor  TRegisterRangeCardinal.Destroy;
-begin
-  SetLength(FValues,0);
-  inherited Destroy;
-end;
-
-function  TRegisterRangeCardinal.GetValue(index:Integer):Double;
-begin
-  Result := FValues[index];
-end;
-
-procedure TRegisterRangeCardinal.SetValue(index:Integer; v:Double);
-begin
-  FValues[index] := Cardinal(FloatToInteger(v));
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-//             inicio da implementacao do TRegisterRangeCardinal
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TRegisterRangeFloat.Create(AdrStart,AdrEnd:Cardinal);
-begin
-  inherited Create(AdrStart,AdrEnd);
-  SetLength(FValues,(AdrEnd-AdrStart)+1);
-end;
-
-destructor  TRegisterRangeFloat.Destroy;
-begin
-  SetLength(FValues,0);
-  inherited Destroy;
-end;
-
-function  TRegisterRangeFloat.GetValue(index:Integer):Double;
-begin
-  Result := FValues[index];
-end;
-
-procedure TRegisterRangeFloat.SetValue(index:Integer; v:Double);
-begin
-  FValues[index] := v;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementacao do TPLCMemoryManager
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TPLCMemoryManager.Create(memType:TNumType);
+constructor TPLCMemoryManager.Create;
 begin
   FCriticalSection := TCriticalSection.Create;
-  FMemType := memType;
   FMaxHole := 5; //o bloco continua caso de enderecos seja <= 5
   FMaxBlockSize := 0; //o bloco tem seu tamanho restrito a x, 0 = sem restricao!
 end;
@@ -836,20 +534,7 @@ end;
 
 function TPLCMemoryManager.CreateRegisterRange(adrStart,adrEnd:Integer):TRegisterRange;
 begin
-  case FMemType of
-    ntBinary:
-      Result := TRegisterRangeBinary.Create(adrStart,adrEnd);
-    ntNibble:
-      Result := TRegisterRangeNibble.Create(adrStart,adrEnd);
-    ntBYTE:
-      Result := TRegisterRangeByte.Create(adrStart,adrEnd);
-    ntWORD:
-      Result := TRegisterRangeWord.Create(adrStart,adrEnd);
-    ntCardinal:
-      Result := TRegisterRangeCardinal.Create(adrStart,adrEnd);
-    else
-      Result := TRegisterRangeFloat.Create(adrStart,adrEnd);
-  end;
+   Result := TRegisterRange.Create(adrStart,adrEnd);
 end;
 
 procedure TPLCMemoryManager.AddAddress(Address,Size,RegSize,Scan:Cardinal);
@@ -902,92 +587,85 @@ end;
 
 function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble):Integer;
 var
-  count, pos, blk,items,c:Integer;
-  found_add:Boolean;
+  blk, AdrEnd, LenUtil:Integer;
 begin
   FCriticalSection.Enter;
-  items := Len*RegSize + AdrStart;
-  c:=AdrStart;
-  count := 0;
 
-  for pos := 0 to High(Values) do begin
-    found_add := false;
-    for blk := 0 to High(Blocks) do
-      if (c>=Blocks[blk].AddressStart) and (c<=Blocks[blk].AddressEnd) then begin
-        Blocks[blk].Values[c-Blocks[blk].AddressStart] := Values[pos];
+  AdrEnd := AdrStart + Length(Values) - 1;
+
+  for blk := 0 to High(Blocks) do begin
+    if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
+      LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
+      if Blocks[blk].Size<=LenUtil then
+        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], Blocks[blk].Size )
+      else
+        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], LenUtil );
+
+      Blocks[blk].Updated;
+      Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+    end else begin
+      if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
+        LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
+        Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil );
         Blocks[blk].Updated;
-        Blocks[blk].ReadSuccess := Blocks[blk].ReadSuccess + 1;
-        found_add := true;
-        break;
-      end;
-
-    if c<(items-1) then
-      inc(c)
-    else
-      break;
-
-    if found_add then
-      inc(count);
+        Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+      end
+    end;
   end;
-  Result := -1;
-  if (count>0) and (count<Length(Values)) then
-    Result := 0;
-  if count>=Length(Values) then
-    Result := 1;
   FCriticalSection.Leave;
 end;
 
 procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
 var
-  items,c,blk:Integer;
+  blk, AdrEnd, LenUtil:Integer;
 begin
   FCriticalSection.Enter;
-  items := Len*RegSize + AdrStart;
-  c:=AdrStart;
 
-  while c<items do begin
-    for blk := 0 to High(Blocks) do
-      if (c>=Blocks[blk].AddressStart) and (c<=Blocks[blk].AddressEnd) then begin
-        Blocks[blk].ReadFaults := Blocks[blk].ReadFaults + 1;
-        Blocks[blk].LastError := Fault;
-        break;
+  AdrEnd := AdrStart + Len * RegSize - 1;
+
+  for blk := 0 to High(Blocks) do begin
+    if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
+      Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
+      Blocks[blk].LastError  := Fault;
+    end else begin
+      if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
+        Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
+        Blocks[blk].LastError  := Fault;
       end;
-    inc(c);
+    end;
   end;
+
+
   FCriticalSection.Leave;
 end;
 
 function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble):Integer;
 var
-  items,c,blk,pos:Integer;
-  found_add:Boolean;
+  blk, AdrEnd, LenUtil:Integer;
 begin
   FCriticalSection.Enter;
-  //verifica o tamanho da array de retorno
-  //ajusta conforme necessario, e zera ela;
-  if Integer(Len)>Length(Values) then begin
-    SetLength(Values,Integer(Len));
-    for c:=0 to High(Values) do
-      Values[c]:=0;
+
+  AdrEnd := AdrStart + Length(Values) - 1;
+
+  for blk := 0 to High(Blocks) do begin
+    if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
+      LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
+      if Blocks[blk].Size<=LenUtil then
+        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].Size )
+      else
+        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], LenUtil );
+
+      Blocks[blk].Updated;
+      Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+    end else begin
+      if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
+        LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
+        Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil );
+        Blocks[blk].Updated;
+        Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+      end
+    end;
   end;
-  items := Len*RegSize + AdrStart;
-  c:=AdrStart;
-  pos:=0;
-  //procura cada endereco...
-  while c<items do begin
-    found_add:=false;
-    for blk := 0 to High(Blocks) do
-      if (c>=Blocks[blk].AddressStart) and (c<=Blocks[blk].AddressEnd) then begin
-        Values[pos] := Blocks[blk].Values[c-Blocks[blk].AddressStart];
-        found_add := true;
-        inc(pos);
-        break;
-      end;
-    if not found_add then
-      inc(pos);
-    inc(c);
-  end;
-  Result := 1;
   FCriticalSection.Leave;
 end;
 
