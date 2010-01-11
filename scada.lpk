@@ -30,6 +30,11 @@
           <OptimizationLevel Value="0"/>
         </Optimizations>
       </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <UseLineInfoUnit Value="False"/>
+        </Debugging>
+      </Linking>
       <Other>
         <WriteFPCLogo Value="False"/>
         <CompilerPath Value="$(CompPath)"/>

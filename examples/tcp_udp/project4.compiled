@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <CONFIG>
-  <Compiler Value="/usr/local/bin/fpc" Date="1261656925"/>
+  <Compiler Value="/usr/bin/fpc" Date="1263043398"/>
   <Params Value=" -MObjFPC -Scgi -g -gl -WG -vewnhi -l -Fi/home/fabiolg/desenvolvimento/HMI_SCADA/examples/tcp_udp/ -Fu/home/fabiolg/desenvolvimento/HMI_SCADA/lib/x86_64-linux/ -Fu/home/fabiolg/lazarus/components/rtticontrols/lib/x86_64-linux/gtk2/ -Fu/home/fabiolg/lazarus/components/tachart/lib/x86_64-linux/gtk2/ -Fu/home/fabiolg/lazarus/ideintf/units/x86_64-linux/ -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux/ -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux/gtk2/ -Fu/home/fabiolg/lazarus/packager/units/x86_64-linux/ -Fu/home/fabiolg/desenvolvimento/HMI_SCADA/examples/tcp_udp/ -Fu. -FE/home/fabiolg/desenvolvimento/HMI_SCADA/examples/tcp_udp/ -oproject4 -dUseCThreads -dLCL -dLCLgtk2 project4.lpr"/>
 </CONFIG>

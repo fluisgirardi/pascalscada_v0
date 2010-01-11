@@ -39,7 +39,12 @@ type
     PLCBlock13: TPLCBlock;
     PLCBlock14: TPLCBlock;
     PLCBlock15: TPLCBlock;
+    PLCBlock16: TPLCBlock;
+    PLCBlock17: TPLCBlock;
+    PLCBlock18: TPLCBlock;
+    PLCBlock19: TPLCBlock;
     PLCBlock2: TPLCBlock;
+    PLCBlock20: TPLCBlock;
     PLCBlock3: TPLCBlock;
     PLCBlock4: TPLCBlock;
     PLCBlock5: TPLCBlock;
