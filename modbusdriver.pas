@@ -260,7 +260,7 @@ begin
         PModbusPLC[plc].OutPuts.MaxBlockItems := 2016;
         PModbusPLC[plc].OutPuts.MaxHole := POutputMaxHole;
         PModbusPLC[plc].Registers := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Registers.MaxBlockItems := 100;
+        PModbusPLC[plc].Registers.MaxBlockItems := 120;
         PModbusPLC[plc].Registers.MaxHole := PRegistersMaxHole;
         PModbusPLC[plc].AnalogReg := TPLCMemoryManager.Create();
         PModbusPLC[plc].AnalogReg.MaxBlockItems := 100;
@@ -392,7 +392,7 @@ begin
         PModbusPLC[plc].OutPuts.MaxBlockItems := 2016;
         PModbusPLC[plc].OutPuts.MaxHole := POutputMaxHole;
         PModbusPLC[plc].Registers := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Registers.MaxBlockItems := 100;
+        PModbusPLC[plc].Registers.MaxBlockItems := 120;
         PModbusPLC[plc].Registers.MaxHole := PRegistersMaxHole;
         PModbusPLC[plc].AnalogReg := TPLCMemoryManager.Create();
         PModbusPLC[plc].AnalogReg.MaxBlockItems := 100;

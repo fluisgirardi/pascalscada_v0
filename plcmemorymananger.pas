@@ -587,11 +587,12 @@ end;
 
 function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble):Integer;
 var
-  blk, AdrEnd, LenUtil:Integer;
+  blk, AdrEnd, LenUtil, Moved:Integer;
 begin
   FCriticalSection.Enter;
 
   AdrEnd := AdrStart + Length(Values) - 1;
+  Moved:=0;
 
   for blk := 0 to High(Blocks) do begin
     if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
@@ -603,12 +604,16 @@ begin
 
       Blocks[blk].Updated;
       Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+      inc(Moved, LenUtil);
+      if Moved>=Length(Values) then break;
     end else begin
       if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
         LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
         Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil );
         Blocks[blk].Updated;
         Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+        inc(Moved, LenUtil);
+        if Moved>=Length(Values) then break;
       end
     end;
   end;
@@ -641,11 +646,12 @@ end;
 
 function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble):Integer;
 var
-  blk, AdrEnd, LenUtil:Integer;
+  blk, AdrEnd, LenUtil, Moved:Integer;
 begin
   FCriticalSection.Enter;
 
   AdrEnd := AdrStart + Length(Values) - 1;
+  Moved:=0;
 
   for blk := 0 to High(Blocks) do begin
     if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
@@ -657,12 +663,17 @@ begin
 
       Blocks[blk].Updated;
       Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+
+      inc(Moved, LenUtil);
+      if Moved>=Length(Values) then break;
     end else begin
       if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
         LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
         Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil );
         Blocks[blk].Updated;
         Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+        inc(Moved, LenUtil);
+        if Moved>=Length(Values) then break;
       end
     end;
   end;

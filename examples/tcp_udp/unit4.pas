@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ExtCtrls, RTTIGrids, TAGraph, TASources, TASeries, tcp_udpport,
   ModBusTCP, PLCTagNumber, PLCBlock, HMILabel, HMIUpDown, HMIScrollBar, HMIEdit,
-  PLCBlockElement;
+  PLCBlockElement, sdl;
 
 type
 
@@ -29,6 +29,7 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    Label4: TLabel;
     ListChartSource1: TListChartSource;
     ModBusTCPDriver1: TModBusTCPDriver;
     Panel1: TPanel;
@@ -57,10 +58,13 @@ type
     PLCBlockElement3: TPLCBlockElement;
     TCP_UDPPort1: TTCP_UDPPort;
     Timer1: TTimer;
+    procedure FormCreate(Sender: TObject);
+    procedure Panel1Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
     { private declarations }
     px:Integer;
+    cmdmedios, cmdcount:Integer;
   public
     { public declarations }
   end; 
@@ -80,9 +84,22 @@ begin
     ListChartSource1.Delete(0);
   inc(px);
   ListChartSource1.Add(px,TCP_UDPPort1.CommandsPerSecond,IntToStr(px), clGreen);
+  Inc(cmdmedios, TCP_UDPPort1.CommandsPerSecond);
+  inc(cmdcount);
   Label1.Caption:=FormatFloat('#0',TCP_UDPPort1.CommandsPerSecond);
   Label2.Caption:='TX: '+FormatFloat('#0.0',TCP_UDPPort1.TXBytesSecond/1024)+' kb/s';
   Label3.Caption:='RX: '+FormatFloat('#0.0',TCP_UDPPort1.RXBytesSecond/1024)+' kb/s';
+  Label4.Caption:=FormatFloat('#0',cmdmedios/cmdcount);
+end;
+
+procedure TForm1.Panel1Click(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  SDL_Init(SDL_INIT_EVERYTHING);
 end;
 
 initialization

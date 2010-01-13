@@ -7,7 +7,7 @@
       <TargetFileExt Value=""/>
       <Icon Value="0"/>
       <UseXPManifest Value="True"/>
-      <ActiveEditorIndexAtStart Value="3"/>
+      <ActiveEditorIndexAtStart Value="0"/>
     </General>
     <VersionInfo>
       <ProjectVersion Value=""/>
@@ -57,8 +57,8 @@
         <ComponentName Value="Form1"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit4"/>
-        <CursorPos X="30" Y="72"/>
-        <TopLine Value="47"/>
+        <CursorPos X="31" Y="102"/>
+        <TopLine Value="88"/>
         <EditorIndex Value="0"/>
         <UsageCount Value="100"/>
         <Loaded Value="True"/>
@@ -106,19 +106,15 @@
         <UnitName Value="ModBusTCP"/>
         <CursorPos X="33" Y="29"/>
         <TopLine Value="17"/>
-        <EditorIndex Value="2"/>
         <UsageCount Value="33"/>
-        <Loaded Value="True"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit7>
       <Unit8>
         <Filename Value="../../modbusdriver.pas"/>
         <UnitName Value="ModBusDriver"/>
-        <CursorPos X="74" Y="138"/>
-        <TopLine Value="126"/>
-        <EditorIndex Value="3"/>
+        <CursorPos X="55" Y="263"/>
+        <TopLine Value="251"/>
         <UsageCount Value="15"/>
-        <Loaded Value="True"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit8>
       <Unit9>
@@ -339,11 +335,9 @@
       <Unit40>
         <Filename Value="../../plcmemorymananger.pas"/>
         <UnitName Value="PLCMemoryMananger"/>
-        <CursorPos X="1" Y="1"/>
-        <TopLine Value="265"/>
-        <EditorIndex Value="1"/>
+        <CursorPos X="35" Y="634"/>
+        <TopLine Value="583"/>
         <UsageCount Value="17"/>
-        <Loaded Value="True"/>
         <SyntaxHighlighter Value="Delphi"/>
       </Unit40>
       <Unit41>
@@ -453,27 +447,35 @@
         <UsageCount Value="10"/>
       </Unit55>
     </Units>
-    <JumpHistory Count="5" HistoryIndex="4">
+    <JumpHistory Count="7" HistoryIndex="6">
       <Position1>
         <Filename Value="unit4.pas"/>
         <Caret Line="33" Column="34" TopLine="25"/>
       </Position1>
       <Position2>
-        <Filename Value="../../modbustcp.pas"/>
-        <Caret Line="29" Column="33" TopLine="17"/>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="33" Column="34" TopLine="25"/>
       </Position2>
       <Position3>
         <Filename Value="unit4.pas"/>
-        <Caret Line="33" Column="34" TopLine="25"/>
+        <Caret Line="72" Column="30" TopLine="71"/>
       </Position3>
       <Position4>
-        <Filename Value="../../modbusdriver.pas"/>
-        <Caret Line="16" Column="10" TopLine="9"/>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="73" Column="30" TopLine="71"/>
       </Position4>
       <Position5>
-        <Filename Value="../../modbusdriver.pas"/>
-        <Caret Line="263" Column="55" TopLine="249"/>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="72" Column="30" TopLine="71"/>
       </Position5>
+      <Position6>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="91" Column="54" TopLine="73"/>
+      </Position6>
+      <Position7>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="11" Column="23" TopLine="73"/>
+      </Position7>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
