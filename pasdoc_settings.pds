@@ -31,8 +31,8 @@ UseTipueSearch=0
 LineBreakQuality=0
 SpecialMarkerTreatment=2
 Title=PascalScada
-VizGraphClasses=1
-VizGraphUses=1
+VizGraphClasses=0
+VizGraphUses=0
 CheckSpelling=0
 LatexGraphicsPackage=0
 
