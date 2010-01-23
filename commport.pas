@@ -482,7 +482,7 @@ end;
 procedure TUpdateThread.WaitInit;
 begin
   if PInitEventHandle.WaitFor($FFFFFFFF)<>wrSignaled  then
-    raise Exception.Create(strUpdateThreadWinit);
+    raise Exception.Create(SUpdateThreadWinit);
 end;
 
 procedure TUpdateThread.Terminate;
@@ -651,7 +651,7 @@ var
   found:Boolean;
 begin
   if not (Prot is TProtocolDriver) then
-    raise Exception.Create(strCompIsntADriver);
+    raise Exception.Create(SCompIsntADriver);
 
   found := false;
   for c:=0 to High(Protocols) do
@@ -950,7 +950,7 @@ begin
 
     //espera a thread criar a fila de mensagens
     if CommThread.WInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-      raise Exception.Create(strThreadSuspended);
+      raise Exception.Create(SThreadSuspended);
 
     CommThread.IOCmd(Cmd,IsWriteValue,PCmdPackt);
 

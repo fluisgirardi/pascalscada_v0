@@ -91,11 +91,14 @@ type
 
 implementation
 
+uses hsstrings
 {$ifdef fpc}
 {$IFDEF UNIX}
-uses  netdb, Unix;
+     ,netdb,
+     Unix
 {$endif}
 {$ENDIF}
+     ;
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
@@ -121,7 +124,7 @@ begin
   if (pn>=1) or (pn<=65535) then
     FPortNumber:=pn
   else
-    raise Exception.Create('Deve estar entre 1 e 65535!');
+    raise Exception.Create('A porta deve estar entre 1 e 65535!');
 end;
 
 procedure TTCP_UDPPort.SetTimeout(t:Integer);
