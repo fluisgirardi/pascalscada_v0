@@ -156,6 +156,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor THMIEdit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -163,7 +165,7 @@ begin
   FIsEnabled := inherited Enabled;
   FSend := [scLostFocus, scPressEnter];
   if (csDesigning in ComponentState) then begin
-    inherited Text := 'SEM TAG!';
+    inherited Text := SWithoutTag;
     Modified := false;
   end;
 
@@ -218,7 +220,7 @@ procedure THMIEdit.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if (t<>nil) and (((t as ITagInterface)=nil) and ((t as ITagNumeric)=nil) and ((t as ITagString)=nil)) then
-     raise Exception.Create('Tag inválido!');
+     raise Exception.Create(SinvalidTag);
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
@@ -234,7 +236,7 @@ begin
   FTag := t;
 
   if (FTag=nil) and (csDesigning in ComponentState) then begin
-    inherited Text := 'SEM TAG!';
+    inherited Text := SWithoutTag;
     Modified := false;
   end;
 
@@ -342,7 +344,7 @@ begin
     if (csDesigning in ComponentState) then begin
       FBlockChange := true;
       if (FTag=nil) then
-        inherited Text := 'SEM TAG!'
+        inherited Text := SWithoutTag
       else
         inherited Text := FTag.Name;
       FBlockChange := false;

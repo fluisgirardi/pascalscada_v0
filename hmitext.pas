@@ -71,6 +71,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor THMIText.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
@@ -103,7 +105,7 @@ procedure THMIText.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numéricos são aceitos!');
+     raise Exception.Create(SonlyNumericTags);
 
   inherited SetHMITag(t);
 end;

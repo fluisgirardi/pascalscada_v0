@@ -72,6 +72,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor TPLCBlockElement.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -125,7 +127,7 @@ begin
   end;
 
   if i>=PBlock.Size then
-    raise Exception.Create('Fora dos limites!');
+    raise Exception.Create(SoutOfBounds);
   PIndex := i;
 end;
 
@@ -161,7 +163,7 @@ begin
          if TryStrToFloat(V,aux) then
             Value := aux
          else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create(SinvalidValue);
       end else
          if VarIsType(V,varboolean) then begin
             if V=true then
@@ -169,7 +171,7 @@ begin
             else
                Value := 0;
          end else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create(SinvalidValue);
 end;
 
 function  TPLCBlockElement.IsValidValue(Value:Variant):Boolean;

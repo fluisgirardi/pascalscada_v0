@@ -320,7 +320,7 @@ var
 
 implementation
 
-uses PLCTag;
+uses PLCTag, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -496,7 +496,7 @@ var
 begin
   for c:=0 to High(PTags) do
     if PTags[c]=TagObj then
-      raise Exception.Create('Este Tag já esta registrado com este driver!');
+      raise Exception.Create(STagAlreadyRegiteredWithThisDriver);
 
   c:=Length(Ptags);
   SetLength(PTags,c+1);
@@ -556,7 +556,7 @@ end;
 procedure TProtocolDriver.DoExceptionIndexOut(index:integer);
 begin
   if (index>high(PTags)) then
-    raise Exception.Create('Indice fora dos limites!');
+    raise Exception.Create(SoutOfBounds);
 end;
 
 function TProtocolDriver.GetTagCount;

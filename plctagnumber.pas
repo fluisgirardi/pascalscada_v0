@@ -90,6 +90,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 function TPLCTagNumber.GetValueRaw:Double;
 begin
   Result := PValueRaw;
@@ -119,7 +121,7 @@ begin
          if TryStrToFloat(V,aux) then
             Value := aux
          else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create(SinvalidValue);
       end else
          if VarIsType(V,varboolean) then begin
             if V=true then
@@ -127,7 +129,7 @@ begin
             else
                Value := 0;
          end else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create(SinvalidValue);
 end;
 
 function  TPLCTagNumber.IsValidValue(Value:Variant):Boolean;

@@ -1034,7 +1034,7 @@ end;
 procedure TCommPortDriver.DoExceptionInActive;
 begin
   if PActive then
-    raise Exception.Create('Impossível mudar propriedades de comunicação quando ativo!');
+    raise Exception.Create(SimpossibleToChangeWhenActive);
 end;
 
 procedure TCommPortDriver.RefreshLastOSError;
@@ -1056,7 +1056,7 @@ begin
     FLastOSErrorMessage:=Buffer;
     FreeMem(buffer);
   end else
-    FLastOSErrorMessage:='Falha buscando a mensagem de erro do sistema operacional';
+    FLastOSErrorMessage:=SFaultGettingLastOSError;
 {$IFEND}
 {$ENDIF}
 end;

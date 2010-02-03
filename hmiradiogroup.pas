@@ -72,6 +72,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor THMIRadioGroup.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
@@ -96,7 +98,7 @@ procedure THMIRadioGroup.SetHMITag(t:TPLCTag);                    //seta um tag
 begin
    //se o tag esta entre um dos aceitos.
    if (t<>nil) and ((t as ITagNumeric)=nil) then
-      raise Exception.Create('Somente tags numéricos são aceitos!');
+      raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin

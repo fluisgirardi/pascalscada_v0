@@ -87,6 +87,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor TTagBit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -109,7 +111,7 @@ end;
 procedure TTagBit.SetNumber(number:TPLCNumber);
 begin
   if (number<>nil) and (((number as ITagInterface)=nil) or ((number as ITagNumeric)=nil)) then
-     raise Exception.Create('Tag inválido!');
+     raise Exception.Create(SinvalidTag);
 
   //esta removendo do bloco.
   if (number=nil) and (PNumber<>nil) then begin
@@ -170,7 +172,7 @@ begin
          if TryStrToFloat(V,aux) then
             Value := aux
          else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create(SinvalidValue);
       end else
          if VarIsType(V,varboolean) then begin
             if V then
@@ -178,7 +180,7 @@ begin
             else
                Value := 0;
          end else
-            raise exception.Create('Valor inválido!');
+            raise exception.Create(SinvalidValue);
 end;
 
 function  TTagBit.IsValidValue(Value:Variant):Boolean;

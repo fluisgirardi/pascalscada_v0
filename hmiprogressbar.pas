@@ -62,6 +62,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 destructor THMIProgressBar.Destroy;
 begin
   if Assigned(FTag) then
@@ -84,7 +86,7 @@ procedure THMIProgressBar.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if (t<>nil) and ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numéricos são aceitos!');
+     raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin

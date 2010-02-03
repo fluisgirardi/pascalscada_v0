@@ -193,6 +193,8 @@ var PortPrefix:array[0..0] of string = ('cuad');
 
 implementation
 
+uses hsstrings;
+
 {$IF defined(WIN32) or defined(WIN64)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
 begin
@@ -595,7 +597,7 @@ begin
     if (v='(none)') and (csDesigning in ComponentState) then
        PPortName:=''
     else
-       raise Exception.Create('Porta serial inexistente!!');
+       raise Exception.Create(SserialPortNotExist);
 end;
 
 function TSerialPortDriver.COMExist(v:String):Boolean;
@@ -648,7 +650,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PBaundRate := old;
-    raise Exception.Create('Modo inválido!!');
+    raise Exception.Create(SinvalidMode);
   end;
 {$IFEND}
 {$IFDEF UNIX}
@@ -673,7 +675,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PStopBits := old;
-    raise Exception.Create('Modo inválido!!');
+    raise Exception.Create(SinvalidMode);
   end;
 {$IFEND}
 {$IFDEF UNIX}
@@ -698,7 +700,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PParity := old;
-    raise Exception.Create('Modo inválido!!');
+    raise Exception.Create(SinvalidMode);
   end;
 {$IFEND}
 {$IFDEF UNIX}
@@ -723,7 +725,7 @@ begin
   if not BuildCommDCB(PChar(dcbstring),d) then begin
     RefreshLastOSError;
     PDataBits := old;
-    raise Exception.Create('Modo inválido!!');
+    raise Exception.Create(SinvalidMode);
   end;
 {$IFEND}
 {$IFDEF UNIX}

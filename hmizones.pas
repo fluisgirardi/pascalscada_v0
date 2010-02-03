@@ -406,6 +406,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor TZone.Create(Collection: TCollection);
 begin
    inherited Create(Collection);
@@ -432,7 +434,7 @@ begin
    if v=FValue1 then exit;
    if ZoneType=ztBit then begin
       if (v>31) or (v<0) then
-         raise Exception.Create('Para o tipo de comparação bit, o valor máximo deve ser 31 e o minimo deve ser 0 (ZERO)!');
+         raise Exception.Create(SztBitcomparationValue1MustBeBetween0And31);
       FValue1 := Int(v);
    end else begin
       if v>FValue2 then begin
@@ -461,12 +463,12 @@ begin
 
    if (v>=0) and (v<Collection.Count) then begin
       if Collection.Items[v]=Self then
-         raise Exception.Create('A zona escolhida para piscar não pode ser ela mesma!');
+         raise Exception.Create(ScannotBlinkWithItSelf);
       FBlinkWith:=TZone(Collection.Items[v]);
       FBlinkWith.AddReference(Self);
    end else begin
       if v<>-1 then
-         raise Exception.Create('Fora do range!');
+         raise Exception.Create(SoutOfBounds);
       if FBlinkWith<>nil then
          FBlinkWith.RemReference(Self);
       FBlinkWith:=nil;
@@ -556,7 +558,7 @@ begin
    if zt=FZoneType then exit;
    
    if (zt=ztBit) and ((FValue1>31) or (FValue1<0)) then
-      raise Exception.Create('Para a comparação do tipo ztBit o valor de Value1 precisa ser maior ou igual a 0 (Zero) e menor ou igual a 31!');
+      raise Exception.Create(SztBitcomparationValue1MustBeBetween0And31);
    FZoneType:=zt;
    NotifyChange;
 end;
@@ -853,7 +855,7 @@ var
    notify:Boolean;
 begin
    if not FileExists(fn) then
-      raise exception.Create('Arquivo inexistente!');
+      raise exception.Create(SfileNotFound);
       
    notify := (fn<>FFileName);
    FFileName := fn;

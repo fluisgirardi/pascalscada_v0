@@ -94,6 +94,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor TTagCollectionItem.Create(Collection: TCollection);
 begin
   inherited create(Collection);
@@ -112,7 +114,7 @@ begin
   if t=FTag then exit;
 
   if (t<>nil) and ((t as ITagInterface)=nil) then
-    raise Exception.Create('Tag inválido!');
+    raise Exception.Create(SinvalidTag);
 
   if Ftag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
@@ -135,7 +137,7 @@ end;
 function    TTagCollectionItem.GetDisplayName: string;
 begin
   if FTag=nil then
-    Result := 'Empty entry'
+    Result := SEmpty
   else
     Result := FTag.Name;
 end;

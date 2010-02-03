@@ -150,6 +150,8 @@ var
 
 implementation
 
+uses hsstrings;
+
 constructor TMessageSpool.Create;
 begin
   Finit := TCrossEvent.Create(nil,true,false,'MessageSpool'+IntToStr(MSCount));
@@ -285,7 +287,7 @@ begin
      err:=true;
   end;
   if err then
-     raise Exception.Create('Memória insuficiente!');
+     raise Exception.Create(SoutOfMemory);
      
   msg^.Msg.MsgID := MsgID;
   msg^.Msg.lParam := lParam;

@@ -54,7 +54,7 @@ begin
 
   //se não está em desing e esta tentando remover a conexao...
   if (ComponentState*[csDesigning]=[]) and (db=nil) then
-    raise Exception.Create('Impossível remover conexão enquanto ela estiver em uso!');
+    raise Exception.Create(SimpossibleToRemoveWhenBusy);
 
   if db<>nil then begin
     match := false;
@@ -64,7 +64,7 @@ begin
     match := match or (LowerCase(LeftStr(db.Protocol,5)) ='mysql');
 
     if not match then
-      raise Exception.Create('Os banco de dados suportados são: MySQL, SQLite e PostgreSQL');
+      raise Exception.Create(SonlyMySQL_SQLite_PostgresSupported);
   end;
 
   PZConnection:=db;
@@ -76,10 +76,10 @@ end;
 procedure TScadaApp.CheckDBConnection;
 begin
   if PZConnection=nil then
-    raise Exception.Create('Sem conexão com banco de dados!');
+    raise Exception.Create(SwithoutDBConnection);
 
   if not PZConnection.Connected then
-    raise Exception.Create('É necessário estar conectado com o banco de dados!');
+    raise Exception.Create(SDBConnectionRequired);
 end;
 
 procedure TScadaApp.DropTable(tablename:String);
@@ -167,7 +167,7 @@ begin
     if not ok then begin
       if MessageDlg('A tabela de usuários está corrompida ou alterada.'+LineEnding+LineEnding+
                     'Deseja recriar a tabela',mtWarning,mbYesNo,0)<>mrYes then
-        raise Exception.Create('Tabelas corrompidas! Impossível continuar!');
+        raise Exception.Create(StablesCorrupt);
       DropTable('tbl_usuarios');
       Create_tbl_usuarios;
     end;
@@ -176,7 +176,7 @@ begin
                   'Deseja criar a tabela?',mtWarning,mbYesNo,0)=mrYes then
       Create_tbl_usuarios
     else
-      raise Exception.Create('Tabela de usuários não existe! Impossível continuar!');
+      raise Exception.Create(SusersTableNotExist);
   end;
 
   if TableExists('tbl_integrantes') then begin
@@ -187,7 +187,7 @@ begin
     if not ok then begin
       if MessageDlg('A tabela de integrantes dos grupos está corrompida ou alterada.'+LineEnding+LineEnding+
                     'Deseja recriar a tabela',mtWarning,mbYesNo,0)<>mrYes then
-        raise Exception.Create('Tabelas corrompidas! Impossível continuar!');
+        raise Exception.Create(StablesCorrupt);
       DropTable('tbl_integrantes');
       Create_tbl_integrantes;
     end;
@@ -196,7 +196,7 @@ begin
                   'Deseja criar a tabela?',mtWarning,mbYesNo,0)=mrYes then
       Create_tbl_integrantes
     else
-      raise Exception.Create('Tabela de de integrantes dos grupos não existe! Impossível continuar!');
+      raise Exception.Create(SuserTableCorrupted);
   end;
 
   if TableExists('tbl_grupos') then begin
@@ -207,7 +207,7 @@ begin
     if not ok then begin
       if MessageDlg('A tabela de grupos está corrompida ou alterada.'+LineEnding+LineEnding+
                     'Deseja recriar a tabela',mtWarning,mbYesNo,0)<>mrYes then
-        raise Exception.Create('Tabelas corrompidas! Impossível continuar!');
+        raise Exception.Create(StablesCorrupt);
       DropTable('tbl_grupos');
       Create_tbl_grupos;
     end;
@@ -216,7 +216,7 @@ begin
                   'Deseja criar a tabela?',mtWarning,mbYesNo,0)=mrYes then
       Create_tbl_grupos
     else
-      raise Exception.Create('Tabela de grupos não existe! Impossível continuar!');
+      raise Exception.Create(SgroupsTableNotExist);
   end;
 
   if TableExists('tbl_permissoes') then begin
@@ -229,7 +229,7 @@ begin
     if not ok then begin
       if MessageDlg('A tabela de permissões está corrompida ou alterada.'+LineEnding+LineEnding+
                     'Deseja recriar a tabela',mtWarning,mbYesNo,0)<>mrYes then
-        raise Exception.Create('Tabelas corrompidas! Impossível continuar!');
+        raise Exception.Create(StablesCorrupt);
       DropTable('tbl_permissoes');
       Create_tbl_permissoes;
     end;
@@ -238,7 +238,7 @@ begin
                   'Deseja criar a tabela?',mtWarning,mbYesNo,0)=mrYes then
       Create_tbl_permissoes
     else
-      raise Exception.Create('Tabela de grupos não existe! Impossível continuar!');
+      raise Exception.Create(SgroupsTableNotExist);
   end;
 
   if TableExists('tbl_objetos') then begin
@@ -251,7 +251,7 @@ begin
     if not ok then begin
       if MessageDlg('A tabela de objetos está corrompida ou alterada.'+LineEnding+LineEnding+
                     'Deseja recriar a tabela',mtWarning,mbYesNo,0)<>mrYes then
-        raise Exception.Create('Tabelas corrompidas! Impossível continuar!');
+        raise Exception.Create(StablesCorrupt);
       DropTable('tbl_objetos');
       Create_tbl_objetos;
     end;
@@ -260,7 +260,7 @@ begin
                   'Deseja criar a tabela?',mtWarning,mbYesNo,0)=mrYes then
       Create_tbl_objetos
     else
-      raise Exception.Create('Tabela de grupos não existe! Impossível continuar!');
+      raise Exception.Create(SgroupsTableNotExist);
   end;
 end;
 

@@ -98,11 +98,13 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor THMILabel.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   if (csDesigning in ComponentState) then
-    inherited Caption := 'SEM TAG!';
+    inherited Caption := SWithoutTag;
   AutoSize:=False;
   FNumberFormat := '#0.0';
 end;
@@ -129,7 +131,7 @@ procedure THMILabel.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if (t<>nil) and ((t as ITagInterface)=nil) then
-     raise Exception.Create('Tag inválido!');
+     raise Exception.Create(SinvalidTag);
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
@@ -145,7 +147,7 @@ begin
   FTag := t;
   
   if (FTag=nil) and (csDesigning in ComponentState) then
-    inherited Caption := 'SEM TAG!';
+    inherited Caption := SWithoutTag;
 end;
 
 procedure THMILabel.SetPrefix(s:String);
@@ -167,7 +169,7 @@ begin
   if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then begin
     if (csDesigning in ComponentState) then begin
       if (FTag=nil) then
-        inherited Caption := 'SEM TAG!'
+        inherited Caption := SWithoutTag
       else
         inherited Caption := FTag.Name;
     end;

@@ -80,7 +80,7 @@ type
 
 implementation
 
-uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} Forms;
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} hsstrings, Forms;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
@@ -174,7 +174,7 @@ var
   tagpkg:PTagRec;
 begin
   if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create('A thread está suspensa?');
+    raise Exception.Create(SthreadSuspended);
 
   New(tagpkg);
   Move(tag,tagpkg^,sizeof(TTagRec));
@@ -185,7 +185,7 @@ end;
 procedure TScanUpdate.ScanWriteCallBack(SWPkg:PScanWriteRec);
 begin
   if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create('A thread está suspensa?');
+    raise Exception.Create(SthreadSuspended);
 
    FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
    DoSomething;
@@ -252,4 +252,4 @@ begin
 end;
 
 end.
-
+

@@ -213,7 +213,7 @@ type
     
 implementation
 
-uses PLCNumber;
+uses PLCNumber, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
 // implementação de TScalePIPEItem
@@ -237,7 +237,7 @@ begin
    if SProcessor<>nil then
       Result := SProcessor.Name
    else
-      Result := 'Dummy';
+      Result := SEmpty;
 end;
 
 function TScalePIPEItem.SetInGetOut(Sender:TComponent; Input:Double):Double;
@@ -327,7 +327,7 @@ var
   c:Integer;
 begin
   if not (tag is TPLCNumber) then
-    raise Exception.Create('Tipo do Tag inválido!');
+    raise Exception.Create(SinvalidTag);
 
   found := false;
   for c:=0 to High(FTags) do
@@ -398,7 +398,7 @@ var
   c:Integer;
 begin
   if not (PIPEItem is TScalePIPEItem) then
-    raise Exception.Create('Tipo inválido!');
+    raise Exception.Create(SinvalidType);
 
   found := false;
   for c:=0 to High(FPIPEItens) do
@@ -473,7 +473,7 @@ end;
 procedure TScaleProcessor.DoExceptionIndexOut(index:Integer);
 begin
   if (index<0) or (index>=Length(FProperts)) then
-    raise Exception.Create('Fora dos limites da array!');
+    raise Exception.Create(SoutOfBounds);
 end;
 
 

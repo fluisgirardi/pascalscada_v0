@@ -76,6 +76,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor THMIUpDown.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -111,7 +113,7 @@ procedure THMIUpDown.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
    if (t<>nil) and ((t as ITagNumeric)=nil) then
-      raise Exception.Create('Somente tags numéricos são aceitos!');
+      raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
    if FTag<>nil then begin
@@ -182,7 +184,7 @@ end;
 procedure THMIUpDown.SetIncrement(v:Double);
 begin
    if (Increment<=0) and ([csReading, csLoading]*ComponentState=[]) then
-      raise Exception.Create('Incremento deve ser um valor maior que zero!');
+      raise Exception.Create(SincrementMustBeGreaterThanZero);
 
    FIncrement := v;
 end;
@@ -190,7 +192,7 @@ end;
 procedure THMIUpDown.SetMax(v:Double);
 begin
   if ([csLoading]*ComponentState=[]) and (v<=FMin) then
-     raise Exception.Create('O valor máximo precisa ser maior que o minimo!');
+     raise Exception.Create(SmaxMustBeGreaterThanMin);
 
   FMax := v;
 end;
@@ -198,7 +200,7 @@ end;
 procedure THMIUpDown.SetMin(v:Double);
 begin
   if ([csLoading]*ComponentState=[]) and (v>=FMax) then
-     raise Exception.Create('O valor minimo precisa ser menor que o máximo!');
+     raise Exception.Create(SminMustBeLessThanMax);
 
   FMin := v;
 end;

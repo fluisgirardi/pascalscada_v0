@@ -124,7 +124,7 @@ begin
   if (pn>=1) or (pn<=65535) then
     FPortNumber:=pn
   else
-    raise Exception.Create('A porta deve estar entre 1 e 65535!');
+    raise Exception.Create(SportNumberRangeError);
 end;
 
 procedure TTCP_UDPPort.SetTimeout(t:Integer);
@@ -452,13 +452,13 @@ initialization
 
   //check for error
   if WSAStartup( version, wsaData ) <> 0 then
-    raise Exception.Create('Falha inicializando WinSock!');
+    raise Exception.Create(SerrorInitializingWinsock);
 
   //check for correct version
   if (LOBYTE(wsaData.wVersion) <> 2) or (HIBYTE(wsaData.wVersion)<>0) then begin
     //incorrect WinSock version
     WSACleanup();
-    raise Exception.Create('Versao incorreta da WinSock. Requerida versao 2.0');
+    raise Exception.Create(SinvalidWinSockVersion);
   end;
 finalization
   WSACleanup;

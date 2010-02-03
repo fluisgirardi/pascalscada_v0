@@ -185,6 +185,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 
 constructor TTag.Create(AOwner:TComponent);
 var
@@ -217,7 +219,7 @@ end;
 procedure TTag.AddCallBacks(ITag:IHMITagInterface);
 begin
   if (ITag<>nil) and ((ITag as IHMITagInterface)=nil) then
-    raise Exception.Create('Interface inválida!');
+    raise Exception.Create(SinvalidInterface);
   
   inc(PChangeCallBackCount);
   SetLength(PChangeCallBacks, PChangeCallBackCount);

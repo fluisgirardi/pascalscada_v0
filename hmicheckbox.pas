@@ -230,6 +230,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor THMICheckBox.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -279,7 +281,7 @@ procedure THMICheckBox.SetHMITag(t:TPLCTag);
 begin
   //se o tag é um tag numerico.
   if (t<>nil) and ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numéricos são aceitos!');
+     raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
@@ -369,7 +371,7 @@ var
   itag:ITagNumeric;
 begin
   if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueFalse) then
-    raise Exception.Create('O valor precisa ser diferente do valor FALSO!');
+    raise Exception.Create(StheValueMustBeDifferentOfValueFalseProperty);
 
   itag := FTag as ITagNumeric;
 
@@ -386,7 +388,7 @@ var
    itag:ITagNumeric;
 begin
   if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueTrue) then
-    raise Exception.Create('O valor precisa ser diferente do valor VERDADEIRO!');
+    raise Exception.Create(StheValueMustBeDifferentOfValueTrueProperty);
 
   itag := FTag as ITagNumeric;
 

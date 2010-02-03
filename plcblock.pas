@@ -74,6 +74,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor TPLCBlock.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
@@ -163,7 +165,7 @@ end;
 function  TPLCBlock.GetValue(Index:Integer):Double;
 begin
    if ((index<0) or (Index>High(PValues))) then
-     raise Exception.Create('Fora dos limites!');
+     raise Exception.Create(SoutOfBounds);
    Result := PValues[Index];
 end;
 

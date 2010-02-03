@@ -248,7 +248,7 @@ type
 
 implementation
 
-uses Math;
+uses Math, hsstrings;
 
 constructor TRegisterRange.Create(AdrStart,AdrEnd:Cardinal);
 begin
@@ -544,7 +544,7 @@ var
 begin
   FCriticalSection.Enter;
   if (Size<=0) or (RegSize<=0) then
-    raise Exception.Create('Tamanho necessita ser no minimo 1!');
+    raise Exception.Create(SsizeMustBeAtLeastOne);
 
   //captura o tamanho da array de enderecos...
   len := length(FAddress);
@@ -569,7 +569,7 @@ var
 begin
   FCriticalSection.Enter;
   if (Size<=0) or (RegSize=0) then
-    raise Exception.Create('Tamanho necessita ser no minimo 1!');
+    raise Exception.Create(SsizeMustBeAtLeastOne);
 
   //captura o tamanho atual...
   len := length(FAddress);

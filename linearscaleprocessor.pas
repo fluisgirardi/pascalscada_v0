@@ -63,6 +63,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor TLinearScaleProcessor.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -102,28 +104,28 @@ end;
 procedure TLinearScaleProcessor.SetSysMin(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[1]) then
-    raise Exception.Create('As propriedades SysMin e SysMax tem de ser obrigatoriamente diferentes!');
+    raise Exception.Create(SsysMinSysMaxMustBeDifferent);
   FProperts[0] := v;
 end;
 
 procedure TLinearScaleProcessor.SetSysMax(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[0]) then
-    raise Exception.Create('As propriedades SysMin e SysMax tem de ser obrigatoriamente diferentes!');
+    raise Exception.Create(SsysMinSysMaxMustBeDifferent);
   FProperts[1] := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMin(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[3]) then
-    raise Exception.Create('As propriedades PLCMin e PLCMax tem de ser obrigatoriamente diferentes!');
+    raise Exception.Create(SPLCMinPLCMaxMustBeDifferent);
   FProperts[2] := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMax(v:double);
 begin
   if (not (csReading	in ComponentState)) and (v=FProperts[2]) then
-    raise Exception.Create('As propriedades PLCMin e PLCMax tem de ser obrigatoriamente diferentes!');
+    raise Exception.Create(SPLCMinPLCMaxMustBeDifferent);
   FProperts[3] := v;
 end;
 
@@ -141,7 +143,7 @@ procedure TLinearScaleProcessor.Loaded;
 begin
   inherited Loaded;
   if (FProperts[0]=FProperts[1]) or (FProperts[2]=FProperts[3]) then
-    raise Exception.Create('Valor das propriedades inválido!');
+    raise Exception.Create(SinvalidValue);
 end;
 
 end.

@@ -238,7 +238,7 @@ type
 
 implementation
 
-uses PLCTagNumber, CrossEvent, syncobjs, dateutils, math;
+uses PLCTagNumber, CrossEvent, syncobjs, dateutils, math, hsstrings;
 
 destructor  TIBoxDriver.Destroy;
 begin
@@ -285,7 +285,7 @@ var
   found :boolean;
 begin
   if not (TagObj is TPLCTagNumber) then
-    Raise Exception.Create('Tag Inválido!');
+    Raise Exception.Create(SinvalidTag);
 
   with TPLCTagNumber(TagObj) do begin
     if not (PLCStation in [0..255]) then exit;
@@ -409,7 +409,7 @@ var
   found :boolean;
 begin
   if not (TagObj is TPLCTagNumber) then
-    Raise Exception.Create('Tag Inválido!');
+    Raise Exception.Create(SinvalidTag);
 
   with TagObj as TPLCTagNumber do begin
     if not (PLCStation in [0..255]) then exit;

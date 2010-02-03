@@ -88,7 +88,7 @@ type
 
 implementation
 
-uses Forms{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses hsstrings, Forms{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
@@ -185,7 +185,7 @@ end;
 procedure TScanThread.ScanWrite(SWPkg:PScanWriteRec);
 begin
   if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create('A thread está suspensa?');
+    raise Exception.Create(SthreadSuspended);
 
   //envia a mensagem
   FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
@@ -193,4 +193,4 @@ begin
 end;
 
 end.
-
+

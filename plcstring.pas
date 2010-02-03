@@ -104,7 +104,7 @@ type
 
 implementation
 
-uses variants;
+uses variants, hsstrings;
 
 constructor TPLCString.Create(AOwner:TComponent);
 begin
@@ -486,7 +486,7 @@ end;
 procedure TPLCString.SetStringSize(size:Cardinal);
 begin
    if size>255 then
-     raise Exception.Create('Tamanho máximo da string fora dos limites!');
+     raise Exception.Create(SstringSizeOutOfBounds);
    PStringSize := size;
    SetBlockSize(CalcBlockSize(false));
 end;
@@ -494,7 +494,7 @@ end;
 procedure TPLCString.SetByteSize(bsize:Byte);
 begin
    if (bsize<7) or (bsize>8) then
-     raise Exception.Create('O tamanho do byte pode ser 7 ou 8 somente!');
+     raise Exception.Create(SsizeMustBe7or8);
    
    PByteSize := bsize;
    SetBlockSize(CalcBlockSize(false));

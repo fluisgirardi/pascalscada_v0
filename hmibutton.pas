@@ -194,6 +194,8 @@ type
 
 implementation
 
+uses hsstrings;
+
 constructor THMIButton.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
@@ -300,7 +302,7 @@ procedure THMIButton.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   if ((t as ITagNumeric)=nil) then
-     raise Exception.Create('Somente tags numéricos são aceitos!');
+     raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin

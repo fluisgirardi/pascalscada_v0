@@ -187,7 +187,7 @@ var
 
 implementation
 
-uses PLCTagNumber, math, dateutils;
+uses PLCTagNumber, math, dateutils, hsstrings;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin
@@ -208,7 +208,7 @@ var
   plctagobj:TPLCTagNumber;
 begin
   if not (TagObj is TPLCTagNumber) then
-    raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
+    raise Exception.Create(SonlyPLCTagNumber);
 
   plctagobj:=TPLCTagNumber(TagObj);
 
@@ -263,7 +263,7 @@ var
 begin
   try
     if not (TagObj is TPLCTagNumber) then
-      raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
+      raise Exception.Create(SonlyPLCTagNumber);
 
     plctagobj:=TPLCTagNumber(TagObj);
 
@@ -332,7 +332,7 @@ end;
 procedure TWestASCIIDriver.DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);
 begin
   if not (TagObj is TPLCTagNumber) then
-    raise Exception.Create('Este driver suporta somente tags PLC simples. Tags Bloco e String não são suportados!');
+    raise Exception.Create(SonlyPLCTagNumber);
   DoDelTag(TagObj);
   DoAddTag(TagObj);
 end;
@@ -601,7 +601,7 @@ begin
 
   //testa as condições q fariam esse procedimento falhar
   if ((Addr<1) or (Addr>99)) then
-    raise Exception.Create('Fora dos limites!');
+    raise Exception.Create(SoutOfBounds);
 
   Unidades := Addr mod 10;
   Dezenas  := (Addr-Unidades) div 10;
