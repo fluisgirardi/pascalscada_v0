@@ -241,7 +241,7 @@ begin
 
   if found then
     //se o endereco do plc esta numa faixa válida procura nos blocos de memória.
-    if station in [1..247] then begin
+    if station in [1..255] then begin
       found := false;
       for plc:=0 to High(PModbusPLC) do
         if PModbusPLC[plc].Station = station then begin
