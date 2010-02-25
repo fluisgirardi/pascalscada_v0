@@ -853,10 +853,21 @@ end;
 
 procedure TModBusDriver.BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
 begin
-  tr.Station := plc;
-  tr.Address := startaddress;
+  with tr do begin
+    Station := plc;
+    Hack:=0;
+    Address := startaddress;
+    ReadFunction := func;
+    OffSet := 0;
+    Slot := 0;
+    File_DB := 0;
+    SubElement := 0;
+    WriteFunction := 0;
+    Retries := 0;
+    ScanTime := 0;
+  end;
   tr.Size := size;
-  tr.ReadFunction := func;
+
 end;
 
 end.
