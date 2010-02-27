@@ -598,9 +598,9 @@ begin
     if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
       LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
       if Blocks[blk].Size<=LenUtil then
-        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], Blocks[blk].Size{$IFNDEF FPC}*SizeOf(Double){$ENDIF})
+        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], Blocks[blk].Size*SizeOf(Double))
       else
-        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], LenUtil{$IFNDEF FPC}*SizeOf(Double){$ENDIF});
+        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], LenUtil*SizeOf(Double));
 
       Blocks[blk].Updated;
       Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
@@ -609,7 +609,7 @@ begin
     end else begin
       if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
         LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
-        Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil{$IFNDEF FPC}*SizeOf(Double){$ENDIF});
+        Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil*SizeOf(Double));
         Blocks[blk].Updated;
         Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
         inc(Moved, LenUtil);
@@ -657,9 +657,9 @@ begin
     if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
       LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
       if Blocks[blk].Size<=LenUtil then
-        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].Size{$IFNDEF FPC}*SizeOf(Double){$ENDIF})
+        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].Size*SizeOf(Double))
       else
-        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], LenUtil{$IFNDEF FPC}*SizeOf(Double){$ENDIF});
+        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], LenUtil*SizeOf(Double));
 
       Blocks[blk].Updated;
       Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
@@ -669,7 +669,7 @@ begin
     end else begin
       if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
         LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
-        Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil{$IFNDEF FPC}*SizeOf(Double){$ENDIF});
+        Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil*SizeOf(Double));
         Blocks[blk].Updated;
         Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
         inc(Moved, LenUtil);
