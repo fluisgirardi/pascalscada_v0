@@ -12,7 +12,7 @@ uses
   HMIRadioButton, HMIRadioGroup, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
   HMIUpDown, HMIZones, hsstrings, hsutils, IBoxDriver, LinearScaleProcessor, 
   MessageSpool, ModBusDriver, ModBusSerial, ModBusTCP, PLCBlock, 
-  PLCBlockElement, PLCMemoryMananger, PLCNumber, PLCString, PLCTag, 
+  PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, PLCTag, 
   PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, protscanupdate, 
   scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, 
   tcp_udpport, UserScale, ValueProcessor, WestASCIIDriver, LazarusPackageIntf;

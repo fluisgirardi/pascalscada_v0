@@ -2,7 +2,7 @@
   @abstract(Classes para organização de blocos de memória de um CLP.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
-unit PLCMemoryMananger;
+unit PLCMemoryManager;
 
 {$IFDEF FPC}
 {$mode delphi}

@@ -13,7 +13,7 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryMananger, PLCBlock, PLCString, SyncObjs,
+  PLCMemoryManager, PLCBlock, PLCString, SyncObjs,
   CrossEvent{$IFNDEF FPC}, Windows{$ENDIF};
 
 type

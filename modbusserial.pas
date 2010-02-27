@@ -36,7 +36,7 @@ type
 
 implementation
 
-uses Math, hsutils, PLCMemoryMananger, SysUtils;
+uses Math, hsutils, PLCMemoryManager, SysUtils;
 
 function  TModBusRTUDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var

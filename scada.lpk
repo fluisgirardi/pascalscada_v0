@@ -159,8 +159,8 @@
         <UnitName Value="PLCBlockElement"/>
       </Item29>
       <Item30>
-        <Filename Value="plcmemorymananger.pas"/>
-        <UnitName Value="PLCMemoryMananger"/>
+        <Filename Value="plcmemorymanager.pas"/>
+        <UnitName Value="PLCMemoryManager"/>
       </Item30>
       <Item31>
         <Filename Value="plcnumber.pas"/>

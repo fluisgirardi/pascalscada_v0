@@ -39,7 +39,7 @@ type
 
 implementation
 
-uses Math, hsutils, PLCMemoryMananger, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses Math, hsutils, PLCMemoryManager, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var
