@@ -15,7 +15,7 @@ uses
   PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
    HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
-   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit,
+   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
    WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP,
   {$IFDEF FPC}
     LResources, PropEdits;
@@ -59,10 +59,11 @@ begin
   RegisterComponents(strControlsPallete,  [THMIText]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
-  RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,  'Index',   TElementIndexPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), TGraphicZone, 'FileName', TZoneFileNamePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TZone,        'BlinkWith',TZoneBlinkWithPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver, 'COMPort'  , TPortPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,  'Index'    , TElementIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), TGraphicZone,      'FileName' , TZoneFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), TProtocolDriver,   'TagEditor', TTagEditorPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer),TZone,             'BlinkWith', TZoneBlinkWithPropertyEditor);
 end;
 
 {$IFDEF FPC}

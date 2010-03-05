@@ -10,12 +10,13 @@ uses
     CommPort, commtypes, crc16utils, CrossEvent, HMIAnimation, HMIButton, 
   HMICheckBox, HMIEdit, HMILabel, HMIProgressBar, hmipropeditor, 
   HMIRadioButton, HMIRadioGroup, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
-  HMIUpDown, HMIZones, hsstrings, hsutils, IBoxDriver, LinearScaleProcessor, 
-  MessageSpool, ModBusDriver, ModBusSerial, ModBusTCP, PLCBlock, 
-  PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, PLCTag, 
+  HMIUpDown, HMIZones, hsstrings, hsutils, IBoxDriver, ISOTCPDriver, 
+  LinearScaleProcessor, MessageSpool, ModBusDriver, ModBusSerial, ModBusTCP, 
+  PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, PLCTag, 
   PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, protscanupdate, 
-  scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, 
-  tcp_udpport, UserScale, ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
+  S7Types, scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, 
+  tagcollection, tcp_udpport, UserScale, ValueProcessor, WestASCIIDriver, 
+  LazarusPackageIntf;
 
 implementation
 

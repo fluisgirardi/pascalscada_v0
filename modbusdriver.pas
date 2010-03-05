@@ -161,11 +161,18 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor Destroy; override;
+    //: @seealso(TProtocolDriver.OpenTagEditor)
+    procedure OpenTagEditor; override;
     //: @seealso(TProtocolDriver.SizeOfTag)
     function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; override;
+  published
+    //: @seealso(TProtocolDriver.TagEditor)
+    property TagEditor;
   end;
 
 implementation
+
+uses Dialogs;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -254,16 +261,16 @@ begin
         SetLength(PModbusPLC,plc+1);
         PModbusPLC[plc].Station := station;
         PModbusPLC[plc].Inputs := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Inputs.MaxBlockItems := 2016;
+        PModbusPLC[plc].Inputs.MaxBlockItems := 2000;
         PModbusPLC[plc].Inputs.MaxHole := PInputMaxHole;
         PModbusPLC[plc].OutPuts := TPLCMemoryManager.Create();
-        PModbusPLC[plc].OutPuts.MaxBlockItems := 2016;
+        PModbusPLC[plc].OutPuts.MaxBlockItems := 2000;
         PModbusPLC[plc].OutPuts.MaxHole := POutputMaxHole;
         PModbusPLC[plc].Registers := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Registers.MaxBlockItems := 120;
+        PModbusPLC[plc].Registers.MaxBlockItems := 125;
         PModbusPLC[plc].Registers.MaxHole := PRegistersMaxHole;
         PModbusPLC[plc].AnalogReg := TPLCMemoryManager.Create();
-        PModbusPLC[plc].AnalogReg.MaxBlockItems := 100;
+        PModbusPLC[plc].AnalogReg.MaxBlockItems := 125;
         PModbusPLC[plc].AnalogReg.MaxHole := PRegistersMaxHole;
       end;
 
@@ -386,16 +393,16 @@ begin
         SetLength(PModbusPLC,plc+1);
         PModbusPLC[plc].Station := newValue;
         PModbusPLC[plc].Inputs := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Inputs.MaxBlockItems := 2016;
+        PModbusPLC[plc].Inputs.MaxBlockItems := 2000;
         PModbusPLC[plc].Inputs.MaxHole := PInputMaxHole;
         PModbusPLC[plc].OutPuts := TPLCMemoryManager.Create();
-        PModbusPLC[plc].OutPuts.MaxBlockItems := 2016;
+        PModbusPLC[plc].OutPuts.MaxBlockItems := 2000;
         PModbusPLC[plc].OutPuts.MaxHole := POutputMaxHole;
         PModbusPLC[plc].Registers := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Registers.MaxBlockItems := 120;
+        PModbusPLC[plc].Registers.MaxBlockItems := 125;
         PModbusPLC[plc].Registers.MaxHole := PRegistersMaxHole;
         PModbusPLC[plc].AnalogReg := TPLCMemoryManager.Create();
-        PModbusPLC[plc].AnalogReg.MaxBlockItems := 100;
+        PModbusPLC[plc].AnalogReg.MaxBlockItems := 125;
         PModbusPLC[plc].AnalogReg.MaxHole := PRegistersMaxHole;
       end;
       case memtype of
@@ -535,6 +542,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TModBusDriver.OpenTagEditor;
+begin
+  if [csDesigning]*ComponentState=[] then exit;
+  ShowMessage('foi');
 end;
 
 function  TModBusDriver.SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE;

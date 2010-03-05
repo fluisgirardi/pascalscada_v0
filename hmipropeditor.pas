@@ -46,7 +46,18 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
   end;
 
+  //: Editor da propriedade TGraphicZone.FileName
+  TTagEditorPropertyEditor = class(TStringProperty)
+  public
+    function  GetAttributes: TPropertyAttributes; override;
+    function  GetValue: string; override;
+    procedure Edit; override;
+    procedure SetValue(const Value: string); override;
+  end;
+
 implementation
+
+uses ProtocolDriver;
 
 function  TZoneFileNamePropertyEditor.GetAttributes: TPropertyAttributes;
 begin
@@ -105,6 +116,30 @@ begin
          if TZone(GetComponent(0)).Collection.Items[i]<>GetComponent(0) then
             Proc(IntToStr(i));
       end;
+end;
+
+//editores de propriedades de BlinkWith
+function  TTagEditorPropertyEditor.GetAttributes: TPropertyAttributes;
+begin
+   if GetComponent(0) is TProtocolDriver then
+      Result := [paDialog{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
+                 paValueEditable{$ENDIF}{$ENDIF}];
+end;
+
+function  TTagEditorPropertyEditor.GetValue: string;
+begin
+   Result := GetStrValue;
+end;
+
+procedure TTagEditorPropertyEditor.Edit;
+begin
+  if GetComponent(0) is TProtocolDriver then
+    TProtocolDriver(GetComponent(0)).OpenTagEditor;
+end;
+
+procedure TTagEditorPropertyEditor.SetValue(const Value: string);
+begin
+   //SetStrValue(Value);
 end;
 
 end.
