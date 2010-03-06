@@ -82,6 +82,6 @@ contains
   modbustcp in 'modbustcp.pas',
   modbusdriver in 'modbusdriver.pas',
   modbusserial in 'modbusserial.pas',
-  utagbuilder in 'utagbuilder.pas';
+  utagbuilder in 'utagbuilder.pas' {frmModbusTagBuilder};
 
 end.
