@@ -1,4 +1,4 @@
-﻿{:
+{:
   @abstract(Implementação dos editores de algumas propriedades de controles
             do PascalSCADA.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
