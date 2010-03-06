@@ -97,6 +97,8 @@ var
 
 implementation
 
+uses hsstrings;
+
 {$IFDEF FPC}
 {$R utagbuilder.lfm}
 {$ELSE}
@@ -118,7 +120,7 @@ begin
     Left    := 0;
     Height  := 21;
     Width   := 160;
-    Text    := '';
+    Text    := 'Tag';
   end;
 
   CountEmpty:=TCheckBox.Create(Self);
@@ -366,7 +368,7 @@ begin
   item := CurItem;
   while item<>nil do begin
     if (Trim(item.Nome.Text)<>'') AND (not (item.Nome.Text[1] in ['a'..'z','A'..'Z','_'])) then
-      raise Exception.Create('Nome inválido!');
+      raise Exception.Create(SInvalidTagNameInTagBuilder);
     item := TTagNamesItemEditor(item.Prior);
   end;
 
@@ -377,7 +379,7 @@ begin
     item := TTagNamesItemEditor(item.Prior);
   end;
   if item=nil then
-    raise Exception.Create('É necessário que pelo menos um nome válido esteja presente ou um item tenha a opção "Contar Vazios" marcado!');
+    raise Exception.Create(SWithoutAtLeastOneValidName);
 end;
 
 procedure TfrmModbusTagBuilder.btnNextClick(Sender: TObject);
@@ -406,4 +408,4 @@ begin
   CurItem := newitem;
 end;
 
-end.
+end.

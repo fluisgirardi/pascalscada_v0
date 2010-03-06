@@ -68,6 +68,8 @@ resourcestring
   SWithoutTag = 'SEM TAG!';
   SEmpty      = 'Vazio';
   SWithoutTagBuilder = 'O driver não suporta a ferramenta Tag Builder';
+  SInvalidTagNameInTagBuilder = 'Nome inválido!';
+  SWithoutAtLeastOneValidName = 'É necessário que pelo menos um nome válido esteja presente ou um item tenha a opção "Contar Vazios" marcado!';
 
 implementation
 

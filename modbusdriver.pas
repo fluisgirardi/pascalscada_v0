@@ -13,7 +13,7 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryManager, PLCBlock, PLCString, SyncObjs,
+  PLCMemoryManager, PLCBlock, PLCString, SyncObjs, uTagBuilder,
   CrossEvent{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -103,6 +103,11 @@ type
   @seealso(TModBusTCPDriver)
   }
   TModBusDriver = class(TProtocolDriver)
+  private
+    function BuildItemName(nameprefix:String; ZeroFill:Boolean; index, NumZeros:Integer):String;
+    function SelectedReadFuntion(dlg:TfrmModbusTagBuilder):Integer;
+    function SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):Integer;
+    function SeekFirstItem(LastItem:TTagNamesItemEditor):TTagNamesItemEditor;
   protected
     FReadEvent:TCrossEvent;
     POutputMaxHole:Cardinal;
@@ -169,7 +174,7 @@ type
 
 implementation
 
-uses Dialogs, uTagBuilder, Controls;
+uses Dialogs, Controls, PLCBlockElement, strings;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -543,23 +548,127 @@ end;
 
 procedure TModBusDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
 var
-  x:TfrmModbusTagBuilder;
-  t:TPLCTagNumber;
+  dlg:TfrmModbusTagBuilder;
+  tplc:TPLCTagNumber;
+  tstr:TPLCString;
+  tblk:TPLCBlock;
+  c, CurMemtAdress, nameitem:Integer;
+  confItem:TTagNamesItemEditor;
 begin
   if [csDesigning]*ComponentState=[] then exit;
-  x:=TfrmModbusTagBuilder.Create(nil);
+  dlg:=TfrmModbusTagBuilder.Create(nil);
   try
-    if x.ShowModal=mrOk then begin
+    if dlg.ShowModal=mrOk then begin
       if Assigned(InsertHook) and Assigned(CreateProc) then begin
-        t:= TPLCTagNumber(CreateProc(TPLCTagNumber));
-        t.Name:='ximia';
-        InsertHook(t);
+
+        //plc number
+        if dlg.optPLCTagNumber.Checked then begin
+
+          CurMemtAdress:=dlg.FirstMemAddress.Value;
+          nameitem:=1;
+          confItem:=SeekFirstItem(dlg.CurItem);
+          if confItem=nil then exit;
+
+          for c:=1 to dlg.MemCount.Value do begin
+            if Trim(confItem.Nome.Text)<>'' then begin
+
+              tplc := TPLCTagNumber(CreateProc(TPLCTagNumber));
+              tplc.Name:=BuildItemName(confItem.Nome.Text,confItem.ZeroFill.Checked,nameitem,confItem.QtdDigitos.Value);
+              tplc.MemAddress := CurMemtAdress;
+              tplc.MemReadFunction  := SelectedReadFuntion(dlg);
+              tplc.MemWriteFunction := SelectedWriteFuntion(dlg);
+              tplc.PLCStation:=dlg.StationAddress.Value;
+              tplc.RefreshTime:=confItem.Scan.Value;
+              tplc.ProtocolDriver := Self;
+              InsertHook(tplc);
+            end;
+
+            if confItem.Next=nil then begin
+              confItem:=SeekFirstItem(dlg.CurItem);
+              inc(nameitem);
+            end else
+              confItem:=TTagNamesItemEditor(confItem.Next);
+
+            inc(CurMemtAdress);
+          end;
+        end;
+
+        //string
+        if dlg.optPLCString.Checked then begin
+
+        end;
+
+        //bloco
+        if dlg.optPLCBlock.Checked then begin
+
+        end;
       end;
     end;
   finally
-    x.Destroy;
+    dlg.Destroy;
   end;
 end;
+
+function TModBusDriver.BuildItemName(nameprefix:String; ZeroFill:Boolean; index, NumZeros:Integer):String;
+var
+  idxfmt, numfmt:String;
+  c:Integer;
+begin
+  if ZeroFill then begin
+    idxfmt:='0';
+    for c:= 2 to NumZeros do
+      idxfmt:=idxfmt+'0';
+  end
+  else
+    idxfmt:='#0';
+
+  numfmt:=FormatFloat(idxfmt,index);
+
+  if Pos('%s',nameprefix)=0 then
+    Result:=nameprefix+numfmt
+  else
+    Result := Format(nameprefix,[numfmt]);
+end;
+
+function TModBusDriver.SelectedReadFuntion(dlg:TfrmModbusTagBuilder):Integer;
+begin
+  Result:=0;
+  if dlg.Type1.Checked then
+    Result:=1;
+  if dlg.Type2.Checked then
+    Result:=2;
+  if dlg.Type3.Checked then
+    Result:=3;
+  if dlg.Type3.Checked then
+    Result:=4;
+end;
+
+function TModBusDriver.SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):Integer;
+begin
+  Result := 0;
+  case SelectedReadFuntion(dlg) of
+    1: begin
+      if dlg.optSimpleFunctions.Checked then
+        Result:=5
+      else
+        Result := 15;
+    end;
+    3: begin
+      if dlg.optSimpleFunctions.Checked then
+        Result := 6
+      else
+        Result := 16;
+    end;
+  end;
+end;
+
+function TModBusDriver.SeekFirstItem(LastItem:TTagNamesItemEditor):TTagNamesItemEditor;
+begin
+  Result := LastItem;
+  while (Result<>nil) and (Result.Prior<>nil) do
+    Result:=TTagNamesItemEditor(Result.Prior);
+end;
+
 
 function  TModBusDriver.SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE;
 var
