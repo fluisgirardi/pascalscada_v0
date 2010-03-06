@@ -87,10 +87,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure optPLCTagNumberClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
-  private
-    { Private declarations }
   public
     CurItem:TTagNamesItemEditor;
+    destructor Destroy; override;
   end;
 
 var
@@ -283,6 +282,19 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+destructor TfrmModbusTagBuilder.Destroy;
+var
+  item : TTagNamesItemEditor;
+begin
+
+  while CurItem<>nil do begin
+     item:=TTagNamesItemEditor(CurItem.Prior);
+     CurItem.Destroy;
+     CurItem:=item;
+  end;
+  inherited Destroy;
+end;
+
 procedure TfrmModbusTagBuilder.PageControl1Change(Sender: TObject);
 begin
   btnPrior.Enabled:=PageControl1.TabIndex<>0;
@@ -366,7 +378,6 @@ begin
   end;
   if item=nil then
     raise Exception.Create('É necessário que pelo menos um nome válido esteja presente ou um item tenha a opção "Contar Vazios" marcado!');
-  Close;
 end;
 
 procedure TfrmModbusTagBuilder.btnNextClick(Sender: TObject);

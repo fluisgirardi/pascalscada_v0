@@ -18,7 +18,7 @@ uses
    HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
    WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP,
   {$IFDEF FPC}
-    LResources, PropEdits;
+    LResources, PropEdits, ComponentEditors;
   {$ELSE}
     Types,
     //se for delphi 4 ou 5
@@ -62,8 +62,9 @@ begin
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver, 'COMPort'  , TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,  'Index'    , TElementIndexPropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), TGraphicZone,      'FileName' , TZoneFileNamePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), TProtocolDriver,   'TagEditor', TTagEditorPropertyEditor);
   RegisterPropertyEditor(TypeInfo(integer),TZone,             'BlinkWith', TZoneBlinkWithPropertyEditor);
+
+  RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
 end;
 
 {$IFDEF FPC}

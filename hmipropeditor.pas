@@ -14,10 +14,10 @@ unit hmipropeditor;
 interface
 
 uses
-  Classes, SysUtils, HMIZones, Dialogs,
+  Classes, SysUtils, HMIZones, Dialogs, Forms, Menus, ProtocolDriver, Tag,
   
   {$IFDEF FPC}
-    PropEdits;
+    PropEdits, ComponentEditors;
   {$ELSE}
     Types,
     //se for delphi 6 ou superior
@@ -46,18 +46,20 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
   end;
 
-  //: Editor da propriedade TGraphicZone.FileName
-  TTagEditorPropertyEditor = class(TStringProperty)
+  //: Editor de componente TagBuilder
+  TTagBuilderComponentEditor = class(TDefaultComponentEditor)
+  private
+    procedure AddTagInEditor(Tag:TTag);
+    procedure OpenTagBuilder;
   public
-    function  GetAttributes: TPropertyAttributes; override;
-    function  GetValue: string; override;
-    procedure Edit; override;
-    procedure SetValue(const Value: string); override;
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
+    procedure PrepareItem(Index: Integer; const AnItem: TMenuItem); override;
+    function ProtocolDriver: TProtocolDriver; virtual;
   end;
 
 implementation
-
-uses ProtocolDriver;
 
 function  TZoneFileNamePropertyEditor.GetAttributes: TPropertyAttributes;
 begin
@@ -118,28 +120,52 @@ begin
       end;
 end;
 
-//editores de propriedades de BlinkWith
-function  TTagEditorPropertyEditor.GetAttributes: TPropertyAttributes;
+///////////////////////////////////////
+//editor TAG BUILDER
+///////////////////////////////////////
+
+procedure TTagBuilderComponentEditor.OpenTagBuilder;
 begin
-   if GetComponent(0) is TProtocolDriver then
-      Result := [paDialog{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
-                 paValueEditable{$ENDIF}{$ENDIF}];
+ ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor);
 end;
 
-function  TTagEditorPropertyEditor.GetValue: string;
+procedure TTagBuilderComponentEditor.AddTagInEditor(Tag:TTag);
+var
+  Hook: TPropertyEditorHook;
 begin
-   Result := GetStrValue;
+  Hook:=nil;
+  if not GetHook(Hook) then exit;
+  Hook.PersistentAdded(Tag,false);
+  Modified;
 end;
 
-procedure TTagEditorPropertyEditor.Edit;
+procedure TTagBuilderComponentEditor.ExecuteVerb(Index: Integer);
 begin
-  if GetComponent(0) is TProtocolDriver then
-    TProtocolDriver(GetComponent(0)).OpenTagEditor;
+  if Index=0 then
+    OpenTagBuilder();
 end;
 
-procedure TTagEditorPropertyEditor.SetValue(const Value: string);
+function TTagBuilderComponentEditor.GetVerb(Index: Integer): string;
 begin
-   //SetStrValue(Value);
+  if Index=0 then
+    Result:='Tag Builder';
+end;
+
+function TTagBuilderComponentEditor.GetVerbCount: Integer;
+begin
+  Result:=1;
+end;
+
+procedure TTagBuilderComponentEditor.PrepareItem(Index: Integer;
+  const AnItem: TMenuItem);
+begin
+  inherited PrepareItem(Index, AnItem);
+  AnItem.Enabled:=true;
+end;
+
+function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
+begin
+  Result:=TProtocolDriver(GetComponent);
 end;
 
 end.

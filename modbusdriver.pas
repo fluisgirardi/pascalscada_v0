@@ -162,17 +162,14 @@ type
     //: @exclude
     destructor Destroy; override;
     //: @seealso(TProtocolDriver.OpenTagEditor)
-    procedure OpenTagEditor; override;
+    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook); override;
     //: @seealso(TProtocolDriver.SizeOfTag)
     function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; override;
-  published
-    //: @seealso(TProtocolDriver.TagEditor)
-    property TagEditor;
   end;
 
 implementation
 
-uses Dialogs;
+uses Dialogs, uTagBuilder, Controls;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -544,10 +541,24 @@ begin
   end;
 end;
 
-procedure TModBusDriver.OpenTagEditor;
+procedure TModBusDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook);
+var
+  x:TfrmModbusTagBuilder;
+  t:TPLCTagNumber;
 begin
   if [csDesigning]*ComponentState=[] then exit;
-  ShowMessage('foi');
+  x:=TfrmModbusTagBuilder.Create(nil);
+  try
+    if x.ShowModal=mrOk then begin
+      if Assigned(InsertHook) then begin
+        t:=TPLCTagNumber.Create(OwnerOfNewTags.Owner);
+        t.Name:='ximia';
+        InsertHook(t);
+      end;
+    end;
+  finally
+    x.Destroy;
+  end;
 end;
 
 function  TModBusDriver.SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE;

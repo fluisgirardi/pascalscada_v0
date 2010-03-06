@@ -1,9 +1,9 @@
 object frmModbusTagBuilder: TfrmModbusTagBuilder
-  Left = 296
+  Left = 535
   Height = 380
   Top = 109
   Width = 593
-  ActiveControl = Panel4
+  ActiveControl = StationAddress
   BorderStyle = bsDialog
   Caption = 'Modbus Tag Builder'
   ClientHeight = 380
@@ -11,23 +11,24 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   OnCreate = FormCreate
+  Position = poScreenCenter
   LCLVersion = '0.9.29'
   object PageControl1: TPageControl
     Left = 0
-    Height = 333
+    Height = 338
     Top = 0
     Width = 593
-    ActivePage = TabSheet3
+    ActivePage = TabSheet1
     Align = alClient
     ParentShowHint = False
     ShowHint = True
-    TabIndex = 2
+    TabIndex = 0
     TabOrder = 0
     TabPosition = tpBottom
     OnChange = PageControl1Change
     object TabSheet1: TTabSheet
       Caption = 'Inicio'
-      ClientHeight = 308
+      ClientHeight = 313
       ClientWidth = 591
       object txtTagType: TLabel
         Left = 8
@@ -37,7 +38,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         AutoSize = False
         Caption = 'Qual o tipo de memória você deseja criar como tag?'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -51,7 +52,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         AutoSize = False
         Caption = 'Quantas memórias você deseja mapear?'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -65,7 +66,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         AutoSize = False
         Caption = 'Qual o endereço da primeira memória que se deseja mapear?'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -79,7 +80,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         AutoSize = False
         Caption = 'Qual o endereço (nó) da estação (CLP) que contem as memórias que se deseja mapear?'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -143,7 +144,6 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Width = 121
         MaxValue = 65535
         TabOrder = 5
-        Value = 1
       end
       object StationAddress: TSpinEdit
         Left = 8
@@ -158,7 +158,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     end
     object TabSheet2: TTabSheet
       Caption = 'Tipo de tag usado'
-      ClientHeight = 308
+      ClientHeight = 313
       ClientWidth = 591
       ImageIndex = 1
       object Label2: TLabel
@@ -169,7 +169,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         AutoSize = False
         Caption = 'Qual o tipo de tag deseja usar para mapear essas memórias?'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -179,11 +179,11 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Left = 24
         Height = 13
         Top = 200
-        Width = 201
+        Width = 223
         AutoSize = False
         Caption = 'Qual o tamanho máximo da string'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -193,11 +193,11 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Left = 24
         Height = 13
         Top = 120
-        Width = 193
+        Width = 217
         AutoSize = False
         Caption = 'Qual o tamanho máximo do bloco'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -207,11 +207,11 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Left = 24
         Height = 13
         Top = 248
-        Width = 143
+        Width = 159
         AutoSize = False
         Caption = 'Qual o formato da string'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -225,7 +225,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         AutoSize = False
         Caption = 'Tamanho de cada byte da string'
         Font.Height = -11
-        Font.Name = 'MS Sans Serif'
+        Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
         ParentColor = False
         ParentFont = False
@@ -331,17 +331,17 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     end
     object TabSheet3: TTabSheet
       Caption = 'Estrutura de nomeacao'
-      ClientHeight = 308
+      ClientHeight = 313
       ClientWidth = 591
       ImageIndex = 2
       object ScrollBox1: TScrollBox
         Left = 0
-        Height = 308
+        Height = 313
         Top = 0
         Width = 591
         Align = alClient
         BorderStyle = bsNone
-        ClientHeight = 308
+        ClientHeight = 313
         ClientWidth = 591
         TabOrder = 0
         object Panel4: TPanel
@@ -461,7 +461,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
           object Button1: TButton
             Left = 512
             Height = 25
-            Top = 2
+            Top = 6
             Width = 50
             Caption = 'Add'
             OnClick = Button1Click
@@ -473,51 +473,52 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
   end
   object Panel1: TPanel
     Left = 0
-    Height = 47
-    Top = 333
+    Height = 42
+    Top = 338
     Width = 593
     Align = alBottom
     BevelOuter = bvNone
-    ClientHeight = 47
+    ClientHeight = 42
     ClientWidth = 593
     TabOrder = 1
     object btnCancel: TButton
       Left = 8
       Height = 33
-      Top = 8
+      Top = 6
       Width = 75
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 0
     end
-    object btnPrior: TButton
-      Left = 332
+    object btnFinish: TButton
+      Left = 504
       Height = 33
-      Top = 8
-      Width = 75
-      Caption = 'Anterior'
+      Top = 6
+      Width = 73
+      Caption = 'Concluir'
+      Default = True
       Enabled = False
-      OnClick = btnPriorClick
+      ModalResult = 1
+      OnClick = btnFinishClick
       TabOrder = 1
     end
     object btnNext: TButton
-      Left = 412
+      Left = 424
       Height = 33
-      Top = 8
-      Width = 75
+      Top = 6
+      Width = 73
       Caption = 'Próxima'
       OnClick = btnNextClick
       TabOrder = 2
     end
-    object btnFinish: TButton
-      Left = 492
+    object btnPrior: TButton
+      Left = 344
       Height = 33
-      Top = 8
-      Width = 75
-      Caption = 'Concluir'
+      Top = 6
+      Width = 73
+      Caption = 'Anterior'
       Enabled = False
-      ModalResult = 1
-      OnClick = btnFinishClick
+      OnClick = btnPriorClick
       TabOrder = 3
     end
   end

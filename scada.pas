@@ -16,7 +16,7 @@ uses
   PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, protscanupdate, 
   S7Types, scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, 
   tagcollection, tcp_udpport, UserScale, ValueProcessor, WestASCIIDriver, 
-  LazarusPackageIntf;
+  uTagBuilder, LazarusPackageIntf;
 
 implementation
 

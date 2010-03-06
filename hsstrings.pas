@@ -67,6 +67,7 @@ resourcestring
   SFaultGettingLastOSError = 'Falha buscando a mensagem de erro do sistema operacional';
   SWithoutTag = 'SEM TAG!';
   SEmpty      = 'Vazio';
+  SWithoutTagBuilder = 'O driver não suporta a ferramenta Tag Builder';
 
 implementation
 

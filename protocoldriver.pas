@@ -15,6 +15,7 @@ uses
   protscan, CrossEvent, Tag, syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
+  TAddTagInEditorHook = procedure(Tag:TTag) of object;
   {:
   @abstract(Classe base para drivers de protocolo.)
 
@@ -74,10 +75,6 @@ type
     PScanWriteThread:TScanThread;
     //thread de atualização dos pedidos dos tags
     PScanUpdateThread:TScanUpdate;
-    //Tag editor
-    FTagEditor:String;
-
-    procedure SetTagEditor(v:String);
 
     //excessao caso o index to tag esteja fora dos limites
     procedure DoExceptionIndexOut(index:integer);
@@ -226,8 +223,6 @@ type
 
     //: Informa ao driver se ele deve ler algum tag a todo scan.
     property ReadSomethingAlways:Boolean read PReadSomethingAlways write PReadSomethingAlways default true;
-    //: Editor de tags do driver.
-    property TagEditor:String read FTagEditor write SetTagEditor;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -242,7 +237,7 @@ type
     procedure AddTag(TagObj:TTag);
 
     //: Chama o editor de tags do driver.
-    procedure OpenTagEditor; virtual;
+    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook); virtual;
 
     {:
     Remove um tag do scan do driver.
@@ -330,7 +325,7 @@ var
 
 implementation
 
-uses PLCTag, hsstrings;
+uses PLCTag, hsstrings, Dialogs;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -341,8 +336,6 @@ begin
   inherited Create(AOwner);
   PDriverID := DriverCount;
   inc(DriverCount);
-
-  FTagEditor := 'Tag Editor';
 
   FCritical := TCriticalSection.Create;
 
@@ -426,8 +419,9 @@ begin
   end;
 end;
 
-procedure TProtocolDriver.OpenTagEditor;
+procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook);
 begin
+  MessageDlg(SWithoutTagBuilder, mtError,[mbOK],0);
 end;
 
 procedure TProtocolDriver.AddPendingAction(const Obj:TObject);
@@ -573,10 +567,6 @@ procedure TProtocolDriver.DoExceptionIndexOut(index:integer);
 begin
   if (index>high(PTags)) then
     raise Exception.Create(SoutOfBounds);
-end;
-
-procedure TProtocolDriver.SetTagEditor(v:String);
-begin
 end;
 
 function TProtocolDriver.GetTagCount;
