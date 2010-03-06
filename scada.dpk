@@ -1,6 +1,6 @@
 package scada;
 
-{$R scada.res}
+{$R *.res}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -31,19 +31,20 @@ requires
   designide,
   xmlrtl,
   vclactnband,
-  vclx;
+  vclx,
+  VclSmp;
 
 contains
   commport in 'commport.pas',
   commtypes in 'commtypes.pas',
   serialport in 'serialport.pas',
   protocoldriver in 'protocoldriver.pas',
-  PLCMemoryMananger in 'PLCMemoryMananger.pas',
+  plcmemorymanager in 'plcmemorymanager.pas',
   hsutils in 'hsutils.pas',
   plctag in 'plctag.pas',
-  Tag in 'Tag.pas',
-  PLCNumber in 'PLCNumber.pas',
-  ValueProcessor in 'ValueProcessor.pas',
+  tag in 'tag.pas',
+  plcnumber in 'plcnumber.pas',
+  valueprocessor in 'valueprocessor.pas',
   ProtocolTypes in 'ProtocolTypes.pas',
   plctagnumber in 'plctagnumber.pas',
   LinearScaleProcessor in 'LinearScaleProcessor.pas',
@@ -80,6 +81,7 @@ contains
   tcp_udpport in 'tcp_udpport.pas',
   modbustcp in 'modbustcp.pas',
   modbusdriver in 'modbusdriver.pas',
-  modbusserial in 'modbusserial.pas';
+  modbusserial in 'modbusserial.pas',
+  utagbuilder in 'utagbuilder.pas';
 
 end.

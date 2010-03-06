@@ -1,4 +1,4 @@
-{:
+﻿{:
   @abstract(Implementação dos editores de algumas propriedades de controles
             do PascalSCADA.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
@@ -47,6 +47,9 @@ type
   end;
 
   //: Editor de componente TagBuilder
+  {$IFNDEF FPC}
+  TDefaultComponentEditor = class(TComponentEditor);
+  {$ENDIF}
   TTagBuilderComponentEditor = class(TDefaultComponentEditor)
   private
     procedure AddTagInEditor(Tag:TTag);
@@ -55,7 +58,6 @@ type
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
-    procedure PrepareItem(Index: Integer; const AnItem: TMenuItem); override;
     function ProtocolDriver: TProtocolDriver; virtual;
   end;
 
@@ -130,13 +132,20 @@ begin
 end;
 
 procedure TTagBuilderComponentEditor.AddTagInEditor(Tag:TTag);
+{$IFDEF FPC}
 var
   Hook: TPropertyEditorHook;
+{$ENDIF}
 begin
+{$IFDEF FPC}
   Hook:=nil;
   if not GetHook(Hook) then exit;
   Hook.PersistentAdded(Tag,false);
   Modified;
+{$ELSE}
+  PersistentToDesignObject(Tag);
+  Designer.Modified;
+{$ENDIF}
 end;
 
 procedure TTagBuilderComponentEditor.ExecuteVerb(Index: Integer);
@@ -154,13 +163,6 @@ end;
 function TTagBuilderComponentEditor.GetVerbCount: Integer;
 begin
   Result:=1;
-end;
-
-procedure TTagBuilderComponentEditor.PrepareItem(Index: Integer;
-  const AnItem: TMenuItem);
-begin
-  inherited PrepareItem(Index, AnItem);
-  AnItem.Enabled:=true;
 end;
 
 function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
