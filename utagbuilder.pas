@@ -100,7 +100,7 @@ implementation
 {$IFDEF FPC}
 {$R utagbuilder.lfm}
 {$ELSE}
-{$R utagbuilder.dfm}
+{$R *.dfm}
 {$ENDIF}
 
 
