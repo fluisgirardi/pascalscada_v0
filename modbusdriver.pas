@@ -569,9 +569,9 @@ begin
           confItem:=SeekFirstItem(dlg.CurItem);
           if confItem=nil then exit;
 
-          for c:=1 to dlg.MemCount.Value do begin
+          c:=1
+          while c<=dlg.MemCount.Value do begin
             if Trim(confItem.Nome.Text)<>'' then begin
-
               tplc := TPLCTagNumber(CreateProc(TPLCTagNumber));
               tplc.Name:=BuildItemName(confItem.Nome.Text,confItem.ZeroFill.Checked,nameitem,confItem.QtdDigitos.Value);
               tplc.MemAddress := CurMemtAdress;
@@ -583,13 +583,16 @@ begin
               InsertHook(tplc);
             end;
 
+            inc(CurMemtAdress);
+
+            if (Trim(confItem.Nome.Text)='') and confItem.CountEmpty.Checked  then
+              inc(c);
+
             if confItem.Next=nil then begin
               confItem:=SeekFirstItem(dlg.CurItem);
               inc(nameitem);
             end else
               confItem:=TTagNamesItemEditor(confItem.Next);
-
-            inc(CurMemtAdress);
           end;
         end;
 
