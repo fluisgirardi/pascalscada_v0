@@ -1,5 +1,5 @@
 {:
-  @abstract(Implementação dos editores de algumas propriedades de controles
+  @abstract(Implementacao dos editores de algumas propriedades de controles
             do PascalSCADA.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
@@ -53,6 +53,7 @@ type
   TTagBuilderComponentEditor = class(TDefaultComponentEditor)
   private
     procedure AddTagInEditor(Tag:TTag);
+    function CreateComponent(tagclass:TComponentClass):TComponent;
     procedure OpenTagBuilder;
   public
     procedure ExecuteVerb(Index: Integer); override;
@@ -128,7 +129,7 @@ end;
 
 procedure TTagBuilderComponentEditor.OpenTagBuilder;
 begin
- ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor);
+  ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
 end;
 
 procedure TTagBuilderComponentEditor.AddTagInEditor(Tag:TTag);
@@ -143,8 +144,16 @@ begin
   Hook.PersistentAdded(Tag,false);
   Modified;
 {$ELSE}
-  PersistentToDesignObject(Tag);
   Designer.Modified;
+{$ENDIF}
+end;
+
+function TTagBuilderComponentEditor.CreateComponent(tagclass:TComponentClass):TComponent;
+begin
+{$IFDEF FPC}
+  Result := tagclass.Create(ProtocolDriver.Owner);
+{$ELSE}
+  Result := Designer.CreateComponent(tagclass,ProtocolDriver.Owner,0,0,0,0);
 {$ENDIF}
 end;
 

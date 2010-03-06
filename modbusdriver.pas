@@ -162,7 +162,7 @@ type
     //: @exclude
     destructor Destroy; override;
     //: @seealso(TProtocolDriver.OpenTagEditor)
-    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook); override;
+    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); override;
     //: @seealso(TProtocolDriver.SizeOfTag)
     function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; override;
   end;
@@ -541,7 +541,7 @@ begin
   end;
 end;
 
-procedure TModBusDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook);
+procedure TModBusDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
 var
   x:TfrmModbusTagBuilder;
   t:TPLCTagNumber;
@@ -550,8 +550,8 @@ begin
   x:=TfrmModbusTagBuilder.Create(nil);
   try
     if x.ShowModal=mrOk then begin
-      if Assigned(InsertHook) then begin
-        t:=TPLCTagNumber.Create(OwnerOfNewTags.Owner);
+      if Assigned(InsertHook) and Assigned(CreateProc) then begin
+        t:= TPLCTagNumber(CreateProc(TPLCTagNumber));
         t.Name:='ximia';
         InsertHook(t);
       end;

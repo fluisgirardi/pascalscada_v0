@@ -20,10 +20,6 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     Top = 0
     Width = 593
     Height = 333
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
     ActivePage = TabSheet3
     Align = alClient
     MultiLine = True
@@ -489,7 +485,6 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 576
     object btnCancel: TButton
       Left = 8
       Top = 8

@@ -16,6 +16,7 @@ uses
 
 type
   TAddTagInEditorHook = procedure(Tag:TTag) of object;
+  TCreateTagProc = function(tagclass:TComponentClass):TComponent of object;
   {:
   @abstract(Classe base para drivers de protocolo.)
 
@@ -237,7 +238,7 @@ type
     procedure AddTag(TagObj:TTag);
 
     //: Chama o editor de tags do driver.
-    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook); virtual;
+    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
 
     {:
     Remove um tag do scan do driver.
@@ -302,7 +303,6 @@ type
     property TagName[index:integer]:String read GetTagName;
     //: Lista cada tag dependente desse driver usando o nome do tag como indice.
     property TagByName[Nome:String]:TTag read GetTagByName;
-
   published
     {:
     Driver de porta que será usado para realizar as operações de comunicação
@@ -419,7 +419,7 @@ begin
   end;
 end;
 
-procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook);
+procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
 begin
   MessageDlg(SWithoutTagBuilder, mtError,[mbOK],0);
 end;
