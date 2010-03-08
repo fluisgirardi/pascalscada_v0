@@ -25,7 +25,6 @@
           <OverflowChecks Value="True"/>
           <StackChecks Value="True"/>
         </Checks>
-        <VerifyObjMethodCallValidity Value="True"/>
         <Optimizations>
           <OptimizationLevel Value="0"/>
         </Optimizations>
@@ -200,7 +199,7 @@
       </Item39>
       <Item40>
         <Filename Value="s7types.pas"/>
-        <UnitName Value="s7types"/>
+        <UnitName Value="S7Types"/>
       </Item40>
       <Item41>
         <Filename Value="scadapropeditor.pas"/>

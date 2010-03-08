@@ -222,13 +222,24 @@ begin
   end;
 
   //Tag Bloco
-  if (not found) and ((TagObj is TPLCBlock) or (TagObj is TPLCString)) then begin
+  if (not found) and (TagObj is TPLCBlock) then begin
     found := true;
     Station := TPLCBlock(TagObj).PLCStation;
     Address := TPLCBlock(TagObj).MemAddress;
     Size := TPLCBlock(TagObj).Size;
     RegType := TPLCBlock(TagObj).MemReadFunction;
     ScanTime := TPLCBlock(TagObj).RefreshTime;
+    Result := found;
+  end;
+
+  //Tag Bloco
+  if (not found) and (TagObj is TPLCString) then begin
+    found := true;
+    Station := TPLCString(TagObj).PLCStation;
+    Address := TPLCString(TagObj).MemAddress;
+    Size := TPLCString(TagObj).Size;
+    RegType := TPLCString(TagObj).MemReadFunction;
+    ScanTime := TPLCString(TagObj).RefreshTime;
     Result := found;
   end;
 end;
@@ -554,6 +565,7 @@ var
   tblk:TPLCBlock;
   c, CurMemtAdress, nameitem:Integer;
   confItem:TTagNamesItemEditor;
+
 begin
   if [csDesigning]*ComponentState=[] then exit;
   dlg:=TfrmModbusTagBuilder.Create(nil);
@@ -561,31 +573,48 @@ begin
     if dlg.ShowModal=mrOk then begin
       if Assigned(InsertHook) and Assigned(CreateProc) then begin
 
-        //plc number
-        if dlg.optPLCTagNumber.Checked then begin
-
+        //plc number e string
+        if dlg.optPLCTagNumber.Checked or dlg.optPLCString.Checked then begin
           CurMemtAdress:=dlg.FirstMemAddress.Value;
           nameitem:=1;
           confItem:=SeekFirstItem(dlg.CurItem);
           if confItem=nil then exit;
 
-          c:=1
+          c:=1;
           while c<=dlg.MemCount.Value do begin
             if Trim(confItem.Nome.Text)<>'' then begin
-              tplc := TPLCTagNumber(CreateProc(TPLCTagNumber));
-              tplc.Name:=BuildItemName(confItem.Nome.Text,confItem.ZeroFill.Checked,nameitem,confItem.QtdDigitos.Value);
-              tplc.MemAddress := CurMemtAdress;
-              tplc.MemReadFunction  := SelectedReadFuntion(dlg);
-              tplc.MemWriteFunction := SelectedWriteFuntion(dlg);
-              tplc.PLCStation:=dlg.StationAddress.Value;
-              tplc.RefreshTime:=confItem.Scan.Value;
-              tplc.ProtocolDriver := Self;
-              InsertHook(tplc);
+              if dlg.optPLCTagNumber.Checked then begin
+                tplc := TPLCTagNumber(CreateProc(TPLCTagNumber));
+                tplc.Name:=BuildItemName(confItem.Nome.Text,confItem.ZeroFill.Checked,nameitem,confItem.QtdDigitos.Value);
+                tplc.MemAddress := CurMemtAdress;
+                tplc.MemReadFunction  := SelectedReadFuntion(dlg);
+                tplc.MemWriteFunction := SelectedWriteFuntion(dlg);
+                tplc.PLCStation:=dlg.StationAddress.Value;
+                tplc.RefreshTime:=confItem.Scan.Value;
+                tplc.ProtocolDriver := Self;
+                InsertHook(tplc);
+                inc(CurMemtAdress);
+              end else begin
+                tstr := TPLCString(CreateProc(TPLCString));
+                tstr.Name:=BuildItemName(confItem.Nome.Text,confItem.ZeroFill.Checked,nameitem,confItem.QtdDigitos.Value);
+                tstr.MemAddress := CurMemtAdress;
+                tstr.MemReadFunction  := SelectedReadFuntion(dlg);
+                tstr.MemWriteFunction := SelectedWriteFuntion(dlg);
+                tstr.PLCStation:=dlg.StationAddress.Value;
+                tstr.RefreshTime:=confItem.Scan.Value;
+                tstr.ProtocolDriver := Self;
+                if dlg.optSTR_C.Checked then
+                  tstr.StringType:=stC
+                else
+                  tstr.StringType:=stSIEMENS;
+                tstr.ByteSize:=Byte(dlg.ByteSize.Value);
+                tstr.StringSize:=dlg.MaxStringSize.Value;
+                InsertHook(tstr);
+                inc(CurMemtAdress,tstr.Size);
+              end;
             end;
 
-            inc(CurMemtAdress);
-
-            if (Trim(confItem.Nome.Text)='') and confItem.CountEmpty.Checked  then
+            if (Trim(confItem.Nome.Text)<>'') or confItem.CountEmpty.Checked  then
               inc(c);
 
             if confItem.Next=nil then begin
@@ -594,11 +623,6 @@ begin
             end else
               confItem:=TTagNamesItemEditor(confItem.Next);
           end;
-        end;
-
-        //string
-        if dlg.optPLCString.Checked then begin
-
         end;
 
         //bloco
@@ -642,7 +666,7 @@ begin
     Result:=2;
   if dlg.Type3.Checked then
     Result:=3;
-  if dlg.Type3.Checked then
+  if dlg.Type4.Checked then
     Result:=4;
 end;
 
@@ -680,17 +704,25 @@ begin
   FunctionCode := 0;
   if (Tag is TPLCTagNumber) then begin
     if (isWrite) then
+      FunctionCode := TPLCTagNumber(Tag).MemWriteFunction
+    else
+      FunctionCode := TPLCTagNumber(Tag).MemReadFunction;
+  end;
+
+  //Tag Bloco
+  if (Tag is TPLCBlock) then begin
+    if (isWrite) then
       FunctionCode := TPLCBlock(Tag).MemWriteFunction
     else
       FunctionCode := TPLCBlock(Tag).MemReadFunction;
   end;
 
-  //Tag Bloco
-  if ((Tag is TPLCBlock) or (Tag is TPLCString)) then begin
+  //tag string
+  if (Tag is TPLCString) then begin
     if (isWrite) then
-      FunctionCode := TPLCBlock(Tag).MemWriteFunction
+      FunctionCode := TPLCString(Tag).MemWriteFunction
     else
-      FunctionCode := TPLCBlock(Tag).MemReadFunction;
+      FunctionCode := TPLCString(Tag).MemReadFunction;
   end;
 
 

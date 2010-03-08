@@ -340,6 +340,7 @@ end;
 procedure TfrmModbusTagBuilder.FormCreate(Sender: TObject);
 begin
   PageControl1.TabIndex := 0;
+  btnFinish.ModalResult:=mrNone;
   CurItem := TTagNamesItemEditor.Create(Self);
   CurItem.Parent := ScrollBox1;
   CurItem.Prior := nil;
@@ -367,8 +368,10 @@ var
 begin
   item := CurItem;
   while item<>nil do begin
-    if (Trim(item.Nome.Text)<>'') AND (not (item.Nome.Text[1] in ['a'..'z','A'..'Z','_'])) then
-      raise Exception.Create(SInvalidTagNameInTagBuilder);
+    if (Trim(item.Nome.Text)<>'') AND (not (item.Nome.Text[1] in ['a'..'z','A'..'Z','_'])) then begin
+      MessageDlg(SInvalidTagNameInTagBuilder,mtError,[mbOk],0);
+      exit;
+    end;
     item := TTagNamesItemEditor(item.Prior);
   end;
 
@@ -378,8 +381,11 @@ begin
       break;
     item := TTagNamesItemEditor(item.Prior);
   end;
-  if item=nil then
-    raise Exception.Create(SWithoutAtLeastOneValidName);
+  if item=nil then begin
+    MessageDlg(SWithoutAtLeastOneValidName,mtError,[mbOk],0);
+    exit;
+  end;
+  ModalResult:=mrOK;
 end;
 
 procedure TfrmModbusTagBuilder.btnNextClick(Sender: TObject);
