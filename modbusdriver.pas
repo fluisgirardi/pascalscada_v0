@@ -174,7 +174,7 @@ type
 
 implementation
 
-uses Dialogs, Controls, PLCBlockElement, strings;
+uses Dialogs, Controls, PLCBlockElement, StrUtils;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
