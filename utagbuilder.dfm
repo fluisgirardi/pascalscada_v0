@@ -251,10 +251,25 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       object txtScanOfEachBlock: TLabel
         Left = 240
         Top = 120
-        Width = 193
+        Width = 129
         Height = 13
         AutoSize = False
-        Caption = 'Qual o Scan de cada bloco?'
+        Caption = 'Scan de cada bloco?'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+        WordWrap = True
+      end
+      object txtNameOfEachBlock: TLabel
+        Left = 384
+        Top = 120
+        Width = 129
+        Height = 13
+        AutoSize = False
+        Caption = 'Nome de cada bloco'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -364,7 +379,15 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         MaxValue = 125
         MinValue = 7200000
         TabOrder = 8
-        Value = 1
+        Value = 7200000
+      end
+      object NameOfEachBlock: TEdit
+        Left = 384
+        Top = 136
+        Width = 153
+        Height = 21
+        TabOrder = 9
+        Text = 'Bloco'
       end
     end
     object TabSheet3: TTabSheet

@@ -84,6 +84,8 @@ type
     optStartFromZero: TCheckBox;
     txtScanOfEachBlock: TLabel;
     ScanOfEachBlock: TSpinEdit;
+    NameOfEachBlock: TEdit;
+    txtNameOfEachBlock: TLabel;
     procedure btnFinishClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
     procedure btnPriorClick(Sender: TObject);
@@ -360,6 +362,8 @@ begin
   MaxBlockSize.Enabled := optPLCBlock.Checked;
   txtScanOfEachBlock.Enabled := optPLCBlock.Checked;
   ScanOfEachBlock.Enabled := optPLCBlock.Checked;
+  txtNameOfEachBlock.Enabled := optPLCBlock.Checked;
+  NameOfEachBlock.Enabled := optPLCBlock.Checked;
   txtMaxStringSize.Enabled := optPLCString.Checked;
   MaxStringSize.Enabled := optPLCString.Checked;
   txtStringFormat.Enabled := optPLCString.Checked;
