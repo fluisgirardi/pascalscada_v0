@@ -201,7 +201,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Left = 24
         Height = 13
         Top = 120
-        Width = 217
+        Width = 207
         AutoSize = False
         Caption = 'Qual o tamanho máximo do bloco'
         Font.Height = -11
@@ -337,12 +337,12 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Value = 8
       end
       object txtScanOfEachBlock: TLabel
-        Left = 263
+        Left = 247
         Height = 13
         Top = 120
-        Width = 223
+        Width = 128
         AutoSize = False
-        Caption = 'Qual o Scan de cada bloco?'
+        Caption = 'Scan de cada bloco?'
         Font.Height = -11
         Font.Name = 'verdana [microsoft]'
         Font.Style = [fsBold]
@@ -351,7 +351,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         WordWrap = True
       end
       object ScanOfEachBlock: TSpinEdit
-        Left = 263
+        Left = 247
         Height = 24
         Top = 136
         Width = 121
@@ -359,6 +359,28 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         MinValue = 1
         TabOrder = 8
         Value = 1000
+      end
+      object txtNameOfEachBlock: TLabel
+        Left = 391
+        Height = 13
+        Top = 120
+        Width = 128
+        AutoSize = False
+        Caption = 'Nome de cada bloco'
+        Font.Height = -11
+        Font.Name = 'verdana [microsoft]'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        WordWrap = True
+      end
+      object NameOfEachBlock: TEdit
+        Left = 391
+        Height = 24
+        Top = 135
+        Width = 160
+        TabOrder = 9
+        Text = 'Bloco'
       end
     end
     object TabSheet3: TTabSheet
