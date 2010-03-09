@@ -3,7 +3,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
   Height = 380
   Top = 109
   Width = 593
-  ActiveControl = StationAddress
+  ActiveControl = optPLCTagNumber
   BorderStyle = bsDialog
   Caption = 'Modbus Tag Builder'
   ClientHeight = 380
@@ -18,11 +18,11 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     Height = 338
     Top = 0
     Width = 593
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alClient
     ParentShowHint = False
     ShowHint = True
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 0
     TabPosition = tpBottom
     OnChange = PageControl1Change
@@ -154,6 +154,14 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         MinValue = 1
         TabOrder = 6
         Value = 1
+      end
+      object optStartFromZero: TCheckBox
+        Left = 151
+        Height = 22
+        Top = 224
+        Width = 195
+        Caption = 'Iniciar a contagem a partir do zero'
+        TabOrder = 7
       end
     end
     object TabSheet2: TTabSheet
@@ -327,6 +335,30 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         MinValue = 7
         TabOrder = 7
         Value = 8
+      end
+      object txtScanOfEachBlock: TLabel
+        Left = 263
+        Height = 13
+        Top = 120
+        Width = 223
+        AutoSize = False
+        Caption = 'Qual o Scan de cada bloco?'
+        Font.Height = -11
+        Font.Name = 'verdana [microsoft]'
+        Font.Style = [fsBold]
+        ParentColor = False
+        ParentFont = False
+        WordWrap = True
+      end
+      object ScanOfEachBlock: TSpinEdit
+        Left = 263
+        Height = 24
+        Top = 136
+        Width = 121
+        MaxValue = 7200000
+        MinValue = 1
+        TabOrder = 8
+        Value = 1000
       end
     end
     object TabSheet3: TTabSheet

@@ -34,6 +34,8 @@ type
     property OnDelClick:TNotifyEvent read FOnDelClick write FOnDelClick;
   end;
 
+  { TfrmModbusTagBuilder }
+
   TfrmModbusTagBuilder = class(TForm)
     PageControl1: TPageControl;
     TabSheet1: TTabSheet;
@@ -419,4 +421,4 @@ begin
   CurItem := newitem;
 end;
 
-end.
+end.
