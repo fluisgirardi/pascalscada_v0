@@ -20,7 +20,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     Top = 0
     Width = 593
     Height = 333
-    ActivePage = TabSheet3
+    ActivePage = TabSheet2
     Align = alClient
     MultiLine = True
     ParentShowHint = False
@@ -49,10 +49,10 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       object txtMemCount: TLabel
         Left = 8
         Top = 200
-        Width = 409
+        Width = 185
         Height = 13
         AutoSize = False
-        Caption = 'Quantas mem'#243'rias voc'#234' deseja mapear?'
+        Caption = 'Quantos tags deseja criar?'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -161,6 +161,14 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         TabOrder = 6
         Value = 1
       end
+      object optStartFromZero: TCheckBox
+        Left = 144
+        Top = 226
+        Width = 185
+        Height = 17
+        Caption = 'Iniciar a contagem a partir do zero'
+        TabOrder = 7
+      end
     end
     object TabSheet2: TTabSheet
       Caption = 'Tipo de tag usado'
@@ -232,6 +240,21 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Height = 13
         AutoSize = False
         Caption = 'Tamanho de cada byte da string'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+        WordWrap = True
+      end
+      object txtScanOfEachBlock: TLabel
+        Left = 240
+        Top = 120
+        Width = 193
+        Height = 13
+        AutoSize = False
+        Caption = 'Qual o Scan de cada bloco?'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -332,6 +355,16 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         MinValue = 7
         TabOrder = 7
         Value = 8
+      end
+      object ScanOfEachBlock: TSpinEdit
+        Left = 240
+        Top = 136
+        Width = 121
+        Height = 22
+        MaxValue = 125
+        MinValue = 7200000
+        TabOrder = 8
+        Value = 1
       end
     end
     object TabSheet3: TTabSheet

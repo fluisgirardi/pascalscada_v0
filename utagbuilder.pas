@@ -79,6 +79,9 @@ type
     Label6: TLabel;
     Label7: TLabel;
     Button1: TButton;
+    optStartFromZero: TCheckBox;
+    txtScanOfEachBlock: TLabel;
+    ScanOfEachBlock: TSpinEdit;
     procedure btnFinishClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
     procedure btnPriorClick(Sender: TObject);
@@ -353,6 +356,8 @@ begin
   optSimpleFunctions.Enabled := optPLCTagNumber.Checked;
   txtMaxBlockSize.Enabled := optPLCBlock.Checked;
   MaxBlockSize.Enabled := optPLCBlock.Checked;
+  txtScanOfEachBlock.Enabled := optPLCBlock.Checked;
+  ScanOfEachBlock.Enabled := optPLCBlock.Checked;
   txtMaxStringSize.Enabled := optPLCString.Checked;
   MaxStringSize.Enabled := optPLCString.Checked;
   txtStringFormat.Enabled := optPLCString.Checked;
