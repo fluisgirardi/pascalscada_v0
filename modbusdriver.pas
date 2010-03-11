@@ -174,7 +174,7 @@ type
 
 implementation
 
-uses Dialogs, Controls, PLCBlockElement, StrUtils;
+uses Dialogs, Controls, PLCBlockElement, StrUtils, math;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -563,9 +563,12 @@ var
   tplc:TPLCTagNumber;
   tstr:TPLCString;
   tblk:TPLCBlock;
-  c, CurMemtAdress, nameitem:Integer;
+  tbel:TPLCBlockElement;
+  c, CurMemtAdress, nameitem, BlockNo, Element:Integer;
   confItem:TTagNamesItemEditor;
-
+  knowstringsize:boolean;
+  tstrdummy:TPLCString;
+  defaultstringsize:integer;
 begin
   if [csDesigning]*ComponentState=[] then exit;
   dlg:=TfrmModbusTagBuilder.Create(nil);
@@ -573,13 +576,22 @@ begin
     if dlg.ShowModal=mrOk then begin
       if Assigned(InsertHook) and Assigned(CreateProc) then begin
 
-        //plc number e string
-        if dlg.optPLCTagNumber.Checked or dlg.optPLCString.Checked then begin
-          CurMemtAdress:=dlg.FirstMemAddress.Value;
-          nameitem:=1;
-          confItem:=SeekFirstItem(dlg.CurItem);
-          if confItem=nil then exit;
+        knowstringsize:=false;
 
+        CurMemtAdress:=dlg.FirstMemAddress.Value;
+
+        if dlg.optStartFromZero.Checked then
+          nameitem:=0
+        else
+          nameitem:=1;
+
+        confItem:=SeekFirstItem(dlg.CurItem);
+        if confItem=nil then exit;
+
+        ////////////////////////////////////////////////////////////////////////
+        //plc number e string
+        ////////////////////////////////////////////////////////////////////////
+        if dlg.optPLCTagNumber.Checked or dlg.optPLCString.Checked then begin
           c:=1;
           while c<=dlg.MemCount.Value do begin
             if Trim(confItem.Nome.Text)<>'' then begin
@@ -593,7 +605,6 @@ begin
                 tplc.RefreshTime:=confItem.Scan.Value;
                 tplc.ProtocolDriver := Self;
                 InsertHook(tplc);
-                inc(CurMemtAdress);
               end else begin
                 tstr := TPLCString(CreateProc(TPLCString));
                 tstr.Name:=BuildItemName(confItem.Nome.Text,confItem.ZeroFill.Checked,nameitem,confItem.QtdDigitos.Value);
@@ -610,8 +621,40 @@ begin
                 tstr.ByteSize:=Byte(dlg.ByteSize.Value);
                 tstr.StringSize:=dlg.MaxStringSize.Value;
                 InsertHook(tstr);
-                inc(CurMemtAdress,tstr.Size);
+
+                if not knowstringsize then begin
+                  knowstringsize:=true;
+                  defaultstringsize:=tstr.Size;
+                end;
               end;
+            end;
+
+            if dlg.optPLCTagNumber.Checked then
+              inc(CurMemtAdress)
+            else begin
+              //se o tamanho do bloco da string ainda não é conhecido.
+              if not knowstringsize then begin
+                try
+                  tstrdummy := TPLCString.Create(Nil);
+                  tstrdummy.MemAddress := CurMemtAdress;
+                  tstrdummy.MemReadFunction  := SelectedReadFuntion(dlg);
+                  tstrdummy.MemWriteFunction := SelectedWriteFuntion(dlg);
+                  tstrdummy.PLCStation:=dlg.StationAddress.Value;
+                  tstrdummy.RefreshTime:=confItem.Scan.Value;
+                  tstrdummy.ProtocolDriver := Self;
+                  if dlg.optSTR_C.Checked then
+                    tstrdummy.StringType:=stC
+                  else
+                    tstrdummy.StringType:=stSIEMENS;
+                  tstrdummy.ByteSize:=Byte(dlg.ByteSize.Value);
+                  tstrdummy.StringSize:=dlg.MaxStringSize.Value;
+                  defaultstringsize:=tstrdummy.Size;
+                  knowstringsize:=true;
+                finally
+                  tstrdummy.Destroy;
+                end;
+              end;
+              inc(CurMemtAdress,defaultstringsize);
             end;
 
             if (Trim(confItem.Nome.Text)<>'') or confItem.CountEmpty.Checked  then
@@ -625,9 +668,52 @@ begin
           end;
         end;
 
-        //bloco
+        ////////////////////////////////////////////////////////////////////////
+        //BLOCO
+        ////////////////////////////////////////////////////////////////////////
         if dlg.optPLCBlock.Checked then begin
+          c:=1;
+          BlockNo:=1;
+          while c<=dlg.MemCount.Value do begin
+            Element:=0;
+            tblk := TPLCBlock(CreateProc(TPLCBlock));
+            tblk.Name:=BuildItemName(dlg.NameOfEachBlock.Text, false, BlockNo, 9);
+            tblk.MemAddress := CurMemtAdress;
+            tblk.MemReadFunction  := SelectedReadFuntion(dlg);
+            tblk.MemWriteFunction := SelectedWriteFuntion(dlg);
+            tblk.PLCStation:=dlg.StationAddress.Value;
+            tblk.RefreshTime:=dlg.ScanOfEachBlock.Value;
+            tblk.Size := 1;
+            tblk.ProtocolDriver := Self;
+            InsertHook(tblk);
 
+            //cria os elementos do bloco
+            while Element<dlg.MaxBlockSize.Value do begin
+              if Trim(confItem.Nome.Text)<>'' then begin
+                tbel := TPLCBlockElement(CreateProc(TPLCBlockElement));
+                tbel.Name:=BuildItemName(confItem.Nome.Text,confItem.ZeroFill.Checked,nameitem,confItem.QtdDigitos.Value);
+                tbel.PLCBlock := tblk;
+                tblk.Size := Element+1;
+                tbel.Index:=Element;
+                InsertHook(tbel);
+              end;
+
+              inc(Element);
+              inc(CurMemtAdress);
+
+              if (Trim(confItem.Nome.Text)<>'') or confItem.CountEmpty.Checked  then
+                inc(c);
+
+              if confItem.Next=nil then begin
+                confItem:=SeekFirstItem(dlg.CurItem);
+                inc(nameitem);
+              end else
+                confItem:=TTagNamesItemEditor(confItem.Next);
+            end;
+
+            //incrementa o numero do bloco.
+            inc(BlockNo);
+          end;
         end;
       end;
     end;

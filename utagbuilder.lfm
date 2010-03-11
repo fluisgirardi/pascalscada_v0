@@ -3,7 +3,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
   Height = 380
   Top = 109
   Width = 593
-  ActiveControl = optPLCTagNumber
+  ActiveControl = StationAddress
   BorderStyle = bsDialog
   Caption = 'Modbus Tag Builder'
   ClientHeight = 380
@@ -18,11 +18,11 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     Height = 338
     Top = 0
     Width = 593
-    ActivePage = TabSheet2
+    ActivePage = TabSheet1
     Align = alClient
     ParentShowHint = False
     ShowHint = True
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     TabPosition = tpBottom
     OnChange = PageControl1Change
