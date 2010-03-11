@@ -247,12 +247,12 @@
         <UnitName Value="WestASCIIDriver"/>
       </Item51>
       <Item52>
-        <Filename Value="utagbuilder.lfm"/>
+        <Filename Value="umodbustagbuilder.lfm"/>
         <Type Value="LFM"/>
       </Item52>
       <Item53>
-        <Filename Value="utagbuilder.pas"/>
-        <UnitName Value="uTagBuilder"/>
+        <Filename Value="umodbustagbuilder.pas"/>
+        <UnitName Value="uModbusTagBuilder"/>
       </Item53>
     </Files>
     <Type Value="RunAndDesignTime"/>

@@ -1,4 +1,4 @@
-unit uTagBuilder;
+unit uModbusTagBuilder;
 
 {$IFDEF FPC}
 {$MODE Delphi}
@@ -107,7 +107,7 @@ implementation
 uses hsstrings;
 
 {$IFDEF FPC}
-{$R utagbuilder.lfm}
+{$R umodbustagbuilder.lfm}
 {$ELSE}
 {$R *.dfm}
 {$ENDIF}
