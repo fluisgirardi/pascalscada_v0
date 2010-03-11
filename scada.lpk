@@ -235,24 +235,24 @@
         <UnitName Value="tcp_udpport"/>
       </Item48>
       <Item49>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
-      </Item49>
-      <Item50>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
-      </Item50>
-      <Item51>
-        <Filename Value="westasciidriver.pas"/>
-        <UnitName Value="WestASCIIDriver"/>
-      </Item51>
-      <Item52>
-        <Filename Value="umodbustagbuilder.lfm"/>
-        <Type Value="LFM"/>
-      </Item52>
-      <Item53>
         <Filename Value="umodbustagbuilder.pas"/>
         <UnitName Value="uModbusTagBuilder"/>
+      </Item49>
+      <Item50>
+        <Filename Value="umodbustagbuilder.lfm"/>
+        <Type Value="LFM"/>
+      </Item50>
+      <Item51>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
+      </Item51>
+      <Item52>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item52>
+      <Item53>
+        <Filename Value="westasciidriver.pas"/>
+        <UnitName Value="WestASCIIDriver"/>
       </Item53>
     </Files>
     <Type Value="RunAndDesignTime"/>
