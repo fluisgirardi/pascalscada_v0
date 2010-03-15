@@ -21,6 +21,8 @@ type
     FConnectionWay:TISOTCPConnectionWay;
     procedure SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
   protected
+    FConnected:Boolean;
+    procedure Connect; virtual;
     procedure DoAddTag(TagObj:TTag); override;
     procedure DoDelTag(TagObj:TTag); override;
     procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
@@ -34,6 +36,11 @@ type
   end;
 
 implementation
+
+procedure TISOTCPDriver.Connect;
+begin
+
+end;
 
 procedure TISOTCPDriver.SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
 begin

@@ -15,8 +15,8 @@ uses
   PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, PLCTag, 
   PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, protscanupdate, 
   S7Types, scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, 
-  tagcollection, tcp_udpport, UserScale, ValueProcessor, WestASCIIDriver, 
-  uModbusTagBuilder, LazarusPackageIntf;
+  tagcollection, tcp_udpport, uModbusTagBuilder, UserScale, ValueProcessor, 
+  WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 

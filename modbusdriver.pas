@@ -174,7 +174,7 @@ type
 
 implementation
 
-uses Dialogs, Controls, PLCBlockElement, StrUtils, math;
+uses Dialogs, Controls, PLCBlockElement, StrUtils, math, ValueProcessor;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -569,9 +569,28 @@ var
   knowstringsize:boolean;
   tstrdummy:TPLCString;
   defaultstringsize:integer;
+  count:Integer;
+  ItemName:array of String;
+  ItemPtr:array of TComponent;
 begin
   if [csDesigning]*ComponentState=[] then exit;
-  dlg:=TfrmModbusTagBuilder.Create(nil);
+
+  count:=1;
+  SetLength(ItemName,1);
+  SetLength(ItemPtr, 1);
+  ItemName[0]:='(none)';
+  ItemPtr[0] :=nil;
+  for c:=0 to Owner.ComponentCount-1 do begin
+    if Owner.Components[c] is TPIPE then begin
+      inc(count);
+      SetLength(ItemName,count);
+      SetLength(ItemPtr, count);
+      ItemName[count-1]:= Owner.Components[c].Name;
+      ItemPtr[count-1] := Owner.Components[c];
+    end;
+  end;
+
+  dlg:=TfrmModbusTagBuilder.Create(ItemName);
   try
     if dlg.ShowModal=mrOk then begin
       if Assigned(InsertHook) and Assigned(CreateProc) then begin
@@ -604,6 +623,8 @@ begin
                 tplc.PLCStation:=dlg.StationAddress.Value;
                 tplc.RefreshTime:=confItem.Scan.Value;
                 tplc.ProtocolDriver := Self;
+                if confItem.PIPES.ItemIndex<>-1 then
+                  tplc.ScaleProcessor:=TPIPE(ItemPtr[confItem.PIPES.ItemIndex]);
                 InsertHook(tplc);
               end else begin
                 tstr := TPLCString(CreateProc(TPLCString));
@@ -695,6 +716,8 @@ begin
                 tbel.PLCBlock := tblk;
                 tblk.Size := Element+1;
                 tbel.Index:=Element;
+                if confItem.PIPES.ItemIndex<>-1 then
+                  tbel.ScaleProcessor:=TPIPE(ItemPtr[confItem.PIPES.ItemIndex]);
                 InsertHook(tbel);
               end;
 

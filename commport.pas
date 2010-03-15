@@ -203,6 +203,9 @@ type
     FRXBytesLast,
     FTXBytesSecond,
     FRXBytesSecond:Int64;
+    {: Abertura forcada da porta em edicao }
+    FOpenInEditMode:Boolean;
+    procedure OpenInEditMode(v:Boolean);
     {: @exclude }
     procedure TimerStatistics(Sender:TObject);
     {: @exclude }
@@ -804,6 +807,11 @@ begin
   FTimer.Enabled := PActive;
 end;
 
+procedure TCommPortDriver.OpenInEditMode(v:Boolean);
+begin
+
+end;
+
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                                  BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                                  CallBack:TDriverCallBack; IsWriteValue:Boolean;
@@ -1033,7 +1041,7 @@ end;
 
 procedure TCommPortDriver.DoExceptionInActive;
 begin
-  if PActive then
+  if (ComponentState*[csDesigning]=[]) and PActive then
     raise Exception.Create(SimpossibleToChangeWhenActive);
 end;
 

@@ -35,6 +35,7 @@ type
   end;
 
   { TfrmModbusTagBuilder }
+  Strings = array of string;
 
   TfrmModbusTagBuilder = class(TForm)
     PageControl1: TPageControl;
@@ -94,9 +95,13 @@ type
     procedure FormCreate(Sender: TObject);
     procedure optPLCTagNumberClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+  private
+    names:array of string;
   public
     CurItem:TTagNamesItemEditor;
+    constructor Create(nomes:Strings);
     destructor Destroy; override;
+    procedure AfterConstruction; override;
   end;
 
 var
@@ -290,18 +295,27 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
+constructor TfrmModbusTagBuilder.Create(nomes:Strings);
+begin
+  inherited Create(nil);
+  names := nomes;
+end;
 
 destructor TfrmModbusTagBuilder.Destroy;
 var
   item : TTagNamesItemEditor;
 begin
-
   while CurItem<>nil do begin
      item:=TTagNamesItemEditor(CurItem.Prior);
      CurItem.Destroy;
      CurItem:=item;
   end;
   inherited Destroy;
+end;
+
+procedure TfrmModbusTagBuilder.AfterConstruction;
+begin
+  Button1Click(Self);
 end;
 
 procedure TfrmModbusTagBuilder.PageControl1Change(Sender: TObject);
@@ -318,7 +332,6 @@ var
 begin
   //se so ha um item.
   if (CurItem.Prior=nil) and (CurItem.Next=nil) then exit;
-
 
   If MessageDlg('Deseja mesmo deletar o item?', mtConfirmation, [mbYes, mbNo],0)=mrYes then begin
     item := CurItem;
@@ -345,14 +358,12 @@ begin
 end;
 
 procedure TfrmModbusTagBuilder.FormCreate(Sender: TObject);
+var
+  c,count:Integer;
 begin
   PageControl1.TabIndex := 0;
   btnFinish.ModalResult:=mrNone;
-  CurItem := TTagNamesItemEditor.Create(Self);
-  CurItem.Parent := ScrollBox1;
-  CurItem.Prior := nil;
-  CurItem.Next  := nil;
-  CurItem.OnDelClick := DelItem;
+  CurItem:=nil;
 end;
 
 procedure TfrmModbusTagBuilder.optPLCTagNumberClick(Sender: TObject);
@@ -420,15 +431,24 @@ end;
 procedure TfrmModbusTagBuilder.Button1Click(Sender: TObject);
 var
   newitem:TTagNamesItemEditor;
+  c:Integer;
 begin
   newitem := TTagNamesItemEditor.Create(Self);
   newitem.Parent := ScrollBox1;
   newitem.Prior := CurItem;
-  CurItem.Next  := newitem;
   newitem.Next  := nil;
   newitem.OnDelClick := DelItem;
   newitem.Top := 200;
+
+  if CurItem<>nil then
+    CurItem.Next  := newitem;
+
   CurItem := newitem;
+
+  for c:=0 to High(names) do
+    newitem.PIPES.Items.Add(names[c]);
+
+  newitem.PIPES.ItemIndex:=0;
 end;
 
 end.
