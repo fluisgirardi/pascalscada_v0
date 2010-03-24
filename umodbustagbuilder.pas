@@ -96,7 +96,7 @@ type
     procedure optPLCTagNumberClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
   private
-    names:array of string;
+    names:Strings;
   public
     CurItem:TTagNamesItemEditor;
     constructor Create(nomes:Strings);

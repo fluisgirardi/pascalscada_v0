@@ -570,7 +570,7 @@ var
   tstrdummy:TPLCString;
   defaultstringsize:integer;
   count:Integer;
-  ItemName:array of String;
+  ItemName:Strings;
   ItemPtr:array of TComponent;
 begin
   if [csDesigning]*ComponentState=[] then exit;

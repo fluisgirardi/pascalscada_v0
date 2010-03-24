@@ -595,27 +595,33 @@ begin
   Moved:=0;
 
   for blk := 0 to High(Blocks) do begin
-    if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
-      LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
-      if Blocks[blk].Size<=LenUtil then
-        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], Blocks[blk].Size*SizeOf(Double))
-      else
-        Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], LenUtil*SizeOf(Double));
-
+    LenUtil:=0;
+    if (Blocks[blk].AddressStart<=AdrStart) AND (Blocks[blk].AddressEnd>=AdrEnd) then begin
+      LenUtil := (AdrEnd - AdrStart) + 1;
+      Move(Values[0], Blocks[blk].FValues[AdrStart - Blocks[blk].AddressStart], LenUtil*SizeOf(Double));
       Blocks[blk].Updated;
       Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
-      inc(Moved, LenUtil);
-      if Moved>=Length(Values) then break;
     end else begin
-      if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
-        LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
-        Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil*SizeOf(Double));
+      if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
+        LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
+        if Blocks[blk].Size<=LenUtil then
+          Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], Blocks[blk].Size*SizeOf(Double))
+        else
+          Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], LenUtil*SizeOf(Double));
+
         Blocks[blk].Updated;
         Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
-        inc(Moved, LenUtil);
-        if Moved>=Length(Values) then break;
-      end
+      end else begin
+        if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
+          LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
+          Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil*SizeOf(Double));
+          Blocks[blk].Updated;
+          Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+        end;
+      end;
     end;
+    inc(Moved, LenUtil);
+    if Moved>=Length(Values) then break;
   end;
   FCriticalSection.Leave;
 end;
@@ -629,13 +635,18 @@ begin
   AdrEnd := AdrStart + Len * RegSize - 1;
 
   for blk := 0 to High(Blocks) do begin
-    if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
+    if (Blocks[blk].AddressStart<=AdrStart) AND (Blocks[blk].AddressEnd>=AdrEnd) then begin
       Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
       Blocks[blk].LastError  := Fault;
     end else begin
-      if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
+      if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
         Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
         Blocks[blk].LastError  := Fault;
+      end else begin
+        if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
+          Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
+          Blocks[blk].LastError  := Fault;
+        end;
       end;
     end;
   end;
@@ -654,30 +665,28 @@ begin
   Moved:=0;
 
   for blk := 0 to High(Blocks) do begin
-    if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
-      LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
-      if Blocks[blk].Size<=LenUtil then
-        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].Size*SizeOf(Double))
-      else
-        Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], LenUtil*SizeOf(Double));
-
-      Blocks[blk].Updated;
-      Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
-
-      inc(Moved, LenUtil);
-      if Moved>=Length(Values) then break;
+    LenUtil:=0;
+    if (Blocks[blk].AddressStart<=AdrStart) AND (Blocks[blk].AddressEnd>=AdrEnd) then begin
+      LenUtil := (AdrEnd - AdrStart) + 1;
+      Move(Blocks[blk].FValues[AdrStart - Blocks[blk].AddressStart], Values[0], LenUtil*SizeOf(Double))
     end else begin
-      if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
-        LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
-        Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil*SizeOf(Double));
-        Blocks[blk].Updated;
-        Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
-        inc(Moved, LenUtil);
-        if Moved>=Length(Values) then break;
-      end
+      if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
+        LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
+        if Blocks[blk].Size<=LenUtil then
+          Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].Size*SizeOf(Double))
+        else
+          Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], LenUtil*SizeOf(Double));
+      end else begin
+        if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
+          LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
+          Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil*SizeOf(Double));
+        end
+      end;
     end;
+    inc(Moved, LenUtil);
+    if Moved>=Length(Values) then break;
   end;
   FCriticalSection.Leave;
 end;
 
-end.
+end.
