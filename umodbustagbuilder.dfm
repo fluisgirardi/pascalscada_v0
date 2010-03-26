@@ -20,7 +20,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     Top = 0
     Width = 593
     Height = 333
-    ActivePage = TabSheet2
+    ActivePage = TabSheet1
     Align = alClient
     MultiLine = True
     ParentShowHint = False
@@ -376,8 +376,8 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         Top = 136
         Width = 121
         Height = 22
-        MaxValue = 125
-        MinValue = 7200000
+        MaxValue = 7200000
+        MinValue = 1
         TabOrder = 8
         Value = 7200000
       end
