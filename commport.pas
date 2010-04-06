@@ -903,9 +903,10 @@ begin
     InLockCS:=false;
     InIOCmdCS:=false;
 
-    if (csDestroying in ComponentState) then
-       exit;
-
+    if (csDestroying in ComponentState) then begin
+      Result := 0;
+      exit;
+    end;
     //verify if another driver is the owner of the comm port...
     PLockCS.Enter;
     InLockCS:=true;
