@@ -376,8 +376,6 @@ begin
     goto erro1;
   end;
 
-  InternalClearALLBuffers;
-
   //monta a estrutura DCB a partir da string
   strdcb := MakeDCBString;
   //zera a estrutura DCB (um bug conhecido, parametro incorreto!);
@@ -403,6 +401,8 @@ begin
     RefreshLastOSError;
     goto erro3;
   end;
+
+  InternalClearALLBuffers;
 
   ok := true;
   PActive := true;
@@ -434,8 +434,6 @@ begin
      PActive := false;
      exit;
   end;
-
-  InternalClearALLBuffers;
   
   //se e para salvar as configs da porta...
   if PBackupPortSettings then
@@ -535,6 +533,8 @@ begin
   
   //seta o uso exclusivo da porta.
   fpioctl(integer(PPortHandle), TIOCEXCL, nil);
+
+  InternalClearALLBuffers;
 
   PActive := true;
   ok := true;
