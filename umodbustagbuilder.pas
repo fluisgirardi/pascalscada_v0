@@ -111,10 +111,12 @@ implementation
 
 uses hsstrings;
 
-{$IFDEF FPC}
-{$R umodbustagbuilder.lfm}
+{$IFDEF FPC }
+  {$IF FPC_FULLVERSION >= 20400 }
+  {$R umodbustagbuilder.lfm}
+  {$IFEND}
 {$ELSE}
-{$R *.dfm}
+  {$R *.dfm}
 {$ENDIF}
 
 
@@ -451,4 +453,4 @@ begin
   newitem.PIPES.ItemIndex:=0;
 end;
 
-end.
+end.

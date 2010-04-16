@@ -13,7 +13,7 @@ unit ISOTCPDriver;
 interface
 
 uses
-  ProtocolDriver, S7Types, Tag, ProtocolTypes, CrossEvent;
+  classes, ProtocolDriver, S7Types, Tag, ProtocolTypes, CrossEvent;
 
 type
   TISOTCPDriver = class(TProtocolDriver)
@@ -42,7 +42,7 @@ type
 
 implementation
 
-uses commtypes, math;
+uses commtypes, math, syncobjs;
 
 constructor TISOTCPDriver.Create(AOwner:TComponent);
 begin
@@ -84,13 +84,13 @@ begin
   try
     if PCommPort<>nil then begin
       FConnectEvent.ResetEvent;
-      res := PCommPort.IOCommandASync(iocWriteRead,msg,4,22,DriverID,0,CallBack,false,FConnectEvent,IOResult);
+      res := PCommPort.IOCommandASync(iocWriteRead,msg,4,22,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
 
       if (res<>0) and (FConnectEvent.WaitFor($FFFFFFFF)=wrSignaled) then begin
         if (IOResult.ReadIOResult=iorOK) and (IOResult.Received=4) then begin
           len:= IOResult.BufferToRead[2]*$100 + IOResult.BufferToRead[3];
           FConnectEvent.ResetEvent;
-          res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CallBack,false,FConnectEvent,IOResult);
+          res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
           if (res<>0) and (FConnectEvent.WaitFor($FFFFFFFF)=wrSignaled) then begin
             if (IOResult.ReadIOResult=iorOK) and (IOResult.Received=(len-4)) then begin
               CPU.Connected:=true;
