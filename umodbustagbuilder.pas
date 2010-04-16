@@ -453,4 +453,11 @@ begin
   newitem.PIPES.ItemIndex:=0;
 end;
 
+{$IFDEF FPC }
+  {$IF FPC_FULLVERSION < 20400 }
+initialization
+  {$I umodbustagbuilder.lrs}
+  {$IFEND}
+{$ENDIF}
+
 end.

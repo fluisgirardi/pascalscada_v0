@@ -1,7 +1,7 @@
 object frmModbusTagBuilder: TfrmModbusTagBuilder
-  Left = 535
+  Left = 235
   Height = 380
-  Top = 109
+  Top = 107
   Width = 593
   ActiveControl = StationAddress
   BorderStyle = bsDialog
@@ -269,9 +269,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optPLCTagNumber: TRadioButton
         Left = 12
-        Height = 22
+        Height = 17
         Top = 40
-        Width = 107
+        Width = 101
         Caption = 'TPLCTagNumber'
         Checked = True
         OnClick = optPLCTagNumberClick
@@ -280,9 +280,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optPLCBlock: TRadioButton
         Left = 12
-        Height = 22
+        Height = 17
         Top = 96
-        Width = 75
+        Width = 72
         Caption = 'TPLCBlock'
         OnClick = optPLCTagNumberClick
         TabOrder = 1
@@ -290,9 +290,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optPLCString: TRadioButton
         Left = 12
-        Height = 22
+        Height = 17
         Top = 176
-        Width = 78
+        Width = 72
         Caption = 'TPLCString'
         OnClick = optPLCTagNumberClick
         TabOrder = 2
@@ -300,15 +300,15 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optSimpleFunctions: TCheckBox
         Left = 32
-        Height = 22
+        Height = 17
         Top = 60
-        Width = 196
+        Width = 181
         Caption = 'Usar as funções de escrita simples'
         TabOrder = 3
       end
       object MaxStringSize: TSpinEdit
         Left = 24
-        Height = 24
+        Height = 21
         Top = 216
         Width = 121
         MinValue = 1
@@ -317,7 +317,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object MaxBlockSize: TSpinEdit
         Left = 24
-        Height = 24
+        Height = 21
         Top = 136
         Width = 121
         MaxValue = 125
@@ -336,9 +336,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         TabOrder = 6
         object optSTR_C: TRadioButton
           Left = 16
-          Height = 22
+          Height = 17
           Top = 8
-          Width = 63
+          Width = 55
           Caption = 'String C'
           Checked = True
           State = cbChecked
@@ -346,9 +346,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         end
         object optSTR_SIEMENS: TRadioButton
           Left = 96
-          Height = 22
+          Height = 17
           Top = 8
-          Width = 103
+          Width = 96
           Caption = 'String SIEMENS'
           TabOrder = 1
           TabStop = False
@@ -356,7 +356,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object ByteSize: TSpinEdit
         Left = 224
-        Height = 24
+        Height = 21
         Top = 270
         Width = 121
         MaxValue = 8
@@ -366,7 +366,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object ScanOfEachBlock: TSpinEdit
         Left = 247
-        Height = 24
+        Height = 21
         Top = 136
         Width = 121
         MaxValue = 7200000
@@ -376,7 +376,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object NameOfEachBlock: TEdit
         Left = 391
-        Height = 24
+        Height = 21
         Top = 135
         Width = 160
         TabOrder = 9
