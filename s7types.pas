@@ -14,6 +14,16 @@ uses
   PLCMemoryManager;
 
 type
+  PDUHeader = record
+      P,             // allways 0x32
+      PDUHeadertype, // Header type, one of 1,2,3 or 7. type 2 and 3 headers are two bytes longer.
+      a,b:Byte;	     // currently unknown. Maybe it can be used for long numbers?
+      number,        //A number. This can be used to make sure a received answer corresponds to the request with the same number.
+      plen,          //length of parameters which follow this header
+      dlen:Word;     //length of data which follow the parameters
+      result:array[0..1] of byte; //only present in type 2 and 3 headers. This contains error information.
+  end;
+
   PDU = record
     header:PByte;           // pointer to start of PDU (PDU header)
     param:PByte;            // pointer to start of parameters inside PDU
@@ -38,6 +48,8 @@ type
     Station,
     Rack,
     Slot:Integer;
+    PDUId:Word;
+    MaxPDULen:Word;
     Connected:Boolean;
     Inputs:TPLCMemoryManager;
     Outputs:TPLCMemoryManager;
