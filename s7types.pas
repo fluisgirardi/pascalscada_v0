@@ -14,17 +14,18 @@ uses
   PLCMemoryManager;
 
 type
-  PDUHeader = record
+  TPDUHeader = record
       P,             // allways 0x32
       PDUHeadertype, // Header type, one of 1,2,3 or 7. type 2 and 3 headers are two bytes longer.
       a,b:Byte;	     // currently unknown. Maybe it can be used for long numbers?
       number,        //A number. This can be used to make sure a received answer corresponds to the request with the same number.
-      plen,          //length of parameters which follow this header
-      dlen:Word;     //length of data which follow the parameters
+      param_len,     //length of parameters which follow this header
+      data_len:Word; //length of data which follow the parameters
       result:array[0..1] of byte; //only present in type 2 and 3 headers. This contains error information.
   end;
+  PPDUHeader = ^TPDUHeader;
 
-  PDU = record
+  TPDU = record
     header:PByte;           // pointer to start of PDU (PDU header)
     param:PByte;            // pointer to start of parameters inside PDU
     data:PByte;             // pointer to start of data inside PDU
@@ -34,6 +35,7 @@ type
     data_len:Integer;       // data length
     user_data_len:Integer;  // user or result data length
   end;
+  PPDU = ^TPDU;
 
   //: Identifica um DB da familia S7-300/S7-400
   TS7DB = Record
@@ -86,6 +88,16 @@ const
   vtS7_Counter =  28;  //S7 counters
   vtS7_Timer   =  29;  // S7 timers
 
+  S7FuncOpenS7Connection = $F0;
+  S7FuncRead             = $04;
+  S7FuncWrite            = $05;
+  S7FuncRequestDownload  = $1A;
+  S7FuncDownloadBlock    = $1B;
+  S7FuncDownloadEnded    = $1C;
+  S7FuncStartUpload      = $1D;
+  S7FuncUpload           = $1E;
+  S7FuncEndUpload        = $1F;
+  S7FuncInsertBlock      = $28;
 
 implementation
 

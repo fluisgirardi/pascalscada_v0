@@ -14,9 +14,9 @@ uses
   LinearScaleProcessor, MessageSpool, ModBusDriver, ModBusSerial, ModBusTCP, 
   PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, PLCTag, 
   PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, protscanupdate, 
-  S7Types, scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, 
-  tagcollection, tcp_udpport, uModbusTagBuilder, UserScale, ValueProcessor, 
-  WestASCIIDriver, LazarusPackageIntf;
+  s7family, S7Types, scadapropeditor, scadareg, SerialPort, Tag, TagBit, 
+  TagBlock, tagcollection, tcp_udpport, uModbusTagBuilder, UserScale, 
+  ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 

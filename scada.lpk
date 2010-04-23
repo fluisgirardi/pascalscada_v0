@@ -35,7 +35,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="6" Release="3"/>
-    <Files Count="53">
+    <Files Count="54">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -193,62 +193,66 @@
         <UnitName Value="protscanupdate"/>
       </Item39>
       <Item40>
-        <Filename Value="s7types.pas"/>
-        <UnitName Value="S7Types"/>
+        <Filename Value="s7family.pas"/>
+        <UnitName Value="s7family"/>
       </Item40>
       <Item41>
-        <Filename Value="scadapropeditor.pas"/>
-        <UnitName Value="scadapropeditor"/>
+        <Filename Value="s7types.pas"/>
+        <UnitName Value="S7Types"/>
       </Item41>
       <Item42>
+        <Filename Value="scadapropeditor.pas"/>
+        <UnitName Value="scadapropeditor"/>
+      </Item42>
+      <Item43>
         <Filename Value="scadareg.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="scadareg"/>
-      </Item42>
-      <Item43>
-        <Filename Value="serialport.pas"/>
-        <UnitName Value="SerialPort"/>
       </Item43>
       <Item44>
-        <Filename Value="tag.pas"/>
-        <UnitName Value="Tag"/>
+        <Filename Value="serialport.pas"/>
+        <UnitName Value="SerialPort"/>
       </Item44>
       <Item45>
-        <Filename Value="tagbit.pas"/>
-        <UnitName Value="TagBit"/>
+        <Filename Value="tag.pas"/>
+        <UnitName Value="Tag"/>
       </Item45>
       <Item46>
-        <Filename Value="tagblock.pas"/>
-        <UnitName Value="TagBlock"/>
+        <Filename Value="tagbit.pas"/>
+        <UnitName Value="TagBit"/>
       </Item46>
       <Item47>
-        <Filename Value="tagcollection.pas"/>
-        <UnitName Value="tagcollection"/>
+        <Filename Value="tagblock.pas"/>
+        <UnitName Value="TagBlock"/>
       </Item47>
       <Item48>
-        <Filename Value="tcp_udpport.pas"/>
-        <UnitName Value="tcp_udpport"/>
+        <Filename Value="tagcollection.pas"/>
+        <UnitName Value="tagcollection"/>
       </Item48>
       <Item49>
-        <Filename Value="umodbustagbuilder.pas"/>
-        <UnitName Value="uModbusTagBuilder"/>
+        <Filename Value="tcp_udpport.pas"/>
+        <UnitName Value="tcp_udpport"/>
       </Item49>
       <Item50>
-        <Filename Value="umodbustagbuilder.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="umodbustagbuilder.pas"/>
+        <UnitName Value="uModbusTagBuilder"/>
       </Item50>
       <Item51>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="umodbustagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item51>
       <Item52>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
       </Item52>
       <Item53>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item53>
+      <Item54>
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
-      </Item53>
+      </Item54>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
