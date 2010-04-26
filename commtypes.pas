@@ -183,8 +183,19 @@ type
   const PSM_WRITE_READWRITE = 62;
   //: Mensagem de pedido de escrita de @bold(alta) prioridade
   const PSM_WRITE_WRITE     = 64;
-  //: Mensagem de pedido de escruta e outro de leitura de @bold(alta) prioridade
+  //: Mensagem de pedido de escrita e outro de leitura de @bold(alta) prioridade
   const PSM_WRITE_WRITEREAD = 66;
+
+  //: Mensagem de erro de comunicação tentando ler;
+  const PSM_COMMERROR_READ   = 70;
+  //: Mensagem de erro de comunicação tentando escrever;
+  const PSM_COMMERROR_WRITE  = 71;
+  //: Mensagem de erro de porta aberta;
+  const PSM_PORT_OPENED      = 72;
+  //: Mensagem de erro de porta fechada;
+  const PSM_PORT_CLOSED      = 73;
+  //: Mensagem de erro de porta disconectada;
+  const PSM_PORT_DISCONECTED = 74;
 
   {:
   Converte uma mensagem interna para um grupo de commandos de leitura/escrita.

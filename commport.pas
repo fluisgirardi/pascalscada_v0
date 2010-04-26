@@ -82,6 +82,15 @@ type
     @seealso(TCommPortDriver.ResumeCallBack)
     }
     procedure DoResumeCallBack(CallBack:TDriverCallBack);
+
+    //: Envia uma mensagem de erro de comunicação para a aplicação;
+    procedure DoCommErrorEvent(WriteCmd:Boolean; Error:TIOResult);
+    //: Envia uma mensagem de porta aberta para aplicação;
+    procedure DoCommPortOpenedEvent;
+    //: Envia uma mensagem de porta fechada para aplicação;
+    procedure DoCommPortCloseEvent;
+    //: Envia uma mensagem de porta desconectada para aplicação;
+    procedure DoCommPortDisconectedEvent;
   end;
 
   {:
@@ -228,6 +237,15 @@ type
     @return(Retorna em Packet os valores lidos.)
     }
     procedure IOCommand(cmd:TIOCommand; Packet:PIOPacket);
+
+    //: Envia uma mensagem de erro de comunicação da thread de comunicação para a aplicação
+    procedure DoCommErrorFromThread(WriteCmd:Boolean; Error:TIOResult);
+    //: Envia uma mensagem de porta aberta pela thread de comunicação;
+    procedure DoCommPortOpenedFromThread;
+    //: Envia uma mensagem de porta fechada pela thread de comunicação;
+    procedure DoCommPortCloseFromThread;
+    //: Envia uma mensagem de porta desconectada detectada pela thread de comunicação;
+    procedure DoCommPortDisconectedFromThead;
   protected
     {: Variável responsável por armazenar o estado atual do driver }
     PActive:Boolean;
@@ -588,6 +606,33 @@ begin
   DoSomething
 end;
 
+procedure TUpdateThread.DoCommErrorEvent(WriteCmd:Boolean; Error:TIOResult);
+begin
+  if WriteCmd then
+    FSpool.PostMessage(PSM_COMMERROR_WRITE, Pointer(Error),nil,false)
+  else
+    FSpool.PostMessage(PSM_COMMERROR_READ, Pointer(Error),nil,false)
+  DoSomething;
+end;
+
+procedure TUpdateThread.DoCommPortOpenedEvent;
+begin
+  FSpool.PostMessage(PSM_PORT_OPENED,nil,nil,false)
+  DoSomething;
+end;
+
+procedure TUpdateThread.DoCommPortCloseEvent;
+begin
+  FSpool.PostMessage(PSM_PORT_CLOSED,nil,nil,false)
+  DoSomething;
+end;
+
+procedure TUpdateThread.DoCommPortDisconectedEvent;
+begin
+  FSpool.PostMessage(PSM_PORT_DISCONECTED,nil,nil,false)
+  DoSomething;
+end;
+
 function TUpdateThread.CanceledCallBack(CallBack:Pointer):Boolean;
 var
   c:Integer;
@@ -717,6 +762,26 @@ begin
   end;
   FRXBytes := FRXBytes + Packet.Received;
   FTXBytes := FTXBytes + Packet.Wrote;
+end;
+
+procedure TCommPortDriver.DoCommErrorFromThread(WriteCmd:Boolean; Error:TIOResult);
+begin
+  PUpdater.DoCommErrorEvent(WriteCmd,Error);
+end;
+
+procedure TCommPortDriver.DoCommPortOpenedFromThread;
+begin
+  PUpdater.DoCommPortOpenedEvent;
+end;
+
+procedure TCommPortDriver.DoCommPortCloseFromThread;
+begin
+  PUpdater.DoCommPortCloseEvent;
+end;
+
+procedure TCommPortDriver.DoCommPortDisconected;
+begin
+  PUpdater.DoCommPortDisconectedEvent;
 end;
 
 procedure TCommPortDriver.Loaded;
