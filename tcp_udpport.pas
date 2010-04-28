@@ -87,6 +87,17 @@ type
     @seealso(TPortType).
     }
     property PortType:TPortType read FPortType write SetPortType default ptTCP;
+
+    //: @seealso TCommPortDriver.OnCommPortOpened
+    property OnCommPortOpened;
+    //: @seealso TCommPortDriver.OnCommPortClosed
+    property OnCommPortClosed;
+    //: @seealso TCommPortDriver.OnCommErrorReading
+    property OnCommErrorReading;
+    //: @seealso TCommPortDriver.OnCommErrorWriting
+    property OnCommErrorWriting;
+    //: @seealso TCommPortDriver.OnCommPortDisconnected
+    property OnCommPortDisconnected;
   end;
 
 implementation
@@ -144,15 +155,6 @@ var
   lidos:Integer;
   tentativas:Cardinal;
 begin
-
-  if Packet=nil then begin
-    {$IFDEF FDEBUG}
-    DebugLn('Nil pkg in TCPUDPPort.Write');
-    DumpStack;
-    {$ENDIF}
-    exit;
-  end;
-
   tentativas := 0;
   lidos := 0;
 
@@ -181,6 +183,9 @@ begin
       InternalClearALLBuffers;
   end else
     Packet^.ReadIOResult := iorOK;
+
+  if Packet^.ReadIOResult<>iorOK then
+    DoCommErrorFromThread(false, Packet^.ReadIOResult);
 end;
 
 procedure TTCP_UDPPort.Write(Packet:PIOPacket);
@@ -188,15 +193,6 @@ var
   escritos:Integer;
   tentativas:Cardinal;
 begin
-
-  if Packet=nil then begin
-    {$IFDEF FDEBUG}  
-    DebugLn('Nil pkg in TCPUDPPort.Write');
-    DumpStack;
-    {$ENDIF}
-    exit;
-  end;
-
   tentativas := 0;
   escritos := 0;
 
@@ -225,6 +221,9 @@ begin
       InternalClearALLBuffers;
   end else
     Packet^.WriteIOResult := iorOK;
+
+  if Packet^.WriteIOResult<>iorOK then
+    DoCommErrorFromThread(true, Packet^.WriteIOResult);
 end;
 
 procedure TTCP_UDPPort.NeedSleepBetweenRW;

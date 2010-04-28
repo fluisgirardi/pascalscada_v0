@@ -161,6 +161,15 @@ type
     antes de comecar modifica-las e as restaura após fechar a porta serial.
     }
     property BackupPortSettings:Boolean read PBackupPortSettings write PBackupPortSettings stored true default false;
+
+    //: @seealso TCommPortDriver.OnCommPortOpened
+    property OnCommPortOpened;
+    //: @seealso TCommPortDriver.OnCommPortClosed
+    property OnCommPortClosed;
+    //: @seealso TCommPortDriver.OnCommErrorReading
+    property OnCommErrorReading;
+    //: @seealso TCommPortDriver.OnCommErrorWriting
+    property OnCommErrorWriting;
   end;
 
 
@@ -266,6 +275,7 @@ begin
   start := Now;
 
   Packet^.Received := 0;
+  Packet^.ReadIOResult:=iorNone;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
      lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
      Packet^.Received := Packet^.Received + lidos;
@@ -287,6 +297,9 @@ begin
       InternalClearALLBuffers;
   end else
     Packet^.ReadIOResult := iorOK;
+
+  if Packet^.ReadIOResult<>iorOK then
+    DoCommErrorFromThread(false, Packet^.ReadIOResult);
 end;
 
 procedure TSerialPortDriver.Write(Packet:PIOPacket);
@@ -333,8 +346,11 @@ begin
     if PClearBufOnErr then
        InternalClearALLBuffers;
   end else
-    Packet^.WriteIOResult := iorOK
+    Packet^.WriteIOResult := iorOK;
 {$ENDIF}
+
+  if Packet^.WriteIOResult<>iorOK then
+    DoCommErrorFromThread(true, Packet^.WriteIOResult);
 end;
 
 procedure TSerialPortDriver.PortStart(var Ok:Boolean);
@@ -827,4 +843,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.

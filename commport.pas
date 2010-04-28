@@ -35,9 +35,20 @@ type
     PCanceledCallbacks:array of Pointer;
     PCanceledCount:Integer;
     FSpool:TMessageSpool;
+    Error:TIOResult;
+    FIsWrite:Boolean;
+    FOnCommErrorReading:TCommPortErrorEvent;
+    FOnCommErrorWriting:TCommPortErrorEvent;
+    FOnCommPortOpened:TCommPortGenericError;
+    FOnCommPortClosed:TCommPortGenericError;
+    FOnCommPortDisconnected:TCommPortGenericError;
     procedure DoSomething;
     procedure WaitToDoSomething;
-    function CanceledCallBack(CallBack:Pointer):Boolean;
+    function  CanceledCallBack(CallBack:Pointer):Boolean;
+    procedure SyncCommErrorEvent;
+    procedure SyncPortOpenEvent;
+    procedure SyncPortClosedEvent;
+    procedure SyncPortDisconectedEvent;
   protected
     //: @exclude
     procedure Execute; override;
@@ -91,6 +102,12 @@ type
     procedure DoCommPortCloseEvent;
     //: Envia uma mensagem de porta desconectada para aplicação;
     procedure DoCommPortDisconectedEvent;
+  published
+    property OnCommErrorReading:TCommPortErrorEvent read FOnCommErrorReading write FOnCommErrorReading;
+    property OnCommErrorWriting:TCommPortErrorEvent read FOnCommErrorWriting write FOnCommErrorWriting;
+    property OnCommPortOpened:TCommPortGenericError read FOnCommPortOpened write FOnCommPortOpened;
+    property OnCommPortClosed:TCommPortGenericError read FOnCommPortClosed write FOnCommPortClosed;
+    property OnCommPortDisconnected:TCommPortGenericError read FOnCommPortDisconnected write FOnCommPortDisconnected;
   end;
 
   {:
@@ -238,6 +255,17 @@ type
     }
     procedure IOCommand(cmd:TIOCommand; Packet:PIOPacket);
 
+    //: Dispara o evento de erro de leitura
+    procedure CallCommErrorReadingEvent(Error:TIOResult);
+    //: Dispara o evento de erro de escrita
+    procedure CallCommErrorWritingEvent(Error:TIOResult);
+    //: Dispara o evento de porta aberta
+    procedure CallCommPortOpenedEvent;
+    //: Dispara o evento de porta fechada
+    procedure CallCommPortClosedEvent;
+    //: Dispara o evento de porta desconectada
+    procedure CallCommPortDisconectedEvent;
+  protected
     //: Envia uma mensagem de erro de comunicação da thread de comunicação para a aplicação
     procedure DoCommErrorFromThread(WriteCmd:Boolean; Error:TIOResult);
     //: Envia uma mensagem de porta aberta pela thread de comunicação;
@@ -270,6 +298,18 @@ type
            a leitura).
     @seealso(TIOPacket)
     }
+
+    //: @exclude
+    FOnCommErrorReading:TCommPortErrorEvent;
+    //: @exclude
+    FOnCommErrorWriting:TCommPortErrorEvent;
+    //: @exclude
+    FOnCommPortOpened:TNotifyEvent;
+    //: @exclude
+    FOnCommPortClosed:TNotifyEvent;
+    //: @exclude
+    FOnCommPortDisconnected:TNotifyEvent;
+
     procedure Read(Packet:PIOPacket); virtual; abstract;
     {:
     Escreve dados na porta. É necessário sobrescrever este método para criar
@@ -330,6 +370,17 @@ type
       o último erro registrado pelo sistema operacional.
     }
     procedure RefreshLastOSError;
+
+    //: Evento que sinaliza uma falha de leitura;
+    property OnCommErrorReading:TCommPortErrorEvent read FOnCommErrorReading write FOnCommErrorReading;
+    //: Evento que sinaliza uma falha de escrita;
+    property OnCommErrorWriting:TCommPortErrorEvent read FOnCommErrorWriting write FOnCommErrorWriting;
+    //: Evento que sinaliza quando a porta é aberta
+    property OnCommPortOpened:TNotifyEvent read FOnCommPortOpened write FOnCommPortOpened;
+    //: Evento que sinaliza quando a porta é fechada
+    property OnCommPortClosed:TNotifyEvent read FOnCommPortClosed write FOnCommPortClosed;
+    //: Evento que sinaliza quando a porta é disconectada devido a algum erro.
+    property OnCommPortDisconnected:TNotifyEvent read FOnCommPortDisconnected write FOnCommPortDisconnected;
   public
     {:
     Cria o driver de porta, inicializando todas as threads e variaveis internas.
@@ -522,7 +573,7 @@ begin
   while not Terminated do begin
     try
       WaitToDoSomething;
-      while FSpool.PeekMessage(PMsg,PSM_CALLBACK,PSM_CANCELCALLBACK,true) do begin
+      while FSpool.PeekMessage(PMsg,PSM_CALLBACK,PSM_PORT_DISCONECTED,true) do begin
         case PMsg.MsgID of
           PSM_CALLBACK:
           begin
@@ -563,6 +614,18 @@ begin
               SetLength(PCanceledCallbacks,PCanceledCount);
             end;
           end;
+          PSM_COMMERROR_READ, PSM_COMMERROR_WRITE:
+          begin
+            FIsWrite:=(PMsg.MsgID=PSM_COMMERROR_WRITE);
+            Error:=TIOResult(PMsg.wParam);
+            Synchronize(SyncCommErrorEvent);
+          end;
+          PSM_PORT_OPENED:
+            Synchronize(SyncPortOpenEvent);
+          PSM_PORT_CLOSED:
+            Synchronize(SyncPortClosedEvent);
+          PSM_PORT_DISCONECTED:
+            Synchronize(SyncPortDisconectedEvent);
         end;
       end;
     except
@@ -611,26 +674,54 @@ begin
   if WriteCmd then
     FSpool.PostMessage(PSM_COMMERROR_WRITE, Pointer(Error),nil,false)
   else
-    FSpool.PostMessage(PSM_COMMERROR_READ, Pointer(Error),nil,false)
+    FSpool.PostMessage(PSM_COMMERROR_READ, Pointer(Error),nil,false);
   DoSomething;
 end;
 
 procedure TUpdateThread.DoCommPortOpenedEvent;
 begin
-  FSpool.PostMessage(PSM_PORT_OPENED,nil,nil,false)
+  FSpool.PostMessage(PSM_PORT_OPENED,nil,nil,false);
   DoSomething;
 end;
 
 procedure TUpdateThread.DoCommPortCloseEvent;
 begin
-  FSpool.PostMessage(PSM_PORT_CLOSED,nil,nil,false)
+  FSpool.PostMessage(PSM_PORT_CLOSED,nil,nil,false);
   DoSomething;
 end;
 
 procedure TUpdateThread.DoCommPortDisconectedEvent;
 begin
-  FSpool.PostMessage(PSM_PORT_DISCONECTED,nil,nil,false)
+  FSpool.PostMessage(PSM_PORT_DISCONECTED,nil,nil,false);
   DoSomething;
+end;
+
+procedure TUpdateThread.SyncCommErrorEvent;
+begin
+  if FIsWrite then begin
+    if Assigned(FOnCommErrorWriting) then
+      FOnCommErrorWriting(Error);
+  end else
+    if Assigned(FOnCommErrorReading) then
+      FOnCommErrorReading(Error);
+end;
+
+procedure TUpdateThread.SyncPortOpenEvent;
+begin
+  if Assigned(FOnCommPortOpened) then
+    FOnCommPortOpened();
+end;
+
+procedure TUpdateThread.SyncPortClosedEvent;
+begin
+  if Assigned(FOnCommPortClosed) then
+    FOnCommPortClosed();
+end;
+
+procedure TUpdateThread.SyncPortDisconectedEvent;
+begin
+  if Assigned(FOnCommPortDisconnected) then
+    FOnCommPortDisconnected();
 end;
 
 function TUpdateThread.CanceledCallBack(CallBack:Pointer):Boolean;
@@ -666,6 +757,11 @@ begin
   PUnlocked:=0;
   PClearBufOnErr := true;
   PUpdater := TUpdateThread.Create(True);
+  PUpdater.OnCommErrorReading    :=CallCommErrorReadingEvent;
+  PUpdater.OnCommErrorWriting    :=CallCommErrorWritingEvent;
+  PUpdater.OnCommPortOpened      :=CallCommPortOpenedEvent;
+  PUpdater.OnCommPortClosed      :=CallCommPortClosedEvent;
+  PUpdater.OnCommPortDisconnected:=CallCommPortDisconectedEvent;
   PUpdater.Priority:=tpHighest;
   PUpdater.Resume;
   PUpdater.WaitInit;
@@ -766,22 +862,60 @@ end;
 
 procedure TCommPortDriver.DoCommErrorFromThread(WriteCmd:Boolean; Error:TIOResult);
 begin
-  PUpdater.DoCommErrorEvent(WriteCmd,Error);
+  if [csDestroying]*ComponentState<>[] then exit;
+  if (WriteCmd and Assigned(FOnCommErrorWriting)) or ((not WriteCmd) and Assigned(FOnCommErrorReading)) then
+    PUpdater.DoCommErrorEvent(WriteCmd,Error);
 end;
 
 procedure TCommPortDriver.DoCommPortOpenedFromThread;
 begin
-  PUpdater.DoCommPortOpenedEvent;
+  if [csDestroying]*ComponentState<>[] then exit;
+  if Assigned(FOnCommPortOpened) then
+    PUpdater.DoCommPortOpenedEvent;
 end;
 
 procedure TCommPortDriver.DoCommPortCloseFromThread;
 begin
-  PUpdater.DoCommPortCloseEvent;
+  if [csDestroying]*ComponentState<>[] then exit;
+  if Assigned(FOnCommPortClosed) then
+    PUpdater.DoCommPortCloseEvent;
 end;
 
-procedure TCommPortDriver.DoCommPortDisconected;
+procedure TCommPortDriver.DoCommPortDisconectedFromThead;
 begin
-  PUpdater.DoCommPortDisconectedEvent;
+  if [csDestroying]*ComponentState<>[] then exit;
+  if Assigned(FOnCommPortDisconnected) then
+    PUpdater.DoCommPortDisconectedEvent;
+end;
+
+procedure TCommPortDriver.CallCommErrorReadingEvent(Error:TIOResult);
+begin
+  if Assigned(FOnCommErrorReading) then
+    FOnCommErrorReading(Error);
+end;
+
+procedure TCommPortDriver.CallCommErrorWritingEvent(Error:TIOResult);
+begin
+  if Assigned(FOnCommErrorWriting) then
+    FOnCommErrorWriting(Error);
+end;
+
+procedure TCommPortDriver.CallCommPortOpenedEvent;
+begin
+  if Assigned(FOnCommPortOpened) then
+    FOnCommPortOpened(Self);
+end;
+
+procedure TCommPortDriver.CallCommPortClosedEvent;
+begin
+  if Assigned(FOnCommPortClosed) then
+    FOnCommPortClosed(Self);
+end;
+
+procedure TCommPortDriver.CallCommPortDisconectedEvent;
+begin
+  if Assigned(FOnCommPortDisconnected) then
+    FOnCommPortDisconnected(Self);
 end;
 
 procedure TCommPortDriver.Loaded;
@@ -1080,6 +1214,8 @@ begin
   try
      PIOCmdCS.Enter;
      PortStart(ok);
+     if Ok then
+       DoCommPortOpenedFromThread;
   finally
      PIOCmdCS.Leave;
   end;
@@ -1090,6 +1226,8 @@ begin
   try
      PIOCmdCS.Enter;
      PortStop(ok);
+     if Ok then
+       DoCommPortCloseFromThread;
   finally
      PIOCmdCS.Leave;
   end;

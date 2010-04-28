@@ -101,6 +101,11 @@ type
   }
   TDriverCallBack = procedure(var Result:TIOPacket) of object;
 
+  //: Procedimento para sinalizar um evento de erro na porta
+  TCommPortErrorEvent = procedure(Error:TIOResult) of object;
+
+  TCommPortGenericError = procedure of object;
+
   {:
   Aponta para um procedimento do tipo TDriverCallBack.
   @seealso(TDriverCallBack)
@@ -153,20 +158,31 @@ type
   @seealso(TDriverCallBack)
   @seealso(TIOPacket)
   }
-  const PSM_CALLBACK       = 1;
+  const PSM_CALLBACK         = 1;
 
   {:
   Ordena thread de atualização a voltar a chamar TDriverCallBack fornecido.
   @seealso(TDriverCallBack)
   }
-  const PSM_RESUMECALLBACK = 2;
+  const PSM_RESUMECALLBACK   = 2;
   
   {:
   Ordena thread de atualização a não chamar mais TDriverCallBack fornecido a fim
   de evitar violações de acesso.
   @seealso(TDriverCallBack)
   }
-  const PSM_CANCELCALLBACK = 3;
+  const PSM_CANCELCALLBACK   = 3;
+
+  //: Mensagem de erro de comunicação tentando ler;
+  const PSM_COMMERROR_READ   = 4;
+  //: Mensagem de erro de comunicação tentando escrever;
+  const PSM_COMMERROR_WRITE  = 5;
+  //: Mensagem de erro de porta aberta;
+  const PSM_PORT_OPENED      = 6;
+  //: Mensagem de erro de porta fechada;
+  const PSM_PORT_CLOSED      = 7;
+  //: Mensagem de erro de porta disconectada;
+  const PSM_PORT_DISCONECTED = 8;
 
   //: Mensagem de pedido de leitura de @bold(baixa) prioridade
   const PSM_READ_READ      = 50;
@@ -185,17 +201,6 @@ type
   const PSM_WRITE_WRITE     = 64;
   //: Mensagem de pedido de escrita e outro de leitura de @bold(alta) prioridade
   const PSM_WRITE_WRITEREAD = 66;
-
-  //: Mensagem de erro de comunicação tentando ler;
-  const PSM_COMMERROR_READ   = 70;
-  //: Mensagem de erro de comunicação tentando escrever;
-  const PSM_COMMERROR_WRITE  = 71;
-  //: Mensagem de erro de porta aberta;
-  const PSM_PORT_OPENED      = 72;
-  //: Mensagem de erro de porta fechada;
-  const PSM_PORT_CLOSED      = 73;
-  //: Mensagem de erro de porta disconectada;
-  const PSM_PORT_DISCONECTED = 74;
 
   {:
   Converte uma mensagem interna para um grupo de commandos de leitura/escrita.
