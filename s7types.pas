@@ -21,7 +21,7 @@ type
       number,        //A number. This can be used to make sure a received answer corresponds to the request with the same number.
       param_len,     //length of parameters which follow this header
       data_len:Word; //length of data which follow the parameters
-      result:array[0..1] of byte; //only present in type 2 and 3 headers. This contains error information.
+      Error:Word;    //only present in type 2 and 3 headers. This contains error information.
   end;
   PPDUHeader = ^TPDUHeader;
 
@@ -64,6 +64,18 @@ type
 
   //: Representação de um conjunto de CLP's S7-200/300/400 da Siemens.
   TS7CPUs = array of TS7CPU;
+
+  TS7Req = record
+    header:array[0..2] of Byte;
+    WordLen:Byte;
+    ReqLength:Word;
+    DBNumber:Word;
+    AreaCode:Byte;
+    StartAddress:Word;
+    Bit:Byte;
+  end;
+
+  PS7Req = ^TS7Req;
 
   //: Identifica o meio de conexão com o CLP.
   TISOTCPConnectionWay = (ISOTCP,ISOTCP_VIA_CP243);

@@ -95,8 +95,10 @@ var
   msg:BYTES;
   res:Integer;
   len:Cardinal;
+  retries:Integer;
 begin
   CPU.Connected:=false;
+  Result:=false;
   if PCommPort=nil then exit;
 
   //incializa conexao
@@ -132,16 +134,31 @@ begin
     FConnectEvent.ResetEvent;
     res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
     if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
-    if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>(len-4)) or ((IOResult.Received+4)<>22) then exit;
+    if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>(len-4)) then exit;
+
+    retries := 1;
+    while (len<>22) and (retries<3) do begin
+      res := PCommPort.IOCommandASync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
+      if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
+      if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>4) then exit;
+
+      len:= IOResult.BufferToRead[2]*$100 + IOResult.BufferToRead[3];
+
+      FConnectEvent.ResetEvent;
+      res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
+      if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
+      if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>(len-4)) then exit;
+    end;
 
     //negocia o tamanho da pdu
-    CPU.Connected := NegotiatePDUSize(CPU);
+    if len=22 then
+      CPU.Connected := NegotiatePDUSize(CPU);
   finally
     SetLength(msg,0);
     SetLength(IOResult.BufferToRead,0);
     SetLength(IOResult.BufferToWrite,0);
+    Result:=CPU.Connected;
   end;
-
 end;
 
 function TISOTCPDriver.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;

@@ -77,9 +77,9 @@ type
     procedure AddParam(var MsgOut:BYTES; const param:BYTES); virtual;
     procedure InitiatePDUHeader(var MsgOut:BYTES; PDUType:Integer); virtual;
     function  NegotiatePDUSize(var CPU:TS7CPU):Boolean; virtual;
-    function  SetupPDU(var msg:BYTES; MsgTypeOut:Boolean):TPDU; virtual;
+    function  SetupPDU(var msg:BYTES; MsgTypeOut:Boolean; out PDU:TPDU):Integer; virtual;
     procedure PrepareReadRequest(var msgOut:BYTES); virtual;
-    procedure AddToReadRequest(var msgOut:BYTES; Area, DBnum, Start, ByteCount:Integer); virtual;
+    procedure AddToReadRequest(var msgOut:BYTES; iArea, iDBnum, iStart, iByteCount:Integer); virtual;
   protected
     procedure DoAddTag(TagObj:TTag); override;
     procedure DoDelTag(TagObj:TTag); override;
@@ -88,6 +88,10 @@ type
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
     function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    procedure RunPLC(CPU:TS7CPU);
+    procedure StopPLC(CPU:TS7CPU);
+    procedure CopyRAMToROM(CPU:TS7CPU);
+    procedure CompressMemory(CPU:TS7CPU);
   public
     constructor Create(AOwner:TComponent); override;
   published
@@ -136,11 +140,16 @@ end;
 function TSiemensProtocolFamily.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;
 var
   pduo:TPDU;
+  res:Integer;
 begin
-  pduo := SetupPDU(msgOut,true);
+  res := SetupPDU(msgOut, true, pduo);
+  if res<>0 then  begin
+    Result:=False;
+    exit;
+  end;
   inc(CPU.PDUId);
   PPDUHeader(pduo.header)^.number:=SwapBytesInWord(CPU.PDUId);
-  Result := false;
+  Result := true;
 end;
 
 procedure TSiemensProtocolFamily.sendMessage(var msgOut:BYTES);
@@ -176,6 +185,7 @@ function  TSiemensProtocolFamily.NegotiatePDUSize(var CPU:TS7CPU):Boolean;
 var
   param, Msg, msgIn:BYTES;
   pdu:TPDU;
+  res:Integer;
 begin
   Result := false;
   SetLength(param,8);
@@ -193,13 +203,15 @@ begin
   InitiatePDUHeader(msg,1);
   AddParam(Msg,param);
   if exchange(CPU,Msg,msgIn,false) then begin
-    pdu := SetupPDU(msgIn, true);
-    CPU.MaxPDULen:=((pdu.param+6)^)*256+((pdu.param+7)^);
-    Result := true;
+    res := SetupPDU(msgIn, true, pdu);
+    if res=0 then begin
+      CPU.MaxPDULen:=((pdu.param+6)^)*256+((pdu.param+7)^);
+      Result := true;
+    end;
   end;
 end;
 
-function  TSiemensProtocolFamily.SetupPDU(var msg:BYTES; MsgTypeOut:Boolean):TPDU;
+function  TSiemensProtocolFamily.SetupPDU(var msg:BYTES; MsgTypeOut:Boolean; out PDU:TPDU):Integer;
 var
   position:Integer;
 begin
@@ -208,19 +220,23 @@ begin
   else
     position:=PDUIn;
 
-  Result.header:=@msg[position];
-  Result.header_len:=10;
-  if PPDUHeader(Result.header)^.PDUHeadertype in [2,3] then
-    Result.header_len:=12;
+  Result := 0;
 
-  Result.param:=@msg[position+Result.header_len];
-  Result.param_len:=SwapBytesInWord(PPDUHeader(Result.header)^.param_len);
+  PDU.header:=@msg[position];
+  PDU.header_len:=10;
+  if PPDUHeader(PDU.header)^.PDUHeadertype in [2,3] then begin
+    PDU.header_len:=12;
+    Result:=SwapBytesInWord(PPDUHeader(PDU.header)^.Error);
+  end;
 
-  Result.data:=@msg[position + Result.header_len + Result.param_len];
-  Result.data_len:=SwapBytesInWord(PPDUHeader(Result.header)^.data_len);
+  PDU.param:=@msg[position+PDU.header_len];
+  PDU.param_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.param_len);
 
-  Result.udata:=nil;
-  Result.user_data_len:=0
+  PDU.data:=@msg[position + PDU.header_len + PDU.param_len];
+  PDU.data_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.data_len);
+
+  PDU.udata:=nil;
+  PDU.user_data_len:=0
 end;
 
 procedure TSiemensProtocolFamily.PrepareReadRequest(var msgOut:BYTES);
@@ -237,9 +253,10 @@ begin
   SetLength(param,0);
 end;
 
-procedure TSiemensProtocolFamily.AddToReadRequest(var msgOut:BYTES; Area, DBnum, Start, ByteCount:Integer);
+procedure TSiemensProtocolFamily.AddToReadRequest(var msgOut:BYTES; iArea, iDBnum, iStart, iByteCount:Integer);
 var
   param:BYTES;
+  p:PS7Req;
 begin
   SetLength(param, 12);
   param[00] := $12;
@@ -255,7 +272,32 @@ begin
   param[10] := $00; //start address in bits
   param[11] := $00; //start address in bits
 
+  p := PS7Req(@param[00]);
 
+  with TS7Req(p) do begin
+    header[0]:=$12;
+    header[1]:=$0A;
+    header[2]:=$10;
+
+    case iArea of
+      vtS7_200_AnInput, vtS7_200_AnOutput:
+        WordLen:=4;
+
+      vtS7_Counter,
+      vtS7_Timer
+      vtS7_200_Counter,
+      vtS7_200_Timer:
+        WordLen:=iArea;
+    end;
+
+    ReqLength   :=SwapBytesInWord(iByteCount);
+    DBNumber    :=SwapBytesInWord(iDBnum);
+    Area        :=iArea;
+    StartAddress:=SwapBytesInWord(iStart);
+    Bit         :=0;
+  end;
+
+  AddParam(msgOut, param);
 
   SetLength(param, 0);
 end;
@@ -264,15 +306,16 @@ procedure TSiemensProtocolFamily.AddParam(var MsgOut:BYTES; const param:BYTES);
 var
   pdu:TPDU;
   paramlen, extra:Integer;
+  res:integer;
 begin
-  pdu := SetupPDU(MsgOut, true);
+  res := SetupPDU(MsgOut, true, pdu);
   paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
 
   extra := ifthen(PPDUHeader(pdu.header)^.PDUHeadertype in [2,3], 2, 0);
 
   if Length(MsgOut)<(PDUOut+10+extra+paramlen) then begin
     SetLength(MsgOut,(PDUOut+10+extra+paramlen));
-    pdu := SetupPDU(MsgOut, true);
+    res := SetupPDU(MsgOut, true, pdu);
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   end;
 
@@ -301,8 +344,7 @@ begin
     data_len:=0;
     //evita escrever se ão foi alocado.
     if extra=2 then begin
-      result[0]:=0;
-      result[1]:=0;
+      Error:=0;
     end;
   end;
 end;
@@ -353,6 +395,55 @@ begin
 end;
 
 function  TSiemensProtocolFamily.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+begin
+
+end;
+
+procedure TSiemensProtocolFamily.RunPLC(CPU:TS7CPU);
+var
+  paramToRun, msgout, msgin:BYTES;
+begin
+  SetLength(paramToRun,20);
+  paramToRun[00]:=$28;
+  paramToRun[01]:=0;
+  paramToRun[02]:=0;
+  paramToRun[03]:=0;
+  paramToRun[04]:=0;
+  paramToRun[05]:=0;
+  paramToRun[06]:=0;
+  paramToRun[07]:=$FD;
+  paramToRun[08]:=0;
+  paramToRun[09]:=0;
+  paramToRun[10]:=9;
+  paramToRun[11]:=$50; //P
+  paramToRun[12]:=$5F; //_
+  paramToRun[13]:=$50; //P
+  paramToRun[14]:=$52; //R
+  paramToRun[15]:=$4F; //O
+  paramToRun[16]:=$47; //G
+  paramToRun[17]:=$52; //R
+  paramToRun[18]:=$41; //A
+  paramToRun[19]:=$4D; //M
+
+  InitiatePDUHeader(msgout, 1);
+  AddParam(msgout, paramToRun);
+
+  if not exchange(CPU,msgout,msgin,false) then
+    raise Exception.Create('Falha ao tentar colocar a CPU em Run!');
+
+end;
+
+procedure TSiemensProtocolFamily.StopPLC(CPU:TS7CPU);
+begin
+
+end;
+
+procedure TSiemensProtocolFamily.CopyRAMToROM(CPU:TS7CPU);
+begin
+
+end;
+
+procedure TSiemensProtocolFamily.CompressMemory(CPU:TS7CPU);
 begin
 
 end;
