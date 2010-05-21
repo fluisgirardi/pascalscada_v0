@@ -40,15 +40,14 @@ type
     @row(     @cell(Outputs, Saidas)            @cell(20)     )
     @row(     @cell(Flags ou M's)               @cell(30)     )
     @row(     @cell(DB e VM no S7-200 )         @cell(40)     )
-    @row(     @cell(DB instanciado)             @cell(50)     )
-    @row(     @cell(Counter, S7 300/400)        @cell(60)     )
-    @row(     @cell(Timer, S7 300/400)          @cell(70)     )
+    @row(     @cell(Counter, S7 300/400)        @cell(50)     )
+    @row(     @cell(Timer, S7 300/400)          @cell(60)     )
 
-    @row(     @cell(Special Memory, SM, S7-200) @cell(80)     )
-    @row(     @cell(Entrada analógica, S7-200)  @cell(90)     )
-    @row(     @cell(Saida analógica, S7-200)    @cell(100)    )
-    @row(     @cell(Counter, S7-200)            @cell(110)    )
-    @row(     @cell(Timer, S7-200)              @cell(120)    )
+    @row(     @cell(Special Memory, SM, S7-200) @cell(70)     )
+    @row(     @cell(Entrada analógica, S7-200)  @cell(80)     )
+    @row(     @cell(Saida analógica, S7-200)    @cell(90)    )
+    @row(     @cell(Counter, S7-200)            @cell(100)    )
+    @row(     @cell(Timer, S7-200)              @cell(110)    )
   )
 
   Logo para acessar um byte das entradas, basta colocar na propriedade
@@ -58,6 +57,8 @@ type
   }
 
   TSiemensProtocolFamily = class(TProtocolDriver)
+  protected
+    function GetTagInfo(tagobj:TTag):TTagRec;
   protected
     PDUIn,PDUOut:Integer;
     FCPUs:TS7CPUs;
@@ -100,7 +101,8 @@ type
 
 implementation
 
-uses math, syncobjs;
+uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
+     PLCMemoryManager;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -360,23 +362,163 @@ end;
 
 procedure TSiemensProtocolFamily.DoAddTag(TagObj:TTag);
 var
-  plc:integer;
+  plc, db:integer;
+  tr:TTagRec;
+  foundplc, founddb:Boolean;
+  area, datatype, datasize:Integer;
 begin
-  for plc := 0 to High(FCPUs) do begin
+  tr:=GetTagInfo(tag);
+  foundplc:=false;
 
+  for plc := 0 to High(FCPUs) do
+    if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
+      foundplc:=true;
+      break;
+    end;
+
+  if not foundplc then begin
+    plc:=Length(FCPUs);
+    SetLength(FCPUs,plc+1);
+    with FCPUs[plc] do begin
+      Slot:=Tr.Slot;
+      Rack:=Tr.Hack;
+      Station :=Tr.Station;
+      Inputs  :=TPLCMemoryManager.Create;
+      Outputs :=TPLCMemoryManager.Create;
+      AnInput :=TPLCMemoryManager.Create;
+      AnOutput:=TPLCMemoryManager.Create;
+      Timers  :=TPLCMemoryManager.Create;
+      Counters:=TPLCMemoryManager.Create;
+      Flags   :=TPLCMemoryManager.Create;
+      SMs     :=TPLCMemoryManager.Create;
+    end;
   end;
+
+  area     := tr.ReadFunction div 10;
+  datatype := tr.ReadFunction mod 10;
+
+  case datatype of
+    1:
+      datasize:=1;
+    2,3:
+      datasize:=2;
+    4,5,6:
+      datasize:=4;
+  end;
+
+  case area of
+    1:
+      FCPUs[plc].Inputs.AddAddress(tr.Address,tr.Size,datasize);
+    2:
+      FCPUs[plc].Outputs.AddAddress(tr.Address,tr.Size,datasize);
+    3:
+      FCPUs[plc].Flags.AddAddress(tr.Address,tr.Size,datasize);
+    4: begin
+      if tr.File_DB<=0 then
+        tr.File_DB:=1;
+
+      founddb:=false;
+      for db:=0 to high(FCPUs[plc].DBs) do
+        if FCPUs[plc].DBs[db].DBNum=tr.File_DB then begin
+          founddb:=true;
+          break;
+        end;
+
+      if not founddb then begin
+        db:=Length(FCPUs[plc].DBs);
+        SetLength(FCPUs[plc].DBs, db+1);
+        FCPUs[plc].DBs[db]:=TPLCMemoryManager.Create;
+      end;
+
+      FCPUs[plc].DBs[db].AddAddress(tr.Address,tr.Size,datasize);
+    end;
+    5,10:
+      FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,datasize);
+    6,11:
+      FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,datasize);
+    7:
+      FCPUs[plc].SMs.AddAddress(tr.Address,tr.Size,datasize);
+    8:
+      FCPUs[plc].AnInput.AddAddress(tr.Address,tr.Size,datasize);
+    9:
+      FCPUs[plc].AnOutput.AddAddress(tr.Address,tr.Size,datasize);
+  end;
+
   Inherited DoAddTag(TagObj);
 end;
 
 procedure TSiemensProtocolFamily.DoDelTag(TagObj:TTag);
+var
+  plc, db:integer;
+  tr:TTagRec;
+  foundplc, founddb:Boolean;
+  area, datatype, datasize:Integer;
 begin
+  tr:=GetTagInfo(tag);
+  foundplc:=false;
 
+  for plc := 0 to High(FCPUs) do
+    if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
+      foundplc:=true;
+      break;
+    end;
+
+  if not foundplc then exit;
+
+  area     := tr.ReadFunction div 10;
+  datatype := tr.ReadFunction mod 10;
+
+  case datatype of
+    1:
+      datasize:=1;
+    2,3:
+      datasize:=2;
+    4,5,6:
+      datasize:=4;
+  end;
+
+  case area of
+    1: begin
+      FCPUs[plc].Inputs.RemoveAddress(tr.Address,tr.Size,datasize);
+    end;
+    2:
+      FCPUs[plc].Outputs.RemoveAddress(tr.Address,tr.Size,datasize);
+    3:
+      FCPUs[plc].Flags.RemoveAddress(tr.Address,tr.Size,datasize);
+    4: begin
+      if tr.File_DB<=0 then
+        tr.File_DB:=1;
+
+      founddb:=false;
+      for db:=0 to high(FCPUs[plc].DBs) do
+        if FCPUs[plc].DBs[db].DBNum=tr.File_DB then begin
+          founddb:=true;
+          break;
+        end;
+
+      if not founddb then exit;
+
+      FCPUs[plc].DBs[db].RemoveAddress(tr.Address,tr.Size,datasize);
+    end;
+    5,10:
+      FCPUs[plc].Counters.RemoveAddress(tr.Address,tr.Size,datasize);
+    6,11:
+      FCPUs[plc].Timers.RemoveAddress(tr.Address,tr.Size,datasize);
+    7:
+      FCPUs[plc].SMs.RemoveAddress(tr.Address,tr.Size,datasize);
+    8:
+      FCPUs[plc].AnInput.RemoveAddress(tr.Address,tr.Size,datasize);
+    9:
+      FCPUs[plc].AnOutput.RemoveAddress(tr.Address,tr.Size,datasize);
+  end;
   Inherited DoDelTag(TagObj);
 end;
 
 procedure TSiemensProtocolFamily.DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);
 begin
-  DoTagChange(TagObj, Change, oldValue, newValue);
+  DoDelTag(TagObj);
+  DoAddTag(TagObj);
+  inherited DoTagChange(TagObj, Change, oldValue, newValue);
 end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:Integer);
@@ -446,6 +588,64 @@ end;
 procedure TSiemensProtocolFamily.CompressMemory(CPU:TS7CPU);
 begin
 
+end;
+
+function  TSiemensProtocolFamily.GetTagInfo(tagobj:TTag):TTagRec;
+begin
+  if Tag is TPLCTagNumber then begin
+    with Result do begin
+      Hack:=TPLCTagNumber(TagObj).PLCHack;
+      Slot:=TPLCTagNumber(TagObj).PLCSlot;
+      Station:=TPLCTagNumber(TagObj).PLCStation;
+      File_DB:=TPLCTagNumber(TagObj).MemFile_DB;
+      Address:=TPLCTagNumber(TagObj).MemAddress;
+      SubElement:=TPLCTagNumber(TagObj).MemSubElement;
+      Size:=1;
+      OffSet:=0;
+      ReadFunction:=TPLCTagNumber(TagObj).MemReadFunction;
+      WriteFunction:=TPLCTagNumber(TagObj).MemWriteFunction;
+      ScanTime:=TPLCTagNumber(TagObj).RefreshTime;
+      CallBack:=nil;
+    end;
+    exit;
+  end;
+
+  if Tag is TPLCBlock then begin
+    with Result do begin
+      Hack:=TPLCBlock(TagObj).PLCHack;
+      Slot:=TPLCBlock(TagObj).PLCSlot;
+      Station:=TPLCBlock(TagObj).PLCStation;
+      File_DB:=TPLCBlock(TagObj).MemFile_DB;
+      Address:=TPLCBlock(TagObj).MemAddress;
+      SubElement:=TPLCBlock(TagObj).MemSubElement;
+      Size:=TPLCBlock(TagObj).Size;
+      OffSet:=0;
+      ReadFunction:=TPLCBlock(TagObj).MemReadFunction;
+      WriteFunction:=TPLCBlock(TagObj).MemWriteFunction;
+      ScanTime:=TPLCBlock(TagObj).RefreshTime;
+      CallBack:=nil;
+    end;
+    exit;
+  end;
+
+  if Tag is TPLCString then begin
+    with Result do begin
+      Hack:=TPLCString(TagObj).PLCHack;
+      Slot:=TPLCString(TagObj).PLCSlot;
+      Station:=TPLCString(TagObj).PLCStation;
+      File_DB:=TPLCString(TagObj).MemFile_DB;
+      Address:=TPLCString(TagObj).MemAddress;
+      SubElement:=TPLCString(TagObj).MemSubElement;
+      Size:=TPLCString(TagObj).StringSize;
+      OffSet:=0;
+      ReadFunction:=TPLCString(TagObj).MemReadFunction;
+      WriteFunction:=TPLCString(TagObj).MemWriteFunction;
+      ScanTime:=TPLCString(TagObj).RefreshTime;
+      CallBack:=nil;
+    end;
+    exit;
+  end;
+  raise Exception.Create(SinvalidTag);
 end;
 
 end.

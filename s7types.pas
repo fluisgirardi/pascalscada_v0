@@ -55,10 +55,12 @@ type
     Connected:Boolean;
     Inputs:TPLCMemoryManager;
     Outputs:TPLCMemoryManager;
+    AnInput:TPLCMemoryManager;
+    AnOutput:TPLCMemoryManager;
     DBs:TS7DBs;
     Timers:TPLCMemoryManager;
     Counters:TPLCMemoryManager;
-    Memorys:TPLCMemoryManager;
+    Flags:TPLCMemoryManager;
     SMs:TPLCMemoryManager;
   end;
 
