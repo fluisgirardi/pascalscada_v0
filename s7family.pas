@@ -28,8 +28,8 @@ type
     @row(     @cell(Byte, 8 bits, unsignaled)      @cell(1)     )
     @row(     @cell(Word, 16 bits, unsignaled)     @cell(2)     )
     @row(     @cell(ShortInt, 16 bits, signaled)   @cell(3)     )
-    @row(     @cell(Integer, 32 bits, signaled)    @cell(4)     )
-    @row(     @cell(DWord, 32 bits, unsignaled)    @cell(5)     )
+    @row(     @cell(DWord, 32 bits, unsignaled)    @cell(4)     )
+    @row(     @cell(Integer, 32 bits, signaled)    @cell(5)     )
     @row(     @cell(Float, 32 bits)                @cell(6)     )
   )
 
@@ -82,17 +82,25 @@ type
     procedure PrepareReadRequest(var msgOut:BYTES); virtual;
     procedure AddToReadRequest(var msgOut:BYTES; iArea, iDBnum, iStart, iByteCount:Integer); virtual;
   protected
-    procedure DoAddTag(TagObj:TTag); override;
-    procedure DoDelTag(TagObj:TTag); override;
-    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
-    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
-    procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
-    function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
-    function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     procedure RunPLC(CPU:TS7CPU);
     procedure StopPLC(CPU:TS7CPU);
     procedure CopyRAMToROM(CPU:TS7CPU);
     procedure CompressMemory(CPU:TS7CPU);
+  protected
+    //funcoes de conversao
+    function BytesToWord(b0,b1:Double):Word;
+    function BytesToInt16(b0,b1:Double):ShortInt;
+    function BytesToDWord(b0,b1,b2,b3:Double):Cardinal;
+    function BytesToInt32(b0,b1,b2,b3:Double):Integer;
+    function BytesToFloat(b0,b1,b2,b3:Double):Double;
+  protected
+{ok}procedure DoAddTag(TagObj:TTag); override;
+{ok}procedure DoDelTag(TagObj:TTag); override;
+{ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
+{ok}procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
+    function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
   published
@@ -102,7 +110,7 @@ type
 implementation
 
 uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
-     PLCMemoryManager;
+     PLCMemoryManager, hsutils;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -523,12 +531,99 @@ end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:Integer);
 begin
-
+  //
 end;
 
 procedure TSiemensProtocolFamily.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
+var
+  plc, db:integer;
+  tr:TTagRec;
+  foundplc, founddb:Boolean;
+  area, datatype, datasize:Integer;
+  temparea:TArrayOfDouble;
+  c1, c2, lent, lend:Integer;
 begin
+  tr:=GetTagInfo(tag);
+  foundplc:=false;
 
+  for plc := 0 to High(FCPUs) do
+    if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
+      foundplc:=true;
+      break;
+    end;
+
+  if not foundplc then exit;
+
+  area     := tr.ReadFunction div 10;
+  datatype := tr.ReadFunction mod 10;
+
+  case datatype of
+    2,3:
+      datasize:=2;
+    4,5,6:
+      datasize:=4;
+    else
+      datasize:=1;
+  end;
+
+  SetLength(temparea,tr.Size*datasize);
+
+  case area of
+    1:
+      FCPUs[plc].Inputs.GetValues(tr.Address,tr.Size,datasize, temparea);
+    2:
+      FCPUs[plc].Outputs.GetValues(tr.Address,tr.Size,datasize, temparea);
+    3:
+      FCPUs[plc].Flags.GetValues(tr.Address,tr.Size,datasize, temparea);
+    4: begin
+      if tr.File_DB<=0 then
+        tr.File_DB:=1;
+
+      founddb:=false;
+      for db:=0 to high(FCPUs[plc].DBs) do
+        if FCPUs[plc].DBs[db].DBNum=tr.File_DB then begin
+          founddb:=true;
+          break;
+        end;
+
+      if not founddb then exit;
+
+      FCPUs[plc].DBs[db].GetValues(tr.Address,tr.Size,datasize, temparea);
+    end;
+    5,10:
+      FCPUs[plc].Counters.GetValues(tr.Address,tr.Size,datasize, temparea);
+    6,11:
+      FCPUs[plc].Timers.GetValues(tr.Address,tr.Size,datasize, temparea);
+    7:
+      FCPUs[plc].SMs.GetValues(tr.Address,tr.Size,datasize, temparea);
+    8:
+      FCPUs[plc].AnInput.GetValues(tr.Address,tr.Size,datasize, temparea);
+    9:
+      FCPUs[plc].AnOutput.GetValues(tr.Address,tr.Size,datasize, temparea);
+  end;
+
+  c1:=0;
+  c2:=0;
+  lent:=Length(temparea);
+  lend:=Length(values.Values);
+  while (c1<lent) AND (c2<lend) do begin
+    case datatype of
+      1:
+        values.Values[c2] := temparea[c1];
+      2:
+        values.Values[c2] := BytesToWord(temparea[c1], temparea[c1+1]);
+      3:
+        values.Values[c2] := BytesToInt16(temparea[c1], temparea[c1+1])
+      4:
+        values.Values[c2] := BytesToDWord(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3])
+      5:
+        values.Values[c2] := BytesToInt32(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3])
+      6:
+        values.Values[c2] := BytesToFloat(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3])
+    end;
+    inc(c1, datasize);
+    inc(c2);
+  end;
 end;
 
 function  TSiemensProtocolFamily.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
@@ -646,6 +741,69 @@ begin
     exit;
   end;
   raise Exception.Create(SinvalidTag);
+end;
+
+//funcoes de conversao
+function TSiemensProtocolFamily.BytesToWord(b0,b1:Double):Word;
+var
+  ib0, ib1:Word;
+begin
+  ib0 := FloatToInteger(b1) and 255;
+  ib1 := FloatToInteger(b2) and 255;
+
+  Result := (ib0 shl 8) + ib1;
+end;
+
+function TSiemensProtocolFamily.BytesToInt16(b0,b1:Double):ShortInt;
+var
+  ib0, ib1:ShortInt;
+begin
+  ib0 := FloatToInteger(b1) and 255;
+  ib1 := FloatToInteger(b2) and 255;
+
+  Result := (ib0 shl 8) + ib1;
+end;
+
+function TSiemensProtocolFamily.BytesToDWord(b0,b1,b2,b3:Double):Cardinal;
+var
+  ib0, ib1, ib2, ib3:DWord;
+begin
+  ib0 := FloatToInteger(b1) and 255;
+  ib1 := FloatToInteger(b2) and 255;
+  ib2 := FloatToInteger(b3) and 255;
+  ib3 := FloatToInteger(b4) and 255;
+
+  Result := (b0 shl 24) + (b1 shl 16) + (b2 shl 16)  + b3;
+end;
+
+function TSiemensProtocolFamily.BytesToInt32(b0,b1,b2,b3:Double):Integer;
+var
+  ib0, ib1, ib2, ib3:Integer;
+begin
+  ib0 := FloatToInteger(b1) and 255;
+  ib1 := FloatToInteger(b2) and 255;
+  ib2 := FloatToInteger(b3) and 255;
+  ib3 := FloatToInteger(b4) and 255;
+
+  Result := (b0 shl 24) + (b1 shl 16) + (b2 shl 16)  + b3;
+end;
+
+function TSiemensProtocolFamily.BytesToFloat(b0,b1,b2,b3:Double):Double;
+var
+  ib0, ib1, ib2, ib3:Integer;
+  res:Float;
+  p:PInteger;
+begin
+  ib0 := FloatToInteger(b1) and 255;
+  ib1 := FloatToInteger(b2) and 255;
+  ib2 := FloatToInteger(b3) and 255;
+  ib3 := FloatToInteger(b4) and 255;
+
+  p:=PInteger(@res);
+
+  p^ := (b0 shl 24) + (b1 shl 16) + (b2 shl 16)  + b3;
+
+  Result := res;
 end;
 
 end.
