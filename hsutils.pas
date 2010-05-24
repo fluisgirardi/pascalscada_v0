@@ -43,55 +43,13 @@ begin
 end;
 
 function FloatToInteger(Value:Extended):Integer;
-var
-  c, pos, t:Integer;
-  x:TFloatRec;
 begin
-  c:=0;
-  result := 0;
-  {$IFDEF FPC}
-  FloatToDecimal(x,Value,10,0);
-  {$ELSE}
-  FloatToDecimal(x,Value,fvExtended,10,0);
-  {$ENDIF}
-  while (c<10) and (x.Digits[c]<>#0) do
-    inc(c);
-  t := c; //armazena o tamanho
-  dec(c);
-  pos := c;
-  while ((c>=0) and (c<10)) and ((x.Digits[c]>='0') and (x.Digits[c]<='9')) do begin
-    Result := Result + (Byte(x.Digits[c])-48) * power(10,pos - c);
-    Dec(c);
-  end;
-  Result := Result * Power(10,x.Exponent-t);
-  if x.Negative then
-    Result := Result * (-1);
+  Result := trunc(Value);
 end;
 
 function FloatToInt64(Value:Extended):Int64;
-var
-  c, pos, t:Integer;
-  x:TFloatRec;
 begin
-  c:=0;
-  result := 0;
-  {$IFDEF FPC}
-  FloatToDecimal(x,Value,19,0);
-  {$ELSE}
-  FloatToDecimal(x,Value,fvExtended,19,0);
-  {$ENDIF}
-  while (c<19) and (x.Digits[c]<>#0) do
-    inc(c);
-  t := c; //armazena o tamanho
-  dec(c);
-  pos := c;
-  while ((c>=0) and (c<19)) and ((x.Digits[c]>='0') and (x.Digits[c]<='9')) do begin
-    Result := Result + (Byte(x.Digits[c])-48) * power(10,pos - c);
-    Dec(c);
-  end;
-  Result := Result * Power(10,x.Exponent-t);
-  if x.Negative then
-    Result := Result * (-1);
+  Result := trunc(Value);
 end;
 
 end.

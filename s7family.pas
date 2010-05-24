@@ -62,6 +62,7 @@ type
   protected
     PDUIn,PDUOut:Integer;
     FCPUs:TS7CPUs;
+    FAdapterInitialized:Boolean;
     function  initAdapter:Boolean; virtual;
     function  disconnectAdapter:Boolean; virtual;
     function  connectPLC(var CPU:TS7CPU):Boolean; virtual;
@@ -99,6 +100,9 @@ type
 {ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
     procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
 {ok}procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
+
+    //estas funcoes ficaram apenas por motivos compatibilidade com os tags
+    //e seus metodos de leitura e escrita diretas.
     function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
@@ -129,7 +133,7 @@ end;
 
 function  TSiemensProtocolFamily.initAdapter:Boolean;
 begin
-
+  Result := true;
 end;
 
 function  TSiemensProtocolFamily.disconnectAdapter:Boolean;
@@ -284,7 +288,7 @@ begin
 
   p := PS7Req(@param[00]);
 
-  with TS7Req(p) do begin
+  with TS7Req(p^) do begin
     header[0]:=$12;
     header[1]:=$0A;
     header[2]:=$10;
@@ -294,7 +298,7 @@ begin
         WordLen:=4;
 
       vtS7_Counter,
-      vtS7_Timer
+      vtS7_Timer,
       vtS7_200_Counter,
       vtS7_200_Timer:
         WordLen:=iArea;
@@ -302,7 +306,7 @@ begin
 
     ReqLength   :=SwapBytesInWord(iByteCount);
     DBNumber    :=SwapBytesInWord(iDBnum);
-    Area        :=iArea;
+    AreaCode    :=iArea;
     StartAddress:=SwapBytesInWord(iStart);
     Bit         :=0;
   end;
@@ -375,7 +379,7 @@ var
   foundplc, founddb:Boolean;
   area, datatype, datasize:Integer;
 begin
-  tr:=GetTagInfo(tag);
+  tr:=GetTagInfo(TagObj);
   foundplc:=false;
 
   for plc := 0 to High(FCPUs) do
@@ -416,11 +420,11 @@ begin
 
   case area of
     1:
-      FCPUs[plc].Inputs.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Inputs.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     2:
-      FCPUs[plc].Outputs.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Outputs.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     3:
-      FCPUs[plc].Flags.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Flags.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     4: begin
       if tr.File_DB<=0 then
         tr.File_DB:=1;
@@ -435,21 +439,21 @@ begin
       if not founddb then begin
         db:=Length(FCPUs[plc].DBs);
         SetLength(FCPUs[plc].DBs, db+1);
-        FCPUs[plc].DBs[db]:=TPLCMemoryManager.Create;
+        FCPUs[plc].DBs[db].DBArea:=TPLCMemoryManager.Create;
       end;
 
-      FCPUs[plc].DBs[db].AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     end;
     5,10:
-      FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     6,11:
-      FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     7:
-      FCPUs[plc].SMs.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].SMs.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     8:
-      FCPUs[plc].AnInput.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].AnInput.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
     9:
-      FCPUs[plc].AnOutput.AddAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].AnOutput.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
   end;
 
   Inherited DoAddTag(TagObj);
@@ -462,7 +466,7 @@ var
   foundplc, founddb:Boolean;
   area, datatype, datasize:Integer;
 begin
-  tr:=GetTagInfo(tag);
+  tr:=GetTagInfo(TagObj);
   foundplc:=false;
 
   for plc := 0 to High(FCPUs) do
@@ -506,7 +510,7 @@ begin
 
       if not founddb then exit;
 
-      FCPUs[plc].DBs[db].RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].DBs[db].DBArea.RemoveAddress(tr.Address,tr.Size,datasize);
     end;
     5,10:
       FCPUs[plc].Counters.RemoveAddress(tr.Address,tr.Size,datasize);
@@ -530,32 +534,120 @@ begin
 end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:Integer);
+var
+  plc, db, block, retries:integer;
+  msgout:BYTES;
+  initialized:Boolean;
+  procedure pkg_initialized;
+  begin
+    if not initialized then begin
+      PrepareReadRequest(msgout);
+      initialized:=true;
+    end;
+  end;
 begin
-  //
+  retries := 0;
+  while (not FAdapterInitialized) AND (retries<3) do begin
+    FAdapterInitialized := initAdapter;
+    inc(retries)
+  end;
+
+  if retries>=3 then begin
+    NeedSleep:=-1;
+    exit;
+  end;
+
+  for plc:=0 to High(FCPUs) do begin
+    if not FCPUs[plc].Connected then
+      connectPLC(FCPUs[plc]);
+
+    //DBs     //////////////////////////////////////////////////////////////////
+    for db := 0 to high(FCPUs[plc].DBs) do
+      for block := 0 to High(FCPUs[plc].DBs[db].DBArea.Blocks) do
+        if FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
+          pkg_initialized;
+          AddToReadRequest(msgout, vtS7_DB, FCPUs[plc].DBs[db].DBNum, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
+        end;
+
+    //INPUTS////////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].Inputs.Blocks) do
+      if FCPUs[plc].Inputs.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_Inputs, 0, FCPUs[plc].Inputs.Blocks[block].AddressStart, FCPUs[plc].Inputs.Blocks[block].Size);
+      end;
+
+    //OUTPUTS///////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].Outputs.Blocks) do
+      if FCPUs[plc].Outputs.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_Outputs, 0, FCPUs[plc].Outputs.Blocks[block].AddressStart, FCPUs[plc].Outputs.Blocks[block].Size);
+      end;
+
+    //AnInput///////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].AnInput.Blocks) do
+      if FCPUs[plc].AnInput.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_200_AnInput, 0, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
+      end;
+
+    //AnOutput//////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].AnOutput.Blocks) do
+      if FCPUs[plc].AnOutput.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_200_AnOutput, 0, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
+      end;
+
+    //Timers///////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].Timers.Blocks) do
+      if FCPUs[plc].Timers.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_Timer, 0, FCPUs[plc].Timers.Blocks[block].AddressStart, FCPUs[plc].Timers.Blocks[block].Size);
+      end;
+
+    //Counters//////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].Counters.Blocks) do
+      if FCPUs[plc].Counters.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_Counter, 0, FCPUs[plc].Counters.Blocks[block].AddressStart, FCPUs[plc].Counters.Blocks[block].Size);
+      end;
+
+    //Flags///////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].Flags.Blocks) do
+      if FCPUs[plc].Flags.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_Flags, 0, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
+      end;
+
+    //SMs//////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].SMs.Blocks) do
+      if FCPUs[plc].SMs.Blocks[block].NeedRefresh then begin
+        pkg_initialized;
+        AddToReadRequest(msgout, vtS7_200_SM, 0, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
+      end;
+
+  end;
 end;
 
 procedure TSiemensProtocolFamily.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
 var
   plc, db:integer;
-  tr:TTagRec;
   foundplc, founddb:Boolean;
   area, datatype, datasize:Integer;
   temparea:TArrayOfDouble;
   c1, c2, lent, lend:Integer;
 begin
-  tr:=GetTagInfo(tag);
   foundplc:=false;
 
   for plc := 0 to High(FCPUs) do
-    if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
+    if (FCPUs[plc].Slot=TagRec.Slot) AND (FCPUs[plc].Rack=TagRec.Hack) AND (FCPUs[plc].Station=TagRec.Station) then begin
       foundplc:=true;
       break;
     end;
 
   if not foundplc then exit;
 
-  area     := tr.ReadFunction div 10;
-  datatype := tr.ReadFunction mod 10;
+  area     := TagRec.ReadFunction div 10;
+  datatype := TagRec.ReadFunction mod 10;
 
   case datatype of
     2,3:
@@ -566,40 +658,40 @@ begin
       datasize:=1;
   end;
 
-  SetLength(temparea,tr.Size*datasize);
+  SetLength(temparea,TagRec.Size*datasize);
 
   case area of
     1:
-      FCPUs[plc].Inputs.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].Inputs.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     2:
-      FCPUs[plc].Outputs.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].Outputs.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     3:
-      FCPUs[plc].Flags.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].Flags.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     4: begin
-      if tr.File_DB<=0 then
-        tr.File_DB:=1;
+      if TagRec.File_DB<=0 then
+        TagRec.File_DB:=1;
 
       founddb:=false;
       for db:=0 to high(FCPUs[plc].DBs) do
-        if FCPUs[plc].DBs[db].DBNum=tr.File_DB then begin
+        if FCPUs[plc].DBs[db].DBNum=TagRec.File_DB then begin
           founddb:=true;
           break;
         end;
 
       if not founddb then exit;
 
-      FCPUs[plc].DBs[db].GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     end;
     5,10:
-      FCPUs[plc].Counters.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     6,11:
-      FCPUs[plc].Timers.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     7:
-      FCPUs[plc].SMs.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].SMs.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     8:
-      FCPUs[plc].AnInput.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].AnInput.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
     9:
-      FCPUs[plc].AnOutput.GetValues(tr.Address,tr.Size,datasize, temparea);
+      FCPUs[plc].AnOutput.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
   end;
 
   c1:=0;
@@ -613,13 +705,13 @@ begin
       2:
         values.Values[c2] := BytesToWord(temparea[c1], temparea[c1+1]);
       3:
-        values.Values[c2] := BytesToInt16(temparea[c1], temparea[c1+1])
+        values.Values[c2] := BytesToInt16(temparea[c1], temparea[c1+1]);
       4:
-        values.Values[c2] := BytesToDWord(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3])
+        values.Values[c2] := BytesToDWord(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3]);
       5:
-        values.Values[c2] := BytesToInt32(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3])
+        values.Values[c2] := BytesToInt32(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3]);
       6:
-        values.Values[c2] := BytesToFloat(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3])
+        values.Values[c2] := BytesToFloat(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3]);
     end;
     inc(c1, datasize);
     inc(c2);
@@ -687,7 +779,7 @@ end;
 
 function  TSiemensProtocolFamily.GetTagInfo(tagobj:TTag):TTagRec;
 begin
-  if Tag is TPLCTagNumber then begin
+  if tagobj is TPLCTagNumber then begin
     with Result do begin
       Hack:=TPLCTagNumber(TagObj).PLCHack;
       Slot:=TPLCTagNumber(TagObj).PLCSlot;
@@ -705,7 +797,7 @@ begin
     exit;
   end;
 
-  if Tag is TPLCBlock then begin
+  if tagobj is TPLCBlock then begin
     with Result do begin
       Hack:=TPLCBlock(TagObj).PLCHack;
       Slot:=TPLCBlock(TagObj).PLCSlot;
@@ -723,7 +815,7 @@ begin
     exit;
   end;
 
-  if Tag is TPLCString then begin
+  if tagobj is TPLCString then begin
     with Result do begin
       Hack:=TPLCString(TagObj).PLCHack;
       Slot:=TPLCString(TagObj).PLCSlot;
@@ -748,8 +840,8 @@ function TSiemensProtocolFamily.BytesToWord(b0,b1:Double):Word;
 var
   ib0, ib1:Word;
 begin
-  ib0 := FloatToInteger(b1) and 255;
-  ib1 := FloatToInteger(b2) and 255;
+  ib0 := FloatToInteger(b0) and 255;
+  ib1 := FloatToInteger(b1) and 255;
 
   Result := (ib0 shl 8) + ib1;
 end;
@@ -758,8 +850,8 @@ function TSiemensProtocolFamily.BytesToInt16(b0,b1:Double):ShortInt;
 var
   ib0, ib1:ShortInt;
 begin
-  ib0 := FloatToInteger(b1) and 255;
-  ib1 := FloatToInteger(b2) and 255;
+  ib0 := FloatToInteger(b0) and 255;
+  ib1 := FloatToInteger(b1) and 255;
 
   Result := (ib0 shl 8) + ib1;
 end;
@@ -768,24 +860,24 @@ function TSiemensProtocolFamily.BytesToDWord(b0,b1,b2,b3:Double):Cardinal;
 var
   ib0, ib1, ib2, ib3:DWord;
 begin
-  ib0 := FloatToInteger(b1) and 255;
-  ib1 := FloatToInteger(b2) and 255;
-  ib2 := FloatToInteger(b3) and 255;
-  ib3 := FloatToInteger(b4) and 255;
+  ib0 := FloatToInteger(b0) and 255;
+  ib1 := FloatToInteger(b1) and 255;
+  ib2 := FloatToInteger(b2) and 255;
+  ib3 := FloatToInteger(b3) and 255;
 
-  Result := (b0 shl 24) + (b1 shl 16) + (b2 shl 16)  + b3;
+  Result := (ib0 shl 24) + (ib1 shl 16) + (ib2 shl 16)  + ib3;
 end;
 
 function TSiemensProtocolFamily.BytesToInt32(b0,b1,b2,b3:Double):Integer;
 var
   ib0, ib1, ib2, ib3:Integer;
 begin
-  ib0 := FloatToInteger(b1) and 255;
-  ib1 := FloatToInteger(b2) and 255;
-  ib2 := FloatToInteger(b3) and 255;
-  ib3 := FloatToInteger(b4) and 255;
+  ib0 := FloatToInteger(b0) and 255;
+  ib1 := FloatToInteger(b1) and 255;
+  ib2 := FloatToInteger(b2) and 255;
+  ib3 := FloatToInteger(b3) and 255;
 
-  Result := (b0 shl 24) + (b1 shl 16) + (b2 shl 16)  + b3;
+  Result := (ib0 shl 24) + (ib1 shl 16) + (ib2 shl 16)  + ib3;
 end;
 
 function TSiemensProtocolFamily.BytesToFloat(b0,b1,b2,b3:Double):Double;
@@ -794,14 +886,14 @@ var
   res:Float;
   p:PInteger;
 begin
-  ib0 := FloatToInteger(b1) and 255;
-  ib1 := FloatToInteger(b2) and 255;
-  ib2 := FloatToInteger(b3) and 255;
-  ib3 := FloatToInteger(b4) and 255;
+  ib0 := FloatToInteger(b0) and 255;
+  ib1 := FloatToInteger(b1) and 255;
+  ib2 := FloatToInteger(b2) and 255;
+  ib3 := FloatToInteger(b3) and 255;
 
   p:=PInteger(@res);
 
-  p^ := (b0 shl 24) + (b1 shl 16) + (b2 shl 16)  + b3;
+  p^ := (ib0 shl 24) + (ib1 shl 16) + (ib2 shl 16)  + ib3;
 
   Result := res;
 end;
