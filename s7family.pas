@@ -95,10 +95,11 @@ type
     function BytesToInt32(b0,b1,b2,b3:Double):Integer;
     function BytesToFloat(b0,b1,b2,b3:Double):Double;
   protected
+    procedure UpdateTags(pkg:BYTES; writepkg:Boolean);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
 {ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
-    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
+{ok}procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
 {ok}procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
 
     //estas funcoes ficaram apenas por motivos compatibilidade com os tags
@@ -372,6 +373,11 @@ end;
 // FUNCOES DE MANIPULAÇAO DO DRIVER
 ////////////////////////////////////////////////////////////////////////////////
 
+procedure TSiemensProtocolFamily.UpdateTags(pkg:BYTES; writepkg:Boolean);
+begin
+
+end;
+
 procedure TSiemensProtocolFamily.DoAddTag(TagObj:TTag);
 var
   plc, db:integer;
@@ -538,8 +544,8 @@ var
   plc, db, block, retries:integer;
   TimeElapsed:Int64;
   lastPLC, lastDB, lastType, lastStartAddress, lastSize:integer;
-  msgout:BYTES;
-  initialized:Boolean;
+  msgout, msgin:BYTES;
+  initialized, onereqdone:Boolean;
   anow:TDateTime;
   procedure pkg_initialized;
   begin
@@ -562,6 +568,8 @@ begin
 
   anow:=Now;
   TimeElapsed:=0;
+  NeedSleep:=-1;
+  onereqdone:=false;
 
   for plc:=0 to High(FCPUs) do begin
     if not FCPUs[plc].Connected then
@@ -702,26 +710,28 @@ begin
           lastStartAddress:=FCPUs[plc].SMs.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].SMs.Blocks[block].Size;
         end;
+    if initialized then begin
+      onereqdone:=true;
+      NeedSleep:=0;
+      if exchange(FCPUs[plc], msgout, msgin, false) then
+        UpdateTags(msgin,False);
+    end;
+    initialized:=false,
+    setlength(msgin,0);
+    setlength(msgout,0);
   end;
 
-  if initialized then
-    NeedSleep:=0
-  else begin
+  if not onereqdone then begin
     if PReadSomethingAlways and (TimeElapsed>0) begin
+      NeedSleep:=0;
       pkg_initialized;
       if lastDB<>-1 then
         AddToReadRequest(msgout, lastType, FCPUs[lastplc].DBs[lastDB].DBNum, lastStartAddress, lastSize)
       else
         AddToReadRequest(msgout, lastType, 0, lastStartAddress, lastSize);
-    end else begin
-      NeedSleep:=-1;
+      if exchange(FCPUs[plc], msgout, msgin, false) then
+        UpdateTags(msgin,False);
     end;
-  end;
-
-  //se inicializou significa que
-  //há um ou mais pedidos para executar
-  if initialized then begin
-
   end;
 end;
 
