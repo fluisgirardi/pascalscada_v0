@@ -716,13 +716,13 @@ begin
       if exchange(FCPUs[plc], msgout, msgin, false) then
         UpdateTags(msgin,False);
     end;
-    initialized:=false,
+    initialized:=false;
     setlength(msgin,0);
     setlength(msgout,0);
   end;
 
   if not onereqdone then begin
-    if PReadSomethingAlways and (TimeElapsed>0) begin
+    if PReadSomethingAlways and (TimeElapsed>0) then begin
       NeedSleep:=0;
       pkg_initialized;
       if lastDB<>-1 then
