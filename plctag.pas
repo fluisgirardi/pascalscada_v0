@@ -21,6 +21,8 @@ type
   TPLCTag = class(TTag)
   private
     CScanTimer:TTimer;
+  private
+    procedure GetNewProtocolTagSize;
   protected
     //: A escrita do tag deve ser sincrona ou assincrona
     FSyncWrites:Boolean;
@@ -36,6 +38,34 @@ type
     PLastASyncReadCmdResult:TProtocolIOResult;
     //: Armazena o resultado da última escrita @bold(assincrona) realizada pelo tag.
     PLastASyncWriteCmdResult:TProtocolIOResult;
+
+    //: Tipo de dado do tag
+    FTagType:TPowerTagType;
+    //: As words da palavra mesclada serão invertidas
+    FSwapWords:Boolean;
+    //: As bytes das words da palavra mesclada serão invertidas
+    FSwapBytes:Boolean;
+
+    FProtocolWordSize,
+    FCurrentWordSize:Byte;
+
+    //: configura o novo tipo de dado do tag.
+    procedure SetTagType(newType:TPowerTagType);
+
+    //: Recompila os valores do tag.
+    procedure RebuildValues; virtual;
+
+    {:
+    Habilita/Desabilita o swap de words.
+    @param(v Boolean: @true habilita, @false desabilita.)
+    }
+    procedure SetSwapWords(v:Boolean);
+
+    {:
+    Habilita/Desabilita o swap de bytes.
+    @param(v Boolean: @true habilita, @false desabilita.)
+    }
+    procedure SetSwapBytes(v:Boolean);
 
     //: @exclude
     procedure SetGUID(v:String);
@@ -111,7 +141,7 @@ type
     Compila uma estrutura com as informações do tag.
     @seealso(TTagRec)
     }
-    procedure BuildTagRec(var tr:TTagRec; const Count, OffSet:Integer);
+    procedure BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
     //: Faz uma leitura @bold(assincrona) do tag.
     procedure ScanRead; virtual; abstract;
     {:
@@ -181,6 +211,13 @@ type
     procedure DoScanTimerEvent(Sender:TObject);
     //: A escrita do tag deve ser sincrona
     property SyncWrites:Boolean read FSyncWrites write FSyncWrites default false ;
+
+    //: Tipo do tag.
+    property TagType:TPowerTagType read FTagType write SetTagType default pttDefault;
+    //: Diz se as words da palavra formada serão invertidas.
+    property SwapBytes:Boolean read FSwapBytes write SetSwapBytes default false;
+    //: Diz se os bytes das words da palavra formada serão invertidas.
+    property SwapWords:Boolean read FSwapWords write SetSwapWords default false;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -240,6 +277,9 @@ begin
   PWriteFunction:=0;
   PRetries:=1;
   PScanTime:=1000;
+  FTagType:=pttDefault;
+  FSwapBytes:=false;
+  FSwapWords:=false;
   CScanTimer := TTimer.Create(self);
   CScanTimer.OnTimer := DoScanTimerEvent;
 end;
@@ -295,6 +335,8 @@ begin
     //adiciona no scan do driver...
     if Self.PAutoRead then
       P.AddTag(self);
+
+    GetNewProtocolTagSize;
     PProtocolDriver := p;
   end;
 end;
@@ -323,6 +365,9 @@ procedure TPLCTag.SetPLCHack(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcPLCHack,PHack,v);
+
+  GetNewProtocolTagSize;
+
   PHack := v;
 end;
 
@@ -330,6 +375,9 @@ procedure TPLCTag.SetPLCSlot(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcPLCSlot,PSlot,v);
+
+  GetNewProtocolTagSize;
+
   PSlot := v;
 end;
 
@@ -337,6 +385,9 @@ procedure TPLCTag.SetPLCStation(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcPLCStation,PStation,v);
+
+  GetNewProtocolTagSize;
+
   PStation := v;
 end;
 
@@ -344,6 +395,9 @@ procedure TPLCTag.SetMemFileDB(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemFile_DB,PFile_DB,v);
+
+  GetNewProtocolTagSize;
+
   PFile_DB := v;
 end;
 
@@ -351,6 +405,9 @@ procedure TPLCTag.SetMemAddress(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemAddress,PAddress,v);
+
+  GetNewProtocolTagSize;
+
   PAddress := v;
 end;
 
@@ -358,6 +415,9 @@ procedure TPLCTag.SetMemSubElement(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemSubElement,PSubElement,v);
+
+  GetNewProtocolTagSize;
+
   PSubElement := v;
 end;
 
@@ -365,6 +425,9 @@ procedure TPLCTag.SetMemReadFunction(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemReadFunction,PReadFunction,v);
+
+  GetNewProtocolTagSize;
+
   PReadFunction := v;
 end;
 
@@ -372,6 +435,9 @@ procedure TPLCTag.SetMemWriteFunction(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcMemWriteFunction,PWriteFunction,v);
+
+  GetNewProtocolTagSize;
+
   PWriteFunction := v;
 end;
 
@@ -379,6 +445,9 @@ procedure TPLCTag.SetPath(v:String);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcPath,0,0);
+
+  GetNewProtocolTagSize;
+
   PPath := v;
 end;
 
@@ -386,6 +455,9 @@ procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
 begin
   if PProtocolDriver<>nil then
     PProtocolDriver.TagChanges(self,tcScanTime,PScanTime,v);
+
+  GetNewProtocolTagSize;
+
   PScanTime := v;
   CScanTimer.Interval := v;
 end;
@@ -397,7 +469,7 @@ begin
     ScanRead;
 end;
 
-procedure TPLCTag.BuildTagRec(var tr:TTagRec; const Count, OffSet:Integer);
+procedure TPLCTag.BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
 begin
   tr.Hack := PHack;
   tr.Slot := PSlot;
@@ -405,14 +477,35 @@ begin
   tr.File_DB := PFile_DB;
   tr.Address := PAddress;
   tr.SubElement := PSubElement;
-  tr.Size := ifthen(count=0, PSize, Count);
-  tr.OffSet := offset;
+  Count := ifthen(Count=0, PSize, Count);
+
+  //calcula o tamanho real e o offset de acordo com
+  //o tipo de tag e tamanho da palavra de dados
+  //que está chegando do protocolo...
+  if FCurrentWordSize>=FProtocolWordSize then begin
+    tr.Size   := (FCurrentWordSize div FProtocolWordSize)*Count;
+    tr.OffSet := (FCurrentWordSize div FProtocolWordSize)*offset
+  end else begin
+    tr.OffSet := (OffSet * FCurrentWordSize) div FProtocolWordSize;
+    tr.Size   := ((OffSet*FCurrentWordSize)+(Count*FCurrentWordSize) div FProtocolWordSize) + ifthen((((OffSet*FCurrentWordSize)+(Count*FCurrentWordSize)) mod FProtocolWordSize)<>0,1,0) - tr.OffSet;
+  end;
+
   tr.Path := PPath;
   tr.ReadFunction := PReadFunction;
   tr.WriteFunction := PWriteFunction;
   tr.Retries := PRetries;
   tr.ScanTime := PScanTime;
   tr.CallBack := TagCommandCallBack;
+end;
+
+procedure TPLCTag.GetNewProtocolTagSize;
+begin
+  if PProtocolDriver=nil then begin
+    FProtocolWordSize:=1;
+    exit;
+  end;
+
+  FProtocolWordSize:=PProtocolDriver.SizeOfTag(Self,False);
 end;
 
 procedure TPLCTag.Loaded;
@@ -424,6 +517,45 @@ procedure TPLCTag.SetGUID(v:String);
 begin
   if ComponentState*[csReading]=[] then exit;
   PGUID:=v;
+end;
+
+procedure TPLCTag.SetTagType(newType:TPowerTagType);
+begin
+  if newType=FTagType then exit;
+  FTagType:=newType;
+
+  case FTagType of
+    pttDefault:
+      FCurrentWordSize := FProtocolWordSize;
+    pttByte:
+      FCurrentWordSize:=8;
+    pttShortInt, pttWord:
+      FCurrentWordSize:=16;
+    pttInteger, pttDWord, pttFloat:
+      FCurrentWordSize:=32;
+  end;
+  RebuildValues;
+end;
+
+procedure TPLCTag.SetSwapWords(v:Boolean);
+begin
+  if v=FSwapWords then exit;
+
+  FSwapWords:=v;
+  RebuildValues;
+end;
+
+procedure TPLCTag.SetSwapBytes(v:Boolean);
+begin
+  if v=FSwapBytes then exit;
+
+  FSwapBytes:=v;
+  RebuildValues;
+end;
+
+procedure TPLCTag.RebuildValues;
+begin
+  ScanRead;
 end;
 
 end.
