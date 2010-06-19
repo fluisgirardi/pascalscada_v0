@@ -130,7 +130,7 @@ var
 begin
   //use a funcao de leitura
   if PProtocolDriver<>nil then
-    BitsByType := Min(PProtocolDriver.SizeOfTag(Self, false),32)
+    BitsByType := Min(PProtocolDriver.SizeOfTag(Self, false, FProtocolTagType),32)
   else
     BitsByType := 8;
 
@@ -246,7 +246,7 @@ var
   strLen, BitsByType :Byte;
 begin
   if PProtocolDriver<>nil then
-    BitsByType := Min(PProtocolDriver.SizeOfTag(Self,true),32)
+    BitsByType := Min(PProtocolDriver.SizeOfTag(Self,true,FProtocolTagType),32)
   else
     BitsByType := 8;
 
@@ -534,7 +534,7 @@ var
   strlen:integer;
 begin
   if PProtocolDriver<>nil then begin
-    BitsByType := PProtocolDriver.SizeOfTag(Self,IsWrite);
+    BitsByType := PProtocolDriver.SizeOfTag(Self,IsWrite,FProtocolTagType);
     BitsByType := IfThen(BitsByType=0,1,BitsByType);
   end else
     BitsByType := 8;

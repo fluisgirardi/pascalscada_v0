@@ -39,8 +39,10 @@ type
     //: Armazena o resultado da última escrita @bold(assincrona) realizada pelo tag.
     PLastASyncWriteCmdResult:TProtocolIOResult;
 
+    //: Tipo de dado retornado pelo protocolo.
+    FProtocolTagType:TProtocolTagType;
     //: Tipo de dado do tag
-    FTagType:TPowerTagType;
+    FTagType:TTagType;
     //: As words da palavra mesclada serão invertidas
     FSwapWords:Boolean;
     //: As bytes das words da palavra mesclada serão invertidas
@@ -49,8 +51,14 @@ type
     FProtocolWordSize,
     FCurrentWordSize:Byte;
 
+    //: Valores vindos do PLC são convertidos para o tipo de dados configurado no tag.
+    function PLCValuesToTagValues(Values:TArrayOfDouble):TArrayOfDouble; virtual;
+
+    //: Valores vindo do tag são convertidos para o tipo de aceito pelo driver.
+    function TagValuesToPLCValues(Values:TArrayOfDouble):TArrayOfDouble; virtual;
+
     //: configura o novo tipo de dado do tag.
-    procedure SetTagType(newType:TPowerTagType);
+    procedure SetTagType(newType:TTagType);
 
     //: Recompila os valores do tag.
     procedure RebuildValues; virtual;
@@ -213,7 +221,7 @@ type
     property SyncWrites:Boolean read FSyncWrites write FSyncWrites default false ;
 
     //: Tipo do tag.
-    property TagType:TPowerTagType read FTagType write SetTagType default pttDefault;
+    property TagType:TTagType read FTagType write SetTagType default pttDefault;
     //: Diz se as words da palavra formada serão invertidas.
     property SwapBytes:Boolean read FSwapBytes write SetSwapBytes default false;
     //: Diz se os bytes das words da palavra formada serão invertidas.
@@ -255,6 +263,8 @@ type
   end;
 
 implementation
+
+uses hsutils;
 
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
@@ -505,7 +515,9 @@ begin
     exit;
   end;
 
-  FProtocolWordSize:=PProtocolDriver.SizeOfTag(Self,False);
+  FProtocolWordSize:=PProtocolDriver.SizeOfTag(Self,False,FProtocolTagType);
+  if FTagType=pttDefault then
+    FCurrentWordSize := FProtocolWordSize;
 end;
 
 procedure TPLCTag.Loaded;
@@ -519,7 +531,7 @@ begin
   PGUID:=v;
 end;
 
-procedure TPLCTag.SetTagType(newType:TPowerTagType);
+procedure TPLCTag.SetTagType(newType:TTagType);
 begin
   if newType=FTagType then exit;
   FTagType:=newType;
@@ -556,6 +568,192 @@ end;
 procedure TPLCTag.RebuildValues;
 begin
   ScanRead;
+end;
+
+function TPLCTag.PLCValuesToTagValues(Values:TArrayOfDouble):TArrayOfDouble;
+var
+  PtrByte, PtrByteWalker:PByte;
+  PtrWord, PtrWordWalker:PWord;
+  PtrDWord, PtrDWordWalker:PDWord;
+  PtrSingle, PtrSingleWalker:PSingle;
+
+  AreaSize:Integer;
+  AreaIdx:Integer;
+  valueidx:Integer;
+
+  WordAux:Word;
+  ByteAux:Byte;
+
+  PtrByte1, PtrByte2:PByte;
+  PtrWord1, PtrWord2:PWord;
+
+  procedure ResetPointers;
+  begin
+    PtrByteWalker  :=PtrByte;
+    PtrWord        :=PWord(PtrByte);
+    PtrWordWalker  :=PWord(PtrByte);
+    PtrDWord       :=PDWord(PtrByte);
+    PtrDWordWalker :=PDWord(PtrByte);
+    PtrSingle      :=PSingle(PtrByte);
+    PtrSingleWalker:=PSingle(PtrByte);
+  end;
+
+  procedure AddToResult(ValueToAdd:Double; var Result:TArrayOfDouble);
+  var
+    i:Integer;
+  begin
+    i:=Length(Result);
+    SetLength(Result,i+1);
+    Result[i]:=ValueToAdd;
+  end;
+
+begin
+  if (FTagType=pttDefault) OR
+     ((FProtocolTagType=ptByte) AND (FTagType=pttByte)) OR
+     ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
+     ((FProtocolTagType=ptShortInt) AND (FTagType=pttShortInt)) OR
+     ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
+     ((FProtocolTagType=ptInteger) AND (FTagType=pttInteger)) OR
+     ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat))
+  then begin
+    Result:=Values;
+    exit;
+  end;
+
+  //calcula quantos bytes precisam ser alocados.
+  SetLength(Result,0);
+
+  case FProtocolTagType of
+    ptBit:
+      AreaSize := Length(Values) div 8;
+    ptByte:
+      AreaSize := Length(Values);
+    ptWord, ptShortInt:
+      AreaSize := Length(Values)*2;
+    ptDWord, ptInteger, ptFloat:
+      AreaSize := Length(Values)*4;
+  end;
+
+  PtrByte:=GetMem(AreaSize);
+  ResetPointers;
+
+  //move os dados para area de trabalho.
+  valueidx:=0;
+  case FProtocolTagType of
+    ptBit:
+       while valueidx<Length(Values) do begin
+         if Values[valueidx]<>0 then
+           PtrByteWalker^:=PtrByteWalker^ + (power(2,valueidx mod 8) AND $FF);
+
+         inc(valueidx);
+         if (valueidx mod 8)=0 then
+           inc(PtrByteWalker);
+       end;
+    ptByte:
+       while valueidx<Length(Values) do begin
+         PtrByteWalker^:=trunc(Values[valueidx]) AND $FF;
+         inc(valueidx);
+         Inc(PtrByteWalker);
+       end;
+    ptWord, ptShortInt:
+       while valueidx<Length(Values) do begin
+         PtrWordWalker^:=trunc(Values[valueidx]) AND $FFFF;
+         inc(valueidx);
+         Inc(PtrWordWalker);
+       end;
+    ptDWord, ptInteger:
+       while valueidx<Length(Values) do begin
+         PtrDWordWalker^:=trunc(Values[valueidx]) AND $FFFFFFFF;
+         inc(valueidx);
+         Inc(PtrDWordWalker);
+       end;
+    ptFloat:
+       while valueidx<Length(Values) do begin
+         PtrSingleWalker^:=Values[valueidx];
+         inc(valueidx);
+         Inc(PtrSingleWalker);
+       end;
+  end;
+
+  ResetPointers;
+  AreaIdx:=0;
+
+  case FTagType of
+    pttByte:
+      while AreaIdx<AreaSize do begin
+        AddToResult(PtrByteWalker^, Result);
+        inc(AreaIdx);
+        inc(PtrByteWalker);
+      end;
+    pttShortInt, pttWord:
+      while AreaIdx<AreaSize do begin
+
+        if FSwapBytes then begin
+          PtrByte1:=PByte(PtrWordWalker);
+          PtrByte2:=PtrByte1;
+          inc(PtrByte2);
+          ByteAux:=PtrByte1^;
+          PtrByte1^:=PtrByte2^;
+          PtrByte2^:=ByteAux;
+        end;
+
+        if FTagType=pttShortInt then
+          AddToResult(PShortInt(PtrWordWalker)^, Result)
+        else
+          AddToResult(PtrWordWalker^, Result);
+
+        inc(AreaIdx, 2);
+        inc(PtrWordWalker);
+      end;
+    pttInteger,
+    pttDWord,
+    pttFloat:
+      while AreaIdx<AreaSize do begin
+        if FSwapWords or FSwapBytes then begin
+          PtrWord1:=PWord(PtrDWordWalker);
+          PtrWord2:=PtrWord1;
+          inc(PtrWord2);
+        end;
+
+        if FSwapWords then begin
+          WordAux:=PtrWord1^;
+          PtrWord1^:=PtrWord2^;
+          PtrWord2^:=WordAux;
+        end;
+
+        if FSwapBytes then begin
+          PtrByte1:=PByte(PtrWord1);
+          PtrByte2:=PtrByte1;
+          inc(PtrByte2);
+          ByteAux:=PtrByte1^;
+          PtrByte1^:=PtrByte2^;
+          PtrByte2^:=ByteAux;
+
+          PtrByte1:=PByte(PtrWord2);
+          PtrByte2:=PtrByte1;
+          inc(PtrByte2);
+          ByteAux:=PtrByte1^;
+          PtrByte1^:=PtrByte2^;
+          PtrByte2^:=ByteAux;
+        end;
+
+        case FTagType of
+          pttDWord:
+            AddToResult(PtrDWordWalker^, Result);
+          pttInteger:
+            AddToResult(PInteger(PtrDWordWalker)^, Result);
+          pttFloat:
+            AddToResult(PSingle(PtrDWordWalker)^, Result);
+        end;
+        inc(AreaIdx, 4);
+        inc(PtrDWordWalker);
+      end;
+  end;
+end;
+
+function TPLCTag.TagValuesToPLCValues(Values:TArrayOfDouble):TArrayOfDouble;
+begin
+
 end;
 
 end.

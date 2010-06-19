@@ -169,7 +169,7 @@ type
     //: @seealso(TProtocolDriver.OpenTagEditor)
     procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); override;
     //: @seealso(TProtocolDriver.SizeOfTag)
-    function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; override;
+    function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
   end;
 
 implementation
@@ -806,7 +806,7 @@ begin
 end;
 
 
-function  TModBusDriver.SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE;
+function  TModBusDriver.SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
 var
   FunctionCode:Cardinal;
 begin
@@ -838,10 +838,14 @@ begin
   //retorna o tamanho em bits dos registradores lidos/escritos por
   //cada tipo de função de leitura/escrita
   case FunctionCode of
-    1,2,5,15:
+    1,2,5,15: begin
       Result := 1;
-    3,4,6,16:
+      ProtocolTagType:=ptBit;
+    end;
+    3,4,6,16: begin
       Result := 16;
+      ProtocolTagType:=ptWord;
+    end
     else
       Result := 0;
   end;

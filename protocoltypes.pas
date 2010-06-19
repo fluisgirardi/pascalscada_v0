@@ -84,11 +84,32 @@ type
   @value(pttDWord,   Inteiro de 32 bits SEM sinal.)
   @value(pttFloat    Flutuante de 32 bits.)
   }
-  TPowerTagType = (pttDefault,                    //size variable
-                   pttByte,                       //8 bits
-                   pttShortInt, pttWord,          //16 bits
-                   pttInteger, pttDWord, pttFloat //32 bits
+  TTagType = (pttDefault,                    //size variable
+              pttByte,                       //8 bits
+              pttShortInt, pttWord,          //16 bits
+              pttInteger, pttDWord, pttFloat //32 bits
+             );
+
+  {:
+  Enumera todos os possíveis tipos de dados retornados por um protocolo.
+  @value(ptBit      1 bit.)
+  @value(ptByte     Inteiro de 8 bits sem sinal.)
+  @value(ptShortInt Inteiro de 16 bits COM sinal.)
+  @value(ptWord,    Inteiro de 16 bits SEM sinal.)
+  @value(ptInteger  Inteiro de 32 bits COM sinal.)
+  @value(ptDWord,   Inteiro de 32 bits SEM sinal.)
+  @value(ptFloat    Flutuante de 32 bits.)
+  }
+  TProtocolTagType = (
+                   ptBit,
+                   ptByte,
+                   ptShortInt,
+                   ptWord,
+                   ptInteger,
+                   ptDWord,
+                   ptFloat
                   );
+
 
   {:
   Callback chamado pelo driver de protocolo (TProtocolDriver) para retornar o

@@ -57,7 +57,7 @@ type
   Executa as leituras sincronas e assincronas dos tags. É o método que vai
   buscar os valores no seu equipamento.
   
-  @code(function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; )
+  @code(function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; )
   Função responsável por informar o tamanho das palavras de dados em bits
   que o tag está referenciando.
 
@@ -268,7 +268,7 @@ type
            funções de escrita.)
     @returns(Tamanho em bits do registrador associado ou 0 (zero) caso falhe.
     }
-    function  SizeOfTag(Tag:TTag; isWrite:Boolean):BYTE; virtual; abstract; 
+    function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; virtual; abstract;
 
     {:
     Solicita a leitura por scan (assincrona) de um tag.
