@@ -70,6 +70,14 @@ type
     property OnValueChange;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
+    //: @seealso(TPLCTag.TagType)
+    property TagType;
+    //: @seealso(TPLCTag.SwapBytes)
+    property SwapBytes;
+    //: @seealso(TPLCTag.SwapWords)
+    property SwapWords;
+    //: @seealso(TPLCTag.TagSizeOnProtocol)
+    property TagSizeOnProtocol;
   end;
 
 implementation
@@ -93,17 +101,19 @@ procedure TPLCBlock.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TD
 var
   c:Integer;
   notify:Boolean;
+  TagValues:TArrayOfDouble;
 begin
   if (csDestroying in ComponentState) then exit;
   try
+    TagValues:=PLCValuesToTagValues(Values);
     notify := false;
     case TagCommand of
       tcScanRead, tcRead:
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
-          for c := 0 to High(Values) do begin
-            notify := notify or (PValues[c+Offset]<>values[c]);
-            PValues[c+Offset]:=values[c];
+          for c := 0 to High(TagValues) do begin
+            notify := notify or (PValues[c+Offset]<>TagValues[c]);
+            PValues[c+Offset]:=TagValues[c];
           end;
           PValueTimeStamp := ValuesTimeStamp;
           if LastResult=ioOk then
@@ -116,9 +126,9 @@ begin
         if LastResult in [ioOk, ioNullDriver] then begin
           if LastResult=ioOk then
             IncCommWriteOK(1);
-          for c := 0 to High(Values) do begin
-            notify := notify or (PValues[c+Offset]<>values[c]);
-            PValues[c+Offset]:=values[c]
+          for c := 0 to High(TagValues) do begin
+            notify := notify or (PValues[c+Offset]<>TagValues[c]);
+            PValues[c+Offset]:=TagValues[c]
           end;
           PValueTimeStamp := ValuesTimeStamp;
         end else
@@ -140,6 +150,7 @@ begin
     if notify then
       NotifyChange;
   finally
+    SetLength(TagValues,0);
   end;
 end;
 
@@ -225,13 +236,21 @@ begin
 end;
 
 procedure TPLCBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
+var
+  PLCValues:TArrayOfDouble;
 begin
-  inherited ScanWrite(Values, Count, Offset);
+  PLCValues:=TagValuesToPLCValues(Values);
+  inherited ScanWrite(PLCValues, Count, Offset);
+  SetLength(PLCValues,0);
 end;
 
 procedure TPLCBlock.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
+var
+  PLCValues:TArrayOfDouble;
 begin
+  PLCValues:=TagValuesToPLCValues(Values);
   inherited Write(Values, Count, Offset);
+  SetLength(PLCValues,0);
 end;
 
 end.

@@ -86,6 +86,14 @@ type
     property LongAddress;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
+    //: @seealso(TPLCTag.TagType)
+    property TagType;
+    //: @seealso(TPLCTag.SwapBytes)
+    property SwapBytes;
+    //: @seealso(TPLCTag.SwapWords)
+    property SwapWords;
+    //: @seealso(TPLCTag.TagSizeOnProtocol)
+    property TagSizeOnProtocol;
   end;
 
 implementation
@@ -173,18 +181,21 @@ end;
 procedure TPLCTagNumber.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
+  PlcValues:TArrayOfDouble;
 begin
   if csDesigning in ComponentState then exit;
+  PlcValues:=TagValuesToPLCValues(Values);
   if (PProtocolDriver<>nil) then begin
      if PAutoWrite then begin
        BuildTagRec(tr,0,0);
-       PProtocolDriver.ScanWrite(tr,Values);
+       PProtocolDriver.ScanWrite(tr,PlcValues);
      end else begin
-       TagCommandCallBack(Values,Now,tcScanWrite,ioOk,0);
+       TagCommandCallBack(PlcValues,Now,tcScanWrite,ioOk,0);
        Dec(PCommWriteOk);
      end;
   end else
-     TagCommandCallBack(Values, Now, tcScanWrite, ioNullDriver, Offset);
+     TagCommandCallBack(PlcValues, Now, tcScanWrite, ioNullDriver, Offset);
+  SetLength(PlcValues,0);
 end;
 
 procedure TPLCTagNumber.Read;
@@ -201,22 +212,28 @@ end;
 procedure TPLCTagNumber.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
+  PlcValues:TArrayOfDouble;
 begin
   if csDesigning in ComponentState then exit;
+  PlcValues:=TagValuesToPLCValues(Values);
   if (PProtocolDriver<>nil) then begin
      if PAutoWrite then begin
-       BuildTagRec(tr,Count,Offset);
-       PProtocolDriver.Write(tr,Values);
+       BuildTagRec(tr,0,0);
+       PProtocolDriver.Write(tr,PlcValues);
      end;
   end else
-     TagCommandCallBack(Values, Now, tcWrite, ioNullDriver, Offset);
+     TagCommandCallBack(PlcValues, Now, tcWrite, ioNullDriver, Offset);
+  SetLength(PlcValues,0);
 end;
 
 procedure TPLCTagNumber.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
 var
   notify:Boolean;
+  TagValues:TArrayOfDouble;
 begin
   if (csDestroying in ComponentState) then exit;
+  TagValues:=PLCValuesToTagValues(Values);
+  if Length(TagValues)<=0 then exit;
   try
     notify := false;
     case TagCommand of
@@ -224,8 +241,8 @@ begin
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           //atualiza os dois valores (direto ou indireto) independende do caso do pedido.
-          notify := (PValueRaw<>values[0]);
-          PValueRaw := values[0];
+          notify := (PValueRaw<>TagValues[0]);
+          PValueRaw := TagValues[0];
           PValueTimeStamp := ValuesTimeStamp;
           if LastResult=ioOk then
              IncCommReadOK(1);
@@ -237,8 +254,8 @@ begin
         if LastResult in [ioOk, ioNullDriver]then begin
           if LastResult=ioOk then
              IncCommWriteOK(1);
-          notify := (PValueRaw<>values[0]);
-          PValueRaw := values[0];
+          notify := (PValueRaw<>TagValues[0]);
+          PValueRaw := TagValues[0];
         end else
           IncCommWriteFaults(1);
       end;
@@ -258,6 +275,7 @@ begin
     if notify then
       NotifyChange;
   finally
+    SetLength(TagValues,0);
   end;
 end;
 

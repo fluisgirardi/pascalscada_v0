@@ -60,6 +60,9 @@ type
     //: configura o novo tipo de dado do tag.
     procedure SetTagType(newType:TTagType);
 
+    //: Retorna o tamanho real do tag.
+    function GetTagSizeOnProtocol:Integer;
+
     //: Recompila os valores do tag.
     procedure RebuildValues; virtual;
 
@@ -226,6 +229,8 @@ type
     property SwapBytes:Boolean read FSwapBytes write SetSwapBytes default false;
     //: Diz se os bytes das words da palavra formada serão invertidas.
     property SwapWords:Boolean read FSwapWords write SetSwapWords default false;
+    //: Informa ao driver o tamanho real do tag.
+    property TagSizeOnProtocol:Integer read GetTagSizeOnProtocol;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -318,36 +323,28 @@ begin
   //estou em tempo de desenvolvimento...
   if (csDesigning in ComponentState) then begin
     PProtocolDriver := p;
+    GetNewProtocolTagSize;
     exit;
   end;
 
-  //estou trocando de driver...
-  if (p<>nil) and (PProtocolDriver<>nil) then begin
-    //se esta habilitado a leitura por scan, remove do driver antigo
-    //e coloca no scan do driver novo
-    if Self.PAutoRead then begin
-      PProtocolDriver.RemoveTag(self);
-      P.AddTag(self);
-    end;
-    PProtocolDriver := p;
-  end;
+  if p=PProtocolDriver then exit;
 
-  //estou removendo meu driver...
-  if (p=nil) and (PProtocolDriver<>nil) then begin
+  //remove o driver antigo.
+  if (PProtocolDriver<>nil) then begin
     //remove do scan do driver...
     if Self.PAutoRead then
       PProtocolDriver.RemoveTag(self);
     PProtocolDriver := nil;
   end;
 
-  //estou setando meu driver...
-  if (p<>nil) and (PProtocolDriver=nil) then begin
+  //seta o novo driver.
+  if (p<>nil) then begin
     //adiciona no scan do driver...
+    PProtocolDriver := p;
+    GetNewProtocolTagSize;
+
     if Self.PAutoRead then
       P.AddTag(self);
-
-    GetNewProtocolTagSize;
-    PProtocolDriver := p;
   end;
 end;
 
@@ -547,6 +544,20 @@ begin
       FCurrentWordSize:=32;
   end;
   RebuildValues;
+end;
+
+function TPLCTag.GetTagSizeOnProtocol:Integer;
+begin
+  if PProtocolDriver=nil then begin
+    Result := PSize;
+    exit;
+  end;
+
+  if FCurrentWordSize>=FProtocolWordSize then begin
+    Result := (FCurrentWordSize div FProtocolWordSize)*PSize;
+  end else begin
+    Result := ((PSize*FCurrentWordSize) div FProtocolWordSize) + ifthen(((PSize*FCurrentWordSize) mod FProtocolWordSize)<>0,1,0);
+  end;
 end;
 
 procedure TPLCTag.SetSwapWords(v:Boolean);
@@ -750,6 +761,7 @@ begin
         inc(PtrDWordWalker);
       end;
   end;
+  Freemem(PtrByte);
 end;
 
 function TPLCTag.TagValuesToPLCValues(Values:TArrayOfDouble):TArrayOfDouble;
@@ -768,6 +780,8 @@ var
 
   PtrByte1, PtrByte2:PByte;
   PtrWord1, PtrWord2:PWord;
+
+  bitaux:Integer;
 
   procedure ResetPointers;
   begin
@@ -826,13 +840,13 @@ begin
          inc(valueidx);
          Inc(PtrByteWalker);
        end;
-    pttWord, ptShortInt:
+    pttWord, pttShortInt:
        while valueidx<Length(Values) do begin
          PtrWordWalker^:=trunc(Values[valueidx]) AND $FFFF;
          inc(valueidx);
          Inc(PtrWordWalker);
        end;
-    pttDWord, ptInteger:
+    pttDWord, pttInteger:
        while valueidx<Length(Values) do begin
          PtrDWordWalker^:=trunc(Values[valueidx]) AND $FFFFFFFF;
          inc(valueidx);
@@ -850,6 +864,20 @@ begin
   AreaIdx:=0;
   //faz as inversoes e move para o resultado.
   case FProtocolTagType of
+    ptBit:
+       while AreaIdx<AreaSize do begin
+         bitaux := Power(2,AreaIdx mod 8);
+         if (PtrByteWalker^ AND bitaux)=bitaux then
+           AddToResult(1, Result)
+         else
+           AddToResult(0, Result);
+
+         inc(AreaIdx);
+
+         if (AreaIdx mod 8)=0 then
+           inc(PtrByteWalker);
+       end;
+
     ptByte:
       while AreaIdx<AreaSize do begin
         AddToResult(PtrByteWalker^, Result);
@@ -923,6 +951,7 @@ begin
         inc(PtrDWordWalker);
       end;
   end;
+  Freemem(PtrByte);
 end;
 
 end.

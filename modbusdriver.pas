@@ -215,32 +215,32 @@ begin
     found := true;
     Station := TPLCTagNumber(TagObj).PLCStation;
     Address := TPLCTagNumber(TagObj).MemAddress;
-    Size := 1;
+    Size    := TPLCTagNumber(TagObj).TagSizeOnProtocol;
     RegType := TPLCTagNumber(TagObj).MemReadFunction;
-    ScanTime := TPLCTagNumber(TagObj).RefreshTime;
-    Result := found;
+    ScanTime:= TPLCTagNumber(TagObj).RefreshTime;
+    Result  := found;
   end;
 
   //Tag Bloco
   if (not found) and (TagObj is TPLCBlock) then begin
-    found := true;
+    found   := true;
     Station := TPLCBlock(TagObj).PLCStation;
     Address := TPLCBlock(TagObj).MemAddress;
-    Size := TPLCBlock(TagObj).Size;
+    Size    := TPLCBlock(TagObj).TagSizeOnProtocol;
     RegType := TPLCBlock(TagObj).MemReadFunction;
-    ScanTime := TPLCBlock(TagObj).RefreshTime;
-    Result := found;
+    ScanTime:= TPLCBlock(TagObj).RefreshTime;
+    Result  := found;
   end;
 
   //Tag Bloco
   if (not found) and (TagObj is TPLCString) then begin
-    found := true;
+    found   := true;
     Station := TPLCString(TagObj).PLCStation;
     Address := TPLCString(TagObj).MemAddress;
-    Size := TPLCString(TagObj).Size;
+    Size    := TPLCString(TagObj).Size;
     RegType := TPLCString(TagObj).MemReadFunction;
-    ScanTime := TPLCString(TagObj).RefreshTime;
-    Result := found;
+    ScanTime:= TPLCString(TagObj).RefreshTime;
+    Result  := found;
   end;
 end;
 
