@@ -137,7 +137,8 @@ type
     ValuesTimestamp:TDateTime;
     ReadsOK,ReadFaults:Cardinal;
     LastQueryResult:TProtocolIOResult;
-    Offset:Integer;
+    Offset,
+    RealOffset:Integer;
   end;
   PScanReadRec = ^TScanReadRec;
 
@@ -185,6 +186,7 @@ type
     SubElement:Integer;
     Size:Integer;
     OffSet:Integer;
+    RealOffset:Integer;
     Path:String;
     ReadFunction:Integer;
     WriteFunction:Integer;

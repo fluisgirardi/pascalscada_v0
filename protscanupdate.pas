@@ -134,6 +134,7 @@ begin
             FTagRec := PTagRec(PMsg.wParam);
             TagCBack:=FTagRec^.CallBack;
             Fvalues.Offset:=FTagRec^.OffSet;
+            Fvalues.RealOffset:=FTagRec^.RealOffset;
 
             if Assigned(PGetValues) then begin
                if not Terminated then
@@ -222,6 +223,7 @@ begin
       TagCBack                := x^.Tag.CallBack;
       Fvalues.Values          := x^.ValuesToWrite;
       Fvalues.Offset          := x^.Tag.OffSet;
+      Fvalues.RealOffset      := x^.Tag.RealOffset;
       Fvalues.ValuesTimestamp := x^.ValueTimeStamp;
       Fvalues.LastQueryResult := x^.WriteResult;
       FCmd:=tcScanWrite;
@@ -242,7 +244,7 @@ begin
   if Terminated then exit;
   try
     if Assigned(TagCBack) then
-      TagCBack(Fvalues.Values,Fvalues.ValuesTimestamp,FCmd,Fvalues.LastQueryResult, Fvalues.Offset);
+      TagCBack(Fvalues.Values,Fvalues.ValuesTimestamp,FCmd,Fvalues.LastQueryResult, Fvalues.RealOffset);
   except
     on erro:Exception do begin
       Ferro:=erro;
