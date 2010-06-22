@@ -597,7 +597,6 @@ var
   PtrByte, PtrByteWalker:PByte;
   PtrWordWalker:PWord;
   PtrDWordWalker:PDWord;
-  PtrSingleWalker:PSingle;
 
   AreaSize:Integer;
   AreaIdx:Integer;
@@ -614,7 +613,6 @@ var
     PtrByteWalker  :=PtrByte;
     PtrWordWalker  :=PWord(PtrByte);
     PtrDWordWalker :=PDWord(PtrByte);
-    PtrSingleWalker:=PSingle(PtrByte);
   end;
 
   procedure AddToResult(ValueToAdd:Double; var Result:TArrayOfDouble);
@@ -677,20 +675,54 @@ begin
     ptWord, ptShortInt:
        while valueidx<Length(Values) do begin
          PtrWordWalker^:=trunc(Values[valueidx]) AND $FFFF;
+         if FSwapBytes then begin
+           PtrByte1:=PByte(PtrWordWalker);
+           PtrByte2:=PtrByte1;
+           inc(PtrByte2);
+           ByteAux:=PtrByte1^;
+           PtrByte1^:=PtrByte2^;
+           PtrByte2^:=ByteAux;
+         end;
          inc(valueidx);
          Inc(PtrWordWalker);
        end;
-    ptDWord, ptInteger:
+    ptDWord, ptInteger, ptFloat:
        while valueidx<Length(Values) do begin
-         PtrDWordWalker^:=trunc(Values[valueidx]) AND $FFFFFFFF;
+         if FProtocolTagType=ptFloat then
+           PSingle(PtrDWordWalker)^:=Values[valueidx]
+         else
+           PtrDWordWalker^:=trunc(Values[valueidx]) AND $FFFFFFFF;
+
+         if FSwapWords or FSwapBytes then begin
+           PtrWord1:=PWord(PtrDWordWalker);
+           PtrWord2:=PtrWord1;
+           inc(PtrWord2);
+         end;
+
+         if FSwapWords then begin
+           WordAux:=PtrWord1^;
+           PtrWord1^:=PtrWord2^;
+           PtrWord2^:=WordAux;
+         end;
+
+         if FSwapBytes then begin
+           PtrByte1:=PByte(PtrWord1);
+           PtrByte2:=PtrByte1;
+           inc(PtrByte2);
+           ByteAux:=PtrByte1^;
+           PtrByte1^:=PtrByte2^;
+           PtrByte2^:=ByteAux;
+
+           PtrByte1:=PByte(PtrWord2);
+           PtrByte2:=PtrByte1;
+           inc(PtrByte2);
+           ByteAux:=PtrByte1^;
+           PtrByte1^:=PtrByte2^;
+           PtrByte2^:=ByteAux;
+         end;
+
          inc(valueidx);
          Inc(PtrDWordWalker);
-       end;
-    ptFloat:
-       while valueidx<Length(Values) do begin
-         PtrSingleWalker^:=Values[valueidx];
-         inc(valueidx);
-         Inc(PtrSingleWalker);
        end;
   end;
 
@@ -707,16 +739,6 @@ begin
       end;
     pttShortInt, pttWord:
       while AreaIdx<AreaSize do begin
-
-        if FSwapBytes then begin
-          PtrByte1:=PByte(PtrWordWalker);
-          PtrByte2:=PtrByte1;
-          inc(PtrByte2);
-          ByteAux:=PtrByte1^;
-          PtrByte1^:=PtrByte2^;
-          PtrByte2^:=ByteAux;
-        end;
-
         if FTagType=pttShortInt then
           AddToResult(PShortInt(PtrWordWalker)^, Result)
         else
@@ -729,34 +751,6 @@ begin
     pttDWord,
     pttFloat:
       while AreaIdx<AreaSize do begin
-        if FSwapWords or FSwapBytes then begin
-          PtrWord1:=PWord(PtrDWordWalker);
-          PtrWord2:=PtrWord1;
-          inc(PtrWord2);
-        end;
-
-        if FSwapWords then begin
-          WordAux:=PtrWord1^;
-          PtrWord1^:=PtrWord2^;
-          PtrWord2^:=WordAux;
-        end;
-
-        if FSwapBytes then begin
-          PtrByte1:=PByte(PtrWord1);
-          PtrByte2:=PtrByte1;
-          inc(PtrByte2);
-          ByteAux:=PtrByte1^;
-          PtrByte1^:=PtrByte2^;
-          PtrByte2^:=ByteAux;
-
-          PtrByte1:=PByte(PtrWord2);
-          PtrByte2:=PtrByte1;
-          inc(PtrByte2);
-          ByteAux:=PtrByte1^;
-          PtrByte1^:=PtrByte2^;
-          PtrByte2^:=ByteAux;
-        end;
-
         case FTagType of
           pttDWord:
             AddToResult(PtrDWordWalker^, Result);
@@ -876,16 +870,6 @@ begin
        while valueidx<Length(Values) do begin
          inc(PtrWordWalker,Offset);
          PtrWordWalker^:=trunc(Values[valueidx]) AND $FFFF;
-
-         if FSwapBytes then begin
-           PtrByte1:=PByte(PtrWordWalker);
-           PtrByte2:=PtrByte1;
-           inc(PtrByte2);
-           ByteAux:=PtrByte1^;
-           PtrByte1^:=PtrByte2^;
-           PtrByte2^:=ByteAux;
-         end;
-
          inc(valueidx);
          Inc(PtrWordWalker);
        end;
@@ -901,34 +885,6 @@ begin
            PtrDWordWalker^:=trunc(Values[valueidx]) AND $FFFFFFFF;
          if FTagType=pttFloat then
            PSingle(PtrDWordWalker)^:=Values[valueidx];
-
-         if FSwapWords or FSwapBytes then begin
-           PtrWord1:=PWord(PtrDWordWalker);
-           PtrWord2:=PtrWord1;
-           inc(PtrWord2);
-         end;
-
-         if FSwapWords then begin
-           WordAux:=PtrWord1^;
-           PtrWord1^:=PtrWord2^;
-           PtrWord2^:=WordAux;
-         end;
-
-         if FSwapBytes then begin
-           PtrByte1:=PByte(PtrWord1);
-           PtrByte2:=PtrByte1;
-           inc(PtrByte2);
-           ByteAux:=PtrByte1^;
-           PtrByte1^:=PtrByte2^;
-           PtrByte2^:=ByteAux;
-
-           PtrByte1:=PByte(PtrWord2);
-           PtrByte2:=PtrByte1;
-           inc(PtrByte2);
-           ByteAux:=PtrByte1^;
-           PtrByte1^:=PtrByte2^;
-           PtrByte2^:=ByteAux;
-         end;
 
          inc(valueidx);
          Inc(PtrDWordWalker);
@@ -963,7 +919,17 @@ begin
     ptShortInt,
     ptWord:
       while AreaIdx<AreaSize do begin
-        if FTagType=pttShortInt then
+
+        if FSwapBytes then begin
+          PtrByte1:=PByte(PtrWordWalker);
+          PtrByte2:=PtrByte1;
+          inc(PtrByte2);
+          ByteAux:=PtrByte1^;
+          PtrByte1^:=PtrByte2^;
+          PtrByte2^:=ByteAux;
+        end;
+
+        if FProtocolTagType=ptShortInt then
           AddToResult(PShortInt(PtrWordWalker)^, Result)
         else
           AddToResult(PtrWordWalker^, Result);
@@ -976,12 +942,41 @@ begin
     ptDWord,
     ptFloat:
       while AreaIdx<AreaSize do begin
-        case FTagType of
-          pttDWord:
+
+        if FSwapWords or FSwapBytes then begin
+          PtrWord1:=PWord(PtrDWordWalker);
+          PtrWord2:=PtrWord1;
+          inc(PtrWord2);
+        end;
+
+        if FSwapWords then begin
+          WordAux:=PtrWord1^;
+          PtrWord1^:=PtrWord2^;
+          PtrWord2^:=WordAux;
+        end;
+
+        if FSwapBytes then begin
+          PtrByte1:=PByte(PtrWord1);
+          PtrByte2:=PtrByte1;
+          inc(PtrByte2);
+          ByteAux:=PtrByte1^;
+          PtrByte1^:=PtrByte2^;
+          PtrByte2^:=ByteAux;
+
+          PtrByte1:=PByte(PtrWord2);
+          PtrByte2:=PtrByte1;
+          inc(PtrByte2);
+          ByteAux:=PtrByte1^;
+          PtrByte1^:=PtrByte2^;
+          PtrByte2^:=ByteAux;
+        end;
+
+        case FProtocolTagType of
+          ptDWord:
             AddToResult(PtrDWordWalker^, Result);
-          pttInteger:
+          ptInteger:
             AddToResult(PInteger(PtrDWordWalker)^, Result);
-          pttFloat:
+          ptFloat:
             AddToResult(PSingle(PtrDWordWalker)^, Result);
         end;
         inc(AreaIdx, 4);
