@@ -105,6 +105,7 @@ var
 begin
   if (csDestroying in ComponentState) then exit;
   try
+    inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
     TagValues:=PLCValuesToTagValues(Values);
     notify := false;
     case TagCommand of
@@ -239,7 +240,7 @@ procedure TPLCBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   PLCValues:TArrayOfDouble;
 begin
-  PLCValues:=TagValuesToPLCValues(Values);
+  PLCValues:=TagValuesToPLCValues(Values,Offset);
   inherited ScanWrite(PLCValues, Count, Offset);
   SetLength(PLCValues,0);
 end;
@@ -248,7 +249,7 @@ procedure TPLCBlock.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   PLCValues:TArrayOfDouble;
 begin
-  PLCValues:=TagValuesToPLCValues(Values);
+  PLCValues:=TagValuesToPLCValues(Values, Offset);
   inherited Write(Values, Count, Offset);
   SetLength(PLCValues,0);
 end;

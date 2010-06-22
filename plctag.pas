@@ -21,6 +21,7 @@ type
   TPLCTag = class(TTag)
   private
     CScanTimer:TTimer;
+    FRawProtocolValues:TArrayOfDouble;
   private
     procedure GetNewProtocolTagSize;
   protected
@@ -55,7 +56,7 @@ type
     function PLCValuesToTagValues(Values:TArrayOfDouble):TArrayOfDouble; virtual;
 
     //: Valores vindo do tag são convertidos para o tipo de aceito pelo driver.
-    function TagValuesToPLCValues(Values:TArrayOfDouble):TArrayOfDouble; virtual;
+    function TagValuesToPLCValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble; virtual;
 
     //: configura o novo tipo de dado do tag.
     procedure SetTagType(newType:TTagType);
@@ -147,7 +148,7 @@ type
     procedure SetProtocolDriver(p:TProtocolDriver); virtual;
 
     //: Procedimento chamado pelo driver de protocolo para atualização de valores do tag.
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); virtual; abstract;
+    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); virtual;
     {:
     Compila uma estrutura com as informações do tag.
     @seealso(TTagRec)
@@ -346,6 +347,15 @@ begin
     if Self.PAutoRead then
       P.AddTag(self);
   end;
+end;
+
+procedure TPLCTag.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
+var
+  c:Integer;
+begin
+  if LastResult in [ioOk, ioNullDriver] then
+    for c := 0 to High(Values) do
+      FRawProtocolValues[c+Offset]:=Values[c];
 end;
 
 procedure TPLCTag.SetAutoRead(v:Boolean);
@@ -558,6 +568,7 @@ begin
   end else begin
     Result := ((PSize*FCurrentWordSize) div FProtocolWordSize) + ifthen(((PSize*FCurrentWordSize) mod FProtocolWordSize)<>0,1,0);
   end;
+  SetLength(FRawProtocolValues, Result);
 end;
 
 procedure TPLCTag.SetSwapWords(v:Boolean);
@@ -761,7 +772,7 @@ begin
   Freemem(PtrByte);
 end;
 
-function TPLCTag.TagValuesToPLCValues(Values:TArrayOfDouble):TArrayOfDouble;
+function TPLCTag.TagValuesToPLCValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble;
 var
   PtrByte, PtrByteWalker:PByte;
   PtrWordWalker:PWord;
@@ -823,17 +834,47 @@ begin
   PtrByte:=GetMem(AreaSize);
   ResetPointers;
 
+  //inicializa a area de dados...
+  valueidx:=0;
+  case FProtocolTagType of
+    ptByte:
+       while valueidx<Length(FRawProtocolValues) do begin
+         PtrByteWalker^:=trunc(FRawProtocolValues[valueidx]) AND $FF;
+         inc(valueidx);
+         Inc(PtrByteWalker);
+       end;
+    ptWord, ptShortInt:
+       while valueidx<Length(FRawProtocolValues) do begin
+         PtrWordWalker^:=trunc(FRawProtocolValues[valueidx]) AND $FFFF;
+         inc(valueidx);
+         Inc(PtrWordWalker);
+       end;
+    ptDWord, ptInteger, ptFloat:
+       while valueidx<Length(FRawProtocolValues) do begin
+         if FProtocolTagType = ptFloat then
+           PSingle(PtrDWordWalker)^:=FRawProtocolValues[valueidx]
+         else
+           PtrDWordWalker^:=trunc(FRawProtocolValues[valueidx]) AND $FFFFFFFF;
+         inc(valueidx);
+         Inc(PtrDWordWalker);
+       end;
+  end;
+
+  ResetPointers;
+
   //move os dados para area de trabalho.
   valueidx:=0;
   case FTagType of
     pttByte:
        while valueidx<Length(Values) do begin
+         inc(PtrByteWalker,Offset);
          PtrByteWalker^:=trunc(Values[valueidx]) AND $FF;
          inc(valueidx);
          Inc(PtrByteWalker);
        end;
     pttWord, pttShortInt:
        while valueidx<Length(Values) do begin
+         inc(PtrWordWalker,Offset);
          PtrWordWalker^:=trunc(Values[valueidx]) AND $FFFF;
 
          if FSwapBytes then begin
@@ -852,6 +893,8 @@ begin
     pttInteger,
     pttFloat:
        while valueidx<Length(Values) do begin
+         inc(PtrDWordWalker,Offset);
+
          if FTagType=pttInteger then
            PInteger(PtrDWordWalker)^:=trunc(Values[valueidx]);
          if FTagType=pttDWord then

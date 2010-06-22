@@ -184,7 +184,7 @@ var
   PlcValues:TArrayOfDouble;
 begin
   if csDesigning in ComponentState then exit;
-  PlcValues:=TagValuesToPLCValues(Values);
+  PlcValues:=TagValuesToPLCValues(Values, Offset);
   if (PProtocolDriver<>nil) then begin
      if PAutoWrite then begin
        BuildTagRec(tr,0,0);
@@ -215,7 +215,7 @@ var
   PlcValues:TArrayOfDouble;
 begin
   if csDesigning in ComponentState then exit;
-  PlcValues:=TagValuesToPLCValues(Values);
+  PlcValues:=TagValuesToPLCValues(Values, Offset);
   if (PProtocolDriver<>nil) then begin
      if PAutoWrite then begin
        BuildTagRec(tr,0,0);
@@ -232,6 +232,7 @@ var
   TagValues:TArrayOfDouble;
 begin
   if (csDestroying in ComponentState) then exit;
+  inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
   TagValues:=PLCValuesToTagValues(Values);
   if Length(TagValues)<=0 then exit;
   try
