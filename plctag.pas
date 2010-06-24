@@ -351,11 +351,17 @@ end;
 
 procedure TPLCTag.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
 var
-  c:Integer;
+  c, poffset:Integer;
 begin
-  if LastResult in [ioOk, ioNullDriver] then
+  if LastResult in [ioOk, ioNullDriver] then begin
+    if FCurrentWordSize>=FProtocolWordSize then begin
+      poffset := (FCurrentWordSize div FProtocolWordSize)*offset
+    end else begin
+      poffset := (OffSet * FCurrentWordSize) div FProtocolWordSize;
+    end;
     for c := 0 to High(Values) do
-      FRawProtocolValues[c+Offset]:=Values[c];
+      FRawProtocolValues[c+poffset]:=Values[c];
+  end;
 end;
 
 procedure TPLCTag.SetAutoRead(v:Boolean);
