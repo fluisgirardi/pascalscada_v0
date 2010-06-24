@@ -1,4 +1,4 @@
-{:
+﻿{:
 @abstract(Implementa a base para Tags de comunicação.)
 @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
@@ -653,7 +653,7 @@ begin
       AreaSize := Length(Values)*4;
   end;
 
-  PtrByte:=GetMem(AreaSize);
+  GetMem(PtrByte, AreaSize);
   ResetPointers;
 
   //move os dados para area de trabalho.
@@ -840,7 +840,7 @@ begin
       AreaSize := ProtocolSize*4;
   end;
 
-  PtrByte:=GetMem(AreaSize);
+  GetMem(PtrByte, AreaSize);
   ResetPointers;
 
   //inicializa a area de dados...

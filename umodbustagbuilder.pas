@@ -112,7 +112,7 @@ implementation
 uses hsstrings;
 
 {$IFDEF FPC }
-  {$IF FPC_FULLVERSION >= 20400 }
+  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
   {$R umodbustagbuilder.lfm}
   {$IFEND}
 {$ELSE}
@@ -454,7 +454,7 @@ begin
 end;
 
 {$IFDEF FPC }
-  {$IF FPC_FULLVERSION < 20400 }
+  {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
 initialization
   {$I umodbustagbuilder.lrs}
   {$IFEND}

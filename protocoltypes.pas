@@ -1,4 +1,4 @@
-{:
+﻿{:
   @abstract(Implementa tipos comuns para drivers de protocolos e tags.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
@@ -15,6 +15,9 @@ uses Tag, variants;
 
 
 type
+  {$IFNDEF FPC}
+  PDWord = ^Cardinal;
+  {$ENDIF}
   //: Array dinamico de valores flutuantes.
   TArrayOfDouble = array of double;
   //: Ponteiro para um array dinamico de pontos flutuantes.
