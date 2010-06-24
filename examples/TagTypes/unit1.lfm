@@ -1,5 +1,5 @@
 object Form1: TForm1
-  Left = 320
+  Left = 238
   Height = 329
   Top = 123
   Width = 320
@@ -163,7 +163,7 @@ object Form1: TForm1
   end
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
-    Host = '10.0.2.2'
+    Host = 'localhost'
     Port = 1502
     Timeout = 50
     left = 8
@@ -293,4 +293,4 @@ object Form1: TForm1
     left = 48
     top = 240
   end
-end
+end

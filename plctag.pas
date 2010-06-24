@@ -53,7 +53,7 @@ type
     FCurrentWordSize:Byte;
 
     //: Valores vindos do PLC são convertidos para o tipo de dados configurado no tag.
-    function PLCValuesToTagValues(Values:TArrayOfDouble):TArrayOfDouble; virtual;
+    function PLCValuesToTagValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble; virtual;
 
     //: Valores vindo do tag são convertidos para o tipo de aceito pelo driver.
     function TagValuesToPLCValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble; virtual;
@@ -600,7 +600,7 @@ begin
   ScanRead;
 end;
 
-function TPLCTag.PLCValuesToTagValues(Values:TArrayOfDouble):TArrayOfDouble;
+function TPLCTag.PLCValuesToTagValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble;
 var
   PtrByte, PtrByteWalker:PByte;
   PtrWordWalker:PWord;
@@ -703,13 +703,18 @@ begin
 
   //faz as inversoes caso necessário e move os dados para o resultado
   case FTagType of
-    pttByte:
+    pttByte: begin
+      inc(PtrByteWalker, Offset);
+      inc(AreaIdx, Offset);
       while AreaIdx<AreaSize do begin
         AddToResult(PtrByteWalker^, Result);
         inc(AreaIdx);
         inc(PtrByteWalker);
       end;
-    pttShortInt, pttWord:
+    end;
+    pttShortInt, pttWord: begin
+      inc(PtrWordWalker, Offset);
+      inc(AreaIdx, Offset*2);
       while AreaIdx<AreaSize do begin
         if FSwapBytes then begin
           PtrByte1:=PByte(PtrWordWalker);
@@ -727,9 +732,12 @@ begin
         inc(AreaIdx, 2);
         inc(PtrWordWalker);
       end;
+    end;
     pttInteger,
     pttDWord,
-    pttFloat:
+    pttFloat: begin
+      inc(PtrDWordWalker, Offset);
+      inc(AreaIdx, Offset*4);
       while AreaIdx<AreaSize do begin
 
         if FSwapWords or FSwapBytes then begin
@@ -771,6 +779,7 @@ begin
         inc(AreaIdx, 4);
         inc(PtrDWordWalker);
       end;
+    end;
   end;
   Freemem(PtrByte);
 end;

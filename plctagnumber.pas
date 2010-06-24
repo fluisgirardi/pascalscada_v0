@@ -233,7 +233,7 @@ var
 begin
   if (csDestroying in ComponentState) then exit;
   inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
-  TagValues:=PLCValuesToTagValues(Values);
+  TagValues:=PLCValuesToTagValues(Values, Offset);
   if Length(TagValues)<=0 then exit;
   try
     notify := false;
