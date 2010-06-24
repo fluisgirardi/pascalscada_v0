@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2010/06/24 11:02:29.452.pas,C:\Documents and Settings\Fabio\My Documents\Borland Studio Projects\Unit2.pas=C:\pascalscada\examples\TagTypes\Unit2.pas</Transaction>
+    <Transaction>2010/06/24 11:02:29.452.dfm,C:\Documents and Settings\Fabio\My Documents\Borland Studio Projects\Unit2.dfm=C:\pascalscada\examples\TagTypes\Unit2.dfm</Transaction>
+    <Transaction>2010/06/24 11:02:35.701.bdsproj,C:\Documents and Settings\Fabio\My Documents\Borland Studio Projects\Project2.bdsproj=C:\pascalscada\examples\TagTypes\tagtypes.bdsproj</Transaction>
+  </Transactions>
+</BorlandProject>

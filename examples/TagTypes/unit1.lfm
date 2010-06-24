@@ -1,0 +1,296 @@
+object Form1: TForm1
+  Left = 320
+  Height = 329
+  Top = 123
+  Width = 320
+  ActiveControl = HMIEdit1
+  Caption = 'Form1'
+  ClientHeight = 329
+  ClientWidth = 320
+  OnCreate = FormCreate
+  LCLVersion = '0.9.29'
+  object HMIEdit1: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 11
+    Width = 103
+    Color = clWindow
+    TabOrder = 0
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+  end
+  object HMILabel1: THMILabel
+    Left = 104
+    Height = 17
+    Top = 40
+    Width = 103
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+  end
+  object HMIEdit2: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 64
+    Width = 103
+    Color = clWindow
+    TabOrder = 1
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement1
+  end
+  object HMILabel2: THMILabel
+    Left = 208
+    Height = 21
+    Top = 64
+    Width = 105
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement1
+  end
+  object HMILabel3: THMILabel
+    Left = 208
+    Height = 21
+    Top = 96
+    Width = 105
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement2
+  end
+  object HMIEdit3: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 96
+    Width = 103
+    Color = clWindow
+    TabOrder = 2
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement2
+  end
+  object HMILabel4: THMILabel
+    Left = 208
+    Height = 21
+    Top = 128
+    Width = 105
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement3
+  end
+  object HMIEdit4: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 128
+    Width = 103
+    Color = clWindow
+    TabOrder = 3
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement3
+  end
+  object HMILabel5: THMILabel
+    Left = 208
+    Height = 21
+    Top = 168
+    Width = 105
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement5
+  end
+  object HMIEdit5: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 168
+    Width = 103
+    Color = clWindow
+    TabOrder = 4
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement5
+  end
+  object HMILabel6: THMILabel
+    Left = 208
+    Height = 21
+    Top = 200
+    Width = 105
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement4
+  end
+  object HMIEdit6: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 200
+    Width = 103
+    Color = clWindow
+    TabOrder = 5
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement4
+  end
+  object HMILabel7: THMILabel
+    Left = 208
+    Height = 21
+    Top = 240
+    Width = 105
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement7
+  end
+  object HMIEdit7: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 240
+    Width = 103
+    Color = clWindow
+    TabOrder = 6
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement7
+  end
+  object HMILabel8: THMILabel
+    Left = 208
+    Height = 21
+    Top = 272
+    Width = 105
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement6
+  end
+  object HMIEdit8: THMIEdit
+    Left = 104
+    Height = 21
+    Top = 272
+    Width = 103
+    Color = clWindow
+    TabOrder = 7
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlockElement6
+  end
+  object TCP_UDPPort1: TTCP_UDPPort
+    Active = True
+    Host = '10.0.2.2'
+    Port = 1502
+    Timeout = 50
+    left = 8
+    top = 8
+  end
+  object ModBusTCPDriver1: TModBusTCPDriver
+    CommunicationPort = TCP_UDPPort1
+    left = 40
+    top = 8
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{9FE5D49C-C628-4F5F-97D0-C0DB062B4010}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    TagType = pttInteger
+    left = 72
+    top = 8
+  end
+  object PLCBlock1: TPLCBlock
+    TagGUID = '{B51692D1-2DC5-475C-85EF-AD0EB9747E35}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    Size = 3
+    TagType = pttInteger
+    SwapWords = True
+    left = 8
+    top = 64
+  end
+  object PLCBlockElement1: TPLCBlockElement
+    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    PLCBlock = PLCBlock1
+    Index = 0
+    left = 48
+    top = 64
+  end
+  object PLCBlockElement2: TPLCBlockElement
+    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    PLCBlock = PLCBlock1
+    Index = 1
+    left = 48
+    top = 96
+  end
+  object PLCBlockElement3: TPLCBlockElement
+    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    PLCBlock = PLCBlock1
+    Index = 2
+    left = 48
+    top = 128
+  end
+  object PLCBlock2: TPLCBlock
+    TagGUID = '{B51692D1-2DC5-475C-85EF-AD0EB9747E35}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 6
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    Size = 2
+    TagType = pttByte
+    SwapBytes = True
+    SwapWords = True
+    left = 8
+    top = 168
+  end
+  object PLCBlockElement4: TPLCBlockElement
+    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    PLCBlock = PLCBlock2
+    Index = 1
+    left = 48
+    top = 200
+  end
+  object PLCBlockElement5: TPLCBlockElement
+    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    PLCBlock = PLCBlock2
+    Index = 0
+    left = 48
+    top = 168
+  end
+  object PLCBlock3: TPLCBlock
+    TagGUID = '{B51692D1-2DC5-475C-85EF-AD0EB9747E35}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 6
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    RefreshTime = 200
+    Size = 2
+    TagType = pttByte
+    left = 8
+    top = 240
+  end
+  object PLCBlockElement6: TPLCBlockElement
+    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    PLCBlock = PLCBlock3
+    Index = 1
+    left = 48
+    top = 272
+  end
+  object PLCBlockElement7: TPLCBlockElement
+    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    PLCBlock = PLCBlock3
+    Index = 0
+    left = 48
+    top = 240
+  end
+end
