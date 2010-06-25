@@ -281,7 +281,7 @@ begin
   Result := 0;
   if FTag=Nil then exit;
 
-  if ((FTag as ITagNumeric)<>nil) then
+  if Supports(FTag, ITagNumeric) then
     Result := (FTag as ITagNumeric).Value;
 end;
 
@@ -289,7 +289,7 @@ procedure THMIButton.SetValue(value:Double);
 begin
   if FTag=Nil then exit;
 
-  if ((FTag as ITagNumeric)<>nil) then
+  if Supports(FTag, ITagNumeric) then
     (FTag as ITagNumeric).Value := value;
 end;
 
@@ -301,7 +301,7 @@ end;
 procedure THMIButton.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if ((t as ITagNumeric)=nil) then
+  if (t<>nil) AND (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove

@@ -112,7 +112,7 @@ end;
 procedure THMIUpDown.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
-   if (t<>nil) and ((t as ITagNumeric)=nil) then
+   if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
@@ -172,7 +172,7 @@ begin
    if (FEnableMin And (Value<FMin)) then
       Value := FMin;
 
-   if (FTag as ITagNumeric)<>nil then
+   if Supports(FTag, ITagNumeric) then
       (FTag as ITagNumeric).Value := Value;
 end;
 
@@ -227,7 +227,7 @@ end;
 
 procedure THMIUpDown.NotifyTagChange(Sender:TObject);
 begin
-  if (FTag as ITagNumeric) <> nil then
+  if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
      FPosition := (FTag as ITagNumeric).Value;
 
   inherited Position:=50;

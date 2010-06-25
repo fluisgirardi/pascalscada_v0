@@ -104,7 +104,7 @@ end;
 procedure THMIText.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if ((t as ITagNumeric)=nil) then
+  if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   inherited SetHMITag(t);
@@ -117,7 +117,7 @@ begin
    value := 0;
    if [csDesigning, csReading]*ComponentState=[] then begin
    
-      if (FTag as ITagNumeric)<>nil then
+      if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
          value := (FTag as ITagNumeric).Value;
    end;
    SetValue(value);

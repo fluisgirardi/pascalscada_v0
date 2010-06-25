@@ -163,7 +163,7 @@ procedure THMIScrollBar.WriteValue(Value:Integer);
 begin
    if (FTag=nil)  then exit;
 
-   if (FTag as ITagNumeric)<>nil then
+   if Supports(FTag, ITagNumeric) then
       (FTag as ITagNumeric).Value:=Value;
 end;
 
@@ -192,7 +192,7 @@ begin
    if not FBusy then begin
       if (FTag=nil) then exit;
 
-      if (FTag as ITagNumeric)<>nil then
+      if Supports(FTag, ITagNumeric) then
          Position := FloatToInteger((FTag as ITagNumeric).Value);
    end;
 end;

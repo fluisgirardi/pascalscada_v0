@@ -219,7 +219,7 @@ end;
 procedure THMIEdit.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if (t<>nil) and (((t as ITagInterface)=nil) and ((t as ITagNumeric)=nil) and ((t as ITagString)=nil)) then
+  if (t<>nil) and ((not Supports(t, ITagInterface)) and (not Supports(t, ITagNumeric)) and (not Supports(t, ITagString))) then
      raise Exception.Create(SinvalidTag);
 
   //se ja estou associado a um tag, remove
@@ -384,17 +384,17 @@ begin
      (not Modified) then
      exit;
 
-  if ((FTag as ITagNumeric)<>nil) then begin
+  if Supports(FTag, ITagNumeric) then begin
     (FTag as ITagNumeric).Value := StrToFloat(Txt);
     exit;
   end;
 
-  if ((FTag as ITagString)<>nil) then begin
+  if Supports(FTag, ITagString) then begin
     (FTag as ITagString).Value := Txt;
     exit;
   end;
   
-  if ((FTag as ITagInterface)<>nil) then begin
+  if Supports(FTag, ITagInterface) then begin
     (FTag as ITagInterface).ValueVariant := Txt;
     exit;
   end;

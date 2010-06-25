@@ -85,7 +85,7 @@ end;
 procedure THMIProgressBar.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if (t<>nil) and ((t as ITagNumeric)=nil) then
+  if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
@@ -121,7 +121,7 @@ end;
 function  THMIProgressBar.GetPosition:Double;
 begin
    Result := 0;
-   if (FTag as ITagNumeric)<>nil then begin
+   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then begin
       Result := (FTag as ITagNumeric).Value;
    end;
 end;
@@ -151,7 +151,7 @@ begin
   if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then
     exit;
 
-  if ((FTag as ITagNumeric)<>nil) then
+  if (FTag<>nil) and (Supports(FTag, ITagNumeric)) then
     inherited Position := FloatToInteger((FTag as ITagNumeric).Value);
 end;
 

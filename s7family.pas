@@ -20,39 +20,30 @@ type
   {: Driver IsoTCP. Baseado na biblioteca LibNodave de ...
 
   Para endereçar uma memória basta escrever na propriedade MemReadFunction a
-  soma o tipo com a área da váriavel (ver tabelas abaixo).
-
-  Tipo de dado:
-  @table(
-    @rowHead( @cell(Tipo de dado)                  @cell(Valor) )
-    @row(     @cell(Byte, 8 bits, unsignaled)      @cell(1)     )
-    @row(     @cell(Word, 16 bits, unsignaled)     @cell(2)     )
-    @row(     @cell(ShortInt, 16 bits, signaled)   @cell(3)     )
-    @row(     @cell(DWord, 32 bits, unsignaled)    @cell(4)     )
-    @row(     @cell(Integer, 32 bits, signaled)    @cell(5)     )
-    @row(     @cell(Float, 32 bits)                @cell(6)     )
-  )
+  o código da área da váriavel (ver tabelas abaixo).
 
   Area:
   @table(
     @rowHead( @cell(Area)                       @cell(Valor) )
-    @row(     @cell(Inputs, Entradas)           @cell(10)     )
-    @row(     @cell(Outputs, Saidas)            @cell(20)     )
-    @row(     @cell(Flags ou M's)               @cell(30)     )
-    @row(     @cell(DB e VM no S7-200 )         @cell(40)     )
-    @row(     @cell(Counter, S7 300/400)        @cell(50)     )
-    @row(     @cell(Timer, S7 300/400)          @cell(60)     )
+    @row(     @cell(Inputs, Entradas)           @cell( 1)    )
+    @row(     @cell(Outputs, Saidas)            @cell( 2)    )
+    @row(     @cell(Flags ou M's)               @cell( 3)    )
+    @row(     @cell(DB e VM no S7-200 )         @cell( 4)    )
+    @row(     @cell(Counter, S7 300/400)        @cell( 5)    )
+    @row(     @cell(Timer, S7 300/400)          @cell( 6)    )
 
-    @row(     @cell(Special Memory, SM, S7-200) @cell(70)     )
-    @row(     @cell(Entrada analógica, S7-200)  @cell(80)     )
-    @row(     @cell(Saida analógica, S7-200)    @cell(90)    )
-    @row(     @cell(Counter, S7-200)            @cell(100)    )
-    @row(     @cell(Timer, S7-200)              @cell(110)    )
+    @row(     @cell(Special Memory, SM, S7-200) @cell( 7)    )
+    @row(     @cell(Entrada analógica, S7-200)  @cell( 8)    )
+    @row(     @cell(Saida analógica, S7-200)    @cell( 9)    )
+    @row(     @cell(Counter, S7-200)            @cell(10)    )
+    @row(     @cell(Timer, S7-200)              @cell(11)    )
   )
 
-  Logo para acessar um byte das entradas, basta colocar na propriedade
-  MemReadFunction o valor 10+1 = 11, para acessar a MD100 (DWord) basta
-  colocar o valor 30+5 = 35.
+  Logo para acessar as entradas, basta colocar na propriedade
+  MemReadFunction o valor 1, para acessar a MD100 (DWord) basta
+  colocar o valor 5.
+
+  O tipo do tag fica vária com a propriedade TagType.
 
   }
 

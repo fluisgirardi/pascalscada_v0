@@ -110,7 +110,7 @@ end;
 
 procedure TTagBit.SetNumber(number:TPLCNumber);
 begin
-  if (number<>nil) and (((number as ITagInterface)=nil) or ((number as ITagNumeric)=nil)) then
+  if (number<>nil) and ((not Supports(number, ITagInterface)) or (not Supports(number, ITagNumeric))) then
      raise Exception.Create(SinvalidTag);
 
   //esta removendo do bloco.
@@ -120,7 +120,7 @@ begin
     exit;
   end;
 
-  //se esta setando o bloco
+  //se esta setando o tag
   if (number<>nil) and (PNumber=nil) then begin
     PNumber := number;
     PNumber.AddCallBacks(Self as IHMITagInterface);
@@ -139,7 +139,7 @@ end;
 
 function TTagBit.GetValueRaw:Double;
 begin
-  if Assigned(PNumber) and ((PNumber as ITagNumeric)<>nil) then begin
+  if Assigned(PNumber) and Supports(PNumber, ITagNumeric) then begin
     if PUseRaw then
       Result := GetBits((PNumber as ITagNumeric).ValueRaw)
     else
@@ -200,7 +200,7 @@ end;
 procedure TTagBit.SetValueRaw(BitValue:Double);
 begin
   PValueRaw:=BitValue;
-  if PNumber<>nil then
+  if (PNumber<>nil) and Supports(PNumber, ITagNumeric) then
      with PNumber as ITagNumeric do begin
         if PUseRaw then
           ValueRaw := SetBits(ValueRaw,bitValue)

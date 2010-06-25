@@ -90,7 +90,7 @@ end;
 
 procedure THMITrackBar.RefreshTagValue;
 begin
-   if (Ftag as ITagNumeric)<>nil then
+   if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
       inherited Position := FloatToInteger((Ftag as ITagNumeric).Value);
    FModified:=false;
 end;
@@ -98,7 +98,7 @@ end;
 procedure THMITrackBar.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if (t<>nil) and ((t as ITagNumeric)=nil) then
+  if (t<>nil) and (Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
@@ -129,7 +129,7 @@ procedure THMITrackBar.WriteValue;
 begin
   if [csLoading,csReading,csDesigning]*ComponentState<>[] then exit;
 
-  if (Ftag as ITagNumeric)<>nil then
+  if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
     (Ftag as ITagNumeric).Value := Position;
 end;
 

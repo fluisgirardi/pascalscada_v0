@@ -97,7 +97,7 @@ end;
 procedure THMIRadioGroup.SetHMITag(t:TPLCTag);                    //seta um tag
 begin
    //se o tag esta entre um dos aceitos.
-   if (t<>nil) and ((t as ITagNumeric)=nil) then
+   if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
@@ -139,7 +139,7 @@ begin
       exit;
 
    if (FLoaded) and (not FIgnore) then
-     if (FTag as ITagNumeric)<>nil then
+     if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
         (FTag as ITagNumeric).Value := ItemIndex;
 end;
 
@@ -202,7 +202,7 @@ var
 begin
    Value := 0;
 
-   if (FTag as ITagNumeric)<>nil then
+   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
       Value := (FTag as ITagNumeric).Value;
 
    FIgnore:=true;

@@ -280,7 +280,7 @@ end;
 procedure THMICheckBox.SetHMITag(t:TPLCTag);
 begin
   //se o tag é um tag numerico.
-  if (t<>nil) and ((t as ITagNumeric)=nil) then
+  if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
@@ -343,58 +343,44 @@ begin
 end;
 
 procedure THMICheckBox.SetWriteTrue(v:Boolean);
-var
-  itag:ITagNumeric;
 begin
   if (inherited GetChecked) and v then begin
-    itag := FTag as ITagNumeric;
-    if itag<>nil then
-      itag.Value:=FValueTrue;
+    if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+      (FTag as ITagNumeric).Value:=FValueTrue;
   end;
   FWriteTrue := v
 end;
 
 procedure THMICheckBox.SetWriteFalse(v:Boolean);
-var
-  itag:ITagNumeric;
 begin
   if (not (inherited GetChecked)) and v then begin
-    itag := FTag as ITagNumeric;
-    if itag<>nil then
-      itag.Value:=FValueFalse;
+    if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+      (FTag as ITagNumeric).Value:=FValueFalse;
   end;
   FWriteFalse := v
 end;
 
 procedure THMICheckBox.SetValueTrue(v:Double);
-var
-  itag:ITagNumeric;
 begin
   if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueFalse) then
     raise Exception.Create(StheValueMustBeDifferentOfValueFalseProperty);
 
-  itag := FTag as ITagNumeric;
-
-  if (v<>FValueTrue) and (itag<>nil) then begin
+  if (v<>FValueTrue) and ((FTag<>nil) and Supports(FTag, ITagNumeric))then begin
     if GetChecked and FWriteTrue then begin
-      itag.Value:=v;
+      (FTag as ITagNumeric).Value:=v;
     end;
   end;
   FValueTrue := v;
 end;
 
 procedure THMICheckBox.SetValueFalse(v:Double);
-var
-   itag:ITagNumeric;
 begin
   if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueTrue) then
     raise Exception.Create(StheValueMustBeDifferentOfValueTrueProperty);
 
-  itag := FTag as ITagNumeric;
-
-  if (v<>FValueFalse) and (itag<>nil) then begin
+  if (v<>FValueFalse) and ((FTag<>nil) and Supports(FTag, ITagNumeric)) then begin
     if (not GetChecked) and FWriteFalse then begin
-      itag.Value:=v;
+      (FTag as ITagNumeric).Value:=v;
     end;
   end;
 
@@ -416,22 +402,18 @@ begin
 end;
 
 procedure THMICheckBox.UpdateTagValue;
-var
-   itag:ITagNumeric;
 begin
   if (csReading in ComponentState) or (csLoading in ComponentState) or (FTag=nil) then
     exit;
 
-  itag := FTag as ITagNumeric;
-
-  if (itag<>nil) then
+  if ((FTag<>nil) and Supports(FTag, ITagNumeric)) then
     if State=cbChecked then begin
       if FWriteTrue then begin
-        itag.Value := FValueTrue;
+        (FTag as ITagNumeric).Value := FValueTrue;
       end;
     end else begin
       if FWriteFalse then begin
-        itag.Value := FValueFalse;
+        (FTag as ITagNumeric).Value := FValueFalse;
       end;
     end;
 end;
@@ -458,14 +440,10 @@ end;
 {$ENDIF}
 
 function THMICheckBox.GetTagValue:Double;
-var
-   itag:ITagNumeric;
 begin
   Result := 0;
-  itag := FTag as ITagNumeric;
-  if itag=Nil then exit;
-  
-  Result := ITag.Value;
+  if (FTag<>nil) AND Supports(FTag, ITagNumeric) then exit;
+    Result := (FTag as ITagNumeric).Value;
 end;
 
 

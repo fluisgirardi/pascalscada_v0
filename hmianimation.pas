@@ -203,7 +203,7 @@ end;
 procedure THMIAnimation.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
-   if (t<>nil) and ((t as ITagNumeric)=nil) then
+   if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
@@ -276,16 +276,13 @@ begin
 end;
 
 procedure THMIAnimation.NotifyTagChange(Sender:TObject);
-var
-   tag:ITagNumeric;
 begin
    if [csDesigning, csReading]*ComponentState=[] then begin
 
       if FTag=nil then exit;
 
-      tag := FTag as ITagNumeric;
-      if Tag<>nil then
-         SetValue(Tag.Value)
+      if Supports(FTag, ITagNumeric) then
+         SetValue((FTag as ITagNumeric).Value)
    end;
 end;
 
