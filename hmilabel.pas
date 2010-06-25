@@ -130,7 +130,7 @@ end;
 procedure THMILabel.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if (t<>nil) and ((t as ITagInterface)=nil) then
+  if (t<>nil) and (not Supports(t, ITagInterface)) then
      raise Exception.Create(SinvalidTag);
 
   //se ja estou associado a um tag, remove
@@ -163,8 +163,6 @@ begin
 end;
 
 procedure THMILabel.RefreshTagValue;
-var
-  itag:ITagInterface;
 begin
   if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then begin
     if (csDesigning in ComponentState) then begin
@@ -176,9 +174,8 @@ begin
     exit;
   end;
 
-  itag := (FTag as ITagInterface);
-  if (itag<>nil) then
-    inherited Caption := itag.GetValueAsText(FPrefix, FSufix, FNumberFormat);
+  if (FTag<>nil) AND Supports(FTag, ITagInterface) then
+    inherited Caption := (FTag as ITagInterface).GetValueAsText(FPrefix, FSufix, FNumberFormat);
 end;
 
 function  THMILabel.GetCaption:TCaption;

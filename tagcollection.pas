@@ -113,7 +113,7 @@ procedure   TTagCollectionItem.SetTag(t:TPLCTag);
 begin
   if t=FTag then exit;
 
-  if (t<>nil) and ((t as ITagInterface)=nil) then
+  if (t<>nil) and (not Supports(t, ITagInterface)) then
     raise Exception.Create(SinvalidTag);
 
   if Ftag<>nil then

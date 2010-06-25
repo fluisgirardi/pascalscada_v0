@@ -336,8 +336,6 @@ begin
 end;
 
 procedure THMIEdit.RefreshTagValue;
-var
-   itag:ITagInterface;
 begin
   if ([csDesigning,csReading]*ComponentState<>[]) or (FTag=nil) or Modified then begin
     if Modified and (not (csDesigning in ComponentState)) then exit;
@@ -353,21 +351,19 @@ begin
     exit;
   end;
 
-  itag := FTag as ITagInterface;
-
-  if (itag <> nil) then begin
+  if (FTagM<>nil) AND Supports(FTag, ITagInterface) then begin
     FBlockChange := true;
     if HasFocus then begin
       if (FFreezeValue) then begin
         if (not FFreezedValue) then begin
-          inherited Text := itag.GetValueAsText('','',FNumberFormat);
+          inherited Text := (FTag as ITagInterface).GetValueAsText('','',FNumberFormat);
           FFreezedValue := true;
         end;
       end else begin
-        inherited Text := itag.GetValueAsText('','',FNumberFormat);
+        inherited Text := (FTag as ITagInterface).GetValueAsText('','',FNumberFormat);
       end;
     end else begin
-      inherited Text := itag.GetValueAsText(FPrefix,FSufix,FNumberFormat);
+      inherited Text := (FTag as ITagInterface).GetValueAsText(FPrefix,FSufix,FNumberFormat);
     end;
     oldValue := inherited Text;
     Modified := false;
@@ -453,7 +449,7 @@ var
 begin
   if FBlockChange then exit;
 
-  if (FTag<>nil)then begin
+  if (FTag<>nil) AND Supports(FTag, ITagInterface) then begin
     itag := (FTag as ITagInterface);
     if (itag<>nil) then begin
       if itag.IsValidValue(Text) then
