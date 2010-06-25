@@ -85,7 +85,7 @@ end;
 procedure THMIScrollBar.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
-   if (t<>nil) and ((t as ITagNumeric)=nil) then
+   if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove

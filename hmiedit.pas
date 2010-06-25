@@ -351,7 +351,7 @@ begin
     exit;
   end;
 
-  if (FTagM<>nil) AND Supports(FTag, ITagInterface) then begin
+  if (FTag<>nil) AND Supports(FTag, ITagInterface) then begin
     FBlockChange := true;
     if HasFocus then begin
       if (FFreezeValue) then begin

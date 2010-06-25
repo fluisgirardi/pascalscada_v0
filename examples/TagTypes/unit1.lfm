@@ -1,11 +1,11 @@
 object Form1: TForm1
   Left = 238
-  Height = 329
+  Height = 322
   Top = 123
   Width = 320
   ActiveControl = HMIEdit1
   Caption = 'Form1'
-  ClientHeight = 329
+  ClientHeight = 322
   ClientWidth = 320
   OnCreate = FormCreate
   LCLVersion = '0.9.29'

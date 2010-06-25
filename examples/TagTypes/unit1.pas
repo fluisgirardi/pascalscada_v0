@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   tcp_udpport, ModBusTCP, PLCTagNumber, HMIEdit, HMILabel, PLCBlock,
-  PLCBlockElement;
+  PLCBlockElement, PLCString, HMICheckBox, HMITrackBar, HMIProgressBar,
+  HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation, HMIText;
 
 type
   

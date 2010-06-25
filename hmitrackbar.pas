@@ -98,7 +98,7 @@ end;
 procedure THMITrackBar.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
-  if (t<>nil) and (Supports(t, ITagNumeric)) then
+  if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
