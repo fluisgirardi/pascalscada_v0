@@ -18,11 +18,12 @@ type
   @abstract(Classe base para todos os tags de comunicação.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
   }
-  TPLCTag = class(TTag)
+  TPLCTag = class(TTag, IManagedTagInterface)
   private
     CScanTimer:TTimer;
     FRawProtocolValues:TArrayOfDouble;
   private
+    procedure RebuildTagGUID;
     procedure GetNewProtocolTagSize;
   protected
     //: A escrita do tag deve ser sincrona ou assincrona
@@ -59,7 +60,7 @@ type
     function TagValuesToPLCValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble; virtual;
 
     //: configura o novo tipo de dado do tag.
-    procedure SetTagType(newType:TTagType);
+    procedure SetTagType(newType:TTagType); virtual;
 
     //: Retorna o tamanho real do tag.
     function GetTagSizeOnProtocol:Integer;
@@ -71,13 +72,13 @@ type
     Habilita/Desabilita o swap de words.
     @param(v Boolean: @true habilita, @false desabilita.)
     }
-    procedure SetSwapWords(v:Boolean);
+    procedure SetSwapWords(v:Boolean); virtual;
 
     {:
     Habilita/Desabilita o swap de bytes.
     @param(v Boolean: @true habilita, @false desabilita.)
     }
-    procedure SetSwapBytes(v:Boolean);
+    procedure SetSwapBytes(v:Boolean); virtual;
 
     //: @exclude
     procedure SetGUID(v:String);
@@ -268,9 +269,20 @@ type
     property LastASyncWriteStatus:TProtocolIOResult Read PLastASyncWriteCmdResult;
   end;
 
+  TManagedTags = array of TPLCTag;
+  TTagMananger=class
+  private
+    ftags:TManagedTags;
+  public
+    constructor Create;
+    destructor Destroy;
+    procedure AddTag(Tag:TPLCTag);
+    procedure RemoveTag(Tag:TPLCTag);
+  end;
+
 implementation
 
-uses hsutils;
+uses hsutils, hsstrings;
 
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
@@ -533,6 +545,11 @@ begin
   FProtocolWordSize:=PProtocolDriver.SizeOfTag(Self,False,FProtocolTagType);
   if FTagType=pttDefault then
     FCurrentWordSize := FProtocolWordSize;
+end;
+
+procedure TPLCTag.RebuildTagGUID;
+begin
+
 end;
 
 procedure TPLCTag.Loaded;
@@ -1021,6 +1038,54 @@ begin
       end;
   end;
   Freemem(PtrByte);
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+constructor TTagMananger.Create;
+begin
+  SetLength(ftags,0);
+end;
+
+destructor TTagMananger.Destroy;
+begin
+  if Length(ftags)>0 then
+    Raise Exception.Create(SCannotDestroyBecauseTagsStillManaged);
+end;
+
+procedure  TTagMananger.AddTag(Tag:TPLCTag);
+var
+  c,h:Integer;
+begin
+  for c:=0 to High(ftags) do begin
+    if ftags[c]=Tag then exit;
+    if ftags[c].TagGUID=tag.TagGUID then begin
+      break;
+    end;
+  end;
+  h:=Length(ftags);
+  SetLength(ftags,h+1);
+  ftags[h]:=Tag;
+end;
+
+procedure  TTagMananger.RemoveTag(Tag:TPLCTag);
+var
+  c,h:Integer;
+  found:Boolean;
+begin
+  found:=false;
+  for c:=0 to High(ftags) do
+    if ftags[c]=Tag then begin
+      found:=true;
+      break;
+    end;
+
+  if found then begin
+    h:=High(ftags);
+    ftags[c]:=ftags[h];
+    SetLength(ftags,h-1);
+  end;
 end;
 
 end.

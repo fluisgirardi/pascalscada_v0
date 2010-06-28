@@ -79,13 +79,6 @@ type
     procedure CopyRAMToROM(CPU:TS7CPU);
     procedure CompressMemory(CPU:TS7CPU);
   protected
-    //funcoes de conversao
-    function BytesToWord(b0,b1:Double):Word;
-    function BytesToInt16(b0,b1:Double):ShortInt;
-    function BytesToDWord(b0,b1,b2,b3:Double):Cardinal;
-    function BytesToInt32(b0,b1,b2,b3:Double):Integer;
-    function BytesToFloat(b0,b1,b2,b3:Double):Double;
-  protected
     procedure UpdateTags(pkg:BYTES; writepkg:Boolean);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
@@ -730,7 +723,6 @@ procedure TSiemensProtocolFamily.DoGetValue(TagRec:TTagRec; var values:TScanRead
 var
   plc, db:integer;
   foundplc, founddb:Boolean;
-  area, datatype, datasize:Integer;
   temparea:TArrayOfDouble;
   c1, c2, lent, lend:Integer;
 begin
@@ -744,27 +736,15 @@ begin
 
   if not foundplc then exit;
 
-  area     := TagRec.ReadFunction div 10;
-  datatype := TagRec.ReadFunction mod 10;
+  SetLength(values.Values, TagRec.Size);
 
-  case datatype of
-    2,3:
-      datasize:=2;
-    4,5,6:
-      datasize:=4;
-    else
-      datasize:=1;
-  end;
-
-  SetLength(temparea,TagRec.Size*datasize);
-
-  case area of
+  case TagRec.ReadFunction of
     1:
-      FCPUs[plc].Inputs.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].Inputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     2:
-      FCPUs[plc].Outputs.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].Outputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     3:
-      FCPUs[plc].Flags.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].Flags.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     4: begin
       if TagRec.File_DB<=0 then
         TagRec.File_DB:=1;
@@ -778,41 +758,18 @@ begin
 
       if not founddb then exit;
 
-      FCPUs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     end;
     5,10:
-      FCPUs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     6,11:
-      FCPUs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     7:
-      FCPUs[plc].SMs.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].SMs.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     8:
-      FCPUs[plc].AnInput.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
+      FCPUs[plc].AnInput.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
     9:
-      FCPUs[plc].AnOutput.GetValues(TagRec.Address,TagRec.Size,datasize, temparea);
-  end;
-
-  c1:=0;
-  c2:=0;
-  lent:=Length(temparea);
-  lend:=Length(values.Values);
-  while (c1<lent) AND (c2<lend) do begin
-    case datatype of
-      1:
-        values.Values[c2] := temparea[c1];
-      2:
-        values.Values[c2] := BytesToWord(temparea[c1], temparea[c1+1]);
-      3:
-        values.Values[c2] := BytesToInt16(temparea[c1], temparea[c1+1]);
-      4:
-        values.Values[c2] := BytesToDWord(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3]);
-      5:
-        values.Values[c2] := BytesToInt32(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3]);
-      6:
-        values.Values[c2] := BytesToFloat(temparea[c1], temparea[c1+1], temparea[c1+2], temparea[c1+3]);
-    end;
-    inc(c1, datasize);
-    inc(c2);
+      FCPUs[plc].AnOutput.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
   end;
 end;
 
@@ -931,69 +888,6 @@ begin
     exit;
   end;
   raise Exception.Create(SinvalidTag);
-end;
-
-//funcoes de conversao
-function TSiemensProtocolFamily.BytesToWord(b0,b1:Double):Word;
-var
-  ib0, ib1:Word;
-begin
-  ib0 := FloatToInteger(b0) and 255;
-  ib1 := FloatToInteger(b1) and 255;
-
-  Result := (ib0 shl 8) + ib1;
-end;
-
-function TSiemensProtocolFamily.BytesToInt16(b0,b1:Double):ShortInt;
-var
-  ib0, ib1:ShortInt;
-begin
-  ib0 := FloatToInteger(b0) and 255;
-  ib1 := FloatToInteger(b1) and 255;
-
-  Result := (ib0 shl 8) + ib1;
-end;
-
-function TSiemensProtocolFamily.BytesToDWord(b0,b1,b2,b3:Double):Cardinal;
-var
-  ib0, ib1, ib2, ib3:DWord;
-begin
-  ib0 := FloatToInteger(b0) and 255;
-  ib1 := FloatToInteger(b1) and 255;
-  ib2 := FloatToInteger(b2) and 255;
-  ib3 := FloatToInteger(b3) and 255;
-
-  Result := (ib0 shl 24) + (ib1 shl 16) + (ib2 shl 16)  + ib3;
-end;
-
-function TSiemensProtocolFamily.BytesToInt32(b0,b1,b2,b3:Double):Integer;
-var
-  ib0, ib1, ib2, ib3:Integer;
-begin
-  ib0 := FloatToInteger(b0) and 255;
-  ib1 := FloatToInteger(b1) and 255;
-  ib2 := FloatToInteger(b2) and 255;
-  ib3 := FloatToInteger(b3) and 255;
-
-  Result := (ib0 shl 24) + (ib1 shl 16) + (ib2 shl 16)  + ib3;
-end;
-
-function TSiemensProtocolFamily.BytesToFloat(b0,b1,b2,b3:Double):Double;
-var
-  ib0, ib1, ib2, ib3:Integer;
-  res:Float;
-  p:PInteger;
-begin
-  ib0 := FloatToInteger(b0) and 255;
-  ib1 := FloatToInteger(b1) and 255;
-  ib2 := FloatToInteger(b2) and 255;
-  ib3 := FloatToInteger(b3) and 255;
-
-  p:=PInteger(@res);
-
-  p^ := (ib0 shl 24) + (ib1 shl 16) + (ib2 shl 16)  + ib3;
-
-  Result := res;
 end;
 
 end.

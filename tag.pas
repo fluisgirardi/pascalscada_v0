@@ -42,6 +42,11 @@ type
     procedure RemoveTag(Sender:TObject);
   end;
 
+  IManagedTagInterface = interface
+    ['{5CC728FD-B75F-475E-BDE7-07A862B6B2B6}']
+    procedure RebuildTagGUID;
+  end;
+
   //: Classe base para todos os tags.
   TTag = class(TComponent)
   protected

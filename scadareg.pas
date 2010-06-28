@@ -14,9 +14,10 @@ uses
   Classes, SerialPort, ModBusSerial, LinearScaleProcessor, PLCTagNumber,
   PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
-   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
-   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
-   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP,
+  HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
+  HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
+  WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct,
+  PLCStructElement,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
   {$ELSE}
@@ -45,6 +46,8 @@ begin
   RegisterComponents(strTagsPallete,      [TPLCBlockElement]);
   RegisterComponents(strTagsPallete,      [TPLCString]);
   RegisterComponents(strTagsPallete,      [TTagBit]);
+  RegisterComponents(strTagsPallete,      [TPLCStruct]);
+  RegisterComponents(strTagsPallete,      [TPLCStructItem]);
 
   RegisterComponents(strControlsPallete,  [THMIEdit]);
   RegisterComponents(strControlsPallete,  [THMILabel]);

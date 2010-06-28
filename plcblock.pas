@@ -31,8 +31,6 @@ type
   protected
     //: @seealso(TPLCTag.TagCommandCallBack)
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
-    //: @exclude
-    procedure Loaded; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -155,12 +153,6 @@ begin
   finally
     SetLength(TagValues,0);
   end;
-end;
-
-procedure TPLCBlock.Loaded;
-begin
-  inherited Loaded;
-  //faca alguma coisa q precise ser feita apos o tag ser carregado...
 end;
 
 procedure TPLCBlock.SetSize(size:Cardinal);

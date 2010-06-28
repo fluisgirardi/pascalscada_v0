@@ -35,7 +35,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="6" Release="4"/>
-    <Files Count="54">
+    <Files Count="56">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -253,6 +253,14 @@
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
       </Item54>
+      <Item55>
+        <Filename Value="plcstruct.pas"/>
+        <UnitName Value="PLCStruct"/>
+      </Item55>
+      <Item56>
+        <Filename Value="plcstructelement.pas"/>
+        <UnitName Value="PLCStructElement"/>
+      </Item56>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">

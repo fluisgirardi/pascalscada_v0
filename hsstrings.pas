@@ -71,6 +71,7 @@ resourcestring
   SInvalidTagNameInTagBuilder = 'Nome inválido!';
   SWithoutAtLeastOneValidName = 'É necessário que pelo menos um nome válido esteja presente ou um item tenha a opção "Contar Vazios" marcado!';
   SInvalidBlockName           = 'Nome do(s) bloco(s) inválido(s)!';
+  SCannotDestroyBecauseTagsStillManaged= 'O gerenciador de tags não pode ser destruido por ainda estar gerenciando tags!';
 
 implementation
 

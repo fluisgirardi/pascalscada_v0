@@ -26,6 +26,7 @@ type
   TPLCBlockElement = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
   private
     PBlock:TPLCBlock;
+  protected
     PIndex:Cardinal;
     procedure SetBlock(blk:TPLCBlock);
     procedure SetIndex(i:Cardinal);
@@ -37,19 +38,17 @@ type
     function  GetValueTimestamp:TDatetime;
 
     //IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure NotifyReadOk; virtual;
+    procedure NotifyReadFault; virtual;
+    procedure NotifyWriteOk; virtual;
+    procedure NotifyWriteFault; virtual;
+    procedure NotifyTagChange(Sender:TObject); virtual;
+    procedure RemoveTag(Sender:TObject); virtual;
   protected
     //: @seealso(TPLCNumber.GetValueRaw)
     function  GetValueRaw:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(Value:Double); override;
-    //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -116,7 +115,6 @@ begin
     if PIndex>=PBlock.Size then
       PIndex := PBlock.Size - 1;
   end;
-
 end;
 
 procedure TPLCBlockElement.SetIndex(i:Cardinal);
@@ -222,11 +220,6 @@ procedure TPLCBlockElement.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 begin
   if Assigned(PBlock) then
     PBlock.Write(values, 1, PIndex)
-end;
-
-procedure TPLCBlockElement.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
-begin
-  //do nothing...
 end;
 
 procedure TPLCBlockElement.NotifyReadOk;
