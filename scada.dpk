@@ -82,6 +82,10 @@ contains
   modbustcp in 'modbustcp.pas',
   modbusdriver in 'modbusdriver.pas',
   modbusserial in 'modbusserial.pas',
-  umodbustagbuilder in 'umodbustagbuilder.pas' {frmModbusTagBuilder};
+  umodbustagbuilder in 'umodbustagbuilder.pas' {frmModbusTagBuilder},
+  plcstruct in 'plcstruct.pas',
+  plcstructelement in 'plcstructelement.pas',
+  s7types in 's7types.pas',
+  tagcollection in 'tagcollection.pas';
 
 end.
