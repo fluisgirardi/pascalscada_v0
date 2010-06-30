@@ -558,6 +558,7 @@ end;
 procedure TPLCTag.Loaded;
 begin
   inherited Loaded;
+  GetTagSizeOnProtocol;
 end;
 
 procedure TPLCTag.SetGUID(v:String);
@@ -724,8 +725,8 @@ begin
   //faz as inversoes caso necessário e move os dados para o resultado
   case FTagType of
     pttByte: begin
-      inc(PtrByteWalker, Offset);
-      inc(AreaIdx, Offset);
+      inc(PtrByteWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
+      inc(AreaIdx,(((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize));
       while AreaIdx<AreaSize do begin
         AddToResult(PtrByteWalker^, Result);
         inc(AreaIdx);
@@ -733,8 +734,8 @@ begin
       end;
     end;
     pttShortInt, pttWord: begin
-      inc(PtrWordWalker, Offset);
-      inc(AreaIdx, Offset*2);
+      inc(PtrWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
+      inc(AreaIdx,(((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize)*2);
       while AreaIdx<AreaSize do begin
         if FSwapBytes then begin
           PtrByte1:=PByte(PtrWordWalker);
@@ -756,8 +757,8 @@ begin
     pttInteger,
     pttDWord,
     pttFloat: begin
-      inc(PtrDWordWalker, Offset);
-      inc(AreaIdx, Offset*4);
+      inc(PtrDWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
+      inc(AreaIdx,       (((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize)*4);
       while AreaIdx<AreaSize do begin
 
         if FSwapWords or FSwapBytes then begin

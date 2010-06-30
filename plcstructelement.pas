@@ -20,6 +20,7 @@ type
     //IHMITagInterface
     procedure NotifyTagChange(Sender:TObject); override;
     procedure RemoveTag(Sender:TObject); override;
+    procedure Loaded; override;
   public
     constructor Create(AOwner:TComponent); override;
     destructor Destroy; override;
@@ -36,7 +37,7 @@ type
 
 implementation
 
-uses Tag;
+uses Tag, ProtocolDriver;
 
 constructor TPLCStructItem.Create(AOwner:TComponent);
 begin
@@ -94,6 +95,16 @@ procedure TPLCStructItem.RemoveTag(Sender:TObject);
 begin
   if PBlock=sender then
     PBlock := nil;
+end;
+
+procedure TPLCStructItem.Loaded;
+var
+  oldprot:TProtocolDriver;
+begin
+  oldprot:=PProtocolDriver;
+  PProtocolDriver:=TProtocolDriver(1);
+  inherited Loaded;
+  PProtocolDriver:=oldprot;
 end;
 
 procedure TPLCStructItem.SetBlock(blk:TPLCStruct);
