@@ -1,11 +1,11 @@
 object Form1: TForm1
-  Left = 238
-  Height = 573
+  Left = 882
+  Height = 518
   Top = 123
   Width = 390
   ActiveControl = HMIEdit1
   Caption = 'Form1'
-  ClientHeight = 573
+  ClientHeight = 518
   ClientWidth = 390
   OnCreate = FormCreate
   LCLVersion = '0.9.29'
@@ -352,21 +352,21 @@ object Form1: TForm1
     top = 64
   end
   object PLCBlockElement2: TPLCBlockElement
-    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    TagGUID = '{2A2143E5-64CC-4515-853D-A43FF7B67D91}'
     PLCBlock = PLCBlock1
     Index = 1
     left = 48
     top = 96
   end
   object PLCBlockElement3: TPLCBlockElement
-    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    TagGUID = '{4D3F8B55-5CFC-4EE9-9920-0040515A0058}'
     PLCBlock = PLCBlock1
     Index = 2
     left = 48
     top = 128
   end
   object PLCBlock2: TPLCBlock
-    TagGUID = '{B51692D1-2DC5-475C-85EF-AD0EB9747E35}'
+    TagGUID = '{35F369DA-3F0D-4D13-9BFF-13438D9E8097}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -385,28 +385,28 @@ object Form1: TForm1
     top = 168
   end
   object PLCBlockElement4: TPLCBlockElement
-    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    TagGUID = '{CB028C75-B121-4C68-A79E-2C62244332BC}'
     PLCBlock = PLCBlock2
     Index = 1
     left = 48
     top = 200
   end
   object PLCBlockElement5: TPLCBlockElement
-    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    TagGUID = '{713888E2-C144-417D-9013-9ABBAD6835C0}'
     PLCBlock = PLCBlock2
     Index = 0
     left = 48
     top = 168
   end
   object PLCBlockElement6: TPLCBlockElement
-    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    TagGUID = '{84EC3F1F-73F5-4BD2-940C-4EB7D4BE671C}'
     PLCBlock = PLCBlock2
     Index = 3
     left = 48
     top = 266
   end
   object PLCBlockElement7: TPLCBlockElement
-    TagGUID = '{59C64E74-FC61-4E26-9CCE-48B90886E8DF}'
+    TagGUID = '{2301ED11-E077-4EA5-A49A-A6437261B5AD}'
     PLCBlock = PLCBlock2
     Index = 2
     left = 48
@@ -438,7 +438,7 @@ object Form1: TForm1
     top = 312
   end
   object PLCStructItem2: TPLCStructItem
-    TagGUID = '{69D48A9C-C45C-4162-9CAE-38D8013246CA}'
+    TagGUID = '{48026225-5688-4425-BA24-F9E163460686}'
     PLCBlock = PLCStruct1
     Index = 1
     TagType = pttByte
@@ -446,7 +446,7 @@ object Form1: TForm1
     top = 340
   end
   object PLCStructItem3: TPLCStructItem
-    TagGUID = '{69D48A9C-C45C-4162-9CAE-38D8013246CA}'
+    TagGUID = '{DE6FC5C9-06DC-4823-A02F-04D418AB73C1}'
     PLCBlock = PLCStruct1
     Index = 2
     TagType = pttShortInt
@@ -454,7 +454,7 @@ object Form1: TForm1
     top = 368
   end
   object PLCStructItem4: TPLCStructItem
-    TagGUID = '{69D48A9C-C45C-4162-9CAE-38D8013246CA}'
+    TagGUID = '{24B15C7F-DB11-4B3B-AB8C-EC9848516C68}'
     PLCBlock = PLCStruct1
     Index = 4
     TagType = pttWord
@@ -462,7 +462,7 @@ object Form1: TForm1
     top = 392
   end
   object PLCStructItem5: TPLCStructItem
-    TagGUID = '{69D48A9C-C45C-4162-9CAE-38D8013246CA}'
+    TagGUID = '{825A67C1-2A1F-4107-B364-90C860BE1007}'
     PLCBlock = PLCStruct1
     Index = 6
     TagType = pttInteger
@@ -471,7 +471,7 @@ object Form1: TForm1
     top = 424
   end
   object PLCStructItem6: TPLCStructItem
-    TagGUID = '{69D48A9C-C45C-4162-9CAE-38D8013246CA}'
+    TagGUID = '{765AFBEC-6084-45D0-BDC5-9BFBCDA75C48}'
     PLCBlock = PLCStruct1
     Index = 10
     TagType = pttDWord
@@ -480,7 +480,7 @@ object Form1: TForm1
     top = 452
   end
   object PLCStructItem7: TPLCStructItem
-    TagGUID = '{69D48A9C-C45C-4162-9CAE-38D8013246CA}'
+    TagGUID = '{21D4EF82-E98A-4E04-9CFF-08D7C0D04FEB}'
     PLCBlock = PLCStruct1
     Index = 14
     TagType = pttFloat

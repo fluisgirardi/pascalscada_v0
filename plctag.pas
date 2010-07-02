@@ -26,6 +26,8 @@ type
     procedure RebuildTagGUID;
     procedure GetNewProtocolTagSize;
   protected
+    //: Referencia ao objeto gerenciador de tags.
+    FTagManager:TObject;
     //: A escrita do tag deve ser sincrona ou assincrona
     FSyncWrites:Boolean;
     //: Armazena o driver de protocolo usado para comunicação do tag.
@@ -280,6 +282,8 @@ type
     procedure RemoveTag(Tag:TPLCTag);
   end;
 
+  function GetTagManager:TTagMananger;
+
 implementation
 
 uses hsutils, hsstrings;
@@ -310,6 +314,7 @@ begin
   FSwapWords:=false;
   CScanTimer := TTimer.Create(self);
   CScanTimer.OnTimer := DoScanTimerEvent;
+  FTagManager := GetTagManager;
 end;
 
 destructor TPLCTag.Destroy;
@@ -318,6 +323,7 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.RemoveTag(self);
   PProtocolDriver := nil;
+  (FTagManager as TTagMananger).RemoveTag(Self);
   inherited Destroy;
 end;
 
@@ -551,14 +557,20 @@ begin
 end;
 
 procedure TPLCTag.RebuildTagGUID;
+var
+  x:TGuid;
 begin
-
+  CreateGUID(x);
+  PGUID:=GUIDToString(x);
 end;
 
 procedure TPLCTag.Loaded;
 begin
   inherited Loaded;
   GetTagSizeOnProtocol;
+
+  with FTagManager as TTagMananger do
+    AddTag(Self);
 end;
 
 procedure TPLCTag.SetGUID(v:String);
@@ -1063,7 +1075,10 @@ begin
   for c:=0 to High(ftags) do begin
     if ftags[c]=Tag then exit;
     if ftags[c].TagGUID=tag.TagGUID then begin
-      break;
+      if Supports(Tag, IManagedTagInterface) then
+        (Tag as IManagedTagInterface).RebuildTagGUID
+      else
+        raise Exception.Create(SCannotRebuildTagID);
     end;
   end;
   h:=Length(ftags);
@@ -1090,4 +1105,16 @@ begin
   end;
 end;
 
+var
+  QPascalTagManager:TTagMananger;
+
+function GetTagManager:TTagMananger;
+begin
+  Result:=QPascalTagManager;
+end;
+
+initialization
+  QPascalTagManager:=TTagMananger.Create;
+finalization
+  QPascalTagManager.Destroy;
 end.

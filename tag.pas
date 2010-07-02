@@ -209,7 +209,6 @@ begin
     CreateGUID(x);
     PGUID:=GUIDToString(x);
   end;
-
 end;
 
 destructor TTag.Destroy;
