@@ -42,8 +42,18 @@ type
     DBNum:Cardinal;
     DBArea:TPLCMemoryManager;
   end;
+
   //: Identifica um conjunto de DB's da familia S7-300/S7-400
   TS7DBs = array of TS7DB;
+
+  //: Representa uma requisição.
+  TS7ReqListItem = record
+    PLC,
+    DB,
+    ReqType,
+    StartAddress,
+    Size:Integer;
+  end;
 
   //: Representação de um CLP S7-200/300/400 da Siemens.
   TS7CPU=record

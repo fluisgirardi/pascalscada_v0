@@ -531,11 +531,27 @@ var
   msgout, msgin:BYTES;
   initialized, onereqdone:Boolean;
   anow:TDateTime;
+  ReqList:Array of TS7ReqListItem;
   procedure pkg_initialized;
   begin
     if not initialized then begin
       PrepareReadRequest(msgout);
       initialized:=true;
+    end;
+  end;
+
+  procedure AddToReqList(iPLC, iDB, iReqType, iStartAddress, iSize:Integer);
+  var
+    h:Integer;
+  begin
+    h:=Length(ReqList);
+    SetLength(ReqList,h+1);
+    with ReqList[h] do begin
+      PLC := iPLC;
+      DB := iDB;
+      ReqType := iReqType;
+      StartAddress := iStartAddress;
+      Size := iSize;
     end;
   end;
 begin
@@ -564,6 +580,7 @@ begin
       for block := 0 to High(FCPUs[plc].DBs[db].DBArea.Blocks) do
         if FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
           pkg_initialized;
+          AddToReqList(plc, FCPUs[plc].DBs[db].DBNum, vtS7_DB, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
           AddToReadRequest(msgout, vtS7_DB, FCPUs[plc].DBs[db].DBNum, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
         end else
           if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].DBs[db].DBArea.Blocks[block].LastUpdate)>TimeElapsed) then begin
