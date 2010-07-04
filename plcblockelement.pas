@@ -29,7 +29,7 @@ type
   protected
     PIndex:Cardinal;
     procedure SetBlock(blk:TPLCBlock);
-    procedure SetIndex(i:Cardinal);
+    procedure SetIndex(i:Cardinal); virtual;
 
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;

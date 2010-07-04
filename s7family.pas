@@ -79,7 +79,7 @@ type
     procedure CopyRAMToROM(CPU:TS7CPU);
     procedure CompressMemory(CPU:TS7CPU);
   protected
-    procedure UpdateTags(pkg:BYTES; writepkg:Boolean);
+    procedure UpdateTags(pkgin, pkgout:BYTES; writepkg:Boolean);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
 {ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
@@ -357,8 +357,15 @@ end;
 // FUNCOES DE MANIPULAÇAO DO DRIVER
 ////////////////////////////////////////////////////////////////////////////////
 
-procedure TSiemensProtocolFamily.UpdateTags(pkg:BYTES; writepkg:Boolean);
+procedure TSiemensProtocolFamily.UpdateTags(pkgin, pkgout:BYTES; writepkg:Boolean);
+var
+  PDU:TPDU;
 begin
+  if writepkg then
+    SetupPDU(pkgout, true, PDU)
+  else
+    SetupPDU(pkgin, false, PDU);
+
 
 end;
 
@@ -532,6 +539,7 @@ var
   initialized, onereqdone:Boolean;
   anow:TDateTime;
   ReqList:Array of TS7ReqListItem;
+
   procedure pkg_initialized;
   begin
     if not initialized then begin
@@ -596,6 +604,7 @@ begin
     for block := 0 to High(FCPUs[plc].Inputs.Blocks) do
       if FCPUs[plc].Inputs.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].Inputs.Blocks[block].AddressStart, FCPUs[plc].Inputs.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Inputs, 0, FCPUs[plc].Inputs.Blocks[block].AddressStart, FCPUs[plc].Inputs.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Inputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -611,6 +620,7 @@ begin
     for block := 0 to High(FCPUs[plc].Outputs.Blocks) do
       if FCPUs[plc].Outputs.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_Outputs, FCPUs[plc].Outputs.Blocks[block].AddressStart, FCPUs[plc].Outputs.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Outputs, 0, FCPUs[plc].Outputs.Blocks[block].AddressStart, FCPUs[plc].Outputs.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Outputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -626,6 +636,7 @@ begin
     for block := 0 to High(FCPUs[plc].AnInput.Blocks) do
       if FCPUs[plc].AnInput.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_200_AnInput, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_200_AnInput, 0, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnInput.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -641,6 +652,7 @@ begin
     for block := 0 to High(FCPUs[plc].AnOutput.Blocks) do
       if FCPUs[plc].AnOutput.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_200_AnOutput, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_200_AnOutput, 0, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnOutput.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -656,6 +668,7 @@ begin
     for block := 0 to High(FCPUs[plc].Timers.Blocks) do
       if FCPUs[plc].Timers.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_Timer, FCPUs[plc].Timers.Blocks[block].AddressStart, FCPUs[plc].Timers.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Timer, 0, FCPUs[plc].Timers.Blocks[block].AddressStart, FCPUs[plc].Timers.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Timers.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -671,6 +684,7 @@ begin
     for block := 0 to High(FCPUs[plc].Counters.Blocks) do
       if FCPUs[plc].Counters.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_Counter, FCPUs[plc].Counters.Blocks[block].AddressStart, FCPUs[plc].Counters.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Counter, 0, FCPUs[plc].Counters.Blocks[block].AddressStart, FCPUs[plc].Counters.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Counters.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -686,6 +700,7 @@ begin
     for block := 0 to High(FCPUs[plc].Flags.Blocks) do
       if FCPUs[plc].Flags.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Flags, 0, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Flags.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -701,6 +716,7 @@ begin
     for block := 0 to High(FCPUs[plc].SMs.Blocks) do
       if FCPUs[plc].SMs.Blocks[block].NeedRefresh then begin
         pkg_initialized;
+        AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_200_SM, 0, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
       end else
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].SMs.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -715,7 +731,7 @@ begin
       onereqdone:=true;
       NeedSleep:=0;
       if exchange(FCPUs[plc], msgout, msgin, false) then
-        UpdateTags(msgin,False);
+        UpdateTags(msgin, msgout,False);
     end;
     initialized:=false;
     setlength(msgin,0);
@@ -731,7 +747,7 @@ begin
       else
         AddToReadRequest(msgout, lastType, 0, lastStartAddress, lastSize);
       if exchange(FCPUs[plc], msgout, msgin, false) then
-        UpdateTags(msgin,False);
+        UpdateTags(msgin, msgout,False);
     end;
   end;
 end;

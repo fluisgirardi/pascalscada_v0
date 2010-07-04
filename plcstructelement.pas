@@ -7,7 +7,7 @@ unit PLCStructElement;
 interface
 
 uses
-  Classes, PLCTag, PLCBlockElement, ProtocolTypes, PLCStruct;
+  Classes, sysutils, PLCTag, PLCBlockElement, ProtocolTypes, PLCStruct;
 
 type
   TPLCStructItem = class(TPLCBlockElement, ITagInterface, ITagNumeric)
@@ -16,6 +16,8 @@ type
   protected
     procedure SetBlock(blk:TPLCStruct);
     procedure SetValueRaw(Value: Double); override;
+    procedure SetIndex(i: Cardinal); override;
+    procedure SetTagType(newType: TTagType); override;
 
     //IHMITagInterface
     procedure NotifyTagChange(Sender:TObject); override;
@@ -37,7 +39,7 @@ type
 
 implementation
 
-uses Tag, ProtocolDriver;
+uses Tag, ProtocolDriver, hsstrings;
 
 constructor TPLCStructItem.Create(AOwner:TComponent);
 begin
@@ -129,7 +131,7 @@ begin
     PBlock := blk;
     PBlock.AddCallBacks(Self as IHMITagInterface);
     if PIndex>=PBlock.Size then
-      PIndex := PBlock.Size - 1;
+      PIndex := 0;
   end;
 end;
 
@@ -153,6 +155,43 @@ begin
       PValueRaw:=Value;
       NotifyChange;
     end;
+end;
+
+procedure TPLCStructItem.SetIndex(i: Cardinal);
+var
+  MySize:Integer;
+begin
+  MySize:=FCurrentWordSize div 8;
+  if PBlock<>nil then
+    if (i+MySize)>PBlock.Size then
+      raise Exception.Create(SItemOutOfStructure);
+
+  inherited SetIndex(i);
+end;
+
+procedure TPLCStructItem.SetTagType(newType:TTagType);
+var
+  MySize:Integer;
+begin
+  case newType of
+    pttDefault:
+      if FProtocolWordSize=1 then
+        MySize:=1
+      else
+        MySize := FProtocolWordSize div 8;
+    pttByte:
+      MySize:=1;
+    pttShortInt, pttWord:
+      MySize:=2;
+    pttInteger, pttDWord, pttFloat:
+      MySize:=4;
+  end;
+
+  if PBlock<>nil then
+    if (PIndex+MySize)>PBlock.Size then
+      raise Exception.Create(SItemOutOfStructure);
+
+  inherited SetTagType(newType);
 end;
 
 end.

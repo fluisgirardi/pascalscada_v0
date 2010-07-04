@@ -73,6 +73,7 @@ resourcestring
   SInvalidBlockName           = 'Nome do(s) bloco(s) inválido(s)!';
   SCannotDestroyBecauseTagsStillManaged= 'O gerenciador de tags não pode ser destruido por ainda estar gerenciando tags!';
   SCannotRebuildTagID = 'Impossível refazer a identificação do tag (TagID).';
+  SItemOutOfStructure = 'O tamanho do item excede a área de dados da estrutura.';
 
 implementation
 
