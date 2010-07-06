@@ -360,13 +360,39 @@ end;
 procedure TSiemensProtocolFamily.UpdateTags(pkgin, pkgout:BYTES; writepkg:Boolean);
 var
   PDU:TPDU;
+  NumResults,
+  CurResult,
+  DataLen,
+  DataIdx,
+  ResultLen:Integer;
 begin
-  if writepkg then
-    SetupPDU(pkgout, true, PDU)
-  else
+  if writepkg then begin
+    SetupPDU(pkgout, true, PDU);
+    if (PDU.param+0)^<>S7FuncWrite then exit;
+  end else begin
     SetupPDU(pkgin, false, PDU);
-
-
+    if (PDU.param+0)^<>S7FuncRead then exit;
+  end;
+  NumResults:=(PDU.param+1)^;
+  CurResult:=0;
+  DataIdx:=0;
+  DataLen:=PDU.data_len;
+  while CurResult<NumResults do begin
+    if ((PDU.data+DataIdx)^=$FF) AND (DataLen>4) then begin
+      ResultLen:=(PDU.data+DataIdx+2)^*$100 + (PDU.data+DataIdx+3)^;
+      //o tamanho está em bits, precisa de ajuste.
+      if (PDU.data+DataIdx+1)^=4 then
+        ResultLen:=ResultLen div 8
+      else begin
+        //3 o restultado já está em bytes
+        //e 9 o resultado está em bits, mas cada bit em um byte.
+        if not ((PDU.data+DataIdx+1)^ in [3,9]) then
+          exit;
+      end;
+    end else begin
+      ResultLen:=0;
+    end;
+  end;
 end;
 
 procedure TSiemensProtocolFamily.DoAddTag(TagObj:TTag);
