@@ -17,7 +17,7 @@ uses
   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct,
-  PLCStructElement,
+  PLCStructElement, ISOTCPDriver,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
   {$ELSE}
@@ -38,6 +38,7 @@ begin
   RegisterComponents(strProtocolsPallete, [TModBusTCPDriver]);
   RegisterComponents(strProtocolsPallete, [TWestASCIIDriver]);
   RegisterComponents(strProtocolsPallete, [TIBoxDriver]);
+  RegisterComponents(strProtocolsPallete, [TISOTCPDriver]);
   RegisterComponents(strUtilsPallete,     [TPIPE]);
   RegisterComponents(strUtilsPallete,     [TLinearScaleProcessor]);
   RegisterComponents(strUtilsPallete,     [TUserScale]);
