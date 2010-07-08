@@ -49,7 +49,9 @@ type
 
   TSiemensProtocolFamily = class(TProtocolDriver)
   protected
-    function GetTagInfo(tagobj:TTag):TTagRec;
+    function  GetTagInfo(tagobj:TTag):TTagRec;
+    function  GetByte(Ptr:PByte; idx:Integer):integer;
+    procedure SetByte(Ptr:PByte; idx:Integer; value:Byte);
   protected
     PDUIn,PDUOut:Integer;
     FCPUs:TS7CPUs;
@@ -79,7 +81,7 @@ type
     procedure CopyRAMToROM(CPU:TS7CPU);
     procedure CompressMemory(CPU:TS7CPU);
   protected
-    procedure UpdateTags(pkgin, pkgout:BYTES; writepkg:Boolean);
+    procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
 {ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
@@ -357,14 +359,18 @@ end;
 // FUNCOES DE MANIPULAÇAO DO DRIVER
 ////////////////////////////////////////////////////////////////////////////////
 
-procedure TSiemensProtocolFamily.UpdateTags(pkgin, pkgout:BYTES; writepkg:Boolean);
+procedure TSiemensProtocolFamily.UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
 var
   PDU:TPDU;
   NumResults,
   CurResult,
   DataLen,
   DataIdx,
-  ResultLen:Integer;
+  ResultLen,
+  ResultCode,
+  CurValue:Integer;
+
+  ResultValues:TArrayOfDouble;
 begin
   if writepkg then begin
     SetupPDU(pkgout, true, PDU);
@@ -378,7 +384,8 @@ begin
   DataIdx:=0;
   DataLen:=PDU.data_len;
   while CurResult<NumResults do begin
-    if ((PDU.data+DataIdx)^=$FF) AND (DataLen>4) then begin
+    ResultCode:=(PDU.data+DataIdx)^;
+    if (ResultCode=$FF) AND (DataLen>4) then begin
       ResultLen:=(PDU.data+DataIdx+2)^*$100 + (PDU.data+DataIdx+3)^;
       //o tamanho está em bits, precisa de ajuste.
       if (PDU.data+DataIdx+1)^=4 then
@@ -392,6 +399,55 @@ begin
     end else begin
       ResultLen:=0;
     end;
+
+    //move os dados recebidos para as respectivas areas.
+    SetLength(ResultValues,0);
+    if ResultLen>0 then begin
+      SetLength(ResultValues,ResultLen);
+      CurValue:=0;
+      while (CurValue<ResultLen) AND (CurValue<Length(ResultValues)) do begin
+        ResultValues[CurValue]:=(PDU.data+DataIdx+4+CurValue)^;
+        inc(CurValue);
+      end;
+
+      with ReqList[CurResult] do begin
+        case ReqType of
+          vtS7_DB:
+             FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_Inputs:
+             FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_Outputs:
+             FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_200_AnInput:
+             FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_200_AnOutput:
+             FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_Timer:
+             FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_Counter:
+             FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_Flags:
+             FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_200_SM:
+             FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues);
+        end;
+      end;
+    end else begin
+      //setar a falha
+    end;
+
+    DataIdx:=ResultLen+4;
+    dec(DataLen,ResultLen);
+
+    //pelo que entendi, um resultado nunca vem com tamanho impar
+    //no pacote.
+    if (ResultLen mod 2)=1 then begin
+      inc(DataIdx);
+      dec(DataLen);
+    end;
+
+    //proximo resultado.
+    inc(CurResult);
   end;
 end;
 
@@ -564,7 +620,7 @@ var
   msgout, msgin:BYTES;
   initialized, onereqdone:Boolean;
   anow:TDateTime;
-  ReqList:Array of TS7ReqListItem;
+  ReqList:TS7ReqList;
 
   procedure pkg_initialized;
   begin
@@ -757,7 +813,7 @@ begin
       onereqdone:=true;
       NeedSleep:=0;
       if exchange(FCPUs[plc], msgout, msgin, false) then
-        UpdateTags(msgin, msgout,False);
+        UpdateMemoryManager(msgin, msgout, False, ReqList);
     end;
     initialized:=false;
     setlength(msgin,0);
@@ -768,12 +824,15 @@ begin
     if PReadSomethingAlways and (TimeElapsed>0) then begin
       NeedSleep:=0;
       pkg_initialized;
-      if lastDB<>-1 then
+      if lastDB<>-1 then begin
+        AddToReqList(plc, FCPUs[lastplc].DBs[lastDB].DBNum, lastType, lastStartAddress, lastSize);
         AddToReadRequest(msgout, lastType, FCPUs[lastplc].DBs[lastDB].DBNum, lastStartAddress, lastSize)
-      else
+      end else begin
+        AddToReqList(plc, 0, lastType, lastStartAddress, lastSize);
         AddToReadRequest(msgout, lastType, 0, lastStartAddress, lastSize);
+      end;
       if exchange(FCPUs[plc], msgout, msgin, false) then
-        UpdateTags(msgin, msgout,False);
+        UpdateMemoryManager(msgin, msgout,False, ReqList);
     end;
   end;
 end;
@@ -799,11 +858,11 @@ begin
 
   case TagRec.ReadFunction of
     1:
-      FCPUs[plc].Inputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].Inputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     2:
-      FCPUs[plc].Outputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].Outputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     3:
-      FCPUs[plc].Flags.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].Flags.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     4: begin
       if TagRec.File_DB<=0 then
         TagRec.File_DB:=1;
@@ -817,18 +876,18 @@ begin
 
       if not founddb then exit;
 
-      FCPUs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     end;
     5,10:
-      FCPUs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     6,11:
-      FCPUs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     7:
-      FCPUs[plc].SMs.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].SMs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     8:
-      FCPUs[plc].AnInput.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].AnInput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     9:
-      FCPUs[plc].AnOutput.GetValues(TagRec.Address,TagRec.Size,1, values.Values);
+      FCPUs[plc].AnOutput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
   end;
 end;
 
@@ -901,7 +960,7 @@ begin
       File_DB:=TPLCTagNumber(TagObj).MemFile_DB;
       Address:=TPLCTagNumber(TagObj).MemAddress;
       SubElement:=TPLCTagNumber(TagObj).MemSubElement;
-      Size:=1;
+      Size:=TPLCTagNumber(TagObj).TagSizeOnProtocol;
       OffSet:=0;
       ReadFunction:=TPLCTagNumber(TagObj).MemReadFunction;
       WriteFunction:=TPLCTagNumber(TagObj).MemWriteFunction;
@@ -919,7 +978,7 @@ begin
       File_DB:=TPLCBlock(TagObj).MemFile_DB;
       Address:=TPLCBlock(TagObj).MemAddress;
       SubElement:=TPLCBlock(TagObj).MemSubElement;
-      Size:=TPLCBlock(TagObj).Size;
+      Size:=TPLCBlock(TagObj).TagSizeOnProtocol;
       OffSet:=0;
       ReadFunction:=TPLCBlock(TagObj).MemReadFunction;
       WriteFunction:=TPLCBlock(TagObj).MemWriteFunction;
@@ -947,6 +1006,24 @@ begin
     exit;
   end;
   raise Exception.Create(SinvalidTag);
+end;
+
+function TSiemensProtocolFamily.GetByte(Ptr:PByte; idx:Integer):Integer;
+var
+  inptr:PByte;
+begin
+  inptr:=Ptr;
+  inc(inptr, idx);
+  Result := inptr^;
+end;
+
+procedure TSiemensProtocolFamily.SetByte(Ptr:PByte; idx:Integer; value:Byte);
+var
+  inptr:PByte;
+begin
+  inptr:=Ptr;
+  inc(inptr, idx);
+  inptr^ := value;
 end;
 
 end.

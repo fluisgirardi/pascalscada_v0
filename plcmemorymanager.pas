@@ -204,7 +204,7 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble):Integer;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
     {:
     @name escreve o status da última leitura, continuas ou não.
 
@@ -655,7 +655,7 @@ begin
   FCriticalSection.Leave;
 end;
 
-function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble):Integer;
+function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
 var
   blk, AdrEnd, LenUtil, Moved:Integer;
 begin
@@ -668,10 +668,14 @@ begin
     LenUtil:=0;
     if (Blocks[blk].AddressStart<=AdrStart) AND (Blocks[blk].AddressEnd>=AdrEnd) then begin
       LenUtil := (AdrEnd - AdrStart) + 1;
+      LastResult:=Blocks[blk].LastError;
+      ValueTimeStamp:=Blocks[blk].LastUpdate;
       Move(Blocks[blk].FValues[AdrStart - Blocks[blk].AddressStart], Values[0], LenUtil*SizeOf(Double))
     end else begin
       if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
         LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
+        LastResult:=Blocks[blk].LastError;
+        ValueTimeStamp:=Blocks[blk].LastUpdate;
         if Blocks[blk].Size<=LenUtil then
           Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].Size*SizeOf(Double))
         else
@@ -679,6 +683,8 @@ begin
       end else begin
         if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
           LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
+          LastResult:=Blocks[blk].LastError;
+          ValueTimeStamp:=Blocks[blk].LastUpdate;
           Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil*SizeOf(Double));
         end
       end;

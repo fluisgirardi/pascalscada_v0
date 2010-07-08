@@ -1101,7 +1101,7 @@ begin
   if found then begin
     h:=High(ftags);
     ftags[c]:=ftags[h];
-    SetLength(ftags,h-1);
+    SetLength(ftags,Max(0,h-1));
   end;
 end;
 

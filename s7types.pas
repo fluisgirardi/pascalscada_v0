@@ -55,6 +55,8 @@ type
     Size:Integer;
   end;
 
+  TS7ReqList = array of TS7ReqListItem;
+
   //: Representação de um CLP S7-200/300/400 da Siemens.
   TS7CPU=record
     Station,
@@ -108,7 +110,7 @@ const
   vtS7_Flags   = $83;
   vtS7_DB      = $84;
   vtS7_DI      = $85;  //DB Instanciado
-  vtS7_Local   = $86;  //not tested
+  //vtS7_Local   = $86;  //not tested
   vtS7_Counter =  28;  //S7 counters
   vtS7_Timer   =  29;  // S7 timers
 

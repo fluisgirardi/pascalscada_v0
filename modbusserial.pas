@@ -212,19 +212,36 @@ var
    aux:TPLCMemoryManager;
 begin
   //se algumas das IOs falhou,
-  if (pkg.ReadIOResult<>iorOK) or (pkg.WriteIOResult<>iorOK) then begin
-    Result := ioCommError;
-    exit;
+  Result:=ioOk;
+
+  case pkg.WriteIOResult of
+    iorTimeOut:
+      Result:=ioTimeOut;
+    iorNotReady,
+    iorNone:
+      Result:=ioDriverError;
+    iorPortError:
+      Result := ioCommError;
   end;
+
+  if (Result=ioOk)then
+    case pkg.ReadIOResult of
+      iorTimeOut:
+        Result:=ioTimeOut;
+      iorNotReady,
+      iorNone:
+        Result:=ioDriverError;
+      iorPortError:
+        Result := ioCommError;
+    end;
   
   //se o endereco retornado nao conferem com o selecionado...
-  if (pkg.BufferToWrite[0]<>pkg.BufferToRead[0]) then begin
+  if (Result=ioOk) and (pkg.BufferToWrite[0]<>pkg.BufferToRead[0]) then begin
     Result := ioCommError;
-    exit;
   end;
 
   //se a checagem crc nao bate, sai
-  if (not Test_crc(pkg.BufferToWrite)) or (not Test_crc(pkg.BufferToRead)) then begin
+  if (Result=ioOk) and ((not Test_crc(pkg.BufferToWrite)) or (not Test_crc(pkg.BufferToRead))) then begin
     Result := ioCommError;
     exit;
   end;
@@ -250,25 +267,28 @@ begin
           aux := PModbusPLC[plc].Inputs;
       end;
 
-      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
-      SetLength(Values,len);
+      if Result=ioOk then begin
+        address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
+        len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+        SetLength(Values,len);
 
-      i := 0;
-      c := 0;
-      c2:= 3;
-      while (i<len) and (c2<Length(pkg.BufferToRead)) do begin
-        if (c=8) then begin
-          c:=0;
-          inc(c2);
+        i := 0;
+        c := 0;
+        c2:= 3;
+        while (i<len) and (c2<Length(pkg.BufferToRead)) do begin
+          if (c=8) then begin
+            c:=0;
+            inc(c2);
+          end;
+          Values[i]:=IfThen(((Integer(pkg.BufferToRead[c2]) and (1 shl c))=(1 shl c)),1,0);
+          inc(i);
+          inc(c);
         end;
-        Values[i]:=IfThen(((Integer(pkg.BufferToRead[c2]) and (1 shl c))=(1 shl c)),1,0);
-        inc(i);
-        inc(c);
-      end;
-      if foundPLC then
-        aux.SetValues(address,len,1,Values);
-      Result := ioOk;
+        if foundPLC then
+          aux.SetValues(address,len,1,Values);
+      end else
+        if foundPLC then
+          aux.SetFault(address,len,1,Result);
     end;
 
     //leitura de words dos registradores ou das entradas analogicas
@@ -281,92 +301,102 @@ begin
           aux := PModbusPLC[plc].AnalogReg;
       end;
 
-      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
-      SetLength(Values,len);
+      if Result=ioOk then begin
+        address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
+        len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+        SetLength(Values,len);
 
-      // data are ok
-      for i:=0 to Len-1 do begin
-        Values[i]:=(Integer(pkg.BufferToRead[3+(i*2)]) shl 8) + Integer(pkg.BufferToRead[4+i*2]);
-      end;
-      if foundPLC then
-        aux.SetValues(address,len,1,Values);
-      Result := ioOk;
+        // data are ok
+        for i:=0 to Len-1 do begin
+          Values[i]:=(Integer(pkg.BufferToRead[3+(i*2)]) shl 8) + Integer(pkg.BufferToRead[4+i*2]);
+        end;
+
+        if foundPLC then
+          aux.SetValues(address,len,1,Values);
+      end else
+        if foundPLC then
+          aux.SetFault(address,len,1,Result);
     end;
 
     $05: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      SetLength(values,1);
+      if Result=ioOk then begin
+        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+        SetLength(values,1);
 
-      if (pkg.BufferToWrite[4]=0) and (pkg.BufferToWrite[5]=0) then
-         values[0] := 0
-      else
-         values[0] := 1;
+        if (pkg.BufferToWrite[4]=0) and (pkg.BufferToWrite[5]=0) then
+           values[0] := 0
+        else
+           values[0] := 1;
 
-      if foundPLC then
-        PModbusPLC[plc].OutPuts.SetValues(address,1,1,values);
-
-      Result := ioOk;
+        if foundPLC then
+          PModbusPLC[plc].OutPuts.SetValues(address,1,1,values);
+      end else
+        if foundPLC then
+          PModbusPLC[plc].OutPuts.SetFault(address,1,1,Result);
     end;
     $06: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      SetLength(values,1);
+      if Result=ioOk then begin
+        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+        SetLength(values,1);
 
-      values[0] := pkg.BufferToWrite[4]*256+pkg.BufferToWrite[5];
-
-      if foundPLC then
-        PModbusPLC[plc].Registers.SetValues(address,1,1,values);
-
-      Result := ioOk;
+        values[0] := pkg.BufferToWrite[4]*256+pkg.BufferToWrite[5];
+        if foundPLC then
+          PModbusPLC[plc].Registers.SetValues(address,1,1,values);
+      end else
+        if foundPLC then
+          PModbusPLC[plc].Registers.SetFault(address,1,1,Result)
     end;
     $07: begin
       if foundPLC then begin
-         PModbusPLC[plc].Status07Value :=Integer(pkg.BufferToRead[2]);
-         PModbusPLC[plc].Status07TimeStamp := Now;
-         PModbusPLC[plc].Status07LastError := ioOk;
+         if Result=ioOk then begin
+           PModbusPLC[plc].Status07Value :=Integer(pkg.BufferToRead[2]);
+           PModbusPLC[plc].Status07TimeStamp := Now;
+         end;
+         PModbusPLC[plc].Status07LastError := Result;
       end;
-      Result := ioOk;
     end;
-    $08:
-      Result := ioOk;
     $0F: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
+      if Result=ioOk then begin
+        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+        len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
 
-      SetLength(values,len);
+        SetLength(values,len);
 
-      i := 0;
-      c := 0;
-      c2:= 7;
-      while i<len do begin
-        if (c=8) then begin
-          c:=0;
-          inc(c2);
+        i := 0;
+        c := 0;
+        c2:= 7;
+        while i<len do begin
+          if (c=8) then begin
+            c:=0;
+            inc(c2);
+          end;
+          Values[i]:=IfThen(((Integer(pkg.BufferToWrite[c2]) and (1 shl c))=(1 shl c)),1,0);
+          inc(i);
+          inc(c);
         end;
-        Values[i]:=IfThen(((Integer(pkg.BufferToWrite[c2]) and (1 shl c))=(1 shl c)),1,0);
-        inc(i);
-        inc(c);
-      end;
-
-      if foundPLC then
-        PModbusPLC[plc].OutPuts.SetValues(address,len,1,values);
-      Result := ioOk;
+        if foundPLC then
+          PModbusPLC[plc].OutPuts.SetValues(address,len,1,values);
+      end else
+        if foundPLC then
+          PModbusPLC[plc].OutPuts.SetFault(address,len,1,Result);
     end;
     $10: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
+      if Result=ioOk then begin
+        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+        len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
 
-      SetLength(values,len);
+        SetLength(values,len);
 
-      i := 0;
-      while (i<len) do begin
-         values[i] := pkg.BufferToWrite[7+i*2]*256 + pkg.BufferToWrite[8+i*2];
-         inc(i);
-      end;
-
-      if foundPLC then
-        PModbusPLC[plc].Registers.SetValues(address,len,1,values);
-      Result := ioOk;
+        i := 0;
+        while (i<len) do begin
+           values[i] := pkg.BufferToWrite[7+i*2]*256 + pkg.BufferToWrite[8+i*2];
+           inc(i);
+        end;
+        if foundPLC then
+          PModbusPLC[plc].Registers.SetValues(address,len,1,values);
+      end else
+        if foundPLC then
+          PModbusPLC[plc].Registers.SetFault(address,len,1,Result);
     end;
     else begin
       case pkg.BufferToRead[1] of
@@ -378,31 +408,25 @@ begin
           Result := ioIllegalValue;
         $84,$85,$86,$87,$88:
           Result := ioPLCError;
-        else
-          Result := ioCommError;
       end;
+
+      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
+      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+
       case pkg.BufferToWrite[1] of
         $01: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
           if foundPLC then
             PModbusPLC[plc].OutPuts.SetFault(address,len,1,Result);
         end;
         $02: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
           if foundPLC then
             PModbusPLC[plc].Inputs.SetFault(address,len,1,Result);
         end;
         $03: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
           if foundPLC then
             PModbusPLC[plc].Registers.SetFault(address,len,1,Result);
         end;
         $04: begin
-          address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-          len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
           if foundPLC then
             PModbusPLC[plc].AnalogReg.SetFault(address,len,1,Result);
         end;

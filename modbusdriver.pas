@@ -1011,28 +1011,22 @@ begin
 
   case TagObj.ReadFunction of
     $01:
-      res := PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values);
+      res := PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $02:
-      res := PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values);
+      res := PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $03:
-      res := PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values);
+      res := PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $04:
-      res := PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values)
+      res := PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp)
   end;
 
-  if res<0 then begin
-    values.ValuesTimestamp := Now;
+  if values.LastQueryResult=ioOk then begin
+    values.ReadsOK := 1;
+    values.ReadFaults := 0;
+  end else begin
     values.ReadsOK := 0;
     values.ReadFaults := 1;
-    values.LastQueryResult := ioDriverError;
-    SetLength(values.Values,0);
-    exit;
   end;
-
-  values.ValuesTimestamp := Now;
-  values.ReadsOK := 1;
-  values.ReadFaults := 0;
-  values.LastQueryResult := ioOk;
 end;
 
 function  TModBusDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
