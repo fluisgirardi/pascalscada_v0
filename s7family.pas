@@ -94,6 +94,7 @@ type
     function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
+    function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
   published
     property ReadSomethingAlways;
   end;
@@ -112,6 +113,12 @@ begin
   inherited Create(AOwner);
   PDUIn:=0;
   PDUOut:=0;
+end;
+
+function  TSiemensProtocolFamily.SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
+begin
+  ProtocolTagType:=ptByte;
+  Result:=8;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
