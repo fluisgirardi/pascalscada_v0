@@ -77,6 +77,7 @@ begin
   Inherited Create(AOwner);
   PDUIn:=7;
   PDUOut:=7;
+  FConnectEvent:=TCrossEvent.Create(nil, true, false, Name+'_DID'+IntToStr(DriverID));
 end;
 
 function TISOTCPDriver.ConnectPLC(var CPU:TS7CPU):Boolean;

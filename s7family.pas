@@ -463,7 +463,6 @@ var
   plc, db:integer;
   tr:TTagRec;
   foundplc, founddb:Boolean;
-  area, datatype, datasize:Integer;
 begin
   tr:=GetTagInfo(TagObj);
   foundplc:=false;
@@ -492,25 +491,13 @@ begin
     end;
   end;
 
-  area     := tr.ReadFunction div 10;
-  datatype := tr.ReadFunction mod 10;
-
-  case datatype of
+  case tr.ReadFunction of
     1:
-      datasize:=1;
-    2,3:
-      datasize:=2;
-    4,5,6:
-      datasize:=4;
-  end;
-
-  case area of
-    1:
-      FCPUs[plc].Inputs.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].Inputs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     2:
-      FCPUs[plc].Outputs.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].Outputs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     3:
-      FCPUs[plc].Flags.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].Flags.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     4: begin
       if tr.File_DB<=0 then
         tr.File_DB:=1;
@@ -525,21 +512,22 @@ begin
       if not founddb then begin
         db:=Length(FCPUs[plc].DBs);
         SetLength(FCPUs[plc].DBs, db+1);
+        FCPUs[plc].DBs[db].DBNum:=tr.File_DB;
         FCPUs[plc].DBs[db].DBArea:=TPLCMemoryManager.Create;
       end;
 
-      FCPUs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     end;
     5,10:
-      FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     6,11:
-      FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     7:
-      FCPUs[plc].SMs.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].SMs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     8:
-      FCPUs[plc].AnInput.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].AnInput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     9:
-      FCPUs[plc].AnOutput.AddAddress(tr.Address,tr.Size,datasize,tr.ScanTime);
+      FCPUs[plc].AnOutput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
   end;
 
   Inherited DoAddTag(TagObj);
@@ -550,7 +538,6 @@ var
   plc, db:integer;
   tr:TTagRec;
   foundplc, founddb:Boolean;
-  area, datatype, datasize:Integer;
 begin
   tr:=GetTagInfo(TagObj);
   foundplc:=false;
@@ -563,26 +550,14 @@ begin
 
   if not foundplc then exit;
 
-  area     := tr.ReadFunction div 10;
-  datatype := tr.ReadFunction mod 10;
-
-  case datatype of
-    1:
-      datasize:=1;
-    2,3:
-      datasize:=2;
-    4,5,6:
-      datasize:=4;
-  end;
-
-  case area of
+  case tr.ReadFunction of
     1: begin
-      FCPUs[plc].Inputs.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Inputs.RemoveAddress(tr.Address,tr.Size,1);
     end;
     2:
-      FCPUs[plc].Outputs.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Outputs.RemoveAddress(tr.Address,tr.Size,1);
     3:
-      FCPUs[plc].Flags.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Flags.RemoveAddress(tr.Address,tr.Size,1);
     4: begin
       if tr.File_DB<=0 then
         tr.File_DB:=1;
@@ -596,18 +571,18 @@ begin
 
       if not founddb then exit;
 
-      FCPUs[plc].DBs[db].DBArea.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].DBs[db].DBArea.RemoveAddress(tr.Address,tr.Size,1);
     end;
     5,10:
-      FCPUs[plc].Counters.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Counters.RemoveAddress(tr.Address,tr.Size,1);
     6,11:
-      FCPUs[plc].Timers.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].Timers.RemoveAddress(tr.Address,tr.Size,1);
     7:
-      FCPUs[plc].SMs.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].SMs.RemoveAddress(tr.Address,tr.Size,1);
     8:
-      FCPUs[plc].AnInput.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].AnInput.RemoveAddress(tr.Address,tr.Size,1);
     9:
-      FCPUs[plc].AnOutput.RemoveAddress(tr.Address,tr.Size,datasize);
+      FCPUs[plc].AnOutput.RemoveAddress(tr.Address,tr.Size,1);
   end;
   Inherited DoDelTag(TagObj);
 end;
