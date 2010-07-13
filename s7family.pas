@@ -1,4 +1,4 @@
-{:
+﻿{:
   @abstract(Implmentação do protocolo ISOTCP.)
   Este driver é baseado no driver ISOTCP da biblioteca
   LibNODAVE de ...
@@ -52,6 +52,7 @@ type
     function  GetTagInfo(tagobj:TTag):TTagRec;
     function  GetByte(Ptr:PByte; idx:Integer):integer;
     procedure SetByte(Ptr:PByte; idx:Integer; value:Byte);
+    procedure SetBytes(Ptr:PByte; idx:Integer; values:BYTES);
   protected
     PDUIn,PDUOut:Integer;
     FCPUs:TS7CPUs;
@@ -213,7 +214,7 @@ begin
   if exchange(CPU,Msg,msgIn,false) then begin
     res := SetupPDU(msgIn, true, pdu);
     if res=0 then begin
-      CPU.MaxPDULen:=((pdu.param+6)^)*256+((pdu.param+7)^);
+      CPU.MaxPDULen:=GetByte(pdu.param,6)*256+GetByte(pdu.param,7);
       Result := true;
     end;
   end;
@@ -327,7 +328,7 @@ begin
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   end;
 
-  Move(param[0], (pdu.param + paramlen)^, Length(param));
+  SetBytes(pdu.param, paramlen, param);
   PPDUHeader(pdu.header)^.param_len:=SwapBytesInWord(paramlen + Length(param));
 end;
 
@@ -381,26 +382,26 @@ var
 begin
   if writepkg then begin
     SetupPDU(pkgout, true, PDU);
-    if (PDU.param+0)^<>S7FuncWrite then exit;
+    if GetByte(PDU.param,0)<>S7FuncWrite then exit;
   end else begin
     SetupPDU(pkgin, false, PDU);
-    if (PDU.param+0)^<>S7FuncRead then exit;
+    if GetByte(PDU.param,0)<>S7FuncRead then exit;
   end;
-  NumResults:=(PDU.param+1)^;
+  NumResults:=GetByte(PDU.param, 1);
   CurResult:=0;
   DataIdx:=0;
   DataLen:=PDU.data_len;
   while CurResult<NumResults do begin
-    ResultCode:=(PDU.data+DataIdx)^;
+    ResultCode:=GetByte(PDU.data, DataIdx);
     if (ResultCode=$FF) AND (DataLen>4) then begin
-      ResultLen:=(PDU.data+DataIdx+2)^*$100 + (PDU.data+DataIdx+3)^;
+      ResultLen:=GetByte(PDU.data, DataIdx+2)*$100 + GetByte(PDU.data, DataIdx+3);
       //o tamanho está em bits, precisa de ajuste.
-      if (PDU.data+DataIdx+1)^=4 then
+      if GetByte(PDU.data, DataIdx+1)=4 then
         ResultLen:=ResultLen div 8
       else begin
         //3 o restultado já está em bytes
         //e 9 o resultado está em bits, mas cada bit em um byte.
-        if not ((PDU.data+DataIdx+1)^ in [3,9]) then
+        if not (GetByte(PDU.data, DataIdx+1) in [3,9]) then
           exit;
       end;
     end else begin
@@ -413,7 +414,7 @@ begin
       SetLength(ResultValues,ResultLen);
       CurValue:=0;
       while (CurValue<ResultLen) AND (CurValue<Length(ResultValues)) do begin
-        ResultValues[CurValue]:=(PDU.data+DataIdx+4+CurValue)^;
+        ResultValues[CurValue]:=GetByte(PDU.data, DataIdx+4+CurValue);
         inc(CurValue);
       end;
 
@@ -1013,6 +1014,15 @@ begin
   inptr:=Ptr;
   inc(inptr, idx);
   inptr^ := value;
+end;
+
+procedure TSiemensProtocolFamily.SetBytes(Ptr:PByte; idx:Integer; values:BYTES);
+var
+  inptr:PByte;
+begin
+  inptr:=Ptr;
+  inc(inptr, idx);
+  Move(values[0],inptr^,Length(values));
 end;
 
 end.
