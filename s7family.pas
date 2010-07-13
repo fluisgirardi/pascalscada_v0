@@ -603,6 +603,7 @@ var
   initialized, onereqdone:Boolean;
   anow:TDateTime;
   ReqList:TS7ReqList;
+  MsgOutSize:Integer;
 
   procedure pkg_initialized;
   begin
@@ -625,6 +626,8 @@ var
       StartAddress := iStartAddress;
       Size := iSize;
     end;
+    inc(MsgOutSize, 12);
+    SetLength(msgout,MsgOutSize);
   end;
 begin
   retries := 0;
@@ -643,9 +646,13 @@ begin
   NeedSleep:=-1;
   onereqdone:=false;
 
+
   for plc:=0 to High(FCPUs) do begin
     if not FCPUs[plc].Connected then
-      connectPLC(FCPUs[plc]);
+      if not connectPLC(FCPUs[plc]) then exit;
+
+    MsgOutSize:=PDUOut+12;
+    SetLength(msgout,MsgOutSize);
 
     //DBs     //////////////////////////////////////////////////////////////////
     for db := 0 to high(FCPUs[plc].DBs) do
