@@ -198,6 +198,10 @@ type
   }
   TCommPortDriver = class(TComponent)
   private
+    FLogActions,
+    FReadedLogActions:Boolean;
+    FLogFile:String;
+    FLogFileStream:TFileStream;
     { @exclude }
     PLockedBy:Cardinal;
     {: @exclude }
@@ -265,6 +269,10 @@ type
     procedure CallCommPortClosedEvent;
     //: Dispara o evento de porta desconectada
     procedure CallCommPortDisconectedEvent;
+
+    procedure  SetLogActions(Log:Boolean);
+    procedure  SetLogFile(nFile:String);
+    procedure  LogAction(cmd:TIOCommand; Packet:TIOPacket);
   protected
     //: Envia uma mensagem de erro de comunicação da thread de comunicação para a aplicação
     procedure DoCommErrorFromThread(WriteCmd:Boolean; Error:TIOResult);
@@ -521,6 +529,10 @@ type
     property RXBytes:Int64 read FRXBytes;
     //: Total de bytes recebidos no último segundo.
     property RXBytesSecond:Int64 read FRXBytesSecond;
+    //: Logar ações de leitura e escrita do driver
+    property LogIOActions:Boolean read FLogActions write SetLogActions;
+    //: Arquivo onde serão armazenados os logs do driver.
+    property LogFile:String read FLogFile write SetLogFile;
   end;
 
 implementation
@@ -922,6 +934,7 @@ procedure TCommPortDriver.Loaded;
 begin
   inherited Loaded;
   SetActive(FReadActive);
+  SetLogActions(FReadedLogActions);
 end;
 
 procedure TCommPortDriver.TimerStatistics(Sender:TObject);
@@ -1204,6 +1217,8 @@ begin
        if cmd in [iocWrite, iocReadWrite, iocWriteRead] then
          Packet^.WriteIOResult := iorNotReady;
      end;
+     if FLogActions then
+       LogAction(cmd, Packet^);
   finally
      PIOCmdCS.Leave;
   end;
@@ -1271,6 +1286,107 @@ begin
     FLastOSErrorMessage:=SFaultGettingLastOSError;
 {$IFEND}
 {$ENDIF}
+end;
+
+procedure  TCommPortDriver.SetLogActions(Log:Boolean);
+var
+  canopen:Boolean;
+begin
+  PIOCmdCS.Enter;
+  try
+    canopen:=false;
+    if Log=FLogActions then exit;
+
+    if [csDesigning]*ComponentState<>[] then begin
+      canopen:=(Trim(FLogFile)<>'');
+      exit;
+    end;
+
+    if [csReading]*ComponentState<>[] then begin
+      FReadedLogActions:=Log;
+      exit;
+    end;
+
+    if log then begin
+      FLogFileStream:=TFileStream.Create(FLogFile,fmCreate);
+    end else
+      FLogFileStream.Destroy;
+    canopen:=true;
+  finally
+    FLogActions:=Log and canopen;
+    PIOCmdCS.Leave;
+  end;
+end;
+
+procedure  TCommPortDriver.SetLogFile(nFile:String);
+var
+  islogging:Boolean;
+begin
+  PIOCmdCS.Enter;
+  try
+    if nFile=FLogFile then exit;
+    islogging:=FLogActions;
+    LogIOActions:=false;
+    FLogFile:=nFile;
+    LogIOActions:=islogging;
+  finally
+    PIOCmdCS.Leave;
+  end;
+end;
+
+procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
+  function bufferToHex(Buf:BYTES):String;
+  var
+    c:integer;
+  begin
+    Result:='';
+    for c:=0 to High(Buf) do
+      Result:=Result+IntToHex(Buf[c],2)+' ';
+  end;
+
+  function TranslateCmdName(cmd:TIOCommand):String;
+  begin
+    case cmd of
+      iocNone:
+        Result := 'iocNone     ';
+      iocRead:
+        Result := 'iocRead     ';
+      iocReadWrite:
+        Result := 'iocReadWrite';
+      iocWrite:
+        Result := 'iocWrite    ';
+      iocWriteRead:
+        Result := 'iocWriteRead';
+    end;
+  end;
+
+  var
+    FS:TStringStream;
+begin
+  try
+    if not FLogActions then exit;
+    FS:=TStringStream.Create('');
+    if cmd=iocRead then begin
+      fs.WriteString(TranslateCmdName(cmd)+', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+    end;
+    if cmd=iocReadWrite then begin
+      fs.WriteString(TranslateCmdName(cmd)+', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+    end;
+
+    if cmd=iocWriteRead then begin
+      fs.WriteString(TranslateCmdName(cmd)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+    end;
+
+    if cmd=iocWrite then begin
+      fs.WriteString(TranslateCmdName(cmd)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+    end;
+    FS.Position:=0;
+    FLogFileStream.CopyFrom(FS,FS.Size);
+  finally
+    FS.Free;
+  end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

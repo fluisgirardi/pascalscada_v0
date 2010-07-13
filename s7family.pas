@@ -158,7 +158,7 @@ begin
   end;
   inc(CPU.PDUId);
   PPDUHeader(pduo.header)^.number:=SwapBytesInWord(CPU.PDUId);
-  Result := true;
+  Result := false;
 end;
 
 procedure TSiemensProtocolFamily.sendMessage(var msgOut:BYTES);
@@ -255,7 +255,7 @@ begin
   SetLength(param, 2);
 
   param[0] := S7FuncRead;
-  param[1] := 0;
+  param[1] := 1;
   InitiatePDUHeader(msgOut,1);
   AddParam(msgOut, param);
 
@@ -657,10 +657,13 @@ begin
 
     //DBs     //////////////////////////////////////////////////////////////////
     for db := 0 to high(FCPUs[plc].DBs) do
+
+      initialized:=false;
+
       for block := 0 to High(FCPUs[plc].DBs[db].DBArea.Blocks) do
         if FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
           pkg_initialized;
-          AddToReqList(plc, FCPUs[plc].DBs[db].DBNum, vtS7_DB, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
+          AddToReqList(plc, db, vtS7_DB, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
           AddToReadRequest(msgout, vtS7_DB, FCPUs[plc].DBs[db].DBNum, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
         end else
           if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].DBs[db].DBArea.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -802,8 +805,11 @@ begin
     if initialized then begin
       onereqdone:=true;
       NeedSleep:=0;
-      if exchange(FCPUs[plc], msgout, msgin, false) then
+      if exchange(FCPUs[plc], msgout, msgin, false) then begin
         UpdateMemoryManager(msgin, msgout, False, ReqList);
+        NeedSleep:=0;
+      end else
+        NeedSleep:=-1;
     end;
     initialized:=false;
     setlength(msgin,0);
@@ -821,8 +827,11 @@ begin
         AddToReqList(plc, 0, lastType, lastStartAddress, lastSize);
         AddToReadRequest(msgout, lastType, 0, lastStartAddress, lastSize);
       end;
-      if exchange(FCPUs[plc], msgout, msgin, false) then
+      if exchange(FCPUs[plc], msgout, msgin, false) then begin
         UpdateMemoryManager(msgin, msgout,False, ReqList);
+        NeedSleep:=0;
+      end else
+        NeedSleep:=-1;
     end;
   end;
 end;

@@ -155,6 +155,7 @@ end;
 function TISOTCPDriver.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;
 var
   x:TCrossEvent;
+  res:Integer;
 begin
   Result := Inherited exchange(CPU, msgOut, msgIn, IsWrite);
 
@@ -168,7 +169,8 @@ begin
 
   x:=TCrossEvent.Create(nil, true, false, 'exchange');
   try
-    if PCommPort.IOCommandASync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,IsWrite,x,nil)=0 then exit;
+    res:=PCommPort.IOCommandASync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,IsWrite,x,nil);
+    if res=0 then exit;
     if x.WaitFor($FFFFFFFF)<>wrSignaled then exit;
     Result := getResponse(msgIn) >= ISOTCPMinPacketLen;
   finally

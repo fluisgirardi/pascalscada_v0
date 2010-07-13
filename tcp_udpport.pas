@@ -290,8 +290,8 @@ begin
     tv.tv_sec:=(FTimeout div 1000);
     tv.tv_usec:=(FTimeout mod 1000) * 1000;
 
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, @tv,      sizeof(tv));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, @tv,      sizeof(tv));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, @tv,       sizeof(tv));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, @tv,       sizeof(tv));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, @flag,     sizeof(Integer));
@@ -432,12 +432,24 @@ end;
 
 procedure TTCP_UDPPort.ClearALLBuffers;
 var
-  dummy, initialState:Boolean;
+  lidos:Integer;
+  buffer:array[0..65535] of Byte;
 begin
-  initialState:=PActive;
-  PortStop(dummy);
-  if initialState then
-    PortStart(dummy);
+  try
+    lidos:=-1;
+    while lidos>0 do begin
+      {$IF defined(UNIX) and defined(FPC)}
+      lidos := fprecv(FSocket, @buffer[0], 65535, MSG_PEEK);
+      lidos := fprecv(FSocket, @buffer[0], lidos, 0);
+      lidos := fprecv(FSocket, @buffer[0], 65535, MSG_PEEK);
+      {$ELSE}
+      lidos := Recv(FSocket, buffer[0], 65535, MSG_PEEK);
+      lidos := Recv(FSocket, buffer[0], lidos, 0);
+      lidos := Recv(FSocket, buffer[0], 65535, MSG_PEEK);
+      {$IFEND}
+    end;
+  finally
+  end;
 end;
 
 {$IF defined(WIN32) or defined(WIN64)}
