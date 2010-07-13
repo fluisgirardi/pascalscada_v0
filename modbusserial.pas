@@ -285,7 +285,7 @@ begin
           inc(c);
         end;
         if foundPLC then
-          aux.SetValues(address,len,1,Values);
+          aux.SetValues(address,len,1,Values, Result);
       end else
         if foundPLC then
           aux.SetFault(address,len,1,Result);
@@ -312,7 +312,7 @@ begin
         end;
 
         if foundPLC then
-          aux.SetValues(address,len,1,Values);
+          aux.SetValues(address,len,1,Values, Result);
       end else
         if foundPLC then
           aux.SetFault(address,len,1,Result);
@@ -329,7 +329,7 @@ begin
            values[0] := 1;
 
         if foundPLC then
-          PModbusPLC[plc].OutPuts.SetValues(address,1,1,values);
+          PModbusPLC[plc].OutPuts.SetValues(address,1,1,values,Result);
       end else
         if foundPLC then
           PModbusPLC[plc].OutPuts.SetFault(address,1,1,Result);
@@ -341,7 +341,7 @@ begin
 
         values[0] := pkg.BufferToWrite[4]*256+pkg.BufferToWrite[5];
         if foundPLC then
-          PModbusPLC[plc].Registers.SetValues(address,1,1,values);
+          PModbusPLC[plc].Registers.SetValues(address,1,1,values,Result);
       end else
         if foundPLC then
           PModbusPLC[plc].Registers.SetFault(address,1,1,Result)
@@ -375,7 +375,7 @@ begin
           inc(c);
         end;
         if foundPLC then
-          PModbusPLC[plc].OutPuts.SetValues(address,len,1,values);
+          PModbusPLC[plc].OutPuts.SetValues(address,len,1,values,Result);
       end else
         if foundPLC then
           PModbusPLC[plc].OutPuts.SetFault(address,len,1,Result);
@@ -393,7 +393,7 @@ begin
            inc(i);
         end;
         if foundPLC then
-          PModbusPLC[plc].Registers.SetValues(address,len,1,values);
+          PModbusPLC[plc].Registers.SetValues(address,len,1,values,Result);
       end else
         if foundPLC then
           PModbusPLC[plc].Registers.SetFault(address,len,1,Result);

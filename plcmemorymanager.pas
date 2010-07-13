@@ -189,7 +189,7 @@ type
     @seealso(RemoveAddress)
     @seealso(GetValues)
     }
-    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble):Integer;
+    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer;
     {:
     @name lê valores intervalo de memórias, continuas ou não.
 
@@ -585,7 +585,7 @@ begin
   FCriticalSection.Leave;
 end;
 
-function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble):Integer;
+function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer;
 var
   blk, AdrEnd, LenUtil, Moved:Integer;
 begin
@@ -600,6 +600,7 @@ begin
       LenUtil := (AdrEnd - AdrStart) + 1;
       Move(Values[0], Blocks[blk].FValues[AdrStart - Blocks[blk].AddressStart], LenUtil*SizeOf(Double));
       Blocks[blk].Updated;
+      Blocks[blk].LastError:=LastResult;
       Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
     end else begin
       if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
@@ -610,12 +611,14 @@ begin
           Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], LenUtil*SizeOf(Double));
 
         Blocks[blk].Updated;
+        Blocks[blk].LastError:=LastResult;
         Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
       end else begin
         if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
           LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
           Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil*SizeOf(Double));
           Blocks[blk].Updated;
+          Blocks[blk].LastError:=LastResult;
           Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
         end;
       end;

@@ -420,24 +420,25 @@ begin
 
       with ReqList[CurResult] do begin
         case ReqType of
-          vtS7_DB:
-             FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues);
+          vtS7_DB: begin
+             FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+          end;
           vtS7_Inputs:
-             FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_Outputs:
-             FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_200_AnInput:
-             FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_200_AnOutput:
-             FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_Timer:
-             FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_Counter:
-             FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_Flags:
-             FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_200_SM:
-             FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues);
+             FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
         end;
       end;
     end else begin
