@@ -112,6 +112,7 @@ uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
 constructor TSiemensProtocolFamily.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  PReadSomethingAlways := true;
   PDUIn:=0;
   PDUOut:=0;
 end;
@@ -420,9 +421,8 @@ begin
 
       with ReqList[CurResult] do begin
         case ReqType of
-          vtS7_DB: begin
+          vtS7_DB:
              FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
-          end;
           vtS7_Inputs:
              FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_Outputs:
@@ -805,12 +805,11 @@ begin
         end;
     if initialized then begin
       onereqdone:=true;
-      NeedSleep:=0;
       if exchange(FCPUs[plc], msgout, msgin, false) then begin
         UpdateMemoryManager(msgin, msgout, False, ReqList);
-        NeedSleep:=0;
-      end else
         NeedSleep:=-1;
+      end else
+        NeedSleep:=1;
     end;
     initialized:=false;
     setlength(msgin,0);
@@ -830,9 +829,9 @@ begin
       end;
       if exchange(FCPUs[plc], msgout, msgin, false) then begin
         UpdateMemoryManager(msgin, msgout,False, ReqList);
-        NeedSleep:=0;
-      end else
         NeedSleep:=-1;
+      end else
+        NeedSleep:=1;
     end;
   end;
 end;
