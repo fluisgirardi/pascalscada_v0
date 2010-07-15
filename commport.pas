@@ -1,4 +1,4 @@
-{:
+﻿{:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   @abstract(Unit que implementa as bases de um driver de porta de comunicação)
 }
@@ -534,6 +534,11 @@ type
     //: Arquivo onde serão armazenados os logs do driver.
     property LogFile:String read FLogFile write SetLogFile;
   end;
+
+{$IFNDEF FPC}
+const
+  LineEnding = #13#10;
+{$ENDIF}
 
 implementation
 

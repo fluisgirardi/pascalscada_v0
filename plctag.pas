@@ -312,9 +312,12 @@ begin
   FTagType:=pttDefault;
   FSwapBytes:=false;
   FSwapWords:=false;
+  FCurrentWordSize:=1;
+  FProtocolWordSize:=1;
   CScanTimer := TTimer.Create(self);
   CScanTimer.OnTimer := DoScanTimerEvent;
   FTagManager := GetTagManager;
+  SetLength(FRawProtocolValues,1);
 end;
 
 destructor TPLCTag.Destroy;
@@ -565,9 +568,18 @@ begin
 end;
 
 procedure TPLCTag.Loaded;
+var
+  olddriver:TProtocolDriver;
 begin
   inherited Loaded;
-  GetTagSizeOnProtocol;
+  if PProtocolDriver=nil then begin
+    olddriver:=PProtocolDriver;
+    PProtocolDriver:=TProtocolDriver(1);
+    FCurrentWordSize:=FProtocolWordSize;
+    GetTagSizeOnProtocol;
+    PProtocolDriver:=olddriver;
+  end else
+    GetTagSizeOnProtocol;
 
   with FTagManager as TTagMananger do
     AddTag(Self);

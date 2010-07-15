@@ -86,6 +86,8 @@ contains
   plcstruct in 'plcstruct.pas',
   plcstructelement in 'plcstructelement.pas',
   s7types in 's7types.pas',
-  tagcollection in 'tagcollection.pas';
+  tagcollection in 'tagcollection.pas',
+  isotcpdriver in 'isotcpdriver.pas',
+  s7family in 's7family.pas';
 
 end.
