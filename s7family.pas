@@ -394,6 +394,7 @@ var
   DataIdx,
   ResultLen,
   ResultCode,
+  dummy1, dummy2,
   CurValue:Integer;
 
   ResultValues:TArrayOfDouble;
@@ -438,8 +439,13 @@ begin
 
       with ReqList[CurResult] do begin
         case ReqType of
-          vtS7_DB:
+          vtS7_DB: begin
+             dummy1:=PLC;
+             dummy2:=DB;
+             dummy1:=StartAddress;
+
              FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+          end;
           vtS7_Inputs:
              FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_Outputs:
@@ -635,13 +641,25 @@ var
   anow:TDateTime;
   ReqList:TS7ReqList;
   MsgOutSize:Integer;
+  RequestsPendding:Boolean;
+
+  OutgoingPDUSize, IncomingPDUSize:Integer;
 
   procedure pkg_initialized;
   begin
     if not initialized then begin
+      OutgoingPDUSize:=10+2; //10 do header + 2 do pedido de leitura;
+      IncomingPDUSize:=10+2+2; //10 do header + 2 do codigo de erro + 2 do pedido de leitura;
+      MsgOutSize:=PDUOut+12;
+      SetLength(msgout,MsgOutSize);
       PrepareReadRequest(msgout);
       initialized:=true;
     end;
+  end;
+
+  function AcceptThisRequest(CPU:TS7CPU; iSize:Integer):Boolean;
+  begin
+    Result:=((OutgoingPDUSize+12)<CPU.MaxPDULen) AND ((IncomingPDUSize+4+iSize)<CPU.MaxPDULen);
   end;
 
   procedure AddToReqList(iPLC, iDB, iReqType, iStartAddress, iSize:Integer);
@@ -658,8 +676,37 @@ var
       Size := iSize;
     end;
     inc(MsgOutSize, 12);
+    inc(IncomingPDUSize,4+iSize);
+    inc(OutgoingPDUSize,12);
+
     SetLength(msgout,MsgOutSize);
+    RequestsPendding:=true;
   end;
+
+  procedure Reset;
+  begin
+    initialized:=false;
+    OutgoingPDUSize:=0;
+    IncomingPDUSize:=0;
+    MsgOutSize:=0;
+    RequestsPendding:=false;
+    SetLength(ReqList,0);
+    SetLength(msgout,0);
+    SetLength(msgin,0);
+  end;
+
+  procedure ReadQueuedRequests(var CPU:TS7CPU);
+  begin
+    if exchange(CPU, msgout, msgin, false) then begin
+      UpdateMemoryManager(msgin, msgout, False, ReqList);
+      NeedSleep:=-1;
+    end else
+      NeedSleep:=1;
+    Reset;
+  end;
+
+
+
 begin
   retries := 0;
   while (not FAdapterInitialized) AND (retries<3) do begin
@@ -674,28 +721,28 @@ begin
 
   anow:=Now;
   TimeElapsed:=0;
-  NeedSleep:=-1;
   onereqdone:=false;
-
+  NeedSleep:=1;
 
   for plc:=0 to High(FCPUs) do begin
     if not FCPUs[plc].Connected then
       if not connectPLC(FCPUs[plc]) then exit;
 
-    MsgOutSize:=PDUOut+12;
-    SetLength(msgout,MsgOutSize);
+    Reset;
 
     //DBs     //////////////////////////////////////////////////////////////////
-    for db := 0 to high(FCPUs[plc].DBs) do
-
-      initialized:=false;
-
-      for block := 0 to High(FCPUs[plc].DBs[db].DBArea.Blocks) do
+    for db := 0 to high(FCPUs[plc].DBs) do begin
+      for block := 0 to High(FCPUs[plc].DBs[db].DBArea.Blocks) do begin
         if FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
+          if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].DBs[db].DBArea.Blocks[block].Size) then begin
+            onereqdone:=True;
+            ReadQueuedRequests(FCPUs[plc]);
+            Reset;
+          end;
           pkg_initialized;
           AddToReqList(plc, db, vtS7_DB, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
           AddToReadRequest(msgout, vtS7_DB, FCPUs[plc].DBs[db].DBNum, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
-        end else
+        end else begin
           if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].DBs[db].DBArea.Blocks[block].LastUpdate)>TimeElapsed) then begin
             TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].DBs[db].DBArea.Blocks[block].LastUpdate);
             lastPLC:=plc;
@@ -704,14 +751,22 @@ begin
             lastStartAddress:=FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart;
             lastSize:=FCPUs[plc].DBs[db].DBArea.Blocks[block].Size;
           end;
+        end;
+      end;
+    end;
 
     //INPUTS////////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].Inputs.Blocks) do
+    for block := 0 to High(FCPUs[plc].Inputs.Blocks) do begin
       if FCPUs[plc].Inputs.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].Inputs.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          initialized:=False;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].Inputs.Blocks[block].AddressStart, FCPUs[plc].Inputs.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Inputs, 0, FCPUs[plc].Inputs.Blocks[block].AddressStart, FCPUs[plc].Inputs.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Inputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Inputs.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -720,14 +775,21 @@ begin
           lastStartAddress:=FCPUs[plc].Inputs.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].Inputs.Blocks[block].Size;
         end;
+      end;
+    end;
 
     //OUTPUTS///////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].Outputs.Blocks) do
+    for block := 0 to High(FCPUs[plc].Outputs.Blocks) do begin
       if FCPUs[plc].Outputs.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].Outputs.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_Outputs, FCPUs[plc].Outputs.Blocks[block].AddressStart, FCPUs[plc].Outputs.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Outputs, 0, FCPUs[plc].Outputs.Blocks[block].AddressStart, FCPUs[plc].Outputs.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Outputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Outputs.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -736,14 +798,21 @@ begin
           lastStartAddress:=FCPUs[plc].Outputs.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].Outputs.Blocks[block].Size;
         end;
+      end;
+    end;
 
     //AnInput///////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].AnInput.Blocks) do
+    for block := 0 to High(FCPUs[plc].AnInput.Blocks) do begin
       if FCPUs[plc].AnInput.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].AnInput.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_200_AnInput, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_200_AnInput, 0, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnInput.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].AnInput.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -752,14 +821,21 @@ begin
           lastStartAddress:=FCPUs[plc].AnInput.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].AnInput.Blocks[block].Size;
         end;
+      end;
+    end;
 
     //AnOutput//////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].AnOutput.Blocks) do
+    for block := 0 to High(FCPUs[plc].AnOutput.Blocks) do begin
       if FCPUs[plc].AnOutput.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].AnOutput.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_200_AnOutput, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_200_AnOutput, 0, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnOutput.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].AnOutput.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -768,14 +844,21 @@ begin
           lastStartAddress:=FCPUs[plc].AnOutput.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].AnOutput.Blocks[block].Size;
         end;
+      end;
+    end;
 
     //Timers///////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].Timers.Blocks) do
+    for block := 0 to High(FCPUs[plc].Timers.Blocks) do begin
       if FCPUs[plc].Timers.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].Timers.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_Timer, FCPUs[plc].Timers.Blocks[block].AddressStart, FCPUs[plc].Timers.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Timer, 0, FCPUs[plc].Timers.Blocks[block].AddressStart, FCPUs[plc].Timers.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Timers.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Timers.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -784,14 +867,21 @@ begin
           lastStartAddress:=FCPUs[plc].Timers.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].Timers.Blocks[block].Size;
         end;
+      end;
+    end;
 
     //Counters//////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].Counters.Blocks) do
+    for block := 0 to High(FCPUs[plc].Counters.Blocks) do begin
       if FCPUs[plc].Counters.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].Counters.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_Counter, FCPUs[plc].Counters.Blocks[block].AddressStart, FCPUs[plc].Counters.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Counter, 0, FCPUs[plc].Counters.Blocks[block].AddressStart, FCPUs[plc].Counters.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Counters.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Counters.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -800,14 +890,21 @@ begin
           lastStartAddress:=FCPUs[plc].Counters.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].Counters.Blocks[block].Size;
         end;
+      end;
+    end;
 
     //Flags///////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].Flags.Blocks) do
+    for block := 0 to High(FCPUs[plc].Flags.Blocks) do begin
       if FCPUs[plc].Flags.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].Flags.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Flags, 0, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Flags.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Flags.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -816,14 +913,21 @@ begin
           lastStartAddress:=FCPUs[plc].Flags.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].Flags.Blocks[block].Size;
         end;
+      end;
+    end;
 
     //SMs//////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].SMs.Blocks) do
+    for block := 0 to High(FCPUs[plc].SMs.Blocks) do begin
       if FCPUs[plc].SMs.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].SMs.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
         pkg_initialized;
         AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_200_SM, 0, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
-      end else
+      end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].SMs.Blocks[block].LastUpdate)>TimeElapsed) then begin
           TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].SMs.Blocks[block].LastUpdate);
           lastPLC:=plc;
@@ -832,37 +936,32 @@ begin
           lastStartAddress:=FCPUs[plc].SMs.Blocks[block].AddressStart;
           lastSize:=FCPUs[plc].SMs.Blocks[block].Size;
         end;
-    if initialized then begin
-      onereqdone:=true;
-      if exchange(FCPUs[plc], msgout, msgin, false) then begin
-        UpdateMemoryManager(msgin, msgout, False, ReqList);
-        NeedSleep:=-1;
-      end else
-        NeedSleep:=1;
+      end;
     end;
-    initialized:=false;
-    setlength(msgin,0);
-    setlength(msgout,0);
+
+    if RequestsPendding then begin
+      onereqdone:=true;
+      ReadQueuedRequests(FCPUs[plc]);
+    end;
   end;
 
-  if not onereqdone then begin
+  if (not onereqdone) then begin
     if PReadSomethingAlways and (TimeElapsed>0) then begin
-      NeedSleep:=0;
+      Reset;
       pkg_initialized;
       if lastDB<>-1 then begin
-        AddToReqList(plc, FCPUs[lastplc].DBs[lastDB].DBNum, lastType, lastStartAddress, lastSize);
+        AddToReqList(lastPLC, FCPUs[lastplc].DBs[lastDB].DBNum, lastType, lastStartAddress, lastSize);
         AddToReadRequest(msgout, lastType, FCPUs[lastplc].DBs[lastDB].DBNum, lastStartAddress, lastSize)
       end else begin
-        AddToReqList(plc, 0, lastType, lastStartAddress, lastSize);
+        AddToReqList(lastPLC, 0, lastType, lastStartAddress, lastSize);
         AddToReadRequest(msgout, lastType, 0, lastStartAddress, lastSize);
       end;
-      if exchange(FCPUs[plc], msgout, msgin, false) then begin
-        UpdateMemoryManager(msgin, msgout,False, ReqList);
-        NeedSleep:=-1;
-      end else
-        NeedSleep:=1;
+      ReadQueuedRequests(FCPUs[lastplc]);
     end;
   end;
+
+  setlength(msgin,0);
+  setlength(msgout,0);
 end;
 
 procedure TSiemensProtocolFamily.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
