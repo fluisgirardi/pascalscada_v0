@@ -64,6 +64,7 @@ type
     Slot:Integer;
     PDUId:Word;
     MaxPDULen:Word;
+    MaxBlockSize:Integer;
     Connected:Boolean;
     Inputs:TPLCMemoryManager;
     Outputs:TPLCMemoryManager;

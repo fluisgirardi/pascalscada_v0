@@ -196,6 +196,7 @@ var
   param, Msg, msgIn:BYTES;
   pdu:TPDU;
   res:Integer;
+  db:Integer;
 begin
   Result := false;
   SetLength(param,8);
@@ -216,6 +217,20 @@ begin
     res := SetupPDU(msgIn, true, pdu);
     if res=0 then begin
       CPU.MaxPDULen:=GetByte(pdu.param,6)*256+GetByte(pdu.param,7);
+      CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes do header + 2 bytes do codigo de erro + 2 bytes da solicitação da leitura + 4 das informações do pedido.
+      //ajusta o tamanho máximo dos blocos;
+      with CPU do begin
+        Inputs.MaxBlockItems:=MaxBlockSize;
+        Outputs.MaxBlockItems:=MaxBlockSize;
+        AnInput.MaxBlockItems:=MaxBlockSize;
+        AnOutput.MaxBlockItems:=MaxBlockSize;
+        Timers.MaxBlockItems:=MaxBlockSize;
+        Counters.MaxBlockItems:=MaxBlockSize;
+        Flags.MaxBlockItems:=MaxBlockSize;
+        SMs.MaxBlockItems:=MaxBlockSize;
+        for db:=0 to High(DBs) do
+          DBs[db].DBArea.MaxBlockItems:=MaxBlockSize;
+      end;
       Result := true;
     end;
   end;
@@ -242,11 +257,13 @@ begin
   PDU.param:=@msg[position+PDU.header_len];
   PDU.param_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.param_len);
 
-  PDU.data:=@msg[position + PDU.header_len + PDU.param_len];
-  PDU.data_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.data_len);
-
-  PDU.udata:=nil;
-  PDU.user_data_len:=0
+  if High(msg)>=(position + PDU.header_len + PDU.param_len) then begin
+    PDU.data:=@msg[position + PDU.header_len + PDU.param_len];
+    PDU.data_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.data_len);
+  end else begin
+    PDU.data:=nil;
+    PDU.data_len:=0;
+  end;
 end;
 
 procedure TSiemensProtocolFamily.PrepareReadRequest(var msgOut:BYTES);
@@ -481,6 +498,9 @@ begin
     with FCPUs[plc] do begin
       Slot:=Tr.Slot;
       Rack:=Tr.Hack;
+      MaxBlockSize:=-1;
+      MaxPDULen:=0;
+      Connected:=false;
       Station :=Tr.Station;
       Inputs  :=TPLCMemoryManager.Create;
       Outputs :=TPLCMemoryManager.Create;
@@ -490,6 +510,14 @@ begin
       Counters:=TPLCMemoryManager.Create;
       Flags   :=TPLCMemoryManager.Create;
       SMs     :=TPLCMemoryManager.Create;
+      Inputs.MaxBlockItems:=MaxBlockSize;
+      Outputs.MaxBlockItems:=MaxBlockSize;
+      AnInput.MaxBlockItems:=MaxBlockSize;
+      AnOutput.MaxBlockItems:=MaxBlockSize;
+      Timers.MaxBlockItems:=MaxBlockSize;
+      Counters.MaxBlockItems:=MaxBlockSize;
+      Flags.MaxBlockItems:=MaxBlockSize;
+      SMs.MaxBlockItems:=MaxBlockSize;
     end;
   end;
 
@@ -516,6 +544,7 @@ begin
         SetLength(FCPUs[plc].DBs, db+1);
         FCPUs[plc].DBs[db].DBNum:=tr.File_DB;
         FCPUs[plc].DBs[db].DBArea:=TPLCMemoryManager.Create;
+        FCPUs[plc].DBs[db].DBArea.MaxBlockItems:=FCPUs[plc].MaxBlockSize;
       end;
 
       FCPUs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);

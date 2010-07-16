@@ -224,10 +224,10 @@ begin
     //e não ter o comprimento minimo do ISOTCP sai.
     if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>(len-4)) or ((IOResult2.Received+4)<ISOTCPMinPacketLen) then exit;
 
-    SetLength(msgIn,IOResult1.Received + IOResult2.Received);
+    SetLength(msgIn,IOResult1.ToRead + IOResult2.ToRead);
 
-    Move(IOResult1.BufferToRead[0], msgIn[0], Length(IOResult1.BufferToRead));
-    Move(IOResult2.BufferToRead[0], msgIn[Length(IOResult1.BufferToRead)],Length(IOResult2.BufferToRead));
+    Move(IOResult1.BufferToRead[0], msgIn[0], IOResult1.ToRead);
+    Move(IOResult2.BufferToRead[0], msgIn[IOResult1.ToRead],Length(IOResult2.BufferToRead));
 
     Result := IOResult1.Received + IOResult2.Received;
   finally
