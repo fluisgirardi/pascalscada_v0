@@ -63,7 +63,7 @@ type
     function  disconnectPLC(var CPU:TS7CPU):Boolean; virtual;
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; virtual;
     procedure sendMessage(var msgOut:BYTES); virtual;
-    function  getResponse(var msgIn:BYTES):Integer; virtual;
+    function  getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult; virtual;
     procedure listReachablePartners; virtual;
   protected
     function  SwapBytesInWord(W:Word):Word;
@@ -82,7 +82,7 @@ type
     procedure CopyRAMToROM(CPU:TS7CPU);
     procedure CompressMemory(CPU:TS7CPU);
   protected
-    procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
+{ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
 {ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
@@ -103,7 +103,7 @@ type
 implementation
 
 uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
-     PLCMemoryManager, hsutils, dateutils;
+     PLCMemoryManager, hsutils, dateutils, LCLProc;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -167,7 +167,7 @@ begin
 
 end;
 
-function  TSiemensProtocolFamily.getResponse(var msgIn:BYTES):Integer;
+function  TSiemensProtocolFamily.getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult;
 begin
 
 end;
@@ -273,7 +273,7 @@ begin
   SetLength(param, 2);
 
   param[0] := S7FuncRead;
-  param[1] := 1;
+  param[1] := 0;
   InitiatePDUHeader(msgOut,1);
   AddParam(msgOut, param);
 
@@ -284,6 +284,8 @@ procedure TSiemensProtocolFamily.AddToReadRequest(var msgOut:BYTES; iArea, iDBnu
 var
   param:BYTES;
   p:PS7Req;
+  PDU:TPDU;
+  NumReq:Byte;
 begin
   SetLength(param, 12);
   param[00] := $12;
@@ -301,11 +303,7 @@ begin
 
   p := PS7Req(@param[00]);
 
-  with TS7Req(p^) do begin
-    header[0]:=$12;
-    header[1]:=$0A;
-    header[2]:=$10;
-
+  with p^ do begin
     case iArea of
       vtS7_200_AnInput, vtS7_200_AnOutput:
         WordLen:=4;
@@ -325,6 +323,11 @@ begin
   end;
 
   AddParam(msgOut, param);
+
+  SetupPDU(msgOut, true, PDU);
+  NumReq:=GetByte(PDU.param,1);
+  NumReq:=NumReq+1;
+  SetByte(PDU.param,1,NumReq);
 
   SetLength(param, 0);
 end;
@@ -396,7 +399,6 @@ var
   ResultCode,
   dummy1, dummy2,
   CurValue:Integer;
-
   ResultValues:TArrayOfDouble;
 begin
   if writepkg then begin
@@ -439,13 +441,8 @@ begin
 
       with ReqList[CurResult] do begin
         case ReqType of
-          vtS7_DB: begin
-             dummy1:=PLC;
-             dummy2:=DB;
-             dummy1:=StartAddress;
-
+          vtS7_DB:
              FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
-          end;
           vtS7_Inputs:
              FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
           vtS7_Outputs:
@@ -659,7 +656,10 @@ var
 
   function AcceptThisRequest(CPU:TS7CPU; iSize:Integer):Boolean;
   begin
-    Result:=((OutgoingPDUSize+12)<CPU.MaxPDULen) AND ((IncomingPDUSize+4+iSize)<CPU.MaxPDULen);
+    if ((OutgoingPDUSize+12)<CPU.MaxPDULen) AND ((IncomingPDUSize+4+iSize)<CPU.MaxPDULen) then
+      Result:=true
+    else
+      Result:=false;
   end;
 
   procedure AddToReqList(iPLC, iDB, iReqType, iStartAddress, iSize:Integer);
@@ -704,9 +704,6 @@ var
       NeedSleep:=1;
     Reset;
   end;
-
-
-
 begin
   retries := 0;
   while (not FAdapterInitialized) AND (retries<3) do begin
@@ -723,6 +720,7 @@ begin
   TimeElapsed:=0;
   onereqdone:=false;
   NeedSleep:=1;
+  lastDB:=-1;
 
   for plc:=0 to High(FCPUs) do begin
     if not FCPUs[plc].Connected then
@@ -733,7 +731,7 @@ begin
     //DBs     //////////////////////////////////////////////////////////////////
     for db := 0 to high(FCPUs[plc].DBs) do begin
       for block := 0 to High(FCPUs[plc].DBs[db].DBArea.Blocks) do begin
-        if FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
+        if false and FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
           if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].DBs[db].DBArea.Blocks[block].Size) then begin
             onereqdone:=True;
             ReadQueuedRequests(FCPUs[plc]);
@@ -749,7 +747,7 @@ begin
             lastDB:=db;
             lastType:=vtS7_DB;
             lastStartAddress:=FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart;
-            lastSize:=FCPUs[plc].DBs[db].DBArea.Blocks[block].Size;
+            lastSize:=        FCPUs[plc].DBs[db].DBArea.Blocks[block].Size;
           end;
         end;
       end;
@@ -950,7 +948,7 @@ begin
       Reset;
       pkg_initialized;
       if lastDB<>-1 then begin
-        AddToReqList(lastPLC, FCPUs[lastplc].DBs[lastDB].DBNum, lastType, lastStartAddress, lastSize);
+        AddToReqList(lastPLC, lastDB, lastType, lastStartAddress, lastSize);
         AddToReadRequest(msgout, lastType, FCPUs[lastplc].DBs[lastDB].DBNum, lastStartAddress, lastSize)
       end else begin
         AddToReqList(lastPLC, 0, lastType, lastStartAddress, lastSize);
@@ -960,8 +958,9 @@ begin
     end;
   end;
 
-  setlength(msgin,0);
-  setlength(msgout,0);
+  SetLength(msgin,0);
+  SetLength(msgout,0);
+  SetLength(ReqList,0);
 end;
 
 procedure TSiemensProtocolFamily.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);

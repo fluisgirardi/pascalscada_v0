@@ -56,7 +56,7 @@ type
   protected
     function  connectPLC(var CPU:TS7CPU):Boolean; override;
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; override;
-    function  getResponse(var msgIn:BYTES):Integer; override;
+    function  getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult; override;
     procedure PrepareToSend(var msg: BYTES); override;
   public
     constructor Create(AOwner:TComponent); override;
@@ -156,6 +156,7 @@ function TISOTCPDriver.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTE
 var
   x:TCrossEvent;
   res:Integer;
+  retries, BytesRead:Integer;
 begin
   Result := Inherited exchange(CPU, msgOut, msgIn, IsWrite);
 
@@ -172,13 +173,20 @@ begin
     res:=PCommPort.IOCommandASync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,IsWrite,x,nil);
     if res=0 then exit;
     if x.WaitFor($FFFFFFFF)<>wrSignaled then exit;
-    Result := getResponse(msgIn) >= ISOTCPMinPacketLen;
+    retries:=0;
+
+    while (getResponse(msgIn, BytesRead)<>iorOk) and (retries<3) do begin
+      Sleep(5);
+      Inc(retries);
+    end;
+
+    Result:=BytesRead>ISOTCPMinPacketLen;
   finally
     x.Destroy;
   end;
 end;
 
-function  TISOTCPDriver.getResponse(var msgIn:BYTES):Integer;
+function  TISOTCPDriver.getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult;
 var
   res, len:Integer;
   FResponseEvent:TCrossEvent;
@@ -186,14 +194,23 @@ var
 begin
   if PCommPort=nil then exit;
 
-  Result:=0;
+  Result:=iorNotReady;
 
   FResponseEvent:=TCrossEvent.Create(nil, true, false, 'response_event');
   try
     FResponseEvent.ResetEvent;
     res := PCommPort.IOCommandASync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,FResponseEvent,@IOResult1);
-    if (res=0) or (FResponseEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
-    if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>4) then exit;
+    if (res=0) or (FResponseEvent.WaitFor($FFFFFFFF)<>wrSignaled) then begin
+      BytesRead:=0;
+      Result:=iorNotReady;
+      exit;
+    end;
+
+    if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>4) then begin
+      BytesRead:=IOResult1.Received;
+      Result:=IOResult1.ReadIOResult;
+      exit;
+    end;
 
     len := IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
     //As vezes o CLP manda um pacote de
@@ -203,33 +220,59 @@ begin
       //remove os outros 3 bytes que sobraram no buffer de leitura.
       FResponseEvent.ResetEvent;
       res := PCommPort.IOCommandASync(iocRead,nil,3,0,DriverID,0,CommPortCallBack,false,FResponseEvent,@IOResult2);
-      if (res=0) or (FResponseEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
-      if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>3) then exit;
+      if (res=0) or (FResponseEvent.WaitFor($FFFFFFFF)<>wrSignaled) then  begin
+        BytesRead:=0;
+        Result:=iorNotReady;
+        exit;
+      end;
+
+      if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>3) then begin
+        BytesRead:=IOResult2.Received;
+        Result:= IOResult2.ReadIOResult;
+        exit;
+      end;
 
       //le novamente...
       FResponseEvent.ResetEvent;
       res := PCommPort.IOCommandASync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,FResponseEvent,@IOResult1);
-      if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
-      if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>4) then exit;
+      if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then begin
+        BytesRead:=0;
+        Result:=iorNotReady;
+        exit;
+      end;
 
+      if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>4) then begin
+        BytesRead:=IOResult1.Received;
+        Result:= IOResult1.ReadIOResult;
+        exit;
+      end;
       //calcula o tamanho do pacote recebido.
       len:= IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
     end;
 
     FConnectEvent.ResetEvent;
     res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult2);
-    if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
+    if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then begin
+      BytesRead:=0;
+      Result:=iorNotReady;
+      exit;
+    end;
     //se resultado nao der ok,
     //ou não fechar com o numero de bytes a ler
     //e não ter o comprimento minimo do ISOTCP sai.
-    if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>(len-4)) or ((IOResult2.Received+4)<ISOTCPMinPacketLen) then exit;
+    if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>(len-4)) then begin
+      BytesRead:=IOResult2.Received;
+      Result:= IOResult2.ReadIOResult;
+      exit;
+    end;
 
     SetLength(msgIn,IOResult1.ToRead + IOResult2.ToRead);
 
     Move(IOResult1.BufferToRead[0], msgIn[0], IOResult1.ToRead);
     Move(IOResult2.BufferToRead[0], msgIn[IOResult1.ToRead],Length(IOResult2.BufferToRead));
 
-    Result := IOResult1.Received + IOResult2.Received;
+    BytesRead := IOResult1.Received + IOResult2.Received;
+    Result:=iorOK;
   finally
     SetLength(IOResult1.BufferToRead,0);
     SetLength(IOResult1.BufferToWrite,0);
