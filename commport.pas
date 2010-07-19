@@ -530,7 +530,7 @@ type
     //: Total de bytes recebidos no último segundo.
     property RXBytesSecond:Int64 read FRXBytesSecond;
     //: Logar ações de leitura e escrita do driver
-    property LogIOActions:Boolean read FLogActions write SetLogActions;
+    property LogIOActions:Boolean read FLogActions write SetLogActions default false;
     //: Arquivo onde serão armazenados os logs do driver.
     property LogFile:String read FLogFile write SetLogFile;
   end;
