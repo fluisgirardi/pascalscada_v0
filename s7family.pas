@@ -103,7 +103,7 @@ type
 implementation
 
 uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
-     PLCMemoryManager, hsutils, dateutils, LCLProc;
+     PLCMemoryManager, hsutils, dateutils;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -736,7 +736,7 @@ begin
     //DBs     //////////////////////////////////////////////////////////////////
     for db := 0 to high(FCPUs[plc].DBs) do begin
       for block := 0 to High(FCPUs[plc].DBs[db].DBArea.Blocks) do begin
-        if false and FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
+        if FCPUs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
           if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].DBs[db].DBArea.Blocks[block].Size) then begin
             onereqdone:=True;
             ReadQueuedRequests(FCPUs[plc]);
@@ -905,7 +905,7 @@ begin
           Reset;
         end;
         pkg_initialized;
-        AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
+        AddToReqList(plc, 0, vtS7_Flags, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_Flags, 0, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Flags.Blocks[block].LastUpdate)>TimeElapsed) then begin
@@ -928,7 +928,7 @@ begin
           Reset;
         end;
         pkg_initialized;
-        AddToReqList(plc, 0, vtS7_Inputs, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
+        AddToReqList(plc, 0, vtS7_200_SM, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
         AddToReadRequest(msgout, vtS7_200_SM, 0, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].SMs.Blocks[block].LastUpdate)>TimeElapsed) then begin
