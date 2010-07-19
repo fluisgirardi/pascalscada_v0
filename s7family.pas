@@ -157,7 +157,12 @@ begin
     Result:=False;
     exit;
   end;
-  inc(CPU.PDUId);
+
+  if CPU.PDUId=$FFFF then
+    CPU.PDUId:=0
+  else
+    inc(CPU.PDUId);
+
   PPDUHeader(pduo.header)^.number:=SwapBytesInWord(CPU.PDUId);
   Result := false;
 end;
