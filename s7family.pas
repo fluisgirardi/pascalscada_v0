@@ -75,12 +75,15 @@ type
     function  NegotiatePDUSize(var CPU:TS7CPU):Boolean; virtual;
     function  SetupPDU(var msg:BYTES; MsgTypeOut:Boolean; out PDU:TPDU):Integer; virtual;
     procedure PrepareReadRequest(var msgOut:BYTES); virtual;
+    procedure PrepareWriteRequest(var msgOut:BYTES); virtual;
+    procedure PrepareReadOrWriteRequest(const WriteRequest:Boolean; var msgOut:BYTES); virtual;
     procedure AddToReadRequest(var msgOut:BYTES; iArea, iDBnum, iStart, iByteCount:Integer); virtual;
   protected
     procedure RunPLC(CPU:TS7CPU);
     procedure StopPLC(CPU:TS7CPU);
     procedure CopyRAMToROM(CPU:TS7CPU);
     procedure CompressMemory(CPU:TS7CPU);
+    function  S7ErrorCodeToProtocolErrorCode(code:Word):TProtocolIOResult;
   protected
 {ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
 {ok}procedure DoAddTag(TagObj:TTag); override;
@@ -272,12 +275,22 @@ begin
 end;
 
 procedure TSiemensProtocolFamily.PrepareReadRequest(var msgOut:BYTES);
+begin
+  PrepareReadOrWriteRequest(false, msgOut);
+end;
+
+procedure TSiemensProtocolFamily.PrepareReadRequest(var msgOut:BYTES);
+begin
+  PrepareReadOrWriteRequest(True, msgOut);
+end;
+
+procedure TSiemensProtocolFamily.PrepareReadOrWriteRequest(const WriteRequest:Boolean; var msgOut:BYTES);
 var
   param:BYTES;
 begin
   SetLength(param, 2);
 
-  param[0] := S7FuncRead;
+  param[0] :=  ifthen(WriteRequest, S7FuncWrite, S7FuncRead);
   param[1] := 0;
   InitiatePDUHeader(msgOut,1);
   AddParam(msgOut, param);
@@ -404,6 +417,7 @@ var
   ResultCode,
   dummy1, dummy2,
   CurValue:Integer;
+  ProtocolErrorCode:TProtocolIOResult;
   ResultValues:TArrayOfDouble;
 begin
   if writepkg then begin
@@ -419,6 +433,7 @@ begin
   DataLen:=PDU.data_len;
   while CurResult<NumResults do begin
     ResultCode:=GetByte(PDU.data, DataIdx);
+    ProtocolErrorCode:=S7ErrorCodeToProtocolErrorCode(ResultCode);
     if (ResultCode=$FF) AND (DataLen>4) then begin
       ResultLen:=GetByte(PDU.data, DataIdx+2)*$100 + GetByte(PDU.data, DataIdx+3);
       //o tamanho está em bits, precisa de ajuste.
@@ -431,6 +446,8 @@ begin
           exit;
       end;
     end else begin
+      if ResultCode=$FF then
+        ProtocolErrorCode:=ioEmptyPacket;
       ResultLen:=0;
     end;
 
@@ -447,30 +464,52 @@ begin
       with ReqList[CurResult] do begin
         case ReqType of
           vtS7_DB:
-             FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_Inputs:
-             FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_Outputs:
-             FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_200_AnInput:
-             FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_200_AnOutput:
-             FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_Timer:
-             FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_Counter:
-             FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_Flags:
-             FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           vtS7_200_SM:
-             FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ioOk);
+             FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
         end;
       end;
     end else begin
-      //setar a falha
+      //seta a falha...
+      with ReqList[CurResult] do begin
+        case ReqType of
+          vtS7_DB:
+             FCPUs[PLC].DBs[DB].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_Inputs:
+             FCPUs[PLC].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_Outputs:
+             FCPUs[PLC].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_200_AnInput:
+             FCPUs[PLC].AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_200_AnOutput:
+             FCPUs[PLC].AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_Timer:
+             FCPUs[PLC].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_Counter:
+             FCPUs[PLC].Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_Flags:
+             FCPUs[PLC].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          vtS7_200_SM:
+             FCPUs[PLC].SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+        end;
+      end;
     end;
 
-    DataIdx:=ResultLen+4;
+    DataIdx:=DataIdx+ResultLen+4;
     dec(DataLen,ResultLen);
 
     //pelo que entendi, um resultado nunca vem com tamanho impar
@@ -1023,6 +1062,8 @@ begin
 end;
 
 function  TSiemensProtocolFamily.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+var
+
 begin
 
 end;
@@ -1079,6 +1120,56 @@ end;
 procedure TSiemensProtocolFamily.CompressMemory(CPU:TS7CPU);
 begin
 
+end;
+
+function  TSiemensProtocolFamily.S7ErrorCodeToProtocolErrorCode(code:Word):TProtocolIOResult;
+begin
+  case code of
+    $FF: Result:=ioOk;
+    $06: Result:=ioIllegalRequest;
+    $0A ,$03: Result:=ioObjectNotExists;
+    $05: Result:=ioIllegalMemoryAddress;
+
+    //$8000: return "function already occupied.";
+    //$8001: return "not allowed in current operating status.";
+    //$8101: return "hardware fault.";
+    //$8103: return "object access not allowed.";
+    //$8104: return "context is not supported. Step7 says:Function not implemented or error in telgram.";
+    //$8105: return "invalid address.";
+    //$8106: return "data type not supported.";
+    //$8107: return "data type not consistent.";
+    //$810A: return "object does not exist.";
+    //$8301: return "insufficient CPU memory ?";
+    //$8402: return "CPU already in RUN or already in STOP ?";
+    //$8404: return "severe error ?";
+    //$8500: return "incorrect PDU size.";
+    //$8702: return "address invalid."; ;
+    //$d002: return "Step7:variant of command is illegal.";
+    //$d004: return "Step7:status for this command is illegal.";
+    //$d0A1: return "Step7:function is not allowed in the current protection level.";
+    //$d201: return "block name syntax error.";
+    //$d202: return "syntax error function parameter.";
+    //$d203: return "syntax error block type.";
+    //$d204: return "no linked block in storage medium.";
+    //$d205: return "object already exists.";
+    //$d206: return "object already exists.";
+    //$d207: return "block exists in EPROM.";
+    //$d209: return "block does not exist/could not be found.";
+    //$d20e: return "no block present.";
+    //$d210: return "block number too big.";
+    //$d240: return "unfinished block transfer in progress?";  // my guess
+    //$d240: return "Coordination rules were violated.";
+    //
+    //$d241: return "Operation not permitted in current protection level.";
+    //$d242: return "protection violation while processing F-blocks. F-blocks can only be processed after password input.";
+    //$d401: return "invalid SZL ID.";
+    //$d402: return "invalid SZL index.";
+    //$d406: return "diagnosis: info not available.";
+    //$d409: return "diagnosis: DP error.";
+    //$dc01: return "invalid BCD code or Invalid time format?";
+    else
+      Result:=ioUnknownError;
+  end;
 end;
 
 function  TSiemensProtocolFamily.GetTagInfo(tagobj:TTag):TTagRec;

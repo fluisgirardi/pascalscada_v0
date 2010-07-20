@@ -1,19 +1,19 @@
 object Form1: TForm1
-  Left = 232
-  Height = 334
-  Top = 118
-  Width = 551
+  Left = 238
+  Height = 337
+  Top = 123
+  Width = 548
   ActiveControl = HMIEdit1
   Caption = 'Form1'
-  ClientHeight = 334
-  ClientWidth = 551
+  ClientHeight = 337
+  ClientWidth = 548
   OnCreate = FormCreate
   LCLVersion = '0.9.29'
   object Label1: TLabel
     Left = 8
-    Height = 15
+    Height = 16
     Top = 8
-    Width = 530
+    Width = 513
     Caption = 'Crie no seu PLC o DB1 com 40 bytes de tamanho (10 DWORDs ou  10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -23,9 +23,9 @@ object Form1: TForm1
   end
   object Label2: TLabel
     Left = 8
-    Height = 15
+    Height = 16
     Top = 24
-    Width = 515
+    Width = 497
     Caption = 'Create the DB1 in your PLC with 40 bytes sized (10 DWORDs or 10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -35,9 +35,9 @@ object Form1: TForm1
   end
   object HMIEdit1: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 88
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 0
     NumberFormat = '#0.0'
@@ -46,9 +46,9 @@ object Form1: TForm1
   end
   object Label3: TLabel
     Left = 80
-    Height = 14
-    Top = 72
-    Width = 80
+    Height = 16
+    Top = 70
+    Width = 112
     Alignment = taCenter
     AutoSize = False
     Caption = 'DB1'
@@ -58,9 +58,9 @@ object Form1: TForm1
   end
   object HMIEdit2: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 112
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 1
     NumberFormat = '#0.0'
@@ -69,9 +69,9 @@ object Form1: TForm1
   end
   object HMIEdit3: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 136
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 2
     NumberFormat = '#0.0'
@@ -80,9 +80,9 @@ object Form1: TForm1
   end
   object HMIEdit4: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 160
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 3
     NumberFormat = '#0.0'
@@ -91,9 +91,9 @@ object Form1: TForm1
   end
   object HMIEdit5: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 184
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 4
     NumberFormat = '#0.0'
@@ -102,9 +102,9 @@ object Form1: TForm1
   end
   object HMIEdit6: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 208
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 5
     NumberFormat = '#0.0'
@@ -113,9 +113,9 @@ object Form1: TForm1
   end
   object HMIEdit7: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 232
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 6
     NumberFormat = '#0.0'
@@ -124,9 +124,9 @@ object Form1: TForm1
   end
   object HMIEdit8: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 256
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 7
     NumberFormat = '#0.0'
@@ -135,9 +135,9 @@ object Form1: TForm1
   end
   object HMIEdit9: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 280
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 8
     NumberFormat = '#0.0'
@@ -146,9 +146,9 @@ object Form1: TForm1
   end
   object HMIEdit10: THMIEdit
     Left = 80
-    Height = 19
+    Height = 21
     Top = 304
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 9
     NumberFormat = '#0.0'
@@ -286,7 +286,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label14: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 88
     Width = 80
@@ -299,7 +299,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label15: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 112
     Width = 80
@@ -312,7 +312,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label16: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 136
     Width = 80
@@ -325,7 +325,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label17: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 160
     Width = 80
@@ -338,7 +338,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label18: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 184
     Width = 80
@@ -351,7 +351,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label19: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 208
     Width = 80
@@ -364,7 +364,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label20: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 232
     Width = 80
@@ -377,7 +377,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label21: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 256
     Width = 80
@@ -390,7 +390,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label22: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 280
     Width = 80
@@ -403,7 +403,7 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label23: TLabel
-    Left = 176
+    Left = 200
     Height = 19
     Top = 304
     Width = 80
@@ -416,10 +416,10 @@ object Form1: TForm1
     ParentFont = False
   end
   object HMIEdit11: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 88
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 10
     NumberFormat = '#0.0'
@@ -427,10 +427,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object Label24: TLabel
-    Left = 256
-    Height = 14
-    Top = 72
-    Width = 80
+    Left = 280
+    Height = 16
+    Top = 70
+    Width = 112
     Alignment = taCenter
     AutoSize = False
     Caption = 'Flags (M)'
@@ -439,10 +439,10 @@ object Form1: TForm1
     ParentFont = False
   end
   object HMIEdit12: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 112
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 11
     NumberFormat = '#0.0'
@@ -450,10 +450,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit13: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 136
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 12
     NumberFormat = '#0.0'
@@ -461,10 +461,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit14: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 160
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 13
     NumberFormat = '#0.0'
@@ -472,10 +472,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit15: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 184
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 14
     NumberFormat = '#0.0'
@@ -483,10 +483,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit16: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 208
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 15
     NumberFormat = '#0.0'
@@ -494,10 +494,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit17: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 232
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 16
     NumberFormat = '#0.0'
@@ -505,10 +505,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit18: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 256
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 17
     NumberFormat = '#0.0'
@@ -516,10 +516,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit19: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 280
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 18
     NumberFormat = '#0.0'
@@ -527,10 +527,10 @@ object Form1: TForm1
     FreezeValueOnFocus = False
   end
   object HMIEdit20: THMIEdit
-    Left = 256
-    Height = 19
+    Left = 280
+    Height = 21
     Top = 304
-    Width = 80
+    Width = 112
     Color = clWindow
     TabOrder = 19
     NumberFormat = '#0.0'
@@ -539,34 +539,34 @@ object Form1: TForm1
   end
   object Label25: TLabel
     Left = 8
-    Height = 14
+    Height = 16
     Top = 45
-    Width = 170
+    Width = 200
     Caption = 'TCP_UDP Port Commands/second'
     ParentColor = False
   end
   object Label26: TLabel
-    Left = 184
+    Left = 214
     Height = 14
     Top = 45
     Width = 56
     Alignment = taRightJustify
     AutoSize = False
-    Caption = 'Label26'
+    Caption = '0'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
   end
   object Label27: TLabel
-    Left = 244
-    Height = 14
+    Left = 273
+    Height = 16
     Top = 45
-    Width = 30
+    Width = 38
     Caption = 'cmd/s'
     ParentColor = False
   end
   object HMIText1: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 88
     Width = 17
@@ -602,7 +602,7 @@ object Form1: TForm1
       end>
   end
   object HMIText2: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 112
     Width = 17
@@ -638,7 +638,7 @@ object Form1: TForm1
       end>
   end
   object HMIText3: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 138
     Width = 17
@@ -674,7 +674,7 @@ object Form1: TForm1
       end>
   end
   object HMIText4: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 162
     Width = 17
@@ -710,7 +710,7 @@ object Form1: TForm1
       end>
   end
   object HMIText5: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 184
     Width = 17
@@ -746,7 +746,7 @@ object Form1: TForm1
       end>
   end
   object HMIText6: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 208
     Width = 17
@@ -782,7 +782,7 @@ object Form1: TForm1
       end>
   end
   object HMIText7: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 234
     Width = 17
@@ -818,7 +818,7 @@ object Form1: TForm1
       end>
   end
   object HMIText8: THMIText
-    Left = 352
+    Left = 408
     Height = 17
     Top = 258
     Width = 17
@@ -854,7 +854,7 @@ object Form1: TForm1
       end>
   end
   object Label28: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 88
     Width = 32
@@ -864,7 +864,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label29: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 112
     Width = 32
@@ -874,7 +874,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label30: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 138
     Width = 32
@@ -884,7 +884,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label31: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 162
     Width = 32
@@ -894,7 +894,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label32: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 184
     Width = 32
@@ -904,7 +904,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label33: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 208
     Width = 32
@@ -914,7 +914,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label34: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 234
     Width = 32
@@ -924,7 +924,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label35: TLabel
-    Left = 376
+    Left = 432
     Height = 17
     Top = 258
     Width = 32
@@ -934,7 +934,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object HMIText9: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 88
     Width = 17
@@ -970,7 +970,7 @@ object Form1: TForm1
       end>
   end
   object HMIText10: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 112
     Width = 17
@@ -1006,7 +1006,7 @@ object Form1: TForm1
       end>
   end
   object HMIText11: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 138
     Width = 17
@@ -1042,7 +1042,7 @@ object Form1: TForm1
       end>
   end
   object HMIText12: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 162
     Width = 17
@@ -1078,7 +1078,7 @@ object Form1: TForm1
       end>
   end
   object HMIText13: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 184
     Width = 17
@@ -1114,7 +1114,7 @@ object Form1: TForm1
       end>
   end
   object HMIText14: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 208
     Width = 17
@@ -1150,7 +1150,7 @@ object Form1: TForm1
       end>
   end
   object HMIText15: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 234
     Width = 17
@@ -1186,7 +1186,7 @@ object Form1: TForm1
       end>
   end
   object HMIText16: THMIText
-    Left = 424
+    Left = 480
     Height = 17
     Top = 258
     Width = 17
@@ -1222,7 +1222,7 @@ object Form1: TForm1
       end>
   end
   object Label36: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 88
     Width = 32
@@ -1232,7 +1232,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label37: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 112
     Width = 32
@@ -1242,7 +1242,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label38: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 138
     Width = 32
@@ -1252,7 +1252,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label39: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 162
     Width = 32
@@ -1262,7 +1262,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label40: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 184
     Width = 32
@@ -1272,7 +1272,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label41: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 208
     Width = 32
@@ -1282,7 +1282,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label42: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 234
     Width = 32
@@ -1292,7 +1292,7 @@ object Form1: TForm1
     ParentColor = False
   end
   object Label43: TLabel
-    Left = 448
+    Left = 504
     Height = 17
     Top = 258
     Width = 32

@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
-  StdCtrls, ExtCtrls, tcp_udpport, ISOTCPDriver, PLCBlock, PLCBlockElement,
-  HMIEdit, HMIText;
+  StdCtrls, ExtCtrls, RTTIGrids, tcp_udpport, ISOTCPDriver, PLCBlock,
+  PLCBlockElement, HMIEdit, HMIText;
 
 type
 

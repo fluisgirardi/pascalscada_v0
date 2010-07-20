@@ -41,11 +41,17 @@ type
   @value(ioTagError               Erro interno do Tag.)
   @value(ioNullDriver             Tag SEM DRIVER.)
   @value(ioIllegalStationAddress  Endereço do equipamento é inválido.)
+  @value(ioIllegalRequest         Requisição inválida ou não suportada.)
+  @value(ioObjectNotExists        O objeto requisitado não existe.)
+  @value(ioIllegalMemoryAddress   O inicio ou o fim da requisição estão fora do espaço de endereços do equipamento.)
+  @value(ioUnknownError           Um código de erro desconhecido foi retornado.)
+  @value(ioEmptyPacket            Um pacote vazio (sem dados) foi retornado.)
   }
   TProtocolIOResult = (ioNone, ioDriverError, ioCommError, ioOk, ioTimeOut,
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
-                       ioPLCError, ioTagError, ioNullDriver,
-                       ioIllegalStationAddress);
+                       ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
+                       ioIllegalStationAddress, ioObjectNotExists,
+                       ioIllegalMemoryAddress, ioUnknownError, ioEmptyPacket);
 
   {:
   Enumera os tipos de alterações que um tag pode sofrer. Usado internamente

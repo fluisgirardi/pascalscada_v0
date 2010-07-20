@@ -1141,10 +1141,8 @@ begin
     PIOCmdCS.Enter;
     InIOCmdCS:=true;
     Result := 0;
-    if not PActive then begin
-       Result := 0;
-       exit;
-    end;
+    if not PActive then
+      exit;
 
     //cria o pacote de dados
     try
