@@ -1,0 +1,376 @@
+object DataModule1: TDataModule1
+  OldCreateOrder = False
+  Height = 549
+  HorizontalOffset = 232
+  VerticalOffset = 118
+  Width = 460
+  object TCP_UDPPort1: TTCP_UDPPort
+    Active = True
+    LogIOActions = True
+    LogFile = '/home/fabiolg/isotcp.log'
+    Host = '192.168.215.207'
+    Timeout = 50
+    left = 40
+    top = 16
+  end
+  object ISOTCPDriver1: TISOTCPDriver
+    CommunicationPort = TCP_UDPPort1
+    ConnectionWay = ISOTCP
+    left = 40
+    top = 72
+  end
+  object DB1: TPLCBlock
+    TagGUID = '{B0747848-93A1-11DF-AA46-001BFC644612}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 2
+    MemFile_DB = 1
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 4
+    MemWriteFunction = 0
+    ProtocolDriver = ISOTCPDriver1
+    RefreshTime = 100
+    Size = 10
+    SyncWrites = True
+    TagType = pttInteger
+    SwapWords = True
+    left = 136
+    top = 16
+  end
+  object MD0_MD40: TPLCBlock
+    TagGUID = '{2358DCFB-93A2-11DF-AA46-001BFC644612}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 2
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 0
+    ProtocolDriver = ISOTCPDriver1
+    RefreshTime = 100
+    Size = 10
+    SyncWrites = True
+    TagType = pttFloat
+    SwapWords = True
+    left = 224
+    top = 16
+  end
+  object DB1_DBD00: TPLCBlockElement
+    TagGUID = '{090B09C0-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 0
+    left = 136
+    top = 64
+  end
+  object DB1_DBD04: TPLCBlockElement
+    TagGUID = '{3F377D89-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 1
+    left = 136
+    top = 112
+  end
+  object DB1_DBD08: TPLCBlockElement
+    TagGUID = '{C79046CB-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 2
+    left = 136
+    top = 160
+  end
+  object DB1_DBD12: TPLCBlockElement
+    TagGUID = '{CF12E2C9-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 3
+    left = 136
+    top = 208
+  end
+  object DB1_DBD16: TPLCBlockElement
+    TagGUID = '{D4AAC635-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 4
+    left = 136
+    top = 256
+  end
+  object DB1_DBD20: TPLCBlockElement
+    TagGUID = '{D6C01DD6-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 5
+    left = 136
+    top = 304
+  end
+  object DB1_DBD24: TPLCBlockElement
+    TagGUID = '{DA2F20C5-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 6
+    left = 136
+    top = 352
+  end
+  object DB1_DBD28: TPLCBlockElement
+    TagGUID = '{DC2268E1-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 7
+    left = 136
+    top = 400
+  end
+  object DB1_DBD32: TPLCBlockElement
+    TagGUID = '{DDE364DE-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 8
+    left = 136
+    top = 448
+  end
+  object DB1_DBD36: TPLCBlockElement
+    TagGUID = '{DFA13295-93A2-11DF-AA46-001BFC644612}'
+    PLCBlock = DB1
+    Index = 9
+    left = 136
+    top = 496
+  end
+  object MD00: TPLCBlockElement
+    TagGUID = '{29D96AAE-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 0
+    left = 224
+    top = 64
+  end
+  object MD04: TPLCBlockElement
+    TagGUID = '{29DA4BDA-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 1
+    left = 224
+    top = 112
+  end
+  object MD08: TPLCBlockElement
+    TagGUID = '{29DB2E57-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 2
+    left = 224
+    top = 160
+  end
+  object MD12: TPLCBlockElement
+    TagGUID = '{29DC2BA7-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 3
+    left = 224
+    top = 208
+  end
+  object MD16: TPLCBlockElement
+    TagGUID = '{29DD124B-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 4
+    left = 224
+    top = 256
+  end
+  object MD20: TPLCBlockElement
+    TagGUID = '{29DE01ED-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 5
+    left = 224
+    top = 304
+  end
+  object MD24: TPLCBlockElement
+    TagGUID = '{29DF0D21-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 6
+    left = 224
+    top = 352
+  end
+  object MD28: TPLCBlockElement
+    TagGUID = '{29E00568-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 7
+    left = 224
+    top = 400
+  end
+  object MD32: TPLCBlockElement
+    TagGUID = '{29E0FD75-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 8
+    left = 224
+    top = 448
+  end
+  object MD36: TPLCBlockElement
+    TagGUID = '{29E21914-93A3-11DF-AA46-001BFC644612}'
+    PLCBlock = MD0_MD40
+    Index = 9
+    left = 224
+    top = 493
+  end
+  object InputsBYTE_01: TPLCTagNumber
+    TagGUID = '{A5A6E944-93A8-11DF-AA46-001BFC644612}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 2
+    MemFile_DB = 0
+    MemAddress = 1
+    MemSubElement = 0
+    MemReadFunction = 1
+    MemWriteFunction = 0
+    ProtocolDriver = ISOTCPDriver1
+    RefreshTime = 100
+    TagType = pttByte
+    left = 312
+    top = 16
+  end
+  object I0_0: TTagBit
+    TagGUID = '{FBF4B42B-93A8-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 0
+    EndBit = 0
+    left = 312
+    top = 64
+  end
+  object I0_1: TTagBit
+    TagGUID = '{FBF4B42B-93A8-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 1
+    EndBit = 1
+    left = 312
+    top = 112
+  end
+  object I0_2: TTagBit
+    TagGUID = '{1A49923F-93A9-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 2
+    EndBit = 2
+    left = 312
+    top = 160
+  end
+  object I0_3: TTagBit
+    TagGUID = '{1BA09E17-93A9-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 3
+    EndBit = 3
+    left = 312
+    top = 208
+  end
+  object I0_4: TTagBit
+    TagGUID = '{1D9ED8BA-93A9-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 4
+    EndBit = 4
+    left = 312
+    top = 256
+  end
+  object I0_5: TTagBit
+    TagGUID = '{1EE73D23-93A9-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 5
+    EndBit = 5
+    left = 312
+    top = 304
+  end
+  object I0_6: TTagBit
+    TagGUID = '{20F2E595-93A9-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 6
+    EndBit = 6
+    left = 312
+    top = 352
+  end
+  object I0_7: TTagBit
+    TagGUID = '{22D0366D-93A9-11DF-AA46-001BFC644612}'
+    PLCTag = InputsBYTE_01
+    UseRawValue = False
+    StartBit = 7
+    EndBit = 7
+    left = 312
+    top = 400
+  end
+  object OutputsBYTE_01: TPLCTagNumber
+    TagGUID = '{A5A6E944-93A8-11DF-AA46-001BFC644612}'
+    PLCHack = 0
+    PLCSlot = 0
+    PLCStation = 2
+    MemFile_DB = 0
+    MemAddress = 1
+    MemSubElement = 0
+    MemReadFunction = 2
+    MemWriteFunction = 0
+    ProtocolDriver = ISOTCPDriver1
+    RefreshTime = 100
+    TagType = pttByte
+    left = 400
+    top = 16
+  end
+  object Q0_0: TTagBit
+    TagGUID = '{6A0638CB-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 0
+    EndBit = 0
+    left = 400
+    top = 64
+  end
+  object Q0_1: TTagBit
+    TagGUID = '{6A07739D-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 1
+    EndBit = 1
+    left = 400
+    top = 112
+  end
+  object Q0_2: TTagBit
+    TagGUID = '{6A08AE9F-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 2
+    EndBit = 2
+    left = 400
+    top = 160
+  end
+  object Q0_3: TTagBit
+    TagGUID = '{6A0A19E2-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 3
+    EndBit = 3
+    left = 400
+    top = 208
+  end
+  object Q0_4: TTagBit
+    TagGUID = '{6A0B9F42-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 4
+    EndBit = 4
+    left = 400
+    top = 256
+  end
+  object Q0_5: TTagBit
+    TagGUID = '{6A0D006F-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 5
+    EndBit = 5
+    left = 400
+    top = 304
+  end
+  object Q0_6: TTagBit
+    TagGUID = '{6A0E70F4-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 6
+    EndBit = 6
+    left = 400
+    top = 352
+  end
+  object Q0_7: TTagBit
+    TagGUID = '{6A0FC4E7-93AA-11DF-AA46-001BFC644612}'
+    PLCTag = OutputsBYTE_01
+    UseRawValue = False
+    StartBit = 7
+    EndBit = 7
+    left = 400
+    top = 400
+  end
+end

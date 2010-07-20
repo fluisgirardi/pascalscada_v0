@@ -1,0 +1,1309 @@
+object Form1: TForm1
+  Left = 232
+  Height = 334
+  Top = 118
+  Width = 551
+  ActiveControl = HMIEdit1
+  Caption = 'Form1'
+  ClientHeight = 334
+  ClientWidth = 551
+  OnCreate = FormCreate
+  LCLVersion = '0.9.29'
+  object Label1: TLabel
+    Left = 8
+    Height = 15
+    Top = 8
+    Width = 530
+    Caption = 'Crie no seu PLC o DB1 com 40 bytes de tamanho (10 DWORDs ou  10 Floats)'
+    Font.Height = -12
+    Font.Name = 'Sans'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 15
+    Top = 24
+    Width = 515
+    Caption = 'Create the DB1 in your PLC with 40 bytes sized (10 DWORDs or 10 Floats)'
+    Font.Height = -12
+    Font.Name = 'Sans'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object HMIEdit1: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 88
+    Width = 80
+    Color = clWindow
+    TabOrder = 0
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD00
+    FreezeValueOnFocus = False
+  end
+  object Label3: TLabel
+    Left = 80
+    Height = 14
+    Top = 72
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DB1'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object HMIEdit2: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 112
+    Width = 80
+    Color = clWindow
+    TabOrder = 1
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD04
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit3: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 136
+    Width = 80
+    Color = clWindow
+    TabOrder = 2
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD08
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit4: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 160
+    Width = 80
+    Color = clWindow
+    TabOrder = 3
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD12
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit5: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 184
+    Width = 80
+    Color = clWindow
+    TabOrder = 4
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD16
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit6: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 208
+    Width = 80
+    Color = clWindow
+    TabOrder = 5
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD20
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit7: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 232
+    Width = 80
+    Color = clWindow
+    TabOrder = 6
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD24
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit8: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 256
+    Width = 80
+    Color = clWindow
+    TabOrder = 7
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD28
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit9: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 280
+    Width = 80
+    Color = clWindow
+    TabOrder = 8
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD32
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit10: THMIEdit
+    Left = 80
+    Height = 19
+    Top = 304
+    Width = 80
+    Color = clWindow
+    TabOrder = 9
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.DB1_DBD36
+    FreezeValueOnFocus = False
+  end
+  object Label4: TLabel
+    Left = 0
+    Height = 19
+    Top = 88
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 0'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label5: TLabel
+    Left = 0
+    Height = 19
+    Top = 112
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 4'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label6: TLabel
+    Left = 0
+    Height = 19
+    Top = 136
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 8'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label7: TLabel
+    Left = 0
+    Height = 19
+    Top = 160
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 12'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label8: TLabel
+    Left = 0
+    Height = 19
+    Top = 184
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 16'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label9: TLabel
+    Left = 0
+    Height = 19
+    Top = 208
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 20'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label10: TLabel
+    Left = 0
+    Height = 19
+    Top = 232
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 24'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label11: TLabel
+    Left = 0
+    Height = 19
+    Top = 256
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 28'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label12: TLabel
+    Left = 0
+    Height = 19
+    Top = 280
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 32'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label13: TLabel
+    Left = 0
+    Height = 19
+    Top = 304
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 36'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label14: TLabel
+    Left = 176
+    Height = 19
+    Top = 88
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 0'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label15: TLabel
+    Left = 176
+    Height = 19
+    Top = 112
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 4'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label16: TLabel
+    Left = 176
+    Height = 19
+    Top = 136
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 8'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label17: TLabel
+    Left = 176
+    Height = 19
+    Top = 160
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 12'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label18: TLabel
+    Left = 176
+    Height = 19
+    Top = 184
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 16'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label19: TLabel
+    Left = 176
+    Height = 19
+    Top = 208
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 20'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label20: TLabel
+    Left = 176
+    Height = 19
+    Top = 232
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 24'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label21: TLabel
+    Left = 176
+    Height = 19
+    Top = 256
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 28'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label22: TLabel
+    Left = 176
+    Height = 19
+    Top = 280
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 32'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label23: TLabel
+    Left = 176
+    Height = 19
+    Top = 304
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Float 36'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object HMIEdit11: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 88
+    Width = 80
+    Color = clWindow
+    TabOrder = 10
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD00
+    FreezeValueOnFocus = False
+  end
+  object Label24: TLabel
+    Left = 256
+    Height = 14
+    Top = 72
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'Flags (M)'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object HMIEdit12: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 112
+    Width = 80
+    Color = clWindow
+    TabOrder = 11
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD04
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit13: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 136
+    Width = 80
+    Color = clWindow
+    TabOrder = 12
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD08
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit14: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 160
+    Width = 80
+    Color = clWindow
+    TabOrder = 13
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD12
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit15: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 184
+    Width = 80
+    Color = clWindow
+    TabOrder = 14
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD16
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit16: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 208
+    Width = 80
+    Color = clWindow
+    TabOrder = 15
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD20
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit17: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 232
+    Width = 80
+    Color = clWindow
+    TabOrder = 16
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD24
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit18: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 256
+    Width = 80
+    Color = clWindow
+    TabOrder = 17
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD28
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit19: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 280
+    Width = 80
+    Color = clWindow
+    TabOrder = 18
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD32
+    FreezeValueOnFocus = False
+  end
+  object HMIEdit20: THMIEdit
+    Left = 256
+    Height = 19
+    Top = 304
+    Width = 80
+    Color = clWindow
+    TabOrder = 19
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.MD36
+    FreezeValueOnFocus = False
+  end
+  object Label25: TLabel
+    Left = 8
+    Height = 14
+    Top = 45
+    Width = 170
+    Caption = 'TCP_UDP Port Commands/second'
+    ParentColor = False
+  end
+  object Label26: TLabel
+    Left = 184
+    Height = 14
+    Top = 45
+    Width = 56
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'Label26'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label27: TLabel
+    Left = 244
+    Height = 14
+    Top = 45
+    Width = 30
+    Caption = 'cmd/s'
+    ParentColor = False
+  end
+  object HMIText1: THMIText
+    Left = 352
+    Height = 17
+    Top = 88
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_0
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText2: THMIText
+    Left = 352
+    Height = 17
+    Top = 112
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_1
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText3: THMIText
+    Left = 352
+    Height = 17
+    Top = 138
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_2
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText4: THMIText
+    Left = 352
+    Height = 17
+    Top = 162
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_3
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText5: THMIText
+    Left = 352
+    Height = 17
+    Top = 184
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_4
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText6: THMIText
+    Left = 352
+    Height = 17
+    Top = 208
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_5
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText7: THMIText
+    Left = 352
+    Height = 17
+    Top = 234
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_6
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText8: THMIText
+    Left = 352
+    Height = 17
+    Top = 258
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.I0_7
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object Label28: TLabel
+    Left = 376
+    Height = 17
+    Top = 88
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_0'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label29: TLabel
+    Left = 376
+    Height = 17
+    Top = 112
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_1'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label30: TLabel
+    Left = 376
+    Height = 17
+    Top = 138
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_2'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label31: TLabel
+    Left = 376
+    Height = 17
+    Top = 162
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_3'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label32: TLabel
+    Left = 376
+    Height = 17
+    Top = 184
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_4'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label33: TLabel
+    Left = 376
+    Height = 17
+    Top = 208
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_5'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label34: TLabel
+    Left = 376
+    Height = 17
+    Top = 234
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_6'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label35: TLabel
+    Left = 376
+    Height = 17
+    Top = 258
+    Width = 32
+    AutoSize = False
+    Caption = 'I0_7'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object HMIText9: THMIText
+    Left = 424
+    Height = 17
+    Top = 88
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_0
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText10: THMIText
+    Left = 424
+    Height = 17
+    Top = 112
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_1
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText11: THMIText
+    Left = 424
+    Height = 17
+    Top = 138
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_2
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText12: THMIText
+    Left = 424
+    Height = 17
+    Top = 162
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_3
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText13: THMIText
+    Left = 424
+    Height = 17
+    Top = 184
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_4
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText14: THMIText
+    Left = 424
+    Height = 17
+    Top = 208
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_5
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText15: THMIText
+    Left = 424
+    Height = 17
+    Top = 234
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_6
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object HMIText16: THMIText
+    Left = 424
+    Height = 17
+    Top = 258
+    Width = 17
+    Color = clSilver
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = DataModule1.Q0_7
+    Zones = <    
+      item
+        Value1 = 0
+        Value2 = 0
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clSilver
+        Transparent = False
+      end    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        BlinkTime = 0
+        BlinkWith = -1
+        DefaultZone = False
+        ZoneType = ztEqual
+        Color = clLime
+        Transparent = False
+      end>
+  end
+  object Label36: TLabel
+    Left = 448
+    Height = 17
+    Top = 88
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_0'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label37: TLabel
+    Left = 448
+    Height = 17
+    Top = 112
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_1'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label38: TLabel
+    Left = 448
+    Height = 17
+    Top = 138
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_2'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label39: TLabel
+    Left = 448
+    Height = 17
+    Top = 162
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_3'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label40: TLabel
+    Left = 448
+    Height = 17
+    Top = 184
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_4'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label41: TLabel
+    Left = 448
+    Height = 17
+    Top = 208
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_5'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label42: TLabel
+    Left = 448
+    Height = 17
+    Top = 234
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_6'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Label43: TLabel
+    Left = 448
+    Height = 17
+    Top = 258
+    Width = 32
+    AutoSize = False
+    Caption = 'Q0_7'
+    Layout = tlCenter
+    ParentColor = False
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    left = 520
+    top = 48
+  end
+end
