@@ -78,6 +78,7 @@ type
     procedure PrepareWriteRequest(var msgOut:BYTES); virtual;
     procedure PrepareReadOrWriteRequest(const WriteRequest:Boolean; var msgOut:BYTES); virtual;
     procedure AddToReadRequest(var msgOut:BYTES; iArea, iDBnum, iStart, iByteCount:Integer); virtual;
+    procedure AddToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES); virtual;
   protected
     procedure RunPLC(CPU:TS7CPU);
     procedure StopPLC(CPU:TS7CPU);
@@ -94,7 +95,7 @@ type
 
     //estas funcoes ficaram apenas por motivos compatibilidade com os tags
     //e seus metodos de leitura e escrita diretas.
-    function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{50}function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
@@ -279,7 +280,7 @@ begin
   PrepareReadOrWriteRequest(false, msgOut);
 end;
 
-procedure TSiemensProtocolFamily.PrepareReadRequest(var msgOut:BYTES);
+procedure TSiemensProtocolFamily.PrepareWriteRequest(var msgOut:BYTES);
 begin
   PrepareReadOrWriteRequest(True, msgOut);
 end;
@@ -334,6 +335,75 @@ begin
     end;
 
     ReqLength   :=SwapBytesInWord(iByteCount);
+    DBNumber    :=SwapBytesInWord(iDBnum);
+    AreaCode    :=iArea;
+    StartAddress:=SwapBytesInWord(iStart);
+    Bit         :=0;
+  end;
+
+  AddParam(msgOut, param);
+
+  SetupPDU(msgOut, true, PDU);
+  NumReq:=GetByte(PDU.param,1);
+  NumReq:=NumReq+1;
+  SetByte(PDU.param,1,NumReq);
+
+  SetLength(param, 0);
+end;
+
+procedure TSiemensProtocolFamily.AddToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES);
+var
+  param, da:BYTES;
+  bufferLen:Integer;
+  p:PS7Req;
+  PDU:TPDU;
+  NumReq:Byte;
+begin
+  bufferLen:=Length(buffer);
+
+  SetLength(param, 12);
+  param[00] := $12;
+  param[01] := $0a;
+  param[02] := $10;
+  param[03] := $02; //1=single bit, 2=byte, 4=word
+  param[04] := $00; //comprimento do pedido
+  param[05] := $00; //comprimento do pedido
+  param[06] := $00; //numero Db
+  param[07] := $00; //numero Db
+  param[08] := $00; //area code;
+  param[09] := $00; //start address in bits
+  param[10] := $00; //start address in bits
+  param[11] := $00; //start address in bits
+
+  SetLength(da, 4);
+  da[0]:=0;
+  da[1]:=4;
+  da[2]:=0;
+  da[3]:=0;
+
+  p := PS7Req(@param[00]);
+
+  with p^ do begin
+    case iArea of
+      vtS7_200_AnInput, vtS7_200_AnOutput:
+        begin
+          WordLen:=4;;
+          ReqLength := SwapBytesInWord((bufferLen+1) div 2);
+        end;
+      vtS7_Counter,
+      vtS7_Timer,
+      vtS7_200_Counter,
+      vtS7_200_Timer:
+        begin
+          WordLen:=iArea;
+          ReqLength := SwapBytesInWord((bufferLen+1) div 2);
+        end;
+      else
+        begin
+          ReqLength := SwapBytesInWord(bufferLen);
+        end;
+    end;
+
     DBNumber    :=SwapBytesInWord(iDBnum);
     AreaCode    :=iArea;
     StartAddress:=SwapBytesInWord(iStart);
@@ -1063,9 +1133,92 @@ end;
 
 function  TSiemensProtocolFamily.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
+  c,
+  OutgoingPacketSize,
+  MaxBytesToSent,
+  retries,
+  BytesWrote,
+  BytesToSent,
+  ByteIdx:Integer;
 
+  PLCPtr:PS7CPU;
+
+  msgout:BYTES;
 begin
+  PLCPtr:=nil;
+  for c:=0 to High(FCPUs) do
+    if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
+      PLCPtr:=@FCPUs[c];
+      break;
+    end;
 
+  if PLCPtr=nil then begin
+    c:=Length(FCPUs);
+    SetLength(FCPUs,c+1);
+    with FCPUs[c] do begin
+      MaxBlockSize:=-1;
+      MaxPDULen:=0;
+      Connected:=false;
+      Slot:=tagrec.Slot;
+      Rack:=tagrec.Hack;
+      Station:=tagrec.Station;
+      Inputs  :=TPLCMemoryManager.Create;
+      Outputs :=TPLCMemoryManager.Create;
+      AnInput :=TPLCMemoryManager.Create;
+      AnOutput:=TPLCMemoryManager.Create;
+      Timers  :=TPLCMemoryManager.Create;
+      Counters:=TPLCMemoryManager.Create;
+      Flags   :=TPLCMemoryManager.Create;
+      SMs     :=TPLCMemoryManager.Create;
+      Inputs.MaxBlockItems:=MaxBlockSize;
+      Outputs.MaxBlockItems:=MaxBlockSize;
+      AnInput.MaxBlockItems:=MaxBlockSize;
+      AnOutput.MaxBlockItems:=MaxBlockSize;
+      Timers.MaxBlockItems:=MaxBlockSize;
+      Counters.MaxBlockItems:=MaxBlockSize;
+      Flags.MaxBlockItems:=MaxBlockSize;
+      SMs.MaxBlockItems:=MaxBlockSize;
+    end;
+    PLCPtr:=@FCPUs[c];
+  end;
+
+  retries := 0;
+  while (not FAdapterInitialized) AND (retries<3) do begin
+    FAdapterInitialized := initAdapter;
+    inc(retries)
+  end;
+
+  if retries>=3 then begin
+    Result:=ioDriverError;
+    exit;
+  end;
+
+  if not PLCPtr.Connected then
+    if not connectPLC(PLCPtr^) then begin
+      Result:=ioDriverError;
+      exit;
+    end;
+
+  OutgoingPacketSize:=PDUOut+28;
+  MaxBytesToSent:=PLCPtr.MaxPDULen-28;
+  BytesWrote:=0;
+  ByteIdx:=0;
+
+  while BytesWrote<Length(Values) do begin
+    SetLength(msgout,0);
+    OutgoingPacketSize:=PDUOut+28;
+
+    BytesToSent:=Min(MaxBytesToSent, Length(Values));
+
+    inc(OutgoingPacketSize,BytesToSent);
+    SetLength(msgout,OutgoingPacketSize);
+
+    PrepareWriteRequest(msgout);
+
+
+
+
+  end;
 end;
 
 function  TSiemensProtocolFamily.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;

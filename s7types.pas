@@ -77,6 +77,8 @@ type
     SMs:TPLCMemoryManager;
   end;
 
+  PS7CPU = ^TS7CPU;
+
   //: Representação de um conjunto de CLP's S7-200/300/400 da Siemens.
   TS7CPUs = array of TS7CPU;
 
