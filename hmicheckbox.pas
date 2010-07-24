@@ -1,4 +1,4 @@
-{:
+﻿{:
   @abstract(Unit que implementa um controle CheckBox ligado a um Tag.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
@@ -442,7 +442,7 @@ end;
 function THMICheckBox.GetTagValue:Double;
 begin
   Result := 0;
-  if (FTag<>nil) AND Supports(FTag, ITagNumeric) then exit;
+  if Assigned(FTag) AND Supports(FTag, ITagNumeric) then
     Result := (FTag as ITagNumeric).Value;
 end;
 
