@@ -332,6 +332,9 @@ begin
       vtS7_200_Counter,
       vtS7_200_Timer:
         WordLen:=iArea;
+      vtS7_Inputs,
+      vtS7_Outputs:
+        iStart:=iStart*8;
     end;
 
     ReqLength   :=SwapBytesInWord(iByteCount);

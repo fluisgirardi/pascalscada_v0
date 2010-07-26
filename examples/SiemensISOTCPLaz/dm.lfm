@@ -7,7 +7,7 @@ object DataModule1: TDataModule1
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
     LogFile = '/home/fabiolg/isotcp.log'
-    Host = '192.168.1.193'
+    Host = '192.168.215.207'
     Timeout = 50
     left = 8
     top = 8
@@ -29,7 +29,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 4
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 50
+    RefreshTime = 30
     Size = 10
     TagType = pttInteger
     SwapBytes = True
@@ -48,7 +48,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 3
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 50
+    RefreshTime = 30
     Size = 11
     TagType = pttFloat
     SwapBytes = True
@@ -207,7 +207,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 1
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 50
+    RefreshTime = 30
     TagType = pttByte
     left = 104
     top = 8
@@ -290,11 +290,12 @@ object DataModule1: TDataModule1
     PLCSlot = 0
     PLCStation = 2
     MemFile_DB = 0
-    MemAddress = 1
+    MemAddress = 2
     MemSubElement = 0
     MemReadFunction = 2
     MemWriteFunction = 0
-    RefreshTime = 100
+    ProtocolDriver = ISOTCPDriver1
+    RefreshTime = 30
     TagType = pttByte
     left = 136
     top = 8
