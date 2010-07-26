@@ -56,9 +56,10 @@
         <ComponentName Value="Form1"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="85"/>
+        <TopLine Value="103"/>
         <CursorPos X="38" Y="106"/>
         <UsageCount Value="82"/>
         <Loaded Value="True"/>
@@ -124,7 +125,6 @@
       <Unit8>
         <Filename Value="../../tcp_udpport.pas"/>
         <UnitName Value="tcp_udpport"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="189"/>

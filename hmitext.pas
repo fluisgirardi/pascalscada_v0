@@ -142,17 +142,18 @@ end;
 
 procedure THMIText.ShowZone(zone:TTextZone);
 begin
-   if zone=nil then begin
-      TLabel(Self).Caption := '';
-      TLabel(Self).Transparent:=true;
-   end else begin
-      TLabel(self).Caption := zone.Text;
-      TLabel(self).Color:=zone.Color;
-      TLabel(self).Transparent:=zone.Transparent;
-      TLabel(self).Font.Assign(zone.Font);
-      TLabel(self).Layout:=zone.VerticalAlignment;
-      TLabel(self).Alignment:=zone.HorizontalAlignment;
-   end;
+  FCurrentZone:=zone;
+  if zone=nil then begin
+    TLabel(Self).Caption := '';
+    TLabel(Self).Transparent:=true;
+  end else begin
+    TLabel(self).Caption := zone.Text;
+    TLabel(self).Color:=zone.Color;
+    TLabel(self).Transparent:=zone.Transparent;
+    TLabel(self).Font.Assign(zone.Font);
+    TLabel(self).Layout:=zone.VerticalAlignment;
+    TLabel(self).Alignment:=zone.HorizontalAlignment;
+  end;
 end;
 
 procedure THMIText.SetTestValue(v:Double);
@@ -172,20 +173,14 @@ end;
 
 procedure THMIText.BlinkTimer(Sender:TObject);
 begin
-   if FOwnerZoneShowed then begin
-      if FCurrentZone.BlinkWith<>(-1) then begin
-         ShowZone(TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]));
-         FTimer.Enabled:=false;
-         FTimer.Interval := TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
-         FTimer.Enabled:=true;
-      end
-   end else begin
-      ShowZone(FCurrentZone);
-      FTimer.Enabled:=false;
-      FTimer.Interval := FCurrentZone.BlinkTime;
-      FTimer.Enabled:=true;
-   end;
-   FOwnerZoneShowed:= not FOwnerZoneShowed;
+  if FCurrentZone.BlinkWith<0 then
+    FTimer.Enabled:=false
+  else begin
+    FTimer.Enabled:=false;
+    FTimer.Interval := TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
+    ShowZone(TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]));
+    FTimer.Enabled:=true;
+  end;
 end;
 
 function THMIText.GetTextZones:TTextZones;
