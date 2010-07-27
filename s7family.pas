@@ -78,7 +78,8 @@ type
     procedure PrepareWriteRequest(var msgOut:BYTES); virtual;
     procedure PrepareReadOrWriteRequest(const WriteRequest:Boolean; var msgOut:BYTES); virtual;
     procedure AddToReadRequest(var msgOut:BYTES; iArea, iDBnum, iStart, iByteCount:Integer); virtual;
-    procedure AddToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES); virtual;
+    procedure AddParamToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES); virtual;
+    procedure AddDataToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES); virtual;
   protected
     procedure RunPLC(CPU:TS7CPU);
     procedure StopPLC(CPU:TS7CPU);
@@ -332,16 +333,15 @@ begin
       vtS7_200_Counter,
       vtS7_200_Timer:
         WordLen:=iArea;
-      vtS7_Inputs,
-      vtS7_Outputs:
+      else
         iStart:=iStart*8;
     end;
 
     ReqLength   :=SwapBytesInWord(iByteCount);
     DBNumber    :=SwapBytesInWord(iDBnum);
     AreaCode    :=iArea;
+    HiBytes     :=0;
     StartAddress:=SwapBytesInWord(iStart);
-    Bit         :=0;
   end;
 
   AddParam(msgOut, param);
@@ -354,13 +354,13 @@ begin
   SetLength(param, 0);
 end;
 
-procedure TSiemensProtocolFamily.AddToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES);
+//executa somente uma escrita por vez!!!
+procedure TSiemensProtocolFamily.AddParamToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES);
 var
   param, da:BYTES;
   bufferLen:Integer;
   p:PS7Req;
   PDU:TPDU;
-  NumReq:Byte;
 begin
   bufferLen:=Length(buffer);
 
@@ -378,19 +378,13 @@ begin
   param[10] := $00; //start address in bits
   param[11] := $00; //start address in bits
 
-  SetLength(da, 4);
-  da[0]:=0;
-  da[1]:=4;
-  da[2]:=0;
-  da[3]:=0;
-
   p := PS7Req(@param[00]);
 
   with p^ do begin
     case iArea of
       vtS7_200_AnInput, vtS7_200_AnOutput:
         begin
-          WordLen:=4;;
+          WordLen:=4;
           ReqLength := SwapBytesInWord((bufferLen+1) div 2);
         end;
       vtS7_Counter,
@@ -403,14 +397,15 @@ begin
         end;
       else
         begin
+          iStart:=iStart*8;
           ReqLength := SwapBytesInWord(bufferLen);
         end;
     end;
 
     DBNumber    :=SwapBytesInWord(iDBnum);
     AreaCode    :=iArea;
+    HiBytes     :=0;
     StartAddress:=SwapBytesInWord(iStart);
-    Bit         :=0;
   end;
 
   AddParam(msgOut, param);
@@ -421,6 +416,30 @@ begin
   SetByte(PDU.param,1,NumReq);
 
   SetLength(param, 0);
+end;
+
+procedure TSiemensProtocolFamily.AddDataToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES);
+var
+  da:BYTES;
+  extra:Integer;
+  bufferlen:Integer;
+  lastdatabyte:Integer;
+begin
+  bufferlen:=Length(buffer);
+
+  extra := (bufferlen mod 2);
+
+  SetLength(da,bufferlen+extra);
+  da[00] := $00;
+  da[01] := $04; //04 bits,
+  da[02] := (bufferlen*8) div 256;
+  da[03] := (bufferlen*8) mod 256;
+  Move(buffer[0],da[4],Length(buffer));
+
+  if extra=1 then begin
+    lastdatabyte:=High(da);
+    da[lastdatabyte]:=$80;
+  end;
 end;
 
 procedure TSiemensProtocolFamily.AddParam(var MsgOut:BYTES; const param:BYTES);

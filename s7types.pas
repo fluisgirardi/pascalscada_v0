@@ -88,8 +88,8 @@ type
     ReqLength:Word;
     DBNumber:Word;
     AreaCode:Byte;
-    StartAddress:Word;
-    Bit:Byte;
+    HiBytes:Byte;
+    StartAddress:Word; //bits and low bytes
   end;
 
   PS7Req = ^TS7Req;
