@@ -13,8 +13,7 @@ unit ISOTCPDriver;
 interface
 
 uses
-  classes, sysutils, ProtocolDriver, S7Types, Tag, ProtocolTypes, CrossEvent,
-  commtypes, s7family;
+  classes, sysutils, S7Types, CrossEvent, commtypes, s7family;
 
 type
   {: Driver IsoTCP. Baseado na biblioteca LibNodave de ...
@@ -157,6 +156,7 @@ var
   x:TCrossEvent;
   res:Integer;
   retries, BytesRead:Integer;
+  resget:TIOResult;
 begin
   Result := Inherited exchange(CPU, msgOut, msgIn, IsWrite);
 
@@ -175,9 +175,15 @@ begin
     if x.WaitFor($FFFFFFFF)<>wrSignaled then exit;
     retries:=0;
 
-    while (getResponse(msgIn, BytesRead)<>iorOk) and (retries<3) do begin
-      Sleep(5);
-      Inc(retries);
+    resget := getResponse(msgIn, BytesRead);
+    while (resget<>iorOk) and (retries<3) do begin
+
+      if resget<>iorTimeOut then
+        Inc(retries)
+      else
+        Sleep(5);
+
+      resget := getResponse(msgIn, BytesRead);
     end;
 
     Result:=BytesRead>ISOTCPMinPacketLen;

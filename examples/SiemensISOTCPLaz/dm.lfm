@@ -1,13 +1,14 @@
 object DataModule1: TDataModule1
   OldCreateOrder = False
   Height = 379
-  HorizontalOffset = 794
-  VerticalOffset = 123
+  HorizontalOffset = 1048
+  VerticalOffset = 141
   Width = 230
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
+    LogIOActions = True
     LogFile = '/home/fabiolg/isotcp.log'
-    Host = '192.168.215.207'
+    Host = '192.168.2.103'
     Timeout = 50
     left = 8
     top = 8
@@ -202,7 +203,7 @@ object DataModule1: TDataModule1
     PLCSlot = 0
     PLCStation = 2
     MemFile_DB = 0
-    MemAddress = 1
+    MemAddress = 3
     MemSubElement = 0
     MemReadFunction = 1
     MemWriteFunction = 0
@@ -290,7 +291,7 @@ object DataModule1: TDataModule1
     PLCSlot = 0
     PLCStation = 2
     MemFile_DB = 0
-    MemAddress = 2
+    MemAddress = 7
     MemSubElement = 0
     MemReadFunction = 2
     MemWriteFunction = 0

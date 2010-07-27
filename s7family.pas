@@ -794,6 +794,9 @@ var
     end;
     inc(MsgOutSize, 12);
     inc(IncomingPDUSize,4+iSize);
+    if (iSize mod 2)=1 then
+      inc(IncomingPDUSize);
+
     inc(OutgoingPDUSize,12);
 
     SetLength(msgout,MsgOutSize);
