@@ -1,7 +1,10 @@
 {:
   @abstract(Implmentação do protocolo ISOTCP.)
   Este driver é baseado no driver ISOTCP da biblioteca
-  LibNODAVE de ...
+  LibNODAVE de Thomas Hergenhahn (thomas.hergenhahn@web.de).
+
+  Este driver não usa Libnodave, ele é uma reescrita da mesma.
+
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit ISOTCPDriver;
@@ -16,7 +19,8 @@ uses
   classes, sysutils, S7Types, CrossEvent, commtypes, s7family;
 
 type
-  {: Driver IsoTCP. Baseado na biblioteca LibNodave de ...
+  {: Driver IsoTCP. Baseado na biblioteca LibNodave de
+     Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
   Para endereçar uma memória basta escrever na propriedade MemReadFunction a
   o código da área da váriavel (ver tabelas abaixo).
@@ -74,8 +78,8 @@ uses math, syncobjs;
 constructor TISOTCPDriver.Create(AOwner:TComponent);
 begin
   Inherited Create(AOwner);
-  PDUIn:=7;
-  PDUOut:=7;
+  PDUIncoming:=7;
+  PDUOutgoing:=7;
   FConnectEvent:=TCrossEvent.Create(nil, true, false, Name+'_DID'+IntToStr(DriverID));
 end;
 

@@ -46,12 +46,14 @@ type
   @value(ioIllegalMemoryAddress   O inicio ou o fim da requisição estão fora do espaço de endereços do equipamento.)
   @value(ioUnknownError           Um código de erro desconhecido foi retornado.)
   @value(ioEmptyPacket            Um pacote vazio (sem dados) foi retornado.)
+  @value(ioPartialOk              Uma ação teve sucesso parcial.)
   }
   TProtocolIOResult = (ioNone, ioDriverError, ioCommError, ioOk, ioTimeOut,
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
                        ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
                        ioIllegalStationAddress, ioObjectNotExists,
-                       ioIllegalMemoryAddress, ioUnknownError, ioEmptyPacket);
+                       ioIllegalMemoryAddress, ioUnknownError, ioEmptyPacket,
+                       ioPartialOk);
 
   {:
   Enumera os tipos de alterações que um tag pode sofrer. Usado internamente

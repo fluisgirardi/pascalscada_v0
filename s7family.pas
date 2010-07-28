@@ -1,7 +1,10 @@
 ﻿{:
   @abstract(Implmentação do protocolo ISOTCP.)
   Este driver é baseado no driver ISOTCP da biblioteca
-  LibNODAVE de ...
+  LibNODAVE de Thomas Hergenhahn (thomas.hergenhahn@web.de).
+
+  Este driver não usa Libnodave, ele é uma reescrita da mesma.
+
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit s7family;
@@ -17,7 +20,8 @@ uses
   commtypes;
 
 type
-  {: Driver IsoTCP. Baseado na biblioteca LibNodave de ...
+  {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
+     de Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
   Para endereçar uma memória basta escrever na propriedade MemReadFunction a
   o código da área da váriavel (ver tabelas abaixo).
@@ -54,7 +58,7 @@ type
     procedure SetByte(Ptr:PByte; idx:Integer; value:Byte);
     procedure SetBytes(Ptr:PByte; idx:Integer; values:BYTES);
   protected
-    PDUIn,PDUOut:Integer;
+    PDUIncoming,PDUOutgoing:Integer;
     FCPUs:TS7CPUs;
     FAdapterInitialized:Boolean;
     function  initAdapter:Boolean; virtual;
@@ -71,9 +75,10 @@ type
     procedure PrepareToSend(var msg:BYTES); virtual;
   protected
     procedure AddParam(var MsgOut:BYTES; const param:BYTES); virtual;
+    procedure AddData(var MsgOut:BYTES; const data:BYTES); virtual;
     procedure InitiatePDUHeader(var MsgOut:BYTES; PDUType:Integer); virtual;
     function  NegotiatePDUSize(var CPU:TS7CPU):Boolean; virtual;
-    function  SetupPDU(var msg:BYTES; MsgTypeOut:Boolean; out PDU:TPDU):Integer; virtual;
+    function  SetupPDU(var msg:BYTES; MsgOutgoing:Boolean; out PDU:TPDU):Integer; virtual;
     procedure PrepareReadRequest(var msgOut:BYTES); virtual;
     procedure PrepareWriteRequest(var msgOut:BYTES); virtual;
     procedure PrepareReadOrWriteRequest(const WriteRequest:Boolean; var msgOut:BYTES); virtual;
@@ -87,6 +92,9 @@ type
     procedure CompressMemory(CPU:TS7CPU);
     function  S7ErrorCodeToProtocolErrorCode(code:Word):TProtocolIOResult;
   protected
+    function  DoublesToBytes(const Values:TArrayOfDouble; Start, Len:Integer):BYTES;
+    function  BytesToDoubles(const ByteSeq:BYTES; Start, Len:Integer):TArrayOfDouble;
+    function  CreateCPU(iHack, iSlot, iStation:Integer):integer; virtual;
 {ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
@@ -118,8 +126,8 @@ constructor TSiemensProtocolFamily.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   PReadSomethingAlways := true;
-  PDUIn:=0;
-  PDUOut:=0;
+  PDUIncoming:=0;
+  PDUOutgoing:=0;
 end;
 
 function  TSiemensProtocolFamily.SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
@@ -210,7 +218,7 @@ var
 begin
   Result := false;
   SetLength(param,8);
-  SetLength(msg, PDUOut+10+8);
+  SetLength(msg, PDUOutgoing+10+8);
 
   param[0] := $F0;
   param[1] := 0;
@@ -224,7 +232,7 @@ begin
   InitiatePDUHeader(msg,1);
   AddParam(Msg,param);
   if exchange(CPU,Msg,msgIn,false) then begin
-    res := SetupPDU(msgIn, true, pdu);
+    res := SetupPDU(msgIn, false, pdu);
     if res=0 then begin
       CPU.MaxPDULen:=GetByte(pdu.param,6)*256+GetByte(pdu.param,7);
       CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes do header + 2 bytes do codigo de erro + 2 bytes da solicitação da leitura + 4 das informações do pedido.
@@ -246,14 +254,14 @@ begin
   end;
 end;
 
-function  TSiemensProtocolFamily.SetupPDU(var msg:BYTES; MsgTypeOut:Boolean; out PDU:TPDU):Integer;
+function  TSiemensProtocolFamily.SetupPDU(var msg:BYTES; MsgOutgoing:Boolean; out PDU:TPDU):Integer;
 var
   position:Integer;
 begin
-  if MsgTypeOut then
-    position:=PDUOut
+  if MsgOutgoing then
+    position:=PDUOutgoing
   else
-    position:=PDUIn;
+    position:=PDUIncoming;
 
   Result := 0;
 
@@ -361,6 +369,7 @@ var
   bufferLen:Integer;
   p:PS7Req;
   PDU:TPDU;
+  NumReq:Byte;
 begin
   bufferLen:=Length(buffer);
 
@@ -424,6 +433,7 @@ var
   extra:Integer;
   bufferlen:Integer;
   lastdatabyte:Integer;
+  PDU:TPDU;
 begin
   bufferlen:=Length(buffer);
 
@@ -440,27 +450,54 @@ begin
     lastdatabyte:=High(da);
     da[lastdatabyte]:=$80;
   end;
+
+  AddData(msgOut, da);
 end;
 
 procedure TSiemensProtocolFamily.AddParam(var MsgOut:BYTES; const param:BYTES);
 var
   pdu:TPDU;
-  paramlen, extra:Integer;
+  paramlen, extra, newparamlen:Integer;
   res:integer;
 begin
   res := SetupPDU(MsgOut, true, pdu);
   paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
+  newparamlen := Length(param);
 
   extra := ifthen(PPDUHeader(pdu.header)^.PDUHeadertype in [2,3], 2, 0);
 
-  if Length(MsgOut)<(PDUOut+10+extra+paramlen) then begin
-    SetLength(MsgOut,(PDUOut+10+extra+paramlen));
+  if Length(MsgOut)<(PDUOutgoing+10+extra+paramlen+newparamlen) then begin
+    SetLength(MsgOut,(PDUOutgoing+10+extra+paramlen+newparamlen));
     res := SetupPDU(MsgOut, true, pdu);
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   end;
 
   SetBytes(pdu.param, paramlen, param);
   PPDUHeader(pdu.header)^.param_len:=SwapBytesInWord(paramlen + Length(param));
+end;
+
+procedure TSiemensProtocolFamily.AddData(var MsgOut:BYTES; const data:BYTES);
+var
+  pdu:TPDU;
+  paramlen, datalen, extra, newdatalen:Integer;
+  res:integer;
+begin
+  res := SetupPDU(MsgOut, true, pdu);
+  paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
+  datalen  := SwapBytesInWord(PPDUHeader(pdu.header)^.data_len);
+  newdatalen := Length(data);
+
+  extra := ifthen(PPDUHeader(pdu.header)^.PDUHeadertype in [2,3], 2, 0);
+
+  if Length(MsgOut)<(PDUOutgoing+10+extra+paramlen+datalen+newdatalen) then begin
+    SetLength(MsgOut,(PDUOutgoing+10+extra+paramlen+datalen+newdatalen));
+    res := SetupPDU(MsgOut, true, pdu);
+    paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
+    datalen  := SwapBytesInWord(PPDUHeader(pdu.header)^.data_len);
+  end;
+
+  SetBytes(pdu.data, datalen, data);
+  PPDUHeader(pdu.header)^.data_len:=SwapBytesInWord(datalen + Length(data));
 end;
 
 procedure TSiemensProtocolFamily.InitiatePDUHeader(var MsgOut:BYTES; PDUType:Integer);
@@ -470,10 +507,10 @@ var
 begin
   extra := ifthen(PDUType in [2,3], 2, 0);
 
-  if Length(MsgOut)<(PDUOut+10+extra) then
-    SetLength(MsgOut,(PDUOut+10+extra));
+  if Length(MsgOut)<(PDUOutgoing+10+extra) then
+    SetLength(MsgOut,(PDUOutgoing+10+extra));
 
-  pduh:=@MsgOut[PDUOut];
+  pduh:=@MsgOut[PDUOutgoing];
   with pduh^ do begin
     P:=$32;
     PDUHeadertype:=PDUType;
@@ -497,6 +534,66 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 // FUNCOES DE MANIPULAÇAO DO DRIVER
 ////////////////////////////////////////////////////////////////////////////////
+
+function  TSiemensProtocolFamily.DoublesToBytes(const Values:TArrayOfDouble; Start, Len:Integer):BYTES;
+var
+  arraylen,
+  c:Integer;
+begin
+  arraylen:=Length(Values);
+  if (start+(Len-1))>=arraylen then
+    raise Exception.Create(SoutOfBounds);
+
+  SetLength(Result,Len);
+  for c:=0 to Len-1 do begin
+    Result[c]:=trunc(Values[c+Start]) and $FF;
+  end;
+end;
+
+function  TSiemensProtocolFamily.BytesToDoubles(const ByteSeq:BYTES; Start, Len:Integer):TArrayOfDouble;
+var
+  arraylen,
+  c:Integer;
+begin
+  arraylen:=Length(ByteSeq);
+  if (start+(Len-1))>=arraylen then
+    raise Exception.Create(SoutOfBounds);
+
+  SetLength(Result,Len);
+  for c:=0 to Len-1 do begin
+    Result[c]:=ByteSeq[c+Start];
+  end;
+end;
+
+function TSiemensProtocolFamily.CreateCPU(iHack, iSlot, iStation:Integer):Integer;
+begin
+  Result:=Length(FCPUs);
+  SetLength(FCPUs,Result+1);
+  with FCPUs[Result] do begin
+    MaxBlockSize:=-1;
+    MaxPDULen:=0;
+    Connected:=false;
+    Slot:=iSlot;
+    Rack:=iHack;
+    Station:=iStation;
+    Inputs  :=TPLCMemoryManager.Create;
+    Outputs :=TPLCMemoryManager.Create;
+    AnInput :=TPLCMemoryManager.Create;
+    AnOutput:=TPLCMemoryManager.Create;
+    Timers  :=TPLCMemoryManager.Create;
+    Counters:=TPLCMemoryManager.Create;
+    Flags   :=TPLCMemoryManager.Create;
+    SMs     :=TPLCMemoryManager.Create;
+    Inputs.MaxBlockItems:=MaxBlockSize;
+    Outputs.MaxBlockItems:=MaxBlockSize;
+    AnInput.MaxBlockItems:=MaxBlockSize;
+    AnOutput.MaxBlockItems:=MaxBlockSize;
+    Timers.MaxBlockItems:=MaxBlockSize;
+    Counters.MaxBlockItems:=MaxBlockSize;
+    Flags.MaxBlockItems:=MaxBlockSize;
+    SMs.MaxBlockItems:=MaxBlockSize;
+  end;
+end;
 
 procedure TSiemensProtocolFamily.UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
 var
@@ -526,7 +623,7 @@ begin
   while CurResult<NumResults do begin
     ResultCode:=GetByte(PDU.data, DataIdx);
     ProtocolErrorCode:=S7ErrorCodeToProtocolErrorCode(ResultCode);
-    if (ResultCode=$FF) AND (DataLen>4) then begin
+    if (writepkg or (ResultCode=$FF)) AND (DataLen>4) then begin
       ResultLen:=GetByte(PDU.data, DataIdx+2)*$100 + GetByte(PDU.data, DataIdx+3);
       //o tamanho está em bits, precisa de ajuste.
       if GetByte(PDU.data, DataIdx+1)=4 then
@@ -632,32 +729,7 @@ begin
     end;
 
   if not foundplc then begin
-    plc:=Length(FCPUs);
-    SetLength(FCPUs,plc+1);
-    with FCPUs[plc] do begin
-      Slot:=Tr.Slot;
-      Rack:=Tr.Hack;
-      MaxBlockSize:=-1;
-      MaxPDULen:=0;
-      Connected:=false;
-      Station :=Tr.Station;
-      Inputs  :=TPLCMemoryManager.Create;
-      Outputs :=TPLCMemoryManager.Create;
-      AnInput :=TPLCMemoryManager.Create;
-      AnOutput:=TPLCMemoryManager.Create;
-      Timers  :=TPLCMemoryManager.Create;
-      Counters:=TPLCMemoryManager.Create;
-      Flags   :=TPLCMemoryManager.Create;
-      SMs     :=TPLCMemoryManager.Create;
-      Inputs.MaxBlockItems:=MaxBlockSize;
-      Outputs.MaxBlockItems:=MaxBlockSize;
-      AnInput.MaxBlockItems:=MaxBlockSize;
-      AnOutput.MaxBlockItems:=MaxBlockSize;
-      Timers.MaxBlockItems:=MaxBlockSize;
-      Counters.MaxBlockItems:=MaxBlockSize;
-      Flags.MaxBlockItems:=MaxBlockSize;
-      SMs.MaxBlockItems:=MaxBlockSize;
-    end;
+    plc:=CreateCPU(tr.Hack, tr.Slot, tr.Station);
   end;
 
   case tr.ReadFunction of
@@ -783,7 +855,7 @@ var
     if not initialized then begin
       OutgoingPDUSize:=10+2; //10 do header + 2 do pedido de leitura;
       IncomingPDUSize:=10+2+2; //10 do header + 2 do codigo de erro + 2 do pedido de leitura;
-      MsgOutSize:=PDUOut+12;
+      MsgOutSize:=PDUOutgoing+12;
       SetLength(msgout,MsgOutSize);
       PrepareReadRequest(msgout);
       initialized:=true;
@@ -1160,50 +1232,34 @@ function  TSiemensProtocolFamily.DoWrite(const tagrec:TTagRec; const Values:TArr
 var
   c,
   OutgoingPacketSize,
-  MaxBytesToSent,
+  MaxBytesToSend,
   retries,
-  BytesWrote,
-  BytesToSent,
-  ByteIdx:Integer;
-
+  BytesToSend,
+  BytesSent,
+  ReqType,
+  plcidx,
+  dbidx:Integer;
+  foundplc,
+  founddb,
+  hasAtLeastOneSuccess:Boolean;
   PLCPtr:PS7CPU;
-
-  msgout:BYTES;
+  msgout, msgin, BytesBuffer:BYTES;
+  partialValues:TArrayOfDouble;
+  incomingPDU:TPDU;
+  ReqList:TS7ReqList;
 begin
   PLCPtr:=nil;
+  foundplc:=false;
   for c:=0 to High(FCPUs) do
     if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FCPUs[c];
+      plcidx:=c;
+      foundplc:=true;
       break;
     end;
 
   if PLCPtr=nil then begin
-    c:=Length(FCPUs);
-    SetLength(FCPUs,c+1);
-    with FCPUs[c] do begin
-      MaxBlockSize:=-1;
-      MaxPDULen:=0;
-      Connected:=false;
-      Slot:=tagrec.Slot;
-      Rack:=tagrec.Hack;
-      Station:=tagrec.Station;
-      Inputs  :=TPLCMemoryManager.Create;
-      Outputs :=TPLCMemoryManager.Create;
-      AnInput :=TPLCMemoryManager.Create;
-      AnOutput:=TPLCMemoryManager.Create;
-      Timers  :=TPLCMemoryManager.Create;
-      Counters:=TPLCMemoryManager.Create;
-      Flags   :=TPLCMemoryManager.Create;
-      SMs     :=TPLCMemoryManager.Create;
-      Inputs.MaxBlockItems:=MaxBlockSize;
-      Outputs.MaxBlockItems:=MaxBlockSize;
-      AnInput.MaxBlockItems:=MaxBlockSize;
-      AnOutput.MaxBlockItems:=MaxBlockSize;
-      Timers.MaxBlockItems:=MaxBlockSize;
-      Counters.MaxBlockItems:=MaxBlockSize;
-      Flags.MaxBlockItems:=MaxBlockSize;
-      SMs.MaxBlockItems:=MaxBlockSize;
-    end;
+    c:=CreateCPU(tagrec.Hack, tagrec.Slot, tagrec.Station);
     PLCPtr:=@FCPUs[c];
   end;
 
@@ -1224,25 +1280,102 @@ begin
       exit;
     end;
 
-  OutgoingPacketSize:=PDUOut+28;
-  MaxBytesToSent:=PLCPtr.MaxPDULen-28;
-  BytesWrote:=0;
-  ByteIdx:=0;
+  case tagrec.ReadFunction of
+    1:
+      ReqType := vtS7_Inputs;
+    2:
+      ReqType := vtS7_Outputs;
+    3:
+      ReqType := vtS7_Flags;
+    4: begin
+      ReqType := vtS7_DB;
+      founddb:=false;
+      if foundplc then
+        for dbidx:=0 to High(PLCPtr^.DBs) do
+          if PLCPtr^.DBs[dbidx].DBNum=tagrec.File_DB then begin
+            founddb:=true;
+            break;
+          end;
+    end;
+    5,10:
+      ReqType := vtS7_Counter;
+    6,11:
+      ReqType := vtS7_Timer;
+    7:
+      ReqType := vtS7_200_SM;
+    8:
+      ReqType := vtS7_200_AnInput;
+    9:
+      ReqType := vtS7_200_AnOutput;
+  end;
 
-  while BytesWrote<Length(Values) do begin
+  MaxBytesToSend:=PLCPtr.MaxPDULen-28;
+  BytesSent:=0;
+  hasAtLeastOneSuccess:=false;
+
+  while BytesSent<Length(Values) do begin
     SetLength(msgout,0);
-    OutgoingPacketSize:=PDUOut+28;
 
-    BytesToSent:=Min(MaxBytesToSent, Length(Values));
+    BytesToSend:=Min(MaxBytesToSend, Length(Values)-BytesSent);
 
-    inc(OutgoingPacketSize,BytesToSent);
+    OutgoingPacketSize:=PDUOutgoing+28+BytesToSend;
+
     SetLength(msgout,OutgoingPacketSize);
 
     PrepareWriteRequest(msgout);
 
+    BytesBuffer := DoublesToBytes(Values, BytesSent, BytesToSend);
 
+    if ReqType=vtS7_DB then begin
+      if tagrec.File_DB=0 then begin
+        AddParamToWriteRequest(msgout, vtS7_DB, 1, tagrec.Address+BytesSent, BytesBuffer);
+        AddDataToWriteRequest(msgout, vtS7_DB, 1, tagrec.Address+BytesSent, BytesBuffer);
+      end else begin
+        AddParamToWriteRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+BytesSent, BytesBuffer);
+        AddDataToWriteRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+BytesSent, BytesBuffer);
+      end;
+    end else begin
+      AddParamToWriteRequest(msgout, ReqType, 0, tagrec.Address+BytesSent, BytesBuffer);
+      AddDataToWriteRequest(msgout, ReqType, 0, tagrec.Address+BytesSent, BytesBuffer);
+    end;
 
+    if exchange(PLCPtr^, msgout, msgin, false) then begin
+      SetupPDU(msgin,false,incomingPDU);
+      if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
+        hasAtLeastOneSuccess:=true;
+        if foundplc then begin
+          SetLength(ReqList,1);
+          ReqList[0].DB:=dbidx;
+          ReqList[0].PLC:=c;
+          ReqList[0].ReqType:=ReqType;
+          ReqList[0].StartAddress:=tagrec.Address+BytesSent;
+          ReqList[0].Size:=BytesToSend;
+          if (ReqType=vtS7_DB) and founddb then begin
+            UpdateMemoryManager(msgin, msgout, true, ReqList);
+          end else begin
+            UpdateMemoryManager(msgin, msgout, true, ReqList);
+          end;
+        end;
+      end else begin
+        if hasAtLeastOneSuccess then begin
+          Result:=ioPartialOk
+        end else
+          if incomingPDU.data_len>0 then begin
+            Result:=S7ErrorCodeToProtocolErrorCode(GetByte(incomingPDU.data,0))
+          end else
+            Result := ioCommError;
+        exit;
+      end;
+    end else begin
+      if hasAtLeastOneSuccess then begin
+        Result:=ioPartialOk
+      end else
+        Result:=ioCommError;
 
+      exit;
+    end;
+
+    inc(BytesSent,BytesToSend);
   end;
 end;
 
