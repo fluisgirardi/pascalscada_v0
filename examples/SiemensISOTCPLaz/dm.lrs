@@ -2,9 +2,9 @@
 
 LazarusResources.Add('TDataModule1','FORMDATA',[
   'TPF0'#12'TDataModule1'#11'DataModule1'#14'OldCreateOrder'#8#6'Height'#3'{'#1
-  +#16'HorizontalOffset'#3#24#4#14'VerticalOffset'#3#141#0#5'Width'#3#230#0#0#12
-  +'TTCP_UDPPort'#12'TCP_UDPPort1'#6'Active'#9#12'LogIOActions'#9#7'LogFile'#6
-  +#24'/home/fabiolg/isotcp.log'#4'Host'#6#13'192.168.2.103'#7'Timeout'#2'2'#4
+  +#16'HorizontalOffset'#3#232#3#14'VerticalOffset'#3#141#0#5'Width'#3#230#0#0
+  +#12'TTCP_UDPPort'#12'TCP_UDPPort1'#6'Active'#9#12'LogIOActions'#9#7'LogFile'
+  +#6#24'/home/fabiolg/isotcp.log'#4'Host'#6#13'192.168.1.193'#7'Timeout'#2'2'#4
   +'left'#2#8#3'top'#2#8#0#0#13'TISOTCPDriver'#13'ISOTCPDriver1'#17'Communicati'
   +'onPort'#7#12'TCP_UDPPort1'#13'ConnectionWay'#7#6'ISOTCP'#4'left'#2#8#3'top'
   +#2'('#0#0#9'TPLCBlock'#3'DB1'#7'TagGUID'#6'&{B0747848-93A1-11DF-AA46-001BFC6'

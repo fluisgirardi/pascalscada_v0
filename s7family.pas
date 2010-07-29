@@ -439,7 +439,7 @@ begin
 
   extra := (bufferlen mod 2);
 
-  SetLength(da,bufferlen+extra);
+  SetLength(da,4+bufferlen+extra);
   da[00] := $00;
   da[01] := $04; //04 bits,
   da[02] := (bufferlen*8) div 256;
@@ -1281,8 +1281,10 @@ begin
     end;
 
   case tagrec.ReadFunction of
-    1:
-      ReqType := vtS7_Inputs;
+    1: begin
+      Result:=ioIllegalFunction;
+      exit;
+    end;
     2:
       ReqType := vtS7_Outputs;
     3:
@@ -1328,15 +1330,15 @@ begin
 
     if ReqType=vtS7_DB then begin
       if tagrec.File_DB=0 then begin
-        AddParamToWriteRequest(msgout, vtS7_DB, 1, tagrec.Address+BytesSent, BytesBuffer);
-        AddDataToWriteRequest(msgout, vtS7_DB, 1, tagrec.Address+BytesSent, BytesBuffer);
+        AddParamToWriteRequest(msgout, vtS7_DB, 1, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
+        AddDataToWriteRequest(msgout, vtS7_DB, 1, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
       end else begin
-        AddParamToWriteRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+BytesSent, BytesBuffer);
-        AddDataToWriteRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+BytesSent, BytesBuffer);
+        AddParamToWriteRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
+        AddDataToWriteRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
       end;
     end else begin
-      AddParamToWriteRequest(msgout, ReqType, 0, tagrec.Address+BytesSent, BytesBuffer);
-      AddDataToWriteRequest(msgout, ReqType, 0, tagrec.Address+BytesSent, BytesBuffer);
+      AddParamToWriteRequest(msgout, ReqType, 0, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
+      AddDataToWriteRequest(msgout, ReqType, 0, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
     end;
 
     if exchange(PLCPtr^, msgout, msgin, false) then begin

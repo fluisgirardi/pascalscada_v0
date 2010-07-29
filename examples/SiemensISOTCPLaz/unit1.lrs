@@ -1,302 +1,302 @@
 { This is an automatically generated lazarus resource file }
 
 LazarusResources.Add('TForm1','FORMDATA',[
-  'TPF0'#6'TForm1'#5'Form1'#4'Left'#3#239#0#6'Height'#3'Q'#1#3'Top'#3#141#0#5'W'
-  +'idth'#3'('#2#13'ActiveControl'#7#8'HMIEdit1'#7'Caption'#6#5'Form1'#12'Clien'
-  +'tHeight'#3'Q'#1#11'ClientWidth'#3'('#2#8'OnCreate'#7#10'FormCreate'#10'LCLV'
-  +'ersion'#6#6'0.9.29'#0#6'TLabel'#6'Label1'#4'Left'#2#8#6'Height'#2#14#3'Top'
-  +#2#8#5'Width'#3#204#1#7'Caption'#6'GCrie no seu PLC o DB1 com 40 bytes de ta'
-  +'manho (10 DWORDs ou  10 Floats)'#11'Font.Height'#2#244#9'Font.Name'#6#4'San'
-  +'s'#10'Font.Style'#11#6'fsBold'#0#11'ParentColor'#8#10'ParentFont'#8#0#0#6'T'
-  +'Label'#6'Label2'#4'Left'#2#8#6'Height'#2#14#3'Top'#2#24#5'Width'#3#190#1#7
-  +'Caption'#6'GCreate the DB1 in your PLC with 40 bytes sized (10 DWORDs or 10'
-  +' Floats)'#11'Font.Height'#2#244#9'Font.Name'#6#4'Sans'#10'Font.Style'#11#6
-  +'fsBold'#0#11'ParentColor'#8#10'ParentFont'#8#0#0#8'THMIEdit'#8'HMIEdit1'#4
-  +'Left'#2'P'#6'Height'#2#25#3'Top'#2'X'#5'Width'#2'p'#5'Color'#7#8'clWindow'#8
-  +'TabOrder'#2#0#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD'
-  +'00'#18'FreezeValueOnFocus'#8#0#0#6'TLabel'#6'Label3'#4'Left'#2'P'#6'Height'
-  +#2#16#3'Top'#2'F'#5'Width'#2'p'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'C'
-  +'aption'#6#3'DB1'#10'Font.Style'#11#6'fsBold'#0#11'ParentColor'#8#10'ParentF'
-  +'ont'#8#0#0#8'THMIEdit'#8'HMIEdit2'#4'Left'#2'P'#6'Height'#2#25#3'Top'#2'p'#5
-  +'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#1#12'NumberFormat'#6#4'#0.'
-  +'0'#6'PLCTag'#7#21'DataModule1.DB1_DBD04'#18'FreezeValueOnFocus'#8#0#0#8'THM'
-  +'IEdit'#8'HMIEdit3'#4'Left'#2'P'#6'Height'#2#25#3'Top'#3#136#0#5'Width'#2'p'
-  +#5'Color'#7#8'clWindow'#8'TabOrder'#2#2#12'NumberFormat'#6#4'#0.0'#6'PLCTag'
-  +#7#21'DataModule1.DB1_DBD08'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#8'HMIE'
-  +'dit4'#4'Left'#2'P'#6'Height'#2#25#3'Top'#3#160#0#5'Width'#2'p'#5'Color'#7#8
-  +'clWindow'#8'TabOrder'#2#3#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataMod'
-  +'ule1.DB1_DBD12'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#8'HMIEdit5'#4'Left'
-  +#2'P'#6'Height'#2#25#3'Top'#3#184#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'T'
-  +'abOrder'#2#4#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD1'
-  +'6'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#8'HMIEdit6'#4'Left'#2'P'#6'Heig'
-  +'ht'#2#25#3'Top'#3#208#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#5
-  +#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD20'#18'FreezeV'
-  +'alueOnFocus'#8#0#0#8'THMIEdit'#8'HMIEdit7'#4'Left'#2'P'#6'Height'#2#25#3'To'
-  +'p'#3#232#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#6#12'NumberFo'
-  +'rmat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD24'#18'FreezeValueOnFocus'
-  +#8#0#0#8'THMIEdit'#8'HMIEdit8'#4'Left'#2'P'#6'Height'#2#25#3'Top'#3#0#1#5'Wi'
-  +'dth'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#7#12'NumberFormat'#6#4'#0.0'
-  +#6'PLCTag'#7#21'DataModule1.DB1_DBD28'#18'FreezeValueOnFocus'#8#0#0#8'THMIEd'
-  +'it'#8'HMIEdit9'#4'Left'#2'P'#6'Height'#2#25#3'Top'#3#24#1#5'Width'#2'p'#5'C'
-  +'olor'#7#8'clWindow'#8'TabOrder'#2#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7
-  +#21'DataModule1.DB1_DBD32'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdi'
-  +'t10'#4'Left'#2'P'#6'Height'#2#25#3'Top'#3'0'#1#5'Width'#2'p'#5'Color'#7#8'c'
-  +'lWindow'#8'TabOrder'#2#9#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModu'
-  +'le1.DB1_DBD36'#18'FreezeValueOnFocus'#8#0#0#6'TLabel'#6'Label4'#4'Left'#2#0
-  +#6'Height'#2#19#3'Top'#2'X'#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoS'
-  +'ize'#8#7'Caption'#6#7'DWORD 0'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8
-  +'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Label5'#4'Left'
-  +#2#0#6'Height'#2#19#3'Top'#2'p'#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'A'
-  +'utoSize'#8#7'Caption'#6#7'DWORD 4'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7
-  +#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Label6'#4'Le'
-  +'ft'#2#0#6'Height'#2#19#3'Top'#3#136#0#5'Width'#2'P'#9'Alignment'#7#8'taCent'
-  +'er'#8'AutoSize'#8#7'Caption'#6#7'DWORD 8'#10'Font.Style'#11#6'fsBold'#0#6'L'
-  +'ayout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Lab'
-  +'el7'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#160#0#5'Width'#2'P'#9'Alignment'#7
-  +#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 12'#10'Font.Style'#11#6'fsBo'
+  'TPF0'#6'TForm1'#5'Form1'#4'Left'#3#238#0#6'Height'#3'Q'#1#3'Top'#2'{'#5'Widt'
+  +'h'#3'('#2#13'ActiveControl'#7#8'HMIEdit1'#7'Caption'#6#5'Form1'#12'ClientHe'
+  +'ight'#3'Q'#1#11'ClientWidth'#3'('#2#8'OnCreate'#7#10'FormCreate'#10'LCLVers'
+  +'ion'#6#6'0.9.29'#0#6'TLabel'#6'Label1'#4'Left'#2#8#6'Height'#2#16#3'Top'#2#8
+  +#5'Width'#3#1#2#7'Caption'#6'GCrie no seu PLC o DB1 com 40 bytes de tamanho '
+  +'(10 DWORDs ou  10 Floats)'#11'Font.Height'#2#244#9'Font.Name'#6#4'Sans'#10
+  +'Font.Style'#11#6'fsBold'#0#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'
+  +#6'Label2'#4'Left'#2#8#6'Height'#2#16#3'Top'#2#24#5'Width'#3#241#1#7'Caption'
+  +#6'GCreate the DB1 in your PLC with 40 bytes sized (10 DWORDs or 10 Floats)'
+  +#11'Font.Height'#2#244#9'Font.Name'#6#4'Sans'#10'Font.Style'#11#6'fsBold'#0
+  +#11'ParentColor'#8#10'ParentFont'#8#0#0#8'THMIEdit'#8'HMIEdit1'#4'Left'#2'P'
+  +#6'Height'#2#21#3'Top'#2'X'#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'
+  +#2#0#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD00'#18'Fre'
+  +'ezeValueOnFocus'#8#0#0#6'TLabel'#6'Label3'#4'Left'#2'P'#6'Height'#2#16#3'To'
+  +'p'#2'F'#5'Width'#2'p'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6
+  +#3'DB1'#10'Font.Style'#11#6'fsBold'#0#11'ParentColor'#8#10'ParentFont'#8#0#0
+  +#8'THMIEdit'#8'HMIEdit2'#4'Left'#2'P'#6'Height'#2#21#3'Top'#2'p'#5'Width'#2
+  +'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#1#12'NumberFormat'#6#4'#0.0'#6'PLCT'
+  +'ag'#7#21'DataModule1.DB1_DBD04'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#8
+  +'HMIEdit3'#4'Left'#2'P'#6'Height'#2#21#3'Top'#3#136#0#5'Width'#2'p'#5'Color'
+  +#7#8'clWindow'#8'TabOrder'#2#2#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'Dat'
+  +'aModule1.DB1_DBD08'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#8'HMIEdit4'#4
+  +'Left'#2'P'#6'Height'#2#21#3'Top'#3#160#0#5'Width'#2'p'#5'Color'#7#8'clWindo'
+  +'w'#8'TabOrder'#2#3#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB'
+  +'1_DBD12'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#8'HMIEdit5'#4'Left'#2'P'#6
+  +'Height'#2#21#3'Top'#3#184#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'
+  +#2#4#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD16'#18'Fre'
+  +'ezeValueOnFocus'#8#0#0#8'THMIEdit'#8'HMIEdit6'#4'Left'#2'P'#6'Height'#2#21#3
+  +'Top'#3#208#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#5#12'Number'
+  +'Format'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD20'#18'FreezeValueOnFoc'
+  +'us'#8#0#0#8'THMIEdit'#8'HMIEdit7'#4'Left'#2'P'#6'Height'#2#21#3'Top'#3#232#0
+  +#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#6#12'NumberFormat'#6#4'#'
+  +'0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD24'#18'FreezeValueOnFocus'#8#0#0#8'T'
+  +'HMIEdit'#8'HMIEdit8'#4'Left'#2'P'#6'Height'#2#21#3'Top'#3#0#1#5'Width'#2'p'
+  +#5'Color'#7#8'clWindow'#8'TabOrder'#2#7#12'NumberFormat'#6#4'#0.0'#6'PLCTag'
+  +#7#21'DataModule1.DB1_DBD28'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#8'HMIE'
+  +'dit9'#4'Left'#2'P'#6'Height'#2#21#3'Top'#3#24#1#5'Width'#2'p'#5'Color'#7#8
+  +'clWindow'#8'TabOrder'#2#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataMod'
+  +'ule1.DB1_DBD32'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit10'#4'Lef'
+  +'t'#2'P'#6'Height'#2#21#3'Top'#3'0'#1#5'Width'#2'p'#5'Color'#7#8'clWindow'#8
+  +'TabOrder'#2#9#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#21'DataModule1.DB1_DBD'
+  +'36'#18'FreezeValueOnFocus'#8#0#0#6'TLabel'#6'Label4'#4'Left'#2#0#6'Height'#2
+  +#19#3'Top'#2'X'#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Cap'
+  +'tion'#6#7'DWORD 0'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11
+  +'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Label5'#4'Left'#2#0#6'Heigh'
+  +'t'#2#19#3'Top'#2'p'#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7
+  +'Caption'#6#7'DWORD 4'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'
+  +#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Label6'#4'Left'#2#0#6'He'
+  +'ight'#2#19#3'Top'#3#136#0#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSi'
+  +'ze'#8#7'Caption'#6#7'DWORD 8'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8't'
+  +'lCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Label7'#4'Left'
+  +#2#0#6'Height'#2#19#3'Top'#3#160#0#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8
+  +'AutoSize'#8#7'Caption'#6#8'DWORD 12'#10'Font.Style'#11#6'fsBold'#0#6'Layout'
+  +#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'Label8'#4
+  +'Left'#2#0#6'Height'#2#19#3'Top'#3#184#0#5'Width'#2'P'#9'Alignment'#7#8'taCe'
+  +'nter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 16'#10'Font.Style'#11#6'fsBold'#0#6
+  +'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#6'La'
+  +'bel9'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#208#0#5'Width'#2'P'#9'Alignment'#7
+  +#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 20'#10'Font.Style'#11#6'fsBo'
   +'ld'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLab'
-  +'el'#6'Label8'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#184#0#5'Width'#2'P'#9'Ali'
-  +'gnment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 16'#10'Font.Style'
+  +'el'#7'Label10'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#232#0#5'Width'#2'P'#9'Al'
+  +'ignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 24'#10'Font.Style'
   +#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0
-  +#0#6'TLabel'#6'Label9'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#208#0#5'Width'#2
-  +'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 20'#10'Fon'
-  +'t.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'Parent'
-  +'Font'#8#0#0#6'TLabel'#7'Label10'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#232#0#5
-  +'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 2'
-  +'4'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8
-  +#10'ParentFont'#8#0#0#6'TLabel'#7'Label11'#4'Left'#2#0#6'Height'#2#19#3'Top'
-  ,#3#0#1#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8
-  +'DWORD 28'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentCo'
-  +'lor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label12'#4'Left'#2#0#6'Height'#2#19
-  +#3'Top'#3#24#1#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Capt'
-  +'ion'#6#8'DWORD 32'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11
-  +'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label13'#4'Left'#2#0#6'Heig'
-  +'ht'#2#19#3'Top'#3'0'#1#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'
-  +#8#7'Caption'#6#8'DWORD 36'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCe'
-  +'nter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label14'#4'Left'#3
-  +#200#0#6'Height'#2#19#3'Top'#2'X'#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8
-  +'AutoSize'#8#7'Caption'#6#7'Float 0'#10'Font.Style'#11#6'fsBold'#0#6'Layout'
-  +#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label15'#4
-  +'Left'#3#200#0#6'Height'#2#19#3'Top'#2'p'#5'Width'#2'P'#9'Alignment'#7#8'taC'
-  +'enter'#8'AutoSize'#8#7'Caption'#6#7'Float 4'#10'Font.Style'#11#6'fsBold'#0#6
-  +'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'La'
-  +'bel16'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3#136#0#5'Width'#2'P'#9'Alignm'
-  +'ent'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#7'Float 8'#10'Font.Style'#11#6
+  +#0#6'TLabel'#7'Label11'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#0#1#5'Width'#2'P'
+  ,#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 28'#10'Font.S'
+  +'tyle'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFon'
+  +'t'#8#0#0#6'TLabel'#7'Label12'#4'Left'#2#0#6'Height'#2#19#3'Top'#3#24#1#5'Wi'
+  +'dth'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'DWORD 32'
+  +#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10
+  +'ParentFont'#8#0#0#6'TLabel'#7'Label13'#4'Left'#2#0#6'Height'#2#19#3'Top'#3
+  +'0'#1#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8
+  +'DWORD 36'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentCo'
+  +'lor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label14'#4'Left'#3#200#0#6'Height'#2
+  +#19#3'Top'#2'X'#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Cap'
+  +'tion'#6#7'Float 0'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11
+  +'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label15'#4'Left'#3#200#0#6
+  +'Height'#2#19#3'Top'#2'p'#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSiz'
+  +'e'#8#7'Caption'#6#7'Float 4'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tl'
+  +'Center'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label16'#4'Left'
+  +#3#200#0#6'Height'#2#19#3'Top'#3#136#0#5'Width'#2'P'#9'Alignment'#7#8'taCent'
+  +'er'#8'AutoSize'#8#7'Caption'#6#7'Float 8'#10'Font.Style'#11#6'fsBold'#0#6'L'
+  +'ayout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Lab'
+  +'el17'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3#160#0#5'Width'#2'P'#9'Alignme'
+  +'nt'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'Float 12'#10'Font.Style'#11#6
   +'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6
-  +'TLabel'#7'Label17'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3#160#0#5'Width'#2
-  +'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'Float 12'#10'Fon'
+  +'TLabel'#7'Label18'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3#184#0#5'Width'#2
+  +'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'Float 16'#10'Fon'
   +'t.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'Parent'
-  +'Font'#8#0#0#6'TLabel'#7'Label18'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3#184
+  +'Font'#8#0#0#6'TLabel'#7'Label19'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3#208
   +#0#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'Flo'
-  +'at 16'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'
-  +#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label19'#4'Left'#3#200#0#6'Height'#2#19#3
-  +'Top'#3#208#0#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Capti'
-  +'on'#6#8'Float 20'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11
-  +'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label20'#4'Left'#3#200#0#6
-  +'Height'#2#19#3'Top'#3#232#0#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'Auto'
-  +'Size'#8#7'Caption'#6#8'Float 24'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8
-  +'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label21'#4'Lef'
-  +'t'#3#200#0#6'Height'#2#19#3'Top'#3#0#1#5'Width'#2'P'#9'Alignment'#7#8'taCen'
-  +'ter'#8'AutoSize'#8#7'Caption'#6#8'Float 28'#10'Font.Style'#11#6'fsBold'#0#6
+  +'at 20'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'
+  +#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label20'#4'Left'#3#200#0#6'Height'#2#19#3
+  +'Top'#3#232#0#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Capti'
+  +'on'#6#8'Float 24'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11
+  +'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label21'#4'Left'#3#200#0#6
+  +'Height'#2#19#3'Top'#3#0#1#5'Width'#2'P'#9'Alignment'#7#8'taCenter'#8'AutoSi'
+  +'ze'#8#7'Caption'#6#8'Float 28'#10'Font.Style'#11#6'fsBold'#0#6'Layout'#7#8
+  +'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label22'#4'Lef'
+  +'t'#3#200#0#6'Height'#2#19#3'Top'#3#24#1#5'Width'#2'P'#9'Alignment'#7#8'taCe'
+  +'nter'#8'AutoSize'#8#7'Caption'#6#8'Float 32'#10'Font.Style'#11#6'fsBold'#0#6
   +'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'La'
-  +'bel22'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3#24#1#5'Width'#2'P'#9'Alignme'
-  +'nt'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'Float 32'#10'Font.Style'#11#6
-  +'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#6
-  +'TLabel'#7'Label23'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3'0'#1#5'Width'#2
-  +'P'#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'Float 36'#10'Fon'
-  +'t.Style'#11#6'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'Parent'
-  +'Font'#8#0#0#8'THMIEdit'#9'HMIEdit11'#4'Left'#3#24#1#6'Height'#2#25#3'Top'#2
-  +'X'#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#10#12'NumberFormat'#6
-  +#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD00'#18'FreezeValueOnFocus'#8#0#0#6'TLa'
-  +'bel'#7'Label24'#4'Left'#3#24#1#6'Height'#2#16#3'Top'#2'F'#5'Width'#2'p'#9'A'
-  +'lignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#9'Flags (M)'#10'Font.Sty'
-  +'le'#11#6'fsBold'#0#11'ParentColor'#8#10'ParentFont'#8#0#0#8'THMIEdit'#9'HMI'
-  +'Edit12'#4'Left'#3#24#1#6'Height'#2#25#3'Top'#2'p'#5'Width'#2'p'#5'Color'#7#8
-  +'clWindow'#8'TabOrder'#2#11#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataMo'
-  +'dule1.MD04'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit13'#4'Left'#3
-  +#24#1#6'Height'#2#25#3'Top'#3#136#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'T'
-  +'abOrder'#2#12#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD08'#18
-  +'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit14'#4'Left'#3#24#1#6'Height'
-  +#2#25#3'Top'#3#160#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#13#12
-  +'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD12'#18'FreezeValueOnFo'
-  +'cus'#8#0#0#8'THMIEdit'#9'HMIEdit15'#4'Left'#3#24#1#6'Height'#2#25#3'Top'#3
-  +#184#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#14#12'NumberFormat'
-  +#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD16'#18'FreezeValueOnFocus'#8#0#0#8'T'
-  +'HMIEdit'#9'HMIEdit16'#4'Left'#3#24#1#6'Height'#2#25#3'Top'#3#208#0#5'Width'
-  +#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#15#12'NumberFormat'#6#4'#0.0'#6'P'
-  +'LCTag'#7#16'DataModule1.MD20'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HM'
-  +'IEdit17'#4'Left'#3#24#1#6'Height'#2#25#3'Top'#3#232#0#5'Width'#2'p'#5'Color'
-  +#7#8'clWindow'#8'TabOrder'#2#16#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'Da'
-  +'taModule1.MD24'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit18'#4'Lef'
-  +'t'#3#24#1#6'Height'#2#25#3'Top'#3#0#1#5'Width'#2'p'#5'Color'#7#8'clWindow'#8
-  ,'TabOrder'#2#17#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD28'
-  +#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit19'#4'Left'#3#24#1#6'Heig'
-  +'ht'#2#25#3'Top'#3#24#1#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#18
-  +#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD32'#18'FreezeValueO'
-  +'nFocus'#8#0#0#8'THMIEdit'#9'HMIEdit20'#4'Left'#3#24#1#6'Height'#2#25#3'Top'
-  +#3'0'#1#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#19#12'NumberForma'
-  +'t'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD36'#18'FreezeValueOnFocus'#8#0#0#6
-  +'TLabel'#7'Label25'#4'Left'#2#8#6'Height'#2#16#3'Top'#2'-'#5'Width'#3#200#0#7
-  +'Caption'#6#28'TCP_UDP Port Commands/second'#11'ParentColor'#8#0#0#6'TLabel'
-  +#7'Label26'#4'Left'#3#214#0#6'Height'#2#14#3'Top'#2'-'#5'Width'#2'8'#9'Align'
-  +'ment'#7#14'taRightJustify'#8'AutoSize'#8#7'Caption'#6#1'0'#10'Font.Style'#11
-  +#6'fsBold'#0#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label27'#4'L'
-  +'eft'#3#17#1#6'Height'#2#16#3'Top'#2'-'#5'Width'#2'&'#7'Caption'#6#5'cmd/s'
-  +#11'ParentColor'#8#0#0#8'THMIText'#8'HMIText1'#4'Left'#3#152#1#6'Height'#2#17
-  +#3'Top'#2'X'#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Trans'
-  +'parent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_0'#5'Zon'
-  +'es'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13
+  +'bel23'#4'Left'#3#200#0#6'Height'#2#19#3'Top'#3'0'#1#5'Width'#2'P'#9'Alignme'
+  +'nt'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#8'Float 36'#10'Font.Style'#11#6
+  +'fsBold'#0#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#10'ParentFont'#8#0#0#8
+  +'THMIEdit'#9'HMIEdit11'#4'Left'#3#24#1#6'Height'#2#21#3'Top'#2'X'#5'Width'#2
+  +'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#10#12'NumberFormat'#6#4'#0.0'#6'PLC'
+  +'Tag'#7#16'DataModule1.MD00'#18'FreezeValueOnFocus'#8#0#0#6'TLabel'#7'Label2'
+  +'4'#4'Left'#3#24#1#6'Height'#2#16#3'Top'#2'F'#5'Width'#2'p'#9'Alignment'#7#8
+  +'taCenter'#8'AutoSize'#8#7'Caption'#6#9'Flags (M)'#10'Font.Style'#11#6'fsBol'
+  +'d'#0#11'ParentColor'#8#10'ParentFont'#8#0#0#8'THMIEdit'#9'HMIEdit12'#4'Left'
+  +#3#24#1#6'Height'#2#21#3'Top'#2'p'#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'Ta'
+  +'bOrder'#2#11#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD04'#18
+  +'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit13'#4'Left'#3#24#1#6'Height'
+  +#2#21#3'Top'#3#136#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#12#12
+  +'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD08'#18'FreezeValueOnFo'
+  +'cus'#8#0#0#8'THMIEdit'#9'HMIEdit14'#4'Left'#3#24#1#6'Height'#2#21#3'Top'#3
+  +#160#0#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#13#12'NumberFormat'
+  +#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD12'#18'FreezeValueOnFocus'#8#0#0#8'T'
+  +'HMIEdit'#9'HMIEdit15'#4'Left'#3#24#1#6'Height'#2#21#3'Top'#3#184#0#5'Width'
+  +#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#14#12'NumberFormat'#6#4'#0.0'#6'P'
+  +'LCTag'#7#16'DataModule1.MD16'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HM'
+  +'IEdit16'#4'Left'#3#24#1#6'Height'#2#21#3'Top'#3#208#0#5'Width'#2'p'#5'Color'
+  +#7#8'clWindow'#8'TabOrder'#2#15#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'Da'
+  +'taModule1.MD20'#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit17'#4'Lef'
+  +'t'#3#24#1#6'Height'#2#21#3'Top'#3#232#0#5'Width'#2'p'#5'Color'#7#8'clWindow'
+  +#8'TabOrder'#2#16#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD24'
+  +#18'FreezeValueOnFocus'#8#0#0#8'THMIEdit'#9'HMIEdit18'#4'Left'#3#24#1#6'Heig'
+  +'ht'#2#21#3'Top'#3#0#1#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#17
+  ,#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD28'#18'FreezeValueO'
+  +'nFocus'#8#0#0#8'THMIEdit'#9'HMIEdit19'#4'Left'#3#24#1#6'Height'#2#21#3'Top'
+  +#3#24#1#5'Width'#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#18#12'NumberForma'
+  +'t'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.MD32'#18'FreezeValueOnFocus'#8#0#0#8
+  +'THMIEdit'#9'HMIEdit20'#4'Left'#3#24#1#6'Height'#2#21#3'Top'#3'0'#1#5'Width'
+  +#2'p'#5'Color'#7#8'clWindow'#8'TabOrder'#2#19#12'NumberFormat'#6#4'#0.0'#6'P'
+  +'LCTag'#7#16'DataModule1.MD36'#18'FreezeValueOnFocus'#8#0#0#6'TLabel'#7'Labe'
+  +'l25'#4'Left'#2#8#6'Height'#2#16#3'Top'#2'-'#5'Width'#3#200#0#7'Caption'#6#28
+  +'TCP_UDP Port Commands/second'#11'ParentColor'#8#0#0#6'TLabel'#7'Label26'#4
+  +'Left'#3#214#0#6'Height'#2#14#3'Top'#2'-'#5'Width'#2'8'#9'Alignment'#7#14'ta'
+  +'RightJustify'#8'AutoSize'#8#7'Caption'#6#1'0'#10'Font.Style'#11#6'fsBold'#0
+  +#11'ParentColor'#8#10'ParentFont'#8#0#0#6'TLabel'#7'Label27'#4'Left'#3#17#1#6
+  +'Height'#2#16#3'Top'#2'-'#5'Width'#2'&'#7'Caption'#6#5'cmd/s'#11'ParentColor'
+  +#8#0#0#8'THMIText'#8'HMIText1'#4'Left'#3#152#1#6'Height'#2#17#3'Top'#2'X'#5
+  +'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'N'
+  +'umberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_0'#5'Zones'#14#1#6'Val'
+  +'ue1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'
+  +#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8
+  +#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Val'
+  +'ue1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'Inc'
+  +'ludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'De'
+  +'faultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8
+  +#0#0#0#0#8'THMIText'#8'HMIText2'#4'Left'#3#152#1#6'Height'#2#17#3'Top'#2'p'#5
+  +'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'N'
+  +'umberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_1'#5'Zones'#14#1#6'Val'
+  +'ue1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'
+  +#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8
+  +#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Val'
+  +'ue1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'Inc'
+  +'ludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'De'
+  +'faultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8
+  +#0#0#0#0#8'THMIText'#8'HMIText3'#4'Left'#3#152#1#6'Height'#2#17#3'Top'#3#138
+  +#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8
+  +#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_2'#5'Zones'#14#1#6
+  +'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeVal'
+  +'ue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZo'
+  +'ne'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1
+  +#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13
+  +'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11
+  +'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'
+  +#8#0#0#0#0#8'THMIText'#8'HMIText4'#4'Left'#3#152#1#6'Height'#2#17#3'Top'#3
+  +#162#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Transparent'
+  +#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_3'#5'Zones'#14#1
+  +#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeV'
+  +'alue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'Default'
+  +'Zone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transparent'#8#0
+  +#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'
+  +#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255
+  +#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'#11'Transpar'
+  +'ent'#8#0#0#0#0#8'THMIText'#8'HMIText5'#4'Left'#3#152#1#6'Height'#2#17#3'Top'
+  +#3#184#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Transpare'
+  +'nt'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_4'#5'Zones'
+  +#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'Inc'
+  +'ludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'De'
+  +'faultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transparent'
+  +#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255
+  +'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2
+  +#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'#11'Tran'
+  +'sparent'#8#0#0#0#0#8'THMIText'#8'HMIText6'#4'Left'#3#152#1#6'Height'#2#17#3
+  +'Top'#3#208#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Tran'
+  +'sparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_5'#5'Zo'
+  +'nes'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13
   +'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11
   +'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transpare'
-  +'nt'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128
+  ,'nt'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128
   +#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'
   +#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'#11'Tr'
-  +'ansparent'#8#0#0#0#0#8'THMIText'#8'HMIText2'#4'Left'#3#152#1#6'Height'#2#17
-  +#3'Top'#2'p'#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Trans'
-  +'parent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_1'#5'Zon'
-  +'es'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13
-  +'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11
-  +'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transpare'
-  +'nt'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128
-  +#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'
-  +#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'#11'Tr'
-  +'ansparent'#8#0#0#0#0#8'THMIText'#8'HMIText3'#4'Left'#3#152#1#6'Height'#2#17
-  +#3'Top'#3#138#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Tr'
-  +'ansparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_2'#5
+  +'ansparent'#8#0#0#0#0#8'THMIText'#8'HMIText7'#4'Left'#3#152#1#6'Height'#2#17
+  +#3'Top'#3#234#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11'Tr'
+  +'ansparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_6'#5
   +'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0
   +#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255
   +#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transp'
   +'arent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0
   +#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'Blink'
   +'With'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'
-  +#11'Transparent'#8#0#0#0#0#8'THMIText'#8'HMIText4'#4'Left'#3#152#1#6'Height'
-  +#2#17#3'Top'#3#162#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8
-  +#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_'
-  +'3'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0
+  +#11'Transparent'#8#0#0#0#0#8'THMIText'#8'HMIText8'#4'Left'#3#152#1#6'Height'
+  +#2#17#3'Top'#3#2#1#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8#11
+  +'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.I0_7'#5
+  +'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0
+  +#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255
+  +#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Transp'
+  +'arent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0#0#0
+  +#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'Blink'
+  +'With'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clLime'
+  +#11'Transparent'#8#0#0#0#0#6'TLabel'#7'Label28'#4'Left'#3#176#1#6'Height'#2
+  +#17#3'Top'#2'X'#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4'I3_0'#6'Layout'#7
+  +#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#7'Label29'#4'Left'#3#176#1#6'He'
+  +'ight'#2#17#3'Top'#2'p'#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4'I3_1'#6'L'
+  +'ayout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#7'Label30'#4'Left'#3
+  +#176#1#6'Height'#2#17#3'Top'#3#138#0#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6
+  +#4'I3_2'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#7'Label31'#4
+  +'Left'#3#176#1#6'Height'#2#17#3'Top'#3#162#0#5'Width'#2' '#8'AutoSize'#8#7'C'
+  +'aption'#6#4'I3_3'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#7
+  +'Label32'#4'Left'#3#176#1#6'Height'#2#17#3'Top'#3#184#0#5'Width'#2' '#8'Auto'
+  +'Size'#8#7'Caption'#6#4'I3_4'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6
+  +'TLabel'#7'Label33'#4'Left'#3#176#1#6'Height'#2#17#3'Top'#3#208#0#5'Width'#2
+  +' '#8'AutoSize'#8#7'Caption'#6#4'I3_5'#6'Layout'#7#8'tlCenter'#11'ParentColo'
+  +'r'#8#0#0#6'TLabel'#7'Label34'#4'Left'#3#176#1#6'Height'#2#17#3'Top'#3#234#0
+  +#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4'I3_6'#6'Layout'#7#8'tlCenter'#11
+  +'ParentColor'#8#0#0#6'TLabel'#7'Label35'#4'Left'#3#176#1#6'Height'#2#17#3'To'
+  +'p'#3#2#1#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4'I7_7'#6'Layout'#7#8'tlC'
+  +'enter'#11'ParentColor'#8#0#0#8'THMIText'#8'HMIText9'#4'Left'#3#224#1#6'Heig'
+  +'ht'#2#17#3'Top'#2'X'#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'#8
+  +#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.Q0_'
+  +'0'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0#0
   +#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2
   +#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11'Tr'
   +'ansparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0#0
   +#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'B'
   +'linkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'clL'
-  +'ime'#11'Transparent'#8#0#0#0#0#8'THMIText'#8'HMIText5'#4'Left'#3#152#1#6'He'
-  +'ight'#2#17#3'Top'#3#184#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentCol'
-  +'or'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModul'
-  +'e1.I0_4'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0
-  +#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkW'
-  +'ith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'
-  +#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0
-  +#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0
-  +#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6
-  +'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#8'HMIText6'#4'Left'#3#152#1#6
-  +'Height'#2#17#3'Top'#3#208#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentC'
+  +'ime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMIText10'#4'Left'#3#224#1#6'H'
+  +'eight'#2#17#3'Top'#2'p'#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentColor'
+  +#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataModule1.Q'
+  +'0_1'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0#0#0#0
+  +#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'BlinkWith'
+  +#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilver'#11
+  +'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0#0#0#0
+  +#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9
+  +'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#6'cl'
+  +'Lime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMIText11'#4'Left'#3#224#1#6
+  +'Height'#2#17#3'Top'#3#138#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'ParentC'
   +'olor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataMod'
-  +'ule1.I0_5'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0
+  +'ule1.Q0_2'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0#0
   +#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'Blin'
   +'kWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSilv'
-  ,'er'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0
+  +'er'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5#0
   +#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'
-  +#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7
-  +#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#8'HMIText7'#4'Left'#3#152#1
-  +#6'Height'#2#17#3'Top'#3#234#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'Paren'
+  ,#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7
+  +#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMIText12'#4'Left'#3#224#1
+  +#6'Height'#2#17#3'Top'#3#162#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11'Paren'
   +'tColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'DataM'
-  +'odule1.I0_6'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0
+  +'odule1.Q0_3'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0#0#0
   +#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9'Bl'
   +'inkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'clSi'
   +'lver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'#5
   +#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTim'
   +'e'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Colo'
-  +'r'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#8'HMIText8'#4'Left'#3
-  +#152#1#6'Height'#2#17#3'Top'#3#2#1#5'Width'#2#17#5'Color'#7#8'clSilver'#11'P'
-  +'arentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'D'
-  +'ataModule1.I0_7'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5#0
-  +#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0#9
-  +'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8'cl'
-  +'Silver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Value2'
-  +#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkT'
-  +'ime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Co'
-  +'lor'#7#6'clLime'#11'Transparent'#8#0#0#0#0#6'TLabel'#7'Label28'#4'Left'#3
-  +#176#1#6'Height'#2#17#3'Top'#2'X'#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4
-  +'I3_0'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#7'Label29'#4
-  +'Left'#3#176#1#6'Height'#2#17#3'Top'#2'p'#5'Width'#2' '#8'AutoSize'#8#7'Capt'
-  +'ion'#6#4'I3_1'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#7'La'
-  +'bel30'#4'Left'#3#176#1#6'Height'#2#17#3'Top'#3#138#0#5'Width'#2' '#8'AutoSi'
-  +'ze'#8#7'Caption'#6#4'I3_2'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6
-  +'TLabel'#7'Label31'#4'Left'#3#176#1#6'Height'#2#17#3'Top'#3#162#0#5'Width'#2
-  +' '#8'AutoSize'#8#7'Caption'#6#4'I3_3'#6'Layout'#7#8'tlCenter'#11'ParentColo'
-  +'r'#8#0#0#6'TLabel'#7'Label32'#4'Left'#3#176#1#6'Height'#2#17#3'Top'#3#184#0
-  +#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4'I3_4'#6'Layout'#7#8'tlCenter'#11
-  +'ParentColor'#8#0#0#6'TLabel'#7'Label33'#4'Left'#3#176#1#6'Height'#2#17#3'To'
-  +'p'#3#208#0#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4'I3_5'#6'Layout'#7#8't'
-  +'lCenter'#11'ParentColor'#8#0#0#6'TLabel'#7'Label34'#4'Left'#3#176#1#6'Heigh'
-  +'t'#2#17#3'Top'#3#234#0#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4'I3_6'#6'L'
-  +'ayout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#7'Label35'#4'Left'#3
-  +#176#1#6'Height'#2#17#3'Top'#3#2#1#5'Width'#2' '#8'AutoSize'#8#7'Caption'#6#4
-  +'I7_7'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#8'THMIText'#8'HMIText9'
-  +#4'Left'#3#224#1#6'Height'#2#17#3'Top'#2'X'#5'Width'#2#17#5'Color'#7#8'clSil'
-  +'ver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTa'
-  +'g'#7#16'DataModule1.Q0_0'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'V'
-  +'alue2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'Blin'
-  +'kTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5
+  +'r'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMIText13'#4'Left'#3
+  +#224#1#6'Height'#2#17#3'Top'#3#184#0#5'Width'#2#17#5'Color'#7#8'clSilver'#11
+  +'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16
+  +'DataModule1.Q0_4'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Value2'#5
+  +#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTime'#2#0
+  +#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Color'#7#8
+  +'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'#6'Valu'
+  +'e2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8#9'Bl'
+  +'inkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5
+  +'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMIText14'#4'Lef'
+  +'t'#3#224#1#6'Height'#2#17#3'Top'#3#208#0#5'Width'#2#17#5'Color'#7#8'clSilve'
+  +'r'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PLCTag'
+  +#7#16'DataModule1.Q0_5'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6'Valu'
+  +'e2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'BlinkTi'
+  +'me'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5'Col'
+  +'or'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255'?'
+  +#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue2'#8
+  +#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqu'
+  +'al'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMIText15'
+  +#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#234#0#5'Width'#2#17#5'Color'#7#8'cl'
+  +'Silver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6'PL'
+  +'CTag'#7#16'DataModule1.Q0_6'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0#6
+  +'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'Bli'
+  +'nkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'#5
   +'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128#255
   +'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeValue'
   +'2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7
   +'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMITe'
-  +'xt10'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#2'p'#5'Width'#2#17#5'Color'#7#8
+  +'xt16'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#2#1#5'Width'#2#17#5'Color'#7#8
   +'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6
-  +'PLCTag'#7#16'DataModule1.Q0_1'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0
-  +#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'B'
-  +'linkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'
-  +#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128
-  +#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeV'
-  +'alue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7
-  +#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMI'
-  +'Text11'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#138#0#5'Width'#2#17#5'Color'
-  +#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'
-  +#6'PLCTag'#7#16'DataModule1.Q0_2'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0
-  +#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9
-  +'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'
-  +#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128
-  +#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeV'
-  ,'alue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7
-  +#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMI'
-  +'Text12'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#162#0#5'Width'#2#17#5'Color'
-  +#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'
-  +#6'PLCTag'#7#16'DataModule1.Q0_3'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0
-  +#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9
-  +'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'
-  +#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128
-  +#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeV'
-  +'alue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7
-  +#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMI'
-  +'Text13'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#184#0#5'Width'#2#17#5'Color'
-  +#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'
-  +#6'PLCTag'#7#16'DataModule1.Q0_4'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0
-  +#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9
-  +'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'
-  +#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128
-  +#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeV'
-  +'alue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7
-  +#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMI'
-  +'Text14'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#208#0#5'Width'#2#17#5'Color'
-  +#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'
-  +#6'PLCTag'#7#16'DataModule1.Q0_5'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0
-  +#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9
-  +'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'
-  +#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128
-  +#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeV'
-  +'alue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7
-  +#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMI'
-  +'Text15'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#234#0#5'Width'#2#17#5'Color'
-  +#7#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'
-  +#6'PLCTag'#7#16'DataModule1.Q0_6'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0
-  +#0#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9
-  +'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'
-  +#5'Color'#7#8'clSilver'#11'Transparent'#8#0#1#6'Value1'#5#0#0#0#0#0#0#0#128
-  +#255'?'#6'Value2'#5#0#0#0#0#0#0#0#128#255'?'#13'IncludeValue1'#8#13'IncludeV'
-  +'alue2'#8#9'BlinkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7
-  +#7'ztEqual'#5'Color'#7#6'clLime'#11'Transparent'#8#0#0#0#0#8'THMIText'#9'HMI'
-  +'Text16'#4'Left'#3#224#1#6'Height'#2#17#3'Top'#3#2#1#5'Width'#2#17#5'Color'#7
-  +#8'clSilver'#11'ParentColor'#8#11'Transparent'#8#12'NumberFormat'#6#4'#0.0'#6
   +'PLCTag'#7#16'DataModule1.Q0_7'#5'Zones'#14#1#6'Value1'#5#0#0#0#0#0#0#0#0#0#0
   +#6'Value2'#5#0#0#0#0#0#0#0#0#0#0#13'IncludeValue1'#8#13'IncludeValue2'#8#9'B'
   +'linkTime'#2#0#9'BlinkWith'#2#255#11'DefaultZone'#8#8'ZoneType'#7#7'ztEqual'

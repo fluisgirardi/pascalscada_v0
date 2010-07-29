@@ -19,10 +19,6 @@
       </Parsing>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
-        <Checks>
-          <RangeChecks Value="True"/>
-          <StackChecks Value="True"/>
-        </Checks>
         <Optimizations>
           <VariablesInRegisters Value="True"/>
           <UncertainOptimizations Value="True"/>
