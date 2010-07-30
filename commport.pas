@@ -1300,13 +1300,13 @@ begin
     canopen:=false;
     if Log=FLogActions then exit;
 
-    if [csDesigning]*ComponentState<>[] then begin
-      canopen:=(Trim(FLogFile)<>'');
+    if [csReading]*ComponentState<>[] then begin
+      FReadedLogActions:=Log;
       exit;
     end;
 
-    if [csReading]*ComponentState<>[] then begin
-      FReadedLogActions:=Log;
+    if [csDesigning]*ComponentState<>[] then begin
+      canopen:=(Trim(FLogFile)<>'');
       exit;
     end;
 

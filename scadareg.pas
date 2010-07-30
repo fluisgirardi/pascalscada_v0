@@ -17,7 +17,7 @@ uses
   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct,
-  PLCStructElement, ISOTCPDriver,
+  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
   {$ELSE}
@@ -61,6 +61,7 @@ begin
   RegisterComponents(strControlsPallete,  [THMIScrollBar]);
   RegisterComponents(strControlsPallete,  [THMIAnimation]);
   RegisterComponents(strControlsPallete,  [THMIText]);
+  RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver, 'COMPort'  , TPortPropertyEditor);

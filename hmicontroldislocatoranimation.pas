@@ -11,10 +11,11 @@ unit HMIControlDislocatorAnimation;
 interface
 
 uses
-  Classes, SysUtils, Controls, LinearScaleProcessor;
+  Classes, SysUtils, Controls, LinearScaleProcessor, PLCNumber, Tag,
+  ProtocolTypes;
 
 type
-  TControlDislocatorAnimation = class(TComponent)
+  THMIControlDislocatorAnimation = class(TComponent, IHMITagInterface)
   private
     FStartLeft,
     FEndLeft:Integer;
@@ -25,6 +26,26 @@ type
     FTarget:TControl;
     FXLinearScale,
     FYLinearScale:TLinearScaleProcessor;
+    FTag:TPLCNumber;
+
+    procedure MoveObject;
+    procedure SetStartLeft(v:Integer);
+    procedure SetStartTop(v:Integer);
+    procedure SetEndLeft(v:Integer);
+    procedure SetEndTop(v:Integer);
+    procedure SetValueStart(v:Double);
+    procedure SetValueEnd(v:Double);
+    procedure SetPLCTag(t:TPLCNumber);
+
+    //metodos da interface ihmiTagInterface
+    procedure NotifyReadOk;
+    procedure NotifyReadFault;
+    procedure NotifyWriteOk;
+    procedure NotifyWriteFault;
+    procedure NotifyTagChange(Sender:TObject);
+    procedure RemoveTag(Sender:TObject);
+  protected
+    procedure Loaded; override;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -35,9 +56,133 @@ type
     property EndY:Integer read FEndTop write SetEndTop;
     property ValueStart:Double read FStartValue write SetValueStart;
     property ValueEnd:Double read FEndValue write SetValueEnd;
+    property PLCTag:TPLCNumber read FTag write SetPLCTag;
   end;
 
 
 implementation
+
+uses hsstrings;
+
+constructor THMIControlDislocatorAnimation.Create(AOwner:TComponent);
+begin
+  inherited Create(AOwner);
+  FXLinearScale:=TLinearScaleProcessor.Create(Self);
+  FYLinearScale:=TLinearScaleProcessor.Create(Self);
+end;
+
+destructor  THMIControlDislocatorAnimation.Destroy;
+begin
+
+  if FTag<>nil then begin
+    FTag.RemoveCallBacks(self as IHMITagInterface);
+  end;
+
+  FXLinearScale.Destroy;
+  FYLinearScale.Destroy;
+  inherited Destroy;
+end;
+
+procedure THMIControlDislocatorAnimation.Loaded;
+begin
+  MoveObject;
+end;
+
+procedure THMIControlDislocatorAnimation.MoveObject;
+begin
+  if (FTarget=nil) or (FTag=nil) then exit;
+
+  FXLinearScale.Input:=FTag.Value;
+  FYLinearScale.Input:=FTag.Value;
+
+  FTarget.Left:=trunc(FXLinearScale.Output);
+  FTarget.Top :=trunc(FYLinearScale.Output);
+end;
+
+procedure THMIControlDislocatorAnimation.SetStartLeft(v:Integer);
+begin
+  FXLinearScale.SysMin:=v;
+  MoveObject;
+end;
+
+procedure THMIControlDislocatorAnimation.SetStartTop(v:Integer);
+begin
+  FYLinearScale.SysMin:=v;
+  MoveObject;
+end;
+
+procedure THMIControlDislocatorAnimation.SetEndLeft(v:Integer);
+begin
+  FXLinearScale.SysMax:=v;
+  MoveObject;
+end;
+
+procedure THMIControlDislocatorAnimation.SetEndTop(v:Integer);
+begin
+  FYLinearScale.SysMax:=v;
+  MoveObject;
+end;
+
+procedure THMIControlDislocatorAnimation.SetValueStart(v:Double);
+begin
+  FXLinearScale.SysMax:=v;
+  MoveObject;
+end;
+
+procedure THMIControlDislocatorAnimation.SetValueEnd(v:Double);
+begin
+
+end;
+
+procedure THMIControlDislocatorAnimation.SetPLCTag(t:TPLCNumber);
+begin
+  //se o tag esta entre um dos aceitos.
+  if (t<>nil) and (not Supports(t, ITagNumeric)) then
+     raise Exception.Create(SonlyNumericTags);
+
+  //se ja estou associado a um tag, remove
+  if FTag<>nil then begin
+    FTag.RemoveCallBacks(self as IHMITagInterface);
+  end;
+
+  //adiona o callback para o novo tag
+  if t<>nil then begin
+    t.AddCallBacks(self as IHMITagInterface);
+    FTag := t;
+    MoveObject;
+  end;
+  FTag := t;
+end;
+
+procedure THMIControlDislocatorAnimation.NotifyReadOk;
+begin
+
+end;
+
+procedure THMIControlDislocatorAnimation.NotifyReadFault;
+begin
+
+end;
+
+procedure THMIControlDislocatorAnimation.NotifyWriteOk;
+begin
+
+end;
+
+procedure THMIControlDislocatorAnimation.NotifyWriteFault;
+begin
+
+end;
+
+procedure THMIControlDislocatorAnimation.NotifyTagChange(Sender:TObject);
+begin
+  MoveObject;
+end;
+
+procedure THMIControlDislocatorAnimation.RemoveTag(Sender:TObject);
+begin
+  if FTag=Sender then
+     FTag:=nil;
+end;
 
 end.

@@ -103,40 +103,40 @@ end;
 
 procedure TLinearScaleProcessor.SetSysMin(v:double);
 begin
-  if (not (csReading	in ComponentState)) and (v=FProperts[1]) then
-    raise Exception.Create(SsysMinSysMaxMustBeDifferent);
   FProperts[0] := v;
 end;
 
 procedure TLinearScaleProcessor.SetSysMax(v:double);
 begin
-  if (not (csReading	in ComponentState)) and (v=FProperts[0]) then
-    raise Exception.Create(SsysMinSysMaxMustBeDifferent);
   FProperts[1] := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMin(v:double);
 begin
-  if (not (csReading	in ComponentState)) and (v=FProperts[3]) then
-    raise Exception.Create(SPLCMinPLCMaxMustBeDifferent);
   FProperts[2] := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMax(v:double);
 begin
-  if (not (csReading	in ComponentState)) and (v=FProperts[2]) then
-    raise Exception.Create(SPLCMinPLCMaxMustBeDifferent);
   FProperts[3] := v;
 end;
 
 function  TLinearScaleProcessor.SetInGetOut(Sender:TComponent; Entrada:Double):Double;
+var
+  divisor:Double;
 begin
-  Result := (Entrada-FProperts[2])*(FProperts[1]-FProperts[0])/(FProperts[3]-FProperts[2])+FProperts[0];
+  divisor := (FProperts[3]-FProperts[2]);
+  if divisor=0 then divisor:=1;
+  Result := (Entrada-FProperts[2])*(FProperts[1]-FProperts[0])/divisor+FProperts[0];
 end;
 
 function TLinearScaleProcessor.SetOutGetIn(Sender:TComponent; Saida:Double):Double;
+var
+  divisor:Double;
 begin
-  Result := (Saida-FProperts[0])*(FProperts[3]-FProperts[2])/(FProperts[1]-FProperts[0])+FProperts[2];
+  divisor := (FProperts[1]-FProperts[0]);
+  if divisor=0 then divisor:=1;
+  Result := (Saida-FProperts[0])*(FProperts[3]-FProperts[2])/divisor+FProperts[2];
 end;
 
 procedure TLinearScaleProcessor.Loaded;
