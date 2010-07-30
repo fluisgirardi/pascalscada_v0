@@ -36,6 +36,7 @@ type
     procedure SetValueStart(v:Double);
     procedure SetValueEnd(v:Double);
     procedure SetPLCTag(t:TPLCNumber);
+    procedure SetControl(t:TControl);
 
     //metodos da interface ihmiTagInterface
     procedure NotifyReadOk;
@@ -57,6 +58,7 @@ type
     property ValueStart:Double read FStartValue write SetValueStart;
     property ValueEnd:Double read FEndValue write SetValueEnd;
     property PLCTag:TPLCNumber read FTag write SetPLCTag;
+    property Control:TControl read FTarget write SetControl;
   end;
 
 
@@ -101,37 +103,46 @@ end;
 
 procedure THMIControlDislocatorAnimation.SetStartLeft(v:Integer);
 begin
+  FStartLeft:=v;
   FXLinearScale.SysMin:=v;
   MoveObject;
 end;
 
 procedure THMIControlDislocatorAnimation.SetStartTop(v:Integer);
 begin
+  FStartTop:=v;
   FYLinearScale.SysMin:=v;
   MoveObject;
 end;
 
 procedure THMIControlDislocatorAnimation.SetEndLeft(v:Integer);
 begin
+  FEndLeft:=v;
   FXLinearScale.SysMax:=v;
   MoveObject;
 end;
 
 procedure THMIControlDislocatorAnimation.SetEndTop(v:Integer);
 begin
+  FEndTop:=v;
   FYLinearScale.SysMax:=v;
   MoveObject;
 end;
 
 procedure THMIControlDislocatorAnimation.SetValueStart(v:Double);
 begin
-  FXLinearScale.SysMax:=v;
+  FStartValue:=v;
+  FXLinearScale.PLCMin:=v;
+  FYLinearScale.PLCMin:=v;
   MoveObject;
 end;
 
 procedure THMIControlDislocatorAnimation.SetValueEnd(v:Double);
 begin
-
+  FEndValue:=v;
+  FXLinearScale.PLCMax:=v;
+  FYLinearScale.PLCMax:=v;
+  MoveObject;
 end;
 
 procedure THMIControlDislocatorAnimation.SetPLCTag(t:TPLCNumber);
@@ -152,6 +163,19 @@ begin
     MoveObject;
   end;
   FTag := t;
+end;
+
+procedure THMIControlDislocatorAnimation.SetControl(t:TControl);
+begin
+  if t=FTarget then exit;
+
+  if FTarget<>nil then begin
+    FTarget.Left:=StartX;
+    FTarget.Top:=StartY;
+  end;
+
+  FTarget:=t;
+  MoveObject;
 end;
 
 procedure THMIControlDislocatorAnimation.NotifyReadOk;
