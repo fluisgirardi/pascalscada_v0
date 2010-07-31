@@ -15,7 +15,7 @@ interface
 
 uses
   Classes, SysUtils, HMIZones, Dialogs, Forms, Menus, ProtocolDriver, Tag,
-  
+  typinfo, HMIControlDislocatorAnimation,
   {$IFDEF FPC}
     PropEdits, ComponentEditors;
   {$ELSE}
@@ -37,6 +37,14 @@ type
     function  GetValue: string; override;
     procedure Edit; override;
     procedure SetValue(const Value: string); override;
+  end;
+
+  //: Editor de varias propriedades de THMIControlDislocatorAnimation
+  TPositionPropertyEditor = class(TStringProperty)
+  public
+    function  GetAttributes: TPropertyAttributes; override;
+    function  GetValue: string; override;
+    procedure Edit; override;
   end;
 
   //: Editor da propriedade TZone.BlinkWith
@@ -177,6 +185,46 @@ end;
 function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
 begin
   Result:=TProtocolDriver(GetComponent);
+end;
+
+function  TPositionPropertyEditor.GetAttributes: TPropertyAttributes;
+begin
+   if GetComponent(0) is THMIControlDislocatorAnimation then
+      Result := [paDialog{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
+                 paValueEditable{$ENDIF}{$ENDIF}];
+end;
+
+function  TPositionPropertyEditor.GetValue: string;
+begin
+   Result := GetStrValue;
+end;
+
+procedure TPositionPropertyEditor.Edit;
+var
+  pname:String;
+begin
+  if GetComponent(0) is THMIControlDislocatorAnimation then begin
+    with GetComponent(0) as THMIControlDislocatorAnimation do begin
+      if Control=nil then exit;
+      pname := LowerCase(GetName);
+      if pname='gets_p0_position' then begin
+        P0_X:=Control.Left;
+        P0_Y:=Control.Top;
+        exit;
+      end;
+
+      if pname='gets_p1_position' then begin
+        P1_X:=Control.Left;
+        P1_Y:=Control.Top;
+        exit;
+      end;
+      if pname='goto_p0_position' then begin
+        Control.Left:=P0_X;
+        Control.Top:=P0_Y;
+        exit;
+      end;
+    end;
+  end;
 end;
 
 end.

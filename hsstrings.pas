@@ -74,6 +74,9 @@ resourcestring
   SCannotDestroyBecauseTagsStillManaged= 'O gerenciador de tags não pode ser destruido por ainda estar gerenciando tags!';
   SCannotRebuildTagID = 'Impossível refazer a identificação do tag (TagID).';
   SItemOutOfStructure = 'O tamanho do item excede a área de dados da estrutura.';
+  SGetP0 = 'Gets initial position';
+  SGetP1 = 'Gets final position';
+  SGotoP0 = 'Controls go to P0 position';
 
 implementation
 

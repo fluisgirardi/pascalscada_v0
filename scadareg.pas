@@ -64,10 +64,14 @@ begin
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
-  RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver, 'COMPort'  , TPortPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,  'Index'    , TElementIndexPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), TGraphicZone,      'FileName' , TZoneFileNamePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TZone,             'BlinkWith', TZoneBlinkWithPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), TGraphicZone,                   'FileName' ,        TZoneFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer),TZone,                          'BlinkWith',        TZoneBlinkWithPropertyEditor);
+
+  RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P1_Position', TPositionPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'GoTo_P0_Position', TPositionPropertyEditor);
 
   RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
 end;
