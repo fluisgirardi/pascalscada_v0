@@ -15,6 +15,17 @@ type
   TDataModule1 = class(TDataModule)
     DB1: TPLCBlock;
     I0_1: TTagBit;
+    Counters: TPLCBlock;
+    C0: TPLCBlockElement;
+    C3: TPLCBlockElement;
+    C4: TPLCBlockElement;
+    C5: TPLCBlockElement;
+    C6: TPLCBlockElement;
+    C7: TPLCBlockElement;
+    C8: TPLCBlockElement;
+    C9: TPLCBlockElement;
+    C1: TPLCBlockElement;
+    C2: TPLCBlockElement;
     Q0_2: TTagBit;
     Q0_3: TTagBit;
     Q0_4: TTagBit;

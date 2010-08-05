@@ -7,13 +7,15 @@ interface
 uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ExtCtrls, RTTIGrids, tcp_udpport, ISOTCPDriver, PLCBlock,
-  PLCBlockElement, HMIEdit, HMIText;
+  PLCBlockElement, HMIEdit, HMIText, LinearScaleProcessor,
+  HMIControlDislocatorAnimation, HMIAnimation, sdl;
 
 type
 
   { TForm1 }
 
   TForm1 = class(TForm)
+    HMIControlDislocatorAnimation1: THMIControlDislocatorAnimation;
     HMIEdit1: THMIEdit;
     HMIEdit10: THMIEdit;
     HMIEdit11: THMIEdit;
@@ -27,7 +29,17 @@ type
     HMIEdit19: THMIEdit;
     HMIEdit2: THMIEdit;
     HMIEdit20: THMIEdit;
+    HMIEdit21: THMIEdit;
+    HMIEdit22: THMIEdit;
+    HMIEdit23: THMIEdit;
+    HMIEdit24: THMIEdit;
+    HMIEdit25: THMIEdit;
+    HMIEdit26: THMIEdit;
+    HMIEdit27: THMIEdit;
+    HMIEdit28: THMIEdit;
+    HMIEdit29: THMIEdit;
     HMIEdit3: THMIEdit;
+    HMIEdit30: THMIEdit;
     HMIEdit4: THMIEdit;
     HMIEdit5: THMIEdit;
     HMIEdit6: THMIEdit;
@@ -88,13 +100,34 @@ type
     Label41: TLabel;
     Label42: TLabel;
     Label43: TLabel;
+    Label44: TLabel;
+    Label45: TLabel;
+    Label46: TLabel;
+    Label47: TLabel;
+    Label48: TLabel;
+    Label49: TLabel;
     Label5: TLabel;
+    Label50: TLabel;
+    Label51: TLabel;
+    Label52: TLabel;
+    Label53: TLabel;
+    Label54: TLabel;
     Label6: TLabel;
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
+    RadioButton1: TRadioButton;
+    RadioButton2: TRadioButton;
+    RadioButton3: TRadioButton;
+    RadioButton4: TRadioButton;
+    RadioButton5: TRadioButton;
     Timer1: TTimer;
+    TIPropertyGrid1: TTIPropertyGrid;
+    ToggleBox1: TToggleBox;
     procedure FormCreate(Sender: TObject);
+    procedure RadioButton1Change(Sender: TObject);
+    procedure RadioButton1Click(Sender: TObject);
+    procedure RadioButton2Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
     { private declarations }
@@ -113,12 +146,36 @@ uses dm;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  SDL_Init(SDL_INIT_EVERYTHING);
+end;
+
+procedure TForm1.RadioButton1Change(Sender: TObject);
+begin
+
+end;
+
+procedure TForm1.RadioButton1Click(Sender: TObject);
+begin
+  if not (Sender is TCheckBox) then exit;
+  with Sender as TCheckBox do
+    case Tag of
+      0:  TIPropertyGrid1.TIObject:=DataModule1.DB1;
+      1:  TIPropertyGrid1.TIObject:=DataModule1.MD0_MD40;
+      2:  TIPropertyGrid1.TIObject:=DataModule1.Counters;
+      3:  TIPropertyGrid1.TIObject:=DataModule1.InputsBYTE_01;
+      4:  TIPropertyGrid1.TIObject:=DataModule1.OutputsBYTE_01;
+    end;
+end;
+
+procedure TForm1.RadioButton2Click(Sender: TObject);
+begin
 
 end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
 begin
   Label26.Caption:=IntToStr(DataModule1.TCP_UDPPort1.CommandsPerSecond);
+  TIPropertyGrid1.RefreshPropertyValues;
 end;
 
 initialization

@@ -79,6 +79,7 @@ procedure TTagBlock.ScanRead;
 var
   tr:TTagRec;
 begin
+  inherited ScanRead;
   if (PProtocolDriver<>nil) and PAutoRead then begin
     BuildTagRec(tr,0,0);
     PProtocolDriver.ScanRead(tr);

@@ -100,8 +100,11 @@ type
     PChangeCallBacks:array of IHMITagInterface;
     //: Conta os callbacks que dependem desse tag.
     PChangeCallBackCount:integer;
-    //: Armazena a zona critica dos callbacks.
-    //PChangeCallBackCS:TCriticalSection;
+
+    //: Armazena quando foi a ultima requisição do Tag ao driver
+    FLastRequestTimestamp:TDateTime;
+    //: Armazena o número de requisicoes de leitura por scan feitas ao driver.
+    FReqCount, FTotalDelay:Int64;
 
     //: Armazena o identificador desse tag. GUID
     PGUID:String;

@@ -22,6 +22,8 @@ type
   private
     CScanTimer:TTimer;
     FRawProtocolValues:TArrayOfDouble;
+    FTotalTime, FReadCount:Int64;
+    FFirtsRead:Boolean;
   private
     procedure RebuildTagGUID;
     procedure GetNewProtocolTagSize;
@@ -60,6 +62,12 @@ type
 
     //: Valores vindo do tag são convertidos para o tipo de aceito pelo driver.
     function TagValuesToPLCValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble; virtual;
+
+    //: Retorna a média de tempo que o tag é atualizado.
+    function GetAvgUpdateRate:Double;
+
+    //: Retorna a média de atraso entre requisitar um valor e o valor chegar ao tag.
+    function GetAvgDelayBetweenRequests:double;
 
     //: configura o novo tipo de dado do tag.
     procedure SetTagType(newType:TTagType); virtual;
@@ -158,7 +166,7 @@ type
     }
     procedure BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
     //: Faz uma leitura @bold(assincrona) do tag.
-    procedure ScanRead; virtual; abstract;
+    procedure ScanRead; virtual;
     {:
     Escreve valores de maneira @bold(assincrona).
     @param(Values TArrayOfDouble: Array de valores a serem escritos.)
@@ -235,6 +243,10 @@ type
     property SwapWords:Boolean read FSwapWords write SetSwapWords default false;
     //: Informa ao driver o tamanho real do tag.
     property TagSizeOnProtocol:Integer read GetTagSizeOnProtocol;
+    //: Informa a média de milisegundos que o tag está sendo atualizado.
+    property AvgUpdateRate:Double read GetAvgUpdateRate;
+    //: Informa a média de atraso entre solicitar o valor e o valor chegar.
+    property AvgDelayBetweenRequest:Double read GetAvgDelayBetweenRequests;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -286,7 +298,7 @@ type
 
 implementation
 
-uses hsutils, hsstrings;
+uses hsutils, hsstrings, dateutils;
 
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
@@ -314,6 +326,7 @@ begin
   FSwapWords:=false;
   FCurrentWordSize:=1;
   FProtocolWordSize:=1;
+  FFirtsRead:=true;
   CScanTimer := TTimer.Create(self);
   CScanTimer.OnTimer := DoScanTimerEvent;
   FTagManager := GetTagManager;
@@ -374,6 +387,14 @@ procedure TPLCTag.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDat
 var
   c, poffset:Integer;
 begin
+  if (not FFirtsRead) and (TagCommand in [tcRead, tcScanRead]) and (LastResult=ioOk) then begin
+    inc(FTotalTime, MilliSecondsBetween(ValuesTimeStamp,PValueTimeStamp));
+    inc(FReadCount);
+  end;
+  if TagCommand=tcScanRead then
+    inc(FTotalDelay,MilliSecondsBetween(ValuesTimeStamp,FLastRequestTimestamp));
+  FFirtsRead:=false;
+
   if LastResult in [ioOk, ioNullDriver] then begin
     if FCurrentWordSize>=FProtocolWordSize then begin
       poffset := (FCurrentWordSize div FProtocolWordSize)*offset
@@ -543,6 +564,12 @@ begin
   tr.Retries := PRetries;
   tr.ScanTime := PScanTime;
   tr.CallBack := TagCommandCallBack;
+end;
+
+procedure TPLCTag.ScanRead;
+begin
+  FLastRequestTimestamp:=Now;
+  Inc(FReqCount);
 end;
 
 procedure TPLCTag.GetNewProtocolTagSize;
@@ -1064,6 +1091,16 @@ begin
     end;
   end;
   Freemem(PtrByte);
+end;
+
+function TPLCTag.GetAvgUpdateRate:Double;
+begin
+  Result:=FTotalTime/FReadCount;
+end;
+
+function TPLCTag.GetAvgDelayBetweenRequests:double;
+begin
+  Result:=FTotalDelay/FReqCount;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

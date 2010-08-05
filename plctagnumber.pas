@@ -94,6 +94,10 @@ type
     property SwapWords;
     //: @seealso(TPLCTag.TagSizeOnProtocol)
     property TagSizeOnProtocol;
+    //: @seealso(TPLCTag.AvgUpdateRate)
+    property AvgUpdateRate;
+    //: @seealso(TPLCTag.AvgDelayBetweenRequest)
+    property AvgDelayBetweenRequest;
   end;
 
 implementation
@@ -172,6 +176,7 @@ var
   tr:TTagRec;
 begin
   if csDesigning in ComponentState then exit;
+  inherited ScanRead;
   if (PProtocolDriver<>nil) and PAutoRead then begin
     BuildTagRec(tr,0,0);
     PProtocolDriver.ScanRead(tr);
