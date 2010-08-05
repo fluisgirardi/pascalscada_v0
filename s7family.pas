@@ -838,17 +838,18 @@ end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:Integer);
 var
-  plc, db, block, retries:integer;
+  plc, db, block, retries, i:integer;
   TimeElapsed:Int64;
-  lastPLC, lastDB, lastType, lastStartAddress, lastSize:integer;
   msgout, msgin:BYTES;
   initialized, onereqdone:Boolean;
   anow:TDateTime;
   ReqList:TS7ReqList;
+  ReqOutOfScan:TS7ReqList;
   MsgOutSize:Integer;
   RequestsPendding:Boolean;
 
   OutgoingPDUSize, IncomingPDUSize:Integer;
+  OutOffScanOutgoingPDUSize, OutOffScanIncomingPDUSize:Integer;
 
   procedure pkg_initialized;
   begin
@@ -868,6 +869,34 @@ var
       Result:=true
     else
       Result:=false;
+  end;
+
+  function OutOfScanAcceptThisRequest(CPU:TS7CPU; iSize:Integer):Boolean;
+  begin
+    if ((OutOffScanOutgoingPDUSize+12)<CPU.MaxPDULen) AND ((OutOffScanIncomingPDUSize+4+iSize)<CPU.MaxPDULen) then
+      Result:=true
+    else
+      Result:=false;
+  end;
+
+  procedure QueueOutOfScanReq(iPLC, iDB, iReqType, iStartAddress, iSize:Integer);
+  var
+    h:Integer;
+  begin
+    h:=Length(ReqOutOfScan);
+    SetLength(ReqOutOfScan,h+1);
+    with ReqOutOfScan[h] do begin
+      PLC := iPLC;
+      DB := iDB;
+      ReqType := iReqType;
+      StartAddress := iStartAddress;
+      Size := iSize;
+    end;
+    inc(OutOffScanIncomingPDUSize,4+iSize);
+    if (iSize mod 2)=1 then
+      inc(OutOffScanIncomingPDUSize);
+
+    inc(OutOffScanOutgoingPDUSize,12);
   end;
 
   procedure AddToReqList(iPLC, iDB, iReqType, iStartAddress, iSize:Integer);
@@ -928,16 +957,17 @@ begin
   end;
 
   anow:=Now;
-  TimeElapsed:=0;
+  TimeElapsed:=5;
   onereqdone:=false;
   NeedSleep:=1;
-  lastDB:=-1;
 
   for plc:=0 to High(FCPUs) do begin
     if not FCPUs[plc].Connected then
       if not connectPLC(FCPUs[plc]) then exit;
 
     Reset;
+    OutOffScanOutgoingPDUSize:=0;
+    OutOffScanIncomingPDUSize:=0;
 
     //DBs     //////////////////////////////////////////////////////////////////
     for db := 0 to high(FCPUs[plc].DBs) do begin
@@ -953,12 +983,9 @@ begin
           AddToReadRequest(msgout, vtS7_DB, FCPUs[plc].DBs[db].DBNum, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
         end else begin
           if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].DBs[db].DBArea.Blocks[block].LastUpdate)>TimeElapsed) then begin
-            TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].DBs[db].DBArea.Blocks[block].LastUpdate);
-            lastPLC:=plc;
-            lastDB:=db;
-            lastType:=vtS7_DB;
-            lastStartAddress:=FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart;
-            lastSize:=        FCPUs[plc].DBs[db].DBArea.Blocks[block].Size;
+            if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].DBs[db].DBArea.Blocks[block].Size) then begin
+              QueueOutOfScanReq(plc, db, vtS7_DB, FCPUs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FCPUs[plc].DBs[db].DBArea.Blocks[block].Size);
+            end;
           end;
         end;
       end;
@@ -977,12 +1004,9 @@ begin
         AddToReadRequest(msgout, vtS7_Inputs, 0, FCPUs[plc].Inputs.Blocks[block].AddressStart, FCPUs[plc].Inputs.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Inputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Inputs.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_Inputs;
-          lastStartAddress:=FCPUs[plc].Inputs.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].Inputs.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].Inputs.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_Inputs, FCPUs[plc].Inputs.Blocks[block].AddressStart, FCPUs[plc].Inputs.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1000,12 +1024,9 @@ begin
         AddToReadRequest(msgout, vtS7_Outputs, 0, FCPUs[plc].Outputs.Blocks[block].AddressStart, FCPUs[plc].Outputs.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Outputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Outputs.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_Outputs;
-          lastStartAddress:=FCPUs[plc].Outputs.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].Outputs.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].Outputs.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_Outputs, FCPUs[plc].Outputs.Blocks[block].AddressStart, FCPUs[plc].Outputs.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1023,12 +1044,9 @@ begin
         AddToReadRequest(msgout, vtS7_200_AnInput, 0, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnInput.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].AnInput.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_200_AnInput;
-          lastStartAddress:=FCPUs[plc].AnInput.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].AnInput.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].AnInput.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_AnInput, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1046,12 +1064,9 @@ begin
         AddToReadRequest(msgout, vtS7_200_AnOutput, 0, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnOutput.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].AnOutput.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_200_AnOutput;
-          lastStartAddress:=FCPUs[plc].AnOutput.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].AnOutput.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].AnOutput.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_AnOutput, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1069,12 +1084,9 @@ begin
         AddToReadRequest(msgout, vtS7_Timer, 0, FCPUs[plc].Timers.Blocks[block].AddressStart, FCPUs[plc].Timers.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Timers.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Timers.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_Timer;
-          lastStartAddress:=FCPUs[plc].Timers.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].Timers.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].Timers.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_Timer, FCPUs[plc].Timers.Blocks[block].AddressStart, FCPUs[plc].Timers.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1092,12 +1104,9 @@ begin
         AddToReadRequest(msgout, vtS7_Counter, 0, FCPUs[plc].Counters.Blocks[block].AddressStart, FCPUs[plc].Counters.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Counters.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Counters.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_Counter;
-          lastStartAddress:=FCPUs[plc].Counters.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].Counters.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].Counters.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_Counter, FCPUs[plc].Counters.Blocks[block].AddressStart, FCPUs[plc].Counters.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1115,12 +1124,9 @@ begin
         AddToReadRequest(msgout, vtS7_Flags, 0, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].Flags.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].Flags.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_Flags;
-          lastStartAddress:=FCPUs[plc].Flags.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].Flags.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].Flags.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_Flags, FCPUs[plc].Flags.Blocks[block].AddressStart, FCPUs[plc].Flags.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1138,12 +1144,9 @@ begin
         AddToReadRequest(msgout, vtS7_200_SM, 0, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
       end else begin
         if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].SMs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          TimeElapsed:=MilliSecondsBetween(anow,FCPUs[plc].SMs.Blocks[block].LastUpdate);
-          lastPLC:=plc;
-          lastDB:=-1;
-          lastType:=vtS7_200_SM;
-          lastStartAddress:=FCPUs[plc].SMs.Blocks[block].AddressStart;
-          lastSize:=FCPUs[plc].SMs.Blocks[block].Size;
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].SMs.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_SM, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
+          end;
         end;
       end;
     end;
@@ -1155,17 +1158,29 @@ begin
   end;
 
   if (not onereqdone) then begin
-    if PReadSomethingAlways and (TimeElapsed>0) then begin
+    if PReadSomethingAlways and (Length(ReqOutOfScan)>0) then begin
       Reset;
       pkg_initialized;
-      if lastDB<>-1 then begin
-        AddToReqList(lastPLC, lastDB, lastType, lastStartAddress, lastSize);
-        AddToReadRequest(msgout, lastType, FCPUs[lastplc].DBs[lastDB].DBNum, lastStartAddress, lastSize)
-      end else begin
-        AddToReqList(lastPLC, 0, lastType, lastStartAddress, lastSize);
-        AddToReadRequest(msgout, lastType, 0, lastStartAddress, lastSize);
+      for i:=0 to High(ReqOutOfScan) do begin
+        if i=0 then
+          plc:=ReqOutOfScan[i].PLC;
+
+        if ReqOutOfScan[i].DB<>-1 then begin
+          AddToReqList(ReqOutOfScan[i].PLC, ReqOutOfScan[i].DB, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
+          AddToReadRequest(msgout, ReqOutOfScan[i].ReqType, FCPUs[ReqOutOfScan[i].PLC].DBs[ReqOutOfScan[i].DB].DBNum, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size)
+        end else begin
+          AddToReqList(ReqOutOfScan[i].PLC, 0, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
+          AddToReadRequest(msgout, ReqOutOfScan[i].ReqType, 0, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size)
+        end;
+        if (i=High(ReqOutOfScan)) then
+          ReadQueuedRequests(FCPUs[ReqOutOfScan[i].PLC])
+        else begin
+          if (i+1)<High(ReqOutOfScan) then begin
+            if ReqOutOfScan[i].PLC<>ReqOutOfScan[i+1].PLC then
+              ReadQueuedRequests(FCPUs[ReqOutOfScan[i].PLC])
+          end;
+        end;
       end;
-      ReadQueuedRequests(FCPUs[lastplc]);
     end;
   end;
 

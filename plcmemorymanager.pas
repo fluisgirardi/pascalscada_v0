@@ -10,7 +10,7 @@ unit PLCMemoryManager;
 
 interface
 
-uses SysUtils, DateUtils, hsutils, ProtocolTypes, SyncObjs;
+uses SysUtils, DateUtils, hsutils, ProtocolTypes, SyncObjs, Classes;
 
 type
   {:
@@ -34,6 +34,19 @@ type
   
   @seealso(TPLCMemoryManager)
   }
+
+  //TSharedMutex = class(TObject)
+  //private
+  //  FInMutex:Cardinal;
+  //  FOwnerID:Cardinal;
+  //  FList:TList;
+  //public
+  //  constructor Create;
+  //  Destructor  destroy;
+  //  procedure Enter(ShareID:Cardinal);
+  //  procedure Leave;
+  //end;
+
   TRegisterRange = class
   private
     FStartAddress:Integer;

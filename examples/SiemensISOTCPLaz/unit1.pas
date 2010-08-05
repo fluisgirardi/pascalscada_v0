@@ -127,6 +127,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure RadioButton1Change(Sender: TObject);
     procedure RadioButton1Click(Sender: TObject);
+    procedure RadioButton2Change(Sender: TObject);
     procedure RadioButton2Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
@@ -165,6 +166,11 @@ begin
       3:  TIPropertyGrid1.TIObject:=DataModule1.InputsBYTE_01;
       4:  TIPropertyGrid1.TIObject:=DataModule1.OutputsBYTE_01;
     end;
+end;
+
+procedure TForm1.RadioButton2Change(Sender: TObject);
+begin
+
 end;
 
 procedure TForm1.RadioButton2Click(Sender: TObject);

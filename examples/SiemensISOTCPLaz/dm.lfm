@@ -6,6 +6,7 @@ object DataModule1: TDataModule1
   Width = 230
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
+    LogIOActions = True
     LogFile = '/home/fabiolg/isotcp.log'
     Host = '192.168.1.185'
     Timeout = 50

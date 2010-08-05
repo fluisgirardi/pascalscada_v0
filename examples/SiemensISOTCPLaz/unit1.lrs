@@ -393,24 +393,25 @@ LazarusResources.Add('TForm1','FORMDATA',[
   +'r'#7#8'clMaroon'#0#0#12'TRadioButton'#12'RadioButton1'#4'Left'#3'Y'#2#6'Hei'
   +'ght'#2#20#3'Top'#3#136#1#5'Width'#2'/'#7'Caption'#6#3'DB1'#7'Checked'#9#8'O'
   +'nChange'#7#18'RadioButton1Change'#7'OnClick'#7#17'RadioButton1Click'#5'Stat'
-  +'e'#7#9'cbChecked'#8'TabOrder'#2'!'#0#0#12'TRadioButton'#12'RadioButton2'#3
+  +'e'#7#9'cbChecked'#8'TabOrder'#2'"'#0#0#12'TRadioButton'#12'RadioButton2'#3
   +'Tag'#2#1#4'Left'#3#145#2#6'Height'#2#20#3'Top'#3#136#1#5'Width'#2'/'#7'Capt'
-  +'ion'#6#3'MDs'#7'OnClick'#7#17'RadioButton1Click'#8'TabOrder'#2'"'#7'TabStop'
-  +#8#0#0#12'TRadioButton'#12'RadioButton3'#3'Tag'#2#2#4'Left'#3#201#2#6'Height'
-  +#2#20#3'Top'#3#136#1#5'Width'#2'L'#7'Caption'#6#8'Counters'#7'OnClick'#7#17
-  +'RadioButton1Click'#8'TabOrder'#2' '#7'TabStop'#8#0#0#12'TRadioButton'#12'Ra'
-  +'dioButton4'#3'Tag'#2#3#4'Left'#3#25#3#6'Height'#2#20#3'Top'#3#136#1#5'Width'
-  +#2'"'#7'Caption'#6#2'IB'#7'OnClick'#7#17'RadioButton1Click'#8'TabOrder'#2'#'
-  +#7'TabStop'#8#0#0#12'TRadioButton'#12'RadioButton5'#3'Tag'#2#4#4'Left'#3'I'#3
-  +#6'Height'#2#20#3'Top'#3#136#1#5'Width'#2''''#7'Caption'#6#2'QB'#7'OnClick'#7
-  +#17'RadioButton1Click'#8'TabOrder'#2'$'#7'TabStop'#8#0#0#6'TTimer'#6'Timer1'
-  +#7'OnTimer'#7#11'Timer1Timer'#4'left'#3#8#2#3'top'#2' '#0#0#30'THMIControlDi'
-  +'slocatorAnimation'#30'HMIControlDislocatorAnimation1'#4'P0_X'#2'0'#4'P0_Y'#3
-  +'X'#1#4'P1_X'#3#184#1#4'P1_Y'#3'X'#1#7'ValueP0'#5#0#0#0#0#0#0#0#0#0#0#7'Valu'
-  +'eP1'#5#0#0#0#0#0#0'P'#195#15'@'#6'PLCTag'#7#21'DataModule1.DB1_DBD00'#7'Con'
-  +'trol'#7#10'ToggleBox1'#10'EnableXMin'#9#10'EnableXMax'#9#10'EnableYMin'#8#10
-  +'EnableYMax'#8#9'MinXValue'#2#2#9'MaxXValue'#3#184#1#9'MinYValue'#2#0#9'MaxY'
-  +'Value'#2#0#16'Gets_P0_Position'#6#21'Gets initial position'#16'Gets_P1_Posi'
-  +'tion'#6#19'Gets final position'#16'GoTo_P0_Position'#6#26'Controls go to P0'
-  +' position'#4'left'#2'h'#3'top'#3'X'#1#0#0#0
+  +'ion'#6#3'MDs'#8'OnChange'#7#18'RadioButton2Change'#7'OnClick'#7#17'RadioBut'
+  +'ton1Click'#8'TabOrder'#2'!'#7'TabStop'#8#0#0#12'TRadioButton'#12'RadioButto'
+  +'n3'#3'Tag'#2#2#4'Left'#3#201#2#6'Height'#2#20#3'Top'#3#136#1#5'Width'#2'L'#7
+  +'Caption'#6#8'Counters'#7'OnClick'#7#17'RadioButton1Click'#8'TabOrder'#2' '#7
+  +'TabStop'#8#0#0#12'TRadioButton'#12'RadioButton4'#3'Tag'#2#3#4'Left'#3#25#3#6
+  +'Height'#2#20#3'Top'#3#136#1#5'Width'#2'"'#7'Caption'#6#2'IB'#7'OnClick'#7#17
+  +'RadioButton1Click'#8'TabOrder'#2'#'#7'TabStop'#8#0#0#12'TRadioButton'#12'Ra'
+  +'dioButton5'#3'Tag'#2#4#4'Left'#3'I'#3#6'Height'#2#20#3'Top'#3#136#1#5'Width'
+  +#2''''#7'Caption'#6#2'QB'#7'OnClick'#7#17'RadioButton1Click'#8'TabOrder'#2'$'
+  +#7'TabStop'#8#0#0#6'TTimer'#6'Timer1'#7'OnTimer'#7#11'Timer1Timer'#4'left'#3
+  +#8#2#3'top'#2' '#0#0#30'THMIControlDislocatorAnimation'#30'HMIControlDisloca'
+  +'torAnimation1'#4'P0_X'#2'0'#4'P0_Y'#3'X'#1#4'P1_X'#3#184#1#4'P1_Y'#3'X'#1#7
+  +'ValueP0'#5#0#0#0#0#0#0#0#0#0#0#7'ValueP1'#5#0#0#0#0#0#0'P'#195#15'@'#6'PLCT'
+  +'ag'#7#21'DataModule1.DB1_DBD00'#7'Control'#7#10'ToggleBox1'#10'EnableXMin'#9
+  +#10'EnableXMax'#9#10'EnableYMin'#8#10'EnableYMax'#8#9'MinXValue'#2#2#9'MaxXV'
+  +'alue'#3#184#1#9'MinYValue'#2#0#9'MaxYValue'#2#0#16'Gets_P0_Position'#6#21'G'
+  +'ets initial position'#16'Gets_P1_Position'#6#19'Gets final position'#16'GoT'
+  +'o_P0_Position'#6#26'Controls go to P0 position'#4'left'#2'h'#3'top'#3'X'#1#0
+  +#0#0
 ]);

@@ -327,6 +327,8 @@ begin
   FCurrentWordSize:=1;
   FProtocolWordSize:=1;
   FFirtsRead:=true;
+  FTotalTime:=0;
+  FTotalDelay:=0;
   CScanTimer := TTimer.Create(self);
   CScanTimer.OnTimer := DoScanTimerEvent;
   FTagManager := GetTagManager;
@@ -387,13 +389,15 @@ procedure TPLCTag.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDat
 var
   c, poffset:Integer;
 begin
-  if (not FFirtsRead) and (TagCommand in [tcRead, tcScanRead]) and (LastResult=ioOk) then begin
+  if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) then begin
     inc(FTotalTime, MilliSecondsBetween(ValuesTimeStamp,PValueTimeStamp));
     inc(FReadCount);
   end;
+  if (LastResult=ioOk) then
+    FFirtsRead:=false;
+
   if TagCommand=tcScanRead then
-    inc(FTotalDelay,MilliSecondsBetween(ValuesTimeStamp,FLastRequestTimestamp));
-  FFirtsRead:=false;
+    inc(FTotalDelay,MilliSecondsBetween(Now,FLastRequestTimestamp));
 
   if LastResult in [ioOk, ioNullDriver] then begin
     if FCurrentWordSize>=FProtocolWordSize then begin

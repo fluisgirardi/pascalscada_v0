@@ -40,7 +40,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="32">
+    <Units Count="33">
       <Unit0>
         <Filename Value="isotcp_example.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -48,7 +48,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="156"/>
+        <UsageCount Value="165"/>
       </Unit0>
       <Unit1>
         <Filename Value="unit1.pas"/>
@@ -58,9 +58,9 @@
         <UnitName Value="Unit1"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="159"/>
-        <CursorPos X="41" Y="178"/>
-        <UsageCount Value="156"/>
+        <TopLine Value="158"/>
+        <CursorPos X="3" Y="160"/>
+        <UsageCount Value="165"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
@@ -72,8 +72,8 @@
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="5"/>
-        <CursorPos X="20" Y="19"/>
-        <UsageCount Value="156"/>
+        <CursorPos X="47" Y="15"/>
+        <UsageCount Value="165"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -81,19 +81,22 @@
         <UnitName Value="ISOTCPDriver"/>
         <EditorIndex Value="10"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="28"/>
-        <CursorPos X="1" Y="1"/>
-        <UsageCount Value="33"/>
+        <TopLine Value="180"/>
+        <CursorPos X="1" Y="197"/>
+        <UsageCount Value="38"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit3>
       <Unit4>
         <Filename Value="../../s7family.pas"/>
         <UnitName Value="s7family"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="11"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="106"/>
-        <CursorPos X="23" Y="113"/>
-        <UsageCount Value="41"/>
+        <TopLine Value="945"/>
+        <CursorPos X="17" Y="960"/>
+        <UsageCount Value="46"/>
+        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
       <Unit5>
@@ -103,7 +106,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="73"/>
         <CursorPos X="3" Y="86"/>
-        <UsageCount Value="17"/>
+        <UsageCount Value="22"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit5>
@@ -111,9 +114,9 @@
         <Filename Value="../../s7types.pas"/>
         <UnitName Value="S7Types"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="4"/>
-        <CursorPos X="3" Y="26"/>
-        <UsageCount Value="31"/>
+        <TopLine Value="109"/>
+        <CursorPos X="3" Y="58"/>
+        <UsageCount Value="35"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit6>
       <Unit7>
@@ -122,7 +125,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1294"/>
         <CursorPos X="59" Y="1314"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="7"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit7>
       <Unit8>
@@ -131,25 +134,29 @@
         <WindowIndex Value="0"/>
         <TopLine Value="189"/>
         <CursorPos X="1" Y="202"/>
-        <UsageCount Value="3"/>
+        <UsageCount Value="2"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit8>
       <Unit9>
         <Filename Value="../../plcmemorymanager.pas"/>
         <UnitName Value="PLCMemoryManager"/>
+        <EditorIndex Value="12"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="173"/>
-        <CursorPos X="15" Y="192"/>
-        <UsageCount Value="12"/>
+        <TopLine Value="31"/>
+        <CursorPos X="65" Y="38"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
       <Unit10>
         <Filename Value="../../protocoldriver.pas"/>
         <UnitName Value="ProtocolDriver"/>
+        <EditorIndex Value="13"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="336"/>
-        <CursorPos X="3" Y="336"/>
+        <TopLine Value="761"/>
+        <CursorPos X="1" Y="772"/>
         <UsageCount Value="31"/>
+        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit10>
       <Unit11>
@@ -158,7 +165,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="78"/>
         <CursorPos X="43" Y="103"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="18"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit11>
       <Unit12>
@@ -167,7 +174,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit12>
       <Unit13>
@@ -175,7 +182,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="54"/>
         <CursorPos X="3" Y="76"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="7"/>
       </Unit13>
       <Unit14>
         <Filename Value="../../../../lazarus/lcl/controls.pp"/>
@@ -183,7 +190,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1408"/>
         <CursorPos X="14" Y="1415"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
       </Unit14>
       <Unit15>
         <Filename Value="../../linearscaleprocessor.pas"/>
@@ -191,7 +198,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="98"/>
         <CursorPos X="10" Y="116"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit15>
       <Unit16>
@@ -200,7 +207,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="219"/>
         <CursorPos X="3" Y="221"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="7"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit16>
       <Unit17>
@@ -210,7 +217,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="101"/>
         <CursorPos X="27" Y="107"/>
-        <UsageCount Value="17"/>
+        <UsageCount Value="22"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit17>
@@ -220,7 +227,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="36"/>
         <CursorPos X="3" Y="36"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit18>
       <Unit19>
@@ -229,7 +236,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="98"/>
         <CursorPos X="1" Y="100"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="7"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit19>
       <Unit20>
@@ -238,7 +245,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="57"/>
         <CursorPos X="103" Y="72"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="15"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit20>
       <Unit21>
@@ -247,7 +254,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="57"/>
         <CursorPos X="19" Y="78"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="8"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit21>
       <Unit22>
@@ -256,7 +263,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="202"/>
         <CursorPos X="3" Y="206"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="8"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit22>
       <Unit23>
@@ -265,7 +272,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="298"/>
         <CursorPos X="14" Y="305"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="8"/>
       </Unit23>
       <Unit24>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/typinfo.pp"/>
@@ -273,7 +280,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="206"/>
         <CursorPos X="7" Y="210"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="8"/>
       </Unit24>
       <Unit25>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/packages/sdl/src/sdl.pas"/>
@@ -281,7 +288,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="381"/>
         <CursorPos X="3" Y="390"/>
-        <UsageCount Value="9"/>
+        <UsageCount Value="8"/>
       </Unit25>
       <Unit26>
         <Filename Value="../../tagblock.pas"/>
@@ -290,7 +297,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="78"/>
         <CursorPos X="22" Y="82"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="16"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit26>
@@ -299,21 +306,20 @@
         <UnitName Value="PLCBlock"/>
         <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="65"/>
-        <CursorPos X="37" Y="82"/>
-        <UsageCount Value="11"/>
+        <TopLine Value="108"/>
+        <CursorPos X="7" Y="117"/>
+        <UsageCount Value="16"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit27>
       <Unit28>
         <Filename Value="../../plctag.pas"/>
         <UnitName Value="PLCTag"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="382"/>
-        <CursorPos X="80" Y="395"/>
-        <UsageCount Value="11"/>
+        <TopLine Value="384"/>
+        <CursorPos X="113" Y="387"/>
+        <UsageCount Value="16"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit28>
@@ -324,7 +330,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="93"/>
         <CursorPos X="1" Y="99"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="16"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit29>
@@ -333,9 +339,9 @@
         <UnitName Value="PLCString"/>
         <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="29"/>
+        <TopLine Value="53"/>
         <CursorPos X="15" Y="78"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="16"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit30>
@@ -344,133 +350,140 @@
         <UnitName Value="PLCStruct"/>
         <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="10"/>
+        <TopLine Value="16"/>
         <CursorPos X="27" Y="41"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="15"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit31>
+      <Unit32>
+        <Filename Value="../../../../lazarus/lcl/interfaces/gtk2/gtk2widgetset.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1841"/>
+        <CursorPos X="15" Y="1857"/>
+        <UsageCount Value="10"/>
+      </Unit32>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="../../plcblock.pas"/>
-        <Caret Line="108" Column="26" TopLine="98"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="616" Column="1" TopLine="598"/>
       </Position1>
       <Position2>
-        <Filename Value="../../tag.pas"/>
-        <Caret Line="355" Column="10" TopLine="331"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="617" Column="1" TopLine="598"/>
       </Position2>
       <Position3>
-        <Filename Value="../../plctag.pas"/>
-        <Caret Line="154" Column="22" TopLine="132"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="619" Column="1" TopLine="598"/>
       </Position3>
       <Position4>
-        <Filename Value="../../tag.pas"/>
-        <Caret Line="130" Column="97" TopLine="117"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="620" Column="1" TopLine="599"/>
       </Position4>
       <Position5>
-        <Filename Value="../../plctag.pas"/>
-        <Caret Line="154" Column="98" TopLine="132"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="621" Column="1" TopLine="600"/>
       </Position5>
       <Position6>
-        <Filename Value="../../tag.pas"/>
-        <Caret Line="14" Column="35" TopLine="1"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="622" Column="1" TopLine="601"/>
       </Position6>
       <Position7>
-        <Filename Value="../../plctagnumber.pas"/>
-        <Caret Line="97" Column="27" TopLine="84"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="623" Column="1" TopLine="602"/>
       </Position7>
       <Position8>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="136" Column="52" TopLine="117"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="624" Column="1" TopLine="603"/>
       </Position8>
       <Position9>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="137" Column="52" TopLine="117"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="625" Column="1" TopLine="604"/>
       </Position9>
       <Position10>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="138" Column="52" TopLine="117"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="626" Column="1" TopLine="605"/>
       </Position10>
       <Position11>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="139" Column="52" TopLine="117"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="627" Column="1" TopLine="606"/>
       </Position11>
       <Position12>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="140" Column="52" TopLine="117"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="629" Column="1" TopLine="608"/>
       </Position12>
       <Position13>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="141" Column="52" TopLine="117"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="630" Column="1" TopLine="609"/>
       </Position13>
       <Position14>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="143" Column="52" TopLine="118"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="644" Column="1" TopLine="631"/>
       </Position14>
       <Position15>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="161" Column="10" TopLine="140"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="645" Column="1" TopLine="631"/>
       </Position15>
       <Position16>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="166" Column="63" TopLine="150"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="646" Column="1" TopLine="631"/>
       </Position16>
       <Position17>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="172" Column="3" TopLine="159"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="647" Column="1" TopLine="631"/>
       </Position17>
       <Position18>
-        <Filename Value="unit1.pas"/>
-        <Caret Line="159" Column="3" TopLine="157"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="648" Column="1" TopLine="631"/>
       </Position18>
       <Position19>
-        <Filename Value="../../plctag.pas"/>
-        <Caret Line="94" Column="15" TopLine="81"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="649" Column="1" TopLine="631"/>
       </Position19>
       <Position20>
-        <Filename Value="dm.pas"/>
-        <Caret Line="9" Column="22" TopLine="3"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="650" Column="1" TopLine="631"/>
       </Position20>
       <Position21>
-        <Filename Value="../../plctagnumber.pas"/>
-        <Caret Line="177" Column="19" TopLine="172"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="648" Column="1" TopLine="631"/>
       </Position21>
       <Position22>
-        <Filename Value="../../plcblock.pas"/>
-        <Caret Line="227" Column="19" TopLine="225"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="653" Column="1" TopLine="632"/>
       </Position22>
       <Position23>
-        <Filename Value="../../tagblock.pas"/>
-        <Caret Line="28" Column="19" TopLine="15"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="654" Column="1" TopLine="633"/>
       </Position23>
       <Position24>
-        <Filename Value="../../plcblock.pas"/>
-        <Caret Line="227" Column="15" TopLine="225"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="660" Column="1" TopLine="647"/>
       </Position24>
       <Position25>
-        <Filename Value="../../plcstruct.pas"/>
-        <Caret Line="41" Column="27" TopLine="34"/>
+        <Filename Value="../../s7family.pas"/>
+        <Caret Line="1176" Column="1" TopLine="1163"/>
       </Position25>
       <Position26>
-        <Filename Value="../../plctag.pas"/>
-        <Caret Line="244" Column="47" TopLine="225"/>
+        <Filename Value="../../protocoldriver.pas"/>
+        <Caret Line="772" Column="1" TopLine="761"/>
       </Position26>
       <Position27>
         <Filename Value="../../plctag.pas"/>
-        <Caret Line="569" Column="8" TopLine="567"/>
+        <Caret Line="390" Column="1" TopLine="385"/>
       </Position27>
       <Position28>
         <Filename Value="../../plctag.pas"/>
-        <Caret Line="249" Column="43" TopLine="239"/>
+        <Caret Line="396" Column="1" TopLine="385"/>
       </Position28>
       <Position29>
         <Filename Value="../../plctag.pas"/>
-        <Caret Line="394" Column="78" TopLine="381"/>
+        <Caret Line="398" Column="1" TopLine="385"/>
       </Position29>
       <Position30>
         <Filename Value="../../plctag.pas"/>
-        <Caret Line="395" Column="79" TopLine="382"/>
+        <Caret Line="390" Column="11" TopLine="385"/>
       </Position30>
     </JumpHistory>
   </ProjectOptions>

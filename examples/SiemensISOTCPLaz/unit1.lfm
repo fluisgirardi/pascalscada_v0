@@ -1581,7 +1581,7 @@ object Form1: TForm1
     OnChange = RadioButton1Change
     OnClick = RadioButton1Click
     State = cbChecked
-    TabOrder = 33
+    TabOrder = 34
   end
   object RadioButton2: TRadioButton
     Tag = 1
@@ -1590,8 +1590,9 @@ object Form1: TForm1
     Top = 392
     Width = 47
     Caption = 'MDs'
+    OnChange = RadioButton2Change
     OnClick = RadioButton1Click
-    TabOrder = 34
+    TabOrder = 33
     TabStop = False
   end
   object RadioButton3: TRadioButton
