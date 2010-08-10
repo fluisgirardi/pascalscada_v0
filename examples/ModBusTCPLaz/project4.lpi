@@ -42,14 +42,14 @@
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="56">
+    <Units Count="58">
       <Unit0>
         <Filename Value="project4.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="project4"/>
         <TopLine Value="1"/>
         <CursorPos X="12" Y="7"/>
-        <UsageCount Value="100"/>
+        <UsageCount Value="102"/>
       </Unit0>
       <Unit1>
         <Filename Value="unit4.pas"/>
@@ -61,8 +61,8 @@
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="31" Y="102"/>
-        <UsageCount Value="100"/>
+        <CursorPos X="20" Y="49"/>
+        <UsageCount Value="102"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
@@ -106,18 +106,20 @@
       <Unit7>
         <Filename Value="../../modbustcp.pas"/>
         <UnitName Value="ModBusTCP"/>
-        <TopLine Value="17"/>
-        <CursorPos X="33" Y="29"/>
-        <SyntaxHighlighter Value="Delphi"/>
-        <UsageCount Value="33"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="270"/>
+        <CursorPos X="1" Y="277"/>
+        <UsageCount Value="34"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit7>
       <Unit8>
         <Filename Value="../../modbusdriver.pas"/>
         <UnitName Value="ModBusDriver"/>
-        <TopLine Value="251"/>
-        <CursorPos X="55" Y="263"/>
-        <SyntaxHighlighter Value="Delphi"/>
-        <UsageCount Value="15"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1067"/>
+        <CursorPos X="9" Y="1074"/>
+        <UsageCount Value="16"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit8>
       <Unit9>
         <Filename Value="../../tag.pas"/>
@@ -206,18 +208,20 @@
       <Unit20>
         <Filename Value="../../protocoldriver.pas"/>
         <UnitName Value="ProtocolDriver"/>
-        <TopLine Value="354"/>
-        <CursorPos X="3" Y="358"/>
-        <SyntaxHighlighter Value="Delphi"/>
-        <UsageCount Value="15"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="783"/>
+        <CursorPos X="1" Y="790"/>
+        <UsageCount Value="16"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit20>
       <Unit21>
         <Filename Value="../../crossevent.pas"/>
         <UnitName Value="CrossEvent"/>
-        <TopLine Value="13"/>
-        <CursorPos X="4" Y="29"/>
-        <SyntaxHighlighter Value="Delphi"/>
-        <UsageCount Value="31"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="253"/>
+        <CursorPos X="1" Y="268"/>
+        <UsageCount Value="32"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit21>
       <Unit22>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/inc/socketsh.inc"/>
@@ -305,10 +309,11 @@
       <Unit35>
         <Filename Value="../../protscan.pas"/>
         <UnitName Value="protscan"/>
-        <TopLine Value="113"/>
-        <CursorPos X="54" Y="131"/>
-        <SyntaxHighlighter Value="Delphi"/>
-        <UsageCount Value="33"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="121"/>
+        <CursorPos X="1" Y="128"/>
+        <UsageCount Value="34"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit35>
       <Unit36>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/classes/classesh.inc"/>
@@ -379,10 +384,11 @@
       <Unit46>
         <Filename Value="../../plcblock.pas"/>
         <UnitName Value="PLCBlock"/>
-        <TopLine Value="25"/>
-        <CursorPos X="17" Y="30"/>
-        <SyntaxHighlighter Value="Delphi"/>
-        <UsageCount Value="9"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="10"/>
+        <CursorPos X="23" Y="23"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit46>
       <Unit47>
         <Filename Value="../../plcnumber.pas"/>
@@ -395,10 +401,11 @@
       <Unit48>
         <Filename Value="../../plctag.pas"/>
         <UnitName Value="PLCTag"/>
-        <TopLine Value="216"/>
-        <CursorPos X="3" Y="218"/>
-        <SyntaxHighlighter Value="Delphi"/>
-        <UsageCount Value="9"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="388"/>
+        <CursorPos X="3" Y="392"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit48>
       <Unit49>
         <Filename Value="../../../../lazarus/components/tachart/tasources.pas"/>
@@ -448,32 +455,34 @@
         <CursorPos X="1" Y="1"/>
         <UsageCount Value="10"/>
       </Unit55>
+      <Unit56>
+        <Filename Value="../../isotcpdriver.pas"/>
+        <UnitName Value="ISOTCPDriver"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="189"/>
+        <CursorPos X="24" Y="196"/>
+        <UsageCount Value="11"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit56>
+      <Unit57>
+        <Filename Value="../../tagblock.pas"/>
+        <UnitName Value="TagBlock"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="10"/>
+        <CursorPos X="23" Y="23"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit57>
     </Units>
-    <JumpHistory Count="6" HistoryIndex="5">
+    <JumpHistory Count="2" HistoryIndex="1">
       <Position1>
         <Filename Value="unit4.pas"/>
-        <Caret Line="33" Column="34" TopLine="25"/>
+        <Caret Line="10" Column="7" TopLine="5"/>
       </Position1>
       <Position2>
         <Filename Value="unit4.pas"/>
-        <Caret Line="33" Column="34" TopLine="25"/>
+        <Caret Line="49" Column="20" TopLine="37"/>
       </Position2>
-      <Position3>
-        <Filename Value="unit4.pas"/>
-        <Caret Line="72" Column="30" TopLine="71"/>
-      </Position3>
-      <Position4>
-        <Filename Value="unit4.pas"/>
-        <Caret Line="73" Column="30" TopLine="71"/>
-      </Position4>
-      <Position5>
-        <Filename Value="unit4.pas"/>
-        <Caret Line="72" Column="30" TopLine="71"/>
-      </Position5>
-      <Position6>
-        <Filename Value="unit4.pas"/>
-        <Caret Line="91" Column="54" TopLine="73"/>
-      </Position6>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>

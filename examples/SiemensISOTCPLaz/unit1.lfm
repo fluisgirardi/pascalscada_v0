@@ -1578,7 +1578,6 @@ object Form1: TForm1
     Width = 47
     Caption = 'DB1'
     Checked = True
-    OnChange = RadioButton1Change
     OnClick = RadioButton1Click
     State = cbChecked
     TabOrder = 34
@@ -1590,7 +1589,6 @@ object Form1: TForm1
     Top = 392
     Width = 47
     Caption = 'MDs'
-    OnChange = RadioButton2Change
     OnClick = RadioButton1Click
     TabOrder = 33
     TabStop = False

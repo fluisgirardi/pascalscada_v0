@@ -58,6 +58,7 @@ type
     PLCBlockElement3: TPLCBlockElement;
     TCP_UDPPort1: TTCP_UDPPort;
     Timer1: TTimer;
+    TIPropertyGrid1: TTIPropertyGrid;
     procedure FormCreate(Sender: TObject);
     procedure Panel1Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -90,6 +91,7 @@ begin
   Label2.Caption:='TX: '+FormatFloat('#0.0',TCP_UDPPort1.TXBytesSecond/1024)+' kb/s';
   Label3.Caption:='RX: '+FormatFloat('#0.0',TCP_UDPPort1.RXBytesSecond/1024)+' kb/s';
   Label4.Caption:=FormatFloat('#0',cmdmedios/cmdcount);
+  TIPropertyGrid1.RefreshPropertyValues;
 end;
 
 procedure TForm1.Panel1Click(Sender: TObject);

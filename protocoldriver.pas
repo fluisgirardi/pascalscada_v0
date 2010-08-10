@@ -115,6 +115,11 @@ type
     //: Array de ações pendentes.
     FPendingActions:TArrayOfObject;
 
+    //: Procedimento interno para deixar a zona critica de scan.
+    procedure InternalLeaveScanCS;
+    //: Procedimento interno para entrar no zona critica de scan.
+    procedure InternalEnterScanCS;
+
     {:
     Cancela ações pendentes do driver que possam demorar.
     Chamado quando o driver está sendo destruido.
@@ -398,6 +403,17 @@ begin
   SetLength(FPendingActions,0);
   PCallersCS.Destroy;
   inherited Destroy;
+end;
+
+procedure TProtocolDriver.InternalLeaveScanCS;
+begin
+  FCritical.Leave;
+end;
+
+procedure TProtocolDriver.InternalEnterScanCS;
+begin
+  FPause.WaitFor($FFFFFFFF);
+  FCritical.Enter;
 end;
 
 procedure TProtocolDriver.CancelPendingActions;

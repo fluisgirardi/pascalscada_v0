@@ -30,7 +30,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 4
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 10
+    RefreshTime = 8
     Size = 40
     TagType = pttFloat
     SwapBytes = True
@@ -49,7 +49,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 3
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 10
+    RefreshTime = 8
     Size = 11
     TagType = pttFloat
     SwapBytes = True
@@ -207,7 +207,7 @@ object DataModule1: TDataModule1
     MemSubElement = 0
     MemReadFunction = 1
     MemWriteFunction = 0
-    RefreshTime = 10
+    RefreshTime = 8
     TagType = pttByte
     left = 104
     top = 8
@@ -295,7 +295,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 2
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 10
+    RefreshTime = 8
     TagType = pttByte
     left = 136
     top = 8
@@ -383,7 +383,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 5
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 10
+    RefreshTime = 8
     Size = 10
     SwapBytes = True
     left = 168

@@ -174,6 +174,7 @@ begin
 
   x:=TCrossEvent.Create(nil, true, false, 'exchange');
   try
+    InternalLeaveScanCS;
     res:=PCommPort.IOCommandASync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,IsWrite,x,nil);
     if res=0 then exit;
     if x.WaitFor($FFFFFFFF)<>wrSignaled then exit;
@@ -192,6 +193,7 @@ begin
 
     Result:=BytesRead>ISOTCPMinPacketLen;
   finally
+    InternalEnterScanCS;
     x.Destroy;
   end;
 end;

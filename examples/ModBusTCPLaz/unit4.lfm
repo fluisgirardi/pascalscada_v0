@@ -1,24 +1,24 @@
 object Form1: TForm1
   Left = 247
-  Height = 275
+  Height = 295
   Top = 128
-  Width = 395
+  Width = 652
   ActiveControl = Panel1
   BorderIcons = [biSystemMenu]
   Caption = 'TESTE'
-  ClientHeight = 275
-  ClientWidth = 395
+  ClientHeight = 295
+  ClientWidth = 652
   OnCreate = FormCreate
   LCLVersion = '0.9.29'
   object Panel1: TPanel
     Left = 0
     Height = 80
     Top = 0
-    Width = 395
+    Width = 652
     Align = alTop
     BevelOuter = bvNone
     ClientHeight = 80
-    ClientWidth = 395
+    ClientWidth = 652
     TabOrder = 0
     OnClick = Panel1Click
     object HMILabel3: THMILabel
@@ -138,20 +138,16 @@ object Form1: TForm1
   end
   object Chart1: TChart
     Left = 0
-    Height = 195
+    Height = 215
     Top = 80
-    Width = 395
+    Width = 408
     AxisList = <    
       item
         Alignment = calLeft
         Title.Font.Orientation = 900
-        Transformation.Offset = 0
-        Transformation.Scale = 1
       end    
       item
         Alignment = calBottom
-        Transformation.Offset = 0
-        Transformation.Scale = 1
       end>
     Foot.Brush.Color = clBtnFace
     Foot.Font.Color = clBlue
@@ -179,6 +175,17 @@ object Form1: TForm1
       SeriesColor = clRed
     end
   end
+  object TIPropertyGrid1: TTIPropertyGrid
+    Left = 408
+    Height = 215
+    Top = 80
+    Width = 244
+    Align = alRight
+    Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar]
+    Indent = 12
+    TIObject = PLCBlock1
+    ValueFont.Color = clMaroon
+  end
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
     Host = 'localhost'
@@ -198,6 +205,7 @@ object Form1: TForm1
     top = 104
   end
   object ListChartSource1: TListChartSource
+    Sorted = False
     left = 264
     top = 71
   end
@@ -212,13 +220,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 200
+    RefreshTime = 50
     Size = 100
     left = 80
     top = 112
   end
   object PLCBlock2: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{45D33A2E-772B-4976-B6BD-CC76EB87A326}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -228,13 +236,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 112
     top = 112
   end
   object PLCBlock3: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{0BE1D703-C5F9-400A-803E-8C540D3C5BA7}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -244,13 +252,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 144
     top = 112
   end
   object PLCBlock4: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{77607C76-4D36-4BE9-A2B3-0CF89C761ABF}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -260,13 +268,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 176
     top = 112
   end
   object PLCBlock5: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{72B1F5BB-70D4-4E4E-B55D-E1A675E8FAE3}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -276,13 +284,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 208
     top = 112
   end
   object PLCBlock6: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{3A255686-DAE9-423D-9CF6-27ED64EB6D60}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -292,13 +300,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 80
     top = 144
   end
   object PLCBlock7: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{AAAB103B-3140-4F54-BC26-8BC4E2535DB3}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -308,13 +316,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 112
     top = 144
   end
   object PLCBlock8: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{C80E77B3-B186-413A-B751-99481AD752A0}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -324,13 +332,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 144
     top = 144
   end
   object PLCBlock9: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{AC31CFA2-50C4-4E45-A25F-B6D149603261}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -340,13 +348,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 176
     top = 144
   end
   object PLCBlock10: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{FD09D84C-3F53-4B18-8EA0-3FFF5E8FA0E2}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -356,13 +364,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 208
     top = 144
   end
   object PLCBlock11: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{A17AACCA-E43D-4CFD-9F8B-01E35E4C2BC0}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -372,13 +380,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 80
     top = 176
   end
   object PLCBlock12: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{CBF9712E-347D-4B37-9105-85F01551E5B8}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -388,13 +396,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 112
     top = 176
   end
   object PLCBlock13: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{4F33A0FE-0F04-45C0-95E0-C8655EB0B43F}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -404,13 +412,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 144
     top = 176
   end
   object PLCBlock14: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{6C6AF8C3-262F-4EBC-9D19-E441319AD280}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -420,13 +428,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 176
     top = 176
   end
   object PLCBlock15: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{671707E0-2F1F-4EEB-9B63-BE44D827224C}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -436,7 +444,7 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 208
     top = 176
@@ -449,21 +457,21 @@ object Form1: TForm1
     top = 112
   end
   object PLCBlockElement2: TPLCBlockElement
-    TagGUID = '{D7F09E1D-8245-48AF-8A22-05E5C24A5E56}'
+    TagGUID = '{3307A6A8-4403-47CE-9C00-BE5B9379D5AD}'
     PLCBlock = PLCBlock1
     Index = 1
     left = 32
     top = 144
   end
   object PLCBlockElement3: TPLCBlockElement
-    TagGUID = '{D7F09E1D-8245-48AF-8A22-05E5C24A5E56}'
+    TagGUID = '{ECC5ED0A-6DCA-4ABB-8227-792AD2071D56}'
     PLCBlock = PLCBlock1
     Index = 2
     left = 32
     top = 176
   end
   object PLCBlock16: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{6D5AFC54-7E37-4442-8CC4-AE79AA6F6A29}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -473,13 +481,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 80
     top = 208
   end
   object PLCBlock17: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{7A6ABCF0-AEEA-4814-98B0-BB8D77E83069}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -489,13 +497,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 112
     top = 208
   end
   object PLCBlock18: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{9CF772B9-A9C1-41C6-B805-36E27913729E}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -505,13 +513,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 144
     top = 208
   end
   object PLCBlock19: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{F4542526-C2C9-4D20-9611-4D3DE518AD00}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -521,13 +529,13 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 176
     top = 208
   end
   object PLCBlock20: TPLCBlock
-    TagGUID = '{06F8086D-E87B-49A3-B683-BF54E4F5FC67}'
+    TagGUID = '{7DDD9376-AEE6-4E15-BEAF-35594A893016}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -537,7 +545,7 @@ object Form1: TForm1
     MemReadFunction = 3
     MemWriteFunction = 16
     ProtocolDriver = ModBusTCPDriver1
-    RefreshTime = 500
+    RefreshTime = 50
     Size = 100
     left = 208
     top = 208

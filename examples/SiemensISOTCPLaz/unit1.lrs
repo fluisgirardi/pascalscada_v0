@@ -391,14 +391,13 @@ LazarusResources.Add('TForm1','FORMDATA',[
   +#7'tkQWord'#10'tkDynArray'#14'tkInterfaceRaw'#9'tkProcVar'#9'tkUString'#7'tk'
   +'UChar'#0#6'Indent'#2#12#8'TIObject'#7#15'DataModule1.DB1'#15'ValueFont.Colo'
   +'r'#7#8'clMaroon'#0#0#12'TRadioButton'#12'RadioButton1'#4'Left'#3'Y'#2#6'Hei'
-  +'ght'#2#20#3'Top'#3#136#1#5'Width'#2'/'#7'Caption'#6#3'DB1'#7'Checked'#9#8'O'
-  +'nChange'#7#18'RadioButton1Change'#7'OnClick'#7#17'RadioButton1Click'#5'Stat'
-  +'e'#7#9'cbChecked'#8'TabOrder'#2'"'#0#0#12'TRadioButton'#12'RadioButton2'#3
-  +'Tag'#2#1#4'Left'#3#145#2#6'Height'#2#20#3'Top'#3#136#1#5'Width'#2'/'#7'Capt'
-  +'ion'#6#3'MDs'#8'OnChange'#7#18'RadioButton2Change'#7'OnClick'#7#17'RadioBut'
-  +'ton1Click'#8'TabOrder'#2'!'#7'TabStop'#8#0#0#12'TRadioButton'#12'RadioButto'
-  +'n3'#3'Tag'#2#2#4'Left'#3#201#2#6'Height'#2#20#3'Top'#3#136#1#5'Width'#2'L'#7
-  +'Caption'#6#8'Counters'#7'OnClick'#7#17'RadioButton1Click'#8'TabOrder'#2' '#7
+  +'ght'#2#20#3'Top'#3#136#1#5'Width'#2'/'#7'Caption'#6#3'DB1'#7'Checked'#9#7'O'
+  +'nClick'#7#17'RadioButton1Click'#5'State'#7#9'cbChecked'#8'TabOrder'#2'"'#0#0
+  +#12'TRadioButton'#12'RadioButton2'#3'Tag'#2#1#4'Left'#3#145#2#6'Height'#2#20
+  +#3'Top'#3#136#1#5'Width'#2'/'#7'Caption'#6#3'MDs'#7'OnClick'#7#17'RadioButto'
+  +'n1Click'#8'TabOrder'#2'!'#7'TabStop'#8#0#0#12'TRadioButton'#12'RadioButton3'
+  +#3'Tag'#2#2#4'Left'#3#201#2#6'Height'#2#20#3'Top'#3#136#1#5'Width'#2'L'#7'Ca'
+  +'ption'#6#8'Counters'#7'OnClick'#7#17'RadioButton1Click'#8'TabOrder'#2' '#7
   +'TabStop'#8#0#0#12'TRadioButton'#12'RadioButton4'#3'Tag'#2#3#4'Left'#3#25#3#6
   +'Height'#2#20#3'Top'#3#136#1#5'Width'#2'"'#7'Caption'#6#2'IB'#7'OnClick'#7#17
   +'RadioButton1Click'#8'TabOrder'#2'#'#7'TabStop'#8#0#0#12'TRadioButton'#12'Ra'

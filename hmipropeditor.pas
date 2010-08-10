@@ -15,7 +15,7 @@ interface
 
 uses
   Classes, SysUtils, HMIZones, Dialogs, Forms, Menus, ProtocolDriver, Tag,
-  typinfo, HMIControlDislocatorAnimation,
+  typinfo, HMIControlDislocatorAnimation, TagBit, PLCNumber,
   {$IFDEF FPC}
     PropEdits, ComponentEditors;
   {$ELSE}
@@ -61,13 +61,25 @@ type
   TTagBuilderComponentEditor = class(TDefaultComponentEditor)
   private
     procedure AddTagInEditor(Tag:TTag);
-    function CreateComponent(tagclass:TComponentClass):TComponent;
+    function  CreateComponent(tagclass:TComponentClass):TComponent;
     procedure OpenTagBuilder;
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function  GetVerb(Index: Integer): string; override;
+    function  GetVerbCount: Integer; override;
+    function  ProtocolDriver: TProtocolDriver; virtual;
+  end;
+
+  TTagBitMapperComponentEditor = class(TDefaultComponentEditor)
+  private
+    procedure AddTagInEditor(Tag:TTagBit);
+    function  CreateComponent(tagclass:TComponentClass):TComponent;
+    procedure OpenBitMapper;
   public
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
-    function ProtocolDriver: TProtocolDriver; virtual;
+    function NumericTag: TPLCNumber; virtual;
   end;
 
 implementation
@@ -186,6 +198,64 @@ function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
 begin
   Result:=TProtocolDriver(GetComponent);
 end;
+
+///////////////////////////////////////////////////////////////////////////////
+// BIT MAPPER
+///////////////////////////////////////////////////////////////////////////////
+
+procedure TTagBitMapperComponentEditor.AddTagInEditor(Tag:TTagBit);
+{$IFDEF FPC}
+var
+  Hook: TPropertyEditorHook;
+{$ENDIF}
+begin
+{$IFDEF FPC}
+  Hook:=nil;
+  if not GetHook(Hook) then exit;
+  Hook.PersistentAdded(Tag,false);
+  Modified;
+{$ELSE}
+  Designer.Modified;
+{$ENDIF}
+end;
+
+function  TTagBitMapperComponentEditor.CreateComponent(tagclass:TComponentClass):TComponent;
+begin
+{$IFDEF FPC}
+  Result := tagclass.Create(NumericTag.Owner);
+{$ELSE}
+  Result := Designer.CreateComponent(tagclass,NumericTag.Owner,0,0,0,0);
+{$ENDIF}
+end;
+
+procedure TTagBitMapperComponentEditor.OpenBitMapper;
+begin
+  //NumericTag.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
+end;
+
+procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: Integer);
+begin
+  if Index=0 then
+    OpenBitMapper();
+end;
+
+function  TTagBitMapperComponentEditor.GetVerb(Index: Integer): string;
+begin
+  if Index=0 then
+    Result:='Map bits...';
+end;
+
+function  TTagBitMapperComponentEditor.GetVerbCount: Integer;
+begin
+  Result:=1;
+end;
+
+function  TTagBitMapperComponentEditor.NumericTag: TPLCNumber;
+begin
+  Result:=TPLCNumber(GetComponent);
+end;
+
+///////////////////////////////////////////////////////////////////////////////
 
 function  TPositionPropertyEditor.GetAttributes: TPropertyAttributes;
 begin

@@ -125,10 +125,7 @@ type
     TIPropertyGrid1: TTIPropertyGrid;
     ToggleBox1: TToggleBox;
     procedure FormCreate(Sender: TObject);
-    procedure RadioButton1Change(Sender: TObject);
     procedure RadioButton1Click(Sender: TObject);
-    procedure RadioButton2Change(Sender: TObject);
-    procedure RadioButton2Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
     { private declarations }
@@ -150,32 +147,23 @@ begin
   SDL_Init(SDL_INIT_EVERYTHING);
 end;
 
-procedure TForm1.RadioButton1Change(Sender: TObject);
-begin
-
-end;
-
 procedure TForm1.RadioButton1Click(Sender: TObject);
 begin
-  if not (Sender is TCheckBox) then exit;
-  with Sender as TCheckBox do
+  if not (Sender is TRadioButton) then exit;
+  TIPropertyGrid1.Clear;
+  with Sender as TRadioButton do
     case Tag of
-      0:  TIPropertyGrid1.TIObject:=DataModule1.DB1;
-      1:  TIPropertyGrid1.TIObject:=DataModule1.MD0_MD40;
-      2:  TIPropertyGrid1.TIObject:=DataModule1.Counters;
-      3:  TIPropertyGrid1.TIObject:=DataModule1.InputsBYTE_01;
-      4:  TIPropertyGrid1.TIObject:=DataModule1.OutputsBYTE_01;
+      0:
+        TIPropertyGrid1.TIObject:=DataModule1.DB1;
+      1:
+        TIPropertyGrid1.TIObject:=DataModule1.MD0_MD40;
+      2:
+        TIPropertyGrid1.TIObject:=DataModule1.Counters;
+      3:
+        TIPropertyGrid1.TIObject:=DataModule1.InputsBYTE_01;
+      4:
+        TIPropertyGrid1.TIObject:=DataModule1.OutputsBYTE_01;
     end;
-end;
-
-procedure TForm1.RadioButton2Change(Sender: TObject);
-begin
-
-end;
-
-procedure TForm1.RadioButton2Click(Sender: TObject);
-begin
-
 end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
