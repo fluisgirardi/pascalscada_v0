@@ -11,10 +11,10 @@ object frmBitMapper: TfrmBitMapper
   Font.Name = 'MS Sans Serif'
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
-  LCLVersion = '0.9.29'
+  LCLVersion = '0.9.28.3'
   object Label1: TLabel
     Left = 0
-    Height = 19
+    Height = 14
     Top = 0
     Width = 21
     Caption = 'Bits:'
@@ -22,17 +22,17 @@ object frmBitMapper: TfrmBitMapper
   end
   object Label2: TLabel
     Left = 0
-    Height = 19
+    Height = 14
     Top = 48
-    Width = 117
+    Width = 109
     Caption = 'New tag name pattern:'
     ParentColor = False
   end
   object Label3: TLabel
     Left = 352
-    Height = 19
+    Height = 14
     Top = 40
-    Width = 72
+    Width = 82
     Caption = 'Name pattern:'
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
@@ -42,33 +42,33 @@ object frmBitMapper: TfrmBitMapper
   end
   object Label4: TLabel
     Left = 360
-    Height = 19
+    Height = 14
     Top = 56
-    Width = 85
+    Width = 76
     Caption = '%b - bit number.'
     ParentColor = False
   end
   object Label5: TLabel
     Left = 360
-    Height = 19
+    Height = 14
     Top = 73
-    Width = 96
+    Width = 87
     Caption = '%B - Byte number.'
     ParentColor = False
   end
   object Label6: TLabel
     Left = 360
-    Height = 19
+    Height = 14
     Top = 89
-    Width = 102
+    Width = 93
     Caption = '%w - Word number.'
     ParentColor = False
   end
   object Label7: TLabel
     Left = 360
-    Height = 19
+    Height = 14
     Top = 105
-    Width = 111
+    Width = 99
     Caption = '%t - Owner tag name'
     ParentColor = False
   end
@@ -93,15 +93,15 @@ object frmBitMapper: TfrmBitMapper
   end
   object eachbitastag: TCheckBox
     Left = 0
-    Height = 22
+    Height = 17
     Top = 104
-    Width = 172
+    Width = 164
     Caption = 'Map each bit as individual tag.'
     TabOrder = 1
   end
   object edtNamepattern: TEdit
     Left = 0
-    Height = 24
+    Height = 21
     Top = 64
     Width = 161
     TabOrder = 2
@@ -109,25 +109,25 @@ object frmBitMapper: TfrmBitMapper
   end
   object bitnamestartsfrom1: TCheckBox
     Left = 176
-    Height = 22
+    Height = 17
     Top = 48
-    Width = 133
+    Width = 121
     Caption = 'Bit name starts from 1'
     TabOrder = 3
   end
   object bytenamestartsfrom1: TCheckBox
     Left = 176
-    Height = 22
+    Height = 17
     Top = 72
-    Width = 142
+    Width = 130
     Caption = 'Byte name starts from 1'
     TabOrder = 4
   end
   object Wordnamestartsfrom1: TCheckBox
     Left = 176
-    Height = 22
+    Height = 17
     Top = 96
-    Width = 147
+    Width = 135
     Caption = 'Word name starts from 1'
     TabOrder = 5
   end
@@ -153,4 +153,4 @@ object frmBitMapper: TfrmBitMapper
     OnClick = Button2Click
     TabOrder = 7
   end
-end
+end

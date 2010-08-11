@@ -1,0 +1,45 @@
+{ This is an automatically generated lazarus resource file }
+
+LazarusResources.Add('TfrmBitMapper','FORMDATA',[
+  'TPF0'#13'TfrmBitMapper'#12'frmBitMapper'#4'Left'#3#238#0#6'Height'#3#128#0#3
+  +'Top'#2'{'#5'Width'#3#167#2#13'ActiveControl'#7#11'StringGrid1'#7'Caption'#6
+  +#8'Map bits'#12'ClientHeight'#3#128#0#11'ClientWidth'#3#167#2#11'Font.Height'
+  +#2#245#9'Font.Name'#6#13'MS Sans Serif'#12'OnCloseQuery'#7#14'FormCloseQuery'
+  +#6'OnShow'#7#8'FormShow'#10'LCLVersion'#6#8'0.9.28.3'#0#6'TLabel'#6'Label1'#4
+  +'Left'#2#0#6'Height'#2#14#3'Top'#2#0#5'Width'#2#21#7'Caption'#6#5'Bits:'#11
+  +'ParentColor'#8#0#0#6'TLabel'#6'Label2'#4'Left'#2#0#6'Height'#2#14#3'Top'#2
+  +'0'#5'Width'#2'm'#7'Caption'#6#21'New tag name pattern:'#11'ParentColor'#8#0
+  +#0#6'TLabel'#6'Label3'#4'Left'#3'`'#1#6'Height'#2#14#3'Top'#2'('#5'Width'#2
+  +'R'#7'Caption'#6#13'Name pattern:'#11'Font.Height'#2#245#9'Font.Name'#6#13'M'
+  +'S Sans Serif'#10'Font.Style'#11#6'fsBold'#0#11'ParentColor'#8#10'ParentFont'
+  +#8#0#0#6'TLabel'#6'Label4'#4'Left'#3'h'#1#6'Height'#2#14#3'Top'#2'8'#5'Width'
+  +#2'L'#7'Caption'#6#16'%b - bit number.'#11'ParentColor'#8#0#0#6'TLabel'#6'La'
+  +'bel5'#4'Left'#3'h'#1#6'Height'#2#14#3'Top'#2'I'#5'Width'#2'W'#7'Caption'#6
+  +#17'%B - Byte number.'#11'ParentColor'#8#0#0#6'TLabel'#6'Label6'#4'Left'#3'h'
+  +#1#6'Height'#2#14#3'Top'#2'Y'#5'Width'#2']'#7'Caption'#6#17'%w - Word number'
+  +'.'#11'ParentColor'#8#0#0#6'TLabel'#6'Label7'#4'Left'#3'h'#1#6'Height'#2#14#3
+  +'Top'#2'i'#5'Width'#2'c'#7'Caption'#6#19'%t - Owner tag name'#11'ParentColor'
+  +#8#0#0#11'TStringGrid'#11'StringGrid1'#4'Left'#2#1#6'Height'#2#20#3'Top'#2#16
+  +#5'Width'#3#163#2'!BorderSpacing.CellAlignHorizontal'#7#9'ccaCenter'#31'Bord'
+  +'erSpacing.CellAlignVertical'#7#9'ccaCenter'#8'ColCount'#2' '#15'DefaultColW'
+  +'idth'#2#20#16'DefaultRowHeight'#2#16#9'FixedCols'#2#0#9'FixedRows'#2#0#7'Op'
+  +'tions'#11#15'goFixedVertLine'#15'goFixedHorzLine'#10'goVertLine'#10'goHorzL'
+  +'ine'#13'goRangeSelect'#19'goDrawFocusSelected'#0#8'RowCount'#2#1#10'ScrollB'
+  +'ars'#7#6'ssNone'#8'TabOrder'#2#0#16'TitleFont.Height'#2#245#14'TitleFont.Na'
+  +'me'#6#13'MS Sans Serif'#0#0#9'TCheckBox'#12'eachbitastag'#4'Left'#2#0#6'Hei'
+  +'ght'#2#17#3'Top'#2'h'#5'Width'#3#164#0#7'Caption'#6#31'Map each bit as indi'
+  +'vidual tag.'#8'TabOrder'#2#1#0#0#5'TEdit'#14'edtNamepattern'#4'Left'#2#0#6
+  +'Height'#2#21#3'Top'#2'@'#5'Width'#3#161#0#8'TabOrder'#2#2#4'Text'#6#8'%t_bi'
+  +'t%b'#0#0#9'TCheckBox'#18'bitnamestartsfrom1'#4'Left'#3#176#0#6'Height'#2#17
+  +#3'Top'#2'0'#5'Width'#2'y'#7'Caption'#6#22'Bit name starts from 1'#8'TabOrde'
+  +'r'#2#3#0#0#9'TCheckBox'#19'bytenamestartsfrom1'#4'Left'#3#176#0#6'Height'#2
+  +#17#3'Top'#2'H'#5'Width'#3#130#0#7'Caption'#6#23'Byte name starts from 1'#8
+  +'TabOrder'#2#4#0#0#9'TCheckBox'#19'Wordnamestartsfrom1'#4'Left'#3#176#0#6'He'
+  +'ight'#2#17#3'Top'#2'`'#5'Width'#3#135#0#7'Caption'#6#23'Word name starts fr'
+  +'om 1'#8'TabOrder'#2#5#0#0#7'TButton'#7'Button1'#4'Left'#3'X'#2#6'Height'#2
+  +#25#3'Top'#2'`'#5'Width'#2'K'#7'Caption'#6#2'OK'#7'Default'#9#11'ModalResult'
+  +#2#1#7'OnClick'#7#12'Button1Click'#8'TabOrder'#2#6#0#0#7'TButton'#7'Button2'
+  +#4'Left'#3#8#2#6'Height'#2#25#3'Top'#2'`'#5'Width'#2'K'#6'Cancel'#9#7'Captio'
+  +'n'#6#6'Cancel'#11'ModalResult'#2#2#7'OnClick'#7#12'Button2Click'#8'TabOrder'
+  +#2#7#0#0#0
+]);
