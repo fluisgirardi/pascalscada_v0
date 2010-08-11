@@ -46,7 +46,12 @@ type
     //: @exclude
     destructor Destroy; override;
 
+    //: Abre o assistente de mapeamento de tags bit.
+    procedure OpenBitMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
+
+    //: @seealso(TPLCTag.Write)
     procedure Write; overload; virtual;
+    //: @seealso(TPLCTag.Write)
     procedure ScanWrite; overload; virtual;
     //: Remove a sequência de processamento de escalas.
     procedure RemoveScaleProcessor;
@@ -62,6 +67,8 @@ type
   end;
 
 implementation
+
+uses ubitmapper, Controls, TagBit;
 
 destructor TPLCNumber.Destroy;
 begin
@@ -125,6 +132,77 @@ end;
 procedure TPLCNumber.RemoveScaleProcessor;
 begin
   PScaleProcessor := nil;
+end;
+
+procedure TPLCNumber.OpenBitMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
+var
+  dlg:TfrmBitMapper;
+  bitnum,
+  bytenum,
+  wordnum,
+  startbit,
+  endbit,
+  curbit:Integer;
+  tbit:TTagBit;
+
+  procedure updatenumbers;
+  begin
+    bitnum:=curbit;
+    if dlg.bitnamestartsfrom1.Checked then inc(bitnum);
+
+    bytenum:=curbit div 8;
+    if dlg.bytenamestartsfrom1.Checked then inc(bytenum);
+
+    wordnum:=curbit div 16;
+    if dlg.Wordnamestartsfrom1.Checked then inc(wordnum);
+  end;
+
+  function GetNewTagBitName:String;
+  var
+    n:String;
+  begin
+    n:=IntToStr(bitnum);
+    Result:=dlg.edtNamepattern.Text;
+    StringReplace(Result,'%b',n,[rfReplaceAll]);
+
+    n:=IntToStr(bytenum);
+    StringReplace(Result,'%B',n,[rfReplaceAll]);
+
+    n:=IntToStr(wordnum);
+    StringReplace(Result,'%w',n,[rfReplaceAll]);
+
+    n:=Name;
+    StringReplace(Result,'%t',n,[rfReplaceAll]);
+  end;
+begin
+  dlg:=TfrmBitMapper.Create(Self);
+  try
+    if dlg.ShowModal=mrOK then begin
+      startbit:=31-dlg.StringGrid1.Selection.Right;
+      endbit:=31-dlg.StringGrid1.Selection.Left;
+      curbit:=startbit;
+      if dlg.eachbitastag.Checked then begin
+        while curbit<=endbit do begin
+          updatenumbers;
+          tbit:=TTagBit(CreateProc(TTagBit));
+          tbit.Name:=GetNewTagBitName;
+          tbit.EndBit:=curbit;
+          tbit.StartBit:=curbit;
+          InsertHook(tbit);
+          inc(curbit);
+        end;
+      end else begin
+        updatenumbers;
+        tbit:=TTagBit(CreateProc(TTagBit));
+        tbit.Name:=GetNewTagBitName;
+        tbit.EndBit:=endbit;
+        tbit.StartBit:=startbit;
+        InsertHook(tbit);
+      end;
+    end;
+  finally
+    dlg.Destroy;
+  end;
 end;
 
 end.

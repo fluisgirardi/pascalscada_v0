@@ -1,0 +1,156 @@
+object frmBitMapper: TfrmBitMapper
+  Left = 238
+  Height = 128
+  Top = 123
+  Width = 679
+  ActiveControl = StringGrid1
+  Caption = 'Map bits'
+  ClientHeight = 128
+  ClientWidth = 679
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  OnCloseQuery = FormCloseQuery
+  OnShow = FormShow
+  LCLVersion = '0.9.29'
+  object Label1: TLabel
+    Left = 0
+    Height = 19
+    Top = 0
+    Width = 21
+    Caption = 'Bits:'
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 0
+    Height = 19
+    Top = 48
+    Width = 117
+    Caption = 'New tag name pattern:'
+    ParentColor = False
+  end
+  object Label3: TLabel
+    Left = 352
+    Height = 19
+    Top = 40
+    Width = 72
+    Caption = 'Name pattern:'
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label4: TLabel
+    Left = 360
+    Height = 19
+    Top = 56
+    Width = 85
+    Caption = '%b - bit number.'
+    ParentColor = False
+  end
+  object Label5: TLabel
+    Left = 360
+    Height = 19
+    Top = 73
+    Width = 96
+    Caption = '%B - Byte number.'
+    ParentColor = False
+  end
+  object Label6: TLabel
+    Left = 360
+    Height = 19
+    Top = 89
+    Width = 102
+    Caption = '%w - Word number.'
+    ParentColor = False
+  end
+  object Label7: TLabel
+    Left = 360
+    Height = 19
+    Top = 105
+    Width = 111
+    Caption = '%t - Owner tag name'
+    ParentColor = False
+  end
+  object StringGrid1: TStringGrid
+    Left = 1
+    Height = 20
+    Top = 16
+    Width = 675
+    BorderSpacing.CellAlignHorizontal = ccaCenter
+    BorderSpacing.CellAlignVertical = ccaCenter
+    ColCount = 32
+    DefaultColWidth = 20
+    DefaultRowHeight = 16
+    FixedCols = 0
+    FixedRows = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected]
+    RowCount = 1
+    ScrollBars = ssNone
+    TabOrder = 0
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+  end
+  object eachbitastag: TCheckBox
+    Left = 0
+    Height = 22
+    Top = 104
+    Width = 172
+    Caption = 'Map each bit as individual tag.'
+    TabOrder = 1
+  end
+  object edtNamepattern: TEdit
+    Left = 0
+    Height = 24
+    Top = 64
+    Width = 161
+    TabOrder = 2
+    Text = '%t_bit%b'
+  end
+  object bitnamestartsfrom1: TCheckBox
+    Left = 176
+    Height = 22
+    Top = 48
+    Width = 133
+    Caption = 'Bit name starts from 1'
+    TabOrder = 3
+  end
+  object bytenamestartsfrom1: TCheckBox
+    Left = 176
+    Height = 22
+    Top = 72
+    Width = 142
+    Caption = 'Byte name starts from 1'
+    TabOrder = 4
+  end
+  object Wordnamestartsfrom1: TCheckBox
+    Left = 176
+    Height = 22
+    Top = 96
+    Width = 147
+    Caption = 'Word name starts from 1'
+    TabOrder = 5
+  end
+  object Button1: TButton
+    Left = 600
+    Height = 25
+    Top = 96
+    Width = 75
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    OnClick = Button1Click
+    TabOrder = 6
+  end
+  object Button2: TButton
+    Left = 520
+    Height = 25
+    Top = 96
+    Width = 75
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    OnClick = Button2Click
+    TabOrder = 7
+  end
+end

@@ -72,7 +72,7 @@ type
 
   TTagBitMapperComponentEditor = class(TDefaultComponentEditor)
   private
-    procedure AddTagInEditor(Tag:TTagBit);
+    procedure AddTagInEditor(Tag:TTag);
     function  CreateComponent(tagclass:TComponentClass):TComponent;
     procedure OpenBitMapper;
   public
@@ -203,7 +203,7 @@ end;
 // BIT MAPPER
 ///////////////////////////////////////////////////////////////////////////////
 
-procedure TTagBitMapperComponentEditor.AddTagInEditor(Tag:TTagBit);
+procedure TTagBitMapperComponentEditor.AddTagInEditor(Tag:TTag);
 {$IFDEF FPC}
 var
   Hook: TPropertyEditorHook;
@@ -230,7 +230,7 @@ end;
 
 procedure TTagBitMapperComponentEditor.OpenBitMapper;
 begin
-  //NumericTag.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
+  NumericTag.OpenBitMapper(NumericTag, AddTagInEditor, CreateComponent);
 end;
 
 procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: Integer);

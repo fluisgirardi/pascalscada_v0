@@ -16,7 +16,7 @@ uses
   scadapropeditor, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton, HMITrackBar,
   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
-  WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct,
+  WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
   PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
@@ -74,6 +74,7 @@ begin
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'GoTo_P0_Position', TPositionPropertyEditor);
 
   RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
+  RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);
 end;
 
 {$IFDEF FPC}

@@ -74,6 +74,9 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+    //: @seealso(TPLCNumber.OpenBitMapper)
+    procedure OpenBitMapper(OwnerOfNewTags: TComponent;
+       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   published
     //: Tag usado para mapear os bits.
     property PLCTag:TPLCNumber read PNumber write SetNumber;
@@ -87,7 +90,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, Dialogs;
 
 constructor TTagBit.Create(AOwner:TComponent);
 begin
@@ -106,6 +109,12 @@ begin
      PNumber.RemoveCallBacks(Self as IHMITagInterface);
   PNumber:=nil;
   inherited Destroy;
+end;
+
+procedure TTagBit.OpenBitMapper(OwnerOfNewTags: TComponent;
+   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+begin
+  MessageDlg('Porque mapear bits de outros bits?',mtInformation,[mbOK],0);
 end;
 
 procedure TTagBit.SetNumber(number:TPLCNumber);

@@ -11,7 +11,7 @@ unit ProtocolTypes;
 interface
 
 
-uses Tag, variants;
+uses Tag, variants, Classes;
 
 
 type
@@ -121,6 +121,10 @@ type
                    ptFloat
                   );
 
+  //: Adiciona um tag no editor de formulário do Delphi/Lazarus.
+  TAddTagInEditorHook = procedure(Tag:TTag) of object;
+  //: Cria um componente em tempo de desenvolvimento.
+  TCreateTagProc = function(tagclass:TComponentClass):TComponent of object;
 
   {:
   Callback chamado pelo driver de protocolo (TProtocolDriver) para retornar o

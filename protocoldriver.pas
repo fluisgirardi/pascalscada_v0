@@ -15,8 +15,6 @@ uses
   protscan, CrossEvent, Tag, syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
-  TAddTagInEditorHook = procedure(Tag:TTag) of object;
-  TCreateTagProc = function(tagclass:TComponentClass):TComponent of object;
   {:
   @abstract(Classe base para drivers de protocolo.)
 

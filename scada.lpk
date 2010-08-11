@@ -35,7 +35,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="6" Release="4"/>
-    <Files Count="57">
+    <Files Count="59">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -246,25 +246,33 @@
         <UnitName Value="tcp_udpport"/>
       </Item52>
       <Item53>
-        <Filename Value="umodbustagbuilder.pas"/>
-        <UnitName Value="uModbusTagBuilder"/>
+        <Filename Value="ubitmapper.pas"/>
+        <UnitName Value="ubitmapper"/>
       </Item53>
       <Item54>
-        <Filename Value="umodbustagbuilder.lfm"/>
+        <Filename Value="ubitmapper.lfm"/>
         <Type Value="LFM"/>
       </Item54>
       <Item55>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="umodbustagbuilder.pas"/>
+        <UnitName Value="uModbusTagBuilder"/>
       </Item55>
       <Item56>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="umodbustagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item56>
       <Item57>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
+      </Item57>
+      <Item58>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item58>
+      <Item59>
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
-      </Item57>
+      </Item59>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
