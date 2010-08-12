@@ -175,7 +175,8 @@ var
     StringReplace(Result,'%t',n,[rfReplaceAll]);
   end;
 begin
-  dlg:=TfrmBitMapper.Create(Self);
+
+  dlg:=TfrmBitMapper.Create(nil);
   try
     if dlg.ShowModal=mrOK then begin
       startbit:=31-dlg.StringGrid1.Selection.Right;
