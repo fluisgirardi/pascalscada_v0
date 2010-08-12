@@ -1,4 +1,4 @@
-object Form1: TfrmBitMapper
+object frmBitMapper: TfrmBitMapper
   Left = 192
   Top = 107
   Width = 688
@@ -85,7 +85,7 @@ object Form1: TfrmBitMapper
     ScrollBars = ssNone
     TabOrder = 0
   end
-  object CheckBox1: TCheckBox
+  object eachbitastag: TCheckBox
     Left = 0
     Top = 104
     Width = 167
@@ -101,7 +101,7 @@ object Form1: TfrmBitMapper
     TabOrder = 2
     Text = '%t_bit%b'
   end
-  object CheckBox2: TCheckBox
+  object bitnamestartsfrom1: TCheckBox
     Left = 176
     Top = 48
     Width = 153
@@ -109,7 +109,7 @@ object Form1: TfrmBitMapper
     Caption = 'Bit name starts from 1'
     TabOrder = 3
   end
-  object CheckBox3: TCheckBox
+  object bytenamestartsfrom1: TCheckBox
     Left = 176
     Top = 72
     Width = 153
@@ -117,7 +117,7 @@ object Form1: TfrmBitMapper
     Caption = 'Byte name starts from 1'
     TabOrder = 4
   end
-  object CheckBox4: TCheckBox
+  object Wordnamestartsfrom1: TCheckBox
     Left = 176
     Top = 96
     Width = 153
