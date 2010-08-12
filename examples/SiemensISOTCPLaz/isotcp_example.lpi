@@ -40,7 +40,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="35">
+    <Units Count="40">
       <Unit0>
         <Filename Value="isotcp_example.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -48,7 +48,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="166"/>
+        <UsageCount Value="169"/>
       </Unit0>
       <Unit1>
         <Filename Value="unit1.pas"/>
@@ -56,12 +56,11 @@
         <ComponentName Value="Form1"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="147"/>
+        <TopLine Value="152"/>
         <CursorPos X="30" Y="154"/>
-        <UsageCount Value="166"/>
+        <UsageCount Value="169"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
@@ -72,9 +71,9 @@
         <UnitName Value="dm"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="2"/>
-        <CursorPos X="20" Y="9"/>
-        <UsageCount Value="166"/>
+        <TopLine Value="67"/>
+        <CursorPos X="3" Y="85"/>
+        <UsageCount Value="169"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -231,9 +230,9 @@
         <Filename Value="../../scadareg.pas"/>
         <UnitName Value="scadareg"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="57"/>
-        <CursorPos X="103" Y="72"/>
-        <UsageCount Value="15"/>
+        <TopLine Value="58"/>
+        <CursorPos X="72" Y="77"/>
+        <UsageCount Value="17"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit20>
       <Unit21>
@@ -249,9 +248,9 @@
         <Filename Value="../../hmipropeditor.pas"/>
         <UnitName Value="hmipropeditor"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="202"/>
-        <CursorPos X="3" Y="206"/>
-        <UsageCount Value="8"/>
+        <TopLine Value="274"/>
+        <CursorPos X="18" Y="301"/>
+        <UsageCount Value="12"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit22>
       <Unit23>
@@ -309,9 +308,9 @@
         <Filename Value="../../plctagnumber.pas"/>
         <UnitName Value="PLCTagNumber"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="93"/>
-        <CursorPos X="1" Y="99"/>
-        <UsageCount Value="16"/>
+        <TopLine Value="14"/>
+        <CursorPos X="30" Y="21"/>
+        <UsageCount Value="18"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit29>
       <Unit30>
@@ -358,6 +357,60 @@
         <CursorPos X="3" Y="5241"/>
         <UsageCount Value="10"/>
       </Unit34>
+      <Unit35>
+        <Filename Value="../../plcnumber.pas"/>
+        <UnitName Value="PLCNumber"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="14"/>
+        <CursorPos X="3" Y="21"/>
+        <UsageCount Value="12"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit35>
+      <Unit36>
+        <Filename Value="../../tagbit.pas"/>
+        <UnitName Value="TagBit"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="97"/>
+        <CursorPos X="75" Y="117"/>
+        <UsageCount Value="12"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit36>
+      <Unit37>
+        <Filename Value="../../ubitmapper.lfm"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="LFM"/>
+      </Unit37>
+      <Unit38>
+        <Filename Value="../../umodbustagbuilder.pas"/>
+        <ComponentName Value="frmModbusTagBuilder"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uModbusTagBuilder"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="162"/>
+        <CursorPos X="20" Y="112"/>
+        <ComponentState Value="1"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit38>
+      <Unit39>
+        <Filename Value="../../ubitmapper.pas"/>
+        <ComponentName Value="frmBitMapper"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ubitmapper"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="29"/>
+        <CursorPos X="58" Y="39"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit39>
     </Units>
     <JumpHistory Count="8" HistoryIndex="7">
       <Position1>
@@ -390,7 +443,7 @@
       </Position7>
       <Position8>
         <Filename Value="dm.pas"/>
-        <Caret Line="9" Column="20" TopLine="1"/>
+        <Caret Line="45" Column="37" TopLine="38"/>
       </Position8>
     </JumpHistory>
   </ProjectOptions>

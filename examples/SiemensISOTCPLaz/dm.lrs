@@ -109,26 +109,27 @@ LazarusResources.Add('TDataModule1','FORMDATA',[
   +#7'TagGUID'#6'&{72AFD62A-73A8-41C5-BE62-23F8617ED7E0}'#7'PLCHack'#2#0#7'PLCS'
   +'lot'#2#0#10'PLCStation'#2#2#10'MemFile_DB'#2#0#10'MemAddress'#2#0#13'MemSub'
   +'Element'#2#0#15'MemReadFunction'#2#5#16'MemWriteFunction'#2#0#14'ProtocolDr'
-  +'iver'#7#13'ISOTCPDriver1'#11'RefreshTime'#2#8#4'Size'#2#10#9'SwapBytes'#9#4
-  +'left'#3#168#0#3'top'#2#8#0#0#16'TPLCBlockElement'#2'C0'#7'TagGUID'#6'&{3E3A'
-  +'7078-DEA6-4E0F-A828-8CE7D1EE5C1D}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#0#4
-  +'left'#3#168#0#3'top'#2'('#0#0#16'TPLCBlockElement'#2'C1'#7'TagGUID'#6'&{8A8'
-  +'9DCF5-2915-406A-93E7-9FBCB13B73F1}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#1#4
-  +'left'#3#168#0#3'top'#2'H'#0#0#16'TPLCBlockElement'#2'C2'#7'TagGUID'#6'&{AB1'
-  +'6A901-DBDB-466A-9C32-BEBB7838F5B3}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#2#4
-  +'left'#3#168#0#3'top'#2'h'#0#0#16'TPLCBlockElement'#2'C3'#7'TagGUID'#6'&{1A8'
-  +'DC46B-99C9-4761-AC48-E4FB99044627}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#3#4
-  +'left'#3#168#0#3'top'#3#136#0#0#0#16'TPLCBlockElement'#2'C4'#7'TagGUID'#6'&{'
-  +'19A280ED-CDE1-49B9-91F2-379D4E414920}'#8'PLCBlock'#7#8'Counters'#5'Index'#2
-  +#4#4'left'#3#168#0#3'top'#3#168#0#0#0#16'TPLCBlockElement'#2'C5'#7'TagGUID'#6
-  +'&{4121C494-628D-4555-A2E6-C916E06D0865}'#8'PLCBlock'#7#8'Counters'#5'Index'
-  +#2#5#4'left'#3#168#0#3'top'#3#200#0#0#0#16'TPLCBlockElement'#2'C6'#7'TagGUID'
-  +#6'&{720392A2-3256-4F51-B810-3EC5DC06A82D}'#8'PLCBlock'#7#8'Counters'#5'Inde'
-  +'x'#2#6#4'left'#3#168#0#3'top'#3#232#0#0#0#16'TPLCBlockElement'#2'C7'#7'TagG'
-  +'UID'#6'&{D56E507F-1DA5-4685-AF22-9C09122BD790}'#8'PLCBlock'#7#8'Counters'#5
-  +'Index'#2#7#4'left'#3#168#0#3'top'#3#8#1#0#0#16'TPLCBlockElement'#2'C8'#7'Ta'
-  +'gGUID'#6'&{2EE10182-3ACC-40B5-8E03-C607794B9766}'#8'PLCBlock'#7#8'Counters'
-  +#5'Index'#2#8#4'left'#3#168#0#3'top'#3'('#1#0#0#16'TPLCBlockElement'#2'C9'#7
-  ,'TagGUID'#6'&{86F8C967-D69D-42E6-A56F-D63680655D0C}'#8'PLCBlock'#7#8'Counter'
-  +'s'#5'Index'#2#9#4'left'#3#168#0#3'top'#3'H'#1#0#0#0
+  +'iver'#7#13'ISOTCPDriver1'#11'RefreshTime'#2#8#4'Size'#2#10#13'OnValueChange'
+  +#7#19'CountersValueChange'#9'SwapBytes'#9#4'left'#3#168#0#3'top'#2#8#0#0#16
+  +'TPLCBlockElement'#2'C0'#7'TagGUID'#6'&{3E3A7078-DEA6-4E0F-A828-8CE7D1EE5C1D'
+  +'}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#0#4'left'#3#168#0#3'top'#2'('#0#0#16
+  +'TPLCBlockElement'#2'C1'#7'TagGUID'#6'&{8A89DCF5-2915-406A-93E7-9FBCB13B73F1'
+  +'}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#1#4'left'#3#168#0#3'top'#2'H'#0#0#16
+  +'TPLCBlockElement'#2'C2'#7'TagGUID'#6'&{AB16A901-DBDB-466A-9C32-BEBB7838F5B3'
+  +'}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#2#4'left'#3#168#0#3'top'#2'h'#0#0#16
+  +'TPLCBlockElement'#2'C3'#7'TagGUID'#6'&{1A8DC46B-99C9-4761-AC48-E4FB99044627'
+  +'}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#3#4'left'#3#168#0#3'top'#3#136#0#0#0
+  +#16'TPLCBlockElement'#2'C4'#7'TagGUID'#6'&{19A280ED-CDE1-49B9-91F2-379D4E414'
+  +'920}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#4#4'left'#3#168#0#3'top'#3#168#0
+  +#0#0#16'TPLCBlockElement'#2'C5'#7'TagGUID'#6'&{4121C494-628D-4555-A2E6-C916E'
+  +'06D0865}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#5#4'left'#3#168#0#3'top'#3
+  +#200#0#0#0#16'TPLCBlockElement'#2'C6'#7'TagGUID'#6'&{720392A2-3256-4F51-B810'
+  +'-3EC5DC06A82D}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#6#4'left'#3#168#0#3'to'
+  +'p'#3#232#0#0#0#16'TPLCBlockElement'#2'C7'#7'TagGUID'#6'&{D56E507F-1DA5-4685'
+  +'-AF22-9C09122BD790}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#7#4'left'#3#168#0
+  +#3'top'#3#8#1#0#0#16'TPLCBlockElement'#2'C8'#7'TagGUID'#6'&{2EE10182-3ACC-40'
+  +'B5-8E03-C607794B9766}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#8#4'left'#3#168
+  ,#0#3'top'#3'('#1#0#0#16'TPLCBlockElement'#2'C9'#7'TagGUID'#6'&{86F8C967-D69D'
+  +'-42E6-A56F-D63680655D0C}'#8'PLCBlock'#7#8'Counters'#5'Index'#2#9#4'left'#3
+  +#168#0#3'top'#3'H'#1#0#0#0
 ]);

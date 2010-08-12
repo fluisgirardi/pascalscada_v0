@@ -45,7 +45,9 @@ implementation
 {$IFNDEF FPC}
   {$R *.dfm}
 {$ELSE}
-  {$R *.lfm}
+  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
+    {$R ubitmapper.lfm}
+  {$IFEND}
 {$ENDIF}
 
 procedure TfrmBitMapper.FormShow(Sender: TObject);
@@ -72,4 +74,10 @@ begin
   //
 end;
 
+{$IFDEF FPC }
+  {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
+initialization
+  {$I ubitmapper.lrs}
+  {$IFEND}
+{$ENDIF}
 end.

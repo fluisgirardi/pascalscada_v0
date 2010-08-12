@@ -385,6 +385,7 @@ object DataModule1: TDataModule1
     ProtocolDriver = ISOTCPDriver1
     RefreshTime = 8
     Size = 10
+    OnValueChange = CountersValueChange
     SwapBytes = True
     left = 168
     top = 8

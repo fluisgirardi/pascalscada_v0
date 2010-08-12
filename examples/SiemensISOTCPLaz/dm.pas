@@ -66,6 +66,7 @@ type
     InputsBYTE_01: TPLCTagNumber;
     I0_0: TTagBit;
     TCP_UDPPort1: TTCP_UDPPort;
+    procedure CountersValueChange(Sender: TObject);
   private
     { private declarations }
   public
@@ -76,6 +77,13 @@ var
   DataModule1: TDataModule1; 
 
 implementation
+
+{ TDataModule1 }
+
+procedure TDataModule1.CountersValueChange(Sender: TObject);
+begin
+
+end;
 
 initialization
   {$I dm.lrs}
