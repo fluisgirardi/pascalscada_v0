@@ -138,7 +138,7 @@ object frmBitMapper: TfrmBitMapper
   end
   object Button2: TButton
     Left = 517
-    Top = 95
+    Top = 96
     Width = 75
     Height = 25
     Cancel = True
