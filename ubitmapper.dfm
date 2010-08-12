@@ -1,9 +1,11 @@
 object frmBitMapper: TfrmBitMapper
   Left = 192
   Top = 107
-  Width = 688
-  Height = 155
+  BorderIcons = []
+  BorderStyle = bsDialog
   Caption = 'Map bits'
+  ClientHeight = 128
+  ClientWidth = 680
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

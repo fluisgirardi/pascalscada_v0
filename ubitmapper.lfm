@@ -4,6 +4,8 @@ object frmBitMapper: TfrmBitMapper
   Top = 123
   Width = 679
   ActiveControl = StringGrid1
+  BorderIcons = []
+  BorderStyle = bsSingle
   Caption = 'Map bits'
   ClientHeight = 128
   ClientWidth = 679
