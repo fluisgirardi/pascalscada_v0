@@ -1099,12 +1099,18 @@ end;
 
 function TPLCTag.GetAvgUpdateRate:Double;
 begin
-  Result:=FTotalTime/FReadCount;
+  if FReadCount=0 then
+    Result:=-1
+  else
+    Result:=FTotalTime/FReadCount;
 end;
 
 function TPLCTag.GetAvgDelayBetweenRequests:double;
 begin
-  Result:=FTotalDelay/FReqCount;
+  if FReqCount=0 then
+    Result:=-1
+  else
+    Result:=FTotalDelay/FReqCount;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
