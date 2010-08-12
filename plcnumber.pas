@@ -163,16 +163,16 @@ var
   begin
     n:=IntToStr(bitnum);
     Result:=dlg.edtNamepattern.Text;
-    StringReplace(Result,'%b',n,[rfReplaceAll]);
+    Result := StringReplace(Result,'%b',n,[rfReplaceAll]);
 
     n:=IntToStr(bytenum);
-    StringReplace(Result,'%B',n,[rfReplaceAll]);
+    Result := StringReplace(Result,'%B',n,[rfReplaceAll]);
 
     n:=IntToStr(wordnum);
-    StringReplace(Result,'%w',n,[rfReplaceAll]);
+    Result := StringReplace(Result,'%w',n,[rfReplaceAll]);
 
     n:=Name;
-    StringReplace(Result,'%t',n,[rfReplaceAll]);
+    Result := StringReplace(Result,'%t',n,[rfReplaceAll]);
   end;
 begin
 
@@ -187,6 +187,7 @@ begin
           updatenumbers;
           tbit:=TTagBit(CreateProc(TTagBit));
           tbit.Name:=GetNewTagBitName;
+          tbit.PLCTag:=Self;
           tbit.EndBit:=curbit;
           tbit.StartBit:=curbit;
           InsertHook(tbit);
@@ -196,6 +197,7 @@ begin
         updatenumbers;
         tbit:=TTagBit(CreateProc(TTagBit));
         tbit.Name:=GetNewTagBitName;
+        tbit.PLCTag:=Self;
         tbit.EndBit:=endbit;
         tbit.StartBit:=startbit;
         InsertHook(tbit);
