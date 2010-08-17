@@ -338,7 +338,7 @@ constructor TProtocolDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   PDriverID := DriverCount;
-  InterLockedIncrement(DriverCount);
+  Inc(DriverCount);
 
   FCritical := TCriticalSection.Create;
 

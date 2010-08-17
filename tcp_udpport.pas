@@ -341,7 +341,6 @@ begin
       RefreshLastOSError;
       exit;
     end;
-    DebugLn('conectou');
     Ok:=true;
     PActive:=true;
   finally
