@@ -89,6 +89,8 @@ contains
   tagcollection in 'tagcollection.pas',
   isotcpdriver in 'isotcpdriver.pas',
   s7family in 's7family.pas',
-  ubitmapper in 'ubitmapper.pas' {frmBitMapper};
+  ubitmapper in 'ubitmapper.pas' {frmBitMapper},
+  HMIControlDislocatorAnimation in 'hmicontroldislocatoranimation.pas',
+  uelementmapper in 'uelementmapper.pas' {frmMapElements};
 
 end.
