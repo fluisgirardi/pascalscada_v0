@@ -11,9 +11,9 @@ object Form1: TForm1
   LCLVersion = '0.9.29'
   object Label1: TLabel
     Left = 8
-    Height = 16
+    Height = 14
     Top = 8
-    Width = 513
+    Width = 460
     Caption = 'Crie no seu PLC o DB1 com 40 bytes de tamanho (10 DWORDs ou  10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -23,9 +23,9 @@ object Form1: TForm1
   end
   object Label2: TLabel
     Left = 8
-    Height = 16
+    Height = 14
     Top = 24
-    Width = 497
+    Width = 446
     Caption = 'Create the DB1 in your PLC with 40 bytes sized (10 DWORDs or 10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -35,10 +35,12 @@ object Form1: TForm1
   end
   object HMIEdit1: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 88
     Width = 112
-    Color = clWindow
+    Color = clWindowText
+    Font.Color = clWindow
+    ParentFont = False
     TabOrder = 0
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD00
@@ -58,7 +60,7 @@ object Form1: TForm1
   end
   object HMIEdit2: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 112
     Width = 112
     Color = clWindow
@@ -69,7 +71,7 @@ object Form1: TForm1
   end
   object HMIEdit3: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 136
     Width = 112
     Color = clWindow
@@ -80,7 +82,7 @@ object Form1: TForm1
   end
   object HMIEdit4: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 160
     Width = 112
     Color = clWindow
@@ -91,7 +93,7 @@ object Form1: TForm1
   end
   object HMIEdit5: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 184
     Width = 112
     Color = clWindow
@@ -102,7 +104,7 @@ object Form1: TForm1
   end
   object HMIEdit6: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 208
     Width = 112
     Color = clWindow
@@ -113,7 +115,7 @@ object Form1: TForm1
   end
   object HMIEdit7: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 232
     Width = 112
     Color = clWindow
@@ -124,7 +126,7 @@ object Form1: TForm1
   end
   object HMIEdit8: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 256
     Width = 112
     Color = clWindow
@@ -135,7 +137,7 @@ object Form1: TForm1
   end
   object HMIEdit9: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 280
     Width = 112
     Color = clWindow
@@ -146,7 +148,7 @@ object Form1: TForm1
   end
   object HMIEdit10: THMIEdit
     Left = 80
-    Height = 21
+    Height = 19
     Top = 304
     Width = 112
     Color = clWindow
@@ -417,7 +419,7 @@ object Form1: TForm1
   end
   object HMIEdit11: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 88
     Width = 112
     Color = clWindow
@@ -440,7 +442,7 @@ object Form1: TForm1
   end
   object HMIEdit12: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 112
     Width = 112
     Color = clWindow
@@ -451,7 +453,7 @@ object Form1: TForm1
   end
   object HMIEdit13: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 136
     Width = 112
     Color = clWindow
@@ -462,7 +464,7 @@ object Form1: TForm1
   end
   object HMIEdit14: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 160
     Width = 112
     Color = clWindow
@@ -473,7 +475,7 @@ object Form1: TForm1
   end
   object HMIEdit15: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 184
     Width = 112
     Color = clWindow
@@ -484,7 +486,7 @@ object Form1: TForm1
   end
   object HMIEdit16: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 208
     Width = 112
     Color = clWindow
@@ -495,7 +497,7 @@ object Form1: TForm1
   end
   object HMIEdit17: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 232
     Width = 112
     Color = clWindow
@@ -506,7 +508,7 @@ object Form1: TForm1
   end
   object HMIEdit18: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 256
     Width = 112
     Color = clWindow
@@ -517,7 +519,7 @@ object Form1: TForm1
   end
   object HMIEdit19: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 280
     Width = 112
     Color = clWindow
@@ -528,7 +530,7 @@ object Form1: TForm1
   end
   object HMIEdit20: THMIEdit
     Left = 280
-    Height = 21
+    Height = 19
     Top = 304
     Width = 112
     Color = clWindow
@@ -539,9 +541,9 @@ object Form1: TForm1
   end
   object Label25: TLabel
     Left = 8
-    Height = 16
+    Height = 14
     Top = 45
-    Width = 200
+    Width = 179
     Caption = 'TCP_UDP Port Commands/second'
     ParentColor = False
   end
@@ -559,9 +561,9 @@ object Form1: TForm1
   end
   object Label27: TLabel
     Left = 273
-    Height = 16
+    Height = 14
     Top = 45
-    Width = 38
+    Width = 34
     Caption = 'cmd/s'
     ParentColor = False
   end
@@ -1441,7 +1443,7 @@ object Form1: TForm1
   end
   object HMIEdit21: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 88
     Width = 112
     Color = clWindow
@@ -1464,7 +1466,7 @@ object Form1: TForm1
   end
   object HMIEdit22: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 112
     Width = 112
     Color = clWindow
@@ -1475,7 +1477,7 @@ object Form1: TForm1
   end
   object HMIEdit23: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 136
     Width = 112
     Color = clWindow
@@ -1486,7 +1488,7 @@ object Form1: TForm1
   end
   object HMIEdit24: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 160
     Width = 112
     Color = clWindow
@@ -1497,7 +1499,7 @@ object Form1: TForm1
   end
   object HMIEdit25: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 184
     Width = 112
     Color = clWindow
@@ -1508,7 +1510,7 @@ object Form1: TForm1
   end
   object HMIEdit26: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 208
     Width = 112
     Color = clWindow
@@ -1519,7 +1521,7 @@ object Form1: TForm1
   end
   object HMIEdit27: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 232
     Width = 112
     Color = clWindow
@@ -1530,7 +1532,7 @@ object Form1: TForm1
   end
   object HMIEdit28: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 256
     Width = 112
     Color = clWindow
@@ -1541,7 +1543,7 @@ object Form1: TForm1
   end
   object HMIEdit29: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 280
     Width = 112
     Color = clWindow
@@ -1552,7 +1554,7 @@ object Form1: TForm1
   end
   object HMIEdit30: THMIEdit
     Left = 433
-    Height = 21
+    Height = 19
     Top = 304
     Width = 112
     Color = clWindow
@@ -1575,56 +1577,52 @@ object Form1: TForm1
     Left = 601
     Height = 20
     Top = 392
-    Width = 47
+    Width = 44
     Caption = 'DB1'
     Checked = True
     OnClick = RadioButton1Click
-    State = cbChecked
     TabOrder = 34
+    TabStop = True
   end
   object RadioButton2: TRadioButton
     Tag = 1
     Left = 657
     Height = 20
     Top = 392
-    Width = 47
+    Width = 45
     Caption = 'MDs'
     OnClick = RadioButton1Click
     TabOrder = 33
-    TabStop = False
   end
   object RadioButton3: TRadioButton
     Tag = 2
     Left = 713
     Height = 20
     Top = 392
-    Width = 76
+    Width = 71
     Caption = 'Counters'
     OnClick = RadioButton1Click
     TabOrder = 32
-    TabStop = False
   end
   object RadioButton4: TRadioButton
     Tag = 3
     Left = 793
     Height = 20
     Top = 392
-    Width = 34
+    Width = 32
     Caption = 'IB'
     OnClick = RadioButton1Click
     TabOrder = 35
-    TabStop = False
   end
   object RadioButton5: TRadioButton
     Tag = 4
     Left = 841
     Height = 20
     Top = 392
-    Width = 39
+    Width = 37
     Caption = 'QB'
     OnClick = RadioButton1Click
     TabOrder = 36
-    TabStop = False
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer

@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ExtCtrls, RTTIGrids, tcp_udpport, ISOTCPDriver, PLCBlock,
   PLCBlockElement, HMIEdit, HMIText, LinearScaleProcessor,
-  HMIControlDislocatorAnimation, HMIAnimation, sdl;
+  HMIControlDislocatorAnimation, HMIAnimation;
 
 type
 
@@ -144,7 +144,7 @@ uses dm;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  SDL_Init(SDL_INIT_EVERYTHING);
+  //SDL_Init(SDL_INIT_EVERYTHING);
 end;
 
 procedure TForm1.RadioButton1Click(Sender: TObject);
