@@ -17,7 +17,7 @@ interface
 
 uses
   classes, sysutils, ProtocolDriver, S7Types, Tag, ProtocolTypes, CrossEvent,
-  commtypes;
+  commtypes, CommPort;
 
 type
   {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
@@ -67,7 +67,7 @@ type
     function  disconnectPLC(var CPU:TS7CPU):Boolean; virtual;
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; virtual;
     procedure sendMessage(var msgOut:BYTES); virtual;
-    function  getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult; virtual;
+    function  getResponse(ComPort:TCommPortDriver; var msgIn:BYTES; var BytesRead:Integer):TIOResult; virtual;
     procedure listReachablePartners; virtual;
   protected
     function  SwapBytesInWord(W:Word):Word;
@@ -185,7 +185,7 @@ begin
 
 end;
 
-function  TSiemensProtocolFamily.getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult;
+function  TSiemensProtocolFamily.getResponse(ComPort:TCommPortDriver; var msgIn:BYTES; var BytesRead:Integer):TIOResult;
 begin
 
 end;

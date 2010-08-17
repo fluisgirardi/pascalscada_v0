@@ -875,7 +875,7 @@ begin
     minScan := -1;
     first:=true;
     done := false;
-    if ([csDesigning, csDestroying]*ComponentState<>[]) then begin
+    if ([csDestroying]*ComponentState<>[]) then begin
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}

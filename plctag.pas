@@ -355,14 +355,14 @@ end;
 procedure TPLCTag.SetProtocolDriver(p:TProtocolDriver);
 begin
   //estou carregando meus parametros...
-  if (csReading in ComponentState) then exit;
+  //if (csReading in ComponentState) then exit;
   
   //estou em tempo de desenvolvimento...
-  if (csDesigning in ComponentState) then begin
-    PProtocolDriver := p;
-    GetNewProtocolTagSize;
-    exit;
-  end;
+  //if (csDesigning in ComponentState) then begin
+  //  PProtocolDriver := p;
+  //  GetNewProtocolTagSize;
+  //  exit;
+  //end;
 
   if p=PProtocolDriver then exit;
 
@@ -534,7 +534,7 @@ end;
 
 procedure TPLCTag.DoScanTimerEvent(Sender:TObject);
 begin
-  if ComponentState*[csDesigning, csReading,csLoading]<>[] then exit;
+  if ComponentState*[csReading,csLoading]<>[] then exit;
   if PProtocolDriver<>nil then
     ScanRead;
 end;

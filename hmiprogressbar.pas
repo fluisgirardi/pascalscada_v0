@@ -148,7 +148,7 @@ end;
 
 procedure THMIProgressBar.NotifyTagChange(Sender:TObject);
 begin
-  if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then
+  if ([csReading]*ComponentState<>[]) or (FTag=nil) then
     exit;
 
   if (FTag<>nil) and (Supports(FTag, ITagNumeric)) then

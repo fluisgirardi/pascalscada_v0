@@ -120,7 +120,7 @@ end;
 
 procedure THMIAnimation.ZoneChange(Sender:TObject);
 begin
-   if [csReading, csDesigning]*ComponentState<>[] then exit;
+   if [csReading]*ComponentState<>[] then exit;
 
    NotifyTagChange(self);
 end;
@@ -277,7 +277,7 @@ end;
 
 procedure THMIAnimation.NotifyTagChange(Sender:TObject);
 begin
-   if [csDesigning, csReading]*ComponentState=[] then begin
+   if [csReading]*ComponentState=[] then begin
 
       if FTag=nil then exit;
 

@@ -15,7 +15,7 @@ interface
 
 uses
   Classes, SysUtils, HMIZones, Dialogs, Forms, Menus, ProtocolDriver, Tag,
-  typinfo, HMIControlDislocatorAnimation, TagBit, PLCNumber,
+  typinfo, HMIControlDislocatorAnimation, TagBit, PLCNumber, PLCBlock,
   {$IFDEF FPC}
     PropEdits, ComponentEditors;
   {$ELSE}
@@ -80,6 +80,18 @@ type
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
     function NumericTag: TPLCNumber; virtual;
+  end;
+
+  TBlockElementMapperComponentEditor = class(TDefaultComponentEditor)
+  private
+    procedure AddTagInEditor(Tag:TTag);
+    function  CreateComponent(tagclass:TComponentClass):TComponent;
+    procedure OpenElementMapper;
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
+    function Block: TPLCBlock; virtual;
   end;
 
 implementation
@@ -253,6 +265,62 @@ end;
 function  TTagBitMapperComponentEditor.NumericTag: TPLCNumber;
 begin
   Result:=TPLCNumber(GetComponent);
+end;
+
+///////////////////////////////////////////////////////////////////////////////
+// ELEMENT BLOCK MAPPER
+///////////////////////////////////////////////////////////////////////////////
+
+procedure TBlockElementMapperComponentEditor.AddTagInEditor(Tag:TTag);
+{$IFDEF FPC}
+var
+  Hook: TPropertyEditorHook;
+{$ENDIF}
+begin
+{$IFDEF FPC}
+  Hook:=nil;
+  if not GetHook(Hook) then exit;
+  Hook.PersistentAdded(Tag,false);
+  Modified;
+{$ELSE}
+  Designer.Modified;
+{$ENDIF}
+end;
+
+function  TBlockElementMapperComponentEditor.CreateComponent(tagclass:TComponentClass):TComponent;
+begin
+{$IFDEF FPC}
+  Result := tagclass.Create(Block.Owner);
+{$ELSE}
+  Result := Designer.CreateComponent(tagclass,Block.Owner,0,0,0,0);
+{$ENDIF}
+end;
+
+procedure TBlockElementMapperComponentEditor.OpenElementMapper;
+begin
+  Block.OpenElementMapper(Block, AddTagInEditor, CreateComponent);
+end;
+
+procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: Integer);
+begin
+  if Index=0 then
+    OpenElementMapper();
+end;
+
+function  TBlockElementMapperComponentEditor.GetVerb(Index: Integer): string;
+begin
+  if Index=0 then
+    Result:='Map block elements...';
+end;
+
+function  TBlockElementMapperComponentEditor.GetVerbCount: Integer;
+begin
+  Result:=1;
+end;
+
+function  TBlockElementMapperComponentEditor.Block:TPLCBlock;
+begin
+  Result:=TPLCBlock(GetComponent);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////

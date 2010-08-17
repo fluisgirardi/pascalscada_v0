@@ -338,7 +338,7 @@ constructor TProtocolDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   PDriverID := DriverCount;
-  inc(DriverCount);
+  InterLockedIncrement(DriverCount);
 
   FCritical := TCriticalSection.Create;
 
@@ -348,29 +348,26 @@ begin
 
   PCallersCS := TCriticalSection.Create;
 
-  if ComponentState*[csDesigning]=[] then begin
+  PScanUpdateThread := TScanUpdate.Create(true);
+  PScanUpdateThread.Priority:=tpTimeCritical;
+  PScanUpdateThread.OnGetValue := SafeGetValue;
 
-    PScanUpdateThread := TScanUpdate.Create(true);
-    PScanUpdateThread.Priority:=tpTimeCritical;
-    PScanUpdateThread.OnGetValue := SafeGetValue;
+  PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
+  PScanReadThread.OnDoScanRead := SafeScanRead;
+  PScanReadThread.OnDoScanWrite := nil;
 
-    PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
-    PScanReadThread.OnDoScanRead := SafeScanRead;
-    PScanReadThread.OnDoScanWrite := nil;
+  PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
+  PScanWriteThread.Priority:=tpTimeCritical;
+  PScanWriteThread.OnDoScanRead := nil;
+  PScanWriteThread.OnDoScanWrite := SafeScanWrite;
 
-    PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
-    PScanWriteThread.Priority:=tpTimeCritical;
-    PScanWriteThread.OnDoScanRead := nil;
-    PScanWriteThread.OnDoScanWrite := SafeScanWrite;
+  PScanUpdateThread.Resume;
 
-    PScanUpdateThread.Resume;
+  PScanReadThread.Resume;
+  PScanReadThread.WaitInit;
 
-    PScanReadThread.Resume;
-    PScanReadThread.WaitInit;
-
-    PScanWriteThread.Resume;
-    PScanWriteThread.WaitInit;
-  end;
+  PScanWriteThread.Resume;
+  PScanWriteThread.WaitInit;
 end;
 
 destructor TProtocolDriver.Destroy;
@@ -378,13 +375,11 @@ var
   c:Integer;
 begin
   CancelPendingActions;
-  if ComponentState*[csDesigning]=[] then begin
-    PScanReadThread.Destroy;
-    PScanWriteThread.Destroy;
+  PScanReadThread.Destroy;
+  PScanWriteThread.Destroy;
 
-    PScanUpdateThread.Terminate;
-    PScanUpdateThread.WaitFor;
-  end;
+  PScanUpdateThread.Terminate;
+  PScanUpdateThread.WaitFor;
 
   for c:=0 to High(PTags) do
     TPLCTag(PTags[c]).RemoveDriver;
@@ -550,9 +545,6 @@ end;
 
 procedure TProtocolDriver.AddTag(TagObj:TTag);
 begin
-  if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
-    exit;
-
   try
     FPause.ResetEvent;
     FCritical.Enter;
@@ -565,8 +557,6 @@ end;
 
 procedure TProtocolDriver.RemoveTag(TagObj:TTag);
 begin
-  if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
-    exit;
   try
     FPause.ResetEvent;
     FCritical.Enter;
@@ -627,8 +617,6 @@ end;
 
 procedure TProtocolDriver.TagChanges(TagObj:TTag; Change:TChangeType; oldValue, newValue:Cardinal);
 begin
-  if (csReading in TagObj.ComponentState) or (csDesigning in TagObj.ComponentState) then
-    exit;
   try
     FPause.ResetEvent;
     FCritical.Enter;
@@ -645,7 +633,6 @@ begin
     PCallersCS.Enter;
     //verifica se esta em edição, caso positivo evita o comando.
     if (csReading in ComponentState) or
-       (csDesigning in ComponentState) or
        (csDestroying in ComponentState) then begin
        Result := 0;
        exit;
@@ -659,7 +646,7 @@ begin
        inc(FScanReadID);
 
     //posta uma mensagem de Leitura por Scan
-    if (ComponentState*[csDesigning]=[]) and (PScanUpdateThread<>nil) then
+    if (PScanUpdateThread<>nil) then
       PScanUpdateThread.ScanRead(tagrec);
 
     Result := FScanReadID;
@@ -677,7 +664,6 @@ begin
     PCallersCS.Enter;
     //verifica se esta em edição, caso positivo evita o comando.
     if (csReading in ComponentState) or
-       (csDesigning in ComponentState) or
        (csDestroying in ComponentState) then begin
        Result := 0;
        exit;
@@ -701,7 +687,7 @@ begin
     pkg^.WriteResult:=ioNone;
 
     //posta uma mensagem de Escrita por Scan
-    if (ComponentState*[csDesigning]=[]) and (PScanWriteThread<>nil) then begin
+    if (PScanWriteThread<>nil) then begin
       PScanWriteThread.ScanWrite(pkg);
       {$IFDEF FPC}
       ThreadSwitch;
@@ -812,5 +798,9 @@ begin
       FPause.SetEvent;
    end;
 end;
+
+initialization
+
+DriverCount:=1;
 
 end.

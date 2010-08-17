@@ -219,6 +219,7 @@ Cria um novo driver de porta serial. Tem como padrao 19200bps, 8 bits de dados,
 constructor TSerialPortDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FExclusiveDevice:=true;
   PBaundRate := br19200;
   PDataBits  := db8;
   PStopBits  := sb1;
@@ -610,7 +611,7 @@ begin
   if COMExist(v) then
     PPortName := v
   else
-    if (v='(none)') and (csDesigning in ComponentState) then
+    if (v='(none)')  then
        PPortName:=''
     else
        raise Exception.Create(SserialPortNotExist);

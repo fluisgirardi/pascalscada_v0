@@ -274,6 +274,7 @@ type
     procedure  SetLogFile(nFile:String);
     procedure  LogAction(cmd:TIOCommand; Packet:TIOPacket);
   protected
+    FExclusiveDevice:Boolean;
     //: Envia uma mensagem de erro de comunicação da thread de comunicação para a aplicação
     procedure DoCommErrorFromThread(WriteCmd:Boolean; Error:TIOResult);
     //: Envia uma mensagem de porta aberta pela thread de comunicação;
@@ -542,7 +543,7 @@ const
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses SysUtils, ProtocolDriver, hsstrings, LCLProc;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -762,6 +763,7 @@ end;
 constructor TCommPortDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FExclusiveDevice:=false;
   FTimer := TTimer.Create(Self);
   FTimer.OnTimer:=TimerStatistics;
   FTimer.Enabled:=false;
@@ -1007,8 +1009,9 @@ begin
     exit;
   end;
 
-  //evita a abertura/fechamento da porta em edição
-  if csDesigning in ComponentState then begin
+  //evita a abertura/fechamento da porta em edição, quando um dispositivo
+  //e de uso exclusivo (porta serial).
+  if FExclusiveDevice and (csDesigning in ComponentState) then begin
     if ComSettingsOK then
       PActive := v;
     exit;

@@ -175,7 +175,6 @@ procedure TPLCTagNumber.ScanRead;
 var
   tr:TTagRec;
 begin
-  if csDesigning in ComponentState then exit;
   inherited ScanRead;
   if (PProtocolDriver<>nil) and PAutoRead then begin
     BuildTagRec(tr,0,0);
@@ -188,7 +187,6 @@ var
   tr:TTagRec;
   PlcValues:TArrayOfDouble;
 begin
-  if csDesigning in ComponentState then exit;
   PlcValues:=TagValuesToPLCValues(Values, Offset);
   if (PProtocolDriver<>nil) then begin
      if PAutoWrite then begin
@@ -207,7 +205,6 @@ procedure TPLCTagNumber.Read;
 var
   tr:TTagRec;
 begin
-  if csDesigning in ComponentState then exit;
   if PProtocolDriver<>nil then begin
     BuildTagRec(tr,0,0);
     PProtocolDriver.Read(tr);
@@ -219,7 +216,6 @@ var
   tr:TTagRec;
   PlcValues:TArrayOfDouble;
 begin
-  if csDesigning in ComponentState then exit;
   PlcValues:=TagValuesToPLCValues(Values, Offset);
   if (PProtocolDriver<>nil) then begin
      if PAutoWrite then begin

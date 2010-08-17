@@ -90,7 +90,6 @@ procedure TTagBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
 begin
-  if csDesigning in ComponentState then exit;
   if Count=0 then exit;
   if (PProtocolDriver<>nil) then begin
     if PAutoWrite then begin
@@ -110,7 +109,6 @@ procedure TTagBlock.Read;
 var
   tr:TTagRec;
 begin
-  if csDesigning in ComponentState then exit;
   if PProtocolDriver<>nil then begin
     BuildTagRec(tr,0,0);
     PProtocolDriver.Read(tr);
@@ -121,7 +119,6 @@ procedure TTagBlock.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
 var
   tr:TTagRec;
 begin
-  if csDesigning in ComponentState then exit;
   if Count=0 then exit;
   if PProtocolDriver<>nil then begin
     BuildTagRec(tr,Count,Offset);

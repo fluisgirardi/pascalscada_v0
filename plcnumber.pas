@@ -175,6 +175,8 @@ var
     Result := StringReplace(Result,'%t',n,[rfReplaceAll]);
   end;
 begin
+  //se não está em design sai.
+  if [csDesigning]*ComponentState=[] then exit;
 
   dlg:=TfrmBitMapper.Create(nil);
   try

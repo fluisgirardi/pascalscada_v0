@@ -127,7 +127,7 @@ end;
 
 procedure THMITrackBar.WriteValue;
 begin
-  if [csLoading,csReading,csDesigning]*ComponentState<>[] then exit;
+  if [csLoading,csReading]*ComponentState<>[] then exit;
 
   if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
     (Ftag as ITagNumeric).Value := Position;

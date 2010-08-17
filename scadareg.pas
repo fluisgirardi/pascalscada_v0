@@ -75,6 +75,7 @@ begin
 
   RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
   RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);
+  RegisterComponentEditor(TPLCBlock,       TBlockElementMapperComponentEditor);
 end;
 
 {$IFDEF FPC}

@@ -277,8 +277,7 @@ end;
 
 procedure THMIEdit.RepaintFocus;
 begin
-  if (csDesigning in ComponentState) or
-     (csReading in ComponentState) then
+  if [csReading]*ComponentState<>[] then
      exit;
 
   FBlockFontChange := true;
@@ -337,17 +336,7 @@ end;
 
 procedure THMIEdit.RefreshTagValue;
 begin
-  if ([csDesigning,csReading]*ComponentState<>[]) or (FTag=nil) or Modified then begin
-    if Modified and (not (csDesigning in ComponentState)) then exit;
-    if (csDesigning in ComponentState) then begin
-      FBlockChange := true;
-      if (FTag=nil) then
-        inherited Text := SWithoutTag
-      else
-        inherited Text := FTag.Name;
-      FBlockChange := false;
-      Modified := false;
-    end;
+  if ([csReading]*ComponentState<>[]) or (FTag=nil) or Modified then begin
     exit;
   end;
 
@@ -374,8 +363,7 @@ end;
 
 procedure THMIEdit.SendValue(Txt:String);
 begin
-  if (csDesigning in ComponentState) or
-     (csReading in ComponentState) or
+  if (csReading in ComponentState) or
      (FTag=nil) or
      (not Modified) then
      exit;

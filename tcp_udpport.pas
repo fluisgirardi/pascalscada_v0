@@ -48,6 +48,7 @@ type
     procedure SetPortNumber(pn:Integer);
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
+    procedure SetExclusive(b:Boolean);
   protected
     //: @seealso(TCommPortDriver.Read)
     procedure Read(Packet:PIOPacket); override;
@@ -88,6 +89,9 @@ type
     }
     property PortType:TPortType read FPortType write SetPortType default ptTCP;
 
+    //: Porta de acesso exclusivo (evita que a porta seja aberta em tempo de desenvolvimento).
+    property ExclusiveDevice:Boolean read FExclusiveDevice write SetExclusive;
+
     //: @seealso TCommPortDriver.OnCommPortOpened
     property OnCommPortOpened;
     //: @seealso TCommPortDriver.OnCommPortClosed
@@ -106,7 +110,8 @@ uses hsstrings
 {$ifdef fpc}
 {$IFDEF UNIX}
      ,netdb,
-     Unix
+     Unix,
+     LCLProc
 {$endif}
 {$ENDIF}
      ;
@@ -148,6 +153,16 @@ procedure TTCP_UDPPort.SetPortType(pt:TPortType);
 begin
   DoExceptionInActive;
   FPortType:=pt;
+end;
+
+procedure TTCP_UDPPort.SetExclusive(b:Boolean);
+var
+  oldstate:Boolean;
+begin
+  oldstate:=Active;
+  Active:=false;
+  FExclusiveDevice:=b;
+  Active:=oldstate;
 end;
 
 procedure TTCP_UDPPort.Read(Packet:PIOPacket);
@@ -326,6 +341,7 @@ begin
       RefreshLastOSError;
       exit;
     end;
+    DebugLn('conectou');
     Ok:=true;
     PActive:=true;
   finally

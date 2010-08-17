@@ -53,7 +53,7 @@ begin
   if db=PZConnection then exit;
 
   //se não está em desing e esta tentando remover a conexao...
-  if (ComponentState*[csDesigning]=[]) and (db=nil) then
+  if (db=nil) then
     raise Exception.Create(SimpossibleToRemoveWhenBusy);
 
   if db<>nil then begin

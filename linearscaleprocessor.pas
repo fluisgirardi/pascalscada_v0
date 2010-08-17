@@ -68,7 +68,7 @@ uses hsstrings;
 constructor TLinearScaleProcessor.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  if csDesigning	in ComponentState then begin
+  if csDesigning in ComponentState then begin
     FProperts[0] := 0;
     FProperts[1] := 100;
     FProperts[2] := 0;

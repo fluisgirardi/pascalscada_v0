@@ -421,7 +421,7 @@ end;
 {$IFDEF FPC}
 procedure THMICheckBox.DoOnChange;
 begin
-  if [csLoading,csDestroying,csDesigning]*ComponentState<>[] then begin
+  if [csLoading,csDestroying]*ComponentState<>[] then begin
     exit;
   end;
 
@@ -605,7 +605,7 @@ end;
 
 procedure THMICheckBox.NotifyTagChange(Sender:TObject);
 begin
-  if (csDesigning in ComponentState) or (csReading in ComponentState) or (FTag=nil) then begin
+  if ([csReading]*ComponentState<>[]) or (FTag=nil) then begin
     exit;
   end;
 

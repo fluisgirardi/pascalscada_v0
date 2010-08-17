@@ -115,7 +115,7 @@ var
    value:Double;
 begin
    value := 0;
-   if [csDesigning, csReading]*ComponentState=[] then begin
+   if [csReading]*ComponentState=[] then begin
    
       if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
          value := (FTag as ITagNumeric).Value;

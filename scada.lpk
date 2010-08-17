@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Name Value="scada"/>
     <CompilerOptions>
-      <Version Value="8"/>
+      <Version Value="9"/>
       <PathDelim Value="\"/>
       <SearchPaths>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
@@ -14,7 +14,6 @@
           <SyntaxMode Value="Delphi"/>
           <CStyleOperator Value="False"/>
           <StaticKeyword Value="True"/>
-          <UseAnsiStrings Value="True"/>
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
@@ -35,7 +34,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="6" Release="4"/>
-    <Files Count="59">
+    <Files Count="61">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -273,6 +272,14 @@
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
       </Item59>
+      <Item60>
+        <Filename Value="uelementmapper.lfm"/>
+        <Type Value="LFM"/>
+      </Item60>
+      <Item61>
+        <Filename Value="uelementmapper.pas"/>
+        <UnitName Value="uelementmapper"/>
+      </Item61>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">

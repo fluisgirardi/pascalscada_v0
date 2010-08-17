@@ -135,7 +135,8 @@ begin
    {$IFDEF FPC}
    inherited CheckItemIndexChanged;
    {$ENDIF}
-   if [csLoading, csReading, csDestroying, csDesigning]*ComponentState<>[] then
+
+   if [csLoading, csReading, csDestroying]*ComponentState<>[] then
       exit;
 
    if (FLoaded) and (not FIgnore) then

@@ -346,7 +346,7 @@ var
   tagrec:TTagRec;
   values:TArrayOfDouble;
 begin
-  if ([csDesigning, csDestroying]*ComponentState<>[]) then begin
+  if ([csDestroying]*ComponentState<>[]) then begin
     {$IFDEF FPC}
     ThreadSwitch;
     {$ELSE}

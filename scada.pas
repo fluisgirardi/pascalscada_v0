@@ -17,7 +17,7 @@ uses
   ProtocolDriver, ProtocolTypes, protscan, protscanupdate, s7family, S7Types, 
   scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, 
   tcp_udpport, ubitmapper, uModbusTagBuilder, UserScale, ValueProcessor, 
-  WestASCIIDriver, LazarusPackageIntf;
+  WestASCIIDriver, uelementmapper, LazarusPackageIntf;
 
 implementation
 
