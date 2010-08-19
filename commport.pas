@@ -543,7 +543,7 @@ const
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings, LCLProc;
+uses SysUtils, ProtocolDriver, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1012,8 +1012,13 @@ begin
   //evita a abertura/fechamento da porta em edição, quando um dispositivo
   //e de uso exclusivo (porta serial).
   if FExclusiveDevice and (csDesigning in ComponentState) then begin
-    if ComSettingsOK then
-      PActive := v;
+    if v then begin
+      if ComSettingsOK then begin
+        PActive := true;
+      end;
+    end else begin
+      PActive := false;
+    end;
     exit;
   end;
 
@@ -1044,10 +1049,10 @@ begin
     InLockCS:=false;
     InIOCmdCS:=false;
 
-    if (csDestroying in ComponentState) then
-       exit;
-
     Result := 0;
+
+    if (csDestroying in ComponentState) or (FExclusiveDevice and (csDesigning in ComponentState)) then
+       exit;
 
     //verify if another driver is the owner of the comm port...
     PLockCS.Enter;
@@ -1123,10 +1128,11 @@ begin
     InLockCS:=false;
     InIOCmdCS:=false;
 
-    if (csDestroying in ComponentState) then begin
+    if (csDestroying in ComponentState) or (FExclusiveDevice and (csDesigning in ComponentState)) then begin
       Result := 0;
       exit;
     end;
+
     //verify if another driver is the owner of the comm port...
     PLockCS.Enter;
     InLockCS:=true;
@@ -1266,8 +1272,10 @@ end;
 
 procedure TCommPortDriver.DoExceptionInActive;
 begin
-  if (ComponentState*[csDesigning]=[]) and PActive then
-    raise Exception.Create(SimpossibleToChangeWhenActive);
+  if PActive then begin
+    if (ComponentState*[csDesigning]=[]) or ((ComponentState*[csDesigning]<>[]) and FExclusiveDevice) then
+      raise Exception.Create(SimpossibleToChangeWhenActive);
+  end;
 end;
 
 procedure TCommPortDriver.RefreshLastOSError;

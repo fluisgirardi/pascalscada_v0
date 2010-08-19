@@ -110,8 +110,7 @@ uses hsstrings
 {$ifdef fpc}
 {$IFDEF UNIX}
      ,netdb,
-     Unix,
-     LCLProc
+     Unix
 {$endif}
 {$ENDIF}
      ;
