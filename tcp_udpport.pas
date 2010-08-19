@@ -44,12 +44,15 @@ type
     FTimeout:Integer;
     FSocket:Tsocket;
     FPortType:TPortType;
+    FExclusiveReaded:Boolean;
     procedure SetHostname(target:string);
     procedure SetPortNumber(pn:Integer);
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
   protected
+    //: @exclude
+    procedure Loaded; override;
     //: @seealso(TCommPortDriver.Read)
     procedure Read(Packet:PIOPacket); override;
     //: @seealso(TCommPortDriver.Write)
@@ -158,10 +161,21 @@ procedure TTCP_UDPPort.SetExclusive(b:Boolean);
 var
   oldstate:Boolean;
 begin
-  oldstate:=Active;
+  if csReading in ComponentState then begin
+    FExclusiveReaded:=b;
+    exit;
+  end;
+
+  oldstate:=PActive;
   Active:=false;
   FExclusiveDevice:=b;
   Active:=oldstate;
+end;
+
+procedure TTCP_UDPPort.Loaded;
+begin
+  ExclusiveDevice:=FExclusiveReaded;
+  inherited Loaded;
 end;
 
 procedure TTCP_UDPPort.Read(Packet:PIOPacket);

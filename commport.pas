@@ -1273,7 +1273,7 @@ end;
 procedure TCommPortDriver.DoExceptionInActive;
 begin
   if PActive then begin
-    if (ComponentState*[csDesigning]=[]) or ((ComponentState*[csDesigning]<>[]) and FExclusiveDevice) then
+    if (ComponentState*[csDesigning]=[]) or ((ComponentState*[csDesigning]<>[]) and FExclusiveDevice=false) then
       raise Exception.Create(SimpossibleToChangeWhenActive);
   end;
 end;
