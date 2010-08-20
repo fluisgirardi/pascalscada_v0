@@ -833,7 +833,7 @@ procedure TSiemensProtocolFamily.DoTagChange(TagObj:TTag; Change:TChangeType; ol
 begin
   DoDelTag(TagObj);
   DoAddTag(TagObj);
-  inherited DoTagChange(TagObj, Change, oldValue, newValue);
+  //inherited DoTagChange(TagObj, Change, oldValue, newValue);
 end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:Integer);
