@@ -101,7 +101,7 @@ type
     //: Armazena o ID (número único) esses pedidos.
     FScanReadID, FScanWriteID, FReadID, FWriteID:Cardinal;
     //: Armazena a evento usado para parar as threads do driver de protocolo.
-    FCritical:TCriticalSection;
+    FCritical:TMultiReadExclusiveWriteSynchronizer;
     //: Forca a suspensão das threads.
     FPause:TCrossEvent;
     //: Armazena a seção crítica que protege areas comuns a muitas threads.
@@ -340,7 +340,7 @@ begin
   PDriverID := DriverCount;
   Inc(DriverCount);
 
-  FCritical := TCriticalSection.Create;
+  FCritical := TMultiReadExclusiveWriteSynchronizer.Create;
 
   FPendingActionsCS := TCriticalSection.Create;
 
@@ -400,13 +400,13 @@ end;
 
 procedure TProtocolDriver.InternalLeaveScanCS;
 begin
-  FCritical.Leave;
+  //FCritical.Leave;
 end;
 
 procedure TProtocolDriver.InternalEnterScanCS;
 begin
-  FPause.WaitFor($FFFFFFFF);
-  FCritical.Enter;
+  //FPause.WaitFor($FFFFFFFF);
+  //FCritical.Enter;
 end;
 
 procedure TProtocolDriver.CancelPendingActions;
@@ -487,7 +487,7 @@ procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
 begin
   try
     FPause.ResetEvent;
-    FCritical.Enter;
+    FCritical.Beginwrite;
     //se for a mesma porta cai fora...
     if CommPort=PCommPort then exit;
 
@@ -504,7 +504,7 @@ begin
     end;
     PCommPort := CommPort;
   finally
-    FCritical.Leave;
+    FCritical.Endwrite;
     FPause.SetEvent;
   end;
 end;
@@ -547,10 +547,10 @@ procedure TProtocolDriver.AddTag(TagObj:TTag);
 begin
   try
     FPause.ResetEvent;
-    FCritical.Enter;
+    FCritical.Beginwrite;
     DoAddTag(TagObj);
   finally
-    FCritical.Leave;
+    FCritical.Endwrite;
     FPause.SetEvent;
   end;
 end;
@@ -559,10 +559,10 @@ procedure TProtocolDriver.RemoveTag(TagObj:TTag);
 begin
   try
     FPause.ResetEvent;
-    FCritical.Enter;
+    FCritical.Beginwrite;
     DoDelTag(TagObj);
   finally
-    FCritical.Leave;
+    FCritical.Endwrite;
     FPause.SetEvent;
   end;
 end;
@@ -619,10 +619,10 @@ procedure TProtocolDriver.TagChanges(TagObj:TTag; Change:TChangeType; oldValue, 
 begin
   try
     FPause.ResetEvent;
-    FCritical.Enter;
+    FCritical.Beginwrite;
     DoTagChange(TagObj,Change,oldValue,newValue);
   finally
-    FCritical.Leave;
+    FCritical.Endwrite;
     FPause.SetEvent;
   end;
 end;
@@ -709,12 +709,12 @@ var
 begin
   try
     FPause.ResetEvent;
-    FCritical.Enter;
+    FCritical.Beginwrite;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcRead,res,tagrec.OffSet);
   finally
-    FCritical.Leave;
+    FCritical.Endwrite;
     FPause.SetEvent;
     SetLength(Values,0);
   end;
@@ -726,12 +726,12 @@ var
 begin
   try
     FPause.ResetEvent;
-    FCritical.Enter;
+    FCritical.Beginwrite;
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcWrite,res,tagrec.OffSet);
   finally
-    FCritical.Leave;
+    FCritical.Endwrite;
     FPause.SetEvent;
   end;
 end;
@@ -768,34 +768,34 @@ procedure TProtocolDriver.SafeScanRead(Sender:TObject; var NeedSleep:Integer);
 begin
    try
       FPause.WaitFor($FFFFFFFF);
-      FCritical.Enter;
+      FCritical.Beginread;
       DoScanRead(Sender, NeedSleep);
    finally
-      FCritical.Leave;
+      FCritical.Endread;
    end;
 end;
 
 function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
 begin
    try
-      FPause.ResetEvent;
-      FCritical.Enter;
+      //FPause.ResetEvent;
+      FCritical.Beginread;
       Result := DoWrite(TagRec,values,false)
    finally
-      FCritical.Leave;
-      FPause.SetEvent;
+      FCritical.Endread;
+      //FPause.SetEvent;
    end;
 end;
 
 procedure TProtocolDriver.SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
 begin
    try
-      FPause.ResetEvent;
-      FCritical.Enter;
+      //FPause.ResetEvent;
+      FCritical.Beginread;
       DoGetValue(TagRec,values);
    finally
-      FCritical.Leave;
-      FPause.SetEvent;
+      FCritical.Endread;
+      //FPause.SetEvent;
    end;
 end;
 
