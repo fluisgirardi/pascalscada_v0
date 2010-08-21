@@ -778,12 +778,12 @@ end;
 function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
 begin
    try
-      //FPause.ResetEvent;
-      FCritical.Beginread;
+      FPause.ResetEvent;
+      FCritical.Beginwrite;
       Result := DoWrite(TagRec,values,false)
    finally
-      FCritical.Endread;
-      //FPause.SetEvent;
+      FCritical.Endwrite;
+      FPause.SetEvent;
    end;
 end;
 

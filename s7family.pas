@@ -1367,11 +1367,7 @@ begin
           ReqList[0].ReqType:=ReqType;
           ReqList[0].StartAddress:=tagrec.Address+BytesSent;
           ReqList[0].Size:=BytesToSend;
-          if (ReqType=vtS7_DB) and founddb then begin
-            UpdateMemoryManager(msgin, msgout, true, ReqList);
-          end else begin
-            UpdateMemoryManager(msgin, msgout, true, ReqList);
-          end;
+          UpdateMemoryManager(msgin, msgout, true, ReqList);
         end;
       end else begin
         if hasAtLeastOneSuccess then begin
