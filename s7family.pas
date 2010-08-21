@@ -1369,6 +1369,7 @@ begin
       SetupPDU(msgin,false,incomingPDU);
       if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
         hasAtLeastOneSuccess:=true;
+        Result:=ioOk;
         if foundplc then begin
           SetLength(ReqList,1);
           ReqList[0].DB:=dbidx;
