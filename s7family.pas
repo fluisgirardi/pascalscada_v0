@@ -1,4 +1,4 @@
-﻿{:
+{:
   @abstract(Implmentação do protocolo ISOTCP.)
   Este driver é baseado no driver ISOTCP da biblioteca
   LibNODAVE de Thomas Hergenhahn (thomas.hergenhahn@web.de).
@@ -282,6 +282,8 @@ begin
     PDU.data:=nil;
     PDU.data_len:=0;
   end;
+  PDU.user_data_len:=0;
+  PDU.udata:=nil
 end;
 
 procedure TSiemensProtocolFamily.PrepareReadRequest(var msgOut:BYTES);
@@ -622,7 +624,12 @@ begin
   DataLen:=PDU.data_len;
   while CurResult<NumResults do begin
     ResultCode:=GetByte(PDU.data, DataIdx);
-    ProtocolErrorCode:=S7ErrorCodeToProtocolErrorCode(ResultCode);
+
+    if writepkg and (ResultCode=0) then
+      ProtocolErrorCode:=ioOk
+    else
+      ProtocolErrorCode:=S7ErrorCodeToProtocolErrorCode(ResultCode);
+
     if (writepkg or (ResultCode=$FF)) AND (DataLen>4) then begin
       ResultLen:=GetByte(PDU.data, DataIdx+2)*$100 + GetByte(PDU.data, DataIdx+3);
       //o tamanho está em bits, precisa de ajuste.
@@ -1265,6 +1272,8 @@ var
 begin
   PLCPtr:=nil;
   foundplc:=false;
+  dbidx:=-1;
+  plcidx:=-1;
   for c:=0 to High(FCPUs) do
     if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FCPUs[c];
@@ -1365,7 +1374,7 @@ begin
           ReqList[0].DB:=dbidx;
           ReqList[0].PLC:=c;
           ReqList[0].ReqType:=ReqType;
-          ReqList[0].StartAddress:=tagrec.Address+BytesSent;
+          ReqList[0].StartAddress:=tagrec.Address+BytesSent+tagrec.OffSet;
           ReqList[0].Size:=BytesToSend;
           UpdateMemoryManager(msgin, msgout, true, ReqList);
         end;
