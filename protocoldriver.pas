@@ -683,8 +683,8 @@ begin
     Move(tagrec, pkg^.Tag, sizeof(TTagRec));
     //copia os valores
     pkg^.ValuesToWrite := Values;
-    
     pkg^.WriteResult:=ioNone;
+    pkg^.ValueTimeStamp:=Now;
 
     //posta uma mensagem de Escrita por Scan
     if (PScanWriteThread<>nil) then begin
