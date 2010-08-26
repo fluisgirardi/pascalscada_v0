@@ -67,7 +67,7 @@ type
     function  disconnectPLC(var CPU:TS7CPU):Boolean; virtual;
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; virtual;
     procedure sendMessage(var msgOut:BYTES); virtual;
-    function  getResponse(ComPort:TCommPortDriver; var msgIn:BYTES; var BytesRead:Integer):TIOResult; virtual;
+    function  getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult; virtual;
     procedure listReachablePartners; virtual;
   protected
     function  SwapBytesInWord(W:Word):Word;
@@ -95,7 +95,7 @@ type
     function  DoublesToBytes(const Values:TArrayOfDouble; Start, Len:Integer):BYTES;
     function  BytesToDoubles(const ByteSeq:BYTES; Start, Len:Integer):TArrayOfDouble;
     function  CreateCPU(iHack, iSlot, iStation:Integer):integer; virtual;
-{ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
+{ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
 {ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
@@ -104,8 +104,8 @@ type
 
     //estas funcoes ficaram apenas por motivos compatibilidade com os tags
     //e seus metodos de leitura e escrita diretas.
-{50}function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
-    function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{ok}function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{90}function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
     function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
@@ -185,7 +185,7 @@ begin
 
 end;
 
-function  TSiemensProtocolFamily.getResponse(ComPort:TCommPortDriver; var msgIn:BYTES; var BytesRead:Integer):TIOResult;
+function  TSiemensProtocolFamily.getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult;
 begin
 
 end;
@@ -597,7 +597,7 @@ begin
   end;
 end;
 
-procedure TSiemensProtocolFamily.UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList);
+procedure TSiemensProtocolFamily.UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
 var
   PDU:TPDU;
   NumResults,
@@ -609,7 +609,6 @@ var
   dummy1, dummy2,
   CurValue:Integer;
   ProtocolErrorCode:TProtocolIOResult;
-  ResultValues:TArrayOfDouble;
 begin
   if writepkg then begin
     SetupPDU(pkgout, true, PDU);
@@ -858,6 +857,8 @@ var
   OutgoingPDUSize, IncomingPDUSize:Integer;
   OutOffScanOutgoingPDUSize, OutOffScanIncomingPDUSize:Integer;
 
+  ivalues:TArrayOfDouble;
+
   procedure pkg_initialized;
   begin
     if not initialized then begin
@@ -945,7 +946,7 @@ var
   procedure ReadQueuedRequests(var CPU:TS7CPU);
   begin
     if exchange(CPU, msgout, msgin, false) then begin
-      UpdateMemoryManager(msgin, msgout, False, ReqList);
+      UpdateMemoryManager(msgin, msgout, False, ReqList, ivalues);
       NeedSleep:=-1;
     end else
       NeedSleep:=1;
@@ -1191,6 +1192,7 @@ begin
     end;
   end;
 
+  SetLength(ivalues,0);
   SetLength(msgin,0);
   SetLength(msgout,0);
   SetLength(ReqList,0);
@@ -1269,6 +1271,7 @@ var
   partialValues:TArrayOfDouble;
   incomingPDU:TPDU;
   ReqList:TS7ReqList;
+  ivalues:TArrayOfDouble;
 begin
   PLCPtr:=nil;
   foundplc:=false;
@@ -1365,7 +1368,7 @@ begin
       AddDataToWriteRequest(msgout, ReqType, 0, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
     end;
 
-    if exchange(PLCPtr^, msgout, msgin, false) then begin
+    if exchange(PLCPtr^, msgout, msgin, True) then begin
       SetupPDU(msgin,false,incomingPDU);
       if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
         hasAtLeastOneSuccess:=true;
@@ -1377,7 +1380,7 @@ begin
           ReqList[0].ReqType:=ReqType;
           ReqList[0].StartAddress:=tagrec.Address+BytesSent+tagrec.OffSet;
           ReqList[0].Size:=BytesToSend;
-          UpdateMemoryManager(msgin, msgout, true, ReqList);
+          UpdateMemoryManager(msgin, msgout, true, ReqList, ivalues);
         end;
       end else begin
         if hasAtLeastOneSuccess then begin
@@ -1400,11 +1403,160 @@ begin
 
     inc(BytesSent,BytesToSend);
   end;
+
+  SetLength(ivalues, 0);
 end;
 
 function  TSiemensProtocolFamily.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+var
+  c,
+  IncomingPacketSize,
+  OutgoingPacketSize,
+  MaxBytesToRecv,
+  retries,
+  BytesToRecv,
+  BytesReceived,
+  ReqType,
+  plcidx,
+  dbidx:Integer;
+  foundplc,
+  founddb,
+  hasAtLeastOneSuccess:Boolean;
+  PLCPtr:PS7CPU;
+  msgout, msgin, BytesBuffer:BYTES;
+  partialValues:TArrayOfDouble;
+  incomingPDU:TPDU;
+  ReqList:TS7ReqList;
+  ivalues:TArrayOfDouble;
 begin
+  PLCPtr:=nil;
+  foundplc:=false;
+  dbidx:=-1;
+  plcidx:=-1;
+  for c:=0 to High(FCPUs) do
+    if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
+      PLCPtr:=@FCPUs[c];
+      plcidx:=c;
+      foundplc:=true;
+      break;
+    end;
 
+  if PLCPtr=nil then begin
+    c:=CreateCPU(tagrec.Hack, tagrec.Slot, tagrec.Station);
+    PLCPtr:=@FCPUs[c];
+  end;
+
+  retries := 0;
+  while (not FAdapterInitialized) AND (retries<3) do begin
+    FAdapterInitialized := initAdapter;
+    inc(retries)
+  end;
+
+  if retries>=3 then begin
+    Result:=ioDriverError;
+    exit;
+  end;
+
+  if not PLCPtr.Connected then
+    if not connectPLC(PLCPtr^) then begin
+      Result:=ioDriverError;
+      exit;
+    end;
+
+  case tagrec.ReadFunction of
+    1:
+      ReqType:=vtS7_Inputs;
+    2:
+      ReqType := vtS7_Outputs;
+    3:
+      ReqType := vtS7_Flags;
+    4: begin
+      ReqType := vtS7_DB;
+      founddb:=false;
+      if foundplc then
+        for dbidx:=0 to High(PLCPtr^.DBs) do
+          if PLCPtr^.DBs[dbidx].DBNum=tagrec.File_DB then begin
+            founddb:=true;
+            break;
+          end;
+    end;
+    5,10:
+      ReqType := vtS7_Counter;
+    6,11:
+      ReqType := vtS7_Timer;
+    7:
+      ReqType := vtS7_200_SM;
+    8:
+      ReqType := vtS7_200_AnInput;
+    9:
+      ReqType := vtS7_200_AnOutput;
+  end;
+
+  MaxBytesToRecv:=PLCPtr.MaxPDULen-18; //10 do header, 2 codigo de erro, 2 pedido de leitura, 4 header do resultado.
+  BytesReceived:=0;
+  hasAtLeastOneSuccess:=false;
+
+  SetLength(Values, tagrec.Size);
+
+  while BytesReceived<tagrec.Size do begin
+    SetLength(msgout,0);
+
+    BytesToRecv:=Min(MaxBytesToRecv, tagrec.Size-BytesReceived);
+
+    IncomingPacketSize:=PDUIncoming+18+BytesToRecv;
+    OutgoingPacketSize:=PDUOutgoing+24; //10 do header, 2 pedido leitura, 12 do header do pedido de leitura.
+
+    SetLength(msgout,OutgoingPacketSize);
+    SetLength(msgin, IncomingPacketSize);
+
+    PrepareReadRequest(msgout);
+
+    if ReqType=vtS7_DB then begin
+      if tagrec.File_DB=0 then begin
+        AddToReadRequest(msgout, vtS7_DB, 1,              tagrec.Address+tagrec.OffSet+BytesReceived, tagrec.Size-BytesReceived);
+      end else begin
+        AddToReadRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+tagrec.OffSet+BytesReceived, tagrec.Size-BytesReceived);
+      end;
+    end else begin
+      AddToReadRequest(  msgout, ReqType, 0,              tagrec.Address+tagrec.OffSet+BytesReceived, tagrec.Size-BytesReceived);
+    end;
+
+    if exchange(PLCPtr^, msgout, msgin, false) then begin
+      SetupPDU(msgin,false,incomingPDU);
+      if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
+        hasAtLeastOneSuccess:=true;
+        Result:=ioOk;
+        if foundplc then begin
+          SetLength(ReqList,1);
+          ReqList[0].DB:=dbidx;
+          ReqList[0].PLC:=c;
+          ReqList[0].ReqType:=ReqType;
+          ReqList[0].StartAddress:=tagrec.Address+BytesReceived+tagrec.OffSet;
+          ReqList[0].Size:=BytesToRecv;
+          UpdateMemoryManager(msgin, msgout, false, ReqList, ivalues);
+          Move(ivalues[0],Values[BytesReceived], Length(ivalues)*sizeof(Double));
+        end;
+      end else begin
+        if hasAtLeastOneSuccess then begin
+          Result:=ioPartialOk
+        end else
+          if incomingPDU.data_len>0 then begin
+            Result:=S7ErrorCodeToProtocolErrorCode(GetByte(incomingPDU.data,0))
+          end else
+            Result := ioCommError;
+        exit;
+      end;
+    end else begin
+      if hasAtLeastOneSuccess then begin
+        Result:=ioPartialOk
+      end else
+        Result:=ioCommError;
+
+      exit;
+    end;
+
+    inc(BytesReceived,BytesToRecv);
+  end;
 end;
 
 procedure TSiemensProtocolFamily.RunPLC(CPU:TS7CPU);
