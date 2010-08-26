@@ -712,7 +712,7 @@ begin
     FCritical.Beginwrite;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(Values,Now,tcRead,res,tagrec.OffSet);
+      tagrec.CallBack(Values,Now,tcRead,res,tagrec.RealOffset);
   finally
     FCritical.Endwrite;
     FPause.SetEvent;
@@ -729,7 +729,7 @@ begin
     FCritical.Beginwrite;
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(Values,Now,tcWrite,res,tagrec.OffSet);
+      tagrec.CallBack(Values,Now,tcWrite,res,tagrec.RealOffset);
   finally
     FCritical.Endwrite;
     FPause.SetEvent;
