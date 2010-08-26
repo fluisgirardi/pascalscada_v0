@@ -251,7 +251,7 @@ var
   PLCValues:TArrayOfDouble;
 begin
   PLCValues:=TagValuesToPLCValues(Values, Offset);
-  inherited Write(Values, Count, Offset);
+  inherited Write(PLCValues, Count, Offset);
   SetLength(PLCValues,0);
 end;
 
