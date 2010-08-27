@@ -658,10 +658,10 @@ begin
 
 
       with ReqList[CurResult] do begin
-        if PLC in [0..High(FCPUs)] then
+        if (PLC>=0) and (PLC<=High(FCPUs)) then
           case ReqType of
             vtS7_DB:
-              if DB in [0..High(FCPUs[PLC].DBs)] then
+              if (DB>=0) AND (DB<=High(FCPUs[PLC].DBs)) then
                 FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Inputs:
                FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
@@ -684,10 +684,10 @@ begin
     end else begin
       //seta a falha...
       with ReqList[CurResult] do begin
-        if PLC in [0..High(FCPUs)] then
+        if (PLC>=0) and (PLC<=High(FCPUs)) then
           case ReqType of
             vtS7_DB:
-              if DB in [0..High(FCPUs[PLC].DBs)] then
+              if (DB>=0) AND (DB<=High(FCPUs[PLC].DBs)) then
                 FCPUs[PLC].DBs[DB].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Inputs:
                FCPUs[PLC].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
