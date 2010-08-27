@@ -656,51 +656,56 @@ begin
         inc(CurValue);
       end;
 
+
       with ReqList[CurResult] do begin
-        case ReqType of
-          vtS7_DB:
-             FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_Inputs:
-             FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_Outputs:
-             FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_200_AnInput:
-             FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_200_AnOutput:
-             FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_Timer:
-             FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_Counter:
-             FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_Flags:
-             FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-          vtS7_200_SM:
-             FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-        end;
+        if PLC in [0..High(FCPUs)] then
+          case ReqType of
+            vtS7_DB:
+              if DB in [0..High(FCPUs[PLC].DBs)] then
+                FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_Inputs:
+               FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_Outputs:
+               FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_200_AnInput:
+               FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_200_AnOutput:
+               FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_Timer:
+               FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_Counter:
+               FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_Flags:
+               FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_200_SM:
+               FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+          end;
       end;
     end else begin
       //seta a falha...
       with ReqList[CurResult] do begin
-        case ReqType of
-          vtS7_DB:
-             FCPUs[PLC].DBs[DB].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_Inputs:
-             FCPUs[PLC].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_Outputs:
-             FCPUs[PLC].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_200_AnInput:
-             FCPUs[PLC].AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_200_AnOutput:
-             FCPUs[PLC].AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_Timer:
-             FCPUs[PLC].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_Counter:
-             FCPUs[PLC].Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_Flags:
-             FCPUs[PLC].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-          vtS7_200_SM:
-             FCPUs[PLC].SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
-        end;
+        if PLC in [0..High(FCPUs)] then
+          case ReqType of
+            vtS7_DB:
+              if DB in [0..High(FCPUs[PLC].DBs)] then
+                FCPUs[PLC].DBs[DB].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_Inputs:
+               FCPUs[PLC].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_Outputs:
+               FCPUs[PLC].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_200_AnInput:
+               FCPUs[PLC].AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_200_AnOutput:
+               FCPUs[PLC].AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_Timer:
+               FCPUs[PLC].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_Counter:
+               FCPUs[PLC].Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_Flags:
+               FCPUs[PLC].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_200_SM:
+               FCPUs[PLC].SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+          end;
       end;
     end;
 
