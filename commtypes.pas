@@ -103,7 +103,11 @@ type
   }
   TDriverCallBack = procedure(var Result:TIOPacket) of object;
 
+  {$IFDEF FPC}
   TPSThreadID = TThreadID;
+  {$ELSE}
+  TPSThreadID = THandle;
+  {$ENDIF}
 
   //: Procedimento para sinalizar um evento de erro na porta
   TCommPortErrorEvent = procedure(Error:TIOResult) of object;
