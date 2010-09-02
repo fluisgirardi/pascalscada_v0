@@ -50,6 +50,7 @@ type
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
+    function  StillAlive:Boolean;
   protected
     //: @exclude
     procedure Loaded; override;
@@ -172,6 +173,83 @@ begin
   Active:=oldstate;
 end;
 
+function  TTCP_UDPPort.StillAlive:Boolean;
+var
+{$IF defined(UNIX) and defined(FPC)}
+  ServerAddr:THostEntry;
+{$ELSE}
+  ServerAddr:PHostEnt;
+{$IFEND}
+  channel:sockaddr_in;
+  flag, bufsize, sockType:Integer;
+  InternalSock:TSocket;
+begin
+  Result:=false;
+  try
+    {$IF defined(UNIX) and defined(FPC)}
+    if not GetHostByName(FHostName,ServerAddr) then begin
+      ServerAddr.Addr:=StrToHostAddr(FHostName);
+      if ServerAddr.Addr.s_addr=0 then begin
+        RefreshLastOSError;
+        exit;
+      end;
+    end;
+    {$ELSE}
+    ServerAddr := GetHostByName(PAnsiChar(FHostName));
+    if ServerAddr=nil then begin
+      RefreshLastOSError;
+      exit;
+    end;
+    {$IFEND}
+
+    case FPortType of
+      ptTCP:
+        sockType := IPPROTO_TCP;
+      ptUDP:
+        sockType := IPPROTO_UDP;
+      else begin
+        exit;
+      end;
+    end;
+    {$IF defined(UNIX) and defined(FPC)}
+    InternalSock := fpSocket(PF_INET, SOCK_STREAM, sockType);
+    {$ELSE}
+    InternalSock := Socket(PF_INET, SOCK_STREAM, sockType);
+    {$IFEND}
+
+    if (InternalSock<0) then begin
+      RefreshLastOSError;
+      exit;
+    end;
+
+    channel.sin_family      := AF_INET;
+    {$IF defined(UNIX) and defined(FPC)}
+    channel.sin_addr.S_addr := longword(htonl(LongInt(ServerAddr.Addr.s_addr)));
+    {$ELSE}
+    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
+    {$IFEND}
+    channel.sin_port        := htons(FPortNumber);
+
+    {$IF defined(UNIX) and defined(FPC)}
+    if fpconnect(InternalSock,@channel,sizeof(sockaddr_in))<>0 then begin
+    {$ELSE}
+    if Connect(InternalSock,channel,sizeof(sockaddr_in))<>0 then begin
+    {$IFEND}
+      RefreshLastOSError;
+      exit;
+    end;
+
+    Result:=true;
+  finally
+    {$IF defined(UNIX) and defined(FPC)}
+    fpshutdown(InternalSock,SHUT_RDWR);
+    {$ELSE}
+    Shutdown(InternalSock,2);
+    {$IFEND}
+    CloseSocket(InternalSock);
+  end;
+end;
+
 procedure TTCP_UDPPort.Loaded;
 begin
   ExclusiveDevice:=FExclusiveReaded;
@@ -201,7 +279,8 @@ begin
       if CheckConnection(Packet^.ReadIOResult) then begin
         inc(tentativas);
         continue;
-      end;
+      end else
+        break;
     end else
       Packet^.Received := Packet^.Received + lidos;
     inc(tentativas);
@@ -216,7 +295,7 @@ begin
     Packet^.ReadIOResult := iorOK;
 
   if Packet^.ReadIOResult<>iorOK then
-    DoCommErrorFromThread(false, Packet^.ReadIOResult);
+    DoCommError(false, Packet^.ReadIOResult);
 end;
 
 procedure TTCP_UDPPort.Write(Packet:PIOPacket);
@@ -242,7 +321,8 @@ begin
       if CheckConnection(Packet^.WriteIOResult) then begin
         inc(tentativas);
         continue;
-      end;
+      end else
+        break;
     end else
       Packet^.Wrote := Packet^.Wrote + escritos;
     inc(tentativas);
@@ -257,7 +337,7 @@ begin
     Packet^.WriteIOResult := iorOK;
 
   if Packet^.WriteIOResult<>iorOK then
-    DoCommErrorFromThread(true, Packet^.WriteIOResult);
+    DoCommError(true, Packet^.WriteIOResult);
 end;
 
 procedure TTCP_UDPPort.NeedSleepBetweenRW;
@@ -324,17 +404,19 @@ begin
     tv.tv_sec:=(FTimeout div 1000);
     tv.tv_usec:=(FTimeout mod 1000) * 1000;
 
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, @tv,       sizeof(tv));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, @tv,       sizeof(tv));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   @bufsize,  sizeof(Integer));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   @bufsize,  sizeof(Integer));
-    fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, @flag,     sizeof(Integer));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  @tv,       sizeof(tv));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  @tv,       sizeof(tv));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(Integer));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    @bufsize,  sizeof(Integer));
+    fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,     sizeof(Integer));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_KEEPALIVE, @flag,     sizeof(Integer));
     {$ELSE}
-    setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
-    setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO, PAnsiChar(@FTimeout), sizeof(FTimeout));
-    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,   PAnsiChar(@bufsize),  sizeof(Integer));
-    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,   PAnsiChar(@bufsize),  sizeof(Integer));
-    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY, PAnsiChar(@flag),     sizeof(Integer));
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  PAnsiChar(@FTimeout), sizeof(FTimeout));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  PAnsiChar(@FTimeout), sizeof(FTimeout));
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    PAnsiChar(@bufsize),  sizeof(Integer));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    PAnsiChar(@bufsize),  sizeof(Integer));
+    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  PAnsiChar(@flag),     sizeof(Integer));
+    setsockopt(FSocket, SOL_SOCKET,  SO_KEEPALIVE, PAnsiChar(@flag),     sizeof(Integer));
     {$IFEND}
 
     channel.sin_family      := AF_INET;
@@ -374,7 +456,7 @@ begin
   end;
   PActive:=false;
   Ok:=true;
-  FSocket:=0
+  FSocket:=0;
 end;
 
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
@@ -425,7 +507,8 @@ begin
   end;
   {$ELSE}
   case socketerror of
-    EsockEINTR, EsockEINVAL:
+    EsockEINTR,
+    EsockEINVAL:
       Result:= true;
 
     EsockENOTCONN,
@@ -434,6 +517,7 @@ begin
     ESysECONNRESET,
     ESysECONNABORTED,
     ESysECONNREFUSED: begin
+      if PActive then DoCommPortDisconected;
       PActive:=false;
       CommResult:=iorNotReady;
       Result:=false;
@@ -450,6 +534,7 @@ begin
     end;
 
     EsockEPROTONOSUPPORT: begin
+      if PActive then DoCommPortDisconected;
       PActive:=false;
       CommResult:=iorPortError;
       Result:=false;
@@ -457,8 +542,15 @@ begin
 
     ESysEAGAIN,
     ESysETIMEDOUT: begin
-      CommResult:=iorTimeOut;
-      Result:=true;
+      if StillAlive then begin
+        CommResult:=iorTimeOut;
+        Result:=true;
+      end else begin
+        if PActive then DoCommPortDisconected;
+        PActive:=false;
+        CommResult:=iorPortError;
+        Result:=false;
+      end;
     end;
   end;
   {$IFEND}

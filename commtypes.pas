@@ -10,6 +10,8 @@ unit commtypes;
 
 interface
 
+uses Classes;
+
 type
   {:
   Representa uma sequencia de bytes.
@@ -101,10 +103,16 @@ type
   }
   TDriverCallBack = procedure(var Result:TIOPacket) of object;
 
+  TPSThreadID = TThreadID;
+
   //: Procedimento para sinalizar um evento de erro na porta
   TCommPortErrorEvent = procedure(Error:TIOResult) of object;
+  PCommPortErrorEvent = ^TCommPortErrorEvent;
 
   TCommPortGenericError = procedure of object;
+  PCommPortGenericError = ^TCommPortGenericError;
+
+  PNotifyEvent = ^TNotifyEvent;
 
   {:
   Aponta para um procedimento do tipo TDriverCallBack.
@@ -153,6 +161,19 @@ type
   PCommandPacket = ^TCommandPacket;
 
   {:
+    Interface
+  }
+  IPortDriverEventNotification = interface
+  ['{26B0F551-5B46-49D9-BCA1-AD621B3775CF}']
+    procedure PortOpened(Sender: TObject);
+    procedure PortClosed(Sender: TObject);
+    procedure PortDisconnected(Sender: TObject);
+    procedure ReadError(Sender:TObject);
+    procedure WriteError(Sender:TObject);
+    procedure PortRemoved(Sender:TObject);
+  end;
+
+  {:
   Ordena thread de atualização a chamar o TDriverCallBack solicitado informando
   dos resultados do pedido de leitura/escrita.
   @seealso(TDriverCallBack)
@@ -173,16 +194,10 @@ type
   }
   const PSM_CANCELCALLBACK   = 3;
 
-  //: Mensagem de erro de comunicação tentando ler;
-  const PSM_COMMERROR_READ   = 4;
-  //: Mensagem de erro de comunicação tentando escrever;
-  const PSM_COMMERROR_WRITE  = 5;
-  //: Mensagem de erro de porta aberta;
-  const PSM_PORT_OPENED      = 6;
-  //: Mensagem de erro de porta fechada;
-  const PSM_PORT_CLOSED      = 7;
-  //: Mensagem de erro de porta disconectada;
-  const PSM_PORT_DISCONECTED = 8;
+  //: Mensagem de erro de comunicação (leitura ou escrita);
+  const PSM_COMMERROR        = 4;
+  //: Mensagem de erro de porta aberta, fechada ou disconectada.
+  const PSM_PORT_EVENT       = 5;
 
   //: Mensagem de pedido de leitura de @bold(baixa) prioridade
   const PSM_READ_READ      = 50;
