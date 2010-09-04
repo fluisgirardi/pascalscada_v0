@@ -307,7 +307,7 @@ type
     Array que armazena os drivers de protocolo dependentes.
     @seealso(TProtocolDriver)
     }
-    Protocols:array of TComponent;
+    Protocols:IPortDriverEventNotificationArray;
     {:
     Lê dados da porta. É necessário sobrescrever este método para criar
     novos drivers de porta.
@@ -425,14 +425,14 @@ type
     @raises(Exception caso Prot não seja descendente de TProtocolDriver)
     @seealso(TProtocolDriver)
     }
-    procedure AddProtocol(Prot:TComponent);
+    procedure AddProtocol(Prot:IPortDriverEventNotification);
     {:
     Remove um driver de protocolo a lista de dependentes
     @param(Prot TProtocolDriver. Driver de protocolo a ser removido da lista de
            dependentes.)
     @seealso(TProtocolDriver)
     }
-    procedure DelProtocol(Prot:TComponent);
+    procedure DelProtocol(Prot:IPortDriverEventNotification);
     {:
     Faz um pedido de leitura/escrita sincrono para o driver (sua aplicação espera
     todo o comando terminar para continuar).
@@ -862,7 +862,7 @@ var
   c:Integer;
 begin
   for c:=0 to High(Protocols) do
-    TProtocolDriver(Protocols[c]).CommunicationPort := nil;
+    Protocols[c].DoPortRemoved(Self);
   CommThread.Terminate;
   CommThread.Destroy;
   PUpdater.Terminate;
@@ -876,7 +876,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TCommPortDriver.AddProtocol(Prot:TComponent);
+procedure TCommPortDriver.AddProtocol(Prot:IPortDriverEventNotification);
 var
   c:Integer;
   found:Boolean;
@@ -898,7 +898,7 @@ begin
   end;
 end;
 
-procedure TCommPortDriver.DelProtocol(Prot:TComponent);
+procedure TCommPortDriver.DelProtocol(Prot:IPortDriverEventNotification);
 var
   found:Boolean;
   c:Integer;
@@ -973,36 +973,63 @@ begin
 end;
 
 procedure TCommPortDriver.DoCommPortOpened;
+var
+  c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
   if not Assigned(FOnCommPortOpened) then exit;
 
-  if GetCurrentThreadId=FOwnerThread then
-    FOnCommPortOpened(Self)
-  else
+  if GetCurrentThreadId=FOwnerThread then begin
+    FOnCommPortOpened(Self);
+    for c:=0 to High(Protocols) do
+      if ntePortOpen in Protocols[c].NotifyThisEvents then
+        Protocols[c].DoPortOpened(Self);
+  end else begin
     PEventUpdater.DoCommPortEvent(FOnCommPortOpened);
+    for c:=0 to High(Protocols) do
+      if ntePortOpen in Protocols[c].NotifyThisEvents then
+        PEventUpdater.DoCommPortEvent(Protocols[c].DoPortOpened);
+  end;
 end;
 
 procedure TCommPortDriver.DoCommPortClose;
+var
+  c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
   if not Assigned(FOnCommPortClosed) then exit;
 
-  if GetCurrentThreadId=FOwnerThread then
-    FOnCommPortClosed(Self)
-  else
+  if GetCurrentThreadId=FOwnerThread then begin
+    FOnCommPortClosed(Self);
+    for c:=0 to High(Protocols) do
+      if ntePortClosed in Protocols[c].NotifyThisEvents then
+        Protocols[c].DoPortClosed(Self);
+  end else begin
     PEventUpdater.DoCommPortEvent(FOnCommPortClosed);
+    for c:=0 to High(Protocols) do
+      if ntePortClosed in Protocols[c].NotifyThisEvents then
+        PEventUpdater.DoCommPortEvent(Protocols[c].DoPortClosed);
+  end;
 end;
 
 procedure TCommPortDriver.DoCommPortDisconected;
+var
+  c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
   if not Assigned(FOnCommPortDisconnected) then exit;
 
-  if GetCurrentThreadId=FOwnerThread then
-    FOnCommPortDisconnected(Self)
-  else
+  if GetCurrentThreadId=FOwnerThread then begin
+    FOnCommPortDisconnected(Self);
+    for c:=0 to High(Protocols) do
+      if ntePortDisconnected in Protocols[c].NotifyThisEvents then
+        Protocols[c].DoPortDisconnected(Self);
+  end else begin
     PEventUpdater.DoCommPortEvent(FOnCommPortDisconnected);
+    for c:=0 to High(Protocols) do
+      if ntePortDisconnected in Protocols[c].NotifyThisEvents then
+        PEventUpdater.DoCommPortEvent(Protocols[c].DoPortDisconnected);
+  end;
 end;
 
 procedure TCommPortDriver.Loaded;
@@ -1442,6 +1469,17 @@ procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
     end;
   end;
 
+  function TranslateResultName(res:TIOResult):String;
+  const
+    EnumMap: array[TIOResult] of String = ('iorOK       ',
+                                           'iorTimeOut  ',
+                                           'iorNotReady ',
+                                           'iorNone     ',
+                                           'iorPortError');
+  begin
+    Result := EnumMap[res];
+  end;
+
   var
     FS:TStringStream;
 begin
@@ -1449,20 +1487,20 @@ begin
     if not FLogActions then exit;
     FS:=TStringStream.Create('');
     if cmd=iocRead then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
     end;
     if cmd=iocReadWrite then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
-      fs.WriteString(TranslateCmdName(cmd)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
     end;
 
     if cmd=iocWriteRead then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
-      fs.WriteString(TranslateCmdName(cmd)+', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
     end;
 
     if cmd=iocWrite then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
     end;
     FS.Position:=0;
     FLogFileStream.CopyFrom(FS,FS.Size);

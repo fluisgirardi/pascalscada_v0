@@ -56,6 +56,9 @@ type
     FConnectEvent:TCrossEvent;
     FConnectionWay:TISOTCPConnectionWay;
     procedure SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
+    function NotifyThisEvents: TNotifyThisEvents; override;
+    procedure PortClosed(Sender: TObject); override;
+    procedure PortDisconnected(Sender: TObject); override;
   protected
     function  connectPLC(var CPU:TS7CPU):Boolean; override;
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; override;
@@ -309,6 +312,24 @@ end;
 procedure TISOTCPDriver.SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
 begin
   FConnectionWay:=NewISOConWay;
+end;
+
+function TISOTCPDriver.NotifyThisEvents: TNotifyThisEvents;
+begin
+  Result:=[ntePortClosed, ntePortDisconnected];
+end;
+
+procedure TISOTCPDriver.PortClosed(Sender: TObject);
+begin
+  PortDisconnected(Self);
+end;
+
+procedure TISOTCPDriver.PortDisconnected(Sender: TObject);
+var
+  plc:Integer;
+begin
+  for plc := 0 to High(FCPUs) do
+    FCPUs[plc].Connected:=false;
 end;
 
 end.

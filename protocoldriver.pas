@@ -63,7 +63,7 @@ type
   a documentação detalhada de cada método para enteder como cada um funciona.)
   }
 
-  TProtocolDriver = class(TComponent)
+  TProtocolDriver = class(TComponent, IPortDriverEventNotification)
   private
     //Array de tags associados ao driver.
     PTags:array of TTag;
@@ -88,6 +88,11 @@ type
     procedure SafeScanRead(Sender:TObject; var NeedSleep:Integer);
     function  SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
+
+    procedure DoPortOpened(Sender: TObject);
+    procedure DoPortClosed(Sender: TObject);
+    procedure DoPortDisconnected(Sender: TObject);
+    procedure DoPortRemoved(Sender:TObject);
   protected
     {:
     Flag que informa ao driver se ao menos uma variavel deve ser lida a cada
@@ -113,6 +118,11 @@ type
     //: Array de ações pendentes.
     FPendingActions:TArrayOfObject;
 
+    //:
+    function  NotifyThisEvents:TNotifyThisEvents; virtual;
+    procedure PortOpened(Sender: TObject); virtual;
+    procedure PortClosed(Sender: TObject); virtual;
+    procedure PortDisconnected(Sender: TObject); virtual;
     //: Procedimento interno para deixar a zona critica de scan.
     procedure InternalLeaveScanCS;
     //: Procedimento interno para entrar no zona critica de scan.
@@ -495,12 +505,12 @@ begin
       if PCommPort.LockedBy=PDriverID then
         PCommPort.Unlock(PDriverID);
       PCommPort.CancelCallBack(CommPortCallBack);
-      PCommPort.DelProtocol(Self);
+      PCommPort.DelProtocol(Self as IPortDriverEventNotification);
     end;
 
     if CommPort<>nil then begin
       CommPort.ResumeCallBack(CommPortCallBack);
-      CommPort.AddProtocol(Self);
+      CommPort.AddProtocol(Self as IPortDriverEventNotification);
     end;
     PCommPort := CommPort;
   finally
@@ -797,6 +807,68 @@ begin
       FCritical.Endread;
       //FPause.SetEvent;
    end;
+end;
+
+function  TProtocolDriver.NotifyThisEvents:TNotifyThisEvents;
+begin
+  Result:=[];
+end;
+
+procedure TProtocolDriver.DoPortOpened(Sender: TObject);
+begin
+  try
+     FPause.ResetEvent;
+     FCritical.Beginwrite;
+     PortOpened(Sender);
+  finally
+     FCritical.Endwrite;
+     FPause.SetEvent;
+  end;
+end;
+
+procedure TProtocolDriver.DoPortClosed(Sender: TObject);
+begin
+  try
+     FPause.ResetEvent;
+     FCritical.Beginwrite;
+     PortClosed(Sender);
+  finally
+     FCritical.Endwrite;
+     FPause.SetEvent;
+  end;
+end;
+
+procedure TProtocolDriver.DoPortDisconnected(Sender: TObject);
+begin
+  try
+     FPause.ResetEvent;
+     FCritical.Beginwrite;
+     PortDisconnected(Sender);
+  finally
+     FCritical.Endwrite;
+     FPause.SetEvent;
+  end;
+end;
+
+procedure TProtocolDriver.DoPortRemoved(Sender:TObject);
+begin
+  if CommunicationPort=Sender then
+    CommunicationPort:=nil;
+end;
+
+procedure TProtocolDriver.PortOpened(Sender: TObject);
+begin
+
+end;
+
+procedure TProtocolDriver.PortClosed(Sender: TObject);
+begin
+
+end;
+
+procedure TProtocolDriver.PortDisconnected(Sender: TObject);
+begin
+
 end;
 
 initialization

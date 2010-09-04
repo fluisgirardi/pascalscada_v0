@@ -164,18 +164,22 @@ type
   }  
   PCommandPacket = ^TCommandPacket;
 
+  TPortEvents = (ntePortOpen, ntePortClosed, ntePortDisconnected);
+  TNotifyThisEvents = set of TPortEvents;
+
   {:
     Interface
   }
   IPortDriverEventNotification = interface
   ['{26B0F551-5B46-49D9-BCA1-AD621B3775CF}']
-    procedure PortOpened(Sender: TObject);
-    procedure PortClosed(Sender: TObject);
-    procedure PortDisconnected(Sender: TObject);
-    procedure ReadError(Sender:TObject);
-    procedure WriteError(Sender:TObject);
-    procedure PortRemoved(Sender:TObject);
+    function  NotifyThisEvents:TNotifyThisEvents;
+    procedure DoPortOpened(Sender: TObject);
+    procedure DoPortClosed(Sender: TObject);
+    procedure DoPortDisconnected(Sender: TObject);
+    procedure DoPortRemoved(Sender:TObject);
   end;
+
+  IPortDriverEventNotificationArray = array of IPortDriverEventNotification;
 
   {:
   Ordena thread de atualização a chamar o TDriverCallBack solicitado informando
@@ -327,4 +331,4 @@ begin
     end
 end;
 
-end.
+end.
