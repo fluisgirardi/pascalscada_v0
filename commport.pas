@@ -254,6 +254,20 @@ type
 
     {: Abertura forcada da porta em edicao }
     FOpenInEditMode:Boolean;
+
+    //: @exclude
+    FOnCommErrorReading:TCommPortErrorEvent;
+    //: @exclude
+    FOnCommErrorWriting:TCommPortErrorEvent;
+    //: @exclude
+    FOnCommPortOpened,
+    FOnCommPortOpenError:TNotifyEvent;
+    //: @exclude
+    FOnCommPortClosed,
+    FOnCommPortCloseError:TNotifyEvent;
+    //: @exclude
+    FOnCommPortDisconnected:TNotifyEvent;
+
     procedure OpenInEditMode(v:Boolean);
     {: @exclude }
     procedure TimerStatistics(Sender:TObject);
@@ -285,10 +299,14 @@ type
     FExclusiveDevice:Boolean;
     //: Envia uma mensagem de erro de comunicação da thread de comunicação para a aplicação
     procedure DoCommError(WriteCmd:Boolean; Error:TIOResult);
-    //: Envia uma mensagem de porta aberta pela thread de comunicação;
+    //: Envia uma mensagem de porta aberta.
     procedure DoCommPortOpened;
-    //: Envia uma mensagem de porta fechada pela thread de comunicação;
+    //: Envia uma mensagem de falha na abertura da porta.
+    procedure DoCommPortOpenError;
+    //: Envia uma mensagem de porta fechada.
     procedure DoCommPortClose;
+    //: Envia uma mensagem de falha fechando a porta de comunicação.
+    procedure DoCommPortCloseError;
     //: Envia uma mensagem de porta desconectada detectada pela thread de comunicação;
     procedure DoCommPortDisconected;
   protected
@@ -308,24 +326,6 @@ type
     @seealso(TProtocolDriver)
     }
     Protocols:IPortDriverEventNotificationArray;
-    {:
-    Lê dados da porta. É necessário sobrescrever este método para criar
-    novos drivers de porta.
-    @param(Packet PIOPacket. Contem as informações necessárias para executar
-           a leitura).
-    @seealso(TIOPacket)
-    }
-
-    //: @exclude
-    FOnCommErrorReading:TCommPortErrorEvent;
-    //: @exclude
-    FOnCommErrorWriting:TCommPortErrorEvent;
-    //: @exclude
-    FOnCommPortOpened:TNotifyEvent;
-    //: @exclude
-    FOnCommPortClosed:TNotifyEvent;
-    //: @exclude
-    FOnCommPortDisconnected:TNotifyEvent;
 
     {:
     Lê dados da porta. É necessário sobrescrever este método para criar
@@ -401,8 +401,12 @@ type
     property OnCommErrorWriting:TCommPortErrorEvent read FOnCommErrorWriting write FOnCommErrorWriting;
     //: Evento que sinaliza quando a porta é aberta
     property OnCommPortOpened:TNotifyEvent read FOnCommPortOpened write FOnCommPortOpened;
+    //: Evento que sinaliza falha na abetura da porta.
+    property OnCommPortOpenError:TNotifyEvent read FOnCommPortOpenError write FOnCommPortOpenError;
     //: Evento que sinaliza quando a porta é fechada
     property OnCommPortClosed:TNotifyEvent read FOnCommPortClosed write FOnCommPortClosed;
+    //: Evento que sinaliza quando não é possível fechar a porta
+    property OnCommPortCloseError:TNotifyEvent read FOnCommPortCloseError write FOnCommPortCloseError;
     //: Evento que sinaliza quando a porta é disconectada devido a algum erro.
     property OnCommPortDisconnected:TNotifyEvent read FOnCommPortDisconnected write FOnCommPortDisconnected;
   public
@@ -805,8 +809,11 @@ var
   ievt:TCommPortErrorEvent;
 begin
   if FEvent=nil then exit;
-  ievt:=TCommPortErrorEvent(FEvent^);
-  ievt(FError);
+  try
+    ievt:=TCommPortErrorEvent(FEvent^);
+    ievt(FError);
+  finally
+  end;
 end;
 
 procedure TEventNotificationThread.SyncPortEvent;
@@ -814,8 +821,11 @@ var
   ievt:TNotifyEvent;
 begin
   if FEvent=nil then exit;
-  ievt:=TNotifyEvent(FEvent^);
-  ievt(FOwner);
+  try
+    ievt:=TNotifyEvent(FEvent^);
+    ievt(FOwner);
+  finally
+  end;
 end;
 
 
@@ -956,10 +966,13 @@ begin
     exit;
 
   if FOwnerThread=GetCurrentThreadId then begin
-    if WriteCmd then begin
-      FOnCommErrorWriting(Error);
-    end else begin
-      FOnCommErrorReading(Error);
+    try
+      if WriteCmd then begin
+        FOnCommErrorWriting(Error);
+      end else begin
+        FOnCommErrorReading(Error);
+      end;
+    finally
     end;
   end else begin
     if WriteCmd then begin
@@ -980,7 +993,10 @@ begin
   if not Assigned(FOnCommPortOpened) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
-    FOnCommPortOpened(Self);
+    try
+      FOnCommPortOpened(Self);
+    finally
+    end;
     for c:=0 to High(Protocols) do
       if ntePortOpen in Protocols[c].NotifyThisEvents then
         Protocols[c].DoPortOpened(Self);
@@ -992,6 +1008,23 @@ begin
   end;
 end;
 
+procedure TCommPortDriver.DoCommPortOpenError;
+var
+  c:Integer;
+begin
+  if [csDestroying]*ComponentState<>[] then exit;
+  if not Assigned(FOnCommPortOpened) then exit;
+
+  if GetCurrentThreadId=FOwnerThread then begin
+    try
+      FOnCommPortOpenError(Self);
+    finally
+    end;
+  end else begin
+    PEventUpdater.DoCommPortEvent(FOnCommPortOpenError);
+  end;
+end;
+
 procedure TCommPortDriver.DoCommPortClose;
 var
   c:Integer;
@@ -1000,7 +1033,10 @@ begin
   if not Assigned(FOnCommPortClosed) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
-    FOnCommPortClosed(Self);
+    try
+      FOnCommPortClosed(Self);
+    finally
+    end;
     for c:=0 to High(Protocols) do
       if ntePortClosed in Protocols[c].NotifyThisEvents then
         Protocols[c].DoPortClosed(Self);
@@ -1012,6 +1048,23 @@ begin
   end;
 end;
 
+procedure TCommPortDriver.DoCommPortCloseError;
+var
+  c:Integer;
+begin
+  if [csDestroying]*ComponentState<>[] then exit;
+  if not Assigned(FOnCommPortClosed) then exit;
+
+  if GetCurrentThreadId=FOwnerThread then begin
+    try
+      FOnCommPortCloseError(Self);
+    finally
+    end;
+  end else begin
+    PEventUpdater.DoCommPortEvent(FOnCommPortCloseError);
+  end;
+end;
+
 procedure TCommPortDriver.DoCommPortDisconected;
 var
   c:Integer;
@@ -1020,7 +1073,10 @@ begin
   if not Assigned(FOnCommPortDisconnected) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
-    FOnCommPortDisconnected(Self);
+    try
+      FOnCommPortDisconnected(Self);
+    finally
+    end;
     for c:=0 to High(Protocols) do
       if ntePortDisconnected in Protocols[c].NotifyThisEvents then
         Protocols[c].DoPortDisconnected(Self);
@@ -1337,7 +1393,9 @@ begin
      PIOCmdCS.Enter;
      PortStart(ok);
      if Ok then
-       DoCommPortOpened;
+       DoCommPortOpened
+     else
+       DoCommPortOpenError;
   finally
      PIOCmdCS.Leave;
   end;
@@ -1349,7 +1407,9 @@ begin
      PIOCmdCS.Enter;
      PortStop(ok);
      if Ok then
-       DoCommPortClose;
+       DoCommPortClose
+     else
+       DoCommPortCloseError;
   finally
      PIOCmdCS.Leave;
   end;

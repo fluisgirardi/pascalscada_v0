@@ -97,8 +97,12 @@ type
 
     //: @seealso TCommPortDriver.OnCommPortOpened
     property OnCommPortOpened;
+    //: @seealso TCommPortDriver.OnCommPortOpenError
+    property OnCommPortOpenError;
     //: @seealso TCommPortDriver.OnCommPortClosed
     property OnCommPortClosed;
+    //: @seealso TCommPortDriver.OnCommPortCloseError
+    property OnCommPortCloseError;
     //: @seealso TCommPortDriver.OnCommErrorReading
     property OnCommErrorReading;
     //: @seealso TCommPortDriver.OnCommErrorWriting
