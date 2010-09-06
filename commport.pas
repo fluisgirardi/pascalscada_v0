@@ -325,7 +325,12 @@ type
     Array que armazena os drivers de protocolo dependentes.
     @seealso(TProtocolDriver)
     }
-    Protocols:IPortDriverEventNotificationArray;
+    Protocols:array of TComponent;
+    {:
+    Array que armazena os drivers de protocolo dependentes.
+    @seealso(TProtocolDriver)
+    }
+    EventInterfaces:IPortDriverEventNotificationArray;
 
     {:
     Lê dados da porta. É necessário sobrescrever este método para criar
@@ -429,14 +434,14 @@ type
     @raises(Exception caso Prot não seja descendente de TProtocolDriver)
     @seealso(TProtocolDriver)
     }
-    procedure AddProtocol(Prot:IPortDriverEventNotification);
+    procedure AddProtocol(Prot:TComponent);
     {:
     Remove um driver de protocolo a lista de dependentes
     @param(Prot TProtocolDriver. Driver de protocolo a ser removido da lista de
            dependentes.)
     @seealso(TProtocolDriver)
     }
-    procedure DelProtocol(Prot:IPortDriverEventNotification);
+    procedure DelProtocol(Prot:TComponent);
     {:
     Faz um pedido de leitura/escrita sincrono para o driver (sua aplicação espera
     todo o comando terminar para continuar).
@@ -872,7 +877,9 @@ var
   c:Integer;
 begin
   for c:=0 to High(Protocols) do
-    Protocols[c].DoPortRemoved(Self);
+    TProtocolDriver(Protocols[c]).CommunicationPort := nil;
+  for c:=0 to High(EventInterfaces) do
+    EventInterfaces[c].DoPortRemoved(self);
   CommThread.Terminate;
   CommThread.Destroy;
   PUpdater.Terminate;
@@ -886,42 +893,73 @@ begin
   inherited Destroy;
 end;
 
-procedure TCommPortDriver.AddProtocol(Prot:IPortDriverEventNotification);
+procedure TCommPortDriver.AddProtocol(Prot:TComponent);
 var
   c:Integer;
-  found:Boolean;
+  found, interfaced:Boolean;
 begin
-  if not (Prot is TProtocolDriver) then
-    raise Exception.Create(SCompIsntADriver);
+  interfaced := Supports(Prot,IPortDriverEventNotification);
+  if not interfaced then
+    if not (Prot is TProtocolDriver) then
+      raise Exception.Create(SCompIsntADriver);
 
   found := false;
-  for c:=0 to High(Protocols) do
-    if Protocols[c]=Prot then begin
-      found := true;
-      break;
-    end;
+  if interfaced then begin
+    for c:=0 to High(EventInterfaces) do
+      if EventInterfaces[c]=(Prot as IPortDriverEventNotification) then begin
+        found := true;
+        break;
+      end;
+  end else begin
+    for c:=0 to High(Protocols) do
+      if Protocols[c]=Prot then begin
+        found := true;
+        break;
+      end;
+  end;
 
   if not found then begin
-    c:=length(Protocols);
-    SetLength(Protocols,c+1);
-    Protocols[c] := Prot;
+    if interfaced then begin
+      c:=length(EventInterfaces);
+      SetLength(EventInterfaces,c+1);
+      EventInterfaces[c] := (Prot as IPortDriverEventNotification);
+    end else begin
+      c:=length(Protocols);
+      SetLength(Protocols,c+1);
+      Protocols[c] := Prot;
+    end;
   end;
 end;
 
-procedure TCommPortDriver.DelProtocol(Prot:IPortDriverEventNotification);
+procedure TCommPortDriver.DelProtocol(Prot:TComponent);
 var
-  found:Boolean;
+  found, interfaced:Boolean;
   c:Integer;
 begin
+  interfaced := Supports(Prot,IPortDriverEventNotification);
   found := false;
-  for c:=0 to High(Protocols) do
-    if Protocols[c]=Prot then begin
-      found := true;
-      break;
-    end;
+  if interfaced then begin
+    for c:=0 to High(EventInterfaces) do
+      if EventInterfaces[c]=(Prot as IPortDriverEventNotification) then begin
+        found := true;
+        break;
+      end;
+  end else begin
+    for c:=0 to High(Protocols) do
+      if Protocols[c]=Prot then begin
+        found := true;
+        break;
+      end;
+  end;
+
   if found then begin
-    Protocols[c] := Protocols[High(Protocols)];
-    SetLength(Protocols,High(Protocols));
+    if interfaced then begin
+      EventInterfaces[c] := EventInterfaces[High(EventInterfaces)];
+      SetLength(EventInterfaces,High(EventInterfaces));
+    end else begin
+      Protocols[c] := Protocols[High(Protocols)];
+      SetLength(Protocols,High(Protocols));
+    end;
   end;
 end;
 
@@ -997,14 +1035,14 @@ begin
       FOnCommPortOpened(Self);
     finally
     end;
-    for c:=0 to High(Protocols) do
-      if ntePortOpen in Protocols[c].NotifyThisEvents then
-        Protocols[c].DoPortOpened(Self);
+    for c:=0 to High(EventInterfaces) do
+      if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
+        EventInterfaces[c].DoPortOpened(Self);
   end else begin
     PEventUpdater.DoCommPortEvent(FOnCommPortOpened);
-    for c:=0 to High(Protocols) do
-      if ntePortOpen in Protocols[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(Protocols[c].DoPortOpened);
+    for c:=0 to High(EventInterfaces) do
+      if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
+        PEventUpdater.DoCommPortEvent(EventInterfaces[c].DoPortOpened);
   end;
 end;
 
@@ -1037,14 +1075,14 @@ begin
       FOnCommPortClosed(Self);
     finally
     end;
-    for c:=0 to High(Protocols) do
-      if ntePortClosed in Protocols[c].NotifyThisEvents then
-        Protocols[c].DoPortClosed(Self);
+    for c:=0 to High(EventInterfaces) do
+      if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
+        EventInterfaces[c].DoPortClosed(Self);
   end else begin
     PEventUpdater.DoCommPortEvent(FOnCommPortClosed);
-    for c:=0 to High(Protocols) do
-      if ntePortClosed in Protocols[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(Protocols[c].DoPortClosed);
+    for c:=0 to High(EventInterfaces) do
+      if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
+        PEventUpdater.DoCommPortEvent(EventInterfaces[c].DoPortClosed);
   end;
 end;
 
@@ -1077,14 +1115,14 @@ begin
       FOnCommPortDisconnected(Self);
     finally
     end;
-    for c:=0 to High(Protocols) do
-      if ntePortDisconnected in Protocols[c].NotifyThisEvents then
-        Protocols[c].DoPortDisconnected(Self);
+    for c:=0 to High(EventInterfaces) do
+      if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
+        EventInterfaces[c].DoPortDisconnected(Self);
   end else begin
     PEventUpdater.DoCommPortEvent(FOnCommPortDisconnected);
-    for c:=0 to High(Protocols) do
-      if ntePortDisconnected in Protocols[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(Protocols[c].DoPortDisconnected);
+    for c:=0 to High(EventInterfaces) do
+      if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
+        PEventUpdater.DoCommPortEvent(EventInterfaces[c].DoPortDisconnected);
   end;
 end;
 

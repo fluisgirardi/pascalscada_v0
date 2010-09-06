@@ -505,12 +505,12 @@ begin
       if PCommPort.LockedBy=PDriverID then
         PCommPort.Unlock(PDriverID);
       PCommPort.CancelCallBack(CommPortCallBack);
-      PCommPort.DelProtocol(Self as IPortDriverEventNotification);
+      PCommPort.DelProtocol(Self);
     end;
 
     if CommPort<>nil then begin
       CommPort.ResumeCallBack(CommPortCallBack);
-      CommPort.AddProtocol(Self as IPortDriverEventNotification);
+      CommPort.AddProtocol(Self);
     end;
     PCommPort := CommPort;
   finally
