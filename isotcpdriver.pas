@@ -22,32 +22,10 @@ type
   {: Driver IsoTCP. Baseado na biblioteca LibNodave de
      Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
-  Para endereçar uma memória basta escrever na propriedade MemReadFunction a
-  o código da área da váriavel (ver tabelas abaixo).
+  Para endereçar uma memória, veja a documentação da classe
+  TSiemensProtocolFamily.
 
-  Area:
-  @table(
-    @rowHead( @cell(Area)                       @cell(Valor) )
-    @row(     @cell(Inputs, Entradas)           @cell( 1)    )
-    @row(     @cell(Outputs, Saidas)            @cell( 2)    )
-    @row(     @cell(Flags ou M's)               @cell( 3)    )
-    @row(     @cell(DB e VM no S7-200 )         @cell( 4)    )
-    @row(     @cell(Counter, S7 300/400)        @cell( 5)    )
-    @row(     @cell(Timer, S7 300/400)          @cell( 6)    )
-
-    @row(     @cell(Special Memory, SM, S7-200) @cell( 7)    )
-    @row(     @cell(Entrada analógica, S7-200)  @cell( 8)    )
-    @row(     @cell(Saida analógica, S7-200)    @cell( 9)    )
-    @row(     @cell(Counter, S7-200)            @cell(10)    )
-    @row(     @cell(Timer, S7-200)              @cell(11)    )
-  )
-
-  Logo para acessar as entradas, basta colocar na propriedade
-  MemReadFunction o valor 1, para acessar a MD100 (DWord) basta
-  colocar o valor 5.
-
-  O tipo do tag fica vária com a propriedade TagType.
-
+  @seealso(TSiemensProtocolFamily).
   }
 
   TISOTCPDriver = class(TSiemensProtocolFamily)

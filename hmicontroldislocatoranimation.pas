@@ -1,5 +1,5 @@
 {:
-  @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da tela.)
+  @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da janela.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
 unit HMIControlDislocatorAnimation;
@@ -15,6 +15,11 @@ uses
   ProtocolTypes;
 
 type
+
+  {:
+  @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da janela.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   THMIControlDislocatorAnimation = class(TComponent, IHMITagInterface)
   private
     FStartLeft,
@@ -66,32 +71,54 @@ type
     procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
   protected
+    //@exclude
     procedure Loaded; override;
   public
+    //: @exclude
     constructor Create(AOwner:TComponent); override;
+    //: @exclude
     destructor  Destroy; override;
   published
+    //: Posição inicial no eixo X (propriedade Left do controle)
     property P0_X:Integer read FStartLeft write SetStartLeft;
+    //: Posição inicial no eixo Y (propriedade Top do controle)
     property P0_Y:Integer read FStartTop write SetStartTop;
+    //: Posição final no eixo X (propriedade Left do controle)
     property P1_X:Integer read FEndLeft write SetEndLeft;
+    //: Posição final no eixo y (propriedade Top do controle)
     property P1_Y:Integer read FEndTop write SetEndTop;
+    //: Valor do tag que irá fazer o controle ir para as coordenadas (P0_X; P0_Y);
     property ValueP0:Double read FStartValue write SetValueStart;
+    //: Valor do tag que irá fazer o controle ir para as coordenadas (P1_X; P1_Y);
     property ValueP1:Double read FEndValue write SetValueEnd;
+    //: Tag que irá controlar a animação.
     property PLCTag:TPLCNumber read FTag write SetPLCTag;
+    //: Controle que será manipulado.
     property Control:TControl read FTarget write SetControl;
 
+    //: Habilita o valor mínimo do eixo X.
     property EnableXMin:Boolean read FMinX write SetEnableMinX;
+    //: Habilita o valor máximo do eixo X.
     property EnableXMax:Boolean read FMaxX write SetEnableMaxX;
+    //: Habilita o valor mínimo do eixo Y.
     property EnableYMin:Boolean read FMinY write SetEnableMinY;
+    //: Habilita o valor máximo do eixo Y.
     property EnableYMax:Boolean read FMaxY write SetEnableMaxY;
 
+    //: Caso valor mínimo de X caso EnableXMin esteja habilitado.
     property MinXValue:Integer read FMinXValue write SetMinX;
+    //: Caso valor máximo de X caso EnableXMax esteja habilitado.
     property MaxXValue:Integer read FMaxXValue write SetMaxX;
+    //: Caso valor mínimo de Y caso EnableYMin esteja habilitado.
     property MinYValue:Integer read FMinYValue write SetMinY;
+    //: Caso valor máximo de Y caso EnableYMax esteja habilitado.
     property MaxYValue:Integer read FMaxyValue write SetMaxY;
 
+    //: Pega a posição atual do controle como posição inicial (P0).
     property Gets_P0_Position:String read FGetPositionP0 write PropertyDoesNothing;
+    //: Pega a posição atual do controle como posição final (P1).
     property Gets_P1_Position:String read FGetPositionP1 write PropertyDoesNothing;
+     //: Reposiciona o controle para a posição inicial definida.
     property GoTo_P0_Position:String read FGoToP0        write PropertyDoesNothing;
   end;
 

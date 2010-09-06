@@ -23,31 +23,44 @@ type
   {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
      de Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
-  Para endereçar uma memória basta escrever na propriedade MemReadFunction a
-  o código da área da váriavel (ver tabelas abaixo).
+  Este driver não usa Libnodave, ele é uma reescrita da mesma.
+
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+
+  Para configurar um tag, é necessário preencher as propriedade PLCStation,
+  PLCHack e PLCSlot para endereçar o CLP. Para endereçar a memória dentro do CLP
+  é necessário prencher as propriedades MemAddress e MemReadFunction e no caso
+  de um DB preencha também a propriedade MemFile_DB com o número do DB. O tipo
+  da variável é escolida na propriedade TagType.
+
+  Caso o tipo da variável seja Word, ShortInt, Integer, DWord ou Real é
+  necessário que as propriedades SwapBytes e SwapWord sejam iguais a true para
+  que os valores fiquem iguais aos do CLP.
+
+  Para escolher o tipo (área de memória) que se deseja lêr preencha a
+  propriedade MemReadFunction de acordo com a tabela abaixo:
 
   Area:
   @table(
-    @rowHead( @cell(Area)                       @cell(Valor) )
-    @row(     @cell(Inputs, Entradas)           @cell( 1)    )
-    @row(     @cell(Outputs, Saidas)            @cell( 2)    )
-    @row(     @cell(Flags ou M's)               @cell( 3)    )
-    @row(     @cell(DB e VM no S7-200 )         @cell( 4)    )
-    @row(     @cell(Counter, S7 300/400)        @cell( 5)    )
-    @row(     @cell(Timer, S7 300/400)          @cell( 6)    )
+    @rowHead( @cell(Area)                       @cell(Valor) @cell(Observação) )
+    @row(     @cell(Inputs, Entradas)           @cell( 1)    @cell( - ))
+    @row(     @cell(Outputs, Saidas)            @cell( 2)    @cell( - ))
+    @row(     @cell(Flags ou M's)               @cell( 3)    @cell( - ))
+    @row(     @cell(DB e VM no S7-200 )         @cell( 4)    @cell( - ))
+    @row(     @cell(Counter, S7 300/400)        @cell( 5)    @cell(Precisa que a propriedade TagType seja igual pttWord))
+    @row(     @cell(Timer, S7 300/400)          @cell( 6)    @cell(Precisa que a propriedade TagType seja igual pttWord))
 
-    @row(     @cell(Special Memory, SM, S7-200) @cell( 7)    )
-    @row(     @cell(Entrada analógica, S7-200)  @cell( 8)    )
-    @row(     @cell(Saida analógica, S7-200)    @cell( 9)    )
-    @row(     @cell(Counter, S7-200)            @cell(10)    )
-    @row(     @cell(Timer, S7-200)              @cell(11)    )
+    @row(     @cell(Special Memory, SM, S7-200) @cell( 7)    @cell( - ))
+    @row(     @cell(Entrada analógica, S7-200)  @cell( 8)    @cell( - ))
+    @row(     @cell(Saida analógica, S7-200)    @cell( 9)    @cell( - ))
+    @row(     @cell(Counter, S7-200)            @cell(10)    @cell(Precisa que a propriedade TagType seja igual pttWord))
+    @row(     @cell(Timer, S7-200)              @cell(11)    @cell(Precisa que a propriedade TagType seja igual pttWord))
   )
 
-  Logo para acessar as entradas, basta colocar na propriedade
-  MemReadFunction o valor 1, para acessar a MD100 (DWord) basta
-  colocar o valor 5.
-
-  O tipo do tag fica vária com a propriedade TagType.
+  Logo para acessar a IB3, basta colocar na propriedade MemReadFunction o valor
+  1, MemAddress o valor 3 e na propriedade TagType o valor pttByte e para
+  acessar a MD100 (DWord) basta colocar o valor 5 em MemReadFunction, 100 em
+  MemAddres e pttDword em TagType.
 
   }
 
