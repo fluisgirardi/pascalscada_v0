@@ -109,8 +109,7 @@ var
   TagValues:TArrayOfDouble;
 begin
   if (csDestroying in ComponentState) then exit;
-  if TagCommand in [tcScanWrite, tcWrite] then
-    notify:=false;
+  
   try
     inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
     TagValues:=PLCValuesToTagValues(Values, Offset);

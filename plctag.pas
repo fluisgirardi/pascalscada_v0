@@ -1,4 +1,4 @@
-﻿{:
+{:
 @abstract(Implementa a base para Tags de comunicação.)
 @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
@@ -405,7 +405,7 @@ begin
     end else begin
       poffset := (OffSet * FCurrentWordSize) div FProtocolWordSize;
     end;
-    c:=Length(FRawProtocolValues);
+    
     for c := 0 to High(Values) do
       FRawProtocolValues[c+poffset]:=Values[c];
   end;
