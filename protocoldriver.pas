@@ -119,6 +119,9 @@ type
     FPendingActions:TArrayOfObject;
 
     //:
+    function  GetPortOpenedEvent:TNotifyEvent;
+    function  GetPortClosedEvent:TNotifyEvent;
+    function  GetPortDisconnectedEvent:TNotifyEvent;    
     function  NotifyThisEvents:TNotifyThisEvents; virtual;
     procedure PortOpened(Sender: TObject); virtual;
     procedure PortClosed(Sender: TObject); virtual;
@@ -807,6 +810,21 @@ begin
       FCritical.Endread;
       //FPause.SetEvent;
    end;
+end;
+
+function  TProtocolDriver.GetPortOpenedEvent:TNotifyEvent;
+begin
+  Result := DoPortOpened;
+end;
+
+function  TProtocolDriver.GetPortClosedEvent:TNotifyEvent;
+begin
+  Result := DoPortClosed;
+end;
+
+function  TProtocolDriver.GetPortDisconnectedEvent:TNotifyEvent;
+begin
+  Result := DoPortDisconnected;
 end;
 
 function  TProtocolDriver.NotifyThisEvents:TNotifyThisEvents;

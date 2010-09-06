@@ -1,4 +1,4 @@
-﻿{:
+{:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   @abstract(Unit que implementa as bases de um driver de porta de comunicação)
 }
@@ -1042,7 +1042,7 @@ begin
     PEventUpdater.DoCommPortEvent(FOnCommPortOpened);
     for c:=0 to High(EventInterfaces) do
       if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(EventInterfaces[c].DoPortOpened);
+        PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortOpenedEvent);
   end;
 end;
 
@@ -1082,7 +1082,7 @@ begin
     PEventUpdater.DoCommPortEvent(FOnCommPortClosed);
     for c:=0 to High(EventInterfaces) do
       if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(EventInterfaces[c].DoPortClosed);
+        PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortClosedEvent);
   end;
 end;
 
@@ -1122,7 +1122,7 @@ begin
     PEventUpdater.DoCommPortEvent(FOnCommPortDisconnected);
     for c:=0 to High(EventInterfaces) do
       if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(EventInterfaces[c].DoPortDisconnected);
+        PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortDisconnectedEvent);
   end;
 end;
 

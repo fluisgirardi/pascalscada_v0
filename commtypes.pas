@@ -172,6 +172,9 @@ type
   }
   IPortDriverEventNotification = interface
   ['{26B0F551-5B46-49D9-BCA1-AD621B3775CF}']
+    function  GetPortOpenedEvent:TNotifyEvent;
+    function  GetPortClosedEvent:TNotifyEvent;
+    function  GetPortDisconnectedEvent:TNotifyEvent;
     function  NotifyThisEvents:TNotifyThisEvents;
     procedure DoPortOpened(Sender: TObject);
     procedure DoPortClosed(Sender: TObject);
