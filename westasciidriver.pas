@@ -157,8 +157,6 @@ type
     //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoDelTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoAddTag)
-{d} procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
-    //: @seealso(TProtocolDriver.DoAddTag)
     procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
     //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -327,14 +325,6 @@ begin
   finally
     inherited DoDelTag(TagObj);
   end;
-end;
-
-procedure TWestASCIIDriver.DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);
-begin
-  if not (TagObj is TPLCTagNumber) then
-    raise Exception.Create(SonlyPLCTagNumber);
-  DoDelTag(TagObj);
-  DoAddTag(TagObj);
 end;
 
 procedure TWestASCIIDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);

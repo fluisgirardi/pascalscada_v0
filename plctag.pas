@@ -434,102 +434,132 @@ end;
 procedure TPLCTag.SetPLCHack(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcPLCHack,PHack,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(self);
 
   PHack := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetPLCSlot(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcPLCSlot,PSlot,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PSlot := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetPLCStation(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcPLCStation,PStation,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(self);
 
   PStation := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemFileDB(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcMemFile_DB,PFile_DB,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PFile_DB := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemAddress(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcMemAddress,PAddress,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PAddress := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemSubElement(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcMemSubElement,PSubElement,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PSubElement := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemReadFunction(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcMemReadFunction,PReadFunction,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PReadFunction := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemWriteFunction(v:Cardinal);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcMemWriteFunction,PWriteFunction,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PWriteFunction := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetPath(v:String);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcPath,0,0);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PPath := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
 begin
   if PProtocolDriver<>nil then
-    PProtocolDriver.TagChanges(self,tcScanTime,PScanTime,v);
-
-  GetNewProtocolTagSize;
+    PProtocolDriver.RemoveTag(Self);
 
   PScanTime := v;
   CScanTimer.Interval := v;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
+
+  GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.DoScanTimerEvent(Sender:TObject);

@@ -262,16 +262,6 @@ type
     }
     procedure RemoveTag(TagObj:TTag);
     {:
-    Atualiza as informações do driver a respeito do tag. Chamado quando alguma
-    propriedade de um tag sofre alguma mudança.
-    @param(TagObj TTag. Tag quem sofreu a mudança.)
-    @param(Change TChangeType. Que propriedade sofreu a alteração.)
-    @param(oldValue Cardinal. Valor antigo da propriedade.)
-    @param(newValue Cardinal. Novo valor da propriedade.)
-    @seealso(TProtocolDriver.TagChanges)
-    }
-    procedure TagChanges(TagObj:TTag; Change:TChangeType; oldValue, newValue:Cardinal);
-    {:
     Função que informa se o Tag está associado ao driver.
     @param(TagObj TTag. Tag que deseja saber se está associado ao driver.)
     @returns(@true caso o tag esteja associado ao driver.)
@@ -626,18 +616,6 @@ begin
       Result := true;
       break;
     end;
-end;
-
-procedure TProtocolDriver.TagChanges(TagObj:TTag; Change:TChangeType; oldValue, newValue:Cardinal);
-begin
-  try
-    FPause.ResetEvent;
-    FCritical.Beginwrite;
-    DoTagChange(TagObj,Change,oldValue,newValue);
-  finally
-    FCritical.Endwrite;
-    FPause.SetEvent;
-  end;
 end;
 
 function TProtocolDriver.ScanRead(const tagrec:TTagRec):Cardinal;

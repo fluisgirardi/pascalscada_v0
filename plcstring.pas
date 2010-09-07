@@ -478,8 +478,10 @@ begin
     old:=PSize;
     PSize := size;
     SetLength(PValues, PSize);
-    if PProtocolDriver<>nil then
-       PProtocolDriver.TagChanges(self,tcSize,old,size);
+    if PProtocolDriver<>nil then begin
+       PProtocolDriver.RemoveTag(Self);
+       PProtocolDriver.AddTag(Self);
+    end;
   end;
 end;
 

@@ -219,8 +219,6 @@ type
     procedure DoAddTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoDelTag)
     procedure DoDelTag(TagObj:TTag); override;
-    //: @seealso(TProtocolDriver.DoTagChange)
-    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);  override;
     //: @seealso(TProtocolDriver.DoScanRead)
     procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
     //: @seealso(TProtocolDriver.DoGetValue)
@@ -460,12 +458,6 @@ begin
     end;
   end;
   inherited DoDelTag(TagObj);
-end;
-
-procedure TIBoxDriver.DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);
-begin
-  RemoveTag(TagObj);
-  AddTag(TagObj);
 end;
 
 procedure TIBoxDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);

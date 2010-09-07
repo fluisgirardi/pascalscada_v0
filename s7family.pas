@@ -111,7 +111,6 @@ type
 {ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
 {ok}procedure DoAddTag(TagObj:TTag); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
-{ok}procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); override;
 {ok}procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
 {ok}procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
 
@@ -851,13 +850,6 @@ begin
       FCPUs[plc].AnOutput.RemoveAddress(tr.Address,tr.Size,1);
   end;
   Inherited DoDelTag(TagObj);
-end;
-
-procedure TSiemensProtocolFamily.DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer);
-begin
-  DoDelTag(TagObj);
-  DoAddTag(TagObj);
-  //inherited DoTagChange(TagObj, Change, oldValue, newValue);
 end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:Integer);
