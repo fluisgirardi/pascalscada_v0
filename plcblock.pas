@@ -162,14 +162,11 @@ begin
 end;
 
 procedure TPLCBlock.SetSize(size:Cardinal);
-var
-  old:Cardinal;
 begin
   if size>0 then begin
-    old:=PSize;
     PSize := size;
     SetLength(PValues,PSize);
-    if PProtocolDriver<>nil then begin
+    if (PProtocolDriver<>nil) and ([csReading,csLoading]*ComponentState=[]) then begin
        PProtocolDriver.RemoveTag(Self);
        PProtocolDriver.AddTag(Self);
     end;

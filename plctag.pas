@@ -693,7 +693,8 @@ begin
     pttInteger, pttDWord, pttFloat:
       FCurrentWordSize:=32;
   end;
-  RebuildValues;
+  if [csReading,csLoading]*ComponentState=[] then
+    RebuildValues;
 end;
 
 function TPLCTag.GetTagSizeOnProtocol:Integer;
