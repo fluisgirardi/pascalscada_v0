@@ -95,7 +95,6 @@ uses hsstrings, Dialogs;
 constructor TTagBit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  ProtocolDriver := nil;
   PNumber := nil;
   AutoRead := false;
   AutoWrite := false;

@@ -24,6 +24,7 @@ type
     FRawProtocolValues:TArrayOfDouble;
     FTotalTime, FReadCount:Int64;
     FFirtsRead:Boolean;
+    FProtocoloOnLoading:TProtocolDriver;
   private
     procedure RebuildTagGUID;
     procedure GetNewProtocolTagSize;
@@ -69,9 +70,6 @@ type
     //: Retorna a média de atraso entre requisitar um valor e o valor chegar ao tag.
     function GetAvgDelayBetweenRequests:double;
 
-    //: configura o novo tipo de dado do tag.
-    procedure SetTagType(newType:TTagType); virtual;
-
     //: Retorna o tamanho real do tag.
     function GetTagSizeOnProtocol:Integer;
 
@@ -92,6 +90,9 @@ type
 
     //: @exclude
     procedure SetGUID(v:String);
+
+    //##########################################################################
+
     {:
     Habilita/Desabilita a leitura automática do tag.
     @param(v Boolean: @true habilita, @false desabilita.)
@@ -103,35 +104,15 @@ type
     }
     procedure SetAutoWrite(v:Boolean); virtual;
     {:
-    Seta o Hack do equipamento que contem a memória sendo mapeada.
-    @param(v Cardinal. Hack do equipamento onde está a memória.)
-    }
-    procedure SetPLCHack(v:Cardinal); virtual;
-    {:
-    Seta o Slot do equipamento que contem a memória sendo mapeada.
-    @param(v Cardinal. Slot do equipamento onde está a memória.)
-    }
-    procedure SetPLCSlot(v:Cardinal); virtual;
-    {:
-    Seta o endereço do equipamento que contem a memória sendo mapeada.
-    @param(v Cardinal. Endereço do equipamento onde está a memória.)
-    }
-    procedure SetPLCStation(v:Cardinal); virtual;
-    {:
-    Seta o Arquivo/DB que contem a memória sendo mapeada.
-    @param(v Cardinal. Arquivo/DB que a memória mapeada pertence.)
-    }
-    procedure SetMemFileDB(v:Cardinal); virtual;
-    {:
     Seta o endereço da memória sendo mapeada.
     @param(v Cardinal. Endereço da memória sendo mapeada.)
     }
     procedure SetMemAddress(v:Cardinal); virtual;
     {:
-    Seta o sub-endereço da memória sendo mapeada.
-    @param(v Cardinal. Sub-endereço da memória sendo mapeada.)
+    Seta o Arquivo/DB que contem a memória sendo mapeada.
+    @param(v Cardinal. Arquivo/DB que a memória mapeada pertence.)
     }
-    procedure SetMemSubElement(v:Cardinal); virtual;
+    procedure SetMemFileDB(v:Cardinal); virtual;
     {:
     Seta o função do driver para leitura da memória.
     @param(v Cardinal. Função do driver usada para leitura da memória.)
@@ -143,10 +124,31 @@ type
     }
     procedure SetMemWriteFunction(v:Cardinal); virtual;
     {:
+    Seta o sub-endereço da memória sendo mapeada.
+    @param(v Cardinal. Sub-endereço da memória sendo mapeada.)
+    }
+    procedure SetMemSubElement(v:Cardinal); virtual;
+    {:
     Seta o endereço longo (texto) do tag.
     @param(v String. Endereço longo (texto) do tag.)
     }
     procedure SetPath(v:String); virtual;
+    {:
+    Seta o endereço do equipamento que contem a memória sendo mapeada.
+    @param(v Cardinal. Endereço do equipamento onde está a memória.)
+    }
+    procedure SetPLCStation(v:Cardinal); virtual;
+    {:
+    Seta o Hack do equipamento que contem a memória sendo mapeada.
+    @param(v Cardinal. Hack do equipamento onde está a memória.)
+    }
+    procedure SetPLCHack(v:Cardinal); virtual;
+    {:
+    Seta o Slot do equipamento que contem a memória sendo mapeada.
+    @param(v Cardinal. Slot do equipamento onde está a memória.)
+    }
+    procedure SetPLCSlot(v:Cardinal); virtual;
+
     {:
     Seta o tempo de varredura (atualização) da memória em milisegundos.
     @param(v Cardinal. Tempo em milisegundos que a memória deve ser atualizada.)
@@ -157,6 +159,11 @@ type
     @param(p TProtocolDriver. Componente de protocolo usado para comunicação do tag.)
     }
     procedure SetProtocolDriver(p:TProtocolDriver); virtual;
+
+    //: configura o novo tipo de dado do tag.
+    procedure SetTagType(newType:TTagType); virtual;
+
+    //##########################################################################
 
     //: Procedimento chamado pelo driver de protocolo para atualização de valores do tag.
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); virtual;
@@ -329,7 +336,9 @@ begin
   FFirtsRead:=true;
   FTotalTime:=0;
   FTotalDelay:=0;
+  PProtocolDriver:=nil;
   CScanTimer := TTimer.Create(self);
+  CScanTimer.Enabled:=false;
   CScanTimer.OnTimer := DoScanTimerEvent;
   FTagManager := GetTagManager;
   SetLength(FRawProtocolValues,1);
@@ -355,8 +364,11 @@ end;
 procedure TPLCTag.SetProtocolDriver(p:TProtocolDriver);
 begin
   //estou carregando meus parametros...
-  //if (csReading in ComponentState) then exit;
-  
+  if ([csReading,csLoading]*ComponentState<>[]) then begin
+    FProtocoloOnLoading:=p;
+    Exit;
+  end;
+
   //estou em tempo de desenvolvimento...
   //if (csDesigning in ComponentState) then begin
   //  PProtocolDriver := p;
@@ -414,10 +426,9 @@ end;
 procedure TPLCTag.SetAutoRead(v:Boolean);
 begin
   PAutoRead := v;
-  if CScanTimer<>nil then
+  if (CScanTimer<>nil) And ([csReading,csLoading]*ComponentState=[]) then
     CScanTimer.Enabled := v;
 
-  //adiciona ou remove do scan do driver...
   if (PProtocolDriver<>nil) then begin
     if v then
       PProtocolDriver.AddTag(self)
@@ -441,7 +452,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetPLCSlot(v:Cardinal);
@@ -454,7 +466,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetPLCStation(v:Cardinal);
@@ -467,7 +480,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemFileDB(v:Cardinal);
@@ -480,7 +494,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemAddress(v:Cardinal);
@@ -493,7 +508,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemSubElement(v:Cardinal);
@@ -506,7 +522,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemReadFunction(v:Cardinal);
@@ -519,7 +536,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetMemWriteFunction(v:Cardinal);
@@ -532,7 +550,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetPath(v:String);
@@ -545,7 +564,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
@@ -559,7 +579,8 @@ begin
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
-  GetNewProtocolTagSize;
+  if ([csReading,csLoading]*ComponentState=[]) then
+    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.DoScanTimerEvent(Sender:TObject);
@@ -633,14 +654,19 @@ var
   olddriver:TProtocolDriver;
 begin
   inherited Loaded;
+
+  ProtocolDriver:=FProtocoloOnLoading;
+  CScanTimer.Enabled:=PAutoRead;
+
   if PProtocolDriver=nil then begin
     olddriver:=PProtocolDriver;
     PProtocolDriver:=TProtocolDriver(1);
     FCurrentWordSize:=FProtocolWordSize;
     GetTagSizeOnProtocol;
     PProtocolDriver:=olddriver;
-  end else
+  end else begin
     GetTagSizeOnProtocol;
+  end;
 
   with FTagManager as TTagMananger do
     AddTag(Self);

@@ -76,7 +76,6 @@ uses hsstrings;
 constructor TPLCBlockElement.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  ProtocolDriver := nil;
   PBlock := nil;
   AutoRead := false;
   AutoWrite := false;
