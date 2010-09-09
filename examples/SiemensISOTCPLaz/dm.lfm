@@ -8,7 +8,7 @@ object DataModule1: TDataModule1
     Active = True
     LogIOActions = True
     LogFile = '/home/fabiolg/isotcp.log'
-    Host = '192.168.2.185'
+    Host = '192.168.1.193'
     Timeout = 50
     ExclusiveDevice = True
     OnCommPortOpenError = TCP_UDPPort1CommPortOpenError
@@ -376,6 +376,7 @@ object DataModule1: TDataModule1
   end
   object Counters: TPLCBlock
     TagGUID = '{72AFD62A-73A8-41C5-BE62-23F8617ED7E0}'
+    AutoRead = False
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 2
@@ -388,6 +389,7 @@ object DataModule1: TDataModule1
     RefreshTime = 8
     Size = 10
     OnValueChange = CountersValueChange
+    TagType = pttWord
     SwapBytes = True
     left = 168
     top = 8

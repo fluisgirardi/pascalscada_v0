@@ -115,7 +115,7 @@ begin
     TagValues:=PLCValuesToTagValues(Values, Offset);
     notify := false;
     case TagCommand of
-      tcScanRead, tcRead:
+      tcScanRead, tcRead, tcInternalUpdate:
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           for c := 0 to High(TagValues) do begin

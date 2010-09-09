@@ -424,7 +424,7 @@ begin
   try
     notify := false;
     case TagCommand of
-      tcScanRead, tcRead:
+      tcScanRead, tcRead, tcInternalUpdate:
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           for c := 0 to Length(Values) - 1 do begin

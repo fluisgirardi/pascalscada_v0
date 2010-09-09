@@ -78,12 +78,13 @@ type
   {:
   Enumera os possíveis tipos de comandos aceitos pelo driver de protocolo (TProtocolDriver).
   
-  @value(tcScanRead  Leitura de valor através do scan do driver de protocolo (assincrona).)
-  @value(tcScanWrite Escrita de valor através do scan do driver de protocolo (assincrona).)
-  @value(tcRead      Leitura de valor direta (sincrona).)
-  @value(tcWrite     Escrita de valor direta (sincrona).)
+  @value(tcScanRead        Leitura de valor através do scan do driver de protocolo (assincrona).)
+  @value(tcScanWrite       Escrita de valor através do scan do driver de protocolo (assincrona).)
+  @value(tcRead            Leitura de valor direta (sincrona).)
+  @value(tcWrite           Escrita de valor direta (sincrona).)
+  @value(tcInternalUpdate  Comando interno de atualização.)
   }
-  TTagCommand = (tcScanRead, tcScanWrite, tcRead, tcWrite);
+  TTagCommand = (tcScanRead, tcScanWrite, tcRead, tcWrite, tcInternalUpdate);
 
   {:
   Enumera todos os possíveis tamanhos de palavras dos tags.

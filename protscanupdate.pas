@@ -137,8 +137,7 @@ begin
             Fvalues.RealOffset:=FTagRec^.RealOffset;
 
             if Assigned(PGetValues) then begin
-               if not Terminated then
-                  PGetValues(FTagRec^, Fvalues)
+              PGetValues(FTagRec^, Fvalues)
             end else
                Fvalues.LastQueryResult := ioDriverError;
 

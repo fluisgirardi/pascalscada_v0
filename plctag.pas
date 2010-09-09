@@ -28,6 +28,7 @@ type
   private
     procedure RebuildTagGUID;
     procedure GetNewProtocolTagSize;
+    function  GetTagSizeOnProtocol:Integer;
   protected
     //: Referencia ao objeto gerenciador de tags.
     FTagManager:TObject;
@@ -71,7 +72,7 @@ type
     function GetAvgDelayBetweenRequests:double;
 
     //: Retorna o tamanho real do tag.
-    function GetTagSizeOnProtocol:Integer;
+    procedure UpdateTagSizeOnProtocol;
 
     //: Recompila os valores do tag.
     procedure RebuildValues; virtual;
@@ -405,6 +406,7 @@ begin
     inc(FTotalTime, MilliSecondsBetween(ValuesTimeStamp,PValueTimeStamp));
     inc(FReadCount);
   end;
+
   if (LastResult=ioOk) then
     FFirtsRead:=false;
 
@@ -417,9 +419,10 @@ begin
     end else begin
       poffset := (OffSet * FCurrentWordSize) div FProtocolWordSize;
     end;
-    
+
     for c := 0 to High(Values) do
-      FRawProtocolValues[c+poffset]:=Values[c];
+      if (c+poffset)<=High(FRawProtocolValues) then
+        FRawProtocolValues[c+poffset]:=Values[c];
   end;
 end;
 
@@ -638,7 +641,12 @@ begin
   if FTagType=pttDefault then
     FCurrentWordSize := FProtocolWordSize;
 
-  GetTagSizeOnProtocol;
+  UpdateTagSizeOnProtocol;
+end;
+
+function  TPLCTag.GetTagSizeOnProtocol:Integer;
+begin
+  Result := Length(FRawProtocolValues);
 end;
 
 procedure TPLCTag.RebuildTagGUID;
@@ -662,10 +670,10 @@ begin
     olddriver:=PProtocolDriver;
     PProtocolDriver:=TProtocolDriver(1);
     FCurrentWordSize:=FProtocolWordSize;
-    GetTagSizeOnProtocol;
+    UpdateTagSizeOnProtocol;
     PProtocolDriver:=olddriver;
   end else begin
-    GetTagSizeOnProtocol;
+    UpdateTagSizeOnProtocol;
   end;
 
   with FTagManager as TTagMananger do
@@ -681,6 +689,10 @@ end;
 procedure TPLCTag.SetTagType(newType:TTagType);
 begin
   if newType=FTagType then exit;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.RemoveTag(Self);
+
   FTagType:=newType;
 
   case FTagType of
@@ -693,23 +705,32 @@ begin
     pttInteger, pttDWord, pttFloat:
       FCurrentWordSize:=32;
   end;
-  if [csReading,csLoading]*ComponentState=[] then
+
+  if [csReading,csLoading]*ComponentState=[] then begin
+    UpdateTagSizeOnProtocol;
     RebuildValues;
+  end;
+
+  if PProtocolDriver<>nil then
+    PProtocolDriver.AddTag(Self);
 end;
 
-function TPLCTag.GetTagSizeOnProtocol:Integer;
+procedure TPLCTag.UpdateTagSizeOnProtocol;
+var
+  Tamanho:Integer;
 begin
   if PProtocolDriver=nil then begin
-    Result := PSize;
+    Tamanho := PSize;
     exit;
   end;
 
   if FCurrentWordSize>=FProtocolWordSize then begin
-    Result := (FCurrentWordSize div FProtocolWordSize)*PSize;
+    Tamanho := (FCurrentWordSize div FProtocolWordSize)*PSize;
   end else begin
-    Result := ((PSize*FCurrentWordSize) div FProtocolWordSize) + ifthen(((PSize*FCurrentWordSize) mod FProtocolWordSize)<>0,1,0);
+    Tamanho := ((PSize*FCurrentWordSize) div FProtocolWordSize) + ifthen(((PSize*FCurrentWordSize) mod FProtocolWordSize)<>0,1,0);
   end;
-  SetLength(FRawProtocolValues, Result);
+
+  SetLength(FRawProtocolValues, Tamanho);
 end;
 
 procedure TPLCTag.SetSwapWords(v:Boolean);

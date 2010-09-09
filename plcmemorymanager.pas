@@ -406,15 +406,18 @@ begin
   c:=0;
   //esse while para quando encontra o endereco desejado ou qdo acaba a lista!!
   while (c<=high(FAddress)) and (add>=FAddress[c].Address) do
-    inc(c);
+    if (add>=FAddress[c].Address) then
+      break
+    else
+      inc(c);
   //se não encontrou cai fora...
   if (c>high(FAddress)) or (FAddress[c].Address<>Add) then exit;
   dec(FAddress[c].Count);
   //caso zerou um endereco, é necessário remover ele da lista...
   if FAddress[c].Count=0 then
-    if Length(FAddress)=1 then
-        SetLength(FAddress,0)
-    else begin
+    if Length(FAddress)=1 then begin
+        SetLength(FAddress,0);
+    end else begin
       if c<High(FAddress) then
         Move(FAddress[c+1],FAddress[c],(high(FAddress)-c)*sizeof(TMemoryRec));
       SetLength(FAddress,Length(FAddress)-1);

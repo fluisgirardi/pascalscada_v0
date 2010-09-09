@@ -239,7 +239,7 @@ begin
   try
     notify := false;
     case TagCommand of
-      tcScanRead,tcRead:
+      tcScanRead,tcRead,tcInternalUpdate:
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           //atualiza os dois valores (direto ou indireto) independende do caso do pedido.
