@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Dialogs,
-  tcp_udpport, ISOTCPDriver, PLCBlock, PLCBlockElement, PLCTagNumber, TagBit;
+  tcp_udpport, ISOTCPDriver, PLCBlock, PLCBlockElement, PLCTagNumber, TagBit, commtypes;
 
 type
 
@@ -67,6 +67,7 @@ type
     I0_0: TTagBit;
     TCP_UDPPort1: TTCP_UDPPort;
     procedure CountersValueChange(Sender: TObject);
+    procedure TCP_UDPPort1CommPortOpenError(Sender: TObject);
   private
     { private declarations }
   public
@@ -78,7 +79,14 @@ var
 
 implementation
 
+uses Unit1;
+
 { TDataModule1 }
+
+procedure TDataModule1.TCP_UDPPort1CommPortOpenError(Sender: TObject);
+begin
+  Form1.Label1.Caption:='lascou...';
+end;
 
 procedure TDataModule1.CountersValueChange(Sender: TObject);
 begin

@@ -13,7 +13,7 @@ uses
 {$IFDEF WINDOWS}{$R isotcp_example.rc}{$ENDIF}
 
 begin
-  {$I isotcp_example.lrs}
+  //{$I isotcp_example.lrs}
   Application.Initialize;
   Application.CreateForm(TForm1, Form1);
   Application.CreateForm(TDataModule1, DataModule1);

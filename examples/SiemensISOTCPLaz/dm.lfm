@@ -8,8 +8,10 @@ object DataModule1: TDataModule1
     Active = True
     LogIOActions = True
     LogFile = '/home/fabiolg/isotcp.log'
-    Host = '192.168.1.185'
+    Host = '192.168.2.185'
     Timeout = 50
+    ExclusiveDevice = True
+    OnCommPortOpenError = TCP_UDPPort1CommPortOpenError
     left = 8
     top = 8
   end
@@ -32,7 +34,7 @@ object DataModule1: TDataModule1
     ProtocolDriver = ISOTCPDriver1
     RefreshTime = 8
     Size = 40
-    TagType = pttFloat
+    TagType = pttDWord
     SwapBytes = True
     SwapWords = True
     left = 40
@@ -51,7 +53,7 @@ object DataModule1: TDataModule1
     ProtocolDriver = ISOTCPDriver1
     RefreshTime = 8
     Size = 11
-    TagType = pttFloat
+    TagType = pttDWord
     SwapBytes = True
     SwapWords = True
     left = 72
