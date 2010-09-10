@@ -671,7 +671,6 @@ function TIBoxDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; 
 var
   pkg, pkgtotal:BYTES;
   cmdpkg:TIOPacket;
-  event:TCrossEvent;
   plc, offset, bytesRemaim, b2, b3, b4, b5, b6, b7, b8:Integer;
   found:Boolean;
   pid20x:TPID20xRegister;
@@ -699,8 +698,6 @@ begin
     end;
 
   SetLength(Values,1);
-  event := TCrossEvent.Create(nil,true,false,'IBoxID'+IntToStr(PDriverID));
-  AddPendingAction(event);
   try
     if PCommPort=nil then begin
       Result := ioNullDriver;
@@ -713,14 +710,11 @@ begin
     pkg[2]:=Byte(tagrec.Address);
     CalculateCheckSum(pkg);
 
-    event.ResetEvent;
     case tagrec.Address of
       //Nível de combustivel.
       96: begin
-        PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
-
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
-          Result:=ioTimeOut;
+        if PCommPort.IOCommandSync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,nil,@cmdpkg)=0 then begin
+          Result:=ioDriverError;
           exit;
         end;
 
@@ -751,10 +745,8 @@ begin
       end;
       //Voltagem da bateria.
       168: begin
-        PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
-
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
-          Result:=ioTimeOut;
+        if PCommPort.IOCommandSync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,nil,@cmdpkg)=0 then begin
+          Result:=ioDriverError;
           exit;
         end;
 
@@ -802,10 +794,8 @@ begin
         end;
 
         PCommPort.Lock(PDriverID);
-        PCommPort.IOCommandASync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
-
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
-          Result:=ioTimeOut;
+        if PCommPort.IOCommandSync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,false,nil,@cmdpkg)=0 then begin
+          Result:=ioDriverError;
           exit;
         end;
 
@@ -871,11 +861,8 @@ begin
           //copia os primeiros bytes do pacote
           pkg := cmdpkg.BufferToRead;
 
-          event.ResetEvent;
-          PCommPort.IOCommandASync(iocRead,nil,bytesRemaim,0,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
-
-          if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
-            Result:=ioTimeOut;
+          if PCommPort.IOCommandSync(iocRead,nil,bytesRemaim,0,PDriverID,5,CommPortCallBack,false,nil,@cmdpkg)=0 then begin
+            Result:=ioDriverError;
             exit;
           end;
 
@@ -978,10 +965,8 @@ begin
       end;
       //status do motor e reset.
       204, 205: begin
-        PCommPort.IOCommandASync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
-
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
-          Result:=ioTimeOut;
+        if PCommPort.IOCommandSync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,false,nil,@cmdpkg)=0 then begin
+          Result:=ioDriverError;
           exit;
         end;
 
@@ -1019,10 +1004,8 @@ begin
       end;
       //Horimetro do motor.
       247: begin
-        PCommPort.IOCommandASync(iocWriteRead,pkg,7,4,PDriverID,5,CommPortCallBack,false,event,@cmdpkg);
-
-        if event.WaitFor($FFFFFFFF)<>wrSignaled then begin
-          Result:=ioTimeOut;
+        if PCommPort.IOCommandSync(iocWriteRead,pkg,7,4,PDriverID,5,CommPortCallBack,false,nil,@cmdpkg)=0 then begin
+          Result:=ioDriverError;
           exit;
         end;
 
@@ -1057,8 +1040,6 @@ begin
     SetLength(pkg,0);
     SetLength(cmdpkg.BufferToRead,0);
     SetLength(cmdpkg.BufferToWrite,0);
-    RemovePendingAction(event);
-    event.Destroy;
   end;
 end;
 

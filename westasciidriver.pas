@@ -525,10 +525,8 @@ function TWestASCIIDriver.DeviceActive(DeviceID:TWestAddressRange):TProtocolIORe
 var
   buffer, No:BYTES;
   pkg:TIOPacket;
-  evento:TCrossEvent;
 begin
   try
-    evento := TCrossEvent.Create(nil, true, false, 'WestDeviceActive');
 
     SetLength(buffer,6);
     SetLength(No,2);
@@ -547,11 +545,8 @@ begin
       exit;
     end;
 
-    evento.ResetEvent;
-    PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
-
-    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
-      Result := ioDriverError;
+    if PCommPort.IOCommandSync(iocWriteRead, buffer, 6, 6, DriverID, 5, CommPortCallBack, false, nil, @pkg)=0 then begin
+      Result:=ioDriverError;
       exit;
     end;
 
@@ -579,7 +574,6 @@ begin
     SetLength(pkg.BufferToWrite,0);
     SetLength(buffer,0);
     SetLength(No,0);
-    evento.Destroy;
   end;
 end;
 
@@ -802,11 +796,8 @@ var
   buffer, No:BYTES;
   b1, b2:Boolean;
   pkg:TIOPacket;
-  evento:TCrossEvent;
 begin
   try
-
-    evento := TCrossEvent.Create(nil, true, false, 'WestGetParamValue');
 
     SetLength(buffer,11);
     SetLength(No,2);
@@ -825,11 +816,9 @@ begin
       exit;
     end;
 
-    evento.ResetEvent;
-    PCommPort.IOCommandASync(iocWriteRead, buffer, 11, 6, DriverID, 5, CommPortCallBack, false, evento, @pkg);
 
-    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
-      Result := ioDriverError;
+    if PCommPort.IOCommandSync(iocWriteRead, buffer, 11, 6, DriverID, 5, CommPortCallBack, false, nil, @pkg)=0 then begin
+      Result:=ioDriverError;
       exit;
     end;
 
@@ -865,7 +854,6 @@ begin
     SetLength(pkg.BufferToWrite,0);
     SetLength(buffer,0);
     SetLength(No,0);
-    evento.Destroy;
   end;
 end;
 
@@ -972,13 +960,9 @@ var
    buffer, No:BYTES;
    b1, b2:Boolean;
    pkg:TIOPacket;
-   evento:TCrossEvent;
-   OffsetSpace, OffsetNo, OffsetSize:Integer;
+   OffsetSpace, OffsetNo, OffsetSize, res:Integer;
 begin
   try
-    evento := TCrossEvent.Create(nil, true, false, 'WestModifyParamValue');
-    AddPendingAction(evento);
-
     SetLength(buffer,35);
     SetLength(No,2);
 
@@ -998,11 +982,8 @@ begin
 
     PCommPort.Lock(DriverID);
 
-    evento.ResetEvent;
-    PCommPort.IOCommandASync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, evento, @pkg);
-
-    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
-      Result := ioDriverError;
+    if PCommPort.IOCommandSync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, false, nil, @pkg)=0 then begin
+      Result:=ioDriverError;
       exit;
     end;
 
@@ -1026,9 +1007,6 @@ begin
       exit;
     end;
 
-    //faz a leitura imediata do resto do pacote... termina em PCommPort.Unlock()
-
-    evento.ResetEvent;
     //se respondeu o endereco com um byte, incrementa offset da array.
     OffsetNo:=0;
     if b2 then
@@ -1036,11 +1014,11 @@ begin
 
     case Chr(buffer[4+OffsetNo]) of
       '0': begin
-        PCommPort.IOCommandASync(iocRead, buffer, 21+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+        res := PCommPort.IOCommandSync(iocRead, buffer, 21+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, nil, @pkg);
         OffsetSize := 0;
       end;
       '5': begin
-        PCommPort.IOCommandASync(iocRead, buffer, 26+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, evento, @pkg);
+        res := PCommPort.IOCommandSync(iocRead, buffer, 26+OffsetNo, 0, DriverID, 10, CommPortCallBack, false, nil, @pkg);
         OffsetSize := 5;
       end;
       else begin
@@ -1049,7 +1027,7 @@ begin
       end;
     end;
 
-    if evento.WaitFor($FFFFFFFF)<>wrSignaled then begin
+    if res=0 then begin
       Result := ioDriverError;
       exit;
     end;
@@ -1118,8 +1096,6 @@ begin
     if PCommPort<>nil then
       if PCommPort.LockedBy=DriverID then
          PCommPort.Unlock(DriverID);
-    RemovePendingAction(evento);
-    evento.Destroy;
   end;
 end;
 

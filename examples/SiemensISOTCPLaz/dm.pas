@@ -5,7 +5,7 @@ unit dm;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, LResources, Forms, Controls, Dialogs,
+  Classes, SysUtils, FileUtil, LResources, Forms, Controls, Dialogs, ExtCtrls,
   tcp_udpport, ISOTCPDriver, PLCBlock, PLCBlockElement, PLCTagNumber, TagBit, commtypes;
 
 type
@@ -66,8 +66,10 @@ type
     InputsBYTE_01: TPLCTagNumber;
     I0_0: TTagBit;
     TCP_UDPPort1: TTCP_UDPPort;
+    Timer1: TTimer;
     procedure CountersValueChange(Sender: TObject);
     procedure TCP_UDPPort1CommPortOpenError(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
   private
     { private declarations }
   public
@@ -86,6 +88,14 @@ uses Unit1;
 procedure TDataModule1.TCP_UDPPort1CommPortOpenError(Sender: TObject);
 begin
   Form1.Label1.Caption:='lascou...';
+end;
+
+procedure TDataModule1.Timer1Timer(Sender: TObject);
+begin
+  DB1.Read;
+  DB1_DBD16.Value:=DB1_DBD16.Value+3;
+  DB1_DBD24.Value:=DB1_DBD24.Value+5;
+  DB1.WriteDirect;
 end;
 
 procedure TDataModule1.CountersValueChange(Sender: TObject);

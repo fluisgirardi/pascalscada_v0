@@ -348,10 +348,11 @@ begin
   PCallersCS := TCriticalSection.Create;
 
   PScanUpdateThread := TScanUpdate.Create(true);
-  PScanUpdateThread.Priority:=tpTimeCritical;
+  PScanUpdateThread.Priority:=tpHighest;
   PScanUpdateThread.OnGetValue := SafeGetValue;
 
   PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
+  PScanReadThread.Priority:=tpTimeCritical;
   PScanReadThread.OnDoScanRead := SafeScanRead;
   PScanReadThread.OnDoScanWrite := nil;
 
@@ -482,12 +483,10 @@ begin
     if PCommPort<>nil then begin
       if PCommPort.LockedBy=PDriverID then
         PCommPort.Unlock(PDriverID);
-      PCommPort.CancelCallBack(CommPortCallBack);
       PCommPort.DelProtocol(Self);
     end;
 
     if CommPort<>nil then begin
-      CommPort.ResumeCallBack(CommPortCallBack);
       CommPort.AddProtocol(Self);
     end;
     PCommPort := CommPort;

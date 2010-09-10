@@ -849,16 +849,9 @@ begin
   try
     pkg := EncodePkg(tagrec,nil,rl);
     if PCommPort<>nil then begin
-      if Sync then begin
-        res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult);
-        if res<>0 then
-          Result := DecodePkg(IOResult,values);
-      end else begin
-        FReadEvent.ResetEvent;
-        res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,FReadEvent,@IOResult);
-        if (res<>0) and (FReadEvent.WaitFor($FFFFFFFF)=wrSignaled) then
-          Result := DecodePkg(IOResult,values);
-      end;
+      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult);
+      if res<>0 then
+        Result := DecodePkg(IOResult,values);
     end else
       Result := ioNullDriver;
   finally

@@ -20,79 +20,6 @@ uses
 type
   {:
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-  @name é responsável por retornar os resultados de um grupo de comandos
-  de leitura/escrita para quem fez o pedido.
-  @bold(Retorna os resultados de maneira ASSINCRONA, sendo responsabilidade de
-  quem escreveu o procedimento de CallBack fazer a sincronização.)
-  É usado internamente por TCommPortDriver.
-  }
-  TUpdateThread = class(TCrossThread)
-  private
-    PMsg:TMSMsg;
-    PCmdPacket:PCommandPacket;
-    PInitEventHandle:TCrossEvent;
-    PDoSomethingEventHandle:TCrossEvent;
-    PCanceledCallbacks:array of Pointer;
-    PCanceledCount:Integer;
-    FSpool:TMessageSpool;
-    Error:TIOResult;
-    FIsWrite:Boolean;
-    FOnCommErrorReading:TCommPortErrorEvent;
-    FOnCommErrorWriting:TCommPortErrorEvent;
-    FOnCommPortOpened:TCommPortGenericError;
-    FOnCommPortClosed:TCommPortGenericError;
-    FOnCommPortDisconnected:TCommPortGenericError;
-    procedure DoSomething;
-    procedure WaitToDoSomething;
-    function  CanceledCallBack(CallBack:Pointer):Boolean;
-  protected
-    //: @exclude
-    procedure Execute; override;
-  public
-    {:
-    Cria uma nova thread de atualização de resultados de leitura/escrita.
-    @param(IniciarSuspensa Boolean. Caso @true a thread será criada suspensa
-           (parada). Para iniciar a execução da thread chame o método Resume.)
-    }
-    constructor Create(IniciarSuspensa:Boolean);
-    //: Destroi a thread de atualização e todos os seus recursos.
-    destructor Destroy; override;
-    //: Aguarda pela inicialização da thread de atualização.
-    procedure WaitInit;
-    //: Termina a execução da thread.
-    procedure Terminate;
-    {:
-    Da uma ordem de atualização de dados assincrona para thread, fazendo com que
-    ela chame o Callback e passe os resultados do pedido de leitura/escrita.
-    Não irá executar o comando caso o CallBack fornecido em CmdPacket esteja
-    cancelado.
-    @seealso(TCommandPacket)
-    @seealso(DoCancelCallBack)
-    @seealso(DoResumeCallBack)
-    }
-    procedure DoCallBack(CmdPacket:PCommandPacket);
-    {:
-    Suspende um método de CallBack a fim de evitar chamadas a endereços inválidos.
-    Quando um método é cancelado, todas as futuras chamadas feitas a ele não
-    serão mais realizadas até que o CallBack seja ativado novamente através de
-    DoResumeCallBack. @bold(É chamado através de TCommPortDriver.CancelCallBack)
-    @seealso(TDriverCallBack)
-    @seealso(TCommPortDriver.CancelCallBack)
-    @seealso(TCommPortDriver.ResumeCallBack)
-    }
-    procedure DoCancelCallBack(CallBack:TDriverCallBack);
-    {:
-    Ativa um método de CallBack para que este se torne novamente um endereço
-    válido.
-    @seealso(TDriverCallBack)
-    @seealso(TCommPortDriver.CancelCallBack)
-    @seealso(TCommPortDriver.ResumeCallBack)
-    }
-    procedure DoResumeCallBack(CallBack:TDriverCallBack);
-  end;
-
-  {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
   @name é responsável por notificar a aplicação e os drivers sobre erros de
   comunicação, abertura, fechamento e desconecção de uma porta de comunicação.
   É usado internamente por TCommPortDriver.
@@ -122,66 +49,6 @@ type
     procedure DoCommErrorEvent(Event:TCommPortErrorEvent; Error:TIOResult);
     //: Envia uma mensagem de evento porta aberta, fechada e disconectada para aplicação;
     procedure DoCommPortEvent(Event:TNotifyEvent);
-  end;
-
-  {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
-  Thread responsável por processar os pedidos de leitura/escrita.
-  }
-  TThreadComm = class(TCrossThread)
-  private
-    PInitEventHandle:TCrossEvent;
-    PDoSomethingEventHandle:TCrossEvent;
-    PIOCommand:TDriverCommand;
-    PneedSleep:Boolean;
-    PUpdater:TUpdateThread;
-    FSpool:TMessageSpool;
-    procedure CheckWriteCmd;
-    procedure DoSomething;
-    procedure WaitToDoSomething;
-  protected
-    //: @exclude
-    procedure Execute; override;
-    //: @exclude
-    procedure DoIOCommand(PMsg:TMSMsg; commandpacket:PCommandPacket);
-  public
-    {:
-    Cria uma nova thread de execução de pedidos de leitura/escrita.
-    É usada para processar os comandos de leitura/escrita assincronos de
-    TCommPortDriver.
-    @bold(Geralmente uma instância dessa classe é criada quando é criado
-          uma instância de TCommPortDriver).
-    @param(IniciarSuspensa Boolean. Caso @true a thread será criada suspensa
-           (parada). Para iniciar a execução da thread chame o método Resume.)
-    @param(Updater TUpdateThread. Informa a instância da thread responsável
-           por retornar os resultados dos comandos a quem fez o pedido de I/O.
-           Se @code(nil) for fornecido não haverá respostas dos resultados
-           dos comandos de leitura/escrita.)
-    @seealso(TUpdateThread)
-    @seealso(TCommPortDriver)
-    }
-    constructor Create(IniciarSuspensa:Boolean; Updater:TUpdateThread);
-    //: Destroi a thread de processamento de leitura/escrita e libera todos os seus recursos.
-    destructor Destroy; override;
-    //: Faz com que a thread termine a sua execução.
-    procedure Terminate;
-    {:
-    Coloca na fila um pedido de leitura/escrita.
-    Chamado por TCommPortDriver.IOCommandASync
-    @param(cmd TIOCommand. Grupo de comandos a realizar.)
-    @param(IsWriteCmd Boolean. Caso @true indica se é um comando de escrita, ou
-           seja, tem mais prioridade sobre os demais comandos sendo colocado
-           no inicio da fila.)
-    @param(Pkg PCommandPacket. Dados e retorno dos comandos.)
-    @seealso(OnIOCommand)
-    @seealso(TCommPortDriver.IOCommandASync)
-    }
-    procedure IOCmd(cmd:TIOCommand; IsWriteCmd:Boolean; Pkg:PCommandPacket);
-  published
-    //: Evento que deve ser informado para que os pedidos de leitura/escrita sejam realizados.
-    property OnIOCommand:TDriverCommand read PIOCommand write PIOCommand;
-    //: Evento criado no construtor Create e sinalizado no primeiro scan da thread.
-    property WInitEvent:TCrossEvent read PInitEventHandle;
   end;
 
   {:
@@ -222,8 +89,6 @@ type
     PPacketID:Cardinal;
     {: @exclude }
     FReadActive:Boolean;
-    {: @exclude }
-    PUpdater:TUpdateThread;
     {: @exclude }
     PEventUpdater:TEventNotificationThread;
     {: @exclude }
@@ -314,13 +179,6 @@ type
     PActive:Boolean;
     {: Variável responsável por armazenar se devem ser feitas limpezas após algum erro de comunicação }
     PClearBufOnErr:Boolean;
-    {:
-     Thread responsável por realizar os comandos de leitura/escrita. Para manter
-     compatibilidade com outros sistemas operacionais, evite fazer a suspensão
-     dela, pois em algums sistemas não é possível suspender uma thread que já
-     está rodando.
-    }
-    CommThread:TThreadComm;
     {:
     Array que armazena os drivers de protocolo dependentes.
     @seealso(TProtocolDriver)
@@ -469,35 +327,6 @@ type
                            Res1:TObject; Res2:Pointer):Cardinal;
 
     {:
-    Faz um pedido de leitura/escrita assincrono para o driver (sua aplicação
-    @bold(NÃO) espera todo o comando terminar para continuar). @bold(Retorna os
-    resultados também de maneira assincrona, sendo responsabilidade de quem o
-    chamou sincronizá-los.)
-    @param(Cmd TIOCommand. Informa a combinação de comandos de leitura/escrita a executar)
-    @param(ToWrite BYTES. Conteúdo que deseja escrever)
-    @param(BytesToRead Cardinal. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
-    @param(BytesToWrite Cardinal. Informa o número de @noAutoLink(bytes) a serem escritos)
-    @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
-           leitura e escrita)
-    @param(CallBack TDriverCallBack. Procedimento que será chamado para retorno
-           dos dados lidos/escritos)
-    @param(IsWriteValue Boolean. Caso @true informa ao driver se o conjunto de
-           comandos é pra escrita de dados, aumentando a prioridade de seu processamento.)
-    @return(Retorna o ID do pacote caso tenha exito. Retorna 0 (zero) caso o
-            componente esteja sendo destruido, a porta esteja fechada ou caso
-            o driver não consiga alocar memória para fazer o pedido.)
-    @raises(Exception caso o driver não tenha sido inicializado corretamente.)
-    @seealso(TIOCommand)
-    @seealso(BYTES)
-    @seealso(TDriverCallBack)
-    @seealso(IOCommandSync)
-    }
-    function IOCommandASync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
-                            BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
-                            CallBack:TDriverCallBack; IsWriteValue:Boolean;
-                            Res1:TObject; Res2:Pointer):Cardinal;
-
-    {:
     Trava a porta para uso exclusivo
     @param(DriverID Cardinal. Identifica o quem deseja obter uso exclusivo.)
     @returns(@true caso o função trave o driver para uso exclusivo, @false para o contrário)
@@ -512,25 +341,6 @@ type
     }
     function Unlock(DriverID:Cardinal):Boolean;
 
-    {:
-    Coloca um método na lista dos procedimentos cancelados, a fim de evitar chamadas a
-    métodos de objetos que foram destruidos. Só não faz isso caso o driver de porta
-    tenha sinalizado na propriedade ComponentState o flag csDestroying, ou seja,
-    também esteja sendo destuido.
-    @param(CallBack TDriverCallBack. Procedimento a ser inserido na lista de
-           cancelados)
-    @seealso(TDriverCallBack)
-    }
-    procedure CancelCallBack(CallBack:TDriverCallBack);
-
-    {:
-    Remove um método da lista dos procedimentos cancelados, fazendo com que esse
-    método seja chamado quando solicitado.
-    @param(CallBack TDriverCallBack. Procedimento a ser removido da lista de
-           métodos cancelados)
-    @seealso(TDriverCallBack)
-    }
-    procedure ResumeCallBack(CallBack:TDriverCallBack);
   published
     //:Se o valor da propriedade for @true, ativa (abre) a porta, caso contrário fecha.
     property Active:Boolean read PActive write SetActive stored true default false;
@@ -568,148 +378,6 @@ const
 implementation
 
 uses SysUtils, ProtocolDriver, hsstrings;
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//  DECLARAÇÃO DA THREAD DE CALLBACK
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TUpdateThread.Create(IniciarSuspensa:Boolean);
-begin
-  inherited Create(IniciarSuspensa);
-  Priority := tpHighest;
-  PInitEventHandle:=  TCrossEvent.Create(nil,true,false,'UPDATEThread'+IntToStr(UniqueID));
-  PDoSomethingEventHandle:=  TCrossEvent.Create(nil,true,false,'DoSomethingThread'+IntToStr(UniqueID));
-  FSpool := TMessageSpool.Create;
-  PCanceledCount:=0;
-end;
-
-destructor TUpdateThread.Destroy;
-begin
-  inherited Destroy;
-  PInitEventHandle.Destroy;
-  PDoSomethingEventHandle.Destroy;
-  FSpool.Destroy;
-end;
-
-procedure TUpdateThread.WaitInit;
-begin
-  if PInitEventHandle.WaitFor($FFFFFFFF)<>wrSignaled  then
-    raise Exception.Create(SUpdateThreadWinit);
-end;
-
-procedure TUpdateThread.Terminate;
-begin
-  inherited Terminate;
-  DoSomething;
-end;
-
-procedure TUpdateThread.Execute;
-var
-  c:integer;
-  found:Boolean;
-  dcallBack:Pointer;
-begin
-  PInitEventHandle.SetEvent;
-  while not Terminated do begin
-    try
-      WaitToDoSomething;
-      while FSpool.PeekMessage(PMsg,PSM_CALLBACK,PSM_CANCELCALLBACK,true) do begin
-        case PMsg.MsgID of
-          PSM_CALLBACK:
-          begin
-            PCmdPacket := PCommandPacket(PMsg.wParam);
-            if Assigned(PCmdPacket^.Callback) and (not CanceledCallBack(@PCmdPacket^.Callback)) then
-               PCmdPacket^.Callback(PCmdPacket^.Packet);
-            SetLength(PCmdPacket^.Packet.BufferToWrite, 0);
-            SetLength(PCmdPacket^.Packet.BufferToRead, 0);
-            Dispose(PCmdPacket);
-          end;
-          PSM_CANCELCALLBACK:
-          begin
-            found := false;
-            dcallBack := PMsg.wParam;
-            for c:=0 to High(PCanceledCallbacks) do
-              if dcallBack=PCanceledCallbacks[c] then begin
-                found := true;
-                break;
-              end;
-            if not found then begin
-              inc(PCanceledCount);
-              SetLength(PCanceledCallbacks,PCanceledCount);
-              PCanceledCallbacks[PCanceledCount-1] := dcallBack;
-            end;
-          end;
-          PSM_RESUMECALLBACK:
-          begin
-            found := false;
-            dcallBack := PMsg.wParam;
-            for c:=0 to High(PCanceledCallbacks) do
-              if dcallBack=PCanceledCallbacks[c] then begin
-                found := true;
-                break;
-              end;
-            if found then begin
-              PCanceledCallbacks[c] := PCanceledCallbacks[high(PCanceledCallbacks)];
-              PCanceledCount := PCanceledCount - 1;
-              SetLength(PCanceledCallbacks,PCanceledCount);
-            end;
-          end;
-        end;
-      end;
-    except
-      on e:Exception do begin
-        {$IFDEF FDEBUG}
-        DebugLn('Exception in UpdateThread: '+ E.Message);
-        DumpStack;
-        {$ENDIF}
-      end;
-    end;
-  end;
-end;
-
-procedure TUpdateThread.DoSomething;
-begin
-  //seta a thread para ela fazer algo!
-  PDoSomethingEventHandle.SetEvent;
-end;
-
-procedure TUpdateThread.WaitToDoSomething;
-begin
-  PDoSomethingEventHandle.WaitFor(1);
-  PDoSomethingEventHandle.ResetEvent;
-end;
-
-procedure TUpdateThread.DoCallBack(CmdPacket:PCommandPacket);
-begin
-  FSpool.PostMessage(PSM_CALLBACK,CmdPacket,nil,false);
-  DoSomething;
-end;
-
-procedure TUpdateThread.DoCancelCallBack(CallBack:TDriverCallBack);
-begin
-  FSpool.PostMessage(PSM_CANCELCALLBACK,@CallBack,nil,true);
-  DoSomething;
-end;
-
-procedure TUpdateThread.DoResumeCallBack(CallBack:TDriverCallBack);
-begin
-  FSpool.PostMessage(PSM_RESUMECALLBACK,@CallBack,nil,true);
-  DoSomething
-end;
-
-function TUpdateThread.CanceledCallBack(CallBack:Pointer):Boolean;
-var
-  c:Integer;
-begin
-  Result := false;
-  for c:=0 to High(PCanceledCallBacks) do
-    if PCanceledCallbacks[c]=CallBack then begin
-      Result := true;
-      break;
-    end;
-end;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -860,16 +528,6 @@ begin
   PEventUpdater:=TEventNotificationThread.Create(true, Self);
   PEventUpdater.Resume;
   PEventUpdater.WaitInit;
-
-  PUpdater := TUpdateThread.Create(True);
-  PUpdater.Priority:=tpHighest;
-  PUpdater.Resume;
-  PUpdater.WaitInit;
-
-  CommThread := TThreadComm.Create(true, PUpdater);
-  CommThread.Priority:=tpTimeCritical;
-  CommThread.OnIOCommand := InternalIOCommand;
-  CommThread.Resume;
 end;
 
 destructor TCommPortDriver.Destroy;
@@ -880,10 +538,8 @@ begin
     TProtocolDriver(Protocols[c]).CommunicationPort := nil;
   for c:=0 to High(EventInterfaces) do
     EventInterfaces[c].DoPortRemoved(self);
-  CommThread.Terminate;
-  CommThread.Destroy;
-  PUpdater.Terminate;
-  PUpdater.Destroy;
+  PEventUpdater.Terminate;
+  PEventUpdater.Destroy;
   Active := false;
   SetLength(Protocols,0);
   PIOCmdCS.Destroy;
@@ -1305,98 +961,6 @@ begin
   end;
 end;
 
-function TCommPortDriver.IOCommandASync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
-                           BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
-                           CallBack:TDriverCallBack; IsWriteValue:Boolean;
-                           Res1:TObject; Res2:Pointer):Cardinal;
-var
-  PCmdPackt:PCommandPacket;
-  InLockCS, InIOCmdCS:Boolean;
-begin
-  try
-    InLockCS:=false;
-    InIOCmdCS:=false;
-
-    if (csDestroying in ComponentState) or (FExclusiveDevice and (csDesigning in ComponentState)) then begin
-      Result := 0;
-      exit;
-    end;
-
-    //verify if another driver is the owner of the comm port...
-    PLockCS.Enter;
-    InLockCS:=true;
-    while (PLockedBy<>0) and (PLockedBy<>DriverID) do begin
-       PLockCS.Leave;
-       InLockCS:=false;
-       PLockEvent.WaitFor($FFFFFFFF);
-       PLockCS.Enter;
-       InLockCS:=true;
-    end;
-    InterLockedIncrement(PUnlocked);
-    PLockCS.Leave;
-    InLockCS:=false;
-
-    PIOCmdCS.Enter;
-    InIOCmdCS:=true;
-    Result := 0;
-    if not PActive then
-      exit;
-
-    //cria o pacote de dados
-    try
-      New(PCmdPackt);
-      if PCmdPackt=nil then exit;
-    except
-      exit;
-    end;
-
-    inc(PPacketID);
-
-    with PCmdPackt^ do begin
-      Packet.PacketID := PPacketID;
-      Packet.WriteIOResult := iorNone;
-      Packet.ToWrite := BytesToWrite;
-      Packet.Wrote := 0;
-      Packet.WriteRetries := 3;
-      Packet.BufferToWrite := ToWrite;
-      Packet.DelayBetweenCommand := DelayBetweenCmds;
-      Packet.ReadIOResult := iorNone;
-      Packet.ToRead := BytesToRead;
-      Packet.Received := 0;
-      Packet.ReadRetries := 3;
-      Packet.Res1 := Res1;
-      Packet.Res2 := Res2;
-      SetLength(Packet.BufferToRead,BytesToRead);
-    end;
-    PCmdPackt^.Callback := CallBack;
-
-    //espera a thread criar a fila de mensagens
-    if CommThread.WInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-      raise Exception.Create(SThreadSuspended);
-
-    CommThread.IOCmd(Cmd,IsWriteValue,PCmdPackt);
-
-    result := PPacketID;
-  finally
-    if InIOCmdCS then
-      PIOCmdCS.Leave;
-    if InLockCS then
-      PLockCS.Leave;
-    InterLockedDecrement(PUnlocked);
-  end;
-end;
-
-procedure TCommPortDriver.CancelCallBack(CallBack:TDriverCallBack);
-begin
-   if not (csDestroying in ComponentState) then
-      PUpdater.DoCancelCallBack(CallBack);
-end;
-
-procedure TCommPortDriver.ResumeCallBack(CallBack:TDriverCallBack);
-begin
-   PUpdater.DoResumeCallBack(CallBack);
-end;
-
 procedure TCommPortDriver.InternalIOCommand(cmd:TIOCommand; Packet:PIOPacket);
 begin
   try
@@ -1605,125 +1169,6 @@ begin
   finally
     FS.Free;
   end;
-end;
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-//  DECLARAÇÃO DA THREAD DE COMUNICAÇÃO
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
-constructor TThreadComm.Create(IniciarSuspensa:Boolean; Updater:TUpdateThread);
-var
-  id:string;
-begin
-  inherited Create(IniciarSuspensa);
-  Priority := tpHighest;
-  //cria o evento de espera de suspend (pausa na thread)
-  id := IntToStr(UniqueID);
-  FSpool := TMessageSpool.Create;
-  PInitEventHandle    := TCrossEvent.Create(nil,true,false,'InitCommThreadID' + id);
-  PDoSomethingEventHandle:=TCrossEvent.Create(nil,true,false,'DoSomethingCommThreadID' + id);
-  PUpdater := Updater;
-end;
-
-destructor TThreadComm.Destroy;
-begin
-  inherited Destroy;
-  PInitEventHandle.Destroy;
-  PDoSomethingEventHandle.Destroy;
-  FSpool.Destroy;
-end;
-
-procedure TThreadComm.Terminate;
-begin
-  inherited Terminate;
-  //seta para a thread fazer alguma coisa!
-  DoSomething;
-end;
-
-procedure TThreadComm.IOCmd(cmd:TIOCommand; IsWriteCmd:Boolean; Pkg:PCommandPacket);
-begin
-  FSpool.PostMessage(IOCommandToWindowsMessage(Cmd, IsWriteCmd), pkg,nil, IsWriteCmd);
-  DoSomething;
-end;
-
-procedure TThreadComm.Execute;
-var
-  commandpacket:PCommandPacket;
-  PMsg:TMSMsg;
-begin
-  //sinaliza q a fila de mensagens esta criada
-  PInitEventHandle.SetEvent;
-  while (not Terminated) do begin
-    try
-      WaitToDoSomething;
-      CheckWriteCmd;
-      while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_READ_READ,PSM_READ_WRITEREAD,true) do begin
-        CheckWriteCmd;
-        commandpacket := PCommandPacket(PMsg.wParam);
-        DoIOCommand(PMsg, commandpacket);
-      end;
-    except
-      on e:Exception do begin
-        {$IFDEF FDEBUG}
-        DebugLn('Exception in TThreadComm: '+ E.Message);
-        DumpStack;
-        {$ENDIF}
-      end;
-    end;
-  end;
-end;
-
-procedure TThreadComm.DoIOCommand(PMsg:TMSMsg; commandpacket:PCommandPacket);
-var
-   iocmd:TIOCommand;
-begin
-  iocmd := WindowsMessageToIOCommand(PMsg.MsgID);
-  if Assigned(PIOCommand) then begin
-    try
-      //se entrou aqui sinaliza que não é necessario dar sleep após as IOs
-      PneedSleep := false;
-      //executa o commando de io...
-      PIOCommand(iocmd, @commandpacket^.Packet);
-    except
-      if iocmd in [iocRead, iocReadWrite, iocWriteRead] then
-        commandpacket^.Packet.ReadIOResult := iorPortError;
-      if iocmd in [iocWrite, iocReadWrite, iocWriteRead] then
-        commandpacket^.Packet.WriteIOResult := iorPortError;
-    end;
-  end else begin
-    if iocmd in [iocRead, iocReadWrite, iocWriteRead] then
-      commandpacket^.Packet.ReadIOResult := iorPortError;
-    if iocmd in [iocWrite, iocReadWrite, iocWriteRead] then
-      commandpacket^.Packet.WriteIOResult := iorPortError;
-  end;
-
-  //passa o pacote para a thread updater fazer a atualização
-  PUpdater.DoCallBack(commandpacket);
-end;
-
-procedure TThreadComm.CheckWriteCmd;
-var
-  commandpacket:PCommandPacket;
-  PMsg:TMSMsg;
-begin
-  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_WRITE_READ,PSM_WRITE_WRITEREAD,true) do begin
-    commandpacket := PCommandPacket(PMsg.wParam);
-    DoIOCommand(PMsg, commandpacket);
-  end;
-end;
-
-procedure TThreadComm.DoSomething;
-begin
-  //seta para a thread fazer alguma coisa!
-  PDoSomethingEventHandle.SetEvent;
-end;
-
-procedure TThreadComm.WaitToDoSomething;
-begin
-  PDoSomethingEventHandle.WaitFor(1);
-  PDoSomethingEventHandle.ResetEvent;
 end;
 
 end.
