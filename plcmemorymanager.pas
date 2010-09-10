@@ -161,7 +161,7 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); virtual; overload;
+    procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); overload; virtual;
     {:
     Remove uma ou mais variáveis do gerenciador.
     @param(Address Cardinal. Endereço inicial do intervalo de memória(s).)
@@ -174,7 +174,7 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    procedure RemoveAddress(Address,Size,RegSize:Cardinal); virtual; overload;
+    procedure RemoveAddress(Address,Size,RegSize:Cardinal); overload; virtual;
     {:
     @name escreve valores em um intervalo de memórias, continuas ou não.
 

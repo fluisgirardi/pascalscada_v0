@@ -368,7 +368,7 @@ begin
     Ok := true;
     exit;
   end;
-  PPortEventName := Name+'_'+PPortName+'_'+IntToStr(CommThread.ThreadID);
+  PPortEventName := Name+'_'+PPortName;
 
   POverlapped.Offset := 0;
   POverlapped.OffsetHigh := 0;
