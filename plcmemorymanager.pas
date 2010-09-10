@@ -261,12 +261,19 @@ type
   private
     FMutex:TCriticalSection;
   public
+    //: @seealso(TPLCMemoryManager.Create)
     constructor Create; override;
+    //: @seealso(TPLCMemoryManager.Destroy)
     destructor Destroy; override;
+    //: @seealso(TPLCMemoryManager.AddAddress)
     procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); override;
+    //: @seealso(TPLCMemoryManager.RemoveAddress)
     procedure RemoveAddress(Address,Size,RegSize:Cardinal); override;
+    //: @seealso(TPLCMemoryManager.SetValues)
     function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer; override;
+    //: @seealso(TPLCMemoryManager.GetValues)
     function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer; override;
+    //: @seealso(TPLCMemoryManager.SetFault)
     procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult); override;
   end;
 
