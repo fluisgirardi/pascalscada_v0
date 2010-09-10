@@ -30,8 +30,6 @@ type
 
   TISOTCPDriver = class(TSiemensProtocolFamily)
   protected
-    FReadEvent,
-    FConnectEvent:TCrossEvent;
     FConnectionWay:TISOTCPConnectionWay;
     procedure SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
     function NotifyThisEvents: TNotifyThisEvents; override;
@@ -61,7 +59,6 @@ begin
   Inherited Create(AOwner);
   PDUIncoming:=7;
   PDUOutgoing:=7;
-  FConnectEvent:=TCrossEvent.Create(nil, true, false, Name+'_DID'+IntToStr(DriverID));
 end;
 
 function TISOTCPDriver.ConnectPLC(var CPU:TS7CPU):Boolean;
@@ -99,29 +96,26 @@ begin
   PrepareToSend(msg);
 
   try
-    FConnectEvent.ResetEvent;
-    res := PCommPort.IOCommandASync(iocWriteRead,msg,4,22,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
-    if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
+    res := PCommPort.IOCommandSync(iocWriteRead,msg,4,22,DriverID,0,CommPortCallBack,false,nil,@IOResult);
+    if (res=0) then exit;
     if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>4) then exit;
 
     len:= IOResult.BufferToRead[2]*$100 + IOResult.BufferToRead[3];
 
-    FConnectEvent.ResetEvent;
-    res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
-    if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
+    res := PCommPort.IOCommandSync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult);
+    if (res=0) then exit;
     if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>(len-4)) then exit;
 
     retries := 1;
     while (len<>22) and (retries<3) do begin
-      res := PCommPort.IOCommandASync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
-      if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
+      res := PCommPort.IOCommandSync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult);
+      if (res=0) then exit;
       if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>4) then exit;
 
       len:= IOResult.BufferToRead[2]*$100 + IOResult.BufferToRead[3];
 
-      FConnectEvent.ResetEvent;
-      res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult);
-      if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then exit;
+      res := PCommPort.IOCommandSync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult);
+      if (res=0) then exit;
       if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>(len-4)) then exit;
     end;
 
@@ -138,7 +132,6 @@ end;
 
 function TISOTCPDriver.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;
 var
-  x:TCrossEvent;
   res:Integer;
   retries, BytesRead:Integer;
   resget:TIOResult;
@@ -155,11 +148,9 @@ begin
 
   PrepareToSend(msgOut);
 
-  x:=TCrossEvent.Create(nil, true, false, 'exchange');
   try
-    res:=PCommPort.IOCommandASync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,IsWrite,x,nil);
+    res:=PCommPort.IOCommandSync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,IsWrite,nil,nil);
     if res=0 then exit;
-    if x.WaitFor($FFFFFFFF)<>wrSignaled then exit;
     retries:=0;
 
     resget := getResponse(msgIn, BytesRead);
@@ -175,24 +166,20 @@ begin
 
     Result:=BytesRead>ISOTCPMinPacketLen;
   finally
-    InternalEnterScanCS;
-    x.Destroy;
+
   end;
 end;
 
 function  TISOTCPDriver.getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult;
 var
   res, len:Integer;
-  FResponseEvent:TCrossEvent;
   IOResult1, IOResult2:TIOPacket;
 begin
   Result:=iorNotReady;
 
-  FResponseEvent:=TCrossEvent.Create(nil, true, false, 'response_event');
   try
-    FResponseEvent.ResetEvent;
-    res := PCommPort.IOCommandASync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,FResponseEvent,@IOResult1);
-    if (res=0) or (FResponseEvent.WaitFor($FFFFFFFF)<>wrSignaled) then begin
+    res := PCommPort.IOCommandSync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult1);
+    if (res=0) then begin
       BytesRead:=0;
       Result:=iorNotReady;
       exit;
@@ -210,9 +197,8 @@ begin
     //ou se serve pra algo, eu não sei.
     while len = 7 do begin
       //remove os outros 3 bytes que sobraram no buffer de leitura.
-      FResponseEvent.ResetEvent;
-      res := PCommPort.IOCommandASync(iocRead,nil,3,0,DriverID,0,CommPortCallBack,false,FResponseEvent,@IOResult2);
-      if (res=0) or (FResponseEvent.WaitFor($FFFFFFFF)<>wrSignaled) then  begin
+      res := PCommPort.IOCommandSync(iocRead,nil,3,0,DriverID,0,CommPortCallBack,false,nil,@IOResult2);
+      if (res=0) then  begin
         BytesRead:=0;
         Result:=iorNotReady;
         exit;
@@ -225,9 +211,8 @@ begin
       end;
 
       //le novamente...
-      FResponseEvent.ResetEvent;
-      res := PCommPort.IOCommandASync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,FResponseEvent,@IOResult1);
-      if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then begin
+      res := PCommPort.IOCommandSync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult1);
+      if (res=0) then begin
         BytesRead:=0;
         Result:=iorNotReady;
         exit;
@@ -242,9 +227,8 @@ begin
       len:= IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
     end;
 
-    FConnectEvent.ResetEvent;
-    res := PCommPort.IOCommandASync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,FConnectEvent,@IOResult2);
-    if (res=0) or (FConnectEvent.WaitFor($FFFFFFFF)<>wrSignaled) then begin
+    res := PCommPort.IOCommandSync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult2);
+    if (res=0) then begin
       BytesRead:=0;
       Result:=iorNotReady;
       exit;
@@ -270,7 +254,6 @@ begin
     SetLength(IOResult1.BufferToWrite,0);
     SetLength(IOResult2.BufferToRead,0);
     SetLength(IOResult2.BufferToWrite,0);
-    FResponseEvent.Destroy;
   end;
 end;
 

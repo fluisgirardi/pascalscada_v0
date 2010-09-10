@@ -854,14 +854,10 @@ begin
         if res<>0 then
           Result := DecodePkg(IOResult,values);
       end else begin
-        InternalLeaveScanCS;
         FReadEvent.ResetEvent;
         res := PCommPort.IOCommandASync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,FReadEvent,@IOResult);
-        if (res<>0) and (FReadEvent.WaitFor($FFFFFFFF)=wrSignaled) then begin
-          InternalEnterScanCS;
+        if (res<>0) and (FReadEvent.WaitFor($FFFFFFFF)=wrSignaled) then
           Result := DecodePkg(IOResult,values);
-        end else
-          InternalEnterScanCS;
       end;
     end else
       Result := ioNullDriver;
