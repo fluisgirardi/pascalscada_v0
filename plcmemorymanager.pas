@@ -124,7 +124,6 @@ type
     FAddress:array of TMemoryRec;
     FMaxHole:Integer;
     FMaxBlockSize:Integer;
-    FCriticalSection:TCriticalSection;
     procedure AddAddress(Add,Scan:Integer); overload;
     procedure RemoveAddress(Add:Integer); overload;
     procedure SetHoleSize(size:Integer);
@@ -140,7 +139,7 @@ type
     @param(memType TNumType. Informa qual é o tipo de dados que o bloco está
     gerenciando).
     }
-    constructor Create;
+    constructor Create; virtual;
     //: Destroi o gerenciador de blocos não continuos e todos os seus recursos.
     destructor Destroy; override;
     {:
@@ -162,7 +161,7 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); overload;
+    procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); virtual; overload;
     {:
     Remove uma ou mais variáveis do gerenciador.
     @param(Address Cardinal. Endereço inicial do intervalo de memória(s).)
@@ -175,7 +174,7 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    procedure RemoveAddress(Address,Size,RegSize:Cardinal); overload;
+    procedure RemoveAddress(Address,Size,RegSize:Cardinal); virtual; overload;
     {:
     @name escreve valores em um intervalo de memórias, continuas ou não.
 
@@ -202,7 +201,7 @@ type
     @seealso(RemoveAddress)
     @seealso(GetValues)
     }
-    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer;
+    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer; virtual;
     {:
     @name lê valores intervalo de memórias, continuas ou não.
 
@@ -217,7 +216,7 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer; virtual;
     {:
     @name escreve o status da última leitura, continuas ou não.
 
@@ -228,7 +227,7 @@ type
 
     @seealso(SetValues)
     }
-    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
+    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult); virtual;
   published
     {:
     Define quantos endereços podem ficar sem serem usados para manter a
@@ -258,6 +257,18 @@ type
     property Size:Integer read GetSize;
   end;
 
+  TPLCMemoryManagerSafe = class(TPLCMemoryManager)
+  private
+    FMutex:TCriticalSection;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+    procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); override;
+    procedure RemoveAddress(Address,Size,RegSize:Cardinal); override;
+    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer; override;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer; override;
+    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult); override;
+  end;
 
 implementation
 
@@ -322,7 +333,6 @@ end;
 
 constructor TPLCMemoryManager.Create;
 begin
-  FCriticalSection := TCriticalSection.Create;
   FMaxHole := 5; //o bloco continua caso de enderecos seja <= 5
   FMaxBlockSize := 0; //o bloco tem seu tamanho restrito a x, 0 = sem restricao!
 end;
@@ -334,7 +344,6 @@ begin
   for c:=0 to High(Blocks) do
     Blocks[c].Destroy;
   SetLength(Blocks,0);
-  FCriticalSection.Destroy;
 end;
 
 procedure TPLCMemoryManager.AddAddress(Add, Scan:Integer);
@@ -558,7 +567,6 @@ var
   c, items:Cardinal;
   len:Integer;
 begin
-  FCriticalSection.Enter;
   if (Size<=0) or (RegSize<=0) then
     raise Exception.Create(SsizeMustBeAtLeastOne);
 
@@ -575,7 +583,6 @@ begin
   //dipara o rebuild blocks, pq foram adicionados enderecos
   if len<>length(FAddress) then
     RebuildBlocks;
-  FCriticalSection.Leave;
 end;
 
 procedure TPLCMemoryManager.RemoveAddress(Address,Size,RegSize:Cardinal);
@@ -583,7 +590,6 @@ var
   c, items:Cardinal;
   len:Integer;
 begin
-  FCriticalSection.Enter;
   if (Size<=0) or (RegSize=0) then
     raise Exception.Create(SsizeMustBeAtLeastOne);
 
@@ -598,15 +604,12 @@ begin
   //dipara o rebuild blocks, pq foram adicionados enderecos
   if len<>length(FAddress) then
     RebuildBlocks;
-  FCriticalSection.Leave;
 end;
 
 function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer;
 var
   blk, AdrEnd, LenUtil, Moved:Integer;
 begin
-  FCriticalSection.Enter;
-
   AdrEnd := AdrStart + Length(Values) - 1;
   Moved:=0;
 
@@ -642,15 +645,12 @@ begin
     inc(Moved, LenUtil);
     if Moved>=Length(Values) then break;
   end;
-  FCriticalSection.Leave;
 end;
 
 procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
 var
   blk, AdrEnd, LenUtil:Integer;
 begin
-  FCriticalSection.Enter;
-
   AdrEnd := AdrStart + Len * RegSize - 1;
 
   for blk := 0 to High(Blocks) do begin
@@ -669,17 +669,12 @@ begin
       end;
     end;
   end;
-
-
-  FCriticalSection.Leave;
 end;
 
 function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
 var
   blk, AdrEnd, LenUtil, Moved:Integer;
 begin
-  FCriticalSection.Enter;
-
   AdrEnd := AdrStart + Length(Values) - 1;
   Moved:=0;
 
@@ -711,7 +706,68 @@ begin
     inc(Moved, LenUtil);
     if Moved>=Length(Values) then break;
   end;
-  FCriticalSection.Leave;
+end;
+
+constructor TPLCMemoryManagerSafe.Create;
+begin
+  inherited Create;
+  FMutex:=TCriticalSection.Create;
+end;
+
+destructor  TPLCMemoryManagerSafe.Destroy;
+begin
+  inherited Destroy;
+  FMutex.Destroy;
+end;
+
+procedure   TPLCMemoryManagerSafe.AddAddress(Address,Size,RegSize,Scan:Cardinal);
+begin
+  try
+    FMutex.Enter;
+    inherited AddAddress(Address,Size,RegSize,Scan);
+  finally
+    FMutex.Leave;
+  end;
+end;
+
+procedure   TPLCMemoryManagerSafe.RemoveAddress(Address,Size,RegSize:Cardinal);
+begin
+  try
+    FMutex.Enter;
+    inherited RemoveAddress(Address,Size,RegSize);
+  finally
+    FMutex.Leave;
+  end;
+end;
+
+function    TPLCMemoryManagerSafe.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer;
+begin
+  try
+    FMutex.Enter;
+    Result := inherited SetValues(AdrStart, Len, RegSize, Values, LastResult);
+  finally
+    FMutex.Leave;
+  end;
+end;
+
+function    TPLCMemoryManagerSafe.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
+begin
+  try
+    FMutex.Enter;
+    Result := inherited GetValues(AdrStart, Len, RegSize, Values, LastResult, ValueTimeStamp);
+  finally
+    FMutex.Leave;
+  end;
+end;
+
+procedure   TPLCMemoryManagerSafe.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
+begin
+  try
+    FMutex.Enter;
+    inherited SetFault(AdrStart, Len, RegSize, Fault);
+  finally
+    FMutex.Leave;
+  end;
 end;
 
 end.
