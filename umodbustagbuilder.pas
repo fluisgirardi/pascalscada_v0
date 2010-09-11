@@ -101,7 +101,6 @@ type
     CurItem:TTagNamesItemEditor;
     constructor Create(nomes:Strings);
     destructor Destroy; override;
-    procedure AfterConstruction; override;
   end;
 
 var
@@ -315,11 +314,6 @@ begin
   inherited Destroy;
 end;
 
-procedure TfrmModbusTagBuilder.AfterConstruction;
-begin
-  Button1Click(Self);
-end;
-
 procedure TfrmModbusTagBuilder.PageControl1Change(Sender: TObject);
 begin
   btnPrior.Enabled:=PageControl1.TabIndex<>0;
@@ -460,4 +454,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.
