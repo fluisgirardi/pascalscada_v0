@@ -101,6 +101,7 @@ type
     CurItem:TTagNamesItemEditor;
     constructor Create(nomes:Strings);
     destructor Destroy; override;
+    procedure AfterConstruction; override;
   end;
 
 var
@@ -312,6 +313,12 @@ begin
      CurItem:=item;
   end;
   inherited Destroy;
+end;
+
+procedure TfrmModbusTagBuilder.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  Button1Click(Self);
 end;
 
 procedure TfrmModbusTagBuilder.PageControl1Change(Sender: TObject);
