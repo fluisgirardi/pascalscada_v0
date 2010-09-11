@@ -4,7 +4,7 @@ object Form1: TForm1
   Top = 119
   Width = 884
   ActiveControl = HMIEdit1
-  Caption = 'Form1'
+  Caption = 'IsoTCP Test'
   ClientHeight = 427
   ClientWidth = 884
   OnCreate = FormCreate
@@ -282,136 +282,6 @@ object Form1: TForm1
     Alignment = taCenter
     AutoSize = False
     Caption = 'DWORD 36'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label14: TLabel
-    Left = 200
-    Height = 19
-    Top = 88
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 0'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label15: TLabel
-    Left = 200
-    Height = 19
-    Top = 112
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 4'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label16: TLabel
-    Left = 200
-    Height = 19
-    Top = 136
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 8'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label17: TLabel
-    Left = 200
-    Height = 19
-    Top = 160
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 12'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label18: TLabel
-    Left = 200
-    Height = 19
-    Top = 184
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 16'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label19: TLabel
-    Left = 200
-    Height = 19
-    Top = 208
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 20'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label20: TLabel
-    Left = 200
-    Height = 19
-    Top = 232
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 24'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label21: TLabel
-    Left = 200
-    Height = 19
-    Top = 256
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 28'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label22: TLabel
-    Left = 200
-    Height = 19
-    Top = 280
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 32'
-    Font.Style = [fsBold]
-    Layout = tlCenter
-    ParentColor = False
-    ParentFont = False
-  end
-  object Label23: TLabel
-    Left = 200
-    Height = 19
-    Top = 304
-    Width = 80
-    Alignment = taCenter
-    AutoSize = False
-    Caption = 'Float 36'
     Font.Style = [fsBold]
     Layout = tlCenter
     ParentColor = False
@@ -1623,6 +1493,136 @@ object Form1: TForm1
     Caption = 'QB'
     OnClick = RadioButton1Click
     TabOrder = 36
+  end
+  object Label14: TLabel
+    Left = 200
+    Height = 19
+    Top = 88
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 0'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label15: TLabel
+    Left = 200
+    Height = 19
+    Top = 112
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 4'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label16: TLabel
+    Left = 200
+    Height = 19
+    Top = 136
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 8'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label17: TLabel
+    Left = 200
+    Height = 19
+    Top = 160
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 12'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label18: TLabel
+    Left = 200
+    Height = 19
+    Top = 184
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 16'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label19: TLabel
+    Left = 200
+    Height = 19
+    Top = 208
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 20'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label20: TLabel
+    Left = 200
+    Height = 19
+    Top = 232
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 24'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label21: TLabel
+    Left = 200
+    Height = 19
+    Top = 256
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 28'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label22: TLabel
+    Left = 200
+    Height = 19
+    Top = 280
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 32'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label23: TLabel
+    Left = 200
+    Height = 19
+    Top = 304
+    Width = 80
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'DWORD 36'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentColor = False
+    ParentFont = False
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
