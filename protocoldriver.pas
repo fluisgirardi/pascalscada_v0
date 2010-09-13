@@ -168,25 +168,13 @@ type
     @param(TagObj TTag. Tag a adicionar como dependente do driver.)
     @seealso(AddTag)
     }
-    procedure DoAddTag(TagObj:TTag); virtual;
+    procedure DoAddTag(TagObj:TTag; TagValid:Boolean); virtual;
     {:
     Método chamado pelo driver de protocolo para remover um tag do scan do driver.
     @param(TagObj TTag. Tag dependente para remover do driver.)
     @seealso(RemoveTag)
     }
     procedure DoDelTag(TagObj:TTag); virtual;
-    {:
-    Método chamado pelo driver de protocolo para atualizar as informações a
-    respeito de um tag quando este tem alguma propriedade alterada.
-
-    @param(TagObj TTag. Tag quem sofreu a mudança.)
-    @param(Change TChangeType. Que propriedade sofreu a alteração.)
-    @param(oldValue Cardinal. Valor antigo da propriedade.)
-    @param(newValue Cardinal. Novo valor da propriedade.)
-    @seealso(TagChanges)
-    }
-    procedure DoTagChange(TagObj:TTag; Change:TChangeType; oldValue, newValue:Integer); virtual; abstract;
-
 
     {:
     Método chamado pelas threads do driver de protocolo para realizar leitura dos
@@ -496,7 +484,7 @@ begin
   end;
 end;
 
-procedure TProtocolDriver.DoAddTag(TagObj:TTag);
+procedure TProtocolDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
   c:integer;
 begin
@@ -507,6 +495,8 @@ begin
   c:=Length(Ptags);
   SetLength(PTags,c+1);
   PTags[c] := TagObj;
+
+  (TagObj as IScanableTagInterface).SetTagValidity(TagValid);
 end;
 
 procedure TProtocolDriver.DoDelTag(TagObj:TTag);
@@ -525,6 +515,7 @@ begin
       break;
     end;
   if found then begin
+    (PTags[c] as IScanableTagInterface).SetTagValidity(false);
     PTags[c] := PTags[h];
     SetLength(PTags,h);
   end;
@@ -532,10 +523,13 @@ end;
 
 procedure TProtocolDriver.AddTag(TagObj:TTag);
 begin
+  if not Supports(TagObj, IScanableTagInterface) then
+    raise Exception.Create(SScanableNotSupported);
+
   try
     FPause.ResetEvent;
     FCritical.Beginwrite;
-    DoAddTag(TagObj);
+    DoAddTag(TagObj,false);
   finally
     FCritical.Endwrite;
     FPause.SetEvent;

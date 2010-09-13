@@ -68,7 +68,7 @@ type
 
 implementation
 
-uses ubitmapper, Controls, TagBit;
+uses ubitmapper, Controls, TagBit, tag;
 
 destructor TPLCNumber.Destroy;
 begin

@@ -128,7 +128,7 @@ type
     function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult; virtual; 
 
     //: @seealso(TProtocolDriver.DoAddTag)
-    procedure DoAddTag(TagObj:TTag); override;
+    procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
     //: @seealso(TProtocolDriver.DoDelTag)
     procedure DoDelTag(TagObj:TTag); override;
 
@@ -242,10 +242,10 @@ begin
   end;
 end;
 
-procedure TModBusDriver.DoAddTag(TagObj:TTag);
+procedure TModBusDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
   station, mem, size, memtype, scantime:Integer;
-  found:boolean;
+  found, valido:boolean;
   plc:integer;
 begin
   //Recupera as informações do tag;
@@ -254,6 +254,7 @@ begin
   size:=0;
   memtype:=0;
   scantime:=0;
+  valido:=false;
 
   found := GetTagProperts(TagObj,station,mem,size,memtype,scantime);
 
@@ -285,6 +286,8 @@ begin
         PModbusPLC[plc].AnalogReg.MaxHole := PRegistersMaxHole;
       end;
 
+      valido := (memtype in [1..4]);
+
       case memtype of
         1:
           PModbusPLC[plc].OutPuts.AddAddress(mem,size,1,scantime);
@@ -296,7 +299,7 @@ begin
           PModbusPLC[plc].AnalogReg.AddAddress(mem,size,1,scantime);
       end;
     end;
-  inherited DoAddTag(TagObj);
+  inherited DoAddTag(TagObj, valido);
 end;
 
 procedure TModBusDriver.DoDelTag(TagObj:TTag);

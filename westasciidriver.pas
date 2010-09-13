@@ -153,7 +153,7 @@ type
 
   protected
     //: @seealso(TProtocolDriver.DoAddTag)
-{d} procedure DoAddTag(TagObj:TTag); override;
+{d} procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
     //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoDelTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoAddTag)
@@ -199,16 +199,18 @@ begin
   SetLength(FWestDevices,0);
 end;
 
-procedure TWestASCIIDriver.DoAddTag(TagObj:TTag);
+procedure TWestASCIIDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
   plc, scanRate:Integer;
-  foundplc, foundScanRate:boolean;
+  foundplc, foundScanRate, valido:boolean;
   plctagobj:TPLCTagNumber;
 begin
   if not (TagObj is TPLCTagNumber) then
     raise Exception.Create(SonlyPLCTagNumber);
 
   plctagobj:=TPLCTagNumber(TagObj);
+
+  valido:=false;
 
   //se for um tag válido, registra ele no scan. senão só o coloca na lista de
   //tags dependentes...
@@ -246,10 +248,12 @@ begin
       end;
 
     with FWestDevices[plc].Registers[plctagobj.MemAddress] do
-     MinScanTime:=Min(MinScanTime, plctagobj.RefreshTime);
+      MinScanTime:=Min(MinScanTime, plctagobj.RefreshTime);
+
+    valido:=true;
   end;
 
-  inherited DoAddTag(TagObj);
+  inherited DoAddTag(TagObj, valido);
 
 end;
 

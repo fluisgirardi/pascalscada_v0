@@ -20,7 +20,6 @@ type
   }
   TPLCTag = class(TTag, IManagedTagInterface)
   private
-    CScanTimer:TTimer;
     FRawProtocolValues:TArrayOfDouble;
     FTotalTime, FReadCount:Int64;
     FFirtsRead:Boolean;
@@ -29,6 +28,11 @@ type
     procedure RebuildTagGUID;
     procedure GetNewProtocolTagSize;
     function  GetTagSizeOnProtocol:Integer;
+  protected
+    PValidTag:Boolean;
+    function RemainingMiliseconds:Integer; virtual;
+    function IsValidTag:Boolean; virtual;
+    procedure SetTagValidity(TagValidity:Boolean); virtual;
   protected
     //: Referencia ao objeto gerenciador de tags.
     FTagManager:TObject;
@@ -238,8 +242,6 @@ type
     property ProtocolDriver:TProtocolDriver read PProtocolDriver write SetProtocolDriver;
     //: Data/Hora em que o valor do tag foi atualizado.
     property ValueTimestamp:TDateTime read PValueTimeStamp;
-    //: Evento chamado pelo timer (TTimer interno) para atualizar o valor do tag.
-    procedure DoScanTimerEvent(Sender:TObject);
     //: A escrita do tag deve ser sincrona
     property SyncWrites:Boolean read FSyncWrites write FSyncWrites default false ;
 
@@ -313,6 +315,7 @@ begin
   inherited Create(AOwner);
   PAutoRead:=true;
   PAutoWrite:=true;
+  PValidTag:=false;
   PCommReadErrors:=0;
   PCommReadOK:=0;
   PCommWriteErrors:=0;
@@ -338,16 +341,12 @@ begin
   FTotalTime:=0;
   FTotalDelay:=0;
   PProtocolDriver:=nil;
-  CScanTimer := TTimer.Create(self);
-  CScanTimer.Enabled:=false;
-  CScanTimer.OnTimer := DoScanTimerEvent;
   FTagManager := GetTagManager;
   SetLength(FRawProtocolValues,1);
 end;
 
 destructor TPLCTag.Destroy;
 begin
-  CScanTimer.Destroy;
   if PProtocolDriver<>nil then
     PProtocolDriver.RemoveTag(self);
   PProtocolDriver := nil;
@@ -429,8 +428,6 @@ end;
 procedure TPLCTag.SetAutoRead(v:Boolean);
 begin
   PAutoRead := v;
-  if (CScanTimer<>nil) And ([csReading,csLoading]*ComponentState=[]) then
-    CScanTimer.Enabled := v;
 
   if (PProtocolDriver<>nil) then begin
     if v then
@@ -577,20 +574,12 @@ begin
     PProtocolDriver.RemoveTag(Self);
 
   PScanTime := v;
-  CScanTimer.Interval := v;
 
   if PProtocolDriver<>nil then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
     GetNewProtocolTagSize;
-end;
-
-procedure TPLCTag.DoScanTimerEvent(Sender:TObject);
-begin
-  if ComponentState*[csReading,csLoading]<>[] then exit;
-  if PProtocolDriver<>nil then
-    ScanRead;
 end;
 
 procedure TPLCTag.BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
@@ -664,7 +653,6 @@ begin
   inherited Loaded;
 
   ProtocolDriver:=FProtocoloOnLoading;
-  CScanTimer.Enabled:=PAutoRead;
 
   if PProtocolDriver=nil then begin
     olddriver:=PProtocolDriver;
@@ -1189,6 +1177,21 @@ begin
     Result:=-1
   else
     Result:=FTotalDelay/FReqCount;
+end;
+
+function TPLCTag.RemainingMiliseconds:Integer;
+begin
+  Result:=PScanTime-MilliSecondsBetween(Now,PValueTimeStamp);
+end;
+
+function TPLCTag.IsValidTag:Boolean;
+begin
+  Result:=PValidTag;
+end;
+
+procedure TPLCTag.SetTagValidity(TagValidity:Boolean);
+begin
+  PValidTag:=TagValidity;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

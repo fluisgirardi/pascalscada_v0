@@ -77,6 +77,7 @@ resourcestring
   SGetP0 = 'Gets initial position';
   SGetP1 = 'Gets final position';
   SGotoP0 = 'Controls go to P0 position';
+  SScanableNotSupported = 'Interface IScanableTagInterface não é suportada!';
 
 implementation
 

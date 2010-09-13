@@ -22,6 +22,128 @@ type
 
   TRefreshTime = 1..$7FFFFFFF;
 
+  //: Array dinamico de valores flutuantes.
+  TArrayOfDouble = array of double;
+  //: Ponteiro para um array dinamico de pontos flutuantes.
+  PArrayOfDouble = ^TArrayOfDouble;
+
+  {:
+  Enumera todos os possíveis tamanhos de palavras dos tags.
+  @value(pttDefault  Tamanho e tipo de dados dependentes das configuração do tag.)
+  @value(pttByte     Inteiro de 8 bits sem sinal.)
+  @value(pttShortInt Inteiro de 16 bits COM sinal.)
+  @value(pttWord,    Inteiro de 16 bits SEM sinal.)
+  @value(pttInteger  Inteiro de 32 bits COM sinal.)
+  @value(pttDWord,   Inteiro de 32 bits SEM sinal.)
+  @value(pttFloat    Flutuante de 32 bits.)
+  }
+  TTagType = (pttDefault,                    //size variable
+              pttByte,                       //8 bits
+              pttShortInt, pttWord,          //16 bits
+              pttInteger, pttDWord, pttFloat //32 bits
+             );
+
+  {:
+  Enumera os possíveis tipos de comandos aceitos pelo driver de protocolo (TProtocolDriver).
+
+  @value(tcScanRead        Leitura de valor através do scan do driver de protocolo (assincrona).)
+  @value(tcScanWrite       Escrita de valor através do scan do driver de protocolo (assincrona).)
+  @value(tcRead            Leitura de valor direta (sincrona).)
+  @value(tcWrite           Escrita de valor direta (sincrona).)
+  @value(tcInternalUpdate  Comando interno de atualização.)
+  }
+  TTagCommand = (tcScanRead, tcScanWrite, tcRead, tcWrite, tcInternalUpdate);
+
+  {:
+  Enumera todos os possíveis resultados de um pedido de leitura/escrita de um
+  tag para um driver de protocolo (TProtocolDriver).
+
+  @value(ioDriverError            Erro interno do driver.)
+  @value(ioCommError              Erro de comunicação.)
+  @value(ioOk                     Comando com sucesso.)
+  @value(ioTimeout                Timeout de comunicação.)
+  @value(ioIllegalFunction        Função de IO inválida.)
+  @value(ioIllegalRegAddress      O endereco da memória é inválido.)
+  @value(ioIllegalValue           O valor é inválido.)
+  @value(ioPLCError               Erro no equipamento.)
+  @value(ioTagError               Erro interno do Tag.)
+  @value(ioNullDriver             Tag SEM DRIVER.)
+  @value(ioIllegalStationAddress  Endereço do equipamento é inválido.)
+  @value(ioIllegalRequest         Requisição inválida ou não suportada.)
+  @value(ioObjectNotExists        O objeto requisitado não existe.)
+  @value(ioIllegalMemoryAddress   O inicio ou o fim da requisição estão fora do espaço de endereços do equipamento.)
+  @value(ioUnknownError           Um código de erro desconhecido foi retornado.)
+  @value(ioEmptyPacket            Um pacote vazio (sem dados) foi retornado.)
+  @value(ioPartialOk              Uma ação teve sucesso parcial.)
+  }
+  TProtocolIOResult = (ioNone, ioDriverError, ioCommError, ioOk, ioTimeOut,
+                       ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
+                       ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
+                       ioIllegalStationAddress, ioObjectNotExists,
+                       ioIllegalMemoryAddress, ioUnknownError, ioEmptyPacket,
+                       ioPartialOk);
+
+  {:
+  Callback chamado pelo driver de protocolo (TProtocolDriver) para retornar o
+  resultado de uma solicitação e os respectivos valores.
+  @param(Values TArrayOfDouble: Array com os valores lidos/escritos.)
+  @param(ValuesTimeStamp TDateTime: Data/Hora em que esses valores foram lidos/escritos.)
+  @param(TagCommand TTagCommand: Tipo de comando.)
+  @param(LastResult TProtocolIOResult: Resultado do driver ao processar o pedido.)
+  @param(Offset Cardinal: Posição dentro do bloco onde os valores começam.)
+  }
+  TTagCommandCallBack = procedure(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:Integer) of object;
+
+  TScanUpdateRec = record
+    CallBack:TTagCommandCallBack;
+    ValueTimeStamp:TDateTime;
+    LastResult:TProtocolIOResult;
+    Values:TArrayOfDouble;
+  end;
+
+  TArrayOfScanUpdateRec = array of TScanUpdateRec;
+
+  {:
+  Estrutura usada internamente pelos drivers de protocolo (TProtocolDriver) para
+  realizar leituras e escritas por Scan. Representa a configuração do tag que
+  está sendo tratado.
+
+  @member Hack Valor da propriedade PLCHack.
+  @member Slot Valor da propriedade PLCSlot.
+  @member Station Valor da propriedade PLCStation.
+  @member File_DB Valor da propriedade MemFile_DB.
+  @member Address Valor da propriedade MemAddress.
+  @member SubElement Valor da propriedade MemSubElement.
+  @member Size Valor da propriedade Size (Tags Blocos).
+  @member OffSet Indice do bloco (Tags Blocos).
+  @member Path Valor da propriedade LongAddress.
+  @member ReadFunction Valor da propriedade MemReadFunction.
+  @member WriteFunction Valor da propriedade MemWriteFunction.
+  @member Retries Valor da propriedade Retries.
+  @member ScanTime Valor da propriedade RefreshTime.
+  @member CallBack Procedimento que será chamado quando o comando for completado.
+  }
+  TTagRec = record
+    Hack:Integer;
+    Slot:Integer;
+    Station:Integer;
+    File_DB:Integer;
+    Address:Integer;
+    SubElement:Integer;
+    Size:Integer;
+    OffSet:Integer;
+    RealOffset:Integer;
+    Path:String;
+    ReadFunction:Integer;
+    WriteFunction:Integer;
+    Retries:Integer;
+    ScanTime:Integer;
+    CallBack:TTagCommandCallBack;
+  end;
+
+  //: Aponta para uma estrutura de Tag.
+  PTagRec = ^TTagRec;
+
   //: Interface de notificação de eventos do tag.
   IHMITagInterface = interface
     ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
@@ -45,6 +167,14 @@ type
   IManagedTagInterface = interface
     ['{5CC728FD-B75F-475E-BDE7-07A862B6B2B6}']
     procedure RebuildTagGUID;
+  end;
+
+  IScanableTagInterface = interface
+    ['{6D57805C-D779-4607-BDA5-DF8A68F49973}']
+    function RemainingMiliseconds:Integer;
+    function IsValidTag:Boolean;
+    procedure SetTagValidity(TagValidity:Boolean);
+    procedure BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
   end;
 
   //: Classe base para todos os tags.

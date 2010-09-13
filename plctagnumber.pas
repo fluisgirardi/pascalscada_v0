@@ -11,14 +11,14 @@ unit PLCTagNumber;
 interface
 
 uses
-  SysUtils, Classes, PLCNumber, ProtocolTypes, variants;
+  SysUtils, Classes, Tag, PLCNumber, ProtocolTypes, variants;
 
 type
   {:
   @abstract(Tag numérico com comunicação individual.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
   }
-  TPLCTagNumber = class(TPLCNumber, ITagInterface, ITagNumeric)
+  TPLCTagNumber = class(TPLCNumber, IScanableTagInterface, ITagInterface, ITagNumeric)
   private
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;

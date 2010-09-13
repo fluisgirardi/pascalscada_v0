@@ -10,7 +10,7 @@ unit PLCMemoryManager;
 
 interface
 
-uses SysUtils, DateUtils, hsutils, ProtocolTypes, SyncObjs, Classes;
+uses SysUtils, DateUtils, hsutils, Tag, ProtocolTypes, SyncObjs, Classes;
 
 type
   {:

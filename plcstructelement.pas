@@ -7,7 +7,7 @@ unit PLCStructElement;
 interface
 
 uses
-  Classes, sysutils, PLCTag, PLCBlockElement, ProtocolTypes, PLCStruct;
+  Classes, sysutils, Tag, PLCTag, PLCBlockElement, ProtocolTypes, PLCStruct;
 
 type
   TPLCStructItem = class(TPLCBlockElement, ITagInterface, ITagNumeric)
@@ -39,7 +39,7 @@ type
 
 implementation
 
-uses Tag, ProtocolDriver, hsstrings;
+uses ProtocolDriver, hsstrings;
 
 constructor TPLCStructItem.Create(AOwner:TComponent);
 begin

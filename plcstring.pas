@@ -11,7 +11,7 @@ unit PLCString;
 interface
 
 uses
-  SysUtils, Classes, TagBlock, ProtocolTypes, ProtocolDriver, Math,
+  SysUtils, Classes, Tag, TagBlock, ProtocolTypes, ProtocolDriver, Math,
   hsutils;
 
 type
@@ -29,7 +29,7 @@ type
   @abstract(Tag de comunicação em formato String.)
   @author(Fabio Luis Girardi papelhigienico@gmail.com)
   }
-  TPLCString = class(TTagBlock, ITagInterface, ITagString)
+  TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private
     PValue:String;
     PByteSize:Byte;

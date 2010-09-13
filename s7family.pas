@@ -109,7 +109,7 @@ type
     function  BytesToDoubles(const ByteSeq:BYTES; Start, Len:Integer):TArrayOfDouble;
     function  CreateCPU(iHack, iSlot, iStation:Integer):integer; virtual;
 {ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
-{ok}procedure DoAddTag(TagObj:TTag); override;
+{ok}procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
 {ok}procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
 {ok}procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -736,14 +736,16 @@ begin
   end;
 end;
 
-procedure TSiemensProtocolFamily.DoAddTag(TagObj:TTag);
+procedure TSiemensProtocolFamily.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
   plc, db:integer;
   tr:TTagRec;
-  foundplc, founddb:Boolean;
+  foundplc, founddb, valido:Boolean;
 begin
   tr:=GetTagInfo(TagObj);
   foundplc:=false;
+
+  valido:=true;
 
   for plc := 0 to High(FCPUs) do
     if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
@@ -793,9 +795,11 @@ begin
       FCPUs[plc].AnInput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     9:
       FCPUs[plc].AnOutput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+    else
+      valido:=false;
   end;
 
-  Inherited DoAddTag(TagObj);
+  Inherited DoAddTag(TagObj, valido);
 end;
 
 procedure TSiemensProtocolFamily.DoDelTag(TagObj:TTag);

@@ -14,7 +14,7 @@ unit protscanupdate;
 interface
 
 uses
-  Classes, SysUtils, CrossEvent, ProtocolTypes, MessageSpool, syncobjs;
+  Classes, SysUtils, CrossEvent, ProtocolTypes, MessageSpool, syncobjs, tag;
 
 type
 
@@ -40,7 +40,7 @@ type
     procedure SyncException;
     procedure DoSomething;
     procedure WaitToDoSomething;
-    procedure CheckScanWrite;
+    procedure CheckScanReadOrWrite;
     function  WaitEnd(timeout:Cardinal):TWaitResult;
   protected
     //: @exclude
@@ -50,8 +50,6 @@ type
     constructor Create(StartSuspended:Boolean);
     //: @exclude
     destructor Destroy; override;
-    //: Ao chamar @name, espera a thread sinalizar a sua inicialização.
-    procedure WaitInit;
     //: Sinaliza para thread Terminar.
     procedure Terminate;
     {:
@@ -120,53 +118,24 @@ begin
 end;
 
 procedure TScanUpdate.Execute;
-var
-  PMsg:TMSMsg;
+
 begin
-   //sinaliza q a fila de mensagens esta criada
-   FInitEvent.SetEvent;
    while not Terminated do begin
-      WaitToDoSomething;
-      while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANREAD,PSM_TAGSCANREAD,true) do begin
-         try
-            CheckScanWrite;
+     try
+        CheckScanReadOrWrite;
 
-            FTagRec := PTagRec(PMsg.wParam);
-            TagCBack:=FTagRec^.CallBack;
-            Fvalues.Offset:=FTagRec^.OffSet;
-            Fvalues.RealOffset:=FTagRec^.RealOffset;
-
-            if Assigned(PGetValues) then begin
-              PGetValues(FTagRec^, Fvalues)
-            end else
-               Fvalues.LastQueryResult := ioDriverError;
-
-            FCmd:=tcScanRead;
-
-            Synchronize(SyncCallBack);
-
-            //libera a memoria ocupada pelos pacotes
-            SetLength(Fvalues.Values, 0);
-            Dispose(FTagRec);
-            TagCBack:=nil;
-         except
-            on E: Exception do begin
-               {$IFDEF FDEBUG}
-               DebugLn('TScanUpdate.Execute:: ' + e.Message);
-               DumpStack;
-               {$ENDIF}
-               Ferro := E;
-               Synchronize(SyncException);
-            end;
-         end;
-      end;
+     except
+       on E: Exception do begin
+         {$IFDEF FDEBUG}
+         DebugLn('TScanUpdate.Execute:: ' + e.Message);
+         DumpStack;
+         {$ENDIF}
+         Ferro := E;
+         Synchronize(SyncException);
+       end;
+     end;
    end;
    FEnd.SetEvent;
-end;
-
-procedure TScanUpdate.WaitInit;
-begin
-  while FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled do ;
 end;
 
 procedure TScanUpdate.ScanRead(Tag:TTagRec);
@@ -210,32 +179,66 @@ begin
   FDoSomethingEvent.WaitFor(1);
 end;
 
-procedure TScanUpdate.CheckScanWrite;
+procedure TScanUpdate.CheckScanReadOrWrite;
 var
   x:PScanWriteRec;
   PMsg:TMSMsg;
 begin
-   while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_TAGSCANWRITE,true) do begin
-      //recupera o pacote
-      x := PScanWriteRec(PMsg.wParam);
+  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANREAD,PSM_TAGSCANWRITE,true) do begin
+    try
+      case PMsg.MsgID of
+        PSM_TAGSCANWRITE: begin
+          x := PScanWriteRec(PMsg.wParam);
 
-      TagCBack                := x^.Tag.CallBack;
-      Fvalues.Values          := x^.ValuesToWrite;
-      Fvalues.Offset          := x^.Tag.OffSet;
-      Fvalues.RealOffset      := x^.Tag.RealOffset;
-      Fvalues.ValuesTimestamp := x^.ValueTimeStamp;
-      Fvalues.LastQueryResult := x^.WriteResult;
-      FCmd:=tcScanWrite;
+          TagCBack                := x^.Tag.CallBack;
+          Fvalues.Values          := x^.ValuesToWrite;
+          Fvalues.Offset          := x^.Tag.OffSet;
+          Fvalues.RealOffset      := x^.Tag.RealOffset;
+          Fvalues.ValuesTimestamp := x^.ValueTimeStamp;
+          Fvalues.LastQueryResult := x^.WriteResult;
+          FCmd:=tcScanWrite;
 
-      //sincroniza com o tag.
-      Synchronize(SyncCallBack);
+          //sincroniza com o tag.
+          Synchronize(SyncCallBack);
 
-      //libera a memoria ocupada
-      //pelo pacote
-      SetLength(x^.ValuesToWrite,0);
-      Dispose(x);
-      TagCBack:=nil;
-   end;
+          //libera a memoria ocupada
+          //pelo pacote
+          SetLength(x^.ValuesToWrite,0);
+          Dispose(x);
+          TagCBack:=nil;
+        end;
+        PSM_TAGSCANREAD: begin
+          FTagRec := PTagRec(PMsg.wParam);
+          TagCBack:=FTagRec^.CallBack;
+          Fvalues.Offset:=FTagRec^.OffSet;
+          Fvalues.RealOffset:=FTagRec^.RealOffset;
+
+          if Assigned(PGetValues) then begin
+            PGetValues(FTagRec^, Fvalues)
+          end else
+            Fvalues.LastQueryResult := ioDriverError;
+
+          FCmd:=tcScanRead;
+
+          Synchronize(SyncCallBack);
+
+          //libera a memoria ocupada pelos pacotes
+          SetLength(Fvalues.Values, 0);
+          Dispose(FTagRec);
+          TagCBack:=nil;
+        end;
+      end;
+    except
+      on E: Exception do begin
+        {$IFDEF FDEBUG}
+        DebugLn('TScanUpdate.Execute:: ' + e.Message);
+        DumpStack;
+        {$ENDIF}
+        Ferro := E;
+        Synchronize(SyncException);
+      end;
+    end;
+  end;
 end;
 
 procedure TScanUpdate.SyncCallBack;

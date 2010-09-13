@@ -12,7 +12,7 @@ unit PLCBlock;
 interface
 
 uses
-  SysUtils, Classes, TagBlock, ProtocolTypes;
+  SysUtils, Classes, Tag, TagBlock, ProtocolTypes;
 
 type
   {:
@@ -20,7 +20,7 @@ type
 
     Tag para comunicação em blocos.
   }
-  TPLCBlock = class(TTagBlock)
+  TPLCBlock = class(TTagBlock, IScanableTagInterface)
   private
     procedure SetSize(size:Cardinal);
     function  GetValue(Index:Integer):Double;

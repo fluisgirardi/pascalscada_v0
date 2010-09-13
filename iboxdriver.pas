@@ -216,7 +216,7 @@ type
     procedure CalculateCheckSum(var pkg:BYTES);
   protected
     //: @seealso(TProtocolDriver.DoAddTag)
-    procedure DoAddTag(TagObj:TTag); override;
+    procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
     //: @seealso(TProtocolDriver.DoDelTag)
     procedure DoDelTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoScanRead)
@@ -277,17 +277,21 @@ begin
   pkg[h]:=(sum and $FF);
 end;
 
-procedure TIBoxDriver.DoAddTag(TagObj:TTag);
+procedure TIBoxDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
   plc,h:Integer;
-  found :boolean;
+  found, valido:boolean;
 begin
   if not (TagObj is TPLCTagNumber) then
     Raise Exception.Create(SinvalidTag);
 
+  valido := false;
+
   with TPLCTagNumber(TagObj) do begin
     if not (PLCStation in [0..255]) then exit;
     if not (MemAddress in [0,96,168,200..205,247]) then exit;
+
+    valido:=true;
 
     h:=High(PStations);
     found := false;
@@ -397,7 +401,7 @@ begin
     end;
   end;
 
-  inherited DoAddTag(TagObj);
+  inherited DoAddTag(TagObj, valido);
 end;
 
 procedure TIBoxDriver.DoDelTag(TagObj:TTag);
