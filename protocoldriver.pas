@@ -368,7 +368,8 @@ begin
   PScanReadThread.Destroy;
   PScanWriteThread.Destroy;
 
-  PScanUpdateThread.Destroy;
+  PScanUpdateThread.Terminate;
+  PScanUpdateThread.WaitFor;
 
   for c:=0 to High(PTags) do
     TPLCTag(PTags[c]).RemoveDriver;
