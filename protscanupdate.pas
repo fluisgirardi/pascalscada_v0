@@ -1,4 +1,4 @@
-{:
+﻿{:
 @abstract(Atualiza os valores dos tags.)
 @author(Fabio Luis Girardi papelhigienico@gmail.com)
 }
@@ -27,6 +27,7 @@ type
   TScanUpdate = class(TCrossThread)
   private
     FSleepInterruptable:TCrossEvent;
+    FEnd:TCrossEvent;
     Ferro:Exception;
     TagCBack:TTagCommandCallBack;
     FTagRec:PTagRec;
@@ -40,6 +41,7 @@ type
     procedure SyncException;
     procedure UpdateMultipleTags;
     procedure CheckScanReadOrWrite;
+    function  WaitEnd(timeout:Cardinal):TWaitResult;
   protected
     //: @exclude
     procedure Execute; override;
@@ -48,6 +50,8 @@ type
     constructor Create(StartSuspended:Boolean);
     //: @exclude
     destructor Destroy; override;
+    //: Sinaliza para thread Terminar.
+    procedure Terminate;
     {:
     Faz a atualização de um tag que solicitou uma LEITURA por scan.
 
@@ -93,6 +97,22 @@ destructor TScanUpdate.Destroy;
 begin
   inherited Destroy;
   FSleepInterruptable.Destroy;
+  FSpool.Destroy;
+  FEnd.Destroy;
+end;
+
+procedure TScanUpdate.Terminate;
+begin
+  TCrossThread(self).Terminate;
+  FSleepInterruptable.SetEvent;
+  repeat
+     Application.ProcessMessages;
+  until WaitEnd(1)=wrSignaled;
+end;
+
+function  TScanUpdate.WaitEnd(timeout:Cardinal):TWaitResult;
+begin
+   Result := FEnd.WaitFor(timeout);
 end;
 
 procedure TScanUpdate.Execute;
@@ -246,4 +266,4 @@ begin
 end;
 
 end.
-
+
