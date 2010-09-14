@@ -339,6 +339,7 @@ begin
   PScanUpdateThread := TScanUpdate.Create(true);
   PScanUpdateThread.Priority:=tpHighest;
   PScanUpdateThread.OnGetValue := SafeGetValue;
+  PScanUpdateThread.OnScanTags := GetMultipleValues;
 
   PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
   PScanReadThread.Priority:=tpTimeCritical;
@@ -367,8 +368,7 @@ begin
   PScanReadThread.Destroy;
   PScanWriteThread.Destroy;
 
-  PScanUpdateThread.Terminate;
-  PScanUpdateThread.WaitFor;
+  PScanUpdateThread.Destroy;
 
   for c:=0 to High(PTags) do
     TPLCTag(PTags[c]).RemoveDriver;
