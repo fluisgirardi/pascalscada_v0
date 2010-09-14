@@ -91,6 +91,7 @@ contains
   s7family in 's7family.pas',
   ubitmapper in 'ubitmapper.pas' {frmBitMapper},
   HMIControlDislocatorAnimation in 'hmicontroldislocatoranimation.pas',
-  uelementmapper in 'uelementmapper.pas' {frmMapElements};
+  uelementmapper in 'uelementmapper.pas' {frmMapElements},
+  uwesttagbuilder in 'uwesttagbuilder.pas' {WestTagBuilder};
 
 end.
