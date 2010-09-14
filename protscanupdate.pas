@@ -26,22 +26,20 @@ type
   }
   TScanUpdate = class(TCrossThread)
   private
-    FInitEvent:TCrossEvent;
-    FDoSomethingEvent:TCrossEvent;
-    FEnd:TCrossEvent;
+    FSleepInterruptable:TCrossEvent;
     Ferro:Exception;
     TagCBack:TTagCommandCallBack;
     FTagRec:PTagRec;
     Fvalues:TScanReadRec;
     FCmd:TTagCommand;
     PGetValues:TGetValues;
+    PScanTags:TGetMultipleValues;
     FSpool:TMessageSpool;
+    PScannedValues:TArrayOfScanUpdateRec;
     procedure SyncCallBack;
     procedure SyncException;
-    procedure DoSomething;
-    procedure WaitToDoSomething;
+    procedure UpdateMultipleTags;
     procedure CheckScanReadOrWrite;
-    function  WaitEnd(timeout:Cardinal):TWaitResult;
   protected
     //: @exclude
     procedure Execute; override;
@@ -50,8 +48,6 @@ type
     constructor Create(StartSuspended:Boolean);
     //: @exclude
     destructor Destroy; override;
-    //: Sinaliza para thread Terminar.
-    procedure Terminate;
     {:
     Faz a atualização de um tag que solicitou uma LEITURA por scan.
 
@@ -74,6 +70,8 @@ type
   published
     //: Evento chamado pela thread para executar uma leitura por scan.
     property OnGetValue:TGetValues read PGetValues write PGetValues;
+    //: função que retorna o tempo do proximo scan ou a lista de tags que estão na vez de serem lidos.
+    property OnScanTags:TGetMultipleValues read PScanTags write PScanTags;
   end;
 
 implementation
@@ -86,78 +84,67 @@ uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} hsstrings, Forms;
 constructor TScanUpdate.Create(StartSuspended:Boolean);
 begin
   inherited Create(StartSuspended);
-  FEnd := TCrossEvent.Create(nil, true, false, 'EndOfThread'+IntToStr(UniqueID));
-  FEnd.ResetEvent;
   Priority := tpHighest;
   FSpool := TMessageSpool.Create;
-  FInitEvent := TCrossEvent.Create(nil,true,false,'ScanUpdateThreadInit'+IntToStr(UniqueID));
-  FDoSomethingEvent := TCrossEvent.Create(nil,true,false,'ScanUpdateThreadDoSomething'+IntToStr(UniqueID));
+  FSleepInterruptable := TCrossEvent.Create(nil,true,false,'ScanUpdateThreadSleepInterruptable'+IntToStr(UniqueID));
 end;
 
 destructor TScanUpdate.Destroy;
 begin
   inherited Destroy;
-  FDoSomethingEvent.Destroy;
-  FInitEvent.Destroy;
-  FSpool.Destroy;
-  FEnd.Destroy;
-end;
-
-procedure TScanUpdate.Terminate;
-begin
-  TCrossThread(self).Terminate;
-  DoSomething;
-  repeat
-     Application.ProcessMessages;
-  until WaitEnd(1)=wrSignaled;
-end;
-
-function  TScanUpdate.WaitEnd(timeout:Cardinal):TWaitResult;
-begin
-   Result := FEnd.WaitFor(timeout);
+  FSleepInterruptable.Destroy;
 end;
 
 procedure TScanUpdate.Execute;
-
+var
+  timeout:Integer;
+  sleepres:TWaitResult;
 begin
-   while not Terminated do begin
-     try
-        CheckScanReadOrWrite;
+  while not Terminated do begin
+    try
+      CheckScanReadOrWrite;
+      if Assigned(PScanTags) then begin
+        SetLength(PScannedValues,0);
+        timeout:=PScanTags(PScannedValues);
+        if Length(PScannedValues)>0 then
+          Synchronize(UpdateMultipleTags);
+      end else
+        timeout:=1;
 
-     except
-       on E: Exception do begin
-         {$IFDEF FDEBUG}
-         DebugLn('TScanUpdate.Execute:: ' + e.Message);
-         DumpStack;
-         {$ENDIF}
-         Ferro := E;
-         Synchronize(SyncException);
-       end;
-     end;
-   end;
-   FEnd.SetEvent;
+      if timeout>0 then
+        sleepres := FSleepInterruptable.WaitFor(timeout)
+      else
+        sleepres := FSleepInterruptable.WaitFor(1);
+
+      if sleepres=wrSignaled then
+        FSleepInterruptable.ResetEvent;
+    except
+      on E: Exception do begin
+        {$IFDEF FDEBUG}
+        DebugLn('TScanUpdate.Execute:: ' + e.Message);
+        DumpStack;
+        {$ENDIF}
+        Ferro := E;
+        Synchronize(SyncException);
+      end;
+    end;
+  end;
 end;
 
 procedure TScanUpdate.ScanRead(Tag:TTagRec);
 var
   tagpkg:PTagRec;
 begin
-  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create(SthreadSuspended);
-
   New(tagpkg);
   Move(tag,tagpkg^,sizeof(TTagRec));
   FSpool.PostMessage(PSM_TAGSCANREAD,tagpkg,nil,false);
-  DoSomething;
+  FSleepInterruptable.SetEvent;
 end;
 
 procedure TScanUpdate.ScanWriteCallBack(SWPkg:PScanWriteRec);
 begin
-  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create(SthreadSuspended);
-
    FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
-   DoSomething;
+   FSleepInterruptable.SetEvent;
 end;
 
 procedure TScanUpdate.SyncException;
@@ -168,15 +155,18 @@ begin
   end;
 end;
 
-procedure TScanUpdate.DoSomething;
+procedure TScanUpdate.UpdateMultipleTags;
+var
+  c:Integer;
 begin
-  FDoSomethingEvent.SetEvent;
-end;
-
-procedure TScanUpdate.WaitToDoSomething;
-begin
-  FDoSomethingEvent.ResetEvent;
-  FDoSomethingEvent.WaitFor(1);
+  for c:=0 to High(PScannedValues) do
+    with PScannedValues[c] do
+      try
+        CallBack(Values, ValueTimeStamp, tcScanRead, LastResult, 0);
+        SetLength(Values,0);
+      finally
+      end;
+  SetLength(PScannedValues,0);
 end;
 
 procedure TScanUpdate.CheckScanReadOrWrite;

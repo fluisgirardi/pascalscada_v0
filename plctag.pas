@@ -177,6 +177,7 @@ type
     @seealso(TTagRec)
     }
     procedure BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
+
     //: Faz uma leitura @bold(assincrona) do tag.
     procedure ScanRead; virtual;
     {:

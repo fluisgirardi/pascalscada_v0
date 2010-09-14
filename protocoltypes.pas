@@ -109,7 +109,7 @@ type
   @param(values TArrayOfDouble: Array onde serão retornados os valores do tag.)
   }
   TGetValues = procedure(const Tag:TTagRec; var values:TScanReadRec) of object;
-  TGetMultipleValues = procedure(var MultiValues:TArrayOfScanUpdateRec) of object;
+  TGetMultipleValues = function(var MultiValues:TArrayOfScanUpdateRec):Integer of object;
 
   //: Interface comum a todos os tags.
   ITagInterface = interface

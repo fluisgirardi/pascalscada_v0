@@ -88,6 +88,7 @@ type
     procedure SafeScanRead(Sender:TObject; var NeedSleep:Integer);
     function  SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
+    function  GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):Integer;
 
     procedure DoPortOpened(Sender: TObject);
     procedure DoPortClosed(Sender: TObject);
@@ -315,7 +316,7 @@ var
 
 implementation
 
-uses PLCTag, hsstrings, Dialogs;
+uses PLCTag, hsstrings, Dialogs, math;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -766,6 +767,57 @@ begin
       FCritical.Endread;
       //FPause.SetEvent;
    end;
+end;
+
+function  TProtocolDriver.GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):Integer;
+var
+  t, valueSet:Integer;
+  first:Boolean;
+  tagiface:IScanableTagInterface;
+  tr:TTagRec;
+  remainingMs:Integer;
+  ScanReadRec:TScanReadRec;
+begin
+  try
+    Result:=0;
+    valueSet:=-1;
+    //FPause.ResetEvent;
+    FCritical.Beginread;
+    for t:=0 to TagCount-1 do begin
+      if Supports(Tag[t], IScanableTagInterface) then begin
+        tagiface:=Tag[t] as IScanableTagInterface;
+        if tagiface.IsValidTag then begin
+
+          remainingMs:=tagiface.RemainingMiliseconds;
+          //se o tempo restante é maior que zero
+          if remainingMs>0 then begin
+            if first then begin
+              Result:=remainingMs;
+              first:=false;
+            end else
+              Result := Min(remainingMs, Result);
+          end else begin
+            inc(valueSet);
+            SetLength(MultiValues,valueSet+1);
+
+            tagiface.BuildTagRec(tr,0,0);
+
+            SetLength(ScanReadRec.Values, tr.Size);
+            DoGetValue(tr, ScanReadRec);
+
+            MultiValues[valueSet].LastResult:=ScanReadRec.LastQueryResult;
+            MultiValues[valueSet].CallBack  :=tr.CallBack;
+            MultiValues[valueSet].Values    :=ScanReadRec.Values;
+            MultiValues[valueSet].ValueTimeStamp:=ScanReadRec.ValuesTimestamp;
+          end;
+        end;
+      end;
+    end;
+
+  finally
+    FCritical.Endread;
+    //FPause.SetEvent;
+  end;
 end;
 
 function  TProtocolDriver.GetPortOpenedEvent:TNotifyEvent;
