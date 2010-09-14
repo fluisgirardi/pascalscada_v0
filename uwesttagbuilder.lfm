@@ -1,0 +1,159 @@
+object WestTagBuilder: TWestTagBuilder
+  Left = 306
+  Height = 448
+  Top = 110
+  Width = 564
+  BorderStyle = bsDialog
+  Caption = 'West 6100+ Tag Builder'
+  ClientHeight = 448
+  ClientWidth = 564
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  OnCreate = FormCreate
+  LCLVersion = '0.9.28.3'
+  object Panel1: TPanel
+    Left = 0
+    Height = 43
+    Top = 0
+    Width = 564
+    Align = alTop
+    ClientHeight = 43
+    ClientWidth = 564
+    TabOrder = 0
+    object Label1: TLabel
+      Left = 8
+      Height = 14
+      Top = 13
+      Width = 205
+      AutoSize = False
+      Caption = 'Mapear variaveis do controlador endereço'
+      ParentColor = False
+    end
+    object Label2: TLabel
+      Left = 271
+      Height = 14
+      Top = 13
+      Width = 10
+      Caption = 'at�'
+      ParentColor = False
+    end
+    object AdrStart: TSpinEdit
+      Left = 216
+      Height = 21
+      Top = 10
+      Width = 49
+      MaxValue = 99
+      MinValue = 1
+      TabOrder = 0
+      Value = 1
+    end
+    object AdrEnd: TSpinEdit
+      Left = 292
+      Height = 21
+      Top = 10
+      Width = 49
+      MaxValue = 99
+      MinValue = 1
+      TabOrder = 1
+      Value = 1
+    end
+    object ZeroFill: TCheckBox
+      Left = 352
+      Height = 17
+      Top = 10
+      Width = 177
+      Caption = 'Preencher com zeros o endereço'
+      TabOrder = 2
+    end
+  end
+  object ScrollBox1: TScrollBox
+    Cursor = crArrow
+    Left = 0
+    Height = 350
+    Top = 63
+    Width = 564
+    Align = alClient
+    BorderStyle = bsNone
+    Color = clBtnFace
+    ParentColor = False
+    TabOrder = 1
+  end
+  object Panel2: TPanel
+    Left = 0
+    Height = 35
+    Top = 413
+    Width = 564
+    Align = alBottom
+    ClientHeight = 35
+    ClientWidth = 564
+    TabOrder = 2
+    object Button1: TButton
+      Left = 484
+      Height = 25
+      Top = 6
+      Width = 75
+      Caption = '&OK'
+      Default = True
+      ModalResult = 1
+      OnClick = Button1Click
+      TabOrder = 0
+    end
+    object Button2: TButton
+      Left = 402
+      Height = 25
+      Top = 6
+      Width = 75
+      Cancel = True
+      Caption = '&Cancelar'
+      ModalResult = 2
+      TabOrder = 1
+    end
+  end
+  object Panel3: TPanel
+    Left = 0
+    Height = 20
+    Top = 43
+    Width = 564
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 20
+    ClientWidth = 564
+    TabOrder = 3
+    object Label6: TLabel
+      Left = 5
+      Height = 14
+      Top = 5
+      Width = 48
+      Caption = 'Variável'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+    end
+    object Label7: TLabel
+      Left = 196
+      Height = 14
+      Top = 6
+      Width = 74
+      Caption = 'Nome do tag'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+    end
+    object Label8: TLabel
+      Left = 402
+      Height = 14
+      Top = 6
+      Width = 57
+      Caption = 'Varredura'
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+    end
+  end
+end

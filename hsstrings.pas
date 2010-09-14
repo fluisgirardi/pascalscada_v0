@@ -78,6 +78,7 @@ resourcestring
   SGetP1 = 'Gets final position';
   SGotoP0 = 'Controls go to P0 position';
   SScanableNotSupported = 'Interface IScanableTagInterface não é suportada!';
+  SCheckAtLeastOneVariable = 'Marque pelo menos uma variável!';
 
 implementation
 

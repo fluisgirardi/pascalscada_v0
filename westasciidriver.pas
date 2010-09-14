@@ -11,8 +11,8 @@ unit WestASCIIDriver;
 interface
 
 uses
-  Classes, SysUtils, ProtocolDriver, Tag, ProtocolTypes, commtypes, CrossEvent,
-  syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
+  Classes, SysUtils, ProtocolDriver, Tag, ProtocolTypes, commtypes
+  {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
   {:
@@ -175,6 +175,12 @@ type
     @returns(ioOk caso o equipamento esteja operando na rede.)
     }
     function    DeviceActive(DeviceID:TWestAddressRange):TProtocolIOResult;
+
+    // @seealso(TProtocolDriver.SizeOfTag);
+    function SizeOfTag(Tag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE; override;
+
+    //: @seealso(TProtocolDriver.OpenTagEditor)
+    procedure OpenTagEditor(OwnerOfNewTags: TComponent; InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   published
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
@@ -185,7 +191,7 @@ var
 
 implementation
 
-uses PLCTagNumber, math, dateutils, hsstrings;
+uses PLCTagNumber, math, dateutils, hsstrings, uwesttagbuilder, Controls;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin
@@ -1134,6 +1140,51 @@ begin
     WestReg.Decimal:=stablereg.Decimal;
   end;
   WestReg.LastReadResult:=stablereg.IOResult;
+end;
+
+function  TWestASCIIDriver.SizeOfTag(Tag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE;
+begin
+  // todos os registradores do west são de 32 bits (ponto flutuante);
+  Result:=32;
+end;
+
+procedure TWestASCIIDriver.OpenTagEditor(OwnerOfNewTags: TComponent; InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+var
+  tplc:TPLCTagNumber;
+  ctrl, variable:Integer;
+  frm:TWestTagBuilder;
+  sctrl,
+  formatmask:String;
+begin
+  frm:=TWestTagBuilder.Create(nil);
+  try
+    if frm.ShowModal=mrOK then begin
+      if frm.ZeroFill.Checked and (frm.AdrEnd.Value>9) then
+        formatmask:='#00'
+      else
+        formatmask:='#0';
+
+      for ctrl:=frm.AdrStart.Value to frm.AdrEnd.Value do begin
+        sctrl:=FormatFloat(formatmask,ctrl);
+        for variable:=0 to $1b do begin
+          if frm.Variaveis[variable].Enabled.Checked then begin
+            if Pos('%a',frm.Variaveis[variable].TagName.Text)=0 then begin
+              frm.Variaveis[variable].TagName.Text := frm.Variaveis[variable].TagName.Text + '%a';
+            end;
+            tplc := TPLCTagNumber(CreateProc(TPLCTagNumber));
+            tplc.Name:=StringReplace(frm.Variaveis[variable].TagName.Text,'%a',sctrl,[rfReplaceAll]);
+            tplc.MemAddress := variable;
+            tplc.PLCStation:=ctrl;
+            tplc.RefreshTime:=frm.Variaveis[variable].Scan.Value;
+            tplc.ProtocolDriver := Self;
+            InsertHook(tplc);
+          end;
+        end;
+      end;
+    end;
+  finally
+    frm.Destroy;
+  end;
 end;
 
 initialization

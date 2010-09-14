@@ -34,7 +34,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="6" Release="4"/>
-    <Files Count="61">
+    <Files Count="63">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -253,33 +253,41 @@
         <Type Value="LFM"/>
       </Item54>
       <Item55>
-        <Filename Value="umodbustagbuilder.pas"/>
-        <UnitName Value="uModbusTagBuilder"/>
+        <Filename Value="uelementmapper.pas"/>
+        <UnitName Value="uelementmapper"/>
       </Item55>
       <Item56>
-        <Filename Value="umodbustagbuilder.lfm"/>
+        <Filename Value="uelementmapper.lfm"/>
         <Type Value="LFM"/>
       </Item56>
       <Item57>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="umodbustagbuilder.pas"/>
+        <UnitName Value="uModbusTagBuilder"/>
       </Item57>
       <Item58>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="umodbustagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item58>
       <Item59>
-        <Filename Value="westasciidriver.pas"/>
-        <UnitName Value="WestASCIIDriver"/>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
       </Item59>
       <Item60>
-        <Filename Value="uelementmapper.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="uwesttagbuilder.pas"/>
+        <UnitName Value="uwesttagbuilder"/>
       </Item60>
       <Item61>
-        <Filename Value="uelementmapper.pas"/>
-        <UnitName Value="uelementmapper"/>
+        <Filename Value="uwesttagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item61>
+      <Item62>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item62>
+      <Item63>
+        <Filename Value="westasciidriver.pas"/>
+        <UnitName Value="WestASCIIDriver"/>
+      </Item63>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
