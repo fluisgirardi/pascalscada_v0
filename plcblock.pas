@@ -81,8 +81,6 @@ type
     property TagSizeOnProtocol;
     //: @seealso(TPLCTag.AvgUpdateRate)
     property AvgUpdateRate;
-    //: @seealso(TPLCTag.AvgDelayBetweenRequest)
-    property AvgDelayBetweenRequest;
   end;
 
 implementation

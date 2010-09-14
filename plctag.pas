@@ -72,9 +72,6 @@ type
     //: Retorna a média de tempo que o tag é atualizado.
     function GetAvgUpdateRate:Double;
 
-    //: Retorna a média de atraso entre requisitar um valor e o valor chegar ao tag.
-    function GetAvgDelayBetweenRequests:double;
-
     //: Retorna o tamanho real do tag.
     procedure UpdateTagSizeOnProtocol;
 
@@ -256,8 +253,6 @@ type
     property TagSizeOnProtocol:Integer read GetTagSizeOnProtocol;
     //: Informa a média de milisegundos que o tag está sendo atualizado.
     property AvgUpdateRate:Double read GetAvgUpdateRate;
-    //: Informa a média de atraso entre solicitar o valor e o valor chegar.
-    property AvgDelayBetweenRequest:Double read GetAvgDelayBetweenRequests;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -340,7 +335,6 @@ begin
   FProtocolWordSize:=1;
   FFirtsRead:=true;
   FTotalTime:=0;
-  FTotalDelay:=0;
   PProtocolDriver:=nil;
   FTagManager := GetTagManager;
   SetLength(FRawProtocolValues,1);
@@ -402,16 +396,13 @@ procedure TPLCTag.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDat
 var
   c, poffset:Integer;
 begin
-  if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) then begin
+  if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) and (ValuesTimeStamp<>PValueTimeStamp) then begin
     inc(FTotalTime, MilliSecondsBetween(ValuesTimeStamp,PValueTimeStamp));
     inc(FReadCount);
   end;
 
   if (LastResult=ioOk) then
     FFirtsRead:=false;
-
-  if TagCommand=tcScanRead then
-    inc(FTotalDelay,MilliSecondsBetween(Now,FLastRequestTimestamp));
 
   if LastResult in [ioOk, ioNullDriver] then begin
     if FCurrentWordSize>=FProtocolWordSize then begin
@@ -616,8 +607,7 @@ end;
 
 procedure TPLCTag.ScanRead;
 begin
-  FLastRequestTimestamp:=Now;
-  Inc(FReqCount);
+
 end;
 
 procedure TPLCTag.GetNewProtocolTagSize;
@@ -1170,14 +1160,6 @@ begin
     Result:=-1
   else
     Result:=FTotalTime/FReadCount;
-end;
-
-function TPLCTag.GetAvgDelayBetweenRequests:double;
-begin
-  if FReqCount=0 then
-    Result:=-1
-  else
-    Result:=FTotalDelay/FReqCount;
 end;
 
 function TPLCTag.RemainingMiliseconds:Integer;
