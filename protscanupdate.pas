@@ -90,6 +90,8 @@ begin
   inherited Create(StartSuspended);
   Priority := tpHighest;
   FSpool := TMessageSpool.Create;
+  FEnd := TCrossEvent.Create(nil, true, false, 'EndOfThread'+IntToStr(UniqueID));
+  FEnd.ResetEvent;
   FSleepInterruptable := TCrossEvent.Create(nil,true,false,'ScanUpdateThreadSleepInterruptable'+IntToStr(UniqueID));
 end;
 
@@ -132,9 +134,9 @@ begin
         timeout:=1;
 
       if timeout>0 then
-        sleepres := FSleepInterruptable.WaitFor(timeout)
+        Sleep(timeout)
       else
-        sleepres := FSleepInterruptable.WaitFor(1);
+        Sleep(1);
 
       if sleepres=wrSignaled then
         FSleepInterruptable.ResetEvent;
@@ -149,6 +151,7 @@ begin
       end;
     end;
   end;
+  FEnd.SetEvent;
 end;
 
 procedure TScanUpdate.ScanRead(Tag:TTagRec);
@@ -266,4 +269,4 @@ begin
 end;
 
 end.
-
+
