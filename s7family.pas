@@ -808,52 +808,55 @@ var
   tr:TTagRec;
   foundplc, founddb:Boolean;
 begin
-  tr:=GetTagInfo(TagObj);
-  foundplc:=false;
+  try
+    tr:=GetTagInfo(TagObj);
+    foundplc:=false;
 
-  for plc := 0 to High(FCPUs) do
-    if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
-      foundplc:=true;
-      break;
+    for plc := 0 to High(FCPUs) do
+      if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
+        foundplc:=true;
+        break;
+      end;
+
+    if not foundplc then exit;
+
+    case tr.ReadFunction of
+      1: begin
+        FCPUs[plc].Inputs.RemoveAddress(tr.Address,tr.Size,1);
+      end;
+      2:
+        FCPUs[plc].Outputs.RemoveAddress(tr.Address,tr.Size,1);
+      3:
+        FCPUs[plc].Flags.RemoveAddress(tr.Address,tr.Size,1);
+      4: begin
+        if tr.File_DB<=0 then
+          tr.File_DB:=1;
+
+        founddb:=false;
+        for db:=0 to high(FCPUs[plc].DBs) do
+          if FCPUs[plc].DBs[db].DBNum=tr.File_DB then begin
+            founddb:=true;
+            break;
+          end;
+
+        if not founddb then exit;
+
+        FCPUs[plc].DBs[db].DBArea.RemoveAddress(tr.Address,tr.Size,1);
+      end;
+      5,10:
+        FCPUs[plc].Counters.RemoveAddress(tr.Address,tr.Size,1);
+      6,11:
+        FCPUs[plc].Timers.RemoveAddress(tr.Address,tr.Size,1);
+      7:
+        FCPUs[plc].SMs.RemoveAddress(tr.Address,tr.Size,1);
+      8:
+        FCPUs[plc].AnInput.RemoveAddress(tr.Address,tr.Size,1);
+      9:
+        FCPUs[plc].AnOutput.RemoveAddress(tr.Address,tr.Size,1);
     end;
-
-  if not foundplc then exit;
-
-  case tr.ReadFunction of
-    1: begin
-      FCPUs[plc].Inputs.RemoveAddress(tr.Address,tr.Size,1);
-    end;
-    2:
-      FCPUs[plc].Outputs.RemoveAddress(tr.Address,tr.Size,1);
-    3:
-      FCPUs[plc].Flags.RemoveAddress(tr.Address,tr.Size,1);
-    4: begin
-      if tr.File_DB<=0 then
-        tr.File_DB:=1;
-
-      founddb:=false;
-      for db:=0 to high(FCPUs[plc].DBs) do
-        if FCPUs[plc].DBs[db].DBNum=tr.File_DB then begin
-          founddb:=true;
-          break;
-        end;
-
-      if not founddb then exit;
-
-      FCPUs[plc].DBs[db].DBArea.RemoveAddress(tr.Address,tr.Size,1);
-    end;
-    5,10:
-      FCPUs[plc].Counters.RemoveAddress(tr.Address,tr.Size,1);
-    6,11:
-      FCPUs[plc].Timers.RemoveAddress(tr.Address,tr.Size,1);
-    7:
-      FCPUs[plc].SMs.RemoveAddress(tr.Address,tr.Size,1);
-    8:
-      FCPUs[plc].AnInput.RemoveAddress(tr.Address,tr.Size,1);
-    9:
-      FCPUs[plc].AnOutput.RemoveAddress(tr.Address,tr.Size,1);
+  finally
+    Inherited DoDelTag(TagObj);
   end;
-  Inherited DoDelTag(TagObj);
 end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:Integer);
