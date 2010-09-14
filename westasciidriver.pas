@@ -251,6 +251,8 @@ begin
         SetLength(ScanTimes,scanRate+1);
         ScanTimes[scanRate].ScanTime:=plctagobj.RefreshTime;
         ScanTimes[scanRate].RefCount:=1;
+        if scanRate=0 then
+          MinScanTime:=plctagobj.RefreshTime;
       end;
 
     with FWestDevices[plc].Registers[plctagobj.MemAddress] do

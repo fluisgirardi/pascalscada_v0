@@ -776,7 +776,7 @@ var
   first:Boolean;
   tagiface:IScanableTagInterface;
   tr:TTagRec;
-  remainingMs:Integer;
+  remainingMs:Int64;
   ScanReadRec:TScanReadRec;
 begin
   try

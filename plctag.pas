@@ -30,7 +30,7 @@ type
     function  GetTagSizeOnProtocol:Integer;
   protected
     PValidTag:Boolean;
-    function RemainingMiliseconds:Integer; virtual;
+    function RemainingMiliseconds:Int64; virtual;
     function IsValidTag:Boolean; virtual;
     procedure SetTagValidity(TagValidity:Boolean); virtual;
   protected
@@ -1162,7 +1162,7 @@ begin
     Result:=FTotalTime/FReadCount;
 end;
 
-function TPLCTag.RemainingMiliseconds:Integer;
+function TPLCTag.RemainingMiliseconds:Int64;
 begin
   Result:=PScanTime-MilliSecondsBetween(Now,PValueTimeStamp);
 end;
