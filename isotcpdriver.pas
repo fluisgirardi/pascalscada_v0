@@ -178,14 +178,14 @@ begin
   Result:=iorNotReady;
 
   try
-    res := PCommPort.IOCommandSync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult1);
+    res := PCommPort.IOCommandSync(iocRead,nil,7,0,DriverID,0,CommPortCallBack,false,nil,@IOResult1);
     if (res=0) then begin
       BytesRead:=0;
       Result:=iorNotReady;
       exit;
     end;
 
-    if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>4) then begin
+    if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>7) then begin
       BytesRead:=IOResult1.Received;
       Result:=IOResult1.ReadIOResult;
       exit;
@@ -196,29 +196,15 @@ begin
     //7 bytes que não serve para nada
     //ou se serve pra algo, eu não sei.
     while len = 7 do begin
-      //remove os outros 3 bytes que sobraram no buffer de leitura.
-      res := PCommPort.IOCommandSync(iocRead,nil,3,0,DriverID,0,CommPortCallBack,false,nil,@IOResult2);
-      if (res=0) then  begin
-        BytesRead:=0;
-        Result:=iorNotReady;
-        exit;
-      end;
-
-      if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>3) then begin
-        BytesRead:=IOResult2.Received;
-        Result:= IOResult2.ReadIOResult;
-        exit;
-      end;
-
       //le novamente...
-      res := PCommPort.IOCommandSync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult1);
+      res := PCommPort.IOCommandSync(iocRead,nil,7,0,DriverID,0,CommPortCallBack,false,nil,@IOResult1);
       if (res=0) then begin
         BytesRead:=0;
         Result:=iorNotReady;
         exit;
       end;
 
-      if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>4) then begin
+      if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>7) then begin
         BytesRead:=IOResult1.Received;
         Result:= IOResult1.ReadIOResult;
         exit;
@@ -227,7 +213,7 @@ begin
       len:= IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
     end;
 
-    res := PCommPort.IOCommandSync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,false,nil,@IOResult2);
+    res := PCommPort.IOCommandSync(iocRead,nil,len-7,0,DriverID,0,CommPortCallBack,false,nil,@IOResult2);
     if (res=0) then begin
       BytesRead:=0;
       Result:=iorNotReady;
@@ -236,7 +222,7 @@ begin
     //se resultado nao der ok,
     //ou não fechar com o numero de bytes a ler
     //e não ter o comprimento minimo do ISOTCP sai.
-    if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>(len-4)) then begin
+    if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>(len-7)) then begin
       BytesRead:=IOResult2.Received;
       Result:= IOResult2.ReadIOResult;
       exit;
