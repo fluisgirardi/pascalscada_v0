@@ -778,7 +778,9 @@ var
   tr:TTagRec;
   remainingMs:Int64;
   ScanReadRec:TScanReadRec;
+  doneOne:Boolean;
 begin
+  doneOne:=false;
   try
     Result:=0;
     valueSet:=-1;
@@ -798,6 +800,7 @@ begin
             end else
               Result := Min(remainingMs, Result);
           end else begin
+            doneOne:=true;
             inc(valueSet);
             SetLength(MultiValues,valueSet+1);
 
@@ -817,6 +820,7 @@ begin
 
   finally
     FCritical.Endread;
+    if doneOne then Result:=0;
     //FPause.SetEvent;
   end;
 end;

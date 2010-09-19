@@ -134,9 +134,9 @@ begin
         timeout:=1;
 
       if timeout>0 then
-        Sleep(timeout)
+        FSleepInterruptable.WaitFor(timeout)
       else
-        Sleep(1);
+        FSleepInterruptable.WaitFor(1);
 
       if sleepres=wrSignaled then
         FSleepInterruptable.ResetEvent;
