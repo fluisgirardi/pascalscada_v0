@@ -1,4 +1,4 @@
-{:
+﻿{:
   @abstract(Unit que implementa uma porta de comunicação TCP/UDP sobre IP cliente.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
@@ -10,6 +10,8 @@ unit tcp_udpport;
   {$DEFINE FDEBUG}
 {$ENDIF}
 {$ENDIF}
+
+{$I delphiver.inc}
 
 interface
 
@@ -295,7 +297,11 @@ begin
       end;
     end;
     {$ELSE}
+    {$IF defined(FPC) or (not defined(DELPHI2009_UP))}
     ServerAddr := GetHostByName(PAnsiChar(FHostName));
+    {$ELSE}
+    ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
+    {$IFEND}
     if ServerAddr=nil then begin
       PActive:=false;
       RefreshLastOSError;
