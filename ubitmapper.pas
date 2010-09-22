@@ -7,8 +7,8 @@ unit ubitmapper;
 interface
 
 uses
-  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  Grids, StdCtrls;
+  {$IFDEF FPC}LCLIntf, LResources,{$ENDIF}Messages, SysUtils, Variants, Classes,
+  Graphics, Controls, Forms, Dialogs, Grids, StdCtrls;
 
 type
   TfrmBitMapper = class(TForm)
