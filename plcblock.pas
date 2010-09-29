@@ -161,7 +161,7 @@ end;
 
 procedure TPLCBlock.SetSize(size:Cardinal);
 begin
-  if size>0 then begin
+  if (size>0) AND (PSize<>size) then begin
     PSize := size;
     SetLength(PValues,PSize);
     if (PProtocolDriver<>nil) and PAutoRead and ([csReading,csLoading]*ComponentState=[]) then begin

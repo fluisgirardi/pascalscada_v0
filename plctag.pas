@@ -419,6 +419,8 @@ end;
 
 procedure TPLCTag.SetAutoRead(v:Boolean);
 begin
+  if PAutoRead=v then exit;
+
   PAutoRead := v;
 
   if (PProtocolDriver<>nil) then begin
@@ -436,6 +438,8 @@ end;
 
 procedure TPLCTag.SetPLCHack(v:Cardinal);
 begin
+  if PHack=v then exit;
+
   if (PProtocolDriver<>nil) and PAutoRead then
     PProtocolDriver.RemoveTag(self);
 
@@ -450,6 +454,8 @@ end;
 
 procedure TPLCTag.SetPLCSlot(v:Cardinal);
 begin
+  if PSlot=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
@@ -464,6 +470,8 @@ end;
 
 procedure TPLCTag.SetPLCStation(v:Cardinal);
 begin
+  if PStation=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(self);
 
@@ -478,6 +486,8 @@ end;
 
 procedure TPLCTag.SetMemFileDB(v:Cardinal);
 begin
+  if PFile_DB=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
@@ -492,6 +502,8 @@ end;
 
 procedure TPLCTag.SetMemAddress(v:Cardinal);
 begin
+  if PAddress=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
@@ -506,6 +518,8 @@ end;
 
 procedure TPLCTag.SetMemSubElement(v:Cardinal);
 begin
+  if PSubElement=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
@@ -520,6 +534,8 @@ end;
 
 procedure TPLCTag.SetMemReadFunction(v:Cardinal);
 begin
+  if PReadFunction=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
@@ -534,6 +550,8 @@ end;
 
 procedure TPLCTag.SetMemWriteFunction(v:Cardinal);
 begin
+  if PWriteFunction=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
@@ -548,6 +566,8 @@ end;
 
 procedure TPLCTag.SetPath(v:String);
 begin
+  if PPath=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
@@ -562,6 +582,8 @@ end;
 
 procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
 begin
+  if PScanTime=v then exit;
+
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
