@@ -1461,6 +1461,7 @@ begin
   if PLCPtr=nil then begin
     c:=CreateCPU(tagrec.Hack, tagrec.Slot, tagrec.Station);
     PLCPtr:=@FCPUs[c];
+    foundplc:=true;
   end;
 
   retries := 0;
