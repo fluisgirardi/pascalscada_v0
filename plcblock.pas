@@ -22,7 +22,7 @@ type
   }
   TPLCBlock = class(TTagBlock, IScanableTagInterface)
   private
-    procedure SetSize(size:Cardinal);
+    procedure SetSize(isize:Cardinal);
     function  GetValue(Index:Integer):Double;
     procedure SetValue(index:Integer; Value:Double);
 
@@ -159,15 +159,20 @@ begin
   end;
 end;
 
-procedure TPLCBlock.SetSize(size:Cardinal);
+procedure TPLCBlock.SetSize(isize:Cardinal);
 begin
-  if (size>0) AND (PSize<>size) then begin
-    PSize := size;
-    SetLength(PValues,PSize);
-    if (PProtocolDriver<>nil) and PAutoRead and ([csReading,csLoading]*ComponentState=[]) then begin
+  if (isize>0) AND (PSize<>isize) then begin
+    if (PProtocolDriver<>nil) and PAutoRead then
        PProtocolDriver.RemoveTag(Self);
-       PProtocolDriver.AddTag(Self);
-    end;
+
+    PSize := isize;
+    SetLength(PValues,PSize);
+
+    if ([csReading,csLoading]*ComponentState=[]) then
+      GetNewProtocolTagSize;
+
+    if (PProtocolDriver<>nil) and PAutoRead then
+      PProtocolDriver.AddTag(Self);
   end;
 end;
 

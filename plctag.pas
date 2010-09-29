@@ -26,10 +26,10 @@ type
     FProtocoloOnLoading:TProtocolDriver;
   private
     procedure RebuildTagGUID;
-    procedure GetNewProtocolTagSize;
     function  GetTagSizeOnProtocol:Integer;
   protected
     PValidTag:Boolean;
+    procedure GetNewProtocolTagSize;
     function RemainingMiliseconds:Int64; virtual;
     function IsValidTag:Boolean; virtual;
     procedure SetTagValidity(TagValidity:Boolean); virtual;
@@ -509,11 +509,11 @@ begin
 
   PAddress := v;
 
-  if (PProtocolDriver<>nil) AND PAutoRead then
-    PProtocolDriver.AddTag(Self);
-
   if ([csReading,csLoading]*ComponentState=[]) then
     GetNewProtocolTagSize;
+
+  if (PProtocolDriver<>nil) AND PAutoRead then
+    PProtocolDriver.AddTag(Self);
 end;
 
 procedure TPLCTag.SetMemSubElement(v:Cardinal);
@@ -525,11 +525,11 @@ begin
 
   PSubElement := v;
 
-  if (PProtocolDriver<>nil) AND PAutoRead then
-    PProtocolDriver.AddTag(Self);
-
   if ([csReading,csLoading]*ComponentState=[]) then
     GetNewProtocolTagSize;
+
+  if (PProtocolDriver<>nil) AND PAutoRead then
+    PProtocolDriver.AddTag(Self);
 end;
 
 procedure TPLCTag.SetMemReadFunction(v:Cardinal);
@@ -541,11 +541,11 @@ begin
 
   PReadFunction := v;
 
-  if (PProtocolDriver<>nil) AND PAutoRead then
-    PProtocolDriver.AddTag(Self);
-
   if ([csReading,csLoading]*ComponentState=[]) then
     GetNewProtocolTagSize;
+
+  if (PProtocolDriver<>nil) AND PAutoRead then
+    PProtocolDriver.AddTag(Self);
 end;
 
 procedure TPLCTag.SetMemWriteFunction(v:Cardinal);
@@ -557,11 +557,11 @@ begin
 
   PWriteFunction := v;
 
-  if (PProtocolDriver<>nil) AND PAutoRead then
-    PProtocolDriver.AddTag(Self);
-
   if ([csReading,csLoading]*ComponentState=[]) then
     GetNewProtocolTagSize;
+
+  if (PProtocolDriver<>nil) AND PAutoRead then
+    PProtocolDriver.AddTag(Self);
 end;
 
 procedure TPLCTag.SetPath(v:String);
@@ -573,11 +573,11 @@ begin
 
   PPath := v;
 
-  if (PProtocolDriver<>nil) AND PAutoRead then
-    PProtocolDriver.AddTag(Self);
-
   if ([csReading,csLoading]*ComponentState=[]) then
     GetNewProtocolTagSize;
+
+  if (PProtocolDriver<>nil) AND PAutoRead then
+    PProtocolDriver.AddTag(Self);
 end;
 
 procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
@@ -591,9 +591,6 @@ begin
 
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
-
-  if ([csReading,csLoading]*ComponentState=[]) then
-    GetNewProtocolTagSize;
 end;
 
 procedure TPLCTag.BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
