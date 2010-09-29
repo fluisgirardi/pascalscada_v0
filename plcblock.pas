@@ -164,7 +164,7 @@ begin
   if size>0 then begin
     PSize := size;
     SetLength(PValues,PSize);
-    if (PProtocolDriver<>nil) and ([csReading,csLoading]*ComponentState=[]) then begin
+    if (PProtocolDriver<>nil) and PAutoRead and ([csReading,csLoading]*ComponentState=[]) then begin
        PProtocolDriver.RemoveTag(Self);
        PProtocolDriver.AddTag(Self);
     end;

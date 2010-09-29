@@ -342,7 +342,7 @@ end;
 
 destructor TPLCTag.Destroy;
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(self);
   PProtocolDriver := nil;
   (FTagManager as TTagMananger).RemoveTag(Self);
@@ -351,7 +351,7 @@ end;
 
 procedure TPLCTag.RemoveDriver;
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(self);
   PProtocolDriver := nil;
 end;
@@ -376,7 +376,7 @@ begin
   //remove o driver antigo.
   if (PProtocolDriver<>nil) then begin
     //remove do scan do driver...
-    if Self.PAutoRead then
+    if PAutoRead then
       PProtocolDriver.RemoveTag(self);
     PProtocolDriver := nil;
   end;
@@ -436,12 +436,12 @@ end;
 
 procedure TPLCTag.SetPLCHack(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) and PAutoRead then
     PProtocolDriver.RemoveTag(self);
 
   PHack := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) and PAutoRead then
     PProtocolDriver.AddTag(self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -450,12 +450,12 @@ end;
 
 procedure TPLCTag.SetPLCSlot(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PSlot := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -464,12 +464,12 @@ end;
 
 procedure TPLCTag.SetPLCStation(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(self);
 
   PStation := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -478,12 +478,12 @@ end;
 
 procedure TPLCTag.SetMemFileDB(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PFile_DB := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -492,12 +492,12 @@ end;
 
 procedure TPLCTag.SetMemAddress(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PAddress := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -506,12 +506,12 @@ end;
 
 procedure TPLCTag.SetMemSubElement(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PSubElement := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -520,12 +520,12 @@ end;
 
 procedure TPLCTag.SetMemReadFunction(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PReadFunction := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -534,12 +534,12 @@ end;
 
 procedure TPLCTag.SetMemWriteFunction(v:Cardinal);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PWriteFunction := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -548,12 +548,12 @@ end;
 
 procedure TPLCTag.SetPath(v:String);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PPath := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -562,12 +562,12 @@ end;
 
 procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
 begin
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   PScanTime := v;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 
   if ([csReading,csLoading]*ComponentState=[]) then
@@ -669,7 +669,7 @@ procedure TPLCTag.SetTagType(newType:TTagType);
 begin
   if newType=FTagType then exit;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
   FTagType:=newType;
@@ -690,7 +690,7 @@ begin
     RebuildValues;
   end;
 
-  if PProtocolDriver<>nil then
+  if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
 end;
 
