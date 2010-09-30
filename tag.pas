@@ -30,16 +30,17 @@ type
   {:
   Enumera todos os possíveis tamanhos de palavras dos tags.
   @value(pttDefault  Tamanho e tipo de dados dependentes das configuração do tag.)
+  @value(pttShortInt Inteiro de 8 bits COM sinal.)
   @value(pttByte     Inteiro de 8 bits sem sinal.)
-  @value(pttShortInt Inteiro de 16 bits COM sinal.)
+  @value(pttSmallInt Inteiro de 16 bits COM sinal.)
   @value(pttWord,    Inteiro de 16 bits SEM sinal.)
   @value(pttInteger  Inteiro de 32 bits COM sinal.)
   @value(pttDWord,   Inteiro de 32 bits SEM sinal.)
   @value(pttFloat    Flutuante de 32 bits.)
   }
   TTagType = (pttDefault,                    //size variable
-              pttByte,                       //8 bits
-              pttShortInt, pttWord,          //16 bits
+              pttShortInt, pttByte,          //8 bits
+              pttSmallInt, pttWord,          //16 bits
               pttInteger, pttDWord, pttFloat //32 bits
              );
 

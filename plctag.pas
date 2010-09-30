@@ -787,8 +787,9 @@ var
 begin
   if (FTagType=pttDefault) OR
      ((FProtocolTagType=ptByte) AND (FTagType=pttByte)) OR
-     ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
      ((FProtocolTagType=ptShortInt) AND (FTagType=pttShortInt)) OR
+     ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
+     ((FProtocolTagType=ptSmallInt) AND (FTagType=pttSmallInt)) OR
      ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
      ((FProtocolTagType=ptInteger) AND (FTagType=pttInteger)) OR
      ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat))
@@ -803,9 +804,9 @@ begin
   case FProtocolTagType of
     ptBit:
       AreaSize := Length(Values) div 8;
-    ptByte:
+    ptByte, ptShortInt:
       AreaSize := Length(Values);
-    ptWord, ptShortInt:
+    ptWord, ptSmallInt:
       AreaSize := Length(Values)*2;
     ptDWord, ptInteger, ptFloat:
       AreaSize := Length(Values)*4;
@@ -826,13 +827,13 @@ begin
          if (valueidx mod 8)=0 then
            inc(PtrByteWalker);
        end;
-    ptByte:
+    ptByte, ptShortInt:
        while valueidx<Length(Values) do begin
          PtrByteWalker^:=trunc(Values[valueidx]) AND $FF;
          inc(valueidx);
          Inc(PtrByteWalker);
        end;
-    ptWord, ptShortInt:
+    ptWord, ptSmallInt:
        while valueidx<Length(Values) do begin
          PtrWordWalker^:=trunc(Values[valueidx]) AND $FFFF;
          inc(valueidx);
@@ -855,16 +856,19 @@ begin
 
   //faz as inversoes caso necessário e move os dados para o resultado
   case FTagType of
-    pttByte: begin
+    pttShortInt, pttByte: begin
       inc(PtrByteWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
       inc(AreaIdx,(((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize));
       while AreaIdx<AreaSize do begin
-        AddToResult(PtrByteWalker^, Result);
+        if FTagType=pttShortInt then
+          AddToResult(PShortInt(PtrByteWalker)^, Result)
+        else
+          AddToResult(PtrByteWalker^, Result);
         inc(AreaIdx);
         inc(PtrByteWalker);
       end;
     end;
-    pttShortInt, pttWord: begin
+    pttSmallInt, pttWord: begin
       inc(PtrWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
       inc(AreaIdx,(((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize)*2);
       while AreaIdx<AreaSize do begin
@@ -876,8 +880,8 @@ begin
           PtrByte1^:=PtrByte2^;
           PtrByte2^:=ByteAux;
         end;
-        if FTagType=pttShortInt then
-          AddToResult(PShortInt(PtrWordWalker)^, Result)
+        if FTagType=pttSmallInt then
+          AddToResult(PSmallInt(PtrWordWalker)^, Result)
         else
           AddToResult(PtrWordWalker^, Result);
 
@@ -975,8 +979,9 @@ var
 begin
   if (FTagType=pttDefault) OR
      ((FProtocolTagType=ptByte) AND (FTagType=pttByte)) OR
-     ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
      ((FProtocolTagType=ptShortInt) AND (FTagType=pttShortInt)) OR
+     ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
+     ((FProtocolTagType=ptSmallInt) AND (FTagType=pttSmallInt)) OR
      ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
      ((FProtocolTagType=ptInteger) AND (FTagType=pttInteger)) OR
      ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat))
@@ -999,9 +1004,9 @@ begin
   case FProtocolTagType of
     ptBit:
       AreaSize := ProtocolSize div 8;
-    ptByte:
+    ptByte, ptShortInt:
       AreaSize := ProtocolSize;
-    ptWord, ptShortInt:
+    ptWord, ptSmallInt:
       AreaSize := ProtocolSize*2;
     ptDWord, ptInteger, ptFloat:
       AreaSize := ProtocolSize*4;
@@ -1010,15 +1015,17 @@ begin
   GetMem(PtrByte, AreaSize);
   ResetPointers;
 
+  //joga os valores puros lidos do driver para a area de memória
+  //para nao perder valores.
   valueidx:=0;
   case FProtocolTagType of
-    ptByte:
+    ptByte, ptShortInt:
        while valueidx<ProtocolSize do begin
          PtrByteWalker^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]) AND $FF;
          inc(valueidx);
          Inc(PtrByteWalker);
        end;
-    ptWord, ptShortInt:
+    ptWord, ptSmallInt:
        while valueidx<ProtocolSize do begin
          PtrWordWalker^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]) AND $FFFF;
          inc(valueidx);
@@ -1043,7 +1050,7 @@ begin
   //move os dados para area de trabalho.
   valueidx:=0;
   case FTagType of
-    pttByte: begin
+    pttByte, pttShortInt: begin
        inc(PtrByteWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
        while valueidx<Length(Values) do begin
          PtrByteWalker^:=trunc(Values[valueidx]) AND $FF;
@@ -1051,7 +1058,7 @@ begin
          Inc(PtrByteWalker);
        end;
     end;
-    pttWord, pttShortInt: begin
+    pttWord, pttSmallInt: begin
        inc(PtrWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
        while valueidx<Length(Values) do begin
          PtrWordWalker^:=trunc(Values[valueidx]) AND $FFFF;
@@ -1134,18 +1141,22 @@ begin
            inc(PtrByteWalker);
        end;
     end;
-    ptByte: begin
+    ptByte,
+    ptShortInt: begin
       while AreaIdx<AreaSize do begin
-        AddToResult(PtrByteWalker^, Result);
+        if FProtocolTagType=ptShortInt then
+         AddToResult(PShortInt(PtrByteWalker)^, Result)
+        else
+          AddToResult(PtrByteWalker^, Result);
         inc(AreaIdx);
         inc(PtrByteWalker);
       end;
     end;
-    ptShortInt,
+    ptSmallInt,
     ptWord: begin
       while AreaIdx<AreaSize do begin
-        if FProtocolTagType=ptShortInt then
-          AddToResult(PShortInt(PtrWordWalker)^, Result)
+        if FProtocolTagType=ptSmallInt then
+          AddToResult(PSmallInt(PtrWordWalker)^, Result)
         else
           AddToResult(PtrWordWalker^, Result);
 

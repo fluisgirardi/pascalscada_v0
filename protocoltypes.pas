@@ -34,8 +34,9 @@ type
   }
   TProtocolTagType = (
                    ptBit,
-                   ptByte,
                    ptShortInt,
+                   ptByte,
+                   ptSmallInt,
                    ptWord,
                    ptInteger,
                    ptDWord,
