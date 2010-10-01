@@ -696,9 +696,9 @@ begin
   case FTagType of
     pttDefault:
       FCurrentWordSize := FProtocolWordSize;
-    pttByte:
+    pttShortInt, pttByte:
       FCurrentWordSize:=8;
-    pttShortInt, pttWord:
+    pttSmallInt, pttWord:
       FCurrentWordSize:=16;
     pttInteger, pttDWord, pttFloat:
       FCurrentWordSize:=32;
