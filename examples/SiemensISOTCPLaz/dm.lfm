@@ -1,6 +1,6 @@
 object DataModule1: TDataModule1
   OldCreateOrder = False
-  Height = 379
+  Height = 459
   HorizontalOffset = 985
   VerticalOffset = 118
   Width = 230
@@ -34,7 +34,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 4
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 8
+    RefreshTime = 500
     Size = 40
     TagType = pttDWord
     SwapBytes = True
@@ -53,7 +53,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 3
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 8
+    RefreshTime = 12
     Size = 11
     TagType = pttDWord
     SwapBytes = True
@@ -207,12 +207,12 @@ object DataModule1: TDataModule1
     PLCSlot = 0
     PLCStation = 2
     MemFile_DB = 0
-    MemAddress = 3
+    MemAddress = 1
     MemSubElement = 0
     MemReadFunction = 1
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 8
+    RefreshTime = 12
     TagType = pttByte
     left = 104
     top = 8
@@ -300,7 +300,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 2
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 8
+    RefreshTime = 12
     TagType = pttByte
     left = 136
     top = 8
@@ -388,7 +388,7 @@ object DataModule1: TDataModule1
     MemReadFunction = 5
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
-    RefreshTime = 8
+    RefreshTime = 12
     Size = 10
     OnValueChange = CountersValueChange
     TagType = pttWord
