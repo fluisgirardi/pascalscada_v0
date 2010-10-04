@@ -98,6 +98,7 @@ end;
 destructor TScanUpdate.Destroy;
 begin
   inherited Destroy;
+  FSleepInterruptable.SetEvent;
   FSleepInterruptable.Destroy;
   FSpool.Destroy;
   FEnd.Destroy;
@@ -133,13 +134,12 @@ begin
       end else
         timeout:=1;
 
-      if timeout>0 then
-        FSleepInterruptable.WaitFor(timeout)
+      if (timeout-1)>0 then
+        FSleepInterruptable.WaitFor(timeout-1)
       else
         FSleepInterruptable.WaitFor(1);
 
-      if sleepres=wrSignaled then
-        FSleepInterruptable.ResetEvent;
+      FSleepInterruptable.ResetEvent;
     except
       on E: Exception do begin
         {$IFDEF FDEBUG}
