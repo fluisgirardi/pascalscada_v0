@@ -39,7 +39,7 @@ type
 
 implementation
 
-uses ProtocolDriver, hsstrings;
+uses ProtocolDriver, hsstrings, math;
 
 constructor TPLCStructItem.Create(AOwner:TComponent);
 begin
@@ -82,7 +82,7 @@ begin
 
     if Length(value)<0 then exit;
 
-    notify := (PValueRaw<>value[0]);
+    notify := (PValueRaw<>value[0]) or (IsNan(value[0]) and (not IsNan(PValueRaw)));
     PValueRaw := value[0];
     PValueTimeStamp := PBlock.ValueTimestamp;
 

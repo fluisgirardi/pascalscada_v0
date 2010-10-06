@@ -117,7 +117,7 @@ begin
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           for c := 0 to High(TagValues) do begin
-            notify := notify or (PValues[c+Offset]<>TagValues[c]);
+            notify := notify or (PValues[c+Offset]<>TagValues[c]) or (IsNan(TagValues[c]) and (not IsNaN(PValues[c+Offset])));
             PValues[c+Offset]:=TagValues[c];
           end;
           PValueTimeStamp := ValuesTimeStamp;

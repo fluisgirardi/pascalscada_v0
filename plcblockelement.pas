@@ -71,7 +71,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, math;
 
 constructor TPLCBlockElement.Create(AOwner:TComponent);
 begin
@@ -246,7 +246,7 @@ var
   notify:Boolean;
 begin
   if Assigned(PBlock) then begin
-    notify := (PValueRaw<>PBlock.ValueRaw[PIndex]);
+    notify := (PValueRaw<>PBlock.ValueRaw[PIndex]) or (IsNan(PBlock.ValueRaw[PIndex]) and (not IsNan(PValueRaw)));
     PValueRaw := PBlock.ValueRaw[PIndex];
     PValueTimeStamp := PBlock.ValueTimestamp;
 

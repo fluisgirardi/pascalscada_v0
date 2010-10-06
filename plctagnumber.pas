@@ -100,7 +100,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, math;
 
 function TPLCTagNumber.GetValueRaw:Double;
 begin
@@ -241,7 +241,7 @@ begin
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
           //atualiza os dois valores (direto ou indireto) independende do caso do pedido.
-          notify := (PValueRaw<>TagValues[0]);
+          notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
           PValueRaw := TagValues[0];
           PValueTimeStamp := ValuesTimeStamp;
           if LastResult=ioOk then
