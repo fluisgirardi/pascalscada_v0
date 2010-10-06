@@ -929,8 +929,12 @@ begin
             AddToResult(PtrDWordWalker^, Result);
           pttInteger:
             AddToResult(PInteger(PtrDWordWalker)^, Result);
-          pttFloat:
+          pttFloat: begin
+            if IsNan(PSingle(PtrDWordWalker)^) or IsInfinite(PSingle(PtrDWordWalker)^) then
+              SetExceptionMask(GetExceptionMask-[exZeroDivide]);
+
             AddToResult(PSingle(PtrDWordWalker)^, Result);
+          end;
         end;
         inc(AreaIdx, 4);
         inc(PtrDWordWalker);
