@@ -749,7 +749,7 @@ end;
 
 procedure TPLCTag.RebuildValues;
 begin
-  ScanRead;
+  TagCommandCallBack(FRawProtocolValues,ValueTimestamp,tcInternalUpdate,ioOk,0);
 end;
 
 function TPLCTag.PLCValuesToTagValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble;
@@ -931,7 +931,7 @@ begin
             AddToResult(PInteger(PtrDWordWalker)^, Result);
           pttFloat: begin
             if IsNan(PSingle(PtrDWordWalker)^) or IsInfinite(PSingle(PtrDWordWalker)^) then
-              SetExceptionMask(GetExceptionMask-[exZeroDivide]);
+              SetExceptionMask([exInvalidOp, exDenormalized, {exZeroDivide,} exOverflow, exUnderflow, exPrecision]);
 
             AddToResult(PSingle(PtrDWordWalker)^, Result);
           end;
