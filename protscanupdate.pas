@@ -92,7 +92,7 @@ begin
   FSpool := TMessageSpool.Create;
   FEnd := TCrossEvent.Create(nil, true, false, 'EndOfThread'+IntToStr(UniqueID));
   FEnd.ResetEvent;
-  FSleepInterruptable := TCrossEvent.Create(nil,true,false,'ScanUpdateThreadSleepInterruptable'+IntToStr(UniqueID));
+  FSleepInterruptable := TCrossEvent.Create(nil,false,false,'ScanUpdateThreadSleepInterruptable'+IntToStr(UniqueID));
 end;
 
 destructor TScanUpdate.Destroy;
@@ -138,8 +138,6 @@ begin
         FSleepInterruptable.WaitFor(timeout-1)
       else
         FSleepInterruptable.WaitFor(1);
-
-      FSleepInterruptable.ResetEvent;
     except
       on E: Exception do begin
         {$IFDEF FDEBUG}

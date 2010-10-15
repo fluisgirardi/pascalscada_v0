@@ -179,6 +179,7 @@ constructor TModBusDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   FReadEvent := TCrossEvent.Create(nil,true,false,'');
+  FProtocolReady:=false;
   POutputMaxHole := 50;
   PInputMaxHole := 50;
   PRegistersMaxHole := 10;
@@ -764,6 +765,7 @@ begin
     end else
       NeedSleep := 1;
   finally
+    FProtocolReady:=true;
     SetLength(values,0);
   end;
 end;

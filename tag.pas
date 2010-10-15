@@ -173,6 +173,7 @@ type
   IScanableTagInterface = interface
     ['{6D57805C-D779-4607-BDA5-DF8A68F49973}']
     function RemainingMiliseconds:Int64;
+    function RemainingMilisecondsForNextScan:Int64;
     function IsValidTag:Boolean;
     procedure SetTagValidity(TagValidity:Boolean);
     procedure BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);

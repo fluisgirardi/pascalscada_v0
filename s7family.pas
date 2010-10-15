@@ -138,6 +138,7 @@ constructor TSiemensProtocolFamily.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   PReadSomethingAlways := true;
+  FProtocolReady:=false;
   PDUIncoming:=0;
   PDUOutgoing:=0;
 end;
@@ -668,6 +669,7 @@ begin
         inc(CurValue);
       end;
 
+      FProtocolReady:=true;
 
       with ReqList[CurResult] do begin
         if (PLC>=0) and (PLC<=High(FCPUs)) then

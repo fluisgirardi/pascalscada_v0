@@ -31,6 +31,7 @@ type
     PValidTag:Boolean;
     procedure GetNewProtocolTagSize;
     function RemainingMiliseconds:Int64; virtual;
+    function RemainingMilisecondsForNextScan:Int64; virtual;
     function IsValidTag:Boolean; virtual;
     procedure SetTagValidity(TagValidity:Boolean); virtual;
   protected
@@ -40,6 +41,8 @@ type
     FSyncWrites:Boolean;
     //: Armazena o driver de protocolo usado para comunicação do tag.
     PProtocolDriver:TProtocolDriver;
+    //: Data/Hora da última tentativa de leitura do valor do tag.
+    PLastScanTimeStamp:TDateTime;
     //: Data/Hora da última atualização do valor do tag.
     PValueTimeStamp:TDateTime;
     //: Armazena o resultado da última leitura @bold(sincrona) realizada pelo tag.
@@ -309,6 +312,7 @@ uses hsutils, hsstrings, dateutils;
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  PValueTimeStamp:=Now;
   PAutoRead:=true;
   PAutoWrite:=true;
   PValidTag:=false;
@@ -401,6 +405,9 @@ begin
     inc(FReadCount);
   end;
 
+  if TagCommand=tcScanRead then
+    PLastScanTimeStamp:=Now;
+
   if (LastResult=ioOk) then
     FFirtsRead:=false;
 
@@ -424,9 +431,10 @@ begin
   PAutoRead := v;
 
   if (PProtocolDriver<>nil) then begin
-    if v then
+    if v then begin
+      PLastScanTimeStamp:=Now;
       PProtocolDriver.AddTag(self)
-    else
+    end else
       PProtocolDriver.RemoveTag(self);
   end;
 end;
@@ -1199,6 +1207,11 @@ end;
 function TPLCTag.RemainingMiliseconds:Int64;
 begin
   Result:=PScanTime-MilliSecondsBetween(Now,PValueTimeStamp);
+end;
+
+function TPLCTag.RemainingMilisecondsForNextScan:Int64;
+begin
+  Result:=PScanTime-MilliSecondsBetween(Now,PLastScanTimeStamp);
 end;
 
 function TPLCTag.IsValidTag:Boolean;

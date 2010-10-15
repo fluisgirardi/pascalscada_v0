@@ -432,10 +432,13 @@ begin
             PValues[c+Offset]:=values[c];
           end;
           PValueTimeStamp := ValuesTimeStamp;
-          if LastResult=ioOk then
-             IncCommReadOK(1);
-        end else
-          IncCommReadFaults(1);
+          if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then
+           IncCommReadOK(1);
+        end else begin
+          if (TagCommand<>tcInternalUpdate) then begin
+            IncCommReadFaults(1);
+          end;
+        end;
       end;
       tcScanWrite,tcWrite:
       begin

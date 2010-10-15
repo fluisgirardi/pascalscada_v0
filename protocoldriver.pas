@@ -100,6 +100,9 @@ type
     ciclo de scan do driver.
     }
     PReadSomethingAlways:Boolean;
+    //: Indica se o driver está pronto.
+    FProtocolReady:Boolean;
+
     //: Armazena a ID (número único) do driver.
     PDriverID:Cardinal;
     //: Armazena o driver de porta associado a esse driver de protocolo.
@@ -228,6 +231,10 @@ type
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
+
+    //: @exclude
+    procedure AfterConstruction; override;
+
     //: @exclude
     destructor  Destroy; override;
 
@@ -328,6 +335,8 @@ begin
   PDriverID := DriverCount;
   Inc(DriverCount);
 
+  FProtocolReady:=true;
+
   FCritical := TMultiReadExclusiveWriteSynchronizer.Create;
 
   FPendingActionsCS := TCriticalSection.Create;
@@ -350,7 +359,11 @@ begin
   PScanWriteThread.Priority:=tpTimeCritical;
   PScanWriteThread.OnDoScanRead := nil;
   PScanWriteThread.OnDoScanWrite := SafeScanWrite;
+end;
 
+procedure TProtocolDriver.AfterConstruction;
+begin
+  Inherited AfterConstruction;
   PScanUpdateThread.Resume;
 
   PScanReadThread.Resume;
@@ -786,12 +799,19 @@ begin
     valueSet:=-1;
     //FPause.ResetEvent;
     FCritical.Beginread;
+
+    if not FProtocolReady then exit;
+
     for t:=0 to TagCount-1 do begin
       if Supports(Tag[t], IScanableTagInterface) then begin
         tagiface:=Tag[t] as IScanableTagInterface;
         if tagiface.IsValidTag then begin
 
-          remainingMs:=tagiface.RemainingMiliseconds;
+          if PReadSomethingAlways then
+            remainingMs:=tagiface.RemainingMiliseconds
+          else
+            remainingMs:=tagiface.RemainingMilisecondsForNextScan;
+
           //se o tempo restante é maior que zero
           if remainingMs>0 then begin
             if first then begin
