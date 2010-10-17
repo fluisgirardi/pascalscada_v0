@@ -101,12 +101,17 @@ end;
 
 procedure TPLCStructItem.Loaded;
 var
-  oldprot:TProtocolDriver;
+  oldwordsize:Byte;
+  oldprotocol:TProtocolDriver;
 begin
-  oldprot:=PProtocolDriver;
-  PProtocolDriver:=TProtocolDriver(1);
+  oldwordsize:=FCurrentWordSize;
   inherited Loaded;
-  PProtocolDriver:=oldprot;
+  FCurrentWordSize:=oldwordsize;
+
+  oldprotocol:=PProtocolDriver;
+  PProtocolDriver:=TProtocolDriver(1);
+  UpdateTagSizeOnProtocol;
+  PProtocolDriver:=oldprotocol;
 end;
 
 procedure TPLCStructItem.SetBlock(blk:TPLCStruct);
@@ -179,9 +184,9 @@ begin
         MySize:=1
       else
         MySize := FProtocolWordSize div 8;
-    pttByte:
+    pttByte, pttShortInt:
       MySize:=1;
-    pttShortInt, pttWord:
+    pttSmallInt, pttWord:
       MySize:=2;
     pttInteger, pttDWord, pttFloat:
       MySize:=4;

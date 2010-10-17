@@ -1144,25 +1144,27 @@ procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
 
   var
     FS:TStringStream;
+    timestamp:String;
 begin
   try
     if not FLogActions then exit;
     FS:=TStringStream.Create('');
+    timestamp := FormatDateTime('mmm-dd hh:nn:ss.zzz',Now);
     if cmd=iocRead then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
     end;
     if cmd=iocReadWrite then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
-      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
     end;
 
     if cmd=iocWriteRead then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
-      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
     end;
 
     if cmd=iocWrite then begin
-      fs.WriteString(TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
     end;
     FS.Position:=0;
     FLogFileStream.CopyFrom(FS,FS.Size);
