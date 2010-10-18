@@ -7,8 +7,8 @@ unit scada;
 interface
 
 uses
-    CommPort, commtypes, crc16utils, CrossEvent, HMIAnimation, HMIButton, 
-  HMICheckBox, HMIControlDislocatorAnimation, HMIEdit, HMILabel, 
+    CommPort, commtypes, crc16utils, CrossEvent, crosskeyevents, HMIAnimation, 
+  HMIButton, HMICheckBox, HMIControlDislocatorAnimation, HMIEdit, HMILabel, 
   HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, HMIScrollBar, 
   HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, hsstrings, hsutils, 
   IBoxDriver, ISOTCPDriver, LinearScaleProcessor, MessageSpool, ModBusDriver, 
