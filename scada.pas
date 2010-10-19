@@ -1,4 +1,4 @@
-{ This file was automatically created by Lazarus. Do not edit!
+{ This file was automatically created by Lazarus. do not edit!
   This source is only used to compile and install the package.
  }
 
@@ -16,8 +16,9 @@ uses
   PLCNumber, PLCString, PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, 
   ProtocolDriver, ProtocolTypes, protscan, protscanupdate, s7family, S7Types, 
   scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, 
-  tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, UserScale, 
-  uwesttagbuilder, ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
+  tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, 
+  unumerickeyboard, UserScale, uwesttagbuilder, ValueProcessor, 
+  WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 

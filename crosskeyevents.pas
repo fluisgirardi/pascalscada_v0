@@ -52,6 +52,8 @@ type
   end;
   {$IFEND}
 
+  function CreateCrossKeyEvents(Target:TWinControl):TCrossKeyEvents;
+
 implementation
 
 {$IF defined(LCLgtk2)}
@@ -65,7 +67,7 @@ uses {$IFDEF FPC}qt4, qtwidgets, qtobjects, LCLType{$ENDIF};
 //se não esta definido FPC (consequentemente não estará definida LCLwin32),
 //estou usando Delphi, consequentemente, Windows...
 {$IF defined(LCLwin32) OR (not defined(FPC))}
-uses {$IFDEF FPC}LCLType{$ENDIF};
+uses windows{$IFDEF FPC}, LCLType{$ENDIF};
 {$IFEND}
 
 constructor TCrossKeyEvents.Create(Target:TWinControl);
@@ -423,19 +425,37 @@ end;
 {$IF defined(LCLwin32) OR (not defined(FPC))}
 procedure TWindowsKeyEvents.DoDown(Key: LongWord);
 begin
-
+  SendMessage(FTarget.Handle,WM_KEYDOWN,Key,0);
+  if (Key>=VK_0) and (key<=VK_9) then
+    SendMessage(FTarget.Handle,WM_CHAR,Key,0);
 end;
 
 procedure TWindowsKeyEvents.DoUp(Key: LongWord);
 begin
-
+  SendMessage(FTarget.Handle,WM_KEYUP,Key,0);
 end;
 
 function TWindowsKeyEvents.TranlateVirtualKey(Key: Word): LongWord;
 begin
   Result := key;
 end;
+
 {$IFEND}
+
+function CreateCrossKeyEvents(Target:TWinControl):TCrossKeyEvents;
+begin
+  {$IF defined(LCLgtk2)}
+  Result:=TGtk2KeyEvents.Create(Target);
+  {$IFEND}
+
+  {$IF defined(LCLqt)}
+  Result:=TQt4KeyEvents.Create(Target);
+  {$IFEND}
+
+  {$IF defined(LCLwin32) OR (not defined(FPC))}
+  Result:=TWindowsKeyEvents.Create(Target);
+  {$IFEND}
+end;
 
 end.
 

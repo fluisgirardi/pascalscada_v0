@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Name Value="scada"/>
     <CompilerOptions>
-      <Version Value="9"/>
+      <Version Value="8"/>
       <PathDelim Value="\"/>
       <SearchPaths>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
@@ -34,7 +34,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="6" Release="4"/>
-    <Files Count="64">
+    <Files Count="66">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -273,25 +273,33 @@
         <Type Value="LFM"/>
       </Item59>
       <Item60>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="unumerickeyboard.pas"/>
+        <UnitName Value="unumerickeyboard"/>
       </Item60>
       <Item61>
-        <Filename Value="uwesttagbuilder.pas"/>
-        <UnitName Value="uwesttagbuilder"/>
+        <Filename Value="unumerickeyboard.lfm"/>
+        <Type Value="LFM"/>
       </Item61>
       <Item62>
-        <Filename Value="uwesttagbuilder.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
       </Item62>
       <Item63>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="uwesttagbuilder.pas"/>
+        <UnitName Value="uwesttagbuilder"/>
       </Item63>
       <Item64>
+        <Filename Value="uwesttagbuilder.lfm"/>
+        <Type Value="LFM"/>
+      </Item64>
+      <Item65>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item65>
+      <Item66>
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
-      </Item64>
+      </Item66>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
