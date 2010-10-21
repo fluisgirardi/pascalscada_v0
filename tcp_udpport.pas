@@ -379,18 +379,33 @@ begin
 end;
 
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
+var
+  buffer:BYTES;
+  lidos:Integer;
 begin
   if FSocket>0 then begin
+    SetLength(buffer,5);
     {$IF defined(UNIX) and defined(FPC)}
-    fpshutdown(FSocket,SHUT_RDWR);
+    fpshutdown(FSocket,SHUT_WR);
+    lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
+    while lidos>0 do begin
+      lidos := fprecv(FSocket, @Buffer[0], 1, 0);
+      lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
+    end;
     {$ELSE}
-    Shutdown(FSocket,2);
+    Shutdown(FSocket,1);
+    lidos := Recv(FSocket, @Buffer[0], 1, MSG_PEEK);
+    while lidos>0 do begin
+      lidos := Recv(FSocket, @Buffer[0], 1, 0);
+      lidos := Recv(FSocket, @Buffer[0], 1, MSG_PEEK);
+    end;
     {$IFEND}
     CloseSocket(FSocket);
   end;
   PActive:=false;
   Ok:=true;
   FSocket:=0;
+  SetLength(Buffer,0);
 end;
 
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
