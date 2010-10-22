@@ -684,11 +684,11 @@ var
   c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
-  if not Assigned(FOnCommPortOpened) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
     try
-      FOnCommPortOpened(Self);
+      if Assigned(FOnCommPortOpened) then
+        FOnCommPortOpened(Self);
     finally
     end;
     for c:=0 to High(EventInterfaces) do
@@ -707,11 +707,11 @@ var
   c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
-  if not Assigned(FOnCommPortOpened) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
     try
-      FOnCommPortOpenError(Self);
+      if Assigned(FOnCommPortOpened) then
+        FOnCommPortOpenError(Self);
     finally
     end;
   end else begin
@@ -724,11 +724,11 @@ var
   c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
-  if not Assigned(FOnCommPortClosed) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
     try
-      FOnCommPortClosed(Self);
+      if Assigned(FOnCommPortClosed) then
+        FOnCommPortClosed(Self);
     finally
     end;
     for c:=0 to High(EventInterfaces) do
@@ -747,11 +747,11 @@ var
   c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
-  if not Assigned(FOnCommPortClosed) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
     try
-      FOnCommPortCloseError(Self);
+      if Assigned(FOnCommPortClosed) then
+        FOnCommPortCloseError(Self);
     finally
     end;
   end else begin
@@ -764,11 +764,11 @@ var
   c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
-  if not Assigned(FOnCommPortDisconnected) then exit;
 
   if GetCurrentThreadId=FOwnerThread then begin
     try
-      FOnCommPortDisconnected(Self);
+      if Assigned(FOnCommPortDisconnected) then
+        FOnCommPortDisconnected(Self);
     finally
     end;
     for c:=0 to High(EventInterfaces) do

@@ -800,8 +800,6 @@ begin
     //FPause.ResetEvent;
     FCritical.Beginread;
 
-    if not FProtocolReady then exit;
-
     for t:=0 to TagCount-1 do begin
       if Supports(Tag[t], IScanableTagInterface) then begin
         tagiface:=Tag[t] as IScanableTagInterface;

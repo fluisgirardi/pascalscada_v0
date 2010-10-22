@@ -342,7 +342,6 @@ begin
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,     sizeof(Integer));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_KEEPALIVE, @flag,     sizeof(Integer));
     {$ELSE}
     flag:=FTimeout+1000;
     setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  PAnsiChar(@flag), sizeof(FTimeout));
