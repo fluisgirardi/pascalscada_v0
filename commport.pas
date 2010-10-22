@@ -658,16 +658,14 @@ procedure TCommPortDriver.DoCommError(WriteCmd:Boolean; Error:TIOResult);
 var
   evt:TCommPortErrorEvent;
 begin
-
-  if (WriteCmd and (not Assigned(FOnCommErrorWriting))) or ((not WriteCmd) and (not Assigned(FOnCommErrorReading))) then
-    exit;
-
   if FOwnerThread=GetCurrentThreadId then begin
     try
       if WriteCmd then begin
-        FOnCommErrorWriting(Error);
+        if Assigned(FOnCommErrorWriting) then
+          FOnCommErrorWriting(Error);
       end else begin
-        FOnCommErrorReading(Error);
+        if Assigned(FOnCommErrorReading) then
+          FOnCommErrorReading(Error);
       end;
     finally
     end;
@@ -678,7 +676,8 @@ begin
       evt := FOnCommErrorReading;
     end;
 
-    PEventUpdater.DoCommErrorEvent(evt,Error);
+    if Assigned(evt) then
+      PEventUpdater.DoCommErrorEvent(evt,Error);
   end;
 end;
 
@@ -698,7 +697,8 @@ begin
       if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
         EventInterfaces[c].DoPortOpened(Self);
   end else begin
-    PEventUpdater.DoCommPortEvent(FOnCommPortOpened);
+    if Assigned(FOnCommPortOpened) then
+      PEventUpdater.DoCommPortEvent(FOnCommPortOpened);
     for c:=0 to High(EventInterfaces) do
       if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
         PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortOpenedEvent);
@@ -713,12 +713,13 @@ begin
 
   if GetCurrentThreadId=FOwnerThread then begin
     try
-      if Assigned(FOnCommPortOpened) then
+      if Assigned(FOnCommPortOpenError) then
         FOnCommPortOpenError(Self);
     finally
     end;
   end else begin
-    PEventUpdater.DoCommPortEvent(FOnCommPortOpenError);
+    if Assigned(FOnCommPortOpenError) then
+      PEventUpdater.DoCommPortEvent(FOnCommPortOpenError);
   end;
 end;
 
@@ -738,7 +739,8 @@ begin
       if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
         EventInterfaces[c].DoPortClosed(Self);
   end else begin
-    PEventUpdater.DoCommPortEvent(FOnCommPortClosed);
+    if Assigned(FOnCommPortClosed) then
+      PEventUpdater.DoCommPortEvent(FOnCommPortClosed);
     for c:=0 to High(EventInterfaces) do
       if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
         PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortClosedEvent);
@@ -753,12 +755,13 @@ begin
 
   if GetCurrentThreadId=FOwnerThread then begin
     try
-      if Assigned(FOnCommPortClosed) then
+      if Assigned(FOnCommPortCloseError) then
         FOnCommPortCloseError(Self);
     finally
     end;
   end else begin
-    PEventUpdater.DoCommPortEvent(FOnCommPortCloseError);
+    if Assigned(FOnCommPortCloseError) then
+      PEventUpdater.DoCommPortEvent(FOnCommPortCloseError);
   end;
 end;
 
@@ -778,7 +781,8 @@ begin
       if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
         EventInterfaces[c].DoPortDisconnected(Self);
   end else begin
-    PEventUpdater.DoCommPortEvent(FOnCommPortDisconnected);
+    if Assigned(FOnCommPortDisconnected) then
+      PEventUpdater.DoCommPortEvent(FOnCommPortDisconnected);
     for c:=0 to High(EventInterfaces) do
       if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
         PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortDisconnectedEvent);
@@ -1009,6 +1013,7 @@ begin
   try
      PIOCmdCS.Enter;
      PortStart(ok);
+     RefreshLastOSError;
      if Ok then
        DoCommPortOpened
      else
@@ -1023,6 +1028,7 @@ begin
   try
      PIOCmdCS.Enter;
      PortStop(ok);
+     RefreshLastOSError;
      if Ok then
        DoCommPortClose
      else
