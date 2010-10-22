@@ -340,7 +340,10 @@ type
     @returns(@true caso consiga remover o uso exclusivo do driver.)
     }
     function Unlock(DriverID:Cardinal):Boolean;
-
+    {:
+    Retorna se a porta está realmente aberta.
+    }
+    function ReallyActive:Boolean;
   published
     //:Se o valor da propriedade for @true, ativa (abre) a porta, caso contrário fecha.
     property Active:Boolean read PActive write SetActive stored true default false;
@@ -842,6 +845,18 @@ begin
   finally
     PLockCS.Leave;
   end;
+end;
+
+function TCommPortDriver.ReallyActive:Boolean;
+begin
+  if [csDesigning]*ComponentState<>[] then begin
+    if FExclusiveDevice then begin
+      Result:=false;
+    end else begin
+      Result:=PActive;
+    end;
+  end else
+    Result:=PActive;
 end;
 
 procedure TCommPortDriver.SetActive(v:Boolean);

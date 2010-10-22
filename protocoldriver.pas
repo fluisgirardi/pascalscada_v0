@@ -800,6 +800,11 @@ begin
     //FPause.ResetEvent;
     FCritical.Beginread;
 
+    if (PCommPort=nil) or (not PCommPort.ReallyActive) then begin
+      Result:=50; //forca espera de 50ms
+      exit;
+    end;
+
     for t:=0 to TagCount-1 do begin
       if Supports(Tag[t], IScanableTagInterface) then begin
         tagiface:=Tag[t] as IScanableTagInterface;
