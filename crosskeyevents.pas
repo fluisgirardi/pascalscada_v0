@@ -3,7 +3,7 @@ unit crosskeyevents;
 interface
 
 uses
-  Controls, Classes;
+  Controls, Classes, SysUtils;
 
 type
 
@@ -53,6 +53,9 @@ type
   {$IFEND}
 
   function CreateCrossKeyEvents(Target:TWinControl):TCrossKeyEvents;
+
+var
+  PSVK_BACK, PSVK_DECIMAL, PSVK_SUBTRACT:Byte;
 
 implementation
 
@@ -426,7 +429,7 @@ end;
 procedure TWindowsKeyEvents.DoDown(Key: LongWord);
 begin
   SendMessage(FTarget.Handle,WM_KEYDOWN,Key,0);
-  if (Key>=VK_0) and (key<=VK_9) then
+  if (Key<>VK_DELETE) AND (Key in [VK_0..VK_9,PSVK_DECIMAL,PSVK_BACK,PSVK_SUBTRACT]) then
     SendMessage(FTarget.Handle,WM_CHAR,Key,0);
 end;
 
@@ -456,6 +459,18 @@ begin
   Result:=TWindowsKeyEvents.Create(Target);
   {$IFEND}
 end;
+
+initialization
+
+{$IFDEF WINDOWS}
+PSVK_BACK     := 8;
+PSVK_DECIMAL  := Ord(DecimalSeparator);
+PSVK_SUBTRACT := Ord('-');
+{$ELSE}
+PSVK_BACK     := VK_BACK;
+PSVK_DECIMAL  := VK_DECIMAL;
+PSVK_SUBTRACT := VK_SUBTRACT;
+{$ENDIF}
 
 end.
 

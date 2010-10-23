@@ -7,8 +7,8 @@ unit unumerickeyboard;
 interface
 
 uses
-  Forms, Classes, Controls, Buttons, crosskeyevents
-  {$IFDEF FPC}, LResources, LCLIntf, LCLType{$ENDIF};
+  SysUtils, Forms, Classes, Controls, Buttons, crosskeyevents
+  {$IFDEF FPC}, LResources, LCLIntf, LCLType, LMessages{$ENDIF};
 
 type
 
@@ -51,6 +51,10 @@ var
   NumericKeyBoard: TNumericKeyBoard;
 
 implementation
+
+{$IFDEF WINDOWS}
+uses windows;
+{$ENDIF}
 
 {$IFNDEF FPC}
   {$R *.dfm}
@@ -99,14 +103,16 @@ begin
   Btn_7.Tag:=VK_7;
   Btn_8.Tag:=VK_8;
   Btn_9.Tag:=VK_9;
-  Btn_DecSeparator.Tag:=VK_DECIMAL;
-  Btn_Minus.Tag:=VK_SUBTRACT;
+
   Btn_Left.tag:=VK_LEFT;
   Btn_Rigth.Tag:=VK_RIGHT;
-  Btn_Back.Tag:=VK_BACK;
   Btn_Esc.Tag:=VK_ESCAPE;
   Btn_Del.Tag:=VK_DELETE;
   Btn_Ok.Tag:=VK_RETURN;
+
+  Btn_Back.Tag:=PSVK_BACK;
+  Btn_DecSeparator.Tag:=PSVK_DECIMAL;
+  Btn_Minus.Tag:=PSVK_SUBTRACT;
 
   OnClose:=FormClose;
 
@@ -128,13 +134,13 @@ begin
     if (tag=VK_ESCAPE) or (tag=VK_RETURN) then
       close;
   end;
-  FTarget.SetFocus;
+  FFormOwner.Show;
 end;
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
-initialization
-  {$i unumerickeyboard.lrs}
+    initialization
+    {$i unumerickeyboard.lrs}
   {$IFEND}
 {$ENDIF}
 
