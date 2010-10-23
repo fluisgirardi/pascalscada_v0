@@ -137,7 +137,7 @@ begin
     gev.key.group:=1;
   end else begin
     gev.key.hardware_keycode:=keys^.keycode;
-    gev.key.group:=keys^.keycode;
+    gev.key.group:=keys^.group;
     g_free(keys);
   end;
 
@@ -167,7 +167,7 @@ begin
     gev.key.group:=1;
   end else begin
     gev.key.hardware_keycode:=keys^.keycode;
-    gev.key.group:=keys^.keycode;
+    gev.key.group:=keys^.group;
     g_free(keys);
   end;
 
@@ -473,4 +473,4 @@ PSVK_SUBTRACT := VK_SUBTRACT;
 {$ENDIF}
 
 end.
-
+
