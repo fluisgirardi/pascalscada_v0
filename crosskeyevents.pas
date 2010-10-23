@@ -293,8 +293,11 @@ end;
 procedure TQT4KeyEvents.DoDown(Key: LongWord);
 var
   qevt:QKeyEventH;
+  ktxt:WideString;
 begin
-  qevt:=QKeyEvent_create(QEventKeyPress, key, QtNoModifier, nil, false, 1);
+  ktxt:=chr(key);
+
+  qevt:=QKeyEvent_create(QEventKeyPress, key, QtNoModifier, @ktxt, false, 1);
 
   QCoreApplication_sendEvent(TQtWidget(FTarget.Handle).Widget,qevt);
   QKeyEvent_destroy(qevt);
