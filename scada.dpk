@@ -92,6 +92,7 @@ contains
   ubitmapper in 'ubitmapper.pas' {frmBitMapper},
   hmicontroldislocatoranimation in 'hmicontroldislocatoranimation.pas',
   uelementmapper in 'uelementmapper.pas' {frmMapElements},
-  uwesttagbuilder in 'uwesttagbuilder.pas' {WestTagBuilder};
+  uwesttagbuilder in 'uwesttagbuilder.pas' {WestTagBuilder},
+  unumerickeyboard in 'unumerickeyboard.pas' {NumericKeyBoard};
 
 end.
