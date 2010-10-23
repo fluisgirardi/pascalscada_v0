@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="41"
+   height="41"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48+devel r"
+   sodipodi:docname="left_arrow.svg"
+   inkscape:export-filename="/home/fabiolg/desenvolvimento/pascalscada/artwork/customsize/left_arrow.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="13"
+     inkscape:cx="20.5"
+     inkscape:cy="20.5"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1366"
+     inkscape:window-height="701"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Camada 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1011.3622)">
+    <g
+       id="g3073"
+       transform="matrix(0.10080831,0,0,0.10181853,-0.47541779,982.72695)">
+      <path
+         inkscape:transform-center-x="32.473014"
+         transform="matrix(0,-1,0.65448844,0,-21.210186,679.71951)"
+         d="m 369.01727,337.30822 -171.87441,0 -171.874428,0 L 111.20564,188.46061 197.14285,39.612991 283.08006,188.4606 z"
+         inkscape:randomized="0"
+         inkscape:rounded="0"
+         inkscape:flatsided="false"
+         sodipodi:arg2="1.5707963"
+         sodipodi:arg1="0.52359878"
+         sodipodi:r2="99.231743"
+         sodipodi:r1="198.46349"
+         sodipodi:cy="238.07648"
+         sodipodi:cx="197.14285"
+         sodipodi:sides="3"
+         id="path3069"
+         style="fill:#333333;fill-opacity:1;stroke:none"
+         sodipodi:type="star" />
+      <rect
+         ry="19.496569"
+         y="421.1481"
+         x="165.71428"
+         height="122.85714"
+         width="245.71428"
+         id="rect3071"
+         style="fill:#333333;fill-opacity:1;stroke:none"
+         rx="25.714285" />
+    </g>
+  </g>
+</svg>
