@@ -393,10 +393,10 @@ begin
     end;
     {$ELSE}
     Shutdown(FSocket,1);
-    lidos := Recv(FSocket, @Buffer[0], 1, MSG_PEEK);
+    lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
     while lidos>0 do begin
-      lidos := Recv(FSocket, @Buffer[0], 1, 0);
-      lidos := Recv(FSocket, @Buffer[0], 1, MSG_PEEK);
+      lidos := Recv(FSocket, Buffer[0], 1, 0);
+      lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
     end;
     {$IFEND}
     CloseSocket(FSocket);

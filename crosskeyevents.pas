@@ -1,4 +1,4 @@
-unit crosskeyevents;
+﻿unit crosskeyevents;
 
 interface
 
@@ -57,6 +57,36 @@ type
 var
   PSVK_BACK, PSVK_DECIMAL, PSVK_SUBTRACT:Byte;
 
+{$IF (not defined(FPC)) and (defined(WIN32) or defined(WIN64) or defined(WINDOWS))}
+const
+  VK_0 = 48;
+  VK_1 = 49;
+  VK_2 = 50;
+  VK_3 = 51;
+  VK_4 = 52;
+  VK_5 = 53;
+  VK_6 = 54;
+  VK_7 = 55;
+  VK_8 = 56;
+  VK_9 = 57;
+
+  //VK_SPACE  = $20;
+  //VK_PRIOR  = $21;
+  //VK_NEXT   = $22;
+  //VK_END    = $23;
+  //VK_HOME   = $24;
+  //VK_SELECT = $2;
+  VK_LEFT   = $25;
+  VK_UP     = $26;
+  VK_RIGHT  = $27;
+  VK_DOWN   = $28;
+  VK_ESCAPE = $1B;
+  VK_DELETE = $2E;
+  VK_RETURN = $0D;
+
+{$IFEND}
+
+
 implementation
 
 {$IF defined(LCLgtk2)}
@@ -70,7 +100,7 @@ uses {$IFDEF FPC}qt4, qtwidgets, qtobjects, LCLType{$ENDIF};
 //se não esta definido FPC (consequentemente não estará definida LCLwin32),
 //estou usando Delphi, consequentemente, Windows...
 {$IF defined(LCLwin32) OR (not defined(FPC))}
-uses windows{$IFDEF FPC}, LCLType{$ENDIF};
+uses windows{$IFDEF FPC}, LCLType {$ELSE}, Messages {$ENDIF};
 {$IFEND}
 
 constructor TCrossKeyEvents.Create(Target:TWinControl);
