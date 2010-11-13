@@ -72,7 +72,7 @@ type
   valores de acordo com a área de memória desejada:
 
   @table(
-    @rowHead( @cell(Área desejada)       @cell(MemReadFunction) @cell(MemReadFunction) )
+    @rowHead( @cell(Área desejada)       @cell(MemReadFunction) @cell(MemWriteFunction) )
     @row(     @cell(Entradas digitais)   @cell(2)               @cell(0) )
     @row(     @cell(Saidas digitais)     @cell(1)               @cell(5 (simples), 15 (bloco)) )
     @row(     @cell(Registradores)       @cell(3)               @cell(6 (simples), 16 (bloco)) )
