@@ -23,9 +23,9 @@ type
     FTag:TPLCTag;
     procedure SetTag(t:TPLCTag);
 
-    function QueryInterface(const IID: TGUID; out Obj): Hresult; virtual; stdcall;
-    function _AddRef: Integer; stdcall;
-    function _Release: Integer; stdcall;
+    function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF}; virtual;
+    function _AddRef: Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+    function _Release: Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 
     //IHMITagInterface
     procedure NotifyReadOk;
@@ -182,7 +182,7 @@ begin
     FTag := nil;
 end;
 
-function TTagCollectionItem.QueryInterface(const IID: TGUID; out Obj): HResult;stdcall;
+function TTagCollectionItem.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 begin
   if GetInterface(IID, Obj) then
     result:=S_OK
@@ -190,12 +190,12 @@ begin
     result:=E_NOINTERFACE;
 end;
 
-function TTagCollectionItem._AddRef: Integer;stdcall;
+function TTagCollectionItem._AddRef: Integer;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 begin
   result:=-1;
 end;
 
-function TTagCollectionItem._Release: Integer;stdcall;
+function TTagCollectionItem._Release: Integer;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 begin
   result:=-1;
 end;
