@@ -1,4 +1,4 @@
-package scada;
+package pascalscada;
 
 {$R *.res}
 {$ALIGN 8}
