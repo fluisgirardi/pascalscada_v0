@@ -80,7 +80,7 @@ end;
 
 {$IFDEF FPC}
 initialization
-  {$I scada.lrs}
+  {$I pascalscada.lrs}
 {$ENDIF}
 end.
 
