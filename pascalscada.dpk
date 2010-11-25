@@ -93,6 +93,7 @@ contains
   hmicontroldislocatoranimation in 'hmicontroldislocatoranimation.pas',
   uelementmapper in 'uelementmapper.pas' {frmMapElements},
   uwesttagbuilder in 'uwesttagbuilder.pas' {WestTagBuilder},
-  unumerickeyboard in 'unumerickeyboard.pas' {NumericKeyBoard};
+  unumerickeyboard in 'unumerickeyboard.pas' {NumericKeyBoard},
+  crosskeyevents in 'crosskeyevents.pas';
 
 end.

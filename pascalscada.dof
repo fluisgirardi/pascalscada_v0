@@ -132,5 +132,7 @@ LegalCopyright=
 LegalTrademarks=
 OriginalFilename=
 ProductName=
-ProductVersion=0.6.4.0
+ProductVersion=1.0.0.0
 Comments=
+[Excluded Packages]
+C:\Temperaturas\Desenvolvimento\RLibD7vcl\RLibWinD7vcl.bpl=FortesReport VCL Library
