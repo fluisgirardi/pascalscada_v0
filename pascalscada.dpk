@@ -94,6 +94,7 @@ contains
   uelementmapper in 'uelementmapper.pas' {frmMapElements},
   uwesttagbuilder in 'uwesttagbuilder.pas' {WestTagBuilder},
   unumerickeyboard in 'unumerickeyboard.pas' {NumericKeyBoard},
-  crosskeyevents in 'crosskeyevents.pas';
+  crosskeyevents in 'crosskeyevents.pas',
+  us7tagbuilder in 'us7tagbuilder.pas' {frmS7TagBuilder};
 
 end.
