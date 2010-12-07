@@ -1,7 +1,7 @@
 object frmS7TagBuilder: TfrmS7TagBuilder
-  Left = 191
+  Left = 238
   Height = 425
-  Top = 104
+  Top = 119
   Width = 595
   BorderStyle = bsDialog
   Caption = 'Siemens S7 Tag builder..'
@@ -13,7 +13,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
-  LCLVersion = '0.9.28.3'
+  LCLVersion = '0.9.29'
   object Panel2: TPanel
     Left = 0
     Height = 388
@@ -28,7 +28,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       Left = 296
       Height = 14
       Top = 8
-      Width = 39
+      Width = 45
       Caption = 'Label24'
       ParentColor = False
     end
@@ -37,22 +37,22 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       Height = 388
       Top = 0
       Width = 595
-      ActivePage = TabSheet2
+      ActivePage = TabSheet1
       Align = alClient
-      TabIndex = 1
+      TabIndex = 0
       TabOrder = 0
       OnChange = PageControl1Change
       OnChanging = PageControl1Changing
       object TabSheet1: TTabSheet
         Caption = 'Area e Tipo'
-        ClientHeight = 362
-        ClientWidth = 587
+        ClientHeight = 365
+        ClientWidth = 593
         OnShow = TabSheet1Show
         object MemoryArea: TRadioGroup
           Left = 0
           Height = 104
           Top = 67
-          Width = 587
+          Width = 593
           Align = alTop
           AutoFill = True
           Caption = 'Qual é a área de memória que deseja endereçar'
@@ -64,15 +64,15 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 3
-          ClientHeight = 86
-          ClientWidth = 583
+          ClientHeight = 90
+          ClientWidth = 591
           Columns = 3
           ItemIndex = 0
           Items.Strings = (
             'Inputs, Entradas'
             'Outputs, Saidas'
             'Flags ou M''s'
-            'DB�s'
+            'DB''s'
             'Counter, S7 300/400'
             'Timer, S7 300/400'
           )
@@ -83,7 +83,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 0
           Height = 11
           Top = 171
-          Width = 587
+          Width = 593
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 2
@@ -92,27 +92,27 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 0
           Height = 67
           Top = 0
-          Width = 587
+          Width = 593
           Align = alTop
           BevelOuter = bvNone
           ClientHeight = 67
-          ClientWidth = 587
+          ClientWidth = 593
           TabOrder = 0
           object PLCAddress: TGroupBox
             Left = 0
             Height = 60
             Top = 0
-            Width = 587
+            Width = 593
             Align = alTop
             Caption = 'Endereço do CLP'
-            ClientHeight = 42
-            ClientWidth = 583
+            ClientHeight = 46
+            ClientWidth = 591
             TabOrder = 0
             object Label1: TLabel
               Left = 8
               Height = 22
               Top = 8
-              Width = 53
+              Width = 62
               AutoSize = False
               Caption = 'PLCStation'
               Layout = tlCenter
@@ -139,8 +139,8 @@ object frmS7TagBuilder: TfrmS7TagBuilder
               ParentColor = False
             end
             object PLCStation: TSpinEdit
-              Left = 65
-              Height = 21
+              Left = 70
+              Height = 19
               Top = 8
               Width = 73
               MaxValue = 255
@@ -149,7 +149,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             end
             object PLCSlot: TSpinEdit
               Left = 225
-              Height = 21
+              Height = 19
               Top = 8
               Width = 73
               MaxValue = 255
@@ -157,7 +157,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             end
             object PLCRack: TSpinEdit
               Left = 385
-              Height = 21
+              Height = 19
               Top = 8
               Width = 73
               MaxValue = 255
@@ -167,13 +167,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object grptagtype: TGroupBox
           Left = 0
-          Height = 180
+          Height = 183
           Top = 182
-          Width = 587
+          Width = 593
           Align = alClient
           Caption = 'Qual o tipo do tag que deseja usar para endereçar a(s) memoria(s) selecionada(s)'
-          ClientHeight = 162
-          ClientWidth = 583
+          ClientHeight = 169
+          ClientWidth = 591
           TabOrder = 3
           object Label25: TLabel
             Left = 56
@@ -209,41 +209,39 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           end
           object optplctagnumber: TRadioButton
             Left = 16
-            Height = 17
+            Height = 20
             Top = 8
-            Width = 177
+            Width = 199
             Caption = 'PLCTagNumber (tags separados)'
             OnClick = optplcblockClick
             TabOrder = 0
-            TabStop = False
           end
           object optplcblock: TRadioButton
             Left = 16
-            Height = 17
+            Height = 20
             Top = 32
-            Width = 262
+            Width = 299
             Caption = 'PLCBlock (tag agrupados do mesmo tipo de dados)'
             Checked = True
             OnClick = optplcblockClick
-            State = cbChecked
             TabOrder = 1
+            TabStop = True
           end
           object optplcStruct: TRadioButton
             Left = 16
-            Height = 17
+            Height = 20
             Top = 104
-            Width = 289
+            Width = 332
             Caption = 'PLCStruck (tags agrupados de diferentes tipos de dados)'
             OnClick = optplcblockClick
             TabOrder = 3
-            TabStop = False
           end
           object BlockType: TComboBox
             Left = 128
-            Height = 21
+            Height = 23
             Top = 56
             Width = 225
-            ItemHeight = 13
+            ItemHeight = 0
             ItemIndex = 0
             Items.Strings = (
               'pttDefault,  Protocol defined word size'
@@ -262,7 +260,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           end
           object BlockScan: TSpinEdit
             Left = 432
-            Height = 21
+            Height = 19
             Top = 56
             Width = 81
             MaxValue = 2147483647
@@ -272,9 +270,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           end
           object BlockSwapBytes: TCheckBox
             Left = 128
-            Height = 17
+            Height = 18
             Top = 82
-            Width = 75
+            Width = 83
             Caption = 'Swap bytes'
             Checked = True
             State = cbChecked
@@ -282,9 +280,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           end
           object BlockSwapWords: TCheckBox
             Left = 232
-            Height = 17
+            Height = 18
             Top = 82
-            Width = 78
+            Width = 86
             Caption = 'Swap words'
             Checked = True
             State = cbChecked
@@ -292,7 +290,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           end
           object StructScan: TSpinEdit
             Left = 97
-            Height = 21
+            Height = 19
             Top = 124
             Width = 81
             MaxValue = 2147483647
@@ -304,15 +302,15 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       end
       object TabSheet2: TTabSheet
         Caption = 'Inputs and Outputs'
-        ClientHeight = 362
-        ClientWidth = 587
+        ClientHeight = 365
+        ClientWidth = 593
         ImageIndex = 1
         OnShow = TabSheet2Show
         object Label4: TLabel
           Left = 8
           Height = 14
           Top = 8
-          Width = 44
+          Width = 46
           Caption = 'Mapear'
           Font.Height = -11
           Font.Name = 'MS Sans Serif'
@@ -324,7 +322,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 32
           Height = 14
           Top = 40
-          Width = 77
+          Width = 89
           Caption = 'Da entrada byte'
           ParentColor = False
         end
@@ -332,7 +330,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 200
           Height = 14
           Top = 40
-          Width = 88
+          Width = 113
           Caption = 'Até a entrada byte'
           ParentColor = False
         end
@@ -340,7 +338,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 32
           Height = 14
           Top = 88
-          Width = 18
+          Width = 21
           Caption = 'Bits'
           ParentColor = False
         end
@@ -378,7 +376,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 51
           Height = 14
           Top = 268
-          Width = 212
+          Width = 250
           Caption = '&Preencher com zeros o número do byte atual'
           FocusControl = IOByteNumberZeroFill
           ParentColor = False
@@ -387,14 +385,14 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 51
           Height = 14
           Top = 284
-          Width = 172
+          Width = 203
           Caption = '&Actual byte number filled with zeroes'
           FocusControl = IOByteNumberZeroFill
           ParentColor = False
         end
         object IOStartByte: TSpinEdit
           Left = 32
-          Height = 21
+          Height = 19
           Top = 56
           Width = 121
           MaxValue = 10000
@@ -403,7 +401,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object IOEndByte: TSpinEdit
           Left = 200
-          Height = 21
+          Height = 19
           Top = 56
           Width = 121
           MaxValue = 10000
@@ -426,26 +424,27 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             'Bit 6'
             'Bit 7'
           )
-          ItemHeight = 15
+          ItemHeight = 0
           OnClick = IOStartByteChange
           OnClickCheck = IOStartByteChange
           OnKeyPress = BitListKeyPress
           TabOrder = 2
+          TopIndex = -1
           Data = {
             080000000000000000000000
           }
         end
         object IOBlockName: TEdit
           Left = 112
-          Height = 21
+          Height = 19
           Top = 184
           Width = 121
-          TabOrder = 6
+          TabOrder = 9
           Text = 'Block_%sb_to_%eb'
         end
         object IOByteNames: TEdit
           Left = 112
-          Height = 21
+          Height = 19
           Top = 208
           Width = 121
           TabOrder = 7
@@ -453,7 +452,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object IOBitNames: TEdit
           Left = 112
-          Height = 21
+          Height = 19
           Top = 232
           Width = 121
           TabOrder = 8
@@ -461,9 +460,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object Memo1: TMemo
           Left = 240
-          Height = 90
+          Height = 87
           Top = 179
-          Width = 273
+          Width = 311
           BorderStyle = bsNone
           Color = clBtnFace
           Lines.Strings = (
@@ -475,12 +474,12 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             '%b - Número do bit atual/Actual bit number'
           )
           ReadOnly = True
-          TabOrder = 9
+          TabOrder = 6
           TabStop = False
         end
         object IOByteNumberZeroFill: TCheckBox
           Left = 32
-          Height = 17
+          Height = 18
           Top = 275
           Width = 20
           TabOrder = 10
@@ -515,8 +514,8 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object IOStatus: TMemo
           Left = 0
           Height = 50
-          Top = 312
-          Width = 587
+          Top = 315
+          Width = 593
           Align = alBottom
           BorderStyle = bsNone
           Color = clBtnFace
@@ -534,15 +533,15 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       end
       object TabSheet3: TTabSheet
         Caption = 'Counters and Timers'
-        ClientHeight = 362
-        ClientWidth = 587
+        ClientHeight = 365
+        ClientWidth = 593
         ImageIndex = 2
         OnShow = TabSheet3Show
         object Label14: TLabel
           Left = 8
           Height = 14
           Top = 40
-          Width = 66
+          Width = 69
           Caption = 'Mapear da '
           Font.Height = -11
           Font.Name = 'MS Sans Serif'
@@ -554,7 +553,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 32
           Height = 14
           Top = 72
-          Width = 54
+          Width = 61
           Caption = 'Do counter'
           ParentColor = False
         end
@@ -562,7 +561,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 200
           Height = 14
           Top = 72
-          Width = 66
+          Width = 86
           Caption = 'Até o Counter'
           ParentColor = False
         end
@@ -590,7 +589,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 51
           Height = 14
           Top = 260
-          Width = 212
+          Width = 250
           Caption = '&Preencher com zeros o número do byte atual'
           FocusControl = CTZeroFill
           ParentColor = False
@@ -599,14 +598,14 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 51
           Height = 14
           Top = 276
-          Width = 172
+          Width = 203
           Caption = '&Actual byte number filled with zeroes'
           FocusControl = CTZeroFill
           ParentColor = False
         end
         object CTStartAddress: TSpinEdit
           Left = 32
-          Height = 21
+          Height = 19
           Top = 88
           Width = 121
           MaxValue = 10000
@@ -615,7 +614,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object CTEndAddress: TSpinEdit
           Left = 200
-          Height = 21
+          Height = 19
           Top = 88
           Width = 121
           MaxValue = 10000
@@ -624,7 +623,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object CTBlockName: TEdit
           Left = 112
-          Height = 21
+          Height = 19
           Top = 176
           Width = 121
           TabOrder = 2
@@ -632,7 +631,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object CTNames: TEdit
           Left = 112
-          Height = 21
+          Height = 19
           Top = 200
           Width = 121
           TabOrder = 3
@@ -642,7 +641,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 240
           Height = 78
           Top = 171
-          Width = 273
+          Width = 313
           BorderStyle = bsNone
           Color = clBtnFace
           Lines.Strings = (
@@ -658,7 +657,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object CTZeroFill: TCheckBox
           Left = 32
-          Height = 17
+          Height = 18
           Top = 267
           Width = 20
           TabOrder = 5
@@ -666,8 +665,8 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object CTStatus: TMemo
           Left = 0
           Height = 50
-          Top = 312
-          Width = 587
+          Top = 315
+          Width = 593
           Align = alBottom
           BorderStyle = bsNone
           Color = clBtnFace
@@ -685,25 +684,25 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       end
       object TabSheet4: TTabSheet
         Caption = 'DB''s and Flags'
-        ClientHeight = 362
-        ClientWidth = 587
+        ClientHeight = 365
+        ClientWidth = 593
         ImageIndex = 3
         OnShow = TabSheet4Show
         object Panel5: TPanel
           Left = 0
           Height = 71
           Top = 0
-          Width = 587
+          Width = 593
           Align = alTop
           BevelOuter = bvNone
           ClientHeight = 71
-          ClientWidth = 587
+          ClientWidth = 593
           TabOrder = 0
           object Label7: TLabel
-            Left = 24
+            Left = 47
             Height = 22
             Top = 2
-            Width = 167
+            Width = 184
             Alignment = taRightJustify
             AutoSize = False
             Caption = 'Número de estruturas a criar'
@@ -715,10 +714,10 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ParentFont = False
           end
           object Label22: TLabel
-            Left = -1
+            Left = 15
             Height = 22
             Top = 26
-            Width = 191
+            Width = 215
             Alignment = taRightJustify
             AutoSize = False
             Caption = 'Endereço inicial do primeiro item'
@@ -730,7 +729,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ParentFont = False
           end
           object Label23: TLabel
-            Left = 288
+            Left = 319
             Height = 22
             Top = 2
             Width = 102
@@ -814,9 +813,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ParentColor = False
             ParentFont = False
           end
-          object SpinEdit1: TSpinEdit
-            Left = 192
-            Height = 21
+          object spinNumStructs: TSpinEdit
+            Left = 232
+            Height = 19
             Top = 2
             Width = 73
             MaxValue = 100000000
@@ -824,17 +823,17 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             TabOrder = 0
             Value = 1
           end
-          object SpinEdit2: TSpinEdit
-            Left = 192
-            Height = 21
+          object spinStructStartAddress: TSpinEdit
+            Left = 232
+            Height = 19
             Top = 26
             Width = 73
             MaxValue = 100000000
             TabOrder = 1
           end
-          object SpinEdit3: TSpinEdit
-            Left = 391
-            Height = 21
+          object spinDBNum: TSpinEdit
+            Left = 422
+            Height = 19
             Top = 2
             Width = 73
             MaxValue = 100000000
@@ -843,7 +842,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Value = 1
           end
           object Button1: TButton
-            Left = 487
+            Left = 503
             Height = 49
             Top = 6
             Width = 85
@@ -854,9 +853,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
         object ScrollBox1: TScrollBox
           Left = 0
-          Height = 291
+          Height = 294
           Top = 71
-          Width = 587
+          Width = 593
           Align = alClient
           TabOrder = 1
         end
@@ -919,4 +918,4 @@ object frmS7TagBuilder: TfrmS7TagBuilder
     left = 444
     top = 56
   end
-end
+end

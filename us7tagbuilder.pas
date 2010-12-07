@@ -178,10 +178,10 @@ type
     CTStatus: TMemo;
     Panel5: TPanel;
     Label7: TLabel;
-    SpinEdit1: TSpinEdit;
-    SpinEdit2: TSpinEdit;
+    spinNumStructs: TSpinEdit;
+    spinStructStartAddress: TSpinEdit;
     Label22: TLabel;
-    SpinEdit3: TSpinEdit;
+    spinDBNum: TSpinEdit;
     Label23: TLabel;
     ScrollBox1: TScrollBox;
     Label24: TLabel;
@@ -249,8 +249,12 @@ implementation
 
 uses strutils, Math, ubitmapper;
 
-{$IFNDEF FPC}
-{$R *.dfm}
+{$IFDEF FPC }
+  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
+  {$R us7tagbuilder.lfm}
+  {$IFEND}
+{$ELSE}
+  {$R *.dfm}
 {$ENDIF}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -512,6 +516,7 @@ begin
     Top:=4;
     Width:=50;
     Checked:=FSwapBytes;
+    Enabled:=false;
     OnClick:=optChange;
   end;
 
@@ -524,6 +529,7 @@ begin
     Top:=4;
     Width:=51;
     Checked:=FSwapWords;
+    Enabled:=false;
     OnClick:=optChange;
   end;
 
@@ -615,24 +621,24 @@ procedure TS7TagItemEditor.EnablePLCNumberTagMode;
 begin
   spinScan.Enabled:=true;
   cmbItemType.Enabled:=true;
-  optSwapBytes.Enabled:=true;
-  optSwapWords.Enabled:=true;
+  //optSwapBytes.Enabled:=true;
+  //optSwapWords.Enabled:=true;
 end;
 
 procedure TS7TagItemEditor.EnablePLCBlockMode;
 begin
   spinScan.Enabled:=false;
   cmbItemType.Enabled:=false;
-  optSwapBytes.Enabled:=false;
-  optSwapWords.Enabled:=false;
+  //optSwapBytes.Enabled:=false;
+  //optSwapWords.Enabled:=false;
 end;
 
 procedure TS7TagItemEditor.EnablePLCStructMode;
 begin
   spinScan.Enabled:=false;
   cmbItemType.Enabled:=true;
-  optSwapBytes.Enabled:=true;
-  optSwapWords.Enabled:=true;
+  //optSwapBytes.Enabled:=true;
+  //optSwapWords.Enabled:=true;
 end;
 
 function TS7TagItemEditor.GetBitCount:Integer;
@@ -843,6 +849,24 @@ begin
       7:
         FTagType:=pttFloat;
     end;
+    case cmbItemType.ItemIndex of
+      0,1,2: begin
+        optSwapBytes.Checked:=false;
+        optSwapBytes.Enabled:=false;
+        optSwapWords.Checked:=false;
+        optSwapWords.Enabled:=false;
+      end;
+      3,4: begin
+        optSwapBytes.Checked:=True;
+        optSwapBytes.Enabled:=True;
+      end;
+      5,6,7: begin
+        optSwapBytes.Checked:=True;
+        optSwapBytes.Enabled:=True;
+        optSwapWords.Checked:=True;
+        optSwapWords.Enabled:=True;
+      end;
+    end;
   end;
 end;
 
@@ -932,6 +956,9 @@ begin
       optplctagnumber.Enabled:=true;
       optplcblock.Enabled:=true;
       optplcStruct.Enabled:=true;
+
+      Label23.Enabled:=MemoryArea.ItemIndex=3;
+      spinDBNum.Enabled:=Label23.Enabled;
 
       label25.Enabled:=true;
       BlockType.Enabled:=true;
@@ -1093,8 +1120,8 @@ begin
   tag.OnBitsClickEvent:=btnBitsClick;
   tag.TagScan:=1000;
   tag.TagType:=pttDefault;
-  tag.SwapBytes:=true;
-  tag.SwapWords:=true;
+  tag.SwapBytes:=false;
+  tag.SwapWords:=false;
   if TagList.Count>0 then begin
     lastitem:=TS7TagItemEditor(taglist.Items[TagList.Count-1]);
     tag.Top:=lastitem.Top+lastitem.Height;
@@ -1363,9 +1390,11 @@ begin
   OldPage:=PageControl1.ActivePage;
 end;
 
-{$IFDEF FPC}
+{$IFDEF FPC }
+  {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
 initialization
   {$i us7tagbuilder.lrs}
+  {$IFEND}
 {$ENDIF}
 
-end.
+end.

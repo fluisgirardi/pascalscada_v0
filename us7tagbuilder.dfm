@@ -813,7 +813,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Font.Style = [fsBold]
             ParentFont = False
           end
-          object SpinEdit1: TSpinEdit
+          object spinNumStructs: TSpinEdit
             Left = 192
             Top = 2
             Width = 73
@@ -823,7 +823,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             TabOrder = 0
             Value = 1
           end
-          object SpinEdit2: TSpinEdit
+          object spinStructStartAddress: TSpinEdit
             Left = 192
             Top = 26
             Width = 73
@@ -833,7 +833,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             TabOrder = 1
             Value = 0
           end
-          object SpinEdit3: TSpinEdit
+          object spinDBNum: TSpinEdit
             Left = 391
             Top = 2
             Width = 73

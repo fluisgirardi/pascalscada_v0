@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Name Value="pascalscada"/>
     <CompilerOptions>
-      <Version Value="8"/>
+      <Version Value="9"/>
       <PathDelim Value="\"/>
       <SearchPaths>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
@@ -14,6 +14,7 @@
           <SyntaxMode Value="Delphi"/>
           <CStyleOperator Value="False"/>
           <StaticKeyword Value="True"/>
+          <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
@@ -33,8 +34,8 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Version Minor="6" Release="4"/>
-    <Files Count="66">
+    <Version Minor="7"/>
+    <Files Count="68">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -281,25 +282,33 @@
         <Type Value="LFM"/>
       </Item61>
       <Item62>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="us7tagbuilder.pas"/>
+        <UnitName Value="us7tagbuilder"/>
       </Item62>
       <Item63>
-        <Filename Value="uwesttagbuilder.pas"/>
-        <UnitName Value="uwesttagbuilder"/>
+        <Filename Value="us7tagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item63>
       <Item64>
-        <Filename Value="uwesttagbuilder.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
       </Item64>
       <Item65>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="uwesttagbuilder.pas"/>
+        <UnitName Value="uwesttagbuilder"/>
       </Item65>
       <Item66>
+        <Filename Value="uwesttagbuilder.lfm"/>
+        <Type Value="LFM"/>
+      </Item66>
+      <Item67>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item67>
+      <Item68>
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
-      </Item66>
+      </Item68>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
@@ -313,7 +322,7 @@
     </RequiredPkgs>
     <UsageOptions>
       <CustomOptions Value="-dUseCThreads"/>
-      <UnitPath Value="$(PkgOutDir)\"/>
+      <UnitPath Value="$(PkgOutDir)"/>
     </UsageOptions>
     <PublishOptions>
       <Version Value="2"/>

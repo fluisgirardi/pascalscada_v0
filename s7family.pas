@@ -121,6 +121,8 @@ type
   public
     constructor Create(AOwner:TComponent); override;
     function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
+    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
+       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   published
     property ReadSomethingAlways;
   end;
@@ -128,7 +130,7 @@ type
 implementation
 
 uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
-     PLCMemoryManager, hsutils, dateutils;
+     PLCMemoryManager, hsutils, dateutils, us7tagbuilder;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -147,6 +149,19 @@ function  TSiemensProtocolFamily.SizeOfTag(Tag:TTag; isWrite:Boolean; var Protoc
 begin
   ProtocolTagType:=ptByte;
   Result:=8;
+end;
+
+procedure TSiemensProtocolFamily.OpenTagEditor(OwnerOfNewTags: TComponent;
+   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+var
+  frmS7tb:TfrmS7TagBuilder;
+begin
+  frmS7tb:=TfrmS7TagBuilder.Create(nil);
+  try
+    frmS7tb.ShowModal;
+  finally
+    frmS7tb.Destroy;
+  end;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
