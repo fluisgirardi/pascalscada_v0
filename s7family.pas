@@ -302,7 +302,7 @@ begin
 
               with TPLCBlockElement(item) do begin
                 PLCBlock:=block;
-                Index:=iobyte-frmS7tb.IOStartByte.Value;
+                Index:=iobyte-frmS7tb.CTStartAddress.Value;
               end;
             end else begin
               item:=TPLCTagNumber(CreateProc(TPLCTagNumber));
