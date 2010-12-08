@@ -117,7 +117,7 @@ type
     //estas funcoes ficaram apenas por motivos compatibilidade com os tags
     //e seus metodos de leitura e escrita diretas.
 {ok}function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
-{90}function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{ok}function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
     function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
@@ -130,7 +130,8 @@ type
 implementation
 
 uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
-     PLCMemoryManager, hsutils, dateutils, us7tagbuilder;
+     PLCMemoryManager, hsutils, dateutils, us7tagbuilder, Controls,
+     PLCBlockElement, PLCNumber, TagBit;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -155,10 +156,113 @@ procedure TSiemensProtocolFamily.OpenTagEditor(OwnerOfNewTags: TComponent;
    InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
 var
   frmS7tb:TfrmS7TagBuilder;
+  iobyte, iobit:Integer;
+  block:TPLCBlock;
+  item:TPLCNumber;
+  bititem:TTagBit;
+  bname:String;
+
+  function GetValueWithZeros(value, endvalue:Integer; toFill:Boolean):String;
+  var
+    numdig, dig:Integer;
+    strendval, fill:STring;
+  begin
+    strendval:=IntToStr(endvalue);
+
+    fill:='';
+    numdig:=Length(strendval);
+    for dig:=1 to numdig do
+      fill:=fill+'0';
+
+    if toFill then
+      Result:=RightStr(fill+IntToStr(value),numdig)
+    else
+      Result:=IntToStr(value);
+  end;
+
 begin
   frmS7tb:=TfrmS7TagBuilder.Create(nil);
   try
-    frmS7tb.ShowModal;
+    if frmS7tb.ShowModal=mrOK then begin
+      case frmS7tb.MemoryArea.ItemIndex of
+        0, 1: begin
+          //se ha bits selecionados...
+          if frmS7tb.BitList.SelCount>0 then begin
+            //cria o bloco
+            if frmS7tb.optplcblock.Checked then begin
+              block := TPLCBlock(CreateProc(TPLCBlock));
+              with block do begin
+                bname:=frmS7tb.IOBlockName.Text;
+                bname:=StringReplace(bname,'%sb',GetValueWithZeros(frmS7tb.IOStartByte.Value,frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked),[rfIgnoreCase, rfReplaceAll]);
+                bname:=StringReplace(bname,'%eb',GetValueWithZeros(frmS7tb.IOEndByte.Value,  frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked),  [rfIgnoreCase, rfReplaceAll]);
+                Name:=bname;
+                PLCHack:=frmS7tb.PLCRack.Value;
+                PLCSlot:=frmS7tb.PLCSlot.Value;
+                PLCStation:=frmS7tb.PLCStation.Value;
+                MemReadFunction:=frmS7tb.MemoryArea.ItemIndex+1;
+                MemAddress:=frmS7tb.IOStartByte.Value;
+                Size:=frmS7tb.IOEndByte.Value-frmS7tb.IOStartByte.Value+2;
+                TagType:=pttByte;
+                RefreshTime:=frmS7tb.BlockScan.Value;
+                ProtocolDriver:=Self;
+              end;
+              InsertHook(block);
+            end;
+
+            //bytes e bits
+            for iobyte:=frmS7tb.IOStartByte.Value to frmS7tb.IOEndByte.Value do begin
+              bname:=frmS7tb.IOBlockName.Text;
+              bname:=StringReplace(bname,'%sb',GetValueWithZeros(frmS7tb.IOStartByte.Value,frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked),[rfIgnoreCase, rfReplaceAll]);
+              bname:=StringReplace(bname,'%eb',GetValueWithZeros(frmS7tb.IOEndByte.Value,  frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked),  [rfIgnoreCase, rfReplaceAll]);
+              bname:=StringReplace(bname,'%B', GetValueWithZeros(iobyte,                   frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked),  [rfIgnoreCase, rfReplaceAll]);
+
+              if frmS7tb.optplcblock.Checked then begin
+                item:=TPLCBlockElement(CreateProc(TPLCBlockElement));
+                item.Name:=bname;
+
+                with TPLCBlockElement(item) do begin
+                  PLCBlock:=block;
+                  Index:=iobyte-frmS7tb.IOStartByte.Value;
+                end;
+              end else begin
+                item:=TPLCTagNumber(CreateProc(TPLCTagNumber));
+                item.Name:=bname;
+
+                with TPLCTagNumber(item) do begin
+                  PLCHack:=frmS7tb.PLCRack.Value;
+                  PLCSlot:=frmS7tb.PLCSlot.Value;
+                  PLCStation:=frmS7tb.PLCStation.Value;
+                  MemReadFunction:=frmS7tb.MemoryArea.ItemIndex+1;
+                  MemAddress:=iobyte;
+                  TagType:=pttByte;
+                  //RefreshTime:=frmS7tb.BlockScan.Value;
+                  ProtocolDriver:=Self;
+                end;
+              end;
+              InsertHook(item);
+
+              for iobit := 0 to 7 do begin
+                if not frmS7tb.BitList.Checked[iobit] then continue;
+                bititem := TTagBit(CreateProc(TTagBit));
+
+                bname:=frmS7tb.IOBitNames.Text;
+                bname:=StringReplace(bname,'%sb',GetValueWithZeros(frmS7tb.IOStartByte.Value,frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+                bname:=StringReplace(bname,'%eb',GetValueWithZeros(frmS7tb.IOEndByte.Value,  frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+                bname:=StringReplace(bname,'%B', GetValueWithZeros(iobyte,                   frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+                bname:=StringReplace(bname,'%b', GetValueWithZeros(iobit,                    7,                       false),                                [rfIgnoreCase, rfReplaceAll]);
+                bititem.Name:=bname;
+                with bititem do begin
+                  PLCTag:=item;
+                  StartBit:=iobit;
+                  EndBit:=iobit;
+                end;
+                InsertHook(bititem);
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
   finally
     frmS7tb.Destroy;
   end;

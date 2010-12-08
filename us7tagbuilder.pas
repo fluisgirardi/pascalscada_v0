@@ -238,8 +238,12 @@ type
     TagList,
     ItemsToDel:TList;
     procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
+    function GetStructItemsCount:Integer;
+    function GetStructItem(index:Integer):TS7TagItemEditor;
   public
-    { Public declarations }
+    destructor Destroy; override;
+    property StructItemsCount:Integer read GetStructItemsCount;
+    property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
   end;
 
 var
@@ -1272,6 +1276,20 @@ begin
   end;
 end;
 
+destructor TfrmS7TagBuilder.Destroy;
+var
+  t,b:Integer;
+begin
+  for t:=TagList.Count-1 downto 0 do begin
+    for b:=0 to TS7TagItemEditor(TagList.Items[t]).BitCount-1 do begin
+      TS7TagItemEditor(TagList.Items[t]).DelBit(b);
+    end;
+    TS7TagItemEditor(TagList.Items[t]).Destroy;
+    TagList.Delete(t);
+  end;
+  inherited Destroy;
+end;
+
 procedure TfrmS7TagBuilder.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
 var
   t,b:Integer;
@@ -1290,6 +1308,16 @@ begin
       end;
     end;
   end;
+end;
+
+function TfrmS7TagBuilder.GetStructItemsCount:Integer;
+begin
+  Result:=TagList.Count;
+end;
+
+function TfrmS7TagBuilder.GetStructItem(index:Integer):TS7TagItemEditor;
+begin
+  Result:=TS7TagItemEditor(TagList.Items[index]);
 end;
 
 procedure TfrmS7TagBuilder.Timer1Timer(Sender: TObject);
