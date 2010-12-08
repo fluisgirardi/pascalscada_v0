@@ -919,7 +919,7 @@ begin
 
   case MemoryArea.ItemIndex of
     0, 1, 4, 5: begin
-      optplctagnumber.Enabled:=true;
+      optplctagnumber.Enabled:=false;
       optplcblock.Enabled:=true;
 
       if optplcStruct.Checked then
@@ -934,13 +934,13 @@ begin
       case MemoryArea.ItemIndex of
         0: begin
           IOBlockName.Text := 'Inputs_%sb_to_%eb';
-          IOByteNames.Text := 'I%B';
+          IOByteNames.Text := 'IB%B';
           IOBitNames.Text  := 'I%B_%b';
           BlockType.ItemIndex := 2;
         end;
         1: begin
           IOBlockName.Text := 'Outputs_%sb_to_%eb';
-          IOByteNames.Text := 'Q%B';
+          IOByteNames.Text := 'QB%B';
           IOBitNames.Text  := 'Q%B_%b';
           BlockType.ItemIndex := 2;
         end;

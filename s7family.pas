@@ -206,7 +206,7 @@ begin
                 PLCStation:=frmS7tb.PLCStation.Value;
                 MemReadFunction:=frmS7tb.MemoryArea.ItemIndex+1;
                 MemAddress:=frmS7tb.IOStartByte.Value;
-                Size:=frmS7tb.IOEndByte.Value-frmS7tb.IOStartByte.Value+2;
+                Size:=frmS7tb.IOEndByte.Value-frmS7tb.IOStartByte.Value+1;
                 TagType:=pttByte;
                 RefreshTime:=frmS7tb.BlockScan.Value;
                 ProtocolDriver:=Self;
@@ -264,6 +264,62 @@ begin
                 InsertHook(bititem);
               end;
             end;
+          end;
+        end;
+
+        //timers e counters...
+        4, 5: begin
+          if frmS7tb.optplcblock.Checked then begin
+            block := TPLCBlock(CreateProc(TPLCBlock));
+            with block do begin
+              bname:=frmS7tb.CTBlockName.Text;
+              bname:=StringReplace(bname,'%si',GetValueWithZeros(frmS7tb.CTStartAddress.Value,frmS7tb.CTEndAddress.Value, frmS7tb.CTZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+              bname:=StringReplace(bname,'%ei',GetValueWithZeros(frmS7tb.CTEndAddress.Value,  frmS7tb.CTEndAddress.Value, frmS7tb.CTZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+              Name:=bname;
+              PLCHack:=frmS7tb.PLCRack.Value;
+              PLCSlot:=frmS7tb.PLCSlot.Value;
+              PLCStation:=frmS7tb.PLCStation.Value;
+              MemReadFunction:=frmS7tb.MemoryArea.ItemIndex+1;
+              MemAddress:=frmS7tb.CTStartAddress.Value*2;
+              Size:=frmS7tb.CTEndAddress.Value-frmS7tb.CTStartAddress.Value+1;
+              TagType:=pttWord;
+              RefreshTime:=frmS7tb.BlockScan.Value;
+              ProtocolDriver:=Self;
+            end;
+            InsertHook(block);
+          end;
+
+          //itens
+          for iobyte:=frmS7tb.CTStartAddress.Value to frmS7tb.CTEndAddress.Value do begin
+            bname:=frmS7tb.CTNames.Text;
+            bname:=StringReplace(bname,'%si',GetValueWithZeros(frmS7tb.CTStartAddress.Value,frmS7tb.CTEndAddress.Value, frmS7tb.CTZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+            bname:=StringReplace(bname,'%ei',GetValueWithZeros(frmS7tb.CTEndAddress.Value,  frmS7tb.CTEndAddress.Value, frmS7tb.CTZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+            bname:=StringReplace(bname,'%I', GetValueWithZeros(iobyte,                      frmS7tb.CTEndAddress.Value, frmS7tb.CTZeroFill.Checked), [rfReplaceAll]);
+
+            if frmS7tb.optplcblock.Checked then begin
+              item:=TPLCBlockElement(CreateProc(TPLCBlockElement));
+              item.Name:=bname;
+
+              with TPLCBlockElement(item) do begin
+                PLCBlock:=block;
+                Index:=iobyte-frmS7tb.IOStartByte.Value;
+              end;
+            end else begin
+              item:=TPLCTagNumber(CreateProc(TPLCTagNumber));
+              item.Name:=bname;
+
+              with TPLCTagNumber(item) do begin
+                PLCHack:=frmS7tb.PLCRack.Value;
+                PLCSlot:=frmS7tb.PLCSlot.Value;
+                PLCStation:=frmS7tb.PLCStation.Value;
+                MemReadFunction:=frmS7tb.MemoryArea.ItemIndex+1;
+                MemAddress:=iobyte*2;
+                TagType:=pttByte;
+                //RefreshTime:=frmS7tb.BlockScan.Value;
+                ProtocolDriver:=Self;
+              end;
+            end;
+            InsertHook(item);
           end;
         end;
       end;
