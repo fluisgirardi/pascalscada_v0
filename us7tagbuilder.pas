@@ -992,7 +992,7 @@ end;
 procedure TfrmS7TagBuilder.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  TagList.Destroy;
+  //
 end;
 
 procedure TfrmS7TagBuilder.FormCloseQuery(Sender: TObject;
@@ -1287,6 +1287,8 @@ begin
     TS7TagItemEditor(TagList.Items[t]).Destroy;
     TagList.Delete(t);
   end;
+  TagList.Destroy;
+  ItemsToDel.Destroy;
   inherited Destroy;
 end;
 
