@@ -156,7 +156,7 @@ procedure TSiemensProtocolFamily.OpenTagEditor(OwnerOfNewTags: TComponent;
    InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
 var
   frmS7tb:TfrmS7TagBuilder;
-  iobyte, iobit, bitselcount:Integer;
+  iobyte, iobit, bitselcount, firstbit:Integer;
   block:TPLCBlock;
   item:TPLCNumber;
   bititem:TTagBit;
@@ -185,12 +185,16 @@ begin
   try
     if frmS7tb.ShowModal=mrOK then begin
       case frmS7tb.MemoryArea.ItemIndex of
+        //entradas e saidas...
         0, 1: begin
           //se ha bits selecionados...
           bitselcount:=0;
+          firstbit:=-1;
           for iobit:=0 to 7 do
-            if frmS7tb.BitList.Checked[iobit] then
+            if frmS7tb.BitList.Checked[iobit] then begin
+              if firstbit<0 then firstbit:=iobit;
               inc(bitselcount);
+            end;
 
           if bitselcount>0 then begin
             //cria o bloco
@@ -200,6 +204,8 @@ begin
                 bname:=frmS7tb.IOBlockName.Text;
                 bname:=StringReplace(bname,'%sb',GetValueWithZeros(frmS7tb.IOStartByte.Value,frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
                 bname:=StringReplace(bname,'%eb',GetValueWithZeros(frmS7tb.IOEndByte.Value,  frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
+                bname:=StringReplace(bname,'%B', GetValueWithZeros(frmS7tb.IOStartByte.Value,frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfReplaceAll]);
+                bname:=StringReplace(bname,'%b', GetValueWithZeros(firstbit,                 7,                       false                               ), [rfReplaceAll]);
                 Name:=bname;
                 PLCHack:=frmS7tb.PLCRack.Value;
                 PLCSlot:=frmS7tb.PLCSlot.Value;
@@ -220,6 +226,7 @@ begin
               bname:=StringReplace(bname,'%sb',GetValueWithZeros(frmS7tb.IOStartByte.Value,frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
               bname:=StringReplace(bname,'%eb',GetValueWithZeros(frmS7tb.IOEndByte.Value,  frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfIgnoreCase, rfReplaceAll]);
               bname:=StringReplace(bname,'%B', GetValueWithZeros(iobyte,                   frmS7tb.IOEndByte.Value, frmS7tb.IOByteNumberZeroFill.Checked), [rfReplaceAll]);
+              bname:=StringReplace(bname,'%b', GetValueWithZeros(firstbit,                 7,                       false                               ), [rfReplaceAll]);
 
               if frmS7tb.optplcblock.Checked then begin
                 item:=TPLCBlockElement(CreateProc(TPLCBlockElement));
@@ -264,6 +271,13 @@ begin
                 InsertHook(bititem);
               end;
             end;
+          end;
+        end;
+
+        //estruturas de flags e dbs
+        2, 3: begin
+          if frmS7tb.StructItemsCount>0 then begin
+
           end;
         end;
 
