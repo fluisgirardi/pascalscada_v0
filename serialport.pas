@@ -618,7 +618,7 @@ begin
     if (v='(none)')  then
        PPortName:=''
     else
-       raise Exception.Create(SserialPortNotExist);
+       raise Exception.Create(v+': '+SserialPortNotExist);
 end;
 
 function TSerialPortDriver.COMExist(v:String):Boolean;
