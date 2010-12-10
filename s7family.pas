@@ -129,9 +129,9 @@ type
 
 implementation
 
-uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, hsstrings,
+uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, PLCStruct, hsstrings,
      PLCMemoryManager, hsutils, dateutils, us7tagbuilder, Controls,
-     PLCBlockElement, PLCNumber, TagBit, strutils;
+     PLCBlockElement, PLCNumber, TagBit, strutils, PLCStructElement;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -156,10 +156,20 @@ procedure TSiemensProtocolFamily.OpenTagEditor(OwnerOfNewTags: TComponent;
    InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
 var
   frmS7tb:TfrmS7TagBuilder;
-  iobyte, iobit, bitselcount, firstbit:Integer;
+
+  iobyte, iobit,
+  bitselcount,
+  firstbit, structitem,
+  structitemstocreate,
+  curstructAddress, StructNumber,
+  finalStructItem:Integer;
+
   block:TPLCBlock;
   item:TPLCNumber;
   bititem:TTagBit;
+
+  foundAtLeastOneItem:Boolean;
+
   bname:String;
 
   function GetValueWithZeros(value, endvalue:Integer; toFill:Boolean):String;
@@ -181,6 +191,12 @@ var
   end;
 
 begin
+  //o que está faltando??
+  //NO FORMULARIO:
+  //** Taxa de atualização do tag quando é escolhido PLCTagNumber para I/O, Timers and Counters
+  //** Nome do bloco quando escolhido PLCBlock/Struct para Flag's e DB's
+  //** Checagens de substituições ausentes nos nomes a fim de evitar duplicidades de nomes...
+
   frmS7tb:=TfrmS7TagBuilder.Create(nil);
   try
     if frmS7tb.ShowModal=mrOK then begin
@@ -276,8 +292,102 @@ begin
 
         //estruturas de flags e dbs
         2, 3: begin
+          //veririca se há itens a serem criados...
           if frmS7tb.StructItemsCount>0 then begin
+            //ve se há pelo menos um item da estrutura que não está
+            //marcado para pular....
+            foundAtLeastOneItem:=false;
+            for structitem:=0 To frmS7tb.StructItemsCount-1 do
+              if not frmS7tb.StructItem[structitem].SkipTag then begin
+                foundAtLeastOneItem:=true;
+              end;
+            //se não encontrou um item válido, sai.
+            if not foundAtLeastOneItem then exit;
 
+            structitemstocreate:=frmS7tb.spinNumStructs.Value*frmS7tb.StructItemsCount;
+            for structitem:=frmS7tb.StructItemsCount-1 downto 0 do
+              if frmS7tb.StructItem[structitem].SkipTag then
+                dec(structitemstocreate)
+              else
+                Break;
+
+
+            //cria os blocos...
+            if frmS7tb.optplcblock.Checked or frmS7tb.optplcStruct.Checked then begin
+              if frmS7tb.optplcblock.Checked then begin
+                block:=TPLCBlock(CreateProc(TPLCBlock));
+                block.TagType:=TTagType(frmS7tb.BlockType.ItemIndex);
+                block.SwapBytes:=frmS7tb.BlockSwapBytes.Checked;
+                block.SwapWords:=frmS7tb.BlockSwapWords.Checked;
+                block.RefreshTime:=frmS7tb.BlockScan.Value;
+              end else begin
+                block:=TPLCStruct(CreateProc(TPLCStruct));
+                block.RefreshTime:=frmS7tb.StructScan.Value;
+              end;
+
+              //configura o bloco criado...
+              with block do begin
+                Name:='Blocao0';
+                PLCHack:=frmS7tb.PLCRack.Value;
+                PLCSlot:=frmS7tb.PLCSlot.Value;
+                PLCStation:=frmS7tb.PLCStation.Value;
+                MemReadFunction:=frmS7tb.MemoryArea.ItemIndex+1;
+
+                if frmS7tb.MemoryArea.ItemIndex=3 then
+                  MemFile_DB:=frmS7tb.spinDBNum.Value;
+
+                MemAddress:=frmS7tb.spinStructStartAddress.Value;
+                Size:=structitemstocreate;
+                ProtocolDriver:=Self;
+              end;
+              InsertHook(block);
+
+              //cria as estruturas.
+              StructNumber:=1;
+              finalStructItem:=1;
+
+              if frmS7tb.optplcStruct.Checked or frmS7tb.optplcblock.Checked then
+                curstructAddress:=0
+              else
+                curstructAddress:=frmS7tb.spinStructStartAddress.Value;
+
+              while StructNumber<=frmS7tb.spinNumStructs.Value do begin
+                for structitem:=0 to frmS7tb.StructItemsCount-1 do begin
+                  if not frmS7tb.StructItem[structitem].SkipTag then begin
+                    //cria cada item da estrutura.
+                    if frmS7tb.optplcblock.Checked then begin
+
+                    end;
+
+                    if frmS7tb.optplcStruct.Checked then begin
+
+                    end;
+
+                    if frmS7tb.optplctagnumber.Checked then begin
+
+                    end;
+
+                    if frmS7tb.StructItem[structitem].BitCount=0 then
+                      inc(finalStructItem);
+                  end;
+
+                  //incrementa o endereco/posicao dentro do bloco.
+                  if frmS7tb.optplcblock.Checked then
+                    inc(curstructAddress)
+                  else begin
+                    case frmS7tb.StructItem[structitem].TagType of
+                      pttDefault, pttShortInt, pttByte:
+                        inc(curstructAddress);
+                      pttSmallInt, pttWord:
+                        inc(curstructAddress, 2);
+                      pttInteger, pttDWord, pttFloat:
+                        inc(curstructAddress, 4);
+                    end;
+                  end;
+                end;
+                inc(StructNumber);
+              end;
+            end;
           end;
         end;
 
