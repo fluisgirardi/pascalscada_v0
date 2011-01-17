@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, Unit1, scada, LResources, runtimetypeinfocontrols, dm
+  Forms, Unit1, LResources, runtimetypeinfocontrols, dm, pascalscada
   { you can add units after this };
 
 {$IFDEF WINDOWS}{$R isotcp_example.rc}{$ENDIF}

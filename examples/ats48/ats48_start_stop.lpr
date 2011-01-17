@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms
-  { you can add units after this }, main, LResources, scada;
+  { you can add units after this }, main, pascalscada, LResources;
 
 {$IFDEF WINDOWS}{$R ats48_start_stop.rc}{$ENDIF}
 

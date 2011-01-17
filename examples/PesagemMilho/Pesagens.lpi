@@ -1,19 +1,21 @@
 <?xml version="1.0"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="7"/>
+    <Version Value="9"/>
     <General>
       <MainUnit Value="0"/>
-      <TargetFileExt Value=""/>
-      <Icon Value="0"/>
       <UseXPManifest Value="True"/>
-      <ActiveEditorIndexAtStart Value="0"/>
+      <Icon Value="0"/>
+      <ActiveWindowIndexAtStart Value="0"/>
     </General>
     <VersionInfo>
-      <ProjectVersion Value=""/>
       <Language Value=""/>
       <CharSet Value=""/>
+      <StringTable ProductVersion=""/>
     </VersionInfo>
+    <BuildModes Count="1">
+      <Item1 Name="default" Default="True"/>
+    </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
       <IgnoreBinaries Value="False"/>
@@ -28,28 +30,28 @@
     </RunParams>
     <RequiredPackages Count="4">
       <Item1>
-        <PackageName Value="FCL"/>
-        <MinVersion Major="1" Valid="True"/>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Valid="True"/>
       </Item1>
       <Item2>
-        <PackageName Value="zcomponent"/>
-        <MinVersion Major="7" Valid="True"/>
+        <PackageName Value="FCL"/>
+        <MinVersion Major="1" Valid="True"/>
       </Item2>
       <Item3>
-        <PackageName Value="scada"/>
-        <MinVersion Minor="6" Valid="True"/>
+        <PackageName Value="zcomponent"/>
+        <MinVersion Major="7" Valid="True"/>
       </Item3>
       <Item4>
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="8">
+    <Units Count="10">
       <Unit0>
         <Filename Value="Pesagens.lpr"/>
         <IsPartOfProject Value="True"/>
-        <CursorPos X="13" Y="7"/>
         <TopLine Value="1"/>
-        <UsageCount Value="24"/>
+        <CursorPos X="13" Y="7"/>
+        <UsageCount Value="25"/>
       </Unit0>
       <Unit1>
         <Filename Value="uDM.pas"/>
@@ -58,11 +60,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uDM"/>
-        <CursorPos X="124" Y="117"/>
+        <EditorIndex Value="4"/>
+        <WindowIndex Value="0"/>
         <TopLine Value="93"/>
-        <EditorIndex Value="2"/>
-        <UsageCount Value="24"/>
+        <CursorPos X="124" Y="117"/>
+        <UsageCount Value="25"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="uMain.pas"/>
@@ -71,11 +75,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uMain"/>
-        <CursorPos X="39" Y="13"/>
-        <TopLine Value="1"/>
         <EditorIndex Value="0"/>
-        <UsageCount Value="24"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="39" Y="13"/>
+        <UsageCount Value="25"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="uDMImg.pas"/>
@@ -84,46 +90,70 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uDMImg"/>
-        <CursorPos X="17" Y="7"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <EditorIndex Value="1"/>
-        <UsageCount Value="24"/>
+        <CursorPos X="17" Y="7"/>
+        <UsageCount Value="25"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit3>
       <Unit4>
         <Filename Value="../HMI_SCADA/commport.pas"/>
         <UnitName Value="CommPort"/>
-        <CursorPos X="19" Y="453"/>
         <TopLine Value="435"/>
-        <UsageCount Value="10"/>
+        <CursorPos X="19" Y="453"/>
         <SyntaxHighlighter Value="Delphi"/>
+        <UsageCount Value="10"/>
       </Unit4>
       <Unit5>
         <Filename Value="../HMI_SCADA/tag.pas"/>
         <UnitName Value="Tag"/>
-        <CursorPos X="3" Y="208"/>
         <TopLine Value="208"/>
-        <UsageCount Value="10"/>
+        <CursorPos X="3" Y="208"/>
         <SyntaxHighlighter Value="Delphi"/>
+        <UsageCount Value="10"/>
       </Unit5>
       <Unit6>
         <Filename Value="../ZeosLib/src/plain/ZPlainMySqlConstants.pas"/>
         <UnitName Value="ZPlainMySqlConstants"/>
-        <CursorPos X="1" Y="1"/>
         <TopLine Value="1"/>
-        <UsageCount Value="10"/>
+        <CursorPos X="1" Y="1"/>
         <SyntaxHighlighter Value="Delphi"/>
+        <UsageCount Value="10"/>
       </Unit6>
       <Unit7>
         <Filename Value="../ZeosLib/src/dbc/ZDbcMySqlResultSet.pas"/>
         <UnitName Value="ZDbcMySqlResultSet"/>
-        <CursorPos X="28" Y="412"/>
         <TopLine Value="401"/>
-        <UsageCount Value="10"/>
+        <CursorPos X="28" Y="412"/>
         <SyntaxHighlighter Value="Delphi"/>
+        <UsageCount Value="10"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
+        <UnitName Value="EventCodeTool"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="114"/>
+        <CursorPos X="44" Y="122"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../../ZeosLib/src/dbc/ZDbcMySqlUtils.pas"/>
+        <UnitName Value="ZDbcMySqlUtils"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="439"/>
+        <CursorPos X="1" Y="453"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit9>
     </Units>
-    <JumpHistory Count="7" HistoryIndex="6">
+    <JumpHistory Count="11" HistoryIndex="10">
       <Position1>
         <Filename Value="uMain.pas"/>
         <Caret Line="59" Column="39" TopLine="39"/>
@@ -152,10 +182,31 @@
         <Filename Value="uMain.pas"/>
         <Caret Line="39" Column="26" TopLine="26"/>
       </Position7>
+      <Position8>
+        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
+        <Caret Line="1" Column="1" TopLine="1"/>
+      </Position8>
+      <Position9>
+        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
+        <Caret Line="127" Column="9" TopLine="113"/>
+      </Position9>
+      <Position10>
+        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
+        <Caret Line="126" Column="30" TopLine="114"/>
+      </Position10>
+      <Position11>
+        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
+        <Caret Line="127" Column="9" TopLine="114"/>
+      </Position11>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="8"/>
+    <Version Value="9"/>
+    <Parsing>
+      <SyntaxOptions>
+        <UseAnsiStrings Value="False"/>
+      </SyntaxOptions>
+    </Parsing>
     <Other>
       <CompilerPath Value="$(CompPath)"/>
     </Other>

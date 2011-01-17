@@ -7,8 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, umain, scada
-  { you can add units after this };
+  Forms, umain, pascalscada;
 
 {$R teste_individuais.res}
 

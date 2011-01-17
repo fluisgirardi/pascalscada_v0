@@ -1,23 +1,21 @@
 <?xml version="1.0"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="7"/>
+    <Version Value="9"/>
     <General>
-      <Flags>
-        <UseDefaultCompilerOptions Value="True"/>
-      </Flags>
       <MainUnit Value="0"/>
-      <TargetFileExt Value=""/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
-      <Icon Value="0"/>
-      <ActiveEditorIndexAtStart Value="0"/>
+      <ActiveWindowIndexAtStart Value="0"/>
     </General>
     <VersionInfo>
       <Language Value=""/>
       <CharSet Value=""/>
-      <StringTable Comments="" CompanyName="" FileDescription="" FileVersion="" InternalName="" LegalCopyright="" LegalTrademarks="" OriginalFilename="" ProductName="" ProductVersion=""/>
+      <StringTable ProductVersion=""/>
     </VersionInfo>
+    <BuildModes Count="1">
+      <Item1 Name="default" Default="True"/>
+    </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
       <IgnoreBinaries Value="False"/>
@@ -32,8 +30,8 @@
     </RunParams>
     <RequiredPackages Count="2">
       <Item1>
-        <PackageName Value="scada"/>
-        <MinVersion Minor="6" Release="3" Valid="True"/>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Valid="True"/>
       </Item1>
       <Item2>
         <PackageName Value="LCL"/>
@@ -52,11 +50,14 @@
         <ComponentName Value="Form1"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="umain"/>
-        <CursorPos X="19" Y="83"/>
-        <TopLine Value="70"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="70"/>
+        <CursorPos X="19" Y="83"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
     </Units>
     <JumpHistory Count="3" HistoryIndex="2">
@@ -75,19 +76,14 @@
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="8"/>
+    <Version Value="9"/>
     <Target>
       <Filename Value="teste_individuais"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir)/"/>
+      <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
-    <Parsing>
-      <SyntaxOptions>
-        <UseAnsiStrings Value="True"/>
-      </SyntaxOptions>
-    </Parsing>
     <Linking>
       <Options>
         <Win32>

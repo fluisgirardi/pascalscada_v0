@@ -1,18 +1,19 @@
 <?xml version="1.0"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="7"/>
+    <Version Value="9"/>
     <General>
       <MainUnit Value="0"/>
-      <TargetFileExt Value=""/>
       <UseXPManifest Value="True"/>
       <Icon Value="0"/>
     </General>
     <VersionInfo>
       <Language Value=""/>
       <CharSet Value=""/>
-      <StringTable Comments="" CompanyName="" FileDescription="" FileVersion="0.0.0.0" InternalName="" LegalCopyright="" LegalTrademarks="" OriginalFilename="" ProductName="" ProductVersion="0.0.0.0"/>
     </VersionInfo>
+    <BuildModes Count="1">
+      <Item1 Name="default" Default="True"/>
+    </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
       <IgnoreBinaries Value="False"/>
@@ -27,8 +28,8 @@
     </RunParams>
     <RequiredPackages Count="2">
       <Item1>
-        <PackageName Value="scada"/>
-        <MinVersion Minor="6" Release="4" Valid="True"/>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Valid="True"/>
       </Item1>
       <Item2>
         <PackageName Value="LCL"/>
@@ -218,8 +219,6 @@
       <Unit20>
         <Filename Value="../../s7types.pas"/>
         <UnitName Value="S7Types"/>
-        <IsVisibleTab Value="True"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="9"/>
         <CursorPos X="3" Y="28"/>
         <UsageCount Value="13"/>
@@ -337,19 +336,14 @@
     <JumpHistory Count="0" HistoryIndex="-1"/>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="8"/>
+    <Version Value="9"/>
     <Target>
       <Filename Value="project1"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir)/"/>
+      <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
-    <Parsing>
-      <SyntaxOptions>
-        <UseAnsiStrings Value="True"/>
-      </SyntaxOptions>
-    </Parsing>
     <Linking>
       <Options>
         <Win32>

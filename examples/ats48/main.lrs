@@ -1,5 +1,3 @@
-{ This is an automatically generated lazarus resource file }
-
 LazarusResources.Add('TForm1','FORMDATA',[
   'TPF0'#6'TForm1'#5'Form1'#4'Left'#3's'#2#6'Height'#3','#1#3'Top'#3#180#0#5'Wi'
   +'dth'#3#144#1#13'ActiveControl'#7#7'Button1'#7'Caption'#6#5'Form1'#12'Client'
@@ -14,17 +12,17 @@ LazarusResources.Add('TForm1','FORMDATA',[
   +'Width'#2'K'#7'Caption'#6#9'Power Off'#7'OnClick'#7#12'Button2Click'#8'TabOr'
   +'der'#2#2#0#0#17'TSerialPortDriver'#17'SerialPortDriver1'#6'Active'#9#7'COMP'
   +'ort'#6#7'ttyUSB0'#7'Timeout'#2'd'#8'Paridade'#7#6'spEven'#4'left'#2#8#3'top'
-  +#2#8#0#0#19'TModBusMasterDriver'#19'ModBusMasterDriver1'#17'CommunicationPor'
-  +'t'#7#17'SerialPortDriver1'#4'left'#2'('#3'top'#2#8#0#0#13'TPLCTagNumber'#8
-  +'ATS48CMD'#7'TagGUID'#6'&{724F91B6-8419-4777-8144-473E16B8318F}'#13'OnValueC'
-  +'hange'#7#22'ATS48StatusValueChange'#7'PLCHack'#2#0#7'PLCSlot'#2#0#10'PLCSta'
-  +'tion'#2#1#10'MemFile_DB'#2#0#10'MemAddress'#3#144#1#13'MemSubElement'#2#0#15
-  +'MemReadFunction'#2#3#16'MemWriteFunction'#2#16#14'ProtocolDriver'#7#19'ModB'
-  +'usMasterDriver1'#11'RefreshTime'#3#200#0#4'left'#2'P'#3'top'#2#8#0#0#13'TPL'
-  +'CTagNumber'#11'ATS48Status'#7'TagGUID'#6'&{F8A77091-272A-4023-AA35-A3724828'
-  +'A32E}'#13'OnValueChange'#7#22'ATS48StatusValueChange'#7'PLCHack'#2#0#7'PLCS'
-  +'lot'#2#0#10'PLCStation'#2#1#10'MemFile_DB'#2#0#10'MemAddress'#3#202#1#13'Me'
-  +'mSubElement'#2#0#15'MemReadFunction'#2#3#16'MemWriteFunction'#2#16#14'Proto'
-  +'colDriver'#7#19'ModBusMasterDriver1'#11'RefreshTime'#3#200#0#4'left'#2'x'#3
-  +'top'#2#8#0#0#0
+  +#2#8#0#0#16'TModBusRTUDriver'#19'ModBusMasterDriver1'#17'CommunicationPort'#7
+  +#17'SerialPortDriver1'#4'left'#2'('#3'top'#2#8#0#0#13'TPLCTagNumber'#8'ATS48'
+  +'CMD'#7'TagGUID'#6'&{724F91B6-8419-4777-8144-473E16B8318F}'#13'OnValueChange'
+  +#7#22'ATS48StatusValueChange'#7'PLCHack'#2#0#7'PLCSlot'#2#0#10'PLCStation'#2
+  +#1#10'MemFile_DB'#2#0#10'MemAddress'#3#144#1#13'MemSubElement'#2#0#15'MemRea'
+  +'dFunction'#2#3#16'MemWriteFunction'#2#16#14'ProtocolDriver'#7#19'ModBusMast'
+  +'erDriver1'#11'RefreshTime'#3#200#0#4'left'#2'P'#3'top'#2#8#0#0#13'TPLCTagNu'
+  +'mber'#11'ATS48Status'#7'TagGUID'#6'&{F8A77091-272A-4023-AA35-A3724828A32E}'
+  +#13'OnValueChange'#7#22'ATS48StatusValueChange'#7'PLCHack'#2#0#7'PLCSlot'#2#0
+  +#10'PLCStation'#2#1#10'MemFile_DB'#2#0#10'MemAddress'#3#202#1#13'MemSubEleme'
+  +'nt'#2#0#15'MemReadFunction'#2#3#16'MemWriteFunction'#2#16#14'ProtocolDriver'
+  +#7#19'ModBusMasterDriver1'#11'RefreshTime'#3#200#0#4'left'#2'x'#3'top'#2#8#0
+  +#0#0
 ]);

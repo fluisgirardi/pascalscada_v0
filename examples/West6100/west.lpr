@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms
-  { you can add units after this }, Unit1, LResources, scada;
+  { you can add units after this }, Unit1, pascalscada, LResources;
 
 {$IFDEF WINDOWS}{$R west.rc}{$ENDIF}
 

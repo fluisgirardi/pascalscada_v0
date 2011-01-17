@@ -9,7 +9,7 @@ uses
   Forms, Interfaces,
   uDM in 'uDM.pas' {DM: TDataModule},
   uMain in 'uMain.pas' {Form1},
-  uDMImg in 'uDMImg.pas', scada, zcomponent {Imagens: TDataModule};
+  uDMImg in 'uDMImg.pas', pascalscada, zcomponent {Imagens: TDataModule};
 
 {$R *.res}
 
