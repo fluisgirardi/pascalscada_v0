@@ -17,9 +17,11 @@ type
 
   {$if declared(lcl_version)}
     {$IF not declared(lcl_fullversion)}
+      {$WARNING lcl_fullversion CALCULADO!}
       const lcl_fullversion = ((lcl_major *  100 + lcl_minor) * 100 + lcl_release) * 100;
     {$ifend}
   {$else}
+    {$WARNING lcl_fullversion ZERADO!}
     const lcl_fullversion = 0;
   {$ifend}
 
