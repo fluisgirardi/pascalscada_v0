@@ -35,7 +35,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7"/>
-    <Files Count="68">
+    <Files Count="69">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -309,6 +309,10 @@
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
       </Item68>
+      <Item69>
+        <Filename Value="lazlclversion.pas"/>
+        <UnitName Value="lazlclversion"/>
+      </Item69>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">

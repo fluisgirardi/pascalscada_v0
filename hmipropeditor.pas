@@ -17,7 +17,7 @@ uses
   Classes, SysUtils, HMIZones, Dialogs, Forms, Menus, ProtocolDriver, Tag,
   typinfo, HMIControlDislocatorAnimation, TagBit, PLCNumber, PLCBlock,
   {$IFDEF FPC}
-    PropEdits, ComponentEditors;
+    PropEdits, ComponentEditors, lazlclversion;
   {$ELSE}
     Types,
     //se for delphi 6 ou superior
@@ -89,6 +89,9 @@ type
     procedure OpenElementMapper;
   public
     procedure ExecuteVerb(Index: Integer); override;
+    {$ifdef has_customhint}
+    function GetCustomHint: String; override;
+    {$endif}
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
     function Block: TPLCBlock; virtual;
@@ -306,6 +309,16 @@ begin
   if Index=0 then
     OpenElementMapper();
 end;
+
+{$ifdef has_customhint}
+function TBlockElementMapperComponentEditor.GetCustomHint: String;
+var
+  varPLCBlock:TPLCBlock;
+begin
+  varPLCBlock:=TPLCBlock(GetComponent);
+  Result:=Result+'Block size:'+IntToStr(varPLCBlock.Size);
+end;
+{$endif}
 
 function  TBlockElementMapperComponentEditor.GetVerb(Index: Integer): string;
 begin
