@@ -726,7 +726,6 @@ var
   Tamanho:Integer;
 begin
   if PProtocolDriver=nil then begin
-    Tamanho := PSize;
     exit;
   end;
 

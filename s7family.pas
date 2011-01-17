@@ -464,17 +464,17 @@ end;
 
 function  TSiemensProtocolFamily.disconnectAdapter:Boolean;
 begin
-
+  Result:=false;
 end;
 
 function  TSiemensProtocolFamily.connectPLC(var CPU:TS7CPU):Boolean;
 begin
-
+  Result:=false;
 end;
 
 function  TSiemensProtocolFamily.disconnectPLC(var CPU:TS7CPU):Boolean;
 begin
-
+  Result:=false;
 end;
 
 function TSiemensProtocolFamily.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;
@@ -504,7 +504,7 @@ end;
 
 function  TSiemensProtocolFamily.getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult;
 begin
-
+  Result:=iorNone;
 end;
 
 function  TSiemensProtocolFamily.SwapBytesInWord(W:Word):Word;
@@ -776,9 +776,8 @@ procedure TSiemensProtocolFamily.AddParam(var MsgOut:BYTES; const param:BYTES);
 var
   pdu:TPDU;
   paramlen, extra, newparamlen:Integer;
-  res:integer;
 begin
-  res := SetupPDU(MsgOut, true, pdu);
+  SetupPDU(MsgOut, true, pdu);
   paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   newparamlen := Length(param);
 
@@ -786,7 +785,7 @@ begin
 
   if Length(MsgOut)<(PDUOutgoing+10+extra+paramlen+newparamlen) then begin
     SetLength(MsgOut,(PDUOutgoing+10+extra+paramlen+newparamlen));
-    res := SetupPDU(MsgOut, true, pdu);
+    SetupPDU(MsgOut, true, pdu);
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   end;
 
@@ -798,9 +797,8 @@ procedure TSiemensProtocolFamily.AddData(var MsgOut:BYTES; const data:BYTES);
 var
   pdu:TPDU;
   paramlen, datalen, extra, newdatalen:Integer;
-  res:integer;
 begin
-  res := SetupPDU(MsgOut, true, pdu);
+  SetupPDU(MsgOut, true, pdu);
   paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   datalen  := SwapBytesInWord(PPDUHeader(pdu.header)^.data_len);
   newdatalen := Length(data);
@@ -809,7 +807,7 @@ begin
 
   if Length(MsgOut)<(PDUOutgoing+10+extra+paramlen+datalen+newdatalen) then begin
     SetLength(MsgOut,(PDUOutgoing+10+extra+paramlen+datalen+newdatalen));
-    res := SetupPDU(MsgOut, true, pdu);
+    SetupPDU(MsgOut, true, pdu);
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
     datalen  := SwapBytesInWord(PPDUHeader(pdu.header)^.data_len);
   end;
@@ -1580,10 +1578,8 @@ var
   BytesToSend,
   BytesSent,
   ReqType,
-  plcidx,
   dbidx:Integer;
   foundplc,
-  founddb,
   hasAtLeastOneSuccess:Boolean;
   PLCPtr:PS7CPU;
   msgout, msgin, BytesBuffer:BYTES;
@@ -1594,11 +1590,9 @@ begin
   PLCPtr:=nil;
   foundplc:=false;
   dbidx:=-1;
-  plcidx:=-1;
   for c:=0 to High(FCPUs) do
     if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FCPUs[c];
-      plcidx:=c;
       foundplc:=true;
       break;
     end;
@@ -1636,11 +1630,9 @@ begin
       ReqType := vtS7_Flags;
     4: begin
       ReqType := vtS7_DB;
-      founddb:=false;
       if foundplc then
         for dbidx:=0 to High(PLCPtr^.DBs) do
           if PLCPtr^.DBs[dbidx].DBNum=tagrec.File_DB then begin
-            founddb:=true;
             break;
           end;
     end;
@@ -1735,10 +1727,8 @@ var
   BytesToRecv,
   BytesReceived,
   ReqType,
-  plcidx,
   dbidx:Integer;
   foundplc,
-  founddb,
   hasAtLeastOneSuccess:Boolean;
   PLCPtr:PS7CPU;
   msgout, msgin:BYTES;
@@ -1749,11 +1739,9 @@ begin
   PLCPtr:=nil;
   foundplc:=false;
   dbidx:=-1;
-  plcidx:=-1;
   for c:=0 to High(FCPUs) do
     if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FCPUs[c];
-      plcidx:=c;
       foundplc:=true;
       break;
     end;
@@ -1790,11 +1778,9 @@ begin
       ReqType := vtS7_Flags;
     4: begin
       ReqType := vtS7_DB;
-      founddb:=false;
       if foundplc then
         for dbidx:=0 to High(PLCPtr^.DBs) do
           if PLCPtr^.DBs[dbidx].DBNum=tagrec.File_DB then begin
-            founddb:=true;
             break;
           end;
     end;

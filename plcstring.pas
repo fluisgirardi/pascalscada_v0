@@ -474,11 +474,8 @@ begin
 end;
 
 procedure TPLCString.SetBlockSize(size:Cardinal);
-var
-  old:Cardinal;
 begin
   if size>0 then begin
-    old:=PSize;
     PSize := size;
     SetLength(PValues, PSize);
     if PProtocolDriver<>nil then begin
