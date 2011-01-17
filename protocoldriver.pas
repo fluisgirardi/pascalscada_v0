@@ -224,7 +224,7 @@ type
 
     @returns(TProtocolIOResult).
     }
-    function DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; virtual; abstract;
+    function DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; virtual; abstract;
 
     //: Informa ao driver se ele deve ler algum tag a todo scan.
     property ReadSomethingAlways:Boolean read PReadSomethingAlways write PReadSomethingAlways default true;

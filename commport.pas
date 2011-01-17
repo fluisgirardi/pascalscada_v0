@@ -706,8 +706,6 @@ begin
 end;
 
 procedure TCommPortDriver.DoCommPortOpenError;
-var
-  c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
@@ -748,8 +746,6 @@ begin
 end;
 
 procedure TCommPortDriver.DoCommPortCloseError;
-var
-  c:Integer;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 

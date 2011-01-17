@@ -31,6 +31,9 @@
       </Linking>
       <Other>
         <WriteFPCLogo Value="False"/>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True" idx5057="True"/>
+        </CompilerMessages>
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>

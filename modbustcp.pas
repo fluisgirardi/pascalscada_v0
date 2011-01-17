@@ -15,7 +15,7 @@ unit ModBusTCP;
 interface
 
 uses
-  ModBusDriver, Tag, ProtocolTypes, commtypes;
+  ModBusDriver, Tag, commtypes;
 
 type
   {:

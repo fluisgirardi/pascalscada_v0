@@ -7,7 +7,7 @@ unit uModbusTagBuilder;
 interface
 
 uses
-  {$IFDEF FPC}LCLIntf, LResources, {$ELSE} Windows, {$ENDIF}Messages, SysUtils,
+  {$IFDEF FPC}LCLIntf, LResources, {$ELSE} Windows, {$ENDIF} SysUtils,
   Classes, Graphics, Controls, Forms, Dialogs, ComCtrls, StdCtrls, ExtCtrls, Spin;
 
 type
@@ -361,8 +361,6 @@ begin
 end;
 
 procedure TfrmModbusTagBuilder.FormCreate(Sender: TObject);
-var
-  c,count:Integer;
 begin
   PageControl1.TabIndex := 0;
   btnFinish.ModalResult:=mrNone;

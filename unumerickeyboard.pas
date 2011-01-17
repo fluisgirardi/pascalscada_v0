@@ -8,7 +8,7 @@ interface
 
 uses
   SysUtils, Forms, Classes, Controls, Buttons, crosskeyevents
-  {$IFDEF FPC}, LResources, LCLIntf, LCLType, LMessages{$ENDIF};
+  {$IFDEF FPC}, LResources, LCLIntf, LCLType{$ENDIF};
 
 type
 
@@ -144,4 +144,4 @@ end;
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

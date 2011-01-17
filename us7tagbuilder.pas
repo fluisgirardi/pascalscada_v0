@@ -7,7 +7,7 @@ unit us7tagbuilder;
 interface
 
 uses
-  Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls,
+  SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls,
   ExtCtrls, ComCtrls, Spin, CheckLst, tag {$IFDEF FPC}, LCLIntf, LResources{$ENDIF}
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}, windows{$IFEND};
 

@@ -15,7 +15,7 @@ interface
 
 uses
   Classes, SysUtils, HMIZones, Dialogs, Forms, Menus, ProtocolDriver, Tag,
-  typinfo, HMIControlDislocatorAnimation, TagBit, PLCNumber, PLCBlock,
+  typinfo, HMIControlDislocatorAnimation, PLCNumber, PLCBlock,
   {$IFDEF FPC}
     PropEdits, ComponentEditors, lazlclversion;
   {$ELSE}

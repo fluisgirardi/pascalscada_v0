@@ -176,7 +176,7 @@ type
     Compila uma estrutura com as informações do tag.
     @seealso(TTagRec)
     }
-    procedure BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
+    procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
 
     //: Faz uma leitura @bold(assincrona) do tag.
     procedure ScanRead; virtual;
@@ -601,7 +601,7 @@ begin
     PProtocolDriver.AddTag(Self);
 end;
 
-procedure TPLCTag.BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
+procedure TPLCTag.BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
 begin
   tr.Hack := PHack;
   tr.Slot := PSlot;

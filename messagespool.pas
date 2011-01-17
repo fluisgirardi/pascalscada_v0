@@ -128,7 +128,7 @@ type
     @seealso(GetMessage)
     @seealso(PostMessage)
     }
-    function  PeekMessage(var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
+    function  PeekMessage(out Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
 
     {:
     Insere uma mensagem na Fila.
@@ -195,7 +195,7 @@ begin
     Result := PeekMessage(Msg,uFilterMinMsg,uFilterMaxMsg,true);
 end;
 
-function TMessageSpool.PeekMessage(var Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
+function TMessageSpool.PeekMessage(out Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
 var
   curmsg, aux:PMsgPkg;
   found:Boolean;

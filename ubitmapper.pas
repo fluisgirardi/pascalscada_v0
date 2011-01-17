@@ -7,7 +7,7 @@ unit ubitmapper;
 interface
 
 uses
-  {$IFDEF FPC}LCLIntf, LResources,{$ENDIF}Messages, SysUtils, Variants, Classes,
+  {$IFDEF FPC}LCLIntf, LResources,{$ENDIF} SysUtils, Variants, Classes,
   Graphics, Controls, Forms, Dialogs, Grids, StdCtrls;
 
 type

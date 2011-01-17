@@ -143,7 +143,6 @@ end;
 procedure TPLCStructItem.SetValueRaw(Value:Double);
 var
   blkvalues, values:TArrayOfDouble;
-  c:Integer;
 begin
   if Assigned(PBlock) then begin
     SetLength(values,1);

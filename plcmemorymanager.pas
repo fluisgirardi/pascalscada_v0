@@ -10,7 +10,7 @@ unit PLCMemoryManager;
 
 interface
 
-uses SysUtils, DateUtils, hsutils, Tag, ProtocolTypes, SyncObjs, Classes;
+uses SysUtils, DateUtils, Tag, SyncObjs, Classes;
 
 type
   {:
@@ -656,7 +656,7 @@ end;
 
 procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
 var
-  blk, AdrEnd, LenUtil:Integer;
+  blk, AdrEnd:Integer;
 begin
   AdrEnd := AdrStart + Len * RegSize - 1;
 

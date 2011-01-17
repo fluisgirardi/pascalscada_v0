@@ -176,7 +176,7 @@ type
     function RemainingMilisecondsForNextScan:Int64;
     function IsValidTag:Boolean;
     procedure SetTagValidity(TagValidity:Boolean);
-    procedure BuildTagRec(var tr:TTagRec; Count, OffSet:Integer);
+    procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
   end;
 
   //: Classe base para todos os tags.

@@ -80,7 +80,7 @@ type
 
 implementation
 
-uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} hsstrings, Forms;
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} Forms;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
@@ -121,7 +121,6 @@ end;
 procedure TScanUpdate.Execute;
 var
   timeout:Integer;
-  sleepres:TWaitResult;
 begin
   while not Terminated do begin
     try

@@ -12,7 +12,7 @@ unit ModBusSerial;
 interface
 
 uses
-  ModBusDriver, Tag, ProtocolTypes, commtypes, crc16utils;
+  ModBusDriver, Tag, commtypes, crc16utils;
 
 type
   {:

@@ -13,7 +13,7 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryManager, PLCBlock, PLCString, SyncObjs, uModbusTagBuilder,
+  PLCMemoryManager, PLCBlock, PLCString, uModbusTagBuilder,
   CrossEvent{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -140,7 +140,7 @@ type
     //: @seealso(TProtocolDriver.DoWrite)
     function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     //: @seealso(TProtocolDriver.DoRead)
-    function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    function  DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     {:
     Informa quantas saidas podem ficar sem serem declaradas para manter um bloco
     de saidas continuo.
@@ -172,7 +172,7 @@ type
 
 implementation
 
-uses Dialogs, Controls, PLCBlockElement, StrUtils, math, ValueProcessor;
+uses Dialogs, Controls, PLCBlockElement, ValueProcessor;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -844,7 +844,7 @@ begin
   end;
 end;
 
-function  TModBusDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+function  TModBusDriver.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
   IOResult:TIOPacket;
   pkg:BYTES;

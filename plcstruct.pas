@@ -13,7 +13,7 @@ unit PLCStruct;
 interface
 
 uses
-  Classes, PLCBlock, Tag, ProtocolTypes;
+  Classes, PLCBlock, Tag;
 
 type
   TPLCStruct = class(TPLCBlock)

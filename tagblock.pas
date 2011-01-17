@@ -11,7 +11,7 @@ unit TagBlock;
 interface
 
 uses
-  SysUtils, Classes, Tag, PLCTag, ProtocolTypes;
+  SysUtils, Classes, Tag, PLCTag;
 
 type
   {:

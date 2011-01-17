@@ -226,7 +226,7 @@ type
     //: @seealso(TProtocolDriver.DoWrite)
     function DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     //: @seealso(TProtocolDriver.DoRead)
-    function DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    function DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     //constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -236,7 +236,7 @@ type
 
 implementation
 
-uses PLCTagNumber, CrossEvent, syncobjs, dateutils, math, hsstrings;
+uses PLCTagNumber, dateutils, math, hsstrings;
 
 destructor  TIBoxDriver.Destroy;
 begin
@@ -671,7 +671,7 @@ begin
   Result := ioIllegalFunction;
 end;
 
-function TIBoxDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+function TIBoxDriver.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
   pkg, pkgtotal:BYTES;
   cmdpkg:TIOPacket;

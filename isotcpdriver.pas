@@ -16,7 +16,7 @@ unit ISOTCPDriver;
 interface
 
 uses
-  classes, sysutils, S7Types, CrossEvent, commtypes, s7family, CommPort;
+  classes, sysutils, S7Types, commtypes, s7family;
 
 type
   {: Driver IsoTCP. Baseado na biblioteca LibNodave de
@@ -52,7 +52,7 @@ const
 
 implementation
 
-uses math, syncobjs;
+uses math;
 
 constructor TISOTCPDriver.Create(AOwner:TComponent);
 begin
@@ -75,24 +75,24 @@ begin
 
   //incializa conexao
   SetLength(msg,22);
-  msg[04] := $11;  //$11,
-  msg[05] := $E0;  //$E0,
-  msg[06] := 0;    //0,
-  msg[07] := 0;    //0,
-  msg[08] := 0;    //0,
-  msg[09] := 1;    //1,
-  msg[10] := 0;    //0,
-  msg[11] := $C1;  //$C1,
-  msg[12] := 2;    //2,
+  msg[04] := $11;  // $11,
+  msg[05] := $E0;  // $E0,
+  msg[06] := 0;    // 0,
+  msg[07] := 0;    // 0,
+  msg[08] := 0;    // 0,
+  msg[09] := 1;    // 1,
+  msg[10] := 0;    // 0,
+  msg[11] := $C1;  // $C1,
+  msg[12] := 2;    // 2,
   msg[13] := ifthen(FConnectionWay=ISOTCP, 1, $4D);    //'M',
   msg[14] := ifthen(FConnectionWay=ISOTCP, 0, $57);    //'W',
-  msg[15] := $C2;  //$C2,
-  msg[16] := 2;    //2,
+  msg[15] := $C2;  // $C2,
+  msg[16] := 2;    // 2,
   msg[17] := ifthen(FConnectionWay=ISOTCP, CPU.Rack+1, $4D);    //'M',
   msg[18] := ifthen(FConnectionWay=ISOTCP, CPU.Slot,   $57);    //'W',
-  msg[19] := $C0;  //$C0,
-  msg[20] := 1;    //1,
-  msg[21] := 9;    //9;
+  msg[19] := $C0;  // $C0,
+  msg[20] := 1;    // 1,
+  msg[21] := 9;    // 9;
   PrepareToSend(msg);
 
   try

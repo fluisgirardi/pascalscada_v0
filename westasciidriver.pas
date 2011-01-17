@@ -163,7 +163,7 @@ type
     //: @seealso(TProtocolDriver.DoAddTag)
 {d} function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     //: @seealso(TProtocolDriver.DoAddTag)
-{d} function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{d} function  DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -493,7 +493,7 @@ begin
   end;
 end;
 
-function  TWestASCIIDriver.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+function  TWestASCIIDriver.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
   plc:integer;
   dec:Byte;

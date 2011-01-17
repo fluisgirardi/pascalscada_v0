@@ -7,7 +7,7 @@ unit uelementmapper;
 interface
 
 uses
-  Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Spin{$IFDEF FPC}, LResources, LCLIntf{$ENDIF};
 
 type

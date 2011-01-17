@@ -16,8 +16,8 @@ unit s7family;
 interface
 
 uses
-  classes, sysutils, ProtocolDriver, S7Types, Tag, ProtocolTypes, CrossEvent,
-  commtypes, CommPort;
+  classes, sysutils, ProtocolDriver, S7Types, Tag, ProtocolTypes,
+  commtypes;
 
 type
   {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
@@ -117,7 +117,7 @@ type
     //estas funcoes ficaram apenas por motivos compatibilidade com os tags
     //e seus metodos de leitura e escrita diretas.
 {ok}function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
-{ok}function  DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+{ok}function  DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
     function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
@@ -129,9 +129,9 @@ type
 
 implementation
 
-uses math, syncobjs, PLCTagNumber, PLCBlock, PLCString, PLCStruct, hsstrings,
-     PLCMemoryManager, hsutils, dateutils, us7tagbuilder, Controls,
-     PLCBlockElement, PLCNumber, TagBit, strutils, PLCStructElement;
+uses math, PLCTagNumber, PLCBlock, PLCString, PLCStruct, hsstrings,
+     PLCMemoryManager, dateutils, us7tagbuilder, Controls,
+     PLCBlockElement, PLCNumber, TagBit, strutils;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -684,7 +684,7 @@ end;
 //executa somente uma escrita por vez!!!
 procedure TSiemensProtocolFamily.AddParamToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES);
 var
-  param, da:BYTES;
+  param:BYTES;
   bufferLen:Integer;
   p:PS7Req;
   PDU:TPDU;
@@ -752,7 +752,6 @@ var
   extra:Integer;
   bufferlen:Integer;
   lastdatabyte:Integer;
-  PDU:TPDU;
 begin
   bufferlen:=Length(buffer);
 
@@ -923,7 +922,6 @@ var
   DataIdx,
   ResultLen,
   ResultCode,
-  dummy1, dummy2,
   CurValue:Integer;
   ProtocolErrorCode:TProtocolIOResult;
 begin
@@ -1525,8 +1523,6 @@ procedure TSiemensProtocolFamily.DoGetValue(TagRec:TTagRec; var values:TScanRead
 var
   plc, db:integer;
   foundplc, founddb:Boolean;
-  temparea:TArrayOfDouble;
-  c1, c2, lent, lend:Integer;
 begin
   foundplc:=false;
 
@@ -1591,7 +1587,6 @@ var
   hasAtLeastOneSuccess:Boolean;
   PLCPtr:PS7CPU;
   msgout, msgin, BytesBuffer:BYTES;
-  partialValues:TArrayOfDouble;
   incomingPDU:TPDU;
   ReqList:TS7ReqList;
   ivalues:TArrayOfDouble;
@@ -1730,7 +1725,7 @@ begin
   SetLength(ivalues, 0);
 end;
 
-function  TSiemensProtocolFamily.DoRead (const tagrec:TTagRec; var   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+function  TSiemensProtocolFamily.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
   c,
   IncomingPacketSize,
@@ -1746,8 +1741,7 @@ var
   founddb,
   hasAtLeastOneSuccess:Boolean;
   PLCPtr:PS7CPU;
-  msgout, msgin, BytesBuffer:BYTES;
-  partialValues:TArrayOfDouble;
+  msgout, msgin:BYTES;
   incomingPDU:TPDU;
   ReqList:TS7ReqList;
   ivalues:TArrayOfDouble;

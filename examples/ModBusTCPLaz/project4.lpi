@@ -44,7 +44,7 @@
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="58">
+    <Units Count="59">
       <Unit0>
         <Filename Value="project4.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -59,21 +59,21 @@
         <ComponentName Value="Form1"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit4"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
         <TopLine Value="27"/>
         <CursorPos X="20" Y="49"/>
         <UsageCount Value="102"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="../../tcp_udpport.pas"/>
         <UnitName Value="tcp_udpport"/>
         <TopLine Value="1"/>
         <CursorPos X="35" Y="1"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="18"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit2>
       <Unit3>
         <Filename Value="../../../../lazarus/lcl/forms.pp"/>
@@ -94,16 +94,16 @@
         <UnitName Value="CommPort"/>
         <TopLine Value="700"/>
         <CursorPos X="32" Y="716"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="19"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit5>
       <Unit6>
         <Filename Value="../../serialport.pas"/>
         <UnitName Value="SerialPort"/>
         <TopLine Value="784"/>
         <CursorPos X="26" Y="819"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="12"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit6>
       <Unit7>
         <Filename Value="../../modbustcp.pas"/>
@@ -128,56 +128,56 @@
         <UnitName Value="Tag"/>
         <TopLine Value="267"/>
         <CursorPos X="1" Y="298"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="3"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
       <Unit10>
         <Filename Value="../../protscanupdate.pas"/>
         <UnitName Value="protscanupdate"/>
         <TopLine Value="124"/>
         <CursorPos X="48" Y="146"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="33"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit10>
       <Unit11>
         <Filename Value="../../hmizones.pas"/>
         <UnitName Value="HMIZones"/>
         <TopLine Value="1"/>
         <CursorPos X="52" Y="13"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="3"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit11>
       <Unit12>
         <Filename Value="../../hmiradiobutton.pas"/>
         <UnitName Value="HMIRadioButton"/>
         <TopLine Value="1"/>
         <CursorPos X="35" Y="83"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="3"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit12>
       <Unit13>
         <Filename Value="../../hmiradiogroup.pas"/>
         <UnitName Value="HMIRadioGroup"/>
         <TopLine Value="13"/>
         <CursorPos X="24" Y="31"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="3"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit13>
       <Unit14>
         <Filename Value="../../hmiupdown.pas"/>
         <UnitName Value="HMIUpDown"/>
         <TopLine Value="51"/>
         <CursorPos X="3" Y="16"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="9"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit14>
       <Unit15>
         <Filename Value="../../plctagnumber.pas"/>
         <UnitName Value="PLCTagNumber"/>
         <TopLine Value="1"/>
         <CursorPos X="25" Y="15"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="9"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit15>
       <Unit16>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/unix/bunxovlh.inc"/>
@@ -196,16 +196,16 @@
         <UnitName Value="TagBit"/>
         <TopLine Value="255"/>
         <CursorPos X="5" Y="290"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="3"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit18>
       <Unit19>
         <Filename Value="../../westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
         <TopLine Value="905"/>
         <CursorPos X="15" Y="922"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="11"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit19>
       <Unit20>
         <Filename Value="../../protocoldriver.pas"/>
@@ -248,8 +248,8 @@
         <UnitName Value="HMILabel"/>
         <TopLine Value="61"/>
         <CursorPos X="3" Y="15"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="9"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit25>
       <Unit26>
         <Filename Value="../../../fpcbuild231/fpcbuild/fpcsrc/rtl/unix/sockets.pp"/>
@@ -346,8 +346,8 @@
         <UnitName Value="PLCMemoryMananger"/>
         <TopLine Value="583"/>
         <CursorPos X="35" Y="634"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="17"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit40>
       <Unit41>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/unix/serial.pp"/>
@@ -374,8 +374,8 @@
         <UnitName Value="IBoxDriver"/>
         <TopLine Value="473"/>
         <CursorPos X="29" Y="489"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit44>
       <Unit45>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/sysutils/sysstrh.inc"/>
@@ -397,8 +397,8 @@
         <UnitName Value="PLCNumber"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit47>
       <Unit48>
         <Filename Value="../../plctag.pas"/>
@@ -433,8 +433,8 @@
         <UnitName Value="ModBusSerial"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit52>
       <Unit53>
         <Filename Value="../../../../lazarus/lcl/masks.pas"/>
@@ -475,6 +475,18 @@
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit57>
+      <Unit58>
+        <Filename Value="../../hmipropeditor.pas"/>
+        <UnitName Value="hmipropeditor"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="214"/>
+        <CursorPos X="3" Y="214"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit58>
     </Units>
     <JumpHistory Count="0" HistoryIndex="-1"/>
   </ProjectOptions>
