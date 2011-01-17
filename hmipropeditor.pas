@@ -89,9 +89,9 @@ type
     procedure OpenElementMapper;
   public
     procedure ExecuteVerb(Index: Integer); override;
-    {$ifdef has_customhint}
+    {$if declared(has_customhints)}
     function GetCustomHint: String; override;
-    {$endif}
+    {$ifend}
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
     function Block: TPLCBlock; virtual;
@@ -310,7 +310,7 @@ begin
     OpenElementMapper();
 end;
 
-{$ifdef has_customhint}
+{$if declared(has_customhints)}
 function TBlockElementMapperComponentEditor.GetCustomHint: String;
 var
   varPLCBlock:TPLCBlock;
@@ -318,7 +318,7 @@ begin
   varPLCBlock:=TPLCBlock(GetComponent);
   Result:=Result+'Block size:'+IntToStr(varPLCBlock.Size);
 end;
-{$endif}
+{$ifend}
 
 function  TBlockElementMapperComponentEditor.GetVerb(Index: Integer): string;
 begin
