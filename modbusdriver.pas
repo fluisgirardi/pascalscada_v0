@@ -125,7 +125,7 @@ type
     //: Cria um pacote modbus
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; virtual;
     //: Extrai os dados de um pacote modbus
-    function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult; virtual; 
+    function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; virtual;
 
     //: @seealso(TProtocolDriver.DoAddTag)
     procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
@@ -640,9 +640,10 @@ end;
 
 function  TModBusDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 begin
+  Result:=nil;
 end;
 
-function TModBusDriver.DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;
+function TModBusDriver.DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult;
 begin
   Result:=ioDriverError
 end;
@@ -772,7 +773,7 @@ end;
 
 procedure TModBusDriver.DoGetValue(TagObj:TTagRec; var values:TScanReadRec);
 var
-  res,plc,c:Integer;
+  plc,c:Integer;
   found:Boolean;
 begin
   if Length(values.Values)<TagObj.Size then
@@ -799,13 +800,13 @@ begin
 
   case TagObj.ReadFunction of
     $01:
-      res := PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $02:
-      res := PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $03:
-      res := PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $04:
-      res := PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp)
+      PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp)
   end;
 
   if values.LastQueryResult=ioOk then begin

@@ -26,7 +26,7 @@ type
   TModBusRTUDriver = class(TModBusDriver)
   protected
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;
-    function  DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult; override;
+    function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; override;
   published
     property ReadSomethingAlways;
     property OutputMaxHole;
@@ -204,7 +204,7 @@ begin
   end;
 end;
 
-function TModBusRTUDriver.DecodePkg(pkg:TIOPacket; var values:TArrayOfDouble):TProtocolIOResult;
+function TModBusRTUDriver.DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult;
 var
    i,c,c2,plc:integer;
    address, len:Cardinal;
