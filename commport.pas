@@ -1163,8 +1163,11 @@ procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
     FS:TStringStream;
     timestamp:String;
 begin
+  if not FLogActions then exit;
+
+  if [csDesigning]*ComponentState<>[] then exit;
+
   try
-    if not FLogActions then exit;
     FS:=TStringStream.Create('');
     timestamp := FormatDateTime('mmm-dd hh:nn:ss.zzz',Now);
     if cmd=iocRead then begin

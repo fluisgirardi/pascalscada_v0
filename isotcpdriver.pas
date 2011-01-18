@@ -150,7 +150,10 @@ begin
 
   try
     res:=PCommPort.IOCommandSync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,IsWrite,nil,nil);
-    if res=0 then exit;
+    if res=0 then begin
+      Result:=false;
+      exit;
+    end;
     retries:=0;
 
     resget := getResponse(msgIn, BytesRead);
