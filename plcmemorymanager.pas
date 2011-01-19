@@ -216,7 +216,7 @@ type
     @seealso(SetValues)
     @seealso(GetValues)
     }
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; out Values:TArrayOfDouble; out LastResult:TProtocolIOResult; out ValueTimeStamp:TDateTime):Integer; virtual;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer; virtual;
     {:
     @name escreve o status da última leitura, continuas ou não.
 
@@ -272,7 +272,7 @@ type
     //: @seealso(TPLCMemoryManager.SetValues)
     function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer; override;
     //: @seealso(TPLCMemoryManager.GetValues)
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; out Values:TArrayOfDouble; out LastResult:TProtocolIOResult; out ValueTimeStamp:TDateTime):Integer; override;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer; override;
     //: @seealso(TPLCMemoryManager.SetFault)
     procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult); override;
   end;
@@ -678,7 +678,7 @@ begin
   end;
 end;
 
-function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; out Values:TArrayOfDouble; out LastResult:TProtocolIOResult; out ValueTimeStamp:TDateTime):Integer;
+function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
 var
   blk, AdrEnd, LenUtil, Moved:Integer;
 begin
@@ -757,7 +757,7 @@ begin
   end;
 end;
 
-function    TPLCMemoryManagerSafe.GetValues(AdrStart,Len,RegSize:Cardinal; out Values:TArrayOfDouble; out LastResult:TProtocolIOResult; out ValueTimeStamp:TDateTime):Integer;
+function    TPLCMemoryManagerSafe.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
 begin
   try
     FMutex.Enter;
