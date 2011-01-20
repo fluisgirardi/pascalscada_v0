@@ -212,8 +212,10 @@ end;
 procedure THMIEdit.Loaded;
 begin
   inherited Loaded;
-  FDefFontColor := Font.Color;
-  FDefColor := inherited Color;
+  if not HasFocus then begin
+    FDefFontColor := Font.Color;
+    FDefColor := inherited Color;
+  end;
 end;
 
 procedure THMIEdit.SetHMITag(t:TPLCTag);
@@ -277,7 +279,7 @@ end;
 
 procedure THMIEdit.RepaintFocus;
 begin
-  if [csReading]*ComponentState<>[] then
+  if [csReading, csLoading, csDesigning]*ComponentState<>[] then
      exit;
 
   FBlockFontChange := true;
