@@ -161,6 +161,8 @@ uses hsstrings;
 constructor THMIEdit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  inherited Color:=clWindow;
+  Font.Color     :=clWindowText;
   FAlignment := taRightJustify;
   FIsEnabled := inherited Enabled;
   FSend := [scLostFocus, scPressEnter];

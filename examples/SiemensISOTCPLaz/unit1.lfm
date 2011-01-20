@@ -8,12 +8,12 @@ object Form1: TForm1
   ClientHeight = 427
   ClientWidth = 884
   OnCreate = FormCreate
-  LCLVersion = '0.9.29'
+  LCLVersion = '0.9.31'
   object Label1: TLabel
     Left = 8
-    Height = 14
+    Height = 16
     Top = 8
-    Width = 460
+    Width = 513
     Caption = 'Crie no seu PLC o DB1 com 40 bytes de tamanho (10 DWORDs ou  10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -23,9 +23,9 @@ object Form1: TForm1
   end
   object Label2: TLabel
     Left = 8
-    Height = 14
+    Height = 16
     Top = 24
-    Width = 446
+    Width = 497
     Caption = 'Create the DB1 in your PLC with 40 bytes sized (10 DWORDs or 10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -39,6 +39,7 @@ object Form1: TForm1
     Top = 88
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
     ParentFont = False
     TabOrder = 0
     NumberFormat = '#0.0'
@@ -63,6 +64,8 @@ object Form1: TForm1
     Top = 112
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 1
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD04
@@ -74,6 +77,8 @@ object Form1: TForm1
     Top = 136
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 2
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD08
@@ -85,6 +90,8 @@ object Form1: TForm1
     Top = 160
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 3
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD12
@@ -96,6 +103,8 @@ object Form1: TForm1
     Top = 184
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 4
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD16
@@ -107,6 +116,8 @@ object Form1: TForm1
     Top = 208
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 5
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD20
@@ -118,6 +129,8 @@ object Form1: TForm1
     Top = 232
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 6
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD24
@@ -129,6 +142,8 @@ object Form1: TForm1
     Top = 256
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 7
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD28
@@ -140,6 +155,8 @@ object Form1: TForm1
     Top = 280
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 8
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD32
@@ -151,6 +168,8 @@ object Form1: TForm1
     Top = 304
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 9
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD36
@@ -292,6 +311,8 @@ object Form1: TForm1
     Top = 88
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 10
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD00
@@ -315,6 +336,8 @@ object Form1: TForm1
     Top = 112
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 11
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD04
@@ -326,6 +349,8 @@ object Form1: TForm1
     Top = 136
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 12
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD08
@@ -337,6 +362,8 @@ object Form1: TForm1
     Top = 160
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 13
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD12
@@ -348,6 +375,8 @@ object Form1: TForm1
     Top = 184
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 14
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD16
@@ -359,6 +388,8 @@ object Form1: TForm1
     Top = 208
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 15
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD20
@@ -370,6 +401,8 @@ object Form1: TForm1
     Top = 232
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 16
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD24
@@ -381,6 +414,8 @@ object Form1: TForm1
     Top = 256
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 17
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD28
@@ -392,6 +427,8 @@ object Form1: TForm1
     Top = 280
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 18
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD32
@@ -403,6 +440,8 @@ object Form1: TForm1
     Top = 304
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 19
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD36
@@ -1316,6 +1355,8 @@ object Form1: TForm1
     Top = 88
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 21
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C0
@@ -1339,6 +1380,8 @@ object Form1: TForm1
     Top = 112
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 22
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C1
@@ -1350,6 +1393,8 @@ object Form1: TForm1
     Top = 136
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 23
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C2
@@ -1361,6 +1406,8 @@ object Form1: TForm1
     Top = 160
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 24
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C3
@@ -1372,6 +1419,8 @@ object Form1: TForm1
     Top = 184
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 25
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C4
@@ -1383,6 +1432,8 @@ object Form1: TForm1
     Top = 208
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 26
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C5
@@ -1394,6 +1445,8 @@ object Form1: TForm1
     Top = 232
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 27
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C6
@@ -1405,6 +1458,8 @@ object Form1: TForm1
     Top = 256
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 28
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C7
@@ -1416,6 +1471,8 @@ object Form1: TForm1
     Top = 280
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 29
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C8
@@ -1427,6 +1484,8 @@ object Form1: TForm1
     Top = 304
     Width = 112
     Color = clWindow
+    Font.Color = clWindowText
+    ParentFont = False
     TabOrder = 30
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C9
@@ -1437,8 +1496,10 @@ object Form1: TForm1
     Height = 379
     Top = 0
     Width = 264
+    DefaultValueFont.Color = clWindowText
     Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar]
     Indent = 12
+    NameFont.Color = clWindowText
     TIObject = DataModule1.DB1
     ValueFont.Color = clMaroon
   end
@@ -1634,7 +1695,7 @@ object Form1: TForm1
     P1_X = 440
     P1_Y = 344
     ValueP0 = 0
-    ValueP1 = 100000
+    ValueP1 = 10000
     PLCTag = DataModule1.DB1_DBD00
     Control = ToggleBox1
     EnableXMin = True
