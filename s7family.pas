@@ -42,19 +42,21 @@ type
 
   Area:
   @table(
-    @rowHead( @cell(Area)                       @cell(Valor) @cell(Observação) )
-    @row(     @cell(Inputs, Entradas)           @cell( 1)    @cell( - ))
-    @row(     @cell(Outputs, Saidas)            @cell( 2)    @cell( - ))
-    @row(     @cell(Flags ou M's)               @cell( 3)    @cell( - ))
-    @row(     @cell(DB e VM no S7-200 )         @cell( 4)    @cell( - ))
-    @row(     @cell(Counter, S7 300/400)        @cell( 5)    @cell(Precisa que a propriedade TagType seja igual pttWord))
-    @row(     @cell(Timer, S7 300/400)          @cell( 6)    @cell(Precisa que a propriedade TagType seja igual pttWord))
+    @rowHead( @cell(Area)                                 @cell(Valor) @cell(Observação) )
+    @row(     @cell(Inputs, Entradas)                     @cell( 1)    @cell( - ))
+    @row(     @cell(Outputs, Saidas)                      @cell( 2)    @cell( - ))
+    @row(     @cell(Flags ou M's)                         @cell( 3)    @cell( - ))
+    @row(     @cell(DB e VM no S7-200 )                   @cell( 4)    @cell( - ))
+    @row(     @cell(Counter, S7 300/400)                  @cell( 5)    @cell(Precisa que a propriedade TagType seja igual pttWord))
+    @row(     @cell(Timer, S7 300/400)                    @cell( 6)    @cell(Precisa que a propriedade TagType seja igual pttWord))
 
-    @row(     @cell(Special Memory, SM, S7-200) @cell( 7)    @cell( - ))
-    @row(     @cell(Entrada analógica, S7-200)  @cell( 8)    @cell( - ))
-    @row(     @cell(Saida analógica, S7-200)    @cell( 9)    @cell( - ))
-    @row(     @cell(Counter, S7-200)            @cell(10)    @cell(Precisa que a propriedade TagType seja igual pttWord))
-    @row(     @cell(Timer, S7-200)              @cell(11)    @cell(Precisa que a propriedade TagType seja igual pttWord))
+    @row(     @cell(Special Memory, SM, S7-200)           @cell( 7)    @cell( - ))
+    @row(     @cell(Entrada analógica, S7-200)            @cell( 8)    @cell( - ))
+    @row(     @cell(Saida analógica, S7-200)              @cell( 9)    @cell( - ))
+    @row(     @cell(Counter, S7-200)                      @cell(10)    @cell(Precisa que a propriedade TagType seja igual pttWord))
+    @row(     @cell(Timer, S7-200)                        @cell(11)    @cell(Precisa que a propriedade TagType seja igual pttWord))
+
+    @row(     @cell(Entrada analógica (PIW), S7 300/400)  @cell(12)    @cell(Precisa que a propriedade TagType seja igual pttWord))
   )
 
   Logo para acessar a IB3, basta colocar na propriedade MemReadFunction o valor
@@ -557,12 +559,17 @@ begin
       with CPU do begin
         Inputs.MaxBlockItems:=MaxBlockSize;
         Outputs.MaxBlockItems:=MaxBlockSize;
-        AnInput.MaxBlockItems:=MaxBlockSize;
-        AnOutput.MaxBlockItems:=MaxBlockSize;
         Timers.MaxBlockItems:=MaxBlockSize;
         Counters.MaxBlockItems:=MaxBlockSize;
         Flags.MaxBlockItems:=MaxBlockSize;
-        SMs.MaxBlockItems:=MaxBlockSize;
+        PeripheralInputs.MaxBlockItems:=MaxBlockSize;
+
+        S7200SMs.MaxBlockItems:=MaxBlockSize;
+        S7200Timers.MaxBlockItems:=MaxBlockSize;
+        S7200Counters.MaxBlockItems:=MaxBlockSize;
+        S7200AnInput.MaxBlockItems:=MaxBlockSize;
+        S7200AnOutput.MaxBlockItems:=MaxBlockSize;
+
         for db:=0 to High(DBs) do
           DBs[db].DBArea.MaxBlockItems:=MaxBlockSize;
       end;
@@ -892,22 +899,32 @@ begin
     Slot:=iSlot;
     Rack:=iHack;
     Station:=iStation;
-    Inputs  :=TPLCMemoryManager.Create;
-    Outputs :=TPLCMemoryManager.Create;
-    AnInput :=TPLCMemoryManager.Create;
-    AnOutput:=TPLCMemoryManager.Create;
-    Timers  :=TPLCMemoryManager.Create;
-    Counters:=TPLCMemoryManager.Create;
-    Flags   :=TPLCMemoryManager.Create;
-    SMs     :=TPLCMemoryManager.Create;
+
+    Inputs           :=TPLCMemoryManager.Create;
+    Outputs          :=TPLCMemoryManager.Create;
+    PeripheralInputs :=TPLCMemoryManager.Create;
+    Timers           :=TPLCMemoryManager.Create;
+    Counters         :=TPLCMemoryManager.Create;
+    Flags            :=TPLCMemoryManager.Create;
+
+    S7200SMs         :=TPLCMemoryManager.Create;
+    S7200Timers      :=TPLCMemoryManager.Create;
+    S7200Counters    :=TPLCMemoryManager.Create;
+    S7200AnInput     :=TPLCMemoryManager.Create;
+    S7200AnOutput    :=TPLCMemoryManager.Create;
+
     Inputs.MaxBlockItems:=MaxBlockSize;
     Outputs.MaxBlockItems:=MaxBlockSize;
-    AnInput.MaxBlockItems:=MaxBlockSize;
-    AnOutput.MaxBlockItems:=MaxBlockSize;
+    PeripheralInputs.MaxBlockItems:=MaxBlockSize;
     Timers.MaxBlockItems:=MaxBlockSize;
     Counters.MaxBlockItems:=MaxBlockSize;
     Flags.MaxBlockItems:=MaxBlockSize;
-    SMs.MaxBlockItems:=MaxBlockSize;
+
+    S7200SMs.MaxBlockItems:=MaxBlockSize;
+    S7200Timers.MaxBlockItems:=MaxBlockSize;
+    S7200Counters.MaxBlockItems:=MaxBlockSize;
+    S7200AnInput.MaxBlockItems:=MaxBlockSize;
+    S7200AnOutput.MaxBlockItems:=MaxBlockSize;
   end;
 end;
 
@@ -982,9 +999,9 @@ begin
             vtS7_Outputs:
                FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_AnInput:
-               FCPUs[PLC].AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLC].S7200AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_AnOutput:
-               FCPUs[PLC].AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLC].S7200AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Timer:
                FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Counter:
@@ -992,7 +1009,13 @@ begin
             vtS7_Flags:
                FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_SM:
-               FCPUs[PLC].SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLC].S7200SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_200_Timer:
+               FCPUs[PLC].S7200Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_200_Counter:
+               FCPUs[PLC].S7200Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+            vtS7_Peripheral:
+               FCPUs[PLC].PeripheralInputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           end;
       end;
     end else begin
@@ -1008,9 +1031,9 @@ begin
             vtS7_Outputs:
                FCPUs[PLC].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_AnInput:
-               FCPUs[PLC].AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLC].S7200AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_AnOutput:
-               FCPUs[PLC].AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLC].S7200AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Timer:
                FCPUs[PLC].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Counter:
@@ -1018,7 +1041,13 @@ begin
             vtS7_Flags:
                FCPUs[PLC].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_SM:
-               FCPUs[PLC].SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLC].S7200SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_200_Timer:
+               FCPUs[PLC].S7200Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_200_Counter:
+               FCPUs[PLC].S7200Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+            vtS7_Peripheral:
+               FCPUs[PLC].PeripheralInputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
           end;
       end;
     end;
@@ -1087,16 +1116,22 @@ begin
 
       FCPUs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     end;
-    5,10:
+    5:
       FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
-    6,11:
+    6:
       FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     7:
-      FCPUs[plc].SMs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200SMs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     8:
-      FCPUs[plc].AnInput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200AnInput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     9:
-      FCPUs[plc].AnOutput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200AnOutput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+    10:
+      FCPUs[plc].S7200Counters.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+    11:
+      FCPUs[plc].S7200Timers.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+    12:
+      FCPUs[plc].PeripheralInputs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
     else
       valido:=false;
   end;
@@ -1145,16 +1180,22 @@ begin
 
         FCPUs[plc].DBs[db].DBArea.RemoveAddress(tr.Address,tr.Size,1);
       end;
-      5,10:
+      5:
         FCPUs[plc].Counters.RemoveAddress(tr.Address,tr.Size,1);
-      6,11:
+      6:
         FCPUs[plc].Timers.RemoveAddress(tr.Address,tr.Size,1);
       7:
-        FCPUs[plc].SMs.RemoveAddress(tr.Address,tr.Size,1);
+        FCPUs[plc].S7200SMs.RemoveAddress(tr.Address,tr.Size,1);
       8:
-        FCPUs[plc].AnInput.RemoveAddress(tr.Address,tr.Size,1);
+        FCPUs[plc].S7200AnInput.RemoveAddress(tr.Address,tr.Size,1);
       9:
-        FCPUs[plc].AnOutput.RemoveAddress(tr.Address,tr.Size,1);
+        FCPUs[plc].S7200AnOutput.RemoveAddress(tr.Address,tr.Size,1);
+      10:
+        FCPUs[plc].S7200Counters.RemoveAddress(tr.Address,tr.Size,1);
+      11:
+        FCPUs[plc].S7200Timers.RemoveAddress(tr.Address,tr.Size,1);
+      12:
+        FCPUs[plc].PeripheralInputs.RemoveAddress(tr.Address,tr.Size,1);
     end;
   finally
     Inherited DoDelTag(TagObj);
@@ -1358,46 +1399,6 @@ begin
       end;
     end;
 
-    //AnInput///////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].AnInput.Blocks) do begin
-      if FCPUs[plc].AnInput.Blocks[block].NeedRefresh then begin
-        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].AnInput.Blocks[block].Size) then begin
-          onereqdone:=True;
-          ReadQueuedRequests(FCPUs[plc]);
-          Reset;
-        end;
-        pkg_initialized;
-        AddToReqList(plc, 0, vtS7_200_AnInput, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
-        AddToReadRequest(msgout, vtS7_200_AnInput, 0, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
-      end else begin
-        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnInput.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].AnInput.Size) then begin
-            QueueOutOfScanReq(plc, -1, vtS7_200_AnInput, FCPUs[plc].AnInput.Blocks[block].AddressStart, FCPUs[plc].AnInput.Blocks[block].Size);
-          end;
-        end;
-      end;
-    end;
-
-    //AnOutput//////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].AnOutput.Blocks) do begin
-      if FCPUs[plc].AnOutput.Blocks[block].NeedRefresh then begin
-        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].AnOutput.Blocks[block].Size) then begin
-          onereqdone:=True;
-          ReadQueuedRequests(FCPUs[plc]);
-          Reset;
-        end;
-        pkg_initialized;
-        AddToReqList(plc, 0, vtS7_200_AnOutput, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
-        AddToReadRequest(msgout, vtS7_200_AnOutput, 0, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
-      end else begin
-        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].AnOutput.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].AnOutput.Size) then begin
-            QueueOutOfScanReq(plc, -1, vtS7_200_AnOutput, FCPUs[plc].AnOutput.Blocks[block].AddressStart, FCPUs[plc].AnOutput.Blocks[block].Size);
-          end;
-        end;
-      end;
-    end;
-
     //Timers///////////////////////////////////////////////////////////////////
     for block := 0 to High(FCPUs[plc].Timers.Blocks) do begin
       if FCPUs[plc].Timers.Blocks[block].NeedRefresh then begin
@@ -1458,21 +1459,121 @@ begin
       end;
     end;
 
-    //SMs//////////////////////////////////////////////////////////////////
-    for block := 0 to High(FCPUs[plc].SMs.Blocks) do begin
-      if FCPUs[plc].SMs.Blocks[block].NeedRefresh then begin
-        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].SMs.Blocks[block].Size) then begin
+    //PeripheralInputs///////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].PeripheralInputs.Blocks) do begin
+      if FCPUs[plc].PeripheralInputs.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].PeripheralInputs.Blocks[block].Size) then begin
           onereqdone:=True;
           ReadQueuedRequests(FCPUs[plc]);
           Reset;
         end;
         pkg_initialized;
-        AddToReqList(plc, 0, vtS7_200_SM, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
-        AddToReadRequest(msgout, vtS7_200_SM, 0, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
+        AddToReqList(plc, 0, vtS7_Peripheral, FCPUs[plc].PeripheralInputs.Blocks[block].AddressStart, FCPUs[plc].PeripheralInputs.Blocks[block].Size);
+        AddToReadRequest(msgout, vtS7_Peripheral, 0, FCPUs[plc].PeripheralInputs.Blocks[block].AddressStart, FCPUs[plc].PeripheralInputs.Blocks[block].Size);
       end else begin
-        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].SMs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].SMs.Size) then begin
-            QueueOutOfScanReq(plc, -1, vtS7_200_SM, FCPUs[plc].SMs.Blocks[block].AddressStart, FCPUs[plc].SMs.Blocks[block].Size);
+        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].PeripheralInputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].PeripheralInputs.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_Peripheral, FCPUs[plc].PeripheralInputs.Blocks[block].AddressStart, FCPUs[plc].PeripheralInputs.Blocks[block].Size);
+          end;
+        end;
+      end;
+    end;
+
+    //S7200AnInput///////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].S7200AnInput.Blocks) do begin
+      if FCPUs[plc].S7200AnInput.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200AnInput.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
+        pkg_initialized;
+        AddToReqList(plc, 0, vtS7_200_AnInput, FCPUs[plc].S7200AnInput.Blocks[block].AddressStart, FCPUs[plc].S7200AnInput.Blocks[block].Size);
+        AddToReadRequest(msgout, vtS7_200_AnInput, 0, FCPUs[plc].S7200AnInput.Blocks[block].AddressStart, FCPUs[plc].S7200AnInput.Blocks[block].Size);
+      end else begin
+        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].S7200AnInput.Blocks[block].LastUpdate)>TimeElapsed) then begin
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200AnInput.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_AnInput, FCPUs[plc].S7200AnInput.Blocks[block].AddressStart, FCPUs[plc].S7200AnInput.Blocks[block].Size);
+          end;
+        end;
+      end;
+    end;
+
+    //S7200AnOutput//////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].S7200AnOutput.Blocks) do begin
+      if FCPUs[plc].S7200AnOutput.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200AnOutput.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
+        pkg_initialized;
+        AddToReqList(plc, 0, vtS7_200_AnOutput, FCPUs[plc].S7200AnOutput.Blocks[block].AddressStart, FCPUs[plc].S7200AnOutput.Blocks[block].Size);
+        AddToReadRequest(msgout, vtS7_200_AnOutput, 0, FCPUs[plc].S7200AnOutput.Blocks[block].AddressStart, FCPUs[plc].S7200AnOutput.Blocks[block].Size);
+      end else begin
+        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].S7200AnOutput.Blocks[block].LastUpdate)>TimeElapsed) then begin
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200AnOutput.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_AnOutput, FCPUs[plc].S7200AnOutput.Blocks[block].AddressStart, FCPUs[plc].S7200AnOutput.Blocks[block].Size);
+          end;
+        end;
+      end;
+    end;
+
+    //S7200Timers///////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].S7200Timers.Blocks) do begin
+      if FCPUs[plc].S7200Timers.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200Timers.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
+        pkg_initialized;
+        AddToReqList(plc, 0, vtS7_200_Timer, FCPUs[plc].S7200Timers.Blocks[block].AddressStart, FCPUs[plc].S7200Timers.Blocks[block].Size);
+        AddToReadRequest(msgout, vtS7_200_Timer, 0, FCPUs[plc].S7200Timers.Blocks[block].AddressStart, FCPUs[plc].S7200Timers.Blocks[block].Size);
+      end else begin
+        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].S7200Timers.Blocks[block].LastUpdate)>TimeElapsed) then begin
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200Timers.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_Timer, FCPUs[plc].S7200Timers.Blocks[block].AddressStart, FCPUs[plc].S7200Timers.Blocks[block].Size);
+          end;
+        end;
+      end;
+    end;
+
+    //S7200Counters//////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].S7200Counters.Blocks) do begin
+      if FCPUs[plc].S7200Counters.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200Counters.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
+        pkg_initialized;
+        AddToReqList(plc, 0, vtS7_200_Counter, FCPUs[plc].S7200Counters.Blocks[block].AddressStart, FCPUs[plc].S7200Counters.Blocks[block].Size);
+        AddToReadRequest(msgout, vtS7_200_Counter, 0, FCPUs[plc].S7200Counters.Blocks[block].AddressStart, FCPUs[plc].S7200Counters.Blocks[block].Size);
+      end else begin
+        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].S7200Counters.Blocks[block].LastUpdate)>TimeElapsed) then begin
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200Counters.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_Counter, FCPUs[plc].S7200Counters.Blocks[block].AddressStart, FCPUs[plc].S7200Counters.Blocks[block].Size);
+          end;
+        end;
+      end;
+    end;
+
+    //S7200SMs//////////////////////////////////////////////////////////////////
+    for block := 0 to High(FCPUs[plc].S7200SMs.Blocks) do begin
+      if FCPUs[plc].S7200SMs.Blocks[block].NeedRefresh then begin
+        if not AcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200SMs.Blocks[block].Size) then begin
+          onereqdone:=True;
+          ReadQueuedRequests(FCPUs[plc]);
+          Reset;
+        end;
+        pkg_initialized;
+        AddToReqList(plc, 0, vtS7_200_SM, FCPUs[plc].S7200SMs.Blocks[block].AddressStart, FCPUs[plc].S7200SMs.Blocks[block].Size);
+        AddToReadRequest(msgout, vtS7_200_SM, 0, FCPUs[plc].S7200SMs.Blocks[block].AddressStart, FCPUs[plc].S7200SMs.Blocks[block].Size);
+      end else begin
+        if PReadSomethingAlways and (MilliSecondsBetween(anow,FCPUs[plc].S7200SMs.Blocks[block].LastUpdate)>TimeElapsed) then begin
+          if OutOfScanAcceptThisRequest(FCPUs[plc], FCPUs[plc].S7200SMs.Size) then begin
+            QueueOutOfScanReq(plc, -1, vtS7_200_SM, FCPUs[plc].S7200SMs.Blocks[block].AddressStart, FCPUs[plc].S7200SMs.Blocks[block].Size);
           end;
         end;
       end;
@@ -1556,16 +1657,22 @@ begin
 
       FCPUs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     end;
-    5,10:
+    5:
       FCPUs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
-    6,11:
+    6:
       FCPUs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     7:
-      FCPUs[plc].SMs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FCPUs[plc].S7200SMs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     8:
-      FCPUs[plc].AnInput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FCPUs[plc].S7200AnInput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
     9:
-      FCPUs[plc].AnOutput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FCPUs[plc].S7200AnOutput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    10:
+      FCPUs[plc].S7200Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    11:
+      FCPUs[plc].S7200Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    12:
+      FCPUs[plc].PeripheralInputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
   end;
 end;
 
@@ -1636,9 +1743,9 @@ begin
             break;
           end;
     end;
-    5,10:
+    5:
       ReqType := vtS7_Counter;
-    6,11:
+    6:
       ReqType := vtS7_Timer;
     7:
       ReqType := vtS7_200_SM;
@@ -1646,6 +1753,12 @@ begin
       ReqType := vtS7_200_AnInput;
     9:
       ReqType := vtS7_200_AnOutput;
+    10:
+      ReqType := vtS7_200_Counter;
+    11:
+      ReqType := vtS7_200_Timer;
+    12:
+      ReqType := vtS7_Peripheral;
   end;
 
   MaxBytesToSend:=PLCPtr.MaxPDULen-28;
@@ -1784,9 +1897,9 @@ begin
             break;
           end;
     end;
-    5,10:
+    5:
       ReqType := vtS7_Counter;
-    6,11:
+    6:
       ReqType := vtS7_Timer;
     7:
       ReqType := vtS7_200_SM;
@@ -1794,6 +1907,12 @@ begin
       ReqType := vtS7_200_AnInput;
     9:
       ReqType := vtS7_200_AnOutput;
+    10:
+      ReqType := vtS7_200_Counter;
+    11:
+      ReqType := vtS7_200_Timer;
+    12:
+      ReqType := vtS7_Peripheral;
   end;
 
   MaxBytesToRecv:=PLCPtr.MaxPDULen-18; //10 do header, 2 codigo de erro, 2 pedido de leitura, 4 header do resultado.
@@ -1919,46 +2038,6 @@ begin
     $06: Result:=ioIllegalRequest;
     $0A ,$03: Result:=ioObjectNotExists;
     $05: Result:=ioIllegalMemoryAddress;
-
-    {
-    $8000: return "function already occupied.";
-    $8001: return "not allowed in current operating status.";
-    $8101: return "hardware fault.";
-    $8103: return "object access not allowed.";
-    $8104: return "context is not supported. Step7 says:Function not implemented or error in telgram.";
-    $8105: return "invalid address.";
-    $8106: return "data type not supported.";
-    $8107: return "data type not consistent.";
-    $810A: return "object does not exist.";
-    $8301: return "insufficient CPU memory ?";
-    $8402: return "CPU already in RUN or already in STOP ?";
-    $8404: return "severe error ?";
-    $8500: return "incorrect PDU size.";
-    $8702: return "address invalid."; ;
-    $d002: return "Step7:variant of command is illegal.";
-    $d004: return "Step7:status for this command is illegal.";
-    $d0A1: return "Step7:function is not allowed in the current protection level.";
-    $d201: return "block name syntax error.";
-    $d202: return "syntax error function parameter.";
-    $d203: return "syntax error block type.";
-    $d204: return "no linked block in storage medium.";
-    $d205: return "object already exists.";
-    $d206: return "object already exists.";
-    $d207: return "block exists in EPROM.";
-    $d209: return "block does not exist/could not be found.";
-    $d20e: return "no block present.";
-    $d210: return "block number too big.";
-    $d240: return "unfinished block transfer in progress?";  // my guess
-    $d240: return "Coordination rules were violated.";
-
-    $d241: return "Operation not permitted in current protection level.";
-    $d242: return "protection violation while processing F-blocks. F-blocks can only be processed after password input.";
-    $d401: return "invalid SZL ID.";
-    $d402: return "invalid SZL index.";
-    $d406: return "diagnosis: info not available.";
-    $d409: return "diagnosis: DP error.";
-    $dc01: return "invalid BCD code or Invalid time format?";
-    }
     else
       Result:=ioUnknownError;
   end;

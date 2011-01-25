@@ -66,15 +66,20 @@ type
     MaxPDULen:Word;
     MaxBlockSize:Integer;
     Connected:Boolean;
+
     Inputs:TPLCMemoryManager;
     Outputs:TPLCMemoryManager;
-    AnInput:TPLCMemoryManager;
-    AnOutput:TPLCMemoryManager;
+    PeripheralInputs:TPLCMemoryManager;
     DBs:TS7DBs;
     Timers:TPLCMemoryManager;
     Counters:TPLCMemoryManager;
     Flags:TPLCMemoryManager;
-    SMs:TPLCMemoryManager;
+
+    S7200SMs:TPLCMemoryManager;
+    S7200Timers:TPLCMemoryManager;
+    S7200Counters:TPLCMemoryManager;
+    S7200AnInput:TPLCMemoryManager;
+    S7200AnOutput:TPLCMemoryManager;
   end;
 
   PS7CPU = ^TS7CPU;
@@ -105,17 +110,18 @@ const
   vtS7_200_AnOutput= $07;
   vtS7_200_Counter =  30;
   vtS7_200_Timer   =  31;
-  vtS7_200_VM      = $87;
 
 
-  vtS7_Inputs  = $81;
-  vtS7_Outputs = $82;
-  vtS7_Flags   = $83;
-  vtS7_DB      = $84;
-  vtS7_DI      = $85;  //DB Instanciado
-  //vtS7_Local   = $86;  //not tested
-  vtS7_Counter =  28;  //S7 counters
-  vtS7_Timer   =  29;  // S7 timers
+  vtS7_Peripheral = $80;
+  vtS7_Inputs     = $81;
+  vtS7_Outputs    = $82;
+  vtS7_Flags      = $83;
+  vtS7_DB         = $84;
+  vtS7_DI         = $85;  //DB Instanciado
+  vtS7_Local      = $86;  //not tested
+  vtS7_V          = $87;
+  vtS7_Counter    =  28;  //S7 counters
+  vtS7_Timer      =  29;  // S7 timers
 
   S7FuncOpenS7Connection = $F0;
   S7FuncRead             = $04;
