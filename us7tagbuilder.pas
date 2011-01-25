@@ -120,6 +120,25 @@ type
   { TfrmS7TagBuilder }
 
   TfrmS7TagBuilder = class(TForm)
+    AnalogBlockName: TEdit;
+    AnalogEndWord: TSpinEdit;
+    AnalogRefreshRate: TSpinEdit;
+    AnalogStartWord: TSpinEdit;
+    AnalogStatus: TMemo;
+    AnalogWordName: TEdit;
+    AnalogZeroFill: TCheckBox;
+    DBFlagBlockName: TEdit;
+    Label38: TLabel;
+    Label39: TLabel;
+    Label40: TLabel;
+    Label41: TLabel;
+    Label42: TLabel;
+    Label43: TLabel;
+    Label44: TLabel;
+    Label45: TLabel;
+    Label46: TLabel;
+    Label47: TLabel;
+    Memo3: TMemo;
     Panel1: TPanel;
     Panel2: TPanel;
     PageControl1: TPageControl;
@@ -204,6 +223,14 @@ type
     btnBack: TButton;
     btnNext: TButton;
     btnFinish: TButton;
+    Label33: TLabel;
+    Label34: TLabel;
+    IORefreshRate: TSpinEdit;
+    Label35: TLabel;
+    Label36: TLabel;
+    CTRefreshRate: TSpinEdit;
+    Label37: TLabel;
+    TabSheet5: TTabSheet;
     procedure BitListKeyPress(Sender: TObject; var Key: char);
     procedure MemoryAreaClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -232,6 +259,7 @@ type
     procedure btnBackClick(Sender: TObject);
     procedure PageControl1Changing(Sender: TObject;
       var AllowChange: Boolean);
+    procedure AnalogStartWordChange(Sender: TObject);
   private
     OldPage:TTabSheet;
     FItemId:Integer;
@@ -1419,6 +1447,26 @@ procedure TfrmS7TagBuilder.PageControl1Changing(Sender: TObject;
 begin
   OldPage:=PageControl1.ActivePage;
 end;
+
+procedure TfrmS7TagBuilder.AnalogStartWordChange(Sender: TObject);
+begin
+  if (AnalogEndWord.Value<AnalogStartWord.Value) then begin
+    if (Sender=AnalogStartWord) then
+      AnalogEndWord.Value:=AnalogStartWord.Value;
+
+    if (Sender=AnalogEndWord) then
+      AnalogStartWord.Value:=AnalogEndWord.Value;
+  end;
+
+  nitems := ((AnalogEndWord.Value - AnalogStartWord.Value) div 2) + 1;
+  with AnalogStatus.Lines do begin
+    Clear;
+    Add('Sera criado/Will be created:');
+    Add(IfThen(optplcblock.checked, '1 PLCBlock and ', '')+
+        IntToStr(nitems)+IfThen(optplcblock.checked, ' PLCBlockElement(s)', ' PLCTagNumber(s)'))
+  end;
+end;
+
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
