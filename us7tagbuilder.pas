@@ -249,6 +249,7 @@ type
     procedure btnDownClick(Sender: TObject);
     procedure btnDelClick(Sender: TObject);
     procedure btnBitsClick(Sender: TObject);
+    procedure TabSheet5Show(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TabSheet1Show(Sender: TObject);
     procedure PageControl1Change(Sender: TObject);
@@ -946,12 +947,11 @@ begin
   optplcStruct.Enabled:=false;
 
   case MemoryArea.ItemIndex of
-    0, 1, 4, 5: begin
-      optplctagnumber.Enabled:=false;
+    0, 1, 4, 5, 9, 10: begin
+      optplctagnumber.Enabled:=true;
       optplcblock.Enabled:=true;
 
-      if optplcStruct.Checked then
-        optplcblock.Checked:=true;
+      optplcblock.Checked:=true;
 
       IOBlockName.Visible:=optplcblock.Checked;
       CTBlockName.Visible:=optplcblock.Checked;
@@ -972,19 +972,19 @@ begin
           IOBitNames.Text  := 'Q%B_%b';
           BlockType.ItemIndex := 2;
         end;
-        4: begin
+        4, 9: begin
           CTBlockName.Text := 'Counters_%si_to_%ei';
           CTNames.Text     := 'C%I';
           BlockType.ItemIndex := 4;
         end;
-        5: begin
+        5, 10: begin
           CTBlockName.Text := 'Timers_%si_to_%ei';
           CTNames.Text     := 'T%I';
           BlockType.ItemIndex := 4;
         end;
       end;
     end;
-    2, 3: begin
+    2, 3, 12: begin
       optplctagnumber.Enabled:=true;
       optplcblock.Enabled:=true;
       optplcStruct.Enabled:=true;
@@ -994,6 +994,33 @@ begin
 
       label25.Enabled:=true;
       BlockType.Enabled:=true;
+    end;
+    7, 8, 11: begin
+      optplctagnumber.Enabled:=true;
+      optplcblock.Enabled:=true;
+
+      optplcblock.Checked:=true;
+
+      AnalogBlockName.Visible:=optplcblock.Checked;
+
+      label25.Enabled:=false;
+      BlockType.Enabled:=false;
+      BlockType.ItemIndex := 4;
+
+      case MemoryArea.ItemIndex of
+        7: begin
+          AnalogBlockName.Text := 'AIW_%swi_to_%ewi';
+          AnalogWordName.Text := 'AIW%wI';
+        end;
+        8: begin
+          AnalogBlockName.Text := 'AQW_%swi_to_%ewi';
+          AnalogWordName.Text := 'AQW%wI';
+        end;
+        11: begin
+          AnalogBlockName.Text := 'PIW_%swi_to_%ewi';
+          AnalogWordName.Text := 'PIW%wI';
+        end;
+      end;
     end;
   end;
   BlockTypeChange(Sender);
@@ -1015,6 +1042,7 @@ end;
 procedure TfrmS7TagBuilder.FormShow(Sender: TObject);
 begin
   MemoryAreaClick(Sender);
+  optplcblockClick(Sender);
 end;
 
 procedure TfrmS7TagBuilder.FormClose(Sender: TObject;
@@ -1064,8 +1092,12 @@ begin
   CTBlockName.Enabled:=optplcblock.Checked;
   Label9.Enabled:=IOBlockName.Enabled;
   Label18.Enabled:=CTBlockName.Enabled;
-  label25.Enabled:=optplcblock.Checked and (MemoryArea.ItemIndex in [2,3]);
-  BlockType.Enabled:=optplcblock.Checked and (MemoryArea.ItemIndex in [2,3]);
+  label25.Enabled:=optplcblock.Checked and (MemoryArea.ItemIndex in [2,3,12]);
+  BlockType.Enabled:=optplcblock.Checked and (MemoryArea.ItemIndex in [2,3,12]);
+  BlockScan.Enabled:=optplcblock.Checked;
+  StructScan.Enabled:=optplcStruct.Checked;
+  label27.enabled:=optplcStruct.Checked;
+  label26.enabled:=optplcblock.Checked;
 
   for c:=0 to TagList.Count-1 do begin
     if optplctagnumber.Checked then
@@ -1304,6 +1336,15 @@ begin
   end;
 end;
 
+procedure TfrmS7TagBuilder.TabSheet5Show(Sender: TObject);
+begin
+  btnBack.Enabled:=true;
+  btnFinish.Enabled:=true;
+  btnNext.Enabled:=false;
+
+  AnalogStartWordChange(Sender);
+end;
+
 destructor TfrmS7TagBuilder.Destroy;
 var
   t,b:Integer;
@@ -1412,12 +1453,14 @@ end;
 procedure TfrmS7TagBuilder.btnNextClick(Sender: TObject);
 begin
   case MemoryArea.ItemIndex of
-    0..1:
+    0, 1:
       PageControl1.ActivePage:=TabSheet2;
-    2..3:
+    2, 3, 12:
       PageControl1.ActivePage:=TabSheet4;
-    4..5:
+    4, 5, 9, 10:
       PageControl1.ActivePage:=TabSheet3;
+    7, 8, 11:
+      PageControl1.ActivePage:=TabSheet5;
   end;
 end;
 
