@@ -38,9 +38,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       Height = 431
       Top = 0
       Width = 595
-      ActivePage = TabSheet5
+      ActivePage = TabSheet2
       Align = alClient
-      TabIndex = 4
+      TabIndex = 1
       TabOrder = 0
       OnChange = PageControl1Change
       OnChanging = PageControl1Changing
@@ -354,30 +354,33 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ParentColor = False
         end
         object Label9: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 168
-          Width = 81
+          Width = 109
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Nome do bloco'
           Layout = tlCenter
           ParentColor = False
         end
         object Label10: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 192
-          Width = 81
+          Width = 109
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Nome dos bytes'
           Layout = tlCenter
           ParentColor = False
         end
         object Label11: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 216
-          Width = 81
+          Width = 109
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Nome dos bits'
           Layout = tlCenter
@@ -402,10 +405,11 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ParentColor = False
         end
         object Label34: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 240
-          Width = 81
+          Width = 109
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Atualizar a cada'
           Layout = tlCenter
@@ -489,10 +493,10 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Text = 'I%B_%b'
         end
         object Memo1: TMemo
-          Left = 255
+          Left = 248
           Height = 87
           Top = 163
-          Width = 311
+          Width = 337
           BorderStyle = bsNone
           Color = clBtnFace
           Lines.Strings = (
@@ -605,20 +609,22 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ParentColor = False
         end
         object Label18: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 152
-          Width = 81
+          Width = 108
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Nome do bloco'
           Layout = tlCenter
           ParentColor = False
         end
         object Label19: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 176
-          Width = 81
+          Width = 108
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Nome dos bytes'
           Layout = tlCenter
@@ -643,10 +649,11 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ParentColor = False
         end
         object Label36: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 200
-          Width = 81
+          Width = 108
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Atualizar a cada'
           Layout = tlCenter
@@ -697,10 +704,10 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Text = 'C%I'
         end
         object Memo2: TMemo
-          Left = 255
+          Left = 248
           Height = 78
           Top = 147
-          Width = 313
+          Width = 337
           BorderStyle = bsNone
           Color = clBtnFace
           Lines.Strings = (
@@ -952,7 +959,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
       end
       object TabSheet5: TTabSheet
-        Caption = 'TabSheet5'
+        Caption = 'Analog I/O'
         ClientHeight = 405
         ClientWidth = 587
         object Label47: TLabel
@@ -984,30 +991,33 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ParentColor = False
         end
         object Label44: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 184
-          Width = 81
+          Width = 101
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Atualizar a cada'
           Layout = tlCenter
           ParentColor = False
         end
         object Label43: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 160
-          Width = 81
+          Width = 101
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Nome dos bytes'
           Layout = tlCenter
           ParentColor = False
         end
         object Label42: TLabel
-          Left = 32
+          Left = 8
           Height = 21
           Top = 136
-          Width = 81
+          Width = 101
+          Alignment = taRightJustify
           AutoSize = False
           Caption = 'Nome do bloco'
           Layout = tlCenter
@@ -1096,7 +1106,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Left = 240
           Height = 78
           Top = 131
-          Width = 332
+          Width = 344
           BorderStyle = bsNone
           Color = clBtnFace
           Lines.Strings = (
