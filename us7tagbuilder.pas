@@ -1449,6 +1449,8 @@ begin
 end;
 
 procedure TfrmS7TagBuilder.AnalogStartWordChange(Sender: TObject);
+var
+  nitems:Integer;
 begin
   if (AnalogEndWord.Value<AnalogStartWord.Value) then begin
     if (Sender=AnalogStartWord) then
