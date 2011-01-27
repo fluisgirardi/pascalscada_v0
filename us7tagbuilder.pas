@@ -1098,6 +1098,15 @@ begin
   StructScan.Enabled:=optplcStruct.Checked;
   label27.enabled:=optplcStruct.Checked;
   label26.enabled:=optplcblock.Checked;
+  label34.Enabled:=optplctagnumber.Checked;
+  label35.Enabled:=optplctagnumber.Checked;
+  IORefreshRate.Enabled:=optplctagnumber.Checked;
+  label36.Enabled:=optplctagnumber.Checked;
+  label37.Enabled:=optplctagnumber.Checked;
+  CTRefreshRate.Enabled:=optplctagnumber.Checked;
+  label44.Enabled:=optplctagnumber.Checked;
+  label45.Enabled:=optplctagnumber.Checked;
+  AnalogRefreshRate.Enabled:=optplctagnumber.Checked;
 
   for c:=0 to TagList.Count-1 do begin
     if optplctagnumber.Checked then

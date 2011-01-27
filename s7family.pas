@@ -195,8 +195,6 @@ var
 begin
   //o que está faltando??
   //NO FORMULARIO:
-  //** Taxa de atualização do tag quando é escolhido PLCTagNumber para I/O, Timers and Counters
-  //** Nome do bloco quando escolhido PLCBlock/Struct para Flag's e DB's
   //** Checagens de substituições ausentes nos nomes a fim de evitar duplicidades de nomes...
 
   frmS7tb:=TfrmS7TagBuilder.Create(nil);
@@ -265,7 +263,7 @@ begin
                   MemReadFunction:=frmS7tb.MemoryArea.ItemIndex+1;
                   MemAddress:=iobyte;
                   TagType:=pttByte;
-                  //RefreshTime:=frmS7tb.BlockScan.Value;
+                  RefreshTime:=frmS7tb.IORefreshRate.Value;
                   ProtocolDriver:=Self;
                 end;
               end;
@@ -329,7 +327,7 @@ begin
 
               //configura o bloco criado...
               with block do begin
-                Name:='Blocao0';
+                Name:=frmS7tb.DBFlagBlockName.Text;
                 PLCHack:=frmS7tb.PLCRack.Value;
                 PLCSlot:=frmS7tb.PLCSlot.Value;
                 PLCStation:=frmS7tb.PLCStation.Value;
@@ -409,7 +407,7 @@ begin
               MemAddress:=frmS7tb.CTStartAddress.Value*2;
               Size:=frmS7tb.CTEndAddress.Value-frmS7tb.CTStartAddress.Value+1;
               TagType:=pttWord;
-              RefreshTime:=frmS7tb.BlockScan.Value;
+              RefreshTime:=frmS7tb.CTRefreshRate.Value;
               ProtocolDriver:=Self;
             end;
             InsertHook(block);
@@ -2128,4 +2126,4 @@ begin
   Move(values[0],inptr^,Length(values));
 end;
 
-end.
+end.
