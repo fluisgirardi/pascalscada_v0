@@ -54,6 +54,7 @@ type
     function  IsValidValue(Value:Variant):Boolean;
     function GetValueTimestamp:TDatetime;
   protected
+    function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.SetPLCHack)
     procedure SetPLCHack(v:Cardinal); override;
     //: @seealso(TPLCTag.SetPLCSlot)
@@ -353,6 +354,11 @@ end;
 function TPLCString.GetValueAsText(Prefix, Sufix, Format:string):String;
 begin
    Result := Prefix + Value + Sufix;
+end;
+
+function TPLCString.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
+begin
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCString.TagCommandCallBack);
 end;
 
 procedure TPLCString.SetPLCHack(v:Cardinal);

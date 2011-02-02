@@ -175,6 +175,7 @@ type
     function RemainingMiliseconds:Int64;
     function RemainingMilisecondsForNextScan:Int64;
     function IsValidTag:Boolean;
+    function IsMyCallBack(Cback:TTagCommandCallBack):Boolean;
     procedure SetTagValidity(TagValidity:Boolean);
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
   end;

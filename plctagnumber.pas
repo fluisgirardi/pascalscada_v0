@@ -26,6 +26,7 @@ type
     function  IsValidValue(Value:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
   protected
+    function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCNumber.SetValueRaw)
     function  GetValueRaw:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
@@ -101,6 +102,11 @@ type
 implementation
 
 uses hsstrings, math;
+
+function TPLCTagNumber.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
+begin
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCTagNumber.TagCommandCallBack);
+end;
 
 function TPLCTagNumber.GetValueRaw:Double;
 begin

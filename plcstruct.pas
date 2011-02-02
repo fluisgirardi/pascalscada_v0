@@ -20,6 +20,7 @@ type
   private
     { Private declarations }
   protected
+    function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
     procedure SetTagType(newType:TTagType); override;
     procedure SetSwapWords(v:Boolean); override;
@@ -34,6 +35,11 @@ constructor TPLCStruct.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   Inherited SetTagType(pttByte);
+end;
+
+function TPLCStruct.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
+begin
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCStruct.TagCommandCallBack);
 end;
 
 procedure TPLCStruct.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);

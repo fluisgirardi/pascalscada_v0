@@ -345,7 +345,7 @@ begin
 
   PCallersCS := TCriticalSection.Create;
 
-  PScanUpdateThread := TScanUpdate.Create(true);
+  PScanUpdateThread := TScanUpdate.Create(true, Self);
   PScanUpdateThread.Priority:=tpHighest;
   PScanUpdateThread.OnGetValue := SafeGetValue;
   PScanUpdateThread.OnScanTags := GetMultipleValues;

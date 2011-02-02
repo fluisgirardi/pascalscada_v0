@@ -26,6 +26,7 @@ type
   }
   TScanUpdate = class(TCrossThread)
   private
+    FOwnerProtocolDriver:TComponent;
     FSleepInterruptable:TCrossEvent;
     FEnd:TCrossEvent;
     Ferro:Exception;
@@ -47,7 +48,7 @@ type
     procedure Execute; override;
   public
     //: @exclude
-    constructor Create(StartSuspended:Boolean);
+    constructor Create(StartSuspended:Boolean; OwnerProtocol:TComponent);
     //: @exclude
     destructor Destroy; override;
     //: Sinaliza para thread Terminar.
@@ -80,14 +81,18 @@ type
 
 implementation
 
-uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} Forms;
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} Forms, ProtocolDriver, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
 ////////////////////////////////////////////////////////////////////////////////
-constructor TScanUpdate.Create(StartSuspended:Boolean);
+constructor TScanUpdate.Create(StartSuspended:Boolean; OwnerProtocol:TComponent);
 begin
   inherited Create(StartSuspended);
+  if not (OwnerProtocol is TProtocolDriver) then
+    raise Exception.Create(STheOwnerMustBeAProtocolDriver);
+
+  FOwnerProtocolDriver:=OwnerProtocol;
   Priority := tpHighest;
   FSpool := TMessageSpool.Create;
   FEnd := TCrossEvent.Create(nil, true, false, 'EndOfThread'+IntToStr(UniqueID));
@@ -177,15 +182,28 @@ end;
 
 procedure TScanUpdate.UpdateMultipleTags;
 var
-  c:Integer;
+  c, pt:Integer;
+  found:Boolean;
+  imanagedint:IScanableTagInterface;
 begin
-  for c:=0 to High(PScannedValues) do
+  for c:=0 to High(PScannedValues) do begin
+    found:=false;
+    for pt:=0 to TProtocolDriver(FOwnerProtocolDriver).TagCount-1 do
+      if Supports(TProtocolDriver(FOwnerProtocolDriver).Tag[pt],IScanableTagInterface) then begin
+        imanagedint := (TProtocolDriver(FOwnerProtocolDriver).Tag[pt] as IScanableTagInterface);
+        if imanagedint.IsMyCallBack(PScannedValues[c].CallBack) then begin
+          found:=true;
+          break;
+        end;
+      end;
+    if not found then continue;
     with PScannedValues[c] do
       try
         CallBack(Values, ValueTimeStamp, tcScanRead, LastResult, 0);
         SetLength(Values,0);
       finally
       end;
+  end;
   SetLength(PScannedValues,0);
 end;
 

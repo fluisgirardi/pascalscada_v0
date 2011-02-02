@@ -29,6 +29,7 @@ type
     function  GetValues:TArrayOfDouble;
     procedure SetValues(values:TArrayOfDouble);
   protected
+    function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.TagCommandCallBack)
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
   public
@@ -98,6 +99,11 @@ destructor TPLCBlock.Destroy;
 begin
    inherited Destroy;
    SetLength(PValues,0);
+end;
+
+function TPLCBlock.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
+begin
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCBlock.TagCommandCallBack);
 end;
 
 procedure TPLCBlock.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);

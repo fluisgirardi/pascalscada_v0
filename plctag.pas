@@ -29,6 +29,7 @@ type
     function  GetTagSizeOnProtocol:Integer;
   protected
     PValidTag:Boolean;
+    function  IsMyCallBack(Cback:TTagCommandCallBack):Boolean; virtual;
     procedure GetNewProtocolTagSize;
     function RemainingMiliseconds:Int64; virtual;
     function RemainingMilisecondsForNextScan:Int64; virtual;
@@ -662,6 +663,11 @@ var
 begin
   CreateGUID(x);
   PGUID:=GUIDToString(x);
+end;
+
+function TPLCTag.IsMyCallBack(Cback:TTagCommandCallBack):Boolean;
+begin
+  Result:=(TMethod(Cback).Data=Self);
 end;
 
 procedure TPLCTag.Loaded;
