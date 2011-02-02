@@ -133,7 +133,7 @@ implementation
 
 uses math, PLCTagNumber, PLCBlock, PLCString, PLCStruct, hsstrings,
      PLCMemoryManager, dateutils, us7tagbuilder, Controls,
-     PLCBlockElement, PLCNumber, TagBit;
+     PLCBlockElement, PLCNumber, TagBit, strutils;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
