@@ -571,20 +571,36 @@ end;
 
 function TProtocolDriver.GetTagCount;
 begin
+  FCritical.Beginread;
+  try
   Result := Length(PTags);
+  finally
+    FCritical.Endread;
+  end;
 end;
 
 function TProtocolDriver.GetTag(index:integer):TTag;
 begin
-  DoExceptionIndexOut(index);
-  result:=PTags[index];
+  FCritical.Beginread;
+  try
+    DoExceptionIndexOut(index);
+    result:=PTags[index];
+  finally
+    FCritical.Endread;
+  end;
 end;
 
 function TProtocolDriver.GetTagName(index:integer):String;
 begin
   Result:='';
-  DoExceptionIndexOut(index);
-  result:=PTags[index].Name;
+  FCritical.Beginread;
+  try
+    DoExceptionIndexOut(index);
+    result:=PTags[index].Name;
+  finally
+    FCritical.Endread;
+  end;
+
 end;
 
 function TProtocolDriver.GetTagByName(Nome:String):TTag;
@@ -592,11 +608,16 @@ var
   c:Integer;
 begin
   Result := nil;
-  for c:=0 to High(PTags) do
-    if PTags[c].Name = Nome then begin
-      Result := PTags[c];
-      break;
-    end;
+  FCritical.Beginread;
+  try
+    for c:=0 to High(PTags) do
+      if PTags[c].Name = Nome then begin
+        Result := PTags[c];
+        break;
+      end;
+  finally
+    FCritical.Endread;
+  end;
 end;
 
 function TProtocolDriver.IsMyTag(TagObj:TTag):Boolean;
@@ -604,11 +625,16 @@ var
   c:integer;
 begin
   Result := false;
-  for c:=0 to High(PTags) do
-    if TagObj=PTags[c] then begin
-      Result := true;
-      break;
-    end;
+  FCritical.Beginread;
+  try
+    for c:=0 to High(PTags) do
+      if TagObj=PTags[c] then begin
+        Result := true;
+        break;
+      end;
+  finally
+    FCritical.Endread;
+  end;
 end;
 
 function TProtocolDriver.ScanRead(const tagrec:TTagRec):Cardinal;
