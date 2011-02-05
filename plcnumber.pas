@@ -63,7 +63,9 @@ type
     //: Sequência de escalas do Tag.
     property ScaleProcessor:TPIPE  read PScaleProcessor write SetScaleProcessor;
     //: Evento chamado ao ocorrer uma mudança no valor do tag.
-    property OnValueChange;
+    property OnValueChange stored false;
+    property OnValueChangeFirst;
+    property OnValueChangeLast;
   end;
 
 implementation

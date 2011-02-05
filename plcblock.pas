@@ -69,7 +69,9 @@ type
     //: Tamanho de elementos do bloco.
     property Size write SetSize;
     //: @seealso(TTag.OnValueChange)
-    property OnValueChange;
+    property OnValueChange stored false;
+    property OnValueChangeFirst;
+    property OnValueChangeLast;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
     //: @seealso(TPLCTag.TagType)

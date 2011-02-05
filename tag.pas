@@ -228,7 +228,9 @@ type
     //: Armazena o evento chamado pelo tag quando uma escrita falha.
     POnWriteFail:TNotifyEvent;
     //: Armazena o evento chamado pelo tag quando o seu valor se altera.
-    POnValueChange:TNotifyEvent;
+    POnValueChangeFirst:TNotifyEvent;
+    //: Armazena o evento chamado pelo tag quando o seu valor se altera.
+    POnValueChangeLast:TNotifyEvent;
     //: Armazena os procedimentos que o tag deve chamar quando o seu valor altera.
     PChangeCallBacks:array of IHMITagInterface;
     //: Conta os callbacks que dependem desse tag.
@@ -306,7 +308,10 @@ type
     //: Evento chamado quando uma escrita do tag falha.
     property OnWriteFail:TNotifyEvent   read POnWriteFail    write POnWriteFail;
     //: Evento chamado quando o valor do tag sofre alguma mudançaW.
-    property OnValueChange:TNotifyEvent read POnValueChange  write POnValueChange;
+    property OnValueChange:TNotifyEvent read POnValueChangeLast  write POnValueChangeLast stored false;
+    property OnValueChangeLast:TNotifyEvent read POnValueChangeLast  write POnValueChangeLast;
+    //: Evento chamado quando o valor do tag sofre alguma mudança.
+    property OnValueChangeFirst:TNotifyEvent read POnValueChangeFirst  write POnValueChangeFirst;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -384,14 +389,24 @@ procedure TTag.NotifyChange;
 var
   c:Integer;
 begin
+  //notifica a mudanca antes de notificar os
+  //demais controles.
+  try
+    if Assigned(POnValueChangeFirst) then
+      POnValueChangeFirst(Self);
+  except
+  end;
+
+  //notifica controles e objetos dependentes
   for c:=0 to High(PChangeCallBacks) do
     try
       PChangeCallBacks[c].NotifyTagChange(self);
     except
     end;
-  if Assigned(POnValueChange) then
-    POnValueChange(Self);
 
+  //notificação de mudanca após notificar os controles.
+  if Assigned(POnValueChangeLast) then
+    POnValueChangeLast(Self);
 end;
 
 procedure TTag.NotifyReadOk;
