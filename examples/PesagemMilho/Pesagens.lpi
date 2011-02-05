@@ -60,10 +60,11 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uDM"/>
-        <EditorIndex Value="4"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="93"/>
-        <CursorPos X="124" Y="117"/>
+        <TopLine Value="91"/>
+        <CursorPos X="124" Y="115"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -90,7 +91,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uDMImg"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="17" Y="7"/>
@@ -133,27 +134,22 @@
       <Unit8>
         <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
         <UnitName Value="EventCodeTool"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="114"/>
         <CursorPos X="44" Y="122"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit8>
       <Unit9>
         <Filename Value="../../../ZeosLib/src/dbc/ZDbcMySqlUtils.pas"/>
         <UnitName Value="ZDbcMySqlUtils"/>
-        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="439"/>
         <CursorPos X="1" Y="453"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
     </Units>
-    <JumpHistory Count="11" HistoryIndex="10">
+    <JumpHistory Count="9" HistoryIndex="8">
       <Position1>
         <Filename Value="uMain.pas"/>
         <Caret Line="59" Column="39" TopLine="39"/>
@@ -183,21 +179,13 @@
         <Caret Line="39" Column="26" TopLine="26"/>
       </Position7>
       <Position8>
-        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="117" Column="124" TopLine="93"/>
       </Position8>
       <Position9>
-        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
-        <Caret Line="127" Column="9" TopLine="113"/>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="116" Column="124" TopLine="92"/>
       </Position9>
-      <Position10>
-        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
-        <Caret Line="126" Column="30" TopLine="114"/>
-      </Position10>
-      <Position11>
-        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
-        <Caret Line="127" Column="9" TopLine="114"/>
-      </Position11>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>

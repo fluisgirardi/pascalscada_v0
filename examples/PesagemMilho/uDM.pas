@@ -65,8 +65,6 @@ type
     ValvulaDeposito: TPLCTagNumber;
     v521_1: TTagBit;
     v521_2: TTagBit;
-    TCP_UDPPort1: TTCP_UDPPort;
-    ModBusTCPDriver1: TModBusTCPDriver;
     procedure Q0_3ValueChange(Sender: TObject);
     procedure Q0_2ValueChange(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);

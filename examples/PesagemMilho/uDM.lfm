@@ -18,12 +18,12 @@ object DM: TDM
     top = 56
   end
   object MySQLConnection: TZConnection
+    Connected = True
     Protocol = 'mysql-5'
     HostName = 'localhost'
     Database = 'dbtemperaturas'
     User = 'root'
     Password = 'cetis'
-    Connected = True
     left = 164
     top = 8
   end
@@ -39,7 +39,7 @@ object DM: TDM
     MemSubElement = 0
     MemReadFunction = 3
     MemWriteFunction = 16
-    ProtocolDriver = ModBusTCPDriver1
+    ProtocolDriver = ModBusRTUDriver1
     RefreshTime = 500
     Size = 2
     OnValueChange = PesoBalancaW1W2ValueChange
@@ -58,7 +58,7 @@ object DM: TDM
     MemSubElement = 0
     MemReadFunction = 3
     MemWriteFunction = 16
-    ProtocolDriver = ModBusTCPDriver1
+    ProtocolDriver = ModBusRTUDriver1
     RefreshTime = 500
     Size = 2
     OnValueChange = PesoBalancaW1W2ValueChange
@@ -77,7 +77,7 @@ object DM: TDM
     MemSubElement = 0
     MemReadFunction = 3
     MemWriteFunction = 16
-    ProtocolDriver = ModBusTCPDriver1
+    ProtocolDriver = ModBusRTUDriver1
     RefreshTime = 10000
     Size = 2
     OnValueChange = PesoBalancaW1W2ValueChange
@@ -94,7 +94,7 @@ object DM: TDM
     MemSubElement = 0
     MemReadFunction = 3
     MemWriteFunction = 6
-    ProtocolDriver = ModBusTCPDriver1
+    ProtocolDriver = ModBusRTUDriver1
     SyncWrites = True
     left = 40
     top = 248
@@ -167,7 +167,7 @@ object DM: TDM
     MemSubElement = 0
     MemReadFunction = 1
     MemWriteFunction = 15
-    ProtocolDriver = ModBusTCPDriver1
+    ProtocolDriver = ModBusRTUDriver1
     RefreshTime = 500
     Size = 7
     left = 248
@@ -181,14 +181,14 @@ object DM: TDM
     top = 56
   end
   object Q0_1: TPLCBlockElement
-    TagGUID = '{6B7786DD-0062-4CEA-AC7C-C2CAECC83DA6}'
+    TagGUID = '{E8F4B908-5EB2-4065-90CE-75532761371A}'
     PLCBlock = Saidas
     Index = 1
     left = 248
     top = 104
   end
   object Q0_2: TPLCBlockElement
-    TagGUID = '{6B7786DD-0062-4CEA-AC7C-C2CAECC83DA6}'
+    TagGUID = '{E6B12DB5-DC0C-4384-8DC0-83FE55A1CED3}'
     OnValueChange = Q0_2ValueChange
     PLCBlock = Saidas
     Index = 2
@@ -196,7 +196,7 @@ object DM: TDM
     top = 152
   end
   object Q0_3: TPLCBlockElement
-    TagGUID = '{6B7786DD-0062-4CEA-AC7C-C2CAECC83DA6}'
+    TagGUID = '{03AA55DE-6A7B-42C7-8A06-BC9D9D3AFC41}'
     OnValueChange = Q0_3ValueChange
     PLCBlock = Saidas
     Index = 3
@@ -214,7 +214,7 @@ object DM: TDM
     MemSubElement = 0
     MemReadFunction = 2
     MemWriteFunction = 0
-    ProtocolDriver = ModBusTCPDriver1
+    ProtocolDriver = ModBusRTUDriver1
     RefreshTime = 500
     Size = 8
     left = 328
@@ -297,7 +297,7 @@ object DM: TDM
     MemSubElement = 0
     MemReadFunction = 3
     MemWriteFunction = 16
-    ProtocolDriver = ModBusTCPDriver1
+    ProtocolDriver = ModBusRTUDriver1
     left = 432
     top = 8
   end
@@ -313,7 +313,7 @@ object DM: TDM
   end
   object ala2: TTagBit
     Tag = 1
-    TagGUID = '{99A9CE57-4EEA-4ED0-B3B3-819D31C497CD}'
+    TagGUID = '{D7DCA158-E291-4E8A-B1F9-8996BC0C24BF}'
     OnValueChange = ala1ValueChange
     PLCTag = Flags520
     UseRawValue = False
@@ -324,7 +324,7 @@ object DM: TDM
   end
   object ala3: TTagBit
     Tag = 2
-    TagGUID = '{99A9CE57-4EEA-4ED0-B3B3-819D31C497CD}'
+    TagGUID = '{94830FC1-0426-4FF9-99FD-5A5923E9E9E2}'
     OnValueChange = ala1ValueChange
     PLCTag = Flags520
     UseRawValue = False
@@ -335,7 +335,7 @@ object DM: TDM
   end
   object ala4: TTagBit
     Tag = 3
-    TagGUID = '{99A9CE57-4EEA-4ED0-B3B3-819D31C497CD}'
+    TagGUID = '{BEFDC833-2A1F-494C-AB51-7138884A8F31}'
     OnValueChange = ala1ValueChange
     PLCTag = Flags520
     UseRawValue = False
@@ -346,7 +346,7 @@ object DM: TDM
   end
   object ala5: TTagBit
     Tag = 4
-    TagGUID = '{99A9CE57-4EEA-4ED0-B3B3-819D31C497CD}'
+    TagGUID = '{FA5E1B68-6B97-4ED1-9B09-5AB75D3076DF}'
     OnValueChange = ala1ValueChange
     PLCTag = Flags520
     UseRawValue = False
@@ -357,7 +357,7 @@ object DM: TDM
   end
   object ala6: TTagBit
     Tag = 5
-    TagGUID = '{99A9CE57-4EEA-4ED0-B3B3-819D31C497CD}'
+    TagGUID = '{DBCBCEB5-D813-498A-9865-6E77DEF382C1}'
     OnValueChange = ala1ValueChange
     PLCTag = Flags520
     UseRawValue = False
@@ -368,7 +368,7 @@ object DM: TDM
   end
   object ala7: TTagBit
     Tag = 6
-    TagGUID = '{99A9CE57-4EEA-4ED0-B3B3-819D31C497CD}'
+    TagGUID = '{BBA2CED8-9BCD-40BE-A87A-B0FD85F51CF6}'
     OnValueChange = ala1ValueChange
     PLCTag = Flags520
     UseRawValue = False
@@ -379,7 +379,7 @@ object DM: TDM
   end
   object ala8: TTagBit
     Tag = 7
-    TagGUID = '{99A9CE57-4EEA-4ED0-B3B3-819D31C497CD}'
+    TagGUID = '{0311C4F2-480E-4361-8AA1-B561313F15A2}'
     OnValueChange = ala1ValueChange
     PLCTag = Flags520
     UseRawValue = False
@@ -468,7 +468,7 @@ object DM: TDM
     top = 8
   end
   object ValvulaDeposito: TPLCTagNumber
-    TagGUID = '{DF71347C-C82D-4219-B179-8799F0701F6A}'
+    TagGUID = '{4E91B893-EB69-4126-9484-BC7B677CA433}'
     PLCHack = 0
     PLCSlot = 0
     PLCStation = 0
@@ -490,25 +490,12 @@ object DM: TDM
     top = 56
   end
   object v521_2: TTagBit
-    TagGUID = '{B6607A8F-3410-4FB9-A2FA-B80495B0436C}'
+    TagGUID = '{705101F6-53F4-4C61-8C37-585602FD3418}'
     PLCTag = Flags520
     UseRawValue = False
     StartBit = 2
     EndBit = 2
     left = 464
     top = 104
-  end
-  object TCP_UDPPort1: TTCP_UDPPort
-    Active = True
-    Host = '192.168.45.130'
-    Port = 502
-    Timeout = 500
-    left = 80
-    top = 8
-  end
-  object ModBusTCPDriver1: TModBusTCPDriver
-    CommunicationPort = TCP_UDPPort1
-    left = 80
-    top = 56
   end
 end
