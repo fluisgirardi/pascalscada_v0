@@ -638,6 +638,8 @@ var
   p:PS7Req;
   PDU:TPDU;
   NumReq:Byte;
+  intArray:array[0..3] of byte;
+  intStart:Integer absolute intArray;
 begin
   SetLength(param, 12);
   param[00] := $12;
@@ -666,14 +668,17 @@ begin
       vtS7_200_Timer:
         WordLen:=iArea;
       else
-        iStart:=iStart*8;
+        intStart:=iStart*8;
     end;
 
     ReqLength   :=SwapBytesInWord(iByteCount);
     DBNumber    :=SwapBytesInWord(iDBnum);
     AreaCode    :=iArea;
     HiBytes     :=0;
-    StartAddress:=SwapBytesInWord(iStart);
+    //StartAddress:=SwapBytesInWord(iStart);
+    param[09] := intArray[2];
+    param[10] := intArray[1];
+    param[11] := intArray[0];
   end;
 
   AddParam(msgOut, param);
