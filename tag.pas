@@ -405,8 +405,11 @@ begin
     end;
 
   //notificação de mudanca após notificar os controles.
-  if Assigned(POnValueChangeLast) then
-    POnValueChangeLast(Self);
+  try
+    if Assigned(POnValueChangeLast) then
+      POnValueChangeLast(Self);
+  except
+  end;
 end;
 
 procedure TTag.NotifyReadOk;
@@ -493,4 +496,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.
