@@ -1,6 +1,6 @@
 object frmS7TagBuilder: TfrmS7TagBuilder
-  Left = 429
-  Top = 143
+  Left = 283
+  Top = 148
   BorderStyle = bsDialog
   Caption = 'Siemens S7 Tag builder..'
   ClientHeight = 441
@@ -166,7 +166,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             'Qual o tipo do tag que deseja usar para endere'#231'ar a(s) memoria(s' +
             ') selecionada(s)'
           TabOrder = 3
-          object Label25: TLabel
+          object lblBlockType: TLabel
             Left = 56
             Top = 72
             Width = 66
@@ -175,7 +175,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Caption = 'Tipo de dado:'
             Layout = tlCenter
           end
-          object Label26: TLabel
+          object lblBlockScan: TLabel
             Left = 365
             Top = 72
             Width = 66
@@ -186,7 +186,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Transparent = True
             Layout = tlCenter
           end
-          object Label27: TLabel
+          object lblStructScan: TLabel
             Left = 30
             Top = 140
             Width = 66
@@ -204,6 +204,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Height = 17
             Caption = 'PLCTagNumber (tags separados)'
             TabOrder = 0
+            OnClick = optplcblockClick
           end
           object optplcblock: TRadioButton
             Left = 16
@@ -214,6 +215,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Checked = True
             TabOrder = 1
             TabStop = True
+            OnClick = optplcblockClick
           end
           object optplcStruct: TRadioButton
             Left = 16
@@ -222,6 +224,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Height = 17
             Caption = 'PLCStruck (tags agrupados de diferentes tipos de dados)'
             TabOrder = 3
+            OnClick = optplcblockClick
           end
           object BlockType: TComboBox
             Left = 128
@@ -550,9 +553,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
   end
   object Timer1: TTimer
     Enabled = False
-    Interval = 10
+    Interval = 5
     OnTimer = Timer1Timer
-    Left = 444
-    Top = 56
+    Left = 492
+    Top = 40
   end
 end

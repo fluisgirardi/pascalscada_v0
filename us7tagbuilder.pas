@@ -149,15 +149,15 @@ type
     lblDBNumber: TLabel;
     ScrollBox1: TScrollBox;
     Label24: TLabel;
-    Label25: TLabel;
+    lblBlockType: TLabel;
     BlockType: TComboBox;
     Button1: TButton;
     BlockScan: TSpinEdit;
-    Label26: TLabel;
+    lblBlockScan: TLabel;
     BlockSwapBytes: TCheckBox;
     BlockSwapWords: TCheckBox;
     StructScan: TSpinEdit;
-    Label27: TLabel;
+    lblStructScan: TLabel;
     Label28: TLabel;
     Label29: TLabel;
     Label30: TLabel;
@@ -169,19 +169,16 @@ type
     btnNext: TButton;
     btnFinish: TButton;
     lblBlockName: TLabel;
-    procedure BitListKeyPress(Sender: TObject; var Key: char);
     procedure MemoryAreaClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure TabSheet2Show(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure btnUpClick(Sender: TObject);
     procedure btnDownClick(Sender: TObject);
     procedure btnDelClick(Sender: TObject);
     procedure btnBitsClick(Sender: TObject);
-    procedure TabSheet5Show(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TabSheet1Show(Sender: TObject);
     procedure BlockTypeChange(Sender: TObject);
@@ -189,7 +186,8 @@ type
     procedure btnBackClick(Sender: TObject);
     procedure PageControl1Changing(Sender: TObject;
       var AllowChange: Boolean);
-    procedure AnalogStartWordChange(Sender: TObject);
+    procedure TabSheet4Show(Sender: TObject);
+    procedure optplcblockClick(Sender: TObject);
   private
     OldPage:TTabSheet;
     FItemId:Integer;
@@ -867,16 +865,23 @@ begin
     FDelClickEvent(Self);
 end;
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
 
 procedure TfrmS7TagBuilder.MemoryAreaClick(Sender: TObject);
 begin
-  optplctagnumber.Enabled:=true;
-  optplcblock.Enabled:=true;
-  optplcStruct.Enabled:=true;
-
   lblDBNumber.Visible:=false;
   spinDBNumber.Visible:=false;
+  BlockType.Enabled:=false;
   case MemoryArea.ItemIndex of
     0: begin
      lblStartAddress.Caption:='Byte inicial da entrada digital';
@@ -884,37 +889,49 @@ begin
     end;
     1: begin
      lblStartAddress.Caption:='Byte inicial da saida digital';
-     BlockType.ItemIndex:=4;
+     BlockType.ItemIndex:=2;
     end;
-    2:
+    2: begin
      lblStartAddress.Caption:='End. inicial da Flag(M)';
+     BlockType.Enabled:=optplcblock.Checked;
+    end;
     3: begin
      lblStartAddress.Caption:='End. inicial dentro da DB';
      lblDBNumber.Visible:=true;
      spinDBNumber.Visible:=true;
+     BlockType.Enabled:=optplcblock.Checked;
     end;
-    4,9:
+    4,9: begin
      lblStartAddress.Caption:='Contador inicial';
-    5,10:
+     BlockType.ItemIndex:=4;
+    end;
+    5,10: begin
      lblStartAddress.Caption:='Temporizador inicial';
-    6:
+     BlockType.ItemIndex:=4;
+    end;
+    6: begin
      lblStartAddress.Caption:='Byte inicial da SM';
-    7:
+     BlockType.ItemIndex:=2;
+    end;     
+    7: begin
      lblStartAddress.Caption:='End. inicial da AIW';
-    8:
+     BlockType.ItemIndex:=4;
+    end;
+    8: begin
      lblStartAddress.Caption:='End. inicial da AQW';
-    11:
+     BlockType.ItemIndex:=4;
+    end;
+    11: begin
      lblStartAddress.Caption:='End. inicial da PIW';
-    12:
+     BlockType.ItemIndex:=4;
+    end;
+    12: begin
      lblStartAddress.Caption:='End. inicial da V';
+     BlockType.Enabled:=optplcblock.Checked;
+    end;
   end;
 
   BlockTypeChange(Sender);
-end;
-
-procedure TfrmS7TagBuilder.BitListKeyPress(Sender: TObject; var Key: char);
-begin
-
 end;
 
 procedure TfrmS7TagBuilder.FormCreate(Sender: TObject);
@@ -939,11 +956,6 @@ procedure TfrmS7TagBuilder.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
   //onclose query
-end;
-
-procedure TfrmS7TagBuilder.TabSheet2Show(Sender: TObject);
-begin
-
 end;
 
 procedure TfrmS7TagBuilder.Button1Click(Sender: TObject);
@@ -1114,15 +1126,6 @@ begin
   end;
 end;
 
-procedure TfrmS7TagBuilder.TabSheet5Show(Sender: TObject);
-begin
-  btnBack.Enabled:=true;
-  btnFinish.Enabled:=true;
-  btnNext.Enabled:=false;
-
-  AnalogStartWordChange(Sender);
-end;
-
 destructor TfrmS7TagBuilder.Destroy;
 var
   t,b:Integer;
@@ -1197,16 +1200,16 @@ begin
     BlockSwapWords.Enabled:=false;
   end;
   if BlockType.ItemIndex in [3..4] then begin
-    BlockSwapBytes.Checked:=true;
+    BlockSwapBytes.Checked:=optplcblock.Checked;
     BlockSwapWords.Checked:=false;
-    BlockSwapBytes.Enabled:=true;
+    BlockSwapBytes.Enabled:=optplcblock.Checked;
     BlockSwapWords.Enabled:=false;
   end;
   if BlockType.ItemIndex in [5..7] then begin
-    BlockSwapBytes.Checked:=true;
-    BlockSwapWords.Checked:=true;
-    BlockSwapBytes.Enabled:=true;
-    BlockSwapWords.Enabled:=true;
+    BlockSwapBytes.Checked:=optplcblock.Checked;
+    BlockSwapWords.Checked:=optplcblock.Checked;
+    BlockSwapBytes.Enabled:=optplcblock.Checked;
+    BlockSwapWords.Enabled:=optplcblock.Checked;
   end;
 end;
 
@@ -1226,11 +1229,31 @@ begin
   OldPage:=PageControl1.ActivePage;
 end;
 
-procedure TfrmS7TagBuilder.AnalogStartWordChange(Sender: TObject);
+procedure TfrmS7TagBuilder.TabSheet4Show(Sender: TObject);
 begin
-
+  btnBack.Enabled:=true;
+  btnFinish.Enabled:=true;
+  btnNext.Enabled:=false;
 end;
 
+procedure TfrmS7TagBuilder.optplcblockClick(Sender: TObject);
+begin
+  lblBlockType.Enabled   :=optplcblock.Checked;
+  BlockType.Enabled      :=optplcblock.Checked;
+  lblBlockScan.Enabled   :=optplcblock.Checked;
+  BlockScan.Enabled      :=optplcblock.Checked;
+  BlockSwapBytes.Enabled :=optplcblock.Checked;
+  BlockSwapWords.Enabled :=optplcblock.Checked;
+
+  lblStructScan.Enabled:=optplcStruct.Checked;
+  StructScan.Enabled:=optplcStruct.Checked;
+
+  lblBlockName.Enabled:=optplcStruct.Checked or optplcblock.Checked;
+  BlockName.Enabled:=optplcStruct.Checked or optplcblock.Checked;
+
+  MemoryAreaClick(Sender);
+  BlockTypeChange(Sender);
+end;
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
