@@ -120,25 +120,7 @@ type
   { TfrmS7TagBuilder }
 
   TfrmS7TagBuilder = class(TForm)
-    AnalogBlockName: TEdit;
-    AnalogEndWord: TSpinEdit;
-    AnalogRefreshRate: TSpinEdit;
-    AnalogStartWord: TSpinEdit;
-    AnalogStatus: TMemo;
-    AnalogWordName: TEdit;
-    AnalogZeroFill: TCheckBox;
-    DBFlagBlockName: TEdit;
-    Label38: TLabel;
-    Label39: TLabel;
-    Label40: TLabel;
-    Label41: TLabel;
-    Label42: TLabel;
-    Label43: TLabel;
-    Label44: TLabel;
-    Label45: TLabel;
-    Label46: TLabel;
-    Label47: TLabel;
-    Memo3: TMemo;
+    BlockName: TEdit;
     Panel1: TPanel;
     Panel2: TPanel;
     PageControl1: TPageControl;
@@ -157,51 +139,14 @@ type
     optplctagnumber: TRadioButton;
     optplcblock: TRadioButton;
     optplcStruct: TRadioButton;
-    TabSheet2: TTabSheet;
-    IOStartByte: TSpinEdit;
-    Label4: TLabel;
-    Label5: TLabel;
-    Label6: TLabel;
-    IOEndByte: TSpinEdit;
-    BitList: TCheckListBox;
-    Label8: TLabel;
-    Label9: TLabel;
-    IOBlockName: TEdit;
-    Label10: TLabel;
-    IOByteNames: TEdit;
-    Label11: TLabel;
-    IOBitNames: TEdit;
-    Memo1: TMemo;
-    IOByteNumberZeroFill: TCheckBox;
-    Label12: TLabel;
-    Label13: TLabel;
-    TabSheet3: TTabSheet;
-    Label14: TLabel;
-    CTStartAddress: TSpinEdit;
-    Label15: TLabel;
-    Label16: TLabel;
-    CTEndAddress: TSpinEdit;
-    Label18: TLabel;
-    CTBlockName: TEdit;
-    Label19: TLabel;
-    CTNames: TEdit;
-    Memo2: TMemo;
-    Label20: TLabel;
-    Label21: TLabel;
-    CTZeroFill: TCheckBox;
     TabSheet4: TTabSheet;
-    btnSelectAll: TButton;
-    btnUnselectAll: TButton;
-    btnInvertSelection: TButton;
-    IOStatus: TMemo;
-    CTStatus: TMemo;
     Panel5: TPanel;
-    Label7: TLabel;
-    spinNumStructs: TSpinEdit;
-    spinStructStartAddress: TSpinEdit;
-    Label22: TLabel;
-    spinDBNum: TSpinEdit;
-    Label23: TLabel;
+    lblNumItems: TLabel;
+    spinNumItens: TSpinEdit;
+    spinStartAddress: TSpinEdit;
+    lblStartAddress: TLabel;
+    spinDBNumber: TSpinEdit;
+    lblDBNumber: TLabel;
     ScrollBox1: TScrollBox;
     Label24: TLabel;
     Label25: TLabel;
@@ -223,27 +168,14 @@ type
     btnBack: TButton;
     btnNext: TButton;
     btnFinish: TButton;
-    Label33: TLabel;
-    Label34: TLabel;
-    IORefreshRate: TSpinEdit;
-    Label35: TLabel;
-    Label36: TLabel;
-    CTRefreshRate: TSpinEdit;
-    Label37: TLabel;
-    TabSheet5: TTabSheet;
+    lblBlockName: TLabel;
     procedure BitListKeyPress(Sender: TObject; var Key: char);
     procedure MemoryAreaClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure btnSelectAllClick(Sender: TObject);
-    procedure btnUnselectAllClick(Sender: TObject);
-    procedure btnInvertSelectionClick(Sender: TObject);
-    procedure optplcblockClick(Sender: TObject);
-    procedure IOStartByteChange(Sender: TObject);
     procedure TabSheet2Show(Sender: TObject);
-    procedure CTStartAddressChange(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure btnUpClick(Sender: TObject);
     procedure btnDownClick(Sender: TObject);
@@ -252,11 +184,8 @@ type
     procedure TabSheet5Show(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TabSheet1Show(Sender: TObject);
-    procedure PageControl1Change(Sender: TObject);
     procedure BlockTypeChange(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
-    procedure TabSheet3Show(Sender: TObject);
-    procedure TabSheet4Show(Sender: TObject);
     procedure btnBackClick(Sender: TObject);
     procedure PageControl1Changing(Sender: TObject;
       var AllowChange: Boolean);
@@ -935,105 +864,61 @@ begin
 
   //esta linha tem q ficar por ultimo sempre!!!
   if (Sender=btnDel) and Assigned(FDelClickEvent) then
-    FDelClickEvent(Self);    
+    FDelClickEvent(Self);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////
 
 procedure TfrmS7TagBuilder.MemoryAreaClick(Sender: TObject);
 begin
-  optplctagnumber.Enabled:=false;
-  optplcblock.Enabled:=false;
-  optplcStruct.Enabled:=false;
+  optplctagnumber.Enabled:=true;
+  optplcblock.Enabled:=true;
+  optplcStruct.Enabled:=true;
 
+  lblDBNumber.Visible:=false;
+  spinDBNumber.Visible:=false;
   case MemoryArea.ItemIndex of
-    0, 1, 4, 5, 9, 10: begin
-      optplctagnumber.Enabled:=true;
-      optplcblock.Enabled:=true;
-
-      optplcblock.Checked:=true;
-
-      IOBlockName.Visible:=optplcblock.Checked;
-      CTBlockName.Visible:=optplcblock.Checked;
-
-      label25.Enabled:=false;
-      BlockType.Enabled:=false;
-
-      case MemoryArea.ItemIndex of
-        0: begin
-          IOBlockName.Text := 'Inputs_%sb_to_%eb';
-          IOByteNames.Text := 'IB%B';
-          IOBitNames.Text  := 'I%B_%b';
-          BlockType.ItemIndex := 2;
-        end;
-        1: begin
-          IOBlockName.Text := 'Outputs_%sb_to_%eb';
-          IOByteNames.Text := 'QB%B';
-          IOBitNames.Text  := 'Q%B_%b';
-          BlockType.ItemIndex := 2;
-        end;
-        4, 9: begin
-          CTBlockName.Text := 'Counters_%si_to_%ei';
-          CTNames.Text     := 'C%I';
-          BlockType.ItemIndex := 4;
-        end;
-        5, 10: begin
-          CTBlockName.Text := 'Timers_%si_to_%ei';
-          CTNames.Text     := 'T%I';
-          BlockType.ItemIndex := 4;
-        end;
-      end;
+    0: begin
+     lblStartAddress.Caption:='Byte inicial da entrada digital';
+     BlockType.ItemIndex:=2;
     end;
-    2, 3, 12: begin
-      optplctagnumber.Enabled:=true;
-      optplcblock.Enabled:=true;
-      optplcStruct.Enabled:=true;
-
-      Label23.Enabled:=MemoryArea.ItemIndex=3;
-      spinDBNum.Enabled:=Label23.Enabled;
-
-      label25.Enabled:=true;
-      BlockType.Enabled:=true;
+    1: begin
+     lblStartAddress.Caption:='Byte inicial da saida digital';
+     BlockType.ItemIndex:=4;
     end;
-    7, 8, 11: begin
-      optplctagnumber.Enabled:=true;
-      optplcblock.Enabled:=true;
-
-      optplcblock.Checked:=true;
-
-      AnalogBlockName.Visible:=optplcblock.Checked;
-
-      label25.Enabled:=false;
-      BlockType.Enabled:=false;
-      BlockType.ItemIndex := 4;
-
-      case MemoryArea.ItemIndex of
-        7: begin
-          AnalogBlockName.Text := 'AIW_%swi_to_%ewi';
-          AnalogWordName.Text := 'AIW%wI';
-        end;
-        8: begin
-          AnalogBlockName.Text := 'AQW_%swi_to_%ewi';
-          AnalogWordName.Text := 'AQW%wI';
-        end;
-        11: begin
-          AnalogBlockName.Text := 'PIW_%swi_to_%ewi';
-          AnalogWordName.Text := 'PIW%wI';
-        end;
-      end;
+    2:
+     lblStartAddress.Caption:='End. inicial da Flag(M)';
+    3: begin
+     lblStartAddress.Caption:='End. inicial dentro da DB';
+     lblDBNumber.Visible:=true;
+     spinDBNumber.Visible:=true;
     end;
+    4,9:
+     lblStartAddress.Caption:='Contador inicial';
+    5,10:
+     lblStartAddress.Caption:='Temporizador inicial';
+    6:
+     lblStartAddress.Caption:='Byte inicial da SM';
+    7:
+     lblStartAddress.Caption:='End. inicial da AIW';
+    8:
+     lblStartAddress.Caption:='End. inicial da AQW';
+    11:
+     lblStartAddress.Caption:='End. inicial da PIW';
+    12:
+     lblStartAddress.Caption:='End. inicial da V';
   end;
+
   BlockTypeChange(Sender);
 end;
 
 procedure TfrmS7TagBuilder.BitListKeyPress(Sender: TObject; var Key: char);
 begin
-  IOStartByteChange(Sender);
+
 end;
 
 procedure TfrmS7TagBuilder.FormCreate(Sender: TObject);
 begin
-  btnSelectAllClick(Sender);
   PageControl1.ActivePageIndex:=0;
   TagList:=TList.Create;
   ItemsToDel:=TList.Create;
@@ -1042,7 +927,6 @@ end;
 procedure TfrmS7TagBuilder.FormShow(Sender: TObject);
 begin
   MemoryAreaClick(Sender);
-  optplcblockClick(Sender);
 end;
 
 procedure TfrmS7TagBuilder.FormClose(Sender: TObject;
@@ -1057,124 +941,9 @@ begin
   //onclose query
 end;
 
-procedure TfrmS7TagBuilder.btnSelectAllClick(Sender: TObject);
-var
-  c:Integer;
-begin
-  for c:=0 to 7 do
-    BitList.Checked[c]:=true;
-  IOStartByteChange(Sender);
-end;
-
-procedure TfrmS7TagBuilder.btnUnselectAllClick(Sender: TObject);
-var
-  c:Integer;
-begin
-  for c:=0 to 7 do
-    BitList.Checked[c]:=false;
-  IOStartByteChange(Sender);
-end;
-
-procedure TfrmS7TagBuilder.btnInvertSelectionClick(Sender: TObject);
-var
-  c:Integer;
-begin
-  for c:=0 to 7 do
-    BitList.Checked[c]:=not BitList.Checked[c];
-  IOStartByteChange(Sender);
-end;
-
-procedure TfrmS7TagBuilder.optplcblockClick(Sender: TObject);
-var
-  c:Integer;
-begin
-  IOBlockName.Enabled:=optplcblock.Checked;
-  CTBlockName.Enabled:=optplcblock.Checked;
-  Label9.Enabled:=IOBlockName.Enabled;
-  Label18.Enabled:=CTBlockName.Enabled;
-  label25.Enabled:=optplcblock.Checked and (MemoryArea.ItemIndex in [2,3,12]);
-  BlockType.Enabled:=optplcblock.Checked and (MemoryArea.ItemIndex in [2,3,12]);
-  BlockScan.Enabled:=optplcblock.Checked;
-  StructScan.Enabled:=optplcStruct.Checked;
-  label27.enabled:=optplcStruct.Checked;
-  label26.enabled:=optplcblock.Checked;
-  label34.Enabled:=optplctagnumber.Checked;
-  label35.Enabled:=optplctagnumber.Checked;
-  IORefreshRate.Enabled:=optplctagnumber.Checked;
-  label36.Enabled:=optplctagnumber.Checked;
-  label37.Enabled:=optplctagnumber.Checked;
-  CTRefreshRate.Enabled:=optplctagnumber.Checked;
-  label44.Enabled:=optplctagnumber.Checked;
-  label45.Enabled:=optplctagnumber.Checked;
-  AnalogRefreshRate.Enabled:=optplctagnumber.Checked;
-
-  for c:=0 to TagList.Count-1 do begin
-    if optplctagnumber.Checked then
-      TS7TagItemEditor(TagList.Items[c]).EnablePLCNumberTagMode
-    else
-      if optplcblock.Checked then
-        TS7TagItemEditor(TagList.Items[c]).EnablePLCBlockMode
-      else
-        TS7TagItemEditor(TagList.Items[c]).EnablePLCStructMode;
-  end;
-end;
-
-procedure TfrmS7TagBuilder.IOStartByteChange(Sender: TObject);
-var
-  nbytes, nbits, c:Integer;
-begin
-  if (IOEndByte.Value<IOStartByte.Value) then begin
-    if (Sender=IOStartByte) then
-      IOEndByte.Value:=IOStartByte.Value;
-
-    if (Sender=IOEndByte) then
-      IOStartByte.Value:=IOEndByte.Value;
-  end;
-
-
-  nbytes:=IOEndByte.Value-IOStartByte.Value+1;
-  nbits:=0;
-  for c:=0 to 7 do
-    if BitList.Checked[c] then
-      inc(nbits);
-
-  with IOStatus.Lines do begin
-    Clear;
-    Add('Sera criado/Will be created:');
-    Add(IfThen(optplcblock.checked, '1 PLCBlock, ', '')+
-        IntToStr(nBytes)+IfThen(optplcblock.checked, ' PLCBlockElement(s) and ', ' PLCTagNumber(s) and ')+
-        IntToStr(nbits*nbytes)+' TagBit(s)')
-  end;
-end;
-
 procedure TfrmS7TagBuilder.TabSheet2Show(Sender: TObject);
 begin
-  btnBack.Enabled:=true;
-  btnFinish.Enabled:=true;
-  btnNext.Enabled:=false;
 
-  IOStartByteChange(sender);
-end;
-
-procedure TfrmS7TagBuilder.CTStartAddressChange(Sender: TObject);
-var
-  nitems:Integer;
-begin
-  if (CTEndAddress.Value<CTStartAddress.Value) then begin
-    if (Sender=CTStartAddress) then
-      CTEndAddress.Value:=CTStartAddress.Value;
-
-    if (Sender=CTEndAddress) then
-      CTStartAddress.Value:=CTEndAddress.Value;
-  end;
-
-  nitems := CTEndAddress.Value - CTStartAddress.Value + 1;
-  with CTStatus.Lines do begin
-    Clear;
-    Add('Sera criado/Will be created:');
-    Add(IfThen(optplcblock.checked, '1 PLCBlock and ', '')+
-        IntToStr(nitems)+IfThen(optplcblock.checked, ' PLCBlockElement(s)', ' PLCTagNumber(s)'))
-  end;
 end;
 
 procedure TfrmS7TagBuilder.Button1Click(Sender: TObject);
@@ -1419,24 +1188,6 @@ begin
   btnNext.Enabled:=true;
 end;
 
-procedure TfrmS7TagBuilder.PageControl1Change(Sender: TObject);
-begin
-  if (MemoryArea.ItemIndex in [0..1]) and (PageControl1.ActivePage<>TabSheet2) and (PageControl1.ActivePage<>TabSheet1) then begin
-    PageControl1.ActivePage:=OldPage;
-    exit;
-  end;
-
-  if (MemoryArea.ItemIndex in [2..3]) and (PageControl1.ActivePage<>TabSheet4) and (PageControl1.ActivePage<>TabSheet1) then begin
-    PageControl1.ActivePage:=OldPage;
-    exit;
-  end;
-
-  if (MemoryArea.ItemIndex in [4..5]) and (PageControl1.ActivePage<>TabSheet3) and (PageControl1.ActivePage<>TabSheet1) then begin
-    PageControl1.ActivePage:=OldPage;
-    exit;
-  end;
-end;
-
 procedure TfrmS7TagBuilder.BlockTypeChange(Sender: TObject);
 begin
   if BlockType.ItemIndex in [0..2] then begin
@@ -1461,32 +1212,7 @@ end;
 
 procedure TfrmS7TagBuilder.btnNextClick(Sender: TObject);
 begin
-  case MemoryArea.ItemIndex of
-    0, 1:
-      PageControl1.ActivePage:=TabSheet2;
-    2, 3, 12:
-      PageControl1.ActivePage:=TabSheet4;
-    4, 5, 9, 10:
-      PageControl1.ActivePage:=TabSheet3;
-    7, 8, 11:
-      PageControl1.ActivePage:=TabSheet5;
-  end;
-end;
-
-procedure TfrmS7TagBuilder.TabSheet3Show(Sender: TObject);
-begin
-  btnBack.Enabled:=true;
-  btnFinish.Enabled:=true;
-  btnNext.Enabled:=false;
-
-  CTStartAddressChange(Sender);
-end;
-
-procedure TfrmS7TagBuilder.TabSheet4Show(Sender: TObject);
-begin
-  btnBack.Enabled:=true;
-  btnFinish.Enabled:=true;
-  btnNext.Enabled:=false;
+  PageControl1.ActivePage:=TabSheet4;
 end;
 
 procedure TfrmS7TagBuilder.btnBackClick(Sender: TObject);
@@ -1501,24 +1227,8 @@ begin
 end;
 
 procedure TfrmS7TagBuilder.AnalogStartWordChange(Sender: TObject);
-var
-  nitems:Integer;
 begin
-  if (AnalogEndWord.Value<AnalogStartWord.Value) then begin
-    if (Sender=AnalogStartWord) then
-      AnalogEndWord.Value:=AnalogStartWord.Value;
 
-    if (Sender=AnalogEndWord) then
-      AnalogStartWord.Value:=AnalogEndWord.Value;
-  end;
-
-  nitems := ((AnalogEndWord.Value - AnalogStartWord.Value) div 2) + 1;
-  with AnalogStatus.Lines do begin
-    Clear;
-    Add('Sera criado/Will be created:');
-    Add(IfThen(optplcblock.checked, '1 PLCBlock and ', '')+
-        IntToStr(nitems)+IfThen(optplcblock.checked, ' PLCBlockElement(s)', ' PLCTagNumber(s)'))
-  end;
 end;
 
 
