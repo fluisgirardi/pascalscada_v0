@@ -73,6 +73,8 @@ type
     BitList:TList;
     DelTimer:TTimer;
     DelList:TList;
+    FOnTypeChange,
+    FOnSkipChange:TNotifyEvent;
     procedure SetTagName(newName:String);
     procedure SetTagType(newType:TTagType);
     procedure SetTagScan(newScan:TRefreshTime);
@@ -93,9 +95,12 @@ type
     constructor Create(AOwner:TComponent); override;
     destructor Destroy; override;
     procedure PopulateCombo;
-    procedure EnablePLCNumberTagMode;
-    procedure EnablePLCBlockMode;
-    procedure EnablePLCStructMode;
+
+    procedure EnableTagType(ToEnable:Boolean);
+    procedure EnableScanRate(ToEnable:Boolean);
+    procedure EnableSwapBytes(ToEnable:Boolean);
+    procedure EnableSwapWords(ToEnable:Boolean);
+
     property  Bit[index:Integer]:TTagBitItemEditor read GetBit;
   published
     property  BitCount:Integer read GetBitCount;
@@ -115,6 +120,8 @@ type
     property OnDownClickEvent:TNotifyEvent read FDownClickEvent write FDownClickEvent;
     property OnDelClickEvent:TNotifyEvent read FDelClickEvent write FDelClickEvent;
     property OnBitsClickEvent:TNotifyEvent read FBitsClickEvent write FBitsClickEvent;
+    property OnTypeChange:TNotifyEvent read FOnTypeChange write FOnTypeChange;
+    property OnSkipChange:TNotifyEvent read FOnSkipChange write FOnSkipChange;
   end;
 
   { TfrmS7TagBuilder }
@@ -179,15 +186,19 @@ type
     procedure btnDownClick(Sender: TObject);
     procedure btnDelClick(Sender: TObject);
     procedure btnBitsClick(Sender: TObject);
+    procedure SomethingOnItemChange(Sender:TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TabSheet1Show(Sender: TObject);
     procedure BlockTypeChange(Sender: TObject);
+    procedure UpdateStructItems;
     procedure btnNextClick(Sender: TObject);
     procedure btnBackClick(Sender: TObject);
     procedure PageControl1Changing(Sender: TObject;
       var AllowChange: Boolean);
     procedure TabSheet4Show(Sender: TObject);
     procedure optplcblockClick(Sender: TObject);
+    procedure UpdateStatusAndBlockName;
+    procedure spinStartAddressChange(Sender: TObject);
   private
     OldPage:TTabSheet;
     FItemId:Integer;
@@ -196,10 +207,23 @@ type
     procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
     function GetStructItemsCount:Integer;
     function GetStructItem(index:Integer):TS7TagItemEditor;
+    function GetStructureSizeInBytes:Integer;
+    function GetRealStartOffset:Integer;
+    function GetRealEndOffset:Integer;
+    function GetStartOffset:Integer;
+    function GetEndOffset:Integer;
+    function GetTheLastItemOffset:Integer;
+    function AtLeastOneItemIsValid:Boolean;
+    function CurBlockType:TTagType;
   public
     destructor Destroy; override;
     property StructItemsCount:Integer read GetStructItemsCount;
     property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
+    property StructureSizeInBytes:Integer read GetStructureSizeInBytes;
+    property RealStartOffset:Integer read GetRealStartOffset;
+    property RealEndOffset:Integer read GetRealEndOffset;
+    property StartOffset:Integer read GetStartOffset;
+    property EndOffset:Integer read GetEndOffset;
   end;
 
 var
@@ -577,28 +601,26 @@ begin
   end;
 end;
 
-procedure TS7TagItemEditor.EnablePLCNumberTagMode;
+procedure TS7TagItemEditor.EnableTagType(ToEnable:Boolean);
 begin
-  spinScan.Enabled:=true;
-  cmbItemType.Enabled:=true;
-  //optSwapBytes.Enabled:=true;
-  //optSwapWords.Enabled:=true;
+  cmbItemType.Enabled:=ToEnable;
 end;
 
-procedure TS7TagItemEditor.EnablePLCBlockMode;
+procedure TS7TagItemEditor.EnableScanRate(ToEnable:Boolean);
 begin
-  spinScan.Enabled:=false;
-  cmbItemType.Enabled:=false;
-  //optSwapBytes.Enabled:=false;
-  //optSwapWords.Enabled:=false;
+  spinScan.Enabled:=ToEnable;
 end;
 
-procedure TS7TagItemEditor.EnablePLCStructMode;
+procedure TS7TagItemEditor.EnableSwapBytes(ToEnable:Boolean);
 begin
-  spinScan.Enabled:=false;
-  cmbItemType.Enabled:=true;
-  //optSwapBytes.Enabled:=true;
-  //optSwapWords.Enabled:=true;
+  optSwapBytes.Enabled:=ToEnable;
+  optSwapBytes.Checked:=ToEnable;
+end;
+
+procedure TS7TagItemEditor.EnableSwapWords(ToEnable:Boolean);
+begin
+  optSwapWords.Enabled:=ToEnable;
+  optSwapWords.Checked:=ToEnable;  
 end;
 
 function TS7TagItemEditor.GetBitCount:Integer;
@@ -706,6 +728,7 @@ begin
     pttFloat:
       cmbItemType.ItemIndex:=7;
   end;
+  optChange(cmbItemType);
 end;
 
 procedure TS7TagItemEditor.SetTagScan(newScan:TRefreshTime);
@@ -730,6 +753,7 @@ procedure TS7TagItemEditor.SetSkipTag(Skip:Boolean);
 begin
   FSkip:=Skip;
   optSkip.Checked:=FSkip;
+  edtItemName.Enabled:=not FSkip;  
 end;
 
 procedure TS7TagItemEditor.edtItemNameExit(Sender:TObject);
@@ -784,8 +808,12 @@ begin
   if Sender=optSwapWords then
     FSwapWords:=optSwapWords.Checked;
 
-  if Sender=optSkip then
+  if Sender=optSkip then begin
     FSkip:=optSkip.Checked;
+    edtItemName.Enabled:=not FSkip;
+    if Assigned(FOnSkipChange) then
+      FOnSkipChange(optSkip);
+  end;
 
   if Sender=spinScan then
     FTagScan:=spinScan.Value;
@@ -827,6 +855,8 @@ begin
         optSwapWords.Enabled:=True;
       end;
     end;
+    if Assigned(FOnTypeChange) then
+      FOnTypeChange(cmbItemType);
   end;
 end;
 
@@ -912,7 +942,7 @@ begin
     6: begin
      lblStartAddress.Caption:='Byte inicial da SM';
      BlockType.ItemIndex:=2;
-    end;     
+    end;
     7: begin
      lblStartAddress.Caption:='End. inicial da AIW';
      BlockType.ItemIndex:=4;
@@ -932,6 +962,7 @@ begin
   end;
 
   BlockTypeChange(Sender);
+  UpdateStructItems;
 end;
 
 procedure TfrmS7TagBuilder.FormCreate(Sender: TObject);
@@ -972,6 +1003,8 @@ begin
   tag.OnDownClickEvent:=btnDownClick;
   tag.OnDelClickEvent:=btnDelClick;
   tag.OnBitsClickEvent:=btnBitsClick;
+  tag.OnTypeChange:=SomethingOnItemChange;
+  tag.OnSkipChange:=SomethingOnItemChange;
   tag.TagScan:=1000;
   tag.TagType:=pttDefault;
   tag.SwapBytes:=false;
@@ -983,19 +1016,27 @@ begin
     tag.Top:=0;
   end;
 
-  if optplctagnumber.Checked then
-    tag.EnablePLCNumberTagMode
-  else
-    if optplcblock.Checked then
-      tag.EnablePLCBlockMode
-    else
-      tag.EnablePLCStructMode;
+  tag.EnableScanRate(optplctagnumber.Checked);
+  case MemoryArea.ItemIndex of
+    0,1,6: begin
+      tag.TagType:=pttByte;
+    end;
+    4,5,7..11: begin
+      tag.TagType:=pttWord;
+    end;
+    2,3,12: begin
+      //does nothing...
+    end;
+  end;
+  
+  tag.EnableTagType((not optplcblock.Checked) and (MemoryArea.ItemIndex in [2,3,12]));
 
   TagList.Add(tag);
 
   while not tag.AcceptName('StructItem'+IntToStr(FItemId)) do
     inc(FItemId);
   tag.TagName:='StructItem'+IntToStr(FItemId);
+  UpdateStatusAndBlockName;
 end;
 
 procedure TfrmS7TagBuilder.btnUpClick(Sender: TObject);
@@ -1019,6 +1060,7 @@ begin
     (Sender as TS7TagItemEditor).TabOrder:=prior.TabOrder;
     prior.Top:=actualTop;
   end;
+  UpdateStatusAndBlockName;
 end;
 
 procedure TfrmS7TagBuilder.btnDownClick(Sender: TObject);
@@ -1042,6 +1084,7 @@ begin
     next.TabOrder:=(Sender as TS7TagItemEditor).TabOrder;
     next.Top:=actualTop;
   end;
+  UpdateStatusAndBlockName;
 end;
 
 procedure TfrmS7TagBuilder.btnDelClick(Sender: TObject);
@@ -1126,12 +1169,17 @@ begin
   end;
 end;
 
+procedure TfrmS7TagBuilder.SomethingOnItemChange(Sender:TObject);
+begin
+  UpdateStatusAndBlockName;
+end;
+
 destructor TfrmS7TagBuilder.Destroy;
 var
   t,b:Integer;
 begin
   for t:=TagList.Count-1 downto 0 do begin
-    for b:=0 to TS7TagItemEditor(TagList.Items[t]).BitCount-1 do begin
+    for b:=TS7TagItemEditor(TagList.Items[t]).BitCount-1 downto 0 do begin
       TS7TagItemEditor(TagList.Items[t]).DelBit(b);
     end;
     TS7TagItemEditor(TagList.Items[t]).Destroy;
@@ -1172,6 +1220,188 @@ begin
   Result:=TS7TagItemEditor(TagList.Items[index]);
 end;
 
+function TfrmS7TagBuilder.GetStructureSizeInBytes:Integer;
+var
+  typesize, curitem:Integer;
+begin
+  if optplcblock.Checked then begin
+    case BlockType.ItemIndex of
+      3..4: begin
+        typesize:=2;
+      end;
+      5..7: begin
+        typesize:=4;
+      end;
+      else begin
+        typesize:=1;
+      end;
+    end;
+    Result:=TagList.Count*typesize
+  end else begin
+    Result:=0;
+    for curitem:=0 to TagList.Count-1 do begin
+      with TS7TagItemEditor(TagList.Items[curitem]) do begin
+        case TagType of
+          pttSmallInt, pttWord:
+            typesize:=2;
+          pttInteger, pttDWord, pttFloat:
+            typesize:=4;
+          else
+            typesize:=1
+        end;
+      end;
+      Inc(Result,typesize);
+    end;
+  end;
+end;
+
+function TfrmS7TagBuilder.GetRealStartOffset:Integer;
+var
+  curitem:Integer;
+  curTagType:TTagType;
+begin
+  if AtLeastOneItemIsValid then begin
+  
+    if MemoryArea.ItemIndex in [4,5,9,10] then
+      Result:=spinStartAddress.Value*2
+    else
+      Result:=spinStartAddress.Value;
+
+    for curitem:=0 to TagList.Count-1 do
+      with TS7TagItemEditor(TagList.Items[curitem]) do begin
+        if optplcblock.Checked then begin
+          curTagType := CurBlockType;
+        end else
+          curTagType := TagType;
+
+        if not SkipTag then
+          break
+        else begin
+          case curTagType of
+            pttDefault, pttShortInt, pttByte:
+              inc(Result, 1);
+            pttSmallInt, pttWord:
+              inc(Result, 2);
+            pttInteger, pttDWord, pttFloat:
+              inc(Result, 4);
+          end;
+        end;
+      end;
+  end else
+    Result:=-1;
+end;
+
+function TfrmS7TagBuilder.GetRealEndOffset:Integer;
+var
+  curitem:Integer;
+  curTagType:TTagType;
+begin
+  if AtLeastOneItemIsValid then begin
+    Result:=EndOffset;
+    for curitem:=TagList.Count-1 downto 0 do
+      with TS7TagItemEditor(TagList.Items[curitem]) do begin
+
+        if optplcblock.Checked then begin
+          curTagType := CurBlockType;
+        end else
+          curTagType := TagType;
+
+        if not SkipTag then
+          break
+        else begin
+          case curTagType of
+            pttDefault, pttShortInt, pttByte:
+              Dec(Result, 1);
+            pttSmallInt, pttWord:
+              Dec(Result, 2);
+            pttInteger, pttDWord, pttFloat:
+              Dec(Result, 4);
+          end;
+        end;
+      end;
+  end else
+    Result:=-1;
+end;
+
+function TfrmS7TagBuilder.GetTheLastItemOffset:Integer;
+var
+  curitem:Integer;
+  curTagType:TTagType;
+begin
+  if AtLeastOneItemIsValid then begin
+    Result:=EndOffset;
+    for curitem:=TagList.Count-1 downto 0 do
+      with TS7TagItemEditor(TagList.Items[curitem]) do begin
+
+        if optplcblock.Checked then begin
+          curTagType := CurBlockType;
+        end else
+          curTagType := TagType;
+
+        case curTagType of
+          pttSmallInt, pttWord:
+            Dec(Result, 1);
+          pttInteger, pttDWord, pttFloat:
+            Dec(Result, 3);
+        end;
+        if not SkipTag then
+          break;
+      end;
+  end else
+    Result:=-1;
+end;
+
+function TfrmS7TagBuilder.GetStartOffset:Integer;
+begin
+  if MemoryArea.ItemIndex in [4,5,9,10] then
+    Result:=(spinStartAddress.Value*2)
+  else
+    Result:=spinStartAddress.Value;
+end;
+
+function TfrmS7TagBuilder.GetEndOffset:Integer;
+begin
+  if MemoryArea.ItemIndex in [4,5,9,10] then
+    Result:=(spinStartAddress.Value*2)+(spinNumItens.Value*StructureSizeInBytes)-1
+  else
+    Result:=spinStartAddress.Value+(spinNumItens.Value*StructureSizeInBytes)-1;
+end;
+
+function TfrmS7TagBuilder.AtLeastOneItemIsValid:Boolean;
+var
+  curitem:Integer;
+begin
+  Result:=false;
+  for curitem:=0 to TagList.Count-1 do
+    with TS7TagItemEditor(TagList.Items[curitem]) do
+      if not SkipTag then begin
+        Result:=true;
+        break;
+      end;
+end;
+
+function TfrmS7TagBuilder.CurBlockType:TTagType;
+begin
+  case BlockType.ItemIndex of
+    1:
+      Result:=pttShortInt;
+    2:
+      Result:=pttByte;
+    3:
+      Result:=pttSmallInt;
+    4:
+      Result:=pttWord;
+    5:
+      Result:=pttInteger;
+    6:
+      Result:=pttDWord;
+    7:
+      Result:=pttFloat;
+    else
+      Result:=pttDefault;
+  end;
+end;
+
 procedure TfrmS7TagBuilder.Timer1Timer(Sender: TObject);
 var
   c:Integer;
@@ -1181,7 +1411,8 @@ begin
     TS7TagItemEditor(ItemsToDel.Items[c]).Destroy;
     ItemsToDel.Delete(c);
   end;
-  Timer1.Enabled:=false
+  Timer1.Enabled:=false;
+  UpdateStatusAndBlockName;
 end;
 
 procedure TfrmS7TagBuilder.TabSheet1Show(Sender: TObject);
@@ -1211,7 +1442,35 @@ begin
     BlockSwapBytes.Enabled:=optplcblock.Checked;
     BlockSwapWords.Enabled:=optplcblock.Checked;
   end;
+  UpdateStatusAndBlockName;
 end;
+
+procedure TfrmS7TagBuilder.UpdateStructItems;
+var
+  c:Integer;
+  toenablescan, toenabletype, toenableSwap:Boolean;
+begin
+  toenablescan := optplctagnumber.Checked;
+  toenabletype:=(not optplcblock.Checked) and (MemoryArea.ItemIndex in [2,3,12]);
+  toenableSwap:=(not optplcblock.Checked);  
+
+  for c:=0 to TagList.Count-1 do
+    with TS7TagItemEditor(TagList.Items[c]) do begin
+      EnableScanRate(toenablescan);
+      EnableSwapBytes(toenableSwap);
+      EnableSwapWords(toenableSwap);      
+      case MemoryArea.ItemIndex of
+        0,1,6: begin
+          TagType:=pttByte;
+        end;
+        4,5,7..11: begin
+          TagType:=pttWord;
+        end;
+      end;
+      EnableTagType(toenabletype);
+    end;
+end;
+
 
 procedure TfrmS7TagBuilder.btnNextClick(Sender: TObject);
 begin
@@ -1252,7 +1511,110 @@ begin
   BlockName.Enabled:=optplcStruct.Checked or optplcblock.Checked;
 
   MemoryAreaClick(Sender);
-  BlockTypeChange(Sender);
+end;
+
+procedure TfrmS7TagBuilder.UpdateStatusAndBlockName;
+var
+  strblockname, starttype, endtype:String;
+  curitem:Integer;
+begin
+  if BlockName.Modified then exit;
+  case MemoryArea.ItemIndex of
+    0: begin
+     strblockname:='InputBytes_From_IB%d_to_IB%d';
+    end;
+    1: begin
+     strblockname:='OutputBytes_From_QB%d_to_QB%d';
+    end;
+    2: begin
+     strblockname:='Flags_From_M%s%d_to_M%s%d';
+    end;
+    3: begin
+     strblockname:='DB%d_From_DB%s%d_to_DB%s%d'
+    end;
+    4,9: begin
+     strblockname:='Counters_From_C%d_to_C%d'
+    end;
+    5,10: begin
+     strblockname:='Timers_From_T%d_to_T%d'
+    end;
+    6: begin
+     strblockname:='SM_From_SMB%d_to_SMB%d'
+    end;
+    7: begin
+     strblockname:='AnalogInput_From_AIW%d_to_AIW%d';
+    end;
+    8: begin
+     strblockname:='AnalogOutput_From_AQW%d_to_AQW%d';
+    end;
+    11: begin
+     strblockname:='AnalogIW_From_PIW%d_to_PIW%d';
+    end;
+    12: begin
+     strblockname:='Vs_From_V%s%d_to_V%s%d';
+    end;
+  end;
+
+  if optplcblock.Checked then begin
+    case BlockType.ItemIndex of
+      0..2: begin
+        starttype:='B';
+      end;
+      3..4: begin
+        starttype:='W';
+      end;
+      5..7: begin
+        starttype:='D';
+      end;
+    end;
+    endtype:=starttype;
+  end else begin
+    starttype:='';
+    endtype:='';
+    if AtLeastOneItemIsValid then
+      for curitem:=0 to TagList.Count-1 do begin
+        with TS7TagItemEditor(TagList.Items[curitem]) do
+          if (starttype='') and (not SkipTag) then begin
+            case TagType of
+              pttDefault, pttShortInt, pttByte:
+                starttype:='B';
+              pttSmallInt, pttWord:
+                starttype:='W';
+              pttInteger, pttDWord, pttFloat:
+                starttype:='D';
+            end;
+          end;
+
+        with TS7TagItemEditor(TagList.Items[(TagList.Count-1)-curitem]) do
+          if (endtype='') and (not SkipTag) then begin
+            case TagType of
+              pttDefault, pttShortInt, pttByte:
+                endtype:='B';
+              pttSmallInt, pttWord:
+                endtype:='W';
+              pttInteger, pttDWord, pttFloat:
+                endtype:='D';
+            end;
+          end;
+      end;
+  end;
+
+  case MemoryArea.ItemIndex of
+    2,12:
+      BlockName.Text:=Format(strblockname,[starttype,GetRealStartOffset,endtype,GetTheLastItemOffset]);
+    3:
+      BlockName.Text:=Format(strblockname,[spinDBNumber.Value, starttype,GetRealStartOffset,endtype,GetTheLastItemOffset]);
+    4,5,9,10:
+      BlockName.Text:=Format(strblockname,[GetRealStartOffset div 2, GetTheLastItemOffset div 2]);
+    else
+      BlockName.Text:=Format(strblockname,[GetRealStartOffset, GetTheLastItemOffset]);
+  end;
+  BlockName.Modified:=false;
+end;
+
+procedure TfrmS7TagBuilder.spinStartAddressChange(Sender: TObject);
+begin
+  UpdateStatusAndBlockName;
 end;
 
 {$IFDEF FPC }

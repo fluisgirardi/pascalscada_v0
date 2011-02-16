@@ -1,10 +1,10 @@
 object frmS7TagBuilder: TfrmS7TagBuilder
-  Left = 283
-  Top = 148
+  Left = 285
+  Top = 113
   BorderStyle = bsDialog
   Caption = 'Siemens S7 Tag builder..'
   ClientHeight = 441
-  ClientWidth = 595
+  ClientWidth = 756
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,7 +22,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
   object Panel2: TPanel
     Left = 0
     Top = 0
-    Width = 595
+    Width = 756
     Height = 404
     Align = alClient
     BevelOuter = bvNone
@@ -37,7 +37,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
     object PageControl1: TPageControl
       Left = 0
       Top = 0
-      Width = 595
+      Width = 756
       Height = 404
       ActivePage = TabSheet1
       Align = alClient
@@ -49,7 +49,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object MemoryArea: TRadioGroup
           Left = 0
           Top = 57
-          Width = 587
+          Width = 748
           Height = 144
           Align = alTop
           Caption = 'Qual '#233' a '#225'rea de mem'#243'ria que deseja endere'#231'ar'
@@ -75,7 +75,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object Panel3: TPanel
           Left = 0
           Top = 201
-          Width = 587
+          Width = 748
           Height = 6
           Align = alTop
           BevelOuter = bvNone
@@ -84,7 +84,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object Panel4: TPanel
           Left = 0
           Top = 0
-          Width = 587
+          Width = 748
           Height = 57
           Align = alTop
           BevelOuter = bvNone
@@ -92,7 +92,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           object PLCAddress: TGroupBox
             Left = 0
             Top = 0
-            Width = 587
+            Width = 748
             Height = 53
             Align = alTop
             Caption = 'Endere'#231'o do CLP'
@@ -159,7 +159,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object grptagtype: TGroupBox
           Left = 0
           Top = 207
-          Width = 587
+          Width = 748
           Height = 169
           Align = alClient
           Caption = 
@@ -296,7 +296,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object Panel5: TPanel
           Left = 0
           Top = 0
-          Width = 587
+          Width = 748
           Height = 71
           Align = alTop
           BevelOuter = bvNone
@@ -334,7 +334,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Layout = tlCenter
           end
           object lblDBNumber: TLabel
-            Left = 287
+            Left = 271
             Top = 26
             Width = 102
             Height = 22
@@ -425,7 +425,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ParentFont = False
           end
           object lblBlockName: TLabel
-            Left = 291
+            Left = 275
             Top = 2
             Width = 97
             Height = 22
@@ -451,6 +451,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             MinValue = 1
             TabOrder = 0
             Value = 1
+            OnChange = spinStartAddressChange
           end
           object spinStartAddress: TSpinEdit
             Left = 192
@@ -461,9 +462,10 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             MinValue = 0
             TabOrder = 1
             Value = 0
+            OnChange = spinStartAddressChange
           end
           object spinDBNumber: TSpinEdit
-            Left = 391
+            Left = 375
             Top = 26
             Width = 101
             Height = 22
@@ -473,9 +475,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Value = 1
           end
           object Button1: TButton
-            Left = 503
-            Top = 6
-            Width = 60
+            Left = 656
+            Top = 8
+            Width = 88
             Height = 49
             Caption = '&Add structitem'
             TabOrder = 4
@@ -483,9 +485,9 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             OnClick = Button1Click
           end
           object BlockName: TEdit
-            Left = 391
+            Left = 375
             Top = 2
-            Width = 101
+            Width = 274
             Height = 21
             TabOrder = 2
             Text = 'BlockName'
@@ -494,7 +496,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         object ScrollBox1: TScrollBox
           Left = 0
           Top = 71
-          Width = 587
+          Width = 748
           Height = 305
           Align = alClient
           BevelInner = bvNone
@@ -507,13 +509,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
   object Panel1: TPanel
     Left = 0
     Top = 404
-    Width = 595
+    Width = 756
     Height = 37
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
     object btnCancel: TButton
-      Left = 272
+      Left = 416
       Top = 8
       Width = 75
       Height = 25
@@ -523,7 +525,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       TabOrder = 0
     end
     object btnBack: TButton
-      Left = 352
+      Left = 496
       Top = 8
       Width = 75
       Height = 25
@@ -532,7 +534,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       OnClick = btnBackClick
     end
     object btnNext: TButton
-      Left = 432
+      Left = 576
       Top = 8
       Width = 75
       Height = 25
@@ -541,7 +543,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       OnClick = btnNextClick
     end
     object btnFinish: TButton
-      Left = 512
+      Left = 656
       Top = 8
       Width = 75
       Height = 25
@@ -555,7 +557,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
     Enabled = False
     Interval = 5
     OnTimer = Timer1Timer
-    Left = 492
+    Left = 276
     Top = 40
   end
 end
