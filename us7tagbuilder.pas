@@ -1089,10 +1089,11 @@ end;
 
 procedure TfrmS7TagBuilder.btnDelClick(Sender: TObject);
 begin
-  if ItemsToDel.IndexOf(Sender)=-1 then begin
-    ItemsToDel.Add(Sender);
-    Timer1.Enabled:=true;
-  end;
+  if ItemsToDel.IndexOf(Sender)=-1 then
+    if MessageDlg('Deseja mesmo remover este item?', mtConfirmation,[mbYes,mbNo],0)=mrYes then begin
+      ItemsToDel.Add(Sender);
+      Timer1.Enabled:=true;
+    end;
 end;
 
 procedure TfrmS7TagBuilder.btnBitsClick(Sender: TObject);
