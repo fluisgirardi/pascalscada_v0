@@ -188,18 +188,15 @@ type
     procedure btnDownClick(Sender: TObject);
     procedure btnDelClick(Sender: TObject);
     procedure btnBitsClick(Sender: TObject);
-    procedure SomethingOnItemChange(Sender:TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TabSheet1Show(Sender: TObject);
     procedure BlockTypeChange(Sender: TObject);
-    procedure UpdateStructItems;
     procedure btnNextClick(Sender: TObject);
     procedure btnBackClick(Sender: TObject);
     procedure PageControl1Changing(Sender: TObject;
       var AllowChange: Boolean);
     procedure TabSheet4Show(Sender: TObject);
     procedure optplcblockClick(Sender: TObject);
-    procedure UpdateStatusAndBlockName;
     procedure spinStartAddressChange(Sender: TObject);
   private
     OldPage:TTabSheet;
@@ -207,6 +204,10 @@ type
     FStructureModified:Boolean;
     TagList,
     ItemsToDel:TList;
+    procedure UpdateStatusAndBlockName;
+    procedure UpdateStructItems;
+    procedure SkipChanged(Sender:TObject);
+    procedure StructItemTypeChanged(Sender:TObject);
     procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
     function GetStructItemsCount:Integer;
     function GetStructItem(index:Integer):TS7TagItemEditor;
@@ -219,6 +220,7 @@ type
     function AtLeastOneItemIsValid:Boolean;
     function CurBlockType:TTagType;
     procedure BitItemDeleted(Sender:TObject);
+    procedure UpdateFlagDBandVStrucItemName;
   public
     destructor Destroy; override;
     property StructItemsCount:Integer read GetStructItemsCount;
@@ -863,7 +865,7 @@ begin
       end;
     end;
     if Assigned(FOnTypeChange) then
-      FOnTypeChange(cmbItemType);
+      FOnTypeChange(Self);
   end;
 end;
 
@@ -1011,8 +1013,8 @@ begin
   tag.OnDownClickEvent:=btnDownClick;
   tag.OnDelClickEvent:=btnDelClick;
   tag.OnBitsClickEvent:=btnBitsClick;
-  tag.OnTypeChange:=SomethingOnItemChange;
-  tag.OnSkipChange:=SomethingOnItemChange;
+  tag.OnTypeChange:=StructItemTypeChanged;
+  tag.OnSkipChange:=SkipChanged;
   tag.OnDelBitItem:=BitItemDeleted;
   tag.TagScan:=1000;
   tag.TagType:=pttDefault;
@@ -1184,9 +1186,20 @@ begin
   end;
 end;
 
-procedure TfrmS7TagBuilder.SomethingOnItemChange(Sender:TObject);
+procedure TfrmS7TagBuilder.SkipChanged(Sender:TObject);
 begin
+  FStructureModified:=true;
   UpdateStatusAndBlockName;
+end;
+
+procedure TfrmS7TagBuilder.StructItemTypeChanged(Sender:TObject);
+begin
+  if MemoryArea.ItemIndex in [2,3,12] then begin
+    if not FStructureModified then
+      UpdateFlagDBandVStrucItemName;
+    UpdateStatusAndBlockName;
+    FStructureModified:=false;
+  end;
 end;
 
 destructor TfrmS7TagBuilder.Destroy;
@@ -1423,6 +1436,46 @@ begin
   FStructureModified:=true;
 end;
 
+procedure TfrmS7TagBuilder.UpdateFlagDBandVStrucItemName;
+var
+  nome, nome2:String;
+  curtype:TTagType;
+begin
+  if TagList.Count<=0 then exit;
+   
+  if MemoryArea.ItemIndex=2 then
+    nome:='M%s'
+  else begin
+    if MemoryArea.ItemIndex=3 then
+      nome:='DB%d_DB%s'
+    else
+      nome:='V%s'
+  end;
+
+  if optplcblock.Checked then
+    curtype:=CurBlockType
+  else
+    curtype:=TS7TagItemEditor(TagList.Items[0]).TagType;
+
+  case curtype of
+    pttDefault, pttShortInt, pttByte:
+      nome2:='B';
+    pttSmallInt, pttWord:
+      nome2:='W';
+    pttInteger, pttDWord, pttFloat:
+      nome2:='D';
+  end;
+
+  if MemoryArea.ItemIndex=3 then
+    nome:=Format(nome,[spinDBNumber.Value,nome2])
+  else
+    nome:=Format(nome,[nome2])+'%a';
+
+  with TS7TagItemEditor(TagList.Items[0]) do begin
+    TagName:=nome;
+  end;
+end;
+
 procedure TfrmS7TagBuilder.Timer1Timer(Sender: TObject);
 var
   c:Integer;
@@ -1512,11 +1565,11 @@ begin
     case MemoryArea.ItemIndex of
       0, 1: begin
         if MemoryArea.ItemIndex=0 then begin
-          nome:='IB%s';
-          nome2:='I%s_';
+          nome:='IB%a';
+          nome2:='I%a_';
         end else begin
-          nome:='QB%s';
-          nome2:='Q%s_';
+          nome:='QB%a';
+          nome2:='Q%a_';
         end;
 
         with TS7TagItemEditor(TagList.Items[0]) do begin
@@ -1529,14 +1582,14 @@ begin
             end;
         end;
       end;
-      2,3,12: begin
-        //caso complicado
-      end;
+      2,3,12:
+        UpdateFlagDBandVStrucItemName;
+
       4,9, 5,10: begin
         if MemoryArea.ItemIndex in [4,9] then
-          nome:='C%s'
+          nome:='C%a'
         else
-          nome:='T%s';
+          nome:='T%a';
 
         with TS7TagItemEditor(TagList.Items[0]) do begin
           TagName:=nome;
@@ -1544,17 +1597,17 @@ begin
       end;
       6: begin
         with TS7TagItemEditor(TagList.Items[0]) do begin
-          TagName:='SMB%s';
+          TagName:='SMB%a';
         end;
       end;
       7,8,11: begin
         if MemoryArea.ItemIndex=7 then
-          nome:='AIW%s'
+          nome:='AIW%a'
         else begin
           if MemoryArea.ItemIndex=8 then
-            nome:='AQW%s'
+            nome:='AQW%a'
           else
-            nome:='PIW%s';
+            nome:='PIW%a';
         end;
 
         with TS7TagItemEditor(TagList.Items[0]) do begin
