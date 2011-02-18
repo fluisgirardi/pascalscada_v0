@@ -74,7 +74,8 @@ type
     DelTimer:TTimer;
     DelList:TList;
     FOnTypeChange,
-    FOnSkipChange:TNotifyEvent;
+    FOnSkipChange,
+    FOnDelBitItem:TNotifyEvent;
     procedure SetTagName(newName:String);
     procedure SetTagType(newType:TTagType);
     procedure SetTagScan(newScan:TRefreshTime);
@@ -122,6 +123,7 @@ type
     property OnBitsClickEvent:TNotifyEvent read FBitsClickEvent write FBitsClickEvent;
     property OnTypeChange:TNotifyEvent read FOnTypeChange write FOnTypeChange;
     property OnSkipChange:TNotifyEvent read FOnSkipChange write FOnSkipChange;
+    property OnDelBitItem:TNotifyEvent read FOnDelBitItem write FOnDelBitItem;
   end;
 
   { TfrmS7TagBuilder }
@@ -202,6 +204,7 @@ type
   private
     OldPage:TTabSheet;
     FItemId:Integer;
+    FStructureModified:Boolean;
     TagList,
     ItemsToDel:TList;
     procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
@@ -215,6 +218,7 @@ type
     function GetTheLastItemOffset:Integer;
     function AtLeastOneItemIsValid:Boolean;
     function CurBlockType:TTagType;
+    procedure BitItemDeleted(Sender:TObject);
   public
     destructor Destroy; override;
     property StructItemsCount:Integer read GetStructItemsCount;
@@ -620,7 +624,7 @@ end;
 procedure TS7TagItemEditor.EnableSwapWords(ToEnable:Boolean);
 begin
   optSwapWords.Enabled:=ToEnable;
-  optSwapWords.Checked:=ToEnable;  
+  optSwapWords.Checked:=ToEnable;
 end;
 
 function TS7TagItemEditor.GetBitCount:Integer;
@@ -657,6 +661,9 @@ begin
     DelList.Delete(c);
   end;
   DelTimer.Enabled:=false;
+
+  if Assigned(FOnDelBitItem) then
+    FOnDelBitItem(Self);
 end;
 
 procedure TS7TagItemEditor.DelBit(index:Integer);
@@ -753,7 +760,7 @@ procedure TS7TagItemEditor.SetSkipTag(Skip:Boolean);
 begin
   FSkip:=Skip;
   optSkip.Checked:=FSkip;
-  edtItemName.Enabled:=not FSkip;  
+  edtItemName.Enabled:=not FSkip;
 end;
 
 procedure TS7TagItemEditor.edtItemNameExit(Sender:TObject);
@@ -970,6 +977,7 @@ begin
   PageControl1.ActivePageIndex:=0;
   TagList:=TList.Create;
   ItemsToDel:=TList.Create;
+  FStructureModified:=false;
 end;
 
 procedure TfrmS7TagBuilder.FormShow(Sender: TObject);
@@ -1005,6 +1013,7 @@ begin
   tag.OnBitsClickEvent:=btnBitsClick;
   tag.OnTypeChange:=SomethingOnItemChange;
   tag.OnSkipChange:=SomethingOnItemChange;
+  tag.OnDelBitItem:=BitItemDeleted;
   tag.TagScan:=1000;
   tag.TagType:=pttDefault;
   tag.SwapBytes:=false;
@@ -1037,6 +1046,7 @@ begin
     inc(FItemId);
   tag.TagName:='StructItem'+IntToStr(FItemId);
   UpdateStatusAndBlockName;
+  FStructureModified:=true;
 end;
 
 procedure TfrmS7TagBuilder.btnUpClick(Sender: TObject);
@@ -1049,6 +1059,7 @@ begin
 
   idx := TagList.IndexOf(Sender);
   if idx>0 then begin
+    FStructureModified:=true;
     prior:=TS7TagItemEditor(TagList.Items[idx-1]);
 
     priortop:=prior.Top;
@@ -1073,6 +1084,7 @@ begin
 
   idx := TagList.IndexOf(Sender);
   if (idx<>-1) and (idx<(TagList.Count-1)) then begin
+    FStructureModified:=true;  
     next:=TS7TagItemEditor(TagList.Items[idx+1]);
 
     nexttop:=next.Top;
@@ -1090,7 +1102,8 @@ end;
 procedure TfrmS7TagBuilder.btnDelClick(Sender: TObject);
 begin
   if ItemsToDel.IndexOf(Sender)=-1 then
-    if MessageDlg('Deseja mesmo remover este item?', mtConfirmation,[mbYes,mbNo],0)=mrYes then begin
+    if MessageDlg('Remove the structure item called "'+TS7TagItemEditor(Sender).TagName+'"?', mtConfirmation,[mbYes,mbNo],0)=mrYes then begin
+      FStructureModified:=true;
       ItemsToDel.Add(Sender);
       Timer1.Enabled:=true;
     end;
@@ -1145,6 +1158,7 @@ begin
   frmbit:=TfrmBitMapper.Create(Self);
   try
     if frmbit.ShowModal=mrOk then begin
+      FStructureModified:=true;
       startbit:=31-frmbit.StringGrid1.Selection.Right;
       endbit:=31-frmbit.StringGrid1.Selection.Left;
       curbit:=startbit;
@@ -1209,6 +1223,7 @@ begin
       end;
     end;
   end;
+  FStructureModified:=true;
 end;
 
 function TfrmS7TagBuilder.GetStructItemsCount:Integer;
@@ -1403,6 +1418,11 @@ begin
   end;
 end;
 
+procedure TfrmS7TagBuilder.BitItemDeleted(Sender:TObject);
+begin
+  FStructureModified:=true;
+end;
+
 procedure TfrmS7TagBuilder.Timer1Timer(Sender: TObject);
 var
   c:Integer;
@@ -1414,6 +1434,7 @@ begin
   end;
   Timer1.Enabled:=false;
   UpdateStatusAndBlockName;
+  FStructureModified:=(TagList.Count<>0);
 end;
 
 procedure TfrmS7TagBuilder.TabSheet1Show(Sender: TObject);
@@ -1453,7 +1474,7 @@ var
 begin
   toenablescan := optplctagnumber.Checked;
   toenabletype:=(not optplcblock.Checked) and (MemoryArea.ItemIndex in [2,3,12]);
-  toenableSwap:=(not optplcblock.Checked);  
+  toenableSwap:=(not optplcblock.Checked);
 
   for c:=0 to TagList.Count-1 do
     with TS7TagItemEditor(TagList.Items[c]) do begin
@@ -1474,7 +1495,77 @@ end;
 
 
 procedure TfrmS7TagBuilder.btnNextClick(Sender: TObject);
+var
+  curitem:Integer;
+  nome,nome2:String;
 begin
+  if (FStructureModified=false) and
+     (MessageDlg('Do you want initialize the structure?', mtConfirmation, [mbYes,mbNo],0)=mrYes) then begin
+
+    for curitem:=TagList.Count-1 downto 0 do
+      TS7TagItemEditor(TagList.Items[curitem]).Destroy;
+
+    TagList.Clear;
+
+    Button1Click(Sender);
+
+    case MemoryArea.ItemIndex of
+      0, 1: begin
+        if MemoryArea.ItemIndex=0 then begin
+          nome:='IB%s';
+          nome2:='I%s_';
+        end else begin
+          nome:='QB%s';
+          nome2:='Q%s_';
+        end;
+
+        with TS7TagItemEditor(TagList.Items[0]) do begin
+          TagName:=nome;
+          for curitem:=0 to 7 do
+            with AddBit do begin
+              TagName:=nome2+IntToStr(curitem);
+              StartBit:=curitem;
+              EndBit:=curitem;
+            end;
+        end;
+      end;
+      2,3,12: begin
+        //caso complicado
+      end;
+      4,9, 5,10: begin
+        if MemoryArea.ItemIndex in [4,9] then
+          nome:='C%s'
+        else
+          nome:='T%s';
+
+        with TS7TagItemEditor(TagList.Items[0]) do begin
+          TagName:=nome;
+        end;
+      end;
+      6: begin
+        with TS7TagItemEditor(TagList.Items[0]) do begin
+          TagName:='SMB%s';
+        end;
+      end;
+      7,8,11: begin
+        if MemoryArea.ItemIndex=7 then
+          nome:='AIW%s'
+        else begin
+          if MemoryArea.ItemIndex=8 then
+            nome:='AQW%s'
+          else
+            nome:='PIW%s';
+        end;
+
+        with TS7TagItemEditor(TagList.Items[0]) do begin
+          TagName:=nome;
+        end;
+      end;
+    end;
+
+    FStructureModified:=false;
+
+  end;
   PageControl1.ActivePage:=TabSheet4;
 end;
 
