@@ -110,7 +110,7 @@ type
     //: Armazena o ID (número único) esses pedidos.
     FScanReadID, FScanWriteID, FReadID, FWriteID:Cardinal;
     //: Armazena a evento usado para parar as threads do driver de protocolo.
-    FCritical:TMultiReadExclusiveWriteSynchronizer;
+    FCritical:TCriticalSection;
     //: Forca a suspensão das threads.
     FPause:TCrossEvent;
     //: Armazena a seção crítica que protege areas comuns a muitas threads.
@@ -337,7 +337,7 @@ begin
 
   FProtocolReady:=true;
 
-  FCritical := TMultiReadExclusiveWriteSynchronizer.Create;
+  FCritical := TCriticalSection.Create;
 
   FPendingActionsCS := TCriticalSection.Create;
 
@@ -479,7 +479,7 @@ procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
 begin
   try
     FPause.ResetEvent;
-    FCritical.Beginwrite;
+    FCritical.Enter;
     //se for a mesma porta cai fora...
     if CommPort=PCommPort then exit;
 
@@ -494,7 +494,7 @@ begin
     end;
     PCommPort := CommPort;
   finally
-    FCritical.Endwrite;
+    FCritical.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -543,10 +543,10 @@ begin
 
   try
     FPause.ResetEvent;
-    FCritical.Beginwrite;
+    FCritical.Enter;
     DoAddTag(TagObj,false);
   finally
-    FCritical.Endwrite;
+    FCritical.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -555,10 +555,10 @@ procedure TProtocolDriver.RemoveTag(TagObj:TTag);
 begin
   try
     FPause.ResetEvent;
-    FCritical.Beginwrite;
+    FCritical.Enter;
     DoDelTag(TagObj);
   finally
-    FCritical.Endwrite;
+    FCritical.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -571,34 +571,34 @@ end;
 
 function TProtocolDriver.GetTagCount;
 begin
-  FCritical.Beginread;
+  FCritical.Enter;
   try
   Result := Length(PTags);
   finally
-    FCritical.Endread;
+    FCritical.Leave;
   end;
 end;
 
 function TProtocolDriver.GetTag(index:integer):TTag;
 begin
-  FCritical.Beginread;
+  FCritical.Enter;
   try
     DoExceptionIndexOut(index);
     result:=PTags[index];
   finally
-    FCritical.Endread;
+    FCritical.Leave;
   end;
 end;
 
 function TProtocolDriver.GetTagName(index:integer):String;
 begin
   Result:='';
-  FCritical.Beginread;
+  FCritical.Enter;
   try
     DoExceptionIndexOut(index);
     result:=PTags[index].Name;
   finally
-    FCritical.Endread;
+    FCritical.Leave;
   end;
 
 end;
@@ -608,7 +608,7 @@ var
   c:Integer;
 begin
   Result := nil;
-  FCritical.Beginread;
+  FCritical.Enter;
   try
     for c:=0 to High(PTags) do
       if PTags[c].Name = Nome then begin
@@ -616,7 +616,7 @@ begin
         break;
       end;
   finally
-    FCritical.Endread;
+    FCritical.Leave;
   end;
 end;
 
@@ -625,7 +625,7 @@ var
   c:integer;
 begin
   Result := false;
-  FCritical.Beginread;
+  FCritical.Enter;
   try
     for c:=0 to High(PTags) do
       if TagObj=PTags[c] then begin
@@ -633,7 +633,7 @@ begin
         break;
       end;
   finally
-    FCritical.Endread;
+    FCritical.Leave;
   end;
 end;
 
@@ -719,12 +719,12 @@ var
 begin
   try
     FPause.ResetEvent;
-    FCritical.Beginwrite;
+    FCritical.Enter;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcRead,res,tagrec.RealOffset);
   finally
-    FCritical.Endwrite;
+    FCritical.Leave;
     FPause.SetEvent;
     SetLength(Values,0);
   end;
@@ -736,12 +736,12 @@ var
 begin
   try
     FPause.ResetEvent;
-    FCritical.Beginwrite;
+    FCritical.Enter;
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcWrite,res,tagrec.RealOffset);
   finally
-    FCritical.Endwrite;
+    FCritical.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -778,10 +778,10 @@ procedure TProtocolDriver.SafeScanRead(Sender:TObject; var NeedSleep:Integer);
 begin
    try
       FPause.WaitFor($FFFFFFFF);
-      FCritical.Beginread;
+      FCritical.Enter;
       DoScanRead(Sender, NeedSleep);
    finally
-      FCritical.Endread;
+      FCritical.Leave;
    end;
 end;
 
@@ -789,10 +789,10 @@ function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArra
 begin
    try
       FPause.ResetEvent;
-      FCritical.Beginwrite;
+      FCritical.Enter;
       Result := DoWrite(TagRec,values,false)
    finally
-      FCritical.Endwrite;
+      FCritical.Leave;
       FPause.SetEvent;
    end;
 end;
@@ -800,12 +800,12 @@ end;
 procedure TProtocolDriver.SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
 begin
    try
-      //FPause.ResetEvent;
-      FCritical.Beginread;
+      FPause.ResetEvent;
+      FCritical.Enter;
       DoGetValue(TagRec,values);
    finally
-      FCritical.Endread;
-      //FPause.SetEvent;
+      FCritical.Leave;
+      FPause.SetEvent;
    end;
 end;
 
@@ -823,8 +823,8 @@ begin
   try
     Result:=0;
     valueSet:=-1;
-    //FPause.ResetEvent;
-    FCritical.Beginread;
+    FPause.ResetEvent;
+    FCritical.Enter;
 
     if (PCommPort=nil) or (not PCommPort.ReallyActive) then begin
       Result:=50; //forca espera de 50ms
@@ -868,9 +868,9 @@ begin
     end;
 
   finally
-    FCritical.Endread;
+    FCritical.Leave;
     if doneOne then Result:=0;
-    //FPause.SetEvent;
+    FPause.SetEvent;
   end;
 end;
 
@@ -898,10 +898,10 @@ procedure TProtocolDriver.DoPortOpened(Sender: TObject);
 begin
   try
      FPause.ResetEvent;
-     FCritical.Beginwrite;
+     FCritical.Enter;
      PortOpened(Sender);
   finally
-     FCritical.Endwrite;
+     FCritical.Leave;
      FPause.SetEvent;
   end;
 end;
@@ -910,10 +910,10 @@ procedure TProtocolDriver.DoPortClosed(Sender: TObject);
 begin
   try
      FPause.ResetEvent;
-     FCritical.Beginwrite;
+     FCritical.Enter;
      PortClosed(Sender);
   finally
-     FCritical.Endwrite;
+     FCritical.Leave;
      FPause.SetEvent;
   end;
 end;
@@ -922,10 +922,10 @@ procedure TProtocolDriver.DoPortDisconnected(Sender: TObject);
 begin
   try
      FPause.ResetEvent;
-     FCritical.Beginwrite;
+     FCritical.Enter;
      PortDisconnected(Sender);
   finally
-     FCritical.Endwrite;
+     FCritical.Leave;
      FPause.SetEvent;
   end;
 end;
