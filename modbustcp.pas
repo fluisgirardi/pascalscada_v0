@@ -15,7 +15,7 @@ unit ModBusTCP;
 interface
 
 uses
-  ModBusDriver, Tag, commtypes;
+  ModBusDriver, Tag, commtypes, Classes;
 
 type
   {:
@@ -30,6 +30,8 @@ type
   protected
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;
     function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; override;
+  public
+    constructor Create(AOwner: TComponent); override;
   published
     property ReadSomethingAlways;
     property OutputMaxHole;
@@ -40,6 +42,12 @@ type
 implementation
 
 uses Math, hsutils, PLCMemoryManager, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+
+constructor TModBusTCPDriver.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  PInternalDelayBetweenCmds:=0;
+end;
 
 function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var

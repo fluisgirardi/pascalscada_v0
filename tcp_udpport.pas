@@ -75,7 +75,7 @@ type
             estado da conexão.)
      @returns(@true caso esteja conectado.)
     }
-    function  CheckConnection(var CommResult:TIOResult):Boolean; virtual;
+    function  CheckConnection(var CommResult:TIOResult; incRetries:Boolean):Boolean; virtual;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -189,6 +189,7 @@ procedure TTCP_UDPPort.Read(Packet:PIOPacket);
 var
   lidos:Integer;
   tentativas:Cardinal;
+  incretries:Boolean;
 begin
   tentativas := 0;
   lidos := 0;
@@ -205,8 +206,8 @@ begin
     end;
 
     if lidos<0 then begin
-      if CheckConnection(Packet^.ReadIOResult) then begin
-        inc(tentativas);
+      if CheckConnection(Packet^.ReadIOResult, incretries) then begin
+        if incretries then inc(tentativas);
         continue;
       end else
         break;
@@ -231,6 +232,7 @@ procedure TTCP_UDPPort.Write(Packet:PIOPacket);
 var
   escritos:Integer;
   tentativas:Cardinal;
+  incretries:Boolean;
 begin
   tentativas := 0;
   escritos := 0;
@@ -247,8 +249,8 @@ begin
     end;
 
     if escritos<0 then begin
-      if CheckConnection(Packet^.WriteIOResult) then begin
-        inc(tentativas);
+      if CheckConnection(Packet^.WriteIOResult, incretries) then begin
+        if incretries then inc(tentativas);
         continue;
       end else
         break;
@@ -412,8 +414,9 @@ begin
   Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
 end;
 
-function TTCP_UDPPort.CheckConnection(var CommResult:TIOResult):Boolean;
+function TTCP_UDPPort.CheckConnection(var CommResult:TIOResult; incRetries:Boolean):Boolean;
 begin
+  incRetries:=true;
   //CommResult informa o resultado da IO
   //Result informa se a acao deve ser retomada.
   {$IF defined(WIN32) or defined(WIN64)}
@@ -447,7 +450,10 @@ begin
       Result := true;
 
     WSAEINPROGRESS,    
-    WSAEINTR,
+    WSAEINTR: begin
+      Result:=true;
+      incRetries:=false;
+    end;
     WSAETIMEDOUT: begin
       if PActive then DoCommPortDisconected;
       PActive:=false;
@@ -463,7 +469,6 @@ begin
   end;
   {$ELSE}
   case socketerror of
-    EsockEINTR,
     EsockEINVAL:
       Result:= true;
 
@@ -496,7 +501,11 @@ begin
       Result:=false;
     end;
 
-    ESysEAGAIN,
+    EsockEINTR,
+    ESysEAGAIN: begin
+      Result:=true;
+      incRetries:=false;
+    end;
     ESysETIMEDOUT: begin
       if PActive then DoCommPortDisconected;
       PActive:=false;

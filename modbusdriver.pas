@@ -113,6 +113,7 @@ type
     POutputMaxHole:Cardinal;
     PInputMaxHole:Cardinal;
     PRegistersMaxHole:Cardinal;
+    PInternalDelayBetweenCmds:Cardinal;
     PModbusPLC:array of TModBusPLC;
     function  GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:Integer):Boolean;
     procedure SetOutputMaxHole(v:Cardinal);
@@ -184,6 +185,7 @@ begin
   PInputMaxHole := 50;
   PRegistersMaxHole := 10;
   PReadSomethingAlways := true;
+  PInternalDelayBetweenCmds:=5;
   SetLength(PModbusPLC,0);
 end;
 
@@ -830,7 +832,7 @@ begin
     pkg := EncodePkg(tagrec,values,rl);
     if PCommPort<>nil then begin
 
-      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult);
+      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,false,nil,@IOResult);
 
       if (res<>0) then
         Result := DecodePkg(IOResult,tempValues);
@@ -855,7 +857,7 @@ begin
   try
     pkg := EncodePkg(tagrec,nil,rl);
     if PCommPort<>nil then begin
-      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,5,CommPortCallBack,false,nil,@IOResult);
+      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,false,nil,@IOResult);
       if res<>0 then
         Result := DecodePkg(IOResult,values);
     end else
