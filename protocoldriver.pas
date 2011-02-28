@@ -116,9 +116,6 @@ type
     //: Armazena a seção crítica que protege areas comuns a muitas threads.
     PCallersCS:TCriticalSection;
 
-    //: Seção crítica de ações pendentes.
-    FPendingActionsCS:TCriticalSection;
-
     //: Array de ações pendentes.
     FPendingActions:TArrayOfObject;
 
@@ -130,25 +127,6 @@ type
     procedure PortOpened(Sender: TObject); virtual;
     procedure PortClosed(Sender: TObject); virtual;
     procedure PortDisconnected(Sender: TObject); virtual;
-
-    {:
-    Cancela ações pendentes do driver que possam demorar.
-    Chamado quando o driver está sendo destruido.
-    }
-    procedure CancelPendingActions; virtual;
-
-    {:
-    Adiciona uma ação a lista de espera do driver.
-    @param(Obj TObject. Objeto que está esperando por alguma coisa acontecer.)
-    }
-    procedure AddPendingAction(const Obj:TObject); virtual;
-
-    {:
-    Remove uma ação da lista de espera do driver.
-    @param(Obj TObject. Objeto que não está mais esperando por alguma
-           coisa acontecer.)
-    }
-    function RemovePendingAction(const Obj:TObject):boolean; virtual;
 
     //: Configura a porta de comunicação que será usada pelo driver.
     procedure SetCommPort(CommPort:TCommPortDriver);
@@ -339,8 +317,6 @@ begin
 
   FCritical := TCriticalSection.Create;
 
-  FPendingActionsCS := TCriticalSection.Create;
-
   FPause := TCrossEvent.Create(nil,true,true,'');
 
   PCallersCS := TCriticalSection.Create;
@@ -377,7 +353,6 @@ destructor TProtocolDriver.Destroy;
 var
   c:Integer;
 begin
-  CancelPendingActions;
   PScanReadThread.Destroy;
   PScanWriteThread.Destroy;
 
@@ -391,8 +366,6 @@ begin
 
   FCritical.Destroy;
 
-  FPendingActionsCS.Destroy;
-
   FPause.Destroy;
   
   SetLength(PTags,0);
@@ -401,78 +374,9 @@ begin
   inherited Destroy;
 end;
 
-procedure TProtocolDriver.CancelPendingActions;
-var
-  c:Integer;
-begin
-  FPendingActionsCS.Enter;
-  try
-    for c:=0 to High(FPendingActions) do begin
-      if ((FPendingActions[c]<>nil) and (FPendingActions[c] is TCrossEvent)) then
-        TCrossEvent(FPendingActions[c]).Destroy
-      else begin
-        if ((FPendingActions[c]<>nil) and (FPendingActions[c] is TObject)) then
-          TObject(FPendingActions[c]).Destroy;
-      end;
-    end;
-  finally
-    FPendingActionsCS.Leave;
-  end;
-end;
-
 procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
 begin
   MessageDlg(SWithoutTagBuilder, mtError,[mbOK],0);
-end;
-
-procedure TProtocolDriver.AddPendingAction(const Obj:TObject);
-var
-  c,h:Integer;
-  found:Boolean;
-begin
-  FPendingActionsCS.Enter;
-  try
-    found := false;
-    for c:=0 to High(FPendingActions) do
-      if (FPendingActions[c]=Obj) then begin
-        found:=true;
-        break;
-      end;
-
-    if not found then begin
-      h := Length(FPendingActions);
-      SetLength(FPendingActions,h+1);
-      FPendingActions[h]:=Obj;
-    end;
-  finally
-    FPendingActionsCS.Leave;
-  end;
-end;
-
-function  TProtocolDriver.RemovePendingAction(const Obj:TObject):boolean;
-var
-  c,h:Integer;
-  found:Boolean;
-begin
-  FPendingActionsCS.Enter;
-  try
-    Result:=false;
-    found := false;
-    for c:=0 to High(FPendingActions) do
-      if (FPendingActions[c]=Obj) then begin
-        found:=true;
-        break;
-      end;
-
-    if found then begin
-      Result := true;
-      h := High(FPendingActions);
-      FPendingActions[c]:=FPendingActions[h];
-      SetLength(FPendingActions,h);
-    end;
-  finally
-    FPendingActionsCS.Leave;
-  end;
 end;
 
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
@@ -571,34 +475,34 @@ end;
 
 function TProtocolDriver.GetTagCount;
 begin
-  FCritical.Enter;
+  //FCritical.Enter;
   try
-  Result := Length(PTags);
+    Result := Length(PTags);
   finally
-    FCritical.Leave;
+    //FCritical.Leave;
   end;
 end;
 
 function TProtocolDriver.GetTag(index:integer):TTag;
 begin
-  FCritical.Enter;
+  //FCritical.Enter;
   try
     DoExceptionIndexOut(index);
     result:=PTags[index];
   finally
-    FCritical.Leave;
+    //FCritical.Leave;
   end;
 end;
 
 function TProtocolDriver.GetTagName(index:integer):String;
 begin
   Result:='';
-  FCritical.Enter;
+  //FCritical.Enter;
   try
     DoExceptionIndexOut(index);
     result:=PTags[index].Name;
   finally
-    FCritical.Leave;
+    //FCritical.Leave;
   end;
 
 end;
@@ -608,7 +512,7 @@ var
   c:Integer;
 begin
   Result := nil;
-  FCritical.Enter;
+  //FCritical.Enter;
   try
     for c:=0 to High(PTags) do
       if PTags[c].Name = Nome then begin
@@ -616,7 +520,7 @@ begin
         break;
       end;
   finally
-    FCritical.Leave;
+    //FCritical.Leave;
   end;
 end;
 

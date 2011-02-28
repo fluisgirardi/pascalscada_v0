@@ -121,8 +121,6 @@ type
     procedure SetRegisterMaxHole(v:Cardinal);
     procedure BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
 
-    procedure CancelPendingActions; override;
-
     //: Cria um pacote modbus
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; virtual;
     //: Extrai os dados de um pacote modbus
@@ -903,11 +901,6 @@ begin
 
   for plc:=0 to High(PModbusPLC) do
     PModbusPLC[plc].Registers.MaxHole := v;
-end;
-
-procedure TModBusDriver.CancelPendingActions;
-begin
-  FReadEvent.SetEvent;
 end;
 
 procedure TModBusDriver.BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
