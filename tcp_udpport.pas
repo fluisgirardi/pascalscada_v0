@@ -75,7 +75,7 @@ type
             estado da conexão.)
      @returns(@true caso esteja conectado.)
     }
-    function  CheckConnection(var CommResult:TIOResult; incRetries:Boolean):Boolean; virtual;
+    function  CheckConnection(var CommResult:TIOResult; var incRetries:Boolean):Boolean; virtual;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -414,7 +414,7 @@ begin
   Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
 end;
 
-function TTCP_UDPPort.CheckConnection(var CommResult:TIOResult; incRetries:Boolean):Boolean;
+function TTCP_UDPPort.CheckConnection(var CommResult:TIOResult; var incRetries:Boolean):Boolean;
 begin
   incRetries:=true;
   //CommResult informa o resultado da IO
