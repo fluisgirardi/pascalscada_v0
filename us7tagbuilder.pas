@@ -216,7 +216,6 @@ type
     function GetRealEndOffset:Integer;
     function GetStartOffset:Integer;
     function GetEndOffset:Integer;
-    function GetTheLastItemOffset:Integer;
     function AtLeastOneItemIsValid:Boolean;
     procedure BitItemDeleted(Sender:TObject);
     procedure UpdateFlagDBandVStrucItemName;
@@ -224,6 +223,7 @@ type
     destructor Destroy; override;
     function GetTagType:Integer;
     function CurBlockType:TTagType;
+    function GetTheLastItemOffset:Integer;
     property StructItemsCount:Integer read GetStructItemsCount;
     property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
     property StructureSizeInBytes:Integer read GetStructureSizeInBytes;

@@ -167,11 +167,6 @@ var
   item:TPLCNumber;
   bititem:TTagBit;
 
-  function GetName(namepattern:String):String;
-  begin
-    Result:='';
-  end;
-
   function GetCurWordSize:Integer;
   var
     ttype:TTagType;
@@ -209,6 +204,41 @@ var
       Result:=IntToStr(value);
   end;
 
+  function GetName(namepattern:String):String;
+  var
+    has_atleastonereplacement:Boolean;
+  begin
+    {
+    %a  - Endereço do item
+    %i  - Numero do item comecando de 1
+    %e  - Numero do item comecando de 0
+    %0a - Endereço do item preenchido com zeros.
+    %0i - Numero do item comecando de 1, preenchido com zeros
+    %0e - Numero do item comecando de 0, preenchido com zeros
+    }
+    has_atleastonereplacement:=(Pos('%a',namepattern)<>0) or
+                               (Pos('%i',namepattern)<>0) or
+                               (Pos('%e',namepattern)<>0) or
+                               (Pos('%0a',namepattern)<>0) or
+                               (Pos('%0i',namepattern)<>0) or
+                               (Pos('%0e',namepattern)<>0);
+    if not has_atleastonereplacement then
+      namepattern:=namepattern+'%i';
+
+    Result:=namepattern;
+    if frmS7tb.MemoryArea.ItemIndex in [4,9,5,10] then begin
+      Result:= StringReplace(Result,'%a', IntToStr(curTCaddress),[rfReplaceAll]);
+      Result:= StringReplace(Result,'%0a',GetValueWithZeros(curTCaddress, frmS7tb.GetTheLastItemOffset div 2, true),[rfReplaceAll]);
+    end else begin
+      Result:= StringReplace(Result,'%a',IntToStr(curaddress),[rfReplaceAll]);
+      Result:= StringReplace(Result,'%0a',GetValueWithZeros(curaddress, frmS7tb.RealEndOffset, true),[rfReplaceAll]);
+    end;
+    Result:= StringReplace(Result,'%i',IntToStr(curitem),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%0i',GetValueWithZeros(curitem, frmS7tb.spinNumItens.Value, true),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%e',IntToStr(curitem-1),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%0e',GetValueWithZeros(curitem-1, frmS7tb.spinNumItens.Value-1, true),[rfReplaceAll]);
+  end;
+
 begin
   { o que está faltando??
     NO FORMULARIO:
@@ -217,9 +247,9 @@ begin
     SUBSTITUIÇÕES:
 
     %a  - Endereço do item
-    %0a - Endereço do item preenchido com zeros.
     %i  - Numero do item comecando de 1
     %e  - Numero do item comecando de 0
+    %0a - Endereço do item preenchido com zeros.
     %0i - Numero do item comecando de 1, preenchido com zeros
     %0e - Numero do item comecando de 0, preenchido com zeros
 
@@ -288,17 +318,19 @@ begin
 
               end else begin
                 if optplcblock.Checked then begin
+                  TPLCBlock(block).Size:=curidx+1;
                   item:=TPLCBlockElement(CreateProc(TPLCBlockElement));
-                  TPLCBlockElement(item).Index:=curidx;
                   TPLCBlockElement(item).PLCBlock:=block;
+                  TPLCBlockElement(item).Index:=curidx;
                 end else begin
                   item:=TPLCStructItem(CreateProc(TPLCStructItem));
                   with TPLCStructItem(item) do begin
+                    PLCBlock:=TPLCStruct(block);
+                    TPLCStruct(block).Size:=curidx+GetCurWordSize;
                     Index:=curidx;
                     TagType:=StructItem[curstructitem].TagType;
                     SwapBytes:=StructItem[curstructitem].SwapBytes;
                     SwapWords:=StructItem[curstructitem].SwapWords;
-                    PLCBlock:=TPLCStruct(block);
                   end;
                 end;
               end;
@@ -311,6 +343,7 @@ begin
                 bititem.EndBit:=StructItem[curstructitem].Bit[curbit].EndBit;
                 bititem.StartBit:=StructItem[curstructitem].Bit[curbit].StartBit;
                 bititem.Name:=GetName(StructItem[curstructitem].Bit[curbit].TagName);
+                bititem.PLCTag:=item;
                 InsertHook(bititem);
               end;
             end;
