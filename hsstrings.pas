@@ -80,6 +80,7 @@ resourcestring
   SScanableNotSupported = 'Interface IScanableTagInterface não é suportada!';
   SCheckAtLeastOneVariable = 'Marque pelo menos uma variável!';
   STheOwnerMustBeAProtocolDriver = 'O componente dono da thread de atualização precisa ser um driver de protocolo!';
+  SYouMustHaveAtLeastOneStructureItem = 'You must have at least one structure item!';
 
 implementation
 

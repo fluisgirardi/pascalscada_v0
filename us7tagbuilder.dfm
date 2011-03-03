@@ -27,13 +27,6 @@ object frmS7TagBuilder: TfrmS7TagBuilder
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    object Label24: TLabel
-      Left = 296
-      Top = 8
-      Width = 38
-      Height = 13
-      Caption = 'Label24'
-    end
     object PageControl1: TPageControl
       Left = 0
       Top = 0

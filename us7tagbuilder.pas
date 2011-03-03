@@ -157,7 +157,6 @@ type
     spinDBNumber: TSpinEdit;
     lblDBNumber: TLabel;
     ScrollBox1: TScrollBox;
-    Label24: TLabel;
     lblBlockType: TLabel;
     BlockType: TComboBox;
     Button1: TButton;
@@ -178,6 +177,7 @@ type
     btnNext: TButton;
     btnFinish: TButton;
     lblBlockName: TLabel;
+    procedure btnFinishClick(Sender: TObject);
     procedure MemoryAreaClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -218,11 +218,12 @@ type
     function GetEndOffset:Integer;
     function GetTheLastItemOffset:Integer;
     function AtLeastOneItemIsValid:Boolean;
-    function CurBlockType:TTagType;
     procedure BitItemDeleted(Sender:TObject);
     procedure UpdateFlagDBandVStrucItemName;
   public
     destructor Destroy; override;
+    function GetTagType:Integer;
+    function CurBlockType:TTagType;
     property StructItemsCount:Integer read GetStructItemsCount;
     property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
     property StructureSizeInBytes:Integer read GetStructureSizeInBytes;
@@ -237,7 +238,7 @@ var
 
 implementation
 
-uses strutils, Math, ubitmapper;
+uses strutils, Math, ubitmapper, hsstrings;
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
@@ -974,6 +975,14 @@ begin
   UpdateStructItems;
 end;
 
+procedure TfrmS7TagBuilder.btnFinishClick(Sender: TObject);
+begin
+  if (TagList.Count=0) or (not AtLeastOneItemIsValid) then
+    raise Exception.Create(SYouMustHaveAtLeastOneStructureItem);
+  if Trim(BlockName.Text)='' then
+    raise Exception.Create(SInvalidBlockName);
+end;
+
 procedure TfrmS7TagBuilder.FormCreate(Sender: TObject);
 begin
   PageControl1.ActivePageIndex:=0;
@@ -985,6 +994,7 @@ end;
 procedure TfrmS7TagBuilder.FormShow(Sender: TObject);
 begin
   MemoryAreaClick(Sender);
+  optplcblockClick(Sender);
 end;
 
 procedure TfrmS7TagBuilder.FormClose(Sender: TObject;
@@ -1216,6 +1226,31 @@ begin
   TagList.Destroy;
   ItemsToDel.Destroy;
   inherited Destroy;
+end;
+
+function TfrmS7TagBuilder.GetTagType:Integer;
+begin
+{
+0  Digital Inputs, S7 200/300/400/1200        Inputs, Entradas)                     @cell( 1
+1  Digital Outputs, S7 200/300/400/1200       Outputs, Saidas)                      @cell( 2
+2  Flags, M's, S7 200/300/400/1200            Flags ou M's)                         @cell( 3
+3  DB's, S7 300/400/1200                      DB e VM no S7-200 )                   @cell( 4
+4  Counter, S7 300/400/1200                   Counter, S7 300/400)                  @cell( 5
+5  Timer, S7 300/400/1200                     Timer, S7 300/400)                    @cell( 6
+6  Special Memory, SM, S7-200                 Special Memory, SM, S7-200)           @cell( 7
+7  Analog Input, S7-200                       Entrada analógica, S7-200)            @cell( 8
+8  Analog output, S7-200                      Saida analógica, S7-200)              @cell( 9
+9  Counter, S7-200                            Counter, S7-200)                      @cell(10
+10 Timer, S7-200                              Timer, S7-200)                        @cell(11
+11 Analog Input (PIW), S7-300/400/1200        Entrada analógica (PIW), S7 300/400)  @cell(12
+12 VB, VW, VD, S7-200
+}
+  Result:=0;
+  if MemoryArea.ItemIndex in [0..11] then
+    Result:=MemoryArea.ItemIndex+1
+  else begin
+    if MemoryArea.ItemIndex=12 then Result:=4;
+  end;
 end;
 
 procedure TfrmS7TagBuilder.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
