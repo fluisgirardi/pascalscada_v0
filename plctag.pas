@@ -214,7 +214,9 @@ type
     //: @seealso(TTag.CommWritesOK)
     property CommWritesOk nodefault;
     //: @seealso(TTag.PLCHack)
-    property PLCHack write SetPLCHack nodefault;
+    property PLCHack write SetPLCHack stored false;
+    //: @seealso(TTag.PLCRack)
+    property PLCRack write SetPLCHack nodefault;
     //: @seealso(TTag.PLCSlot)
     property PLCSlot write SetPLCSlot nodefault;
     //: @seealso(TTag.PLCStation)
@@ -232,7 +234,9 @@ type
     //: @seealso(TTag.Retries)
     property Retries write PRetries default 1;
     //: @seealso(TTag.RefreshTime)
-    property RefreshTime write SetRefreshTime default 1000;
+    property RefreshTime write SetRefreshTime stored false;
+    //: @seealso(TTag.ScanRate)
+    property ScanRate write SetRefreshTime default 1000;
     //: @seealso(TTag.Size)
     property Size nodefault;
     //: @seealso(TTag.LongAddress)

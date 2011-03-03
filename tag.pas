@@ -275,7 +275,9 @@ type
     //: Informa o total de escritas com sucesso do tag.
     property CommWritesOk:Cardinal read PCommWriteOk;
     //: Hack do equipamento que contem a memória que está sendo mapeada, se aplicável.
-    property PLCHack:Cardinal read PHack;
+    property PLCHack:Cardinal read PHack stored false;
+    //: Rack do equipamento que contem a memória que está sendo mapeada, se aplicável.
+    property PLCRack:Cardinal read PHack;
     //: Slot do equipamento que contem a memória que está sendo mapeada, se aplicável.
     property PLCSlot:Cardinal read PSlot;
     //: Endereço da estação que contem a memória que está sendo mapeada, se aplicável.
@@ -293,7 +295,9 @@ type
     //: Número tentivas de leitura/escrita dessa memória.
     property Retries:Cardinal read PRetries;
     //: Tempo de varredura (atualização) dessa memória em milisegundos.
-    property RefreshTime:TRefreshTime read PScanTime;
+    property RefreshTime:TRefreshTime read PScanTime stored false;
+    //: Tempo de varredura (atualização) dessa memória em milisegundos.
+    property ScanRate:TRefreshTime read PScanTime;
     //: Número de memórias que serão mapeadas, se aplicável.
     property Size:Cardinal read PSize;
     //: Endereço longo (texto), se aplicável ao driver.

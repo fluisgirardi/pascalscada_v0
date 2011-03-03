@@ -59,6 +59,8 @@ type
     property CommWritesOk;
     //: @seealso(TTag.PLCHack)
     property PLCHack;
+    //: @seealso(TTag.PLCRack)
+    property PLCRack;
     //: @seealso(TTag.PLCSlot)
     property PLCSlot;
     //: @seealso(TTag.PLCStation)
@@ -81,6 +83,8 @@ type
     property ScaleProcessor;
     //: @seealso(TTag.RefreshTime)
     property RefreshTime;
+    //: @seealso(TTag.ScanRate)
+    property ScanRate;
     //: @seealso(TPLCTag.ValueTimestamp)
     property ValueTimestamp;
     //: @seealso(TTag.LongAddress)
