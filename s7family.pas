@@ -167,6 +167,8 @@ var
   item:TPLCNumber;
   bititem:TTagBit;
 
+  started:Boolean;
+
   function GetCurWordSize:Integer;
   var
     ttype:TTagType;
@@ -292,10 +294,12 @@ begin
         //comeca a criar os itens da estrutura
         curaddress:=spinStartAddress.Value;
         curidx := 0;
+        started:=false;
         for curitem:=1 to spinNumItens.Value do begin
           for curstructitem:=0 to StructItemsCount-1 do begin
             //se é para criar o tag.
             if not StructItem[curstructitem].SkipTag then begin
+              started:=true;
               if optplctagnumber.Checked then begin
 
                 item:=TPLCTagNumber(CreateProc(TPLCTagNumber));
@@ -350,10 +354,12 @@ begin
 
             inc(curTCaddress);
             inc(curaddress,GetCurWordSize);
-            if optplcblock.Checked then
-              inc(curidx)
-            else
-              inc(curidx, GetCurWordSize);
+            if started then begin
+              if optplcblock.Checked then
+                inc(curidx)
+              else
+                inc(curidx, GetCurWordSize);
+            end;
           end;
         end;
       end;
