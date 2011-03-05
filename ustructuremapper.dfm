@@ -85,6 +85,9 @@ object frmStructureEditor: TfrmStructureEditor
     TabOrder = 1
   end
   object Timer1: TTimer
+    Enabled = False
+    Interval = 5
+    OnTimer = Timer1Timer
     Left = 432
     Top = 8
   end
