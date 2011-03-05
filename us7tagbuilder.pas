@@ -1,3 +1,7 @@
+{:
+  @abstract(Unit do formulário TagBuilder para a familia de drivers da Siemens.)
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+}
 unit us7tagbuilder;
 
 {$IFDEF FPC}
@@ -12,8 +16,14 @@ uses
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}, windows{$IFEND};
 
 type
+  //: Rotina de checagem de nomes.
   TCheckNames = procedure (Sender:TObject; NewName:String; var AcceptNewName:Boolean) of object;
 
+  {:
+  Editor de bits de um item da estrtura.
+
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   TTagBitItemEditor = class(TPanel)
   private
     FTagName:String;
@@ -45,6 +55,11 @@ type
     property OnDelClick:TNotifyEvent read fondelclick write fondelclick;
   end;
 
+  {:
+  Editor de itens da estrtura.
+
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   TS7TagItemEditor = class(TPanel)
   private
     FTagName:String;
@@ -126,8 +141,11 @@ type
     property OnDelBitItem:TNotifyEvent read FOnDelBitItem write FOnDelBitItem;
   end;
 
-  { TfrmS7TagBuilder }
+  {:
+  Tag builder da familia de protocolos da Siemens.
 
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   TfrmS7TagBuilder = class(TForm)
     BlockName: TEdit;
     Panel1: TPanel;
