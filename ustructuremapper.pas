@@ -49,8 +49,12 @@ type
     procedure btnDelClick(Sender:TObject);
     procedure btnBitsClick(Sender:TObject);
     procedure BitItemDeleted(Sender:TObject);
+    function  GetStructItemsCount:Integer;
+    function  GetStructItem(index:Integer):TS7TagItemEditor;
   public
-    { Public declarations }
+    function HasAtLeastOneValidItem:Boolean;
+    property StructItemsCount:Integer read GetStructItemsCount;
+    property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
   end;
 
 var
@@ -58,7 +62,7 @@ var
 
 implementation
 
-uses Tag, ubitmapper;
+uses Tag, ubitmapper, hsstrings;
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
@@ -106,7 +110,8 @@ end;
 
 procedure TfrmStructureEditor.BitBtn1Click(Sender: TObject);
 begin
-  //
+  if not HasAtLeastOneValidItem then
+    Raise Exception.Create(SYouMustHaveAtLeastOneStructureItem);
 end;
 
 procedure TfrmStructureEditor.FormCreate(Sender: TObject);
@@ -282,6 +287,28 @@ begin
   //
 end;
 
+function  TfrmStructureEditor.GetStructItemsCount:Integer;
+begin
+  Result:=FTagList.Count;
+end;
+
+function  TfrmStructureEditor.GetStructItem(index:Integer):TS7TagItemEditor;
+begin
+  Result:=TS7TagItemEditor(FTagList.Items[index]);
+end;
+
+function TfrmStructureEditor.HasAtLeastOneValidItem:Boolean;
+var
+  c:Integer;
+begin
+  Result:=false;
+  for c:=0 to StructItemsCount-1 do
+    if not StructItem[c].SkipTag then begin
+      Result:=true;
+      break;
+    end;
+end;
+
 procedure TfrmStructureEditor.Timer1Timer(Sender: TObject);
 var
   c:Integer;
@@ -302,4 +329,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.
