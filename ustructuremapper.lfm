@@ -28,7 +28,7 @@ object frmStructureEditor: TfrmStructureEditor
       Left = 8
       Height = 22
       Top = 8
-      Width = 145
+      Width = 177
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Número de estruturas a criar'
@@ -36,7 +36,7 @@ object frmStructureEditor: TfrmStructureEditor
       ParentColor = False
     end
     object SpinEdit1: TSpinEdit
-      Left = 156
+      Left = 192
       Height = 21
       Top = 8
       Width = 121
@@ -46,7 +46,7 @@ object frmStructureEditor: TfrmStructureEditor
       Value = 1
     end
     object Button1: TButton
-      Left = 293
+      Left = 328
       Height = 26
       Top = 6
       Width = 116
@@ -61,6 +61,7 @@ object frmStructureEditor: TfrmStructureEditor
       Width = 92
       Caption = 'C&onstruir'
       Kind = bkOK
+      ModalResult = 1
       OnClick = BitBtn1Click
       TabOrder = 3
     end
@@ -71,6 +72,7 @@ object frmStructureEditor: TfrmStructureEditor
       Width = 92
       Caption = '&Cancelar'
       Kind = bkCancel
+      ModalResult = 2
       OnClick = BitBtn2Click
       TabOrder = 2
     end
