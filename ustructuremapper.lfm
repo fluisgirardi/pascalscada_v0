@@ -31,7 +31,7 @@ object frmStructureEditor: TfrmStructureEditor
       Width = 177
       Alignment = taRightJustify
       AutoSize = False
-      Caption = 'Número de estruturas a criar'
+      Caption = 'NÃºmero de estruturas a criar'
       Layout = tlCenter
       ParentColor = False
     end

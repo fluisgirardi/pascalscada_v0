@@ -30,7 +30,7 @@ type
 
 implementation
 
-uses ustructuremapper, Controls;
+uses ustructuremapper, Controls, PLCStructElement, sysutils, math;
 
 constructor TPLCStruct.Create(AOwner:TComponent);
 begin
@@ -45,6 +45,8 @@ var
   curitem,
   curidx,
   curstructitem:Integer;
+
+  item:TPLCStructItem;
 
   function GetCurWordSize:Integer;
   begin
@@ -86,27 +88,18 @@ var
     %0i - Numero do item comecando de 1, preenchido com zeros
     %0e - Numero do item comecando de 0, preenchido com zeros
     }
-    has_atleastonereplacement:=(Pos('%a',namepattern)<>0) or
-                               (Pos('%i',namepattern)<>0) or
+    has_atleastonereplacement:=(Pos('%i',namepattern)<>0) or
                                (Pos('%e',namepattern)<>0) or
-                               (Pos('%0a',namepattern)<>0) or
                                (Pos('%0i',namepattern)<>0) or
                                (Pos('%0e',namepattern)<>0);
     if not has_atleastonereplacement then
       namepattern:=namepattern+'%i';
 
     Result:=namepattern;
-    if frmS7tb.MemoryArea.ItemIndex in [4,9,5,10] then begin
-      Result:= StringReplace(Result,'%a', IntToStr(curTCaddress),[rfReplaceAll]);
-      Result:= StringReplace(Result,'%0a',GetValueWithZeros(curTCaddress, frmS7tb.GetTheLastItemOffset div 2, true),[rfReplaceAll]);
-    end else begin
-      Result:= StringReplace(Result,'%a',IntToStr(curaddress),[rfReplaceAll]);
-      Result:= StringReplace(Result,'%0a',GetValueWithZeros(curaddress, frmS7tb.RealEndOffset, true),[rfReplaceAll]);
-    end;
     Result:= StringReplace(Result,'%i',IntToStr(curitem),[rfReplaceAll]);
-    Result:= StringReplace(Result,'%0i',GetValueWithZeros(curitem, frmS7tb.spinNumItens.Value, true),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%0i',GetValueWithZeros(curitem, frmstructedit.SpinEdit1.Value, true),[rfReplaceAll]);
     Result:= StringReplace(Result,'%e',IntToStr(curitem-1),[rfReplaceAll]);
-    Result:= StringReplace(Result,'%0e',GetValueWithZeros(curitem-1, frmS7tb.spinNumItens.Value-1, true),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%0e',GetValueWithZeros(curitem-1, frmstructedit.SpinEdit1.Value-1, true),[rfReplaceAll]);
   end;
 begin
   //se não está em design sai.
@@ -115,13 +108,28 @@ begin
   frmstructedit:=TfrmStructureEditor.Create(nil);
   try
     if frmstructedit.ShowModal=mrOk then begin
+      curidx:=0;
       for curitem:=1 to frmstructedit.SpinEdit1.Value do begin
         for curstructitem:=0 to frmstructedit.StructItemsCount-1 do begin
-
+          if not frmstructedit.StructItem[curstructitem].SkipTag then begin
+            item := TPLCStructItem(CreateProc(TPLCStructItem));
+            with item do begin
+              Name:=GetName(frmstructedit.StructItem[curstructitem].TagName);
+              TagType:=frmstructedit.StructItem[curstructitem].TagType;
+              SwapBytes:=frmstructedit.StructItem[curstructitem].SwapBytes;
+              SwapWords:=frmstructedit.StructItem[curstructitem].SwapWords;
+              Index:=curidx;
+              Self.Size:=Max(Self.Size, curidx+GetCurWordSize);
+              PLCBlock:=Self;
+            end;
+            InsertHook(item);
+          end;
+          inc(curidx,GetCurWordSize)
         end;
       end;
     end;
   finally
+    DumpExceptionBackTrace(Output);
     frmstructedit.Destroy;
   end;
 end;

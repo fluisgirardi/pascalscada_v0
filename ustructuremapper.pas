@@ -52,6 +52,7 @@ type
     function  GetStructItemsCount:Integer;
     function  GetStructItem(index:Integer):TS7TagItemEditor;
   public
+    destructor Destroy; override;
     function HasAtLeastOneValidItem:Boolean;
     property StructItemsCount:Integer read GetStructItemsCount;
     property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
@@ -71,6 +72,13 @@ uses Tag, ubitmapper, hsstrings;
 {$ELSE}
   {$R *.dfm}
 {$ENDIF}
+
+destructor TfrmStructureEditor.Destroy;
+begin
+  FTagList.Destroy;
+  ItemsToDel.Destroy;
+  inherited Destroy;
+end;
 
 procedure TfrmStructureEditor.Button1Click(Sender: TObject);
 var
@@ -124,13 +132,12 @@ end;
 procedure TfrmStructureEditor.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  FTagList.Destroy;
-  ItemsToDel.Destroy;
+  //
 end;
 
 procedure TfrmStructureEditor.FormShow(Sender: TObject);
 begin
-  //
+  Button1Click(Sender);
 end;
 
 procedure TfrmStructureEditor.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
