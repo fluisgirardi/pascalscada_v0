@@ -12,8 +12,10 @@ unit ustructuremapper;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Spin, ExtCtrls, Buttons, us7tagbuilder;
+  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, Spin, ExtCtrls, Buttons, us7tagbuilder
+  {$IFDEF FPC}, LCLIntf, LResources{$ENDIF}
+  {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}, windows{$IFEND};
 
 type
   {:
@@ -58,7 +60,13 @@ implementation
 
 uses Tag, ubitmapper;
 
-{$R *.dfm}
+{$IFDEF FPC }
+  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
+  {$R ustructuremapper.lfm}
+  {$IFEND}
+{$ELSE}
+  {$R *.dfm}
+{$ENDIF}
 
 procedure TfrmStructureEditor.Button1Click(Sender: TObject);
 var
@@ -286,5 +294,12 @@ begin
   Timer1.Enabled:=false;
   if FTagList.Count=0 then FItemId:=1;
 end;
+
+{$IFDEF FPC }
+  {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
+initialization
+  {$i ustructuremapper.lrs}
+  {$IFEND}
+{$ENDIF}
 
 end.

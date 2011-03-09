@@ -1,0 +1,93 @@
+object frmStructureEditor: TfrmStructureEditor
+  Left = 190
+  Height = 379
+  Top = 105
+  Width = 712
+  BorderStyle = bsDialog
+  Caption = 'Structure editor'
+  ClientHeight = 379
+  ClientWidth = 712
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnShow = FormShow
+  Position = poScreenCenter
+  LCLVersion = '0.9.28.2'
+  object Panel1: TPanel
+    Left = 0
+    Height = 40
+    Top = 0
+    Width = 712
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 40
+    ClientWidth = 712
+    TabOrder = 0
+    object Label1: TLabel
+      Left = 8
+      Height = 22
+      Top = 8
+      Width = 145
+      Alignment = taRightJustify
+      AutoSize = False
+      Caption = 'Número de estruturas a criar'
+      Layout = tlCenter
+      ParentColor = False
+    end
+    object SpinEdit1: TSpinEdit
+      Left = 156
+      Height = 21
+      Top = 8
+      Width = 121
+      MaxValue = 2147483647
+      MinValue = 1
+      TabOrder = 0
+      Value = 1
+    end
+    object Button1: TButton
+      Left = 293
+      Height = 26
+      Top = 6
+      Width = 116
+      Caption = '&Adicionar um item'
+      OnClick = Button1Click
+      TabOrder = 1
+    end
+    object BitBtn1: TBitBtn
+      Left = 613
+      Height = 26
+      Top = 6
+      Width = 92
+      Caption = 'C&onstruir'
+      Kind = bkOK
+      OnClick = BitBtn1Click
+      TabOrder = 3
+    end
+    object BitBtn2: TBitBtn
+      Left = 496
+      Height = 26
+      Top = 6
+      Width = 92
+      Caption = '&Cancelar'
+      Kind = bkCancel
+      OnClick = BitBtn2Click
+      TabOrder = 2
+    end
+  end
+  object ScrollBox1: TScrollBox
+    Left = 0
+    Height = 339
+    Top = 40
+    Width = 712
+    Align = alClient
+    TabOrder = 1
+  end
+  object Timer1: TTimer
+    Enabled = False
+    Interval = 5
+    OnTimer = Timer1Timer
+    left = 432
+    top = 8
+  end
+end
