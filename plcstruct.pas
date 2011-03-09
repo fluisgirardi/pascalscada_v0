@@ -30,7 +30,8 @@ type
 
 implementation
 
-uses ustructuremapper, Controls, PLCStructElement, sysutils, math;
+uses ustructuremapper, Controls, PLCStructElement, sysutils, math,
+     StrUtils;
 
 constructor TPLCStruct.Create(AOwner:TComponent);
 begin
@@ -129,7 +130,6 @@ begin
       end;
     end;
   finally
-    DumpExceptionBackTrace(Output);
     frmstructedit.Destroy;
   end;
 end;
