@@ -7,7 +7,7 @@ unit pascalscada;
 interface
 
 uses
-    CommPort, commtypes, crc16utils, CrossEvent, crosskeyevents, HMIAnimation, 
+  CommPort, commtypes, crc16utils, CrossEvent, crosskeyevents, HMIAnimation, 
   HMIButton, HMICheckBox, HMIControlDislocatorAnimation, HMIEdit, HMILabel, 
   HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, HMIScrollBar, 
   HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, hsstrings, hsutils, 
@@ -18,7 +18,8 @@ uses
   s7family, S7Types, scadapropeditor, scadareg, SerialPort, Tag, TagBit, 
   TagBlock, tagcollection, tcp_udpport, ubitmapper, uelementmapper, 
   uModbusTagBuilder, unumerickeyboard, us7tagbuilder, UserScale, 
-  uwesttagbuilder, ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
+  uwesttagbuilder, ValueProcessor, WestASCIIDriver, ustructuremapper, 
+  LazarusPackageIntf;
 
 implementation
 

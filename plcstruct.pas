@@ -13,12 +13,10 @@ unit PLCStruct;
 interface
 
 uses
-  Classes, PLCBlock, Tag;
+  Classes, PLCBlock, ProtocolTypes, Tag;
 
 type
   TPLCStruct = class(TPLCBlock)
-  private
-    { Private declarations }
   protected
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
@@ -27,14 +25,34 @@ type
     procedure SetSwapBytes(v:Boolean); override;
   public
     constructor Create(AOwner:TComponent); override;
+    procedure OpenElementMapper(OwnerOfNewTags: TComponent; InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   end;
 
 implementation
+
+uses ustructuremapper, Controls;
 
 constructor TPLCStruct.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   Inherited SetTagType(pttByte);
+end;
+
+procedure TPLCStruct.OpenElementMapper(OwnerOfNewTags: TComponent; InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+var
+  frmstructedit:TfrmStructureEditor;
+begin
+  //se não está em design sai.
+  if [csDesigning]*ComponentState=[] then exit;
+
+  frmstructedit:=TfrmStructureEditor.Create(nil);
+  try
+    if frmstructedit.ShowModal=mrOk then begin
+
+    end;
+  finally
+    frmstructedit.Destroy;
+  end;
 end;
 
 function TPLCStruct.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
