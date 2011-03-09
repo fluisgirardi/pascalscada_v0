@@ -12,7 +12,7 @@ unit ustructuremapper;
 interface
 
 uses
-  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Spin, ExtCtrls, Buttons, us7tagbuilder
   {$IFDEF FPC}, LCLIntf, LResources{$ENDIF}
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}, windows{$IFEND};

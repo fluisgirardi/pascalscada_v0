@@ -42,7 +42,7 @@ type
     procedure Execute; override;
   public
     constructor Create(CreateSuspended: Boolean; AOwner:TComponent);
-    destructor  Destroy;
+    destructor  Destroy; override;
     procedure   WaitInit;
     procedure   Terminate;
     //: Envia uma mensagem de erro de comunicação para a aplicação;

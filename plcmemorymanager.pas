@@ -652,6 +652,7 @@ begin
     inc(Moved, LenUtil);
     if Moved>=Length(Values) then break;
   end;
+  Result:=ifthen(Moved=Length(Values),0,ifthen(Moved<Length(Values),-1,1));
 end;
 
 procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
@@ -713,6 +714,7 @@ begin
     inc(Moved, LenUtil);
     if Moved>=Length(Values) then break;
   end;
+  Result:=ifthen(Moved=Length(Values),0,ifthen(Moved<Length(Values),-1,1));
 end;
 
 constructor TPLCMemoryManagerSafe.Create;

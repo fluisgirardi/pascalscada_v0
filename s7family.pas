@@ -293,6 +293,7 @@ begin
 
         //comeca a criar os itens da estrutura
         curaddress:=spinStartAddress.Value;
+        curTCaddress:=spinStartAddress.Value;
         curidx := 0;
         started:=false;
         for curitem:=1 to spinNumItens.Value do begin

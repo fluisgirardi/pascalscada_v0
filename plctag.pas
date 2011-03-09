@@ -303,7 +303,7 @@ type
     ftags:TManagedTags;
   public
     constructor Create;
-    destructor Destroy;
+    destructor Destroy; override;
     procedure AddTag(Tag:TPLCTag);
     procedure RemoveTag(Tag:TPLCTag);
   end;
