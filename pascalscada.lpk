@@ -33,11 +33,12 @@
         <WriteFPCLogo Value="False"/>
         <CompilerMessages>
           <IgnoredMessages idx5024="True" idx5057="True"/>
+          <UseMsgFile Value="True"/>
         </CompilerMessages>
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
-    <Version Minor="7"/>
+    <Version Minor="7" Release="1"/>
     <Files Count="71">
       <Item1>
         <Filename Value="commport.pas"/>
