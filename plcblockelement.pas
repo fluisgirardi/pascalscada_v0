@@ -67,6 +67,14 @@ type
     property PLCBlock:TPLCBlock read PBlock write SetBlock;
     //: Offset da elemento de memória dentro do bloco (indice).
     property Index:Cardinal read PIndex write SetIndex;
+    //: @seealso(TPLCNumber.EnableMaxValue)
+    property EnableMaxValue;
+    //: @seealso(TPLCNumber.EnableMinValue)
+    property EnableMinValue;
+    //: @seealso(TPLCNumber.MaxValue)
+    property MaxValue;
+    //: @seealso(TPLCNumber.MinValue)
+    property MinValue;
   end;
 
 implementation

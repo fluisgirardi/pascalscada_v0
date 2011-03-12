@@ -20,6 +20,10 @@ type
   }
   TPLCNumber = class(TPLCTag)
   protected
+    //: Armazena se devem ser verificados limites minimos e máximos
+    FEnableMin, FEnableMax:Boolean;
+    //: Armazena os valores de limites inferior e superior, apenas entrada.
+    FMinLimit, FMaxLimit:Double;
     //: Armazena a sequência de escalas aplicadas a esse tag.
     PScaleProcessor:TPIPE;
     //: Armazena o valor puro (sem escalas) lido @bold(assincrono).
@@ -42,7 +46,22 @@ type
     @seealso(ScaleProcessor)
     }
     procedure SetScaleProcessor(sp:TPIPE);
+
+    //: seta o limite minimo
+    procedure SetMinLimit(v:Double);
+    //: seta o limite máximo
+    procedure SetMaxLimit(v:Double);
+
+    //: Habilita/desabilita o limite minimo para entrada de dados.
+    property EnableMinValue:Boolean read FEnableMin write FEnableMin stored true;
+    //: Habilita/desabilita o limite máximo para entrada de dados.
+    property EnableMaxValue:Boolean read FEnableMax write FEnableMax stored true;
+    //: Limite minimo para entrada de dados.
+    property MinValue:Double read FMinLimit write SetMinLimit;
+    //: Limite máximo para entrada de dados.
+    property MaxValue:Double read FMaxLimit write SetMaxLimit;
   public
+
     //: @exclude
     destructor Destroy; override;
 
@@ -70,7 +89,7 @@ type
 
 implementation
 
-uses ubitmapper, Controls, TagBit, tag;
+uses ubitmapper, Controls, TagBit, tag, hsstrings, Dialogs;
 
 destructor TPLCNumber.Destroy;
 begin
@@ -90,6 +109,12 @@ procedure TPLCNumber.SetValue(Value:Double);
 var
   towrite:Double;
 begin
+  if (FEnableMin and (Value<FMinLimit)) or (FEnableMax and (Value>FMaxLimit)) then begin
+    MessageDlg(SoutOfBounds,mtWarning,[mbOK],0);
+    NotifyWriteFault;
+    exit;
+  end;
+
   if Assigned(PScaleProcessor) then
     towrite := PScaleProcessor.SetOutGetIn(self, Value)
   else
@@ -109,6 +134,22 @@ begin
     sp.AddTag(self);
 
   PScaleProcessor := sp;
+end;
+
+procedure TPLCNumber.SetMinLimit(v:Double);
+begin
+  if ([csReading, csLoading]*ComponentState=[]) and  (v>=FMaxLimit) then
+    raise Exception.Create(SminMustBeLessThanMax);
+
+  FMinLimit:=v;
+end;
+
+procedure TPLCNumber.SetMaxLimit(v:Double);
+begin
+  if ([csReading, csLoading]*ComponentState=[]) and  (v<=FMinLimit) then
+    raise Exception.Create(SmaxMustBeGreaterThanMin);
+
+  FMaxLimit:=v;
 end;
 
 procedure TPLCNumber.Write;
@@ -213,4 +254,4 @@ begin
 end;
 
 end.
- 
+ 

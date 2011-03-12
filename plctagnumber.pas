@@ -101,6 +101,14 @@ type
     property TagSizeOnProtocol;
     //: @seealso(TPLCTag.AvgUpdateRate)
     property AvgUpdateRate;
+    //: @seealso(TPLCNumber.EnableMaxValue)
+    property EnableMaxValue;
+    //: @seealso(TPLCNumber.EnableMinValue)
+    property EnableMinValue;
+    //: @seealso(TPLCNumber.MaxValue)
+    property MaxValue;
+    //: @seealso(TPLCNumber.MinValue)
+    property MinValue;
   end;
 
 implementation

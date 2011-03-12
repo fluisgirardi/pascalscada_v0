@@ -86,6 +86,14 @@ type
     property StartBit:TBitRange read PStartBit write SetStartBit;
     //: Qual o último bit da palavra que vai ser mapeado.
     property EndBit:TBitRange read PEndBit write SetEndBit;
+    //: @seealso(TPLCNumber.EnableMaxValue)
+    property EnableMaxValue;
+    //: @seealso(TPLCNumber.EnableMinValue)
+    property EnableMinValue;
+    //: @seealso(TPLCNumber.MaxValue)
+    property MaxValue;
+    //: @seealso(TPLCNumber.MinValue)
+    property MinValue;
   end;
 
 implementation
