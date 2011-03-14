@@ -14,7 +14,7 @@ interface
 uses
 
   {$IFDEF FPC} LCLIntf, {$ENDIF} commtypes, CommPort, SysUtils, Classes,
-  {$IF defined(WIN32) or defined(WIN64)} Windows,{$IFEND}
+  {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)} Windows,{$IFEND}
   {$IFDEF UNIX} Serial, Unix, BaseUnix, termio, {$ENDIF}
   DateUtils;
 
@@ -84,7 +84,7 @@ type
     PStopBits:TSerialStopBits;
     PParity:TSerialParity;
     PDataBits:TSerialDataBits;
-    {$IF defined(WIN32) or defined(WIN64)}
+    {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
     PPortEventName:String;
     PSavedDCB:DCB;
     PDCB:DCB;
@@ -177,7 +177,7 @@ type
   end;
 
 
-{$IF defined(WIN32) or defined(WIN64)}
+{$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
 
 const METHOD_BUFFERED         = 0;
@@ -208,7 +208,7 @@ implementation
 
 uses hsstrings;
 
-{$IF defined(WIN32) or defined(WIN64)}
+{$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
 begin
   result := (((DeviceType) shl 16) or ((Access) shl 14) or ((Func) shl 2) or (Method));
@@ -295,6 +295,12 @@ begin
   end;
 {$ENDIF}
 
+{$IF defined(WINCE)}
+var
+  tentativas:Integer;
+begin
+{$IFEND}
+
   Packet^.ReadRetries := tentativas;
   if Packet^.ToRead>Packet^.Received then begin
     Packet^.ReadIOResult := iorTimeOut;
@@ -353,6 +359,11 @@ begin
   end else
     Packet^.WriteIOResult := iorOK;
 {$ENDIF}
+{$IF defined(WINCE)}
+var
+  tentativas:Integer;
+begin
+{$IFEND}
 
   if Packet^.WriteIOResult<>iorOK then
     DoCommError(true, Packet^.WriteIOResult);
@@ -440,6 +451,10 @@ erro1:
   POverlapped.hEvent := 0;
   ok := false;
   PActive := false;
+{$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDO
 {$IFEND}
 {$IFDEF UNIX}
 
@@ -603,6 +618,10 @@ begin
   strdcb := MakeDCBString;
   Result := COMExist(PPortName) and BuildCommDCB(PChar(strdcb),vardcb);
 {$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDo
+{$IFEND}
 {$IFDEF UNIX}
 begin
   Result := COMExist(PPortName);
@@ -629,6 +648,10 @@ var
 begin
   dcbstring := v+': baud=1200 parity=N data=8 stop=1';
   Result := BuildCommDCB(PChar(dcbstring),d)
+{$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDo
 {$IFEND}
 {$IFDEF UNIX}
 var
@@ -674,6 +697,10 @@ begin
     raise Exception.Create(SinvalidMode);
   end;
 {$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDo
+{$IFEND}
 {$IFDEF UNIX}
 begin
   PBaundRate := v;
@@ -698,6 +725,10 @@ begin
     PStopBits := old;
     raise Exception.Create(SinvalidMode);
   end;
+{$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDo
 {$IFEND}
 {$IFDEF UNIX}
 begin
@@ -724,6 +755,10 @@ begin
     raise Exception.Create(SinvalidMode);
   end;
 {$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDo
+{$IFEND}
 {$IFDEF UNIX}
 begin
   PParity := v;
@@ -748,6 +783,10 @@ begin
     PDataBits := old;
     raise Exception.Create(SinvalidMode);
   end;
+{$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDo
 {$IFEND}
 {$IFDEF UNIX}
 begin
@@ -834,6 +873,10 @@ begin
   FlushFileBuffers(PPortHandle);
   PurgeComm(PPortHandle,dwFlags);
 {$IFEND}
+{$IF defined(WINCE)}
+begin
+  //ToDo
+{$IFEND}
 {$IFDEF UNIX}
 begin
   //flush buffers...
@@ -848,4 +891,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.

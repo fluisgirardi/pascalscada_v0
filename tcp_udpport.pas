@@ -1,4 +1,4 @@
-﻿{:
+{:
   @abstract(Unit que implementa uma porta de comunicação TCP/UDP sobre IP cliente.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
@@ -17,7 +17,7 @@ interface
 
 uses
   Classes, SysUtils, CommPort, commtypes
-  {$IF defined(WIN32) or defined(WIN64)}
+  {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   , Windows, WinSock
   {$ELSE}
   {$IFDEF FPC}
@@ -419,7 +419,7 @@ begin
   incRetries:=true;
   //CommResult informa o resultado da IO
   //Result informa se a acao deve ser retomada.
-  {$IF defined(WIN32) or defined(WIN64)}
+  {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   case WSAGetLastError of
     WSANOTINITIALISED,
     WSAENETDOWN,

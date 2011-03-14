@@ -1,4 +1,4 @@
-﻿unit crosskeyevents;
+unit crosskeyevents;
 
 interface
 
@@ -99,7 +99,7 @@ uses {$IFDEF FPC}qt4, qtwidgets, qtobjects, LCLType{$ENDIF};
 
 //se não esta definido FPC (consequentemente não estará definida LCLwin32),
 //estou usando Delphi, consequentemente, Windows...
-{$IF defined(LCLwin32) OR (not defined(FPC))}
+{$IF defined(LCLwin32) OR defined(LCLwin64) OR defined(LCLwince) OR (not defined(FPC))}
 uses windows{$IFDEF FPC}, LCLType {$ELSE}, Messages {$ENDIF};
 {$IFEND}
 
@@ -506,4 +506,4 @@ PSVK_SUBTRACT := VK_SUBTRACT;
 {$ENDIF}
 
 end.
-
+

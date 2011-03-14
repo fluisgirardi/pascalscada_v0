@@ -16,7 +16,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement,
 
-  {$IF defined(WIN32) or defined(WIN64)}
+  {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
   {$ELSE}
   Unix,
@@ -88,7 +88,8 @@ begin
      if BuildCommDCB(PChar(dcbstring),d) then
         Proc(comname);
   end;
-{$ELSE}
+{$IFEND}
+{$IFDEF UNIX}
 var
    c, d:Integer;
    pname:String;
@@ -100,7 +101,11 @@ begin
          if FileExists('/dev/'+pname) then
             Proc(pname);
       end;
-{$IFEND}
+{$ENDIF}
+{$IFDEF WINCE}
+begin
+  //ToDo
+{$ENDIF}
 end;
 
 procedure TPortPropertyEditor.SetValue(const Value: string);
