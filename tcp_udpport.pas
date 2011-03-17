@@ -307,7 +307,7 @@ begin
     {$ELSE}
     {$IFNDEF WINCE}
     //se esta usando FPC ou um Delphi abaixo da versao 2009
-    {$IF defined(FPC) OR (not defined(DELPHI2009_UP)))}
+    {$IF defined(FPC) OR (not defined(DELPHI2009_UP))}
     ServerAddr := GetHostByName(PAnsiChar(FHostName));
     {$ELSE}
     ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
@@ -330,6 +330,7 @@ begin
         exit;
       end;
     end;
+
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
     {$ELSE}
@@ -379,9 +380,8 @@ begin
     {$IFDEF WINCE}
     channel.sin_addr := StrToNetAddr(FHostName);
     {$ELSE}
-    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr
+    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
     {$ENDIF}
-
     {$IFEND}
 
     {$IF defined(FPC) and (defined(UNIX) or defined(WINCE))}
