@@ -1,4 +1,4 @@
-﻿{:
+{:
   @abstract(Unit que implementa uma porta de comunicação TCP/UDP sobre IP cliente.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }
@@ -21,7 +21,8 @@ uses
   , Windows, WinSock
   {$ELSE}
   {$IFDEF FPC}
-  , Sockets, BaseUnix{$IFDEF FDEBUG}, LCLProc{$ENDIF}
+  , Sockets {$IFDEF UNIX}, BaseUnix{$ENDIF}
+            {$IFDEF FDEBUG}, LCLProc{$ENDIF}
   {$ENDIF}
   {$IFEND};
 
@@ -121,6 +122,9 @@ uses hsstrings
      ,netdb,
      Unix
 {$endif}
+{$IFDEF WINCE}
+     ,WinSock2
+{$endif}
 {$ENDIF}
      ;
 
@@ -197,7 +201,7 @@ begin
   Packet^.Received := 0;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
     try
-      {$IF defined(UNIX) and defined(FPC)}
+      {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
       lidos := fprecv(FSocket, @Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
       {$ELSE}
       lidos := Recv(FSocket, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
@@ -240,7 +244,7 @@ begin
   Packet^.Wrote := 0;
   while (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
     try
-      {$IF defined(UNIX) and defined(FPC)}
+      {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
       escritos := fpsend(FSocket, @Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
       {$ELSE}
       escritos := Send(FSocket, Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
@@ -282,7 +286,9 @@ var
   ServerAddr:THostEntry;
   tv:timeval;
 {$ELSE}
+{$IFNDEF WINCE}
   ServerAddr:PHostEnt;
+{$ENDIF}
 {$IFEND}
   channel:sockaddr_in;
   flag, bufsize, sockType:Integer;
@@ -299,7 +305,9 @@ begin
       end;
     end;
     {$ELSE}
-    {$IF defined(FPC) or (not defined(DELPHI2009_UP))}
+    {$IFNDEF WINCE}
+    //se esta usando FPC ou um Delphi abaixo da versao 2009
+    {$IF defined(FPC) OR (not defined(DELPHI2009_UP)))}
     ServerAddr := GetHostByName(PAnsiChar(FHostName));
     {$ELSE}
     ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
@@ -309,6 +317,7 @@ begin
       RefreshLastOSError;
       exit;
     end;
+    {$ENDIF}
     {$IFEND}
 
     case FPortType of
@@ -321,7 +330,7 @@ begin
         exit;
       end;
     end;
-    {$IF defined(UNIX) and defined(FPC)}
+    {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
     {$ELSE}
     FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
@@ -335,19 +344,26 @@ begin
 
     flag:=1;
     bufsize := 1024*16;
-    {$IF defined(UNIX) and defined(FPC)}
+    {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
+    {$IFDEF UNIX}
     tv.tv_sec:=((FTimeout+1000) div 1000);
     tv.tv_usec:=((FTimeout+1000) mod 1000) * 1000;
 
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  @tv,       sizeof(tv));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  @tv,       sizeof(tv));
+    {$ELSE}
+    flag:=FTimeout+1000;
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  @flag, sizeof(flag));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  @flag, sizeof(flag));
+    flag:=1;
+    {$ENDIF}
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,     sizeof(Integer));
     {$ELSE}
     flag:=FTimeout+1000;
-    setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  PAnsiChar(@flag), sizeof(FTimeout));
-    setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  PAnsiChar(@flag), sizeof(FTimeout));
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  PAnsiChar(@flag), sizeof(flag));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  PAnsiChar(@flag), sizeof(flag));
     setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    PAnsiChar(@bufsize),  sizeof(Integer));
     setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    PAnsiChar(@bufsize),  sizeof(Integer));
     flag := 1;
@@ -355,17 +371,23 @@ begin
     {$IFEND}
 
     channel.sin_family      := AF_INET;
-    {$IF defined(UNIX) and defined(FPC)}
-    channel.sin_addr.S_addr := longword(htonl(LongInt(ServerAddr.Addr.s_addr)));
-    {$ELSE}
-    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
-    {$IFEND}
     channel.sin_port        := htons(FPortNumber);
 
-    {$IF defined(UNIX) and defined(FPC)}
+    {$IF defined(FPC) AND defined(UNIX)}
+    channel.sin_addr.S_addr := longword(htonl(LongInt(ServerAddr.Addr.s_addr)));
+    {$ELSE}
+    {$IFDEF WINCE}
+    channel.sin_addr := StrToNetAddr(FHostName);
+    {$ELSE}
+    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr
+    {$ENDIF}
+
+    {$IFEND}
+
+    {$IF defined(FPC) and (defined(UNIX) or defined(WINCE))}
     if fpconnect(FSocket,@channel,sizeof(sockaddr_in))<>0 then begin
     {$ELSE}
-    if Connect(FSocket,channel,sizeof(sockaddr_in))<>0 then begin
+    if Connect(FSocket,channel,sizeof(channel))<>0 then begin
     {$IFEND}
       PActive:=false;
       RefreshLastOSError;
@@ -419,7 +441,7 @@ begin
   incRetries:=true;
   //CommResult informa o resultado da IO
   //Result informa se a acao deve ser retomada.
-  {$IF defined(WIN32) or defined(WIN64)}
+  {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
   case WSAGetLastError of
     WSANOTINITIALISED,
     WSAENETDOWN,
