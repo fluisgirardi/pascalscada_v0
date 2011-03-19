@@ -23,6 +23,7 @@ uses
   {$IFDEF FPC}
   , Sockets {$IFDEF UNIX}, BaseUnix{$ENDIF}
             {$IFDEF FDEBUG}, LCLProc{$ENDIF}
+            {$IFDEF WINCE}, WinSock{$endif}
   {$ENDIF}
   {$IFEND};
 
@@ -36,9 +37,9 @@ type
 
   //@exclude
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}
-  tsocklen = tOS_INT;
+  t_socklen = tOS_INT;
   {$ELSE}
-  tsocklen = Integer;
+  t_socklen = Integer;
   {$IFEND}
   {:
   @abstract(Driver genérico para portas TCP/UDP sobre IP. Atualmente funcionando
@@ -59,7 +60,7 @@ type
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
-    function  connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:Integer):Integer;
+    function  connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:t_socklen; timeout:Integer):Integer;
     {$IFDEF UNIX}
     function  set_nonblock(fd:TSocket; block:boolean):Integer;
     {$ENDIF}
@@ -131,9 +132,6 @@ uses hsstrings
 {$IFDEF UNIX}
      ,netdb,
      Unix
-{$endif}
-{$IFDEF WINCE}
-     ,WinSock2
 {$endif}
 {$ENDIF}
      ;
@@ -300,7 +298,11 @@ var
   ServerAddr:PHostEnt;
 {$ENDIF}
 {$IFEND}
+{$IFDEF WINCE}
+  channel:sockets.sockaddr_in;
+{$ELSE}
   channel:sockaddr_in;
+{$ENDIF}
   flag, bufsize, sockType:Integer;
 begin
   Ok:=false;
@@ -592,7 +594,7 @@ begin
 end;
 {$ENDIF}
 
-function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:Integer):Integer;
+function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:t_socklen; timeout:Integer):Integer;
 var
   sel:TFDSet;
   ret:Integer;
