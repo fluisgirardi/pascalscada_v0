@@ -53,6 +53,10 @@ type
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
+    function connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:Integer):Integer;
+    {$IFDEF UNIX}
+    function  set_nonblock(fd:TSocket; block:boolean):Integer;
+    {$ENDIF}
   protected
     //: @exclude
     procedure Loaded; override;
@@ -566,6 +570,99 @@ begin
   //end;
 end;
 
+{$IFDEF UNIX}
+function  TTCP_UDPPort.set_nonblock(fd:TSocket; block:boolean):Integer;
+var
+  oldflags:Integer;
+begin
+    oldflags := FpFcntl(fd, F_GETFL, 0);
+    if (oldflags < 0) then begin
+      Result:= oldflags;
+      exit;
+    end;
+
+    if (block) then
+      oldflags := oldflags or O_NONBLOCK
+    else
+      oldflags := oldflags xor O_NONBLOCK;
+
+    Result:= FpFcntl(fd, F_SETFL, oldflags);
+end;
+{$endif}
+
+function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:integer):Integer;
+var
+  sel:TFDSet;
+  ret:Integer;
+  mode:Dword;
+  tv : TimeVal;
+  p:ptimeval;
+label
+  cleanup;
+begin
+
+  if timeout=-1 then
+    p:=nil
+  else begin
+    tv.tv_Sec:=Timeout div 1000;
+    tv.tv_Usec:=(Timeout mod 1000)*1000;
+    p:=@tv;
+  end;
+
+  {$if defined(WIN32) or defined(WIN64)}
+  mode:=1;
+  ioctlsocket(sock, FIONBIO, &mode);
+  {$ELSE}
+  if set_nonblock(sock, true) < 0 then begin
+    Result:=-1;
+    exit;
+  end;
+  {$ifend}
+
+  {$IF defined(UNIX) and defined(FPC)}
+  if fpconnect(sock, address, address_len) <> 0 then
+  {$ELSE}
+  if connect(sock, address, address_len) <> 0 then
+  {$IFEND}
+    {$if defined(WIN32) or defined(WIN64)}
+    if WSAGetLastError=WSAEWOULDBLOCK then begin
+    {$else}
+    if socketerror = ESysEINPROGRESS then begin
+    {$ifend}
+      {$IF defined(FPC) and defined(UNIX)}
+      fpFD_ZERO(sel);
+      fpFD_SET(sock, sel);
+      mode := fpSelect(sock+1, nil, @sel, nil, p);
+      {$else}
+      FD_ZERO(sel);
+      FD_SET((unsigned)sock, &sel);
+      mode = select(sock+1, nil, @sel, nil, p);
+      {$IFEND}
+
+      if (mode < 0) then begin
+        Result := -1;
+      end else begin
+        if (mode > 0) then begin
+	  Result := 0;
+        end else begin
+          if (mode = 0) then begin
+	    Result := -2;
+          end;
+        end;
+      end;
+    end else
+      Result := -1;
+
+cleanup:
+  {$if defined(WIN32) or defined(WIN64)}
+  mode := 0;
+  ioctlsocket(sock, FIONBIO, &mode);
+  {$else}
+  if(set_nonblock(sock, false) < 0) then
+    Result := -1;
+  {$IFEND}
+end;
+
 {$IF defined(WIN32) or defined(WIN64)}
 var
   wsaData:TWSAData;
@@ -588,4 +685,4 @@ initialization
 finalization
   WSACleanup;
 {$IFEND}
-end.
+end.
