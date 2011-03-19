@@ -34,6 +34,12 @@ type
   }
   TPortType = (ptTCP, ptUDP);
 
+  //@exclude
+  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}
+  tsocklen = tOS_INT;
+  {$ELSE}
+  tsocklen = Integer;
+  {$ENDIF}
   {:
   @abstract(Driver genérico para portas TCP/UDP sobre IP. Atualmente funcionando
             para Windows, Linux e FreeBSD.)
@@ -388,11 +394,7 @@ begin
     {$ENDIF}
     {$IFEND}
 
-    {$IF defined(FPC) and (defined(UNIX) or defined(WINCE))}
-    if fpconnect(FSocket,@channel,sizeof(sockaddr_in))<>0 then begin
-    {$ELSE}
-    if Connect(FSocket,channel,sizeof(channel))<>0 then begin
-    {$IFEND}
+    if connect_with_timeout(FSocket,@channel,sizeof(channel),FTimeout)<>0 then begin
       PActive:=false;
       RefreshLastOSError;
       exit;
@@ -594,7 +596,7 @@ function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; addr
 var
   sel:TFDSet;
   ret:Integer;
-  mode:Dword;
+  mode:Integer;
   tv : TimeVal;
   p:ptimeval;
 label
@@ -611,7 +613,7 @@ begin
 
   {$if defined(WIN32) or defined(WIN64)}
   mode:=1;
-  ioctlsocket(sock, FIONBIO, &mode);
+  ioctlsocket(sock, FIONBIO, mode);
   {$ELSE}
   if set_nonblock(sock, true) < 0 then begin
     Result:=-1;
@@ -622,7 +624,7 @@ begin
   {$IF defined(UNIX) and defined(FPC)}
   if fpconnect(sock, address, address_len) <> 0 then
   {$ELSE}
-  if connect(sock, address, address_len) <> 0 then
+  if connect(sock, address^, address_len) <> 0 then
   {$IFEND}
     {$if defined(WIN32) or defined(WIN64)}
     if WSAGetLastError=WSAEWOULDBLOCK then begin
@@ -635,18 +637,18 @@ begin
       mode := fpSelect(sock+1, nil, @sel, nil, p);
       {$else}
       FD_ZERO(sel);
-      FD_SET((unsigned)sock, &sel);
-      mode = select(sock+1, nil, @sel, nil, p);
+      FD_SET(sock+1, sel);
+      mode := select(sock+1, nil, @sel, nil, p);
       {$IFEND}
 
       if (mode < 0) then begin
         Result := -1;
       end else begin
         if (mode > 0) then begin
-	  Result := 0;
+          Result := 0;
         end else begin
           if (mode = 0) then begin
-	    Result := -2;
+            Result := -2;
           end;
         end;
       end;
@@ -656,7 +658,7 @@ begin
 cleanup:
   {$if defined(WIN32) or defined(WIN64)}
   mode := 0;
-  ioctlsocket(sock, FIONBIO, &mode);
+  ioctlsocket(sock, FIONBIO, mode);
   {$else}
   if(set_nonblock(sock, false) < 0) then
     Result := -1;
@@ -685,4 +687,4 @@ initialization
 finalization
   WSACleanup;
 {$IFEND}
-end.
+end.
