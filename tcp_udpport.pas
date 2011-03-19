@@ -39,7 +39,7 @@ type
   tsocklen = tOS_INT;
   {$ELSE}
   tsocklen = Integer;
-  {$ENDIF}
+  {$IFEND}
   {:
   @abstract(Driver genérico para portas TCP/UDP sobre IP. Atualmente funcionando
             para Windows, Linux e FreeBSD.)
@@ -59,7 +59,7 @@ type
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
-    function connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:Integer):Integer;
+    function  connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:Integer):Integer;
     {$IFDEF UNIX}
     function  set_nonblock(fd:TSocket; block:boolean):Integer;
     {$ENDIF}
@@ -315,19 +315,19 @@ begin
       end;
     end;
     {$ELSE}
-    {$IFNDEF WINCE}
-    //se esta usando FPC ou um Delphi abaixo da versao 2009
-    {$IF defined(FPC) OR (not defined(DELPHI2009_UP))}
-    ServerAddr := GetHostByName(PAnsiChar(FHostName));
-    {$ELSE}
-    ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
-    {$IFEND}
-    if ServerAddr=nil then begin
-      PActive:=false;
-      RefreshLastOSError;
-      exit;
-    end;
-    {$ENDIF}
+      {$IFNDEF WINCE}
+        //se esta usando FPC ou um Delphi abaixo da versao 2009
+        {$IF defined(FPC) OR (not defined(DELPHI2009_UP))}
+        ServerAddr := GetHostByName(PAnsiChar(FHostName));
+        {$ELSE}
+        ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
+        {$IFEND}
+        if ServerAddr=nil then begin
+          PActive:=false;
+          RefreshLastOSError;
+          exit;
+        end;
+      {$ENDIF}
     {$IFEND}
 
     case FPortType of
@@ -414,7 +414,7 @@ var
 begin
   if FSocket>0 then begin
     SetLength(buffer,5);
-    {$IF defined(UNIX) and defined(FPC)}
+    {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     fpshutdown(FSocket,SHUT_WR);
     lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
     while lidos>0 do begin
@@ -590,14 +590,14 @@ begin
 
     Result:= FpFcntl(fd, F_SETFL, oldflags);
 end;
-{$endif}
+{$ENDIF}
 
-function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:integer):Integer;
+function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:tsocklen; timeout:Integer):Integer;
 var
   sel:TFDSet;
   ret:Integer;
-  mode:Integer;
-  tv : TimeVal;
+  mode:u_long;
+  tv : TTimeVal;
   p:ptimeval;
 label
   cleanup;
@@ -611,7 +611,7 @@ begin
     p:=@tv;
   end;
 
-  {$if defined(WIN32) or defined(WIN64)}
+  {$if defined(WIN32) or defined(WIN64) or defined(WINCE)}
   mode:=1;
   ioctlsocket(sock, FIONBIO, mode);
   {$ELSE}
@@ -626,7 +626,7 @@ begin
   {$ELSE}
   if connect(sock, address^, address_len) <> 0 then
   {$IFEND}
-    {$if defined(WIN32) or defined(WIN64)}
+    {$if defined(WIN32) or defined(WIN64) or defined(WINCE)}
     if WSAGetLastError=WSAEWOULDBLOCK then begin
     {$else}
     if socketerror = ESysEINPROGRESS then begin
@@ -656,7 +656,7 @@ begin
       Result := -1;
 
 cleanup:
-  {$if defined(WIN32) or defined(WIN64)}
+  {$if defined(WIN32) or defined(WIN64) or defined(WINCE)}
   mode := 0;
   ioctlsocket(sock, FIONBIO, mode);
   {$else}
