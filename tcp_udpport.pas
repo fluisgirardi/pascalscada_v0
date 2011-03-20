@@ -37,7 +37,11 @@ type
 
   //@exclude
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}
+  {$IFDEF UNIX}
+  t_socklen = Sockets.TSockLen;
+  {$ELSE}
   t_socklen = tOS_INT;
+  {$ENDIF}
   {$ELSE}
   t_socklen = Integer;
   {$IFEND}
@@ -598,7 +602,11 @@ function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; addr
 var
   sel:TFDSet;
   ret:Integer;
+  {$IFDEF UNIX}
+  mode:Integer;
+  {$ELSE}
   mode:u_long;
+  {$ENDIF}
   tv : TTimeVal;
   p:ptimeval;
 label
@@ -689,4 +697,4 @@ initialization
 finalization
   WSACleanup;
 {$IFEND}
-end.
+end.
