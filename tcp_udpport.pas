@@ -16,35 +16,18 @@ unit tcp_udpport;
 interface
 
 uses
-  Classes, SysUtils, CommPort, commtypes
-  {$IF defined(WIN32) or defined(WIN64)}
-  , Windows, WinSock
+  Classes, SysUtils, CommPort, commtypes, socket_types
+  {$IF defined(WIN32) or defined(WIN64)} //delphi ou lazarus sobre windows
+  , Windows, WinSock, sockets_w32_w64
   {$ELSE}
-  {$IFDEF FPC}
-  , Sockets {$IFDEF UNIX}, BaseUnix{$ENDIF}
+  {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
+  , Sockets {$IFDEF UNIX}  , sockets_unix, BaseUnix, netdb, Unix{$ENDIF}
+            {$IFDEF WINCE} , sockets_wince {$ENDIF}
             {$IFDEF FDEBUG}, LCLProc{$ENDIF}
-            {$IFDEF WINCE}, WinSock{$endif}
-  {$ENDIF}
+  {$IFEND}
   {$IFEND};
 
 type
-  {:
-  Enumera os tipos de porta.
-  @value ptTCP = Porta cliente do tipo TCP.
-  @value ptUDP = Porta cliente do tipo UDP.
-  }
-  TPortType = (ptTCP, ptUDP);
-
-  //@exclude
-  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}
-  {$IFDEF UNIX}
-  t_socklen = Sockets.TSockLen;
-  {$ELSE}
-  t_socklen = tOS_INT;
-  {$ENDIF}
-  {$ELSE}
-  t_socklen = Integer;
-  {$IFEND}
   {:
   @abstract(Driver genérico para portas TCP/UDP sobre IP. Atualmente funcionando
             para Windows, Linux e FreeBSD.)
@@ -64,10 +47,7 @@ type
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
-    function  connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:t_socklen; timeout:Integer):Integer;
-    {$IFDEF UNIX}
-    function  set_nonblock(fd:TSocket; block:boolean):Integer;
-    {$ENDIF}
+    function  connect_with_timeoutOLD(sock:Tsocket; address:psockaddr; address_len:t_socklen; timeout:Integer):Integer;
   protected
     //: @exclude
     procedure Loaded; override;
@@ -131,14 +111,7 @@ type
 
 implementation
 
-uses hsstrings
-{$ifdef fpc}
-{$IFDEF UNIX}
-     ,netdb,
-     Unix
-{$endif}
-{$ENDIF}
-     ;
+uses hsstrings;
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
@@ -294,48 +267,61 @@ end;
 
 procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
 var
-{$IF defined(UNIX) and defined(FPC)}
+{$IF defined(FPC) and defined(UNIX)}
   ServerAddr:THostEntry;
   tv:timeval;
-{$ELSE}
-{$IFNDEF WINCE}
-  ServerAddr:PHostEnt;
-{$ENDIF}
-{$IFEND}
-{$IFDEF WINCE}
-  channel:sockets.sockaddr_in;
-{$ELSE}
   channel:sockaddr_in;
-{$ENDIF}
+{$IFEND}
+
+{$IF defined(FPC) and defined(WINCE)}
+  ServerAddr:PHostEnt;
+{$IFEND}
+
+{$IF defined(WIN32) or defined(WIN64)}
+  ServerAddr:PHostEnt;
+  channel:sockaddr_in;
+{$IFEND}
+
   flag, bufsize, sockType:Integer;
 begin
   Ok:=false;
   try
-    {$IF defined(UNIX) and defined(FPC)}
-    if not GetHostByName(FHostName,ServerAddr) then begin
-      ServerAddr.Addr:=StrToHostAddr(FHostName);
-      if ServerAddr.Addr.s_addr=0 then begin
+    //##########################################################################
+    // RESOLUCAO DE NOMES SOBRE WINDOWS 32/64 BITS.
+    //##########################################################################
+    {$IF defined(WIN32) or defined(WIN64)}
+      //se esta usando FPC ou um Delphi abaixo da versao 2009, usa a versão
+      //ansistring, caso seja uma versao delphi 2009 ou superior
+      //usa a versao unicode.
+      {$IF defined(FPC) OR (not defined(DELPHI2009_UP))}
+      ServerAddr := GetHostByName(PAnsiChar(FHostName));
+      {$ELSE}
+      ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
+      {$IFEND}
+      if ServerAddr=nil then begin
         PActive:=false;
         RefreshLastOSError;
         exit;
       end;
-    end;
-    {$ELSE}
-      {$IFNDEF WINCE}
-        //se esta usando FPC ou um Delphi abaixo da versao 2009
-        {$IF defined(FPC) OR (not defined(DELPHI2009_UP))}
-        ServerAddr := GetHostByName(PAnsiChar(FHostName));
-        {$ELSE}
-        ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
-        {$IFEND}
-        if ServerAddr=nil then begin
+    {$IFEND}
+
+    //##########################################################################
+    // RESOLUCAO DE NOMES SOBRE LINUX/FREEBSD e outros.
+    //##########################################################################
+    {$IF defined(FPC) and defined(UNIX)}
+      if not GetHostByName(FHostName,ServerAddr) then begin
+        ServerAddr.Addr:=StrToHostAddr(FHostName);
+        if ServerAddr.Addr.s_addr=0 then begin
           PActive:=false;
           RefreshLastOSError;
           exit;
         end;
-      {$ENDIF}
+      end;
     {$IFEND}
 
+    //##########################################################################
+    //CRIA O SOCKET
+    //##########################################################################
     case FPortType of
       ptTCP:
         sockType := IPPROTO_TCP;
@@ -348,56 +334,66 @@ begin
     end;
 
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
+    //UNIX E WINDOWS CE
     FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
-    {$ELSE}
-    FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
-    {$IFEND}
 
     if FSocket<0 then begin
       PActive:=false;
       RefreshLastOSError;
       exit;
     end;
+    {$ELSE}
+    //WINDOWS
+    FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
 
+    if FSocket=INVALID_SOCKET then begin
+      PActive:=false;
+      RefreshLastOSError;
+      exit;
+    end;
+    {$IFEND}
+
+    //##########################################################################
+    //SETA O MODO DE OPERACAO DE NAO BLOQUEIO DE CHAMADA.
+    //##########################################################################
+    setblockingmode(FSocket,MODE_NONBLOCKING);
+
+    //##########################################################################
+    //SETA AS OPCOES DO SOCKET
+    //OPCOES DE TIMEOUT IRÃO SER FEITAS USANDO SELECT/FPSELECT
+    //POIS ESTAS OPÇÕES NÃO SAO SUPORTADAS POR ALGUNS SISTEMAS OPERACIONAIS
+    //##########################################################################
     flag:=1;
     bufsize := 1024*16;
+    //UNIX e WINDOWS CE
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-    {$IFDEF UNIX}
-    tv.tv_sec:=((FTimeout+1000) div 1000);
-    tv.tv_usec:=((FTimeout+1000) mod 1000) * 1000;
-
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  @tv,       sizeof(tv));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  @tv,       sizeof(tv));
-    {$ELSE}
-    flag:=FTimeout+1000;
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  @flag, sizeof(flag));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  @flag, sizeof(flag));
-    flag:=1;
-    {$ENDIF}
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,     sizeof(Integer));
-    {$ELSE}
-    flag:=FTimeout+1000;
-    setsockopt(FSocket, SOL_SOCKET,  SO_RCVTIMEO,  PAnsiChar(@flag), sizeof(flag));
-    setsockopt(FSocket, SOL_SOCKET,  SO_SNDTIMEO,  PAnsiChar(@flag), sizeof(flag));
-    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    PAnsiChar(@bufsize),  sizeof(Integer));
-    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    PAnsiChar(@bufsize),  sizeof(Integer));
-    flag := 1;
-    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  PAnsiChar(@flag),     sizeof(Integer));
+    {$IFEND}
+    //WINDOWS
+    {$IF defined(WIN32) or defined(WIN64)}
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    PAnsiChar(@bufsize), sizeof(Integer));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    PAnsiChar(@bufsize), sizeof(Integer));
+    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  PAnsiChar(@flag),    sizeof(Integer));
     {$IFEND}
 
-    channel.sin_family      := AF_INET;
-    channel.sin_port        := htons(FPortNumber);
+    //##########################################################################
+    //CONFIGURA E ENDERECO QUE O SOCKET VAI CONECTAR
+    //##########################################################################
+    channel.sin_family      := AF_INET;            //FAMILIA
+    channel.sin_port        := htons(FPortNumber); //NUMERO DA PORTA
 
     {$IF defined(FPC) AND defined(UNIX)}
     channel.sin_addr.S_addr := longword(htonl(LongInt(ServerAddr.Addr.s_addr)));
-    {$ELSE}
-    {$IFDEF WINCE}
+    {$IFEND}
+
+    {$IF defined(FPC) AND defined(WINCE)}
     channel.sin_addr := StrToNetAddr(FHostName);
-    {$ELSE}
+    {$IFEND}
+
+    {$IF defined(WIN32) OR defined(WIN64)}
     channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
-    {$ENDIF}
     {$IFEND}
 
     if connect_with_timeout(FSocket,@channel,sizeof(channel),FTimeout)<>0 then begin
@@ -453,7 +449,7 @@ begin
   incRetries:=true;
   //CommResult informa o resultado da IO
   //Result informa se a acao deve ser retomada.
-  {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
+  {$IF defined(WIN32) or defined(WIN64)}
   case WSAGetLastError of
     WSANOTINITIALISED,
     WSAENETDOWN,
@@ -491,11 +487,7 @@ begin
     WSAETIMEDOUT: begin
       if PActive then DoCommPortDisconected;
       PActive:=false;
-      {$IF defined(UNIX) and defined(FPC)}
-      fpshutdown(FSocket,SHUT_RDWR);
-      {$ELSE}
       Shutdown(FSocket,2);
-      {$IFEND}
       CloseSocket(FSocket);
       CommResult:=iorTimeOut;
       Result:=false;
@@ -514,11 +506,7 @@ begin
     ESysECONNREFUSED: begin
       if PActive then DoCommPortDisconected;
       PActive:=false;
-      {$IF defined(UNIX) and defined(FPC)}
       fpshutdown(FSocket,SHUT_RDWR);
-      {$ELSE}
-      Shutdown(FSocket,2);
-      {$IFEND}
       CloseSocket(FSocket);
       CommResult:=iorNotReady;
       Result:=false;
@@ -543,11 +531,7 @@ begin
     ESysETIMEDOUT: begin
       if PActive then DoCommPortDisconected;
       PActive:=false;
-      {$IF defined(UNIX) and defined(FPC)}
       fpshutdown(FSocket,SHUT_RDWR);
-      {$ELSE}
-      Shutdown(FSocket,2);
-      {$IFEND}
       CloseSocket(FSocket);
       CommResult:=iorTimeOut;
       Result:=false;
@@ -557,48 +541,10 @@ begin
 end;
 
 procedure TTCP_UDPPort.ClearALLBuffers;
-//var
-  //lidos:Integer;
-  //buffer:array[0..65535] of Byte;
 begin
-  //try
-    //lidos:=-1;
-    //while lidos>0 do begin
-    //  {$IF defined(UNIX) and defined(FPC)}
-    //  lidos := fprecv(FSocket, @buffer[0], 65535, MSG_PEEK);
-    //  lidos := fprecv(FSocket, @buffer[0], lidos, 0);
-    //  lidos := fprecv(FSocket, @buffer[0], 65535, MSG_PEEK);
-    //  {$ELSE}
-    //  lidos := Recv(FSocket, buffer[0], 65535, MSG_PEEK);
-    //  lidos := Recv(FSocket, buffer[0], lidos, 0);
-    //  lidos := Recv(FSocket, buffer[0], 65535, MSG_PEEK);
-    //  {$IFEND}
-    //end;
-  //finally
-  //end;
 end;
 
-{$IFDEF UNIX}
-function  TTCP_UDPPort.set_nonblock(fd:TSocket; block:boolean):Integer;
-var
-  oldflags:Integer;
-begin
-    oldflags := FpFcntl(fd, F_GETFL, 0);
-    if (oldflags < 0) then begin
-      Result:= oldflags;
-      exit;
-    end;
-
-    if (block) then
-      oldflags := oldflags or O_NONBLOCK
-    else
-      oldflags := oldflags xor O_NONBLOCK;
-
-    Result:= FpFcntl(fd, F_SETFL, oldflags);
-end;
-{$ENDIF}
-
-function TTCP_UDPPort.connect_with_timeout(sock:Tsocket; address:psockaddr; address_len:t_socklen; timeout:Integer):Integer;
+function TTCP_UDPPort.connect_with_timeoutOLD(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
 var
   sel:TFDSet;
   ret:Integer;
@@ -631,7 +577,7 @@ begin
   end;
   {$ifend}
 
-  {$IF defined(UNIX) and defined(FPC)}
+  {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
   if fpconnect(sock, address, address_len) <> 0 then
   {$ELSE}
   if connect(sock, address^, address_len) <> 0 then
@@ -675,26 +621,4 @@ cleanup:
   {$IFEND}
 end;
 
-{$IF defined(WIN32) or defined(WIN64)}
-var
-  wsaData:TWSAData;
-  version:WORD;
-initialization
-
-  //inicialização Winsock
-  version := MAKEWORD( 2, 0 );
-
-  //check for error
-  if WSAStartup( version, wsaData ) <> 0 then
-    raise Exception.Create(SerrorInitializingWinsock);
-
-  //check for correct version
-  if (LOBYTE(wsaData.wVersion) <> 2) or (HIBYTE(wsaData.wVersion)<>0) then begin
-    //incorrect WinSock version
-    WSACleanup();
-    raise Exception.Create(SinvalidWinSockVersion);
-  end;
-finalization
-  WSACleanup;
-{$IFEND}
-end.
+end.
