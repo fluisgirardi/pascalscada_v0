@@ -185,11 +185,7 @@ begin
   Packet^.Received := 0;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
     try
-      {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-      lidos := fprecv(FSocket, @Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
-      {$ELSE}
-      lidos := Recv(FSocket, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0);
-      {$IFEND}
+      lidos := socket_recv(FSocket, @Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, 0, FTimeout);
     finally
     end;
 
@@ -228,11 +224,7 @@ begin
   Packet^.Wrote := 0;
   while (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
     try
-      {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-      escritos := fpsend(FSocket, @Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
-      {$ELSE}
-      escritos := Send(FSocket, Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0);
-      {$IFEND}
+      escritos := socket_send(FSocket, @Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0, FTimeout);
     finally
     end;
 
