@@ -49,7 +49,9 @@ begin
     p:=@tv;
   end;
 
-  if fpconnect(sock, address, address_len) <> 0 then
+  Result:=0;
+
+  if fpconnect(sock, address, address_len) <> 0 then begin
     if socketerror = ESysEINPROGRESS then begin
       fpFD_ZERO(sel);
       fpFD_SET(sock, sel);
@@ -68,8 +70,9 @@ begin
       end;
     end else
       Result := -1;
+  end;
 end;
 
 
 end.
-
+

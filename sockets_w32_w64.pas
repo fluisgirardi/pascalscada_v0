@@ -30,8 +30,6 @@ var
   mode:u_long;
   tv : TTimeVal;
   p:ptimeval;
-label
-  cleanup;
 begin
 
   if timeout=-1 then
@@ -42,7 +40,9 @@ begin
     p:=@tv;
   end;
 
-  if connect(sock, address^, address_len) <> 0 then
+  Result:=0;
+
+  if connect(sock, address^, address_len) <> 0 then begin
     if WSAGetLastError=WSAEWOULDBLOCK then begin
       FD_ZERO(sel);
       FD_SET(sock+1, sel);
@@ -61,6 +61,7 @@ begin
       end;
     end else
       Result := -1;
+  end;
 end;
 
 {$IF defined(WIN32) or defined(WIN64)}

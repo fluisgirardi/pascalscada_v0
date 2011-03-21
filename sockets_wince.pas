@@ -7,30 +7,30 @@ unit sockets_wince;
 interface
 
 uses
-  winsock, socket_types;
+  windows, Sockets, socket_types;
 
-  function setblockingmode(fd:TSocket; mode:u_long):Integer;
+  function setblockingmode(fd:TSocket; mode:dword):Integer;
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
 
 implementation
 
-function setblockingmode(fd:TSocket; mode:u_long):Integer;
+uses winsock;
+
+function setblockingmode(fd:sockets.Tsocket; mode:u_long):Integer;
 begin
-  if ioctlsocket(sock, FIONBIO, mode)=SOCKET_ERROR then
-    Result:=-1;
+  if ioctlsocket(fd, FIONBIO, mode)=SOCKET_ERROR then
+    Result:=-1
   else
     Result:=0;
 end;
 
-function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
+function connect_with_timeout(sock:sockets.Tsocket; address:sockets.psockaddr; address_len:t_socklen; timeout:Integer):Integer;
 var
   sel:TFDSet;
   ret:Integer;
   mode:u_long;
   tv : TTimeVal;
   p:ptimeval;
-label
-  cleanup;
 begin
 
   if timeout=-1 then
@@ -41,7 +41,9 @@ begin
     p:=@tv;
   end;
 
-  if connect(sock, address^, address_len) <> 0 then
+  Result:=0;
+
+  if fpconnect(sock, address, address_len) <> 0 then begin
     if WSAGetLastError=WSAEWOULDBLOCK then begin
       FD_ZERO(sel);
       FD_SET(sock+1, sel);
@@ -60,6 +62,7 @@ begin
       end;
     end else
       Result := -1;
+  end;
 end;
 
 
