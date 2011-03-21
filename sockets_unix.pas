@@ -7,9 +7,9 @@ unit sockets_unix;
 interface
 
 uses
-  Sockets, socket_types;
+  unix, baseunix, Sockets, socket_types;
 
-  function setblockingmode(fd:TSocket; block:boolean):Integer;
+  function setblockingmode(fd:TSocket; mode:Integer):Integer;
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
 
 implementation
@@ -36,11 +36,9 @@ function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_soc
 var
   sel:TFDSet;
   ret:Integer;
-  mode:u_long;
+  mode:Integer;
   tv : TTimeVal;
   p:ptimeval;
-label
-  cleanup;
 begin
 
   if timeout=-1 then
@@ -51,11 +49,11 @@ begin
     p:=@tv;
   end;
 
-  if connect(sock, address^, address_len) <> 0 then
-    if WSAGetLastError=WSAEWOULDBLOCK then begin
-      FD_ZERO(sel);
-      FD_SET(sock+1, sel);
-      mode := select(sock+1, nil, @sel, nil, p);
+  if fpconnect(sock, address, address_len) <> 0 then
+    if socketerror = ESysEINPROGRESS then begin
+      fpFD_ZERO(sel);
+      fpFD_SET(sock, sel);
+      mode := fpSelect(sock+1, nil, @sel, nil, p);
 
       if (mode < 0) then begin
         Result := -1;
@@ -74,4 +72,4 @@ end;
 
 
 end.
-
+

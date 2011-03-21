@@ -567,15 +567,15 @@ begin
     p:=@tv;
   end;
 
-  {$if defined(WIN32) or defined(WIN64) or defined(WINCE)}
-  mode:=1;
-  ioctlsocket(sock, FIONBIO, mode);
-  {$ELSE}
-  if set_nonblock(sock, true) < 0 then begin
-    Result:=-1;
-    exit;
-  end;
-  {$ifend}
+  //{$if defined(WIN32) or defined(WIN64) or defined(WINCE)}
+  //mode:=1;
+  //ioctlsocket(sock, FIONBIO, mode);
+  //{$ELSE}
+  //if set_nonblock(sock, true) < 0 then begin
+  //  Result:=-1;
+  //  exit;
+  //end;
+  //{$ifend}
 
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
   if fpconnect(sock, address, address_len) <> 0 then
@@ -616,9 +616,9 @@ cleanup:
   mode := 0;
   ioctlsocket(sock, FIONBIO, mode);
   {$else}
-  if(set_nonblock(sock, false) < 0) then
-    Result := -1;
+  //if(set_nonblock(sock, false) < 0) then
+  //  Result := -1;
   {$IFEND}
 end;
 
-end.
+end.
