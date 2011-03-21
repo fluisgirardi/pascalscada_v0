@@ -190,11 +190,11 @@ begin
     end;
 
     if lidos<0 then begin
-      if CheckConnection(Packet^.ReadIOResult, incretries) then begin
-        if incretries then inc(tentativas);
-        continue;
-      end else
-        break;
+      //if CheckConnection(Packet^.ReadIOResult, incretries) then begin
+      //  if incretries then inc(tentativas);
+      //  continue;
+      //end else
+      //  break;
     end else
       Packet^.Received := Packet^.Received + lidos;
     inc(tentativas);

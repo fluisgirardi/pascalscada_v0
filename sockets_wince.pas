@@ -86,11 +86,11 @@ begin
 
   Result:=fprecv(sock, buf, len, flags);
 
-  if Result <> 0 then begin
+  if Result = SOCKET_ERROR then begin
     if WSAGetLastError=WSAEWOULDBLOCK then begin
       FD_ZERO(sel);
-      FD_SET(sock+1, sel);
-      mode := select(sock+1, nil, @sel, nil, p);
+      FD_SET(sock, sel);
+      mode := select(sock, @sel, nil, nil, p);
 
       if (mode < 0) then begin
         Result := -1;
@@ -127,11 +127,11 @@ begin
 
   Result:=fpsend(sock, buf, len, flags);
 
-  if Result <> 0 then begin
+  if Result = SOCKET_ERROR then begin
     if WSAGetLastError=WSAEWOULDBLOCK then begin
       FD_ZERO(sel);
-      FD_SET(sock+1, sel);
-      mode := select(sock+1, nil, @sel, nil, p);
+      FD_SET(sock, sel);
+      mode := select(sock, nil, @sel, nil, p);
 
       if (mode < 0) then begin
         Result := -1;
