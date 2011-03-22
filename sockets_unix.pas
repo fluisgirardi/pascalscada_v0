@@ -54,7 +54,7 @@ begin
   Result:=0;
 
   if fpconnect(sock, address, address_len) <> 0 then begin
-    if socketerror = ESysEINPROGRESS then begin
+    if fpGetErrno = ESysEINPROGRESS then begin
       fpFD_ZERO(sel);
       fpFD_SET(sock, sel);
       mode := fpSelect(sock+1, nil, @sel, nil, p);
@@ -79,7 +79,7 @@ function socket_recv(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: 
 var
   sel:TFDSet;
   ret:Integer;
-  mode:u_long;
+  mode:Integer;
   tv : TTimeVal;
   p:ptimeval;
 begin
@@ -94,11 +94,12 @@ begin
 
   Result:=fprecv(sock, buf, len, flags);
 
-  if  Result<> 0 then begin
-    if WSAGetLastError=WSAEWOULDBLOCK then begin
-      FD_ZERO(sel);
-      FD_SET(sock, sel);
-      mode := select(sock, @sel, nil, nil, p);
+  if  Result < 0 then begin
+    if fpGetErrno in [ESysEINTR, ESysEAGAIN] then begin
+      fpFD_ZERO(sel);
+      fpFD_SET(sock, sel);
+
+      mode := fpselect(sock+1, @sel, nil, nil, p);
 
       if (mode < 0) then begin
         Result := -1;
@@ -120,7 +121,7 @@ function socket_send(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: 
 var
   sel:TFDSet;
   ret:Integer;
-  mode:u_long;
+  mode:Integer;
   tv : TTimeVal;
   p:ptimeval;
 begin
@@ -135,11 +136,12 @@ begin
 
   Result:=fpsend(sock, buf, len, flags);
 
-  if Result <> 0 then begin
-    if WSAGetLastError=WSAEWOULDBLOCK then begin
-      FD_ZERO(sel);
-      FD_SET(sock, sel);
-      mode := select(sock, nil, @sel, nil, p);
+  if Result < 0 then begin
+    if fpGetErrno in [ESysEINTR, ESysEAGAIN] then begin
+      fpFD_ZERO(sel);
+      fpFD_SET(sock, sel);
+
+      mode := fpselect(sock+1, nil, @sel, nil, p);
 
       if (mode < 0) then begin
         Result := -1;
@@ -157,6 +159,4 @@ begin
   end;
 end;
 
-
-end.
-
+end.
