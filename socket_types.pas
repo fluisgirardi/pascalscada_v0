@@ -1,6 +1,8 @@
 unit socket_types;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+{$mode delphi}
+{$ENDIF}
 
 interface
 

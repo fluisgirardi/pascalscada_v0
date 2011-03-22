@@ -37,7 +37,6 @@ end;
 function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
 var
   sel:TFDSet;
-  ret:Integer;
   mode:Integer;
   tv : TTimeVal;
   p:ptimeval;
@@ -78,7 +77,6 @@ end;
 function socket_recv(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
 var
   sel:TFDSet;
-  ret:Integer;
   mode:Integer;
   tv : TTimeVal;
   p:ptimeval;
@@ -120,7 +118,6 @@ end;
 function socket_send(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
 var
   sel:TFDSet;
-  ret:Integer;
   mode:Integer;
   tv : TTimeVal;
   p:ptimeval;
@@ -159,4 +156,4 @@ begin
   end;
 end;
 
-end.
+end.
