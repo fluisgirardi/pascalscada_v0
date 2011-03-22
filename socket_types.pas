@@ -19,7 +19,7 @@ type
 
   //@exclude
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}
-  {$IFDEF UNIX}
+  {$IFNDEF UNIX}
   t_socklen = TSockLen;
   {$ELSE}
   t_socklen = tOS_INT;
