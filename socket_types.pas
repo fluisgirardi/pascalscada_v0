@@ -19,11 +19,7 @@ type
 
   //@exclude
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}
-  {$IFNDEF UNIX}
   t_socklen = TSockLen;
-  {$ELSE}
-  t_socklen = tOS_INT;
-  {$ENDIF}
   {$ELSE}
   t_socklen = Integer;
   {$IFEND}
@@ -42,4 +38,4 @@ const
 implementation
 
 end.
-
+
