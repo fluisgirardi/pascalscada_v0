@@ -95,15 +95,6 @@ type
   }
   TTagCommandCallBack = procedure(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:Integer) of object;
 
-  TScanUpdateRec = record
-    CallBack:TTagCommandCallBack;
-    ValueTimeStamp:TDateTime;
-    LastResult:TProtocolIOResult;
-    Values:TArrayOfDouble;
-  end;
-
-  TArrayOfScanUpdateRec = array of TScanUpdateRec;
-
   {:
   Estrutura usada internamente pelos drivers de protocolo (TProtocolDriver) para
   realizar leituras e escritas por Scan. Representa a configuração do tag que
@@ -327,6 +318,15 @@ type
     procedure RemoveCallBacks(ITag:IHMITagInterface);
   end;
 
+  TScanUpdateRec = record
+    Owner:TTag;
+    CallBack:TTagCommandCallBack;
+    ValueTimeStamp:TDateTime;
+    LastResult:TProtocolIOResult;
+    Values:TArrayOfDouble;
+  end;
+
+  TArrayOfScanUpdateRec = array of TScanUpdateRec;
 
 implementation
 
@@ -500,4 +500,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.

@@ -189,12 +189,9 @@ begin
   for c:=0 to High(PScannedValues) do begin
     found:=false;
     for pt:=TProtocolDriver(FOwnerProtocolDriver).TagCount-1 downto 0 do
-      if Supports(TProtocolDriver(FOwnerProtocolDriver).Tag[pt],IScanableTagInterface) then begin
-        imanagedint := (TProtocolDriver(FOwnerProtocolDriver).Tag[pt] as IScanableTagInterface);
-        if imanagedint.IsMyCallBack(PScannedValues[c].CallBack) then begin
-          found:=true;
-          break;
-        end;
+      if TProtocolDriver(FOwnerProtocolDriver).Tag[pt]=PScannedValues[c].Owner then begin
+        found:=true;
+        break;
       end;
     if not found then continue;
     with PScannedValues[c] do
@@ -284,4 +281,4 @@ begin
 end;
 
 end.
-
+

@@ -48,8 +48,8 @@ begin
   if fpconnect(sock, address, address_len) <> 0 then begin
     if WSAGetLastError=WSAEWOULDBLOCK then begin
       FD_ZERO(sel);
-      FD_SET(sock+1, sel);
-      mode := select(sock+1, nil, @sel, nil, p);
+      FD_SET(sock, sel);
+      mode := select(sock, nil, @sel, nil, p);
 
       if (mode < 0) then begin
         Result := -1;

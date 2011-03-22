@@ -762,9 +762,10 @@ begin
             SetLength(ScanReadRec.Values, tr.Size);
             DoGetValue(tr, ScanReadRec);
 
-            MultiValues[valueSet].LastResult:=ScanReadRec.LastQueryResult;
-            MultiValues[valueSet].CallBack  :=tr.CallBack;
-            MultiValues[valueSet].Values    :=ScanReadRec.Values;
+            MultiValues[valueSet].Owner         :=Tag[t];
+            MultiValues[valueSet].LastResult    :=ScanReadRec.LastQueryResult;
+            MultiValues[valueSet].CallBack      :=tr.CallBack;
+            MultiValues[valueSet].Values        :=ScanReadRec.Values;
             MultiValues[valueSet].ValueTimeStamp:=ScanReadRec.ValuesTimestamp;
           end;
         end;
