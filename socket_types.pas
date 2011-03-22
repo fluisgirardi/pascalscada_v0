@@ -19,7 +19,11 @@ type
 
   //@exclude
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}
+  {$IF defined(WIN32) or defined(WIN64)}
+  t_socklen = tOS_INT;
+  {$ELSE}
   t_socklen = TSockLen;
+  {$IFEND}
   {$ELSE}
   t_socklen = Integer;
   {$IFEND}
@@ -38,4 +42,4 @@ const
 implementation
 
 end.
-
+
