@@ -7,12 +7,13 @@ unit sockets_unix;
 interface
 
 uses
-  unix, baseunix, Sockets, socket_types;
+  unix, baseunix, Sockets, socket_types, commtypes;
 
   function setblockingmode(fd:TSocket; mode:Integer):Integer;
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
   function socket_recv(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
   function socket_send(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
+  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 
 implementation
 
@@ -156,4 +157,52 @@ begin
   end;
 end;
 
-end.
+function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+begin
+  incRetries:=true;
+  case socketerror of
+    EsockEINVAL:
+      Result:= true;
+
+    EsockENOTCONN,
+    EsockENOTSOCK,
+    EsockEBADF,
+    ESysECONNRESET,
+    ESysECONNABORTED,
+    ESysECONNREFUSED: begin
+      if PActive then DoCommPortDisconected;
+      PActive:=false;
+      fpshutdown(FSocket,SHUT_RDWR);
+      CloseSocket(FSocket);
+      CommResult:=iorNotReady;
+      Result:=false;
+    end;
+
+    EsockEFAULT,
+    EsockEACCESS,
+    EsockEMFILE,
+    EsockEMSGSIZE,
+    EsockENOBUFS,
+    ESysEIO,
+    EsockEPROTONOSUPPORT: begin
+      CommResult:=iorPortError;
+      Result:=false;
+    end;
+
+    EsockEINTR,
+    ESysEAGAIN: begin
+      Result:=true;
+      incRetries:=false;
+    end;
+    ESysETIMEDOUT: begin
+      if PActive then DoCommPortDisconected;
+      PActive:=false;
+      fpshutdown(FSocket,SHUT_RDWR);
+      CloseSocket(FSocket);
+      CommResult:=iorTimeOut;
+      Result:=false;
+    end;
+  end;
+end;
+
+end.

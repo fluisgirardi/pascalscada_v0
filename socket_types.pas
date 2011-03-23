@@ -35,6 +35,8 @@ type
   }
   TPortType = (ptTCP, ptUDP);
 
+  TDisconnectNotifierProc = procedure of object;
+
 const
   MODE_NONBLOCKING = 1;
   MODE_BLOCKING = 0;
@@ -42,4 +44,4 @@ const
 implementation
 
 end.
-
+

@@ -64,13 +64,6 @@ type
     function  ComSettingsOK:Boolean; override;
     //: @seealso(TCommPortDriver.ClearALLBuffers)
     procedure ClearALLBuffers; override;
-    {:
-     Verifica o estado atual da conexao e sinaliza no pacote de resulta.
-     @param(CommResult TIOResult. Estrutra do pedido a ser sinalizado com o novo
-            estado da conexão.)
-     @returns(@true caso esteja conectado.)
-    }
-    function  CheckConnection(var CommResult:TIOResult; var incRetries:Boolean):Boolean; virtual;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -190,11 +183,11 @@ begin
     end;
 
     if lidos<0 then begin
-      //if CheckConnection(Packet^.ReadIOResult, incretries) then begin
-      //  if incretries then inc(tentativas);
-      //  continue;
-      //end else
-      //  break;
+      if CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then begin
+        if incretries then inc(tentativas);
+        continue;
+      end else
+        break;
     end else
       Packet^.Received := Packet^.Received + lidos;
     inc(tentativas);
@@ -229,7 +222,7 @@ begin
     end;
 
     if escritos<0 then begin
-      if CheckConnection(Packet^.WriteIOResult, incretries) then begin
+      if CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then begin
         if incretries then inc(tentativas);
         continue;
       end else
@@ -433,104 +426,6 @@ end;
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
 begin
   Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
-end;
-
-function TTCP_UDPPort.CheckConnection(var CommResult:TIOResult; var incRetries:Boolean):Boolean;
-begin
-  incRetries:=true;
-  //CommResult informa o resultado da IO
-  //Result informa se a acao deve ser retomada.
-  {$IF defined(WIN32) or defined(WIN64)}
-  case WSAGetLastError of
-    WSANOTINITIALISED,
-    WSAENETDOWN,
-    WSAEFAULT,
-    WSAENETRESET,
-    WSAENOTSOCK,
-    WSAECONNABORTED,
-    WSAENOTCONN,
-    WSAESHUTDOWN: begin
-      PActive:=false;
-      CommResult := iorNotReady;
-      Result := false;
-    end;
-
-    WSAEOPNOTSUPP: begin
-      PActive:=false;
-      CommResult:=iorPortError;
-      Result:=false;
-    end;
-
-    WSAEINVAL,
-    WSAEMSGSIZE: begin
-      Result := false;
-      CommResult := iorPortError;
-    end;
-
-    WSAEWOULDBLOCK:
-      Result := true;
-
-    WSAEINPROGRESS,    
-    WSAEINTR: begin
-      Result:=true;
-      incRetries:=false;
-    end;
-    WSAETIMEDOUT: begin
-      if PActive then DoCommPortDisconected;
-      PActive:=false;
-      Shutdown(FSocket,2);
-      CloseSocket(FSocket);
-      CommResult:=iorTimeOut;
-      Result:=false;
-    end;
-  end;
-  {$ELSE}
-  {$IFDEF UNIX}
-  case socketerror of
-    EsockEINVAL:
-      Result:= true;
-
-    EsockENOTCONN,
-    EsockENOTSOCK,
-    EsockEBADF,
-    ESysECONNRESET,
-    ESysECONNABORTED,
-    ESysECONNREFUSED: begin
-      if PActive then DoCommPortDisconected;
-      PActive:=false;
-      fpshutdown(FSocket,SHUT_RDWR);
-      CloseSocket(FSocket);
-      CommResult:=iorNotReady;
-      Result:=false;
-    end;
-
-    EsockEFAULT,
-    EsockEACCESS,
-    EsockEMFILE,
-    EsockEMSGSIZE,
-    EsockENOBUFS,
-    ESysEIO,
-    EsockEPROTONOSUPPORT: begin
-      CommResult:=iorPortError;
-      Result:=false;
-    end;
-
-    EsockEINTR,
-    ESysEAGAIN: begin
-      Result:=true;
-      incRetries:=false;
-    end;
-    ESysETIMEDOUT: begin
-      if PActive then DoCommPortDisconected;
-      PActive:=false;
-      fpshutdown(FSocket,SHUT_RDWR);
-      CloseSocket(FSocket);
-      CommResult:=iorTimeOut;
-      Result:=false;
-    end;
-  end;
-  {$ENDIF}
-  {$IFEND}
 end;
 
 procedure TTCP_UDPPort.ClearALLBuffers;

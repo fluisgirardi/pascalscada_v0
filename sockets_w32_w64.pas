@@ -7,12 +7,13 @@ unit sockets_w32_w64;
 interface
 
 uses
-  windows, winsock, socket_types, hsstrings, sysutils;
+  windows, winsock, socket_types, hsstrings, sysutils, commtypes;
 
   function socket_recv(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
   function socket_send(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
   function setblockingmode(fd:TSocket; mode:u_long):Integer;
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
+  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 
 implementation
 
@@ -144,6 +145,53 @@ begin
   end;
 end;
 
+function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+begin
+  case WSAGetLastError of
+    WSANOTINITIALISED,
+    WSAENETDOWN,
+    WSAEFAULT,
+    WSAENETRESET,
+    WSAENOTSOCK,
+    WSAECONNABORTED,
+    WSAENOTCONN,
+    WSAESHUTDOWN: begin
+      PActive:=false;
+      CommResult := iorNotReady;
+      Result := false;
+    end;
+
+    WSAEOPNOTSUPP: begin
+      PActive:=false;
+      CommResult:=iorPortError;
+      Result:=false;
+    end;
+
+    WSAEINVAL,
+    WSAEMSGSIZE: begin
+      Result := false;
+      CommResult := iorPortError;
+    end;
+
+    WSAEWOULDBLOCK:
+      Result := true;
+
+    WSAEINPROGRESS,
+    WSAEINTR: begin
+      Result:=true;
+      incRetries:=false;
+    end;
+    WSAETIMEDOUT: begin
+      if PActive then DoCommPortDisconected;
+      PActive:=false;
+      Shutdown(FSocket,2);
+      CloseSocket(FSocket);
+      CommResult:=iorTimeOut;
+      Result:=false;
+    end;
+  end;
+end;
+
 {$IF defined(WIN32) or defined(WIN64)}
 var
   wsaData:TWSAData;
@@ -167,4 +215,4 @@ finalization
   WSACleanup;
 {$IFEND}
 end.
-
+
