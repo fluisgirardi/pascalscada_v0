@@ -147,7 +147,7 @@ begin
   end;
 end;
 
-function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:Sockets.TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 begin
   case WSAGetLastError of
     WSANOTINITIALISED,
@@ -195,4 +195,4 @@ begin
 end;
 
 end.
-
+
