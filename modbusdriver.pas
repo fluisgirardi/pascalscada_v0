@@ -109,7 +109,6 @@ type
     function SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):Integer;
     function SeekFirstItem(LastItem:TTagNamesItemEditor):TTagNamesItemEditor;
   protected
-    FReadEvent:TCrossEvent;
     POutputMaxHole:Cardinal;
     PInputMaxHole:Cardinal;
     PRegistersMaxHole:Cardinal;
@@ -177,7 +176,6 @@ uses Dialogs, Controls, PLCBlockElement, ValueProcessor;
 constructor TModBusDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  FReadEvent := TCrossEvent.Create(nil,true,false,'');
   FProtocolReady:=false;
   POutputMaxHole := 50;
   PInputMaxHole := 50;
@@ -199,7 +197,6 @@ begin
       PModbusPLC[plc].AnalogReg.Destroy;
   end;
   SetLength(PModbusPLC,0);
-  FReadEvent.Destroy;
 end;
 
 

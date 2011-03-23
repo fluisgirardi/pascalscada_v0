@@ -730,6 +730,8 @@ begin
     FPause.ResetEvent;
     FCritical.Enter;
 
+    if ComponentState*[csDestroying]<>[] then exit;
+
     if (PCommPort=nil) or (not PCommPort.ReallyActive) then begin
       Result:=50; //forca espera de 50ms
       exit;
