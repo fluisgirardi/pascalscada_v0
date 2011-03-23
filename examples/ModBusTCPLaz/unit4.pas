@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ExtCtrls, RTTIGrids, TAGraph, TASources, TASeries, tcp_udpport,
   ModBusTCP, PLCTagNumber, PLCBlock, HMILabel, HMIUpDown, HMIScrollBar, HMIEdit,
-  PLCBlockElement, sdl;
+  PLCBlockElement;
 
 type
 
@@ -101,7 +101,7 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  SDL_Init(SDL_INIT_EVERYTHING);
+  //SDL_Init(SDL_INIT_EVERYTHING);
 end;
 
 initialization
