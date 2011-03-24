@@ -173,9 +173,9 @@ begin
   t.tv_usec:=1;
   t.tv_sec:=0;
 
-  fpFD_ZERO(readset);
-  fpFD_SET(FSocket,readset);
-  retval:=fpSelect(FSocket+1,@readset,nil,nil,@t);
+  FD_ZERO(readset);
+  FD_SET(FSocket,readset);
+  retval:=Select(FSocket,@readset,nil,nil,@t);
 
   if (retval=0) then begin   //timeout, appears to be ok...
     Result:=true;
@@ -194,7 +194,7 @@ begin
 
   if (retval=1) then begin  // seems there is something in our receive buffer!!
     // now we check how many bytes are in receive buffer
-    retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
+    retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
 
     if (retval<>0) then begin  // some error occured
       DoCommPortDisconected();
@@ -237,4 +237,4 @@ finalization
   WSACleanup;
 {$IFEND}
 end.
-
+
