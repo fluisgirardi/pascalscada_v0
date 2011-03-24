@@ -182,22 +182,18 @@ begin
     finally
     end;
 
-    if lidos<0 then begin
-      if CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then begin
-        if incretries then inc(tentativas);
-        continue;
-      end else
+    if lidos<=0 then begin
+      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then
         break;
     end else
       Packet^.Received := Packet^.Received + lidos;
-    inc(tentativas);
+
   end;
 
   Packet^.ReadRetries := tentativas;
   if Packet^.ToRead>Packet^.Received then begin
     Packet^.ReadIOResult := iorTimeOut;
-    if PClearBufOnErr then
-      InternalClearALLBuffers;
+    if PClearBufOnErr then InternalClearALLBuffers;
   end else
     Packet^.ReadIOResult := iorOK;
 
@@ -221,15 +217,11 @@ begin
     finally
     end;
 
-    if escritos<0 then begin
-      if CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then begin
-        if incretries then inc(tentativas);
-        continue;
-      end else
+    if escritos<=0 then begin
+      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then
         break;
     end else
       Packet^.Wrote := Packet^.Wrote + escritos;
-    inc(tentativas);
   end;
 
   Packet^.WriteRetries := tentativas;
@@ -432,4 +424,4 @@ begin
 
 end;
 
-end.
+end.

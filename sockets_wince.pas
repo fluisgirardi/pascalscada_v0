@@ -153,7 +153,7 @@ var
   t:TTimeVal;
   readset:TFDSet;
 begin
-  incRetries:=false;
+  Result:=true;
 
   retval:=0;
   nbytes:=0;
@@ -162,7 +162,7 @@ begin
   if retval<>0 then begin
     DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=true;
+    PActive:=false;
     Result:=false;
     exit;
   end;
@@ -182,14 +182,13 @@ begin
   if (retval=0) then begin   //timeout, appears to be ok...
     Result:=true;
     CommResult:=iorTimeOut;
-    incRetries:=true;
     exit;
   end;
 
   if (retval<0) then begin //error on socket...
     DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=true;
+    PActive:=false;
     Result:=false;
     exit;
   end;
@@ -201,7 +200,7 @@ begin
     if (retval<>0) then begin  // some error occured
       DoCommPortDisconected();
       CommResult:=iorPortError;
-      PActive:=true;
+      PActive:=false;
       Result:=false;
       exit;
     end;
@@ -209,7 +208,7 @@ begin
     if (nbytes=0) then begin
       DoCommPortDisconected();
       CommResult:=iorNotReady;
-      PActive:=true;
+      PActive:=false;
       Result:=false;
       exit;
     end;
