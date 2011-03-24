@@ -21,7 +21,7 @@ uses
   , Windows, WinSock, sockets_w32_w64
   {$ELSE}
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-  , Sockets {$IFDEF UNIX}  , sockets_unix, BaseUnix, netdb, Unix{$ENDIF}
+  , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix{$ENDIF}
             {$IFDEF WINCE} , sockets_wince {$ENDIF}
             {$IFDEF FDEBUG}, LCLProc{$ENDIF}
   {$IFEND}
@@ -253,7 +253,6 @@ procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
 var
 {$IF defined(FPC) and defined(UNIX)}
   ServerAddr:THostEntry;
-  tv:timeval;
   channel:sockaddr_in;
 {$IFEND}
 

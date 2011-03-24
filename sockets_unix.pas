@@ -7,7 +7,7 @@ unit sockets_unix;
 interface
 
 uses
-  unix, baseunix, Sockets, socket_types, commtypes;
+  unix, baseunix, Sockets, socket_types, commtypes, termio;
 
   function setblockingmode(fd:TSocket; mode:Integer):Integer;
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
@@ -158,49 +158,70 @@ begin
 end;
 
 function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+var
+  retval, nbytes:Integer;
+  t:TTimeVal;
+  readset:TFDSet;
 begin
-  incRetries:=true;
-  case socketerror of
-    EsockEINVAL:
-      Result:= true;
+  incRetries:=false;
 
-    EsockENOTCONN,
-    EsockENOTSOCK,
-    EsockEBADF,
-    ESysECONNRESET,
-    ESysECONNABORTED,
-    ESysECONNREFUSED: begin
-      if PActive then DoCommPortDisconected;
-      PActive:=false;
-      fpshutdown(FSocket,SHUT_RDWR);
-      CloseSocket(FSocket);
-      CommResult:=iorNotReady;
-      Result:=false;
-    end;
+  retval:=0;
+  nbytes:=0;
+  retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
 
-    EsockEFAULT,
-    EsockEACCESS,
-    EsockEMFILE,
-    EsockEMSGSIZE,
-    EsockENOBUFS,
-    ESysEIO,
-    EsockEPROTONOSUPPORT: begin
+  if retval<>0 then begin
+    DoCommPortDisconected();
+    CommResult:=iorPortError;
+    PActive:=true;
+    Result:=false;
+    exit;
+  end;
+
+  if (nbytes>0) then begin   // there is something in receive buffer, it doesn't seem the socket has been closed
+    Result:=true;
+    exit;
+  end;
+
+  t.tv_usec:=1;
+  t.tv_sec:=0;
+
+  fpFD_ZERO(readset);
+  fpFD_SET(FSocket,readset);
+  retval:=fpSelect(FSocket+1,@readset,nil,nil,@t);
+
+  if (retval=0) then begin   //timeout, appears to be ok...
+    Result:=true;
+    CommResult:=iorTimeOut;
+    incRetries:=true;
+    exit;
+  end;
+
+  if (retval<0) then begin //error on socket...
+    DoCommPortDisconected();
+    CommResult:=iorPortError;
+    PActive:=true;
+    Result:=false;
+    exit;
+  end;
+
+  if (retval=1) then begin  // seems there is something in our receive buffer!!
+    // now we check how many bytes are in receive buffer
+    retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
+
+    if (retval<>0) then begin  // some error occured
+      DoCommPortDisconected();
       CommResult:=iorPortError;
+      PActive:=true;
       Result:=false;
+      exit;
     end;
 
-    EsockEINTR,
-    ESysEAGAIN: begin
-      Result:=true;
-      incRetries:=false;
-    end;
-    ESysETIMEDOUT: begin
-      if PActive then DoCommPortDisconected;
-      PActive:=false;
-      fpshutdown(FSocket,SHUT_RDWR);
-      CloseSocket(FSocket);
-      CommResult:=iorTimeOut;
+    if (nbytes=0) then begin
+      DoCommPortDisconected();
+      CommResult:=iorNotReady;
+      PActive:=true;
       Result:=false;
+      exit;
     end;
   end;
 end;

@@ -13,8 +13,8 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryManager, PLCBlock, PLCString, uModbusTagBuilder,
-  CrossEvent{$IFNDEF FPC}, Windows{$ENDIF};
+  PLCMemoryManager, PLCBlock, PLCString, uModbusTagBuilder
+  {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
   {:
