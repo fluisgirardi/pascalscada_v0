@@ -169,17 +169,20 @@ begin
 
    if zone<>nil then begin
       if zone.ImageListAsDefault then begin
-         if Assigned(zone.ImageList) AND (zone.ImageIndex<>-1) then
-            zone.ImageList.GetBitmap(zone.ImageIndex, Picture.Bitmap)
-         else
+         if Assigned(zone.ImageList) AND (zone.ImageIndex<>-1) then begin
+            zone.ImageList.GetBitmap(zone.ImageIndex, Picture.Bitmap);
+            Repaint;
+         end else
             if FileExists(zone.FileName) then
                Picture.LoadFromFile(zone.FileName);
       end else begin
          if FileExists(zone.FileName) then
             Picture.LoadFromFile(zone.FileName)
          else
-            if Assigned(zone.ImageList) AND (zone.ImageIndex<>-1) then
+            if Assigned(zone.ImageList) AND (zone.ImageIndex<>-1) then begin
                zone.ImageList.GetBitmap(zone.ImageIndex, Picture.Bitmap);
+               Repaint;
+            end;
       end;
       Transparent := zone.Transparent;
       if zone.Transparent then
