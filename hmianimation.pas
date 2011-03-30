@@ -251,10 +251,10 @@ begin
   if FCurrentZone.BlinkWith<0 then
     FTimer.Enabled:=false
   else begin
-    FTimer.Enabled:=false;
-    FTimer.Interval := TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
+    if FTimer.Interval<>TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime then
+      FTimer.Interval := TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
     ShowZone(TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]));
-    FTimer.Enabled:=true;
+    if not FTimer.Enabled then FTimer.Enabled:=true;
   end;
 end;
 
