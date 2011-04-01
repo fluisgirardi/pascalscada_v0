@@ -12,7 +12,7 @@ unit HMIUpDown;
 interface
 
 uses
-  Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Forms, Controls, Graphics,
+  Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Controls, Graphics,
   Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls, Tag;
 
 type

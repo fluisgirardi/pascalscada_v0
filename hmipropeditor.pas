@@ -14,7 +14,7 @@ unit hmipropeditor;
 interface
 
 uses
-  Classes, SysUtils, HMIZones, Dialogs, Forms, Menus, ProtocolDriver, Tag,
+  Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, Tag,
   typinfo, HMIControlDislocatorAnimation, PLCNumber, PLCBlock, PLCStruct,
   {$IFDEF FPC}
     PropEdits, ComponentEditors, lazlclversion;

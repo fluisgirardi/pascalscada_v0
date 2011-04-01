@@ -20,6 +20,7 @@ resourcestring
   strTagsPallete        = 'PascalSCADA Tags';
   strUtilsPallete       = 'PascalSCADA Utils';
   strControlsPallete    = 'PascalSCADA HCl';
+  strDatabasePallete    = 'PascalSCADA Database';
   
   //////////////////////////////////////////////////////////////////////////////
   // Mensagens de exceptions.

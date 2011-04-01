@@ -88,7 +88,7 @@ type
 
 implementation
 
-uses hsstrings, Forms{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses hsstrings{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
@@ -172,7 +172,7 @@ end;
 procedure TScanThread.SyncException;
 begin
   try
-    Application.ShowException(erro);
+    //Application.ShowException(erro);
   except
   end;
 end;

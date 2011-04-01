@@ -8,7 +8,7 @@ unit HMIButton;
 interface
 
 uses
-  Classes, SysUtils, {$IFDEF FPC}LResources, LMessages, {$ENDIF}Forms, Controls,
+  Classes, SysUtils, {$IFDEF FPC}LResources, LMessages, {$ENDIF}Controls,
   Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag;
 
 type

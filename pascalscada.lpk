@@ -39,7 +39,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="2"/>
-    <Files Count="71">
+    <Files Count="72">
       <Item1>
         <Filename Value="commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -77,254 +77,258 @@
         <UnitName Value="HMIControlDislocatorAnimation"/>
       </Item9>
       <Item10>
-        <Filename Value="hmiedit.pas"/>
-        <UnitName Value="HMIEdit"/>
+        <Filename Value="hmidbconnection.pas"/>
+        <UnitName Value="HMIDBConnection"/>
       </Item10>
       <Item11>
-        <Filename Value="hmilabel.pas"/>
-        <UnitName Value="HMILabel"/>
+        <Filename Value="hmiedit.pas"/>
+        <UnitName Value="HMIEdit"/>
       </Item11>
       <Item12>
-        <Filename Value="hmiprogressbar.pas"/>
-        <UnitName Value="HMIProgressBar"/>
+        <Filename Value="hmilabel.pas"/>
+        <UnitName Value="HMILabel"/>
       </Item12>
       <Item13>
-        <Filename Value="hmipropeditor.pas"/>
-        <UnitName Value="hmipropeditor"/>
+        <Filename Value="hmiprogressbar.pas"/>
+        <UnitName Value="HMIProgressBar"/>
       </Item13>
       <Item14>
-        <Filename Value="hmiradiobutton.pas"/>
-        <UnitName Value="HMIRadioButton"/>
+        <Filename Value="hmipropeditor.pas"/>
+        <UnitName Value="hmipropeditor"/>
       </Item14>
       <Item15>
-        <Filename Value="hmiradiogroup.pas"/>
-        <UnitName Value="HMIRadioGroup"/>
+        <Filename Value="hmiradiobutton.pas"/>
+        <UnitName Value="HMIRadioButton"/>
       </Item15>
       <Item16>
-        <Filename Value="hmiscrollbar.pas"/>
-        <UnitName Value="HMIScrollBar"/>
+        <Filename Value="hmiradiogroup.pas"/>
+        <UnitName Value="HMIRadioGroup"/>
       </Item16>
       <Item17>
-        <Filename Value="hmitext.pas"/>
-        <UnitName Value="HMIText"/>
+        <Filename Value="hmiscrollbar.pas"/>
+        <UnitName Value="HMIScrollBar"/>
       </Item17>
       <Item18>
-        <Filename Value="hmitrackbar.pas"/>
-        <UnitName Value="HMITrackBar"/>
+        <Filename Value="hmitext.pas"/>
+        <UnitName Value="HMIText"/>
       </Item18>
       <Item19>
-        <Filename Value="hmitypes.pas"/>
-        <UnitName Value="HMITypes"/>
+        <Filename Value="hmitrackbar.pas"/>
+        <UnitName Value="HMITrackBar"/>
       </Item19>
       <Item20>
-        <Filename Value="hmiupdown.pas"/>
-        <UnitName Value="HMIUpDown"/>
+        <Filename Value="hmitypes.pas"/>
+        <UnitName Value="HMITypes"/>
       </Item20>
       <Item21>
-        <Filename Value="hmizones.pas"/>
-        <UnitName Value="HMIZones"/>
+        <Filename Value="hmiupdown.pas"/>
+        <UnitName Value="HMIUpDown"/>
       </Item21>
       <Item22>
-        <Filename Value="hsstrings.pas"/>
-        <UnitName Value="hsstrings"/>
+        <Filename Value="hmizones.pas"/>
+        <UnitName Value="HMIZones"/>
       </Item22>
       <Item23>
-        <Filename Value="hsutils.pas"/>
-        <UnitName Value="hsutils"/>
+        <Filename Value="hsstrings.pas"/>
+        <UnitName Value="hsstrings"/>
       </Item23>
       <Item24>
-        <Filename Value="iboxdriver.pas"/>
-        <UnitName Value="IBoxDriver"/>
+        <Filename Value="hsutils.pas"/>
+        <UnitName Value="hsutils"/>
       </Item24>
       <Item25>
-        <Filename Value="isotcpdriver.pas"/>
-        <UnitName Value="ISOTCPDriver"/>
+        <Filename Value="iboxdriver.pas"/>
+        <UnitName Value="IBoxDriver"/>
       </Item25>
       <Item26>
-        <Filename Value="lazlclversion.pas"/>
-        <UnitName Value="lazlclversion"/>
+        <Filename Value="isotcpdriver.pas"/>
+        <UnitName Value="ISOTCPDriver"/>
       </Item26>
       <Item27>
-        <Filename Value="linearscaleprocessor.pas"/>
-        <UnitName Value="LinearScaleProcessor"/>
+        <Filename Value="lazlclversion.pas"/>
+        <UnitName Value="lazlclversion"/>
       </Item27>
       <Item28>
-        <Filename Value="messagespool.pas"/>
-        <UnitName Value="MessageSpool"/>
+        <Filename Value="linearscaleprocessor.pas"/>
+        <UnitName Value="LinearScaleProcessor"/>
       </Item28>
       <Item29>
-        <Filename Value="modbusdriver.pas"/>
-        <UnitName Value="ModBusDriver"/>
+        <Filename Value="messagespool.pas"/>
+        <UnitName Value="MessageSpool"/>
       </Item29>
       <Item30>
-        <Filename Value="modbusserial.pas"/>
-        <UnitName Value="ModBusSerial"/>
+        <Filename Value="modbusdriver.pas"/>
+        <UnitName Value="ModBusDriver"/>
       </Item30>
       <Item31>
-        <Filename Value="modbustcp.pas"/>
-        <UnitName Value="ModBusTCP"/>
+        <Filename Value="modbusserial.pas"/>
+        <UnitName Value="ModBusSerial"/>
       </Item31>
       <Item32>
-        <Filename Value="plcblock.pas"/>
-        <UnitName Value="PLCBlock"/>
+        <Filename Value="modbustcp.pas"/>
+        <UnitName Value="ModBusTCP"/>
       </Item32>
       <Item33>
-        <Filename Value="plcblockelement.pas"/>
-        <UnitName Value="PLCBlockElement"/>
+        <Filename Value="plcblock.pas"/>
+        <UnitName Value="PLCBlock"/>
       </Item33>
       <Item34>
-        <Filename Value="plcmemorymanager.pas"/>
-        <UnitName Value="PLCMemoryManager"/>
+        <Filename Value="plcblockelement.pas"/>
+        <UnitName Value="PLCBlockElement"/>
       </Item34>
       <Item35>
-        <Filename Value="plcnumber.pas"/>
-        <UnitName Value="PLCNumber"/>
+        <Filename Value="plcmemorymanager.pas"/>
+        <UnitName Value="PLCMemoryManager"/>
       </Item35>
       <Item36>
-        <Filename Value="plcstring.pas"/>
-        <UnitName Value="PLCString"/>
+        <Filename Value="plcnumber.pas"/>
+        <UnitName Value="PLCNumber"/>
       </Item36>
       <Item37>
-        <Filename Value="plcstruct.pas"/>
-        <UnitName Value="PLCStruct"/>
+        <Filename Value="plcstring.pas"/>
+        <UnitName Value="PLCString"/>
       </Item37>
       <Item38>
-        <Filename Value="plcstructelement.pas"/>
-        <UnitName Value="PLCStructElement"/>
+        <Filename Value="plcstruct.pas"/>
+        <UnitName Value="PLCStruct"/>
       </Item38>
       <Item39>
-        <Filename Value="plctag.pas"/>
-        <UnitName Value="PLCTag"/>
+        <Filename Value="plcstructelement.pas"/>
+        <UnitName Value="PLCStructElement"/>
       </Item39>
       <Item40>
-        <Filename Value="plctagnumber.pas"/>
-        <UnitName Value="PLCTagNumber"/>
+        <Filename Value="plctag.pas"/>
+        <UnitName Value="PLCTag"/>
       </Item40>
       <Item41>
-        <Filename Value="protocoldriver.pas"/>
-        <UnitName Value="ProtocolDriver"/>
+        <Filename Value="plctagnumber.pas"/>
+        <UnitName Value="PLCTagNumber"/>
       </Item41>
       <Item42>
-        <Filename Value="protocoltypes.pas"/>
-        <UnitName Value="ProtocolTypes"/>
+        <Filename Value="protocoldriver.pas"/>
+        <UnitName Value="ProtocolDriver"/>
       </Item42>
       <Item43>
-        <Filename Value="protscan.pas"/>
-        <UnitName Value="protscan"/>
+        <Filename Value="protocoltypes.pas"/>
+        <UnitName Value="ProtocolTypes"/>
       </Item43>
       <Item44>
-        <Filename Value="protscanupdate.pas"/>
-        <UnitName Value="protscanupdate"/>
+        <Filename Value="protscan.pas"/>
+        <UnitName Value="protscan"/>
       </Item44>
       <Item45>
-        <Filename Value="s7family.pas"/>
-        <UnitName Value="s7family"/>
+        <Filename Value="protscanupdate.pas"/>
+        <UnitName Value="protscanupdate"/>
       </Item45>
       <Item46>
-        <Filename Value="s7types.pas"/>
-        <UnitName Value="S7Types"/>
+        <Filename Value="s7family.pas"/>
+        <UnitName Value="s7family"/>
       </Item46>
       <Item47>
-        <Filename Value="scadapropeditor.pas"/>
-        <UnitName Value="scadapropeditor"/>
+        <Filename Value="s7types.pas"/>
+        <UnitName Value="S7Types"/>
       </Item47>
       <Item48>
+        <Filename Value="scadapropeditor.pas"/>
+        <UnitName Value="scadapropeditor"/>
+      </Item48>
+      <Item49>
         <Filename Value="scadareg.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="scadareg"/>
-      </Item48>
-      <Item49>
-        <Filename Value="serialport.pas"/>
-        <UnitName Value="SerialPort"/>
       </Item49>
       <Item50>
-        <Filename Value="tag.pas"/>
-        <UnitName Value="Tag"/>
+        <Filename Value="serialport.pas"/>
+        <UnitName Value="SerialPort"/>
       </Item50>
       <Item51>
-        <Filename Value="tagbit.pas"/>
-        <UnitName Value="TagBit"/>
+        <Filename Value="tag.pas"/>
+        <UnitName Value="Tag"/>
       </Item51>
       <Item52>
-        <Filename Value="tagblock.pas"/>
-        <UnitName Value="TagBlock"/>
+        <Filename Value="tagbit.pas"/>
+        <UnitName Value="TagBit"/>
       </Item52>
       <Item53>
-        <Filename Value="tagcollection.pas"/>
-        <UnitName Value="tagcollection"/>
+        <Filename Value="tagblock.pas"/>
+        <UnitName Value="TagBlock"/>
       </Item53>
       <Item54>
-        <Filename Value="tcp_udpport.pas"/>
-        <UnitName Value="tcp_udpport"/>
+        <Filename Value="tagcollection.pas"/>
+        <UnitName Value="tagcollection"/>
       </Item54>
       <Item55>
-        <Filename Value="ubitmapper.pas"/>
-        <UnitName Value="ubitmapper"/>
+        <Filename Value="tcp_udpport.pas"/>
+        <UnitName Value="tcp_udpport"/>
       </Item55>
       <Item56>
-        <Filename Value="ubitmapper.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="ubitmapper.pas"/>
+        <UnitName Value="ubitmapper"/>
       </Item56>
       <Item57>
-        <Filename Value="uelementmapper.pas"/>
-        <UnitName Value="uelementmapper"/>
+        <Filename Value="ubitmapper.lfm"/>
+        <Type Value="LFM"/>
       </Item57>
       <Item58>
-        <Filename Value="uelementmapper.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="uelementmapper.pas"/>
+        <UnitName Value="uelementmapper"/>
       </Item58>
       <Item59>
-        <Filename Value="umodbustagbuilder.pas"/>
-        <UnitName Value="uModbusTagBuilder"/>
+        <Filename Value="uelementmapper.lfm"/>
+        <Type Value="LFM"/>
       </Item59>
       <Item60>
-        <Filename Value="umodbustagbuilder.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="umodbustagbuilder.pas"/>
+        <UnitName Value="uModbusTagBuilder"/>
       </Item60>
       <Item61>
-        <Filename Value="unumerickeyboard.pas"/>
-        <UnitName Value="unumerickeyboard"/>
+        <Filename Value="umodbustagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item61>
       <Item62>
-        <Filename Value="unumerickeyboard.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="unumerickeyboard.pas"/>
+        <UnitName Value="unumerickeyboard"/>
       </Item62>
       <Item63>
-        <Filename Value="us7tagbuilder.pas"/>
-        <UnitName Value="us7tagbuilder"/>
+        <Filename Value="unumerickeyboard.lfm"/>
+        <Type Value="LFM"/>
       </Item63>
       <Item64>
-        <Filename Value="us7tagbuilder.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="us7tagbuilder.pas"/>
+        <UnitName Value="us7tagbuilder"/>
       </Item64>
       <Item65>
-        <Filename Value="userscale.pas"/>
-        <UnitName Value="UserScale"/>
+        <Filename Value="us7tagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item65>
       <Item66>
-        <Filename Value="ustructuremapper.pas"/>
-        <UnitName Value="ustructuremapper"/>
+        <Filename Value="userscale.pas"/>
+        <UnitName Value="UserScale"/>
       </Item66>
       <Item67>
-        <Filename Value="ustructuremapper.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="ustructuremapper.pas"/>
+        <UnitName Value="ustructuremapper"/>
       </Item67>
       <Item68>
-        <Filename Value="uwesttagbuilder.pas"/>
-        <UnitName Value="uwesttagbuilder"/>
+        <Filename Value="ustructuremapper.lfm"/>
+        <Type Value="LFM"/>
       </Item68>
       <Item69>
-        <Filename Value="uwesttagbuilder.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="uwesttagbuilder.pas"/>
+        <UnitName Value="uwesttagbuilder"/>
       </Item69>
       <Item70>
-        <Filename Value="valueprocessor.pas"/>
-        <UnitName Value="ValueProcessor"/>
+        <Filename Value="uwesttagbuilder.lfm"/>
+        <Type Value="LFM"/>
       </Item70>
       <Item71>
+        <Filename Value="valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+      </Item71>
+      <Item72>
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
-      </Item71>
+      </Item72>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="3">

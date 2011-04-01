@@ -81,7 +81,7 @@ type
 
 implementation
 
-uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} Forms, ProtocolDriver, hsstrings;
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
@@ -114,7 +114,7 @@ begin
   TCrossThread(self).Terminate;
   FSleepInterruptable.SetEvent;
   repeat
-     Application.ProcessMessages;
+     CheckSynchronize(1);
   until WaitEnd(1)=wrSignaled;
 end;
 
@@ -175,7 +175,7 @@ end;
 procedure TScanUpdate.SyncException;
 begin
   try
-    Application.ShowException(Ferro);
+    //Application.ShowException(Ferro);
   except
   end;
 end;
@@ -281,4 +281,4 @@ begin
 end;
 
 end.
-
+
