@@ -5,7 +5,8 @@ unit HMIDBConnection;
 interface
 
 uses
-  Classes, sysutils, ZConnection, ZPropertyEditor;
+  Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
+  syncobjs;
 
 type
   THMIDBDatabasePropertyEditor = class(TZDatabasePropertyEditor)
@@ -24,6 +25,18 @@ type
     ['{C5AEA572-D7F8-4116-9A4B-3C3B972DC021}']
     function GetSyncConnection:TZConnection;
     function ExecSQL(sql:String; NotifyAfter:TNotifyEvent):Integer;
+  end;
+
+  TProcessSQLCommandThread=class(TCrossThread)
+  private
+    FSpool:TMessageSpool;
+    FEnd:TCrossEvent;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(CreateSuspended: Boolean);
+    destructor Destroy; override;
+    function WaitEnd(Timeout:Cardinal):TWaitResult;
   end;
 
   THMIDBConnection = class(TComponent, IHMIDBConnection)
@@ -67,6 +80,10 @@ type
 
 implementation
 
+//##############################################################################
+//EDITORES DE PROPRIEDADES DA CLASSE THMIDBCONNECTION
+//##############################################################################
+
 function THMIDBDatabasePropertyEditor.GetZComponent:TPersistent;
 begin
   Result:=GetComponent(0);
@@ -81,6 +98,32 @@ begin
     Result:=(Result as IHMIDBConnection).GetSyncConnection;
 end;
 
+//##############################################################################
+//THREAD DE EXECUÇÃO DOS COMANDOS SQL THMIDBCONNECTION
+//##############################################################################
+
+constructor TProcessSQLCommandThread.Create(CreateSuspended: Boolean);
+begin
+
+end;
+
+destructor  TProcessSQLCommandThread.Destroy;
+begin
+
+end;
+
+procedure   TProcessSQLCommandThread.Execute;
+begin
+
+end;
+
+function    TProcessSQLCommandThread.WaitEnd(Timeout:Cardinal):TWaitResult;
+begin
+
+end;
+
+//##############################################################################
+//CLASSE THMIDBCONNECTION
 //##############################################################################
 
 constructor THMIDBConnection.Create(AOwner: TComponent);
