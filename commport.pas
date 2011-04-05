@@ -161,6 +161,7 @@ type
     procedure  SetLogFile(nFile:String);
     procedure  LogAction(cmd:TIOCommand; Packet:TIOPacket);
   protected
+    FDelayBetweenCmds:Cardinal;
     FExclusiveDevice:Boolean;
     //: Envia uma mensagem de erro de comunicação da thread de comunicação para a aplicação
     procedure DoCommError(WriteCmd:Boolean; Error:TIOResult);
@@ -632,6 +633,7 @@ begin
   if csDestroying in ComponentState then
      exit;
 
+  FDelayBetweenCmds:=Packet.DelayBetweenCommand;
   case cmd of
     iocRead:
       Read(Packet);

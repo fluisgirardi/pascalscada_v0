@@ -96,7 +96,7 @@ begin
   PrepareToSend(msg);
 
   try
-    res := PCommPort.IOCommandSync(iocWriteRead,msg,4,22,DriverID,0,CommPortCallBack,false,nil,@IOResult);
+    res := PCommPort.IOCommandSync(iocWriteRead,msg,4,22,DriverID,ifthen(FConnectionWay=ISOTCP_VIA_CP243,1000,0),CommPortCallBack,false,nil,@IOResult);
     if (res=0) then exit;
     if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>4) then exit;
 

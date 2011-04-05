@@ -238,7 +238,8 @@ end;
 
 procedure TTCP_UDPPort.NeedSleepBetweenRW;
 begin
-  //TCP not need sleep between Read and Write commands.
+  if FDelayBetweenCmds>0 then
+    Sleep(FDelayBetweenCmds);
 end;
 
 procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
@@ -424,4 +425,4 @@ begin
 
 end;
 
-end.
+end.
