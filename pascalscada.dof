@@ -91,10 +91,10 @@ ImageBase=4194304
 ExeDescription=PascalSCADA
 [Directories]
 OutputDir=
-UnitOutputDir=
+UnitOutputDir=lib
 PackageDLLOutputDir=
 PackageDCPOutputDir=
-SearchPath=
+SearchPath=lib
 Packages=vcl;rtl;vclx;indy;inet;xmlrtl;vclie;inetdbbde;inetdbxpress;dbrtl;dsnap;dsnapcon;vcldb;soaprtl;VclSmp;dbexpress;dbxcds;inetdb;bdertl;vcldbx;webdsnap;websnap;adortl;ibxpress;teeui;teedb;tee;dss;visualclx;visualdbclx;vclactnband;vclshlctrls;IntrawebDB_50_70;Intraweb_50_70;Rave50CLX;Rave50VCL;dclOfficeXP;protocolos;RLibWinD7vcl;qrpt
 Conditionals=
 DebugSourceDirs=
@@ -134,5 +134,3 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
-[Excluded Packages]
-C:\Temperaturas\Desenvolvimento\RLibD7vcl\RLibWinD7vcl.bpl=FortesReport VCL Library
