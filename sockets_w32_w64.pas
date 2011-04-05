@@ -155,8 +155,11 @@ begin
 
   retval:=0;
   nbytes:=0;
+  {$IFDEF FPC}
   retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
-
+  {$ELSE}
+  retval:=ioctlsocket(FSocket,FIONREAD,nbytes);
+  {$ENDIF}
   if retval<>0 then begin
     DoCommPortDisconected();
     CommResult:=iorPortError;
@@ -193,7 +196,11 @@ begin
 
   if (retval=1) then begin  // seems there is something in our receive buffer!!
     // now we check how many bytes are in receive buffer
+    {$IFDEF FPC}
     retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
+    {$ELSE}
+    retval:=ioctlsocket(FSocket,FIONREAD,nbytes);
+    {$ENDIF};
 
     if (retval<>0) then begin  // some error occured
       DoCommPortDisconected();

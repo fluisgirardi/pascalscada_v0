@@ -17,11 +17,11 @@ uses
   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
-  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection,
+  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation,
   {$IFDEF FPC}
-    LResources, PropEdits, ComponentEditors;
+    HMIDBConnection, LResources, PropEdits, ComponentEditors;
   {$ELSE}
-    Types,
+    Types, MemDs,
     //se for delphi 4 ou 5
     {$IF defined(VER130) or defined(VER120)}
       DsgnIntf;
@@ -63,8 +63,11 @@ begin
   RegisterComponents(strControlsPallete,  [THMIText]);
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
-
+  {$IFDEF FPC}
   RegisterComponents(strDatabasePallete,  [THMIDBConnection]);
+  {$ELSE}
+  RegisterComponents(strFPCPallete,       [TMemDataset]);
+  {$ENDIF}
 
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
@@ -75,9 +78,11 @@ begin
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P1_Position', TPositionPropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'GoTo_P0_Position', TPositionPropertyEditor);
 
+  {$IFDEF FPC}
   RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Protocol', THMIDBProtocolPropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Database', THMIDBDatabasePropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Catalog',  THMIDBCatalogPropertyEditor);
+  {$ENDIF}
 
   RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
   RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);

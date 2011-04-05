@@ -21,6 +21,7 @@ resourcestring
   strUtilsPallete       = 'PascalSCADA Utils';
   strControlsPallete    = 'PascalSCADA HCl';
   strDatabasePallete    = 'PascalSCADA Database';
+  strFPCPallete         = 'PascalSCADA - FreePascal'; //componentes importados do freepascal
   
   //////////////////////////////////////////////////////////////////////////////
   // Mensagens de exceptions.
