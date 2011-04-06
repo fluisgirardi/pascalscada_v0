@@ -1,4 +1,4 @@
-﻿{:
+{:
   @abstract(Unit que implementa um controle CheckBox ligado a um Tag.)
   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
 }

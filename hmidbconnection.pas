@@ -90,14 +90,14 @@ function THMIDBDatabasePropertyEditor.GetZComponent:TPersistent;
 begin
   Result:=GetComponent(0);
   if (Result is THMIDBConnection) and Supports(Result, IHMIDBConnection) then
-    Result:=(Result as IHMIDBConnection).GetSyncConnection;
+    Result:=(THMIDBConnection(Result) as IHMIDBConnection).GetSyncConnection;
 end;
 
 function THMIDBCatalogPropertyEditor.GetZComponent:TPersistent;
 begin
   Result:=GetComponent(0);
   if (Result is THMIDBConnection) and Supports(Result, IHMIDBConnection) then
-    Result:=(Result as IHMIDBConnection).GetSyncConnection;
+    Result:=(THMIDBConnection(Result) as IHMIDBConnection).GetSyncConnection;
 end;
 
 //##############################################################################
