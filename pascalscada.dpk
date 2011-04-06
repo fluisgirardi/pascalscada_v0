@@ -33,7 +33,8 @@ requires
   vclactnband,
   vclx,
   VclSmp,
-  dbrtl;
+  dbrtl,
+  ZComponentDesign;
 
 contains
   commport in 'commport.pas',
