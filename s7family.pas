@@ -319,6 +319,8 @@ begin
                   TagType:=StructItem[curstructitem].TagType;
                   SwapBytes:=StructItem[curstructitem].SwapBytes;
                   SwapWords:=StructItem[curstructitem].SwapWords;
+
+                  ProtocolDriver:=Self;
                 end;
 
               end else begin
