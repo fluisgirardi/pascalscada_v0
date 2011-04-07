@@ -493,14 +493,29 @@ begin
     OnExit:=edtItemNameExit;
   end;
 
+  //desenha um botão que não faz nada
+  //para forcar a perda de foco por tab do
+  //edit anterior
+  btnUp:=TButton.Create(Self);
+  with btnUp do begin
+    Parent:=TagArea;
+    Height:=22;
+    Left:=155;
+    Top:=3;
+    Width:=4;
+  end;
+
   cmbItemType:=TComboBox.Create(Self);
   with cmbItemType do begin
     Parent:=TagArea;
-    Left:=155;
+    Left:=160;
     top:=2;
     Style:=csDropDownList;
     Width:=78;
     OnChange:=optChange;
+    OnEnter:=edtItemNameExit;
+    OnClick:=edtItemNameExit;
+    OnDropDown:=edtItemNameExit;
   end;
 
   spinScan:=TSpinEdit.Create(Self);
@@ -937,8 +952,8 @@ end;
 
 procedure TfrmS7TagBuilder.MemoryAreaClick(Sender: TObject);
 begin
-  lblDBNumber.Visible:=false;
-  spinDBNumber.Visible:=false;
+  lblDBNumber.Enabled:=false;
+  spinDBNumber.Enabled:=false;
   BlockType.Enabled:=false;
   case MemoryArea.ItemIndex of
     0: begin
@@ -955,8 +970,8 @@ begin
     end;
     3: begin
      lblStartAddress.Caption:='End. inicial dentro da DB';
-     lblDBNumber.Visible:=true;
-     spinDBNumber.Visible:=true;
+     lblDBNumber.Enabled:=true;
+     spinDBNumber.Enabled:=true;
      BlockType.Enabled:=optplcblock.Checked;
     end;
     4,9: begin
@@ -1223,10 +1238,11 @@ end;
 procedure TfrmS7TagBuilder.StructItemTypeChanged(Sender:TObject);
 begin
   if MemoryArea.ItemIndex in [2,3,12] then begin
-    if not FStructureModified then
+    if not FStructureModified then begin
       UpdateFlagDBandVStrucItemName;
+      FStructureModified:=false;
+    end;
     UpdateStatusAndBlockName;
-    FStructureModified:=false;
   end;
 end;
 
