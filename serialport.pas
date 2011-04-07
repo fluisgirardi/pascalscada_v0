@@ -310,7 +310,7 @@ begin
     Packet^.ReadIOResult := iorOK;
 
   if Packet^.ReadIOResult<>iorOK then
-    DoCommError(false, Packet^.ReadIOResult);
+    CommError(false, Packet^.ReadIOResult);
 end;
 
 procedure TSerialPortDriver.Write(Packet:PIOPacket);
@@ -366,7 +366,7 @@ begin
 {$IFEND}
 
   if Packet^.WriteIOResult<>iorOK then
-    DoCommError(true, Packet^.WriteIOResult);
+    CommError(true, Packet^.WriteIOResult);
 end;
 
 procedure TSerialPortDriver.PortStart(var Ok:Boolean);
@@ -891,4 +891,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.

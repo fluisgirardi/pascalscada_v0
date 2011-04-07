@@ -16,7 +16,7 @@ unit tcp_udpport;
 interface
 
 uses
-  Classes, SysUtils, CommPort, commtypes, socket_types
+  Classes, SysUtils, ExtCtrls, CommPort, commtypes, socket_types
   {$IF defined(WIN32) or defined(WIN64)} //delphi ou lazarus sobre windows
   , Windows, WinSock, sockets_w32_w64
   {$ELSE}
@@ -42,12 +42,22 @@ type
     FSocket:Tsocket;
     FPortType:TPortType;
     FExclusiveReaded:Boolean;
+    freconnectTimer:TTimer;
+    FEnableAutoReconnect:Boolean;
+    FReconnectRetriesLimit:Cardinal;
+    procedure TryReconnectTimer(Sender: TObject);
     procedure SetHostname(target:string);
     procedure SetPortNumber(pn:Integer);
     procedure SetTimeout(t:Integer);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
+
+    procedure setEnableAutoReconnect(v:Boolean);
+    function GetReconnectInterval:Cardinal;
+    procedure SetReconnectInterval(v:Cardinal);
   protected
+    //: @exclude
+    FReconnectRetries:Cardinal;
     //: @exclude
     procedure Loaded; override;
     //: @seealso(TCommPortDriver.Read)
@@ -64,6 +74,11 @@ type
     function  ComSettingsOK:Boolean; override;
     //: @seealso(TCommPortDriver.ClearALLBuffers)
     procedure ClearALLBuffers; override;
+
+    //: @seealso(TCommPortDriver.DoPortDisconnected)
+    procedure DoPortDisconnected(sender: TObject); override;
+    //: @seealso(TCommPortDriver.DoPortOpenError)
+    procedure DoPortOpenError(sender: TObject); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -84,6 +99,13 @@ type
 
     //: Porta de acesso exclusivo (evita que a porta seja aberta em tempo de desenvolvimento).
     property ExclusiveDevice:Boolean read FExclusiveDevice write SetExclusive;
+
+    //: Informa se a porta deve se auto reconectar após uma perda ou falha de conexão.
+    property EnableAutoReconnect:Boolean read FEnableAutoReconnect write setEnableAutoReconnect  stored true default true;
+    //: Define o tempo após a perda de conexão a porta deve tentar reconectar. Tempo em milisegundos.
+    property ReconnectRetryInterval:Cardinal read GetReconnectInterval write SetReconnectInterval stored true default 5000;
+    //: Limite máximo de tentativas de reconexão. O contador de tentativas é reiniciado após uma conexão com sucesso.
+    property ReconnectRetriesLimit:Cardinal read FReconnectRetriesLimit write FReconnectRetriesLimit stored true default 0;
 
     //: @seealso TCommPortDriver.OnCommPortOpened
     property OnCommPortOpened;
@@ -111,11 +133,25 @@ begin
   FPortNumber:=102;
   FTimeout:=1000;
   FSocket:=0;
+  FEnableAutoReconnect:=true;
+  FReconnectRetriesLimit:=0;
+  freconnectTimer:=TTimer.Create(nil);
+  freconnectTimer.Enabled:=false;
+  freconnectTimer.Interval:=5000;
+  freconnectTimer.OnTimer:=TryReconnectTimer;
 end;
 
 destructor  TTCP_UDPPort.Destroy;
 begin
   inherited Destroy;
+  freconnectTimer.Destroy;
+end;
+
+procedure TTCP_UDPPort.TryReconnectTimer(Sender: TObject);
+begin
+  freconnectTimer.Enabled:=false;
+  inc(FReconnectRetries);
+  Active:=true;
 end;
 
 procedure TTCP_UDPPort.SetHostname(target:string);
@@ -160,6 +196,23 @@ begin
   Active:=oldstate;
 end;
 
+procedure TTCP_UDPPort.setEnableAutoReconnect(v:Boolean);
+begin
+  FEnableAutoReconnect:=v;
+  if (v=false) and freconnectTimer.Enabled then
+    freconnectTimer.Enabled:=false;
+end;
+
+function  TTCP_UDPPort.GetReconnectInterval:Cardinal;
+begin
+  Result:=freconnectTimer.Interval;
+end;
+
+procedure TTCP_UDPPort.SetReconnectInterval(v:Cardinal);
+begin
+  freconnectTimer.Interval:=v;
+end;
+
 procedure TTCP_UDPPort.Loaded;
 begin
   ExclusiveDevice:=FExclusiveReaded;
@@ -183,7 +236,7 @@ begin
     end;
 
     if lidos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, CommPortDisconected) then
         break;
     end else
       Packet^.Received := Packet^.Received + lidos;
@@ -198,7 +251,7 @@ begin
     Packet^.ReadIOResult := iorOK;
 
   if Packet^.ReadIOResult<>iorOK then
-    DoCommError(false, Packet^.ReadIOResult);
+    CommError(false, Packet^.ReadIOResult);
 end;
 
 procedure TTCP_UDPPort.Write(Packet:PIOPacket);
@@ -218,7 +271,7 @@ begin
     end;
 
     if escritos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, DoCommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, CommPortDisconected) then
         break;
     end else
       Packet^.Wrote := Packet^.Wrote + escritos;
@@ -233,7 +286,7 @@ begin
     Packet^.WriteIOResult := iorOK;
 
   if Packet^.WriteIOResult<>iorOK then
-    DoCommError(true, Packet^.WriteIOResult);
+    CommError(true, Packet^.WriteIOResult);
 end;
 
 procedure TTCP_UDPPort.NeedSleepBetweenRW;
@@ -379,6 +432,7 @@ begin
     end;
     Ok:=true;
     PActive:=true;
+    FReconnectRetries:=0;
   finally
     if not Ok then
       CloseSocket(FSocket);
@@ -418,6 +472,22 @@ end;
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
 begin
   Result := (FHostName<>'') and ((FPortNumber>0) and (FPortNumber<65536));
+end;
+
+procedure TTCP_UDPPort.DoPortDisconnected(sender: TObject);
+begin
+  if FEnableAutoReconnect and ((FReconnectRetriesLimit=0) or (FReconnectRetries<=FReconnectRetriesLimit)) then
+    freconnectTimer.Enabled:=True;
+
+  inherited DoPortDisconnected(sender);
+end;
+
+procedure TTCP_UDPPort.DoPortOpenError(sender: TObject);
+begin
+  if FEnableAutoReconnect and ((FReconnectRetriesLimit=0) or (FReconnectRetries<=FReconnectRetriesLimit)) then
+    freconnectTimer.Enabled:=True;
+
+  inherited DoPortOpenError(sender);
 end;
 
 procedure TTCP_UDPPort.ClearALLBuffers;
