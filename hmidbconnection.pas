@@ -11,35 +11,56 @@ uses
   syncobjs, memds, ZDataset;
 
 type
+  //: Editor da propriedade THMIDBConnection.Database
   THMIDBDatabasePropertyEditor = class(TZDatabasePropertyEditor)
   public
     function GetZComponent: TPersistent; override;
   end;
 
+  //: Editor da propriedade THMIDBConnection.Catalog
   THMIDBCatalogPropertyEditor = class(TZDatabasePropertyEditor)
   public
     function GetZComponent: TPersistent; override;
   end;
 
+  //: Editor da propriedade THMIDBConnection.Protocol
   THMIDBProtocolPropertyEditor = class(TZProtocolPropertyEditor);
 
+  //: Método usado pela thread para execução de uma consulta.
   TExecSQLProc = procedure(sqlcmd:String; outputdataset:TMemDataset) of object;
 
+  //: Método usado pela thread para retornar um dataset após a execução da consulta.
   TReturnDataSetProc = procedure(Sender:TObject; DS:TMemDataset) of object;
 
+  //: Inteface para interação com objetos privados do THMIDBConnection
   IHMIDBConnection = interface
     ['{C5AEA572-D7F8-4116-9A4B-3C3B972DC021}']
+    //: Retorna um TZConnection para os editores de propriedade.
     function GetSyncConnection:TZConnection;
+    {:
+      Função que executa uma consulta assincrona.
+      @param(sql String. Commando SQL. Se for uma consulta de seleção onde se
+                         deseja obter os dados retornados, é necessário informar
+                         uma procedure válida no parametro ReturnDatasetCallback.)
+      @param(ReturnDatasetCallback TReturnDataSetProc. Ponteiro para o procedimento
+                         que vai ser chamado quando para retornar os dados a aplicação.)
+    }
     function ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
   end;
 
+  //: Estrutura de comando SQL que é enviado a thread.
   TSQLCmdRec = record
     SQLCmd:String;
     ReturnDataSetCallback:TReturnDataSetProc;
   end;
 
+  //: Pointeiro de estrutura de mensagem de comando SQL.
   PSQLCmdRec = ^TSQLCmdRec;
 
+  {:
+  Fila de execução assincrona de comandos SQL.
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   TProcessSQLCommandThread=class(TCrossThread)
   private
     FSpool:TMessageSpool;
@@ -48,17 +69,54 @@ type
     fds:TMemDataset;
     fOnExecSQL:TExecSQLProc;
   protected
+    //: @exclude
     procedure Execute; override;
+    //: @exclude
     procedure ReturnData;
   public
+    {:
+    Cria a fila de processamento assincrono.
+
+    @param(CreateSuspended  Boolean. Se verdadeiro, a fila é criada suspensa,
+                                     sendo necessário chamar o procedimento
+                                     Resume posteriormente para que ela comece a
+                                     trabalhar.)
+    @param(ExecSQLProc TExecSQLProc. Ponteiro para o procedimento que será chamado
+                                     para executar as consultas SQL.)
+    }
     constructor Create(CreateSuspended: Boolean; ExecSQLProc:TExecSQLProc);
+    //: @exclude
     destructor Destroy; override;
+    {:
+    Espera determinado tempo pela finalização da thread.
+    @param(Timeout Cardinal. Tempo máximo de espera.)
+    @returns(Retorna wrSignaled caso a thread seja finalizada antes do tempo
+             máximo de espera (Timeout). Caso a fila não termine antes do tempo
+             máximo retorna wrTimeout. Caso o procedimento Destroy for chamado
+             antes do método Terminate seguido @name, pode retornar wrAbandoned
+             ou wrError.)
+    }
     function WaitEnd(Timeout:Cardinal):TWaitResult;
   public
+    {:
+    Executa uma consulta SQL sem retornar um DataSet para a aplicação.
+    @param(sql String. Comando SQL a executar.)
+    }
     procedure ExecSQLWithoutResultSet(sql:String);
+    {:
+    Executa uma consulta SQL e rotorna um DataSet para a aplicação.
+    @param(sql String. Comando SQL a executar.)
+    @param(ReturnDataCallback TReturnDataSetProc. Procedimento que é chamado para
+                                                  retornar o dataset resultante da
+                                                  consulta para a aplicação.)
+    }
     procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc);
   end;
 
+  {:
+  Componente de banco de dados do PascalSCADA.
+  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  }
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private
     FSyncConnection,
@@ -242,7 +300,7 @@ end;
 
 procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
 begin
-  FCS.Enter
+  FCS.Enter;
   try
     FASyncQuery.SQL.Clear;
     FASyncQuery.SQL.Add(sqlcmd);
@@ -264,37 +322,79 @@ end;
 
 procedure THMIDBConnection.SetProtocol(x: String);
 begin
-
+  FSyncConnection.Protocol:=x;
+  FCS.Enter;
+  try
+    FASyncConnection.Protocol:=x;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetHostName(x: String);
 begin
-
+  FSyncConnection.HostName:=x;
+  FCS.Enter;
+  try
+    FASyncConnection.HostName:=x;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetPort(x: Integer);
 begin
-
+  FSyncConnection.Port:=x;
+  FCS.Enter;
+  try
+    FASyncConnection.Port:=x;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetDatabase(x: String);
 begin
-
+  FSyncConnection.Database:=x;
+  FCS.Enter;
+  try
+    FASyncConnection.Database:=x;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetUser(x: String);
 begin
-
+  FSyncConnection.User:=x;
+  FCS.Enter;
+  try
+    FASyncConnection.User:=x;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetPassword(x: String);
 begin
-
+  FSyncConnection.Password:=x;
+  FCS.Enter;
+  try
+    FASyncConnection.Password:=x;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetCatalog(x: String);
 begin
-
+  FSyncConnection.Catalog:=x;
+  FCS.Enter;
+  try
+    FASyncConnection.Catalog:=x;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetConnected(x:Boolean);
