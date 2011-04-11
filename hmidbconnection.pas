@@ -399,7 +399,15 @@ end;
 
 procedure THMIDBConnection.SetConnected(x:Boolean);
 begin
-
+  FSyncConnection.Connected:=x;
+  if FSyncConnection.Connected=x then begin
+    FCS.Enter;
+    try
+      FASyncConnection.Connected:=x;
+    finally
+      FCS.Leave;
+    end;
+  end;
 end;
 
 end.
