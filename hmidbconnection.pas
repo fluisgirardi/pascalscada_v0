@@ -119,6 +119,7 @@ type
   }
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private
+    FConnectRead:Boolean;
     FSyncConnection,
     FASyncConnection:TZConnection;
     FASyncQuery:TZQuery;
@@ -135,6 +136,7 @@ type
     FUser: string;
     FPassword: string;
     FCatalog: string;
+    procedure Loaded; override;
   protected
     function GetConnected:Boolean;
 
@@ -230,6 +232,7 @@ begin
         end;
       end;
     end;
+    Sleep(1);
   end;
   FEnd.SetEvent;
 end;
@@ -269,8 +272,11 @@ begin
   FCS:=TCriticalSection.Create;
   FSyncConnection:=TZConnection.Create(nil);
   FASyncConnection:=TZConnection.Create(nil);
-  FASyncQuery.Create(nil);
+  FASyncQuery:=TZQuery.Create(nil);
   FASyncQuery.Connection:=FASyncConnection;
+
+  FSQLSpooler:=TProcessSQLCommandThread.Create(true,ExecuteSQLCommand);
+  FSQLSpooler.Resume;
 end;
 
 destructor  THMIDBConnection.Destroy;
@@ -286,6 +292,12 @@ begin
   FSyncConnection.Destroy;
   FASyncConnection.Destroy;
   FCS.Destroy;
+end;
+
+procedure THMIDBConnection.Loaded;
+begin
+  Inherited loaded;
+  Connected:=FConnectRead;
 end;
 
 function THMIDBConnection.GetSyncConnection:TZConnection;
@@ -329,6 +341,7 @@ begin
   finally
     FCS.Leave;
   end;
+  FProtocol:=FSyncConnection.Protocol;
 end;
 
 procedure THMIDBConnection.SetHostName(x: String);
@@ -340,6 +353,7 @@ begin
   finally
     FCS.Leave;
   end;
+  FHostName:=FSyncConnection.HostName;
 end;
 
 procedure THMIDBConnection.SetPort(x: Integer);
@@ -351,6 +365,7 @@ begin
   finally
     FCS.Leave;
   end;
+  FPort:=FSyncConnection.Port;
 end;
 
 procedure THMIDBConnection.SetDatabase(x: String);
@@ -362,6 +377,7 @@ begin
   finally
     FCS.Leave;
   end;
+  FDatabase:=FSyncConnection.Database;
 end;
 
 procedure THMIDBConnection.SetUser(x: String);
@@ -373,6 +389,7 @@ begin
   finally
     FCS.Leave;
   end;
+  FUser:=FSyncConnection.User;
 end;
 
 procedure THMIDBConnection.SetPassword(x: String);
@@ -384,6 +401,7 @@ begin
   finally
     FCS.Leave;
   end;
+  FPassword:=FSyncConnection.Password;
 end;
 
 procedure THMIDBConnection.SetCatalog(x: String);
@@ -395,10 +413,15 @@ begin
   finally
     FCS.Leave;
   end;
+  FCatalog:=FSyncConnection.Catalog;
 end;
 
 procedure THMIDBConnection.SetConnected(x:Boolean);
 begin
+  if [csReading, csLoading]*ComponentState<>[] then begin
+    FConnectRead:=x;
+    exit;
+  end;
   FSyncConnection.Connected:=x;
   if FSyncConnection.Connected=x then begin
     FCS.Enter;
