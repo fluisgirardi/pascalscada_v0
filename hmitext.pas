@@ -79,7 +79,7 @@ begin
    FTimer:=TTimer.Create(Self);
    FTimer.OnTimer:=BlinkTimer;
    FTimer.Enabled:=false;
-   FTextZones:=TTextZones.Create;
+   FTextZones:=TTextZones.Create(Self);
    FTextZones.OnNeedCompState:=NeedComState;
    FTextZones.OnZoneChange:=ZoneChange;
 end;

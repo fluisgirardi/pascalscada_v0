@@ -104,7 +104,7 @@ begin
    FTimer:=TTimer.Create(Self);
    FTimer.OnTimer:=BlinkTimer;
    FTimer.Enabled:=false;
-   FAnimationZones:=TGraphicZones.Create;
+   FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=NeedComState;
    FAnimationZones.OnZoneChange:=ZoneChange;
 end;

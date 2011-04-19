@@ -163,11 +163,13 @@ type
   }
   TZones = class(TCollection)
   private
+     FOwner:TPersistent;
      FOnZoneChange:TNotifyEvent;
      FOnNeedCompState:TNeedCompStateEvent;
      FComponentState:TComponentState;
-
   protected
+     //: @exclude
+     function GetOwner: TPersistent; override;
      //: @exclude
      function GetComponentState:TComponentState;
      //: @exclude
@@ -188,7 +190,7 @@ type
      property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
   public
      //: @exclude
-     constructor Create(ItemClass: TCollectionItemClass);
+     constructor Create(Owner:TPersistent; ItemClass: TCollectionItemClass);
      {:
      Este método deve ser chamado através do método Loaded de seu componente para
      informar para as zonas que a partir de agora elas devem operar normalmente e
@@ -321,7 +323,7 @@ type
   TTextZones = class(TZones)
   public
     //: @exclude
-    constructor Create;
+    constructor Create(Owner:TPersistent);
     //: Adiciona uma nova zona de texto na coleção.
     function Add:TTextZone;
   end;
@@ -399,7 +401,7 @@ type
   TGraphicZones = class(TZones)
   public
     //: @exclude
-    constructor Create;
+    constructor Create(Owner:TPersistent);
     //: Adiciona uma nova zona gráfica a coleção.
     function Add:TGraphicZone;
   end;
@@ -671,9 +673,10 @@ end;
 // TZones implementation
 //############################################################
 
-constructor TZones.Create(ItemClass: TCollectionItemClass);
+constructor TZones.Create(Owner:TPersistent; ItemClass: TCollectionItemClass);
 begin
   inherited Create(ItemClass);
+  FOwner:=Owner;
 end;
 
 procedure TZones.Loaded;
@@ -682,6 +685,11 @@ var
 begin
    for i:=0 to Count-1 do
       TZone(Items[i]).Loaded;
+end;
+
+function TZones.GetOwner: TPersistent;
+begin
+  Result:=FOwner;
 end;
 
 function TZones.GetComponentState:TComponentState;
@@ -816,9 +824,9 @@ end;
 //############################################################
 // TTextZones implementation
 //############################################################
-constructor TTextZones.Create;
+constructor TTextZones.Create(Owner:TPersistent);
 begin
-   inherited Create(TTextZone);
+   inherited Create(Owner, TTextZone);
 end;
 
 function TTextZones.Add:TTextZone;
@@ -932,9 +940,9 @@ end;
 //############################################################
 // TGraphicZones implementation
 //############################################################
-constructor TGraphicZones.Create;
+constructor TGraphicZones.Create(Owner:TPersistent);
 begin
-   inherited Create(TGraphicZone);
+   inherited Create(Owner, TGraphicZone);
 end;
 
 function TGraphicZones.Add:TGraphicZone;
