@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="pattern.svn">
+  <defs
+     id="defs4">
+    <pattern
+       inkscape:collect="always"
+       xlink:href="#pattern5210"
+       id="pattern5295"
+       patternTransform="translate(89.7121,199.9872)" />
+    <pattern
+       inkscape:collect="always"
+       xlink:href="#pattern5285"
+       id="pattern5291"
+       patternTransform="matrix(0.49673649,0.49673649,-0.49673649,0.49673649,89.714666,199.49392)" />
+    <pattern
+       inkscape:collect="always"
+       xlink:href="#pattern5210"
+       id="pattern5285"
+       patternTransform="matrix(0.70710678,0.70710678,-0.70710678,0.70710678,89.712105,199.9872)" />
+    <linearGradient
+       id="linearGradient3594">
+      <stop
+         style="stop-color:#999999;stop-opacity:1;"
+         offset="0"
+         id="stop3596" />
+      <stop
+         id="stop3602"
+         offset="0.5"
+         style="stop-color:#000000;stop-opacity:1;" />
+      <stop
+         style="stop-color:#999999;stop-opacity:1;"
+         offset="1"
+         id="stop3598" />
+    </linearGradient>
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective10" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3594"
+       id="linearGradient3600"
+       x1="197.23228"
+       y1="155.34673"
+       x2="201.69981"
+       y2="155.34673"
+       gradientUnits="userSpaceOnUse" />
+    <pattern
+       patternUnits="userSpaceOnUse"
+       width="4.5535712"
+       height="80.26786"
+       patternTransform="translate(197.14285,112.36219)"
+       id="pattern3608">
+      <rect
+         y="0"
+         x="0"
+         height="80.26786"
+         width="4.5535712"
+         id="rect2820"
+         style="fill:url(#linearGradient3611);fill-opacity:1;stroke:none" />
+    </pattern>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3594"
+       id="linearGradient3611"
+       gradientUnits="userSpaceOnUse"
+       x1="197.23228"
+       y1="155.34673"
+       x2="201.69981"
+       y2="155.34673"
+       gradientTransform="translate(-197.14285,-112.36219)" />
+    <pattern
+       patternUnits="userSpaceOnUse"
+       width="4"
+       height="4.0000002"
+       patternTransform="translate(89.712105,199.9872)"
+       id="pattern5210">
+      <g
+         id="g5169"
+         transform="translate(-89.712105,-199.9872)">
+        <rect
+           style="fill:#262626;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.99999994;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+           id="rect5073"
+           width="3"
+           height="3.0000002"
+           x="90.212105"
+           y="200.4872" />
+        <rect
+           style="fill:#787878;fill-opacity:1;stroke:none"
+           id="rect5121"
+           width="3"
+           height="3"
+           x="90.712105"
+           y="200.9872" />
+      </g>
+    </pattern>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="64"
+     inkscape:cx="68.954208"
+     inkscape:cy="846.83904"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1366"
+     inkscape:window-height="701"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true">
+    <sodipodi:guide
+       orientation="1,0"
+       position="129.45313,812.82032"
+       id="guide5297" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="129.28125,812.63672"
+       id="guide5299" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="65.84375,849.125"
+       id="guide5303" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Camada 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#787878;fill-opacity:1;stroke:none"
+       id="rect5077"
+       width="40"
+       height="40"
+       x="89.712105"
+       y="199.9872"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"
+       inkscape:export-filename="/home/fabiolg/preenchimento.png" />
+    <rect
+       inkscape:export-ydpi="90"
+       inkscape:export-xdpi="90"
+       y="199.9872"
+       x="89.712097"
+       height="39.738266"
+       width="39.741032"
+       id="rect5289"
+       style="fill:url(#pattern5291);fill-opacity:1;stroke:none"
+       inkscape:export-filename="/home/fabiolg/Público/preenchimento.png" />
+    <rect
+       style="fill:url(#pattern5295);stroke:none"
+       width="4"
+       height="4"
+       x="81.712097"
+       y="199.9872"
+       id="rect5215" />
+    <rect
+       style="fill:#979797;fill-opacity:1;stroke:none"
+       id="rect5301"
+       width="6"
+       height="6"
+       x="69"
+       y="204.36218"
+       inkscape:export-filename="/home/fabiolg/Público/prenchimento2.png"
+       inkscape:export-xdpi="60"
+       inkscape:export-ydpi="60" />
+    <g
+       id="g5173"
+       transform="matrix(-0.80026315,0.83331416,-0.80026315,-0.83331416,304.13586,299.25604)">
+      <rect
+         style="fill:#999999;fill-opacity:1;stroke:#636363;stroke-width:0.86589300999999985;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-linejoin:round"
+         id="rect5175"
+         width="3"
+         height="3.0000002"
+         x="90.212105"
+         y="200.4872" />
+      <rect
+         style="fill:#999999;fill-opacity:1;stroke:none"
+         id="rect5177"
+         width="3"
+         height="3"
+         x="90.648422"
+         y="200.92352" />
+    </g>
+    <g
+       transform="matrix(0.80026315,0.83331416,0.80026315,-0.83331416,-160.13594,299.25604)"
+       id="g5305">
+      <rect
+         y="200.4872"
+         x="90.212105"
+         height="3.0000002"
+         width="3"
+         id="rect5307"
+         style="fill:#999999;fill-opacity:1;stroke:#636363;stroke-width:0.86589301;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <rect
+         y="200.92352"
+         x="90.648422"
+         height="3"
+         width="3"
+         id="rect5309"
+         style="fill:#999999;fill-opacity:1;stroke:none" />
+    </g>
+  </g>
+</svg>
