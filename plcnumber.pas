@@ -1,6 +1,6 @@
 {:
   @abstract(Implementa um tag PLC numérico para uso geral.)
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit PLCNumber;
 
@@ -16,7 +16,7 @@ uses
 type
   {:
     @abstract(Classe base para tags numéricos.)
-    @author(Fabio Luis Girardi papelhigienico@gmail.com)
+    @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   TPLCNumber = class(TPLCTag)
   protected

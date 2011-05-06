@@ -1,6 +1,6 @@
 {:
   @abstract(Unit que implementa uma caixa para entrada de valores em Tags.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit HMIEdit;
 
@@ -16,7 +16,7 @@ uses
 
 type
   {:
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
     Implementa um Edit para leitura/escrita de valores texto/numéricos em tags.
 
     @bold(Para maiores informações consulte a documentação da classe TEdit

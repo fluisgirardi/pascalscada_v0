@@ -1,6 +1,6 @@
 {:
 @abstract(Implementa a base para Tags de comunicação.)
-@author(Fabio Luis Girardi papelhigienico@gmail.com)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit PLCTag;
 
@@ -16,7 +16,7 @@ uses
 type
   {:
   @abstract(Classe base para todos os tags de comunicação.)
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   TPLCTag = class(TTag, IManagedTagInterface)
   private

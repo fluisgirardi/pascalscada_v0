@@ -1,6 +1,6 @@
 {:
 @abstract(Implementa o tag PLC numérico com comunicação.)
-@author(Fabio Luis Girardi papelhigienico@gmail.com)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit PLCTagNumber;
 
@@ -16,7 +16,7 @@ uses
 type
   {:
   @abstract(Tag numérico com comunicação individual.)
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   TPLCTagNumber = class(TPLCNumber, IScanableTagInterface, ITagInterface, ITagNumeric)
   private

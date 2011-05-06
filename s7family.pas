@@ -5,7 +5,7 @@
 
   Este driver não usa Libnodave, ele é uma reescrita da mesma.
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit s7family;
 
@@ -25,7 +25,7 @@ type
 
   Este driver não usa Libnodave, ele é uma reescrita da mesma.
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Para configurar um tag, é necessário preencher as propriedade PLCStation,
   PLCHack e PLCSlot para endereçar o CLP. Para endereçar a memória dentro do CLP

@@ -1,6 +1,6 @@
 {:
   @abstract(Unit de tradução do PascalSCADA.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit hsstrings;
 

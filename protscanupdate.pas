@@ -1,6 +1,6 @@
 {:
 @abstract(Atualiza os valores dos tags.)
-@author(Fabio Luis Girardi papelhigienico@gmail.com)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit protscanupdate;
 
@@ -19,7 +19,7 @@ uses
 type
 
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   Classe de thread responsável por atualizar os tags após o driver processar
   leituras/escritas por scan. Usado por TProtocolDriver.
   @seealso(TProtocolDriver)

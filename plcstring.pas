@@ -1,6 +1,6 @@
 {:
   @abstract(Implementação para Tags String.)
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit PLCString;
 
@@ -16,7 +16,7 @@ uses
 
 type
   {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 
   Define os possíveis tipos de strings.
   @value(stSIEMENS String no formato SIEMENS, onde os dois primeiros bytes da
@@ -27,7 +27,7 @@ type
 
   {:
   @abstract(Tag de comunicação em formato String.)
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private

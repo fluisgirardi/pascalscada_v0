@@ -1,6 +1,6 @@
 {:
   @abstract(Implementação de processadores de escala.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit ValueProcessor;
 
@@ -16,7 +16,7 @@ uses
 type
   {:
     @abstract(Classe base processadora de escalas.)
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TScaleProcessor = class(TComponent)
   private

@@ -1,6 +1,6 @@
 {:
   @abstract(Implementa a base para Tags Blocos.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit TagBlock;
 
@@ -16,7 +16,7 @@ uses
 type
   {:
   @abstract(Classe base para tags blocos.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Classe base para os tags TPLCBlock e TPLCString.
   }

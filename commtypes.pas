@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Unit com os tipos que são usados frequentemente em drivers de portas de comunicação.)
 }
 unit commtypes;

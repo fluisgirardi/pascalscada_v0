@@ -1,7 +1,7 @@
 {:
   ATUALMENTE ESTE CONTROLE não funciona no Lazarus.
   @abstract(Implementa um controle um controle em forma de RadioButton.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 
 unit HMIRadioButton;

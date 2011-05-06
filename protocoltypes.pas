@@ -1,6 +1,6 @@
 {:
   @abstract(Implementa tipos comuns para drivers de protocolos e tags.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit ProtocolTypes;
 

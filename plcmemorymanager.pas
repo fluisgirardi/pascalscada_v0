@@ -1,6 +1,6 @@
 {:
   @abstract(Classes para organização de blocos de memória de um CLP.)
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit PLCMemoryManager;
 
@@ -14,7 +14,7 @@ uses SysUtils, DateUtils, Tag, SyncObjs, Classes;
 
 type
   {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 
   Estrutura usada para cadastrar cada endereço único dentro do gerenciador de
   blocos de memória.
@@ -24,7 +24,7 @@ type
   end;
 
   {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 
   Classe que representa um faixa de endereços de memória continuos (bloco).
   
@@ -115,7 +115,7 @@ type
   //: @exclude
   TRegisterRangeArray = array of TRegisterRange;
   {:
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 
   @abstract(Classe que gerência blocos de memórias não continuos (fragmentados).)
   }

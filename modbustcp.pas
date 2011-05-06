@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementa o driver ModBus TCP.)
 }
@@ -20,7 +20,7 @@ uses
 type
   {:
   @abstract(Classe driver ModBus para TCP/IP.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @bold(Para informações de como endereçar seus tags veja a classe TModBusDriver.)
 

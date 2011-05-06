@@ -1,6 +1,6 @@
 {:
   @abstract(Define um controle de opções para leitura/escrita de valores de tags numéricos.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit HMIRadioGroup;
 

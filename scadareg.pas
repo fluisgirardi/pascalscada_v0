@@ -1,6 +1,6 @@
 {:
   @abstract(Unit de registro de componentes do PascalSCADA. Para Delphi e Lazarus.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit scadareg;
 

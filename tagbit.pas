@@ -1,6 +1,6 @@
 {:
   @abstract(Implementação do tag de mapeamento de bits.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit TagBit;
 
@@ -19,7 +19,7 @@ type
   TBitRange = 0..31;
 
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Tag que representam um conjunto de bits dentro de um tag.)
 
   Por exemplo, digamos que o tag plc associado contenha o valor 5 (00000101 bin).

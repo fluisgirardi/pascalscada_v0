@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementação de um tag de bloco de comunicação.)
 }
@@ -16,7 +16,7 @@ uses
 
 type
   {:
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
     Tag para comunicação em blocos.
   }

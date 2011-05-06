@@ -1,6 +1,6 @@
 {:
   @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da janela.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit HMIControlDislocatorAnimation;
 
@@ -18,7 +18,7 @@ type
 
   {:
   @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da janela.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   THMIControlDislocatorAnimation = class(TComponent, IHMITagInterface)
   private

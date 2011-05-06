@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Unit das funções CRC de 16 bits)
 }
 unit crc16utils;

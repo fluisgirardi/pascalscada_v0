@@ -59,7 +59,7 @@ type
 
   {:
   Fila de execução assincrona de comandos SQL.
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TProcessSQLCommandThread=class(TCrossThread)
   private
@@ -115,7 +115,7 @@ type
 
   {:
   Componente de banco de dados do PascalSCADA.
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private

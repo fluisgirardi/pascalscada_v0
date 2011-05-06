@@ -1,7 +1,7 @@
 {:
   @abstract(Implementa o controle responsável por mostrar textos pré-definidos
             em função do valor do tag associado.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit HMIText;
 

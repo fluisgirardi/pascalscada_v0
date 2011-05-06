@@ -1,6 +1,6 @@
 {:
   @abstract(Implementa uma coleção de tags.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit tagcollection;
 
@@ -16,7 +16,7 @@ uses
 type
   {:
   @abstract(Classe de um item na coleção de tags.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TTagCollectionItem=class(TCollectionItem, IUnknown, IHMITagInterface)
   private
@@ -57,7 +57,7 @@ type
 
   {:
   @abstract(Classe que representa uma coleção de tags.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Use este componente em lugares que são necessarios mais de um tag, como
   por exemplo históricos e receitas.

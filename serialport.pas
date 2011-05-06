@@ -1,6 +1,6 @@
 {:
   @abstract(Unit que implementa uma porta de comunicação serial multiplataforma.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit SerialPort;
 
@@ -73,7 +73,7 @@ type
   {:
   @abstract(Driver genérico para portas seriais. Atualmente funcionando para
             Windows, Linux e FreeBSD.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @seealso(TCommPortDriver)
   }
   TSerialPortDriver = class(TCommPortDriver)

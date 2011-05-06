@@ -1,6 +1,6 @@
 {:
   @abstract(Unit do formulário assistente de criação de estruturas do tag TPLCStruct.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 
 unit ustructuremapper;
@@ -21,7 +21,7 @@ type
   {:
   Assistente de criação de estruturas usando o tag TPLCStruct.
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TfrmStructureEditor = class(TForm)
     Panel1: TPanel;

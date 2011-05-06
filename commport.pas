@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Unit que implementa as bases de um driver de porta de comunicação)
 }
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @abstract(Unit that implements the basis of a communication port driver)
+}
+{$ENDIF}
 unit CommPort;
 
 {$IFDEF FPC}
@@ -19,7 +26,7 @@ uses
 
 type
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @name é responsável por notificar a aplicação e os drivers sobre erros de
   comunicação, abertura, fechamento e desconecção de uma porta de comunicação.
   É usado internamente por TCommPortDriver.
@@ -54,7 +61,7 @@ type
   {:
   @abstract(Classe base de drivers de portas de comunicação)
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Esta classe foi criada com o intuito de diminuir os esforços na criação de
   drivers de portas de comunicações tanto no modo mono-tarefa (single thread) quanto

@@ -1,6 +1,6 @@
 {:
   @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit HMIProgressBar;
 

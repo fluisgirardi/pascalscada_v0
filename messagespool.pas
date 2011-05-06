@@ -2,7 +2,7 @@
  @abstract(Unit que implementa o enfileiramento de mensagens internas do programa,
            multiplataforma.)
  
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
  
  Feito para suprir a necessidade de comunicação inter-processos (threads) de
  forma independente de sistema operacional.
@@ -25,7 +25,7 @@ uses
 type
 
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Estrutura que identifica uma mensagem.
   @member MsgID Classifica a mensagem.
@@ -43,7 +43,7 @@ type
   PMSMsg = ^TMSMsg;
 
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Estrutura usada para montar uma fila de mensagens.
   @member Msg Mensagem do elemento da fila.
@@ -61,7 +61,7 @@ type
   {:
   @abstract(Classe de enfileiramento de mensagens internas do programa)
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Classe criada para suprir a necessidade de comunicação inter-processos (threads)
   de forma independente de sistema operacional.

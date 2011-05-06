@@ -1,6 +1,6 @@
 {:
   @abstract(Implementação da base de todos os tags.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit Tag;
 

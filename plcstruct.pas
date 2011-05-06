@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementação de um tag estrutura de comunicação com
   suporte a multi-tipos de dados.)

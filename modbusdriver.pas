@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementa a base para os drivers ModBus RTU e ModBus TCP.)
 }
@@ -18,7 +18,7 @@ uses
 
 type
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Estrutura que simula as áreas de memória de um equipamento modbus escravo.
 
@@ -50,7 +50,7 @@ type
 
   {:
   @abstract(Classe base do driver ModBus (RTU e TCP))
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Driver que implementa a base do protocolo ModBus. Trabalha independentemente do
   driver de porta (camadas abaixo da camada de aplicação.)

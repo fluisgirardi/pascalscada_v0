@@ -1,6 +1,6 @@
 {:
   @abstract(Unit que implementa uma porta de comunicação TCP/UDP sobre IP cliente.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit tcp_udpport;
 
@@ -31,7 +31,7 @@ type
   {:
   @abstract(Driver genérico para portas TCP/UDP sobre IP. Atualmente funcionando
             para Windows, Linux e FreeBSD.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @seealso(TCommPortDriver)
   }
   TTCP_UDPPort = class(TCommPortDriver)

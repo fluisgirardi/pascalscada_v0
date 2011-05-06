@@ -1,6 +1,6 @@
 {:
   @abstract(Tipos comuns aos CLP's da familia Siemens.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit S7Types;
 

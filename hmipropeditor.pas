@@ -1,7 +1,7 @@
 {:
   @abstract(Implementacao dos editores de algumas propriedades de controles
             do PascalSCADA.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit hmipropeditor;
 
@@ -32,7 +32,7 @@ uses
 type
   {:
   Editor da propriedade TGraphicZone.FileName
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TZoneFileNamePropertyEditor = class(TStringProperty)
   public
@@ -44,7 +44,7 @@ type
 
   {:
   Editor de varias propriedades de THMIControlDislocatorAnimation
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TPositionPropertyEditor = class(TStringProperty)
   public
@@ -55,7 +55,7 @@ type
 
   {:
   Editor da propriedade TZone.BlinkWith
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TZoneBlinkWithPropertyEditor = class(TIntegerProperty)
   public
@@ -72,7 +72,7 @@ type
   {:
     Editor de componente base para todos os demais editores que irão inserir
     componentes na aplicação.
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TInsertTagsOnFormComponentEditor = class(TDefaultComponentEditor)
   protected
@@ -83,7 +83,7 @@ type
 
   {:
   Editor de componente TagBuilder
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TTagBuilderComponentEditor = class(TInsertTagsOnFormComponentEditor)
   private

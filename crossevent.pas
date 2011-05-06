@@ -1,5 +1,5 @@
 {:
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
     @abstract(Unit de sincronização de threads por eventos.)
 
     Esta unit foi criada por motivos de compatibilidade
@@ -74,7 +74,7 @@ type
   entre ambientes Windows e Unix.
   Simula eventos para qualquer sistema operacional. A parte Unix (Linux/FreeBSD)
   é baseado nos eventos RTL do FreePascal.
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TCrossEvent = class(TObject)
    private

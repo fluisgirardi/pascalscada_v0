@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Implementa o controle responsável por mostrar imagens em função do valor do tag associado.)
 }
 
@@ -17,7 +17,7 @@ uses
 
 type
   {:
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
     Implementa o controle responsável por mostrar imagens em função do valor do
     tag associado.
 

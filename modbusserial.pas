@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementa o driver ModBus RTU.)
 }
@@ -17,7 +17,7 @@ uses
 type
   {:
   @abstract(Classe driver ModBus RTU.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @bold(Para informações de como endereçar seus tags veja a classe TModBusDriver.)
 

@@ -5,7 +5,7 @@
 
   Este driver não usa Libnodave, ele é uma reescrita da mesma.
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit ISOTCPDriver;
 

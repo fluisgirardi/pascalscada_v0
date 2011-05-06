@@ -1,6 +1,6 @@
 {:
   @abstract(Unit do formulário TagBuilder para a familia de drivers da Siemens.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit us7tagbuilder;
 
@@ -22,7 +22,7 @@ type
   {:
   Editor de bits de um item da estrtura.
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TTagBitItemEditor = class(TPanel)
   private
@@ -58,7 +58,7 @@ type
   {:
   Editor de itens da estrtura.
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TS7TagItemEditor = class(TPanel)
   private
@@ -144,7 +144,7 @@ type
   {:
   Tag builder da familia de protocolos da Siemens.
 
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   TfrmS7TagBuilder = class(TForm)
     BlockName: TEdit;

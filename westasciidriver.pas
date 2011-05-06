@@ -1,6 +1,6 @@
 {:
   @abstract(Implmentação do driver West n6100 ASCII.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit WestASCIIDriver;
 
@@ -87,7 +87,7 @@ type
 
   {:
   @abstract(Classe driver para West n6100 ASCII.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Para usar este driver, basta configurar as seguintes propriedades do seu tag:
 

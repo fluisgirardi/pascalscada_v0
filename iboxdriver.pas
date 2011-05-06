@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Driver de protocolo Ibox, usado para comunicar com unidades
   de refrigeração da Thermo-King.)
@@ -17,7 +17,7 @@ uses
 
 type
   {:
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
     Identifica um registrador simples do Ibox.
     @member RefCount Conta quantas vezes o registro foi referenciado.
@@ -35,7 +35,7 @@ type
   end;
 
   {:
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
     Representa os registradores 200,201 e 202 do Ibox.
     @member RefCount Conta quantas vezes o registro foi referenciado.
@@ -92,7 +92,7 @@ type
   end;
 
   {:
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
     Estrutura que representa o registrador 203 do Ibox.
     @member RefCount Conta quantas vezes o registro foi referenciado.
@@ -156,7 +156,7 @@ type
   end;
 
   {:
-   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
    Identifica uma estação Ibox da ThermoKing.
    @member PID0 Registrador PID0 do ibox.
@@ -184,13 +184,13 @@ type
   end;
 
   {:
-   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
    Conjunto de estações i-Box.
   }
   TIBoxStations=array of TIBoxStation;
 
   {:
-   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
    @abstract(Driver de comunicação para dispositivos i-Box.)
 

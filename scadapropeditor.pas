@@ -1,7 +1,7 @@
 {:
   @abstract(Implementação dos editores de algumas propriedades de componentes
             do PascalSCADA.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit scadapropeditor;
 

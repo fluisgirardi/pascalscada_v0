@@ -1,6 +1,6 @@
 {:
   @abstract(Unit que implementa um controle para a exibição de valores de qualquer tag.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit HMILabel;
 
@@ -16,7 +16,7 @@ uses
 type
   {:
     @name implementa o controle para a exibir de valores de qualquer tipo de tag.
-    @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
     @bold(Para maiores informações consulte a documentação da classe TLabel
     de seu ambiente de desenvolvimento.)

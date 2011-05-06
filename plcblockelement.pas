@@ -1,5 +1,5 @@
 {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementação de um elemento de um tag bloco de comunicação.)
 }
@@ -16,7 +16,7 @@ uses
 
 type
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Classe de Tag Elemento de Bloco de comunicação.
   Usado para retirar uma informação de um conjunto (bloco) de informações.

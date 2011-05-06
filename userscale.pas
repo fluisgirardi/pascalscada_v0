@@ -1,6 +1,6 @@
 {:
   @abstract(Escala definida pelo usuário.)
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit UserScale;
 
@@ -18,7 +18,7 @@ type
    TScaleEvent = procedure(Sender:TObject; const Input:Double; var Output:Double) of object;
    {:
    @abstract(Classe para processamento de escalas personalizaveis pelo usuário.)
-   @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
    }
    TUserScale = class(TScaleProcessor)
    private

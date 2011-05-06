@@ -1,6 +1,6 @@
 {:
   Implementa funções uteis a todo o sistema.
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 unit hsutils;
 

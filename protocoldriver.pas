@@ -1,6 +1,6 @@
 {:
 @abstract(Implementação da base de um driver de protocolo.)
-@author(Fabio Luis Girardi papelhigienico@gmail.com)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit ProtocolDriver;
 
@@ -18,7 +18,7 @@ type
   {:
   @abstract(Classe base para drivers de protocolo.)
 
-  @author(Fabio Luis Girardi papelhigienico@gmail.com)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
 
   Para você criar um novo driver, basta sobrescrever alguns métodos e funções,
   de acordo com as necessidades de seu driver de protocolo. São eles:

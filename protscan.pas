@@ -1,6 +1,6 @@
 {:
 @abstract(Processa os pedidos de leitura e escrita por scan.)
-@author(Fabio Luis Girardi papelhigienico@gmail.com)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
 }
 unit protscan;
 
@@ -20,7 +20,7 @@ uses
 type
 
   {:
-  @author(Fabio Luis Girardi <papelhigienico@gmail.com>)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   Classe de thread reponsável processar as escritas por scan e por manter os
   tags com seus valores atualizados o mais rápido possível. Usado por
   TProtocolDriver.
