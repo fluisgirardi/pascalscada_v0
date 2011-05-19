@@ -183,6 +183,7 @@ begin
   if (retval=0) then begin   //timeout, appears to be ok...
     Result:=true;
     CommResult:=iorTimeOut;
+    incRetries:=true;
     exit;
   end;
 
@@ -217,6 +218,8 @@ begin
       Result:=false;
       exit;
     end;
+
+    incRetries:=true;
   end;
 end;
 

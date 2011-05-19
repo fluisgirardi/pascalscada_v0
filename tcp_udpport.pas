@@ -238,6 +238,8 @@ begin
     if lidos<=0 then begin
       if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, CommPortDisconected) then
         break;
+      if incRetries then
+        inc(tentativas);
     end else
       Packet^.Received := Packet^.Received + lidos;
 
@@ -273,6 +275,8 @@ begin
     if escritos<=0 then begin
       if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, CommPortDisconected) then
         break;
+      if incRetries then
+        inc(tentativas);
     end else
       Packet^.Wrote := Packet^.Wrote + escritos;
   end;

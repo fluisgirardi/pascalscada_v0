@@ -223,6 +223,8 @@ begin
       Result:=false;
       exit;
     end;
+
+    incRetries:=true;
   end;
 end;
 
