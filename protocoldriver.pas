@@ -383,14 +383,14 @@ procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
 begin
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
+      {$ENDIF};
+
+    FCritical.Enter;
 
     //se for a mesma porta cai fora...
     if CommPort=PCommPort then exit;
@@ -455,14 +455,14 @@ begin
 
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
+      {$ENDIF};
+
+    FCritical.Enter;
     
     DoAddTag(TagObj,false);
   finally
@@ -475,14 +475,14 @@ procedure TProtocolDriver.RemoveTag(TagObj:TTag);
 begin
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
+      {$ENDIF};
+
+    FCritical.Enter;
     DoDelTag(TagObj);
   finally
     FCritical.Leave;
@@ -646,14 +646,14 @@ var
 begin
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
+      {$ENDIF};
+
+    FCritical.Enter;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcRead,res,tagrec.RealOffset);
@@ -670,14 +670,15 @@ var
 begin
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
+      {$ENDIF};
+
+    FCritical.Enter;
+
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,Now,tcWrite,res,tagrec.RealOffset);
@@ -733,40 +734,42 @@ end;
 
 function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
 begin
-   try
+  try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
-      Result := DoWrite(TagRec,values,false)
-   finally
-      FCritical.Leave;
-      FPause.SetEvent;
-   end;
+      {$ENDIF};
+
+    FCritical.Enter;
+
+    Result := DoWrite(TagRec,values,false)
+  finally
+    FCritical.Leave;
+    FPause.SetEvent;
+  end;
 end;
 
 procedure TProtocolDriver.SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
 begin
-   try
+  try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
-      DoGetValue(TagRec,values);
-   finally
-      FCritical.Leave;
-      FPause.SetEvent;
-   end;
+      {$ENDIF};
+
+    FCritical.Enter;
+
+    DoGetValue(TagRec,values);
+  finally
+    FCritical.Leave;
+    FPause.SetEvent;
+  end;
 end;
 
 function  TProtocolDriver.GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):Integer;
@@ -785,14 +788,14 @@ begin
     valueSet:=-1;
     
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
+      {$ENDIF};
+
+    FCritical.Enter;
 
     if ComponentState*[csDestroying]<>[] then exit;
 
@@ -869,18 +872,19 @@ procedure TProtocolDriver.DoPortOpened(Sender: TObject);
 begin
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
-     PortOpened(Sender);
+      {$ENDIF};
+
+    FCritical.Enter;
+
+    PortOpened(Sender);
   finally
-     FCritical.Leave;
-     FPause.SetEvent;
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
@@ -888,18 +892,19 @@ procedure TProtocolDriver.DoPortClosed(Sender: TObject);
 begin
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
-     PortClosed(Sender);
+      {$ENDIF};
+
+    FCritical.Enter;
+
+    PortClosed(Sender);
   finally
-     FCritical.Leave;
-     FPause.SetEvent;
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
@@ -907,18 +912,19 @@ procedure TProtocolDriver.DoPortDisconnected(Sender: TObject);
 begin
   try
     //tenta entrar no Mutex
-    while not FCritical.TryEnter do begin
-      FPause.ResetEvent;
+    while not FPause.ResetEvent do
       {$IFDEF FPC}
       ThreadSwitch;
       {$ELSE}
       SwitchToThread;
-      {$ENDIF}
-    end;
-     PortDisconnected(Sender);
+      {$ENDIF};
+
+    FCritical.Enter;
+
+    PortDisconnected(Sender);
   finally
-     FCritical.Leave;
-     FPause.SetEvent;
+    FCritical.Leave;
+    FPause.SetEvent;
   end;
 end;
 
