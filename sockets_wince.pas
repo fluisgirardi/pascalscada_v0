@@ -9,8 +9,8 @@ interface
 uses
   windows, Sockets, socket_types, commtypes;
 
-  function socket_recv(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
-  function socket_send(sock:Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
+  function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
+  function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
   function setblockingmode(fd:TSocket; mode:dword):Integer;
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
   function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
@@ -67,7 +67,7 @@ begin
   end;
 end;
 
-function socket_recv(sock:sockets.Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
+function socket_recv(sock:sockets.Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
 var
   sel:TFDSet;
   mode:u_long;
@@ -107,7 +107,7 @@ begin
   end;
 end;
 
-function socket_send(sock:sockets.Tsocket; buf: pointer; len: Cardinal; flags, timeout: Integer):Integer;
+function socket_send(sock:sockets.Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
 var
   sel:TFDSet;
   mode:u_long;
