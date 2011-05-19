@@ -15,7 +15,7 @@ unit CrossEvent;
 {$mode delphi}
 {$ENDIF}
 
-{$if (not defined(WINDOWS)) and ((defined(VER2_0) or defined(VER2_2_0)) or defined(unix))}
+{$if (not defined(WINDOWS)) and (not defined(WIN32)) and (not defined(WIN64))}
 {$DEFINE NeedCrossEvents}
 {$IFEND}
 
@@ -25,15 +25,12 @@ uses
   SyncObjs,
   Classes,
   SysUtils
-  {$IFDEF FPC}
-  ,LResources
-  {$ELSE}
-  ,Windows
-  {$ENDIF}
   {$if defined(NeedCrossEvents)}
   ,BaseUnix
   ,unix
   ,pthreads
+  {$ELSE}
+  ,windows
   {$IFEND}
   ;
 
@@ -83,9 +80,8 @@ type
       FEvent:TINTRTLEvent;
       Waiters:Integer;
       {$ELSE}
-      FEvent:TEvent;
+      FEvent:THandle;
       {$IFEND}
-      function GetManualReset:Boolean;
    public
       {:
       @name cria um novo evento. Seus parametros são iguais ao da classe TEvent
@@ -112,14 +108,14 @@ type
       @seealso(SetEvent)
       @seealso(WaitFor)
       }
-      procedure ResetEvent;
+      function ResetEvent:Boolean;
       
       {:
       Seta o evento. Sinaliza-o para @true.
       @seealso(ResetEvent)
       @seealso(WaitFor)
       }
-      procedure SetEvent;
+      function SetEvent:Boolean;
       
       {:
       Espera um evento acontecer por um determinado tempo.
@@ -134,8 +130,6 @@ type
       @seealso(ResetEvent)
       }
       function WaitFor(Timeout : Cardinal) : TWaitResult;
-      //: Indica se o evento precisa ser manualmente resetado.
-      Property ManualReset : Boolean read GetManualReset;
   end;
 
 implementation
@@ -162,7 +156,7 @@ begin
   FEvent.Name:=Name;
   FEvent.EventAttr:=EventAttributes;
   {$ELSE}
-  FEvent := TEvent.Create(EventAttributes,AManualReset,InitialState,Name);
+  FEvent :=  CreateEvent(EventAttributes,AManualReset,InitialState,PChar(Name));
   {$IFEND}
 end;
 
@@ -180,30 +174,32 @@ begin
   pthread_cond_destroy(@FEvent.condvar);
   pthread_mutex_destroy(@FEvent.mutex);
   {$ELSE}
-  FEvent.Destroy;
+  CloseHandle(FEvent);
   {$IFEND}
   inherited destroy;
 end;
-procedure  TCrossEvent.ResetEvent;
+function TCrossEvent.ResetEvent:Boolean;
 begin
   {$if defined(NeedCrossEvents)}
   pthread_mutex_lock(@FEvent.mutex);
   FEvent.isset:=false;
+  Result:=true;
   pthread_mutex_unlock(@FEvent.mutex);
   {$ELSE}
-  FEvent.ResetEvent;
+  Result:=Windows.ResetEvent(FEvent);
   {$IFEND}
 end;
 
-procedure  TCrossEvent.SetEvent;
+function TCrossEvent.SetEvent:Boolean;
 begin
   {$if defined(NeedCrossEvents)}
   pthread_mutex_lock(@FEvent.mutex);
   FEvent.isset:=true;
   pthread_cond_broadcast(@FEvent.condvar);
+  Result:=true;
   pthread_mutex_unlock(@FEvent.mutex);
   {$ELSE}
-  FEvent.SetEvent;
+  Result:=Windows.SetEvent(FEvent);
   {$IFEND}
 end;
 
@@ -268,13 +264,18 @@ begin
   InterLockedDecrement(Waiters);
   
   {$ELSE}
-  Result := FEvent.WaitFor(Timeout);
+  case WaitForSingleObject(FEvent, Timeout) of
+    WAIT_ABANDONED: Result := wrAbandoned;
+    WAIT_OBJECT_0: Result := wrSignaled;
+    WAIT_TIMEOUT: Result := wrTimeout;
+    WAIT_FAILED:
+      begin
+        Result := wrError;
+      end;
+  else
+    Result := wrError;
+  end;
   {$IFEND}
-end;
-
-function TCrossEvent.GetManualReset:Boolean;
-begin
-  Result := FManualReset;
 end;
 
 end.

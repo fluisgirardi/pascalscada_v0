@@ -17,7 +17,7 @@ uses
   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
-  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection, 
+  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, //HMIDBConnection, 
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
   {$ELSE}
@@ -63,7 +63,7 @@ begin
   RegisterComponents(strControlsPallete,  [THMIText]);
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
-  RegisterComponents(strDatabasePallete,  [THMIDBConnection]);
+  //RegisterComponents(strDatabasePallete,  [THMIDBConnection]);
   {$IFNDEF FPC}
   RegisterComponents(strFPCPallete,       [TMemDataset]);
   {$ENDIF}
@@ -77,9 +77,9 @@ begin
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P1_Position', TPositionPropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'GoTo_P0_Position', TPositionPropertyEditor);
 
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Protocol', THMIDBProtocolPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Database', THMIDBDatabasePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Catalog',  THMIDBCatalogPropertyEditor);
+  //RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Protocol', THMIDBProtocolPropertyEditor);
+  //RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Database', THMIDBDatabasePropertyEditor);
+  //RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Catalog',  THMIDBCatalogPropertyEditor);
 
   RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
   RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);
