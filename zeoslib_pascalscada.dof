@@ -96,7 +96,7 @@ PackageDLLOutputDir=.
 PackageDCPOutputDir=.
 SearchPath=.;ZeosLib\src\component
 Packages=vcl;rtl;vclx;indy;inet;xmlrtl;vclie;inetdbbde;inetdbxpress;dbrtl;dsnap;dsnapcon;vcldb;soaprtl;VclSmp;dbexpress;dbxcds;inetdb;bdertl;vcldbx;webdsnap;websnap;adortl;ibxpress;teeui;teedb;tee;dss;visualclx;visualdbclx;vclactnband;vclshlctrls;IntrawebDB_50_70;Intraweb_50_70;Rave50CLX;Rave50VCL;dclOfficeXP;qrpt
-Conditionals=
+Conditionals=ZEOS_DISABLE_DBLIB;ZEOS_DISABLE_ADO;ZEOS_DISABLE_INTERBASE;ZEOS_DISABLE_ASA;ZEOS_DISABLE_ORACLE
 DebugSourceDirs=.
 UsePackages=0
 [Parameters]
@@ -134,9 +134,19 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
+[Excluded Packages]
+C:\pascalscada\zeoslib_pascalscada.bpl=ZeosLib - PascalSCADA
 [HistoryLists\hlDebugSourcePath]
 Count=1
 Item0=.
+[HistoryLists\hlConditionals]
+Count=6
+Item0=ZEOS_DISABLE_DBLIB;ZEOS_DISABLE_ADO;ZEOS_DISABLE_INTERBASE;ZEOS_DISABLE_ASA;ZEOS_DISABLE_ORACLE
+Item1=ZEOS_DISABLE_DBLIB;ZEOS_DISABLE_ADO;ZEOS_DISABLE_INTERBASE;ZEOS_DISABLE_ASA
+Item2=ZEOS_DISABLE_DBLIB;ZEOS_DISABLE_ADO;ZEOS_DISABLE_INTERBASE
+Item3=ZEOS_DISABLE_DBLIB;ZEOS_DISABLE_ADO
+Item4=ZEOS_DISABLE_DBLIB
+Item5=ZEOS_DISABLE_DBLIB 
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

@@ -9,7 +9,7 @@ MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
 DCC = $(ROOT)\bin\dcc32.exe $**
 BRCC = $(ROOT)\bin\brcc32.exe $**
 #------------------------------------------------------------------------------
-PROJECTS = pascalscada.bpl ZComponentDesign100.bpl
+PROJECTS = pascalscada.bpl zeoslib_pascalscada.bpl
 #------------------------------------------------------------------------------
 default: $(PROJECTS)
 #------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ default: $(PROJECTS)
 pascalscada.bpl: pascalscada.dpk
   $(DCC)
 
-ZComponentDesign100.bpl: ZeosLib\packages\delphi10\ZComponentDesign.dpk
+zeoslib_pascalscada.bpl: zeoslib_pascalscada.dpk
   $(DCC)
 
 
