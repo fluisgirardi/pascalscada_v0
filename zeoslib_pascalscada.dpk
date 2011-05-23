@@ -1,0 +1,122 @@
+package zeoslib_pascalscada;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS OFF}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'ZeosLib - PascalSCADA'}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  dbrtl,
+  designide,
+  vclactnband,
+  vclx,
+  visualclx,
+  vcldb;
+
+contains
+  ZPlainDriver in 'ZeosLib\src\plain\ZPlainDriver.pas',
+  ZPlainLoader in 'ZeosLib\src\plain\ZPlainLoader.pas',
+  ZPlainMySqlConstants in 'ZeosLib\src\plain\ZPlainMySqlConstants.pas',
+  ZPlainMySqlDriver in 'ZeosLib\src\plain\ZPlainMySqlDriver.pas',
+  ZPlainPostgreSqlDriver in 'ZeosLib\src\plain\ZPlainPostgreSqlDriver.pas',
+  ZPlainSqLiteDriver in 'ZeosLib\src\plain\ZPlainSqLiteDriver.pas',
+  ZSqLiteToken in 'ZeosLib\src\parsesql\ZSqLiteToken.pas',
+  ZGenericSqlAnalyser in 'ZeosLib\src\parsesql\ZGenericSqlAnalyser.pas',
+  ZGenericSqlToken in 'ZeosLib\src\parsesql\ZGenericSqlToken.pas',
+  ZMySqlAnalyser in 'ZeosLib\src\parsesql\ZMySqlAnalyser.pas',
+  ZMySqlToken in 'ZeosLib\src\parsesql\ZMySqlToken.pas',
+  ZPostgreSqlAnalyser in 'ZeosLib\src\parsesql\ZPostgreSqlAnalyser.pas',
+  ZPostgreSqlToken in 'ZeosLib\src\parsesql\ZPostgreSqlToken.pas',
+  ZScriptParser in 'ZeosLib\src\parsesql\ZScriptParser.pas',
+  ZSelectSchema in 'ZeosLib\src\parsesql\ZSelectSchema.pas',
+  ZSqLiteAnalyser in 'ZeosLib\src\parsesql\ZSqLiteAnalyser.pas',
+  ZDbcUtils in 'ZeosLib\src\dbc\ZDbcUtils.pas',
+  ZDbcCache in 'ZeosLib\src\dbc\ZDbcCache.pas',
+  ZDbcCachedResultSet in 'ZeosLib\src\dbc\ZDbcCachedResultSet.pas',
+  ZDbcConnection in 'ZeosLib\src\dbc\ZDbcConnection.pas',
+  ZDbcGenericResolver in 'ZeosLib\src\dbc\ZDbcGenericResolver.pas',
+  ZDbcIntfs in 'ZeosLib\src\dbc\ZDbcIntfs.pas',
+  ZDbcLogging in 'ZeosLib\src\dbc\ZDbcLogging.pas',
+  ZDbcMetadata in 'ZeosLib\src\dbc\ZDbcMetadata.pas',
+  ZDbcMySql in 'ZeosLib\src\dbc\ZDbcMySql.pas',
+  ZDbcMySqlMetadata in 'ZeosLib\src\dbc\ZDbcMySqlMetadata.pas',
+  ZDbcMySqlResultSet in 'ZeosLib\src\dbc\ZDbcMySqlResultSet.pas',
+  ZDbcMySqlStatement in 'ZeosLib\src\dbc\ZDbcMySqlStatement.pas',
+  ZDbcMySqlUtils in 'ZeosLib\src\dbc\ZDbcMySqlUtils.pas',
+  ZDbcPooled in 'ZeosLib\src\dbc\ZDbcPooled.pas',
+  ZDbcPostgreSql in 'ZeosLib\src\dbc\ZDbcPostgreSql.pas',
+  ZDbcPostgreSqlMetadata in 'ZeosLib\src\dbc\ZDbcPostgreSqlMetadata.pas',
+  ZDbcPostgreSqlResultSet in 'ZeosLib\src\dbc\ZDbcPostgreSqlResultSet.pas',
+  ZDbcPostgreSqlStatement in 'ZeosLib\src\dbc\ZDbcPostgreSqlStatement.pas',
+  ZDbcPostgreSqlUtils in 'ZeosLib\src\dbc\ZDbcPostgreSqlUtils.pas',
+  ZDbcResultSet in 'ZeosLib\src\dbc\ZDbcResultSet.pas',
+  ZDbcResultSetMetadata in 'ZeosLib\src\dbc\ZDbcResultSetMetadata.pas',
+  ZDbcSqLite in 'ZeosLib\src\dbc\ZDbcSqLite.pas',
+  ZDbcSqLiteMetadata in 'ZeosLib\src\dbc\ZDbcSqLiteMetadata.pas',
+  ZDbcSqLiteResultSet in 'ZeosLib\src\dbc\ZDbcSqLiteResultSet.pas',
+  ZDbcSqLiteStatement in 'ZeosLib\src\dbc\ZDbcSqLiteStatement.pas',
+  ZDbcSqLiteUtils in 'ZeosLib\src\dbc\ZDbcSqLiteUtils.pas',
+  ZDbcStatement in 'ZeosLib\src\dbc\ZDbcStatement.pas',
+  ZVariant in 'ZeosLib\src\core\ZVariant.pas',
+  ZClasses in 'ZeosLib\src\core\ZClasses.pas',
+  ZCollections in 'ZeosLib\src\core\ZCollections.pas',
+  ZCompatibility in 'ZeosLib\src\core\ZCompatibility.pas',
+  ZExpression in 'ZeosLib\src\core\ZExpression.pas',
+  ZExprParser in 'ZeosLib\src\core\ZExprParser.pas',
+  ZExprToken in 'ZeosLib\src\core\ZExprToken.pas',
+  ZFunctions in 'ZeosLib\src\core\ZFunctions.pas',
+  ZFunctionsConvert in 'ZeosLib\src\core\ZFunctionsConvert.pas',
+  ZFunctionsDateTime in 'ZeosLib\src\core\ZFunctionsDateTime.pas',
+  ZFunctionsMath in 'ZeosLib\src\core\ZFunctionsMath.pas',
+  ZFunctionsOther in 'ZeosLib\src\core\ZFunctionsOther.pas',
+  ZFunctionsStrings in 'ZeosLib\src\core\ZFunctionsStrings.pas',
+  ZMatchPattern in 'ZeosLib\src\core\ZMatchPattern.pas',
+  ZMessages in 'ZeosLib\src\core\ZMessages.pas',
+  ZSysUtils in 'ZeosLib\src\core\ZSysUtils.pas',
+  ZTokenizer in 'ZeosLib\src\core\ZTokenizer.pas',
+  ZURL in 'ZeosLib\src\core\ZURL.pas',
+  ZVariables in 'ZeosLib\src\core\ZVariables.pas',
+  ZAbstractConnection in 'ZeosLib\src\component\ZAbstractConnection.pas',
+  ZAbstractDataset in 'ZeosLib\src\component\ZAbstractDataset.pas',
+  ZAbstractRODataset in 'ZeosLib\src\component\ZAbstractRODataset.pas',
+  ZAbstractTable in 'ZeosLib\src\component\ZAbstractTable.pas',
+  ZComponentReg in 'ZeosLib\src\component\ZComponentReg.pas',
+  ZConnection in 'ZeosLib\src\component\ZConnection.pas',
+  ZConnectionGroup in 'ZeosLib\src\component\ZConnectionGroup.pas',
+  ZDataset in 'ZeosLib\src\component\ZDataset.pas',
+  ZDatasetUtils in 'ZeosLib\src\component\ZDatasetUtils.pas',
+  ZGroupedConnection in 'ZeosLib\src\component\ZGroupedConnection.pas',
+  ZPgEventAlerter in 'ZeosLib\src\component\ZPgEventAlerter.pas',
+  ZPropertyEditor in 'ZeosLib\src\component\ZPropertyEditor.pas',
+  ZSequence in 'ZeosLib\src\component\ZSequence.pas',
+  ZSqlMetadata in 'ZeosLib\src\component\ZSqlMetadata.pas',
+  ZSqlMonitor in 'ZeosLib\src\component\ZSqlMonitor.pas',
+  ZSqlProcessor in 'ZeosLib\src\component\ZSqlProcessor.pas',
+  ZSqlStrings in 'ZeosLib\src\component\ZSqlStrings.pas',
+  ZSqlUpdate in 'ZeosLib\src\component\ZSqlUpdate.pas',
+  ZStoredProcedure in 'ZeosLib\src\component\ZStoredProcedure.pas',
+  ZStreamBlob in 'ZeosLib\src\component\ZStreamBlob.pas';
+
+end.
