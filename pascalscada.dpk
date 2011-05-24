@@ -34,7 +34,7 @@ requires
   vclx,
   VclSmp,
   dbrtl,
-  ZComponentDesign;
+  zeoslib_pascalscada;
 
 contains
   commport in 'commport.pas',
