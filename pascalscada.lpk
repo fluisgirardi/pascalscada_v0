@@ -338,7 +338,7 @@
       <Item2>
         <PackageName Value="zcomponent"/>
         <MinVersion Major="7" Valid="True"/>
-        <DefaultFilename Value="ZeosLib\packages\lazarus\zcomponent.lpk" Prefer="True"/>
+        <DefaultFilename Value="zeoslib\packages\lazarus\zcomponent.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="IDEIntf"/>
