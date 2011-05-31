@@ -85,18 +85,25 @@ type
   drivers de portas de comunicações tanto no modo mono-tarefa (single thread) quanto
   no modo multi-tarefa (threads).
 
-  As poucas partes a serem escritas é sobreescrever de três métodos virtuais que
+  As poucas partes a serem escritas é sobreescrever de cinco métodos virtuais que
   fazem todo o trabalho (e é lógico as rotinas das propriedades e demais funções
   de comunicação da sua porta). São eles:
 
-  //port read
-  //port write
+  @code(function  ComSettingsOK:Boolean; virtual;)
+  Sobrescreva a função para verificar se todas as propriedades de sua porta
+  de comunicação estão certas. Retorne @true caso estejam.
 
   @code(procedure PortStart(var Ok:Boolean); virtual;)
   Abra a porta e retorne @true caso consiga abrir a porta de comunicação.
 
   @code(procedure PortStop(var Ok:Boolean); virtual;)
   Feche a porta e retorne @true caso consiga fechar a porta de comunicação.
+
+  @code(procedure Read(Packet:PIOPacket); virtual; abstract;)
+  Sobrescreva este método para poder executar as funções de leitura de sua porta de comunicação.
+
+  @code(procedure Write(Packet:PIOPacket); virtual; abstract;)
+  Sobrescreva este método para poder escrever dados na sua porta de comunicação.
 
   Feito isso, sua porta já é thread-safe!
   }
@@ -109,21 +116,26 @@ type
   This class was created to reduce the efforts to create new communication port
   drivers, both on single-thread and multi-threads environments.
 
-  //port read
-  //port write
-
   To make a minimal usable communication port driver, you must overwrite only
-  tree virtual methods that do all work (don't forget of the
+  five virtual methods that do all work (don't forget of the
   properties/procedures/functions particular of your communication port). The
   methods that you must overwrite are this:
 
-
+  @code(function  ComSettingsOK:Boolean; virtual;)
+  Overwrite this function to check if the setting of your communication port are
+  rigth.
 
   @code(procedure PortStart(var Ok:Boolean); virtual;)
   Opens the communication port. If it was open successfully, return true on OK variable.
 
   @code(procedure PortStop(var Ok:Boolean); virtual;)
   Closes the communication port. If it was closed successfully, return true on OK variable.
+
+  @code(procedure Read(Packet:PIOPacket); virtual; abstract;)
+  Overwrite this method to read data of your communication port.
+
+  @code(procedure Write(Packet:PIOPacket); virtual; abstract;)
+  Overwrite this method to write data on your communication port.
 
   After do this, your communication port already is thread-safe!
   }
