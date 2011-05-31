@@ -827,7 +827,7 @@ begin
     pkg := EncodePkg(tagrec,values,rl);
     if PCommPort<>nil then begin
 
-      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,false,nil,@IOResult);
+      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,nil,@IOResult);
 
       if (res<>0) then
         Result := DecodePkg(IOResult,tempValues);
@@ -852,7 +852,7 @@ begin
   try
     pkg := EncodePkg(tagrec,nil,rl);
     if PCommPort<>nil then begin
-      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,false,nil,@IOResult);
+      res := PCommPort.IOCommandSync(iocWriteRead,pkg,rl,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,nil,@IOResult);
       if res<>0 then
         Result := DecodePkg(IOResult,values);
     end else

@@ -116,8 +116,6 @@ type
     //: Armazena a seção crítica que protege areas comuns a muitas threads.
     PCallersCS:TCriticalSection;
 
-    //: Array de ações pendentes.
-    FPendingActions:TArrayOfObject;
 
     //:
     function  GetPortOpenedEvent:TNotifyEvent;
@@ -369,7 +367,6 @@ begin
   FPause.Destroy;
   
   SetLength(PTags,0);
-  SetLength(FPendingActions,0);
   PCallersCS.Destroy;
   inherited Destroy;
 end;
@@ -953,4 +950,4 @@ initialization
 
 DriverCount:=1;
 
-end.
+end.
