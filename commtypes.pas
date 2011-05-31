@@ -208,11 +208,18 @@ type
   //: Defines a method called when a communication error occurs.
   {$ENDIF}
   TCommPortErrorEvent = procedure(Error:TIOResult) of object;
+  //: @exclude
   PCommPortErrorEvent = ^TCommPortErrorEvent;
 
+  {$IFDEF PORTUGUES}
+  //: Define o tipo dos eventos de porta aberta, fechada e desconectada.
+  {$ELSE}
+  //: Defines the types of events of communications port opens, closed and disconnected.
+  {$ENDIF}
   TCommPortGenericError = procedure of object;
+  //: @exclude
   PCommPortGenericError = ^TCommPortGenericError;
-
+  //: @exclude
   PNotifyEvent = ^TNotifyEvent;
 
   {$IFDEF PORTUGUES}
