@@ -1,3 +1,4 @@
+{$IFDEF PORTUGUES}
 {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
     @abstract(Unit de sincronização de threads por eventos.)
@@ -9,6 +10,18 @@
     Parte do codigo foi adaptado da unit rtl/unix/cthreads.pp do
     projeto Freepascal.
 }
+{$ELSE}
+{:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+    @abstract(Unit of thread synchronization using events.)
+
+    This unit was created by compatibility and performance reasons between
+    windows, linux and other unix environments.
+
+    Pieces of code was adapted from the unit rtl/unix/cthreads.pp of FreePascal
+    project.
+}
+{$ENDIF}
 unit CrossEvent;
 
 {$IFDEF FPC}
@@ -37,15 +50,26 @@ uses
 type
 
 {$if defined(NeedCrossEvents)}
+
+  {$IFDEF PORTUGUES}
   {:
   Estrutura usada por TCrossEvent para trabalhar em ambientes Unix.
-  Usada internamente por TCrossEvent em ambientes Unix-like.
-  @member condvar Armazena uma condição.
-  @member mutex Armazena uma zona critica.
+  @member condvar Armazena um objeto pthread_cond.
+  @member mutex Armazena um objeto pthread_mutex.
   @member isset Armazena se o evento foi setado.
   @member IsDestroing Armazena se o evento está sendo destuido.
   @seealso(TCrossEvent)
   }
+  {$ELSE}
+  {:
+  Record used by TCrossEvent to work in Unix environments.
+  @member condvar Stores a pthread_cond object.
+  @member mutex Stores a pthread_mutex object.
+  @member isset Stores the actual state of the event (set or not).
+  @member IsDestroing Stores if the event has been destroyed.
+  @seealso(TCrossEvent)
+  }
+  {$ENDIF}
   TINTRTLEvent = record
     EventAttr:Pointer;
     Name:String;
@@ -55,24 +79,45 @@ type
     IsDestroing:boolean;
   end;
 {$IFEND}
+
+  {$IFDEF PORTUGUES}
   //: Classe base para threads.
+  {$ELSE}
+  //: Thread base class.
+  {$ENDIF}
   TCrossThread = class(TThread)
    private
      function GetUniqueID:Int64;
    public
+     {$IFDEF PORTUGUES}
      //: Fornece o número único da thread.
+     {$ELSE}
+     //: Provides a unique number of identification.
+     {$ENDIF}
      property UniqueID:Int64 read GetUniqueID;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Classe de sincronização de threads por eventos Multi-plataforma.
 
   Esta classe foi criada por motivos de compatibilidade (e performance)
   entre ambientes Windows e Unix.
-  Simula eventos para qualquer sistema operacional. A parte Unix (Linux/FreeBSD)
+  Emula eventos para qualquer sistema operacional. A parte Unix (Linux/FreeBSD)
   é baseado nos eventos RTL do FreePascal.
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Class of thread synchronization by events multi-platform.
+
+  This class was created by compatibility and performance reasons between
+  Windows and Unix environments.
+  It emulates events to any OSes. The Unix code (Linux/FreeBSD) is based on
+  events of the RTL of FreePascal project.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TCrossEvent = class(TObject)
    private
       FManualReset: Boolean;
@@ -83,6 +128,7 @@ type
       FEvent:THandle;
       {$IFEND}
    public
+      {$IFDEF PORTUGUES}
       {:
       @name cria um novo evento. Seus parametros são iguais ao da classe TEvent
       disponível no FPC e no Delphi.
@@ -98,25 +144,63 @@ type
       @seealso(ResetEvent)
       @seealso(WaitFor)
       }
+      {$ELSE}
+      {:
+      @name creates a new event object. Their parameters are the same of the
+      class TEvent of FPC and Delphi.
+      @param(EventAttributes PSecurityAttributes. Security attributes.
+             Only Windows, other OSes must be suplied @code(nil).)
+      @param(AManualReset Boolean. If @false, the event will reset automatically
+             after the first thread wake up of the wait. If @true is needed call
+             ResetEvent to reset the event object.)
+      @param(InitialState Boolean. Initial state of the event object. If true,
+             the event object will be created signaled.)
+      @param(Name String. Event object name. Only Windows.)
+      @seealso(SetEvent)
+      @seealso(ResetEvent)
+      @seealso(WaitFor)
+      }
+      {$ENDIF}
       constructor Create(EventAttributes : PSecurityAttributes; AManualReset,InitialState : Boolean;const Name : string);
-      
+
+      {$IFDEF PORTUGUES}
       //: Destroi o objeto de eventos.
+      {$ELSE}
+      //: Destroys the event object.
+      {$ENDIF}
       destructor  Destroy; override;
-      
+
+      {$IFDEF PORTUGUES}
       {:
       Reseta o evento. Sinaliza-o para @false.
       @seealso(SetEvent)
       @seealso(WaitFor)
       }
+      {$ELSE}
+      {:
+      Reset the event object. Set it to @false.
+      @seealso(SetEvent)
+      @seealso(WaitFor)
+      }
+      {$ENDIF}
       function ResetEvent:Boolean;
-      
+
+      {$IFDEF PORTUGUES}
       {:
       Seta o evento. Sinaliza-o para @true.
       @seealso(ResetEvent)
       @seealso(WaitFor)
       }
+      {$ELSE}
+      {:
+      Set the event object. Set it to @true.
+      @seealso(ResetEvent)
+      @seealso(WaitFor)
+      }
+      {$ENDIF}
       function SetEvent:Boolean;
-      
+
+      {$IFDEF PORTUGUES}
       {:
       Espera um evento acontecer por um determinado tempo.
       @param(Timeout Cardinal. Tempo em milisegundos até o evento acontecer. Caso
@@ -125,10 +209,24 @@ type
                @bold(wrTimeout) caso o evento não tenha sido sinalizado no tempo habil.
                @bold(wrAbandoned) caso o evento esteja sendo destruído.
                @bold(wrError) caso tenha acontecido algum erro ao tentar esperar pelo evento.)
-      
+
       @seealso(SetEvent)
       @seealso(ResetEvent)
       }
+      {$ELSE}
+      {:
+      Wait the event object to be signaled (set).
+      @param(Timeout Cardinal. Timeout in milliseconds to wait the event be
+             signaled. If is suplied $FFFFFFFF, waits infinitely or until be destroyed.)
+      @returns(@bold(wrSignaled) if the event was signaled before the timeout.
+               @bold(wrTimeout) if the event was not signaled before the timeout.
+               @bold(wrAbandoned) if the event object was destroyed.
+               @bold(wrError) if some error occurs trying to wait the event object.)
+
+      @seealso(SetEvent)
+      @seealso(ResetEvent)
+      }
+      {$ENDIF}
       function WaitFor(Timeout : Cardinal) : TWaitResult;
   end;
 
@@ -224,12 +322,14 @@ begin
   InterLockedIncrement(Waiters);
 
   //espera sem timeout
+  //wait without timetout
   if Timeout = $FFFFFFFF then begin
      while (not FEvent.isset) and (not FEvent.IsDestroing) do
         pthread_cond_wait(@FEvent.condvar, @FEvent.mutex);
 
   end else begin
     //espera com timeout
+    //wait the event with timeout.
     fpgettimeofday(@tnow,nil);
     timespec.tv_sec  := tnow.tv_sec + (clong(timeout) div 1000);
     timespec.tv_nsec := (clong(timeout) mod 1000)*1000000 + tnow.tv_usec*1000;
@@ -247,6 +347,7 @@ begin
     FEvent.isset := false;
 
   //checa os resultados...
+  //check the results.
   if FEvent.IsDestroing then
      Result := wrAbandoned
   else
@@ -278,4 +379,4 @@ begin
   {$IFEND}
 end;
 
-end.
+end.
