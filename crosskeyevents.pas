@@ -1,3 +1,13 @@
+{$IFDEF PORTUGUES}
+{:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+    @abstract(Unit de teclado virtual multi plataforma.)
+}
+{$ELSE}
+{:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+    @abstract(Multi-platform virtual keyboard unit.)
+}
 unit crosskeyevents;
 
 interface
@@ -506,4 +516,4 @@ PSVK_SUBTRACT := VK_SUBTRACT;
 {$ENDIF}
 
 end.
-
+
