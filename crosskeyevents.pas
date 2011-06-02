@@ -8,6 +8,7 @@
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
     @abstract(Multi-platform virtual keyboard unit.)
 }
+{$ENDIF}
 unit crosskeyevents;
 
 interface
