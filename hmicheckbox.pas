@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um controle CheckBox ligado a um Tag.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a CheckBox control linked with a tag.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMICheckBox;
 
 {$IFDEF FPC}
@@ -15,6 +22,7 @@ uses
   ProtocolTypes, Tag;
 
 type
+  {$IFDEF PORTUGUES}
   {:
    @name é a classe de um controle booleano em forma de CheckBox que lê e escreve valores em Tags.
    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -22,6 +30,16 @@ type
    @bold(Para maiores informações consulte a documentação da classe TCheckBox
    de seu ambiente de desenvolvimento.)
   }
+  {$ELSE}
+  {:
+   @name is the class of the boolean control with appearance of an CheckBox that
+   reads and writes values in tags.
+   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+   @bold(To get more information, see the documentation of the TCheckBox of your
+   development environment.)
+  }
+  {$ENDIF}
   THMICheckBox = class(TCheckBox, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
@@ -66,7 +84,7 @@ type
     procedure SetHMIEnabled(v:Boolean);
     function  GetHMIEnabled:Boolean;
 
-    //IHMITagInterface
+    //implementes the IHMITagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -101,130 +119,309 @@ type
     procedure EditingDone; override;
     {$ENDIF}
   published
+    {$IFDEF PORTUGUES}
     {:
     @name informa se o controle aceita o estado intermediário (Grayed).
     O valor dessa propriedade depende principalmente da implementação que está
     sendo usada (Delphi ou Lazarus).
     }
+    {$ELSE}
+    {:
+    @name tells if the control accepts a grayed state. The value of this property
+    depends mainly of your development environment (Lazarus or Delphi).
+    }
+    {$ENDIF}
     property AllowGrayed:Boolean read GetAllowGrayed stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     Use @name para ver/setar o estado do controle. Se escrito através dessa
     propriedade, o valor ValueTrue/ValueFalse é escrito no Tag caso as
     propriedades WriteTrueValue/WriteFalseValue estejam em @true
     }
-    property Checked stored false;
+    {$ELSE}
     {:
-    Tag numérico usado pelo controle.
+    Use the @name property to read/write the state of the control. Changes on
+    this property will write the value of property ValueTrue/ValueFalse on the
+    tag if the the respective property WriteTrueValue/WriteFalseValue is set to
+    @true.
+    }
+    {$ENDIF}
+    property Checked stored false;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Tag numérico usado pelo controle. As alterações do valor do tag alteram a
+    aparencia do controle, assim como as alterações do controle podem alterar
+    o valor do tag.
     @seealso(TPLCTag)
     @seealso(TPLCBlockElement)
     @seealso(TPLCTagNumber)
     }
-    property PLCTag:TPLCTag read GetHMITag write SetHMITag;
+    {$ELSE}
     {:
-    @name mostra o CaptionTrue, CaptionFalse, CaptionGrayed de acordo com o valor
-    to Tag ou escreve seu valor em CaptionTrue, CaptionFalse e CaptionGrayed para
+    Numeric tag link. The value changes of the tag will update the control
+    appearance and the changes made on control can update the tag value.
+    @seealso(TPLCTag)
+    @seealso(TPLCBlockElement)
+    @seealso(TPLCTagNumber)
+    }
+    {$ENDIF}
+    property PLCTag:TPLCTag read GetHMITag write SetHMITag;
+
+    {$IFDEF PORTUGUES}
+    {:
+    @name mostra o Caption atual do controle. Se esta propriedade for modificada,
+    escreve seu valor em CaptionTrue, CaptionFalse e CaptionGrayed para
     agilizar sua configuração.
     @seealso(CaptionTrue)
     @seealso(CaptionFalse)
     @seealso(CaptionGrayed)
     }
+    {$ELSE}
+    {:
+    @name shows the actual caption of the control. If this property is modified,
+    it changes the properties CaptionFalse, CaptionTrue and CaptionGrayed with the
+    same value, to accelerate your configuration.
+    @seealso(CaptionTrue)
+    @seealso(CaptionFalse)
+    @seealso(CaptionGrayed)
+    }
+    {$ENDIF}
     property Caption write SetCaption stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é texto que será mostrado no controle caso ele esteja desmarcado.
     @seealso(Caption)
     }
+    {$ELSE}
+    {:
+    @name is the text that will be show if the checkbox is unchecked.
+    @seealso(Caption)
+    }
+    {$ENDIF}
     property CaptionFalse:String read FCaptionFalse write SetCaptionFalse stored true nodefault;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é texto que será mostrado no controle caso ele esteja marcado.
     @seealso(Caption)
     }
+    {$ELSE}
+    {:
+    @name is the text that will be show if the checkbox is checked.
+    @seealso(Caption)
+    }
+    {$ENDIF}
     property CaptionTrue:String read FCaptionTrue write SetCaptionTrue stored true nodefault;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é texto que será mostrado no controle caso ele esteja no meio-termo
     (nem marcado e nem desmarcado).
     @seealso(Caption)
     }
+    {$ELSE}
+    {:
+    @name is the text that will be show if the checkbox is grayed.
+    @seealso(Caption)
+    }
+    {$ENDIF}
     property CaptionGrayed:string read FCaptionGrayed write SetCaptionGrayed stored true nodefault;
 
-
+    {$IFDEF PORTUGUES}
     {:
-    @name mostra o ColorTrue, ColorFalse, ColorGrayed de acordo com o valor do
-    tag ou escreve seu valor em ColorTrue, ColorFalse e ColorGrayed, para
-    agilizar sua configuração.
-    @seealso(ColorTrue)
-    @seealso(ColorFalse)
-    @seealso(ColorGrayed)
-    }
-    property Color read IntGetColor write IntSetColor stored false;
-    {:
-    @name é a cor do controle caso ele esteja desmarcado.
-    @seealso(Color)
-    }
-    property ColorFalse:TColor read FColorFalse write SetColorFalse stored true default clBtnFace;
-    {:
-    @name é a cor do controle caso ele esteja marcado.
-    @seealso(Color)
-    }
-    property ColorTrue:TColor read FColorTrue write SetColorTrue stored true default clBtnFace;
-    {:
-    @name é a cor do controle caso ele esteja no meio-termo (nem marcado e nem
-    desmarcado).
-    @seealso(Color)
-    }
-    property ColorGrayed:TColor read FColorGrayed write SetColorGrayed stored true default clBtnFace;
-
-    {:
-    @name mostra o FontTrue, FontFalse ou FontGrayed de acordo com o valor do tag
-    ou escreve seu valor em FontTrue, FontFalse e FontGrayed  para agilizar sua
+    @name mostra a cor atual do controle. Se esta propriedade for modificada,
+    escreve seu valor em ColorTrue, ColorFalse e ColorGrayed, para agilizar sua
     configuração.
     @seealso(ColorTrue)
     @seealso(ColorFalse)
     @seealso(ColorGrayed)
     }
+    {$ELSE}
+    {:
+    @name shows the actual color of the control. If this property is modified,
+    it changes the properties ColorFalse, ColorTrue and ColorGrayed with the
+    same value, to accelerate your configuration.
+    @seealso(ColorTrue)
+    @seealso(ColorFalse)
+    @seealso(ColorGrayed)
+    }
+    {$ENDIF}
+    property Color read IntGetColor write IntSetColor stored false;
+
+    {$IFDEF PORTUGUES}
+    {:
+    @name é a cor do controle caso ele esteja desmarcado.
+    @seealso(Color)
+    }
+    {$ELSE}
+    {:
+    @name is the color of the checkbox if it's unchecked.
+    @seealso(Color)
+    }
+    {$ENDIF}
+    property ColorFalse:TColor read FColorFalse write SetColorFalse stored true default clBtnFace;
+
+    {$IFDEF PORTUGUES}
+    {:
+    @name é a cor do controle caso ele esteja marcado.
+    @seealso(Color)
+    }
+    {$ELSE}
+    {:
+    @name is the color of the checkbox if it's checked.
+    @seealso(Color)
+    }
+    {$ENDIF}
+    property ColorTrue:TColor read FColorTrue write SetColorTrue stored true default clBtnFace;
+
+    {$IFDEF PORTUGUES}
+    {:
+    @name é a cor do controle caso ele esteja no meio-termo (nem marcado e nem
+    desmarcado).
+    @seealso(Color)
+    }
+    {$ELSE}
+    {:
+    @name is the color of the checkbox if it's grayed.
+    @seealso(Color)
+    }
+    {$ENDIF}
+    property ColorGrayed:TColor read FColorGrayed write SetColorGrayed stored true default clBtnFace;
+
+    {$IFDEF PORTUGUES}
+    {:
+    @name mostra o FontTrue, FontFalse ou FontGrayed de acordo com o valor do tag
+    ou escreve seu valor em FontTrue, FontFalse e FontGrayed  para agilizar sua
+    configuração.
+    @seealso(FontTrue)
+    @seealso(FontFalse)
+    @seealso(FontGrayed)
+    }
+    {$ELSE}
+    {:
+    @name shows the actual font of the control. If this property is modified,
+    it changes the properties FontFalse, FontTrue and FontGrayed with the
+    same value, to accelerate your configuration.
+    @seealso(FontTrue)
+    @seealso(FontFalse)
+    @seealso(FontGrayed)
+    }
+    {$ENDIF}
     property Font write SetFont stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é a fonte que será usada pelo controle caso ele esteja desmarcado.
     @seealso(Font)
     }
+    {$ELSE}
+    {:
+    @name is the font of checkbox if it's unchecked.
+    @seealso(Font)
+    }
+    {$ENDIF}
     property FontFalse:TFont read FFontFalse write SetFontFalse stored true;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é a fonte que será usada pelo controle caso ele esteja marcado.
     @seealso(Font)
     }
+    {$ELSE}
+    {:
+    @name is the font of checkbox if it's checked.
+    @seealso(Font)
+    }
+    {$ENDIF}
     property FontTrue:TFont read FFontTrue write SetFontTrue stored true;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é a fonte que será usada pelo controle caso ele esteja  no meio-termo
     (nem marcado e nem desmarcado).
     @seealso(Font)
     }
+    {$ELSE}
+    {:
+    @name is the font of the checkbox if it's grayed.
+    @seealso(Font)
+    }
+    {$ENDIF}
     property FontGrayed:TFont read FFontGrayed write SetFontGrayed stored true;
 
+    {$IFDEF PORTUGUES}
     {:
     Diz como o controle irá se comportar caso o valor do Tag não seja igual a
     ValueFalse e nem a ValueTrue.
 
     @seealso(TOtherValues)
     }
+    {$ELSE}
+    {:
+    The value of this property tells how the checkbox will handle tag values that
+    are others than ValueFalse and ValueTrue.
+
+    @seealso(TOtherValues)
+    }
+    {$ENDIF}
     property OtherValuesIS:TOtherValues read FOtherValues write SetOtherValues stored true default IsGrayed;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso o valor do Tag seja igual a @name, o controle é desmarcado.
     }
+    {$ELSE}
+    {:
+    If the value of Tag is equal to @name, the checkbox is unchecked.
+    }
+    {$ENDIF}
     property ValueFalse:Double read FValueFalse write SetValueFalse stored true;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso o valor do Tag seja igual a @name, o controle é marcado.
     }
+    {$ELSE}
+    {:
+    If the value of the Tag is equal to @name, the checkbox is checked.
+    }
+    {$ENDIF}
     property ValueTrue:Double read FValueTrue write SetValueTrue stored true;
+
+    {$IFDEF PORTUGUES}
     {:
     @name diz que qualquer ação feita pelo usuário que marque o controle, deve
     também escrever ValueTrue no tag associado.
     }
+    {$ELSE}
+    {:
+    If @name is true, all actions that check the control will write the property
+    ValueTrue value on the linked tag.
+    }
+    {$ENDIF}
     property WriteTrueValue:Boolean read FWriteTrue write SetWriteTrue stored true default true;
+
+    {$IFDEF PORTUGUES}
     {:
     @name diz que qualquer ação feita pelo usuário que desmarque o controle, deve
     também escrever ValueFalse no tag associado.
     }
+    {$ELSE}
+    {:
+    If @name is true, all actions that uncheck the control will write the property
+    ValueFalse value on the linked tag.
+    }
+    {$ENDIF}
     property WriteFalseValue:Boolean read FWriteFalse write SetWriteFalse stored true default true;
+
+    {$IFDEF PORTUGUES}
     //: Informa o atual estado do controle (marcado, desmarcado, acinzentado).
+    {$ELSE}
+    //: Tells the actual state of the control (checked, unchecked or grayed).
+    {$ENDIF}
     property State:TCheckBoxState read GetState stored false nodefault;
   end;
 
@@ -280,15 +477,18 @@ end;
 procedure THMICheckBox.SetHMITag(t:TPLCTag);
 begin
   //se o tag é um tag numerico.
+  //check if the tag is valid.
   if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
+  //if the control is linked with some tag, remove the link.
   if FTag<>nil then begin
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
+  //link with the new tag.
   if t<>nil then begin
     t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;

@@ -17,30 +17,104 @@ uses
   Controls, Classes, SysUtils;
 
 type
-
+  {$IFDEF PORTUGUES}
+  {:
+      @abstract(Classe te base de emulação de eventos de teclado.)
+      @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ELSE}
+  {:
+      @abstract(Base class of keyboard events emulation.)
+      @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TCrossKeyEvents = class
   protected
+    {$IFDEF PORTUGUES}
+    //: Controle alvo dos eventos de teclado.
+    {$ELSE}
+    //: Target control of keyboard events.
+    {$ENDIF}
     FTarget:TWinControl;
+
+    {$IFDEF PORTUGUES}
+    //: Emula o pressionamento de uma tecla.
+    {$ELSE}
+    //: Emulates the key press event.
+    {$ENDIF}
     procedure DoDown(Key: LongWord); dynamic; abstract;
+
+    {$IFDEF PORTUGUES}
+    //: Emula o liberar de uma tecla.
+    {$ELSE}
+    //: Emulates a key release event.
+    {$ENDIF}
     procedure DoUp(Key: LongWord); dynamic; abstract;
+
+    {$IFDEF PORTUGUES}
+    //: Traduz o codigo da tecla para o codigo da tecla no widgetset.
+    {$ELSE}
+    //: Translate the key code to the widgetset key code.
+    {$ENDIF}
     function  TranlateVirtualKey(Key:Word):LongWord; dynamic; abstract;
   public
+    {$IFDEF PORTUGUES}
+     //: Cria o emulador de eventos de tecla.
+    {$ELSE}
+    //: Creates the key event emulator.
+    {$ENDIF}
     constructor Create(Target:TWinControl);
+
+    {$IFDEF PORTUGUES}
+    //: Configura o controle alvo dos eventos de tecla.
+    {$ELSE}
+    //: Sets the target control of key events.
+    {$ENDIF}
     procedure SetTarget(Target:TWinControl);
+
+    {$IFDEF PORTUGUES}
+    //: Traduz e emula o pressionamento de uma tecla.
+    {$ELSE}
+    //: Translate and send the key press event.
+    {$ENDIF}
     procedure Down(Key: Word);
+
+    {$IFDEF PORTUGUES}
+    //: Traduz e emula o liberar de uma tecla.
+    {$ELSE}
+    //: Translate and send a key release event.
+    {$ENDIF}
     procedure Up(Key: Word);
 
+    {$IFDEF PORTUGUES}
+    //: Traduz e emula o presionar e o liberar de uma tecla.
+    {$ELSE}
+    //: Translate and send a key press and a key release events.
+    {$ENDIF}
     procedure Press(Key: Word);
 
+    {$IFDEF PORTUGUES}
+    //: Aplica modificadores de evento de tecla (Ctrl, Shift e Alt).
+    {$ELSE}
+    //: Apply key modification events (Ctrl, Shift and Alt).
+    {$ENDIF}
     procedure Apply(Shift: TShiftState);
+    {$IFDEF PORTUGUES}
+    //: Remove modificadores de evento de tecla (Ctrl, Shift e Alt).
+    {$ELSE}
+    //: Removes key modification events (Ctrl, Shift and Alt).
+    {$ENDIF}
     procedure Unapply(Shift: TShiftState);
   end;
 
   {$IF defined(LCLgtk2)}
   TGTK2KeyEvents = class(TCrossKeyEvents)
     protected
+      // @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;
+      // @seealso(TCrossKeyEvents.DoUp)
       procedure DoUp(Key: LongWord); override;
+      // @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
   end;
   {$IFEND}
@@ -48,8 +122,11 @@ type
   {$IF defined(LCLqt)}
   TQT4KeyEvents = class(TCrossKeyEvents)
     protected
+      // @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;
+      // @seealso(TCrossKeyEvents.DoUp)
       procedure DoUp(Key: LongWord); override;
+      // @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
   end;
   {$IFEND}
@@ -57,12 +134,20 @@ type
   {$IF defined(LCLwin32) OR (not defined(FPC))}
   TWindowsKeyEvents = class(TCrossKeyEvents)
     protected
+      // @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;
+      // @seealso(TCrossKeyEvents.DoUp)
       procedure DoUp(Key: LongWord); override;
+      // @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
   end;
   {$IFEND}
 
+  {$IFDEF PORTUGUES}
+  //: Cria o emulador de eventos de tecla de acordo com o widgetset em uso.
+  {$ELSE}
+  //: Creates the key event emulator of the currently widgetset.
+  {$ENDIF}
   function CreateCrossKeyEvents(Target:TWinControl):TCrossKeyEvents;
 
 var
@@ -70,6 +155,8 @@ var
 
 {$IF (not defined(FPC)) and (defined(WIN32) or defined(WIN64) or defined(WINDOWS))}
 const
+  //Constantes e teclas ausentes.
+  //missing key constants
   VK_0 = 48;
   VK_1 = 49;
   VK_2 = 50;
@@ -110,6 +197,9 @@ uses {$IFDEF FPC}qt4, qtwidgets, qtobjects, LCLType{$ENDIF};
 
 //se não esta definido FPC (consequentemente não estará definida LCLwin32),
 //estou usando Delphi, consequentemente, Windows...
+//
+//if isn't set FPC (consequently will not defined LCLwin32),
+//so, I'm using Delphi, consequently Windows.
 {$IF defined(LCLwin32) OR defined(LCLwin64) OR defined(LCLwince) OR (not defined(FPC))}
 uses windows{$IFDEF FPC}, LCLType {$ELSE}, Messages {$ENDIF};
 {$IFEND}

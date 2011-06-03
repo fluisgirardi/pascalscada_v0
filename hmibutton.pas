@@ -1,4 +1,8 @@
-//: Classe que implementa um botão
+{$IFDEF PORTUGUES}
+//: Classe que implementa um botão (precisa ser implementada).
+{$ELSE}
+//: HMI button class (must be implemented)
+{$ENDIF}
 unit HMIButton;
 
 {$IFDEF FPC}
@@ -12,12 +16,11 @@ uses
   Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag;
 
 type
-  {:
-  Classe botão HMI que pode ser flat ou
-
-  @bold(Para maiores informações consulte a documentação da classe TSpeedButton
-  de seu ambiente de desenvolvimento.)
-  }
+  {$IFDEF PORTUGUES}
+  //: Precisa ser implementado.
+  {$ELSE}
+  //: Must be implemented.
+  {$ENDIF}
   THMIButton = class(TSpeedButton, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;

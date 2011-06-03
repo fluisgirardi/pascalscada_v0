@@ -1,8 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Implementa o controle responsável por mostrar imagens em função do valor do tag associado.)
 }
-
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @abstract(Implements the control that shows images based on the value of the associated tag.)
+}
+{$ENDIF}
 unit HMIAnimation;
 
 {$IFDEF FPC}
@@ -16,6 +22,8 @@ uses
   Dialogs, ExtCtrls, HMIZones, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
     Implementa o controle responsável por mostrar imagens em função do valor do
@@ -24,6 +32,16 @@ type
     @bold(Para maiores informações consulte a documentação da classe TImage
     de seu ambiente de desenvolvimento.)
   }
+  {$ELSE}
+  {:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+    Implements the control that shows images based on the value of the
+    associated tag.
+
+    @bold(More informations, see the documentation of the class TImage of your
+    IDE.)
+  }
+  {$ENDIF}
   THMIAnimation = class(TImage, IHMIInterface, IHMITagInterface)
   private
     FAnimationZones:TGraphicZones;
@@ -39,7 +57,7 @@ type
     procedure NeedComState(var CurState:TComponentState);
     procedure BlinkTimer(Sender:TObject);
 
-    //IHMITagInterface
+    //Implements the IHMITagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -71,11 +89,21 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+
+    {$IFDEF PORTUGUES}
     {:
     Propriedade criada para testar o controle sem a necessidade de valores vindos
     de um tag. @bold(Só pode ser usada em tempo de desenvolvimento.)
     }
+    {$ELSE}
+    {:
+    Property created to test the control without values comming from a device.
+    @bold(Can only be used in design-time.)
+    }
+    {$ENDIF}
     property TestValue:Double read FTestValue write SetTestValue stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     Coleção de zonas (imagens) que podem ser exibidas em função do valor do tag.
     @seealso(TZone)
@@ -83,7 +111,18 @@ type
     @seealso(TGraphicZone)
     @seealso(TGraphicZones)
     }
+    {$ELSE}
+    {:
+    Zones collection (imagens) that can be showed based on the tag value.
+    @seealso(TZone)
+    @seealso(TZones)
+    @seealso(TGraphicZone)
+    @seealso(TGraphicZones)
+    }
+    {$ENDIF}
     property Zones:TGraphicZones read GetAnimationZones write SetAnimationZones;
+
+    {$IFDEF PORTUGUES}
     {:
     Tag numérico que dispara eventos para o controle exibir imagens de acordo
     com as configurações de zonas.
@@ -91,6 +130,15 @@ type
     @seealso(TPLCBlockElement)
     @seealso(TPLCTagNumber)
     }
+    {$ELSE}
+    {:
+    Numeric Tag which their value will choose the image (of the collection) that
+    will be showed.
+    @seealso(TPLCTag)
+    @seealso(TPLCBlockElement)
+    @seealso(TPLCTagNumber)
+    }
+    {$ENDIF}
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
   end;
 
@@ -158,8 +206,9 @@ var
 {$ENDIF}
 begin
    FCurrentZone:=zone;
-   //limpa a imagem
    {$IFDEF FPC}
+   //limpa a imagem
+   //Clears the image
    Picture.Clear;
    {$ELSE}
    x:= TPicture.Create;
@@ -206,15 +255,18 @@ end;
 procedure THMIAnimation.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
+   //if the new tag is valid.
    if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
+   //if the control are linked with some tag, remove the link.
    if FTag<>nil then begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    end;
 
    //adiona o callback para o novo tag
+   //link with the new tag.
    if t<>nil then begin
       t.AddCallBacks(Self As IHMITagInterface);
       FTag := t;
