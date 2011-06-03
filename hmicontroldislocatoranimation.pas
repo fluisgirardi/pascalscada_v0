@@ -1,7 +1,15 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da janela.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a component that moves controls on axis X and Y
+  of the window.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIControlDislocatorAnimation;
 
 {$IFDEF FPC}
@@ -16,10 +24,17 @@ uses
 
 type
 
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da janela.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  @abstract(Class of component that moves controls on axis X and Y of the window.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   THMIControlDislocatorAnimation = class(TComponent, IHMITagInterface)
   private
     FStartLeft,
@@ -63,7 +78,7 @@ type
     procedure SetMinY(v:Integer);
     procedure SetMaxY(v:Integer);
 
-    //metodos da interface ihmiTagInterface
+    //implements the ihmiTagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -79,46 +94,136 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     //: Posição inicial no eixo X (propriedade Left do controle)
+    {$ELSE}
+    //: Initial position on X axis (Left property of the control)
+    {$ENDIF}
     property P0_X:Integer read FStartLeft write SetStartLeft;
+
+    {$IFDEF PORTUGUES}
     //: Posição inicial no eixo Y (propriedade Top do controle)
+    {$ELSE}
+    //: Initial position on Y axis (Top property of the control)
+    {$ENDIF}
     property P0_Y:Integer read FStartTop write SetStartTop;
+
+    {$IFDEF PORTUGUES}
     //: Posição final no eixo X (propriedade Left do controle)
+    {$ELSE}
+    //: Final position on X axis (Left property of the control)
+    {$ENDIF}
     property P1_X:Integer read FEndLeft write SetEndLeft;
+
+    {$IFDEF PORTUGUES}
     //: Posição final no eixo y (propriedade Top do controle)
+    {$ELSE}
+    //: Final position on Y axis (Top property of the control)
+    {$ENDIF}
     property P1_Y:Integer read FEndTop write SetEndTop;
-    //: Valor do tag que irá fazer o controle ir para as coordenadas (P0_X; P0_Y);
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas Inicias (P0_X; P0_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the Initial coordinates (P0_X; P0_Y);
+    {$ENDIF}
     property ValueP0:Double read FStartValue write SetValueStart;
-    //: Valor do tag que irá fazer o controle ir para as coordenadas (P1_X; P1_Y);
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas finais (P1_X; P1_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the final coordinates (P1_X; P1_Y);
+    {$ENDIF}
     property ValueP1:Double read FEndValue write SetValueEnd;
-    //: Tag que irá controlar a animação.
+
+    {$IFDEF PORTUGUES}
+    //: Tag numérico que irá controlar a animação.
+    {$ELSE}
+    //: Numeric tag that will control the animation.
+    {$ENDIF}
     property PLCTag:TPLCNumber read FTag write SetPLCTag;
+
+    {$IFDEF PORTUGUES}
     //: Controle que será manipulado.
+    {$ELSE}
+    //: Control that will be manipulated.
+    {$ENDIF}
     property Control:TControl read FTarget write SetControl;
 
-    //: Habilita o valor mínimo do eixo X.
+    {$IFDEF PORTUGUES}
+    //: Habilita o valor mínimo no eixo X.
+    {$ELSE}
+    //: Enables a minimum value on X axis.
+    {$ENDIF}
     property EnableXMin:Boolean read FMinX write SetEnableMinX;
-    //: Habilita o valor máximo do eixo X.
+
+    {$IFDEF PORTUGUES}
+    //: Habilita o valor máximo no eixo X.
+    {$ELSE}
+    //: Enables a maximum value on X axis.
+    {$ENDIF}
     property EnableXMax:Boolean read FMaxX write SetEnableMaxX;
-    //: Habilita o valor mínimo do eixo Y.
+
+    {$IFDEF PORTUGUES}
+    //: Habilita o valor mínimo no eixo Y.
+    {$ELSE}
+    //: Enables a minimum value on Y axis.
+    {$ENDIF}
     property EnableYMin:Boolean read FMinY write SetEnableMinY;
-    //: Habilita o valor máximo do eixo Y.
+
+    {$IFDEF PORTUGUES}
+    //: Habilita o valor máximo no eixo Y.
+    {$ELSE}
+    //: Enables a maximum value on Y axis.
+    {$ENDIF}
     property EnableYMax:Boolean read FMaxY write SetEnableMaxY;
 
-    //: Caso valor mínimo de X caso EnableXMin esteja habilitado.
+    {$IFDEF PORTUGUES}
+    //: Caso valor mínimo de X caso EnableXMin seja @true.
+    {$ELSE}
+    //: Minimum value of X axis if EnableXMin is @true.
+    {$ENDIF}
     property MinXValue:Integer read FMinXValue write SetMinX;
-    //: Caso valor máximo de X caso EnableXMax esteja habilitado.
+
+    {$IFDEF PORTUGUES}
+    //: Caso valor máximo de X caso EnableXMax seja @true.
+    {$ELSE}
+    //: Minimum value of X axis if EnableXMax is @true.
+    {$ENDIF}
     property MaxXValue:Integer read FMaxXValue write SetMaxX;
-    //: Caso valor mínimo de Y caso EnableYMin esteja habilitado.
+
+    {$IFDEF PORTUGUES}
+    //: Caso valor mínimo de Y caso EnableyMin seja @true.
+    {$ELSE}
+    //: Minimum value of y axis if EnableYMin is @true.
+    {$ENDIF}
     property MinYValue:Integer read FMinYValue write SetMinY;
-    //: Caso valor máximo de Y caso EnableYMax esteja habilitado.
+
+    {$IFDEF PORTUGUES}
+    //: Caso valor máximo de Y caso EnableYMax seja @true.
+    {$ELSE}
+    //: Minimum value of Y axis if EnableYMax is @true.
+    {$ENDIF}
     property MaxYValue:Integer read FMaxyValue write SetMaxY;
 
+    {$IFDEF PORTUGUES}
     //: Pega a posição atual do controle como posição inicial (P0).
+    {$ELSE}
+    //: Gets the actual position of the control as the initial position (P0).
+    {$ENDIF}
     property Gets_P0_Position:String read FGetPositionP0 write PropertyDoesNothing;
+    {$IFDEF PORTUGUES}
     //: Pega a posição atual do controle como posição final (P1).
+    {$ELSE}
+    //: Gets the actual position of the control as the final position (P1).
+    {$ENDIF}
     property Gets_P1_Position:String read FGetPositionP1 write PropertyDoesNothing;
-     //: Reposiciona o controle para a posição inicial definida.
+
+    {$IFDEF PORTUGUES}
+    //: Reposiciona o controle para a posição inicial definida.
+    {$ELSE}
+    //: Puts the control in the initial position defined.
+    {$ENDIF}
     property GoTo_P0_Position:String read FGoToP0        write PropertyDoesNothing;
   end;
 
@@ -235,15 +340,18 @@ end;
 procedure THMIControlDislocatorAnimation.SetPLCTag(t:TPLCNumber);
 begin
   //se o tag esta entre um dos aceitos.
+  //Checks if the tag is valid (only numeric tag are acceptable)
   if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
+  //if the control is linked with some tag, remove the old link.
   if FTag<>nil then begin
     FTag.RemoveCallBacks(self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
+  //link with the new tag.
   if t<>nil then begin
     t.AddCallBacks(self as IHMITagInterface);
     FTag := t;
