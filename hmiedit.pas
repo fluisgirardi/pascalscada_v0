@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa uma caixa para entrada de valores em Tags.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a input to enter values on Tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIEdit;
 
 {$IFDEF FPC}
@@ -15,6 +22,7 @@ uses
   {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag;
 
 type
+  {$IFDEF PORTUGUES}
   {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
     Implementa um Edit para leitura/escrita de valores texto/numéricos em tags.
@@ -22,6 +30,15 @@ type
     @bold(Para maiores informações consulte a documentação da classe TEdit
     de seu ambiente de desenvolvimento.)
   }
+  {$ELSE}
+  {:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+    Implements a Edit to read and write numeric/text values on tags.
+
+    @bold(To get more informations, see the documentation of the class TEdit of
+    your development environment.)
+  }
+  {$ENDIF}
   THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
   private
     FAlignment:TAlignment;
@@ -62,7 +79,7 @@ type
     procedure SetHMIEnabled(v:Boolean);
     function  GetHMIEnabled:Boolean;
 
-    //IHMITagInterface
+    //implements the IHMITagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -96,14 +113,28 @@ type
     destructor  Destroy; override;
   published
     {$IFNDEF FPC}
+    {$IFDEF PORTUGUES}
     //: Alinhamento do texto dentro do Edit. Somente Delphi. Lazarus já oferece esse recurso.
+    {$ELSE}
+    //: Alignment of the text . Only Delphi. The Lazarus IDE has this feature built-in.
+    {$ENDIF}
     property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
     {$ENDIF}
+
+    {$IFDEF PORTUGUES}
     {:
     @name diz para o controle quando um valor alterado deve ser escrito no Tag.
     @seealso(TSendChange)
     }
+    {$ELSE}
+    {:
+    @name tell when the Edit will send the modified value to tag.
+    @seealso(TSendChange)
+    }
+    {$ENDIF}
     property SendValueWhen:TSendChange read FSend write SetSend stored true default [scLostFocus, scPressEnter];
+
+    {$IFDEF PORTUGUES}
     {:
     Caso o tag associado ao controle seja numérico, especifica a formatação
     numérica adotada.
@@ -111,31 +142,72 @@ type
     Para maiores informações procure sobre a função FormatFloat de seu ambiente
     de desenvolvimento.
     }
+    {$ELSE}
+    {:
+    If the linked tag is a numeric tag, specifies the format of the number.
+
+    More information, see the documentation of the function FormatFloat of your
+    development environment.
+    }
+    {$ENDIF}
     property NumberFormat:string read FNumberFormat write SetFormat;
+
+    {$IFDEF PORTUGUES}
     {:
     Especifica o tag que será usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
     @seealso(TPLCString)
     }
+    {$ELSE}
+    {:
+    Tag that will be linked with Edit control.
+    @seealso(TPLCTag)
+    @seealso(TPLCTagNumber)
+    @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
+    @seealso(TPLCString)
+    }
+    {$ENDIF}
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
+
+    {$IFDEF PORTUGUES}
     {:
     @name retorna o texto que está sendo exibido pelo controle. Inclui sufixo,
     prefixo e formatação.
     }
+    {$ELSE}
+    {:
+    @name returns the text showed on control. Includes the suffix, prefix and
+    the number format.
+    }
+    {$ENDIF}
     property Text:TCaption read GetText stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é a cor de fundo do controle.
     }
+    {$ELSE}
+    {:
+    @name is the actual background color of the control.
+    }
+    {$ENDIF}
     property Color:TColor read GetColor Write SetColor;
+
+    {$IFDEF PORTUGUES}
     {:
     @name faz com que o controle passe a cor do fundo para a cor da fonte e
     vice-versa quando ele estiver com o foco.
-    
+
     @bold(Deixe essa propriedade @false quando sua aplicação estiver rodando
     sobre o toolkit GTK1.)
     }
+    {$ELSE}
+
+    {$ENDIF}
     property ShowFocused:Boolean read FShowFocused write SetShowFocused default true;
     {:
     @name é o texto que é exibido a esquerda (antes) do valor do tag quando o controle
