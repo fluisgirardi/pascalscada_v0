@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um controle para a exibição de valores de qualquer tag.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a control to show values of any tag.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMILabel;
 
 {$IFDEF FPC}
@@ -14,6 +21,8 @@ uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes, Tag;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
     @name implementa o controle para a exibir de valores de qualquer tipo de tag.
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -21,6 +30,15 @@ type
     @bold(Para maiores informações consulte a documentação da classe TLabel
     de seu ambiente de desenvolvimento.)
   }
+  {$ELSE}
+  {:
+    @name implements the control to show values of any kind of tag.
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+    @bold(To more information, see the documentation of the class TLabel of your
+    development environment.
+  }
+  {$ENDIF}
   THMILabel = class(TLabel, IHMIInterface, IHMITagInterface)
   private
     FNumberFormat:string;
@@ -39,7 +57,7 @@ type
 
     procedure RefreshHMISecurity;
 
-    //IHMITagInterface
+    //the procedurs below implements the IHMITagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -53,7 +71,7 @@ type
     //: @exclude
     procedure RefreshTagValue; virtual;
 
-    //IHMITagInterface
+    //IHMITagInterface, visible to THMIText
     procedure NotifyTagChange(Sender:TObject); virtual;
 
   public
@@ -62,11 +80,21 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+
+    {$IFDEF PORTUGUES}
     {:
     @name informa o texto que está sendo exibido pelo controle.
     Inclui sufixo e prefixo.
     }
+    {$ELSE}
+    {:
+    @name is the current text that is being showed by the control. Includes the
+    prefix and the suffix.
+    }
+    {$ENDIF}
     property Caption:TCaption read GetCaption stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso o tag associado ao controle seja numérico, especifica a formatação
     numérica adotada.
@@ -74,23 +102,59 @@ type
     Para maiores informações procure sobre a função FormatFloat de seu ambiente
     de desenvolvimento.
     }
+    {$ELSE}
+    {:
+    If the linked tag is a numeric tag, specifies the format of the number.
+
+    To get more information, see the documentation of the funcion FormatFloat of
+    your development environment.
+    }
+    {$ENDIF}
     property NumberFormat:string read FNumberFormat write SetFormat;
+
+    {$IFDEF PORTUGUES}
     {:
     Especifica o tag que será usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
     @seealso(TPLCString)
     }
+    {$ELSE}
+    {:
+    The tag that the control will show the values.
+    @seealso(TPLCTag)
+    @seealso(TPLCTagNumber)
+    @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
+    @seealso(TPLCString)
+    }
+    {$ENDIF}
     property PLCTag:TPLCTag read FTag write SetHMITag;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é o texto que é exibido a esquerda (antes) do valor do tag.
     }
+    {$ELSE}
+    {:
+    @name is the text that will be show at the left (before) of the tag value.
+    }
+    {$ENDIF}
     property Prefix:string read FPrefix write SetPrefix;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é o texto exibido a direita (após) do valor do tag. Útil para informar
     o tipo da grandeza exibida.
     }
+    {$ELSE}
+    {:
+    @name is the text that will be show at the right (after) of the tag value.
+    Useful to show the engineering unit of the tag.
+    }
+    {$ENDIF}
     property Sufix:String read FSufix write SetSufix;
     //: @exclude
     property AutoSize default False;
@@ -130,15 +194,20 @@ end;
 procedure THMILabel.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
+  //
+  //check if the tag is valid.
   if (t<>nil) and (not Supports(t, ITagInterface)) then
      raise Exception.Create(SinvalidTag);
 
   //se ja estou associado a um tag, remove
+  //
+  //if the control is linked with some tag, remove the old link.
   if FTag<>nil then begin
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
+  //link with the new tag.
   if t<>nil then begin
     t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;

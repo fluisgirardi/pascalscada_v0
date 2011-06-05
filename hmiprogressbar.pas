@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIProgressBar;
 
 {$IFDEF FPC}
@@ -15,25 +22,36 @@ uses
   ProtocolTypes, Tag;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
   Implementa um controle para exibição de valores numéricos em forma de barra de
   progresso.
-  
+
   @bold(Para maiores informações consulte a documentação da classe TProgressBar
   de seu ambiente de desenvolvimento.)
   }
+  {$ELSE}
+  {:
+  Implements a control to show numeric values of tags in a progress bar.
+
+  @bold(To get more information see the documentation of the class TProgressBar
+  of your development environment.)
+  }
+  {$ENDIF}
   THMIProgressBar = class(TProgressBar, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FIsEnabled:Boolean;
-    procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações.
-    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //implements the IHMIInterface.
+    procedure RefreshHMISecurity;
+    procedure SetHMITag(t:TPLCTag);
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
     procedure SetHMIEnabled(v:Boolean);
     function  GetPosition:Double;
 
-    //IHMITagInterface
+    //implements the IHMITagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -47,16 +65,30 @@ type
     //: @exclude
     destructor Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     //: Informa a posição (valor do tag) atual.
+    {$ELSE}
+    //: Tells the current position (tag value).
+    {$ENDIF}
     property Position:Double read GetPosition;
     //: @exclude
     property Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
+
+    {$IFDEF PORTUGUES}
     {:
     Tag numérico que será usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
     }
+    {$ELSE}
+    {:
+    Numeric tag that will be used by the control.
+    @seealso(TPLCTag)
+    @seealso(TPLCTagNumber)
+    @seealso(TPLCBlockElement)
+    }
+    {$ENDIF}
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
   end;
 
@@ -85,15 +117,18 @@ end;
 procedure THMIProgressBar.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
+  //check if the tag is valid.
   if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
   //se ja estou associado a um tag, remove
+  //if the control is linked with some tag, remove the old link.
   if FTag<>nil then begin
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
+  //link with the new tag.
   if t<>nil then begin
     t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;

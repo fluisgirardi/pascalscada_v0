@@ -1,8 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementacao dos editores de algumas propriedades de controles
             do PascalSCADA.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements the some properties editors of the controls of the
+            PascalSCADA.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit hmipropeditor;
 
 {$IFDEF FPC}
@@ -20,20 +28,27 @@ uses
     PropEdits, ComponentEditors, lazlclversion;
   {$ELSE}
     Types,
-    //se for delphi 6 ou superior
+    //if is a delphi 6+
     {$IF defined(DELPHI6_UP)}
       DesignIntf, DesignEditors;
     {$ELSE}
-      //delphi 5 e inferiores.
+      //delphi 5-
       DsgnIntf;
     {$IFEND}
   {$ENDIF}
 
 type
+  {$IFDEF PORTUGUES}
   {:
   Editor da propriedade TGraphicZone.FileName
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Property editor of TGraphicZone.FileName property.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TZoneFileNamePropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
@@ -42,10 +57,29 @@ type
     procedure SetValue(const Value: string); override;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
-  Editor de varias propriedades de THMIControlDislocatorAnimation
+  Editor das seguintes propriedades de THMIControlDislocatorAnimation:
+  @unorderedList(
+    @item(THMIControlDislocatorAnimation.Gets_P0_Position)
+    @item(THMIControlDislocatorAnimation.Gets_P1_Position)
+    @item(THMIControlDislocatorAnimation.GoTo_P0_Position)
+  )
+
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Property editor of the following properties of THMIControlDislocatorAnimation:
+  @unorderedList(
+    @item(THMIControlDislocatorAnimation.Gets_P0_Position)
+    @item(THMIControlDislocatorAnimation.Gets_P1_Position)
+    @item(THMIControlDislocatorAnimation.GoTo_P0_Position)
+  )
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TPositionPropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
@@ -53,10 +87,17 @@ type
     procedure Edit; override;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
-  Editor da propriedade TZone.BlinkWith
+  Editor da propriedade
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Property editor of TZone.BlinkWith property.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TZoneBlinkWithPropertyEditor = class(TIntegerProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
@@ -69,11 +110,18 @@ type
   TDefaultComponentEditor = class(TComponentEditor);
   {$ENDIF}
 
+  {$IFDEF PORTUGUES}
   {:
     Editor de componente base para todos os demais editores que irão inserir
     componentes na aplicação.
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TInsertTagsOnFormComponentEditor = class(TDefaultComponentEditor)
   protected
     procedure AddTagInEditor(Tag:TTag);

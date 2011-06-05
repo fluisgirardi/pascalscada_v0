@@ -206,23 +206,54 @@ type
     sobre o toolkit GTK1.)
     }
     {$ELSE}
+    {:
+    If @name is @true, swaps the colors of the foreground and background when
+    control has the focus.
 
+    @bold(Keep the value of this property to @false when you are using GTK1
+    widgetset.)
+    }
     {$ENDIF}
     property ShowFocused:Boolean read FShowFocused write SetShowFocused default true;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é o texto que é exibido a esquerda (antes) do valor do tag quando o controle
     @bold(não tem o foco).
     }
+    {$ELSE}
+    {:
+    @name is the text that will be show on the left (before) of the value of the
+    tag @bold(when the control doesn't has the focus).
+    }
+    {$ENDIF}
     property Prefix:string read FPrefix write SetPrefix;
+
+    {$IFDEF PORTUGUES}
     {:
     @name é o texto que é exibido a direita (após) do valor do tag quando o controle
     @bold(não tem o foco). Útil para informar o tipo da grandeza exibida.
     }
+    {$ELSE}
+    {:
+    @name is the text that will be show on the right (after) of the value of the
+    tag @bold(when the control doesn't has the focus). Useful to show the
+    engineering unit of the tag.
+    }
+    {$ENDIF}
     property Sufix:String read FSufix write SetSufix;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso o valor de @name seja @true, faz com que o controle pare de atualizar
     o valor do tag no controle quando este tem o foco da aplicação
     }
+    {$ELSE}
+    {:
+    If the value of @name is @true, stops the updates of the value of the tag
+    when the control has de focus.
+    }
+    {$ENDIF}
     property FreezeValueOnFocus:Boolean read FFreezeValue write FFreezeValue default true;
   end;
 
@@ -295,15 +326,20 @@ end;
 procedure THMIEdit.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
+  //
+  //check if the tag is valid.
   if (t<>nil) and ((not Supports(t, ITagInterface)) and (not Supports(t, ITagNumeric)) and (not Supports(t, ITagString))) then
      raise Exception.Create(SinvalidTag);
 
   //se ja estou associado a um tag, remove
+  //
+  //if the control is linked with some tag, removes the link.
   if FTag<>nil then begin
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   end;
 
   //adiona o callback para o novo tag
+  //link the control with the new tag.
   if t<>nil then begin
     t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
