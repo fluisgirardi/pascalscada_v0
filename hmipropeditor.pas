@@ -118,7 +118,8 @@ type
   }
   {$ELSE}
   {:
-
+    Base class of Component editor for all component editors that will insert
+    others componentes in application.
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
@@ -129,10 +130,19 @@ type
     function  GetTheOwner:TComponent; virtual;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
-  Editor de componente TagBuilder
+  Editor de componente TagBuilder.
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
   }
+  {$ELSE}
+  {:
+  TagBuilder component editor tool.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ENDIF}
   TTagBuilderComponentEditor = class(TInsertTagsOnFormComponentEditor)
   private
     procedure OpenTagBuilder;
@@ -145,6 +155,19 @@ type
     function  ProtocolDriver: TProtocolDriver; virtual;
   end;
 
+  {$IFDEF PORTUGUES}
+  {:
+  Editor de componente BitMapper. Mapeia bits de um tag.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ELSE}
+  {:
+  BitMapper component editor tool. Map bits of a tag.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ENDIF}
   TTagBitMapperComponentEditor = class(TInsertTagsOnFormComponentEditor)
   private
     procedure OpenBitMapper;
@@ -157,6 +180,19 @@ type
     function NumericTag: TPLCNumber; virtual;
   end;
 
+  {$IFDEF PORTUGUES}
+  {:
+  Editor de componente BlockElementMapper. Mapeia elementos de um tag bloco.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ELSE}
+  {:
+  BlockElementMapper component editor tool. Map elements of a tag block.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ENDIF}
   TBlockElementMapperComponentEditor = class(TInsertTagsOnFormComponentEditor)
   private
     procedure OpenElementMapper;
@@ -213,7 +249,6 @@ begin
       TGraphicZone(GetComponent(0)).ImageListAsDefault := false;
 end;
 
-//editores de propriedades de BlinkWith
 function  TZoneBlinkWithPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
    if GetComponent(0) is TZone then
