@@ -5,7 +5,7 @@
 }
 {$ELSE}
 {:
-  @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)
+  @abstract(Unit that implements a control to show numeric values in a progress bar.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 {$ENDIF}

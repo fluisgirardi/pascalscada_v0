@@ -1,8 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementa o controle responsável por mostrar textos pré-definidos
             em função do valor do tag associado.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a control that shows a predefined text
+            depending of the value of the tag.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIText;
 
 {$IFDEF FPC}
@@ -16,11 +24,19 @@ uses
   Dialogs, HMILabel, PLCTag, HMIZones, ProtocolTypes, StdCtrls, ExtCtrls;
 
 type
+  {$IFDEF PORTUGUES}
   {:
-  Implementa o controle responsável por mostrar textos pré-definidos em função
-  do valor do tag associado.
-  @seealso(THMILabel)
+    @abstract(Classe de controle que mostra um texto pré-definido em função do
+              valor do tag associado.)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+    @abstract(Class of control that shows a predefined text depending of the
+              value of the tag.)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   THMIText = class(THMILabel)
   private
     FTextZones:TTextZones;
@@ -34,18 +50,52 @@ type
     procedure NeedComState(var CurState:TComponentState);
     procedure BlinkTimer(Sender:TObject);
   protected
+
+    {$IFDEF PORTUGUES}
+    {:
+    Escolhe (dependendo da condição de cada zona de texto) e mostra uma zona de texto.
+    }
+    {$ELSE}
+    {:
+    Choose (depending of the condition of each text zone) and shows a text zone.
+    }
+    {$ENDIF}
+    procedure SetValue(v:Double);
+
+    {$IFDEF PORTUGUES}
+    {:
+    Mostra uma zona de texto.
+    }
+    {$ELSE}
+    {:
+    Shows a text zone.
+    }
+    {$ENDIF}
+    procedure ShowZone(zone:TTextZone);
+
+    {$IFDEF PORTUGUES}
+    {:
+    Mostra uma zona de texto a partir do valor de teste.
+    }
+    {$ELSE}
+    {:
+    Shows a text zone depending of the value of TestValue property.
+    }
+    {$ENDIF}
+    procedure SetTestValue(v:Double);
+
+    //sobrescreve alguns métodos para permitir somente tags numéricos.
+    //
+    //override some procedures to allow only numeric tags in control.
+
     //: @exclude
     procedure RefreshTagValue; override;
-    //: @exclude
-    procedure SetValue(v:Double);
-    //: @exclude
-    procedure ShowZone(zone:TTextZone);
-    //: @exclude
-    procedure SetTestValue(v:Double);
     //: @exclude
     procedure SetHMITag(t:TPLCTag); override;
     //: @exclude
     procedure NotifyTagChange(Sender:TObject); override;
+
+
     //: @exclude
     procedure Loaded; override;
   public
@@ -54,11 +104,20 @@ type
     //: @exclude
     destructor Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     {:
     Propriedade criada para testar o controle sem a necessidade de valores vindos
     de um tag. @bold(Só pode ser usada em tempo de desenvolvimento.)
     }
+    {$ELSE}
+    {:
+    Use this property to test the control without values coming from your device.
+    @bold(Can only be used on desing-time.)
+    }
+    {$ENDIF}
     property TestValue:Double read FTestValue write SetTestValue stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     Coleção de zonas (textos) que podem ser exibidos em função do valor do tag.
     @seealso(TZone)
@@ -66,6 +125,15 @@ type
     @seealso(TTextZone)
     @seealso(TTextZones)
     }
+    {$ELSE}
+    {:
+    Collection of texts that can be show depending of the value of the tag.
+    @seealso(TZone)
+    @seealso(TZones)
+    @seealso(TTextZone)
+    @seealso(TTextZones)
+    }
+    {$ENDIF}
     property Zones:TTextZones read GetTextZones write SetTextZones nodefault;
   end;
 
@@ -104,6 +172,8 @@ end;
 procedure THMIText.SetHMITag(t:TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
+  //
+  //check if the tag is valid (only numeric tags)
   if (t<>nil) and (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
@@ -171,6 +241,7 @@ begin
    NotifyTagChange(Self);
 end;
 
+//timer procedure (does a blink effect)
 procedure THMIText.BlinkTimer(Sender:TObject);
 begin
   if FCurrentZone.BlinkWith<0 then

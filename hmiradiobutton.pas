@@ -1,9 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   ATUALMENTE ESTE CONTROLE não funciona no Lazarus.
   @abstract(Implementa um controle um controle em forma de RadioButton.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
-
+{$ELSE}
+{:
+  Currently this control doesn't works on Lazarus IDE.
+  @abstract(Unit that implements a RadioButton control.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIRadioButton;
 
 {$IFDEF FPC}
@@ -17,10 +24,19 @@ uses
   WSLCLClasses,{$ELSE}Windows,{$ENDIF} StdCtrls, HMITypes;
 
 type
+  {$IFDEF PORTUGUES}
   {:
   Define um controle booleando em forma de RadioButton.
+  @bold(Atualmente este controle não funciona no Lazarus.)
   @seealso(THMICheckBox)
   }
+  {$ELSE}
+  {:
+  Implements a RadioButton Control.
+  @bold(Currently this control doesn't works on Lazarus IDE.)
+  @seealso(THMICheckBox)
+  }
+  {$ENDIF}
   THMIRadioButton = class(THMICheckBox)
   protected
   {$IFDEF FPC}

@@ -156,6 +156,7 @@ type
     o valor do tag.
     @seealso(TPLCTag)
     @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
     @seealso(TPLCTagNumber)
     }
     {$ELSE}
@@ -164,6 +165,7 @@ type
     appearance and the changes made on control can update the tag value.
     @seealso(TPLCTag)
     @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
     @seealso(TPLCTagNumber)
     }
     {$ENDIF}

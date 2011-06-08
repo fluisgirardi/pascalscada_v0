@@ -1,7 +1,15 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Define um controle de opções para leitura/escrita de valores de tags numéricos.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a multiple-options control to read and write
+  values in numeric tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIRadioGroup;
 
 {$IFDEF FPC}
@@ -15,15 +23,28 @@ uses
   Dialogs, ExtCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes, Tag;
 
 type
-  //: Define um controle de opções para leitura/escrita de valores de tags numéricos.
+  {$IFDEF PORTUGUES}
+  {:
+    @abstract(Classe de controle de multiplas opções para leitura/escrita de
+    valores de tags numéricos.)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ELSE}
+  {:
+    @abstract(Class of multiple-options control to read and write
+    values in numeric tags.)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   THMIRadioGroup = class(TRadioGroup, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
     FIsEnabled:Boolean;
     FDefaultIndex:Integer;
     FIgnore, FLoaded:Boolean;
-    procedure RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações
-    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //implementes the IHMIInterface
+    procedure RefreshHMISecurity;                      //check security
+    procedure SetHMITag(t:TPLCTag);                    //link with a tag
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
     procedure SetHMIEnabled(v:Boolean);
@@ -31,7 +52,7 @@ type
     function  GetIndex:Integer;
     procedure SetIndex(v:Integer);
 
-    //IHMITagInterface
+    //implements the IHMITagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -52,21 +73,45 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     //: @name retorna qual a opção selecionada.
+    {$ELSE}
+    //: @name tells what's the index of selected option.
+    {$ENDIF}
     property  ItemIndex:Integer read GetIndex Write SetIndex;
     //: @exclude
     property  Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
+
+    {$IFDEF PORTUGUES}
     {:
     Tag numérico que será usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
     }
+    {$ELSE}
+    {:
+    Numeric tag that will be linked with the control.
+    @seealso(TPLCTag)
+    @seealso(TPLCTagNumber)
+    @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
+    }
+    {$ENDIF}
     property  PLCTag:TPLCTag read GetHMITag write SetHMITag;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso o valor inteiro do tag não esteja entre as opções oferecidas, usa o valor
     de @name.
     }
+    {$ELSE}
+    {:
+    If the integer value of tag doesn't match with one of the control list, uses
+    the value of @name.
+    }
+    {$ENDIF}
     property  DefaultIndex:Integer read FDefaultIndex write SetDefaultIndex default -1;
   end;
 
@@ -89,23 +134,29 @@ begin
    inherited Destroy;
 end;
 
-procedure THMIRadioGroup.RefreshHMISecurity;                      //alquem efetuou login e é necessario verificar autorizações.
+//check the security
+procedure THMIRadioGroup.RefreshHMISecurity;
 begin
    //todo
 end;
 
-procedure THMIRadioGroup.SetHMITag(t:TPLCTag);                    //seta um tag
+//link with tags
+procedure THMIRadioGroup.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
+   //
+   //Check if the tag is valid (only numeric tags).
    if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
+   //remove the old link.
    if FTag<>nil then begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    end;
 
    //adiona o callback para o novo tag
+   //link with the new tag.
    if t<>nil then begin
       t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;

@@ -1,8 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um controle em forma de ScrollBar para a leitura/escrita de valores
             em tags numéricos.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a ScrollBar control to read/write values in
+            numeric tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIScrollBar;
 
 {$IFDEF FPC}
@@ -16,10 +24,18 @@ uses
   Dialogs, StdCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes, Tag;
 
 type
+  {$IFDEF PORTUGUES}
   {:
   Implementa um controle em forma de ScrollBar para a leitura/escrita de valores
   em tags numéricos.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Class of ScrollBar control to read/write values in numeric tags.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   THMIScrollBar = class(TScrollBar, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
@@ -28,14 +44,15 @@ type
     FBusy:Boolean;
     FCmdCount:Integer;
     FLastPosition:Integer;
-    procedure RefreshHMISecurity;                      //alquem efetuou login e é necessário verificar autorizações
-    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //implements the IHMIInterface.
+    procedure RefreshHMISecurity;
+    procedure SetHMITag(t:TPLCTag);
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
     procedure SetHMIEnabled(v:Boolean);
     procedure WriteValue(Value:Integer);
 
-    //IHMITagInterface
+    //implements the IHMITagInterface
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -52,17 +69,36 @@ type
     //: @exclude
     destructor Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     {:
     Tag numérico que será usado pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
     }
+    {$ELSE}
+    {:
+    Numeric tag that will be linked with the control.
+    @seealso(TPLCTag)
+    @seealso(TPLCTagNumber)
+    @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
+    }
+    {$ENDIF}
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso @true, escreve seu valor para o tag ainda quando está sendo movido.
     Caso @false, escreve seu valor para o tag somente quando é solto.
     }
+    {$ELSE}
+    {:
+    If @true, write its value while the scroll is being moved.
+    If @false write its value only when the scroll is released.
+    }
+    {$ENDIF}
     property UpdateOnMove:Boolean read FUpdateOnMove write FUpdateOnMove default false;
   end;
 
@@ -85,15 +121,19 @@ end;
 procedure THMIScrollBar.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
+   //
+   //check if the tag is valid (only numeric tags);
    if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
+   //removes the old link.
    if FTag<>nil then begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    end;
 
    //adiona o callback para o novo tag
+   //link with the new tag.
    if t<>nil then begin
       t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;
