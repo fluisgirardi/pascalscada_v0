@@ -1,8 +1,15 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um controle em forma de Up/Down para escrita de valores
             em tags numéricos.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a UpDown control to write values on numeric tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIUpDown;
 
 {$IFDEF FPC}
@@ -16,7 +23,19 @@ uses
   Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls, Tag;
 
 type
-   //: Implementa um controle em forma de Up/Down para escrita de valores em tags numéricos.
+
+  {$IFDEF PORTUGUES}
+  {:
+  Implementa um controle em forma de Up/Down para escrita de valores em tags
+  numéricos.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ELSE}
+  {:
+  Class of UpDown control to write values on numeric tags.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   THMIUpDown = class(TUpDown, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
@@ -25,17 +44,19 @@ type
     FMax,FMin:Double;
     FEnableMax, FEnableMin:Boolean;
 
-    procedure RefreshHMISecurity;                      //alquem efetuou login e é necessário verificar as autorizações.
-    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //implements the IHMIInterface interface
+    procedure RefreshHMISecurity;
+    procedure SetHMITag(t:TPLCTag);
     function  GetHMITag:TPLCTag;
     function  GetHMIEnabled:Boolean;
     procedure SetHMIEnabled(v:Boolean);
+
     procedure SetPosition(v:Double);
     procedure SetIncrement(v:Double);
     procedure SetMax(v:Double);
     procedure SetMin(v:Double);
 
-    //IHMITagInterface
+    //implements the IHMITagInterface interface.
     procedure NotifyReadOk;
     procedure NotifyReadFault;
     procedure NotifyWriteOk;
@@ -53,24 +74,65 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     {:
-    Tag numérico que será usado pelo controle.
+    Tag numérico que será pelo controle.
     @seealso(TPLCTag)
     @seealso(TPLCTagNumber)
     @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
     }
+    {$ELSE}
+    {:
+    Numeric tag that will be linked with the control.
+    @seealso(TPLCTag)
+    @seealso(TPLCTagNumber)
+    @seealso(TPLCBlockElement)
+    @seealso(TPLCStructItem)
+    }
+    {$ENDIF}
     property PLCTag:TPLCTag read FTag write SetHMITag;
+
+    {$IFDEF PORTUGUES}
     //: Valor máximo que o controle pode atingir caso EnableMax for igual a @true.
+    {$ELSE}
+    //: Maximum value which control can write on tag if EnableMax is @true.
+    {$ENDIF}
     property Max:Double read FMax write SetMax;
+
+    {$IFDEF PORTUGUES}
     //: Valor minimo que o controle pode atingir caso EnableMin for igual a @true.
+    {$ELSE}
+    //: Minimum value which control can write on tag if EnableMin is @true.
+    {$ENDIF}
     property Min:Double read FMin write SetMin;
+
+    {$IFDEF PORTUGUES}
     //: Valor que será incrementado/decrementado a cada clique no controle.
+    {$ELSE}
+    //: Value that will be incremented/decremented on each click on control.
+    {$ENDIF}
     property Increment:Double read FIncrement write SetIncrement;
+
+    {$IFDEF PORTUGUES}
     //: Valor atual do controle.
+    {$ELSE}
+    //: Actual value of the control.
+    {$ENDIF}
     property Position:Double read FPosition write SetPosition;
+
+    {$IFDEF PORTUGUES}
     //: Habilita/desabilita o limite máximo para o cotrole.
+    {$ELSE}
+    //: Enables/disables the maximum value of the control.
+    {$ENDIF}
     property EnableMax:Boolean read FEnableMax write FEnableMax default false;
+
+    {$IFDEF PORTUGUES}
     //: Habilita/desabilita o limite minimo para o cotrole.
+    {$ELSE}
+    //: Enables/disables the minimum value of the control.
+    {$ENDIF}
     property EnableMin:Boolean read FEnableMin write FEnableMin default false;    
   end;
 
@@ -112,15 +174,21 @@ end;
 procedure THMIUpDown.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
+   //
+   //check if the tag is valid (only numeric tags)
    if (t<>nil) and (not Supports(t, ITagNumeric)) then
       raise Exception.Create(SonlyNumericTags);
 
    //se ja estou associado a um tag, remove
+   //
+   //Remove the old link
    if FTag<>nil then begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    end;
 
    //adiona o callback para o novo tag
+   //
+   //link with the new tag.
    if t<>nil then begin
       t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;
