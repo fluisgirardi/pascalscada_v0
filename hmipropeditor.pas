@@ -25,7 +25,7 @@ uses
   Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, Tag,
   typinfo, HMIControlDislocatorAnimation, PLCNumber, PLCBlock, PLCStruct,
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, lazlclversion;
+    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList;
   {$ELSE}
     Types,
     //if is a delphi 6+
@@ -56,6 +56,27 @@ type
     procedure Edit; override;
     procedure SetValue(const Value: string); override;
   end;
+
+  {$IFDEF FPC}
+  {$IFDEF PORTUGUES}
+  {:
+  Editor da propriedade TGraphicZone.ImageIndex
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ELSE}
+  {:
+  Property editor of TGraphicZone.ImageIndex property.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
+  TGraphiZoneImageIndexPropertyEditor = class(TImageIndexPropertyEditor)
+  protected
+    function GetImageList: TCustomImageList; override;
+  public
+    procedure GetValues(Proc: TGetStrProc); override;
+    procedure SetValue(const NewValue: ansistring); override;
+  end;
+  {$ENDIF}
 
   {$IFDEF PORTUGUES}
   {:
@@ -248,6 +269,38 @@ begin
    if GetComponent(0) is TGraphicZone then
       TGraphicZone(GetComponent(0)).ImageListAsDefault := false;
 end;
+
+{$IFDEF FPC}
+procedure TGraphiZoneImageIndexPropertyEditor.SetValue(const NewValue: ansistring);
+var
+  x:Integer;
+begin
+  try
+    if NewValue='(none)' then
+       inherited SetValue('-1')
+    else begin
+      x:=StrToInt(NewValue);
+      inherited SetValue(NewValue);
+    end;
+  except
+    inherited SetValue('-1');
+  end;
+end;
+
+function TGraphiZoneImageIndexPropertyEditor.GetImageList: TCustomImageList;
+begin
+  if GetComponent(0) is TGraphicZone then
+    Result:=TGraphicZone(GetComponent(0)).ImageList
+  else
+    Result:=nil;
+end;
+
+procedure TGraphiZoneImageIndexPropertyEditor.GetValues(Proc: TGetStrProc);
+begin
+  inherited GetValues(Proc);
+  Proc('(none)');
+end;
+{$ENDIF}
 
 function  TZoneBlinkWithPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
