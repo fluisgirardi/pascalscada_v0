@@ -58,6 +58,7 @@ type
   end;
 
   {$IFDEF FPC}
+  {$if defined(lcl_fullversion) and (lcl_fullversion>=093000)}
   {$IFDEF PORTUGUES}
   {:
   Editor da propriedade TGraphicZone.ImageIndex
@@ -76,6 +77,7 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const NewValue: ansistring); override;
   end;
+  {$IFEND}
   {$ENDIF}
 
   {$IFDEF PORTUGUES}
@@ -271,6 +273,7 @@ begin
 end;
 
 {$IFDEF FPC}
+{$if defined(lcl_fullversion) and (lcl_fullversion>=093000)}
 procedure TGraphiZoneImageIndexPropertyEditor.SetValue(const NewValue: ansistring);
 var
   x:Integer;
@@ -300,6 +303,7 @@ begin
   inherited GetValues(Proc);
   Proc('(none)');
 end;
+{$IFEND}
 {$ENDIF}
 
 function  TZoneBlinkWithPropertyEditor.GetAttributes: TPropertyAttributes;

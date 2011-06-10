@@ -74,7 +74,9 @@ begin
   RegisterPropertyEditor(TypeInfo(integer),TZone,                          'BlinkWith',        TZoneBlinkWithPropertyEditor);
 
   {$IFDEF FPC}
+  {$if defined(lcl_fullversion) and (lcl_fullversion>=093000)}
   RegisterPropertyEditor(TypeInfo(integer),TGraphicZone,                   'ImageIndex',        TGraphiZoneImageIndexPropertyEditor);
+  {$IFEND}
   {$ENDIF}
 
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);
