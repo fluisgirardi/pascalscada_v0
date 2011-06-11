@@ -102,7 +102,7 @@ type
   @member PacketID Número identificador do pacote.
   @member WriteIOResult Resultado do comando de escrita se existir. Caso não exista retorna iorNone.
   @member ToWrite Quantidade de @noAutoLink(bytes) a escrever.
-  @member Wrote Quantidade de @noAutoLink(bytes) escritos.
+  @member Written Quantidade de @noAutoLink(bytes) escritos.
   @member WriteRetries Número de tentativas para escrever ToWrite @noAutoLink(bytes).
   @member BufferToWrite Sequencia de @noAutoLink(bytes) a escrever. @bold(Deve ter o tamanho mínimo de ToWrite @noAutoLink(bytes)).
   @member DelayBetweenCommand Atraso em milisegundos entre comandos de leitura e escrita.
@@ -124,7 +124,7 @@ type
   @member PacketID Request identification.
   @member WriteIOResult Result of a write command, if exists. If not exists, return iorNone.
   @member ToWrite Number of @noAutoLink(bytes) to write.
-  @member Wrote Number of @noAutoLink(bytes) written.
+  @member Written Number of @noAutoLink(bytes) written.
   @member WriteRetries Number of retries to write ToWrite @noAutoLink(bytes).
   @member BufferToWrite Sequence of @noAutoLink(bytes) to write. @bold(Must have at least ToWrite @noAutoLink(bytes) of length).
   @member DelayBetweenCommand Delay in milliseconds between the commands of Read and Write.
@@ -144,7 +144,7 @@ type
     PacketID:Cardinal;
     WriteIOResult:TIOResult;
     ToWrite:Cardinal;
-    Wrote:Cardinal;
+    Written:Cardinal;
     WriteRetries:Cardinal;
     BufferToWrite:BYTES;
     DelayBetweenCommand:Integer;

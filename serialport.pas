@@ -321,13 +321,13 @@ begin
   ResetEvent(POverlapped.hEvent);
   POverlapped.Offset := 0;
   POverlapped.OffsetHigh := 0;
-  if not WriteFile(PPortHandle, Packet^.BufferToWrite[0], Packet^.ToWrite, Packet^.Wrote, @POverlapped) then begin
+  if not WriteFile(PPortHandle, Packet^.BufferToWrite[0], Packet^.ToWrite, Packet^.Written, @POverlapped) then begin
     case WaitForSingleObject(POverlapped.hEvent, PTimeout) of
       WAIT_OBJECT_0:
         begin
           Packet^.WriteIOResult := iorOK;
           GetOverlappedResult(PPortHandle,POverlapped,escritos,true);
-          Packet^.Wrote := escritos;
+          Packet^.Written := escritos;
         end;
       else begin
         Packet^.WriteIOResult := iorTimeOut;
@@ -344,15 +344,15 @@ var
 begin
   tentativas := 0;
 
-  Packet^.Wrote := 0;
-  While (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
-    escritos := SerWrite (PPortHandle,Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote);
-    Packet^.Wrote := Packet^.Wrote + escritos;
+  Packet^.Written := 0;
+  While (Packet^.Written<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
+    escritos := SerWrite (PPortHandle,Packet^.BufferToWrite[Packet^.Written], Packet^.ToWrite-Packet^.Written);
+    Packet^.Written := Packet^.Written + escritos;
     Inc(tentativas);
   end;
 
   Packet^.WriteRetries := tentativas;
-  if Packet^.ToWrite>Packet^.Wrote then begin
+  if Packet^.ToWrite>Packet^.Written then begin
     Packet^.WriteIOResult := iorTimeOut;
     if PClearBufOnErr then
        InternalClearALLBuffers;

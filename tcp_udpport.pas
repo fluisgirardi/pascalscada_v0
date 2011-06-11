@@ -265,24 +265,24 @@ begin
   tentativas := 0;
   escritos := 0;
 
-  Packet^.Wrote := 0;
-  while (Packet^.Wrote<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
+  Packet^.Written := 0;
+  while (Packet^.Written<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
     try
-      escritos := socket_send(FSocket, @Packet^.BufferToWrite[Packet^.Wrote], Packet^.ToWrite-Packet^.Wrote, 0, FTimeout);
+      escritos := socket_send(FSocket, @Packet^.BufferToWrite[Packet^.Written], Packet^.ToWrite-Packet^.Written, 0, FTimeout);
     finally
     end;
 
     if escritos<=0 then begin
       if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, CommPortDisconected) then
         break;
-      if incRetries and (Packet^.Wrote>0) then
+      if incRetries and (Packet^.Written>0) then
         inc(tentativas);
     end else
-      Packet^.Wrote := Packet^.Wrote + escritos;
+      Packet^.Written := Packet^.Written + escritos;
   end;
 
   Packet^.WriteRetries := tentativas;
-  if Packet^.ToWrite>Packet^.Wrote then begin
+  if Packet^.ToWrite>Packet^.Written then begin
     Packet^.WriteIOResult := iorTimeOut;
     if PClearBufOnErr then
       InternalClearALLBuffers;

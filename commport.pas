@@ -1150,7 +1150,7 @@ begin
       end;
   end;
   FRXBytes := FRXBytes + Packet.Received;
-  FTXBytes := FTXBytes + Packet.Wrote;
+  FTXBytes := FTXBytes + Packet.Written;
 end;
 
 procedure TCommPortDriver.CommError(WriteCmd:Boolean; Error:TIOResult);
@@ -1472,7 +1472,7 @@ begin
     PPacket.PacketID := PPacketID;
     PPacket.WriteIOResult := iorNone;
     PPacket.ToWrite := BytesToWrite;
-    PPacket.Wrote := 0;
+    PPacket.Written := 0;
     PPacket.WriteRetries := 3;
 
     PPacket.BufferToWrite := ToWrite;
@@ -1705,16 +1705,16 @@ begin
     end;
     if cmd=iocReadWrite then begin
       fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
-      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Written:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
     end;
 
     if cmd=iocWriteRead then begin
-      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Written:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
       fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
     end;
 
     if cmd=iocWrite then begin
-      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Wrote:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
+      fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.WriteIOResult)+', Written:    '+bufferToHex(Packet.BufferToWrite)+LineEnding);
     end;
     FS.Position:=0;
     FLogFileStream.CopyFrom(FS,FS.Size);

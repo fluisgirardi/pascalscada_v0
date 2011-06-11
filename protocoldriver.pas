@@ -698,7 +698,7 @@ begin
   Dest.PacketID := Source.PacketID;
   Dest.WriteIOResult := Source.WriteIOResult;
   Dest.ToWrite := Source.ToWrite;
-  Dest.Wrote := Source.Wrote;
+  Dest.Written := Source.Written;
   Dest.WriteRetries := Source.WriteRetries;
   Dest.DelayBetweenCommand := Source.DelayBetweenCommand;
   Dest.ReadIOResult := Source.ReadIOResult;

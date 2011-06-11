@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
 @abstract(Unit de coleções de zonas gráficas e de texto.)
 @author(Fabio Luis Girardi)
 }
+{$ELSE}
+{:
+@abstract(Unit that implements graphic and text zone collections.)
+@author(Fabio Luis Girardi)
+}
+{$ENDIF}
 unit HMIZones;
 
 {$IFDEF FPC}
@@ -13,17 +20,35 @@ interface
 uses Classes, SysUtils, hsutils, Controls, Graphics {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type
+  {$IFDEF PORTUGUES}
   {:
   Define a condição de seleção de uma zona.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Defines the condition of selection of an zone.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TZoneTypes = (ztEqual, ztRange, ztBit, ztNotEqual, ztOutOfRange, ztGreaterThan, ztLessThan);
 
+  {$IFDEF PORTUGUES}
   {:
   @name é classe que implementa a base de uma zona. Estas zonas são selecionadas
   atraves do valor do tag associado ao objeto dono do conjunto de zonas aplicado
   a expressão de seleção da zona.
   @seealso(TZones)
+  @seealso(TZoneTypes)
   }
+  {$ELSE}
+  {:
+  @name is the base class of an animation zone. This zones are selected depending
+  of the value of the linked tag and of their select condition.
+  @seealso(TZones)
+  @seealso(TZoneTypes)
+  }
+  {$ENDIF}
   TZone = class(TCollectionItem)
   private
      FValue1,FValue2:Double;
@@ -59,50 +84,112 @@ type
      {: @exclude }
      procedure Loaded;
   published
+     {$IFDEF PORTUGUES}
      {:
      Valor principal.
      @seealso(ZoneType)
      }
+     {$ELSE}
+     {:
+     Main value.
+     @seealso(ZoneType)
+     }
+     {$ENDIF}
      property Value1:Double read FValue1 write SetV1;
+
+     {$IFDEF PORTUGUES}
      {:
      Valor secundário.
      @seealso(ZoneType)
      }
+     {$ELSE}
+     {:
+     Secundary value.
+     @seealso(ZoneType)
+     }
+     {$ENDIF}
      property Value2:Double read FValue2 write SetV2;
+
+     {$IFDEF PORTUGUES}
      {:
-     Flag auxiliar da proprieade Value1.
+     Flag auxiliar da proprieade Value1. Altera o critério de seleção.
      @seealso(ZoneType)
      }
+     {$ELSE}
+     {:
+     Auxiliar flag of Value1 property. Changes the selection criteria.
+     @seealso(ZoneType)
+     }
+     {$ENDIF}
      property IncludeValue1:Boolean read FIncludeV1 write SetIncV1;
+
+     {$IFDEF PORTUGUES}
      {:
-     Flag auxiliar da proprieade Value2.
+     Flag auxiliar da proprieade Value2. Altera o critério de seleção.
      @seealso(ZoneType)
      }
+     {$ELSE}
+     {:
+     Auxiliar flag of Value2 property. Changes the selection criteria.
+     @seealso(ZoneType)
+     }
+     {$ENDIF}
      property IncludeValue2:Boolean read FIncludeV2 write SetIncV2;
+
+     {$IFDEF PORTUGUES}
      {:
      @name informa o tempo em milisegundos que a zona ficara visivel. Após esse
      tempo chama a próxima zona definida por BlinkWith.
      @seealso(BlinkWith)
+     @seealso(TZone.DefaultZone)
      }
+     {$ELSE}
+     {:
+     @name is the time in milliseconds that the animation zone will stay visible.
+     After this time, shows the next zone (defined by the BlinkWith property).
+     @seealso(BlinkWith)
+     @seealso(TZone.DefaultZone)
+     }
+     {$ENDIF}
      property BlinkTime:Cardinal read FBlinkTime write SetBlinkTime;
+
+     {$IFDEF PORTUGUES}
      {:
      @name informa qual será a próxima zona a ser chamada para gerar o efeito de
      pisca/animação após o tempo de exibição da zona.
      @seealso(BlinkTime)
      }
+     {$ELSE}
+     {:
+     @name is the next zone to be shown to do a blink effect/animation after
+     BlinkTime milliseconds of the current animation zone.
+     @seealso(BlinkTime)
+     }
+     {$ENDIF}
      property BlinkWith:Integer read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
+
+     {$IFDEF PORTUGUES}
      {:
      Se @true torna a zona padrão, exibindo-a quando nenhuma zona for selecionada
      em função do valor do tag.
      @seealso(ZoneType)
      }
+     {$ELSE}
+     {:
+     If @true makes the zone default, showing it when no animation zone is
+     selected depending of the tag value.
+     @seealso(ZoneType)
+     }
+     {$ENDIF}
      property DefaultZone:Boolean read FDefaultZone write SetAsDefaultZone;
+
+     {$IFDEF PORTUGUES}
      {:
      @name define qual vai ser a condição que vai selecionar ou descartar a zona
      em questão.
-     
+
      Seus possíveis valores são:
-     
+
      @bold(ztEqual:)       O valor do @noAutoLink(Tag) tem que ser igual ao valor
                            da propriedade Value1 da zona para ela ser selecionada.
 
@@ -121,7 +208,7 @@ type
      @bold(ztNotEqual:)    Para a zona ser selecionada, o valor do @noAutoLink(tag)
                            tem que ser diferente do valor presente na propriedade
                            Value1.
-                          
+
      @bold(ztOutOfRange:)  O valor do @noAutoLink(Tag) não pode estar entre os
                            valores das propriedades Value1 e Value2 (menor que
                            Value1 OU maior que Value2) da zona para ela ser
@@ -130,7 +217,7 @@ type
                            Value1 ou Value2 (menor ou igual que Value1 OU
                            maior ou igual que Value2) use as propriedades
                            IncludeValue1 e IncludeValue2.
-     
+
      @bold(ztGreaterThan:) Para a zona ser selecionada, o valor do @noAutoLink(tag)
                            tem que ser maior que o valor da propriedade Value1.
                            Para incluir o valor de Value1 na condição (maior ou
@@ -140,7 +227,7 @@ type
                            tem que ser menor que o valor da propriedade Value1.
                            Para incluir o valor de Value1 na condição (menor ou
                            igual que) coloque o valor @true IncludeValue1.
-                           
+
      @seealso(Value1)
      @seealso(Value2)
      @seealso(IncludeValue1)
@@ -148,19 +235,87 @@ type
      @seealso(TZoneTypes)
      @seealso(DefaultZone)
      }
+     {$ELSE}
+     {:
+     @name defines what's the selection condition that will show or not the
+     animation zone.
+
+     Their values can be:
+
+     @bold(ztEqual:)       The @noAutoLink(Tag) value must be equal to the
+                           Value1 property to show the animation zone.
+
+     @bold(ztRange:)       The @noAutoLink(Tag) value must be between the values
+                           of Value1 and Value2 (greater than Value1 AND less
+                           than Value2) to show the animation zone. To include
+                           the Value1 or Value2 (greater or equal than Value1
+                           AND less or equal than Value2) use the properties
+                           IncludeValue1 and IncludeValue2.
+
+     @bold(ztBit:)         To select the animation zone with this configuration,
+                           the bit number Valor1 of the @noAutoLink(tag) value
+                           must be equal of the value of IncludeValue1 property.
+
+     @bold(ztNotEqual:)    To select the animation zone, the @noAutoLink(Tag)
+                           value must be different of the Value1 property.
+
+     @bold(ztOutOfRange:)  The value of @noAutoLink(Tag) must be out of the range
+                           made by Value1 and Value2 properties (it must be
+                           less than Value1 OR greater than Value2 property) to
+                           select the animation zone. To Include the Value1 or
+                           Value2 (less or equal than Value1 OR greater or equal
+                           than Value2 property) use the properties
+                           IncludeValue1 and IncludeValue2.
+
+     @bold(ztGreaterThan:) To select the animation zone, the @noAutoLink(tag)
+                           value must be greater than Value1 property. To include
+                           the Value1, set @true in IncludeValue1 (greater or
+                           equal than Value1 property).
+
+     @bold(ztLessThan:)    To select the animation zone, the @noAutoLink(tag)
+                           value must be less than Value1 property. To include
+                           the Value1, set @true in IncludeValue1 (less or
+                           equal than Value1 property).
+
+     @seealso(Value1)
+     @seealso(Value2)
+     @seealso(IncludeValue1)
+     @seealso(IncludeValue2)
+     @seealso(TZoneTypes)
+     @seealso(DefaultZone)
+     }
+     {$ENDIF}
      property ZoneType:TZoneTypes read FZoneType write SetZoneType;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Evento chamado quando é necessário saber o atual estado do componente.
   @seealso(TZones)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Procedure used to return the current state of the owner component.
+  @seealso(TZones)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TNeedCompStateEvent = procedure(var CurState:TComponentState) of object;
 
+  {$IFDEF PORTUGUES}
   {:
   @name implementa a classe base para uma coleção de zonas.
   @seealso(TZone)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  @name is the base class of a collection of animation zones.
+  @seealso(TZone)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TZones = class(TCollection)
   private
      FOwner:TPersistent;
@@ -175,55 +330,117 @@ type
      //: @exclude
      procedure NeedCurrentCompState;
   published
+
+     {$IFDEF PORTUGUES}
      {:
      @name é o evento chamado quando há alterações de alguma propriedade de
      alguma zona. Use esse evento para calcular qual é a nova zona escolhida
      em função dos novos parametros.
      }
+     {$ELSE}
+     {:
+     @name is called when an animation zone was changed. Use this event to
+     select the correct animation zone depending of the new parameters.
+     }
+     {$ENDIF}
      property OnZoneChange:TNotifyEvent read FOnZoneChange write FOnZoneChange;
+
+     {$IFDEF PORTUGUES}
      {:
      @name é o evento chamado quando uma zona ou a coleção de zonas precisa saber
      qual é o atual estado do componente. Este evento também é chamado quando o
      método NeedCurrentCompState é chamado.
      @seealso(ZonesState)
      }
+     {$ELSE}
+     {:
+     @name is called when a animation zone or the collection of animations zones
+     needs to know what's the current state of the owner component. It's called
+     too when the procedure NeedCurrentCompState is called.
+     @seealso(ZonesState)
+     }
+     {$ENDIF}
      property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
   public
      //: @exclude
      constructor Create(Owner:TPersistent; ItemClass: TCollectionItemClass);
+
+     {$IFDEF PORTUGUES}
      {:
      Este método deve ser chamado através do método Loaded de seu componente para
      informar para as zonas que a partir de agora elas devem operar normalmente e
      não mais no modo de carga de configurações. @bold(Se este método não for
      chamado as zonas não vão se comportar da maneira esperada).
      }
+     {$ELSE}
+     {:
+     This procedure must be called from Loaded procedure of your component/control
+     to tell that all properties are loaded. @bold(If this procedure aren't
+     called, the animation zones will not work properly).
+     }
+     {$ENDIF}
      procedure Loaded;
+
+     {$IFDEF PORTUGUES}
      {:
      @name retorna uma zona em função do valor e dos critérios das zonas
      pertencentes a coleção.
      @param(v Double. Valor numérico a passar pelos critérios de seleção das
             zonas.)
-    
+
      @return(@name retorna a primeira zona que tenha seu critério de seleção
              satisfeito, ou caso não tenha nenhuma zona escolhida, traz a zona
              marcada como padrão. Se não for escolhida nenhuma zona e não há
              nenhuma zona padrão retorna @nil).
      }
+     {$ELSE}
+     {:
+     @name returns the selected animation zone, depending of select criteria of
+     each animation zone.
+
+     @param(v Double. Number that will be used to select a animation zone.)
+
+     @return(@name returns the first animation zone that their criteria match,
+     or if no zone was selected, returns the animation zone setted as default.
+     If has no animation zone set as default, returns @nil).
+     }
+     {$ENDIF}
      function  GetZoneFromValue(v:Double):TZone; virtual;
+
+     {$IFDEF PORTUGUES}
      {:
      Propriedade que lê o estado do componente e o repassa para a coleção de
      zonas. Usa o evento OnNeedCompState para obter o atual estado.
      @seealso(OnNeedCompState)
      }
+     {$ELSE}
+     {:
+     Property that reads the current state of the owner component/control and
+     repass it to the animation collection zones. Uses the event OnNeedCompState
+     to get the actual state of the owner.
+     @seealso(OnNeedCompState)
+     }
+     {$ENDIF}
      property  ZonesState:TComponentState read GetComponentState;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Implementa uma zona de texto com várias opções de formatação.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TTextZones)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Class of a Text animation zone.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TTextZones)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TTextZone = class(TZone)
   private
      FText:TCaption;
@@ -243,11 +460,13 @@ type
     //: @exclude
     constructor Create(Collection: TCollection); override;
   published
+
+     {$IFDEF PORTUGUES}
      {:
      Alinhamento horizontal do texto da zona. Os valores possiveis são:
 
      @bold(taLeftJustify:) Alinha o texto a esquerda do componente.
-     
+
      @bold(taRightJustify:) Alinha o texto a direita do componente.
 
      @bold(taCenter:) Alinha o texto no centro do componente.
@@ -258,15 +477,34 @@ type
      @seealso(Transparent)
      @seealso(VerticalAlignment)
      }
-     property  HorizontalAlignment:TAlignment read FHorAlignment write SetHorAlignment default taLeftJustify;
+     {$ELSE}
      {:
-     Alinhamento vertical do texto da zona. Os valores possíveis são:
+     Horizontal alignment of the text. The possible values are:
 
-     @bold(tlTop:) Alinha o texto no topo do componente.
+     @bold(taLeftJustify:) Left alignment of the text.
 
-     @bold(tlCenter:) Alinha o texto no centro do componente.
+     @bold(taRightJustify:) Right alignment of the text.
 
-     @bold(tlBottom:) Alinha o texto no fundo (parte baixa) do componente.
+     @bold(taCenter:) Centralized alignment of the text.
+
+     @seealso(Color)
+     @seealso(Font)
+     @seealso(Text)
+     @seealso(Transparent)
+     @seealso(VerticalAlignment)
+     }
+     {$ENDIF}
+     property  HorizontalAlignment:TAlignment read FHorAlignment write SetHorAlignment default taLeftJustify;
+
+     {$IFDEF PORTUGUES}
+     {:
+     Vertical alignment of the text. The possible values are:
+
+     @bold(tlTop:) Align the text on top of the control.
+
+     @bold(tlCenter:) Align the text on center of the control.
+
+     @bold(tlBottom:) Align the text on bottom of the control.
 
      @seealso(Color)
      @seealso(Font)
@@ -274,7 +512,12 @@ type
      @seealso(Transparent)
      @seealso(HorizontalAlignment)
      }
+     {$ELSE}
+
+     {$ENDIF}
      property  VerticalAlignment:TTextLayout read FVerAlignment write SetVerAlignment default tlTop;
+
+     {$IFDEF PORTUGUES}
      {:
      Texto a ser exibido na zona.
      @seealso(Color)
@@ -283,7 +526,19 @@ type
      @seealso(HorizontalAlignment)
      @seealso(VerticalAlignment)
      }
+     {$ELSE}
+     {:
+     Text to be shown.
+     @seealso(Color)
+     @seealso(Font)
+     @seealso(Transparent)
+     @seealso(HorizontalAlignment)
+     @seealso(VerticalAlignment)
+     }
+     {$ENDIF}
      property  Text:TCaption read FText write SetText;
+
+     {$IFDEF PORTUGUES}
      {:
      Cor que será exibida no fundo da zona.
      @seealso(Font)
@@ -292,7 +547,19 @@ type
      @seealso(HorizontalAlignment)
      @seealso(VerticalAlignment)
      }
+     {$ELSE}
+     {:
+     Background color of the text animation zone.
+     @seealso(Font)
+     @seealso(Text)
+     @seealso(Transparent)
+     @seealso(HorizontalAlignment)
+     @seealso(VerticalAlignment)
+     }
+     {$ENDIF}
      property  Color:TColor read FColor write SetColor;
+
+     {$IFDEF PORTUGUES}
      {:
      Caso @false, usa a cor de fundo da zona informada em Color. Caso @true
      deixa o fundo da zona transparente.
@@ -302,7 +569,20 @@ type
      @seealso(HorizontalAlignment)
      @seealso(VerticalAlignment)
      }
+     {$ELSE}
+     {:
+     If @false, uses the background color specified in Color property. If @true
+     makes the background transparent.
+     @seealso(Color)
+     @seealso(Font)
+     @seealso(Text)
+     @seealso(HorizontalAlignment)
+     @seealso(VerticalAlignment)
+     }
+     {$ENDIF}
      property  Transparent:Boolean read FTransparent write SetTransparent;
+
+     {$IFDEF PORTUGUES}
      {:
      Fonte de formatação do texto (forma, tamanho e cor).
      @seealso(Color)
@@ -311,15 +591,34 @@ type
      @seealso(HorizontalAlignment)
      @seealso(VerticalAlignment)
      }
+     {$ELSE}
+     {:
+     Text font (form, size and color).
+     @seealso(Color)
+     @seealso(Text)
+     @seealso(Transparent)
+     @seealso(HorizontalAlignment)
+     @seealso(VerticalAlignment)
+     }
+     {$ENDIF}
      property  Font:TFont read FFont write SetFont;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Coleção de zonas de texto.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TTextZone)
   }
+  {$ELSE}
+  {:
+  Collection of text animation zones.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TTextZone)
+  }
+  {$ENDIF}
   TTextZones = class(TZones)
   public
     //: @exclude
