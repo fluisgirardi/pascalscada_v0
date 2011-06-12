@@ -623,16 +623,30 @@ type
   public
     //: @exclude
     constructor Create(Owner:TPersistent);
+
+    {$IFDEF PORTUGUES}
     //: Adiciona uma nova zona de texto na coleção.
+    {$ELSE}
+    //: Adds a animation text zone into the collection.
+    {$ENDIF}
     function Add:TTextZone;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Implementa uma zona gráfica.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TGraphicZones)
   }
+  {$ELSE}
+  {:
+  Class of graphic animation zone.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TGraphicZones)
+  }
+  {$ENDIF}
   TGraphicZone = class(TZone)
   private
      FILIsDefault:Boolean;
@@ -651,6 +665,8 @@ type
      //: @exclude
      constructor Create(Collection: TCollection); override;
   published
+
+     {$IFDEF PORTUGUES}
      {:
      Caso as propriedades FileName, ImageList e ImageIndex estejam configuradas
      corretamente, @name permite você escolher qual será o recurso primário.
@@ -660,48 +676,119 @@ type
      @seealso(ImageList)
      @seealso(ImageIndex)
      }
+     {$ELSE}
+     {:
+     If the properties FileName, ImageList and ImageIndex are configured
+     correctly, @name let you choose what's the primary image resource. If @true,
+     the primary image resource is the ImageList, if not the primary image
+     resource is the image stored on disk pointed by the FileName property.
+     @seealso(FileName)
+     @seealso(ImageList)
+     @seealso(ImageIndex)
+     }
+     {$ENDIF}
      property ImageListAsDefault:Boolean read FILIsDefault write SetILAsDefault default true;
+
+     {$IFDEF PORTUGUES}
      {:
      Caso a zona seja escolhida, exibe a imagem apontada por esse caminho (caso exista).
      @seealso(ImageListAsDefault)
      }
+     {$ELSE}
+     {:
+     Shows the image pointed by @name (if the file exists) if the graphic
+     animation zone is selected.
+     @seealso(ImageListAsDefault)
+     }
+     {$ENDIF}
      property FileName:String read FFileName write SetFileName nodefault;
+
+     {$IFDEF PORTUGUES}
      {:
      Informa qual a lista de imagens que será usada pela zona gráfica.
      @seealso(ImageListAsDefault)
      @seealso(ImageIndex)
      }
+     {$ELSE}
+     {:
+     What's the ImageList that will be used graphic animation zone.
+     @seealso(ImageListAsDefault)
+     @seealso(ImageIndex)
+     }
+     {$ENDIF}
      property ImageList:TImageList read FImageList write SetImageList;
+
+     {$IFDEF PORTUGUES}
      {:
      Informa qual imagem do ImageList que será exibido pela zona gráfica.
      @seealso(ImageListAsDefault)
      @seealso(ImageList)
      }
+     {$ELSE}
+     {:
+     What's the Image Index of ImageList that will be shown if the graphic
+     animation zone is selected.
+     @seealso(ImageListAsDefault)
+     @seealso(ImageList)
+     }
+     {$ENDIF}
      property ImageIndex:Integer read FImageIndex write SetImageIndex stored true nodefault;
+
+     {$IFDEF PORTUGUES}
      {:
      Informa qual cor será interpretada como transparente pela zona gráfica caso
      a propriedade Transparent esteja habilitada.
      @seealso(Transparent)
      }
+     {$ELSE}
+     {:
+     What's the color that will be interpreted as Transparent if Transparent
+     property is @true.
+     @seealso(Transparent)
+     }
+     {$ENDIF}
      property TransparentColor:TColor read FColor write SetColor default clWhite;
+
+     {$IFDEF PORTUGUES}
      {:
      Habilita/desabilita o troca da cor TransparentColor pelo transparente.
      @seealso(TransparentColor)
      }
+     {$ELSE}
+     {:
+     Enables/disables the replacement of the color TransparentColor by the
+     transparent.
+     @seealso(TransparentColor)
+     }
+     {$ENDIF}
      property Transparent:Boolean read FTransparent write SetTransparent default true;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Coleção de zonas gráficas.
   @seealso(TZone)
   @seealso(TZones)
   @seealso(TGraphicZone)
   }
+  {$ELSE}
+  {:
+  Collection of graphic animation zones.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TGraphicZone)
+  }
+  {$ENDIF}
   TGraphicZones = class(TZones)
   public
     //: @exclude
     constructor Create(Owner:TPersistent);
+
+    {$IFDEF PORTUGUES}
     //: Adiciona uma nova zona gráfica a coleção.
+    {$ELSE}
+    //: Adds a new graphic animation zone into the collection.
+    {$ENDIF}
     function Add:TGraphicZone;
   end;
 
@@ -1000,6 +1087,8 @@ end;
 //seleciona a zona de acordo com seu critério de seleção
 //se duas zonas responderem a um valor, ele irá retornar
 //a primeira zona encontrada
+//
+//Selects a animation zone depending of their select criteria.
 function TZones.GetZoneFromValue(v:Double):TZone;
 var
    c, value, bit:Integer;
