@@ -1,8 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
-  @abstract(Implementação de um tag de bloco de comunicação.)
+  @abstract(Implementação de um bloco de tags de comunicação.)
 }
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  @abstract(Unit that implements a block of tags of communication.)
+}
+{$ENDIF}
 unit PLCBlock;
 
 {$IFDEF FPC}
@@ -15,11 +23,19 @@ uses
   SysUtils, Classes, Tag, TagBlock, ProtocolTypes;
 
 type
+  {$IFDEF PORTUGUES}
   {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
     Tag para comunicação em blocos.
   }
+  {$ELSE}
+  {:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+    Class of Block of tags of communication.
+  }
+  {$ENDIF}
   TPLCBlock = class(TTagBlock, IScanableTagInterface)
   private
     procedure SetSize(isize:Cardinal);
@@ -37,18 +53,38 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+
+    {$IFDEF PORTUGUES}
     {:
     @name escreve assincronamente os valores atribuidos ao bloco.
     @bold(Só tem efeito caso AutoWrite = @false.)
     }
+    {$ELSE}
+    {:
+    @name writes asynchronously the values stored in the block.
+    @bold(Only works if AutoWrite = @false.)
+    }
+    {$ENDIF}
     procedure WriteByScan;
+
+    {$IFDEF PORTUGUES}
     {:
     @name escreve sincronamente os valores atribuidos ao bloco.
     @bold(Só tem efeito caso AutoWrite = @false.)
     }
+    {$ELSE}
+    {:
+    @name writes synchronously the values stored in the block.
+    @bold(Only works if AutoWrite = @false.)
+    }
+    {$ENDIF}
     procedure WriteDirect;
 
-    //: Abre o sistema de mapeamento de bits.
+    {$IFDEF PORTUGUES}
+    //: Abre a ferramenta de mapeamento de tags elementos de bloco.
+    {$ELSE}
+    //: Opens the tool to map block elements.
+    {$ENDIF}
     procedure OpenElementMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
 
     //: @seealso(TPLCTag.ScanRead)
@@ -61,12 +97,26 @@ type
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
+    {$IFDEF PORTUGUES}
     //: Lê/escreve um valor puro de modo assincrono em um item do bloco.
+    {$ELSE}
+    //: Read/Writes a raw value asynchronously on a block item.
+    {$ENDIF}
     property ValueRaw[index:Integer]:Double read GetValue write SetValue;
-    //: Lê/escreve valores (array) puros de modo assincrono em um item do bloco.
+
+    {$IFDEF PORTUGUES}
+    //: Lê/escreve valores puros de modo assincrono no bloco.
+    {$ELSE}
+    //: Read/Writes a raw values asynchronously on block.
+    {$ENDIF}
     property ValuesRaw:TArrayOfDouble read GetValues write SetValues;
   published
-    //: Tamanho de elementos do bloco.
+
+    {$IFDEF PORTUGUES}
+    //: Número de elementos do bloco.
+    {$ELSE}
+    //: Number of elements of the block.
+    {$ENDIF}
     property Size write SetSize;
     //: @seealso(TTag.OnValueChange)
     property OnValueChange stored false;
@@ -323,4 +373,4 @@ begin
   end;
 end;
 
-end.
+end.

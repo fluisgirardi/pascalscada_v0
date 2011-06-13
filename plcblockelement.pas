@@ -1,8 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementação de um elemento de um tag bloco de comunicação.)
 }
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  @abstract(Unit that implements a block element tag.)
+}
+{$ENDIF}
 unit PLCBlockElement;
 
 {$IFDEF FPC}
@@ -15,6 +23,7 @@ uses
   SysUtils, Classes, PLCNumber, PLCBlock, ProtocolTypes, variants, Tag;
 
 type
+  {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
@@ -23,6 +32,16 @@ type
 
   @seealso(TPLCBlock)
   }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Class of Block element tag.
+  Used to get a single value from a set of values (block).
+
+  @seealso(TPLCBlock)
+  }
+  {$ENDIF}
   TPLCBlockElement = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
   private
     PBlock:TPLCBlock;
@@ -37,7 +56,7 @@ type
     function  IsValidValue(Value:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
 
-    //IHMITagInterface
+    //implements the IHMITagInterface
     procedure NotifyReadOk; virtual;
     procedure NotifyReadFault; virtual;
     procedure NotifyWriteOk; virtual;
@@ -63,9 +82,19 @@ type
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
   published
+
+    {$IFDEF PORTUGUES}
     //: Bloco de comunicações que o elemento pertence.
+    {$ELSE}
+    //: Communication Block of the element.
+    {$ENDIF}
     property PLCBlock:TPLCBlock read PBlock write SetBlock;
+
+    {$IFDEF PORTUGUES}
     //: Offset da elemento de memória dentro do bloco (indice).
+    {$ELSE}
+    //: Index of tag element on the Tag Block.
+    {$ENDIF}
     property Index:Cardinal read PIndex write SetIndex;
     //: @seealso(TPLCNumber.EnableMaxValue)
     property EnableMaxValue;
@@ -101,6 +130,7 @@ end;
 procedure TPLCBlockElement.SetBlock(blk:TPLCBlock);
 begin
   //esta removendo do bloco.
+  //removing the link with the block
   if (blk=nil) and (Assigned(PBlock)) then begin
     PBlock.RemoveCallBacks(Self as IHMITagInterface);
     PBlock := nil;
@@ -108,6 +138,7 @@ begin
   end;
 
   //se esta setando o bloco
+  //if the block is being set
   if (blk<>nil) and (PBlock=nil) then begin
     PBlock := blk;
     PBlock.AddCallBacks(Self as IHMITagInterface);
@@ -115,6 +146,7 @@ begin
   end;
 
   //se esta setado o bloco, mas esta trocando
+  //if the block is being replaced.
   if blk<>PBlock then begin
     PBlock.RemoveCallBacks(Self as IHMITagInterface);
     PBlock := blk;
