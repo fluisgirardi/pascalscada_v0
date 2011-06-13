@@ -184,7 +184,6 @@ procedure TScanUpdate.UpdateMultipleTags;
 var
   c, pt:Integer;
   found:Boolean;
-  imanagedint:IScanableTagInterface;
 begin
   for c:=0 to High(PScannedValues) do begin
     found:=false;

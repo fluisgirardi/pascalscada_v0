@@ -60,28 +60,64 @@ type
 
     {$IFDEF PORTUGUES}
     {:
-    Fornece a saida em função de um valor de entrada.
+    Pega um valor na escala do CLP e converte para a escala do sistema.
     @param(sender Objeto que chamou a função.)
-    @param(Entrada Valor a ser convertido para saida.)
+    @param(Entrada Valor do dispositivo a ser convertido.)
+    @returns(O valor convertido para a escala do sistema)
     }
     {$ELSE}
-
+    {:
+    Convert a value from the device scale to the system scale.
+    @param(sender Object that calls the convertion.)
+    @param(Entrada Device value to be converted.)
+    @returns(The value converted to the system Scale.)
+    }
     {$ENDIF}
     function SetInGetOut(Sender:TComponent; Entrada:Double):Double; override;
+
+    {$IFDEF PORTUGUES}
     {:
-    Fornece a entrada em função um valor de saida.
-    @param(sender Objeto que chamou função.)
-    @param(Saida Valor a ser convertido para entrada.)
+    Pega um valor na escala do sistema e converte para a escala do CLP.
+    @param(sender Objeto que chamou a função.)
+    @param(Entrada Valor do sistema a ser convertido.)
+    @returns(O valor convertido para a escala do CLP)
     }
+    {$ELSE}
+    {:
+    Convert a value from the device scale to the system scale.
+    @param(sender Object that calls the convertion.)
+    @param(Entrada Device value to be converted.)
+    @returns(The value converted to the system Scale.)
+    }
+    {$ENDIF}
     function SetOutGetIn(Sender:TComponent; Saida:Double):Double; override;
   published
-    //Valor minimo de escala do sistema (Saida).
+    {$IFDEF PORTUGUES}
+    //: Valor minimo de escala do sistema (Saida).
+    {$ELSE}
+    //: Minimum value of the system scale (output).
+    {$ENDIF}
     property SysMin:Double read GetSysMin write SetSysMin Stored true;
-    //Valor máximo de escala do sistema (Saida).
+
+    {$IFDEF PORTUGUES}
+    //: Valor máximo da escala do dispositivo (entrada).
+    {$ELSE}
+    //: Maximum value of the device (PLC) scale (input).
+    {$ENDIF}
     property SysMax:Double read GetSysMax write SetSysMax Stored true;
-    //Valor minimo de escala do PLC (Entrada).
+
+    {$IFDEF PORTUGUES}
+    //: Valor mínimo da escala do dispositivo (entrada).
+    {$ELSE}
+    //: Minimum value of the device (PLC) scale (input).
+    {$ENDIF}
     property PLCMin:Double read GetPLCMin write SetPLCMin Stored true;
-    //Valor máximo de escala do PLC (Entrada).
+
+    {$IFDEF PORTUGUES}
+    //: Valor máximo da escala do dispositivo (entrada).
+    {$ELSE}
+    //: Maximum value of the device (PLC) scale (input).
+    {$ENDIF}
     property PLCMax:Double read GetPLCMax write SetPLCMax Stored true;
   end;
 

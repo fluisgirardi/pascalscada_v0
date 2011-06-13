@@ -1,8 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
-  @abstract(Implementa a base para os drivers ModBus RTU e ModBus TCP.)
+  @abstract(Implementa a base para os drivers de protocolo ModBus RTU e ModBus TCP.)
 }
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  @abstract(Unit that implements the base of ModBus RTU and ModBus TCP protocol drivers.)
+}
+{$ENDIF}
 unit ModBusDriver;
 
 {$IFDEF FPC}
@@ -17,6 +25,7 @@ uses
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
+  {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
@@ -37,6 +46,27 @@ type
   @member Status07LastError Guarda o status do driver ao executar a função
           07 do ModBus.
   }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Record that represents a modbus slave device.
+
+  @member Station Address of the modbus device.
+  @member Inputs Memory mananger object that handles the digital inputs of
+          your modbus device.
+  @member Outputs Memory mananger object that handles the digital outputs of
+          your modbus device (coils).
+  @member Registers Memory mananger object that handles the registers of
+          your modbus device.
+  @member AnalogReg Memory mananger object that handles the analog registers of
+          your modbus device.
+  @member Status07Value Stores the value returned by the ModBus function 07.
+  @member Status07TimeStamp Stores the date/time of the last action of ModBus
+          function 07.
+  @member Status07LastError Stores the IO result of the last ModBus function 07.
+  }
+  {$ENDIF}
   TModBusPLC = record
     Station:Integer;
     Inputs:TPLCMemoryManager;
@@ -48,12 +78,10 @@ type
     Status07LastError:TProtocolIOResult;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Classe base do driver ModBus (RTU e TCP))
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-
-  Driver que implementa a base do protocolo ModBus. Trabalha independentemente do
-  driver de porta (camadas abaixo da camada de aplicação.)
 
   Para configurar um tag para usar o ModBus, é necessário configurar as
   seguintes propriedades do tag:
@@ -61,7 +89,7 @@ type
   @unorderedList(
     @item(@bold(PLCStation): Endereço do equipamento modbus.)
     @item(@bold(MemAddress): Endereço da entrada/saida/registrador que se deseja
-          lêr/escrever.)
+          lêr/escrever. Os endereços começam de zero)
     @item(@bold(MemReadFuntion): Função que será usada para ler o tag. Veja
           tabela abaixo.)
     @item(@bold(MemWriteFuntion): Função que será usada para escrever valores do
@@ -80,28 +108,46 @@ type
     @row(     @cell(Status equipamento)  @cell(7)               @cell(0) )
   )
 
-  Esta tabela é apenas uma sugestão correta dos parametros para cada área de dados.
-  Você pode sem problemas configurar um tag dessa maneira:
-
-  @unorderedList(
-    @item(@bold(MemAddress): 0;)
-    @item(@bold(MemReadFuntion): 2;)
-    @item(@bold(MemWriteFuntion): 5;)
-  )
-
-  O que vai acontecer é que quando o tag for lido seu valor tem origem da
-  entrada número 0, mas quando for escrito este tag irá ligar/desligar
-  a saida 0 (depende do valor escrito para ligar/desligar);
-
-  @bold(Quando for usado um valor de escrita simples(funções 5 e 6) em um tag
-  bloco, e todo o bloco for escrito de uma única vez, o driver fará uma emulação
-  escrevendo elemento a elemento usando a função definida, mas não é recomendado.
-
   É necessário que você conheça as funções ModBus que seu equipamento suporta.)
 
   @seealso(TModBusRTUDriver)
   @seealso(TModBusTCPDriver)
   }
+  {$ELSE}
+  {:
+  @abstract(Base class of ModBus protocol driver (RTU e TCP))
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  To configure your tag, you must set the following properties of your tag:
+
+  @unorderedList(
+    @item(@bold(PLCStation): Address of your modbus slave.)
+    @item(@bold(MemAddress): Address of the digital input or output, register or
+          analog register.)
+    @item(@bold(MemReadFuntion): Modbus function that will be used to read the
+          tag. See the table below.)
+    @item(@bold(MemWriteFuntion): Modbus function that will be used to write the
+          values of your tag on device. See the table below.)
+  )
+
+  The properties MemReadFunction and MemWriteFunction accept the following values,
+  depending of the area (digital input, output, register) desejado:
+
+  @table(
+    @rowHead( @cell(Desired area)    @cell(MemReadFunction) @cell(MemWriteFunction) )
+    @row(     @cell(Digital inputs)  @cell(2)               @cell(0) )
+    @row(     @cell(Digital outputs) @cell(1)               @cell(5 (simple), 15 (block)) )
+    @row(     @cell(Registers)       @cell(3)               @cell(6 (simple), 16 (block)) )
+    @row(     @cell(Analog Inputs)   @cell(4)               @cell(0) )
+    @row(     @cell(Device Status)   @cell(7)               @cell(0) )
+  )
+
+  You must know what's the supported functions of your modbus slave.
+
+  @seealso(TModBusRTUDriver)
+  @seealso(TModBusTCPDriver)
+  }
+  {$ENDIF}
   TModBusDriver = class(TProtocolDriver)
   private
     function BuildItemName(nameprefix:String; ZeroFill:Boolean; index, NumZeros:Integer):String;
@@ -120,9 +166,18 @@ type
     procedure SetRegisterMaxHole(v:Cardinal);
     procedure BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
 
+    {$IFDEF PORTUGUES}
     //: Cria um pacote modbus
+    {$ELSE}
+    //: Encode a modbus packet.
+    {$ENDIF}
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; virtual;
+
+    {$IFDEF PORTUGUES}
     //: Extrai os dados de um pacote modbus
+    {$ELSE}
+    //: Decodes a modbus packet.
+    {$ENDIF}
     function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; virtual;
 
     //: @seealso(TProtocolDriver.DoAddTag)
@@ -139,23 +194,47 @@ type
     function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     //: @seealso(TProtocolDriver.DoRead)
     function  DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+
+    {$IFDEF PORTUGUES}
     {:
     Informa quantas saidas podem ficar sem serem declaradas para manter um bloco
     de saidas continuo.
     @seealso(TPLCMemoryManager.MaxHole)
     }
+    {$ELSE}
+    {:
+    How many digital outputs can be undeclared to keep the block continuous.
+    @seealso(TPLCMemoryManager.MaxHole)
+    }
+    {$ENDIF}
     property OutputMaxHole:Cardinal read POutputMaxHole write SetOutputMaxHole default 50;
+
+    {$IFDEF PORTUGUES}
     {:
     Informa quantas entradas podem ficar sem serem declaradas para manter um bloco
     continuo.
     @seealso(TPLCMemoryManager.MaxHole)
     }
+    {$ELSE}
+    {:
+    How many digital inputs can be undeclared to keep the block continuous.
+    @seealso(TPLCMemoryManager.MaxHole)
+    }
+    {$ENDIF}
     property InputMaxHole:Cardinal read PInputMaxHole write SetInputMaxHole default 50;
+
+    {$IFDEF PORTUGUES}
     {:
     Informa quantos registradores podem ficar sem serem declaradas para manter
     um bloco continuo.
     @seealso(TPLCMemoryManager.MaxHole)
     }
+    {$ELSE}
+    {:
+    How many registers can be undeclared to keep the block continuous.
+    @seealso(TPLCMemoryManager.MaxHole)
+    }
+    {$ENDIF}
     property RegisterMaxHole:Cardinal read PRegistersMaxHole write SetRegisterMaxHole default 10;
   public
     //: @exclude
@@ -217,7 +296,7 @@ begin
     Result  := found;
   end;
 
-  //Tag Bloco
+  //TPLCBlock and TPLCStruct
   if (not found) and (TagObj is TPLCBlock) then begin
     found   := true;
     Station := TPLCBlock(TagObj).PLCStation;
@@ -228,7 +307,7 @@ begin
     Result  := found;
   end;
 
-  //Tag Bloco
+  //TPLCString
   if (not found) and (TagObj is TPLCString) then begin
     found   := true;
     Station := TPLCString(TagObj).PLCStation;
@@ -247,6 +326,7 @@ var
   plc:integer;
 begin
   //Recupera as informações do tag;
+  //retrieve informations of the tag.
   station:=0;
   mem:=0;
   size:=0;
@@ -258,6 +338,7 @@ begin
 
   if found then
     //se o endereco do plc esta numa faixa válida procura nos blocos de memória.
+    //check if the address of the slave is valid.
     if station in [1..255] then begin
       found := false;
       for plc:=0 to High(PModbusPLC) do
@@ -266,6 +347,7 @@ begin
           break;
         end;
       //se nao encontrou o plc, adiciona!
+      //if not found the slave, add it.
       if not found then begin
         plc:=length(PModbusPLC);
         SetLength(PModbusPLC,plc+1);
@@ -307,6 +389,7 @@ var
   plc:Integer;
 begin
   //Recupera as informações do tag;
+  //retrieve informations about the tag.
   station:=0;
   mem:=0;
   size:=0;
@@ -316,6 +399,7 @@ begin
 
   if found then
     //se o endereco do plc esta numa faixa válida procura nos blocos de memória.
+    //check if the slave address is valid.
     if station in [1..255] then begin
       found := false;
       for plc:=0 to High(PModbusPLC) do
@@ -325,6 +409,7 @@ begin
         end;
 
       //se encontrou o plc remove a memoria que estou lendo dele.
+      //if found the slave, removes the tag.
       if found then begin
         case memtype of
           1:
@@ -392,7 +477,7 @@ begin
         if confItem=nil then exit;
 
         ////////////////////////////////////////////////////////////////////////
-        //plc number e string
+        //plcnumber and string
         ////////////////////////////////////////////////////////////////////////
         if dlg.optPLCTagNumber.Checked or dlg.optPLCString.Checked then begin
           c:=1;
@@ -438,6 +523,7 @@ begin
               inc(CurMemtAdress)
             else begin
               //se o tamanho do bloco da string ainda não é conhecido.
+              //if the string size is unknown.
               if not knowstringsize then begin
                 try
                   tstrdummy := TPLCString.Create(Nil);
@@ -474,7 +560,7 @@ begin
         end;
 
         ////////////////////////////////////////////////////////////////////////
-        //BLOCO
+        //TPLCBlock
         ////////////////////////////////////////////////////////////////////////
         if dlg.optPLCBlock.Checked then begin
           c:=1;
@@ -493,6 +579,7 @@ begin
             InsertHook(tblk);
 
             //cria os elementos do bloco
+            //create the block elements.
             while Element<dlg.MaxBlockSize.Value do begin
               if Trim(confItem.Nome.Text)<>'' then begin
                 tbel := TPLCBlockElement(CreateProc(TPLCBlockElement));
@@ -519,6 +606,7 @@ begin
             end;
 
             //incrementa o numero do bloco.
+            //inc the block number.
             inc(BlockNo);
           end;
         end;
@@ -602,7 +690,7 @@ begin
       FunctionCode := TPLCTagNumber(Tag).MemReadFunction;
   end;
 
-  //Tag Bloco
+  //TPLCBlock and TPLCStruct
   if (Tag is TPLCBlock) then begin
     if (isWrite) then
       FunctionCode := TPLCBlock(Tag).MemWriteFunction
@@ -610,7 +698,7 @@ begin
       FunctionCode := TPLCBlock(Tag).MemReadFunction;
   end;
 
-  //tag string
+  //TPLCString
   if (Tag is TPLCString) then begin
     if (isWrite) then
       FunctionCode := TPLCString(Tag).MemWriteFunction
@@ -621,6 +709,8 @@ begin
 
   //retorna o tamanho em bits dos registradores lidos/escritos por
   //cada tipo de função de leitura/escrita
+  //
+  //return the size in bits of the tag
   case FunctionCode of
     1,2,5,15: begin
       Result := 1;
@@ -756,8 +846,11 @@ begin
     //se nao fez leitura de nenhum bloco
     //faz atualiza o bloco que esta quase vencendo
     //o tempo de scan...
+    //
+    //if does nothing, update the tag with the oldest timestamp
     if (PReadSomethingAlways) and (Length(PModbusPLC)>0) and ((not done) and (not first)) then begin
       //compila o bloco do mais necessitado;
+      //build the tagrec record.
       BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
       DoRead(tr,values,false);
     end else
