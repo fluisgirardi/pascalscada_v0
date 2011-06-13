@@ -20,7 +20,7 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Controls, Graphics,
-  Dialogs, ExtCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes, Tag;
+  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
   {$IFDEF PORTUGUES}
@@ -259,7 +259,7 @@ begin
 
    FIgnore:=true;
    if (Value>=0) and (Value<Items.Count) then
-      inherited ItemIndex:= FloatToInteger(Value)
+      inherited ItemIndex:= Trunc(Value)
    else
       inherited ItemIndex := FDefaultIndex;
    FIgnore:=false;

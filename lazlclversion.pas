@@ -1,3 +1,17 @@
+{$IFDEF PORTUGUES}
+{:
+  Calcula a constante lcl_fullversion em versões do lazarus
+  que não tem ela disponível.
+  Verifica também se existe o recurso de hints customizaveis (na IDE).
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ELSE}
+{:
+  Calculates the lcl_fullversion constant in old Lazarus versions.
+  Check too if the custom hints (on IDE) are available.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit lazlclversion;
 
 {$IFDEF FPC}
@@ -26,7 +40,7 @@ type
   {$ifend}
 
   {$if declared(lcl_fullversion)}
-    {$if lcl_fullversion>=092900}
+    {$if lcl_fullversion>=093000}
       const has_customhints = hchYes;
     {$ifend}
   {$ifend}

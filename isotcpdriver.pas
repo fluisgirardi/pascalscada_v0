@@ -1,5 +1,6 @@
+{$IFDEF PORTUGUES}
 {:
-  @abstract(Implmentação do protocolo ISOTCP.)
+  @abstract(Implementação do protocolo ISOTCP.)
   Este driver é baseado no driver ISOTCP da biblioteca
   LibNODAVE de Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
@@ -7,6 +8,17 @@
 
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements the ISOTCP protocol.)
+  This driver is based on ISOTCP of LibNODAVE library of
+  Thomas Hergenhahn (thomas.hergenhahn@web.de).
+
+  This driver does not uses LibNodave, it's a rewritten of it.
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit ISOTCPDriver;
 
 {$IFDEF FPC}
@@ -19,6 +31,8 @@ uses
   classes, sysutils, S7Types, commtypes, s7family;
 
 type
+
+  {$IFDEF PORTUGUES}
   {: Driver IsoTCP. Baseado na biblioteca LibNodave de
      Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
@@ -27,23 +41,59 @@ type
 
   @seealso(TSiemensProtocolFamily).
   }
+  {$ELSE}
+  {: ISOTCP protocol driver. Based on LibNODAVE libray of
+     Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
+  To address your tags, see the documentation of the class
+  TSiemensProtocolFamily.
+
+  @seealso(TSiemensProtocolFamily).
+  }
+  {$ENDIF}
   TISOTCPDriver = class(TSiemensProtocolFamily)
   protected
     FConnectionWay:TISOTCPConnectionWay;
+
+    {$IFDEF PORTUGUES}
+    //: Define o meio de conexão com o CLP.
+    {$ELSE}
+    //: Defines the way to connect into the PLC.
+    {$ENDIF}
     procedure SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
+
+    //: seealso(TProtocolDriver.NotifyThisEvents)
     function NotifyThisEvents: TNotifyThisEvents; override;
+    //: seealso(TProtocolDriver.PortClosed)
     procedure PortClosed(Sender: TObject); override;
+    //: seealso(TProtocolDriver.PortDisconnected)
     procedure PortDisconnected(Sender: TObject); override;
   protected
+    //: seealso(TSiemensProtocolFamily.connectPLC)
     function  connectPLC(var CPU:TS7CPU):Boolean; override;
+    //: seealso(TSiemensProtocolFamily.exchange)
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; override;
+    //: seealso(TSiemensProtocolFamily.getResponse)
     function  getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult; override;
+    //: seealso(TSiemensProtocolFamily.PrepareToSend)
     procedure PrepareToSend(var msg: BYTES); override;
   public
     constructor Create(AOwner:TComponent); override;
   published
+    //: @seealso(TSiemensProtocolFamily.ReadSomethingAlways)
     property ReadSomethingAlways;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Define o meio de conexão com o CLP.
+    @seealso(TISOTCPConnectionWay)
+    }
+    {$ELSE}
+    {:
+    Defines the way to connect into the PLC.
+    @seealso(TISOTCPConnectionWay)
+    }
+    {$ENDIF}
     property ConnectionWay:TISOTCPConnectionWay read FConnectionWay write SetISOConnectionWay;
   end;
 
@@ -74,6 +124,8 @@ begin
   if PCommPort=nil then exit;
 
   //incializa conexao
+  //
+  //initiates the connection.
   SetLength(msg,22);
   msg[04] := $11;  // $11,
   msg[05] := $E0;  // $E0,
@@ -120,6 +172,8 @@ begin
     end;
 
     //negocia o tamanho da pdu
+    //
+    //negotiates the PDU size
     if len=22 then
       CPU.Connected := NegotiatePDUSize(CPU);
   finally
@@ -198,8 +252,11 @@ begin
     //As vezes o CLP manda um pacote de
     //7 bytes que não serve para nada
     //ou se serve pra algo, eu não sei.
+    //
+    //Sometimes the PLC sends a packet with 7 bytes of len, without a function.
     while len = 7 do begin
       //le novamente...
+      //reads again.
       res := PCommPort.IOCommandSync(iocRead,nil,7,0,DriverID,0,CommPortCallBack,nil,@IOResult1);
       if (res=0) then begin
         BytesRead:=0;
@@ -213,6 +270,8 @@ begin
         exit;
       end;
       //calcula o tamanho do pacote recebido.
+      //
+      //calculate the size of the packet
       len:= IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
     end;
 
@@ -225,6 +284,9 @@ begin
     //se resultado nao der ok,
     //ou não fechar com o numero de bytes a ler
     //e não ter o comprimento minimo do ISOTCP sai.
+    //
+    //if the IO result aren't ok or the packet has less bytes than minimum size.
+    //exit...
     if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>(len-7)) then begin
       BytesRead:=IOResult2.Received;
       Result:= IOResult2.ReadIOResult;

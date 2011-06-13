@@ -36,7 +36,7 @@ type
 
 implementation
 
-uses Math, hsutils, PLCMemoryManager, SysUtils;
+uses Math, PLCMemoryManager, SysUtils;
 
 function  TModBusRTUDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var
@@ -130,8 +130,8 @@ begin
         Result[1] := $06;
         Result[2] := (TagObj.Address and $FF00) shr 8;
         Result[3] := TagObj.Address and $FF;
-        Result[4] := (FloatToInteger(ToWrite[0]) and $FF00) shr 8;
-        Result[5] := FloatToInteger(ToWrite[0]) and $FF;
+        Result[4] := (Trunc(ToWrite[0]) and $FF00) shr 8;
+        Result[5] := Trunc(ToWrite[0]) and $FF;
         // Calcula o CRC
         Calcul_crc(Result);
       end;
@@ -181,8 +181,8 @@ begin
         Result[6] := (TagObj.Size*2) and $FF;
         i := 0;
         while (i<TagObj.Size) do begin
-            Result[7+i*2] := ((FloatToInteger(ToWrite[i]) and $FF00) shr 8);
-            Result[8+i*2] := FloatToInteger(ToWrite[i]) and $FF;
+            Result[7+i*2] := ((Trunc(ToWrite[i]) and $FF00) shr 8);
+            Result[8+i*2] := Trunc(ToWrite[i]) and $FF;
             inc(i);
         end;
         // Calcula o CRC

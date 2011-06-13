@@ -21,7 +21,7 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Controls, Graphics,
-  Dialogs, StdCtrls, HMITypes, PLCTag, hsutils, ProtocolTypes, Tag;
+  Dialogs, StdCtrls, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
   {$IFDEF PORTUGUES}
@@ -233,7 +233,7 @@ begin
       if (FTag=nil) then exit;
 
       if Supports(FTag, ITagNumeric) then
-         Position := FloatToInteger((FTag as ITagNumeric).Value);
+         Position := Trunc((FTag as ITagNumeric).Value);
    end;
 end;
 

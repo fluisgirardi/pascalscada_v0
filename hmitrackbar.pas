@@ -112,7 +112,7 @@ type
 
 implementation
 
-uses hsstrings, hsutils;
+uses hsstrings;
 
 destructor THMITrackBar.Destroy;
 begin
@@ -130,7 +130,7 @@ end;
 procedure THMITrackBar.RefreshTagValue;
 begin
    if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
-      inherited Position := FloatToInteger((Ftag as ITagNumeric).Value);
+      inherited Position := Trunc((Ftag as ITagNumeric).Value);
    FModified:=false;
 end;
 

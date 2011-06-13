@@ -152,7 +152,7 @@ begin
        ValueBitP := 0;
        ValueAux := 0;
        strlen := 255;
-       ValueAux2 := FloatToInteger(values[ValueP]);
+       ValueAux2 := Trunc(values[ValueP]);
        //passa bit a bit para montar a string
        while bit<maxbits do begin
          aux1 := Power(2,ValueBitP);
@@ -183,7 +183,7 @@ begin
          if ValueBitP>=BitsByType then begin
            ValueBitP := 0;
            Inc(ValueP);
-           ValueAux2 := FloatToInteger(values[ValueP]);
+           ValueAux2 := Trunc(values[ValueP]);
          end;
        end;
        if ByteBitP<PByteSize then begin
@@ -201,7 +201,7 @@ begin
        ValueP := 0;
        ValueBitP := 0;
        ValueAux := 0;
-       ValueAux2 := FloatToInteger(values[ValueP]);
+       ValueAux2 := Trunc(values[ValueP]);
        //passa bit a bit para montar a string
        while bit<maxbits do begin
          aux1 := Power(2,ValueBitP);
@@ -227,7 +227,7 @@ begin
          if ValueBitP>=BitsByType then begin
            ValueBitP := 0;
            Inc(ValueP);
-           ValueAux2 := FloatToInteger(values[ValueP]);           
+           ValueAux2 := Trunc(values[ValueP]);
          end;
        end;
        if ByteBitP<PByteSize then begin

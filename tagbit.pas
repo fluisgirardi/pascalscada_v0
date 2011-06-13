@@ -227,14 +227,14 @@ end;
 
 function  TTagBit.GetBits(value:double):Double;
 begin
-   Result:=((FloatToInteger(value) and PNormalMask) shr PStartBit);
+   Result:=((Trunc(value) and PNormalMask) shr PStartBit);
 end;
 
 function  TTagBit.SetBits(OriginalValue, Value:Double):Double;
 begin
    Result :=
-            ((FloatToInteger(OriginalValue) and PInvMask) or
-             ((FloatToInteger(value) shl PStartBit) and PNormalMask));
+            ((Trunc(OriginalValue) and PInvMask) or
+             ((Trunc(value) shl PStartBit) and PNormalMask));
 end;
 
 function  TTagBit.GetBitMask:Integer;

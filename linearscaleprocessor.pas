@@ -1,8 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   @abstract(Implementa o componente de escalonamento linear.)
 }
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  @abstract(Unit that implements a linear scale.)
+}
+{$ENDIF}
 unit LinearScaleProcessor;
 
 {$IFDEF FPC}
@@ -15,6 +23,8 @@ uses
   SysUtils, Classes, ValueProcessor;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
@@ -22,6 +32,15 @@ type
   @seealso(TPIPE)
   @seealso(TScaleProcessor)
   }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Linear scale component.
+  @seealso(TPIPE)
+  @seealso(TScaleProcessor)
+  }
+  {$ENDIF}
   TLinearScaleProcessor = class(TScaleProcessor)
   private
     function GetSysMin:Double;
@@ -38,11 +57,16 @@ type
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
+
+    {$IFDEF PORTUGUES}
     {:
     Fornece a saida em função de um valor de entrada.
     @param(sender Objeto que chamou a função.)
     @param(Entrada Valor a ser convertido para saida.)
     }
+    {$ELSE}
+
+    {$ENDIF}
     function SetInGetOut(Sender:TComponent; Entrada:Double):Double; override;
     {:
     Fornece a entrada em função um valor de saida.

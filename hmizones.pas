@@ -1117,8 +1117,8 @@ begin
                end;
             ztBit:
             begin
-               bit := FloatToInteger(Value1);
-               value := FloatToInteger(v);
+               bit := Trunc(Value1);
+               value := Trunc(v);
                bit := Power(2,bit);
                if ((value and bit)=bit)=FIncludeV1 then begin
                   Result := Self.items[c] as TZone;

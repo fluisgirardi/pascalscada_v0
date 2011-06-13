@@ -1,7 +1,15 @@
+
+{$IFDEF PORTUGUES}
 {:
   Implementa funções uteis a todo o sistema.
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  Miscelaneous functions.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit hsutils;
 
 {$IFDEF FPC}
@@ -11,25 +19,23 @@ unit hsutils;
 interface
 
 uses SysUtils;
-{:
-  Converte um valor Float para Int64, descartando a parte decimal.
-  @returns(O valor convertido para Int64.)
-}
-function FloatToInt64(Value:Extended):Int64;
+
+{$IFDEF PORTUGUES}
 {:
   Realiza o cálculo de exponenciação.
   @returns(O resultado da exponenciação em Cardinal.)
 }
-function Power(Base, Expoent:Integer):Cardinal;
+{$ELSE}
 {:
-  Converte um valor Float para Integer, descartando a parte decimal.
-  @returns(O valor convertido para Integer.)
+  Computes the exponentiation.
+  @returns(Cardinal. Returns Base^Expoent calculation.)
 }
-function FloatToInteger(Value:Extended):Integer;
+{$ENDIF}
+function Power(Base:Integer; Expoent:Cardinal):Cardinal;
 
 implementation
 
-function Power(Base, Expoent:Integer):Cardinal;
+function Power(Base:Integer; Expoent:Cardinal):Cardinal;
 var
   c:Integer;
 begin
@@ -40,16 +46,6 @@ begin
   Result:=Base;
   for c:=2 to Expoent do
     Result := Result*Base;
-end;
-
-function FloatToInteger(Value:Extended):Integer;
-begin
-  Result := trunc(Value);
-end;
-
-function FloatToInt64(Value:Extended):Int64;
-begin
-  Result := trunc(Value);
 end;
 
 end.

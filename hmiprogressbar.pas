@@ -18,8 +18,7 @@ unit HMIProgressBar;
 interface
 
 uses
-  SysUtils, Classes, Controls, ComCtrls, HMITypes, PLCTag, hsutils,
-  ProtocolTypes, Tag;
+  SysUtils, Classes, Controls, ComCtrls, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
 
@@ -187,7 +186,7 @@ begin
     exit;
 
   if (FTag<>nil) and (Supports(FTag, ITagNumeric)) then
-    inherited Position := FloatToInteger((FTag as ITagNumeric).Value);
+    inherited Position := Trunc((FTag as ITagNumeric).Value);
 end;
 
 procedure THMIProgressBar.RemoveTag(Sender:TObject);

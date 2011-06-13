@@ -41,7 +41,7 @@ type
 
 implementation
 
-uses Math, hsutils, PLCMemoryManager, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses Math, PLCMemoryManager, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 constructor TModBusTCPDriver.Create(AOwner: TComponent);
 begin
@@ -164,8 +164,8 @@ begin
         Result[07] := $06;
         Result[08] := (TagObj.Address and $FF00) shr 8;
         Result[09] := TagObj.Address and $FF;
-        Result[10] := (FloatToInteger(ToWrite[0]) and $FF00) shr 8;
-        Result[11] := FloatToInteger(ToWrite[0]) and $FF;
+        Result[10] := (Trunc(ToWrite[0]) and $FF00) shr 8;
+        Result[11] := Trunc(ToWrite[0]) and $FF;
       end;
 
       $0F: begin
@@ -227,8 +227,8 @@ begin
         Result[12] := (TagObj.Size*2) and $FF;
         i := 0;
         while (i<TagObj.Size) do begin
-            Result[13+i*2] := ((FloatToInteger(ToWrite[i]) and $FF00) shr 8);
-            Result[14+i*2] := FloatToInteger(ToWrite[i]) and $FF;
+            Result[13+i*2] := ((Trunc(ToWrite[i]) and $FF00) shr 8);
+            Result[14+i*2] := Trunc(ToWrite[i]) and $FF;
             inc(i);
         end;
       end;
