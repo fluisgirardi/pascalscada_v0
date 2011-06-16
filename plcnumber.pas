@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um tag PLC numérico para uso geral.)
   @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a numeric tag for general use.)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ENDIF}
 unit PLCNumber;
 
 {$IFDEF FPC}
@@ -14,76 +21,202 @@ uses
   SysUtils, Classes, PLCTag, ProtocolTypes, ValueProcessor;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
     @abstract(Classe base para tags numéricos.)
     @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
+  {$ELSE}
+  {:
+    @abstract(Base class of numeric tags.)
+    @author(Fabio Luis Girardi fabio@pascalscada.com)
+  }
+  {$ENDIF}
   TPLCNumber = class(TPLCTag)
   protected
+    {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
+    {$ELSE}
+    //: Stores if must be checked the minimum and maximum limits.
+    {$ENDIF}
     FEnableMin, FEnableMax:Boolean;
+
+    {$IFDEF PORTUGUES}
     //: Armazena os valores de limites inferior e superior, apenas entrada.
+    {$ELSE}
+    //: Stores the minimum and maximum limits.
+    {$ENDIF}
     FMinLimit, FMaxLimit:Double;
+
+    {$IFDEF PORTUGUES}
     //: Armazena a sequência de escalas aplicadas a esse tag.
+    {$ELSE}
+    //: Store the scales linked with the tag.
+    {$ENDIF}
     PScaleProcessor:TPIPE;
-    //: Armazena o valor puro (sem escalas) lido @bold(assincrono).
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o valor puro (sem escalas).
+    {$ELSE}
+    //: Stores the raw value (without scales).
+    {$ENDIF}
     PValueRaw:Double;
 
-    //: Retorna o valor @bold(assincrono) processado pelas escalas associadas.
+    {$IFDEF PORTUGUES}
+    //: Retorna o valor processado pelas escalas associadas, ou o valor puro caso contrário.
+    {$ELSE}
+    //: Returns the value processed by the linked scales or the value raw.
+    {$ENDIF}
     function GetValue:Double; virtual;
-    //: Retorna o valor @bold(assincrono) PURO.
+
+    {$IFDEF PORTUGUES}
+    //: Retorna o valor PURO.
+    {$ELSE}
+    //: Returns the raw value.
+    {$ENDIF}
     function GetValueRaw:Double; virtual; abstract;
 
+    {$IFDEF PORTUGUES}
     {: Processa pelas escalas e escreve o valor processado de modo @bold(assincrono).
     @param(Value Double: Valor a processar e escrever.) }
+    {$ELSE}
+    {:
+    Processes the value using linked scales and writes the value processed
+    @bold(assynchronous).
+    @param(Value Double: Value to be processed and written in device.)
+    }
+    {$ENDIF}
     procedure SetValue(Value:Double); virtual;
+
+    {$IFDEF PORTUGUES}
     {: Escreve o valor do tag de modo @bold(assincrono).
        @param(Value Double: Valor a escrever.) }
+    {$ELSE}
+    {: Write the raw value @bold(assynchronous).
+       @param(Value Double: Value to be written.) }
+    {$ENDIF}
     procedure SetValueRaw(Value:Double); virtual; abstract;
+
+    {$IFDEF PORTUGUES}
     {:
     Configura a sequência de escalas.
     @param(sp TPIPE: Nova sequência de escalas.)
     @seealso(ScaleProcessor)
     }
+    {$ELSE}
+    {:
+    Sets the new scales sequence.
+    @param(sp TPIPE: The new scale sequence.)
+    @seealso(ScaleProcessor)
+    }
+    {$ENDIF}
     procedure SetScaleProcessor(sp:TPIPE);
 
+    {$IFDEF PORTUGUES}
     //: seta o limite minimo
+    {$ELSE}
+    //: set the minimum limit.
+    {$ENDIF}
     procedure SetMinLimit(v:Double);
+
+    {$IFDEF PORTUGUES}
     //: seta o limite máximo
+    {$ELSE}
+    //: sets the maximum limit.
+    {$ENDIF}
     procedure SetMaxLimit(v:Double);
 
+    {$IFDEF PORTUGUES}
     //: Habilita/desabilita o limite minimo para entrada de dados.
+    {$ELSE}
+    //: Enables/disables the minimum limit.
+    {$ENDIF}
     property EnableMinValue:Boolean read FEnableMin write FEnableMin stored true;
+
+    {$IFDEF PORTUGUES}
     //: Habilita/desabilita o limite máximo para entrada de dados.
+    {$ELSE}
+    //: Enables/disables the maximum limit.
+    {$ENDIF}
     property EnableMaxValue:Boolean read FEnableMax write FEnableMax stored true;
+
+    {$IFDEF PORTUGUES}
     //: Limite minimo para entrada de dados.
+    {$ELSE}
+    //: Minimum value acceptable if the minimum limit is enabled.
+    {$ENDIF}
     property MinValue:Double read FMinLimit write SetMinLimit;
+
+    {$IFDEF PORTUGUES}
     //: Limite máximo para entrada de dados.
+    {$ELSE}
+    //: Maximum value acceptable if the maximum limit is enabled.
+    {$ENDIF}
     property MaxValue:Double read FMaxLimit write SetMaxLimit;
   public
 
     //: @exclude
     destructor Destroy; override;
 
+    {$IFDEF PORTUGUES}
     //: Abre o assistente de mapeamento de tags bit.
+    {$ELSE}
+    //: Opens the bit mapper wizard.
+    {$ENDIF}
     procedure OpenBitMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
 
     //: @seealso(TPLCTag.Write)
     procedure Write; overload; virtual;
     //: @seealso(TPLCTag.Write)
     procedure ScanWrite; overload; virtual;
+    {$IFDEF PORTUGUES}
     //: Remove a sequência de processamento de escalas.
+    {$ELSE}
+    //: Removes the scales sequence, it's being destroyed.
+    {$ENDIF}
     procedure RemoveScaleProcessor;
-    //: Valor do tag escalonado (processado) @bold(assincrono).
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag escalonado (processado).
+    {$ELSE}
+    //: Tag Value processed by the scales.
+    {$ENDIF}
     property Value:Double read GetValue write SetValue;
+
+    {$IFDEF PORTUGUES}
     //: Valor do tag puro @bold(assincrono).
+    {$ELSE}
+    //: Raw value of the tag.
+    {$ENDIF}
     property ValueRaw:Double read PValueRaw write SetValueRaw;
   published
+    {$IFDEF PORTUGUES}
     //: Sequência de escalas do Tag.
+    {$ELSE}
+    //: Scale sequence of tag.
+    {$ENDIF}
     property ScaleProcessor:TPIPE  read PScaleProcessor write SetScaleProcessor;
-    //: Evento chamado ao ocorrer uma mudança no valor do tag.
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado ao ocorrer uma mudança no valor do tag. Chamado APÓS notificar os controles dependentes.
+    {$ELSE}
+    //: Event called when the value of tag changes. Called AFTER updates all dependent components.
+    {$ENDIF}
     property OnValueChange stored false;
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado ao ocorrer uma mudança no valor do tag. Chamado ANTES DE notificar os controles dependentes.
+    {$ELSE}
+    //: Event called when the value of tag changes. Called BEFORE updates all dependent components.
+    {$ENDIF}
     property OnValueChangeFirst;
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado ao ocorrer uma mudança no valor do tag. Chamado APÓS notificar os controles dependentes.
+    {$ELSE}
+    //: Event called when the value of tag changes. Called AFTER updates all dependent components.
+    {$ENDIF}
     property OnValueChangeLast;
   end;
 
@@ -218,7 +351,10 @@ var
     Result := StringReplace(Result,'%t',n,[rfReplaceAll]);
   end;
 begin
+  //bit mapper...
+
   //se não está em design sai.
+  //if it's not at designtime, exit.
   if [csDesigning]*ComponentState=[] then exit;
 
   dlg:=TfrmBitMapper.Create(nil);
