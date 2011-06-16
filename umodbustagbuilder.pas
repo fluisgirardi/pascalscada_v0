@@ -403,13 +403,6 @@ begin
     exit;
   end;
 
-  //item := CurItem;
-  //while item<>nil do begin
-  //  if ((Trim(item.Nome.Text)<>'') AND (item.Nome.Text[1] in ['a'..'z','A'..'Z','_'])) or item.CountEmpty.Checked then
-  //    break;
-  //  item := TTagNamesItemEditor(item.Prior);
-  //end;
-
   if CurItem=nil then begin
     MessageDlg(SWithoutAtLeastOneValidName,mtError,[mbOk],0);
     exit;
