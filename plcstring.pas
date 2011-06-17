@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementação para Tags String.)
   @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a tag that can read/write string values.)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ENDIF}
 unit PLCString;
 
 {$IFDEF FPC}
@@ -15,6 +22,8 @@ uses
   hsutils;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi fabio@pascalscada.com)
 
@@ -23,12 +32,29 @@ type
   cadeia informam o tamanho máximo e quantos bytes desse tamanho já foram usados.)
   @value(stC A string só termina quando o código ASCII 0 é encontrado.)
   }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
+
+  Defines the how the string will be encoded/decoded:
+  @value(stSIEMENS String on SIEMENS format. The first byte tells the maximum
+  size of string and the second byte tells the actual length of the string.)
+  @value(stC The string finishes when a ASCII char 0 (string terminator) is found.)
+  }
+  {$ENDIF}
   TPLCStringTypes = (stSIEMENS, stC);
 
+  {$IFDEF PORTUGUES}
   {:
-  @abstract(Tag de comunicação em formato String.)
+  @abstract(Tag de comunicação capaz de escrever valores String no seu dispositivo.)
   @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
+  {$ELSE}
+  {:
+    @abstract(Communication tag that can read/write string values on your device.)
+    @author(Fabio Luis Girardi fabio@pascalscada.com)
+  }
+  {$ENDIF}
   TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private
     PValue:String;
@@ -82,22 +108,50 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
-    //: Lê/escreve uma string do equipamento de modo assincrono.
+
+    {$IFDEF PORTUGUES}
+    //: Lê/escreve uma string do equipamento.
+    {$ELSE}
+    //: Read/writes a string value on your device
+    {$ENDIF}
     property Value:String read PValue write SetValue;
   published
+
+    {$IFDEF PORTUGUES}
     //: Quantidade máxima de caracteres da string.
+    {$ELSE}
+    //: Maximum length of your string.
+    {$ENDIF}
     property StringSize:Cardinal read PStringSize write SetStringSize;
+
+    {$IFDEF PORTUGUES}
     {:
     Tipo da String.
     @seealso(TPLCStringTypes)
     }
+    {$ELSE}
+    {:
+    String format.
+    @seealso(TPLCStringTypes)
+    }
+    {$ENDIF}
     property StringType:TPLCStringTypes read PStringType write SetStringType default stC;
+
+    {$IFDEF PORTUGUES}
     //: Tamanho em bits de cada caracter da string.
+    {$ELSE}
+    //: Size in bits of each character of string.
+    {$ENDIF}
     property ByteSize:Byte read PByteSize write SetByteSize default 8;
     
     //: @seealso(TTag.OnValueChange)
     property OnValueChange;
+
+    {$IFDEF PORTUGUES}
     //: Tamanho do bloco (somente-leitura).
+    {$ELSE}
+    //: Real block size (read-only).
+    {$ENDIF}
     property Size write SetDummySize;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
@@ -123,6 +177,8 @@ begin
 end;
 
 //codifica uma array de valores em uma string
+//
+//decodes the string from a array of double.
 function  TPLCString.EncodeValues(values:TArrayOfDouble):String;
 var
   aux1, maxbits, bit:Integer;
@@ -130,6 +186,7 @@ var
   ValueAux, strLen, BitsByType :Byte;
 begin
   //use a funcao de leitura
+  //what's the current register size in bits
   if PProtocolDriver<>nil then
     BitsByType := Min(PProtocolDriver.SizeOfTag(Self, false, FProtocolTagType),32)
   else
@@ -141,7 +198,8 @@ begin
   end;
 
   case PStringType of
-      //string formato SIEMENS de 7 ou 8 bits
+     //string formato SIEMENS de 7 ou 8 bits
+     //decodes a siemens string.
      stSIEMENS:
      begin
        maxbits := length(values)*BitsByType;
@@ -154,6 +212,7 @@ begin
        strlen := 255;
        ValueAux2 := Trunc(values[ValueP]);
        //passa bit a bit para montar a string
+       //build the string, bit by bit
        while bit<maxbits do begin
          aux1 := Power(2,ValueBitP);
          if ((ValueAux2 and aux1)=aux1) then
@@ -164,15 +223,20 @@ begin
          inc(ValueBitP);
 
          //incrementa os ponteiros
+         //increment pointers
          if ByteBitP>=PByteSize then begin
            //se esta nos primeiros 2 bytes
            //acha o tamanho real da string
            //(o menor dos dois primeiros bytes)
+           //
+           //if the I'm on the first two bytes
+           //gets the real size of the string
            if ByteP<2 then begin
              strlen := min(strlen,ValueAux);
            end else begin
              Result := Result + char(ValueAux);
              //se alcançou o tamanho da string.
+             //if all string is decoded, finish.
              if Length(Result)>=strlen then
                exit;
            end;
@@ -192,6 +256,7 @@ begin
      end;
 
       //string formato C de 7 ou 8 bits
+      //C string, 7 or 8 bits per character.
      stC:
      begin
        maxbits := length(values)*BitsByType;
@@ -203,6 +268,7 @@ begin
        ValueAux := 0;
        ValueAux2 := Trunc(values[ValueP]);
        //passa bit a bit para montar a string
+       //build the string, bit by bit
        while bit<maxbits do begin
          aux1 := Power(2,ValueBitP);
          if ((ValueAux2 and aux1)=aux1) then
@@ -213,9 +279,12 @@ begin
          inc(ValueBitP);
 
          //incrementa os ponteiros
+         //increment the pointers
          if ByteBitP>=PByteSize then begin
            //se encontrou um byte ZERO (fim de string)
            //para de processar os valores.
+           //
+           //if found the terminator, finish the string.
            if ValueAux=0 then
              exit
            else
@@ -240,6 +309,7 @@ begin
 end;
 
 //codifica uma uma string em array de valores
+//encodes a string to a array of double.
 function  TPLCString.DecodeValue(value:String):TArrayOfDouble;
 var
   ValueAux, aux1, maxbits, bit, bs:Integer;
@@ -253,11 +323,13 @@ begin
 
 
   //usa a WriteFunction
+  //use the writefunction to determine the block size.
   bs := CalcBlockSize(true);
   SetLength(Result,bs);
 
   case PStringType of
     //formato de String SIEMENS de 7 ou  8 bits
+    //encodes a SIEMENS string, 7 or 8 bits of length
     stSIEMENS:
     begin
       strlen := Min(PStringSize, power(2,PByteSize)-1);
@@ -273,6 +345,8 @@ begin
       while bit<maxbits do begin
         //processa os dois primeiros bytes do formato siemens
         //que dizem o tamanho da string;
+        //
+        //stores in the first two bytes, the length of string.
         if bit<(2*PByteSize) then begin
           aux1 := Power(2,ByteBitP);
           if (strLen and aux1)=aux1 then
@@ -283,6 +357,7 @@ begin
             ByteP := 1;
           end;
           //processa os bytes da string
+          //processes the bytes of string.
           aux1 := Power(2,ByteBitP);
           if (ord(value[ByteP]) and aux1)=aux1 then begin
             ValueAux := ValueAux + Power(2,ValueBitP);
@@ -295,6 +370,7 @@ begin
         inc(ValueBitP);
 
         //incrementa os ponteiros
+        //increment the pointes.
         if ByteBitP>=PByteSize then begin
           inc(ByteP);
           ByteBitP := 0;
@@ -311,6 +387,7 @@ begin
       end;
     end;
     //formato de String C de 7 ou  8 bits
+    //C string format, 7 or 8 bits.
     stC:
     begin
       strlen := Min(Length(value), power(2,PByteSize)-1);
@@ -323,6 +400,7 @@ begin
       ValueAux := 0;
       while bit<maxbits do begin
         //processa os bytes da string
+        //processes the bytes of string.
         aux1 := Power(2,ByteBitP);
         if (ord(value[ByteP]) and aux1)=aux1 then
           ValueAux := ValueAux + Power(2,ValueBitP);
@@ -332,6 +410,7 @@ begin
         inc(ValueBitP);
 
         //incrementa os ponteiros
+        //increment the pointers.
         if ByteBitP>=PByteSize then begin
           inc(ByteP);
           ByteBitP := 0;
@@ -548,6 +627,7 @@ begin
     BitsByType := 8;
 
   //calcula o tamanho da string conforme o tipo
+  //calculate the string size depending of the format.
   case PStringType of
     stSIEMENS:
       strlen := (PStringSize + 2)*PByteSize;

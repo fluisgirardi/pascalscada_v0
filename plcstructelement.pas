@@ -1,3 +1,16 @@
+{$IFDEF PORTUGUES}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  @abstract(Implementação de tag item de uma estrutura de comunicação.)
+}
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  @abstract(Unit that implements a tag item of an structure communication.)
+}
+{$ENDIF}
 unit PLCStructElement;
 
 {$IFDEF FPC}
@@ -10,21 +23,40 @@ uses
   Classes, sysutils, Tag, PLCTag, PLCBlockElement, ProtocolTypes, PLCStruct;
 
 type
+  {$IFDEF PORTUGUES}
+  {:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+    @abstract(Classe de tag item de uma estrutura de comunicação.)
+  }
+  {$ELSE}
+  {:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+    @abstract(Class of a tag item of a structure communication tag.)
+  }
+  {$ENDIF}
   TPLCStructItem = class(TPLCBlockElement, ITagInterface, ITagNumeric)
   private
     PBlock:TPLCStruct;
   protected
     procedure SetBlock(blk:TPLCStruct);
+    //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(Value: Double); override;
+    //: @seealso(TPLCBlockElement.SetIndex)
     procedure SetIndex(i: Cardinal); override;
+    //: @seealso(TPLCTag.SetTagType)
     procedure SetTagType(newType: TTagType); override;
 
     //IHMITagInterface
     procedure NotifyTagChange(Sender:TObject); override;
     procedure RemoveTag(Sender:TObject); override;
+    //: @exclude
     procedure Loaded; override;
   public
+    //: @exclude
     constructor Create(AOwner:TComponent); override;
+    //: @exclude
     destructor Destroy; override;
   published
     //: @seealso(TPLCTag.TagType);
@@ -34,6 +66,11 @@ type
     //: @seealso(TPLCTag.SwapWords);
     property SwapWords;
 
+    {$IFDEF PORTUGUES}
+    //: Tag estrutura a que o item pertence.
+    {$ELSE}
+    //: Structure tag which the item belongs.
+    {$ENDIF}
     property PLCBlock:TPLCStruct read PBlock write SetBlock;
   end;
 
@@ -117,6 +154,7 @@ end;
 procedure TPLCStructItem.SetBlock(blk:TPLCStruct);
 begin
   //esta removendo do bloco.
+  //if the structure is being removed.
   if (blk=nil) and (Assigned(PBlock)) then begin
     PBlock.RemoveCallBacks(Self as IHMITagInterface);
     PBlock := nil;
@@ -124,6 +162,7 @@ begin
   end;
 
   //se esta setando o bloco
+  //if the structure is being set.
   if (blk<>nil) and (PBlock=nil) then begin
     PBlock := blk;
     PBlock.AddCallBacks(Self as IHMITagInterface);
@@ -131,6 +170,7 @@ begin
   end;
 
   //se esta setado o bloco, mas esta trocando
+  //if the structure is being replaced.
   if blk<>PBlock then begin
     PBlock.RemoveCallBacks(Self as IHMITagInterface);
     PBlock := blk;

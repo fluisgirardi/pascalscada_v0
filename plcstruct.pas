@@ -1,9 +1,16 @@
+{$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
-  @abstract(Implementação de um tag estrutura de comunicação com
-  suporte a multi-tipos de dados.)
+  @abstract(Implementação de um tag estrutura de comunicação.)
 }
+{$ELSE}
+{:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  @abstract(Unit that implements a structure communication tag.)
+}
+{$ENDIF}
 unit PLCStruct;
 
 {$IFDEF FPC}
@@ -16,15 +23,39 @@ uses
   Classes, PLCBlock, ProtocolTypes, Tag;
 
 type
+  {$IFDEF PORTUGUES}
+  {:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+    @abstract(Classe de tag estrutura de comunicação.)
+  }
+  {$ELSE}
+  {:
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+    @abstract(Class of an structure communication tag.)
+  }
+  {$ENDIF}
   TPLCStruct = class(TPLCBlock)
   protected
+    //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
+    //: @seealso(TPLCTag.TagCommandCallBack)
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
+    //: @seealso(TPLCTag.SetTagType)
     procedure SetTagType(newType:TTagType); override;
+    //: @seealso(TPLCTag.SetSwapWords)
     procedure SetSwapWords(v:Boolean); override;
+    //: @seealso(TPLCTag.SetSwapBytes)
     procedure SetSwapBytes(v:Boolean); override;
   public
+    //: @xclude
     constructor Create(AOwner:TComponent); override;
+    {$IFDEF PORTUGUES}
+    //: Abre o editor de strutura.
+    {$ELSE}
+    //: Opens the structure editor.
+    {$ENDIF}
     procedure OpenElementMapper(OwnerOfNewTags: TComponent; InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   end;
 
@@ -88,7 +119,13 @@ var
     %e  - Numero do item comecando de 0
     %0i - Numero do item comecando de 1, preenchido com zeros
     %0e - Numero do item comecando de 0, preenchido com zeros
+
+    %i  - Structure item number, starting of 1
+    %e  - Structure item number, starting of 0
+    %0i - Structure item number, starting of 1, filled with zeros at the left
+    %0e - Structure item number, starting of 0, filled with zeros at the left
     }
+
     has_atleastonereplacement:=(Pos('%i',namepattern)<>0) or
                                (Pos('%e',namepattern)<>0) or
                                (Pos('%0i',namepattern)<>0) or
@@ -104,6 +141,7 @@ var
   end;
 begin
   //se não está em design sai.
+  //if isn't at design time, exit.
   if [csDesigning]*ComponentState=[] then exit;
 
   frmstructedit:=TfrmStructureEditor.Create(nil);
