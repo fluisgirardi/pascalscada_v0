@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
 @abstract(Implementa a base para Tags de comunicação.)
 @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
+{$ELSE}
+{:
+@abstract(Unit that implements the base of an communication tag.)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ENDIF}
 unit PLCTag;
 
 {$IFDEF FPC}
@@ -14,10 +21,18 @@ uses
   SysUtils, ExtCtrls, Classes, Tag, ProtocolDriver, ProtocolTypes, Math;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Classe base para todos os tags de comunicação.)
   @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
+  {$ELSE}
+  {:
+  @abstract(Base class of a communication tag.)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
+  }
+  {$ENDIF}
   TPLCTag = class(TTag, IManagedTagInterface)
   private
     FRawProtocolValues:TArrayOfDouble;
@@ -36,166 +51,420 @@ type
     function IsValidTag:Boolean; virtual;
     procedure SetTagValidity(TagValidity:Boolean); virtual;
   protected
+    {$IFDEF PORTUGUES}
     //: Referencia ao objeto gerenciador de tags.
+    {$ELSE}
+    //: Stores the tag manager.
+    {$ENDIF}
     FTagManager:TObject;
+
+    {$IFDEF PORTUGUES}
     //: A escrita do tag deve ser sincrona ou assincrona
+    {$ELSE}
+    //: Tells if the write command will be synchronous or asynchronous.
+    {$ENDIF}
     FSyncWrites:Boolean;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o driver de protocolo usado para comunicação do tag.
+    {$ELSE}
+    //: Stores the protocol driver used by tag.
+    {$ENDIF}
     PProtocolDriver:TProtocolDriver;
+
+    {$IFDEF PORTUGUES}
     //: Data/Hora da última tentativa de leitura do valor do tag.
+    {$ELSE}
+    //: Date/time of the last scan read request of tag.
+    {$ENDIF}
     PLastScanTimeStamp:TDateTime;
+
+    {$IFDEF PORTUGUES}
     //: Data/Hora da última atualização do valor do tag.
+    {$ELSE}
+    //: Date/time of the last update of the tag value.
+    {$ENDIF}
     PValueTimeStamp:TDateTime;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o resultado da última leitura @bold(sincrona) realizada pelo tag.
+    {$ELSE}
+    //: Stores the I/O result of the last synchronous read command done.
+    {$ENDIF}
     PLastSyncReadCmdResult:TProtocolIOResult;
-    //: Armazena o resultado da última escrita sincrona realizada pelo tag.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o resultado da última escrita @bold(sincrona) realizada pelo tag.
+    {$ELSE}
+    //: Stores the I/O result of the last synchronous write command done.
+    {$ENDIF}
     PLastSyncWriteCmdResult:TProtocolIOResult;
-    //: Armazena o resultado da última leitura @bold(assincrona) realizada pelo tag.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o resultado da última leitura @bold(asincrona) realizada pelo tag.
+    {$ELSE}
+    //: Stores the I/O result of the last @bold(asynchronous) read command done.
+    {$ENDIF}
     PLastASyncReadCmdResult:TProtocolIOResult;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o resultado da última escrita @bold(assincrona) realizada pelo tag.
+    {$ELSE}
+    //: Stores the I/O result of the last synchronous write command done.
+    {$ENDIF}
     PLastASyncWriteCmdResult:TProtocolIOResult;
 
+    {$IFDEF PORTUGUES}
     //: Tipo de dado retornado pelo protocolo.
+    {$ELSE}
+    //: Stores the datatype returned by the protocol driver.
+    {$ENDIF}
     FProtocolTagType:TProtocolTagType;
+
+    {$IFDEF PORTUGUES}
     //: Tipo de dado do tag
+    {$ELSE}
+    //: Datatype of the tag.
+    {$ENDIF}
     FTagType:TTagType;
-    //: As words da palavra mesclada serão invertidas
+
+    {$IFDEF PORTUGUES}
+    //: Diz se as words da palavra (integer, cardinal e float) serão invertidas
+    {$ELSE}
+    //: Tells if the words of an DWORD (integer,cardinal and float) will be swaped.
+    {$ENDIF}
     FSwapWords:Boolean;
-    //: As bytes das words da palavra mesclada serão invertidas
+
+    {$IFDEF PORTUGUES}
+    //: Diz se os bytes da WORD (SmallInt, Word) serão invertidas.
+    {$ELSE}
+    //: Tells if the bytes of an WORD (SmallInt, Word) will be swaped.
+    {$ENDIF}
     FSwapBytes:Boolean;
 
+    {$IFDEF PORTUGUES}
+    //: Tamanho da palavra retornada pelo protocolo e em uso pelo tag, em bits.
+    {$ELSE}
+    //: Word size returned by the protocol and current word size of the tag.
+    {$ENDIF}
     FProtocolWordSize,
     FCurrentWordSize:Byte;
 
+    {$IFDEF PORTUGUES}
     //: Valores vindos do PLC são convertidos para o tipo de dados configurado no tag.
+    {$ELSE}
+    //: Convert values comming from the PLC to the datatype of the tag.
+    {$ENDIF}
     function PLCValuesToTagValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble; virtual;
 
+    {$IFDEF PORTUGUES}
     //: Valores vindo do tag são convertidos para o tipo de aceito pelo driver.
+    {$ELSE}
+    //: Convert values of the datatype of the tag to the datatype of the driver.
+    {$ENDIF}
     function TagValuesToPLCValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble; virtual;
 
+    {$IFDEF PORTUGUES}
     //: Retorna a média de tempo que o tag é atualizado.
+    {$ELSE}
+    //: Average scan update rate.
+    {$ENDIF}
     function GetAvgUpdateRate:Double;
 
+    {$IFDEF PORTUGUES}
     //: Retorna o tamanho real do tag.
+    {$ELSE}
+    //: Returns the real size of the tag.
+    {$ENDIF}
     procedure UpdateTagSizeOnProtocol;
 
+    {$IFDEF PORTUGUES}
     //: Recompila os valores do tag.
+    {$ELSE}
+    //: Rebuild the tag values.
+    {$ENDIF}
     procedure RebuildValues; virtual;
 
+    {$IFDEF PORTUGUES}
     {:
     Habilita/Desabilita o swap de words.
     @param(v Boolean: @true habilita, @false desabilita.)
     }
+    {$ELSE}
+    {:
+    Enable/disables the swap of words.
+    @param(v Boolean: @true enables the swap, @false disables.)
+    }
+    {$ENDIF}
     procedure SetSwapWords(v:Boolean); virtual;
 
+    {$IFDEF PORTUGUES}
     {:
     Habilita/Desabilita o swap de bytes.
     @param(v Boolean: @true habilita, @false desabilita.)
     }
+    {$ELSE}
+    {:
+    Enable/disables the swap of bytes.
+    @param(v Boolean: @true enables the swap, @false disables.)
+    }
+    {$ENDIF}
     procedure SetSwapBytes(v:Boolean); virtual;
 
-    //: @exclude
+    {$IFDEF PORTUGUES}
+    //: Define uma identificação unica do tag. Chamada pelo Tag Manager.
+    {$ELSE}
+    //: Sets a new unique tag identification. Called by the Tag Manager.
+    {$ENDIF}
     procedure SetGUID(v:String);
 
     //##########################################################################
 
+    {$IFDEF PORTUGUES}
     {:
     Habilita/Desabilita a leitura automática do tag.
     @param(v Boolean: @true habilita, @false desabilita.)
     }
+    {$ELSE}
+    {:
+    Enable/disables the automatic tag read.
+    @param(v Boolean: @true enables, @false disables (manual).)
+    }
+    {$ENDIF}
     procedure SetAutoRead(v:Boolean); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Habilita/Desabilita a escrita automática de valores do tag.
-    @param(v Boolean: @true habilita, @false desabilita.)
+    @param(v Boolean: @true automatico, @false manual.)
     }
+    {$ELSE}
+    {:
+    Enable/disables the automatic write of values of the tag.
+    @param(v Boolean: @true automatic, @false manual.)
+    }
+    {$ENDIF}
     procedure SetAutoWrite(v:Boolean); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o endereço da memória sendo mapeada.
     @param(v Cardinal. Endereço da memória sendo mapeada.)
     }
+    {$ELSE}
+    {:
+    Sets the memory address.
+    @param(v Cardinal. The memory address.)
+    }
+    {$ENDIF}
     procedure SetMemAddress(v:Cardinal); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o Arquivo/DB que contem a memória sendo mapeada.
     @param(v Cardinal. Arquivo/DB que a memória mapeada pertence.)
     }
+    {$ELSE}
+    {:
+    Sets the File/DB that contains the mapped memory.
+    @param(v Cardinal. File/DB number of your memory.)
+    }
+    {$ENDIF}
     procedure SetMemFileDB(v:Cardinal); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o função do driver para leitura da memória.
     @param(v Cardinal. Função do driver usada para leitura da memória.)
     }
+    {$ELSE}
+    {:
+    Sets the function to be used to read the memory.
+    @param(v Cardinal. Function number to read the memory.)
+    }
+    {$ENDIF}
     procedure SetMemReadFunction(v:Cardinal); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o função do driver para escrita de valores da memória.
     @param(v Cardinal. Função do driver usada para escrita de valores da memória.)
     }
+    {$ELSE}
+    {:
+    Sets the function to be used to write values on memory.
+    @param(v Cardinal. Function number to write values on memory.)
+    }
+    {$ENDIF}
     procedure SetMemWriteFunction(v:Cardinal); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o sub-endereço da memória sendo mapeada.
     @param(v Cardinal. Sub-endereço da memória sendo mapeada.)
     }
+    {$ELSE}
+    {:
+    Sets the sub-element of the memory being mapped.
+    @param(v Cardinal. The sub-element number of the memory being mapped.)
+    }
+    {$ENDIF}
     procedure SetMemSubElement(v:Cardinal); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o endereço longo (texto) do tag.
     @param(v String. Endereço longo (texto) do tag.)
     }
+    {$ELSE}
+    {:
+    Sets the long address (text) of the tag.
+    @param(v String. The long address of the tag (text).)
+    }
+    {$ENDIF}
     procedure SetPath(v:String); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o endereço do equipamento que contem a memória sendo mapeada.
     @param(v Cardinal. Endereço do equipamento onde está a memória.)
     }
-    procedure SetPLCStation(v:Cardinal); virtual;
+    {$ELSE}
     {:
-    Seta o Hack do equipamento que contem a memória sendo mapeada.
+    Sets the address of device being mapped.
+    @param(v Cardinal. The device address.)
+    }
+    {$ENDIF}
+    procedure SetPLCStation(v:Cardinal); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Seta o Rack do equipamento que contem a memória sendo mapeada.
     @param(v Cardinal. Hack do equipamento onde está a memória.)
     }
+    {$ELSE}
+    {:
+    Sets the Rack of the device being mapped.
+    @param(v Cardinal. The device Rack number.)
+    }
+    {$ENDIF}
     procedure SetPLCHack(v:Cardinal); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o Slot do equipamento que contem a memória sendo mapeada.
     @param(v Cardinal. Slot do equipamento onde está a memória.)
     }
+    {$ELSE}
+    {:
+    Sets the Slot number of the device being mapped.
+    @param(v Cardinal. The Slot number.)
+    }
+    {$ENDIF}
     procedure SetPLCSlot(v:Cardinal); virtual;
 
+    {$IFDEF PORTUGUES}
     {:
     Seta o tempo de varredura (atualização) da memória em milisegundos.
     @param(v Cardinal. Tempo em milisegundos que a memória deve ser atualizada.)
     }
+    {$ELSE}
+    {:
+    Sets the scan rate of the tag in milliseconds.
+    @param(v Cardinal. Scan rate in milliseconds.)
+    }
+    {$ENDIF}
     procedure SetRefreshTime(v:TRefreshTime); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Seta o driver de protocolo usado para a comunicação dessa memória.
     @param(p TProtocolDriver. Componente de protocolo usado para comunicação do tag.)
     }
+    {$ELSE}
+    {:
+    Sets the protocol driver to be used the read/write values on device.
+    @param(p TProtocolDriver. The protocol driver to be used to read/write values of your device.)
+    }
+    {$ENDIF}
     procedure SetProtocolDriver(p:TProtocolDriver); virtual;
 
-    //: configura o novo tipo de dado do tag.
+    {$IFDEF PORTUGUES}
+    //: Configura o novo tipo de dado do tag. @seealso(TTagType)
+    {$ELSE}
+    //: Sets the datatype of the tag. @seealso(TTagType)
+    {$ENDIF}
     procedure SetTagType(newType:TTagType); virtual;
 
     //##########################################################################
 
+
+    {$IFDEF PORTUGUES}
     //: Procedimento chamado pelo driver de protocolo para atualização de valores do tag.
+    {$ELSE}
+    //: Procedure called by the protocol driver to update tag values.
+    {$ENDIF}
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Compila uma estrutura com as informações do tag.
     @seealso(TTagRec)
     }
+    {$ELSE}
+    {:
+    Returns a structure with all informations about the tag.
+    @seealso(TTagRec)
+    }
+    {$ENDIF}
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
 
+    {$IFDEF PORTUGUES}
     //: Faz uma leitura @bold(assincrona) do tag.
+    {$ELSE}
+    //: Request a update of tag values.
+    {$ENDIF}
     procedure ScanRead; virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Escreve valores de maneira @bold(assincrona).
     @param(Values TArrayOfDouble: Array de valores a serem escritos.)
     @param(Count Cardinal: Quantidade de valores a serem escritos.)
     @param(Offset Cardinal: A partir de qual elemento deve comecar a escrita.)
     }
+    {$ELSE}
+    {:
+    Write values of the tag on your device @bold(asynchronous).
+    @param(Values TArrayOfDouble: Array of values to be written.)
+    @param(Count Cardinal: How many values will be written.)
+    @param(Offset Cardinal: Tells offset after the address where the values will be written.)
+    }
+    {$ENDIF}
     procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); virtual; abstract;
+
+    {$IFDEF PORTUGUES}
     //: Faz uma leitura @bold(sincrona) do valor do tag.
+    {$ELSE}
+    //: Request a @bold(synchronous) read of the tag value.
+    {$ENDIF}
     procedure Read; virtual; abstract;
+
+    {$IFDEF PORTUGUES}
     {:
     Escreve valores de maneira @bold(sincrona).
     @param(Values TArrayOfDouble: Array de valores a serem escritos.)
     @param(Count Cardinal: Quantidade de valores a serem escritos.)
     @param(Offset Cardinal: A partir de qual elemento deve comecar a escrita.)
     }
+    {$ELSE}
+    {:
+    Write values of the tag on your device @bold(synchronous).
+    @param(Values TArrayOfDouble: Array of values to be written.)
+    @param(Count Cardinal: How many values will be written.)
+    @param(Offset Cardinal: Tells offset after the address where the values will be written.)
+    }
+    {$ENDIF}
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); virtual; abstract;
 
     //: @exclude
@@ -241,59 +510,143 @@ type
     property Size nodefault;
     //: @seealso(TTag.LongAddress)
     property LongAddress write SetPath nodefault;
+
+    {$IFDEF PORTUGUES}
     {:
     Driver de protocolo usado para comunicação do mapeamento de memória.
     @seealso(TProtocolDriver)
     }
+    {$ELSE}
+    {:
+    Protocol driver used by tag to read/write values on your device.
+    @seealso(TProtocolDriver)
+    }
+    {$ENDIF}
     property ProtocolDriver:TProtocolDriver read PProtocolDriver write SetProtocolDriver;
+
+    {$IFDEF PORTUGUES}
     //: Data/Hora em que o valor do tag foi atualizado.
+    {$ELSE}
+    //: Date/time of the last update of the tag value.
+    {$ENDIF}
     property ValueTimestamp:TDateTime read PValueTimeStamp;
-    //: A escrita do tag deve ser sincrona
+
+    {$IFDEF PORTUGUES}
+    //: Caso @true, a escrita de valoes do tag vai ser @bold(sincrona).
+    {$ELSE}
+    //: If @true, the write of values will be @bold(synchronous).
+    {$ENDIF}
     property SyncWrites:Boolean read FSyncWrites write FSyncWrites default false ;
 
+    {$IFDEF PORTUGUES}
     //: Tipo do tag.
+    {$ELSE}
+    //: Datatype of the tag.
+    {$ENDIF}
     property TagType:TTagType read FTagType write SetTagType default pttDefault;
-    //: Diz se as words da palavra formada serão invertidas.
+
+    {$IFDEF PORTUGUES}
+    //: Diz se os bytes da WORD (SmallInt, Word) serão invertidas.
+    {$ELSE}
+    //: Tells if the bytes of an WORD (SmallInt, Word) will be swaped.
+    {$ENDIF}
     property SwapBytes:Boolean read FSwapBytes write SetSwapBytes default false;
-    //: Diz se os bytes das words da palavra formada serão invertidas.
+
+    {$IFDEF PORTUGUES}
+    //: Diz se as words da palavra formada serão invertidas.
+    {$ELSE}
+    //: Tells if the words of an DWORD (integer, cardinal and float) will be swaped.
+    {$ENDIF}
     property SwapWords:Boolean read FSwapWords write SetSwapWords default false;
-    //: Informa ao driver o tamanho real do tag.
+
+    {$IFDEF PORTUGUES}
+    //: Informa ao driver o tamanho real do tag no driver de protocolo.
+    {$ELSE}
+    //: Tells the real size of the tag on protocol driver.
+    {$ENDIF}
     property TagSizeOnProtocol:Integer read GetTagSizeOnProtocol;
+
+    {$IFDEF PORTUGUES}
     //: Informa a média de milisegundos que o tag está sendo atualizado.
+    {$ELSE}
+    //: Average update rate of the tag.
+    {$ENDIF}
     property AvgUpdateRate:Double read GetAvgUpdateRate;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor Destroy; override;
+
+    {$IFDEF PORTUGUES}
     {:
     Método chamado pelo driver de protocolo que elimina referências a ele.
     }
+    {$ELSE}
+    //: Called when the protocol driver is being destroyed.
+    {$ENDIF}
     procedure RemoveDriver;
   published
+
+    {$IFDEF PORTUGUES}
     {:
     Exibe o GUID do tag. Somente leitura.
     }
+    {$ELSE}
+    //: Tells the unique tag identification.
+    {$ENDIF}
     property TagGUID:String read PGUID write SetGUID;
+
+    {$IFDEF PORTUGUES}
     {:
     Resultado da última leitura @bold(sincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
+    {$ELSE}
+    {:
+    I/O result of the last @bold(synchronous) read done.
+    @seealso(TProtocolIOResult)
+    }
+    {$ENDIF}
     property LastSyncReadStatus:TProtocolIOResult Read PLastSyncReadCmdResult;
+
+    {$IFDEF PORTUGUES}
     {:
     Resultado da última escrita @bold(sincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
+    {$ELSE}
+    {:
+    I/O result of the last @bold(synchronous) write done.
+    @seealso(TProtocolIOResult)
+    }
+    {$ENDIF}
     property LastSyncWriteStatus:TProtocolIOResult Read PLastSyncWriteCmdResult;
+
+    {$IFDEF PORTUGUES}
     {:
-    Resultado da última leitura @bold(assincrona) realizada pelo tag.
+    Resultado da última leitura @bold(asincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
+    {$ELSE}
+    {:
+    I/O result of the last @bold(asynchronous) read done.
+    @seealso(TProtocolIOResult)
+    }
+    {$ENDIF}
     property LastASyncReadStatus:TProtocolIOResult Read PLastASyncReadCmdResult;
+
+    {$IFDEF PORTUGUES}
     {:
-    Resultado da última escrita @bold(assincrona) realizada pelo tag.
+    Resultado da última escrita @bold(asincrona) realizada pelo tag.
     @seealso(TProtocolIOResult)
     }
+    {$ELSE}
+    {:
+    I/O result of the last @bold(asynchronous) write done.
+    @seealso(TProtocolIOResult)
+    }
+    {$ENDIF}
     property LastASyncWriteStatus:TProtocolIOResult Read PLastASyncWriteCmdResult;
   end;
 
@@ -368,31 +721,29 @@ end;
 procedure TPLCTag.SetProtocolDriver(p:TProtocolDriver);
 begin
   //estou carregando meus parametros...
+  //if the tag is being loaded.
   if ([csReading,csLoading]*ComponentState<>[]) then begin
     FProtocoloOnLoading:=p;
     Exit;
   end;
 
-  //estou em tempo de desenvolvimento...
-  //if (csDesigning in ComponentState) then begin
-  //  PProtocolDriver := p;
-  //  GetNewProtocolTagSize;
-  //  exit;
-  //end;
-
   if p=PProtocolDriver then exit;
 
   //remove o driver antigo.
+  //removes the link with the old driver.
   if (PProtocolDriver<>nil) then begin
     //remove do scan do driver...
+    //removes the tag of the scan of the driver.
     if PAutoRead then
       PProtocolDriver.RemoveTag(self);
     PProtocolDriver := nil;
   end;
 
   //seta o novo driver.
+  //sets the new protocol driver.
   if (p<>nil) then begin
     //adiciona no scan do driver...
+    //add the tag to the scan of protocolo driver.
     PProtocolDriver := p;
     GetNewProtocolTagSize;
 
@@ -619,6 +970,9 @@ begin
   //calcula o tamanho real e o offset de acordo com
   //o tipo de tag e tamanho da palavra de dados
   //que está chegando do protocolo...
+  //
+  //calculate the real size and the real offset depending
+  //of the tag datatype and of protocol datatype.
   if FCurrentWordSize>=FProtocolWordSize then begin
     tr.Size   := (FCurrentWordSize div FProtocolWordSize)*Count;
     tr.OffSet := (FCurrentWordSize div FProtocolWordSize)*offset
@@ -816,6 +1170,7 @@ begin
   end;
 
   //calcula quantos bytes precisam ser alocados.
+  //calculate how many bytes must be allocated.
   SetLength(Result,0);
 
   case FProtocolTagType of
@@ -833,6 +1188,7 @@ begin
   ResetPointers;
 
   //move os dados para area de trabalho.
+  //move data to work memory.
   valueidx:=0;
   case FProtocolTagType of
     ptBit:
@@ -872,6 +1228,7 @@ begin
   AreaIdx:=0;
 
   //faz as inversoes caso necessário e move os dados para o resultado
+  //swap bytes and words (if necessary)
   case FTagType of
     pttShortInt, pttByte: begin
       inc(PtrByteWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
@@ -1012,6 +1369,7 @@ begin
   end;
 
   //calcula quantos bytes precisam ser alocados.
+  //calculate how many bytes must be allocated.
   SetLength(Result,0);
 
   if FCurrentWordSize>=FProtocolWordSize then begin
@@ -1036,8 +1394,8 @@ begin
   GetMem(PtrByte, AreaSize);
   ResetPointers;
 
-  //joga os valores puros lidos do driver para a area de memória
-  //para nao perder valores.
+  //joga os valores puros lidos do driver para a area de memória para nao perder valores.
+  //move the raw values to the work memory to don't loose data.
   valueidx:=0;
   case FProtocolTagType of
     ptByte, ptShortInt:
@@ -1069,6 +1427,7 @@ begin
   ResetPointers;
 
   //move os dados para area de trabalho.
+  //move data to the work memory.
   valueidx:=0;
   case FTagType of
     pttByte, pttShortInt: begin
@@ -1147,6 +1506,7 @@ begin
   ResetPointers;
   AreaIdx:=0;
   //faz as inversoes e move para o resultado.
+  //swap bytes and words (if necessary).
   case FProtocolTagType of
     ptBit: begin
        while AreaIdx<AreaSize do begin
@@ -1234,6 +1594,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
+//PASCALSCADA TAG MANAGER.
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TTagMananger.Create;

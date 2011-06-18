@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
 @abstract(Implementa o tag PLC numérico com comunicação.)
 @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
+{$ELSE}
+{:
+@abstract(Unit that implements a numeric tag with communication.)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ENDIF}
 unit PLCTagNumber;
 
 {$IFDEF FPC}
@@ -14,10 +21,18 @@ uses
   SysUtils, Classes, Tag, PLCNumber, ProtocolTypes, variants;
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Tag numérico com comunicação individual.)
   @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
+  {$ELSE}
+  {:
+  @abstract(Single numeric tag with communication.)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
+  }
+  {$ENDIF}
   TPLCTagNumber = class(TPLCNumber, IScanableTagInterface, ITagInterface, ITagNumeric)
   private
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
@@ -258,7 +273,6 @@ begin
       tcScanRead,tcRead,tcInternalUpdate:
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
-          //atualiza os dois valores (direto ou indireto) independende do caso do pedido.
           notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
           PValueRaw := TagValues[0];
           PValueTimeStamp := ValuesTimeStamp;
