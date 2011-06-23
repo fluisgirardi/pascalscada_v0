@@ -78,22 +78,24 @@ type
     function GetValueRaw:Double; virtual; abstract;
 
     {$IFDEF PORTUGUES}
-    {: Processa pelas escalas e escreve o valor processado de modo @bold(assincrono).
-    @param(Value Double: Valor a processar e escrever.) }
+    {: Processa pelas escalas associadas e escreve o valor processado no dispositivo.
+    @param(Value Double: Valor a processar e escrever.)
+    @seealso(SetValueRaw)
+    }
     {$ELSE}
     {:
-    Processes the value using linked scales and writes the value processed
-    @bold(assynchronous).
+    Processes the value using linked scales and writes the value processed on device.
     @param(Value Double: Value to be processed and written in device.)
+    @seealso(SetValueRaw)
     }
     {$ENDIF}
     procedure SetValue(Value:Double); virtual;
 
     {$IFDEF PORTUGUES}
-    {: Escreve o valor do tag de modo @bold(assincrono).
+    {: Escreve o valor puro do tag no dispositivo.
        @param(Value Double: Valor a escrever.) }
     {$ELSE}
-    {: Write the raw value @bold(assynchronous).
+    {: Write the raw value on device.
        @param(Value Double: Value to be written.) }
     {$ENDIF}
     procedure SetValueRaw(Value:Double); virtual; abstract;
@@ -185,7 +187,7 @@ type
     property Value:Double read GetValue write SetValue;
 
     {$IFDEF PORTUGUES}
-    //: Valor do tag puro @bold(assincrono).
+    //: Valor puro do tag.
     {$ELSE}
     //: Raw value of the tag.
     {$ENDIF}
