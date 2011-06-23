@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
 @abstract(Atualiza os valores dos tags.)
 @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
+{$ELSE}
+{:
+@abstract(Updates the tag values.)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ENDIF}
 unit protscanupdate;
 
 {$IFDEF FPC}
@@ -18,12 +25,20 @@ uses
 
 type
 
+  {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-  Classe de thread responsável por atualizar os tags após o driver processar
-  leituras/escritas por scan. Usado por TProtocolDriver.
+  Classe de thread responsável por atualizar os valores dos tags. Usado por
+  TProtocolDriver.
   @seealso(TProtocolDriver)
   }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  Class of thread that updates the tag values. Used by TProtocolDriver.
+  @seealso(TProtocolDriver)
+  }
+  {$ENDIF}
   TScanUpdate = class(TCrossThread)
   private
     FOwnerProtocolDriver:TComponent;
@@ -51,31 +66,65 @@ type
     constructor Create(StartSuspended:Boolean; OwnerProtocol:TComponent);
     //: @exclude
     destructor Destroy; override;
+
+    {$IFDEF PORTUGUES}
     //: Sinaliza para thread Terminar.
+    {$ELSE}
+    //: Requests the thread finalization.
+    {$ENDIF}
     procedure Terminate;
+
+    {$IFDEF PORTUGUES}
     {:
     Faz a atualização de um tag que solicitou uma LEITURA por scan.
 
-    Retorna principalmente valores e resultados das leituras do driver.
     @param(Tag TTagRec. Estrutura com as informações do tag.)
     @raises(Exception caso a thread esteja suspensa ou não sinalize a sua
             inicialização em 5 segundos.)
     }
+    {$ELSE}
+    {:
+    Updates the tag that requested a scan read.
+
+    @param(Tag TTagRec. Structure with informations about the tag.)
+    @raises(Exception if the thread was not initialized.)
+    }
+    {$ENDIF}
     procedure ScanRead(Tag:TTagRec);
+
+    {$IFDEF PORTUGUES}
     {:
     Faz a atualização de um tag que solicitou uma ESCRITA por scan.
 
-    Retorna principalmente valores e resultados da escrita do driver.
     @param(SWPkg PScanWriteRec. Ponteiro para estrutura com as informações
            da escrita por scan do tag.)
     @raises(Exception caso a thread esteja suspensa ou não sinalize a sua
             inicialização em 5 segundos.)
     }
+    {$ELSE}
+    {:
+    Updates the the tag that requested a scan write.
+
+    @param(SWPkg PScanWriteRec. Points to a structure with informations about
+           the scan write and Tag.)
+    @raises(Exception if the thread was not initialized.)
+    }
+    {$ENDIF}
     procedure ScanWriteCallBack(SWPkg:PScanWriteRec);
   published
-    //: Evento chamado pela thread para executar uma leitura por scan.
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado pela thread para pegar e atualizar um tag.
+    {$ELSE}
+    //: Event called by thread to get values and update a tag.
+    {$ENDIF}
     property OnGetValue:TGetValues read PGetValues write PGetValues;
+
+    {$IFDEF PORTUGUES}
     //: função que retorna o tempo do proximo scan ou a lista de tags que estão na vez de serem lidos.
+    {$ELSE}
+    //: Returns the lists of tags to be updated or the next time to check has tags to be updated.
+    {$ENDIF}
     property OnScanTags:TGetMultipleValues read PScanTags write PScanTags;
   end;
 
@@ -85,6 +134,7 @@ uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
+//                    implementation of TScanUpdate class
 ////////////////////////////////////////////////////////////////////////////////
 constructor TScanUpdate.Create(StartSuspended:Boolean; OwnerProtocol:TComponent);
 begin
@@ -223,10 +273,12 @@ begin
           FCmd:=tcScanWrite;
 
           //sincroniza com o tag.
+          //sync tag (update it)
           Synchronize(SyncCallBack);
 
           //libera a memoria ocupada
           //pelo pacote
+          //free the memory of the request
           SetLength(x^.ValuesToWrite,0);
           Dispose(x);
           TagCBack:=nil;
@@ -247,6 +299,7 @@ begin
           Synchronize(SyncCallBack);
 
           //libera a memoria ocupada pelos pacotes
+          //free the memory of the request
           SetLength(Fvalues.Values, 0);
           Dispose(FTagRec);
           TagCBack:=nil;

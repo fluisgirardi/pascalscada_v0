@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
 @abstract(Processa os pedidos de leitura e escrita por scan.)
 @author(Fabio Luis Girardi fabio@pascalscada.com)
 }
+{$ELSE}
+{:
+@abstract(Process request of read and write by scan (asynchronous).)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ENDIF}
 unit protscan;
 
 {$IFDEF FPC}
@@ -19,6 +26,7 @@ uses
 
 type
 
+  {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   Classe de thread reponsável processar as escritas por scan e por manter os
@@ -26,6 +34,14 @@ type
   TProtocolDriver.
   @seealso(TProtocolDriver)
   }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  Thread class that processes the requests the reads and writes by scan (asynchronous)
+  and keep the tag values updated. Used by the class TProtocolDriver.
+  @seealso(TProtocolDriver)
+  }
+  {$ENDIF}
   TScanThread = class(TCrossThread)
   private
     FInitEvent:TCrossEvent;
@@ -49,10 +65,28 @@ type
     constructor Create(StartSuspended:Boolean; ScanUpdater:TScanUpdate);
     //: @exclude
     destructor Destroy; override;
+
+    {$IFDEF PORTUGUES}
     //:Ordena a thread verificar se há comandos de escrita pendentes.
+    {$ELSE}
+    //: Verifies if the thread has write requests on queue.
+    {$ENDIF}
     procedure CheckScanWriteCmd;
-    //: Ao chamar @name, espera a thread sinalizar a sua inicialização.
+
+    {$IFDEF PORTUGUES}
+    {:
+    Ao chamar @name, espera a thread sinalizar a sua inicialização. Se ela já foi
+    inicializada, não faz nada.
+    }
+    {$ELSE}
+    {:
+    When @name is called, waits the thread initialization. If it's already
+    initialized, does nothing.
+    }
+    {$ENDIF}
     procedure WaitInit;
+
+    {$IFDEF PORTUGUES}
     {:
     Solicita uma escrita de valores por scan para a thread do driver de protocolo.
 
@@ -61,28 +95,48 @@ type
     @raises(Exception caso a thread esteja suspensa ou não sinalize a sua
             inicialização em 5 segundos.)
     }
-    procedure ScanWrite(SWPkg:PScanWriteRec);
+    {$ELSE}
     {:
-    Atualiza as informações do driver a respeito dos tags dependentes. Chamado
-    quando alguma propriedade de um tag sofre alguma mudança.
-    @param(Tag TTag. Tag quem sofreu a mudança.)
-    @param(Change TChangeType. Que propriedade sofreu a alteração.)
-    @param(oldValue Cardinal. Valor antigo da propriedade.)
-    @param(newValue Cardinal. Novo valor da propriedade.)
-    @seealso(TProtocolDriver.TagChanges)
+    Put a values write request to be processed by the scan (queue) of protocol.
+
+    @param(SWPkg PScanWriteRec. Points to a structure with informations about
+           the write command.)
+    @raises(Exception if the thread didn't responds.)
     }
+    {$ENDIF}
+    procedure ScanWrite(SWPkg:PScanWriteRec);
   published
+    {$IFDEF PORTUGUES}
     {:
     Diz quantos milisegundos o driver esperar caso não seja feita nenhuma
     operação de scan, a fim de evitar alto consumo de processador inutilmente.
     }
+    {$ELSE}
+    {:
+    How many milliseconds the thread will sleep if it didn't nothing, to avoid
+    the high CPU usage.
+    }
+    {$ENDIF}
     property MinTimeOfScan:Cardinal read FMinScan write FMinScan nodefault;
+
+    {$IFDEF PORTUGUES}
     //: Evento chamado para realizar a atualização do valores dos tags.
+    {$ELSE}
+    //: Event called to execute a scan read command.
+    {$ENDIF}
     property OnDoScanRead:TScanReadProc read FDoScanRead write FDoScanRead;
+
+    {$IFDEF PORTUGUES}
     {:
     Evento chamado para executar uma escrita por scan.
     @seealso(TScanWriteProc)
     }
+    {$ELSE}
+    {:
+    Event called to execute a scan write command.
+    @seealso(TScanWriteProc)
+    }
+    {$ENDIF}
     property OnDoScanWrite:TScanWriteProc read FDoScanWrite write FDoScanWrite;
   end;
 
@@ -92,6 +146,7 @@ uses hsstrings{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
+//                    implementation of TScanThread Class
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TScanThread.Create(StartSuspended:Boolean; ScanUpdater:TScanUpdate);
@@ -119,6 +174,7 @@ var
   NeedSleep:Integer;
 begin
   //sinaliza q a fila de mensagens esta criada
+  //set as initialized the thread
   FInitEvent.SetEvent;
   while not Terminated do begin
     CheckScanWriteCmd;
@@ -188,6 +244,7 @@ begin
     raise Exception.Create(SthreadSuspended);
 
   //envia a mensagem
+  //sends the message.
   FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
   FWaitToWrite.SetEvent;
 end;
