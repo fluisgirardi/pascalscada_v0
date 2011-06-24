@@ -1,5 +1,6 @@
+{$IFDEF PORTUGUES}
 {:
-  @abstract(Implmentação do protocolo ISOTCP.)
+  @abstract(Implementação do protocolo ISOTCP.)
   Este driver é baseado no driver ISOTCP da biblioteca
   LibNODAVE de Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
@@ -7,6 +8,17 @@
 
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implementation of ISOTCP protocol.)
+  This driver is based on ISOTCP implementation of LibNODAVE library of Thomas
+  Hergenhahn (thomas.hergenhahn@web.de).
+
+  This driver doesn't use the Libnodave library, it's a rewritten of it.
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit s7family;
 
 {$IFDEF FPC}
@@ -20,6 +32,7 @@ uses
   commtypes;
 
 type
+  {$IFDEF PORTUGUES}
   {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
      de Thomas Hergenhahn (thomas.hergenhahn@web.de).
 
@@ -28,7 +41,7 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Para configurar um tag, é necessário preencher as propriedade PLCStation,
-  PLCHack e PLCSlot para endereçar o CLP. Para endereçar a memória dentro do CLP
+  PLCRack e PLCSlot para endereçar o CLP. Para endereçar a memória dentro do CLP
   é necessário prencher as propriedades MemAddress e MemReadFunction e no caso
   de um DB preencha também a propriedade MemFile_DB com o número do DB. O tipo
   da variável é escolida na propriedade TagType.
@@ -63,9 +76,52 @@ type
   1, MemAddress o valor 3 e na propriedade TagType o valor pttByte e para
   acessar a MD100 (DWord) basta colocar o valor 5 em MemReadFunction, 100 em
   MemAddres e pttDword em TagType.
+  }
+  {$ELSE}
+  {: Siemens S7 protocol drivers family. Based on LibNodave library of
+  Thomas Hergenhahn (thomas.hergenhahn@web.de).
+
+  This driver doesn't use the Libnodave library, it's a rewritten of it.
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  To setup a tag, you must set the properties PLCStation, PLCRack and PLCSlot
+  to address your PLC. To address a memory inside the PLC, you must set the
+  properties MemAddress and MemReadFunction (see the table below) and if is a DB
+  that is being addressed, set the DB number on property MemFile_DB. The datatype
+  of tag can be selected on property TagType.
+
+  If the TagType is a Word, SmalltInt, Integer, DWord or Float you must set too
+  the properties SwapBytes and SwapWord to @true to get the PLC values correctly.
+
+  To choose the memory area, set the property MemReadFunction as show below:
+
+  Area:
+  @table(
+    @rowHead( @cell(Area)                            @cell(Value) @cell(Observation) )
+    @row(     @cell(Inputs)                          @cell( 1)    @cell( - ))
+    @row(     @cell(Outputs)                         @cell( 2)    @cell( - ))
+    @row(     @cell(Flags or M's)                    @cell( 3)    @cell( - ))
+    @row(     @cell(DB and V no S7-200 )             @cell( 4)    @cell( - ))
+    @row(     @cell(Counter, S7 300/400)             @cell( 5)    @cell(TagType property must be pttWord))
+    @row(     @cell(Timer, S7 300/400)               @cell( 6)    @cell(TagType property must be pttWord))
+
+    @row(     @cell(Special Memory, SM, S7-200)      @cell( 7)    @cell( - ))
+    @row(     @cell(Analog Input, S7-200)            @cell( 8)    @cell( - ))
+    @row(     @cell(Analog Output, S7-200)           @cell( 9)    @cell( - ))
+    @row(     @cell(Counter, S7-200)                 @cell(10)    @cell(TagType property must be pttWord))
+    @row(     @cell(Timer, S7-200)                   @cell(11)    @cell(TagType property must be pttWord))
+
+    @row(     @cell(Analog Input (PIW), S7 300/400)  @cell(12)    @cell(TagType property must be pttWord))
+  )
+
+  So, to address the IB3, you must set the property MemReadFunction the value 1,
+  the MemAddress the value 3 and the property TagType the value pttByte. To
+  address the MD100 (DWord) you must set MemReadFunction to 5, the MemAddres to
+  100 and pttDword on TagType.
 
   }
-
+  {$ENDIF}
   TSiemensProtocolFamily = class(TProtocolDriver)
   protected
     function  GetTagInfo(tagobj:TTag):TTagRec;
