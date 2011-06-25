@@ -376,31 +376,318 @@ type
     }
     {$ELSE}
     {:
-    Creates a PDU structure from the message.
+    Creates a PDU structure from message.
     @param(msg BYTES. Menssage to get the PDU structure.)
     @param(MsgOutgoing Boolean. If @true the message will be sent to PLC, if not
            the message is comming from the PLC.)
     @param(PDU TPDU. The PDU structure extracted from message.)
-    @returns(O código de erro presente na PDU, caso exista.)
+    @returns(The error number of PDU, if exists.)
     }
     {$ENDIF}
     function  SetupPDU(var msg:BYTES; MsgOutgoing:Boolean; out PDU:TPDU):Integer; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Prepara a mensagem para requisitar uma leitura de memórias do CLP.
+    @param(msgOut BYTES. Mensagem a enviar ao CLP requisitando uma leitura.)
+    }
+    {$ELSE}
+    {:
+    Prepares the message to do a memory read request from PLC.
+    @param(msgOut BYTES. Message to be sent to PLC requesting a memory read.)
+    }
+    {$ENDIF}
     procedure PrepareReadRequest(var msgOut:BYTES); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Prepara a mensagem para escrever nas memórias do CLP.
+    @param(msgOut BYTES. Mensagem a enviar ao CLP requisitando uma leitura.)
+    }
+    {$ELSE}
+    {:
+    Prepares the message to write data into the PLC memory.
+    @param(msgOut BYTES. Message to sent to write data into the PLC memory.)
+    }
+    {$ENDIF}
     procedure PrepareWriteRequest(var msgOut:BYTES); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Prepara a mensagem para ler ou escrever no CLP.
+    @param(WriteRequest Boolean. Se true, a mensagem irá escrever dados na memória do CLP.)
+    @param(msgOut BYTES. Mensagem a ser preparada para um comando de leitura/escrita.)
+    }
+    {$ELSE}
+    {:
+    Prepares the message to read or write on PLC.
+    @param(WriteRequest Boolean. If @true, the message will write something in PLC memory.)
+    @param(msgOut BYTES. Message to be prepared to request a read/write.)
+    }
+    {$ENDIF}
     procedure PrepareReadOrWriteRequest(const WriteRequest:Boolean; var msgOut:BYTES); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Adiciona as informações sobre o que deve ser lido do CLP.
+    @param(msgOut BYTES. Mensagem a enviar ao CLP requisitando uma leitura.)
+    @param(iArea Integer. Área de memória desejada.
+           @seealso(vtS7_200_SysInfo)
+           @seealso(vtS7_200_SM)
+           @seealso(vtS7_200_AnInput)
+           @seealso(vtS7_200_AnOutput)
+           @seealso(vtS7_200_Counter)
+           @seealso(vtS7_200_Timer)
+           @seealso(vtS7_Peripheral)
+           @seealso(vtS7_Inputs)
+           @seealso(vtS7_Outputs)
+           @seealso(vtS7_Flags)
+           @seealso(vtS7_DB)
+           @seealso(vtS7_DI)
+           @seealso(vtS7_Local)
+           @seealso(vtS7_V)
+           @seealso(vtS7_Counter)
+           @seealso(vtS7_Timer)
+    )
+    @param(iDBnum Integer. Caso iArea seja vtS7_DB, especifique aqui o número do DB.)
+    @param(iStart Integer. Endereço inicial da memória.)
+    @param(iByteCount Integer. Quantidade de bytes a ler.)
+    }
+    {$ELSE}
+    {:
+    Add into the outgoing message, informations about what must be read from PLC.
+    @param(msgOut BYTES. Message to be sent to PLC requesting a memory read.)
+    @param(iArea Integer. Wanted memory area.
+           @seealso(vtS7_200_SysInfo)
+           @seealso(vtS7_200_SM)
+           @seealso(vtS7_200_AnInput)
+           @seealso(vtS7_200_AnOutput)
+           @seealso(vtS7_200_Counter)
+           @seealso(vtS7_200_Timer)
+           @seealso(vtS7_Peripheral)
+           @seealso(vtS7_Inputs)
+           @seealso(vtS7_Outputs)
+           @seealso(vtS7_Flags)
+           @seealso(vtS7_DB)
+           @seealso(vtS7_DI)
+           @seealso(vtS7_Local)
+           @seealso(vtS7_V)
+           @seealso(vtS7_Counter)
+           @seealso(vtS7_Timer)
+    )
+    @param(iDBnum Integer. If iArea is vtS7_DB, what's the DB number.)
+    @param(iStart Integer. Start address of memory.)
+    @param(iByteCount Integer. How many bytes to read.)
+    }
+    {$ENDIF}
     procedure AddToReadRequest(var msgOut:BYTES; iArea, iDBnum, iStart, iByteCount:Integer); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Adiciona as informações sobre onde e o que deve escrito na memória do CLP na mensagem a ser enviada.
+    @param(msgOut BYTES. Mensagem a enviar com o comando de escrita de dados no CLP.)
+    @param(iArea Integer. Área de memória que se desejada escrever.
+           @seealso(vtS7_200_SysInfo)
+           @seealso(vtS7_200_SM)
+           @seealso(vtS7_200_AnInput)
+           @seealso(vtS7_200_AnOutput)
+           @seealso(vtS7_200_Counter)
+           @seealso(vtS7_200_Timer)
+           @seealso(vtS7_Peripheral)
+           @seealso(vtS7_Inputs)
+           @seealso(vtS7_Outputs)
+           @seealso(vtS7_Flags)
+           @seealso(vtS7_DB)
+           @seealso(vtS7_DI)
+           @seealso(vtS7_Local)
+           @seealso(vtS7_V)
+           @seealso(vtS7_Counter)
+           @seealso(vtS7_Timer)
+    )
+    @param(iDBnum Integer. Caso iArea seja vtS7_DB, especifique aqui o número do DB.)
+    @param(iStart Integer. Endereço inicial da memória.)
+    @param(buffer BYTES. Dados a serem escritos no CLP.)
+    }
+    {$ELSE}
+    {:
+    Add into the outgoing message, informations about the data to be written on PLC.
+    @param(msgOut BYTES. Message to be sent to write data on PLC.)
+    @param(iArea Integer. Wanted memory area.
+           @seealso(vtS7_200_SysInfo)
+           @seealso(vtS7_200_SM)
+           @seealso(vtS7_200_AnInput)
+           @seealso(vtS7_200_AnOutput)
+           @seealso(vtS7_200_Counter)
+           @seealso(vtS7_200_Timer)
+           @seealso(vtS7_Peripheral)
+           @seealso(vtS7_Inputs)
+           @seealso(vtS7_Outputs)
+           @seealso(vtS7_Flags)
+           @seealso(vtS7_DB)
+           @seealso(vtS7_DI)
+           @seealso(vtS7_Local)
+           @seealso(vtS7_V)
+           @seealso(vtS7_Counter)
+           @seealso(vtS7_Timer)
+    )
+    @param(iDBnum Integer. If iArea is vtS7_DB, what's the DB number.)
+    @param(iStart Integer. Start address of memory.)
+    @param(buffer BYTES. Data to be written on PLC.)
+    }
+    {$ENDIF}
     procedure AddParamToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Adiciona os dados que devem ser escritos na memória do CLP na mensagem a ser enviada.
+    @param(msgOut BYTES. Mensagem a enviar com o comando de escrita de dados no CLP.)
+    @param(iArea Integer. Área de memória que se desejada escrever.
+           @seealso(vtS7_200_SysInfo)
+           @seealso(vtS7_200_SM)
+           @seealso(vtS7_200_AnInput)
+           @seealso(vtS7_200_AnOutput)
+           @seealso(vtS7_200_Counter)
+           @seealso(vtS7_200_Timer)
+           @seealso(vtS7_Peripheral)
+           @seealso(vtS7_Inputs)
+           @seealso(vtS7_Outputs)
+           @seealso(vtS7_Flags)
+           @seealso(vtS7_DB)
+           @seealso(vtS7_DI)
+           @seealso(vtS7_Local)
+           @seealso(vtS7_V)
+           @seealso(vtS7_Counter)
+           @seealso(vtS7_Timer)
+    )
+    @param(iDBnum Integer. Caso iArea seja vtS7_DB, especifique aqui o número do DB.)
+    @param(iStart Integer. Endereço inicial da memória.)
+    @param(buffer BYTES. Dados a serem escritos no CLP.)
+    }
+    {$ELSE}
+    {:
+    Add into the outgoing message the data to be written on PLC.
+    @param(msgOut BYTES. Message to be sent to write data on PLC.)
+    @param(iArea Integer. Wanted memory area.
+           @seealso(vtS7_200_SysInfo)
+           @seealso(vtS7_200_SM)
+           @seealso(vtS7_200_AnInput)
+           @seealso(vtS7_200_AnOutput)
+           @seealso(vtS7_200_Counter)
+           @seealso(vtS7_200_Timer)
+           @seealso(vtS7_Peripheral)
+           @seealso(vtS7_Inputs)
+           @seealso(vtS7_Outputs)
+           @seealso(vtS7_Flags)
+           @seealso(vtS7_DB)
+           @seealso(vtS7_DI)
+           @seealso(vtS7_Local)
+           @seealso(vtS7_V)
+           @seealso(vtS7_Counter)
+           @seealso(vtS7_Timer)
+    )
+    @param(iDBnum Integer. If iArea is vtS7_DB, what's the DB number.)
+    @param(iStart Integer. Start address of memory.)
+    @param(buffer BYTES. Data to be written on PLC.)
+    }
+    {$ENDIF}
     procedure AddDataToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES); virtual;
   protected
+    {$IFDEF PORTUGUES}
+    //: Coloca o CLP em RUN, se possível. Não funciona ainda.
+    {$ELSE}
+    //: Put the PLC in RUN state, if possible. Don't work yet.
+    {$ENDIF}
     procedure RunPLC(CPU:TS7CPU);
+
+    {$IFDEF PORTUGUES}
+    //: Coloca o CLP em STOP, se possível. Não funciona ainda.
+    {$ELSE}
+    //: Stops the PLC, if possible. Don't work yet.
+    {$ENDIF}
     procedure StopPLC(CPU:TS7CPU);
+
+    //: @exclude.
     procedure CopyRAMToROM(CPU:TS7CPU);
+    //: @exclude.
     procedure CompressMemory(CPU:TS7CPU);
+
+    {$IFDEF PORTUGUES}
+    //: Converte um número de erro Siemens para um erro de protocolo.
+    {$ELSE}
+    //: Converts a Siemens error code to a protocol error code.
+    {$ENDIF}
     function  S7ErrorCodeToProtocolErrorCode(code:Word):TProtocolIOResult;
   protected
+    {$IFDEF PORTUGUES}
+    {:
+    Converte TArrayOfDouble para BYTES.
+    @param(Values TArrayOfDouble. Array a ser convertida.)
+    @param(Start Integer. A partir de qual elemento deve ser iniciada a conversão.)
+    @param(Len Integer. Quantos elementos da array devem ser convertidos.)
+    @returns(Array de BYTES convertida.)
+    }
+    {$ELSE}
+    {:
+    Converts TArrayOfDouble to BYTES.
+    @param(Values TArrayOfDouble. Array to be converted.)
+    @param(Start Integer. First element of Values to be converted.)
+    @param(Len Integer. How many elements to convert from Start.)
+    @returns(Converted Array of BYTES.)
+    }
+    {$ENDIF}
     function  DoublesToBytes(const Values:TArrayOfDouble; Start, Len:Integer):BYTES;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Converte BYTES para TArrayOfDouble.
+    @param(ByteSeq BYTES. Array de byte a ser convertida para double.)
+    @param(Start Integer. A partir de qual elemento deve ser iniciada a conversão.)
+    @param(Len Integer. Quantos elementos da array devem ser convertidos.)
+    @returns(Array de TArrayOfDouble.)
+    }
+    {$ELSE}
+    {:
+    Converts BYTES to TArrayOfDouble.
+    @param(ByteSeq BYTES. Array of byte to be converted to Double.)
+    @param(Start Integer. First element of ByteSeq to be converted.)
+    @param(Len Integer. How many elements to convert from Start.)
+    @returns(Array of TArrayOfDouble.)
+    }
+    {$ENDIF}
     function  BytesToDoubles(const ByteSeq:BYTES; Start, Len:Integer):TArrayOfDouble;
-    function  CreateCPU(iHack, iSlot, iStation:Integer):integer; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Cria um CLP na lista de CLP's endereçados.
+    @param(iRack Integer. Rack do CLP)
+    @param(iSlot Integer. Slot do CLP)
+    @param(iStation Integer. Endereço do CLP)
+    @returns(O indice do CLP na lista.)
+
+    }
+    {$ELSE}
+    {:
+    Creates a  PLC in the addressed PLC's list.
+    @param(iRack Integer. PLC Rack.)
+    @param(iSlot Integer. PLC Slot.)
+    @param(iStation Integer. PLC Address.)
+    @returns(The PLC index on PLC list.)
+    }
+    {$ENDIF}
+    function  CreateCPU(iRack, iSlot, iStation:Integer):integer; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Atualiza os valores dos gerenciadores de memórias não continuas.
+    @param(pkgin BYTES. )
+    @param(pkgout BYTES. )
+    @param(writepkg Boolean. )
+    @param(ReqList TS7ReqList. )
+    @param(ResultValues TArrayOfDouble. )
+    }
+    {$ELSE}
+
+    {$ENDIF}
 {ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
 {ok}procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
 {ok}procedure DoDelTag(TagObj:TTag); override;
@@ -1096,7 +1383,7 @@ begin
   end;
 end;
 
-function TSiemensProtocolFamily.CreateCPU(iHack, iSlot, iStation:Integer):Integer;
+function TSiemensProtocolFamily.CreateCPU(iRack, iSlot, iStation:Integer):Integer;
 begin
   Result:=Length(FCPUs);
   SetLength(FCPUs,Result+1);
@@ -1105,7 +1392,7 @@ begin
     MaxPDULen:=0;
     Connected:=false;
     Slot:=iSlot;
-    Rack:=iHack;
+    Rack:=iRack;
     Station:=iStation;
 
     Inputs           :=TPLCMemoryManager.Create;

@@ -112,16 +112,16 @@ const
   vtS7_200_Timer   =  31;
 
 
-  vtS7_Peripheral = $80;
-  vtS7_Inputs     = $81;
-  vtS7_Outputs    = $82;
-  vtS7_Flags      = $83;
-  vtS7_DB         = $84;
-  vtS7_DI         = $85;  //DB Instanciado
-  vtS7_Local      = $86;  //not tested
-  vtS7_V          = $87;
-  vtS7_Counter    =  28;  //S7 counters
-  vtS7_Timer      =  29;  // S7 timers
+  vtS7_Peripheral  = $80;
+  vtS7_Inputs      = $81;
+  vtS7_Outputs     = $82;
+  vtS7_Flags       = $83;
+  vtS7_DB          = $84;
+  vtS7_DI          = $85;  //DB Instanciado
+  vtS7_Local       = $86;  //not tested
+  vtS7_V           = $87;
+  vtS7_Counter     =  28;  //S7 counters
+  vtS7_Timer       =  29;  // S7 timers
 
   S7FuncOpenS7Connection = $F0;
   S7FuncRead             = $04;
