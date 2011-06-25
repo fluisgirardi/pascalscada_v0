@@ -124,31 +124,266 @@ type
   {$ENDIF}
   TSiemensProtocolFamily = class(TProtocolDriver)
   protected
+    {$IFDEF PORTUGUES}
+    //: Retorna uma estrutura com informações sobre o tag.
+    {$ELSE}
+    //: Returns a structure with informations about the tag.
+    {$ENDIF}
     function  GetTagInfo(tagobj:TTag):TTagRec;
+
+    {$IFDEF PORTUGUES}
+    //: Pega um byte de um ponteiro de bytes.
+    {$ELSE}
+    //: Gets a byte from a pointer of bytes.
+    {$ENDIF}
     function  GetByte(Ptr:PByte; idx:Integer):integer;
+
+    {$IFDEF PORTUGUES}
+    //: Seta um byte em um ponteiro de bytes.
+    {$ELSE}
+    //: Sets a byte in a pointer of bytes.
+    {$ENDIF}
     procedure SetByte(Ptr:PByte; idx:Integer; value:Byte);
+
+    {$IFDEF PORTUGUES}
+    //: Seta varios bytes em um ponteiro de bytes.
+    {$ELSE}
+    //: Sets a lot of bytes in a pointer of bytes.
+    {$ENDIF}
     procedure SetBytes(Ptr:PByte; idx:Integer; values:BYTES);
   protected
-    PDUIncoming,PDUOutgoing:Integer;
+    {$IFDEF PORTUGUES}
+    //: Onde inicia a PDU nos pacotes que chegam e que saem.
+    {$ELSE}
+    //: Where PDU starts on incoming and outgoing packets.
+    {$ENDIF}
+    PDUIncoming, PDUOutgoing:Integer;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Lista de CPU's sendo lidas pelo driver.
+    @seealso(TS7CPU)
+    }
+    {$ELSE}
+    {:
+    Lists all CPU's being read by the protocol driver.
+    @seealso(TS7CPU)
+    }
+    {$ENDIF}
     FCPUs:TS7CPUs;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Caso for um protocolo que precise inicializar o adaptador, armazena se o
+    adaptador foi inicializado.
+    }
+    {$ELSE}
+    {:
+    If the protocol needs to initialize the adapter, stores if it was initialized.
+    }
+    {$ENDIF}
     FAdapterInitialized:Boolean;
+
+    {$IFDEF PORTUGUES}
+    //: Inicializa o adaptador, se necessário.
+    {$ELSE}
+    //: Initializes the adapter, if needed.
+    {$ENDIF}
     function  initAdapter:Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    //: Desconecta do adaptador.
+    {$ELSE}
+    //: Disconnects from adapter.
+    {$ENDIF}
     function  disconnectAdapter:Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Conecta em um CLP.
+    @param(CPU TS7CPU. Representa o CLP a ser conectado.)
+    }
+    {$ELSE}
+    {:
+    Connects on a PLC.
+    @param(CPU TS7CPU. Represents the PLC to connect.)
+    }
+    {$ENDIF}
     function  connectPLC(var CPU:TS7CPU):Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Desconecta de um CLP.
+    @param(CPU TS7CPU. Representa o CLP a ser desconectado.)
+    }
+    {$ELSE}
+    {:
+    Disconnects from a PLC.
+    @param(CPU TS7CPU. Represents the PLC to disconnect.)
+    }
+    {$ENDIF}
     function  disconnectPLC(var CPU:TS7CPU):Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Troca dados com um CLP.
+    @param(CPU TS7CPU. CLP na qual dados vao ser trocados.)
+    @param(msgOut BYTES. Mensagem a enviar para o CLP.)
+    @param(msgIn BYTES. Armazena a mensagem recebida do CLP.)
+    @param(IsWrite Boolean. Diz se a mensagem que está sendo enviada vai escrever
+           nas memorias do CLP.)
+    @returns(@True se bem sucessedido.)
+    }
+    {$ELSE}
+    {:
+    Exchange data with a PLC.
+    @param(CPU TS7CPU. PLC to exchange data.)
+    @param(msgOut BYTES. Packet to send to PLC.)
+    @param(msgIn BYTES. Stores the received packet from PLC.)
+    @param(IsWrite Boolean. Tells if the message to be send to PLC will write
+           in PLC memory.)
+    @returns(@True if successful.)
+    }
+    {$ENDIF}
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Envia uma mensagem.
+    @param(msgOut BYTES. Mensagem a enviar.)
+    }
+    {$ELSE}
+    {:
+    Sends a message.
+    @param(msgOut BYTES. Message to send.)
+    }
+    {$ENDIF}
     procedure sendMessage(var msgOut:BYTES); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Pega um pacote que tenha chego na porta de comunicação.
+    @param(msgIn BYTES. Armazena o pacote que chegou.)
+    @param(BytesRead Integer. Tamanho do pacote que chegou.)
+    @returns(iorOK caso tenha chego algum pacote.)
+    }
+    {$ELSE}
+    {:
+    Gets a incoming packet from the communication port.
+    @param(msgIn BYTES. Stores the incoming packet.)
+    @param(BytesRead Integer. Packet length.)
+    @returns(iorOK if was come some packet.)
+    }
+    {$ENDIF}
     function  getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult; virtual;
+
+    //: @exclude
     procedure listReachablePartners; virtual;
   protected
+    {$IFDEF PORTUGUES}
+    {:
+    Inverte os bytes de uma Word.
+    @param(W Word. Word a ser invertido os seus bytes.)
+    @returns(A word com os bytes invertidos.)
+    }
+    {$ELSE}
+    {:
+    Swap the bytes of a word.
+    @param(W Word. Word to swap their bytes.)
+    @returns(The word with their bytes swaped.)
+    }
+    {$ENDIF}
     function  SwapBytesInWord(W:Word):Word;
-    procedure Send(var msg:BYTES); virtual;
+    {$IFDEF PORTUGUES}
+    {:
+    Prepara uma mensagem para ser enviada.
+    @param(msg BYTES. Mensagem a ser preparada)
+    }
+    {$ELSE}
+    {:
+    Prepares a message to be sent.
+    @param(msg BYTES. Message to be prepared.)
+    }
+    {$ENDIF}
     procedure PrepareToSend(var msg:BYTES); virtual;
   protected
+    {$IFDEF PORTUGUES}
+    {:
+    Adiciona um parametro na mensagem a ser enviada.
+    @param(MsgOut BYTES. Mensagem a ser enviada.)
+    @param(param BYTES. Parametro a ser adicionado.)
+    }
+    {$ELSE}
+    {:
+    Adds a parameter into the message to be sent.
+    @param(MsgOut BYTES. Message to be sent.)
+    @param(param BYTES. Parameter to be added.)
+    }
+    {$ENDIF}
     procedure AddParam(var MsgOut:BYTES; const param:BYTES); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Adiciona um conjunto de dados na mensagem a ser enviada.
+    @param(MsgOut BYTES. Mensagem a ser enviada.)
+    @param(data BYTES. Dados a serem adicionados.)
+    }
+    {$ELSE}
+    {:
+    Adds a dataset into the message to be sent.
+    @param(MsgOut BYTES. Message to be sent.)
+    @param(data BYTES. Data to be added.)
+    }
+    {$ENDIF}
     procedure AddData(var MsgOut:BYTES; const data:BYTES); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Inicializa a PDU em uma mensagem que se deseja enviar.
+    @param(MsgOut BYTES. Mensagem a ser enviada onde se deve inicializar a PDU.)
+    @param(PDUType Integer. Tipo da PDU a criar.)
+    }
+    {$ELSE}
+    {:
+    Initialize the PDU on outgoing message.
+    @param(MsgOut BYTES. Outgoing message to initiate the PDU.)
+    @param(PDUType Integer. Kind of PDU to create.)
+    }
+    {$ENDIF}
     procedure InitiatePDUHeader(var MsgOut:BYTES; PDUType:Integer); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Negocia o tamanho máximo da PDU.
+    @param(CPU TS7CPU. CLP a negociar o tamanho da PDU.)
+    }
+    {$ELSE}
+    {:
+    Negotiate the maximum PDU size.
+    @param(CPU TS7CPU. PLC to negotiate the maximum PDU size.)
+    }
+    {$ENDIF}
     function  NegotiatePDUSize(var CPU:TS7CPU):Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Cria uma estrutura PDU a partir de uma Mensagem.
+    @param(msg BYTES. Mensagem que se deseja obter a estrutura PDU.)
+    @param(MsgOutgoing Boolean. Caso @true a mensagem vai ser enviada ao CLP, caso
+           contrário a mensagem está chegando do CLP.)
+    @param(PDU TPDU. Estrutura PDU retornada.)
+    @returns(O código de erro presente na PDU, caso exista.)
+    }
+    {$ELSE}
+    {:
+    Creates a PDU structure from the message.
+    @param(msg BYTES. Menssage to get the PDU structure.)
+    @param(MsgOutgoing Boolean. If @true the message will be sent to PLC, if not
+           the message is comming from the PLC.)
+    @param(PDU TPDU. The PDU structure extracted from message.)
+    @returns(O código de erro presente na PDU, caso exista.)
+    }
+    {$ENDIF}
     function  SetupPDU(var msg:BYTES; MsgOutgoing:Boolean; out PDU:TPDU):Integer; virtual;
     procedure PrepareReadRequest(var msgOut:BYTES); virtual;
     procedure PrepareWriteRequest(var msgOut:BYTES); virtual;
@@ -489,11 +724,6 @@ begin
   bl := W mod $100;
   bh := W div $100;
   Result:=(bl*$100)+bh;
-end;
-
-procedure TSiemensProtocolFamily.Send(var msg:BYTES);
-begin
-
 end;
 
 procedure TSiemensProtocolFamily.PrepareToSend(var msg:BYTES);
