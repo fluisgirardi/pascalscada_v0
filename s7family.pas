@@ -678,32 +678,50 @@ type
 
     {$IFDEF PORTUGUES}
     {:
-    Atualiza os valores dos gerenciadores de memórias não continuas.
-    @param(pkgin BYTES. )
-    @param(pkgout BYTES. )
-    @param(writepkg Boolean. )
-    @param(ReqList TS7ReqList. )
-    @param(ResultValues TArrayOfDouble. )
+    Atualiza os valores do gerenciador de memórias não continuas.
+    @param(pkgin BYTES. Mensagem recebida ao CLP)
+    @param(pkgout BYTES. Mensagem enviada do CLP)
+    @param(writepkg Boolean. Se @true, o pacote enviado era para alterar os valores na memória do CLP)
+    @param(ReqList TS7ReqList. Lista de todas as requisições da mensagem enviada)
+    @param(ResultValues TArrayOfDouble. Valores da última requisição.)
     }
     {$ELSE}
-
+    {:
+    Updates the manager of non-continuous memory blocks.
+    @param(pkgin BYTES. Message received from PLC)
+    @param(pkgout BYTES. Message sent to PLC)
+    @param(writepkg Boolean. If @true, the packet sent will change the PLC memory.)
+    @param(ReqList TS7ReqList. List of all requests sent.)
+    @param(ResultValues TArrayOfDouble. Values of the last request.)
+    }
     {$ENDIF}
-{ok}procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
-{ok}procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
-{ok}procedure DoDelTag(TagObj:TTag); override;
-{ok}procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
-{ok}procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
+    procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
+    //: @seealso(TProtocolDriver.DoAddTag)
+    procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
+    //: @seealso(TProtocolDriver.DoDelTag)
+    procedure DoDelTag(TagObj:TTag); override;
+    //: @seealso(TProtocolDriver.DoScanRead)
+    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
+    //: @seealso(TProtocolDriver.DoGetValue)
+    procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
 
     //estas funcoes ficaram apenas por motivos compatibilidade com os tags
     //e seus metodos de leitura e escrita diretas.
-{ok}function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
-{ok}function  DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+
+    //: @seealso(TProtocolDriver.DoWrite)
+    function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    //: @seealso(TProtocolDriver.DoRead)
+    function  DoRead(const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
   public
+    //: @exclude
     constructor Create(AOwner:TComponent); override;
+    //: @seealso(TProtocolDriver.SizeOfTag)
     function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
+    //: @seealso(TProtocolDriver.OpenTagEditor)
     procedure OpenTagEditor(OwnerOfNewTags: TComponent;
        InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   published
+    //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
   end;
 
@@ -715,6 +733,7 @@ uses PLCTagNumber, PLCBlock, PLCString, PLCStruct, hsstrings, PLCStructElement,
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
+// CONSTRUCTORS AND DESTRUCTORS
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TSiemensProtocolFamily.Create(AOwner:TComponent);
@@ -728,6 +747,8 @@ end;
 
 function  TSiemensProtocolFamily.SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
 begin
+  //todos os tipos são retornados como byte
+  //all kinds of tags are returned as byte
   ProtocolTagType:=ptByte;
   Result:=8;
 end;
@@ -788,6 +809,7 @@ var
   var
     has_atleastonereplacement:Boolean;
   begin
+    {$IFDEF PORTUGUES}
     {
     %a  - Endereço do item
     %i  - Numero do item comecando de 1
@@ -796,6 +818,16 @@ var
     %0i - Numero do item comecando de 1, preenchido com zeros
     %0e - Numero do item comecando de 0, preenchido com zeros
     }
+    {$ELSE}
+    {
+    %a  - Item address
+    %i  - Item number starting from 1
+    %e  - Item number starting from 0
+    %0a - Item address filled with zeros.
+    %0i - Item number starting from 1, filled with zeroes.
+    %0e - Item number starting from 0, filled with zeroes.
+    }
+    {$ENDIF}
     has_atleastonereplacement:=(Pos('%a',namepattern)<>0) or
                                (Pos('%i',namepattern)<>0) or
                                (Pos('%e',namepattern)<>0) or
@@ -820,6 +852,7 @@ var
   end;
 
 begin
+  {$IFDEF PORTUGUES}
   { o que está faltando??
     NO FORMULARIO:
     ** Checagens de substituições ausentes nos nomes a fim de evitar duplicidades de nomes...
@@ -832,17 +865,33 @@ begin
     %0a - Endereço do item preenchido com zeros.
     %0i - Numero do item comecando de 1, preenchido com zeros
     %0e - Numero do item comecando de 0, preenchido com zeros
-
   }
+  {$ELSE}
+  { What's missing??
+    On form:
+    ** Check of missing replacements to avoid name duplicity...
+
+    REPLACEMENTS:
+
+    %a  - Item address
+    %i  - Item number starting from 1
+    %e  - Item number starting from 0
+    %0a - Item address filled with zeros.
+    %0i - Item number starting from 1, filled with zeroes.
+    %0e - Item number starting from 0, filled with zeroes.
+  }
+  {$ENDIF}
 
   frmS7tb:=TfrmS7TagBuilder.Create(nil);
   try
     with frmS7tb do begin
       if ShowModal=mrOK then begin
         //cria o bloco simples ou bloco estrutura e faz sua configuração.
+        //create the block or struture and configure it.
         if optplcblock.Checked or optplcStruct.Checked then begin
 
           //cria o bloco
+          //creates the block
           if optplcblock.Checked then
             block:=TPLCBlock(CreateProc(TPLCBlock))
           else
@@ -870,6 +919,7 @@ begin
         end;
 
         //comeca a criar os itens da estrutura
+        //creates the structure items
         curaddress:=spinStartAddress.Value;
         curTCaddress:=spinStartAddress.Value;
         curidx := 0;
@@ -877,6 +927,7 @@ begin
         for curitem:=1 to spinNumItens.Value do begin
           for curstructitem:=0 to StructItemsCount-1 do begin
             //se é para criar o tag.
+            //if the tag must be created.
             if not StructItem[curstructitem].SkipTag then begin
               started:=true;
               if optplctagnumber.Checked then begin
@@ -952,6 +1003,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Funcoes da interface
+// Interface functions.
 ////////////////////////////////////////////////////////////////////////////////
 
 function  TSiemensProtocolFamily.initAdapter:Boolean;
@@ -1044,8 +1096,9 @@ begin
     res := SetupPDU(msgIn, false, pdu);
     if res=0 then begin
       CPU.MaxPDULen:=GetByte(pdu.param,6)*256+GetByte(pdu.param,7);
-      CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes do header + 2 bytes do codigo de erro + 2 bytes da solicitação da leitura + 4 das informações do pedido.
+      CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes of header + 2 bytes of error code + 2 bytes of read request + 4 bytes of informations about the request.
       //ajusta o tamanho máximo dos blocos;
+      //adjust the maximum block size.
       with CPU do begin
         Inputs.MaxBlockItems:=MaxBlockSize;
         Outputs.MaxBlockItems:=MaxBlockSize;
@@ -1138,10 +1191,10 @@ begin
   param[01] := $0a;
   param[02] := $10;
   param[03] := $02; //1=single bit, 2=byte, 4=word
-  param[04] := $00; //comprimento do pedido
-  param[05] := $00; //comprimento do pedido
-  param[06] := $00; //numero Db
-  param[07] := $00; //numero Db
+  param[04] := $00; //size of request
+  param[05] := $00; //size of request
+  param[06] := $00; //DB Number
+  param[07] := $00; //DB Number
   param[08] := $00; //area code;
   param[09] := $00; //start address in bits
   param[10] := $00; //start address in bits
@@ -1184,6 +1237,7 @@ begin
 end;
 
 //executa somente uma escrita por vez!!!
+//executes only one write per request.
 procedure TSiemensProtocolFamily.AddParamToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:Integer; buffer:BYTES);
 var
   param:BYTES;
@@ -1199,10 +1253,10 @@ begin
   param[01] := $0a;
   param[02] := $10;
   param[03] := $02; //1=single bit, 2=byte, 4=word
-  param[04] := $00; //comprimento do pedido
-  param[05] := $00; //comprimento do pedido
-  param[06] := $00; //numero Db
-  param[07] := $00; //numero Db
+  param[04] := $00; //size of request
+  param[05] := $00; //size of request
+  param[06] := $00; //DB Number
+  param[07] := $00; //DB Number
   param[08] := $00; //area code;
   param[09] := $00; //start address in bits
   param[10] := $00; //start address in bits
@@ -1337,7 +1391,8 @@ begin
     number:=0;
     param_len:=0;
     data_len:=0;
-    //evita escrever se ão foi alocado.
+    //evita escrever se não foi alocado.
+    // avoid write if not allocated.
     if extra=2 then begin
       Error:=0;
     end;
@@ -1351,6 +1406,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // FUNCOES DE MANIPULAÇAO DO DRIVER
+// FUNCTIONS OF DRIVER HANDLING.
 ////////////////////////////////////////////////////////////////////////////////
 
 function  TSiemensProtocolFamily.DoublesToBytes(const Values:TArrayOfDouble; Start, Len:Integer):BYTES;
@@ -1457,11 +1513,14 @@ begin
     if (writepkg or (ResultCode=$FF)) AND (DataLen>4) then begin
       ResultLen:=GetByte(PDU.data, DataIdx+2)*$100 + GetByte(PDU.data, DataIdx+3);
       //o tamanho está em bits, precisa de ajuste.
+      //if the size is in bits, adjust to bytes
       if GetByte(PDU.data, DataIdx+1)=4 then
         ResultLen:=ResultLen div 8
       else begin
         //3 o restultado já está em bytes
         //e 9 o resultado está em bits, mas cada bit em um byte.
+        //if 3, the result already is in bytes
+        //if 9, the result is in bits, but each byte stores one bit
         if not (GetByte(PDU.data, DataIdx+1) in [3,9]) then
           exit;
       end;
@@ -1472,6 +1531,7 @@ begin
     end;
 
     //move os dados recebidos para as respectivas areas.
+    //move the received data to their area.
     SetLength(ResultValues,0);
     if ResultLen>0 then begin
       SetLength(ResultValues,ResultLen);
@@ -1515,6 +1575,7 @@ begin
       end;
     end else begin
       //seta a falha...
+      //sets the fault.
       with ReqList[CurResult] do begin
         if (PLC>=0) and (PLC<=High(FCPUs)) then
           case ReqType of
@@ -1552,12 +1613,14 @@ begin
 
     //pelo que entendi, um resultado nunca vem com tamanho impar
     //no pacote.
+    //the size of result never is a odd number
     if (ResultLen mod 2)=1 then begin
       inc(DataIdx);
       dec(DataLen);
     end;
 
     //proximo resultado.
+    //goto the next result.
     inc(CurResult);
   end;
 end;
@@ -1717,8 +1780,8 @@ var
   procedure pkg_initialized;
   begin
     if not initialized then begin
-      OutgoingPDUSize:=10+2; //10 do header + 2 do pedido de leitura;
-      IncomingPDUSize:=10+2+2; //10 do header + 2 do codigo de erro + 2 do pedido de leitura;
+      OutgoingPDUSize:=10+2; //10 of header + 2 bytes of read request;
+      IncomingPDUSize:=10+2+2; //10 of header + 2 bytes of the error code + 2 bytes of the read request;
       MsgOutSize:=PDUOutgoing+12;
       SetLength(msgout,MsgOutSize);
       PrepareReadRequest(msgout);
@@ -2410,7 +2473,7 @@ begin
       ReqType := vtS7_Peripheral;
   end;
 
-  MaxBytesToRecv:=PLCPtr.MaxPDULen-18; //10 do header, 2 codigo de erro, 2 pedido de leitura, 4 header do resultado.
+  MaxBytesToRecv:=PLCPtr.MaxPDULen-18; //10 bytes of header, 2 bytes of error code, 2 bytes of read request, 4 bytes of result header.
   BytesReceived:=0;
   hasAtLeastOneSuccess:=false;
 
@@ -2422,7 +2485,7 @@ begin
     BytesToRecv:=Min(MaxBytesToRecv, tagrec.Size-BytesReceived);
 
     IncomingPacketSize:=PDUIncoming+18+BytesToRecv;
-    OutgoingPacketSize:=PDUOutgoing+24; //10 do header, 2 pedido leitura, 12 do header do pedido de leitura.
+    OutgoingPacketSize:=PDUOutgoing+24; //10 bytes of header, 2 bytes of read request, 12 bytes of read request header.
 
     SetLength(msgout,OutgoingPacketSize);
     SetLength(msgin, IncomingPacketSize);
@@ -2507,7 +2570,7 @@ begin
   AddParam(msgout, paramToRun);
 
   if not exchange(CPU,msgout,msgin,false) then
-    raise Exception.Create('Falha ao tentar colocar a CPU em Run!');
+    raise Exception.Create('Cannot swicth the PLC to RUN');
 
 end;
 
