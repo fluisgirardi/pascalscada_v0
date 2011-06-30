@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Tipos comuns aos CLP's da familia Siemens.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Common types used by Siemens PLC's.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit S7Types;
 
 {$IFDEF FPC}
@@ -14,17 +21,59 @@ uses
   PLCMemoryManager;
 
 type
+  {$IFDEF PORTUGUES}
+  {:
+  Representa o cabeçalho de uma PDU.
+
+  @member P             Seu valor é sempre 0x32
+  @member PDUHeadertype Tipo do cabeçalho, podendo ser 1,2,3 ou 7. Os cabeçalhos tipos 2 e 3 são dois bytes maiores.
+  @member a             Desconhecido.
+  @member b             Desconhecido.
+  @member number        Um número. Pode ser usado para assegurar que o pacote recebido corresponde ao que foi selecionado com o mesmo número.
+  @member param_len     Tamanho dos parametros após o cabeçalho.
+  @member data_len      Tamanho dos dados após o cabeçalho.
+  @member Error         Somente presente em cabeçalhos tipo 2 e 3. Contem o código do erro.
+  }
+  {$ELSE}
+  {:
+  Represents the PDU header.
+
+  @member P             Allways 0x32
+  @member PDUHeadertype Header type, one of 1,2,3 or 7. type 2 and 3 headers are two bytes longer.
+  @member a             Currently unknown. Maybe it can be used for long numbers?
+  @member b             Currently unknown. Maybe it can be used for long numbers?
+  @member number        A number. This can be used to make sure a received answer corresponds to the request with the same number.
+  @member param_len     Length of parameters which follow this header.
+  @member data_len      Length of data which follow the parameters.
+  @member Error         Only present in type 2 and 3 headers. This contains error information.
+  }
+  {$ENDIF}
   TPDUHeader = record
-      P,             // allways 0x32
-      PDUHeadertype, // Header type, one of 1,2,3 or 7. type 2 and 3 headers are two bytes longer.
-      a,b:Byte;	     // currently unknown. Maybe it can be used for long numbers?
-      number,        //A number. This can be used to make sure a received answer corresponds to the request with the same number.
-      param_len,     //length of parameters which follow this header
-      data_len:Word; //length of data which follow the parameters
-      Error:Word;    //only present in type 2 and 3 headers. This contains error information.
+      P,
+      PDUHeadertype,
+      a,b:Byte;
+      number,
+      param_len,
+      data_len:Word;
+      Error:Word;
   end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Aponta para uma estrutura de cabeçalho PDU.
+  }
+  {$ELSE}
+  {:
+  Points to a PDU structure header.
+  }
+  {$ENDIF}
   PPDUHeader = ^TPDUHeader;
 
+  {$IFDEF PORTUGUES}
+
+  {$ELSE}
+
+  {$ENDIF}
   TPDU = record
     header:PByte;           // pointer to start of PDU (PDU header)
     param:PByte;            // pointer to start of parameters inside PDU
@@ -37,16 +86,28 @@ type
   end;
   PPDU = ^TPDU;
 
-  //: Identifica um DB da familia S7-300/S7-400
+  {$IFDEF PORTUGUES}
+  //: Identifica um DB da familia S7-1200/S7-300/S7-400
+  {$ELSE}
+  //: Identifies a DB of S7-1200/S7-300/S7-400 PLC's.
+  {$ENDIF}
   TS7DB = Record
     DBNum:Cardinal;
     DBArea:TPLCMemoryManager;
   end;
 
+  {$IFDEF PORTUGUES}
   //: Identifica um conjunto de DB's da familia S7-300/S7-400
+  {$ELSE}
+  //: Identifies a set of DB's of S7-1200/S7-300/S7-400 PLC's.
+  {$ENDIF}
   TS7DBs = array of TS7DB;
 
-  //: Representa uma requisição.
+  {$IFDEF PORTUGUES}
+  //: Representa uma requisição dentro varios pedidos de leitura.
+  {$ELSE}
+  //: Represents one request on a set of read requests.
+  {$ENDIF}
   TS7ReqListItem = record
     PLC,
     DB,
@@ -55,9 +116,18 @@ type
     Size:Integer;
   end;
 
+  {$IFDEF PORTUGUES}
+  //: Uma lista de requisições.
+  {$ELSE}
+  //: A request list.
+  {$ENDIF}
   TS7ReqList = array of TS7ReqListItem;
 
-  //: Representação de um CLP S7-200/300/400 da Siemens.
+  {$IFDEF PORTUGUES}
+  //: Representação de um CLP S7-200/300/400/1200 da Siemens.
+  {$ELSE}
+  //: Represents a Siemens S7-200/300/400/1200 PLC.
+  {$ENDIF}
   TS7CPU=record
     Station,
     Rack,
@@ -82,9 +152,18 @@ type
     S7200AnOutput:TPLCMemoryManager;
   end;
 
+  {$IFDEF PORTUGUES}
+  //: Ponteiro de CLP.
+  {$ELSE}
+  //: Points to a PLC.
+  {$ENDIF}
   PS7CPU = ^TS7CPU;
 
+  {$IFDEF PORTUGUES}
   //: Representação de um conjunto de CLP's S7-200/300/400 da Siemens.
+  {$ELSE}
+  //: Represents a set of Siemens S7-200/300/400 PLC's.
+  {$ENDIF}
   TS7CPUs = array of TS7CPU;
 
   TS7Req = record

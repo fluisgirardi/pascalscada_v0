@@ -41,6 +41,8 @@ type
     PBlock:TPLCStruct;
   protected
     procedure SetBlock(blk:TPLCStruct);
+    //: @seealso(TPLCTag.GetValueRaw)
+    function GetValueRaw: Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(Value: Double); override;
     //: @seealso(TPLCBlockElement.SetIndex)
@@ -94,40 +96,8 @@ begin
 end;
 
 procedure TPLCStructItem.NotifyTagChange(Sender:TObject);
-var
-  notify:Boolean;
-  data, value:TArrayOfDouble;
 begin
-  if Assigned(PBlock) then begin
-    if FCurrentWordSize>=8 then begin
-      SetLength(data,1);
-      data[0]:=PBlock.ValueRaw[PIndex];
-    end;
-
-    if FCurrentWordSize>=16 then begin
-      SetLength(data,2);
-      data[1]:=PBlock.ValueRaw[PIndex+1];
-    end;
-
-    if FCurrentWordSize>=32 then begin
-      SetLength(data,4);
-      data[2]:=PBlock.ValueRaw[PIndex+2];
-      data[3]:=PBlock.ValueRaw[PIndex+3];
-    end;
-
-    value := PLCValuesToTagValues(data,0);
-
-    if Length(value)<0 then exit;
-
-    notify := (PValueRaw<>value[0]) or (IsNan(value[0]) and (not IsNan(PValueRaw)));
-    PValueRaw := value[0];
-    PValueTimeStamp := PBlock.ValueTimestamp;
-
-    if notify then
-      NotifyChange();
-
-    SetLength(data,0);
-  end;
+  GetValueRaw();
 end;
 
 procedure TPLCStructItem.RemoveTag(Sender:TObject);
@@ -177,6 +147,45 @@ begin
     PBlock.AddCallBacks(Self as IHMITagInterface);
     if PIndex>=PBlock.Size then
       PIndex := 0;
+  end;
+end;
+
+function  TPLCStructItem.GetValueRaw: Double;
+var
+  notify:Boolean;
+  data, value:TArrayOfDouble;
+begin
+  if Assigned(PBlock) then begin
+    if FCurrentWordSize>=8 then begin
+      SetLength(data,1);
+      data[0]:=PBlock.ValueRaw[PIndex];
+    end;
+
+    if FCurrentWordSize>=16 then begin
+      SetLength(data,2);
+      data[1]:=PBlock.ValueRaw[PIndex+1];
+    end;
+
+    if FCurrentWordSize>=32 then begin
+      SetLength(data,4);
+      data[2]:=PBlock.ValueRaw[PIndex+2];
+      data[3]:=PBlock.ValueRaw[PIndex+3];
+    end;
+
+    value := PLCValuesToTagValues(data,0);
+
+    if Length(value)<0 then exit;
+
+    notify := (PValueRaw<>value[0]) or (IsNan(value[0]) and (not IsNan(PValueRaw)));
+    PValueRaw := value[0];
+    PValueTimeStamp := PBlock.ValueTimestamp;
+
+    Result:=PValueRaw;
+
+    if notify then
+      NotifyChange();
+
+    SetLength(data,0);
   end;
 end;
 
