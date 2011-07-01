@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa uma porta de comunicação serial multiplataforma.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements a multi-platform serial port driver.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit SerialPort;
 
 {$IFDEF FPC}
@@ -21,10 +28,11 @@ uses
 
 type
 
+  {$IFDEF PORTUGUES}
   {:
-  @name enumera as velocidades possíveis de comunicação serial (em bits/segundo).
+  @name enumera as velocidades possíveis de comunicação serial.
   Essas velocidade são suportados em todos os sistemas operacionais.
-  
+
   @value br110    = 110 bps
   @value br300    = 300 bps
   @value br600    = 600 bps
@@ -37,9 +45,28 @@ type
   @value br57600  = 57600 bps
   @value br115200 = 115200 bps
   }
+  {$ELSE}
+  {:
+  @name enumerates all baud rates.
+  This baud rates are supported on all OSes.
+
+  @value br110    = 110 bps
+  @value br300    = 300 bps
+  @value br600    = 600 bps
+  @value br1200   = 1200 bps
+  @value br2400   = 2400 bps
+  @value br4800   = 4800 bps
+  @value br9600   = 9600 bps
+  @value br19200  = 19200 bps
+  @value br38400  = 38400 bps
+  @value br57600  = 57600 bps
+  @value br115200 = 115200 bps
+  }
+  {$ENDIF}
   TSerialBaundRate = (br110, br300, br600, br1200, br2400, br4800, br9600,
                       br19200, br38400, br57600, br115200);
 
+  {$IFDEF PORTUGUES}
   {:
   @name enumera todos as possíveis quantidades de bits de parada.
   Essas quantidades são suportados em todos os sistemas operacionais.
@@ -47,8 +74,18 @@ type
   @value sb1 = 1 stop bit
   @value sb2 = 2 stop bit
   }
+  {$ELSE}
+  {:
+  @name enumarates all stop bits.
+  This values are supported on all OSes
+
+  @value sb1 = 1 stop bit
+  @value sb2 = 2 stop bit
+  }
+  {$ENDIF}
   TSerialStopBits = (sb1, sb2);
 
+  {$IFDEF PORTUGUES}
   {:
   @name enumera as possíveis checagens de paridade.
   Essas paridades são suportados em todos os sistemas operacionais.
@@ -57,8 +94,19 @@ type
   @value spOdd Checagem de erros por paridade impar.
   @value spEven Checagem de erros por paridade par.
   }
+  {$ELSE}
+  {:
+  @name enumerates all parity modes.
+  This values are supported on all OSes.
+
+  @value spNone Don't check the parity.
+  @value spOdd  Check errors using the odd parity.
+  @value spEven Check errors using the even parity.
+  }
+  {$ENDIF}
   TSerialParity = (spNone, spOdd, spEven);
 
+  {$IFDEF PORTUGUES}
   {:
   @name enumera os possíveis tamanhos de palavra de dados.
   Essas tamanhos são suportados em todos os sistemas operacionais.
@@ -68,14 +116,33 @@ type
   @value db7 A palavra de dados terá 7 bits de tamanho.
   @value db8 A palavra de dados terá 8 bits de tamanho.
   }
+  {$ELSE}
+  {:
+  @name enumerates all data byte sizes.
+  This values are supported on all OSes.
+
+  @value db5 The data byte will have 5 bits of size.
+  @value db6 The data byte will have 6 bits of size.
+  @value db7 The data byte will have 7 bits of size.
+  @value db8 The data byte will have 8 bits of size.
+  }
+  {$ENDIF}
   TSerialDataBits= (db5, db6, db7, db8);
 
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Driver genérico para portas seriais. Atualmente funcionando para
             Windows, Linux e FreeBSD.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @seealso(TCommPortDriver)
   }
+  {$ELSE}
+  {:
+  @abstract(Serial port driver. Working on  Windows, Linux and FreeBSD.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TCommPortDriver)
+  }
+  {$ENDIF}
   TSerialPortDriver = class(TCommPortDriver)
   private
     PPortName:String;
@@ -123,43 +190,113 @@ type
     {: @exclude }
     procedure ClearALLBuffers; override;
   public
+    {$IFDEF PORTUGUES}
+    {:
+    Cria um novo driver de porta serial. Tem como padrao 19200bps, 8 bits de dados,
+    1 stop bits, sem verificação de paridade e 100ms de timeout.
+    @seealso(TCommPortDriver)
+    }
+    {$ELSE}
+    {:
+    Creates a new serial port driver with the following settings: baud rate 19200bps,
+    8 data bits, 1 stop bits, without parity check and 100ms of timeout.
+    @seealso(TCommPortDriver)
+    }
+    {$ENDIF}
     constructor Create(AOwner:TComponent); override;
     {: @exclude }
     destructor  Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     {:
     Nome da porta serial que será usada. Depende de cada sistema operacional.
     No Windows é COMx, no Linux ttySx e no FreeBSD cuadx.
     }
+    {$ELSE}
+    {:
+    Serial port driver to be used. This names depends of operating system.
+    On Windows the name is COMx, ob Linux is ttySx and on FreeBSD is cuadx.
+    }
+    {$ENDIF}
     property COMPort:string read PPortName write SetCOMPort;
+
+    {$IFDEF PORTUGUES}
     {: Informa a duração máxima de uma ação leitura ou escrita. }
+    {$ELSE}
+    {: How many time a read or write operation can take. }
+    {$ENDIF}
     property Timeout:integer read PTimeout write SetTimeOut stored true default 5;
+
+    {$IFDEF PORTUGUES}
     {: Informa o tempo em milisegundos entre uma leitura e uma escrita. }
+    {$ELSE}
+    {: Delay between commands of read and write. }
+    {$ENDIF}
     property WriteReadDelay:integer read PRWTimeout write SetRWTimeout stored true default 20;
+
+    {$IFDEF PORTUGUES}
     {:
     Velocidade de comunicação da porta serial.
     @seealso(TSerialBaundRate)
     }
+    {$ELSE}
+    {:
+    Serial port baud rate.
+    @seealso(TSerialBaundRate)
+    }
+    {$ENDIF}
     property BaudRate:TSerialBaundRate read PBaundRate write SetBaundRate stored true default br19200;
+
+    {$IFDEF PORTUGUES}
     {:
     Tamanho da palavra de comunicação.
     @seealso(TSerialDataBits)
     }
+    {$ELSE}
+    {:
+    Data byte size.
+    @seealso(TSerialDataBits)
+    }
+    {$ENDIF}
     property DataBits:TSerialDataBits read PDataBits write SetDataBits stored true default db8;
+
+    {$IFDEF PORTUGUES}
     {:
     Informa qual vai ser o modo de checagem da paridade.
     @seealso(TSerialParity)
     }
+    {$ELSE}
+    {:
+    Parity check.
+    @seealso(TSerialParity)
+    }
+    {$ENDIF}
     property Paridade:TSerialParity read PParity write SetParity stored true default spNone;
+
+    {$IFDEF PORTUGUES}
     {:
     Informa a quantidade de bits de parada.
     @seealso(TSerialStopBits)
     }
+    {$ELSE}
+    {:
+    Stop bits.
+    @seealso(TSerialStopBits)
+    }
+    {$ENDIF}
     property StopBits:TSerialStopBits read PStopBits write SetStopBits stored true default sb1;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso @true o driver irá fazer um backup das configurações da porta serial
     antes de comecar modifica-las e as restaura após fechar a porta serial.
     }
+    {$ELSE}
+    {:
+    If @true the driver will do a of the older settings of the serial port before
+    open it, and restore when it's closed.
+    }
+    {$ENDIF}
     property BackupPortSettings:Boolean read PBackupPortSettings write PBackupPortSettings stored true default false;
 
     //: @seealso TCommPortDriver.OnCommPortOpened
@@ -215,11 +352,7 @@ begin
 end;
 {$IFEND}
 
-{:
-Cria um novo driver de porta serial. Tem como padrao 19200bps, 8 bits de dados,
-1 stop bits, sem verificação de paridade e 100ms de timeout.
-@seealso(TCommPortDriver)
-}
+
 constructor TSerialPortDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -289,6 +422,7 @@ begin
         start:=Now;
      end;
      //faz esperar 0,1ms
+     //waits 0,1ms
      Req.tv_sec:=0;
      Req.tv_nsec:=100000;
      FpNanoSleep(@Req,@Rem);
@@ -403,14 +537,17 @@ begin
   end;
 
   //seta o tamanho dos buffer se leitura e escrita
+  //sets the length of the buffers of read and write
   if not SetupComm(PPortHandle, 8192, 8192) then begin
     RefreshLastOSError;
     goto erro1;
   end;
 
-  //monta a estrutura DCB a partir da string
+  //monta string DCB
+  //makes a DCB string
   strdcb := MakeDCBString;
   //zera a estrutura DCB (um bug conhecido, parametro incorreto!);
+  //Fill with zeros the structure.
   FillMemory(@PDCB,sizeof(DCB),0);
   PDCB.DCBlength := sizeof(DCB);
   if not BuildCommDCB(PChar(strdcb),PDCB) then begin
@@ -419,16 +556,19 @@ begin
   end;
 
   //faz backup da DCB que estava setada na porta
+  //backup the old settings.
   if PBackupPortSettings then
     GetCommState(PPortHandle,PSavedDCB);
 
   //seta a nova estrutura DCB na porta de comunicação
+  //sets the new DCB struture.
   if not SetCommState(PPortHandle,PDCB) then begin
     RefreshLastOSError;
     goto erro3;
   end;
 
   //Seta os timeouts
+  //sets the timeouts.
   if not SetCommTimeouts(PPortHandle,ComTimeouts) then begin
     RefreshLastOSError;
     goto erro3;
@@ -463,6 +603,7 @@ var
    tios:termios;
 begin
   //abre a porta
+  //open the serial port
   PPortHandle := fpopen('/dev/'+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
   if PPortHandle<0 then begin
      RefreshLastOSError;
@@ -472,6 +613,7 @@ begin
   end;
   
   //se e para salvar as configs da porta...
+  //backup the serial port settings.
   if PBackupPortSettings then
     PSavedState := SerSaveState(PPortHandle);
 
@@ -482,6 +624,7 @@ begin
   tios.c_lflag := 0;
 
   //velocidade
+  //sets the baudrate
   case PBaundRate of
      br110: begin
        tios.c_ispeed := B110;
@@ -544,6 +687,7 @@ begin
   end;
 
   //seta paridade, tamanho do byte, stop bits...
+  //data byte size, parity and stop bits
   case PParity of
     spOdd:
       tios.c_cflag := tios.c_cflag or PARENB or PARODD;
@@ -568,6 +712,7 @@ begin
   tcflush(PPortHandle, TCIOFLUSH);
   
   //seta o uso exclusivo da porta.
+  //makes the serial port for exclusive access
   fpioctl(integer(PPortHandle), TIOCEXCL, nil);
 
   InternalClearALLBuffers;
@@ -581,6 +726,7 @@ procedure TSerialPortDriver.PortStop(var Ok:Boolean);
 begin
 {$IF defined(WIN32) or defined(WIN64)}
   //fecha
+  //close serial port
   if PActive then begin
     {$IFNDEF FPC}
     CancelIo(PPortHandle);

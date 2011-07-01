@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
-  @abstract(Unit de registro de componentes do PascalSCADA. Para Delphi e Lazarus.)
+  @abstract(Unit de registro de componentes do PascalSCADA. Para Lazarus e Delphi.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit of register of PascalSCADA components. For Lazarus and Delphi.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit scadareg;
 
 interface
@@ -23,10 +30,12 @@ uses
   {$ELSE}
     Types, MemDs,
     //se for delphi 4 ou 5
+    //if is delphi 5 or below.
     {$IF defined(VER130) or defined(VER120)}
       DsgnIntf;
     {$ELSE}
       //demais versoes do delphi
+      //others versions of delphi.
       DesignIntf, DesignEditors;
     {$IFEND}
   {$ENDIF}

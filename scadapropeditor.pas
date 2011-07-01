@@ -1,8 +1,15 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementação dos editores de algumas propriedades de componentes
             do PascalSCADA.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements some property editors of PascalSCADA.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit scadapropeditor;
 
 {$IFDEF FPC}
@@ -36,7 +43,11 @@ uses
   {$ENDIF}
 
 type
+  {$IFDEF PORTUGUES}
   //: Editor da propriedade TSerialPortDriver.COMPort
+  {$ELSE}
+  //: Property editor of TSerialPortDriver.COMPort property.
+  {$ENDIF}
   TPortPropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
@@ -45,19 +56,16 @@ type
     procedure SetValue(const Value: string); override;
   end;
 
+  {$IFDEF PORTUGUES}
   //: Editor da propriedade TPLCBlockElement.Index
+  {$ELSE}
+  //: Property editor of TPLCBlockElement.Index property.
+  {$ENDIF}
   TElementIndexPropertyEditor = class(TIntegerProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
     procedure GetValues(Proc: TGetStrProc); override;
   end;
-
-  {TComponentNameEditorEx = class(TComponentNamePropertyEditor)
-  public
-    function  GetAttributes: TPropertyAttributes; override;
-    function  GetValue: string; override;
-    procedure SetValue(const Value: string); override;
-  end;}
 
 implementation
 
@@ -141,4 +149,4 @@ end;}
 
 
 end.
-
+
