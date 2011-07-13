@@ -2494,12 +2494,12 @@ begin
 
     if ReqType=vtS7_DB then begin
       if tagrec.File_DB=0 then begin
-        AddToReadRequest(msgout, vtS7_DB, 1,              tagrec.Address+tagrec.OffSet+BytesReceived, tagrec.Size-BytesReceived);
+        AddToReadRequest(msgout, vtS7_DB, 1,              tagrec.Address+tagrec.OffSet+BytesReceived, Min(MaxBytesToRecv, tagrec.Size-BytesReceived));
       end else begin
-        AddToReadRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+tagrec.OffSet+BytesReceived, tagrec.Size-BytesReceived);
+        AddToReadRequest(msgout, vtS7_DB, tagrec.File_DB, tagrec.Address+tagrec.OffSet+BytesReceived, Min(MaxBytesToRecv, tagrec.Size-BytesReceived));
       end;
     end else begin
-      AddToReadRequest(  msgout, ReqType, 0,              tagrec.Address+tagrec.OffSet+BytesReceived, tagrec.Size-BytesReceived);
+      AddToReadRequest(  msgout, ReqType, 0,              tagrec.Address+tagrec.OffSet+BytesReceived, Min(MaxBytesToRecv, tagrec.Size-BytesReceived));
     end;
 
     if exchange(PLCPtr^, msgout, msgin, false) then begin
