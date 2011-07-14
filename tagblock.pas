@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementa a base para Tags Blocos.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements the base for all block tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit TagBlock;
 
 {$IFDEF FPC}
@@ -14,15 +21,28 @@ uses
   SysUtils, Classes, Tag, PLCTag;
 
 type
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Classe base para tags blocos.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   Classe base para os tags TPLCBlock e TPLCString.
   }
+  {$ELSE}
+  {:
+  @abstract(Base class for all block tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Base class for tags TPLCBlock and TPLCString.
+  }
+  {$ENDIF}
   TTagBlock = class(TPLCTag)
   protected
+    {$IFDEF PORTUGUES}
     //: Array que armazena os valores assincronos.
+    {$ELSE}
+    //: Array that stores the values of the tag block.
+    {$ENDIF}
     PValues:TArrayOfDouble;
     //: @seealso(TPLCTag.ScanRead)
     procedure ScanRead; override;
@@ -99,8 +119,6 @@ begin
     if PAutoWrite then begin
       BuildTagRec(tr,Count,Offset);
       PProtocolDriver.ScanWrite(tr,Values);
-      //TagCommandCallBack(Values,Now,tcScanWrite,ioOk,Offset);
-      //Dec(PCommWriteOk);
     end else begin
       TagCommandCallBack(Values,Now,tcScanWrite,ioOk,Offset);
       Dec(PCommWriteOk);

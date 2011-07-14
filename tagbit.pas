@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementação do tag de mapeamento de bits.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements a tag that maps bits from another tag.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit TagBit;
 
 {$IFDEF FPC}
@@ -15,9 +22,14 @@ uses
 
 type
 
+  {$IFDEF PORTUGUES}
   //: Reprensenta um bit de uma palavra de 32 bits.
+  {$ELSE}
+  //: Defines the acceptable range of bits.
+  {$ENDIF}
   TBitRange = 0..31;
 
+  {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Tag que representam um conjunto de bits dentro de um tag.)
@@ -32,7 +44,22 @@ type
   pelo tag, enquanto EndBit é o bit mais significativo. Logo Endbit tem que ser
   maior ou igual a StartBit.
   }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @abstract(Tag that represents a set of bits of another tag.)
 
+  Por exemplo, digamos que o tag plc associado contenha o valor 5 (00000101 bin).
+  Com o StartBit=1 e Endbit=2, o valor do tag bit vai ser igual a 2 (10 bin).
+  Com o StartBit=0 e EndBit=2, o valor do tag bit é 5 (101).
+  Com o StartBit=0 e EndBit=1, o valor do tag bit é 1 (01).
+  Com o StartBit=0 e EndBit=0, o valor do tag bit é 1 (1).
+
+  StartBit é equivalente ao bit menos significativo da palavra representada
+  pelo tag, enquanto EndBit é o bit mais significativo. Logo Endbit tem que ser
+  maior ou igual a StartBit.
+  }
+  {$ENDIF}
   TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
   private
     PNumber:TPLCNumber;

@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementação da base de todos os tags.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements the base class of tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit Tag;
 
 {$IFDEF FPC}
@@ -14,19 +21,32 @@ uses
   SysUtils, Classes;
 
 type
-  //: Estrutura de procedimentos internos dos tags.
-  TTagProcedures = record
-    ChangeCallBack:TNotifyEvent;
-    RemoveTag:TNotifyEvent;
-  end;
-
+  {$IFDEF PORTUGUES}
+  {:
+  Define o intervalo de atualização dos tags.
+  }
+  {$ELSE}
+  {:
+  Defines the the update rate range of tags.
+  }
+  {$ENDIF}
   TRefreshTime = 1..$7FFFFFFF;
 
+  {$IFDEF PORTUGUES}
   //: Array dinamico de valores flutuantes.
+  {$ELSE}
+  //: Dynamic array of double.
+  {$ENDIF}
   TArrayOfDouble = array of double;
+
+  {$IFDEF PORTUGUES}
   //: Ponteiro para um array dinamico de pontos flutuantes.
+  {$ELSE}
+    //: Points to a array of doubles.
+  {$ENDIF}
   PArrayOfDouble = ^TArrayOfDouble;
 
+  {$IFDEF PORTUGUES}
   {:
   Enumera todos os possíveis tamanhos de palavras dos tags.
   @value(pttDefault  Tamanho e tipo de dados dependentes das configuração do tag.)
@@ -38,14 +58,28 @@ type
   @value(pttDWord,   Inteiro de 32 bits SEM sinal.)
   @value(pttFloat    Flutuante de 32 bits.)
   }
+  {$ELSE}
+  {:
+  Enumerates all tag data types.
+  @value(pttDefault  Word length and data type variable.)
+  @value(pttShortInt Signed Integer, 8 bits sized.)
+  @value(pttByte     Unsigned Integer, 8 bits sized.)
+  @value(pttSmallInt Signed Integer, 16 bits sized.)
+  @value(pttWord,    Unsigned Integer, 16 bits sized.)
+  @value(pttInteger  Signed Integer, 32 bits sized.)
+  @value(pttDWord,   Unsigned Integer, 32 bits sized.)
+  @value(pttFloat    Float, 32 bits sized.)
+  }
+  {$ENDIF}
   TTagType = (pttDefault,                    //size variable
               pttShortInt, pttByte,          //8 bits
               pttSmallInt, pttWord,          //16 bits
               pttInteger, pttDWord, pttFloat //32 bits
              );
 
+  {$IFDEF PORTUGUES}
   {:
-  Enumera os possíveis tipos de comandos aceitos pelo driver de protocolo (TProtocolDriver).
+  Enumera os possíveis tipos de comandos aceitos pelo tag.
 
   @value(tcScanRead        Leitura de valor através do scan do driver de protocolo (assincrona).)
   @value(tcScanWrite       Escrita de valor através do scan do driver de protocolo (assincrona).)
@@ -53,8 +87,20 @@ type
   @value(tcWrite           Escrita de valor direta (sincrona).)
   @value(tcInternalUpdate  Comando interno de atualização.)
   }
+  {$ELSE}
+  {:
+  Enumerates all commands accept by the tag.
+
+  @value(tcScanRead        Values are read using the driver scan.)
+  @value(tcScanWrite       Values are write using the driver scan.)
+  @value(tcRead            Values are read synchronous (without driver scan).)
+  @value(tcWrite           Values are write synchronous (without driver scan).)
+  @value(tcInternalUpdate  Internal tag update command.)
+  }
+  {$ENDIF}
   TTagCommand = (tcScanRead, tcScanWrite, tcRead, tcWrite, tcInternalUpdate);
 
+  {$IFDEF PORTUGUES}
   {:
   Enumera todos os possíveis resultados de um pedido de leitura/escrita de um
   tag para um driver de protocolo (TProtocolDriver).
@@ -77,6 +123,30 @@ type
   @value(ioEmptyPacket            Um pacote vazio (sem dados) foi retornado.)
   @value(ioPartialOk              Uma ação teve sucesso parcial.)
   }
+  {$ELSE}
+  {:
+  Enumerates all results that can be returned by the protocol driver to a
+  read/write request of a tag.
+
+  @value(ioDriverError            Internal driver error.)
+  @value(ioCommError              Communication error.)
+  @value(ioOk                     Sucessfull request.)
+  @value(ioTimeout                Communication timeout.)
+  @value(ioIllegalFunction        Invalid IO function.)
+  @value(ioIllegalRegAddress      Invalid memory address.)
+  @value(ioIllegalValue           Invalid value.)
+  @value(ioPLCError               Device error.)
+  @value(ioTagError               Internal tag error.)
+  @value(ioNullDriver             Tag without a driver.)
+  @value(ioIllegalStationAddress  Invalid device address.)
+  @value(ioIllegalRequest         The request is invalid or not supported.)
+  @value(ioObjectNotExists        The requested object doesn't exists.)
+  @value(ioIllegalMemoryAddress   The request is out of bound of the memory space of device.)
+  @value(ioUnknownError           A invalid error code was returned.)
+  @value(ioEmptyPacket            A empty packet was returned.)
+  @value(ioPartialOk              An action was partially successful.)
+  }
+  {$ENDIF}
   TProtocolIOResult = (ioNone, ioDriverError, ioCommError, ioOk, ioTimeOut,
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
                        ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
@@ -500,4 +570,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.
