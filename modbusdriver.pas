@@ -997,7 +997,7 @@ procedure TModBusDriver.BuildTagRec(plc,func,startaddress,size:Integer; var tr:T
 begin
   with tr do begin
     Station := plc;
-    Hack:=0;
+    Rack:=0;
     Address := startaddress;
     ReadFunction := func;
     OffSet := 0;
@@ -1006,7 +1006,7 @@ begin
     SubElement := 0;
     WriteFunction := 0;
     Retries := 0;
-    ScanTime := 0;
+    UpdateTime := 0;
   end;
   tr.Size := size;
 

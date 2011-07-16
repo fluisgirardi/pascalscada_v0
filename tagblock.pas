@@ -90,7 +90,7 @@ type
     //: @seealso(TTag.RefreshTime)
     property RefreshTime;
     //: @seealso(TTag.ScanRate)
-    property ScanRate;
+    property UpdateTime;
     //: @seealso(TPLCTag.ValueTimestamp)
     property ValueTimestamp;
     //: @seealso(TTag.LongAddress)

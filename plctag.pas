@@ -505,7 +505,7 @@ type
     //: @seealso(TTag.RefreshTime)
     property RefreshTime write SetRefreshTime stored false;
     //: @seealso(TTag.ScanRate)
-    property ScanRate write SetRefreshTime default 1000;
+    property UpdateTime write SetRefreshTime default 1000;
     //: @seealso(TTag.Size)
     property Size nodefault;
     //: @seealso(TTag.LongAddress)
@@ -678,7 +678,7 @@ begin
   PCommReadOK:=0;
   PCommWriteErrors:=0;
   PCommWriteOk:=0;
-  PHack:=0;
+  PRack:=0;
   PSlot:=0;
   PStation:=0;
   PFile_DB:=0;
@@ -802,12 +802,12 @@ end;
 
 procedure TPLCTag.SetPLCHack(v:Cardinal);
 begin
-  if PHack=v then exit;
+  if PRack=v then exit;
 
   if (PProtocolDriver<>nil) and PAutoRead then
     PProtocolDriver.RemoveTag(self);
 
-  PHack := v;
+  PRack := v;
 
   if (PProtocolDriver<>nil) and PAutoRead then
     PProtocolDriver.AddTag(self);
@@ -959,7 +959,7 @@ end;
 
 procedure TPLCTag.BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
 begin
-  tr.Hack := PHack;
+  tr.Rack := PRack;
   tr.Slot := PSlot;
   tr.Station := PStation;
   tr.File_DB := PFile_DB;
@@ -987,7 +987,7 @@ begin
   tr.ReadFunction := PReadFunction;
   tr.WriteFunction := PWriteFunction;
   tr.Retries := PRetries;
-  tr.ScanTime := PScanTime;
+  tr.UpdateTime := PScanTime;
   tr.CallBack := TagCommandCallBack;
 end;
 

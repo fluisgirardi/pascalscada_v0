@@ -154,6 +154,7 @@ type
                        ioIllegalMemoryAddress, ioUnknownError, ioEmptyPacket,
                        ioPartialOk);
 
+  {$IFDEF PORTUGUES}
   {:
   Callback chamado pelo driver de protocolo (TProtocolDriver) para retornar o
   resultado de uma solicitação e os respectivos valores.
@@ -163,8 +164,20 @@ type
   @param(LastResult TProtocolIOResult: Resultado do driver ao processar o pedido.)
   @param(Offset Cardinal: Posição dentro do bloco onde os valores começam.)
   }
+  {$ELSE}
+  {:
+  Callback called by the protocol driver (TProtocolDriver) to return the result
+  of an request and theirs values.
+  @param(Values TArrayOfDouble: Array with the values read/written.)
+  @param(ValuesTimeStamp TDateTime: Date/Time when these values are read/written.)
+  @param(TagCommand TTagCommand: Command type.)
+  @param(LastResult TProtocolIOResult: I/O result after process this request.)
+  @param(Offset Cardinal: Block Offset.)
+  }
+  {$ENDIF}
   TTagCommandCallBack = procedure(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:Integer) of object;
 
+  {$IFDEF PORTUGUES}
   {:
   Estrutura usada internamente pelos drivers de protocolo (TProtocolDriver) para
   realizar leituras e escritas por Scan. Representa a configuração do tag que
@@ -185,8 +198,30 @@ type
   @member ScanTime Valor da propriedade RefreshTime.
   @member CallBack Procedimento que será chamado quando o comando for completado.
   }
+  {$ELSE}
+  {:
+  Struture used internaly by the protocolo driver (TProtocolDriver) to process
+  read and write requests. Represents the configuration of the tag being
+  processed.
+
+  @member Rack Value of PLCRack property.
+  @member Slot Value of PLCSlot property.
+  @member Station Value of PLCStation property.
+  @member File_DB Value of MemFile_DB property.
+  @member Address Value of MemAddress property.
+  @member SubElement Value of MemSubElement property.
+  @member Size Value of Size (Block tags) property.
+  @member OffSet Index inside the block (Block Tags).
+  @member Path Value of LongAddress property.
+  @member ReadFunction Value of MemReadFunction property.
+  @member WriteFunction Value of MemWriteFunction property.
+  @member Retries Value of Retries property.
+  @member UpdateTime Value of UpdateTime property.
+  @member CallBack Procedure called when the request is done to return the data of the request.
+  }
+  {$ENDIF}
   TTagRec = record
-    Hack:Integer;
+    Rack:Integer;
     Slot:Integer;
     Station:Integer;
     File_DB:Integer;
@@ -199,11 +234,15 @@ type
     ReadFunction:Integer;
     WriteFunction:Integer;
     Retries:Integer;
-    ScanTime:Integer;
+    UpdateTime:Integer;
     CallBack:TTagCommandCallBack;
   end;
 
+  {$IFDEF PORTUGUES}
   //: Aponta para uma estrutura de Tag.
+  {$ELSE}
+  //: Points to a tag structure
+  {$ENDIF}
   PTagRec = ^TTagRec;
 
   //: Interface de notificação de eventos do tag.
@@ -257,7 +296,7 @@ type
     //: Conta as escritas com sucesso do tag.
     PCommWriteOk:Cardinal;
     //: Armazena o Hack do equipamento da memória que está sendo mapeada.
-    PHack:Cardinal;
+    PRack:Cardinal;
     //: Armazena o Slot do equipamento da memória que está sendo mapeada.
     PSlot:Cardinal;
     //: Armazena o endereço da estação da memória que está sendo mapeada.
@@ -336,9 +375,9 @@ type
     //: Informa o total de escritas com sucesso do tag.
     property CommWritesOk:Cardinal read PCommWriteOk;
     //: Hack do equipamento que contem a memória que está sendo mapeada, se aplicável.
-    property PLCHack:Cardinal read PHack stored false;
+    property PLCHack:Cardinal read PRack stored false;
     //: Rack do equipamento que contem a memória que está sendo mapeada, se aplicável.
-    property PLCRack:Cardinal read PHack;
+    property PLCRack:Cardinal read PRack;
     //: Slot do equipamento que contem a memória que está sendo mapeada, se aplicável.
     property PLCSlot:Cardinal read PSlot;
     //: Endereço da estação que contem a memória que está sendo mapeada, se aplicável.
@@ -358,7 +397,7 @@ type
     //: Tempo de varredura (atualização) dessa memória em milisegundos.
     property RefreshTime:TRefreshTime read PScanTime stored false;
     //: Tempo de varredura (atualização) dessa memória em milisegundos.
-    property ScanRate:TRefreshTime read PScanTime;
+    property UpdateTime:TRefreshTime read PScanTime;
     //: Número de memórias que serão mapeadas, se aplicável.
     property Size:Cardinal read PSize;
     //: Endereço longo (texto), se aplicável ao driver.

@@ -1637,22 +1637,22 @@ begin
   valido:=true;
 
   for plc := 0 to High(FCPUs) do
-    if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
+    if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Rack) AND (FCPUs[plc].Station=Tr.Station) then begin
       foundplc:=true;
       break;
     end;
 
   if not foundplc then begin
-    plc:=CreateCPU(tr.Hack, tr.Slot, tr.Station);
+    plc:=CreateCPU(tr.Rack, tr.Slot, tr.Station);
   end;
 
   case tr.ReadFunction of
     1:
-      FCPUs[plc].Inputs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].Inputs.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     2:
-      FCPUs[plc].Outputs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].Outputs.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     3:
-      FCPUs[plc].Flags.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].Flags.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     4: begin
       if tr.File_DB<=0 then
         tr.File_DB:=1;
@@ -1672,24 +1672,24 @@ begin
         FCPUs[plc].DBs[db].DBArea.MaxBlockItems:=FCPUs[plc].MaxBlockSize;
       end;
 
-      FCPUs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     end;
     5:
-      FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].Counters.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     6:
-      FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].Timers.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     7:
-      FCPUs[plc].S7200SMs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200SMs.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     8:
-      FCPUs[plc].S7200AnInput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200AnInput.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     9:
-      FCPUs[plc].S7200AnOutput.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200AnOutput.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     10:
-      FCPUs[plc].S7200Counters.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200Counters.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     11:
-      FCPUs[plc].S7200Timers.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].S7200Timers.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     12:
-      FCPUs[plc].PeripheralInputs.AddAddress(tr.Address,tr.Size,1,tr.ScanTime);
+      FCPUs[plc].PeripheralInputs.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     else
       valido:=false;
   end;
@@ -1708,7 +1708,7 @@ begin
     foundplc:=false;
 
     for plc := 0 to High(FCPUs) do
-      if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Hack) AND (FCPUs[plc].Station=Tr.Station) then begin
+      if (FCPUs[plc].Slot=Tr.Slot) AND (FCPUs[plc].Rack=Tr.Rack) AND (FCPUs[plc].Station=Tr.Station) then begin
         foundplc:=true;
         break;
       end;
@@ -2184,7 +2184,7 @@ begin
   foundplc:=false;
 
   for plc := 0 to High(FCPUs) do
-    if (FCPUs[plc].Slot=TagRec.Slot) AND (FCPUs[plc].Rack=TagRec.Hack) AND (FCPUs[plc].Station=TagRec.Station) then begin
+    if (FCPUs[plc].Slot=TagRec.Slot) AND (FCPUs[plc].Rack=TagRec.Rack) AND (FCPUs[plc].Station=TagRec.Station) then begin
       foundplc:=true;
       break;
     end;
@@ -2256,14 +2256,14 @@ begin
   foundplc:=false;
   dbidx:=-1;
   for c:=0 to High(FCPUs) do
-    if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
+    if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Rack) and (FCPUs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FCPUs[c];
       foundplc:=true;
       break;
     end;
 
   if PLCPtr=nil then begin
-    c:=CreateCPU(tagrec.Hack, tagrec.Slot, tagrec.Station);
+    c:=CreateCPU(tagrec.Rack, tagrec.Slot, tagrec.Station);
     PLCPtr:=@FCPUs[c];
   end;
 
@@ -2411,14 +2411,14 @@ begin
   foundplc:=false;
   dbidx:=-1;
   for c:=0 to High(FCPUs) do
-    if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Hack) and (FCPUs[c].Station=tagrec.Station) then begin
+    if (FCPUs[c].Slot=tagrec.Slot) and (FCPUs[c].Rack=tagrec.Rack) and (FCPUs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FCPUs[c];
       foundplc:=true;
       break;
     end;
 
   if PLCPtr=nil then begin
-    c:=CreateCPU(tagrec.Hack, tagrec.Slot, tagrec.Station);
+    c:=CreateCPU(tagrec.Rack, tagrec.Slot, tagrec.Station);
     PLCPtr:=@FCPUs[c];
     foundplc:=true;
   end;
@@ -2605,7 +2605,7 @@ function  TSiemensProtocolFamily.GetTagInfo(tagobj:TTag):TTagRec;
 begin
   if tagobj is TPLCTagNumber then begin
     with Result do begin
-      Hack:=TPLCTagNumber(TagObj).PLCHack;
+      Rack:=TPLCTagNumber(TagObj).PLCRack;
       Slot:=TPLCTagNumber(TagObj).PLCSlot;
       Station:=TPLCTagNumber(TagObj).PLCStation;
       File_DB:=TPLCTagNumber(TagObj).MemFile_DB;
@@ -2615,7 +2615,7 @@ begin
       OffSet:=0;
       ReadFunction:=TPLCTagNumber(TagObj).MemReadFunction;
       WriteFunction:=TPLCTagNumber(TagObj).MemWriteFunction;
-      ScanTime:=TPLCTagNumber(TagObj).RefreshTime;
+      UpdateTime:=TPLCTagNumber(TagObj).UpdateTime;
       CallBack:=nil;
     end;
     exit;
@@ -2623,7 +2623,7 @@ begin
 
   if tagobj is TPLCBlock then begin
     with Result do begin
-      Hack:=TPLCBlock(TagObj).PLCHack;
+      Rack:=TPLCBlock(TagObj).PLCRack;
       Slot:=TPLCBlock(TagObj).PLCSlot;
       Station:=TPLCBlock(TagObj).PLCStation;
       File_DB:=TPLCBlock(TagObj).MemFile_DB;
@@ -2633,7 +2633,7 @@ begin
       OffSet:=0;
       ReadFunction:=TPLCBlock(TagObj).MemReadFunction;
       WriteFunction:=TPLCBlock(TagObj).MemWriteFunction;
-      ScanTime:=TPLCBlock(TagObj).RefreshTime;
+      UpdateTime:=TPLCBlock(TagObj).UpdateTime;
       CallBack:=nil;
     end;
     exit;
@@ -2641,7 +2641,7 @@ begin
 
   if tagobj is TPLCString then begin
     with Result do begin
-      Hack:=TPLCString(TagObj).PLCHack;
+      Rack:=TPLCString(TagObj).PLCRack;
       Slot:=TPLCString(TagObj).PLCSlot;
       Station:=TPLCString(TagObj).PLCStation;
       File_DB:=TPLCString(TagObj).MemFile_DB;
@@ -2651,7 +2651,7 @@ begin
       OffSet:=0;
       ReadFunction:=TPLCString(TagObj).MemReadFunction;
       WriteFunction:=TPLCString(TagObj).MemWriteFunction;
-      ScanTime:=TPLCString(TagObj).RefreshTime;
+      UpdateTime:=TPLCString(TagObj).UpdateTime;
       CallBack:=nil;
     end;
     exit;
