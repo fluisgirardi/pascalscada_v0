@@ -245,38 +245,132 @@ type
   {$ENDIF}
   PTagRec = ^TTagRec;
 
-  //: Interface de notificação de eventos do tag.
+  {$IFDEF PORTUGUES}
+  {:
+  Interface de notificação de eventos do tag. Usado para notificar os controles
+  ligados ao tag sobre o que ocorre com o tag.
+  }
+  {$ELSE}
+  {:
+  Tag events notification interface. Used to notifies the linked controls about
+  any event that occurs with the tag.
+  }
+  {$ENDIF}
   IHMITagInterface = interface
     ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
-    //: Chama o evento quando uma letura tem exito.
+    {$IFDEF PORTUGUES}
+    //: Chama o evento quando o tag tem uma letura com exito.
+    {$ELSE}
+    //: Called when the tag has a successful read.
+    {$ENDIF}
     procedure NotifyReadOk;
+
+    {$IFDEF PORTUGUES}
     //: Chama o evento quando uma leitura falha.
+    {$ELSE}
+    //: Called when the tag has a fault read.
+    {$ENDIF}
     procedure NotifyReadFault;
+
+    {$IFDEF PORTUGUES}
     //: Chama o evento quando uma escrita tem sucesso.
+    {$ELSE}
+    //: Called when the tag has a successful write.
+    {$ENDIF}
     procedure NotifyWriteOk;
+
+    {$IFDEF PORTUGUES}
     //: Chama o evento quando uma escrita do tag falha.
+    {$ELSE}
+    //: Called when the tag has a fault write.
+    {$ENDIF}
     procedure NotifyWriteFault;
+
+    {$IFDEF PORTUGUES}
     //: Chama o evento quando o valor do tag muda.
+    {$ELSE}
+    //: Called when the tag value changes.
+    {$ENDIF}
     procedure NotifyTagChange(Sender:TObject);
+
+    {$IFDEF PORTUGUES}
     {:
-    Notifica objetos dependentes que o tag
-    será removido.
+    Notifica objetos dependentes que o tag será removido.
     }
+    {$ELSE}
+    //: Notifies the control about the destruction of the tag.
+    {$ENDIF}
     procedure RemoveTag(Sender:TObject);
   end;
 
+  {$IFDEF PORTUGUES}
+  //: Interface de gerenciamento de identificação do tag.
+  {$ELSE}
+  //: Interface of management of unique tag identification.
+  {$ENDIF}
   IManagedTagInterface = interface
     ['{5CC728FD-B75F-475E-BDE7-07A862B6B2B6}']
+    {$IFDEF PORTUGUES}
+    //: Ordena o tag refazer sua identificação a fim de torná-la única.
+    {$ELSE}
+    //: Forces the tag to rebuild their identification to make it unique.
+    {$ENDIF}
     procedure RebuildTagGUID;
   end;
 
+  {$IFDEF PORTUGUES}
+  {:
+  Interface de atualização do tag. Interface usada pelo driver de protocolo
+  para saber quando o tag deve ser atualizado.
+  }
+  {$ELSE}
+  {:
+  Tag scan interface. Used by the protocol driver to know when a tag must be
+  updated.
+  }
+  {$ENDIF}
   IScanableTagInterface = interface
     ['{6D57805C-D779-4607-BDA5-DF8A68F49973}']
+    {$IFDEF PORTUGUES}
+    //: Informa quanto tempo se passou desde a última atualização do valor do tag.
+    {$ELSE}
+    //: Tells how many time has elapsed from the last update of tag value.
+    {$ENDIF}
     function RemainingMiliseconds:Int64;
+
+    {$IFDEF PORTUGUES}
+    //: Informa quanto tempo se passou desde a última verificação do tag.
+    {$ELSE}
+    //: Tells how many time has elapsed from the last scan of tag.
+    {$ENDIF}
     function RemainingMilisecondsForNextScan:Int64;
+
+    {$IFDEF PORTUGUES}
+    //: Diz se o tag está configurado corretamente.
+    {$ELSE}
+    //: Tells if the tag is set properly.
+    {$ENDIF}
     function IsValidTag:Boolean;
+
+    {$IFDEF PORTUGUES}
+    //: Informa se o callback pertence ao tag.
+    {$ELSE}
+    //: Tells if callback belongs to the tag
+    {$ENDIF}
     function IsMyCallBack(Cback:TTagCommandCallBack):Boolean;
+
+    {$IFDEF PORTUGUES}
+    //: Seta o tag como válido ou não.
+    {$ELSE}
+    //: Sets the tag as valid or not.
+    {$ENDIF}
     procedure SetTagValidity(TagValidity:Boolean);
+
+    {$IFDEF PORTUGUES}
+    //: Obtem a estrutura com as informações do tag.
+    {$ELSE}
+    //: Gets a structure with informations about the tag.
+    {$ENDIF}
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
   end;
 
