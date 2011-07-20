@@ -374,12 +374,25 @@ type
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
   end;
 
+  {$IFDEF PORTUGUES}
   //: Classe base para todos os tags.
+  {$ELSE}
+  //: Base class for all tags.
+  {$ENDIF}
   TTag = class(TComponent)
   protected
+    {$IFDEF PORTUGUES}
     //: Booleano que armazena se o tag vai ser lido automaticamente.
+    {$ELSE}
+    //: Stores if the tag will be updated automatically.
+    {$ENDIF}
     PAutoRead:Boolean;
+
+    {$IFDEF PORTUGUES}
     //: Booleano que armazena se o tag vai ter seu valor escrito automaticamente.
+    {$ELSE}
+    //: Stores if the tag will write their value automatically.
+    {$ENDIF}
     PAutoWrite:Boolean;
     //: Conta os erros de leitura.
     PCommReadErrors:Cardinal;
