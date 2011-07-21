@@ -36,9 +36,9 @@ type
 
   Por exemplo, digamos que o tag plc associado contenha o valor 5 (00000101 bin).
   Com o StartBit=1 e Endbit=2, o valor do tag bit vai ser igual a 2 (10 bin).
-  Com o StartBit=0 e EndBit=2, o valor do tag bit é 5 (101).
-  Com o StartBit=0 e EndBit=1, o valor do tag bit é 1 (01).
-  Com o StartBit=0 e EndBit=0, o valor do tag bit é 1 (1).
+  Com o StartBit=0 e EndBit=2, o valor do tag bit é 5 (101 bin).
+  Com o StartBit=0 e EndBit=1, o valor do tag bit é 1 (01 bin).
+  Com o StartBit=0 e EndBit=0, o valor do tag bit é 1 (1 bin).
 
   StartBit é equivalente ao bit menos significativo da palavra representada
   pelo tag, enquanto EndBit é o bit mais significativo. Logo Endbit tem que ser
@@ -49,15 +49,14 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Tag that represents a set of bits of another tag.)
 
-  Por exemplo, digamos que o tag plc associado contenha o valor 5 (00000101 bin).
-  Com o StartBit=1 e Endbit=2, o valor do tag bit vai ser igual a 2 (10 bin).
-  Com o StartBit=0 e EndBit=2, o valor do tag bit é 5 (101).
-  Com o StartBit=0 e EndBit=1, o valor do tag bit é 1 (01).
-  Com o StartBit=0 e EndBit=0, o valor do tag bit é 1 (1).
+  For example, if the linked tag has the value 5 (00000101 bin).
+  With StartBit=1 and Endbit=2, the value of the tag bit will be 2 (10 bin).
+  With StartBit=0 and EndBit=2, the value of the tag bit will be 5 (101 bin).
+  With StartBit=0 and EndBit=1, the value of the tag bit will be 1 (01 bin).
+  With StartBit=0 and EndBit=0, the value of the tag bit will be 1 (1 bin).
 
-  StartBit é equivalente ao bit menos significativo da palavra representada
-  pelo tag, enquanto EndBit é o bit mais significativo. Logo Endbit tem que ser
-  maior ou igual a StartBit.
+  StartBit is the less significant bit of the tag and EndBit represents the most
+  significant bit. Therefore Endbit must be greater or equal than StartBit.
   }
   {$ENDIF}
   TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
@@ -105,13 +104,33 @@ type
     procedure OpenBitMapper(OwnerOfNewTags: TComponent;
        InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   published
-    //: Tag usado para mapear os bits.
+
+    {$IFDEF PORTUGUES}
+    //: Tag de onde os bits serão mapeados.
+    {$ELSE}
+    //: Tag where the bits will be mapped.
+    {$ENDIF}
     property PLCTag:TPLCNumber read PNumber write SetNumber;
-    //: Usar o valor puro ou processado para mapeamento de bits.
+
+    {$IFDEF PORTUGUES}
+    //: Caso @true, os bits serão mapeados do valor puro do tag (propriedade ValueRaw do tag).
+    {$ELSE}
+    //: If @true, the bits will be mapped from the raw value (ValueRaw property of the tag).
+    {$ENDIF}
     property UseRawValue:boolean read PUseRaw write SetUseRaw;
-    //: Qual o primeiro bit da palavra que vai ser mapeado.
+
+    {$IFDEF PORTUGUES}
+    //: Primeiro bit da palavra que vai ser mapeado. Inicia de 0 (zero).
+    {$ELSE}
+    //: First bit of the tag word to be mapped. Starts from 0 (ZERO).
+    {$ENDIF}
     property StartBit:TBitRange read PStartBit write SetStartBit;
-    //: Qual o último bit da palavra que vai ser mapeado.
+
+    {$IFDEF PORTUGUES}
+    //: Último bit da palavra que vai ser mapeado. Valor máximo aceito é 31.
+    {$ELSE}
+    //: Last bit of the tag word to be mapped. The Maximum value accept is 31.
+    {$ENDIF}
     property EndBit:TBitRange read PEndBit write SetEndBit;
     //: @seealso(TPLCNumber.EnableMaxValue)
     property EnableMaxValue;
@@ -148,7 +167,7 @@ end;
 procedure TTagBit.OpenBitMapper(OwnerOfNewTags: TComponent;
    InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
 begin
-  MessageDlg('Porque mapear bits de outros bits?',mtInformation,[mbOK],0);
+  MessageDlg(SWhyMapBitsFromOtherBits,mtInformation,[mbOK],0);
 end;
 
 procedure TTagBit.SetNumber(number:TPLCNumber);
@@ -156,7 +175,8 @@ begin
   if (number<>nil) and ((not Supports(number, ITagInterface)) or (not Supports(number, ITagNumeric))) then
      raise Exception.Create(SinvalidTag);
 
-  //esta removendo do bloco.
+  //esta removendo o tag.
+  //the link with tag is being removed.
   if (number=nil) and (PNumber<>nil) then begin
     PNumber.RemoveCallBacks(Self as IHMITagInterface);
     PNumber := nil;
@@ -164,6 +184,7 @@ begin
   end;
 
   //se esta setando o tag
+  //a new tag link is being set.
   if (number<>nil) and (PNumber=nil) then begin
     PNumber := number;
     PNumber.AddCallBacks(Self as IHMITagInterface);
@@ -171,7 +192,8 @@ begin
     exit;
   end;
 
-  //se esta setado o bloco, mas esta trocando
+  //esta trocando de tag
+  //replacing the tag link
   if number<>PNumber then begin
     PNumber.RemoveCallBacks(Self as IHMITagInterface);
     PNumber := number;

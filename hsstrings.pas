@@ -96,6 +96,7 @@ resourcestring
   SCheckAtLeastOneVariable = 'Marque pelo menos uma variável!';
   STheOwnerMustBeAProtocolDriver = 'O componente dono da thread de atualização precisa ser um driver de protocolo!';
   SYouMustHaveAtLeastOneStructureItem = 'É necessário pelo menos um item de estrutura!';
+  SWhyMapBitsFromOtherBits = 'Porque mapear bits de outros bits?'
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -153,6 +154,7 @@ resourcestring
   SCheckAtLeastOneVariable = 'Check at least one variable!';
   STheOwnerMustBeAProtocolDriver = 'The component owner of the update thread must be a protocol driver!';
   SYouMustHaveAtLeastOneStructureItem = 'You must have at least one structure item!';
+  SWhyMapBitsFromOtherBits = 'Why to map bits from other bits?';
   {$ENDIF}
 
 implementation

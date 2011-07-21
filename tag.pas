@@ -546,99 +546,304 @@ type
     //: Stores the event called when the tag value changes, AFTER notify the dependents of the tag.
     {$ENDIF}
     POnValueChangeLast:TNotifyEvent;
-    //: Armazena os procedimentos que o tag deve chamar quando o seu valor altera.
-    PChangeCallBacks:array of IHMITagInterface;
-    //: Conta os callbacks que dependem desse tag.
-    PChangeCallBackCount:integer;
 
+    {$IFDEF PORTUGUES}
+    //: Armazena a interface de notificação de eventos de todos os objetos dependentes.
+    {$ELSE}
+    //: Stores the notification event interface of all dependent objects.
+    {$ENDIF}
+    PNotificationInterfaces:array of IHMITagInterface;
+
+    {$IFDEF PORTUGUES}
+    //: Conta os objetos que dependem desse tag.
+    {$ELSE}
+    //: Number of dependent objects.
+    {$ENDIF}
+    PNotificationInterfacesCount:integer;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o identificador desse tag. GUID
+    {$ELSE}
+    //: Stores the unique tag identification.
+    {$ENDIF}
     PGUID:String;
 
-    //: Chama o evento quando uma letura tem exito.
+    {$IFDEF PORTUGUES}
+    //: Notifica quando uma letura tem exito.
+    {$ELSE}
+    //: Notifies when a successful read occurs.
+    {$ENDIF}
     procedure NotifyReadOk;
-    //: Chama o evento quando uma leitura falha.
+
+    {$IFDEF PORTUGUES}
+    //: Notifica quando uma falha de leitura.
+    {$ELSE}
+    //: Notifies when a read fault occurs.
+    {$ENDIF}
     procedure NotifyReadFault;
-    //: Chama o evento quando uma escrita tem sucesso.
+
+    {$IFDEF PORTUGUES}
+    //: Notifica quando uma escrita tem sucesso.
+    {$ELSE}
+    //: Notifies when a successful write occurs.
+    {$ENDIF}
     procedure NotifyWriteOk;
-    //: Chama o evento quando uma escrita do tag falha.
+
+    {$IFDEF PORTUGUES}
+    //: Notifica quando uma falha de escrita ocorre.
+    {$ELSE}
+    //: Notifies when a write fault occurs.
+    {$ENDIF}
     procedure NotifyWriteFault;
-    //: Chama o evento quando o valor do tag muda.
+
+    {$IFDEF PORTUGUES}
+    //: Notifica quando o valor do tag muda.
+    {$ELSE}
+    //: Notifies when the tag value changes.
+    {$ENDIF}
     procedure NotifyChange;
 
+
+    {$IFDEF PORTUGUES}
     //: Incrementa o contador de leituras com sucesso.
+    {$ELSE}
+    //: Increments the counter of successful reads.
+    {$ENDIF}
     procedure IncCommReadOK(value:Cardinal);
+
+    {$IFDEF PORTUGUES}
     //: Incrementa o contador de leituras com falha do tag.
+    {$ELSE}
+    //: Increments the counter of faulted reads.
+    {$ENDIF}
     procedure IncCommReadFaults(value:Cardinal);
+
+    {$IFDEF PORTUGUES}
     //: Incrementa o contador de escritas com exito do tag.
+    {$ELSE}
+    //: Increments the counter of successful writes.
+    {$ENDIF}
     procedure IncCommWriteOK(value:Cardinal);
+
+    {$IFDEF PORTUGUES}
     //: Incrementa o contador de falhas de escrita do tag.
+    {$ELSE}
+    //: Increments the counter of faulted writes.
+    {$ENDIF}
     procedure IncCommWriteFaults(value:Cardinal);
 
+    {$IFDEF PORTUGUES}
     //: Caso @true, o tag será lido automaticamente.
+    {$ELSE}
+    //: If @true, the tag will be updated automaticaly.
+    {$ENDIF}
     property AutoRead:Boolean read PAutoRead;
+
+    {$IFDEF PORTUGUES}
     {:
     Caso @true, toda a vez que ocorrerem escritas no tag,
     ele irá escrever o valor no equipamento.
     }
+    {$ELSE}
+    {:
+    If @true, all values written on tags will be automaticaly written on the
+    the memory of the linked device.
+    }
+    {$ENDIF}
     property AutoWrite:Boolean read PAutoWrite;
+
+    {$IFDEF PORTUGUES}
     //: Informa o total de erros de leitura do tag.
+    {$ELSE}
+    //: Tell how many read errors occurred.
+    {$ENDIF}
     property CommReadErrors:Cardinal read PCommReadErrors;
+
+    {$IFDEF PORTUGUES}
     //: Informa o total de leituras com exito do tag.
+    {$ELSE}
+    //: Tells the count of successful reads.
+    {$ENDIF}
     property CommReadsOK:Cardinal read PCommReadOK;
+
+    {$IFDEF PORTUGUES}
     //: Informa o total de erros de escrita do tag.
+    {$ELSE}
+    //: Tell how many write errors occurred.
+    {$ENDIF}
     property CommWriteErrors:Cardinal read PCommWriteErrors;
-    //: Informa o total de escritas com sucesso do tag.
+
+    {$IFDEF PORTUGUES}
+    //: Informa o total de escritas com exito do tag.
+    {$ELSE}
+    //: Tells the count of successful writes.
+    {$ENDIF}
     property CommWritesOk:Cardinal read PCommWriteOk;
-    //: Hack do equipamento que contem a memória que está sendo mapeada, se aplicável.
-    property PLCHack:Cardinal read PRack stored false;
+
+    {$IFDEF PORTUGUES}
     //: Rack do equipamento que contem a memória que está sendo mapeada, se aplicável.
+    {$ELSE}
+    //: Device Rack that contains the memory being mapped, if applicable.
+    {$ENDIF}
+    property PLCHack:Cardinal read PRack stored false;
+
+    {$IFDEF PORTUGUES}
+    //: Rack do equipamento que contem a memória que está sendo mapeada, se aplicável.
+    {$ELSE}
+    //: Device Rack that contains the memory being mapped, if applicable.
+    {$ENDIF}
     property PLCRack:Cardinal read PRack;
+
+    {$IFDEF PORTUGUES}
     //: Slot do equipamento que contem a memória que está sendo mapeada, se aplicável.
+    {$ELSE}
+    //: Device Slot that contains the memory being mapped, if applicable.
+    {$ENDIF}
     property PLCSlot:Cardinal read PSlot;
+
+    {$IFDEF PORTUGUES}
     //: Endereço da estação que contem a memória que está sendo mapeada, se aplicável.
+    {$ELSE}
+    //: Device address that contains the memory being mapped, if applicable.
+    {$ENDIF}
     property PLCStation:Cardinal read PStation;
-    //: Arquivo/DB dentro do equipamento que contem a memória que está sendo mapeada, se aplicável.
+
+    {$IFDEF PORTUGUES}
+     //: Arquivo/DB dentro do equipamento que contem a memória que está sendo mapeada, se aplicável.
+    {$ELSE}
+    //: Device File/DB that contains the memory being mapped, if applicable.
+    {$ENDIF}
     property MemFile_DB:Cardinal read PFile_DB;
+
+    {$IFDEF PORTUGUES}
     //: Endereço da memória que está sendo mapeada.
+    {$ELSE}
+    //: The address of the memory being mapped.
+    {$ENDIF}
     property MemAddress:Cardinal read PAddress;
+
+    {$IFDEF PORTUGUES}
     //: Subendereço da memória que está sendo mapeada, se aplicável.
+    {$ELSE}
+    //: The sub-memory address, if applicable.
+    {$ENDIF}
     property MemSubElement:Cardinal read PSubElement;
+
+    {$IFDEF PORTUGUES}
     //: Função do driver responsável por realizar a leitura dessa memória.
+    {$ELSE}
+    //: Protocol driver function that will read the memory being mapped.
+    {$ENDIF}
     property MemReadFunction:Cardinal read PReadFunction;
+
+    {$IFDEF PORTUGUES}
     //: Função do driver responsável por realizar a escrita de valores dessa memória.
+    {$ELSE}
+    //: Protocol driver function that will write values in the memory being mapped.
+    {$ENDIF}
     property MemWriteFunction:Cardinal read PWriteFunction;
+
+    {$IFDEF PORTUGUES}
     //: Número tentivas de leitura/escrita dessa memória.
+    {$ELSE}
+    //: Number of retries of read/write of this memory.
+    {$ENDIF}
     property Retries:Cardinal read PRetries;
-    //: Tempo de varredura (atualização) dessa memória em milisegundos.
+
+    {$IFDEF PORTUGUES}
+    //: Tempo de atualização do tag, em milisegundos.
+    {$ELSE}
+    //: Update time of the tag, in milliseconds.
+    {$ENDIF}
     property RefreshTime:TRefreshTime read PUpdateTime stored false;
-    //: Tempo de varredura (atualização) dessa memória em milisegundos.
+
+    {$IFDEF PORTUGUES}
+    //: Tempo de atualização do tag, em milisegundos.
+    {$ELSE}
+    //: Update time of the tag, in milliseconds.
+    {$ENDIF}
     property UpdateTime:TRefreshTime read PUpdateTime;
+
+    {$IFDEF PORTUGUES}
     //: Número de memórias que serão mapeadas, se aplicável.
+    {$ELSE}
+    //: Number of memories being mapped, if applicable.
+    {$ENDIF}
     property Size:Cardinal read PSize;
-    //: Endereço longo (texto), se aplicável ao driver.
+
+    {$IFDEF PORTUGUES}
+    //: Endereço longo (texto), se suportado pelo driver de protocolo.
+    {$ELSE}
+    //: Long address (text), if supported by the protocol driver.
+    {$ENDIF}
     property LongAddress:String read PPath;
 
+    {$IFDEF PORTUGUES}
     //: Evento chamado quando uma leitura do tag tem exito.
+    {$ELSE}
+    //: Event called to notify when a successful read occurs.
+    {$ENDIF}
     property OnReadOK:TNotifyEvent      read POnReadOk       write POnReadOk;
+
+    {$IFDEF PORTUGUES}
     //: Evento chamado quando uma leitura do tag falha.
+    {$ELSE}
+    //: Event called when a read fault occurs.
+    {$ENDIF}
     property OnReadFail:TNotifyEvent    read POnReadFail     write POnReadFail;
+
+    {$IFDEF PORTUGUES}
     //: Evento chamado quando uma escrita de valor do tag tem exito.
+    {$ELSE}
+    //: Event called to notify when a write of the tag value has success.
+    {$ENDIF}
     property OnWriteOk:TNotifyEvent     read POnWriteOk      write POnWriteOk;
+
+    {$IFDEF PORTUGUES}
     //: Evento chamado quando uma escrita do tag falha.
+    {$ELSE}
+    //: Event called when a write fault occurs.
+    {$ENDIF}
     property OnWriteFail:TNotifyEvent   read POnWriteFail    write POnWriteFail;
-    //: Evento chamado quando o valor do tag sofre alguma mudançaW.
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado quando o valor do tag sofre alguma mudança, após notificar todos os dependentes do tag.
+    {$ELSE}
+    //: Event called when the tag value changes, AFTER notify all tag dependents.
+    {$ENDIF}
     property OnValueChange:TNotifyEvent read POnValueChangeLast  write POnValueChangeLast stored false;
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado quando o valor do tag sofre alguma mudança, APÓS notificar todos os dependentes do tag.
+    {$ELSE}
+    //: Event called when the tag value changes, AFTER notify all tag dependents.
+    {$ENDIF}
     property OnValueChangeLast:TNotifyEvent read POnValueChangeLast  write POnValueChangeLast;
-    //: Evento chamado quando o valor do tag sofre alguma mudança.
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado quando o valor do tag sofre alguma mudança, ANTES DE notificar todos os dependentes do tag.
+    {$ELSE}
+    //: Event called when the tag value changes, BEFORE notify all tag dependents.
+    {$ENDIF}
     property OnValueChangeFirst:TNotifyEvent read POnValueChangeFirst  write POnValueChangeFirst;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
-    //: Adiciona um conjunto de notificação de alteração para o tag.
+
+    {$IFDEF PORTUGUES}
+    //: Adiciona uma nova interface para ser notificada dos eventos do tag.
+    {$ELSE}
+    //: Adds a new notification interface to the tag notification list.
+    {$ENDIF}
     procedure AddCallBacks(ITag:IHMITagInterface);
-    //: Remove um conjunto de notificação de mudanças do tag.
+
+    {$IFDEF PORTUGUES}
+    //: Remove uma interface da lista de notificações do tag.
+    {$ELSE}
+    //: Remove a interface from the tag notification list.
+    {$ENDIF}
     procedure RemoveCallBacks(ITag:IHMITagInterface);
   end;
 
@@ -662,7 +867,7 @@ var
   x:TGuid;
 begin
   inherited Create(AOwner);
-  PChangeCallBackCount := 0;
+  PNotificationInterfacesCount := 0;
   PCommReadErrors := 0;
   PCommReadOK := 0;
   PCommWriteErrors := 0;
@@ -679,8 +884,8 @@ destructor TTag.Destroy;
 var
   c:Integer;
 begin
-  for c := 0 to High(PChangeCallBacks) do
-    PChangeCallBacks[c].RemoveTag(Self);
+  for c := 0 to High(PNotificationInterfaces) do
+    PNotificationInterfaces[c].RemoveTag(Self);
   inherited Destroy;
 end;
 
@@ -689,9 +894,9 @@ begin
   if (ITag<>nil) and ((ITag as IHMITagInterface)=nil) then
     raise Exception.Create(SinvalidInterface);
   
-  inc(PChangeCallBackCount);
-  SetLength(PChangeCallBacks, PChangeCallBackCount);
-  PChangeCallBacks[PChangeCallBackCount-1]:=ITag;
+  inc(PNotificationInterfacesCount);
+  SetLength(PNotificationInterfaces, PNotificationInterfacesCount);
+  PNotificationInterfaces[PNotificationInterfacesCount-1]:=ITag;
 end;
 
 procedure TTag.RemoveCallBacks(ITag:IHMITagInterface);
@@ -700,16 +905,16 @@ var
   found:Boolean;
 begin
   found:=false;
-  h := High(PChangeCallbacks);
+  h := High(PNotificationInterfaces);
   for c:=0 to h do
-    if (ITag)=(PChangeCallBacks[c]) then begin
+    if (ITag)=(PNotificationInterfaces[c]) then begin
       found := true;
       break;
     end;
   if found then begin
-    PChangeCallBacks[c] := PChangeCallbacks[h];
-    PChangeCallBackCount := PChangeCallBackCount - 1;
-    SetLength(PChangeCallBacks, PChangeCallBackCount);
+    PNotificationInterfaces[c] := PNotificationInterfaces[h];
+    dec(PNotificationInterfacesCount);
+    SetLength(PNotificationInterfaces, PNotificationInterfacesCount);
   end;
 end;
 
@@ -719,6 +924,8 @@ var
 begin
   //notifica a mudanca antes de notificar os
   //demais controles.
+  //
+  // Notify the change before notify the dependent objects.
   try
     if Assigned(POnValueChangeFirst) then
       POnValueChangeFirst(Self);
@@ -726,13 +933,17 @@ begin
   end;
 
   //notifica controles e objetos dependentes
-  for c:=0 to High(PChangeCallBacks) do
+  //
+  //Notify the dependent objects.
+  for c:=0 to High(PNotificationInterfaces) do
     try
-      PChangeCallBacks[c].NotifyTagChange(self);
+      PNotificationInterfaces[c].NotifyTagChange(self);
     except
     end;
 
   //notificação de mudanca após notificar os controles.
+  //
+  //Notify the change after notify the dependent objects.
   try
     if Assigned(POnValueChangeLast) then
       POnValueChangeLast(Self);
@@ -744,9 +955,9 @@ procedure TTag.NotifyReadOk;
 var
   c:Integer;
 begin
-  for c:=0 to High(PChangeCallBacks) do
+  for c:=0 to High(PNotificationInterfaces) do
     try
-      PChangeCallBacks[c].NotifyReadOk;
+      PNotificationInterfaces[c].NotifyReadOk;
     except
     end;
 
@@ -758,9 +969,9 @@ procedure TTag.NotifyReadFault;
 var
   c:Integer;
 begin
-  for c:=0 to High(PChangeCallBacks) do
+  for c:=0 to High(PNotificationInterfaces) do
     try
-      PChangeCallBacks[c].NotifyReadFault;
+      PNotificationInterfaces[c].NotifyReadFault;
     except
     end;
 
@@ -772,9 +983,9 @@ procedure TTag.NotifyWriteOk;
 var
   c:Integer;
 begin
-  for c:=0 to High(PChangeCallBacks) do
+  for c:=0 to High(PNotificationInterfaces) do
     try
-      PChangeCallBacks[c].NotifyWriteOk;
+      PNotificationInterfaces[c].NotifyWriteOk;
     except
     end;
 
@@ -786,9 +997,9 @@ procedure TTag.NotifyWriteFault;
 var
   c:Integer;
 begin
-  for c:=0 to High(PChangeCallBacks) do
+  for c:=0 to High(PNotificationInterfaces) do
     try
-      PChangeCallBacks[c].NotifyWriteFault;
+      PNotificationInterfaces[c].NotifyWriteFault;
     except
     end;
 
