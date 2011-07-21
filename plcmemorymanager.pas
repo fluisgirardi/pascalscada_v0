@@ -239,6 +239,10 @@ type
     FAddress:array of TMemoryRec;
     FMaxHole:Integer;
     FMaxBlockSize:Integer;
+    //binary search of memory address
+    function FindAddress(const address:Integer; var idx:Integer):Boolean;
+    //segmented binary search of memory address
+    function FindAddresBySegment(const address, startindex, endindex:Integer; var idx:Integer):Boolean;
     procedure AddAddress(Add,Scan:Integer); overload;
     procedure RemoveAddress(Add:Integer); overload;
     procedure SetHoleSize(size:Integer);
@@ -629,6 +633,35 @@ begin
   SetLength(Blocks,0);
 end;
 
+function TPLCMemoryManager.FindAddress(const address:Integer; var idx:Integer):Boolean;
+begin
+  if Length(FAddress)=0 then
+    Result:=false
+  else
+    Result:=FindAddresBySegment(address,0,High(FAddress), idx);
+end;
+
+function TPLCMemoryManager.FindAddresBySegment(const address, startindex, endindex:Integer; var idx:Integer):Boolean;
+var
+  len, middle:Integer;
+begin
+  len:=endindex-startindex+1;
+
+  if len=1 then begin
+    if FAddress[startindex].Address=Address then begin
+      Result:=true;
+      idx:=startindex;
+    end else
+      Result:=false;
+  end else begin
+    middle := (len div 2) + startindex;
+    if Address<FAddress[middle].Address then
+      Result:=FindAddresBySegment(Address,startindex,middle-1,idx)
+    else
+      Result:=FindAddresBySegment(Address,middle,endindex,idx);
+  end;
+end;
+
 procedure TPLCMemoryManager.AddAddress(Add, Scan:Integer);
 var
   c, h:Integer;
@@ -669,8 +702,13 @@ begin
     c:=0;
     //procura...
     //search
-    while (c<Length(FAddress)) and (add>FAddress[c].Address) do
-      inc(c);
+    if not FindAddress(add,c) then begin
+      c:=0;
+      //if the address has not found using the binary search, try the normal
+      //search to seek the nearest array index to insert the new address.
+      while (c<Length(FAddress)) and (add>FAddress[c].Address) do
+        inc(c);
+    end;
 
     if (c<Length(FAddress)) and (FAddress[c].Address=add) then begin
       //se encontrou o endereco...
@@ -703,16 +741,11 @@ var
   c:Integer;
 begin
   c:=0;
-  //esse while para quando encontra o endereco desejado ou qdo acaba a lista!!
-  //search the address...
-  while (c<=high(FAddress)) and (add>=FAddress[c].Address) do
-    if (add>=FAddress[c].Address) then
-      break
-    else
-      inc(c);
   //se não encontrou cai fora...
   //if not found the addres, exit.
-  if (c>high(FAddress)) or (FAddress[c].Address<>Add) then exit;
+  if not FindAddress(add, c) then
+    exit;
+
   dec(FAddress[c].Count);
   //caso zerou um endereco, é necessário remover ele da lista...
   //if the address isn't referenced anymore, remove it from the address list.
