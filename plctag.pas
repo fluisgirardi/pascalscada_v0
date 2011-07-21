@@ -689,7 +689,7 @@ begin
   PReadFunction:=0;
   PWriteFunction:=0;
   PRetries:=1;
-  PScanTime:=1000;
+  PUpdateTime:=1000;
   FTagType:=pttDefault;
   FSwapBytes:=false;
   FSwapWords:=false;
@@ -946,12 +946,12 @@ end;
 
 procedure TPLCTag.SetRefreshTime(v:TRefreshTime);
 begin
-  if PScanTime=v then exit;
+  if PUpdateTime=v then exit;
 
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.RemoveTag(Self);
 
-  PScanTime := v;
+  PUpdateTime := v;
 
   if (PProtocolDriver<>nil) AND PAutoRead then
     PProtocolDriver.AddTag(Self);
@@ -987,7 +987,7 @@ begin
   tr.ReadFunction := PReadFunction;
   tr.WriteFunction := PWriteFunction;
   tr.Retries := PRetries;
-  tr.UpdateTime := PScanTime;
+  tr.UpdateTime := PUpdateTime;
   tr.CallBack := TagCommandCallBack;
 end;
 
@@ -1575,12 +1575,12 @@ end;
 
 function TPLCTag.RemainingMiliseconds:Int64;
 begin
-  Result:=PScanTime-MilliSecondsBetween(Now,PValueTimeStamp);
+  Result:=PUpdateTime-MilliSecondsBetween(Now,PValueTimeStamp);
 end;
 
 function TPLCTag.RemainingMilisecondsForNextScan:Int64;
 begin
-  Result:=PScanTime-MilliSecondsBetween(Now,PLastScanTimeStamp);
+  Result:=PUpdateTime-MilliSecondsBetween(Now,PLastScanTimeStamp);
 end;
 
 function TPLCTag.IsValidTag:Boolean;

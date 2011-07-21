@@ -294,9 +294,7 @@ type
     procedure NotifyTagChange(Sender:TObject);
 
     {$IFDEF PORTUGUES}
-    {:
-    Notifica objetos dependentes que o tag será removido.
-    }
+    //: Notifica o objeto dependente que o tag será removido.
     {$ELSE}
     //: Notifies the control about the destruction of the tag.
     {$ENDIF}
@@ -394,49 +392,159 @@ type
     //: Stores if the tag will write their value automatically.
     {$ENDIF}
     PAutoWrite:Boolean;
-    //: Conta os erros de leitura.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena a contagem de erros de leitura.
+    {$ELSE}
+    //: Stores the counter of failed reads.
+    {$ENDIF}
     PCommReadErrors:Cardinal;
-    //: Conta as leituras com exito.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena a contagem de leituras bem sucedidas.
+    {$ELSE}
+    //: Stores the counter of successful reads.
+    {$ENDIF}
     PCommReadOK:Cardinal;
-    //: Conta os erros de escritas do tag.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena a contagem de erros de escrita.
+    {$ELSE}
+    //: Stores the counter of failed writes.
+    {$ENDIF}
     PCommWriteErrors:Cardinal;
-    //: Conta as escritas com sucesso do tag.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena a contagem de escritas bem sucedidas.
+    {$ELSE}
+    //: Stores the counter of successful writes.
+    {$ENDIF}
     PCommWriteOk:Cardinal;
-    //: Armazena o Hack do equipamento da memória que está sendo mapeada.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o Rack do equipamento da memória que está sendo mapeada.
+    {$ELSE}
+    //: Stores the device Rack number of the tag.
+    {$ENDIF}
     PRack:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o Slot do equipamento da memória que está sendo mapeada.
+    {$ELSE}
+    //: Stores the device Slot number of the tag.
+    {$ENDIF}
     PSlot:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o endereço da estação da memória que está sendo mapeada.
+    {$ELSE}
+    //: Stores the device Station address of the tag.
+    {$ENDIF}
     PStation:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o Arquivo/DB dentro do equipamento da memória que está sendo mapeada.
+    {$ELSE}
+    //: Stores the File/DB number of the tag.
+    {$ENDIF}
     PFile_DB:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o endereço da memória no equipamento que está sendo mapeada.
+    {$ELSE}
+    //: Stores the device memory address of the tag.
+    {$ENDIF}
     PAddress:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o subendereço da memória no equipamento que está sendo mapeada.
+    {$ELSE}
+    //: Stores the device sub-memory address of the tag.
+    {$ENDIF}
     PSubElement:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o número de memórias que estão mapeadas.
+    {$ELSE}
+    //: Stores how many memories are being mapped.
+    {$ENDIF}
     PSize:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o endereço completo da memória em formato texto.
+    {$ELSE}
+    //: Stores the textual memory address of the tag.
+    {$ENDIF}
     PPath:String;
+
+    {$IFDEF PORTUGUES}
     //: Armazena a função usada para leitura da memória.
+    {$ELSE}
+    //: Stores the function code to read the values of the tag.
+    {$ENDIF}
     PReadFunction:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena a função usada para escrita da memória.
+    {$ELSE}
+    //: Stores the function code to write the values of the tag.
+    {$ENDIF}
     PWriteFunction:Cardinal;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o número de tentivas de leitura/escrita da memória.
+    {$ELSE}
+    //: Stores the
+    {$ENDIF}
     PRetries:Cardinal;
-    //: Armazena o tempo de varredura a memória.
-    PScanTime:TRefreshTime;
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o tempo de atualização do tag.
+    {$ELSE}
+    //: Stores the update time of the tag.
+    {$ENDIF}
+    PUpdateTime:TRefreshTime;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o evento chamado pelo quando uma leitura do tag tem sucesso.
+    {$ELSE}
+    //: Stores the event to be called when a read has success.
+    {$ENDIF}
     POnReadOk:TNotifyEvent;
+
+    {$IFDEF PORTUGUES}
     //: Armazena o evento chamado pelo tag quando uma leitura do tag falha.
+    {$ELSE}
+    //: Stores the event to be called when a read fail occurs.
+    {$ENDIF}
     POnReadFail:TNotifyEvent;
-    //: Armazena o evento chamado pelo tag quando uma escrita tem sucesso.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o evento chamado pelo tag quando um valor é escrito com sucesso no dispositivo.
+    {$ELSE}
+    //: Stores the event to be called when a value is written successfully on device.
+    {$ENDIF}
     POnWriteOk:TNotifyEvent;
-    //: Armazena o evento chamado pelo tag quando uma escrita falha.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o evento chamado pelo tag quando uma escrita de valores do tag no dispositivo falha.
+    {$ELSE}
+    //: Stores the event called when a write of tag value has a failed.
+    {$ENDIF}
     POnWriteFail:TNotifyEvent;
-    //: Armazena o evento chamado pelo tag quando o seu valor se altera.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o evento chamado pelo tag quando o valor da tag se altera, ANTES de notificar seus dependetes.
+    {$ELSE}
+    //: Stores the event called when the tag value changes, BEFORE notify the dependents of the tag.
+    {$ENDIF}
     POnValueChangeFirst:TNotifyEvent;
-    //: Armazena o evento chamado pelo tag quando o seu valor se altera.
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o evento chamado pelo tag quando o valor da tag se altera, APÓS notificar seus dependetes.
+    {$ELSE}
+    //: Stores the event called when the tag value changes, AFTER notify the dependents of the tag.
+    {$ENDIF}
     POnValueChangeLast:TNotifyEvent;
     //: Armazena os procedimentos que o tag deve chamar quando o seu valor altera.
     PChangeCallBacks:array of IHMITagInterface;
@@ -502,9 +610,9 @@ type
     //: Número tentivas de leitura/escrita dessa memória.
     property Retries:Cardinal read PRetries;
     //: Tempo de varredura (atualização) dessa memória em milisegundos.
-    property RefreshTime:TRefreshTime read PScanTime stored false;
+    property RefreshTime:TRefreshTime read PUpdateTime stored false;
     //: Tempo de varredura (atualização) dessa memória em milisegundos.
-    property UpdateTime:TRefreshTime read PScanTime;
+    property UpdateTime:TRefreshTime read PUpdateTime;
     //: Número de memórias que serão mapeadas, se aplicável.
     property Size:Cardinal read PSize;
     //: Endereço longo (texto), se aplicável ao driver.
@@ -559,7 +667,7 @@ begin
   PCommReadOK := 0;
   PCommWriteErrors := 0;
   PCommWriteOk := 0;
-  PScanTime:=1000;
+  PUpdateTime:=1000;
 
   if ComponentState*[csReading, csLoading]=[] then begin
     CreateGUID(x);
