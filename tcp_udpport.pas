@@ -1,7 +1,15 @@
+
+{$IFDEF PORTUGUES}
 {:
-  @abstract(Unit que implementa uma porta de comunicação TCP/UDP sobre IP cliente.)
+  @abstract(Unit que implementa um socket TCP/UDP sobre IP cliente.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit that implements a socket client TCP/UDP over IP.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit tcp_udpport;
 
 {$IFDEF FPC}
@@ -17,7 +25,7 @@ interface
 
 uses
   Classes, SysUtils, ExtCtrls, CommPort, commtypes, socket_types
-  {$IF defined(WIN32) or defined(WIN64)} //delphi ou lazarus sobre windows
+  {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
   , Windows, WinSock, sockets_w32_w64
   {$ELSE}
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
@@ -28,12 +36,22 @@ uses
   {$IFEND};
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Driver genérico para portas TCP/UDP sobre IP. Atualmente funcionando
             para Windows, Linux e FreeBSD.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @seealso(TCommPortDriver)
   }
+  {$ELSE}
+  {:
+  @abstract(TCP/UDP over IP client port driver. Currently working on Windows,
+            Linux and FreeBSD.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TCommPortDriver)
+  }
+  {$ENDIF}
   TTCP_UDPPort = class(TCommPortDriver)
   private
     FHostName:String;
@@ -85,26 +103,68 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+    {$IFDEF PORTUGUES}
     //: Nome ou endereço do servidor onde se deseja conectar.
+    {$ELSE}
+    //: Hostname or address of the server to connect.
+    {$ENDIF}
     property Host:String read FHostName write SetHostname nodefault;
+
+    {$IFDEF PORTUGUES}
     //: Porta do servidor que se deseja conectar. Para Modbus TCP use 502 e para Siemens ISOTCP use 102.
+    {$ELSE}
+    //: Server port to connect. To use Modbus, set this to 502 and to use Siemens ISOTCP set it to 102.
+    {$ENDIF}
     property Port:Integer read FPortNumber write SetPortNumber default 102;
-    //: Timeout(extra) em milisegundos para operações de leitura/escrita.
+
+    {$IFDEF PORTUGUES}
+    //: Timeout em milisegundos para operações de leitura/escrita.
+    {$ELSE}
+    //: Timeout in milliseconds to I/O operations.
+    {$ENDIF}
     property Timeout:Integer read FTimeout write SetTimeout default 1000;
+
+    {$IFDEF PORTUGUES}
     {:
-    Tipo da porta.
+    Tipo da porta (TCP ou UDP).
     @seealso(TPortType).
     }
+    {$ELSE}
+    {:
+    Port kind (TCP or UDP).
+    @seealso(TPortType).
+    }
+    {$ENDIF}
     property PortType:TPortType read FPortType write SetPortType default ptTCP;
 
-    //: Porta de acesso exclusivo (evita que a porta seja aberta em tempo de desenvolvimento).
+
+    {$IFDEF PORTUGUES}
+    //: Informa se a porta é de acesso exclusivo (evita que a porta seja aberta em tempo de desenvolvimento).
+    {$ELSE}
+    //: Tells if the communication port is exclusive (avoid it to be opened in design time).
+    {$ENDIF}
     property ExclusiveDevice:Boolean read FExclusiveDevice write SetExclusive;
 
+
+    {$IFDEF PORTUGUES}
     //: Informa se a porta deve se auto reconectar após uma perda ou falha de conexão.
+    {$ELSE}
+    //: Enables the auto reconnection if a connection is lost or failed.
+    {$ENDIF}
     property EnableAutoReconnect:Boolean read FEnableAutoReconnect write setEnableAutoReconnect  stored true default true;
+
+    {$IFDEF PORTUGUES}
     //: Define o tempo após a perda de conexão a porta deve tentar reconectar. Tempo em milisegundos.
+    {$ELSE}
+    //: Time to retry a lost connection in milliseconds.
+    {$ENDIF}
     property ReconnectRetryInterval:Cardinal read GetReconnectInterval write SetReconnectInterval stored true default 5000;
+
+    {$IFDEF PORTUGUES}
     //: Limite máximo de tentativas de reconexão. O contador de tentativas é reiniciado após uma conexão com sucesso.
+    {$ELSE}
+    //: Maximum limit of connection retries.
+    {$ENDIF}
     property ReconnectRetriesLimit:Cardinal read FReconnectRetriesLimit write FReconnectRetriesLimit stored true default 0;
 
     //: @seealso TCommPortDriver.OnCommPortOpened
@@ -321,11 +381,15 @@ begin
   try
     //##########################################################################
     // RESOLUCAO DE NOMES SOBRE WINDOWS 32/64 BITS.
+    // NAME RESOLUTION OVER WINDOWS 32/64 BITS.
     //##########################################################################
     {$IF defined(WIN32) or defined(WIN64)}
       //se esta usando FPC ou um Delphi abaixo da versao 2009, usa a versão
       //ansistring, caso seja uma versao delphi 2009 ou superior
       //usa a versao unicode.
+      //
+      //if the name resolution is being done using FPC or a Delphi 2009 or older
+      //uses the ansistring version, otherwise uses the unicode version.
       {$IF defined(FPC) OR (not defined(DELPHI2009_UP))}
       ServerAddr := GetHostByName(PAnsiChar(FHostName));
       {$ELSE}
@@ -340,6 +404,7 @@ begin
 
     //##########################################################################
     // RESOLUCAO DE NOMES SOBRE LINUX/FREEBSD e outros.
+    // NAME RESOLUTION OVER LINUX/FREEBSD and others.
     //##########################################################################
     {$IF defined(FPC) and defined(UNIX)}
       if not GetHostByName(FHostName,ServerAddr) then begin
@@ -353,7 +418,8 @@ begin
     {$IFEND}
 
     //##########################################################################
-    //CRIA O SOCKET
+    // CRIA O SOCKET
+    // CREATE THE SOCKET.
     //##########################################################################
     case FPortType of
       ptTCP:
@@ -367,7 +433,7 @@ begin
     end;
 
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-    //UNIX E WINDOWS CE
+    //UNIX and WINDOWS CE
     FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
 
     if FSocket<0 then begin
@@ -388,6 +454,7 @@ begin
 
     //##########################################################################
     //SETA O MODO DE OPERACAO DE NAO BLOQUEIO DE CHAMADA.
+    //SET THE NON-BLOCKING OPERATING MODE OF THE SOCKET
     //##########################################################################
     setblockingmode(FSocket,MODE_NONBLOCKING);
 
@@ -395,10 +462,14 @@ begin
     //SETA AS OPCOES DO SOCKET
     //OPCOES DE TIMEOUT IRÃO SER FEITAS USANDO SELECT/FPSELECT
     //POIS ESTAS OPÇÕES NÃO SAO SUPORTADAS POR ALGUNS SISTEMAS OPERACIONAIS
+    //
+    //SOCKET OPTIONS
+    //TIMEOUT OPTIONS ARE MADE USING SELECT/FPSELECT, BECAUSE THIS OPTIONS
+    //AREN'T SUPPORTED BY SOME OSes LIKE WINDOWS CE
     //##########################################################################
     flag:=1;
     bufsize := 1024*16;
-    //UNIX e WINDOWS CE
+    //UNIX AND WINDOWS CE
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(Integer));
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    @bufsize,  sizeof(Integer));
@@ -413,9 +484,10 @@ begin
 
     //##########################################################################
     //CONFIGURA E ENDERECO QUE O SOCKET VAI CONECTAR
+    //SETS THE TARGET ADDRESS TO SOCKET CONNECT
     //##########################################################################
-    channel.sin_family      := AF_INET;            //FAMILIA
-    channel.sin_port        := htons(FPortNumber); //NUMERO DA PORTA
+    channel.sin_family      := AF_INET;            //FAMILY
+    channel.sin_port        := htons(FPortNumber); //PORT NUMBER
 
     {$IF defined(FPC) AND defined(UNIX)}
     channel.sin_addr.S_addr := longword(htonl(LongInt(ServerAddr.Addr.s_addr)));

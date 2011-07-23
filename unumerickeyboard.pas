@@ -1,3 +1,8 @@
+{$IFDEF PORTUGUES}
+//: Teclado numérico.
+{$ELSE}
+//: Vitual numeric keyboard.
+{$ENDIF}
 unit unumerickeyboard;
 
 {$IFDEF FPC}

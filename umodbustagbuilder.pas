@@ -1,3 +1,8 @@
+{$IFDEF PORTUGUES}
+//: Unit do assistente Modbus TagBuilder.
+{$ELSE}
+//: Unit of Modbus TagBuilder wizard.
+{$ENDIF}
 unit uModbusTagBuilder;
 
 {$IFDEF FPC}
@@ -336,7 +341,7 @@ begin
   //se so ha um item.
   if (CurItem.Prior=nil) and (CurItem.Next=nil) then exit;
 
-  If MessageDlg('Deseja mesmo deletar o item?', mtConfirmation, [mbYes, mbNo],0)=mrYes then begin
+  If MessageDlg(SDoYouWantDeleteThisItem, mtConfirmation, [mbYes, mbNo],0)=mrYes then begin
     item := CurItem;
     if Sender=CurItem then begin
       CurItem := TTagNamesItemEditor(item.Prior);

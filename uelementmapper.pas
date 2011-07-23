@@ -1,3 +1,8 @@
+{$IFDEF PORTUGUES}
+//: Unit do assistente mapeador de elementos de bloco.
+{$ELSE}
+//: Unit of Block element mapper wizard.
+{$ENDIF}
 unit uelementmapper;
 
 {$IFDEF FPC}
@@ -36,6 +41,8 @@ var
 
 implementation
 
+uses hsstrings;
+
 {$IFNDEF FPC}
   {$R *.dfm}
 {$ELSE}
@@ -63,7 +70,7 @@ end;
 procedure TfrmMapElements.Button2Click(Sender: TObject);
 begin
   if endindex.Value<startindex.Value then
-    raise Exception.Create('Start index must be less or equal than end index');
+    raise Exception.Create(SStartMustBeLessThanEndIndex);
 end;
 
 procedure TfrmMapElements.Button1Click(Sender: TObject);

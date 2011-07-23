@@ -1,8 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Unit do formulário assistente de criação de estruturas do tag TPLCStruct.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
-
+{$ELSE}
+{:
+  @abstract(Unit of Struct item mapper wizard.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit ustructuremapper;
 
 {$IFDEF FPC}
@@ -18,11 +24,20 @@ uses
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}, windows{$IFEND};
 
 type
+
+  {$IFDEF PORTUGUES}
   {:
   Assistente de criação de estruturas usando o tag TPLCStruct.
 
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Struct mapper wizard.
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TfrmStructureEditor = class(TForm)
     Panel1: TPanel;
     Label1: TLabel;

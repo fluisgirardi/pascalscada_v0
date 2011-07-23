@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Unit do formul·rio TagBuilder para a familia de drivers da Siemens.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Unit of Siemens TagBuilder wizard.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit us7tagbuilder;
 
 {$IFDEF FPC}
@@ -16,14 +23,26 @@ uses
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}, windows{$IFEND};
 
 type
+  {$IFDEF PORTUGUES}
   //: Rotina de checagem de nomes.
+  {$ELSE}
+  //: Name check routine.
+  {$ENDIF}
   TCheckNames = procedure (Sender:TObject; NewName:String; var AcceptNewName:Boolean) of object;
 
+  {$IFDEF PORTUGUES}
   {:
   Editor de bits de um item da estrtura.
 
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Bit editor of a structure item.
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TTagBitItemEditor = class(TPanel)
   private
     FTagName:String;
@@ -55,11 +74,19 @@ type
     property OnDelClick:TNotifyEvent read fondelclick write fondelclick;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Editor de itens da estrtura.
 
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  Structure item editor.
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TS7TagItemEditor = class(TPanel)
   private
     FTagName:String;
@@ -141,11 +168,19 @@ type
     property OnDelBitItem:TNotifyEvent read FOnDelBitItem write FOnDelBitItem;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Tag builder da familia de protocolos da Siemens.
 
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  TagBuilder of siemens protocol family.
+
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TfrmS7TagBuilder = class(TForm)
     BlockName: TEdit;
     Panel1: TPanel;
@@ -493,9 +528,14 @@ begin
     OnExit:=edtItemNameExit;
   end;
 
+  //correÁ„o
   //desenha um bot„o que n„o faz nada
   //para forcar a perda de foco por tab do
   //edit anterior
+  //
+  //FIX
+  //draw a button that does nothing
+  //to force the focus lost using of the previos edit
   btnUp:=TButton.Create(Self);
   with btnUp do begin
     Parent:=TagArea;
@@ -725,13 +765,16 @@ begin
   accept2:=true;
 
   //checa o nome com os bits...
+  //check the new name with bit names.
   CheckNames(Self, TheName, accept1);
 
   //checa o nome com os demais itens...
+  //check the new name with other struct item names.
   if accept1 and Assigned(FCheckNames) then
     FCheckNames(Self,TheName,accept2);
 
   //Ok caso passe nos dois testes...
+  //Ok if everything is ok.
   Result:=accept1 and accept2;
 end;
 
@@ -811,19 +854,23 @@ begin
   accept2:=true;
 
   //checa o nome com os bits...
+  //check the new name with bits names.
   CheckNames(Sender,edtItemName.Text,accept1);
 
   //checa o nome com os demais itens...
+  //check the new name with other struct names.
   if accept1 and Assigned(FCheckNames) then
     FCheckNames(Self,edtItemName.Text,accept2);
 
   //se pelo menos um falhou, volta o nome anterior...
+  //to accept the new name, everything must be ok.
   if (accept1=true) and (accept2=true) then begin
     edtItemName.Modified:=false;
     oldname:=FTagName;
     FTagName:=edtItemName.Text;
 
     //atualiza nome dos bits
+    //update the name of the bits.
     for b:=0 to BitCount-1 do
       TTagBitItemEditor(Bit[b]).TagName := StringReplace(TTagBitItemEditor(Bit[b]).TagName,oldname,FTagName,[rfReplaceAll, rfIgnoreCase]);
       
@@ -837,7 +884,7 @@ procedure TS7TagItemEditor.DelBitItem(Sender:TObject);
 begin
   if not (Sender is TTagBitItemEditor) then exit;
 
-  if MessageDlg('Delete item "'+(Sender as TTagBitItemEditor).TagName+'"?',mtConfirmation,[mbyes,mbNo],0)=mrno then exit;
+  if MessageDlg(SDeleteTheItem+(Sender as TTagBitItemEditor).TagName+'"?',mtConfirmation,[mbyes,mbNo],0)=mrno then exit;
 
   DelList.Add(Sender);
   DelTimer.Enabled:=true;
@@ -904,6 +951,7 @@ begin
 end;
 
 //evento chamado pelos bits do tag para verificar seu nome...
+//event called by bit itens to check theirs names.
 procedure TS7TagItemEditor.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
 var
   b:Integer;
@@ -934,6 +982,7 @@ begin
     FBitsClickEvent(Self);
 
   //esta linha tem q ficar por ultimo sempre!!!
+  //this condition must be the last ALWAYS!
   if (Sender=btnDel) and Assigned(FDelClickEvent) then
     FDelClickEvent(Self);
 end;
@@ -957,49 +1006,49 @@ begin
   BlockType.Enabled:=false;
   case MemoryArea.ItemIndex of
     0: begin
-     lblStartAddress.Caption:='Byte inicial da entrada digital';
+     lblStartAddress.Caption:=SDigitalInputInitialByte;
      BlockType.ItemIndex:=2;
     end;
     1: begin
-     lblStartAddress.Caption:='Byte inicial da saida digital';
+     lblStartAddress.Caption:=SDigitalOutputInitialByte;
      BlockType.ItemIndex:=2;
     end;
     2: begin
-     lblStartAddress.Caption:='End. inicial da Flag(M)';
+     lblStartAddress.Caption:=SFlagInitialAddress;
      BlockType.Enabled:=optplcblock.Checked;
     end;
     3: begin
-     lblStartAddress.Caption:='End. inicial dentro da DB';
+     lblStartAddress.Caption:=SInitialAddressInsideDB;
      lblDBNumber.Enabled:=true;
      spinDBNumber.Enabled:=true;
      BlockType.Enabled:=optplcblock.Checked;
     end;
     4,9: begin
-     lblStartAddress.Caption:='Contador inicial';
+     lblStartAddress.Caption:=SCounterInitialAddress;
      BlockType.ItemIndex:=4;
     end;
     5,10: begin
-     lblStartAddress.Caption:='Temporizador inicial';
+     lblStartAddress.Caption:=STimerInitialAddress;
      BlockType.ItemIndex:=4;
     end;
     6: begin
-     lblStartAddress.Caption:='Byte inicial da SM';
+     lblStartAddress.Caption:=SSMInitialByte;
      BlockType.ItemIndex:=2;
     end;
     7: begin
-     lblStartAddress.Caption:='End. inicial da AIW';
+     lblStartAddress.Caption:=SAIWInitialAddress;
      BlockType.ItemIndex:=4;
     end;
     8: begin
-     lblStartAddress.Caption:='End. inicial da AQW';
+     lblStartAddress.Caption:=SAQWInitialAddress;
      BlockType.ItemIndex:=4;
     end;
     11: begin
-     lblStartAddress.Caption:='End. inicial da PIW';
+     lblStartAddress.Caption:=SPIWInitialAddress;
      BlockType.ItemIndex:=4;
     end;
     12: begin
-     lblStartAddress.Caption:='End. inicial da V';
+     lblStartAddress.Caption:=SVInitialAddress;
      BlockType.Enabled:=optplcblock.Checked;
     end;
   end;
@@ -1147,7 +1196,7 @@ end;
 procedure TfrmS7TagBuilder.btnDelClick(Sender: TObject);
 begin
   if ItemsToDel.IndexOf(Sender)=-1 then
-    if MessageDlg('Remove the structure item called "'+TS7TagItemEditor(Sender).TagName+'"?', mtConfirmation,[mbYes,mbNo],0)=mrYes then begin
+    if MessageDlg(SRemoveaStructItemCalled+TS7TagItemEditor(Sender).TagName+'"?', mtConfirmation,[mbYes,mbNo],0)=mrYes then begin
       FStructureModified:=true;
       ItemsToDel.Add(Sender);
       Timer1.Enabled:=true;
@@ -1265,18 +1314,18 @@ end;
 function TfrmS7TagBuilder.GetTagType:Integer;
 begin
 {
-0  Digital Inputs, S7 200/300/400/1200        Inputs, Entradas)                     @cell( 1
-1  Digital Outputs, S7 200/300/400/1200       Outputs, Saidas)                      @cell( 2
-2  Flags, M's, S7 200/300/400/1200            Flags ou M's)                         @cell( 3
-3  DB's, S7 300/400/1200                      DB e VM no S7-200 )                   @cell( 4
-4  Counter, S7 300/400/1200                   Counter, S7 300/400)                  @cell( 5
-5  Timer, S7 300/400/1200                     Timer, S7 300/400)                    @cell( 6
-6  Special Memory, SM, S7-200                 Special Memory, SM, S7-200)           @cell( 7
-7  Analog Input, S7-200                       Entrada anal√≥gica, S7-200)            @cell( 8
-8  Analog output, S7-200                      Saida anal√≥gica, S7-200)              @cell( 9
-9  Counter, S7-200                            Counter, S7-200)                      @cell(10
-10 Timer, S7-200                              Timer, S7-200)                        @cell(11
-11 Analog Input (PIW), S7-300/400/1200        Entrada anal√≥gica (PIW), S7 300/400)  @cell(12
+0  Digital Inputs, S7 200/300/400/1200        Inputs, Entradas)        @cell( 1
+1  Digital Outputs, S7 200/300/400/1200       Outputs, Saidas)         @cell( 2
+2  Flags, M's, S7 200/300/400/1200            Flags and M's)           @cell( 3
+3  DB's, S7 300/400/1200                      DB and VM no S7-200 )    @cell( 4
+4  Counter, S7 300/400/1200                   Counter, S7 300/400)     @cell( 5
+5  Timer, S7 300/400/1200                     Timer, S7 300/400)       @cell( 6
+6  Special Memory, SM, S7-200                 SM, S7-200)              @cell( 7
+7  Analog Input, S7-200                       AIW, S7-200)             @cell( 8
+8  Analog output, S7-200                      AQW, S7-200)             @cell( 9
+9  Counter, S7-200                            Counter, S7-200)         @cell(10
+10 Timer, S7-200                              Timer, S7-200)           @cell(11
+11 Analog Input (PIW), S7-300/400/1200        PIW, S7 300/400)         @cell(12
 12 VB, VW, VD, S7-200
 }
   Result:=0;

@@ -1,3 +1,14 @@
+{$IFDEF PORTUGUES}
+{:
+Unit que implementa o West 6100+ TagBuilder assistente.
+@author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ELSE}
+{:
+Unit that implements the West 6100+ TagBuilder wizard.
+@author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit uwesttagbuilder;
 
 {$IFDEF FPC}

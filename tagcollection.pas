@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementa uma coleção de tags.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements a tag collection.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit tagcollection;
 
 {$IFDEF FPC}
@@ -14,10 +21,17 @@ uses
   Classes, SysUtils, PLCTag, HMIZones, ProtocolTypes, Tag;
 
 type
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Classe de um item na coleção de tags.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+  @abstract(Class of a tag collection item.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TTagCollectionItem=class(TCollectionItem, IUnknown, IHMITagInterface)
   private
     FTag:TPLCTag;
@@ -35,26 +49,50 @@ type
     procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
   protected
+
+    {$IFDEF PORTUGUES}
     //: Notifica a coleção de tags que um item teve alteração de valor.
+    {$ELSE}
+    //: Notifies the collection when a value a collection item changes.
+    {$ENDIF}
     procedure NotifyChange;
+
+    {$IFDEF PORTUGUES}
     //: Descrição do item na coleção.
+    {$ELSE}
+    //: Returns the tag collection item description.
+    {$ENDIF}
     function  GetDisplayName: string; override;
   public
     //: @exclude
     constructor Create(Collection: TCollection); override;
     //: @exclude
     destructor  Destroy; override;
+
+    {$IFDEF PORTUGUES}
     {:
     Chamado quando o dono da coleção foi totalmente carregado.
     Use este método para realizar ações que precisem ser feitas
     com a coleção totalmente carregada.
     }
+    {$ELSE}
+    {:
+    The collection will call this method to notify the collection
+    item when everything is fully loaded.
+    }
+    {$ENDIF}
     procedure   Loaded;
   published
+
+    {$IFDEF PORTUGUES}
     //: Tag do item da coleção.
+    {$ELSE}
+    //: Tag of collection.
+    {$ENDIF}
     property PLCTag:TPLCTag read FTag write SetTag;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Classe que representa uma coleção de tags.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -62,6 +100,14 @@ type
   Use este componente em lugares que são necessarios mais de um tag, como
   por exemplo históricos e receitas.
   }
+  {$ELSE}
+  {:
+  @abstract(Class of collection of tags.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Use this class if you need more than one tag, like as recipes and historics.
+  }
+  {$ENDIF}
   TTagCollection=class(TCollection)
   private
     FOnItemChange:TNotifyEvent;
@@ -69,26 +115,63 @@ type
     FOnNeedCompState:TNeedCompStateEvent;
     FComponentState:TComponentState;
   protected
+
+    {$IFDEF PORTUGUES}
     //: Retorna o estado atual do dono da coleção.
+    {$ELSE}
+    //: Returns the actual state of the collection owner.
+    {$ENDIF}
     function  GetComponentState:TComponentState;
+
+    {$IFDEF PORTUGUES}
     //: Solicita o estado atual do dono da coleção.
+    {$ELSE}
+    //: Request the actual owner state.
+    {$ENDIF}
     procedure NeedCurrentCompState;
   published
+
+    {$IFDEF PORTUGUES}
     //: Evento que informa ao dono da coleção que um item foi alterado.
+    {$ELSE}
+    //: Tells when at least one collection item was changed.
+    {$ENDIF}
     property OnItemChange:TNotifyEvent read FOnItemChange write FOnItemChange;
+
+    {$IFDEF PORTUGUES}
     //: Evento que informa ao dono da coleção que um item da coleção teve seu valor alterado.
+    {$ELSE}
+    //: Tells when a value of an collection item was changed.
+    {$ENDIF}
     property OnValuesChange:TNotifyEvent read FOnValuesChange write FOnValuesChange;
+
+    {$IFDEF PORTUGUES}
     //: Evento usado para repassar o estado do dono da coleção para a coleção.
+    {$ELSE}
+    //: Event used to inform to collection the actual estate of the owner.
+    {$ENDIF}
     property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
   public
     //: @exclude
     constructor Create(ItemClass: TCollectionItemClass);
+
+    {$IFDEF PORTUGUES}
     {:
     Método chamado pelo dono da coleção para sinalizar que ele foi totalmente
     carregado.
     }
+    {$ELSE}
+    {:
+    Method that the owner must call to inform the collection that it's fully
+    loaded.
+    }
+    {$ENDIF}
     procedure Loaded;
-    //: Informa o estado atual da coleção de tags.
+    {$IFDEF PORTUGUES}
+    //: Informa o estado atual do dono da coleção de tags.
+    {$ELSE}
+    //: Tells the actual state of the collection owner.
+    {$ENDIF}
     property  ZonesState:TComponentState read GetComponentState;
   end;
 

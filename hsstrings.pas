@@ -1,4 +1,3 @@
-
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de tradução do PascalSCADA.)
@@ -96,7 +95,22 @@ resourcestring
   SCheckAtLeastOneVariable = 'Marque pelo menos uma variável!';
   STheOwnerMustBeAProtocolDriver = 'O componente dono da thread de atualização precisa ser um driver de protocolo!';
   SYouMustHaveAtLeastOneStructureItem = 'É necessário pelo menos um item de estrutura!';
-  SWhyMapBitsFromOtherBits = 'Porque mapear bits de outros bits?'
+  SWhyMapBitsFromOtherBits = 'Porque mapear bits de outros bits?';
+  SStartMustBeLessThanEndIndex = 'O indice inicial precisa ser menor que o inicial';
+  SDoYouWantDeleteThisItem = 'Deseja mesmo deletar o item?'
+  SDeleteTheItem = 'Deletar o item "';
+  SDigitalInputInitialByte  = 'Byte inicial da entrada digital';
+  SDigitalOutputInitialByte = 'Byte inicial da saida digital';
+  SFlagInitialAddress       = 'End. inicial da Flag(M)';
+  SInitialAddressInsideDB   = 'End. inicial dentro da DB';
+  SCounterInitialAddress    = 'Contador inicial';
+  STimerInitialAddress      = 'Temporizador inicial';
+  SSMInitialByte            = 'Byte inicial da SM';
+  SAIWInitialAddress        = 'End. inicial da AIW';
+  SAQWInitialAddress        = 'End. inicial da AQW';
+  SPIWInitialAddress        = 'End. inicial da PIW';
+  SVInitialAddress          = 'End. inicial da V';
+  SRemoveaStructItemCalled  = 'Remover o item da estrutura chamado "';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -155,6 +169,21 @@ resourcestring
   STheOwnerMustBeAProtocolDriver = 'The component owner of the update thread must be a protocol driver!';
   SYouMustHaveAtLeastOneStructureItem = 'You must have at least one structure item!';
   SWhyMapBitsFromOtherBits = 'Why to map bits from other bits?';
+  SStartMustBeLessThanEndIndex = 'Start index must be less or equal than end index';
+  SDoYouWantDeleteThisItem = 'Do you want to delete this item?';
+  SDeleteTheItem = 'Delete item "';
+  SDigitalInputInitialByte  = 'Initial byte of digital input';
+  SDigitalOutputInitialByte = 'Initial byte of digital ouput';
+  SFlagInitialAddress       = 'Initial address of Flags(M)';
+  SInitialAddressInsideDB   = 'Start address inside of DB';
+  SCounterInitialAddress    = 'Initial address of Counter';
+  STimerInitialAddress      = 'Initial address of Timer';
+  SSMInitialByte            = 'Initial address of SM';
+  SAIWInitialAddress        = 'Initial address of AIW';
+  SAQWInitialAddress        = 'Initial address of AQW';
+  SPIWInitialAddress        = 'Initial address of PIW';
+  SVInitialAddress          = 'Initial address of V';
+  SRemoveaStructItemCalled  = 'Remove the structure item called "';
   {$ENDIF}
 
 implementation

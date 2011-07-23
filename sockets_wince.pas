@@ -1,3 +1,8 @@
+{$IFDEF PORTUGUES}
+//: Implementa funções de socket para Windows CE.
+{$ELSE}
+//: Windows CE socket functions.
+{$ENDIF}
 unit sockets_wince;
 
 {$IFDEF FPC}
@@ -11,8 +16,42 @@ uses
 
   function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
   function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
+
+  {$IFDEF PORTUGUES}
+  //: Seta o modo de operação de socket.
+  {$ELSE}
+  //: Sets the socket operation mode.
+  {$ENDIF}
   function setblockingmode(fd:TSocket; mode:dword):Integer;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Função de conexão com timeout. Seus parametros são identicos a função
+  connect/fpconnect, porem adicionado o tempo máximo de espera pelo estabelecimento
+  da conexão em milisegundos.
+  @returns(0 se a conexão foi estabelecida com sucesso.)
+  }
+  {$ELSE}
+  {:
+  Connect function with timeout. Their parameters are the same of the functions
+  connect/fpconnect, with a extra parameter that is the maximum timeout of the
+  connection establishment in milliseconds.
+  @returns(0 if the connection was estabilished successful.)
+  }
+  {$ENDIF}
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Verifica o estado da conexão e atualiza o estado da porta da comunicação.
+  @returns(@True se ainda está conectado)
+  }
+  {$ELSE}
+  {:
+  Check the current connection state and updates the state of the communication port.
+  @returns(@True if stills connected.)
+  }
+  {$ENDIF}
   function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 
 implementation
@@ -219,4 +258,4 @@ begin
 end;
 
 end.
-
+
