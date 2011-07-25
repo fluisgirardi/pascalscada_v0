@@ -14,7 +14,34 @@ interface
 uses
   windows, winsock, socket_types, hsstrings, sysutils, commtypes;
 
+  {$IFDEF PORTUGUES}
+  {:
+  Função que recebe dados do socket. Seus parametros são identicos a da função
+  recv/fprecv, adicionado do parametro timeout, que diz o tempo máximo para
+  receber todos os dados solicitados.
+  }
+  {$ELSE}
+  {:
+  Function that receive data of a socket. Their parameters are the same of the
+  function recv/fprecv, with a extra parameter that is the maximum timout to
+  receive all requested data on socket.
+  }
+  {$ENDIF}
   function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Função que envia dados ao socket. Seus parametros são identicos a da função
+  send/fpsend, adicionado do parametro timeout, que diz o tempo máximo para
+  enviar todos os dados.
+  }
+  {$ELSE}
+  {:
+  Function that sends data through the socket. Their parameters are the same of
+  the function send/fpsend, with a extra parameter that is the maximum timout to
+  send all requested data.
+  }
+  {$ENDIF}
   function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
 
   {$IFDEF PORTUGUES}

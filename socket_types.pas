@@ -28,17 +28,36 @@ type
   t_socklen = Integer;
   {$IFEND}
 
+  {$IFDEF PORTUGUES}
   {:
   Enumera os tipos de porta.
   @value ptTCP = Porta cliente do tipo TCP.
   @value ptUDP = Porta cliente do tipo UDP.
   }
+  {$ELSE}
+  {:
+  Enumerates all kinds of client ports.
+  @value ptTCP = TCP port.
+  @value ptUDP = UDP port.
+  }
+  {$ENDIF}
   TPortType = (ptTCP, ptUDP);
 
   TDisconnectNotifierProc = procedure of object;
 
 const
+  {$IFDEF PORTUGUES}
+  //: Define o modo de não bloqueio do socket (não espera a ação terminar).
+  {$ELSE}
+  //: Defines the non-blocking mode of socket (don't waits the end of the action).
+  {$ENDIF}
   MODE_NONBLOCKING = 1;
+
+  {$IFDEF PORTUGUES}
+  //: Define o modo de bloqueio do socket (espera a ação terminar).
+  {$ELSE}
+  //: Defines the blocking mode of socket (waits the end of the action).
+  {$ENDIF}
   MODE_BLOCKING = 0;
 
 implementation
