@@ -1065,17 +1065,6 @@ begin
 
   FTagType:=newType;
 
-  case FTagType of
-    pttDefault:
-      FCurrentWordSize := FProtocolWordSize;
-    pttShortInt, pttByte:
-      FCurrentWordSize:=8;
-    pttSmallInt, pttWord:
-      FCurrentWordSize:=16;
-    pttInteger, pttDWord, pttFloat:
-      FCurrentWordSize:=32;
-  end;
-
   if [csReading,csLoading]*ComponentState=[] then begin
     UpdateTagSizeOnProtocol;
     RebuildValues;
@@ -1091,6 +1080,17 @@ var
 begin
   if PProtocolDriver=nil then begin
     exit;
+  end;
+
+  case FTagType of
+    pttDefault:
+      FCurrentWordSize := FProtocolWordSize;
+    pttShortInt, pttByte:
+      FCurrentWordSize:=8;
+    pttSmallInt, pttWord:
+      FCurrentWordSize:=16;
+    pttInteger, pttDWord, pttFloat:
+      FCurrentWordSize:=32;
   end;
 
   if FCurrentWordSize>=FProtocolWordSize then begin
