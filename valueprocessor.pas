@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implementação de processadores de escala.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implements the scale processors.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit ValueProcessor;
 
 {$IFDEF FPC}
@@ -14,10 +21,17 @@ uses
   SysUtils, Classes, PLCTag;
 
 type
+  {$IFDEF PORTUGUES}
   {:
     @abstract(Classe base processadora de escalas.)
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
+  {$ELSE}
+  {:
+    @abstract(Base class for all scale processors.)
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
   TScaleProcessor = class(TComponent)
   private
     FValueIn:Double;
@@ -29,16 +43,30 @@ type
     function  GetProperty(index:Integer):Double;
     procedure SetProperty(index:Integer; Value:Double);
   protected
+    {$IFDEF PORTUGUES}
     //: Array que armazena o valor das propriedades;
+    {$ELSE}
+    //: Store the values of all properties.
+    {$ENDIF}
     FProperts:array of Double;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor Destroy; override;
+
+    {$IFDEF PORTUGUES}
     //: Adiciona um dependente desse processador de escalas.
+    {$ELSE}
+    //: Adds a object to dependents list.
+    {$ENDIF}
     procedure AddPIPEItem(PIPEItem:TCollectionItem);
+
+    {$IFDEF PORTUGUES}
     //: Remove um dependente desse processador de escalas.
+    {$ELSE}
+    //: Removes a object from the dependent object list.
+    {$ENDIF}
     procedure DelPIPEItem(PIPEItem:TCollectionItem);
     {:
     Fornece um valor processado a partir de um valor puro em função dos
