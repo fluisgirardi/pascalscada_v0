@@ -68,54 +68,117 @@ type
     //: Removes a object from the dependent object list.
     {$ENDIF}
     procedure DelPIPEItem(PIPEItem:TCollectionItem);
+
+    {$IFDEF PORTUGUES}
     {:
-    Fornece um valor processado a partir de um valor puro em função dos
-    parametros da escala, se existirem.
-    
+    Fornece um valor na escala de engenharia a partir de um valor puro em função
+    e dos parametros da escala, se existirem.
+
     @bold(Geralmente é a informação no sentido Equipamento -> Usuário.)
 
     @param(Sender TComponent: Quem está solicitando esse processamento.)
     @param(Input Double: Valor de entrada.)
-    @returns(Double. Valor processado em função dos parametros da escala.)
+    @returns(Double. Valor processado para a escala de engenharia.)
     }
+    {$ELSE}
+    {:
+    Returns a value in engineering scale based on a raw value and in the scales
+    parameters, if there exists.
+
+    @bold(Usually, this value is comming from device and going to user.)
+
+    @param(Sender TComponent: Who is requesting this transformation.)
+    @param(Input Double: Input value to be processed.)
+    @returns(Double. The value tranformed to engineering scale.)
+    }
+    {$ENDIF}
     function SetInGetOut(Sender:TComponent; Input:Double):Double; virtual;
+
+    {$IFDEF PORTUGUES}
     {:
     Fornece um valor puro a partir de um valor processado em função dos
     parametros da escala, se existirem.
 
     @bold(Geralmente é a informação no sentido Usuário -> Equipamento.)
-    
+
     @param(Sender TComponent: Quem está solicitando esse processamento.)
-    @param(Output Double: Valor processado da qual se deseja obter um valor puro.)
+    @param(Output Double: Valor na escala de engenharia a ser transformado em um valor puro.)
     @returns(Double. Valor puro em função dos parametros da escala.)
     }
+    {$ELSE}
+    {:
+    Returns a raw value based on a value in engineering scale and in scales
+    parameters, if there exists.
+
+    @bold(Usually, this value is comming from a user input going to device.)
+
+    @param(Sender TComponent: Who is requesting this value transformation.)
+    @param(Output Double: Value in engineering scale to be processed to a raw value.)
+    @returns(Double. The tranformed raw value.)
+    }
+    {$ENDIF}
     function SetOutGetIn(Sender:TComponent; Output:Double):Double; virtual;
+
+    {$IFDEF PORTUGUES}
     //: Retorna uma propriedade da escala da array de propriedades.
+    {$ELSE}
+    //: Returns each property of the scale processor.
+    {$ENDIF}
     property Propriedade[index:Integer]:Double read GetProperty write SetProperty;
   published
+
+    {$IFDEF PORTUGUES}
     {:
     Propriedade para testes da escala.
 
     Se for escrito em @name, o valor processado será entregue em OutPut.
 
     Se for escrito em OutPut, o valor processado será entregue em @name.
-    
+
     @seealso(OutPut)
     }
+    {$ELSE}
+    {:
+    Property to test the scale processor.
+
+    If something is written in @name, the transformed value will be returned on OutPut property.
+
+    If something is written in OutPut, the transformed value will be returned on @name property.
+
+    @seealso(OutPut)
+    }
+    {$ENDIF}
     property Input:Double read FValueIn write SetInput Stored false;
+
+    {$IFDEF PORTUGUES}
     {:
     Propriedade para testes da escala.
 
-    Se for escrito em @name, o valor processado será entregue em InPut.
+    Se for escrito em @name, o valor processado será entregue em Input.
 
-    Se for escrito em InPut, o valor processado será entregue em @name.
+    Se for escrito em Input, o valor processado será entregue em @name.
+
+    @seealso(OutPut)
+    }
+    {$ELSE}
+    {:
+    Property to test the scale processor.
+
+    If something is written in @name, the transformed value will be returned on Input property.
+
+    If something is written in Input, the transformed value will be returned on @name property.
 
     @seealso(Input)
     }
+    {$ENDIF}
     property Output:Double read GetOutput write SetOutput Stored false;
   end;
-  
+
+  {$IFDEF PORTUGUES}
   //: Implementa um item de uma coleção de processadores de escala.
+  {$ELSE}
+  //: Implements a item of a scales processors collection.
+  {$ENDIF}
   TScalePIPEItem = class(TCollectionItem)
   private
     SProcessor:TScaleProcessor;
@@ -124,66 +187,122 @@ type
     //: @exclude
     function  GetDisplayName: string; override;
   public
+    {$IFDEF PORTUGUES}
     {:
     Procedimento chamado para remover a dependencia de um objeto de escalas que
     está sendo destruido.
     }
+    {$ELSE}
+    {:
+    Procedure called to remove a dependency with a scale processor object that
+    is being destroyed.
+    }
+    {$ENDIF}
     procedure RemoveScaleProcessor;
+
+    {$IFDEF PORTUGUES}
     {:
     Repassa a chamada para o método SetInGetOut do processador de escalas
     configurado em ScaleProcessor.
-    
+
     @param(Sender TComponent: Objeto solicitante.)
     @param(Input Double: Valor puro que será processado pela escala.)
-    
+
     @returns(O valor processado pela escala associada em ScaleProcessor. Caso
     ScaleProcessor não tenha um objeto associado, retorna o valor passado
     em Input.)
-    
+
     @seealso(TScaleProcessor.SetInGetOut)
     }
+    {$ELSE}
+    {:
+    Calls the procedure SetInGetOut of the scale processor, if it's set.
+
+    @param(Sender TComponent: Object that did the request.)
+    @param(Input Double: Value to be processed.)
+
+    @returns(The value processed by the scale processor. If there isn't an
+    object associated, returns the value of Input.)
+
+    @seealso(TScaleProcessor.SetInGetOut)
+    }
+    {$ENDIF}
     function SetInGetOut(Sender:TComponent; Input:Double):Double;
+
+    {$IFDEF PORTUGUES}
     {:
     Repassa a chamada para o método SetOutGetIn do processador de escalas
     configurado em ScaleProcessor.
 
     @param(Sender TComponent: Objeto solicitante.)
     @param(Output Double: Valor processado que se deseja obter um valor puro.)
-    
+
     @returns(O valor puro retornado pela escala associada em ScaleProcessor. Caso
     ScaleProcessor não tenha um objeto associado, retorna o valor passado
     em Output.)
 
     @seealso(TScaleProcessor.SetOutGetIn)
     }
+    {$ELSE}
+    {:
+    Calls the procedure SetOutGetIn of the scale processor, if it's set.
+
+    @param(Sender TComponent: Object that did the request.)
+    @param(Output Double: Value to be processed.)
+
+    @returns(The value processed by the scale processor. If there isn't an
+    object associated, returns the value of Output parameter.)
+
+    @seealso(TScaleProcessor.SetInGetOut)
+    }
+    {$ENDIF}
     function SetOutGetIn(Sender:TComponent; Output:Double):Double;
   published
+
+    {$IFDEF PORTUGUES}
     //: Objeto de escalas responsável por fazer os processamentos desse item.
+    {$ELSE}
+    //: Scale processor object that does the values transformations of this item.
+    {$ENDIF}
     property ScaleProcessor:TScaleProcessor read SProcessor write SetScaleProcessor;
   end;
-  
+
+  {$IFDEF PORTUGUES}
   //: Implementa uma coleção de processadores de escala.
+  {$ELSE}
+  //: Implements a collection of scale processors.
+  {$ENDIF}
   TScalePIPE = class(TCollection)
   public
     //: @exclude
     constructor Create;
+
+    {$IFDEF PORTUGUES}
     {:
     Adiciona um novo item de processamento de escalas a coleção.
     @returns(O novo item da coleção.)
     }
+    {$ELSE}
+    {:
+    Adds a new item to collection.
+    @returns(The new item of the collection.)
+    }
+    {$ENDIF}
     function Add:TScalePIPEItem;
+
+    {$IFDEF PORTUGUES}
     {:
     Tranforma um valor puro (Entrada) em um valor processado pelas multiplas
     escalas pertencentes a coleção (Saida).
-    
+
     Para isso ele passa Input para o método SetInGetOut do primeiro item da
     coleção e o resultado ele repassa como parametro do próximo item coleção,
     repetindo isso até atingir o fim da lista.
-    
+
     @bold(Logo, o primeiro item da lista é primeiro a ser chamado quando o valor
     vem no sentido Equipamento -> Usuário assim como o último item da coleção é
     o primeiro a ser chamado quando o valor vai do Usuário -> Equipamento.)
-    
+
     @param(Sender TComponent: Quem chamou esse processamento.)
     @param(Input Double: Valor puro a processar.)
     @returns(Retorna o valor processado em função das escalas associadas aos
@@ -191,15 +310,20 @@ type
              tiverem um processador de escala associado, Input é retornado.)
     @seealso(TScalePIPEItem.SetInGetOut)
     }
+    {$ELSE}
+
+    {$ENDIF}
     function SetInGetOut(Sender:TComponent; Input:Double):Double;
+
+    {$IFDEF PORTUGUES}
     {:
     Tranforma um valor processado pelas multiplas escalas da coleção (Saida) em
     um valor puro (Entrada).
-    
+
     Para isso ele passa Output para o método SetOutGetIn do último item da
     coleção e o resultado ele repassa como parametro do item que o antecede,
     repetindo isso até atingir o inicio da coleção.
-    
+
     @bold(Logo, o primeiro item da lista é primeiro a ser chamado quando o valor
     vem no sentido Equipamento -> Usuário assim como o último item da coleção é
     o primeiro a ser chamado quando o valor vai do Usuário -> Equipamento.)
@@ -211,10 +335,18 @@ type
              tiverem um processador de escala associado, Output é retornado.)
     @seealso(TScalePIPEItem.SetOutGetIn)
     }
+    {$ELSE}
+
+    {$ENDIF}
     function SetOutGetIn(Sender:TComponent; Output:Double):Double;
   end;
   
+
+  {$IFDEF PORTUGUES}
   //: Componente de enfileiramento de processadores de escala.
+  {$ELSE}
+  //: Scale processors queue.
+  {$ENDIF}
   TPIPE = class(TComponent)
   private
     FScalePIPE:TScalePIPE;
@@ -226,16 +358,31 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+
+    {$IFDEF PORTUGUES}
     //: Adiciona um tag como dependente dessa fila.
+    {$ELSE}
+    //: Adds a tag to the list of dependents of this scale processor set.
+    {$ENDIF}
     procedure AddTag(tag:TPLCTag);
+
+    {$IFDEF PORTUGUES}
     //: Remove um tag como dependente dessa fila.
+    {$ELSE}
+    //: Remove a tag from the dependent list of this scale processor set.
+    {$ENDIF}
     procedure DelTag(tag:TPLCTag);
     //: @seealso(TScalePIPE.SetInGetOut)
     function SetInGetOut(Sender:TComponent; Input:Double):Double;
     //: @seealso(TScalePIPE.SetOutGetIn)
     function SetOutGetIn(Sender:TComponent; Output:Double):Double;
   published
+
+    {$IFDEF PORTUGUES}
     //: Coleção de escalas.
+    {$ELSE}
+    //: Collection of scale processors.
+    {$ENDIF}
     property Escalas:TScalePIPE read GetScalePIPE write SetScalePIPE stored true;
   end;
     
@@ -244,7 +391,7 @@ implementation
 uses PLCNumber, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementação de TScalePIPEItem
+// TScalePIPEItem implementation
 ////////////////////////////////////////////////////////////////////////////////
 procedure TScalePIPEItem.SetScaleProcessor(SP:TScaleProcessor);
 begin
@@ -290,7 +437,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementação de TScalePIPE
+// TScalePIPE implementation
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TScalePIPE.Create;
@@ -324,7 +471,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementação de TPIPE
+// TPIPE implementation
 ////////////////////////////////////////////////////////////////////////////////
 
 constructor TPIPE.Create(AOwner:TComponent);
@@ -401,7 +548,7 @@ begin
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
-// implementação de TScaleProcessor
+// TScaleProcessor implementation
 ////////////////////////////////////////////////////////////////////////////////
 constructor TScaleProcessor.Create(AOwner:TComponent);
 begin
