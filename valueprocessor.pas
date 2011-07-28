@@ -311,7 +311,28 @@ type
     @seealso(TScalePIPEItem.SetInGetOut)
     }
     {$ELSE}
+    {:
+    Process a raw value (Input) to a value in engineering scale, processed by
+    each scale processors of the collection.
 
+    To do this, this method passes the Input parameter to TScalePIPEItem.SetInGetOut
+    of the first item of the collection, takes the result and passes it again as
+    Input of TScalePIPEItem.SetInGetOut of the next item of the collection,
+    until reach the end of the collection.
+
+    @bold(So, the first item of the collection is the first that will be called
+    when the value is comming from device and going to User AND so as the last
+    item of the collection o is the first to be called when the value is comming
+    from the user and going to device.)
+
+    @param(Sender TComponent: Object that has requested the value transformation.)
+    @param(Input Double: Value to be transformed to a value in engineering scale.)
+    @returns(Returns the value processed by all items of the collection. If the
+             collection is empty or all items of the collection aren't set
+             correctly (a value processor isn't set), returns the value given in
+             Input parameter.)
+    @seealso(TScalePIPEItem.SetInGetOut)
+    }
     {$ENDIF}
     function SetInGetOut(Sender:TComponent; Input:Double):Double;
 
@@ -337,6 +358,29 @@ type
     }
     {$ELSE}
 
+
+    {:
+    Process a raw value in engineering scale to a raw value, processed by each
+    scale processors of the collection.
+
+    Para fazer isso, esse método passa o parâmetro de entrada para
+    TScalePIPEItem.SetInGetOut do último item da coleção, leva o resultado e
+    passa-lo novamente como entrada de TScalePIPEItem.SetInGetOut do item que
+    precede o item atual da coleção, até chegar ao início da coleção.
+
+    @bold(So, the last item of the collection is the first that will be called
+          when the value is comming from the user and going to device AND so as
+          the first item of the collection o is the last to be called when the
+          value is comming from the device and going to user.)
+
+    @param(Sender TComponent: Object that has requested the value transformation.)
+    @param(Output Double: Value in engineering scale to be transformed to a raw value.)
+    @returns(Returns the value processed by all items of the collection. If the
+             collection is empty or all items of the collection aren't set
+             correctly (a value processor isn't set), returns the value given in
+             Outpu parameter.)
+    @seealso(TScalePIPEItem.SetInGetOut)
+    }
     {$ENDIF}
     function SetOutGetIn(Sender:TComponent; Output:Double):Double;
   end;
