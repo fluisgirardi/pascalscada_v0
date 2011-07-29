@@ -1,7 +1,14 @@
+{$IFDEF PORTUGUES}
 {:
   @abstract(Implmentação do driver West n6100 ASCII.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
+{$ELSE}
+{:
+  @abstract(Implmentation of West n6100 ASCII protocol driver.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit WestASCIIDriver;
 
 {$IFDEF FPC}
@@ -15,6 +22,7 @@ uses
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
+  {$IFDEF PORTUGUES}
   {:
   Identifica um parametro West n6100.
   @member ParameterID identifica o parametro West.
@@ -22,6 +30,15 @@ type
   @member ReadOnly Identifica um parametro somente leitura.
   @member Decimal Identifica quantas casas decimais o parametro tem por padrão.
   }
+  {$ELSE}
+  {:
+  Identify a West n6100 parameter.
+  @member ParameterID identifica o parametro West.
+  @member FunctionAllowed funções West permitidas para esse parametro.
+  @member ReadOnly Identifica um parametro somente leitura.
+  @member Decimal Identifica quantas casas decimais o parametro tem por padrão.
+  }
+  {$ENDIF}
   TParameter = record
     ParameterID:Byte;
     FunctionAllowed:Byte;
@@ -29,11 +46,16 @@ type
     Decimal:Byte;
   end;
 
-  //: Tempos de scam de cada registrador West.
+  {$IFDEF PORTUGUES}
+  //: Tempos de varredura de cada registrador West.
+  {$ELSE}
+  //: Update time of a West register.
+  {$ENDIF}
   TScanTime = record
     ScanTime, RefCount:integer;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   Identifica um registrador West n6100.
   @member Value Valor do registrador.
@@ -44,6 +66,18 @@ type
   @member ScanTimes Lista das taxas de atualização do registrador.
   @member MinScanTime Menor taxa de atualização do registrador.
   }
+  {$ELSE}
+  {:
+  Identify a West n6100 register.
+  @member Value register value.
+  @member Decimal Decimal places of the register.
+  @member Timestamp Date/time of the last update of the register.
+  @member LastReadResult IO result of the last read request.
+  @member LastWriteResult IO result of the last write request.
+  @member ScanTimes List of all update times of the register.
+  @member MinScanTime Smaller update time of the register.
+  }
+  {$ENDIF}
   TWestRegister = record
     Value:Double;
     Decimal:Byte;
@@ -52,22 +86,43 @@ type
     ScanTimes:Array of TScanTime;
     MinScanTime:Integer;
   end;
+
+  {$IFDEF PORTUGUES}
   //: Lista de todos os registradores do West n6100.
+  {$ELSE}
+  //: List all West n6100 registers.
+  {$ENDIF}
   TWestRegisters = array[$00..$1b] of TWestRegister;
 
+  {$IFDEF PORTUGUES}
   //: Identifica o intervalo de endereços do West n6100.
+  {$ELSE}
+  //: Identifies the address range of West n6100.
+  {$ENDIF}
   TWestAddressRange = 0..99;
 
+  {$IFDEF PORTUGUES}
   //: Identifica um controlador West n6100.
+  {$ELSE}
+  //: Identifies a West n6100 device.
+  {$ENDIF}
   TWestDevice = record
     Address:TWestAddressRange;
     Registers:TWestRegisters;
   end;
 
+  {$IFDEF PORTUGUES}
   //: Identifica vários controladores West n6100.
+  {$ELSE}
+  //: Identifies a set of West n6100 devices.
+  {$ENDIF}
   TWestDevices = array of TWestDevice;
 
+  {$IFDEF PORTUGUES}
   //: Identifica cada item retornando pela Tabela de Scan (ScanTable) do West.
+  {$ELSE}
+  //: Represents a item of a West ScanTable request.
+  {$ENDIF}
   TScanTableReg = record
     Value:Double;
     Decimal:Byte;
@@ -75,7 +130,11 @@ type
     TimeStamp:TDateTime;
   end;
 
+  {$IFDEF PORTUGUES}
   //: Identifica os dados retornados por ScanTable do West n6100.
+  {$ELSE}
+  //: Represents a West ScanTable request.
+  {$ENDIF}
   TScanTable = record
     PV,
     SP,
@@ -85,6 +144,7 @@ type
     HaveOut2:Boolean;
   end;
 
+  {$IFDEF PORTUGUES}
   {:
   @abstract(Classe driver para West n6100 ASCII.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -133,6 +193,9 @@ type
   @bold(Caso um ou mais parametros possam ser lidos por scan table, o driver
   irá fazer isso para ganhar algum desempenho.)
   }
+  {$ELSE}
+
+  {$ENDIF}
   TWestASCIIDriver = class(TProtocolDriver)
   private
     FWestDevices:TWestDevices;
