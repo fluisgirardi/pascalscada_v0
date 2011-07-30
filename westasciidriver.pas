@@ -194,7 +194,54 @@ type
   irá fazer isso para ganhar algum desempenho.)
   }
   {$ELSE}
+  {:
+  @abstract(Class of West n6100 ASCII protocol driver.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
+  To use this driver, you must set the following properties of your tag:
+
+  @unorderedList(
+    @item(@bold(TTag.MemAddress): Address of West  register. See the table below;)
+    @item(@bold(TTag.PLCStation): Address of West n6100 device.)
+  )
+
+  To set the property MemAddress, use one of the following values:
+
+  @table(
+    @rowHead( @cell(MemAddres Value)       @cell(West register) )
+    @row(     @cell(0)                     @cell(SetPoint - SP) )
+    @row(     @cell(1)                     @cell(Process Variable - PV) )
+    @row(     @cell(2)                     @cell(Power Output value) )
+    @row(     @cell(3)                     @cell(Controller status) )
+    @row(     @cell(4)                     @cell(Scale Range Max) )
+    @row(     @cell(5)                     @cell(Scale Range Min) )
+    @row(     @cell(6)                     @cell(Scale Range Decimal Point) )
+    @row(     @cell(7)                     @cell(Input filter time constant) )
+    @row(     @cell(8)                     @cell(Output 1 Power Limit) )
+    @row(     @cell(9)                     @cell(Output 1 cycle time) )
+    @row(     @cell(10)                    @cell(Output 2 cycle time) )
+    @row(     @cell(11)                    @cell(Recorder output scale max) )
+    @row(     @cell(12)                    @cell(Recorder output scale min) )
+    @row(     @cell(13)                    @cell(SetPoint ramp rate) )
+    @row(     @cell(14)                    @cell(Setpoint high limit) )
+    @row(     @cell(15)                    @cell(Setpoint low limit) )
+    @row(     @cell(16)                    @cell(Alarm 1 value) )
+    @row(     @cell(17)                    @cell(Alarm 2 value) )
+    @row(     @cell(18)                    @cell(Rate - Derivative time constant) )
+    @row(     @cell(19)                    @cell(Reset - Integral time constant) )
+    @row(     @cell(20)                    @cell(Manual time reset - BIAS) )
+    @row(     @cell(21)                    @cell(ON/OFF diferential) )
+    @row(     @cell(22)                    @cell(Overlap/Deadband) )
+    @row(     @cell(23)                    @cell(Proportional band 1 value) )
+    @row(     @cell(24)                    @cell(Proportional band 2 value) )
+    @row(     @cell(25)                    @cell(PV Offset) )
+    @row(     @cell(26)                    @cell(Arithmetic deviation) )
+    @row(     @cell(27)                    @cell(Arithmetic deviation) )
+  )
+
+  @bold(Caso um ou mais parametros possam ser lidos por scan table, o driver
+  irá fazer isso para ganhar algum desempenho.)
+  }
   {$ENDIF}
   TWestASCIIDriver = class(TProtocolDriver)
   private
@@ -232,11 +279,20 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+
+    {$IFDEF PORTUGUES}
     {:
     Verifique se um controlador West esta ativo na rede.
-    @param(DeviceID TWestAddressRange Endereço que se deseja verificar se está disponível na rede.)
+    @param(DeviceID TWestAddressRange Endereço que se deseja verificar se está ativo na rede.)
     @returns(ioOk caso o equipamento esteja operando na rede.)
     }
+    {$ELSE}
+    {:
+    Checks if a West n6100 device is active on network.
+    @param(DeviceID TWestAddressRange Address of _West n6100 device to check if is active on network.)
+    @returns(ioOk if the device is active on network.)
+    }
+    {$ENDIF}
     function    DeviceActive(DeviceID:TWestAddressRange):TProtocolIOResult;
 
     // @seealso(TProtocolDriver.SizeOfTag);
@@ -283,6 +339,8 @@ begin
 
   //se for um tag válido, registra ele no scan. senão só o coloca na lista de
   //tags dependentes...
+  //
+  //if the tag is valid, register it on scan or on the list of dependent tags
   if (plctagobj.PLCStation in [1..99]) and (plctagobj.MemAddress in [$00..$1B]) then begin
 
     foundplc:=false;
@@ -353,6 +411,9 @@ begin
 
       //se nao encontrou o CLP, não há nada para fazer,
       //pq se o clp nao existe, a memoria tbm nao existe.
+      //
+      //if don't found the PLC, has nothing to do,
+      //because if the PLC don't exists, the memory don't exists too.
       if not foundplc then
         exit;
 
@@ -365,6 +426,8 @@ begin
             dec(ScanTimes[scanRate].RefCount);
 
             //caso a taxa de atualização nao tenha mais dependentes, remove...
+            //
+            //if the update time don't has dependents, remove.
             if ScanTimes[scanRate].RefCount=0 then begin
               ScanTimes[scanRate] := ScanTimes[h];
               SetLength(ScanTimes,h);
@@ -378,6 +441,8 @@ begin
         exit;
 
       //procura por registros ativos no scan.
+      //
+      //search active registers on scan.
       foundActiveReg:=false;
       for reg:=0 to High(FWestDevices[plc].Registers) do
         if Length(FWestDevices[plc].Registers[reg].ScanTimes)>0 then begin
@@ -391,6 +456,8 @@ begin
         if (Length(FWestDevices)>0) then begin
           //se nao encontrou mais nenhum outro registrador ativo
           //no clp, é necessario elimintar tbm o CLP do scan.
+          //
+          //if has not found any other active register on PLC, removes the PLC
           h:=High(FWestDevices);
           FWestDevices[plc]:=FWestDevices[h];
           SetLength(FWestDevices,h);
@@ -687,7 +754,7 @@ begin
     end;
   end;
 
-  a := buffer[0]-48; //ascii para decimal
+  a := buffer[0]-48; //ascii to decimal
   b := buffer[1]-48;
   c := buffer[2]-48;
   d := buffer[3]-48;
@@ -1082,7 +1149,9 @@ begin
       exit;
     end;
 
-    //se respondeu o endereco com um byte, incrementa offset da array.
+    //se respondeu o endereco com dois byte, incrementa offset da array.
+    //
+    //if the response has two bytes to device addres, increments the offset of the array.
     OffsetNo:=0;
     if b2 then
       OffsetNo:=1;
@@ -1210,6 +1279,8 @@ end;
 function  TWestASCIIDriver.SizeOfTag(Tag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE;
 begin
   // todos os registradores do west são de 32 bits (ponto flutuante);
+  //
+  // all west registers are float 32 bits sized.
   Result:=32;
 end;
 
@@ -1255,6 +1326,9 @@ end;
 initialization
 
    //Cria a lista de Parametros Validos...
+   //
+   //creates a list of valid parameters
+
    //SetPoint
    ParameterList[$00].ParameterID := $53;
    ParameterList[$00].FunctionAllowed :=  0;
@@ -1262,10 +1336,10 @@ initialization
    ParameterList[$00].Decimal := 255;
 
    //PV
-   ParameterList[$01].ParameterID := $4D; //ID do Parametro
-   ParameterList[$01].FunctionAllowed :=  2 ; //Funcao q pode usar, 0 := todas as funcoes
+   ParameterList[$01].ParameterID := $4D; //Parameter ID
+   ParameterList[$01].FunctionAllowed :=  2 ; //Function that can use this register, 0 = all functions
    ParameterList[$01].ReadOnly :=  true ; //ReadOnly 1 := yes?
-   ParameterList[$01].Decimal := 255; // casas decimais variaveis...
+   ParameterList[$01].Decimal := 255; // Number of decimal places of the parameter
 
    //Power Output value
    ParameterList[$02].ParameterID := $57;
@@ -1407,7 +1481,7 @@ initialization
 
    //PV Offset
    ParameterList[$19].ParameterID := $76;
-   ParameterList[$19].FunctionAllowed :=  0 ; //todas as funcoes podem realizar operacoes com esse parametro
+   ParameterList[$19].FunctionAllowed :=  0 ;
    ParameterList[$19].ReadOnly :=  false ;
    ParameterList[$19].Decimal := 255;
 
