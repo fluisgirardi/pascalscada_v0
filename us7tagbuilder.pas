@@ -485,7 +485,7 @@ begin
   BevelOuter:=bvNone;
   Height:=30;
   Caption:='';
-  Top:=$7FFFFFFF;
+  Top:=$0FFFFFFF;
 
   BitList:=TList.Create;
   DelList:=TList.Create;
