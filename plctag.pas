@@ -465,7 +465,7 @@ type
     @param(Offset Cardinal: Tells offset after the address where the values will be written.)
     }
     {$ENDIF}
-    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); virtual; abstract;
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); virtual; abstract; overload;
 
     //: @exclude
     procedure Loaded; override;

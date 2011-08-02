@@ -249,10 +249,8 @@ var
 begin
   PlcValues:=TagValuesToPLCValues(Values, Offset);
   if (PProtocolDriver<>nil) then begin
-     if PAutoWrite then begin
-       BuildTagRec(tr,0,0);
-       PProtocolDriver.Write(tr,PlcValues);
-     end;
+    BuildTagRec(tr,0,0);
+    PProtocolDriver.Write(tr,PlcValues);
   end else
      TagCommandCallBack(PlcValues, Now, tcWrite, ioNullDriver, Offset);
   SetLength(PlcValues,0);
