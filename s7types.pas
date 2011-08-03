@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Tipos comuns aos CLP's da familia Siemens.)

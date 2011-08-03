@@ -1,3 +1,4 @@
+{$i language.inc}
 unit HMIDBConnection;
 
 {$IFDEF FPC}

@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa o tag PLC numérico com comunicação.)

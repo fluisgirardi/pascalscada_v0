@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação de processadores de escala.)

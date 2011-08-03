@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Classes para organização de blocos de memória de um CLP.)

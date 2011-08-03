@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 //: Unit do assistente mapeador de elementos de bloco.
 {$ELSE}

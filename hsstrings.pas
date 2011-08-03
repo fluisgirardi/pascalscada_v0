@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de tradução do PascalSCADA.)

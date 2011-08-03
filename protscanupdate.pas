@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Atualiza os valores dos tags.)

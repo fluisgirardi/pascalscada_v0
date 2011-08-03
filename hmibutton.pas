@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 //: Classe que implementa um botão (precisa ser implementada).
 {$ELSE}

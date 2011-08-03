@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação dos editores de algumas propriedades de componentes

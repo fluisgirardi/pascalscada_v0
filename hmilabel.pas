@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um controle para a exibição de valores de qualquer tag.)

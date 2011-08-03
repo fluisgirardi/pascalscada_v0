@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 //: Implementa funções de socket para unix.
 {$ELSE}
@@ -302,4 +303,4 @@ begin
   end;
 end;
 
-end.
+end.

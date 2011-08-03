@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 //: Unit do assistente de mapeamento de bits.
 {$ELSE}

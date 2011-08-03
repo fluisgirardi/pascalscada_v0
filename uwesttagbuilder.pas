@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 Unit que implementa o West 6100+ TagBuilder assistente.

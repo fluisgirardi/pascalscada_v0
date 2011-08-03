@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)

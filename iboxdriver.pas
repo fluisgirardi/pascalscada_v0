@@ -1,3 +1,4 @@
+{$i language.inc}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 

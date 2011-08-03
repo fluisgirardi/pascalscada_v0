@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa uma porta de comunicação serial multiplataforma.)

@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   ATUALMENTE ESTE CONTROLE não funciona no Lazarus.

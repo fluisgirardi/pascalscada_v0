@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Unit de coleções de zonas gráficas e de texto.)

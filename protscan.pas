@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Processa os pedidos de leitura e escrita por scan.)

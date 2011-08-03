@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de registro de componentes do PascalSCADA. Para Lazarus e Delphi.)

@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   Calcula a constante lcl_fullversion em versões do lazarus

@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 //: Implementa funções de socket para Windows.
 {$ELSE}
@@ -312,4 +313,4 @@ finalization
   WSACleanup;
 {$IFEND}
 end.
-
+

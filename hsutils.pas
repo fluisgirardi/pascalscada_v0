@@ -1,4 +1,4 @@
-
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   Implementa funções uteis a todo o sistema.

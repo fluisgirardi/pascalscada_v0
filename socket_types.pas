@@ -1,3 +1,15 @@
+{$i language.inc}
+{$IFDEF PORTUGUES}
+{:
+@abstract(Tipos usados por sockets.)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ELSE}
+{:
+@abstract(Some types used by sockets.)
+@author(Fabio Luis Girardi fabio@pascalscada.com)
+}
+{$ENDIF}
 unit socket_types;
 
 {$IFDEF FPC}
@@ -63,4 +75,4 @@ const
 implementation
 
 end.
-
+

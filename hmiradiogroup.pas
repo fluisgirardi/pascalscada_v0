@@ -1,3 +1,4 @@
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Define um controle de opções para leitura/escrita de valores de tags numéricos.)
