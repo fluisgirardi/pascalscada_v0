@@ -1,4 +1,4 @@
-{$i language.inc}
+﻿{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa a base para Tags de comunicação.)
@@ -466,7 +466,7 @@ type
     @param(Offset Cardinal: Tells offset after the address where the values will be written.)
     }
     {$ENDIF}
-    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); virtual; abstract; overload;
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); overload; virtual; abstract; 
 
     //: @exclude
     procedure Loaded; override;
