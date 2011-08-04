@@ -1,5 +1,6 @@
 package zeoslib_pascalscada;
 
+{$R *.res}
 {$R 'zeoslib\src\component\ZComponent.dcr'}
 {$ALIGN 8}
 {$ASSERTIONS ON}
