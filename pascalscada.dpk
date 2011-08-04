@@ -47,7 +47,7 @@ contains
   tag in 'tag.pas',
   plcnumber in 'plcnumber.pas',
   valueprocessor in 'valueprocessor.pas',
-  ProtocolTypes in 'protocoltypes.pas',
+  protocoltypes in 'protocoltypes.pas',
   plctagnumber in 'plctagnumber.pas',
   LinearScaleProcessor in 'LinearScaleProcessor.pas',
   hsstrings in 'hsstrings.pas',
