@@ -134,9 +134,6 @@ OriginalFilename=
 ProductName=
 ProductVersion=1.0.0.0
 Comments=
-[Excluded Packages]
-c:\program files\borland\delphi7\Projects\Bpl\pascalscada.bpl=PascalSCADA
-C:\Program Files\Borland\Delphi7\Projects\Bpl\zeoslib_pascalscada.bpl=ZeosLib - PascalSCADA
 [HistoryLists\hlDebugSourcePath]
 Count=2
 Item0=.
