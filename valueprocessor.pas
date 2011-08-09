@@ -526,7 +526,12 @@ begin
 end;
 
 destructor  TPIPE.Destroy;
+var
+  t:Integer;
 begin
+  for t:=High(FTags) downto 0 do begin
+    TPLCNumber(FTags[t]).ScaleProcessor:=nil;
+  end;
   FScalePIPE.Destroy;
   inherited Destroy;
 end;
