@@ -250,10 +250,18 @@ begin
     exit;
   end;
 
-  oldstate:=PActive;
-  Active:=false;
-  FExclusiveDevice:=b;
-  Active:=oldstate;
+  //only at design-time
+  if csDesigning in ComponentState then begin
+    //stores the old state.
+    oldstate:=PActive;
+    //close the communication port.
+    Active:=False;
+    //set the new state.
+    FExclusiveDevice := b;
+    //restores the old state.
+    Active:=oldstate;
+  end else
+    FExclusiveDevice := b;
 end;
 
 procedure TTCP_UDPPort.setEnableAutoReconnect(v:Boolean);

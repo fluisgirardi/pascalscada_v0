@@ -67,13 +67,13 @@ type
     {$ELSE}
     //: Sends a communication error message to application;
     {$ENDIF}
-    procedure DoCommErrorEvent(Event:TCommPortErrorEvent; Error:TIOResult);
+    procedure DoCommErrorEvent(Event:TCommPortErrorEvent; Error:TIOResult; MainThread:Boolean);
     {$IFDEF PORTUGUES}
     //: Envia uma mensagem de evento porta aberta, fechada e disconectada para aplicação;
     {$ELSE}
     //: Sends a port event message (port open, closed or diconnected) to application;
     {$ENDIF}
-    procedure DoCommPortEvent(Event:TNotifyEvent);
+    procedure DoCommPortEvent(Event:TNotifyEvent; MainThread:Boolean);
   end;
 
   {$IFDEF PORTUGUES}
@@ -281,6 +281,11 @@ type
     //: Stores if the communication port is exclusive (like serial port)
     {$ENDIF}
     FExclusiveDevice:Boolean;
+
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
     {$IFDEF PORTUGUES}
     //: Envia uma mensagem de erro de comunicação de uma thread para a aplicação
     {$ELSE}
@@ -323,6 +328,9 @@ type
     {$ENDIF}
     procedure CommPortDisconected;
 
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     {$IFDEF PORTUGUES}
     //: Notifica o evento do usuário a respeito de um erro de leitura
@@ -926,6 +934,9 @@ begin
 end;
 
 procedure TEventNotificationThread.Execute;
+var
+  AtMainThread:Boolean;
+  evt:TNotifyEvent;
 begin
   FInitEvent.SetEvent;
   while not Terminated do begin
@@ -942,7 +953,14 @@ begin
           end;
           PSM_PORT_EVENT:begin
             FEvent:=PMsg.wParam;
-            Synchronize(SyncPortEvent);
+            AtMainThread:=Boolean(PMsg.lParam);
+            if AtMainThread then
+              Synchronize(SyncPortEvent)
+            else begin
+              evt:=PNotifyEvent(FEvent)^;
+              if Assigned(evt) then
+                evt(nil);
+            end;
             Dispose(PNotifyEvent(FEvent));
           end;
         end;
@@ -958,7 +976,7 @@ begin
   end;
 end;
 
-procedure TEventNotificationThread.DoCommErrorEvent(Event:TCommPortErrorEvent; Error:TIOResult);
+procedure TEventNotificationThread.DoCommErrorEvent(Event:TCommPortErrorEvent; Error:TIOResult; MainThread:Boolean);
 var
   p:PCommPortErrorEvent;
 begin
@@ -968,13 +986,13 @@ begin
   DoSomething;
 end;
 
-procedure TEventNotificationThread.DoCommPortEvent(Event:TNotifyEvent);
+procedure TEventNotificationThread.DoCommPortEvent(Event:TNotifyEvent; MainThread:Boolean);
 var
   p:PNotifyEvent;
 begin
   new(p);
   p^:=Event;
-  FSpool.PostMessage(PSM_PORT_EVENT,p,nil,false);
+  FSpool.PostMessage(PSM_PORT_EVENT, p, Pointer(MainThread), false);
   DoSomething;
 end;
 
@@ -1158,25 +1176,17 @@ procedure TCommPortDriver.CommError(WriteCmd:Boolean; Error:TIOResult);
 var
   evt:TCommPortErrorEvent;
 begin
-  if FOwnerThread=GetCurrentThreadId then begin
-    try
-      if WriteCmd then begin
-        DoWriteError(Error);
-      end else begin
-        DoReadError(Error);
-      end;
-    finally
-    end;
+  if WriteCmd then begin
+    evt := DoWriteError
   end else begin
-    if WriteCmd then begin
-      evt := DoWriteError
-    end else begin
-      evt := DoReadError;
-    end;
-
-    if Assigned(evt) then
-      PEventUpdater.DoCommErrorEvent(evt,Error);
+    evt := DoReadError;
   end;
+
+  if Assigned(evt) then
+    if MainThreadID=GetCurrentThreadId then
+      evt(error)
+    else
+      PEventUpdater.DoCommErrorEvent(evt,Error, true);
 end;
 
 procedure TCommPortDriver.CommPortOpened;
@@ -1185,33 +1195,24 @@ var
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
-  if GetCurrentThreadId=FOwnerThread then begin
-    try
-      DoPortOpened(Self);
-    finally
-    end;
-    for c:=0 to High(EventInterfaces) do
-      if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
-        EventInterfaces[c].DoPortOpened(Self);
-  end else begin
-    PEventUpdater.DoCommPortEvent(DoPortOpened);
-    for c:=0 to High(EventInterfaces) do
-      if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortOpenedEvent);
-  end;
+  if MainThreadID=GetCurrentThreadId then
+    DoPortOpened(Self)
+  else
+    PEventUpdater.DoCommPortEvent(DoPortOpened, true);
+
+  for c:=0 to High(EventInterfaces) do
+    if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
+      PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortOpenedEvent, false);
 end;
 
 procedure TCommPortDriver.CommPortOpenError;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
-  if GetCurrentThreadId=FOwnerThread then
-    try
-      DoPortOpenError(Self);
-    finally
-    end
+  if MainThreadID=GetCurrentThreadId then
+    DoPortOpenError(self)
   else
-    PEventUpdater.DoCommPortEvent(DoPortOpenError);
+    PEventUpdater.DoCommPortEvent(DoPortOpenError, true);
 end;
 
 procedure TCommPortDriver.CommPortClose;
@@ -1220,33 +1221,24 @@ var
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
-  if GetCurrentThreadId=FOwnerThread then begin
-    try
-      DoPortClose(Self);
-    finally
-    end;
-    for c:=0 to High(EventInterfaces) do
-      if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
-        EventInterfaces[c].DoPortClosed(Self);
-  end else begin
-    PEventUpdater.DoCommPortEvent(DoPortClose);
-    for c:=0 to High(EventInterfaces) do
-      if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortClosedEvent);
-  end;
+  if MainThreadID=GetCurrentThreadId then
+    DoPortClose(self)
+  else
+    PEventUpdater.DoCommPortEvent(DoPortClose, true);
+
+  for c:=0 to High(EventInterfaces) do
+    if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
+      PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortClosedEvent, false);
 end;
 
 procedure TCommPortDriver.CommPortCloseError;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
-  if GetCurrentThreadId=FOwnerThread then
-    try
-      DoPortCloseError(Self);
-    finally
-    end
+  if MainThreadID=GetCurrentThreadId then
+    DoPortCloseError(self)
   else
-    PEventUpdater.DoCommPortEvent(DoPortCloseError);
+    PEventUpdater.DoCommPortEvent(DoPortCloseError, true);
 end;
 
 procedure TCommPortDriver.CommPortDisconected;
@@ -1255,21 +1247,18 @@ var
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
-  if GetCurrentThreadId=FOwnerThread then begin
-    try
-      DoPortDisconnected(Self);
-    finally
-    end;
-    for c:=0 to High(EventInterfaces) do
-      if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
-        EventInterfaces[c].DoPortDisconnected(Self);
-  end else begin
-    PEventUpdater.DoCommPortEvent(DoPortDisconnected);
-    for c:=0 to High(EventInterfaces) do
-      if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
-        PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortDisconnectedEvent);
-  end;
+  if MainThreadID=GetCurrentThreadId then
+    DoPortDisconnected(Self)
+  else
+    PEventUpdater.DoCommPortEvent(DoPortDisconnected, true);
+  for c:=0 to High(EventInterfaces) do
+    if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
+      PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortDisconnectedEvent, false);
 end;
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 procedure TCommPortDriver.DoReadError(Error:TIOResult);
 begin
@@ -1412,17 +1401,16 @@ begin
     end else begin
       PActive := false;
     end;
-    exit;
+  end else begin
+    if v then begin
+       InternalPortStart(x);
+    end else begin
+       InternalPortStop(x);
+    end;
+    //habilita o timer de estatisticas.
+    //enables the statistical timer.
+    FTimer.Enabled := PActive;
   end;
-
-  if v and (not PActive) then begin
-     InternalPortStart(x);
-  end;
-  
-  if (not v) and PActive then begin
-     InternalPortStop(x);
-  end;
-  FTimer.Enabled := PActive;
 end;
 
 procedure TCommPortDriver.OpenInEditMode(v:Boolean);
