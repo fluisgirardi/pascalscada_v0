@@ -1,4 +1,16 @@
 {$i language.inc}
+{$IFDEF PORTUGUES}
+{:
+  Unit que implementa a classe de conexão a vários sistemas gerenciadores de
+  banco de dados.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ELSE}
+{:
+  Unit that implements a class to connnect on many database servers.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
 unit HMIDBConnection;
 
 {$IFDEF FPC}
@@ -38,7 +50,10 @@ type
   {$ELSE}
   //: Property editor of THMIDBConnection.Protocol property.
   {$ENDIF}
-  THMIDBProtocolPropertyEditor = class(TZProtocolPropertyEditor);
+  THMIDBProtocolPropertyEditor = class(TZProtocolPropertyEditor)
+  public
+    procedure GetValueList(List: TStrings); override;
+  end;
 
   {$IFDEF PORTUGUES}
   //: Método usado pela thread para execução de uma consulta.
@@ -353,6 +368,28 @@ begin
   Result:=GetComponent(0);
   if (Result is THMIDBConnection) and Supports(Result, IHMIDBConnection) then
     Result:=(THMIDBConnection(Result) as IHMIDBConnection).GetSyncConnection;
+end;
+
+var
+  SupportedDBDrivers:array[0..2] of string = ('postgresql','sqlite','mysql');
+
+//only accepted drivers are show.
+procedure THMIDBProtocolPropertyEditor.GetValueList(List: TStrings);
+var
+  i, s:Integer;
+  found:Boolean;
+begin
+  inherited GetValueList(List);
+  for i:=List.Count-1 downto 0 do begin
+    found:=false;
+    for s:=0 to High(SupportedDBDrivers) do
+      if pos(SupportedDBDrivers[s], List.Strings[i])<>0 then begin
+        found:=true;
+        break;
+      end;
+    if not found then
+      List.Delete(i);
+  end;
 end;
 
 //##############################################################################
