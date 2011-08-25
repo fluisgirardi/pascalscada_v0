@@ -121,8 +121,12 @@ type
     property Size write SetSize;
     //: @seealso(TTag.OnValueChange)
     property OnValueChange stored false;
+    //: @seealso(TTag.OnValueChangeFirst)
     property OnValueChangeFirst;
+    //: @seealso(TTag.OnValueChangeLast)
     property OnValueChangeLast;
+    //: @seealso(TTag.OnUpdate)
+    property OnUpdate;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
     //: @seealso(TPLCTag.TagType)
@@ -164,9 +168,10 @@ var
   c:Integer;
   notify:Boolean;
   TagValues:TArrayOfDouble;
+  PreviousTimestamp:TDateTime;
 begin
   if (csDestroying in ComponentState) then exit;
-  
+  PreviousTimestamp:=PValueTimeStamp;
   try
     inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
     TagValues:=PLCValuesToTagValues(Values, Offset);
@@ -216,6 +221,10 @@ begin
 
     if notify then
       NotifyChange;
+
+    if (TagCommand in [tcRead,tcScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PValueTimeStamp) then
+      NotifyUpdate;
+
   finally
     SetLength(TagValues,0);
   end;

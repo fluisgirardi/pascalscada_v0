@@ -549,6 +549,13 @@ type
     POnValueChangeLast:TNotifyEvent;
 
     {$IFDEF PORTUGUES}
+    //: Armazena o evento chamado pelo tag toda vez que ele for atualizado.
+    {$ELSE}
+    //: Stores the event called when the tag value was updated.
+    {$ENDIF}
+    POnUpdate:TNotifyEvent;
+
+    {$IFDEF PORTUGUES}
     //: Armazena a interface de notificação de eventos de todos os objetos dependentes.
     {$ELSE}
     //: Stores the notification event interface of all dependent objects.
@@ -582,6 +589,13 @@ type
     //: Notifies when a read fault occurs.
     {$ENDIF}
     procedure NotifyReadFault;
+
+    {$IFDEF PORTUGUES}
+    //: Notifica quando o valor do tag é atualizado.
+    {$ELSE}
+    //: Notifies when the tag value was updated.
+    {$ENDIF}
+    procedure NotifyUpdate;
 
     {$IFDEF PORTUGUES}
     //: Notifica quando uma escrita tem sucesso.
@@ -827,6 +841,13 @@ type
     //: Event called when the tag value changes, BEFORE notify all tag dependents.
     {$ENDIF}
     property OnValueChangeFirst:TNotifyEvent read POnValueChangeFirst  write POnValueChangeFirst;
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado quando o valor do tag é atualizado.
+    {$ELSE}
+    //: Event called when the tag value was updated.
+    {$ENDIF}
+    property OnUpdate:TNotifyEvent read POnUpdate  write POnUpdate;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -978,6 +999,15 @@ begin
 
   if Assigned(POnReadFail) then
     POnReadFail(self)
+end;
+
+procedure TTag.NotifyUpdate;
+begin
+  try
+    if Assigned(POnUpdate) then
+      POnUpdate(self)
+  finally
+  end;
 end;
 
 procedure TTag.NotifyWriteOk;

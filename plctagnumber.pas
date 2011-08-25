@@ -261,7 +261,9 @@ procedure TPLCTagNumber.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStam
 var
   notify:Boolean;
   TagValues:TArrayOfDouble;
+  PreviousTimestamp:TDateTime;
 begin
+  PreviousTimestamp:=PValueTimeStamp;
   if (csDestroying in ComponentState) then exit;
   inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
   TagValues:=PLCValuesToTagValues(Values, Offset);
@@ -308,6 +310,9 @@ begin
 
     if notify then
       NotifyChange;
+
+    if (TagCommand in [tcRead,tcScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PValueTimeStamp) then
+      NotifyUpdate;
   finally
     SetLength(TagValues,0);
   end;
