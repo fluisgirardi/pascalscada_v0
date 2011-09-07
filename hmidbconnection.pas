@@ -262,7 +262,6 @@ type
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
     function  GetSyncConnection:TZConnection;
-    function  ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
     procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
   protected
     FProtocol: string;
@@ -288,6 +287,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
+    function  ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -531,7 +531,7 @@ begin
   try
     FASyncQuery.SQL.Clear;
     FASyncQuery.SQL.Add(sqlcmd);
-    if outputdataset=nil then begin
+    if outputdataset<>nil then begin
       FASyncQuery.Open;
       outputdataset.CopyFromDataset(FASyncQuery);
     end else

@@ -1,4 +1,4 @@
-( SELECT 
+ SELECT 
     tbum_user.ds_login,
     NULL AS ds_groupname,  
     tbum_object.ds_object
@@ -9,9 +9,9 @@
   WHERE 
     tbum_user.id_user = tbum_permission.cd_user AND
     tbum_object.id_object = tbum_permission.cd_object
-) 
+ 
 UNION
-(  
+  
   SELECT 
     tbum_user.ds_login, 
     tbum_group.ds_groupname, 
@@ -27,4 +27,3 @@ UNION
     tbum_group_member.cd_group = tbum_permission.cd_group AND
     tbum_group_member.cd_group = tbum_group.id_group AND
     tbum_permission.cd_object = tbum_object.id_object
-)
