@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  HMITrackBar, HMILabel;
+  HMITrackBar, HMILabel, HMIScrollBar;
 
 type
 
@@ -17,10 +17,10 @@ type
     HMILabel2: THMILabel;
     HMILabel3: THMILabel;
     HMILabel4: THMILabel;
-    HMITrackBar1: THMITrackBar;
-    HMITrackBar2: THMITrackBar;
-    HMITrackBar3: THMITrackBar;
-    HMITrackBar4: THMITrackBar;
+    HMIScrollBar1: THMIScrollBar;
+    HMIScrollBar2: THMIScrollBar;
+    HMIScrollBar3: THMIScrollBar;
+    HMIScrollBar4: THMIScrollBar;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;

@@ -53,7 +53,7 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="2"/>
+        <TopLine Value="3"/>
         <CursorPos X="8" Y="41"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
@@ -71,7 +71,7 @@
         <UsageCount Value="20"/>
       </Unit2>
     </Units>
-    <JumpHistory Count="9" HistoryIndex="8">
+    <JumpHistory Count="17" HistoryIndex="16">
       <Position1>
         <Filename Value="umain.pas"/>
         <Caret Line="1" Column="1" TopLine="1"/>
@@ -108,6 +108,38 @@
         <Filename Value="umain.pas"/>
         <Caret Line="40" Column="8" TopLine="1"/>
       </Position9>
+      <Position10>
+        <Filename Value="umain.pas"/>
+        <Caret Line="41" Column="8" TopLine="2"/>
+      </Position10>
+      <Position11>
+        <Filename Value="umain.pas"/>
+        <Caret Line="40" Column="8" TopLine="2"/>
+      </Position11>
+      <Position12>
+        <Filename Value="umain.pas"/>
+        <Caret Line="41" Column="8" TopLine="2"/>
+      </Position12>
+      <Position13>
+        <Filename Value="umain.pas"/>
+        <Caret Line="40" Column="8" TopLine="2"/>
+      </Position13>
+      <Position14>
+        <Filename Value="umain.pas"/>
+        <Caret Line="41" Column="8" TopLine="2"/>
+      </Position14>
+      <Position15>
+        <Filename Value="umain.pas"/>
+        <Caret Line="42" Column="8" TopLine="3"/>
+      </Position15>
+      <Position16>
+        <Filename Value="umain.pas"/>
+        <Caret Line="41" Column="8" TopLine="3"/>
+      </Position16>
+      <Position17>
+        <Filename Value="umain.pas"/>
+        <Caret Line="40" Column="8" TopLine="3"/>
+      </Position17>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>

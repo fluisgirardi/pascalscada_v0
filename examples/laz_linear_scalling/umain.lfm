@@ -1,30 +1,18 @@
 object Form1: TForm1
   Left = 281
-  Height = 277
+  Height = 109
   Top = 127
-  Width = 274
+  Width = 502
+  BorderStyle = bsDialog
   Caption = 'Form1'
-  ClientHeight = 277
-  ClientWidth = 274
+  ClientHeight = 109
+  ClientWidth = 502
   LCLVersion = '0.9.31'
-  object HMITrackBar1: THMITrackBar
-    Left = 8
-    Height = 192
-    Top = 56
-    Width = 49
-    Max = 480
-    Orientation = trVertical
-    Reversed = True
-    ScalePos = trBottom
-    TabOrder = 0
-    PLCTag = DataModule1.Word1
-  end
   object Label1: TLabel
-    Left = 8
+    Left = 80
     Height = 14
-    Top = 32
+    Top = 8
     Width = 49
-    Alignment = taCenter
     AutoSize = False
     Caption = 'Tensão'
     Font.Style = [fsBold]
@@ -32,11 +20,11 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label2: TLabel
-    Left = 8
+    Left = 0
     Height = 14
-    Top = 8
-    Width = 121
-    Alignment = taCenter
+    Top = 17
+    Width = 73
+    Alignment = taRightJustify
     AutoSize = False
     Caption = 'Cabeça'
     Font.Style = [fsBold]
@@ -44,35 +32,22 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label3: TLabel
-    Left = 72
+    Left = 80
     Height = 14
     Top = 32
     Width = 57
-    Alignment = taCenter
     AutoSize = False
     Caption = 'Corrente'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
   end
-  object HMITrackBar2: THMITrackBar
-    Left = 72
-    Height = 192
-    Top = 56
-    Width = 57
-    Max = 1000
-    Orientation = trVertical
-    Reversed = True
-    ScalePos = trBottom
-    TabOrder = 1
-    PLCTag = DataModule1.Word2_ws
-  end
   object Label4: TLabel
-    Left = 144
+    Left = 0
     Height = 14
-    Top = 8
-    Width = 117
-    Alignment = taCenter
+    Top = 65
+    Width = 73
+    Alignment = taRightJustify
     AutoSize = False
     Caption = 'Peito'
     Font.Style = [fsBold]
@@ -80,11 +55,10 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label5: TLabel
-    Left = 144
+    Left = 80
     Height = 14
-    Top = 32
+    Top = 56
     Width = 49
-    Alignment = taCenter
     AutoSize = False
     Caption = 'Tensão'
     Font.Style = [fsBold]
@@ -92,56 +66,32 @@ object Form1: TForm1
     ParentFont = False
   end
   object Label6: TLabel
-    Left = 208
+    Left = 80
     Height = 14
-    Top = 32
+    Top = 80
     Width = 57
-    Alignment = taCenter
     AutoSize = False
     Caption = 'Corrente'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
   end
-  object HMITrackBar3: THMITrackBar
-    Left = 144
-    Height = 192
-    Top = 56
-    Width = 49
-    Max = 480
-    Orientation = trVertical
-    Reversed = True
-    ScalePos = trBottom
-    TabOrder = 2
-    PLCTag = DataModule1.Word3
-  end
-  object HMITrackBar4: THMITrackBar
-    Left = 208
-    Height = 192
-    Top = 56
-    Width = 57
-    Max = 1000
-    Orientation = trVertical
-    Reversed = True
-    ScalePos = trBottom
-    TabOrder = 3
-    PLCTag = DataModule1.Word4_ws
-  end
   object HMILabel1: THMILabel
-    Left = 8
-    Height = 17
-    Top = 254
-    Width = 49
+    Left = 440
+    Height = 15
+    Top = 8
+    Width = 57
     Alignment = taRightJustify
+    Layout = tlCenter
     ParentColor = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Word1
     Sufix = ' V'
   end
   object HMILabel2: THMILabel
-    Left = 72
+    Left = 440
     Height = 17
-    Top = 254
+    Top = 32
     Width = 57
     Alignment = taRightJustify
     ParentColor = False
@@ -150,10 +100,10 @@ object Form1: TForm1
     Sufix = ' A'
   end
   object HMILabel3: THMILabel
-    Left = 144
+    Left = 440
     Height = 17
-    Top = 254
-    Width = 49
+    Top = 56
+    Width = 57
     Alignment = taRightJustify
     ParentColor = False
     NumberFormat = '#0.0'
@@ -161,14 +111,59 @@ object Form1: TForm1
     Sufix = ' V'
   end
   object HMILabel4: THMILabel
-    Left = 208
+    Left = 440
     Height = 17
-    Top = 254
+    Top = 80
     Width = 57
     Alignment = taRightJustify
     ParentColor = False
     NumberFormat = '#0.00'
     PLCTag = DataModule1.Word4
     Sufix = ' A'
+  end
+  object HMIScrollBar1: THMIScrollBar
+    Left = 144
+    Height = 15
+    Top = 8
+    Width = 288
+    Max = 480
+    PageSize = 0
+    ParentShowHint = False
+    TabOrder = 0
+    PLCTag = DataModule1.Word1
+    UpdateOnMove = True
+  end
+  object HMIScrollBar2: THMIScrollBar
+    Left = 144
+    Height = 15
+    Top = 32
+    Width = 288
+    Max = 1000
+    PageSize = 0
+    TabOrder = 1
+    PLCTag = DataModule1.Word2_ws
+    UpdateOnMove = True
+  end
+  object HMIScrollBar3: THMIScrollBar
+    Left = 144
+    Height = 15
+    Top = 56
+    Width = 288
+    Max = 480
+    PageSize = 0
+    TabOrder = 2
+    PLCTag = DataModule1.Word3
+    UpdateOnMove = True
+  end
+  object HMIScrollBar4: THMIScrollBar
+    Left = 144
+    Height = 15
+    Top = 80
+    Width = 288
+    Max = 1000
+    PageSize = 0
+    TabOrder = 3
+    PLCTag = DataModule1.Word4_ws
+    UpdateOnMove = True
   end
 end
