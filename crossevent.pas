@@ -255,7 +255,11 @@ begin
   FEvent.Name:=Name;
   FEvent.EventAttr:=EventAttributes;
   {$ELSE}
+  {$IFDEF WinCE}
+  FEvent :=  CreateEvent(EventAttributes,AManualReset,InitialState,PWideChar(Name));
+  {$ELSE}
   FEvent :=  CreateEvent(EventAttributes,AManualReset,InitialState,PChar(Name));
+  {$ENDIF}
   {$IFEND}
 end;
 
@@ -380,4 +384,4 @@ begin
   {$IFEND}
 end;
 
-end.
+end.
