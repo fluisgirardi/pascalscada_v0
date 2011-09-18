@@ -58,6 +58,19 @@ type
     FFreezedValue:Boolean;
     HasFocus:Boolean;
     FIsEnabled:Boolean;
+    {$IFDEF PORTUGUES}
+    //: Armazena se devem ser verificados limites minimos e máximos
+    {$ELSE}
+    //: Stores if must be checked the minimum and maximum limits.
+    {$ENDIF}
+    FEnableMin, FEnableMax:Boolean;
+
+    {$IFDEF PORTUGUES}
+    //: Armazena os valores de limites inferior e superior, apenas entrada.
+    {$ELSE}
+    //: Stores the minimum and maximum limits.
+    {$ENDIF}
+    FMinLimit, FMaxLimit:Double;
 
     procedure RemoveHMITag(Sender:TObject);
 
@@ -87,6 +100,9 @@ type
     procedure NotifyWriteFault;
     procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
+
+    procedure SetMinLimit(v:Double);
+    procedure SetMaxLimit(v:Double);
   protected
     //: @exclude
     procedure Change; override;
@@ -256,6 +272,34 @@ type
     }
     {$ENDIF}
     property FreezeValueOnFocus:Boolean read FFreezeValue write FFreezeValue default true;
+
+    {$IFDEF PORTUGUES}
+    //: Habilita/desabilita o limite minimo para entrada de dados.
+    {$ELSE}
+    //: Enables/disables the minimum limit.
+    {$ENDIF}
+    property EnableMinValue:Boolean read FEnableMin write FEnableMin stored true;
+
+    {$IFDEF PORTUGUES}
+    //: Habilita/desabilita o limite máximo para entrada de dados.
+    {$ELSE}
+    //: Enables/disables the maximum limit.
+    {$ENDIF}
+    property EnableMaxValue:Boolean read FEnableMax write FEnableMax stored true;
+
+    {$IFDEF PORTUGUES}
+    //: Limite minimo para entrada de dados.
+    {$ELSE}
+    //: Minimum value acceptable if the minimum limit is enabled.
+    {$ENDIF}
+    property MinValue:Double read FMinLimit write SetMinLimit;
+
+    {$IFDEF PORTUGUES}
+    //: Limite máximo para entrada de dados.
+    {$ELSE}
+    //: Maximum value acceptable if the maximum limit is enabled.
+    {$ENDIF}
+    property MaxValue:Double read FMaxLimit write SetMaxLimit;
   end;
 
 implementation
@@ -437,6 +481,22 @@ begin
   RefreshTagValue;
 end;
 
+procedure THMIEdit.SetMinLimit(v:Double);
+begin
+  if ([csReading, csLoading]*ComponentState=[]) and  (v>=FMaxLimit) then
+    raise Exception.Create(SminMustBeLessThanMax);
+
+  FMinLimit:=v;
+end;
+
+procedure THMIEdit.SetMaxLimit(v:Double);
+begin
+  if ([csReading, csLoading]*ComponentState=[]) and  (v<=FMinLimit) then
+    raise Exception.Create(SmaxMustBeGreaterThanMin);
+
+  FMaxLimit:=v;
+end;
+
 procedure THMIEdit.FontChange(Sender: TObject);
 begin
   if Assigned(FFontChangeEvent) then
@@ -475,6 +535,8 @@ begin
 end;
 
 procedure THMIEdit.SendValue(Txt:String);
+var
+  x:Double;
 begin
   if (csReading in ComponentState) or
      (FTag=nil) or
@@ -482,7 +544,11 @@ begin
      exit;
 
   if Supports(FTag, ITagNumeric) then begin
-    (FTag as ITagNumeric).Value := StrToFloat(Txt);
+    x:=StrToFloat(Txt);
+    if (FEnableMax and (x>FMaxLimit)) or (FEnableMin and (x<FMinLimit)) then
+      raise Exception.Create(SoutOfBounds);
+
+    (FTag as ITagNumeric).Value := x;
     exit;
   end;
 
