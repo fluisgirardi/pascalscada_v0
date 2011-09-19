@@ -1,0 +1,75 @@
+-- ######################################################
+-- Tabela de strings
+-- ######################################################
+CREATE TABLE tbl_string ( 
+    id_string INTEGER NOT NULL
+                      PRIMARY KEY AUTOINCREMENT,
+    ds_string TEXT    NOT NULL,
+    CONSTRAINT tbl_string_un UNIQUE ( ds_string ) 
+);
+
+
+-- ######################################################
+-- Tabela de Tags
+-- ######################################################
+CREATE TABLE tbl_tags ( 
+    id_tag     INTEGER        PRIMARY KEY AUTOINCREMENT
+                              NOT NULL,
+    tag_guid   VARCHAR( 40 )  NOT NULL,
+    ds_tagname TEXT           NOT NULL,
+    CONSTRAINT 'tbl_tag_guid_un' UNIQUE ( tag_guid ) 
+);
+
+-- ######################################################
+-- Tabelas de gerenciamento de usuários.
+-- ######################################################
+CREATE TABLE tbum_user ( 
+    id_user     INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    ds_login    TEXT    NOT NULL,
+    ds_password TEXT    NOT NULL,
+    ds_fullname TEXT,
+    op_blocked  BOOLEAN NOT NULL DEFAULT false,
+    CONSTRAINT tbum_users_un UNIQUE ( ds_login ) 
+);
+
+CREATE TABLE tbum_group ( 
+    id_group            INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    ds_groupname        TEXT    NOT NULL,
+    ds_groupdescription TEXT,
+    CONSTRAINT tbum_groups_un UNIQUE ( ds_groupname ) 
+);
+
+CREATE TABLE tbum_object ( 
+    id_object          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    ds_object          TEXT    NOT NULL,
+    ds_longdescription TEXT,
+    CONSTRAINT tbum_objects_un UNIQUE ( ds_object ) 
+);
+
+CREATE TABLE tbum_group_member ( 
+    cd_user  INTEGER NOT NULL,
+    cd_group INTEGER NOT NULL,
+    CONSTRAINT tbum_group_member_pk PRIMARY KEY ( cd_user, cd_group ),
+    CONSTRAINT tbum_group_member_group_fk FOREIGN KEY ( cd_group ) REFERENCES tbum_group ( id_group ) ON DELETE CASCADE
+                                                                                                          ON UPDATE CASCADE
+                                                                                                          MATCH SIMPLE,
+    CONSTRAINT tbum_group_member_user_fk FOREIGN KEY ( cd_user ) REFERENCES tbum_user ( id_user ) ON DELETE CASCADE
+                                                                                                      ON UPDATE CASCADE
+                                                                                                      MATCH SIMPLE 
+);
+
+CREATE TABLE tbum_permission ( 
+    id_permission INTEGER NOT NULL
+                          PRIMARY KEY AUTOINCREMENT,
+    cd_user       INTEGER,
+    cd_group      INTEGER,
+    cd_object     INTEGER NOT NULL,
+    CONSTRAINT tbum_permission_group_fk FOREIGN KEY ( cd_group ) REFERENCES tbum_group ( id_group ) ON DELETE CASCADE
+                                                                                                        ON UPDATE CASCADE
+                                                                                                        MATCH SIMPLE,
+    CONSTRAINT tbum_permission_user_fk FOREIGN KEY ( cd_user ) REFERENCES tbum_user ( id_user ) ON DELETE CASCADE
+                                                                                                    ON UPDATE CASCADE
+                                                                                                    MATCH SIMPLE 
+);
+
+
