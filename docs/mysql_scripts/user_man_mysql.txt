@@ -1,7 +1,7 @@
 CREATE TABLE tbum_user
 (
-  id_user serial NOT NULL,
-  ds_login text NOT NULL,
+  id_user INT NOT NULL AUTO_INCREMENT,
+  ds_login varchar(50) NOT NULL,
   ds_password text NOT NULL,
   ds_fullname text,
   op_blocked boolean NOT NULL DEFAULT false,
@@ -11,8 +11,8 @@ CREATE TABLE tbum_user
 
 CREATE TABLE tbum_group
 (
-  id_group serial NOT NULL,
-  ds_groupname text NOT NULL,
+  id_group INT NOT NULL AUTO_INCREMENT,
+  ds_groupname varchar(50) NOT NULL,
   ds_groupdescription text,
   CONSTRAINT tbum_groups_pk PRIMARY KEY (id_group),
   CONSTRAINT tbum_groups_un UNIQUE (ds_groupname)
@@ -20,8 +20,8 @@ CREATE TABLE tbum_group
 
 CREATE TABLE tbum_object
 (
-  id_object serial NOT NULL,
-  ds_object text NOT NULL,
+  id_object INT NOT NULL AUTO_INCREMENT,
+  ds_object varchar(50) NOT NULL,
   ds_longdescription text,
   CONSTRAINT tbum_objects_pk PRIMARY KEY (id_object),
   CONSTRAINT tbum_objects_un UNIQUE (ds_object)
