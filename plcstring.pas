@@ -146,7 +146,11 @@ type
     property ByteSize:Byte read PByteSize write SetByteSize default 8;
     
     //: @seealso(TTag.OnValueChange)
-    property OnValueChange;
+    property OnValueChange stored false;
+    //: @seealso(TTag.OnValueChangeFirst)
+    property OnValueChangeFirst;
+    //: @seealso(TTag.OnValueChangeLast)
+    property OnValueChangeLast;
 
     {$IFDEF PORTUGUES}
     //: Tamanho do bloco (somente-leitura).
