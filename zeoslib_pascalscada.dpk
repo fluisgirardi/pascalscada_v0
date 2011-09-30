@@ -118,6 +118,16 @@ contains
   ZSqlStrings in 'ZeosLib\src\component\ZSqlStrings.pas',
   ZSqlUpdate in 'ZeosLib\src\component\ZSqlUpdate.pas',
   ZStoredProcedure in 'ZeosLib\src\component\ZStoredProcedure.pas',
-  ZStreamBlob in 'ZeosLib\src\component\ZStreamBlob.pas';
+  ZStreamBlob in 'ZeosLib\src\component\ZStreamBlob.pas',
+  ZDbcAdo in 'zeoslib\src\dbc\ZDbcAdo.pas',
+  ZDbcAdoMetadata in 'zeoslib\src\dbc\ZDbcAdoMetadata.pas',
+  ZDbcAdoResultSet in 'zeoslib\src\dbc\ZDbcAdoResultSet.pas',
+  ZDbcAdoStatement in 'zeoslib\src\dbc\ZDbcAdoStatement.pas',
+  ZDbcAdoUtils in 'zeoslib\src\dbc\ZDbcAdoUtils.pas',
+  ZPlainAdo in 'zeoslib\src\plain\ZPlainAdo.pas',
+  ZPlainAdoDriver in 'zeoslib\src\plain\ZPlainAdoDriver.pas',
+  ZSybaseAnalyser in 'zeoslib\src\parsesql\ZSybaseAnalyser.pas',
+  ZSybaseToken in 'zeoslib\src\parsesql\ZSybaseToken.pas',
+  ZUpdateSqlEditor in 'zeoslib\src\component\ZUpdateSqlEditor.pas';
 
 end.
