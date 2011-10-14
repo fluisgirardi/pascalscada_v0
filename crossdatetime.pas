@@ -1,5 +1,9 @@
 unit crossdatetime;
 
+{$IFDEF FPC}
+{$mode delphi}
+{$ENDIF}
+
 interface
 
 uses
@@ -15,7 +19,7 @@ var
   ms:Word;
   encoded_ms:TDateTime;
 begin
-  Result:=CrossNow;
+  Result:=Now;
   {$IFDEF WINCE}
   ms:=(GetTickCount-GetOffset) mod 1000;
   encoded_ms:=EncodeTime(0,0,0,ms);
@@ -46,4 +50,4 @@ initialization
   end;
 {$ENDIF}
 end.
-
+

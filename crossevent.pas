@@ -256,9 +256,9 @@ begin
   FEvent.EventAttr:=EventAttributes;
   {$ELSE}
   {$IFDEF WinCE}
-  FEvent :=  CreateEvent(EventAttributes,AManualReset,InitialState,PWideChar(Name));
+  FEvent :=  CreateEvent(nil,AManualReset,InitialState,nil);
   {$ELSE}
-  FEvent :=  CreateEvent(EventAttributes,AManualReset,InitialState,PChar(Name));
+  FEvent :=  CreateEvent(nil,AManualReset,InitialState,nil);
   {$ENDIF}
   {$IFEND}
 end;
