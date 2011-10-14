@@ -666,12 +666,12 @@ type
 
 implementation
 
-uses hsutils, hsstrings, dateutils;
+uses hsutils, hsstrings, dateutils, crossdatetime;
 
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  PValueTimeStamp:=Now;
+  PValueTimeStamp:=CrossNow;
   PAutoRead:=true;
   PAutoWrite:=true;
   PValidTag:=false;
@@ -763,7 +763,7 @@ begin
   end;
 
   if TagCommand=tcScanRead then
-    PLastScanTimeStamp:=Now;
+    PLastScanTimeStamp:=CrossNow;
 
   if (LastResult=ioOk) then
     FFirtsRead:=false;
@@ -789,7 +789,7 @@ begin
 
   if (PProtocolDriver<>nil) then begin
     if v then begin
-      PLastScanTimeStamp:=Now;
+      PLastScanTimeStamp:=CrossNow;
       PProtocolDriver.AddTag(self)
     end else
       PProtocolDriver.RemoveTag(self);
@@ -1576,12 +1576,12 @@ end;
 
 function TPLCTag.RemainingMiliseconds:Int64;
 begin
-  Result:=PUpdateTime-MilliSecondsBetween(Now,PValueTimeStamp);
+  Result:=PUpdateTime-MilliSecondsBetween(CrossNow,PValueTimeStamp);
 end;
 
 function TPLCTag.RemainingMilisecondsForNextScan:Int64;
 begin
-  Result:=PUpdateTime-MilliSecondsBetween(Now,PLastScanTimeStamp);
+  Result:=PUpdateTime-MilliSecondsBetween(CrossNow,PLastScanTimeStamp);
 end;
 
 function TPLCTag.IsValidTag:Boolean;

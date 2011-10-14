@@ -63,7 +63,7 @@ type
 
 implementation
 
-uses Math, PLCMemoryManager, SysUtils;
+uses Math, PLCMemoryManager, SysUtils, crossdatetime;
 
 function  TModBusRTUDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var
@@ -413,7 +413,7 @@ begin
       if foundPLC then begin
          if Result=ioOk then begin
            PModbusPLC[plc].Status07Value :=Integer(pkg.BufferToRead[2]);
-           PModbusPLC[plc].Status07TimeStamp := Now;
+           PModbusPLC[plc].Status07TimeStamp := CrossNow;
          end;
          PModbusPLC[plc].Status07LastError := Result;
       end;

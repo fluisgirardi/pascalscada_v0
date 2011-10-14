@@ -555,7 +555,7 @@ type
 
 implementation
 
-uses Math, hsstrings;
+uses Math, hsstrings, crossdatetime;
 
 constructor TRegisterRange.Create(AdrStart,AdrEnd:Cardinal);
 begin
@@ -569,7 +569,7 @@ end;
 
 procedure TRegisterRange.Updated;
 begin
-  FLastUpdate := now;
+  FLastUpdate := CrossNow;
 end;
 
 function  TRegisterRange.GetValue(index:Integer):Double;
@@ -589,7 +589,7 @@ end;
 
 function TRegisterRange.GetMsecLastUpdate:Int64;
 begin
-  Result := MilliSecondsBetween(Now,FLastUpdate);
+  Result := MilliSecondsBetween(CrossNow,FLastUpdate);
 end;
 
 function TRegisterRange.NeedRefresh:Boolean;
@@ -808,7 +808,7 @@ begin
       SetLength(newBlocks,Length(newBlocks)+1);
 
       newBlocks[BlockIndex] := CreateRegisterRange(adrStart,adrEnd);
-      newBlocks[BlockIndex].LastUpdate := now;
+      newBlocks[BlockIndex].LastUpdate := CrossNow;
       newBlocks[BlockIndex].ScanTime := mscan;
       inc(BlockIndex);
 
@@ -830,7 +830,7 @@ begin
     if c=High(FAddress) then begin
       SetLength(newBlocks,Length(newBlocks)+1);
       newBlocks[BlockIndex] := CreateRegisterRange(adrStart,adrEnd);
-      newBlocks[BlockIndex].LastUpdate := now;
+      newBlocks[BlockIndex].LastUpdate := CrossNow;
       newBlocks[BlockIndex].ScanTime := mscan;
       inc(BlockIndex);
     end;

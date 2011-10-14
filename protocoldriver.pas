@@ -671,7 +671,7 @@ var
 
 implementation
 
-uses PLCTag, hsstrings, Dialogs, math;
+uses PLCTag, hsstrings, Dialogs, math, crossdatetime;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -1006,7 +1006,7 @@ begin
     //copy the values
     pkg^.ValuesToWrite := Values;
     pkg^.WriteResult:=ioNone;
-    pkg^.ValueTimeStamp:=Now;
+    pkg^.ValueTimeStamp:=CrossNow;
 
     //posta uma mensagem de Escrita por Scan
     //send the scanwrite message to thread.
@@ -1043,7 +1043,7 @@ begin
     FCritical.Enter;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(Values,Now,tcRead,res,tagrec.RealOffset);
+      tagrec.CallBack(Values,CrossNow,tcRead,res,tagrec.RealOffset);
   finally
     FCritical.Leave;
     FPause.SetEvent;
@@ -1069,7 +1069,7 @@ begin
 
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(Values,Now,tcWrite,res,tagrec.RealOffset);
+      tagrec.CallBack(Values,CrossNow,tcWrite,res,tagrec.RealOffset);
   finally
     FCritical.Leave;
     FPause.SetEvent;

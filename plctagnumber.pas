@@ -129,7 +129,7 @@ type
 
 implementation
 
-uses hsstrings, math;
+uses hsstrings, math, crossdatetime;
 
 function TPLCTagNumber.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin
@@ -225,11 +225,11 @@ begin
        BuildTagRec(tr,0,0);
        PProtocolDriver.ScanWrite(tr,PlcValues);
      end else begin
-       TagCommandCallBack(PlcValues,Now,tcScanWrite,ioOk,0);
+       TagCommandCallBack(PlcValues,CrossNow,tcScanWrite,ioOk,0);
        Dec(PCommWriteOk);
      end;
   end else
-     TagCommandCallBack(PlcValues, Now, tcScanWrite, ioNullDriver, Offset);
+     TagCommandCallBack(PlcValues, CrossNow, tcScanWrite, ioNullDriver, Offset);
   SetLength(PlcValues,0);
 end;
 
@@ -253,7 +253,7 @@ begin
     BuildTagRec(tr,0,0);
     PProtocolDriver.Write(tr,PlcValues);
   end else
-     TagCommandCallBack(PlcValues, Now, tcWrite, ioNullDriver, Offset);
+     TagCommandCallBack(PlcValues, CrossNow, tcWrite, ioNullDriver, Offset);
   SetLength(PlcValues,0);
 end;
 

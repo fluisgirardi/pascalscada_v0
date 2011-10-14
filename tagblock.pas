@@ -100,6 +100,8 @@ type
 
 implementation
 
+uses crossdatetime;
+
 procedure TTagBlock.ScanRead;
 var
   tr:TTagRec;
@@ -121,11 +123,11 @@ begin
       BuildTagRec(tr,Count,Offset);
       PProtocolDriver.ScanWrite(tr,Values);
     end else begin
-      TagCommandCallBack(Values,Now,tcScanWrite,ioOk,Offset);
+      TagCommandCallBack(Values,CrossNow,tcScanWrite,ioOk,Offset);
       Dec(PCommWriteOk);
     end;
   end else
-    TagCommandCallBack(Values,Now,tcScanWrite,ioNullDriver,Offset);
+    TagCommandCallBack(Values,CrossNow,tcScanWrite,ioNullDriver,Offset);
 end;
 
 procedure TTagBlock.Read;
@@ -147,7 +149,7 @@ begin
     BuildTagRec(tr,Count,Offset);
     PProtocolDriver.Write(tr,Values);
   end else
-    TagCommandCallBack(Values,Now,tcWrite,ioNullDriver,Offset);
+    TagCommandCallBack(Values,CrossNow,tcWrite,ioNullDriver,Offset);
 end;
 
 

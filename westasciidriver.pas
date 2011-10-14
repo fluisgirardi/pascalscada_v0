@@ -311,7 +311,8 @@ var
 
 implementation
 
-uses PLCTagNumber, math, dateutils, hsstrings, uwesttagbuilder, Controls;
+uses PLCTagNumber, math, dateutils, hsstrings, uwesttagbuilder, Controls,
+  crossdatetime;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin
@@ -497,10 +498,10 @@ begin
       regini := 0;
       usados := 0;
       with FWestDevices[plc] do begin
-        usados := ifthen((Length(Registers[0].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[0].Timestamp)>=Registers[0].MinScanTime),usados+1,usados);
-        usados := ifthen((Length(Registers[1].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[1].Timestamp)>=Registers[1].MinScanTime),usados+1,usados);
-        usados := ifthen((Length(Registers[2].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[2].Timestamp)>=Registers[2].MinScanTime),usados+1,usados);
-        usados := ifthen((Length(Registers[3].ScanTimes)>0) and (MilliSecondsBetween(Now,Registers[3].Timestamp)>=Registers[3].MinScanTime),usados+1,usados);
+        usados := ifthen((Length(Registers[0].ScanTimes)>0) and (MilliSecondsBetween(CrossNow,Registers[0].Timestamp)>=Registers[0].MinScanTime),usados+1,usados);
+        usados := ifthen((Length(Registers[1].ScanTimes)>0) and (MilliSecondsBetween(CrossNow,Registers[1].Timestamp)>=Registers[1].MinScanTime),usados+1,usados);
+        usados := ifthen((Length(Registers[2].ScanTimes)>0) and (MilliSecondsBetween(CrossNow,Registers[2].Timestamp)>=Registers[2].MinScanTime),usados+1,usados);
+        usados := ifthen((Length(Registers[3].ScanTimes)>0) and (MilliSecondsBetween(CrossNow,Registers[3].Timestamp)>=Registers[3].MinScanTime),usados+1,usados);
       end;
 
       tagrec.Station:=FWestDevices[plc].Address;
@@ -526,7 +527,7 @@ begin
       for reg := regini to High(FWestDevices[plc].Registers) do
         with FWestDevices[plc].Registers[reg] do
           if Length(ScanTimes)>0 then begin
-            msbetween:=MilliSecondsBetween(Now,Timestamp);
+            msbetween:=MilliSecondsBetween(CrossNow,Timestamp);
             if msbetween>=MinScanTime then begin
               tagrec.Address:=reg;
               DoRead(tagrec, values, false);
@@ -617,7 +618,7 @@ begin
     with FWestDevices[plc].Registers[tagrec.Address] do begin
       if (Length(Values)>0) and (Result=ioOk) then begin
         Value:=Values[0];
-        Timestamp:=Now;
+        Timestamp:=CrossNow;
       end;
       LastWriteResult:=Result;
     end;
@@ -658,7 +659,7 @@ begin
       if (Length(Values)>0) and (Result=ioOk) then begin
         Value:=Values[0];
         Decimal := dec;
-        Timestamp:=Now;
+        Timestamp:=CrossNow;
       end;
       LastReadResult:=Result;
     end;
@@ -1202,38 +1203,38 @@ begin
     Result := WestToDouble(buffer[0+OffsetSpace], ScanTableValues.SP.Value, ScanTableValues.SP.Decimal);
     if (Result=ioCommError) then
       exit;
-    ScanTableValues.SP.TimeStamp:=Now;
+    ScanTableValues.SP.TimeStamp:=CrossNow;
     ScanTableValues.SP.IOResult:=Result;
 
     Result := WestToDouble(buffer[5+OffsetSpace], ScanTableValues.PV.Value, ScanTableValues.PV.Decimal);
     if (Result=ioCommError) then
       exit;
-    ScanTableValues.PV.TimeStamp:=Now;
+    ScanTableValues.PV.TimeStamp:=CrossNow;
     ScanTableValues.PV.IOResult:=Result;
 
     Result := WestToDouble(buffer[10+OffsetSpace], ScanTableValues.Out1.Value, ScanTableValues.Out1.Decimal);
     if (Result=ioCommError) then
       exit;
-    ScanTableValues.Out1.TimeStamp:=Now;
+    ScanTableValues.Out1.TimeStamp:=CrossNow;
     ScanTableValues.Out1.IOResult:=Result;
 
     if OffsetSize=0 then begin
       Result := WestToDouble(buffer[15+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
       if (Result=ioCommError) then
         exit;
-      ScanTableValues.Status.TimeStamp:=Now;
+      ScanTableValues.Status.TimeStamp:=CrossNow;
       ScanTableValues.Status.IOResult:=Result;
     end else begin
       Result := WestToDouble(buffer[15+OffsetSpace], ScanTableValues.Out2.Value, ScanTableValues.Out2.Decimal);
       if (Result=ioCommError) then
         exit;
-      ScanTableValues.Out2.TimeStamp:=Now;
+      ScanTableValues.Out2.TimeStamp:=CrossNow;
       ScanTableValues.Out2.IOResult:=Result;
 
       Result := WestToDouble(buffer[20+OffsetNo+OffsetSpace], ScanTableValues.Status.Value, ScanTableValues.Status.Decimal);
       if (Result=ioCommError) then
         exit;
-      ScanTableValues.Status.TimeStamp:=Now;
+      ScanTableValues.Status.TimeStamp:=CrossNow;
       ScanTableValues.Status.IOResult:=Result;
     end;
     Result := ioOk;

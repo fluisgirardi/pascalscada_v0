@@ -68,7 +68,7 @@ type
 
 implementation
 
-uses Math, PLCMemoryManager, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses Math, PLCMemoryManager, SysUtils, crossdatetime{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 constructor TModBusTCPDriver.Create(AOwner: TComponent);
 begin
@@ -454,7 +454,7 @@ begin
       if foundPLC then begin
         if Result=ioOk then begin
           PModbusPLC[plc].Status07Value :=Integer(pkg.BufferToRead[8]);
-          PModbusPLC[plc].Status07TimeStamp := Now;
+          PModbusPLC[plc].Status07TimeStamp := CrossNow;
         end;
         PModbusPLC[plc].Status07LastError := Result;
       end;

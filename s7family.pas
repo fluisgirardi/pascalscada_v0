@@ -730,7 +730,7 @@ implementation
 
 uses PLCTagNumber, PLCBlock, PLCString, PLCStruct, hsstrings, PLCStructElement,
      PLCMemoryManager, dateutils, us7tagbuilder, Controls,
-     PLCBlockElement, PLCNumber, TagBit, strutils, math;
+     PLCBlockElement, PLCNumber, TagBit, strutils, math, crossdatetime;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -1888,7 +1888,7 @@ begin
     exit;
   end;
 
-  anow:=Now;
+  anow:=CrossNow;
   TimeElapsed:=5;
   onereqdone:=false;
   NeedSleep:=1;

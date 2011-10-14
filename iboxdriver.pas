@@ -237,7 +237,7 @@ type
 
 implementation
 
-uses PLCTagNumber, dateutils, math, hsstrings;
+uses PLCTagNumber, dateutils, math, hsstrings, crossdatetime;
 
 destructor  TIBoxDriver.Destroy;
 begin
@@ -480,47 +480,47 @@ begin
     tr.SubElement:=0;
 
     with PStations[plc].PID96 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=96;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID168 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=168;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID200 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=200;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
     with PStations[plc].PID201 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=201;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
     with PStations[plc].PID202 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=202;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID203 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=203;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID204 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=204;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
@@ -529,7 +529,7 @@ begin
     //pid 205 é um comando, deixe-o fora do scan.
     /////////////////////////////////////////////
     with PStations[plc].PID247 do
-      if (RefCount>0) and (MilliSecondsBetween(Now,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
         tr.Address:=247;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
@@ -551,19 +551,19 @@ var
 begin
   if not (tagrec.Station in [0..255]) then begin
     values.LastQueryResult := ioIllegalStationAddress;
-    values.ValuesTimestamp :=now;
+    values.ValuesTimestamp :=CrossNow;
     exit;
   end;
 
   if not (tagrec.Address in [0,96,168,200..205,247]) then begin
     values.LastQueryResult := ioIllegalRegAddress;
-    values.ValuesTimestamp :=now;
+    values.ValuesTimestamp :=CrossNow;
     exit;
   end;
 
   if (Tagrec.Address in [200..202]) and (not (Tagrec.SubElement in [0..16])) then begin
     values.LastQueryResult := ioIllegalRegAddress;
-    values.ValuesTimestamp :=now;
+    values.ValuesTimestamp :=CrossNow;
     exit;
   end;
 
@@ -576,7 +576,7 @@ begin
 
   if not found then begin
     values.LastQueryResult:=ioDriverError;
-    values.ValuesTimestamp :=now;
+    values.ValuesTimestamp :=CrossNow;
     exit;
   end;
 
@@ -640,7 +640,7 @@ begin
           16:
             values.Values[0] := OperatingMode;
           else begin
-            Values.ValuesTimestamp:=now;
+            Values.ValuesTimestamp:=CrossNow;
             values.LastQueryResult:=ioIllegalRegAddress;
           end;
         end;
@@ -745,7 +745,7 @@ begin
         if found then begin
           PStations[plc].PID96.Value := Values[0];
           PStations[plc].PID96.LastReadResult:=Result;
-          PStations[plc].PID96.TimeStamp := Now;
+          PStations[plc].PID96.TimeStamp := CrossNow;
         end;
       end;
       //Voltagem da bateria.
@@ -777,7 +777,7 @@ begin
         if found then begin
           PStations[plc].PID168.Value := Values[0];
           PStations[plc].PID168.LastReadResult:=Result;
-          PStations[plc].PID168.TimeStamp := Now;
+          PStations[plc].PID168.TimeStamp := CrossNow;
         end;
       end;
       200..202: begin
@@ -913,7 +913,7 @@ begin
 
         Result := ioOk;
         pid20x.LastReadResult:=Result;
-        pid20x.TimeStamp:=Now;
+        pid20x.TimeStamp:=CrossNow;
 
         if found then
           case tagrec.Address of
@@ -999,11 +999,11 @@ begin
           if tagrec.Address=204 then begin
             PStations[plc].PID204.Value:= Values[0];
             PStations[plc].PID204.LastReadResult:=Result;
-            PStations[plc].PID204.TimeStamp:=Now;
+            PStations[plc].PID204.TimeStamp:=CrossNow;
           end else begin
             PStations[plc].PID205.Value:= Values[0];
             PStations[plc].PID205.LastReadResult:=Result;
-            PStations[plc].PID205.TimeStamp:=Now;
+            PStations[plc].PID205.TimeStamp:=CrossNow;
           end;
         end;
       end;
@@ -1036,7 +1036,7 @@ begin
         if found then begin
           PStations[plc].PID247.Value := Values[0];
           PStations[plc].PID247.LastReadResult:=Result;
-          PStations[plc].PID247.TimeStamp:=Now;
+          PStations[plc].PID247.TimeStamp:=CrossNow;
         end;
       end;
     end;

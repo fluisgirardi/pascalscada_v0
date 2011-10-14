@@ -250,7 +250,7 @@ type
 
 implementation
 
-uses Dialogs, Controls, PLCBlockElement, ValueProcessor;
+uses Dialogs, Controls, PLCBlockElement, ValueProcessor, crossdatetime;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -881,7 +881,7 @@ begin
     end;
 
   if not found then begin
-    values.ValuesTimestamp := Now;
+    values.ValuesTimestamp := CrossNow;
     values.ReadsOK := 0;
     values.ReadFaults := 1;
     values.LastQueryResult := ioDriverError;

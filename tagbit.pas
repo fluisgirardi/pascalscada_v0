@@ -145,7 +145,7 @@ type
 
 implementation
 
-uses hsstrings, Dialogs;
+uses hsstrings, Dialogs, crossdatetime;
 
 constructor TTagBit.Create(AOwner:TComponent);
 begin
@@ -370,7 +370,7 @@ begin
 
     if bold<>bnew then begin
        PValueRaw:=bnew;
-       PValueTimeStamp := Now;
+       PValueTimeStamp := CrossNow;
 
        NotifyChange();
     end;

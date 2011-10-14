@@ -15,7 +15,7 @@ var
   ms:Word;
   encoded_ms:TDateTime;
 begin
-  Result:=Now;
+  Result:=CrossNow;
   {$IFDEF WINCE}
   ms:=(GetTickCount-GetOffset) mod 1000;
   encoded_ms:=EncodeTime(0,0,0,ms);
@@ -35,9 +35,9 @@ end;
 {$IFDEF WINCE}
 initialization
 
-  DecodeTime(Now, a, a, sec, a);
+  DecodeTime(CrossNow, a, a, sec, a);
   while true do begin
-    DecodeTime(Now, a, a, sec2, a);
+    DecodeTime(CrossNow, a, a, sec2, a);
 
     if sec<>sec2 then begin
       offset := GetTickCount mod 1000;
@@ -46,4 +46,4 @@ initialization
   end;
 {$ENDIF}
 end.
-
+

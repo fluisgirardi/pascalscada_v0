@@ -344,7 +344,7 @@ var PortPrefix:array[0..0] of string = ('cuad');
 
 implementation
 
-uses hsstrings;
+uses hsstrings, crossdatetime;
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
@@ -411,16 +411,16 @@ var
   Req, Rem:TimeSpec;
 begin
   tentativas := 0;
-  start := Now;
+  start := CrossNow;
 
   Packet^.Received := 0;
   Packet^.ReadIOResult:=iorNone;
   while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
      lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
      Packet^.Received := Packet^.Received + lidos;
-     if (MilliSecondsBetween(Now,start)>PTimeout) then begin
+     if (MilliSecondsBetween(CrossNow,start)>PTimeout) then begin
         inc(tentativas);
-        start:=Now;
+        start:=CrossNow;
      end;
      //faz esperar 0,1ms
      //waits 0,1ms

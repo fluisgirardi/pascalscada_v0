@@ -885,7 +885,7 @@ const
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings;
+uses SysUtils, ProtocolDriver, hsstrings, crossdatetime;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1688,7 +1688,7 @@ begin
 
   try
     FS:=TStringStream.Create('');
-    timestamp := FormatDateTime('mmm-dd hh:nn:ss.zzz',Now);
+    timestamp := FormatDateTime('mmm-dd hh:nn:ss.zzz',CrossNow);
     if cmd=iocRead then begin
       fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
     end;
