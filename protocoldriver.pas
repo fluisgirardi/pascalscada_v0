@@ -693,17 +693,23 @@ begin
   PCallersCS := TCriticalSection.Create;
 
   PScanUpdateThread := TScanUpdate.Create(true, Self);
+  {$IFNDEF WINCE}
   PScanUpdateThread.Priority:=tpHighest;
+  {$ENDIF}
   PScanUpdateThread.OnGetValue := SafeGetValue;
   PScanUpdateThread.OnScanTags := GetMultipleValues;
 
   PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
+  {$IFNDEF WINCE}
   PScanReadThread.Priority:=tpTimeCritical;
+  {$ENDIF}
   PScanReadThread.OnDoScanRead := SafeScanRead;
   PScanReadThread.OnDoScanWrite := nil;
 
   PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
+  {$IFNDEF WINCE}
   PScanWriteThread.Priority:=tpTimeCritical;
+  {$ENDIF}
   PScanWriteThread.OnDoScanRead := nil;
   PScanWriteThread.OnDoScanWrite := SafeScanWrite;
 end;
@@ -1351,4 +1357,4 @@ initialization
 
 DriverCount:=1;
 
-end.
+end.
