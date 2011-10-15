@@ -47,6 +47,7 @@ type
   private
     FInitEvent:TCrossEvent;
     FWaitToWrite:TCrossEvent;
+    FEnd:TCrossEvent;
 
     FDoScanRead:TScanReadProc;
     FDoScanWrite:TScanWriteProc;
@@ -57,7 +58,7 @@ type
     PScanUpdater:TScanUpdate;
 
     procedure SyncException;
-
+    function  WaitEnd(timeout:Cardinal):TWaitResult;
   protected
     //: @exclude
     procedure Execute; override;
@@ -73,6 +74,13 @@ type
     //: Verifies if the thread has write requests on queue.
     {$ENDIF}
     procedure CheckScanWriteCmd;
+
+    {$IFDEF PORTUGUES}
+    //: Sinaliza para thread Terminar.
+    {$ELSE}
+    //: Requests the thread finalization.
+    {$ENDIF}
+    procedure Terminate;
 
     {$IFDEF PORTUGUES}
     {:
@@ -158,6 +166,7 @@ begin
   PScanUpdater := ScanUpdater;
   FInitEvent   := TCrossEvent.Create(nil,true,false,'ScanThreadInit'+IntToStr(UniqueID));
   FWaitToWrite := TCrossEvent.Create(nil,true,false,'WaitToWrite'+IntToStr(UniqueID));
+  FEnd         := TCrossEvent.Create(nil,true,false,'');
   FMinScan := 0;
 end;
 
@@ -205,6 +214,7 @@ begin
     if FMinScan>0 then
       Sleep(FMinScan);
   end;
+  FEnd.SetEvent;
 end;
 
 procedure TScanThread.CheckScanWriteCmd;
@@ -248,6 +258,19 @@ begin
   //sends the message.
   FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
   FWaitToWrite.SetEvent;
+end;
+
+procedure TScanThread.Terminate;
+begin
+  TCrossThread(self).Terminate;
+  repeat
+     CheckSynchronize(1);
+  until WaitEnd(1)=wrSignaled;
+end;
+
+function  TScanThread.WaitEnd(timeout:Cardinal):TWaitResult;
+begin
+   Result := FEnd.WaitFor(timeout);
 end;
 
 end.

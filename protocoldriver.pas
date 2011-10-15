@@ -724,8 +724,11 @@ destructor TProtocolDriver.Destroy;
 var
   c:Integer;
 begin
-  PScanReadThread.Destroy;
-  PScanWriteThread.Destroy;
+  PScanReadThread.Terminate;
+  PScanReadThread.WaitFor;
+
+  PScanWriteThread.Terminate;
+  PScanWriteThread.WaitFor;
 
   PScanUpdateThread.Terminate;
   PScanUpdateThread.WaitFor;
