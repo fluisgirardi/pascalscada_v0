@@ -1,0 +1,91 @@
+object frmUserAuthentication: TfrmUserAuthentication
+  Left = 476
+  Height = 146
+  Top = 151
+  Width = 200
+  BorderIcons = []
+  BorderStyle = bsDialog
+  Caption = 'User Authentication'
+  ClientHeight = 146
+  ClientWidth = 200
+  Color = clBtnFace
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Position = poScreenCenter
+  LCLVersion = '0.9.30.1'
+  object Label1: TLabel
+    Left = 8
+    Height = 14
+    Top = 8
+    Width = 49
+    Caption = '&Username'
+    FocusControl = edtusername
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 14
+    Top = 56
+    Width = 47
+    Caption = '&Password'
+    FocusControl = edtPassword
+    ParentColor = False
+  end
+  object edtusername: TEdit
+    Left = 8
+    Height = 21
+    Top = 24
+    Width = 185
+    TabOrder = 0
+  end
+  object edtPassword: TEdit
+    Left = 8
+    Height = 21
+    Top = 72
+    Width = 185
+    EchoMode = emPassword
+    PasswordChar = '*'
+    TabOrder = 1
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 35
+    Top = 111
+    Width = 200
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 35
+    ClientWidth = 200
+    TabOrder = 2
+    object Panel2: TPanel
+      Left = 15
+      Height = 35
+      Top = 0
+      Width = 185
+      Align = alRight
+      BevelOuter = bvNone
+      ClientHeight = 35
+      ClientWidth = 185
+      TabOrder = 0
+      object BitBtn4: TBitBtn
+        Left = 14
+        Height = 25
+        Top = 4
+        Width = 81
+        Caption = '&OK'
+        Kind = bkOK
+        TabOrder = 0
+      end
+      object BitBtn1: TBitBtn
+        Left = 102
+        Height = 25
+        Top = 4
+        Width = 75
+        Caption = '&Cancel'
+        Kind = bkCancel
+        TabOrder = 1
+      end
+    end
+  end
+end
