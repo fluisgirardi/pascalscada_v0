@@ -3,10 +3,10 @@ unit BasicUserManagement;
 interface
 
 uses
-  SysUtils, Classes;
+  SysUtils, Classes, ExtCtrls;
 
 type
-  TVKType = (vktAlphaNumeric, vktNumeric);
+  TVKType = (vktNone, vktAlphaNumeric, vktNumeric);
 
   TBasicUserManagement = class(TComponent)
   private
@@ -16,9 +16,9 @@ type
 {}  FLoggedSince:TDateTime;
 {}  FInactiveTimeOut:Cardinal;
 {}  FLoginRetries:Cardinal;
-    FFreezeTime:Cardinal;
-    FUseVirtualKeyBoard:Boolean;
+    FFrozenTime:Cardinal;
     FVirtualKeyboardType:TVKType;
+
     function GetLoginTime:TDateTime;
     procedure SetInactiveTimeOut(t:Cardinal);
   protected
@@ -33,8 +33,7 @@ type
     property LoggedSince:TDateTime read GetLoginTime;
 
     //read-write properties.
-    property UseVirtualKeyBoard:Boolean read FUseVirtualKeyBoard write FUseVirtualKeyBoard;
-    property VirtualKeyboardType:TVKType read FVirtualKeyboardType write FVirtualKeyboardType;
+    //property VirtualKeyboardType:TVKType read FVirtualKeyboardType write FVirtualKeyboardType;
     property InactiveTimeout:Cardinal read FInactiveTimeOut write SetInactiveTimeOut;
     property LoginRetries:Cardinal read FLoginRetries write FLoginRetries;
     property LoginFrozenTime:Cardinal read  FFreezeTime write FFreezeTime;
@@ -45,13 +44,63 @@ type
     procedure   Logout; virtual;
 
     procedure   ValidateSecurityCode(sc:String); virtual;
-    procedure   CanAccess(sc:String):Boolean; virtual;
+    function    CanAccess(sc:String):Boolean; virtual;
   end;
-
-procedure Register;
 
 implementation
 
+uses keyboard;
+
+constructor TBasicUserManagement.Create(AOwner:TComponent);
+begin
+  inherited Create(AOwner);
+end;
+
+destructor  TBasicUserManagement.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function    TBasicUserManagement.Login:Boolean;
+begin
+
+end;
+
+procedure   TBasicUserManagement.Logout;
+begin
+  FLoggedUser:=false;
+  FCurrentUserName:='';
+  FCurrentUserLogin:='';
+  FLoggedSince:=Now;
+end;
+
+procedure   TBasicUserManagement.ValidateSecurityCode(sc:String);
+begin
+  //does nothing.
+end;
+
+function    TBasicUserManagement.CanAccess(sc:String):Boolean;
+begin
+  Result:=false;
+end;
+
+function    TBasicUserManagement.GetLoginTime:TDateTime;
+begin
+  if FLoggedUser then
+    Result:=FLoggedSince
+  else
+    Result:=Now;
+end;
+
+procedure   TBasicUserManagement.SetInactiveTimeOut(t:Cardinal);
+begin
+  //
+end;
+
+function    TBasicUserManagement.CheckUserAndPassword(User, Pass:String):Boolean;
+begin
+  Result:=false;
+end;
 
 end.
  
