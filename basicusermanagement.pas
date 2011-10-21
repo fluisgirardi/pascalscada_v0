@@ -36,7 +36,7 @@ type
     //property VirtualKeyboardType:TVKType read FVirtualKeyboardType write FVirtualKeyboardType;
     property InactiveTimeout:Cardinal read FInactiveTimeOut write SetInactiveTimeOut;
     property LoginRetries:Cardinal read FLoginRetries write FLoginRetries;
-    property LoginFrozenTime:Cardinal read  FFreezeTime write FFreezeTime;
+    property LoginFrozenTime:Cardinal read  FFrozenTime write FFrozenTime;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -103,4 +103,4 @@ begin
 end;
 
 end.
- 
+ 

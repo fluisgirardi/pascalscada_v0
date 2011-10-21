@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="3">
     <PathDelim Value="\"/>
     <Name Value="pascalscada"/>
-    <AddToProjectUsesSection Value="True"/>
     <CompilerOptions>
-      <Version Value="10"/>
+      <Version Value="8"/>
       <PathDelim Value="\"/>
       <SearchPaths>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
@@ -15,7 +14,6 @@
           <SyntaxMode Value="Delphi"/>
           <CStyleOperator Value="False"/>
           <StaticKeyword Value="True"/>
-          <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
@@ -28,7 +26,6 @@
       <Linking>
         <Debugging>
           <GenerateDebugInfo Value="True"/>
-          <DebugInfoType Value="dsStabs"/>
         </Debugging>
       </Linking>
       <Other>
@@ -41,7 +38,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="73">
+    <Files Count="75">
       <Item1>
         <Filename Value="basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -335,6 +332,14 @@
         <Filename Value="westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
       </Item73>
+      <Item74>
+        <Filename Value="usrmgnt_login.lfm"/>
+        <Type Value="LFM"/>
+      </Item74>
+      <Item75>
+        <Filename Value="usrmgnt_login.pas"/>
+        <UnitName Value="usrmgnt_login"/>
+      </Item75>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="4">
@@ -344,7 +349,7 @@
       <Item2>
         <PackageName Value="zcomponent"/>
         <MinVersion Major="7" Valid="True"/>
-        <DefaultFilename Value="zeoslib\packages\lazarus\zcomponent.lpk" Prefer="True"/>
+        <DefaultFilename Value="zeoslib\packages\lazarus\zcomponent.lpk"/>
       </Item2>
       <Item3>
         <PackageName Value="IDEIntf"/>

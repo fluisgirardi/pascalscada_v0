@@ -1,4 +1,4 @@
-{ This file was automatically created by Lazarus. Do not edit!
+{ This file was automatically created by Lazarus. do not edit!
   This source is only used to compile and install the package.
  }
 
@@ -7,7 +7,7 @@ unit pascalscada;
 interface
 
 uses
-  BasicUserManagement, CommPort, commtypes, crc16utils, CrossEvent, 
+    BasicUserManagement, CommPort, commtypes, crc16utils, CrossEvent, 
   crosskeyevents, HMIAnimation, HMIButton, HMICheckBox, 
   HMIControlDislocatorAnimation, HMIDBConnection, HMIEdit, HMILabel, 
   HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, HMIScrollBar, 
@@ -20,7 +20,7 @@ uses
   TagBlock, tagcollection, tcp_udpport, ubitmapper, uelementmapper, 
   uModbusTagBuilder, unumerickeyboard, us7tagbuilder, UserScale, 
   ustructuremapper, uwesttagbuilder, ValueProcessor, WestASCIIDriver, 
-  LazarusPackageIntf;
+  usrmgnt_login, LazarusPackageIntf;
 
 implementation
 

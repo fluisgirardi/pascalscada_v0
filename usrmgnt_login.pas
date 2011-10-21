@@ -1,3 +1,4 @@
+{$i language.inc}
 unit usrmgnt_login;
 
 {$IFDEF FPC}
@@ -7,7 +8,7 @@ unit usrmgnt_login;
 interface
 
 uses
-  StdCtrls, Buttons, ExtCtrls;
+  {$IFDEF FPC}LCLIntf, LResources,{$ENDIF} Forms, StdCtrls, Buttons, ExtCtrls;
 
 type
   TfrmUserAuthentication = class(TForm)
@@ -33,7 +34,12 @@ implementation
 {$IFNDEF FPC}
   {$R *.dfm}
 {$ELSE}
-  {$R *.lfm}
+  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
+    {$R usrmgnt_login.lfm}
+  {$ELSE}
+  initialization
+  {$i usrmgnt_login.lrs}
+  {$IFEND}
 {$ENDIF}
 
 end.
