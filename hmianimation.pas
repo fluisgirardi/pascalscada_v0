@@ -47,7 +47,8 @@ type
   private
     FAnimationZones:TGraphicZones;
     FTag:TPLCTag;
-    FIsEnabled:Boolean;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     FTestValue:Double;
     FCurrentZone,
     FOwnerZone:TGraphicZone;
@@ -72,16 +73,20 @@ type
     procedure ShowZone(zone:TGraphicZone);
     //: @exclude
     procedure SetTestValue(v:Double);
-    //: @seealso(IHMIInterface.RefreshHMISecurity)
-    procedure RefreshHMISecurity;
+
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag;
-    //: @seealso(IHMIInterface.GetHMIEnabled)
-    function  GetHMIEnabled:Boolean;
-    //: @seealso(IHMIInterface.SetHMIEnabled)
-    procedure SetHMIEnabled(v:Boolean);
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+
+    //: @exclude
+    procedure SetEnabled(e:Boolean); override;
+
     //: @exclude
     procedure Loaded; override;
   public
@@ -141,6 +146,8 @@ type
     }
     {$ENDIF}
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
   end;
 
 implementation
@@ -153,6 +160,7 @@ begin
    FTimer:=TTimer.Create(Self);
    FTimer.OnTimer:=BlinkTimer;
    FTimer.Enabled:=false;
+   FIsEnabled:=true;
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=NeedComState;
    FAnimationZones.OnZoneChange:=ZoneChange;
@@ -248,7 +256,7 @@ begin
    SetValue(v);
 end;
 
-procedure THMIAnimation.RefreshHMISecurity;
+function THMIAnimation.GetControlSecurityCode:String;
 begin
    //todo
 end;
@@ -281,15 +289,10 @@ begin
   Result:=FTag;
 end;
 
-function  THMIAnimation.GetHMIEnabled:Boolean;
+procedure THMIAnimation.CanBeAccessed(a:Boolean);
 begin
-   Result := FIsEnabled;
-end;
-
-procedure THMIAnimation.SetHMIEnabled(v:Boolean);
-begin
-   inherited Enabled := v;
-   FIsEnabled := v;
+  FIsEnabledBySecurity :=a;
+  SetEnabled(FIsEnabled);
 end;
 
 procedure THMIAnimation.Loaded;
@@ -345,6 +348,12 @@ end;
 procedure THMIAnimation.RemoveTag(Sender:TObject);
 begin
   FTag:=nil;
+end;
+
+procedure THMIAnimation.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 end.

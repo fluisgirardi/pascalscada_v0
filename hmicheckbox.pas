@@ -44,13 +44,14 @@ type
   THMICheckBox = class(TCheckBox, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     FValueTrue, FValueFalse:Double;
     FWriteTrue, FWriteFalse:Boolean;
     FColorFalse, FColorTrue, FColorGrayed:TColor;
     FCaptionFalse, FCaptionTrue, FCaptionGrayed:string;
     FFontFalse, FFontTrue, FFontGrayed:TFont;
     FOtherValues:TOtherValues;
-    FIsEnabled:Boolean;
 
     function  GetTagValue:Double;
     procedure SetCaptionFalse(v:String);
@@ -71,8 +72,6 @@ type
     procedure SetValueTrue(v:Double);
     procedure SetValueFalse(v:Double);
     procedure SetOtherValues(v:TOtherValues);
-    procedure SetHMITag(t:TPLCTag);
-    function  GetHMITag:TPLCTag;
     procedure RefreshTagValue(x:Double);
     procedure FontChange(Sender:TObject);
 
@@ -80,10 +79,6 @@ type
     procedure SetFont(f:TFont);
 
     function  GetAllowGrayed:Boolean;
-    procedure RefreshHMISecurity;
-
-    procedure SetHMIEnabled(v:Boolean);
-    function  GetHMIEnabled:Boolean;
 
     //implementes the IHMITagInterface
     procedure NotifyReadOk;
@@ -93,6 +88,19 @@ type
     procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
   protected
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
+    function  GetHMITag:TPLCTag;
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+
+    //: @exclude
+    procedure SetEnabled(e:Boolean); override;
+
     {$IFDEF FPC}
     //: @exclude
     procedure DoOnChange; override;
@@ -446,6 +454,7 @@ begin
 
   inherited AllowGrayed := false;
 
+  FIsEnabled:=true;
   FFontFalse  := TFont.Create;
   FFontFalse.OnChange := FontChange;
   FFontTrue   := TFont.Create;
@@ -503,6 +512,23 @@ end;
 function  THMICheckBox.GetHMITag:TPLCTag;
 begin
    Result := FTag;
+end;
+
+function THMICheckBox.GetControlSecurityCode:String;
+begin
+   //todo
+end;
+
+procedure THMICheckBox.CanBeAccessed(a:Boolean);
+begin
+  FIsEnabledBySecurity :=a;
+  SetEnabled(FIsEnabled);
+end;
+
+procedure THMICheckBox.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMICheckBox.RefreshTagValue(x:Double);
@@ -768,22 +794,6 @@ end;
 function  THMICheckBox.GetAllowGrayed:Boolean;
 begin
   result := inherited AllowGrayed;
-end;
-
-procedure THMICheckBox.RefreshHMISecurity;
-begin
-
-end;
-
-procedure THMICheckBox.SetHMIEnabled(v:Boolean);
-begin
-   inherited Enabled := v;
-   FIsEnabled := v;
-end;
-
-function  THMICheckBox.GetHMIEnabled:Boolean;
-begin
-   Result := FIsEnabled;
 end;
 
 procedure THMICheckBox.NotifyReadOk;

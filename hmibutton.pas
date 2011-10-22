@@ -25,6 +25,8 @@ type
   THMIButton = class(TSpeedButton, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     FClickFlag:Boolean;
     FAfterGrayed:Boolean;
     FButtonType:TButtonType;
@@ -51,16 +53,18 @@ type
     //: @exclude
     procedure SetButtonState(bs:TButtonState);
 
-    //: @seealso(IHMIInterface.RefreshHMISecurity)
-    procedure RefreshHMISecurity;
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag;
-    //: @seealso(IHMIInterface.GetHMIEnabled)
-    function  GetHMIEnabled:Boolean;
-    //: @seealso(IHMIInterface.SetHMIEnabled)
-    procedure SetHMIEnabled(v:Boolean);
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+
+    //: @exclude
+    procedure SetEnabled(e:Boolean); override;
 
     //: @seealso OtherValuesIs
     procedure SetOtherValues(v:TOtherValues);
@@ -174,6 +178,9 @@ type
     @seealso(PLCTag)
     }
     property ColorGrayed:TColor read FColorGrayed write SetColorGrayed;
+
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
     
     {:
     Tag numérico usado pelo controle.
@@ -212,6 +219,7 @@ begin
       FValueDown  := 0;
       FValueUp := 0;
    end;
+   FIsEnabled:=true;
    FClickFlag:=false;
    FGlyphDown:=TBitmap.Create;
    FGlyphUp:=TBitmap.Create;
@@ -297,10 +305,6 @@ begin
     (FTag as ITagNumeric).Value := value;
 end;
 
-procedure THMIButton.RefreshHMISecurity;
-begin
-  // TODO
-end;
 
 procedure THMIButton.SetHMITag(t:TPLCTag);
 begin
@@ -327,14 +331,21 @@ begin
    Result := FTag;
 end;
 
-function  THMIButton.GetHMIEnabled:Boolean;
+function THMIButton.GetControlSecurityCode:String;
 begin
-   result := true
+   //todo
 end;
 
-procedure THMIButton.SetHMIEnabled(v:Boolean);
+procedure THMIButton.CanBeAccessed(a:Boolean);
 begin
+  FIsEnabledBySecurity :=a;
+  SetEnabled(FIsEnabled);
+end;
 
+procedure THMIButton.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMIButton.CMButtonPressed(var Message: TMessage);

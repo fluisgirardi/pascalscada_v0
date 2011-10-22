@@ -131,18 +131,11 @@ type
     ['{62FF1979-FA70-4965-B24F-347A69AC2EB1}']
 
     {$IFDEF PORTUGUES}
-    {:
-    Procedimento que atualiza o componente de acordo com as regras atuais de
-    segurança. É chamado quando um usuário faz login ou alguma regra de segurança
-    é alterada.
-    }
+    //: Retorna o código de acesso do controle.
     {$ELSE}
-    {:
-    Procedure that updates the control with the new security rules. Is called every
-    time that a user does a log-in or log-off or if a security rule changes.
-    }
+    //: Gets the access code of the control.
     {$ENDIF}
-    procedure RefreshHMISecurity;
+    function GetControlSecurityCode:String;
 
     {$IFDEF PORTUGUES}
     //: Atualiza a referencia de tag do controle.
@@ -159,25 +152,12 @@ type
     function  GetHMITag:TPLCTag;
 
     {$IFDEF PORTUGUES}
-    //: Informa se o controle está habilitado. @seealso(Enabled)
-    {$ELSE}
-    //: Tells if the control is enabled. @seealso(Enabled)
-    {$ENDIF}
-    function  GetHMIEnabled:Boolean;
-
-    {$IFDEF PORTUGUES}
-    //: Habilita/desabilita o controle. @seealso(Enabled)
+    //: Habilita/desabilita o controle pelas suas permissões. @seealso(Enabled)
     {$ELSE}
     //: Enables/disables the control. @seealso(Enabled)
     {$ENDIF}
-    procedure SetHMIEnabled(v:Boolean);
+    procedure CanBeAccessed(a:Boolean);
 
-    {$IFDEF PORTUGUES}
-    //: Propriedade criada para informar/setar o estado do controle através da interface.
-    {$ELSE}
-    //: Property to get/set the state of the control through the interface.
-    {$ENDIF}
-    property  Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
 
     {$IFDEF PORTUGUES}
     //: Propriedade criada para informar/setar o tag do controle através da interface.

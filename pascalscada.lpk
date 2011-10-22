@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <CONFIG>
-  <Package Version="3">
+  <Package Version="4">
     <PathDelim Value="\"/>
     <Name Value="pascalscada"/>
+    <AddToProjectUsesSection Value="True"/>
     <CompilerOptions>
-      <Version Value="8"/>
+      <Version Value="10"/>
       <PathDelim Value="\"/>
       <SearchPaths>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
@@ -14,6 +15,7 @@
           <SyntaxMode Value="Delphi"/>
           <CStyleOperator Value="False"/>
           <StaticKeyword Value="True"/>
+          <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
@@ -26,6 +28,7 @@
       <Linking>
         <Debugging>
           <GenerateDebugInfo Value="True"/>
+          <DebugInfoType Value="dsStabs"/>
         </Debugging>
       </Linking>
       <Other>
@@ -38,7 +41,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="75">
+    <Files Count="76">
       <Item1>
         <Filename Value="basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -340,6 +343,10 @@
         <Filename Value="usrmgnt_login.pas"/>
         <UnitName Value="usrmgnt_login"/>
       </Item75>
+      <Item76>
+        <Filename Value="controlsecuritymanager.pas"/>
+        <UnitName Value="ControlSecurityManager"/>
+      </Item76>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="4">
