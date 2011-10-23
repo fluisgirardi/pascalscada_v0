@@ -42,13 +42,18 @@ type
   THMIProgressBar = class(TProgressBar, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
-    FIsEnabled:Boolean;
-    //implements the IHMIInterface.
-    procedure RefreshHMISecurity;
-    procedure SetHMITag(t:TPLCTag);
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag;
-    function  GetHMIEnabled:Boolean;
-    procedure SetHMIEnabled(v:Boolean);
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+
     function  GetPosition:Double;
 
     //implements the IHMITagInterface
@@ -60,19 +65,23 @@ type
     procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
+    procedure SetEnabled(e:Boolean); override;
+    //: @exclude
     procedure Loaded; override;
   public
+    constructor Create(AOwner: TComponent); override;
     //: @exclude
     destructor Destroy; override;
   published
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
+
     {$IFDEF PORTUGUES}
     //: Informa a posição (valor do tag) atual.
     {$ELSE}
     //: Tells the current position (tag value).
     {$ENDIF}
     property Position:Double read GetPosition;
-    //: @exclude
-    property Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
 
     {$IFDEF PORTUGUES}
     {:
@@ -96,6 +105,12 @@ implementation
 
 uses hsstrings;
 
+constructor THMIProgressBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FIsEnabled:=true;
+end;
+
 destructor THMIProgressBar.Destroy;
 begin
   if Assigned(FTag) then
@@ -109,9 +124,21 @@ begin
    NotifyTagChange(Self);
 end;
 
-procedure THMIProgressBar.RefreshHMISecurity;
+function THMIProgressBar.GetControlSecurityCode:String;
 begin
+   //todo
+end;
 
+procedure THMIProgressBar.CanBeAccessed(a:Boolean);
+begin
+  FIsEnabledBySecurity := a;
+  SetEnabled(FIsEnabled);
+end;
+
+procedure THMIProgressBar.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMIProgressBar.SetHMITag(t:TPLCTag);
@@ -140,17 +167,6 @@ end;
 function  THMIProgressBar.GetHMITag:TPLCTag;
 begin
   Result := FTag;
-end;
-
-function  THMIProgressBar.GetHMIEnabled:Boolean;
-begin
-   Result := FIsEnabled;
-end;
-
-procedure THMIProgressBar.SetHMIEnabled(v:Boolean);
-begin
-   inherited Enabled := v;
-   FIsEnabled := v;
 end;
 
 function  THMIProgressBar.GetPosition:Double;

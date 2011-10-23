@@ -40,15 +40,21 @@ type
   THMIRadioGroup = class(TRadioGroup, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
-    FIsEnabled:Boolean;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     FDefaultIndex:Integer;
     FIgnore, FLoaded:Boolean;
-    //implementes the IHMIInterface
-    procedure RefreshHMISecurity;                      //check security
-    procedure SetHMITag(t:TPLCTag);                    //link with a tag
+
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag;
-    function  GetHMIEnabled:Boolean;
-    procedure SetHMIEnabled(v:Boolean);
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+
     procedure SetDefaultIndex(v:integer);
     function  GetIndex:Integer;
     procedure SetIndex(v:Integer);
@@ -65,6 +71,8 @@ type
     procedure Click; override;
     {$ENDIF}
     //: @exclude
+    procedure SetEnabled(e:Boolean); override;
+    //: @exclude
     procedure CheckItemIndexChanged; {$IFDEF FPC} override; {$ENDIF}
     //: @exclude
     procedure Loaded; override;
@@ -80,8 +88,9 @@ type
     //: @name tells what's the index of selected option.
     {$ENDIF}
     property  ItemIndex:Integer read GetIndex Write SetIndex;
+
     //: @exclude
-    property  Enabled:Boolean read GetHMIEnabled write SetHMIEnabled;
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
 
     {$IFDEF PORTUGUES}
     {:
@@ -125,6 +134,7 @@ begin
    inherited Create(AOwner);
    FIgnore:=false;
    FLoaded:=false;
+   FIsEnabled:=true;
    FDefaultIndex:=-1;
 end;
 
@@ -133,12 +143,6 @@ begin
    if FTag<>nil then
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    inherited Destroy;
-end;
-
-//check the security
-procedure THMIRadioGroup.RefreshHMISecurity;
-begin
-   //todo
 end;
 
 //link with tags
@@ -171,15 +175,21 @@ begin
    Result:=FTag;
 end;
 
-function  THMIRadioGroup.GetHMIEnabled:Boolean;
+function THMIRadioGroup.GetControlSecurityCode:String;
 begin
-   Result := FIsEnabled;
+   //todo
 end;
 
-procedure THMIRadioGroup.SetHMIEnabled(v:Boolean);
+procedure THMIRadioGroup.CanBeAccessed(a:Boolean);
 begin
-   inherited Enabled := v;
-   FIsEnabled := v;
+  FIsEnabledBySecurity := a;
+  SetEnabled(FIsEnabled);
+end;
+
+procedure THMIRadioGroup.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMIRadioGroup.CheckItemIndexChanged;

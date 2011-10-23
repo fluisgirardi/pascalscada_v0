@@ -40,17 +40,22 @@ type
   THMIScrollBar = class(TScrollBar, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
-    FIsEnabled:Boolean;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     FUpdateOnMove:Boolean;
     FBusy:Boolean;
     FCmdCount:Integer;
     FLastPosition:Integer;
-    //implements the IHMIInterface.
-    procedure RefreshHMISecurity;
-    procedure SetHMITag(t:TPLCTag);
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag;
-    function  GetHMIEnabled:Boolean;
-    procedure SetHMIEnabled(v:Boolean);
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+
     procedure WriteValue(Value:Integer);
 
     //implements the IHMITagInterface
@@ -62,14 +67,21 @@ type
     procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
+     procedure SetEnabled(e:Boolean); override;
+    //: @exclude
     procedure Scroll(ScrollCode: TScrollCode; var ScrollPos: Integer); override;
     {$IF (not defined(WIN32)) and (not defined(WIN64))}
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     {$IFEND}
   public
     //: @exclude
+    constructor Create(AOwner: TComponent); override;
+    //: @exclude
     destructor Destroy; override;
   published
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
+
     {$IFDEF PORTUGUES}
     {:
     Tag numérico que será usado pelo controle.
@@ -107,16 +119,17 @@ implementation
 
 uses hsstrings;
 
+constructor THMIScrollBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FIsEnabled:=true;
+end;
+
 destructor THMIScrollBar.Destroy;
 begin
    if FTag<>nil then
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    inherited Destroy;
-end;
-
-procedure THMIScrollBar.RefreshHMISecurity;
-begin
-
 end;
 
 procedure THMIScrollBar.SetHMITag(t:TPLCTag);
@@ -148,15 +161,21 @@ begin
    Result:=FTag;
 end;
 
-function  THMIScrollBar.GetHMIEnabled:Boolean;
+function THMIScrollBar.GetControlSecurityCode:String;
 begin
-   Result := FIsEnabled;
+   //todo
 end;
 
-procedure THMIScrollBar.SetHMIEnabled(v:Boolean);
+procedure THMIScrollBar.CanBeAccessed(a:Boolean);
 begin
-   inherited Enabled := v;
-   FIsEnabled := v;
+  FIsEnabledBySecurity := a;
+  SetEnabled(FIsEnabled);
+end;
+
+procedure THMIScrollBar.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMIScrollBar.Scroll(ScrollCode: TScrollCode; var ScrollPos: Integer);

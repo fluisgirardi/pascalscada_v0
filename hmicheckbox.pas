@@ -434,6 +434,9 @@ type
     //: Tells the actual state of the control (checked, unchecked or grayed).
     {$ENDIF}
     property State:TCheckBoxState read GetState stored false nodefault;
+
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
   end;
 
 implementation
@@ -521,7 +524,7 @@ end;
 
 procedure THMICheckBox.CanBeAccessed(a:Boolean);
 begin
-  FIsEnabledBySecurity :=a;
+  FIsEnabledBySecurity := a;
   SetEnabled(FIsEnabled);
 end;
 

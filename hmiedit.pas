@@ -57,7 +57,8 @@ type
     FFreezeValue:Boolean;
     FFreezedValue:Boolean;
     HasFocus:Boolean;
-    FIsEnabled:Boolean;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
     {$ELSE}
@@ -74,8 +75,6 @@ type
 
     procedure RemoveHMITag(Sender:TObject);
 
-    procedure SetHMITag(t:TPLCTag);
-    function  GetHMITag:TPLCTag;
     procedure SetFormat(f:string);
     function  GetText:TCaption;
     procedure RefreshTagValue;
@@ -88,10 +87,6 @@ type
     procedure SetSufix(s:String);
 
     procedure SendValue(txt:String);
-    procedure RefreshHMISecurity;
-
-    procedure SetHMIEnabled(v:Boolean);
-    function  GetHMIEnabled:Boolean;
 
     //implements the IHMITagInterface
     procedure NotifyReadOk;
@@ -104,6 +99,19 @@ type
     procedure SetMinLimit(v:Double);
     procedure SetMaxLimit(v:Double);
   protected
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
+    function  GetHMITag:TPLCTag;
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+
+    //: @exclude
+    procedure SetEnabled(e:Boolean); override;
+
     //: @exclude
     procedure Change; override;
     //: @exclude
@@ -137,6 +145,9 @@ type
     {$ENDIF}
     property Alignment:TAlignment read FAlignment write SetAlignment default taRightJustify;
     {$ENDIF}
+
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
 
     {$IFDEF PORTUGUES}
     {:
@@ -314,6 +325,7 @@ begin
   FAlignment := taRightJustify;
   FIsEnabled := inherited Enabled;
   FSend := [scLostFocus, scPressEnter];
+  FIsEnabled:=true;
   if (csDesigning in ComponentState) then begin
     inherited Text := SWithoutTag;
     Modified := false;
@@ -354,9 +366,21 @@ begin
 end;
 {$ENDIF}
 
-procedure THMIEdit.RefreshHMISecurity;
+procedure THMIEdit.CanBeAccessed(a:Boolean);
 begin
+  FIsEnabledBySecurity :=a;
+  SetEnabled(FIsEnabled);
+end;
 
+function THMIEdit.GetControlSecurityCode:String;
+begin
+   //todo
+end;
+
+procedure THMIEdit.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMIEdit.Loaded;
@@ -634,18 +658,6 @@ begin
     SendValue(Text);
 
   inherited Change;
-end;
-
-procedure THMIEdit.SetHMIEnabled(v:Boolean);
-begin
-   { todo: }
-   inherited Enabled := v;
-   FIsEnabled := v;
-end;
-
-function  THMIEdit.GetHMIEnabled:Boolean;
-begin
-   Result := FIsEnabled;
 end;
 
 procedure THMIEdit.NotifyReadOk;

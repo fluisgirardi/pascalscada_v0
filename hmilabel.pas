@@ -44,19 +44,21 @@ type
   private
     FNumberFormat:string;
     FPrefix, FSufix:string;
-    FIsEnabled:Boolean;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
 
     procedure SetFormat(f:string);
-    function  GetHMITag:TPLCTag;
     procedure SetPrefix(s:String);
     procedure SetSufix(s:String);
-
     function  GetCaption:TCaption;
 
-    procedure SetHMIEnabled(v:Boolean);
-    function  GetHMIEnabled:Boolean;
+    //: @seealso(IHMIInterface.GetHMITag)
+    function  GetHMITag:TPLCTag;
 
-    procedure RefreshHMISecurity;
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
 
     //the procedurs below implements the IHMITagInterface
     procedure NotifyReadOk;
@@ -67,6 +69,8 @@ type
   protected
     //: @exclude
     FTag:TPLCTag;
+    //: @exclude
+    procedure SetEnabled(e:Boolean); override;
     //: @exclude
     procedure SetHMITag(t:TPLCTag); virtual;
     //: @exclude
@@ -94,6 +98,9 @@ type
     }
     {$ENDIF}
     property Caption:TCaption read GetCaption stored false;
+
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
 
     {$IFDEF PORTUGUES}
     {:
@@ -171,6 +178,7 @@ begin
   if (csDesigning in ComponentState) then
     inherited Caption := SWithoutTag;
   AutoSize:=False;
+  FIsEnabled:=true;
   FNumberFormat := '#0.0';
 end;
 
@@ -253,21 +261,21 @@ begin
   Result := inherited Caption;
 end;
 
-procedure THMILabel.SetHMIEnabled(v:Boolean);
+function THMILabel.GetControlSecurityCode:String;
 begin
-   { todo: }
-   inherited Enabled := v;
-   FIsEnabled := v;
+   //todo
 end;
 
-function  THMILabel.GetHMIEnabled:Boolean;
+procedure THMILabel.CanBeAccessed(a:Boolean);
 begin
-   Result := FIsEnabled;
+  FIsEnabledBySecurity := a;
+  SetEnabled(FIsEnabled);
 end;
 
-procedure THMILabel.RefreshHMISecurity;
+procedure THMILabel.SetEnabled(e:Boolean);
 begin
-
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMILabel.NotifyReadOk;

@@ -40,17 +40,22 @@ type
   THMIUpDown = class(TUpDown, IHMIInterface, IHMITagInterface)
   private
     FTag:TPLCTag;
-    FIsEnabled:Boolean;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     FPosition, FIncrement:Double;
     FMax,FMin:Double;
     FEnableMax, FEnableMin:Boolean;
 
     //implements the IHMIInterface interface
-    procedure RefreshHMISecurity;
-    procedure SetHMITag(t:TPLCTag);
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag;
-    function  GetHMIEnabled:Boolean;
-    procedure SetHMIEnabled(v:Boolean);
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
 
     procedure SetPosition(v:Double);
     procedure SetIncrement(v:Double);
@@ -66,6 +71,8 @@ type
     procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
+    procedure SetEnabled(e:Boolean); override;
+    //: @exclude
     procedure Loaded; override;
     //: @exclude
     procedure Click(Button: TUDBtnType); override;
@@ -75,6 +82,9 @@ type
     //: @exclude
     destructor  Destroy; override;
   published
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
+
     {$IFDEF PORTUGUES}
     {:
     Tag numérico que será pelo controle.
@@ -167,11 +177,6 @@ begin
    inherited Destroy;
 end;
 
-procedure THMIUpDown.RefreshHMISecurity;
-begin
-
-end;
-
 procedure THMIUpDown.SetHMITag(t:TPLCTag);
 begin
    //se o tag esta entre um dos aceitos.
@@ -203,15 +208,21 @@ begin
    Result:=FTag;
 end;
 
-function  THMIUpDown.GetHMIEnabled:Boolean;
+function THMIUpDown.GetControlSecurityCode:String;
 begin
-   Result := FIsEnabled;
+   //todo
 end;
 
-procedure THMIUpDown.SetHMIEnabled(v:Boolean);
+procedure THMIUpDown.CanBeAccessed(a:Boolean);
 begin
-   inherited Enabled := v;
-   FIsEnabled := v;
+  FIsEnabledBySecurity := a;
+  SetEnabled(FIsEnabled);
+end;
+
+procedure THMIUpDown.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 procedure THMIUpDown.Loaded;

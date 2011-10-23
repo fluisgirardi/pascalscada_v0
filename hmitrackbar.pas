@@ -40,17 +40,22 @@ type
   THMITrackBar = class(TTrackBar, IHMIInterface, IHMITagInterface)
   private
     Ftag:TPLCTag;
-    FIsEnabled:Boolean;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
     FModified:Boolean;
 
-    //implements the IHMIInterface interface
-    procedure RefreshTagValue;
-    procedure SetHMITag(t:TPLCTag);
-    function  GetHMITag:TPLCTag;
     function  GetPosition:Integer;
-    procedure RefreshHMISecurity;
-    procedure SetHMIEnabled(v:Boolean);
-    function  GetHMIEnabled:Boolean;
+    procedure RefreshTagValue;
+
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag);                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
+    function  GetHMITag:TPLCTag;
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
 
     //implements the IHMITagInterface interface
     procedure NotifyReadOk;
@@ -60,6 +65,8 @@ type
     procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
   protected
+    //: @exclude
+    procedure SetEnabled(e:Boolean); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     {$IFDEF FPC}
@@ -74,8 +81,12 @@ type
     procedure WriteValue;
   public
     //: @exclude
+    constructor Create(AOwner: TComponent); override;
+    //: @exclude
     destructor  Destroy; override;
   published
+    //: @exclude
+    property Enabled:Boolean read FIsEnabled write SetEnabled;
 
     {$IFDEF PORTUGUES}
     {:
@@ -114,6 +125,12 @@ type
 implementation
 
 uses hsstrings;
+
+constructor THMITrackBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FIsEnabled:=true;
+end;
 
 destructor THMITrackBar.Destroy;
 begin
@@ -162,6 +179,23 @@ end;
 function THMITrackBar.GetHMITag;
 begin
   Result:=Ftag;
+end;
+
+function THMITrackBar.GetControlSecurityCode:String;
+begin
+   //todo
+end;
+
+procedure THMITrackBar.CanBeAccessed(a:Boolean);
+begin
+  FIsEnabledBySecurity := a;
+  SetEnabled(FIsEnabled);
+end;
+
+procedure THMITrackBar.SetEnabled(e:Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 function THMITrackBar.GetPosition:Integer;
@@ -217,23 +251,6 @@ end;
 //
 // END OF PROCESSING OF EVENTS
 //------------------------------------------------------------------------------
-
-procedure THMITrackBar.RefreshHMISecurity;
-begin
-
-end;
-
-procedure THMITrackBar.SetHMIEnabled(v:Boolean);
-begin
-   { todo: }
-   inherited Enabled := v;
-   FIsEnabled := v;
-end;
-
-function  THMITrackBar.GetHMIEnabled:Boolean;
-begin
-   Result := FIsEnabled;
-end;
 
 procedure THMITrackBar.NotifyReadOk;
 begin
