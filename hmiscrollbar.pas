@@ -117,18 +117,20 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIScrollBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FIsEnabled:=true;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIScrollBar.Destroy;
 begin
    if FTag<>nil then
       FTag.RemoveCallBacks(Self as IHMITagInterface);
+   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 

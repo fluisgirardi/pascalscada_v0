@@ -124,18 +124,20 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMITrackBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FIsEnabled:=true;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMITrackBar.Destroy;
 begin
   if Assigned(FTag) then
     Ftag.RemoveCallBacks(self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

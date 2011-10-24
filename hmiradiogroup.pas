@@ -127,7 +127,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIRadioGroup.Create(AOwner:TComponent);
 begin
@@ -136,12 +136,14 @@ begin
    FLoaded:=false;
    FIsEnabled:=true;
    FDefaultIndex:=-1;
+   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor  THMIRadioGroup.Destroy;
 begin
    if FTag<>nil then
       FTag.RemoveCallBacks(Self as IHMITagInterface);
+   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 

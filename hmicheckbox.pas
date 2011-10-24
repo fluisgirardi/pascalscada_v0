@@ -441,7 +441,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMICheckBox.Create(AOwner:TComponent);
 begin
@@ -470,6 +470,7 @@ begin
   FOtherValues := IsGrayed;
   FWriteTrue := true;
   FWriteFalse := true;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMICheckBox.Destroy;
@@ -479,6 +480,7 @@ begin
   FFontFalse.Destroy;
   FFontTrue.Destroy;
   FFontGrayed.Destroy;
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

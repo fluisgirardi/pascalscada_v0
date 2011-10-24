@@ -103,18 +103,20 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIProgressBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FIsEnabled:=true;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIProgressBar.Destroy;
 begin
   if Assigned(FTag) then
     Ftag.RemoveCallBacks(Self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

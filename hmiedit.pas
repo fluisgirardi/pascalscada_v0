@@ -315,7 +315,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIEdit.Create(AOwner:TComponent);
 begin
@@ -336,12 +336,14 @@ begin
   FShowFocused := true;
   FFreezeValue := true;
   FNumberFormat := '#0.0';
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor  THMIEdit.Destroy;
 begin
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

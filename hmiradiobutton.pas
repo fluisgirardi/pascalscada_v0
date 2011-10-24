@@ -61,6 +61,8 @@ type
 
 implementation
 
+uses ControlSecurityManager;
+
 constructor THMIRadioButton.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -68,10 +70,12 @@ begin
   fCompStyle := csRadioButton;
   {$ENDIF}
   OtherValuesIS := isUnchecked;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIRadioButton.Destroy;
 begin
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

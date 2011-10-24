@@ -152,7 +152,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIAnimation.Create(AOwner:TComponent);
 begin
@@ -164,6 +164,7 @@ begin
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=NeedComState;
    FAnimationZones.OnZoneChange:=ZoneChange;
+   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIAnimation.Destroy;
@@ -172,6 +173,7 @@ begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    FTimer.Destroy;
    FAnimationZones.Destroy;
+   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 

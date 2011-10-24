@@ -205,7 +205,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIButton.Create(AOwner:TComponent);
 begin
@@ -227,6 +227,7 @@ begin
    FColorDown:=clBtnFace;
    FColorUp:= clBtnFace;
    FColorGrayed:=clBtnShadow;
+   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIButton.Destroy;
@@ -236,6 +237,7 @@ begin
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
+   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 

@@ -149,7 +149,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIUpDown.Create(AOwner:TComponent);
 begin
@@ -168,12 +168,14 @@ begin
   inherited Position:=50;
   FEnableMin := false;
   FEnableMax := false;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIUpDown.Destroy;
 begin
    if FTag<>nil then
       FTag.RemoveCallBacks(Self as IHMITagInterface);
+   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 

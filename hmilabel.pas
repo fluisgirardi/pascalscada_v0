@@ -170,7 +170,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMILabel.Create(AOwner:TComponent);
 begin
@@ -180,12 +180,14 @@ begin
   AutoSize:=False;
   FIsEnabled:=true;
   FNumberFormat := '#0.0';
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor  THMILabel.Destroy;
 begin
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
