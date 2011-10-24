@@ -112,6 +112,8 @@ resourcestring
   SPIWInitialAddress        = 'End. inicial da PIW';
   SVInitialAddress          = 'End. inicial da V';
   SRemoveaStructItemCalled  = 'Remover o item da estrutura chamado "';
+  SSecurityControlBusy      = 'Gerenciador de segurança ainda em uso.';
+  SUserManagementIsSet      = 'Já existe um gerenciamento de usuários ativo na aplicação.';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -185,6 +187,8 @@ resourcestring
   SPIWInitialAddress        = 'Initial address of PIW';
   SVInitialAddress          = 'Initial address of V';
   SRemoveaStructItemCalled  = 'Remove the structure item called "';
+  SSecurityControlBusy      = 'The security manager is busy.';
+  SUserManagementIsSet      = 'There are already a user management on your application.';
   {$ENDIF}
 
 implementation

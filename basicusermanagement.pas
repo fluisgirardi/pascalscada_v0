@@ -61,15 +61,22 @@ type
 
 implementation
 
-uses Controls;
+uses Controls, ControlSecurityManager, hsstrings;
 
 constructor TBasicUserManagement.Create(AOwner:TComponent);
 begin
+  if GetControlSecurityManager.UserManagement=nil then
+    GetControlSecurityManager.UserManagement:=Self
+  else
+    raise Exception.Create(SUserManagementIsSet);
+
   inherited Create(AOwner);
 end;
 
 destructor  TBasicUserManagement.Destroy;
 begin
+  if GetControlSecurityManager.UserManagement=Self then
+    GetControlSecurityManager.UserManagement:=nil;
   inherited Destroy;
 end;
 
