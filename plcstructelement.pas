@@ -154,7 +154,7 @@ end;
 function  TPLCStructItem.GetValueRaw: Double;
 var
   notify:Boolean;
-  data, value:TArrayOfDouble;
+  data, converted_value:TArrayOfDouble;
 begin
   if Assigned(PBlock) then begin
     if FCurrentWordSize>=8 then begin
@@ -173,12 +173,13 @@ begin
       data[3]:=PBlock.ValueRaw[PIndex+3];
     end;
 
-    value := PLCValuesToTagValues(data,0);
+    converted_value := PLCValuesToTagValues(data,0);
 
-    if Length(value)<0 then exit;
+    if Length(converted_value)<=0 then exit;
 
-    notify := (PValueRaw<>value[0]) or (IsNan(value[0]) and (not IsNan(PValueRaw)));
-    PValueRaw := value[0];
+    notify := (IsNan(converted_value[0]) and (not IsNan(PValueRaw))) or
+              ((not IsNan(converted_value[0])) and IsNan(PValueRaw)) or (PValueRaw<>converted_value[0]) ;
+    PValueRaw := converted_value[0];
     PValueTimeStamp := PBlock.ValueTimestamp;
 
     Result:=PValueRaw;
@@ -187,6 +188,7 @@ begin
       NotifyChange();
 
     SetLength(data,0);
+    SetLength(converted_value,0);
   end;
 end;
 

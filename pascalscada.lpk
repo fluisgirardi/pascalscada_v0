@@ -20,15 +20,11 @@
       </Parsing>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
-        <Optimizations>
-          <VariablesInRegisters Value="True"/>
-          <UncertainOptimizations Value="True"/>
-        </Optimizations>
       </CodeGeneration>
       <Linking>
         <Debugging>
           <GenerateDebugInfo Value="True"/>
-          <DebugInfoType Value="dsStabs"/>
+          <DebugInfoType Value="dsAuto"/>
         </Debugging>
       </Linking>
       <Other>

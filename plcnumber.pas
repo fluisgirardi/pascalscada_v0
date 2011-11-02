@@ -158,6 +158,8 @@ type
     {$ENDIF}
     property MaxValue:Double read FMaxLimit write SetMaxLimit;
   public
+    //: @exclude
+    constructor Create(AOwner: TComponent); override;
 
     //: @exclude
     destructor Destroy; override;
@@ -226,6 +228,12 @@ type
 implementation
 
 uses ubitmapper, Controls, TagBit, tag, hsstrings, Dialogs;
+
+constructor TPLCNumber.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  PValueRaw:=0;
+end;
 
 destructor TPLCNumber.Destroy;
 begin

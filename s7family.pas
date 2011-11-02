@@ -961,14 +961,12 @@ begin
                   TPLCBlockElement(item).Index:=curidx;
                 end else begin
                   item:=TPLCStructItem(CreateProc(TPLCStructItem));
-                  with TPLCStructItem(item) do begin
-                    PLCBlock:=TPLCStruct(block);
-                    TPLCStruct(block).Size:=curidx+GetCurWordSize;
-                    Index:=curidx;
-                    TagType:=StructItem[curstructitem].TagType;
-                    SwapBytes:=StructItem[curstructitem].SwapBytes;
-                    SwapWords:=StructItem[curstructitem].SwapWords;
-                  end;
+                  TPLCStruct(block).Size:=curidx+GetCurWordSize;
+                  TPLCStructItem(item).PLCBlock:=TPLCStruct(block);
+                  TPLCStructItem(item).Index:=curidx;
+                  TPLCStructItem(item).TagType:=StructItem[curstructitem].TagType;
+                  TPLCStructItem(item).SwapBytes:=StructItem[curstructitem].SwapBytes;
+                  TPLCStructItem(item).SwapWords:=StructItem[curstructitem].SwapWords;
                 end;
               end;
 
