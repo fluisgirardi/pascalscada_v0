@@ -761,11 +761,14 @@ var
 
   curitem, curstructitem,
   curaddress, curidx,
-  curTCaddress, curbit:Integer;
+  curTCaddress, curbit, curdb:Integer;
 
   block:TPLCBlock;
   item:TPLCNumber;
   bititem:TTagBit;
+
+
+  morethanonedb:Boolean;
 
   started:Boolean;
 
@@ -806,27 +809,70 @@ var
       Result:=IntToStr(value);
   end;
 
+  function ReplaceBlockNamePattern(namepattern:String):String;
+  var
+    has_atleastonereplacement:Boolean;
+  begin
+    {$IFDEF PORTUGUES}
+    {
+    %db  - Numero do DB.
+    %di  - Contador de DB atual, comecando de 1.
+    %de  - Contador de DB atual, comecando de 0.
+    %0db - Numero do DB, preenchido com zeros.
+    %0di - Contador de DB atual, comecando de 1, preenchido com zeros.
+    %0de - Contador de DB atual, comecando de 0, preenchido com zeros.
+    }
+    {$ELSE}
+    {
+    %db  - DB number.
+    %di  - DB counter, starting from 1.
+    %de  - DB counter, starting from 0.
+    %0db - DB number, filled with zeroes.
+    %0di - DB counter, starting from 1, filled with zeroes.
+    %0de - DB counter, starting from 0, filled with zeroes.
+    }
+    {$ENDIF}
+
+    has_atleastonereplacement:=(Pos('%db',namepattern)<>0) or
+                               (Pos('%di',namepattern)<>0) or
+                               (Pos('%de',namepattern)<>0) or
+                               (Pos('%0db',namepattern)<>0) or
+                               (Pos('%0di',namepattern)<>0) or
+                               (Pos('%0de',namepattern)<>0);
+
+    if (not has_atleastonereplacement) and morethanonedb then
+      namepattern:=namepattern+'%di';
+
+    Result:= StringReplace(Result,'%db',IntToStr(curdb),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%di',IntToStr(curdb-frmS7tb.spinDBNumber.Value+1),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%de',IntToStr(curdb-frmS7tb.spinDBNumber.Value+0),[rfReplaceAll]);
+
+    Result:= StringReplace(Result,'%0db',GetValueWithZeros(curdb,                              frmS7tb.spinFinalDBNumber.Value,                              true),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%0di',GetValueWithZeros(curdb-frmS7tb.spinDBNumber.Value+1, frmS7tb.spinFinalDBNumber.Value-frmS7tb.spinDBNumber.Value+1, true),[rfReplaceAll]);
+    Result:= StringReplace(Result,'%0di',GetValueWithZeros(curdb-frmS7tb.spinDBNumber.Value,   frmS7tb.spinFinalDBNumber.Value-frmS7tb.spinDBNumber.Value  , true),[rfReplaceAll]);
+  end;
+
   function GetName(namepattern:String):String;
   var
     has_atleastonereplacement:Boolean;
   begin
     {$IFDEF PORTUGUES}
     {
-    %a  - Endereço do item
-    %i  - Numero do item comecando de 1
-    %e  - Numero do item comecando de 0
-    %0a - Endereço do item preenchido com zeros.
-    %0i - Numero do item comecando de 1, preenchido com zeros
-    %0e - Numero do item comecando de 0, preenchido com zeros
+    %a    - Endereço do item
+    %i    - Numero do item comecando de 1
+    %e    - Numero do item comecando de 0
+    %0a   - Endereço do item preenchido com zeros.
+    %0i   - Numero do item comecando de 1, preenchido com zeros
+    %0e   - Numero do item comecando de 0, preenchido com zeros
     }
     {$ELSE}
     {
-    %a  - Item address
-    %i  - Item number starting from 1
-    %e  - Item number starting from 0
-    %0a - Item address filled with zeros.
-    %0i - Item number starting from 1, filled with zeroes.
-    %0e - Item number starting from 0, filled with zeroes.
+    %a    - Item address
+    %i    - Item number starting from 1.
+    %e    - Item number starting from 0.
+    %0a   - Item address filled with zeros.
+    %0i   - Item number starting from 1, filled with zeroes.
+    %0e   - Item number starting from 0, filled with zeroes.
     }
     {$ENDIF}
     has_atleastonereplacement:=(Pos('%a',namepattern)<>0) or
@@ -835,10 +881,16 @@ var
                                (Pos('%0a',namepattern)<>0) or
                                (Pos('%0i',namepattern)<>0) or
                                (Pos('%0e',namepattern)<>0);
-    if not has_atleastonereplacement then
-      namepattern:=namepattern+'%i';
+    if not has_atleastonereplacement then begin
+      if morethanonedb then
+        namepattern:=namepattern+'%di_%i'
+      else
+        namepattern:=namepattern+'%i';
+    end;
 
-    Result:=namepattern;
+    //replaces the block name patterns present on item names.
+    Result:=ReplaceBlockNamePattern(namepattern);
+
     if frmS7tb.MemoryArea.ItemIndex in [4,9,5,10] then begin
       Result:= StringReplace(Result,'%a', IntToStr(curTCaddress),[rfReplaceAll]);
       Result:= StringReplace(Result,'%0a',GetValueWithZeros(curTCaddress, frmS7tb.GetTheLastItemOffset div 2, true),[rfReplaceAll]);
@@ -887,6 +939,9 @@ begin
   try
     with frmS7tb do begin
       if ShowModal=mrOK then begin
+
+        morethanonedb:=spinDBNumber.Value<>spinFinalDBNumber.Value;
+
         //cria o bloco simples ou bloco estrutura e faz sua configuração.
         //create the block or struture and configure it.
         if optplcblock.Checked or optplcStruct.Checked then begin
@@ -2690,4 +2745,4 @@ begin
   Move(values[0],inptr^,Length(values));
 end;
 
-end.
+end.

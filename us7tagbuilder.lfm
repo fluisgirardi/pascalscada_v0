@@ -14,7 +14,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
   OnCreate = FormCreate
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '0.9.28.2'
+  LCLVersion = '0.9.31'
   object Panel2: TPanel
     Left = 0
     Height = 404
@@ -30,13 +30,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       Height = 404
       Top = 0
       Width = 756
-      ActivePage = TabSheet1
+      ActivePage = TabSheet4
       Align = alClient
-      TabIndex = 0
+      TabIndex = 1
       TabOrder = 0
       OnChanging = PageControl1Changing
       object TabSheet1: TTabSheet
-        Caption = 'Area e Tipo'
+        Caption = 'Area and type'
         ClientHeight = 378
         ClientWidth = 748
         OnShow = TabSheet1Show
@@ -108,37 +108,40 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ClientWidth = 744
             TabOrder = 0
             object Label1: TLabel
-              Left = 8
+              Left = 2
               Height = 22
               Top = 6
-              Width = 53
+              Width = 70
+              Alignment = taRightJustify
               AutoSize = False
               Caption = 'PLCStation'
               Layout = tlCenter
               ParentColor = False
             end
             object Label2: TLabel
-              Left = 176
+              Left = 170
               Height = 22
               Top = 6
-              Width = 45
+              Width = 61
+              Alignment = taRightJustify
               AutoSize = False
               Caption = 'PLCStlot'
               Layout = tlCenter
               ParentColor = False
             end
             object Label3: TLabel
-              Left = 333
+              Left = 314
               Height = 22
               Top = 6
-              Width = 49
+              Width = 69
+              Alignment = taRightJustify
               AutoSize = False
               Caption = 'PLCRack'
               Layout = tlCenter
               ParentColor = False
             end
             object PLCStation: TSpinEdit
-              Left = 65
+              Left = 74
               Height = 21
               Top = 6
               Width = 73
@@ -147,7 +150,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
               Value = 2
             end
             object PLCSlot: TSpinEdit
-              Left = 225
+              Left = 233
               Height = 21
               Top = 6
               Width = 73
@@ -175,10 +178,11 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ClientWidth = 744
           TabOrder = 3
           object lblBlockType: TLabel
-            Left = 56
+            Left = 32
             Height = 21
             Top = 56
-            Width = 66
+            Width = 90
+            Alignment = taRightJustify
             AutoSize = False
             Caption = 'Tipo de dado:'
             Layout = tlCenter
@@ -214,7 +218,6 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Caption = 'PLCTagNumber (tags separados)'
             OnClick = optplcblockClick
             TabOrder = 0
-            TabStop = False
           end
           object optplcblock: TRadioButton
             Left = 16
@@ -224,8 +227,8 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Caption = 'PLCBlock (tag agrupados do mesmo tipo de dados)'
             Checked = True
             OnClick = optplcblockClick
-            State = cbChecked
             TabOrder = 1
+            TabStop = True
           end
           object optplcStruct: TRadioButton
             Left = 16
@@ -235,7 +238,6 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Caption = 'PLCStruck (tags agrupados de diferentes tipos de dados)'
             OnClick = optplcblockClick
             TabOrder = 3
-            TabStop = False
           end
           object BlockType: TComboBox
             Left = 128
@@ -302,7 +304,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
       end
       object TabSheet4: TTabSheet
-        Caption = 'Declaração dos itens'
+        Caption = 'Items declaration'
         ClientHeight = 378
         ClientWidth = 748
         ImageIndex = 3
@@ -318,13 +320,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           ClientWidth = 748
           TabOrder = 0
           object lblNumItems: TLabel
-            Left = 24
+            Left = -1
             Height = 22
             Top = 2
-            Width = 167
+            Width = 192
             Alignment = taRightJustify
             AutoSize = False
-            Caption = 'Número de estruturas a criar'
+            Caption = 'Number of structures to create'
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = [fsBold]
@@ -339,7 +341,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Width = 191
             Alignment = taRightJustify
             AutoSize = False
-            Caption = 'Endereço inicial do primeiro item'
+            Caption = 'Start address '
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = [fsBold]
@@ -348,13 +350,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ParentFont = False
           end
           object lblDBNumber: TLabel
-            Left = 271
+            Left = 284
             Height = 22
             Top = 26
-            Width = 102
+            Width = 116
             Alignment = taRightJustify
             AutoSize = False
-            Caption = 'Número do DB'
+            Caption = 'From DB number'
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = [fsBold]
@@ -433,13 +435,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ParentFont = False
           end
           object lblBlockName: TLabel
-            Left = 275
+            Left = 284
             Height = 22
             Top = 2
-            Width = 97
+            Width = 116
             Alignment = taRightJustify
             AutoSize = False
-            Caption = 'Nome do bloco'
+            Caption = 'Block'
             Color = clBtnFace
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
@@ -470,12 +472,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             TabOrder = 1
           end
           object spinDBNumber: TSpinEdit
-            Left = 375
+            Left = 404
             Height = 21
             Top = 26
-            Width = 101
-            MaxValue = 100000000
+            Width = 80
+            MaxValue = 65535
             MinValue = 1
+            OnChange = spinDBNumberChange
             TabOrder = 3
             Value = 1
           end
@@ -489,12 +492,38 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             TabOrder = 4
           end
           object BlockName: TEdit
-            Left = 375
+            Left = 404
             Height = 21
             Top = 2
-            Width = 274
+            Width = 245
             TabOrder = 2
             Text = 'BlockName'
+          end
+          object lblDBNumber1: TLabel
+            Left = 484
+            Height = 21
+            Top = 26
+            Width = 83
+            Alignment = taCenter
+            AutoSize = False
+            Caption = ' to DB number'
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = [fsBold]
+            Layout = tlCenter
+            ParentColor = False
+            ParentFont = False
+          end
+          object spinFinalDBNumber: TSpinEdit
+            Left = 569
+            Height = 21
+            Top = 27
+            Width = 80
+            MaxValue = 65535
+            MinValue = 1
+            OnChange = spinFinalDBNumberChange
+            TabOrder = 5
+            Value = 1
           end
         end
         object ScrollBox1: TScrollBox
@@ -502,6 +531,8 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           Height = 307
           Top = 71
           Width = 748
+          HorzScrollBar.Page = 744
+          VertScrollBar.Page = 303
           Align = alClient
           TabOrder = 1
         end
@@ -554,6 +585,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       Caption = 'Finish'
       Default = True
       ModalResult = 1
+      OnClick = btnFinishClick
       TabOrder = 3
     end
   end
@@ -561,7 +593,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
     Enabled = False
     Interval = 5
     OnTimer = Timer1Timer
-    left = 496
+    left = 664
     top = 48
   end
 end

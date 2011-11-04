@@ -182,11 +182,16 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
+
+  { TfrmS7TagBuilder }
+
   TfrmS7TagBuilder = class(TForm)
     BlockName: TEdit;
+    lblDBNumber1: TLabel;
     Panel1: TPanel;
     Panel2: TPanel;
     PageControl1: TPageControl;
+    spinFinalDBNumber: TSpinEdit;
     TabSheet1: TTabSheet;
     MemoryArea: TRadioGroup;
     Panel3: TPanel;
@@ -242,6 +247,8 @@ type
     procedure btnDownClick(Sender: TObject);
     procedure btnDelClick(Sender: TObject);
     procedure btnBitsClick(Sender: TObject);
+    procedure spinDBNumberChange(Sender: TObject);
+    procedure spinFinalDBNumberChange(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TabSheet1Show(Sender: TObject);
     procedure BlockTypeChange(Sender: TObject);
@@ -1279,6 +1286,18 @@ begin
   end;
 end;
 
+procedure TfrmS7TagBuilder.spinDBNumberChange(Sender: TObject);
+begin
+  if spinDBNumber.Value>spinFinalDBNumber.Value then
+    spinFinalDBNumber.Value:=spinDBNumber.Value
+end;
+
+procedure TfrmS7TagBuilder.spinFinalDBNumberChange(Sender: TObject);
+begin
+  if spinDBNumber.Value>spinFinalDBNumber.Value then
+    spinDBNumber.Value := spinFinalDBNumber.Value;
+end;
+
 procedure TfrmS7TagBuilder.SkipChanged(Sender:TObject);
 begin
   FStructureModified:=true;
@@ -1888,4 +1907,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.
