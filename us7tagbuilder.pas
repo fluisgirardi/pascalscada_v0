@@ -1061,6 +1061,11 @@ begin
     end;
   end;
 
+  if MemoryArea.ItemIndex<>3 then begin
+    spinDBNumber.Value:=1;
+    spinFinalDBNumber.Value:=1;
+  end;
+
   BlockTypeChange(Sender);
   UpdateStructItems;
 end;
@@ -1907,4 +1912,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

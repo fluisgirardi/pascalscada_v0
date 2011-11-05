@@ -768,7 +768,7 @@ var
   bititem:TTagBit;
 
 
-  morethanonedb:Boolean;
+  morethanonedb, morethanoneitem:Boolean;
 
   started:Boolean;
 
@@ -852,9 +852,10 @@ var
     Result:= StringReplace(Result,'%0di',GetValueWithZeros(curdb-frmS7tb.spinDBNumber.Value,   frmS7tb.spinFinalDBNumber.Value-frmS7tb.spinDBNumber.Value  , true),[rfReplaceAll]);
   end;
 
-  function GetName(namepattern:String):String;
+  function GetItemName(namepattern:String):String;
   var
-    has_atleastonereplacement:Boolean;
+    has_atleastonereplacement,
+    has_atleastoneDBreplacement:Boolean;
   begin
     {$IFDEF PORTUGUES}
     {
@@ -875,15 +876,26 @@ var
     %0e   - Item number starting from 0, filled with zeroes.
     }
     {$ENDIF}
+    has_atleastoneDBreplacement:=(Pos('%db',namepattern)<>0) or
+                                 (Pos('%di',namepattern)<>0) or
+                                 (Pos('%de',namepattern)<>0) or
+                                 (Pos('%0db',namepattern)<>0) or
+                                 (Pos('%0di',namepattern)<>0) or
+                                 (Pos('%0de',namepattern)<>0);
+
     has_atleastonereplacement:=(Pos('%a',namepattern)<>0) or
                                (Pos('%i',namepattern)<>0) or
                                (Pos('%e',namepattern)<>0) or
                                (Pos('%0a',namepattern)<>0) or
                                (Pos('%0i',namepattern)<>0) or
                                (Pos('%0e',namepattern)<>0);
-    if not has_atleastonereplacement then begin
+
+    if morethanonedb and (not has_atleastoneDBreplacement) then
+      namepattern:=namepattern+'%di';
+
+    if morethanoneitem and (not has_atleastonereplacement) then begin
       if morethanonedb then
-        namepattern:=namepattern+'%di_%i'
+        namepattern:=namepattern+'_%i'
       else
         namepattern:=namepattern+'%i';
     end;
@@ -941,110 +953,113 @@ begin
       if ShowModal=mrOK then begin
 
         morethanonedb:=spinDBNumber.Value<>spinFinalDBNumber.Value;
+        morethanoneitem:=spinNumItens.Value>1;
 
-        //cria o bloco simples ou bloco estrutura e faz sua configuração.
-        //create the block or struture and configure it.
-        if optplcblock.Checked or optplcStruct.Checked then begin
+        for curdb:=spinDBNumber.Value to spinFinalDBNumber.Value do begin
+          //cria o bloco simples ou bloco estrutura e faz sua configuração.
+          //create the block or struture and configure it.
+          if optplcblock.Checked or optplcStruct.Checked then begin
 
-          //cria o bloco
-          //creates the block
-          if optplcblock.Checked then
-            block:=TPLCBlock(CreateProc(TPLCBlock))
-          else
-            block:=TPLCStruct(CreateProc(TPLCStruct));
+            //cria o bloco
+            //creates the block
+            if optplcblock.Checked then
+              block:=TPLCBlock(CreateProc(TPLCBlock))
+            else
+              block:=TPLCStruct(CreateProc(TPLCStruct));
 
-          block.PLCHack:=PLCRack.Value;
-          block.PLCSlot:=PLCSlot.Value;
-          block.PLCStation:=PLCStation.Value;
-          block.MemReadFunction := GetTagType;
-          block.Name:=BlockName.Text;
-          if block.MemReadFunction=4 then
-            block.MemFile_DB:=spinDBNumber.Value;
-          block.MemAddress:=RealStartOffset;
+            block.PLCHack:=PLCRack.Value;
+            block.PLCSlot:=PLCSlot.Value;
+            block.PLCStation:=PLCStation.Value;
+            block.MemReadFunction := GetTagType;
+            block.Name:=ReplaceBlockNamePattern(BlockName.Text);
+            if block.MemReadFunction=4 then
+              block.MemFile_DB:=curdb;
+            block.MemAddress:=RealStartOffset;
 
-          if optplcblock.Checked then begin
-            block.RefreshTime:=BlockScan.Value;
-            block.TagType:=CurBlockType;
-            Block.SwapBytes:=BlockSwapBytes.Checked;
-            block.SwapWords:=BlockSwapWords.Checked;
-          end else
-            block.RefreshTime:=StructScan.Value;
+            if optplcblock.Checked then begin
+              block.RefreshTime:=BlockScan.Value;
+              block.TagType:=CurBlockType;
+              Block.SwapBytes:=BlockSwapBytes.Checked;
+              block.SwapWords:=BlockSwapWords.Checked;
+            end else
+              block.RefreshTime:=StructScan.Value;
 
-          block.ProtocolDriver:=Self;
-          InsertHook(block);
-        end;
+            block.ProtocolDriver:=Self;
+            InsertHook(block);
+          end;
 
-        //comeca a criar os itens da estrutura
-        //creates the structure items
-        curaddress:=spinStartAddress.Value;
-        curTCaddress:=spinStartAddress.Value;
-        curidx := 0;
-        started:=false;
-        for curitem:=1 to spinNumItens.Value do begin
-          for curstructitem:=0 to StructItemsCount-1 do begin
-            //se é para criar o tag.
-            //if the tag must be created.
-            if not StructItem[curstructitem].SkipTag then begin
-              started:=true;
-              if optplctagnumber.Checked then begin
+          //comeca a criar os itens da estrutura
+          //creates the structure items
+          curaddress:=spinStartAddress.Value;
+          curTCaddress:=spinStartAddress.Value;
+          curidx := 0;
+          started:=false;
+          for curitem:=1 to spinNumItens.Value do begin
+            for curstructitem:=0 to StructItemsCount-1 do begin
+              //se é para criar o tag.
+              //if the tag must be created.
+              if not StructItem[curstructitem].SkipTag then begin
+                started:=true;
+                if optplctagnumber.Checked then begin
 
-                item:=TPLCTagNumber(CreateProc(TPLCTagNumber));
+                  item:=TPLCTagNumber(CreateProc(TPLCTagNumber));
 
-                with TPLCTagNumber(item) do begin
+                  with TPLCTagNumber(item) do begin
 
-                  PLCHack:=frmS7tb.PLCRack.Value;
-                  PLCSlot:=frmS7tb.PLCSlot.Value;
-                  PLCStation:=frmS7tb.PLCStation.Value;
-                  MemReadFunction := GetTagType;
-                  if MemReadFunction=4 then
-                    MemFile_DB:=spinDBNumber.Value;
-                  MemAddress:=curaddress;
+                    PLCHack:=frmS7tb.PLCRack.Value;
+                    PLCSlot:=frmS7tb.PLCSlot.Value;
+                    PLCStation:=frmS7tb.PLCStation.Value;
+                    MemReadFunction := GetTagType;
+                    if MemReadFunction=4 then
+                      MemFile_DB:=spinDBNumber.Value;
+                    MemAddress:=curaddress;
 
-                  RefreshTime:=StructItem[curstructitem].TagScan;
-                  TagType:=StructItem[curstructitem].TagType;
-                  SwapBytes:=StructItem[curstructitem].SwapBytes;
-                  SwapWords:=StructItem[curstructitem].SwapWords;
+                    RefreshTime:=StructItem[curstructitem].TagScan;
+                    TagType:=StructItem[curstructitem].TagType;
+                    SwapBytes:=StructItem[curstructitem].SwapBytes;
+                    SwapWords:=StructItem[curstructitem].SwapWords;
 
-                  ProtocolDriver:=Self;
-                end;
+                    ProtocolDriver:=Self;
+                  end;
 
-              end else begin
-                if optplcblock.Checked then begin
-                  TPLCBlock(block).Size:=curidx+1;
-                  item:=TPLCBlockElement(CreateProc(TPLCBlockElement));
-                  TPLCBlockElement(item).PLCBlock:=block;
-                  TPLCBlockElement(item).Index:=curidx;
                 end else begin
-                  item:=TPLCStructItem(CreateProc(TPLCStructItem));
-                  TPLCStruct(block).Size:=curidx+GetCurWordSize;
-                  TPLCStructItem(item).PLCBlock:=TPLCStruct(block);
-                  TPLCStructItem(item).Index:=curidx;
-                  TPLCStructItem(item).TagType:=StructItem[curstructitem].TagType;
-                  TPLCStructItem(item).SwapBytes:=StructItem[curstructitem].SwapBytes;
-                  TPLCStructItem(item).SwapWords:=StructItem[curstructitem].SwapWords;
+                  if optplcblock.Checked then begin
+                    TPLCBlock(block).Size:=curidx+1;
+                    item:=TPLCBlockElement(CreateProc(TPLCBlockElement));
+                    TPLCBlockElement(item).PLCBlock:=block;
+                    TPLCBlockElement(item).Index:=curidx;
+                  end else begin
+                    item:=TPLCStructItem(CreateProc(TPLCStructItem));
+                    TPLCStruct(block).Size:=curidx+GetCurWordSize;
+                    TPLCStructItem(item).PLCBlock:=TPLCStruct(block);
+                    TPLCStructItem(item).Index:=curidx;
+                    TPLCStructItem(item).TagType:=StructItem[curstructitem].TagType;
+                    TPLCStructItem(item).SwapBytes:=StructItem[curstructitem].SwapBytes;
+                    TPLCStructItem(item).SwapWords:=StructItem[curstructitem].SwapWords;
+                  end;
+                end;
+
+                item.Name:=GetItemName(StructItem[curstructitem].TagName);
+                InsertHook(item);
+
+                for curbit:=0 to StructItem[curstructitem].BitCount-1 do begin
+                  bititem:=TTagBit(CreateProc(TTagBit));
+                  bititem.EndBit:=StructItem[curstructitem].Bit[curbit].EndBit;
+                  bititem.StartBit:=StructItem[curstructitem].Bit[curbit].StartBit;
+                  bititem.Name:=GetItemName(StructItem[curstructitem].Bit[curbit].TagName);
+                  bititem.PLCTag:=item;
+                  InsertHook(bititem);
                 end;
               end;
 
-              item.Name:=GetName(StructItem[curstructitem].TagName);
-              InsertHook(item);
-
-              for curbit:=0 to StructItem[curstructitem].BitCount-1 do begin
-                bititem:=TTagBit(CreateProc(TTagBit));
-                bititem.EndBit:=StructItem[curstructitem].Bit[curbit].EndBit;
-                bititem.StartBit:=StructItem[curstructitem].Bit[curbit].StartBit;
-                bititem.Name:=GetName(StructItem[curstructitem].Bit[curbit].TagName);
-                bititem.PLCTag:=item;
-                InsertHook(bititem);
+              inc(curTCaddress);
+              inc(curaddress,GetCurWordSize);
+              if started then begin
+                if optplcblock.Checked then
+                  inc(curidx)
+                else
+                  inc(curidx, GetCurWordSize);
               end;
-            end;
-
-            inc(curTCaddress);
-            inc(curaddress,GetCurWordSize);
-            if started then begin
-              if optplcblock.Checked then
-                inc(curidx)
-              else
-                inc(curidx, GetCurWordSize);
             end;
           end;
         end;
@@ -2745,4 +2760,4 @@ begin
   Move(values[0],inptr^,Length(values));
 end;
 
-end.
+end.
