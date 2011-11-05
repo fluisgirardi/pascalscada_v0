@@ -843,6 +843,8 @@ var
     if (not has_atleastonereplacement) and morethanonedb then
       namepattern:=namepattern+'%di';
 
+    Result:=namepattern;
+
     Result:= StringReplace(Result,'%db',IntToStr(curdb),[rfReplaceAll]);
     Result:= StringReplace(Result,'%di',IntToStr(curdb-frmS7tb.spinDBNumber.Value+1),[rfReplaceAll]);
     Result:= StringReplace(Result,'%de',IntToStr(curdb-frmS7tb.spinDBNumber.Value+0),[rfReplaceAll]);
@@ -971,7 +973,7 @@ begin
             block.PLCSlot:=PLCSlot.Value;
             block.PLCStation:=PLCStation.Value;
             block.MemReadFunction := GetTagType;
-            block.Name:=ReplaceBlockNamePattern(BlockName.Text);
+            block.Name := ReplaceBlockNamePattern(BlockName.Text);
             if block.MemReadFunction=4 then
               block.MemFile_DB:=curdb;
             block.MemAddress:=RealStartOffset;
@@ -2760,4 +2762,4 @@ begin
   Move(values[0],inptr^,Length(values));
 end;
 
-end.
+end.
