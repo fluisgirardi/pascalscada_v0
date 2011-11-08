@@ -1010,7 +1010,9 @@ end;
 procedure TfrmS7TagBuilder.MemoryAreaClick(Sender: TObject);
 begin
   lblDBNumber.Enabled:=false;
+  lblDBNumber1.Enabled:=false;
   spinDBNumber.Enabled:=false;
+  spinFinalDBNumber.Enabled:=false;
   BlockType.Enabled:=false;
   case MemoryArea.ItemIndex of
     0: begin
@@ -1029,6 +1031,8 @@ begin
      lblStartAddress.Caption:=SInitialAddressInsideDB;
      lblDBNumber.Enabled:=true;
      spinDBNumber.Enabled:=true;
+     lblDBNumber1.Enabled:=true;
+     spinFinalDBNumber.Enabled:=true;
      BlockType.Enabled:=optplcblock.Checked;
     end;
     4,9: begin
@@ -1084,6 +1088,33 @@ begin
   TagList:=TList.Create;
   ItemsToDel:=TList.Create;
   FStructureModified:=false;
+
+
+  //translated captions.
+  TabSheet1.Caption      :=us7tb_tabsheet1_caption;
+  PLCAddress.Caption     :=us7tb_plcaddres_caption;
+  MemoryArea.Caption     :=us7tb_memoryarea_caption;
+  grptagtype.Caption     :=us7tb_grptagtype_caption;
+  optplctagnumber.Caption:=us7tb_optplctagnumber_caption;
+  optplcblock.Caption    :=us7tb_optplcblock_caption;
+  optplcStruct.Caption   :=us7tb_optplcstruct_caption;
+  lblBlockType.Caption   :=us7tb_lblblocktype_caption;
+  BlockSwapBytes.Caption :=us7tb_blockswapbytes_caption;
+  BlockSwapWords.Caption :=us7tb_blockswapwords_caption;
+  lblBlockScan.Caption   :=us7tb_blockscan_caption;
+  lblStructScan.Caption  :=us7tb_structscan_caption;
+
+  TabSheet4.Caption      :=us7tb_tabsheet4_caption;
+  lblNumItems.Caption    :=us7tb_lblnumitems_caption;
+  lblStartAddress.Caption:=us7tb_startaddress_caption;
+  lblBlockName.Caption   :=us7tb_lblblockname_caption;
+  lblDBNumber.Caption    :=us7tb_lblDBNumber_caption;
+  lblDBNumber1.Caption   :=us7tb_lblDBNumber1_caption;
+  Label28.Caption        :=us7tb_label28_caption;
+  Label29.Caption        :=us7tb_label29_caption;
+  Label30.Caption        :=us7tb_label30_caption;
+  Label32.Caption        :=us7tb_label31_caption;
+  Label32.Caption        :=us7tb_label32_caption;
 end;
 
 procedure TfrmS7TagBuilder.FormShow(Sender: TObject);
@@ -1912,4 +1943,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

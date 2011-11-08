@@ -113,7 +113,32 @@ resourcestring
   SVInitialAddress          = 'End. inicial da V';
   SRemoveaStructItemCalled  = 'Remover o item da estrutura chamado "';
   SSecurityControlBusy      = 'Gerenciador de segurança ainda em uso.';
-  SUserManagementIsSet      = 'Já existe um gerenciamento de usuários ativo na aplicação.';
+  SUserManagementIsSet      = 'Já existe um gerenciador de usuários ativo na aplicação.';
+
+  us7tb_tabsheet1_caption       = 'Area e tipo';
+  us7tb_plcaddres_caption       = 'Endereco do CLP';
+  us7tb_memoryarea_caption      = 'Qual e a area de memoria que deseja enderecar';
+  us7tb_grptagtype_caption      = 'Qual o tipo do tag que deseja usar para enderecar a(s) memoria(s) selecionada(s)';
+  us7tb_optplctagnumber_caption = 'PLCTagNumber (tags separados)';
+  us7tb_optplcblock_caption     = 'PLCBlock (tag agrupados do mesmo tipo de dados)';
+  us7tb_optplcstruct_caption    = 'PLCStruck (tags agrupados de diferentes tipos de dados)';
+  us7tb_lblblocktype_caption    = 'Tipo de dado:';
+  us7tb_blockswapbytes_caption  = 'Inverter bytes';
+  us7tb_blockswapwords_caption  = 'Inverter words';
+  us7tb_blockscan_caption       = 'Varredura (ms):';
+  us7tb_structscan_caption      = 'Varredura (ms):';
+
+  us7tb_tabsheet4_caption       = 'Declaração dos items';
+  us7tb_lblnumitems_caption     = 'Numero de estruturas a criar';
+  us7tb_startaddress_caption    = 'Endereço inicial';
+  us7tb_lblblockname_caption    = 'Nome do bloco';
+  us7tb_lblDBNumber_caption     = 'A partir do DB';
+  us7tb_lblDBNumber1_caption    = 'ate o DB';
+  us7tb_label28_caption         = 'Nome do item';
+  us7tb_label29_caption         = 'Tipo do item';
+  us7tb_label30_caption         = 'Varredura';
+  us7tb_label31_caption         = 'Inverter';
+  us7tb_label32_caption         = 'Pular';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -189,6 +214,31 @@ resourcestring
   SRemoveaStructItemCalled  = 'Remove the structure item called "';
   SSecurityControlBusy      = 'The security manager is busy.';
   SUserManagementIsSet      = 'There are already a user management on your application.';
+
+  us7tb_tabsheet1_caption       = 'Area and type';
+  us7tb_plcaddres_caption       = 'PLC Address';
+  us7tb_memoryarea_caption      = 'What''s the memory area to be mapped';
+  us7tb_grptagtype_caption      = 'What''s the kind of tag that will be used to represent the selected memory area';
+  us7tb_optplctagnumber_caption = 'PLCTagNumber (single tags)';
+  us7tb_optplcblock_caption     = 'PLCBlock (grouped tags of the same data type)';
+  us7tb_optplcstruct_caption    = 'PLCStruck (grouped tags of many data types)';
+  us7tb_lblblocktype_caption    = 'Data type:';
+  us7tb_blockswapbytes_caption  = 'Swap bytes';
+  us7tb_blockswapwords_caption  = 'Swap words';
+  us7tb_blockscan_caption       = 'Scan (ms):';
+  us7tb_structscan_caption      = 'Scan (ms):';
+
+  us7tb_tabsheet4_caption       = 'Item declaration';
+  us7tb_lblnumitems_caption     = 'Number of structures to create';
+  us7tb_startaddress_caption    = 'Initial address';
+  us7tb_lblblockname_caption    = 'Block name';
+  us7tb_lblDBNumber_caption     = 'From DB number';
+  us7tb_lblDBNumber1_caption    = 'to DB';
+  us7tb_label28_caption         = 'Item name';
+  us7tb_label29_caption         = 'Item type';
+  us7tb_label30_caption         = 'SCAN';
+  us7tb_label31_caption         = 'SWAP';
+  us7tb_label32_caption         = 'SKIP';
   {$ENDIF}
 
 implementation

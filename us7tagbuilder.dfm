@@ -32,12 +32,12 @@ object frmS7TagBuilder: TfrmS7TagBuilder
       Top = 0
       Width = 756
       Height = 404
-      ActivePage = TabSheet1
+      ActivePage = TabSheet4
       Align = alClient
       TabOrder = 0
       OnChanging = PageControl1Changing
       object TabSheet1: TTabSheet
-        Caption = 'Area e Tipo'
+        Caption = 'Area and type'
         OnShow = TabSheet1Show
         object MemoryArea: TRadioGroup
           Left = 0
@@ -93,32 +93,35 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             object Label1: TLabel
               Left = 8
               Top = 20
-              Width = 53
+              Width = 61
               Height = 22
+              Alignment = taRightJustify
               AutoSize = False
               Caption = 'PLCStation'
               Layout = tlCenter
             end
             object Label2: TLabel
-              Left = 176
+              Left = 168
               Top = 20
-              Width = 45
+              Width = 53
               Height = 22
+              Alignment = taRightJustify
               AutoSize = False
               Caption = 'PLCStlot'
               Layout = tlCenter
             end
             object Label3: TLabel
-              Left = 333
+              Left = 320
               Top = 20
-              Width = 49
+              Width = 62
               Height = 22
+              Alignment = taRightJustify
               AutoSize = False
               Caption = 'PLCRack'
               Layout = tlCenter
             end
             object PLCStation: TSpinEdit
-              Left = 65
+              Left = 73
               Top = 20
               Width = 73
               Height = 22
@@ -283,7 +286,7 @@ object frmS7TagBuilder: TfrmS7TagBuilder
         end
       end
       object TabSheet4: TTabSheet
-        Caption = 'Declara'#231#227'o dos itens'
+        Caption = 'Items declaration'
         ImageIndex = 3
         OnShow = TabSheet4Show
         object Panel5: TPanel
@@ -435,6 +438,22 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             ParentFont = False
             Layout = tlCenter
           end
+          object lblDBNumber1: TLabel
+            Left = 464
+            Top = 26
+            Width = 97
+            Height = 22
+            Alignment = taCenter
+            AutoSize = False
+            Caption = 'to DB number'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -11
+            Font.Name = 'MS Sans Serif'
+            Font.Style = [fsBold]
+            ParentFont = False
+            Layout = tlCenter
+          end
           object spinNumItens: TSpinEdit
             Left = 192
             Top = 2
@@ -460,12 +479,13 @@ object frmS7TagBuilder: TfrmS7TagBuilder
           object spinDBNumber: TSpinEdit
             Left = 375
             Top = 26
-            Width = 101
+            Width = 90
             Height = 22
-            MaxValue = 100000000
+            MaxValue = 65535
             MinValue = 1
             TabOrder = 3
             Value = 1
+            OnChange = spinDBNumberChange
           end
           object Button1: TButton
             Left = 656
@@ -484,6 +504,17 @@ object frmS7TagBuilder: TfrmS7TagBuilder
             Height = 21
             TabOrder = 2
             Text = 'BlockName'
+          end
+          object spinFinalDBNumber: TSpinEdit
+            Left = 559
+            Top = 26
+            Width = 90
+            Height = 22
+            MaxValue = 65535
+            MinValue = 1
+            TabOrder = 5
+            Value = 1
+            OnChange = spinFinalDBNumberChange
           end
         end
         object ScrollBox1: TScrollBox
