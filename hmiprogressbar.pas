@@ -53,6 +53,8 @@ type
      function GetControlSecurityCode:String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
 
     function  GetPosition:Double;
 
@@ -135,6 +137,11 @@ procedure THMIProgressBar.CanBeAccessed(a:Boolean);
 begin
   FIsEnabledBySecurity := a;
   SetEnabled(FIsEnabled);
+end;
+
+procedure THMIProgressBar.MakeUnsecure;
+begin
+
 end;
 
 procedure THMIProgressBar.SetEnabled(e:Boolean);

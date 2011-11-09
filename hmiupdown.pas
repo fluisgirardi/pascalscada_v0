@@ -56,6 +56,8 @@ type
      function GetControlSecurityCode:String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
 
     procedure SetPosition(v:Double);
     procedure SetIncrement(v:Double);
@@ -219,6 +221,11 @@ procedure THMIUpDown.CanBeAccessed(a:Boolean);
 begin
   FIsEnabledBySecurity := a;
   SetEnabled(FIsEnabled);
+end;
+
+procedure THMIUpDown.MakeUnsecure;
+begin
+
 end;
 
 procedure THMIUpDown.SetEnabled(e:Boolean);

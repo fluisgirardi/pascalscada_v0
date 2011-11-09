@@ -62,6 +62,8 @@ type
      function GetControlSecurityCode:String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
 
     //: @exclude
     procedure SetEnabled(e:Boolean); override;
@@ -342,6 +344,11 @@ procedure THMIButton.CanBeAccessed(a:Boolean);
 begin
   FIsEnabledBySecurity :=a;
   SetEnabled(FIsEnabled);
+end;
+
+procedure THMIButton.MakeUnsecure;
+begin
+
 end;
 
 procedure THMIButton.SetEnabled(e:Boolean);

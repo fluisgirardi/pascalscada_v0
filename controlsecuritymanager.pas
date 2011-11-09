@@ -23,6 +23,10 @@ type
     procedure  UnRegisterControl(control:IHMIInterface);
     procedure  UpdateControls;
     function   CanAccess(sc:String):Boolean;
+    procedure  ValidateSecurityCode(sc:String);
+    procedure  RegisterSecurityCode(sc:String);
+    procedure  UnregisterSecurityCode(sc:String);
+    function   SecurityCodeExists(sc:String):Boolean;
   published
     property UserManagement:TComponent read FUserManagement write FUserManagement;
   end;
@@ -31,7 +35,7 @@ type
 
 implementation
 
-uses BasicUserManagement, hsstrings;
+uses BasicUserManagement, hsstrings, Dialogs, Controls;
 
 destructor TControlSecurityManager.Destroy;
 begin
@@ -76,6 +80,51 @@ begin
   Result:=true;
   if (FUserManagement<>nil) and (FUserManagement is TBasicUserManagement) then
     Result:=TBasicUserManagement(FUserManagement).CanAccess(sc);
+end;
+
+procedure  TControlSecurityManager.ValidateSecurityCode(sc:String);
+begin
+  if FUserManagement<>nil then
+    TBasicUserManagement(FUserManagement).ValidateSecurityCode(sc);
+end;
+
+procedure  TControlSecurityManager.RegisterSecurityCode(sc:String);
+begin
+  if FUserManagement<>nil then
+    TBasicUserManagement(FUserManagement).RegisterSecurityCode(sc);
+end;
+
+procedure  TControlSecurityManager.UnregisterSecurityCode(sc:String);
+var
+  being_used:Boolean;
+  c:Integer;
+begin
+  being_used:=false;
+  for c:=0 to Length(FControls) do
+    being_used:=being_used or (FControls[c].GetControlSecurityCode=sc);
+
+  if being_used then begin
+    case MessageDlg('O codigo de segurança ainda está sendo usado por alguns controles, deseja remover o a ligação com eles?',mtConfirmation,mbYesNoCancel,0) of
+      mrYes:
+        // the interface must be changed.
+        exit;
+        //for c:=0 to Length(FControls) do
+        //  FControls[c].SetControlSecurityCode:='';
+      mrNo:
+        raise Exception.Create('Remova o codigo dos controles que o estão usando!');
+      mrCancel:
+        exit;
+    end;
+  end;
+
+  TBasicUserManagement(FUserManagement).UnregisterSecurityCode(sc);
+end;
+
+function   TControlSecurityManager.SecurityCodeExists(sc:String):Boolean;
+begin
+  Result:=false;
+  if FUserManagement<>nil then
+    Result:=TBasicUserManagement(FUserManagement).SecurityCodeExists(sc);
 end;
 
 var

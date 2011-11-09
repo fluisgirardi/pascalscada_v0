@@ -138,6 +138,13 @@ type
     function GetControlSecurityCode:String;
 
     {$IFDEF PORTUGUES}
+    //: Remove o codigo de segurança do controle, tornando-o inseguro.
+    {$ELSE}
+    //: Clear the security of the control, making it unsecure.
+    {$ENDIF}
+    procedure MakeUnsecure;
+
+    {$IFDEF PORTUGUES}
     //: Atualiza a referencia de tag do controle.
     {$ELSE}
     //: Updates the link of the control with a tag

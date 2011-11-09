@@ -55,6 +55,8 @@ type
      function GetControlSecurityCode:String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
 
     procedure WriteValue(Value:Integer);
 
@@ -172,6 +174,11 @@ procedure THMIScrollBar.CanBeAccessed(a:Boolean);
 begin
   FIsEnabledBySecurity := a;
   SetEnabled(FIsEnabled);
+end;
+
+procedure THMIScrollBar.MakeUnsecure;
+begin
+
 end;
 
 procedure THMIScrollBar.SetEnabled(e:Boolean);

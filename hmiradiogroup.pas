@@ -54,6 +54,8 @@ type
      function GetControlSecurityCode:String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
 
     procedure SetDefaultIndex(v:integer);
     function  GetIndex:Integer;
@@ -186,6 +188,11 @@ procedure THMIRadioGroup.CanBeAccessed(a:Boolean);
 begin
   FIsEnabledBySecurity := a;
   SetEnabled(FIsEnabled);
+end;
+
+procedure THMIRadioGroup.MakeUnsecure;
+begin
+
 end;
 
 procedure THMIRadioGroup.SetEnabled(e:Boolean);

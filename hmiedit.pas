@@ -108,6 +108,8 @@ type
      function GetControlSecurityCode:String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
 
     //: @exclude
     procedure SetEnabled(e:Boolean); override;
@@ -372,6 +374,11 @@ procedure THMIEdit.CanBeAccessed(a:Boolean);
 begin
   FIsEnabledBySecurity :=a;
   SetEnabled(FIsEnabled);
+end;
+
+procedure THMIEdit.MakeUnsecure;
+begin
+
 end;
 
 function THMIEdit.GetControlSecurityCode:String;

@@ -56,6 +56,8 @@ type
      function GetControlSecurityCode:String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
 
     //implements the IHMITagInterface interface
     procedure NotifyReadOk;
@@ -192,6 +194,11 @@ procedure THMITrackBar.CanBeAccessed(a:Boolean);
 begin
   FIsEnabledBySecurity := a;
   SetEnabled(FIsEnabled);
+end;
+
+procedure THMITrackBar.MakeUnsecure;
+begin
+
 end;
 
 procedure THMITrackBar.SetEnabled(e:Boolean);

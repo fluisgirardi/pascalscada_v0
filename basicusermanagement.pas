@@ -55,8 +55,14 @@ type
     function    Login:Boolean; virtual;
     procedure   Logout; virtual;
 
-    procedure   ValidateSecurityCode(sc:String); virtual;
+    //Security codes management
+    procedure   ValidateSecurityCode(sc:String);
+    function    SecurityCodeExists(sc:String):Boolean; virtual;
+    procedure   RegisterSecurityCode(sc:String); virtual;
+    procedure   UnregisterSecurityCode(sc:String); virtual;
+
     function    CanAccess(sc:String):Boolean; virtual;
+    function    GetRegisteredAccessCodes:TStringList; virtual;
   end;
 
 implementation
@@ -104,8 +110,8 @@ begin
           loggedin:=true;
           FCurrentUserLogin:=frmLogin.edtusername.Text;
           FLoggedSince:=Now;
-          DoSuccessfulLogin;
           Result:=true;
+          DoSuccessfulLogin;
         end else begin
           DoFailureLogin;
           inc(retries);
@@ -133,12 +139,32 @@ end;
 
 procedure   TBasicUserManagement.ValidateSecurityCode(sc:String);
 begin
-  //does nothing.
+  //raise a exception if the security code is invalid.
+end;
+
+function    TBasicUserManagement.SecurityCodeExists(sc:String):Boolean;
+begin
+  Result:=false;
+end;
+
+procedure   TBasicUserManagement.RegisterSecurityCode(sc:String);
+begin
+  //do nothing
+end;
+
+procedure   TBasicUserManagement.UnregisterSecurityCode(sc:String);
+begin
+  //do nothing
 end;
 
 function    TBasicUserManagement.CanAccess(sc:String):Boolean;
 begin
   Result:=false;
+end;
+
+function    TBasicUserManagement.GetRegisteredAccessCodes:TStringList;
+begin
+  Result:=TStringList.Create;
 end;
 
 function    TBasicUserManagement.GetLoginTime:TDateTime;
