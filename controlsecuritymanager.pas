@@ -106,10 +106,9 @@ begin
   if being_used then begin
     case MessageDlg('O codigo de segurança ainda está sendo usado por alguns controles, deseja remover o a ligação com eles?',mtConfirmation,mbYesNoCancel,0) of
       mrYes:
-        // the interface must be changed.
-        exit;
-        //for c:=0 to Length(FControls) do
-        //  FControls[c].SetControlSecurityCode:='';
+        for c:=0 to Length(FControls) do
+          if FControls[c].GetControlSecurityCode=sc then
+            FControls[c].MakeUnsecure;
       mrNo:
         raise Exception.Create('Remova o codigo dos controles que o estão usando!');
       mrCancel:
