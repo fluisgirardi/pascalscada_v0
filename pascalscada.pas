@@ -17,10 +17,10 @@ uses
   PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, 
   PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, ProtocolDriver, 
   ProtocolTypes, protscan, protscanupdate, s7family, S7Types, scadapropeditor, 
-  scadareg, SerialPort, TableChecker, Tag, TagBit, TagBlock, tagcollection, 
-  tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, 
-  unumerickeyboard, us7tagbuilder, UserScale, usrmgnt_login, ustructuremapper, 
-  uwesttagbuilder, ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
+  scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, tcp_udpport, 
+  ubitmapper, uelementmapper, uModbusTagBuilder, unumerickeyboard, 
+  us7tagbuilder, UserScale, usrmgnt_login, ustructuremapper, uwesttagbuilder, 
+  ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 

@@ -21,7 +21,7 @@ interface
 
 uses
   Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
-  syncobjs, memds, ZDataset;
+  syncobjs, memds, ZDataset, db;
 
 type
 
@@ -241,10 +241,14 @@ type
     procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc);
   end;
 
+  //: @exclude
+  TBasicTableChecker = class;
+
   {$IFDEF PORTUGUES}
   {:
   Componente de banco de dados do PascalSCADA.
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @bold(Usa o projeto ZeosLib.)
   }
   {$ELSE}
   {:
@@ -287,7 +291,15 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
+
+    {$IFDEF PORTUGUES}
+    //: Executa uma consulta assincrona.
+    {$ELSE}
+    //: Executes a assychronous query.
+    {$ENDIF}
     function  ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
+
+    function CreateTableChecker:TBasicTableChecker;
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -346,10 +358,84 @@ type
     property Catalog:  string  read FCatalog     write SetCatalog;
   end;
 
+  {$IFDEF PORTUGUES}
+  //: Estrutura que armazena a declaração de um campo de uma tabela.
+  {$ELSE}
+  //: Structure that stores a table field.
+  {$ENDIF}
+  TFieldDefinition = record
+    FieldName:String;
+    FieldType:TFieldType;
+    FieldSize:Integer;
+    PrimaryKey, Unique, NotNull:Boolean;
+  end;
+
+  {$IFDEF PORTUGUES}
+  //: Array que contem os campos esperados em uma tabela.
+  {$ELSE}
+  //: Array that stores the expected fields of a table.
+  {$ENDIF}
+  TFieldsDefinition = array of TFieldDefinition;
+
+
+  {$IFDEF PORTUGUES}
+  //: Estados possiveis de uma tabela.
+  {$ELSE}
+  //: Array that stores the expected fields of a table.
+  {$ENDIF}
+  TTableState = (tsOk,tsDontExists, tsChanged, tsUnknown);
+
+  //checks the table structure
+  TBasicTableChecker = class(TComponent)
+  private
+    FCS:TCriticalSection;
+    FSignaled:Boolean;
+    FMemDS:TMemDataset;
+    procedure ReturnedQuery(Sender:TObject; DS:TMemDataset);
+    function  InternalExecuteSQL(SQL:String):TMemDataset;
+  protected
+    FDBConnection:THMIDBConnection;
+    FTableName:String;
+    FFields:TFieldsDefinition;
+    function  ExecuteSQL(SQL:String):TMemDataset;
+    procedure SetTableName(fname:String);
+  public
+    constructor Create(AOwner: TComponent); override;
+    //constructor Create(AOwner: TComponent; DBConnection:THMIDBConnection); overload;
+    //constructor Create(AOwner: TComponent; TableName:String); overload;
+    //constructor Create(AOwner: TComponent; DBConnection:THMIDBConnection; TableName:String); overload;
+
+    destructor Destroy; override;
+    procedure ValidateName(fname:String); virtual;
+    procedure AddFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false); virtual;
+    procedure DelFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false); virtual;
+    function  CheckTable:TTableState; virtual;
+    function  DropTableCmd:String; virtual;
+    procedure ExecuteDropTable; virtual;
+    function  CreateTableCmd:String; virtual;
+    procedure ExecuteCreateTable; virtual;
+  published
+    property TableName:String read FTableName write SetTableName;
+    property DBConnection:THMIDBConnection read FDBConnection write FDBConnection;
+  end;
+
+  TPostgreTableChecker = class(TBasicTableChecker)
+  public
+    function CheckTable: TTableState; override;
+
+    function DropTableCmd: String; override;
+    procedure ExecuteDropTable; override;
+
+    function CreateTableCmd: String; override;
+    procedure ExecuteCreateTable; override;
+  end;
+
 const
   SQLCommandMSG = 1024;
 
 implementation
+
+uses hsstrings;
 
 //##############################################################################
 //EDITORES DE PROPRIEDADES DA CLASSE THMIDBCONNECTION
@@ -371,7 +457,7 @@ begin
 end;
 
 var
-  SupportedDBDrivers:array[0..2] of string = ('postgresql','sqlite','mysql');
+  SupportedDBDrivers:array[0..3] of string = ('postgresql','sqlite','mysql','firebird');
 
 //only accepted drivers are show.
 procedure THMIDBProtocolPropertyEditor.GetValueList(List: TStrings);
@@ -525,6 +611,29 @@ begin
   FSQLSpooler.ExecSQLWithResultSet(sql,ReturnDatasetCallback);
 end;
 
+function THMIDBConnection.CreateTableChecker:TBasicTableChecker;
+begin
+  if Connected then begin
+    if (Protocol='mysql') or (Protocol='mysql-4.1') or (Protocol='mysql-5') or
+       (Protocol='mysqld-4.1') or (Protocol='mysqld-5') then begin
+      Result:=nil; //must return a MySQL table Checker.
+    end;
+
+    if (Protocol='postgresql') or (Protocol='postgresql-7') or (Protocol='postgresql-8') then begin
+      Result:=TPostgreTableChecker.Create(Self);
+    end;
+
+    if (Protocol='sqlite') or (Protocol='sqlite-3') then begin
+      Result:=nil; //must return a SQLite table Checker.
+    end;
+
+    if Result<>nil then
+      Result.DBConnection:=Self;
+
+  end else
+    raise Exception.Create('Database must be connected!');
+end;
+
 procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
 begin
   FCS.Enter;
@@ -646,6 +755,210 @@ begin
       FCS.Leave;
     end;
   end;
+end;
+
+//##############################################################################
+//CLASSE TBasicTableChecker
+//
+//TBasicTableChecker CLASS
+//##############################################################################
+
+constructor TBasicTableChecker.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FCS:=TCriticalSection.Create;
+end;
+
+destructor TBasicTableChecker.Destroy;
+begin
+  FCS.Destroy;
+  inherited Destroy;
+end;
+
+procedure TBasicTableChecker.ValidateName(fname:String);
+var
+  c:Integer;
+begin
+  for c:=1 to Length(fname) do
+    if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
+       ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z']))  and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_'))) then
+      raise Exception.Create(SInvalidDatabaseName);
+end;
+
+procedure TBasicTableChecker.AddFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false);
+var
+  h:Integer;
+begin
+  ValidateName(fieldname);
+
+  for h:=0 to High(FFields) do
+    if FFields[h].FieldName=fieldname then
+      exit;
+
+  h:=Length(FFields);
+  SetLength(FFields,h+1);
+  FFields[h].FieldName :=fieldname;
+  FFields[h].FieldType :=fieldType;
+  FFields[h].FieldSize :=fieldsize;
+  FFields[h].PrimaryKey:=pk;
+  FFields[h].Unique    :=unique;
+  FFields[h].NotNull   :=notnull;
+end;
+
+procedure TBasicTableChecker.DelFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false);
+var
+  c,h:Integer;
+  found:Boolean;
+begin
+  found:=false;
+  for c:=0 to High(FFields) do
+    if FFields[c].FieldName=fieldname then begin
+      found:=true;
+      break;
+    end;
+
+  if not found then exit;
+
+  h:=High(FFields);
+  FFields[c].FieldName :=FFields[h].FieldName;
+  FFields[c].FieldType :=FFields[h].FieldType;
+  FFields[c].FieldSize :=FFields[h].FieldSize;
+  FFields[c].PrimaryKey:=FFields[h].PrimaryKey;
+  FFields[c].Unique    :=FFields[h].Unique;
+  FFields[c].NotNull   :=FFields[h].NotNull;
+  SetLength(FFields, h);
+end;
+
+function  TBasicTableChecker.CheckTable:TTableState;
+begin
+  Result:=tsDontExists;
+end;
+
+function  TBasicTableChecker.DropTableCmd:String;
+begin
+  Result:='';
+end;
+
+procedure TBasicTableChecker.ExecuteDropTable;
+var
+  x:TMemDataset;
+begin
+  x:=ExecuteSQL(DropTableCmd);
+  if x<>nil then
+    x.Destroy;
+end;
+
+function  TBasicTableChecker.CreateTableCmd:String;
+begin
+  Result:='';
+end;
+
+procedure TBasicTableChecker.ExecuteCreateTable;
+var
+  x:TMemDataset;
+begin
+  x:=ExecuteSQL(CreateTableCmd);
+  if x<>nil then
+    x.Destroy;
+end;
+
+procedure TBasicTableChecker.ReturnedQuery(Sender:TObject; DS:TMemDataset);
+begin
+  FMemDS:=DS;
+  FSignaled:=true;
+end;
+
+function  TBasicTableChecker.InternalExecuteSQL(SQL:String):TMemDataset;
+begin
+  FCS.Enter;
+  try
+    FSignaled:=false;
+    FMemDS:=nil;
+    Result:=nil;
+    if FDBConnection<>nil then begin
+      FDBConnection.ExecSQL(sql,ReturnedQuery);
+      while not FSignaled do
+        CheckSynchronize(1);
+
+      Result:=FMemDS;
+    end;
+  finally
+    FCS.Leave;
+  end;
+end;
+
+function  TBasicTableChecker.ExecuteSQL(SQL:String):TMemDataset;
+begin
+  Result:=InternalExecuteSQL(SQL);
+end;
+
+procedure TBasicTableChecker.SetTableName(fname:String);
+begin
+  ValidateName(fname);
+  FTableName:=fname;
+end;
+
+//##############################################################################
+//CLASSE TPostgreTableChecker
+//
+//TPostgreTableChecker CLASS
+//##############################################################################
+
+function  TPostgreTableChecker.CheckTable: TTableState;
+var
+  ds:TMemDataset;
+
+  function IsEqual(PGType:string; APPType:TFieldType);
+  begin
+
+  end;
+
+begin
+  //check if table exists.
+  ds:=ExecuteSQL('SELECT table_name FROM information_schema.tables WHERE table_name='''+FTableName+''' and table_schema=''public'' AND table_type=''BASE TABLE''');
+
+  if ds=nil then begin
+    Result:=tsUnknown;
+    exit;
+  end;
+
+  if ds.RecordCount=0 then begin
+    Result:=tsDontExists;
+    ds.Destroy;
+  end else begin
+    //check fields.
+    ds:=ExecuteSQL('SELECT * FROM information_schema.columns WHERE table_name='''+FTableName+''' and table_schema=''public'' AND is_updatable=''YES''');
+
+    if ds=nil then begin
+      Result:=tsUnknown;
+      exit;
+    end;
+
+  end;
+end;
+
+function  TPostgreTableChecker.DropTableCmd: String;
+begin
+  Result:='DROP TABLE '+FTableName+';';
+end;
+
+procedure TPostgreTableChecker.ExecuteDropTable;
+begin
+  inherited ExecuteDropTable;
+end;
+
+function  TPostgreTableChecker.CreateTableCmd: String;
+var
+  c:Integer;
+begin
+  Result := 'CREATE TABLE (';
+  //for c:=0 to
+
+end;
+
+procedure TPostgreTableChecker.ExecuteCreateTable;
+begin
+  inherited ExecuteCreateTable;
 end;
 
 end.

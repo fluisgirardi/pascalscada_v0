@@ -139,6 +139,8 @@ resourcestring
   us7tb_label30_caption         = 'Varredura';
   us7tb_label31_caption         = 'Inverter';
   us7tb_label32_caption         = 'Pular';
+
+  SInvalidDatabaseName          = 'Nome inválido!';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -239,6 +241,8 @@ resourcestring
   us7tb_label30_caption         = 'SCAN';
   us7tb_label31_caption         = 'SWAP';
   us7tb_label32_caption         = 'SKIP';
+
+  SInvalidDatabaseName          = 'Invalid name!';
   {$ENDIF}
 
 implementation
