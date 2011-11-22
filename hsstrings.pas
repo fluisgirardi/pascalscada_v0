@@ -141,6 +141,7 @@ resourcestring
   us7tb_label32_caption         = 'Pular';
 
   SInvalidDatabaseName          = 'Nome inválido!';
+  SInvalidQueueOperation        = 'Impossível adicionar a fila como um item da mesma!';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -243,6 +244,7 @@ resourcestring
   us7tb_label32_caption         = 'SKIP';
 
   SInvalidDatabaseName          = 'Invalid name!';
+  SInvalidQueueOperation        = 'Impossible add the queue as a queue item!';
   {$ENDIF}
 
 implementation

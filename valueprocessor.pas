@@ -435,6 +435,9 @@ uses PLCNumber, hsstrings;
 ////////////////////////////////////////////////////////////////////////////////
 procedure TScaleQueueItem.SetScaleProcessor(SP:TScaleProcessor);
 begin
+  if SP=Collection.Owner then
+    raise Exception.Create(SInvalidQueueOperation);
+
   if sp=SProcessor then exit;
 
   if SProcessor<>nil then
