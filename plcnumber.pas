@@ -55,7 +55,7 @@ type
     {$ELSE}
     //: Store the scales linked with the tag.
     {$ENDIF}
-    PScaleProcessor:TPIPE;
+    PScaleProcessor:TScaleProcessor;
 
     {$IFDEF PORTUGUES}
     //: Armazena o valor puro (sem escalas).
@@ -114,7 +114,7 @@ type
     @seealso(ScaleProcessor)
     }
     {$ENDIF}
-    procedure SetScaleProcessor(sp:TPIPE);
+    procedure SetScaleProcessor(sp:TScaleProcessor);
 
     {$IFDEF PORTUGUES}
     //: seta o limite minimo
@@ -129,6 +129,9 @@ type
     //: sets the maximum limit.
     {$ENDIF}
     procedure SetMaxLimit(v:Double);
+
+    //: @exclude
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     {$IFDEF PORTUGUES}
     //: Habilita/desabilita o limite minimo para entrada de dados.
@@ -201,7 +204,7 @@ type
     {$ELSE}
     //: Scale sequence of tag.
     {$ENDIF}
-    property ScaleProcessor:TPIPE  read PScaleProcessor write SetScaleProcessor;
+    property ScaleProcessor:TScaleProcessor read PScaleProcessor write SetScaleProcessor;
 
     {$IFDEF PORTUGUES}
     //: Evento chamado ao ocorrer uma mudança no valor do tag. Chamado APÓS notificar os controles dependentes.
@@ -267,15 +270,15 @@ begin
   SetValueRaw(towrite);
 end;
 
-procedure TPLCNumber.SetScaleProcessor(sp:TPIPE);
+procedure TPLCNumber.SetScaleProcessor(sp:TScaleProcessor);
 begin
   if sp=PScaleProcessor then exit;
 
   if PScaleProcessor<>nil then
-    PScaleProcessor.DelTag(self);
+    PScaleProcessor.RemoveFreeNotification(self);
 
   if sp<>nil then
-    sp.AddTag(self);
+    sp.FreeNotification(self);
 
   PScaleProcessor := sp;
 end;
@@ -294,6 +297,13 @@ begin
     raise Exception.Create(SmaxMustBeGreaterThanMin);
 
   FMaxLimit:=v;
+end;
+
+procedure TPLCNumber.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  if (Operation=opRemove) and (AComponent=PScaleProcessor) then
+    PScaleProcessor:=nil;
+  inherited Notification(AComponent,Operation);
 end;
 
 procedure TPLCNumber.Write;

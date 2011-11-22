@@ -908,10 +908,10 @@ function  TPostgreTableChecker.CheckTable: TTableState;
 var
   ds:TMemDataset;
 
-  function IsEqual(PGType:string; APPType:TFieldType);
-  begin
+  //function IsEqual(PGType:string; APPType:TFieldType);
+  //begin
 
-  end;
+  //end;
 
 begin
   //check if table exists.

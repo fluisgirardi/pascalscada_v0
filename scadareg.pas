@@ -49,7 +49,7 @@ begin
   RegisterComponents(strProtocolsPallete, [TWestASCIIDriver]);
   RegisterComponents(strProtocolsPallete, [TIBoxDriver]);
   RegisterComponents(strProtocolsPallete, [TISOTCPDriver]);
-  RegisterComponents(strUtilsPallete,     [TPIPE]);
+  RegisterComponents(strUtilsPallete,     [TScalesQueue]);
   RegisterComponents(strUtilsPallete,     [TLinearScaleProcessor]);
   RegisterComponents(strUtilsPallete,     [TUserScale]);
   RegisterComponents(strTagsPallete,      [TPLCTagNumber]);
@@ -100,6 +100,8 @@ begin
   RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
   RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);
   RegisterComponentEditor(TPLCBlock,       TBlockElementMapperComponentEditor);
+
+  RegisterClassAlias(TScalesQueue,        'TPIPE');
 end;
 
 {$IFDEF FPC}

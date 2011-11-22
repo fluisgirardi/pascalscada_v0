@@ -36,7 +36,7 @@ type
   TScaleProcessor = class(TComponent)
   private
     FValueIn:Double;
-    FPIPEItens:array of TCollectionItem;
+    FQueueItems:array of TCollectionItem;
     procedure SetInput(value:Double);
     function  GetOutput:Double;
     procedure SetOutput(value:Double);
@@ -61,14 +61,14 @@ type
     {$ELSE}
     //: Adds a object to dependents list.
     {$ENDIF}
-    procedure AddPIPEItem(PIPEItem:TCollectionItem);
+    procedure AddQueueItem(QueueItem:TCollectionItem);
 
     {$IFDEF PORTUGUES}
     //: Remove um dependente desse processador de escalas.
     {$ELSE}
     //: Removes a object from the dependent object list.
     {$ENDIF}
-    procedure DelPIPEItem(PIPEItem:TCollectionItem);
+    procedure DelQueueItem(QueueItem:TCollectionItem);
 
     {$IFDEF PORTUGUES}
     {:
@@ -180,7 +180,7 @@ type
   {$ELSE}
   //: Implements a item of a scales processors collection.
   {$ENDIF}
-  TScalePIPEItem = class(TCollectionItem)
+  TScaleQueueItem = class(TCollectionItem)
   private
     SProcessor:TScaleProcessor;
     procedure SetScaleProcessor(SP:TScaleProcessor);
@@ -273,10 +273,15 @@ type
   {$ELSE}
   //: Implements a collection of scale processors.
   {$ENDIF}
-  TScalePIPE = class(TCollection)
+  TScaleQueue = class(TCollection)
+  private
+    FOwner:TPersistent;
+  protected
+    //: @exclude
+    function GetOwner: TPersistent; override;
   public
     //: @exclude
-    constructor Create;
+    constructor Create(Owner:TPersistent);
 
     {$IFDEF PORTUGUES}
     {:
@@ -289,7 +294,7 @@ type
     @returns(The new item of the collection.)
     }
     {$ENDIF}
-    function Add:TScalePIPEItem;
+    function Add:TScaleQueueItem;
 
     {$IFDEF PORTUGUES}
     {:
@@ -392,35 +397,22 @@ type
   {$ELSE}
   //: Scale processors queue.
   {$ENDIF}
-  TPIPE = class(TComponent)
+  TScalesQueue = class(TScaleProcessor)
   private
-    FScalePIPE:TScalePIPE;
+    FScaleQueue:TScaleQueue;
     FTags:array of TPLCTag;
-    function  GetScalePIPE:TScalePIPE;
-    procedure SetScalePIPE(ScalePIPE:TScalePIPE);
+    function  GetScaleQueue:TScaleQueue;
+    procedure SetScaleQueue(ScaleQueue:TScaleQueue);
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
 
-    {$IFDEF PORTUGUES}
-    //: Adiciona um tag como dependente dessa fila.
-    {$ELSE}
-    //: Adds a tag to the list of dependents of this scale processor set.
-    {$ENDIF}
-    procedure AddTag(tag:TPLCTag);
-
-    {$IFDEF PORTUGUES}
-    //: Remove um tag como dependente dessa fila.
-    {$ELSE}
-    //: Remove a tag from the dependent list of this scale processor set.
-    {$ENDIF}
-    procedure DelTag(tag:TPLCTag);
     //: @seealso(TScalePIPE.SetInGetOut)
-    function SetInGetOut(Sender:TComponent; Input:Double):Double;
+    function SetInGetOut(Sender: TComponent; Input: Double): Double; override;
     //: @seealso(TScalePIPE.SetOutGetIn)
-    function SetOutGetIn(Sender:TComponent; Output:Double):Double;
+    function SetOutGetIn(Sender: TComponent; Output: Double): Double; override;
   published
 
     {$IFDEF PORTUGUES}
@@ -428,31 +420,34 @@ type
     {$ELSE}
     //: Collection of scale processors.
     {$ENDIF}
-    property Escalas:TScalePIPE read GetScalePIPE write SetScalePIPE stored true;
+    property Escalas:TScaleQueue read GetScaleQueue write SetScaleQueue stored false; // to be removed after 1.0
+    property ScalesQueue:TScaleQueue read GetScaleQueue write SetScaleQueue stored true;
   end;
+
+  TPIPE = class(TScalesQueue);
     
 implementation
 
 uses PLCNumber, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
-// TScalePIPEItem implementation
+// TScaleQueueItem implementation
 ////////////////////////////////////////////////////////////////////////////////
-procedure TScalePIPEItem.SetScaleProcessor(SP:TScaleProcessor);
+procedure TScaleQueueItem.SetScaleProcessor(SP:TScaleProcessor);
 begin
   if sp=SProcessor then exit;
-  
+
   if SProcessor<>nil then
-     SProcessor.DelPIPEItem(self);
+     SProcessor.DelQueueItem(self);
 
   if SP<>nil then
-     SP.AddPIPEItem(self);
+     SP.AddQueueItem(self);
 
   DisplayName:=SP.Name;
   SProcessor := SP;
 end;
 
-function TScalePIPEItem.GetDisplayName: string;
+function TScaleQueueItem.GetDisplayName: string;
 begin
    if SProcessor<>nil then
       Result := SProcessor.Name
@@ -460,7 +455,7 @@ begin
       Result := SEmpty;
 end;
 
-function TScalePIPEItem.SetInGetOut(Sender:TComponent; Input:Double):Double;
+function TScaleQueueItem.SetInGetOut(Sender:TComponent; Input:Double):Double;
 begin
   if SProcessor<>nil then
      Result := SProcessor.SetInGetOut(Sender,Input)
@@ -468,7 +463,7 @@ begin
      Result := Input;
 end;
 
-function TScalePIPEItem.SetOutGetIn(Sender:TComponent; Output:Double):Double;
+function TScaleQueueItem.SetOutGetIn(Sender:TComponent; Output:Double):Double;
 begin
   if SProcessor<>nil then
      Result := SProcessor.SetOutGetIn(Sender,Output)
@@ -476,7 +471,7 @@ begin
      Result := Output;
 end;
 
-procedure TScalePIPEItem.RemoveScaleProcessor;
+procedure TScaleQueueItem.RemoveScaleProcessor;
 begin
   SProcessor := nil;
 end;
@@ -485,116 +480,81 @@ end;
 // TScalePIPE implementation
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TScalePIPE.Create;
+constructor TScaleQueue.Create(Owner:TPersistent);
 begin
-  inherited Create(TScalePIPEItem);
+  inherited Create(TScaleQueueItem);
+  FOwner:=Owner;
 end;
 
-function TScalePIPE.Add:TScalePIPEItem;
+function TScaleQueue.GetOwner:TPersistent;
 begin
-   Result := TScalePIPEItem(inherited Add)
+  Result:=FOwner;
 end;
 
-function TScalePIPE.SetInGetOut(Sender:TComponent; Input:Double):Double;
+function TScaleQueue.Add:TScaleQueueItem;
+begin
+   Result := TScaleQueueItem(inherited Add)
+end;
+
+function TScaleQueue.SetInGetOut(Sender:TComponent; Input:Double):Double;
 var
   c:Integer;
 begin
   Result := Input;
   for c:=0 to Count-1 do
-    if GetItem(c) is TScalePIPEItem then
-       Result := TScalePIPEItem(GetItem(c)).SetInGetOut(Sender,Result);
+    if GetItem(c) is TScaleQueueItem then
+       Result := TScaleQueueItem(GetItem(c)).SetInGetOut(Sender,Result);
 end;
 
-function TScalePIPE.SetOutGetIn(Sender:TComponent; Output:Double):Double;
+function TScaleQueue.SetOutGetIn(Sender:TComponent; Output:Double):Double;
 var
   c:Integer;
 begin
   Result := Output;
   for c:=(Count-1) downto 0 do
-    if GetItem(c) is TScalePIPEItem then
-       Result := TScalePIPEItem(GetItem(c)).SetOutGetIn(Sender,Result);
+    if GetItem(c) is TScaleQueueItem then
+       Result := TScaleQueueItem(GetItem(c)).SetOutGetIn(Sender,Result);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 // TPIPE implementation
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TPIPE.Create(AOwner:TComponent);
+constructor TScalesQueue.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  FScalePIPE := TScalePIPE.Create;
+  FScaleQueue := TScaleQueue.Create(Self);
 end;
 
-destructor  TPIPE.Destroy;
+destructor  TScalesQueue.Destroy;
 var
   t:Integer;
 begin
   for t:=High(FTags) downto 0 do begin
     TPLCNumber(FTags[t]).ScaleProcessor:=nil;
   end;
-  FScalePIPE.Destroy;
+  FScaleQueue.Destroy;
   inherited Destroy;
 end;
 
-function  TPIPE.GetScalePIPE:TScalePIPE;
+function  TScalesQueue.GetScaleQueue:TScaleQueue;
 begin
-  Result := FScalePIPE;
+  Result := FScaleQueue;
 end;
 
-procedure TPIPE.SetScalePIPE(ScalePIPE:TScalePIPE);
+procedure TScalesQueue.SetScaleQueue(ScaleQueue:TScaleQueue);
 begin
-  FScalePIPE.Assign(ScalePIPE);
+  FScaleQueue.Assign(ScaleQueue);
 end;
 
-procedure TPIPE.AddTag(tag:TPLCTag);
-var
-  found:Boolean;
-  c:Integer;
+function TScalesQueue.SetInGetOut(Sender:TComponent; Input:Double):Double;
 begin
-  if not (tag is TPLCNumber) then
-    raise Exception.Create(SinvalidTag);
-
-  found := false;
-  for c:=0 to High(FTags) do
-    if FTags[c]=Tag then begin
-      found := true;
-      break;
-    end;
-
-  if not found  then begin
-    c:=Length(FTags);
-    SetLength(FTags,c+1);
-    FTags[c]:=Tag;
-  end;
+   Result := FScaleQueue.SetInGetOut(Sender,Input);
 end;
 
-procedure TPIPE.DelTag(tag:TPLCTag);
-var
-  found:Boolean;
-  c,h:Integer;
+function TScalesQueue.SetOutGetIn(Sender:TComponent; Output:Double):Double;
 begin
-  found := false;
-  h:=High(FTags);
-  for c:=0 to h do
-    if FTags[c]=Tag then begin
-      found := true;
-      break;
-    end;
-
-  if found then begin
-    FTags[c]:=FTags[h];
-    SetLength(FTags,h);
-  end;
-end;
-
-function TPIPE.SetInGetOut(Sender:TComponent; Input:Double):Double;
-begin
-   Result := FScalePIPE.SetInGetOut(Sender,Input);
-end;
-
-function TPIPE.SetOutGetIn(Sender:TComponent; Output:Double):Double;
-begin
-   Result := FScalePIPE.SetOutGetIn(Sender, Output);
+   Result := FScaleQueue.SetOutGetIn(Sender, Output);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -611,50 +571,50 @@ var
   c:Integer;
 begin
   SetLength(FProperts,0);
-  for c:=0 to High(FPIPEItens) do
-    TScalePIPEItem(FPIPEItens[c]).RemoveScaleProcessor;
-  SetLength(FPIPEItens,0);
+  for c:=0 to High(FQueueItems) do
+    TScaleQueueItem(FQueueItems[c]).RemoveScaleProcessor;
+  SetLength(FQueueItems,0);
   inherited Destroy;
 end;
 
-procedure TScaleProcessor.AddPIPEItem(PIPEItem:TCollectionItem);
+procedure TScaleProcessor.AddQueueItem(QueueItem:TCollectionItem);
 var
   found:Boolean;
   c:Integer;
 begin
-  if not (PIPEItem is TScalePIPEItem) then
+  if not (QueueItem is TScaleQueueItem) then
     raise Exception.Create(SinvalidType);
 
   found := false;
-  for c:=0 to High(FPIPEItens) do
-    if FPIPEItens[c]=PIPEItem then begin
+  for c:=0 to High(FQueueItems) do
+    if FQueueItems[c]=QueueItem then begin
       found := true;
       break;
     end;
 
   if not found  then begin
-    c:=Length(FPIPEItens);
-    SetLength(FPIPEItens,c+1);
-    FPIPEItens[c]:=PIPEItem;
+    c:=Length(FQueueItems);
+    SetLength(FQueueItems,c+1);
+    FQueueItems[c]:=QueueItem;
   end;
 end;
 
-procedure TScaleProcessor.DelPIPEItem(PIPEItem:TCollectionItem);
+procedure TScaleProcessor.DelQueueItem(QueueItem:TCollectionItem);
 var
   found:Boolean;
   c,h:Integer;
 begin
   found := false;
-  h:=High(FPIPEItens);
+  h:=High(FQueueItems);
   for c:=0 to h do
-    if FPIPEItens[c]=PIPEItem then begin
+    if FQueueItems[c]=QueueItem then begin
       found := true;
       break;
     end;
 
   if found then begin
-    FPIPEItens[c]:=FPIPEItens[h];
-    SetLength(FPIPEItens,h);
+    FQueueItems[c]:=FQueueItems[h];
+    SetLength(FQueueItems,h);
   end;
 end;
 

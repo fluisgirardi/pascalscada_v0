@@ -4,8 +4,8 @@ object DataModule1: TDataModule1
   HorizontalOffset = 709
   VerticalOffset = 127
   Width = 383
-  object Linear1_is_100_on_PLC: TPIPE
-    Escalas = <    
+  object Linear1_is_100_on_PLC: TScalesQueue
+    ScalesQueue = <    
       item
         ScaleProcessor = LinearScale_1_is_100
       end>
