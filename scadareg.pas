@@ -101,7 +101,11 @@ begin
   RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);
   RegisterComponentEditor(TPLCBlock,       TBlockElementMapperComponentEditor);
 
-  RegisterClassAlias(TScalesQueue,        'TPIPE');
+  {$IFDEF FPC}
+  RegisterClassAlias(TScalesQueue, 'TPIPE');
+  {$ELSE}
+  RegisterClassAlias(TPIPE,        'TScalesQueue');
+  {$ENDIF}
 end;
 
 {$IFDEF FPC}
