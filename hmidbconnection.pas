@@ -419,8 +419,9 @@ type
     property DBConnection:THMIDBConnection read FDBConnection write FDBConnection;
   end;
 
-  TPostgreTableChecker = class(TBasicTableChecker)
+  TPostgresTableChecker = class(TBasicTableChecker)
   public
+    procedure ValidateName(fname: String); override;
     function CheckTable: TTableState; override;
 
     function DropTableCmd: String; override;
@@ -620,7 +621,7 @@ begin
     end;
 
     if (Protocol='postgresql') or (Protocol='postgresql-7') or (Protocol='postgresql-8') then begin
-      Result:=TPostgreTableChecker.Create(Self);
+      Result:=TPostgresTableChecker.Create(Self);
     end;
 
     if (Protocol='sqlite') or (Protocol='sqlite-3') then begin
@@ -830,13 +831,46 @@ begin
 end;
 
 function  TBasicTableChecker.CheckTable:TTableState;
+var
+  ds:TMemDataset;
+  f, fd:Integer;
+  found:boolean;
 begin
-  Result:=tsDontExists;
+  ds:=ExecuteSQL('SELECT * FROM '+FTableName+' LIMIT 1;');
+  if ds=nil then begin
+    Result:=tsUnknown;
+    exit;
+  end;
+
+  try
+    for f:=0 To High(FFields) do begin
+      found:=false;
+      for fd:=0 to ds.FieldDefs.Count-1 do begin
+        if (LowerCase(ds.FieldDefs.Items[fd].Name)=LowerCase(FFields[f].FieldName)) and
+           (ds.FieldDefs.Items[fd].DataType=FFields[f].FieldType) and
+           (ds.FieldDefs.Items[fd].Required=FFields[f].NotNull) and
+           ((FFields[f].FieldType<>ftString) or
+            ((FFields[f].FieldType=ftString) and
+             (ds.FieldDefs.Items[fd].Size=FFields[f].FieldSize))) then
+        begin
+          found:=true;
+          break;
+        end;
+      end;
+      if not found then begin
+        Result:=tsChanged;
+        exit;
+      end;
+    end;
+    Result:=tsOk;
+  finally
+    ds.Destroy;
+  end;
 end;
 
 function  TBasicTableChecker.DropTableCmd:String;
 begin
-  Result:='';
+  Result:='DROP TABLE '+FTableName+';';
 end;
 
 procedure TBasicTableChecker.ExecuteDropTable;
@@ -904,16 +938,25 @@ end;
 //TPostgreTableChecker CLASS
 //##############################################################################
 
-function  TPostgreTableChecker.CheckTable: TTableState;
+procedure TPostgresTableChecker.ValidateName(fname: String);
+var
+  c:Integer;
+begin
+  for c:=1 to Length(fname) do
+    if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
+       ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z']))  and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_') and (fname[c]<>'.'))) then
+      raise Exception.Create(SInvalidDatabaseName);
+end;
+
+function  TPostgresTableChecker.CheckTable: TTableState;
 var
   ds:TMemDataset;
-
-  //function IsEqual(PGType:string; APPType:TFieldType);
-  //begin
-
-  //end;
-
+  f, r:Integer;
+  ffound:Boolean;
 begin
+  Result:=inherited CheckTable;
+  exit;
+
   //check if table exists.
   ds:=ExecuteSQL('SELECT table_name FROM information_schema.tables WHERE table_name='''+FTableName+''' and table_schema=''public'' AND table_type=''BASE TABLE''');
 
@@ -934,20 +977,35 @@ begin
       exit;
     end;
 
+    if ds.RecordCount=0 then begin
+      Result:=tsDontExists;
+      ds.Destroy;
+    end else begin
+      if ds.RecordCount<>Length(FFields) then begin
+        Result:=tsChanged;
+        exit;
+      end else
+        for f:=0 to High(FFields) do begin
+
+          for r:=1 to ds.RecordCount do begin
+
+          end;
+        end;
+    end;
   end;
 end;
 
-function  TPostgreTableChecker.DropTableCmd: String;
+function  TPostgresTableChecker.DropTableCmd: String;
 begin
   Result:='DROP TABLE '+FTableName+';';
 end;
 
-procedure TPostgreTableChecker.ExecuteDropTable;
+procedure TPostgresTableChecker.ExecuteDropTable;
 begin
   inherited ExecuteDropTable;
 end;
 
-function  TPostgreTableChecker.CreateTableCmd: String;
+function  TPostgresTableChecker.CreateTableCmd: String;
 var
   c:Integer;
 begin
@@ -956,7 +1014,7 @@ begin
 
 end;
 
-procedure TPostgreTableChecker.ExecuteCreateTable;
+procedure TPostgresTableChecker.ExecuteCreateTable;
 begin
   inherited ExecuteCreateTable;
 end;
