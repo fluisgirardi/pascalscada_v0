@@ -422,13 +422,8 @@ type
   TPostgresTableChecker = class(TBasicTableChecker)
   public
     procedure ValidateName(fname: String); override;
-    function CheckTable: TTableState; override;
-
-    function DropTableCmd: String; override;
-    procedure ExecuteDropTable; override;
 
     function CreateTableCmd: String; override;
-    procedure ExecuteCreateTable; override;
   end;
 
 const
@@ -948,63 +943,6 @@ begin
       raise Exception.Create(SInvalidDatabaseName);
 end;
 
-function  TPostgresTableChecker.CheckTable: TTableState;
-var
-  ds:TMemDataset;
-  f, r:Integer;
-  ffound:Boolean;
-begin
-  Result:=inherited CheckTable;
-  exit;
-
-  //check if table exists.
-  ds:=ExecuteSQL('SELECT table_name FROM information_schema.tables WHERE table_name='''+FTableName+''' and table_schema=''public'' AND table_type=''BASE TABLE''');
-
-  if ds=nil then begin
-    Result:=tsUnknown;
-    exit;
-  end;
-
-  if ds.RecordCount=0 then begin
-    Result:=tsDontExists;
-    ds.Destroy;
-  end else begin
-    //check fields.
-    ds:=ExecuteSQL('SELECT * FROM information_schema.columns WHERE table_name='''+FTableName+''' and table_schema=''public'' AND is_updatable=''YES''');
-
-    if ds=nil then begin
-      Result:=tsUnknown;
-      exit;
-    end;
-
-    if ds.RecordCount=0 then begin
-      Result:=tsDontExists;
-      ds.Destroy;
-    end else begin
-      if ds.RecordCount<>Length(FFields) then begin
-        Result:=tsChanged;
-        exit;
-      end else
-        for f:=0 to High(FFields) do begin
-
-          for r:=1 to ds.RecordCount do begin
-
-          end;
-        end;
-    end;
-  end;
-end;
-
-function  TPostgresTableChecker.DropTableCmd: String;
-begin
-  Result:='DROP TABLE '+FTableName+';';
-end;
-
-procedure TPostgresTableChecker.ExecuteDropTable;
-begin
-  inherited ExecuteDropTable;
-end;
-
 function  TPostgresTableChecker.CreateTableCmd: String;
 var
   c:Integer;
@@ -1012,11 +950,6 @@ begin
   Result := 'CREATE TABLE (';
   //for c:=0 to
 
-end;
-
-procedure TPostgresTableChecker.ExecuteCreateTable;
-begin
-  inherited ExecuteCreateTable;
 end;
 
 end.
