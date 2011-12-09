@@ -523,7 +523,7 @@ end;
 
 function THMICheckBox.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:='';//todo
 end;
 
 procedure THMICheckBox.CanBeAccessed(a:Boolean);

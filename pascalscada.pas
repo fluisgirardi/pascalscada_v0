@@ -8,11 +8,11 @@ interface
 
 uses
   BasicUserManagement, CommPort, commtypes, ControlSecurityManager, 
-  crc16utils, CrossEvent, crosskeyevents, HMIAnimation, HMIButton, 
-  HMICheckBox, HMIControlDislocatorAnimation, HMIDBConnection, HMIEdit, 
-  HMILabel, HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, 
-  HMIScrollBar, HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, 
-  hsstrings, hsutils, IBoxDriver, ISOTCPDriver, lazlclversion, 
+  crc16utils, crossdatetime, CrossEvent, crosskeyevents, HMIAnimation, 
+  HMIButton, HMICheckBox, HMIControlDislocatorAnimation, HMIDBConnection, 
+  HMIEdit, HMILabel, HMIProgressBar, hmipropeditor, HMIRadioButton, 
+  HMIRadioGroup, HMIScrollBar, HMIText, HMITrackBar, HMITypes, HMIUpDown, 
+  HMIZones, hsstrings, hsutils, IBoxDriver, ISOTCPDriver, lazlclversion, 
   LinearScaleProcessor, MessageSpool, ModBusDriver, ModBusSerial, ModBusTCP, 
   PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, 
   PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, ProtocolDriver, 

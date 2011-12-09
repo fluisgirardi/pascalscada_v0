@@ -267,7 +267,7 @@ end;
 
 function THMILabel.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:=''; //todo
 end;
 
 procedure THMILabel.CanBeAccessed(a:Boolean);

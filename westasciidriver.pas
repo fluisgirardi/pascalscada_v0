@@ -728,7 +728,7 @@ begin
   if not Assigned(ret) then exit;
 
   //testa as condições q fariam esse procedimento falhar
-  if ((Addr<1) or (Addr>99)) then
+  if ((Addr<1) or (Addr>98)) then
     raise Exception.Create(SoutOfBounds);
 
   Unidades := Addr mod 10;

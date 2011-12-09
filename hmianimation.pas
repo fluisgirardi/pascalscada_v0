@@ -262,7 +262,7 @@ end;
 
 function THMIAnimation.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:='';//todo
 end;
 
 procedure THMIAnimation.SetHMITag(t:TPLCTag);

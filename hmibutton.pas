@@ -337,7 +337,7 @@ end;
 
 function THMIButton.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:='';//todo
 end;
 
 procedure THMIButton.CanBeAccessed(a:Boolean);

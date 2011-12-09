@@ -187,7 +187,7 @@ end;
 
 function THMITrackBar.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:=''; //todo
 end;
 
 procedure THMITrackBar.CanBeAccessed(a:Boolean);

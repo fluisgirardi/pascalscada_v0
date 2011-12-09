@@ -265,6 +265,7 @@ type
     FASyncQuery:TZQuery;
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
+    FCmdID:Cardinal;
     function  GetSyncConnection:TZConnection;
     procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
   protected
@@ -569,6 +570,7 @@ begin
   FASyncConnection:=TZConnection.Create(nil);
   FASyncQuery:=TZQuery.Create(nil);
   FASyncQuery.Connection:=FASyncConnection;
+  FCmdID:=0;
 
   FSQLSpooler:=TProcessSQLCommandThread.Create(true,ExecuteSQLCommand);
   FSQLSpooler.Resume;
@@ -605,6 +607,9 @@ end;
 function THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
 begin
   FSQLSpooler.ExecSQLWithResultSet(sql,ReturnDatasetCallback);
+  Result:=InterLockedIncrement(FCmdID);
+  if Result=$7FFFFFFF then
+    InterLockedExchange(FCmdID,0);
 end;
 
 function THMIDBConnection.CreateTableChecker:TBasicTableChecker;
@@ -953,8 +958,9 @@ var
   c:Integer;
 begin
   Result := 'CREATE TABLE (';
-  //for c:=0 to
+  for c:=0 to High(FFields) do begin
 
+  end;
 end;
 
 end.

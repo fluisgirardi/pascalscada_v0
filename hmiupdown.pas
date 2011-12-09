@@ -214,7 +214,7 @@ end;
 
 function THMIUpDown.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:=''; //todo
 end;
 
 procedure THMIUpDown.CanBeAccessed(a:Boolean);

@@ -181,7 +181,7 @@ end;
 
 function THMIRadioGroup.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:=''; //todo
 end;
 
 procedure THMIRadioGroup.CanBeAccessed(a:Boolean);

@@ -10,14 +10,18 @@ uses
   SysUtils {$IFDEF WINCE}, windows{$ENDIF};
 
   function CrossNow:TDateTime;
+  {$IFDEF WINCE}
   function GetOffset:Word;
+  {$ENDIF}
 
 implementation
 
 function CrossNow:TDateTime;
+{$IFDEF WINCE}
 var
   ms:Word;
   encoded_ms:TDateTime;
+{$ENDIF}
 begin
   Result:=Now;
   {$IFDEF WINCE}
@@ -27,6 +31,8 @@ begin
   {$ENDIF}
 end;
 
+
+{$IFDEF WINCE}
 var
   a, sec2,sec:Word;
   offset:word;
@@ -36,7 +42,7 @@ begin
   Result:=offset;
 end;
 
-{$IFDEF WINCE}
+
 initialization
 
   DecodeTime(CrossNow, a, a, sec, a);
@@ -50,4 +56,4 @@ initialization
   end;
 {$ENDIF}
 end.
-
+

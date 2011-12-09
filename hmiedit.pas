@@ -383,7 +383,7 @@ end;
 
 function THMIEdit.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:='';//todo
 end;
 
 procedure THMIEdit.SetEnabled(e:Boolean);

@@ -26,7 +26,7 @@ uses
   Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, Tag,
   typinfo, HMIControlDislocatorAnimation, PLCNumber, PLCBlock, PLCStruct,
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList;
+    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits;
   {$ELSE}
     Types,
     //if is a delphi 6+

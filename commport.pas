@@ -191,7 +191,7 @@ type
     {$ELSE}
     //: Opens the communication port in design time
     {$ENDIF}
-    FOpenInEditMode:Boolean;
+    //FOpenInEditMode:Boolean;
 
     //: @exclude
     FOnCommErrorReading:TCommPortErrorEvent;

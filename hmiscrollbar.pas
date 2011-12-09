@@ -167,7 +167,7 @@ end;
 
 function THMIScrollBar.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:=''; //todo
 end;
 
 procedure THMIScrollBar.CanBeAccessed(a:Boolean);

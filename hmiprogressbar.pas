@@ -130,7 +130,7 @@ end;
 
 function THMIProgressBar.GetControlSecurityCode:String;
 begin
-   //todo
+   Result:=''; //todo
 end;
 
 procedure THMIProgressBar.CanBeAccessed(a:Boolean);
