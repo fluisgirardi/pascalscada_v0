@@ -953,7 +953,7 @@ begin
           end;
           PSM_PORT_EVENT:begin
             FEvent:=PMsg.wParam;
-            AtMainThread:=Boolean(PMsg.lParam);
+            AtMainThread:=PMsg.lParam<>nil;
             if AtMainThread then
               Synchronize(SyncPortEvent)
             else begin
@@ -989,10 +989,15 @@ end;
 procedure TEventNotificationThread.DoCommPortEvent(Event:TNotifyEvent; MainThread:Boolean);
 var
   p:PNotifyEvent;
+  pb:Pointer;
 begin
   new(p);
   p^:=Event;
-  FSpool.PostMessage(PSM_PORT_EVENT, p, Pointer(MainThread), false);
+
+  pb:=nil;
+  if MainThread then pb:=Pointer(1);
+
+  FSpool.PostMessage(PSM_PORT_EVENT, p, pb, false);
   DoSomething;
 end;
 
