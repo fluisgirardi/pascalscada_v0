@@ -831,6 +831,11 @@ var
   f, fd:Integer;
   found:boolean;
 begin
+  if trim(FTableName)='' then begin
+    Result:=tsDontExists;
+    exit;
+  end;
+
   ds:=ExecuteSQL('SELECT * FROM '+FTableName+' LIMIT 1;');
   if ds=nil then begin
     Result:=tsUnknown;
