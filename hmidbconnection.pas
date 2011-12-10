@@ -21,7 +21,7 @@ interface
 
 uses
   Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
-  syncobjs, memds, ZDataset, db;
+  syncobjs, memds, ZDataset, db {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
 
