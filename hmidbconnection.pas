@@ -573,7 +573,7 @@ begin
   FCmdID:=0;
 
   FSQLSpooler:=TProcessSQLCommandThread.Create(true,ExecuteSQLCommand);
-  FSQLSpooler.Resume;
+  FSQLSpooler.WakeUp;
 end;
 
 destructor  THMIDBConnection.Destroy;

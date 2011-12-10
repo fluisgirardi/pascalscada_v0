@@ -105,7 +105,7 @@ type
     names:Strings;
   public
     CurItem:TTagNamesItemEditor;
-    constructor Create(nomes:Strings);
+    constructor Create(nomes:Strings); overload;
     destructor Destroy; override;
     procedure AfterConstruction; override;
   end;

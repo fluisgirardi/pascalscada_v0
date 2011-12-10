@@ -91,6 +91,13 @@ type
      function GetUniqueID:Int64;
    public
      {$IFDEF PORTUGUES}
+     //: Acorda/inicia uma thread suspensa.
+     {$ELSE}
+     //: Wake/starts a suspended thread.
+     {$ENDIF}
+     procedure WakeUp;
+
+     {$IFDEF PORTUGUES}
      //: Fornece o número único da thread.
      {$ELSE}
      //: Provides a unique number of identification.
@@ -232,6 +239,11 @@ type
   end;
 
 implementation
+
+procedure TCrossThread.WakeUp;
+begin
+  Resume; //must be improved
+end;
 
 function TCrossThread.GetUniqueID:Int64;
 begin
@@ -384,4 +396,4 @@ begin
   {$IFEND}
 end;
 
-end.
+end.

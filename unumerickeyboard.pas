@@ -49,7 +49,7 @@ type
     FFormOwner:TForm;
     keyboard:TCrossKeyEvents;
   public
-    constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
+    constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
     destructor Destroy; override;
   end;
 

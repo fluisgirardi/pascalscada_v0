@@ -717,12 +717,12 @@ end;
 procedure TProtocolDriver.AfterConstruction;
 begin
   Inherited AfterConstruction;
-  PScanUpdateThread.Resume;
+  PScanUpdateThread.WakeUp;
 
-  PScanReadThread.Resume;
+  PScanReadThread.WakeUp;
   PScanReadThread.WaitInit;
 
-  PScanWriteThread.Resume;
+  PScanWriteThread.WakeUp;
   PScanWriteThread.WaitInit;
 end;
 
@@ -1357,4 +1357,4 @@ initialization
 
 DriverCount:=1;
 
-end.
+end.

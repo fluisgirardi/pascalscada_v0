@@ -1051,7 +1051,7 @@ begin
   PClearBufOnErr := true;
 
   PEventUpdater:=TEventNotificationThread.Create(true, Self);
-  PEventUpdater.Resume;
+  PEventUpdater.WakeUp;
   PEventUpdater.WaitInit;
 end;
 
