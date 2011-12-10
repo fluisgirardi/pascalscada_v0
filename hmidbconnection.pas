@@ -265,7 +265,7 @@ type
     FASyncQuery:TZQuery;
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
-    FCmdID:Cardinal;
+    FCmdID:Integer;
     function  GetSyncConnection:TZConnection;
     procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
   protected
@@ -608,7 +608,7 @@ function THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataS
 begin
   FSQLSpooler.ExecSQLWithResultSet(sql,ReturnDatasetCallback);
   Result:=InterLockedIncrement(FCmdID);
-  if Result=$7FFFFFFF then
+  if Result=$3FFFFFFF then
     InterLockedExchange(FCmdID,0);
 end;
 
