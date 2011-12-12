@@ -1,4 +1,5 @@
 {$i language.inc}
+{$i delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -26,7 +27,15 @@
 unit CrossEvent;
 
 {$IFDEF FPC}
-{$mode delphi}
+  {$mode delphi}
+
+  {$IF (FPC_FULLVERSION >= 20404)}
+  {$DEFINE USE_TTHREAD_START}
+  {$IFEND}
+{$ELSE}
+  {$IFDEF DELPHI2010_UP}
+    {$DEFINE USE_TTHREAD_START}
+  {$ENDIF}
 {$ENDIF}
 
 {$if (not defined(WINDOWS)) and (not defined(WIN32)) and (not defined(WIN64))}
@@ -242,7 +251,11 @@ implementation
 
 procedure TCrossThread.WakeUp;
 begin
-  Resume; //must be improved
+  {$IFDEF USE_TTHREAD_START}
+    Start;
+  {$ELSE}
+    Resume;
+  {$ENDIF}
 end;
 
 function TCrossThread.GetUniqueID:Int64;

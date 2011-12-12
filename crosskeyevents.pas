@@ -283,7 +283,7 @@ var
   nkeys:cint;
 begin
   if FTarget=nil then exit;
-  gev.key.window:=PGtkWidget(Ftarget.Handle)^.window;
+  gev.key.window:=PGtkWidget(Ftarget.Handle).window;
   gev.key._type:=GDK_KEY_RELEASE;
   gev.key.send_event:=1;
   gev.key.time:=10;

@@ -424,6 +424,7 @@ type
   public
     procedure ValidateName(fname: String); override;
 
+    function DropTableCmd: String; override;
     function CreateTableCmd: String; override;
   end;
 
@@ -454,7 +455,11 @@ begin
 end;
 
 var
+  {$IFDEF WINCE}
+  SupportedDBDrivers:array[0..0] of string = ('sqlite');
+  {$ELSE}
   SupportedDBDrivers:array[0..3] of string = ('postgresql','sqlite','mysql','firebird');
+  {$ENDIF}
 
 //only accepted drivers are show.
 procedure THMIDBProtocolPropertyEditor.GetValueList(List: TStrings);
@@ -951,6 +956,11 @@ begin
     if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
        ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z']))  and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_') and (fname[c]<>'.'))) then
       raise Exception.Create(SInvalidDatabaseName);
+end;
+
+function TPostgresTableChecker.DropTableCmd:String;
+begin
+  Result:='ALTER TABLE '+FTableName+' RENAME TO '+FTableName+'_backup_'+FormatDateTime('yyyymmddhhnnsszzz',Now);
 end;
 
 function  TPostgresTableChecker.CreateTableCmd: String;
