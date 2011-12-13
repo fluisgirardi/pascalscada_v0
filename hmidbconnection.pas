@@ -359,6 +359,15 @@ type
     property Catalog:  string  read FCatalog     write SetCatalog;
   end;
 
+  TFKAction = ( fkNoAction, fkRestrict, fkSetNULL, fkCascade );
+
+  TFKInfo = record
+    FKTable,
+    FKField:String;
+    OnUpdateAction,
+    OnDeleteAction:TFKAction;
+  end;
+
   {$IFDEF PORTUGUES}
   //: Estrutura que armazena a declaração de um campo de uma tabela.
   {$ELSE}
@@ -368,6 +377,8 @@ type
     FieldName:String;
     FieldType:TFieldType;
     FieldSize:Integer;
+    FieldFK:TFKInfo;
+    FieldDefaultValue:String;
     PrimaryKey, Unique, NotNull:Boolean;
   end;
 
@@ -377,6 +388,8 @@ type
   //: Array that stores the expected fields of a table.
   {$ENDIF}
   TFieldsDefinition = array of TFieldDefinition;
+
+  TDBNameBehavior = (nbTableName, nbFieldName, nbConstraintName);
 
 
   {$IFDEF PORTUGUES}
@@ -407,7 +420,7 @@ type
     //constructor Create(AOwner: TComponent; DBConnection:THMIDBConnection; TableName:String); overload;
 
     destructor Destroy; override;
-    procedure ValidateName(fname:String); virtual;
+    function  ValidName(fname:String; namebehavior:TDBNameBehavior):Boolean; virtual;
     procedure AddFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false); virtual;
     procedure DelFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false); virtual;
     function  CheckTable:TTableState; virtual;
@@ -420,12 +433,28 @@ type
     property DBConnection:THMIDBConnection read FDBConnection write FDBConnection;
   end;
 
+  TBasicTableCheckerClass = class of TBasicTableChecker;
+
   TPostgresTableChecker = class(TBasicTableChecker)
   public
-    procedure ValidateName(fname: String); override;
+    function  ValidName(fname:String; namebehavior:TDBNameBehavior):Boolean; virtual;
 
     function DropTableCmd: String; override;
     function CreateTableCmd: String; override;
+  end;
+
+  TBasicDatabaseChecker = class(TComponent)
+  private
+    FTableClass:TBasicTableCheckerClass;
+    FTables:array of TBasicTableChecker;
+  public
+    constructor Create(AOwner: TComponent; tableclass:TBasicTableCheckerClass);
+    destructor  Destroy; override;
+    function    AddTable(tablename:String):TBasicTableChecker; virtual;
+    procedure   RemoveTable(tablename:String);
+
+    function    TableExistsOnMetadata(tablename:String):Boolean; virtual;
+    function    GetTableMetadataByName(Tablename:String):TBasicTableChecker; virtual;
   end;
 
 const
@@ -781,21 +810,25 @@ begin
   inherited Destroy;
 end;
 
-procedure TBasicTableChecker.ValidateName(fname:String);
+function TBasicTableChecker.ValidName(fname:String; namebehavior:TDBNameBehavior):Boolean;
 var
   c:Integer;
 begin
+  Result:=true;
   for c:=1 to Length(fname) do
     if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
-       ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z']))  and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_'))) then
-      raise Exception.Create(SInvalidDatabaseName);
+       ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z']))  and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_'))) then begin
+      Result:=false;
+      exit;
+    end;
 end;
 
 procedure TBasicTableChecker.AddFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false);
 var
   h:Integer;
 begin
-  ValidateName(fieldname);
+  if not ValidName(fieldname, nbFieldName) then
+    raise exception.Create(SInvalidDatabaseName);
 
   for h:=0 to High(FFields) do
     if FFields[h].FieldName=fieldname then
@@ -938,8 +971,10 @@ end;
 
 procedure TBasicTableChecker.SetTableName(fname:String);
 begin
-  ValidateName(fname);
-  FTableName:=fname;
+  if ValidName(fname,nbTableName) then
+    FTableName:=fname
+  else
+    raise Exception.Create(SInvalidDatabaseName);
 end;
 
 //##############################################################################
@@ -948,14 +983,20 @@ end;
 //TPostgreTableChecker CLASS
 //##############################################################################
 
-procedure TPostgresTableChecker.ValidateName(fname: String);
+function TPostgresTableChecker.ValidName(fname: String; namebehavior:TDBNameBehavior):Boolean;
 var
   c:Integer;
 begin
-  for c:=1 to Length(fname) do
-    if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
-       ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z']))  and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_') and (fname[c]<>'.'))) then
-      raise Exception.Create(SInvalidDatabaseName);
+  Result:=false;
+  if namebehavior=nbTableName then
+    for c:=1 to Length(fname) do
+      if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
+         ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])) and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_') and (fname[c]<>'.'))) then begin
+        Result:=false;
+        exit;
+      end
+  else
+    inherited ValidName(fname, namebehavior);
 end;
 
 function TPostgresTableChecker.DropTableCmd:String;
@@ -969,8 +1010,68 @@ var
 begin
   Result := 'CREATE TABLE (';
   for c:=0 to High(FFields) do begin
-
+    case FFields[c].FieldType of
+      ftAutoInc:
+        Result:=Result;
+    end;
   end;
+end;
+
+constructor TBasicDatabaseChecker.Create(AOwner: TComponent; tableclass:TBasicTableCheckerClass);
+begin
+  inherited Create(AOwner);
+  FTableClass:=tableclass;
+end;
+
+destructor  TBasicDatabaseChecker.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function    TBasicDatabaseChecker.AddTable(tablename:String):TBasicTableChecker;
+var
+  t:Integer;
+begin
+  for t:=0 to High(FTables) do
+    if FTables[t].TableName=lowercase(tablename) then
+      raise Exception.Create(STableAlreadyexistsOnMetadata);
+
+  Result:=FTableClass.Create(Self);
+
+  if not Result.ValidName(tablename) then begin
+    Result.Destroy;
+    Result:=nil;
+  end
+    Result.TableName:=lowercase(tablename);
+end;
+
+procedure   TBasicDatabaseChecker.RemoveTable(tablename:String);
+begin
+
+end;
+
+function    TBasicDatabaseChecker.TableExistsOnMetadata(tablename:String):Boolean;
+var
+  t:Integer;
+begin
+  Result:=false;
+  for t:=0 to High(FTables) do
+    if FTables[t].TableName=lowercase(tablename) then begin
+      Result:=true
+      break;
+    end;
+end;
+
+function    TBasicDatabaseChecker.GetTableMetadataByName(Tablename:String):TBasicTableChecker;
+var
+  t:Integer;
+begin
+  Result:=nil;
+  for t:=0 to High(FTables) do
+    if FTables[t].TableName=lowercase(tablename) then begin
+      Result:=FTables[t];
+      break;
+    end;
 end;
 
 end.
