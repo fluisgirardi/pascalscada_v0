@@ -143,6 +143,7 @@ resourcestring
   SInvalidDatabaseName          = 'Nome inválido!';
   STableAlreadyexistsOnMetadata = 'A tabela já existe no metadata';
   SInvalidQueueOperation        = 'Impossível adicionar a fila como um item da mesma!';
+  SInvalidOwnerClass            = 'O dono do objeto precisa ser da classe THMIDBConnection';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -247,6 +248,7 @@ resourcestring
   SInvalidDatabaseName          = 'Invalid name!';
   STableAlreadyexistsOnMetadata = 'The table already exists on metadata.';
   SInvalidQueueOperation        = 'Impossible add the queue as a queue item!';
+  SInvalidOwnerClass            = 'The owner must be a object of THMIDBConnection class';
   {$ENDIF}
 
 implementation

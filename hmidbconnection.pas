@@ -241,6 +241,12 @@ type
     procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc);
   end;
 
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+
+
   //: @exclude
   TBasicTableChecker = class;
 
@@ -359,6 +365,11 @@ type
     property Catalog:  string  read FCatalog     write SetCatalog;
   end;
 
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+
   TFKAction = ( fkNoAction, fkRestrict, fkSetNULL, fkCascade );
 
   TFKInfo = record
@@ -391,7 +402,6 @@ type
 
   TDBNameBehavior = (nbTableName, nbFieldName, nbConstraintName);
 
-
   {$IFDEF PORTUGUES}
   //: Estados possiveis de uma tabela.
   {$ELSE}
@@ -399,8 +409,13 @@ type
   {$ENDIF}
   TTableState = (tsOk,tsDontExists, tsChanged, tsUnknown);
 
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+
   //checks the table structure
-  TBasicTableChecker = class(TComponent)
+  TTableChecker = class(TComponent)
   private
     FCS:TCriticalSection;
     FSignaled:Boolean;
@@ -435,6 +450,11 @@ type
 
   TBasicTableCheckerClass = class of TBasicTableChecker;
 
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+
   TPostgresTableChecker = class(TBasicTableChecker)
   public
     function  ValidName(fname:String; namebehavior:TDBNameBehavior):Boolean; virtual;
@@ -443,12 +463,16 @@ type
     function CreateTableCmd: String; override;
   end;
 
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+  //##############################################################################
+
   TBasicDatabaseChecker = class(TComponent)
   private
-    FTableClass:TBasicTableCheckerClass;
     FTables:array of TBasicTableChecker;
   public
-    constructor Create(AOwner: TComponent; tableclass:TBasicTableCheckerClass);
+    constructor Create(AOwner: TComponent);
     destructor  Destroy; override;
     function    AddTable(tablename:String):TBasicTableChecker; virtual;
     procedure   RemoveTable(tablename:String);
@@ -462,7 +486,7 @@ const
 
 implementation
 
-uses hsstrings;
+uses hsstrings, strutils;
 
 //##############################################################################
 //EDITORES DE PROPRIEDADES DA CLASSE THMIDBCONNECTION
@@ -1007,20 +1031,233 @@ end;
 function  TPostgresTableChecker.CreateTableCmd: String;
 var
   c:Integer;
+  virgula, pkvirgula, unvirgula:String;
+  pk, un:String;
 begin
   Result := 'CREATE TABLE (';
+  virgula:='';
+  pkvirgula:='';
+  unvirgula:='';
   for c:=0 to High(FFields) do begin
     case FFields[c].FieldType of
-      ftAutoInc:
-        Result:=Result;
+      ftAutoInc: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' SERIAL '+
+                ifthen(FFields[c].NotNull,' NOT NULL');
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+      ftString: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ifthen(FFields[c].FieldSize>0,' CHARACTER VARYING('+IntToStr(FFields[c].FieldSize)+')',' TEXT')+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '''+FFields[c].FieldDefaultValue+''':CHARACTER VARYING';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+      ftWord,
+      ftSmallint: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' SMALLINT '+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '+FFields[c].FieldDefaultValue+':SMALLINT';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+      ftInteger: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' INTEGER '+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '+FFields[c].FieldDefaultValue+':INTEGER';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+
+      ftBoolean: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' BOOLEAN '+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '+FFields[c].FieldDefaultValue+':BOOLEAN';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+
+      ftFloat: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' BOOLEAN '+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '+FFields[c].FieldDefaultValue+':BOOLEAN';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+
+      ftDate: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' DATE '+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '+FFields[c].FieldDefaultValue+':DATE';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+
+      ftTime: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' TIME WITHOUT TIME ZONE '+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '+FFields[c].FieldDefaultValue+':TIME WITHOUT TIME ZONE';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
+
+      ftDateTime: begin
+        Result:=Result+
+                virgula+
+                FFields[c].FieldName+
+                ' TIMESTAMP WITHOUT TIME ZONE '+
+                ifthen(FFields[c].NotNull,' NOT NULL')+
+                ' DEFAULT '+FFields[c].FieldDefaultValue+':TIMESTAMP WITHOUT TIME ZONE';
+
+        //is a primary key?
+        if FFields[c].PrimaryKey then begin
+          pk:=pk+pkvirgula+FFields[c].FieldName;
+          pkvirgula:=', ';
+        end;
+
+        //unique
+        if FFields[c].Unique then begin
+          un:=un+unvirgula+FFields[c].FieldName;
+          unvirgula:=', ';
+        end;
+
+        virgula:=', ';
+      end;
     end;
   end;
 end;
 
-constructor TBasicDatabaseChecker.Create(AOwner: TComponent; tableclass:TBasicTableCheckerClass);
+//##############################################################################
+//CLASSE TBasicDatabaseChecker
+//
+//TBasicDatabaseChecker CLASS
+//##############################################################################
+
+constructor TBasicDatabaseChecker.Create(AOwner: TComponent);
 begin
+  if not (AOwner is THMIDBConnection) then
+    raise Exception.Create(SInvalidOwnerClass);
   inherited Create(AOwner);
-  FTableClass:=tableclass;
 end;
 
 destructor  TBasicDatabaseChecker.Destroy;
@@ -1030,24 +1267,37 @@ end;
 
 function    TBasicDatabaseChecker.AddTable(tablename:String):TBasicTableChecker;
 var
-  t:Integer;
+  t, h:Integer;
+
 begin
   for t:=0 to High(FTables) do
     if FTables[t].TableName=lowercase(tablename) then
       raise Exception.Create(STableAlreadyexistsOnMetadata);
 
-  Result:=FTableClass.Create(Self);
+  Result:=TBasicTableChecker.Create(Self);
 
-  if not Result.ValidName(tablename) then begin
+  if not Result.ValidName(tablename, nbTableName) then begin
     Result.Destroy;
     Result:=nil;
-  end
+  end else begin
     Result.TableName:=lowercase(tablename);
+    h:=Length(FTables);
+    SetLength(FTables, h+1);
+    FTables[h]:=Result;
+  end;
 end;
 
 procedure   TBasicDatabaseChecker.RemoveTable(tablename:String);
+var
+  t,h:Integer;
 begin
-
+  for t:=0 to High(FTables) do
+    if FTables[t].TableName=lowercase(tablename) then begin
+      h:=High(FTables);
+      FTables[t].Destroy;
+      FTables[t]:=FTables[h];
+      SetLength(FTables,h);
+    end;
 end;
 
 function    TBasicDatabaseChecker.TableExistsOnMetadata(tablename:String):Boolean;
@@ -1057,7 +1307,7 @@ begin
   Result:=false;
   for t:=0 to High(FTables) do
     if FTables[t].TableName=lowercase(tablename) then begin
-      Result:=true
+      Result:=true ;
       break;
     end;
 end;
