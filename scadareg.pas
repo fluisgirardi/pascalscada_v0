@@ -102,7 +102,11 @@ begin
   RegisterComponentEditor(TPLCBlock,       TBlockElementMapperComponentEditor);
 
   {$IFDEF FPC}
+  {$IF defined(FPC) AND (FPC_FULLVERSION < 20501) }
   RegisterClassAlias(TScalesQueue, 'TPIPE');
+  {$ELSE}
+  RegisterClassAlias(TPIPE, 'TScalesQueue');
+  {$ENDIF}
   {$ELSE}
   RegisterClassAlias(TPIPE,        'TScalesQueue');
   {$ENDIF}
