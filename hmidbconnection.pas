@@ -21,38 +21,39 @@ interface
 
 uses
   Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
-  syncobjs, memds, ZDataset, db {$IFNDEF FPC}, Windows{$ENDIF};
+  syncobjs, memds, ZDataset;
 
 type
 
-  TFKAction = ( fkNoAction, fkRestrict, fkSetNULL, fkCascade );
-
-  //############################################################################
-
-  TFKInfo = record
-    FKTable,
-    FKField:String;
-    OnUpdateAction,
-    OnDeleteAction:TFKAction;
+  {$IFDEF PORTUGUES}
+  //: Editor da propriedade THMIDBConnection.Database.
+  {$ELSE}
+  //: Property editor of THMIDBConnection.Database property.
+  {$ENDIF}
+  THMIDBDatabasePropertyEditor = class(TZDatabasePropertyEditor)
+  public
+    function GetZComponent: TPersistent; override;
   end;
-
-  //############################################################################
 
   {$IFDEF PORTUGUES}
-  //: Estrutura que armazena a declaração de um campo de uma tabela.
+  //: Editor da propriedade THMIDBConnection.Catalog
   {$ELSE}
-  //: Structure that stores a table field.
+  //: Property editor of THMIDBConnection.Catalog property.
   {$ENDIF}
-  TFieldDefinition = record
-    FieldName:String;
-    FieldType:TFieldType;
-    FieldSize:Integer;
-    FieldFK:TFKInfo;
-    FieldDefaultValue:String;
-    PrimaryKey, Unique, NotNull:Boolean;
+  THMIDBCatalogPropertyEditor = class(TZDatabasePropertyEditor)
+  public
+    function GetZComponent: TPersistent; override;
   end;
 
-  //############################################################################
+  {$IFDEF PORTUGUES}
+  //: Editor da propriedade THMIDBConnection.Protocol
+  {$ELSE}
+  //: Property editor of THMIDBConnection.Protocol property.
+  {$ENDIF}
+  THMIDBProtocolPropertyEditor = class(TZProtocolPropertyEditor)
+  public
+    procedure GetValueList(List: TStrings); override;
+  end;
 
   {$IFDEF PORTUGUES}
   //: Método usado pela thread para execução de uma consulta.
@@ -61,75 +62,12 @@ type
   {$ENDIF}
   TExecSQLProc = procedure(sqlcmd:String; outputdataset:TMemDataset) of object;
 
-  //############################################################################
-
   {$IFDEF PORTUGUES}
   //: Método usado pela thread para retornar um dataset após a execução da consulta.
   {$ELSE}
   //: Procedure called by thread to return the dataset after the query execution.
   {$ENDIF}
   TReturnDataSetProc = procedure(Sender:TObject; DS:TMemDataset) of object;
-
-  //############################################################################
-
-  {$IFDEF PORTUGUES}
-  {:
-  Estrutura de comando SQL que é enviado a thread.
-  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
-  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
-  }
-  {$ELSE}
-  {:
-  SQL command message. It's queued on thread.
-  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
-  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
-  }
-  {$ENDIF}
-  TSQLCmdRec = record
-    SQLCmd:String;
-    ReturnDataSetCallback:TReturnDataSetProc;
-  end;
-
-  //############################################################################
-
-  {$IFDEF PORTUGUES}
-  {:
-  Pointeiro de estrutura de mensagem de comando SQL.
-  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
-  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
-  }
-  {$ELSE}
-  {:
-  Pointer of a SQL command message.
-  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
-  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
-  }
-  {$ENDIF}
-  PSQLCmdRec = ^TSQLCmdRec;
-
-  //############################################################################
-
-  {$IFDEF PORTUGUES}
-  //: Array que contem os campos esperados em uma tabela.
-  {$ELSE}
-  //: Array that stores the expected fields of a table.
-  {$ENDIF}
-  TFieldsDefinition = array of TFieldDefinition;
-
-  //############################################################################
-
-  TDBNameBehavior = (nbTableName, nbFieldName, nbConstraintName);
-
-  //############################################################################
-
-  {$IFDEF PORTUGUES}
-  //: Estados possiveis de uma tabela.
-  {$ELSE}
-  //: Array that stores the expected fields of a table.
-  {$ENDIF}
-  TTableState = (tsOk,tsDontExists, tsChanged, tsUnknown);
-
-  //############################################################################
 
   {$IFDEF PORTUGUES}
   //: Inteface para interação com objetos privados do THMIDBConnection
@@ -167,41 +105,38 @@ type
     function ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
   end;
 
-  //############################################################################
-  //############################################################################
-  //############################################################################
-  //############################################################################
-
-
   {$IFDEF PORTUGUES}
-  //: Editor da propriedade THMIDBConnection.Database.
+  {:
+  Estrutura de comando SQL que é enviado a thread.
+  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
+  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
+  }
   {$ELSE}
-  //: Property editor of THMIDBConnection.Database property.
+  {:
+  SQL command message. It's queued on thread.
+  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
+  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
+  }
   {$ENDIF}
-  THMIDBDatabasePropertyEditor = class(TZDatabasePropertyEditor)
-  public
-    function GetZComponent: TPersistent; override;
+  TSQLCmdRec = record
+    SQLCmd:String;
+    ReturnDataSetCallback:TReturnDataSetProc;
   end;
 
   {$IFDEF PORTUGUES}
-  //: Editor da propriedade THMIDBConnection.Catalog
+  {:
+  Pointeiro de estrutura de mensagem de comando SQL.
+  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
+  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
+  }
   {$ELSE}
-  //: Property editor of THMIDBConnection.Catalog property.
+  {:
+  Pointer of a SQL command message.
+  @seealso(TProcessSQLCommandThread.ExecSQLWithoutResultSet)
+  @seealso(TProcessSQLCommandThread.ExecSQLWithResultSet)
+  }
   {$ENDIF}
-  THMIDBCatalogPropertyEditor = class(TZDatabasePropertyEditor)
-  public
-    function GetZComponent: TPersistent; override;
-  end;
-
-  {$IFDEF PORTUGUES}
-  //: Editor da propriedade THMIDBConnection.Protocol
-  {$ELSE}
-  //: Property editor of THMIDBConnection.Protocol property.
-  {$ENDIF}
-  THMIDBProtocolPropertyEditor = class(TZProtocolPropertyEditor)
-  public
-    procedure GetValueList(List: TStrings); override;
-  end;
+  PSQLCmdRec = ^TSQLCmdRec;
 
   {$IFDEF PORTUGUES}
   {:
@@ -306,19 +241,10 @@ type
     procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc);
   end;
 
-  //############################################################################
-  //############################################################################
-  //############################################################################
-  //############################################################################
-
-
-  //: @exclude
-
   {$IFDEF PORTUGUES}
   {:
   Componente de banco de dados do PascalSCADA.
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-  @bold(Usa o projeto ZeosLib.)
   }
   {$ELSE}
   {:
@@ -335,7 +261,6 @@ type
     FASyncQuery:TZQuery;
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
-    FCmdID:Integer;
     function  GetSyncConnection:TZConnection;
     procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
   protected
@@ -362,12 +287,6 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
-
-    {$IFDEF PORTUGUES}
-    //: Executa uma consulta assincrona.
-    {$ELSE}
-    //: Executes a assychronous query.
-    {$ENDIF}
     function  ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
   published
     {$IFDEF PORTUGUES}
@@ -427,90 +346,10 @@ type
     property Catalog:  string  read FCatalog     write SetCatalog;
   end;
 
-  //##############################################################################
-  //##############################################################################
-  //##############################################################################
-  //##############################################################################
-
-  TTableDefinition = class;
-
-  TBasicSQLCommands = class
-  public
-    function  ValidName(fname:String; namebehavior:TDBNameBehavior):Boolean; virtual;
-    function DropTableCmd(TableName:String): String; virtual;
-    function CreateTableCmd(TableName:String; TableDef:TTableDefinition): String; virtual;
-  end;
-
-  TPostgresCommands = class(TBasicSQLCommands)
-  public
-    function  ValidName(fname:String; namebehavior:TDBNameBehavior):Boolean; virtual;
-    function DropTableCmd(TableName:String): String; override;
-    function CreateTableCmd(TableName:String; TableDef:TTableDefinition): String; override;
-  end;
-
-  //##############################################################################
-  //##############################################################################
-  //##############################################################################
-  //##############################################################################
-
-  //checks the table structure
-  TTableDefinition = class(TComponent)
-  private
-    FCS:TCriticalSection;
-    FSignaled:Boolean;
-    FMemDS:TMemDataset;
-    procedure ReturnedQuery(Sender:TObject; DS:TMemDataset);
-    function  InternalExecuteSQL(SQL:String):TMemDataset;
-  protected
-    FDBConnection:THMIDBConnection;
-    FTableName:String;
-    FFields:TFieldsDefinition;
-    function  ExecuteSQL(SQL:String):TMemDataset;
-    procedure SetTableName(fname:String);
-  public
-    constructor Create(AOwner: TComponent); override;
-
-    destructor Destroy; override;
-    procedure AddFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false); virtual;
-    procedure DelFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false); virtual;
-    function  CheckTable:TTableState; virtual;
-    procedure ExecuteDropTable; virtual;
-    procedure ExecuteCreateTable; virtual;
-  published
-    property TableName:String read FTableName write SetTableName;
-    property DBConnection:THMIDBConnection read FDBConnection write FDBConnection;
-  end;
-
-  //##############################################################################
-  //##############################################################################
-  //##############################################################################
-  //##############################################################################
-
-  TBasicDatabaseChecker = class(TComponent)
-  private
-    FTables:array of TTableDefinition;
-    FOnDatabaseChanges:TNotifyEvent;
-    FSQLComands:TBasicSQLCommands;
-  public
-    constructor Create(AOwner: TComponent); override; overload;
-    constructor Create(AOwner: TComponent; SQLCommands:TBasicSQLCommands); overload;
-    destructor  Destroy; override;
-    function    AddTable(tablename:String):TTableDefinition; virtual;
-    procedure   RemoveTable(tablename:String);
-
-    function    TableExistsOnMetadata(tablename:String):Boolean; virtual;
-    function    GetTableMetadataByName(Tablename:String):TTableDefinition; virtual;
-    property    SQLCommands:TBasicSQLCommands read FSQLComands;
-  published
-    property DatabaseConnectionChanged:TNotifyEvent read FOnDatabaseChanges write FOnDatabaseChanges;
-  end;
-
 const
   SQLCommandMSG = 1024;
 
 implementation
-
-uses hsstrings, strutils;
 
 //##############################################################################
 //EDITORES DE PROPRIEDADES DA CLASSE THMIDBCONNECTION
@@ -532,11 +371,7 @@ begin
 end;
 
 var
-  {$IFDEF WINCE}
-  SupportedDBDrivers:array[0..0] of string = ('sqlite');
-  {$ELSE}
-  SupportedDBDrivers:array[0..3] of string = ('postgresql','mysql','firebird','sqlite');
-  {$ENDIF}
+  SupportedDBDrivers:array[0..2] of string = ('postgresql','sqlite','mysql');
 
 //only accepted drivers are show.
 procedure THMIDBProtocolPropertyEditor.GetValueList(List: TStrings);
@@ -652,10 +487,9 @@ begin
   FASyncConnection:=TZConnection.Create(nil);
   FASyncQuery:=TZQuery.Create(nil);
   FASyncQuery.Connection:=FASyncConnection;
-  FCmdID:=0;
 
   FSQLSpooler:=TProcessSQLCommandThread.Create(true,ExecuteSQLCommand);
-  FSQLSpooler.WakeUp;
+  FSQLSpooler.Resume;
 end;
 
 destructor  THMIDBConnection.Destroy;
@@ -689,33 +523,7 @@ end;
 function THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
 begin
   FSQLSpooler.ExecSQLWithResultSet(sql,ReturnDatasetCallback);
-  Result:=InterLockedIncrement(FCmdID);
-  if Result=$3FFFFFFF then
-    InterLockedExchange(FCmdID,0);
 end;
-
-{function THMIDBConnection.CreateTableChecker:TTableChecker;
-begin
-  if Connected then begin
-    if (Protocol='mysql') or (Protocol='mysql-4.1') or (Protocol='mysql-5') or
-       (Protocol='mysqld-4.1') or (Protocol='mysqld-5') then begin
-      Result:=nil; //must return a MySQL table Checker.
-    end;
-
-    if (Protocol='postgresql') or (Protocol='postgresql-7') or (Protocol='postgresql-8') then begin
-      Result:=TPostgresTableChecker.Create(Self);
-    end;
-
-    if (Protocol='sqlite') or (Protocol='sqlite-3') then begin
-      Result:=nil; //must return a SQLite table Checker.
-    end;
-
-    if Result<>nil then
-      Result.DBConnection:=Self;
-
-  end else
-    raise Exception.Create('Database must be connected!');
-end;}
 
 procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
 begin
@@ -838,516 +646,6 @@ begin
       FCS.Leave;
     end;
   end;
-end;
-
-//##############################################################################
-//CLASSE TBasicTableChecker
-//
-//TBasicTableChecker CLASS
-//##############################################################################
-
-constructor TTableDefinition.Create(AOwner: TComponent);
-begin
-  if not (AOwner is TBasicDatabaseChecker) then
-    raise Exception.Create(SInvalidOwnerClass);
-  inherited Create(AOwner);
-  FCS:=TCriticalSection.Create;
-end;
-
-destructor TTableDefinition.Destroy;
-begin
-  FCS.Destroy;
-  inherited Destroy;
-end;
-
-procedure TTableDefinition.AddFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false);
-var
-  h:Integer;
-begin
-  if not TBasicDatabaseChecker(Owner).SQLCommands.ValidName(fieldname, nbFieldName) then
-    raise exception.Create(SInvalidDatabaseName);
-
-  for h:=0 to High(FFields) do
-    if FFields[h].FieldName=fieldname then
-      exit;
-
-  h:=Length(FFields);
-  SetLength(FFields,h+1);
-  FFields[h].FieldName :=fieldname;
-  FFields[h].FieldType :=fieldType;
-  FFields[h].FieldSize :=fieldsize;
-  FFields[h].PrimaryKey:=pk;
-  FFields[h].Unique    :=unique;
-  FFields[h].NotNull   :=notnull;
-end;
-
-procedure TTableDefinition.DelFieldDefinition(fieldname:String; fieldType:TFieldType; fieldsize:Integer = -1; pk:Boolean = false; unique:Boolean = false; notnull:Boolean = false);
-var
-  c,h:Integer;
-  found:Boolean;
-begin
-  found:=false;
-  for c:=0 to High(FFields) do
-    if FFields[c].FieldName=fieldname then begin
-      found:=true;
-      break;
-    end;
-
-  if not found then exit;
-
-  h:=High(FFields);
-  FFields[c].FieldName :=FFields[h].FieldName;
-  FFields[c].FieldType :=FFields[h].FieldType;
-  FFields[c].FieldSize :=FFields[h].FieldSize;
-  FFields[c].PrimaryKey:=FFields[h].PrimaryKey;
-  FFields[c].Unique    :=FFields[h].Unique;
-  FFields[c].NotNull   :=FFields[h].NotNull;
-  SetLength(FFields, h);
-end;
-
-function  TTableDefinition.CheckTable:TTableState;
-var
-  ds:TMemDataset;
-  f, fd:Integer;
-  found:boolean;
-begin
-  if trim(FTableName)='' then begin
-    Result:=tsDontExists;
-    exit;
-  end;
-
-  ds:=ExecuteSQL('SELECT * FROM '+FTableName+' LIMIT 1;');
-  if ds=nil then begin
-    Result:=tsUnknown;
-    exit;
-  end;
-
-  try
-    for f:=0 To High(FFields) do begin
-      found:=false;
-      for fd:=0 to ds.FieldDefs.Count-1 do begin
-        if (LowerCase(ds.FieldDefs.Items[fd].Name)=LowerCase(FFields[f].FieldName)) and
-           (ds.FieldDefs.Items[fd].DataType=FFields[f].FieldType) and
-           (ds.FieldDefs.Items[fd].Required=FFields[f].NotNull) and
-           ((FFields[f].FieldType<>ftString) or
-            ((FFields[f].FieldType=ftString) and
-             (ds.FieldDefs.Items[fd].Size=FFields[f].FieldSize))) then
-        begin
-          found:=true;
-          break;
-        end;
-      end;
-      if not found then begin
-        Result:=tsChanged;
-        exit;
-      end;
-    end;
-    Result:=tsOk;
-  finally
-    ds.Destroy;
-  end;
-end;
-
-procedure TTableDefinition.ExecuteDropTable;
-var
-  x:TMemDataset;
-begin
-  x:=ExecuteSQL(TBasicDatabaseChecker(Owner).SQLCommands.DropTableCmd(FTableName));
-  if x<>nil then
-    x.Destroy;
-end;
-
-procedure TTableDefinition.ExecuteCreateTable;
-var
-  x:TMemDataset;
-begin
-  x:=ExecuteSQL(TBasicDatabaseChecker(Owner).SQLCommands.CreateTableCmd(FTableName,Self));
-  if x<>nil then
-    x.Destroy;
-end;
-
-procedure TTableDefinition.ReturnedQuery(Sender:TObject; DS:TMemDataset);
-begin
-  FMemDS:=DS;
-  FSignaled:=true;
-end;
-
-function  TTableDefinition.InternalExecuteSQL(SQL:String):TMemDataset;
-begin
-  FCS.Enter;
-  try
-    FSignaled:=false;
-    FMemDS:=nil;
-    Result:=nil;
-    if FDBConnection<>nil then begin
-      FDBConnection.ExecSQL(sql,ReturnedQuery);
-      while not FSignaled do
-        CheckSynchronize(1);
-
-      Result:=FMemDS;
-    end;
-  finally
-    FCS.Leave;
-  end;
-end;
-
-function  TTableDefinition.ExecuteSQL(SQL:String):TMemDataset;
-begin
-  Result:=InternalExecuteSQL(SQL);
-end;
-
-procedure TTableDefinition.SetTableName(fname:String);
-begin
-  if TBasicDatabaseChecker(Owner).SQLCommands.ValidName(fname,nbTableName) then
-    FTableName:=fname
-  else
-    raise Exception.Create(SInvalidDatabaseName);
-end;
-
-//##############################################################################
-//CLASSE TPostgreTableChecker
-//
-//TPostgreTableChecker CLASS
-//##############################################################################
-
-function TBasicSQLCommands.ValidName(fname:String; namebehavior:TDBNameBehavior):Boolean;
-var
-  c:Integer;
-begin
-  Result:=true;
-  for c:=1 to Length(fname) do
-    if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
-       ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z']))  and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_'))) then begin
-      Result:=false;
-      exit;
-    end;
-end;
-
-function TBasicSQLCommands.DropTableCmd(TableName:String): String;
-begin
-  Result:='ALTER TABLE '+TableName+' RENAME TO '+TableName+'_backup_'+FormatDateTime('yyyymmddhhnnsszzz',Now);
-end;
-
-function TBasicSQLCommands.CreateTableCmd(TableName:String; TableDef:TTableDefinition): String;
-begin
-  Result:='';
-end;
-
-function TPostgresCommands.ValidName(fname: String; namebehavior:TDBNameBehavior):Boolean;
-var
-  c:Integer;
-begin
-  Result:=false;
-  if namebehavior=nbTableName then
-    for c:=1 to Length(fname) do
-      if ((c=1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])))) or
-         ((c>1) AND ((not (fname[c] in ['a'..'z'])) and (not (fname[c] in ['A'..'Z'])) and (not (fname[c] in ['0'..'9'])) and (fname[c]<>'_') and (fname[c]<>'.'))) then begin
-        Result:=false;
-        exit;
-      end
-  else
-    inherited ValidName(fname, namebehavior);
-end;
-
-function TPostgresCommands.DropTableCmd(TableName:String):String;
-begin
-  Result:='ALTER TABLE '+TableName+' RENAME TO '+TableName+'_backup_'+FormatDateTime('yyyymmddhhnnsszzz',Now);
-end;
-
-function  TPostgresCommands.CreateTableCmd(TableName:String; TableDef:TTableDefinition): String;
-var
-  c:Integer;
-  virgula, pkvirgula, unvirgula:String;
-  pk, un:String;
-begin
-  Result := 'CREATE TABLE (';
-  virgula:='';
-  pkvirgula:='';
-  unvirgula:='';
-  for c:=0 to High(FFields) do begin
-    case FFields[c].FieldType of
-      ftAutoInc: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' SERIAL '+
-                ifthen(FFields[c].NotNull,' NOT NULL');
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-      ftString: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ifthen(FFields[c].FieldSize>0,' CHARACTER VARYING('+IntToStr(FFields[c].FieldSize)+')',' TEXT')+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '''+FFields[c].FieldDefaultValue+''':CHARACTER VARYING';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-      ftWord,
-      ftSmallint: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' SMALLINT '+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '+FFields[c].FieldDefaultValue+':SMALLINT';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-      ftInteger: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' INTEGER '+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '+FFields[c].FieldDefaultValue+':INTEGER';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-
-      ftBoolean: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' BOOLEAN '+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '+FFields[c].FieldDefaultValue+':BOOLEAN';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-
-      ftFloat: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' BOOLEAN '+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '+FFields[c].FieldDefaultValue+':BOOLEAN';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-
-      ftDate: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' DATE '+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '+FFields[c].FieldDefaultValue+':DATE';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-
-      ftTime: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' TIME WITHOUT TIME ZONE '+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '+FFields[c].FieldDefaultValue+':TIME WITHOUT TIME ZONE';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-
-      ftDateTime: begin
-        Result:=Result+
-                virgula+
-                FFields[c].FieldName+
-                ' TIMESTAMP WITHOUT TIME ZONE '+
-                ifthen(FFields[c].NotNull,' NOT NULL')+
-                ' DEFAULT '+FFields[c].FieldDefaultValue+':TIMESTAMP WITHOUT TIME ZONE';
-
-        //is a primary key?
-        if FFields[c].PrimaryKey then begin
-          pk:=pk+pkvirgula+FFields[c].FieldName;
-          pkvirgula:=', ';
-        end;
-
-        //unique
-        if FFields[c].Unique then begin
-          un:=un+unvirgula+FFields[c].FieldName;
-          unvirgula:=', ';
-        end;
-
-        virgula:=', ';
-      end;
-    end;
-  end;
-end;
-
-//##############################################################################
-//CLASSE TBasicDatabaseChecker
-//
-//TBasicDatabaseChecker CLASS
-//##############################################################################
-
-constructor TBasicDatabaseChecker.Create(AOwner: TComponent);
-begin
-  if not (AOwner is THMIDBConnection) then
-    raise Exception.Create(SInvalidOwnerClass);
-  inherited Create(AOwner);
-end;
-
-destructor  TBasicDatabaseChecker.Destroy;
-begin
-  inherited Destroy;
-end;
-
-function    TBasicDatabaseChecker.AddTable(tablename:String):TBasicTableChecker;
-var
-  t, h:Integer;
-
-begin
-  for t:=0 to High(FTables) do
-    if FTables[t].TableName=lowercase(tablename) then
-      raise Exception.Create(STableAlreadyexistsOnMetadata);
-
-  Result:=TBasicTableChecker.Create(Self);
-
-  if not Result.ValidName(tablename, nbTableName) then begin
-    Result.Destroy;
-    Result:=nil;
-  end else begin
-    Result.TableName:=lowercase(tablename);
-    h:=Length(FTables);
-    SetLength(FTables, h+1);
-    FTables[h]:=Result;
-  end;
-end;
-
-procedure   TBasicDatabaseChecker.RemoveTable(tablename:String);
-var
-  t,h:Integer;
-begin
-  for t:=0 to High(FTables) do
-    if FTables[t].TableName=lowercase(tablename) then begin
-      h:=High(FTables);
-      FTables[t].Destroy;
-      FTables[t]:=FTables[h];
-      SetLength(FTables,h);
-    end;
-end;
-
-function    TBasicDatabaseChecker.TableExistsOnMetadata(tablename:String):Boolean;
-var
-  t:Integer;
-begin
-  Result:=false;
-  for t:=0 to High(FTables) do
-    if FTables[t].TableName=lowercase(tablename) then begin
-      Result:=true ;
-      break;
-    end;
-end;
-
-function    TBasicDatabaseChecker.GetTableMetadataByName(Tablename:String):TBasicTableChecker;
-var
-  t:Integer;
-begin
-  Result:=nil;
-  for t:=0 to High(FTables) do
-    if FTables[t].TableName=lowercase(tablename) then begin
-      Result:=FTables[t];
-      break;
-    end;
 end;
 
 end.
