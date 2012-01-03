@@ -9,7 +9,7 @@ type
   TVKType = (vktNone, vktAlphaNumeric, vktNumeric);
 
   TBasicUserManagement = class(TComponent)
-  private
+  protected
 {}  FLoggedUser:Boolean;
 {}  FCurrentUserName,
 {}  FCurrentUserLogin:String;
@@ -22,9 +22,11 @@ type
     FSuccessfulLogin:TNotifyEvent;
     FFailureLogin:TNotifyEvent;
 
+    FRegisteredSecurityCodes:TStringList;
+
     frmLogin:TfrmUserAuthentication;
 
-    function GetLoginTime:TDateTime;
+    function  GetLoginTime:TDateTime;
     procedure SetInactiveTimeOut(t:Cardinal);
     procedure UnfreezeLogin(Sender:TObject);
   protected
@@ -56,7 +58,7 @@ type
     procedure   Logout; virtual;
 
     //Security codes management
-    procedure   ValidateSecurityCode(sc:String);
+    procedure   ValidateSecurityCode(sc:String); virtual;
     function    SecurityCodeExists(sc:String):Boolean; virtual;
     procedure   RegisterSecurityCode(sc:String); virtual;
     procedure   UnregisterSecurityCode(sc:String); virtual;
@@ -77,12 +79,15 @@ begin
     raise Exception.Create(SUserManagementIsSet);
 
   inherited Create(AOwner);
+  FRegisteredSecurityCodes:=TStringList.Create;
 end;
 
 destructor  TBasicUserManagement.Destroy;
 begin
   if GetControlSecurityManager.UserManagement=Self then
     GetControlSecurityManager.UserManagement:=nil;
+
+  FRegisteredSecurityCodes.Destroy;
   inherited Destroy;
 end;
 
@@ -144,17 +149,19 @@ end;
 
 function    TBasicUserManagement.SecurityCodeExists(sc:String):Boolean;
 begin
-  Result:=false;
+  Result:=FRegisteredSecurityCodes.IndexOf(sc)>=0;
 end;
 
 procedure   TBasicUserManagement.RegisterSecurityCode(sc:String);
 begin
-  //do nothing
+  if Not SecurityCodeExists(sc) then
+    FRegisteredSecurityCodes.Add(sc);
 end;
 
 procedure   TBasicUserManagement.UnregisterSecurityCode(sc:String);
 begin
-  //do nothing
+  if SecurityCodeExists(sc) then
+    FRegisteredSecurityCodes.Delete(FRegisteredSecurityCodes.IndexOf(sc));
 end;
 
 function    TBasicUserManagement.CanAccess(sc:String):Boolean;
@@ -165,6 +172,7 @@ end;
 function    TBasicUserManagement.GetRegisteredAccessCodes:TStringList;
 begin
   Result:=TStringList.Create;
+  Result.Assign(FRegisteredSecurityCodes);
 end;
 
 function    TBasicUserManagement.GetLoginTime:TDateTime;
