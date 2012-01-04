@@ -11,36 +11,37 @@ object frmUserAuthentication: TfrmUserAuthentication
   ClientWidth = 200
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
+  OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '0.9.28.2'
+  LCLVersion = '0.9.30.2'
   object Label1: TLabel
     Left = 8
-    Height = 19
+    Height = 14
     Top = 8
-    Width = 58
+    Width = 49
     Caption = '&Username'
     FocusControl = edtusername
     ParentColor = False
   end
   object Label2: TLabel
     Left = 8
-    Height = 19
+    Height = 14
     Top = 56
-    Width = 55
+    Width = 47
     Caption = '&Password'
     FocusControl = edtPassword
     ParentColor = False
   end
   object edtusername: TEdit
     Left = 8
-    Height = 24
+    Height = 21
     Top = 24
     Width = 185
     TabOrder = 0
   end
   object edtPassword: TEdit
     Left = 8
-    Height = 24
+    Height = 21
     Top = 72
     Width = 185
     EchoMode = emPassword
@@ -73,7 +74,9 @@ object frmUserAuthentication: TfrmUserAuthentication
         Top = 1
         Width = 81
         Caption = '&OK'
+        Default = True
         Kind = bkOK
+        ModalResult = 1
         TabOrder = 0
       end
       object BitBtn1: TBitBtn
@@ -81,8 +84,10 @@ object frmUserAuthentication: TfrmUserAuthentication
         Height = 30
         Top = 1
         Width = 75
+        Cancel = True
         Caption = '&Cancel'
         Kind = bkCancel
+        ModalResult = 2
         TabOrder = 1
       end
     end

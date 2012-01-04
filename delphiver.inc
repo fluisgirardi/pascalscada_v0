@@ -1,6 +1,7 @@
 {
+PascalSCADA Project.
 
-versoes do delphi:
+Delphi versions:
 
 # VER80 - Delphi 1
 # VER90 - Delphi 2
@@ -17,6 +18,7 @@ versoes do delphi:
 # VER200 - Delphi 2009
 # VER210 - Delphi 2010
 # VER220 - Delphi XE
+# VER230 - Delphi XE2
 }
 
 
@@ -128,4 +130,20 @@ versoes do delphi:
 {$DEFINE DELPHI2009_UP}
 {$DEFINE DELPHI2010_UP}
 {$DEFINE DELPHI_XE_UP}
+{$ENDIF}
+
+// Compiler directives for Delphi XE2
+{$IFDEF VER230}
+{$DEFINE DELPHI4_UP}
+{$DEFINE DELPHI5_UP}
+{$DEFINE DELPHI6_UP}
+{$DEFINE DELPHI7_UP}
+{$DEFINE DELPHI8_UP}
+{$DEFINE DELPHI2005_UP}
+{$DEFINE DELPHI2006_UP}
+{$DEFINE DELPHI2007_UP}
+{$DEFINE DELPHI2009_UP}
+{$DEFINE DELPHI2010_UP}
+{$DEFINE DELPHI_XE_UP}
+{$DEFINE DELPHI_XE2_UP}
 {$ENDIF}

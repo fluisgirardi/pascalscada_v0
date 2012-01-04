@@ -25,13 +25,14 @@ resourcestring
   // COMPONENT PALETTE
   //////////////////////////////////////////////////////////////////////////////
   
-  strPortsPallete       = 'PascalSCADA Ports';
-  strProtocolsPallete   = 'PascalSCADA Protocols';
-  strTagsPallete        = 'PascalSCADA Tags';
-  strUtilsPallete       = 'PascalSCADA Utils';
-  strControlsPallete    = 'PascalSCADA HCl';
-  strDatabasePallete    = 'PascalSCADA Database';
-  strFPCPallete         = 'PascalSCADA - FreePascal';
+  strPortsPallete     = 'PascalSCADA Ports';
+  strProtocolsPallete = 'PascalSCADA Protocols';
+  strTagsPallete      = 'PascalSCADA Tags';
+  strUtilsPallete     = 'PascalSCADA Utils';
+  strControlsPallete  = 'PascalSCADA HCl';
+  strDatabasePallete  = 'PascalSCADA Database';
+  strUserManagement   = 'PascalSCADA User Management';
+  strFPCPallete       = 'PascalSCADA - FreePascal';
   
   //////////////////////////////////////////////////////////////////////////////
   // Mensagens de exceptions.

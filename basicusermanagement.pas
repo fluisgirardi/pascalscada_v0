@@ -36,11 +36,15 @@ type
 
     function CheckUserAndPassword(User, Pass:String):Boolean; virtual;
 
+    function GetLoggedUser:Boolean; virtual;
+    function GetCurrentUserName:String; virtual;
+    function GetCurrentUserLogin:String; virtual;
+
     //read only properties.
 
-    property UserLogged:Boolean read FLoggedUser;
-    property CurrentUserName:String read FCurrentUserName;
-    property CurrentUserLogin:String read FCurrentUserLogin;
+    property UserLogged:Boolean read GetLoggedUser;
+    property CurrentUserName:String read GetCurrentUserName;
+    property CurrentUserLogin:String read GetCurrentUserLogin;
     property LoggedSince:TDateTime read GetLoginTime;
 
     //read-write properties.
@@ -73,12 +77,13 @@ uses Controls, ControlSecurityManager, hsstrings;
 
 constructor TBasicUserManagement.Create(AOwner:TComponent);
 begin
+  inherited Create(AOwner);
+
   if GetControlSecurityManager.UserManagement=nil then
     GetControlSecurityManager.UserManagement:=Self
   else
     raise Exception.Create(SUserManagementIsSet);
 
-  inherited Create(AOwner);
   FRegisteredSecurityCodes:=TStringList.Create;
 end;
 
@@ -105,10 +110,9 @@ begin
   loggedin:=False;
   Result:=false;
   try
-    while (not loggedin) or aborted do begin
+    while (not loggedin) and (not aborted) do begin
       frmLogin.edtusername.Text:='';
       frmLogin.edtPassword.Text:='';
-      frmLogin.edtusername.SetFocus;
       if frmLogin.ShowModal=mrOk then begin
         if CheckUserAndPassword(frmLogin.edtusername.Text, frmLogin.edtPassword.Text) then begin
           FLoggedUser:=true;
@@ -120,7 +124,7 @@ begin
         end else begin
           DoFailureLogin;
           inc(retries);
-          if retries=FLoginRetries then begin
+          if (FLoginRetries>0) and (retries=FLoginRetries) then begin
             frmLogin.Enabled:=false;
             frozenTimer.Enabled:=true;
           end;
@@ -191,6 +195,21 @@ end;
 function    TBasicUserManagement.CheckUserAndPassword(User, Pass:String):Boolean;
 begin
   Result:=false;
+end;
+
+function TBasicUserManagement.GetLoggedUser:Boolean;
+begin
+  Result:=FLoggedUser;
+end;
+
+function TBasicUserManagement.GetCurrentUserName:String;
+begin
+  Result:=FCurrentUserName;
+end;
+
+function TBasicUserManagement.GetCurrentUserLogin:String;
+begin
+  Result:=FCurrentUserLogin;
 end;
 
 procedure TBasicUserManagement.DoSuccessfulLogin;

@@ -14,9 +14,6 @@ type
   private
     FControls:array of IHMIInterface;
     FUserManagement:TComponent;
-
-  protected
-    { Protected declarations }
   public
     destructor Destroy; override;
     procedure  RegisterControl(control:IHMIInterface);
@@ -116,7 +113,8 @@ begin
     end;
   end;
 
-  TBasicUserManagement(FUserManagement).UnregisterSecurityCode(sc);
+  if FUserManagement<>nil then
+    TBasicUserManagement(FUserManagement).UnregisterSecurityCode(sc);
 end;
 
 function   TControlSecurityManager.SecurityCodeExists(sc:String):Boolean;

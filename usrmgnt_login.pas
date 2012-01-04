@@ -8,9 +8,12 @@ unit usrmgnt_login;
 interface
 
 uses
-  {$IFDEF FPC}LCLIntf, LResources,{$ENDIF} Forms, StdCtrls, Buttons, ExtCtrls;
+  {$IFDEF FPC}LCLIntf, LResources,{$ENDIF} Forms, StdCtrls, Buttons, ExtCtrls, Classes;
 
 type
+
+  { TfrmUserAuthentication }
+
   TfrmUserAuthentication = class(TForm)
     edtusername: TEdit;
     Label1: TLabel;
@@ -20,6 +23,7 @@ type
     Panel2: TPanel;
     BitBtn4: TBitBtn;
     BitBtn1: TBitBtn;
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
@@ -41,5 +45,12 @@ implementation
   {$i usrmgnt_login.lrs}
   {$IFEND}
 {$ENDIF}
+
+{ TfrmUserAuthentication }
+
+procedure TfrmUserAuthentication.FormShow(Sender: TObject);
+begin
+  edtusername.SetFocus;
+end;
 
 end.
