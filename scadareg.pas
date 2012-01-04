@@ -25,7 +25,10 @@ uses
   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
-  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection, 
+  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection,
+  {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
+  WinCCUserManagement,
+  {$IFEND}
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
   {$ELSE}
@@ -77,6 +80,10 @@ begin
   {$IFNDEF FPC}
   RegisterComponents(strFPCPallete,       [TMemDataset]);
   {$ENDIF}
+
+  {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
+  RegisterComponents(strUserManagement,   [TWinCCUserManagement]);
+  {$IFEND}
 
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
