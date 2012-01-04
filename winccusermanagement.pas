@@ -3,7 +3,7 @@ unit WinCCUserManagement;
 interface
 
 uses
-  Classes, sysutils, BasicUserManagement, dynlibs;
+  Classes, sysutils, BasicUserManagement, dynlibs, ExtCtrls;
 
 type
   TPWRTLogin                   = function (monitor:char)                                    :Boolean;  stdcall;
@@ -23,6 +23,9 @@ type
 
   TWinCCUserManagement = class(TBasicUserManagement)
   private
+    FCheckTimer                :TTimer;
+    procedure CheckAuthChanges(Sender:TObject);
+  private
     PWRTLogin                  :TPWRTLogin;
     PWRTLogout                 :TPWRTLogout;
     PWRTGetCurrentUser         :TPWRTGetCurrentUser;
@@ -39,6 +42,7 @@ type
     function GetCurrentUserLogin:String; virtual;
   public
     constructor Create(AOwner: TComponent); override;
+    procedure AfterConstruction; override;
     destructor Destroy; override;
     procedure Logout; override;
 
@@ -59,6 +63,8 @@ type
 
 implementation
 
+uses ControlSecurityManager;
+
 constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -78,6 +84,17 @@ begin
   PWRTCheckPermissionOnArea  :=TPWRTCheckPermissionOnArea(GetProcedureAddress(hUseAdmin,'PWRTCheckPermissionOnArea'));
   PWRTCheckPermissionOnAreaID:=TPWRTCheckPermissionOnAreaID(GetProcedureAddress(hUseAdmin,'PWRTCheckPermissionOnAreaID'));
   PWRTSilentLogin            :=TPWRTSilentLogin(GetProcedureAddress(hUseAdmin,'PWRTSilentLogin'));
+
+  FCheckTimer:=TTimer.Create(Self);
+  FCheckTimer.OnTimer :=CheckAuthChanges;
+  FCheckTimer.Interval:=1000;
+  FCheckTimer.Enabled:=false;
+end;
+
+procedure TWinCCUserManagement.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FCheckTimer.Enabled:=true;
 end;
 
 destructor TWinCCUserManagement.Destroy;
@@ -85,7 +102,20 @@ begin
   //unload the library if it´s loaded
   if hUseAdmin<>0 then
     UnloadLibrary(hUseAdmin);
+  if FCheckTimer<>nil then
+    FCheckTimer.Destroy;
   inherited Destroy;
+end;
+
+procedure TWinCCUserManagement.CheckAuthChanges(Sender:TObject);
+var
+  culogin:String;
+begin
+  culogin:=GetCurrentUserLogin;
+  if culogin<>FCurrentUserLogin then begin
+    GetControlSecurityManager.UpdateControls;
+    FCurrentUserLogin:=culogin;
+  end;
 end;
 
 function TWinCCUserManagement.CheckUserAndPassword(User, Pass: String): Boolean;

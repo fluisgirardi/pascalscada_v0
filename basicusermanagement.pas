@@ -92,7 +92,8 @@ begin
   if GetControlSecurityManager.UserManagement=Self then
     GetControlSecurityManager.UserManagement:=nil;
 
-  FRegisteredSecurityCodes.Destroy;
+  if FRegisteredSecurityCodes<>nil then
+    FRegisteredSecurityCodes.Destroy;
   inherited Destroy;
 end;
 

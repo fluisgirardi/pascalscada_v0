@@ -14,6 +14,7 @@ type
   private
     FControls:array of IHMIInterface;
     FUserManagement:TComponent;
+    procedure SetUserManagement(um:TComponent);
   public
     destructor Destroy; override;
     procedure  RegisterControl(control:IHMIInterface);
@@ -25,10 +26,10 @@ type
     procedure  UnregisterSecurityCode(sc:String);
     function   SecurityCodeExists(sc:String):Boolean;
   published
-    property UserManagement:TComponent read FUserManagement write FUserManagement;
+    property UserManagement:TComponent read FUserManagement write SetUserManagement;
   end;
 
-    function GetControlSecurityManager:TControlSecurityManager;
+  function GetControlSecurityManager:TControlSecurityManager;
 
 implementation
 
@@ -39,6 +40,18 @@ begin
   if Length(FControls)>0 then
     raise Exception.Create(SSecurityControlBusy);
   inherited Destroy;
+end;
+
+procedure TControlSecurityManager.SetUserManagement(um:TComponent);
+begin
+  if (um<>nil) and (not (um is TBasicUserManagement)) then
+    raise Exception.Create(SInvalidUserManager);
+
+  if (um<>nil) and (FUserManagement<>nil) then
+    raise Exception.Create(SUserManagementIsSet);
+
+  FUserManagement:=um;
+  UpdateControls;
 end;
 
 procedure  TControlSecurityManager.RegisterControl(control:IHMIInterface);
@@ -68,7 +81,7 @@ procedure  TControlSecurityManager.UpdateControls;
 var
   c:Integer;
 begin
-  for c:=0 to Length(FControls) do
+  for c:=0 to High(FControls) do
     FControls[c].CanBeAccessed(CanAccess(FControls[c].GetControlSecurityCode));
 end;
 

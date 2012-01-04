@@ -59,6 +59,7 @@ type
     HasFocus:Boolean;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
+
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
     {$ELSE}
@@ -72,6 +73,9 @@ type
     //: Stores the minimum and maximum limits.
     {$ENDIF}
     FMinLimit, FMaxLimit:Double;
+
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
 
     procedure RemoveHMITag(Sender:TObject);
 
@@ -313,6 +317,13 @@ type
     //: Maximum value acceptable if the maximum limit is enabled.
     {$ENDIF}
     property MaxValue:Double read FMaxLimit write SetMaxLimit;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -369,6 +380,22 @@ begin
   end;
 end;
 {$ENDIF}
+
+procedure THMIEdit.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
+end;
 
 procedure THMIEdit.CanBeAccessed(a:Boolean);
 begin

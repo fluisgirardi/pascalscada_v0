@@ -115,6 +115,7 @@ resourcestring
   SRemoveaStructItemCalled  = 'Remover o item da estrutura chamado "';
   SSecurityControlBusy      = 'Gerenciador de segurança ainda em uso.';
   SUserManagementIsSet      = 'Já existe um gerenciador de usuários ativo na aplicação.';
+  SInvalidUserManager       = 'Gerenciador de usuarios invalido!';
 
   us7tb_tabsheet1_caption       = 'Area e tipo';
   us7tb_plcaddres_caption       = 'Endereco do CLP';
@@ -220,6 +221,7 @@ resourcestring
   SRemoveaStructItemCalled  = 'Remove the structure item called "';
   SSecurityControlBusy      = 'The security manager is busy.';
   SUserManagementIsSet      = 'There are already a user management on your application.';
+  SInvalidUserManager       = 'Invalid user manager!';
 
   us7tb_tabsheet1_caption       = 'Area and type';
   us7tb_plcaddres_caption       = 'PLC Address';
