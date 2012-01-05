@@ -146,6 +146,11 @@ resourcestring
   STableAlreadyexistsOnMetadata = 'A tabela já existe no metadata';
   SInvalidQueueOperation        = 'Impossível adicionar a fila como um item da mesma!';
   SInvalidOwnerClass            = 'O dono do objeto precisa ser da classe THMIDBConnection';
+
+  SSecurityCodeBusyWantRemove   = 'O codigo de segurança ainda está sendo usado por alguns controles, deseja remover o a ligação com eles?';
+  SSecurityCodeStillBusy        = 'Remova o codigo dos controles que o estão usando!';
+  SWinCCAreInstalled            = 'WinCC está instalado?';
+  SUseTheWinCCUserManager       = 'Cadastre a informação de segurança usando o Security Manager do WinCC!';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -252,6 +257,11 @@ resourcestring
   STableAlreadyexistsOnMetadata = 'The table already exists on metadata.';
   SInvalidQueueOperation        = 'Impossible add the queue as a queue item!';
   SInvalidOwnerClass            = 'The owner must be a object of THMIDBConnection class';
+
+  SSecurityCodeBusyWantRemove   = 'The Security Code still being used by some controls. Do you want remove the link between the security code and these controls?';
+  SSecurityCodeStillBusy        = 'The SecurityCode still being used by some controls!';
+  SWinCCAreInstalled            = 'WinCC is installed?';
+  SUseTheWinCCUserManager       = 'Use the WinCC Security Manager to insert a new Security Code/Authorization!';
   {$ENDIF}
 
 implementation

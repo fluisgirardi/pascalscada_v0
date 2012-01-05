@@ -1,20 +1,21 @@
+﻿{$I delphiver.inc}
 unit WinCCUserManagement;
 
 interface
 
 uses
-  Classes, sysutils, BasicUserManagement, dynlibs, ExtCtrls;
+  Classes, sysutils, BasicUserManagement, windows, ExtCtrls;
 
 type
-  TPWRTLogin                   = function (monitor:char)                                    :Boolean;  stdcall;
-  TPWRTLogout                  = function ()                                                :Boolean;  stdcall;
-  TPWRTGetCurrentUser          = function (Buffer:PChar; bufsize:Integer)                   :Boolean;  stdcall;
-  TPWRTGetLoginPriority        = function ()                                                :Cardinal; stdcall;
-  TPWRTPermissionToString      = function (perm:Cardinal; permstr:PChar; bufsize:Integer)   :Boolean;  stdcall;
-  TPWRTCheckPermission         = function (permlevel:Cardinal; suppress_messagebox:Cardinal):Boolean;  stdcall;
-  TPWRTCheckPermissionOnArea   = function (permlevel:Cardinal; area:PChar)                  :Boolean;  stdcall;
-  TPWRTCheckPermissionOnAreaID = function (permlevel:Cardinal; area:PChar)                  :Boolean;  stdcall;
-  TPWRTSilentLogin             = function (login:PChar; password:PChar)                     :Boolean;  stdcall;
+  TPWRTLogin                   = function (monitor:AnsiChar)                                 :Boolean;  stdcall;
+  TPWRTLogout                  = function ()                                                 :Boolean;  stdcall;
+  TPWRTGetCurrentUser          = function (Buffer:PAnsiChar; bufsize:Integer)                :Boolean;  stdcall;
+  TPWRTGetLoginPriority        = function ()                                                 :Cardinal; stdcall;
+  TPWRTPermissionToString      = function (perm:Cardinal; permstr:PAnsiChar; bufsize:Integer):Boolean;  stdcall;
+  TPWRTCheckPermission         = function (permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
+  TPWRTCheckPermissionOnArea   = function (permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
+  TPWRTCheckPermissionOnAreaID = function (permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
+  TPWRTSilentLogin             = function (login:PAnsiChar; password:PAnsiChar)              :Boolean;  stdcall;
 
   TPermission = class(TObject)
   public
@@ -35,7 +36,7 @@ type
     PWRTCheckPermissionOnArea  :TPWRTCheckPermissionOnArea;
     PWRTCheckPermissionOnAreaID:TPWRTCheckPermissionOnAreaID;
     PWRTSilentLogin            :TPWRTSilentLogin;
-    hUseAdmin:TLibHandle;
+    hUseAdmin:THANDLE;
     fUseAdminLoaded:Boolean;
   protected
     function CheckUserAndPassword(User, Pass: String): Boolean; override;
@@ -65,7 +66,7 @@ type
 
 implementation
 
-uses ControlSecurityManager;
+uses ControlSecurityManager, hsstrings, StrUtils;
 
 constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
@@ -90,7 +91,7 @@ destructor TWinCCUserManagement.Destroy;
 begin
   //unload the library if it´s loaded
   if hUseAdmin<>0 then
-    UnloadLibrary(hUseAdmin);
+    FreeLibrary(hUseAdmin);
   if FCheckTimer<>nil then
     FCheckTimer.Destroy;
   inherited Destroy;
@@ -100,19 +101,19 @@ procedure TWinCCUserManagement.LoadUseAdmin;
 begin
   hUseAdmin:=LoadLibrary('UseAdmin.dll');
   if hUseAdmin=0 then begin
-    raise Exception.Create('WinCC está instalado?');
+    raise Exception.Create(SWinCCAreInstalled);
   end;
 
   //load UseAdmin functions...
-  PWRTLogin                  :=TPWRTLogin(GetProcedureAddress(hUseAdmin,'PWRTLogin'));
-  PWRTLogout                 :=TPWRTLogout(GetProcedureAddress(hUseAdmin,'PWRTLogout'));
-  PWRTGetCurrentUser         :=TPWRTGetCurrentUser(GetProcedureAddress(hUseAdmin,'PWRTGetCurrentUser'));
-  PWRTGetLoginPriority       :=TPWRTGetLoginPriority(GetProcedureAddress(hUseAdmin,'PWRTGetLoginPriority'));
-  PWRTPermissionToString     :=TPWRTPermissionToString(GetProcedureAddress(hUseAdmin,'PWRTPermissionToString'));
-  PWRTCheckPermission        :=TPWRTCheckPermission(GetProcedureAddress(hUseAdmin,'PWRTCheckPermission'));
-  PWRTCheckPermissionOnArea  :=TPWRTCheckPermissionOnArea(GetProcedureAddress(hUseAdmin,'PWRTCheckPermissionOnArea'));
-  PWRTCheckPermissionOnAreaID:=TPWRTCheckPermissionOnAreaID(GetProcedureAddress(hUseAdmin,'PWRTCheckPermissionOnAreaID'));
-  PWRTSilentLogin            :=TPWRTSilentLogin(GetProcedureAddress(hUseAdmin,'PWRTSilentLogin'));
+  PWRTLogin                  :=TPWRTLogin(GetProcAddress(hUseAdmin,'PWRTLogin'));
+  PWRTLogout                 :=TPWRTLogout(GetProcAddress(hUseAdmin,'PWRTLogout'));
+  PWRTGetCurrentUser         :=TPWRTGetCurrentUser(GetProcAddress(hUseAdmin,'PWRTGetCurrentUser'));
+  PWRTGetLoginPriority       :=TPWRTGetLoginPriority(GetProcAddress(hUseAdmin,'PWRTGetLoginPriority'));
+  PWRTPermissionToString     :=TPWRTPermissionToString(GetProcAddress(hUseAdmin,'PWRTPermissionToString'));
+  PWRTCheckPermission        :=TPWRTCheckPermission(GetProcAddress(hUseAdmin,'PWRTCheckPermission'));
+  PWRTCheckPermissionOnArea  :=TPWRTCheckPermissionOnArea(GetProcAddress(hUseAdmin,'PWRTCheckPermissionOnArea'));
+  PWRTCheckPermissionOnAreaID:=TPWRTCheckPermissionOnAreaID(GetProcAddress(hUseAdmin,'PWRTCheckPermissionOnAreaID'));
+  PWRTSilentLogin            :=TPWRTSilentLogin(GetProcAddress(hUseAdmin,'PWRTSilentLogin'));
 
   fUseAdminLoaded:=true;
 end;
@@ -134,7 +135,7 @@ function TWinCCUserManagement.CheckUserAndPassword(User, Pass: String): Boolean;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
-  Result:=PWRTSilentLogin(PChar(User),PChar(Pass)); //log into WinCC
+  Result:=PWRTSilentLogin(PAnsiChar(User),PAnsiChar(Pass)); //log into WinCC
 end;
 
 function TWinCCUserManagement.GetLoggedUser:Boolean;
@@ -144,14 +145,14 @@ end;
 
 function TWinCCUserManagement.GetCurrentUserLogin:String;
 var
-  buffer1:PChar;
+  buffer1:PAnsiChar;
   c:Integer;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
   c:=PWRTGetLoginPriority(); //forces initialization...
 
-  buffer1:=StrAlloc(512);
+  buffer1:=GetMemory(512);
   buffer1[0]:=#0;
 
   if PWRTGetCurrentUser(buffer1,510) then
@@ -159,7 +160,7 @@ begin
   else
     Result:='';
 
-  StrDispose(buffer1);
+  FreeMem(buffer1);
 end;
 
 procedure TWinCCUserManagement.Logout;
@@ -173,7 +174,7 @@ end;
 procedure   TWinCCUserManagement.ValidateSecurityCode(sc:String);
 begin
   if not SecurityCodeExists(sc) then
-    raise exception.Create('Cadastre a informação de segurança usando o Security Manager do WinCC');
+    raise exception.Create(SUseTheWinCCUserManager);
 end;
 
 function    TWinCCUserManagement.CanAccess(sc:String):Boolean;
@@ -225,7 +226,7 @@ end;
 
 procedure   TWinCCUserManagement.RegisterSecurityCode(sc:String);
 begin
-  raise exception.Create('Cadastre a informação de segurança usando o Security Manager do WinCC');
+  raise exception.Create(SUseTheWinCCUserManager);
 end;
 
 procedure   TWinCCUserManagement.UnregisterSecurityCode(sc:String);
@@ -235,7 +236,7 @@ end;
 
 function    TWinCCUserManagement.GetRegisteredAccessCodes:TStringList;
 var
-  buffer1:PChar;
+  buffer1:PAnsiChar;
   c:Integer;
   authobj:TPermission;
 begin
@@ -243,7 +244,7 @@ begin
 
   c:=PWRTGetLoginPriority(); //forces initialization...
 
-  buffer1:=StrAlloc(512);
+  buffer1:=GetMemory(512);
 
   Result:=TStringList.Create;
 
@@ -254,10 +255,14 @@ begin
     if strcomp(buffer1,'')<>0 then begin
       authobj:=TPermission.Create;
       authobj.AuthID:=c;
+      {$IFDEF DELPHI2009_UP}
+      Result.AddObject((buffer1),authobj);
+      {$ELSE}
       Result.AddObject(buffer1,authobj);
+      {$ENDIF}
     end;
   end;
-  StrDispose(buffer1);
+  FreeMem(buffer1);
 end;
 
 end.

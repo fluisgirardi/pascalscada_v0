@@ -18,6 +18,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    function   Login:Boolean;
+    procedure  Logout;
     procedure  RegisterControl(control:IHMIInterface);
     procedure  UnRegisterControl(control:IHMIInterface);
     procedure  UpdateControls;
@@ -49,6 +51,20 @@ begin
   if Length(FControls)>0 then
     raise Exception.Create(SSecurityControlBusy);
   inherited Destroy;
+end;
+
+function   TControlSecurityManager.Login:Boolean;
+begin
+  if FUserManagement<>nil then
+    Result:=TBasicUserManagement(FUserManagement).Login
+  else
+    Result:=false;
+end;
+
+procedure  TControlSecurityManager.Logout;
+begin
+  if FUserManagement<>nil then
+    TBasicUserManagement(FUserManagement).Logout
 end;
 
 procedure TControlSecurityManager.SetUserManagement(um:TComponent);
@@ -126,13 +142,13 @@ begin
     being_used:=being_used or (FControls[c].GetControlSecurityCode=sc);
 
   if being_used then begin
-    case MessageDlg('O codigo de segurança ainda está sendo usado por alguns controles, deseja remover o a ligação com eles?',mtConfirmation,mbYesNoCancel,0) of
+    case MessageDlg(SSecurityCodeBusyWantRemove,mtConfirmation,mbYesNoCancel,0) of
       mrYes:
         for c:=0 to Length(FControls) do
           if FControls[c].GetControlSecurityCode=sc then
             FControls[c].MakeUnsecure;
       mrNo:
-        raise Exception.Create('Remova o codigo dos controles que o estão usando!');
+        raise Exception.Create(SSecurityCodeStillBusy);
       mrCancel:
         exit;
     end;

@@ -1,4 +1,4 @@
-{$i language.inc}
+﻿{$i language.inc}
 {$i delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
@@ -29,7 +29,7 @@ unit CrossEvent;
 {$IFDEF FPC}
   {$mode delphi}
 
-  {$IF (FPC_FULLVERSION >= 20404)}
+  {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20404)}
   {$DEFINE USE_TTHREAD_START}
   {$IFEND}
 {$ELSE}

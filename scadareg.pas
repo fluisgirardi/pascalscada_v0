@@ -127,7 +127,7 @@ begin
   RegisterClassAlias(TScalesQueue, 'TPIPE');
   {$ELSE}
   RegisterClassAlias(TPIPE, 'TScalesQueue');
-  {$ENDIF}
+  {$IFEND}
   {$ELSE}
   RegisterClassAlias(TPIPE,        'TScalesQueue');
   {$ENDIF}
