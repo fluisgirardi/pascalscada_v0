@@ -135,7 +135,7 @@ function TWinCCUserManagement.CheckUserAndPassword(User, Pass: String): Boolean;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
-  Result:=PWRTSilentLogin(PAnsiChar(User),PAnsiChar(Pass)); //log into WinCC
+  Result:=PWRTSilentLogin(PAnsiChar(AnsiString(User)),PAnsiChar(AnsiString(Pass))); //log into WinCC
 end;
 
 function TWinCCUserManagement.GetLoggedUser:Boolean;
