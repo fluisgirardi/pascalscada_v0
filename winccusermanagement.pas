@@ -39,8 +39,8 @@ type
     fUseAdminLoaded:Boolean;
   protected
     function CheckUserAndPassword(User, Pass: String): Boolean; override;
-    function GetLoggedUser:Boolean; virtual;
-    function GetCurrentUserLogin:String; virtual;
+    function GetLoggedUser:Boolean; override;
+    function GetCurrentUserLogin:String; override;
     procedure LoadUseAdmin;
   public
     constructor Create(AOwner: TComponent); override;
@@ -49,12 +49,12 @@ type
     procedure Logout; override;
 
     procedure   ValidateSecurityCode(sc:String); override;
-    function    SecurityCodeExists(sc:String):Boolean; virtual;
-    procedure   RegisterSecurityCode(sc:String); virtual;
-    procedure   UnregisterSecurityCode(sc:String); virtual;
+    function    SecurityCodeExists(sc:String):Boolean; override;
+    procedure   RegisterSecurityCode(sc:String); override;
+    procedure   UnregisterSecurityCode(sc:String); override;
 
     function    CanAccess(sc:String):Boolean; override;
-    function    GetRegisteredAccessCodes:TStringList; virtual;
+    function    GetRegisteredAccessCodes:TStringList; override;
   published
     property CurrentUserLogin;
     property FailureLogin;
