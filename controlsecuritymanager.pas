@@ -26,6 +26,7 @@ type
     procedure  RegisterSecurityCode(sc:String);
     procedure  UnregisterSecurityCode(sc:String);
     function   SecurityCodeExists(sc:String):Boolean;
+    function   GetRegisteredAccessCodes:TStringList;
   published
     property UserManagement:TComponent read FUserManagement write SetUserManagement;
   end;
@@ -146,6 +147,14 @@ begin
   Result:=false;
   if FUserManagement<>nil then
     Result:=TBasicUserManagement(FUserManagement).SecurityCodeExists(sc);
+end;
+
+function   TControlSecurityManager.GetRegisteredAccessCodes:TStringList;
+begin
+  if FUserManagement=nil then begin
+    Result:=TStringList.Create
+  end else
+    Result:=TBasicUserManagement(FUserManagement).GetRegisteredAccessCodes;
 end;
 
 var

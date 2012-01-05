@@ -25,6 +25,7 @@ interface
 uses
   Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, Tag,
   typinfo, HMIControlDislocatorAnimation, PLCNumber, PLCBlock, PLCStruct,
+  ControlSecurityManager,
   {$IFDEF FPC}
     PropEdits, ComponentEditors, lazlclversion, GraphPropEdits;
   {$ELSE}
@@ -123,6 +124,23 @@ type
   }
   {$ENDIF}
   TZoneBlinkWithPropertyEditor = class(TIntegerProperty)
+  public
+    function  GetAttributes: TPropertyAttributes; override;
+    procedure GetValues(Proc: TGetStrProc); override;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Editor da propriedade SecurityCode, responsavel pela seguranca de cada controle.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ELSE}
+  {:
+  Property editor of SecurityCode property, that makes controls secure.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
+  TSecurityCodePropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
     procedure GetValues(Proc: TGetStrProc); override;
@@ -234,6 +252,8 @@ type
 
 implementation
 
+uses HMITypes;
+
 function  TZoneFileNamePropertyEditor.GetAttributes: TPropertyAttributes;
 begin
    if GetComponent(0) is TGraphicZone then
@@ -324,6 +344,28 @@ begin
          if TZone(GetComponent(0)).Collection.Items[i]<>GetComponent(0) then
             Proc(IntToStr(i));
       end;
+end;
+
+function  TSecurityCodePropertyEditor.GetAttributes: TPropertyAttributes;
+begin
+   if Supports(GetComponent(0), IHMIInterface) then
+      Result := [paValueList{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
+                 paValueEditable{$ENDIF}{$ENDIF}];
+end;
+
+procedure TSecurityCodePropertyEditor.GetValues(Proc: TGetStrProc);
+var
+   i:Integer;
+   x:TStringList;
+begin
+   Proc('');
+   x:=GetControlSecurityManager.GetRegisteredAccessCodes;
+   for i:=0 to x.Count-1 do begin
+     proc(x.Strings[i]);
+     if x.Objects[i]<>nil then
+        x.Objects[i].Destroy;
+   end;
+   x.Destroy;
 end;
 
 ///////////////////////////////////////
