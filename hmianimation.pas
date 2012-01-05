@@ -53,6 +53,10 @@ type
     FCurrentZone,
     FOwnerZone:TGraphicZone;
     FTimer:TTimer;
+
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     procedure ZoneChange(Sender:TObject);
     function  GetAnimationZones:TGraphicZones;
     procedure SetAnimationZones(v:TGraphicZones);
@@ -150,6 +154,13 @@ type
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -177,6 +188,22 @@ begin
    FAnimationZones.Destroy;
    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
+end;
+
+procedure THMIAnimation.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
 end;
 
 procedure THMIAnimation.ZoneChange(Sender:TObject);
@@ -262,7 +289,7 @@ end;
 
 function THMIAnimation.GetControlSecurityCode:String;
 begin
-   Result:='';//todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMIAnimation.SetHMITag(t:TPLCTag);
@@ -301,7 +328,8 @@ end;
 
 procedure THMIAnimation.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMIAnimation.Loaded;

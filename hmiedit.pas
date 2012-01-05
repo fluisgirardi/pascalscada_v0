@@ -405,12 +405,13 @@ end;
 
 procedure THMIEdit.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 function THMIEdit.GetControlSecurityCode:String;
 begin
-   Result:='';//todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMIEdit.SetEnabled(e:Boolean);

@@ -47,6 +47,9 @@ type
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
 
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     procedure SetFormat(f:string);
     procedure SetPrefix(s:String);
     procedure SetSufix(s:String);
@@ -168,6 +171,14 @@ type
     property Sufix:String read FSufix write SetSufix;
     //: @exclude
     property AutoSize default False;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+
   end;
 
 implementation
@@ -191,6 +202,22 @@ begin
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
+end;
+
+procedure THMILabel.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
 end;
 
 procedure THMILabel.SetFormat(f:string);
@@ -267,7 +294,7 @@ end;
 
 function THMILabel.GetControlSecurityCode:String;
 begin
-   Result:=''; //todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMILabel.CanBeAccessed(a:Boolean);
@@ -278,7 +305,8 @@ end;
 
 procedure THMILabel.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMILabel.SetEnabled(e:Boolean);

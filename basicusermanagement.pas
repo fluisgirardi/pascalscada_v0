@@ -121,6 +121,7 @@ begin
           FCurrentUserLogin:=frmLogin.edtusername.Text;
           FLoggedSince:=Now;
           Result:=true;
+          GetControlSecurityManager.UpdateControls;
           DoSuccessfulLogin;
         end else begin
           DoFailureLogin;
@@ -145,6 +146,7 @@ begin
   FCurrentUserName:='';
   FCurrentUserLogin:='';
   FLoggedSince:=Now;
+  GetControlSecurityManager.UpdateControls;
 end;
 
 procedure   TBasicUserManagement.ValidateSecurityCode(sc:String);

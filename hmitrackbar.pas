@@ -44,6 +44,9 @@ type
     FIsEnabledBySecurity:Boolean;
     FModified:Boolean;
 
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     function  GetPosition:Integer;
     procedure RefreshTagValue;
 
@@ -122,6 +125,13 @@ type
     //: Tells if the control has been modified.
     {$ENDIF}
     property Modified:Boolean read FModified;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -187,7 +197,7 @@ end;
 
 function THMITrackBar.GetControlSecurityCode:String;
 begin
-   Result:=''; //todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMITrackBar.CanBeAccessed(a:Boolean);
@@ -198,13 +208,30 @@ end;
 
 procedure THMITrackBar.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMITrackBar.SetEnabled(e:Boolean);
 begin
   FIsEnabled:=e;
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
+end;
+
+procedure THMITrackBar.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
 end;
 
 function THMITrackBar.GetPosition:Integer;

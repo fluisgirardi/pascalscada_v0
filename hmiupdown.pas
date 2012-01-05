@@ -46,6 +46,9 @@ type
     FMax,FMin:Double;
     FEnableMax, FEnableMin:Boolean;
 
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     //implements the IHMIInterface interface
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -146,7 +149,14 @@ type
     {$ELSE}
     //: Enables/disables the minimum value of the control.
     {$ENDIF}
-    property EnableMin:Boolean read FEnableMin write FEnableMin default false;    
+    property EnableMin:Boolean read FEnableMin write FEnableMin default false;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -179,6 +189,22 @@ begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
+end;
+
+procedure THMIUpDown.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
 end;
 
 procedure THMIUpDown.SetHMITag(t:TPLCTag);
@@ -214,7 +240,7 @@ end;
 
 function THMIUpDown.GetControlSecurityCode:String;
 begin
-   Result:=''; //todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMIUpDown.CanBeAccessed(a:Boolean);
@@ -225,7 +251,8 @@ end;
 
 procedure THMIUpDown.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMIUpDown.SetEnabled(e:Boolean);

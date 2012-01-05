@@ -16,6 +16,7 @@ type
     FUserManagement:TComponent;
     procedure SetUserManagement(um:TComponent);
   public
+    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure  RegisterControl(control:IHMIInterface);
     procedure  UnRegisterControl(control:IHMIInterface);
@@ -34,6 +35,13 @@ type
 implementation
 
 uses BasicUserManagement, hsstrings, Dialogs, Controls;
+
+constructor TControlSecurityManager.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FUserManagement:=nil;
+  SetLength(FControls,0);
+end;
 
 destructor TControlSecurityManager.Destroy;
 begin
@@ -88,6 +96,9 @@ end;
 function   TControlSecurityManager.CanAccess(sc:String):Boolean;
 begin
   Result:=true;
+
+  if sc='' then exit;
+
   if (FUserManagement<>nil) and (FUserManagement is TBasicUserManagement) then
     Result:=TBasicUserManagement(FUserManagement).CanAccess(sc);
 end;

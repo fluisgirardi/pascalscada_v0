@@ -44,6 +44,10 @@ type
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
+
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
@@ -101,6 +105,13 @@ type
     }
     {$ENDIF}
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -130,7 +141,7 @@ end;
 
 function THMIProgressBar.GetControlSecurityCode:String;
 begin
-   Result:=''; //todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMIProgressBar.CanBeAccessed(a:Boolean);
@@ -141,13 +152,30 @@ end;
 
 procedure THMIProgressBar.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMIProgressBar.SetEnabled(e:Boolean);
 begin
   FIsEnabled:=e;
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
+end;
+
+procedure THMIProgressBar.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
 end;
 
 procedure THMIProgressBar.SetHMITag(t:TPLCTag);

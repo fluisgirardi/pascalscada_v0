@@ -35,6 +35,10 @@ type
     FGlyphDown, FGlyphUp, FGlyphGrayed:TBitmap;
     FColorDown, FColorUp, FColorGrayed:TColor;
     FCaptionDown, FCaptionUp, FCaptionGrayed:TCaption;
+
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     function GetTagValue:Double;
     procedure SetValue(value:Double);
 
@@ -203,6 +207,13 @@ type
     property GroupIndex:Integer read GetGroupIndex;
     //: Esconde a propriedade herdada.
     property AllowAllUp:Boolean read GetAllowAllUp;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -292,6 +303,22 @@ begin
    end;
 end;
 
+procedure THMIButton.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
+end;
+
 function THMIButton.GetTagValue:Double;
 begin
   Result := 0;
@@ -337,7 +364,7 @@ end;
 
 function THMIButton.GetControlSecurityCode:String;
 begin
-   Result:='';//todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMIButton.CanBeAccessed(a:Boolean);
@@ -348,7 +375,8 @@ end;
 
 procedure THMIButton.MakeUnsecure;
 begin
-
+   FSecurityCode:='';
+   CanBeAccessed(true);
 end;
 
 procedure THMIButton.SetEnabled(e:Boolean);

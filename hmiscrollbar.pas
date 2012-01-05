@@ -46,6 +46,10 @@ type
     FBusy:Boolean;
     FCmdCount:Integer;
     FLastPosition:Integer;
+
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
@@ -115,6 +119,13 @@ type
     }
     {$ENDIF}
     property UpdateOnMove:Boolean read FUpdateOnMove write FUpdateOnMove default false;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -134,6 +145,22 @@ begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
+end;
+
+procedure THMIScrollBar.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
 end;
 
 procedure THMIScrollBar.SetHMITag(t:TPLCTag);
@@ -167,7 +194,7 @@ end;
 
 function THMIScrollBar.GetControlSecurityCode:String;
 begin
-   Result:=''; //todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMIScrollBar.CanBeAccessed(a:Boolean);
@@ -178,7 +205,8 @@ end;
 
 procedure THMIScrollBar.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMIScrollBar.SetEnabled(e:Boolean);

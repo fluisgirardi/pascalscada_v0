@@ -53,6 +53,9 @@ type
     FFontFalse, FFontTrue, FFontGrayed:TFont;
     FOtherValues:TOtherValues;
 
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
     function  GetTagValue:Double;
     procedure SetCaptionFalse(v:String);
     procedure SetCaptionTrue(v:String);
@@ -439,6 +442,13 @@ type
 
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -523,7 +533,7 @@ end;
 
 function THMICheckBox.GetControlSecurityCode:String;
 begin
-   Result:='';//todo
+   Result:=FSecurityCode;
 end;
 
 procedure THMICheckBox.CanBeAccessed(a:Boolean);
@@ -534,7 +544,8 @@ end;
 
 procedure THMICheckBox.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMICheckBox.SetEnabled(e:Boolean);
@@ -679,6 +690,22 @@ begin
   UpdateTagValue;
 end;
 {$ENDIF}
+
+procedure THMICheckBox.SetSecurityCode(Sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
+end;
 
 function THMICheckBox.GetTagValue:Double;
 begin
