@@ -60,6 +60,7 @@ type
     destructor  Destroy; override;
     function    Login:Boolean; virtual;
     procedure   Logout; virtual;
+    procedure   Manage; virtual;
 
     //Security codes management
     procedure   ValidateSecurityCode(sc:String); virtual;
@@ -147,6 +148,11 @@ begin
   FCurrentUserLogin:='';
   FLoggedSince:=Now;
   GetControlSecurityManager.UpdateControls;
+end;
+
+procedure   TBasicUserManagement.Manage;
+begin
+  //has nothing to do here!
 end;
 
 procedure   TBasicUserManagement.ValidateSecurityCode(sc:String);

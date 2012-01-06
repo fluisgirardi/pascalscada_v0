@@ -151,6 +151,7 @@ resourcestring
   SSecurityCodeStillBusy        = 'Remova o codigo dos controles que o estão usando!';
   SWinCCAreInstalled            = 'WinCC está instalado?';
   SUseTheWinCCUserManager       = 'Cadastre a informação de segurança usando o Security Manager do WinCC!';
+  SAccessDenied                 = 'Acesso negado!';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -262,6 +263,7 @@ resourcestring
   SSecurityCodeStillBusy        = 'The SecurityCode still being used by some controls!';
   SWinCCAreInstalled            = 'WinCC is installed?';
   SUseTheWinCCUserManager       = 'Use the WinCC Security Manager to insert a new Security Code/Authorization!';
+  SAccessDenied                 = 'Access denied!';
   {$ENDIF}
 
 implementation

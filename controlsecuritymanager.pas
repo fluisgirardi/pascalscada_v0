@@ -20,6 +20,8 @@ type
     destructor Destroy; override;
     function   Login:Boolean;
     procedure  Logout;
+    procedure  Manage;
+    procedure  TryAccess(sc:String);
     procedure  RegisterControl(control:IHMIInterface);
     procedure  UnRegisterControl(control:IHMIInterface);
     procedure  UpdateControls;
@@ -65,6 +67,19 @@ procedure  TControlSecurityManager.Logout;
 begin
   if FUserManagement<>nil then
     TBasicUserManagement(FUserManagement).Logout
+end;
+
+procedure  TControlSecurityManager.Manage;
+begin
+  if FUserManagement<>nil then
+    TBasicUserManagement(FUserManagement).Manage;
+end;
+
+procedure  TControlSecurityManager.TryAccess(sc:String);
+begin
+  if FUserManagement<>nil then
+    if not TBasicUserManagement(FUserManagement).CanAccess(sc) then
+      raise Exception.Create(SAccessDenied);
 end;
 
 procedure TControlSecurityManager.SetUserManagement(um:TComponent);

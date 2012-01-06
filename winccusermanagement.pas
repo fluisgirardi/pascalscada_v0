@@ -7,15 +7,15 @@ uses
   Classes, sysutils, BasicUserManagement, windows, ExtCtrls;
 
 type
-  TPWRTLogin                   = function (monitor:AnsiChar)                                 :Boolean;  stdcall;
-  TPWRTLogout                  = function ()                                                 :Boolean;  stdcall;
-  TPWRTGetCurrentUser          = function (Buffer:PAnsiChar; bufsize:Integer)                :Boolean;  stdcall;
-  TPWRTGetLoginPriority        = function ()                                                 :Cardinal; stdcall;
-  TPWRTPermissionToString      = function (perm:Cardinal; permstr:PAnsiChar; bufsize:Integer):Boolean;  stdcall;
-  TPWRTCheckPermission         = function (permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
-  TPWRTCheckPermissionOnArea   = function (permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
-  TPWRTCheckPermissionOnAreaID = function (permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
-  TPWRTSilentLogin             = function (login:PAnsiChar; password:PAnsiChar)              :Boolean;  stdcall;
+  TPWRTLogin                   = function(monitor:AnsiChar)                                 :Boolean;  stdcall;
+  TPWRTLogout                  = function()                                                 :Boolean;  stdcall;
+  TPWRTGetCurrentUser          = function(Buffer:PAnsiChar; bufsize:Integer)                :Boolean;  stdcall;
+  TPWRTGetLoginPriority        = function()                                                 :Cardinal; stdcall;
+  TPWRTPermissionToString      = function(perm:Cardinal; permstr:PAnsiChar; bufsize:Integer):Boolean;  stdcall;
+  TPWRTCheckPermission         = function(permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
+  TPWRTCheckPermissionOnArea   = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
+  TPWRTCheckPermissionOnAreaID = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
+  TPWRTSilentLogin             = function(login:PAnsiChar; password:PAnsiChar)              :Boolean;  stdcall;
 
   TPermission = class(TObject)
   public
@@ -38,16 +38,17 @@ type
     PWRTSilentLogin            :TPWRTSilentLogin;
     hUseAdmin:THANDLE;
     fUseAdminLoaded:Boolean;
+    procedure LoadUseAdmin;
   protected
     function CheckUserAndPassword(User, Pass: String): Boolean; override;
     function GetLoggedUser:Boolean; override;
     function GetCurrentUserLogin:String; override;
-    procedure LoadUseAdmin;
   public
     constructor Create(AOwner: TComponent); override;
     procedure AfterConstruction; override;
     destructor Destroy; override;
     procedure Logout; override;
+    procedure Manage; override;
 
     procedure   ValidateSecurityCode(sc:String); override;
     function    SecurityCodeExists(sc:String):Boolean; override;
@@ -169,6 +170,11 @@ begin
 
   if PWRTLogout() then
     inherited Logout;
+end;
+
+procedure TWinCCUserManagement.Manage;
+begin
+  raise exception.Create(SUseTheWinCCUserManager);
 end;
 
 procedure   TWinCCUserManagement.ValidateSecurityCode(sc:String);
