@@ -7,7 +7,7 @@ unit ControlSecurityManager;
 interface
 
 uses
-  Classes, sysutils, HMITypes;
+  Classes, sysutils, HMITypes, ActnList, PLCTag;
 
 type
   TControlSecurityManager = class(TComponent)
@@ -33,6 +33,55 @@ type
     function   GetRegisteredAccessCodes:TStringList;
   published
     property UserManagement:TComponent read FUserManagement write SetUserManagement;
+  end;
+
+  TPascalSCADAUserManagementAction = class(TAction)
+  public
+    function HandlesTarget(Target: TObject): Boolean; override;
+  end;
+
+  TPascalSCADALoginAction = class(TPascalSCADAUserManagementAction)
+  public
+    procedure UpdateTarget(Target: TObject); override;
+    procedure ExecuteTarget(Target: TObject); override;
+  end;
+
+  TPascalSCADALogoutAction = class(TPascalSCADAUserManagementAction)
+  public
+    procedure UpdateTarget(Target: TObject); override;
+    procedure ExecuteTarget(Target: TObject); override;
+  end;
+
+  TPascalSCADAManageUsersAction = class(TPascalSCADAUserManagementAction)
+  public
+    procedure UpdateTarget(Target: TObject); override;
+    procedure ExecuteTarget(Target: TObject); override;
+  end;
+
+  TPascalSCADASecureAction = class(TPascalSCADAUserManagementAction, IHMIInterface)
+  private
+    FCanBeAccessed:Boolean;
+    FSecurityCode:String;
+    procedure SetSecurityCode(sc:String);
+
+    function  GetControlSecurityCode:String;
+    procedure MakeUnsecure;
+    procedure CanBeAccessed(a:Boolean);
+
+    //unused procedures
+    procedure SetHMITag(t:TPLCTag); virtual;
+    function  GetHMITag:TPLCTag;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure UpdateTarget(Target: TObject); override;
+  published
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
   function GetControlSecurityManager:TControlSecurityManager;
@@ -187,6 +236,119 @@ begin
   end else
     Result:=TBasicUserManagement(FUserManagement).GetRegisteredAccessCodes;
 end;
+
+////////////////////////////////////////////////////////////////////////////////
+//PascaSCADA user management Standart actions
+////////////////////////////////////////////////////////////////////////////////
+
+function TPascalSCADAUserManagementAction.HandlesTarget(Target: TObject): Boolean;
+begin
+  Result:=true;
+end;
+
+procedure TPascalSCADALoginAction.UpdateTarget(Target: TObject);
+begin
+  if GetControlSecurityManager.UserManagement<>nil then
+    with GetControlSecurityManager.UserManagement as TBasicUserManagement do
+      Enabled:=not UserLogged;
+end;
+
+procedure TPascalSCADALoginAction.ExecuteTarget(Target: TObject);
+begin
+  GetControlSecurityManager.Login;
+end;
+
+procedure TPascalSCADALogoutAction.UpdateTarget(Target: TObject);
+begin
+  if GetControlSecurityManager.UserManagement<>nil then
+    with GetControlSecurityManager.UserManagement as TBasicUserManagement do
+      Enabled:=UserLogged;
+end;
+
+procedure TPascalSCADALogoutAction.ExecuteTarget(Target: TObject);
+begin
+  GetControlSecurityManager.Logout;
+end;
+
+procedure TPascalSCADAManageUsersAction.UpdateTarget(Target: TObject);
+begin
+  if GetControlSecurityManager.UserManagement<>nil then
+    with GetControlSecurityManager.UserManagement as TBasicUserManagement do
+      Enabled:=UserLogged;
+end;
+
+procedure TPascalSCADAManageUsersAction.ExecuteTarget(Target: TObject);
+begin
+  GetControlSecurityManager.Manage;
+end;
+
+//
+
+constructor TPascalSCADASecureAction.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  GetControlSecurityManager.RegisterControl(self as IHMIInterface);
+end;
+
+destructor  TPascalSCADASecureAction.Destroy;
+begin
+  GetControlSecurityManager.UnRegisterControl(self as IHMIInterface);
+  inherited Destroy;
+end;
+
+procedure   TPascalSCADASecureAction.UpdateTarget(Target: TObject);
+begin
+  Enabled:=FCanBeAccessed;
+end;
+
+procedure TPascalSCADASecureAction.SetSecurityCode(sc:String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
+end;
+
+function  TPascalSCADASecureAction.GetControlSecurityCode:String;
+begin
+  Result:=FSecurityCode;
+end;
+
+procedure TPascalSCADASecureAction.MakeUnsecure;
+begin
+  FSecurityCode:='';
+  CanBeAccessed(true);
+end;
+
+procedure TPascalSCADASecureAction.CanBeAccessed(a:Boolean);
+begin
+  FCanBeAccessed:=a;
+  Enabled:=a;
+end;
+
+//unused procedures
+procedure TPascalSCADASecureAction.SetHMITag(t:TPLCTag);
+begin
+
+end;
+
+function  TPascalSCADASecureAction.GetHMITag:TPLCTag;
+begin
+
+end;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//END PascaSCADA user management Standart actions
+////////////////////////////////////////////////////////////////////////////////
 
 var
   QPascalControlSecurityManager:TControlSecurityManager;

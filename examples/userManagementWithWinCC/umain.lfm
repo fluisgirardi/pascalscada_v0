@@ -1,0 +1,99 @@
+object Form1: TForm1
+  Left = 362
+  Height = 94
+  Top = 100
+  Width = 371
+  Caption = 'Form1'
+  ClientHeight = 75
+  ClientWidth = 371
+  Menu = MainMenu1
+  LCLVersion = '0.9.30.2'
+  object Label1: TLabel
+    Left = 8
+    Height = 14
+    Top = 8
+    Width = 102
+    Caption = 'Current WinCC User:'
+    ParentColor = False
+  end
+  object TILabel1: TTILabel
+    Left = 112
+    Height = 14
+    Top = 8
+    Width = 80
+    Font.Style = [fsBold]
+    Link.TIObject = WinCCUserManagement1
+    Link.TIPropertyName = 'CurrentUserLogin'
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 14
+    Top = 35
+    Width = 262
+    Caption = 'WinCC must run together with this application!'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label3: TLabel
+    Left = 8
+    Height = 14
+    Top = 56
+    Width = 318
+    Caption = 'O WinCC precisa estar rodando junto com esta aplicação'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object ActionList1: TActionList
+    left = 247
+    top = 8
+    object PascalSCADALoginAction1: TPascalSCADALoginAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADALoginAction1'
+    end
+    object PascalSCADALogoutAction1: TPascalSCADALogoutAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADALogoutAction1'
+    end
+    object PascalSCADAManageUsersAction1: TPascalSCADAManageUsersAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADAManageUsersAction1'
+    end
+    object PascalSCADASecureAction1: TPascalSCADASecureAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'If a Message are displayed, the current user has "Process controlling" authorization on WinCC'
+      OnExecute = PascalSCADASecureAction1Execute
+      SecurityCode = 'Process controlling'
+    end
+  end
+  object MainMenu1: TMainMenu
+    left = 216
+    top = 8
+    object MenuItem1: TMenuItem
+      Caption = 'Users'
+      object MenuItem4: TMenuItem
+        Action = PascalSCADALoginAction1
+      end
+      object MenuItem5: TMenuItem
+        Action = PascalSCADALogoutAction1
+      end
+      object MenuItem6: TMenuItem
+        Action = PascalSCADAManageUsersAction1
+      end
+    end
+    object MenuItem2: TMenuItem
+      Caption = 'Access'
+      object MenuItem3: TMenuItem
+        Action = PascalSCADASecureAction1
+      end
+    end
+  end
+  object WinCCUserManagement1: TWinCCUserManagement
+    LoginRetries = 0
+    LoginFrozenTime = 0
+    left = 280
+    top = 8
+  end
+end

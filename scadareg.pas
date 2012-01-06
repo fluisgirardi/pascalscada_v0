@@ -26,6 +26,7 @@ uses
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
   PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection,
+  ControlSecurityManager, ActnList,
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
   {$IFEND}
@@ -112,6 +113,7 @@ begin
   RegisterPropertyEditor(TypeInfo(string), THMIScrollBar, 'SecurityCode', TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), THMIAnimation, 'SecurityCode', TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), THMIText, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), TPascalSCADASecureAction, 'SecurityCode', TSecurityCodePropertyEditor);
   //end securitycode property editor.
 
   RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Protocol', THMIDBProtocolPropertyEditor);
@@ -131,6 +133,14 @@ begin
   {$ELSE}
   RegisterClassAlias(TPIPE,        'TScalesQueue');
   {$ENDIF}
+
+  //////////////////////////////////////////////////////////////////////////////
+  //Actions
+  //////////////////////////////////////////////////////////////////////////////
+  RegisterActions(strUserManagement,[TPascalSCADALoginAction,
+                                     TPascalSCADALogoutAction,
+                                     TPascalSCADAManageUsersAction,
+                                     TPascalSCADASecureAction],nil);
 end;
 
 {$IFDEF FPC}

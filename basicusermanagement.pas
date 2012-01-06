@@ -42,7 +42,6 @@ type
 
     //read only properties.
 
-    property UserLogged:Boolean read GetLoggedUser;
     property CurrentUserName:String read GetCurrentUserName;
     property CurrentUserLogin:String read GetCurrentUserLogin;
     property LoggedSince:TDateTime read GetLoginTime;
@@ -70,6 +69,8 @@ type
 
     function    CanAccess(sc:String):Boolean; virtual;
     function    GetRegisteredAccessCodes:TStringList; virtual;
+
+    property UserLogged:Boolean read GetLoggedUser;
   end;
 
 implementation

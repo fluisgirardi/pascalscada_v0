@@ -25,6 +25,7 @@ type
   TWinCCUserManagement = class(TBasicUserManagement)
   private
     FCheckTimer                :TTimer;
+    FInLoginProcess            :Boolean;
     procedure CheckAuthChanges(Sender:TObject);
   private
     PWRTLogin                  :TPWRTLogin;
@@ -47,6 +48,7 @@ type
     constructor Create(AOwner: TComponent); override;
     procedure AfterConstruction; override;
     destructor Destroy; override;
+    function Login: Boolean; override;
     procedure Logout; override;
     procedure Manage; override;
 
@@ -162,6 +164,17 @@ begin
     Result:='';
 
   FreeMem(buffer1);
+end;
+
+function  TWinCCUserManagement.Login: Boolean;
+begin
+  if FInLoginProcess then exit;
+  FInLoginProcess:=true;
+  try
+    Result := inherited Login;
+  finally
+    FInLoginProcess:=false;
+  end;
 end;
 
 procedure TWinCCUserManagement.Logout;
