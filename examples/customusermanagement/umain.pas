@@ -5,9 +5,9 @@ unit umain;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, RTTICtrls, Forms, Controls, Graphics, Dialogs,
-  Menus, ActnList, StdCtrls, CustomizedUserManagement, PLCTagNumber, HMIEdit,
-  ControlSecurityManager;
+  Classes, SysUtils, FileUtil, RTTICtrls, RTTIGrids, Forms, Controls, Graphics,
+  Dialogs, Menus, ActnList, StdCtrls, CustomizedUserManagement, PLCTagNumber,
+  HMIEdit, ControlSecurityManager;
 
 type
 
