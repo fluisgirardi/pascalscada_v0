@@ -1,0 +1,155 @@
+object Form1: TForm1
+  Left = 327
+  Height = 376
+  Top = 102
+  Width = 522
+  Caption = 'Form1'
+  ClientHeight = 355
+  ClientWidth = 522
+  Menu = MainMenu1
+  LCLVersion = '0.9.31'
+  object HMIEdit1: THMIEdit
+    Left = 237
+    Height = 23
+    Top = 156
+    Width = 80
+    Alignment = taRightJustify
+    Color = clWindow
+    Enabled = True
+    Font.Color = clWindowText
+    ParentFont = False
+    TabOrder = 0
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    EnableMinValue = False
+    EnableMaxValue = False
+    MinValue = 0
+    MaxValue = 0
+    SecurityCode = 'autorizacao1'
+  end
+  object HMIEdit2: THMIEdit
+    Left = 237
+    Height = 23
+    Top = 200
+    Width = 80
+    Alignment = taRightJustify
+    Color = clWindow
+    Enabled = True
+    Font.Color = clWindowText
+    ParentFont = False
+    TabOrder = 1
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber2
+    EnableMinValue = False
+    EnableMaxValue = False
+    MinValue = 0
+    MaxValue = 0
+    SecurityCode = 'autorizacao2'
+  end
+  object TILabel1: TTILabel
+    Left = 184
+    Height = 1
+    Top = 16
+    Width = 1
+    Font.Style = [fsBold]
+    Link.TIObject = CustomizedUserManagement1
+    Link.TIPropertyName = 'CurrentUserLogin'
+    ParentFont = False
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 14
+    Top = 16
+    Width = 143
+    Caption = 'Usuário corrente/Current :'
+    ParentColor = False
+  end
+  object CustomizedUserManagement1: TCustomizedUserManagement
+    LoginRetries = 0
+    LoginFrozenTime = 0
+    OnCheckUserAndPass = CustomizedUserManagement1CheckUserAndPass
+    OnGetUserLogin = CustomizedUserManagement1GetUserLogin
+    OnCanAccess = CustomizedUserManagement1CanAccess
+    left = 112
+    top = 80
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{02219BCF-F5C9-4A96-87C1-D44C485A7DE5}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+    left = 112
+    top = 136
+  end
+  object PLCTagNumber2: TPLCTagNumber
+    TagGUID = '{24D6F5A0-36E5-43EF-9E11-25B01FB20E61}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+    left = 112
+    top = 192
+  end
+  object MainMenu1: TMainMenu
+    left = 264
+    top = 80
+    object MenuItem1: TMenuItem
+      Caption = 'Usuarios/Users'
+      object MenuItem2: TMenuItem
+        Action = PascalSCADALoginAction1
+      end
+      object MenuItem3: TMenuItem
+        Action = PascalSCADALogoutAction1
+      end
+      object MenuItem4: TMenuItem
+        Action = Action1
+      end
+      object MenuItem5: TMenuItem
+        Action = Action2
+      end
+    end
+  end
+  object ActionList1: TActionList
+    left = 360
+    top = 80
+    object PascalSCADALoginAction1: TPascalSCADALoginAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Login'
+    end
+    object PascalSCADALogoutAction1: TPascalSCADALogoutAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Logout'
+    end
+    object Action1: TPascalSCADASecureAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'usuario com autorizacao "autorizacao1"/User Can access the authorization "autorizacao1"'
+      Enabled = False
+      OnExecute = Action1Execute
+      SecurityCode = 'autorizacao1'
+    end
+    object Action2: TPascalSCADASecureAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'usuario com autorizacao "autorizacao2"/User Can access the authorization "autorizacao2"'
+      Enabled = False
+      OnExecute = Action2Execute
+      SecurityCode = 'autorizacao2'
+    end
+  end
+end

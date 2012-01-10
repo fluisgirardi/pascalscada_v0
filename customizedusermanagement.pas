@@ -11,6 +11,7 @@ type
   TGetUserNameAndLogin       = procedure(var UserInfo:String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
   TValidadeSecurityCode      = TNotifyEvent;
+  TLogoutEvent               = TNotifyEvent;
   TCanAccessEvent            = procedure(securityCode:String; var CanAccess:Boolean) of object;
 
   TCustomizedUserManagement = class(TBasicUserManagement)
@@ -21,18 +22,20 @@ type
     FManageUsersAndGroupsEvent:TManageUsersAndGroupsEvent;
     FValidadeSecurityCode     :TValidadeSecurityCode;
     FCanAccessEvent           :TCanAccessEvent;
+    FLogoutEvent              :TLogoutEvent;
   protected
-    function CheckUserAndPassword(User, Pass:String):Boolean; override;
+    function  CheckUserAndPassword(User, Pass:String):Boolean; override;
 
-    function GetCurrentUserName:String; override;
-    function GetCurrentUserLogin:String; override;
+    function  GetCurrentUserName:String; override;
+    function  GetCurrentUserLogin:String; override;
   public
-    procedure   Manage; override;
+    procedure Logout; override;
+    procedure Manage; override;
 
     //Security codes management
-    procedure   ValidateSecurityCode(sc:String); override;
+    procedure ValidateSecurityCode(sc:String); override;
 
-    function    CanAccess(sc:String):Boolean; override;
+    function  CanAccess(sc:String):Boolean; override;
   published
     property CurrentUserName;
     property CurrentUserLogin;
@@ -50,6 +53,7 @@ type
     property OnManageUsersAndGroups:TManageUsersAndGroupsEvent read FManageUsersAndGroupsEvent write FManageUsersAndGroupsEvent;
     property OnValidadeSecurityCode:TValidadeSecurityCode      read FValidadeSecurityCode      write FValidadeSecurityCode;
     property OnCanAccess           :TCanAccessEvent            read FCanAccessEvent            write FCanAccessEvent;
+    property OnLogout              :TLogoutEvent               read FLogoutEvent               write FLogoutEvent;
   end;
 
 implementation
@@ -88,6 +92,16 @@ begin
         FGetUserLogin(Result);
     except
       Result:='';
+    end;
+end;
+
+procedure TCustomizedUserManagement.Logout;
+begin
+  inherited Logout;
+  if Assigned(FLogoutEvent) then
+    try
+      FLogoutEvent(self);
+    except
     end;
 end;
 
