@@ -19,6 +19,7 @@ type
     HMIEdit1: THMIEdit;
     HMIEdit2: THMIEdit;
     Label1: TLabel;
+    Label2: TLabel;
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
@@ -32,6 +33,7 @@ type
     PLCTagNumber1: TPLCTagNumber;
     PLCTagNumber2: TPLCTagNumber;
     TILabel1: TTILabel;
+    TILabel2: TTILabel;
     procedure Action1Execute(Sender: TObject);
     procedure Action2Execute(Sender: TObject);
     procedure CustomizedUserManagement1CanAccess(securityCode: String;
@@ -39,7 +41,7 @@ type
     procedure CustomizedUserManagement1CheckUserAndPass(user, pass: String;
       var ValidUser: Boolean);
     procedure CustomizedUserManagement1GetUserLogin(var UserInfo: String);
-    procedure MenuItem2Click(Sender: TObject);
+    procedure CustomizedUserManagement1Logout(Sender: TObject);
   private
     LastValidUser:String;
   public
@@ -59,7 +61,7 @@ procedure TForm1.CustomizedUserManagement1CheckUserAndPass(user, pass: String;
   var ValidUser: Boolean);
 begin
   //check the user login and password
-  ValidUser:=(((user='fabio') and (pass='123')) or ((user='user') and (pass='321')));
+  ValidUser:=(((user='fabio') and (pass='123')) or ((user='user') and (pass='321')) or ((user='root') and (pass='333')));
   if ValidUser then
     LastValidUser:=user;
 end;
@@ -69,9 +71,9 @@ begin
   UserInfo:=LastValidUser; //return last logged user login.
 end;
 
-procedure TForm1.MenuItem2Click(Sender: TObject);
+procedure TForm1.CustomizedUserManagement1Logout(Sender: TObject);
 begin
-
+  LastValidUser:='';
 end;
 
 procedure TForm1.CustomizedUserManagement1CanAccess(securityCode: String;
@@ -79,7 +81,8 @@ procedure TForm1.CustomizedUserManagement1CanAccess(securityCode: String;
 begin
   //check if the current user can access the securityCode
   CanAccess :=((LastValidUser='fabio') and (securityCode='autorizacao1')) or
-              ((LastValidUser='user') and (securityCode='autorizacao2'));
+              ((LastValidUser='user') and (securityCode='autorizacao2')) or
+              ((LastValidUser='root') and ((securityCode='autorizacao1') or (securityCode='autorizacao2')));
 end;
 
 procedure TForm1.Action1Execute(Sender: TObject);

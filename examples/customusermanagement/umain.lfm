@@ -64,12 +64,30 @@ object Form1: TForm1
     Caption = 'Usuário corrente/Current user:'
     ParentColor = False
   end
+  object TILabel2: TTILabel
+    Left = 184
+    Height = 14
+    Top = 40
+    Width = 118
+    Link.TIObject = CustomizedUserManagement1
+    Link.TIPropertyName = 'LoggedSince'
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 14
+    Top = 40
+    Width = 160
+    Caption = 'Logado desde/Logged since:'
+    ParentColor = False
+  end
   object CustomizedUserManagement1: TCustomizedUserManagement
     LoginRetries = 0
     LoginFrozenTime = 0
     OnCheckUserAndPass = CustomizedUserManagement1CheckUserAndPass
     OnGetUserLogin = CustomizedUserManagement1GetUserLogin
     OnCanAccess = CustomizedUserManagement1CanAccess
+    OnLogout = CustomizedUserManagement1Logout
     left = 112
     top = 80
   end
