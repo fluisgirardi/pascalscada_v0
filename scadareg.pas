@@ -26,7 +26,7 @@ uses
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
   PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection,
-  ControlSecurityManager, ActnList,
+  ControlSecurityManager, ActnList, CustomizedUserManagement,
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
   {$IFEND}
@@ -85,6 +85,7 @@ begin
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   RegisterComponents(strUserManagement,   [TWinCCUserManagement]);
   {$IFEND}
+  RegisterComponents(strUserManagement,   [TCustomizedUserManagement]);
 
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
