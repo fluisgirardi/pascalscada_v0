@@ -67,7 +67,7 @@ type
   {$ELSE}
   //: Procedure called by thread to return the dataset after the query execution.
   {$ENDIF}
-  TReturnDataSetProc = procedure(Sender:TObject; DS:TMemDataset) of object;
+  TReturnDataSetProc = procedure(Sender:TObject; DS:TMemDataset; error:Exception) of object;
 
   {$IFDEF PORTUGUES}
   //: Inteface para interação com objetos privados do THMIDBConnection
@@ -155,6 +155,7 @@ type
     FEnd:TCrossEvent;
     cmd:PSQLCmdRec;
     fds:TMemDataset;
+    ferror:Exception;
     fOnExecSQL:TExecSQLProc;
   protected
     //: @exclude
@@ -428,6 +429,7 @@ begin
           //
           //if are to return the data,
           //creates the dataset.
+          ferror:=nil;
           if Assigned(cmd^.ReturnDataSetCallback) then
             fds:=TMemDataset.Create(Nil)
           else
@@ -436,10 +438,22 @@ begin
           if Assigned(fOnExecSQL) then
             fOnExecSQL(cmd^.SQLCmd, fds);
 
-          if Assigned(cmd^.ReturnDataSetCallback) then
-            Synchronize(ReturnData);
-        finally
-          Dispose(cmd);
+          try
+            if Assigned(cmd^.ReturnDataSetCallback) then
+              Synchronize(ReturnData);
+          finally
+            Dispose(cmd);
+          end;
+        except
+          on e:Exception do begin
+            ferror:=e;
+            try
+              if Assigned(cmd^.ReturnDataSetCallback) then
+                Synchronize(ReturnData);
+            finally
+              Dispose(cmd);
+            end;
+          end;
         end;
       end;
     end;
@@ -450,7 +464,10 @@ end;
 
 procedure   TProcessSQLCommandThread.ReturnData;
 begin
-  cmd^.ReturnDataSetCallback(self,fds);
+  if ferror<>nil then
+    cmd^.ReturnDataSetCallback(self,nil,ferror)
+  else
+    cmd^.ReturnDataSetCallback(self,fds,nil);
 end;
 
 function    TProcessSQLCommandThread.WaitEnd(Timeout:Cardinal):TWaitResult;
