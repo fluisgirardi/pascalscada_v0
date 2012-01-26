@@ -947,14 +947,16 @@ begin
         //calculates the remaining package length at the communication buffer.
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
-        res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2);
+        if FRemainingBytes>0 then begin
+          res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2);
 
-        if res<>0 then begin
-          IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
-          IOResult1.Received:=IOResult1.Received + IOResult2.Received;
-          Result := DecodePkg(IOResult1,tempValues);
-        end else
-          Result:=ioDriverError;
+          if res<>0 then begin
+            IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
+            IOResult1.Received:=IOResult1.Received + IOResult2.Received;
+          end else
+            Result:=ioDriverError;
+        end;
+        Result := DecodePkg(IOResult1,tempValues);
       end else
         Result:=ioEmptyPacket;
 
@@ -993,14 +995,16 @@ begin
         //calculates the remaining package length at the communication buffer.
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
-        res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2);
+        if FRemainingBytes>0 then begin
+          res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2);
 
-        if res<>0 then begin
-          IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
-          IOResult1.Received:=IOResult1.Received + IOResult2.Received;
-          Result := DecodePkg(IOResult1,values);
-        end else
-          Result:=ioDriverError;
+          if res<>0 then begin
+            IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
+            IOResult1.Received:=IOResult1.Received + IOResult2.Received;
+          end else
+            Result:=ioDriverError;
+        end;
+        Result := DecodePkg(IOResult1,values);
       end else
         Result:=ioEmptyPacket;
 

@@ -1619,7 +1619,12 @@ begin
     end;
 
     if log then begin
-      FLogFileStream:=TFileStream.Create(FLogFile,fmCreate);
+      if not FileExists(FLogFile) then begin
+        FLogFileStream:=TFileStream.Create(FLogFile,fmCreate);
+        FLogFileStream.Destroy;
+      end;
+      FLogFileStream:=TFileStream.Create(FLogFile,fmOpenReadWrite+fmShareDenyWrite);
+      FLogFileStream.Position:=FLogFileStream.Size;
     end else
       FLogFileStream.Destroy;
     canopen:=true;
