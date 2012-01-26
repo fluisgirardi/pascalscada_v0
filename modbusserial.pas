@@ -21,7 +21,7 @@ unit ModBusSerial;
 interface
 
 uses
-  ModBusDriver, Tag, commtypes, crc16utils;
+  Classes, ModBusDriver, Tag, commtypes, crc16utils;
 
 type
 
@@ -44,12 +44,19 @@ type
   @seealso(TModBusDriver)
   }
   {$ENDIF}
+
+  { TModBusRTUDriver }
+
   TModBusRTUDriver = class(TModBusDriver)
   protected
     //:  @seealso(TModBusDriver.EncodePkg)
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;
     //:  @seealso(TModBusDriver.DecodePkg)
     function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; override;
+    //:  @seealso(TModBusDriver.RemainingBytes)
+    function RemainingBytes(buffer: BYTES): Integer; override;
+  public
+    constructor Create(AOwner: TComponent); override;
   published
     //:  @seealso(TModBusDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
@@ -64,6 +71,14 @@ type
 implementation
 
 uses Math, PLCMemoryManager, SysUtils, crossdatetime;
+
+constructor TModBusRTUDriver.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  PFirstRequestLen:=3;
+  PFuncByteOffset:=1;
+  PCRCLen:=2;
+end;
 
 function  TModBusRTUDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
 var
@@ -470,14 +485,14 @@ begin
     else begin
       //tratamento de erros modbus
       //modbus error handling.
-      case pkg.BufferToRead[1] of
-        $81:
+      case pkg.BufferToRead[2] of
+        $01:
           Result := ioIllegalFunction;
-        $82:
+        $02:
           Result := ioIllegalRegAddress;
-        $83:
+        $03:
           Result := ioIllegalValue;
-        $84,$85,$86,$87,$88:
+        $04,$05,$06,$07,$08:
           Result := ioPLCError;
       end;
 
@@ -501,6 +516,22 @@ begin
           if foundPLC then
             PModbusPLC[plc].AnalogReg.SetFault(address,len,1,Result);
         end;
+      end;
+    end;
+  end;
+end;
+
+function TModBusRTUDriver.RemainingBytes(buffer: BYTES): Integer;
+begin
+  if Length(buffer)>=3 then begin
+    if (buffer[PFuncByteOffset] and $80)=$80 then begin
+      Result:=2; //is remaining the CRC at the buffer.
+    end else begin
+      case buffer[PFuncByteOffset] of
+        1,2,3,4:
+          Result:=buffer[PFuncByteOffset+1]+2;
+        5,6,15,16:
+          Result:=5;
       end;
     end;
   end;

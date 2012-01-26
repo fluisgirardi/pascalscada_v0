@@ -47,12 +47,17 @@ type
   @seealso(TModBusDriver)
   }
   {$ENDIF}
+
+  { TModBusTCPDriver }
+
   TModBusTCPDriver = class(TModBusDriver)
   protected
     //:  @seealso(TModBusDriver.EncodePkg)
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;
     //:  @seealso(TModBusDriver.DecodePkg)
     function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; override;
+    //:  @seealso(TModBusDriver.RemainingBytes)
+    function RemainingBytes(buffer: BYTES): Integer; override;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -74,6 +79,9 @@ constructor TModBusTCPDriver.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   PInternalDelayBetweenCmds:=0;
+  PFirstRequestLen:=9;
+  PFuncByteOffset:=7;
+  PCRCLen:=0;
 end;
 
 function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
@@ -513,14 +521,14 @@ begin
     else begin
       //tratamento de erros modbus
       //modbus error handling.
-      case pkg.BufferToRead[7] of
-        $81:
+      case pkg.BufferToRead[8] of
+        $01:
           Result := ioIllegalFunction;
-        $82:
+        $02:
           Result := ioIllegalRegAddress;
-        $83:
+        $03:
           Result := ioIllegalValue;
-        $84,$85,$86,$87,$88:
+        $04,$05,$06,$07,$08:
           Result := ioPLCError;
         else
           Result := ioCommError;
@@ -549,6 +557,12 @@ begin
       end;
     end;
   end;
+end;
+
+function TModBusTCPDriver.RemainingBytes(buffer: BYTES): Integer;
+begin
+  if High(buffer)>=5 then
+    Result:=buffer[5]-3;
 end;
 
 end.

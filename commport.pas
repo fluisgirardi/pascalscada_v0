@@ -1332,6 +1332,15 @@ end;
 
 function TCommPortDriver.Lock(DriverID:Cardinal):Boolean;
 begin
+  //espera todos acabarem seus comandos.
+  //waits everyone finish their commands.
+  while PUnlocked>0 do
+    {$IFDEF FPC}
+    ThreadSwitch;
+    {$ELSE}
+    SwitchToThread;
+    {$ENDIF}
+
   try
     PLockCS.Enter;
     if PLockedBy=0 then begin
@@ -1343,16 +1352,6 @@ begin
   finally
     PLockCS.Leave;
   end;
-
-  //espera todos acabarem seus comandos.
-  //waits everyone finish their commands.
-  while PUnlocked>0 do
-    {$IFDEF FPC}
-    ThreadSwitch;
-    {$ELSE}
-    SwitchToThread;
-    {$ENDIF}
-
 end;
 
 function TCommPortDriver.Unlock(DriverID:Cardinal):Boolean;
