@@ -76,6 +76,10 @@ type
     //Array of linked tags.
     PTags:array of TTag;
 
+    //Tempo de gasto em millisegundos atualizando valores dos tags (e seus dependentes)
+    //Time used in milliseconds to update the tag value and their dependents. 
+    FUserUpdateTime:Double;
+
     //thread de execução do scan dos tags
     //Scan read thread object
     PScanReadThread:TScanThread;
@@ -114,6 +118,7 @@ type
     procedure DoPortClosed(Sender: TObject);
     procedure DoPortDisconnected(Sender: TObject);
     procedure DoPortRemoved(Sender:TObject);
+    procedure UpdateUserTime(usertime:Double);
   protected
 
     {$IFDEF PORTUGUES}
@@ -648,6 +653,13 @@ type
     //: Unique protocol identification.
     {$ENDIF}
     property DriverID:Cardinal read PDriverID;
+
+    {$IFDEF PORTUGUES}
+    //: Tempo médio em millisegundos gasto atualizando valores dos tags e seus dependentes.
+    {$ELSE}
+    //: Average time in milliseconds used to update values of tags and their dependents.
+    {$ENDIF}
+    property AvgTagUpdateTime:Double read FUserUpdateTime;
   end;
 
 var
@@ -692,7 +704,7 @@ begin
 
   PCallersCS := TCriticalSection.Create;
 
-  PScanUpdateThread := TScanUpdate.Create(true, Self);
+  PScanUpdateThread := TScanUpdate.Create(true, Self, UpdateUserTime);
   {$IFNDEF WINCE}
   PScanUpdateThread.Priority:=tpHighest;
   {$ENDIF}
@@ -1338,6 +1350,11 @@ begin
     CommunicationPort:=nil;
 end;
 
+procedure TProtocolDriver.UpdateUserTime(usertime: Double);
+begin
+  FUserUpdateTime:=usertime;
+end;
+
 procedure TProtocolDriver.PortOpened(Sender: TObject);
 begin
 
@@ -1357,4 +1374,4 @@ initialization
 
 DriverCount:=1;
 
-end.
+end.

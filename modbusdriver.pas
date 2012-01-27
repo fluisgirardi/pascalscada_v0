@@ -941,7 +941,7 @@ begin
 
       //se o resultado de leitura deu ok, le o resto do pacote.
       //if the IO result is OK, reads the remaing packet...
-      if (IOResult1.ReadIOResult=iorOK) then begin
+      if (res<>0) and (IOResult1.ReadIOResult=iorOK) then begin
 
         //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
         //calculates the remaining package length at the communication buffer.
@@ -953,6 +953,8 @@ begin
           if res<>0 then begin
             IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
             IOResult1.Received:=IOResult1.Received + IOResult2.Received;
+            if IOResult2.ReadIOResult<>iorOK then
+              IOResult1.ReadIOResult:=IOResult2.ReadIOResult;
           end else
             Result:=ioDriverError;
         end;
@@ -989,7 +991,7 @@ begin
 
       //se o resultado de leitura deu ok, le o resto do pacote.
       //if the IO result is OK, reads the remaing packet...
-      if (IOResult1.ReadIOResult=iorOK) then begin
+      if (res<>0) and (IOResult1.ReadIOResult=iorOK) then begin
 
         //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
         //calculates the remaining package length at the communication buffer.
@@ -1001,6 +1003,8 @@ begin
           if res<>0 then begin
             IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
             IOResult1.Received:=IOResult1.Received + IOResult2.Received;
+            if IOResult2.ReadIOResult<>iorOK then
+              IOResult1.ReadIOResult:=IOResult2.ReadIOResult;
           end else
             Result:=ioDriverError;
         end;

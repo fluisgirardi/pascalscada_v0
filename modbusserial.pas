@@ -296,6 +296,9 @@ begin
       iorPortError:
         Result := ioCommError;
     end;
+
+  if (Length(pkg.BufferToWrite)=0) or (Length(pkg.BufferToRead)=0) then
+    Result:=ioDriverError;
   
   //se o endereco retornado nao conferem com o selecionado...
   //if the address in the incoming packet is different of the requested

@@ -26,6 +26,8 @@ uses
 
 type
 
+  TUserUpdateTimeProc = procedure (usertime: Double) of object;
+
   {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -42,6 +44,7 @@ type
   {$ENDIF}
   TScanUpdate = class(TCrossThread)
   private
+    FUserUpdateTimePRoc:TUserUpdateTimeProc;
     FOwnerProtocolDriver:TComponent;
     FSleepInterruptable:TCrossEvent;
     FEnd:TCrossEvent;
@@ -64,7 +67,7 @@ type
     procedure Execute; override;
   public
     //: @exclude
-    constructor Create(StartSuspended:Boolean; OwnerProtocol:TComponent);
+    constructor Create(StartSuspended:Boolean; OwnerProtocol:TComponent; usrUpdTime:TUserUpdateTimeProc);
     //: @exclude
     destructor Destroy; override;
 
@@ -131,13 +134,14 @@ type
 
 implementation
 
-uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings;
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings, crossdatetime,
+  dateutils;
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanUpdate
 //                    implementation of TScanUpdate class
 ////////////////////////////////////////////////////////////////////////////////
-constructor TScanUpdate.Create(StartSuspended:Boolean; OwnerProtocol:TComponent);
+constructor TScanUpdate.Create(StartSuspended:Boolean; OwnerProtocol:TComponent; usrUpdTime:TUserUpdateTimeProc);
 begin
   inherited Create(StartSuspended);
   if not (OwnerProtocol is TProtocolDriver) then
@@ -145,6 +149,7 @@ begin
 
   FOwnerProtocolDriver:=OwnerProtocol;
   Priority := tpHighest;
+  FUserUpdateTimePRoc:=usrUpdTime;
   FSpool := TMessageSpool.Create;
   FEnd := TCrossEvent.Create(nil, true, false, 'EndOfThread'+IntToStr(UniqueID));
   FEnd.ResetEvent;
@@ -177,15 +182,29 @@ end;
 procedure TScanUpdate.Execute;
 var
   timeout:Integer;
+  FInicio:TDateTime;
+  FTempo, FVezes, FValor:Integer;
+  FMedia:Double;
 begin
+  FTempo:=0;
+  FVezes:=0;
   while not Terminated do begin
     try
       CheckScanReadOrWrite;
       if Assigned(PScanTags) then begin
         SetLength(PScannedValues,0);
         timeout:=PScanTags(PScannedValues);
-        if Length(PScannedValues)>0 then
+        if Length(PScannedValues)>0 then begin
+          FInicio:=CrossNow;
           Synchronize(UpdateMultipleTags);
+          FValor:=MilliSecondsBetween(CrossNow,FInicio);
+
+          inc(FTempo,FValor);
+          inc(FVezes);
+          FMedia:=FTempo div FVezes;
+          if Assigned(FUserUpdateTimePRoc) then
+            FUserUpdateTimePRoc(FMedia);
+        end;
       end else
         timeout:=1;
 
@@ -334,4 +353,4 @@ begin
 end;
 
 end.
-
+

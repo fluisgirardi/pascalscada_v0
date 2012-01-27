@@ -156,6 +156,7 @@ type
     cmd:PSQLCmdRec;
     fds:TMemDataset;
     ferror:Exception;
+    FErrorOnSync:Boolean;
     fOnExecSQL:TExecSQLProc;
   protected
     //: @exclude
@@ -421,6 +422,7 @@ begin
     while FSpool.PeekMessage(msg,0,0,true) do begin
       //executa o comando sql
       //executes the sql commmand.
+      FErrorOnSync:=false;
       if (msg.MsgID=SQLCommandMSG) and (msg.wParam<>nil) then begin
         cmd:=PSQLCmdRec(msg.wParam);
         try
@@ -439,19 +441,23 @@ begin
             fOnExecSQL(cmd^.SQLCmd, fds);
 
           try
-            if Assigned(cmd^.ReturnDataSetCallback) then
+            if Assigned(cmd^.ReturnDataSetCallback) then begin
+              FErrorOnSync:=true;
               Synchronize(ReturnData);
+            end;
           finally
             Dispose(cmd);
           end;
         except
           on e:Exception do begin
-            ferror:=e;
-            try
-              if Assigned(cmd^.ReturnDataSetCallback) then
-                Synchronize(ReturnData);
-            finally
-              Dispose(cmd);
+            if not FErrorOnSync then  begin
+              ferror:=e;
+              try
+                if Assigned(cmd^.ReturnDataSetCallback) then
+                  Synchronize(ReturnData);
+              finally
+                Dispose(cmd);
+              end;
             end;
           end;
         end;
