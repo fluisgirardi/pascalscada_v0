@@ -123,6 +123,33 @@ type
 
     {$IFDEF PORTUGUES}
     {:
+    Informa ao driver que uma operação de alta latência irá começar, fazendo
+    que ele libere os recursos para atualização dos tags.
+    }
+    {$ELSE}
+    {:
+    Tells to driver that a high latency operation will begins, releasing some
+    resources of the driver.
+    }
+    {$ENDIF}
+    procedure HighLatencyOperationWillBegin(Sender:TObject);
+
+    {$IFDEF PORTUGUES}
+    {:
+    Informa ao driver que uma operação de alta latência foi finalizada,
+    recuperando os recursos necessários para o driver.
+    }
+    {$ELSE}
+    {:
+    Tells to driver that a high latency operation was ended, taking back some
+    resources back to driver.
+    }
+    {$ENDIF}
+    procedure HighLatencyOperationWasEnded(Sender:TObject);
+
+  protected
+    {$IFDEF PORTUGUES}
+    {:
     Flag que informa ao driver se ao menos uma variavel deve ser lida a cada
     ciclo de scan do driver.
     }
@@ -1353,6 +1380,16 @@ end;
 procedure TProtocolDriver.UpdateUserTime(usertime: Double);
 begin
   FUserUpdateTime:=usertime;
+end;
+
+procedure TProtocolDriver.HighLatencyOperationWillBegin(Sender: TObject);
+begin
+  FCritical.Leave;
+end;
+
+procedure TProtocolDriver.HighLatencyOperationWasEnded(Sender: TObject);
+begin
+  FCritical.Enter;
 end;
 
 procedure TProtocolDriver.PortOpened(Sender: TObject);

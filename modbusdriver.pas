@@ -151,6 +151,7 @@ type
   {$ENDIF}
   TModBusDriver = class(TProtocolDriver)
   private
+    FMustReleaseResources:Boolean;
     function BuildItemName(nameprefix:String; ZeroFill:Boolean; index, NumZeros:Integer):String;
     function SelectedReadFuntion(dlg:TfrmModbusTagBuilder):Integer;
     function SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):Integer;
@@ -779,7 +780,9 @@ begin
         if PModBusPLC[plc].Outputs.Blocks[block].NeedRefresh then begin
           done := true;
           BuildTagRec(PModBusPLC[plc].Station,1,PModBusPLC[plc].Outputs.Blocks[block].AddressStart,PModBusPLC[plc].Outputs.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
           DoRead(tr,values,false);
+          FMustReleaseResources:=false;
         end else begin
           if first then begin
             lastType := 1;
@@ -800,7 +803,9 @@ begin
         if PModBusPLC[plc].Inputs.Blocks[block].NeedRefresh then begin
           done := true;
           BuildTagRec(PModBusPLC[plc].Station,2,PModBusPLC[plc].Inputs.Blocks[block].AddressStart,PModBusPLC[plc].Inputs.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
           DoRead(tr,values,false);
+          FMustReleaseResources:=false;
         end else begin
           if first then begin
             lastType := 2;
@@ -821,7 +826,9 @@ begin
         if PModBusPLC[plc].Registers.Blocks[block].NeedRefresh then begin
           done := true;
           BuildTagRec(PModBusPLC[plc].Station,3,PModBusPLC[plc].Registers.Blocks[block].AddressStart,PModBusPLC[plc].Registers.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
           DoRead(tr,values,false);
+          FMustReleaseResources:=false;
         end else begin
           if first then begin
             lastType := 3;
@@ -842,7 +849,9 @@ begin
         if PModBusPLC[plc].AnalogReg.Blocks[block].NeedRefresh then begin
           done := true;
           BuildTagRec(PModBusPLC[plc].Station,4,PModBusPLC[plc].AnalogReg.Blocks[block].AddressStart,PModBusPLC[plc].AnalogReg.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
           DoRead(tr,values,false);
+          FMustReleaseResources:=false;
         end else begin
           if first then begin
             lastType := 4;
@@ -868,7 +877,9 @@ begin
       //compila o bloco do mais necessitado;
       //build the tagrec record.
       BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
+      FMustReleaseResources:=true;
       DoRead(tr,values,false);
+      FMustReleaseResources:=false;
     end else
       NeedSleep := 1;
   finally
@@ -982,12 +993,21 @@ var
   pkg:BYTES;
   rl:Integer;
   res:Integer;
+  starts, ends:TNotifyEvent;
 begin
   try
+    if FMustReleaseResources then begin
+      starts:=HighLatencyOperationWillBegin;
+      ends  :=HighLatencyOperationWasEnded;
+    end else begin
+      starts:=nil;
+      ends  :=nil;
+    end;
+
     pkg := EncodePkg(tagrec,nil,rl);
     if PCommPort<>nil then begin
       PCommPort.Lock(DriverID);
-      res := PCommPort.IOCommandSync(iocWriteRead,pkg,PFirstRequestLen,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,nil,@IOResult1);
+      res := PCommPort.IOCommandSync(iocWriteRead,pkg,PFirstRequestLen,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,nil,@IOResult1,starts,ends);
 
       //se o resultado de leitura deu ok, le o resto do pacote.
       //if the IO result is OK, reads the remaing packet...
@@ -998,7 +1018,7 @@ begin
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
         if FRemainingBytes>0 then begin
-          res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2);
+          res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2,starts,ends);
 
           if res<>0 then begin
             IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);

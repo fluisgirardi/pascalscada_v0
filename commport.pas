@@ -739,7 +739,9 @@ type
     function IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                            BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                            CallBack:TDriverCallBack;
-                           Res1:TObject; Res2:Pointer):Cardinal;
+                           Res1:TObject; Res2:Pointer;
+                           OnBegin:TNotifyEvent = nil;
+                           OnEnd:TNotifyEvent = nil):Cardinal;
 
 
     {$IFDEF PORTUGUES}
@@ -1425,7 +1427,9 @@ end;
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                                  BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                                  CallBack:TDriverCallBack;
-                                 Res1:TObject; Res2:Pointer):Cardinal;
+                                 Res1:TObject; Res2:Pointer;
+                                 OnBegin:TNotifyEvent = nil;
+                                 OnEnd:TNotifyEvent = nil):Cardinal;
 var
   PPacket:TIOPacket;
   InLockCS, InIOCmdCS:Boolean;
@@ -1457,6 +1461,9 @@ begin
     InIOCmdCS:=true;
     if (not PActive) then
        exit;
+
+    if Assigned(OnBegin) then
+      OnBegin(Self);
 
     inc(PPacketID);
 
@@ -1490,11 +1497,16 @@ begin
 
     //return the command ID.
     Result := PPacketID;
+
+    if Assigned(OnEnd) then
+      OnEnd(Self);
   finally
     if InIOCmdCS then
       PIOCmdCS.Leave;
+
     if InLockCS then
       PLockCS.Leave;
+
     InterLockedDecrement(PUnlocked);
   end;
 end;
