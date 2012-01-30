@@ -21,7 +21,7 @@ interface
 
 uses
   Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
-  syncobjs, memds, ZDataset;
+  syncobjs, fpc_ps_memds, ZDataset;
 
 type
 
@@ -60,14 +60,14 @@ type
   {$ELSE}
   //: Procedure called by thread to execute the query.
   {$ENDIF}
-  TExecSQLProc = procedure(sqlcmd:String; outputdataset:TMemDataset) of object;
+  TExecSQLProc = procedure(sqlcmd:String; outputdataset:TFPCPSMemDataset) of object;
 
   {$IFDEF PORTUGUES}
   //: Método usado pela thread para retornar um dataset após a execução da consulta.
   {$ELSE}
   //: Procedure called by thread to return the dataset after the query execution.
   {$ENDIF}
-  TReturnDataSetProc = procedure(Sender:TObject; DS:TMemDataset; error:Exception) of object;
+  TReturnDataSetProc = procedure(Sender:TObject; DS:TFPCPSMemDataset; error:Exception) of object;
 
   {$IFDEF PORTUGUES}
   //: Inteface para interação com objetos privados do THMIDBConnection
@@ -154,7 +154,7 @@ type
     FSpool:TMessageSpool;
     FEnd:TCrossEvent;
     cmd:PSQLCmdRec;
-    fds:TMemDataset;
+    fds:TFPCPSMemDataset;
     ferror:Exception;
     FErrorOnSync:Boolean;
     fOnExecSQL:TExecSQLProc;
@@ -264,7 +264,7 @@ type
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
     function  GetSyncConnection:TZConnection;
-    procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
+    procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPCPSMemDataset);
   protected
     FProtocol: string;
     FHostName: string;
@@ -433,7 +433,7 @@ begin
           //creates the dataset.
           ferror:=nil;
           if Assigned(cmd^.ReturnDataSetCallback) then
-            fds:=TMemDataset.Create(Nil)
+            fds:=TFPCPSMemDataset.Create(Nil)
           else
             fds:=nil;
 
@@ -548,7 +548,7 @@ begin
   FSQLSpooler.ExecSQLWithResultSet(sql,ReturnDatasetCallback);
 end;
 
-procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TMemDataset);
+procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPCPSMemDataset);
 begin
   FCS.Enter;
   try

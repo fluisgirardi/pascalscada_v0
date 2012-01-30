@@ -7,21 +7,21 @@ unit pascalscada;
 interface
 
 uses
-  BasicUserManagement, CommPort, commtypes, ControlSecurityManager, 
+    BasicUserManagement, CommPort, commtypes, ControlSecurityManager, 
   crc16utils, crossdatetime, CrossEvent, crosskeyevents, 
-  CustomizedUserManagement, HMIAnimation, HMIButton, HMICheckBox, 
-  HMIControlDislocatorAnimation, HMIDBConnection, HMIEdit, HMILabel, 
-  HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, HMIScrollBar, 
-  HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, hsstrings, hsutils, 
-  IBoxDriver, ISOTCPDriver, lazlclversion, LinearScaleProcessor, MessageSpool, 
-  ModBusDriver, ModBusSerial, ModBusTCP, PLCBlock, PLCBlockElement, 
-  PLCMemoryManager, PLCNumber, PLCString, PLCStruct, PLCStructElement, PLCTag, 
-  PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, protscanupdate, 
-  s7family, S7Types, scadapropeditor, scadareg, SerialPort, Tag, TagBit, 
-  TagBlock, tagcollection, tcp_udpport, ubitmapper, uelementmapper, 
-  uModbusTagBuilder, unumerickeyboard, us7tagbuilder, UserScale, 
-  usrmgnt_login, ustructuremapper, uwesttagbuilder, ValueProcessor, 
-  WestASCIIDriver, LazarusPackageIntf;
+  CustomizedUserManagement, fpc_ps_memds, HMIAnimation, HMIButton, 
+  HMICheckBox, HMIControlDislocatorAnimation, HMIDBConnection, HMIEdit, 
+  HMILabel, HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, 
+  HMIScrollBar, HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, 
+  hsstrings, hsutils, IBoxDriver, ISOTCPDriver, lazlclversion, 
+  LinearScaleProcessor, MessageSpool, ModBusDriver, ModBusSerial, ModBusTCP, 
+  PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, 
+  PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, ProtocolDriver, 
+  ProtocolTypes, protscan, protscanupdate, s7family, S7Types, scadapropeditor, 
+  scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, tcp_udpport, 
+  ubitmapper, uelementmapper, uModbusTagBuilder, unumerickeyboard, 
+  us7tagbuilder, UserScale, usrmgnt_login, ustructuremapper, uwesttagbuilder, 
+  ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 
