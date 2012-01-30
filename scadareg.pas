@@ -1,4 +1,5 @@
 {$i language.inc}
+{$i delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de registro de componentes do PascalSCADA. Para Lazarus e Delphi.)
@@ -26,23 +27,25 @@ uses
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
   PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection,
-  ControlSecurityManager, ActnList, CustomizedUserManagement,
+  ControlSecurityManager, ActnList, CustomizedUserManagement, fpc_ps_memds, 
+
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
   {$IFEND}
+
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
   {$ELSE}
-    Types, MemDs,
-    //se for delphi 4 ou 5
-    //if is delphi 5 or below.
-    {$IF defined(VER130) or defined(VER120)}
-      DsgnIntf;
-    {$ELSE}
+    Types, 
+    {$IFDEF DELPHI6_UP}
       //demais versoes do delphi
       //others versions of delphi.
       DesignIntf, DesignEditors;
-    {$IFEND}
+    {$ELSE}
+      //se for delphi 4 ou 5
+      //if is delphi 5 or below.
+      DsgnIntf;
+    {$ENDIF}
   {$ENDIF}
 procedure Register;
 begin
@@ -78,9 +81,9 @@ begin
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
   RegisterComponents(strDatabasePallete,  [THMIDBConnection]);
-  {$IFNDEF FPC}
-  RegisterComponents(strFPCPallete,       [TMemDataset]);
-  {$ENDIF}
+
+  //THE FPC MEMORY DATASET
+  RegisterComponents(strFPCPallete,       [TFPCPSMemDataset]);
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   RegisterComponents(strUserManagement,   [TWinCCUserManagement]);

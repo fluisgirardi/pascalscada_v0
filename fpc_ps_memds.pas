@@ -63,6 +63,10 @@ type
   TRecordBuffer = PChar;
   {$ENDIF}
 
+  {$IFDEF NEED_PTRINT}
+  ptrint = Integer;
+  {$ENDIF}
+
   FPCPSMDSError=class(Exception);
 
   PFPCPSRecInfo=^TFPCPSMTRecInfo;

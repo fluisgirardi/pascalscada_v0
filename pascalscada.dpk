@@ -99,7 +99,6 @@ contains
   unumerickeyboard in 'unumerickeyboard.pas' {NumericKeyBoard},
   crosskeyevents in 'crosskeyevents.pas',
   us7tagbuilder in 'us7tagbuilder.pas' {frmS7TagBuilder},
-  ustructuremapper in 'ustructuremapper.pas' {frmStructureEditor},
-  memds in 'memorydataset\memds.pas';
+  ustructuremapper in 'ustructuremapper.pas' {frmStructureEditor};
 
 end.
