@@ -13,35 +13,35 @@ object frmUserAuthentication: TfrmUserAuthentication
   Font.Name = 'MS Sans Serif'
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '0.9.30.2'
+  LCLVersion = '0.9.28.2'
   object Label1: TLabel
     Left = 8
-    Height = 14
+    Height = 19
     Top = 8
-    Width = 49
+    Width = 58
     Caption = '&Username'
     FocusControl = edtusername
     ParentColor = False
   end
   object Label2: TLabel
     Left = 8
-    Height = 14
+    Height = 19
     Top = 56
-    Width = 47
+    Width = 55
     Caption = '&Password'
     FocusControl = edtPassword
     ParentColor = False
   end
   object edtusername: TEdit
     Left = 8
-    Height = 21
+    Height = 24
     Top = 24
     Width = 185
     TabOrder = 0
   end
   object edtPassword: TEdit
     Left = 8
-    Height = 21
+    Height = 24
     Top = 72
     Width = 185
     EchoMode = emPassword

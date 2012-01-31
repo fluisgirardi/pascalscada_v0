@@ -35,15 +35,12 @@ var
 
 implementation
 
-{$IFNDEF FPC}
-  {$R *.dfm}
-{$ELSE}
-  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
+{$IFDEF FPC}
+  {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20400) }
     {$R usrmgnt_login.lfm}
-  {$ELSE}
-  initialization
-  {$i usrmgnt_login.lrs}
   {$IFEND}
+{$ELSE}
+  {$R *.dfm}
 {$ENDIF}
 
 { TfrmUserAuthentication }
@@ -52,5 +49,12 @@ procedure TfrmUserAuthentication.FormShow(Sender: TObject);
 begin
   edtusername.SetFocus;
 end;
+
+{$IFDEF FPC}
+  {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION < 20400) }
+  initialization
+  {$i usrmgnt_login.lrs}
+  {$IFEND}
+{$ENDIF}
 
 end.
