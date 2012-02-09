@@ -702,12 +702,20 @@ type
     @param(ToWrite BYTES. Conteudo que deseja escrever)
     @param(BytesToRead Cardinal. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
     @param(BytesToWrite Cardinal. Informa o número de @noAutoLink(bytes) a serem escritos)
+    @param(DriverID Cardinal. Identifica o driver de protocolo que está chamando a função.)
     @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
            leitura e escrita)
     @param(CallBack TDriverCallBack. Procedimento que será chamado para retorno
            dos dados lidos/escritos)
     @param(Res1 TObject. Objeto que será passado como parametro ao callback.)
     @param(Res2 Pointer. Pointeiro que será passado como parametro ao callback.)
+    @param(OnBegin TNotifyEvent. Procedimento chamado pelo driver de porta antes de iniciar
+           suas operações. Pode ser usado como inicio de cronometro ou para liberar o
+           mutex de um driver de protocolo para melhorar as atualizações de tags.)
+    @param(OnEnd TNotifyEvent. Procedimento chamado pelo driver de porta após finalizar
+           suas operações. Pode ser usado como finalização de cronometro ou para pegar
+           novamente o mutex de um driver de protocolo, liberado anteriormente com o OnBegin.)
+
     @return(Retorna o ID do pacote caso tenha exito. Retorna 0 (zero) caso o
             componente esteja sendo destruido ou a porta não esteja aberta.)
     @seealso(TIOCommand)
@@ -723,11 +731,18 @@ type
     @param(ToWrite BYTES. Data to be written on the communication port)
     @param(BytesToRead Cardinal. Number of @noAutoLink(bytes) to be read on communication port.)
     @param(BytesToWrite Cardinal. Number of @noAutoLink(bytes) to be written on communication port.)
+    @param(DriverID Cardinal. Identifies the protocol that is calling the function.)
     @param(DelayBetweenCmds Cardinal. Delay in milliseconds between the commands of read and write.)
     @param(CallBack TDriverCallBack. Procedure called to return the data of the
            I/O command (with the write result and the bytes received).)
     @param(Res1 TObject. Object to be passed to callback.)
     @param(Res2 Pointer. Pointer to be passed to callback.)
+    @param(OnBegin TNotifyEvent. Procedure called by the communication port before
+           start the communication operation. It can be used to start a timer or
+           to release a mutex of a the protocol driver to improve the tag update rates.)
+    @param(OnEnd TNotifyEvent. Procedure called after finish the communication operation.
+           Can be used to finish the cronometer or to get again the mutex of the
+           protocol driver, freed previously by the OnBegin.)
     @return(Returns the I/O command ID. Returns 0 if the communication port has
             been destroied or if the communication port is closed.)
     @seealso(TIOCommand)
@@ -741,7 +756,67 @@ type
                            CallBack:TDriverCallBack;
                            Res1:TObject; Res2:Pointer;
                            OnBegin:TNotifyEvent = nil;
-                           OnEnd:TNotifyEvent = nil):Cardinal;
+                           OnEnd:TNotifyEvent = nil):Cardinal; overload; deprecated;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Faz um pedido de leitura/escrita sincrono para o driver (sua aplicação espera
+    todo o comando terminar para continuar).
+    @param(Cmd TIOCommand. Informa a combinação de comandos de leitura/escrita a
+           executar)
+    @param(BytesToWrite Cardinal. Informa o número de @noAutoLink(bytes) a serem escritos)
+    @param(ToWrite BYTES. Conteudo que deseja escrever)
+    @param(BytesToRead Cardinal. Informa o número de @noAutoLink(bytes) que deverão ser lidos)
+    @param(DriverID Cardinal. Identifica o driver de protocolo que está chamando a função.)
+    @param(DelayBetweenCmds Cardinal. Tempo em milisegundos entre comandos de
+           leitura e escrita)
+    @param(pkt PIOPacket. Estrutura que irá retornar as informações da execução do
+           comando. Se @code(Nil) não será possível checar o resultado da ação.)
+    @param(OnBegin TNotifyEvent. Procedimento chamado pelo driver de porta antes de iniciar
+           suas operações. Pode ser usado como inicio de cronometro ou para liberar o
+           mutex de um driver de protocolo para melhorar as atualizações de tags.)
+    @param(OnEnd TNotifyEvent. Procedimento chamado pelo driver de porta após finalizar
+           suas operações. Pode ser usado como finalização de cronometro ou para pegar
+           novamente o mutex de um driver de protocolo, liberado anteriormente com o OnBegin.)
+
+    @return(Retorna o ID do pacote caso tenha exito. Retorna 0 (zero) caso o
+            componente esteja sendo destruido ou a porta não esteja aberta.)
+    @seealso(TIOCommand)
+    @seealso(BYTES)
+    @seealso(TDriverCallBack)
+    @seealso(IOCommandASync)
+    }
+    {$ELSE}
+    {:
+    Do a synchronous I/O request to the communication port (blocks your
+    application until this action is done).
+    @param(Cmd TIOCommand. The sequence of I/O to be executed.)
+    @param(BytesToWrite Cardinal. Number of @noAutoLink(bytes) to be written on communication port.)
+    @param(ToWrite BYTES. Data to be written on the communication port)
+    @param(BytesToRead Cardinal. Number of @noAutoLink(bytes) to be read on communication port.)
+    @param(DriverID Cardinal. Identifies the protocol that is calling the function.)
+    @param(DelayBetweenCmds Cardinal. Delay in milliseconds between the commands of read and write.)
+    @param(pkt PIOPacket. Structure that will return informations about the command execution.
+           If @code(Nil) you will not able to check result of the command.)
+    @param(OnBegin TNotifyEvent. Procedure called by the communication port before
+           start the communication operation. It can be used to start a timer or
+           to release a mutex of a the protocol driver to improve the tag update rates.)
+    @param(OnEnd TNotifyEvent. Procedure called after finish the communication operation.
+           Can be used to a timer or to get again the mutex of the
+           protocol driver, freed previously by the OnBegin.)
+    @return(Returns the I/O command ID. Returns 0 if the communication port has
+            been destroied or if the communication port is closed.)
+    @seealso(TIOCommand)
+    @seealso(BYTES)
+    @seealso(TDriverCallBack)
+    @seealso(IOCommandASync)
+    }
+    {$ENDIF}
+    function IOCommandSync(Cmd:TIOCommand; BytesToWrite:Cardinal; ToWrite:BYTES;
+                           BytesToRead, DriverID, DelayBetweenCmds:Cardinal;
+                           pkt:PIOPacket;
+                           OnBegin:TNotifyEvent = nil;
+                           OnEnd:TNotifyEvent = nil):Cardinal; overload;
 
 
     {$IFDEF PORTUGUES}
@@ -1497,6 +1572,98 @@ begin
 
     //return the command ID.
     Result := PPacketID;
+
+    if Assigned(OnEnd) then
+      OnEnd(Self);
+  finally
+    if InIOCmdCS then
+      PIOCmdCS.Leave;
+
+    if InLockCS then
+      PLockCS.Leave;
+
+    InterLockedDecrement(PUnlocked);
+  end;
+end;
+
+function TCommPortDriver.IOCommandSync(Cmd: TIOCommand; BytesToWrite: Cardinal;
+  ToWrite: BYTES; BytesToRead, DriverID, DelayBetweenCmds: Cardinal;
+  pkt: PIOPacket; OnBegin: TNotifyEvent; OnEnd: TNotifyEvent): Cardinal;
+var
+  InLockCS, InIOCmdCS:Boolean;
+  PPacket:PIOPacket;
+begin
+  try
+    InLockCS:=false;
+    InIOCmdCS:=false;
+
+    Result := 0;
+
+    if pkt=nil then
+      new(PPacket)
+    else
+      PPacket:=pkt;
+
+    if (csDestroying in ComponentState) or (FExclusiveDevice and (csDesigning in ComponentState)) then
+       exit;
+
+    //verify if another driver is the owner of the comm port...
+    PLockCS.Enter;
+    InLockCS:=true;
+    while (PLockedBy<>0) and (PLockedBy<>DriverID) do begin
+       PLockCS.Leave;
+       InLockCS:=false;
+       PLockEvent.WaitFor($FFFFFFFF);
+       PLockCS.Enter;
+       InLockCS:=true;
+    end;
+    InterLockedIncrement(PUnlocked);
+    PLockCS.Leave;
+    InLockCS:=false;
+
+    PIOCmdCS.Enter;
+    InIOCmdCS:=true;
+    if (not PActive) then
+       exit;
+
+    if Assigned(OnBegin) then
+      OnBegin(Self);
+
+    inc(PPacketID);
+
+    //cria o pacote
+    //creates de command packet.
+    PPacket^.PacketID := PPacketID;
+    PPacket^.WriteIOResult := iorNone;
+    PPacket^.ToWrite := BytesToWrite;
+    PPacket^.Written := 0;
+    PPacket^.WriteRetries := 3;
+
+    PPacket^.BufferToWrite := ToWrite;
+
+    PPacket^.DelayBetweenCommand := DelayBetweenCmds;
+    PPacket^.ReadIOResult := iorNone;
+    PPacket^.ToRead := BytesToRead;
+    PPacket^.Received := 0;
+    PPacket^.ReadRetries := 3;
+    PPacket^.Res1 := nil;
+    PPacket^.Res2 := nil;
+    SetLength(PPacket^.BufferToRead,BytesToRead);
+
+    //executes the I/O command.
+    InternalIOCommand(Cmd,@PPacket^);
+
+    //free the buffers
+    if pkt=nil then begin
+      SetLength(PPacket^.BufferToWrite,0);
+      SetLength(PPacket^.BufferToRead, 0);
+    end;
+
+    //return the command ID.
+    Result := PPacketID;
+
+    if pkt=nil then
+      Dispose(PPacket);
 
     if Assigned(OnEnd) then
       OnEnd(Self);

@@ -948,7 +948,7 @@ begin
     pkg := EncodePkg(tagrec,values,rl);
     if PCommPort<>nil then begin
       PCommPort.Lock(DriverID);
-      res := PCommPort.IOCommandSync(iocWriteRead,pkg,PFirstRequestLen,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,nil,@IOResult1);
+      res := PCommPort.IOCommandSync(iocWriteRead,Length(pkg),pkg,PFirstRequestLen,DriverID,PInternalDelayBetweenCmds,@IOResult1);
 
       //se o resultado de leitura deu ok, le o resto do pacote.
       //if the IO result is OK, reads the remaing packet...
@@ -959,7 +959,7 @@ begin
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
         if FRemainingBytes>0 then begin
-          res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2);
+          res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2);
 
           if res<>0 then begin
             IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
@@ -1007,7 +1007,7 @@ begin
     pkg := EncodePkg(tagrec,nil,rl);
     if PCommPort<>nil then begin
       PCommPort.Lock(DriverID);
-      res := PCommPort.IOCommandSync(iocWriteRead,pkg,PFirstRequestLen,Length(pkg),DriverID,PInternalDelayBetweenCmds,CommPortCallBack,nil,@IOResult1,starts,ends);
+      res := PCommPort.IOCommandSync(iocWriteRead,Length(pkg),pkg,PFirstRequestLen,DriverID,PInternalDelayBetweenCmds,@IOResult1,starts,ends);
 
       //se o resultado de leitura deu ok, le o resto do pacote.
       //if the IO result is OK, reads the remaing packet...
@@ -1018,7 +1018,7 @@ begin
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
         if FRemainingBytes>0 then begin
-          res := PCommPort.IOCommandSync(iocRead,nil,FRemainingBytes,0,DriverID,0,CommPortCallBack,nil,@IOResult2,starts,ends);
+          res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2,starts,ends);
 
           if res<>0 then begin
             IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);

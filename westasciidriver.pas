@@ -689,7 +689,7 @@ begin
       exit;
     end;
 
-    if PCommPort.IOCommandSync(iocWriteRead, buffer, 6, 6, DriverID, 5, CommPortCallBack, nil, @pkg)=0 then begin
+    if PCommPort.IOCommandSync(iocWriteRead, 6, buffer, 6, DriverID, 5, @pkg)=0 then begin
       Result:=ioDriverError;
       exit;
     end;
@@ -961,7 +961,7 @@ begin
     end;
 
 
-    if PCommPort.IOCommandSync(iocWriteRead, buffer, 11, 6, DriverID, 5, CommPortCallBack, nil, @pkg)=0 then begin
+    if PCommPort.IOCommandSync(iocWriteRead, 6, buffer, 11, DriverID, 5, @pkg)=0 then begin
       Result:=ioDriverError;
       exit;
     end;
@@ -1050,7 +1050,7 @@ begin
       exit;
     end;
 
-    PCommPort.IOCommandSync(iocWriteRead, buffer, 11, 11, DriverID, 10, CommPortCallBack, nil, @pkg);
+    PCommPort.IOCommandSync(iocWriteRead, 11, buffer, 11, DriverID, 10, @pkg);
 
     Result := IOResultToProtocolResult(pkg.WriteIOResult);
     if Result <> ioOk then exit;
@@ -1078,7 +1078,7 @@ begin
     buffer[4] := $49;
     buffer[5] := $2A;
 
-    PCommPort.IOCommandSync(iocWriteRead, buffer, 11, 6, DriverID, 10, CommPortCallBack, nil, @pkg);
+    PCommPort.IOCommandSync(iocWriteRead, 6, buffer, 11, DriverID, 10, @pkg);
 
     Result := IOResultToProtocolResult(pkg.WriteIOResult);
     if Result <> ioOk then exit;
@@ -1126,7 +1126,7 @@ begin
 
     PCommPort.Lock(DriverID);
 
-    if PCommPort.IOCommandSync(iocWriteRead, buffer, 6, 6, DriverID, 10, CommPortCallBack, nil, @pkg)=0 then begin
+    if PCommPort.IOCommandSync(iocWriteRead, 6, buffer, 6, DriverID, 10, @pkg)=0 then begin
       Result:=ioDriverError;
       exit;
     end;
@@ -1160,11 +1160,11 @@ begin
 
     case Chr(buffer[4+OffsetNo]) of
       '0': begin
-        res := PCommPort.IOCommandSync(iocRead, buffer, 21+OffsetNo, 0, DriverID, 10, CommPortCallBack, nil, @pkg);
+        res := PCommPort.IOCommandSync(iocRead, 0, nil, 21+OffsetNo, DriverID, 10, @pkg);
         OffsetSize := 0;
       end;
       '5': begin
-        res := PCommPort.IOCommandSync(iocRead, buffer, 26+OffsetNo, 0, DriverID, 10, CommPortCallBack, nil, @pkg);
+        res := PCommPort.IOCommandSync(iocRead, 0, Nil, 26+OffsetNo, DriverID, 10, @pkg);
         OffsetSize := 5;
       end;
       else begin

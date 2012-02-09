@@ -718,7 +718,7 @@ begin
     case tagrec.Address of
       //Nível de combustivel.
       96: begin
-        if PCommPort.IOCommandSync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,nil,@cmdpkg)=0 then begin
+        if PCommPort.IOCommandSync(iocWriteRead,4,pkg,4,PDriverID,5,@cmdpkg)=0 then begin
           Result:=ioDriverError;
           exit;
         end;
@@ -750,7 +750,7 @@ begin
       end;
       //Voltagem da bateria.
       168: begin
-        if PCommPort.IOCommandSync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,nil,@cmdpkg)=0 then begin
+        if PCommPort.IOCommandSync(iocWriteRead,4,pkg,5,PDriverID,5,@cmdpkg)=0 then begin
           Result:=ioDriverError;
           exit;
         end;
@@ -799,7 +799,7 @@ begin
         end;
 
         PCommPort.Lock(PDriverID);
-        if PCommPort.IOCommandSync(iocWriteRead,pkg,5,4,PDriverID,5,CommPortCallBack,nil,@cmdpkg)=0 then begin
+        if PCommPort.IOCommandSync(iocWriteRead,4,pkg,5,PDriverID,5,@cmdpkg)=0 then begin
           Result:=ioDriverError;
           exit;
         end;
@@ -866,7 +866,7 @@ begin
           //copia os primeiros bytes do pacote
           pkg := cmdpkg.BufferToRead;
 
-          if PCommPort.IOCommandSync(iocRead,nil,bytesRemaim,0,PDriverID,5,CommPortCallBack,nil,@cmdpkg)=0 then begin
+          if PCommPort.IOCommandSync(iocRead,0,nil,bytesRemaim,PDriverID,5,@cmdpkg)=0 then begin
             Result:=ioDriverError;
             exit;
           end;
@@ -970,7 +970,7 @@ begin
       end;
       //status do motor e reset.
       204, 205: begin
-        if PCommPort.IOCommandSync(iocWriteRead,pkg,4,4,PDriverID,5,CommPortCallBack,nil,@cmdpkg)=0 then begin
+        if PCommPort.IOCommandSync(iocWriteRead,4,pkg,4,PDriverID,5,@cmdpkg)=0 then begin
           Result:=ioDriverError;
           exit;
         end;
@@ -1009,7 +1009,7 @@ begin
       end;
       //Horimetro do motor.
       247: begin
-        if PCommPort.IOCommandSync(iocWriteRead,pkg,7,4,PDriverID,5,CommPortCallBack,nil,@cmdpkg)=0 then begin
+        if PCommPort.IOCommandSync(iocWriteRead,4,pkg,7,PDriverID,5,@cmdpkg)=0 then begin
           Result:=ioDriverError;
           exit;
         end;

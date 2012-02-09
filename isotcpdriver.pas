@@ -149,25 +149,25 @@ begin
   PrepareToSend(msg);
 
   try
-    res := PCommPort.IOCommandSync(iocWriteRead,msg,4,22,DriverID,ifthen(FConnectionWay=ISOTCP_VIA_CP243,1000,0),CommPortCallBack,nil,@IOResult);
+    res := PCommPort.IOCommandSync(iocWriteRead,22,msg,4,DriverID,ifthen(FConnectionWay=ISOTCP_VIA_CP243,1000,0),@IOResult);
     if (res=0) then exit;
     if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>4) then exit;
 
     len:= IOResult.BufferToRead[2]*$100 + IOResult.BufferToRead[3];
 
-    res := PCommPort.IOCommandSync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,nil,@IOResult);
+    res := PCommPort.IOCommandSync(iocRead,0,nil,len-4,DriverID,0,@IOResult);
     if (res=0) then exit;
     if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>(len-4)) then exit;
 
     retries := 1;
     while (len<>22) and (retries<3) do begin
-      res := PCommPort.IOCommandSync(iocRead,nil,4,0,DriverID,0,CommPortCallBack,nil,@IOResult);
+      res := PCommPort.IOCommandSync(iocRead,0,nil,4,DriverID,0,@IOResult);
       if (res=0) then exit;
       if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>4) then exit;
 
       len:= IOResult.BufferToRead[2]*$100 + IOResult.BufferToRead[3];
 
-      res := PCommPort.IOCommandSync(iocRead,nil,len-4,0,DriverID,0,CommPortCallBack,nil,@IOResult);
+      res := PCommPort.IOCommandSync(iocRead,0,nil,len-4,DriverID,0,@IOResult);
       if (res=0) then exit;
       if (IOResult.ReadIOResult<>iorOK) or (IOResult.Received<>(len-4)) then exit;
     end;
@@ -204,7 +204,7 @@ begin
   PrepareToSend(msgOut);
 
   try
-    res:=PCommPort.IOCommandSync(iocWrite,msgOut,0,Length(msgOut),DriverID,0,CommPortCallBack,nil,nil);
+    res:=PCommPort.IOCommandSync(iocWrite,Length(msgOut),msgOut,0,DriverID,0,nil);
     if res=0 then begin
       Result:=false;
       exit;
@@ -236,7 +236,7 @@ begin
   Result:=iorNotReady;
 
   try
-    res := PCommPort.IOCommandSync(iocRead,nil,7,0,DriverID,0,CommPortCallBack,nil,@IOResult1);
+    res := PCommPort.IOCommandSync(iocRead,0,nil,7,DriverID,0,@IOResult1);
     if (res=0) then begin
       BytesRead:=0;
       Result:=iorNotReady;
@@ -258,7 +258,7 @@ begin
     while len = 7 do begin
       //le novamente...
       //reads again.
-      res := PCommPort.IOCommandSync(iocRead,nil,7,0,DriverID,0,CommPortCallBack,nil,@IOResult1);
+      res := PCommPort.IOCommandSync(iocRead,0,nil,7,DriverID,0,@IOResult1);
       if (res=0) then begin
         BytesRead:=0;
         Result:=iorNotReady;
@@ -276,7 +276,7 @@ begin
       len:= IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
     end;
 
-    res := PCommPort.IOCommandSync(iocRead,nil,len-7,0,DriverID,0,CommPortCallBack,nil,@IOResult2);
+    res := PCommPort.IOCommandSync(iocRead,0,nil,len-7,DriverID,0,@IOResult2);
     if (res=0) then begin
       BytesRead:=0;
       Result:=iorNotReady;
@@ -345,4 +345,4 @@ begin
     FCPUs[plc].Connected:=false;
 end;
 
-end.
+end.
