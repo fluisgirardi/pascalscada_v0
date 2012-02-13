@@ -312,7 +312,7 @@ var
 implementation
 
 uses PLCTagNumber, math, dateutils, hsstrings, uwesttagbuilder, Controls,
-  crossdatetime;
+  crossdatetime, pascalScadaMTPCPU;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin
@@ -481,11 +481,7 @@ var
   values:TArrayOfDouble;
 begin
   if ([csDestroying]*ComponentState<>[]) then begin
-    {$IFDEF FPC}
-    ThreadSwitch;
-    {$ELSE}
-    SwitchToThread;
-    {$ENDIF}
+    CrossThreadSwitch;
     exit;
   end;
   plcneedy:=0;

@@ -151,7 +151,7 @@ type
 
 implementation
 
-uses hsstrings{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses hsstrings, pascalScadaMTPCPU{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
@@ -195,11 +195,7 @@ begin
         if NeedSleep>0 then
           Sleep(NeedSleep);
         if NeedSleep<0 then
-          {$IFDEF FPC}
-          ThreadSwitch;
-          {$ELSE}
-          SwitchToThread;
-          {$ENDIF}
+          CrossThreadSwitch;
       except
         on E: Exception do begin
           {$IFDEF FDEBUG}
@@ -274,4 +270,4 @@ begin
 end;
 
 end.
-
+

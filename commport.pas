@@ -962,7 +962,7 @@ const
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings, crossdatetime;
+uses SysUtils, ProtocolDriver, hsstrings, crossdatetime, pascalScadaMTPCPU;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1412,11 +1412,7 @@ begin
   //espera todos acabarem seus comandos.
   //waits everyone finish their commands.
   while PUnlocked>0 do
-    {$IFDEF FPC}
-    ThreadSwitch;
-    {$ELSE}
-    SwitchToThread;
-    {$ENDIF}
+    CrossThreadSwitch;
 
   try
     PLockCS.Enter;

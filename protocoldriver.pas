@@ -710,7 +710,7 @@ var
 
 implementation
 
-uses PLCTag, hsstrings, Dialogs, math, crossdatetime;
+uses PLCTag, hsstrings, Dialogs, math, crossdatetime, pascalScadaMTPCPU;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -803,11 +803,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 
@@ -877,11 +873,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
     
@@ -898,11 +890,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
     DoDelTag(TagObj);
@@ -1060,11 +1048,7 @@ begin
     //send the scanwrite message to thread.
     if (PScanWriteThread<>nil) then begin
       PScanWriteThread.ScanWrite(pkg);
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF}
+      CrossThreadSwitch;
     end;
 
     Result := FScanWriteID;
@@ -1082,11 +1066,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
     res := DoRead(tagrec,Values,true);
@@ -1107,11 +1087,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 
@@ -1160,11 +1136,7 @@ begin
       DoScanRead(Sender, NeedSleep);
    finally
       FCritical.Leave;
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF}
+      CrossThreadSwitch;
    end;
 end;
 
@@ -1174,11 +1146,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 
@@ -1195,11 +1163,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 
@@ -1228,11 +1192,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 
@@ -1314,11 +1274,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 
@@ -1335,11 +1291,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 
@@ -1356,11 +1308,7 @@ begin
     //tenta entrar no Mutex
     //try enter on mutex
     while not FPause.ResetEvent do
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF};
+      CrossThreadSwitch;
 
     FCritical.Enter;
 

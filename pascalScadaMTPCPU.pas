@@ -12,6 +12,7 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  **********************************************************************}
+{$i language.inc}
 unit pascalScadaMTPCPU;
 
 {$IFDEF FPC}
@@ -30,6 +31,18 @@ uses ctypes;
 {$ENDIF}
 
 function GetSystemThreadCount: integer;
+
+{$IFDEF PORTUGUES}
+{:
+Troca a thread em execução da maneira mais eficiente de acordo com várias
+configurações de sistema operacional/número de processadores.
+}
+{$ELSE}
+{:
+More efficient thread switch, checking the OS/number of processors.
+}
+{$ENDIF}
+procedure CrossThreadSwitch;
 
 implementation
 
@@ -87,6 +100,26 @@ end;
     Result:=1;
   end;
 {$ENDIF}
+
+procedure CrossThreadSwitch;
+begin
+  if GetSystemThreadCount>1 then
+    {$IFDEF FPC}
+    ThreadSwitch
+    {$ELSE}
+    SwitchToThread
+    {$ENDIF}
+  else
+    {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64) or defined(WINCE)}
+    Sleep(1);
+    {$ELSE}
+    {$IFDEF FPC}
+    ThreadSwitch;
+    {$ELSE}
+    SwitchToThread;
+    {$ENDIF}
+    {$IFEND}
+end;
 
 end.
 

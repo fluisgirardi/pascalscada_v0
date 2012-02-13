@@ -249,6 +249,8 @@ type
 
 implementation
 
+uses pascalScadaMTPCPU;
+
 procedure TCrossThread.WakeUp;
 begin
   {$IFDEF USE_TTHREAD_START}
@@ -297,7 +299,7 @@ begin
   pthread_mutex_unlock(@FEvent.mutex);
 
   while (Waiters <> 0) do
-    ThreadSwitch;
+    CrossThreadSwitch
 
   pthread_cond_destroy(@FEvent.condvar);
   pthread_mutex_destroy(@FEvent.mutex);
@@ -409,4 +411,4 @@ begin
   {$IFEND}
 end;
 
-end.
+end.

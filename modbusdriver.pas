@@ -261,7 +261,8 @@ type
 
 implementation
 
-uses Dialogs, Controls, PLCBlockElement, ValueProcessor, crossdatetime;
+uses Dialogs, Controls, PLCBlockElement, ValueProcessor, crossdatetime,
+  pascalScadaMTPCPU;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);
@@ -768,11 +769,7 @@ begin
     first:=true;
     done := false;
     if ([csDestroying]*ComponentState<>[]) then begin
-      {$IFDEF FPC}
-      ThreadSwitch;
-      {$ELSE}
-      SwitchToThread;
-      {$ENDIF}
+      CrossThreadSwitch;
       exit;
     end;
     for plc:= 0 to High(PModbusPLC) do begin
