@@ -299,7 +299,7 @@ begin
   pthread_mutex_unlock(@FEvent.mutex);
 
   while (Waiters <> 0) do
-    CrossThreadSwitch
+    CrossThreadSwitch;
 
   pthread_cond_destroy(@FEvent.condvar);
   pthread_mutex_destroy(@FEvent.mutex);
@@ -411,4 +411,4 @@ begin
   {$IFEND}
 end;
 
-end.
+end.
