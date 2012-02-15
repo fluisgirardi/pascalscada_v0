@@ -1,4 +1,4 @@
-﻿{$i language.inc}
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa a base para Tags de comunicação.)

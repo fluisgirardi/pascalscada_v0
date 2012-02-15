@@ -1,4 +1,4 @@
-﻿{$i language.inc}
+{$i language.inc}
 {$i delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
