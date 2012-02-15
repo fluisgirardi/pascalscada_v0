@@ -53,7 +53,7 @@ function sysconf(i: cint): clong; cdecl; external name 'sysconf';
 
 function GetSystemThreadCount: integer;
 // returns a good default for the number of threads on this system
-{$IF defined(windows)}
+{$IF defined(WIN32) or defined(WIN64)}
 //returns total number of processors available to system including logical hyperthreaded processors
 var
   i: Integer;
@@ -74,6 +74,10 @@ begin
     GetSystemInfo(SystemInfo);
     Result := SystemInfo.dwNumberOfProcessors;
   end;
+end;
+{$ELSEIF defined(WINCE)}
+begin
+  Result:=1;
 end;
 {$ELSEIF defined(UNTESTEDsolaris)}
   begin
