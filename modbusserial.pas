@@ -198,11 +198,11 @@ begin
         SetLength(Result,(TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0)+9);
         Result[0] := TagObj.Station and $FF;
         Result[1] := $0F;
-        Result[2] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
-        Result[3] := (TagObj.Address+TagObj.OffSet) and $FF;
-        Result[4] := (Min(TagObj.Size,Length(ToWrite)) and $FF00) shr 8;
-        Result[5] := Min(TagObj.Size,Length(ToWrite)) and $FF;
-        Result[6] := (TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0);
+        Result[2] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;        //endereco
+        Result[3] := (TagObj.Address+TagObj.OffSet) and $FF;                  //endereco
+        Result[4] := (Min(TagObj.Size,Length(ToWrite)) and $FF00) shr 8;      //num de coils
+        Result[5] := Min(TagObj.Size,Length(ToWrite)) and $FF;                //num de coils
+        Result[6] := (TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0);   //num de bytes que seguem
 
         i := 0;
         c := 0;
@@ -233,11 +233,11 @@ begin
         SetLength(Result,(TagObj.Size*2)+9);
         Result[0] := TagObj.Station and $FF;
         Result[1] := $10;
-        Result[2] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
-        Result[3] := (TagObj.Address+TagObj.OffSet) and $FF;
-        Result[4] := ((TagObj.Size and $FF00) shr 8);
-        Result[5] := TagObj.Size and $FF;
-        Result[6] := (TagObj.Size*2) and $FF;
+        Result[2] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8; //endereco
+        Result[3] := (TagObj.Address+TagObj.OffSet) and $FF;           //endereco
+        Result[4] := ((TagObj.Size and $FF00) shr 8);                  //num de words
+        Result[5] := TagObj.Size and $FF;                              //num de words
+        Result[6] := (TagObj.Size*2) and $FF;                          //num de bytes que seguem = num de words * 2
         i := 0;
         while (i<TagObj.Size) do begin
             Result[7+i*2] := ((Trunc(ToWrite[i]) and $FF00) shr 8);

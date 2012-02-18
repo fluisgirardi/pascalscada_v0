@@ -227,11 +227,11 @@ begin
         Result[05] := ((size + 7) and $FF);            //size of the packet, bLo
         Result[06] := TagObj.Station and $FF;
         Result[07] := $0F;
-        Result[08] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
-        Result[09] := (TagObj.Address+TagObj.OffSet) and $FF;
-        Result[10] := (Min(TagObj.Size,Length(ToWrite)) and $FF00) shr 8;
-        Result[11] := Min(TagObj.Size,Length(ToWrite)) and $FF;
-        Result[12] := (TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0);
+        Result[08] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;      //endereco
+        Result[09] := (TagObj.Address+TagObj.OffSet) and $FF;                //endereco
+        Result[10] := (Min(TagObj.Size,Length(ToWrite)) and $FF00) shr 8;    //num de coils
+        Result[11] := Min(TagObj.Size,Length(ToWrite)) and $FF;              //num de coils
+        Result[12] := (TagObj.Size div 8)+IfThen((TagObj.Size mod 8)>0,1,0); //num de bytes que seguem
 
         i := 0;
         c := 0;
@@ -267,11 +267,11 @@ begin
 
         Result[06] := TagObj.Station and $FF;
         Result[07] := $10;
-        Result[08] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;
-        Result[09] := (TagObj.Address+TagObj.OffSet) and $FF;
-        Result[10] := ((TagObj.Size and $FF00) shr 8);
-        Result[11] := TagObj.Size and $FF;
-        Result[12] := (TagObj.Size*2) and $FF;
+        Result[08] := ((TagObj.Address+TagObj.OffSet) and $FF00) shr 8;  //endereco
+        Result[09] := (TagObj.Address+TagObj.OffSet) and $FF;            //endereco
+        Result[10] := ((TagObj.Size and $FF00) shr 8);                   //num de words
+        Result[11] := TagObj.Size and $FF;                               //num de words
+        Result[12] := (TagObj.Size*2) and $FF;                           //num de bytes que seguem = num de words * 2
         i := 0;
         while (i<TagObj.Size) do begin
             Result[13+i*2] := ((Trunc(ToWrite[i]) and $FF00) shr 8);
