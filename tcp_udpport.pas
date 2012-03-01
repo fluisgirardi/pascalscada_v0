@@ -383,7 +383,7 @@ var
   channel:sockaddr_in;
 {$IFEND}
 
-  flag, bufsize, sockType:Integer;
+  flag, bufsize, sockType, sockProto:Integer;
 begin
   Ok:=false;
   try
@@ -431,9 +431,15 @@ begin
     //##########################################################################
     case FPortType of
       ptTCP:
-        sockType := IPPROTO_TCP;
+        begin
+          sockProto := IPPROTO_TCP;
+          sockType  := SOCK_STREAM;
+        end;
       ptUDP:
-        sockType := IPPROTO_UDP;
+        begin
+          sockProto := IPPROTO_UDP;
+          sockType  := SOCK_DGRAM;
+        end
       else begin
         PActive:=false;
         exit;
@@ -442,7 +448,7 @@ begin
 
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     //UNIX and WINDOWS CE
-    FSocket := fpSocket(PF_INET, SOCK_STREAM, sockType);
+    FSocket := fpSocket(PF_INET, sockType, sockProto);
 
     if FSocket<0 then begin
       PActive:=false;
@@ -451,7 +457,7 @@ begin
     end;
     {$ELSE}
     //WINDOWS
-    FSocket :=   Socket(PF_INET, SOCK_STREAM, sockType);
+    FSocket :=   Socket(PF_INET, sockType, sockProto);
 
     if FSocket=INVALID_SOCKET then begin
       PActive:=false;
