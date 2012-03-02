@@ -569,8 +569,10 @@ begin
     PSize := size;
     SetLength(PValues, PSize);
     if PProtocolDriver<>nil then begin
-       PProtocolDriver.RemoveTag(Self);
-       PProtocolDriver.AddTag(Self);
+      if PAutoRead then begin
+        PProtocolDriver.RemoveTag(Self);
+        PProtocolDriver.AddTag(Self);
+      end;
     end;
   end;
 end;
