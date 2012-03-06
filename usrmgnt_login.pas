@@ -12,6 +12,8 @@ uses
 
 type
 
+  TFocusedControl = (fcUserName, fcPassword);
+
   { TfrmUserAuthentication }
 
   TfrmUserAuthentication = class(TForm)
@@ -25,9 +27,11 @@ type
     BitBtn1: TBitBtn;
     procedure FormShow(Sender: TObject);
   private
-    { Private declarations }
+    FFocusControl:TFocusedControl;
   public
     { Public declarations }
+  published
+    property FocusControl:TFocusedControl read FFocusControl write FFocusControl;
   end;
 
 var
@@ -47,7 +51,10 @@ implementation
 
 procedure TfrmUserAuthentication.FormShow(Sender: TObject);
 begin
-  edtusername.SetFocus;
+  case FFocusControl of
+    fcUserName: edtusername.SetFocus;
+    fcPassword: edtPassword.SetFocus;
+  end;
 end;
 
 {$IFDEF FPC}

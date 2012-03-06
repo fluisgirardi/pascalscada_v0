@@ -113,8 +113,9 @@ begin
   loggedin:=False;
   Result:=false;
   try
+    frmLogin.edtusername.Text:='';
+    frmLogin.FocusControl:=fcUserName;
     while (not loggedin) and (not aborted) do begin
-      frmLogin.edtusername.Text:='';
       frmLogin.edtPassword.Text:='';
       if frmLogin.ShowModal=mrOk then begin
         if CheckUserAndPassword(frmLogin.edtusername.Text, frmLogin.edtPassword.Text) then begin
@@ -135,6 +136,7 @@ begin
         end;
       end else
         aborted:=true;
+      frmLogin.FocusControl:=fcPassword;
     end;
   finally
     frmLogin.Destroy;

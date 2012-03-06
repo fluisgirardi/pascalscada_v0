@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 327
+  Left = 438
   Height = 376
-  Top = 102
+  Top = 101
   Width = 522
   Caption = 'Form1'
   ClientHeight = 355
@@ -158,7 +158,6 @@ object Form1: TForm1
     object Action1: TPascalSCADASecureAction
       Category = 'PascalSCADA User Management'
       Caption = 'usuario com autorizacao "autorizacao1"/User Can access the authorization "autorizacao1"'
-      Enabled = False
       OnExecute = Action1Execute
       SecurityCode = 'autorizacao1'
     end
