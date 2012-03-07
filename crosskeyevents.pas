@@ -38,6 +38,8 @@ type
     {$ENDIF}
     FTarget:TWinControl;
 
+    FShitfState:TShiftState;
+
     {$IFDEF PORTUGUES}
     //: Emula o pressionamento de uma tecla.
     {$ELSE}
@@ -99,35 +101,43 @@ type
     {$ELSE}
     //: Apply key modification events (Ctrl, Shift and Alt).
     {$ENDIF}
-    procedure Apply(Shift: TShiftState);
+    procedure Apply(Shift: TShiftState); virtual;
     {$IFDEF PORTUGUES}
     //: Remove modificadores de evento de tecla (Ctrl, Shift e Alt).
     {$ELSE}
     //: Removes key modification events (Ctrl, Shift and Alt).
     {$ENDIF}
-    procedure Unapply(Shift: TShiftState);
+    procedure Unapply(Shift: TShiftState); virtual;
   end;
 
   {$IF defined(LCLgtk2)}
+
+  { TGTK2KeyEvents }
+
   TGTK2KeyEvents = class(TCrossKeyEvents)
     protected
-      // @seealso(TCrossKeyEvents.DoDown)
+      //: @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;
-      // @seealso(TCrossKeyEvents.DoUp)
+      //: @seealso(TCrossKeyEvents.DoUp)
       procedure DoUp(Key: LongWord); override;
-      // @seealso(TCrossKeyEvents.TranlateVirtualKey)
+      //: @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
+    public
+      //: @seealso(TCrossKeyEvents.Apply)
+      procedure Apply(Shift: TShiftState); override;
+      //: @seealso(TCrossKeyEvents.Unapply)
+      procedure Unapply(Shift: TShiftState); override;
   end;
   {$IFEND}
 
   {$IF defined(LCLqt)}
   TQT4KeyEvents = class(TCrossKeyEvents)
     protected
-      // @seealso(TCrossKeyEvents.DoDown)
+      //: @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;
-      // @seealso(TCrossKeyEvents.DoUp)
+      //: @seealso(TCrossKeyEvents.DoUp)
       procedure DoUp(Key: LongWord); override;
-      // @seealso(TCrossKeyEvents.TranlateVirtualKey)
+      //: @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
   end;
   {$IFEND}
@@ -135,11 +145,11 @@ type
   {$IF defined(LCLwin32) OR (not defined(FPC))}
   TWindowsKeyEvents = class(TCrossKeyEvents)
     protected
-      // @seealso(TCrossKeyEvents.DoDown)
+      //: @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;
-      // @seealso(TCrossKeyEvents.DoUp)
+      //: @seealso(TCrossKeyEvents.DoUp)
       procedure DoUp(Key: LongWord); override;
-      // @seealso(TCrossKeyEvents.TranlateVirtualKey)
+      //: @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
   end;
   {$IFEND}
@@ -251,18 +261,30 @@ var
   gev:TGdkEvent;
   keys:PGdkKeymapKey;
   nkeys:cint;
+  effectivegroup, level:Integer;
+  consumedkeys:TGdkModifierType;
 begin
   if FTarget=nil then exit;
   gev.key.window:=PGtkWidget(Ftarget.Handle)^.window;
   gev.key._type:=GDK_KEY_PRESS;
   gev.key.send_event:=1;
+
   gev.key.time:=10;
   gev.key.state:=0;
-  gev.key.keyval:=key;
   gev.key.length:=1;
+
+  if ssShift in FShitfState then
+    gev.key.state:=gev.key.state or GDK_SHIFT_MASK;
+
+  if ssCtrl in FShitfState  then
+    gev.key.state:=gev.key.state or GDK_CONTROL_MASK;
+
+  if ssAlt in FShitfState   then
+    gev.key.state:=gev.key.state or GDK_MOD1_MASK;
+
   gev.key._string:=gdk_keyval_name(key);
 
-  gdk_keymap_get_entries_for_keyval(nil,gev.key.keyval,keys,@nkeys);
+  gdk_keymap_get_entries_for_keyval(nil,key,keys,@nkeys);
 
   if keys=nil then begin
     gev.key.hardware_keycode:=GDK_KEY_a;
@@ -272,6 +294,8 @@ begin
     gev.key.group:=keys^.group;
     g_free(keys);
   end;
+
+  gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),gev.key.hardware_keycode,gev.key.state,gev.key.group,@gev.key.keyval,@effectivegroup,@level,@consumedkeys);
 
   gdk_event_put(@gev);
 end;
@@ -418,6 +442,20 @@ begin
   else
     Result := GDK_KEY_VoidSymbol;
   end;
+end;
+
+procedure TGTK2KeyEvents.Apply(Shift: TShiftState);
+begin
+  if ssCtrl in Shift then  FShitfState:=FShitfState+[ssCtrl];
+  if ssAlt in Shift then   FShitfState:=FShitfState+[ssAlt];
+  if ssShift in Shift then FShitfState:=FShitfState+[ssShift];
+end;
+
+procedure TGTK2KeyEvents.Unapply(Shift: TShiftState);
+begin
+  if ssCtrl in Shift then  FShitfState:=FShitfState-[ssCtrl];
+  if ssAlt in Shift then   FShitfState:=FShitfState-[ssAlt];
+  if ssShift in Shift then FShitfState:=FShitfState-[ssShift];
 end;
 {$IFEND}
 

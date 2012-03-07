@@ -18,7 +18,7 @@ type
   TDatabaseObjectState = (dosUnknown, dosChanged, dosDontExists, dosOK);
   TDatabaseNameBehavior = (dbnTableName, dbnFieldName, dbnIndexName);
 
-  //simple index declaration (primary and unique)
+  //simple index declaration (for primary and unique keys)
   TIndex = class(TObject)
   protected
     FTableOwner:TTableDefinition;
@@ -26,12 +26,16 @@ type
     FFields:TArrayOfString;
     FState:TDatabaseObjectState;
     procedure AddFieldToIndex(FieldName:String); virtual;
+    function GetFieldCount:Integer;
+    function GetField(index:Integer):String;
   public
     constructor Create(OwnerTable:TTableDefinition; IndexName:String);
     destructor Destroy; override;
     function GetCurrentState:TDatabaseObjectState; virtual;
     procedure ResetState;
     property IndexName:String read FIndexName;
+    property FieldCount:Integer read GetFieldCount;
+    property IndexField[index:Integer]:Integer read GetField;
   end;
 
   TUniqueIndex = class(TIndex)
@@ -111,7 +115,8 @@ implementation
 
 constructor TIndex.Create(OwnerTable:TTableDefinition; IndexName:String);
 begin
-  //must validate the index name first.
+  //TODO: must validate the index name first with the database driver.
+  //TODO: must check if the name of the index don't already exists on schema.
   inherited Create;
   FTableOwner:=OwnerTable;
   FIndexName:=IndexName;
@@ -147,9 +152,22 @@ begin
   FFields[c]:=lowercase(FieldName);
 end;
 
+function TIndex.GetFieldCount:Integer;
+begin
+  Result:=Length(FFields);
+end;
+
+function TIndex.GetField(index:Integer):String;
+begin
+  if (index<0) or (index>High(FFields)) then
+    raise Exception.Create('Fora dos limites!');
+
+  Result:=FFields[index];
+end;
+
 function   TIndex.GetCurrentState:TDatabaseObjectState;
 begin
-
+  //TODO: must check itself with database driver.
 end;
 
 procedure  TIndex.ResetState;
@@ -177,7 +195,23 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+constructor TForeignKey.Create(OwnerTable:TTableDefinition; IndexName,
+                               SourceTable:String;
+                               UpdateAction:TForeignKeyRestriction = fkrNoAction;
+                               DeleteAction:TForeignKeyRestriction = fkrNoAction);
+begin
+  inherited Create();
+end;
 
+destructor  TForeignKey.Destroy;
+begin
+
+end;
+
+procedure   TForeignKey.addFieldLink(SourceField, Field:String);
+begin
+
+end;
 
 end.
 
