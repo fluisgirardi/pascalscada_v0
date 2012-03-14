@@ -1,0 +1,437 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <General>
+      <MainUnit Value="0"/>
+      <Title Value="Monitoramento e controle de horimetros"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <Icon Value="0"/>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <StringTable ProductVersion=""/>
+    </VersionInfo>
+    <BuildModes Count="1" Active="Default">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+        <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="8">
+      <Item1>
+        <PackageName Value="fortes324forlaz"/>
+        <MinVersion Major="3" Minor="24" Release="2" Valid="True"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="lazreport"/>
+        <MinVersion Minor="9" Release="8" Valid="True"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="TAChartLazarusPkg"/>
+        <MinVersion Major="1" Valid="True"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="LCLBase"/>
+        <MinVersion Major="1" Release="1" Valid="True"/>
+      </Item4>
+      <Item5>
+        <PackageName Value="FCL"/>
+        <MinVersion Major="1" Release="1" Valid="True"/>
+      </Item5>
+      <Item6>
+        <PackageName Value="zcomponent"/>
+        <MinVersion Major="7" Valid="True"/>
+      </Item6>
+      <Item7>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Release="2" Valid="True"/>
+      </Item7>
+      <Item8>
+        <PackageName Value="LCL"/>
+      </Item8>
+    </RequiredPackages>
+    <Units Count="20">
+      <Unit0>
+        <Filename Value="horimetros.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="horimetros"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="15"/>
+        <UsageCount Value="55"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="umain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmMain"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="umain"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="112"/>
+        <CursorPos X="18" Y="114"/>
+        <UsageCount Value="55"/>
+        <Bookmarks Count="1">
+          <Item0 X="3" Y="326" ID="0"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="udm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="dmtags"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <UnitName Value="udm"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="138"/>
+        <CursorPos X="139" Y="168"/>
+        <UsageCount Value="55"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="udmdb.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="dmdb"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <UnitName Value="udmdb"/>
+        <EditorIndex Value="4"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="126"/>
+        <CursorPos X="69" Y="105"/>
+        <UsageCount Value="55"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="../pascalscada/plcnumber.pas"/>
+        <UnitName Value="PLCNumber"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="68"/>
+        <CursorPos X="14" Y="87"/>
+        <UsageCount Value="9"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/db.pas"/>
+        <UnitName Value="db"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="30"/>
+        <CursorPos X="41" Y="50"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/dataset.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="2061"/>
+        <CursorPos X="3" Y="2064"/>
+        <UsageCount Value="9"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="upopuphorimetro.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmPopup"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="upopuphorimetro"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="37"/>
+        <CursorPos X="17" Y="37"/>
+        <ComponentState Value="1"/>
+        <UsageCount Value="53"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="../pascalscada/ucrosstimer.pas"/>
+        <UnitName Value="ucrosstimer"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="13"/>
+        <CursorPos X="21" Y="25"/>
+        <UsageCount Value="9"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../lazarus/lcl/extctrls.pp"/>
+        <UnitName Value="ExtCtrls"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="360"/>
+        <CursorPos X="25" Y="372"/>
+        <UsageCount Value="9"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="../../lazarus/lcl/customtimer.pas"/>
+        <UnitName Value="CustomTimer"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="31"/>
+        <CursorPos X="15" Y="43"/>
+        <UsageCount Value="9"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="../../lazarus/lcl/dbgrids.pas"/>
+        <UnitName Value="DBGrids"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="406"/>
+        <CursorPos X="32" Y="256"/>
+        <UsageCount Value="13"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="../../lazarus/lcl/grids.pas"/>
+        <UnitName Value="Grids"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="519"/>
+        <CursorPos X="33" Y="543"/>
+        <UsageCount Value="13"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/rtl/inc/mouseh.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="65"/>
+        <CursorPos X="11" Y="62"/>
+        <UsageCount Value="11"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="ulogin.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmLogin"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ulogin"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="13"/>
+        <CursorPos X="23" Y="47"/>
+        <UsageCount Value="36"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="ugraficos.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmGraficos"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ugraficos"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="46"/>
+        <CursorPos X="50" Y="62"/>
+        <UsageCount Value="35"/>
+        <Loaded Value="True"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="ufiltro.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmFiltro"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ufiltro"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="8"/>
+        <CursorPos X="24" Y="42"/>
+        <UsageCount Value="26"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="urelatorios.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmRelatorios"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="urelatorios"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="18"/>
+        <CursorPos X="3" Y="42"/>
+        <UsageCount Value="25"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="../pascalscada/ZeosLib/src/component/ZAbstractRODataset.pas"/>
+        <UnitName Value="ZAbstractRODataset"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1415"/>
+        <CursorPos X="1" Y="1434"/>
+        <UsageCount Value="11"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="ugerenciamentousuarios.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmUsuarios"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ugerenciamentousuarios"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="43"/>
+        <CursorPos X="19" Y="72"/>
+        <UsageCount Value="23"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit19>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="umain.pas"/>
+        <Caret Line="97" Column="77" TopLine="64"/>
+      </Position1>
+      <Position2>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="95" Column="80" TopLine="90"/>
+      </Position2>
+      <Position3>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="96" Column="80" TopLine="91"/>
+      </Position3>
+      <Position4>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="97" Column="80" TopLine="92"/>
+      </Position4>
+      <Position5>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="98" Column="80" TopLine="93"/>
+      </Position5>
+      <Position6>
+        <Filename Value="ugerenciamentousuarios.pas"/>
+        <Caret Line="37" Column="12" TopLine="11"/>
+      </Position6>
+      <Position7>
+        <Filename Value="ugerenciamentousuarios.pas"/>
+        <Caret Line="52" Column="25" TopLine="17"/>
+      </Position7>
+      <Position8>
+        <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/db.pas"/>
+        <Caret Line="1558" Column="31" TopLine="1539"/>
+      </Position8>
+      <Position9>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="106" Column="80" TopLine="100"/>
+      </Position9>
+      <Position10>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="99" Column="77" TopLine="96"/>
+      </Position10>
+      <Position11>
+        <Filename Value="ugerenciamentousuarios.pas"/>
+        <Caret Line="71" Column="3" TopLine="34"/>
+      </Position11>
+      <Position12>
+        <Filename Value="ugerenciamentousuarios.pas"/>
+        <Caret Line="76" Column="6" TopLine="39"/>
+      </Position12>
+      <Position13>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="89" Column="3" TopLine="87"/>
+      </Position13>
+      <Position14>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="106" Column="80" TopLine="103"/>
+      </Position14>
+      <Position15>
+        <Filename Value="umain.pas"/>
+        <Caret Line="310" Column="24" TopLine="298"/>
+      </Position15>
+      <Position16>
+        <Filename Value="umain.pas"/>
+        <Caret Line="318" Column="24" TopLine="306"/>
+      </Position16>
+      <Position17>
+        <Filename Value="umain.pas"/>
+        <Caret Line="147" Column="40" TopLine="144"/>
+      </Position17>
+      <Position18>
+        <Filename Value="umain.pas"/>
+        <Caret Line="152" Column="3" TopLine="86"/>
+      </Position18>
+      <Position19>
+        <Filename Value="umain.pas"/>
+        <Caret Line="318" Column="3" TopLine="316"/>
+      </Position19>
+      <Position20>
+        <Filename Value="umain.pas"/>
+        <Caret Line="152" Column="1" TopLine="150"/>
+      </Position20>
+      <Position21>
+        <Filename Value="umain.pas"/>
+        <Caret Line="177" Column="3" TopLine="175"/>
+      </Position21>
+      <Position22>
+        <Filename Value="umain.pas"/>
+        <Caret Line="161" Column="18" TopLine="159"/>
+      </Position22>
+      <Position23>
+        <Filename Value="umain.pas"/>
+        <Caret Line="152" Column="3" TopLine="150"/>
+      </Position23>
+      <Position24>
+        <Filename Value="umain.pas"/>
+        <Caret Line="178" Column="3" TopLine="176"/>
+      </Position24>
+      <Position25>
+        <Filename Value="umain.pas"/>
+        <Caret Line="161" Column="3" TopLine="159"/>
+      </Position25>
+      <Position26>
+        <Filename Value="umain.pas"/>
+        <Caret Line="192" Column="3" TopLine="190"/>
+      </Position26>
+      <Position27>
+        <Filename Value="umain.pas"/>
+        <Caret Line="130" Column="18" TopLine="128"/>
+      </Position27>
+      <Position28>
+        <Filename Value="umain.pas"/>
+        <Caret Line="122" Column="18" TopLine="120"/>
+      </Position28>
+      <Position29>
+        <Filename Value="umain.pas"/>
+        <Caret Line="140" Column="18" TopLine="138"/>
+      </Position29>
+      <Position30>
+        <Filename Value="umain.pas"/>
+        <Caret Line="173" Column="18" TopLine="171"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="10"/>
+    <Target>
+      <Filename Value="horimetros"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CompilerMessages>
+        <UseMsgFile Value="True"/>
+      </CompilerMessages>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="4">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+      <Item4>
+        <Name Value="Exception"/>
+      </Item4>
+    </Exceptions>
+  </Debugging>
+</CONFIG>
