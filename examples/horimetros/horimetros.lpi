@@ -63,7 +63,7 @@
         <PackageName Value="LCL"/>
       </Item8>
     </RequiredPackages>
-    <Units Count="20">
+    <Units Count="23">
       <Unit0>
         <Filename Value="horimetros.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -71,7 +71,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="15"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="60"/>
       </Unit0>
       <Unit1>
         <Filename Value="umain.pas"/>
@@ -79,17 +79,13 @@
         <ComponentName Value="frmMain"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="umain"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="112"/>
-        <CursorPos X="18" Y="114"/>
-        <UsageCount Value="55"/>
-        <Bookmarks Count="1">
-          <Item0 X="3" Y="326" ID="0"/>
-        </Bookmarks>
+        <TopLine Value="105"/>
+        <CursorPos X="74" Y="106"/>
+        <ComponentState Value="1"/>
+        <UsageCount Value="60"/>
         <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="udm.pas"/>
@@ -98,9 +94,9 @@
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="udm"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="138"/>
+        <TopLine Value="151"/>
         <CursorPos X="139" Y="168"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="60"/>
       </Unit2>
       <Unit3>
         <Filename Value="udmdb.pas"/>
@@ -108,11 +104,15 @@
         <ComponentName Value="dmdb"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="udmdb"/>
-        <EditorIndex Value="4"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="126"/>
-        <CursorPos X="69" Y="105"/>
-        <UsageCount Value="55"/>
+        <TopLine Value="112"/>
+        <CursorPos X="45" Y="129"/>
+        <UsageCount Value="60"/>
+        <Bookmarks Count="1">
+          <Item0 X="3" Y="179" ID="0"/>
+        </Bookmarks>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit3>
@@ -123,17 +123,14 @@
         <TopLine Value="68"/>
         <CursorPos X="14" Y="87"/>
         <UsageCount Value="9"/>
-        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
       <Unit5>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/db.pas"/>
         <UnitName Value="db"/>
-        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="30"/>
         <CursorPos X="41" Y="50"/>
         <UsageCount Value="11"/>
-        <Loaded Value="True"/>
       </Unit5>
       <Unit6>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/dataset.inc"/>
@@ -150,9 +147,9 @@
         <UnitName Value="upopuphorimetro"/>
         <WindowIndex Value="0"/>
         <TopLine Value="37"/>
-        <CursorPos X="17" Y="37"/>
+        <CursorPos X="15" Y="43"/>
         <ComponentState Value="1"/>
-        <UsageCount Value="53"/>
+        <UsageCount Value="58"/>
       </Unit7>
       <Unit8>
         <Filename Value="../pascalscada/ucrosstimer.pas"/>
@@ -161,7 +158,6 @@
         <TopLine Value="13"/>
         <CursorPos X="21" Y="25"/>
         <UsageCount Value="9"/>
-        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit8>
       <Unit9>
         <Filename Value="../../lazarus/lcl/extctrls.pp"/>
@@ -204,14 +200,13 @@
       </Unit13>
       <Unit14>
         <Filename Value="ulogin.pas"/>
-        <IsPartOfProject Value="True"/>
         <ComponentName Value="frmLogin"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="ulogin"/>
         <WindowIndex Value="0"/>
         <TopLine Value="13"/>
         <CursorPos X="23" Y="47"/>
-        <UsageCount Value="36"/>
+        <UsageCount Value="40"/>
       </Unit14>
       <Unit15>
         <Filename Value="ugraficos.pas"/>
@@ -219,12 +214,10 @@
         <ComponentName Value="frmGraficos"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="ugraficos"/>
-        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="46"/>
         <CursorPos X="50" Y="62"/>
-        <UsageCount Value="35"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="40"/>
       </Unit15>
       <Unit16>
         <Filename Value="ufiltro.pas"/>
@@ -234,8 +227,8 @@
         <UnitName Value="ufiltro"/>
         <WindowIndex Value="0"/>
         <TopLine Value="8"/>
-        <CursorPos X="24" Y="42"/>
-        <UsageCount Value="26"/>
+        <CursorPos X="24" Y="15"/>
+        <UsageCount Value="31"/>
       </Unit16>
       <Unit17>
         <Filename Value="urelatorios.pas"/>
@@ -245,8 +238,8 @@
         <UnitName Value="urelatorios"/>
         <WindowIndex Value="0"/>
         <TopLine Value="18"/>
-        <CursorPos X="3" Y="42"/>
-        <UsageCount Value="25"/>
+        <CursorPos X="36" Y="23"/>
+        <UsageCount Value="30"/>
       </Unit17>
       <Unit18>
         <Filename Value="../pascalscada/ZeosLib/src/component/ZAbstractRODataset.pas"/>
@@ -255,7 +248,6 @@
         <TopLine Value="1415"/>
         <CursorPos X="1" Y="1434"/>
         <UsageCount Value="11"/>
-        <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit18>
       <Unit19>
         <Filename Value="ugerenciamentousuarios.pas"/>
@@ -265,138 +257,90 @@
         <UnitName Value="ugerenciamentousuarios"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="43"/>
-        <CursorPos X="19" Y="72"/>
-        <UsageCount Value="23"/>
+        <TopLine Value="10"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="28"/>
         <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit19>
+      <Unit20>
+        <Filename Value="../../controlsecuritymanager.pas"/>
+        <UnitName Value="ControlSecurityManager"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="149"/>
+        <CursorPos X="3" Y="151"/>
+        <UsageCount Value="11"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="../../customizedusermanagement.pas"/>
+        <UnitName Value="CustomizedUserManagement"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="78" Y="13"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit21>
+      <Unit22>
+        <Filename Value="../../../../lazarus/lcl/include/containedaction.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="41"/>
+        <CursorPos X="1" Y="53"/>
+        <UsageCount Value="10"/>
+      </Unit22>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="29">
+    <JumpHistory Count="12" HistoryIndex="11">
       <Position1>
         <Filename Value="umain.pas"/>
-        <Caret Line="97" Column="77" TopLine="64"/>
+        <Caret Line="298" Column="3" TopLine="298"/>
       </Position1>
       <Position2>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="95" Column="80" TopLine="90"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="123" Column="39" TopLine="115"/>
       </Position2>
       <Position3>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="96" Column="80" TopLine="91"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="132" Column="3" TopLine="120"/>
       </Position3>
       <Position4>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="97" Column="80" TopLine="92"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="269" Column="17" TopLine="257"/>
       </Position4>
       <Position5>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="98" Column="80" TopLine="93"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="311" Column="1" TopLine="302"/>
       </Position5>
       <Position6>
-        <Filename Value="ugerenciamentousuarios.pas"/>
-        <Caret Line="37" Column="12" TopLine="11"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="281" Column="1" TopLine="259"/>
       </Position6>
       <Position7>
-        <Filename Value="ugerenciamentousuarios.pas"/>
-        <Caret Line="52" Column="25" TopLine="17"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="326" Column="1" TopLine="268"/>
       </Position7>
       <Position8>
-        <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/db.pas"/>
-        <Caret Line="1558" Column="31" TopLine="1539"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="350" Column="5" TopLine="295"/>
       </Position8>
       <Position9>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="106" Column="80" TopLine="100"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="94" Column="44" TopLine="64"/>
       </Position9>
       <Position10>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="99" Column="77" TopLine="96"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="1" Column="48" TopLine="1"/>
       </Position10>
       <Position11>
-        <Filename Value="ugerenciamentousuarios.pas"/>
-        <Caret Line="71" Column="3" TopLine="34"/>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="153" Column="30" TopLine="172"/>
       </Position11>
       <Position12>
-        <Filename Value="ugerenciamentousuarios.pas"/>
-        <Caret Line="76" Column="6" TopLine="39"/>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="175" Column="7" TopLine="64"/>
       </Position12>
-      <Position13>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="89" Column="3" TopLine="87"/>
-      </Position13>
-      <Position14>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="106" Column="80" TopLine="103"/>
-      </Position14>
-      <Position15>
-        <Filename Value="umain.pas"/>
-        <Caret Line="310" Column="24" TopLine="298"/>
-      </Position15>
-      <Position16>
-        <Filename Value="umain.pas"/>
-        <Caret Line="318" Column="24" TopLine="306"/>
-      </Position16>
-      <Position17>
-        <Filename Value="umain.pas"/>
-        <Caret Line="147" Column="40" TopLine="144"/>
-      </Position17>
-      <Position18>
-        <Filename Value="umain.pas"/>
-        <Caret Line="152" Column="3" TopLine="86"/>
-      </Position18>
-      <Position19>
-        <Filename Value="umain.pas"/>
-        <Caret Line="318" Column="3" TopLine="316"/>
-      </Position19>
-      <Position20>
-        <Filename Value="umain.pas"/>
-        <Caret Line="152" Column="1" TopLine="150"/>
-      </Position20>
-      <Position21>
-        <Filename Value="umain.pas"/>
-        <Caret Line="177" Column="3" TopLine="175"/>
-      </Position21>
-      <Position22>
-        <Filename Value="umain.pas"/>
-        <Caret Line="161" Column="18" TopLine="159"/>
-      </Position22>
-      <Position23>
-        <Filename Value="umain.pas"/>
-        <Caret Line="152" Column="3" TopLine="150"/>
-      </Position23>
-      <Position24>
-        <Filename Value="umain.pas"/>
-        <Caret Line="178" Column="3" TopLine="176"/>
-      </Position24>
-      <Position25>
-        <Filename Value="umain.pas"/>
-        <Caret Line="161" Column="3" TopLine="159"/>
-      </Position25>
-      <Position26>
-        <Filename Value="umain.pas"/>
-        <Caret Line="192" Column="3" TopLine="190"/>
-      </Position26>
-      <Position27>
-        <Filename Value="umain.pas"/>
-        <Caret Line="130" Column="18" TopLine="128"/>
-      </Position27>
-      <Position28>
-        <Filename Value="umain.pas"/>
-        <Caret Line="122" Column="18" TopLine="120"/>
-      </Position28>
-      <Position29>
-        <Filename Value="umain.pas"/>
-        <Caret Line="140" Column="18" TopLine="138"/>
-      </Position29>
-      <Position30>
-        <Filename Value="umain.pas"/>
-        <Caret Line="173" Column="18" TopLine="171"/>
-      </Position30>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="10"/>
+    <Version Value="11"/>
     <Target>
       <Filename Value="horimetros"/>
     </Target>

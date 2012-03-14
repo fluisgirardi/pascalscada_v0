@@ -10,7 +10,7 @@ type
   TUserStillLoggedEvent      = procedure(var StillLogged:Boolean) of object;
   TGetUserNameAndLogin       = procedure(var UserInfo:String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
-  TValidadeSecurityCode      = TNotifyEvent;
+  TValidadeSecurityCode      = procedure(const securityCode:String) of object;
   TLogoutEvent               = TNotifyEvent;
   TCanAccessEvent            = procedure(securityCode:String; var CanAccess:Boolean) of object;
 
@@ -114,7 +114,7 @@ end;
 procedure TCustomizedUserManagement.ValidateSecurityCode(sc:String);
 begin
   if Assigned(FValidadeSecurityCode) then
-    FValidadeSecurityCode(Self);
+    FValidadeSecurityCode(sc);
 end;
 
 function  TCustomizedUserManagement.CanAccess(sc:String):Boolean;

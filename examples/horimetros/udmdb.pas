@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, db, FileUtil, ExtCtrls, LR_Class, LR_DBSet, LR_E_HTM,
-  ZConnection, ZDataset;
+  ZConnection, ZDataset, CustomizedUserManagement, ControlSecurityManager;
 
 type
 
@@ -30,6 +30,7 @@ type
     AlarmesQuerydt_duracao1: TDateTimeField;
     AlarmesQuerydt_fim: TDateTimeField;
     AlarmesQuerydt_inicio: TDateTimeField;
+    CustomizedUserManagement1: TCustomizedUserManagement;
     Datasource1: TDatasource;
     Datasource2: TDatasource;
     AcionamentoDatasource: TDatasource;
@@ -44,30 +45,35 @@ type
     ZTable1password: TStringField;
     ZTable1usuario: TStringField;
     procedure AcionamentoQueryCalcFields(DataSet: TDataSet);
-procedure AlarmesAtivosCalcFields(DataSet: TDataSet);
-procedure AlarmesQueryCalcFields(DataSet: TDataSet);
+    procedure AlarmesAtivosCalcFields(DataSet: TDataSet);
+    procedure AlarmesQueryCalcFields(DataSet: TDataSet);
+    procedure CustomizedUserManagement1CanAccess(securityCode: String;
+      var CanAccess: Boolean);
+    procedure CustomizedUserManagement1CheckUserAndPass(user, pass: String;
+      var ValidUser: Boolean);
+    procedure CustomizedUserManagement1GetUserLogin(var UserInfo: String);
+    procedure CustomizedUserManagement1GetUserName(var UserInfo: String);
+    procedure CustomizedUserManagement1Logout(Sender: TObject);
+    procedure CustomizedUserManagement1ManageUsersAndGroups(Sender: TObject);
+    procedure CustomizedUserManagement1ValidadeSecurityCode(
+      const securityCode: String);
     procedure DataModuleCreate(Sender: TObject);
-    procedure Datasource2StateChange(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure ZTable1BeforeDelete(DataSet: TDataSet);
     procedure ZTable1BeforePost(DataSet: TDataSet);
   private
     { private declarations }
-  public
-    procedure Access(level:Integer);
-    function  TryAccess(level:Integer):Boolean;
-    function Login(username, password:String):Boolean;
-    procedure Logout;
-  end; 
+  end;
 
 var
   dmdb: Tdmdb;
+  fullusername,
   userlogin:String;
   userlevel:Integer;
 
 implementation
 
-uses Forms;
+uses Forms, Dialogs, ugerenciamentousuarios;
 
 {$R *.lfm}
 
@@ -82,11 +88,6 @@ begin
   sqlnow:=FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
   SQLiteConnection.ExecuteDirect('UPDATE tbl_acionamento SET dt_fim='''+sqlnow+''' WHERE dt_fim IS NULL');
   SQLiteConnection.ExecuteDirect('UPDATE tbl_alarme      SET dt_fim='''+sqlnow+''' WHERE dt_fim IS NULL');
-end;
-
-procedure Tdmdb.Datasource2StateChange(Sender: TObject);
-begin
-
 end;
 
 procedure Tdmdb.Timer1Timer(Sender: TObject);
@@ -119,6 +120,79 @@ begin
     AlarmesQuerydt_duracao1.AsDateTime:=AlarmesQuerydt_fim.AsDateTime - AlarmesQuerydt_inicio.AsDateTime
 end;
 
+procedure Tdmdb.CustomizedUserManagement1CanAccess(securityCode: String;
+  var CanAccess: Boolean);
+var
+  level:Integer;
+begin
+  if not TryStrToInt(securityCode, level) then level:=0;
+  CanAccess:=((userlevel>0) and (userlevel<=level)) or (level<1);
+end;
+
+procedure Tdmdb.CustomizedUserManagement1CheckUserAndPass(user, pass: String;
+  var ValidUser: Boolean);
+var
+  rec:Integer;
+  pos:TBookmark;
+begin
+  ValidUser:=false;
+  pos:=ZTable1.GetBookmark;
+  ZTable1.DisableControls;
+  for rec:=1 to ZTable1.RecordCount do begin
+    ZTable1.RecNo:=rec;
+    if (ZTable1.FieldByName('usuario').AsString=user) and (ZTable1.FieldByName('password').AsString=pass) then begin
+      userlogin:=user;
+      userlevel:=ZTable1.FieldByName('accesslevel').AsInteger;
+      fullusername:=ZTable1.FieldByName('Nome').AsString;
+      ValidUser:=true;
+      break;
+    end;
+  end;
+  ZTable1.EnableControls;
+  ZTable1.GotoBookmark(pos);
+  ZTable1.FreeBookmark(pos);
+end;
+
+procedure Tdmdb.CustomizedUserManagement1GetUserLogin(var UserInfo: String);
+begin
+  UserInfo:=userlogin;
+end;
+
+procedure Tdmdb.CustomizedUserManagement1GetUserName(var UserInfo: String);
+begin
+  UserInfo:=fullusername;
+end;
+
+procedure Tdmdb.CustomizedUserManagement1Logout(Sender: TObject);
+begin
+  userlevel:=0;
+  userlogin:='';
+  fullusername:='';
+end;
+
+procedure Tdmdb.CustomizedUserManagement1ManageUsersAndGroups(Sender: TObject);
+var
+  um:TfrmUsuarios;
+begin
+  GetControlSecurityManager.TryAccess('1');
+
+  um:=TfrmUsuarios.Create(Self);
+  try
+    um.ShowModal;
+  finally
+    um.Destroy;
+  end;
+end;
+
+procedure Tdmdb.CustomizedUserManagement1ValidadeSecurityCode(
+  const securityCode: String);
+var
+  x:Integer;
+begin
+  if (securityCode<>'') and (not TryStrToInt(securityCode,x)) then
+    raise Exception.Create('Nivel de segurança precisa ser numérico!');
+end;
+
 procedure Tdmdb.AcionamentoQueryCalcFields(DataSet: TDataSet);
 begin
   if AcionamentoQuerydt_fim.IsNull then
@@ -127,44 +201,10 @@ begin
     AcionamentoQuerydt_duracao1.AsDateTime:=AcionamentoQuerydt_fim.AsDateTime - AcionamentoQuerydt_inicio.AsDateTime
 end;
 
-procedure Tdmdb.Access(level:Integer);
-begin
-  if not TryAccess(level) then
-    raise Exception.Create('Acesso negado!');
-end;
-
-function  Tdmdb.TryAccess(level:Integer):Boolean;
-begin
-  Result:=((userlevel>0) and (userlevel>level)) or (level<1);
-end;
-
-function  Tdmdb.Login(username, password:String):Boolean;
-var
-  currec, rec:Integer;
-begin
-  Result:=false;
-  currec:=ZTable1.RecNo;
-  for rec:=1 to ZTable1.RecordCount do begin
-    ZTable1.RecNo:=rec;
-    if (ZTable1.FieldByName('usuario').AsString=username) and (ZTable1.FieldByName('password').AsString=password) then begin
-      userlogin:=username;
-      userlevel:=ZTable1.FieldByName('accesslevel').AsInteger;
-      Result:=true;
-      break;
-    end;
-  end;
-  ZTable1.RecNo:=currec;
-end;
-
-procedure Tdmdb.Logout;
-begin
-  userlevel:=0;
-  userlogin:='';
-end;
-
 initialization
   userlevel:=0;
   userlogin:='';
+  fullusername:='';
 
 end.
 

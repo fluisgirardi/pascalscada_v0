@@ -2,8 +2,8 @@ object dmtags: Tdmtags
   OnCreate = DataModuleCreate
   OldCreateOrder = False
   Height = 184
-  HorizontalOffset = -2121
-  VerticalOffset = 118
+  HorizontalOffset = 988
+  VerticalOffset = 107
   Width = 371
   object S7200Connection: TTCP_UDPPort
     Active = True
@@ -450,7 +450,6 @@ object dmtags: Tdmtags
     MemSubElement = 0
     MemReadFunction = 4
     MemWriteFunction = 0
-    ScanRate = 500
     TagType = pttByte
     EnableMaxValue = False
     EnableMinValue = False
@@ -711,7 +710,6 @@ object dmtags: Tdmtags
     MemReadFunction = 3
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver
-    ScanRate = 500
     Size = 3
     TagType = pttByte
     left = 240

@@ -1,11 +1,11 @@
 object frmMain: TfrmMain
-  Left = 80
-  Height = 696
-  Top = 25
-  Width = 1278
+  Left = 381
+  Height = 694
+  Top = 109
+  Width = 1366
   Caption = 'Controle de horimetros'
-  ClientHeight = 696
-  ClientWidth = 1278
+  ClientHeight = 694
+  ClientWidth = 1366
   OnCreate = FormCreate
   OnShow = FormShow
   LCLVersion = '0.9.31'
@@ -13,7 +13,7 @@ object frmMain: TfrmMain
     Left = 0
     Height = 80
     Top = 0
-    Width = 1278
+    Width = 1366
     Align = alTop
     Color = clYellow
     Columns = <    
@@ -47,9 +47,9 @@ object frmMain: TfrmMain
   end
   object Image1: TImage
     Left = 0
-    Height = 616
+    Height = 614
     Top = 80
-    Width = 1278
+    Width = 1366
     Align = alClient
     Picture.Data = {
       1754506F727461626C654E6574776F726B47726170686963D625010089504E47
@@ -2411,6 +2411,7 @@ object frmMain: TfrmMain
     Height = 64
     Top = 471
     Width = 64
+    Enabled = True
     OnClick = anFornoClick
     Transparent = True
     Zones = <    
@@ -2463,12 +2464,14 @@ object frmMain: TfrmMain
         ImageIndex = 3
       end>
     PLCTag = dmtags.MB2_0
+    SecurityCode = '5'
   end
   object anRotativa: THMIAnimation
     Left = 605
     Height = 39
     Top = 524
     Width = 47
+    Enabled = True
     OnClick = anRotativaClick
     Transparent = True
     Zones = <    
@@ -2497,12 +2500,14 @@ object frmMain: TfrmMain
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB1_1
+    SecurityCode = '5'
   end
   object anAtomizador: THMIAnimation
     Left = 664
     Height = 47
     Top = 93
     Width = 39
+    Enabled = True
     OnClick = anAtomizadorClick
     Transparent = True
     Zones = <    
@@ -2531,12 +2536,14 @@ object frmMain: TfrmMain
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB0_7
+    SecurityCode = '5'
   end
   object anZaranda: THMIAnimation
     Left = 604
     Height = 39
     Top = 566
     Width = 47
+    Enabled = True
     OnClick = anZarandaClick
     Picture.Data = {
       07544269746D6170DA1C0000424DDA1C00000000000036000000280000002F00
@@ -2811,12 +2818,14 @@ object frmMain: TfrmMain
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB1_0
+    SecurityCode = '5'
   end
   object anBomba_de_Produto: THMIAnimation
     Left = 926
     Height = 55
     Top = 530
     Width = 78
+    Enabled = True
     OnClick = anBomba_de_ProdutoClick
     Transparent = True
     Zones = <    
@@ -2845,12 +2854,14 @@ object frmMain: TfrmMain
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB1_2
+    SecurityCode = '5'
   end
   object anVentilador: THMIAnimation
     Left = 416
     Height = 91
     Top = 88
     Width = 154
+    Enabled = True
     OnClick = anVentiladorClick
     Transparent = True
     Zones = <    
@@ -2867,12 +2878,14 @@ object frmMain: TfrmMain
         ImageIndex = 0
       end>
     PLCTag = dmtags.MB0_6
+    SecurityCode = '5'
   end
   object HMICheckBox1: THMICheckBox
-    Left = 96
-    Height = 18
-    Top = 88
-    Width = 89
+    Left = 128
+    Height = 22
+    Top = 104
+    Width = 93
+    Enabled = True
     ParentColor = False
     TabOrder = 1
     PLCTag = MostrarTags
@@ -2887,6 +2900,7 @@ object frmMain: TfrmMain
     Height = 17
     Top = 471
     Width = 88
+    Enabled = True
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
@@ -2926,6 +2940,7 @@ object frmMain: TfrmMain
     Height = 17
     Top = 93
     Width = 88
+    Enabled = True
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
@@ -2965,6 +2980,7 @@ object frmMain: TfrmMain
     Height = 17
     Top = 93
     Width = 88
+    Enabled = True
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
@@ -3003,6 +3019,7 @@ object frmMain: TfrmMain
     Height = 17
     Top = 588
     Width = 124
+    Enabled = True
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
@@ -3042,6 +3059,7 @@ object frmMain: TfrmMain
     Height = 17
     Top = 524
     Width = 88
+    Enabled = True
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
@@ -3081,6 +3099,7 @@ object frmMain: TfrmMain
     Height = 17
     Top = 576
     Width = 88
+    Enabled = True
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
@@ -3121,6 +3140,7 @@ object frmMain: TfrmMain
     Top = 487
     Width = 160
     Alignment = taRightJustify
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido1
@@ -3133,6 +3153,7 @@ object frmMain: TfrmMain
     Top = 109
     Width = 160
     Alignment = taRightJustify
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido2
@@ -3144,6 +3165,7 @@ object frmMain: TfrmMain
     Height = 17
     Top = 109
     Width = 160
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido3
@@ -3156,6 +3178,7 @@ object frmMain: TfrmMain
     Top = 604
     Width = 160
     Alignment = taRightJustify
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido4
@@ -3168,6 +3191,7 @@ object frmMain: TfrmMain
     Top = 540
     Width = 160
     Alignment = taRightJustify
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido5
@@ -3180,6 +3204,7 @@ object frmMain: TfrmMain
     Top = 592
     Width = 160
     Alignment = taRightJustify
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido6
@@ -3191,6 +3216,7 @@ object frmMain: TfrmMain
     Height = 168
     Top = 281
     Width = 211
+    Enabled = True
     Transparent = True
     Zones = <    
       item
@@ -3255,37 +3281,39 @@ object frmMain: TfrmMain
       object ToolButton1: TToolButton
         Left = 1
         Top = 2
-        Caption = 'ToolButton1'
-        ImageIndex = 1
-        OnClick = ToolButton1Click
+        Action = PascalSCADALoginAction1
       end
       object ToolButton2: TToolButton
         Left = 1
-        Top = 54
-        Caption = 'ToolButton2'
-        ImageIndex = 2
-        OnClick = ToolButton2Click
+        Top = 116
+        Action = secureGraphics
       end
       object ToolButton3: TToolButton
         Left = 1
-        Top = 106
-        Caption = 'ToolButton3'
-        ImageIndex = 3
-        OnClick = ToolButton3Click
+        Top = 168
+        Action = secureRelatorioAcionamento
       end
       object ToolButton4: TToolButton
         Left = 1
-        Top = 210
-        Caption = 'ToolButton4'
-        ImageIndex = 4
-        OnClick = ToolButton4Click
+        Top = 272
+        Action = PascalSCADAManageUsersAction1
       end
       object ToolButton5: TToolButton
         Left = 1
-        Top = 158
-        Caption = 'ToolButton5'
-        ImageIndex = 5
-        OnClick = ToolButton5Click
+        Top = 220
+        Action = secureAlarmes
+      end
+      object ToolButton6: TToolButton
+        Left = 1
+        Top = 54
+        Action = PascalSCADALogoutAction1
+      end
+      object ToolButton7: TToolButton
+        Left = 1
+        Top = 106
+        Width = 50
+        Caption = 'ToolButton7'
+        Style = tbsSeparator
       end
     end
     object Image2: TImage
@@ -3565,11 +3593,13 @@ object frmMain: TfrmMain
       Top = 1
       Width = 168
       Align = alTop
+      Enabled = True
       ParentColor = False
       ParentFont = False
       OnClick = HMIText7Click
       NumberFormat = '#0.0'
       PLCTag = MostrarTags
+      SecurityCode = '5'
       Zones = <      
         item
           Value1 = 0
@@ -3607,6 +3637,7 @@ object frmMain: TfrmMain
       Width = 168
       Align = alTop
       Alignment = taCenter
+      Enabled = True
       Layout = tlCenter
       ParentColor = False
       OnClick = HMILabel7Click
@@ -3614,6 +3645,7 @@ object frmMain: TfrmMain
       PLCTag = dmtags.TDecorrido8
       Prefix = 'Funcionando a '
       Sufix = ' h'
+      SecurityCode = '5'
     end
     object anMartelo: THMIText
       Left = 1
@@ -3623,6 +3655,7 @@ object frmMain: TfrmMain
       Align = alTop
       Alignment = taCenter
       Color = clGray
+      Enabled = True
       Font.Height = -20
       Font.Style = [fsBold]
       Layout = tlCenter
@@ -3632,6 +3665,7 @@ object frmMain: TfrmMain
       OnClick = anMarteloClick
       NumberFormat = '#0.0'
       PLCTag = dmtags.MB0_1
+      SecurityCode = '5'
       Zones = <      
         item
           Value1 = 0
@@ -3683,11 +3717,13 @@ object frmMain: TfrmMain
       Top = 1
       Width = 168
       Align = alTop
+      Enabled = True
       ParentColor = False
       ParentFont = False
       OnClick = HMIText9Click
       NumberFormat = '#0.0'
       PLCTag = MostrarTags
+      SecurityCode = '5'
       Zones = <      
         item
           Value1 = 0
@@ -3725,6 +3761,7 @@ object frmMain: TfrmMain
       Width = 168
       Align = alTop
       Alignment = taCenter
+      Enabled = True
       Layout = tlCenter
       ParentColor = False
       OnClick = HMILabel8Click
@@ -3732,6 +3769,7 @@ object frmMain: TfrmMain
       PLCTag = dmtags.TDecorrido7
       Prefix = 'Funcionando a '
       Sufix = ' h'
+      SecurityCode = '5'
     end
     object anFiltro_Manga: THMIText
       Left = 1
@@ -3741,6 +3779,7 @@ object frmMain: TfrmMain
       Align = alTop
       Alignment = taCenter
       Color = clGray
+      Enabled = True
       Font.Height = -20
       Font.Style = [fsBold]
       Layout = tlCenter
@@ -3750,6 +3789,7 @@ object frmMain: TfrmMain
       OnClick = anFiltro_MangaClick
       NumberFormat = '#0.0'
       PLCTag = dmtags.MB1_3
+      SecurityCode = '5'
       Zones = <      
         item
           Value1 = 0
@@ -24922,5 +24962,49 @@ object frmMain: TfrmMain
     OnException = ApplicationProperties1Exception
     left = 226
     top = 167
+  end
+  object ActionList1: TActionList
+    Images = ImageList4
+    left = 162
+    top = 140
+    object PascalSCADALoginAction1: TPascalSCADALoginAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Login'
+      Hint = 'Fazer Login no sistema'
+      ImageIndex = 1
+    end
+    object PascalSCADALogoutAction1: TPascalSCADALogoutAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Logoff'
+      Hint = 'Fazer Logoff do sistema'
+      ImageIndex = 0
+    end
+    object PascalSCADAManageUsersAction1: TPascalSCADAManageUsersAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Gerenciar usuários'
+      Hint = 'Gerenciar usuários'
+      ImageIndex = 4
+    end
+    object secureGraphics: TPascalSCADASecureAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Gráficos'
+      Hint = 'Gráficos'
+      ImageIndex = 2
+      OnExecute = secureGraphicsExecute
+    end
+    object secureRelatorioAcionamento: TPascalSCADASecureAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Relatório de acionamentos'
+      Hint = 'Relatório de acionamentos'
+      ImageIndex = 3
+      OnExecute = secureRelatorioAcionamentoExecute
+    end
+    object secureAlarmes: TPascalSCADASecureAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'Relatório de alarmes de horimetro'
+      Hint = 'Relatório de alarmes'
+      ImageIndex = 5
+      OnExecute = secureAlarmesExecute
+    end
   end
 end

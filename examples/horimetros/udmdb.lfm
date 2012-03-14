@@ -2,8 +2,8 @@ object dmdb: Tdmdb
   OnCreate = DataModuleCreate
   OldCreateOrder = False
   Height = 50
-  HorizontalOffset = 497
-  VerticalOffset = 449
+  HorizontalOffset = 380
+  VerticalOffset = 107
   Width = 528
   object SQLiteConnection: TZConnection
     Connected = True
@@ -164,7 +164,6 @@ object dmdb: Tdmdb
   end
   object Datasource2: TDatasource
     DataSet = ZTable1
-    OnStateChange = Datasource2StateChange
     left = 184
     top = 8
   end
@@ -338,6 +337,19 @@ object dmdb: Tdmdb
   object AlarmeDatasource: TDatasource
     DataSet = AlarmesQuery
     left = 472
+    top = 8
+  end
+  object CustomizedUserManagement1: TCustomizedUserManagement
+    LoginRetries = 0
+    LoginFrozenTime = 0
+    OnCheckUserAndPass = CustomizedUserManagement1CheckUserAndPass
+    OnGetUserName = CustomizedUserManagement1GetUserName
+    OnGetUserLogin = CustomizedUserManagement1GetUserLogin
+    OnManageUsersAndGroups = CustomizedUserManagement1ManageUsersAndGroups
+    OnValidadeSecurityCode = CustomizedUserManagement1ValidadeSecurityCode
+    OnCanAccess = CustomizedUserManagement1CanAccess
+    OnLogout = CustomizedUserManagement1Logout
+    left = 295
     top = 8
   end
 end

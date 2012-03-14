@@ -1,13 +1,14 @@
 object frmFiltro: TfrmFiltro
-  Left = -2422
+  Left = 442
   Height = 92
-  Top = 154
+  Top = 205
   Width = 445
   BorderStyle = bsDialog
   Caption = 'Filtrar dados'
   ClientHeight = 92
   ClientWidth = 445
   OnShow = FormShow
+  Position = poScreenCenter
   LCLVersion = '0.9.31'
   object Panel1: TPanel
     Left = 0
@@ -28,7 +29,7 @@ object frmFiltro: TfrmFiltro
     end
     object DateInicial: TDateEdit
       Left = 8
-      Height = 19
+      Height = 23
       Top = 24
       Width = 114
       CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]
@@ -87,7 +88,7 @@ object frmFiltro: TfrmFiltro
     end
     object DateFinal: TDateEdit
       Left = 176
-      Height = 19
+      Height = 23
       Top = 24
       Width = 114
       CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]

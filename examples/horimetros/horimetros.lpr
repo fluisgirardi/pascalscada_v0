@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, tachartlazaruspkg, lazreport, umain, udm, pascalscada, zcomponent,
-  udmdb, upopuphorimetro, ulogin, ugraficos, ufiltro, urelatorios,
+  udmdb, upopuphorimetro, ugraficos, ufiltro, urelatorios,
   fortes324forlaz, ugerenciamentousuarios;
 
 {$R *.res}
@@ -21,7 +21,6 @@ begin
   Application.CreateForm(Tdmtags, dmtags);
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmRelatorios, frmRelatorios);
-  Application.CreateForm(TfrmUsuarios, frmUsuarios);
   Application.Run;
 end.
 
