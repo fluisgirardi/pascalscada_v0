@@ -1,4 +1,4 @@
-{ System depending code for light weight threads.
+﻿{ System depending code for light weight threads.
 
   This file is part of the Free Pascal run time library.
 
@@ -21,14 +21,14 @@ unit pascalScadaMTPCPU;
 
 interface
 
-{$IF defined(windows)}
+{$IF defined(WIN32) or defined(WIN64)}
 uses Windows;
 {$ELSEIF defined(freebsd) or defined(darwin)}
 uses ctypes, sysctl;
 {$ELSEIF defined(linux)}
 {$linklib c}
 uses ctypes;
-{$ENDIF}
+{$IFEND}
 
 function GetSystemThreadCount: integer;
 
@@ -103,7 +103,7 @@ end;
   begin
     Result:=1;
   end;
-{$ENDIF}
+{$IFEND}
 
 procedure CrossThreadSwitch;
 begin
