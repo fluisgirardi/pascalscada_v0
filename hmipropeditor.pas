@@ -16,6 +16,7 @@ unit hmipropeditor;
 
 {$IFDEF FPC}
 {$MODE Delphi}
+{$MACRO ON}
 {$ENDIF}
 
 {$I delphiver.inc}
@@ -27,7 +28,7 @@ uses
   typinfo, HMIControlDislocatorAnimation, PLCNumber, PLCBlock, PLCStruct,
   ControlSecurityManager,
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits;
+    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList;
   {$ELSE}
     Types,
     //if is a delphi 6+
@@ -60,7 +61,7 @@ type
   end;
 
   {$IFDEF FPC}
-  {$if defined(lcl_fullversion) and (lcl_fullversion>=093000)}
+  {$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
   {$IFDEF PORTUGUES}
   {:
   Editor da propriedade TGraphicZone.ImageIndex
@@ -73,6 +74,14 @@ type
   }
   {$ENDIF}
   TGraphiZoneImageIndexPropertyEditor = class(TImageIndexPropertyEditor)
+  protected
+    function GetImageList: TCustomImageList; override;
+  public
+    procedure GetValues(Proc: TGetStrProc); override;
+    procedure SetValue(const NewValue: ansistring); override;
+  end;
+
+  TPascalSCADALoginLogoutImageIndexPropertyEditor = class(TImageIndexPropertyEditor)
   protected
     function GetImageList: TCustomImageList; override;
   public
@@ -294,7 +303,7 @@ begin
 end;
 
 {$IFDEF FPC}
-{$if defined(lcl_fullversion) and (lcl_fullversion>=093000)}
+{$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
 procedure TGraphiZoneImageIndexPropertyEditor.SetValue(const NewValue: ansistring);
 var
   x:Integer;
@@ -303,8 +312,14 @@ begin
     if NewValue='(none)' then
        inherited SetValue('-1')
     else begin
-      x:=StrToInt(NewValue);
-      inherited SetValue(NewValue);
+      if GetImageList<>nil then begin
+        x:=StrToInt(NewValue);
+        if x in [0.. GetImageList.Count] then
+          inherited SetValue(NewValue)
+        else
+          inherited SetValue('-1');
+      end else
+        inherited SetValue('-1');
     end;
   except
     inherited SetValue('-1');
@@ -322,7 +337,41 @@ end;
 procedure TGraphiZoneImageIndexPropertyEditor.GetValues(Proc: TGetStrProc);
 begin
   inherited GetValues(Proc);
-  Proc('(none)');
+end;
+
+procedure TPascalSCADALoginLogoutImageIndexPropertyEditor.SetValue(const NewValue: ansistring);
+var
+  x:Integer;
+begin
+  try
+    if NewValue='(none)' then
+       inherited SetValue('-1')
+    else begin
+      if GetImageList<>nil then begin
+        x:=StrToInt(NewValue);
+        if x in [0..GetImageList.Count] then
+          inherited SetValue(NewValue)
+        else
+          inherited SetValue('-1');
+      end else
+        inherited SetValue('-1');
+    end;
+  except
+    inherited SetValue('-1');
+  end;
+end;
+
+function TPascalSCADALoginLogoutImageIndexPropertyEditor.GetImageList: TCustomImageList;
+begin
+  if GetComponent(0) is TPascalSCADALogin_LogoutAction then
+    Result:=TPascalSCADALogin_LogoutAction(GetComponent(0)).ActionList.Images
+  else
+    Result:=nil;
+end;
+
+procedure TPascalSCADALoginLogoutImageIndexPropertyEditor.GetValues(Proc: TGetStrProc);
+begin
+  inherited GetValues(Proc);
 end;
 {$IFEND}
 {$ENDIF}

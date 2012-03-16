@@ -216,8 +216,6 @@ type
     procedure TimerStatistics(Sender:TObject);
     {: @exclude }
     function GetLocked:Boolean;
-    {: @exclude }
-    procedure SetActive(v:Boolean);
 
     {$IFDEF PORTUGUES}
     //: Executa um comandos de IO (thread-safe).
@@ -285,6 +283,12 @@ type
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
+    {$IFDEF PORTUGUES}
+    //: Caso v = @true, abre a porta, caso contrario fecha.
+    {$ELSE}
+    //: If v = @true, opens the communication port, else closes.
+    {$ENDIF}
+    procedure SetActive(v:Boolean); virtual;
 
     {$IFDEF PORTUGUES}
     //: Envia uma mensagem de erro de comunicação de uma thread para a aplicação

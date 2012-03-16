@@ -52,8 +52,12 @@ type
   @seealso(TCommPortDriver)
   }
   {$ENDIF}
+
+  { TTCP_UDPPort }
+
   TTCP_UDPPort = class(TCommPortDriver)
   private
+    FExclusiveDevice: Boolean;
     FHostName:String;
     FPortNumber:Integer;
     FTimeout:Integer;
@@ -76,6 +80,8 @@ type
   protected
     //: @exclude
     FReconnectRetries:Cardinal;
+    //: @exclude
+    procedure SetActive(v: Boolean); override;
     //: @exclude
     procedure Loaded; override;
     //: @seealso(TCommPortDriver.Read)
@@ -279,6 +285,13 @@ end;
 procedure TTCP_UDPPort.SetReconnectInterval(v:Cardinal);
 begin
   freconnectTimer.Interval:=v;
+end;
+
+procedure TTCP_UDPPort.SetActive(v: Boolean);
+begin
+  inherited SetActive(v);
+  if not v then
+    freconnectTimer.Enabled:=false;
 end;
 
 procedure TTCP_UDPPort.Loaded;
@@ -585,4 +598,4 @@ begin
 
 end;
 
-end.
+end.

@@ -34,7 +34,7 @@ uses
   {$IFEND}
 
   {$IFDEF FPC}
-    LResources, PropEdits, ComponentEditors;
+    LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}
     Types, 
     {$IFDEF DELPHI6_UP}
@@ -96,8 +96,10 @@ begin
   RegisterPropertyEditor(TypeInfo(integer),TZone,                          'BlinkWith',        TZoneBlinkWithPropertyEditor);
 
   {$IFDEF FPC}
-  {$if defined(lcl_fullversion) and (lcl_fullversion>=093000)}
-  RegisterPropertyEditor(TypeInfo(integer),TGraphicZone,                   'ImageIndex',        TGraphiZoneImageIndexPropertyEditor);
+  {$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
+  RegisterPropertyEditor(TypeInfo(integer),TGraphicZone,                   'ImageIndex',                    TGraphiZoneImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer),TPascalSCADALogin_LogoutAction, 'WithUserLoggedInImageIndex',    TPascalSCADALoginLogoutImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer),TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
   {$IFEND}
   {$ENDIF}
 
@@ -132,7 +134,7 @@ begin
   {$IF defined(FPC) AND (FPC_FULLVERSION < 20501) }
   RegisterClassAlias(TScalesQueue, 'TPIPE');
   {$ELSE}
-  RegisterClassAlias(TPIPE, 'TScalesQueue');
+  RegisterClassAlias(TPIPE,        'TScalesQueue');
   {$IFEND}
   {$ELSE}
   RegisterClassAlias(TPIPE,        'TScalesQueue');
@@ -143,6 +145,7 @@ begin
   //////////////////////////////////////////////////////////////////////////////
   RegisterActions(strUserManagement,[TPascalSCADALoginAction,
                                      TPascalSCADALogoutAction,
+                                     TPascalSCADALogin_LogoutAction,
                                      TPascalSCADAManageUsersAction,
                                      TPascalSCADASecureAction],nil);
 end;

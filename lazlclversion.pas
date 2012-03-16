@@ -31,17 +31,19 @@ type
   THasCustomHint = (hchNo,hchYes);
 
   {$if declared(lcl_version)}
-    {$IF not declared(lcl_fullversion)}
+    {$IF declared(lcl_fullversion)}
+      const pslcl_fullversion = lcl_fullversion;
+    {$ELSE}
       {$WARNING lcl_fullversion CALCULADO!}
-      const lcl_fullversion = ((lcl_major *  100 + lcl_minor) * 100 + lcl_release) * 100;
+      const pslcl_fullversion = ((lcl_major *  100 + lcl_minor) * 100 + lcl_release) * 100;
     {$ifend}
   {$else}
     {$WARNING lcl_fullversion ZERADO!}
-    const lcl_fullversion = 0;
+    const pslcl_fullversion = 0;
   {$ifend}
 
-  {$if declared(lcl_fullversion)}
-    {$if lcl_fullversion>=093000}
+  {$if declared(pslcl_fullversion)}
+    {$if pslcl_fullversion>=093000}
       const has_customhints = hchYes;
     {$ifend}
   {$ifend}

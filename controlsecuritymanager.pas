@@ -80,6 +80,45 @@ type
     procedure ExecuteTarget(Target: TObject); override;
   end;
 
+  { TPascalSCADALogin_LogoutAction }
+
+  TPascalSCADALogin_LogoutAction = class(TPascalSCADAUserManagementAction)
+  private
+    FWithUserLoggedInImageIndex,
+    FWithoutUserLoggedInImageIndex:Integer;
+    FWithUserLoggedInCaption,
+    FWithoutUserLoggedInCaption,
+    FWithUserLoggedInHint,
+    FWithoutUserLoggedInHint:String;
+    function GetCurrentCaption: String;
+    function GetCurrentHintMessage: String;
+    function GetCurrentImageIndex: Integer;
+    procedure SetWithUserLoggedInCaption(const AValue: String);
+    procedure SetWithUserLoggedInHint(const AValue: String);
+    procedure SetWithUserLoggedInImageIndex(const AValue: Integer);
+    procedure SetWithoutUserLoggedInCaption(const AValue: String);
+    procedure SetWithoutUserLoggedInHint(const AValue: String);
+    procedure SetWithoutUserLoggedInImageIndex(const AValue: Integer);
+    procedure UpdateMyState;
+  protected
+    procedure CanBeAccessed(a: Boolean); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    procedure UpdateTarget(Target: TObject); override;
+    procedure ExecuteTarget(Target: TObject); override;
+  published
+    property Caption:String read GetCurrentCaption;
+    property Hint:String read GetCurrentHintMessage;
+    property ImageIndex:Integer read GetCurrentImageIndex;
+    property WithUserLoggedInCaption:String        read FWithUserLoggedInCaption    write SetWithUserLoggedInCaption;
+    property WithUserLoggedInHint:String           read FWithUserLoggedInHint       write SetWithUserLoggedInHint;
+    property WithUserLoggedInImageIndex:Integer    read FWithUserLoggedInImageIndex write SetWithUserLoggedInImageIndex;
+
+    property WithoutUserLoggedInCaption:String     read FWithoutUserLoggedInCaption    write SetWithoutUserLoggedInCaption;
+    property WithoutUserLoggedInHint:String        read FWithoutUserLoggedInHint       write SetWithoutUserLoggedInHint;
+    property WithoutUserLoggedInImageIndex:Integer read FWithoutUserLoggedInImageIndex write SetWithoutUserLoggedInImageIndex;
+  end;
+
   { TPascalSCADAManageUsersAction }
 
   TPascalSCADAManageUsersAction = class(TPascalSCADAUserManagementAction)
@@ -111,6 +150,112 @@ type
 implementation
 
 uses BasicUserManagement, hsstrings, Dialogs, Controls;
+
+{ TPascalSCADALogin_LogoutAction }
+
+function TPascalSCADALogin_LogoutAction.GetCurrentCaption: String;
+begin
+  Result:=inherited Caption;
+end;
+
+function TPascalSCADALogin_LogoutAction.GetCurrentHintMessage: String;
+begin
+  Result:=inherited Hint;
+end;
+
+function TPascalSCADALogin_LogoutAction.GetCurrentImageIndex: Integer;
+begin
+  Result:=inherited ImageIndex;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.SetWithUserLoggedInCaption(const AValue: String
+  );
+begin
+  if FWithUserLoggedInCaption=AValue then exit;
+  FWithUserLoggedInCaption:=AValue;
+  UpdateMyState;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.SetWithUserLoggedInHint(const AValue: String);
+begin
+  if FWithUserLoggedInHint=AValue then exit;
+  FWithUserLoggedInHint:=AValue;
+  UpdateMyState;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.SetWithUserLoggedInImageIndex(
+  const AValue: Integer);
+begin
+  if FWithUserLoggedInImageIndex=AValue then exit;
+  FWithUserLoggedInImageIndex:=AValue;
+  UpdateMyState;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.SetWithoutUserLoggedInCaption(const AValue: String
+  );
+begin
+  if FWithoutUserLoggedInCaption=AValue then exit;
+  FWithoutUserLoggedInCaption:=AValue;
+  UpdateMyState;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.SetWithoutUserLoggedInHint(const AValue: String);
+begin
+  if FWithoutUserLoggedInHint=AValue then exit;
+  FWithoutUserLoggedInHint:=AValue;
+  UpdateMyState;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.SetWithoutUserLoggedInImageIndex(
+  const AValue: Integer);
+begin
+  if FWithoutUserLoggedInImageIndex=AValue then exit;
+  FWithoutUserLoggedInImageIndex:=AValue;
+  UpdateMyState;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.UpdateMyState;
+begin
+  if GetControlSecurityManager.UserManagement<>nil then
+    if TBasicUserManagement(GetControlSecurityManager.UserManagement).UserLogged then begin
+      inherited Caption   :=FWithUserLoggedInCaption;
+      inherited Hint      :=FWithUserLoggedInHint;
+      inherited ImageIndex:=FWithUserLoggedInImageIndex;
+    end else begin
+      inherited Caption   :=FWithoutUserLoggedInCaption;
+      inherited Hint      :=FWithoutUserLoggedInHint;
+      inherited ImageIndex:=FWithoutUserLoggedInImageIndex;
+    end;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.CanBeAccessed(a: Boolean);
+begin
+  inherited CanBeAccessed(true); //it can be accessed always.
+  UpdateMyState;
+end;
+
+constructor TPascalSCADALogin_LogoutAction.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FWithUserLoggedInImageIndex:=-1;
+  FWithoutUserLoggedInImageIndex:=-1;
+end;
+
+procedure TPascalSCADALogin_LogoutAction.UpdateTarget(Target: TObject);
+begin
+  CanBeAccessed(true);
+end;
+
+procedure TPascalSCADALogin_LogoutAction.ExecuteTarget(Target: TObject);
+begin
+  if GetControlSecurityManager.UserManagement<>nil then
+    if TBasicUserManagement(GetControlSecurityManager.UserManagement).UserLogged then begin
+      GetControlSecurityManager.Logout;
+    end else begin
+      GetControlSecurityManager.Login;
+    end;
+  UpdateMyState;
+end;
 
 constructor TControlSecurityManager.Create(AOwner: TComponent);
 begin
