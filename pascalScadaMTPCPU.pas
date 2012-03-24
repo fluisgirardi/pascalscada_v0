@@ -21,7 +21,7 @@ unit pascalScadaMTPCPU;
 
 interface
 
-{$IF defined(WIN32) or defined(WIN64)}
+{$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 uses Windows;
 {$ELSEIF defined(freebsd) or defined(darwin)}
 uses ctypes, sysctl;
