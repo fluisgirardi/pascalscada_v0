@@ -57,7 +57,6 @@ type
 
   TTCP_UDPPort = class(TCommPortDriver)
   private
-    FExclusiveDevice: Boolean;
     FHostName:String;
     FPortNumber:Integer;
     FTimeout:Integer;
@@ -259,7 +258,7 @@ begin
   //only at design-time
   if csDesigning in ComponentState then begin
     //stores the old state.
-    oldstate:=PActive;
+    oldstate:=Active;
     //close the communication port.
     Active:=False;
     //set the new state.
