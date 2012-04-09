@@ -244,7 +244,7 @@ type
 
 implementation
 
-uses ubitmapper, Controls, TagBit, tag, hsstrings, Dialogs, LMessages, LCLIntf;
+uses ubitmapper, Controls, TagBit, tag, hsstrings, Dialogs;
 
 constructor TPLCNumber.Create(AOwner: TComponent);
 begin

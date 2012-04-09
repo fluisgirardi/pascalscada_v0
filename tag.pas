@@ -19,7 +19,13 @@ unit Tag;
 interface
 
 uses
-  SysUtils, Classes, LCLIntf, LMessages, LCLType, Interfaces;
+  SysUtils, Classes
+  {$IFDEF FPC}
+  ,LCLIntf, LMessages, LCLType, Interfaces;
+  {$ELSE}
+  ,Windows, Messages;
+  {$ENDIF}
+
 
 type
   {$IFDEF PORTUGUES}
@@ -375,6 +381,11 @@ type
 
   TASyncValueChangeNotify = procedure(Sender:TObject; const Value:TArrayOfDouble) of object;
   TASyncStringValueChange = procedure(Sender:TObject; const Value:String) of object;
+
+  {$IFNDEF FPC}
+  TLMessage = TMessage;
+  PtrInt = Integer;
+  {$ENDIF}
 
   {$IFDEF PORTUGUES}
   //: Classe base para todos os tags.
@@ -934,6 +945,9 @@ type
   TArrayOfScanUpdateRec = array of TScanUpdateRec;
 
 const
+  {$IFNDEF FPC}
+  LM_USER = WM_USER;
+  {$ENDIF}
   PM_ASYNCVALUECHANGE = LM_USER + $0123;
 
 implementation
