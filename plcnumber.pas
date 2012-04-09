@@ -37,7 +37,11 @@ type
   TPLCNumber = class(TPLCTag)
   protected
     //: @seealso(TTag.AsyncNotifyChange)    
-    procedure AsyncNotifyChange; override;
+    procedure AsyncNotifyChange(data:Pointer); override;
+    //: @seealso(TTag.GetValueChangeData)
+    function GetValueChangeData: Pointer; override;
+    //: @seealso(TTag.ReleaseChangeData)
+    procedure ReleaseChangeData(data: Pointer); override;
   protected
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
@@ -254,15 +258,32 @@ begin
   inherited Destroy;
 end;
 
-procedure TPLCNumber.AsyncNotifyChange;
+procedure TPLCNumber.AsyncNotifyChange(data:Pointer);
 var
-  x:TArrayOfDouble;
+  x:PArrayOfDouble;
 begin
   if not Assigned(POnAsyncValueChange) then exit;
-  SetLength(x,1);
-  x[0]:=Value;
-  POnAsyncValueChange(self,x);
-  SetLength(x,0);
+  x:=data;
+  POnAsyncValueChange(self,x^);
+end;
+
+function TPLCNumber.GetValueChangeData: Pointer;
+var
+  x:PArrayOfDouble;
+begin
+  New(x);
+  SetLength(x^,1);
+  x^[0]:=Value;
+  Result:=x;
+end;
+
+procedure TPLCNumber.ReleaseChangeData(data: Pointer);
+var
+  x:PArrayOfDouble;
+begin
+  x:=data;
+  SetLength(x^,0);
+  Dispose(x);
 end;
 
 function  TPLCNumber.GetValue:Double;

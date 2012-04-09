@@ -47,7 +47,11 @@ type
     procedure SetValues(values:TArrayOfDouble);
   protected
     //: @seealso(TTag.AsyncNotifyChange)    
-    procedure AsyncNotifyChange; override;
+    procedure AsyncNotifyChange(data:Pointer); override;
+    //: @seealso(TTag.GetValueChangeData)
+    function GetValueChangeData: Pointer; override;
+    //: @seealso(TTag.ReleaseChangeData)
+    procedure ReleaseChangeData(data: Pointer); override;
     //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.TagCommandCallBack)
@@ -289,14 +293,31 @@ begin
   SetLength(towrite,0);
 end;
 
-procedure TPLCBlock.AsyncNotifyChange;
+procedure TPLCBlock.AsyncNotifyChange(data: Pointer);
 var
-  x:TArrayOfDouble;
+  x:PArrayOfDouble;
 begin
   if not Assigned(POnAsyncValueChange) then exit;
-  x:=PValues;
-  POnAsyncValueChange(self,x);
-  SetLength(x,0);
+  x:=data;
+  POnAsyncValueChange(self,x^);
+end;
+
+function TPLCBlock.GetValueChangeData: Pointer;
+var
+  x:PArrayOfDouble;
+begin
+  New(x);
+  x^:=PValues;
+  Result:=x;
+end;
+
+procedure TPLCBlock.ReleaseChangeData(data: Pointer);
+var
+  x:PArrayOfDouble;
+begin
+  x:=data;
+  SetLength(x^,0);
+  Dispose(x);
 end;
 
 procedure TPLCBlock.WriteByScan;

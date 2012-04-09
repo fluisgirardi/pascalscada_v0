@@ -83,7 +83,11 @@ type
     function GetValueTimestamp:TDatetime;
   protected
     //: @seealso(TTag.AsyncNotifyChange)
-    procedure AsyncNotifyChange; override;
+    procedure AsyncNotifyChange(data:Pointer); override;
+    //: @seealso(TTag.GetValueChangeData)
+    function GetValueChangeData: Pointer; override;
+    //: @seealso(TTag.ReleaseChangeData)
+    procedure ReleaseChangeData(data: Pointer); override;
     //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.SetPLCHack)
@@ -679,10 +683,32 @@ begin
    Result := PValueTimeStamp;
 end;
 
-procedure TPLCString.AsyncNotifyChange;
+procedure TPLCString.AsyncNotifyChange(data:Pointer);
+var
+  x:PString;
 begin
-  if Assigned(POnAsyncStringValueChange) then
-    POnAsyncStringValueChange(self,Value);
+  if Assigned(POnAsyncStringValueChange) then begin
+    x:=data;
+    POnAsyncStringValueChange(self,x^);
+  end;
+end;
+
+function TPLCString.GetValueChangeData: Pointer;
+var
+  x:PString;
+begin
+  New(x);
+  x^:=Value;
+  Result:=x;
+end;
+
+procedure TPLCString.ReleaseChangeData(data: Pointer);
+var
+  x:PString;
+begin
+  x:=data;
+  SetLength(x^,0);
+  Dispose(x);
 end;
 
 end.

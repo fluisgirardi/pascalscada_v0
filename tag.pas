@@ -397,7 +397,21 @@ type
     {$ELSE}
     //: Call the assynchronous tag value change.
     {$ENDIF}    
-    procedure AsyncNotifyChange; virtual;
+    procedure AsyncNotifyChange(data:Pointer); virtual;
+
+    {$IFDEF PORTUGUES}
+    //: Retorna uma cópia do valor do tag para que ele não se perca entre as chamadas de evento assincronas.
+    {$ELSE}
+    //: Return a copy of the Tag value for each assynchronous event calls.
+    {$ENDIF} 
+    function  GetValueChangeData:Pointer; virtual;
+
+    {$IFDEF PORTUGUES}
+    //: Libera a cópia do valor do tag de uma determinada chamada asincrona.
+    {$ELSE}
+    //: Release a copy of a tag value of one assynchronous event call.
+    {$ENDIF} 
+    procedure ReleaseChangeData(data:Pointer); virtual;
   protected
     {$IFDEF PORTUGUES}
     //: Booleano que armazena se o tag vai ser lido automaticamente.
@@ -989,6 +1003,7 @@ end;
 procedure TTag.NotifyChange;
 var
   c:Integer;
+  x:Pointer;
 begin
   //notifica a mudanca antes de notificar os
   //demais controles.
@@ -1017,19 +1032,23 @@ begin
       POnValueChangeLast(Self);
   except
   end;
-
-  PostMessage(Handle,PM_ASYNCVALUECHANGE,0,0);
+  x:=GetValueChangeData;
+  PostMessage(Handle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
 end;
 
 procedure TTag.wndMethod(var Msg: TLMessage);
 var
   handled:Boolean;
   c:Integer;
+  FData:Pointer;
 begin
   handled:=true;
   case Msg.msg of
-    PM_ASYNCVALUECHANGE:
-      AsyncNotifyChange;
+    PM_ASYNCVALUECHANGE: begin
+      FData:=Pointer(Msg.wParam);
+      AsyncNotifyChange(FData);
+      ReleaseChangeData(FData);
+    end
     else
       handled:=false;
   end;
@@ -1040,9 +1059,19 @@ begin
     Dispatch(Msg);
 end;
 
-procedure TTag.AsyncNotifyChange;
+procedure TTag.AsyncNotifyChange(data:Pointer);
 begin
+  //does nothing.
+end;
 
+function TTag.GetValueChangeData: Pointer;
+begin
+  Result:=nil;
+end;
+
+procedure TTag.ReleaseChangeData(data: Pointer);
+begin
+  //does nothing.
 end;
 
 procedure TTag.NotifyReadOk;
