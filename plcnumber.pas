@@ -36,6 +36,9 @@ type
   {$ENDIF}
   TPLCNumber = class(TPLCTag)
   protected
+    //: @seealso(TTag.AsyncNotifyChange)    
+    procedure AsyncNotifyChange; override;
+  protected
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
     {$ELSE}
@@ -226,11 +229,18 @@ type
     //: Event called when the value of tag changes. Called AFTER updates all dependent components.
     {$ENDIF}
     property OnValueChangeLast;
+
+    {$IFDEF PORTUGUES}
+    //: Evento assincrono chamado quando o valor do tag sofre uma alteração.
+    {$ELSE}
+    //: Asynchronous event called when the tag value changes.
+    {$ENDIF}
+    property OnAsyncValueChange;
   end;
 
 implementation
 
-uses ubitmapper, Controls, TagBit, tag, hsstrings, Dialogs;
+uses ubitmapper, Controls, TagBit, tag, hsstrings, Dialogs, LMessages, LCLIntf;
 
 constructor TPLCNumber.Create(AOwner: TComponent);
 begin
@@ -242,6 +252,17 @@ destructor TPLCNumber.Destroy;
 begin
   SetScaleProcessor(nil);
   inherited Destroy;
+end;
+
+procedure TPLCNumber.AsyncNotifyChange;
+var
+  x:TArrayOfDouble;
+begin
+  if not Assigned(POnAsyncValueChange) then exit;
+  SetLength(x,1);
+  x[0]:=Value;
+  POnAsyncValueChange(self,x);
+  SetLength(x,0);
 end;
 
 function  TPLCNumber.GetValue:Double;
@@ -411,4 +432,4 @@ begin
 end;
 
 end.
- 
+ 

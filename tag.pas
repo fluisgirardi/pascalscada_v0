@@ -19,7 +19,7 @@ unit Tag;
 interface
 
 uses
-  SysUtils, Classes;
+  SysUtils, Classes, LCLIntf, LMessages, LCLType, Interfaces;
 
 type
   {$IFDEF PORTUGUES}
@@ -373,12 +373,31 @@ type
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
   end;
 
+  TASyncValueChangeNotify = procedure(Sender:TObject; const Value:TArrayOfDouble) of object;
+  TASyncStringValueChange = procedure(Sender:TObject; const Value:String) of object;
+
   {$IFDEF PORTUGUES}
   //: Classe base para todos os tags.
   {$ELSE}
   //: Base class for all tags.
   {$ENDIF}
   TTag = class(TComponent)
+  private
+    fHandle:HWND;
+  protected
+    {$IFDEF PORTUGUES}
+    //: Processa as mensagens do tag.
+    {$ELSE}
+    //: Processes the tag messages.
+    {$ENDIF}    
+    procedure wndMethod(var Msg:TLMessage); virtual;
+
+    {$IFDEF PORTUGUES}
+    //: Realiza a chamado do evento assincrono informando a mudança do valor do tag.
+    {$ELSE}
+    //: Call the assynchronous tag value change.
+    {$ENDIF}    
+    procedure AsyncNotifyChange; virtual;
   protected
     {$IFDEF PORTUGUES}
     //: Booleano que armazena se o tag vai ser lido automaticamente.
@@ -547,6 +566,13 @@ type
     //: Stores the event called when the tag value changes, AFTER notify the dependents of the tag.
     {$ENDIF}
     POnValueChangeLast:TNotifyEvent;
+
+    {$IFDEF PORTUGUES}
+    //: Armazena o evento assincrono que notifica uma mudança de valor do tag.
+    {$ELSE}
+    //: Stores asynchronous event that notifies when the tag value changes.
+    {$ENDIF}
+    POnAsyncValueChange:TASyncValueChangeNotify;
 
     {$IFDEF PORTUGUES}
     //: Armazena o evento chamado pelo tag toda vez que ele for atualizado.
@@ -848,6 +874,13 @@ type
     //: Event called when the tag value was updated.
     {$ENDIF}
     property OnUpdate:TNotifyEvent read POnUpdate  write POnUpdate;
+
+    {$IFDEF PORTUGUES}
+    //: Evento assincrono chamado quando o valor do tag sofre uma alteração.
+    {$ELSE}
+    //: Asynchronous event called when the tag value changes.
+    {$ENDIF}
+    property OnAsyncValueChange:TASyncValueChangeNotify read POnAsyncValueChange  write POnAsyncValueChange;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -867,6 +900,13 @@ type
     //: Remove a interface from the tag notification list.
     {$ENDIF}
     procedure RemoveCallBacks(ITag:IHMITagInterface);
+
+    {$IFDEF PORTUGUES}
+    //: Retorna o manipulador do tag.
+    {$ELSE}
+    //: Returns the tag handle.
+    {$ENDIF}
+    property Handle:HWND read fHandle;
   end;
 
   TScanUpdateRec = record
@@ -878,6 +918,9 @@ type
   end;
 
   TArrayOfScanUpdateRec = array of TScanUpdateRec;
+
+const
+  PM_ASYNCVALUECHANGE = LM_USER + $0123;
 
 implementation
 
@@ -896,6 +939,8 @@ begin
   PCommWriteOk := 0;
   PUpdateTime:=1000;
 
+  fHandle:=AllocateHWnd(WndMethod);
+
   if ComponentState*[csReading, csLoading]=[] then begin
     CreateGUID(x);
     PGUID:=GUIDToString(x);
@@ -908,6 +953,7 @@ var
 begin
   for c := 0 to High(PNotificationInterfaces) do
     PNotificationInterfaces[c].RemoveTag(Self);
+  DeallocateHWnd(fHandle);
   inherited Destroy;
 end;
 
@@ -971,6 +1017,32 @@ begin
       POnValueChangeLast(Self);
   except
   end;
+
+  PostMessage(Handle,PM_ASYNCVALUECHANGE,0,0);
+end;
+
+procedure TTag.wndMethod(var Msg: TLMessage);
+var
+  handled:Boolean;
+  c:Integer;
+begin
+  handled:=true;
+  case Msg.msg of
+    PM_ASYNCVALUECHANGE:
+      AsyncNotifyChange;
+    else
+      handled:=false;
+  end;
+
+  if handled then
+    msg.Result:=0
+  else
+    Dispatch(Msg);
+end;
+
+procedure TTag.AsyncNotifyChange;
+begin
+
 end;
 
 procedure TTag.NotifyReadOk;
@@ -1066,4 +1138,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.

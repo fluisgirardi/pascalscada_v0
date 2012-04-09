@@ -62,6 +62,7 @@ type
     PByteSize:Byte;
     PStringType:TPLCStringTypes;
     PStringSize:Cardinal;
+    POnAsyncStringValueChange:TASyncStringValueChange;
 
     procedure SetBlockSize(size:Cardinal);
     procedure SetStringSize(size:Cardinal);
@@ -81,6 +82,9 @@ type
     function  IsValidValue(Value:Variant):Boolean;
     function GetValueTimestamp:TDatetime;
   protected
+    //: @seealso(TTag.AsyncNotifyChange)
+    procedure AsyncNotifyChange; override;
+    //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.SetPLCHack)
     procedure SetPLCHack(v:Cardinal); override;
@@ -151,6 +155,13 @@ type
     property OnValueChangeFirst;
     //: @seealso(TTag.OnValueChangeLast)
     property OnValueChangeLast;
+
+    {$IFDEF PORTUGUES}
+    //: Evento assincrono chamado quando o valor do tag sofre uma alteração.
+    {$ELSE}
+    //: Asynchronous event called when the tag value changes.
+    {$ENDIF}
+    property OnAsyncStringChange:TASyncStringValueChange read POnAsyncStringValueChange write POnAsyncStringValueChange;
 
     {$IFDEF PORTUGUES}
     //: Tamanho do bloco (somente-leitura).
@@ -666,6 +677,12 @@ end;
 function  TPLCString.GetValueTimestamp:TDatetime;
 begin
    Result := PValueTimeStamp;
+end;
+
+procedure TPLCString.AsyncNotifyChange;
+begin
+  if Assigned(POnAsyncStringValueChange) then
+    POnAsyncStringValueChange(self,Value);
 end;
 
 end.

@@ -46,6 +46,9 @@ type
     function  GetValues:TArrayOfDouble;
     procedure SetValues(values:TArrayOfDouble);
   protected
+    //: @seealso(TTag.AsyncNotifyChange)    
+    procedure AsyncNotifyChange; override;
+    //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.TagCommandCallBack)
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
@@ -127,6 +130,8 @@ type
     property OnValueChangeLast;
     //: @seealso(TTag.OnUpdate)
     property OnUpdate;
+    //: @seealso(TTag.OnAsyncValueChange)
+    property OnAsyncValueChange;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
     //: @seealso(TPLCTag.TagType)
@@ -284,6 +289,16 @@ begin
   SetLength(towrite,0);
 end;
 
+procedure TPLCBlock.AsyncNotifyChange;
+var
+  x:TArrayOfDouble;
+begin
+  if not Assigned(POnAsyncValueChange) then exit;
+  x:=PValues;
+  POnAsyncValueChange(self,x);
+  SetLength(x,0);
+end;
+
 procedure TPLCBlock.WriteByScan;
 var
   x:Boolean;
@@ -383,4 +398,4 @@ begin
   end;
 end;
 
-end.
+end.
