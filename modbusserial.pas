@@ -1,4 +1,4 @@
-{$i language.inc}
+﻿{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -526,6 +526,8 @@ end;
 
 function TModBusRTUDriver.RemainingBytes(buffer: BYTES): Integer;
 begin
+  Result:=255; //if some communication error happens, set the next read
+               //to read 255 bytes and clear the remaining buffer.
   if Length(buffer)>=3 then begin
     if (buffer[PFuncByteOffset] and $80)=$80 then begin
       Result:=2; //is remaining the CRC at the buffer.

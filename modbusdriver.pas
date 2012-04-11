@@ -1,4 +1,4 @@
-{$i language.inc}
+﻿{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -1013,6 +1013,16 @@ begin
         //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
         //calculates the remaining package length at the communication buffer.
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
+
+        if (IOResult1.BufferToRead[PFuncByteOffset-1]<>pkg[PFuncByteOffset-1]) or
+           ((IOResult1.BufferToRead[PFuncByteOffset]<>pkg[PFuncByteOffset]) and
+            (not (IOResult1.BufferToRead[PFuncByteOffset] in [$81..$88])))then begin
+           repeat
+             res := PCommPort.IOCommandSync(iocRead,0,nil,255,DriverID,0,@IOResult2,starts,ends);
+           until IOResult2.ReadIOResult=iorTimeOut;
+           Result:=ioCommError;
+           exit;
+        end;
 
         if FRemainingBytes>0 then begin
           res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2,starts,ends);
