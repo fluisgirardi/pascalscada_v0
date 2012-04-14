@@ -193,7 +193,7 @@ type
     {$ELSE}
     //: Mutex that protect the protocol driver.
     {$ENDIF}
-    FCritical:TCriticalSection;
+    FReadCS, FWriteCS:TCriticalSection;
 
     {$IFDEF PORTUGUES}
     //: Forca a suspensão das threads, a fim de manter a execução correta do sistema.
@@ -725,7 +725,8 @@ begin
 
   FProtocolReady:=true;
 
-  FCritical := TCriticalSection.Create;
+  FReadCS := TCriticalSection.Create;
+  FWriteCS:= TCriticalSection.Create;
 
   FPause := TCrossEvent.Create(nil,true,true,'');
 
@@ -783,7 +784,8 @@ begin
 
   SetCommPort(nil);
 
-  FCritical.Destroy;
+  FReadCS.Destroy;
+  FWriteCS.Destroy;
 
   FPause.Destroy;
   
@@ -805,7 +807,8 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
 
     //se for a mesma porta cai fora...
     //if is the same communication port, exit.
@@ -822,7 +825,8 @@ begin
     end;
     PCommPort := CommPort;
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -875,11 +879,13 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
     
     DoAddTag(TagObj,false);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -892,10 +898,13 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
+
     DoDelTag(TagObj);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -1068,12 +1077,14 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,CrossNow,tcRead,res,tagrec.RealOffset);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
     SetLength(Values,0);
   end;
@@ -1089,13 +1100,15 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
 
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
       tagrec.CallBack(Values,CrossNow,tcWrite,res,tagrec.RealOffset);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -1132,10 +1145,12 @@ procedure TProtocolDriver.SafeScanRead(Sender:TObject; var NeedSleep:Integer);
 begin
    try
       FPause.WaitFor($FFFFFFFF);
-      FCritical.Enter;
+      FWriteCS.Enter;
+      FReadCS.Enter;
       DoScanRead(Sender, NeedSleep);
    finally
-      FCritical.Leave;
+      FReadCS.Leave;
+      FWriteCS.Leave;
       CrossThreadSwitch;
    end;
 end;
@@ -1148,11 +1163,13 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
 
     Result := DoWrite(TagRec,values,false)
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -1165,11 +1182,11 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FReadCS.Enter;
 
     DoGetValue(TagRec,values);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -1194,7 +1211,7 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FReadCS.Enter;
 
     if ComponentState*[csDestroying]<>[] then exit;
 
@@ -1242,7 +1259,7 @@ begin
     end;
 
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
     if doneOne then Result:=0;
     FPause.SetEvent;
   end;
@@ -1276,11 +1293,13 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
 
     PortOpened(Sender);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -1293,11 +1312,13 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
 
     PortClosed(Sender);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -1310,11 +1331,13 @@ begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
-    FCritical.Enter;
+    FWriteCS.Enter;
+    FReadCS.Enter;
 
     PortDisconnected(Sender);
   finally
-    FCritical.Leave;
+    FReadCS.Leave;
+    FWriteCS.Leave;
     FPause.SetEvent;
   end;
 end;
@@ -1332,12 +1355,12 @@ end;
 
 procedure TProtocolDriver.HighLatencyOperationWillBegin(Sender: TObject);
 begin
-  FCritical.Leave;
+  FReadCS.Leave;
 end;
 
 procedure TProtocolDriver.HighLatencyOperationWasEnded(Sender: TObject);
 begin
-  FCritical.Enter;
+  FReadCS.Enter;
 end;
 
 procedure TProtocolDriver.PortOpened(Sender: TObject);
@@ -1359,4 +1382,4 @@ initialization
 
 DriverCount:=1;
 
-end.
+end.
