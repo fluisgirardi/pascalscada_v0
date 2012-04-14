@@ -439,6 +439,7 @@ end;
 
 function TPascalSCADAUserManagementAction.GetHMITag: TPLCTag;
 begin
+  Result:=nil;
   //does nothing
 end;
 

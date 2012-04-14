@@ -21,10 +21,15 @@ interface
 uses
   SysUtils, Classes
   {$IFDEF FPC}
-  ,LCLIntf, LMessages, LCLType, Interfaces;
+  ,LCLIntf, LCLType, Interfaces, Forms;
   {$ELSE}
   ,Windows, Messages;
   {$ENDIF}
+
+{$IFNDEF FPC}
+const
+  PM_ASYNCVALUECHANGE = WM_USER + $0123;
+{$ENDIF}
 
 
 type
@@ -394,15 +399,18 @@ type
   {$ENDIF}
   TTag = class(TComponent)
   private
+    {$IFNDEF FPC}
     fHandle:HWND;
-  protected
     {$IFDEF PORTUGUES}
     //: Processa as mensagens do tag.
     {$ELSE}
     //: Processes the tag messages.
     {$ENDIF}    
     procedure wndMethod(var Msg:TLMessage); virtual;
-
+    {$ELSE}
+    procedure ASyncMethod(Data: PtrInt); virtual;
+    {$ENDIF}
+  protected
     {$IFDEF PORTUGUES}
     //: Realiza a chamado do evento assincrono informando a mudança do valor do tag.
     {$ELSE}
@@ -926,12 +934,14 @@ type
     {$ENDIF}
     procedure RemoveCallBacks(ITag:IHMITagInterface);
 
+    {$IFNDEF FPC}
     {$IFDEF PORTUGUES}
     //: Retorna o manipulador do tag.
     {$ELSE}
     //: Returns the tag handle.
     {$ENDIF}
     property Handle:HWND read fHandle;
+    {$ENDIF}
   end;
 
   TScanUpdateRec = record
@@ -944,11 +954,6 @@ type
 
   TArrayOfScanUpdateRec = array of TScanUpdateRec;
 
-const
-  {$IFNDEF FPC}
-  LM_USER = WM_USER;
-  {$ENDIF}
-  PM_ASYNCVALUECHANGE = LM_USER + $0123;
 
 implementation
 
@@ -967,7 +972,9 @@ begin
   PCommWriteOk := 0;
   PUpdateTime:=1000;
 
+  {$IFNDEF FPC}
   fHandle:=AllocateHWnd(WndMethod);
+  {$ENDIF}
 
   if ComponentState*[csReading, csLoading]=[] then begin
     CreateGUID(x);
@@ -981,7 +988,9 @@ var
 begin
   for c := 0 to High(PNotificationInterfaces) do
     PNotificationInterfaces[c].RemoveTag(Self);
+  {$IFNDEF FPC}
   DeallocateHWnd(fHandle);
+  {$ENDIF}
   inherited Destroy;
 end;
 
@@ -1047,9 +1056,14 @@ begin
   except
   end;
   x:=GetValueChangeData;
-  PostMessage(Handle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
+  {$IFDEF FPC}
+  Application.QueueAsyncCall(ASyncMethod,PtrInt(x));
+  {$ELSE}
+  PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
+  {$ENDIF}
 end;
 
+{$IFNDEF FPC}
 procedure TTag.wndMethod(var Msg: TLMessage);
 var
   handled:Boolean;
@@ -1070,8 +1084,15 @@ begin
   if handled then
     msg.Result:=0
   else
-    Dispatch(Msg);
+    inherited Dispatch(Msg);
 end;
+{$ELSE}
+procedure TTag.ASyncMethod(Data: PtrInt);
+begin
+  AsyncNotifyChange(Pointer(Data));
+  ReleaseChangeData(Pointer(Data));
+end;
+{$ENDIF}
 
 procedure TTag.AsyncNotifyChange(data:Pointer);
 begin
@@ -1181,4 +1202,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.

@@ -545,6 +545,7 @@ end;
 {$if declared(has_customhints)}
 function TBlockElementMapperComponentEditor.GetCustomHint: String;
 begin
+  Result:='';
   if Block is TPLCStruct then
     Result:=Result+'Structure size in bytes:'+IntToStr(TPLCStruct(Block).Size)
   else
