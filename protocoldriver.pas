@@ -633,6 +633,13 @@ type
     procedure Write(const tagrec:TTagRec; const Values:TArrayOfDouble);
 
     {$IFDEF PORTUGUES}
+    //: Retorna o endereço literal de um tag.
+    {$ELSE}
+    //: Returns the literal address of the tag.
+    {$ENDIF}
+    function LiteralTagAddress(aTag:TTag; aBlockTag:TTag=nil):String; virtual;
+
+    {$IFDEF PORTUGUES}
     //: Conta os tags dependentes desse driver de protocolo.
     {$ELSE}
     //: Return how many tags are on scan cycle of the protocol driver.
@@ -1111,6 +1118,11 @@ begin
     FWriteCS.Leave;
     FPause.SetEvent;
   end;
+end;
+
+function TProtocolDriver.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):String;
+begin
+  Result:='';
 end;
 
 procedure TProtocolDriver.CommPortCallBack(var Result:TIOPacket);

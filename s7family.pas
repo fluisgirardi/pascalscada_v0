@@ -721,6 +721,8 @@ type
     //: @seealso(TProtocolDriver.OpenTagEditor)
     procedure OpenTagEditor(OwnerOfNewTags: TComponent;
        InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+    //: @seealso(TProtocolDriver.LiteralTagAddress)
+    function LiteralTagAddress(aTag: TTag; aBlockTag: TTag=nil):String; override;
   published
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
@@ -1069,6 +1071,178 @@ begin
     end;
   finally
     frmS7tb.Destroy;
+  end;
+end;
+
+function TSiemensProtocolFamily.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):String;
+
+  function DescTagArea(area:Integer):String;
+  begin
+    case area of
+      1:
+        Result:='I';
+      2:
+        Result:='Q';
+      3:
+        Result:='M';
+      4:
+        Result:='DB';
+      5:
+        Result:='C';
+      6:
+        Result:='T';
+      7:
+        Result:='SM';
+      8:
+        Result:='S7200 I';
+      9:
+        Result:='S7200 Q';
+      10:
+        Result:='S7200 C';
+      11:
+        Result:='S7200 T';
+      12:
+        Result:='PI';
+      else
+        Result:='(Unknown area)';
+    end;
+  end;
+
+  function SiemensDescOfType(atype:TTagType):String;
+  begin
+    case atype of
+      pttDefault, pttShortInt, pttByte:
+        Result:='B';
+      pttSmallInt, pttWord:
+        Result:='W';
+      pttInteger, pttDWord, pttFloat:
+        Result:='D';
+    end;
+  end;
+
+  function PascalDescOfType(atype:TTagType):String;
+  begin
+    case atype of
+      pttDefault, pttByte:
+        Result:=' AS Byte [0..255]';
+      pttShortInt:
+        Result:=' AS ShortInt [-128..127]';
+      pttSmallInt:
+        Result:=' AS SmallInt [-32768..32767]';
+      pttWord:
+        Result:=' AS Word [0..65535]';
+      pttInteger:
+        Result:=' AS Integer [-2147483648..2147483647]';
+      pttDWord:
+        Result:=' AS SmallInt [0..4294967295]';
+      pttFloat:
+        Result:=' AS Float [±1.18×10E−38 to ±3.4×10E38]';
+    end;
+  end;
+
+begin
+  if aBlockTag=nil then begin
+    if aTag is TPLCTagNumber then begin
+      with atag as TPLCTagNumber do begin
+
+        case MemReadFunction of
+          4:
+            Result:='DB'+IntToStr(MemFile_DB)+'.DB'+ SiemensDescOfType(TagType)+
+                    IntToStr(MemAddress)+PascalDescOfType(TagType);
+          1..3, 7:
+            Result:=DescTagArea(MemReadFunction)+SiemensDescOfType(TagType)+
+                    IntToStr(MemAddress)+PascalDescOfType(TagType);
+
+          5..6, 8..12: begin
+            Result:=DescTagArea(MemReadFunction)+
+                    IntToStr(MemAddress)+PascalDescOfType(TagType);
+            if (TagType<>pttWord) and (TagType<>pttSmallInt) then
+              Result:=Result+LineEnding+'(wrong Tag data type, set the Tag data type to pttWord or pttSmallInt)';
+          end;
+          else
+            Result:='Unknown area';
+        end;
+      end;
+      exit;
+    end;
+
+    if aTag is TPLCString then begin
+      with atag as TPLCString do begin
+        Result:='String format '+ifthen(StringType=stC,'"C" (null terminated)','"Siemens" (with one byte to max size and other with the current string size)')+
+                ','+LineEnding+' starting at ';
+
+        case MemReadFunction of
+          4:
+            Result:=Result+'DB'+IntToStr(MemFile_DB)+'.DBB'+IntToStr(MemAddress);
+          1..3, 7: begin
+            Result:=Result+DescTagArea(MemReadFunction)+'B'+
+                    IntToStr(MemAddress);
+            if MemReadFunction in [1..2] then
+              Result:=Result+LineEnding+'(Digital inputs/outputs are a strange area to store a string, not?)';
+          end;
+
+          5..6, 8..12: begin
+            Result:=DescTagArea(MemReadFunction)+IntToStr(MemAddress)+
+            LineEnding+'('+DescTagArea(MemReadFunction)+' are a strange area to store a string, not?)';
+          end;
+          else
+            Result:='Unknown area';
+        end;
+      end;
+      exit;
+    end;
+
+    if aTag is TPLCStruct then begin
+      Result:='Structure at ';
+      with atag as TPLCStruct do begin
+
+        case MemReadFunction of
+          4:
+            Result:=Result+'DB'+IntToStr(MemFile_DB)+'.DB'+ SiemensDescOfType(TagType)+
+                    IntToStr(MemAddress);
+          1..3, 7:
+            Result:=Result+DescTagArea(MemReadFunction)+SiemensDescOfType(TagType)+
+                    IntToStr(MemAddress);
+
+          5..6, 8..12: begin
+            Result:=Result+DescTagArea(MemReadFunction)+
+                    IntToStr(MemAddress);
+          end;
+          else
+            Result:=Result+'Unknown area';
+        end;
+        Result:=Result+LineEnding+'with '+IntToStr(TagSizeOnProtocol);
+      end;
+      exit;
+    end;
+
+    if aTag is TPLCBlock then begin //block and plcstruct
+      Result:='Block of tags starting at ';
+      with atag as TPLCBlock do begin
+
+        case MemReadFunction of
+          4:
+            Result:=Result+'DB'+IntToStr(MemFile_DB)+'.DB'+ SiemensDescOfType(TagType)+
+                    IntToStr(MemAddress);
+          1..3, 7:
+            Result:=Result+DescTagArea(MemReadFunction)+SiemensDescOfType(TagType)+
+                    IntToStr(MemAddress);
+
+          5..6, 8..12: begin
+            Result:=Result+DescTagArea(MemReadFunction)+
+                    IntToStr(MemAddress);
+            if (TagType<>pttWord) and (TagType<>pttSmallInt) then
+              Result:=Result+LineEnding+'(with a strange Tag data type, set the data type to pttWord or pttSmallInt)';
+          end;
+          else
+            Result:=Result+'Unknown area';
+        end;
+        Result:=Result+LineEnding+'with '+IntToStr(Size)+' elements'+PascalDescOfType(TagType);
+      end;
+      exit;
+    end;
+  end else begin
+
   end;
 end;
 
@@ -2762,4 +2936,4 @@ begin
   Move(values[0],inptr^,Length(values));
 end;
 
-end.
+end.
