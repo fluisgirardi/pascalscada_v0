@@ -955,6 +955,17 @@ begin
         //calculates the remaining package length at the communication buffer.
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
+        //clear the remaining buffer...
+        if (IOResult1.BufferToRead[PFuncByteOffset-1]<>pkg[PFuncByteOffset-1]) or
+           ((IOResult1.BufferToRead[PFuncByteOffset]<>pkg[PFuncByteOffset]) and
+            (not (IOResult1.BufferToRead[PFuncByteOffset] in [$81..$88])))then begin
+           repeat
+             res := PCommPort.IOCommandSync(iocRead,0,nil,1,DriverID,0,@IOResult2,starts,ends);
+           until IOResult2.ReadIOResult=iorTimeOut;
+           Result:=ioCommError;
+           exit;
+        end;
+
         if FRemainingBytes>0 then begin
           res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2);
 
@@ -1014,11 +1025,12 @@ begin
         //calculates the remaining package length at the communication buffer.
         FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
+        //clear the remaining buffer...
         if (IOResult1.BufferToRead[PFuncByteOffset-1]<>pkg[PFuncByteOffset-1]) or
            ((IOResult1.BufferToRead[PFuncByteOffset]<>pkg[PFuncByteOffset]) and
             (not (IOResult1.BufferToRead[PFuncByteOffset] in [$81..$88])))then begin
            repeat
-             res := PCommPort.IOCommandSync(iocRead,0,nil,255,DriverID,0,@IOResult2,starts,ends);
+             res := PCommPort.IOCommandSync(iocRead,0,nil,1,DriverID,0,@IOResult2,starts,ends);
            until IOResult2.ReadIOResult=iorTimeOut;
            Result:=ioCommError;
            exit;
