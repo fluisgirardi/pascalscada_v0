@@ -940,8 +940,16 @@ var
   rl:Integer;
   res:Integer;
   tempValues:TArrayOfDouble;
+  starts, ends:TNotifyEvent;
 begin
   try
+    if FMustReleaseResources then begin
+      starts:=HighLatencyOperationWillBegin;
+      ends  :=HighLatencyOperationWasEnded;
+    end else begin
+      starts:=nil;
+      ends  :=nil;
+    end;
     pkg := EncodePkg(tagrec,values,rl);
     if PCommPort<>nil then begin
       PCommPort.Lock(DriverID);

@@ -1,4 +1,4 @@
-{$i language.inc}
+﻿{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de tradução do PascalSCADA.)
@@ -265,6 +265,11 @@ resourcestring
   SUseTheWinCCUserManager       = 'Use the WinCC Security Manager to insert a new Security Code/Authorization!';
   SAccessDenied                 = 'Access denied!';
   {$ENDIF}
+
+{$IFNDEF FPC}
+const
+  LineEnding=#13#10;
+{$ENDIF}
 
 implementation
 
