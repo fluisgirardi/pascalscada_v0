@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<CONFIG>
-  <Compiler Value="/usr/bin/fpc" Date="1295029494"/>
-  <Params Value=" -MObjFPC -Scgi -g -gl -WG -vewnhi -l -Fl/opt/gnome/lib -Fu/home/fabiolg/lazarus/components/rtticontrols/lib/x86_64-linux/gtk2 -Fu/home/fabiolg/lazarus/components/tachart/lib/x86_64-linux/gtk2 -Fu/home/fabiolg/desenvolvimento/pascalscada/lib/x86_64-linux -Fu/home/fabiolg/desenvolvimento/pascalscada/ZeosLib/packages/lazarus/lib/x86_64-linux -Fu/home/fabiolg/lazarus/components/memds/lib/x86_64-linux/gtk2 -Fu/home/fabiolg/lazarus/ideintf/units/x86_64-linux -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux/gtk2 -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux -Fu/home/fabiolg/lazarus/packager/units/x86_64-linux -Fu/home/fabiolg/desenvolvimento/pascalscada/examples/ModBusTCPLaz/ -dUseCThreads -dLCL -dLCLgtk2 project4.lpr"/>
-</CONFIG>

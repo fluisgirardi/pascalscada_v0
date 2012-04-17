@@ -940,16 +940,8 @@ var
   rl:Integer;
   res:Integer;
   tempValues:TArrayOfDouble;
-  starts, ends:TNotifyEvent;
 begin
   try
-    if FMustReleaseResources then begin
-      starts:=HighLatencyOperationWillBegin;
-      ends  :=HighLatencyOperationWasEnded;
-    end else begin
-      starts:=nil;
-      ends  :=nil;
-    end;
     pkg := EncodePkg(tagrec,values,rl);
     if PCommPort<>nil then begin
       PCommPort.Lock(DriverID);
@@ -968,7 +960,7 @@ begin
            ((IOResult1.BufferToRead[PFuncByteOffset]<>pkg[PFuncByteOffset]) and
             (not (IOResult1.BufferToRead[PFuncByteOffset] in [$81..$88])))then begin
            repeat
-             res := PCommPort.IOCommandSync(iocRead,0,nil,1,DriverID,0,@IOResult2,starts,ends);
+             res := PCommPort.IOCommandSync(iocRead,0,nil,1,DriverID,0,@IOResult2);
            until IOResult2.ReadIOResult=iorTimeOut;
            Result:=ioCommError;
            exit;

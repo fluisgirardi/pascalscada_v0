@@ -102,7 +102,7 @@ type
                          called to return the data to the application.)
     }
     {$ENDIF}
-    function ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
+    procedure ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc);
   end;
 
   {$IFDEF PORTUGUES}
@@ -289,7 +289,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
-    function  ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
+    procedure   ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc);
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -512,7 +512,7 @@ begin
   FASyncQuery.Connection:=FASyncConnection;
 
   FSQLSpooler:=TProcessSQLCommandThread.Create(true,ExecuteSQLCommand);
-  FSQLSpooler.Resume;
+  FSQLSpooler.WakeUp;
 end;
 
 destructor  THMIDBConnection.Destroy;
@@ -543,7 +543,7 @@ begin
   Result:=FSyncConnection;
 end;
 
-function THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc):Integer;
+procedure THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc);
 begin
   FSQLSpooler.ExecSQLWithResultSet(sql,ReturnDatasetCallback);
 end;

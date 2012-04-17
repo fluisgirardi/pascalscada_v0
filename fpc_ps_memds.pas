@@ -111,7 +111,6 @@ type
     procedure FreeRecordBuffer(var Buffer: TRecordBuffer); override;
     procedure GetBookmarkData(Buffer: TRecordBuffer; Data: Pointer); override;
     function  GetBookmarkFlag(Buffer: TRecordBuffer): TBookmarkFlag; override;
-    function  GetFieldData(Field: TField; Buffer: Pointer): Boolean; override;
     function  GetRecord(Buffer: TRecordBuffer; GetMode: TGetMode; DoCheck: Boolean): TGetResult; override;
     function  GetRecordSize: Word; override;
     procedure InternalAddRecord(Buffer: Pointer; DoAppend: Boolean); override;
@@ -128,7 +127,7 @@ type
     function  IsCursorOpen: Boolean; override;
     procedure SetBookmarkFlag(Buffer: TRecordBuffer; Value: TBookmarkFlag); override;
     procedure SetBookmarkData(Buffer: TRecordBuffer; Data: Pointer); override;
-    procedure SetFieldData(Field: TField; Buffer: Pointer); override;
+
 
     // Optional.
     function GetRecordCount: Integer; override;
@@ -155,6 +154,8 @@ type
     procedure CreateTable;
 
     Function  DataSize : Integer;
+    function  GetFieldData(Field: TField; Buffer: Pointer): Boolean; override;
+    procedure SetFieldData(Field: TField; Buffer: Pointer); override;
 
     procedure Clear(ClearDefs : Boolean);{$IFNDEF FPC} overload; {$ENDIF}
     procedure Clear;{$IFNDEF FPC} overload; {$ENDIF}
@@ -238,7 +239,6 @@ end;
   ---------------------------------------------------------------------}
 
 Function ReadInteger(S : TStream) : Integer;
-
 begin
   S.ReadBuffer(Result,SizeOf(Result));
 end;
@@ -404,10 +404,6 @@ begin
 end;
 
 procedure TFPCPSMemDataset.InternalInitRecord(Buffer: TRecordBuffer);
-
-var
-  I : integer;
-
 begin
  fillchar(buffer^,frecsize,0);
 end;
@@ -416,7 +412,6 @@ procedure TFPCPSMemDataset.InternalDelete;
 
 Var
   TS : TMemoryStream;
-  OldPos,NewPos,CopySize1,CopySize2 : Cardinal;
 
 begin
   if (FCurrRecNo<0) or (FCurrRecNo>=FRecCount) then
@@ -618,11 +613,7 @@ end;
 Procedure TFPCPSMemDataset.SaveFieldDefsToStream(F : TStream);
 
 Var
-  I,ACount : Integer;
-  FN : String;
-  FS : Integer;
-  B : Boolean;
-  FT : TFieldType;
+  I : Integer;
   FD : TFieldDef;
 
 begin
@@ -1043,4 +1034,4 @@ begin
   inc(Result, Pos);
 end;
 
-end.
+end.

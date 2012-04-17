@@ -80,14 +80,17 @@ uses LCLProc;
 { TForm1 }
 
 procedure TForm1.Timer1Timer(Sender: TObject);
+var
+  y:Integer;
 begin
   if ListChartSource1.Count>300 then
     ListChartSource1.Delete(0);
   inc(px);
-  ListChartSource1.Add(px,TCP_UDPPort1.CommandsPerSecond,IntToStr(px), clGreen);
-  Inc(cmdmedios, TCP_UDPPort1.CommandsPerSecond);
+  y:=TCP_UDPPort1.CommandsPerSecond div 2;
+  ListChartSource1.Add(px,y,IntToStr(px), clGreen);
+  Inc(cmdmedios, y); //now modbus does executes 2 IO commands to do a read/write of a tag value
   inc(cmdcount);
-  Label1.Caption:=FormatFloat('#0',TCP_UDPPort1.CommandsPerSecond);
+  Label1.Caption:=FormatFloat('#0',y);
   Label2.Caption:='TX: '+FormatFloat('#0.0',TCP_UDPPort1.TXBytesSecond/1024)+' kb/s';
   Label3.Caption:='RX: '+FormatFloat('#0.0',TCP_UDPPort1.RXBytesSecond/1024)+' kb/s';
   Label4.Caption:=FormatFloat('#0',cmdmedios/cmdcount);

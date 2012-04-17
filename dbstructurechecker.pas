@@ -18,24 +18,33 @@ type
   TDatabaseObjectState = (dosUnknown, dosChanged, dosDontExists, dosOK);
   TDatabaseNameBehavior = (dbnTableName, dbnFieldName, dbnIndexName);
 
+  { TDatabaseObject }
+
+  TDatabaseObject = class(TObject)
+  protected
+    FState:TDatabaseObjectState;
+    function GetCurrentState:TDatabaseObjectState; virtual;
+    procedure ResetState; virtual;
+  end;
+
   //simple index declaration (for primary and unique keys)
-  TIndex = class(TObject)
+  TIndex = class(TDatabaseObject)
   protected
     FTableOwner:TTableDefinition;
     FIndexName:string;
     FFields:TArrayOfString;
-    FState:TDatabaseObjectState;
     procedure AddFieldToIndex(FieldName:String); virtual;
     function GetFieldCount:Integer;
     function GetField(index:Integer):String;
   public
     constructor Create(OwnerTable:TTableDefinition; IndexName:String);
     destructor Destroy; override;
-    function GetCurrentState:TDatabaseObjectState; virtual;
-    procedure ResetState;
+
+    function GetCurrentState:TDatabaseObjectState; override;
+
     property IndexName:String read FIndexName;
     property FieldCount:Integer read GetFieldCount;
-    property IndexField[index:Integer]:Integer read GetField;
+    property IndexField[index:Integer]:String read GetField;
   end;
 
   TUniqueIndex = class(TIndex)
@@ -71,6 +80,8 @@ type
     procedure addFieldLink(SourceField, Field:String);
   end;
 
+  { TCollumnDefinition }
+
   TCollumnDefinition = class(TObject)
   private
     FFieldName   :String;
@@ -89,7 +100,9 @@ type
     property Size        :Integer    read FSize;
   end;
 
-  TTableDefinition = class(TObject)
+  { TTableDefinition }
+
+  TTableDefinition = class(TDatabaseObject)
   private
     FFields:array of TCollumnDefinition;
     FPK:TPrimaryKeyIndex;
@@ -105,13 +118,135 @@ type
                             DeleteAction:TForeignKeyRestriction = fkrNoAction):TForeignKey;
   public
     function FieldExists(fieldname:String; var field:TCollumnDefinition):Boolean;
-    function GetCurrentState:TDatabaseObjectState; virtual;
-    procedure ResetState;
+    function GetCurrentState:TDatabaseObjectState; override;
+    procedure ResetState; override;
   end;
 
-   TDatabaseDefinition = class(TObject);
+   { TDatabaseDefinition }
+
+   TDatabaseDefinition = class(TDatabaseObject)
+   protected
+     FTables:array of TTableDefinition;
+
+   public
+     destructor Destroy; override;
+     procedure AddTable(TableName:String);
+     procedure DeleteTable(TableName:String);
+     function  FindTableDef(TableName:String):Boolean;
+     function GetCurrentState: TDatabaseObjectState; override;
+     procedure ResetState; override;
+   end;
 
 implementation
+
+{ TDatabaseDefinition }
+
+destructor TDatabaseDefinition.Destroy;
+begin
+  inherited Destroy;
+end;
+
+procedure TDatabaseDefinition.AddTable(TableName: String);
+begin
+
+end;
+
+procedure TDatabaseDefinition.DeleteTable(TableName: String);
+begin
+
+end;
+
+function TDatabaseDefinition.FindTableDef(TableName: String): Boolean;
+begin
+
+end;
+
+function TDatabaseDefinition.GetCurrentState: TDatabaseObjectState;
+begin
+  Result:=inherited GetCurrentState;
+end;
+
+procedure TDatabaseDefinition.ResetState;
+begin
+  inherited ResetState;
+end;
+
+{ TCollumnDefinition }
+
+constructor TCollumnDefinition.Create(OnwerTable: TTableDefinition;
+  FieldName: String; FieldType: TFieldType; Size: Integer; Nullable: Boolean;
+  DefaultValue: String);
+begin
+
+end;
+
+destructor TCollumnDefinition.Destroy;
+begin
+  inherited Destroy;
+end;
+
+{ TDatabaseObject }
+
+function TDatabaseObject.GetCurrentState: TDatabaseObjectState;
+begin
+
+end;
+
+procedure TDatabaseObject.ResetState;
+begin
+
+end;
+
+{ TTableDefinition }
+
+constructor TTableDefinition.Create(OwnerDatabase: TDatabaseDefinition);
+begin
+
+end;
+
+destructor TTableDefinition.Destroy;
+begin
+  inherited Destroy;
+end;
+
+procedure TTableDefinition.addCollumn(FieldName: String; FieldType: TFieldType;
+  Size: Integer; Nullable: Boolean; DefaultValue: String);
+begin
+
+end;
+
+function TTableDefinition.addPrimaryKey(pkName: String): TPrimaryKeyIndex;
+begin
+
+end;
+
+function TTableDefinition.addUniqueIndex(uniquename: String): TUniqueIndex;
+begin
+
+end;
+
+function TTableDefinition.addForeignKey(IndexName, SourceTable: String;
+  UpdateAction: TForeignKeyRestriction; DeleteAction: TForeignKeyRestriction
+  ): TForeignKey;
+begin
+
+end;
+
+function TTableDefinition.FieldExists(fieldname: String;
+  var field: TCollumnDefinition): Boolean;
+begin
+
+end;
+
+function TTableDefinition.GetCurrentState: TDatabaseObjectState;
+begin
+  Result:=inherited GetCurrentState;
+end;
+
+procedure TTableDefinition.ResetState;
+begin
+  inherited ResetState;
+end;
 
 constructor TIndex.Create(OwnerTable:TTableDefinition; IndexName:String);
 begin
@@ -170,11 +305,6 @@ begin
   //TODO: must check itself with database driver.
 end;
 
-procedure  TIndex.ResetState;
-begin
-  FState:=dosUnknown;
-end;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 procedure TUniqueIndex.AddFieldToIndex(FieldName:String);
@@ -200,12 +330,15 @@ constructor TForeignKey.Create(OwnerTable:TTableDefinition; IndexName,
                                UpdateAction:TForeignKeyRestriction = fkrNoAction;
                                DeleteAction:TForeignKeyRestriction = fkrNoAction);
 begin
-  inherited Create();
+  inherited Create(OwnerTable,IndexName);
+  FDeleteAction:=DeleteAction;
+  FUpdateAction:=UpdateAction;
+  //must find the source table by their name.
 end;
 
 destructor  TForeignKey.Destroy;
 begin
-
+   inherited Destroy;
 end;
 
 procedure   TForeignKey.addFieldLink(SourceField, Field:String);
