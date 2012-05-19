@@ -290,6 +290,8 @@ begin
 
    if Supports(FTag, ITagNumeric) then
       (FTag as ITagNumeric).Value := Value;
+
+   inherited Click(Button);
 end;
 
 procedure THMIUpDown.SetPosition(v:Double);
