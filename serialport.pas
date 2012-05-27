@@ -64,8 +64,8 @@ type
   @value br115200 = 115200 bps
   }
   {$ENDIF}
-  TSerialBaundRate = (br110, br300, br600, br1200, br2400, br4800, br9600,
-                      br19200, br38400, br57600, br115200);
+  TSerialBaudRate = (br110, br300, br600, br1200, br2400, br4800, br9600,
+                     br19200, br38400, br57600, br115200);
 
   {$IFDEF PORTUGUES}
   {:
@@ -148,7 +148,7 @@ type
   private
     PPortName:String;
     PTimeout:integer;
-    PBaundRate:TSerialBaundRate;
+    PBaundRate:TSerialBaudRate;
     PStopBits:TSerialStopBits;
     PParity:TSerialParity;
     PDataBits:TSerialDataBits;
@@ -168,7 +168,7 @@ type
     PRWTimeout:Integer;    
     procedure SetTimeOut(v:Integer);
     procedure SetRWTimeout(v:Integer);
-    procedure SetBaundRate(v:TSerialBaundRate);
+    procedure SetBaundRate(v:TSerialBaudRate);
     procedure SetStopBits(v:TSerialStopBits);
     procedure SetParity(v:TSerialParity);
     procedure SetDataBits(v:TSerialDataBits);
@@ -246,7 +246,7 @@ type
     @seealso(TSerialBaundRate)
     }
     {$ENDIF}
-    property BaudRate:TSerialBaundRate read PBaundRate write SetBaundRate stored true default br19200;
+    property BaudRate:TSerialBaudRate read PBaundRate write SetBaundRate stored true default br19200;
 
     {$IFDEF PORTUGUES}
     {:
@@ -781,7 +781,7 @@ begin
   if COMExist(v) then
     PPortName := v
   else
-    if (v='(none)')  then
+    if (v='(none)') or (v='') then
        PPortName:=''
     else
        raise Exception.Create(v+': '+SserialPortNotExist);
@@ -825,12 +825,12 @@ begin
   PRWTimeout := v;
 end;
 
-procedure TSerialPortDriver.SetBaundRate(v:TSerialBaundRate);
+procedure TSerialPortDriver.SetBaundRate(v:TSerialBaudRate);
 {$IF defined(WIN32) or defined(WIN64)}
 var
   dcbstring:String;
   d:DCB;
-  Old:TSerialBaundRate;
+  Old:TSerialBaudRate;
 begin
   DoExceptionInActive;
 
@@ -1038,4 +1038,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.
