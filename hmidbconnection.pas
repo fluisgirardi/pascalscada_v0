@@ -102,7 +102,7 @@ type
                          called to return the data to the application.)
     }
     {$ENDIF}
-    procedure ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc);
+    procedure ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
   end;
 
   {$IFDEF PORTUGUES}
@@ -120,6 +120,7 @@ type
   {$ENDIF}
   TSQLCmdRec = record
     SQLCmd:String;
+    ReturnSync:Boolean;
     ReturnDataSetCallback:TReturnDataSetProc;
   end;
 
@@ -222,7 +223,7 @@ type
     @param(sql String. SQL query command.)
     }
     {$ENDIF}
-    procedure ExecSQLWithoutResultSet(sql:String);
+    procedure ExecSQLWithoutResultSet(sql:String; ReturnSync:Boolean=true);
 
     {$IFDEF PORTUGUES}
     {:
@@ -240,7 +241,7 @@ type
                                                   to return the dataset.)
     }
     {$ENDIF}
-    procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc);
+    procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
   end;
 
   {$IFDEF PORTUGUES}
@@ -289,7 +290,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
-    procedure   ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc);
+    procedure   ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -442,8 +443,11 @@ begin
 
           try
             if Assigned(cmd^.ReturnDataSetCallback) then begin
-              FErrorOnSync:=true;
-              Synchronize(ReturnData);
+              if cmd^.ReturnSync then begin
+                FErrorOnSync:=true;
+                Synchronize(ReturnData);
+              end else
+                ReturnData;
             end;
           finally
             Dispose(cmd);
@@ -481,17 +485,18 @@ begin
   Result := FEnd.WaitFor(Timeout);
 end;
 
-procedure   TProcessSQLCommandThread.ExecSQLWithoutResultSet(sql:String);
+procedure   TProcessSQLCommandThread.ExecSQLWithoutResultSet(sql:String; ReturnSync:Boolean=true);
 begin
-  ExecSQLWithResultSet(sql,nil);
+  ExecSQLWithResultSet(sql, nil, ReturnSync);
 end;
 
-procedure   TProcessSQLCommandThread.ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc);
+procedure   TProcessSQLCommandThread.ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
 var
   sqlcmd:PSQLCmdRec;
 begin
   new(sqlcmd);
   sqlcmd^.SQLCmd:=sql;
+  sqlcmd^.ReturnSync:=ReturnSync;
   sqlcmd^.ReturnDataSetCallback:=ReturnDataCallback;
   FSpool.PostMessage(SQLCommandMSG,sqlcmd,nil,true);
 end;
@@ -543,9 +548,9 @@ begin
   Result:=FSyncConnection;
 end;
 
-procedure THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc);
+procedure THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
 begin
-  FSQLSpooler.ExecSQLWithResultSet(sql,ReturnDatasetCallback);
+  FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync);
 end;
 
 procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPCPSMemDataset);
