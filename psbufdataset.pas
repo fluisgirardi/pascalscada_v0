@@ -1,11 +1,9 @@
 unit psbufdataset;
 
-{$mode objfpc}{$H+}
-
 interface
 
 uses
-  DB, Classes{$IFDEF FPC}, BufDataset{$ELSE} {$ENDIF};
+  DB, Classes{$IFDEF FPC}, BufDataset{$ELSE}, fpsbufdataset{$ENDIF};
 
 type
 

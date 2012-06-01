@@ -1,9 +1,5 @@
 unit fpsbufdataset_parser;
 
-{$h+}
-{$mode delphi}
-
-
 interface
 
 uses

@@ -16,12 +16,9 @@
 
 unit fpsBufDataset;
 
-{$mode objfpc}
-{$h+}
-
 interface
 
-uses Classes,Sysutils,db,fpsbufdataset_parser;
+uses Classes, Sysutils, db, fpsbufdataset_parser;
 
 type
   TCustomBufDataset = Class;

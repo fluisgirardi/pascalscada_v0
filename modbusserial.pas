@@ -1,4 +1,4 @@
-﻿{$i language.inc}
+{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
