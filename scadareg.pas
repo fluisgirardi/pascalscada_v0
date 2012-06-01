@@ -27,7 +27,7 @@ uses
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
   PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection,
-  ControlSecurityManager, ActnList, CustomizedUserManagement, fpc_ps_memds, 
+  ControlSecurityManager, ActnList, CustomizedUserManagement, psbufdataset,
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
@@ -82,8 +82,8 @@ begin
   //RegisterComponents(strControlsPallete,  [THMIButton]);
   RegisterComponents(strDatabasePallete,  [THMIDBConnection]);
 
-  //THE FPC MEMORY DATASET
-  RegisterComponents(strFPCPallete,       [TFPCPSMemDataset]);
+  //THE FPC BUFDATASET
+  RegisterComponents(strFPCPallete,       [TFPSBufDataSet]);
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   RegisterComponents(strUserManagement,   [TWinCCUserManagement]);

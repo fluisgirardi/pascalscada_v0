@@ -21,7 +21,7 @@ interface
 
 uses
   Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
-  syncobjs, fpc_ps_memds, ZDataset;
+  syncobjs, ZDataset, psbufdataset;
 
 type
 
@@ -60,14 +60,14 @@ type
   {$ELSE}
   //: Procedure called by thread to execute the query.
   {$ENDIF}
-  TExecSQLProc = procedure(sqlcmd:String; outputdataset:TFPCPSMemDataset) of object;
+  TExecSQLProc = procedure(sqlcmd:String; outputdataset:TFPSBufDataSet) of object;
 
   {$IFDEF PORTUGUES}
   //: Método usado pela thread para retornar um dataset após a execução da consulta.
   {$ELSE}
   //: Procedure called by thread to return the dataset after the query execution.
   {$ENDIF}
-  TReturnDataSetProc = procedure(Sender:TObject; DS:TFPCPSMemDataset; error:Exception) of object;
+  TReturnDataSetProc = procedure(Sender:TObject; DS:TFPSBufDataSet; error:Exception) of object;
 
   {$IFDEF PORTUGUES}
   //: Inteface para interação com objetos privados do THMIDBConnection
@@ -155,7 +155,7 @@ type
     FSpool:TMessageSpool;
     FEnd:TCrossEvent;
     cmd:PSQLCmdRec;
-    fds:TFPCPSMemDataset;
+    fds:TFPSBufDataSet;
     ferror:Exception;
     FErrorOnSync:Boolean;
     fOnExecSQL:TExecSQLProc;
@@ -265,7 +265,7 @@ type
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
     function  GetSyncConnection:TZConnection;
-    procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPCPSMemDataset);
+    procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPSBufDataSet);
   protected
     FProtocol: string;
     FHostName: string;
@@ -434,7 +434,7 @@ begin
           //creates the dataset.
           ferror:=nil;
           if Assigned(cmd^.ReturnDataSetCallback) then
-            fds:=TFPCPSMemDataset.Create(Nil)
+            fds:=TFPSBufDataSet.Create(Nil)
           else
             fds:=nil;
 
@@ -553,7 +553,7 @@ begin
   FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync);
 end;
 
-procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPCPSMemDataset);
+procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPSBufDataSet);
 begin
   FCS.Enter;
   try
