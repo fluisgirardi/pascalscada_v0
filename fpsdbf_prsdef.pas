@@ -31,6 +31,21 @@ type
   TExprFunc = procedure(Expr: PExpressionRec);
 
 //-----
+  {$IFDEF FPC}
+    {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION < 20701)}
+      {$DEFINE FPCPS_COMPAT_MODE}
+    {$IFEND}
+  {$ELSE}
+    {$I delphiver.inc}
+    {$DEFINE NEED_PTRINT}
+    {$IFNDEF DELPHI2009_UP}
+      {$DEFINE FPCPS_COMPAT_MODE}
+    {$ENDIF}
+  {$ENDIF}
+  
+  {$IFDEF FPCPS_COMPAT_MODE}
+  TRecordBuffer = PChar;
+  {$ENDIF}
 
   TDynamicType = class(TObject)
   private
