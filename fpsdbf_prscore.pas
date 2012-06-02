@@ -20,14 +20,16 @@ unit fpsdbf_prscore;
 
 interface
 
+{$IFDEF FPC}
 {$I dbf_common.inc}
+{$ENDIF}
 
 uses
   SysUtils,
   Classes,
   Db,
-  dbf_prssupp,
-  dbf_prsdef;
+  fpsdbf_prssupp,
+  fpsdbf_prsdef;
 
 {$define ENG_NUMBERS}
 

@@ -2,7 +2,9 @@ unit fpsdbf_prssupp;
 
 // parse support
 
+{$IFDEF FPC}
 {$I dbf_common.inc}
+{$ENDIF}
 
 interface
 
@@ -223,7 +225,7 @@ var
   I, J: Integer;
   NegSign: boolean;
 begin
-  {$I getstrfromint.inc}
+  {$I fpsgetstrfromint.inc}
 end;
 
 {$ifdef SUPPORT_INT64}

@@ -6,8 +6,8 @@ uses
   SysUtils,
   Classes,
   db,
-  dbf_prscore,
-  dbf_prsdef;
+  fpsdbf_prscore,
+  fpsdbf_prsdef;
 
 type
 

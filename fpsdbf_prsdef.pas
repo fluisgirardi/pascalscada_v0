@@ -2,13 +2,13 @@ unit fpsdbf_prsdef;
 
 interface
 
-{$I dbf_common.inc}
+{$I fpsdbf_common.inc}
 
 uses
   SysUtils,
   Classes,
   Db,
-  dbf_prssupp;
+  fpsdbf_prssupp;
 
 const
   MaxArg = 6;
