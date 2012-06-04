@@ -13,6 +13,8 @@ uses
 const
   MaxArg = 6;
   ArgAllocSize = 32;
+  dsMaxBufferCount = $FFFFFFF;
+  dsMaxStringSize  = 8192;
 
 type
   TExpressionType = (etInteger, etString, etBoolean, etLargeInt, etFloat, etDateTime,
@@ -31,20 +33,14 @@ type
   TExprFunc = procedure(Expr: PExpressionRec);
 
 //-----
-  {$IFDEF FPC}
-    {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION < 20701)}
-      {$DEFINE FPCPS_COMPAT_MODE}
-    {$IFEND}
-  {$ELSE}
-    {$I delphiver.inc}
-    {$DEFINE NEED_PTRINT}
-    {$IFNDEF DELPHI2009_UP}
-      {$DEFINE FPCPS_COMPAT_MODE}
-    {$ENDIF}
-  {$ENDIF}
-  
+  {$I fps_compat.inc}
+
   {$IFDEF FPCPS_COMPAT_MODE}
   TRecordBuffer = PChar;
+  {$ENDIF}
+  
+  {$IFDEF NEED_TSTRINGFIELDBUFFER}
+  TStringFieldBuffer = Array[0..dsMaxStringSize] of Char;
   {$ENDIF}
 
   TDynamicType = class(TObject)

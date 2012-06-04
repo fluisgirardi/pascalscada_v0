@@ -51,7 +51,7 @@ type
 
 implementation
 
-uses dbconst;
+uses fpsdbconst;
 
 type
 // TFieldVar aids in retrieving field values from records

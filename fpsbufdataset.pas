@@ -21,7 +21,27 @@ interface
 uses Classes, Sysutils, db, fpsbufdataset_parser;
 
 type
-  TCustomBufDataset = Class;
+
+  {$I fps_compat.inc}
+
+  {$IFDEF NEED_TRESOLVERRESPONSE}
+  TResolverResponse = (rrSkip, rrAbort, rrMerge, rrApply, rrIgnore);
+  {$ENDIF}
+
+  {$IFDEF NEED_PTRINT}
+  PtrInt = Integer; //must be fixed for Delphi XE2 64 bits..
+  {$ENDIF}
+
+  {$IFDEF FPCPS_COMPAT_MODE}
+  TRecordBuffer = PChar;
+  {$ENDIF}
+
+  {$IFDEF NEED_PLARGEINT}
+  PLargeInt = ^Int64;
+  PQWord    = ^Int64;
+  {$ENDIF}
+
+  TCustomBufDataset = class;
 
   TResolverErrorEvent = procedure(Sender: TObject; DataSet: TCustomBufDataset; E: EUpdateError;
     UpdateKind: TUpdateKind; var Response: TResolverResponse) of object;
@@ -36,7 +56,7 @@ type
     Size    : ptrint;
   end;
 
-   TBufBlobStream = class(TStream)
+  TBufBlobStream = class(TStream)
   private
     FBlobBuffer : PBlobBuffer;
     FPosition   : ptrint;
@@ -48,8 +68,6 @@ type
   public
     constructor Create(Field: TBlobField; Mode: TBlobStreamMode);
   end;
-
-  { TCustomBufDataset }
 
   PBufRecLinkItem = ^TBufRecLinkItem;
   TBufRecLinkItem = record
@@ -390,7 +408,11 @@ type
     class function RecognizeStream(AStream : TStream) : boolean; override;
   end;
 
+  {$IFDEF FPCPS_COMPAT_MODE}
+  TCustomBufDataset = class(TDataSet)
+  {$ELSE}
   TCustomBufDataset = class(TDBDataSet)
+  {$ENDIF}
   private
     FFileName: string;
     FReadFromFile   : boolean;
@@ -456,13 +478,13 @@ type
     procedure FreeBlobBuffer(var ABlobBuffer: PBlobBuffer);
     procedure SetRecNo(Value: Longint); override;
     function  GetRecNo: Longint; override;
-    function GetChangeCount: integer; virtual;
-    function  AllocRecordBuffer: TRecordBuffer override;
+    function  GetChangeCount: integer; virtual;
+    function  AllocRecordBuffer: TRecordBuffer; override;
     procedure FreeRecordBuffer(var Buffer: TRecordBuffer); override;
     procedure ClearCalcFields(Buffer: TRecordBuffer); override;
     procedure InternalInitRecord(Buffer: TRecordBuffer); override;
     function  GetCanModify: Boolean; override;
-    function GetRecord(Buffer: TRecordBuffer; GetMode: TGetMode; DoCheck: Boolean): TGetResult; override;
+    function  GetRecord(Buffer: TRecordBuffer; GetMode: TGetMode; DoCheck: Boolean): TGetResult; override;
     procedure DoBeforeClose; override;
     procedure InternalOpen; override;
     procedure InternalClose; override;
@@ -504,8 +526,7 @@ type
     procedure SetFieldData(Field: TField; Buffer: Pointer;
       NativeFormat: Boolean); override;
     procedure SetFieldData(Field: TField; Buffer: Pointer); override;
-    procedure ApplyUpdates; virtual; overload;
-    procedure ApplyUpdates(MaxErrors: Integer); virtual; overload;
+    procedure ApplyUpdates(MaxErrors: Integer = 0); virtual;
     procedure CancelUpdates; virtual;
     destructor Destroy; override;
     function Locate(const keyfields: string; const keyvalues: Variant; options: TLocateOptions) : boolean; override;
@@ -574,7 +595,7 @@ procedure RegisterDatapacketReader(ADatapacketReaderClass : TDatapacketReaderCla
 
 implementation
 
-uses variants, dbconst, FmtBCD;
+uses variants, fpsdbconst, FmtBCD, StrUtils;
 
 Type TDatapacketReaderRegistration = record
                                        ReaderClass : TDatapacketReaderClass;
@@ -702,28 +723,70 @@ begin
 end;
 
 procedure unSetFieldIsNull(NullMask : pbyte;x : longint); //inline;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  p:PByte;
+{$ENDIF}
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   NullMask[x div 8] := (NullMask[x div 8]) and not (1 shl (x mod 8));
+  {$ELSE}
+  p:=NullMask;
+  inc(p, x div 8);
+  p^:=p^ and not (1 shl (x mod 8));
+  {$ENDIF}
 end;
 
 procedure SetFieldIsNull(NullMask : pbyte;x : longint); //inline;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  p:PByte;
+{$ENDIF}
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   NullMask[x div 8] := (NullMask[x div 8]) or (1 shl (x mod 8));
+  {$ELSE}
+  p:=NullMask;
+  inc(p, x div 8);
+  p^:=p^ or (1 shl (x mod 8));
+  {$ENDIF}
 end;
 
 function GetFieldIsNull(NullMask : pbyte;x : longint) : boolean; //inline;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  p:PByte;
+{$ENDIF}
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   result := ord(NullMask[x div 8]) and (1 shl (x mod 8)) > 0
+  {$ELSE}
+  p:=NullMask;
+  inc(p, x div 8);
+  result := ord(p^) and (1 shl (x mod 8)) > 0
+  {$ENDIF}
 end;
 
 function IndexCompareRecords(Rec1,Rec2 : pointer; ADBCompareRecs : TDBCompareStruct) : LargeInt;
 var IndexFieldNr : Integer;
     IsNull1, IsNull2 : boolean;
+    {$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+    p1, p2:PByte;
+    {$ENDIF}
 begin
   for IndexFieldNr:=0 to length(ADBCompareRecs)-1 do with ADBCompareRecs[IndexFieldNr] do
     begin
+    {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     IsNull1:=GetFieldIsNull(rec1+NullBOff1,FieldInd1);
     IsNull2:=GetFieldIsNull(rec2+NullBOff2,FieldInd2);
+    {$ELSE}
+    p1 := rec1;
+    inc(p1,NullBOff1);
+    IsNull1:=GetFieldIsNull(p1,FieldInd1);
+    p2 := rec2;
+    inc(p2,NullBOff2);
+    IsNull2:=GetFieldIsNull(p2,FieldInd2);
+    {$ENDIF}
     if IsNull1 and IsNull2 then
       result := 0
     else if IsNull1 then
@@ -731,7 +794,15 @@ begin
     else if IsNull2 then
       result := 1
     else
+      {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
       Result := Comparefunc(Rec1+Off1,Rec2+Off2,Options);
+      {$ELSE}
+      p1 := Rec1;
+      inc(p1, Off1);
+      p2 := Rec2;
+      inc(p2, Off2);
+      Result := Comparefunc(p1,p2,Options);
+      {$ENDIF}
 
     if Result <> 0 then
       begin
@@ -876,22 +947,51 @@ var PCurRecLinkItem : PBufRecLinkItem;
     AField          : TField;
     Index0,
     DblLinkIndex    : TDoubleLinkedBufIndex;
+    {$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+    aux2:PBufRecLinkItem;
+    {$ENDIF}
 
   procedure PlaceNewRec(var e: PBufRecLinkItem; var esize: integer);
+  {$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+  var
+    aux:PBufRecLinkItem;
+  {$ENDIF}
   begin
     if DblLinkIndex.FFirstRecBuf=nil then
      begin
      DblLinkIndex.FFirstRecBuf:=e;
+     {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
      e[DblLinkIndex.IndNr].prior:=nil;
+     {$ELSE}
+     aux:=e;
+     inc(aux, DblLinkIndex.IndNr);
+     aux^.prior:=nil;
+     {$ENDIF}
      l:=e;
      end
    else
      begin
+     {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
      l[DblLinkIndex.IndNr].next:=e;
      e[DblLinkIndex.IndNr].prior:=l;
+     {$ELSE}
+     aux:=l;
+     inc(aux, DblLinkIndex.IndNr);
+     aux^.next:=e;
+
+     aux:=e;
+     inc(aux, DblLinkIndex.IndNr);
+     aux^.prior:=l;
+     {$ENDIF}
      l:=e;
      end;
+   {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
    e := e[DblLinkIndex.IndNr].next;
+   {$ELSE}
+   aux:=e;
+   inc(aux, DblLinkIndex.IndNr);
+   e:=aux^.next;
+   {$ENDIF}
    dec(esize);
   end;
 
@@ -934,17 +1034,30 @@ begin
 
 // This simply copies the index...
   PCurRecLinkItem:=Index0.FFirstRecBuf;
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   PCurRecLinkItem[DblLinkIndex.IndNr].next := PCurRecLinkItem[0].next;
   PCurRecLinkItem[DblLinkIndex.IndNr].prior := PCurRecLinkItem[0].prior;
+  {$ELSE}
+  aux2:=PCurRecLinkItem;
+  inc(aux2, DblLinkIndex.IndNr);
+  aux2^.next  := PCurRecLinkItem^.next;
+  aux2^.prior := PCurRecLinkItem^.prior;
+  {$ENDIF}
 
   if PCurRecLinkItem <> Index0.FLastRecBuf then
     begin
     while PCurRecLinkItem^.next<>Index0.FLastRecBuf do
       begin
       PCurRecLinkItem:=PCurRecLinkItem^.next;
-
+      {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
       PCurRecLinkItem[DblLinkIndex.IndNr].next := PCurRecLinkItem[0].next;
       PCurRecLinkItem[DblLinkIndex.IndNr].prior := PCurRecLinkItem[0].prior;
+      {$ELSE}
+      aux2:=PCurRecLinkItem;
+      inc(aux2, DblLinkIndex.IndNr);
+      aux2^.next  := PCurRecLinkItem^.next;
+      aux2^.prior := PCurRecLinkItem^.prior;
+      {$ENDIF}
       end;
     end;
 
@@ -952,8 +1065,18 @@ begin
   DblLinkIndex.FFirstRecBuf:=Index0.FFirstRecBuf;
   (FCurrentIndex as TDoubleLinkedBufIndex).FCurrentRecBuf:=DblLinkIndex.FFirstRecBuf;
 // Link in the FLastRecBuf that belongs to this index
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   PCurRecLinkItem[DblLinkIndex.IndNr].next:=DblLinkIndex.FLastRecBuf;
   DblLinkIndex.FLastRecBuf[DblLinkIndex.IndNr].prior:=PCurRecLinkItem;
+  {$ELSE}
+  aux2:=PCurRecLinkItem;
+  inc(aux2, DblLinkIndex.IndNr);
+  aux2^.next:=DblLinkIndex.FLastRecBuf;
+
+  aux2:=DblLinkIndex.FLastRecBuf;
+  inc(aux2, DblLinkIndex.IndNr);
+  aux2.prior:=PCurRecLinkItem;
+  {$ENDIF}
 
 // Mergesort. Used the algorithm as described here by Simon Tatham
 // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
@@ -992,7 +1115,13 @@ begin
     while (i<k) and (q<>DblLinkIndex.FLastRecBuf) do
       begin
       inc(i);
+      {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
       q := q[DblLinkIndex.IndNr].next;
+      {$ELSE}
+      aux2:=q;
+      inc(aux2, DblLinkIndex.IndNr);
+      q:=aux2.next;
+      {$ENDIF}
       end;
     psize :=i;
 
@@ -1040,13 +1169,26 @@ begin
 // algorithm terminates, and the output list L is sorted. Otherwise, double the
 // value of K, and go back to the beginning.
 
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   l[DblLinkIndex.IndNr].next:=DblLinkIndex.FLastRecBuf;
+  {$ELSE}
+  aux2:=l;
+  inc(aux2, DblLinkIndex.IndNr);
+  aux2.next:=DblLinkIndex.FLastRecBuf;
+  {$ENDIF}
 
   k:=k*2;
 
   until MergeAmount = 1;
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   DblLinkIndex.FLastRecBuf[DblLinkIndex.IndNr].next:=DblLinkIndex.FFirstRecBuf;
   DblLinkIndex.FLastRecBuf[DblLinkIndex.IndNr].prior:=l;
+  {$ELSE}
+  aux2:=DblLinkIndex.FLastRecBuf;
+  inc(aux2, DblLinkIndex.IndNr);
+  aux2.next :=DblLinkIndex.FFirstRecBuf;
+  aux2.prior:=l;
+  {$ENDIF}
 end;
 
 function TCustomBufDataset.GetIndexDefs : TIndexDefs;
@@ -2024,12 +2166,6 @@ procedure TCustomBufDataset.SetOnUpdateError(const AValue: TResolverErrorEvent);
 
 begin
   FOnUpdateError := AValue;
-end;
-
-procedure TCustomBufDataset.ApplyUpdates; // For backwards-compatibility
-
-begin
-  ApplyUpdates(0);
 end;
 
 procedure TCustomBufDataset.ApplyUpdates(MaxErrors: Integer);

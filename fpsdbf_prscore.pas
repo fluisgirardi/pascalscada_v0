@@ -20,9 +20,8 @@ unit fpsdbf_prscore;
 
 interface
 
-{$IFDEF FPC}
-{$I dbf_common.inc}
-{$ENDIF}
+
+{$I fpsdbf_common.inc}
 
 uses
   SysUtils,
