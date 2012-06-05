@@ -1238,7 +1238,7 @@ end;
 procedure TCustomBufDataset.ClearCalcFields(Buffer: TRecordBuffer);
 begin
   if CalcFieldsSize > 0 then
-    FillByte((Buffer+RecordSize)^,CalcFieldsSize,0);
+    FillChar((Buffer+RecordSize)^,CalcFieldsSize,#0);
 end;
 
 procedure TCustomBufDataset.InternalOpen;
@@ -1355,7 +1355,12 @@ end;
 
 function TDoubleLinkedBufIndex.GetCurrentBuffer: Pointer;
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   Result := pointer(FCurrentRecBuf)+(sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount);
+  {$ELSE}
+  Result := pointer(FCurrentRecBuf);
+  inc(PByte(Result), sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount);
+  {$ENDIF}
 end;
 
 function TDoubleLinkedBufIndex.GetIsInitialized: boolean;
@@ -1365,7 +1370,12 @@ end;
 
 function TDoubleLinkedBufIndex.GetSpareBuffer: TRecordBuffer;
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   Result := pointer(FLastRecBuf)+(sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount);
+  {$ELSE}
+  Result := pointer(FLastRecBuf);
+  inc(PByte(Result), (sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount));
+  {$ENDIF}
 end;
 
 function TDoubleLinkedBufIndex.GetSpareRecord: TRecordBuffer;
@@ -1390,31 +1400,66 @@ begin
 end;
 
 function TDoubleLinkedBufIndex.ScrollBackward: TGetResult;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  aux:PBufRecLinkItem;
+{$ENDIF}
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   if not assigned(FCurrentRecBuf[IndNr].prior) then
+  {$ELSE}
+  aux := FCurrentRecBuf;
+  inc(aux, IndNr);
+  if not assigned(aux.prior) then
+  {$ENDIF}
     begin
     Result := grBOF;
     end
   else
     begin
     Result := grOK;
+    {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     FCurrentRecBuf := FCurrentRecBuf[IndNr].prior;
+    {$ELSE}
+    aux := FCurrentRecBuf;
+    inc(aux, IndNr);
+    FCurrentRecBuf:=aux.prior;
+    {$ENDIF}
     end;
 end;
 
 function TDoubleLinkedBufIndex.ScrollForward: TGetResult;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  aux:PBufRecLinkItem;
+{$ENDIF}
 begin
-  if (FCurrentRecBuf = FLastRecBuf) or // just opened
-     (FCurrentRecBuf[IndNr].next = FLastRecBuf) then
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+  if (FCurrentRecBuf = FLastRecBuf) or (FCurrentRecBuf[IndNr].next = FLastRecBuf) then
+  {$ELSE}
+  aux:=FCurrentRecBuf;
+  inc(aux, IndNr);
+  if (FCurrentRecBuf = FLastRecBuf) or (aux.next = FLastRecBuf) then
+  {$ENDIF}
     result := grEOF
   else
     begin
+    {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     FCurrentRecBuf := FCurrentRecBuf[IndNr].next;
+    {$ELSE}
+    aux:=FCurrentRecBuf;
+    inc(aux, IndNr);
+    FCurrentRecBuf := aux.next;
+    {$ENDIF}
     Result := grOK;
     end;
 end;
 
 function TDoubleLinkedBufIndex.GetCurrent: TGetResult;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  aux:PBufRecLinkItem;
+{$ENDIF}
 begin
   if FFirstRecBuf = FLastRecBuf then
     Result := grError
@@ -1422,7 +1467,13 @@ begin
     begin
     Result := grOK;
     if FCurrentRecBuf = FLastRecBuf then
+      {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
       FCurrentRecBuf:=FLastRecBuf[IndNr].prior;
+      {$ELSE}
+      aux := FLastRecBuf;
+      inc(aux, IndNr);
+      FCurrentRecBuf := aux.prior;
+      {$ENDIF}
     end;
 end;
 
@@ -1441,8 +1492,18 @@ begin
 end;
 
 procedure TDoubleLinkedBufIndex.SetToFirstRecord;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  aux:PBufRecLinkItem;
+{$ENDIF}
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   FLastRecBuf[IndNr].next:=FFirstRecBuf;
+  {$ELSE}
+  aux:=FLastRecBuf;
+  inc(aux, IndNr);
+  aux.next:=FFirstRecBuf;
+  {$ENDIF}
   FCurrentRecBuf := FLastRecBuf;
 end;
 
@@ -1462,8 +1523,18 @@ begin
 end;
 
 procedure TDoubleLinkedBufIndex.DoScrollForward;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  aux:PBufRecLinkItem;
+{$ENDIF}
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   FCurrentRecBuf := FCurrentRecBuf[IndNr].next;
+  {$ELSE}
+  aux:=FCurrentRecBuf;
+  inc(aux, IndNr);
+  FCurrentRecBuf := aux.next
+  {$ENDIF}
 end;
 
 procedure TDoubleLinkedBufIndex.StoreCurrentRecIntoBookmark(const ABookmark: PBufBookmark);
@@ -1488,18 +1559,38 @@ begin
 end;
 
 function TDoubleLinkedBufIndex.CanScrollForward: Boolean;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  aux:PBufRecLinkItem;
+{$ENDIF}
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   if (FCurrentRecBuf[IndNr].next = FLastRecBuf) then
+  {$ELSE}
+  aux:=FCurrentRecBuf;
+  inc(aux, IndNr);
+  if (aux.next = FLastRecBuf) then
+  {$ENDIF}
     Result := False
   else
     Result := True;
 end;
 
 procedure TDoubleLinkedBufIndex.InitialiseSpareRecord(const ASpareRecord : TRecordBuffer);
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+var
+  aux:PBufRecLinkItem;
+{$ENDIF}
 begin
   FFirstRecBuf := pointer(ASpareRecord);
   FLastRecBuf := FFirstRecBuf;
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   FLastRecBuf[IndNr].next:=FLastRecBuf;
+  {$ELSE}
+  aux := FLastRecBuf;
+  inc(aux, IndNr);
+  aux.next := FLastRecBuf;
+  {$ENDIF}
   FCurrentRecBuf := FLastRecBuf;
 end;
 
@@ -1509,30 +1600,73 @@ begin
 end;
 
 procedure TDoubleLinkedBufIndex.RemoveRecordFromIndex(const ABookmark : TBufBookmark);
-var ARecord : PBufRecLinkItem;
+var
+  ARecord : PBufRecLinkItem;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+  aux, aux2:PBufRecLinkItem;
+{$ENDIF}
 begin
   ARecord := ABookmark.BookmarkData;
   if ARecord = FCurrentRecBuf then DoScrollForward;
   if ARecord <> FFirstRecBuf then
+    {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     ARecord[IndNr].prior[IndNr].next := ARecord[IndNr].next
+    {$ELSE}
+    aux:=ARecord;
+    inc(aux, IndNr);
+    aux2:=aux.prior
+    inc(aux2, IndNr);
+    aux2.next := aux.next;
+    {$ENDIF}
   else
     begin
+    {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     FFirstRecBuf := ARecord[IndNr].next;
     FLastRecBuf[IndNr].next := FFirstRecBuf;
+    {$ELSE}
+    aux:=ARecord;
+    inc(aux, IndNr);
+    FFirstRecBuf := aux.next;
+
+    aux:= FLastRecBuf;
+    inc(aux, IndNr);
+    aux.next := FFirstRecBuf;
+    {$ENDIF}
     end;
+
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   ARecord[IndNr].next[IndNr].prior := ARecord[IndNr].prior;
+  {$ELSE}
+  aux:=ARecord;
+  inc(aux, IndNr);
+
+  aux2:= aux.next;
+  inc(aux2, IndNr);
+  
+  aux2.prior := aux.prior;
+  {$ENDIF}
 end;
 
 function TDoubleLinkedBufIndex.GetRecNo(const ABookmark: PBufBookmark): integer;
-Var TmpRecBuffer    : PBufRecLinkItem;
-    recnr           : integer;
+Var
+  TmpRecBuffer    : PBufRecLinkItem;
+  recnr           : integer;
+  {$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+  aux:PBufRecLinkItem;
+  {$ENDIF}
 begin
   TmpRecBuffer := FFirstRecBuf;
   recnr := 1;
   while TmpRecBuffer <> ABookmark^.BookmarkData do
     begin
     inc(recnr);
+    {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     TmpRecBuffer := TmpRecBuffer[IndNr].next;
+    {$ELSE}
+    aux := TmpRecBuffer;
+    inc(aux, IndNr);
+    TmpRecBuffer := aux.next;
+    {$ENDIF}
     end;
   Result := recnr;
 end;
@@ -1546,13 +1680,28 @@ begin
 end;
 
 procedure TDoubleLinkedBufIndex.AddRecord;
-var ARecord: TRecordBuffer;
+var
+  ARecord: TRecordBuffer;
+{$IFNDEF SUPPORT_EXTENDED_POINTER_OPERATION}
+  aux, aux2:PBufRecLinkItem;
+{$ENDIF}
 begin
   ARecord := FDataset.IntAllocRecordBuffer;
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   FLastRecBuf[IndNr].next := pointer(ARecord);
   FLastRecBuf[IndNr].next[IndNr].prior := FLastRecBuf;
-
   FLastRecBuf := FLastRecBuf[IndNr].next;
+  {$ELSE}
+  aux := FLastRecBuf;
+  inc(aux, IndNr);
+  aux.next := pointer(ARecord);
+
+  aux2:=aux.next;
+  inc(aux2, IndNr);
+  aux2.prior:=FLastRecBuf;
+
+  FLastRecBuf := aux.next;
+  {$ENDIF}
 end;
 
 procedure TDoubleLinkedBufIndex.InsertRecordBeforeCurrentRecord(const ARecord: TRecordBuffer);
