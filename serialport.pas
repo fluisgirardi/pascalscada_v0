@@ -339,6 +339,9 @@ var PortPrefix:array[0..0] of string = ('cuad');
 {$IFDEF OPENBSD}
 var PortPrefix:array[0..0] of string = ('cuad');
 {$ENDIF}
+{$ifdef SunOS}
+var PortPrefix:array[0..0] of string = ('tty');
+{$ENDIF}
 {$ENDIF}
 
 

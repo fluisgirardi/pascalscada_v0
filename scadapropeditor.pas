@@ -105,8 +105,13 @@ var
 begin
    Proc('(none)');
    for d:=0 to High(PortPrefix) do
+      {$IFDEF SunOS}
+      for c:=Ord('a') to ord('z') do begin
+         pname:=PortPrefix[d]+Char(c);
+      {$ELSE}
       for c:=0 to 255 do begin
          pname:=PortPrefix[d]+IntToStr(c);
+      {$ENDIF}
          if FileExists('/dev/'+pname) then
             Proc(pname);
       end;
@@ -150,4 +155,4 @@ end;}
 
 
 end.
-
+
