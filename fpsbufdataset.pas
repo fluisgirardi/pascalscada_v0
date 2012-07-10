@@ -592,6 +592,7 @@ type
 
 
 procedure RegisterDatapacketReader(ADatapacketReaderClass : TDatapacketReaderClass; AFormat : TDataPacketFormat);
+function IndexedBufRecLinkItem(Base:PBufRecLinkItem; index:Integer):PBufRecLinkItem;
 
 implementation
 
@@ -603,6 +604,12 @@ Type TDatapacketReaderRegistration = record
                                      end;
 
 var RegisteredDatapacketReaders : Array of TDatapacketReaderRegistration;
+
+function IndexedBufRecLinkItem(Base:PBufRecLinkItem; index:Integer):PBufRecLinkItem;
+begin
+  Result:=base;
+  inc(Result, index);
+end;
 
 procedure RegisterDatapacketReader(ADatapacketReaderClass : TDatapacketReaderClass; AFormat : TDataPacketFormat);
 begin
@@ -1612,11 +1619,13 @@ begin
     {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     ARecord[IndNr].prior[IndNr].next := ARecord[IndNr].next
     {$ELSE}
+  begin
     aux:=ARecord;
     inc(aux, IndNr);
-    aux2:=aux.prior
+    aux2:=aux.prior;
     inc(aux2, IndNr);
     aux2.next := aux.next;
+  end
     {$ENDIF}
   else
     begin
@@ -1708,22 +1717,40 @@ procedure TDoubleLinkedBufIndex.InsertRecordBeforeCurrentRecord(const ARecord: T
 var ANewRecord : PBufRecLinkItem;
 begin
   ANewRecord:=PBufRecLinkItem(ARecord);
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   ANewRecord[IndNr].prior:=FCurrentRecBuf[IndNr].prior;
   ANewRecord[IndNr].Next:=FCurrentRecBuf;
+  {$ELSE}
+  IndexedBufRecLinkItem(ANewRecord,IndNr).prior := IndexedBufRecLinkItem(FCurrentRecBuf,IndNr).prior;
+  IndexedBufRecLinkItem(ANewRecord,IndNr).next  := FCurrentRecBuf;
+  {$ENDIF}
 
   if FCurrentRecBuf=FFirstRecBuf then
     begin
     FFirstRecBuf:=ANewRecord;
+    {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     ANewRecord[IndNr].prior:=nil;
+    {$ELSE}
+    IndexedBufRecLinkItem(ANewRecord,IndNr).prior:=nil
+    {$ENDIF}
     end
   else
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
     ANewRecord[IndNr].Prior[IndNr].next:=ANewRecord;
   ANewRecord[IndNr].next[IndNr].prior:=ANewRecord;
+  {$ELSE}
+    IndexedBufRecLinkItem(IndexedBufRecLinkItem(ANewRecord,IndNr).prior, IndNr).next:=ANewRecord;
+  IndexedBufRecLinkItem(IndexedBufRecLinkItem(ANewRecord,IndNr).next, IndNr).prior:=ANewRecord
+  {$ENDIF}
 end;
 
 procedure TDoubleLinkedBufIndex.EndUpdate;
 begin
+  {$IFDEF SUPPORT_EXTENDED_POINTER_OPERATION}
   FLastRecBuf[IndNr].next := FFirstRecBuf;
+  {$ELSE}
+  IndexedBufRecLinkItem(FLastRecBuf,IndNr).next:=FFirstRecBuf;
+  {$ENDIF}
   if FCursOnFirstRec then FCurrentRecBuf:=FLastRecBuf;
 end;
 
