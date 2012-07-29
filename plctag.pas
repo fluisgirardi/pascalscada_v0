@@ -44,13 +44,15 @@ type
     procedure RebuildTagGUID;
     function  GetTagSizeOnProtocol:Integer;
   protected
-    PValidTag:Boolean;
+    PValidTag,
+    PModified:Boolean;
     function  IsMyCallBack(Cback:TTagCommandCallBack):Boolean; virtual;
     procedure GetNewProtocolTagSize;
     function RemainingMiliseconds:Int64; virtual;
     function RemainingMilisecondsForNextScan:Int64; virtual;
     function IsValidTag:Boolean; virtual;
     procedure SetTagValidity(TagValidity:Boolean); virtual;
+    property Modified:Boolean read PModified;
   protected
     {$IFDEF PORTUGUES}
     //: Referencia ao objeto gerenciador de tags.

@@ -194,6 +194,7 @@ procedure TPLCTagNumber.SetValueRaw(Value:Double);
 var
   towrite:TArrayOfDouble;
 begin
+  PModified:=true;
   SetLength(towrite,1);
   towrite[0] := Value;
   if FSyncWrites then
@@ -277,8 +278,10 @@ begin
           notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
           PValueRaw := TagValues[0];
           PValueTimeStamp := ValuesTimeStamp;
-          if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then
-             IncCommReadOK(1);
+          if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then begin
+            PModified:=False;
+            IncCommReadOK(1);
+          end;
         end else begin
           if (TagCommand<>tcInternalUpdate) then begin
             IncCommReadFaults(1);
@@ -288,8 +291,10 @@ begin
       tcScanWrite,tcWrite:
       begin
         if LastResult in [ioOk, ioNullDriver]then begin
-          if LastResult=ioOk then
-             IncCommWriteOK(1);
+          if LastResult=ioOk then begin
+            PModified:=False;
+            IncCommWriteOK(1);
+          end;
           notify := (PValueRaw<>TagValues[0]);
           PValueRaw := TagValues[0];
         end else

@@ -148,6 +148,8 @@ type
     property TagSizeOnProtocol;
     //: @seealso(TPLCTag.AvgUpdateRate)
     property AvgUpdateRate;
+    //: @seealso(TPLCTag.Modified)
+    property Modified;
   end;
 
 implementation
@@ -194,8 +196,10 @@ begin
             PValues[c+Offset]:=TagValues[c];
           end;
           PValueTimeStamp := ValuesTimeStamp;
-          if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then
+          if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then begin
             IncCommReadOK(1);
+            PModified:=false;
+          end;
         end else begin
           if (TagCommand<>tcInternalUpdate) then begin
             IncCommReadFaults(1);
@@ -205,8 +209,10 @@ begin
       tcScanWrite,tcWrite:
       begin
         if LastResult in [ioOk, ioNullDriver] then begin
-          if LastResult=ioOk then
+          if LastResult=ioOk then begin
             IncCommWriteOK(1);
+            PModified:=False;
+          end;
           for c := 0 to High(TagValues) do begin
             notify := notify or (PValues[c+Offset]<>TagValues[c]);
             PValues[c+Offset]:=TagValues[c]
@@ -267,6 +273,7 @@ procedure TPLCBlock.SetValue(index:Integer; Value:Double);
 var
   towrite:TArrayOfDouble;
 begin
+  PModified:=true;
   SetLength(towrite,1);
   towrite[0] := Value;
   if FSyncWrites then
@@ -285,6 +292,7 @@ procedure TPLCBlock.SetValues(values:TArrayOfDouble);
 var
   towrite:TArrayOfDouble;
 begin
+  PModified:=true;
   towrite := values;
   if FSyncWrites then
     Write(towrite,PSize,0)
