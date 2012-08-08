@@ -69,6 +69,7 @@ type
   @value(pttInteger  Inteiro de 32 bits COM sinal.)
   @value(pttDWord,   Inteiro de 32 bits SEM sinal.)
   @value(pttFloat    Flutuante de 32 bits.)
+  @value(pttDouble   Flutuante de 64 bits.)
   }
   {$ELSE}
   {:
@@ -81,12 +82,14 @@ type
   @value(pttInteger  Signed Integer, 32 bits sized.)
   @value(pttDWord,   Unsigned Integer, 32 bits sized.)
   @value(pttFloat    Float, 32 bits sized.)
+  @value(pttDouble   Float, 64 bits sized.)
   }
   {$ENDIF}
-  TTagType = (pttDefault,                    //size variable
-              pttShortInt, pttByte,          //8 bits
-              pttSmallInt, pttWord,          //16 bits
-              pttInteger, pttDWord, pttFloat //32 bits
+  TTagType = (pttDefault,                     //size variable
+              pttShortInt, pttByte,           //8 bits
+              pttSmallInt, pttWord,           //16 bits
+              pttInteger, pttDWord, pttFloat, //32 bits
+              pttDouble                       //64 bits
              );
 
   {$IFDEF PORTUGUES}
@@ -1202,4 +1205,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.

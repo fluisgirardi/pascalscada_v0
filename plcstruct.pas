@@ -45,6 +45,8 @@ type
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
     //: @seealso(TPLCTag.SetTagType)
     procedure SetTagType(newType:TTagType); override;
+    //: @seealso(TPLCTag.SwapDWords)
+    procedure SetSwapDWords(v:Boolean); override;
     //: @seealso(TPLCTag.SetSwapWords)
     procedure SetSwapWords(v:Boolean); override;
     //: @seealso(TPLCTag.SetSwapBytes)
@@ -186,6 +188,11 @@ end;
 procedure TPLCStruct.SetTagType(newType:TTagType);
 begin
   Inherited SetTagType(pttByte);
+end;
+
+procedure TPLCStruct.SetSwapDWords(v: Boolean);
+begin
+  inherited SetSwapDWords(false);
 end;
 
 procedure TPLCStruct.SetSwapWords(v:Boolean);

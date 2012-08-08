@@ -113,6 +113,8 @@ type
     property SwapBytes;
     //: @seealso(TPLCTag.SwapWords)
     property SwapWords;
+    //: @seealso(TPLCTag.SwapDWords)
+    property SwapDWords;
     //: @seealso(TPLCTag.TagSizeOnProtocol)
     property TagSizeOnProtocol;
     //: @seealso(TPLCTag.AvgUpdateRate)

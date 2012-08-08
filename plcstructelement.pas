@@ -68,6 +68,8 @@ type
     property SwapBytes;
     //: @seealso(TPLCTag.SwapWords);
     property SwapWords;
+    //: @seealso(TPLCTag.SwapDWords)
+    property SwapDWords;
 
     {$IFDEF PORTUGUES}
     //: Tag estrutura a que o item pertence.
@@ -173,6 +175,14 @@ begin
       data[3]:=PBlock.ValueRaw[PIndex+3];
     end;
 
+    if FCurrentWordSize>=64 then begin
+      SetLength(data,8);
+      data[4]:=PBlock.ValueRaw[PIndex+4];
+      data[5]:=PBlock.ValueRaw[PIndex+5];
+      data[6]:=PBlock.ValueRaw[PIndex+6];
+      data[7]:=PBlock.ValueRaw[PIndex+7];
+    end;
+
     converted_value := PLCValuesToTagValues(data,0);
 
     if Length(converted_value)<=0 then exit;
@@ -241,6 +251,8 @@ begin
       MySize:=2;
     pttInteger, pttDWord, pttFloat:
       MySize:=4;
+    pttDouble:
+      MySize:=8;
   end;
 
   if PBlock<>nil then
