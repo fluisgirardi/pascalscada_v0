@@ -9,20 +9,14 @@ type
 
   TFPSBufDataSet = class (TBufDataset)
   public
-    Procedure CopyFromDataset(DataSet : TDataSet); {$IFNDEF FPC} overload; {$ENDIF}
-    Procedure CopyFromDataset(DataSet : TDataSet; CopyData : Boolean); {$IFNDEF FPC} overload; {$ENDIF}
+    Procedure CopyFromDataset(DataSet : TDataSet; CopyData : Boolean = True);
   end;
 
 implementation
 
 { TFPSBufDataSet }
 
-procedure TFPSBufDataSet.CopyFromDataset(DataSet: TDataSet);
-begin
-  CopyFromDataset(Dataset,True);
-end;
-
-procedure TFPSBufDataSet.CopyFromDataset(DataSet: TDataSet; CopyData: Boolean);
+procedure TFPSBufDataSet.CopyFromDataset(DataSet: TDataSet; CopyData: Boolean = True);
 Var
   I  : Integer;
   F,F1,F2 : TField;
