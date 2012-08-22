@@ -22,6 +22,16 @@ type
     AuthID:Integer;
   end;
 
+  TAuthorization = class(TObject)
+  public
+    AuthorizationName:String;
+    Valid:Boolean;
+  end;
+
+  TAuthorizations = array of TAuthorization;
+
+  { TWinCCUserManagement }
+
   TWinCCUserManagement = class(TBasicUserManagement)
   private
     FCheckTimer                :TTimer;
@@ -39,6 +49,7 @@ type
     PWRTSilentLogin            :TPWRTSilentLogin;
     hUseAdmin:THANDLE;
     fUseAdminLoaded:Boolean;
+    fAuthorizationCache:TStringList;
     procedure LoadUseAdmin;
   protected
     function CheckUserAndPassword(User, Pass: String): Boolean; override;
@@ -59,6 +70,7 @@ type
 
     function    CanAccess(sc:String):Boolean; override;
     function    GetRegisteredAccessCodes:TStringList; override;
+    procedure   ClearAuthorizationCache;
   published
     property CurrentUserLogin;
     property FailureLogin;
@@ -82,6 +94,7 @@ begin
   FCheckTimer.OnTimer :=CheckAuthChanges;
   FCheckTimer.Interval:=1000;
   FCheckTimer.Enabled:=false;
+  fAuthorizationCache:=nil;
 end;
 
 procedure TWinCCUserManagement.AfterConstruction;
@@ -214,15 +227,10 @@ begin
 
   i:=auth.IndexOf(sc);
 
-  if (i>0) and (auth.Objects[i] is TPermission) then
-    p2:=TPermission(auth.Objects[i]).AuthID
+  if (i>0) then
+    p2:=Integer(Pointer(auth.Objects[i]))
   else
     p2:=0;
-
-  for c:=auth.Count-1 downto 0 do begin
-    auth.Objects[c].Destroy;
-    auth.Objects[c]:=Nil;
-  end;
 
   auth.Destroy;
 
@@ -236,10 +244,6 @@ var
 begin
   x:=GetRegisteredAccessCodes;
   Result:=x.IndexOf(sc)<>-1;
-  for c:=x.Count-1 downto 0 do begin
-    x.Objects[c].Destroy;
-    x.Objects[c]:=Nil;
-  end;
   x.Destroy;
 end;
 
@@ -257,31 +261,41 @@ function    TWinCCUserManagement.GetRegisteredAccessCodes:TStringList;
 var
   buffer1:PAnsiChar;
   c:Integer;
-  authobj:TPermission;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
   c:=PWRTGetLoginPriority(); //forces initialization...
 
-  buffer1:=GetMemory(512);
+  if fAuthorizationCache=nil then begin
 
-  Result:=TStringList.Create;
+    buffer1:=GetMemory(512);
 
-  for c:=1 to 1100 do begin
-    buffer1[0]:=#0;
-    PWRTPermissionToString(c,buffer1,510);
+    Result:=TStringList.Create;
+    for c:=1 to 1100 do begin
+      buffer1[0]:=#0;
+      PWRTPermissionToString(c,buffer1,510);
 
-    if strcomp(buffer1,'')<>0 then begin
-      authobj:=TPermission.Create;
-      authobj.AuthID:=c;
-      {$IFDEF DELPHI2009_UP}
-      Result.AddObject((buffer1),authobj);
-      {$ELSE}
-      Result.AddObject(buffer1,authobj);
-      {$ENDIF}
+      if strcomp(buffer1,'')<>0 then begin
+        {$IFDEF DELPHI2009_UP}
+        Result.AddObject((buffer1),TObject(Pointer(c)));
+        {$ELSE}
+        Result.AddObject(buffer1,TObject(Pointer(c)));
+        {$ENDIF}
+      end;
     end;
+    fAuthorizationCache:=TStringList.Create;
+    fAuthorizationCache.Assign(Result);
+    FreeMem(buffer1);
+  end else begin
+    Result:=TStringList.Create;
+    Result.Assign(fAuthorizationCache);
   end;
-  FreeMem(buffer1);
+end;
+
+procedure TWinCCUserManagement.ClearAuthorizationCache;
+begin
+  fAuthorizationCache.Destroy;
+  fAuthorizationCache:=nil;
 end;
 
 end.
