@@ -314,7 +314,7 @@ begin
     else begin
       if GetImageList<>nil then begin
         x:=StrToInt(NewValue);
-        if x in [0.. GetImageList.Count] then
+        if x in [0..GetImageList.Count-2] then
           inherited SetValue(NewValue)
         else
           inherited SetValue('-1');
@@ -349,7 +349,7 @@ begin
     else begin
       if GetImageList<>nil then begin
         x:=StrToInt(NewValue);
-        if x in [0..GetImageList.Count] then
+        if x in [0..GetImageList.Count-1] then
           inherited SetValue(NewValue)
         else
           inherited SetValue('-1');
@@ -371,6 +371,7 @@ end;
 
 procedure TPascalSCADALoginLogoutImageIndexPropertyEditor.GetValues(Proc: TGetStrProc);
 begin
+  Proc('(none)');
   inherited GetValues(Proc);
 end;
 {$IFEND}
