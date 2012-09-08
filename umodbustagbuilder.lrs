@@ -11,7 +11,7 @@ LazarusResources.Add('TfrmModbusTagBuilder','FORMDATA',[
   +'Sheet1'#5'Align'#7#8'alClient'#14'ParentShowHint'#8#8'ShowHint'#9#8'TabInde'
   +'x'#2#0#8'TabOrder'#2#0#11'TabPosition'#7#8'tpBottom'#8'OnChange'#7#18'PageC'
   +'ontrol1Change'#0#9'TTabSheet'#9'TabSheet1'#7'Caption'#6#6'Inicio'#12'Client'
-  +'Height'#3'8'#1#11'ClientWidth'#3'I'#2#0#6'TLabel'#10'txtTagType'#4'Left'#2#8
+  +'Height'#3';'#1#11'ClientWidth'#3'O'#2#0#6'TLabel'#10'txtTagType'#4'Left'#2#8
   +#6'Height'#2#13#3'Top'#2'H'#5'Width'#3#153#1#8'AutoSize'#8#7'Caption'#6'4Qua'
   +'l o tipo de mem'#195#179'ria voc'#195#170' deseja criar como tag?'#11'Font.'
   +'Height'#2#245#9'Font.Name'#6#19'verdana [microsoft]'#10'Font.Style'#11#6'fs'
@@ -30,24 +30,24 @@ LazarusResources.Add('TfrmModbusTagBuilder','FORMDATA',[
   +'ntem as mem'#195#179'rias que se deseja mapear?'#11'Font.Height'#2#245#9'Fo'
   +'nt.Name'#6#19'verdana [microsoft]'#10'Font.Style'#11#6'fsBold'#0#11'ParentC'
   +'olor'#8#10'ParentFont'#8#8'WordWrap'#9#0#0#12'TRadioButton'#5'Type1'#3'Tag'
-  +#3#208#7#4'Left'#2#12#6'Height'#2#17#3'Top'#2'`'#5'Width'#2'V'#7'Caption'#6
+  +#3#208#7#4'Left'#2#12#6'Height'#2#22#3'Top'#2'`'#5'Width'#2'_'#7'Caption'#6
   +#15'Coils (Outputs)'#8'TabOrder'#2#0#7'TabStop'#8#0#0#12'TRadioButton'#5'Typ'
-  +'e2'#3'Tag'#3#208#7#4'Left'#2#12#6'Height'#2#17#3'Top'#2'x'#5'Width'#2'/'#7
+  +'e2'#3'Tag'#3#208#7#4'Left'#2#12#6'Height'#2#22#3'Top'#2'x'#5'Width'#2'3'#7
   +'Caption'#6#6'Inputs'#8'TabOrder'#2#1#7'TabStop'#8#0#0#12'TRadioButton'#5'Ty'
-  +'pe3'#3'Tag'#2'}'#4'Left'#2#12#6'Height'#2#17#3'Top'#3#144#0#5'Width'#2'e'#7
+  +'pe3'#3'Tag'#2'}'#4'Left'#2#12#6'Height'#2#22#3'Top'#3#144#0#5'Width'#2'k'#7
   +'Caption'#6#17'Holding Registers'#7'Checked'#9#5'State'#7#9'cbChecked'#8'Tab'
   +'Order'#2#2#0#0#12'TRadioButton'#5'Type4'#3'Tag'#2'}'#4'Left'#2#12#6'Height'
-  +#2#17#3'Top'#3#168#0#5'Width'#2'Y'#7'Caption'#6#15'Input Registers'#8'TabOrd'
-  +'er'#2#3#7'TabStop'#8#0#0#9'TSpinEdit'#8'MemCount'#4'Left'#2#8#6'Height'#2#21
+  +#2#22#3'Top'#3#168#0#5'Width'#2'_'#7'Caption'#6#15'Input Registers'#8'TabOrd'
+  +'er'#2#3#7'TabStop'#8#0#0#9'TSpinEdit'#8'MemCount'#4'Left'#2#8#6'Height'#2#24
   +#3'Top'#3#224#0#5'Width'#2'y'#8'MaxValue'#3#16''''#8'MinValue'#2#1#8'TabOrde'
   +'r'#2#4#5'Value'#2#1#0#0#9'TSpinEdit'#15'FirstMemAddress'#4'Left'#2#8#6'Heig'
-  +'ht'#2#21#3'Top'#3#24#1#5'Width'#2'y'#8'MaxValue'#4#255#255#0#0#8'TabOrder'#2
-  +#5#0#0#9'TSpinEdit'#14'StationAddress'#4'Left'#2#8#6'Height'#2#21#3'Top'#2'('
+  +'ht'#2#24#3'Top'#3#24#1#5'Width'#2'y'#8'MaxValue'#4#255#255#0#0#8'TabOrder'#2
+  +#5#0#0#9'TSpinEdit'#14'StationAddress'#4'Left'#2#8#6'Height'#2#24#3'Top'#2'('
   +#5'Width'#2'y'#8'MaxValue'#3#255#0#8'MinValue'#2#1#8'TabOrder'#2#6#5'Value'#2
-  +#1#0#0#9'TCheckBox'#16'optStartFromZero'#4'Left'#3#151#0#6'Height'#2#17#3'To'
-  +'p'#3#224#0#5'Width'#3#178#0#7'Caption'#6'#Iniciar a contagem a partir do ze'
+  +#1#0#0#9'TCheckBox'#16'optStartFromZero'#4'Left'#3#151#0#6'Height'#2#22#3'To'
+  +'p'#3#224#0#5'Width'#3#195#0#7'Caption'#6'#Iniciar a contagem a partir do ze'
   +'ro'#8'TabOrder'#2#7#0#0#0#9'TTabSheet'#9'TabSheet2'#7'Caption'#6#17'Tipo de'
-  +' tag usado'#12'ClientHeight'#3'8'#1#11'ClientWidth'#3'I'#2#10'ImageIndex'#2
+  +' tag usado'#12'ClientHeight'#3';'#1#11'ClientWidth'#3'O'#2#10'ImageIndex'#2
   +#1#0#6'TLabel'#6'Label2'#4'Left'#2#8#6'Height'#2#13#3'Top'#2#16#5'Width'#3
   +#153#1#8'AutoSize'#8#7'Caption'#6';Qual o tipo de tag deseja usar para mapea'
   +'r essas mem'#195#179'rias?'#11'Font.Height'#2#245#9'Font.Name'#6#19'verdana'
@@ -76,39 +76,39 @@ LazarusResources.Add('TfrmModbusTagBuilder','FORMDATA',[
   +'Width'#3#128#0#8'AutoSize'#8#7'Caption'#6#18'Nome de cada bloco'#11'Font.He'
   +'ight'#2#245#9'Font.Name'#6#19'verdana [microsoft]'#10'Font.Style'#11#6'fsBo'
   +'ld'#0#11'ParentColor'#8#10'ParentFont'#8#8'WordWrap'#9#0#0#12'TRadioButton'
-  +#15'optPLCTagNumber'#4'Left'#2#12#6'Height'#2#17#3'Top'#2'('#5'Width'#2'e'#7
+  +#15'optPLCTagNumber'#4'Left'#2#12#6'Height'#2#22#3'Top'#2'('#5'Width'#2'k'#7
   +'Caption'#6#13'TPLCTagNumber'#7'Checked'#9#7'OnClick'#7#20'optPLCTagNumberCl'
   +'ick'#5'State'#7#9'cbChecked'#8'TabOrder'#2#0#0#0#12'TRadioButton'#11'optPLC'
-  +'Block'#4'Left'#2#12#6'Height'#2#17#3'Top'#2'`'#5'Width'#2'H'#7'Caption'#6#9
+  +'Block'#4'Left'#2#12#6'Height'#2#22#3'Top'#2'`'#5'Width'#2'K'#7'Caption'#6#9
   +'TPLCBlock'#7'OnClick'#7#20'optPLCTagNumberClick'#8'TabOrder'#2#1#7'TabStop'
-  +#8#0#0#12'TRadioButton'#12'optPLCString'#4'Left'#2#12#6'Height'#2#17#3'Top'#3
-  +#176#0#5'Width'#2'H'#7'Caption'#6#10'TPLCString'#7'OnClick'#7#20'optPLCTagNu'
+  +#8#0#0#12'TRadioButton'#12'optPLCString'#4'Left'#2#12#6'Height'#2#22#3'Top'#3
+  +#176#0#5'Width'#2'N'#7'Caption'#6#10'TPLCString'#7'OnClick'#7#20'optPLCTagNu'
   +'mberClick'#8'TabOrder'#2#2#7'TabStop'#8#0#0#9'TCheckBox'#18'optSimpleFuncti'
-  +'ons'#4'Left'#2' '#6'Height'#2#17#3'Top'#2'<'#5'Width'#3#181#0#7'Caption'#6
+  +'ons'#4'Left'#2' '#6'Height'#2#22#3'Top'#2'<'#5'Width'#3#196#0#7'Caption'#6
   +'$Usar as fun'#195#167#195#181'es de escrita simples'#8'TabOrder'#2#3#0#0#9
-  +'TSpinEdit'#13'MaxStringSize'#4'Left'#2#24#6'Height'#2#21#3'Top'#3#216#0#5'W'
+  +'TSpinEdit'#13'MaxStringSize'#4'Left'#2#24#6'Height'#2#24#3'Top'#3#216#0#5'W'
   +'idth'#2'y'#8'MinValue'#2#1#8'TabOrder'#2#4#5'Value'#2#1#0#0#9'TSpinEdit'#12
-  +'MaxBlockSize'#4'Left'#2#24#6'Height'#2#21#3'Top'#3#136#0#5'Width'#2'y'#8'Ma'
+  +'MaxBlockSize'#4'Left'#2#24#6'Height'#2#24#3'Top'#3#136#0#5'Width'#2'y'#8'Ma'
   +'xValue'#2'}'#8'MinValue'#2#1#8'TabOrder'#2#5#5'Value'#2#1#0#0#6'TPanel'#6'P'
   +'anel2'#4'Left'#2#16#6'Height'#2#30#3'Top'#3#8#1#5'Width'#3#198#0#10'BevelOu'
   +'ter'#7#6'bvNone'#12'ClientHeight'#2#30#11'ClientWidth'#3#198#0#8'TabOrder'#2
-  +#6#0#12'TRadioButton'#8'optSTR_C'#4'Left'#2#16#6'Height'#2#17#3'Top'#2#8#5'W'
-  +'idth'#2'7'#7'Caption'#6#8'String C'#7'Checked'#9#5'State'#7#9'cbChecked'#8
+  +#6#0#12'TRadioButton'#8'optSTR_C'#4'Left'#2#16#6'Height'#2#22#3'Top'#2#8#5'W'
+  +'idth'#2'?'#7'Caption'#6#8'String C'#7'Checked'#9#5'State'#7#9'cbChecked'#8
   +'TabOrder'#2#0#0#0#12'TRadioButton'#14'optSTR_SIEMENS'#4'Left'#2'`'#6'Height'
-  +#2#17#3'Top'#2#8#5'Width'#2'`'#7'Caption'#6#14'String SIEMENS'#8'TabOrder'#2
-  +#1#7'TabStop'#8#0#0#0#9'TSpinEdit'#8'ByteSize'#4'Left'#3#224#0#6'Height'#2#21
+  +#2#22#3'Top'#2#8#5'Width'#2'g'#7'Caption'#6#14'String SIEMENS'#8'TabOrder'#2
+  +#1#7'TabStop'#8#0#0#0#9'TSpinEdit'#8'ByteSize'#4'Left'#3#224#0#6'Height'#2#24
   +#3'Top'#3#14#1#5'Width'#2'y'#8'MaxValue'#2#8#8'MinValue'#2#7#8'TabOrder'#2#7
   +#5'Value'#2#8#0#0#9'TSpinEdit'#15'ScanOfEachBlock'#4'Left'#3#247#0#6'Height'
-  +#2#21#3'Top'#3#136#0#5'Width'#2'y'#8'MaxValue'#4#0#221'm'#0#8'MinValue'#2#1#8
+  +#2#24#3'Top'#3#136#0#5'Width'#2'y'#8'MaxValue'#4#0#221'm'#0#8'MinValue'#2#1#8
   +'TabOrder'#2#8#5'Value'#3#232#3#0#0#5'TEdit'#15'NameOfEachBlock'#4'Left'#3
-  +#135#1#6'Height'#2#21#3'Top'#3#135#0#5'Width'#3#160#0#8'TabOrder'#2#9#4'Text'
+  +#135#1#6'Height'#2#24#3'Top'#3#135#0#5'Width'#3#160#0#8'TabOrder'#2#9#4'Text'
   +#6#5'Bloco'#0#0#0#9'TTabSheet'#9'TabSheet3'#7'Caption'#6#21'Estrutura de nom'
-  +'eacao'#12'ClientHeight'#3'8'#1#11'ClientWidth'#3'I'#2#10'ImageIndex'#2#2#0
-  +#10'TScrollBox'#10'ScrollBox1'#4'Left'#2#0#6'Height'#3'8'#1#3'Top'#2#0#5'Wid'
-  +'th'#3'I'#2#5'Align'#7#8'alClient'#11'BorderStyle'#7#6'bsNone'#12'ClientHeig'
-  +'ht'#3'8'#1#11'ClientWidth'#3'I'#2#8'TabOrder'#2#0#0#6'TPanel'#6'Panel4'#4'L'
-  +'eft'#2#0#6'Height'#2'&'#3'Top'#2#0#5'Width'#3'I'#2#5'Align'#7#5'alTop'#10'B'
-  +'evelOuter'#7#6'bvNone'#12'ClientHeight'#2'&'#11'ClientWidth'#3'I'#2#5'Color'
+  +'eacao'#12'ClientHeight'#3';'#1#11'ClientWidth'#3'O'#2#10'ImageIndex'#2#2#0
+  +#10'TScrollBox'#10'ScrollBox1'#4'Left'#2#0#6'Height'#3';'#1#3'Top'#2#0#5'Wid'
+  +'th'#3'O'#2#5'Align'#7#8'alClient'#11'BorderStyle'#7#6'bsNone'#12'ClientHeig'
+  +'ht'#3';'#1#11'ClientWidth'#3'O'#2#8'TabOrder'#2#0#0#6'TPanel'#6'Panel4'#4'L'
+  +'eft'#2#0#6'Height'#2'&'#3'Top'#2#0#5'Width'#3'O'#2#5'Align'#7#5'alTop'#10'B'
+  +'evelOuter'#7#6'bvNone'#12'ClientHeight'#2'&'#11'ClientWidth'#3'O'#2#5'Color'
   +#7#11'clBtnShadow'#11'ParentColor'#8#8'TabOrder'#2#0#0#6'TLabel'#6'Label1'#4
   +'Left'#2#0#6'Height'#2'&'#3'Top'#2#0#5'Width'#3#160#0#5'Align'#7#6'alLeft'#9
   +'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#11'Nome do Tag'#11'Font'

@@ -371,6 +371,32 @@ begin
   PageControl1.TabIndex := 0;
   btnFinish.ModalResult:=mrNone;
   CurItem:=nil;
+  txtStationAddress.Caption  := SMBTBStatiomAddress;
+  txtTagType.Caption         := SMBTBTagType;
+  txtMemCount.Caption        := SMBTBMemCount;
+  optStartFromZero.Caption   := SMBTBStartFromZero;
+  txtFirstMemAddress.Caption := SMBTBFirstMemAddress;
+  TabSheet1.Caption          := SMBTBTabSheet1;
+  TabSheet2.Caption          := SMBTBTabSheet2;
+  TabSheet3.Caption          := SMBTBTabSheet3;
+  btnCancel.Caption          := SMBTBCancel;
+  btnPrior.Caption           := SMBTBPrior;
+  btnNext.Caption            := SMBTBNext;
+  btnFinish.Caption          := SMBTBFinish;
+  Label2.Caption             := SMBTBLabel2;
+  optSimpleFunctions.Caption := SMBTBSimpleFunctions;
+  txtMaxBlockSize.Caption    := SMBTBMaxBlockSize;
+  txtScanOfEachBlock.Caption := SMBTBScanOfEachBlock;
+  txtNameOfEachBlock.Caption := SMBTBNameOfEachBlock;
+  txtMaxStringSize.Caption   := SMBTBMaxStringSize;
+  txtStringFormat.Caption    := SMBTBStringFormat;
+  txtStringByteSize.Caption  := SMBTBStringByteSize;
+  Label1.Caption             := SMBTBLabel1;
+  Label3.Caption             := SMBTBLabel3;
+  Label4.Caption             := SMBTBLabel4;
+  Label5.Caption             := SMBTBLabel5;
+  Label6.Caption             := SMBTBLabel6;
+  Label7.Caption             := SMBTBLabel7;
 end;
 
 procedure TfrmModbusTagBuilder.optPLCTagNumberClick(Sender: TObject);
@@ -458,4 +484,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

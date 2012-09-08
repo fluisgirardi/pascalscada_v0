@@ -28,8 +28,8 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     OnChange = PageControl1Change
     object TabSheet1: TTabSheet
       Caption = 'Inicio'
-      ClientHeight = 312
-      ClientWidth = 585
+      ClientHeight = 315
+      ClientWidth = 591
       object txtTagType: TLabel
         Left = 8
         Height = 13
@@ -89,9 +89,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       object Type1: TRadioButton
         Tag = 2000
         Left = 12
-        Height = 17
+        Height = 22
         Top = 96
-        Width = 86
+        Width = 95
         Caption = 'Coils (Outputs)'
         TabOrder = 0
         TabStop = False
@@ -99,9 +99,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       object Type2: TRadioButton
         Tag = 2000
         Left = 12
-        Height = 17
+        Height = 22
         Top = 120
-        Width = 47
+        Width = 51
         Caption = 'Inputs'
         TabOrder = 1
         TabStop = False
@@ -109,9 +109,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       object Type3: TRadioButton
         Tag = 125
         Left = 12
-        Height = 17
+        Height = 22
         Top = 144
-        Width = 101
+        Width = 107
         Caption = 'Holding Registers'
         Checked = True
         State = cbChecked
@@ -120,16 +120,16 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       object Type4: TRadioButton
         Tag = 125
         Left = 12
-        Height = 17
+        Height = 22
         Top = 168
-        Width = 89
+        Width = 95
         Caption = 'Input Registers'
         TabOrder = 3
         TabStop = False
       end
       object MemCount: TSpinEdit
         Left = 8
-        Height = 21
+        Height = 24
         Top = 224
         Width = 121
         MaxValue = 10000
@@ -139,7 +139,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object FirstMemAddress: TSpinEdit
         Left = 8
-        Height = 21
+        Height = 24
         Top = 280
         Width = 121
         MaxValue = 65535
@@ -147,7 +147,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object StationAddress: TSpinEdit
         Left = 8
-        Height = 21
+        Height = 24
         Top = 40
         Width = 121
         MaxValue = 255
@@ -157,17 +157,17 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optStartFromZero: TCheckBox
         Left = 151
-        Height = 17
+        Height = 22
         Top = 224
-        Width = 178
+        Width = 195
         Caption = 'Iniciar a contagem a partir do zero'
         TabOrder = 7
       end
     end
     object TabSheet2: TTabSheet
       Caption = 'Tipo de tag usado'
-      ClientHeight = 312
-      ClientWidth = 585
+      ClientHeight = 315
+      ClientWidth = 591
       ImageIndex = 1
       object Label2: TLabel
         Left = 8
@@ -269,9 +269,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optPLCTagNumber: TRadioButton
         Left = 12
-        Height = 17
+        Height = 22
         Top = 40
-        Width = 101
+        Width = 107
         Caption = 'TPLCTagNumber'
         Checked = True
         OnClick = optPLCTagNumberClick
@@ -280,9 +280,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optPLCBlock: TRadioButton
         Left = 12
-        Height = 17
+        Height = 22
         Top = 96
-        Width = 72
+        Width = 75
         Caption = 'TPLCBlock'
         OnClick = optPLCTagNumberClick
         TabOrder = 1
@@ -290,9 +290,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optPLCString: TRadioButton
         Left = 12
-        Height = 17
+        Height = 22
         Top = 176
-        Width = 72
+        Width = 78
         Caption = 'TPLCString'
         OnClick = optPLCTagNumberClick
         TabOrder = 2
@@ -300,15 +300,15 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object optSimpleFunctions: TCheckBox
         Left = 32
-        Height = 17
+        Height = 22
         Top = 60
-        Width = 181
+        Width = 196
         Caption = 'Usar as funções de escrita simples'
         TabOrder = 3
       end
       object MaxStringSize: TSpinEdit
         Left = 24
-        Height = 21
+        Height = 24
         Top = 216
         Width = 121
         MinValue = 1
@@ -317,7 +317,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object MaxBlockSize: TSpinEdit
         Left = 24
-        Height = 21
+        Height = 24
         Top = 136
         Width = 121
         MaxValue = 125
@@ -336,9 +336,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         TabOrder = 6
         object optSTR_C: TRadioButton
           Left = 16
-          Height = 17
+          Height = 22
           Top = 8
-          Width = 55
+          Width = 63
           Caption = 'String C'
           Checked = True
           State = cbChecked
@@ -346,9 +346,9 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
         end
         object optSTR_SIEMENS: TRadioButton
           Left = 96
-          Height = 17
+          Height = 22
           Top = 8
-          Width = 96
+          Width = 103
           Caption = 'String SIEMENS'
           TabOrder = 1
           TabStop = False
@@ -356,7 +356,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object ByteSize: TSpinEdit
         Left = 224
-        Height = 21
+        Height = 24
         Top = 270
         Width = 121
         MaxValue = 8
@@ -366,7 +366,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object ScanOfEachBlock: TSpinEdit
         Left = 247
-        Height = 21
+        Height = 24
         Top = 136
         Width = 121
         MaxValue = 7200000
@@ -376,7 +376,7 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
       end
       object NameOfEachBlock: TEdit
         Left = 391
-        Height = 21
+        Height = 24
         Top = 135
         Width = 160
         TabOrder = 9
@@ -385,28 +385,28 @@ object frmModbusTagBuilder: TfrmModbusTagBuilder
     end
     object TabSheet3: TTabSheet
       Caption = 'Estrutura de nomeacao'
-      ClientHeight = 312
-      ClientWidth = 585
+      ClientHeight = 315
+      ClientWidth = 591
       ImageIndex = 2
       object ScrollBox1: TScrollBox
         Left = 0
-        Height = 312
+        Height = 315
         Top = 0
-        Width = 585
+        Width = 591
         Align = alClient
         BorderStyle = bsNone
-        ClientHeight = 312
-        ClientWidth = 585
+        ClientHeight = 315
+        ClientWidth = 591
         TabOrder = 0
         object Panel4: TPanel
           Left = 0
           Height = 38
           Top = 0
-          Width = 585
+          Width = 591
           Align = alTop
           BevelOuter = bvNone
           ClientHeight = 38
-          ClientWidth = 585
+          ClientWidth = 591
           Color = clBtnShadow
           ParentColor = False
           TabOrder = 0
