@@ -26,8 +26,8 @@ uses
   HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar, HMIAnimation,
   HMIText, HMIZones, hmipropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
-  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation, HMIDBConnection,
-  ControlSecurityManager, ActnList, CustomizedUserManagement, psbufdataset,
+  PLCStructElement, ISOTCPDriver, HMIControlDislocatorAnimation,
+  ControlSecurityManager, ActnList, CustomizedUserManagement,
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
@@ -80,10 +80,6 @@ begin
   RegisterComponents(strControlsPallete,  [THMIText]);
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
-  RegisterComponents(strDatabasePallete,  [THMIDBConnection]);
-
-  //THE FPC BUFDATASET
-  RegisterComponents(strFPCPallete,       [TFPSBufDataSet]);
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   RegisterComponents(strUserManagement,   [TWinCCUserManagement]);
@@ -121,10 +117,6 @@ begin
   RegisterPropertyEditor(TypeInfo(string), THMIText, 'SecurityCode', TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), TPascalSCADASecureAction, 'SecurityCode', TSecurityCodePropertyEditor);
   //end securitycode property editor.
-
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Protocol', THMIDBProtocolPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Database', THMIDBDatabasePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection,               'Catalog',  THMIDBCatalogPropertyEditor);
 
   RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
   RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);
