@@ -412,8 +412,6 @@ begin
    x:=GetControlSecurityManager.GetRegisteredAccessCodes;
    for i:=0 to x.Count-1 do begin
      proc(x.Strings[i]);
-     if x.Objects[i]<>nil then
-        x.Objects[i].Destroy;
    end;
    x.Destroy;
 end;

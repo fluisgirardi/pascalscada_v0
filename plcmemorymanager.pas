@@ -118,6 +118,8 @@ type
     {$ENDIF}
     constructor Create(AdrStart,AdrEnd:Cardinal);
 
+    destructor Destroy; override;
+
     {$IFDEF PORTUGUES}
     {:
     Lê/escreve o valor da memória especificada por Index no bloco.
@@ -565,6 +567,12 @@ begin
   FReadOK := 0;
   FReadFault := 0;
   SetLength(FValues,(AdrEnd-AdrStart)+1);
+end;
+
+destructor TRegisterRange.Destroy;
+begin
+  SetLength(FValues,0);
+  inherited Destroy;
 end;
 
 procedure TRegisterRange.Updated;
@@ -1115,4 +1123,4 @@ begin
   end;
 end;
 
-end.
+end.
