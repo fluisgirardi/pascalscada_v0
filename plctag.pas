@@ -1,4 +1,4 @@
-{$i language.inc}
+﻿{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa a base para Tags de comunicação.)
@@ -1176,7 +1176,7 @@ var
   AreaIdx:Integer;
   valueidx:Integer;
 
-  DWordAux:DWord;
+  DWordAux:Cardinal;
   WordAux:Word;
   ByteAux:Byte;
 
@@ -1496,7 +1496,7 @@ var
   AreaIdx:Integer;
   valueidx:Integer;
 
-  DWordAux:DWord;
+  DWordAux:Cardinal;
   WordAux :Word;
   ByteAux :Byte;
 
