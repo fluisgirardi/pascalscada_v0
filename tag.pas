@@ -1,4 +1,4 @@
-{$i language.inc}
+﻿{$i language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação da base de todos os tags.)
@@ -1070,7 +1070,6 @@ end;
 procedure TTag.wndMethod(var Msg: TLMessage);
 var
   handled:Boolean;
-  c:Integer;
   FData:Pointer;
 begin
   handled:=true;

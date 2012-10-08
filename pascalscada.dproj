@@ -136,6 +136,7 @@
 			<DCCReference Include="ustructuremapper.pas">
 				<Form>frmStructureEditor</Form>
 			</DCCReference>
+			<DCCReference Include="customizedusermanagement.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -162,9 +163,6 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>
-					<Language>
-						<Language Name="RootDir">C:\pascalscada\</Language>
-					</Language>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>

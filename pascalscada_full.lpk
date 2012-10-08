@@ -7,7 +7,7 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)\"/>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Other>
         <CompilerMessages>
@@ -16,15 +16,18 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
+    <Version Minor="7" Release="3"/>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="3">
       <Item1>
-        <PackageName Value="pascalscada_db"/>
-        <MinVersion Minor="7" Release="3" Valid="True"/>
-      </Item1>
-      <Item2>
         <PackageName Value="pascalscada"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
+        <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="pascalscada_db"/>
+        <MinVersion Minor="7" Release="3" Valid="True"/>
+        <DefaultFilename Value="pascalscada_db.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="FCL"/>
