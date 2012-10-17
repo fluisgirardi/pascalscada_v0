@@ -1,4 +1,4 @@
-unit bufdataset_parser;
+unit fpsbufdataset_parser;
 
 {$h+}
 {$mode delphi}

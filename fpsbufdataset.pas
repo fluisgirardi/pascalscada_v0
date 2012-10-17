@@ -14,7 +14,7 @@
 
  **********************************************************************}
 
-unit BufDataset;
+unit fpsBufDataset;
 
 {$mode objfpc}
 {$h+}
