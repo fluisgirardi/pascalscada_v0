@@ -1,19 +1,21 @@
 unit fpsbufdataset_parser;
 
-{$h+}
-{$mode delphi}
-
-
 interface
 
 uses
   SysUtils,
   Classes,
   db,
-  dbf_prscore,
-  dbf_prsdef;
+  fpsdbf_prscore,
+  fpsdbf_prsdef;
+
+const
+  dsMaxStringSize = 8192;
+
 
 type
+  { Auxiliary type }
+  TStringFieldBuffer = Array[0..dsMaxStringSize] of Char;
 
   TBufDatasetParser = class(TCustomExpressionParser)
   private
@@ -55,7 +57,7 @@ type
 
 implementation
 
-uses dbconst;
+uses fpsdbconst;
 
 type
 // TFieldVar aids in retrieving field values from records

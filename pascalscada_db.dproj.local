@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2012/01/05 17:33:46.598,=rtl.dcp</Transaction>
+    <Transaction>2012/10/17 00:29:48.823.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\Package1.dproj=C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_db.dproj</Transaction>
+    <Transaction>2012/10/17 00:33:30.937.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_db.dproj=C:\pascalscada\pascalscada_db.dproj</Transaction>
+    <Transaction>2012/10/17 00:53:03.055.dcp,pascalscada.dcp=</Transaction>
+  </Transactions>
+</BorlandProject>

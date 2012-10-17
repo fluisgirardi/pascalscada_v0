@@ -20,7 +20,7 @@ unit fpsdbf_prscore;
 
 interface
 
-{$I dbf_common.inc}
+{$I fpsdbf_common.inc}
 
 uses
   SysUtils,

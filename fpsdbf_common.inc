@@ -40,126 +40,23 @@
 //--- Delphi versions                                ---
 //------------------------------------------------------
 
+{$i delphiver.inc}
 
-{$ifdef VER80}          //	Delphi 1.0
-  #ERROR tDbf needs Delphi or C++ Builder 3 minimum.
-{$endif}
-
-{$ifdef VER90}          //	 Delphi 2.0
-  #ERROR tDbf needs Delphi or C++ Builder 3 minimum.
-{$endif}
-
-{$ifdef VER93}          //	 is BCB++ 1.0
-  #ERROR tDbf needs Delphi or C++ Builder 3 minimum.
-{$endif}
-
-{$ifdef VER100}         // Delphi 3
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER110}      // CBuilder 3
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER120}      // Delphi 4
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER125} // C++ BUILDER 4
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER130} // Delphi 5
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER135} // C++ Builder 5 ??
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER140} // Delphi 6
-  {$define DELPHI_6}
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER145} // C++ Builder 6
-  {$define DELPHI_6}
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER150} // Delphi 7 :-) For once I am not late (12/07/2001)
-  {$define DELPHI_7}
-  {$define DELPHI_6}
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER155} // C++ Builder 7
-  {$define DELPHI_7}
-  {$define DELPHI_6}
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER160} // Delphi 8
-  {$define DELPHI_2005}
-  {$define DELPHI_8}
-  {$define DELPHI_7}
-  {$define DELPHI_6}
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER170} // Delphi 2005
-  {$define DELPHI_2005}
-  {$define DELPHI_8}
-  {$define DELPHI_7}
-  {$define DELPHI_6}
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER180} // Delphi 2006
-  {$define DELPHI_2006}
-  {$define DELPHI_2005}
-  {$define DELPHI_8}
-  {$define DELPHI_7}
-  {$define DELPHI_6}
-  {$define DELPHI_5}
-  {$define DELPHI_4}
-  {$define DELPHI_3}
-{$endif}
-
-{$ifdef VER185} // Delphi 2007
-  {$define DELPHI_2007}
-  { Delphi 2007 also defines VER180, so other DELPHI defines already done }
+{$ifndef DELPHI2009_UP}          //	Delphi 1.0
+  #ERROR tDbf needs Delphi 2009 minimum.
 {$endif}
 
 //-------------------------------------------------------
 //--- Conclude supported features from delphi version ---
 //-------------------------------------------------------
 
-{$ifdef DELPHI_3}
+{$ifdef DELPHI2009_UP}
 
   {$define SUPPORT_VARIANTS}
   {$define WINDOWS}
   {$define ENDIAN_LITTLE}
 
-{$ifdef DELPHI_4}
+//{$ifdef DELPHI_4}
 
   {$define SUPPORT_DEFCHANGED}
   {$define SUPPORT_DEFAULT_PARAMS}
@@ -175,7 +72,7 @@
   {$define SUPPORT_UINT32_CARDINAL}
   {$define SUPPORT_MATH_UNIT}
 
-{$ifdef DELPHI_5}
+//{$ifdef DELPHI_5}
 
   {$define SUPPORT_BACKWARD_FIELDDATA}
   {$define SUPPORT_INITDEFSFROMFIELDS}
@@ -183,14 +80,14 @@
   {$define SUPPORT_DEF_DELETE}
   {$define SUPPORT_FREEANDNIL}
 
-{$ifdef DELPHI_6}
+//{$ifdef DELPHI_6}
 
   {$define SUPPORT_PATHDELIM}
   {$define SUPPORT_SEPARATE_VARIANTS_UNIT}
 
-{$endif}
-{$endif}
-{$endif}
+//{$endif}
+//{$endif}
+//{$endif}
 {$endif}
 
 //------------------------------------------------------

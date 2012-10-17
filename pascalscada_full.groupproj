@@ -1,0 +1,60 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{39C44530-B49D-4311-88DE-C721E66EC08F}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="pascalscada.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="pascalscada_db.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="zeoslib_pascalscada.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Default.Personality/>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="pascalscada">
+			<MSBuild Projects="pascalscada.dproj"/>
+		</Target>
+		<Target Name="pascalscada:Clean">
+			<MSBuild Targets="Clean" Projects="pascalscada.dproj"/>
+		</Target>
+		<Target Name="pascalscada:Make">
+			<MSBuild Targets="Make" Projects="pascalscada.dproj"/>
+		</Target>
+		<Target Name="pascalscada_db">
+			<MSBuild Projects="pascalscada_db.dproj"/>
+		</Target>
+		<Target Name="pascalscada_db:Clean">
+			<MSBuild Targets="Clean" Projects="pascalscada_db.dproj"/>
+		</Target>
+		<Target Name="pascalscada_db:Make">
+			<MSBuild Targets="Make" Projects="pascalscada_db.dproj"/>
+		</Target>
+		<Target Name="zeoslib_pascalscada">
+			<MSBuild Projects="zeoslib_pascalscada.dproj"/>
+		</Target>
+		<Target Name="zeoslib_pascalscada:Clean">
+			<MSBuild Targets="Clean" Projects="zeoslib_pascalscada.dproj"/>
+		</Target>
+		<Target Name="zeoslib_pascalscada:Make">
+			<MSBuild Targets="Make" Projects="zeoslib_pascalscada.dproj"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="pascalscada;pascalscada_db;zeoslib_pascalscada"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="pascalscada:Clean;pascalscada_db:Clean;zeoslib_pascalscada:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="pascalscada:Make;pascalscada_db:Make;zeoslib_pascalscada:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>

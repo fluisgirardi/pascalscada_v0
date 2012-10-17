@@ -1,8 +1,8 @@
-unit dbf_prssupp;
+unit fpsdbf_prssupp;
 
 // parse support
 
-{$I dbf_common.inc}
+{$I fpsdbf_common.inc}
 
 interface
 
@@ -178,12 +178,12 @@ end;
 
 function TStrCollection.Compare(Key1, Key2: Pointer): Integer;
 begin
-  Compare := StrComp(Key1, Key2);
+  Compare := StrComp(PWideChar(Key1), PWideChar(Key2));
 end;
 
 procedure TStrCollection.FreeItem(Item: Pointer);
 begin
-  StrDispose(Item);
+  StrDispose(PWideChar(Item));
 end;
 
 // it seems there is no pascal function to convert an integer into a PChar???
@@ -223,7 +223,7 @@ var
   I, J: Integer;
   NegSign: boolean;
 begin
-  {$I getstrfromint.inc}
+  {$I fpsgetstrfromint.inc}
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -234,7 +234,7 @@ var
   I, J: Integer;
   NegSign: boolean;
 begin
-  {$I getstrfromint.inc}
+  {$I fpsgetstrfromint.inc}
 end;
 
 function GetStrFromInt64(Val: Int64; const Dst: PChar): Integer;

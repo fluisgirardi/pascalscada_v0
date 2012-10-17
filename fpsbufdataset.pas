@@ -16,15 +16,16 @@
 
 unit fpsBufDataset;
 
-{$mode objfpc}
-{$h+}
-
 interface
 
-uses Classes,Sysutils,db,bufdataset_parser;
+uses Classes, Sysutils, db, fpsbufdataset_parser;
 
 type
   TCustomBufDataset = Class;
+  TResolverResponse = (rrSkip, rrAbort, rrMerge, rrApply, rrIgnore);
+  PtrInt = Integer;
+  LargeInt = Int64;
+  PLargeInt= ^LargeInt;
 
   TResolverErrorEvent = procedure(Sender: TObject; DataSet: TCustomBufDataset; E: EUpdateError;
     UpdateKind: TUpdateKind; var Response: TResolverResponse) of object;
