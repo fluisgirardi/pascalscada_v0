@@ -20,8 +20,7 @@ unit fpsdbf_prscore;
 
 interface
 
-
-{$I fpsdbf_common.inc}
+{$I dbf_common.inc}
 
 uses
   SysUtils,
@@ -1680,7 +1679,7 @@ begin
         str0 := AnsiStrUpper(Args[0]);
         str1 := AnsiStrUpper(Args[1]+1);
         setlength(str1, arg1len-2);
-        match := AnsiPos(str0, str1) = 0;
+        match := AnsiPos(str1, str0) <> 0;
       end else begin
         arg0len := StrLen(Args[0]);
         // at least length without asterisk

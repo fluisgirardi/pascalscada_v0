@@ -1,8 +1,8 @@
-unit fpsdbf_prssupp;
+unit dbf_prssupp;
 
 // parse support
 
-{$I fpsdbf_common.inc}
+{$I dbf_common.inc}
 
 interface
 
@@ -223,7 +223,7 @@ var
   I, J: Integer;
   NegSign: boolean;
 begin
-  {$I fpsgetstrfromint.inc}
+  {$I getstrfromint.inc}
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -234,7 +234,7 @@ var
   I, J: Integer;
   NegSign: boolean;
 begin
-  {$I fpsgetstrfromint.inc}
+  {$I getstrfromint.inc}
 end;
 
 function GetStrFromInt64(Val: Int64; const Dst: PChar): Integer;

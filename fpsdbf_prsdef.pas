@@ -2,7 +2,7 @@ unit fpsdbf_prsdef;
 
 interface
 
-{$I fpsdbf_common.inc}
+{$I dbf_common.inc}
 
 uses
   SysUtils,
@@ -13,8 +13,6 @@ uses
 const
   MaxArg = 6;
   ArgAllocSize = 32;
-  dsMaxBufferCount = $FFFFFFF;
-  dsMaxStringSize  = 8192;
 
 type
   TExpressionType = (etInteger, etString, etBoolean, etLargeInt, etFloat, etDateTime,
@@ -33,15 +31,6 @@ type
   TExprFunc = procedure(Expr: PExpressionRec);
 
 //-----
-  {$I fps_compat.inc}
-
-  {$IFDEF FPCPS_COMPAT_MODE}
-  TRecordBuffer = PChar;
-  {$ENDIF}
-  
-  {$IFDEF NEED_TSTRINGFIELDBUFFER}
-  TStringFieldBuffer = Array[0..dsMaxStringSize] of Char;
-  {$ENDIF}
 
   TDynamicType = class(TObject)
   private
