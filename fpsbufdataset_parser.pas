@@ -1,4 +1,8 @@
-unit fpsbufdataset_parser;
+unit bufdataset_parser;
+
+{$h+}
+{$mode delphi}
+
 
 interface
 
@@ -6,8 +10,8 @@ uses
   SysUtils,
   Classes,
   db,
-  fpsdbf_prscore,
-  fpsdbf_prsdef;
+  dbf_prscore,
+  dbf_prsdef;
 
 type
 
@@ -51,7 +55,7 @@ type
 
 implementation
 
-uses fpsdbconst;
+uses dbconst;
 
 type
 // TFieldVar aids in retrieving field values from records

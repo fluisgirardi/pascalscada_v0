@@ -14,7 +14,7 @@
 
  **********************************************************************}
 
-unit fpsdbconst;
+unit dbconst;
 
 Interface
 
@@ -109,6 +109,9 @@ Resourcestring
   SRollingBack             = 'Rolling back transaction';
   SCommitRetaining         = 'Commit and retaining transaction';
   SRollBackRetaining       = 'Rollback and retaining transaction';
+  SErrNoFieldsDefined      = 'Can not create a dataset when there are no fielddefinitions or fields defined';
+  SErrApplyUpdBeforeRefresh= 'Must apply updates before refreshing data';
+  SErrNoDataset            = 'Missing (compatible) underlying dataset, can not open';
 
 Implementation
 
