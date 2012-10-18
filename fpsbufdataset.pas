@@ -18,14 +18,31 @@ unit fpsBufDataset;
 
 interface
 
-uses Classes, Sysutils, db, fpsbufdataset_parser;
+uses Classes, Sysutils, db, fpsbufdataset_parser{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
   TCustomBufDataset = Class;
+
+  {$I fps_compat.inc}
+
+  {$IFDEF NEED_TRESOLVERRESPONSE}
   TResolverResponse = (rrSkip, rrAbort, rrMerge, rrApply, rrIgnore);
-  PtrInt = Integer;
-  LargeInt = Int64;
-  PLargeInt= ^LargeInt;
+  {$ENDIF}
+
+  {$IFDEF NEED_PTRINT}
+  PtrInt = Integer; //must be fixed for Delphi XE2 64 bits..
+  {$ENDIF}
+
+  {$IFDEF FPCPS_COMPAT_MODE}
+  TRecordBuffer = PChar;
+  {$ENDIF}
+
+  {$IFDEF NEED_PLARGEINT}
+  PLargeInt = ^Int64;
+  PQWord    = ^Int64;
+  {$ENDIF}
+
+  {$POINTERMATH ON}
 
   TResolverErrorEvent = procedure(Sender: TObject; DataSet: TCustomBufDataset; E: EUpdateError;
     UpdateKind: TUpdateKind; var Response: TResolverResponse) of object;
@@ -394,7 +411,11 @@ type
     class function RecognizeStream(AStream : TStream) : boolean; override;
   end;
 
+  {$IFDEF NEED_TDBDATASET}
+  TCustomBufDataset = class(TDataSet)
+  {$ELSE}
   TCustomBufDataset = class(TDBDataSet)
+  {$ENDIF}
   private
     FFileName: string;
     FReadFromFile   : boolean;
@@ -514,8 +535,7 @@ type
     procedure SetFieldData(Field: TField; Buffer: Pointer;
       NativeFormat: Boolean); override;
     procedure SetFieldData(Field: TField; Buffer: Pointer); override;
-    procedure ApplyUpdates; virtual; overload;
-    procedure ApplyUpdates(MaxErrors: Integer); virtual; overload;
+    procedure ApplyUpdates(MaxErrors: Integer = 0); virtual;
     procedure MergeChangeLog;
     procedure CancelUpdates; virtual;
     destructor Destroy; override;
@@ -589,7 +609,7 @@ procedure RegisterDatapacketReader(ADatapacketReaderClass : TDatapacketReaderCla
 
 implementation
 
-uses variants, dbconst, FmtBCD;
+uses variants, fpsdbconst, FmtBCD, StrUtils;
 
 Type TDatapacketReaderRegistration = record
                                        ReaderClass : TDatapacketReaderClass;
@@ -737,8 +757,8 @@ var IndexFieldNr : Integer;
 begin
   for IndexFieldNr:=0 to length(ADBCompareRecs)-1 do with ADBCompareRecs[IndexFieldNr] do
     begin
-    IsNull1:=GetFieldIsNull(rec1+NullBOff1,FieldInd1);
-    IsNull2:=GetFieldIsNull(rec2+NullBOff2,FieldInd2);
+    IsNull1:=GetFieldIsNull(PByte(rec1)+NullBOff1,FieldInd1);
+    IsNull2:=GetFieldIsNull(PByte(rec2)+NullBOff2,FieldInd2);
     if IsNull1 and IsNull2 then
       result := 0
     else if IsNull1 then
@@ -746,7 +766,7 @@ begin
     else if IsNull2 then
       result := 1
     else
-      Result := Comparefunc(Rec1+Off1,Rec2+Off2,Options);
+      Result := Comparefunc(PByte(Rec1)+Off1,PByte(Rec2)+Off2,Options);
 
     if Result <> 0 then
       begin
@@ -1115,7 +1135,7 @@ end;
 procedure TCustomBufDataset.ClearCalcFields(Buffer: TRecordBuffer);
 begin
   if CalcFieldsSize > 0 then
-    FillByte((Buffer+RecordSize)^,CalcFieldsSize,0);
+    FillMemory((Buffer+RecordSize),CalcFieldsSize,0);
 end;
 
 procedure TCustomBufDataset.InternalOpen;
@@ -1260,7 +1280,7 @@ end;
 
 function TDoubleLinkedBufIndex.GetCurrentBuffer: Pointer;
 begin
-  Result := pointer(FCurrentRecBuf)+(sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount);
+  Result := pbyte(FCurrentRecBuf)+(sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount);
 end;
 
 function TDoubleLinkedBufIndex.GetIsInitialized: boolean;
@@ -1270,7 +1290,7 @@ end;
 
 function TDoubleLinkedBufIndex.GetSpareBuffer: TRecordBuffer;
 begin
-  Result := pointer(FLastRecBuf)+(sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount);
+  Result := pbyte(FLastRecBuf)+(sizeof(TBufRecLinkItem)*FDataset.MaxIndexesCount);
 end;
 
 function TDoubleLinkedBufIndex.GetSpareRecord: TRecordBuffer;
@@ -1925,7 +1945,7 @@ begin
       Field.Validate(Buffer);	
     NullMask := CurrBuff;
 
-    inc(CurrBuff,FFieldBufPositions[Field.FieldNo-1]);
+    inc(pbyte(CurrBuff),FFieldBufPositions[Field.FieldNo-1]);
     if assigned(buffer) then
       begin
       Move(Buffer^, CurrBuff^, GetFieldSize(FieldDefs[Field.FieldNo-1]));
@@ -1936,9 +1956,9 @@ begin
     end
   else
     begin
-    Inc(CurrBuff, GetRecordSize + Field.Offset);
+    Inc(pbyte(CurrBuff), GetRecordSize + Field.Offset);
     Boolean(CurrBuff^) := Buffer <> nil;
-    inc(CurrBuff);
+    inc(pbyte(CurrBuff));
     if assigned(Buffer) then
       Move(Buffer^, CurrBuff^, Field.Datasize);
     end;
@@ -2081,11 +2101,6 @@ begin
   FOnUpdateError := AValue;
 end;
 
-procedure TCustomBufDataset.ApplyUpdates; // For backwards-compatibility
-
-begin
-  ApplyUpdates(0);
-end;
 
 procedure TCustomBufDataset.ApplyUpdates(MaxErrors: Integer);
 
@@ -2451,7 +2466,7 @@ var ABlobBuffer : PBlobBuffer;
 begin
   setlength(FBlobBuffers,length(FBlobBuffers)+1);
   new(ABlobBuffer);
-  fillbyte(ABlobBuffer^,sizeof(ABlobBuffer^),0);
+  FillMemory(ABlobBuffer,sizeof(ABlobBuffer^),0);
   ABlobBuffer^.OrgBufID := high(FUpdateBlobBuffers);
   FBlobBuffers[high(FBlobBuffers)] := ABlobBuffer;
   result := ABlobBuffer;
@@ -2464,7 +2479,7 @@ var ABlobBuffer : PBlobBuffer;
 begin
   setlength(FUpdateBlobBuffers,length(FUpdateBlobBuffers)+1);
   new(ABlobBuffer);
-  fillbyte(ABlobBuffer^,sizeof(ABlobBuffer^),0);
+  FillMemory(ABlobBuffer,sizeof(ABlobBuffer^),0);
   FUpdateBlobBuffers[high(FUpdateBlobBuffers)] := ABlobBuffer;
   result := ABlobBuffer;
 end;
@@ -2497,7 +2512,7 @@ var ptr : pointer;
 begin
   if FPosition + count > FBlobBuffer^.Size then
     count := FBlobBuffer^.Size-FPosition;
-  ptr := FBlobBuffer^.Buffer+FPosition;
+  ptr := PByte(FBlobBuffer^.Buffer)+FPosition;
   move(ptr^,buffer,count);
   inc(FPosition,count);
   result := count;
@@ -2509,7 +2524,7 @@ var ptr : pointer;
 
 begin
   ReAllocMem(FBlobBuffer^.Buffer,FPosition+Count);
-  ptr := FBlobBuffer^.Buffer+FPosition;
+  ptr := PByte(FBlobBuffer^.Buffer)+FPosition;
   move(buffer,ptr^,count);
   inc(FBlobBuffer^.Size,count);
   inc(FPosition,count);
@@ -3149,7 +3164,7 @@ begin
       begin
       if Filtered then
         begin
-        FFilterBuffer:=pointer(CurrLinkItem)+(sizeof(TBufRecLinkItem)*MaxIndexesCount);
+        FFilterBuffer:=PByte(CurrLinkItem)+(sizeof(TBufRecLinkItem)*MaxIndexesCount);
         // The dataset-state is still dsFilter at this point, so we don't have to set it.
         DoFilterRecord(FiltAcceptable);
         if FiltAcceptable then
