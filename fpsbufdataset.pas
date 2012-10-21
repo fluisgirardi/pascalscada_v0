@@ -16,6 +16,11 @@
 
 unit fpsBufDataset;
 
+{$IFDEF FPC}
+{$mode objfpc}
+{$h+}
+{$ENDIF}
+
 interface
 
 uses Classes, Sysutils, db, fpsbufdataset_parser{$IFNDEF FPC}, Windows{$ENDIF};

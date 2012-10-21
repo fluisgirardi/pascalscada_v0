@@ -1,5 +1,10 @@
 unit fpsbufdataset_parser;
 
+{$IFDEF FPC}
+{$h+}
+{$mode delphi}
+{$ENDIF}
+
 interface
 
 uses
