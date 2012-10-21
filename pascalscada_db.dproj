@@ -55,9 +55,10 @@
 			<DCCReference Include="xmlrtl.dcp"/>
 			<DCCReference Include="designide.dcp"/>
 			<DCCReference Include="zeoslib_pascalscada.dcp"/>
-			<DCCReference Include="hmidbconnection.pas"/>
+			<DCCReference Include="pascalscada.dcp"/>
 			<DCCReference Include="dbstructurechecker.pas"/>
 			<DCCReference Include="fpsbufdataset.pas"/>
+			<DCCReference Include="hmidbconnection.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

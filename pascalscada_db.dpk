@@ -33,11 +33,12 @@ requires
   vclactnband,
   xmlrtl,
   designide,
-  zeoslib_pascalscada;
+  zeoslib_pascalscada,
+  pascalscada;
 
 contains
-  hmidbconnection in 'hmidbconnection.pas',
   dbstructurechecker in 'dbstructurechecker.pas',
-  fpsbufdataset in 'fpsbufdataset.pas';
+  fpsbufdataset in 'fpsbufdataset.pas',
+  hmidbconnection in 'hmidbconnection.pas';
 
 end.

@@ -26,9 +26,9 @@ interface
 uses Classes, Sysutils, db, fpsbufdataset_parser{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
-  TCustomBufDataset = Class;
-
   {$I fps_compat.inc}
+
+  TCustomBufDataset = Class;
 
   {$IFDEF NEED_TRESOLVERRESPONSE}
   TResolverResponse = (rrSkip, rrAbort, rrMerge, rrApply, rrIgnore);
@@ -49,6 +49,49 @@ type
 
   {$POINTERMATH ON}
 
+  {$IFNDEF NEED_TFPSTREAM}
+  TFPStream = class(TStrean);
+  TFPHandleStream = class(THandleStream);
+  TFPFileStream = class(TFileStream)
+  {$ELSE}
+  TFPStream = class(TStream)
+  public
+    function ReadByte : Byte;
+    function ReadWord : Word;
+    function ReadDWord : Cardinal;
+    function ReadAnsiString : String;
+    procedure WriteByte(b : Byte);
+    procedure WriteWord(w : Word);
+    procedure WriteDWord(d : Cardinal);
+    Procedure WriteAnsiString (const S : String);
+  end;
+
+  { TFPHandleStream class }
+  TFPHandleStream = class(TFPStream)
+  protected
+    FHandle: THandle;
+    procedure SetSize(NewSize: Longint); override;
+    procedure SetSize(const NewSize: Int64); override;
+  public
+    constructor Create(AHandle: Integer);
+    function Read(var Buffer; Count: Longint): Longint; override;
+    function Write(const Buffer; Count: Longint): Longint; override;
+    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
+    property Handle: THandle read FHandle;
+  end;
+
+  { TFPFileStream class }
+  TFPFileStream = class(TFPHandleStream)
+  strict private
+    FFileName: string;
+  public
+    constructor Create(const AFileName: string; Mode: Word); overload;
+    constructor Create(const AFileName: string; Mode: Word; Rights: Cardinal); overload;
+    destructor Destroy; override;
+    property FileName: string read FFileName;
+  end;
+  {$ENDIF}
+
   TResolverErrorEvent = procedure(Sender: TObject; DataSet: TCustomBufDataset; E: EUpdateError;
     UpdateKind: TUpdateKind; var Response: TResolverResponse) of object;
 
@@ -67,12 +110,11 @@ type
     FBlobBuffer : PBlobBuffer;
     FPosition   : ptrint;
     FDataset    : TCustomBufDataset;
-  protected
+  public
+    constructor Create(Field: TBlobField; Mode: TBlobStreamMode);
     function Read(var Buffer; Count: Longint): Longint; override;
     function Write(const Buffer; Count: Longint): Longint; override;
     function Seek(Offset: Longint; Origin: Word): Longint; override;
-  public
-    constructor Create(Field: TBlobField; Mode: TBlobStreamMode);
   end;
 
   { TCustomBufDataset }
@@ -203,7 +245,6 @@ type
   TDataPacketFormat = (dfBinary,dfXML,dfXMLUTF8,dfAny);
 
   { TDoubleLinkedBufIndex }
-
   TDoubleLinkedBufIndex = class(TBufIndex)
   private
     FCursOnFirstRec : boolean;
@@ -301,7 +342,6 @@ type
 
 
   { TArrayBufIndex }
-
   TArrayBufIndex = class(TBufIndex)
   private
     FStoredRecBuf  : integer;
@@ -357,23 +397,18 @@ type
 
 
   { TBufDatasetReader }
-
-type
   TRowStateValue = (rsvOriginal, rsvDeleted, rsvInserted, rsvUpdated, rsvDetailUpdates);
   TRowState = set of TRowStateValue;
 
-type
-
   { TDataPacketReader }
-
   TDatapacketReaderClass = class of TDatapacketReader;
   TDataPacketReader = class(TObject)
-    FStream : TStream;
+    FStream : TFPStream;
   protected
     class function RowStateToByte(const ARowState : TRowState) : byte;
     class function ByteToRowState(const AByte : Byte) : TRowState;
   public
-    constructor create(AStream : TStream); virtual;
+    constructor create(AStream : TFPStream); virtual;
     // Load a dataset from stream:
     // Load the field-definitions from a stream.
     procedure LoadFieldDefs(AFieldDefs : TFieldDefs; var AnAutoIncValue : integer); virtual; abstract;
@@ -397,11 +432,10 @@ type
     procedure FinalizeStoreRecords; virtual; abstract;
     // Checks if the provided stream is of the right format for this class
     class function RecognizeStream(AStream : TStream) : boolean; virtual; abstract;
-    property Stream: TStream read FStream;
+    property Stream: TFPStream read FStream;
   end;
 
   { TFpcBinaryDatapacketReader }
-
   TFpcBinaryDatapacketReader = class(TDataPacketReader)
   public
     procedure LoadFieldDefs(AFieldDefs : TFieldDefs; var AnAutoIncValue : integer); override;
@@ -424,7 +458,7 @@ type
   private
     FFileName: string;
     FReadFromFile   : boolean;
-    FFileStream     : TFileStream;
+    FFileStream     : TFPFileStream;
     FDatasetReader  : TDataPacketReader;
     FIndexes        : array of TBufIndex;
     FMaxIndexesCount: integer;
@@ -466,7 +500,7 @@ type
     function GetIndexFieldNames: String;
     function GetIndexName: String;
     function GetBufUniDirectional: boolean;
-    function GetPacketReader(const Format: TDataPacketFormat; const AStream: TStream): TDataPacketReader;
+    function GetPacketReader(const Format: TDataPacketFormat; const AStream: TFPStream): TDataPacketReader;
     function LoadBuffer(Buffer : TRecordBuffer): TGetResult;
     function GetFieldSize(FieldDef : TFieldDef) : longint;
     function GetRecordUpdateBuffer(const ABookmark : TBufBookmark; IncludePrior : boolean = false; AFindNext : boolean = false) : boolean;
@@ -485,6 +519,7 @@ type
     procedure SetBufUniDirectional(const AValue: boolean);
     procedure InitDefaultIndexes;
   protected
+    procedure SetFieldValues(const fieldname: string; Value: Variant); virtual;
     procedure UpdateIndexDefs; override;
     function GetNewWriteBlobBuffer : PBlobBuffer;
     procedure FreeBlobBuffer(var ABlobBuffer: PBlobBuffer);
@@ -554,8 +589,8 @@ type
 
     procedure SetDatasetPacket(AReader : TDataPacketReader);
     procedure GetDatasetPacket(AWriter : TDataPacketReader);
-    procedure LoadFromStream(AStream : TStream; Format: TDataPacketFormat = dfAny);
-    procedure SaveToStream(AStream : TStream; Format: TDataPacketFormat = dfBinary);
+    procedure LoadFromStream(AStream : TFPStream; Format: TDataPacketFormat = dfAny);
+    procedure SaveToStream(AStream : TFPStream; Format: TDataPacketFormat = dfBinary);
     procedure LoadFromFile(AFileName: string = ''; Format: TDataPacketFormat = dfAny);
     procedure SaveToFile(AFileName: string = ''; Format: TDataPacketFormat = dfBinary);
     procedure CreateDataset;
@@ -614,7 +649,155 @@ procedure RegisterDatapacketReader(ADatapacketReaderClass : TDatapacketReaderCla
 
 implementation
 
-uses variants, fpsdbconst, FmtBCD, StrUtils;
+uses variants, fpsdbconst, FmtBCD, StrUtils, RTLConsts;
+
+{$IFDEF NEED_TFPSTREAM}
+function TFPStream.ReadByte : Byte;
+var
+   b : Byte;
+begin
+   ReadBuffer(b,1);
+   ReadByte:=b;
+end;
+
+function TFPStream.ReadWord : Word;
+var
+   w : Word;
+begin
+   ReadBuffer(w,2);
+   ReadWord:=w;
+end;
+
+function TFPStream.ReadDWord : Cardinal;
+var
+   d : Cardinal;
+begin
+   ReadBuffer(d,4);
+   ReadDWord:=d;
+end;
+
+Function TFPStream.ReadAnsiString : String;
+Var
+  TheSize : Longint;
+  P : PByte ;
+begin
+  ReadBuffer (TheSize,SizeOf(TheSize));
+  SetLength(Result,TheSize);
+  // Illegal typecast if no AnsiStrings defined.
+  if TheSize>0 then
+   begin
+     ReadBuffer (Pointer(Result)^,TheSize);
+     P:=Pointer(Result);
+     inc(P, TheSize);
+     p^:=0;
+   end;
+ end;
+
+Procedure TFPStream.WriteAnsiString (const S : String);
+Var
+  L : Longint;
+begin
+  L:=Length(S);
+  WriteBuffer (L,SizeOf(L));
+  WriteBuffer (Pointer(S)^,L);
+end;
+
+procedure TFPStream.WriteByte(b : Byte);
+begin
+   WriteBuffer(b,1);
+end;
+
+procedure TFPStream.WriteWord(w : Word);
+begin
+   WriteBuffer(w,2);
+end;
+
+procedure TFPStream.WriteDWord(d : Cardinal);
+begin
+   WriteBuffer(d,4);
+end;
+
+{****************************************************************************}
+{*                            TFPHandleStream                               *}
+{****************************************************************************}
+
+Constructor TFPHandleStream.Create(AHandle: Integer);
+begin
+  Inherited Create;
+  FHandle:=AHandle;
+end;
+
+function TFPHandleStream.Read(var Buffer; Count: Longint): Longint;
+begin
+  Result:=FileRead(FHandle,Buffer,Count);
+  If Result=-1 then Result:=0;
+end;
+
+
+function TFPHandleStream.Write(const Buffer; Count: Longint): Longint;
+begin
+  Result:=FileWrite (FHandle,Buffer,Count);
+  If Result=-1 then Result:=0;
+end;
+
+Procedure TFPHandleStream.SetSize(NewSize: Longint);
+begin
+  SetSize(Int64(NewSize));
+end;
+
+Procedure TFPHandleStream.SetSize(const NewSize: Int64);
+begin
+  Seek(NewSize, soBeginning);
+  {$IFDEF MSWINDOWS}
+  Win32Check(SetEndOfFile(FHandle));
+  {$ELSE}
+  if ftruncate(FHandle, Position) = -1 then
+    raise EStreamError(sStreamSetSize);
+  {$ENDIF}
+end;
+
+function TFPHandleStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+begin
+  Result:=FileSeek(FHandle,Offset,ord(Origin));
+end;
+
+{****************************************************************************}
+{*                             TFPFileStream                                *}
+{****************************************************************************}
+
+constructor TFPFileStream.Create(const AFileName: string; Mode: Word);
+begin
+{$IFDEF MSWINDOWS}
+  Create(AFilename, Mode, 0);
+{$ELSE}
+  Create(AFilename, Mode, FileAccessRights);
+{$ENDIF}
+end;
+
+constructor TFPFileStream.Create(const AFileName: string; Mode: Word; Rights: Cardinal);
+begin
+  if Mode = fmCreate then
+  begin
+    inherited Create(FileCreate(AFileName, Rights));
+    if FHandle = INVALID_HANDLE_VALUE then
+      raise EFCreateError.CreateResFmt(@SFCreateErrorEx, [ExpandFileName(AFileName), SysErrorMessage(GetLastError)]);
+  end
+  else
+  begin
+    inherited Create(FileOpen(AFileName, Mode));
+    if FHandle = INVALID_HANDLE_VALUE then
+      raise EFOpenError.CreateResFmt(@SFOpenErrorEx, [ExpandFileName(AFileName), SysErrorMessage(GetLastError)]);
+  end;
+  FFileName := AFileName;
+end;
+
+destructor TFPFileStream.Destroy;
+begin
+  if FHandle <> INVALID_HANDLE_VALUE then
+    FileClose(FHandle);
+  inherited Destroy;
+end;
+{$ENDIF}
 
 Type TDatapacketReaderRegistration = record
                                        ReaderClass : TDatapacketReaderClass;
@@ -1099,6 +1282,24 @@ begin
   Result := FIndexDefs;
 end;
 
+procedure TCustomBufDataset.SetFieldValues(const Fieldname: string; Value: Variant);
+var
+  i : Integer;
+  FieldList: TList;
+begin
+  if VarIsArray(Value) then begin
+    FieldList := TList.Create;
+    try
+      GetFieldList(FieldList, FieldName);
+      for i := 0 to FieldList.Count -1 do
+        TField(FieldList[i]).Value := Value[i];
+    finally
+      FieldList.Free;
+    end;
+  end else
+    FieldByName(Fieldname).Value := Value;
+end;
+
 procedure TCustomBufDataset.UpdateIndexDefs;
 var i : integer;
 begin
@@ -1152,7 +1353,7 @@ begin
   FAutoIncField:=nil;
   if not Assigned(FDatasetReader) and (FileName<>'') then
     begin
-    FFileStream := TFileStream.Create(FileName,fmOpenRead);
+    FFileStream := TFPFileStream.Create(FileName,fmOpenRead);
     FDatasetReader := GetPacketReader(dfAny, FFileStream);
     FReadFromFile := True;
     end;
@@ -2365,7 +2566,7 @@ begin
   result := IsUniDirectional;
 end;
 
-function TCustomBufDataset.GetPacketReader(const Format: TDataPacketFormat; const AStream: TStream): TDataPacketReader;
+function TCustomBufDataset.GetPacketReader(const Format: TDataPacketFormat; const AStream: TFPStream): TDataPacketReader;
 
 var APacketReader: TDataPacketReader;
     APacketReaderReg: TDatapacketReaderRegistration;
@@ -2614,10 +2815,10 @@ end;
 
 procedure TCustomBufDataset.SaveToFile(AFileName: string;
   Format: TDataPacketFormat);
-var AFileStream : TFileStream;
+var AFileStream : TFPFileStream;
 begin
   if AFileName='' then AFileName := FFileName;
-  AFileStream := TFileStream.Create(AFileName,fmCreate);
+  AFileStream := TFPFileStream.Create(AFileName,fmCreate);
   try
     SaveToStream(AFileStream, Format);
   finally
@@ -2736,7 +2937,7 @@ begin
   end;
 end;
 
-procedure TCustomBufDataset.LoadFromStream(AStream: TStream; Format: TDataPacketFormat);
+procedure TCustomBufDataset.LoadFromStream(AStream: TFPStream; Format: TDataPacketFormat);
 var APacketReader : TDataPacketReader;
 begin
   CheckBiDirectional;
@@ -2748,7 +2949,7 @@ begin
   end;
 end;
 
-procedure TCustomBufDataset.SaveToStream(AStream: TStream; Format: TDataPacketFormat);
+procedure TCustomBufDataset.SaveToStream(AStream: TFPStream; Format: TDataPacketFormat);
 var APacketReaderReg : TDatapacketReaderRegistration;
     APacketWriter : TDataPacketReader;
 begin
@@ -2767,10 +2968,10 @@ begin
 end;
 
 procedure TCustomBufDataset.LoadFromFile(AFileName: string; Format: TDataPacketFormat);
-var AFileStream : TFileStream;
+var AFileStream : TFPFileStream;
 begin
   if AFileName='' then AFileName := FFileName;
-  AFileStream := TFileStream.Create(AFileName,fmOpenRead);
+  AFileStream := TFPFileStream.Create(AFileName,fmOpenRead);
   try
     LoadFromStream(AFileStream, Format);
   finally
@@ -3456,7 +3657,7 @@ begin
   if (AByte and 8)=8 then Result := Result+[rsvUpdated];
 end;
 
-constructor TDataPacketReader.create(AStream: TStream);
+constructor TDataPacketReader.create(AStream: TFPStream);
 begin
   FStream := AStream;
 end;
