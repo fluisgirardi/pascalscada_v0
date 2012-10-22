@@ -18,7 +18,7 @@
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
     <Type Value="RunAndDesignTime"/>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="pascalscada"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
@@ -29,9 +29,6 @@
         <MinVersion Minor="7" Release="3" Valid="True"/>
         <DefaultFilename Value="pascalscada_db.lpk" Prefer="True"/>
       </Item2>
-      <Item3>
-        <PackageName Value="FCL"/>
-      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="pascalscada_hmi"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <IncludeFiles Value="src/hmi"/>
+        <OtherUnitFiles Value="src/hmi"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <MsgFileName Value=""/>
+        </CompilerMessages>
+        <CompilerPath Value="$(CompPath)"/>
+      </Other>
+    </CompilerOptions>
+    <Version Minor="7" Release="3"/>
+    <Files Count="26">
+      <Item1>
+        <Filename Value="src/hmi/basicusermanagement.pas"/>
+        <UnitName Value="BasicUserManagement"/>
+      </Item1>
+      <Item2>
+        <Filename Value="src/hmi/controlsecuritymanager.pas"/>
+        <UnitName Value="ControlSecurityManager"/>
+      </Item2>
+      <Item3>
+        <Filename Value="src/hmi/crosskeyevents.pas"/>
+        <UnitName Value="crosskeyevents"/>
+      </Item3>
+      <Item4>
+        <Filename Value="src/hmi/customizedusermanagement.pas"/>
+        <UnitName Value="CustomizedUserManagement"/>
+      </Item4>
+      <Item5>
+        <Filename Value="src/hmi/hmianimation.pas"/>
+        <UnitName Value="HMIAnimation"/>
+      </Item5>
+      <Item6>
+        <Filename Value="src/hmi/hmibutton.pas"/>
+        <UnitName Value="HMIButton"/>
+      </Item6>
+      <Item7>
+        <Filename Value="src/hmi/hmicheckbox.pas"/>
+        <UnitName Value="HMICheckBox"/>
+      </Item7>
+      <Item8>
+        <Filename Value="src/hmi/hmicontroldislocatoranimation.pas"/>
+        <UnitName Value="HMIControlDislocatorAnimation"/>
+      </Item8>
+      <Item9>
+        <Filename Value="src/hmi/hmiedit.pas"/>
+        <UnitName Value="HMIEdit"/>
+      </Item9>
+      <Item10>
+        <Filename Value="src/hmi/hmilabel.pas"/>
+        <UnitName Value="HMILabel"/>
+      </Item10>
+      <Item11>
+        <Filename Value="src/hmi/hmiprogressbar.pas"/>
+        <UnitName Value="HMIProgressBar"/>
+      </Item11>
+      <Item12>
+        <Filename Value="src/hmi/hmipropeditor.pas"/>
+        <UnitName Value="hmipropeditor"/>
+      </Item12>
+      <Item13>
+        <Filename Value="src/hmi/hmiradiobutton.pas"/>
+        <UnitName Value="HMIRadioButton"/>
+      </Item13>
+      <Item14>
+        <Filename Value="src/hmi/hmiradiogroup.pas"/>
+        <UnitName Value="HMIRadioGroup"/>
+      </Item14>
+      <Item15>
+        <Filename Value="src/hmi/hmiscrollbar.pas"/>
+        <UnitName Value="HMIScrollBar"/>
+      </Item15>
+      <Item16>
+        <Filename Value="src/hmi/hmitext.pas"/>
+        <UnitName Value="HMIText"/>
+      </Item16>
+      <Item17>
+        <Filename Value="src/hmi/hmitrackbar.pas"/>
+        <UnitName Value="HMITrackBar"/>
+      </Item17>
+      <Item18>
+        <Filename Value="src/hmi/hmitypes.pas"/>
+        <UnitName Value="HMITypes"/>
+      </Item18>
+      <Item19>
+        <Filename Value="src/hmi/hmiupdown.pas"/>
+        <UnitName Value="HMIUpDown"/>
+      </Item19>
+      <Item20>
+        <Filename Value="src/hmi/hmizones.pas"/>
+        <UnitName Value="HMIZones"/>
+      </Item20>
+      <Item21>
+        <Filename Value="src/hmi/ualfakeyboard.lfm"/>
+        <Type Value="LFM"/>
+      </Item21>
+      <Item22>
+        <Filename Value="src/hmi/ualfakeyboard.pas"/>
+        <UnitName Value="ualfakeyboard"/>
+      </Item22>
+      <Item23>
+        <Filename Value="src/hmi/unumerickeyboard.lfm"/>
+        <Type Value="LFM"/>
+      </Item23>
+      <Item24>
+        <Filename Value="src/hmi/unumerickeyboard.pas"/>
+        <UnitName Value="unumerickeyboard"/>
+      </Item24>
+      <Item25>
+        <Filename Value="src/hmi/usrmgnt_login.lfm"/>
+        <Type Value="LFM"/>
+      </Item25>
+      <Item26>
+        <Filename Value="src/hmi/usrmgnt_login.pas"/>
+        <UnitName Value="usrmgnt_login"/>
+      </Item26>
+    </Files>
+    <Type Value="RunAndDesignTime"/>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="IDEIntf"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="LCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

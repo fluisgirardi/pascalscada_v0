@@ -7,7 +7,8 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)\"/>
+        <OtherUnitFiles Value="src\database"/>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Other>
         <CompilerMessages>
@@ -17,31 +18,38 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="3">
+    <Files Count="4">
       <Item1>
-        <Filename Value="dbstructurechecker.pas"/>
+        <Filename Value="src\database\dbstructurechecker.pas"/>
         <UnitName Value="dbstructurechecker"/>
       </Item1>
       <Item2>
-        <Filename Value="hmidbconnection.pas"/>
+        <Filename Value="src\database\hmidbconnection.pas"/>
         <UnitName Value="HMIDBConnection"/>
       </Item2>
       <Item3>
-        <Filename Value="pscada_dbreg.pas"/>
+        <Filename Value="src\database\psbufdataset.pas"/>
+        <UnitName Value="psbufdataset"/>
+      </Item3>
+      <Item4>
+        <Filename Value="src\database\pscada_dbreg.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="pscada_dbreg"/>
-      </Item3>
+      </Item4>
     </Files>
     <Type Value="RunAndDesignTime"/>
-    <RequiredPkgs Count="2">
+    <RequiredPkgs Count="3">
       <Item1>
+        <PackageName Value="pascalscada_common"/>
+      </Item1>
+      <Item2>
         <PackageName Value="zcomponent"/>
         <MinVersion Major="7" Valid="True"/>
         <DefaultFilename Value="zeoslib\packages\lazarus\zcomponent.lpk" Prefer="True"/>
-      </Item1>
-      <Item2>
-        <PackageName Value="FCL"/>
       </Item2>
+      <Item3>
+        <PackageName Value="FCL"/>
+      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

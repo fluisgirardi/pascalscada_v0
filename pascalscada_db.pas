@@ -7,7 +7,8 @@ unit pascalscada_db;
 interface
 
 uses
-  dbstructurechecker, HMIDBConnection, pscada_dbreg, LazarusPackageIntf;
+  dbstructurechecker, HMIDBConnection, psbufdataset, pscada_dbreg, 
+  LazarusPackageIntf;
 
 implementation
 

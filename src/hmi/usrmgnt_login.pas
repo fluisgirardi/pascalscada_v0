@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 unit usrmgnt_login;
 
 {$IFDEF FPC}

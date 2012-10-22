@@ -60,6 +60,7 @@
       </Item2>
     </RequiredPkgs>
     <UsageOptions>
+      <CustomOptions Value="-dUseCThreads"/>
       <UnitPath Value="$(PkgOutDir)"/>
     </UsageOptions>
     <PublishOptions>
