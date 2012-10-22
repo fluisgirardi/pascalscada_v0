@@ -16,6 +16,7 @@
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
+    <Version Minor="7" Release="3"/>
     <Files Count="8">
       <Item1>
         <Filename Value="src/common/crossdatetime.pas"/>

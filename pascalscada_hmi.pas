@@ -10,14 +10,15 @@ uses
   BasicUserManagement, ControlSecurityManager, crosskeyevents, 
   CustomizedUserManagement, HMIAnimation, HMIButton, HMICheckBox, 
   HMIControlDislocatorAnimation, HMIEdit, HMILabel, HMIProgressBar, 
-  hmipropeditor, HMIRadioButton, HMIRadioGroup, HMIScrollBar, HMIText, 
-  HMITrackBar, HMITypes, HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, 
-  usrmgnt_login, LazarusPackageIntf;
+  hmipropeditor, HMIRadioButton, HMIRadioGroup, hmiregister, HMIScrollBar, 
+  HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, ualfakeyboard, 
+  unumerickeyboard, usrmgnt_login, LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
+  RegisterUnit('hmiregister', @hmiregister.Register);
 end;
 
 initialization

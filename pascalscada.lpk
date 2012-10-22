@@ -33,7 +33,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="62">
+    <Files Count="49">
       <Item1>
         <Filename Value="src\scada\commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -140,6 +140,7 @@
       </Item26>
       <Item27>
         <Filename Value="src\scada\scadareg.pas"/>
+        <HasRegisterProc Value="True"/>
         <UnitName Value="scadareg"/>
       </Item27>
       <Item28>
@@ -179,114 +180,63 @@
         <Type Value="LFM"/>
       </Item36>
       <Item37>
-        <Filename Value="src\scada\ubitmapper.lrs"/>
-        <Type Value="LRS"/>
-      </Item37>
-      <Item38>
         <Filename Value="src\scada\uelementmapper.pas"/>
         <UnitName Value="uelementmapper"/>
+      </Item37>
+      <Item38>
+        <Filename Value="src\scada\uelementmapper.lfm"/>
+        <Type Value="LFM"/>
       </Item38>
       <Item39>
-        <Filename Value="src\scada\uelementmapper.dfm"/>
-        <Type Value="Text"/>
+        <Filename Value="src\scada\umodbustagbuilder.pas"/>
+        <UnitName Value="uModbusTagBuilder"/>
       </Item39>
       <Item40>
-        <Filename Value="src\scada\uelementmapper.lfm"/>
+        <Filename Value="src\scada\umodbustagbuilder.lfm"/>
         <Type Value="LFM"/>
       </Item40>
       <Item41>
-        <Filename Value="src\scada\uelementmapper.lrs"/>
-        <Type Value="LRS"/>
-      </Item41>
-      <Item42>
-        <Filename Value="src\scada\umodbustagbuilder.pas"/>
-        <UnitName Value="uModbusTagBuilder"/>
-      </Item42>
-      <Item43>
-        <Filename Value="src\scada\umodbustagbuilder.dfm"/>
-        <Type Value="Text"/>
-      </Item43>
-      <Item44>
-        <Filename Value="src\scada\umodbustagbuilder.lfm"/>
-        <Type Value="LFM"/>
-      </Item44>
-      <Item45>
-        <Filename Value="src\scada\umodbustagbuilder.lrs"/>
-        <Type Value="LRS"/>
-      </Item45>
-      <Item46>
         <Filename Value="src\scada\us7tagbuilder.pas"/>
         <UnitName Value="us7tagbuilder"/>
-      </Item46>
-      <Item47>
-        <Filename Value="src\scada\us7tagbuilder.dfm"/>
-        <Type Value="Text"/>
-      </Item47>
-      <Item48>
+      </Item41>
+      <Item42>
         <Filename Value="src\scada\us7tagbuilder.lfm"/>
         <Type Value="LFM"/>
-      </Item48>
-      <Item49>
-        <Filename Value="src\scada\us7tagbuilder.lrs"/>
-        <Type Value="LRS"/>
-      </Item49>
-      <Item50>
+      </Item42>
+      <Item43>
         <Filename Value="src\scada\userscale.pas"/>
         <UnitName Value="UserScale"/>
-      </Item50>
-      <Item51>
-        <Filename Value="src\scada\usrmgnt_login.pas"/>
-        <UnitName Value="usrmgnt_login"/>
-      </Item51>
-      <Item52>
-        <Filename Value="src\scada\usrmgnt_login.dfm"/>
-        <Type Value="Text"/>
-      </Item52>
-      <Item53>
-        <Filename Value="src\scada\usrmgnt_login.lfm"/>
-        <Type Value="LFM"/>
-      </Item53>
-      <Item54>
-        <Filename Value="src\scada\usrmgnt_login.lrs"/>
-        <Type Value="LRS"/>
-      </Item54>
-      <Item55>
+      </Item43>
+      <Item44>
         <Filename Value="src\scada\ustructuremapper.pas"/>
         <UnitName Value="ustructuremapper"/>
-      </Item55>
-      <Item56>
-        <Filename Value="src\scada\ustructuremapper.dfm"/>
-        <Type Value="Text"/>
-      </Item56>
-      <Item57>
+      </Item44>
+      <Item45>
         <Filename Value="src\scada\ustructuremapper.lfm"/>
         <Type Value="LFM"/>
-      </Item57>
-      <Item58>
-        <Filename Value="src\scada\ustructuremapper.lrs"/>
-        <Type Value="LRS"/>
-      </Item58>
-      <Item59>
+      </Item45>
+      <Item46>
         <Filename Value="src\scada\uwesttagbuilder.pas"/>
         <UnitName Value="uwesttagbuilder"/>
-      </Item59>
-      <Item60>
+      </Item46>
+      <Item47>
         <Filename Value="src\scada\uwesttagbuilder.lfm"/>
         <Type Value="LFM"/>
-      </Item60>
-      <Item61>
+      </Item47>
+      <Item48>
         <Filename Value="src\scada\valueprocessor.pas"/>
         <UnitName Value="ValueProcessor"/>
-      </Item61>
-      <Item62>
+      </Item48>
+      <Item49>
         <Filename Value="src\scada\westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
-      </Item62>
+      </Item49>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="pascalscada_common"/>
+        <MinVersion Minor="7" Release="3" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item1>
       <Item2>

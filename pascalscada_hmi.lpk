@@ -7,7 +7,7 @@
       <SearchPaths>
         <IncludeFiles Value="src/hmi"/>
         <OtherUnitFiles Value="src/hmi"/>
-        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Other>
         <CompilerMessages>
@@ -17,7 +17,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="26">
+    <Files Count="27">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -75,39 +75,40 @@
         <UnitName Value="HMIRadioGroup"/>
       </Item14>
       <Item15>
-        <Filename Value="src/hmi/hmiscrollbar.pas"/>
-        <UnitName Value="HMIScrollBar"/>
+        <Filename Value="src/hmi/hmiregister.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="hmiregister"/>
       </Item15>
       <Item16>
-        <Filename Value="src/hmi/hmitext.pas"/>
-        <UnitName Value="HMIText"/>
+        <Filename Value="src/hmi/hmiscrollbar.pas"/>
+        <UnitName Value="HMIScrollBar"/>
       </Item16>
       <Item17>
-        <Filename Value="src/hmi/hmitrackbar.pas"/>
-        <UnitName Value="HMITrackBar"/>
+        <Filename Value="src/hmi/hmitext.pas"/>
+        <UnitName Value="HMIText"/>
       </Item17>
       <Item18>
-        <Filename Value="src/hmi/hmitypes.pas"/>
-        <UnitName Value="HMITypes"/>
+        <Filename Value="src/hmi/hmitrackbar.pas"/>
+        <UnitName Value="HMITrackBar"/>
       </Item18>
       <Item19>
-        <Filename Value="src/hmi/hmiupdown.pas"/>
-        <UnitName Value="HMIUpDown"/>
+        <Filename Value="src/hmi/hmitypes.pas"/>
+        <UnitName Value="HMITypes"/>
       </Item19>
       <Item20>
-        <Filename Value="src/hmi/hmizones.pas"/>
-        <UnitName Value="HMIZones"/>
+        <Filename Value="src/hmi/hmiupdown.pas"/>
+        <UnitName Value="HMIUpDown"/>
       </Item20>
       <Item21>
-        <Filename Value="src/hmi/ualfakeyboard.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="src/hmi/hmizones.pas"/>
+        <UnitName Value="HMIZones"/>
       </Item21>
       <Item22>
         <Filename Value="src/hmi/ualfakeyboard.pas"/>
         <UnitName Value="ualfakeyboard"/>
       </Item22>
       <Item23>
-        <Filename Value="src/hmi/unumerickeyboard.lfm"/>
+        <Filename Value="src/hmi/ualfakeyboard.lfm"/>
         <Type Value="LFM"/>
       </Item23>
       <Item24>
@@ -115,22 +116,31 @@
         <UnitName Value="unumerickeyboard"/>
       </Item24>
       <Item25>
-        <Filename Value="src/hmi/usrmgnt_login.lfm"/>
+        <Filename Value="src/hmi/unumerickeyboard.lfm"/>
         <Type Value="LFM"/>
       </Item25>
       <Item26>
         <Filename Value="src/hmi/usrmgnt_login.pas"/>
         <UnitName Value="usrmgnt_login"/>
       </Item26>
+      <Item27>
+        <Filename Value="src/hmi/usrmgnt_login.lfm"/>
+        <Type Value="LFM"/>
+      </Item27>
     </Files>
     <Type Value="RunAndDesignTime"/>
-    <RequiredPkgs Count="2">
+    <RequiredPkgs Count="3">
       <Item1>
-        <PackageName Value="IDEIntf"/>
+        <PackageName Value="pascalscada_common"/>
+        <MinVersion Minor="7" Release="3" Valid="True"/>
+        <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item1>
       <Item2>
-        <PackageName Value="LCL"/>
+        <PackageName Value="IDEIntf"/>
       </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

@@ -30,40 +30,43 @@
         <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="8">
+    <RequiredPackages Count="9">
       <Item1>
-        <PackageName Value="fortes324forlaz"/>
-        <MinVersion Major="3" Minor="24" Release="2" Valid="True"/>
+        <PackageName Value="pascalscada_hmi"/>
       </Item1>
       <Item2>
-        <PackageName Value="lazreport"/>
-        <MinVersion Minor="9" Release="8" Valid="True"/>
+        <PackageName Value="fortes324forlaz"/>
+        <MinVersion Major="3" Minor="24" Release="2" Valid="True"/>
       </Item2>
       <Item3>
-        <PackageName Value="TAChartLazarusPkg"/>
-        <MinVersion Major="1" Valid="True"/>
+        <PackageName Value="lazreport"/>
+        <MinVersion Minor="9" Release="8" Valid="True"/>
       </Item3>
       <Item4>
-        <PackageName Value="LCLBase"/>
-        <MinVersion Major="1" Release="1" Valid="True"/>
+        <PackageName Value="TAChartLazarusPkg"/>
+        <MinVersion Major="1" Valid="True"/>
       </Item4>
       <Item5>
-        <PackageName Value="FCL"/>
+        <PackageName Value="LCLBase"/>
         <MinVersion Major="1" Release="1" Valid="True"/>
       </Item5>
       <Item6>
-        <PackageName Value="zcomponent"/>
-        <MinVersion Major="7" Valid="True"/>
+        <PackageName Value="FCL"/>
+        <MinVersion Major="1" Release="1" Valid="True"/>
       </Item6>
       <Item7>
-        <PackageName Value="pascalscada"/>
-        <MinVersion Minor="7" Release="2" Valid="True"/>
+        <PackageName Value="zcomponent"/>
+        <MinVersion Major="7" Valid="True"/>
       </Item7>
       <Item8>
-        <PackageName Value="LCL"/>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Release="2" Valid="True"/>
       </Item8>
+      <Item9>
+        <PackageName Value="LCL"/>
+      </Item9>
     </RequiredPackages>
-    <Units Count="23">
+    <Units Count="24">
       <Unit0>
         <Filename Value="horimetros.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -81,8 +84,8 @@
         <UnitName Value="umain"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="105"/>
-        <CursorPos X="74" Y="106"/>
+        <TopLine Value="196"/>
+        <CursorPos X="63" Y="114"/>
         <ComponentState Value="1"/>
         <UsageCount Value="60"/>
         <Loaded Value="True"/>
@@ -102,13 +105,14 @@
         <Filename Value="udmdb.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="dmdb"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="udmdb"/>
         <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="112"/>
-        <CursorPos X="45" Y="129"/>
+        <TopLine Value="76"/>
+        <CursorPos X="1" Y="95"/>
         <UsageCount Value="60"/>
         <Bookmarks Count="1">
           <Item0 X="3" Y="179" ID="0"/>
@@ -145,11 +149,13 @@
         <ComponentName Value="frmPopup"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="upopuphorimetro"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="37"/>
-        <CursorPos X="15" Y="43"/>
+        <TopLine Value="25"/>
+        <CursorPos X="17" Y="37"/>
         <ComponentState Value="1"/>
         <UsageCount Value="58"/>
+        <Loaded Value="True"/>
       </Unit7>
       <Unit8>
         <Filename Value="../pascalscada/ucrosstimer.pas"/>
@@ -223,12 +229,16 @@
         <Filename Value="ufiltro.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmFiltro"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="ufiltro"/>
+        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="8"/>
         <CursorPos X="24" Y="15"/>
         <UsageCount Value="31"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit16>
       <Unit17>
         <Filename Value="urelatorios.pas"/>
@@ -255,7 +265,7 @@
         <ComponentName Value="frmUsuarios"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="ugerenciamentousuarios"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
         <TopLine Value="10"/>
         <CursorPos X="1" Y="1"/>
@@ -287,8 +297,19 @@
         <CursorPos X="1" Y="53"/>
         <UsageCount Value="10"/>
       </Unit22>
+      <Unit23>
+        <Filename Value="../../zeoslib/src/dbc/ZDbcSqLiteUtils.pas"/>
+        <UnitName Value="ZDbcSqLiteUtils"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="248"/>
+        <CursorPos X="13" Y="258"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit23>
     </Units>
-    <JumpHistory Count="12" HistoryIndex="11">
+    <JumpHistory Count="18" HistoryIndex="17">
       <Position1>
         <Filename Value="umain.pas"/>
         <Caret Line="298" Column="3" TopLine="298"/>
@@ -331,12 +352,36 @@
       </Position10>
       <Position11>
         <Filename Value="udmdb.pas"/>
-        <Caret Line="153" Column="30" TopLine="172"/>
+        <Caret Line="175" Column="7" TopLine="64"/>
       </Position11>
       <Position12>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="175" Column="7" TopLine="64"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="106" Column="74" TopLine="105"/>
       </Position12>
+      <Position13>
+        <Filename Value="upopuphorimetro.pas"/>
+        <Caret Line="43" Column="15" TopLine="37"/>
+      </Position13>
+      <Position14>
+        <Filename Value="umain.pas"/>
+        <Caret Line="106" Column="35" TopLine="94"/>
+      </Position14>
+      <Position15>
+        <Filename Value="umain.pas"/>
+        <Caret Line="1" Column="1" TopLine="1"/>
+      </Position15>
+      <Position16>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="129" Column="45" TopLine="76"/>
+      </Position16>
+      <Position17>
+        <Filename Value="../../zeoslib/src/dbc/ZDbcSqLiteUtils.pas"/>
+        <Caret Line="258" Column="13" TopLine="248"/>
+      </Position17>
+      <Position18>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="87" Column="1" TopLine="76"/>
+      </Position18>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
@@ -363,6 +408,15 @@
     </Other>
   </CompilerOptions>
   <Debugging>
+    <BreakPoints Count="1">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="udmdb.pas"/>
+        <Line Value="87"/>
+      </Item1>
+    </BreakPoints>
     <Exceptions Count="4">
       <Item1>
         <Name Value="EAbort"/>
@@ -378,4 +432,5 @@
       </Item4>
     </Exceptions>
   </Debugging>
+  <EditorMacros Count="0"/>
 </CONFIG>

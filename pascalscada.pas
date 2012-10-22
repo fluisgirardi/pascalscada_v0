@@ -14,13 +14,14 @@ uses
   ProtocolTypes, protscan, protscanupdate, s7family, S7Types, scadapropeditor, 
   scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, tcp_udpport, 
   ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, UserScale, 
-  usrmgnt_login, ustructuremapper, uwesttagbuilder, ValueProcessor, 
-  WestASCIIDriver, LazarusPackageIntf;
+  ustructuremapper, uwesttagbuilder, ValueProcessor, WestASCIIDriver, 
+  LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
+  RegisterUnit('scadareg', @scadareg.Register);
 end;
 
 initialization

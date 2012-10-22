@@ -6,16 +6,17 @@ object dmdb: Tdmdb
   VerticalOffset = 107
   Width = 528
   object SQLiteConnection: TZConnection
-    Connected = True
-    Protocol = 'sqlite-3'
+    UTF8StringsAsWideField = False
+    PreprepareSQL = False
+    Port = 0
     Database = '/home/fabiolg/desenvolvimento/horimetros/historicos.db3'
+    Protocol = 'sqlite-3'
     left = 8
     top = 8
   end
   object AlarmesAtivos: TZQuery
     Connection = SQLiteConnection
     OnCalcFields = AlarmesAtivosCalcFields
-    Active = True
     SQL.Strings = (
       'SELECT * FROM tbl_alarme a, tbl_equipamento e WHERE e.id_equipamento=a.cd_equipamento and a.dt_fim IS NULL ORDER BY a.dt_inicio DESC;'
     )
@@ -112,7 +113,6 @@ object dmdb: Tdmdb
     Connection = SQLiteConnection
     BeforePost = ZTable1BeforePost
     BeforeDelete = ZTable1BeforeDelete
-    Active = True
     TableName = 'usuarios'
     left = 152
     top = 8

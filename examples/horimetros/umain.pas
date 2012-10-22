@@ -103,7 +103,7 @@ var
 
 implementation
 
-uses udmdb, udm, upopuphorimetro, ulogin, ugraficos, ufiltro, urelatorios;
+uses udmdb, udm, upopuphorimetro, ugraficos, ufiltro, urelatorios;
 
 {$R *.lfm}
 
