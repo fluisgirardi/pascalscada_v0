@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um controle em forma de TrackBar para a leitura/escrita

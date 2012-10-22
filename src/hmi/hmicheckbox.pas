@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um controle CheckBox ligado a um Tag.)

@@ -4,7 +4,7 @@
     {$IFEND}
     {$DEFINE SUPPORT_EXTENDED_POINTER_OPERATION}
   {$ELSE}
-    {$I delphiver.inc}
+    {$I ../common/delphiver.inc}
 
     {$DEFINE NEED_PTRINT}
 	  {$DEFINE NEED_TRESOLVERRESPONSE}

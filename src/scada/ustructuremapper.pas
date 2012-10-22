@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit do formulário assistente de criação de estruturas do tag TPLCStruct.)

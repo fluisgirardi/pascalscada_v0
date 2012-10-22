@@ -147,3 +147,9 @@ Delphi versions:
 {$DEFINE DELPHI_XE_UP}
 {$DEFINE DELPHI_XE2_UP}
 {$ENDIF}
+
+{$IFNDEF FPC}
+  {$IFNDEF DELPHI2009_UP}
+    {$MESSAGE ERROR 'Only Delphi 2009 or later are supported!' }
+  {$ENDIF}
+{$ENDIF}

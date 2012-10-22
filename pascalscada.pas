@@ -7,27 +7,20 @@ unit pascalscada;
 interface
 
 uses
-  BasicUserManagement, CommPort, commtypes, ControlSecurityManager, 
-  crc16utils, crossdatetime, CrossEvent, crosskeyevents, 
-  CustomizedUserManagement, HMIAnimation, HMIButton, HMICheckBox, 
-  HMIControlDislocatorAnimation, HMIEdit, HMILabel, HMIProgressBar, 
-  hmipropeditor, HMIRadioButton, HMIRadioGroup, HMIScrollBar, HMIText, 
-  HMITrackBar, HMITypes, HMIUpDown, HMIZones, hsstrings, hsutils, IBoxDriver, 
-  ISOTCPDriver, lazlclversion, LinearScaleProcessor, MessageSpool, 
-  ModBusDriver, ModBusSerial, ModBusTCP, OPCDAProtocol, pascalScadaMTPCPU, 
+  CommPort, commtypes, crc16utils, IBoxDriver, ISOTCPDriver, 
+  LinearScaleProcessor, ModBusDriver, ModBusSerial, ModBusTCP, OPCDAProtocol, 
   PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, 
   PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, ProtocolDriver, 
   ProtocolTypes, protscan, protscanupdate, s7family, S7Types, scadapropeditor, 
   scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, tcp_udpport, 
-  ubitmapper, uelementmapper, uModbusTagBuilder, unumerickeyboard, 
-  us7tagbuilder, UserScale, usrmgnt_login, ustructuremapper, uwesttagbuilder, 
-  ValueProcessor, WestASCIIDriver, LazarusPackageIntf;
+  ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, UserScale, 
+  usrmgnt_login, ustructuremapper, uwesttagbuilder, ValueProcessor, 
+  WestASCIIDriver, LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
-  RegisterUnit('scadareg', @scadareg.Register);
 end;
 
 initialization

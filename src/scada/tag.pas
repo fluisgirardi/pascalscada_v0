@@ -1,4 +1,4 @@
-﻿{$i language.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação da base de todos os tags.)

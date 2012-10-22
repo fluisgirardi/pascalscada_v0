@@ -1,5 +1,5 @@
-{$i language.inc}
-{$i delphiver.inc}
+{$i ../common/language.inc}
+{$I ../common/delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)

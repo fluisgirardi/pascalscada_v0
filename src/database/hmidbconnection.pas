@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   Unit que implementa a classe de conexão a vários sistemas gerenciadores de

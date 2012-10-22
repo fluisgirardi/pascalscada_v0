@@ -12,7 +12,7 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  **********************************************************************}
-{$i language.inc}
+{$i ../common/language.inc}
 unit pascalScadaMTPCPU;
 
 {$IFDEF FPC}

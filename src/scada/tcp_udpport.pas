@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um socket TCP/UDP sobre IP cliente.)
@@ -19,7 +19,7 @@ unit tcp_udpport;
 {$ENDIF}
 {$ENDIF}
 
-{$I delphiver.inc}
+{$I ../common/delphiver.inc}
 
 interface
 

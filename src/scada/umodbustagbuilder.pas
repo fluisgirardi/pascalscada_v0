@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 //: Unit do assistente Modbus TagBuilder.
 {$ELSE}

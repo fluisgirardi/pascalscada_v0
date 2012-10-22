@@ -40,7 +40,7 @@
 //--- Delphi versions                                ---
 //------------------------------------------------------
 
-{$i delphiver.inc}
+{$I ../common/delphiver.inc}
 
 {$ifndef DELPHI2009_UP}          //	Delphi 1.0
   #ERROR tDbf needs Delphi 2009 minimum.

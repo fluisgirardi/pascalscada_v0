@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 

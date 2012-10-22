@@ -1,4 +1,4 @@
-{$I delphiver.inc}
+{$I ../common/delphiver.inc}
 unit WinCCUserManagement;
 
 interface

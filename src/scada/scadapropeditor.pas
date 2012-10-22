@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação dos editores de algumas propriedades de componentes
@@ -17,12 +17,13 @@ unit scadapropeditor;
 {$MODE Delphi}
 {$ENDIF}
 
-{$I delphiver.inc}
+{$I ../common/delphiver.inc}
 
 interface
 
 uses
-  Classes, SysUtils, SerialPort, PLCBlockElement,
+  Classes, SysUtils, SerialPort, PLCBlockElement, PLCNumber, PLCBlock,
+  PLCStruct, Tag, ProtocolDriver,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -31,7 +32,7 @@ uses
   {$IFEND}
   
   {$IFDEF FPC}
-    PropEdits;
+    PropEdits, ComponentEditors, lazlclversion;
   {$ELSE}
     Types,
     //Delphi 6 ou superior
@@ -66,6 +67,109 @@ type
   public
     function  GetAttributes: TPropertyAttributes; override;
     procedure GetValues(Proc: TGetStrProc); override;
+  end;
+
+  {$IFNDEF FPC}
+  //: @exclude
+  TDefaultComponentEditor = class(TComponentEditor);
+  {$ENDIF}
+
+  {$IFDEF PORTUGUES}
+  {:
+    Editor de componente base para todos os demais editores que irão inserir
+    componentes na aplicação.
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ELSE}
+  {:
+    Base class of Component editor for all component editors that will insert
+    others componentes in application.
+    @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
+  TInsertTagsOnFormComponentEditor = class(TDefaultComponentEditor)
+  protected
+    procedure AddTagInEditor(Tag:TTag);
+    function  CreateComponent(tagclass:TComponentClass):TComponent;
+    function  GetTheOwner:TComponent; virtual;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Editor de componente TagBuilder.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ELSE}
+  {:
+  TagBuilder component editor tool.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ENDIF}
+  TTagBuilderComponentEditor = class(TInsertTagsOnFormComponentEditor)
+  private
+    procedure OpenTagBuilder;
+  protected
+    function GetTheOwner: TComponent; override;
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function  GetVerb(Index: Integer): string; override;
+    function  GetVerbCount: Integer; override;
+    function  ProtocolDriver: TProtocolDriver; virtual;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Editor de componente BitMapper. Mapeia bits de um tag.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ELSE}
+  {:
+  BitMapper component editor tool. Map bits of a tag.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ENDIF}
+  TTagBitMapperComponentEditor = class(TInsertTagsOnFormComponentEditor)
+  private
+    procedure OpenBitMapper;
+  protected
+    function GetTheOwner: TComponent; override;
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
+    function NumericTag: TPLCNumber; virtual;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Editor de componente BlockElementMapper. Mapeia elementos de um tag bloco.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ELSE}
+  {:
+  BlockElementMapper component editor tool. Map elements of a tag block.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  @seealso(TInsertTagsOnFormComponentEditor)
+  }
+  {$ENDIF}
+  TBlockElementMapperComponentEditor = class(TInsertTagsOnFormComponentEditor)
+  private
+    procedure OpenElementMapper;
+  protected
+    function GetTheOwner: TComponent; override;
+  public
+    procedure ExecuteVerb(Index: Integer); override;
+    {$if declared(has_customhints)}
+    function GetCustomHint: String; override;
+    {$ifend}
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
+    function Block: TPLCBlock; virtual;
   end;
 
 implementation
@@ -153,6 +257,162 @@ begin
   Result := [paMultiSelect];
 end;}
 
+///////////////////////////////////////
+//editor base para os demais editores.
+///////////////////////////////////////
+procedure TInsertTagsOnFormComponentEditor.AddTagInEditor(Tag:TTag);
+{$IFDEF FPC}
+var
+  Hook: TPropertyEditorHook;
+{$ENDIF}
+begin
+{$IFDEF FPC}
+  Hook:=nil;
+  if not GetHook(Hook) then exit;
+  Hook.PersistentAdded(Tag,false);
+  Modified;
+{$ELSE}
+  Designer.Modified;
+{$ENDIF}
+end;
+
+function  TInsertTagsOnFormComponentEditor.CreateComponent(tagclass:TComponentClass):TComponent;
+begin
+  {$IFDEF FPC}
+    Result := tagclass.Create(GetTheOwner);
+  {$ELSE}
+    Result := Designer.CreateComponent(tagclass,GetTheOwner,0,0,0,0);
+  {$ENDIF}
+end;
+
+function TInsertTagsOnFormComponentEditor.GetTheOwner:TComponent;
+begin
+  Result:=nil;
+end;
+
+///////////////////////////////////////
+//editor TAG BUILDER
+///////////////////////////////////////
+
+function  TTagBuilderComponentEditor.GetTheOwner: TComponent;
+begin
+  Result:=ProtocolDriver.Owner;
+end;
+
+procedure TTagBuilderComponentEditor.OpenTagBuilder;
+begin
+  ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
+end;
+
+procedure TTagBuilderComponentEditor.ExecuteVerb(Index: Integer);
+begin
+  if Index=0 then
+    OpenTagBuilder();
+end;
+
+function TTagBuilderComponentEditor.GetVerb(Index: Integer): string;
+begin
+  if Index=0 then
+    Result:='Tag Builder';
+end;
+
+function TTagBuilderComponentEditor.GetVerbCount: Integer;
+begin
+  Result:=1;
+end;
+
+function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
+begin
+  Result:=TProtocolDriver(GetComponent);
+end;
+
+///////////////////////////////////////////////////////////////////////////////
+// BIT MAPPER
+///////////////////////////////////////////////////////////////////////////////
+
+function TTagBitMapperComponentEditor.GetTheOwner: TComponent;
+begin
+  Result:=NumericTag.Owner;
+end;
+
+procedure TTagBitMapperComponentEditor.OpenBitMapper;
+begin
+  NumericTag.OpenBitMapper(NumericTag, AddTagInEditor, CreateComponent);
+end;
+
+procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: Integer);
+begin
+  if Index=0 then
+    OpenBitMapper();
+end;
+
+function  TTagBitMapperComponentEditor.GetVerb(Index: Integer): string;
+begin
+  if Index=0 then
+    Result:='Map bits...';
+end;
+
+function  TTagBitMapperComponentEditor.GetVerbCount: Integer;
+begin
+  Result:=1;
+end;
+
+function  TTagBitMapperComponentEditor.NumericTag: TPLCNumber;
+begin
+  Result:=TPLCNumber(GetComponent);
+end;
+
+///////////////////////////////////////////////////////////////////////////////
+// ELEMENT BLOCK MAPPER
+///////////////////////////////////////////////////////////////////////////////
+
+function  TBlockElementMapperComponentEditor.GetTheOwner: TComponent;
+begin
+  Result:=Block.Owner;
+end;
+
+procedure TBlockElementMapperComponentEditor.OpenElementMapper;
+begin
+  Block.OpenElementMapper(Block, AddTagInEditor, CreateComponent);
+end;
+
+procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: Integer);
+begin
+  if Index=0 then
+    OpenElementMapper();
+end;
+
+{$if declared(has_customhints)}
+function TBlockElementMapperComponentEditor.GetCustomHint: String;
+begin
+  Result:='';
+  if Block is TPLCStruct then
+    Result:=Result+'Structure size in bytes:'+IntToStr(TPLCStruct(Block).Size)
+  else
+    Result:=Result+'Block size:'+IntToStr(Block.Size);
+end;
+{$ifend}
+
+function  TBlockElementMapperComponentEditor.GetVerb(Index: Integer): string;
+begin
+  if Index=0 then begin
+    if Block is TPLCStruct then
+      Result:='Map structure items...'
+    else
+      Result:='Map block elements...';
+  end;
+end;
+
+function  TBlockElementMapperComponentEditor.GetVerbCount: Integer;
+begin
+  Result:=1;
+end;
+
+function  TBlockElementMapperComponentEditor.Block:TPLCBlock;
+begin
+  Result:=TPLCBlock(GetComponent);
+end;
+
 
 end.
-
+

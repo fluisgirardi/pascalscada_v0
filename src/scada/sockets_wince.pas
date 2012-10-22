@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 //: Implementa funções de socket para Windows CE.
 {$ELSE}

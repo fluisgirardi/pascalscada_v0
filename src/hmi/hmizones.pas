@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Unit de coleções de zonas gráficas e de texto.)
@@ -18,7 +18,8 @@ unit HMIZones;
 
 interface
 
-uses Classes, SysUtils, hsutils, Controls, Graphics {$IFNDEF FPC}, StdCtrls{$ENDIF};
+uses Classes, SysUtils, hsutils, Controls, Graphics, collections
+  {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type
   {$IFDEF PORTUGUES}
@@ -289,20 +290,6 @@ type
      property ZoneType:TZoneTypes read FZoneType write SetZoneType;
   end;
 
-  {$IFDEF PORTUGUES}
-  {:
-  Evento chamado quando é necessário saber o atual estado do componente.
-  @seealso(TZones)
-  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-  }
-  {$ELSE}
-  {:
-  Procedure used to return the current state of the owner component.
-  @seealso(TZones)
-  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-  }
-  {$ENDIF}
-  TNeedCompStateEvent = procedure(var CurState:TComponentState) of object;
 
   {$IFDEF PORTUGUES}
   {:

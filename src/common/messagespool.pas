@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
  @abstract(Unit que implementa o enfileiramento de mensagens internas do programa,

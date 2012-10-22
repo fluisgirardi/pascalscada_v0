@@ -1,4 +1,4 @@
-{$i language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementa uma coleção de tags.)
@@ -19,7 +19,8 @@ unit tagcollection;
 interface
 
 uses
-  Classes, SysUtils, PLCTag, HMIZones, ProtocolTypes, Tag;
+  Classes, SysUtils, PLCTag, ProtocolTypes, Tag, collections
+  {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type
   {$IFDEF PORTUGUES}
@@ -310,7 +311,7 @@ var
    i:Integer;
 begin
   for i:=0 to Count-1 do
-    TZone(Items[i]).Loaded;
+    TTagCollectionItem(Items[i]).Loaded;
 end;
 
 end.
