@@ -9,6 +9,11 @@
         <OtherUnitFiles Value="src/hmi"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Parsing>
+        <SyntaxOptions>
+          <SyntaxMode Value="Delphi"/>
+        </SyntaxOptions>
+      </Parsing>
       <Other>
         <CompilerMessages>
           <MsgFileName Value=""/>
@@ -129,18 +134,23 @@
       </Item27>
     </Files>
     <Type Value="RunAndDesignTime"/>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="4">
       <Item1>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Release="3" Valid="True"/>
+        <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
+      </Item1>
+      <Item2>
         <PackageName Value="pascalscada_common"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
-      </Item1>
-      <Item2>
-        <PackageName Value="IDEIntf"/>
       </Item2>
       <Item3>
-        <PackageName Value="LCL"/>
+        <PackageName Value="IDEIntf"/>
       </Item3>
+      <Item4>
+        <PackageName Value="LCL"/>
+      </Item4>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
@@ -148,5 +158,8 @@
     <PublishOptions>
       <Version Value="2"/>
     </PublishOptions>
+    <CustomOptions Items="ExternHelp" Version="2">
+      <_ExternHelp Items="Count"/>
+    </CustomOptions>
   </Package>
 </CONFIG>
