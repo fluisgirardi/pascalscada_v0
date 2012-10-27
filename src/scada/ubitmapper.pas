@@ -49,7 +49,7 @@ var
 implementation
 
 {$IFNDEF FPC}
-  {$R *.dfm}
+  {$R ../../src/scada/ubitmapper.dfm}
 {$ELSE}
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
     {$R ubitmapper.lfm}

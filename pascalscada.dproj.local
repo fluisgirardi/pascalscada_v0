@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
-  <Transactions>
+	<Transactions>
     <Transaction>2012/10/27 18:41:51.245.pas,C:\pascalscada\src\scada\scadaapp.pas=</Transaction>
     <Transaction>2012/10/27 18:42:14.788.pas,C:\pascalscada\src\scada\sockets_unix.pas=</Transaction>
     <Transaction>2012/10/27 18:42:14.806.pas,C:\pascalscada\src\scada\sockets_w32_w64.pas=</Transaction>

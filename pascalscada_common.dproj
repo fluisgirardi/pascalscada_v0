@@ -47,7 +47,6 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
-			<DCCReference Include="pascalscada.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="VclSmp.dcp"/>
 			<DCCReference Include="vclx.dcp"/>
@@ -61,8 +60,8 @@
 			<DCCReference Include="src\common\crossevent.pas"/>
 			<DCCReference Include="src\common\hsstrings.pas"/>
 			<DCCReference Include="src\common\hsutils.pas"/>
-			<DCCReference Include="src\common\lazlclversion.pas"/>
 			<DCCReference Include="src\common\messagespool.pas"/>
+			<DCCReference Include="src\common\pscada_common.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

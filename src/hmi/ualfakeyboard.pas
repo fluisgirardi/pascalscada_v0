@@ -1,12 +1,14 @@
 unit ualfakeyboard;
 
-{$mode objfpc}{$H+}
+{$IFDEF FPC}
+{$mode delphi}
+{$ENDIF}
 
 interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Buttons, ExtCtrls,
-  crosskeyevents;
+  crosskeyevents, pscada_common;
 
 type
 
@@ -130,13 +132,19 @@ var
 
 implementation
 
-uses strutils, keyboard
-     {$IFDEF FPC}, LResources, LCLIntf, LCLType{$ENDIF}
-     {$IFDEF WINDOWS}
+uses strutils
+     {$IFDEF FPC}, keyboard, LResources, LCLIntf, LCLType{$ENDIF}
+     {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64) or defined(MSWINDOWS)}
      , windows
-     {$ENDIF};
+     {$IFEND};
 
-{$R *.lfm}
+{$IFNDEF FPC}
+  {$R *.dfm}
+{$ELSE}
+  {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
+    {$R ualfakeyboard.lfm}
+  {$IFEND}
+{$ENDIF}
 
 { TForm1 }
 
@@ -332,6 +340,7 @@ begin
         CurrentState:=CurrentState+[ssCtrl];
         TSpeedButton(Sender).Down:=true;
       end;
+    {$IFDEF FPC}
     4:
       if ssAltGr in CurrentState then begin
         CurrentState:=CurrentState-[ssAltGr];
@@ -341,6 +350,7 @@ begin
         CurrentState:=CurrentState+[ssAltGr];
         TSpeedButton(Sender).Down:=true;
       end;
+    {$ENDIF}
   end;
   Fkeyboard.Apply(CurrentState);
   x.Destroy;

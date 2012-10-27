@@ -27,7 +27,6 @@ package pascalscada_hmi;
 requires
   rtl,
   vcl,
-  pascalscada,
   dbrtl,
   VclSmp,
   vclx,
@@ -42,7 +41,6 @@ contains
   crosskeyevents in 'src\hmi\crosskeyevents.pas',
   customizedusermanagement in 'src\hmi\customizedusermanagement.pas',
   hmianimation in 'src\hmi\hmianimation.pas',
-  hmibutton in 'src\hmi\hmibutton.pas',
   hmicheckbox in 'src\hmi\hmicheckbox.pas',
   hmicontroldislocatoranimation in 'src\hmi\hmicontroldislocatoranimation.pas',
   hmiedit in 'src\hmi\hmiedit.pas',
@@ -58,8 +56,8 @@ contains
   hmitypes in 'src\hmi\hmitypes.pas',
   hmiupdown in 'src\hmi\hmiupdown.pas',
   hmizones in 'src\hmi\hmizones.pas',
-  ualfakeyboard in 'src\hmi\ualfakeyboard.pas',
   unumerickeyboard in 'src\hmi\unumerickeyboard.pas' {NumericKeyBoard},
-  usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication};
+  usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication},
+  ualfakeyboard in 'src\hmi\ualfakeyboard.pas' {Form1};
 
 end.

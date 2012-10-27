@@ -26,7 +26,6 @@ package pascalscada_common;
 
 requires
   rtl,
-  pascalscada,
   dbrtl,
   VclSmp,
   vclx,
@@ -42,7 +41,7 @@ contains
   crossevent in 'src\common\crossevent.pas',
   hsstrings in 'src\common\hsstrings.pas',
   hsutils in 'src\common\hsutils.pas',
-  lazlclversion in 'src\common\lazlclversion.pas',
-  messagespool in 'src\common\messagespool.pas';
+  messagespool in 'src\common\messagespool.pas',
+  pscada_common in 'src\common\pscada_common.pas';
 
 end.

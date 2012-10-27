@@ -12,5 +12,8 @@
     <Transaction>2012/10/27 18:06:07.404.pas,C:\pascalscada\src\common\lazlclversion.pas=</Transaction>
     <Transaction>2012/10/27 18:06:07.419.pas,C:\pascalscada\src\common\messagespool.pas=</Transaction>
     <Transaction>2012/10/27 18:06:07.419.pas,C:\pascalscada\src\common\pascalScadaMTPCPU.pas=</Transaction>
+    <Transaction>2012/10/27 19:53:13.526.pas,C:\pascalscada\src\common\lazlclversion.pas=</Transaction>
+    <Transaction>2012/10/27 20:08:29.014.pas,C:\pascalscada\Unit1.pas=C:\pascalscada\pscada_common.pas</Transaction>
+    <Transaction>2012/10/27 20:10:45.802.pas,C:\pascalscada\pscada_common.pas=</Transaction>
   </Transactions>
 </BorlandProject>

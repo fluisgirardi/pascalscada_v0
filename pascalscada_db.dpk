@@ -33,8 +33,7 @@ requires
   vclactnband,
   xmlrtl,
   designide,
-  zeoslib_pascalscada,
-  pascalscada;
+  zeoslib_pascalscada;
 
 contains
   pscada_dbreg in 'src\database\pscada_dbreg.pas',

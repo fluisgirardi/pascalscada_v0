@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
-  <Transactions>
+	<Transactions>
     <Transaction>2012/10/27 18:06:53.261.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\Package1.dproj=C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_hmi.dproj</Transaction>
     <Transaction>2012/10/27 18:07:05.745.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_hmi.dproj=C:\pascalscada\pascalscada_hmi.dproj</Transaction>
+    <Transaction>2012/10/27 19:50:34.840.pas,C:\pascalscada\src\hmi\hmibutton.pas=</Transaction>
+    <Transaction>2012/10/27 20:34:46.265.pas,C:\pascalscada\src\hmi\ualfakeyboard.pas=</Transaction>
+    <Transaction>2012/10/27 20:34:46.265.dfm,C:\pascalscada\src\hmi\ualfakeyboard.dfm=</Transaction>
   </Transactions>
 </BorlandProject>
