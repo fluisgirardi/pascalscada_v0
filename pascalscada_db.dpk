@@ -37,8 +37,9 @@ requires
   pascalscada;
 
 contains
-  dbstructurechecker in 'dbstructurechecker.pas',
-  fpsbufdataset in 'fpsbufdataset.pas',
-  hmidbconnection in 'hmidbconnection.pas';
+  pscada_dbreg in 'src\database\pscada_dbreg.pas',
+  psbufdataset in 'src\database\psbufdataset.pas',
+  dbstructurechecker in 'src\database\dbstructurechecker.pas',
+  hmidbconnection in 'src\database\hmidbconnection.pas';
 
 end.

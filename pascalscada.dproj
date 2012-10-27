@@ -60,83 +60,71 @@
 			<DCCReference Include="vclx.dcp"/>
 			<DCCReference Include="VclSmp.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>
-			<DCCReference Include="commport.pas"/>
-			<DCCReference Include="commtypes.pas"/>
-			<DCCReference Include="serialport.pas"/>
-			<DCCReference Include="protocoldriver.pas"/>
-			<DCCReference Include="plcmemorymanager.pas"/>
-			<DCCReference Include="hsutils.pas"/>
-			<DCCReference Include="plctag.pas"/>
-			<DCCReference Include="tag.pas"/>
-			<DCCReference Include="plcnumber.pas"/>
-			<DCCReference Include="valueprocessor.pas"/>
-			<DCCReference Include="protocoltypes.pas"/>
-			<DCCReference Include="plctagnumber.pas"/>
-			<DCCReference Include="LinearScaleProcessor.pas"/>
-			<DCCReference Include="hsstrings.pas"/>
-			<DCCReference Include="messagespool.pas"/>
-			<DCCReference Include="TagBlock.pas"/>
-			<DCCReference Include="PLCBlock.pas"/>
-			<DCCReference Include="PLCBlockElement.pas"/>
-			<DCCReference Include="PLCString.pas"/>
-			<DCCReference Include="crossevent.pas"/>
-			<DCCReference Include="UserScale.pas"/>
-			<DCCReference Include="scadapropeditor.pas"/>
-			<DCCReference Include="hmianimation.pas"/>
-			<DCCReference Include="HMICheckBox.pas"/>
-			<DCCReference Include="HMIEdit.pas"/>
-			<DCCReference Include="HMILabel.pas"/>
-			<DCCReference Include="HMIProgressBar.pas"/>
-			<DCCReference Include="hmipropeditor.pas"/>
-			<DCCReference Include="HMIRadioButton.pas"/>
-			<DCCReference Include="hmiradiogroup.pas"/>
-			<DCCReference Include="hmiscrollbar.pas"/>
-			<DCCReference Include="hmitext.pas"/>
-			<DCCReference Include="HMITrackBar.pas"/>
-			<DCCReference Include="HMITypes.pas"/>
-			<DCCReference Include="HMIUpDown.pas"/>
-			<DCCReference Include="HMIZones.pas"/>
-			<DCCReference Include="scadareg.pas"/>
-			<DCCReference Include="crc16utils.pas"/>
-			<DCCReference Include="tagbit.pas"/>
-			<DCCReference Include="protscan.pas"/>
-			<DCCReference Include="protscanupdate.pas"/>
-			<DCCReference Include="westasciidriver.pas"/>
-			<DCCReference Include="iboxdriver.pas"/>
-			<DCCReference Include="tcp_udpport.pas"/>
-			<DCCReference Include="modbustcp.pas"/>
-			<DCCReference Include="modbusdriver.pas"/>
-			<DCCReference Include="modbusserial.pas"/>
-			<DCCReference Include="umodbustagbuilder.pas">
-				<Form>frmModbusTagBuilder</Form>
-			</DCCReference>
-			<DCCReference Include="plcstruct.pas"/>
-			<DCCReference Include="plcstructelement.pas"/>
-			<DCCReference Include="s7types.pas"/>
-			<DCCReference Include="tagcollection.pas"/>
-			<DCCReference Include="isotcpdriver.pas"/>
-			<DCCReference Include="s7family.pas"/>
-			<DCCReference Include="ubitmapper.pas">
+			<DCCReference Include="inet.dcp"/>
+			<DCCReference Include="src\scada\westasciidriver.pas"/>
+			<DCCReference Include="src\scada\commport.pas"/>
+			<DCCReference Include="src\scada\commtypes.pas"/>
+			<DCCReference Include="src\scada\crc16utils.pas"/>
+			<DCCReference Include="src\scada\iboxdriver.pas"/>
+			<DCCReference Include="src\scada\isotcpdriver.pas"/>
+			<DCCReference Include="src\scada\linearscaleprocessor.pas"/>
+			<DCCReference Include="src\scada\modbusdriver.pas"/>
+			<DCCReference Include="src\scada\modbusserial.pas"/>
+			<DCCReference Include="src\scada\modbustcp.pas"/>
+			<DCCReference Include="src\scada\opcdaprotocol.pas"/>
+			<DCCReference Include="src\scada\plcblock.pas"/>
+			<DCCReference Include="src\scada\plcblockelement.pas"/>
+			<DCCReference Include="src\scada\plcmemorymanager.pas"/>
+			<DCCReference Include="src\scada\plcnumber.pas"/>
+			<DCCReference Include="src\scada\plcstring.pas"/>
+			<DCCReference Include="src\scada\plcstruct.pas"/>
+			<DCCReference Include="src\scada\plcstructelement.pas"/>
+			<DCCReference Include="src\scada\plctag.pas"/>
+			<DCCReference Include="src\scada\plctagnumber.pas"/>
+			<DCCReference Include="src\scada\protocoldriver.pas"/>
+			<DCCReference Include="src\scada\protocoltypes.pas"/>
+			<DCCReference Include="src\scada\protscan.pas"/>
+			<DCCReference Include="src\scada\protscanupdate.pas"/>
+			<DCCReference Include="src\scada\psOPC_AE.pas"/>
+			<DCCReference Include="src\scada\psOPCCOMN.pas"/>
+			<DCCReference Include="src\scada\psOPCDA.pas"/>
+			<DCCReference Include="src\scada\psOPCenum.pas"/>
+			<DCCReference Include="src\scada\psOPCerror.pas"/>
+			<DCCReference Include="src\scada\psOPCHDA.pas"/>
+			<DCCReference Include="src\scada\psOPCSEC.pas"/>
+			<DCCReference Include="src\scada\psOPCtypes.pas"/>
+			<DCCReference Include="src\scada\psOPCutils.pas"/>
+			<DCCReference Include="src\scada\s7family.pas"/>
+			<DCCReference Include="src\scada\s7types.pas"/>
+			<DCCReference Include="src\scada\scadapropeditor.pas"/>
+			<DCCReference Include="src\scada\scadareg.pas"/>
+			<DCCReference Include="src\scada\serialport.pas"/>
+			<DCCReference Include="src\scada\socket_types.pas"/>
+			<DCCReference Include="src\scada\tag.pas"/>
+			<DCCReference Include="src\scada\tagbit.pas"/>
+			<DCCReference Include="src\scada\tagblock.pas"/>
+			<DCCReference Include="src\scada\tagcollection.pas"/>
+			<DCCReference Include="src\scada\tcp_udpport.pas"/>
+			<DCCReference Include="src\scada\ubitmapper.pas">
 				<Form>frmBitMapper</Form>
 			</DCCReference>
-			<DCCReference Include="hmicontroldislocatoranimation.pas"/>
-			<DCCReference Include="uelementmapper.pas">
+			<DCCReference Include="src\scada\uelementmapper.pas">
 				<Form>frmMapElements</Form>
 			</DCCReference>
-			<DCCReference Include="uwesttagbuilder.pas">
-				<Form>WestTagBuilder</Form>
+			<DCCReference Include="src\scada\umodbustagbuilder.pas">
+				<Form>frmModbusTagBuilder</Form>
 			</DCCReference>
-			<DCCReference Include="unumerickeyboard.pas">
-				<Form>NumericKeyBoard</Form>
-			</DCCReference>
-			<DCCReference Include="crosskeyevents.pas"/>
-			<DCCReference Include="us7tagbuilder.pas">
+			<DCCReference Include="src\scada\us7tagbuilder.pas">
 				<Form>frmS7TagBuilder</Form>
 			</DCCReference>
-			<DCCReference Include="ustructuremapper.pas">
+			<DCCReference Include="src\scada\userscale.pas"/>
+			<DCCReference Include="src\scada\ustructuremapper.pas">
 				<Form>frmStructureEditor</Form>
 			</DCCReference>
-			<DCCReference Include="customizedusermanagement.pas"/>
+			<DCCReference Include="src\scada\uwesttagbuilder.pas">
+				<Form>WestTagBuilder</Form>
+			</DCCReference>
+			<DCCReference Include="src\scada\valueprocessor.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

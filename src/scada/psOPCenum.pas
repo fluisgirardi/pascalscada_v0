@@ -194,7 +194,11 @@ begin
   if Succeeded(HR) then
   begin
     repeat
+      {$IFDEF FPC}
       HR := EnumGUID.Next(1, CLSID, @Fetched);
+      {$ELSE}
+      HR := EnumGUID.Next(1, CLSID, Fetched);
+      {$ENDIF}
       if Succeeded(HR) and (Fetched = 1) then
       begin
         if Succeeded(

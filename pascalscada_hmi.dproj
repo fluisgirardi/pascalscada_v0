@@ -47,6 +47,43 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="pascalscada.dcp"/>
+			<DCCReference Include="dbrtl.dcp"/>
+			<DCCReference Include="VclSmp.dcp"/>
+			<DCCReference Include="vclx.dcp"/>
+			<DCCReference Include="vclactnband.dcp"/>
+			<DCCReference Include="xmlrtl.dcp"/>
+			<DCCReference Include="designide.dcp"/>
+			<DCCReference Include="src\hmi\winccusermanagement.pas"/>
+			<DCCReference Include="src\hmi\basicusermanagement.pas"/>
+			<DCCReference Include="src\hmi\controlsecuritymanager.pas"/>
+			<DCCReference Include="src\hmi\crosskeyevents.pas"/>
+			<DCCReference Include="src\hmi\customizedusermanagement.pas"/>
+			<DCCReference Include="src\hmi\hmianimation.pas"/>
+			<DCCReference Include="src\hmi\hmibutton.pas"/>
+			<DCCReference Include="src\hmi\hmicheckbox.pas"/>
+			<DCCReference Include="src\hmi\hmicontroldislocatoranimation.pas"/>
+			<DCCReference Include="src\hmi\hmiedit.pas"/>
+			<DCCReference Include="src\hmi\hmilabel.pas"/>
+			<DCCReference Include="src\hmi\hmiprogressbar.pas"/>
+			<DCCReference Include="src\hmi\hmipropeditor.pas"/>
+			<DCCReference Include="src\hmi\hmiradiobutton.pas"/>
+			<DCCReference Include="src\hmi\hmiradiogroup.pas"/>
+			<DCCReference Include="src\hmi\hmiregister.pas"/>
+			<DCCReference Include="src\hmi\hmiscrollbar.pas"/>
+			<DCCReference Include="src\hmi\hmitext.pas"/>
+			<DCCReference Include="src\hmi\hmitrackbar.pas"/>
+			<DCCReference Include="src\hmi\hmitypes.pas"/>
+			<DCCReference Include="src\hmi\hmiupdown.pas"/>
+			<DCCReference Include="src\hmi\hmizones.pas"/>
+			<DCCReference Include="src\hmi\ualfakeyboard.pas"/>
+			<DCCReference Include="src\hmi\unumerickeyboard.pas">
+				<Form>NumericKeyBoard</Form>
+			</DCCReference>
+			<DCCReference Include="src\hmi\usrmgnt_login.pas">
+				<Form>frmUserAuthentication</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

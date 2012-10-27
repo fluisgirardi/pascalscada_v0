@@ -14,7 +14,7 @@ uses
 //{$IF CompilerVersion >= 14}
   Variants,
 //{$IFEND}
-  Windows, ActiveX, OPCtypes, psOPCDA;
+  Windows, ActiveX, psOPCtypes, psOPCDA;
 
 function ServerAddGroup(ServerIf: IOPCServer; Name: string; Active: BOOL;
           UpdateRate: DWORD; ClientHandle: OPCHANDLE; var GroupIf: IOPCItemMgt;
@@ -24,11 +24,12 @@ function GroupAddItem(GroupIf: IOPCItemMgt; ItemID: string;
           var ServerHandle: OPCHANDLE; var CanonicalType: TVarType): HResult;
 function GroupRemoveItem(GroupIf: IOPCItemMgt;
           ServerHandle: OPCHANDLE): HResult;
+
 function GroupAdviseTime(GroupIf: IUnknown; Sink: IAdviseSink;
-          var AsyncConnection: Longword): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
 function GroupUnAdvise(GroupIf: IUnknown; AsyncConnection: Longint): HResult;
 function GroupAdvise2(GroupIf: IUnknown; OPCDataCallback: IOPCDataCallback;
-          var AsyncConnection: Longword): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
 function GroupUnadvise2(GroupIf: IUnknown;
           var AsyncConnection: Longword): HResult;
 function ReadOPCGroupItemValue(GroupIf: IUnknown; ItemServerHandle: OPCHANDLE;
@@ -130,7 +131,7 @@ end;
 
 // wrapper for IDataObject.DAdvise on an OPC group object
 function GroupAdviseTime(GroupIf: IUnknown; Sink: IAdviseSink;
-          var AsyncConnection: Longword): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
 var
   DataIf: IDataObject;
   Fmt: TFormatEtc;
@@ -179,7 +180,7 @@ end;
 
 // wrapper for setting up an IOPCDataCallback connection
 function GroupAdvise2(GroupIf: IUnknown; OPCDataCallback: IOPCDataCallback;
-          var AsyncConnection: Longword): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
 var
   ConnectionPointContainer: IConnectionPointContainer;
   ConnectionPoint: IConnectionPoint;
