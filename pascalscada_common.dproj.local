@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2012/01/05 17:33:46.598,=rtl.dcp</Transaction>
+    <Transaction>2012/10/27 17:58:50.071.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\Package1.dproj=C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_common.dproj</Transaction>
+    <Transaction>2012/10/27 18:05:48.321.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_common.dproj=C:\pascalscada\pascalscada_common.dproj</Transaction>
+    <Transaction>2012/10/27 18:06:07.373.pas,C:\pascalscada\src\common\collections.pas=</Transaction>
+    <Transaction>2012/10/27 18:06:07.373.pas,C:\pascalscada\src\common\crossdatetime.pas=</Transaction>
+    <Transaction>2012/10/27 18:06:07.389.pas,C:\pascalscada\src\common\crossevent.pas=</Transaction>
+    <Transaction>2012/10/27 18:06:07.389.pas,C:\pascalscada\src\common\hsstrings.pas=</Transaction>
+    <Transaction>2012/10/27 18:06:07.404.pas,C:\pascalscada\src\common\hsutils.pas=</Transaction>
+    <Transaction>2012/10/27 18:06:07.404.pas,C:\pascalscada\src\common\lazlclversion.pas=</Transaction>
+    <Transaction>2012/10/27 18:06:07.419.pas,C:\pascalscada\src\common\messagespool.pas=</Transaction>
+    <Transaction>2012/10/27 18:06:07.419.pas,C:\pascalscada\src\common\pascalScadaMTPCPU.pas=</Transaction>
+  </Transactions>
+</BorlandProject>

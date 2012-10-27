@@ -1,6 +1,8 @@
 unit OPCDAProtocol;
 
+{$IFDEF FPC}
 {$mode delphi}
+{$ENDIF}
 
 interface
 

@@ -1,0 +1,48 @@
+package pascalscada_common;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  pascalscada,
+  dbrtl,
+  VclSmp,
+  vclx,
+  vcl,
+  vclactnband,
+  xmlrtl,
+  designide;
+
+contains
+  pascalScadaMTPCPU in 'src\common\pascalScadaMTPCPU.pas',
+  collections in 'src\common\collections.pas',
+  crossdatetime in 'src\common\crossdatetime.pas',
+  crossevent in 'src\common\crossevent.pas',
+  hsstrings in 'src\common\hsstrings.pas',
+  hsutils in 'src\common\hsutils.pas',
+  lazlclversion in 'src\common\lazlclversion.pas',
+  messagespool in 'src\common\messagespool.pas';
+
+end.
