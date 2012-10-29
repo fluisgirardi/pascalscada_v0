@@ -4,10 +4,10 @@
 		</PropertyGroup>
 		<ItemGroup>
 			<Projects Include="pascalscada.dproj">
-				<Dependencies/>
+				<Dependencies>pascalscada_common.dproj</Dependencies>
 			</Projects>
 			<Projects Include="pascalscada_hmi.dproj">
-				<Dependencies/>
+				<Dependencies>pascalscada.dproj;pascalscada_common.dproj</Dependencies>
 			</Projects>
 			<Projects Include="pascalscada_common.dproj">
 				<Dependencies/>
@@ -16,7 +16,7 @@
 				<Dependencies/>
 			</Projects>
 			<Projects Include="pascalscada_db.dproj">
-				<Dependencies/>
+				<Dependencies>pascalscada_common.dproj;zeoslib_pascalscada.dproj</Dependencies>
 			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
@@ -26,22 +26,22 @@
 				<Default.Personality/>
 			</BorlandProject>
 		</ProjectExtensions>
-		<Target Name="pascalscada">
+		<Target DependsOnTargets="pascalscada_common" Name="pascalscada">
 			<MSBuild Projects="pascalscada.dproj"/>
 		</Target>
-		<Target Name="pascalscada:Clean">
+		<Target DependsOnTargets="pascalscada_common:Clean" Name="pascalscada:Clean">
 			<MSBuild Targets="Clean" Projects="pascalscada.dproj"/>
 		</Target>
-		<Target Name="pascalscada:Make">
+		<Target DependsOnTargets="pascalscada_common:Make" Name="pascalscada:Make">
 			<MSBuild Targets="Make" Projects="pascalscada.dproj"/>
 		</Target>
-		<Target Name="pascalscada_hmi">
+		<Target DependsOnTargets="pascalscada;pascalscada_common" Name="pascalscada_hmi">
 			<MSBuild Projects="pascalscada_hmi.dproj"/>
 		</Target>
-		<Target Name="pascalscada_hmi:Clean">
+		<Target DependsOnTargets="pascalscada:Clean;pascalscada_common:Clean" Name="pascalscada_hmi:Clean">
 			<MSBuild Targets="Clean" Projects="pascalscada_hmi.dproj"/>
 		</Target>
-		<Target Name="pascalscada_hmi:Make">
+		<Target DependsOnTargets="pascalscada:Make;pascalscada_common:Make" Name="pascalscada_hmi:Make">
 			<MSBuild Targets="Make" Projects="pascalscada_hmi.dproj"/>
 		</Target>
 		<Target Name="pascalscada_common">
@@ -62,13 +62,13 @@
 		<Target Name="zeoslib_pascalscada:Make">
 			<MSBuild Targets="Make" Projects="zeoslib_pascalscada.dproj"/>
 		</Target>
-		<Target Name="pascalscada_db">
+		<Target DependsOnTargets="pascalscada_common;zeoslib_pascalscada" Name="pascalscada_db">
 			<MSBuild Projects="pascalscada_db.dproj"/>
 		</Target>
-		<Target Name="pascalscada_db:Clean">
+		<Target DependsOnTargets="pascalscada_common:Clean;zeoslib_pascalscada:Clean" Name="pascalscada_db:Clean">
 			<MSBuild Targets="Clean" Projects="pascalscada_db.dproj"/>
 		</Target>
-		<Target Name="pascalscada_db:Make">
+		<Target DependsOnTargets="pascalscada_common:Make;zeoslib_pascalscada:Make" Name="pascalscada_db:Make">
 			<MSBuild Targets="Make" Projects="pascalscada_db.dproj"/>
 		</Target>
 		<Target Name="Build">

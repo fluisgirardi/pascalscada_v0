@@ -20,11 +20,12 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_BplOutput>./lib/</DCC_BplOutput>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\zeoslib_pascalscada.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>lib\zeoslib_pascalscada.bpl</DCC_DependencyCheckOutputName>
 			<DCC_IOChecking>false</DCC_IOChecking>
 			<DCC_DebugInformation>false</DCC_DebugInformation>
-			<DCC_UsePackage>vcl;rtl;vclx;indy;inet;xmlrtl;vclie;inetdbbde;inetdbxpress;dbrtl;dsnap;dsnapcon;vcldb;soaprtl;VclSmp;dbexpress;dbxcds;inetdb;bdertl;vcldbx;webdsnap;websnap;adortl;ibxpress;teeui;teedb;tee;dss;visualclx;visualdbclx;vclactnband;vclshlctrls;IntrawebDB_50_70;Intraweb_50_70;Rave50CLX;Rave50VCL;dclOfficeXP;qrpt</DCC_UsePackage>
 			<DCC_UnitSearchPath>zeoslib\src\component;zeoslib\src\core;zeoslib\src\dbc;zeoslib\src\parsesql;zeoslib\src\plain;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
@@ -41,7 +42,7 @@
 			<DebugSourcePath>.;$(DebugSourcePath)</DebugSourcePath>
 			<GenPackage>true</GenPackage>
 			<DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
-			<DCC_DcuOutput>.</DCC_DcuOutput>
+			<DCC_DcuOutput>./lib/</DCC_DcuOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -54,14 +55,8 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="zeoslib\src\component\ZComponent.dcr"/>
-			<DCCReference Include="rtl.dcp"/>
-			<DCCReference Include="vcl.dcp"/>
-			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="designide.dcp"/>
-			<DCCReference Include="vclactnband.dcp"/>
-			<DCCReference Include="vclx.dcp"/>
-			<DCCReference Include="vcldb.dcp"/>
-			<DCCReference Include="xmlrtl.dcp"/>
+			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainSqLiteDriver.pas"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainAdo.pas"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainAdoDriver.pas"/>
@@ -186,6 +181,9 @@
 			<DCCReference Include="zeoslib\src\component\ZSqlUpdate.pas"/>
 			<DCCReference Include="zeoslib\src\component\ZStoredProcedure.pas"/>
 			<DCCReference Include="zeoslib\src\component\ZStreamBlob.pas"/>
+			<DCCReference Include="zeoslib\src\component\ZUpdateSqlEditor.pas">
+				<Form>ZUpdateSQLEditForm</Form>
+			</DCCReference>
 			<DCCReference Include="zeoslib\src\component\ZComponent.dcr"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
@@ -213,9 +211,6 @@
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
 					</Parameters>
-					<Language>
-						<Language Name="RootDir">C:\pascalscada\</Language>
-					</Language>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
@@ -228,7 +223,7 @@
 						<VersionInfo Name="Special">False</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1046</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
 						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
@@ -243,6 +238,7 @@
 						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
+					<Excluded_Packages/>
 				</Delphi.Personality>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>

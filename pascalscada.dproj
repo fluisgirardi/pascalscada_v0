@@ -20,10 +20,11 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_BplOutput>./lib/</DCC_BplOutput>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\pascalscada.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>lib\pascalscada.bpl</DCC_DependencyCheckOutputName>
 			<DCC_IOChecking>false</DCC_IOChecking>
-			<DCC_UnitSearchPath>.;zeoslib\src\component;zeoslib\src\core;zeoslib\src\dbc;zeoslib\src\parsesql;zeoslib\src\plain;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Description>PascalSCADA</DCC_Description>
@@ -37,7 +38,7 @@
 			<GenPackage>true</GenPackage>
 			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
 			<DCC_E>false</DCC_E>
-			<DCC_DcuOutput>.</DCC_DcuOutput>
+			<DCC_DcuOutput>./lib/</DCC_DcuOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -52,15 +53,9 @@
 			<DelphiCompile Include="pascalscada.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="rtl.dcp"/>
-			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="designide.dcp"/>
-			<DCCReference Include="xmlrtl.dcp"/>
-			<DCCReference Include="vclactnband.dcp"/>
-			<DCCReference Include="vclx.dcp"/>
 			<DCCReference Include="VclSmp.dcp"/>
-			<DCCReference Include="dbrtl.dcp"/>
-			<DCCReference Include="inet.dcp"/>
+			<DCCReference Include="pascalscada_common.dcp"/>
 			<DCCReference Include="src\scada\westasciidriver.pas"/>
 			<DCCReference Include="src\scada\commport.pas"/>
 			<DCCReference Include="src\scada\commtypes.pas"/>
@@ -125,6 +120,7 @@
 				<Form>WestTagBuilder</Form>
 			</DCCReference>
 			<DCCReference Include="src\scada\valueprocessor.pas"/>
+			<DCCReference Include="src\scada\sockets_w32_w64.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -175,13 +171,10 @@
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName"/>
-						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">0.7.3.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
-					<Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k120.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-					</Excluded_Packages>
+					<Excluded_Packages/>
 				</Delphi.Personality>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>

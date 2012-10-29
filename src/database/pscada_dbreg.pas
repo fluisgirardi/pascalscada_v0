@@ -1,6 +1,10 @@
 unit pscada_dbreg;
 
-{$mode objfpc}{$H+}
+{$I ../../src/common/delphiver.inc}
+
+{$IFDEF FPC}
+{$mode delphi}
+{$ENDIF}
 
 interface
 

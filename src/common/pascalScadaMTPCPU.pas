@@ -1,4 +1,4 @@
-{ System depending code for light weight threads.
+﻿{ System depending code for light weight threads.
 
   This file is part of the Free Pascal run time library.
 
@@ -16,7 +16,7 @@
 unit pascalScadaMTPCPU;
 
 {$IFDEF FPC}
-{$mode objfpc}{$H+}
+{$mode delphi}
 {$ENDIF}
 
 interface

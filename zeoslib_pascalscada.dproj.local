@@ -129,5 +129,13 @@
     <Transaction>2012/10/17 00:43:24.873.pas,C:\pascalscada\zeoslib\src\component\ZSqlTestForm.pas=</Transaction>
     <Transaction>2012/10/17 00:43:57.338.pas,C:\pascalscada\zeoslib\src\component\ZUpdateSqlEditor.pas=</Transaction>
     <Transaction>2012/10/17 00:43:57.338.dfm,C:\pascalscada\zeoslib\src\component\ZUpdateSqlEditor.dfm=</Transaction>
+    <Transaction>2012/10/29 10:40:07.017.dcp,dbrtl.dcp=</Transaction>
+    <Transaction>2012/10/29 10:40:09.219.dcp,designide.dcp=</Transaction>
+    <Transaction>2012/10/29 10:40:13.170.dcp,rtl.dcp=</Transaction>
+    <Transaction>2012/10/29 10:43:00.834.dcp,vcl.dcp=</Transaction>
+    <Transaction>2012/10/29 10:43:13.239.dcp,vclactnband.dcp=</Transaction>
+    <Transaction>2012/10/29 10:43:14.777.dcp,vcldb.dcp=</Transaction>
+    <Transaction>2012/10/29 10:43:16.229.dcp,vclx.dcp=</Transaction>
+    <Transaction>2012/10/29 10:43:18.612.dcp,xmlrtl.dcp=</Transaction>
   </Transactions>
 </BorlandProject>

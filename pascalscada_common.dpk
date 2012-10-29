@@ -22,17 +22,11 @@ package pascalscada_common;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$DESCRIPTION 'PascalSCADA common features'}
 {$IMPLICITBUILD ON}
 
 requires
-  rtl,
-  dbrtl,
-  VclSmp,
-  vclx,
-  vcl,
-  vclactnband,
-  xmlrtl,
-  designide;
+  rtl;
 
 contains
   pascalScadaMTPCPU in 'src\common\pascalScadaMTPCPU.pas',

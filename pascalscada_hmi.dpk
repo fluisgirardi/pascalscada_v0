@@ -22,17 +22,12 @@ package pascalscada_hmi;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$DESCRIPTION 'PascalSCADA HMI Controls'}
 {$IMPLICITBUILD ON}
 
 requires
-  rtl,
-  vcl,
-  dbrtl,
-  VclSmp,
-  vclx,
-  vclactnband,
-  xmlrtl,
-  designide;
+  designide,
+  pascalscada_common;
 
 contains
   winccusermanagement in 'src\hmi\winccusermanagement.pas',
@@ -56,8 +51,8 @@ contains
   hmitypes in 'src\hmi\hmitypes.pas',
   hmiupdown in 'src\hmi\hmiupdown.pas',
   hmizones in 'src\hmi\hmizones.pas',
+  ualfakeyboard in 'src\hmi\ualfakeyboard.pas' {Form1},
   unumerickeyboard in 'src\hmi\unumerickeyboard.pas' {NumericKeyBoard},
-  usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication},
-  ualfakeyboard in 'src\hmi\ualfakeyboard.pas' {Form1};
+  usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication};
 
 end.

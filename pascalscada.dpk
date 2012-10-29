@@ -27,15 +27,9 @@ package pascalscada;
 {$DEFINE ZEOS_DISABLE_ASA}
 
 requires
-  rtl,
-  vcl,
   designide,
-  xmlrtl,
-  vclactnband,
-  vclx,
   VclSmp,
-  dbrtl,
-  inet;
+  pascalscada_common;
 
 contains
   westasciidriver in 'src\scada\westasciidriver.pas',
@@ -89,6 +83,7 @@ contains
   userscale in 'src\scada\userscale.pas',
   ustructuremapper in 'src\scada\ustructuremapper.pas' {frmStructureEditor},
   uwesttagbuilder in 'src\scada\uwesttagbuilder.pas' {WestTagBuilder},
-  valueprocessor in 'src\scada\valueprocessor.pas';
+  valueprocessor in 'src\scada\valueprocessor.pas',
+  sockets_w32_w64 in 'src\scada\sockets_w32_w64.pas';
 
 end.

@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um socket TCP/UDP sobre IP cliente.)

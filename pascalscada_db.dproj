@@ -20,12 +20,16 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DcuOutput>./lib/</DCC_DcuOutput>
+			<DCC_BplOutput>./lib/</DCC_BplOutput>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
+			<DCC_Description>PascalSCADA Database components</DCC_Description>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<GenPackage>true</GenPackage>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Platform>x86</DCC_Platform>
-			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\pascalscada_db.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>lib\pascalscada_db.bpl</DCC_DependencyCheckOutputName>
 			<DCC_N>false</DCC_N>
 			<DCC_S>false</DCC_S>
 			<GenDll>true</GenDll>
@@ -46,18 +50,19 @@
 			<DelphiCompile Include="pascalscada_db.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="rtl.dcp"/>
-			<DCCReference Include="dbrtl.dcp"/>
-			<DCCReference Include="VclSmp.dcp"/>
-			<DCCReference Include="vclx.dcp"/>
-			<DCCReference Include="vcl.dcp"/>
-			<DCCReference Include="vclactnband.dcp"/>
-			<DCCReference Include="xmlrtl.dcp"/>
 			<DCCReference Include="designide.dcp"/>
+			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="zeoslib_pascalscada.dcp"/>
+			<DCCReference Include="pascalscada_common.dcp"/>
 			<DCCReference Include="src\database\pscada_dbreg.pas"/>
-			<DCCReference Include="src\database\psbufdataset.pas"/>
 			<DCCReference Include="src\database\dbstructurechecker.pas"/>
+			<DCCReference Include="src\database\psbufdataset.pas"/>
+			<DCCReference Include="src\database\fpsbufdataset.pas"/>
+			<DCCReference Include="src\database\fpsbufdataset_parser.pas"/>
+			<DCCReference Include="src\database\fpsdbconst.pas"/>
+			<DCCReference Include="src\database\fpsdbf_prscore.pas"/>
+			<DCCReference Include="src\database\fpsdbf_prsdef.pas"/>
+			<DCCReference Include="src\database\fpsdbf_prssupp.pas"/>
 			<DCCReference Include="src\database\hmidbconnection.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
@@ -88,22 +93,22 @@
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-						<VersionInfo Name="MajorVer">1</VersionInfo>
-						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="MajorVer">0</VersionInfo>
+						<VersionInfo Name="MinorVer">7</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1046</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
 						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.7.3.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

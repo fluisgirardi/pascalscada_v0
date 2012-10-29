@@ -15,5 +15,13 @@
     <Transaction>2012/10/27 19:53:13.526.pas,C:\pascalscada\src\common\lazlclversion.pas=</Transaction>
     <Transaction>2012/10/27 20:08:29.014.pas,C:\pascalscada\Unit1.pas=C:\pascalscada\pscada_common.pas</Transaction>
     <Transaction>2012/10/27 20:10:45.802.pas,C:\pascalscada\pscada_common.pas=</Transaction>
+    <Transaction>2012/10/29 10:35:08.883.dcp,dbrtl.dcp=</Transaction>
+    <Transaction>2012/10/29 10:35:12.039.dcp,designide.dcp=</Transaction>
+    <Transaction>2012/10/29 10:35:14.286.dcp,rtl.dcp=</Transaction>
+    <Transaction>2012/10/29 10:35:15.991.dcp,vcl.dcp=</Transaction>
+    <Transaction>2012/10/29 10:35:17.499.dcp,vclactnband.dcp=</Transaction>
+    <Transaction>2012/10/29 10:35:18.932.dcp,VclSmp.dcp=</Transaction>
+    <Transaction>2012/10/29 10:35:23.616.dcp,vclx.dcp=</Transaction>
+    <Transaction>2012/10/29 10:35:25.242.dcp,xmlrtl.dcp=</Transaction>
   </Transactions>
 </BorlandProject>

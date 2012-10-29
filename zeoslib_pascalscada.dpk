@@ -28,14 +28,8 @@ package zeoslib_pascalscada;
 {$DEFINE ZEOS_DISABLE_ASA}
 
 requires
-  rtl,
-  vcl,
-  dbrtl,
   designide,
-  vclactnband,
-  vclx,
-  vcldb,
-  xmlrtl;
+  dbrtl;
 
 contains
   ZPlainSqLiteDriver in 'zeoslib\src\plain\ZPlainSqLiteDriver.pas',
@@ -161,6 +155,7 @@ contains
   ZSqlStrings in 'zeoslib\src\component\ZSqlStrings.pas',
   ZSqlUpdate in 'zeoslib\src\component\ZSqlUpdate.pas',
   ZStoredProcedure in 'zeoslib\src\component\ZStoredProcedure.pas',
-  ZStreamBlob in 'zeoslib\src\component\ZStreamBlob.pas';
+  ZStreamBlob in 'zeoslib\src\component\ZStreamBlob.pas',
+  ZUpdateSqlEditor in 'zeoslib\src\component\ZUpdateSqlEditor.pas' {ZUpdateSQLEditForm};
 
 end.
