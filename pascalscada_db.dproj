@@ -20,8 +20,8 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DcuOutput>./lib/</DCC_DcuOutput>
-			<DCC_BplOutput>./lib/</DCC_BplOutput>
+			<DCC_DcuOutput>lib\delphi</DCC_DcuOutput>
+			<DCC_BplOutput>lib\delphi</DCC_BplOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_Description>PascalSCADA Database components</DCC_Description>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
@@ -29,7 +29,7 @@
 			<GenPackage>true</GenPackage>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Platform>x86</DCC_Platform>
-			<DCC_DependencyCheckOutputName>lib\pascalscada_db.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>lib\delphi\pascalscada_db.bpl</DCC_DependencyCheckOutputName>
 			<DCC_N>false</DCC_N>
 			<DCC_S>false</DCC_S>
 			<GenDll>true</GenDll>

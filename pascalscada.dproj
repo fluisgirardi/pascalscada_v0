@@ -20,10 +20,10 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_BplOutput>./lib/</DCC_BplOutput>
+			<DCC_BplOutput>lib\delphi</DCC_BplOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>lib\pascalscada.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>lib\delphi\pascalscada.bpl</DCC_DependencyCheckOutputName>
 			<DCC_IOChecking>false</DCC_IOChecking>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
@@ -38,7 +38,7 @@
 			<GenPackage>true</GenPackage>
 			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
 			<DCC_E>false</DCC_E>
-			<DCC_DcuOutput>./lib/</DCC_DcuOutput>
+			<DCC_DcuOutput>lib\delphi</DCC_DcuOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -56,6 +56,8 @@
 			<DCCReference Include="designide.dcp"/>
 			<DCCReference Include="VclSmp.dcp"/>
 			<DCCReference Include="pascalscada_common.dcp"/>
+			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="src\scada\westasciidriver.pas"/>
 			<DCCReference Include="src\scada\commport.pas"/>
 			<DCCReference Include="src\scada\commtypes.pas"/>
@@ -121,6 +123,36 @@
 			</DCCReference>
 			<DCCReference Include="src\scada\valueprocessor.pas"/>
 			<DCCReference Include="src\scada\sockets_w32_w64.pas"/>
+			<DCCReference Include="src\hmi\winccusermanagement.pas"/>
+			<DCCReference Include="src\hmi\basicusermanagement.pas"/>
+			<DCCReference Include="src\hmi\controlsecuritymanager.pas"/>
+			<DCCReference Include="src\hmi\crosskeyevents.pas"/>
+			<DCCReference Include="src\hmi\customizedusermanagement.pas"/>
+			<DCCReference Include="src\hmi\hmianimation.pas"/>
+			<DCCReference Include="src\hmi\hmicheckbox.pas"/>
+			<DCCReference Include="src\hmi\hmicontroldislocatoranimation.pas"/>
+			<DCCReference Include="src\hmi\hmiedit.pas"/>
+			<DCCReference Include="src\hmi\hmilabel.pas"/>
+			<DCCReference Include="src\hmi\hmiprogressbar.pas"/>
+			<DCCReference Include="src\hmi\hmipropeditor.pas"/>
+			<DCCReference Include="src\hmi\hmiradiobutton.pas"/>
+			<DCCReference Include="src\hmi\hmiradiogroup.pas"/>
+			<DCCReference Include="src\hmi\hmiregister.pas"/>
+			<DCCReference Include="src\hmi\hmiscrollbar.pas"/>
+			<DCCReference Include="src\hmi\hmitext.pas"/>
+			<DCCReference Include="src\hmi\hmitrackbar.pas"/>
+			<DCCReference Include="src\hmi\hmitypes.pas"/>
+			<DCCReference Include="src\hmi\hmiupdown.pas"/>
+			<DCCReference Include="src\hmi\hmizones.pas"/>
+			<DCCReference Include="src\hmi\ualfakeyboard.pas">
+				<Form>Form1</Form>
+			</DCCReference>
+			<DCCReference Include="src\hmi\unumerickeyboard.pas">
+				<Form>NumericKeyBoard</Form>
+			</DCCReference>
+			<DCCReference Include="src\hmi\usrmgnt_login.pas">
+				<Form>frmUserAuthentication</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

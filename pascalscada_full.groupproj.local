@@ -4,6 +4,6 @@
     <Transaction>2012/10/17 00:29:34.334.groupproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\ProjectGroup1.groupproj=C:\pascalscada\pascalscada_full.groupproj</Transaction>
   </Transactions>
 	<Default.Personality>
-		<Projects ActiveProject="zeoslib_pascalscada.bpl"/>
+		<Projects ActiveProject="pascalscada_common.bpl"/>
 	</Default.Personality>
 </BorlandProject>

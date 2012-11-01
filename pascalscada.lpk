@@ -33,7 +33,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="49">
+    <Files Count="50">
       <Item1>
         <Filename Value="src\scada\commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -231,6 +231,10 @@
         <Filename Value="src\scada\westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
       </Item49>
+      <Item50>
+        <Filename Value="mutexserver.pas"/>
+        <UnitName Value="MutexServer"/>
+      </Item50>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="3">

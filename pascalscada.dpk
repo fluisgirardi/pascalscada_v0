@@ -29,7 +29,9 @@ package pascalscada;
 requires
   designide,
   VclSmp,
-  pascalscada_common;
+  pascalscada_common,
+  vcl,
+  rtl;
 
 contains
   westasciidriver in 'src\scada\westasciidriver.pas',
@@ -84,6 +86,30 @@ contains
   ustructuremapper in 'src\scada\ustructuremapper.pas' {frmStructureEditor},
   uwesttagbuilder in 'src\scada\uwesttagbuilder.pas' {WestTagBuilder},
   valueprocessor in 'src\scada\valueprocessor.pas',
-  sockets_w32_w64 in 'src\scada\sockets_w32_w64.pas';
+  sockets_w32_w64 in 'src\scada\sockets_w32_w64.pas',
+  winccusermanagement in 'src\hmi\winccusermanagement.pas',
+  basicusermanagement in 'src\hmi\basicusermanagement.pas',
+  controlsecuritymanager in 'src\hmi\controlsecuritymanager.pas',
+  crosskeyevents in 'src\hmi\crosskeyevents.pas',
+  customizedusermanagement in 'src\hmi\customizedusermanagement.pas',
+  hmianimation in 'src\hmi\hmianimation.pas',
+  hmicheckbox in 'src\hmi\hmicheckbox.pas',
+  hmicontroldislocatoranimation in 'src\hmi\hmicontroldislocatoranimation.pas',
+  hmiedit in 'src\hmi\hmiedit.pas',
+  hmilabel in 'src\hmi\hmilabel.pas',
+  hmiprogressbar in 'src\hmi\hmiprogressbar.pas',
+  hmipropeditor in 'src\hmi\hmipropeditor.pas',
+  hmiradiobutton in 'src\hmi\hmiradiobutton.pas',
+  hmiradiogroup in 'src\hmi\hmiradiogroup.pas',
+  hmiregister in 'src\hmi\hmiregister.pas',
+  hmiscrollbar in 'src\hmi\hmiscrollbar.pas',
+  hmitext in 'src\hmi\hmitext.pas',
+  hmitrackbar in 'src\hmi\hmitrackbar.pas',
+  hmitypes in 'src\hmi\hmitypes.pas',
+  hmiupdown in 'src\hmi\hmiupdown.pas',
+  hmizones in 'src\hmi\hmizones.pas',
+  ualfakeyboard in 'src\hmi\ualfakeyboard.pas' {Form1},
+  unumerickeyboard in 'src\hmi\unumerickeyboard.pas' {NumericKeyBoard},
+  usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication};
 
 end.

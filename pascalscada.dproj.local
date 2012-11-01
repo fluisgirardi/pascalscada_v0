@@ -5,5 +5,6 @@
     <Transaction>2012/10/27 18:42:14.788.pas,C:\pascalscada\src\scada\sockets_unix.pas=</Transaction>
     <Transaction>2012/10/27 18:42:14.806.pas,C:\pascalscada\src\scada\sockets_w32_w64.pas=</Transaction>
     <Transaction>2012/10/27 18:42:14.823.pas,C:\pascalscada\src\scada\sockets_wince.pas=</Transaction>
+    <Transaction>2012/10/31 11:47:26.726.pas,C:\pascalscada\src\hmi\hmibutton.pas=</Transaction>
   </Transactions>
 </BorlandProject>
