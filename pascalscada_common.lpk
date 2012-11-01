@@ -17,39 +17,43 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="8">
+    <Files Count="9">
       <Item1>
-        <Filename Value="src/common/crossdatetime.pas"/>
-        <UnitName Value="crossdatetime"/>
-      </Item1>
-      <Item2>
-        <Filename Value="src/common/crossevent.pas"/>
-        <UnitName Value="CrossEvent"/>
-      </Item2>
-      <Item3>
-        <Filename Value="src/common/hsstrings.pas"/>
-        <UnitName Value="hsstrings"/>
-      </Item3>
-      <Item4>
-        <Filename Value="src/common/hsutils.pas"/>
-        <UnitName Value="hsutils"/>
-      </Item4>
-      <Item5>
-        <Filename Value="src/common/lazlclversion.pas"/>
-        <UnitName Value="lazlclversion"/>
-      </Item5>
-      <Item6>
-        <Filename Value="src/common/messagespool.pas"/>
-        <UnitName Value="MessageSpool"/>
-      </Item6>
-      <Item7>
-        <Filename Value="src/common/pascalScadaMTPCPU.pas"/>
-        <UnitName Value="pascalScadaMTPCPU"/>
-      </Item7>
-      <Item8>
         <Filename Value="src/common/collections.pas"/>
         <UnitName Value="collections"/>
+      </Item1>
+      <Item2>
+        <Filename Value="src/common/crossdatetime.pas"/>
+        <UnitName Value="crossdatetime"/>
+      </Item2>
+      <Item3>
+        <Filename Value="src/common/crossevent.pas"/>
+        <UnitName Value="CrossEvent"/>
+      </Item3>
+      <Item4>
+        <Filename Value="src/common/hsstrings.pas"/>
+        <UnitName Value="hsstrings"/>
+      </Item4>
+      <Item5>
+        <Filename Value="src/common/hsutils.pas"/>
+        <UnitName Value="hsutils"/>
+      </Item5>
+      <Item6>
+        <Filename Value="src/common/lazlclversion.pas"/>
+        <UnitName Value="lazlclversion"/>
+      </Item6>
+      <Item7>
+        <Filename Value="src/common/messagespool.pas"/>
+        <UnitName Value="MessageSpool"/>
+      </Item7>
+      <Item8>
+        <Filename Value="src/common/pascalScadaMTPCPU.pas"/>
+        <UnitName Value="pascalScadaMTPCPU"/>
       </Item8>
+      <Item9>
+        <Filename Value="src/common/pscada_common.pas"/>
+        <UnitName Value="pscada_common"/>
+      </Item9>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
@@ -67,5 +71,8 @@
     <PublishOptions>
       <Version Value="2"/>
     </PublishOptions>
+    <CustomOptions Items="ExternHelp" Version="2">
+      <_ExternHelp Items="Count"/>
+    </CustomOptions>
   </Package>
 </CONFIG>

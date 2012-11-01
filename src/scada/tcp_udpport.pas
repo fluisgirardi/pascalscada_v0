@@ -14,9 +14,6 @@ unit tcp_udpport;
 
 {$IFDEF FPC}
 {$mode delphi}
-{$IFDEF DEBUG}
-  {$DEFINE FDEBUG}
-{$ENDIF}
 {$ENDIF}
 
 {$I ../common/delphiver.inc}

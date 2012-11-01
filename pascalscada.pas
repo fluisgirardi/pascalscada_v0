@@ -15,7 +15,7 @@ uses
   scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, tcp_udpport, 
   ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, UserScale, 
   ustructuremapper, uwesttagbuilder, ValueProcessor, WestASCIIDriver, 
-  LazarusPackageIntf;
+  mutexserver, LazarusPackageIntf;
 
 implementation
 

@@ -232,7 +232,7 @@
         <UnitName Value="WestASCIIDriver"/>
       </Item49>
       <Item50>
-        <Filename Value="mutexserver.pas"/>
+        <Filename Value="src\scada\mutexserver.pas"/>
         <UnitName Value="MutexServer"/>
       </Item50>
     </Files>
