@@ -89,19 +89,20 @@ end;
 
 procedure TAcceptThread.Execute;
 var
-  sel:TFDSet;
-  tv : TTimeVal;
-  p:ptimeval;
-  mode: tOS_INT;
+  ClientSocket:TSocket;
+  ClientAddrInfo:sockaddr;
+  ClientAddrInfoSize:Integer;
 begin
-  tv.tv_Sec:=Timeout div 1000;
-  tv.tv_Usec:=(Timeout mod 1000)*1000;
-  p:=@tv;
-
-  FD_ZERO(sel);
-  FD_SET(FServerSocket+1, sel);
   while not Terminated do begin
-    mode := select(FServerSocket+1, nil, @sel, nil, p);
+    if WaitForConnection(FServerSocket,500) then
+      {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
+      ClientSocket:=fpAccept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
+      {$IFEND}
+      //WINDOWS
+      {$IF defined(WIN32) or defined(WIN64)}
+      ClientSocket:=  Accept(setsockopt(FSocket,   SOL_SOCKET,  SO_REUSEADDR, @reuse_addr, sizeof(reuse_addr));
+      {$IFEND}
+      //launch a new thread that will handle this new connection
   end;
   while not FEnd.SetEvent do Sleep(1);
 end;
@@ -140,7 +141,7 @@ procedure TMutexServer.setActive(AValue: Boolean);
 var
 {$IF defined(FPC) and defined(UNIX)}
   ServerAddr:THostEntry;
-  channel:sockaddr_in;
+  channel:sockaddr;
 {$IFEND}
 
 {$IF defined(FPC) and defined(WINCE)}
@@ -200,13 +201,13 @@ begin
     channel.sin_port        := htons(FPort); //PORT NUMBER
 
     {$IF defined(FPC) AND (defined(UNIX) OR defined(WINCE))}
-    if fpbind(FSocket,channel,sizeof(channel))<>0 then begin
+    if fpBind(FSocket,@channel,sizeof(channel))<>0 then begin
       CloseSocket(FSocket);
       FActive:=false;
       exit;
     end;
 
-    if listen(FSocket, SOMAXCONN)<>0 then begin
+    if fpListen(FSocket, SOMAXCONN)<>0 then begin
       CloseSocket(FSocket);
       FActive:=false;
       exit;
@@ -262,6 +263,7 @@ end;
 constructor TMutexServer.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FPort:=51342;
   FMutex:=syncobjs.TCriticalSection.Create;
 end;
 
@@ -272,4 +274,4 @@ begin
   inherited Destroy;
 end;
 
-end.
+end.

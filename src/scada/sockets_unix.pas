@@ -332,9 +332,9 @@ begin
   end;
 
 
-  FD_ZERO(sel);
-  FD_SET(sock+1, sel);
-  mode := select(sock+1, @sel, nil, nil, p);
+  fpFD_ZERO(sel);
+  fpFD_SET(FListenerSocket+1, sel);
+  mode := fpselect(FListenerSocket+1, @sel, nil, nil, p);
 
   if (mode <= 0) then begin
     Result := false;
@@ -344,4 +344,4 @@ begin
     end;
 end;
 
-end.
+end.
