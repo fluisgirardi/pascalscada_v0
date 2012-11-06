@@ -90,6 +90,18 @@ uses
   {$ENDIF}
   function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 
+  {$IFDEF PORTUGUES}
+  {:
+  Espera por uma conexao de entrada
+  @returns(@True se uma conexao de entrada foi realizada)
+  }
+  {$ELSE}
+  {:
+  Waits for a incoming connection.
+  @returns(@True if a incoming connection was done.)
+  }
+  {$ENDIF}
+  function WaitForConnection(FListenerSocket:TSocket; timeout:Integer):Boolean;
 implementation
 
 function setblockingmode(fd:TSocket; mode:Integer):Integer;
@@ -301,6 +313,35 @@ begin
 
     incRetries:=true;
   end;
+end;
+
+function WaitForConnection(FListenerSocket:TSocket; timeout:Integer):Boolean;
+var
+  sel:TFDSet;
+  mode:Integer;
+  tv : TTimeVal;
+  p:ptimeval;
+begin
+
+  if timeout=-1 then
+    p:=nil
+  else begin
+    tv.tv_Sec:=Timeout div 1000;
+    tv.tv_Usec:=(Timeout mod 1000)*1000;
+    p:=@tv;
+  end;
+
+
+  FD_ZERO(sel);
+  FD_SET(sock+1, sel);
+  mode := select(sock+1, @sel, nil, nil, p);
+
+  if (mode <= 0) then begin
+    Result := false;
+  end else
+    if (mode > 0) then begin
+      Result := true;
+    end;
 end;
 
 end.

@@ -743,8 +743,9 @@ begin
   {$IFNDEF WINCE}
   PScanUpdateThread.Priority:=tpHighest;
   {$ENDIF}
-  PScanUpdateThread.OnGetValue := SafeGetValue;
-  PScanUpdateThread.OnScanTags := GetMultipleValues;
+  PScanUpdateThread.OnGetValue     := SafeGetValue;
+  PScanUpdateThread.OnScanTags     := GetMultipleValues;
+  PScanUpdateThread.FreeOnTerminate:=true;
 
   PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
   {$IFNDEF WINCE}
@@ -752,13 +753,15 @@ begin
   {$ENDIF}
   PScanReadThread.OnDoScanRead := SafeScanRead;
   PScanReadThread.OnDoScanWrite := nil;
+  PScanReadThread.FreeOnTerminate:=true;
 
   PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
   {$IFNDEF WINCE}
   PScanWriteThread.Priority:=tpTimeCritical;
   {$ENDIF}
-  PScanWriteThread.OnDoScanRead := nil;
-  PScanWriteThread.OnDoScanWrite := SafeScanWrite;
+  PScanWriteThread.OnDoScanRead    := nil;
+  PScanWriteThread.OnDoScanWrite   := SafeScanWrite;
+  PScanWriteThread.FreeOnTerminate := true;
 end;
 
 procedure TProtocolDriver.AfterConstruction;
@@ -1394,4 +1397,4 @@ initialization
 
 DriverCount:=1;
 
-end.
+end.
