@@ -218,7 +218,7 @@ begin
     TLabel(Self).Caption := '';
     TLabel(Self).Transparent:=true;
   end else begin
-    TLabel(self).Caption := zone.Text;
+    TLabel(self).Caption := Prefix+zone.Text+Sufix;
     TLabel(self).Color:=zone.Color;
     TLabel(self).Transparent:=zone.Transparent;
     TLabel(self).Font.Assign(zone.Font);

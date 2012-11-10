@@ -50,6 +50,19 @@ type
     destructor Destroy; override;
   end;
 
+  { TClientThread }
+
+  TClientThread = Class(TCrossThread)
+  private
+    function WaitEnd(timeout:Cardinal): TWaitResult;
+  protected
+    procedure Execute; override;
+  public
+    procedure Terminate;
+    constructor Create(CreateSuspended: Boolean; ServerSocket:TSocket; ServerMutex:syncobjs.TCriticalSection);
+    destructor Destroy; override;
+  end;
+
   { TMutexServer }
 
   TMutexServer = class(TComponent)
@@ -83,6 +96,34 @@ uses hsstrings {$IF defined(WIN32) or defined(WIN64)} , Windows{$ENDIF};
 procedure Register;
 begin
   RegisterComponents(strUtilsPallete,[TMutexServer]);
+end;
+
+{ TClientThread }
+
+function TClientThread.WaitEnd(timeout: Cardinal): TWaitResult;
+begin
+
+end;
+
+procedure TClientThread.Execute;
+begin
+
+end;
+
+procedure TClientThread.Terminate;
+begin
+
+end;
+
+constructor TClientThread.Create(CreateSuspended: Boolean;
+  ServerSocket: TSocket; ServerMutex: syncobjs.TCriticalSection);
+begin
+
+end;
+
+destructor TClientThread.Destroy;
+begin
+  inherited Destroy;
 end;
 
 { TAcceptThread }
