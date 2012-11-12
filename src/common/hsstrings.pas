@@ -146,6 +146,7 @@ resourcestring
   STableAlreadyexistsOnMetadata = 'A tabela já existe no metadata';
   SInvalidQueueOperation        = 'Impossível adicionar a fila como um item da mesma!';
   SInvalidOwnerClass            = 'O dono do objeto precisa ser da classe THMIDBConnection';
+  SInvalidClass                 = 'Classe inválida!';
 
   SSecurityCodeBusyWantRemove   = 'O codigo de segurança ainda está sendo usado por alguns controles, deseja remover o a ligação com eles?';
   SSecurityCodeStillBusy        = 'Remova o codigo dos controles que o estão usando!';
@@ -285,6 +286,7 @@ resourcestring
   STableAlreadyexistsOnMetadata = 'The table already exists on metadata.';
   SInvalidQueueOperation        = 'Impossible add the queue as a queue item!';
   SInvalidOwnerClass            = 'The owner must be a object of THMIDBConnection class';
+  SInvalidClass                 = 'Invalid class!';
 
   SSecurityCodeBusyWantRemove   = 'The Security Code still being used by some controls. Do you want remove the link between the security code and these controls?';
   SSecurityCodeStillBusy        = 'The SecurityCode still being used by some controls!';
