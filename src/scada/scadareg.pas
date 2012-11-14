@@ -24,7 +24,7 @@ uses
   PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
   scadapropeditor, hsstrings, TagBit, ProtocolDriver,
   WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
-  PLCStructElement, ISOTCPDriver, mutexserver,
+  PLCStructElement, ISOTCPDriver, mutexserver, MutexClient,
   {$IFDEF FPC}
     LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}
@@ -52,6 +52,7 @@ begin
   RegisterComponents(strUtilsPallete,     [TLinearScaleProcessor]);
   RegisterComponents(strUtilsPallete,     [TUserScale]);
   RegisterComponents(strUtilsPallete,     [TMutexServer]);
+  RegisterComponents(strUtilsPallete,     [TMutexClient]);
   RegisterComponents(strTagsPallete,      [TPLCTagNumber]);
   RegisterComponents(strTagsPallete,      [TPLCBlock]);
   RegisterComponents(strTagsPallete,      [TPLCBlockElement]);

@@ -94,6 +94,22 @@ uses
   }
   {$ENDIF}
   function WaitForConnection(FListenerSocket:TSocket; timeout:Integer):Boolean;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Função que informa quantos bytes estão disponíveis para serem lidos.
+  @returns(Um valor maior que zero caso existir dados disponíveis no buffer,
+           zero caso não exista ou -1 em caso de erro.)
+  }
+  {$ELSE}
+  {:
+  Rerturn how many bytes are available on receive buffer.
+  @returns(A value bigger than zero if data are available on the receive
+           buffer, zero if no data on the receive buffer and -1 on error.)
+  }
+  {$ENDIF}
+  function GetNumberOfBytesInReceiveBuffer(socket:Tsocket):Integer;
+
 implementation
 
 uses winsock;
@@ -326,5 +342,22 @@ begin
     end;
 end;
 
-end.
+function GetNumberOfBytesInReceiveBuffer(socket: Tsocket): Integer;
+var
+  retval, nbytes:Integer;
+begin
+  Result:=0;
 
+  retval:=ioctlsocket(socket,FIONREAD,@nbytes);
+
+  if retval<>0 then begin
+    Result:=-1;
+    exit;
+  end;
+
+  if (nbytes>0) then
+    Result:=nbytes;
+end;
+
+end.
+
