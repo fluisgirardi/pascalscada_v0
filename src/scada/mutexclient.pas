@@ -332,6 +332,8 @@ begin
   FConnected:=false;
   FActiveLoaded:=false;
   FPingTimer:=TTimer.Create(Self);
+  FPingTimer.Interval:=1000;
+  FPingTimer.OnTimer:=CheckPingCmd;
 end;
 
 destructor TMutexClient.Destroy;
