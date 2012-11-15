@@ -45,17 +45,20 @@ object Form1: TForm1
     TabOrder = 3
   end
   object MutexServer1: TMutexServer
+    Active = True
     Port = 51342
     left = 48
     top = 16
   end
   object MutexClient1: TMutexClient
+    Active = True
     Host = '127.0.0.1'
     Port = 51342
     left = 136
     top = 16
   end
   object MutexClient2: TMutexClient
+    Active = True
     Host = '127.0.0.1'
     Port = 51342
     left = 216

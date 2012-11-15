@@ -28,7 +28,7 @@
       <local>
         <FormatVersion Value="1"/>
         <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
-        <Display Use="True" Value=":1"/>
+        <Display Value=":1"/>
       </local>
     </RunParams>
     <RequiredPackages Count="2">
@@ -49,6 +49,7 @@
         <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="umain"/>
       </Unit1>

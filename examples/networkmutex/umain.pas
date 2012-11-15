@@ -42,9 +42,9 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  MutexServer1.Active:=true;
-  MutexClient1.Active:=true;
-  MutexClient2.Active:=true;
+  //MutexServer1.Active:=true;
+  //MutexClient1.Active:=true;
+  //MutexClient2.Active:=true;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);

@@ -387,6 +387,11 @@ begin
     exit;
   end;
 
+  if [csDesigning]*ComponentState<>[] then begin
+    FActive:=AValue;
+    exit;
+  end;
+
   if FActive=AValue then Exit;
 
   if AValue then begin

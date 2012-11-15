@@ -243,6 +243,11 @@ begin
     exit;
   end;
 
+  if [csDesigning]*ComponentState<>[] then begin
+    FActive:=AValue;
+    exit;
+  end;
+
   if AValue then
     Connect
   else
