@@ -255,7 +255,8 @@ begin
   retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
 
   if retval<>0 then begin
-    DoCommPortDisconected();
+    if Assigned(DoCommPortDisconected) then
+      DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
     Result:=false;
@@ -282,7 +283,8 @@ begin
   end;
 
   if (retval<0) then begin //error on socket...
-    DoCommPortDisconected();
+    if Assigned(DoCommPortDisconected) then
+      DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
     Result:=false;
@@ -294,7 +296,8 @@ begin
     retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
 
     if (retval<>0) then begin  // some error occured
-      DoCommPortDisconected();
+      if Assigned(DoCommPortDisconected) then
+        DoCommPortDisconected();
       CommResult:=iorPortError;
       PActive:=false;
       Result:=false;
@@ -302,7 +305,8 @@ begin
     end;
 
     if (nbytes=0) then begin
-      DoCommPortDisconected();
+      if Assigned(DoCommPortDisconected) then
+        DoCommPortDisconected();
       CommResult:=iorNotReady;
       PActive:=false;
       Result:=false;

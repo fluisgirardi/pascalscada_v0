@@ -1,0 +1,64 @@
+object Form1: TForm1
+  Left = 287
+  Height = 177
+  Top = 103
+  Width = 501
+  Caption = 'NetWorkMutex example'
+  ClientHeight = 177
+  ClientWidth = 501
+  OnCreate = FormCreate
+  LCLVersion = '1.1'
+  object Button1: TButton
+    Left = 8
+    Height = 25
+    Top = 88
+    Width = 225
+    Caption = 'Try own the Mutex via MutexClient 1'
+    OnClick = Button1Click
+    TabOrder = 0
+  end
+  object Button2: TButton
+    Left = 8
+    Height = 25
+    Top = 136
+    Width = 225
+    Caption = 'Try own the Mutex via MutexClient 2'
+    OnClick = Button2Click
+    TabOrder = 1
+  end
+  object Button3: TButton
+    Left = 256
+    Height = 25
+    Top = 87
+    Width = 240
+    Caption = 'release mutex owned by MutexClient 1'
+    OnClick = Button3Click
+    TabOrder = 2
+  end
+  object Button4: TButton
+    Left = 256
+    Height = 25
+    Top = 136
+    Width = 240
+    Caption = 'release mutex owned by MutexClient 2'
+    OnClick = Button4Click
+    TabOrder = 3
+  end
+  object MutexServer1: TMutexServer
+    Port = 51342
+    left = 48
+    top = 16
+  end
+  object MutexClient1: TMutexClient
+    Host = '127.0.0.1'
+    Port = 51342
+    left = 136
+    top = 16
+  end
+  object MutexClient2: TMutexClient
+    Host = '127.0.0.1'
+    Port = 51342
+    left = 216
+    top = 16
+  end
+end

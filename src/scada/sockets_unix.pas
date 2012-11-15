@@ -272,7 +272,8 @@ begin
   retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
 
   if retval<>0 then begin
-    DoCommPortDisconected();
+    if Assigned(DoCommPortDisconected) then
+      DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
     Result:=false;
@@ -299,7 +300,8 @@ begin
   end;
 
   if (retval<0) then begin //error on socket...
-    DoCommPortDisconected();
+    if Assigned(DoCommPortDisconected) then
+      DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
     Result:=false;
@@ -311,7 +313,8 @@ begin
     retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
 
     if (retval<>0) then begin  // some error occured
-      DoCommPortDisconected();
+      if Assigned(DoCommPortDisconected) then
+        DoCommPortDisconected();
       CommResult:=iorPortError;
       PActive:=false;
       Result:=false;
@@ -319,7 +322,8 @@ begin
     end;
 
     if (nbytes=0) then begin
-      DoCommPortDisconected();
+      if Assigned(DoCommPortDisconected) then
+        DoCommPortDisconected();
       CommResult:=iorNotReady;
       PActive:=false;
       Result:=false;
@@ -337,6 +341,7 @@ var
   tv : TTimeVal;
   p:ptimeval;
 begin
+  Result := false;
 
   if timeout=-1 then
     p:=nil
@@ -351,12 +356,8 @@ begin
   fpFD_SET(FListenerSocket+1, sel);
   mode := fpselect(FListenerSocket+1, @sel, nil, nil, p);
 
-  if (mode <= 0) then begin
-    Result := false;
-  end else
-    if (mode > 0) then begin
-      Result := true;
-    end;
+  if (mode >= 0) then
+    Result := fpFD_ISSET(FListenerSocket+1,sel)>0;
 end;
 
 function GetNumberOfBytesInReceiveBuffer(socket: Tsocket): Integer;

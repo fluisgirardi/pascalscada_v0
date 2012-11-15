@@ -26,7 +26,7 @@ uses
   , WinSock, sockets_w32_w64
   {$ELSE}
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-  , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix{$ENDIF}
+  , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix, BaseUnix{$ENDIF}
             {$IFDEF WINCE} , sockets_wince {$ENDIF}
             {$IFDEF FDEBUG}, LCLProc{$ENDIF}
   {$IFEND}
@@ -128,6 +128,7 @@ procedure TClientThread.Execute;
 var
   ClientCmd, Response:Byte;
   FaultCount:Integer;
+  Quit:Boolean;
 
   const FaultLimite = 30;
   procedure CheckConnectionError; forward;
@@ -155,6 +156,10 @@ var
         //send the response..
         if socket_send(FSocket,PByte(@Response),1,0,1000)<1 then
           CheckConnectionError;
+      end;
+
+      253: begin//clear the fault count...
+        Quit:=true;
       end;
 
       254: begin//clear the fault count...
@@ -203,8 +208,9 @@ begin
   //254 - Ping response (from client to server)
   //255 - Ping request (from server to client)
   FaultCount:=0;
+  Quit:=false;
 
-  while (not Terminated) and (FaultCount<FaultLimite) do begin
+  while ((not Terminated) and (not Quit)) and (FaultCount<FaultLimite) do begin
     if socket_recv(FSocket,@ClientCmd,1,0,1000)>0 then begin
       ProcResponse(ClientCmd);
     end else
@@ -267,21 +273,48 @@ var
   ClientSocket:TSocket;
   ClientAddrInfo:sockaddr;
   ClientAddrInfoSize:Integer;
+
+  procedure LaunchNewThread;
+  begin
+    //launch a new thread that will handle this new connection
+    setblockingmode(ClientSocket,MODE_NONBLOCKING);
+    FClientThread := TClientThread.Create(True, ClientSocket, FMutex, FRemoveClientThread);
+    Synchronize(AddClientToMainThread);
+    FClientThread.WakeUp;
+  end;
+
 begin
 
   while not Terminated do begin
-    if WaitForConnection(FServerSocket,500) then
-      {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-      ClientSocket:=fpAccept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
-      {$IFEND}
-      //WINDOWS
-      {$IF defined(WIN32) or defined(WIN64)}
-      ClientSocket:=  Accept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
-      {$IFEND}
-      //launch a new thread that will handle this new connection
-      FClientThread := TClientThread.Create(True, ClientSocket, FMutex, FRemoveClientThread);
-      Synchronize(AddClientToMainThread);
-      FClientThread.WakeUp;
+    //linux, bsd
+    {$IF defined(FPC) AND defined(UNIX)}
+    ClientSocket:=fpAccept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
+
+    if ClientSocket>0 then
+      LaunchNewThread
+    else
+      Sleep(500);
+    {$IFEND}
+
+    //WINCE
+    {$IF defined(FPC) AND defined(WINCE)}
+    ClientSocket:=fpAccept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
+
+    if ClientSocket<>SOCKET_ERROR then
+      LaunchNewThread
+    else
+      Sleep(500);
+    {$IFEND}
+
+    //WINDOWS
+    {$IF defined(WIN32) or defined(WIN64)}
+    ClientSocket:=  Accept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
+
+    if ClientSocket<>SOCKET_ERROR then
+      LaunchNewThread
+    else
+      Sleep(500);
+    {$IFEND}
   end;
   while not FEnd.SetEvent do Sleep(1);
 end;
@@ -302,7 +335,7 @@ end;
 procedure TAcceptThread.AddClientToMainThread;
 begin
   if Assigned(FAddClientThread) then
-    FAddClientThread(self);
+    FAddClientThread(FClientThread);
 end;
 
 constructor TAcceptThread.Create(CreateSuspended: Boolean;

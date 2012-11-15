@@ -47,6 +47,7 @@ type
     FPingTimer:TTimer;
     procedure Connect;
     procedure Disconnect;
+    procedure SayGoodBye;
     procedure setActive(AValue: Boolean);
     procedure SetPort(AValue: Word);
     procedure SetServerHost(AValue: String);
@@ -88,7 +89,7 @@ var
   channel:sockaddr_in;
 {$IFEND}
 
-  flag, bufsize, sockType, sockProto:Integer;
+  flag:Integer;
   socketOpen:boolean;
 begin
 
@@ -178,7 +179,6 @@ begin
     //AREN'T SUPPORTED BY SOME OSes LIKE WINDOWS CE
     //##########################################################################
     flag:=1;
-    bufsize := 1024*16;
     //UNIX AND WINDOWS CE
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,           sizeof(Integer));
@@ -214,7 +214,7 @@ begin
     end;
     FConnected:=true;
   finally
-    if socketOpen then
+    if socketOpen and (not FConnected) then
       CloseSocket(FSocket);
   end;
 end;
@@ -222,9 +222,18 @@ end;
 procedure TMutexClient.Disconnect;
 begin
   if FConnected then begin
+    SayGoodBye;
     CloseSocket(FSocket);
     FConnected:=false;
   end;
+end;
+
+procedure TMutexClient.SayGoodBye;
+var
+  cmd:byte;
+begin
+  cmd:=253;
+  socket_send(FSocket,@cmd,1,0,1000); //quit command.
 end;
 
 procedure TMutexClient.setActive(AValue: Boolean);
@@ -338,6 +347,7 @@ end;
 
 destructor TMutexClient.Destroy;
 begin
+
   FPingTimer.Destroy;
   setActive(false);
   inherited Destroy;
