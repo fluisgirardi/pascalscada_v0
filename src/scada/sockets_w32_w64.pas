@@ -340,8 +340,8 @@ begin
 
 
   FD_ZERO(sel);
-  FD_SET(sock, sel);
-  mode := select(sock, @sel, nil, nil, p);
+  FD_SET(FListenerSocket, sel);
+  mode := select(FListenerSocket, @sel, nil, nil, p);
 
   if (mode <= 0) then begin
     Result := false;
@@ -395,4 +395,4 @@ finalization
   WSACleanup;
 {$IFEND}
 end.
-
+

@@ -1,0 +1,301 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="13">
+      <Unit0>
+        <Filename Value="networkmutex.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="networkmutex"/>
+        <UsageCount Value="22"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="umain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="umain"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="44"/>
+        <CursorPos X="28" Y="58"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="../../src/scada/sockets_unix.pas"/>
+        <UnitName Value="sockets_unix"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="332"/>
+        <CursorPos X="1" Y="237"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <UnitName Value="mutexserver"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="321"/>
+        <CursorPos X="44" Y="327"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="../../src/scada/sockets_wince.pas"/>
+        <UnitName Value="sockets_wince"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="312"/>
+        <CursorPos X="25" Y="338"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <UnitName Value="sockets_w32_w64"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="347"/>
+        <CursorPos X="1" Y="361"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="../../src/scada/mutexclient.pas"/>
+        <UnitName Value="MutexClient"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="56"/>
+        <CursorPos X="31" Y="64"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="../../src/scada/socket_types.pas"/>
+        <UnitName Value="socket_types"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="46"/>
+        <CursorPos X="3" Y="58"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/unix/bunxovlh.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="64"/>
+        <CursorPos X="20" Y="75"/>
+        <UsageCount Value="10"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/unix/baseunix.pp"/>
+        <UnitName Value="BaseUnix"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="31"/>
+        <CursorPos X="12" Y="43"/>
+        <UsageCount Value="10"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="../../src/scada/tcp_udpport.pas"/>
+        <UnitName Value="tcp_udpport"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/classes/classesh.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1569"/>
+        <CursorPos X="22" Y="1579"/>
+        <UsageCount Value="10"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="../../../lazarus/fpc/2.6.0/source/rtl/win/winsock.pp"/>
+        <UnitName Value="winsock"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="306"/>
+        <CursorPos X="24" Y="320"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit12>
+    </Units>
+    <General>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="325" Column="1" TopLine="309"/>
+      </Position1>
+      <Position2>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="333" Column="1" TopLine="323"/>
+      </Position2>
+      <Position3>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="336" Column="1" TopLine="323"/>
+      </Position3>
+      <Position4>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="337" Column="1" TopLine="333"/>
+      </Position4>
+      <Position5>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="338" Column="1" TopLine="333"/>
+      </Position5>
+      <Position6>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="345" Column="7" TopLine="333"/>
+      </Position6>
+      <Position7>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="346" Column="1" TopLine="336"/>
+      </Position7>
+      <Position8>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="349" Column="1" TopLine="336"/>
+      </Position8>
+      <Position9>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="350" Column="1" TopLine="336"/>
+      </Position9>
+      <Position10>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="352" Column="1" TopLine="336"/>
+      </Position10>
+      <Position11>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="409" Column="1" TopLine="399"/>
+      </Position11>
+      <Position12>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="325" Column="15" TopLine="315"/>
+      </Position12>
+      <Position13>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="344" Column="1" TopLine="336"/>
+      </Position13>
+      <Position14>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="346" Column="10" TopLine="336"/>
+      </Position14>
+      <Position15>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="326" Column="1" TopLine="315"/>
+      </Position15>
+      <Position16>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="327" Column="1" TopLine="315"/>
+      </Position16>
+      <Position17>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="294" Column="1" TopLine="284"/>
+      </Position17>
+      <Position18>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="327" Column="5" TopLine="312"/>
+      </Position18>
+      <Position19>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="330" Column="18" TopLine="322"/>
+      </Position19>
+      <Position20>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="325" Column="1" TopLine="321"/>
+      </Position20>
+      <Position21>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="327" Column="58" TopLine="321"/>
+      </Position21>
+      <Position22>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="325" Column="1" TopLine="321"/>
+      </Position22>
+      <Position23>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="358" Column="1" TopLine="347"/>
+      </Position23>
+      <Position24>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="325" Column="1" TopLine="321"/>
+      </Position24>
+      <Position25>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="358" Column="1" TopLine="347"/>
+      </Position25>
+      <Position26>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="325" Column="1" TopLine="321"/>
+      </Position26>
+      <Position27>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="358" Column="1" TopLine="347"/>
+      </Position27>
+      <Position28>
+        <Filename Value="../../src/scada/mutexserver.pas"/>
+        <Caret Line="325" Column="1" TopLine="321"/>
+      </Position28>
+      <Position29>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="358" Column="1" TopLine="347"/>
+      </Position29>
+      <Position30>
+        <Filename Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Caret Line="361" Column="1" TopLine="347"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+  <Debugging>
+    <BreakPoints Count="6">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="umain.pas"/>
+        <Line Value="60"/>
+      </Item1>
+      <Item2>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/scada/mutexserver.pas"/>
+        <Line Value="294"/>
+      </Item2>
+      <Item3>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/scada/mutexserver.pas"/>
+        <Line Value="305"/>
+      </Item3>
+      <Item4>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Line Value="346"/>
+      </Item4>
+      <Item5>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/scada/sockets_w32_w64.pas"/>
+        <Line Value="344"/>
+      </Item5>
+      <Item6>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/scada/mutexserver.pas"/>
+        <Line Value="328"/>
+      </Item6>
+    </BreakPoints>
+  </Debugging>
+</CONFIG>
