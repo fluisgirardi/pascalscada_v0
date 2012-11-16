@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2012/11/16 21:16:28.036.pas,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\Unit2.pas=C:\pascalscada\examples\networkmutex\dclient_main.pas</Transaction>
+    <Transaction>2012/11/16 21:16:28.036.dfm,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\Unit2.dfm=C:\pascalscada\examples\networkmutex\dclient_main.dfm</Transaction>
+    <Transaction>2012/11/16 21:16:43.224.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\Project2.dproj=C:\pascalscada\examples\networkmutex\delphi_networkmutex_client.dproj</Transaction>
+  </Transactions>
+</BorlandProject>
