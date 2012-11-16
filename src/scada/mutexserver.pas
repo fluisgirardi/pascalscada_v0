@@ -59,7 +59,6 @@ type
                        ServerMutex:syncobjs.TCriticalSection;
                        AddClientThread,
                        RemoveClientThread:TNotifyEvent);
-    destructor Destroy; override;
   end;
 
   { TClientThread }
@@ -81,7 +80,6 @@ type
                        ClientSocket:TSocket;
                        ServerMutex:syncobjs.TCriticalSection;
                        RemoveClientThread:TNotifyEvent);
-    destructor Destroy; override;
   end;
 
   { TMutexServer }
@@ -249,6 +247,7 @@ begin
   repeat
      CheckSynchronize(1);
   until WaitEnd(1)=wrSignaled;
+  FEnd.Destroy;
 end;
 
 constructor TClientThread.Create(CreateSuspended: Boolean;
@@ -263,12 +262,6 @@ begin
   FRemoveClientThread :=RemoveClientThread;
   FEnd.ResetEvent;
   FIntoCriticalSection:=false;
-end;
-
-destructor TClientThread.Destroy;
-begin
-  FEnd.Destroy;
-  inherited Destroy;
 end;
 
 { TAcceptThread }
@@ -328,6 +321,7 @@ begin
   repeat
      CheckSynchronize(1);
   until WaitEnd(1)=wrSignaled;
+  FEnd.Destroy;
 end;
 
 function TAcceptThread.WaitEnd(timeout:Cardinal): TWaitResult;
@@ -355,12 +349,6 @@ begin
   FEnd                := TCrossEvent.Create(nil,true,false,'');
 
   FEnd.ResetEvent;
-end;
-
-destructor TAcceptThread.Destroy;
-begin
-  FEnd.Destroy;
-  inherited Destroy;
 end;
 
 { TMutexServer }
@@ -465,6 +453,8 @@ begin
     FAcceptThread:=TAcceptThread.Create(true, FSocket, FMutex, AddClientThread, RemoveClientThread);
     FAcceptThread.WakeUp;
   end else begin
+    //close the socket...
+    closesocket(FSocket);
     //destroy the threads from all clients and close the socket.
     FAcceptThread.Terminate;
     FAcceptThread.Destroy;
@@ -473,7 +463,7 @@ begin
     //destroy all client threads...
     for ct:=0 to High(FClients) do begin
       FClients[ct].Terminate;
-      FClients[ct].Destroy;
+      //FClients[ct].de;
     end;
   end;
   FActive:=AValue;
