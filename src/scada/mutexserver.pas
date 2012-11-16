@@ -111,7 +111,7 @@ type
 
 implementation
 
-uses hsstrings {$IF defined(WIN32) or defined(WIN64)} , Windows{$ENDIF};
+uses hsstrings {$IF defined(WIN32) or defined(WIN64)} , Windows{$IFEND};
 
 
 { TClientThread }
@@ -403,7 +403,7 @@ begin
       //RefreshLastOSError;
       exit;
     end;
-    {$ENDIF}
+    {$IFEND}
 
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     fpsetsockopt(FSocket, SOL_SOCKET,  SO_REUSEADDR, @reuse_addr, sizeof(reuse_addr));
