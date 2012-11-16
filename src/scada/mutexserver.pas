@@ -23,7 +23,12 @@ uses
   Classes, SysUtils, ExtCtrls, CommPort, commtypes, socket_types, CrossEvent,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
-  , WinSock, sockets_w32_w64
+    {$IFDEF FPC}
+    , WinSock2,
+    {$ELSE}
+    , WinSock,
+    {$ENDIF}
+    sockets_w32_w64
   {$ELSE}
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
   , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix, BaseUnix{$ENDIF}
@@ -271,8 +276,6 @@ end;
 procedure TAcceptThread.Execute;
 var
   ClientSocket:TSocket;
-  ClientAddrInfo:sockaddr;
-  ClientAddrInfoSize:Integer;
 
   procedure LaunchNewThread;
   begin
@@ -288,7 +291,7 @@ begin
   while not Terminated do begin
     //linux, bsd
     {$IF defined(FPC) AND defined(UNIX)}
-    ClientSocket:=fpAccept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
+    ClientSocket:=fpAccept(FServerSocket,nil,nil);
 
     if ClientSocket>0 then
       LaunchNewThread
@@ -298,9 +301,9 @@ begin
 
     //WINCE
     {$IF defined(FPC) AND defined(WINCE)}
-    ClientSocket:=fpAccept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
+    ClientSocket:=fpAccept(FServerSocket,nil,nil);
 
-    if ClientSocket<>SOCKET_ERROR then
+    if ClientSocket<>INVALID_SOCKET then
       LaunchNewThread
     else
       Sleep(500);
@@ -308,9 +311,9 @@ begin
 
     //WINDOWS
     {$IF defined(WIN32) or defined(WIN64)}
-    ClientSocket:=  Accept(FServerSocket,@ClientAddrInfo,@ClientAddrInfoSize);
+    ClientSocket:=  Accept(FServerSocket,nil,nil);
 
-    if ClientSocket<>SOCKET_ERROR then
+    if ClientSocket<>INVALID_SOCKET then
       LaunchNewThread
     else
       Sleep(500);
@@ -558,4 +561,4 @@ begin
   inherited Destroy;
 end;
 
-end.
+end.

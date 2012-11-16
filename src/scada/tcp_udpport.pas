@@ -23,7 +23,13 @@ interface
 uses
   Classes, SysUtils, ExtCtrls, CommPort, commtypes, socket_types
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
-  , Windows, WinSock, sockets_w32_w64
+    , Windows,
+    {$IFDEF FPC}
+    WinSock2,
+    {$ELSE}
+    WinSock,
+    {$ENDIF}
+    sockets_w32_w64
   {$ELSE}
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
   , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix{$ENDIF}

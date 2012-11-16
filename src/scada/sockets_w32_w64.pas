@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 //: Implementa funções de socket para Windows.
 {$ELSE}
@@ -13,7 +13,7 @@ unit sockets_w32_w64;
 interface
 
 uses
-  windows, winsock, socket_types, hsstrings, sysutils, commtypes;
+  windows, {$IFDEF FPC}WinSock2, {$ELSE} WinSock, {$ENDIF}socket_types, hsstrings, sysutils, commtypes;
 
   {$IFDEF PORTUGUES}
   {:
