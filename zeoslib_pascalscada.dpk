@@ -29,7 +29,8 @@ package zeoslib_pascalscada;
 
 requires
   designide,
-  dbrtl;
+  dbrtl,
+  rtl;
 
 contains
   ZPlainSqLiteDriver in 'zeoslib\src\plain\ZPlainSqLiteDriver.pas',
@@ -156,6 +157,7 @@ contains
   ZSqlUpdate in 'zeoslib\src\component\ZSqlUpdate.pas',
   ZStoredProcedure in 'zeoslib\src\component\ZStoredProcedure.pas',
   ZStreamBlob in 'zeoslib\src\component\ZStreamBlob.pas',
-  ZUpdateSqlEditor in 'zeoslib\src\component\ZUpdateSqlEditor.pas' {ZUpdateSQLEditForm};
+  ZUpdateSqlEditor in 'zeoslib\src\component\ZUpdateSqlEditor.pas' {ZUpdateSQLEditForm},
+  ZEncoding in 'zeoslib\src\core\ZEncoding.pas';
 
 end.

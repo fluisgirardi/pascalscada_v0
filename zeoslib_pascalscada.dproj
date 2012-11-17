@@ -57,6 +57,7 @@
 			<DCCReference Include="zeoslib\src\component\ZComponent.dcr"/>
 			<DCCReference Include="designide.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>
+			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainSqLiteDriver.pas"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainAdo.pas"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainAdoDriver.pas"/>
@@ -184,6 +185,7 @@
 			<DCCReference Include="zeoslib\src\component\ZUpdateSqlEditor.pas">
 				<Form>ZUpdateSQLEditForm</Form>
 			</DCCReference>
+			<DCCReference Include="zeoslib\src\core\ZEncoding.pas"/>
 			<DCCReference Include="zeoslib\src\component\ZComponent.dcr"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

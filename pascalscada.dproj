@@ -153,6 +153,8 @@
 			<DCCReference Include="src\hmi\usrmgnt_login.pas">
 				<Form>frmUserAuthentication</Form>
 			</DCCReference>
+			<DCCReference Include="src\scada\mutexserver.pas"/>
+			<DCCReference Include="src\scada\mutexclient.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

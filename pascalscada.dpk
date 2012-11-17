@@ -110,6 +110,8 @@ contains
   hmizones in 'src\hmi\hmizones.pas',
   ualfakeyboard in 'src\hmi\ualfakeyboard.pas' {Form1},
   unumerickeyboard in 'src\hmi\unumerickeyboard.pas' {NumericKeyBoard},
-  usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication};
+  usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication},
+  mutexserver in 'src\scada\mutexserver.pas',
+  mutexclient in 'src\scada\mutexclient.pas';
 
 end.

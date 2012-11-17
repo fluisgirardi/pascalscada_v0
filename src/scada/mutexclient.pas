@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um mutex de rede.)
@@ -399,8 +399,17 @@ begin
             254:
               PingResponse;
           end;
-        end else
+        end else begin
+          //if the program is at this line,
+          //is because it send the request,
+          //but don´t received a response (timeout)
+          //so, release the mutex sending
+          //a release command.
+          request:=3; //leave mutex command.
+          socket_send(FSocket,@request,1,0,1000);
           InternalCheckConnection;
+        end;
+
 
         if not FConnected then exit;
       until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;

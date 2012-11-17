@@ -133,7 +133,7 @@ var
   FaultCount:Integer;
   Quit:Boolean;
 
-  const FaultLimite = 30;
+  const FaultLimite = 2000; //2000*5ms = 10seconds.
   procedure CheckConnectionError; forward;
 
   procedure ProcResponse(response:Byte);
@@ -146,7 +146,7 @@ var
         end else
           Response:=0;
 
-        if socket_send(FSocket,PByte(@Response),1,0,1000)<1 then
+        if socket_send(FSocket,PByte(@Response),1,0,50)<1 then
           CheckConnectionError;
       end;
 
@@ -157,7 +157,7 @@ var
           FIntoCriticalSection:=false;
         end;
         //send the response..
-        if socket_send(FSocket,PByte(@Response),1,0,1000)<1 then
+        if socket_send(FSocket,PByte(@Response),1,0,50)<1 then
           CheckConnectionError;
       end;
 
@@ -178,11 +178,11 @@ var
   begin
     Response:=255;
     IncFault:=false;
-    if socket_send(FSocket,PByte(@Response),1,0,1000)<1 then
+    if socket_send(FSocket,PByte(@Response),1,0,50)<1 then
       if not CheckConnection(ioresult,IncRetries,PActive,FSocket,nil) then
         IncFault:=true;
 
-    if socket_recv(FSocket,PByte(@ClientCmd),1,0,1000)>0 then
+    if socket_recv(FSocket,PByte(@ClientCmd),1,0,50)>0 then
       ProcResponse(ClientCmd)
     else begin
       if not CheckConnection(ioresult,IncRetries,PActive,FSocket,nil) then
@@ -214,7 +214,8 @@ begin
   Quit:=false;
 
   while ((not Terminated) and (not Quit)) and (FaultCount<FaultLimite) do begin
-    if socket_recv(FSocket,@ClientCmd,1,0,1000)>0 then begin
+    if socket_recv(FSocket,@ClientCmd,1,0,5)>0 then begin  //<<=== 5ms here
+      if Terminated then break;
       ProcResponse(ClientCmd);
     end else
       CheckConnectionError;
@@ -289,7 +290,7 @@ begin
     if ClientSocket>0 then
       LaunchNewThread
     else
-      Sleep(500);
+      Sleep(5);
     {$IFEND}
 
     //WINCE
@@ -299,7 +300,7 @@ begin
     if ClientSocket<>INVALID_SOCKET then
       LaunchNewThread
     else
-      Sleep(500);
+      Sleep(5);
     {$IFEND}
 
     //WINDOWS
@@ -309,7 +310,7 @@ begin
     if ClientSocket<>INVALID_SOCKET then
       LaunchNewThread
     else
-      Sleep(500);
+      Sleep(5);
     {$IFEND}
   end;
   while not FEnd.SetEvent do Sleep(1);
