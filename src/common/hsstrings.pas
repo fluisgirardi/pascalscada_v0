@@ -99,7 +99,7 @@ resourcestring
   SYouMustHaveAtLeastOneStructureItem = 'É necessário pelo menos um item de estrutura!';
   SWhyMapBitsFromOtherBits = 'Porque mapear bits de outros bits?';
   SStartMustBeLessThanEndIndex = 'O indice inicial precisa ser menor que o inicial';
-  SDoYouWantDeleteThisItem = 'Deseja mesmo deletar o item?'
+  SDoYouWantDeleteThisItem = 'Deseja mesmo deletar o item?';
   SDeleteTheItem = 'Deletar o item "';
   SDigitalInputInitialByte  = 'Byte inicial da entrada digital';
   SDigitalOutputInitialByte = 'Byte inicial da saida digital';

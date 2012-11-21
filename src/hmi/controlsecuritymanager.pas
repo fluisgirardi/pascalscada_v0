@@ -7,20 +7,25 @@ unit ControlSecurityManager;
 interface
 
 uses
-  Classes, sysutils, HMITypes, ActnList, PLCTag;
+  Classes, sysutils, HMITypes, ActnList, PLCTag, BasicUserManagement;
 
 type
+
+
+  { TControlSecurityManager }
+
   TControlSecurityManager = class(TComponent)
   private
     FControls:array of IHMIInterface;
-    FUserManagement:TComponent;
-    procedure SetUserManagement(um:TComponent);
+    FUserManagement:TBasicUserManagement;
+    procedure SetUserManagement(um:TBasicUserManagement);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function   Login:Boolean;
     procedure  Logout;
     procedure  Manage;
+    function   GetCurrentUserlogin:String;
     procedure  TryAccess(sc:String);
     procedure  RegisterControl(control:IHMIInterface);
     procedure  UnRegisterControl(control:IHMIInterface);
@@ -32,7 +37,7 @@ type
     function   SecurityCodeExists(sc:String):Boolean;
     function   GetRegisteredAccessCodes:TStringList;
   published
-    property UserManagement:TComponent read FUserManagement write SetUserManagement;
+    property UserManagement:TBasicUserManagement read FUserManagement write SetUserManagement;
   end;
 
   //actions...
@@ -149,7 +154,7 @@ type
 
 implementation
 
-uses BasicUserManagement, hsstrings, Dialogs, Controls;
+uses hsstrings, Dialogs, Controls;
 
 { TPascalSCADALogin_LogoutAction }
 
@@ -291,6 +296,13 @@ begin
     TBasicUserManagement(FUserManagement).Manage;
 end;
 
+function TControlSecurityManager.GetCurrentUserlogin: String;
+begin
+  Result:='';
+  if FUserManagement<>nil then
+    Result:=TBasicUserManagement(FUserManagement).CurrentUserLogin;
+end;
+
 procedure  TControlSecurityManager.TryAccess(sc:String);
 begin
   if FUserManagement<>nil then
@@ -298,7 +310,7 @@ begin
       raise Exception.Create(SAccessDenied);
 end;
 
-procedure TControlSecurityManager.SetUserManagement(um:TComponent);
+procedure TControlSecurityManager.SetUserManagement(um:TBasicUserManagement);
 begin
   if (um<>nil) and (not (um is TBasicUserManagement)) then
     raise Exception.Create(SInvalidUserManager);

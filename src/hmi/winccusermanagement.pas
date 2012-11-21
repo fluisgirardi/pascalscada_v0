@@ -72,7 +72,6 @@ type
     function    GetRegisteredAccessCodes:TStringList; override;
     procedure   ClearAuthorizationCache;
   published
-    property CurrentUserLogin;
     property FailureLogin;
     property LoginRetries;
     property LoginFrozenTime;
