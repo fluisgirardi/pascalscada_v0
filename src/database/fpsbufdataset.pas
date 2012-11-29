@@ -1377,8 +1377,9 @@ begin
   for i := 0 to Fields.Count-1 do
     if fields[i].FieldNo=0 then
       DatabaseError(SErrNoDataset)
-    else if (FAutoIncValue>-1) and (fields[i] is TAutoIncField) and not assigned(FAutoIncField) then
-      FAutoIncField := TAutoIncField(fields[i]);
+    else
+      if (FAutoIncValue>-1) and (fields[i] is TAutoIncField) and not assigned(FAutoIncField) then
+        FAutoIncField := TAutoIncField(fields[i]);
 
   InitDefaultIndexes;
   CalcRecordSize;
@@ -2986,9 +2987,12 @@ begin
   CheckInactive;
   if ((FieldCount=0) or (FieldDefs.Count=0)) then
     begin
-    if (FieldDefs.Count>0) then
-      CreateFields
-    else if (fields.Count>0) then
+    if (FieldDefs.Count>0) then begin
+      CreateFields;
+      {$IFNDEF FPC}
+      BindFields(true);
+      {$ENDIF}
+    end else if (fields.Count>0) then
       begin
       InitFieldDefsFromfields;
       BindFields(True);

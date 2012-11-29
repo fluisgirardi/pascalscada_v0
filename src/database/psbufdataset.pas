@@ -7,7 +7,11 @@ uses
 
 type
 
+  { TFPSBufDataSet }
+
   TFPSBufDataSet = class (TBufDataset)
+  //protected
+  //  procedure CreateFields; override;
   public
     Procedure CopyFromDataset(DataSet : TDataSet; CopyData : Boolean = True);
   end;
@@ -15,6 +19,29 @@ type
 implementation
 
 { TFPSBufDataSet }
+
+//procedure TFPSBufDataSet.CreateFields;
+//Var
+//  I : Integer;
+//  {$IFNDEF FPC}
+//  FField: TField;
+//  {$ENDIF}
+//begin
+//  For I:=0 to fielddefs.Count-1 do
+//    With Fielddefs.Items[I] do
+//      If DataType<>ftUnknown then begin
+//        {$ifdef DSDebug}
+//        Writeln('About to create field',FieldDefs.Items[i].Name);
+//        {$endif}
+//        {$IFDEF FPC}
+//        CreateField(self);
+//        {$ELSE}
+//        FField:=CreateField(self);
+//        if Assigned(FField) then
+//          FField.FieldNO:=FieldNo;
+//        {$ENDIF}
+//      end;
+//end;
 
 procedure TFPSBufDataSet.CopyFromDataset(DataSet: TDataSet; CopyData: Boolean = True);
 Var
