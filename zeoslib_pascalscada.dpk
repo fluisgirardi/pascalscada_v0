@@ -23,14 +23,19 @@ package zeoslib_pascalscada;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'ZeosLib - PascalSCADA'}
+{$DESCRIPTION 'PascalSCADA - Database Compatibility - ZeosLib'}
 {$IMPLICITBUILD ON}
 {$DEFINE ZEOS_DISABLE_ASA}
 
 requires
   designide,
   dbrtl,
-  rtl;
+  rtl,
+  pascalscada_common,
+  xmlrtl,
+  vclactnband,
+  vclx,
+  vcl;
 
 contains
   ZPlainSqLiteDriver in 'zeoslib\src\plain\ZPlainSqLiteDriver.pas',
@@ -158,6 +163,11 @@ contains
   ZStoredProcedure in 'zeoslib\src\component\ZStoredProcedure.pas',
   ZStreamBlob in 'zeoslib\src\component\ZStreamBlob.pas',
   ZUpdateSqlEditor in 'zeoslib\src\component\ZUpdateSqlEditor.pas' {ZUpdateSQLEditForm},
-  ZEncoding in 'zeoslib\src\core\ZEncoding.pas';
+  ZEncoding in 'zeoslib\src\core\ZEncoding.pas',
+  fpsbufdataset in 'src\database\fpsbufdataset.pas',
+  hmidbconnection in 'src\database\hmidbconnection.pas',
+  psbufdataset in 'src\database\psbufdataset.pas',
+  pscada_dbreg in 'src\database\pscada_dbreg.pas',
+  dbstructurechecker in 'src\database\dbstructurechecker.pas';
 
 end.

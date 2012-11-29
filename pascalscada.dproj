@@ -20,10 +20,9 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_BplOutput>lib\delphi</DCC_BplOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>lib\delphi\pascalscada.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\pascalscada.bpl</DCC_DependencyCheckOutputName>
 			<DCC_IOChecking>false</DCC_IOChecking>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
@@ -55,9 +54,9 @@
 			</DelphiCompile>
 			<DCCReference Include="designide.dcp"/>
 			<DCCReference Include="VclSmp.dcp"/>
-			<DCCReference Include="pascalscada_common.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="pascalscada_common.dcp"/>
 			<DCCReference Include="src\scada\westasciidriver.pas"/>
 			<DCCReference Include="src\scada\commport.pas"/>
 			<DCCReference Include="src\scada\commtypes.pas"/>
@@ -187,7 +186,7 @@
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">7</VersionInfo>
 						<VersionInfo Name="Release">3</VersionInfo>
-						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Build">1</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -199,7 +198,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">0.7.3.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.7.3.1</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

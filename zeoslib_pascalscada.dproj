@@ -20,17 +20,16 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_BplOutput>lib\delphi</DCC_BplOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_DependencyCheckOutputName>lib\delphi\zeoslib_pascalscada.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\zeoslib_pascalscada.bpl</DCC_DependencyCheckOutputName>
 			<DCC_IOChecking>false</DCC_IOChecking>
 			<DCC_DebugInformation>false</DCC_DebugInformation>
-			<DCC_UnitSearchPath>zeoslib\src\component;zeoslib\src\core;zeoslib\src\dbc;zeoslib\src\parsesql;zeoslib\src\plain;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>zeoslib\src\component;zeoslib\src\core;zeoslib\src\dbc;zeoslib\src\parsesql;zeoslib\src\plain;src\database;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_Platform>x86</DCC_Platform>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-			<DCC_Description>ZeosLib - PascalSCADA</DCC_Description>
+			<DCC_Description>PascalSCADA - Database Compatibility - ZeosLib</DCC_Description>
 			<DCC_Define>ZEOS_DISABLE_ASA;$(DCC_Define)</DCC_Define>
 			<DCC_K>false</DCC_K>
 			<DCC_F>false</DCC_F>
@@ -58,6 +57,11 @@
 			<DCCReference Include="designide.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="pascalscada_common.dcp"/>
+			<DCCReference Include="xmlrtl.dcp"/>
+			<DCCReference Include="vclactnband.dcp"/>
+			<DCCReference Include="vclx.dcp"/>
+			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainSqLiteDriver.pas"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainAdo.pas"/>
 			<DCCReference Include="zeoslib\src\plain\ZPlainAdoDriver.pas"/>
@@ -186,6 +190,11 @@
 				<Form>ZUpdateSQLEditForm</Form>
 			</DCCReference>
 			<DCCReference Include="zeoslib\src\core\ZEncoding.pas"/>
+			<DCCReference Include="src\database\fpsbufdataset.pas"/>
+			<DCCReference Include="src\database\hmidbconnection.pas"/>
+			<DCCReference Include="src\database\psbufdataset.pas"/>
+			<DCCReference Include="src\database\pscada_dbreg.pas"/>
+			<DCCReference Include="src\database\dbstructurechecker.pas"/>
 			<DCCReference Include="zeoslib\src\component\ZComponent.dcr"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

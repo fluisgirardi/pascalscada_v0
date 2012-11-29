@@ -12,9 +12,6 @@
 			<Projects Include="zeoslib_pascalscada.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="pascalscada_db.dproj">
-				<Dependencies>pascalscada_common.dproj;zeoslib_pascalscada.dproj</Dependencies>
-			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -50,23 +47,14 @@
 		<Target Name="zeoslib_pascalscada:Make">
 			<MSBuild Targets="Make" Projects="zeoslib_pascalscada.dproj"/>
 		</Target>
-		<Target DependsOnTargets="pascalscada_common;zeoslib_pascalscada" Name="pascalscada_db">
-			<MSBuild Projects="pascalscada_db.dproj"/>
-		</Target>
-		<Target DependsOnTargets="pascalscada_common:Clean;zeoslib_pascalscada:Clean" Name="pascalscada_db:Clean">
-			<MSBuild Targets="Clean" Projects="pascalscada_db.dproj"/>
-		</Target>
-		<Target DependsOnTargets="pascalscada_common:Make;zeoslib_pascalscada:Make" Name="pascalscada_db:Make">
-			<MSBuild Targets="Make" Projects="pascalscada_db.dproj"/>
-		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="pascalscada_common;pascalscada;zeoslib_pascalscada;pascalscada_db"/>
+			<CallTarget Targets="pascalscada_common;pascalscada;zeoslib_pascalscada"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="pascalscada_common:Clean;pascalscada:Clean;zeoslib_pascalscada:Clean;pascalscada_db:Clean"/>
+			<CallTarget Targets="pascalscada_common:Clean;pascalscada:Clean;zeoslib_pascalscada:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="pascalscada_common:Make;pascalscada:Make;zeoslib_pascalscada:Make;pascalscada_db:Make"/>
+			<CallTarget Targets="pascalscada_common:Make;pascalscada:Make;zeoslib_pascalscada:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

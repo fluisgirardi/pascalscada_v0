@@ -29,9 +29,9 @@ package pascalscada;
 requires
   designide,
   VclSmp,
-  pascalscada_common,
   vcl,
-  rtl;
+  rtl,
+  pascalscada_common;
 
 contains
   westasciidriver in 'src\scada\westasciidriver.pas',

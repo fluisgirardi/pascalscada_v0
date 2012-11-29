@@ -21,15 +21,14 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_DcuOutput>lib\delphi</DCC_DcuOutput>
-			<DCC_BplOutput>lib\delphi</DCC_BplOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
-			<DCC_Description>PascalSCADA common features</DCC_Description>
+			<DCC_Description>PascalSCADA - Common features</DCC_Description>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<GenPackage>true</GenPackage>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Platform>x86</DCC_Platform>
-			<DCC_DependencyCheckOutputName>lib\delphi\pascalscada_common.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\pascalscada_common.bpl</DCC_DependencyCheckOutputName>
 			<DCC_N>false</DCC_N>
 			<DCC_S>false</DCC_S>
 			<GenDll>true</GenDll>
