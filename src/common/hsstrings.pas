@@ -296,30 +296,30 @@ resourcestring
 
   SMBTBStatiomAddress           = 'What are the address of your Modbus Device?';
   SMBTBTagType                  = 'What are the tag type you want use in your application?';
-  SMBTBMemCount                 = 'How many memories you want map?';
+  SMBTBMemCount                 = 'How many memories do you want map?';
   SMBTBStartFromZero            = 'Start the count from zero? (only names)';
-  SMBTBFirstMemAddress          = 'Qual o endereço da primeira memória que se deseja mapear?';
-  SMBTBTabSheet1                = 'Inicio';
-  SMBTBTabSheet2                = 'Tipo de tag usado';
-  SMBTBTabSheet3                = 'Estrutura de nomeacao';
-  SMBTBCancel                   = 'Cancelar';
-  SMBTBPrior                    = 'Antrerior';
-  SMBTBNext                     = 'Proxima';
-  SMBTBFinish                   = 'Concluir';
-  SMBTBLabel2                   = 'Qual o tipo de tag deseja usar para mapear essas memórias?';
-  SMBTBSimpleFunctions          = 'Usar as funções de escrita simples';
-  SMBTBMaxBlockSize             = 'Qual o tamanho máximo do bloco';
-  SMBTBScanOfEachBlock          = 'Scan de cada bloco?';
-  SMBTBNameOfEachBlock          = 'Nome de cada bloco';
-  SMBTBMaxStringSize            = 'Qual o tamanho máximo da string';
-  SMBTBStringFormat             = 'Qual o formato da string';
-  SMBTBStringByteSize           = 'Tamanho de cada byte da string';
-  SMBTBLabel1                   = 'Nome do Tag';
-  SMBTBLabel3                   = 'Contar Vazio';
+  SMBTBFirstMemAddress          = 'What´s the address of the first memory to map?';
+  SMBTBTabSheet1                = 'Start from';
+  SMBTBTabSheet2                = 'Tag type used';
+  SMBTBTabSheet3                = 'Name struct';
+  SMBTBCancel                   = 'Cancel';
+  SMBTBPrior                    = 'Prior';
+  SMBTBNext                     = 'Next';
+  SMBTBFinish                   = 'Finish';
+  SMBTBLabel2                   = 'What´s the tag kind that will be used to map these variables?';
+  SMBTBSimpleFunctions          = 'Use the single write functions';
+  SMBTBMaxBlockSize             = 'What´s the maximum size of the block';
+  SMBTBScanOfEachBlock          = 'Update rate of each block?';
+  SMBTBNameOfEachBlock          = 'Name of each block';
+  SMBTBMaxStringSize            = 'Maximum string size';
+  SMBTBStringFormat             = 'What´s the string format';
+  SMBTBStringByteSize           = 'Whats the byte size of string';
+  SMBTBLabel1                   = 'Tag name';
+  SMBTBLabel3                   = 'Count empty';
   SMBTBLabel4                   = 'Scan (ms)';
   SMBTBLabel5                   = 'Zero Fill';
   SMBTBLabel6                   = 'Qtd. de digitos';
-  SMBTBLabel7                   = 'Escala';
+  SMBTBLabel7                   = 'Scale';
   {$ENDIF}
 
 {$IFNDEF FPC}
