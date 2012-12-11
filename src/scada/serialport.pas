@@ -397,7 +397,7 @@ begin
   tentativas := 0;
 
   Packet^.Received:=0;
-  While (Packet^.Received<Packet^.ToRead) and ((Packet^.Received=0) or ((Packet^.Received>0) AND (tentativas<Packet^.ReadRetries))) do begin
+  While (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
 
     ResetEvent(POverlapped.hEvent);
     POverlapped.Offset := 0;
@@ -424,7 +424,7 @@ begin
 
   Packet^.Received := 0;
   Packet^.ReadIOResult:=iorNone;
-  While (Packet^.Received<Packet^.ToRead) and ((Packet^.Received=0) or ((Packet^.Received>0) AND (tentativas<Packet^.ReadRetries))) do begin
+  While (Packet^.Received<Packet^.ToRead) (tentativas<Packet^.ReadRetries) do begin
      lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
      Packet^.Received := Packet^.Received + lidos;
      if (MilliSecondsBetween(CrossNow,start)>PTimeout) then begin
@@ -1025,6 +1025,7 @@ var
 begin
   IOCTL_SERIAL_CONFIG_SIZE := CTL_CODE (FILE_DEVICE_SERIAL_PORT, 32, METHOD_BUFFERED, FILE_ANY_ACCESS);
   dwFlags := PURGE_TXABORT or PURGE_RXABORT or PURGE_TXCLEAR or PURGE_RXCLEAR;
+  DeviceIoControl(PPortHandle,IOCTL_SERIAL_CONFIG_SIZE,@buf2,0,@buf2,0,buf,nil);
   DeviceIoControl(PPortHandle,IOCTL_SERIAL_CONFIG_SIZE,@buf2,8192,@buf2,8192,buf,nil);
   FlushFileBuffers(PPortHandle);
   PurgeComm(PPortHandle,dwFlags);
