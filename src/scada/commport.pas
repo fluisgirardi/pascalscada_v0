@@ -147,6 +147,8 @@ type
     FReadedLogActions:Boolean;
     FLogFile:String;
     FLogFileStream:TFileStream;
+    FReadRetries: Cardinal;
+    FWriteRetries: Cardinal;
     { @exclude }
     PLockedBy:Cardinal;
     {: @exclude }
@@ -207,6 +209,8 @@ type
     FOnCommPortDisconnected:TNotifyEvent;
 
     procedure OpenInEditMode(v:Boolean);
+    procedure SetReadRetries(AValue: Cardinal);
+    procedure SetWriteRetries(AValue: Cardinal);
 
     {$IFDEF PORTUGUES}
     //: Atualiza as estatisticas de comunicação.
@@ -631,6 +635,20 @@ type
     //: Event called when the communication port has been disconected.
     {$ENDIF}
     property OnCommPortDisconnected:TNotifyEvent read FOnCommPortDisconnected write FOnCommPortDisconnected;
+
+    {$IFDEF PORTUGUES}
+    //: Numero de tentativas de leitura.
+    {$ELSE}
+    //: Number of read retries.
+    {$ENDIF}
+    property ReadRetries:Cardinal read FReadRetries write SetReadRetries default 3;
+
+    {$IFDEF PORTUGUES}
+    //: Numero de tentativas de escrita.
+    {$ELSE}
+    //: Number of write retries.
+    {$ENDIF}
+    property WriteRetries:Cardinal read FWriteRetries write SetWriteRetries default 3;
   public
 
     {$IFDEF PORTUGUES}
@@ -1125,6 +1143,8 @@ begin
   FTimer.Interval:=1000;
   FLastOSErrorMessage:='';
   FLastOSErrorNumber:=0;
+  FReadRetries:=3;
+  FWriteRetries:=3;
   PIOCmdCS := TCriticalSection.Create;
   PLockCS  := TCriticalSection.Create;
   PLockEvent := TCrossEvent.Create(nil,True,True,Name);
@@ -1499,6 +1519,18 @@ begin
 
 end;
 
+procedure TCommPortDriver.SetReadRetries(AValue: Cardinal);
+begin
+  if FReadRetries=AValue then Exit;
+  InterLockedExchange(FReadRetries,AValue);
+end;
+
+procedure TCommPortDriver.SetWriteRetries(AValue: Cardinal);
+begin
+  if FWriteRetries=AValue then Exit;
+  InterLockedExchange(FWriteRetries,AValue);
+end;
+
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
                                  BytesToWrite, DriverID, DelayBetweenCmds:Cardinal;
                                  CallBack:TDriverCallBack;
@@ -1548,7 +1580,7 @@ begin
     PPacket.WriteIOResult := iorNone;
     PPacket.ToWrite := BytesToWrite;
     PPacket.Written := 0;
-    PPacket.WriteRetries := 3;
+    PPacket.WriteRetries := FWriteRetries;
 
     PPacket.BufferToWrite := ToWrite;
 
@@ -1556,7 +1588,7 @@ begin
     PPacket.ReadIOResult := iorNone;
     PPacket.ToRead := BytesToRead;
     PPacket.Received := 0;
-    PPacket.ReadRetries := 3;
+    PPacket.ReadRetries := FReadRetries;
     PPacket.Res1 := Res1;
     PPacket.Res2 := Res2;
     SetLength(PPacket.BufferToRead,BytesToRead);
@@ -1637,7 +1669,7 @@ begin
     PPacket^.WriteIOResult := iorNone;
     PPacket^.ToWrite := BytesToWrite;
     PPacket^.Written := 0;
-    PPacket^.WriteRetries := 3;
+    PPacket^.WriteRetries := FWriteRetries;
 
     PPacket^.BufferToWrite := ToWrite;
 
@@ -1645,7 +1677,7 @@ begin
     PPacket^.ReadIOResult := iorNone;
     PPacket^.ToRead := BytesToRead;
     PPacket^.Received := 0;
-    PPacket^.ReadRetries := 3;
+    PPacket^.ReadRetries := FReadRetries;
     PPacket^.Res1 := nil;
     PPacket^.Res2 := nil;
     SetLength(PPacket^.BufferToRead,BytesToRead);

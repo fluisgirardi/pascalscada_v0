@@ -312,6 +312,11 @@ type
     property OnCommErrorReading;
     //: @seealso TCommPortDriver.OnCommErrorWriting
     property OnCommErrorWriting;
+
+    //: @seealso TCommPortDriver.ReadRetries
+    property ReadRetries;
+    //: @seealso TCommPortDriver.WriteRetries
+    property WriteRetries;
   end;
 
 
@@ -391,7 +396,8 @@ var
 begin
   tentativas := 0;
 
-  While (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
+  Packet^.Received:=0;
+  While (Packet^.Received<Packet^.ToRead) and ((Packet^.Received=0) or ((Packet^.Received>0) AND (tentativas<Packet^.ReadRetries))) do begin
 
     ResetEvent(POverlapped.hEvent);
     POverlapped.Offset := 0;
@@ -418,7 +424,7 @@ begin
 
   Packet^.Received := 0;
   Packet^.ReadIOResult:=iorNone;
-  while (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
+  While (Packet^.Received<Packet^.ToRead) and ((Packet^.Received=0) or ((Packet^.Received>0) AND (tentativas<Packet^.ReadRetries))) do begin
      lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
      Packet^.Received := Packet^.Received + lidos;
      if (MilliSecondsBetween(CrossNow,start)>PTimeout) then begin
