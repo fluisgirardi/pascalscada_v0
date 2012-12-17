@@ -424,7 +424,7 @@ begin
 
   Packet^.Received := 0;
   Packet^.ReadIOResult:=iorNone;
-  While (Packet^.Received<Packet^.ToRead) (tentativas<Packet^.ReadRetries) do begin
+  While (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
      lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
      Packet^.Received := Packet^.Received + lidos;
      if (MilliSecondsBetween(CrossNow,start)>PTimeout) then begin
@@ -1048,4 +1048,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.
