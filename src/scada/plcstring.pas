@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação para Tags String.)
@@ -257,14 +257,14 @@ begin
              {$IFDEF FPC}
              Result := Result + AnsiToUtf8(chr(ValueAux));
              {$ELSE}
-             missing code for delhi!
+             Result := Result + chr(ValueAux);
              {$ENDIF}
              //se alcançou o tamanho da string.
              //if all string is decoded, finish.
              {$IFDEF FPC}
              if UTF8Length(Result)>=strlen then
              {$ELSE}
-             missing delphi code.
+             if Length(Result)>=strlen then
              {$ENDIF}
                exit;
            end;
@@ -282,7 +282,7 @@ begin
          {$IFDEF FPC}
          Result := Result + AnsiToUtf8(char(ValueAux));
          {$ELSE}
-         missing code for delhi!
+         Result := Result + chr(ValueAux);
          {$ENDIF}
        end;
      end;
@@ -323,7 +323,7 @@ begin
              {$IFDEF FPC}
              Result := Result + AnsiToUtf8(chr(ValueAux));
              {$ELSE}
-             missing code for delhi!
+             Result := Result + chr(ValueAux);
              {$ENDIF}
            //inc(ByteP);
            ByteBitP := 0;
@@ -339,7 +339,7 @@ begin
          {$IFDEF FPC}
          Result := Result + AnsiToUtf8(chr(ValueAux));
          {$ELSE}
-         missing code for delhi!
+         Result := Result + chr(ValueAux);
          {$ENDIF}
        end;
      end;
@@ -662,7 +662,7 @@ begin
   {$IFDEF FPC}
   x:=DecodeValue(Utf8ToAnsi(Value));
   {$ELSE}
-  missing code for Delphi!! ahahahha
+  x:=DecodeValue(AnsiString(Value));
   {$ENDIF}
   if FSyncWrites then
     Write(x,Length(x),0)
