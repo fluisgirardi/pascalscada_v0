@@ -74,7 +74,7 @@ type
     procedure SetValue(Value:String);
     function  CalcBlockSize(IsWrite:Boolean):Cardinal;
     function  EncodeValues(values:TArrayOfDouble):String;
-    function  DecodeValue(value:String):TArrayOfDouble;
+    function  DecodeValue(value:AnsiString):TArrayOfDouble;
     
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
@@ -179,7 +179,7 @@ type
 
 implementation
 
-uses variants, hsstrings;
+uses variants, hsstrings{$IFDEF FPC}, LazUTF8{$ENDIF};
 
 constructor TPLCString.Create(AOwner:TComponent);
 begin
@@ -254,10 +254,18 @@ begin
            if ByteP<2 then begin
              strlen := min(strlen,ValueAux);
            end else begin
-             Result := Result + char(ValueAux);
+             {$IFDEF FPC}
+             Result := Result + AnsiToUtf8(chr(ValueAux));
+             {$ELSE}
+             missing code for delhi!
+             {$ENDIF}
              //se alcançou o tamanho da string.
              //if all string is decoded, finish.
-             if Length(Result)>=strlen then
+             {$IFDEF FPC}
+             if UTF8Length(Result)>=strlen then
+             {$ELSE}
+             missing delphi code.
+             {$ENDIF}
                exit;
            end;
            inc(ByteP);
@@ -270,8 +278,12 @@ begin
            ValueAux2 := Trunc(values[ValueP]);
          end;
        end;
-       if ByteBitP<PByteSize then begin
-         Result := Result + char(ValueAux);
+       if ByteBitP<=PByteSize then begin
+         {$IFDEF FPC}
+         Result := Result + AnsiToUtf8(char(ValueAux));
+         {$ELSE}
+         missing code for delhi!
+         {$ENDIF}
        end;
      end;
 
@@ -308,7 +320,11 @@ begin
            if ValueAux=0 then
              exit
            else
-             Result := Result + char(ValueAux);
+             {$IFDEF FPC}
+             Result := Result + AnsiToUtf8(chr(ValueAux));
+             {$ELSE}
+             missing code for delhi!
+             {$ENDIF}
            //inc(ByteP);
            ByteBitP := 0;
            ValueAux := 0;
@@ -319,8 +335,12 @@ begin
            ValueAux2 := Trunc(values[ValueP]);
          end;
        end;
-       if ByteBitP<PByteSize then begin
-         Result := Result + char(ValueAux);
+       if ByteBitP<=PByteSize then begin
+         {$IFDEF FPC}
+         Result := Result + AnsiToUtf8(chr(ValueAux));
+         {$ELSE}
+         missing code for delhi!
+         {$ENDIF}
        end;
      end;
      else
@@ -330,11 +350,11 @@ end;
 
 //codifica uma uma string em array de valores
 //encodes a string to a array of double.
-function  TPLCString.DecodeValue(value:String):TArrayOfDouble;
+function  TPLCString.DecodeValue(value:AnsiString):TArrayOfDouble;
 var
   ValueAux, aux1, maxbits, bit, bs:Integer;
   ValueP, ByteP, ValueBitP, ByteBitP:Integer;
-  strLen, BitsByType :Byte;
+  MaxLen, strLen, BitsByType :Byte;
 begin
   if PProtocolDriver<>nil then
     BitsByType := Min(PProtocolDriver.SizeOfTag(Self,true,FProtocolTagType),32)
@@ -352,8 +372,8 @@ begin
     //encodes a SIEMENS string, 7 or 8 bits of length
     stSIEMENS:
     begin
-      strlen := Min(PStringSize, power(2,PByteSize)-1);
-      strlen := Min(strLen,Length(value));
+      MaxLen := Min(PStringSize, power(2,PByteSize)-1);
+      strlen := Min(MaxLen,Length(value));
       maxbits := PByteSize * (strlen+2);
       bit := 0;
       ByteBitP := 0;
@@ -369,8 +389,13 @@ begin
         //stores in the first two bytes, the length of string.
         if bit<(2*PByteSize) then begin
           aux1 := Power(2,ByteBitP);
-          if (strLen and aux1)=aux1 then
-            ValueAux := ValueAux + Power(2,ValueBitP);
+          if bit<PByteSize then begin
+            if (MaxLen and aux1)=aux1 then
+              ValueAux := ValueAux + Power(2,ValueBitP);
+          end else begin
+            if (strLen and aux1)=aux1 then
+              ValueAux := ValueAux + Power(2,ValueBitP);
+          end;
         end else begin
           if bit=(2*PByteSize) then begin
             ByteBitP := 0;
@@ -594,7 +619,7 @@ end;
 
 procedure TPLCString.SetStringSize(size:Cardinal);
 begin
-   if size>255 then
+   if (PByteSize=8) and (size>255) or ((PByteSize=7) and (size>127)) then
      raise Exception.Create(SstringSizeOutOfBounds);
    PStringSize := size;
    SetBlockSize(CalcBlockSize(false));
@@ -604,15 +629,20 @@ procedure TPLCString.SetByteSize(bsize:Byte);
 begin
    if (bsize<7) or (bsize>8) then
      raise Exception.Create(SsizeMustBe7or8);
-   
+
+   if (bsize=7) and (PStringSize>127) then PStringSize:=127;
+   if (bsize=8) and (PStringSize>255) then PStringSize:=255;
+
    PByteSize := bsize;
    SetBlockSize(CalcBlockSize(false));
 end;
 
 procedure TPLCString.SetStringType(stype:TPLCStringTypes);
 begin
+  if stype=PStringType then exit;
   PStringType := stype;
   SetBlockSize(CalcBlockSize(false));
+  EncodeValues(PValues);
 end;
 
 procedure TPLCString.SetDummySize(s:Cardinal);
@@ -629,7 +659,11 @@ procedure TPLCString.SetValue(Value:String);
 var
   x:TArrayOfDouble;
 begin
-  x:=DecodeValue(Value);
+  {$IFDEF FPC}
+  x:=DecodeValue(Utf8ToAnsi(Value));
+  {$ELSE}
+  missing code for Delphi!! ahahahha
+  {$ENDIF}
   if FSyncWrites then
     Write(x,Length(x),0)
   else
