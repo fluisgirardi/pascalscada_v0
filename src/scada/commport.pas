@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -1522,13 +1522,13 @@ end;
 procedure TCommPortDriver.SetReadRetries(AValue: Cardinal);
 begin
   if FReadRetries=AValue then Exit;
-  InterLockedExchange(FReadRetries,AValue);
+  InterLockedExchange(Integer(FReadRetries),AValue);
 end;
 
 procedure TCommPortDriver.SetWriteRetries(AValue: Cardinal);
 begin
   if FWriteRetries=AValue then Exit;
-  InterLockedExchange(FWriteRetries,AValue);
+  InterLockedExchange(integer(FWriteRetries),AValue);
 end;
 
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
