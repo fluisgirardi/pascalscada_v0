@@ -23,7 +23,7 @@ uses
   Classes, hsstrings, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton,
   HMITrackBar, HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar,
   HMIAnimation, HMIText, HMIZones, hmipropeditor, HMIControlDislocatorAnimation,
-  ControlSecurityManager, ActnList, CustomizedUserManagement,
+  ControlSecurityManager, ActnList, CustomizedUserManagement, Controls,
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
@@ -70,10 +70,11 @@ begin
 
   {$IFDEF FPC}
   {$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
-  RegisterPropertyEditor(TypeInfo(integer),TGraphicZone,                   'ImageIndex',                    TGraphiZoneImageIndexPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TPascalSCADALogin_LogoutAction, 'WithUserLoggedInImageIndex',    TPascalSCADALoginLogoutImageIndexPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer), TGraphicZone,                   'ImageIndex',                    TGraphiZoneImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer), TPascalSCADALogin_LogoutAction, 'WithUserLoggedInImageIndex',    TPascalSCADALoginLogoutImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(integer), TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
   {$IFEND}
+  RegisterPropertyEditor(TypeInfo(TCaption),TTextZone,                      'Text',                          TStringMultilinePropertyEditor);
   {$ENDIF}
 
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);

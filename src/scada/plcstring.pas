@@ -56,6 +56,9 @@ type
     @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
+
+  { TPLCString }
+
   TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private
     PValue:String;
@@ -124,6 +127,35 @@ type
     //: Read/writes a string value on your device
     {$ENDIF}
     property Value:String read PValue write SetValue;
+
+    //: @seealso(TTagBlock.Read)
+    procedure Read; override;
+
+        {$IFDEF PORTUGUES}
+    {:
+    @name escreve assincronamente os valores atribuidos ao bloco.
+    @bold(Só tem efeito caso AutoWrite = @false.)
+    }
+    {$ELSE}
+    {:
+    @name writes asynchronously the values stored in the block.
+    @bold(Only works if AutoWrite = @false.)
+    }
+    {$ENDIF}
+    procedure WriteByScan;
+
+    {$IFDEF PORTUGUES}
+    {:
+    @name escreve sincronamente os valores atribuidos ao bloco.
+    @bold(Só tem efeito caso AutoWrite = @false.)
+    }
+    {$ELSE}
+    {:
+    @name writes synchronously the values stored in the block.
+    @bold(Only works if AutoWrite = @false.)
+    }
+    {$ENDIF}
+    procedure WriteDirect;
   published
 
     {$IFDEF PORTUGUES}
@@ -194,6 +226,33 @@ destructor TPLCString.Destroy;
 begin
   inherited Destroy;
   SetLength(PValues,0);
+end;
+
+procedure TPLCString.Read;
+begin
+  inherited Read;
+end;
+
+procedure TPLCString.WriteByScan;
+var
+  x:Boolean;
+  values:TArrayOfDouble;
+begin
+  x:=PAutoWrite;
+  PAutoWrite := true;
+  values:=DecodeValue(PValue);
+  ScanWrite(values,PSize,0);
+  PAutoWrite := x;
+  SetLength(values,0);
+end;
+
+procedure TPLCString.WriteDirect;
+var
+  values:TArrayOfDouble;
+begin
+  values:=DecodeValue(PValue);
+  Write(values,PSize,0);
+  SetLength(values,0);
 end;
 
 //codifica uma array de valores em uma string
@@ -300,7 +359,7 @@ begin
        ValueAux := 0;
        ValueAux2 := Trunc(values[ValueP]);
        //passa bit a bit para montar a string
-       //build the string, bit by bit
+       //build the string, bit by bite
        while bit<maxbits do begin
          aux1 := Power(2,ValueBitP);
          if ((ValueAux2 and aux1)=aux1) then
