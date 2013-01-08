@@ -557,7 +557,7 @@ type
     procedure SetFilterText(const Value: String); override; {virtual;}
     procedure SetFiltered(Value: Boolean); override; {virtual;}
     procedure InternalRefresh; override;
-    procedure DataEvent(Event: TDataEvent; Info: Ptrint); override;
+    procedure DataEvent(Event: TDataEvent; Info: NativeInt); override;
     procedure BeforeRefreshOpenCursor; virtual;
     procedure DoFilterRecord(out Acceptable: Boolean); virtual;
     procedure SetReadOnly(AValue: Boolean); virtual;
@@ -3246,7 +3246,7 @@ begin
   // Do nothing
 end;
 
-procedure TCustomBufDataset.DataEvent(Event: TDataEvent; Info: Ptrint);
+procedure TCustomBufDataset.DataEvent(Event: TDataEvent; Info: NativeInt);
 begin
   if Event = deUpdateState then
     // Save DataSet.State set by DataSet.SetState (filter out State set by DataSet.SetTempState)
