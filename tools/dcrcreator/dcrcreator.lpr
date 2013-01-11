@@ -9,6 +9,7 @@ uses
   CustApp,
   reswriter,
   bitmapresource,
+  versionresource,
   resource;
 type
 
@@ -31,6 +32,7 @@ var
 
   colection:TResources;
   item:TBitmapResource;
+  version:TVersionResource;
   st:TMemoryStream;
   c:integer;
   vname:TResourceDesc;
@@ -74,6 +76,11 @@ begin
     except
     end;
   end;
+  version:=TVersionResource.Create(nil,'Version Info');
+  version.LangID:=1046;
+
+  colection.Add(version);
+
   colection.WriteToFile(ParamStr(1));
 
   // stop program loop
