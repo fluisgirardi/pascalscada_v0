@@ -76,7 +76,8 @@ begin
     except
     end;
   end;
-  version:=TVersionResource.Create(nil,'Version Info');
+  Vname:=TResourceDesc.Create('1');
+  version:=TVersionResource.Create(nil, vname);
   version.LangID:=1046;
 
   colection.Add(version);
