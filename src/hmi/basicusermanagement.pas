@@ -12,6 +12,10 @@ uses
 type
   TVKType = (vktNone, vktAlphaNumeric, vktNumeric);
 
+  TUserChangedEvent = procedure(Sender:TObject; const OldUsername, NewUserName:String);
+
+  { TBasicUserManagement }
+
   TBasicUserManagement = class(TComponent)
   protected
 {}  FLoggedUser:Boolean;
@@ -25,6 +29,7 @@ type
 
     FSuccessfulLogin:TNotifyEvent;
     FFailureLogin:TNotifyEvent;
+    FUserChanged:TUserChangedEvent;
 
     FRegisteredSecurityCodes:TStringList;
 
@@ -34,6 +39,7 @@ type
     procedure SetInactiveTimeOut(t:Cardinal);
     procedure UnfreezeLogin(Sender:TObject);
   protected
+    procedure DoUserChanged; virtual;
 
     procedure DoSuccessfulLogin; virtual;
     procedure DoFailureLogin; virtual;
@@ -55,6 +61,7 @@ type
 
     property SuccessfulLogin:TNotifyEvent read FSuccessfulLogin write FSuccessfulLogin;
     property FailureLogin:TNotifyEvent read FFailureLogin write FFailureLogin;
+    property UserChanged:TUserChangedEvent read FUserChanged write FUserChanged;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -112,6 +119,11 @@ begin
   frozenTimer:=TTimer.Create(nil);
   frozenTimer.OnTimer:=UnfreezeLogin;
   frmLogin:=TfrmUserAuthentication.Create(nil);
+  {$IFDEF FPC}
+  frmLogin.FormStyle:=fsSystemStayOnTop;
+  {$ELSE}
+  frmLogin.FormStyle:=fsStayOnTop;
+  {$ENDIF}
   retries:=0;
   aborted:=false;
   loggedin:=False;
@@ -246,6 +258,15 @@ begin
     TTimer(sender).Enabled:=false;
   if frmLogin<>nil then
     frmLogin.Enabled:=true;
+end;
+
+procedure TBasicUserManagement.DoUserChanged;
+begin
+  if Assigned(FUserChanged) then
+    try
+      FUserChanged(Self, FCurrentUserLogin, GetCurrentUserLogin);
+    finally
+    end;
 end;
 
 end.

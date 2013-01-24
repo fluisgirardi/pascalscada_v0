@@ -76,6 +76,7 @@ type
     property LoginRetries;
     property LoginFrozenTime;
     property SuccessfulLogin;
+    property UserChanged;
   end;
 
 implementation
@@ -142,7 +143,11 @@ begin
   culogin:=GetCurrentUserLogin;
   if culogin<>FCurrentUserLogin then begin
     GetControlSecurityManager.UpdateControls;
-    FCurrentUserLogin:=culogin;
+    try
+      DoUserChanged;
+    finally
+      FCurrentUserLogin:=culogin;
+    end;
   end;
 end;
 
