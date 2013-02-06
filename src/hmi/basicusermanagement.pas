@@ -12,7 +12,7 @@ uses
 type
   TVKType = (vktNone, vktAlphaNumeric, vktNumeric);
 
-  TUserChangedEvent = procedure(Sender:TObject; const OldUsername, NewUserName:String);
+  TUserChangedEvent = procedure(Sender:TObject; const OldUsername, NewUserName:String) of object;
 
   { TBasicUserManagement }
 

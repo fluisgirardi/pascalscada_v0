@@ -60,6 +60,8 @@ type
     procedure Read; override;
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
+
+    procedure Write(Value:Double);
   published
     //: @seealso(TTag.AutoRead)
     property AutoRead;
@@ -258,6 +260,19 @@ begin
   end else
      TagCommandCallBack(PlcValues, CrossNow, tcWrite, ioNullDriver, Offset);
   SetLength(PlcValues,0);
+end;
+
+procedure TPLCTagNumber.Write(Value: Double);
+var
+  x:TArrayOfDouble;
+begin
+  SetLength(x,1);
+  try
+    x[0]:=Value;
+    Write(x,1,0);
+  finally
+    SetLength(x,0);
+  end;
 end;
 
 procedure TPLCTagNumber.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
