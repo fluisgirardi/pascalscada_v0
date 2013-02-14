@@ -42,6 +42,7 @@ type
       var ValidUser: Boolean);
     procedure CustomizedUserManagement1GetUserLogin(var UserInfo: String);
     procedure CustomizedUserManagement1Logout(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     LastValidUser:String;
   public
@@ -76,6 +77,16 @@ begin
   LastValidUser:='';
 end;
 
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  MessageDlg('This example demostrates how use and implement a customized'+LineEnding+
+             'user management with TCustomizedUserManagement class.'+LineEnding+
+             'This class aims to make easy the security integration with'+LineEnding+
+             'others systems, protecting PascalSCADA controls,'+LineEnding+
+             'menus and toolbar buttons via action list using TPascalSCADASecureAction',
+             mtInformation,[mbok],0);
+end;
+
 procedure TForm1.CustomizedUserManagement1CanAccess(securityCode: String;
   var CanAccess: Boolean);
 begin
@@ -87,14 +98,12 @@ end;
 
 procedure TForm1.Action1Execute(Sender: TObject);
 begin
-  ShowMessage('usuário com permissao de acesso a autorizacao "autorizacao1"!'+LineEnding+
-              'The current can access the authorization "autorizacao1"!');
+  ShowMessage('The current can access the authorization "autorizacao1"!');
 end;
 
 procedure TForm1.Action2Execute(Sender: TObject);
 begin
-  ShowMessage('usuário com permissao de acesso a autorizacao "autorizacao2"!'+LineEnding+
-              'The current can access the authorization "autorizacao2"!');
+  ShowMessage('The current can access the authorization "autorizacao2"!');
 end;
 
 end.

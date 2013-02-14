@@ -1,5 +1,5 @@
 object Form1: TForm1
-  Left = 438
+  Left = 421
   Height = 376
   Top = 101
   Width = 522
@@ -7,7 +7,8 @@ object Form1: TForm1
   ClientHeight = 355
   ClientWidth = 522
   Menu = MainMenu1
-  LCLVersion = '0.9.31'
+  OnCreate = FormCreate
+  LCLVersion = '1.1'
   object HMIEdit1: THMIEdit
     Left = 237
     Height = 23
@@ -47,10 +48,10 @@ object Form1: TForm1
     SecurityCode = 'autorizacao2'
   end
   object TILabel1: TTILabel
-    Left = 184
-    Height = 1
+    Left = 96
+    Height = 13
     Top = 16
-    Width = 1
+    Width = 107
     Font.Style = [fsBold]
     Link.TIObject = CustomizedUserManagement1
     Link.TIPropertyName = 'CurrentUserLogin'
@@ -58,27 +59,27 @@ object Form1: TForm1
   end
   object Label1: TLabel
     Left = 8
-    Height = 14
+    Height = 13
     Top = 16
-    Width = 167
-    Caption = 'Usuário corrente/Current user:'
+    Width = 71
+    Caption = 'Current user:'
     ParentColor = False
   end
   object TILabel2: TTILabel
-    Left = 184
-    Height = 14
+    Left = 96
+    Height = 13
     Top = 40
-    Width = 118
+    Width = 117
     Link.TIObject = CustomizedUserManagement1
     Link.TIPropertyName = 'LoggedSince'
     ParentFont = False
   end
   object Label2: TLabel
     Left = 8
-    Height = 14
+    Height = 13
     Top = 40
-    Width = 160
-    Caption = 'Logado desde/Logged since:'
+    Width = 77
+    Caption = 'Logged since:'
     ParentColor = False
   end
   object CustomizedUserManagement1: TCustomizedUserManagement
@@ -129,7 +130,7 @@ object Form1: TForm1
     left = 264
     top = 80
     object MenuItem1: TMenuItem
-      Caption = 'Usuarios/Users'
+      Caption = 'Users'
       object MenuItem2: TMenuItem
         Action = PascalSCADALoginAction1
       end
@@ -138,9 +139,11 @@ object Form1: TForm1
       end
       object MenuItem4: TMenuItem
         Action = Action1
+        Caption = 'User Can access the authorization "autorizacao1"'
       end
       object MenuItem5: TMenuItem
         Action = Action2
+        Caption = 'User Can access the authorization "autorizacao2"'
       end
     end
   end

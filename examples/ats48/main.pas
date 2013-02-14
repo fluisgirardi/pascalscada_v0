@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
-  SerialPort, ModBusMasterDriver, PLCTagNumber, HMILabel, StdCtrls, hsutils;
+  SerialPort, ModBusSerial, PLCTagNumber, HMILabel, StdCtrls, hsutils;
 
 type
   
@@ -42,7 +42,7 @@ procedure TForm1.ATS48StatusValueChange(Sender: TObject);
 begin
   if Sender is TPLCTagNumber then
     with Sender as TPLCTagNumber do
-       Memo1.Lines.Add(Name+'='+FormatFloat('#0',FloatToInteger(Value) and $FF));
+       Memo1.Lines.Add(Name+'='+FormatFloat('#0',trunc(Value) and $FF));
 
   if (Sender is TPLCTagNumber) and (TPLCTagNumber(Sender).Name='ATS48Status') then begin
     if First then begin
@@ -52,7 +52,7 @@ begin
     end;
     if PowerOn then
       with TPLCTagNumber(Sender) do begin
-        case FloatToInteger(Value) and $FF of
+        case Trunc(Value) and $FF of
           $60:
             ATS48CMD.Value:=$06;
           $21:
@@ -63,7 +63,7 @@ begin
       end
     else
       with TPLCTagNumber(Sender) do begin
-        case FloatToInteger(Value) and $FF of
+        case Trunc(Value) and $FF of
           $27:
             ATS48CMD.Value:=$07;
           $23:
@@ -90,6 +90,12 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   First:=false;
+  MessageDlg('This example demonstrate a simple ModBus RTU that '+LineEnding+
+             'turn on or turn off a motor linked with a Telemecanique'+LineEnding+
+             'Altistart 48 (Softstarter).'+LineEnding+LineEnding+
+             'Please setup a valid serial port before get a functional'+LineEnding+
+             'example. All components are stored on form1.',
+             mtInformation,[mbok],0);
 end;
 
 initialization

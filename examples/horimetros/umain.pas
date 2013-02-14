@@ -52,7 +52,7 @@ type
     ImageList4: TImageList;
     motorh: TImageList;
     motorv: TImageList;
-    MostrarTags: TPLCTagNumber;
+    ShowTags: TPLCTagNumber;
     LeftToolbar: TPanel;
     Panel1: TPanel;
     Panel2: TPanel;
@@ -111,7 +111,7 @@ uses udmdb, udm, upopuphorimetro, ugraficos, ufiltro, urelatorios;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
-  MostrarTags.Value:=1;
+  ShowTags.Value:=1;
   WindowState:=wsMaximized;
 end;
 

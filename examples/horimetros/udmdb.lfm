@@ -1,13 +1,13 @@
 object dmdb: Tdmdb
   OnCreate = DataModuleCreate
   OldCreateOrder = False
-  Height = 50
+  Height = 68
   HorizontalOffset = 380
   VerticalOffset = 107
   Width = 528
   object SQLiteConnection: TZConnection
-    UTF8StringsAsWideField = False
-    PreprepareSQL = False
+    ControlsCodePage = cCP_UTF8
+    AutoEncodeStrings = False
     Port = 0
     Database = '/home/fabiolg/desenvolvimento/horimetros/historicos.db3'
     Protocol = 'sqlite-3'

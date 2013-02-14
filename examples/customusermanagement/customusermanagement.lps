@@ -17,12 +17,14 @@
         <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="umain"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="44"/>
-        <CursorPos X="64" Y="44"/>
+        <TopLine Value="61"/>
+        <CursorPos X="36" Y="87"/>
         <UsageCount Value="22"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -30,13 +32,10 @@
       <Unit2>
         <Filename Value="../../controlsecuritymanager.pas"/>
         <UnitName Value="ControlSecurityManager"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="43"/>
         <CursorPos X="52" Y="55"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit2>
       <Unit3>
@@ -50,7 +49,7 @@
       </Unit3>
       <Unit4>
         <Filename Value="../../../../lazarus/lcl/include/customform.inc"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="360"/>
         <CursorPos X="1" Y="372"/>
@@ -59,7 +58,7 @@
       </Unit4>
       <Unit5>
         <Filename Value="../../../../lazarus/lcl/include/wincontrol.inc"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="5487"/>
         <CursorPos X="1" Y="5499"/>
@@ -69,30 +68,26 @@
       <Unit6>
         <Filename Value="../../basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
-        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="120"/>
         <CursorPos X="106" Y="134"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit6>
       <Unit7>
         <Filename Value="../../usrmgnt_login.pas"/>
         <UnitName Value="usrmgnt_login"/>
-        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
         <TopLine Value="41"/>
         <CursorPos X="37" Y="56"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit7>
     </Units>
     <General>
       <ActiveWindowIndexAtStart Value="0"/>
     </General>
-    <JumpHistory Count="26" HistoryIndex="25">
+    <JumpHistory Count="22" HistoryIndex="21">
       <Position1>
         <Filename Value="umain.pas"/>
         <Caret Line="64" Column="47" TopLine="36"/>
@@ -174,29 +169,14 @@
         <Caret Line="5499" Column="1" TopLine="5487"/>
       </Position20>
       <Position21>
-        <Filename Value="../../basicusermanagement.pas"/>
-        <Caret Line="117" Column="15" TopLine="105"/>
-      </Position21>
-      <Position22>
-        <Filename Value="../../basicusermanagement.pas"/>
-        <Caret Line="10" Column="19" TopLine="1"/>
-      </Position22>
-      <Position23>
-        <Filename Value="../../basicusermanagement.pas"/>
-        <Caret Line="76" Column="1" TopLine="61"/>
-      </Position23>
-      <Position24>
         <Filename Value="../../../../lazarus/lcl/include/customform.inc"/>
         <Caret Line="372" Column="1" TopLine="360"/>
-      </Position24>
-      <Position25>
-        <Filename Value="../../basicusermanagement.pas"/>
-        <Caret Line="120" Column="1" TopLine="99"/>
-      </Position25>
-      <Position26>
-        <Filename Value="../../usrmgnt_login.pas"/>
-        <Caret Line="54" Column="21" TopLine="41"/>
-      </Position26>
+      </Position21>
+      <Position22>
+        <Filename Value="umain.pas"/>
+        <Caret Line="101" Column="15" TopLine="68"/>
+      </Position22>
     </JumpHistory>
   </ProjectSession>
+  <EditorMacros Count="0"/>
 </CONFIG>

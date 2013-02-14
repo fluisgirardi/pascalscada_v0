@@ -1,41 +1,41 @@
 object frmMain: TfrmMain
-  Left = 381
-  Height = 694
-  Top = 109
-  Width = 1366
-  Caption = 'Controle de horimetros'
-  ClientHeight = 694
-  ClientWidth = 1366
+  Left = 73
+  Height = 621
+  Top = 97
+  Width = 1289
+  Caption = 'Hourmeter control'
+  ClientHeight = 621
+  ClientWidth = 1289
   OnCreate = FormCreate
   OnShow = FormShow
-  LCLVersion = '0.9.31'
+  LCLVersion = '1.1'
   object DBGrid1: TDBGrid
     Left = 0
     Height = 80
     Top = 0
-    Width = 1366
+    Width = 1289
     Align = alTop
     Color = clYellow
     Columns = <    
       item
-        Title.Caption = 'Data/Hora'
+        Title.Caption = 'Date/Time'
         Width = 150
         FieldName = 'dt_inicio'
         DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
       end    
       item
-        Title.Caption = 'Duração'
+        Title.Caption = 'Duration'
         Width = 100
         FieldName = 'dt_duracao'
         DisplayFormat = 'hh:nn:ss'
       end    
       item
-        Title.Caption = 'Equipamento'
+        Title.Caption = 'Equipment'
         Width = 150
         FieldName = 'ds_equipamento'
       end    
       item
-        Title.Caption = 'Mensagem'
+        Title.Caption = 'Message'
         FieldName = 'ds_mensagem'
       end>
     DataSource = dmdb.Datasource1
@@ -47,9 +47,9 @@ object frmMain: TfrmMain
   end
   object Image1: TImage
     Left = 0
-    Height = 614
+    Height = 541
     Top = 80
-    Width = 1366
+    Width = 1289
     Align = alClient
     Picture.Data = {
       1754506F727461626C654E6574776F726B47726170686963D625010089504E47
@@ -2882,16 +2882,16 @@ object frmMain: TfrmMain
   end
   object HMICheckBox1: THMICheckBox
     Left = 128
-    Height = 22
+    Height = 21
     Top = 104
-    Width = 93
+    Width = 80
     Enabled = True
     ParentColor = False
     TabOrder = 1
-    PLCTag = MostrarTags
-    CaptionFalse = 'Mostrar Tags'
-    CaptionTrue = 'Mostrar Tags'
-    CaptionGrayed = 'Mostrar Tags'
+    PLCTag = ShowTags
+    CaptionFalse = 'Show tags'
+    CaptionTrue = 'Show tags'
+    CaptionGrayed = 'Show tags'
     ValueFalse = 0
     ValueTrue = 1
   end
@@ -2904,7 +2904,7 @@ object frmMain: TfrmMain
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
-    PLCTag = MostrarTags
+    PLCTag = ShowTags
     Zones = <    
       item
         Value1 = 0
@@ -2944,7 +2944,7 @@ object frmMain: TfrmMain
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
-    PLCTag = MostrarTags
+    PLCTag = ShowTags
     Zones = <    
       item
         Value1 = 0
@@ -2984,7 +2984,7 @@ object frmMain: TfrmMain
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
-    PLCTag = MostrarTags
+    PLCTag = ShowTags
     Zones = <    
       item
         Value1 = 0
@@ -3023,7 +3023,7 @@ object frmMain: TfrmMain
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
-    PLCTag = MostrarTags
+    PLCTag = ShowTags
     Zones = <    
       item
         Value1 = 0
@@ -3063,7 +3063,7 @@ object frmMain: TfrmMain
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
-    PLCTag = MostrarTags
+    PLCTag = ShowTags
     Zones = <    
       item
         Value1 = 0
@@ -3103,7 +3103,7 @@ object frmMain: TfrmMain
     ParentColor = False
     ParentFont = False
     NumberFormat = '#0.0'
-    PLCTag = MostrarTags
+    PLCTag = ShowTags
     Zones = <    
       item
         Value1 = 0
@@ -3144,8 +3144,7 @@ object frmMain: TfrmMain
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido1
-    Prefix = 'Funcionando a '
-    Sufix = ' h'
+    Sufix = ' hour(s) running'
   end
   object HMILabel2: THMILabel
     Left = 248
@@ -3157,8 +3156,7 @@ object frmMain: TfrmMain
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido2
-    Prefix = 'Funcionando a '
-    Sufix = ' h'
+    Sufix = ' hour(s) running'
   end
   object HMILabel3: THMILabel
     Left = 706
@@ -3169,8 +3167,7 @@ object frmMain: TfrmMain
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido3
-    Prefix = 'Funcionando a '
-    Sufix = ' h'
+    Sufix = ' hour(s) running'
   end
   object HMILabel4: THMILabel
     Left = 868
@@ -3182,8 +3179,7 @@ object frmMain: TfrmMain
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido4
-    Prefix = 'Funcionando a '
-    Sufix = ' h'
+    Sufix = ' hour(s) running'
   end
   object HMILabel5: THMILabel
     Left = 440
@@ -3195,8 +3191,7 @@ object frmMain: TfrmMain
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido5
-    Prefix = 'Funcionando a '
-    Sufix = ' h'
+    Sufix = ' hour(s) running'
   end
   object HMILabel6: THMILabel
     Left = 440
@@ -3208,8 +3203,7 @@ object frmMain: TfrmMain
     ParentColor = False
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido6
-    Prefix = 'Funcionando a '
-    Sufix = ' h'
+    Sufix = ' hour(s) running'
   end
   object HMIAnimation2: THMIAnimation
     Left = 212
@@ -3598,7 +3592,7 @@ object frmMain: TfrmMain
       ParentFont = False
       OnClick = HMIText7Click
       NumberFormat = '#0.0'
-      PLCTag = MostrarTags
+      PLCTag = ShowTags
       SecurityCode = '5'
       Zones = <      
         item
@@ -3643,8 +3637,7 @@ object frmMain: TfrmMain
       OnClick = HMILabel7Click
       NumberFormat = '#0'
       PLCTag = dmtags.TDecorrido8
-      Prefix = 'Funcionando a '
-      Sufix = ' h'
+      Sufix = ' hour(s) running'
       SecurityCode = '5'
     end
     object anMartelo: THMIText
@@ -3678,7 +3671,7 @@ object frmMain: TfrmMain
           ZoneType = ztEqual
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
-          Text = 'DESLIGADO'
+          Text = 'Switched Off'
           Color = clGray
           Transparent = False
           Font.Height = -20
@@ -3695,7 +3688,7 @@ object frmMain: TfrmMain
           ZoneType = ztEqual
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
-          Text = 'LIGADO'
+          Text = 'Switched ON'
           Color = clLime
           Transparent = False
           Font.Height = -20
@@ -3722,7 +3715,7 @@ object frmMain: TfrmMain
       ParentFont = False
       OnClick = HMIText9Click
       NumberFormat = '#0.0'
-      PLCTag = MostrarTags
+      PLCTag = ShowTags
       SecurityCode = '5'
       Zones = <      
         item
@@ -3767,8 +3760,7 @@ object frmMain: TfrmMain
       OnClick = HMILabel8Click
       NumberFormat = '#0'
       PLCTag = dmtags.TDecorrido7
-      Prefix = 'Funcionando a '
-      Sufix = ' h'
+      Sufix = ' hour(s) running'
       SecurityCode = '5'
     end
     object anFiltro_Manga: THMIText
@@ -3802,7 +3794,7 @@ object frmMain: TfrmMain
           ZoneType = ztEqual
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
-          Text = 'DESLIGADO'
+          Text = 'Switched Off'
           Color = clGray
           Transparent = False
           Font.Height = -20
@@ -3819,7 +3811,7 @@ object frmMain: TfrmMain
           ZoneType = ztEqual
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
-          Text = 'LIGADO'
+          Text = 'Switched ON'
           Color = clLime
           Transparent = False
           Font.Height = -20
@@ -9889,7 +9881,7 @@ object frmMain: TfrmMain
       00FF000000FF
     }
   end
-  object MostrarTags: TPLCTagNumber
+  object ShowTags: TPLCTagNumber
     TagGUID = '{34DE7DE7-2FD4-4D56-9580-BE328C5634F5}'
     PLCRack = 0
     PLCSlot = 0
@@ -9903,7 +9895,7 @@ object frmMain: TfrmMain
     EnableMinValue = False
     MaxValue = 0
     MinValue = 0
-    left = 184
+    left = 144
     top = 224
   end
   object fire: TImageList
@@ -23224,8 +23216,8 @@ object frmMain: TfrmMain
   object ImageList4: TImageList
     Height = 48
     Width = 48
-    left = 40
-    top = 320
+    left = 144
+    top = 464
     Bitmap = {
       4C69060000003000000030000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
@@ -24970,39 +24962,39 @@ object frmMain: TfrmMain
     object PascalSCADALoginAction1: TPascalSCADALoginAction
       Category = 'PascalSCADA User Management'
       Caption = 'Login'
-      Hint = 'Fazer Login no sistema'
+      Hint = 'User login'
       ImageIndex = 1
     end
     object PascalSCADALogoutAction1: TPascalSCADALogoutAction
       Category = 'PascalSCADA User Management'
       Caption = 'Logoff'
-      Hint = 'Fazer Logoff do sistema'
+      Hint = 'User logoff'
       ImageIndex = 0
     end
     object PascalSCADAManageUsersAction1: TPascalSCADAManageUsersAction
       Category = 'PascalSCADA User Management'
-      Caption = 'Gerenciar usuários'
-      Hint = 'Gerenciar usuários'
+      Caption = 'Manage users'
+      Hint = 'Manage users'
       ImageIndex = 4
     end
     object secureGraphics: TPascalSCADASecureAction
       Category = 'PascalSCADA User Management'
-      Caption = 'Gráficos'
-      Hint = 'Gráficos'
+      Caption = 'Charts'
+      Hint = 'System Charts'
       ImageIndex = 2
       OnExecute = secureGraphicsExecute
     end
     object secureRelatorioAcionamento: TPascalSCADASecureAction
       Category = 'PascalSCADA User Management'
-      Caption = 'Relatório de acionamentos'
-      Hint = 'Relatório de acionamentos'
+      Caption = 'Actions report'
+      Hint = 'Actions report'
       ImageIndex = 3
       OnExecute = secureRelatorioAcionamentoExecute
     end
     object secureAlarmes: TPascalSCADASecureAction
       Category = 'PascalSCADA User Management'
-      Caption = 'Relatório de alarmes de horimetro'
-      Hint = 'Relatório de alarmes'
+      Caption = 'Alarm report'
+      Hint = 'Alarm report'
       ImageIndex = 5
       OnExecute = secureAlarmesExecute
     end

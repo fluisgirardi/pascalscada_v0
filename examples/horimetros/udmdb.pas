@@ -88,6 +88,8 @@ begin
   sqlnow:=FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
   SQLiteConnection.ExecuteDirect('UPDATE tbl_acionamento SET dt_fim='''+sqlnow+''' WHERE dt_fim IS NULL');
   SQLiteConnection.ExecuteDirect('UPDATE tbl_alarme      SET dt_fim='''+sqlnow+''' WHERE dt_fim IS NULL');
+  AlarmesAtivos.Open;
+  ZTable1.Open;
 end;
 
 procedure Tdmdb.Timer1Timer(Sender: TObject);

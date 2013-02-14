@@ -56,6 +56,14 @@ procedure TForm1.FormCreate(Sender: TObject);
 var
   c:Integer;
 begin
+  MessageDlg('This example is used to compare the scan cycle of pascalscada'+LineEnding+
+             'with other scada tools. It exchange data with a Siemens S7-1200,'+LineEnding+
+             'S7-300 and S7-400 via ISOTCP protocol (TCP/IPv4) and some tag '+LineEnding+
+             'values are displayed on the main form (form1). Tags and '+LineEnding+
+             'protocols are stored on DataModule1. This is a copy'+LineEnding+
+             'of a real application developed by me with another scada tool.'+
+             'PascalSCADA Wins!!', mtInformation,[mbok],0);
+
   ComboBox1.items.Clear;
   for c:=0 to DataModule1.ComponentCount-1 do begin
     if (DataModule1.Components[c] is TPLCTagNumber) or (DataModule1.Components[c] is TPLCBlock) then

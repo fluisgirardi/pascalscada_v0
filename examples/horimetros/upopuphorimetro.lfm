@@ -2,23 +2,24 @@ object frmPopup: TfrmPopup
   Left = 283
   Height = 205
   Top = 118
-  Width = 239
+  Width = 267
   BorderStyle = bsDialog
-  Caption = 'Popup Horimetro'
+  Caption = 'Hourmeter popup'
   ClientHeight = 205
-  ClientWidth = 239
+  ClientWidth = 267
   FormStyle = fsStayOnTop
   OnClose = FormClose
   OnCreate = FormCreate
-  LCLVersion = '0.9.31'
+  LCLVersion = '1.1'
   object HMIText1: THMIText
     Left = 0
     Height = 40
     Top = 0
-    Width = 239
+    Width = 267
     Align = alTop
     Alignment = taCenter
     Color = clGray
+    Enabled = True
     Font.Height = -20
     Font.Style = [fsBold]
     Layout = tlCenter
@@ -38,7 +39,7 @@ object frmPopup: TfrmPopup
         ZoneType = ztEqual
         HorizontalAlignment = taCenter
         VerticalAlignment = tlCenter
-        Text = 'DESLIGADO'
+        Text = 'Switched Off'
         Color = clGray
         Transparent = False
         Font.Height = -20
@@ -55,7 +56,7 @@ object frmPopup: TfrmPopup
         ZoneType = ztEqual
         HorizontalAlignment = taCenter
         VerticalAlignment = tlCenter
-        Text = 'LIGADO'
+        Text = 'Switched On'
         Color = clLime
         Transparent = False
         Font.Height = -20
@@ -63,57 +64,64 @@ object frmPopup: TfrmPopup
       end>
   end
   object HMILabel1: THMILabel
-    Left = 139
+    Left = 163
     Height = 14
     Top = 84
     Width = 96
     Alignment = taRightJustify
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     Sufix = ' horas'
   end
   object Label1: TLabel
     Left = 0
-    Height = 14
+    Height = 13
     Top = 84
-    Width = 86
-    Caption = 'Tempo ligado:'
+    Width = 97
+    Caption = 'Time turned on:'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
   end
   object HMILabel2: THMILabel
-    Left = 139
+    Left = 163
     Height = 14
     Top = 110
     Width = 96
     Alignment = taRightJustify
+    Enabled = True
     ParentColor = False
     NumberFormat = '#0'
     Sufix = ' horas'
   end
   object Label2: TLabel
     Left = 0
-    Height = 14
+    Height = 13
     Top = 110
-    Width = 114
-    Caption = 'Tempo acumulado:'
+    Width = 173
+    Caption = 'Accumulated time turned on'
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
   end
   object HMIEdit1: THMIEdit
-    Left = 139
-    Height = 19
+    Left = 163
+    Height = 23
     Top = 56
     Width = 96
     Alignment = taRightJustify
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 0
     NumberFormat = '#0'
     ShowFocused = False
+    EnableMinValue = False
+    EnableMaxValue = False
+    MinValue = 0
+    MaxValue = 0
   end
   object Label3: TLabel
     Left = 0
@@ -121,7 +129,7 @@ object frmPopup: TfrmPopup
     Top = 56
     Width = 137
     AutoSize = False
-    Caption = 'Setpoint horimetro:'
+    Caption = 'Hourmeter Setpoint:'
     Font.Style = [fsBold]
     Layout = tlCenter
     ParentColor = False
@@ -131,8 +139,8 @@ object frmPopup: TfrmPopup
     Left = 0
     Height = 30
     Top = 137
-    Width = 235
-    Caption = 'Resetar horimetro'
+    Width = 259
+    Caption = 'Reset hourmeter'
     Kind = bkRetry
     OnClick = BitBtn1Click
     TabOrder = 1
@@ -141,8 +149,8 @@ object frmPopup: TfrmPopup
     Left = 0
     Height = 30
     Top = 171
-    Width = 235
-    Caption = 'Resetar Alarme'
+    Width = 259
+    Caption = 'Alarm Reset'
     Default = True
     Kind = bkOK
     OnClick = BitBtn2Click
