@@ -71,6 +71,7 @@ type
     function    CanAccess(sc:String):Boolean; override;
     function    GetRegisteredAccessCodes:TStringList; override;
     procedure   ClearAuthorizationCache;
+    function    CanAccessViaWinCCAuthCode(Code:Integer):Boolean;
   published
     property FailureLogin;
     property LoginRetries;
@@ -300,6 +301,11 @@ procedure TWinCCUserManagement.ClearAuthorizationCache;
 begin
   fAuthorizationCache.Destroy;
   fAuthorizationCache:=nil;
+end;
+
+function TWinCCUserManagement.CanAccessViaWinCCAuthCode(Code: Integer): Boolean;
+begin
+  Result := PWRTCheckPermission(code,0);
 end;
 
 end.
