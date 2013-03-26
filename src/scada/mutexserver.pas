@@ -136,6 +136,42 @@ var
 
   const FaultLimit = 10;
 
+  procedure ProcClientCommand(cmd:Byte);
+  begin
+    case Cmd of
+      2: begin
+        if FIntoCriticalSection or FMutex.TryEnter then begin
+          FIntoCriticalSection:=true;
+          LastPingSent:=Now;
+          Response:=21;
+        end else begin
+          FIntoCriticalSection:=false;
+          Response:=20;
+        end;
+        socket_send(FSocket, @Response, 1, 0, 100);
+      end;
+      3: begin
+        try
+          if FIntoCriticalSection then begin
+            FMutex.Leave;
+            FIntoCriticalSection:=false;
+            Response:=30;
+          end else
+            Response:=31;
+        except
+          Response:=32;
+        end;
+
+        socket_send(FSocket, @Response, 1, 0, 100);
+      end;
+
+      //client was finished.
+      253: Quit:=true;
+      //client ping response.
+      254: FaultCount:=0;
+    end;
+  end;
+
 begin
   //command and responses id list:
   //2  - Try enter on server mutex.
@@ -155,46 +191,23 @@ begin
   LastPingSent:=Now;
   while ((not Terminated) and (not Quit)) and (FaultCount<FaultLimit) do begin
     //if more than one seconds was elapsed, send a ping command.
-    if MilliSecondsBetween(Now,LastPingSent)>=1000 then begin
+    if FIntoCriticalSection and (MilliSecondsBetween(Now,LastPingSent)>=500) then begin
       Response:=255;
-      socket_send(FSocket, @Response, 1, 0, 100);
+      socket_send(FSocket, @Response, 1, 0, 5000);
       LastPingSent:=Now;
-      Inc(FaultCount);
+      if socket_recv(FSocket, @Response, 1, 0, 5000)>=1 then
+        ProcClientCommand(Response)
+      else
+        Inc(FaultCount);
     end;
 
     if socket_recv(FSocket, @ClientCmd, 1{byte to read}, 0{noflasgs}, 5{ms})=1 then begin
-      case ClientCmd of
-        2: begin
-          if FIntoCriticalSection or FMutex.TryEnter then begin
-            FIntoCriticalSection:=true;
-            Response:=21;
-          end else begin
-            FIntoCriticalSection:=false;
-            Response:=20;
-          end;
-          socket_send(FSocket, @Response, 1, 0, 100);
-        end;
-        3: begin
-          if FIntoCriticalSection then begin
-            FMutex.Leave;
-            FIntoCriticalSection:=false;
-            Response:=30;
-          end else
-            Response:=31;
-
-          socket_send(FSocket, @Response, 1, 0, 100);
-        end;
-
-        //client was finished.
-        253: Quit:=true;
-        //client ping response.
-        254: FaultCount:=0;
-      end;
+      ProcClientCommand(ClientCmd);
     end;
   end;
 
   //if server was terminated, quit the client side.
-  if Terminated then begin
+  if Terminated or (FaultCount>=FaultLimit) then begin
     Response:=253;
     socket_send(FSocket,PByte(@Response),1,0,2000);
   end;
@@ -524,4 +537,4 @@ begin
   inherited Destroy;
 end;
 
-end.
+end.

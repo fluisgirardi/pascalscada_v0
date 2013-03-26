@@ -140,17 +140,17 @@ begin
     if FOwnMutex then begin
       FSocketMutex.Enter;
       repeat
-        if socket_recv(FSocket,@serverrequest,1,0,500)>=1 then begin
+        if socket_recv(FSocket,@serverrequest,1,0,5)>=1 then begin
           case serverrequest of
-            21, 31:
+            21:
               SetIntoServerMutexBehavior;
-            20, 30:
+            20, 30, 31, 32:
               SetOutServerMutexBehavior;
             253:
               ServerHasBeenFinished;
             255: begin
               request:=254;
-              socket_send(FSocket,@request,1,0,500);
+              socket_send(FSocket,@request,1,0,5000);
             end;
           end;
         end else begin
@@ -161,8 +161,9 @@ begin
         end;
       until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
       FSocketMutex.Leave;
-    end else
-      Sleep(1);
+    end;
+
+    Sleep(1);
   end;
   FEnd.SetEvent;
 end;
@@ -262,12 +263,8 @@ begin
       repeat
         if socket_recv(FSocket,@response,1,0,5000)>=1 then begin
           case response of
-            30:
+            30, 31, 32:
               SetOutServerMutexBehavior;
-            31: begin
-              //How notify this strange behavior?
-              SetIntoServerMutexBehavior;
-            end;
             253: begin
               ServerHasBeenFinished;
               break;
