@@ -60,6 +60,7 @@ var
   r: Integer;
 begin
   count:=0;
+  count_leaves:=0;
   for r:=1 to 1000 do begin
     try
       if MutexClient1.TryEnter then

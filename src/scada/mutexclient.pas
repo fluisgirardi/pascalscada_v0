@@ -50,6 +50,7 @@ type
     FEnd:TCrossEvent;
     FSocketMutex:TCriticalSection;
     LastPingSent:TDateTime;
+    Quit:Boolean;
   private
     procedure ConnectionIsGone;
   protected
@@ -165,7 +166,7 @@ var
 begin
   FEnd.ResetEvent;
   LastPingSent:=Now;
-  while (not Terminated) do begin
+  while (not Terminated) AND (not Quit) do begin
     FSocketMutex.Enter;
     try
       repeat
@@ -210,8 +211,9 @@ begin
   FSocketMutex.Enter;
   request:=253;//try enter on mutex
   socket_send(FSocket,@request,1,0,1000);
+  Quit:=true;
+  ConnectionIsGone;
   FSocketMutex.Leave;
-  Terminate;
 end;
 
 procedure TMutexClientThread.WaitEnd;
@@ -222,7 +224,8 @@ end;
 
 procedure TMutexClientThread.ServerHasBeenFinished;
 begin
-  Terminate;
+  Quit:=true;
+  ConnectionIsGone;
 end;
 
 function TMutexClientThread.PingServer: Boolean;
@@ -243,6 +246,7 @@ begin
   FSocketMutex:=TCriticalSection.Create;
   FEnd:=TCrossEvent.Create(nil,true,false,'');
   FSocket:=aSocket;
+  Quit:=false;
 end;
 
 destructor TMutexClientThread.Destroy;
@@ -490,12 +494,18 @@ begin
 end;
 
 procedure TMutexClient.Disconnect;
+var
+  threadinstance: TMutexClientThread;
 begin
   if FConnected<>0 then begin
     if FConnectionStatusThread<>nil then begin
-      FConnectionStatusThread.DisconnectFromServer;
-      FConnectionStatusThread.WaitEnd;
-      FConnectionStatusThread.Destroy;
+      threadinstance:=FConnectionStatusThread;
+      with threadinstance do begin
+        FreeOnTerminate:=false;
+        DisconnectFromServer;
+        WaitEnd;
+        Destroy;
+      end;
     end;
     FConnectionStatusThread:=nil;
     CloseSocket(FSocket);
@@ -568,7 +578,6 @@ end;
 
 destructor TMutexClient.Destroy;
 begin
-
   setActive(false);
   inherited Destroy;
 end;
