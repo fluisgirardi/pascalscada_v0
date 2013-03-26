@@ -148,7 +148,7 @@ begin
     if fpGetErrno = ESysEINPROGRESS then begin
 
       sel.fd:=sock;
-      sel.events:=POLLIN or POLLPRI;
+      sel.events:=POLLIN or POLLPRI or POLLOUT;
       sel.revents:=0;
 
       mode := FpPoll(@sel,1,timeout);
@@ -314,28 +314,28 @@ end;
 
 function WaitForConnection(FListenerSocket:TSocket; timeout:Integer):Boolean;
 var
-  sel:TFDSet;
+  sel:tpollfd;
   mode:Integer;
-  tv : TTimeVal;
-  p:ptimeval;
 begin
   Result := false;
 
-  if timeout=-1 then
-    p:=nil
-  else begin
-    tv.tv_Sec:=Timeout div 1000;
-    tv.tv_Usec:=(Timeout mod 1000)*1000;
-    p:=@tv;
+  sel.fd:=FListenerSocket;
+  sel.events:=POLLIN or POLLPRI or POLLOUT;
+  sel.revents:=0;
+
+  mode := FpPoll(@sel,1,timeout);
+
+  if (mode > 0) then begin
+    if ((sel.revents and POLLERR)=POLLERR) or ((sel.revents and POLLHUP)=POLLHUP) or ((sel.revents and POLLNVAL)=POLLNVAL) then
+      Result:=False  //error
+    else
+      Result:=True;  //connection is fine.
+  end else begin
+    if mode=0 then
+      Result:=false  //timeout?
+    else
+      Result:=false; //error.
   end;
-
-
-  fpFD_ZERO(sel);
-  fpFD_SET(FListenerSocket+1, sel);
-  mode := fpselect(FListenerSocket+1, @sel, nil, nil, p);
-
-  if (mode >= 0) then
-    Result := fpFD_ISSET(FListenerSocket+1,sel)>0;
 end;
 
 function GetNumberOfBytesInReceiveBuffer(socket: Tsocket): Integer;
