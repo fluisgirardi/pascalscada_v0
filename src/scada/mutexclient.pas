@@ -49,6 +49,7 @@ type
     FSocket:Tsocket;
     FEnd:TCrossEvent;
     FSocketMutex:TCriticalSection;
+    LastPingSent:TDateTime;
   private
     procedure ConnectionIsGone;
   protected
@@ -60,6 +61,8 @@ type
     procedure Execute; override;
     //called when server sends a quit command.
     procedure ServerHasBeenFinished; virtual;
+    //ping server
+    function PingServer:Boolean;
   public
     constructor Create(CreateSuspended: Boolean; aSocket: Tsocket);
     destructor Destroy; override;
@@ -81,33 +84,37 @@ type
   TMutexClient = class(TComponent)
   private
     FActive,
-    FActiveLoaded,
-    FConnected: Boolean;
+    FActiveLoaded:Boolean;
+    FConnected:Integer;
     FPort: Word;
     FServerHost:String;
     FSocket: TSocket;
+    FDefaultBehavior:Boolean;
     FConnectionStatusThread:TMutexClientThread;
     procedure Connect;
     procedure Disconnect;
     procedure setActive(AValue: Boolean);
     procedure SetPort(AValue: Word);
     procedure SetServerHost(AValue: String);
+    procedure ConnectionFinished(Sender:TObject);
   protected
     procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
     function    TryEnter:Boolean;
+    function    TryEnter(PickedTheDefaultBehavior: Boolean): Boolean; overload;
     procedure   Leave;
   published
     property Active:Boolean read FActive write setActive stored true default false;
     property Host:String read FServerHost write SetServerHost stored true nodefault;
+    property DefaultBehavior:Boolean read FDefaultBehavior write FDefaultBehavior stored true default false;
     property Port:Word read FPort write SetPort stored true default 52321;
   end;
 
 implementation
 
-uses hsstrings;
+uses hsstrings, dateutils;
 
 { TMutexClientThread }
 
@@ -134,32 +141,51 @@ var
   commresult: TIOResult;
   incRetries: Boolean;
   StillActive: Boolean;
+
+  function SendPingCmd:Boolean;
+  var
+    request:Byte;
+  begin
+    request:=254;
+    if socket_send(FSocket,@request,1,0,1000)<1 then begin
+      ConnectionIsGone;
+      Result:=false;
+    end else
+      LastPingSent:=Now;
+  end;
+
+  function PingServer:Boolean;
+  begin
+    Result:=true;
+    if MilliSecondsBetween(now,LastPingSent)>=1000 then begin
+      Result:=SendPingCmd;
+    end;
+  end;
+
 begin
   FEnd.ResetEvent;
+  LastPingSent:=Now;
   while (not Terminated) do begin
-    if FOwnMutex then begin
-      FSocketMutex.Enter;
-      repeat
-        if socket_recv(FSocket,@serverrequest,1,0,5)>=1 then begin
-          case serverrequest of
-            21:
-              SetIntoServerMutexBehavior;
-            20, 30, 31, 32:
-              SetOutServerMutexBehavior;
-            253:
-              ServerHasBeenFinished;
-            255: begin
-              request:=254;
-              socket_send(FSocket,@request,1,0,5000);
+    FSocketMutex.Enter;
+    try
+        repeat
+          if socket_recv(FSocket,@serverrequest,1,0,5)>=1 then begin
+            case serverrequest of
+              21:
+                SetIntoServerMutexBehavior;
+              20, 30, 31, 32:
+                SetOutServerMutexBehavior;
+              253:
+                ServerHasBeenFinished;
+              255:
+                if not SendPingCmd then begin
+                  ConnectionIsGone;
+                  break;
+                end;
             end;
           end;
-        end else begin
-          if not CheckConnection(commresult,incRetries,StillActive,FSocket,nil) then begin
-            Synchronize(ConnectionIsGone);
-            Break;
-          end;
-        end;
-      until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
+        until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
+    finally
       FSocketMutex.Leave;
     end;
 
@@ -174,7 +200,7 @@ var
 begin
   FSocketMutex.Enter;
   request:=253;//try enter on mutex
-  socket_send(FSocket,@request,1,0,5000);
+  socket_send(FSocket,@request,1,0,1000);
   FSocketMutex.Leave;
   Terminate;
 end;
@@ -188,6 +214,17 @@ end;
 procedure TMutexClientThread.ServerHasBeenFinished;
 begin
   Terminate;
+end;
+
+function TMutexClientThread.PingServer: Boolean;
+var
+  request: byte;
+begin
+  request:=254;
+  if socket_send(FSocket,@request,1,0,1000)<1 then
+    ConnectionIsGone
+  else
+    LastPingSent:=Now;
 end;
 
 constructor TMutexClientThread.Create(CreateSuspended: Boolean; aSocket: Tsocket
@@ -214,9 +251,9 @@ begin
   FSocketMutex.Enter;
   try
     request:=2;//try enter on mutex
-    if socket_send(FSocket,@request,1,0,5000)>=1 then begin
+    if socket_send(FSocket,@request,1,0,1000)>=1 then begin
       repeat
-        if socket_recv(FSocket,@response,1,0,5000)>=1 then begin
+        if socket_recv(FSocket,@response,1,0,1000)>=1 then begin
           case response of
             20: begin
               Result:=false;
@@ -232,8 +269,7 @@ begin
               break;
             end;
             255: begin
-              request:=254;
-              socket_send(FSocket,@request,1,0,5000)
+              PingServer;
             end;
           end;
         end else begin
@@ -243,10 +279,12 @@ begin
           //so, release the mutex sending
           //a release command.
           request:=3; //leave mutex command.
-          socket_send(FSocket,@request,1,0,5000);
+          if socket_send(FSocket,@request,1,0,1000)<1 then
+            ConnectionIsGone;
         end;
       until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
-    end;
+    end else
+      ConnectionIsGone;
   finally
     FSocketMutex.Leave;
   end;
@@ -259,9 +297,9 @@ begin
   FSocketMutex.Enter;
   try
     request:=3;//try enter on mutex
-    if socket_send(FSocket,@request,1,0,5000)>=1 then begin
+    if socket_send(FSocket,@request,1,0,1000)>=1 then begin
       repeat
-        if socket_recv(FSocket,@response,1,0,5000)>=1 then begin
+        if socket_recv(FSocket,@response,1,0,1000)>=1 then begin
           case response of
             30, 31, 32:
               SetOutServerMutexBehavior;
@@ -270,13 +308,13 @@ begin
               break;
             end;
             255: begin
-              request:=254;
-              socket_send(FSocket,@request,1,0,5000)
+              PingServer;
             end;
           end;
         end;
       until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
-    end;
+    end else
+      ConnectionIsGone;
   finally
     FSocketMutex.Leave;
   end;
@@ -304,7 +342,7 @@ var
   socketOpen:boolean;
 begin
 
-  if FConnected then exit;
+  if FConnected<>0 then exit;
 
   socketOpen:=false;
 
@@ -423,20 +461,25 @@ begin
       //RefreshLastOSError;
       exit;
     end;
-    FConnected:=true;
+    FConnected:=1;
     FConnectionStatusThread:=TMutexClientThread.Create(true, FSocket);
+    FConnectionStatusThread.FreeOnTerminate:=true;
+    FConnectionStatusThread.OnTerminate:=ConnectionFinished;
+    FConnectionStatusThread.onConnectionBroken:=ConnectionFinished;
+    FConnectionStatusThread.onServerHasBeenFinished:=ConnectionFinished;
+
 
     //after setup the thread, wake up it.
     FConnectionStatusThread.WakeUp;
   finally
-    if socketOpen and (not FConnected) then
+    if socketOpen and (FConnected=0) then
       CloseSocket(FSocket);
   end;
 end;
 
 procedure TMutexClient.Disconnect;
 begin
-  if FConnected then begin
+  if FConnected<>0 then begin
     if FConnectionStatusThread<>nil then begin
       FConnectionStatusThread.DisconnectFromServer;
       FConnectionStatusThread.WaitEnd;
@@ -444,7 +487,7 @@ begin
     end;
     FConnectionStatusThread:=nil;
     CloseSocket(FSocket);
-    FConnected:=false;
+    FConnected:=0;
   end;
 end;
 
@@ -490,6 +533,12 @@ begin
   FServerHost:=AValue;
 end;
 
+procedure TMutexClient.ConnectionFinished(Sender: TObject);
+begin
+  InterLockedExchange(FConnected,0);
+  InterLockedExchange(Pointer(FConnectionStatusThread),nil);
+end;
+
 procedure TMutexClient.Loaded;
 begin
   inherited Loaded;
@@ -501,7 +550,7 @@ begin
   inherited Create(AOwner);
   FPort:=51342;
   FActive:=false;
-  FConnected:=false;
+  FConnected:=0;
   FActiveLoaded:=false;
 end;
 
@@ -514,19 +563,28 @@ end;
 
 function TMutexClient.TryEnter: Boolean;
 var
+  adefaultbehavior: Boolean;
+begin
+  Result:=TryEnter(adefaultbehavior);
+end;
+
+function TMutexClient.TryEnter(PickedTheDefaultBehavior: Boolean): Boolean; overload;
+var
   request, response:Byte;
 begin
-  Result:=False;
+  Result:=FDefaultBehavior;
+  PickedTheDefaultBehavior:=true;
   if FActive then begin
     //if not connected, connect
-    if not FConnected then
+    if FConnected=0 then
       Connect;
 
     //if still disconnected, exit.
-    if not FConnected then exit;
+    if FConnected=0 then exit;
 
     if FConnectionStatusThread=nil then exit;
 
+    PickedTheDefaultBehavior:=false;
     Result:=FConnectionStatusThread.TryEnter;
   end;
 end;
@@ -537,11 +595,11 @@ var
 begin
   if FActive then begin
     //if not connected, connect
-    if not FConnected then
+    if FConnected=0 then
       Connect;
 
     //if still disconnected, exit.
-    if not FConnected then exit;
+    if FConnected=0 then exit;
 
     if FConnectionStatusThread=nil then exit;
 

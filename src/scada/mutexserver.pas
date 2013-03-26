@@ -148,7 +148,8 @@ var
           FIntoCriticalSection:=false;
           Response:=20;
         end;
-        socket_send(FSocket, @Response, 1, 0, 100);
+        if socket_send(FSocket, @Response, 1, 0, 1000)<1 then
+          FaultCount:=FaultLimit+1;
       end;
       3: begin
         try
@@ -162,13 +163,17 @@ var
           Response:=32;
         end;
 
-        socket_send(FSocket, @Response, 1, 0, 100);
+        if socket_send(FSocket, @Response, 1, 0, 1000)<1 then
+          FaultCount:=FaultLimit+1;
       end;
 
       //client was finished.
       253: Quit:=true;
       //client ping response.
-      254: FaultCount:=0;
+      254: begin
+        FaultCount:=0;
+        LastPingSent:=Now;
+      end;
     end;
   end;
 
@@ -191,11 +196,16 @@ begin
   LastPingSent:=Now;
   while ((not Terminated) and (not Quit)) and (FaultCount<FaultLimit) do begin
     //if more than one seconds was elapsed, send a ping command.
-    if FIntoCriticalSection and (MilliSecondsBetween(Now,LastPingSent)>=500) then begin
+    if MilliSecondsBetween(Now,LastPingSent)>=1000 then begin
       Response:=255;
-      socket_send(FSocket, @Response, 1, 0, 5000);
+
+      if socket_send(FSocket, @Response, 1, 0, 1000)<1 then begin
+        FaultCount:=FaultLimit+1;
+        Break;
+      end;
+
       LastPingSent:=Now;
-      if socket_recv(FSocket, @Response, 1, 0, 5000)>=1 then
+      if socket_recv(FSocket, @Response, 1, 0, 1000)>=1 then
         ProcClientCommand(Response)
       else
         Inc(FaultCount);
@@ -209,7 +219,7 @@ begin
   //if server was terminated, quit the client side.
   if Terminated or (FaultCount>=FaultLimit) then begin
     Response:=253;
-    socket_send(FSocket,PByte(@Response),1,0,2000);
+    socket_send(FSocket,PByte(@Response),1,0,1000);
   end;
 
   //leaves the mutex.
