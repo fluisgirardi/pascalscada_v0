@@ -170,7 +170,7 @@ begin
     FSocketMutex.Enter;
     try
       repeat
-        if socket_recv(FSocket,@serverrequest,1,MSG_PEEK,5)>=1 then begin
+        if socket_recv(FSocket,@serverrequest,1,0,5)>=1 then begin
           case serverrequest of
             21: begin
               SetIntoServerMutexBehavior;
@@ -181,11 +181,9 @@ begin
               exit;
             end;
             253: begin
-              socket_recv(FSocket,@serverrequest,1,0,5);
               ServerHasBeenFinished;
             end;
             255: begin
-              socket_recv(FSocket,@serverrequest,1,0,5);
               if not SendPingCmd then begin
                 ConnectionIsGone;
                 break;
