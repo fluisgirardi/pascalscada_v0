@@ -139,79 +139,60 @@ end;
 
 function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
 var
-  sel:TFDSet;
+  sel:tpollfd;
   mode:Integer;
-  tv : TTimeVal;
-  p:ptimeval;
 begin
-
-  if timeout=-1 then
-    p:=nil
-  else begin
-    tv.tv_Sec:=Timeout div 1000;
-    tv.tv_Usec:=(Timeout mod 1000)*1000;
-    p:=@tv;
-  end;
-
   Result:=0;
 
   if fpconnect(sock, address, address_len) <> 0 then begin
     if fpGetErrno = ESysEINPROGRESS then begin
-      fpFD_ZERO(sel);
-      fpFD_SET(sock, sel);
-      mode := fpSelect(sock+1, nil, @sel, nil, p);
 
-      if (mode < 0) then begin
-        Result := -1;
+      sel.fd:=sock;
+      sel.events:=POLLIN or POLLPRI;
+      sel.revents:=0;
+
+      mode := FpPoll(@sel,1,timeout);
+
+      if (mode > 0) then begin
+        if ((sel.revents and POLLERR)=POLLERR) or ((sel.revents and POLLHUP)=POLLHUP) or ((sel.revents and POLLNVAL)=POLLNVAL) then
+          Result:=-1  //error
+        else
+          Result:=0;  //connection is fine.
       end else begin
-        if (mode > 0) then begin
-          Result := 0;
-        end else begin
-          if (mode = 0) then begin
-            Result := -2;
-          end;
-        end;
+        if mode=0 then
+          Result:=-2  //timeout?
+        else
+          Result:=-1; //error.
       end;
     end else
-      Result := -1;
+      Result := -1;   //error.
   end;
 end;
 
 function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
 var
-  sel:TFDSet;
+  sel:tpollfd;
   mode:Integer;
-  tv : TTimeVal;
-  p:ptimeval;
 begin
-
-  if timeout=-1 then
-    p:=nil
-  else begin
-    tv.tv_Sec:=Timeout div 1000;
-    tv.tv_Usec:=(Timeout mod 1000)*1000;
-    p:=@tv;
-  end;
-
   Result:=fprecv(sock, buf, len, flags);
 
   if  Result < 0 then begin
     if fpGetErrno in [ESysEINTR, ESysEAGAIN] then begin
-      fpFD_ZERO(sel);
-      fpFD_SET(sock, sel);
+      sel.fd:=sock;
+      sel.events:=POLLIN;
 
-      mode := fpselect(sock+1, @sel, nil, nil, p);
+      mode := FpPoll(@sel, 1, timeout);
 
-      if (mode < 0) then begin
-        Result := -1;
+      if (mode > 0) then begin
+        if ((sel.revents and POLLERR)=POLLERR) or ((sel.revents and POLLHUP)=POLLHUP) or ((sel.revents and POLLNVAL)=POLLNVAL) then
+          Result:=-1  //error
+        else
+          Result:=fprecv(sock, buf, len, flags);  //connection is fine.
       end else begin
-        if (mode > 0) then begin
-          Result := fprecv(sock, buf, len, flags);
-        end else begin
-          if (mode = 0) then begin
-            Result := -2;
-          end;
-        end;
+        if mode=0 then
+          Result:=-2  //timeout?
+        else
+          Result:=-1; //error.
       end;
     end else
       Result := -1;
@@ -220,39 +201,28 @@ end;
 
 function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
 var
-  sel:TFDSet;
+  sel:tpollfd;
   mode:Integer;
-  tv : TTimeVal;
-  p:ptimeval;
 begin
-
-  if timeout=-1 then
-    p:=nil
-  else begin
-    tv.tv_Sec:=Timeout div 1000;
-    tv.tv_Usec:=(Timeout mod 1000)*1000;
-    p:=@tv;
-  end;
-
   Result:=fpsend(sock, buf, len, flags);
 
   if Result < 0 then begin
     if fpGetErrno in [ESysEINTR, ESysEAGAIN] then begin
-      fpFD_ZERO(sel);
-      fpFD_SET(sock, sel);
+      sel.fd:=sock;
+      sel.events:=POLLOUT;
 
-      mode := fpselect(sock+1, nil, @sel, nil, p);
+      mode := FpPoll(@sel, 1, timeout);
 
-      if (mode < 0) then begin
-        Result := -1;
+      if (mode > 0) then begin
+        if ((sel.revents and POLLERR)=POLLERR) or ((sel.revents and POLLHUP)=POLLHUP) or ((sel.revents and POLLNVAL)=POLLNVAL) then
+          Result:=-1  //error
+        else
+          Result:=fpsend(sock, buf, len, flags);  //connection is fine.
       end else begin
-        if (mode > 0) then begin
-          Result := fpsend(sock, buf, len, flags);
-        end else begin
-          if (mode = 0) then begin
-            Result := -2;
-          end;
-        end;
+        if mode=0 then
+          Result:=-2  //timeout?
+        else
+          Result:=-1; //error.
       end;
     end else
       Result := -1;
@@ -262,8 +232,7 @@ end;
 function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 var
   retval, nbytes:Integer;
-  t:TTimeVal;
-  readset:TFDSet;
+  sel:tpollfd;
 begin
   Result:=true;
 
@@ -285,12 +254,12 @@ begin
     exit;
   end;
 
-  t.tv_usec:=1;
-  t.tv_sec:=0;
 
-  fpFD_ZERO(readset);
-  fpFD_SET(FSocket,readset);
-  retval:=fpSelect(FSocket+1,@readset,nil,nil,@t);
+  sel.fd:=FSocket;
+  sel.events:=POLLIN or POLLOUT or POLLPRI;
+  sel.revents:=0;
+
+  retval:=FpPoll(@sel,1,1);
 
   if (retval=0) then begin   //timeout, appears to be ok...
     Result:=true;
@@ -309,6 +278,15 @@ begin
   end;
 
   if (retval=1) then begin  // seems there is something in our receive buffer!!
+    if ((sel.revents and POLLERR)=POLLERR) or ((sel.revents and POLLHUP)=POLLHUP) or ((sel.revents and POLLNVAL)=POLLNVAL) then begin
+      if Assigned(DoCommPortDisconected) then
+        DoCommPortDisconected();
+      CommResult:=iorPortError;
+      PActive:=false;
+      Result:=false;
+      exit;
+    end;
+
     // now we check how many bytes are in receive buffer
     retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
 
