@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  mutexserver, MutexClient;
+  ExtCtrls, mutexserver, MutexClient;
 
 type
 
@@ -23,6 +23,9 @@ type
     MutexClient2: TMutexClient;
     MutexClient3: TMutexClient;
     MutexServer1: TMutexServer;
+    Panel1: TPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -54,41 +57,47 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  if MutexClient1.TryEnter then
-    ShowMessage('Mutex Client 1 own the mutex')
-  else
+  if MutexClient1.TryEnter then begin
+    ShowMessage('Mutex Client 1 own the mutex');
+    Panel1.Color:=clGreen;
+  end else
     ShowMessage('The Mutex is being used!');
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
 begin
-  if MutexClient2.TryEnter then
-    ShowMessage('Mutex Client 2 own the mutex')
-  else
+  if MutexClient2.TryEnter then begin
+    ShowMessage('Mutex Client 2 own the mutex');
+    Panel2.Color:=clGreen;
+  end else
     ShowMessage('The Mutex is being used!');
 end;
 
 procedure TForm1.Button3Click(Sender: TObject);
 begin
   MutexClient1.Leave;
+  Panel1.Color:=clDefault;
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
 begin
   MutexClient2.Leave;
+  Panel2.Color:=clDefault;
 end;
 
 procedure TForm1.Button5Click(Sender: TObject);
 begin
-  if MutexClient3.TryEnter then
-    ShowMessage('Mutex Client 3 own the mutex')
-  else
+  if MutexClient3.TryEnter then begin
+    ShowMessage('Mutex Client 3 own the mutex');
+    Panel3.Color:=clGreen;
+  end else
     ShowMessage('The Mutex is being used!');
 end;
 
 procedure TForm1.Button6Click(Sender: TObject);
 begin
   MutexClient3.Leave;
+  Panel3.Color:=clDefault;
 end;
 
 end.

@@ -7,7 +7,7 @@ object Form1: TForm1
   ClientHeight = 211
   ClientWidth = 541
   OnCreate = FormCreate
-  LCLVersion = '1.0.2.0'
+  LCLVersion = '1.0.6.0'
   object Button1: TButton
     Left = 8
     Height = 25
@@ -29,9 +29,10 @@ object Form1: TForm1
   object Button3: TButton
     Left = 256
     Height = 25
-    Top = 55
+    Top = 56
     Width = 240
     Caption = 'release mutex owned by MutexClient 1'
+    Color = clBackground
     OnClick = Button3Click
     TabOrder = 2
   end
@@ -61,6 +62,30 @@ object Form1: TForm1
     Caption = 'release mutex owned by MutexClient 3'
     OnClick = Button6Click
     TabOrder = 5
+  end
+  object Panel1: TPanel
+    Left = 232
+    Height = 25
+    Top = 56
+    Width = 23
+    Caption = 'Panel1'
+    TabOrder = 6
+  end
+  object Panel2: TPanel
+    Left = 232
+    Height = 25
+    Top = 104
+    Width = 23
+    Caption = 'Panel2'
+    TabOrder = 7
+  end
+  object Panel3: TPanel
+    Left = 232
+    Height = 25
+    Top = 152
+    Width = 23
+    Caption = 'Panel3'
+    TabOrder = 8
   end
   object MutexServer1: TMutexServer
     Active = True
