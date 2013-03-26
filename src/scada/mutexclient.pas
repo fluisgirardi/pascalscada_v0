@@ -69,7 +69,7 @@ type
     //try enter on server mutex.
     function TryEnter:Boolean;
     //leave the server mutex.
-    procedure Leave;
+    function Leave: Boolean;
     //send a quit command to server.
     procedure DisconnectFromServer; virtual;
     //wait the client thread ends.
@@ -104,7 +104,7 @@ type
     destructor  Destroy; override;
     function    TryEnter:Boolean;
     function    TryEnter(PickedTheDefaultBehavior: Boolean): Boolean; overload;
-    procedure   Leave;
+    function Leave: Boolean;
   published
     property Active:Boolean read FActive write setActive stored true default false;
     property Host:String read FServerHost write SetServerHost stored true nodefault;
@@ -168,23 +168,32 @@ begin
   while (not Terminated) do begin
     FSocketMutex.Enter;
     try
-        repeat
-          if socket_recv(FSocket,@serverrequest,1,0,5)>=1 then begin
-            case serverrequest of
-              21:
-                SetIntoServerMutexBehavior;
-              20, 30, 31, 32:
-                SetOutServerMutexBehavior;
-              253:
-                ServerHasBeenFinished;
-              255:
-                if not SendPingCmd then begin
-                  ConnectionIsGone;
-                  break;
-                end;
+      repeat
+        if socket_recv(FSocket,@serverrequest,1,MSG_PEEK,5)>=1 then begin
+          case serverrequest of
+            21: begin
+              SetIntoServerMutexBehavior;
+              exit;
+            end;
+            20, 30, 31, 32: begin
+              SetOutServerMutexBehavior;
+              exit;
+            end;
+            253: begin
+              socket_recv(FSocket,@serverrequest,1,0,5);
+              ServerHasBeenFinished;
+            end;
+            255: begin
+              socket_recv(FSocket,@serverrequest,1,0,5);
+              if not SendPingCmd then begin
+                ConnectionIsGone;
+                break;
+              end;
             end;
           end;
-        until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
+        end;
+      until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
+      PingServer;
     finally
       FSocketMutex.Leave;
     end;
@@ -290,10 +299,11 @@ begin
   end;
 end;
 
-procedure TMutexClientThread.Leave;
+function TMutexClientThread.Leave:Boolean;
 var
   request, response:Byte;
 begin
+  Result:=false;
   FSocketMutex.Enter;
   try
     request:=3;//try enter on mutex
@@ -301,8 +311,10 @@ begin
       repeat
         if socket_recv(FSocket,@response,1,0,1000)>=1 then begin
           case response of
-            30, 31, 32:
+            30, 31, 32: begin
+              Result:=true;
               SetOutServerMutexBehavior;
+            end;
             253: begin
               ServerHasBeenFinished;
               break;
@@ -589,10 +601,12 @@ begin
   end;
 end;
 
-procedure TMutexClient.Leave;
+function TMutexClient.Leave:Boolean;
 var
   request, response:Byte;
 begin
+  Result:=True;
+
   if FActive then begin
     //if not connected, connect
     if FConnected=0 then
@@ -603,7 +617,7 @@ begin
 
     if FConnectionStatusThread=nil then exit;
 
-    FConnectionStatusThread.Leave;
+    Result:=FConnectionStatusThread.Leave;
   end;
 end;
 

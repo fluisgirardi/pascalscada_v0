@@ -45,6 +45,15 @@ object Form1: TForm1
     TabOrder = 2
     Visible = False
   end
+  object Button3: TButton
+    Left = 0
+    Height = 25
+    Top = 192
+    Width = 136
+    Caption = 'Stress test'
+    OnClick = Button3Click
+    TabOrder = 3
+  end
   object MutexClient1: TMutexClient
     Active = True
     Host = '127.0.0.1'
