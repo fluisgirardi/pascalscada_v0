@@ -4,12 +4,12 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="7">
+    <Units Count="9">
       <Unit0>
         <Filename Value="networkmutex_client.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="networkmutex_client"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="41" Y="8"/>
@@ -26,8 +26,8 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="54"/>
-        <CursorPos X="1" Y="81"/>
+        <TopLine Value="57"/>
+        <CursorPos X="44" Y="73"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -35,10 +35,10 @@
       <Unit2>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
         <UnitName Value="MutexClient"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="486"/>
-        <CursorPos X="41" Y="495"/>
+        <TopLine Value="549"/>
+        <CursorPos X="32" Y="567"/>
         <UsageCount Value="11"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -46,7 +46,7 @@
       <Unit3>
         <Filename Value="..\..\src\scada\sockets_w32_w64.pas"/>
         <UnitName Value="sockets_w32_w64"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="176"/>
         <CursorPos X="15" Y="179"/>
@@ -56,152 +56,165 @@
       </Unit3>
       <Unit4>
         <Filename Value="C:\lazarus\lcl\include\control.inc"/>
-        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="4809"/>
         <CursorPos X="1" Y="4828"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit4>
       <Unit5>
         <Filename Value="C:\lazarus\lcl\include\wincontrol.inc"/>
-        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="6427"/>
         <CursorPos X="1" Y="6446"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit5>
       <Unit6>
         <Filename Value="C:\lazarus\lcl\include\customcontrol.inc"/>
-        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
         <TopLine Value="40"/>
         <CursorPos X="1" Y="60"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="..\..\src\scada\sockets_unix.pas"/>
+        <UnitName Value="sockets_unix"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="224"/>
+        <CursorPos X="1" Y="237"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\src\scada\tcp_udpport.pas"/>
+        <UnitName Value="tcp_udpport"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit8>
     </Units>
     <General>
       <ActiveWindowIndexAtStart Value="0"/>
     </General>
-    <JumpHistory Count="29" HistoryIndex="28">
+    <JumpHistory Count="28" HistoryIndex="27">
       <Position1>
         <Filename Value="client_main.pas"/>
-        <Caret Line="53" Column="13" TopLine="12"/>
+        <Caret Line="58" Column="6" TopLine="48"/>
       </Position1>
       <Position2>
-        <Filename Value="client_main.pas"/>
-        <Caret Line="60" Column="13" TopLine="20"/>
+        <Filename Value="..\..\src\scada\mutexclient.pas"/>
+        <Caret Line="605" Column="3" TopLine="579"/>
       </Position2>
       <Position3>
         <Filename Value="client_main.pas"/>
-        <Caret Line="58" Column="6" TopLine="48"/>
+        <Caret Line="57" Column="1" TopLine="35"/>
       </Position3>
       <Position4>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="605" Column="3" TopLine="579"/>
+        <Caret Line="608" Column="3" TopLine="575"/>
       </Position4>
       <Position5>
-        <Filename Value="client_main.pas"/>
-        <Caret Line="57" Column="1" TopLine="35"/>
+        <Filename Value="..\..\src\scada\mutexclient.pas"/>
+        <Caret Line="317" Column="30" TopLine="295"/>
       </Position5>
       <Position6>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="608" Column="3" TopLine="575"/>
+        <Caret Line="604" Column="23" TopLine="584"/>
       </Position6>
       <Position7>
-        <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="317" Column="30" TopLine="295"/>
-      </Position7>
-      <Position8>
-        <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="604" Column="23" TopLine="584"/>
-      </Position8>
-      <Position9>
         <Filename Value="client_main.pas"/>
         <Caret Line="93" Column="40" TopLine="27"/>
-      </Position9>
-      <Position10>
+      </Position7>
+      <Position8>
         <Filename Value="client_main.pas"/>
         <Caret Line="20" Column="5" TopLine="13"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\src\scada\mutexclient.pas"/>
+        <Caret Line="571" Column="6" TopLine="569"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\src\scada\mutexclient.pas"/>
+        <Caret Line="508" Column="3" TopLine="506"/>
       </Position10>
       <Position11>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="571" Column="6" TopLine="569"/>
+        <Caret Line="494" Column="3" TopLine="492"/>
       </Position11>
       <Position12>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="508" Column="3" TopLine="506"/>
+        <Caret Line="185" Column="24" TopLine="159"/>
       </Position12>
       <Position13>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="494" Column="3" TopLine="492"/>
+        <Caret Line="64" Column="36" TopLine="44"/>
       </Position13>
       <Position14>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="185" Column="24" TopLine="159"/>
+        <Caret Line="79" Column="107" TopLine="47"/>
       </Position14>
       <Position15>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="64" Column="36" TopLine="44"/>
+        <Caret Line="185" Column="37" TopLine="153"/>
       </Position15>
       <Position16>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="79" Column="107" TopLine="47"/>
+        <Caret Line="224" Column="51" TopLine="191"/>
       </Position16>
       <Position17>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="185" Column="37" TopLine="153"/>
+        <Caret Line="215" Column="20" TopLine="213"/>
       </Position17>
       <Position18>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="224" Column="51" TopLine="191"/>
+        <Caret Line="222" Column="1" TopLine="212"/>
       </Position18>
       <Position19>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="215" Column="20" TopLine="213"/>
+        <Caret Line="501" Column="1" TopLine="481"/>
       </Position19>
       <Position20>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="222" Column="1" TopLine="212"/>
+        <Caret Line="211" Column="3" TopLine="206"/>
       </Position20>
       <Position21>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="501" Column="1" TopLine="481"/>
+        <Caret Line="222" Column="1" TopLine="206"/>
       </Position21>
       <Position22>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="211" Column="3" TopLine="206"/>
+        <Caret Line="575" Column="1" TopLine="555"/>
       </Position22>
       <Position23>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="222" Column="1" TopLine="206"/>
+        <Caret Line="525" Column="1" TopLine="505"/>
       </Position23>
       <Position24>
-        <Filename Value="C:\lazarus\lcl\include\control.inc"/>
-        <Caret Line="4828" Column="1" TopLine="4809"/>
+        <Filename Value="..\..\src\scada\mutexclient.pas"/>
+        <Caret Line="559" Column="1" TopLine="506"/>
       </Position24>
       <Position25>
-        <Filename Value="C:\lazarus\lcl\include\wincontrol.inc"/>
-        <Caret Line="6446" Column="1" TopLine="6427"/>
+        <Filename Value="client_main.pas"/>
+        <Caret Line="70" Column="89" TopLine="54"/>
       </Position25>
       <Position26>
-        <Filename Value="C:\lazarus\lcl\include\customcontrol.inc"/>
-        <Caret Line="60" Column="1" TopLine="40"/>
+        <Filename Value="..\..\src\scada\sockets_unix.pas"/>
+        <Caret Line="234" Column="7" TopLine="224"/>
       </Position26>
       <Position27>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="575" Column="1" TopLine="555"/>
+        <Caret Line="567" Column="32" TopLine="549"/>
       </Position27>
       <Position28>
-        <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="525" Column="1" TopLine="505"/>
+        <Filename Value="client_main.pas"/>
+        <Caret Line="70" Column="89" TopLine="1"/>
       </Position28>
-      <Position29>
-        <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="559" Column="1" TopLine="506"/>
-      </Position29>
     </JumpHistory>
   </ProjectSession>
+  <EditorMacros Count="0"/>
 </CONFIG>

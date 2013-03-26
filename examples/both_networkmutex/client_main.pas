@@ -70,7 +70,7 @@ begin
         inc(count_leaves);
     end;
   end;
-  ShowMessage('Mutex owned '+IntToStr(r)+' times'+LineEnding+'Mutex free '+IntToStr(count_leaves)+' times');
+  ShowMessage('Mutex owned '+IntToStr(count)+' times'+LineEnding+'Mutex free '+IntToStr(count_leaves)+' times');
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -100,4 +100,4 @@ begin
 end;
 
 end.
-
+
