@@ -23,6 +23,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="client_main"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
         <TopLine Value="54"/>
@@ -34,11 +35,10 @@
       <Unit2>
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
         <UnitName Value="MutexClient"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="486"/>
-        <CursorPos X="32" Y="504"/>
+        <CursorPos X="41" Y="495"/>
         <UsageCount Value="11"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -85,7 +85,7 @@
     <General>
       <ActiveWindowIndexAtStart Value="0"/>
     </General>
-    <JumpHistory Count="30" HistoryIndex="29">
+    <JumpHistory Count="29" HistoryIndex="28">
       <Position1>
         <Filename Value="client_main.pas"/>
         <Caret Line="53" Column="13" TopLine="12"/>
@@ -202,10 +202,6 @@
         <Filename Value="..\..\src\scada\mutexclient.pas"/>
         <Caret Line="559" Column="1" TopLine="506"/>
       </Position29>
-      <Position30>
-        <Filename Value="..\..\src\scada\mutexclient.pas"/>
-        <Caret Line="360" Column="3" TopLine="464"/>
-      </Position30>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

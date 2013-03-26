@@ -56,7 +56,7 @@ object Form1: TForm1
   end
   object MutexClient1: TMutexClient
     Active = True
-    Host = '192.168.1.33'
+    Host = '127.0.0.1'
     Port = 51342
     left = 40
     top = 8

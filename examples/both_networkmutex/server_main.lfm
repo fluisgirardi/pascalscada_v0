@@ -1,12 +1,12 @@
 object Form1: TForm1
   Left = 246
-  Height = 240
+  Height = 258
   Top = 109
   Width = 320
   Caption = 'Mutex Server'
-  ClientHeight = 240
+  ClientHeight = 258
   ClientWidth = 320
-  LCLVersion = '1.0.2.0'
+  LCLVersion = '1.0.6.0'
   object Label1: TLabel
     Left = 64
     Height = 196
