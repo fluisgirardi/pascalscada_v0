@@ -6,7 +6,8 @@ object Form1: TForm1
   Caption = 'Mutex Client'
   ClientHeight = 240
   ClientWidth = 320
-  LCLVersion = '1.0.2.0'
+  OnCreate = FormCreate
+  LCLVersion = '1.0.6.0'
   object Label1: TLabel
     Left = 144
     Height = 222
@@ -32,6 +33,17 @@ object Form1: TForm1
     Caption = 'Leave the mutex'
     OnClick = Button2Click
     TabOrder = 1
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 50
+    Top = 112
+    Width = 136
+    Caption = 'Mutex owned'
+    Color = clLime
+    ParentColor = False
+    TabOrder = 2
+    Visible = False
   end
   object MutexClient1: TMutexClient
     Active = True
