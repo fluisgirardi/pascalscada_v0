@@ -563,8 +563,10 @@ end;
 
 procedure TMutexClient.ConnectionFinished(Sender: TObject);
 begin
+  CloseSocket(FSocket);
+  InterLockedExchange(FSocket,0);
   InterLockedExchange(FConnected,0);
-  InterLockedExchange(Pointer(FConnectionStatusThread),nil);
+  InterlockedCompareExchange(Pointer(FConnectionStatusThread),nil,Pointer(Self));
 end;
 
 procedure TMutexClient.Loaded;
