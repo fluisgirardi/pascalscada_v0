@@ -259,8 +259,10 @@ end;
 function TMutexClientThread.TryEnter: Boolean;
 var
   request, response:Byte;
+  ExpectedResponse:Boolean;
 begin
   Result:=False;
+  ExpectedResponse:=false;
   FSocketMutex.Enter;
   try
     request:=2;//try enter on mutex
@@ -270,32 +272,29 @@ begin
           case response of
             20: begin
               Result:=false;
+              ExpectedResponse:=true;
               SetOutServerMutexBehavior;
             end;
             21: begin
               Result:=true;
+              ExpectedResponse:=true;
               SetIntoServerMutexBehavior;
             end;
             253: begin
               Result:=false;
+              ExpectedResponse:=false;
               ServerHasBeenFinished;
               break;
             end;
             255: begin
+              ExpectedResponse:=false;
               PingServer;
             end;
+            else
+              ExpectedResponse:=false;
           end;
-        end else begin
-          //if the program is at this line,
-          //is because it send the request,
-          //but don´t received a response (timeout)
-          //so, release the mutex sending
-          //a release command.
-          request:=3; //leave mutex command.
-          if socket_send(FSocket,@request,1,0,1000)<1 then
-            ConnectionIsGone;
         end;
-      until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
+      until (GetNumberOfBytesInReceiveBuffer(FSocket)<=0) and ExpectedResponse;
     end else
       ConnectionIsGone;
   finally
@@ -306,8 +305,10 @@ end;
 function TMutexClientThread.Leave:Boolean;
 var
   request, response:Byte;
+  ExpectedResponse:Boolean;
 begin
   Result:=false;
+  ExpectedResponse:=false;
   FSocketMutex.Enter;
   try
     request:=3;//try enter on mutex
@@ -317,18 +318,23 @@ begin
           case response of
             30, 31, 32: begin
               Result:=true;
+              ExpectedResponse:=true;
               SetOutServerMutexBehavior;
             end;
             253: begin
+              ExpectedResponse:=False;
               ServerHasBeenFinished;
               break;
             end;
             255: begin
+              ExpectedResponse:=false;
               PingServer;
             end;
+            else
+              ExpectedResponse:=false;
           end;
         end;
-      until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
+      until (GetNumberOfBytesInReceiveBuffer(FSocket)<=0) and ExpectedResponse;
     end else
       ConnectionIsGone;
   finally
