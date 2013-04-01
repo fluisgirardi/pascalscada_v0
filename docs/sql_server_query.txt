@@ -1,0 +1,9 @@
+SELECT [PW_LINE].[LINENUM]
+      ,[PW_LINE].[LINENAME]
+      ,[PW_LINE].[LINEAREASPEC]
+      ,[TXTTable].[TEXTID]
+      ,[TXTTable].[L9]
+      ,[TXTTable].[L7]
+  FROM [dbo].[TXTTable],
+       [dbo].[PW_LINE]
+ WHERE [LINENAME]=[TEXTID]
