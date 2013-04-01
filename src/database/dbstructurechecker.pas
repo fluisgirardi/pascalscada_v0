@@ -15,15 +15,18 @@ type
   TDatabaseMetadata = class; //forward declaration.
 
   TDatabaseObjectState = (dosUnknown, dosChanged, dosDontExists, dosOK);
-  TDatabaseNameBehavior = (dbnTableName, dbnFieldName, dbnIndexName);
+  TDatabaseNameKind    = (dbkTableName, dbkFieldName, dbkIndexName); //must be improved;
 
   { TDatabaseObject }
 
   TDatabaseObject = class(TObject)
   protected
     FState:TDatabaseObjectState;
-    function GetCurrentState:TDatabaseObjectState; virtual;
+    FGenerateDDL:Boolean;
+    function  ValidateName(Name:String; NameKind:TDatabaseNameKind):Boolean; virtual;
+    function  GetCurrentState:TDatabaseObjectState; virtual;
     procedure ResetState; virtual;
+    function  GenerateDDL:String;
   end;
 
   //simple index declaration (for primary and unique keys)
@@ -51,10 +54,14 @@ type
     procedure AddFieldToIndex(FieldName:String); override;
   end;
 
+  TUniqueIndexClass = class of TUniqueIndex;
+
   TPrimaryKeyIndex = class(TIndex)
   public
     procedure AddFieldToIndex(FieldName: String); override;
   end;
+
+  TPrimaryKeyIndexClass = class of TPrimaryKeyIndex;
 
   TFieldLink = record
     SourceField,
@@ -79,13 +86,15 @@ type
     procedure addFieldLink(SourceField, Field:String);
   end;
 
+  TForeignKeyClass = class of TForeignKey;
+
   { TCollumnDefinition }
 
   TCollumnDefinition = class(TObject)
   private
     FFieldName   :String;
     FFieldType   :TFieldType;
-    FNullable    :Boolean;
+    FNotNull     :Boolean;
     FDefaultValue:String;
     FSize        :Integer; //string size
     FOwnerTable  :TTableMetadata;
@@ -94,10 +103,12 @@ type
     destructor Destroy;  override;
     property FieldName   :String     read FFieldName;
     property FieldType   :TFieldType read FFieldType;
-    property Nullable    :Boolean    read FNullable     write FNullable;
+    property NotNull     :Boolean    read FNotNull     write FNotNull;
     property DefaultValue:String     read FDefaultValue;
     property Size        :Integer    read FSize;
   end;
+
+  TCollumnDefinitionClass = Class of TCollumnDefinition;
 
   { TTableMetadata }
 
@@ -111,13 +122,15 @@ type
   public
     constructor Create(OwnerDatabase:TDatabaseMetadata; TableName:String);
     destructor Destroy; override;
-    procedure addCollumn(FieldName:String; FieldType:TFieldType; Size:Integer = -1; Nullable:Boolean = true; DefaultValue:String = '');
-    function  addPrimaryKey(pkName:String):TPrimaryKeyIndex;
-    function  addUniqueIndex(uniquename:String):TUniqueIndex;
-    function  addForeignKey(IndexName, SourceTable:String;
+    function addCollumn(FieldName:String; FieldType:TFieldType; Size:Integer = -1; NotNull:Boolean = false; DefaultValue:String = ''):TCollumnDefinition;
+    function addPrimaryKey(pkName:String):TPrimaryKeyIndex;
+    function addUniqueIndex(uniquename:String):TUniqueIndex;
+    function addForeignKey(IndexName, SourceTable:String;
                             UpdateAction:TForeignKeyRestriction = fkrNoAction;
                             DeleteAction:TForeignKeyRestriction = fkrNoAction):TForeignKey;
   public
+    function ValidateName(Name: String; NameKind: TDatabaseNameKind): Boolean;
+       override;
     function FieldExists(fieldname:String; var field:TCollumnDefinition):Boolean;
     function GetCurrentState:TDatabaseObjectState; override;
     procedure ResetState; override;
@@ -125,12 +138,17 @@ type
     property OwnerDatabase:TDatabaseMetadata read FOwnerDatabase;
   end;
 
+  TTableMetadataClass = Class of TTableMetadata;
+
    { TDatabaseMetadata }
 
    TDatabaseMetadata = class(TDatabaseObject)
    protected
      FTables:TList;
+     FTableMetadataClass:TTableMetadataClass;
    public
+     constructor Create; virtual;
+     function   ValidateName(Name:String; NameKind:TDatabaseNameKind):Boolean; override;
      destructor Destroy; override;
      function   AddTable(TableName:String):TTableMetadata;
      procedure  DeleteTable(TableName:String);
@@ -145,11 +163,23 @@ implementation
 
 { TDatabaseMetadata }
 
+constructor TDatabaseMetadata.Create;
+begin
+  FTableMetadataClass:=TTableMetadata;
+end;
+
+function TDatabaseMetadata.ValidateName(Name: String;
+  NameKind: TDatabaseNameKind): Boolean;
+begin
+  Result:=true;
+end;
+
 destructor TDatabaseMetadata.Destroy;
 var
   i:Integer;
 begin
   inherited Destroy;
+  //starts from the end
   for i:=FTables.Count-1 downto 0 do begin
     TTableMetadata(FTables[i]).Destroy;
     FTables.Delete(i);
@@ -165,7 +195,7 @@ begin
   tabledef:=FindTableDef(TableName, h);
   Result:=nil;
   if tabledef=nil then begin
-    tabledef:=TTableMetadata.Create(Self,TableName);
+    tabledef:=FTableMetadataClass.Create(Self,TableName);
     FTables.Add(tabledef);
     Result:=tabledef;
     FTables.Sort(SortTableList);
@@ -204,8 +234,24 @@ begin
 end;
 
 function TDatabaseMetadata.GetCurrentState: TDatabaseObjectState;
+var
+  i: Integer;
 begin
-  Result:=inherited GetCurrentState;
+  Result:=dosOK;
+  for i:=0 to FTables.Count-1 do
+    case TTableMetadata(FTables[i]).GetCurrentState of
+      dosUnknown:
+        raise exception.Create('Resposta inesperada!');
+
+      dosChanged, dosDontExists: begin
+        Result:=dosChanged;
+        break;
+      end;
+
+      dosOK:
+        continue;
+    end;
+
 end;
 
 procedure TDatabaseMetadata.ResetState;
@@ -234,14 +280,25 @@ end;
 
 { TDatabaseObject }
 
+function TDatabaseObject.ValidateName(Name: String; NameKind: TDatabaseNameKind
+  ): Boolean;
+begin
+  Result:=true;
+end;
+
 function TDatabaseObject.GetCurrentState: TDatabaseObjectState;
 begin
-
+  Result:=dosUnknown;
 end;
 
 procedure TDatabaseObject.ResetState;
 begin
+  FState:=dosUnknown;
+end;
 
+function TDatabaseObject.GenerateDDL: String;
+begin
+  Result:='';
 end;
 
 { TTableMetadata }
@@ -250,6 +307,12 @@ constructor TTableMetadata.Create(OwnerDatabase: TDatabaseMetadata;
   TableName: String);
 begin
   inherited Create;
+  if (OwnerDatabase=nil) then
+    raise Exception.Create('Banco de dados inválido!');
+
+  if (not OwnerDatabase.ValidateName(TableName,dbkTableName)) then
+    raise Exception.Create('Nome invalido para a tabela');
+
   FTableName:=TableName;
   FOwnerDatabase:=OwnerDatabase;
 end;
@@ -259,8 +322,8 @@ begin
   inherited Destroy;
 end;
 
-procedure TTableMetadata.addCollumn(FieldName: String; FieldType: TFieldType;
-  Size: Integer; Nullable: Boolean; DefaultValue: String);
+function TTableMetadata.addCollumn(FieldName: String; FieldType: TFieldType;
+  Size: Integer; NotNull: Boolean; DefaultValue: String): TCollumnDefinition;
 begin
 
 end;
@@ -280,6 +343,15 @@ function TTableMetadata.addForeignKey(IndexName, SourceTable: String;
   ): TForeignKey;
 begin
 
+end;
+
+function TTableMetadata.ValidateName(Name: String; NameKind: TDatabaseNameKind
+  ): Boolean;
+begin
+  if FOwnerDatabase<>nil then
+    Result:=FOwnerDatabase.ValidateName(Name,NameKind)
+  else
+    raise Exception.Create('Invalid Database');
 end;
 
 function TTableMetadata.FieldExists(fieldname: String;
@@ -303,6 +375,11 @@ begin
   //TODO: must validate the index name first with the database driver.
   //TODO: must check if the name of the index don't already exists on schema.
   inherited Create;
+
+  //check if index name is valid.
+  if not OwnerTable.ValidateName(IndexName, dbkIndexName) then
+    raise Exception.Create('Invalid index name');
+
   FTableOwner:=OwnerTable;
   FIndexName:=IndexName;
   FFields:=TStringList.Create;
@@ -351,7 +428,7 @@ end;
 
 function   TIndex.GetCurrentState:TDatabaseObjectState;
 begin
-  //TODO: must check itself with database driver.
+  Result:=dosUnknown; //TODO: must check itself with database driver.
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -369,7 +446,7 @@ var
 begin
   inherited AddFieldToIndex(FieldName);
   if FTableOwner.FieldExists(FieldName,ffield) then
-    ffield.Nullable:=false;
+    ffield.NotNull:=true;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
