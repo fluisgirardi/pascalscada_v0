@@ -13,6 +13,7 @@
 
  **********************************************************************}
 {$i ../common/language.inc}
+{$i ../common/delphiver.inc}
 unit pascalScadaMTPCPU;
 
 {$IFDEF FPC}
@@ -29,6 +30,17 @@ uses ctypes, sysctl;
 {$linklib c}
 uses ctypes;
 {$IFEND}
+
+type
+  {$IFNDEF FPC}
+    {$IFDEF DELPHI_XE2_UP}
+    crossNativeUInt = NativeUInt;
+    {$ELSE}
+    crossNativeUInt = Cardinal;
+    {$ENDIF}
+  {$ELSE}
+    crossNativeUInt = Cardinal;
+  {$ENDIF}
 
 function GetSystemThreadCount: integer;
 
@@ -57,7 +69,7 @@ function GetSystemThreadCount: integer;
 //returns total number of processors available to system including logical hyperthreaded processors
 var
   i: Integer;
-  ProcessAffinityMask, SystemAffinityMask: NativeUint;
+  ProcessAffinityMask, SystemAffinityMask: crossNativeUInt;
   Mask: DWORD;
   SystemInfo: SYSTEM_INFO;
 begin
