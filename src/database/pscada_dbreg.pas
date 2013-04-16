@@ -1,3 +1,4 @@
+{$i ../common/language.inc}
 unit pscada_dbreg;
 
 {$I ../../src/common/delphiver.inc}
@@ -19,14 +20,16 @@ uses hsstrings, HMIDBConnection, psbufdataset,
     LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}
     Types,
-    {$IFDEF DELPHI6_UP}
+    {$IFDEF DELPHI2009_UP}
       //demais versoes do delphi
       //others versions of delphi.
       DesignIntf, DesignEditors;
     {$ELSE}
-      //se for delphi 4 ou 5
-      //if is delphi 5 or below.
-      DsgnIntf;
+      {$IFDEF PORTUGUES}
+        {$MESSAGE ERROR 'Somente versões posteriores ao Delphi 2009 são suportadas!'}
+      {$ELSE}
+        {$MESSAGE ERROR 'Only Delphi 2009 or later are supported!'}
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 

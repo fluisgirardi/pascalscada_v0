@@ -39,7 +39,7 @@ type
     crossNativeUInt = Cardinal;
     {$ENDIF}
   {$ELSE}
-    crossNativeUInt = Cardinal;
+    crossNativeUInt = PtrUInt;
   {$ENDIF}
 
 function GetSystemThreadCount: integer;
