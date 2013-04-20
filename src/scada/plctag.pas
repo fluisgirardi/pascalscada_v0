@@ -1133,7 +1133,8 @@ begin
     Tamanho := ((PSize*FCurrentWordSize) div FProtocolWordSize) + ifthen(((PSize*FCurrentWordSize) mod FProtocolWordSize)<>0,1,0);
   end;
 
-  SetLength(FRawProtocolValues, Tamanho);
+  if Length(FRawProtocolValues)<>Tamanho then
+    SetLength(FRawProtocolValues, Tamanho);
 end;
 
 procedure TPLCTag.SetSwapDWords(v:Boolean);

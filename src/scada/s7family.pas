@@ -2656,6 +2656,7 @@ var
   incomingPDU:TPDU;
   ReqList:TS7ReqList;
   ivalues:TArrayOfDouble;
+  founddb: Boolean;
 begin
   PLCPtr:=nil;
   foundplc:=false;
@@ -2699,9 +2700,11 @@ begin
       ReqType := vtS7_Flags;
     4: begin
       ReqType := vtS7_DB;
+      founddb:=false;
       if foundplc then
         for dbidx:=0 to High(PLCPtr^.DBs) do
           if PLCPtr^.DBs[dbidx].DBNum=tagrec.File_DB then begin
+            founddb:=true;
             break;
           end;
     end;
@@ -2757,7 +2760,7 @@ begin
       if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
-        if foundplc then begin
+        if foundplc and ((ReqType<>vtS7_DB) or ((ReqType=vtS7_DB) and founddb)) then begin
           SetLength(ReqList,1);
           ReqList[0].DB:=dbidx;
           ReqList[0].PLC:=c;
@@ -2936,4 +2939,4 @@ begin
   Move(values[0],inptr^,Length(values));
 end;
 
-end.
+end.
