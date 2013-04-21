@@ -152,8 +152,8 @@ type
   }
   {$ENDIF}
   TS7ReqListItem = record
-    PLC,
-    DB,
+    PLCIdx,
+    DBIdx,
     ReqType,
     StartAddress,
     Size:Integer;

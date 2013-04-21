@@ -1694,7 +1694,7 @@ begin
   Result:=Length(FCPUs);
   SetLength(FCPUs,Result+1);
   with FCPUs[Result] do begin
-    MaxBlockSize:=-1;
+    MaxBlockSize:=0; //must be 0 instead of -1 to avoid fragmentation
     MaxPDULen:=0;
     Connected:=false;
     Slot:=iSlot;
@@ -1794,66 +1794,66 @@ begin
       FProtocolReady:=true;
 
       with ReqList[CurResult] do begin
-        if (PLC>=0) and (PLC<=High(FCPUs)) then
+        if (PLCIdx>=0) and (PLCIdx<=High(FCPUs)) then
           case ReqType of
             vtS7_DB:
-              if (DB>=0) AND (DB<=High(FCPUs[PLC].DBs)) then
-                FCPUs[PLC].DBs[DB].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+              if (DBIdx>=0) AND (DBIdx<=High(FCPUs[PLCIdx].DBs)) then
+                FCPUs[PLCIdx].DBs[DBIdx].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Inputs:
-               FCPUs[PLC].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Outputs:
-               FCPUs[PLC].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_AnInput:
-               FCPUs[PLC].S7200AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_AnOutput:
-               FCPUs[PLC].S7200AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Timer:
-               FCPUs[PLC].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Counter:
-               FCPUs[PLC].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Flags:
-               FCPUs[PLC].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_SM:
-               FCPUs[PLC].S7200SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_Timer:
-               FCPUs[PLC].S7200Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_200_Counter:
-               FCPUs[PLC].S7200Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
             vtS7_Peripheral:
-               FCPUs[PLC].PeripheralInputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+               FCPUs[PLCIdx].PeripheralInputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
           end;
       end;
     end else begin
       //seta a falha...
       //sets the fault.
       with ReqList[CurResult] do begin
-        if (PLC>=0) and (PLC<=High(FCPUs)) then
+        if (PLCIdx>=0) and (PLCIdx<=High(FCPUs)) then
           case ReqType of
             vtS7_DB:
-              if (DB>=0) AND (DB<=High(FCPUs[PLC].DBs)) then
-                FCPUs[PLC].DBs[DB].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+              if (DBIdx>=0) AND (DBIdx<=High(FCPUs[PLCIdx].DBs)) then
+                FCPUs[PLCIdx].DBs[DBIdx].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Inputs:
-               FCPUs[PLC].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Outputs:
-               FCPUs[PLC].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_AnInput:
-               FCPUs[PLC].S7200AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_AnOutput:
-               FCPUs[PLC].S7200AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Timer:
-               FCPUs[PLC].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Counter:
-               FCPUs[PLC].Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Flags:
-               FCPUs[PLC].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_SM:
-               FCPUs[PLC].S7200SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_Timer:
-               FCPUs[PLC].S7200Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_200_Counter:
-               FCPUs[PLC].S7200Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].S7200Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
             vtS7_Peripheral:
-               FCPUs[PLC].PeripheralInputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FCPUs[PLCIdx].PeripheralInputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
           end;
       end;
     end;
@@ -2399,21 +2399,21 @@ begin
       pkg_initialized;
       for i:=0 to High(ReqOutOfScan) do begin
         if i=0 then
-          plc:=ReqOutOfScan[i].PLC;
+          plc:=ReqOutOfScan[i].PLCIdx;
 
-        if ReqOutOfScan[i].DB<>-1 then begin
-          AddToReqList(ReqOutOfScan[i].PLC, ReqOutOfScan[i].DB, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
-          AddToReadRequest(msgout, ReqOutOfScan[i].ReqType, FCPUs[ReqOutOfScan[i].PLC].DBs[ReqOutOfScan[i].DB].DBNum, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size)
+        if ReqOutOfScan[i].DBIdx<>-1 then begin
+          AddToReqList(ReqOutOfScan[i].PLCIdx, ReqOutOfScan[i].DBIdx, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
+          AddToReadRequest(msgout, ReqOutOfScan[i].ReqType, FCPUs[ReqOutOfScan[i].PLCIdx].DBs[ReqOutOfScan[i].DBIdx].DBNum, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size)
         end else begin
-          AddToReqList(ReqOutOfScan[i].PLC, 0, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
+          AddToReqList(ReqOutOfScan[i].PLCIdx, 0, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
           AddToReadRequest(msgout, ReqOutOfScan[i].ReqType, 0, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size)
         end;
         if (i=High(ReqOutOfScan)) then
-          ReadQueuedRequests(FCPUs[ReqOutOfScan[i].PLC])
+          ReadQueuedRequests(FCPUs[ReqOutOfScan[i].PLCIdx])
         else begin
           if (i+1)<High(ReqOutOfScan) then begin
-            if ReqOutOfScan[i].PLC<>ReqOutOfScan[i+1].PLC then
-              ReadQueuedRequests(FCPUs[ReqOutOfScan[i].PLC])
+            if ReqOutOfScan[i].PLCIdx<>ReqOutOfScan[i+1].PLCIdx then
+              ReadQueuedRequests(FCPUs[ReqOutOfScan[i].PLCIdx])
           end;
         end;
       end;
@@ -2501,6 +2501,7 @@ var
   incomingPDU:TPDU;
   ReqList:TS7ReqList;
   ivalues:TArrayOfDouble;
+  foundDB: Boolean;
 begin
   PLCPtr:=nil;
   foundplc:=false;
@@ -2545,9 +2546,11 @@ begin
       ReqType := vtS7_Flags;
     4: begin
       ReqType := vtS7_DB;
+      foundDB:=false;
       if foundplc then
         for dbidx:=0 to High(PLCPtr^.DBs) do
           if PLCPtr^.DBs[dbidx].DBNum=tagrec.File_DB then begin
+            foundDB:=true;
             break;
           end;
     end;
@@ -2606,8 +2609,8 @@ begin
         Result:=ioOk;
         if foundplc then begin
           SetLength(ReqList,1);
-          ReqList[0].DB:=dbidx;
-          ReqList[0].PLC:=c;
+          ReqList[0].DBIdx:=ifthen(foundDB, dbidx, -1);
+          ReqList[0].PLCIdx:=c;
           ReqList[0].ReqType:=ReqType;
           ReqList[0].StartAddress:=tagrec.Address+BytesSent+tagrec.OffSet;
           ReqList[0].Size:=BytesToSend;
@@ -2760,10 +2763,10 @@ begin
       if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
-        if foundplc and ((ReqType<>vtS7_DB) or ((ReqType=vtS7_DB) and founddb)) then begin
+        if foundplc then begin
           SetLength(ReqList,1);
-          ReqList[0].DB:=dbidx;
-          ReqList[0].PLC:=c;
+          ReqList[0].DBIdx:=ifthen(founddb,dbidx,-1);
+          ReqList[0].PLCIdx:=c;
           ReqList[0].ReqType:=ReqType;
           ReqList[0].StartAddress:=tagrec.Address+BytesReceived+tagrec.OffSet;
           ReqList[0].Size:=BytesToRecv;
