@@ -2062,8 +2062,8 @@ var
     h:=Length(ReqOutOfScan);
     SetLength(ReqOutOfScan,h+1);
     with ReqOutOfScan[h] do begin
-      PLC := iPLC;
-      DB := iDB;
+      PLCIdx := iPLC;
+      DBIdx := iDB;
       ReqType := iReqType;
       StartAddress := iStartAddress;
       Size := iSize;
@@ -2082,8 +2082,8 @@ var
     h:=Length(ReqList);
     SetLength(ReqList,h+1);
     with ReqList[h] do begin
-      PLC := iPLC;
-      DB := iDB;
+      PLCIdx := iPLC;
+      DBIdx := iDB;
       ReqType := iReqType;
       StartAddress := iStartAddress;
       Size := iSize;
