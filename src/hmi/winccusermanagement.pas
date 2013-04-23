@@ -36,6 +36,7 @@ type
   private
     FCheckTimer                :TTimer;
     FInLoginProcess            :Boolean;
+    FAuthorizationList         :TStrings;
     procedure CheckAuthChanges(Sender:TObject);
   private
     PWRTLogin                  :TPWRTLogin;
@@ -51,10 +52,12 @@ type
     fUseAdminLoaded:Boolean;
     fAuthorizationCache:TStringList;
     procedure LoadUseAdmin;
+    procedure SetAuthorizationList(AValue: TStrings);
   protected
     function CheckUserAndPassword(User, Pass: String): Boolean; override;
     function GetLoggedUser:Boolean; override;
     function GetCurrentUserLogin:String; override;
+    procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
     procedure AfterConstruction; override;
@@ -78,11 +81,12 @@ type
     property LoginFrozenTime;
     property SuccessfulLogin;
     property UserChanged;
+    property AuthorizationList:TStrings read FAuthorizationList write SetAuthorizationList stored true;
   end;
 
 implementation
 
-uses ControlSecurityManager, hsstrings, StrUtils;
+uses ControlSecurityManager, hsstrings, StrUtils, TextStrings;
 
 constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
@@ -95,6 +99,7 @@ begin
   FCheckTimer.OnTimer :=CheckAuthChanges;
   FCheckTimer.Interval:=1000;
   FCheckTimer.Enabled:=false;
+  FAuthorizationList:=TTextStrings.Create;
   fAuthorizationCache:=nil;
 end;
 
@@ -111,6 +116,9 @@ begin
     FreeLibrary(hUseAdmin);
   if FCheckTimer<>nil then
     FCheckTimer.Destroy;
+  FAuthorizationList.Destroy;
+  if fAuthorizationCache<>nil then
+    fAuthorizationCache.Destroy;
   inherited Destroy;
 end;
 
@@ -133,6 +141,52 @@ begin
   PWRTSilentLogin            :=TPWRTSilentLogin(GetProcAddress(hUseAdmin,'PWRTSilentLogin'));
 
   fUseAdminLoaded:=true;
+end;
+
+procedure TWinCCUserManagement.SetAuthorizationList(AValue: TStrings);
+var
+  l, p, AuthNumber: Integer;
+  newAuthorizationCache:TStringList;
+  ValidFormat: Boolean;
+  strNum: String;
+  strAuthName: String;
+begin
+  newAuthorizationCache:=TStringList.Create;
+  try
+    ValidFormat:=true;
+    if AValue=nil then exit;
+    for l:=0 to AValue.Count-1 do begin
+      p:=Pos(':',AValue[l]);
+      if p>0 then begin
+        strNum:=LeftStr(AValue[l],p-1);
+        strAuthName:=RightStr(AValue[l],Length(AValue[l])-p);
+        if TryStrToInt(Trim(strNum), AuthNumber) then begin
+          {$IFDEF DELPHI2009_UP}
+          newAuthorizationCache.AddObject(strAuthName,TObject(Pointer(AuthNumber)));
+          {$ELSE}
+          newAuthorizationCache.AddObject(strAuthName,TObject(Pointer(PtrUInt(AuthNumber))));
+          {$ENDIF}
+        end else begin
+          ValidFormat:=False;
+          break;
+        end;
+      end else begin
+        ValidFormat:=False;
+        break;
+      end;
+    end;
+  finally
+    if ValidFormat then begin
+      if fAuthorizationCache<>nil then
+        fAuthorizationCache.Destroy;
+      fAuthorizationCache:=newAuthorizationCache;
+    end else begin
+      newAuthorizationCache.Destroy;
+      raise exception.Create('WinCCUserManagement: Invalid authorization list format at line '+IntToStr(l+1));
+    end;
+    if AValue<>nil then
+      FAuthorizationList.Assign(AValue);
+  end;
 end;
 
 procedure TWinCCUserManagement.CheckAuthChanges(Sender:TObject);
@@ -182,6 +236,13 @@ begin
     Result:='';
 
   FreeMem(buffer1);
+end;
+
+procedure TWinCCUserManagement.Loaded;
+begin
+  inherited Loaded;
+  if FAuthorizationList.Count>0 then
+    SetAuthorizationList(FAuthorizationList);
 end;
 
 function  TWinCCUserManagement.Login: Boolean;
@@ -284,7 +345,7 @@ begin
         {$IFDEF DELPHI2009_UP}
         Result.AddObject((buffer1),TObject(Pointer(c)));
         {$ELSE}
-        Result.AddObject(buffer1,TObject(Pointer(c)));
+        Result.AddObject(buffer1,TObject(Pointer(PtrUInt(c))));
         {$ENDIF}
       end;
     end;
