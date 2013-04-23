@@ -7,3 +7,7 @@ SELECT [PW_LINE].[LINENUM]
   FROM [dbo].[TXTTable],
        [dbo].[PW_LINE]
  WHERE [LINENAME]=[TEXTID]
+
+SELECT CAST([LINENUM] AS VARCHAR) + ':' + [L9] AS Permissao
+  FROM [CC_SupGeral_13_04_22_07_37_12].[dbo].[PW_LINE]
+Left join [CC_SupGeral_13_04_22_07_37_12].[dbo].[TXTTable] ON [TEXTID]=[LINENAME]
