@@ -152,6 +152,7 @@ type
     PStopBits:TSerialStopBits;
     PParity:TSerialParity;
     PDataBits:TSerialDataBits;
+    PAcceptAnyPortName:Boolean;
     {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
     PPortEventName:String;
     PSavedDCB:DCB;
@@ -300,6 +301,19 @@ type
     {$ENDIF}
     property BackupPortSettings:Boolean read PBackupPortSettings write PBackupPortSettings stored true default false;
 
+    {$IFDEF PORTUGUES}
+    {:
+    Caso @true o driver irá aceitar qualquer nome de porta serial,
+    mesmo que elas não existam no sistema
+    }
+    {$ELSE}
+    {:
+    If @true the driver will accept any comm port name, even if it don´t
+    exists on your system.
+    }
+    {$ENDIF}
+    property AcceptAnyPortName:Boolean read PAcceptAnyPortName write PAcceptAnyPortName stored true default false;
+
     //: @seealso TCommPortDriver.OnCommPortOpened
     property OnCommPortOpened;
     //: @seealso TCommPortDriver.OnCommPortOpenError
@@ -365,6 +379,7 @@ end;
 constructor TSerialPortDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  PAcceptAnyPortName:=false;
   FExclusiveDevice:=true;
   PBaundRate := br19200;
   PDataBits  := db8;
@@ -802,6 +817,10 @@ var
   dcbstring:String;
   d:DCB;
 begin
+  if PAcceptAnyPortName then begin
+    Result:=true;
+    exit;
+  end;
   dcbstring := v+': baud=1200 parity=N data=8 stop=1';
   Result := BuildCommDCB(PChar(dcbstring),d)
 {$IFEND}
@@ -813,6 +832,11 @@ begin
 var
    c:Integer;
 begin
+  if PAcceptAnyPortName then begin
+    Result:=true;
+    exit;
+  end;
+
   Result := false;
   for c:=0 to high(PortPrefix) do
      if (LeftStr(v, Length(PortPrefix[c]))=PortPrefix[c]) and FileExists('/dev/'+v) then begin
@@ -1048,4 +1072,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.
