@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa o tag PLC numérico com comunicação.)
@@ -61,7 +61,7 @@ type
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
-    procedure Write(Value:Double);
+    procedure Write(Value:Double); overload;
   published
     //: @seealso(TTag.AutoRead)
     property AutoRead;

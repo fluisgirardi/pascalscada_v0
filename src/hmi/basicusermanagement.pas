@@ -86,7 +86,7 @@ type
 
 implementation
 
-uses Controls, ControlSecurityManager, hsstrings;
+uses Controls, Forms, ControlSecurityManager, hsstrings;
 
 constructor TBasicUserManagement.Create(AOwner:TComponent);
 begin

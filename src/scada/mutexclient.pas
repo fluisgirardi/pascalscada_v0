@@ -103,7 +103,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
-    function    TryEnter:Boolean;
+    function    TryEnter:Boolean; overload;
     function    TryEnter(PickedTheDefaultBehavior: Boolean): Boolean; overload;
     function Leave: Boolean;
   published
@@ -115,7 +115,7 @@ type
 
 implementation
 
-uses hsstrings, dateutils;
+uses hsstrings, dateutils{$IFNDEF FPC}, Windows{$ENDIF};
 
 { TMutexClientThread }
 
@@ -562,9 +562,14 @@ end;
 procedure TMutexClient.ConnectionFinished(Sender: TObject);
 begin
   CloseSocket(FSocket);
-  InterLockedExchange(FSocket,0);
   InterLockedExchange(FConnected,0);
+  {$IFDEF FPC}
+  InterLockedExchange(FSocket,0);
   InterlockedCompareExchange(Pointer(FConnectionStatusThread),nil,Pointer(Self));
+  {$ELSE}
+  InterlockedExchangePointer(Pointer(FSocket),nil);
+  InterlockedCompareExchangePointer(Pointer(FConnectionStatusThread),nil,Pointer(Self));
+  {$ENDIF}
 end;
 
 procedure TMutexClient.Loaded;
@@ -595,7 +600,7 @@ begin
   Result:=TryEnter(adefaultbehavior);
 end;
 
-function TMutexClient.TryEnter(PickedTheDefaultBehavior: Boolean): Boolean; overload;
+function TMutexClient.TryEnter(PickedTheDefaultBehavior: Boolean): Boolean;
 var
   request, response:Byte;
 begin

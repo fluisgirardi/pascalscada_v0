@@ -1,4 +1,4 @@
-{$I ../common/delphiver.inc}
+﻿{$I ../common/delphiver.inc}
 unit WinCCUserManagement;
 
 interface
@@ -86,7 +86,7 @@ type
 
 implementation
 
-uses ControlSecurityManager, hsstrings, StrUtils, TextStrings;
+uses ControlSecurityManager, hsstrings, StrUtils;
 
 constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
@@ -99,7 +99,7 @@ begin
   FCheckTimer.OnTimer :=CheckAuthChanges;
   FCheckTimer.Interval:=1000;
   FCheckTimer.Enabled:=false;
-  FAuthorizationList:=TTextStrings.Create;
+  FAuthorizationList:=TStringList.Create;
   fAuthorizationCache:=nil;
 end;
 
