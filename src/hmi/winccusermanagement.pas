@@ -86,7 +86,12 @@ type
 
 implementation
 
-uses ControlSecurityManager, hsstrings, StrUtils;
+uses ControlSecurityManager, hsstrings, StrUtils, StdCtrls
+     {$IFDEF FPC}
+     , TextStrings
+     {$ELSE}
+     , hmitextstrings
+     {$ENDIF};
 
 constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
@@ -99,7 +104,7 @@ begin
   FCheckTimer.OnTimer :=CheckAuthChanges;
   FCheckTimer.Interval:=1000;
   FCheckTimer.Enabled:=false;
-  FAuthorizationList:=TStringList.Create;
+  FAuthorizationList:=TTextStrings.Create;
   fAuthorizationCache:=nil;
 end;
 
