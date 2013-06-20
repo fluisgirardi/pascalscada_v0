@@ -56,6 +56,7 @@ type
     procedure RemoveTag(Sender:TObject); override;
     //: @exclude
     procedure Loaded; override;
+    procedure UpdateTagSizeOnProtocol; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -118,9 +119,17 @@ begin
   inherited Loaded;
   FCurrentWordSize:=oldwordsize;
 
+  UpdateTagSizeOnProtocol;
+
+end;
+
+procedure TPLCStructItem.UpdateTagSizeOnProtocol;
+var
+  oldprotocol: TProtocolDriver;
+begin
   oldprotocol:=PProtocolDriver;
   PProtocolDriver:=TProtocolDriver(1);
-  UpdateTagSizeOnProtocol;
+  inherited UpdateTagSizeOnProtocol;
   PProtocolDriver:=oldprotocol;
 end;
 
@@ -251,7 +260,7 @@ begin
       MySize:=2;
     pttInteger, pttDWord, pttFloat:
       MySize:=4;
-    pttDouble:
+    pttInt64, pttQWord, pttDouble:
       MySize:=8;
   end;
 

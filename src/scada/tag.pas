@@ -69,7 +69,10 @@ type
   @value(pttInteger  Inteiro de 32 bits COM sinal.)
   @value(pttDWord,   Inteiro de 32 bits SEM sinal.)
   @value(pttFloat    Flutuante de 32 bits.)
+  @value(pttInt64    Inteiro de 64 bits COM sinal)
+  @value(pttQWord    Inteiro de 64 bits SEM sinal)
   @value(pttDouble   Flutuante de 64 bits.)
+
   }
   {$ELSE}
   {:
@@ -82,14 +85,17 @@ type
   @value(pttInteger  Signed Integer, 32 bits sized.)
   @value(pttDWord,   Unsigned Integer, 32 bits sized.)
   @value(pttFloat    Float, 32 bits sized.)
+  @value(pttInt64    Signed Integer, 64 bits sized)
+  @value(pttQWord    Unsigned Integer, 64 bits sized)
   @value(pttDouble   Float, 64 bits sized.)
+
   }
   {$ENDIF}
-  TTagType = (pttDefault,                     //size variable
-              pttShortInt, pttByte,           //8 bits
-              pttSmallInt, pttWord,           //16 bits
-              pttInteger, pttDWord, pttFloat, //32 bits
-              pttDouble                       //64 bits
+  TTagType = (pttDefault,                      //size variable
+              pttShortInt, pttByte,            //8 bits
+              pttSmallInt, pttWord,            //16 bits
+              pttInteger,  pttDWord, pttFloat, //32 bits
+              pttInt64,    pttQWord, pttDouble //64 bits
              );
 
   {$IFDEF PORTUGUES}

@@ -45,6 +45,8 @@ type
   @value(ptDWord,    Inteiro de 32 bits SEM sinal.)
   @value(ptInteger   Inteiro de 32 bits COM sinal.)
   @value(ptFloat     Flutuante de 32 bits.)
+  @value(ptInt64     Inteiro de 64 bits COM sinal)
+  @value(ptQWord     Inteiro de 64 bits SEM sinal)
   @value(ptDouble    Flutuante de 64 bits.)
   }
   {$ELSE}
@@ -58,6 +60,8 @@ type
   @value(ptDWord,    Unsigned integer, 32 bits sized.)
   @value(ptInteger   Signed integer, 32 bits sized.)
   @value(ptFloat     Float, 32 bits sized.)
+  @value(ptInt64     Signed Integer, 64 bits sized)
+  @value(ptQWord     Unsigned Integer, 64 bits sized)
   @value(ptDouble    Float, 64 bits sized.)
   }
   {$ENDIF}
@@ -70,6 +74,8 @@ type
                    ptInteger,
                    ptDWord,
                    ptFloat,
+                   ptInt64,
+                   ptQWord,
                    ptDouble
                   );
 

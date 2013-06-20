@@ -155,7 +155,7 @@ type
     {$IFDEF PORTUGUES}
     //: Tamanho da palavra retornada pelo protocolo e em uso pelo tag, em bits.
     {$ELSE}
-    //: Word size returned by the protocol and current word size of the tag.
+    //: Word size returned by the protocol and current word size of the tag in bits.
     {$ENDIF}
     FProtocolWordSize,
     FCurrentWordSize:Byte;
@@ -186,7 +186,7 @@ type
     {$ELSE}
     //: Returns the real size of the tag.
     {$ENDIF}
-    procedure UpdateTagSizeOnProtocol;
+    procedure UpdateTagSizeOnProtocol; virtual;
 
     {$IFDEF PORTUGUES}
     //: Recompila os valores do tag.
@@ -1211,6 +1211,8 @@ begin
      ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
      ((FProtocolTagType=ptInteger) AND (FTagType=pttInteger)) OR
      ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat)) Or
+     ((FProtocolTagType=ptInt64) AND (FTagType=pttInt64)) Or
+     ((FProtocolTagType=ptQWord) AND (FTagType=pttQWord)) Or
      ((FProtocolTagType=ptDouble) AND (FTagType=pttDouble))
   then begin
     Result:=Values;
@@ -1230,7 +1232,7 @@ begin
       AreaSize := Length(Values)*2;
     ptDWord, ptInteger, ptFloat:
       AreaSize := Length(Values)*4;
-    ptDouble:
+    ptQWord, ptInt64, ptDouble:
       AreaSize := Length(Values)*8;
   end;
 
@@ -1272,7 +1274,7 @@ begin
          inc(valueidx);
          Inc(PtrDWordWalker);
        end;
-    ptDouble:
+    ptQWord, ptInt64, ptDouble:
       while valueidx<Length(Values) do begin
           PtrDoubleWalker^:=Values[valueidx];
 
