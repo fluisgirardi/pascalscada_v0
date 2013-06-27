@@ -119,11 +119,9 @@ begin
   //unload the library if it´s loaded
   if hUseAdmin<>0 then
     FreeLibrary(hUseAdmin);
-  if FCheckTimer<>nil then
-    FCheckTimer.Destroy;
-  FAuthorizationList.Destroy;
-  if fAuthorizationCache<>nil then
-    fAuthorizationCache.Destroy;
+  FreeAndNil(FCheckTimer);
+  FreeAndNil(FAuthorizationList);
+  FreeAndNil(fAuthorizationCache);
   inherited Destroy;
 end;
 
