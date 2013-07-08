@@ -8,6 +8,12 @@
 {:
   @abstract(Unit of translation of PascalSCADA.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - New resourcestrings
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
 {$ENDIF}
 unit hsstrings;
@@ -33,6 +39,7 @@ resourcestring
   strDatabasePallete  = 'PascalSCADA Database';
   strUserManagement   = 'PascalSCADA User Management';
   strFPCPallete       = 'PascalSCADA - FreePascal';
+  strAssistants       = 'PascalSCADA - Assistants';
   
   //////////////////////////////////////////////////////////////////////////////
   // Mensagens de exceptions.
@@ -256,6 +263,9 @@ resourcestring
   SSecurityControlBusy      = 'The security manager is busy.';
   SUserManagementIsSet      = 'There are already a user management on your application.';
   SInvalidUserManager       = 'Invalid user manager!';
+  SDriverRequired           = 'You must assign one driver to build tags';
+  SBlockRequired            = 'Please, define block or structure';
+  SNumberTagRequired        = 'Please, assign a one tag to build bits';
 
   us7tb_tabsheet1_caption       = 'Area and type';
   us7tb_plcaddres_caption       = 'PLC Address';

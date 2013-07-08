@@ -1,4 +1,4 @@
-﻿{$i ../common/language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -22,7 +22,12 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, ExtCtrls
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs,
+  {$IFDEF FPC}
+  fptimer
+  {$ELSE}
+  Extctrls
+  {$ENDIF}
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -168,7 +173,7 @@ type
     {: @exclude }
     FLastOSErrorMessage:String;
     {: @exclude }
-    FTimer:TTimer;
+    {$IFDEF FPC}FTimer:TFPTimer;{$ELSE}FTimer:TTimer;{$ENDIF}
     {: @exclude }
     FLastPkgId:Cardinal;
     {: @exclude }
@@ -1137,7 +1142,7 @@ begin
   inherited Create(AOwner);
   FOwnerThread:=GetCurrentThreadId;
   FExclusiveDevice:=false;
-  FTimer := TTimer.Create(Self);
+  FTimer := {$IFDEF FPC}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(Self);
   FTimer.OnTimer:=TimerStatistics;
   FTimer.Enabled:=false;
   FTimer.Interval:=1000;

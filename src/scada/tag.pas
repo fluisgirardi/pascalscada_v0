@@ -1,4 +1,5 @@
-﻿{$i ../common/language.inc}
+{$i ../common/language.inc}
+{$I ../common/delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação da base de todos os tags.)
@@ -8,7 +9,14 @@
 {:
   @abstract(Implements the base class of tags.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - Avoid the use of Linux-Widget if fpc >= 2.7.1 (CONSOLEPASCALSCADA)
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
+
 {$ENDIF}
 unit Tag;
 
@@ -20,11 +28,17 @@ interface
 
 uses
   SysUtils, Classes
+
   {$IFDEF FPC}
-  ,LCLIntf, LCLType, Interfaces, Forms;
+
+    {$IFNDEF CONSOLEPASCALSCADA}
+       ,LCLIntf, LCLType, Interfaces, Forms
+    {$ENDIF}
+
   {$ELSE}
-  ,Windows, Messages;
+  ,Windows, Messages
   {$ENDIF}
+  ;
 
 {$IFNDEF FPC}
 const
@@ -72,7 +86,6 @@ type
   @value(pttInt64    Inteiro de 64 bits COM sinal)
   @value(pttQWord    Inteiro de 64 bits SEM sinal)
   @value(pttDouble   Flutuante de 64 bits.)
-
   }
   {$ELSE}
   {:
@@ -88,7 +101,6 @@ type
   @value(pttInt64    Signed Integer, 64 bits sized)
   @value(pttQWord    Unsigned Integer, 64 bits sized)
   @value(pttDouble   Float, 64 bits sized.)
-
   }
   {$ENDIF}
   TTagType = (pttDefault,                      //size variable
@@ -408,16 +420,26 @@ type
   {$ENDIF}
   TTag = class(TComponent)
   private
+    {$IFDEF FPC}
+      {$IFDEF CONSOLEPASCALSCADA}
+        FUserData:Pointer;
+      {$ENDIF}
+    {$ENDIF}
+
     {$IFNDEF FPC}
-    fHandle:HWND;
-    {$IFDEF PORTUGUES}
-    //: Processa as mensagens do tag.
+      fHandle:HWND;
+         {$IFDEF PORTUGUES}
+         //: Processa as mensagens do tag.
+         {$ELSE}
+         //: Processes the tag messages.
+         {$ENDIF}
+      procedure wndMethod(var Msg:TLMessage); virtual;
     {$ELSE}
-    //: Processes the tag messages.
-    {$ENDIF}    
-    procedure wndMethod(var Msg:TLMessage); virtual;
-    {$ELSE}
-    procedure ASyncMethod(Data: PtrInt); virtual;
+      {$IFNDEF CONSOLEPASCALSCADA}
+        procedure ASyncMethod(Data: PtrInt); virtual;
+      {$ELSE}
+        procedure ASyncMethod(); virtual;
+      {$ENDIF}
     {$ENDIF}
   protected
     {$IFDEF PORTUGUES}
@@ -1035,7 +1057,9 @@ end;
 procedure TTag.NotifyChange;
 var
   c:Integer;
+{$IFNDEF CONSOLEPASCALSCADA}
   x:Pointer;
+{$ENDIF}
 begin
   //notifica a mudanca antes de notificar os
   //demais controles.
@@ -1064,9 +1088,22 @@ begin
       POnValueChangeLast(Self);
   except
   end;
-  x:=GetValueChangeData;
+
+  {$IFNDEF CONSOLEPASCALSCADA}
+    x:=GetValueChangeData;
+  {$ELSE}
+    FUserData:=GetValueChangeData;
+  {$ENDIF}
+
+
   {$IFDEF FPC}
-  Application.QueueAsyncCall(ASyncMethod,PtrInt(x));
+
+    {$IFNDEF CONSOLEPASCALSCADA}
+      Application.QueueAsyncCall(ASyncMethod,PtrInt(x));
+    {$ELSE}
+      TThread.Queue(nil, ASyncMethod);
+    {$ENDIF}
+
   {$ELSE}
   PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
   {$ENDIF}
@@ -1095,11 +1132,20 @@ begin
     inherited Dispatch(Msg);
 end;
 {$ELSE}
-procedure TTag.ASyncMethod(Data: PtrInt);
-begin
-  AsyncNotifyChange(Pointer(Data));
-  ReleaseChangeData(Pointer(Data));
-end;
+  {$IFNDEF CONSOLEPASCALSCADA}
+    procedure TTag.ASyncMethod(Data: PtrInt);
+    begin
+      AsyncNotifyChange(Pointer(Data));
+      ReleaseChangeData(Pointer(Data));
+    end;
+  {$ELSE}
+    procedure TTag.ASyncMethod();
+    begin
+      AsyncNotifyChange(Pointer(FUserData));
+      ReleaseChangeData(Pointer(FUserData));
+    end;
+  {$ENDIF}
+
 {$ENDIF}
 
 procedure TTag.AsyncNotifyChange(data:Pointer);
@@ -1210,4 +1256,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.

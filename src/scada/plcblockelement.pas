@@ -8,8 +8,14 @@
 {$ELSE}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-
   @abstract(Unit that implements a block element tag.)
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - TPLCBlockElement is descendant of TPLCNumberMappable
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
+
 }
 {$ENDIF}
 unit PLCBlockElement;
@@ -43,7 +49,7 @@ type
   @seealso(TPLCBlock)
   }
   {$ENDIF}
-  TPLCBlockElement = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
+  TPLCBlockElement = class(TPLCNumberMappable, ITagInterface, ITagNumeric, IHMITagInterface)
   private
     PBlock:TPLCBlock;
   protected

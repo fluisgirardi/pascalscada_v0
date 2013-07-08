@@ -8,8 +8,13 @@
 {$ELSE}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-
   @abstract(Unit that implements a block of tags of communication.)
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - Moved OpenElementMapper to BlockTagAssistant to remove TForm dependencies
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
 {$ENDIF}
 unit PLCBlock;
@@ -21,7 +26,7 @@ unit PLCBlock;
 interface
 
 uses
-  SysUtils, Classes, Tag, TagBlock, ProtocolTypes;
+  SysUtils, Classes, Tag, TagBlock;
 
 type
   {$IFDEF PORTUGUES}
@@ -88,13 +93,6 @@ type
     {$ENDIF}
     procedure WriteDirect;
 
-    {$IFDEF PORTUGUES}
-    //: Abre a ferramenta de mapeamento de tags elementos de bloco.
-    {$ELSE}
-    //: Opens the tool to map block elements.
-    {$ENDIF}
-    procedure OpenElementMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
-
     //: @seealso(TPLCTag.ScanRead)
     procedure ScanRead; override;
     //: @seealso(TPLCTag.ScanWrite)
@@ -156,7 +154,7 @@ type
 
 implementation
 
-uses hsstrings, uelementmapper, math, PLCBlockElement, Controls;
+uses hsstrings, math;
 
 constructor TPLCBlock.Create(AOwner:TComponent);
 begin
@@ -373,60 +371,5 @@ begin
   SetLength(PLCValues,0);
 end;
 
-procedure TPLCBlock.OpenElementMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
-var
-  dlg:TfrmMapElements;
-  startelement,
-  endelement,
-  curelement,
-  elementnumber:Integer;
-  tagelement:TPLCBlockElement;
 
-  function GetNewTagElementName:String;
-  var
-    n:String;
-  begin
-    n:=IntToStr(elementnumber);
-    Result:=dlg.elementnames.Text;
-    Result := StringReplace(Result,'%e',n,[rfReplaceAll]);
-
-    n:=Name;
-    Result := StringReplace(Result,'%t',n,[rfReplaceAll]);
-  end;
-
-begin
-  //se não está em design sai.
-  if [csDesigning]*ComponentState=[] then exit;
-
-  dlg:=TfrmMapElements.Create(nil);
-  try
-    dlg.startindex.MinValue:=0;
-    dlg.startindex.MaxValue:=Size-1;
-
-    dlg.endindex.MinValue:=0;
-    dlg.endindex.MaxValue:=Size-1;
-
-    if dlg.ShowModal=mrOK then begin
-
-      if Pos('%e', dlg.elementnames.Text)=0 then
-        dlg.elementnames.Text:=dlg.elementnames.Text+'%e';
-
-      startelement:=dlg.startindex.Value;
-      endelement:=dlg.endindex.Value;
-      curelement:=startelement;
-      while curelement<=endelement do begin
-        elementnumber:=ifthen(dlg.ElementsStartFromOne.Checked,curelement+1,curelement);
-        tagelement:=TPLCBlockElement(CreateProc(TPLCBlockElement));
-        tagelement.Name:=GetNewTagElementName;
-        tagelement.PLCBlock:=Self;
-        tagelement.Index:=curelement;
-        InsertHook(tagelement);
-        inc(curelement);
-      end;
-    end;
-  finally
-    dlg.Destroy;
-  end;
-end;
-
-end.
+end.

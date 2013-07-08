@@ -8,6 +8,15 @@
 {:
   @abstract(Unit that implements a numeric tag for general use.)
   @author(Fabio Luis Girardi fabio@pascalscada.com)
+
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - Moved OpenBitMapper to BitMapTagAssistant to remove form dependencies
+  07/2013 - Added TPLCNumberMappable to avoid TTagBit to be BitMappable
+  07/2013 - Remove Dialogs unit and replace MessageDlg with raising exceptions;
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
 {$ENDIF}
 unit PLCNumber;
@@ -19,7 +28,7 @@ unit PLCNumber;
 interface
 
 uses
-  SysUtils, Classes, PLCTag, ProtocolTypes, ValueProcessor;
+  SysUtils, Classes, PLCTag, ValueProcessor;
 
 type
 
@@ -174,13 +183,6 @@ type
     //: @exclude
     destructor Destroy; override;
 
-    {$IFDEF PORTUGUES}
-    //: Abre o assistente de mapeamento de tags bit.
-    {$ELSE}
-    //: Opens the bit mapper wizard.
-    {$ENDIF}
-    procedure OpenBitMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
-
     //: @seealso(TPLCTag.Write)
     procedure Write; overload; virtual;
     //: @seealso(TPLCTag.Write)
@@ -242,9 +244,16 @@ type
     property OnAsyncValueChange;
   end;
 
+
+  TPLCNumberMappable = class(TPLCNumber)
+    // This abstract class avoid TTagbit component being listed in the property editor of TBitMapperTagAssistant
+  end;
+
+
+
 implementation
 
-uses ubitmapper, Controls, TagBit, tag, hsstrings, Dialogs;
+uses tag, hsstrings;
 
 constructor TPLCNumber.Create(AOwner: TComponent);
 begin
@@ -298,11 +307,11 @@ procedure TPLCNumber.SetValue(Value:Double);
 var
   towrite:Double;
 begin
-  if (FEnableMin and (Value<FMinLimit)) or (FEnableMax and (Value>FMaxLimit)) then begin
-    MessageDlg(SoutOfBounds,mtWarning,[mbOK],0);
-    NotifyWriteFault;
-    exit;
-  end;
+  if (FEnableMin and (Value<FMinLimit)) or (FEnableMax and (Value>FMaxLimit)) then
+   begin
+     NotifyWriteFault;
+     raise Exception.Create(SoutOfBounds);
+   end;
 
   if Assigned(PScaleProcessor) then
     towrite := PScaleProcessor.SetOutGetIn(self, Value)
@@ -373,84 +382,5 @@ begin
   PScaleProcessor := nil;
 end;
 
-procedure TPLCNumber.OpenBitMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
-var
-  dlg:TfrmBitMapper;
-  bitnum,
-  bytenum,
-  wordnum,
-  startbit,
-  endbit,
-  curbit:Integer;
-  tbit:TTagBit;
-
-  procedure updatenumbers;
-  begin
-    bitnum:=curbit;
-    if dlg.bitnamestartsfrom1.Checked then inc(bitnum);
-
-    bytenum:=curbit div 8;
-    if dlg.bytenamestartsfrom1.Checked then inc(bytenum);
-
-    wordnum:=curbit div 16;
-    if dlg.Wordnamestartsfrom1.Checked then inc(wordnum);
-  end;
-
-  function GetNewTagBitName:String;
-  var
-    n:String;
-  begin
-    n:=IntToStr(bitnum);
-    Result:=dlg.edtNamepattern.Text;
-    Result := StringReplace(Result,'%b',n,[rfReplaceAll]);
-
-    n:=IntToStr(bytenum);
-    Result := StringReplace(Result,'%B',n,[rfReplaceAll]);
-
-    n:=IntToStr(wordnum);
-    Result := StringReplace(Result,'%w',n,[rfReplaceAll]);
-
-    n:=Name;
-    Result := StringReplace(Result,'%t',n,[rfReplaceAll]);
-  end;
-begin
-  //bit mapper...
-
-  //se não está em design sai.
-  //if it's not at designtime, exit.
-  if [csDesigning]*ComponentState=[] then exit;
-
-  dlg:=TfrmBitMapper.Create(nil);
-  try
-    if dlg.ShowModal=mrOK then begin
-      startbit:=31-dlg.StringGrid1.Selection.Right;
-      endbit:=31-dlg.StringGrid1.Selection.Left;
-      curbit:=startbit;
-      if dlg.eachbitastag.Checked then begin
-        while curbit<=endbit do begin
-          updatenumbers;
-          tbit:=TTagBit(CreateProc(TTagBit));
-          tbit.Name:=GetNewTagBitName;
-          tbit.PLCTag:=Self;
-          tbit.EndBit:=curbit;
-          tbit.StartBit:=curbit;
-          InsertHook(tbit);
-          inc(curbit);
-        end;
-      end else begin
-        updatenumbers;
-        tbit:=TTagBit(CreateProc(TTagBit));
-        tbit.Name:=GetNewTagBitName;
-        tbit.PLCTag:=Self;
-        tbit.EndBit:=endbit;
-        tbit.StartBit:=startbit;
-        InsertHook(tbit);
-      end;
-    end;
-  finally
-    dlg.Destroy;
-  end;
-end;
-
 end.
- 
+ 

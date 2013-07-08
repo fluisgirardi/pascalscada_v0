@@ -9,6 +9,12 @@
 {:
   @abstract(Unit of register of PascalSCADA components. For Lazarus and Delphi.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - Modified. Register new assistant components
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
 {$ENDIF}
 unit scadareg;
@@ -23,8 +29,10 @@ uses
   Classes, SerialPort, ModBusSerial, LinearScaleProcessor, PLCTagNumber,
   PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
   scadapropeditor, hsstrings, TagBit, ProtocolDriver,
-  WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCNumber,
+  WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct,
   PLCStructElement, ISOTCPDriver, mutexserver, MutexClient,
+  commontagassistant, siemenstagassistant, modbustagassistant, westasciitagassistant,
+  bitmappertagassistant, blockstructtagassistant,
   {$IFDEF FPC}
     LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}
@@ -63,13 +71,22 @@ begin
   RegisterComponents(strTagsPallete,      [TPLCStruct]);
   RegisterComponents(strTagsPallete,      [TPLCStructItem]);
 
+  // New component pallette
+  RegisterComponents(strAssistants,      [TSiemensTagAssistant]);
+  RegisterComponents(strAssistants,      [TModBusTagAssistant]);
+  RegisterComponents(strAssistants,      [TWestASCIITagAssistant]);
+  RegisterComponents(strAssistants,      [TBitMapperTagAssistant]);
+  RegisterComponents(strAssistants,      [TBlockStructTagAssistant]);
+  // End new component pallette
+
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
   //end securitycode property editor.
 
-  RegisterComponentEditor(TProtocolDriver, TTagBuilderComponentEditor);
-  RegisterComponentEditor(TPLCNumber,      TTagBitMapperComponentEditor);
-  RegisterComponentEditor(TPLCBlock,       TBlockElementMapperComponentEditor);
+
+  RegisterComponentEditor(TCommonTagAssistant, TTagBuilderComponentEditor);
+  RegisterComponentEditor(TBitMapperTagAssistant, TTagBitMapperComponentEditor);
+  RegisterComponentEditor(TBlockStructTagAssistant,  TBlockElementMapperComponentEditor);
 
   {$IFDEF FPC}
   {$IF defined(FPC) AND (FPC_FULLVERSION < 20501) }

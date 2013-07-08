@@ -1,4 +1,4 @@
-﻿{$i ../common/language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa o tag PLC numérico com comunicação.)
@@ -6,8 +6,16 @@
 }
 {$ELSE}
 {:
-@abstract(Unit that implements a numeric tag with communication.)
-@author(Fabio Luis Girardi fabio@pascalscada.com)
+  @abstract(Unit that implements a numeric tag with communication.)
+  @author(Fabio Luis Girardi fabio@pascalscada.com)
+
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - TPLCTagNumber is descendant of TPLCNumberMappable
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
+
 }
 {$ENDIF}
 unit PLCTagNumber;
@@ -34,7 +42,7 @@ type
   @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
-  TPLCTagNumber = class(TPLCNumber, IScanableTagInterface, ITagInterface, ITagNumeric)
+  TPLCTagNumber = class(TPLCNumberMappable, IScanableTagInterface, ITagInterface, ITagNumeric)
   private
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;

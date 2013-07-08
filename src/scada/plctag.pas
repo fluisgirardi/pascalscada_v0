@@ -1,4 +1,4 @@
-﻿{$i ../common/language.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa a base para Tags de comunicação.)
@@ -8,6 +8,13 @@
 {:
 @abstract(Unit that implements the base of an communication tag.)
 @author(Fabio Luis Girardi fabio@pascalscada.com)
+
+
+****************************** History  *******************************
+***********************************************************************
+08/2013 - Removed Extctrls unit
+@author(Juanjo Montero <juanjo.montero@gmail.com>)
+***********************************************************************
 }
 {$ENDIF}
 unit PLCTag;
@@ -19,7 +26,7 @@ unit PLCTag;
 interface
 
 uses
-  SysUtils, ExtCtrls, Classes, Tag, ProtocolDriver, ProtocolTypes, Math;
+  SysUtils, Classes, Tag, ProtocolDriver, ProtocolTypes, Math;
 
 type
 

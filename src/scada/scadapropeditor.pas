@@ -9,6 +9,15 @@
 {:
   @abstract(Implements some property editors of PascalSCADA.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - Replaced ProtocolDriver with TagAssistant. (unit, properties and classes)
+  07/2013 - Implemented Double-Click for the assistants.
+  07/2013 - Replaced PlcNumber with BitMapTagAssistant. (unit, properties and classes)
+  07/2013 - Replaced PlcBlock with BLockTagAssistant. (unit, properties and classes)
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
 {$ENDIF}
 unit scadapropeditor;
@@ -22,8 +31,9 @@ unit scadapropeditor;
 interface
 
 uses
-  Classes, SysUtils, SerialPort, PLCBlockElement, PLCNumber, PLCBlock,
-  PLCStruct, Tag, ProtocolDriver,
+  Classes, SysUtils, SerialPort, PLCBlockElement,
+  PLCStruct, Tag, commontagassistant, bitmappertagassistant,
+  blockstructtagassistant,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -116,7 +126,8 @@ type
     procedure ExecuteVerb(Index: Integer); override;
     function  GetVerb(Index: Integer): string; override;
     function  GetVerbCount: Integer; override;
-    function  ProtocolDriver: TProtocolDriver; virtual;
+    procedure Edit; override;
+    function  TagAssistant: TCommonTagAssistant; virtual;
   end;
 
   {$IFDEF PORTUGUES}
@@ -141,7 +152,8 @@ type
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
-    function NumericTag: TPLCNumber; virtual;
+    procedure Edit; override;
+    function bitmappertagassistant: TBitMapperTagAssistant; virtual;
   end;
 
   {$IFDEF PORTUGUES}
@@ -169,7 +181,8 @@ type
     {$ifend}
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
-    function Block: TPLCBlock; virtual;
+    procedure Edit; override;
+    function BlockAssistant: TBlockStructTagAssistant; virtual;
   end;
 
 implementation
@@ -296,12 +309,12 @@ end;
 
 function  TTagBuilderComponentEditor.GetTheOwner: TComponent;
 begin
-  Result:=ProtocolDriver.Owner;
+  Result:=TagAssistant.Owner;
 end;
 
 procedure TTagBuilderComponentEditor.OpenTagBuilder;
 begin
-  ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
+  TagAssistant.OpenTagEditor(TagAssistant, AddTagInEditor, CreateComponent);
 end;
 
 procedure TTagBuilderComponentEditor.ExecuteVerb(Index: Integer);
@@ -321,9 +334,15 @@ begin
   Result:=1;
 end;
 
-function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
+procedure TTagBuilderComponentEditor.Edit;
 begin
-  Result:=TProtocolDriver(GetComponent);
+  inherited Edit;
+  OpenTagBuilder();
+end;
+
+function TTagBuilderComponentEditor.TagAssistant: TCommonTagAssistant;
+begin
+  Result:=TCommonTagAssistant(GetComponent);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -332,12 +351,12 @@ end;
 
 function TTagBitMapperComponentEditor.GetTheOwner: TComponent;
 begin
-  Result:=NumericTag.Owner;
+  Result:=bitmappertagassistant.Owner;
 end;
 
 procedure TTagBitMapperComponentEditor.OpenBitMapper;
 begin
-  NumericTag.OpenBitMapper(NumericTag, AddTagInEditor, CreateComponent);
+  bitmappertagassistant.OpenBitMapper(bitmappertagassistant, AddTagInEditor, CreateComponent);
 end;
 
 procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: Integer);
@@ -357,9 +376,15 @@ begin
   Result:=1;
 end;
 
-function  TTagBitMapperComponentEditor.NumericTag: TPLCNumber;
+procedure TTagBitMapperComponentEditor.Edit;
 begin
-  Result:=TPLCNumber(GetComponent);
+  inherited Edit;
+  OpenBitMapper();
+end;
+
+function  TTagBitMapperComponentEditor.BitMapperTagAssistant: TBitMapperTagAssistant;
+begin
+  Result:=TBitMapperTagAssistant(GetComponent);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -368,12 +393,12 @@ end;
 
 function  TBlockElementMapperComponentEditor.GetTheOwner: TComponent;
 begin
-  Result:=Block.Owner;
+  Result:=BlockAssistant.Owner;
 end;
 
 procedure TBlockElementMapperComponentEditor.OpenElementMapper;
 begin
-  Block.OpenElementMapper(Block, AddTagInEditor, CreateComponent);
+  BlockAssistant.OpenElementMapper(BlockAssistant, AddTagInEditor, CreateComponent);
 end;
 
 procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: Integer);
@@ -385,22 +410,30 @@ end;
 {$if declared(has_customhints)}
 function TBlockElementMapperComponentEditor.GetCustomHint: String;
 begin
-  Result:='';
-  if Block is TPLCStruct then
-    Result:=Result+'Structure size in bytes:'+IntToStr(TPLCStruct(Block).Size)
+  if not Assigned(BlockAssistant.BlockStructTag) then
+    begin
+      Result:='Please, define block or structure';
+      Exit;
+    end;
+  if BlockAssistant.BlockStructTag is TPLCStruct then
+    Result:=Result+'Structure size in bytes:'+IntToStr(TPLCStruct(BlockAssistant.BlockStructTag).Size)
   else
-    Result:=Result+'Block size:'+IntToStr(Block.Size);
+    Result:=Result+'Block size:'+IntToStr(BlockAssistant.BlockStructTag.Size);
 end;
 {$ifend}
 
 function  TBlockElementMapperComponentEditor.GetVerb(Index: Integer): string;
 begin
-  if Index=0 then begin
-    if Block is TPLCStruct then
-      Result:='Map structure items...'
-    else
-      Result:='Map block elements...';
-  end;
+  Result:='Undefined Block';
+  if Index=0 then
+    begin
+      if not Assigned(BlockAssistant.BlockStructTag) then
+        Exit;
+      if BlockAssistant.BlockStructTag is TPLCStruct then
+       Result:='Map structure items...'
+      else
+       Result:='Map block elements...';
+    end;
 end;
 
 function  TBlockElementMapperComponentEditor.GetVerbCount: Integer;
@@ -408,9 +441,15 @@ begin
   Result:=1;
 end;
 
-function  TBlockElementMapperComponentEditor.Block:TPLCBlock;
+procedure TBlockElementMapperComponentEditor.Edit;
 begin
-  Result:=TPLCBlock(GetComponent);
+  inherited Edit;
+  OpenElementMapper();
+end;
+
+function  TBlockElementMapperComponentEditor.BlockAssistant:TBlockStructTagAssistant;
+begin
+  Result:=TBlockStructTagAssistant(GetComponent);
 end;
 
 

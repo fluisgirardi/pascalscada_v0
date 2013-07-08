@@ -8,6 +8,13 @@
 {:
   @abstract(Unit that implements a network mutex.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - Removed Extctrls unit
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
 {$ENDIF}
 unit MutexClient;
@@ -20,7 +27,7 @@ unit MutexClient;
 interface
 
 uses
-  Classes, SysUtils, ExtCtrls, CommPort, commtypes, socket_types, CrossEvent,
+  Classes, SysUtils, CommPort, commtypes, socket_types, CrossEvent,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}

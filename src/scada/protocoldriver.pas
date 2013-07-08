@@ -8,6 +8,14 @@
 {:
 @abstract(Unit that implements a base class of protocol driver.)
 @author(Fabio Luis Girardi fabio@pascalscada.com)
+
+
+****************************** History  *******************************
+***********************************************************************
+07/2013 - Moved OpenTagEditor to TagBuilderAssistant to remove form dependencies
+@author(Juanjo Montero <juanjo.montero@gmail.com>)
+***********************************************************************
+
 }
 {$ENDIF}
 unit ProtocolDriver;
@@ -518,12 +526,6 @@ type
     {$ENDIF}
     procedure AddTag(TagObj:TTag);
 
-    {$IFDEF PORTUGUES}
-    //: Chama o editor de tags do driver.
-    {$ELSE}
-    //: Opens the Tag Builder of the protocol driver (if exists)
-    {$ENDIF}
-    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -717,7 +719,7 @@ var
 
 implementation
 
-uses PLCTag, hsstrings, Dialogs, math, crossdatetime, pascalScadaMTPCPU;
+uses PLCTag, hsstrings, math, crossdatetime, pascalScadaMTPCPU;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -801,10 +803,6 @@ begin
   inherited Destroy;
 end;
 
-procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
-begin
-  MessageDlg(SWithoutTagBuilder, mtError,[mbOK],0);
-end;
 
 procedure TProtocolDriver.SetCommPort(CommPort:TCommPortDriver);
 begin

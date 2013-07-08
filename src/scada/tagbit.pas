@@ -8,7 +8,15 @@
 {:
   @abstract(Implements a tag that maps bits from another tag.)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+
+  ****************************** History  *******************************
+  ***********************************************************************
+  07/2013 - Modified. Remove any reference to dialogs, forms ....
+  @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  ***********************************************************************
 }
+
 {$ENDIF}
 unit TagBit;
 
@@ -101,9 +109,7 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
-    //: @seealso(TPLCNumber.OpenBitMapper)
-    procedure OpenBitMapper(OwnerOfNewTags: TComponent;
-       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+
   published
 
     {$IFDEF PORTUGUES}
@@ -145,7 +151,7 @@ type
 
 implementation
 
-uses hsstrings, Dialogs, crossdatetime;
+uses hsstrings, crossdatetime;
 
 constructor TTagBit.Create(AOwner:TComponent);
 begin
@@ -165,11 +171,6 @@ begin
   inherited Destroy;
 end;
 
-procedure TTagBit.OpenBitMapper(OwnerOfNewTags: TComponent;
-   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
-begin
-  MessageDlg(SWhyMapBitsFromOtherBits,mtInformation,[mbOK],0);
-end;
 
 procedure TTagBit.SetNumber(number:TPLCNumber);
 begin
