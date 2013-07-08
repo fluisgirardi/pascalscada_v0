@@ -15,7 +15,9 @@ uses
   scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, 
   tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, 
   UserScale, ustructuremapper, uwesttagbuilder, ValueProcessor, 
-  WestASCIIDriver, LazarusPackageIntf;
+  WestASCIIDriver, commontagassistant, siemenstagassistant, 
+  modbustagassistant, westasciitagassistant, bitmappertagassistant, 
+  blockstructtagassistant, LazarusPackageIntf;
 
 implementation
 

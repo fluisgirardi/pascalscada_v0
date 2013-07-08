@@ -3,7 +3,6 @@
   <Package Version="4">
     <PathDelim Value="\"/>
     <Name Value="pascalscada"/>
-    <AddToProjectUsesSection Value="True"/>
     <CompilerOptions>
       <Version Value="11"/>
       <PathDelim Value="\"/>
@@ -33,7 +32,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="51">
+    <Files Count="57">
       <Item1>
         <Filename Value="src\scada\commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -76,7 +75,7 @@
       </Item10>
       <Item11>
         <Filename Value="src\scada\mutexserver.pas"/>
-        <UnitName Value="MutexServer"/>
+        <UnitName Value="mutexserver"/>
       </Item11>
       <Item12>
         <Filename Value="src\scada\opcdaprotocol.pas"/>
@@ -239,9 +238,33 @@
         <Filename Value="src\scada\westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
       </Item51>
+      <Item52>
+        <Filename Value="src\scada\commontagassistant.pas"/>
+        <UnitName Value="commontagassistant"/>
+      </Item52>
+      <Item53>
+        <Filename Value="src\scada\siemenstagassistant.pas"/>
+        <UnitName Value="siemenstagassistant"/>
+      </Item53>
+      <Item54>
+        <Filename Value="src\scada\modbustagassistant.pas"/>
+        <UnitName Value="modbustagassistant"/>
+      </Item54>
+      <Item55>
+        <Filename Value="src\scada\westasciitagassistant.pas"/>
+        <UnitName Value="westasciitagassistant"/>
+      </Item55>
+      <Item56>
+        <Filename Value="src\scada\bitmappertagassistant.pas"/>
+        <UnitName Value="bitmappertagassistant"/>
+      </Item56>
+      <Item57>
+        <Filename Value="src\scada\blockstructtagassistant.pas"/>
+        <UnitName Value="blockstructtagassistant"/>
+      </Item57>
     </Files>
     <Type Value="RunAndDesignTime"/>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="pascalscada_common"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
@@ -250,10 +273,6 @@
       <Item2>
         <PackageName Value="IDEIntf"/>
       </Item2>
-      <Item3>
-        <PackageName Value="LCL"/>
-        <MinVersion Major="1" Valid="True"/>
-      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <CustomOptions Value="-dUseCThreads"/>

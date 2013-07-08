@@ -112,6 +112,12 @@ contains
   unumerickeyboard in 'src\hmi\unumerickeyboard.pas' {NumericKeyBoard},
   usrmgnt_login in 'src\hmi\usrmgnt_login.pas' {frmUserAuthentication},
   mutexserver in 'src\scada\mutexserver.pas',
-  mutexclient in 'src\scada\mutexclient.pas';
+  mutexclient in 'src\scada\mutexclient.pas',
+  bitmappertagassistant in 'src\scada\bitmappertagassistant.pas',
+  blockstructtagassistant in 'src\scada\blockstructtagassistant.pas',
+  commontagassistant in 'src\scada\commontagassistant.pas',
+  modbustagassistant in 'src\scada\modbustagassistant.pas',
+  siemenstagassistant in 'src\scada\siemenstagassistant.pas',
+  westasciitagassistant in 'src\scada\westasciitagassistant.pas';
 
 end.
