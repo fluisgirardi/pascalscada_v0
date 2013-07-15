@@ -164,10 +164,10 @@ Delphi versions:
 {$ENDIF}
 
 
-// Compile directive that allows to use PascalSCADA in Console Mode
-// This only is usefull for Linux that can runs without X enviroment
-{$IFDEF UNIX}
-  {$IF ((FPC_VERSION >= 2) and (FPC_RELEASE >= 7) and (FPC_PATCH >= 1))}
-    {$DEFINE CONSOLEPASCALSCADA}
-  {$ENDIF}
+// Include testings for fpc and unix. Delphi skip this test avoiding
+// errors of type "undefined constants"
+{$IFDEF FPC}
+  {$i console.inc}
 {$ENDIF}
+
+
