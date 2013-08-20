@@ -56,9 +56,6 @@ type
     @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
-
-  { TPLCString }
-
   TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private
     PValue:String;

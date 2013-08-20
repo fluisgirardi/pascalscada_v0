@@ -293,13 +293,13 @@ begin
   if (csDestroying in ComponentState) then exit;
   inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
   TagValues:=PLCValuesToTagValues(Values, Offset);
-  if Length(TagValues)<=0 then exit;
+
   try
     notify := false;
     case TagCommand of
       tcScanRead,tcRead,tcInternalUpdate:
       begin
-        if LastResult in [ioOk, ioNullDriver] then begin
+        if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
           notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
           PValueRaw := TagValues[0];
           PValueTimeStamp := ValuesTimeStamp;
@@ -315,7 +315,7 @@ begin
       end;
       tcScanWrite,tcWrite:
       begin
-        if LastResult in [ioOk, ioNullDriver]then begin
+        if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
           if LastResult=ioOk then begin
             PModified:=False;
             IncCommWriteOK(1);
