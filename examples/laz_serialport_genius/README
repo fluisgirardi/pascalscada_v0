@@ -1,0 +1,9 @@
+  This program communicates with a game called "Genius" recording the name
+  of each player and their punctuation on this game. The game is a third
+  part hardware, that sends the latest game number/punctuation every second.
+
+  To see the serial communication, see  TCommThread.Execute on this file.
+
+  YOU WILL NEED THE SQLITE3 LIBRARIES INSTALLED ON YOUR SYSTEM!!!!!
+
+  Author: Fabio Luis Girardi.
