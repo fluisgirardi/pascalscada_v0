@@ -31,13 +31,13 @@ uses SysUtils;
   @returns(Cardinal. Returns Base^Expoent calculation.)
 }
 {$ENDIF}
-function Power(Base:Integer; Expoent:Cardinal):Cardinal;
+function Power(Base:LongInt; Expoent:Cardinal):Cardinal;
 
 implementation
 
-function Power(Base:Integer; Expoent:Cardinal):Cardinal;
+function Power(Base:LongInt; Expoent:Cardinal):Cardinal;
 var
-  c:Integer;
+  c:LongInt;
 begin
   if Expoent=0 then begin
     Result:=1;

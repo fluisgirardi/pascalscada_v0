@@ -138,7 +138,7 @@ type
     FirstMessage:PMsgPkg;
     NormalMsgs:PMsgPkg;
     LastMsg:PMsgPkg;
-    FMsgCount:Integer;
+    FMsgCount:LongInt;
   public
     {$IFDEF PORTUGUES}
     //: Cria um objeto de enfileiramento de mensagens.
@@ -231,8 +231,6 @@ type
     procedure PostMessage(MsgID:Cardinal; wParam, lParam:Pointer; Priority:Boolean);
   end;
 
-var
-  MSCount:Integer = 0;
 
 implementation
 
@@ -245,7 +243,6 @@ begin
   NormalMsgs := nil;
   LastMsg := nil;
   FMsgCount := 0;
-  MSCount := MSCount + 1;
 end;
 
 destructor TMessageSpool.Destroy;
@@ -261,8 +258,7 @@ begin
   end;
   FCs.Release;
   FCs.Destroy;
-  FCs := nil;;
-  MSCount := MSCount - 1;
+  FCs := nil;
 end;
 
 function TMessageSpool.PeekMessage(out Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;

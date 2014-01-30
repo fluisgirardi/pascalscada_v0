@@ -181,7 +181,7 @@ end;
 
 procedure TScanThread.Execute;
 var
-  NeedSleep:Integer;
+  NeedSleep:LongInt;
 begin
   //sinaliza q a fila de mensagens esta criada
   //set as initialized the thread

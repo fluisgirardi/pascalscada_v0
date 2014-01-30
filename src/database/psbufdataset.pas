@@ -20,7 +20,7 @@ implementation
 
 procedure TFPSBufDataSet.CopyFromDataset(DataSet: TDataSet; CopyData: Boolean = True);
 Var
-  I  : Integer;
+  I  : LongInt;
   F,F1,F2 : TField;
   L1,L2  : TList;
   N : String;

@@ -202,7 +202,7 @@ end;
 {$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
 procedure TGraphiZoneImageIndexPropertyEditor.SetValue(const NewValue: ansistring);
 var
-  x:Integer;
+  x:LongInt;
 begin
   try
     if NewValue='(none)' then
@@ -237,7 +237,7 @@ end;
 
 procedure TPascalSCADALoginLogoutImageIndexPropertyEditor.SetValue(const NewValue: ansistring);
 var
-  x:Integer;
+  x:LongInt;
 begin
   try
     if NewValue='(none)' then
@@ -282,7 +282,7 @@ end;
 
 procedure TZoneBlinkWithPropertyEditor.GetValues(Proc: TGetStrProc);
 var
-   i:Integer;
+   i:LongInt;
 begin
    Proc('-1');
    if (GetComponent(0) is TZone) and (TZone(GetComponent(0)).Collection is TZones) then
@@ -301,7 +301,7 @@ end;
 
 procedure TSecurityCodePropertyEditor.GetValues(Proc: TGetStrProc);
 var
-   i:Integer;
+   i:LongInt;
    x:TStringList;
 begin
    Proc('');

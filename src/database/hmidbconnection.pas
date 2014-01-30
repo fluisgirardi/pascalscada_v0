@@ -269,7 +269,7 @@ type
   protected
     FProtocol: string;
     FHostName: string;
-    FPort: Integer;
+    FPort: LongInt;
     FDatabase: string;
     FUser: string;
     FPassword: string;
@@ -281,7 +281,7 @@ type
     procedure SetConnected(x:Boolean);
     procedure SetProtocol(x: String);
     procedure SetHostName(x: String);
-    procedure SetPort(x: Integer);
+    procedure SetPort(x: LongInt);
     procedure SetDatabase(x: String);
     procedure SetUser(x: String);
     procedure SetPassword(x: String);
@@ -318,7 +318,7 @@ type
     {$ELSE}
     //: Port number to connect on database (TCP/UDP connections)
     {$ENDIF}
-    property Port:     Integer read FPort        write SetPort default 0;
+    property Port:     LongInt read FPort        write SetPort default 0;
 
     {$IFDEF PORTUGUES}
     //: Banco de dados a conectar.
@@ -379,7 +379,7 @@ var
 //only accepted drivers are show.
 procedure THMIDBProtocolPropertyEditor.GetValueList(List: TStrings);
 var
-  i, s:Integer;
+  i, s:LongInt;
   found:Boolean;
 begin
   inherited GetValueList(List);
@@ -599,7 +599,7 @@ begin
   FHostName:=FSyncConnection.HostName;
 end;
 
-procedure THMIDBConnection.SetPort(x: Integer);
+procedure THMIDBConnection.SetPort(x: LongInt);
 begin
   FSyncConnection.Port:=x;
   FCS.Enter;

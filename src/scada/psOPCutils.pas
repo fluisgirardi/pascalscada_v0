@@ -26,10 +26,10 @@ function GroupRemoveItem(GroupIf: IOPCItemMgt;
           ServerHandle: OPCHANDLE): HResult;
 
 function GroupAdviseTime(GroupIf: IUnknown; Sink: IAdviseSink;
-          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}LongInt{$ENDIF}): HResult;
 function GroupUnAdvise(GroupIf: IUnknown; AsyncConnection: Longint): HResult;
 function GroupAdvise2(GroupIf: IUnknown; OPCDataCallback: IOPCDataCallback;
-          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}LongInt{$ENDIF}): HResult;
 function GroupUnadvise2(GroupIf: IUnknown;
           var AsyncConnection: Longword): HResult;
 function ReadOPCGroupItemValue(GroupIf: IUnknown; ItemServerHandle: OPCHANDLE;
@@ -131,7 +131,7 @@ end;
 
 // wrapper for IDataObject.DAdvise on an OPC group object
 function GroupAdviseTime(GroupIf: IUnknown; Sink: IAdviseSink;
-          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}LongInt{$ENDIF}): HResult;
 var
   DataIf: IDataObject;
   Fmt: TFormatEtc;
@@ -180,7 +180,7 @@ end;
 
 // wrapper for setting up an IOPCDataCallback connection
 function GroupAdvise2(GroupIf: IUnknown; OPCDataCallback: IOPCDataCallback;
-          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}Integer{$ENDIF}): HResult;
+          var AsyncConnection:{$IFDEF FPC}Longword{$ELSE}LongInt{$ENDIF}): HResult;
 var
   ConnectionPointContainer: IConnectionPointContainer;
   ConnectionPoint: IConnectionPoint;
@@ -289,7 +289,7 @@ function WriteOPCGroupItemValues(GroupIf: IUnknown;
 var
   SyncIOIf: IOPCSyncIO;
   Errors: PResultList;
-  I: Integer;
+  I: LongInt;
 begin
   Result := E_INVALIDARG;
   if Length(ItemServerHandles) = 0 then Exit;

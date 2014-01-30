@@ -90,20 +90,20 @@ type
   TPascalSCADALogin_LogoutAction = class(TPascalSCADAUserManagementAction)
   private
     FWithUserLoggedInImageIndex,
-    FWithoutUserLoggedInImageIndex:Integer;
+    FWithoutUserLoggedInImageIndex:LongInt;
     FWithUserLoggedInCaption,
     FWithoutUserLoggedInCaption,
     FWithUserLoggedInHint,
     FWithoutUserLoggedInHint:String;
     function GetCurrentCaption: String;
     function GetCurrentHintMessage: String;
-    function GetCurrentImageIndex: Integer;
+    function GetCurrentImageIndex: LongInt;
     procedure SetWithUserLoggedInCaption(const AValue: String);
     procedure SetWithUserLoggedInHint(const AValue: String);
-    procedure SetWithUserLoggedInImageIndex(const AValue: Integer);
+    procedure SetWithUserLoggedInImageIndex(const AValue: LongInt);
     procedure SetWithoutUserLoggedInCaption(const AValue: String);
     procedure SetWithoutUserLoggedInHint(const AValue: String);
-    procedure SetWithoutUserLoggedInImageIndex(const AValue: Integer);
+    procedure SetWithoutUserLoggedInImageIndex(const AValue: LongInt);
     procedure UpdateMyState;
   protected
     procedure CanBeAccessed(a: Boolean); override;
@@ -114,14 +114,14 @@ type
   published
     property Caption:String read GetCurrentCaption;
     property Hint:String read GetCurrentHintMessage;
-    property ImageIndex:Integer read GetCurrentImageIndex;
+    property ImageIndex:LongInt read GetCurrentImageIndex;
     property WithUserLoggedInCaption:String        read FWithUserLoggedInCaption    write SetWithUserLoggedInCaption;
     property WithUserLoggedInHint:String           read FWithUserLoggedInHint       write SetWithUserLoggedInHint;
-    property WithUserLoggedInImageIndex:Integer    read FWithUserLoggedInImageIndex write SetWithUserLoggedInImageIndex;
+    property WithUserLoggedInImageIndex:LongInt    read FWithUserLoggedInImageIndex write SetWithUserLoggedInImageIndex;
 
     property WithoutUserLoggedInCaption:String     read FWithoutUserLoggedInCaption    write SetWithoutUserLoggedInCaption;
     property WithoutUserLoggedInHint:String        read FWithoutUserLoggedInHint       write SetWithoutUserLoggedInHint;
-    property WithoutUserLoggedInImageIndex:Integer read FWithoutUserLoggedInImageIndex write SetWithoutUserLoggedInImageIndex;
+    property WithoutUserLoggedInImageIndex:LongInt read FWithoutUserLoggedInImageIndex write SetWithoutUserLoggedInImageIndex;
   end;
 
   { TPascalSCADAManageUsersAction }
@@ -168,7 +168,7 @@ begin
   Result:=inherited Hint;
 end;
 
-function TPascalSCADALogin_LogoutAction.GetCurrentImageIndex: Integer;
+function TPascalSCADALogin_LogoutAction.GetCurrentImageIndex: LongInt;
 begin
   Result:=inherited ImageIndex;
 end;
@@ -189,7 +189,7 @@ begin
 end;
 
 procedure TPascalSCADALogin_LogoutAction.SetWithUserLoggedInImageIndex(
-  const AValue: Integer);
+  const AValue: LongInt);
 begin
   if FWithUserLoggedInImageIndex=AValue then exit;
   FWithUserLoggedInImageIndex:=AValue;
@@ -212,7 +212,7 @@ begin
 end;
 
 procedure TPascalSCADALogin_LogoutAction.SetWithoutUserLoggedInImageIndex(
-  const AValue: Integer);
+  const AValue: LongInt);
 begin
   if FWithoutUserLoggedInImageIndex=AValue then exit;
   FWithoutUserLoggedInImageIndex:=AValue;
@@ -324,7 +324,7 @@ end;
 
 procedure  TControlSecurityManager.RegisterControl(control:IHMIInterface);
 var
-  h:Integer;
+  h:LongInt;
 begin
   h:=Length(FControls);
   SetLength(FControls,h+1);
@@ -334,7 +334,7 @@ end;
 
 procedure  TControlSecurityManager.UnRegisterControl(control:IHMIInterface);
 var
-  c, h:Integer;
+  c, h:LongInt;
 begin
   h:=High(FControls);
   for c:=0 to h do
@@ -347,7 +347,7 @@ end;
 
 procedure  TControlSecurityManager.UpdateControls;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=0 to High(FControls) do
     FControls[c].CanBeAccessed(CanAccess(FControls[c].GetControlSecurityCode));
@@ -378,7 +378,7 @@ end;
 procedure  TControlSecurityManager.UnregisterSecurityCode(sc:String);
 var
   being_used:Boolean;
-  c:Integer;
+  c:LongInt;
 begin
   being_used:=false;
   for c:=0 to Length(FControls) do

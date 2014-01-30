@@ -123,9 +123,9 @@ type
   protected
     function GetTheOwner: TComponent; override;
   public
-    procedure ExecuteVerb(Index: Integer); override;
-    function  GetVerb(Index: Integer): string; override;
-    function  GetVerbCount: Integer; override;
+    procedure ExecuteVerb(Index: LongInt); override;
+    function  GetVerb(Index: LongInt): string; override;
+    function  GetVerbCount: LongInt; override;
     procedure Edit; override;
     function  TagAssistant: TCommonTagAssistant; virtual;
   end;
@@ -149,9 +149,9 @@ type
   protected
     function GetTheOwner: TComponent; override;
   public
-    procedure ExecuteVerb(Index: Integer); override;
-    function GetVerb(Index: Integer): string; override;
-    function GetVerbCount: Integer; override;
+    procedure ExecuteVerb(Index: LongInt); override;
+    function GetVerb(Index: LongInt): string; override;
+    function GetVerbCount: LongInt; override;
     procedure Edit; override;
     function bitmappertagassistant: TBitMapperTagAssistant; virtual;
   end;
@@ -175,12 +175,12 @@ type
   protected
     function GetTheOwner: TComponent; override;
   public
-    procedure ExecuteVerb(Index: Integer); override;
+    procedure ExecuteVerb(Index: LongInt); override;
     {$if declared(has_customhints)}
     function GetCustomHint: String; override;
     {$ifend}
-    function GetVerb(Index: Integer): string; override;
-    function GetVerbCount: Integer; override;
+    function GetVerb(Index: LongInt): string; override;
+    function GetVerbCount: LongInt; override;
     procedure Edit; override;
     function BlockAssistant: TBlockStructTagAssistant; virtual;
   end;
@@ -203,7 +203,7 @@ end;
 procedure TPortPropertyEditor.GetValues(Proc: TGetStrProc);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  c:Integer;
+  c:LongInt;
   dcbstring, comname:String;
   d:DCB;
 begin
@@ -217,7 +217,7 @@ begin
 {$IFEND}
 {$IFDEF UNIX}
 var
-   c, d:Integer;
+   c, d:LongInt;
    pname:String;
 begin
    Proc('(none)');
@@ -256,10 +256,10 @@ end;
 
 procedure TElementIndexPropertyEditor.GetValues(Proc: TGetStrProc);
 var
-   i:Integer;
+   i:LongInt;
 begin
    if (GetComponent(0) is TPLCBlockElement) and (TPLCBlockElement(GetComponent(0)).PLCBlock <> nil) then
-      for i := 0 to Integer(TPLCBlockElement(GetComponent(0)).PLCBlock.Size)-1 do begin
+      for i := 0 to LongInt(TPLCBlockElement(GetComponent(0)).PLCBlock.Size)-1 do begin
           Proc(IntToStr(i));
       end;
 end;
@@ -317,19 +317,19 @@ begin
   TagAssistant.OpenTagEditor(TagAssistant, AddTagInEditor, CreateComponent);
 end;
 
-procedure TTagBuilderComponentEditor.ExecuteVerb(Index: Integer);
+procedure TTagBuilderComponentEditor.ExecuteVerb(Index: LongInt);
 begin
   if Index=0 then
     OpenTagBuilder();
 end;
 
-function TTagBuilderComponentEditor.GetVerb(Index: Integer): string;
+function TTagBuilderComponentEditor.GetVerb(Index: LongInt): string;
 begin
   if Index=0 then
     Result:='Tag Builder';
 end;
 
-function TTagBuilderComponentEditor.GetVerbCount: Integer;
+function TTagBuilderComponentEditor.GetVerbCount: LongInt;
 begin
   Result:=1;
 end;
@@ -359,19 +359,19 @@ begin
   bitmappertagassistant.OpenBitMapper(bitmappertagassistant, AddTagInEditor, CreateComponent);
 end;
 
-procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: Integer);
+procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: LongInt);
 begin
   if Index=0 then
     OpenBitMapper();
 end;
 
-function  TTagBitMapperComponentEditor.GetVerb(Index: Integer): string;
+function  TTagBitMapperComponentEditor.GetVerb(Index: LongInt): string;
 begin
   if Index=0 then
     Result:='Map bits...';
 end;
 
-function  TTagBitMapperComponentEditor.GetVerbCount: Integer;
+function  TTagBitMapperComponentEditor.GetVerbCount: LongInt;
 begin
   Result:=1;
 end;
@@ -401,7 +401,7 @@ begin
   BlockAssistant.OpenElementMapper(BlockAssistant, AddTagInEditor, CreateComponent);
 end;
 
-procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: Integer);
+procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: LongInt);
 begin
   if Index=0 then
     OpenElementMapper();
@@ -422,7 +422,7 @@ begin
 end;
 {$ifend}
 
-function  TBlockElementMapperComponentEditor.GetVerb(Index: Integer): string;
+function  TBlockElementMapperComponentEditor.GetVerb(Index: LongInt): string;
 begin
   Result:='Undefined Block';
   if Index=0 then
@@ -436,7 +436,7 @@ begin
     end;
 end;
 
-function  TBlockElementMapperComponentEditor.GetVerbCount: Integer;
+function  TBlockElementMapperComponentEditor.GetVerbCount: LongInt;
 begin
   Result:=1;
 end;
@@ -454,4 +454,4 @@ end;
 
 
 end.
-
+

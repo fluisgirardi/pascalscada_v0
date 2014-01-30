@@ -42,7 +42,7 @@ type
     crossNativeUInt = PtrUInt;
   {$ENDIF}
 
-function GetSystemThreadCount: integer;
+function GetSystemThreadCount: LongInt;
 
 {$IFDEF PORTUGUES}
 {:
@@ -63,12 +63,12 @@ const _SC_NPROCESSORS_ONLN = 83;
 function sysconf(i: cint): clong; cdecl; external name 'sysconf';
 {$ENDIF}
 
-function GetSystemThreadCount: integer;
+function GetSystemThreadCount: LongInt;
 // returns a good default for the number of threads on this system
 {$IF defined(WIN32) or defined(WIN64)}
 //returns total number of processors available to system including logical hyperthreaded processors
 var
-  i: Integer;
+  i: LongInt;
   ProcessAffinityMask, SystemAffinityMask: crossNativeUInt;
   Mask: DWORD;
   SystemInfo: SYSTEM_INFO;

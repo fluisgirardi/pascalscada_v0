@@ -52,7 +52,7 @@ var
 
   curitem, curstructitem,
   curaddress, curidx,
-  curTCaddress, curbit, curdb:Integer;
+  curTCaddress, curbit, curdb:LongInt;
 
   block:TPLCBlock;
   item:TPLCNumber;
@@ -63,7 +63,7 @@ var
 
   started:Boolean;
 
-  function GetCurWordSize:Integer;
+  function GetCurWordSize:LongInt;
   var
     ttype:TTagType;
   begin
@@ -77,14 +77,14 @@ var
         Result := 1;
       pttSmallInt, pttWord:
         Result := 2;
-      pttInteger, pttDWord, pttFloat:
+      pttLongInt, pttDWord, pttFloat:
         Result := 4;
     end;
   end;
 
-  function GetValueWithZeros(value, endvalue:Integer; toFill:Boolean):String;
+  function GetValueWithZeros(value, endvalue:LongInt; toFill:Boolean):String;
   var
-    numdig, dig:Integer;
+    numdig, dig:LongInt;
     strendval, fill:STring;
   begin
     strendval:=IntToStr(endvalue);

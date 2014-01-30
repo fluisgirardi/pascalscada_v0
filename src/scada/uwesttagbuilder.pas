@@ -72,7 +72,7 @@ uses hsstrings;
 
 procedure TWestTagBuilder.Button1Click(Sender: TObject);
 var
-  c:Integer;
+  c:LongInt;
   atleastOne:Boolean;
 begin
   atleastOne:=false;
@@ -86,7 +86,7 @@ end;
 
 destructor TWestTagBuilder.Destroy;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c := 0 to $1b do begin
     Variaveis[c].Enabled.Destroy;
@@ -99,7 +99,7 @@ end;
 
 procedure TWestTagBuilder.FormCreate(Sender: TObject);
 var
-  c:Integer;
+  c:LongInt;
 begin
   VarDesc[$00]:= 'SetPoint (SP)';
   VarDesc[$01]:= 'Process Variable (PV)';
@@ -202,7 +202,7 @@ end;
 
 procedure TWestTagBuilder.OnTagNameExit(Sender: TObject);
 var
-  c:Integer;
+  c:LongInt;
 begin
  if Sender is TEdit then
    with Sender as TEdit do begin

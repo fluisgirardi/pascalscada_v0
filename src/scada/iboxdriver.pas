@@ -221,7 +221,7 @@ type
     //: @seealso(TProtocolDriver.DoDelTag)
     procedure DoDelTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoScanRead)
-    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     //: @seealso(TProtocolDriver.DoGetValue)
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
     //: @seealso(TProtocolDriver.DoWrite)
@@ -247,7 +247,7 @@ end;
 
 function TIBoxDriver.CheckSumOk(const pkg:BYTES):Boolean;
 var
-  c,h:Integer;
+  c,h:LongInt;
   sum:cardinal;
 begin
   try
@@ -266,7 +266,7 @@ end;
 
 procedure TIBoxDriver.CalculateCheckSum(var pkg:BYTES);
 var
-  c,h:Integer;
+  c,h:LongInt;
   sum:cardinal;
 begin
   if Length(pkg)<2 then exit;
@@ -280,7 +280,7 @@ end;
 
 procedure TIBoxDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
-  plc,h:Integer;
+  plc,h:LongInt;
   found, valido:boolean;
 begin
   if not (TagObj is TPLCTagNumber) then
@@ -408,7 +408,7 @@ end;
 procedure TIBoxDriver.DoDelTag(TagObj:TTag);
 var
   refcount:Cardinal;
-  plc,h:Integer;
+  plc,h:LongInt;
   found :boolean;
 begin
   if not (TagObj is TPLCTagNumber) then
@@ -465,9 +465,9 @@ begin
   inherited DoDelTag(TagObj);
 end;
 
-procedure TIBoxDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);
+procedure TIBoxDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 var
-  plc:Integer;
+  plc:LongInt;
   dosomething:boolean;
   tr:TTagRec;
   dummyValue:TArrayOfDouble;
@@ -545,7 +545,7 @@ end;
 
 procedure TIBoxDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
 var
-  plc:Integer;
+  plc:LongInt;
   found:Boolean;
   pid20x:TPID20xRegister;
 begin
@@ -676,7 +676,7 @@ function TIBoxDriver.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; 
 var
   pkg, pkgtotal:BYTES;
   cmdpkg:TIOPacket;
-  plc, offset, bytesRemaim, b2, b3, b4, b5, b6, b7, b8:Integer;
+  plc, offset, bytesRemaim, b2, b3, b4, b5, b6, b7, b8:LongInt;
   found:Boolean;
   pid20x:TPID20xRegister;
 begin

@@ -75,7 +75,7 @@ type
     //: seealso(TSiemensProtocolFamily.exchange)
     function  exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean; override;
     //: seealso(TSiemensProtocolFamily.getResponse)
-    function  getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult; override;
+    function  getResponse(var msgIn:BYTES; var BytesRead:LongInt):TIOResult; override;
     //: seealso(TSiemensProtocolFamily.PrepareToSend)
     procedure PrepareToSend(var msg: BYTES); override;
   public
@@ -116,9 +116,9 @@ function TISOTCPDriver.ConnectPLC(var CPU:TS7CPU):Boolean;
 var
   IOResult:TIOPacket;
   msg:BYTES;
-  res:Integer;
+  res:LongInt;
   len:Cardinal;
-  retries:Integer;
+  retries:LongInt;
 begin
   CPU.Connected:=false;
   Result:=false;
@@ -187,8 +187,8 @@ end;
 
 function TISOTCPDriver.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;
 var
-  res:Integer;
-  retries, BytesRead:Integer;
+  res:LongInt;
+  retries, BytesRead:LongInt;
   resget:TIOResult;
 begin
   if PCommPort=nil then exit;
@@ -228,9 +228,9 @@ begin
   end;
 end;
 
-function  TISOTCPDriver.getResponse(var msgIn:BYTES; var BytesRead:Integer):TIOResult;
+function  TISOTCPDriver.getResponse(var msgIn:BYTES; var BytesRead:LongInt):TIOResult;
 var
-  res, len:Integer;
+  res, len:LongInt;
   IOResult1, IOResult2:TIOPacket;
 begin
   Result:=iorNotReady;
@@ -311,7 +311,7 @@ end;
 
 procedure TISOTCPDriver.PrepareToSend(var msg:BYTES);
 var
-  len:Integer;
+  len:LongInt;
 begin
   len := Length(msg);
   if len<4 then
@@ -339,7 +339,7 @@ end;
 
 procedure TISOTCPDriver.PortDisconnected(Sender: TObject);
 var
-  plc:Integer;
+  plc:LongInt;
 begin
   for plc := 0 to High(FCPUs) do
     FCPUs[plc].Connected:=false;

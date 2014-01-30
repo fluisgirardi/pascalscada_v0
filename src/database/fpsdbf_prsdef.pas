@@ -15,7 +15,7 @@ const
   ArgAllocSize = 32;
 
 type
-  TExpressionType = (etInteger, etString, etBoolean, etLargeInt, etFloat, etDateTime,
+  TExpressionType = (etLongInt, etString, etBoolean, etLargeInt, etFloat, etDateTime,
     etLeftBracket, etRightBracket, etComma, etUnknown);
 
   EParserException = class(Exception);
@@ -36,19 +36,19 @@ type
   private
     FMemory: PPChar;
     FMemoryPos: PPChar;
-    FSize: PInteger;
+    FSize: PLongInt;
   public
-    constructor Create(DestMem, DestPos: PPChar; ASize: PInteger);
+    constructor Create(DestMem, DestPos: PPChar; ASize: PLongInt);
 
-    procedure AssureSpace(ASize: Integer);
-    procedure Resize(NewSize: Integer; Exact: Boolean);
+    procedure AssureSpace(ASize: LongInt);
+    procedure Resize(NewSize: LongInt; Exact: Boolean);
     procedure Rewind;
-    procedure Append(Source: PChar; Length: Integer);
-    procedure AppendInteger(Source: Integer);
+    procedure Append(Source: PChar; Length: LongInt);
+    procedure AppendLongInt(Source: LongInt);
 
     property Memory: PPChar read FMemory;
     property MemoryPos: PPChar read FMemoryPos;
-    property Size: PInteger read FSize;
+    property Size: PLongInt read FSize;
   end;
 
   TExpressionRec = record
@@ -62,7 +62,7 @@ type
     WantsFunction: boolean;
     Args: array[0..MaxArg-1] of PChar;
     ArgsPos: array[0..MaxArg-1] of PChar;
-    ArgsSize: array[0..MaxArg-1] of Integer;
+    ArgsSize: array[0..MaxArg-1] of LongInt;
     ArgsType: array[0..MaxArg-1] of TExpressionType;
     ArgList: array[0..MaxArg-1] of PExpressionRec;
   end;
@@ -83,8 +83,8 @@ type
     FixedLen: Boolean;
     CanVary: Boolean;
     ResultType: TExpressionType;
-    MinArg: Integer;
-    MaxArg: Integer;
+    MinArg: LongInt;
+    MaxArg: LongInt;
     TypeSpec: PChar;
     Description: PChar;
     ExprFunc: TExprFunc;
@@ -100,19 +100,19 @@ type
     function GetIsOperator: Boolean; virtual;
     function GetIsVariable: Boolean;
     function GetNeedsCopy: Boolean;
-    function GetFixedLen: Integer; virtual;
+    function GetFixedLen: LongInt; virtual;
     function GetCanVary: Boolean; virtual;
     function GetResultType: TExpressionType; virtual;
-    function GetMinFunctionArg: Integer; virtual;
-    function GetMaxFunctionArg: Integer; virtual;
+    function GetMinFunctionArg: LongInt; virtual;
+    function GetMaxFunctionArg: LongInt; virtual;
     function GetDescription: string; virtual;
     function GetTypeSpec: string; virtual;
     function GetShortName: string; virtual;
-    procedure SetFixedLen(NewLen: integer); virtual;
+    procedure SetFixedLen(NewLen: LongInt); virtual;
   public
     constructor Create(AName: string; AExprFunc: TExprFunc);
 
-    function LenAsPointer: PInteger; virtual;
+    function LenAsPointer: PLongInt; virtual;
     function AsPointer: PChar; virtual;
     function IsFunction: Boolean; virtual;
 
@@ -121,10 +121,10 @@ type
     property CanVary: Boolean read GetCanVary;
     property IsVariable: Boolean read GetIsVariable;
     property NeedsCopy: Boolean read GetNeedsCopy;
-    property FixedLen: Integer read GetFixedLen write SetFixedLen;
+    property FixedLen: LongInt read GetFixedLen write SetFixedLen;
     property ResultType: TExpressionType read GetResultType;
-    property MinFunctionArg: Integer read GetMinFunctionArg;
-    property MaxFunctionArg: Integer read GetMaxFunctionArg;
+    property MinFunctionArg: LongInt read GetMinFunctionArg;
+    property MaxFunctionArg: LongInt read GetMaxFunctionArg;
     property Name: string read FName;
     property ShortName: string read GetShortName;
     property Description: string read GetDescription;
@@ -134,7 +134,7 @@ type
   TExpressShortList = class(TSortedCollection)
   public
     function KeyOf(Item: Pointer): Pointer; override;
-    function Compare(Key1, Key2: Pointer): Integer; override;
+    function Compare(Key1, Key2: Pointer): LongInt; override;
     procedure FreeItem(Item: Pointer); override;
   end;
 
@@ -146,8 +146,8 @@ type
     destructor Destroy; override;
     procedure Add(Item: Pointer); override;
     function  KeyOf(Item: Pointer): Pointer; override;
-    function  Compare(Key1, Key2: Pointer): Integer; override;
-    function  Search(Key: Pointer; var Index: Integer): Boolean; override;
+    function  Compare(Key1, Key2: Pointer): LongInt; override;
+    function  Search(Key: Pointer; var Index: LongInt): Boolean; override;
     procedure FreeItem(Item: Pointer); override;
   end;
 
@@ -191,11 +191,11 @@ type
     function AsPointer: PChar; override;
   end;
 
-  TIntegerConstant = class(TConstant)
+  TLongIntConstant = class(TConstant)
   private
-    FValue: Integer;
+    FValue: LongInt;
   public
-    constructor Create(AValue: Integer);
+    constructor Create(AValue: LongInt);
 
     function AsPointer: PChar; override;
   end;
@@ -234,17 +234,17 @@ type
   TStringVariable = class(TVariable)
   private
     FValue: PPChar;
-    FFixedLen: Integer;
+    FFixedLen: LongInt;
   protected
-    function GetFixedLen: Integer; override;
-    procedure SetFixedLen(NewLen: integer); override;
+    function GetFixedLen: LongInt; override;
+    procedure SetFixedLen(NewLen: LongInt); override;
   public
     constructor Create(AName: string; AValue: PPChar);
 
-    function LenAsPointer: PInteger; override;
+    function LenAsPointer: PLongInt; override;
     function AsPointer: PChar; override;
 
-    property FixedLen: Integer read FFixedLen;
+    property FixedLen: LongInt read FFixedLen;
   end;
 
   TDateTimeVariable = class(TVariable)
@@ -256,11 +256,11 @@ type
     function AsPointer: PChar; override;
   end;
 
-  TIntegerVariable = class(TVariable)
+  TLongIntVariable = class(TVariable)
   private
-    FValue: PInteger;
+    FValue: PLongInt;
   public
-    constructor Create(AName: string; AValue: PInteger);
+    constructor Create(AName: string; AValue: PLongInt);
 
     function AsPointer: PChar; override;
   end;
@@ -304,9 +304,9 @@ type
   TFunction = class(TExprWord)
   private
     FIsOperator: Boolean;
-    FOperPrec: Integer;
-    FMinFunctionArg: Integer;
-    FMaxFunctionArg: Integer;
+    FOperPrec: LongInt;
+    FMinFunctionArg: LongInt;
+    FMaxFunctionArg: LongInt;
     FDescription: string;
     FTypeSpec: string;
     FShortName: string;
@@ -314,21 +314,21 @@ type
   protected
     function GetDescription: string; override;
     function GetIsOperator: Boolean; override;
-    function GetMinFunctionArg: Integer; override;
-    function GetMaxFunctionArg: Integer; override;
+    function GetMinFunctionArg: LongInt; override;
+    function GetMaxFunctionArg: LongInt; override;
     function GetResultType: TExpressionType; override;
     function GetTypeSpec: string; override;
     function GetShortName: string; override;
 
-    procedure InternalCreate(AName, ATypeSpec: string; AMinFuncArg: Integer; AResultType: TExpressionType;
-      AExprFunc: TExprFunc; AIsOperator: Boolean; AOperPrec: Integer);
+    procedure InternalCreate(AName, ATypeSpec: string; AMinFuncArg: LongInt; AResultType: TExpressionType;
+      AExprFunc: TExprFunc; AIsOperator: Boolean; AOperPrec: LongInt);
   public
-    constructor Create(AName, AShortName, ATypeSpec: string; AMinFuncArg: Integer; AResultType: TExpressionType; AExprFunc: TExprFunc; Descr: string);
-    constructor CreateOper(AName, ATypeSpec: string; AResultType: TExpressionType; AExprFunc: TExprFunc; AOperPrec: Integer);
+    constructor Create(AName, AShortName, ATypeSpec: string; AMinFuncArg: LongInt; AResultType: TExpressionType; AExprFunc: TExprFunc; Descr: string);
+    constructor CreateOper(AName, ATypeSpec: string; AResultType: TExpressionType; AExprFunc: TExprFunc; AOperPrec: LongInt);
 
     function IsFunction: Boolean; override;
 
-    property OperPrec: Integer read FOperPrec;
+    property OperPrec: LongInt read FOperPrec;
     property TypeSpec: string read FTypeSpec;
   end;
 
@@ -353,7 +353,7 @@ function ExprCharToExprType(ExprChar: Char): TExpressionType;
 begin
   case ExprChar of
     'B': Result := etBoolean;
-    'I': Result := etInteger;
+    'I': Result := etLongInt;
     'L': Result := etLargeInt;
     'F': Result := etFloat;
     'D': Result := etDateTime;
@@ -383,11 +383,11 @@ end;
 
 procedure _StringVariable(Param: PExpressionRec);
 var
-  length: integer;
+  length: LongInt;
 begin
   with Param^ do
   begin
-    length := PInteger(Args[1])^;
+    length := PLongInt(Args[1])^;
     if length = -1 then
       length := StrLen(PPChar(Args[0])^);
     Res.Append(PPChar(Args[0])^, length);
@@ -400,10 +400,10 @@ begin
     PDateTimeRec(Res.MemoryPos^)^ := PDateTimeRec(Args[0])^;
 end;
 
-procedure _IntegerVariable(Param: PExpressionRec);
+procedure _LongIntVariable(Param: PExpressionRec);
 begin
   with Param^ do
-    PInteger(Res.MemoryPos^)^ := PInteger(Args[0])^;
+    PLongInt(Res.MemoryPos^)^ := PLongInt(Args[0])^;
 end;
 
 {
@@ -459,7 +459,7 @@ begin
   Result := (@FExprFunc = @_StringVariable)         or
             (@FExprFunc = @_StringConstant)         or
             (@FExprFunc = @_FloatVariable)          or
-            (@FExprFunc = @_IntegerVariable)        or
+            (@FExprFunc = @_LongIntVariable)        or
 //            (FExprFunc = @_SmallIntVariable)       or
 {$ifdef SUPPORT_INT64}
             (@FExprFunc = @_LargeIntVariable)       or
@@ -477,7 +477,7 @@ begin
 // because it is indirectly referenced and possibly
 // not null-terminated (fixed len)
             (@FExprFunc <> @_FloatVariable)          and
-            (@FExprFunc <> @_IntegerVariable)        and
+            (@FExprFunc <> @_LongIntVariable)        and
 //            (FExprFunc <> @_SmallIntVariable)       and
 {$ifdef SUPPORT_INT64}
             (@FExprFunc <> @_LargeIntVariable)       and
@@ -486,18 +486,18 @@ begin
             (@FExprFunc <> @_BooleanVariable);
 end;
 
-function TExprWord.GetFixedLen: Integer;
+function TExprWord.GetFixedLen: LongInt;
 begin
   // -1 means variable, non-fixed length
   Result := -1;
 end;
 
-function TExprWord.GetMinFunctionArg: Integer;
+function TExprWord.GetMinFunctionArg: LongInt;
 begin
   Result := 0;
 end;
 
-function TExprWord.GetMaxFunctionArg: Integer;
+function TExprWord.GetMaxFunctionArg: LongInt;
 begin
   Result := 0;
 end;
@@ -517,7 +517,7 @@ begin
   Result := nil;
 end;
 
-function TExprWord.LenAsPointer: PInteger;
+function TExprWord.LenAsPointer: PLongInt;
 begin
   Result := nil;
 end;
@@ -527,7 +527,7 @@ begin
   Result := False;
 end;
 
-procedure TExprWord.SetFixedLen(NewLen: integer);
+procedure TExprWord.SetFixedLen(NewLen: LongInt);
 begin
 end;
 
@@ -618,16 +618,16 @@ begin
   Result := PChar(@FValue);
 end;
 
-{ TIntegerConstant }
+{ TLongIntConstant }
 
-constructor TIntegerConstant.Create(AValue: Integer);
+constructor TLongIntConstant.Create(AValue: LongInt);
 begin
-  inherited Create(IntToStr(AValue), etInteger, _IntegerVariable);
+  inherited Create(IntToStr(AValue), etLongInt, _LongIntVariable);
 
   FValue := AValue;
 end;
 
-function TIntegerConstant.AsPointer: PChar;
+function TLongIntConstant.AsPointer: PChar;
 begin
   Result := PChar(@FValue);
 end;
@@ -681,17 +681,17 @@ begin
   Result := PChar(FValue);
 end;
 
-function TStringVariable.GetFixedLen: Integer;
+function TStringVariable.GetFixedLen: LongInt;
 begin
   Result := FFixedLen;
 end;
 
-function TStringVariable.LenAsPointer: PInteger;
+function TStringVariable.LenAsPointer: PLongInt;
 begin
   Result := @FFixedLen;
 end;
 
-procedure TStringVariable.SetFixedLen(NewLen: integer);
+procedure TStringVariable.SetFixedLen(NewLen: LongInt);
 begin
   FFixedLen := NewLen;
 end;
@@ -709,15 +709,15 @@ begin
   Result := PChar(FValue);
 end;
 
-{ TIntegerVariable }
+{ TLongIntVariable }
 
-constructor TIntegerVariable.Create(AName: string; AValue: PInteger);
+constructor TLongIntVariable.Create(AName: string; AValue: PLongInt);
 begin
-  inherited Create(AName, etInteger, _IntegerVariable);
+  inherited Create(AName, etLongInt, _LongIntVariable);
   FValue := AValue;
 end;
 
-function TIntegerVariable.AsPointer: PChar;
+function TLongIntVariable.AsPointer: PChar;
 begin
   Result := PChar(FValue);
 end;
@@ -790,7 +790,7 @@ end;
 
 procedure TExpressList.Add(Item: Pointer);
 var
-  I: Integer;
+  I: LongInt;
 begin
   inherited;
 
@@ -805,7 +805,7 @@ begin
   end;
 end;
 
-function TExpressList.Compare(Key1, Key2: Pointer): Integer;
+function TExpressList.Compare(Key1, Key2: Pointer): LongInt;
 begin
   Result := StrIComp(PChar(Key1), PChar(Key2));
 end;
@@ -823,9 +823,9 @@ begin
     inherited;
 end;
 
-function TExpressList.Search(Key: Pointer; var Index: Integer): Boolean;
+function TExpressList.Search(Key: Pointer; var Index: LongInt): Boolean;
 var
-  SecIndex: Integer;
+  SecIndex: LongInt;
 begin
   Result := inherited Search(Key, Index);
   if not Result then
@@ -836,7 +836,7 @@ begin
   end;
 end;
 
-function TExpressShortList.Compare(Key1, Key2: Pointer): Integer;
+function TExpressShortList.Compare(Key1, Key2: Pointer): LongInt;
 begin
   Result := StrIComp(PChar(Key1), PChar(Key2));
 end;
@@ -854,7 +854,7 @@ end;
 
 procedure TExprCollection.Check;
 var
-  brCount, I: Integer;
+  brCount, I: LongInt;
 begin
   brCount := 0;
   for I := 0 to Count - 1 do
@@ -870,8 +870,8 @@ end;
 
 procedure TExprCollection.EraseExtraBrackets;
 var
-  I: Integer;
-  brCount: Integer;
+  I: LongInt;
+  brCount: LongInt;
 begin
   if (TExprWord(Items[0]).ResultType = etLeftBracket) then
   begin
@@ -898,7 +898,7 @@ end;
 
 { TFunction }
 
-constructor TFunction.Create(AName, AShortName, ATypeSpec: string; AMinFuncArg: Integer; AResultType: TExpressionType;
+constructor TFunction.Create(AName, AShortName, ATypeSpec: string; AMinFuncArg: LongInt; AResultType: TExpressionType;
   AExprFunc: TExprFunc; Descr: string);
 begin
   //to increase compatibility don't use default parameters
@@ -908,13 +908,13 @@ begin
 end;
 
 constructor TFunction.CreateOper(AName, ATypeSpec: string; AResultType: TExpressionType;
-  AExprFunc: TExprFunc; AOperPrec: Integer);
+  AExprFunc: TExprFunc; AOperPrec: LongInt);
 begin
   InternalCreate(AName, ATypeSpec, -1, AResultType, AExprFunc, true, AOperPrec);
 end;
 
-procedure TFunction.InternalCreate(AName, ATypeSpec: string; AMinFuncArg: Integer; AResultType: TExpressionType;
-  AExprFunc: TExprFunc; AIsOperator: Boolean; AOperPrec: Integer);
+procedure TFunction.InternalCreate(AName, ATypeSpec: string; AMinFuncArg: LongInt; AResultType: TExpressionType;
+  AExprFunc: TExprFunc; AIsOperator: Boolean; AOperPrec: LongInt);
 begin
   inherited Create(AName, AExprFunc);
 
@@ -942,12 +942,12 @@ begin
   Result := FIsOperator;
 end;
 
-function TFunction.GetMinFunctionArg: Integer;
+function TFunction.GetMinFunctionArg: LongInt;
 begin
   Result := FMinFunctionArg;
 end;
 
-function TFunction.GetMaxFunctionArg: Integer;
+function TFunction.GetMaxFunctionArg: LongInt;
 begin
   Result := FMaxFunctionArg;
 end;
@@ -981,7 +981,7 @@ end;
 
 { TDynamicType }
 
-constructor TDynamicType.Create(DestMem, DestPos: PPChar; ASize: PInteger);
+constructor TDynamicType.Create(DestMem, DestPos: PPChar; ASize: PLongInt);
 begin
   inherited Create;
 
@@ -995,17 +995,17 @@ begin
   FMemoryPos^ := FMemory^;
 end;
 
-procedure TDynamicType.AssureSpace(ASize: Integer);
+procedure TDynamicType.AssureSpace(ASize: LongInt);
 begin
   // need more memory?
   if ((FMemoryPos^) - (FMemory^) + ASize) > (FSize^) then
     Resize((FMemoryPos^) - (FMemory^) + ASize, False);
 end;
 
-procedure TDynamicType.Resize(NewSize: Integer; Exact: Boolean);
+procedure TDynamicType.Resize(NewSize: LongInt; Exact: Boolean);
 var
   tempBuf: PChar;
-  bytesCopy, pos: Integer;
+  bytesCopy, pos: LongInt;
 begin
   // if not exact requested make newlength a multiple of ArgAllocSize
   if not Exact then
@@ -1028,7 +1028,7 @@ begin
   FMemoryPos^ := FMemory^ + pos;
 end;
 
-procedure TDynamicType.Append(Source: PChar; Length: Integer);
+procedure TDynamicType.Append(Source: PChar; Length: LongInt);
 begin
   // make room for string plus null-terminator
   AssureSpace(Length+4);
@@ -1039,7 +1039,7 @@ begin
   FMemoryPos^^ := #0;
 end;
 
-procedure TDynamicType.AppendInteger(Source: Integer);
+procedure TDynamicType.AppendLongInt(Source: LongInt);
 begin
   // make room for number
   AssureSpace(12);

@@ -42,7 +42,7 @@ type
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
-    FDefaultIndex:Integer;
+    FDefaultIndex:LongInt;
     FIgnore, FLoaded:Boolean;
 
     FSecurityCode:String;
@@ -60,9 +60,9 @@ type
     //: @seealso(IHMIInterface.MakeUnsecure)
     procedure MakeUnsecure;
 
-    procedure SetDefaultIndex(v:integer);
-    function  GetIndex:Integer;
-    procedure SetIndex(v:Integer);
+    procedure SetDefaultIndex(v:LongInt);
+    function  GetIndex:LongInt;
+    procedure SetIndex(v:LongInt);
 
     //implements the IHMITagInterface
     procedure NotifyReadOk;
@@ -92,7 +92,7 @@ type
     {$ELSE}
     //: @name tells what's the index of selected option.
     {$ENDIF}
-    property  ItemIndex:Integer read GetIndex Write SetIndex;
+    property  ItemIndex:LongInt read GetIndex Write SetIndex;
 
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
@@ -123,11 +123,11 @@ type
     }
     {$ELSE}
     {:
-    If the integer value of tag doesn't match with one of the control list, uses
+    If the LongInt value of tag doesn't match with one of the control list, uses
     the value of @name.
     }
     {$ENDIF}
-    property  DefaultIndex:Integer read FDefaultIndex write SetDefaultIndex default -1;
+    property  DefaultIndex:LongInt read FDefaultIndex write SetDefaultIndex default -1;
 
     {$IFDEF PORTUGUES}
     //: Codigo de segurança que libera acesso ao controle
@@ -248,7 +248,7 @@ begin
    FLoaded:=true;
 end;
 
-procedure THMIRadioGroup.SetDefaultIndex(v:integer);
+procedure THMIRadioGroup.SetDefaultIndex(v:LongInt);
 begin
   if v<(-1) then
      FDefaultIndex:=-1
@@ -257,12 +257,12 @@ begin
   NotifyTagChange(Self);
 end;
 
-function  THMIRadioGroup.GetIndex:Integer;
+function  THMIRadioGroup.GetIndex:LongInt;
 begin
    Result := inherited ItemIndex;
 end;
 
-procedure THMIRadioGroup.SetIndex(v:Integer);
+procedure THMIRadioGroup.SetIndex(v:LongInt);
 begin
 
 end;

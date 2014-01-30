@@ -90,7 +90,7 @@ implementation
 function Test_crc(const Pkg:BYTES):Boolean;
 var
   crc,j,carry_flag,a:Cardinal;
-  i,n:Integer;
+  i,n:LongInt;
 begin
   n := Length(Pkg)-2;
   crc := $FFFF;
@@ -114,7 +114,7 @@ end;
 function Calcul_crc(var Pkg:BYTES):Cardinal;
 var
   crc,j,carry_flag,a:Cardinal;
-  i,n:Integer;  
+  i,n:LongInt;
 begin
   n:=Length(Pkg)-2;
   crc := $FFFF;

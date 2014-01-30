@@ -40,9 +40,9 @@ type
     procedure SetInput(value:Double);
     function  GetOutput:Double;
     procedure SetOutput(value:Double);
-    procedure DoExceptionIndexOut(index:Integer);
-    function  GetProperty(index:Integer):Double;
-    procedure SetProperty(index:Integer; Value:Double);
+    procedure DoExceptionIndexOut(index:LongInt);
+    function  GetProperty(index:LongInt):Double;
+    procedure SetProperty(index:LongInt; Value:Double);
   protected
     {$IFDEF PORTUGUES}
     //: Array que armazena o valor das propriedades;
@@ -125,7 +125,7 @@ type
     {$ELSE}
     //: Returns each property of the scale processor.
     {$ENDIF}
-    property Propriedade[index:Integer]:Double read GetProperty write SetProperty;
+    property Propriedade[index:LongInt]:Double read GetProperty write SetProperty;
   published
 
     {$IFDEF PORTUGUES}
@@ -501,7 +501,7 @@ end;
 
 function TScaleQueue.SetInGetOut(Sender:TComponent; Input:Double):Double;
 var
-  c:Integer;
+  c:LongInt;
 begin
   Result := Input;
   for c:=0 to Count-1 do
@@ -511,7 +511,7 @@ end;
 
 function TScaleQueue.SetOutGetIn(Sender:TComponent; Output:Double):Double;
 var
-  c:Integer;
+  c:LongInt;
 begin
   Result := Output;
   for c:=(Count-1) downto 0 do
@@ -531,7 +531,7 @@ end;
 
 destructor  TScalesQueue.Destroy;
 var
-  t:Integer;
+  t:LongInt;
 begin
   for t:=High(FTags) downto 0 do begin
     TPLCNumber(FTags[t]).ScaleProcessor:=nil;
@@ -571,7 +571,7 @@ end;
 
 destructor TScaleProcessor.Destroy;
 var
-  c:Integer;
+  c:LongInt;
 begin
   SetLength(FProperts,0);
   for c:=0 to High(FQueueItems) do
@@ -583,7 +583,7 @@ end;
 procedure TScaleProcessor.AddQueueItem(QueueItem:TCollectionItem);
 var
   found:Boolean;
-  c:Integer;
+  c:LongInt;
 begin
   if not (QueueItem is TScaleQueueItem) then
     raise Exception.Create(SinvalidType);
@@ -605,7 +605,7 @@ end;
 procedure TScaleProcessor.DelQueueItem(QueueItem:TCollectionItem);
 var
   found:Boolean;
-  c,h:Integer;
+  c,h:LongInt;
 begin
   found := false;
   h:=High(FQueueItems);
@@ -631,7 +631,7 @@ begin
   Result := Output;
 end;
 
-function  TScaleProcessor.GetProperty(index:Integer):Double;
+function  TScaleProcessor.GetProperty(index:LongInt):Double;
 begin
   DoExceptionIndexOut(index);
   Result := FProperts[index];
@@ -652,13 +652,13 @@ begin
   Result := SetInGetOut(self, FValueIn);
 end;
 
-procedure TScaleProcessor.SetProperty(index:Integer; Value:Double);
+procedure TScaleProcessor.SetProperty(index:LongInt; Value:Double);
 begin
   DoExceptionIndexOut(index);
   FProperts[index] := Value;
 end;
 
-procedure TScaleProcessor.DoExceptionIndexOut(index:Integer);
+procedure TScaleProcessor.DoExceptionIndexOut(index:LongInt);
 begin
   if (index<0) or (index>=Length(FProperts)) then
     raise Exception.Create(SoutOfBounds);

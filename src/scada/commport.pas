@@ -167,9 +167,9 @@ type
     {: @exclude }
     PLockEvent:TCrossEvent;
     {: @exclude }
-    PUnlocked:Integer;
+    PUnlocked:LongInt;
     {: @exclude }
-    FLastOSErrorNumber:Integer;
+    FLastOSErrorNumber:LongInt;
     {: @exclude }
     FLastOSErrorMessage:String;
     {: @exclude }
@@ -177,7 +177,7 @@ type
     {: @exclude }
     FLastPkgId:Cardinal;
     {: @exclude }
-    FCommandsSecond:Integer;
+    FCommandsSecond:LongInt;
 
     {$IFDEF PORTUGUES}
     //: Estatisticas de comunicação (total de bytes enviados/recebitos e bytes enviados/recebidos por segundo).
@@ -923,7 +923,7 @@ type
     {$ELSE}
     //: The last error code registered by the OS.
     {$ENDIF}
-    property LastOSErrorNumber:Integer read FLastOSErrorNumber;
+    property LastOSErrorNumber:LongInt read FLastOSErrorNumber;
 
     {$IFDEF PORTUGUES}
     //: Informa a mensagem do último erro registrado pelo sistema operacional.
@@ -937,7 +937,7 @@ type
     {$ELSE}
     //: How many I/O commands are processed by second. Updated every 1 second.
     {$ENDIF}
-    property CommandsPerSecond:Integer read FCommandsSecond;
+    property CommandsPerSecond:LongInt read FCommandsSecond;
 
     {$IFDEF PORTUGUES}
     //: Total de @noAutoLink(bytes) transmitidos.
@@ -1163,7 +1163,7 @@ end;
 
 destructor TCommPortDriver.Destroy;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=0 to High(Protocols) do
     TProtocolDriver(Protocols[c]).CommunicationPort := nil;
@@ -1182,7 +1182,7 @@ end;
 
 procedure TCommPortDriver.AddProtocol(Prot:TComponent);
 var
-  c:Integer;
+  c:LongInt;
   found, interfaced:Boolean;
 begin
   interfaced := Supports(Prot,IPortDriverEventNotification);
@@ -1221,7 +1221,7 @@ end;
 procedure TCommPortDriver.DelProtocol(Prot:TComponent);
 var
   found, interfaced:Boolean;
-  c:Integer;
+  c:LongInt;
 begin
   interfaced := Supports(Prot,IPortDriverEventNotification);
   found := false;
@@ -1302,7 +1302,7 @@ end;
 
 procedure TCommPortDriver.CommPortOpened;
 var
-  c:Integer;
+  c:LongInt;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
@@ -1328,7 +1328,7 @@ end;
 
 procedure TCommPortDriver.CommPortClose;
 var
-  c:Integer;
+  c:LongInt;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
@@ -1354,7 +1354,7 @@ end;
 
 procedure TCommPortDriver.CommPortDisconected;
 var
-  c:Integer;
+  c:LongInt;
 begin
   if [csDestroying]*ComponentState<>[] then exit;
 
@@ -1527,13 +1527,13 @@ end;
 procedure TCommPortDriver.SetReadRetries(AValue: Cardinal);
 begin
   if FReadRetries=AValue then Exit;
-  InterLockedExchange(Integer(FReadRetries),AValue);
+  InterLockedExchange(LongInt(FReadRetries),AValue);
 end;
 
 procedure TCommPortDriver.SetWriteRetries(AValue: Cardinal);
 begin
   if FWriteRetries=AValue then Exit;
-  InterLockedExchange(integer(FWriteRetries),AValue);
+  InterLockedExchange(LongInt(FWriteRetries),AValue);
 end;
 
 function TCommPortDriver.IOCommandSync(Cmd:TIOCommand; ToWrite:BYTES; BytesToRead,
@@ -1869,7 +1869,7 @@ end;
 procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
   function bufferToHex(Buf:BYTES):String;
   var
-    c:integer;
+    c:LongInt;
   begin
     Result:='';
     for c:=0 to High(Buf) do

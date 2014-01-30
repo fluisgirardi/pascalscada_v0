@@ -60,7 +60,7 @@ Resourcestring
   SNoTransactions          = 'No transactions are attached to the database';
   SNotABoolean             = '"%s" is not a valid boolean';
   SNotAFloat               = '"%s" is not a valid float';
-  SNotAninteger            = '"%s" is not a valid integer';
+  SNotAnLongInt            = '"%s" is not a valid LongInt';
   SNotConnected            = 'Operation cannot be performed on an disconnected database';
   SNotEditing              = 'Operation not allowed, dataset "%s" is not in an edit or insert state.';
   SParameterNotFound       = 'Parameter "%s" not found';

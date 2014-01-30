@@ -36,8 +36,8 @@ type
   { TTextStrings }
 
   TTextLineRange = record
-    StartPos: integer; // start of line in Text
-    EndPos: integer; // end of line in Text (= start of newline character(s))
+    StartPos: LongInt; // start of line in Text
+    EndPos: LongInt; // end of line in Text (= start of newline character(s))
     Line: string; // cached line as string
     TheObject: TObject; // user data
   end;
@@ -48,43 +48,43 @@ type
     FOnChanging: TNotifyEvent;
   protected
     FArraysValid: boolean;
-    FLineCount: integer;
-    FLineCapacity: integer;
+    FLineCount: LongInt;
+    FLineCapacity: LongInt;
     FLineRanges: ^TTextLineRange;// array of TTextLineRange
     FText: string;
-    FUpdateCount: integer;
+    FUpdateCount: LongInt;
     FChangedWhileUpdate: boolean;
     function GetTextStr: string; override;
     procedure SetTextStr(const AValue: string); override;
     procedure BuildArrays; virtual;
-    function GetCount: Integer; override;
+    function GetCount: LongInt; override;
     procedure Changed; virtual;
     procedure Changing; virtual;
-    function Get(Index: Integer): string; override;
+    function Get(Index: LongInt): string; override;
     procedure ClearArrays;
-    function GetObject(Index: Integer): TObject; override;
-    procedure Put(Index: Integer; const S: string); override;
-    procedure PutObject(Index: Integer; AnObject: TObject); override;
-    function GetLineLen(Index: integer; IncludeNewLineChars: boolean): integer; inline;
-    function GetLineEnd(Index: integer; IncludeNewLineChars: boolean): integer;
+    function GetObject(Index: LongInt): TObject; override;
+    procedure Put(Index: LongInt; const S: string); override;
+    procedure PutObject(Index: LongInt; AnObject: TObject); override;
+    function GetLineLen(Index: LongInt; IncludeNewLineChars: boolean): LongInt; inline;
+    function GetLineEnd(Index: LongInt; IncludeNewLineChars: boolean): LongInt;
     function HasObjects: boolean;
-    function CountLineEndings(const s: string): integer;
+    function CountLineEndings(const s: string): LongInt;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear; override;
     procedure SetText(TheText: PChar); override;
-    procedure Insert(Index: Integer; const S: string); override;
-    procedure Delete(Index: Integer); override;
-    procedure Exchange(Index1, Index2: Integer); override;
-    procedure Move(CurIndex, NewIndex: Integer); override;
+    procedure Insert(Index: LongInt; const S: string); override;
+    procedure Delete(Index: LongInt); override;
+    procedure Exchange(Index1, Index2: LongInt); override;
+    procedure Move(CurIndex, NewIndex: LongInt); override;
     procedure MakeTextBufferUnique;
     procedure BeginUpdate;
     procedure EndUpdate;
     function GetText: PChar; override;
-    function IndexOf(const S: string): Integer; override;
-    function Add(const S: string): Integer; override;
-    function AddObject(const S: string; AObject: TObject): Integer; override;
+    function IndexOf(const S: string): LongInt; override;
+    function Add(const S: string): LongInt; override;
+    function AddObject(const S: string; AObject: TObject): LongInt; override;
     procedure AddStrings(TheStrings: TStrings); override;
   public
     property Text: string read FText write SetTextStr;
@@ -116,9 +116,9 @@ end;
 
 procedure TTextStrings.BuildArrays;
 var
-  p, line: integer;
-  l: Integer;
-  ArraySize: Integer;
+  p, line: LongInt;
+  l: LongInt;
+  ArraySize: LongInt;
 begin
   if FArraysValid then exit;
   ClearArrays;
@@ -156,7 +156,7 @@ begin
   end;
 end;
 
-function TTextStrings.GetCount: Integer;
+function TTextStrings.GetCount: LongInt;
 begin
   if not FArraysValid then BuildArrays;
   Result:=FLineCount;
@@ -180,7 +180,7 @@ begin
       FOnChanging(Self);
 end;
 
-function TTextStrings.Get(Index: Integer): string;
+function TTextStrings.Get(Index: LongInt): string;
 begin
   if not FArraysValid then BuildArrays;
   if (Index<0) or (Index>=FLineCount) then
@@ -195,7 +195,7 @@ end;
 
 procedure TTextStrings.ClearArrays;
 var
-  i: Integer;
+  i: LongInt;
 begin
   FArraysValid:=false;
   if FLineRanges<>nil then begin
@@ -207,7 +207,7 @@ begin
   FLineCapacity:=0;
 end;
 
-function TTextStrings.GetObject(Index: Integer): TObject;
+function TTextStrings.GetObject(Index: LongInt): TObject;
 begin
   if FArraysValid then
     Result:=FLineRanges[Index].TheObject
@@ -215,16 +215,16 @@ begin
     Result:=nil;
 end;
 
-procedure TTextStrings.Put(Index: Integer; const S: string);
+procedure TTextStrings.Put(Index: LongInt; const S: string);
 var
-  OldLineLen: Integer;
-  NewLineLen: Integer;
-  Movement: Integer;
+  OldLineLen: LongInt;
+  NewLineLen: LongInt;
+  Movement: LongInt;
   OldStartPos: LongInt;
   OldEndPos: LongInt;
-  MoveLen: Integer;
-  i: Integer;
-  NewEndPos: Integer;
+  MoveLen: LongInt;
+  i: LongInt;
+  NewEndPos: LongInt;
 begin
   if not FArraysValid then BuildArrays;
   OldStartPos:=FLineRanges[Index].StartPos;
@@ -263,20 +263,20 @@ begin
   end;
 end;
 
-procedure TTextStrings.PutObject(Index: Integer; AnObject: TObject);
+procedure TTextStrings.PutObject(Index: LongInt; AnObject: TObject);
 begin
   if not FArraysValid then BuildArrays;
   FLineRanges[Index].TheObject:=AnObject;
 end;
 
-function TTextStrings.GetLineLen(Index: integer; IncludeNewLineChars: boolean
-  ): integer;
+function TTextStrings.GetLineLen(Index: LongInt; IncludeNewLineChars: boolean
+  ): LongInt;
 begin
   Result:=GetLineEnd(Index,IncludeNewLineChars)-FLineRanges[Index].StartPos;
 end;
 
-function TTextStrings.GetLineEnd(Index: integer; IncludeNewLineChars: boolean
-  ): integer;
+function TTextStrings.GetLineEnd(Index: LongInt; IncludeNewLineChars: boolean
+  ): LongInt;
 begin
   if not FArraysValid then BuildArrays;
   if not IncludeNewLineChars then
@@ -289,7 +289,7 @@ end;
 
 function TTextStrings.HasObjects: boolean;
 var
-  i: Integer;
+  i: LongInt;
 begin
   if FArraysValid then
     for i:=0 to FLineCount-1 do
@@ -298,10 +298,10 @@ begin
   Result:=false;
 end;
 
-function TTextStrings.CountLineEndings(const s: string): integer;
+function TTextStrings.CountLineEndings(const s: string): LongInt;
 var
-  p: Integer;
-  l: Integer;
+  p: LongInt;
+  l: LongInt;
 begin
   Result:=0;
   l:=length(s);
@@ -345,12 +345,12 @@ begin
   FArraysValid:=false;
 end;
 
-procedure TTextStrings.Insert(Index: Integer; const S: string);
+procedure TTextStrings.Insert(Index: LongInt; const S: string);
 var
-  NewStartPos: Integer;
-  NewLineCharCount: Integer;
-  NewLineLen: Integer;
-  i: Integer;
+  NewStartPos: LongInt;
+  NewLineCharCount: LongInt;
+  NewLineLen: LongInt;
+  i: LongInt;
   SEndsInNewLine: boolean;
 begin
   if not FArraysValid then BuildArrays;
@@ -395,11 +395,11 @@ begin
   inc(FLineCount);
 end;
 
-procedure TTextStrings.Delete(Index: Integer);
+procedure TTextStrings.Delete(Index: LongInt);
 var
-  OldLineLen: Integer;
-  OldStartPos: Integer;
-  i: Integer;
+  OldLineLen: LongInt;
+  OldStartPos: LongInt;
+  i: LongInt;
 begin
   if not FArraysValid then BuildArrays;
   // adjust text
@@ -421,19 +421,19 @@ begin
   end;
 end;
 
-procedure TTextStrings.Exchange(Index1, Index2: Integer);
+procedure TTextStrings.Exchange(Index1, Index2: LongInt);
 var
-  LineLen1: Integer;
-  LineLen2: Integer;
+  LineLen1: LongInt;
+  LineLen2: LongInt;
   buf: Pointer;
-  Dummy: Integer;
-  OldBetweenStart: Integer;
-  NewBetweenStart: Integer;
-  BetweenLength: Integer;
+  Dummy: LongInt;
+  OldBetweenStart: LongInt;
+  NewBetweenStart: LongInt;
+  BetweenLength: LongInt;
   StartPos1: LongInt;
   StartPos2: LongInt;
-  i: Integer;
-  Movement: Integer;
+  i: LongInt;
+  Movement: LongInt;
   Obj: TObject;
   LineShortLen1: LongInt;
   LineShortLen2: LongInt;
@@ -523,13 +523,13 @@ begin
   FreeMem(buf);
 end;
 
-procedure TTextStrings.Move(CurIndex, NewIndex: Integer);
+procedure TTextStrings.Move(CurIndex, NewIndex: LongInt);
 var
   SrcPos1: LongInt;
   SrcPos2: LongInt;
   SrcPos3: LongInt;
   LineStr: String;
-  LineLen: Integer;
+  LineLen: LongInt;
   i: LongInt;
   Obj: TObject;
   LineShortLen: LongInt;
@@ -648,23 +648,23 @@ begin
   Result:=PChar(FText);
 end;
 
-function TTextStrings.IndexOf(const S: string): Integer;
+function TTextStrings.IndexOf(const S: string): LongInt;
 begin
   Result:=inherited IndexOf(S);
 end;
 
-function TTextStrings.Add(const S: string): Integer;
+function TTextStrings.Add(const S: string): LongInt;
 begin
   Result:=AddObject(S,nil);
 end;
 
-function TTextStrings.AddObject(const S: string; AObject: TObject): Integer;
+function TTextStrings.AddObject(const S: string; AObject: TObject): LongInt;
 var
   e: String;
-  NewLineCount: Integer;
-  OldTxtLen: Integer;
-  p: Integer;
-  l: Integer;
+  NewLineCount: LongInt;
+  OldTxtLen: LongInt;
+  p: LongInt;
+  l: LongInt;
 begin
   Result:=Count;
   if (FText<>'') and (not (FText[length(FText)] in [#10,#13])) then
@@ -706,7 +706,7 @@ procedure TTextStrings.AddStrings(TheStrings: TStrings);
 
   function MustAddObjects: boolean;
   var
-    i: Integer;
+    i: LongInt;
   begin
     if HasObjects then exit(true);
     if TheStrings is TTextStrings then
@@ -722,7 +722,7 @@ procedure TTextStrings.AddStrings(TheStrings: TStrings);
 
 var
   s: String;
-  i: Integer;
+  i: LongInt;
 begin
   if TheStrings.Count=0 then exit;
   if MustAddObjects then

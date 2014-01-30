@@ -37,7 +37,7 @@ type
   }
   {$ENDIF}
   TMemoryRec = record
-    Address, Count, MinScan:Integer;
+    Address, Count, MinScan:LongInt;
   end;
 
   {$IFDEF PORTUGUES}
@@ -67,20 +67,20 @@ type
   {$ENDIF}
   TRegisterRange = class
   private
-    FStartAddress:Integer;
-    FEndAddress:Integer;
+    FStartAddress:LongInt;
+    FEndAddress:LongInt;
     FLastUpdate:TDateTime;
     FMinScanTime:Cardinal;
     FReadOK, FReadFault:Cardinal;
     procedure SetReadOK(value:Cardinal);
     procedure SetReadFault(value:Cardinal);
-    function GetSize:Integer;
+    function GetSize:LongInt;
     function GetMsecLastUpdate:Int64;
   protected
     //: @exclude
-    function  GetValue(index:Integer):Double;
+    function  GetValue(index:LongInt):Double;
     //: @exclude
-    procedure SetValue(index:Integer; v:Double);
+    procedure SetValue(index:LongInt; v:Double);
   public
     {$IFDEF PORTUGUES}
     //: Array que armazena os valores do bloco.
@@ -129,7 +129,7 @@ type
     Reads/writes a value at the specified index of the memory block.
     }
     {$ENDIF}
-    property Values[Index:Integer]:Double read GetValue write SetValue;
+    property Values[Index:LongInt]:Double read GetValue write SetValue;
 
     {$IFDEF PORTUGUES}
     {:
@@ -163,21 +163,21 @@ type
     {$ELSE}
     //: Start address of the memory block.
     {$ENDIF}
-    property AddressStart:Integer read FStartAddress;
+    property AddressStart:LongInt read FStartAddress;
 
     {$IFDEF PORTUGUES}
     //: Informa o endereço final do bloco.
     {$ELSE}
     //: Final address of the memory block.
     {$ENDIF}
-    property AddressEnd:Integer read FEndAddress;
+    property AddressEnd:LongInt read FEndAddress;
 
     {$IFDEF PORTUGUES}
     //: Informa o tamanho do bloco.
     {$ELSE}
     //: Tells the size of the block.
     {$ENDIF}
-    property Size:Integer read GetSize;
+    property Size:LongInt read GetSize;
 
     {$IFDEF PORTUGUES}
     //: @name informa quando foi a última atualização dos dados do bloco.
@@ -240,21 +240,21 @@ type
   TPLCMemoryManager = class
   private
     FAddress:array of TMemoryRec;
-    FMaxHole:Integer;
-    FMaxBlockSize:Integer;
+    FMaxHole:LongInt;
+    FMaxBlockSize:LongInt;
     //binary search of memory address
-    function FindAddress(const address:Integer; var idx:Integer):Boolean;
+    function FindAddress(const address:LongInt; var idx:LongInt):Boolean;
     //segmented binary search of memory address
-    function FindAddresBySegment(const address, startindex, endindex:Integer; var idx:Integer):Boolean;
-    procedure AddAddress(Add,Scan:Integer); overload;
-    procedure RemoveAddress(Add:Integer); overload;
-    procedure SetHoleSize(size:Integer);
-    procedure SetBlockSize(size:Integer);
+    function FindAddresBySegment(const address, startindex, endindex:LongInt; var idx:LongInt):Boolean;
+    procedure AddAddress(Add,Scan:LongInt); overload;
+    procedure RemoveAddress(Add:LongInt); overload;
+    procedure SetHoleSize(size:LongInt);
+    procedure SetBlockSize(size:LongInt);
     //rebuild the blocks
     procedure RebuildBlocks;
     //returns the size of all block fragments.
-    function  GetSize:Integer;
-    function  CreateRegisterRange(adrStart,adrEnd:Integer):TRegisterRange;
+    function  GetSize:LongInt;
+    function  CreateRegisterRange(adrStart,adrEnd:LongInt):TRegisterRange;
   public
     {$IFDEF PORTUGUES}
     //: Blocos de memória continuos.
@@ -408,7 +408,7 @@ type
     @seealso(GetValues)
     }
     {$ENDIF}
-    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer; virtual;
+    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):LongInt; virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -447,7 +447,7 @@ type
     @seealso(GetValues)
     }
     {$ENDIF}
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer; virtual;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt; virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -503,7 +503,7 @@ type
     block on two pieces.
     }
     {$ENDIF}
-    property MaxHole:Integer read FMaxHole write SetHoleSize;
+    property MaxHole:LongInt read FMaxHole write SetHoleSize;
 
     {$IFDEF PORTUGUES}
     {:
@@ -525,14 +525,14 @@ type
     the address [3,4].
     }
     {$ENDIF}
-    property MaxBlockItems:Integer read FMaxBlockSize write SetBlockSize;
+    property MaxBlockItems:LongInt read FMaxBlockSize write SetBlockSize;
 
     {$IFDEF PORTUGUES}
     //: Retorna a quantidade total de memórias gerenciadas pelo bloco.
     {$ELSE}
     //: How many memories are handled by the manager.
     {$ENDIF}
-    property Size:Integer read GetSize;
+    property Size:LongInt read GetSize;
   end;
 
   TPLCMemoryManagerSafe = class(TPLCMemoryManager)
@@ -548,9 +548,9 @@ type
     //: @seealso(TPLCMemoryManager.RemoveAddress)
     procedure RemoveAddress(Address,Size,RegSize:Cardinal); override;
     //: @seealso(TPLCMemoryManager.SetValues)
-    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer; override;
+    function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):LongInt; override;
     //: @seealso(TPLCMemoryManager.GetValues)
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer; override;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt; override;
     //: @seealso(TPLCMemoryManager.SetFault)
     procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult); override;
   end;
@@ -580,17 +580,17 @@ begin
   FLastUpdate := CrossNow;
 end;
 
-function  TRegisterRange.GetValue(index:Integer):Double;
+function  TRegisterRange.GetValue(index:LongInt):Double;
 begin
   Result := FValues[index];
 end;
 
-procedure TRegisterRange.SetValue(index:Integer; v:Double);
+procedure TRegisterRange.SetValue(index:LongInt; v:Double);
 begin
   FValues[index] := v;
 end;
 
-function TRegisterRange.GetSize:Integer;
+function TRegisterRange.GetSize:LongInt;
 begin
   Result := (FEndAddress-FStartAddress)+1;
 end;
@@ -635,14 +635,14 @@ end;
 
 destructor TPLCMemoryManager.Destroy;
 var
-  c:integer;
+  c:LongInt;
 begin
   for c:=0 to High(Blocks) do
     Blocks[c].Destroy;
   SetLength(Blocks,0);
 end;
 
-function TPLCMemoryManager.FindAddress(const address:Integer; var idx:Integer):Boolean;
+function TPLCMemoryManager.FindAddress(const address:LongInt; var idx:LongInt):Boolean;
 begin
   if Length(FAddress)=0 then
     Result:=false
@@ -650,9 +650,9 @@ begin
     Result:=FindAddresBySegment(address,0,High(FAddress), idx);
 end;
 
-function TPLCMemoryManager.FindAddresBySegment(const address, startindex, endindex:Integer; var idx:Integer):Boolean;
+function TPLCMemoryManager.FindAddresBySegment(const address, startindex, endindex:LongInt; var idx:LongInt):Boolean;
 var
-  len, middle:Integer;
+  len, middle:LongInt;
 begin
   len:=endindex-startindex+1;
 
@@ -671,9 +671,9 @@ begin
   end;
 end;
 
-procedure TPLCMemoryManager.AddAddress(Add, Scan:Integer);
+procedure TPLCMemoryManager.AddAddress(Add, Scan:LongInt);
 var
-  c, h:Integer;
+  c, h:LongInt;
 begin
   IF Length(FAddress)=0 THEN begin
     SetLength(FAddress,1);
@@ -745,9 +745,9 @@ begin
   end;
 end;
 
-procedure TPLCMemoryManager.RemoveAddress(Add:Integer);
+procedure TPLCMemoryManager.RemoveAddress(Add:LongInt);
 var
-  c:Integer;
+  c:LongInt;
 begin
   c:=0;
   //se não encontrou cai fora...
@@ -768,14 +768,14 @@ begin
     end;
 end;
 
-procedure TPLCMemoryManager.SetHoleSize(size:Integer);
+procedure TPLCMemoryManager.SetHoleSize(size:LongInt);
 begin
   if size=FMaxHole then exit;
   FMaxHole := size;
   RebuildBlocks;
 end;
 
-procedure TPLCMemoryManager.SetBlockSize(size:Integer);
+procedure TPLCMemoryManager.SetBlockSize(size:LongInt);
 begin
   if size=FMaxBlockSize then exit;
   FMaxBlockSize := size;
@@ -784,11 +784,11 @@ end;
 
 procedure TPLCMemoryManager.RebuildBlocks;
 var
-  c, c2, c3:integer;
+  c, c2, c3:LongInt;
   newBlocks:TRegisterRangeArray;
-  adrstart, adrend,BlockItems,BlockEnd,mscan:Integer;
-  BlockOldOffset, BlockNewOffset:Integer;
-  BlockIndex:Integer;
+  adrstart, adrend,BlockItems,BlockEnd,mscan:LongInt;
+  BlockOldOffset, BlockNewOffset:LongInt;
+  BlockIndex:LongInt;
   found:Boolean;
 begin
   SetLength(newBlocks,0);
@@ -895,16 +895,16 @@ begin
   SetLength(newBlocks,0);
 end;
 
-function TPLCMemoryManager.GetSize:Integer;
+function TPLCMemoryManager.GetSize:LongInt;
 var
-  c:Integer;
+  c:LongInt;
 begin
   Result := 0;
   for c:=0 to High(Blocks) do
     Result := Result + Blocks[c].Size;
 end;
 
-function TPLCMemoryManager.CreateRegisterRange(adrStart,adrEnd:Integer):TRegisterRange;
+function TPLCMemoryManager.CreateRegisterRange(adrStart,adrEnd:LongInt):TRegisterRange;
 begin
    Result := TRegisterRange.Create(adrStart,adrEnd);
 end;
@@ -912,7 +912,7 @@ end;
 procedure TPLCMemoryManager.AddAddress(Address,Size,RegSize,Scan:Cardinal);
 var
   c, items:Cardinal;
-  len:Integer;
+  len:LongInt;
 begin
   if (Size<=0) or (RegSize<=0) then
     raise Exception.Create(SsizeMustBeAtLeastOne);
@@ -937,7 +937,7 @@ end;
 procedure TPLCMemoryManager.RemoveAddress(Address,Size,RegSize:Cardinal);
 var
   c, items:Cardinal;
-  len:Integer;
+  len:LongInt;
 begin
   if (Size<=0) or (RegSize=0) then
     raise Exception.Create(SsizeMustBeAtLeastOne);
@@ -957,9 +957,9 @@ begin
     RebuildBlocks;
 end;
 
-function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer;
+function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):LongInt;
 var
-  blk, AdrEnd, LenUtil, Moved:Integer;
+  blk, AdrEnd, LenUtil, Moved:LongInt;
 begin
   AdrEnd := AdrStart + Length(Values) - 1;
   Moved:=0;
@@ -1001,7 +1001,7 @@ end;
 
 procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
 var
-  blk, AdrEnd:Integer;
+  blk, AdrEnd:LongInt;
 begin
   AdrEnd := AdrStart + Len * RegSize - 1;
 
@@ -1023,9 +1023,9 @@ begin
   end;
 end;
 
-function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
+function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt;
 var
-  blk, AdrEnd, LenUtil, Moved:Integer;
+  blk, AdrEnd, LenUtil, Moved:LongInt;
 begin
   AdrEnd := AdrStart + Length(Values) - 1;
   Moved:=0;
@@ -1093,7 +1093,7 @@ begin
   end;
 end;
 
-function    TPLCMemoryManagerSafe.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):Integer;
+function    TPLCMemoryManagerSafe.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):LongInt;
 begin
   try
     FMutex.Enter;
@@ -1103,7 +1103,7 @@ begin
   end;
 end;
 
-function    TPLCMemoryManagerSafe.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):Integer;
+function    TPLCMemoryManagerSafe.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt;
 begin
   try
     FMutex.Enter;

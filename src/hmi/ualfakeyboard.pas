@@ -102,18 +102,18 @@ type
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+      Shift: TShiftState; X, Y: LongInt);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: LongInt);
     procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+      Shift: TShiftState; X, Y: LongInt);
     procedure FormPaint(Sender: TObject);
     procedure ModifierPress(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure BtnPress(Sender: TObject);
   private
     //move operations
-    OffsetX, OffsetY:Integer;
-    CurX,CurY:Integer;
+    OffsetX, OffsetY:LongInt;
+    CurX,CurY:LongInt;
     MoveOperation:Boolean;
 
     FTarget:TWinControl;
@@ -174,7 +174,7 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
-  c:Integer;
+  c:LongInt;
 begin
   Timer1.Enabled:=false;
   MoveOperation:=False;
@@ -271,7 +271,7 @@ begin
 end;
 
 procedure TForm1.FormMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: LongInt);
 begin
   OffsetX:=X;
   OffsetY:=Y;
@@ -279,7 +279,7 @@ begin
 end;
 
 procedure TForm1.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
-  Y: Integer);
+  Y: LongInt);
 begin
   CurX:=X;
   CurY:=Y;
@@ -287,7 +287,7 @@ begin
 end;
 
 procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: LongInt);
 begin
   Timer1.Enabled:=false;
   MoveOperation:=False;

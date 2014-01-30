@@ -35,11 +35,11 @@ var
   FScadaAppMgr:TScadaApp;
 
 const
-  IntegerFieldTypes = [ftSmallint, ftInteger, ftWord, ftAutoInc, ftLargeint];
+  LongIntFieldTypes = [ftSmallint, ftLongInt, ftWord, ftAutoInc, ftLargeint];
   StringFieldTypes  = [ftString, ftWideString];
   DateTimeFieldTypes= [ftDate,  ftTime, ftDateTime, ftTimeStamp];
   FloatFieldTypes   = [ftFloat, ftCurrency];
-  NumericFieldTypes = [ftSmallint, ftInteger, ftWord, ftAutoInc, ftLargeint,
+  NumericFieldTypes = [ftSmallint, ftLongInt, ftWord, ftAutoInc, ftLargeint,
                        ftFloat, ftCurrency];
 
 implementation
@@ -91,7 +91,7 @@ end;
 
 function TScadaApp.TableExists(tablename:String):Boolean;
 var
-  affected:Integer;
+  affected:LongInt;
   tname,sql:String;
   found:boolean;
 begin
@@ -158,11 +158,11 @@ var
 begin
   if TableExists('tbl_usuarios') then begin
     ok := true;
-    ok := ok and (FieldExists('tbl_usuarios','id_usuario') in IntegerFieldTypes);
+    ok := ok and (FieldExists('tbl_usuarios','id_usuario') in LongIntFieldTypes);
     ok := ok and (FieldExists('tbl_usuarios','ds_login') in StringFieldTypes);
     ok := ok and (FieldExists('tbl_usuarios','ds_password') in StringFieldTypes);
     ok := ok and (FieldExists('tbl_usuarios','ds_fullname') in StringFieldTypes);
-    ok := ok and (FieldExists('tbl_usuarios','bl_blocked') in IntegerFieldTypes);
+    ok := ok and (FieldExists('tbl_usuarios','bl_blocked') in LongIntFieldTypes);
 
     if not ok then begin
       if MessageDlg('A tabela de usuários está corrompida ou alterada.'+LineEnding+LineEnding+
@@ -181,8 +181,8 @@ begin
 
   if TableExists('tbl_integrantes') then begin
     ok := true;
-    ok := ok and (FieldExists('tbl_integrantes','cd_usuario') in IntegerFieldTypes);
-    ok := ok and (FieldExists('tbl_integrantes','cd_grupo') in IntegerFieldTypes);
+    ok := ok and (FieldExists('tbl_integrantes','cd_usuario') in LongIntFieldTypes);
+    ok := ok and (FieldExists('tbl_integrantes','cd_grupo') in LongIntFieldTypes);
 
     if not ok then begin
       if MessageDlg('A tabela de integrantes dos grupos está corrompida ou alterada.'+LineEnding+LineEnding+
@@ -201,7 +201,7 @@ begin
 
   if TableExists('tbl_grupos') then begin
     ok := true;
-    ok := ok and (FieldExists('tbl_grupos','cd_usuario') in IntegerFieldTypes);
+    ok := ok and (FieldExists('tbl_grupos','cd_usuario') in LongIntFieldTypes);
     ok := ok and (FieldExists('tbl_grupos','cd_grupo') in StringFieldTypes);
 
     if not ok then begin
@@ -221,10 +221,10 @@ begin
 
   if TableExists('tbl_permissoes') then begin
     ok := true;
-    ok := ok and (FieldExists('tbl_permissoes','id_permissao') in IntegerFieldTypes);
-    ok := ok and (FieldExists('tbl_permissoes','cd_usuario') in IntegerFieldTypes);
-    ok := ok and (FieldExists('tbl_permissoes','cd_grupo') in IntegerFieldTypes);
-    ok := ok and (FieldExists('tbl_permissoes','cd_objeto') in IntegerFieldTypes);
+    ok := ok and (FieldExists('tbl_permissoes','id_permissao') in LongIntFieldTypes);
+    ok := ok and (FieldExists('tbl_permissoes','cd_usuario') in LongIntFieldTypes);
+    ok := ok and (FieldExists('tbl_permissoes','cd_grupo') in LongIntFieldTypes);
+    ok := ok and (FieldExists('tbl_permissoes','cd_objeto') in LongIntFieldTypes);
 
     if not ok then begin
       if MessageDlg('A tabela de permissões está corrompida ou alterada.'+LineEnding+LineEnding+
@@ -243,10 +243,10 @@ begin
 
   if TableExists('tbl_objetos') then begin
     ok := true;
-    ok := ok and (FieldExists('tbl_objetos','id_permissao') in IntegerFieldTypes);
-    ok := ok and (FieldExists('tbl_objetos','cd_usuario') in IntegerFieldTypes);
-    ok := ok and (FieldExists('tbl_objetos','cd_grupo') in IntegerFieldTypes);
-    ok := ok and (FieldExists('tbl_objetos','cd_objeto') in IntegerFieldTypes);
+    ok := ok and (FieldExists('tbl_objetos','id_permissao') in LongIntFieldTypes);
+    ok := ok and (FieldExists('tbl_objetos','cd_usuario') in LongIntFieldTypes);
+    ok := ok and (FieldExists('tbl_objetos','cd_grupo') in LongIntFieldTypes);
+    ok := ok and (FieldExists('tbl_objetos','cd_objeto') in LongIntFieldTypes);
 
     if not ok then begin
       if MessageDlg('A tabela de objetos está corrompida ou alterada.'+LineEnding+LineEnding+

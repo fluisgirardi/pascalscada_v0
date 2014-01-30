@@ -74,7 +74,7 @@ type
   }
   {$ENDIF}
   TModBusPLC = record
-    Station:Integer;
+    Station:LongInt;
     Inputs:TPLCMemoryManager;
     OutPuts:TPLCMemoryManager;
     Registers:TPLCMemoryManager;
@@ -161,24 +161,24 @@ type
   protected
     PFirstRequestLen,
     PFuncByteOffset,
-    PCRCLen:Integer;
+    PCRCLen:LongInt;
     POutputMaxHole:Cardinal;
     PInputMaxHole:Cardinal;
     PRegistersMaxHole:Cardinal;
     PInternalDelayBetweenCmds:Cardinal;
     PModbusPLC:array of TModBusPLC;
-    function  GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:Integer):Boolean;
+    function  GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:LongInt):Boolean;
     procedure SetOutputMaxHole(v:Cardinal);
     procedure SetInputMaxHole(v:Cardinal);
     procedure SetRegisterMaxHole(v:Cardinal);
-    procedure BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
+    procedure BuildTagRec(plc,func,startaddress,size:LongInt; var tr:TTagRec);
 
     {$IFDEF PORTUGUES}
     //: Cria um pacote modbus
     {$ELSE}
     //: Encode a modbus packet.
     {$ENDIF}
-    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; virtual;
+    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:LongInt):BYTES; virtual;
 
     {$IFDEF PORTUGUES}
     //: Extrai os dados de um pacote modbus
@@ -192,7 +192,7 @@ type
     {$ELSE}
     //: Returns the remaing bytes on RX buffer of communication port.
     {$ENDIF}
-    function RemainingBytes(buffer:BYTES):Integer; virtual;
+    function RemainingBytes(buffer:BYTES):LongInt; virtual;
 
     //: @seealso(TProtocolDriver.DoAddTag)
     procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
@@ -200,7 +200,7 @@ type
     procedure DoDelTag(TagObj:TTag); override;
 
     //: @seealso(TProtocolDriver.DoScanRead)
-    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     //: @seealso(TProtocolDriver.DoGetValue)
     procedure DoGetValue(TagObj:TTagRec; var values:TScanReadRec); override;
 
@@ -278,7 +278,7 @@ end;
 
 destructor TModBusDriver.Destroy;
 var
-  plc:Integer;
+  plc:LongInt;
 begin
   inherited Destroy;
   for plc:=0 to High(PModbusPLC) do begin
@@ -291,7 +291,7 @@ begin
 end;
 
 
-function TModBusDriver.GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:Integer):Boolean;
+function TModBusDriver.GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:LongInt):Boolean;
 var
   found:Boolean;
 begin
@@ -333,9 +333,9 @@ end;
 
 procedure TModBusDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
-  station, mem, size, memtype, scantime:Integer;
+  station, mem, size, memtype, scantime:LongInt;
   found, valido:boolean;
-  plc:integer;
+  plc:LongInt;
 begin
   //Recupera as informações do tag;
   //retrieve informations of the tag.
@@ -396,9 +396,9 @@ end;
 
 procedure TModBusDriver.DoDelTag(TagObj:TTag);
 var
-  station, mem, size, memtype, scantime:Integer;
+  station, mem, size, memtype, scantime:LongInt;
   found:boolean;
-  plc:Integer;
+  plc:LongInt;
 begin
   //Recupera as informações do tag;
   //retrieve informations about the tag.
@@ -487,7 +487,7 @@ begin
   end;
 end;
 
-function  TModBusDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
+function  TModBusDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:LongInt):BYTES;
 begin
   Result:=nil;
 end;
@@ -497,19 +497,19 @@ begin
   Result:=ioDriverError
 end;
 
-function  TModBusDriver.RemainingBytes(buffer:BYTES):Integer;
+function  TModBusDriver.RemainingBytes(buffer:BYTES):LongInt;
 begin
   Result:=0;
 end;
 
-procedure TModBusDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);
+procedure TModBusDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 var
-  plc,block:Integer;
+  plc,block:LongInt;
   done,first:Boolean;
   minScan:Int64;
-  lastType:Integer;
+  lastType:LongInt;
   lastBlock:TRegisterRange;
-  lastPLC:Integer;
+  lastPLC:LongInt;
   tr:TTagRec;
   values:TArrayOfDouble;
 begin
@@ -636,7 +636,7 @@ end;
 
 procedure TModBusDriver.DoGetValue(TagObj:TTagRec; var values:TScanReadRec);
 var
-  plc,c:Integer;
+  plc,c:LongInt;
   found:Boolean;
 begin
   if Length(values.Values)<TagObj.Size then
@@ -685,9 +685,9 @@ function  TModBusDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDoubl
 var
   IOResult1, IOResult2:TIOPacket;
   pkg:BYTES;
-  FRemainingBytes:Integer;
-  rl:Integer;
-  res:Integer;
+  FRemainingBytes:LongInt;
+  rl:LongInt;
+  res:LongInt;
   tempValues:TArrayOfDouble;
 begin
   try
@@ -746,10 +746,10 @@ end;
 function  TModBusDriver.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
   IOResult1, IOResult2:TIOPacket;
-  FRemainingBytes:Integer;
+  FRemainingBytes:LongInt;
   pkg:BYTES;
-  rl:Integer;
-  res:Integer;
+  rl:LongInt;
+  res:LongInt;
   starts, ends:TNotifyEvent;
 begin
   try
@@ -814,7 +814,7 @@ end;
 
 procedure TModBusDriver.SetOutputMaxHole(v:Cardinal);
 var
-  plc:Integer;
+  plc:LongInt;
 begin
   if v = POutputMaxHole then exit;
 
@@ -826,7 +826,7 @@ end;
 
 procedure TModBusDriver.SetInputMaxHole(v:Cardinal);
 var
-  plc:Integer;
+  plc:LongInt;
 begin
   if v = PInputMaxHole then exit;
 
@@ -838,7 +838,7 @@ end;
 
 procedure TModBusDriver.SetRegisterMaxHole(v:Cardinal);
 var
-  plc:Integer;
+  plc:LongInt;
 begin
   if v = PRegistersMaxHole then exit;
 
@@ -848,7 +848,7 @@ begin
     PModbusPLC[plc].Registers.MaxHole := v;
 end;
 
-procedure TModBusDriver.BuildTagRec(plc,func,startaddress,size:Integer; var tr:TTagRec);
+procedure TModBusDriver.BuildTagRec(plc,func,startaddress,size:LongInt; var tr:TTagRec);
 begin
   with tr do begin
     Station := plc;

@@ -140,7 +140,7 @@ type
       FManualReset: Boolean;
       {$if defined(NeedCrossEvents)}
       FEvent:TINTRTLEvent;
-      Waiters:Integer;
+      Waiters:LongInt;
       {$ELSE}
       FEvent:THandle;
       {$IFEND}
@@ -411,4 +411,4 @@ begin
   {$IFEND}
 end;
 
-end.
+end.

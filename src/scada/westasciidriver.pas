@@ -59,7 +59,7 @@ type
   //: Update time of a West register.
   {$ENDIF}
   TScanTime = record
-    ScanTime, RefCount:integer;
+    ScanTime, RefCount:LongInt;
   end;
 
   {$IFDEF PORTUGUES}
@@ -91,7 +91,7 @@ type
     Timestamp:TDateTime;
     LastReadResult, LastWriteResult:TProtocolIOResult;
     ScanTimes:Array of TScanTime;
-    MinScanTime:Integer;
+    MinScanTime:LongInt;
   end;
 
   {$IFDEF PORTUGUES}
@@ -274,7 +274,7 @@ type
     //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoDelTag(TagObj:TTag); override;
     //: @seealso(TProtocolDriver.DoAddTag)
-    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); override;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     //: @seealso(TProtocolDriver.DoAddTag)
 {d} procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
     //: @seealso(TProtocolDriver.DoAddTag)
@@ -332,7 +332,7 @@ end;
 
 procedure TWestASCIIDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
-  plc, scanRate:Integer;
+  plc, scanRate:LongInt;
   foundplc, foundScanRate, valido:boolean;
   plctagobj:TPLCTagNumber;
 begin
@@ -394,7 +394,7 @@ end;
 
 procedure TWestASCIIDriver.DoDelTag(TagObj:TTag);
 var
-  plc, scanRate, reg, h:Integer;
+  plc, scanRate, reg, h:LongInt;
   foundplc, foundScanRate, foundActiveReg:boolean;
   plctagobj:TPLCTagNumber;
 begin
@@ -475,9 +475,9 @@ begin
   end;
 end;
 
-procedure TWestASCIIDriver.DoScanRead(Sender:TObject; var NeedSleep:Integer);
+procedure TWestASCIIDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 var
-  plc, plcneedy, reg, regneedy, regini, usados, msbetween,minStime:Integer;
+  plc, plcneedy, reg, regneedy, regini, usados, msbetween,minStime:LongInt;
   somethingdone,firstreg:boolean;
   res:TProtocolIOResult;
   stable:TScanTable;
@@ -562,7 +562,7 @@ end;
 
 procedure TWestASCIIDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
 var
-  plc:Integer;
+  plc:LongInt;
 begin
   if (tagrec.Station<1) or (tagrec.Station>99) then
     exit;
@@ -582,7 +582,7 @@ end;
 
 function  TWestASCIIDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
-  plc:integer;
+  plc:LongInt;
   dec:BYTE;
   foundplc:Boolean;
 begin
@@ -627,7 +627,7 @@ end;
 
 function  TWestASCIIDriver.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
-  plc:integer;
+  plc:LongInt;
   dec:Byte;
   foundplc:Boolean;
 begin
@@ -741,7 +741,7 @@ end;
 function TWestASCIIDriver.WestToDouble(const buffer:Array of byte; var Value:Double; var dec:Byte):TProtocolIOResult;
 var
   a,b,c,d,r:BYTE;
-  i, aux:Integer;
+  i, aux:LongInt;
 begin
   if ((buffer[0]=$3C) and (buffer[1]=$3F) and (buffer[2]=$3F) and (buffer[3]=$3E)) then begin
     Result := ioIllegalValue;
@@ -819,7 +819,7 @@ function  TWestASCIIDriver.DoubleToWestAuto(var buffer:Array of Byte; const Valu
 var
    caso:BYTE;
    numaux:Extended;
-   c:Integer;
+   c:LongInt;
    aux:String;
 begin
   caso:=255;
@@ -874,7 +874,7 @@ end;
 function  TWestASCIIDriver.DoubleToWestManual(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult;
 var
    caso:BYTE;
-   c:Integer;
+   c:LongInt;
    numaux:Double;
    aux:String;
 begin
@@ -1006,7 +1006,7 @@ var
   buffer, respprog, No:BYTES;
   flag:Boolean;
   pkg:TIOPacket;
-  i:Integer;
+  i:LongInt;
 begin
   try
 
@@ -1104,7 +1104,7 @@ var
    buffer, No:BYTES;
    b1, b2:Boolean;
    pkg:TIOPacket;
-   OffsetSpace, OffsetNo, OffsetSize, res:Integer;
+   OffsetSpace, OffsetNo, OffsetSize, res:LongInt;
 begin
   try
     SetLength(buffer,35);
@@ -1247,7 +1247,7 @@ end;
 
 procedure TWestASCIIDriver.MinScanTimeOfReg(var WestReg:TWestRegister);
 var
-  srate:integer;
+  srate:LongInt;
 begin
   if Length(WestReg.ScanTimes)>0 then begin
     WestReg.MinScanTime:=WestReg.ScanTimes[0].ScanTime;

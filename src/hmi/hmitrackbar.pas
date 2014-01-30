@@ -47,7 +47,7 @@ type
     FSecurityCode:String;
     procedure SetSecurityCode(sc:String);
 
-    function  GetPosition:Integer;
+    function  GetPosition:LongInt;
     procedure RefreshTagValue;
 
     //: @seealso(IHMIInterface.SetHMITag)
@@ -73,7 +73,7 @@ type
     //: @exclude
     procedure SetEnabled(e:Boolean); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt); override;
     {$IFDEF FPC}
     procedure DoChange(var msg); message LM_CHANGED;
     {$ELSE}
@@ -117,7 +117,7 @@ type
     {$ELSE}
     //: Tells the current position.
     {$ENDIF}
-    Property Position:Integer read GetPosition;
+    Property Position:LongInt read GetPosition;
 
     {$IFDEF PORTUGUES}
     //: Diz se o valor do controle sofreu alguma alteração.
@@ -234,7 +234,7 @@ begin
   FSecurityCode:=sc;
 end;
 
-function THMITrackBar.GetPosition:Integer;
+function THMITrackBar.GetPosition:LongInt;
 begin
   Result := inherited Position;
 end;
@@ -260,7 +260,7 @@ begin
    inherited KeyUp(Key, Shift);
 end;
 
-procedure THMITrackBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure THMITrackBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt);
 begin
    if Modified then
       WriteValue;

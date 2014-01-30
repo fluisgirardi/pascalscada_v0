@@ -26,7 +26,7 @@ type
   private
     FDataset: TDataSet;
     FFieldVarList: TStringList;
-    FResultLen: Integer;
+    FResultLen: LongInt;
     FIsExpression: Boolean;       // expression or simple field?
     FFieldType: TExpressionType;
     FCaseInsensitive: Boolean;
@@ -54,7 +54,7 @@ type
 
     property Dataset: TDataSet read FDataset; // write FDataset;
     property Expression: string read FCurrentExpression;
-    property ResultLen: Integer read FResultLen;
+    property ResultLen: LongInt read FResultLen;
 
     property CaseInsensitive: Boolean read FCaseInsensitive write SetCaseInsensitive;
     property PartialMatch: boolean read FPartialMatch write SetPartialMatch;
@@ -110,9 +110,9 @@ type
     procedure Refresh(Buffer: TRecordBuffer); override;
   end;
 
-  TIntegerFieldVar = class(TFieldVar)
+  TLongIntFieldVar = class(TFieldVar)
   private
-    FFieldVal: Integer;
+    FFieldVal: LongInt;
   protected
     function GetFieldVal: Pointer; override;
     function GetFieldType: TExpressionType; override;
@@ -212,18 +212,18 @@ begin
     FFieldVal := 0;
 end;
 
-//--TIntegerFieldVar----------------------------------------------------------
-function TIntegerFieldVar.GetFieldVal: Pointer;
+//--TLongIntFieldVar----------------------------------------------------------
+function TLongIntFieldVar.GetFieldVal: Pointer;
 begin
   Result := @FFieldVal;
 end;
 
-function TIntegerFieldVar.GetFieldType: TExpressionType;
+function TLongIntFieldVar.GetFieldType: TExpressionType;
 begin
-  Result := etInteger;
+  Result := etLongInt;
 end;
 
-procedure TIntegerFieldVar.Refresh(Buffer: TRecordBuffer);
+procedure TLongIntFieldVar.Refresh(Buffer: TRecordBuffer);
 begin
   if not FField.DataSet.GetFieldData(FField,@FFieldVal) then
     FFieldVal := 0;
@@ -394,10 +394,10 @@ begin
         TempFieldVar := TFloatFieldVar.Create(FieldInfo);
         TempFieldVar.FExprWord := DefineFloatVariable(VarName, TempFieldVar.FieldVal);
       end;
-    ftAutoInc, ftInteger, ftSmallInt:
+    ftAutoInc, ftLongInt, ftSmallInt:
       begin
-        TempFieldVar := TIntegerFieldVar.Create(FieldInfo);
-        TempFieldVar.FExprWord := DefineIntegerVariable(VarName, TempFieldVar.FieldVal);
+        TempFieldVar := TLongIntFieldVar.Create(FieldInfo);
+        TempFieldVar.FExprWord := DefineLongIntVariable(VarName, TempFieldVar.FieldVal);
       end;
     ftLargeInt:
       begin
@@ -419,7 +419,7 @@ end;
 
 procedure TBufDatasetParser.ClearExpressions;
 var
-  I: Integer;
+  I: LongInt;
 begin
   inherited;
 
@@ -478,7 +478,7 @@ begin
   // set result len for fixed length expressions / fields
   case ResultType of
     etBoolean:  FResultLen := 1;
-    etInteger:  FResultLen := 4;
+    etLongInt:  FResultLen := 4;
     etFloat:    FResultLen := 8;
     etDateTime: FResultLen := 8;
   end;
@@ -493,7 +493,7 @@ end;
 
 function TBufDatasetParser.ExtractFromBuffer(Buffer: TRecordBuffer): PChar;
 var
-  I: Integer;
+  I: LongInt;
 begin
   // prepare all field variables
   for I := 0 to FFieldVarList.Count - 1 do

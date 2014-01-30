@@ -111,7 +111,7 @@ type
     //: @seealso(TPLCTag.SetProtocolDriver)
     procedure SetProtocolDriver(p:TProtocolDriver); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
+    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -257,8 +257,8 @@ end;
 //decodes the string from a array of double.
 function  TPLCString.EncodeValues(values:TArrayOfDouble):String;
 var
-  aux1, maxbits, bit:Integer;
-  ValueAux2, ValueP, ByteP, ValueBitP, ByteBitP:Integer;
+  aux1, maxbits, bit:LongInt;
+  ValueAux2, ValueP, ByteP, ValueBitP, ByteBitP:LongInt;
   ValueAux, strLen, BitsByType :Byte;
 begin
   //use a funcao de leitura
@@ -408,8 +408,8 @@ end;
 //encodes a string to a array of double.
 function  TPLCString.DecodeValue(value:AnsiString):TArrayOfDouble;
 var
-  ValueAux, aux1, maxbits, bit, bs:Integer;
-  ValueP, ByteP, ValueBitP, ByteBitP:Integer;
+  ValueAux, aux1, maxbits, bit, bs:LongInt;
+  ValueP, ByteP, ValueBitP, ByteBitP:LongInt;
   MaxLen, strLen, BitsByType :Byte;
 begin
   if PProtocolDriver<>nil then
@@ -601,9 +601,9 @@ begin
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
+procedure TPLCString.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);
 var
-  c:Integer;
+  c:LongInt;
   notify:Boolean;
 begin
   if (csDestroying in ComponentState) then exit;
@@ -730,7 +730,7 @@ end;
 function TPLCString.CalcBlockSize(IsWrite:Boolean):Cardinal;
 var
   BitsByType:Byte;
-  strlen:integer;
+  strlen:LongInt;
 begin
   if PProtocolDriver<>nil then begin
     BitsByType := PProtocolDriver.SizeOfTag(Self,IsWrite,FProtocolTagType);

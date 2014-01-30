@@ -113,7 +113,7 @@ end;
 function    TBasicUserManagement.Login:Boolean;
 var
   frozenTimer:TTimer;
-  retries:Integer;
+  retries:LongInt;
   aborted, loggedin:Boolean;
 begin
   frozenTimer:=TTimer.Create(nil);

@@ -147,7 +147,7 @@ type
   TSerialPortDriver = class(TCommPortDriver)
   private
     PPortName:String;
-    PTimeout:integer;
+    PTimeout:LongInt;
     PBaundRate:TSerialBaudRate;
     PStopBits:TSerialStopBits;
     PParity:TSerialParity;
@@ -166,9 +166,9 @@ type
     PSavedState:TSerialState;
     {$IFEND}
     PBackupPortSettings:Boolean;
-    PRWTimeout:Integer;    
-    procedure SetTimeOut(v:Integer);
-    procedure SetRWTimeout(v:Integer);
+    PRWTimeout:LongInt;    
+    procedure SetTimeOut(v:LongInt);
+    procedure SetRWTimeout(v:LongInt);
     procedure SetBaundRate(v:TSerialBaudRate);
     procedure SetStopBits(v:TSerialStopBits);
     procedure SetParity(v:TSerialParity);
@@ -227,14 +227,14 @@ type
     {$ELSE}
     {: How many time a read or write operation can take. }
     {$ENDIF}
-    property Timeout:integer read PTimeout write SetTimeOut stored true default 5;
+    property Timeout:LongInt read PTimeout write SetTimeOut stored true default 5;
 
     {$IFDEF PORTUGUES}
     {: Informa o tempo em milisegundos entre uma leitura e uma escrita. }
     {$ELSE}
     {: Delay between commands of read and write. }
     {$ENDIF}
-    property WriteReadDelay:integer read PRWTimeout write SetRWTimeout stored true default 20;
+    property WriteReadDelay:LongInt read PRWTimeout write SetRWTimeout stored true default 20;
 
     {$IFDEF PORTUGUES}
     {:
@@ -456,7 +456,7 @@ begin
 
 {$IF defined(WINCE)}
 var
-  tentativas:Integer;
+  tentativas:LongInt;
 begin
 {$IFEND}
 
@@ -520,7 +520,7 @@ begin
 {$ENDIF}
 {$IF defined(WINCE)}
 var
-  tentativas:Integer;
+  tentativas:LongInt;
 begin
 {$IFEND}
 
@@ -624,7 +624,7 @@ begin
 {$IFDEF UNIX}
 
 var
-   r:Integer;
+   r:LongInt;
    tios:termios;
 begin
   //abre a porta
@@ -738,7 +738,7 @@ begin
   
   //seta o uso exclusivo da porta.
   //makes the serial port for exclusive access
-  fpioctl(integer(PPortHandle), TIOCEXCL, nil);
+  fpioctl(LongInt(PPortHandle), TIOCEXCL, nil);
 
   InternalClearALLBuffers;
 
@@ -830,7 +830,7 @@ begin
 {$IFEND}
 {$IFDEF UNIX}
 var
-   c:Integer;
+   c:LongInt;
 begin
   if PAcceptAnyPortName then begin
     Result:=true;
@@ -846,13 +846,13 @@ begin
 {$ENDIF}
 end;
 
-procedure TSerialPortDriver.SetTimeOut(v:Integer);
+procedure TSerialPortDriver.SetTimeOut(v:LongInt);
 begin
   DoExceptionInActive;
   PTimeout := v;
 end;
 
-procedure TSerialPortDriver.SetRWTimeout(v:Integer);
+procedure TSerialPortDriver.SetRWTimeout(v:LongInt);
 begin
   DoExceptionInActive;
   PRWTimeout := v;
@@ -1065,9 +1065,9 @@ begin
   tcflush(PPortHandle, TCIOFLUSH);
   //purge comm...
   {$IFDEF LINUX}
-  fpioctl(integer(PPortHandle), TCIOFLUSH, nil);
+  fpioctl(LongInt(PPortHandle), TCIOFLUSH, nil);
   {$ELSE}
-  fpioctl(integer(PPortHandle), TIOCFLUSH, nil);
+  fpioctl(LongInt(PPortHandle), TIOCFLUSH, nil);
   {$ENDIF}
 {$ENDIF}
 end;

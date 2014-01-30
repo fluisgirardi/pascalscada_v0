@@ -51,12 +51,12 @@ type
     FCurrentRec: PExpressionRec;
     FExpResult: PChar;
     FExpResultPos: PChar;
-    FExpResultSize: Integer;
+    FExpResultSize: LongInt;
 
     procedure ParseString(AnExpression: string; DestCollection: TExprCollection);
-    function  MakeTree(Expr: TExprCollection; FirstItem, LastItem: Integer): PExpressionRec;
+    function  MakeTree(Expr: TExprCollection; FirstItem, LastItem: LongInt): PExpressionRec;
     procedure MakeLinkedList(var ExprRec: PExpressionRec; Memory: PPChar;
-        MemoryPos: PPChar; MemSize: PInteger);
+        MemoryPos: PPChar; MemSize: PLongInt);
     procedure Check(AnExprList: TExprCollection);
     procedure CheckArguments(ExprRec: PExpressionRec);
     procedure RemoveConstants(var ExprRec: PExpressionRec);
@@ -85,7 +85,7 @@ type
     destructor Destroy; override;
 
     function DefineFloatVariable(AVarName: string; AValue: PDouble): TExprWord;
-    function DefineIntegerVariable(AVarName: string; AValue: PInteger): TExprWord;
+    function DefineLongIntVariable(AVarName: string; AValue: PLongInt): TExprWord;
 //    procedure DefineSmallIntVariable(AVarName: string; AValue: PSmallInt);
 {$ifdef SUPPORT_INT64}
     function DefineLargeIntVariable(AVarName: string; AValue: PLargeInt): TExprWord;
@@ -94,9 +94,9 @@ type
     function DefineBooleanVariable(AVarName: string; AValue: PBoolean): TExprWord;
     function DefineStringVariable(AVarName: string; AValue: PPChar): TExprWord;
     function DefineFunction(AFunctName, AShortName, ADescription, ATypeSpec: string;
-        AMinFunctionArg: Integer; AResultType: TExpressionType; AFuncAddress: TExprFunc): TExprWord;
+        AMinFunctionArg: LongInt; AResultType: TExpressionType; AFuncAddress: TExprFunc): TExprWord;
     procedure Evaluate(AnExpression: string);
-    function AddExpression(AnExpression: string): Integer;
+    function AddExpression(AnExpression: string): LongInt;
     procedure ClearExpressions; virtual;
 //    procedure GetGeneratedVars(AList: TList);
     procedure GetFunctionNames(AList: TStrings);
@@ -115,7 +115,7 @@ type
 //--Expression functions-----------------------------------------------------
 
 procedure FuncFloatToStr(Param: PExpressionRec);
-procedure FuncIntToStr_Gen(Param: PExpressionRec; Val: {$ifdef SUPPORT_INT64}Int64{$else}Integer{$endif});
+procedure FuncIntToStr_Gen(Param: PExpressionRec; Val: {$ifdef SUPPORT_INT64}Int64{$else}LongInt{$endif});
 procedure FuncIntToStr(Param: PExpressionRec);
 {$ifdef SUPPORT_INT64}
 procedure FuncInt64ToStr(Param: PExpressionRec);
@@ -266,7 +266,7 @@ end;
 
 procedure LinkVariables(ExprRec: PExpressionRec);
 var
-  I: integer;
+  I: LongInt;
 begin
   with ExprRec^ do
   begin
@@ -354,7 +354,7 @@ end;
 procedure TCustomExpressionParser.CheckArguments(ExprRec: PExpressionRec);
 var
   TempExprWord: TExprWord;
-  I, error, firstFuncIndex, funcIndex: Integer;
+  I, error, firstFuncIndex, funcIndex: LongInt;
   foundAltFunc: Boolean;
 
   procedure FindAlternate;
@@ -449,7 +449,7 @@ end;
 function TCustomExpressionParser.ResultCanVary(ExprRec: PExpressionRec):
   Boolean;
 var
-  I: Integer;
+  I: LongInt;
 begin
   with ExprRec^ do
   begin
@@ -466,7 +466,7 @@ end;
 
 procedure TCustomExpressionParser.RemoveConstants(var ExprRec: PExpressionRec);
 var
-  I: Integer;
+  I: LongInt;
 begin
   if not ResultCanVary(ExprRec) then
   begin
@@ -514,7 +514,7 @@ end;
 
 procedure TCustomExpressionParser.DisposeTree(ExprRec: PExpressionRec);
 var
-  I: Integer;
+  I: LongInt;
 begin
   if ExprRec <> nil then
   begin
@@ -533,7 +533,7 @@ end;
 procedure TCustomExpressionParser.DisposeList(ARec: PExpressionRec);
 var
   TheNext: PExpressionRec;
-  I: Integer;
+  I: LongInt;
 begin
   if ARec <> nil then
     repeat
@@ -552,9 +552,9 @@ begin
 end;
 
 procedure TCustomExpressionParser.MakeLinkedList(var ExprRec: PExpressionRec;
-  Memory: PPChar; MemoryPos: PPChar; MemSize: PInteger);
+  Memory: PPChar; MemoryPos: PPChar; MemSize: PLongInt);
 var
-  I: Integer;
+  I: LongInt;
 begin
   // test function type
   if @ExprRec^.ExprWord.ExprFunc = nil then
@@ -624,7 +624,7 @@ begin
 end;
 
 function TCustomExpressionParser.MakeTree(Expr: TExprCollection; 
-  FirstItem, LastItem: Integer): PExpressionRec;
+  FirstItem, LastItem: LongInt): PExpressionRec;
 
 {
 - This is the most complex routine, it breaks down the expression and makes
@@ -633,7 +633,7 @@ function TCustomExpressionParser.MakeTree(Expr: TExprCollection;
 }
 
 var
-  I, IArg, IStart, IEnd, lPrec, brCount: Integer;
+  I, IArg, IStart, IEnd, lPrec, brCount: LongInt;
   ExprWord: TExprWord;
 begin
   // remove redundant brackets
@@ -769,7 +769,7 @@ end;
 procedure TCustomExpressionParser.ParseString(AnExpression: string; DestCollection: TExprCollection);
 var
   isConstant: Boolean;
-  I, I1, I2, Len, DecSep: Integer;
+  I, I1, I2, Len, DecSep: LongInt;
   W, S: string;
   TempWord: TExprWord;
 
@@ -800,7 +800,7 @@ var
 
   procedure ReadWord(AnExpr: string);
   var
-    OldI2: Integer;
+    OldI2: LongInt;
     constChar: Char;
   begin
     isConstant := false;
@@ -935,7 +935,7 @@ begin
 {$ENDIF}
           TempWord := TFloatConstant.Create(W, W)
         end else begin
-          TempWord := TIntegerConstant.Create(StrToInt(W));
+          TempWord := TLongIntConstant.Create(StrToInt(W));
         end;
       end;
       DestCollection.Add(TempWord);
@@ -961,7 +961,7 @@ end;
 
 procedure TCustomExpressionParser.Check(AnExprList: TExprCollection);
 var
-  I, J, K, L: Integer;
+  I, J, K, L: LongInt;
 begin
   AnExprList.Check;
   with AnExprList do
@@ -1062,7 +1062,7 @@ begin
 
       {-----CHECK ON INTPOWER------}
       if (TExprWord(Items[I]).Name = '^') and ((I < Count - 1) and
-          (TExprWord(Items[I + 1]).ClassType = TIntegerConstant)) then
+          (TExprWord(Items[I + 1]).ClassType = TLongIntConstant)) then
         if FWordsList.Search(PChar('^@'), J) then
           Items[I] := FWordsList.Items[J]; //use the faster intPower if possible
       Inc(I);
@@ -1096,15 +1096,15 @@ begin
 end;
 
 function TCustomExpressionParser.DefineFunction(AFunctName, AShortName, ADescription, ATypeSpec: string;
-  AMinFunctionArg: Integer; AResultType: TExpressionType; AFuncAddress: TExprFunc): TExprWord;
+  AMinFunctionArg: LongInt; AResultType: TExpressionType; AFuncAddress: TExprFunc): TExprWord;
 begin
   Result := TFunction.Create(AFunctName, AShortName, ATypeSpec, AMinFunctionArg, AResultType, AFuncAddress, ADescription);
   FWordsList.Add(Result);
 end;
 
-function TCustomExpressionParser.DefineIntegerVariable(AVarName: string; AValue: PInteger): TExprWord;
+function TCustomExpressionParser.DefineLongIntVariable(AVarName: string; AValue: PLongInt): TExprWord;
 begin
-  Result := TIntegerVariable.Create(AVarName, AValue);
+  Result := TLongIntVariable.Create(AVarName, AValue);
   FWordsList.Add(Result);
 end;
 
@@ -1145,7 +1145,7 @@ end;
 {
 procedure TCustomExpressionParser.GetGeneratedVars(AList: TList);
 var
-  I: Integer;
+  I: LongInt;
 begin
   AList.Clear;
   with FWordsList do
@@ -1172,7 +1172,7 @@ end;
 
 function TCustomExpressionParser.MakeRec: PExpressionRec;
 var
-  I: Integer;
+  I: LongInt;
 begin
   New(Result);
   Result^.Oper := nil;
@@ -1201,7 +1201,7 @@ begin
   end;
 end;
 
-function TCustomExpressionParser.AddExpression(AnExpression: string): Integer;
+function TCustomExpressionParser.AddExpression(AnExpression: string): LongInt;
 begin
   if Length(AnExpression) > 0 then
   begin
@@ -1223,7 +1223,7 @@ function TCustomExpressionParser.GetFunctionDescription(AFunction: string):
   string;
 var
   S: string;
-  p, I: Integer;
+  p, I: LongInt;
 begin
   S := AFunction;
   p := Pos('(', S);
@@ -1237,7 +1237,7 @@ end;
 
 procedure TCustomExpressionParser.GetFunctionNames(AList: TStrings);
 var
-  I, J: Integer;
+  I, J: LongInt;
   S: string;
 begin
   with FWordsList do
@@ -1262,7 +1262,7 @@ end;
 
 procedure FuncFloatToStr(Param: PExpressionRec);
 var
-  width, numDigits, resWidth: Integer;
+  width, numDigits, resWidth: LongInt;
   extVal: Extended;
 begin
   with Param^ do
@@ -1270,11 +1270,11 @@ begin
     // get params;
     numDigits := 0;
     if Args[1] <> nil then
-      width := PInteger(Args[1])^
+      width := PLongInt(Args[1])^
     else
       width := 18;
     if Args[2] <> nil then
-      numDigits := PInteger(Args[2])^;
+      numDigits := PLongInt(Args[2])^;
     // convert to string
     Res.AssureSpace(width);
     extVal := PDouble(Args[0])^;
@@ -1302,9 +1302,9 @@ begin
   end;
 end;
 
-procedure FuncIntToStr_Gen(Param: PExpressionRec; Val: {$ifdef SUPPORT_INT64}Int64{$else}Integer{$endif});
+procedure FuncIntToStr_Gen(Param: PExpressionRec; Val: {$ifdef SUPPORT_INT64}Int64{$else}LongInt{$endif});
 var
-  width: Integer;
+  width: LongInt;
 begin
   with Param^ do
   begin
@@ -1312,7 +1312,7 @@ begin
     if Args[1] <> nil then
     begin
       // convert to string
-      width := PInteger(Args[1])^;
+      width := PLongInt(Args[1])^;
 {$ifdef SUPPORT_INT64}
       GetStrFromInt64_Width
 {$else}
@@ -1325,7 +1325,7 @@ begin
       if Args[2] <> nil then
       begin
         // get number of digits
-        width := PInteger(Args[2])^;
+        width := PLongInt(Args[2])^;
         // add decimal dot
         Res.MemoryPos^^ := '.';
         Inc(Res.MemoryPos^);
@@ -1353,7 +1353,7 @@ end;
 
 procedure FuncIntToStr(Param: PExpressionRec);
 begin
-  FuncIntToStr_Gen(Param, PInteger(Param^.Args[0])^);
+  FuncIntToStr_Gen(Param, PLongInt(Param^.Args[0])^);
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -1380,15 +1380,15 @@ end;
 
 procedure FuncSubString(Param: PExpressionRec);
 var
-  srcLen, index, count: Integer;
+  srcLen, index, count: LongInt;
 begin
   with Param^ do
   begin
     srcLen := StrLen(Args[0]);
-    index := PInteger(Args[1])^ - 1;
+    index := PLongInt(Args[1])^ - 1;
     if Args[2] <> nil then
     begin
-      count := PInteger(Args[2])^;
+      count := PLongInt(Args[2])^;
       if index + count > srcLen then
         count := srcLen - index;
     end else
@@ -1434,19 +1434,19 @@ end;
 procedure FuncAdd_F_FI(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ + PInteger(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ + PLongInt(Args[1])^;
 end;
 
 procedure FuncAdd_F_II(Param: PExpressionRec);
 begin
   with Param^ do
-    PInteger(Res.MemoryPos^)^ := PInteger(Args[0])^ + PInteger(Args[1])^;
+    PLongInt(Res.MemoryPos^)^ := PLongInt(Args[0])^ + PLongInt(Args[1])^;
 end;
 
 procedure FuncAdd_F_IF(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PInteger(Args[0])^ + PDouble(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PLongInt(Args[0])^ + PDouble(Args[1])^;
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -1460,7 +1460,7 @@ end;
 procedure FuncAdd_F_IL(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInteger(Args[0])^ + PInt64(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PLongInt(Args[0])^ + PInt64(Args[1])^;
 end;
 
 procedure FuncAdd_F_LL(Param: PExpressionRec);
@@ -1478,7 +1478,7 @@ end;
 procedure FuncAdd_F_LI(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ + PInteger(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ + PLongInt(Args[1])^;
 end;
 
 {$endif}
@@ -1492,19 +1492,19 @@ end;
 procedure FuncSub_F_FI(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ - PInteger(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ - PLongInt(Args[1])^;
 end;
 
 procedure FuncSub_F_II(Param: PExpressionRec);
 begin
   with Param^ do
-    PInteger(Res.MemoryPos^)^ := PInteger(Args[0])^ - PInteger(Args[1])^;
+    PLongInt(Res.MemoryPos^)^ := PLongInt(Args[0])^ - PLongInt(Args[1])^;
 end;
 
 procedure FuncSub_F_IF(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PInteger(Args[0])^ - PDouble(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PLongInt(Args[0])^ - PDouble(Args[1])^;
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -1518,7 +1518,7 @@ end;
 procedure FuncSub_F_IL(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInteger(Args[0])^ - PInt64(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PLongInt(Args[0])^ - PInt64(Args[1])^;
 end;
 
 procedure FuncSub_F_LL(Param: PExpressionRec);
@@ -1536,7 +1536,7 @@ end;
 procedure FuncSub_F_LI(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ - PInteger(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ - PLongInt(Args[1])^;
 end;
 
 {$endif}
@@ -1550,19 +1550,19 @@ end;
 procedure FuncMul_F_FI(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ * PInteger(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ * PLongInt(Args[1])^;
 end;
 
 procedure FuncMul_F_II(Param: PExpressionRec);
 begin
   with Param^ do
-    PInteger(Res.MemoryPos^)^ := PInteger(Args[0])^ * PInteger(Args[1])^;
+    PLongInt(Res.MemoryPos^)^ := PLongInt(Args[0])^ * PLongInt(Args[1])^;
 end;
 
 procedure FuncMul_F_IF(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PInteger(Args[0])^ * PDouble(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PLongInt(Args[0])^ * PDouble(Args[1])^;
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -1576,7 +1576,7 @@ end;
 procedure FuncMul_F_IL(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInteger(Args[0])^ * PInt64(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PLongInt(Args[0])^ * PInt64(Args[1])^;
 end;
 
 procedure FuncMul_F_LL(Param: PExpressionRec);
@@ -1594,7 +1594,7 @@ end;
 procedure FuncMul_F_LI(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ * PInteger(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ * PLongInt(Args[1])^;
 end;
 
 {$endif}
@@ -1608,19 +1608,19 @@ end;
 procedure FuncDiv_F_FI(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ / PInteger(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PDouble(Args[0])^ / PLongInt(Args[1])^;
 end;
 
 procedure FuncDiv_F_II(Param: PExpressionRec);
 begin
   with Param^ do
-    PInteger(Res.MemoryPos^)^ := PInteger(Args[0])^ div PInteger(Args[1])^;
+    PLongInt(Res.MemoryPos^)^ := PLongInt(Args[0])^ div PLongInt(Args[1])^;
 end;
 
 procedure FuncDiv_F_IF(Param: PExpressionRec);
 begin
   with Param^ do
-    PDouble(Res.MemoryPos^)^ := PInteger(Args[0])^ / PDouble(Args[1])^;
+    PDouble(Res.MemoryPos^)^ := PLongInt(Args[0])^ / PDouble(Args[1])^;
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -1634,7 +1634,7 @@ end;
 procedure FuncDiv_F_IL(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInteger(Args[0])^ div PInt64(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PLongInt(Args[0])^ div PInt64(Args[1])^;
 end;
 
 procedure FuncDiv_F_LL(Param: PExpressionRec);
@@ -1652,7 +1652,7 @@ end;
 procedure FuncDiv_F_LI(Param: PExpressionRec);
 begin
   with Param^ do
-    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ div PInteger(Args[1])^;
+    PInt64(Res.MemoryPos^)^ := PInt64(Args[0])^ div PLongInt(Args[1])^;
 end;
 
 {$endif}
@@ -1665,7 +1665,7 @@ end;
 
 procedure FuncStrIP_EQ(Param: PExpressionRec);
 var
-  arg0len, arg1len: integer;
+  arg0len, arg1len: LongInt;
   match: boolean;
   str0, str1: string;
 begin
@@ -1733,7 +1733,7 @@ end;
 
 procedure FuncStrP_EQ(Param: PExpressionRec);
 var
-  arg0len, arg1len: integer;
+  arg0len, arg1len: LongInt;
   match: boolean;
 begin
   with Param^ do
@@ -1842,109 +1842,109 @@ end;
 procedure Func_FI_EQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PDouble(Args[0])^   =  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PDouble(Args[0])^   =  PLongInt(Args[1])^);
 end;
 
 procedure Func_FI_NEQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PDouble(Args[0])^   <> PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PDouble(Args[0])^   <> PLongInt(Args[1])^);
 end;
 
 procedure Func_FI_LT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PDouble(Args[0])^   <  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PDouble(Args[0])^   <  PLongInt(Args[1])^);
 end;
 
 procedure Func_FI_GT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PDouble(Args[0])^   >  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PDouble(Args[0])^   >  PLongInt(Args[1])^);
 end;
 
 procedure Func_FI_LTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PDouble(Args[0])^   <= PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PDouble(Args[0])^   <= PLongInt(Args[1])^);
 end;
 
 procedure Func_FI_GTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PDouble(Args[0])^   >= PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PDouble(Args[0])^   >= PLongInt(Args[1])^);
 end;
 
 procedure Func_II_EQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  =  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  =  PLongInt(Args[1])^);
 end;
 
 procedure Func_II_NEQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <> PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <> PLongInt(Args[1])^);
 end;
 
 procedure Func_II_LT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <  PLongInt(Args[1])^);
 end;
 
 procedure Func_II_GT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  >  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  >  PLongInt(Args[1])^);
 end;
 
 procedure Func_II_LTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <= PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <= PLongInt(Args[1])^);
 end;
 
 procedure Func_II_GTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  >= PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  >= PLongInt(Args[1])^);
 end;
 
 procedure Func_IF_EQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  =  PDouble(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  =  PDouble(Args[1])^);
 end;
 
 procedure Func_IF_NEQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <> PDouble(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <> PDouble(Args[1])^);
 end;
 
 procedure Func_IF_LT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <  PDouble(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <  PDouble(Args[1])^);
 end;
 
 procedure Func_IF_GT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  >  PDouble(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  >  PDouble(Args[1])^);
 end;
 
 procedure Func_IF_LTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <= PDouble(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <= PDouble(Args[1])^);
 end;
 
 procedure Func_IF_GTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  >= PDouble(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  >= PDouble(Args[1])^);
 end;
 
 {$ifdef SUPPORT_INT64}
@@ -2060,73 +2060,73 @@ end;
 procedure Func_LI_EQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInt64(Args[0])^    =  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PInt64(Args[0])^    =  PLongInt(Args[1])^);
 end;
 
 procedure Func_LI_NEQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInt64(Args[0])^    <> PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PInt64(Args[0])^    <> PLongInt(Args[1])^);
 end;
 
 procedure Func_LI_LT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInt64(Args[0])^    <  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PInt64(Args[0])^    <  PLongInt(Args[1])^);
 end;
 
 procedure Func_LI_GT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInt64(Args[0])^    >  PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PInt64(Args[0])^    >  PLongInt(Args[1])^);
 end;
 
 procedure Func_LI_LTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInt64(Args[0])^    <= PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PInt64(Args[0])^    <= PLongInt(Args[1])^);
 end;
 
 procedure Func_LI_GTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInt64(Args[0])^    >= PInteger(Args[1])^);
+    Res.MemoryPos^^ := Char(PInt64(Args[0])^    >= PLongInt(Args[1])^);
 end;
 
 procedure Func_IL_EQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  =  PInt64(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  =  PInt64(Args[1])^);
 end;
 
 procedure Func_IL_NEQ(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <> PInt64(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <> PInt64(Args[1])^);
 end;
 
 procedure Func_IL_LT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <  PInt64(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <  PInt64(Args[1])^);
 end;
 
 procedure Func_IL_GT(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  >  PInt64(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  >  PInt64(Args[1])^);
 end;
 
 procedure Func_IL_LTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  <= PInt64(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  <= PInt64(Args[1])^);
 end;
 
 procedure Func_IL_GTE(Param: PExpressionRec);
 begin
   with Param^ do
-    Res.MemoryPos^^ := Char(PInteger(Args[0])^  >= PInt64(Args[1])^);
+    Res.MemoryPos^^ := Char(PLongInt(Args[0])^  >= PInt64(Args[1])^);
 end;
 
 {$endif}
@@ -2171,7 +2171,7 @@ initialization
     Add(TFunction.CreateOper('+', 'FF', etFloat,    FuncAdd_F_FF, 40));
     Add(TFunction.CreateOper('+', 'FI', etFloat,    FuncAdd_F_FI, 40));
     Add(TFunction.CreateOper('+', 'IF', etFloat,    FuncAdd_F_IF, 40));
-    Add(TFunction.CreateOper('+', 'II', etInteger,  FuncAdd_F_II, 40));
+    Add(TFunction.CreateOper('+', 'II', etLongInt,  FuncAdd_F_II, 40));
 {$ifdef SUPPORT_INT64}
     Add(TFunction.CreateOper('+', 'FL', etFloat,    FuncAdd_F_FL, 40));
     Add(TFunction.CreateOper('+', 'IL', etLargeInt, FuncAdd_F_IL, 40));
@@ -2182,7 +2182,7 @@ initialization
     Add(TFunction.CreateOper('-', 'FF', etFloat,    FuncSub_F_FF, 40));
     Add(TFunction.CreateOper('-', 'FI', etFloat,    FuncSub_F_FI, 40));
     Add(TFunction.CreateOper('-', 'IF', etFloat,    FuncSub_F_IF, 40));
-    Add(TFunction.CreateOper('-', 'II', etInteger,  FuncSub_F_II, 40));
+    Add(TFunction.CreateOper('-', 'II', etLongInt,  FuncSub_F_II, 40));
 {$ifdef SUPPORT_INT64}
     Add(TFunction.CreateOper('-', 'FL', etFloat,    FuncSub_F_FL, 40));
     Add(TFunction.CreateOper('-', 'IL', etLargeInt, FuncSub_F_IL, 40));
@@ -2193,7 +2193,7 @@ initialization
     Add(TFunction.CreateOper('*', 'FF', etFloat,    FuncMul_F_FF, 40));
     Add(TFunction.CreateOper('*', 'FI', etFloat,    FuncMul_F_FI, 40));
     Add(TFunction.CreateOper('*', 'IF', etFloat,    FuncMul_F_IF, 40));
-    Add(TFunction.CreateOper('*', 'II', etInteger,  FuncMul_F_II, 40));
+    Add(TFunction.CreateOper('*', 'II', etLongInt,  FuncMul_F_II, 40));
 {$ifdef SUPPORT_INT64}
     Add(TFunction.CreateOper('*', 'FL', etFloat,    FuncMul_F_FL, 40));
     Add(TFunction.CreateOper('*', 'IL', etLargeInt, FuncMul_F_IL, 40));
@@ -2204,7 +2204,7 @@ initialization
     Add(TFunction.CreateOper('/', 'FF', etFloat,    FuncDiv_F_FF, 40));
     Add(TFunction.CreateOper('/', 'FI', etFloat,    FuncDiv_F_FI, 40));
     Add(TFunction.CreateOper('/', 'IF', etFloat,    FuncDiv_F_IF, 40));
-    Add(TFunction.CreateOper('/', 'II', etInteger,  FuncDiv_F_II, 40));
+    Add(TFunction.CreateOper('/', 'II', etLongInt,  FuncDiv_F_II, 40));
 {$ifdef SUPPORT_INT64}
     Add(TFunction.CreateOper('/', 'FL', etFloat,    FuncDiv_F_FL, 40));
     Add(TFunction.CreateOper('/', 'IL', etLargeInt, FuncDiv_F_IL, 40));

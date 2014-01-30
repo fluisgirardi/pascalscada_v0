@@ -37,7 +37,7 @@ type
   t_socklen = TSockLen;
   {$IFEND}
   {$ELSE}
-  t_socklen = Integer;
+  t_socklen = LongInt;
   {$IFEND}
 
   {$IFDEF PORTUGUES}

@@ -58,7 +58,7 @@ implementation
 
 procedure TfrmBitMapper.FormShow(Sender: TObject);
 var
-  c:Integer;
+  c:LongInt;
 begin
   eachbitastag.Checked:=true;
   for c:=31 downto 0 do

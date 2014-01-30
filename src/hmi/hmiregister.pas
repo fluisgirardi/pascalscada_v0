@@ -68,13 +68,13 @@ begin
   RegisterComponents(strUserManagement,   [TCustomizedUserManagement]);
 
   RegisterPropertyEditor(TypeInfo(string), TGraphicZone,                   'FileName' ,        TZoneFileNamePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TZone,                          'BlinkWith',        TZoneBlinkWithPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(LongInt),TZone,                          'BlinkWith',        TZoneBlinkWithPropertyEditor);
 
   {$IFDEF FPC}
   {$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
-  RegisterPropertyEditor(TypeInfo(integer), TGraphicZone,                   'ImageIndex',                    TGraphiZoneImageIndexPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer), TPascalSCADALogin_LogoutAction, 'WithUserLoggedInImageIndex',    TPascalSCADALoginLogoutImageIndexPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer), TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(LongInt), TGraphicZone,                   'ImageIndex',                    TGraphiZoneImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(LongInt), TPascalSCADALogin_LogoutAction, 'WithUserLoggedInImageIndex',    TPascalSCADALoginLogoutImageIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(LongInt), TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
   {$IFEND}
   RegisterPropertyEditor(TypeInfo(TCaption),TTextZone,                      'Text',                          TStringMultilinePropertyEditor);
   {$ENDIF}

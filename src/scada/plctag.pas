@@ -49,7 +49,7 @@ type
     FProtocoloOnLoading:TProtocolDriver;
   private
     procedure RebuildTagGUID;
-    function  GetTagSizeOnProtocol:Integer;
+    function  GetTagSizeOnProtocol:LongInt;
   protected
     PValidTag,
     PModified:Boolean;
@@ -146,9 +146,9 @@ type
     FSwapDWords:Boolean;
 
     {$IFDEF PORTUGUES}
-    //: Diz se as words da palavra (integer, cardinal e float) serão invertidas
+    //: Diz se as words da palavra (LongInt, cardinal e float) serão invertidas
     {$ELSE}
-    //: Tells if the words of an DWORD (integer,cardinal and float) will be swaped.
+    //: Tells if the words of an DWORD (LongInt,cardinal and float) will be swaped.
     {$ENDIF}
     FSwapWords:Boolean;
 
@@ -435,7 +435,7 @@ type
     {$ELSE}
     //: Procedure called by the protocol driver to update tag values.
     {$ENDIF}
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); virtual;
+    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -448,7 +448,7 @@ type
     @seealso(TTagRec)
     }
     {$ENDIF}
-    procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
+    procedure BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
 
     {$IFDEF PORTUGUES}
     //: Faz uma leitura @bold(assincrona) do tag.
@@ -586,7 +586,7 @@ type
     {$IFDEF PORTUGUES}
     //: Diz se as words da palavra formada serão invertidas.
     {$ELSE}
-    //: Tells if the words of an DWORD (integer, cardinal and float) will be swaped.
+    //: Tells if the words of an DWORD (LongInt, cardinal and float) will be swaped.
     {$ENDIF}
     property SwapWords:Boolean read FSwapWords write SetSwapWords default false;
 
@@ -602,7 +602,7 @@ type
     {$ELSE}
     //: Tells the real size of the tag on protocol driver.
     {$ENDIF}
-    property TagSizeOnProtocol:Integer read GetTagSizeOnProtocol;
+    property TagSizeOnProtocol:LongInt read GetTagSizeOnProtocol;
 
     {$IFDEF PORTUGUES}
     //: Informa a média de milisegundos que o tag está sendo atualizado.
@@ -791,9 +791,9 @@ begin
   end;
 end;
 
-procedure TPLCTag.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
+procedure TPLCTag.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);
 var
-  c, poffset:Integer;
+  c, poffset:LongInt;
 begin
   if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) and (ValuesTimeStamp<>PValueTimeStamp) then begin
     inc(FTotalTime, MilliSecondsBetween(ValuesTimeStamp,PValueTimeStamp));
@@ -996,7 +996,7 @@ begin
     PProtocolDriver.AddTag(Self);
 end;
 
-procedure TPLCTag.BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
+procedure TPLCTag.BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
 begin
   tr.Rack := PRack;
   tr.Slot := PSlot;
@@ -1049,7 +1049,7 @@ begin
   UpdateTagSizeOnProtocol;
 end;
 
-function  TPLCTag.GetTagSizeOnProtocol:Integer;
+function  TPLCTag.GetTagSizeOnProtocol:LongInt;
 begin
   Result := Length(FRawProtocolValues);
 end;
@@ -1115,7 +1115,7 @@ end;
 
 procedure TPLCTag.UpdateTagSizeOnProtocol;
 var
-  Tamanho:Integer;
+  Tamanho:LongInt;
 begin
   if PProtocolDriver=nil then begin
     exit;
@@ -1128,7 +1128,7 @@ begin
       FCurrentWordSize:=8;
     pttSmallInt, pttWord:
       FCurrentWordSize:=16;
-    pttInteger, pttDWord, pttFloat:
+    pttLongInt, pttDWord, pttFloat:
       FCurrentWordSize:=32;
     pttDouble:
       FCurrentWordSize:=64;
@@ -1180,9 +1180,9 @@ var
   PtrDWordWalker:PDWord;
   PtrDoubleWalker:PDouble;
 
-  AreaSize:Integer;
-  AreaIdx:Integer;
-  valueidx:Integer;
+  AreaSize:LongInt;
+  AreaIdx:LongInt;
+  valueidx:LongInt;
 
   DWordAux:Cardinal;
   WordAux:Word;
@@ -1202,7 +1202,7 @@ var
 
   procedure AddToResult(ValueToAdd:Double; var Result:TArrayOfDouble);
   var
-    i:Integer;
+    i:LongInt;
   begin
     i:=Length(Result);
     SetLength(Result,i+1);
@@ -1216,7 +1216,7 @@ begin
      ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
      ((FProtocolTagType=ptSmallInt) AND (FTagType=pttSmallInt)) OR
      ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
-     ((FProtocolTagType=ptInteger) AND (FTagType=pttInteger)) OR
+     ((FProtocolTagType=ptLongInt) AND (FTagType=pttLongInt)) OR
      ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat)) Or
      ((FProtocolTagType=ptInt64) AND (FTagType=pttInt64)) Or
      ((FProtocolTagType=ptQWord) AND (FTagType=pttQWord)) Or
@@ -1237,7 +1237,7 @@ begin
       AreaSize := Length(Values);
     ptWord, ptSmallInt:
       AreaSize := Length(Values)*2;
-    ptDWord, ptInteger, ptFloat:
+    ptDWord, ptLongInt, ptFloat:
       AreaSize := Length(Values)*4;
     ptQWord, ptInt64, ptDouble:
       AreaSize := Length(Values)*8;
@@ -1271,7 +1271,7 @@ begin
          inc(valueidx);
          Inc(PtrWordWalker);
        end;
-    ptDWord, ptInteger, ptFloat:
+    ptDWord, ptLongInt, ptFloat:
        while valueidx<Length(Values) do begin
          if FProtocolTagType=ptFloat then
            PSingle(PtrDWordWalker)^:=Values[valueidx]
@@ -1329,7 +1329,7 @@ begin
         inc(PtrWordWalker);
       end;
     end;
-    pttInteger,
+    pttLongInt,
     pttDWord,
     pttFloat: begin
       inc(PtrDWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
@@ -1367,8 +1367,8 @@ begin
         case FTagType of
           pttDWord:
             AddToResult(PtrDWordWalker^, Result);
-          pttInteger:
-            AddToResult(PInteger(PtrDWordWalker)^, Result);
+          pttLongInt:
+            AddToResult(PLongInt(PtrDWordWalker)^, Result);
           pttFloat: begin
             if IsNan(PSingle(PtrDWordWalker)^) or IsInfinite(PSingle(PtrDWordWalker)^) then
               SetExceptionMask([exInvalidOp, exDenormalized, {exZeroDivide,} exOverflow, exUnderflow, exPrecision]);
@@ -1502,9 +1502,9 @@ var
   PtrDWordWalker:PDWord;
   PtrDoubleWalker:PDouble;
 
-  AreaSize:Integer;
-  AreaIdx:Integer;
-  valueidx:Integer;
+  AreaSize:LongInt;
+  AreaIdx:LongInt;
+  valueidx:LongInt;
 
   DWordAux:Cardinal;
   WordAux :Word;
@@ -1514,9 +1514,9 @@ var
   PtrWord1, PtrWord2:PWord;
   PtrDWord1,PtrDWord2:PDWord;
 
-  bitaux:Integer;
+  bitaux:LongInt;
 
-  ProtocolOffSet, ProtocolSize:Integer;
+  ProtocolOffSet, ProtocolSize:LongInt;
 
   procedure ResetPointers;
   begin
@@ -1528,7 +1528,7 @@ var
 
   procedure AddToResult(ValueToAdd:Double; var Result:TArrayOfDouble);
   var
-    i:Integer;
+    i:LongInt;
   begin
     i:=Length(Result);
     SetLength(Result,i+1);
@@ -1542,7 +1542,7 @@ begin
      ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
      ((FProtocolTagType=ptSmallInt) AND (FTagType=pttSmallInt)) OR
      ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
-     ((FProtocolTagType=ptInteger) AND (FTagType=pttInteger)) OR
+     ((FProtocolTagType=ptLongInt) AND (FTagType=pttLongInt)) OR
      ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat)) OR
      ((FProtocolTagType=ptDouble) AND (FTagType=pttDouble))
   then begin
@@ -1569,7 +1569,7 @@ begin
       AreaSize := ProtocolSize;
     ptWord, ptSmallInt:
       AreaSize := ProtocolSize*2;
-    ptDWord, ptInteger, ptFloat:
+    ptDWord, ptLongInt, ptFloat:
       AreaSize := ProtocolSize*4;
     ptDouble:
       AreaSize := ProtocolSize*8;
@@ -1594,13 +1594,13 @@ begin
          inc(valueidx);
          Inc(PtrWordWalker);
        end;
-    ptDWord, ptInteger, ptFloat:
+    ptDWord, ptLongInt, ptFloat:
        while valueidx<ProtocolSize do begin
          if FProtocolTagType = ptFloat then
            PSingle(PtrDWordWalker)^:=FRawProtocolValues[valueidx+ProtocolOffSet]
          else begin
-           if FProtocolTagType = ptInteger then
-             PInteger(PtrDWordWalker)^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet])
+           if FProtocolTagType = ptLongInt then
+             PLongInt(PtrDWordWalker)^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet])
            else
              PtrDWordWalker^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]) AND $FFFFFFFF;
          end;
@@ -1647,13 +1647,13 @@ begin
        end;
     end;
     pttDWord,
-    pttInteger,
+    pttLongInt,
     pttFloat: begin
        inc(PtrDWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
        while valueidx<Length(Values) do begin
 
-         if FTagType=pttInteger then
-           PInteger(PtrDWordWalker)^:=trunc(Values[valueidx]);
+         if FTagType=pttLongInt then
+           PLongInt(PtrDWordWalker)^:=trunc(Values[valueidx]);
          if FTagType=pttDWord then
            PtrDWordWalker^:=trunc(Values[valueidx]) AND $FFFFFFFF;
          if FTagType=pttFloat then
@@ -1841,15 +1841,15 @@ begin
         inc(PtrWordWalker);
       end;
     end;
-    ptInteger,
+    ptLongInt,
     ptDWord,
     ptFloat: begin
       while AreaIdx<AreaSize do begin
         case FProtocolTagType of
           ptDWord:
             AddToResult(PtrDWordWalker^, Result);
-          ptInteger:
-            AddToResult(PInteger(PtrDWordWalker)^, Result);
+          ptLongInt:
+            AddToResult(PLongInt(PtrDWordWalker)^, Result);
           ptFloat:
             AddToResult(PSingle(PtrDWordWalker)^, Result);
         end;
@@ -1913,7 +1913,7 @@ end;
 
 procedure  TTagMananger.AddTag(Tag:TPLCTag);
 var
-  c,h:Integer;
+  c,h:LongInt;
 begin
   for c:=0 to High(ftags) do begin
     if ftags[c]=Tag then exit;
@@ -1931,7 +1931,7 @@ end;
 
 procedure  TTagMananger.RemoveTag(Tag:TPLCTag);
 var
-  c,h:Integer;
+  c,h:LongInt;
   found:Boolean;
 begin
   found:=false;

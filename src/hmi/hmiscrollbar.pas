@@ -44,8 +44,8 @@ type
     FIsEnabledBySecurity:Boolean;
     FUpdateOnMove:Boolean;
     FBusy:Boolean;
-    FCmdCount:Integer;
-    FLastPosition:Integer;
+    FCmdCount:LongInt;
+    FLastPosition:LongInt;
 
     FSecurityCode:String;
     procedure SetSecurityCode(sc:String);
@@ -62,7 +62,7 @@ type
     //: @seealso(IHMIInterface.MakeUnsecure)
     procedure MakeUnsecure;
 
-    procedure WriteValue(Value:Integer);
+    procedure WriteValue(Value:LongInt);
 
     //implements the IHMITagInterface
     procedure NotifyReadOk;
@@ -75,9 +75,9 @@ type
     //: @exclude
      procedure SetEnabled(e:Boolean); override;
     //: @exclude
-    procedure Scroll(ScrollCode: TScrollCode; var ScrollPos: Integer); override;
+    procedure Scroll(ScrollCode: TScrollCode; var ScrollPos: LongInt); override;
     {$IF (not defined(WIN32)) and (not defined(WIN64))}
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt); override;
     {$IFEND}
   public
     //: @exclude
@@ -215,7 +215,7 @@ begin
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
-procedure THMIScrollBar.Scroll(ScrollCode: TScrollCode; var ScrollPos: Integer);
+procedure THMIScrollBar.Scroll(ScrollCode: TScrollCode; var ScrollPos: LongInt);
 var
    WriteFlag:Boolean;
 begin
@@ -246,7 +246,7 @@ begin
 end;
 
 {$IF (not defined(WIN32)) and (not defined(WIN64))}
-procedure THMIScrollBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure THMIScrollBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt);
 begin
   try
     WriteValue(FLastPosition);
@@ -256,7 +256,7 @@ begin
 end;
 {$IFEND}
 
-procedure THMIScrollBar.WriteValue(Value:Integer);
+procedure THMIScrollBar.WriteValue(Value:LongInt);
 begin
    if (FTag=nil)  then exit;
 

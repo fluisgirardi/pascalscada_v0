@@ -77,14 +77,14 @@ type
     procedure SetButtonType(v:TButtonType);
 
     //: @exclude
-    function GetGroupIndex:Integer;
+    function GetGroupIndex:LongInt;
     //: @exclude
     function GetAllowAllUp:Boolean;
     //: @exclude
     function GetDown:Boolean;
     
     //: @exclude
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt); override;
 
     //: Retorna o caption corrente do botão;
     function GetCaption:TCaption;
@@ -204,7 +204,7 @@ type
     //: Retorna se o botão esta precionado ou não. Esconde a propriedade herdada.
     property Down: Boolean read GetDown;
     //: GroupIndex do botão. Esconde a propriedade herdada.
-    property GroupIndex:Integer read GetGroupIndex;
+    property GroupIndex:LongInt read GetGroupIndex;
     //: Esconde a propriedade herdada.
     property AllowAllUp:Boolean read GetAllowAllUp;
 
@@ -443,7 +443,7 @@ begin
    FButtonType:=v;
 end;
 
-function THMIButton.GetGroupIndex:Integer;
+function THMIButton.GetGroupIndex:LongInt;
 begin
    Result := TSpeedButton(Self).GroupIndex;
 end;
@@ -458,7 +458,7 @@ begin
    Result :=  FState = bsDown;
 end;
 
-procedure THMIButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure THMIButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt);
 begin
     try
        if FClickFlag and (FButtonType=btJog) then

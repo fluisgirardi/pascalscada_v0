@@ -28,7 +28,7 @@ uses
   receive all requested data on socket.
   }
   {$ENDIF}
-  function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
+  function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
 
   {$IFDEF PORTUGUES}
   {:
@@ -43,14 +43,14 @@ uses
   send all requested data.
   }
   {$ENDIF}
-  function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
+  function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
 
   {$IFDEF PORTUGUES}
   //: Seta o modo de operação de socket.
   {$ELSE}
   //: Sets the socket operation mode.
   {$ENDIF}
-  function setblockingmode(fd:TSocket; mode:u_long):Integer;
+  function setblockingmode(fd:TSocket; mode:u_long):LongInt;
 
   {$IFDEF PORTUGUES}
   {:
@@ -67,7 +67,7 @@ uses
   @returns(0 if the connection was estabilished successful.)
   }
   {$ENDIF}
-  function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
+  function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:LongInt):LongInt;
 
   {$IFDEF PORTUGUES}
   {:
@@ -93,7 +93,7 @@ uses
   @returns(@True if a incoming connection was done.)
   }
   {$ENDIF}
-  function WaitForConnection(FListenerSocket:TSocket; timeout:Integer):Boolean;
+  function WaitForConnection(FListenerSocket:TSocket; timeout:LongInt):Boolean;
 
   {$IFDEF PORTUGUES}
   {:
@@ -108,11 +108,11 @@ uses
            buffer, zero if no data on the receive buffer and -1 on error.)
   }
   {$ENDIF}
-  function GetNumberOfBytesInReceiveBuffer(socket:Tsocket):Integer;
+  function GetNumberOfBytesInReceiveBuffer(socket:Tsocket):LongInt;
 
 implementation
 
-function setblockingmode(fd:TSocket; mode:u_long):Integer;
+function setblockingmode(fd:TSocket; mode:u_long):LongInt;
 begin
   if ioctlsocket(fd, FIONBIO, mode)=SOCKET_ERROR then
     Result:=-1
@@ -120,7 +120,7 @@ begin
     Result:=0;
 end;
 
-function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:Integer):Integer;
+function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:LongInt):LongInt;
 var
   sel:TFDSet;
   mode:u_long;
@@ -160,7 +160,7 @@ begin
   end;
 end;
 
-function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
+function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
 var
   sel:TFDSet;
   mode:u_long;
@@ -200,7 +200,7 @@ begin
   end;
 end;
 
-function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: Integer):Integer;
+function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
 var
   sel:TFDSet;
   mode:u_long;
@@ -242,7 +242,7 @@ end;
 
 function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 var
-  retval, nbytes:Integer;
+  retval, nbytes:LongInt;
   t:TTimeVal;
   readset:TFDSet;
 begin
@@ -322,7 +322,7 @@ begin
   end;
 end;
 
-function WaitForConnection(FListenerSocket:TSocket; timeout:Integer):Boolean;
+function WaitForConnection(FListenerSocket:TSocket; timeout:LongInt):Boolean;
 var
   sel:TFDSet;
   mode:u_long;
@@ -351,9 +351,9 @@ begin
     end;
 end;
 
-function GetNumberOfBytesInReceiveBuffer(socket: Tsocket): Integer;
+function GetNumberOfBytesInReceiveBuffer(socket: Tsocket): LongInt;
 var
-  retval, nbytes:Integer;
+  retval, nbytes:LongInt;
 begin
   Result:=0;
 

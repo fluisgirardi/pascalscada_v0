@@ -457,7 +457,7 @@ end;
 procedure TfrmModbusTagBuilder.Button1Click(Sender: TObject);
 var
   newitem:TTagNamesItemEditor;
-  c:Integer;
+  c:LongInt;
 begin
   newitem := TTagNamesItemEditor.Create(Self);
   newitem.Parent := ScrollBox1;

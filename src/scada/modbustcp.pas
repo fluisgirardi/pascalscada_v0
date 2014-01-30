@@ -53,11 +53,11 @@ type
   TModBusTCPDriver = class(TModBusDriver)
   protected
     //:  @seealso(TModBusDriver.EncodePkg)
-    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES; override;
+    function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:LongInt):BYTES; override;
     //:  @seealso(TModBusDriver.DecodePkg)
     function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; override;
     //:  @seealso(TModBusDriver.RemainingBytes)
-    function RemainingBytes(buffer: BYTES): Integer; override;
+    function RemainingBytes(buffer: BYTES): LongInt; override;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -84,9 +84,9 @@ begin
   PCRCLen:=0;
 end;
 
-function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:Integer):BYTES;
+function  TModBusTCPDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:LongInt):BYTES;
 var
-  i, c, c2, size:Integer;
+  i, c, c2, size:LongInt;
 begin
   //checa se é um pacote de escrita de valores ou de leitura
   //que está sendo codificado.
@@ -298,7 +298,7 @@ end;
 
 function TModBusTCPDriver.DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult;
 var
-   i,c,c2,plc:integer;
+   i,c,c2,plc:LongInt;
    address, len:Cardinal;
    foundPLC:Boolean;
    aux:TPLCMemoryManager;
@@ -381,7 +381,7 @@ begin
             c:=0;
             inc(c2);
           end;
-          Values[i]:=IfThen(((Integer(pkg.BufferToRead[c2]) and (1 shl c))=(1 shl c)),1,0);
+          Values[i]:=IfThen(((LongInt(pkg.BufferToRead[c2]) and (1 shl c))=(1 shl c)),1,0);
           inc(i);
           inc(c);
         end;
@@ -411,7 +411,7 @@ begin
 
         // data are ok
         for i:=0 to Len-1 do begin
-          Values[i]:=(Integer(pkg.BufferToRead[9+(i*2)]) shl 8) + Integer(pkg.BufferToRead[10+i*2]);
+          Values[i]:=(LongInt(pkg.BufferToRead[9+(i*2)]) shl 8) + LongInt(pkg.BufferToRead[10+i*2]);
         end;
 
         if foundPLC then
@@ -461,7 +461,7 @@ begin
     $07: begin
       if foundPLC then begin
         if Result=ioOk then begin
-          PModbusPLC[plc].Status07Value :=Integer(pkg.BufferToRead[8]);
+          PModbusPLC[plc].Status07Value :=LongInt(pkg.BufferToRead[8]);
           PModbusPLC[plc].Status07TimeStamp := CrossNow;
         end;
         PModbusPLC[plc].Status07LastError := Result;
@@ -485,7 +485,7 @@ begin
             c:=0;
             inc(c2);
           end;
-          Values[i]:=IfThen(((Integer(pkg.BufferToWrite[c2]) and (1 shl c))=(1 shl c)),1,0);
+          Values[i]:=IfThen(((LongInt(pkg.BufferToWrite[c2]) and (1 shl c))=(1 shl c)),1,0);
           inc(i);
           inc(c);
         end;
@@ -559,7 +559,7 @@ begin
   end;
 end;
 
-function TModBusTCPDriver.RemainingBytes(buffer: BYTES): Integer;
+function TModBusTCPDriver.RemainingBytes(buffer: BYTES): LongInt;
 begin
   if High(buffer)>=5 then
     Result:=buffer[5]-3;

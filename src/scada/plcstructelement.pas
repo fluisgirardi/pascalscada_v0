@@ -234,7 +234,7 @@ end;
 
 procedure TPLCStructItem.SetIndex(i: Cardinal);
 var
-  MySize:Integer;
+  MySize:LongInt;
 begin
   MySize:=FCurrentWordSize div 8;
   if PBlock<>nil then
@@ -246,7 +246,7 @@ end;
 
 procedure TPLCStructItem.SetTagType(newType:TTagType);
 var
-  MySize:Integer;
+  MySize:LongInt;
 begin
   case newType of
     pttDefault:
@@ -258,7 +258,7 @@ begin
       MySize:=1;
     pttSmallInt, pttWord:
       MySize:=2;
-    pttInteger, pttDWord, pttFloat:
+    pttLongInt, pttDWord, pttFloat:
       MySize:=4;
     pttInt64, pttQWord, pttDouble:
       MySize:=8;

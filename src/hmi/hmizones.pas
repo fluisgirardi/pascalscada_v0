@@ -57,12 +57,12 @@ type
      FIncludeV1, FIncludeV2:Boolean;
      FBlinkTime:Cardinal;
      FBlinkWith:TZone;
-     FBlinkWithIndex:Integer;
+     FBlinkWithIndex:LongInt;
      FDefaultZone:Boolean;
      FZoneType:TZoneTypes;
      FReferencedBy:Array of TZone;
-     function  GetBlinkWithZoneNumber:Integer;
-     procedure SetBlinkWithZoneNumber(v:Integer);
+     function  GetBlinkWithZoneNumber:LongInt;
+     procedure SetBlinkWithZoneNumber(v:LongInt);
      procedure SetV1(v:Double);
      procedure SetV2(v:Double);
      procedure SetIncV1(v:Boolean);
@@ -168,7 +168,7 @@ type
      @seealso(BlinkTime)
      }
      {$ENDIF}
-     property BlinkWith:Integer read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
+     property BlinkWith:LongInt read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
 
      {$IFDEF PORTUGUES}
      {:
@@ -640,13 +640,13 @@ type
      FILIsDefault:Boolean;
      FFileName:String;
      FImageList:TImageList;
-     FImageIndex:Integer;
+     FImageIndex:LongInt;
      FColor:TColor;
      FTransparent:Boolean;
      procedure SetILAsDefault(b:Boolean);
      procedure SetFileName(fn:String);
      procedure SetImageList(il:TImageList);
-     procedure SetImageIndex(index:Integer);
+     procedure SetImageIndex(index:LongInt);
      procedure SetColor(c:TColor);
      procedure SetTransparent(b:Boolean);
   public
@@ -720,7 +720,7 @@ type
      @seealso(ImageList)
      }
      {$ENDIF}
-     property ImageIndex:Integer read FImageIndex write SetImageIndex stored true nodefault;
+     property ImageIndex:LongInt read FImageIndex write SetImageIndex stored true nodefault;
 
      {$IFDEF PORTUGUES}
      {:
@@ -794,7 +794,7 @@ end;
 
 destructor TZone.Destroy;
 var
-   i:Integer;
+   i:LongInt;
 begin
    for i:=0 to High(FReferencedBy) do
       FReferencedBy[i].RemoveBlinkZone;
@@ -822,7 +822,7 @@ begin
    NotifyChange;
 end;
 
-function  TZone.GetBlinkWithZoneNumber:Integer;
+function  TZone.GetBlinkWithZoneNumber:LongInt;
 begin
    if FBlinkWith<>nil then
       Result := FBlinkWith.Index
@@ -830,7 +830,7 @@ begin
       Result := -1;
 end;
 
-procedure TZone.SetBlinkWithZoneNumber(v:Integer);
+procedure TZone.SetBlinkWithZoneNumber(v:LongInt);
 begin
    if [csReading]*TZones(Collection).ZonesState<>[] then begin
       FBlinkWithIndex:=v;
@@ -905,7 +905,7 @@ end;
 
 procedure TZone.SetAsDefaultZone(v:Boolean);
 var
-   c:Integer;
+   c:LongInt;
 begin
    if [csReading]*TZones(Collection).ZonesState<>[] then begin
       FDefaultZone:=v;
@@ -946,7 +946,7 @@ end;
 
 procedure TZone.AddReference(RefBy:TZone);
 var
-   h,i:Integer;
+   h,i:LongInt;
 begin
    for i:=0 to High(FReferencedBy) do
       if FReferencedBy[i]=RefBy then exit;
@@ -957,7 +957,7 @@ end;
 
 procedure TZone.RemReference(RefBy:TZone);
 var
-   h,i,p:Integer;
+   h,i,p:LongInt;
    found:boolean;
 begin
    found := false;
@@ -1055,7 +1055,7 @@ end;
 
 procedure TZones.Loaded;
 var
-   i:Integer;
+   i:LongInt;
 begin
    for i:=0 to Count-1 do
       TZone(Items[i]).Loaded;
@@ -1079,7 +1079,7 @@ end;
 //Selects a animation zone depending of their select criteria.
 function TZones.GetZoneFromValue(v:Double):TZone;
 var
-   c, value, bit:Integer;
+   c, value, bit:LongInt;
    found:Boolean;
 begin
    Result:=nil;
@@ -1267,7 +1267,7 @@ begin
    NotifyChange;
 end;
 
-procedure TGraphicZone.SetImageIndex(index:Integer);
+procedure TGraphicZone.SetImageIndex(index:LongInt);
 var
    notify:Boolean;
 begin

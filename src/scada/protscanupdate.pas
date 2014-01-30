@@ -181,9 +181,9 @@ end;
 
 procedure TScanUpdate.Execute;
 var
-  timeout:Integer;
+  timeout:LongInt;
   FInicio:TDateTime;
-  FTempo, FVezes, FValor:Integer;
+  FTempo, FVezes, FValor:LongInt;
   FMedia:Double;
 begin
   FTempo:=0;
@@ -252,7 +252,7 @@ end;
 
 procedure TScanUpdate.UpdateMultipleTags;
 var
-  c, pt:Integer;
+  c, pt:LongInt;
   found:Boolean;
 begin
   for c:=0 to High(PScannedValues) do begin

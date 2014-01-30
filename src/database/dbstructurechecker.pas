@@ -36,8 +36,8 @@ type
     FIndexName:string;
     FFields:TStringList;
     procedure AddFieldToIndex(FieldName:String); virtual;
-    function GetFieldCount:Integer;
-    function GetField(index:Integer):String;
+    function GetFieldCount:LongInt;
+    function GetField(index:LongInt):String;
   public
     constructor Create(OwnerTable:TTableMetadata; IndexName:String);
     destructor Destroy; override;
@@ -45,8 +45,8 @@ type
     function GetCurrentState:TDatabaseObjectState; override;
 
     property IndexName:String read FIndexName;
-    property FieldCount:Integer read GetFieldCount;
-    property IndexField[index:Integer]:String read GetField;
+    property FieldCount:LongInt read GetFieldCount;
+    property IndexField[index:LongInt]:String read GetField;
   end;
 
   TUniqueIndex = class(TIndex)
@@ -96,16 +96,16 @@ type
     FFieldType   :TFieldType;
     FNotNull     :Boolean;
     FDefaultValue:String;
-    FSize        :Integer; //string size
+    FSize        :LongInt; //string size
     FOwnerTable  :TTableMetadata;
   public
-    constructor Create(OnwerTable:TTableMetadata; FieldName:String; FieldType:TFieldType; Size:Integer = -1; Nullable:Boolean = true; DefaultValue:String = '');
+    constructor Create(OnwerTable:TTableMetadata; FieldName:String; FieldType:TFieldType; Size:LongInt = -1; Nullable:Boolean = true; DefaultValue:String = '');
     destructor Destroy;  override;
     property FieldName   :String     read FFieldName;
     property FieldType   :TFieldType read FFieldType;
     property NotNull     :Boolean    read FNotNull     write FNotNull;
     property DefaultValue:String     read FDefaultValue;
-    property Size        :Integer    read FSize;
+    property Size        :LongInt    read FSize;
   end;
 
   TCollumnDefinitionClass = Class of TCollumnDefinition;
@@ -122,7 +122,7 @@ type
   public
     constructor Create(OwnerDatabase:TDatabaseMetadata; TableName:String);
     destructor Destroy; override;
-    function addCollumn(FieldName:String; FieldType:TFieldType; Size:Integer = -1; NotNull:Boolean = false; DefaultValue:String = ''):TCollumnDefinition;
+    function addCollumn(FieldName:String; FieldType:TFieldType; Size:LongInt = -1; NotNull:Boolean = false; DefaultValue:String = ''):TCollumnDefinition;
     function addPrimaryKey(pkName:String):TPrimaryKeyIndex;
     function addUniqueIndex(uniquename:String):TUniqueIndex;
     function addForeignKey(IndexName, SourceTable:String;
@@ -152,12 +152,12 @@ type
      destructor Destroy; override;
      function   AddTable(TableName:String):TTableMetadata;
      procedure  DeleteTable(TableName:String);
-     function   FindTableDef(TableName:String; var index:Integer):TTableMetadata; overload;
+     function   FindTableDef(TableName:String; var index:LongInt):TTableMetadata; overload;
      function   GetCurrentState: TDatabaseObjectState; override;
      procedure  ResetState; override;
    end;
 
-   function SortTableList(Item1, Item2: Pointer): Integer;
+   function SortTableList(Item1, Item2: Pointer): LongInt;
 
 implementation
 
@@ -176,7 +176,7 @@ end;
 
 destructor TDatabaseMetadata.Destroy;
 var
-  i:Integer;
+  i:LongInt;
 begin
   inherited Destroy;
   //starts from the end
@@ -190,7 +190,7 @@ end;
 function TDatabaseMetadata.AddTable(TableName: String):TTableMetadata;
 var
   tabledef:TTableMetadata;
-  h:Integer;
+  h:LongInt;
 begin
   tabledef:=FindTableDef(TableName, h);
   Result:=nil;
@@ -207,7 +207,7 @@ end;
 procedure TDatabaseMetadata.DeleteTable(TableName: String);
 var
   tabledef:TTableMetadata;
-  i:Integer;
+  i:LongInt;
 begin
   tabledef:=FindTableDef(TableName, i);
 
@@ -217,9 +217,9 @@ begin
   FTables.Delete(i);
 end;
 
-function TDatabaseMetadata.FindTableDef(TableName: String; var index:Integer): TTableMetadata;
+function TDatabaseMetadata.FindTableDef(TableName: String; var index:LongInt): TTableMetadata;
 var
-  i:Integer;
+  i:LongInt;
 begin
   index:=-1;
   Result:=nil;
@@ -235,7 +235,7 @@ end;
 
 function TDatabaseMetadata.GetCurrentState: TDatabaseObjectState;
 var
-  i: Integer;
+  i: LongInt;
 begin
   Result:=dosOK;
   for i:=0 to FTables.Count-1 do
@@ -256,7 +256,7 @@ end;
 
 procedure TDatabaseMetadata.ResetState;
 var
-  i:Integer;
+  i:LongInt;
 begin
   inherited ResetState;
   for i:=0 to FTables.Count-1 do begin
@@ -267,7 +267,7 @@ end;
 { TCollumnDefinition }
 
 constructor TCollumnDefinition.Create(OnwerTable: TTableMetadata;
-  FieldName: String; FieldType: TFieldType; Size: Integer; Nullable: Boolean;
+  FieldName: String; FieldType: TFieldType; Size: LongInt; Nullable: Boolean;
   DefaultValue: String);
 begin
 
@@ -323,7 +323,7 @@ begin
 end;
 
 function TTableMetadata.addCollumn(FieldName: String; FieldType: TFieldType;
-  Size: Integer; NotNull: Boolean; DefaultValue: String): TCollumnDefinition;
+  Size: LongInt; NotNull: Boolean; DefaultValue: String): TCollumnDefinition;
 begin
 
 end;
@@ -395,7 +395,7 @@ procedure  TIndex.AddFieldToIndex(FieldName:String);
 var
   ffield:TCollumnDefinition;
   found:Boolean;
-  c:Integer;
+  c:LongInt;
 begin
   if (FTableOwner=nil) or (not FTableOwner.FieldExists(FieldName,ffield)) then
     raise Exception.Create('O Campo nao existe na tabela!');
@@ -413,12 +413,12 @@ begin
   FFields.Add(lowercase(FieldName));
 end;
 
-function TIndex.GetFieldCount:Integer;
+function TIndex.GetFieldCount:LongInt;
 begin
   Result:=FFields.Count;
 end;
 
-function TIndex.GetField(index:Integer):String;
+function TIndex.GetField(index:LongInt):String;
 begin
   if (index<0) or (index>=FFields.Count) then
     raise Exception.Create('Fora dos limites!');
@@ -472,7 +472,7 @@ begin
 
 end;
 
-function SortTableList(Item1, Item2: Pointer): Integer;
+function SortTableList(Item1, Item2: Pointer): LongInt;
 begin
   if TTableMetadata(item1).TableName=TTableMetadata(Item2).TableName then
     Result:=0

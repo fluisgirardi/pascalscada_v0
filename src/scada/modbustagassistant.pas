@@ -29,10 +29,10 @@ type
   TModBusTagAssistant = class(TCommonTagAssistant)
   private
     FDriver: TModBusDriver;
-    function SelectedReadFuntion(dlg:TfrmModbusTagBuilder):Integer;
-    function SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):Integer;
+    function SelectedReadFuntion(dlg:TfrmModbusTagBuilder):LongInt;
+    function SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):LongInt;
     function SeekFirstItem(LastItem:TTagNamesItemEditor):TTagNamesItemEditor;
-    function BuildItemName(nameprefix:String; ZeroFill:Boolean; index, NumZeros:Integer):String;
+    function BuildItemName(nameprefix:String; ZeroFill:Boolean; index, NumZeros:LongInt):String;
     public
       //: Opens the Tag Builder of the ModBus protocol driver
       procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
@@ -58,12 +58,12 @@ var
   tstr:TPLCString;
   tblk:TPLCBlock;
   tbel:TPLCBlockElement;
-  c, CurMemtAdress, nameitem, BlockNo, Element:Integer;
+  c, CurMemtAdress, nameitem, BlockNo, Element:LongInt;
   confItem:TTagNamesItemEditor;
   knowstringsize:boolean;
   tstrdummy:TPLCString;
-  defaultstringsize:integer;
-  count:Integer;
+  defaultstringsize:LongInt;
+  count:LongInt;
   ItemName:Strings;
   ItemPtr:array of TComponent;
 begin
@@ -253,7 +253,7 @@ end;
 
 
 
-function TModBusTagAssistant.SelectedReadFuntion(dlg:TfrmModbusTagBuilder):Integer;
+function TModBusTagAssistant.SelectedReadFuntion(dlg:TfrmModbusTagBuilder):LongInt;
 begin
   Result:=0;
   if dlg.Type1.Checked then
@@ -266,7 +266,7 @@ begin
     Result:=4;
 end;
 
-function TModBusTagAssistant.SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):Integer;
+function TModBusTagAssistant.SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):LongInt;
 begin
   Result := 0;
   case SelectedReadFuntion(dlg) of
@@ -293,10 +293,10 @@ begin
 end;
 
 function TModBusTagAssistant.BuildItemName(nameprefix: String;
-  ZeroFill: Boolean; index, NumZeros: Integer): String;
+  ZeroFill: Boolean; index, NumZeros: LongInt): String;
 var
   idxfmt, numfmt:String;
-  c:Integer;
+  c:LongInt;
 begin
   if ZeroFill then begin
     idxfmt:='0';

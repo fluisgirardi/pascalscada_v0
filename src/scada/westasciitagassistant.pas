@@ -48,7 +48,7 @@ procedure TWestASCIITagAssistant.OpenTagEditor(OwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
 var
   tplc:TPLCTagNumber;
-  ctrl, variable:Integer;
+  ctrl, variable:LongInt;
   frm:TWestTagBuilder;
   sctrl,
   formatmask:String;

@@ -43,7 +43,7 @@ type
   @value(ptWord,     Inteiro de 16 bits SEM sinal.)
   @value(ptSmallInt, Inteiro de 16 bits COM sinal.)
   @value(ptDWord,    Inteiro de 32 bits SEM sinal.)
-  @value(ptInteger   Inteiro de 32 bits COM sinal.)
+  @value(ptLongInt   Inteiro de 32 bits COM sinal.)
   @value(ptFloat     Flutuante de 32 bits.)
   @value(ptInt64     Inteiro de 64 bits COM sinal)
   @value(ptQWord     Inteiro de 64 bits SEM sinal)
@@ -53,15 +53,15 @@ type
   {:
   Enumerates all datatypes that can be returned by a protocol driver.
   @value(ptBit       1 bit.)
-  @value(ptByte      Unsigned integer, 8 bits sized.)
-  @value(ptShortInt  Signed integer, 8 bits sized.)
-  @value(ptWord,     Unsigned integer, 16 bits sized.)
-  @value(ptSmallInt, Signed integer, 16 bits sized.)
-  @value(ptDWord,    Unsigned integer, 32 bits sized.)
-  @value(ptInteger   Signed integer, 32 bits sized.)
+  @value(ptByte      Unsigned LongInt, 8 bits sized.)
+  @value(ptShortInt  Signed LongInt, 8 bits sized.)
+  @value(ptWord,     Unsigned LongInt, 16 bits sized.)
+  @value(ptSmallInt, Signed LongInt, 16 bits sized.)
+  @value(ptDWord,    Unsigned LongInt, 32 bits sized.)
+  @value(ptLongInt   Signed LongInt, 32 bits sized.)
   @value(ptFloat     Float, 32 bits sized.)
-  @value(ptInt64     Signed Integer, 64 bits sized)
-  @value(ptQWord     Unsigned Integer, 64 bits sized)
+  @value(ptInt64     Signed LongInt, 64 bits sized)
+  @value(ptQWord     Unsigned LongInt, 64 bits sized)
   @value(ptDouble    Float, 64 bits sized.)
   }
   {$ENDIF}
@@ -71,7 +71,7 @@ type
                    ptByte,
                    ptSmallInt,
                    ptWord,
-                   ptInteger,
+                   ptLongInt,
                    ptDWord,
                    ptFloat,
                    ptInt64,
@@ -122,7 +122,7 @@ type
     ReadsOK,ReadFaults:Cardinal;
     LastQueryResult:TProtocolIOResult;
     Offset,
-    RealOffset:Integer;
+    RealOffset:LongInt;
   end;
   PScanReadRec = ^TScanReadRec;
   
@@ -184,18 +184,18 @@ type
   {:
   Define o procedimento responsável por executar leituras por Scan.
   @param(Sender TObject: thread do driver que está realizando o scan.)
-  @param(Sleep Integer: informa ao driver se ele deve dormir por um tempo, a fim
+  @param(Sleep LongInt: informa ao driver se ele deve dormir por um tempo, a fim
                         de liberar processador.)
   }
   {$ELSE}
   {:
   Defines the procedure that will execute the scan read commands.
   @param(Sender TObject: Thread object that is calling the procedure.)
-  @param(Sleep Integer: Tells to The caller thread if it must sleep or switch to
+  @param(Sleep LongInt: Tells to The caller thread if it must sleep or switch to
                         another thread.)
   }
   {$ENDIF}
-  TScanReadProc = procedure(Sender:TObject; var NeedSleep:Integer) of object;
+  TScanReadProc = procedure(Sender:TObject; var NeedSleep:LongInt) of object;
 
   {$IFDEF PORTUGUES}
   {:
@@ -227,7 +227,7 @@ type
          of tags.)
   }
   {$ENDIF}
-  TGetMultipleValues = function(var MultiValues:TArrayOfScanUpdateRec):Integer of object;
+  TGetMultipleValues = function(var MultiValues:TArrayOfScanUpdateRec):LongInt of object;
 
   {$IFDEF PORTUGUES}
   //: Interface comum a todos os tags.

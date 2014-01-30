@@ -56,7 +56,7 @@ type
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(Value:Double); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
+    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
     //: @seealso(TTag.Size)
     property Size nodefault;
   public
@@ -283,7 +283,7 @@ begin
   end;
 end;
 
-procedure TPLCTagNumber.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
+procedure TPLCTagNumber.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);
 var
   notify:Boolean;
   TagValues:TArrayOfDouble;

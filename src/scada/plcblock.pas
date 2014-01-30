@@ -45,8 +45,8 @@ type
   TPLCBlock = class(TTagBlock, IScanableTagInterface)
   private
     procedure SetSize(isize:Cardinal);
-    function  GetValue(Index:Integer):Double;
-    procedure SetValue(index:Integer; Value:Double);
+    function  GetValue(Index:LongInt):Double;
+    procedure SetValue(index:LongInt; Value:Double);
 
     function  GetValues:TArrayOfDouble;
     procedure SetValues(values:TArrayOfDouble);
@@ -60,7 +60,7 @@ type
     //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer); override;
+    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -108,7 +108,7 @@ type
     {$ELSE}
     //: Read/Writes a raw value asynchronously on a block item.
     {$ENDIF}
-    property ValueRaw[index:Integer]:Double read GetValue write SetValue;
+    property ValueRaw[index:LongInt]:Double read GetValue write SetValue;
 
     {$IFDEF PORTUGUES}
     //: Lê/escreve valores puros de modo assincrono no bloco.
@@ -174,9 +174,9 @@ begin
   Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCBlock.TagCommandCallBack);
 end;
 
-procedure TPLCBlock.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:Integer);
+procedure TPLCBlock.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);
 var
-  c:Integer;
+  c:LongInt;
   notify:Boolean;
   TagValues:TArrayOfDouble;
   PreviousTimestamp:TDateTime;
@@ -262,14 +262,14 @@ begin
   end;
 end;
 
-function  TPLCBlock.GetValue(Index:Integer):Double;
+function  TPLCBlock.GetValue(Index:LongInt):Double;
 begin
    if ((index<0) or (Index>High(PValues))) then
      raise Exception.Create(SoutOfBounds);
    Result := PValues[Index];
 end;
 
-procedure TPLCBlock.SetValue(index:Integer; Value:Double);
+procedure TPLCBlock.SetValue(index:LongInt; Value:Double);
 var
   towrite:TArrayOfDouble;
 begin

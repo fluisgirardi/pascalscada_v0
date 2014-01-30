@@ -9,9 +9,9 @@ uses
 type
   TPWRTLogin                   = function(monitor:AnsiChar)                                 :Boolean;  stdcall;
   TPWRTLogout                  = function()                                                 :Boolean;  stdcall;
-  TPWRTGetCurrentUser          = function(Buffer:PAnsiChar; bufsize:Integer)                :Boolean;  stdcall;
+  TPWRTGetCurrentUser          = function(Buffer:PAnsiChar; bufsize:LongInt)                :Boolean;  stdcall;
   TPWRTGetLoginPriority        = function()                                                 :Cardinal; stdcall;
-  TPWRTPermissionToString      = function(perm:Cardinal; permstr:PAnsiChar; bufsize:Integer):Boolean;  stdcall;
+  TPWRTPermissionToString      = function(perm:Cardinal; permstr:PAnsiChar; bufsize:LongInt):Boolean;  stdcall;
   TPWRTCheckPermission         = function(permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
   TPWRTCheckPermissionOnArea   = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
   TPWRTCheckPermissionOnAreaID = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
@@ -19,7 +19,7 @@ type
 
   TPermission = class(TObject)
   public
-    AuthID:Integer;
+    AuthID:LongInt;
   end;
 
   TAuthorization = class(TObject)
@@ -74,7 +74,7 @@ type
     function    CanAccess(sc:String):Boolean; override;
     function    GetRegisteredAccessCodes:TStringList; override;
     procedure   ClearAuthorizationCache;
-    function    CanAccessViaWinCCAuthCode(Code:Integer):Boolean;
+    function    CanAccessViaWinCCAuthCode(Code:LongInt):Boolean;
   published
     property FailureLogin;
     property LoginRetries;
@@ -148,7 +148,7 @@ end;
 
 procedure TWinCCUserManagement.SetAuthorizationList(AValue: TStrings);
 var
-  l, p, AuthNumber: Integer;
+  l, p, AuthNumber: LongInt;
   newAuthorizationCache:TStringList;
   ValidFormat: Boolean;
   strNum: String;
@@ -224,7 +224,7 @@ end;
 function TWinCCUserManagement.GetCurrentUserLogin:String;
 var
   buffer1:PAnsiChar;
-  c:Integer;
+  c:LongInt;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
@@ -282,7 +282,7 @@ function    TWinCCUserManagement.CanAccess(sc:String):Boolean;
 var
   p, p2, i:Cardinal;
   auth:TStringList;
-  c:Integer;
+  c:LongInt;
 begin
   Result:=false;
 
@@ -297,7 +297,7 @@ begin
   i:=auth.IndexOf(sc);
 
   if (i>0) then
-    p2:=Integer(Pointer(auth.Objects[i]))
+    p2:=LongInt(Pointer(auth.Objects[i]))
   else
     p2:=0;
 
@@ -309,7 +309,7 @@ end;
 function    TWinCCUserManagement.SecurityCodeExists(sc:String):Boolean;
 var
   x:TStringList;
-  c:Integer;
+  c:LongInt;
 begin
   x:=GetRegisteredAccessCodes;
   Result:=x.IndexOf(sc)<>-1;
@@ -329,7 +329,7 @@ end;
 function    TWinCCUserManagement.GetRegisteredAccessCodes:TStringList;
 var
   buffer1:PAnsiChar;
-  c:Integer;
+  c:LongInt;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
@@ -367,7 +367,7 @@ begin
   fAuthorizationCache:=nil;
 end;
 
-function TWinCCUserManagement.CanAccessViaWinCCAuthCode(Code: Integer): Boolean;
+function TWinCCUserManagement.CanAccessViaWinCCAuthCode(Code: LongInt): Boolean;
 begin
   Result := PWRTCheckPermission(code,0);
 end;

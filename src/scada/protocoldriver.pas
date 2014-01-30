@@ -53,7 +53,7 @@ type
   método herdado com @code(inherited DoDelTag(TagObj:TTag)) para remover o tag
   da classe base (@name).
 
-  @code(procedure DoScanRead(Sender:TObject; var NeedSleep:Integer);)
+  @code(procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt);)
   Prodimento chamado para verificar se há algum tag necessitando ser lido.
 
   @code(procedure DoGetValue(TagObj:TTagRec; var values:TScanReadRec);)
@@ -100,18 +100,18 @@ type
 
     //excessao caso o index to tag esteja fora dos limites
     //raises an exception if the that index is out of bounds.
-    procedure DoExceptionIndexOut(index:integer);
+    procedure DoExceptionIndexOut(index:LongInt);
 
     //metodos para manipulação da lista de tags
     //procedures to handle the taglist.
-    function  GetTagCount:Integer;
-    function  GetTag(index:integer):TTag;
-    function  GetTagName(index:integer):String;
+    function  GetTagCount:LongInt;
+    function  GetTag(index:LongInt):TTag;
+    function  GetTagName(index:LongInt):String;
     function  GetTagByName(Nome:String):TTag;
 
     //metodo chamado pela thread de scan para ler valores do dispositivo.
     //procedure called to read data from your device.
-    procedure SafeScanRead(Sender:TObject; var NeedSleep:Integer);
+    procedure SafeScanRead(Sender:TObject; var NeedSleep:LongInt);
     //metodo chamado pela thred de scan de escrita para escrever valores no dispositivo.
     //procedure called by the scan write thread to write data on your device.
     function  SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
@@ -120,7 +120,7 @@ type
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
     //metodo chamado para atualizar o valores de varios tags (simples ou bloco)
     //procedure called to update values of multiples tag (single or block)
-    function  GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):Integer;
+    function  GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):LongInt;
 
     procedure DoPortOpened(Sender: TObject);
     procedure DoPortClosed(Sender: TObject);
@@ -411,7 +411,7 @@ type
     Método chamado pelas threads do driver de protocolo para verificar se há tags
     que precisam ser lidos do dispositivo.
     @param(Sender TObject. Thread que está solicitando a varredura de atualização.)
-    @param(NeedSleep Integer. Caso o procedimento não encontrou nada que precise
+    @param(NeedSleep LongInt. Caso o procedimento não encontrou nada que precise
                               ser lido, escreva um valor negativo na variável para
                               forçar o scheduler do seu sistema operacional a
                               executar outra thread ou um valor positivo para
@@ -426,7 +426,7 @@ type
     Procedure called by the protocol driver threads to check if has some tags
     that must be updated/readed from device.
     @param(Sender TObject. Thread that's calling the procedure.)
-    @param(NeedSleep Integer. If the procedure did not found anything to be
+    @param(NeedSleep LongInt. If the procedure did not found anything to be
     read/updated, write in this variable a negative value to force the scheduler
     of the OS to switch to another thread, or a positive value to make the caller
     thread sleep. The time of the sleep is the value of this variable. If this
@@ -434,7 +434,7 @@ type
     @seealso(TProtocolDriver.DoRead)
     }
     {$ENDIF}
-    procedure DoScanRead(Sender:TObject; var NeedSleep:Integer); virtual; abstract;
+    procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); virtual; abstract;
 
     {$IFDEF PORTUGUES}
     {:
@@ -646,21 +646,21 @@ type
     {$ELSE}
     //: Return how many tags are on scan cycle of the protocol driver.
     {$ENDIF}
-    property TagCount:Integer read GetTagCount;
+    property TagCount:LongInt read GetTagCount;
 
     {$IFDEF PORTUGUES}
     //: Lista cada tag dependente desse driver.
     {$ELSE}
     //: Return the tags using the index.
     {$ENDIF}
-    property Tag[index:integer]:TTag read GetTag;
+    property Tag[index:LongInt]:TTag read GetTag;
 
     {$IFDEF PORTUGUES}
     //: Lista o nome de cada tag dependente desse driver.
     {$ELSE}
     //: Return the tag names.
     {$ENDIF}
-    property TagName[index:integer]:String read GetTagName;
+    property TagName[index:LongInt]:String read GetTagName;
 
     {$IFDEF PORTUGUES}
     //: Lista cada tag dependente desse driver usando o nome do tag como indice.
@@ -777,7 +777,7 @@ end;
 
 destructor TProtocolDriver.Destroy;
 var
-  c:Integer;
+  c:LongInt;
 begin
   PScanReadThread.Terminate;
   PScanReadThread.WaitFor;
@@ -838,7 +838,7 @@ end;
 
 procedure TProtocolDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
-  c:integer;
+  c:LongInt;
 begin
   for c:=0 to High(PTags) do
     if PTags[c]=TagObj then
@@ -853,8 +853,8 @@ end;
 
 procedure TProtocolDriver.DoDelTag(TagObj:TTag);
 var
-  c:Integer;
-  h:integer;
+  c:LongInt;
+  h:LongInt;
   found:boolean;
 begin
   if Length(PTags)<=0 then exit;
@@ -914,7 +914,7 @@ begin
   end;
 end;
 
-procedure TProtocolDriver.DoExceptionIndexOut(index:integer);
+procedure TProtocolDriver.DoExceptionIndexOut(index:LongInt);
 begin
   if (index>high(PTags)) then
     raise Exception.Create(SoutOfBounds);
@@ -930,7 +930,7 @@ begin
   end;
 end;
 
-function TProtocolDriver.GetTag(index:integer):TTag;
+function TProtocolDriver.GetTag(index:LongInt):TTag;
 begin
   //FCritical.Enter;
   try
@@ -941,7 +941,7 @@ begin
   end;
 end;
 
-function TProtocolDriver.GetTagName(index:integer):String;
+function TProtocolDriver.GetTagName(index:LongInt):String;
 begin
   Result:='';
   //FCritical.Enter;
@@ -956,7 +956,7 @@ end;
 
 function TProtocolDriver.GetTagByName(Nome:String):TTag;
 var
-  c:Integer;
+  c:LongInt;
 begin
   Result := nil;
   //FCritical.Enter;
@@ -973,7 +973,7 @@ end;
 
 function TProtocolDriver.IsMyTag(TagObj:TTag):Boolean;
 var
-  c:integer;
+  c:LongInt;
 begin
   Result := false;
   //FCritical.Enter;
@@ -1151,7 +1151,7 @@ begin
   Dest.Res2 := Source.Res2;
 end;
 
-procedure TProtocolDriver.SafeScanRead(Sender:TObject; var NeedSleep:Integer);
+procedure TProtocolDriver.SafeScanRead(Sender:TObject; var NeedSleep:LongInt);
 begin
    try
       FPause.WaitFor($FFFFFFFF);
@@ -1201,9 +1201,9 @@ begin
   end;
 end;
 
-function  TProtocolDriver.GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):Integer;
+function  TProtocolDriver.GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):LongInt;
 var
-  t, valueSet:Integer;
+  t, valueSet:LongInt;
   first:Boolean;
   tagiface:IScanableTagInterface;
   tr:TTagRec;

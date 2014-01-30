@@ -15,7 +15,7 @@ type
 
   TOCollection = class(TList)
   public
-    procedure AtFree(Index: Integer);
+    procedure AtFree(Index: LongInt);
     procedure FreeAll;
     procedure DoFree(Item: Pointer);
     procedure FreeItem(Item: Pointer); virtual;
@@ -31,29 +31,29 @@ type
 
   TSortedCollection = class(TOCollection)
   public
-    function Compare(Key1, Key2: Pointer): Integer; virtual; abstract;
-    function IndexOf(Item: Pointer): Integer; virtual;
+    function Compare(Key1, Key2: Pointer): LongInt; virtual; abstract;
+    function IndexOf(Item: Pointer): LongInt; virtual;
     procedure Add(Item: Pointer); virtual;
     procedure AddReplace(Item: Pointer); virtual;
-    procedure AddList(Source: TList; FromIndex, ToIndex: Integer);
+    procedure AddList(Source: TList; FromIndex, ToIndex: LongInt);
     {if duplicate then replace the duplicate else add}
     function KeyOf(Item: Pointer): Pointer; virtual;
-    function Search(Key: Pointer; var Index: Integer): Boolean; virtual;
+    function Search(Key: Pointer; var Index: LongInt): Boolean; virtual;
   end;
 
   { TStrCollection object }
 
   TStrCollection = class(TSortedCollection)
   public
-    function Compare(Key1, Key2: Pointer): Integer; override;
+    function Compare(Key1, Key2: Pointer): LongInt; override;
     procedure FreeItem(Item: Pointer); override;
   end;
 
-function GetStrFromInt(Val: Integer; const Dst: PChar): Integer;
-procedure GetStrFromInt_Width(Val: Integer; const Width: Integer; const Dst: PChar; const PadChar: Char);
+function GetStrFromInt(Val: LongInt; const Dst: PChar): LongInt;
+procedure GetStrFromInt_Width(Val: LongInt; const Width: LongInt; const Dst: PChar; const PadChar: Char);
 {$ifdef SUPPORT_INT64}
-function  GetStrFromInt64(Val: Int64; const Dst: PChar): Integer;
-procedure GetStrFromInt64_Width(Val: Int64; const Width: Integer; const Dst: PChar; const PadChar: Char);
+function  GetStrFromInt64(Val: Int64; const Dst: PChar): LongInt;
+procedure GetStrFromInt64_Width(Val: Int64; const Width: LongInt; const Dst: PChar; const PadChar: Char);
 {$endif}
 
 implementation
@@ -66,7 +66,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TOCollection.AtFree(Index: Integer);
+procedure TOCollection.AtFree(Index: LongInt);
 var
   Item: Pointer;
 begin
@@ -78,7 +78,7 @@ end;
 
 procedure TOCollection.FreeAll;
 var
-  I: Integer;
+  I: LongInt;
 begin
   try
     for I := 0 to Count - 1 do
@@ -110,9 +110,9 @@ end;
 
 { TSortedCollection }
 
-function TSortedCollection.IndexOf(Item: Pointer): Integer;
+function TSortedCollection.IndexOf(Item: Pointer): LongInt;
 var
-  I: Integer;
+  I: LongInt;
 begin
   IndexOf := -1;
   if Search(KeyOf(Item), I) then
@@ -125,7 +125,7 @@ end;
 
 procedure TSortedCollection.AddReplace(Item: Pointer);
 var
-  Index: Integer;
+  Index: LongInt;
 begin
   if Search(KeyOf(Item), Index) then
     Delete(Index);
@@ -134,15 +134,15 @@ end;
 
 procedure TSortedCollection.Add(Item: Pointer);
 var
-  I: Integer;
+  I: LongInt;
 begin
   Search(KeyOf(Item), I);
   Insert(I, Item);
 end;
 
-procedure TSortedCollection.AddList(Source: TList; FromIndex, ToIndex: Integer);
+procedure TSortedCollection.AddList(Source: TList; FromIndex, ToIndex: LongInt);
 var
-  I: Integer;
+  I: LongInt;
 begin
   for I := FromIndex to ToIndex do
     Add(Source.Items[I]);
@@ -153,9 +153,9 @@ begin
   Result := Item;
 end;
 
-function TSortedCollection.Search(Key: Pointer; var Index: Integer): Boolean;
+function TSortedCollection.Search(Key: Pointer; var Index: LongInt): Boolean;
 var
-  L, H, I, C: Integer;
+  L, H, I, C: LongInt;
 begin
   Result := false;
   L := 0;
@@ -176,7 +176,7 @@ end;
 
 { TStrCollection }
 
-function TStrCollection.Compare(Key1, Key2: Pointer): Integer;
+function TStrCollection.Compare(Key1, Key2: Pointer): LongInt;
 begin
   Compare := StrComp(PWideChar(Key1), PWideChar(Key2));
 end;
@@ -186,13 +186,13 @@ begin
   StrDispose(PWideChar(Item));
 end;
 
-// it seems there is no pascal function to convert an integer into a PChar???
+// it seems there is no pascal function to convert an LongInt into a PChar???
 // NOTE: in dbf_dbffile.pas there is also a convert routine, but is slightly different
 
-function GetStrFromInt(Val: Integer; const Dst: PChar): Integer;
+function GetStrFromInt(Val: LongInt; const Dst: PChar): LongInt;
 var
   Temp: array[0..10] of Char;
-  I, J: Integer;
+  I, J: LongInt;
 begin
   Val := Abs(Val);
   // we'll have to store characters backwards first
@@ -215,12 +215,12 @@ begin
   // done!
 end;
 
-// it seems there is no pascal function to convert an integer into a PChar???
+// it seems there is no pascal function to convert an LongInt into a PChar???
 
-procedure GetStrFromInt_Width(Val: Integer; const Width: Integer; const Dst: PChar; const PadChar: Char);
+procedure GetStrFromInt_Width(Val: LongInt; const Width: LongInt; const Dst: PChar; const PadChar: Char);
 var
   Temp: array[0..10] of Char;
-  I, J: Integer;
+  I, J: LongInt;
   NegSign: boolean;
 begin
   {$I fpsgetstrfromint.inc}
@@ -228,19 +228,19 @@ end;
 
 {$ifdef SUPPORT_INT64}
 
-procedure GetStrFromInt64_Width(Val: Int64; const Width: Integer; const Dst: PChar; const PadChar: Char);
+procedure GetStrFromInt64_Width(Val: Int64; const Width: LongInt; const Dst: PChar; const PadChar: Char);
 var
   Temp: array[0..19] of Char;
-  I, J: Integer;
+  I, J: LongInt;
   NegSign: boolean;
 begin
   {$I fpsgetstrfromint.inc}
 end;
 
-function GetStrFromInt64(Val: Int64; const Dst: PChar): Integer;
+function GetStrFromInt64(Val: Int64; const Dst: PChar): LongInt;
 var
   Temp: array[0..19] of Char;
-  I, J: Integer;
+  I, J: LongInt;
 begin
   Val := Abs(Val);
   // we'll have to store characters backwards first

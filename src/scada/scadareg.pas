@@ -80,7 +80,7 @@ begin
   // End new component pallette
 
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(integer),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(LongInt),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
   //end securitycode property editor.
 
 

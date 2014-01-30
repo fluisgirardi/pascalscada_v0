@@ -137,7 +137,7 @@ end;
 procedure TClientThread.Execute;
 var
   ClientCmd, Response:Byte;
-  FaultCount:Integer;
+  FaultCount:LongInt;
   Quit:Boolean;
   LastPingSent: TDateTime;
 
@@ -371,8 +371,8 @@ var
   channel:sockaddr_in;
 {$IFEND}
 
-  reuse_addr:Integer;
-  ct: Integer;
+  reuse_addr:LongInt;
+  ct: LongInt;
 begin
   reuse_addr:=1;
 
@@ -487,7 +487,7 @@ end;
 
 procedure TMutexServer.AddClientThread(Sender: TObject);
 var
-  i:Integer;
+  i:LongInt;
   found:Boolean;
 begin
   if not (sender is TClientThread) then
@@ -511,9 +511,9 @@ end;
 
 procedure TMutexServer.RemoveClientThread(Sender: TObject);
 var
-  i:Integer;
+  i:LongInt;
   found:Boolean;
-  h: Integer;
+  h: LongInt;
 begin
   if not (sender is TClientThread) then
     raise Exception.Create(SInvalidClass);

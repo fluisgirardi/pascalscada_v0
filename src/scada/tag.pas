@@ -80,7 +80,7 @@ type
   @value(pttByte     Inteiro de 8 bits sem sinal.)
   @value(pttSmallInt Inteiro de 16 bits COM sinal.)
   @value(pttWord,    Inteiro de 16 bits SEM sinal.)
-  @value(pttInteger  Inteiro de 32 bits COM sinal.)
+  @value(pttLongInt  Inteiro de 32 bits COM sinal.)
   @value(pttDWord,   Inteiro de 32 bits SEM sinal.)
   @value(pttFloat    Flutuante de 32 bits.)
   @value(pttInt64    Inteiro de 64 bits COM sinal)
@@ -91,22 +91,22 @@ type
   {:
   Enumerates all tag data types.
   @value(pttDefault  Word length and data type variable.)
-  @value(pttShortInt Signed Integer, 8 bits sized.)
-  @value(pttByte     Unsigned Integer, 8 bits sized.)
-  @value(pttSmallInt Signed Integer, 16 bits sized.)
-  @value(pttWord,    Unsigned Integer, 16 bits sized.)
-  @value(pttInteger  Signed Integer, 32 bits sized.)
-  @value(pttDWord,   Unsigned Integer, 32 bits sized.)
+  @value(pttShortInt Signed LongInt, 8 bits sized.)
+  @value(pttByte     Unsigned LongInt, 8 bits sized.)
+  @value(pttSmallInt Signed LongInt, 16 bits sized.)
+  @value(pttWord,    Unsigned LongInt, 16 bits sized.)
+  @value(pttLongInt  Signed LongInt, 32 bits sized.)
+  @value(pttDWord,   Unsigned LongInt, 32 bits sized.)
   @value(pttFloat    Float, 32 bits sized.)
-  @value(pttInt64    Signed Integer, 64 bits sized)
-  @value(pttQWord    Unsigned Integer, 64 bits sized)
+  @value(pttInt64    Signed LongInt, 64 bits sized)
+  @value(pttQWord    Unsigned LongInt, 64 bits sized)
   @value(pttDouble   Float, 64 bits sized.)
   }
   {$ENDIF}
   TTagType = (pttDefault,                      //size variable
               pttShortInt, pttByte,            //8 bits
               pttSmallInt, pttWord,            //16 bits
-              pttInteger,  pttDWord, pttFloat, //32 bits
+              pttLongInt,  pttDWord, pttFloat, //32 bits
               pttInt64,    pttQWord, pttDouble //64 bits
              );
 
@@ -208,7 +208,7 @@ type
   @param(Offset Cardinal: Block Offset.)
   }
   {$ENDIF}
-  TTagCommandCallBack = procedure(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:Integer) of object;
+  TTagCommandCallBack = procedure(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:LongInt) of object;
 
   {$IFDEF PORTUGUES}
   {:
@@ -254,20 +254,20 @@ type
   }
   {$ENDIF}
   TTagRec = record
-    Rack:Integer;
-    Slot:Integer;
-    Station:Integer;
-    File_DB:Integer;
-    Address:Integer;
-    SubElement:Integer;
-    Size:Integer;
-    OffSet:Integer;
-    RealOffset:Integer;
+    Rack:LongInt;
+    Slot:LongInt;
+    Station:LongInt;
+    File_DB:LongInt;
+    Address:LongInt;
+    SubElement:LongInt;
+    Size:LongInt;
+    OffSet:LongInt;
+    RealOffset:LongInt;
     Path:String;
-    ReadFunction:Integer;
-    WriteFunction:Integer;
-    Retries:Integer;
-    UpdateTime:Integer;
+    ReadFunction:LongInt;
+    WriteFunction:LongInt;
+    Retries:LongInt;
+    UpdateTime:LongInt;
     CallBack:TTagCommandCallBack;
   end;
 
@@ -402,7 +402,7 @@ type
     {$ELSE}
     //: Gets a structure with informations about the tag.
     {$ENDIF}
-    procedure BuildTagRec(out tr:TTagRec; Count, OffSet:Integer);
+    procedure BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
   end;
 
   TASyncValueChangeNotify = procedure(Sender:TObject; const Value:TArrayOfDouble) of object;
@@ -410,7 +410,7 @@ type
 
   {$IFNDEF FPC}
   TLMessage = TMessage;
-  PtrInt = Integer;
+  PtrInt = LongInt;
   {$ENDIF}
 
   {$IFDEF PORTUGUES}
@@ -657,7 +657,7 @@ type
     {$ELSE}
     //: Number of dependent objects.
     {$ENDIF}
-    PNotificationInterfacesCount:integer;
+    PNotificationInterfacesCount:LongInt;
 
     {$IFDEF PORTUGUES}
     //: Armazena o identificador desse tag. GUID
@@ -1015,7 +1015,7 @@ end;
 
 destructor TTag.Destroy;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c := 0 to High(PNotificationInterfaces) do
     PNotificationInterfaces[c].RemoveTag(Self);
@@ -1037,7 +1037,7 @@ end;
 
 procedure TTag.RemoveCallBacks(ITag:IHMITagInterface);
 var
-  c,h:Integer;
+  c,h:LongInt;
   found:Boolean;
 begin
   found:=false;
@@ -1056,7 +1056,7 @@ end;
 
 procedure TTag.NotifyChange;
 var
-  c:Integer;
+  c:LongInt;
 {$IFNDEF CONSOLEPASCALSCADA}
   x:Pointer;
 {$ENDIF}
@@ -1165,7 +1165,7 @@ end;
 
 procedure TTag.NotifyReadOk;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=0 to High(PNotificationInterfaces) do
     try
@@ -1179,7 +1179,7 @@ end;
 
 procedure TTag.NotifyReadFault;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=0 to High(PNotificationInterfaces) do
     try
@@ -1202,7 +1202,7 @@ end;
 
 procedure TTag.NotifyWriteOk;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=0 to High(PNotificationInterfaces) do
     try
@@ -1216,7 +1216,7 @@ end;
 
 procedure TTag.NotifyWriteFault;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=0 to High(PNotificationInterfaces) do
     try

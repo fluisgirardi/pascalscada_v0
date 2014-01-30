@@ -58,20 +58,20 @@ type
   private
     FTagList,
     ItemsToDel:TList;
-    FItemId:Integer;
+    FItemId:LongInt;
     procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
     procedure btnUpClick(Sender:TObject);
     procedure btnDownClick(Sender:TObject);
     procedure btnDelClick(Sender:TObject);
     procedure btnBitsClick(Sender:TObject);
     procedure BitItemDeleted(Sender:TObject);
-    function  GetStructItemsCount:Integer;
-    function  GetStructItem(index:Integer):TS7TagItemEditor;
+    function  GetStructItemsCount:LongInt;
+    function  GetStructItem(index:LongInt):TS7TagItemEditor;
   public
     destructor Destroy; override;
     function HasAtLeastOneValidItem:Boolean;
-    property StructItemsCount:Integer read GetStructItemsCount;
-    property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
+    property StructItemsCount:LongInt read GetStructItemsCount;
+    property StructItem[index:LongInt]:TS7TagItemEditor read GetStructItem;
   end;
 
 var
@@ -158,7 +158,7 @@ end;
 
 procedure TfrmStructureEditor.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
 var
-  t,b:Integer;
+  t,b:LongInt;
 begin
   for t:=0 to FTagList.Count-1 do begin
     if FTagList.Items[t]=Sender then continue;
@@ -178,8 +178,8 @@ end;
 
 procedure TfrmStructureEditor.btnUpClick(Sender:TObject);
 var
-  idx:Integer;
-  priortop, actualTop:Integer;
+  idx:LongInt;
+  priortop, actualTop:LongInt;
   prior:TS7TagItemEditor;
 begin
   if not (Sender is TS7TagItemEditor) then exit;
@@ -201,8 +201,8 @@ end;
 
 procedure TfrmStructureEditor.btnDownClick(Sender:TObject);
 var
-  idx:Integer;
-  nexttop, actualTop:Integer;
+  idx:LongInt;
+  nexttop, actualTop:LongInt;
   next:TS7TagItemEditor;
 begin
   if not (Sender is TS7TagItemEditor) then exit;
@@ -241,7 +241,7 @@ var
   wordnum,
   startbit,
   endbit,
-  curbit:Integer;
+  curbit:LongInt;
 
   procedure updatenumbers;
   begin
@@ -310,19 +310,19 @@ begin
   //
 end;
 
-function  TfrmStructureEditor.GetStructItemsCount:Integer;
+function  TfrmStructureEditor.GetStructItemsCount:LongInt;
 begin
   Result:=FTagList.Count;
 end;
 
-function  TfrmStructureEditor.GetStructItem(index:Integer):TS7TagItemEditor;
+function  TfrmStructureEditor.GetStructItem(index:LongInt):TS7TagItemEditor;
 begin
   Result:=TS7TagItemEditor(FTagList.Items[index]);
 end;
 
 function TfrmStructureEditor.HasAtLeastOneValidItem:Boolean;
 var
-  c:Integer;
+  c:LongInt;
 begin
   Result:=false;
   for c:=0 to StructItemsCount-1 do
@@ -334,7 +334,7 @@ end;
 
 procedure TfrmStructureEditor.Timer1Timer(Sender: TObject);
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=ItemsToDel.Count-1 downto 0 do begin
     FTagList.Remove(ItemsToDel.Items[c]);

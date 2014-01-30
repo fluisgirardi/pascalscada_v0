@@ -100,10 +100,10 @@ type
     param:PByte;
     data:PByte;
     udata:PByte;
-    header_len:Integer;
-    param_len:Integer;
-    data_len:Integer;
-    user_data_len:Integer;
+    header_len:LongInt;
+    param_len:LongInt;
+    data_len:LongInt;
+    user_data_len:LongInt;
   end;
   PPDU = ^TPDU;
 
@@ -156,7 +156,7 @@ type
     DBIdx,
     ReqType,
     StartAddress,
-    Size:Integer;
+    Size:LongInt;
   end;
 
   {$IFDEF PORTUGUES}
@@ -220,10 +220,10 @@ type
   TS7CPU=record
     Station,
     Rack,
-    Slot:Integer;
+    Slot:LongInt;
     PDUId:Word;
     MaxPDULen:Word;
-    MaxBlockSize:Integer;
+    MaxBlockSize:LongInt;
     Connected:Boolean;
 
     Inputs:TPLCMemoryManager;

@@ -40,8 +40,8 @@ type
     procedure SetTag(t:TPLCTag);
 
     function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
-    function _AddRef: Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
-    function _Release: Integer; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+    function _AddRef: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+    function _Release: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 
     //IHMITagInterface
     procedure NotifyReadOk;
@@ -275,12 +275,12 @@ begin
     result:=E_NOINTERFACE;
 end;
 
-function TTagCollectionItem._AddRef: Integer;
+function TTagCollectionItem._AddRef: LongInt;
 begin
   result:=-1;
 end;
 
-function TTagCollectionItem._Release: Integer;
+function TTagCollectionItem._Release: LongInt;
 begin
   result:=-1;
 end;
@@ -308,7 +308,7 @@ end;
 
 procedure   TTagCollection.Loaded;
 var
-   i:Integer;
+   i:LongInt;
 begin
   for i:=0 to Count-1 do
     TTagCollectionItem(Items[i]).Loaded;

@@ -53,7 +53,7 @@ var
   wordnum,
   startbit,
   endbit,
-  curbit:Integer;
+  curbit:LongInt;
   tbit:TTagBit;
 
   procedure updatenumbers;

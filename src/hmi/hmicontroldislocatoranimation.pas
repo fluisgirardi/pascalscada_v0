@@ -39,9 +39,9 @@ type
   THMIControlDislocatorAnimation = class(TComponent, IHMITagInterface)
   private
     FStartLeft,
-    FEndLeft:Integer;
+    FEndLeft:LongInt;
     FStartTop,
-    FEndTop:Integer;
+    FEndTop:LongInt;
     FStartValue,
     FEndValue:Double;
     FTarget:TControl;
@@ -51,17 +51,17 @@ type
     FMinX, FMaxX,
     FMinY, FMaxY:Boolean;
     FMinXValue, FMaxXValue,
-    FMinYValue, FMaxyValue:Integer;
+    FMinYValue, FMaxyValue:LongInt;
 
     FGetPositionP0,
     FGetPositionP1,
     FGoToP0:String;
 
     procedure MoveObject;
-    procedure SetStartLeft(v:Integer);
-    procedure SetStartTop(v:Integer);
-    procedure SetEndLeft(v:Integer);
-    procedure SetEndTop(v:Integer);
+    procedure SetStartLeft(v:LongInt);
+    procedure SetStartTop(v:LongInt);
+    procedure SetEndLeft(v:LongInt);
+    procedure SetEndTop(v:LongInt);
     procedure SetValueStart(v:Double);
     procedure SetValueEnd(v:Double);
     procedure SetPLCTag(t:TPLCNumber);
@@ -74,10 +74,10 @@ type
     procedure SetEnableMinY(v:Boolean);
     procedure SetEnableMaxY(v:Boolean);
 
-    procedure SetMinX(v:Integer);
-    procedure SetMaxX(v:Integer);
-    procedure SetMinY(v:Integer);
-    procedure SetMaxY(v:Integer);
+    procedure SetMinX(v:LongInt);
+    procedure SetMaxX(v:LongInt);
+    procedure SetMinY(v:LongInt);
+    procedure SetMaxY(v:LongInt);
 
     //implements the ihmiTagInterface
     procedure NotifyReadOk;
@@ -100,28 +100,28 @@ type
     {$ELSE}
     //: Initial position on X axis (Left property of the control)
     {$ENDIF}
-    property P0_X:Integer read FStartLeft write SetStartLeft;
+    property P0_X:LongInt read FStartLeft write SetStartLeft;
 
     {$IFDEF PORTUGUES}
     //: Posição inicial no eixo Y (propriedade Top do controle)
     {$ELSE}
     //: Initial position on Y axis (Top property of the control)
     {$ENDIF}
-    property P0_Y:Integer read FStartTop write SetStartTop;
+    property P0_Y:LongInt read FStartTop write SetStartTop;
 
     {$IFDEF PORTUGUES}
     //: Posição final no eixo X (propriedade Left do controle)
     {$ELSE}
     //: Final position on X axis (Left property of the control)
     {$ENDIF}
-    property P1_X:Integer read FEndLeft write SetEndLeft;
+    property P1_X:LongInt read FEndLeft write SetEndLeft;
 
     {$IFDEF PORTUGUES}
     //: Posição final no eixo y (propriedade Top do controle)
     {$ELSE}
     //: Final position on Y axis (Top property of the control)
     {$ENDIF}
-    property P1_Y:Integer read FEndTop write SetEndTop;
+    property P1_Y:LongInt read FEndTop write SetEndTop;
 
     {$IFDEF PORTUGUES}
     //: Valor do tag que irá fazer o controle ir para as coordenadas Inicias (P0_X; P0_Y);
@@ -184,28 +184,28 @@ type
     {$ELSE}
     //: Minimum value of X axis if EnableXMin is @true.
     {$ENDIF}
-    property MinXValue:Integer read FMinXValue write SetMinX;
+    property MinXValue:LongInt read FMinXValue write SetMinX;
 
     {$IFDEF PORTUGUES}
     //: Caso valor máximo de X caso EnableXMax seja @true.
     {$ELSE}
     //: Minimum value of X axis if EnableXMax is @true.
     {$ENDIF}
-    property MaxXValue:Integer read FMaxXValue write SetMaxX;
+    property MaxXValue:LongInt read FMaxXValue write SetMaxX;
 
     {$IFDEF PORTUGUES}
     //: Caso valor mínimo de Y caso EnableyMin seja @true.
     {$ELSE}
     //: Minimum value of y axis if EnableYMin is @true.
     {$ENDIF}
-    property MinYValue:Integer read FMinYValue write SetMinY;
+    property MinYValue:LongInt read FMinYValue write SetMinY;
 
     {$IFDEF PORTUGUES}
     //: Caso valor máximo de Y caso EnableYMax seja @true.
     {$ELSE}
     //: Minimum value of Y axis if EnableYMax is @true.
     {$ENDIF}
-    property MaxYValue:Integer read FMaxyValue write SetMaxY;
+    property MaxYValue:LongInt read FMaxyValue write SetMaxY;
 
     {$IFDEF PORTUGUES}
     //: Pega a posição atual do controle como posição inicial (P0).
@@ -294,28 +294,28 @@ begin
   FTarget.Top :=trunc(outY);
 end;
 
-procedure THMIControlDislocatorAnimation.SetStartLeft(v:Integer);
+procedure THMIControlDislocatorAnimation.SetStartLeft(v:LongInt);
 begin
   FStartLeft:=v;
   FXLinearScale.SysMin:=v;
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.SetStartTop(v:Integer);
+procedure THMIControlDislocatorAnimation.SetStartTop(v:LongInt);
 begin
   FStartTop:=v;
   FYLinearScale.SysMin:=v;
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.SetEndLeft(v:Integer);
+procedure THMIControlDislocatorAnimation.SetEndLeft(v:LongInt);
 begin
   FEndLeft:=v;
   FXLinearScale.SysMax:=v;
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.SetEndTop(v:Integer);
+procedure THMIControlDislocatorAnimation.SetEndTop(v:LongInt);
 begin
   FEndTop:=v;
   FYLinearScale.SysMax:=v;
@@ -434,25 +434,25 @@ begin
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.SetMinX(v:Integer);
+procedure THMIControlDislocatorAnimation.SetMinX(v:LongInt);
 begin
   FMinXValue:=v;
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.SetMaxX(v:Integer);
+procedure THMIControlDislocatorAnimation.SetMaxX(v:LongInt);
 begin
   FMaxXValue:=v;
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.SetMinY(v:Integer);
+procedure THMIControlDislocatorAnimation.SetMinY(v:LongInt);
 begin
   FMinYValue:=v;
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.SetMaxY(v:Integer);
+procedure THMIControlDislocatorAnimation.SetMaxY(v:LongInt);
 begin
   FMaxYValue:=v;
   MoveObject;

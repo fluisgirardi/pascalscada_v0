@@ -48,7 +48,7 @@ type
   private
     FTagName:String;
     FStartBit,
-    FEndBit:Integer;
+    FEndBit:LongInt;
     FCheckNames:TCheckNames;
     fedtItemName:TEdit;
     lblStart,
@@ -58,8 +58,8 @@ type
     btnDel:TButton;
     fondelclick:TNotifyEvent;
     procedure SetTagName(newname:String);
-    procedure SetStartBit(bitindex:integer);
-    procedure SetEndBit(bitindex:integer);
+    procedure SetStartBit(bitindex:LongInt);
+    procedure SetEndBit(bitindex:LongInt);
   private
     procedure SpinEditChanges(Sender:TObject);
     procedure edtItemNameExit(Sender:TObject);
@@ -69,8 +69,8 @@ type
     destructor Destroy; override;
   published
     property TagName:String read FTagName write SetTagName;
-    property StartBit:Integer read FStartBit write SetStartBit;
-    property EndBit:Integer read FEndBit write SetEndBit;
+    property StartBit:LongInt read FStartBit write SetStartBit;
+    property EndBit:LongInt read FEndBit write SetEndBit;
     property OnCheckNames:TCheckNames read FCheckNames write FCheckNames;
     property OnDelClick:TNotifyEvent read fondelclick write fondelclick;
   end;
@@ -132,8 +132,8 @@ type
     procedure edtItemNameExit(Sender:TObject);
     procedure DelBitItem(Sender:TObject);
   private
-    function GetBitCount:Integer;
-    function GetBit(Index:Integer):TTagBitItemEditor;
+    function GetBitCount:LongInt;
+    function GetBit(Index:LongInt):TTagBitItemEditor;
     procedure OnDelTimer(Sender:TObject);
   public
     constructor Create(AOwner:TComponent); override;
@@ -145,12 +145,12 @@ type
     procedure EnableSwapBytes(ToEnable:Boolean);
     procedure EnableSwapWords(ToEnable:Boolean);
 
-    property  Bit[index:Integer]:TTagBitItemEditor read GetBit;
+    property  Bit[index:LongInt]:TTagBitItemEditor read GetBit;
   published
-    property  BitCount:Integer read GetBitCount;
+    property  BitCount:LongInt read GetBitCount;
     function  AddBit:TTagBitItemEditor;
-    procedure DelBit(index:Integer);
-    function  GetIndex(tbitEditor:TTagBitItemEditor):Integer;
+    procedure DelBit(index:LongInt);
+    function  GetIndex(tbitEditor:TTagBitItemEditor):LongInt;
     function  AcceptName(TheName:String):Boolean;
   published
     property TagName:String Read FTagName write SetTagName;
@@ -261,7 +261,7 @@ type
     procedure spinStartAddressChange(Sender: TObject);
   private
     OldPage:TTabSheet;
-    FItemId:Integer;
+    FItemId:LongInt;
     FStructureModified:Boolean;
     TagList,
     ItemsToDel:TList;
@@ -270,28 +270,28 @@ type
     procedure SkipChanged(Sender:TObject);
     procedure StructItemTypeChanged(Sender:TObject);
     procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
-    function GetStructItemsCount:Integer;
-    function GetStructItem(index:Integer):TS7TagItemEditor;
-    function GetStructureSizeInBytes:Integer;
-    function GetRealStartOffset:Integer;
-    function GetRealEndOffset:Integer;
-    function GetStartOffset:Integer;
-    function GetEndOffset:Integer;
+    function GetStructItemsCount:LongInt;
+    function GetStructItem(index:LongInt):TS7TagItemEditor;
+    function GetStructureSizeInBytes:LongInt;
+    function GetRealStartOffset:LongInt;
+    function GetRealEndOffset:LongInt;
+    function GetStartOffset:LongInt;
+    function GetEndOffset:LongInt;
     function AtLeastOneItemIsValid:Boolean;
     procedure BitItemDeleted(Sender:TObject);
     procedure UpdateFlagDBandVStrucItemName;
   public
     destructor Destroy; override;
-    function GetTagType:Integer;
+    function GetTagType:LongInt;
     function CurBlockType:TTagType;
-    function GetTheLastItemOffset:Integer;
-    property StructItemsCount:Integer read GetStructItemsCount;
-    property StructItem[index:integer]:TS7TagItemEditor read GetStructItem;
-    property StructureSizeInBytes:Integer read GetStructureSizeInBytes;
-    property RealStartOffset:Integer read GetRealStartOffset;
-    property RealEndOffset:Integer read GetRealEndOffset;
-    property StartOffset:Integer read GetStartOffset;
-    property EndOffset:Integer read GetEndOffset;
+    function GetTheLastItemOffset:LongInt;
+    property StructItemsCount:LongInt read GetStructItemsCount;
+    property StructItem[index:LongInt]:TS7TagItemEditor read GetStructItem;
+    property StructureSizeInBytes:LongInt read GetStructureSizeInBytes;
+    property RealStartOffset:LongInt read GetRealStartOffset;
+    property RealEndOffset:LongInt read GetRealEndOffset;
+    property StartOffset:LongInt read GetStartOffset;
+    property EndOffset:LongInt read GetEndOffset;
   end;
 
 var
@@ -417,7 +417,7 @@ begin
   end;
 end;
 
-procedure TTagBitItemEditor.SetStartBit(bitindex:integer);
+procedure TTagBitItemEditor.SetStartBit(bitindex:LongInt);
 begin
   FStartBit:=bitindex;
   spinStart.Value:=bitindex;
@@ -428,7 +428,7 @@ begin
   end;
 end;
 
-procedure TTagBitItemEditor.SetEndBit(bitindex:integer);
+procedure TTagBitItemEditor.SetEndBit(bitindex:LongInt);
 begin
   FEndBit:=bitindex;
   spinEnd.Value:=bitindex;
@@ -664,7 +664,7 @@ end;
 
 destructor TS7TagItemEditor.Destroy;
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=GetBitCount-1 downto 0 do
     DelBit(c);
@@ -682,7 +682,7 @@ begin
     Items.Add('pttByte');
     Items.Add('pttSmallInt');
     Items.Add('pttWord');
-    Items.Add('pttInteger');
+    Items.Add('pttLongInt');
     Items.Add('pttDWord');
     Items.Add('pttFloat');
     ItemIndex:=0;
@@ -711,12 +711,12 @@ begin
   optSwapWords.Checked:=ToEnable;
 end;
 
-function TS7TagItemEditor.GetBitCount:Integer;
+function TS7TagItemEditor.GetBitCount:LongInt;
 begin
   Result:=BitList.Count;
 end;
 
-function TS7TagItemEditor.GetBit(Index:Integer):TTagBitItemEditor;
+function TS7TagItemEditor.GetBit(Index:LongInt):TTagBitItemEditor;
 begin
   Result:=TTagBitItemEditor(BitList.Items[index])
 end;
@@ -737,7 +737,7 @@ end;
 
 procedure TS7TagItemEditor.OnDelTimer(Sender:TObject);
 var
-  c, i:Integer;
+  c, i:LongInt;
 begin
   for c:=DelList.Count-1 downto 0 do begin
     i:=GetIndex(TTagBitItemEditor(DelList.Items[c]));
@@ -750,7 +750,7 @@ begin
     FOnDelBitItem(Self);
 end;
 
-procedure TS7TagItemEditor.DelBit(index:Integer);
+procedure TS7TagItemEditor.DelBit(index:LongInt);
 var
   tb:TTagBitItemEditor;
 begin
@@ -760,7 +760,7 @@ begin
   tb.Destroy;
 end;
 
-function  TS7TagItemEditor.GetIndex(tbitEditor:TTagBitItemEditor):Integer;
+function  TS7TagItemEditor.GetIndex(tbitEditor:TTagBitItemEditor):LongInt;
 begin
   Result:=BitList.IndexOf(tbitEditor);
 end;
@@ -815,7 +815,7 @@ begin
       cmbItemType.ItemIndex:=3;
     pttWord:
       cmbItemType.ItemIndex:=4;
-    pttInteger:
+    pttLongInt:
       cmbItemType.ItemIndex:=5;
     pttDWord:
       cmbItemType.ItemIndex:=6;
@@ -853,7 +853,7 @@ end;
 procedure TS7TagItemEditor.edtItemNameExit(Sender:TObject);
 var
   accept1, accept2 :Boolean;
-  b:Integer;
+  b:LongInt;
   oldname:String;
 begin
   if not edtItemName.Modified then exit;
@@ -929,7 +929,7 @@ begin
       4:
         FTagType:=pttWord;
       5:
-        FTagType:=pttInteger;
+        FTagType:=pttLongInt;
       6:
         FTagType:=pttDWord;
       7:
@@ -962,7 +962,7 @@ end;
 //event called by bit itens to check theirs names.
 procedure TS7TagItemEditor.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
 var
-  b:Integer;
+  b:LongInt;
 begin
   if (Sender<>Self) and (NewName=TagName) then begin
     AcceptNewName:=false
@@ -1189,8 +1189,8 @@ end;
 
 procedure TfrmS7TagBuilder.btnUpClick(Sender: TObject);
 var
-  idx:Integer;
-  priortop, actualTop:Integer;
+  idx:LongInt;
+  priortop, actualTop:LongInt;
   prior:TS7TagItemEditor;
 begin
   if not (Sender is TS7TagItemEditor) then exit;
@@ -1214,8 +1214,8 @@ end;
 
 procedure TfrmS7TagBuilder.btnDownClick(Sender: TObject);
 var
-  idx:Integer;
-  nexttop, actualTop:Integer;
+  idx:LongInt;
+  nexttop, actualTop:LongInt;
   next:TS7TagItemEditor;
 begin
   if not (Sender is TS7TagItemEditor) then exit;
@@ -1257,7 +1257,7 @@ var
   wordnum,
   startbit,
   endbit,
-  curbit:Integer;
+  curbit:LongInt;
 
   procedure updatenumbers;
   begin
@@ -1353,7 +1353,7 @@ end;
 
 destructor TfrmS7TagBuilder.Destroy;
 var
-  t,b:Integer;
+  t,b:LongInt;
 begin
   for t:=TagList.Count-1 downto 0 do begin
     for b:=TS7TagItemEditor(TagList.Items[t]).BitCount-1 downto 0 do begin
@@ -1367,7 +1367,7 @@ begin
   inherited Destroy;
 end;
 
-function TfrmS7TagBuilder.GetTagType:Integer;
+function TfrmS7TagBuilder.GetTagType:LongInt;
 begin
 {
 0  Digital Inputs, S7 200/300/400/1200        Inputs, Entradas)        @cell( 1
@@ -1394,7 +1394,7 @@ end;
 
 procedure TfrmS7TagBuilder.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
 var
-  t,b:Integer;
+  t,b:LongInt;
 begin
   for t:=0 to TagList.Count-1 do begin
     if TagList.Items[t]=Sender then continue;
@@ -1413,19 +1413,19 @@ begin
   FStructureModified:=true;
 end;
 
-function TfrmS7TagBuilder.GetStructItemsCount:Integer;
+function TfrmS7TagBuilder.GetStructItemsCount:LongInt;
 begin
   Result:=TagList.Count;
 end;
 
-function TfrmS7TagBuilder.GetStructItem(index:Integer):TS7TagItemEditor;
+function TfrmS7TagBuilder.GetStructItem(index:LongInt):TS7TagItemEditor;
 begin
   Result:=TS7TagItemEditor(TagList.Items[index]);
 end;
 
-function TfrmS7TagBuilder.GetStructureSizeInBytes:Integer;
+function TfrmS7TagBuilder.GetStructureSizeInBytes:LongInt;
 var
-  typesize, curitem:Integer;
+  typesize, curitem:LongInt;
 begin
   if optplcblock.Checked then begin
     case BlockType.ItemIndex of
@@ -1447,7 +1447,7 @@ begin
         case TagType of
           pttSmallInt, pttWord:
             typesize:=2;
-          pttInteger, pttDWord, pttFloat:
+          pttLongInt, pttDWord, pttFloat:
             typesize:=4;
           else
             typesize:=1
@@ -1458,9 +1458,9 @@ begin
   end;
 end;
 
-function TfrmS7TagBuilder.GetRealStartOffset:Integer;
+function TfrmS7TagBuilder.GetRealStartOffset:LongInt;
 var
-  curitem:Integer;
+  curitem:LongInt;
   curTagType:TTagType;
 begin
   if AtLeastOneItemIsValid then begin
@@ -1485,7 +1485,7 @@ begin
               inc(Result, 1);
             pttSmallInt, pttWord:
               inc(Result, 2);
-            pttInteger, pttDWord, pttFloat:
+            pttLongInt, pttDWord, pttFloat:
               inc(Result, 4);
           end;
         end;
@@ -1494,9 +1494,9 @@ begin
     Result:=-1;
 end;
 
-function TfrmS7TagBuilder.GetRealEndOffset:Integer;
+function TfrmS7TagBuilder.GetRealEndOffset:LongInt;
 var
-  curitem:Integer;
+  curitem:LongInt;
   curTagType:TTagType;
 begin
   if AtLeastOneItemIsValid then begin
@@ -1517,7 +1517,7 @@ begin
               Dec(Result, 1);
             pttSmallInt, pttWord:
               Dec(Result, 2);
-            pttInteger, pttDWord, pttFloat:
+            pttLongInt, pttDWord, pttFloat:
               Dec(Result, 4);
           end;
         end;
@@ -1526,9 +1526,9 @@ begin
     Result:=-1;
 end;
 
-function TfrmS7TagBuilder.GetTheLastItemOffset:Integer;
+function TfrmS7TagBuilder.GetTheLastItemOffset:LongInt;
 var
-  curitem:Integer;
+  curitem:LongInt;
   curTagType:TTagType;
 begin
   if AtLeastOneItemIsValid then begin
@@ -1544,7 +1544,7 @@ begin
         case curTagType of
           pttSmallInt, pttWord:
             Dec(Result, 1);
-          pttInteger, pttDWord, pttFloat:
+          pttLongInt, pttDWord, pttFloat:
             Dec(Result, 3);
         end;
         if not SkipTag then
@@ -1554,7 +1554,7 @@ begin
     Result:=-1;
 end;
 
-function TfrmS7TagBuilder.GetStartOffset:Integer;
+function TfrmS7TagBuilder.GetStartOffset:LongInt;
 begin
   if MemoryArea.ItemIndex in [4,5,9,10] then
     Result:=(spinStartAddress.Value*2)
@@ -1562,7 +1562,7 @@ begin
     Result:=spinStartAddress.Value;
 end;
 
-function TfrmS7TagBuilder.GetEndOffset:Integer;
+function TfrmS7TagBuilder.GetEndOffset:LongInt;
 begin
   if MemoryArea.ItemIndex in [4,5,9,10] then
     Result:=(spinStartAddress.Value*2)+(spinNumItens.Value*StructureSizeInBytes)-1
@@ -1572,7 +1572,7 @@ end;
 
 function TfrmS7TagBuilder.AtLeastOneItemIsValid:Boolean;
 var
-  curitem:Integer;
+  curitem:LongInt;
 begin
   Result:=false;
   for curitem:=0 to TagList.Count-1 do
@@ -1595,7 +1595,7 @@ begin
     4:
       Result:=pttWord;
     5:
-      Result:=pttInteger;
+      Result:=pttLongInt;
     6:
       Result:=pttDWord;
     7:
@@ -1636,7 +1636,7 @@ begin
       nome2:='B';
     pttSmallInt, pttWord:
       nome2:='W';
-    pttInteger, pttDWord, pttFloat:
+    pttLongInt, pttDWord, pttFloat:
       nome2:='D';
   end;
 
@@ -1652,7 +1652,7 @@ end;
 
 procedure TfrmS7TagBuilder.Timer1Timer(Sender: TObject);
 var
-  c:Integer;
+  c:LongInt;
 begin
   for c:=ItemsToDel.Count-1 downto 0 do begin
     TagList.Remove(ItemsToDel.Items[c]);
@@ -1696,7 +1696,7 @@ end;
 
 procedure TfrmS7TagBuilder.UpdateStructItems;
 var
-  c:Integer;
+  c:LongInt;
   toenablescan, toenabletype, toenableSwap:Boolean;
 begin
   toenablescan := optplctagnumber.Checked;
@@ -1723,7 +1723,7 @@ end;
 
 procedure TfrmS7TagBuilder.btnNextClick(Sender: TObject);
 var
-  curitem:Integer;
+  curitem:LongInt;
   nome,nome2:String;
 begin
   if (FStructureModified=false) and
@@ -1835,7 +1835,7 @@ end;
 procedure TfrmS7TagBuilder.UpdateStatusAndBlockName;
 var
   strblockname, starttype, endtype:String;
-  curitem:Integer;
+  curitem:LongInt;
 begin
   if BlockName.Modified then exit;
   case MemoryArea.ItemIndex of
@@ -1899,7 +1899,7 @@ begin
                 starttype:='B';
               pttSmallInt, pttWord:
                 starttype:='W';
-              pttInteger, pttDWord, pttFloat:
+              pttLongInt, pttDWord, pttFloat:
                 starttype:='D';
             end;
           end;
@@ -1911,7 +1911,7 @@ begin
                 endtype:='B';
               pttSmallInt, pttWord:
                 endtype:='W';
-              pttInteger, pttDWord, pttFloat:
+              pttLongInt, pttDWord, pttFloat:
                 endtype:='D';
             end;
           end;

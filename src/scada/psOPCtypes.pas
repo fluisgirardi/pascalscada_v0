@@ -16,7 +16,7 @@ uses
   Windows, ActiveX;
 
 type
-  TOleEnum          = type Integer;
+  TOleEnum          = type LongInt;
 
   OPCHANDLE         = DWORD;
   POPCHANDLE        = ^OPCHANDLE;

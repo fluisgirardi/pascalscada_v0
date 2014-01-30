@@ -148,7 +148,7 @@ type
     Written:Cardinal;
     WriteRetries:Cardinal;
     BufferToWrite:BYTES;
-    DelayBetweenCommand:Integer;
+    DelayBetweenCommand:LongInt;
     ReadIOResult:TIOResult;
     ToRead:Cardinal;
     Received:Cardinal;
@@ -380,7 +380,7 @@ implementation
 //concatenate two buffers of bytes.
 function ConcatenateBYTES(const a,b:BYTES):BYTES;
 var
-  c:Integer;
+  c:LongInt;
 begin
   SetLength(Result,Length(a)+Length(b));
   for c:=0 to High(a) do

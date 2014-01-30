@@ -93,7 +93,7 @@ type
   private
     FActive,
     FActiveLoaded:Boolean;
-    FConnected:Integer;
+    FConnected:LongInt;
     FPort: Word;
     FServerHost:String;
     FSocket: TSocket;
@@ -365,7 +365,7 @@ var
   channel:sockaddr_in;
 {$IFEND}
 
-  flag:Integer;
+  flag:LongInt;
   socketOpen:boolean;
 begin
 
@@ -457,11 +457,11 @@ begin
     flag:=1;
     //UNIX AND WINDOWS CE
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-    fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,           sizeof(Integer));
+    fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,           sizeof(LongInt));
     {$IFEND}
     //WINDOWS
     {$IF defined(WIN32) or defined(WIN64)}
-    setsockopt  (FSocket, IPPROTO_TCP, TCP_NODELAY, PAnsiChar(@flag), sizeof(Integer));
+    setsockopt  (FSocket, IPPROTO_TCP, TCP_NODELAY, PAnsiChar(@flag), sizeof(LongInt));
     {$IFEND}
 
     //##########################################################################
@@ -570,13 +570,28 @@ procedure TMutexClient.ConnectionFinished(Sender: TObject);
 begin
   CloseSocket(FSocket);
   InterLockedExchange(FConnected,0);
-  {$IFDEF FPC}
-  InterLockedExchange(FSocket,0);
+
+  //32 bits CPU's
+  {$IF defined(cpu32) OR defined(CPU386) OR defined(CPUX86)}
+  if SizeOf(Cardinal)=SizeOf(FSocket) then
+     InterLockedExchange(Cardinal(FSocket),0)
+   else
+     raise Exception.Create(Format('SizeOf(Cardinal)=%d and SizeOf(TSocket)=%d mismatch.'+LineEnding+
+                                   'Contact PascalSCADA developer!',SizeOf(Cardinal), SizeOf(FSocket)));
+  {$IFEND}
+
+  {$IF defined(cpu64) OR defined(CPUX64)}
+    {$IFDEF FPC}
+      {$IF defined(WIN64)} //win32 is treated on 32 bit cpus...
+      InterLockedExchange64(FSocket,0);
+      {$ELSE}
+      InterLockedExchange(FSocket,0); //unix and others systems that TSocket is 32bit identifier...
+      {$ENDIF}
+    {$ELSE}
+    InterlockedCompareExchange64(FSocket,0,FSocket);
+    {$ENDIF}
+  {$IFEND}
   InterlockedCompareExchange(Pointer(FConnectionStatusThread),nil,Pointer(Self));
-  {$ELSE}
-  InterlockedExchangePointer(Pointer(FSocket),nil);
-  InterlockedCompareExchangePointer(Pointer(FConnectionStatusThread),nil,Pointer(Self));
-  {$ENDIF}
 end;
 
 procedure TMutexClient.Loaded;

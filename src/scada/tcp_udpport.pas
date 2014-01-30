@@ -62,8 +62,8 @@ type
   TTCP_UDPPort = class(TCommPortDriver)
   private
     FHostName:String;
-    FPortNumber:Integer;
-    FTimeout:Integer;
+    FPortNumber:LongInt;
+    FTimeout:LongInt;
     FSocket:Tsocket;
     FPortType:TPortType;
     FExclusiveReaded:Boolean;
@@ -72,8 +72,8 @@ type
     FReconnectRetriesLimit:Cardinal;
     procedure TryReconnectTimer(Sender: TObject);
     procedure SetHostname(target:string);
-    procedure SetPortNumber(pn:Integer);
-    procedure SetTimeout(t:Integer);
+    procedure SetPortNumber(pn:LongInt);
+    procedure SetTimeout(t:LongInt);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
 
@@ -124,14 +124,14 @@ type
     {$ELSE}
     //: Server port to connect. To use Modbus, set this to 502 and to use Siemens ISOTCP set it to 102.
     {$ENDIF}
-    property Port:Integer read FPortNumber write SetPortNumber default 102;
+    property Port:LongInt read FPortNumber write SetPortNumber default 102;
 
     {$IFDEF PORTUGUES}
     //: Timeout em milisegundos para operações de leitura/escrita.
     {$ELSE}
     //: Timeout in milliseconds to I/O operations.
     {$ENDIF}
-    property Timeout:Integer read FTimeout write SetTimeout default 1000;
+    property Timeout:LongInt read FTimeout write SetTimeout default 1000;
 
     {$IFDEF PORTUGUES}
     {:
@@ -229,7 +229,7 @@ begin
   FHostName:=target;
 end;
 
-procedure TTCP_UDPPort.SetPortNumber(pn:Integer);
+procedure TTCP_UDPPort.SetPortNumber(pn:LongInt);
 begin
   DoExceptionInActive;
   if (pn>=1) or (pn<=65535) then
@@ -238,7 +238,7 @@ begin
     raise Exception.Create(SportNumberRangeError);
 end;
 
-procedure TTCP_UDPPort.SetTimeout(t:Integer);
+procedure TTCP_UDPPort.SetTimeout(t:LongInt);
 begin
   DoExceptionInActive;
   FTimeout:=t;
@@ -305,7 +305,7 @@ end;
 
 procedure TTCP_UDPPort.Read(Packet:PIOPacket);
 var
-  lidos:Integer;
+  lidos:LongInt;
   tentativas:Cardinal;
   incretries:Boolean;
 begin
@@ -342,7 +342,7 @@ end;
 
 procedure TTCP_UDPPort.Write(Packet:PIOPacket);
 var
-  escritos:Integer;
+  escritos:LongInt;
   tentativas:Cardinal;
   incretries:Boolean;
 begin
@@ -399,7 +399,7 @@ var
   channel:sockaddr_in;
 {$IFEND}
 
-  flag, bufsize, sockType, sockProto:Integer;
+  flag, bufsize, sockType, sockProto:LongInt;
 begin
   Ok:=false;
   try
@@ -501,15 +501,15 @@ begin
     bufsize := 1024*16;
     //UNIX AND WINDOWS CE
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(Integer));
-    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    @bufsize,  sizeof(Integer));
-    fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,     sizeof(Integer));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(LongInt));
+    fpsetsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    @bufsize,  sizeof(LongInt));
+    fpsetsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  @flag,     sizeof(LongInt));
     {$IFEND}
     //WINDOWS
     {$IF defined(WIN32) or defined(WIN64)}
-    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    PAnsiChar(@bufsize), sizeof(Integer));
-    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    PAnsiChar(@bufsize), sizeof(Integer));
-    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  PAnsiChar(@flag),    sizeof(Integer));
+    setsockopt(FSocket, SOL_SOCKET,  SO_RCVBUF,    PAnsiChar(@bufsize), sizeof(LongInt));
+    setsockopt(FSocket, SOL_SOCKET,  SO_SNDBUF,    PAnsiChar(@bufsize), sizeof(LongInt));
+    setsockopt(FSocket, IPPROTO_TCP, TCP_NODELAY,  PAnsiChar(@flag),    sizeof(LongInt));
     {$IFEND}
 
     //##########################################################################
@@ -548,7 +548,7 @@ end;
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 var
   buffer:BYTES;
-  lidos:Integer;
+  lidos:LongInt;
 begin
   if FSocket>0 then begin
     SetLength(buffer,5);

@@ -75,7 +75,7 @@ type
     PStartBit:TBitRange;
     PEndBit:TBitRange;
     POldValue:Double;
-    PNormalMask, PInvMask:Integer;
+    PNormalMask, PInvMask:LongInt;
     procedure SetNumber(number:TPLCNumber);
     procedure SetUseRaw(use:Boolean);
     procedure SetStartBit(b:TBitRange);
@@ -83,8 +83,8 @@ type
 
     function  GetBits(value:double):Double;
     function  SetBits(OriginalValue, Value:Double):Double;
-    function  GetBitMask:Integer;
-    function  GetInvBitMask:Integer;
+    function  GetBitMask:LongInt;
+    function  GetInvBitMask:LongInt;
 
     function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
@@ -288,9 +288,9 @@ begin
              ((Trunc(value) shl PStartBit) and PNormalMask));
 end;
 
-function  TTagBit.GetBitMask:Integer;
+function  TTagBit.GetBitMask:LongInt;
 var
-   c:Integer;
+   c:LongInt;
 begin
    Result := 0;
    for c:=PStartBit to PEndBit do begin
@@ -298,9 +298,9 @@ begin
    end;
 end;
 
-function  TTagBit.GetInvBitMask:Integer;
+function  TTagBit.GetInvBitMask:LongInt;
 var
-   c:Integer;
+   c:LongInt;
 begin
    Result := -1;
    for c:=PStartBit to PEndBit do begin
