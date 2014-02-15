@@ -8,6 +8,9 @@
   ***********************************************************************
   07/2013 - New Unit
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  02/2014
+  Changed to the old behavior (Right click on ISOTCP protocol ->
+  Tag Builder to open the tag editor, whithout link with gui.
   ***********************************************************************
 }
 unit siemenstagassistant;
@@ -19,34 +22,24 @@ unit siemenstagassistant;
 interface
 
 uses
-  Classes, SysUtils, commontagassistant, isotcpdriver, ProtocolTypes;
+  Classes, SysUtils, isotcpdriver, ProtocolTypes;
 
-type
-
-  { TSiemensTagBuilderAssistant }
-
-  TSiemensTagAssistant = class(TCommonTagAssistant)
-  private
-    FDriver: TISOTCPDriver;
-    public
-      //: Opens the Tag Builder of the Siemens protocol driver
-      procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
-        CreateProc:TCreateTagProc); override;
-
-    published
-      property Driver:TISOTCPDriver read FDriver write FDriver;
-end;
+  procedure OpenTagEditor(aProtocolDriver,
+                          aOwnerOfNewTags:TComponent;
+                          InsertHook:TAddTagInEditorHook;
+                          CreateProc:TCreateTagProc);
 
 implementation
 
 uses
-  PLCTagNumber,PLCStructElement, us7tagbuilder, PLCBlockElement, PLCNumber, TagBit,
-  plcblock, tag, Controls, PLCStruct, hsstrings, Dialogs, StrUtils;
+  PLCTagNumber,PLCStructElement, us7tagbuilder, PLCBlockElement, PLCNumber,
+  TagBit, plcblock, tag, Controls, PLCStruct, hsstrings, Dialogs, StrUtils,
+  ProtocolDriver, s7family;
 
-
-
-procedure TSiemensTagAssistant.OpenTagEditor(OwnerOfNewTags: TComponent;
-   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+procedure OpenTagEditor(aProtocolDriver,
+                        aOwnerOfNewTags: TComponent;
+                        InsertHook: TAddTagInEditorHook;
+                        CreateProc: TCreateTagProc);
 var
   frmS7tb:TfrmS7TagBuilder;
 
@@ -240,11 +233,8 @@ begin
   }
   {$ENDIF}
 
-  if not Assigned(FDriver) then
-    begin
-      ShowMessage(SDriverRequired);
-      Exit;
-    end;
+  if not (aProtocolDriver is TProtocolDriver) then
+    raise Exception.Create('Protocol driver must be a instance of TProtocolDriver.');
 
   frmS7tb:=TfrmS7TagBuilder.Create(nil);
   try
@@ -283,7 +273,7 @@ begin
             end else
               block.RefreshTime:=StructScan.Value;
 
-            block.ProtocolDriver:=FDriver;
+            block.ProtocolDriver:=TProtocolDriver(aProtocolDriver);
             InsertHook(block);
           end;
 
@@ -318,7 +308,7 @@ begin
                     SwapBytes:=StructItem[curstructitem].SwapBytes;
                     SwapWords:=StructItem[curstructitem].SwapWords;
 
-                    ProtocolDriver:=FDriver;
+                    ProtocolDriver:=TProtocolDriver(ProtocolDriver);
                   end;
 
                 end else begin
@@ -368,6 +358,9 @@ begin
     frmS7tb.Destroy;
   end;
 end;
+
+initialization
+  SetTagBuilderToolForSiemensS7ProtocolFamily(@OpenTagEditor)
 
 end.
 

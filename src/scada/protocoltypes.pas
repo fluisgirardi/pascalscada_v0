@@ -95,6 +95,20 @@ type
   TCreateTagProc = function(tagclass:TComponentClass):TComponent of object;
 
   {$IFDEF PORTUGUES}
+  {: Assinatura do metodo que chama a ferramenta Tag Builder de um protocolo em
+     tempo de desenvolvimento.
+  }
+  {$ELSE}
+  {: Method signature that calls the Tag Builder tool of a protocol driver
+     at design-time.
+  }
+  {$ENDIF}
+  TOpenTagEditor = procedure(ProtocolDriver,
+                             OwnerOfNewTags:TComponent;
+                             InsertHook:TAddTagInEditorHook;
+                             CreateProc:TCreateTagProc);
+
+  {$IFDEF PORTUGUES}
   {:
   Estrutura usada internamente pelo driver de protocolo (TProtocoloDriver) para
   processar leitura por scan.

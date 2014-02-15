@@ -33,7 +33,7 @@ uses
 type
 
   {$IFDEF PORTUGUES}
-    {:
+  {:
   @abstract(Classe base para drivers de protocolo.)
 
   @author(Fabio Luis Girardi fabio@pascalscada.com)
@@ -668,6 +668,14 @@ type
     //: Returns the tag by the name index.
     {$ENDIF}
     property TagByName[Nome:String]:TTag read GetTagByName;
+
+    {$IFDEF PORTUGUES}
+    //: Chama o editor de tags do driver.
+    {$ELSE}
+    //: Opens the Tag Builder of the protocol driver (if exists)
+    {$ENDIF}
+    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
+      CreateProc:TCreateTagProc); virtual;
   published
     {$IFDEF PORTUGUES}
     {:
@@ -920,7 +928,7 @@ begin
     raise Exception.Create(SoutOfBounds);
 end;
 
-function TProtocolDriver.GetTagCount;
+function TProtocolDriver.GetTagCount: LongInt;
 begin
   //FCritical.Enter;
   try
@@ -1121,6 +1129,12 @@ end;
 function TProtocolDriver.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):String;
 begin
   Result:='';
+end;
+
+procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
+  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+begin
+  raise Exception.Create('This protocol driver do not have a Tag Builder tool defined.');
 end;
 
 procedure TProtocolDriver.CommPortCallBack(var Result:TIOPacket);
@@ -1392,4 +1406,4 @@ initialization
 
 DriverCount:=1;
 
-end.
+end.

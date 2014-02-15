@@ -33,7 +33,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement,
   PLCStruct, Tag, commontagassistant, bitmappertagassistant,
-  blockstructtagassistant,
+  blockstructtagassistant, ProtocolDriver,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -127,7 +127,7 @@ type
     function  GetVerb(Index: LongInt): string; override;
     function  GetVerbCount: LongInt; override;
     procedure Edit; override;
-    function  TagAssistant: TCommonTagAssistant; virtual;
+    function  ProtocolDriver: TProtocolDriver; virtual;
   end;
 
   {$IFDEF PORTUGUES}
@@ -309,12 +309,12 @@ end;
 
 function  TTagBuilderComponentEditor.GetTheOwner: TComponent;
 begin
-  Result:=TagAssistant.Owner;
+  Result:=ProtocolDriver.Owner;
 end;
 
 procedure TTagBuilderComponentEditor.OpenTagBuilder;
 begin
-  TagAssistant.OpenTagEditor(TagAssistant, AddTagInEditor, CreateComponent);
+  ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
 end;
 
 procedure TTagBuilderComponentEditor.ExecuteVerb(Index: LongInt);
@@ -340,9 +340,9 @@ begin
   OpenTagBuilder();
 end;
 
-function TTagBuilderComponentEditor.TagAssistant: TCommonTagAssistant;
+function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
 begin
-  Result:=TCommonTagAssistant(GetComponent);
+  Result:=TProtocolDriver(GetComponent);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////

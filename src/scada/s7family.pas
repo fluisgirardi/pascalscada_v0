@@ -737,13 +737,18 @@ type
     //: @seealso(TProtocolDriver.SizeOfTag)
     function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
 
-
     //: @seealso(TProtocolDriver.LiteralTagAddress)
     function LiteralTagAddress(aTag: TTag; aBlockTag: TTag=nil):String; override;
+
+    //: @seealso(TProtocolDriver.OpenTagEditor)
+    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
+       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
   published
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
   end;
+
+  procedure SetTagBuilderToolForSiemensS7ProtocolFamily(TagBuilderTool:TOpenTagEditor);
 
 implementation
 
@@ -771,8 +776,6 @@ begin
   ProtocolTagType:=ptByte;
   Result:=8;
 end;
-
-
 
 function TSiemensProtocolFamily.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):String;
 
@@ -2709,6 +2712,26 @@ begin
   inptr:=Ptr;
   inc(inptr, idx);
   Move(values[0],inptr^,Length(values));
+end;
+
+var
+  TagBuilderEditor:TOpenTagEditor = nil;
+
+procedure TSiemensProtocolFamily.OpenTagEditor(OwnerOfNewTags: TComponent;
+  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+begin
+  if Assigned(TagBuilderEditor) then
+    TagBuilderEditor(Self, OwnerOfNewTags,InsertHook,CreateProc)
+  else
+    inherited OpenTagEditor(OwnerOfNewTags,InsertHook,CreateProc);
+end;
+
+procedure SetTagBuilderToolForSiemensS7ProtocolFamily(TagBuilderTool:TOpenTagEditor);
+begin
+  if assigned(TagBuilderEditor) then
+    raise Exception.Create('A Tag Builder editor for Siemens S7 protocol family was already assigned.')
+  else
+    TagBuilderEditor:=TagBuilderTool;
 end;
 
 end.
