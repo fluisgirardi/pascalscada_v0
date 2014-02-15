@@ -513,8 +513,6 @@ type
     property CommWriteErrors default 0;
     //: @seealso(TTag.CommWritesOK)
     property CommWritesOk nodefault;
-    //: @seealso(TTag.PLCHack)
-    property PLCHack write SetPLCHack stored false;
     //: @seealso(TTag.PLCRack)
     property PLCRack write SetPLCHack nodefault;
     //: @seealso(TTag.PLCSlot)

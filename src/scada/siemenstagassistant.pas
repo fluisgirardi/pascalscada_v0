@@ -266,7 +266,7 @@ begin
             else
               block:=TPLCStruct(CreateProc(TPLCStruct));
 
-            block.PLCHack:=PLCRack.Value;
+            block.PLCRack:=PLCRack.Value;
             block.PLCSlot:=PLCSlot.Value;
             block.PLCStation:=PLCStation.Value;
             block.MemReadFunction := GetTagType;
@@ -305,7 +305,7 @@ begin
 
                   with TPLCTagNumber(item) do begin
 
-                    PLCHack:=frmS7tb.PLCRack.Value;
+                    PLCRack:=frmS7tb.PLCRack.Value;
                     PLCSlot:=frmS7tb.PLCSlot.Value;
                     PLCStation:=frmS7tb.PLCStation.Value;
                     MemReadFunction := GetTagType;

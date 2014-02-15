@@ -29,7 +29,7 @@ unit ISOTCPDriver;
 interface
 
 uses
-  classes, sysutils, S7Types, commtypes, s7family;
+  classes, sysutils, S7Types, commtypes, s7family, Tag;
 
 type
 
@@ -40,6 +40,12 @@ type
   Para endereçar uma memória, veja a documentação da classe
   TSiemensProtocolFamily.
 
+  @bold(Devido ao ISOTCP permitir conectar a somente um CLP atraves de uma
+        conexao TCP/IP, as propriedades TTag.PLCStation, TTag.PLCSlot e
+        TTag.PLCRack dos tags nao tem efeito. Portanto estas informacoes devem
+        ser configuradas atraves das propriedades PLCStation, PLCSlot e PLCRack
+        de cada instancia deste protocolo.)
+
   @seealso(TSiemensProtocolFamily).
   }
   {$ELSE}
@@ -49,11 +55,24 @@ type
   To address your tags, see the documentation of the class
   TSiemensProtocolFamily.
 
+  @bold(Due to ISOTCP allow connect to a single PLC through a TCP/IP connection,
+        the properties TTag.PLCStation, TTag.PLCSlot and TTag.PLCRack has no
+        effect. Therefore these informations must be set through properties
+        PLCStation, PLCSlot and PLCRack of each instance of this protocol.)
+
   @seealso(TSiemensProtocolFamily).
   }
   {$ENDIF}
   TISOTCPDriver = class(TSiemensProtocolFamily)
+  private
+    procedure SetPLCRack(AValue: longint);
+    procedure SetPLCSlot(AValue: LongInt);
+    procedure SetPLCStation(AValue: LongInt);
+    procedure UpdatePLCs;
   protected
+    FPLCRack,
+    FPLCSlot,
+    FPLCStation:LongInt;
     FConnectionWay:TISOTCPConnectionWay;
 
     {$IFDEF PORTUGUES}
@@ -62,6 +81,9 @@ type
     //: Defines the way to connect into the PLC.
     {$ENDIF}
     procedure SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
+
+    //: seealso(TSiemensProtocolFamily.GetTagInfo)
+    function GetTagInfo(tagobj: TTag): TTagRec; override;
 
     //: seealso(TProtocolDriver.NotifyThisEvents)
     function NotifyThisEvents: TNotifyThisEvents; override;
@@ -78,8 +100,22 @@ type
     function  getResponse(var msgIn:BYTES; var BytesRead:LongInt):TIOResult; override;
     //: seealso(TSiemensProtocolFamily.PrepareToSend)
     procedure PrepareToSend(var msg: BYTES); override;
+    //: @exclude
+    procedure Loaded; override;
   public
     constructor Create(AOwner:TComponent); override;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Atualiza de uma so vez, Rack, Slot e Station da lista de CPUs, evitando
+    overhead.
+    }
+    {$ELSE}
+    {:
+    Updates in a single call, Rack, Slot and Station, avoiding overhead.
+    }
+    {$ENDIF}
+    procedure UpdatePLCAddress(Rack, Slot, Station:LongInt);
   published
     //: @seealso(TSiemensProtocolFamily.ReadSomethingAlways)
     property ReadSomethingAlways;
@@ -96,6 +132,90 @@ type
     }
     {$ENDIF}
     property ConnectionWay:TISOTCPConnectionWay read FConnectionWay write SetISOConnectionWay;
+
+    {$IFDEF PORTUGUES}
+    {:
+      Sobrescreve o valor da propriedade PLCRack do tag pelo valor configurado
+      aqui.
+
+      @bold(Devido ao ISOTCP permitir conectar a somente um CLP atraves de uma
+            conexao TCP/IP, a propriedade TTag.PLCRack do tag nao tem efeito.
+            Portanto esta informacao deve ser configurada atraves da
+            propriedade PLCRack de cada instancia deste protocolo.)
+
+      @seealso(TTag.PLCRack)
+      @seealso(TISOTCPDriver)
+    }
+    {$ELSE}
+    {:
+      Override the value TTag.PLCRack property by the value set here.
+
+      @bold(Due to ISOTCP allow connect to a single PLC through a TCP/IP
+            connection, the property TTag.PLCRack has no effect. Therefore
+            these information must be set through property PLCRack of each
+            instance of this protocol.)
+
+      @seealso(TTag.PLCRack)
+      @seealso(TISOTCPDriver)
+    }
+    {$ENDIF}
+    property PLCRack:longint    read FPLCRack    write SetPLCRack default 0;
+
+    {$IFDEF PORTUGUES}
+    {:
+      Sobrescreve o valor da propriedade PLCSlot do tag pelo valor
+      configurado aqui.
+
+      @bold(Devido ao ISOTCP permitir conectar a somente um CLP atraves de uma
+            conexao TCP/IP, a propriedade TTag.PLCSlot do tag nao tem efeito.
+            Portanto esta informacao deve ser configurada atraves da
+            propriedade PLCSlot de cada instancia deste protocolo.)
+
+      @seealso(TTag.PLCSlot)
+      @seealso(TISOTCPDriver)
+    }
+    {$ELSE}
+    {:
+      Override the value TTag.PLCSlot property by the value set here.
+
+      @bold(Due to ISOTCP allow connect to a single PLC through a TCP/IP
+            connection, the property TTag.PLCSlot has no effect. Therefore
+            these information must be set through property PLCSlot of each
+            instance of this protocol.)
+
+      @seealso(TTag.PLCSlot)
+      @seealso(TISOTCPDriver)
+    }
+    {$ENDIF}
+    property PLCSlot:LongInt    read FPLCSlot    write SetPLCSlot default 0;
+
+    {$IFDEF PORTUGUES}
+    {:
+      Sobrescreve o valor da propriedade PLCStation do tag pelo valor
+      configurado aqui.
+
+      @bold(Devido ao ISOTCP permitir conectar a somente um CLP atraves de uma
+            conexao TCP/IP, a propriedade TTag.PLCStation do tag nao tem efeito.
+            Portanto esta informacao deve ser configurada atraves da
+            propriedade PLCStation de cada instancia deste protocolo.)
+
+      @seealso(TTag.PLCStation)
+      @seealso(TISOTCPDriver)
+    }
+    {$ELSE}
+    {:
+      Override the value TTag.PLCStation property by the value set here.
+
+      @bold(Due to ISOTCP allow connect to a single PLC through a TCP/IP
+            connection, the property TTag.PLCStation has no effect. Therefore
+            these information must be set through property PLCStation of each
+            instance of this protocol.)
+
+      @seealso(TTag.PLCStation)
+      @seealso(TISOTCPDriver)
+    }
+    {$ENDIF}
+    property PLCStation:LongInt read FPLCStation write SetPLCStation default 2;
   end;
 
 const
@@ -103,13 +223,25 @@ const
 
 implementation
 
-uses math;
+uses math, hsstrings, pascalScadaMTPCPU;
 
 constructor TISOTCPDriver.Create(AOwner:TComponent);
 begin
   Inherited Create(AOwner);
+  FPLCRack   :=0;
+  FPLCSlot   :=0;
+  FPLCStation:=2;
+
   PDUIncoming:=7;
   PDUOutgoing:=7;
+end;
+
+procedure TISOTCPDriver.UpdatePLCAddress(Rack, Slot, Station: LongInt);
+begin
+  FPLCRack   :=Rack;
+  FPLCSlot   :=Slot;
+  FPLCStation:=Station;
+  UpdatePLCs;
 end;
 
 function TISOTCPDriver.ConnectPLC(var CPU:TS7CPU):Boolean;
@@ -322,9 +454,113 @@ begin
   msg[03] := len mod $100;
 end;
 
+procedure TISOTCPDriver.Loaded;
+begin
+  inherited Loaded;
+  UpdatePLCs;
+end;
+
+procedure TISOTCPDriver.SetPLCRack(AValue: longint);
+begin
+  if FPLCRack=AValue then Exit;
+  FPLCRack:=AValue;
+  if [csLoading]*ComponentState=[] then
+    UpdatePLCs;
+end;
+
+procedure TISOTCPDriver.SetPLCSlot(AValue: LongInt);
+begin
+  if FPLCSlot=AValue then Exit;
+  FPLCSlot:=AValue;
+  if [csLoading]*ComponentState=[] then
+    UpdatePLCs;
+end;
+
+procedure TISOTCPDriver.SetPLCStation(AValue: LongInt);
+begin
+  if FPLCStation=AValue then Exit;
+  FPLCStation:=AValue;
+  if [csLoading]*ComponentState=[] then
+    UpdatePLCs;
+end;
+
+procedure TISOTCPDriver.UpdatePLCs;
+var
+  StillConnected: Boolean;
+  t: Integer;
+  CurTag: TTag;
+  TagList: TList;
+
+begin
+  try
+    //tenta entrar no Mutex
+    //try enter on mutex
+    while not FPause.ResetEvent do
+      CrossThreadSwitch;
+
+    FWriteCS.Enter;
+    FReadCS.Enter;
+
+    case Length(FPLCs) of
+      0: begin
+        //does nothing...;
+      end;
+      1:
+        with FPLCs[0] do begin
+          StillConnected:=(Rack=FPLCRack) AND (Slot=FPLCSlot) AND (Station=FPLCStation);
+          Rack     :=FPLCRack;
+          Slot     :=FPLCSlot;
+          Station  :=FPLCStation;
+          Connected:=StillConnected;
+          if not StillConnected then
+            PDUId:=0;
+        end;
+      else begin
+        TagList:=TList.Create;
+        try
+          for t:=TagCount-1 downto 0 do begin
+            CurTag:=Tag[t];
+            TagList.Add(CurTag);
+            DoDelTag(CurTag);
+          end;
+
+          if Length(FPLCs)>0 then
+            raise Exception.Create('Something went wrong. At this point the '+
+                                   'size of FPLCs must be zero. Please inform '+
+                                   'this error to the PascalSCADA developer.');
+
+          for t:=0 to TagList.Count-1 do begin
+            DoAddTag(TTag(TagList.Items[t]), false);
+          end;
+        finally
+          TagList.Destroy;
+        end;
+      end;
+    end;
+
+  finally
+    FReadCS.Leave;
+    FWriteCS.Leave;
+    FPause.SetEvent;
+  end;
+end;
+
 procedure TISOTCPDriver.SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
 begin
   FConnectionWay:=NewISOConWay;
+end;
+
+function TISOTCPDriver.GetTagInfo(tagobj: TTag): TTagRec;
+begin
+  Result:=inherited GetTagInfo(tagobj);
+  //iso on TCP allows one PLC connection per TCP/IP connection
+  //so, it allow only one Rack, Slot, and Station linked with
+  //this connection. To avoid settings mistakes on user aplication
+  //these method override the Tag settings (Rack, Slot,
+  //and Station) with the settings of current instance of ISO on TCP protocol.
+  Result.Slot   :=FPLCSlot;
+  Result.Station:=FPLCStation;
+  Result.Rack   :=FPLCRack;
 end;
 
 function TISOTCPDriver.NotifyThisEvents: TNotifyThisEvents;
@@ -341,8 +577,8 @@ procedure TISOTCPDriver.PortDisconnected(Sender: TObject);
 var
   plc:LongInt;
 begin
-  for plc := 0 to High(FCPUs) do
-    FCPUs[plc].Connected:=false;
+  for plc := 0 to High(FPLCs) do
+    FPLCs[plc].Connected:=false;
 end;
 
-end.
+end.

@@ -786,30 +786,41 @@ type
     property CommWritesOk:Cardinal read PCommWriteOk;
 
     {$IFDEF PORTUGUES}
-    //: Rack do equipamento que contem a memória que está sendo mapeada, se aplicável.
+    {: Rack do equipamento que contem a memória que está sendo mapeada, se aplicável.
+       @seealso(TISOTCPDriver)
+       @seealso(TISOTCPDriver.PLCRack)
+    }
     {$ELSE}
-    //: Device Rack that contains the memory being mapped, if applicable.
-    {$ENDIF}
-    property PLCHack:Cardinal read PRack stored false;
-
-    {$IFDEF PORTUGUES}
-    //: Rack do equipamento que contem a memória que está sendo mapeada, se aplicável.
-    {$ELSE}
-    //: Device Rack that contains the memory being mapped, if applicable.
+    {: Device Rack that contains the memory being mapped, if applicable.
+       @seealso(TISOTCPDriver)
+       @seealso(TISOTCPDriver.PLCRack)
+    }
     {$ENDIF}
     property PLCRack:Cardinal read PRack;
 
     {$IFDEF PORTUGUES}
-    //: Slot do equipamento que contem a memória que está sendo mapeada, se aplicável.
+    {: Slot do equipamento que contem a memória que está sendo mapeada, se aplicável.
+       @seealso(TISOTCPDriver)
+       @seealso(TISOTCPDriver.PLCSlot)
+    }
     {$ELSE}
-    //: Device Slot that contains the memory being mapped, if applicable.
+    {: Device Slot that contains the memory being mapped, if applicable.
+       @seealso(TISOTCPDriver)
+       @seealso(TISOTCPDriver.PLCSlot)
+    }
     {$ENDIF}
     property PLCSlot:Cardinal read PSlot;
 
     {$IFDEF PORTUGUES}
-    //: Endereço da estação que contem a memória que está sendo mapeada, se aplicável.
+    {: Endereço da estação que contem a memória que está sendo mapeada, se aplicável.
+       @seealso(TISOTCPDriver)
+       @seealso(TISOTCPDriver.PLCStation)
+    }
     {$ELSE}
-    //: Device address that contains the memory being mapped, if applicable.
+    {: Device address that contains the memory being mapped, if applicable.
+       @seealso(TISOTCPDriver)
+       @seealso(TISOTCPDriver.PLCStation)
+    }
     {$ENDIF}
     property PLCStation:Cardinal read PStation;
 
@@ -1256,4 +1267,4 @@ begin
     NotifyWriteFault;
 end;
 
-end.
+end.

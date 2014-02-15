@@ -66,8 +66,6 @@ type
     property CommWriteErrors;
     //: @seealso(TTag.CommWritesOk)
     property CommWritesOk;
-    //: @seealso(TTag.PLCHack)
-    property PLCHack;
     //: @seealso(TTag.PLCRack)
     property PLCRack;
     //: @seealso(TTag.PLCSlot)
