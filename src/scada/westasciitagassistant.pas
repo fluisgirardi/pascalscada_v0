@@ -19,19 +19,19 @@ unit westasciitagassistant;
 interface
 
 uses
-  Classes, SysUtils, westasciidriver, commontagassistant, ProtocolTypes;
+  Classes, SysUtils, westasciidriver, ProtocolTypes;
 
 type
 
   { TWestASCIITagAssistant }
 
-  TWestASCIITagAssistant = class(TCommonTagAssistant)
+  TWestASCIITagAssistant = class
   private
     FDriver: TWestASCIIDriver;
     public
       //: Opens the Tag Builder of the WestASCII protocol driver
       procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
-        CreateProc:TCreateTagProc); override;
+        CreateProc:TCreateTagProc);
 
     published
       property Driver:TWestASCIIDriver read FDriver write FDriver;

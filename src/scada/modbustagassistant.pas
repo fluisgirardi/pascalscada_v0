@@ -19,14 +19,14 @@ unit modbustagassistant;
 interface
 
 uses
-  Classes, SysUtils, modbusdriver, commontagassistant, ProtocolTypes, uModbusTagBuilder;
+  Classes, SysUtils, modbusdriver, ProtocolTypes, uModbusTagBuilder;
 
 
 type
 
   { TModBusTagAssistant }
 
-  TModBusTagAssistant = class(TCommonTagAssistant)
+  TModBusTagAssistant = class
   private
     FDriver: TModBusDriver;
     function SelectedReadFuntion(dlg:TfrmModbusTagBuilder):LongInt;
@@ -36,17 +36,41 @@ type
     public
       //: Opens the Tag Builder of the ModBus protocol driver
       procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
-        CreateProc:TCreateTagProc); override;
+        CreateProc:TCreateTagProc);
 
     published
       property Driver:TModBusDriver read FDriver write FDriver;
-end;
+  end;
+
+  procedure OpenTagEditor(aProtocolDriver,
+                          aOwnerOfNewTags: TComponent;
+                          InsertHook: TAddTagInEditorHook;
+                          CreateProc: TCreateTagProc);
 
 implementation
 
 uses
   PLCBlockElement, ValueProcessor, PLCTagNumber, PLCString,
-  PLCBlock, Controls, Dialogs, hsstrings;
+  PLCBlock, Controls, Dialogs, hsstrings, ProtocolDriver;
+
+procedure OpenTagEditor(aProtocolDriver,
+                        aOwnerOfNewTags: TComponent;
+                        InsertHook: TAddTagInEditorHook;
+                        CreateProc: TCreateTagProc);
+var
+  wizard: TModBusTagAssistant;
+begin
+  if not (aProtocolDriver is TModBusDriver) then
+    raise exception.Create('A Modbus RTU/TCP driver required as protocol.');
+
+  wizard:=TModBusTagAssistant.Create;
+  try
+    wizard.Driver:=TModBusDriver(aProtocolDriver);
+    wizard.OpenTagEditor(aOwnerOfNewTags,InsertHook,CreateProc);
+  finally
+    FreeAndNil(wizard);
+  end;
+end;
 
 { TModBusTagAssistant }
 
@@ -74,21 +98,18 @@ begin
       Exit;
     end;
 
-
-  if [csDesigning]*ComponentState=[] then exit;
-
   count:=1;
   SetLength(ItemName,1);
   SetLength(ItemPtr, 1);
   ItemName[0]:='(none)';
   ItemPtr[0] :=nil;
-  for c:=0 to Owner.ComponentCount-1 do begin
-    if Owner.Components[c] is TPIPE then begin
+  for c:=0 to OwnerOfNewTags.ComponentCount-1 do begin
+    if OwnerOfNewTags.Components[c] is TScaleProcessor then begin
       inc(count);
       SetLength(ItemName,count);
       SetLength(ItemPtr, count);
-      ItemName[count-1]:= Owner.Components[c].Name;
-      ItemPtr[count-1] := Owner.Components[c];
+      ItemName[count-1]:= OwnerOfNewTags.Components[c].Name;
+      ItemPtr[count-1] := OwnerOfNewTags.Components[c];
     end;
   end;
 

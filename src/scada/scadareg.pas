@@ -28,11 +28,10 @@ implementation
 uses
   Classes, SerialPort, ModBusSerial, LinearScaleProcessor, PLCTagNumber,
   PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
-  scadapropeditor, hsstrings, TagBit, ProtocolDriver,
-  WestASCIIDriver, IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct,
-  PLCStructElement, ISOTCPDriver, mutexserver, MutexClient,
-  commontagassistant, siemenstagassistant, modbustagassistant, westasciitagassistant,
-  bitmappertagassistant, blockstructtagassistant,
+  scadapropeditor, hsstrings, TagBit, ProtocolDriver, WestASCIIDriver,
+  IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
+  mutexserver, MutexClient, siemenstagassistant, modbustagassistant,
+  westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   {$IFDEF FPC}
     LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}

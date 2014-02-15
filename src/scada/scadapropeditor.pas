@@ -31,9 +31,8 @@ unit scadapropeditor;
 interface
 
 uses
-  Classes, SysUtils, SerialPort, PLCBlockElement,
-  PLCStruct, Tag, commontagassistant, bitmappertagassistant,
-  blockstructtagassistant, ProtocolDriver,
+  Classes, SysUtils, SerialPort, PLCBlockElement, PLCStruct, Tag,
+  bitmappertagassistant, blockstructtagassistant, ProtocolDriver,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
