@@ -78,6 +78,9 @@ type
   {$ELSE}
 
   {$ENDIF}
+
+  { TProtocolDriver }
+
   TProtocolDriver = class(TComponent, IPortDriverEventNotification)
   private
     //Array de tags associados ao driver.
@@ -676,6 +679,13 @@ type
     {$ENDIF}
     procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
       CreateProc:TCreateTagProc); virtual;
+
+    {$IFDEF PORTUGUES}
+    //: Diz ao editor de componente se ha um editor de tag definido.
+    {$ELSE}
+    //: Tell to the protocol editor if the current protocol has a tab builder tool defined.
+    {$ENDIF}
+    function HasTabBuilderEditor:Boolean; virtual;
   published
     {$IFDEF PORTUGUES}
     {:
@@ -1135,6 +1145,11 @@ procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
 begin
   raise Exception.Create('This protocol driver do not have a Tag Builder tool defined.');
+end;
+
+function TProtocolDriver.HasTabBuilderEditor: Boolean;
+begin
+  Result:=False;
 end;
 
 procedure TProtocolDriver.CommPortCallBack(var Result:TIOPacket);

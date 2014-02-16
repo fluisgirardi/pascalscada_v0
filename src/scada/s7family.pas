@@ -128,6 +128,9 @@ type
 
   }
   {$ENDIF}
+
+  { TSiemensProtocolFamily }
+
   TSiemensProtocolFamily = class(TProtocolDriver)
   protected
     {$IFDEF PORTUGUES}
@@ -743,6 +746,8 @@ type
     //: @seealso(TProtocolDriver.OpenTagEditor)
     procedure OpenTagEditor(OwnerOfNewTags: TComponent;
        InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+    //: @seealso(TProtocolDriver.HasTabBuilderEditor)
+    function HasTabBuilderEditor: Boolean; override;
   published
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
@@ -2724,6 +2729,11 @@ begin
     TagBuilderEditor(Self, OwnerOfNewTags,InsertHook,CreateProc)
   else
     inherited OpenTagEditor(OwnerOfNewTags,InsertHook,CreateProc);
+end;
+
+function TSiemensProtocolFamily.HasTabBuilderEditor: Boolean;
+begin
+  Result:=true;
 end;
 
 procedure SetTagBuilderToolForSiemensS7ProtocolFamily(TagBuilderTool:TOpenTagEditor);

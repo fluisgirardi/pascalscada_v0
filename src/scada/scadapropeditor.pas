@@ -330,7 +330,10 @@ end;
 
 function TTagBuilderComponentEditor.GetVerbCount: LongInt;
 begin
-  Result:=1;
+  if ProtocolDriver.HasTabBuilderEditor then
+    Result:=1
+  else
+    Result:=0;;
 end;
 
 procedure TTagBuilderComponentEditor.Edit;
