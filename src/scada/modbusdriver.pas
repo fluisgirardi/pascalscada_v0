@@ -895,7 +895,7 @@ end;
 procedure SetTagBuilderToolForModBusProtocolFamily(TagBuilderTool:TOpenTagEditor);
 begin
   if assigned(ModbusTagBuilderEditor) then
-    raise Exception.Create('A Tag Builder editor for Siemens S7 protocol family was already assigned.')
+    raise Exception.Create('A Tag Builder editor for Modbus RTU/TCP protocol family was already assigned.')
   else
     ModbusTagBuilderEditor:=TagBuilderTool;
 end;

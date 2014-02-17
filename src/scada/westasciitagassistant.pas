@@ -21,30 +21,19 @@ interface
 uses
   Classes, SysUtils, westasciidriver, ProtocolTypes;
 
-type
 
-  { TWestASCIITagAssistant }
-
-  TWestASCIITagAssistant = class
-  private
-    FDriver: TWestASCIIDriver;
-    public
-      //: Opens the Tag Builder of the WestASCII protocol driver
-      procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
-        CreateProc:TCreateTagProc);
-
-    published
-      property Driver:TWestASCIIDriver read FDriver write FDriver;
-end;
+  //: Opens the Tag Builder of the WestASCII protocol driver
+  procedure OpenTagEditor(aProtocolDriver,
+                          aOwnerOfNewTags:TComponent;
+                          InsertHook:TAddTagInEditorHook;
+                          CreateProc:TCreateTagProc);
 
 implementation
 
 uses
   PLCTagNumber, uwesttagbuilder, Controls, hsstrings, Dialogs;
 
-{ TWestASCIITagAssistant }
-
-procedure TWestASCIITagAssistant.OpenTagEditor(OwnerOfNewTags: TComponent;
+procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
 var
   tplc:TPLCTagNumber;
@@ -53,14 +42,6 @@ var
   sctrl,
   formatmask:String;
 begin
-
-  if not Assigned(FDriver) then
-    begin
-      ShowMessage(SDriverRequired);
-      Exit;
-    end;
-
-
   frm:=TWestTagBuilder.Create(nil);
   try
     if frm.ShowModal=mrOK then begin
@@ -81,7 +62,7 @@ begin
             tplc.MemAddress := variable;
             tplc.PLCStation:=ctrl;
             tplc.RefreshTime:=frm.Variaveis[variable].Scan.Value;
-            tplc.ProtocolDriver := FDriver;
+            tplc.ProtocolDriver := TWestASCIIDriver(aProtocolDriver);
             InsertHook(tplc);
           end;
         end;
@@ -91,6 +72,10 @@ begin
     frm.Destroy;
   end;
 end;
+
+initialization
+
+  SetTagBuilderToolForWest6100Protocol(@OpenTagEditor);
 
 end.
 

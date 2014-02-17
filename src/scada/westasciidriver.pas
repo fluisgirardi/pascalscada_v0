@@ -250,6 +250,9 @@ type
   irá fazer isso para ganhar algum desempenho.)
   }
   {$ENDIF}
+
+  { TWestASCIIDriver }
+
   TWestASCIIDriver = class(TProtocolDriver)
   private
     FWestDevices:TWestDevices;
@@ -305,10 +308,18 @@ type
     // @seealso(TProtocolDriver.SizeOfTag);
     function SizeOfTag(Tag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE; override;
 
+    // @seealso(TProtocolDriver.OpenTagEditor);
+    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
+       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+
+    // @seealso(TProtocolDriver.HasTabBuilderEditor);
+    function HasTabBuilderEditor: Boolean; override;
   published
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
   end;
+
+  procedure SetTagBuilderToolForWest6100Protocol(TagBuilderTool:TOpenTagEditor);
 
 var
   ParameterList:array[$00..$1b] of TParameter;
@@ -1284,6 +1295,31 @@ begin
   //
   // all west registers are float 32 bits sized.
   Result:=32;
+end;
+
+var
+  WestTagBuilderEditor:TOpenTagEditor = nil;
+
+procedure TWestASCIIDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
+  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+begin
+  if Assigned(WestTagBuilderEditor) then
+    WestTagBuilderEditor(Self, OwnerOfNewTags, InsertHook, CreateProc)
+  else
+    inherited;
+end;
+
+function TWestASCIIDriver.HasTabBuilderEditor: Boolean;
+begin
+  Result:=true
+end;
+
+procedure SetTagBuilderToolForWest6100Protocol(TagBuilderTool:TOpenTagEditor);
+begin
+  if assigned(WestTagBuilderEditor) then
+    raise Exception.Create('A Tag Builder editor for West 6100 protocol was already assigned.')
+  else
+    WestTagBuilderEditor:=TagBuilderTool;
 end;
 
 
