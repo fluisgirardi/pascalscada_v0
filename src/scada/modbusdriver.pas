@@ -257,7 +257,16 @@ type
     destructor Destroy; override;
     //: @seealso(TProtocolDriver.SizeOfTag)
     function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
+
+    //: @seealso(TProtocolDriver.OpenTagEditor)
+    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
+       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+
+    //: @seealso(TProtocolDriver.HasTabBuilderEditor)
+    function HasTabBuilderEditor: Boolean; override;
   end;
+
+  procedure SetTagBuilderToolForModBusProtocolFamily(TagBuilderTool:TOpenTagEditor);
 
 implementation
 
@@ -864,7 +873,31 @@ begin
     UpdateTime := 0;
   end;
   tr.Size := size;
+end;
 
+var
+  ModbusTagBuilderEditor:TOpenTagEditor = nil;
+
+procedure TModBusDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
+  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+begin
+  if Assigned(ModbusTagBuilderEditor) then
+    ModbusTagBuilderEditor(Self,OwnerOfNewTags,InsertHook,CreateProc)
+  else
+    inherited;
+end;
+
+function TModBusDriver.HasTabBuilderEditor: Boolean;
+begin
+  Result:=true
+end;
+
+procedure SetTagBuilderToolForModBusProtocolFamily(TagBuilderTool:TOpenTagEditor);
+begin
+  if assigned(ModbusTagBuilderEditor) then
+    raise Exception.Create('A Tag Builder editor for Siemens S7 protocol family was already assigned.')
+  else
+    ModbusTagBuilderEditor:=TagBuilderTool;
 end;
 
 end.

@@ -335,7 +335,8 @@ begin
     Result := Format(nameprefix,[numfmt]);
 end;
 
-
+initialization
+  SetTagBuilderToolForModBusProtocolFamily(@OpenTagEditor)
 
 end.
 
