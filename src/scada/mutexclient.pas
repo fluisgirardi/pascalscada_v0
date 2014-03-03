@@ -577,7 +577,7 @@ begin
      InterLockedExchange(Cardinal(FSocket),0)
    else
      raise Exception.Create(Format('SizeOf(Cardinal)=%d and SizeOf(TSocket)=%d mismatch.'+LineEnding+
-                                   'Contact PascalSCADA developer!',SizeOf(Cardinal), SizeOf(FSocket)));
+                                   'Contact PascalSCADA developer!',[SizeOf(Cardinal), SizeOf(FSocket)]));
   {$IFEND}
 
   {$IF defined(cpu64) OR defined(CPUX64)}

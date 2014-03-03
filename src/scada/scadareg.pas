@@ -70,21 +70,11 @@ begin
   RegisterComponents(strTagsPallete,      [TPLCStruct]);
   RegisterComponents(strTagsPallete,      [TPLCStructItem]);
 
-  // Changed by Juanjo and Fabio
-  // New component pallette
-  // Before the change made
-  //RegisterComponents(strAssistants,      [TSiemensTagAssistant]);
-  //RegisterComponents(strAssistants,      [TModBusTagAssistant]);
-  //RegisterComponents(strAssistants,      [TWestASCIITagAssistant]);
-  //RegisterComponents(strAssistants,      [TBitMapperTagAssistant]);
-  //RegisterComponents(strAssistants,      [TBlockStructTagAssistant]);
-  // End new component pallette
-
   RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(LongInt),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
   //end securitycode property editor.
 
-  RegisterComponentEditor(TProtocolDriver,          TTagBuilderComponentEditor);
+  RegisterComponentEditor(TProtocolDriver,          TProtocolDriverComponentEditor);
   RegisterComponentEditor(TBitMapperTagAssistant,   TTagBitMapperComponentEditor);
   RegisterComponentEditor(TBlockStructTagAssistant, TBlockElementMapperComponentEditor);
 

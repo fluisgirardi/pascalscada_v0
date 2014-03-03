@@ -116,7 +116,7 @@ type
   @seealso(TInsertTagsOnFormComponentEditor)
   }
   {$ENDIF}
-  TTagBuilderComponentEditor = class(TInsertTagsOnFormComponentEditor)
+  TProtocolDriverComponentEditor = class(TInsertTagsOnFormComponentEditor)
   private
     procedure OpenTagBuilder;
   protected
@@ -306,29 +306,29 @@ end;
 //editor TAG BUILDER
 ///////////////////////////////////////
 
-function  TTagBuilderComponentEditor.GetTheOwner: TComponent;
+function  TProtocolDriverComponentEditor.GetTheOwner: TComponent;
 begin
   Result:=ProtocolDriver.Owner;
 end;
 
-procedure TTagBuilderComponentEditor.OpenTagBuilder;
+procedure TProtocolDriverComponentEditor.OpenTagBuilder;
 begin
   ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
 end;
 
-procedure TTagBuilderComponentEditor.ExecuteVerb(Index: LongInt);
+procedure TProtocolDriverComponentEditor.ExecuteVerb(Index: LongInt);
 begin
   if Index=0 then
     OpenTagBuilder();
 end;
 
-function TTagBuilderComponentEditor.GetVerb(Index: LongInt): string;
+function TProtocolDriverComponentEditor.GetVerb(Index: LongInt): string;
 begin
   if Index=0 then
     Result:='Tag Builder';
 end;
 
-function TTagBuilderComponentEditor.GetVerbCount: LongInt;
+function TProtocolDriverComponentEditor.GetVerbCount: LongInt;
 begin
   if ProtocolDriver.HasTabBuilderEditor then
     Result:=1
@@ -336,13 +336,13 @@ begin
     Result:=0;;
 end;
 
-procedure TTagBuilderComponentEditor.Edit;
+procedure TProtocolDriverComponentEditor.Edit;
 begin
   inherited Edit;
   OpenTagBuilder();
 end;
 
-function TTagBuilderComponentEditor.ProtocolDriver: TProtocolDriver;
+function TProtocolDriverComponentEditor.ProtocolDriver: TProtocolDriver;
 begin
   Result:=TProtocolDriver(GetComponent);
 end;
