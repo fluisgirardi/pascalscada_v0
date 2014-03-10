@@ -571,27 +571,16 @@ begin
   CloseSocket(FSocket);
   InterLockedExchange(FConnected,0);
 
-  //32 bits CPU's
-  {$IF defined(cpu32) OR defined(CPU386) OR defined(CPUX86)}
-  if SizeOf(Cardinal)=SizeOf(FSocket) then
-     InterLockedExchange(Cardinal(FSocket),0)
-   else
-     raise Exception.Create(Format('SizeOf(Cardinal)=%d and SizeOf(TSocket)=%d mismatch.'+LineEnding+
-                                   'Contact PascalSCADA developer!',[SizeOf(Cardinal), SizeOf(FSocket)]));
+  //TSocket 32 bits sized
+  {$IF sizeof(FSocket)=4}
+  InterLockedExchange(integer(FSocket),0);
   {$IFEND}
 
-  {$IF defined(cpu64) OR defined(CPUX64)}
-    {$IFDEF FPC}
-      {$IF defined(WIN64)} //win32 is treated on 32 bit cpus...
-      InterLockedExchange64(FSocket,0);
-      {$ELSE}
-      InterLockedExchange(FSocket,0); //unix and others systems that TSocket is 32bit identifier...
-      {$ENDIF}
-    {$ELSE}
-    InterlockedCompareExchange64(FSocket,0,FSocket);
-    {$ENDIF}
+  {$IF sizeof(FSocket)=8}
+  InterLockedExchange64(Int64(FSocket), 0);
   {$IFEND}
-  InterlockedCompareExchange(Pointer(FConnectionStatusThread),nil,Pointer(Self));
+
+  InterlockedExchangePointer(Pointer(FConnectionStatusThread),nil);
 end;
 
 procedure TMutexClient.Loaded;

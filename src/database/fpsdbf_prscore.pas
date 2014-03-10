@@ -656,7 +656,7 @@ begin
   begin
     case TExprWord(Expr.Items[I]).ResultType of
       etLeftBracket: Inc(brCount);
-      etRightBracket: 
+      etRightBracket:
         begin
           Dec(brCount);
           if brCount < IArg then
@@ -931,7 +931,11 @@ begin
 {$IFDEF ENG_NUMBERS}
           // we'll have to convert FDecimalSeparator into DecimalSeparator
           // otherwise the OS will not understand what we mean
+          {$IFDEF DELPHI_XE5_UP}
+          W[DecSep] := FormatSettings.DecimalSeparator;
+          {$ELSE}
           W[DecSep] := DecimalSeparator;
+          {$ENDIF}
 {$ENDIF}
           TempWord := TFloatConstant.Create(W, W)
         end else begin

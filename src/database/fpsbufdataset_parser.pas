@@ -394,7 +394,7 @@ begin
         TempFieldVar := TFloatFieldVar.Create(FieldInfo);
         TempFieldVar.FExprWord := DefineFloatVariable(VarName, TempFieldVar.FieldVal);
       end;
-    ftAutoInc, ftLongInt, ftSmallInt:
+    ftAutoInc, ftSmallInt {$IFDEF FPC}, ftLongInt{$ENDIF}:
       begin
         TempFieldVar := TLongIntFieldVar.Create(FieldInfo);
         TempFieldVar.FExprWord := DefineLongIntVariable(VarName, TempFieldVar.FieldVal);

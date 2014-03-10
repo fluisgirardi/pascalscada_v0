@@ -572,6 +572,9 @@ type
     function IsReadFromPacket : Boolean;
 
   public
+    {$IFDEF DELPHI_XE3_UP}
+    function ActiveBuffer: TRecordBuffer;
+    {$ENDIF}
     constructor Create(AOwner: TComponent); override;
     function GetFieldData(Field: TField; Buffer: Pointer;
       NativeFormat: Boolean): Boolean; override;
@@ -1010,6 +1013,13 @@ begin
   FreeAndNil(FIndexDefs);
   inherited destroy;
 end;
+
+{$IFDEF DELPHI_XE3_UP}
+function TCustomBufDataset.ActiveBuffer: TRecordBuffer;
+begin
+  Result:=TRecordBuffer(inherited ActiveBuffer);
+end;
+{$ENDIF}
 
 procedure TCustomBufDataset.FetchAll;
 begin
@@ -1827,7 +1837,7 @@ begin
     ftString, ftFixedChar : ACompareRec.Comparefunc := @DBCompareText;
     ftWideString, ftFixedWideChar: ACompareRec.Comparefunc := @DBCompareWideText;
     ftSmallint : ACompareRec.Comparefunc := @DBCompareSmallInt;
-    ftLongInt, ftBCD, ftAutoInc : ACompareRec.Comparefunc :=
+    ftBCD, ftAutoInc{$IFDEF FPC}, ftLongInt{$ENDIF}: ACompareRec.Comparefunc :=
       @DBCompareInt;
     ftWord : ACompareRec.Comparefunc := @DBCompareWord;
     ftBoolean : ACompareRec.Comparefunc := @DBCompareByte;
@@ -1961,37 +1971,50 @@ function TCustomBufDataset.GetFieldSize(FieldDef : TFieldDef) : longint;
 begin
   case FieldDef.DataType of
     ftUnknown    : result := 0;
+
     ftString,
-      ftGuid,
-      ftFixedChar: result := FieldDef.Size + 1;
+    ftGuid,
+    ftFixedChar  : result := FieldDef.Size + 1;
+
     ftFixedWideChar,
-      ftWideString:result := (FieldDef.Size + 1)*2;
+    ftWideString :result := (FieldDef.Size + 1)*2;
+
     ftSmallint,
-      ftLongInt,
-      ftAutoInc,
-      ftword     : result := sizeof(longint);
+    {$IFDEF FPC}ftLongInt,{$ENDIF}
+    ftAutoInc,
+    ftword       : result := sizeof(longint);
+
     ftBoolean    : result := sizeof(wordbool);
+
     ftBCD        : result := sizeof(currency);
+
     ftFmtBCD     : result := sizeof(TBCD);
+
     ftFloat,
-      ftCurrency : result := sizeof(double);
+    ftCurrency   : result := sizeof(double);
+
     ftLargeInt   : result := sizeof(largeint);
+
     ftTime,
-      ftDate,
-      ftDateTime : result := sizeof(TDateTime);
+    ftDate,
+    ftDateTime   : result := sizeof(TDateTime);
+
     ftBytes      : result := FieldDef.Size;
+
     ftVarBytes   : result := FieldDef.Size + 2;
+
     ftVariant    : result := sizeof(variant);
+
     ftBlob,
-      ftMemo,
-      ftGraphic,
-      ftFmtMemo,
-      ftParadoxOle,
-      ftDBaseOle,
-      ftTypedBinary,
-      ftOraBlob,
-      ftOraClob,
-      ftWideMemo : result := sizeof(TBufBlobField)
+    ftMemo,
+    ftGraphic,
+    ftFmtMemo,
+    ftParadoxOle,
+    ftDBaseOle,
+    ftTypedBinary,
+    ftOraBlob,
+    ftOraClob,
+    ftWideMemo   : result := sizeof(TBufBlobField)
   else
     DatabaseErrorFmt(SUnsupportedFieldType,[Fieldtypenames[FieldDef.DataType]]);
   end;
@@ -2077,8 +2100,13 @@ end;
 function TCustomBufDataset.GetCurrentBuffer: TRecordBuffer;
 begin
   if State = dsFilter then Result := FFilterBuffer
-  else if state = dsCalcFields then Result := CalcBuffer
-  else Result := ActiveBuffer;
+  {$IFNDEF DELPHI_XE3_UP}
+  else if State = dsCalcFields  then Result := CalcBuffer
+  else    Result := ActiveBuffer;
+  {$ELSE}
+  else if State = dsCalcFields  then Result := TRecordBuffer(CalcBuffer)
+  else    Result := TRecordBuffer(ActiveBuffer);
+  {$ENDIF}
 end;
 
 
@@ -2800,8 +2828,10 @@ begin
     end;
 end;
 
-procedure TCustomBufDataset.AddIndex(const AName, AFields : string; AOptions : TIndexOptions; const ADescFields: string = '';
-                               const ACaseInsFields: string = '');
+procedure TCustomBufDataset.AddIndex(const AName, AFields : string;
+                                     AOptions : TIndexOptions;
+                                     const ADescFields: string = '';
+                                     const ACaseInsFields: string = '');
 begin
   CheckBiDirectional;
   if AFields='' then DatabaseError(SNoIndexFieldNameGiven);

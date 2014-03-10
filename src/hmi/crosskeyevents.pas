@@ -420,7 +420,7 @@ end;
 function CreateCrossKeyEvents(Target:TWinControl):TCrossKeyEvents;
 begin
   {$IF (not defined(FPC)) and defined(DELPHI2009_UP)}
-  Result:=TVCLKeyEvents.Create(Target);
+  Result:=TDelphiVCLKeyEvents.Create(Target);
   {$IFEND}
 
   {$IF defined(FPC) and defined(LCL)}

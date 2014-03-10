@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+﻿{$i ../common/language.inc}
 {$I ../common/delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
@@ -32,11 +32,13 @@ uses
   {$IFDEF FPC}
     LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}
-    Types,
     {$IFDEF DELPHI2009_UP}
       //demais versoes do delphi
       //others versions of delphi.
-      DesignIntf, DesignEditors;
+      Types, DesignIntf, DesignEditors
+      {$IFDEF DELPHI_XE5_UP}
+      , System.Actions
+      {$ENDIF};
     {$ELSE}
       {$IFDEF PORTUGUES}
         {$MESSAGE ERROR 'Somente versões posteriores ao Delphi 2009 são suportadas!'}
