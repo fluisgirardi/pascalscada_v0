@@ -105,6 +105,9 @@ type
     procedure SetPort(AValue: Word);
     procedure SetServerHost(AValue: String);
     procedure ConnectionFinished(Sender:TObject);
+    {$IFDEF FPC}
+    function InterLockedExchangePointer(var Target: Pointer;Source : Pointer) : Pointer;
+    {$ENDIF}
   protected
     procedure Loaded; override;
   public
@@ -572,15 +575,21 @@ begin
   InterLockedExchange(FConnected,0);
 
   //TSocket 32 bits sized
-  {$IF sizeof(FSocket)=4}
+  {$IF sizeof(TSocket)=4}
   InterLockedExchange(integer(FSocket),0);
   {$IFEND}
 
-  {$IF sizeof(FSocket)=8}
+  {$IF sizeof(TSocket)=8}
   InterLockedExchange64(Int64(FSocket), 0);
   {$IFEND}
 
   InterlockedExchangePointer(Pointer(FConnectionStatusThread),nil);
+end;
+
+function TMutexClient.InterLockedExchangePointer(var Target: Pointer;
+  Source: Pointer): Pointer;
+begin
+  Result := InterLockedExchange (Target, Source);
 end;
 
 procedure TMutexClient.Loaded;
