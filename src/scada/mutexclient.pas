@@ -586,11 +586,13 @@ begin
   InterlockedExchangePointer(Pointer(FConnectionStatusThread),nil);
 end;
 
+{$IFDEF FPC}
 function TMutexClient.InterLockedExchangePointer(var Target: Pointer;
   Source: Pointer): Pointer;
 begin
   Result := InterLockedExchange (Target, Source);
 end;
+{$ENDIF}
 
 procedure TMutexClient.Loaded;
 begin
