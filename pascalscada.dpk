@@ -1,6 +1,7 @@
 package pascalscada;
 
 {$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -22,9 +23,11 @@ package pascalscada;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$DEFINE ZEOS_DISABLE_ASA}
+{$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'PascalSCADA'}
 {$IMPLICITBUILD ON}
-{$DEFINE ZEOS_DISABLE_ASA}
 
 requires
   designide,
@@ -115,9 +118,9 @@ contains
   mutexclient in 'src\scada\mutexclient.pas',
   bitmappertagassistant in 'src\scada\bitmappertagassistant.pas',
   blockstructtagassistant in 'src\scada\blockstructtagassistant.pas',
-  commontagassistant in 'src\scada\commontagassistant.pas',
   modbustagassistant in 'src\scada\modbustagassistant.pas',
   siemenstagassistant in 'src\scada\siemenstagassistant.pas',
-  westasciitagassistant in 'src\scada\westasciitagassistant.pas';
+  westasciitagassistant in 'src\scada\westasciitagassistant.pas',
+  hmitextstrings in 'src\hmi\hmitextstrings.pas';
 
 end.

@@ -1,27 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>2012/01/05 17:33:46.598,=rtl.dcp</Transaction>
     <Transaction>2012/10/27 17:58:50.071.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\Package1.dproj=C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_common.dproj</Transaction>
     <Transaction>2012/10/27 18:05:48.321.dproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\pascalscada_common.dproj=C:\pascalscada\pascalscada_common.dproj</Transaction>
-    <Transaction>2012/10/27 18:06:07.373.pas,C:\pascalscada\src\common\collections.pas=</Transaction>
-    <Transaction>2012/10/27 18:06:07.373.pas,C:\pascalscada\src\common\crossdatetime.pas=</Transaction>
     <Transaction>2012/10/27 18:06:07.389.pas,C:\pascalscada\src\common\crossevent.pas=</Transaction>
-    <Transaction>2012/10/27 18:06:07.389.pas,C:\pascalscada\src\common\hsstrings.pas=</Transaction>
-    <Transaction>2012/10/27 18:06:07.404.pas,C:\pascalscada\src\common\hsutils.pas=</Transaction>
-    <Transaction>2012/10/27 18:06:07.404.pas,C:\pascalscada\src\common\lazlclversion.pas=</Transaction>
-    <Transaction>2012/10/27 18:06:07.419.pas,C:\pascalscada\src\common\messagespool.pas=</Transaction>
-    <Transaction>2012/10/27 18:06:07.419.pas,C:\pascalscada\src\common\pascalScadaMTPCPU.pas=</Transaction>
-    <Transaction>2012/10/27 19:53:13.526.pas,C:\pascalscada\src\common\lazlclversion.pas=</Transaction>
-    <Transaction>2012/10/27 20:08:29.014.pas,C:\pascalscada\Unit1.pas=C:\pascalscada\pscada_common.pas</Transaction>
-    <Transaction>2012/10/27 20:10:45.802.pas,C:\pascalscada\pscada_common.pas=</Transaction>
-    <Transaction>2012/10/29 10:35:08.883.dcp,dbrtl.dcp=</Transaction>
     <Transaction>2012/10/29 10:35:12.039.dcp,designide.dcp=</Transaction>
-    <Transaction>2012/10/29 10:35:14.286.dcp,rtl.dcp=</Transaction>
-    <Transaction>2012/10/29 10:35:15.991.dcp,vcl.dcp=</Transaction>
-    <Transaction>2012/10/29 10:35:17.499.dcp,vclactnband.dcp=</Transaction>
-    <Transaction>2012/10/29 10:35:18.932.dcp,VclSmp.dcp=</Transaction>
     <Transaction>2012/10/29 10:35:23.616.dcp,vclx.dcp=</Transaction>
-    <Transaction>2012/10/29 10:35:25.242.dcp,xmlrtl.dcp=</Transaction>
   </Transactions>
 </BorlandProject>

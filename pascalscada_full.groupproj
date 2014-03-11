@@ -1,60 +1,60 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-		<PropertyGroup>
-			<ProjectGuid>{39C44530-B49D-4311-88DE-C721E66EC08F}</ProjectGuid>
-		</PropertyGroup>
-		<ItemGroup>
-			<Projects Include="pascalscada_common.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="pascalscada.dproj">
-				<Dependencies>pascalscada_common.dproj</Dependencies>
-			</Projects>
-			<Projects Include="zeoslib_pascalscada.dproj">
-				<Dependencies/>
-			</Projects>
-		</ItemGroup>
-		<ProjectExtensions>
-			<Borland.Personality>Default.Personality.12</Borland.Personality>
-			<Borland.ProjectType/>
-			<BorlandProject>
-				<Default.Personality/>
-			</BorlandProject>
-		</ProjectExtensions>
-		<Target Name="pascalscada_common">
-			<MSBuild Projects="pascalscada_common.dproj"/>
-		</Target>
-		<Target Name="pascalscada_common:Clean">
-			<MSBuild Targets="Clean" Projects="pascalscada_common.dproj"/>
-		</Target>
-		<Target Name="pascalscada_common:Make">
-			<MSBuild Targets="Make" Projects="pascalscada_common.dproj"/>
-		</Target>
-		<Target DependsOnTargets="pascalscada_common" Name="pascalscada">
-			<MSBuild Projects="pascalscada.dproj"/>
-		</Target>
-		<Target DependsOnTargets="pascalscada_common:Clean" Name="pascalscada:Clean">
-			<MSBuild Targets="Clean" Projects="pascalscada.dproj"/>
-		</Target>
-		<Target DependsOnTargets="pascalscada_common:Make" Name="pascalscada:Make">
-			<MSBuild Targets="Make" Projects="pascalscada.dproj"/>
-		</Target>
-		<Target Name="zeoslib_pascalscada">
-			<MSBuild Projects="zeoslib_pascalscada.dproj"/>
-		</Target>
-		<Target Name="zeoslib_pascalscada:Clean">
-			<MSBuild Targets="Clean" Projects="zeoslib_pascalscada.dproj"/>
-		</Target>
-		<Target Name="zeoslib_pascalscada:Make">
-			<MSBuild Targets="Make" Projects="zeoslib_pascalscada.dproj"/>
-		</Target>
-		<Target Name="Build">
-			<CallTarget Targets="pascalscada_common;pascalscada;zeoslib_pascalscada"/>
-		</Target>
-		<Target Name="Clean">
-			<CallTarget Targets="pascalscada_common:Clean;pascalscada:Clean;zeoslib_pascalscada:Clean"/>
-		</Target>
-		<Target Name="Make">
-			<CallTarget Targets="pascalscada_common:Make;pascalscada:Make;zeoslib_pascalscada:Make"/>
-		</Target>
-		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
-	</Project>
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{39C44530-B49D-4311-88DE-C721E66EC08F}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="pascalscada_common.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="pascalscada.dproj">
+            <Dependencies>pascalscada_common.dproj</Dependencies>
+        </Projects>
+        <Projects Include="zeoslib_pascalscada.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="pascalscada_common">
+        <MSBuild Projects="pascalscada_common.dproj"/>
+    </Target>
+    <Target Name="pascalscada_common:Clean">
+        <MSBuild Projects="pascalscada_common.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="pascalscada_common:Make">
+        <MSBuild Projects="pascalscada_common.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="pascalscada" DependsOnTargets="pascalscada_common">
+        <MSBuild Projects="pascalscada.dproj"/>
+    </Target>
+    <Target Name="pascalscada:Clean" DependsOnTargets="pascalscada_common:Clean">
+        <MSBuild Projects="pascalscada.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="pascalscada:Make" DependsOnTargets="pascalscada_common:Make">
+        <MSBuild Projects="pascalscada.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="zeoslib_pascalscada">
+        <MSBuild Projects="zeoslib_pascalscada.dproj"/>
+    </Target>
+    <Target Name="zeoslib_pascalscada:Clean">
+        <MSBuild Projects="zeoslib_pascalscada.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="zeoslib_pascalscada:Make">
+        <MSBuild Projects="zeoslib_pascalscada.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="pascalscada_common;pascalscada;zeoslib_pascalscada"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="pascalscada_common:Clean;pascalscada:Clean;zeoslib_pascalscada:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="pascalscada_common:Make;pascalscada:Make;zeoslib_pascalscada:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

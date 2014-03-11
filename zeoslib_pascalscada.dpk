@@ -25,7 +25,6 @@ package zeoslib_pascalscada;
 {$IMAGEBASE $400000}
 {$DESCRIPTION 'PascalSCADA - Database Compatibility - ZeosLib'}
 {$IMPLICITBUILD ON}
-{$DEFINE ZEOS_DISABLE_ASA}
 
 requires
   designide,

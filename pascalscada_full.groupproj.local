@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>2012/10/17 00:29:34.334.groupproj,C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\ProjectGroup1.groupproj=C:\pascalscada\pascalscada_full.groupproj</Transaction>
+    <Transaction>2012/10/17 00:29:34.334.groupproj,C:\pascalscada\pascalscada_full.groupproj=C:\Documents and Settings\Claudecir\My Documents\RAD Studio\Projects\ProjectGroup1.groupproj</Transaction>
   </Transactions>
 	<Default.Personality>
-		<Projects ActiveProject="pascalscada_common.bpl"/>
+		<Projects ActiveProject="pascalscada_common.dproj"/>
 	</Default.Personality>
 </BorlandProject>
