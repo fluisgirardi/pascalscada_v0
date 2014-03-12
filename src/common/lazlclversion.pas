@@ -16,7 +16,9 @@
 unit lazlclversion;
 
 {$IFDEF FPC}
-{$MODE Delphi}
+  {$MACRO ON}
+{$ELSE}
+  {$ERROR This unit should be used with FPC + Lazarus, never with Delphi!}
 {$ENDIF}
 
 interface
@@ -30,16 +32,15 @@ type
 
   THasCustomHint = (hchNo,hchYes);
 
-  {$if declared(lcl_version)}
-    {$IF declared(lcl_fullversion)}
-      const pslcl_fullversion = lcl_fullversion;
-    {$ELSE}
-      {$WARNING lcl_fullversion CALCULADO!}
+  {$IF declared(lcl_fullversion)}
+    const pslcl_fullversion = lcl_fullversion;
+  {$ELSE}
+    {$IF declared(lcl_major) and declared(lcl_minor) and declared(lcl_release)}
+      {$WARNING pslcl_fullversion calculated!}
       const pslcl_fullversion = ((lcl_major *  100 + lcl_minor) * 100 + lcl_release) * 100;
-    {$ifend}
-  {$else}
-    {$WARNING lcl_fullversion ZERADO!}
-    const pslcl_fullversion = 0;
+    {$ELSE}
+      {$ERROR Your Lazarus is too old or it has something wrong!}  
+    {$ENDIF}
   {$ifend}
 
   {$if declared(pslcl_fullversion)}
