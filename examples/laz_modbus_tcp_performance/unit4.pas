@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
   StdCtrls, ExtCtrls, RTTIGrids, TAGraph, TASources, TASeries, tcp_udpport,
   ModBusTCP, PLCTagNumber, PLCBlock, HMILabel, HMIUpDown, HMIScrollBar, HMIEdit,
-  PLCBlockElement;
+  CustomizedUserManagement, PLCBlockElement;
 
 type
 
@@ -19,13 +19,11 @@ type
     Chart1Line1: TLine;
     Chart1Line2: TLine;
     Chart1LineSeries1: TLineSeries;
+    CustomizedUserManagement1: TCustomizedUserManagement;
     HMIEdit1: THMIEdit;
     HMIEdit2: THMIEdit;
-    HMILabel1: THMILabel;
     HMILabel2: THMILabel;
     HMILabel3: THMILabel;
-    HMIScrollBar1: THMIScrollBar;
-    HMIUpDown1: THMIUpDown;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -34,28 +32,8 @@ type
     ModBusTCPDriver1: TModBusTCPDriver;
     Panel1: TPanel;
     PLCBlock1: TPLCBlock;
-    PLCBlock10: TPLCBlock;
-    PLCBlock11: TPLCBlock;
-    PLCBlock12: TPLCBlock;
-    PLCBlock13: TPLCBlock;
-    PLCBlock14: TPLCBlock;
-    PLCBlock15: TPLCBlock;
-    PLCBlock16: TPLCBlock;
-    PLCBlock17: TPLCBlock;
-    PLCBlock18: TPLCBlock;
-    PLCBlock19: TPLCBlock;
-    PLCBlock2: TPLCBlock;
-    PLCBlock20: TPLCBlock;
-    PLCBlock3: TPLCBlock;
-    PLCBlock4: TPLCBlock;
-    PLCBlock5: TPLCBlock;
-    PLCBlock6: TPLCBlock;
-    PLCBlock7: TPLCBlock;
-    PLCBlock8: TPLCBlock;
-    PLCBlock9: TPLCBlock;
     PLCBlockElement1: TPLCBlockElement;
     PLCBlockElement2: TPLCBlockElement;
-    PLCBlockElement3: TPLCBlockElement;
     TCP_UDPPort1: TTCP_UDPPort;
     Timer1: TTimer;
     TIPropertyGrid1: TTIPropertyGrid;

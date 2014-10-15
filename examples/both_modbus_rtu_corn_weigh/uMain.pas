@@ -76,7 +76,7 @@ end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
 begin
-  Image4.Height :=(73*(1000-FloatToInteger(dm.PesoBalanca.Value))) div 1000;
+  Image4.Height :=(73*(1000-Trunc(dm.PesoBalanca.Value))) div 1000;
 end;
 
 procedure TForm1.Timer2Timer(Sender: TObject);

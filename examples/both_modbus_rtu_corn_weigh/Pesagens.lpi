@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
     <Version Value="9"/>
@@ -60,11 +60,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uDM"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="91"/>
-        <CursorPos X="124" Y="115"/>
+        <TopLine Value="146"/>
+        <CursorPos X="16" Y="166"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -76,10 +75,11 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uMain"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="39" Y="13"/>
+        <TopLine Value="56"/>
+        <CursorPos X="34" Y="79"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -132,7 +132,7 @@
         <UsageCount Value="10"/>
       </Unit7>
       <Unit8>
-        <Filename Value="../../../../lazarus/components/codetools/eventcodetool.pas"/>
+        <Filename Value="//VBOXSVR/lazarus/components/codetools/eventcodetool.pas"/>
         <UnitName Value="EventCodeTool"/>
         <WindowIndex Value="0"/>
         <TopLine Value="114"/>
@@ -149,7 +149,7 @@
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
     </Units>
-    <JumpHistory Count="9" HistoryIndex="8">
+    <JumpHistory Count="11" HistoryIndex="10">
       <Position1>
         <Filename Value="uMain.pas"/>
         <Caret Line="59" Column="39" TopLine="39"/>
@@ -186,10 +186,18 @@
         <Filename Value="uDM.pas"/>
         <Caret Line="116" Column="124" TopLine="92"/>
       </Position9>
+      <Position10>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="120" Column="125" TopLine="90"/>
+      </Position10>
+      <Position11>
+        <Filename Value="uMain.pas"/>
+        <Caret Line="13" Column="39" TopLine="1"/>
+      </Position11>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="9"/>
+    <Version Value="11"/>
     <Parsing>
       <SyntaxOptions>
         <UseAnsiStrings Value="False"/>
@@ -212,4 +220,5 @@
       </Item3>
     </Exceptions>
   </Debugging>
+  <EditorMacros Count="0"/>
 </CONFIG>

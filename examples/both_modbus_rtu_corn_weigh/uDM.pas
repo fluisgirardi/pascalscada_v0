@@ -162,8 +162,8 @@ var
   resultado:single;
   paux:PWord;
 begin
-  mW1 := FloatToInteger(W1) and $FFFF;
-  mW2 := FloatToInteger(W2) and $FFFF;
+  mW1 := Trunc(W1) and $FFFF;
+  mW2 := Trunc(W2) and $FFFF;
   paux := PWord(@resultado);
   resultado := 0;
   Paux^ := mW1;

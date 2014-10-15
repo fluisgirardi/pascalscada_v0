@@ -1,5 +1,6 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Compiler Value="/usr/local/bin/fpc" Date="1253190886"/>
-  <Params Value=" -MObjFPC -Scgi -O1 -gl -vewnhi -l -Fu/home/fabiolg/desenvolvimento/HMI_SCADA/lib/x86_64-linux/ -Fu/home/fabiolg/desenvolvimento/ZeosLib/packages/lazarus/build/ -Fu/home/fabiolg/lazarus/ideintf/units/x86_64-linux/ -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux/ -Fu/home/fabiolg/lazarus/lcl/units/x86_64-linux/gtk2/ -Fu/home/fabiolg/lazarus/packager/units/x86_64-linux/ -Fu/home/fabiolg/desenvolvimento/PesagemMilhoAlfa/ -Fu. -FE/home/fabiolg/desenvolvimento/PesagemMilhoAlfa/ -oPesagens -dUseCThreads -dLCL -dLCLgtk2 Pesagens.lpr"/>
+  <Compiler Value="C:\lazarus\fpc\2.6.4\bin\i386-win32\fpc.exe" Date="1154382129"/>
+  <Params Value=" -MObjFPC -Scgi -O1 -g -gl -vewnhi -Fu\\VBOXSVR\desenvolvimento\pascalscada\zeoslib\packages\lazarus\lib\i386-win32 -Fu\\VBOXSVR\desenvolvimento\pascalscada\lib\i386-win32 -FuC:\lazarus\components\ideintf\units\i386-win32\win32 -FuC:\lazarus\components\lazcontrols\lib\i386-win32\win32 -FuC:\lazarus\lcl\units\i386-win32\win32 -FuC:\lazarus\lcl\units\i386-win32 -FuC:\lazarus\components\lazutils\lib\i386-win32 -FuC:\lazarus\packager\units\i386-win32 -Fu\\VBOXSVR\desenvolvimento\pascalscada\examples\both_modbus_rtu_corn_weigh\ -l -dUseCThreads -dUseCThreads -dLCL -dLCLwin32 Pesagens.lpr"/>
+  <Complete Value="False"/>
 </CONFIG>
