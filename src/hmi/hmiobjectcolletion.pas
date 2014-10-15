@@ -14,7 +14,14 @@ type
   {:
   Object colletion class.
   }
-  TObjectColletion = class(TCollection);
+  TObjectColletion = class(TCollection)
+  private
+    FOwner:TPersistent;
+  protected
+    function GetOwner: TPersistent; override;
+  public
+    constructor Create(AOwner:TComponent; ItemClass: TCollectionItemClass);
+  end;
 
   {$IFDEF PORTUGUES}
   {:
@@ -39,6 +46,20 @@ type
   end;
 
 implementation
+
+{ TObjectColletion }
+
+function TObjectColletion.GetOwner: TPersistent;
+begin
+  Result:=FOwner;
+end;
+
+constructor TObjectColletion.Create(AOwner: TComponent;
+  ItemClass: TCollectionItemClass);
+begin
+  inherited Create(ItemClass);
+  FOwner:=AOwner;
+end;
 
 { TObjectColletionItem }
 

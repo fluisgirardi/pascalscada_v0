@@ -62,6 +62,22 @@ type
     property ZoneResult:Boolean read FResult write SetZoneResult;
   end;
 
+  TObjectWithBooleanPropetiesColletionItem = class;
+
+  TObjectWithBooleanPropetiesColletion = class(TObjectColletion)
+  public
+    constructor Create(AOwner:TComponent);
+    function Add: TObjectWithBooleanPropetiesColletionItem;
+  end;
+
+  { TObjectWithBooleanPropetiesColletionItem }
+
+  TObjectWithBooleanPropetiesColletionItem = class(TObjectColletionItem)
+  protected
+    function AcceptObjectProperty(PropertyName: String): Boolean; override;
+    function AcceptObject(obj: TComponent): Boolean; override;
+  end;
+
   TBooleanPropertyConnector = class(TComponent)
   private
     { Private declarations }
@@ -74,6 +90,32 @@ type
   end;
 
 implementation
+
+{ TObjectWithBooleanPropetiesColletionItem }
+
+function TObjectWithBooleanPropetiesColletionItem.AcceptObjectProperty(
+  PropertyName: String): Boolean;
+begin
+  Result:=inherited AcceptObjectProperty(PropertyName);
+end;
+
+function TObjectWithBooleanPropetiesColletionItem.AcceptObject(obj: TComponent
+  ): Boolean;
+begin
+  Result:=inherited AcceptObject(obj);
+end;
+
+{ TObjectWithBooleanPropetiesColletion }
+
+constructor TObjectWithBooleanPropetiesColletion.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner, TObjectWithBooleanPropetiesColletionItem);
+end;
+
+function TObjectWithBooleanPropetiesColletion.Add: TObjectWithBooleanPropetiesColletionItem;
+begin
+  Result:=TObjectWithBooleanPropetiesColletionItem(inherited Add);
+end;
 
 { TBooleanZones}
 
