@@ -8,11 +8,12 @@ interface
 
 uses
   BasicUserManagement, ControlSecurityManager, crosskeyevents, 
-  CustomizedUserManagement, HMIAnimation, HMIButton, HMICheckBox, 
-  HMIControlDislocatorAnimation, HMIEdit, HMILabel, HMIProgressBar, 
-  hmipropeditor, HMIRadioButton, HMIRadioGroup, hmiregister, HMIScrollBar, 
-  HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, ualfakeyboard, 
-  unumerickeyboard, usrmgnt_login, LazarusPackageIntf;
+  CustomizedUserManagement, HMIAnimation, hmibooleanpropertyconnector, 
+  HMIButton, HMICheckBox, HMIControlDislocatorAnimation, HMIEdit, HMILabel, 
+  hmiobjectcolletion, HMIProgressBar, hmipropeditor, HMIRadioButton, 
+  HMIRadioGroup, hmiregister, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
+  HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
+  LazarusPackageIntf;
 
 implementation
 

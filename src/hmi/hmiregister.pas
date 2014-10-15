@@ -29,6 +29,10 @@ uses
   WinCCUserManagement,
   {$IFEND}
 
+  {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
+  hmibooleanpropertyconnector,
+  {$IFEND}
+
   {$IFDEF FPC}
     LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}
@@ -62,6 +66,7 @@ begin
   RegisterComponents(strControlsPallete,  [THMIAnimation]);
   RegisterComponents(strControlsPallete,  [THMIText]);
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
+  RegisterComponents(strControlsPallete,  [THMIBooleanPropertyConnector]);
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}

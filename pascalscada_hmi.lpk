@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <Package Version="4">
     <Name Value="pascalscada_hmi"/>
@@ -22,7 +22,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="27">
+    <Files Count="29">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -44,94 +44,102 @@
         <UnitName Value="HMIAnimation"/>
       </Item5>
       <Item6>
-        <Filename Value="src/hmi/hmibutton.pas"/>
-        <UnitName Value="HMIButton"/>
+        <Filename Value="src/hmi/hmibooleanpropertyconnector.pas"/>
+        <UnitName Value="hmibooleanpropertyconnector"/>
       </Item6>
       <Item7>
-        <Filename Value="src/hmi/hmicheckbox.pas"/>
-        <UnitName Value="HMICheckBox"/>
+        <Filename Value="src/hmi/hmibutton.pas"/>
+        <UnitName Value="HMIButton"/>
       </Item7>
       <Item8>
-        <Filename Value="src/hmi/hmicontroldislocatoranimation.pas"/>
-        <UnitName Value="HMIControlDislocatorAnimation"/>
+        <Filename Value="src/hmi/hmicheckbox.pas"/>
+        <UnitName Value="HMICheckBox"/>
       </Item8>
       <Item9>
-        <Filename Value="src/hmi/hmiedit.pas"/>
-        <UnitName Value="HMIEdit"/>
+        <Filename Value="src/hmi/hmicontroldislocatoranimation.pas"/>
+        <UnitName Value="HMIControlDislocatorAnimation"/>
       </Item9>
       <Item10>
-        <Filename Value="src/hmi/hmilabel.pas"/>
-        <UnitName Value="HMILabel"/>
+        <Filename Value="src/hmi/hmiedit.pas"/>
+        <UnitName Value="HMIEdit"/>
       </Item10>
       <Item11>
-        <Filename Value="src/hmi/hmiprogressbar.pas"/>
-        <UnitName Value="HMIProgressBar"/>
+        <Filename Value="src/hmi/hmilabel.pas"/>
+        <UnitName Value="HMILabel"/>
       </Item11>
       <Item12>
-        <Filename Value="src/hmi/hmipropeditor.pas"/>
-        <UnitName Value="hmipropeditor"/>
+        <Filename Value="src/hmi/hmiobjectcolletion.pas"/>
+        <UnitName Value="hmiobjectcolletion"/>
       </Item12>
       <Item13>
-        <Filename Value="src/hmi/hmiradiobutton.pas"/>
-        <UnitName Value="HMIRadioButton"/>
+        <Filename Value="src/hmi/hmiprogressbar.pas"/>
+        <UnitName Value="HMIProgressBar"/>
       </Item13>
       <Item14>
-        <Filename Value="src/hmi/hmiradiogroup.pas"/>
-        <UnitName Value="HMIRadioGroup"/>
+        <Filename Value="src/hmi/hmipropeditor.pas"/>
+        <UnitName Value="hmipropeditor"/>
       </Item14>
       <Item15>
+        <Filename Value="src/hmi/hmiradiobutton.pas"/>
+        <UnitName Value="HMIRadioButton"/>
+      </Item15>
+      <Item16>
+        <Filename Value="src/hmi/hmiradiogroup.pas"/>
+        <UnitName Value="HMIRadioGroup"/>
+      </Item16>
+      <Item17>
         <Filename Value="src/hmi/hmiregister.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="hmiregister"/>
-      </Item15>
-      <Item16>
-        <Filename Value="src/hmi/hmiscrollbar.pas"/>
-        <UnitName Value="HMIScrollBar"/>
-      </Item16>
-      <Item17>
-        <Filename Value="src/hmi/hmitext.pas"/>
-        <UnitName Value="HMIText"/>
       </Item17>
       <Item18>
-        <Filename Value="src/hmi/hmitrackbar.pas"/>
-        <UnitName Value="HMITrackBar"/>
+        <Filename Value="src/hmi/hmiscrollbar.pas"/>
+        <UnitName Value="HMIScrollBar"/>
       </Item18>
       <Item19>
-        <Filename Value="src/hmi/hmitypes.pas"/>
-        <UnitName Value="HMITypes"/>
+        <Filename Value="src/hmi/hmitext.pas"/>
+        <UnitName Value="HMIText"/>
       </Item19>
       <Item20>
-        <Filename Value="src/hmi/hmiupdown.pas"/>
-        <UnitName Value="HMIUpDown"/>
+        <Filename Value="src/hmi/hmitrackbar.pas"/>
+        <UnitName Value="HMITrackBar"/>
       </Item20>
       <Item21>
-        <Filename Value="src/hmi/hmizones.pas"/>
-        <UnitName Value="HMIZones"/>
+        <Filename Value="src/hmi/hmitypes.pas"/>
+        <UnitName Value="HMITypes"/>
       </Item21>
       <Item22>
-        <Filename Value="src/hmi/ualfakeyboard.pas"/>
-        <UnitName Value="ualfakeyboard"/>
+        <Filename Value="src/hmi/hmiupdown.pas"/>
+        <UnitName Value="HMIUpDown"/>
       </Item22>
       <Item23>
-        <Filename Value="src/hmi/ualfakeyboard.lfm"/>
-        <Type Value="LFM"/>
+        <Filename Value="src/hmi/hmizones.pas"/>
+        <UnitName Value="HMIZones"/>
       </Item23>
       <Item24>
-        <Filename Value="src/hmi/unumerickeyboard.pas"/>
-        <UnitName Value="unumerickeyboard"/>
+        <Filename Value="src/hmi/ualfakeyboard.pas"/>
+        <UnitName Value="ualfakeyboard"/>
       </Item24>
       <Item25>
-        <Filename Value="src/hmi/unumerickeyboard.lfm"/>
+        <Filename Value="src/hmi/ualfakeyboard.lfm"/>
         <Type Value="LFM"/>
       </Item25>
       <Item26>
-        <Filename Value="src/hmi/usrmgnt_login.pas"/>
-        <UnitName Value="usrmgnt_login"/>
+        <Filename Value="src/hmi/unumerickeyboard.pas"/>
+        <UnitName Value="unumerickeyboard"/>
       </Item26>
       <Item27>
-        <Filename Value="src/hmi/usrmgnt_login.lfm"/>
+        <Filename Value="src/hmi/unumerickeyboard.lfm"/>
         <Type Value="LFM"/>
       </Item27>
+      <Item28>
+        <Filename Value="src/hmi/usrmgnt_login.pas"/>
+        <UnitName Value="usrmgnt_login"/>
+      </Item28>
+      <Item29>
+        <Filename Value="src/hmi/usrmgnt_login.lfm"/>
+        <Type Value="LFM"/>
+      </Item29>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="4">

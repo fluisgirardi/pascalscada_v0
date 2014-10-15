@@ -5,7 +5,7 @@ unit hmibooleanpropertyconnector;
 interface
 
 uses
-  Classes, HMIZones, hmiobjectcolletion;
+  Classes, sysutils, HMIZones, hmiobjectcolletion;
 
 type
   //forward class declaration.
@@ -73,36 +73,102 @@ type
   { TObjectWithBooleanPropetiesColletionItem }
 
   TObjectWithBooleanPropetiesColletionItem = class(TObjectColletionItem)
-  protected
-    function AcceptObjectProperty(PropertyName: String): Boolean; override;
-    function AcceptObject(obj: TComponent): Boolean; override;
+  private
+    fInvertResult,
+    fModified,
+    fLastResultApplied: Boolean;
+    procedure SetInvertedResult(AValue: Boolean);
+  public
+    constructor Create(ACollection: TCollection); override;
+    procedure ApplyResult(Result:Boolean); virtual;
+  published
+    property InvertResult:Boolean read FInvertResult write SetInvertedResult;
   end;
 
-  TBooleanPropertyConnector = class(TComponent)
+  { THMIBooleanPropertyConnector }
+
+  THMIBooleanPropertyConnector = class(TComponent)
   private
-    { Private declarations }
-  protected
-    { Protected declarations }
+    FConditionZones:TBooleanZones;
+    FObjects:TObjectWithBooleanPropetiesColletion;
+    function GetConditionZones: TBooleanZones;
+    function GetObjects: TObjectWithBooleanPropetiesColletion;
+    procedure SetConditionZones(AValue: TBooleanZones);
+    procedure SetObjects(AValue: TObjectWithBooleanPropetiesColletion);
   public
-    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   published
-    { Published declarations }
+    property Conditions:TBooleanZones read GetConditionZones write SetConditionZones;
+    property AffectedObjects:TObjectWithBooleanPropetiesColletion read GetObjects write SetObjects;
   end;
 
 implementation
 
-{ TObjectWithBooleanPropetiesColletionItem }
+uses typinfo, rttiutils;
 
-function TObjectWithBooleanPropetiesColletionItem.AcceptObjectProperty(
-  PropertyName: String): Boolean;
+{ THMIBooleanPropertyConnector }
+
+function THMIBooleanPropertyConnector.GetConditionZones: TBooleanZones;
 begin
-  Result:=inherited AcceptObjectProperty(PropertyName);
+  Result:=FConditionZones;
 end;
 
-function TObjectWithBooleanPropetiesColletionItem.AcceptObject(obj: TComponent
-  ): Boolean;
+function THMIBooleanPropertyConnector.GetObjects: TObjectWithBooleanPropetiesColletion;
 begin
-  Result:=inherited AcceptObject(obj);
+  Result:=FObjects;
+end;
+
+procedure THMIBooleanPropertyConnector.SetConditionZones(AValue: TBooleanZones);
+begin
+  FConditionZones.Assign(AValue);
+end;
+
+procedure THMIBooleanPropertyConnector.SetObjects(
+  AValue: TObjectWithBooleanPropetiesColletion);
+begin
+  FObjects.Assign(AValue);
+end;
+
+constructor THMIBooleanPropertyConnector.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FConditionZones:=TBooleanZones.Create(Self);
+  FObjects:=TObjectWithBooleanPropetiesColletion.Create(Self);
+end;
+
+destructor THMIBooleanPropertyConnector.Destroy;
+begin
+  FreeAndNil(FConditionZones);
+  FreeAndNil(FObjects);
+  inherited Destroy;
+end;
+
+{ TObjectWithBooleanPropetiesColletionItem }
+
+procedure TObjectWithBooleanPropetiesColletionItem.SetInvertedResult(
+  AValue: Boolean);
+begin
+  if FInvertResult=AValue then Exit;
+  FInvertResult:=AValue;
+
+  if fModified then ApplyResult(fLastResultApplied);
+end;
+
+constructor TObjectWithBooleanPropetiesColletionItem.Create(
+  ACollection: TCollection);
+begin
+  inherited Create(ACollection);
+  fRequiredTypeName:=PTypeInfo(TypeInfo(Boolean)).Name ;
+end;
+
+procedure TObjectWithBooleanPropetiesColletionItem.ApplyResult(Result: Boolean);
+begin
+  if (not AcceptObject(TargetObject)) or
+     (not AcceptObjectProperty(TargetObjectProperty)) then exit;
+  fModified:=true;
+  fLastResultApplied:=Result;
+  SetPropValue(TargetObject,TargetObjectProperty,(Result xor fInvertResult));
 end;
 
 { TObjectWithBooleanPropetiesColletion }
