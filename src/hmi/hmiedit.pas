@@ -42,7 +42,9 @@ type
   {$ENDIF}
   THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
   private
+    FAfterSendValueToTag: TAfterSendValueToTagEvent;
     FAlignment:TAlignment;
+    FBeforeSendValueToTag: TBeforeSendValueToTagEvent;
     FTag:TPLCTag;
     FShowFocused:Boolean;
     FDefFontColor:TColor;
@@ -324,6 +326,20 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado antes do HMIEdit enviar um valor ao tag associado
+    {$ELSE}
+    //: Event triggered before HMIEdit send a value to linked tag.
+    {$ENDIF}
+    property BeforeSendAValueToTag:TBeforeSendValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
+    {$ELSE}
+    //: Event triggered when the HMIEdit sent a value to linked tag.
+    {$ENDIF}
+    property AfterValueToTag:TAfterSendValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
@@ -381,7 +397,7 @@ begin
 end;
 {$ENDIF}
 
-procedure THMIEdit.SetSecurityCode(Sc:String);
+procedure THMIEdit.SetSecurityCode(sc: String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -595,14 +611,31 @@ begin
   end;
 end;
 
-procedure THMIEdit.SendValue(Txt:String);
+procedure THMIEdit.SendValue(txt: String);
 var
   x:Double;
+
+  procedure DoAfterSendValue;
+  begin
+    if Assigned(FAfterSendValueToTag) then
+      FAfterSendValueToTag(Self,txt);
+  end;
+
+  function SendIt:Boolean;
+  begin
+    if Assigned(FBeforeSendValueToTag) then
+      FBeforeSendValueToTag(Self,txt,Result)
+    else
+      Result:=true;
+  end;
+
 begin
   if (csReading in ComponentState) or
      (FTag=nil) or
      (not Modified) then
      exit;
+
+  if not SendIt then exit;
 
   if Supports(FTag, ITagNumeric) then begin
     x:=StrToFloat(Txt);
@@ -610,16 +643,19 @@ begin
       raise Exception.Create(SoutOfBounds);
 
     (FTag as ITagNumeric).Value := x;
+    DoAfterSendValue;
     exit;
   end;
 
   if Supports(FTag, ITagString) then begin
     (FTag as ITagString).Value := Txt;
+    DoAfterSendValue;
     exit;
   end;
   
   if Supports(FTag, ITagInterface) then begin
     (FTag as ITagInterface).ValueVariant := Txt;
+    DoAfterSendValue;
     exit;
   end;
 end;

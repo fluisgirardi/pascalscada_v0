@@ -174,6 +174,9 @@ type
     property  Tag:TPLCTag read GetHMITag write SetHMITag;
   end;
 
+  TBeforeSendValueToTagEvent = procedure(Sender:TObject; Value:String; var SendIt:Boolean) of object;
+  TAfterSendValueToTagEvent = procedure(Sender:TObject; Value:String) of object;
+
 implementation
 
 end.

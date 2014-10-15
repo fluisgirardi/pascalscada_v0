@@ -22,7 +22,7 @@ interface
 
 uses
   Classes, SysUtils, CommPort, commtypes, socket_types
-  {$IFDEF FPC}, fptimer{$ELSE}, Extctrls{$ENDIF}
+  {$IFDEF FPC}, fptimer, ExtCtrls{$ELSE}, Extctrls{$ENDIF}
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     , Windows,
     {$IFDEF FPC}
@@ -67,7 +67,7 @@ type
     FSocket:Tsocket;
     FPortType:TPortType;
     FExclusiveReaded:Boolean;
-    freconnectTimer:{$IFDEF FPC}TFPTimer{$ELSE}TTimer{$ENDIF};
+    freconnectTimer:{$IFDEF FPC_BUG}TFPTimer{$ELSE}TTimer{$ENDIF};
     FEnableAutoReconnect:Boolean;
     FReconnectRetriesLimit:Cardinal;
     procedure TryReconnectTimer(Sender: TObject);
@@ -204,7 +204,7 @@ begin
   FSocket:=0;
   FEnableAutoReconnect:=true;
   FReconnectRetriesLimit:=0;
-  freconnectTimer:={$IFDEF FPC}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(nil);
+  freconnectTimer:={$IFDEF FPC_BUG}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(nil);
   freconnectTimer.Enabled:=false;
   freconnectTimer.Interval:=5000;
   freconnectTimer.OnTimer:=TryReconnectTimer;

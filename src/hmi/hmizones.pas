@@ -780,9 +780,74 @@ type
     function Add:TGraphicZone;
   end;
 
+  //: @exclude
+  TColorZone = class;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Coleção de zonas de cores.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TColorcZone)
+  }
+  {$ELSE}
+  {:
+  Collection of color zones.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TColorcZone)
+  }
+  {$ENDIF}
+  TColorZones = class(TZones)
+  public
+    //: @exclude
+    constructor Create(Owner:TPersistent);
+
+    {$IFDEF PORTUGUES}
+    //: Adiciona uma nova zona de cor a coleção.
+    {$ELSE}
+    //: Adds a new color zone into the collection.
+    {$ENDIF}
+    function Add:TColorZone;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Implementa uma zona de cor.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TColorZones)
+  }
+  {$ELSE}
+  {:
+  Class of a color zone.
+  @seealso(TZone)
+  @seealso(TZones)
+  @seealso(TColorZones)
+  }
+  {$ENDIF}
+  TColorZone = class(TZone)
+  private
+    FColor: TColor;
+  published
+    property Color:TColor read FColor write FColor;
+  end;
+
 implementation
 
 uses hsstrings;
+
+{ TColorZones }
+
+constructor TColorZones.Create(Owner: TPersistent);
+begin
+  inherited create(Owner,TColorZone);
+end;
+
+function TColorZones.Add: TColorZone;
+begin
+  Result := TColorZone(inherited Add);
+end;
 
 constructor TZone.Create(Collection: TCollection);
 begin

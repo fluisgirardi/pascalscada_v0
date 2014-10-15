@@ -1780,7 +1780,7 @@ begin
 
     //if current plc has nothing to be read
     //delete it...
-    if TotalSize=0 then
+    if (TotalSize=0) and (not FPLCs[plc].Connected) then
       DeletePLC(plc);
   finally
     Inherited DoDelTag(TagObj);
@@ -1912,7 +1912,7 @@ begin
   anow:=CrossNow;
   TimeElapsed:=5;
   onereqdone:=false;
-  NeedSleep:=1;
+  NeedSleep:=ifthen(Length(FPLCs)<=0,-1,1);
 
   for plc:=0 to High(FPLCs) do begin
     if not FPLCs[plc].Connected then

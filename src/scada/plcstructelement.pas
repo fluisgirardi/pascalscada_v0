@@ -93,8 +93,8 @@ end;
 
 destructor TPLCStructItem.Destroy;
 begin
-    if Assigned(PBlock) then
-     PBlock.RemoveCallBacks(Self as IHMITagInterface);
+  if Assigned(PBlock) then
+    PBlock.RemoveCallBacks(Self as IHMITagInterface);
   PBlock:=nil;
   inherited Destroy;
 end;

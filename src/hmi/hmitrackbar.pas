@@ -39,6 +39,7 @@ type
   {$ENDIF}
   THMITrackBar = class(TTrackBar, IHMIInterface, IHMITagInterface)
   private
+    FAfterSendValueToTag: TAfterSendValueToTagEvent;
     Ftag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -132,6 +133,13 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
+    {$ELSE}
+    //: Event triggered when the HMIEdit sent a value to linked tag.
+    {$ENDIF}
+    property AfterValueToTag:TAfterSendValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
@@ -190,7 +198,7 @@ begin
   FTag := t;
 end;
 
-function THMITrackBar.GetHMITag;
+function THMITrackBar.GetHMITag: TPLCTag;
 begin
   Result:=Ftag;
 end;
@@ -218,7 +226,7 @@ begin
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
-procedure THMITrackBar.SetSecurityCode(Sc:String);
+procedure THMITrackBar.SetSecurityCode(sc: String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -240,11 +248,18 @@ begin
 end;
 
 procedure THMITrackBar.WriteValue;
+  procedure DoAfterSendValue;
+  begin
+    if Assigned(FAfterSendValueToTag) then
+      FAfterSendValueToTag(Self,IntToStr(Position));
+  end;
 begin
   if [csLoading,csReading]*ComponentState<>[] then exit;
 
-  if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
+  if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then begin
     (Ftag as ITagNumeric).Value := Position;
+    DoAfterSendValue;
+  end;
 end;
 
 //------------------------------------------------------------------------------
