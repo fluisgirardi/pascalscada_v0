@@ -28,7 +28,8 @@ uses
   typinfo, HMIControlDislocatorAnimation,
   ControlSecurityManager,
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList;
+    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList,
+    hmibooleanpropertyconnector;
   {$ELSE}
     Types,
     //if is a delphi 6+
@@ -77,7 +78,6 @@ type
   protected
     function GetImageList: TCustomImageList; override;
   public
-    procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const NewValue: ansistring); override;
   end;
 
@@ -89,6 +89,31 @@ type
     procedure SetValue(const NewValue: ansistring); override;
   end;
   {$IFEND}
+
+  {$IFNDEF DELPHI4_UP}
+
+  { TTargetObjectPropPropertyEditor }
+
+  TSelectObjectPropPropertyEditor = class(TStringPropertyEditor)
+  protected
+    FOnlyPropertiesOfType:String;
+  public
+    constructor Create(Hook: TPropertyEditorHook; APropCount: Integer);
+      override;
+    function  GetAttributes: TPropertyAttributes; override;
+    procedure GetValues(Proc: TGetStrProc); override;
+    procedure SetValue(const NewValue: ansistring); override;
+  end;
+
+  { TSelectOnlyBooleanPropPropertyEditor }
+
+  TSelectOnlyBooleanPropPropertyEditor = Class(TSelectObjectPropPropertyEditor)
+  public
+    constructor Create(Hook: TPropertyEditorHook; APropCount: Integer);
+       override;
+  end;
+
+  {$ENDIF}
   {$ENDIF}
 
   {$IFDEF PORTUGUES}
@@ -159,6 +184,74 @@ implementation
 
 uses HMITypes;
 
+{ TSelectOnlyBooleanPropPropertyEditor }
+
+constructor TSelectOnlyBooleanPropPropertyEditor.Create(
+  Hook: TPropertyEditorHook; APropCount: Integer);
+begin
+  inherited Create(Hook, APropCount);
+  FOnlyPropertiesOfType:=PTypeInfo(TypeInfo(Boolean)).Name;
+end;
+
+{ TTargetObjectPropPropertyEditor }
+
+constructor TSelectObjectPropPropertyEditor.Create(Hook: TPropertyEditorHook;
+  APropCount: Integer);
+begin
+  inherited Create(Hook, APropCount);
+  FOnlyPropertiesOfType:='';
+end;
+
+function TSelectObjectPropPropertyEditor.GetAttributes: TPropertyAttributes;
+begin
+  if GetComponent(0) is TObjectWithBooleanPropetiesColletionItem then
+     Result := [paValueList
+                {$IFDEF FPC}
+                ,paPickList
+                {$ELSE}
+                  {$IFDEF DELPHI2005_UP}
+                  , paReadOnly, paValueEditable
+                  {$ENDIF}
+                {$ENDIF}];
+end;
+
+procedure TSelectObjectPropPropertyEditor.GetValues(Proc: TGetStrProc);
+var
+  PL: PPropList;
+  tdata: PTypeData;
+  nprops: Integer;
+  p: Integer;
+  obj: TComponent;
+begin
+  Proc('(none)');
+   if GetComponent(0) is TObjectWithBooleanPropetiesColletionItem then
+     if assigned(TObjectWithBooleanPropetiesColletionItem(GetComponent(0)).TargetObject) then begin
+       obj := TObjectWithBooleanPropetiesColletionItem(GetComponent(0)).TargetObject;
+
+       tdata:=GetTypeData(obj.ClassInfo);
+
+       GetMem(PL,tdata.PropCount*SizeOf(Pointer));
+       try
+         nprops:=GetPropList(obj,PL);
+         for p:=0 to nprops-1 do begin
+           if (lowercase(PL^[p]^.PropType^.Name)=lowercase(FOnlyPropertiesOfType)) or (FOnlyPropertiesOfType='') then begin
+             Proc(PL^[p]^.Name);
+           end;
+         end;
+       finally
+         Freemem(PL);
+       end;
+     end;
+end;
+
+procedure TSelectObjectPropPropertyEditor.SetValue(const NewValue: ansistring);
+begin
+  if NewValue='(none)' then
+    inherited SetValue('')
+  else
+    inherited SetValue(NewValue);
+end;
+
 function  TZoneFileNamePropertyEditor.GetAttributes: TPropertyAttributes;
 begin
    if GetComponent(0) is TGraphicZone then
@@ -228,11 +321,6 @@ begin
     Result:=TGraphicZone(GetComponent(0)).ImageList
   else
     Result:=nil;
-end;
-
-procedure TGraphiZoneImageIndexPropertyEditor.GetValues(Proc: TGetStrProc);
-begin
-  inherited GetValues(Proc);
 end;
 
 procedure TPascalSCADALoginLogoutImageIndexPropertyEditor.SetValue(const NewValue: ansistring);

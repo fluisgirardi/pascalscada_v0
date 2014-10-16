@@ -5,7 +5,8 @@ unit hmibooleanpropertyconnector;
 interface
 
 uses
-  Classes, sysutils, HMIZones, hmiobjectcolletion;
+  Classes, sysutils, HMIZones, hmiobjectcolletion, ProtocolTypes, HMITypes,
+  Tag, PLCTag;
 
 type
   //forward class declaration.
@@ -32,9 +33,9 @@ type
     constructor Create(Owner:TPersistent);
 
     {$IFDEF PORTUGUES}
-    //: Adiciona uma nova zona de cor a coleção.
+    //: Adiciona uma nova zona boolean.
     {$ELSE}
-    //: Adds a new color zone into the collection.
+    //: Adds a new Boolean zone into the collection.
     {$ENDIF}
     function Add:TBooleanZone;
   end;
@@ -54,21 +55,52 @@ type
   @seealso(TBooleanZones)
   }
   {$ENDIF}
+
+  { TBooleanZone }
+
   TBooleanZone = class(TZone)
   private
     FResult: Boolean;
     procedure SetZoneResult(AValue: Boolean);
+  protected
+    function GetDisplayName: string; override;
   published
     property ZoneResult:Boolean read FResult write SetZoneResult;
   end;
 
+  //////////////////////////////////////////////////////////////////////////////
+
+  //: @exclude
   TObjectWithBooleanPropetiesColletionItem = class;
 
+  {$IFDEF PORTUGUES}
+  {:
+  Implementa uma coleção de objetos com propriedades do tipo Boolean.
+  @seealso(TObjectColletion)
+  }
+  {$ELSE}
+  {:
+  Implements a collection with objects that contains boolean properties.
+  @seealso(TObjectColletion)
+  }
+  {$ENDIF}
   TObjectWithBooleanPropetiesColletion = class(TObjectColletion)
   public
     constructor Create(AOwner:TComponent);
     function Add: TObjectWithBooleanPropetiesColletionItem;
   end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Implementa um item da coleção de objetos com propriedades booleanas.
+  @seealso(TObjectColletionItem)
+  }
+  {$ELSE}
+  {:
+  Implements a item of a collection with objects that contains boolean properties.
+  @seealso(TObjectColletionItem)
+  }
+  {$ENDIF}
 
   { TObjectWithBooleanPropetiesColletionItem }
 
@@ -78,6 +110,8 @@ type
     fModified,
     fLastResultApplied: Boolean;
     procedure SetInvertedResult(AValue: Boolean);
+  protected
+    function GetDisplayName: string; override;
   public
     constructor Create(ACollection: TCollection); override;
     procedure ApplyResult(Result:Boolean); virtual;
@@ -85,19 +119,38 @@ type
     property InvertResult:Boolean read FInvertResult write SetInvertedResult;
   end;
 
+  //////////////////////////////////////////////////////////////////////////////
+
   { THMIBooleanPropertyConnector }
 
-  THMIBooleanPropertyConnector = class(TComponent)
+  THMIBooleanPropertyConnector = class(TComponent, IHMITagInterface)
+  private
+    FTag:TPLCTag;
+    FConditionZones:TBooleanZones;
+    FObjects:TObjectWithBooleanPropetiesColletion;
     procedure ConditionItemChanged(Sender: TObject);
     procedure CollectionNeedsComponentState(var CurState: TComponentState);
     procedure ObjectItemChanged(Sender: TObject);
-  private
-    FConditionZones:TBooleanZones;
-    FObjects:TObjectWithBooleanPropetiesColletion;
     function GetConditionZones: TBooleanZones;
     function GetObjects: TObjectWithBooleanPropetiesColletion;
     procedure SetConditionZones(AValue: TBooleanZones);
+    procedure SetHMITag(AValue: TPLCTag);
     procedure SetObjects(AValue: TObjectWithBooleanPropetiesColletion);
+
+    //: @seealso(IHMITagInterface.NotifyReadOk)
+    procedure NotifyReadOk;
+    //: @seealso(IHMITagInterface.NotifyReadFault)
+    procedure NotifyReadFault;
+    //: @seealso(IHMITagInterface.NotifyWriteOk)
+    procedure NotifyWriteOk;
+    //: @seealso(IHMITagInterface.NotifyWriteFault)
+    procedure NotifyWriteFault;
+    //: @seealso(IHMITagInterface.NotifyTagChange)
+    procedure NotifyTagChange(Sender:TObject);
+    //: @seealso(IHMITagInterface.RemoveTag)
+    procedure RemoveTag(Sender:TObject);
+
+    procedure RecalculateObjectsProperties;
   protected
     procedure Loaded; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation);
@@ -108,17 +161,18 @@ type
   published
     property Conditions:TBooleanZones read GetConditionZones write SetConditionZones;
     property AffectedObjects:TObjectWithBooleanPropetiesColletion read GetObjects write SetObjects;
+    property PLCTag:TPLCTag read FTag write SetHMITag;
   end;
 
 implementation
 
-uses typinfo, rttiutils;
+uses typinfo, rttiutils, hsstrings;
 
 { THMIBooleanPropertyConnector }
 
 procedure THMIBooleanPropertyConnector.ConditionItemChanged(Sender: TObject);
 begin
-  //recalcular?
+  RecalculateObjectsProperties
 end;
 
 procedure THMIBooleanPropertyConnector.CollectionNeedsComponentState(
@@ -129,7 +183,7 @@ end;
 
 procedure THMIBooleanPropertyConnector.ObjectItemChanged(Sender: TObject);
 begin
-
+  RecalculateObjectsProperties
 end;
 
 function THMIBooleanPropertyConnector.GetConditionZones: TBooleanZones;
@@ -147,10 +201,77 @@ begin
   FConditionZones.Assign(AValue);
 end;
 
+procedure THMIBooleanPropertyConnector.SetHMITag(AValue: TPLCTag);
+begin
+  if FTag=AValue then Exit;
+
+  //se o tag esta entre um dos aceitos.
+  //check if the tag is valid (only numeric tags)
+  if (AValue<>nil) and (not Supports(AValue, ITagNumeric)) then
+     raise Exception.Create(SonlyNumericTags);
+
+  if FTag<>nil then begin
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  end;
+
+  //adiona o callback para o novo tag
+  //link with the new tag.
+  if AValue<>nil then begin
+    AValue.AddCallBacks(Self as IHMITagInterface);
+    FTag := AValue;
+    RecalculateObjectsProperties;
+  end;
+  FTag:=AValue;
+end;
+
 procedure THMIBooleanPropertyConnector.SetObjects(
   AValue: TObjectWithBooleanPropetiesColletion);
 begin
   FObjects.Assign(AValue);
+end;
+
+procedure THMIBooleanPropertyConnector.NotifyReadOk;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure THMIBooleanPropertyConnector.NotifyReadFault;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure THMIBooleanPropertyConnector.NotifyWriteOk;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure THMIBooleanPropertyConnector.NotifyWriteFault;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure THMIBooleanPropertyConnector.NotifyTagChange(Sender: TObject);
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure THMIBooleanPropertyConnector.RemoveTag(Sender: TObject);
+begin
+  if Sender=FTag then
+     FTag:=nil;
+end;
+
+procedure THMIBooleanPropertyConnector.RecalculateObjectsProperties;
+var
+  x: TBooleanZone;
+  o: Integer;
+begin
+  if csDesigning in ComponentState then exit;
+  if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin
+    x:=TBooleanZone(FConditionZones.GetZoneFromValue((FTag as ITagNumeric).Value));
+    for o:=0 to AffectedObjects.Count-1 do
+      TObjectWithBooleanPropetiesColletionItem(AffectedObjects.Items[o]).ApplyResult(x.ZoneResult);
+  end;
 end;
 
 procedure THMIBooleanPropertyConnector.Loaded;
@@ -158,6 +279,7 @@ begin
   inherited Loaded;
   FConditionZones.Loaded;
   FObjects.Loaded;
+  RecalculateObjectsProperties;
 end;
 
 procedure THMIBooleanPropertyConnector.Notification(AComponent: TComponent;
@@ -190,6 +312,7 @@ destructor THMIBooleanPropertyConnector.Destroy;
 begin
   FreeAndNil(FConditionZones);
   FreeAndNil(FObjects);
+  SetHMITag(nil);
   inherited Destroy;
 end;
 
@@ -202,6 +325,14 @@ begin
   FInvertResult:=AValue;
 
   if fModified then ApplyResult(fLastResultApplied);
+end;
+
+function TObjectWithBooleanPropetiesColletionItem.GetDisplayName: string;
+begin
+  if Assigned(TargetObject) and (TargetObjectProperty<>'') then
+    Result:=TargetObject.Name+'.'+TargetObjectProperty
+  else
+    Result:='(unused)';
 end;
 
 constructor TObjectWithBooleanPropetiesColletionItem.Create(
@@ -251,6 +382,11 @@ begin
   if FResult=AValue then Exit;
   FResult:=AValue;
   NotifyChange;
+end;
+
+function TBooleanZone.GetDisplayName: string;
+begin
+  Result:=inherited GetDisplayName+', Result='+BoolToStr(ZoneResult,'True','False');
 end;
 
 end.

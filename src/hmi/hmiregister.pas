@@ -84,6 +84,7 @@ begin
   RegisterPropertyEditor(TypeInfo(LongInt), TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
   {$IFEND}
   RegisterPropertyEditor(TypeInfo(TCaption),TTextZone,                      'Text',                          TStringMultilinePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String)  ,TObjectWithBooleanPropetiesColletionItem,'TargetObjectProperty', TSelectOnlyBooleanPropPropertyEditor);
   {$ENDIF}
 
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);
