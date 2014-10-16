@@ -88,6 +88,9 @@ type
   { THMIBooleanPropertyConnector }
 
   THMIBooleanPropertyConnector = class(TComponent)
+    procedure ConditionItemChanged(Sender: TObject);
+    procedure CollectionNeedsComponentState(var CurState: TComponentState);
+    procedure ObjectItemChanged(Sender: TObject);
   private
     FConditionZones:TBooleanZones;
     FObjects:TObjectWithBooleanPropetiesColletion;
@@ -95,6 +98,10 @@ type
     function GetObjects: TObjectWithBooleanPropetiesColletion;
     procedure SetConditionZones(AValue: TBooleanZones);
     procedure SetObjects(AValue: TObjectWithBooleanPropetiesColletion);
+  protected
+    procedure Loaded; override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation);
+      override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -108,6 +115,22 @@ implementation
 uses typinfo, rttiutils;
 
 { THMIBooleanPropertyConnector }
+
+procedure THMIBooleanPropertyConnector.ConditionItemChanged(Sender: TObject);
+begin
+  //recalcular?
+end;
+
+procedure THMIBooleanPropertyConnector.CollectionNeedsComponentState(
+  var CurState: TComponentState);
+begin
+  CurState:=ComponentState;
+end;
+
+procedure THMIBooleanPropertyConnector.ObjectItemChanged(Sender: TObject);
+begin
+
+end;
 
 function THMIBooleanPropertyConnector.GetConditionZones: TBooleanZones;
 begin
@@ -130,11 +153,37 @@ begin
   FObjects.Assign(AValue);
 end;
 
+procedure THMIBooleanPropertyConnector.Loaded;
+begin
+  inherited Loaded;
+  FConditionZones.Loaded;
+  FObjects.Loaded;
+end;
+
+procedure THMIBooleanPropertyConnector.Notification(AComponent: TComponent;
+  Operation: TOperation);
+var
+  i: Integer;
+begin
+  inherited Notification(AComponent, Operation);
+  if Operation=opRemove then begin
+    for i:=0 to FObjects.Count-1 do begin
+      if TObjectWithBooleanPropetiesColletionItem(FObjects.Items[i]).TargetObject=AComponent then begin
+        TObjectWithBooleanPropetiesColletionItem(FObjects.Items[i]).TargetObject:=nil;
+      end;
+    end;
+  end;
+end;
+
 constructor THMIBooleanPropertyConnector.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FConditionZones:=TBooleanZones.Create(Self);
+  FConditionZones.OnCollectionItemChange:=ConditionItemChanged;
+  FConditionZones.OnNeedCompState:=CollectionNeedsComponentState;
   FObjects:=TObjectWithBooleanPropetiesColletion.Create(Self);
+  FObjects.OnCollectionItemChange:=ObjectItemChanged;
+  FObjects.OnNeedCompState:=CollectionNeedsComponentState;
 end;
 
 destructor THMIBooleanPropertyConnector.Destroy;

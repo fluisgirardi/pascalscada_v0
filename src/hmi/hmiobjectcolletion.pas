@@ -3,7 +3,7 @@ unit hmiobjectcolletion;
 interface
 
 uses
-  Classes, typinfo;
+  Classes, hmibasiccolletion, typinfo;
 
 type
   {$IFDEF PORTUGUES}
@@ -15,14 +15,7 @@ type
   Object colletion class.
   }
   {$ENDIF}
-  TObjectColletion = class(TCollection)
-  private
-    FOwner:TPersistent;
-  protected
-    function GetOwner: TPersistent; override;
-  public
-    constructor Create(AOwner:TComponent; ItemClass: TCollectionItemClass);
-  end;
+  TObjectColletion = class(THMIBasicColletion);
 
   {$IFDEF PORTUGUES}
   {:
@@ -32,13 +25,13 @@ type
   {:
   Object colletion class item.
   }
-
-  { TObjectColletionItem }
   {$ENDIF}
-  TObjectColletionItem = Class(TCollectionItem)
+  TObjectColletionItem = Class(THMIBasicColletionItem)
   private
-    FTargetObject: TComponent;
-    FTargetObjectProperty: String;
+    FTargetObject,
+    FTargetObjectLoaded: TComponent;
+    FTargetObjectProperty,
+    FTargetObjectPropertyLoaded: String;
     procedure SetTargetObject(AValue: TComponent);
     procedure SetTargetObjectProperty(AValue: String);
   protected
@@ -49,30 +42,23 @@ type
     property TargetObject:TComponent read FTargetObject write SetTargetObject;
     property TargetObjectProperty:String read FTargetObjectProperty write SetTargetObjectProperty;
   public
+    procedure Loaded; override;
     constructor Create(ACollection: TCollection); override;
   end;
 
 implementation
 
-{ TObjectColletion }
-
-function TObjectColletion.GetOwner: TPersistent;
-begin
-  Result:=FOwner;
-end;
-
-constructor TObjectColletion.Create(AOwner: TComponent;
-  ItemClass: TCollectionItemClass);
-begin
-  inherited Create(ItemClass);
-  FOwner:=AOwner;
-end;
-
 { TObjectColletionItem }
 
 procedure TObjectColletionItem.SetTargetObject(AValue: TComponent);
 begin
-  if FTargetObject=AValue then Exit;
+  if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+    FTargetObjectLoaded:=AValue;
+    exit;
+  end;
+
+  if FTargetObject=AValue    then Exit;
+  if AValue=Collection.Owner then exit;
 
   if AValue=nil then begin
     FTargetObject:=nil;
@@ -88,6 +74,11 @@ end;
 
 procedure TObjectColletionItem.SetTargetObjectProperty(AValue: String);
 begin
+  if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+    FTargetObjectPropertyLoaded:=AValue;
+    exit;
+  end;
+
   if FTargetObjectProperty=AValue     then Exit;
 
   if AValue='' then begin
@@ -152,6 +143,13 @@ begin
   finally
     Freemem(PL);
   end;
+end;
+
+procedure TObjectColletionItem.Loaded;
+begin
+  inherited Loaded;
+  SetTargetObject(FTargetObjectLoaded);
+  SetTargetObjectProperty(FTargetObjectPropertyLoaded);
 end;
 
 constructor TObjectColletionItem.Create(ACollection: TCollection);

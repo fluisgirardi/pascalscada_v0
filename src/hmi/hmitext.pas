@@ -150,7 +150,7 @@ begin
    FTimer.Enabled:=false;
    FTextZones:=TTextZones.Create(Self);
    FTextZones.OnNeedCompState:=NeedComState;
-   FTextZones.OnZoneChange:=ZoneChange;
+   FTextZones.OnCollectionItemChange:=ZoneChange;
 end;
 
 destructor THMIText.Destroy;

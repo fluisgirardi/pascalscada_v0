@@ -176,7 +176,7 @@ begin
    FIsEnabled:=true;
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=NeedComState;
-   FAnimationZones.OnZoneChange:=ZoneChange;
+   FAnimationZones.OnCollectionItemChange:=ZoneChange;
    GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 

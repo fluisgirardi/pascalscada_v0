@@ -18,7 +18,7 @@ unit HMIZones;
 
 interface
 
-uses Classes, SysUtils, hsutils, Controls, Graphics, collections
+uses Classes, SysUtils, hsutils, Controls, Graphics, hmibasiccolletion
   {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type
@@ -51,7 +51,7 @@ type
   @seealso(TZoneTypes)
   }
   {$ENDIF}
-  TZone = class(TCollectionItem)
+  TZone = class(THMIBasicColletionItem)
   private
      FValue1,FValue2:Double;
      FIncludeV1, FIncludeV2:Boolean;
@@ -75,8 +75,6 @@ type
      procedure RemReference(RefBy:TZone);
   protected
      {: @exclude }
-     procedure NotifyChange;
-     {: @exclude }
      function  GetDisplayName: string; override;
   public
      {: @exclude }
@@ -84,7 +82,7 @@ type
      {: @exclude }
      destructor Destroy; override;
      {: @exclude }
-     procedure Loaded;
+     procedure Loaded; override;
   published
      {$IFDEF PORTUGUES}
      {:
@@ -304,70 +302,10 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  TZones = class(TCollection)
-  private
-     FOwner:TPersistent;
-     FOnZoneChange:TNotifyEvent;
-     FOnNeedCompState:TNeedCompStateEvent;
-     FComponentState:TComponentState;
-  protected
-     //: @exclude
-     function GetOwner: TPersistent; override;
-     //: @exclude
-     function GetComponentState:TComponentState;
-     //: @exclude
-     procedure NeedCurrentCompState;
-  published
-
-     {$IFDEF PORTUGUES}
-     {:
-     @name é o evento chamado quando há alterações de alguma propriedade de
-     alguma zona. Use esse evento para calcular qual é a nova zona escolhida
-     em função dos novos parametros.
-     }
-     {$ELSE}
-     {:
-     @name is called when an animation zone was changed. Use this event to
-     select the correct animation zone depending of the new parameters.
-     }
-     {$ENDIF}
-     property OnZoneChange:TNotifyEvent read FOnZoneChange write FOnZoneChange;
-
-     {$IFDEF PORTUGUES}
-     {:
-     @name é o evento chamado quando uma zona ou a coleção de zonas precisa saber
-     qual é o atual estado do componente. Este evento também é chamado quando o
-     método NeedCurrentCompState é chamado.
-     @seealso(ZonesState)
-     }
-     {$ELSE}
-     {:
-     @name is called when a animation zone or the collection of animations zones
-     needs to know what's the current state of the owner component. It's called
-     too when the procedure NeedCurrentCompState is called.
-     @seealso(ZonesState)
-     }
-     {$ENDIF}
-     property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
+  TZones = class(THMIBasicColletion)
   public
      //: @exclude
-     constructor Create(Owner:TPersistent; ItemClass: TCollectionItemClass);
-
-     {$IFDEF PORTUGUES}
-     {:
-     Este método deve ser chamado através do método Loaded de seu componente para
-     informar para as zonas que a partir de agora elas devem operar normalmente e
-     não mais no modo de carga de configurações. @bold(Se este método não for
-     chamado as zonas não vão se comportar da maneira esperada).
-     }
-     {$ELSE}
-     {:
-     This procedure must be called from Loaded procedure of your component/control
-     to tell that all properties are loaded. @bold(If this procedure aren't
-     called, the animation zones will not work properly).
-     }
-     {$ENDIF}
-     procedure Loaded;
+     constructor Create(Owner:TPersistent; ItemClass: TCollectionItemClass); override;
 
      {$IFDEF PORTUGUES}
      {:
@@ -394,22 +332,6 @@ type
      }
      {$ENDIF}
      function  GetZoneFromValue(v:Double):TZone; virtual;
-
-     {$IFDEF PORTUGUES}
-     {:
-     Propriedade que lê o estado do componente e o repassa para a coleção de
-     zonas. Usa o evento OnNeedCompState para obter o atual estado.
-     @seealso(OnNeedCompState)
-     }
-     {$ELSE}
-     {:
-     Property that reads the current state of the owner component/control and
-     repass it to the animation collection zones. Uses the event OnNeedCompState
-     to get the actual state of the owner.
-     @seealso(OnNeedCompState)
-     }
-     {$ENDIF}
-     property  ZonesState:TComponentState read GetComponentState;
   end;
 
   {$IFDEF PORTUGUES}
@@ -853,8 +775,6 @@ constructor TZone.Create(Collection: TCollection);
 begin
    inherited Create(Collection);
    FBlinkWithIndex := -1;
-   if Collection is TZones then
-      TZones(Collection).NeedCurrentCompState;
 end;
 
 destructor TZone.Destroy;
@@ -868,7 +788,7 @@ end;
 
 procedure TZone.SetV1(v:Double);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FValue1:=v;
       exit;
    end;
@@ -897,7 +817,7 @@ end;
 
 procedure TZone.SetBlinkWithZoneNumber(v:LongInt);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FBlinkWithIndex:=v;
       exit;
    end;
@@ -918,7 +838,7 @@ end;
 
 procedure TZone.SetV2(v:Double);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FValue2:=v;
       exit;
    end;
@@ -934,7 +854,7 @@ end;
 
 procedure TZone.SetIncV1(v:Boolean);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FIncludeV1:=v;
       exit;
    end;
@@ -946,7 +866,7 @@ end;
 
 procedure TZone.SetIncV2(v:Boolean);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FIncludeV2:=v;
       exit;
    end;
@@ -958,7 +878,7 @@ end;
 
 procedure TZone.SetBlinkTime(v:Cardinal);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FBlinkTime:=v;
       exit;
    end;
@@ -972,7 +892,7 @@ procedure TZone.SetAsDefaultZone(v:Boolean);
 var
    c:LongInt;
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FDefaultZone:=v;
       exit;
    end;
@@ -991,7 +911,7 @@ end;
 
 procedure TZone.SetZoneType(zt:TZoneTypes);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FZoneType:=zt;
       exit;
    end;
@@ -1039,7 +959,8 @@ end;
 
 procedure TZone.Loaded;
 begin
-   SetBlinkWithZoneNumber(FBlinkWithIndex);
+  inherited Loaded;
+  SetBlinkWithZoneNumber(FBlinkWithIndex);
 end;
 
 function  TZone.GetDisplayName: string;
@@ -1101,40 +1022,13 @@ begin
   end;
 end;
 
-procedure TZone.NotifyChange;
-begin
-   with Collection as TZones do
-      if Assigned(OnZoneChange) then
-         OnZoneChange(Self);
-end;
-
 //############################################################
 // TZones implementation
 //############################################################
 
 constructor TZones.Create(Owner:TPersistent; ItemClass: TCollectionItemClass);
 begin
-  inherited Create(ItemClass);
-  FOwner:=Owner;
-end;
-
-procedure TZones.Loaded;
-var
-   i:LongInt;
-begin
-   for i:=0 to Count-1 do
-      TZone(Items[i]).Loaded;
-end;
-
-function TZones.GetOwner: TPersistent;
-begin
-  Result:=FOwner;
-end;
-
-function TZones.GetComponentState:TComponentState;
-begin
-   NeedCurrentCompState;
-   Result := FComponentState;
+  inherited Create(Owner, ItemClass);
 end;
 
 //seleciona a zona de acordo com seu critério de seleção
@@ -1200,12 +1094,6 @@ begin
                end;
          end; //end do case
    end; //end do for
-end;
-
-procedure TZones.NeedCurrentCompState;
-begin
-   if assigned(FOnNeedCompState) then
-      FOnNeedCompState(FComponentState);
 end;
 
 //############################################################
@@ -1314,7 +1202,7 @@ end;
 
 procedure TGraphicZone.SetImageList(il:TImageList);
 begin
-   if [csReading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FImageList:=il;
       exit;
    end;
@@ -1336,7 +1224,7 @@ procedure TGraphicZone.SetImageIndex(index:LongInt);
 var
    notify:Boolean;
 begin
-   if [csReading, csLoading]*TZones(Collection).ZonesState<>[] then begin
+   if [csReading, csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FImageIndex:=index;
       exit;
    end;
