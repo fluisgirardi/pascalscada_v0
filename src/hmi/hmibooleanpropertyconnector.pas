@@ -309,7 +309,14 @@ begin
 end;
 
 destructor THMIBooleanPropertyConnector.Destroy;
+var
+  o: Integer;
 begin
+  if FObjects.Owner is TComponent then
+    for o:=0 to FObjects.Count-1 do begin
+      if assigned(TObjectWithBooleanPropetiesColletionItem(FObjects.Items[o]).TargetObject) then
+        TObjectWithBooleanPropetiesColletionItem(FObjects.Items[o]).TargetObject.RemoveFreeNotification(TComponent(FObjects.Owner));
+    end;
   FreeAndNil(FConditionZones);
   FreeAndNil(FObjects);
   SetHMITag(nil);
