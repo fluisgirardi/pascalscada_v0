@@ -36,6 +36,7 @@ type
     procedure  UnregisterSecurityCode(sc:String);
     function   SecurityCodeExists(sc:String):Boolean;
     function   GetRegisteredAccessCodes:TStringList;
+    function   CheckIfUserIsAllowed(sc:String; var userlogin:String):Boolean;
   published
     property UserManagement:TBasicUserManagement read FUserManagement write SetUserManagement;
   end;
@@ -414,6 +415,14 @@ begin
     Result:=TStringList.Create
   end else
     Result:=TBasicUserManagement(FUserManagement).GetRegisteredAccessCodes;
+end;
+
+function TControlSecurityManager.CheckIfUserIsAllowed(sc: String;
+  var userlogin: String): Boolean;
+begin
+  Result:=false;
+  if FUserManagement<>nil then
+    Result:=TBasicUserManagement(FUserManagement).CheckIfUserIsAllowed(sc, userlogin);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -63,7 +63,7 @@ object frmUserAuthentication: TfrmUserAuthentication
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 0
-      object BitBtn4: TBitBtn
+      object btnOk: TBitBtn
         Left = 16
         Top = 6
         Width = 81
@@ -71,7 +71,7 @@ object frmUserAuthentication: TfrmUserAuthentication
         TabOrder = 0
         Kind = bkOK
       end
-      object BitBtn1: TBitBtn
+      object btnCancel: TBitBtn
         Left = 104
         Top = 6
         Width = 75

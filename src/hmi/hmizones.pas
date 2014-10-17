@@ -55,34 +55,19 @@ type
   private
      FValue1,FValue2:Double;
      FIncludeV1, FIncludeV2:Boolean;
-     FBlinkTime:Cardinal;
-     FBlinkWith:TZone;
-     FBlinkWithIndex:LongInt;
      FDefaultZone:Boolean;
      FZoneType:TZoneTypes;
-     FReferencedBy:Array of TZone;
-     function  GetBlinkWithZoneNumber:LongInt;
-     procedure SetBlinkWithZoneNumber(v:LongInt);
+
      procedure SetV1(v:Double);
      procedure SetV2(v:Double);
      procedure SetIncV1(v:Boolean);
      procedure SetIncV2(v:Boolean);
-     procedure SetBlinkTime(v:Cardinal);
      procedure SetAsDefaultZone(v:Boolean);
      procedure SetZoneType(zt:TZoneTypes);
-     procedure RemoveBlinkZone;
-     procedure AddReference(RefBy:TZone);
-     procedure RemReference(RefBy:TZone);
+
   protected
      {: @exclude }
      function  GetDisplayName: string; override;
-  public
-     {: @exclude }
-     constructor Create(Collection: TCollection); override;
-     {: @exclude }
-     destructor Destroy; override;
-     {: @exclude }
-     procedure Loaded; override;
   published
      {$IFDEF PORTUGUES}
      {:
@@ -135,38 +120,6 @@ type
      }
      {$ENDIF}
      property IncludeValue2:Boolean read FIncludeV2 write SetIncV2;
-
-     {$IFDEF PORTUGUES}
-     {:
-     @name informa o tempo em milisegundos que a zona ficara visivel. Após esse
-     tempo chama a próxima zona definida por BlinkWith.
-     @seealso(BlinkWith)
-     @seealso(TZone.DefaultZone)
-     }
-     {$ELSE}
-     {:
-     @name is the time in milliseconds that the animation zone will stay visible.
-     After this time, shows the next zone (defined by the BlinkWith property).
-     @seealso(BlinkWith)
-     @seealso(TZone.DefaultZone)
-     }
-     {$ENDIF}
-     property BlinkTime:Cardinal read FBlinkTime write SetBlinkTime;
-
-     {$IFDEF PORTUGUES}
-     {:
-     @name informa qual será a próxima zona a ser chamada para gerar o efeito de
-     pisca/animação após o tempo de exibição da zona.
-     @seealso(BlinkTime)
-     }
-     {$ELSE}
-     {:
-     @name is the next zone to be shown to do a blink effect/animation after
-     BlinkTime milliseconds of the current animation zone.
-     @seealso(BlinkTime)
-     }
-     {$ENDIF}
-     property BlinkWith:LongInt read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
 
      {$IFDEF PORTUGUES}
      {:
@@ -288,6 +241,59 @@ type
      property ZoneType:TZoneTypes read FZoneType write SetZoneType;
   end;
 
+  { TAnimationZone }
+
+  TAnimationZone = class(TZone)
+  private
+     FBlinkTime:Cardinal;
+     FBlinkWith:TAnimationZone;
+     FBlinkWithIndex:LongInt;
+     FReferencedBy:Array of TAnimationZone;
+     function  GetBlinkWithZoneNumber:LongInt;
+     procedure SetBlinkWithZoneNumber(v:LongInt);
+     procedure SetBlinkTime(v:Cardinal);
+     procedure RemoveBlinkZone;
+     procedure AddReference(RefBy:TAnimationZone);
+     procedure RemReference(RefBy:TAnimationZone);
+  protected
+     procedure Loaded; override;
+  public
+     constructor Create(Collection: TCollection); override;
+     destructor Destroy; override;
+  published
+     {$IFDEF PORTUGUES}
+     {:
+     @name informa o tempo em milisegundos que a zona ficara visivel. Após esse
+     tempo chama a próxima zona definida por BlinkWith.
+     @seealso(BlinkWith)
+     @seealso(TZone.DefaultZone)
+     }
+     {$ELSE}
+     {:
+     @name is the time in milliseconds that the animation zone will stay visible.
+     After this time, shows the next zone (defined by the BlinkWith property).
+     @seealso(BlinkWith)
+     @seealso(TZone.DefaultZone)
+     }
+     {$ENDIF}
+     property BlinkTime:Cardinal read FBlinkTime write SetBlinkTime;
+
+     {$IFDEF PORTUGUES}
+     {:
+     @name informa qual será a próxima zona a ser chamada para gerar o efeito de
+     pisca/animação após o tempo de exibição da zona.
+     @seealso(BlinkTime)
+     }
+     {$ELSE}
+     {:
+     @name is the next zone to be shown to do a blink effect/animation after
+     BlinkTime milliseconds of the current animation zone.
+     @seealso(BlinkTime)
+     }
+     {$ENDIF}
+     property BlinkWith:LongInt read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
+  end;
+
 
   {$IFDEF PORTUGUES}
   {:
@@ -351,7 +357,7 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  TTextZone = class(TZone)
+  TTextZone = class(TAnimationZone)
   private
      FText:TCaption;
      FColor:TColor;
@@ -557,7 +563,7 @@ type
   @seealso(TGraphicZones)
   }
   {$ENDIF}
-  TGraphicZone = class(TZone)
+  TGraphicZone = class(TAnimationZone)
   private
      FILIsDefault:Boolean;
      FFileName:String;
@@ -748,7 +754,7 @@ type
   @seealso(TColorZones)
   }
   {$ENDIF}
-  TColorZone = class(TZone)
+  TColorZone = class(TAnimationZone)
   private
     FColor: TColor;
   published
@@ -758,6 +764,103 @@ type
 implementation
 
 uses hsstrings;
+
+{ TAnimationZone }
+
+function  TAnimationZone.GetBlinkWithZoneNumber:LongInt;
+begin
+   if FBlinkWith<>nil then
+      Result := FBlinkWith.Index
+   else
+      Result := -1;
+end;
+
+procedure TAnimationZone.SetBlinkWithZoneNumber(v:LongInt);
+begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+      FBlinkWithIndex:=v;
+      exit;
+   end;
+
+   if (v>=0) and (v<Collection.Count) then begin
+      if Collection.Items[v]=Self then
+         raise Exception.Create(ScannotBlinkWithItSelf);
+      FBlinkWith:=TAnimationZone(Collection.Items[v]);
+      FBlinkWith.AddReference(Self);
+   end else begin
+      if v<>-1 then
+         raise Exception.Create(SoutOfBounds);
+      if FBlinkWith<>nil then
+         FBlinkWith.RemReference(Self);
+      FBlinkWith:=nil;
+   end;
+end;
+
+procedure TAnimationZone.SetBlinkTime(v:Cardinal);
+begin
+   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+      FBlinkTime:=v;
+      exit;
+   end;
+
+   if v=FBlinkTime then exit;
+   FBlinkTime:=v;
+   NotifyChange;
+end;
+
+procedure TAnimationZone.RemoveBlinkZone;
+begin
+   FBlinkWith:=nil;
+end;
+
+procedure TAnimationZone.AddReference(RefBy: TAnimationZone);
+var
+   h,i:LongInt;
+begin
+   for i:=0 to High(FReferencedBy) do
+      if FReferencedBy[i]=RefBy then exit;
+   h:=Length(FReferencedBy);
+   SetLength(FReferencedBy, h+1);
+   FReferencedBy[h]:=RefBy;
+end;
+
+procedure TAnimationZone.RemReference(RefBy: TAnimationZone);
+var
+   h,i,p:LongInt;
+   found:boolean;
+begin
+   found := false;
+   for i:=0 to High(FReferencedBy) do
+      if FReferencedBy[i]=RefBy then begin
+         p:=i;
+         found:=true;
+      end;
+   if not found then exit;
+   h:=High(FReferencedBy);
+   FReferencedBy[p]:=FReferencedBy[h];
+   SetLength(FReferencedBy, h);
+end;
+
+procedure TAnimationZone.Loaded;
+begin
+  inherited Loaded;
+  SetBlinkWithZoneNumber(FBlinkWithIndex);
+end;
+
+constructor TAnimationZone.Create(Collection: TCollection);
+begin
+  inherited Create(Collection);
+  FBlinkWithIndex := -1;
+end;
+
+destructor TAnimationZone.Destroy;
+var
+  i: Integer;
+begin
+  for i:=0 to High(FReferencedBy) do
+    FReferencedBy[i].RemoveBlinkZone;
+  inherited Destroy;
+end;
 
 { TColorZones }
 
@@ -769,21 +872,6 @@ end;
 function TColorZones.Add: TColorZone;
 begin
   Result := TColorZone(inherited Add);
-end;
-
-constructor TZone.Create(Collection: TCollection);
-begin
-   inherited Create(Collection);
-   FBlinkWithIndex := -1;
-end;
-
-destructor TZone.Destroy;
-var
-   i:LongInt;
-begin
-   for i:=0 to High(FReferencedBy) do
-      FReferencedBy[i].RemoveBlinkZone;
-   inherited Destroy;
 end;
 
 procedure TZone.SetV1(v:Double);
@@ -805,35 +893,6 @@ begin
          FValue1:=v;
    end;
    NotifyChange;
-end;
-
-function  TZone.GetBlinkWithZoneNumber:LongInt;
-begin
-   if FBlinkWith<>nil then
-      Result := FBlinkWith.Index
-   else
-      Result := -1;
-end;
-
-procedure TZone.SetBlinkWithZoneNumber(v:LongInt);
-begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
-      FBlinkWithIndex:=v;
-      exit;
-   end;
-
-   if (v>=0) and (v<Collection.Count) then begin
-      if Collection.Items[v]=Self then
-         raise Exception.Create(ScannotBlinkWithItSelf);
-      FBlinkWith:=TZone(Collection.Items[v]);
-      FBlinkWith.AddReference(Self);
-   end else begin
-      if v<>-1 then
-         raise Exception.Create(SoutOfBounds);
-      if FBlinkWith<>nil then
-         FBlinkWith.RemReference(Self);
-      FBlinkWith:=nil;
-   end;
 end;
 
 procedure TZone.SetV2(v:Double);
@@ -876,18 +935,6 @@ begin
    NotifyChange;
 end;
 
-procedure TZone.SetBlinkTime(v:Cardinal);
-begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
-      FBlinkTime:=v;
-      exit;
-   end;
-
-   if v=FBlinkTime then exit;
-   FBlinkTime:=v;
-   NotifyChange;
-end;
-
 procedure TZone.SetAsDefaultZone(v:Boolean);
 var
    c:LongInt;
@@ -922,45 +969,6 @@ begin
       raise Exception.Create(SztBitcomparationValue1MustBeBetween0And31);
    FZoneType:=zt;
    NotifyChange;
-end;
-
-procedure TZone.RemoveBlinkZone;
-begin
-   FBlinkWith:=nil;
-end;
-
-procedure TZone.AddReference(RefBy:TZone);
-var
-   h,i:LongInt;
-begin
-   for i:=0 to High(FReferencedBy) do
-      if FReferencedBy[i]=RefBy then exit;
-   h:=Length(FReferencedBy);
-   SetLength(FReferencedBy, h+1);
-   FReferencedBy[h]:=RefBy;
-end;
-
-procedure TZone.RemReference(RefBy:TZone);
-var
-   h,i,p:LongInt;
-   found:boolean;
-begin
-   found := false;
-   for i:=0 to High(FReferencedBy) do
-      if FReferencedBy[i]=RefBy then begin
-         p:=i;
-         found:=true;
-      end;
-   if not found then exit;
-   h:=High(FReferencedBy);
-   FReferencedBy[p]:=FReferencedBy[h];
-   SetLength(FReferencedBy, h);
-end;
-
-procedure TZone.Loaded;
-begin
-  inherited Loaded;
-  SetBlinkWithZoneNumber(FBlinkWithIndex);
 end;
 
 function  TZone.GetDisplayName: string;

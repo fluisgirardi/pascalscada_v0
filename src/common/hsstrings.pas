@@ -159,6 +159,8 @@ resourcestring
   SSecurityCodeStillBusy        = 'Remova o codigo dos controles que o estão usando!';
   SWinCCAreInstalled            = 'WinCC está instalado?';
   SUseTheWinCCUserManager       = 'Cadastre a informação de segurança usando o Security Manager do WinCC!';
+  SWCCNotSupportCheckUserAuth   = 'Este metodo não é suportado pelo gerenciador de segurança do WinCC';
+  SLoginCaptionToken            = 'Informe um usuário que tenha autorização para "%s".';
   SAccessDenied                 = 'Acesso negado!';
 
   SMBTBStatiomAddress           = 'Qual o endereço (nó) da estação (CLP) que contem as memórias que se deseja mapear?';
@@ -302,6 +304,8 @@ resourcestring
   SSecurityCodeStillBusy        = 'The SecurityCode still being used by some controls!';
   SWinCCAreInstalled            = 'WinCC is installed?';
   SUseTheWinCCUserManager       = 'Use the WinCC Security Manager to insert a new Security Code/Authorization!';
+  SWCCNotSupportCheckUserAuth   = 'This method is not supported by WinCC security Manager';
+  SLoginCaptionToken            = 'Enter a user that can access the "%s" token.';
   SAccessDenied                 = 'Access denied!';
 
   SMBTBStatiomAddress           = 'What are the address of your Modbus Device?';

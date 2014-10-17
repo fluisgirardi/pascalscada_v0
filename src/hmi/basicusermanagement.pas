@@ -21,6 +21,7 @@ type
 {}  FLoggedUser:Boolean;
 {}  FCurrentUserName,
 {}  FCurrentUserLogin:String;
+    FUID:Integer;
 {}  FLoggedSince:TDateTime;
 {}  FInactiveTimeOut:Cardinal;
 {}  FLoginRetries:Cardinal;
@@ -33,18 +34,19 @@ type
 
     FRegisteredSecurityCodes:TStringList;
 
-    frmLogin:TfrmUserAuthentication;
+    frmLogin, frmCheckIfUserIsAllowed:TfrmUserAuthentication;
 
     function  GetLoginTime:TDateTime;
     procedure SetInactiveTimeOut(t:Cardinal);
     procedure UnfreezeLogin(Sender:TObject);
+    function  GetUID: Integer;
   protected
     procedure DoUserChanged; virtual;
 
     procedure DoSuccessfulLogin; virtual;
     procedure DoFailureLogin; virtual;
 
-    function CheckUserAndPassword(User, Pass:String):Boolean; virtual;
+    function CheckUserAndPassword(User, Pass:String; var UserID:Integer; LoginAction:Boolean):Boolean; virtual;
 
     function GetLoggedUser:Boolean; virtual;
     function GetCurrentUserName:String; virtual;
@@ -62,6 +64,7 @@ type
     property SuccessfulLogin:TNotifyEvent read FSuccessfulLogin write FSuccessfulLogin;
     property FailureLogin:TNotifyEvent read FFailureLogin write FFailureLogin;
     property UserChanged:TUserChangedEvent read FUserChanged write FUserChanged;
+    function CanAccess(sc:String; aUID:Integer):Boolean; virtual; overload;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -78,7 +81,10 @@ type
     function    CanAccess(sc:String):Boolean; virtual;
     function    GetRegisteredAccessCodes:TStringList; virtual;
 
+    function    CheckIfUserIsAllowed(sc: String; var userlogin: String): Boolean; virtual;
+
     //read only properties.
+    property UID:Integer read GetUID;
     property UserLogged:Boolean read GetLoggedUser;
     property CurrentUserName:String read GetCurrentUserName;
     property CurrentUserLogin:String read GetCurrentUserLogin;
@@ -96,6 +102,12 @@ begin
     GetControlSecurityManager.UserManagement:=Self
   else
     raise Exception.Create(SUserManagementIsSet);
+
+  FLoggedUser:=false;
+  FCurrentUserName:='';
+  FCurrentUserLogin:='';
+  FUID:=-1;
+  FLoggedSince:=Now;
 
   FRegisteredSecurityCodes:=TStringList.Create;
 end;
@@ -115,8 +127,17 @@ var
   frozenTimer:TTimer;
   retries:LongInt;
   aborted, loggedin:Boolean;
+  aUserID: Integer;
 begin
+  if Assigned(frmLogin) then begin
+    frmLogin.ShowOnTop;
+    exit;
+  end;
+
   frozenTimer:=TTimer.Create(nil);
+  frozenTimer.Enabled:=false;
+  frozenTimer.Interval:=LoginFrozenTime;
+  frozenTimer.Tag:=1; //login
   frozenTimer.OnTimer:=UnfreezeLogin;
   frmLogin:=TfrmUserAuthentication.Create(nil);
   {$IFDEF FPC}
@@ -134,8 +155,9 @@ begin
     while (not loggedin) and (not aborted) do begin
       frmLogin.edtPassword.Text:='';
       if frmLogin.ShowModal=mrOk then begin
-        if CheckUserAndPassword(frmLogin.edtusername.Text, frmLogin.edtPassword.Text) then begin
+        if CheckUserAndPassword(frmLogin.edtusername.Text, frmLogin.edtPassword.Text, aUserID, true) then begin
           FLoggedUser:=true;
+          FUID:=aUserID;
           loggedin:=true;
           FCurrentUserLogin:=frmLogin.edtusername.Text;
           FLoggedSince:=Now;
@@ -145,9 +167,11 @@ begin
         end else begin
           DoFailureLogin;
           inc(retries);
-          if (FLoginRetries>0) and (retries=FLoginRetries) then begin
-            frmLogin.Enabled:=false;
+          if (FLoginRetries>0) and (retries>=FLoginRetries) then begin
+            frmLogin.DisableEntry;
             frozenTimer.Enabled:=true;
+            frmLogin.ShowModal;
+            retries:=0;
           end;
         end;
       end else
@@ -155,8 +179,8 @@ begin
       frmLogin.FocusControl:=fcPassword;
     end;
   finally
-    frmLogin.Destroy;
-    frozenTimer.Destroy;
+    FreeAndNil(frmLogin);
+    FreeAndNil(frozenTimer);
   end;
 end;
 
@@ -165,6 +189,7 @@ begin
   FLoggedUser:=false;
   FCurrentUserName:='';
   FCurrentUserLogin:='';
+  FUID:=-1;
   FLoggedSince:=Now;
   GetControlSecurityManager.UpdateControls;
 end;
@@ -207,6 +232,69 @@ begin
   Result.Assign(FRegisteredSecurityCodes);
 end;
 
+function TBasicUserManagement.CheckIfUserIsAllowed(sc: String;
+                                                   var userlogin: String): Boolean;
+var
+  frozenTimer:TTimer;
+  aUserID:Integer;
+
+begin
+  Result:=false;
+
+  //se o usuário logado tem permissão, evita
+  //abrir o dialog que irá solicitar a permissão
+  //de outro usuário.
+  if UserLogged and CanAccess(sc) then begin
+    userlogin:=GetCurrentUserLogin;
+    Result:=true;
+    exit;
+  end;
+
+  //se existe um dialogo de permissão especial aberto
+  //chama ele...
+  if Assigned(frmCheckIfUserIsAllowed) then begin
+    frmCheckIfUserIsAllowed.ShowOnTop;
+    exit;
+  end;
+
+  frozenTimer:=TTimer.Create(nil);
+  frozenTimer.Enabled:=false;
+  frozenTimer.Interval:=LoginFrozenTime;
+  frozenTimer.Tag:=2; //Check
+  frozenTimer.OnTimer:=UnfreezeLogin;
+  frmCheckIfUserIsAllowed:=TfrmUserAuthentication.Create(nil);
+  {$IFDEF FPC}
+  frmCheckIfUserIsAllowed.FormStyle:=fsSystemStayOnTop;
+  {$ELSE}
+  frmCheckIfUserIsAllowed.FormStyle:=fsStayOnTop;
+  {$ENDIF}
+
+  frmCheckIfUserIsAllowed.Caption:=Format(SLoginCaptionToken, [sc]);
+  Result:=false;
+  try
+    frmCheckIfUserIsAllowed.FocusControl:=fcUserName;
+    frmCheckIfUserIsAllowed.edtusername.Text:='';
+    frmCheckIfUserIsAllowed.edtPassword.Text:='';
+    if frmCheckIfUserIsAllowed.ShowModal=mrOk then begin
+      if CheckUserAndPassword(frmCheckIfUserIsAllowed.edtusername.Text, frmCheckIfUserIsAllowed.edtPassword.Text, aUserID, false) then begin
+        if CanAccess(sc,aUserID) then begin
+          Result:=true;
+          userlogin:=frmCheckIfUserIsAllowed.edtusername.Text;
+        end else
+          Result:=false;
+      end;
+    end;
+  finally
+    FreeAndNil(frmCheckIfUserIsAllowed);
+    FreeAndNil(frozenTimer);
+  end;
+end;
+
+function TBasicUserManagement.GetUID: Integer;
+begin
+  Result:=FUID;
+end;
+
 function    TBasicUserManagement.GetLoginTime:TDateTime;
 begin
   if FLoggedUser then
@@ -220,7 +308,8 @@ begin
   //
 end;
 
-function    TBasicUserManagement.CheckUserAndPassword(User, Pass:String):Boolean;
+function TBasicUserManagement.CheckUserAndPassword(User, Pass: String;
+  var UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
 end;
@@ -240,6 +329,11 @@ begin
   Result:=FCurrentUserLogin;
 end;
 
+function TBasicUserManagement.CanAccess(sc: String; aUID: Integer): Boolean;
+begin
+  Result:=false;
+end;
+
 procedure TBasicUserManagement.DoSuccessfulLogin;
 begin
   if Assigned(FSuccessfulLogin) then
@@ -254,10 +348,19 @@ end;
 
 procedure TBasicUserManagement.UnfreezeLogin(Sender:TObject);
 begin
-  if sender is TTimer then
+  if sender is TTimer then begin
     TTimer(sender).Enabled:=false;
-  if frmLogin<>nil then
-    frmLogin.Enabled:=true;
+    case TTimer(sender).Tag of
+      1: if Assigned(frmLogin) then begin
+           frmLogin.Close;
+           frmLogin.EnableEntry;
+         end;
+      2: if Assigned(frmCheckIfUserIsAllowed) then begin
+          frmCheckIfUserIsAllowed.Close;
+          frmCheckIfUserIsAllowed.EnableEntry;
+         end;
+    end;
+  end;
 end;
 
 procedure TBasicUserManagement.DoUserChanged;

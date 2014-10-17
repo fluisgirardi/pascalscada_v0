@@ -23,13 +23,16 @@ type
     edtPassword: TEdit;
     Panel1: TPanel;
     Panel2: TPanel;
-    BitBtn4: TBitBtn;
-    BitBtn1: TBitBtn;
+    btnOk: TBitBtn;
+    btnCancel: TBitBtn;
     procedure FormShow(Sender: TObject);
   private
     FFocusControl:TFocusedControl;
   public
     { Public declarations }
+    procedure EnableEntry;
+    procedure DisableEntry;
+
   published
     property FocusControl:TFocusedControl read FFocusControl write FFocusControl;
   end;
@@ -52,9 +55,26 @@ implementation
 procedure TfrmUserAuthentication.FormShow(Sender: TObject);
 begin
   case FFocusControl of
-    fcUserName: edtusername.SetFocus;
-    fcPassword: edtPassword.SetFocus;
+    fcUserName: if edtusername.Enabled then edtusername.SetFocus;
+    fcPassword: if edtPassword.Enabled then edtPassword.SetFocus;
   end;
+end;
+
+procedure TfrmUserAuthentication.EnableEntry;
+begin
+  edtPassword.Enabled:=true;
+  edtusername.Enabled:=true;
+  btnCancel.Enabled:=true;
+  btnOk.Enabled:=true;
+  FormShow(Self);
+end;
+
+procedure TfrmUserAuthentication.DisableEntry;
+begin
+  edtPassword.Enabled:=false;
+  edtusername.Enabled:=false;
+  btnCancel.Enabled:=false;
+  btnOk.Enabled:=false;
 end;
 
 {$IFDEF FPC}

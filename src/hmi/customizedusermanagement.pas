@@ -6,13 +6,14 @@ uses
   Classes, BasicUserManagement;
 
 type
-  TCheckUserAndPasswordEvent = procedure(user, pass:String; var ValidUser:Boolean) of object;
+  TCheckUserAndPasswordEvent = procedure(user, pass:String; var aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;
   TUserStillLoggedEvent      = procedure(var StillLogged:Boolean) of object;
   TGetUserNameAndLogin       = procedure(var UserInfo:String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
   TValidadeSecurityCode      = procedure(const securityCode:String) of object;
   TLogoutEvent               = TNotifyEvent;
   TCanAccessEvent            = procedure(securityCode:String; var CanAccess:Boolean) of object;
+  TUIDCanAccessEvent         = procedure(aUID:Integer; securityCode:String; var CanAccess:Boolean) of object;
 
   TCustomizedUserManagement = class(TBasicUserManagement)
   private
@@ -20,14 +21,16 @@ type
     FGetUserName              :TGetUserNameAndLogin;
     FGetUserLogin             :TGetUserNameAndLogin;
     FManageUsersAndGroupsEvent:TManageUsersAndGroupsEvent;
+    FUIDCanAccessEvent        :TUIDCanAccessEvent;
     FValidadeSecurityCode     :TValidadeSecurityCode;
     FCanAccessEvent           :TCanAccessEvent;
     FLogoutEvent              :TLogoutEvent;
   protected
-    function  CheckUserAndPassword(User, Pass:String):Boolean; override;
+    function  CheckUserAndPassword(User, Pass:String; var UserID:Integer; LoginAction:Boolean):Boolean; override;
 
     function  GetCurrentUserName:String; override;
     function  GetCurrentUserLogin:String; override;
+    function CanAccess(sc: String; aUID: Integer): Boolean; override; overload;
   public
     procedure Logout; override;
     procedure Manage; override;
@@ -37,6 +40,7 @@ type
 
     function  CanAccess(sc:String):Boolean; override;
   published
+    property UID;
     property CurrentUserName;
     property CurrentUserLogin;
     property LoggedSince;
@@ -53,6 +57,7 @@ type
     property OnManageUsersAndGroups:TManageUsersAndGroupsEvent read FManageUsersAndGroupsEvent write FManageUsersAndGroupsEvent;
     property OnValidadeSecurityCode:TValidadeSecurityCode      read FValidadeSecurityCode      write FValidadeSecurityCode;
     property OnCanAccess           :TCanAccessEvent            read FCanAccessEvent            write FCanAccessEvent;
+    property OnUIDCanAccess        :TUIDCanAccessEvent         read FUIDCanAccessEvent         write FUIDCanAccessEvent;
     property OnLogout              :TLogoutEvent               read FLogoutEvent               write FLogoutEvent;
   end;
 
@@ -60,12 +65,13 @@ implementation
 
 uses sysutils;
 
-function  TCustomizedUserManagement.CheckUserAndPassword(User, Pass:String):Boolean;
+function TCustomizedUserManagement.CheckUserAndPassword(User, Pass: String;
+  var UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
   try
     if Assigned(FCheckUserAndPasswordEvent) then
-      FCheckUserAndPasswordEvent(user,Pass,Result);
+      FCheckUserAndPasswordEvent(user,Pass,UserID,Result,LoginAction);
   except
     Result:=false;
   end;
@@ -92,6 +98,19 @@ begin
         FGetUserLogin(Result);
     except
       Result:='';
+    end;
+end;
+
+function TCustomizedUserManagement.CanAccess(sc: String; aUID: Integer
+  ): Boolean;
+begin
+  Result:=(Trim(sc)='');
+  if aUID>=0 then
+    try
+      if Assigned(FUIDCanAccessEvent) then
+        FUIDCanAccessEvent(aUID,sc,Result);
+    except
+      Result:=(Trim(sc)='');
     end;
 end;
 

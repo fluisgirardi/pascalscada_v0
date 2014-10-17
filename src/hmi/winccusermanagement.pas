@@ -54,7 +54,7 @@ type
     procedure LoadUseAdmin;
     procedure SetAuthorizationList(AValue: TStrings);
   protected
-    function CheckUserAndPassword(User, Pass: String): Boolean; override;
+    function CheckUserAndPassword(User, Pass: String; var UID:Integer; LoginAction:Boolean): Boolean; override;
     function GetLoggedUser:Boolean; override;
     function GetCurrentUserLogin:String; override;
     procedure Loaded; override;
@@ -75,6 +75,7 @@ type
     function    GetRegisteredAccessCodes:TStringList; override;
     procedure   ClearAuthorizationCache;
     function    CanAccessViaWinCCAuthCode(Code:LongInt):Boolean;
+    function    CheckIfUserIsAllowed(sc: String; var userlogin: String): Boolean; override;
   published
     property FailureLogin;
     property LoginRetries;
@@ -209,11 +210,16 @@ begin
   end;
 end;
 
-function TWinCCUserManagement.CheckUserAndPassword(User, Pass: String): Boolean;
+function TWinCCUserManagement.CheckUserAndPassword(User, Pass: String;
+  var UID: Integer; LoginAction: Boolean): Boolean;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
   Result:=PWRTSilentLogin(PAnsiChar(AnsiString(User)),PAnsiChar(AnsiString(Pass))); //log into WinCC
+  if Result then
+    UID:=1
+  else
+    UID:=-1;
 end;
 
 function TWinCCUserManagement.GetLoggedUser:Boolean;
@@ -370,6 +376,12 @@ end;
 function TWinCCUserManagement.CanAccessViaWinCCAuthCode(Code: LongInt): Boolean;
 begin
   Result := PWRTCheckPermission(code,0);
+end;
+
+function TWinCCUserManagement.CheckIfUserIsAllowed(sc: String;
+  var userlogin: String): Boolean;
+begin
+  raise exception.Create(SWCCNotSupportCheckUserAuth);
 end;
 
 end.
