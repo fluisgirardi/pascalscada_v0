@@ -382,7 +382,7 @@ end;
 
 function  TSecurityCodePropertyEditor.GetAttributes: TPropertyAttributes;
 begin
-   if Supports(GetComponent(0), IHMIInterface) then
+   if Supports(GetComponent(0), IHMIInterface) or (GetComponent(0) is TPascalSCADACheckSpecialTokenAction) then
       Result := [paValueList{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
                  paValueEditable{$ENDIF}{$ENDIF}];
 end;

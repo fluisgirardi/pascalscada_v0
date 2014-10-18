@@ -104,11 +104,13 @@ begin
   RegisterPropertyEditor(TypeInfo(string), THMIAnimation, 'SecurityCode', TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), THMIText, 'SecurityCode', TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), TPascalSCADASecureAction, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(string), TPascalSCADACheckSpecialTokenAction, 'SecurityCode', TSecurityCodePropertyEditor);
 
   //////////////////////////////////////////////////////////////////////////////
   //Actions
   //////////////////////////////////////////////////////////////////////////////
-  RegisterActions(strUserManagement,[TPascalSCADALoginAction,
+  RegisterActions(strUserManagement,[TPascalSCADACheckSpecialTokenAction,
+                                     TPascalSCADALoginAction,
                                      TPascalSCADALogoutAction,
                                      TPascalSCADALogin_LogoutAction,
                                      TPascalSCADAManageUsersAction,

@@ -43,6 +43,20 @@ type
 
   //actions...
 
+  { TPascalSCADACheckSpecialTokenAction }
+
+  TPascalSCADACheckSpecialTokenAction = class(TAction)
+  private
+    FAuthorizedBy: String;
+    FSecurityCode: String;
+  public
+    function Execute: Boolean; override;
+    function HandlesTarget(Target: TObject): Boolean; override;
+  published
+    property AuthorizedBy:String read FAuthorizedBy;
+    property SecurityCode:String read FSecurityCode write FSecurityCode;
+  end;
+
   TPascalSCADAUserManagementAction = class(TAction, IHMIInterface)
   protected
     FEnabled,
@@ -156,6 +170,22 @@ type
 implementation
 
 uses hsstrings, Dialogs, Controls;
+
+{ TPascalSCADACheckSpecialTokenAction }
+
+function TPascalSCADACheckSpecialTokenAction.Execute: Boolean;
+begin
+  if GetControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode,FAuthorizedBy) then
+    Result:=inherited Execute
+  else
+    Result:=false;
+end;
+
+function TPascalSCADACheckSpecialTokenAction.HandlesTarget(Target: TObject
+  ): Boolean;
+begin
+  Result:=true;
+end;
 
 { TPascalSCADALogin_LogoutAction }
 
