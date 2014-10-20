@@ -81,7 +81,7 @@ type
     function    CanAccess(sc:String):Boolean; virtual;
     function    GetRegisteredAccessCodes:TStringList; virtual;
 
-    function    CheckIfUserIsAllowed(sc: String; var userlogin: String): Boolean; virtual;
+    function    CheckIfUserIsAllowed(sc: String; RequireUserLogin: Boolean; var userlogin: String): Boolean; virtual;
 
     //read only properties.
     property UID:Integer read GetUID;
@@ -233,7 +233,7 @@ begin
 end;
 
 function TBasicUserManagement.CheckIfUserIsAllowed(sc: String;
-                                                   var userlogin: String): Boolean;
+  RequireUserLogin: Boolean; var userlogin: String): Boolean;
 var
   frozenTimer:TTimer;
   aUserID:Integer;
@@ -244,7 +244,7 @@ begin
   //se o usuário logado tem permissão, evita
   //abrir o dialog que irá solicitar a permissão
   //de outro usuário.
-  if UserLogged and CanAccess(sc) then begin
+  if UserLogged and CanAccess(sc) and (RequireUserLogin=false) then begin
     userlogin:=GetCurrentUserLogin;
     Result:=true;
     exit;

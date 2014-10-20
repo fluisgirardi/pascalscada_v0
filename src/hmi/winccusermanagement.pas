@@ -75,7 +75,7 @@ type
     function    GetRegisteredAccessCodes:TStringList; override;
     procedure   ClearAuthorizationCache;
     function    CanAccessViaWinCCAuthCode(Code:LongInt):Boolean;
-    function    CheckIfUserIsAllowed(sc: String; var userlogin: String): Boolean; override;
+    function    CheckIfUserIsAllowed(sc: String; RequireUserLogin: Boolean; var userlogin: String): Boolean; override;
   published
     property FailureLogin;
     property LoginRetries;
@@ -379,7 +379,7 @@ begin
 end;
 
 function TWinCCUserManagement.CheckIfUserIsAllowed(sc: String;
-  var userlogin: String): Boolean;
+  RequireUserLogin: Boolean; var userlogin: String): Boolean;
 begin
   raise exception.Create(SWCCNotSupportCheckUserAuth);
 end;

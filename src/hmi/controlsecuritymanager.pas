@@ -12,8 +12,6 @@ uses
 type
 
 
-  { TControlSecurityManager }
-
   TControlSecurityManager = class(TComponent)
   private
     FControls:array of IHMIInterface;
@@ -36,7 +34,7 @@ type
     procedure  UnregisterSecurityCode(sc:String);
     function   SecurityCodeExists(sc:String):Boolean;
     function   GetRegisteredAccessCodes:TStringList;
-    function   CheckIfUserIsAllowed(sc:String; var userlogin:String):Boolean;
+    function   CheckIfUserIsAllowed(sc:String; RequireUserLogin:Boolean; var userlogin:String):Boolean;
   published
     property UserManagement:TBasicUserManagement read FUserManagement write SetUserManagement;
   end;
@@ -48,6 +46,7 @@ type
   TPascalSCADACheckSpecialTokenAction = class(TAction)
   private
     FAuthorizedBy: String;
+    FRequireLoginAlways: Boolean;
     FSecurityCode: String;
   public
     function Execute: Boolean; override;
@@ -55,6 +54,7 @@ type
   published
     property AuthorizedBy:String read FAuthorizedBy;
     property SecurityCode:String read FSecurityCode write FSecurityCode;
+    property RequireLoginAlways:Boolean read FRequireLoginAlways write FRequireLoginAlways;
   end;
 
   TPascalSCADAUserManagementAction = class(TAction, IHMIInterface)
@@ -175,7 +175,7 @@ uses hsstrings, Dialogs, Controls;
 
 function TPascalSCADACheckSpecialTokenAction.Execute: Boolean;
 begin
-  if GetControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode,FAuthorizedBy) then
+  if GetControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode, FRequireLoginAlways, FAuthorizedBy) then
     Result:=inherited Execute
   else
     Result:=false;
@@ -448,11 +448,11 @@ begin
 end;
 
 function TControlSecurityManager.CheckIfUserIsAllowed(sc: String;
-  var userlogin: String): Boolean;
+  RequireUserLogin: Boolean; var userlogin: String): Boolean;
 begin
   Result:=false;
   if FUserManagement<>nil then
-    Result:=TBasicUserManagement(FUserManagement).CheckIfUserIsAllowed(sc, userlogin);
+    Result:=TBasicUserManagement(FUserManagement).CheckIfUserIsAllowed(sc, RequireUserLogin, userlogin);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
