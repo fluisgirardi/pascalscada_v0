@@ -167,6 +167,7 @@ var
   notify:Boolean;
   data, converted_value:TArrayOfDouble;
 begin
+  Result:=0;
   if Assigned(PBlock) then begin
     if FCurrentWordSize>=8 then begin
       SetLength(data,1);

@@ -48,12 +48,13 @@ type
     FAuthorizedBy: String;
     FRequireLoginAlways: Boolean;
     FSecurityCode: String;
+    procedure SetSecurityCode(AValue: String);
   public
     function Execute: Boolean; override;
     function HandlesTarget(Target: TObject): Boolean; override;
   published
     property AuthorizedBy:String read FAuthorizedBy;
-    property SecurityCode:String read FSecurityCode write FSecurityCode;
+    property SecurityCode:String read FSecurityCode write SetSecurityCode;
     property RequireLoginAlways:Boolean read FRequireLoginAlways write FRequireLoginAlways;
   end;
 
@@ -156,6 +157,7 @@ type
     procedure SetSecurityCode(sc:String);
   public
     procedure UpdateTarget(Target: TObject); override;
+    function Execute: Boolean; override;
   published
     {$IFDEF PORTUGUES}
     //: Codigo de segurança que libera acesso ao controle
@@ -172,6 +174,20 @@ implementation
 uses hsstrings, Dialogs, Controls;
 
 { TPascalSCADACheckSpecialTokenAction }
+
+procedure TPascalSCADACheckSpecialTokenAction.SetSecurityCode(AValue: String);
+begin
+  if FSecurityCode=AValue then Exit;
+
+  if Trim(AValue)<>'' then
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(AValue);
+      if not SecurityCodeExists(AValue) then
+        RegisterSecurityCode(AValue);
+    end;
+
+  FSecurityCode:=AValue;
+end;
 
 function TPascalSCADACheckSpecialTokenAction.Execute: Boolean;
 begin
@@ -582,6 +598,15 @@ end;
 procedure   TPascalSCADASecureAction.UpdateTarget(Target: TObject);
 begin
   CanBeAccessed(FAccessAllowed);
+  inherited UpdateTarget(Target);
+end;
+
+function TPascalSCADASecureAction.Execute: Boolean;
+begin
+  if GetControlSecurityManager.CanAccess(FSecurityCode) then
+    Result:=inherited Execute
+  else
+    Result:=false;
 end;
 
 procedure TPascalSCADASecureAction.SetSecurityCode(sc:String);

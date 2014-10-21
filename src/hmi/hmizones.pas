@@ -851,6 +851,8 @@ constructor TAnimationZone.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
   FBlinkWithIndex := -1;
+  FValue1:=Index;
+  FValue2:=FValue1;
 end;
 
 destructor TAnimationZone.Destroy;
