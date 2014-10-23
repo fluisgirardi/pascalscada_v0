@@ -30,7 +30,7 @@ uses
   {$IFEND}
 
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
-  hmibooleanpropertyconnector,
+  hmibooleanpropertyconnector, HMIComboBox,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -67,6 +67,9 @@ begin
   RegisterComponents(strControlsPallete,  [THMIText]);
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   RegisterComponents(strControlsPallete,  [THMIBooleanPropertyConnector]);
+  {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
+  RegisterComponents(strControlsPallete,  [THMIComboBox]);
+  {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}

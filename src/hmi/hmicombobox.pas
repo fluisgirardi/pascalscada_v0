@@ -5,21 +5,39 @@ unit HMIComboBox;
 interface
 
 uses
-  Classes, StdCtrls, HMITypes, Tag, PLCTag;
+  Classes, sysutils, StdCtrls, HMITypes, Tag, PLCTag, ProtocolTypes;
 
 type
 
   { THMIComboBox }
 
   THMIComboBox = class(TCustomComboBox, IHMIInterface, IHMITagInterface)
+  private
+    FAfterSendValueToTag: TAfterSendValueToTagEvent;
+    FBeforeSendValueToTag: TBeforeSendValueToTagEvent;
   protected
     FTag:TPLCTag;
     FSecurityCode: String;
+    FAllowSetIndex,
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
+
+    //: @exclude
     procedure Select; override;
+    //: @exclude
+    function GetEnabled: Boolean; override;
+    procedure SetEnabled(Value: Boolean); override;
+    //: @exclude
+    function  GetItemIndex: integer; override;
+    //: @exclude
+    procedure SetItemIndex(const Val: integer); override;
+    procedure SetItems(const Value: TStrings); override;
+
+    procedure InternalSetItemIndex(const Val: integer); virtual;
     procedure SetSecurityCode(AValue: String); virtual;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-    function GetControlSecurityCode:String; virtual;
+    function  GetControlSecurityCode:String; virtual;
     //: @seealso(IHMIInterface.MakeUnsecure)
     procedure MakeUnsecure; virtual;
     //: @seealso(IHMIInterface.SetHMITag)
@@ -43,6 +61,7 @@ type
     procedure RemoveTag(Sender:TObject); virtual;
   public
     constructor Create(TheOwner: TComponent); override;
+    destructor Destroy; override;
   published
     property Align;
     property Anchors;
@@ -65,7 +84,7 @@ type
     property Enabled;
     property Font;
     property ItemHeight;
-    property ItemIndex;
+    property ItemIndex: integer read GetItemIndex;
     property Items;
     property ItemWidth;
     property MaxLength;
@@ -111,41 +130,89 @@ type
     property TabStop;
     property Text;
     property Visible;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado antes do HMIEdit enviar um valor ao tag associado
+    {$ELSE}
+    //: Event triggered before HMIEdit send a value to linked tag.
+    {$ENDIF}
+    property BeforeSendAValueToTag:TBeforeSendValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
+    {$ELSE}
+    //: Event triggered when the HMIEdit sent a value to linked tag.
+    {$ENDIF}
+    property AfterValueToTag:TAfterSendValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
+
+uses ControlSecurityManager, hsstrings;
 
 { THMIComboBox }
 
 procedure THMIComboBox.SetSecurityCode(AValue: String);
 begin
   if FSecurityCode=AValue then Exit;
+
+  if Trim(AValue)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(AValue);
+      if not SecurityCodeExists(AValue) then
+        RegisterSecurityCode(AValue);
+
+      Self.CanBeAccessed(CanAccess(AValue));
+    end;
+
   FSecurityCode:=AValue;
 end;
 
 function THMIComboBox.GetControlSecurityCode: String;
 begin
-
+  Result:=FSecurityCode;
 end;
 
 procedure THMIComboBox.MakeUnsecure;
 begin
-
+  FSecurityCode:='';
+  CanBeAccessed(true);
 end;
 
 procedure THMIComboBox.SetHMITag(t: TPLCTag);
 begin
+  //se o tag esta entre um dos aceitos.
+  //check if the tag is valid.
+  if (t<>nil) and (not Supports(t, ITagNumeric)) then
+     raise Exception.Create(SinvalidTag);
 
+  //se ja estou associado a um tag, remove
+  //if the control is linked with some tag, removes the link.
+  if FTag<>nil then begin
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  end;
+
+  //adiona o callback para o novo tag
+  //link the control with the new tag.
+  if t<>nil then begin
+    t.AddCallBacks(Self as IHMITagInterface);
+    FTag := t;
+    NotifyTagChange(Self);
+  end;
+  FTag := t;
 end;
 
 function THMIComboBox.GetHMITag: TPLCTag;
 begin
-
+  Result:=FTag;
 end;
 
 procedure THMIComboBox.CanBeAccessed(a: Boolean);
 begin
-
+  FIsEnabledBySecurity :=a;
+  SetEnabled(FIsEnabled);
 end;
 
 procedure THMIComboBox.NotifyReadOk;
@@ -165,29 +232,109 @@ end;
 
 procedure THMIComboBox.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIComboBox.NotifyTagChange(Sender: TObject);
+var
+  valueReal: Double;
+  ValueInt: Int64;
+  NewIndex: Integer;
 begin
+  //este controle aceita somente valores inteiros, portanto
+  //valores reais serão tratados como não existentes na lista.
+  NewIndex:=-1;
+  if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
+    valueReal:=(FTag as ITagNumeric).GetValue;
+    ValueInt:=Trunc(valueReal);
 
+    if ((valueReal-ValueInt)=0) and ((ValueInt>=0) and (ValueInt<Items.Count)) then
+      NewIndex:=ValueInt;
+  end;
+  InternalSetItemIndex(NewIndex);
 end;
 
 procedure THMIComboBox.RemoveTag(Sender: TObject);
 begin
-
+  if Ftag=Sender then
+    FTag:=nil;
 end;
 
 procedure THMIComboBox.Select;
-begin
+  function SendValue:Boolean;
+  begin
+    Result:=true;
+    if Assigned(FBeforeSendValueToTag) then
+      FBeforeSendValueToTag(Self,IntToStr(GetItemIndex), Result);
+  end;
 
+  procedure AfterSendValue;
+  begin
+    if Assigned(FAfterSendValueToTag) then
+      FAfterSendValueToTag(Self,IntToStr(GetItemIndex));
+  end;
+
+begin
+  if (FTag<>nil) and Supports(FTag, ITagNumeric) and SendValue then begin
+    (FTag as ITagNumeric).Value:=GetItemIndex;
+    AfterSendValue;
+  end;
   inherited Select;
+end;
+
+function THMIComboBox.GetEnabled: Boolean;
+begin
+  Result:=FIsEnabled;
+end;
+
+procedure THMIComboBox.SetEnabled(Value: Boolean);
+begin
+  FIsEnabled:=Value;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
+end;
+
+function THMIComboBox.GetItemIndex: integer;
+begin
+  Result:=inherited GetItemIndex;
+end;
+
+procedure THMIComboBox.SetItemIndex(const Val: integer);
+begin
+  if FAllowSetIndex then
+    inherited SetItemIndex(Val);
+end;
+
+procedure THMIComboBox.SetItems(const Value: TStrings);
+begin
+  inherited SetItems(Value);
+  NotifyTagChange(Self);
+end;
+
+procedure THMIComboBox.InternalSetItemIndex(const Val: integer);
+begin
+  FAllowSetIndex:=true;
+  try
+    SetItemIndex(Val);
+  finally
+    FAllowSetIndex:=false;
+  end;
 end;
 
 constructor THMIComboBox.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
   SetStyle(csDropDownList);
+  FIsEnabled:=true;
+  FAllowSetIndex:=false;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+end;
+
+destructor THMIComboBox.Destroy;
+begin
+  if FTag<>nil then
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  inherited Destroy;
 end;
 
 end.
