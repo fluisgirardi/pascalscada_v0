@@ -9,7 +9,7 @@ interface
 uses
   BasicUserManagement, ControlSecurityManager, crosskeyevents, 
   CustomizedUserManagement, HMIAnimation, hmibasiccolletion, 
-  hmibooleanpropertyconnector, HMIButton, HMICheckBox, 
+  hmibooleanpropertyconnector, HMIButton, HMICheckBox, HMIComboBox, 
   HMIControlDislocatorAnimation, HMIEdit, HMILabel, hmiobjectcolletion, 
   HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, hmiregister, 
   HMIScrollBar, HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, 
