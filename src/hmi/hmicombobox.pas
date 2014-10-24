@@ -25,7 +25,6 @@ type
     //: @exclude
     procedure Select; override;
     //: @exclude
-    function GetEnabled: Boolean; override;
     procedure SetEnabled(Value: Boolean); override;
     //: @exclude
     function  GetItemIndex: integer; override;
@@ -81,7 +80,7 @@ type
     property DragKind;
     property DragMode;
     property DropDownCount;
-    property Enabled;
+    property Enabled read FIsEnabled write SetEnabled default True;
     property Font;
     property ItemHeight;
     property ItemIndex: integer read GetItemIndex;
@@ -121,7 +120,7 @@ type
     property ParentShowHint;
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
     property PopupMenu;
-    property ReadOnly;
+    //property ReadOnly;
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
     property ShowHint;
     property Sorted;
@@ -211,7 +210,7 @@ end;
 
 procedure THMIComboBox.CanBeAccessed(a: Boolean);
 begin
-  FIsEnabledBySecurity :=a;
+  FIsEnabledBySecurity := a;
   SetEnabled(FIsEnabled);
 end;
 
@@ -280,11 +279,6 @@ begin
     AfterSendValue;
   end;
   inherited Select;
-end;
-
-function THMIComboBox.GetEnabled: Boolean;
-begin
-  Result:=FIsEnabled;
 end;
 
 procedure THMIComboBox.SetEnabled(Value: Boolean);
