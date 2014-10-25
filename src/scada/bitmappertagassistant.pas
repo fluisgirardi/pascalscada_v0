@@ -8,6 +8,8 @@
   ***********************************************************************
   07/2013 - New Unit
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  02/2014 - Changed to the old behavior (Right click on PLCNumber Tag ->
+  "Map bits" to open the bit mapper editor, whithout link with gui.
   ***********************************************************************
 }
 unit bitmappertagassistant;
@@ -21,21 +23,10 @@ interface
 uses
   Classes, SysUtils, ProtocolTypes, plcnumber;
 
-type
-
-  { TBitMapTagAssistant }
-
-  TBitMapperTagAssistant = class(TComponent)
-  private
-    FNumberTag: TPLCNumberMappable;
-    public
-      //: Opens the bit mapper wizard.
-      procedure OpenBitMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
-        CreateProc:TCreateTagProc); virtual;
-
-    published
-      property NumberTag:TPLCNumberMappable read FNumberTag write FNumberTag;
-end;
+  procedure OpenBitMapper(Target,
+                          OwnerOfNewTags:TComponent;
+                          InsertHook:TAddTagInEditorHook;
+                          CreateProc:TCreateTagProc);
 
 implementation
 
@@ -44,8 +35,10 @@ uses
 
 { TBitMapTagAssistant }
 
-procedure TBitMapperTagAssistant.OpenBitMapper(OwnerOfNewTags:TComponent;
-  InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
+procedure OpenBitMapper(Target,
+                        OwnerOfNewTags:TComponent;
+                        InsertHook:TAddTagInEditorHook;
+                        CreateProc:TCreateTagProc);
 var
   dlg:TfrmBitMapper;
   bitnum,
@@ -55,6 +48,7 @@ var
   endbit,
   curbit:LongInt;
   tbit:TTagBit;
+  FNumberTag:TPLCNumberMappable;
 
   procedure updatenumbers;
   begin
@@ -86,19 +80,17 @@ var
     Result := StringReplace(Result,'%t',n,[rfReplaceAll]);
   end;
 begin
+  if not Assigned(Target) then begin
+    ShowMessage(SNumberTagRequired);
+    Exit;
+  end;
 
-  if not Assigned(FNumberTag) then
-    begin
-      ShowMessage(SNumberTagRequired);
-      Exit;
-    end;
+  if not (Target is TPLCNumberMappable) then begin
+    ShowMessage(SNumberTagRequired);
+    Exit;
+  end;
 
-
-  //bit mapper...
-
-  //se não está em design sai.
-  //if it's not at designtime, exit.
-  if [csDesigning]*ComponentState=[] then exit;
+  FNumberTag:=TPLCNumberMappable(Target);
 
   dlg:=TfrmBitMapper.Create(nil);
   try
@@ -132,6 +124,9 @@ begin
   end;
 end;
 
+initialization
+
+  SetTagBitMapper(@OpenBitMapper);
 
 end.
 

@@ -14,14 +14,13 @@ unit PLCString;
 
 {$IFDEF FPC}
 {$mode delphi}
-{$MACRO ON}
 {$ENDIF}
 
 interface
 
 uses
   SysUtils, Classes, Tag, TagBlock, ProtocolTypes, ProtocolDriver, Math,
-  hsutils {$IFDEF FPC}, lazlclversion{$ENDIF};
+  hsutils;
 
 type
 
@@ -209,16 +208,7 @@ type
 
 implementation
 
-uses variants, hsstrings
-     {$IFDEF FPC}
-       {$if declared(pslcl_fullversion)}
-         {$if pslcl_fullversion>=093100}
-         , LazUTF8
-         {$ELSE}
-         , LCLProc
-         {$ENDIF}
-       {$IFEND}
-     {$ENDIF};
+uses variants, hsstrings{$IFDEF FPC}, LazUTF8{$ENDIF};
 
 constructor TPLCString.Create(AOwner:TComponent);
 begin

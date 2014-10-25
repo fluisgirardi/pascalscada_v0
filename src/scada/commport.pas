@@ -24,7 +24,7 @@ interface
 uses
   Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs,
   {$IFDEF FPC}
-  fptimer
+  ExtCtrls
   {$ELSE}
   Extctrls
   {$ENDIF}
@@ -173,7 +173,7 @@ type
     {: @exclude }
     FLastOSErrorMessage:String;
     {: @exclude }
-    {$IFDEF FPC}FTimer:TFPTimer;{$ELSE}FTimer:TTimer;{$ENDIF}
+    {$IFDEF FPC_BUG}FTimer:TFPTimer;{$ELSE}FTimer:TTimer;{$ENDIF}
     {: @exclude }
     FLastPkgId:Cardinal;
     {: @exclude }
@@ -1142,7 +1142,7 @@ begin
   inherited Create(AOwner);
   FOwnerThread:=GetCurrentThreadId;
   FExclusiveDevice:=false;
-  FTimer := {$IFDEF FPC}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(Self);
+  FTimer := {$IFDEF FPC_BUG}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(Self);
   FTimer.OnTimer:=TimerStatistics;
   FTimer.Enabled:=false;
   FTimer.Interval:=1000;

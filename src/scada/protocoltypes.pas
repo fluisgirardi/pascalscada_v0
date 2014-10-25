@@ -103,10 +103,12 @@ type
      at design-time.
   }
   {$ENDIF}
-  TOpenTagEditor = procedure(ProtocolDriver,
+  TOpenTagEditor = procedure(Target,
                              OwnerOfNewTags:TComponent;
                              InsertHook:TAddTagInEditorHook;
                              CreateProc:TCreateTagProc);
+
+
 
   {$IFDEF PORTUGUES}
   {:

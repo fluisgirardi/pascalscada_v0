@@ -309,8 +309,8 @@ type
     function SizeOfTag(Tag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE; override;
 
     // @seealso(TProtocolDriver.OpenTagEditor);
-    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
-       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+    procedure OpenTagEditor(InsertHook: TAddTagInEditorHook;
+      CreateProc: TCreateTagProc); override;
 
     // @seealso(TProtocolDriver.HasTabBuilderEditor);
     function HasTabBuilderEditor: Boolean; override;
@@ -1300,11 +1300,11 @@ end;
 var
   WestTagBuilderEditor:TOpenTagEditor = nil;
 
-procedure TWestASCIIDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
-  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+procedure TWestASCIIDriver.OpenTagEditor(InsertHook: TAddTagInEditorHook;
+                                         CreateProc: TCreateTagProc);
 begin
   if Assigned(WestTagBuilderEditor) then
-    WestTagBuilderEditor(Self, OwnerOfNewTags, InsertHook, CreateProc)
+    WestTagBuilderEditor(Self, Self.Owner, InsertHook, CreateProc)
   else
     inherited;
 end;

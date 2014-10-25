@@ -677,7 +677,7 @@ type
     {$ELSE}
     //: Opens the Tag Builder of the protocol driver (if exists)
     {$ENDIF}
-    procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
+    procedure OpenTagEditor(InsertHook:TAddTagInEditorHook;
       CreateProc:TCreateTagProc); virtual;
 
     {$IFDEF PORTUGUES}
@@ -1141,8 +1141,8 @@ begin
   Result:='';
 end;
 
-procedure TProtocolDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
-  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+procedure TProtocolDriver.OpenTagEditor(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
 begin
   raise Exception.Create('This protocol driver do not have a Tag Builder tool defined.');
 end;

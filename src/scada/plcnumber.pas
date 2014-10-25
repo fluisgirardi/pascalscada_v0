@@ -28,7 +28,7 @@ unit PLCNumber;
 interface
 
 uses
-  SysUtils, Classes, PLCTag, ValueProcessor;
+  SysUtils, Classes, PLCTag, ValueProcessor, ProtocolTypes;
 
 type
 
@@ -245,11 +245,20 @@ type
   end;
 
 
+  //: This abstract class avoid TTagbit component being listed in the property editor of TBitMapperTagAssistant
+
+  { TPLCNumberMappable }
+
   TPLCNumberMappable = class(TPLCNumber)
-    // This abstract class avoid TTagbit component being listed in the property editor of TBitMapperTagAssistant
+    {$IFDEF PORTUGUES}
+    //: Abre o assistente de mapeamento de tags bit.
+    {$ELSE}
+    //: Opens the bit mapper wizard.
+    {$ENDIF}
+    procedure OpenBitMapper(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
   end;
 
-
+  procedure SetTagBitMapper(BitMapperTool:TOpenTagEditor);
 
 implementation
 
@@ -382,5 +391,27 @@ begin
   PScaleProcessor := nil;
 end;
 
+var
+  BitMapperEditor:TOpenTagEditor = nil;
+
+{ TPLCNumberMappable }
+
+procedure TPLCNumberMappable.OpenBitMapper(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
+begin
+  if Assigned(BitMapperEditor) then
+    BitMapperEditor(Self, Self.Owner,InsertHook,CreateProc)
+  else
+    raise exception.Create('None bit mapper tool has been assigned!');
+end;
+
+procedure SetTagBitMapper(BitMapperTool:TOpenTagEditor);
+begin
+  if assigned(BitMapperEditor) then
+    raise Exception.Create('A Bit Mapper editor was already assigned.')
+  else
+    BitMapperEditor:=BitMapperTool;
+end;
+
 end.
- 
+ 

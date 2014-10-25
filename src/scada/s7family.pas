@@ -744,8 +744,8 @@ type
     function LiteralTagAddress(aTag: TTag; aBlockTag: TTag=nil):String; override;
 
     //: @seealso(TProtocolDriver.OpenTagEditor)
-    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
-       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+    procedure OpenTagEditor(InsertHook: TAddTagInEditorHook;
+      CreateProc: TCreateTagProc); override;
     //: @seealso(TProtocolDriver.HasTabBuilderEditor)
     function HasTabBuilderEditor: Boolean; override;
   published
@@ -2722,13 +2722,13 @@ end;
 var
   TagBuilderEditor:TOpenTagEditor = nil;
 
-procedure TSiemensProtocolFamily.OpenTagEditor(OwnerOfNewTags: TComponent;
-  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+procedure TSiemensProtocolFamily.OpenTagEditor(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
 begin
   if Assigned(TagBuilderEditor) then
-    TagBuilderEditor(Self, OwnerOfNewTags,InsertHook,CreateProc)
+    TagBuilderEditor(Self, Self.Owner,InsertHook,CreateProc)
   else
-    inherited OpenTagEditor(OwnerOfNewTags,InsertHook,CreateProc);
+    inherited OpenTagEditor(InsertHook,CreateProc);
 end;
 
 function TSiemensProtocolFamily.HasTabBuilderEditor: Boolean;

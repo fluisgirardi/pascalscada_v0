@@ -154,6 +154,9 @@ type
   @seealso(TModBusTCPDriver)
   }
   {$ENDIF}
+
+  { TModBusDriver }
+
   TModBusDriver = class(TProtocolDriver)
   private
     FMustReleaseResources:Boolean;
@@ -259,8 +262,8 @@ type
     function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
 
     //: @seealso(TProtocolDriver.OpenTagEditor)
-    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
-       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+    procedure OpenTagEditor(InsertHook: TAddTagInEditorHook;
+      CreateProc: TCreateTagProc); override;
 
     //: @seealso(TProtocolDriver.HasTabBuilderEditor)
     function HasTabBuilderEditor: Boolean; override;
@@ -878,11 +881,11 @@ end;
 var
   ModbusTagBuilderEditor:TOpenTagEditor = nil;
 
-procedure TModBusDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
-  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+procedure TModBusDriver.OpenTagEditor(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
 begin
   if Assigned(ModbusTagBuilderEditor) then
-    ModbusTagBuilderEditor(Self,OwnerOfNewTags,InsertHook,CreateProc)
+    ModbusTagBuilderEditor(Self,Self.Owner,InsertHook,CreateProc)
   else
     inherited;
 end;

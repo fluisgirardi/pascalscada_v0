@@ -27,7 +27,7 @@ implementation
 
 uses
   Classes, SerialPort, ModBusSerial, LinearScaleProcessor, PLCTagNumber,
-  PLCBlock, PLCBlockElement, PLCString, UserScale, ValueProcessor,
+  PLCBlock, PLCBlockElement, PLCString, PLCNumber, UserScale, ValueProcessor,
   scadapropeditor, hsstrings, TagBit, ProtocolDriver, WestASCIIDriver,
   IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant,
@@ -75,7 +75,7 @@ begin
   //end securitycode property editor.
 
   RegisterComponentEditor(TProtocolDriver,          TProtocolDriverComponentEditor);
-  RegisterComponentEditor(TBitMapperTagAssistant,   TTagBitMapperComponentEditor);
+  RegisterComponentEditor(TPLCNumberMappable,       TTagBitMapperComponentEditor);
   RegisterComponentEditor(TBlockStructTagAssistant, TBlockElementMapperComponentEditor);
 
   {$IFDEF FPC}

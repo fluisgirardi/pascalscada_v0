@@ -33,6 +33,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement, PLCStruct, Tag,
   bitmappertagassistant, blockstructtagassistant, ProtocolDriver,
+  PLCNumber, ProtocolTypes,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -152,7 +153,6 @@ type
     function GetVerb(Index: LongInt): string; override;
     function GetVerbCount: LongInt; override;
     procedure Edit; override;
-    function bitmappertagassistant: TBitMapperTagAssistant; virtual;
   end;
 
   {$IFDEF PORTUGUES}
@@ -313,7 +313,7 @@ end;
 
 procedure TProtocolDriverComponentEditor.OpenTagBuilder;
 begin
-  ProtocolDriver.OpenTagEditor(ProtocolDriver, AddTagInEditor, CreateComponent);
+  ProtocolDriver.OpenTagEditor(AddTagInEditor, CreateComponent);
 end;
 
 procedure TProtocolDriverComponentEditor.ExecuteVerb(Index: LongInt);
@@ -353,12 +353,13 @@ end;
 
 function TTagBitMapperComponentEditor.GetTheOwner: TComponent;
 begin
-  Result:=bitmappertagassistant.Owner;
+  Result:=GetComponent().Owner;
 end;
 
 procedure TTagBitMapperComponentEditor.OpenBitMapper;
 begin
-  bitmappertagassistant.OpenBitMapper(bitmappertagassistant, AddTagInEditor, CreateComponent);
+  if (GetComponent is TPLCNumberMappable) then
+    TPLCNumberMappable(GetComponent).OpenBitMapper(AddTagInEditor, CreateComponent);
 end;
 
 procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: LongInt);
@@ -370,7 +371,7 @@ end;
 function  TTagBitMapperComponentEditor.GetVerb(Index: LongInt): string;
 begin
   if Index=0 then
-    Result:='Map bits...';
+    Result:='Map bits';
 end;
 
 function  TTagBitMapperComponentEditor.GetVerbCount: LongInt;
@@ -382,11 +383,6 @@ procedure TTagBitMapperComponentEditor.Edit;
 begin
   inherited Edit;
   OpenBitMapper();
-end;
-
-function  TTagBitMapperComponentEditor.BitMapperTagAssistant: TBitMapperTagAssistant;
-begin
-  Result:=TBitMapperTagAssistant(GetComponent);
 end;
 
 ///////////////////////////////////////////////////////////////////////////////
