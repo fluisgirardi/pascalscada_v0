@@ -14,6 +14,8 @@
   ***********************************************************************
   07/2013 - Moved OpenElementMapper to BlockTagAssistant to remove TForm dependencies
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  10/2014 - Switched back to the old behavior but keeping the improvemnt
+  of Juanjo (do not link with GUI);
   ***********************************************************************
 }
 {$ENDIF}
@@ -26,7 +28,7 @@ unit PLCBlock;
 interface
 
 uses
-  SysUtils, Classes, Tag, TagBlock;
+  SysUtils, Classes, Tag, TagBlock, ProtocolTypes;
 
 type
   {$IFDEF PORTUGUES}
@@ -42,6 +44,9 @@ type
     Class of Block of tags of communication.
   }
   {$ENDIF}
+
+  { TPLCBlock }
+
   TPLCBlock = class(TTagBlock, IScanableTagInterface)
   private
     procedure SetSize(isize:Cardinal);
@@ -104,6 +109,13 @@ type
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
     {$IFDEF PORTUGUES}
+    //: Abre o assistente de mapeamento de items do bloco/estrutura.
+    {$ELSE}
+    //: Opens the block/struct item mapper wizard.
+    {$ENDIF}
+    procedure MapElements(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); virtual;
+
+    {$IFDEF PORTUGUES}
     //: Lê/escreve um valor puro de modo assincrono em um item do bloco.
     {$ELSE}
     //: Read/Writes a raw value asynchronously on a block item.
@@ -151,6 +163,8 @@ type
     //: @seealso(TPLCTag.Modified)
     property Modified;
   end;
+
+  procedure SetBlockElementMapper(ElementMapperTool:TOpenTagEditor);
 
 implementation
 
@@ -371,5 +385,25 @@ begin
   SetLength(PLCValues,0);
 end;
 
+var
+  ElementMapperEditor:TOpenTagEditor = nil;
 
-end.
+procedure TPLCBlock.MapElements(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
+begin
+  if Assigned(ElementMapperEditor) then
+    ElementMapperEditor(Self, Self.Owner,InsertHook,CreateProc)
+  else
+    raise exception.Create('None element mapper tool has been assigned!');
+end;
+
+procedure SetBlockElementMapper(ElementMapperTool:TOpenTagEditor);
+begin
+  if assigned(ElementMapperEditor) then
+    raise Exception.Create('A Bit Mapper editor was already assigned.')
+  else
+    ElementMapperEditor:=ElementMapperTool;
+end;
+
+
+end.

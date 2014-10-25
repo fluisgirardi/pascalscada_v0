@@ -21,20 +21,12 @@ unit siemenstagassistant;
 
 interface
 
-uses
-  Classes, SysUtils, isotcpdriver, ProtocolTypes;
-
-  procedure OpenTagEditor(aProtocolDriver,
-                          aOwnerOfNewTags:TComponent;
-                          InsertHook:TAddTagInEditorHook;
-                          CreateProc:TCreateTagProc);
-
 implementation
 
 uses
-  PLCTagNumber,PLCStructElement, us7tagbuilder, PLCBlockElement, PLCNumber,
-  TagBit, plcblock, tag, Controls, PLCStruct, hsstrings, Dialogs, StrUtils,
-  ProtocolDriver, s7family;
+  Classes, SysUtils, isotcpdriver, ProtocolTypes, PLCTagNumber,PLCStructElement,
+  us7tagbuilder, PLCBlockElement, PLCNumber, TagBit, plcblock, tag, Controls,
+  PLCStruct, hsstrings, Dialogs, StrUtils, ProtocolDriver, s7family;
 
 procedure OpenTagEditor(aProtocolDriver,
                         aOwnerOfNewTags: TComponent;

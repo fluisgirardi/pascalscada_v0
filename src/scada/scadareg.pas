@@ -74,19 +74,9 @@ begin
   RegisterPropertyEditor(TypeInfo(LongInt),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
   //end securitycode property editor.
 
-  RegisterComponentEditor(TProtocolDriver,          TProtocolDriverComponentEditor);
-  RegisterComponentEditor(TPLCNumberMappable,       TTagBitMapperComponentEditor);
-  RegisterComponentEditor(TBlockStructTagAssistant, TBlockElementMapperComponentEditor);
-
-  {$IFDEF FPC}
-  {$IF defined(FPC) AND (FPC_FULLVERSION < 20501) }
-  RegisterClassAlias(TScalesQueue, 'TPIPE');
-  {$ELSE}
-  RegisterClassAlias(TPIPE,        'TScalesQueue');
-  {$IFEND}
-  {$ELSE}
-  RegisterClassAlias(TPIPE,        'TScalesQueue');
-  {$ENDIF}
+  RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
+  RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
+  RegisterComponentEditor(TPLCBlock,          TBlockElementMapperComponentEditor);
 end;
 
 {$IFDEF FPC}

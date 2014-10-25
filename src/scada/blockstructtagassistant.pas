@@ -18,41 +18,17 @@ unit blockstructtagassistant;
 
 interface
 
-uses
-  Classes, SysUtils, ProtocolTypes, plcblock;
-
-type
-
-  { TBlockStructTagAssistant }
-
-  TBlockStructTagAssistant = class(TComponent)
-    private
-      FBlockStructTag: TPLCBlock;
-      FOwnerOfNewTags:TComponent;
-      FInsertHook:TAddTagInEditorHook;
-      FCreateProc:TCreateTagProc;
-      procedure BlockElementMapper();
-      procedure StructElementMapper();
-    public
-      {$IFDEF PORTUGUES}
-      //: Abre a ferramenta de mapeamento de tags elementos de bloco.
-      {$ELSE}
-      //: Opens the tool to map block elements.
-      {$ENDIF}
-      procedure OpenElementMapper(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
-        CreateProc:TCreateTagProc); virtual;
-
-    published
-      property BlockStructTag:TPLCBlock read FBlockStructTag write FBlockStructTag;
-end;
-
 implementation
 
 uses
-  uelementmapper, ustructuremapper, plcblockelement, plcstructelement, tag,
-  plcstruct, hsstrings, Controls, Dialogs, math, StrUtils;
+  Classes, SysUtils, ProtocolTypes, plcblock, uelementmapper, ustructuremapper,
+  plcblockelement, plcstructelement, tag, plcstruct, hsstrings, Controls,
+  Dialogs, math, StrUtils;
 
-procedure TBlockStructTagAssistant.BlockElementMapper;
+procedure BlockElementMapper(Target,
+                             OwnerOfNewTags:TComponent;
+                             InsertHook:TAddTagInEditorHook;
+                             CreateProc:TCreateTagProc);
 var
   dlg:TfrmMapElements;
   startelement,
@@ -60,6 +36,7 @@ var
   curelement,
   elementnumber:LongInt;
   tagelement:TPLCBlockElement;
+  FBlockStructTag: TPLCBlock;
 
   function GetNewTagElementName:String;
   var
@@ -69,13 +46,22 @@ var
     Result:=dlg.elementnames.Text;
     Result := StringReplace(Result,'%e',n,[rfReplaceAll]);
 
-    n:=FBlockStructTag.Name;
+    n:=Target.Name;
     Result := StringReplace(Result,'%t',n,[rfReplaceAll]);
   end;
 
 begin
-  //se não está em design sai.
-  if [csDesigning]*ComponentState=[] then exit;
+  if not Assigned(Target) then begin
+    ShowMessage(SBlockRequired);
+    Exit;
+  end;
+
+  if not (Target is TPLCBlock) then begin
+    ShowMessage(SBlockRequired);
+    Exit;
+  end;
+
+  FBlockStructTag:=TPLCBlock(Target);
 
   dlg:=TfrmMapElements.Create(nil);
   try
@@ -95,11 +81,11 @@ begin
       curelement:=startelement;
       while curelement<=endelement do begin
         elementnumber:=ifthen(dlg.ElementsStartFromOne.Checked,curelement+1,curelement);
-        tagelement:=TPLCBlockElement(FCreateProc(TPLCBlockElement));
+        tagelement:=TPLCBlockElement(CreateProc(TPLCBlockElement));
         tagelement.Name:=GetNewTagElementName;
         tagelement.PLCBlock:=FBlockStructTag;
         tagelement.Index:=curelement;
-        FInsertHook(tagelement);
+        InsertHook(tagelement);
         inc(curelement);
       end;
     end;
@@ -108,7 +94,10 @@ begin
   end;
 end;
 
-procedure TBlockStructTagAssistant.StructElementMapper;
+procedure StructElementMapper(Target,
+                              OwnerOfNewTags:TComponent;
+                              InsertHook:TAddTagInEditorHook;
+                              CreateProc:TCreateTagProc);
 var
   frmstructedit:TfrmStructureEditor;
 
@@ -117,6 +106,7 @@ var
   curstructitem:LongInt;
 
   item:TPLCStructItem;
+  FBlockStructTag: TPLCStruct;
 
   function GetCurWordSize:LongInt;
   begin
@@ -178,9 +168,17 @@ var
     Result:= StringReplace(Result,'%0e',GetValueWithZeros(curitem-1, frmstructedit.SpinEdit1.Value-1, true),[rfReplaceAll]);
   end;
 begin
-  //se não está em design sai.
-  //if isn't at design time, exit.
-  if [csDesigning]*ComponentState=[] then exit;
+  if not Assigned(Target) then begin
+    ShowMessage(SBlockRequired);
+    Exit;
+  end;
+
+  if not (Target is TPLCStruct) then begin
+    ShowMessage(SBlockRequired);
+    Exit;
+  end;
+
+  FBlockStructTag:=TPLCStruct(Target);
 
   frmstructedit:=TfrmStructureEditor.Create(nil);
   try
@@ -189,7 +187,7 @@ begin
       for curitem:=1 to frmstructedit.SpinEdit1.Value do begin
         for curstructitem:=0 to frmstructedit.StructItemsCount-1 do begin
           if not frmstructedit.StructItem[curstructitem].SkipTag then begin
-            item := TPLCStructItem(FCreateProc(TPLCStructItem));
+            item := TPLCStructItem(CreateProc(TPLCStructItem));
             with item do begin
               Name:=GetName(frmstructedit.StructItem[curstructitem].TagName);
               TagType:=frmstructedit.StructItem[curstructitem].TagType;
@@ -199,7 +197,7 @@ begin
               FBlockStructTag.Size:=Max(FBlockStructTag.Size, curidx+GetCurWordSize);
               PLCBlock:=FBlockStructTag as TPLCStruct;
             end;
-            FInsertHook(item);
+            InsertHook(item);
           end;
           inc(curidx,GetCurWordSize)
         end;
@@ -210,24 +208,10 @@ begin
   end;
 end;
 
-procedure TBlockStructTagAssistant.OpenElementMapper(OwnerOfNewTags:TComponent;
-  InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
-begin
-  if not Assigned(FBlockStructTag) then
-    begin
-      ShowMessage(SBlockRequired);
-      Exit;
-    end;
+initialization
 
-  FOwnerOfNewTags:=OwnerOfNewTags;
-  FInsertHook:=InsertHook;
-  FCreateProc:=CreateProc;
-
-  if FBlockStructTag is TPLCStruct then
-    StructElementMapper
-     else
-       BlockElementMapper;
-end;
+  SetBlockElementMapper(@BlockElementMapper);
+  SetStructItemMapper(@StructElementMapper);
 
 end.
 

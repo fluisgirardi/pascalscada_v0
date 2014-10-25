@@ -20,18 +20,11 @@ unit bitmappertagassistant;
 
 interface
 
-uses
-  Classes, SysUtils, ProtocolTypes, plcnumber;
-
-  procedure OpenBitMapper(Target,
-                          OwnerOfNewTags:TComponent;
-                          InsertHook:TAddTagInEditorHook;
-                          CreateProc:TCreateTagProc);
-
 implementation
 
 uses
-  ubitmapper, hsstrings, Controls, Dialogs, TagBit;
+  Classes, SysUtils, ProtocolTypes, plcnumber, ubitmapper, hsstrings, Controls,
+  Dialogs, TagBit;
 
 { TBitMapTagAssistant }
 

@@ -266,8 +266,8 @@ resourcestring
   SUserManagementIsSet      = 'There are already a user management on your application.';
   SInvalidUserManager       = 'Invalid user manager!';
   SDriverRequired           = 'You must assign one driver to build tags';
-  SBlockRequired            = 'Please, define block or structure';
-  SNumberTagRequired        = 'Please, assign a one tag to build bits';
+  SBlockRequired            = 'A block or structure tag is required to map their elements';
+  SNumberTagRequired        = 'A numeric tag is required to build bits';
 
   us7tb_tabsheet1_caption       = 'Area and type';
   us7tb_plcaddres_caption       = 'PLC Address';

@@ -21,7 +21,6 @@ interface
 uses
   Classes, SysUtils, modbusdriver, ProtocolTypes, uModbusTagBuilder;
 
-
 type
 
   { TModBusTagAssistant }

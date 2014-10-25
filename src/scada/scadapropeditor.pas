@@ -171,8 +171,6 @@ type
   TBlockElementMapperComponentEditor = class(TInsertTagsOnFormComponentEditor)
   private
     procedure OpenElementMapper;
-  protected
-    function GetTheOwner: TComponent; override;
   public
     procedure ExecuteVerb(Index: LongInt); override;
     {$if declared(has_customhints)}
@@ -181,10 +179,11 @@ type
     function GetVerb(Index: LongInt): string; override;
     function GetVerbCount: LongInt; override;
     procedure Edit; override;
-    function BlockAssistant: TBlockStructTagAssistant; virtual;
   end;
 
 implementation
+
+uses PLCBlock;
 
 function  TPortPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
@@ -389,14 +388,10 @@ end;
 // ELEMENT BLOCK MAPPER
 ///////////////////////////////////////////////////////////////////////////////
 
-function  TBlockElementMapperComponentEditor.GetTheOwner: TComponent;
-begin
-  Result:=BlockAssistant.Owner;
-end;
-
 procedure TBlockElementMapperComponentEditor.OpenElementMapper;
 begin
-  BlockAssistant.OpenElementMapper(BlockAssistant, AddTagInEditor, CreateComponent);
+  if (GetComponent is TPLCBlock) then
+    TPLCBlock(GetComponent).MapElements(AddTagInEditor, CreateComponent);
 end;
 
 procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: LongInt);
@@ -408,35 +403,38 @@ end;
 {$if declared(has_customhints)}
 function TBlockElementMapperComponentEditor.GetCustomHint: String;
 begin
-  if not Assigned(BlockAssistant.BlockStructTag) then
-    begin
-      Result:='Please, define block or structure';
-      Exit;
-    end;
-  if BlockAssistant.BlockStructTag is TPLCStruct then
-    Result:=Result+'Structure size in bytes:'+IntToStr(TPLCStruct(BlockAssistant.BlockStructTag).Size)
-  else
-    Result:=Result+'Block size:'+IntToStr(BlockAssistant.BlockStructTag.Size);
+  if GetComponent is TPLCStruct then begin
+    Result:=Result+'Structure size in bytes:'+IntToStr(TPLCStruct(GetComponent).Size);
+    exit;
+  end;
+
+  if GetComponent is TPLCBlock then begin
+    Result:=Result+'Number of elements: '+IntToStr(TPLCBlock(GetComponent).Size);
+    exit;
+  end;
 end;
 {$ifend}
 
 function  TBlockElementMapperComponentEditor.GetVerb(Index: LongInt): string;
 begin
-  Result:='Undefined Block';
-  if Index=0 then
-    begin
-      if not Assigned(BlockAssistant.BlockStructTag) then
-        Exit;
-      if BlockAssistant.BlockStructTag is TPLCStruct then
-       Result:='Map structure items...'
-      else
-       Result:='Map block elements...';
+  Result:='Unknow option...';
+  if Index=0 then begin
+    if GetComponent is TPLCStruct then begin
+      Result:='Map structure items...';
+      exit;
     end;
+    if GetComponent is TPLCBlock then begin
+      Result:='Map block elements...';
+      exit;
+    end;
+  end;
 end;
 
 function  TBlockElementMapperComponentEditor.GetVerbCount: LongInt;
 begin
-  Result:=1;
+  Result:=0;
+  if GetComponent is TPLCBlock then
+   Result:=1;
 end;
 
 procedure TBlockElementMapperComponentEditor.Edit;
@@ -444,12 +442,6 @@ begin
   inherited Edit;
   OpenElementMapper();
 end;
-
-function  TBlockElementMapperComponentEditor.BlockAssistant:TBlockStructTagAssistant;
-begin
-  Result:=TBlockStructTagAssistant(GetComponent);
-end;
-
 
 end.
 

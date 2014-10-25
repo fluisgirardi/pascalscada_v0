@@ -18,20 +18,11 @@ unit westasciitagassistant;
 
 interface
 
-uses
-  Classes, SysUtils, westasciidriver, ProtocolTypes;
-
-
-  //: Opens the Tag Builder of the WestASCII protocol driver
-  procedure OpenTagEditor(aProtocolDriver,
-                          aOwnerOfNewTags:TComponent;
-                          InsertHook:TAddTagInEditorHook;
-                          CreateProc:TCreateTagProc);
-
 implementation
 
 uses
-  PLCTagNumber, uwesttagbuilder, Controls, hsstrings, Dialogs;
+  Classes, SysUtils, westasciidriver, ProtocolTypes, PLCTagNumber,
+  uwesttagbuilder, Controls, hsstrings, Dialogs;
 
 procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);

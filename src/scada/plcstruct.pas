@@ -14,6 +14,8 @@
   ***********************************************************************
   07/2013 - Moved OpenElementMapper to StructTagAssistant to remove form dependencies
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
+  10/2014 - Switched back to the old behavior but keeping the improvemnt
+  of Juanjo (do not link with GUI);
   ***********************************************************************
 }
 {$ENDIF}
@@ -26,7 +28,7 @@ unit PLCStruct;
 interface
 
 uses
-  Classes, PLCBlock, Tag;
+  Classes, PLCBlock, Tag, ProtocolTypes;
 
 type
   {$IFDEF PORTUGUES}
@@ -42,6 +44,9 @@ type
     @abstract(Class of an structure communication tag.)
   }
   {$ENDIF}
+
+  { TPLCStruct }
+
   TPLCStruct = class(TPLCBlock)
   protected
     //: @seealso(TPLCTag.IsMyCallBack)
@@ -59,7 +64,13 @@ type
   public
     //: @xclude
     constructor Create(AOwner:TComponent); override;
+
+    //: @seealso(TPLCBlock.MapElements)
+    procedure MapElements(InsertHook: TAddTagInEditorHook;
+       CreateProc: TCreateTagProc); override;
   end;
+
+  procedure SetStructItemMapper(StructItemMapperTool:TOpenTagEditor);
 
 implementation
 
@@ -70,7 +81,6 @@ begin
   inherited Create(AOwner);
   Inherited SetTagType(pttByte);
 end;
-
 
 function TPLCStruct.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin
@@ -101,5 +111,26 @@ procedure TPLCStruct.SetSwapBytes(v:Boolean);
 begin
   inherited SetSwapBytes(false);
 end;
+
+var
+  StructItemMapperEditor:TOpenTagEditor = nil;
+
+procedure TPLCStruct.MapElements(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
+begin
+    if Assigned(StructItemMapperEditor) then
+    StructItemMapperEditor(Self, Self.Owner,InsertHook,CreateProc)
+  else
+    raise exception.Create('None element mapper tool has been assigned!');
+end;
+
+procedure SetStructItemMapper(StructItemMapperTool:TOpenTagEditor);
+begin
+  if assigned(StructItemMapperEditor) then
+    raise Exception.Create('A Bit Mapper editor was already assigned.')
+  else
+    StructItemMapperEditor:=StructItemMapperTool;
+end;
+
 
 end.
