@@ -135,6 +135,8 @@ type
     property MaxValue;
     //: @seealso(TPLCNumber.MinValue)
     property MinValue;
+    //: @seealso(TTag.OnUpdate)
+    property OnUpdate;
   end;
 
 implementation
