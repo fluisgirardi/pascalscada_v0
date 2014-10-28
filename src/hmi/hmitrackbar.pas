@@ -39,7 +39,7 @@ type
   {$ENDIF}
   THMITrackBar = class(TTrackBar, IHMIInterface, IHMITagInterface)
   private
-    FAfterSendValueToTag: TAfterSendValueToTagEvent;
+    FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     Ftag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -139,7 +139,7 @@ type
     {$ELSE}
     //: Event triggered when the HMIEdit sent a value to linked tag.
     {$ENDIF}
-    property AfterValueToTag:TAfterSendValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
+    property AfterSendValueToTag:TAfterSendNumericValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
@@ -251,7 +251,7 @@ procedure THMITrackBar.WriteValue;
   procedure DoAfterSendValue;
   begin
     if Assigned(FAfterSendValueToTag) then
-      FAfterSendValueToTag(Self,IntToStr(Position));
+      FAfterSendValueToTag(Self,Position);
   end;
 begin
   if [csLoading,csReading]*ComponentState<>[] then exit;

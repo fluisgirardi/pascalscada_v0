@@ -13,8 +13,8 @@ type
 
   THMIComboBox = class(TCustomComboBox, IHMIInterface, IHMITagInterface)
   private
-    FAfterSendValueToTag: TAfterSendValueToTagEvent;
-    FBeforeSendValueToTag: TBeforeSendValueToTagEvent;
+    FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
+    FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
   protected
     FTag:TPLCTag;
     FSecurityCode: String;
@@ -135,14 +135,14 @@ type
     {$ELSE}
     //: Event triggered before HMIEdit send a value to linked tag.
     {$ENDIF}
-    property BeforeSendAValueToTag:TBeforeSendValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
+    property BeforeSendAValueToTag:TBeforeSendNumericValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
 
     {$IFDEF PORTUGUES}
     //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
     {$ELSE}
     //: Event triggered when the HMIEdit sent a value to linked tag.
     {$ENDIF}
-    property AfterValueToTag:TAfterSendValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
+    property AfterValueToTag:TAfterSendNumericValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
@@ -264,13 +264,13 @@ procedure THMIComboBox.Select;
   begin
     Result:=true;
     if Assigned(FBeforeSendValueToTag) then
-      FBeforeSendValueToTag(Self,IntToStr(GetItemIndex), Result);
+      FBeforeSendValueToTag(Self,GetItemIndex, Result);
   end;
 
   procedure AfterSendValue;
   begin
     if Assigned(FAfterSendValueToTag) then
-      FAfterSendValueToTag(Self,IntToStr(GetItemIndex));
+      FAfterSendValueToTag(Self,GetItemIndex);
   end;
 
 begin

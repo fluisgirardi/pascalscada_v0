@@ -41,8 +41,13 @@ type
    development environment.)
   }
   {$ENDIF}
+
+  { THMICheckBox }
+
   THMICheckBox = class(TCheckBox, IHMIInterface, IHMITagInterface)
   private
+    FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
+    FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -449,6 +454,20 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado antes do HMIEdit enviar um valor ao tag associado
+    {$ELSE}
+    //: Event triggered before HMIEdit send a value to linked tag.
+    {$ENDIF}
+    property BeforeSendAValueToTag:TBeforeSendNumericValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
+    {$ELSE}
+    //: Event triggered when the HMIEdit sent a value to linked tag.
+    {$ENDIF}
+    property AfterSendValueToTag:TAfterSendNumericValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
@@ -500,6 +519,8 @@ end;
 procedure THMICheckBox.EditingDone;
 begin
   UpdateTagValue;
+
+  inherited EditingDone;
 end;
 {$ENDIF}
 
@@ -654,18 +675,33 @@ begin
 end;
 
 procedure THMICheckBox.UpdateTagValue;
+  procedure DoAfterSendValue(avalue:Double);
+  begin
+    if Assigned(FAfterSendValueToTag) then
+      FAfterSendValueToTag(Self,avalue);
+  end;
+
+  function SendIt(avalue:Double):Boolean;
+  begin
+    if Assigned(FBeforeSendValueToTag) then
+      FBeforeSendValueToTag(Self,avalue,Result)
+    else
+      Result:=true;
+  end;
 begin
   if (csReading in ComponentState) or (csLoading in ComponentState) or (FTag=nil) then
     exit;
 
   if ((FTag<>nil) and Supports(FTag, ITagNumeric)) then
     if State=cbChecked then begin
-      if FWriteTrue then begin
+      if FWriteTrue and SendIt(FValueTrue) then begin
         (FTag as ITagNumeric).Value := FValueTrue;
+        DoAfterSendValue(FValueTrue);
       end;
     end else begin
-      if FWriteFalse then begin
+      if FWriteFalse and SendIt(FValueFalse) then begin
         (FTag as ITagNumeric).Value := FValueFalse;
+        DoAfterSendValue(FValueFalse);
       end;
     end;
 end;
@@ -691,7 +727,7 @@ begin
 end;
 {$ENDIF}
 
-procedure THMICheckBox.SetSecurityCode(Sc:String);
+procedure THMICheckBox.SetSecurityCode(sc: String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)

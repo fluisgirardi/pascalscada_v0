@@ -42,9 +42,9 @@ type
   {$ENDIF}
   THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
   private
-    FAfterSendValueToTag: TAfterSendValueToTagEvent;
+    FAfterSendValueToTag: TAfterSendStringValueToTagEvent;
     FAlignment:TAlignment;
-    FBeforeSendValueToTag: TBeforeSendValueToTagEvent;
+    FBeforeSendValueToTag: TBeforeSendStringValueToTagEvent;
     FTag:TPLCTag;
     FShowFocused:Boolean;
     FDefFontColor:TColor;
@@ -332,14 +332,14 @@ type
     {$ELSE}
     //: Event triggered before HMIEdit send a value to linked tag.
     {$ENDIF}
-    property BeforeSendAValueToTag:TBeforeSendValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
+    property BeforeSendAValueToTag:TBeforeSendStringValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
 
     {$IFDEF PORTUGUES}
     //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
     {$ELSE}
     //: Event triggered when the HMIEdit sent a value to linked tag.
     {$ENDIF}
-    property AfterValueToTag:TAfterSendValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
+    property AfterSendValueToTag:TAfterSendStringValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
@@ -618,13 +618,13 @@ var
   procedure DoAfterSendValue;
   begin
     if Assigned(FAfterSendValueToTag) then
-      FAfterSendValueToTag(Self,txt);
+      FAfterSendValueToTag(Self,Txt);
   end;
 
   function SendIt:Boolean;
   begin
     if Assigned(FBeforeSendValueToTag) then
-      FBeforeSendValueToTag(Self,txt,Result)
+      FBeforeSendValueToTag(Self,Txt,Result)
     else
       Result:=true;
   end;

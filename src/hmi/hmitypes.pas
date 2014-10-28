@@ -174,8 +174,11 @@ type
     property  Tag:TPLCTag read GetHMITag write SetHMITag;
   end;
 
-  TBeforeSendValueToTagEvent = procedure(Sender:TObject; Value:String; var SendIt:Boolean) of object;
-  TAfterSendValueToTagEvent = procedure(Sender:TObject; Value:String) of object;
+  TBeforeSendNumericValueToTagEvent = procedure(Sender:TObject; Value:Double; var SendIt:Boolean) of object;
+  TAfterSendNumericValueToTagEvent = procedure(Sender:TObject; Value:Double) of object;
+
+  TBeforeSendStringValueToTagEvent = procedure(Sender:TObject; Value:String; var SendIt:Boolean) of object;
+  TAfterSendStringValueToTagEvent = procedure(Sender:TObject; Value:String) of object;
 
 implementation
 
