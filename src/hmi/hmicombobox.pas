@@ -142,7 +142,7 @@ type
     {$ELSE}
     //: Event triggered when the HMIEdit sent a value to linked tag.
     {$ENDIF}
-    property AfterValueToTag:TAfterSendNumericValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
+    property AfterSendValueToTag:TAfterSendNumericValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
