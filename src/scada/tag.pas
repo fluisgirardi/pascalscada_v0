@@ -1100,24 +1100,26 @@ begin
   except
   end;
 
-  {$IFNDEF CONSOLEPASCALSCADA}
-    x:=GetValueChangeData;
-  {$ELSE}
-    FUserData:=GetValueChangeData;
-  {$ENDIF}
-
-
-  {$IFDEF FPC}
-
+  if Assigned(POnAsyncValueChange) then begin
     {$IFNDEF CONSOLEPASCALSCADA}
-      Application.QueueAsyncCall(ASyncMethod,PtrInt(x));
+      x:=GetValueChangeData;
     {$ELSE}
-      TThread.Queue(nil, ASyncMethod);
+      FUserData:=GetValueChangeData;
     {$ENDIF}
 
-  {$ELSE}
-  PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
-  {$ENDIF}
+
+    {$IFDEF FPC}
+
+      {$IFNDEF CONSOLEPASCALSCADA}
+        Application.QueueAsyncCall(ASyncMethod,PtrInt(x));
+      {$ELSE}
+        TThread.Queue(nil, ASyncMethod);
+      {$ENDIF}
+
+    {$ELSE}
+    PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
+    {$ENDIF}
+  end;
 end;
 
 {$IFNDEF FPC}

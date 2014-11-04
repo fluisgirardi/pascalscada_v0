@@ -183,8 +183,6 @@ begin
       TSpeedButton(Controls[c]).Caption:=StringReplace(TSpeedButton(Controls[c]).Caption,' ',''+LineEnding+'',[rfReplaceAll]);
     end;
 
-  Btn_Back.Tag:=PSVK_BACK;
-
   Btn_0.Tag:=VK_0;
   Btn_1.Tag:=VK_1;
   Btn_2.Tag:=VK_2;
@@ -199,7 +197,7 @@ begin
   Btn_Alt.Tag:=VK_MENU;
   Btn_AltGR.Tag:=VK_RMENU;
   Btn_B.Tag:=VK_B;
-  Btn_Back.Tag:=PSVK_BACK;
+  Btn_Back.Tag:=VK_BACK;
   Btn_BackSlash.Tag:=VK_OEM_5;
   Btn_BracketClose.Tag:=VK_OEM_6;
   Btn_BracketOpen.Tag:=VK_OEM_4;

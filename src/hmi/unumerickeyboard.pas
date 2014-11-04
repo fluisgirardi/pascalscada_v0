@@ -51,6 +51,8 @@ type
   public
     constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
     destructor Destroy; override;
+  published
+    property Target:TWinControl read FTarget;
   end;
 
 var
@@ -116,9 +118,9 @@ begin
   Btn_Del.Tag:=VK_DELETE;
   Btn_Ok.Tag:=VK_RETURN;
 
-  Btn_Back.Tag:=PSVK_BACK;
-  Btn_DecSeparator.Tag:=PSVK_DECIMAL;
-  Btn_Minus.Tag:=PSVK_SUBTRACT;
+  Btn_Back.Tag:=VK_BACK;
+  Btn_DecSeparator.Tag:=VK_DECIMAL;
+  Btn_Minus.Tag:=VK_SUBTRACT;
 
   OnClose:=FormClose;
 
@@ -150,4 +152,4 @@ end;
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

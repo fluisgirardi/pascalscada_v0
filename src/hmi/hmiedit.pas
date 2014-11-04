@@ -20,7 +20,8 @@ interface
 
 uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, Graphics, Dialogs,
-  {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag;
+  {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag,
+  unumerickeyboard, LMessages;
 
 type
   {$IFDEF PORTUGUES}
@@ -40,11 +41,16 @@ type
     your development environment.)
   }
   {$ENDIF}
+
+  { THMIEdit }
+
   THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
   private
     FAfterSendValueToTag: TAfterSendStringValueToTagEvent;
     FAlignment:TAlignment;
     FBeforeSendValueToTag: TBeforeSendStringValueToTagEvent;
+    FNumericKBShowDecimal: Boolean;
+    FNumericKBShowMinus: Boolean;
     FTag:TPLCTag;
     FShowFocused:Boolean;
     FDefFontColor:TColor;
@@ -61,6 +67,7 @@ type
     HasFocus:Boolean;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
+    FOnScreenKeyboardBehavior:TOnScreenKeyboardBehavior;
 
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
@@ -139,6 +146,8 @@ type
     //: @exclude
     procedure SetAlignment(Value: TAlignment);
     {$ENDIF}
+
+    procedure WndProc(var Message: TLMessage); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -326,6 +335,16 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
+
+    {$IFDEF PORTUGUES}
+    //: Comportamento do controle com relação ao teclado virtual.
+    {$ELSE}
+    //: On screen keyboard control behavior.
+    {$ENDIF}
+    property ScreenKeyboardBehavior:TOnScreenKeyboardBehavior read FOnScreenKeyboardBehavior write FOnScreenKeyboardBehavior default oskbDisabled;
+
+    property ScreenNumericKBShowMinus:Boolean read FNumericKBShowMinus write FNumericKBShowMinus default false;
+    property ScreenNumericKBShowDecimal:Boolean read FNumericKBShowDecimal write FNumericKBShowDecimal default false;
 
     {$IFDEF PORTUGUES}
     //: Evento disparado antes do HMIEdit enviar um valor ao tag associado
@@ -544,6 +563,11 @@ begin
   {$ENDIF}
   if not FBlockFontChange then
     FDefColor := c;
+end;
+
+procedure THMIEdit.WndProc(var Message: TLMessage);
+begin
+  inherited WndProc(Message);
 end;
 
 procedure THMIEdit.SetPrefix(s:String);

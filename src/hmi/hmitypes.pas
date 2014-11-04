@@ -180,6 +180,8 @@ type
   TBeforeSendStringValueToTagEvent = procedure(Sender:TObject; Value:String; var SendIt:Boolean) of object;
   TAfterSendStringValueToTagEvent = procedure(Sender:TObject; Value:String) of object;
 
+  TOnScreenKeyboardBehavior = (oskbDisabled, oskbEnabled, oskbManager);
+
 implementation
 
 end.
