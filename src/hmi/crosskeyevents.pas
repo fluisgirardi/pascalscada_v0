@@ -115,6 +115,7 @@ type
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+  {$IF defined(win32) OR defined(win64) OR defined(wince) OR defined(windows)}
   { TWindowsVirtualKeyboard }
 
   TWindowsVirtualKeyboard = class(TCrossKeyEvents)
@@ -123,6 +124,23 @@ type
     procedure DoUp(Key: LongWord); override;
     function TranlateVirtualKey(Key: Word): LongWord; override;
   end;
+  {$IFEND}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+  {$IF defined(linux)}
+
+  { TLinuxVirtualKeyboard }
+
+  TLinuxVirtualKeyboard = class(TCrossKeyEvents)
+  protected
+    procedure DoDown(Key: LongWord); override;
+    procedure DoUp(Key: LongWord); override;
+    function TranlateVirtualKey(Key: Word): LongWord; override;
+  end;
+  {$IFEND}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +170,29 @@ implementation
   uses windows{$IFDEF FPC}, JwaWinUser{$ENDIF};
 {$IFEND}
 
+{$IF defined(linux)}
+  uses lcltype;
+{$IFEND}
+
+
+{$IF defined(linux)}
+procedure TLinuxVirtualKeyboard.DoDown(Key: LongWord);
+begin
+
+end;
+
+procedure TLinuxVirtualKeyboard.DoUp(Key: LongWord);
+begin
+
+end;
+
+function TLinuxVirtualKeyboard.TranlateVirtualKey(Key: Word): LongWord;
+begin
+
+end;
+{$IFEND}
+
+{$IF defined(win32) OR defined(win64) OR defined(wince) OR defined(windows)}
 { TWindowsVirtualKeyboard }
 
 procedure TWindowsVirtualKeyboard.DoDown(Key: LongWord);
@@ -182,8 +223,7 @@ function TWindowsVirtualKeyboard.TranlateVirtualKey(Key: Word): LongWord;
 begin
   Result:=Key;
 end;
-
-
+{$IFEND}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +277,10 @@ function CreateCrossKeyEvents(Target:TWinControl):TCrossKeyEvents;
 begin
   {$IF defined(win32) OR defined(win64) OR defined(wince) OR defined(windows)}
   Result:=TWindowsVirtualKeyboard.Create(Target);
+  {$IFEND}
+
+  {$IF defined(linux)}
+  Result:=TLinuxVirtualKeyboard.Create(Target);
   {$IFEND}
 end;
 

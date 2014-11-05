@@ -137,12 +137,17 @@ end;
 procedure TNumericKeyBoard.BtnPress(Sender: TObject);
 begin
   if FTarget=nil then exit;
+
+  FFormOwner.Show;
+  FTarget.SetFocus;
+
+  Application.ProcessMessages;
+
   with Sender as TSpeedButton do begin
     keyboard.Press(Tag);
     if (tag=VK_ESCAPE) or (tag=VK_RETURN) then
       close;
   end;
-  FFormOwner.Show;
 end;
 
 {$IFDEF FPC }

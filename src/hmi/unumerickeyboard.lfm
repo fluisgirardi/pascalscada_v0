@@ -1,7 +1,7 @@
 object NumericKeyBoard: TNumericKeyBoard
-  Left = 563
+  Left = 684
   Height = 192
-  Top = 215
+  Top = 131
   Width = 239
   BorderIcons = [biHelp]
   BorderStyle = bsToolWindow
@@ -12,18 +12,16 @@ object NumericKeyBoard: TNumericKeyBoard
   Font.Name = 'MS Sans Serif'
   FormStyle = fsStayOnTop
   OnCreate = FormCreate
-  LCLVersion = '0.9.28.2'
+  LCLVersion = '1.2.6.0'
   object Btn_1: TSpeedButton
     Left = 1
     Height = 45
     Top = 97
     Width = 45
     Caption = '1'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -33,11 +31,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 97
     Width = 45
     Caption = '2'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -47,11 +43,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 97
     Width = 45
     Caption = '3'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -61,11 +55,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 49
     Width = 45
     Caption = '4'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -75,11 +67,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 49
     Width = 45
     Caption = '5'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -89,11 +79,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 49
     Width = 45
     Caption = '6'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -103,11 +91,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 1
     Width = 45
     Caption = '7'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -117,11 +103,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 1
     Width = 45
     Caption = '8'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -131,11 +115,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 1
     Width = 45
     Caption = '9'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -145,11 +127,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 145
     Width = 45
     Caption = '0'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -159,11 +139,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 145
     Width = 45
     Caption = '-'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -173,11 +151,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 145
     Width = 45
     Caption = '.'
-    Color = clBtnFace
     Font.Height = -19
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -187,11 +163,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 49
     Width = 45
     Caption = 'Del'
-    Color = clBtnFace
     Font.Height = -15
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -201,11 +175,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 1
     Width = 45
     Caption = 'Esc'
-    Color = clBtnFace
     Font.Height = -15
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -215,11 +187,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 1
     Width = 45
     Caption = 'Back'
-    Color = clBtnFace
     Font.Height = -15
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -229,11 +199,9 @@ object NumericKeyBoard: TNumericKeyBoard
     Top = 49
     Width = 45
     Caption = 'OK'
-    Color = clBtnFace
     Font.Height = -15
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -242,7 +210,6 @@ object NumericKeyBoard: TNumericKeyBoard
     Height = 45
     Top = 145
     Width = 45
-    Color = clBtnFace
     Font.Height = -15
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
@@ -460,7 +427,6 @@ object NumericKeyBoard: TNumericKeyBoard
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00
     }
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
@@ -469,7 +435,6 @@ object NumericKeyBoard: TNumericKeyBoard
     Height = 45
     Top = 145
     Width = 45
-    Color = clBtnFace
     Font.Height = -15
     Font.Name = 'Verdana'
     Font.Style = [fsBold]
@@ -687,7 +652,6 @@ object NumericKeyBoard: TNumericKeyBoard
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00
     }
-    NumGlyphs = 0
     OnClick = BtnPress
     ParentFont = False
   end
