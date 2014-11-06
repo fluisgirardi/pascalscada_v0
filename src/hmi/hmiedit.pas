@@ -21,7 +21,7 @@ interface
 uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, Graphics, Dialogs,
   {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag,
-  unumerickeyboard, LMessages;
+  unumerickeyboard, Forms;
 
 type
   {$IFDEF PORTUGUES}
@@ -69,6 +69,8 @@ type
     FIsEnabledBySecurity:Boolean;
     FOnScreenKeyboardBehavior:TOnScreenKeyboardBehavior;
 
+    FNumericKB:TNumericKeyBoard;
+
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
     {$ELSE}
@@ -111,6 +113,12 @@ type
 
     procedure SetMinLimit(v:Double);
     procedure SetMaxLimit(v:Double);
+
+    procedure ShowScreenKeyboard;
+    procedure ShowScreenKeyboardIfNeeded;
+    procedure HideScreenKeyboard;
+
+    procedure NumericKBClosed(Sender: TObject; var CloseAction: TCloseAction);
   protected
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -127,6 +135,8 @@ type
     //: @exclude
     procedure SetEnabled(e:Boolean); override;
 
+    //: @exclude
+    procedure Click; override;
     //: @exclude
     procedure Change; override;
     //: @exclude
@@ -146,8 +156,6 @@ type
     //: @exclude
     procedure SetAlignment(Value: TAlignment);
     {$ENDIF}
-
-    procedure WndProc(var Message: TLMessage); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -337,9 +345,16 @@ type
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
 
     {$IFDEF PORTUGUES}
-    //: Comportamento do controle com relação ao teclado virtual.
+    {:
+    Comportamento do controle com relação ao teclado virtual. A seleção do tipo
+    do teclado irá ser feita baseada no tipo de tag, informações de limite e de
+    formatação do edit.
+    }
     {$ELSE}
-    //: On screen keyboard control behavior.
+    {:
+    On screen keyboard control behavior. The keyboard type will be made
+    automacally based on tag type, limits and on NumberFormat property.
+    }
     {$ENDIF}
     property ScreenKeyboardBehavior:TOnScreenKeyboardBehavior read FOnScreenKeyboardBehavior write FOnScreenKeyboardBehavior default oskbDisabled;
 
@@ -416,6 +431,13 @@ begin
 end;
 {$ENDIF}
 
+procedure THMIEdit.NumericKBClosed(Sender: TObject;
+  var CloseAction: TCloseAction);
+begin
+  FNumericKB:=nil; //numerickb.DoClose force CloseAction to caFree, so free
+                   //isn´t need.
+end;
+
 procedure THMIEdit.SetSecurityCode(sc: String);
 begin
   if Trim(sc)='' then
@@ -453,6 +475,12 @@ procedure THMIEdit.SetEnabled(e:Boolean);
 begin
   FIsEnabled:=e;
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
+end;
+
+procedure THMIEdit.Click;
+begin
+  ShowScreenKeyboardIfNeeded;
+  inherited Click;
 end;
 
 procedure THMIEdit.Loaded;
@@ -565,11 +593,6 @@ begin
     FDefColor := c;
 end;
 
-procedure THMIEdit.WndProc(var Message: TLMessage);
-begin
-  inherited WndProc(Message);
-end;
-
 procedure THMIEdit.SetPrefix(s:String);
 begin
   FPrefix := s;
@@ -596,6 +619,42 @@ begin
     raise Exception.Create(SmaxMustBeGreaterThanMin);
 
   FMaxLimit:=v;
+end;
+
+procedure THMIEdit.ShowScreenKeyboard;
+var
+  showMinus: Boolean;
+  showDecPoint: Boolean;
+begin
+  if ReadOnly then exit;
+  if FTag <> nil then begin
+    if Supports(FTag,ITagNumeric) then begin
+      if Assigned(FNumericKB) then begin
+        FNumericKB.ShowOnTop;
+        Exit;
+      end;
+      showMinus   :=(FEnableMin AND (FMinLimit<0)) or ((FEnableMin=false) and FNumericKBShowMinus);
+      showDecPoint:=(Pos('.', FNumberFormat)>0) or FNumericKBShowDecimal;
+      FNumericKB:=TNumericKeyBoard.Create(Self,Self,showMinus,showDecPoint);
+      FNumericKB.OnClose:=NumericKBClosed;
+      FNumericKB.ShowAlongsideOfTheTarget;
+      exit;
+    end;
+  end;
+end;
+
+procedure THMIEdit.ShowScreenKeyboardIfNeeded;
+begin
+  if FOnScreenKeyboardBehavior=oskbEnabled then
+    ShowScreenKeyboard;
+end;
+
+procedure THMIEdit.HideScreenKeyboard;
+begin
+  if assigned(FNumericKB) and (FNumericKB.Target=Self) then begin
+    FNumericKB.Close;
+    FNumericKB:=nil;
+  end;
 end;
 
 procedure THMIEdit.FontChange(Sender: TObject);
@@ -718,6 +777,8 @@ begin
   Modified := false;
   RefreshTagValue;
 
+  HideScreenKeyboard;
+
   inherited DoExit;
 end;
 
@@ -728,6 +789,7 @@ begin
   RepaintFocus;
   RefreshTagValue;
   SelectAll;
+  ShowScreenKeyboardIfNeeded;
   inherited DoEnter;
 end;
 
