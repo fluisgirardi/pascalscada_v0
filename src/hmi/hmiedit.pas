@@ -789,7 +789,6 @@ begin
   RepaintFocus;
   RefreshTagValue;
   SelectAll;
-  ShowScreenKeyboardIfNeeded;
   inherited DoEnter;
 end;
 

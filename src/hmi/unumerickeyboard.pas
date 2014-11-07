@@ -160,9 +160,8 @@ end;
 procedure TNumericKeyBoard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
-  Show;
-  ReturnFocusToTarget;
-  BringToFrontWithoutActivate;
+  //BringToFrontWithoutActivate;
+  ShowOnTop;
 end;
 
 procedure TNumericKeyBoard.FormCreate(Sender: TObject);
