@@ -88,7 +88,6 @@ type
     Btn_CtrlR: TSpeedButton;
     Btn_Caps: TSpeedButton;
     Btn_Shift: TSpeedButton;
-    Btn_ShiftR: TSpeedButton;
     Btn_Ctrl: TSpeedButton;
     Btn_Space: TSpeedButton;
     Btn_Alt: TSpeedButton;
@@ -125,12 +124,30 @@ type
     procedure ModifierRelease();
     procedure ReturnFocusToTarget;
   protected
-    FFxxKeyGroup:TList;
+    FFxxKeyGroup,
+    FSymbolsKeyGroup,
+    FNavigationKeyGroup,
+    FFastNavigationKeyGroup:TList;
+    FReturnCloseKeyBoard:Boolean;
     procedure DoClose(var CloseAction: TCloseAction); override;
   public
-    constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
+    constructor Create(TheOwner: TComponent;
+                       Target:TWinControl;
+                       ShowFxxKeys,
+                       ShowTab,
+                       ShowCaps,
+                       ShowShift,
+                       ShowCtrl,
+                       ShowAlt,
+                       ShowSymbols,
+                       ShowFastNavigation,
+                       ShowNavigation,
+
+                       CloseOnPressEnter:Boolean); overload;
     destructor Destroy; override;
     procedure ShowAlongsideOfTheTarget;
+  published
+    property Target:TWinControl read FTarget;
   end; 
 
 var
@@ -157,10 +174,23 @@ uses strutils,
 var
   LastAlphaKeyboard:TpsfrmAlphaKeyboard;
 
-constructor TpsfrmAlphaKeyboard.Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
+constructor TpsfrmAlphaKeyboard.Create(TheOwner: TComponent;
+  Target: TWinControl; ShowFxxKeys, ShowTab, ShowCaps, ShowShift, ShowCtrl,
+  ShowAlt, ShowSymbols, ShowFastNavigation, ShowNavigation,
+  CloseOnPressEnter: Boolean);
 var
   curcontrol:TControl;
   k: TKeyEvent;
+
+  procedure EnableGroup(Group:TList; EnableGroup:Boolean);
+  var
+    i: Integer;
+  begin
+    for i:=0 to Group.Count-1 do begin
+      TSpeedButton(Group.Items[i]).Enabled:=TSpeedButton(Group.Items[i]).Enabled and EnableGroup;
+    end;
+  end;
+
 begin
   inherited Create(TheOwner);
 
@@ -188,13 +218,74 @@ begin
   CurrentState:=[ssCtrl, ssAlt, ssShift];
   ModifierRelease();
   CurrentState:=[];
+
+  FReturnCloseKeyBoard:=CloseOnPressEnter;
+
+  FFxxKeyGroup:=TList.Create;
+  FFxxKeyGroup.Add(Btn_F1);
+  FFxxKeyGroup.Add(Btn_F2);
+  FFxxKeyGroup.Add(Btn_F3);
+  FFxxKeyGroup.Add(Btn_F4);
+  FFxxKeyGroup.Add(Btn_F5);
+  FFxxKeyGroup.Add(Btn_F6);
+  FFxxKeyGroup.Add(Btn_F7);
+  FFxxKeyGroup.Add(Btn_F8);
+  FFxxKeyGroup.Add(Btn_F9);
+  FFxxKeyGroup.Add(Btn_F10);
+  FFxxKeyGroup.Add(Btn_F11);
+  FFxxKeyGroup.Add(Btn_F12);
+
+  FSymbolsKeyGroup:=TList.Create;
+  FSymbolsKeyGroup.Add(Btn_Quote);
+  FSymbolsKeyGroup.Add(Btn_BackSlash);
+  FSymbolsKeyGroup.Add(Btn_Hyphen);
+  FSymbolsKeyGroup.Add(Btn_Equal);
+  FSymbolsKeyGroup.Add(Btn_SingleQuote);
+  FSymbolsKeyGroup.Add(Btn_BracketOpen);
+  FSymbolsKeyGroup.Add(Btn_Tilde);
+  FSymbolsKeyGroup.Add(Btn_BracketClose);
+  FSymbolsKeyGroup.Add(Btn_Comma);
+  FSymbolsKeyGroup.Add(Btn_Dot);
+  FSymbolsKeyGroup.Add(Btn_Semicolon);
+  FSymbolsKeyGroup.Add(Btn_Slash);
+
+  FFastNavigationKeyGroup:=TList.Create;
+  FFastNavigationKeyGroup.Add(Btn_PgUp);
+  FFastNavigationKeyGroup.Add(Btn_PgDown);
+  FFastNavigationKeyGroup.Add(Btn_End);
+  FFastNavigationKeyGroup.Add(Btn_Home);
+
+  FNavigationKeyGroup:=TList.Create;
+  FNavigationKeyGroup.Add(Btn_Up);
+  FNavigationKeyGroup.Add(Btn_Down);
+  FNavigationKeyGroup.Add(Btn_Left);
+  FNavigationKeyGroup.Add(Btn_Rigth);
+
+  Btn_Caps.Enabled:=Btn_Caps.Enabled and ShowCaps;
+  Btn_Tab.Enabled:=Btn_Tab.Enabled and ShowTab;
+  Btn_Shift.Enabled:=Btn_Shift.Enabled and ShowShift and ShowSymbols;
+  Btn_Ctrl.Enabled:=Btn_Ctrl.Enabled and ShowCtrl;
+  Btn_Alt.Enabled:=Btn_Alt.Enabled and ShowAlt;
+
+  EnableGroup(FNavigationKeyGroup, ShowNavigation);
+  EnableGroup(FFastNavigationKeyGroup, ShowFastNavigation);
+  EnableGroup(FFxxKeyGroup, ShowFxxKeys);
+  EnableGroup(FSymbolsKeyGroup, ShowSymbols);
 end;
 
 destructor TpsfrmAlphaKeyboard.Destroy;
 begin
   ModifierRelease;
   Fkeyboard.destroy;
+  if LastAlphaKeyboard=Self then
+    LastAlphaKeyboard:=nil;
+
+  FreeAndNil(FFxxKeyGroup);
+  FreeAndNil(FSymbolsKeyGroup);
+  FreeAndNil(FNavigationKeyGroup);
+  FreeAndNil(FFastNavigationKeyGroup);
   inherited Destroy;
+
 end;
 
 procedure TpsfrmAlphaKeyboard.ShowAlongsideOfTheTarget;
@@ -226,19 +317,19 @@ begin
   Btn_8.Tag:=VK_8;
   Btn_9.Tag:=VK_9;
   Btn_A.Tag:=VK_A;
-  Btn_Alt.Tag:=VK_MENU;
-  Btn_AltGR.Tag:=VK_RMENU;
+  //Btn_Alt.Tag:=VK_MENU;
+  //Btn_AltGR.Tag:=VK_RMENU;
   Btn_B.Tag:=VK_B;
   Btn_Back.Tag:=VK_BACK;
   Btn_BackSlash.Tag:=VK_OEM_102;
   Btn_BracketClose.Tag:=VK_OEM_5;
   Btn_BracketOpen.Tag:=VK_OEM_6;
   Btn_C.Tag:=VK_C;
-  //Btn_Caps.Tag:=VK_;
+  //Btn_Caps.Tag:=VK_CAPITAL;
   Btn_Cedilla.Tag:=VK_OEM_1;
   Btn_Comma.Tag:=VK_OEM_COMMA;
-  Btn_Ctrl.Tag:=VK_CONTROL;
-  Btn_CtrlR.Tag:=VK_RCONTROL;
+  //Btn_Ctrl.Tag:=VK_CONTROL;
+  //Btn_CtrlR.Tag:=VK_RCONTROL;
   Btn_D.Tag:=VK_D;
   Btn_Del.Tag:=VK_DELETE;
   Btn_Dot.Tag:=VK_OEM_PERIOD;
@@ -284,7 +375,6 @@ begin
   Btn_S.Tag:=VK_S;
   Btn_Semicolon.Tag:=VK_OEM_2;
   //Btn_Shift.Tag:=VK_SHIFT;
-  //Btn_ShiftR.Tag:=VK_SHIFT;
   Btn_SingleQuote.Tag:=VK_OEM_4;
   //Btn_Slash.Tag:=VK_UNKNOWN;
   Btn_Space.Tag:=VK_SPACE;
@@ -328,9 +418,9 @@ begin
   Canvas.Font.Size:=8;
   Canvas.Font.Style:=[fsBold];
 
-  canvas.TextOut(62,248,'Click here');
-  canvas.TextOut(62,260,'to move');
-  canvas.TextOut(62,272,'the keyboard');
+  canvas.TextOut(62,233,'Click here');
+  canvas.TextOut(62,245,'to move');
+  canvas.TextOut(62,257,'the keyboard');
 end;
 
 procedure TpsfrmAlphaKeyboard.ModifierPress(Sender: TObject);
@@ -433,7 +523,7 @@ begin
   with Sender as TSpeedButton do begin
     FKeyboard.Press(Tag);
     Application.ProcessMessages;
-    if (tag=VK_ESCAPE) or (tag=VK_RETURN) then
+    if (tag=VK_ESCAPE) or (FReturnCloseKeyBoard and (tag=VK_RETURN)) then
       Close;
   end;
   BringToFrontWithoutActivate;
