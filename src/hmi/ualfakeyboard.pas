@@ -12,9 +12,9 @@ uses
 
 type
 
-  { TForm1 }
+  { TpsfrmAlphaKeyboard }
 
-  TForm1 = class(TForm)
+  TpsfrmAlphaKeyboard = class(TForm)
     Btn_0: TSpeedButton;
     Btn_1: TSpeedButton;
     Btn_Q: TSpeedButton;
@@ -99,7 +99,6 @@ type
     Btn_Down: TSpeedButton;
     Btn_Up: TSpeedButton;
     Timer1: TTimer;
-    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: LongInt);
@@ -117,23 +116,30 @@ type
     MoveOperation:Boolean;
 
     FTarget:TWinControl;
-    FFormOwner:TForm;
+    FFormOwner:TCustomForm;
     FKeyboard:TCrossKeyEvents;
 
     CurrentState:TShiftState;
+    procedure BringToFrontWithoutActivate;
+    procedure GotoBetterPosition;
     procedure ModifierRelease();
+    procedure ReturnFocusToTarget;
+  protected
+    FFxxKeyGroup:TList;
+    procedure DoClose(var CloseAction: TCloseAction); override;
   public
     constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
     destructor Destroy; override;
+    procedure ShowAlongsideOfTheTarget;
   end; 
 
 var
-  Form1: TForm1; 
+  psfrmAlphaKeyboard: TpsfrmAlphaKeyboard;
 
 implementation
 
-uses strutils
-     {$IFDEF FPC}, keyboard, LResources, LCLIntf, LCLType{$ENDIF}
+uses strutils,
+     {$IFDEF FPC}InterfaceBase, keyboard, LResources, LCLIntf, LCLType{$ENDIF}
      {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64) or defined(MSWINDOWS)}
      , windows
      {$IFEND};
@@ -146,33 +152,59 @@ uses strutils
   {$IFEND}
 {$ENDIF}
 
-{ TForm1 }
+{ TpsfrmAlphaKeyboard }
 
-constructor TForm1.Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
+var
+  LastAlphaKeyboard:TpsfrmAlphaKeyboard;
+
+constructor TpsfrmAlphaKeyboard.Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
 var
   curcontrol:TControl;
+  k: TKeyEvent;
 begin
   inherited Create(TheOwner);
+
+  if Assigned(LastAlphaKeyboard) then begin
+    LastAlphaKeyboard.Close;
+    LastAlphaKeyboard:=nil;
+  end;
+
   FTarget:=Target;
-  Fkeyboard:=CreateCrossKeyEvents(Target);
+  FKeyboard:=CreateCrossKeyEvents(Target);
+  {$IFDEF LCL}
+  FormStyle:=fsSystemStayOnTop;
+  {$ENDIF}
 
   curcontrol:=FTarget;
   FFormOwner:=nil;
   while (curcontrol<>nil) and (FFormOwner=nil) do begin
-    if curcontrol is TForm then
-      FFormOwner:=curcontrol as TForm
-    else
-      curcontrol:=curcontrol.Parent;
+    if (curcontrol.Parent=nil) and (curcontrol is TCustomForm) then
+      FFormOwner:=curcontrol as TCustomForm;
+
+    curcontrol:=curcontrol.Parent;
   end;
+  LastAlphaKeyboard:=Self;
+
+  CurrentState:=[ssCtrl, ssAlt, ssShift];
+  ModifierRelease();
+  CurrentState:=[];
 end;
 
-destructor TForm1.Destroy;
+destructor TpsfrmAlphaKeyboard.Destroy;
 begin
-  inherited Destroy;
+  ModifierRelease;
   Fkeyboard.destroy;
+  inherited Destroy;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TpsfrmAlphaKeyboard.ShowAlongsideOfTheTarget;
+begin
+  GotoBetterPosition;
+  //BringToFrontWithoutActivate;
+  ShowOnTop;
+end;
+
+procedure TpsfrmAlphaKeyboard.FormCreate(Sender: TObject);
 var
   c:LongInt;
 begin
@@ -198,12 +230,12 @@ begin
   Btn_AltGR.Tag:=VK_RMENU;
   Btn_B.Tag:=VK_B;
   Btn_Back.Tag:=VK_BACK;
-  Btn_BackSlash.Tag:=VK_OEM_5;
-  Btn_BracketClose.Tag:=VK_OEM_6;
-  Btn_BracketOpen.Tag:=VK_OEM_4;
+  Btn_BackSlash.Tag:=VK_OEM_102;
+  Btn_BracketClose.Tag:=VK_OEM_5;
+  Btn_BracketOpen.Tag:=VK_OEM_6;
   Btn_C.Tag:=VK_C;
   //Btn_Caps.Tag:=VK_;
-  //Btn_Cedilla.Tag:=VK_;
+  Btn_Cedilla.Tag:=VK_OEM_1;
   Btn_Comma.Tag:=VK_OEM_COMMA;
   Btn_Ctrl.Tag:=VK_CONTROL;
   Btn_CtrlR.Tag:=VK_RCONTROL;
@@ -213,7 +245,7 @@ begin
   Btn_Down.Tag:=VK_DOWN;
   Btn_E.Tag:=VK_E;
   Btn_End.Tag:=VK_END;
-  //Btn_Equal.Tag:=VK_;
+  Btn_Equal.Tag:=VK_OEM_PLUS;
   Btn_Esc.Tag:=VK_ESCAPE;
   Btn_F.Tag:=VK_F;
   Btn_F1.Tag:=VK_F1;
@@ -231,7 +263,7 @@ begin
   Btn_G.Tag:=VK_G;
   Btn_H.Tag:=VK_H;
   Btn_Home.Tag:=VK_HOME;
-  //Btn_Hyphen.Tag:=VK_MINUS;
+  Btn_Hyphen.Tag:=VK_OEM_MINUS;
   Btn_I.Tag:=VK_I;
   Btn_Ins.Tag:=VK_INSERT;
   Btn_J.Tag:=VK_J;
@@ -246,19 +278,19 @@ begin
   Btn_PgDown.Tag:=VK_NEXT;
   Btn_PgUp.Tag:=VK_PRIOR;
   Btn_Q.Tag:=VK_Q;
-  Btn_Quote.Tag:=VK_OEM_7;
+  Btn_Quote.Tag:=VK_OEM_3;
   Btn_R.Tag:=VK_R;
   Btn_Rigth.Tag:=VK_RIGHT;
   Btn_S.Tag:=VK_S;
-  //Btn_Semicolon.Tag:=VK_se;
+  Btn_Semicolon.Tag:=VK_OEM_2;
   //Btn_Shift.Tag:=VK_SHIFT;
   //Btn_ShiftR.Tag:=VK_SHIFT;
-  //Btn_SingleQuote.Tag:=VK_;
-  //Btn_Slash.Tag:=VK_;
+  Btn_SingleQuote.Tag:=VK_OEM_4;
+  //Btn_Slash.Tag:=VK_UNKNOWN;
   Btn_Space.Tag:=VK_SPACE;
   Btn_T.Tag:=VK_T;
   Btn_Tab.Tag:=VK_TAB;
-  //Btn_Tilde.Tag:=VK_TILDE;
+  Btn_Tilde.Tag:=VK_OEM_7;
   Btn_U.Tag:=VK_U;
   Btn_Up.Tag:=VK_UP;
   Btn_V.Tag:=VK_V;
@@ -268,7 +300,7 @@ begin
   Btn_Z.Tag:=VK_Z;
 end;
 
-procedure TForm1.FormMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TpsfrmAlphaKeyboard.FormMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: LongInt);
 begin
   OffsetX:=X;
@@ -276,7 +308,7 @@ begin
   Timer1.Enabled:=true;
 end;
 
-procedure TForm1.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+procedure TpsfrmAlphaKeyboard.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: LongInt);
 begin
   CurX:=X;
@@ -284,14 +316,14 @@ begin
   MoveOperation:=True;
 end;
 
-procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton;
+procedure TpsfrmAlphaKeyboard.FormMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: LongInt);
 begin
   Timer1.Enabled:=false;
   MoveOperation:=False;
 end;
 
-procedure TForm1.FormPaint(Sender: TObject);
+procedure TpsfrmAlphaKeyboard.FormPaint(Sender: TObject);
 begin
   Canvas.Font.Size:=8;
   Canvas.Font.Style:=[fsBold];
@@ -301,7 +333,7 @@ begin
   canvas.TextOut(62,272,'the keyboard');
 end;
 
-procedure TForm1.ModifierPress(Sender: TObject);
+procedure TpsfrmAlphaKeyboard.ModifierPress(Sender: TObject);
 var
   x:TSpeedButton;
 begin
@@ -309,13 +341,19 @@ begin
 
   x:=TSpeedButton.Create(Self);
   x.GroupIndex:=TSpeedButton(Sender).GroupIndex;
+  x.Parent:=TSpeedButton(Sender).Parent;
+  x.Left:=-1000;
+  x.Top :=-1000;
+
+  FKeyboard.Unapply(CurrentState);
 
   case TSpeedButton(Sender).Tag of
     1:
       if ssShift in CurrentState then begin
         CurrentState:=CurrentState-[ssShift];
-        TSpeedButton(Sender).Down:=false;
+        //TSpeedButton(Sender).Down:=false;
         x.Down:=true;
+        TSpeedButton(Sender).Down:=false;
       end else begin
         CurrentState:=CurrentState+[ssShift];
         TSpeedButton(Sender).Down:=true;
@@ -323,8 +361,9 @@ begin
     2:
       if ssAlt in CurrentState then begin
         CurrentState:=CurrentState-[ssAlt];
-        TSpeedButton(Sender).Down:=false;
+        //TSpeedButton(Sender).Down:=false;
         x.Down:=true;
+        TSpeedButton(Sender).Down:=false;
       end else begin
         CurrentState:=CurrentState+[ssAlt];
         TSpeedButton(Sender).Down:=true;
@@ -332,8 +371,9 @@ begin
     3:
       if ssCtrl in CurrentState then begin
         CurrentState:=CurrentState-[ssCtrl];
-        TSpeedButton(Sender).Down:=false;
+        //TSpeedButton(Sender).Down:=false;
         x.Down:=true;
+        TSpeedButton(Sender).Down:=false;
       end else begin
         CurrentState:=CurrentState+[ssCtrl];
         TSpeedButton(Sender).Down:=true;
@@ -342,8 +382,9 @@ begin
     4:
       if ssAltGr in CurrentState then begin
         CurrentState:=CurrentState-[ssAltGr];
-        TSpeedButton(Sender).Down:=false;
+        //TSpeedButton(Sender).Down:=false;
         x.Down:=true;
+        TSpeedButton(Sender).Down:=false;
       end else begin
         CurrentState:=CurrentState+[ssAltGr];
         TSpeedButton(Sender).Down:=true;
@@ -351,15 +392,23 @@ begin
     {$ENDIF}
   end;
   Fkeyboard.Apply(CurrentState);
+  Application.ProcessMessages;
   x.Destroy;
 end;
 
-procedure TForm1.ModifierRelease();
+procedure TpsfrmAlphaKeyboard.ModifierRelease();
 begin
   Fkeyboard.Unapply(CurrentState);
+  Application.ProcessMessages;
 end;
 
-procedure TForm1.Timer1Timer(Sender: TObject);
+procedure TpsfrmAlphaKeyboard.DoClose(var CloseAction: TCloseAction);
+begin
+  inherited DoClose(CloseAction);
+  CloseAction:=caFree;
+end;
+
+procedure TpsfrmAlphaKeyboard.Timer1Timer(Sender: TObject);
 begin
   if not MoveOperation then exit;
   MoveOperation:=False;
@@ -375,21 +424,66 @@ begin
     Top:=Top-(OffsetY-CurY);
 end;
 
-procedure TForm1.FormClose(Sender: TObject; var CloseAction: TCloseAction);
-begin
-  CloseAction:=caFree;
-end;
-
-procedure TForm1.BtnPress(Sender: TObject);
+procedure TpsfrmAlphaKeyboard.BtnPress(Sender: TObject);
 begin
   if FTarget=nil then exit;
+
+  ReturnFocusToTarget;
+
   with Sender as TSpeedButton do begin
-    Fkeyboard.Press(Tag);
-    //ModifierRelease();
+    FKeyboard.Press(Tag);
+    Application.ProcessMessages;
     if (tag=VK_ESCAPE) or (tag=VK_RETURN) then
-      close;
+      Close;
   end;
+  BringToFrontWithoutActivate;
+end;
+
+procedure TpsfrmAlphaKeyboard.BringToFrontWithoutActivate;
+begin
+  WidgetSet.SetWindowPos(Self.Handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE+SWP_NOSIZE+SWP_NOACTIVATE);
+end;
+
+procedure TpsfrmAlphaKeyboard.ReturnFocusToTarget;
+begin
   FFormOwner.Show;
+  FTarget.SetFocus;
+  Application.ProcessMessages;
+  BringToFrontWithoutActivate;
+end;
+
+
+procedure TpsfrmAlphaKeyboard.GotoBetterPosition;
+var
+  sw, sh:Integer;
+  frect, t_rect: TRect;
+begin
+  //auto posicionamento do popup.
+  //t_point:=FTarget.ClientOrigin;
+  WidgetSet.GetWindowRect(FTarget.Handle,t_rect);
+  WidgetSet.GetWindowRect(Self.Handle,frect);
+  sw:=Screen.Width;
+  sh:=Screen.Height;
+
+  if (t_rect.Top+(frect.Bottom-frect.Top)+FTarget.Height)<=sh then
+    Top:=t_rect.Top+FTarget.Height   //borda superior do form com borda inferior do target
+  else begin
+    if (t_rect.Top - (frect.Bottom - frect.Top))>=0 then
+      Top:=t_rect.Top - (frect.Bottom - frect.Top)  //borda inferior do form com
+                                                                    //borda superior do target
+    else
+      Top:=(t_rect.Top-(frect.Bottom-frect.Top)-FTarget.Height) div 2; //meio
+  end;
+
+  if ((t_rect.Left+FTarget.Width)-(frect.Right-frect.Left))>=0 then
+    Left:=((t_rect.Left+FTarget.Width)-(frect.Right-frect.Left))  //borda direita do form com
+                                                                //borda direita do target
+  else begin
+    if (t_rect.Left+(frect.Right-frect.Left))<=sw then
+      Left:=t_rect.Left   //borda esquerda do form com borda esquerda do target
+    else
+      Left:=(t_rect.Left-(frect.Right-frect.Left)-FTarget.Width) div 2; //meio
+  end;
 end;
 
 end.

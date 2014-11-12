@@ -10,10 +10,11 @@ uses
   BasicUserManagement, ControlSecurityManager, crosskeyevents, 
   CustomizedUserManagement, HMIAnimation, hmibasiccolletion, 
   hmibooleanpropertyconnector, HMIButton, HMICheckBox, HMIComboBox, 
-  HMIControlDislocatorAnimation, HMIEdit, HMILabel, hmiobjectcolletion, 
-  HMIProgressBar, hmipropeditor, HMIRadioButton, HMIRadioGroup, hmiregister, 
-  HMIScrollBar, HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, 
-  ualfakeyboard, unumerickeyboard, usrmgnt_login, LazarusPackageIntf;
+  HMIControlDislocatorAnimation, HMIEdit, HMIKeyboardManager, HMILabel, 
+  hmiobjectcolletion, HMIProgressBar, hmipropeditor, HMIRadioButton, 
+  HMIRadioGroup, hmiregister, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
+  HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
+  LazarusPackageIntf;
 
 implementation
 
