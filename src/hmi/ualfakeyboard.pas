@@ -125,6 +125,7 @@ type
     procedure ReturnFocusToTarget;
   protected
     FFxxKeyGroup,
+    FNumbersKeyGroup,
     FSymbolsKeyGroup,
     FNavigationKeyGroup,
     FFastNavigationKeyGroup:TList;
@@ -140,6 +141,7 @@ type
                        ShowCtrl,
                        ShowAlt,
                        ShowSymbols,
+                       ShowNumbers,
                        ShowFastNavigation,
                        ShowNavigation,
 
@@ -176,7 +178,7 @@ var
 
 constructor TpsHMIfrmAlphaKeyboard.Create(TheOwner: TComponent;
   Target: TWinControl; ShowFxxKeys, ShowTab, ShowCaps, ShowShift, ShowCtrl,
-  ShowAlt, ShowSymbols, ShowFastNavigation, ShowNavigation,
+  ShowAlt, ShowSymbols, ShowNumbers, ShowFastNavigation, ShowNavigation,
   CloseOnPressEnter: Boolean);
 var
   curcontrol:TControl;
@@ -235,6 +237,18 @@ begin
   FFxxKeyGroup.Add(Btn_F11);
   FFxxKeyGroup.Add(Btn_F12);
 
+  FNumbersKeyGroup:=TList.Create;
+  FNumbersKeyGroup.Add(Btn_0);
+  FNumbersKeyGroup.Add(Btn_1);
+  FNumbersKeyGroup.Add(Btn_2);
+  FNumbersKeyGroup.Add(Btn_3);
+  FNumbersKeyGroup.Add(Btn_4);
+  FNumbersKeyGroup.Add(Btn_5);
+  FNumbersKeyGroup.Add(Btn_6);
+  FNumbersKeyGroup.Add(Btn_7);
+  FNumbersKeyGroup.Add(Btn_8);
+  FNumbersKeyGroup.Add(Btn_9);
+
   FSymbolsKeyGroup:=TList.Create;
   FSymbolsKeyGroup.Add(Btn_Quote);
   FSymbolsKeyGroup.Add(Btn_BackSlash);
@@ -271,6 +285,7 @@ begin
   EnableGroup(FFastNavigationKeyGroup, ShowFastNavigation);
   EnableGroup(FFxxKeyGroup, ShowFxxKeys);
   EnableGroup(FSymbolsKeyGroup, ShowSymbols);
+  EnableGroup(FNumbersKeyGroup, ShowNumbers);
 end;
 
 destructor TpsHMIfrmAlphaKeyboard.Destroy;
@@ -281,6 +296,7 @@ begin
     LastAlphaKeyboard:=nil;
 
   FreeAndNil(FFxxKeyGroup);
+  FreeAndNil(FNumbersKeyGroup);
   FreeAndNil(FSymbolsKeyGroup);
   FreeAndNil(FNavigationKeyGroup);
   FreeAndNil(FFastNavigationKeyGroup);
