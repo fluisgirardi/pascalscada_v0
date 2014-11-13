@@ -575,10 +575,12 @@ begin
     Top:=t_rect.Top+FTarget.Height   //borda superior do form com borda inferior do target
   else begin
     if (t_rect.Top - (frect.Bottom - frect.Top))>=0 then
-      Top:=t_rect.Top - (frect.Bottom - frect.Top)  //borda inferior do form com
-                                                                    //borda superior do target
-    else
-      Top:=(t_rect.Top-(frect.Bottom-frect.Top)-FTarget.Height) div 2; //meio
+      Top:=t_rect.Top - (frect.Bottom - frect.Top)  //borda inferior do form com borda superior do target
+    else begin
+      Top:= (t_rect.Top+((t_rect.Bottom-t_rect.Top) div 2) - ((frect.Bottom-frect.Top) div 2)); //meio
+      if Top<0 then Top:=0;
+      if (Top+(frect.Bottom - frect.Top))>Screen.Height then Top:=Screen.Height - (frect.Bottom - frect.Top);
+    end;
   end;
 
   if ((t_rect.Left+FTarget.Width)-(frect.Right-frect.Left))>=0 then
@@ -587,8 +589,11 @@ begin
   else begin
     if (t_rect.Left+(frect.Right-frect.Left))<=sw then
       Left:=t_rect.Left   //borda esquerda do form com borda esquerda do target
-    else
-      Left:=(t_rect.Left-(frect.Right-frect.Left)-FTarget.Width) div 2; //meio
+    else begin
+      Left:= (t_rect.Left+((t_rect.Right-t_rect.Left) div 2) - ((frect.Right-frect.Left) div 2)); //meio
+      if Left<0 then Left:=0;
+      if (Left+(frect.Right - frect.Left))>Screen.Width then Left:=Screen.Width - (frect.Right - frect.Left);
+    end;
   end;
 end;
 
