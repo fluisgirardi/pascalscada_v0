@@ -14,9 +14,9 @@ type
 
   TFocusedControl = (fcUserName, fcPassword);
 
-  { TfrmUserAuthentication }
+  { TpsHMIfrmUserAuthentication }
 
-  TfrmUserAuthentication = class(TForm)
+  TpsHMIfrmUserAuthentication = class(TForm)
     edtusername: TEdit;
     Label1: TLabel;
     Label2: TLabel;
@@ -38,7 +38,7 @@ type
   end;
 
 var
-  frmUserAuthentication: TfrmUserAuthentication;
+  psHMIfrmUserAuthentication: TpsHMIfrmUserAuthentication;
 
 implementation
 
@@ -50,9 +50,9 @@ implementation
   {$R *.dfm}
 {$ENDIF}
 
-{ TfrmUserAuthentication }
+{ TpsHMIfrmUserAuthentication }
 
-procedure TfrmUserAuthentication.FormShow(Sender: TObject);
+procedure TpsHMIfrmUserAuthentication.FormShow(Sender: TObject);
 begin
   case FFocusControl of
     fcUserName: if edtusername.Enabled then edtusername.SetFocus;
@@ -60,7 +60,7 @@ begin
   end;
 end;
 
-procedure TfrmUserAuthentication.EnableEntry;
+procedure TpsHMIfrmUserAuthentication.EnableEntry;
 begin
   edtPassword.Enabled:=true;
   edtusername.Enabled:=true;
@@ -69,7 +69,7 @@ begin
   FormShow(Self);
 end;
 
-procedure TfrmUserAuthentication.DisableEntry;
+procedure TpsHMIfrmUserAuthentication.DisableEntry;
 begin
   edtPassword.Enabled:=false;
   edtusername.Enabled:=false;

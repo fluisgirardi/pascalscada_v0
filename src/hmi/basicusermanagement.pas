@@ -34,7 +34,7 @@ type
 
     FRegisteredSecurityCodes:TStringList;
 
-    frmLogin, frmCheckIfUserIsAllowed:TfrmUserAuthentication;
+    frmLogin, frmCheckIfUserIsAllowed:TpsHMIfrmUserAuthentication;
 
     function  GetLoginTime:TDateTime;
     procedure SetInactiveTimeOut(t:Cardinal);
@@ -139,7 +139,7 @@ begin
   frozenTimer.Interval:=LoginFrozenTime;
   frozenTimer.Tag:=1; //login
   frozenTimer.OnTimer:=UnfreezeLogin;
-  frmLogin:=TfrmUserAuthentication.Create(nil);
+  frmLogin:=TpsHMIfrmUserAuthentication.Create(nil);
   {$IFDEF FPC}
   frmLogin.FormStyle:=fsSystemStayOnTop;
   {$ELSE}
@@ -262,7 +262,7 @@ begin
   frozenTimer.Interval:=LoginFrozenTime;
   frozenTimer.Tag:=2; //Check
   frozenTimer.OnTimer:=UnfreezeLogin;
-  frmCheckIfUserIsAllowed:=TfrmUserAuthentication.Create(nil);
+  frmCheckIfUserIsAllowed:=TpsHMIfrmUserAuthentication.Create(nil);
   {$IFDEF FPC}
   frmCheckIfUserIsAllowed.FormStyle:=fsSystemStayOnTop;
   {$ELSE}

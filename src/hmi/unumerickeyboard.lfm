@@ -1,4 +1,4 @@
-object NumericKeyBoard: TNumericKeyBoard
+object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
   Left = 684
   Height = 192
   Top = 131

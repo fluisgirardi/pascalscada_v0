@@ -18,9 +18,9 @@ uses
 
 type
 
-  { TNumericKeyBoard }
+  { TpsHMIfrmNumericKeyBoard }
 
-  TNumericKeyBoard = class(TForm)
+  TpsHMIfrmNumericKeyBoard = class(TForm)
     Btn_1: TSpeedButton;
     Btn_2: TSpeedButton;
     Btn_3: TSpeedButton;
@@ -61,7 +61,7 @@ type
   end;
 
 var
-  NumericKeyBoard: TNumericKeyBoard;
+  psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard;
 
 implementation
 
@@ -76,9 +76,9 @@ uses InterfaceBase;
 {$ENDIF}
 
 var
-  LastNumericKeyBoard: TNumericKeyBoard;
+  LastNumericKeyBoard: TpsHMIfrmNumericKeyBoard;
 
-constructor TNumericKeyBoard.Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
+constructor TpsHMIfrmNumericKeyBoard.Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
 var
   curcontrol:TControl;
 begin
@@ -108,7 +108,7 @@ begin
   LastNumericKeyBoard:=Self;
 end;
 
-destructor TNumericKeyBoard.Destroy;
+destructor TpsHMIfrmNumericKeyBoard.Destroy;
 begin
   inherited Destroy;
   if LastNumericKeyBoard=Self then
@@ -116,7 +116,7 @@ begin
   keyboard.Destroy;
 end;
 
-procedure TNumericKeyBoard.GotoBetterPosition;
+procedure TpsHMIfrmNumericKeyBoard.GotoBetterPosition;
 var
   sw, sh:Integer;
   frect, t_rect: TRect;
@@ -149,7 +149,7 @@ begin
   end;
 end;
 
-procedure TNumericKeyBoard.ReturnFocusToTarget;
+procedure TpsHMIfrmNumericKeyBoard.ReturnFocusToTarget;
 begin
   FFormOwner.Show;
   FTarget.SetFocus;
@@ -157,14 +157,14 @@ begin
   BringToFrontWithoutActivate;
 end;
 
-procedure TNumericKeyBoard.ShowAlongsideOfTheTarget;
+procedure TpsHMIfrmNumericKeyBoard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
   //BringToFrontWithoutActivate;
   ShowOnTop;
 end;
 
-procedure TNumericKeyBoard.FormCreate(Sender: TObject);
+procedure TpsHMIfrmNumericKeyBoard.FormCreate(Sender: TObject);
 begin
   Btn_0.Tag:=VK_0;
   Btn_1.Tag:=VK_1;
@@ -191,7 +191,7 @@ begin
   Btn_DecSeparator.Visible:=FShowDecimal;
 end;
 
-procedure TNumericKeyBoard.BtnPress(Sender: TObject);
+procedure TpsHMIfrmNumericKeyBoard.BtnPress(Sender: TObject);
 begin
   if FTarget=nil then exit;
 
@@ -206,7 +206,7 @@ begin
   BringToFrontWithoutActivate;
 end;
 
-procedure TNumericKeyBoard.DoClose(var CloseAction: TCloseAction);
+procedure TpsHMIfrmNumericKeyBoard.DoClose(var CloseAction: TCloseAction);
 begin
   inherited DoClose(CloseAction);
   if LastNumericKeyBoard=Self then
@@ -214,7 +214,7 @@ begin
   CloseAction:=caFree;
 end;
 
-procedure TNumericKeyBoard.BringToFrontWithoutActivate;
+procedure TpsHMIfrmNumericKeyBoard.BringToFrontWithoutActivate;
 begin
   WidgetSet.SetWindowPos(Self.Handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE+SWP_NOSIZE+SWP_NOACTIVATE);
 end;

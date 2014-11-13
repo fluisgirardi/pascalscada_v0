@@ -1,4 +1,4 @@
-object frmUserAuthentication: TfrmUserAuthentication
+object psHMIfrmUserAuthentication: TpsHMIfrmUserAuthentication
   Left = 476
   Height = 146
   Top = 151

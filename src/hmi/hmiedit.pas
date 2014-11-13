@@ -69,7 +69,7 @@ type
     FIsEnabledBySecurity:Boolean;
     FOnScreenKeyboardBehavior:TOnScreenKeyboardBehavior;
 
-    FNumericKB:TNumericKeyBoard;
+    FNumericKB:TpsHMIfrmNumericKeyBoard;
 
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
@@ -635,7 +635,7 @@ begin
       end;
       showMinus   :=(FEnableMin AND (FMinLimit<0)) or ((FEnableMin=false) and FNumericKBShowMinus);
       showDecPoint:=(Pos('.', FNumberFormat)>0) or FNumericKBShowDecimal;
-      FNumericKB:=TNumericKeyBoard.Create(Self,Self,showMinus,showDecPoint);
+      FNumericKB:=TpsHMIfrmNumericKeyBoard.Create(Self,Self,showMinus,showDecPoint);
       FNumericKB.OnClose:=NumericKBClosed;
       FNumericKB.ShowAlongsideOfTheTarget;
       exit;
