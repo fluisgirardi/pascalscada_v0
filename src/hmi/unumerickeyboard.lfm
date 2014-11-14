@@ -1,7 +1,7 @@
 object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
-  Left = 684
+  Left = 683
   Height = 192
-  Top = 131
+  Top = 111
   Width = 239
   BorderIcons = [biHelp]
   BorderStyle = bsToolWindow
@@ -12,7 +12,7 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
   Font.Name = 'MS Sans Serif'
   FormStyle = fsStayOnTop
   OnCreate = FormCreate
-  LCLVersion = '1.2.6.0'
+  LCLVersion = '1.3'
   object Btn_1: TSpeedButton
     Left = 1
     Height = 45
@@ -655,4 +655,4 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
     OnClick = BtnPress
     ParentFont = False
   end
-end
+end

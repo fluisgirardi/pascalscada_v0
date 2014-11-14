@@ -31,6 +31,8 @@ uses
 
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   hmibooleanpropertyconnector, HMIComboBox, HMIKeyboardManager,
+  hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca,
+  hmi_polyline,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -70,6 +72,9 @@ begin
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   RegisterComponents(strControlsPallete,  [THMIComboBox]);
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);
+  RegisterComponents(strControlsPallete,  [THMIFitaBasica, THMIElevadorBasico,
+                                           THMIRedlerBasico, THMIRoscaBasica,
+                                           THMIPolyline]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
