@@ -269,6 +269,7 @@ begin
   if csDesigning in ComponentState then exit;
   if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin
     x:=TBooleanZone(FConditionZones.GetZoneFromValue((FTag as ITagNumeric).Value));
+    if x=nil then exit;
     for o:=0 to AffectedObjects.Count-1 do
       TObjectWithBooleanPropetiesColletionItem(AffectedObjects.Items[o]).ApplyResult(x.ZoneResult);
   end;

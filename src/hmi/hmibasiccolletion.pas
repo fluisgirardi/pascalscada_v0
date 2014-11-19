@@ -17,9 +17,10 @@ type
     //: @exclude
     function GetOwner: TPersistent; override;
     //: @exclude
-    function GetComponentState:TComponentState;
-    //: @exclude
     procedure NeedCurrentCompState;
+ public
+   //: @exclude
+   function GetComponentState:TComponentState;
  published
 
     {$IFDEF PORTUGUES}

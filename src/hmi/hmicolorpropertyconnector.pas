@@ -104,12 +104,37 @@ type
 
   { TObjectWithColorPropetiesColletionItem }
 
-  TObjectWithColorPropetiesColletionItem = class(TObjectColletionItem)
+  TObjectWithColorPropetiesColletionItem = class(TObjectColletionItem, IUnknown, IHMITagInterface)
+  private
+    FTag:TPLCTag;
+
+    function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+    function _AddRef: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+    function _Release: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+
+    //: @seealso(IHMITagInterface.NotifyReadOk)
+    procedure NotifyReadOk;
+    //: @seealso(IHMITagInterface.NotifyReadFault)
+    procedure NotifyReadFault;
+    //: @seealso(IHMITagInterface.NotifyWriteOk)
+    procedure NotifyWriteOk;
+    //: @seealso(IHMITagInterface.NotifyWriteFault)
+    procedure NotifyWriteFault;
+    //: @seealso(IHMITagInterface.NotifyTagChange)
+    procedure NotifyTagChange(Sender:TObject);
+    //: @seealso(IHMITagInterface.RemoveTag)
+    procedure RemoveTag(Sender:TObject);
+
+    procedure RecalculateObjectsProperties;
+    procedure SetHMITag(AValue: TPLCTag);
   protected
     function GetDisplayName: string; override;
   public
     constructor Create(ACollection: TCollection); override;
+    destructor Destroy; override;
     procedure ApplyResult(Result:TColor); virtual;
+  published
+    property PLCTag:TPLCTag read FTag write SetHMITag;
   end;
 
   //////////////////////////////////////////////////////////////////////////////
@@ -158,7 +183,7 @@ type
 
 implementation
 
-uses typinfo, rttiutils, hsstrings;
+uses typinfo, rttiutils, hsstrings, hmibasiccolletion;
 
 { THMIBooleanPropertyConnector }
 
@@ -261,8 +286,11 @@ begin
   if csDesigning in ComponentState then exit;
   if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin
     x:=TColorZone(FConditionZones.GetZoneFromValue((FTag as ITagNumeric).Value));
-    for o:=0 to AffectedObjects.Count-1 do
+    if x=nil then exit;
+    for o:=0 to AffectedObjects.Count-1 do begin
+      if Assigned(TObjectWithColorPropetiesColletionItem(AffectedObjects.Items[o]).PLCTag) then continue;
       TObjectWithColorPropetiesColletionItem(AffectedObjects.Items[o]).ApplyResult(x.ZoneResult);
+    end;
   end;
 end;
 
@@ -317,6 +345,95 @@ end;
 
 { TObjectWithColorPropetiesColletionItem }
 
+function TObjectWithColorPropetiesColletionItem.QueryInterface(
+  {$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; stdcall;
+begin
+  if GetInterface(IID, Obj) then
+    result:=S_OK
+  else
+    result:=E_NOINTERFACE;
+end;
+
+function TObjectWithColorPropetiesColletionItem._AddRef: LongInt; stdcall;
+begin
+  Result:=-1;
+end;
+
+function TObjectWithColorPropetiesColletionItem._Release: LongInt; stdcall;
+begin
+  Result:=-1;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.NotifyReadOk;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.NotifyReadFault;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.NotifyWriteOk;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.NotifyWriteFault;
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.NotifyTagChange(Sender: TObject
+  );
+begin
+  RecalculateObjectsProperties;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.RemoveTag(Sender: TObject);
+begin
+  if Sender=FTag then
+     FTag:=nil;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.RecalculateObjectsProperties;
+var
+  x: TColorZone;
+  o: Integer;
+begin
+  if csDesigning in THMIBasicColletion(Collection).GetComponentState then exit;
+  if not (Collection.Owner is THMIColorPropertyConnector) then exit;
+
+  if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin
+    x:=TColorZone(THMIColorPropertyConnector(Collection.Owner).Conditions.GetZoneFromValue((FTag as ITagNumeric).Value));
+    if x<>nil then
+      ApplyResult(x.ZoneResult);
+  end;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.SetHMITag(AValue: TPLCTag);
+begin
+  if FTag=AValue then Exit;
+
+  //se o tag esta entre um dos aceitos.
+  //check if the tag is valid (only numeric tags)
+  if (AValue<>nil) and (not Supports(AValue, ITagNumeric)) then
+     raise Exception.Create(SonlyNumericTags);
+
+  if FTag<>nil then begin
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  end;
+
+  //adiona o callback para o novo tag
+  //link with the new tag.
+  if AValue<>nil then begin
+    AValue.AddCallBacks(Self as IHMITagInterface);
+    FTag := AValue;
+    RecalculateObjectsProperties;
+  end;
+  FTag:=AValue;
+end;
+
 function TObjectWithColorPropetiesColletionItem.GetDisplayName: string;
 begin
   if Assigned(TargetObject) and (TargetObjectProperty<>'') then
@@ -330,6 +447,13 @@ constructor TObjectWithColorPropetiesColletionItem.Create(
 begin
   inherited Create(ACollection);
   fRequiredTypeName:=PTypeInfo(TypeInfo(TColor)).Name ;
+end;
+
+destructor TObjectWithColorPropetiesColletionItem.Destroy;
+begin
+  if Assigned(FTag) then
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  inherited Destroy;
 end;
 
 procedure TObjectWithColorPropetiesColletionItem.ApplyResult(Result: TColor);
