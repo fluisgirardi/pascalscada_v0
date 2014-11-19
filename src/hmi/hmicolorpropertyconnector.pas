@@ -133,6 +133,7 @@ type
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
     procedure ApplyResult(Result:TColor); virtual;
+    procedure Loaded; override;
   published
     property PLCTag:TPLCTag read FTag write SetHMITag;
   end;
@@ -462,6 +463,13 @@ begin
      (not AcceptObjectProperty(TargetObjectProperty)) then exit;
 
   SetPropValue(TargetObject,TargetObjectProperty,Result);
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.Loaded;
+begin
+  inherited Loaded;
+  if Assigned(FTag) then
+    RecalculateObjectsProperties;
 end;
 
 { TObjectWithColorPropetiesColletion }
