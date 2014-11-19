@@ -32,7 +32,7 @@ uses
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   hmibooleanpropertyconnector, HMIComboBox, HMIKeyboardManager,
   hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca,
-  hmi_polyline,
+  hmi_polyline, hmicolorpropertyconnector,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -69,6 +69,7 @@ begin
   RegisterComponents(strControlsPallete,  [THMIText]);
   RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
   RegisterComponents(strControlsPallete,  [THMIBooleanPropertyConnector]);
+  RegisterComponents(strControlsPallete,  [THMIColorPropertyConnector]);
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   RegisterComponents(strControlsPallete,  [THMIComboBox]);
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);
@@ -94,6 +95,7 @@ begin
   {$IFEND}
   RegisterPropertyEditor(TypeInfo(TCaption),TTextZone,                      'Text',                          TStringMultilinePropertyEditor);
   RegisterPropertyEditor(TypeInfo(String)  ,TObjectWithBooleanPropetiesColletionItem,'TargetObjectProperty', TSelectOnlyBooleanPropPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String)  ,TObjectWithColorPropetiesColletionItem,  'TargetObjectProperty', TSelectOnlyTColorPropPropertyEditor);
   {$ENDIF}
 
   RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);

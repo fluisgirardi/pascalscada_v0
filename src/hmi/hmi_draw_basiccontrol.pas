@@ -66,9 +66,9 @@ begin
       bit:=7;
       for x:=0 to FControlArea.Width-1 do begin
         {$IFDEF WINDOWS}
-        if (p^.alpha>128) then begin
+        if (p^.alpha>0) then begin
         {$ELSE}
-        if (p^.alpha<128) then begin
+        if (p^.alpha=0) then begin
         {$ENDIF}
           pb^:=pb^+trunc(power(2,bit));
         end;

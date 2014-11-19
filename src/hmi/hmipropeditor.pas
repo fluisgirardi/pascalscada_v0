@@ -25,11 +25,11 @@ interface
 
 uses
   Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, Tag,
-  typinfo, HMIControlDislocatorAnimation,
-  ControlSecurityManager,
+  typinfo, HMIControlDislocatorAnimation, hmiobjectcolletion,
+  ControlSecurityManager, Graphics,
   {$IFDEF FPC}
     PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList,
-    hmibooleanpropertyconnector;
+    hmibooleanpropertyconnector, hmicolorpropertyconnector;
   {$ELSE}
     Types,
     //if is a delphi 6+
@@ -97,6 +97,7 @@ type
   TSelectObjectPropPropertyEditor = class(TStringPropertyEditor)
   protected
     FOnlyPropertiesOfType:String;
+    FExpectedClass:TObjectColletionItemClass;
   public
     constructor Create(Hook: TPropertyEditorHook; APropCount: Integer);
       override;
@@ -108,6 +109,14 @@ type
   { TSelectOnlyBooleanPropPropertyEditor }
 
   TSelectOnlyBooleanPropPropertyEditor = Class(TSelectObjectPropPropertyEditor)
+  public
+    constructor Create(Hook: TPropertyEditorHook; APropCount: Integer);
+       override;
+  end;
+
+  { TSelectOnlyTColorPropPropertyEditor }
+
+  TSelectOnlyTColorPropPropertyEditor = Class(TSelectObjectPropPropertyEditor)
   public
     constructor Create(Hook: TPropertyEditorHook; APropCount: Integer);
        override;
@@ -184,6 +193,16 @@ implementation
 
 uses HMITypes;
 
+{ TSelectOnlyTColorPropPropertyEditor }
+
+constructor TSelectOnlyTColorPropPropertyEditor.Create(
+  Hook: TPropertyEditorHook; APropCount: Integer);
+begin
+  inherited Create(Hook, APropCount);
+  FOnlyPropertiesOfType:=PTypeInfo(TypeInfo(TColor)).Name;
+  FExpectedClass:=TObjectWithColorPropetiesColletionItem;
+end;
+
 { TSelectOnlyBooleanPropPropertyEditor }
 
 constructor TSelectOnlyBooleanPropPropertyEditor.Create(
@@ -191,6 +210,7 @@ constructor TSelectOnlyBooleanPropPropertyEditor.Create(
 begin
   inherited Create(Hook, APropCount);
   FOnlyPropertiesOfType:=PTypeInfo(TypeInfo(Boolean)).Name;
+  FExpectedClass:=TObjectWithBooleanPropetiesColletionItem;
 end;
 
 { TTargetObjectPropPropertyEditor }
@@ -200,11 +220,12 @@ constructor TSelectObjectPropPropertyEditor.Create(Hook: TPropertyEditorHook;
 begin
   inherited Create(Hook, APropCount);
   FOnlyPropertiesOfType:='';
+  FExpectedClass:=TObjectColletionItem;
 end;
 
 function TSelectObjectPropPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
-  if GetComponent(0) is TObjectWithBooleanPropetiesColletionItem then
+  if GetComponent(0) is FExpectedClass then
      Result := [paValueList
                 {$IFDEF FPC}
                 ,paPickList
@@ -224,9 +245,9 @@ var
   obj: TComponent;
 begin
   Proc('(none)');
-   if GetComponent(0) is TObjectWithBooleanPropetiesColletionItem then
-     if assigned(TObjectWithBooleanPropetiesColletionItem(GetComponent(0)).TargetObject) then begin
-       obj := TObjectWithBooleanPropetiesColletionItem(GetComponent(0)).TargetObject;
+   if GetComponent(0) is FExpectedClass then
+     if assigned((GetComponent(0) as FExpectedClass).TargetObject) then begin
+       obj := (GetComponent(0) as FExpectedClass).TargetObject;
 
        tdata:=GetTypeData(obj.ClassInfo);
 

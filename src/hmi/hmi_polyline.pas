@@ -38,6 +38,7 @@ type
   private
     FLineColor: TColor;
     FLineWidth: Integer;
+    FOnlyColorChanged:Boolean;
     procedure SetLineColor(AValue: TColor);
     procedure SetLineWidth(AValue: Integer);
     procedure setPointCoordinates(AValue: TPointCollection);
@@ -49,6 +50,7 @@ type
     procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
+    procedure Invalidate; override;
   published
     property LineColor:TColor read FLineColor write SetLineColor default clBlack;
     property LineWidth:Integer read FLineWidth write SetLineWidth default 2;
@@ -113,6 +115,7 @@ end;
 procedure THMIPolyline.SetLineColor(AValue: TColor);
 begin
   if FLineColor=AValue then Exit;
+  FOnlyColorChanged:=true;
   FLineColor:=AValue;
   Invalidate;
 end;
@@ -125,7 +128,7 @@ end;
 
 procedure THMIPolyline.Paint;
 var
-  p:array of TPointF;
+  p:array of TPoint;
   aColor: TBGRAPixel;
   i: Integer;
 begin
@@ -138,14 +141,18 @@ begin
   FControlArea := TBGRABitmap.Create(Width,Height);
   try
 
-    FControlArea.PenStyle:=psSolid;
-    FControlArea.JoinStyle:=pjsBevel;
+    //FControlArea.PenStyle:=psSolid;
+    //FControlArea.JoinStyle:=pjsBevel;
     aColor:=ColorToBGRA(FLineColor);
-    FControlArea.DrawPolyLineAntialias(p, aColor, FLineWidth);
-
-    FControlArea.Draw(Canvas, 0, 0, False);
+    FControlArea.CanvasBGRA.Pen.Style:=psSolid;
+    FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
+    FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
+    //FControlArea.DrawPolyLineAntialias(p, aColor, FLineWidth);
+    FControlArea.CanvasBGRA.Polyline(p);
 
     inherited Paint;
+
+    FControlArea.Draw(Canvas, 0, 0, False);
   finally
     FreeAndNil(FControlArea);
   end;
@@ -165,6 +172,13 @@ begin
   FPointCoordinates.OnNeedCompState:=@CollectionNeedsComponentState;
   FLineWidth:=2;
   FLineColor:=clBlack;
+  FOnlyColorChanged:=false;
+end;
+
+procedure THMIPolyline.Invalidate;
+begin
+  if [csReading,csLoading]*ComponentState=[] then
+    inherited Invalidate;
 end;
 
 end.

@@ -46,6 +46,8 @@ type
     constructor Create(ACollection: TCollection); override;
   end;
 
+  TObjectColletionItemClass = class of TObjectColletionItem;
+
 implementation
 
 { TObjectColletionItem }
