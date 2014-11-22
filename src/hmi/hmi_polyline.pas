@@ -132,27 +132,30 @@ var
   aColor: TBGRAPixel;
   i: Integer;
 begin
-  SetLength(p, FPointCoordinates.Count);
-  for i:=0 to FPointCoordinates.Count-1 do begin
-    p[i].x:=TPointCollectionItem(FPointCoordinates.Items[i]).X;
-    p[i].y:=TPointCollectionItem(FPointCoordinates.Items[i]).Y;
-  end;
-
   FControlArea := TBGRABitmap.Create(Width,Height);
   try
+    if FLineColor<>clNone then begin
 
-    //FControlArea.PenStyle:=psSolid;
-    //FControlArea.JoinStyle:=pjsBevel;
-    aColor:=ColorToBGRA(FLineColor);
-    FControlArea.CanvasBGRA.Pen.Style:=psSolid;
-    FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
-    FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
-    //FControlArea.DrawPolyLineAntialias(p, aColor, FLineWidth);
-    FControlArea.CanvasBGRA.Polyline(p);
+      SetLength(p, FPointCoordinates.Count);
+      for i:=0 to FPointCoordinates.Count-1 do begin
+        p[i].x:=TPointCollectionItem(FPointCoordinates.Items[i]).X;
+        p[i].y:=TPointCollectionItem(FPointCoordinates.Items[i]).Y;
+      end;
 
-    inherited Paint;
+      //FControlArea.PenStyle:=psSolid;
+      //FControlArea.JoinStyle:=pjsBevel;
+      aColor:=ColorToBGRA(FLineColor);
+      FControlArea.CanvasBGRA.Pen.Style:=psSolid;
+      FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
+      FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
+      //FControlArea.DrawPolyLineAntialias(p, aColor, FLineWidth);
+      FControlArea.CanvasBGRA.Polyline(p);
 
-    FControlArea.Draw(Canvas, 0, 0, False);
+      inherited Paint;
+
+      FControlArea.Draw(Canvas, 0, 0, False);
+    end else
+      inherited Paint;
   finally
     FreeAndNil(FControlArea);
   end;

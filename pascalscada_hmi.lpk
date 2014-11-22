@@ -22,7 +22,7 @@
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="40">
+    <Files Count="41">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -184,6 +184,11 @@
         <Filename Value="src/hmi/usrmgnt_login.lfm"/>
         <Type Value="LFM"/>
       </Item40>
+      <Item41>
+        <Filename Value="src/hmi/hmitransparentbutton.pas"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="HMITransparentButton"/>
+      </Item41>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="5">

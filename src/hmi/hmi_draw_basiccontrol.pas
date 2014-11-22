@@ -5,13 +5,18 @@ unit hmi_draw_basiccontrol;
 interface
 
 uses
-  Classes, sysutils, Controls, Graphics, BGRABitmap, BGRABitmapTypes, BMPcomn;
+  Classes, sysutils, Controls, Graphics, BGRABitmap, BGRABitmapTypes, LCLIntf,
+  LMessages;
 
 type
 
   { TBasicSCADAControl }
 
+  { THMIBasicControl }
+
   THMIBasicControl = class(TCustomControl)
+  private
+    fbmp:TBitmap;
   protected
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
@@ -19,6 +24,7 @@ type
     procedure SetBorderColor(AValue: TColor); virtual;
     procedure SetColor(AValue: TColor); virtual;
     procedure Paint; override;
+    procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
   public
     procedure BeginUpdate; virtual;
     procedure EndUpdate; virtual;
@@ -47,22 +53,23 @@ end;
 
 procedure THMIBasicControl.Paint;
 var
-  bmp:TBitmap;
   p:PBGRAPixel;
   x, y:Integer;
   pb: PByte;
   bit: Integer;
 begin
-  bmp:=TBitmap.Create;
+  if assigned(fbmp) then FreeAndNil(fbmp);
+
+  fbmp:=TBitmap.Create;
   try
-    bmp.Width:=FControlArea.Width;
-    bmp.Height:=FControlArea.Height;
-    bmp.Monochrome :=true;
-    bmp.PixelFormat:=pf1bit;
+    fbmp.Width:=FControlArea.Width;
+    fbmp.Height:=FControlArea.Height;
+    fbmp.Monochrome :=true;
+    fbmp.PixelFormat:=pf1bit;
 
     for y:=0 to FControlArea.Height-1 do begin
       p:=FControlArea.ScanLine[y];
-      pb:=PByte(bmp.ScanLine[y]);
+      pb:=PByte(fbmp.ScanLine[y]);
       bit:=7;
       for x:=0 to FControlArea.Width-1 do begin
         {$IFDEF WINDOWS}
@@ -83,10 +90,18 @@ begin
         inc(p);
       end;
     end;
-    SetShape(bmp);
+    SetShape(fbmp);
   finally
-    FreeAndNil(bmp);
+    //FreeAndNil(bmp);
   end;
+end;
+
+procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
+begin
+  if assigned(fbmp) and PtInRegion(fbmp.Handle, Message.Pos.X, Message.Pos.Y) then
+    Message.Result:=1
+  else
+    Message.Result:=0;
 end;
 
 procedure THMIBasicControl.BeginUpdate;
