@@ -70,20 +70,20 @@ begin
     for y:=0 to FControlArea.Height-1 do begin
       p:=FControlArea.ScanLine[y];
       pb:=PByte(fbmp.ScanLine[y]);
-      bit:=7;
+      bit:=128;
       for x:=0 to FControlArea.Width-1 do begin
         {$IFDEF WINDOWS}
         if (p^.alpha>0) then begin
         {$ELSE}
         if (p^.alpha=0) then begin
         {$ENDIF}
-          pb^:=pb^+trunc(power(2,bit));
+          pb^:=pb^+bit;
         end;
 
-        dec(bit);
+        bit:=bit shr 1;
 
-        if bit<0 then begin
-          bit:=7;
+        if bit=0 then begin
+          bit:=128;
           inc(pb);
         end;
 
