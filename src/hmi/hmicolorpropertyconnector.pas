@@ -108,7 +108,7 @@ type
   private
     FTag:TPLCTag;
 
-    function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
+    function  QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
     function _AddRef: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
     function _Release: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 
@@ -347,7 +347,7 @@ end;
 { TObjectWithColorPropetiesColletionItem }
 
 function TObjectWithColorPropetiesColletionItem.QueryInterface(
-  {$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; stdcall;
+  {$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   if GetInterface(IID, Obj) then
     result:=S_OK
@@ -355,12 +355,12 @@ begin
     result:=E_NOINTERFACE;
 end;
 
-function TObjectWithColorPropetiesColletionItem._AddRef: LongInt; stdcall;
+function TObjectWithColorPropetiesColletionItem._AddRef: LongInt;{$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   Result:=-1;
 end;
 
-function TObjectWithColorPropetiesColletionItem._Release: LongInt; stdcall;
+function TObjectWithColorPropetiesColletionItem._Release: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   Result:=-1;
 end;
@@ -510,4 +510,4 @@ begin
   Result:=inherited GetDisplayName+', Result='+ColorToString(ZoneResult);
 end;
 
-end.
+end.
