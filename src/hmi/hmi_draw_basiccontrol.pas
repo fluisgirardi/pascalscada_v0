@@ -16,7 +16,7 @@ type
 
   THMIBasicControl = class(TCustomControl)
   private
-    fbmp:TBitmap;
+    frgn:TRegion;
   protected
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
@@ -51,54 +51,68 @@ begin
 
 end;
 
+{$DEFINE PIXEL_BY_PIXEL}
+
 procedure THMIBasicControl.Paint;
 var
   p:PBGRAPixel;
   x, y:Integer;
-  pb: PByte;
-  bit: Integer;
+  {$IFNDEF PIXEL_BY_PIXEL}
+  started:boolean;
+  x0, x1:Integer;
+  {$ENDIF}
 begin
-  if assigned(fbmp) then FreeAndNil(fbmp);
+  if assigned(frgn) then FreeAndNil(frgn);
 
-  fbmp:=TBitmap.Create;
-  try
-    fbmp.Width:=FControlArea.Width;
-    fbmp.Height:=FControlArea.Height;
-    fbmp.Monochrome :=true;
-    fbmp.PixelFormat:=pf1bit;
+  frgn:=TRegion.Create;
+  for y:=0 to FControlArea.Height-1 do begin
+    p:=FControlArea.ScanLine[y];
+    {$IFNDEF PIXEL_BY_PIXEL}
+    started:=false;
+    {$ENDIF}
+    for x:=0 to FControlArea.Width-1 do begin
+      {$IFDEF PIXEL_BY_PIXEL}
+      if (p^.alpha>0) then
+        frgn.AddRectangle(x,y,x+1,y+1);
 
-    for y:=0 to FControlArea.Height-1 do begin
-      p:=FControlArea.ScanLine[y];
-      pb:=PByte(fbmp.ScanLine[y]);
-      bit:=128;
-      for x:=0 to FControlArea.Width-1 do begin
-        {$IFDEF WINDOWS}
-        if (p^.alpha>0) then begin
-        {$ELSE}
-        if (p^.alpha=0) then begin
-        {$ENDIF}
-          pb^:=pb^+bit;
+      {$ELSE}
+      if (p^.alpha=0) then begin
+        if started then begin
+          if x0=x1 then
+            frgn.AddRectangle(x0,y,x0+1,y+1)
+          else
+            frgn.AddRectangle(x0,y,x1,y+1);
         end;
-
-        bit:=bit shr 1;
-
-        if bit=0 then begin
-          bit:=128;
-          inc(pb);
+        started:=false;
+      end else begin
+        if started then begin
+          x1:=x;
+        end else begin
+          x0:=x;
+          x1:=x;
+          started:=true;
         end;
-
-        inc(p);
       end;
+      {$ENDIF}
+      inc(p);
     end;
-    SetShape(fbmp);
-  finally
-    //FreeAndNil(bmp);
+    {$IFNDEF PIXEL_BY_PIXEL}
+    //
+    if started then begin
+      if x0=x1 then
+        frgn.AddRectangle(x0,y,x0+1,y+1)
+      else
+        frgn.AddRectangle(x0,y,x1,y+1);
+    end;
+    {$ENDIF}
   end;
+  SetShape(frgn);
+
 end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
 begin
-  if assigned(fbmp) and PtInRegion(fbmp.Handle, Message.Pos.X, Message.Pos.Y) then
+  if assigned(frgn) and PtInRegion(frgn.Handle, Message.Pos.X, Message.Pos.Y) then
     Message.Result:=1
   else
     Message.Result:=0;
