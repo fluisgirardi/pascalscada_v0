@@ -51,7 +51,7 @@ begin
 
 end;
 
-{$DEFINE PIXEL_BY_PIXEL}
+//{$DEFINE PIXEL_BY_PIXEL}
 
 procedure THMIBasicControl.Paint;
 var
@@ -86,10 +86,10 @@ begin
         started:=false;
       end else begin
         if started then begin
-          x1:=x;
+          x1:=x+1;
         end else begin
           x0:=x;
-          x1:=x;
+          x1:=x+1;
           started:=true;
         end;
       end;
