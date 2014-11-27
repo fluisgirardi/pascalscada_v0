@@ -64,11 +64,16 @@ var
   {$ENDIF}
 
   {$IFDEF DETECT_RECTANGLES}
-  pixel:array of array of boolean;
   xa, x1:Integer;
   y1:Integer;
   invalidline:boolean;
   {$ENDIF}
+
+  function ControlArea(pixel:TBGRAPixel):Boolean;
+  begin
+    Result:=pixel.alpha>0;
+  end;
+
 begin
   if assigned(frgn) then FreeAndNil(frgn);
 
@@ -121,31 +126,22 @@ begin
   {$ENDIF}
 
   {$IFDEF DETECT_RECTANGLES}
-  setlength(pixel,FControlArea.Height);
-  for y:=0 to FControlArea.Height-1 do begin
-    p:=FControlArea.ScanLine[y];
-    setlength(pixel[y],FControlArea.Width);
-    for x:=0 to FControlArea.Width-1 do begin
-      pixel[y][x]:=(p^.alpha>0);
-      inc(p);
-    end;
-  end;
 
   {$IFDEF DEBUG}
   debugln('==============================================');
   {$ENDIF}
-  for y:=0 to high(pixel) do begin
-    for x:=0 to high(pixel[y]) do begin
-      if pixel[y][x] and (PtInRegion(frgn.Handle, x, y)=false) then begin
-        for x1:=x to high(pixel[y])-1 do begin
-          if pixel[y][x1+1]=false then break;
+  for y:=0 to FControlArea.Height-1 do begin
+    for x:=0 to FControlArea.Width-1 do begin
+      if ControlArea(FControlArea.ScanLine[y][x]) and (PtInRegion(frgn.Handle, x, y)=false) then begin
+        for x1:=x to FControlArea.Width-2 do begin
+          if ControlArea(FControlArea.ScanLine[y][x1+1])=false then break;
           if PtInRegion(frgn.Handle, x1+1, y) then break;
         end;
 
         invalidline:=false;
-        for y1:=y to high(pixel)-1 do begin
+        for y1:=y to FControlArea.Height-2 do begin
           for xa:=x to x1 do begin
-            if pixel[y1+1][xa]=false then begin
+            if ControlArea(FControlArea.ScanLine[y1+1][xa])=false then begin
               invalidline:=true;
               break;
             end;
@@ -169,8 +165,6 @@ begin
       end;
     end;
   end;
-
-  setlength(pixel,0);
   {$ENDIF}
 
   SetShape(frgn);
