@@ -21,9 +21,8 @@ type
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
     function CanRepaint:Boolean; virtual;
-    procedure DrawControl; virtual;
-    procedure UpdateShape; virtual;
     procedure SetBorderColor(AValue: TColor); virtual;
+    procedure SetColor(AValue: TColor); virtual;
     procedure Paint; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
   public
@@ -42,13 +41,19 @@ begin
   Result:=FUpdatingCount=0;
 end;
 
-procedure THMIBasicControl.DrawControl;
+procedure THMIBasicControl.SetBorderColor(AValue: TColor);
+begin
+
+end;
+
+procedure THMIBasicControl.SetColor(AValue: TColor);
 begin
 
 end;
 
 {$DEFINE DETECT_RECTANGLES}
-procedure THMIBasicControl.UpdateShape;
+
+procedure THMIBasicControl.Paint;
 var
   p:PBGRAPixel;
   x, y:Integer;
@@ -149,24 +154,8 @@ begin
   end;
   {$ENDIF}
 
-  if ParentHandlesAllocated then
-    SetShape(frgn);
+  SetShape(frgn);
 
-end;
-
-procedure THMIBasicControl.SetBorderColor(AValue: TColor);
-begin
-
-end;
-
-procedure THMIBasicControl.Paint;
-begin
-  if assigned(FControlArea) then begin
-    FControlArea.Draw(Canvas, 0, 0, False);
-    {$IFDEF WINDOWS}
-    //UpdateShape;
-    {$ENDIF}
-  end;
 end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
@@ -187,6 +176,10 @@ procedure THMIBasicControl.EndUpdate;
 begin
   if FUpdatingCount>0 then
     Dec(FUpdatingCount);
+
+  if FUpdatingCount=0 then
+    Invalidate;
+
 end;
 
 end.
