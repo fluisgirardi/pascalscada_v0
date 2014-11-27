@@ -32,7 +32,7 @@ type
 
 implementation
 
-uses math;
+uses math {$IFDEF DEBUG}, LCLProc{$ENDIF};
 
 { TBasicSCADAControl }
 
@@ -51,31 +51,45 @@ begin
 
 end;
 
-//{$DEFINE PIXEL_BY_PIXEL}
+{$DEFINE DETECT_RECTANGLES}
 
 procedure THMIBasicControl.Paint;
 var
   p:PBGRAPixel;
   x, y:Integer;
-  {$IFNDEF PIXEL_BY_PIXEL}
+
+  {$IFDEF CONTINUOUS_ROW_AS_RECTANGLE}
   started:boolean;
   x0, x1:Integer;
+  {$ENDIF}
+
+  {$IFDEF DETECT_RECTANGLES}
+  pixel:array of array of boolean;
+  xa, x1:Integer;
+  y1:Integer;
+  invalidline:boolean;
   {$ENDIF}
 begin
   if assigned(frgn) then FreeAndNil(frgn);
 
   frgn:=TRegion.Create;
+  {$IFDEF PIXEL_BY_PIXEL}
   for y:=0 to FControlArea.Height-1 do begin
     p:=FControlArea.ScanLine[y];
-    {$IFNDEF PIXEL_BY_PIXEL}
-    started:=false;
-    {$ENDIF}
     for x:=0 to FControlArea.Width-1 do begin
-      {$IFDEF PIXEL_BY_PIXEL}
       if (p^.alpha>0) then
         frgn.AddRectangle(x,y,x+1,y+1);
 
-      {$ELSE}
+      inc(p);
+    end;
+  end;
+  {$ENDIF}
+
+  {$IFDEF CONTINUOUS_ROW_AS_RECTANGLE}
+  for y:=0 to FControlArea.Height-1 do begin
+    p:=FControlArea.ScanLine[y];
+    started:=false;
+    for x:=0 to FControlArea.Width-1 do begin
       if (p^.alpha=0) then begin
         if started then begin
           if x0=x1 then
@@ -93,19 +107,72 @@ begin
           started:=true;
         end;
       end;
-      {$ENDIF}
       inc(p);
     end;
-    {$IFNDEF PIXEL_BY_PIXEL}
-    //
+
+    //the
     if started then begin
       if x0=x1 then
         frgn.AddRectangle(x0,y,x0+1,y+1)
       else
         frgn.AddRectangle(x0,y,x1,y+1);
     end;
-    {$ENDIF}
   end;
+  {$ENDIF}
+
+  {$IFDEF DETECT_RECTANGLES}
+  setlength(pixel,FControlArea.Height);
+  for y:=0 to FControlArea.Height-1 do begin
+    p:=FControlArea.ScanLine[y];
+    setlength(pixel[y],FControlArea.Width);
+    for x:=0 to FControlArea.Width-1 do begin
+      pixel[y][x]:=(p^.alpha>0);
+      inc(p);
+    end;
+  end;
+
+  {$IFDEF DEBUG}
+  debugln('==============================================');
+  {$ENDIF}
+  for y:=0 to high(pixel) do begin
+    for x:=0 to high(pixel[y]) do begin
+      if pixel[y][x] and (PtInRegion(frgn.Handle, x, y)=false) then begin
+        for x1:=x to high(pixel[y])-1 do begin
+          if pixel[y][x1+1]=false then break;
+          if PtInRegion(frgn.Handle, x1+1, y) then break;
+        end;
+
+        invalidline:=false;
+        for y1:=y to high(pixel)-1 do begin
+          for xa:=x to x1 do begin
+            if pixel[y1+1][xa]=false then begin
+              invalidline:=true;
+              break;
+            end;
+            if PtInRegion(frgn.Handle, xa, y1+1) then begin
+              invalidline:=true;
+              break;
+            end;
+          end;
+          if invalidline then break;
+        end;
+
+        {$IFDEF DEBUG}
+        debugln('frgn.AddRectangle(x=',inttostr(x),
+                ', y=',inttostr(y),
+                ', x1=',IntToStr(x1),
+                ', y1=',IntToStr(y1),
+                ')');
+        {$ENDIF}
+
+        frgn.AddRectangle(x,y,x1+1,y1+1);
+      end;
+    end;
+  end;
+
+  setlength(pixel,0);
+  {$ENDIF}
+
   SetShape(frgn);
 
 end;
