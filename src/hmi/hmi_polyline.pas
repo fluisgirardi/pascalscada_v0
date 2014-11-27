@@ -46,11 +46,10 @@ type
     procedure PointChanged(Sender: TObject);
   protected
     FPointCoordinates:TPointCollection;
-    procedure Paint; override;
+    procedure DrawControl; override;
     procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
-    procedure Invalidate; override;
   published
     property LineColor:TColor read FLineColor write SetLineColor default clBlack;
     property LineWidth:Integer read FLineWidth write SetLineWidth default 2;
@@ -102,69 +101,79 @@ end;
 
 procedure THMIPolyline.PointChanged(Sender: TObject);
 begin
-  Invalidate;
+  if [csLoading, csReading]*ComponentState=[] then begin
+    DrawControl;
+    UpdateShape;
+    Invalidate;
+  end;
 end;
 
 procedure THMIPolyline.SetLineWidth(AValue: Integer);
 begin
   if FLineWidth=AValue then Exit;
   FLineWidth:=AValue;
-  Invalidate;
+  if [csLoading, csReading]*ComponentState=[] then begin
+    DrawControl;
+    UpdateShape;
+    Invalidate;
+  end;
 end;
 
 procedure THMIPolyline.SetLineColor(AValue: TColor);
 begin
   if FLineColor=AValue then Exit;
-  FOnlyColorChanged:=true;
   FLineColor:=AValue;
-  Invalidate;
+  if [csLoading, csReading]*ComponentState=[] then begin
+    DrawControl;
+    Invalidate;
+  end;
 end;
 
 procedure THMIPolyline.setPointCoordinates(AValue: TPointCollection);
 begin
   FPointCoordinates.Assign(AValue);
-  Invalidate;
+  if [csLoading, csReading]*ComponentState=[] then begin
+    DrawControl;
+    UpdateShape;
+    Invalidate;
+  end;
 end;
 
-procedure THMIPolyline.Paint;
+procedure THMIPolyline.DrawControl;
 var
   p:array of TPoint;
   aColor: TBGRAPixel;
   i: Integer;
 begin
+  if assigned(FControlArea) then FreeAndNil(FControlArea);
   FControlArea := TBGRABitmap.Create(Width,Height);
-  try
-    if FLineColor<>clNone then begin
 
-      SetLength(p, FPointCoordinates.Count);
-      for i:=0 to FPointCoordinates.Count-1 do begin
-        p[i].x:=TPointCollectionItem(FPointCoordinates.Items[i]).X;
-        p[i].y:=TPointCollectionItem(FPointCoordinates.Items[i]).Y;
-      end;
+  if FLineColor<>clNone then begin
 
-      //FControlArea.PenStyle:=psSolid;
-      //FControlArea.JoinStyle:=pjsBevel;
-      aColor:=ColorToBGRA(FLineColor);
-      FControlArea.CanvasBGRA.Pen.Style:=psSolid;
-      FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
-      FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
-      //FControlArea.DrawPolyLineAntialias(p, aColor, FLineWidth);
-      FControlArea.CanvasBGRA.Polyline(p);
+    SetLength(p, FPointCoordinates.Count);
+    for i:=0 to FPointCoordinates.Count-1 do begin
+      p[i].x:=TPointCollectionItem(FPointCoordinates.Items[i]).X;
+      p[i].y:=TPointCollectionItem(FPointCoordinates.Items[i]).Y;
+    end;
 
-      inherited Paint;
-
-      FControlArea.Draw(Canvas, 0, 0, False);
-    end else
-      inherited Paint;
-  finally
-    FreeAndNil(FControlArea);
+    //FControlArea.PenStyle:=psSolid;
+    //FControlArea.JoinStyle:=pjsBevel;
+    aColor:=ColorToBGRA(FLineColor);
+    FControlArea.CanvasBGRA.Pen.Style:=psSolid;
+    FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
+    FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
+    //FControlArea.DrawPolyLineAntialias(p, aColor, FLineWidth);
+    FControlArea.CanvasBGRA.Polyline(p);
   end;
 end;
 
 procedure THMIPolyline.Loaded;
 begin
   inherited Loaded;
-  Invalidate;
+  DrawControl;
+  UpdateShape;
+  EndUpdate;
+  InvalidateControl(true,false);
 end;
 
 constructor THMIPolyline.Create(AOwner: TComponent);
@@ -176,12 +185,8 @@ begin
   FLineWidth:=2;
   FLineColor:=clBlack;
   FOnlyColorChanged:=false;
-end;
-
-procedure THMIPolyline.Invalidate;
-begin
-  if [csReading,csLoading]*ComponentState=[] then
-    inherited Invalidate;
+  if [csLoading, csReading]*ComponentState<>[] then
+    BeginUpdate;
 end;
 
 end.

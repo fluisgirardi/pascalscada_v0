@@ -21,8 +21,9 @@ type
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
     function CanRepaint:Boolean; virtual;
+    procedure DrawControl; virtual;
+    procedure UpdateShape; virtual;
     procedure SetBorderColor(AValue: TColor); virtual;
-    procedure SetColor(AValue: TColor); virtual;
     procedure Paint; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
   public
@@ -41,19 +42,13 @@ begin
   Result:=FUpdatingCount=0;
 end;
 
-procedure THMIBasicControl.SetBorderColor(AValue: TColor);
-begin
-
-end;
-
-procedure THMIBasicControl.SetColor(AValue: TColor);
+procedure THMIBasicControl.DrawControl;
 begin
 
 end;
 
 {$DEFINE DETECT_RECTANGLES}
-
-procedure THMIBasicControl.Paint;
+procedure THMIBasicControl.UpdateShape;
 var
   p:PBGRAPixel;
   x, y:Integer;
@@ -126,10 +121,6 @@ begin
   {$ENDIF}
 
   {$IFDEF DETECT_RECTANGLES}
-
-  {$IFDEF DEBUG}
-  debugln('==============================================');
-  {$ENDIF}
   for y:=0 to FControlArea.Height-1 do begin
     for x:=0 to FControlArea.Width-1 do begin
       if ControlArea(FControlArea.ScanLine[y][x]) and (PtInRegion(frgn.Handle, x, y)=false) then begin
@@ -152,23 +143,30 @@ begin
           end;
           if invalidline then break;
         end;
-
-        {$IFDEF DEBUG}
-        debugln('frgn.AddRectangle(x=',inttostr(x),
-                ', y=',inttostr(y),
-                ', x1=',IntToStr(x1),
-                ', y1=',IntToStr(y1),
-                ')');
-        {$ENDIF}
-
         frgn.AddRectangle(x,y,x1+1,y1+1);
       end;
     end;
   end;
   {$ENDIF}
 
-  SetShape(frgn);
+  if ParentHandlesAllocated then
+    SetShape(frgn);
 
+end;
+
+procedure THMIBasicControl.SetBorderColor(AValue: TColor);
+begin
+
+end;
+
+procedure THMIBasicControl.Paint;
+begin
+  if assigned(FControlArea) then begin
+    FControlArea.Draw(Canvas, 0, 0, False);
+    {$IFDEF WINDOWS}
+    //UpdateShape;
+    {$ENDIF}
+  end;
 end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
@@ -189,10 +187,6 @@ procedure THMIBasicControl.EndUpdate;
 begin
   if FUpdatingCount>0 then
     Dec(FUpdatingCount);
-
-  if FUpdatingCount=0 then
-    Invalidate;
-
 end;
 
 end.
