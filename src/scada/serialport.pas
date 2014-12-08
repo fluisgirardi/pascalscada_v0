@@ -494,6 +494,8 @@ begin
            InternalClearALLBuffers;
       end;
     end;
+  end else begin
+    Packet^.WriteIOResult := iorOK;
   end;
 {$IFEND}
 {$IFDEF UNIX}
@@ -1072,4 +1074,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.
