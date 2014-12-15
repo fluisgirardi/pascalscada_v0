@@ -639,6 +639,7 @@ var
 begin
   for c:=0 to High(Blocks) do
     Blocks[c].Destroy;
+  SetLength(FAddress,0);
   SetLength(Blocks,0);
 end;
 
@@ -1069,8 +1070,8 @@ end;
 
 destructor  TPLCMemoryManagerSafe.Destroy;
 begin
-  inherited Destroy;
   FMutex.Destroy;
+  inherited Destroy;
 end;
 
 procedure   TPLCMemoryManagerSafe.AddAddress(Address,Size,RegSize,Scan:Cardinal);

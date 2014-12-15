@@ -3,7 +3,7 @@ unit hmiobjectcolletion;
 interface
 
 uses
-  Classes, hmibasiccolletion, typinfo;
+  Classes, hmibasiccolletion, rttiutils, typinfo;
 
 type
   {$IFDEF PORTUGUES}
@@ -27,7 +27,7 @@ type
   }
   {$ENDIF}
   TObjectColletionItem = Class(THMIBasicColletionItem)
-  private
+  protected
     FTargetObject,
     FTargetObjectLoaded: TComponent;
     FTargetObjectProperty,
@@ -36,6 +36,7 @@ type
     procedure SetTargetObjectProperty(AValue: String);
   protected
     fRequiredTypeName:String;
+    fRequiredTypeKind:TTypeKind;
     function AcceptObject(obj:TComponent):Boolean; virtual;
     function AcceptObjectProperty(PropertyName:String):Boolean; virtual;
   published
@@ -97,53 +98,42 @@ end;
 
 function TObjectColletionItem.AcceptObject(obj: TComponent): Boolean;
 var
-  PL: PPropList;
-  tdata: PTypeData;
-  nprops: Integer;
-  p: Integer;
+  helper:TPropInfoList;
+  pidx: Integer;
 begin
   Result:=false;
-  if not assigned(obj) then exit;
-  tdata:=GetTypeData(obj.ClassInfo);
-
-  GetMem(PL,tdata.PropCount*SizeOf(Pointer));
+  helper := TPropInfoList.Create(obj,[fRequiredTypeKind]);
   try
-    nprops:=GetPropList(obj,PL);
-    for p:=0 to nprops-1 do begin
-      if lowercase(PL^[p]^.PropType^.Name)=lowercase(fRequiredTypeName) then begin
+    for pidx:=0 to helper.Count-1 do begin
+      if helper.Items[pidx].PropType.Name=fRequiredTypeName then begin
         Result:=true;
-        exit;
+        Exit;
       end;
     end;
   finally
-    Freemem(PL);
+    helper.Free;
   end;
 end;
 
 function TObjectColletionItem.AcceptObjectProperty(PropertyName: String
   ): Boolean;
 var
-  PL: PPropList;
-  tdata: PTypeData;
-  nprops: Integer;
-  p: Integer;
+  helper:TPropInfoList;
+  pidx: Integer;
 begin
   Result:=false;
-  if not Assigned(FTargetObject) then exit;
-  tdata:=GetTypeData(FTargetObject.ClassInfo);
-
-  GetMem(PL,tdata.PropCount*SizeOf(Pointer));
+  if FTargetObject=nil then exit;
+  helper := TPropInfoList.Create(FTargetObject,[fRequiredTypeKind]);
   try
-    nprops:=GetPropList(FTargetObject,PL);
-    for p:=0 to nprops-1 do begin
-      if (lowercase(PL^[p]^.Name)=lowercase(PropertyName)) and
-         (lowercase(PL^[p]^.PropType^.Name)=lowercase(fRequiredTypeName)) then begin
+    for pidx:=0 to helper.Count-1 do begin
+      if (lowercase(helper.Items[pidx].Name)=LowerCase(PropertyName)) and
+         (helper.Items[pidx].PropType.Name=fRequiredTypeName)  then begin
         Result:=true;
-        exit;
+        Exit;
       end;
     end;
   finally
-    Freemem(PL);
+    helper.Free;
   end;
 end;
 

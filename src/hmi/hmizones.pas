@@ -375,6 +375,7 @@ type
   public
     //: @exclude
     constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
   published
 
      {$IFDEF PORTUGUES}
@@ -1117,6 +1118,12 @@ begin
    FFont.OnChange := FontChanges;
    FVerAlignment:=tlTop;
    FHorAlignment:=taLeftJustify;
+end;
+
+destructor TTextZone.Destroy;
+begin
+  FFont.Destroy;
+  inherited Destroy;
 end;
 
 procedure TTextZone.SetText(t:TCaption);

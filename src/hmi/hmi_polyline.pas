@@ -50,6 +50,7 @@ type
     procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure Invalidate; override;
   published
     property LineColor:TColor read FLineColor write SetLineColor default clBlack;
@@ -176,6 +177,12 @@ begin
   FLineWidth:=2;
   FLineColor:=clBlack;
   FOnlyColorChanged:=false;
+end;
+
+destructor THMIPolyline.Destroy;
+begin
+  FPointCoordinates.Destroy;
+  inherited Destroy;
 end;
 
 procedure THMIPolyline.Invalidate;

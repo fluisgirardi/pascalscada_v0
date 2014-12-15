@@ -1402,40 +1402,38 @@ function TSiemensProtocolFamily.CreatePLC(iRack, iSlot, iStation: LongInt
 begin
   Result:=Length(FPLCs);
   SetLength(FPLCs,Result+1);
-  with FPLCs[Result] do begin
-    MaxBlockSize:=0; //must be 0 instead of -1 to avoid fragmentation
-    MaxPDULen:=0;
-    Connected:=false;
-    Slot:=iSlot;
-    Rack:=iRack;
-    Station:=iStation;
+  FPLCs[Result].MaxBlockSize:=0; //must be 0 instead of -1 to avoid fragmentation
+  FPLCs[Result].MaxPDULen:=0;
+  FPLCs[Result].Connected:=false;
+  FPLCs[Result].Slot:=iSlot;
+  FPLCs[Result].Rack:=iRack;
+  FPLCs[Result].Station:=iStation;
 
-    Inputs           :=TPLCMemoryManager.Create;
-    Outputs          :=TPLCMemoryManager.Create;
-    PeripheralInputs :=TPLCMemoryManager.Create;
-    Timers           :=TPLCMemoryManager.Create;
-    Counters         :=TPLCMemoryManager.Create;
-    Flags            :=TPLCMemoryManager.Create;
+  FPLCs[Result].Inputs           :=TPLCMemoryManager.Create;
+  FPLCs[Result].Outputs          :=TPLCMemoryManager.Create;
+  FPLCs[Result].PeripheralInputs :=TPLCMemoryManager.Create;
+  FPLCs[Result].Timers           :=TPLCMemoryManager.Create;
+  FPLCs[Result].Counters         :=TPLCMemoryManager.Create;
+  FPLCs[Result].Flags            :=TPLCMemoryManager.Create;
 
-    S7200SMs         :=TPLCMemoryManager.Create;
-    S7200Timers      :=TPLCMemoryManager.Create;
-    S7200Counters    :=TPLCMemoryManager.Create;
-    S7200AnInput     :=TPLCMemoryManager.Create;
-    S7200AnOutput    :=TPLCMemoryManager.Create;
+  FPLCs[Result].S7200SMs         :=TPLCMemoryManager.Create;
+  FPLCs[Result].S7200Timers      :=TPLCMemoryManager.Create;
+  FPLCs[Result].S7200Counters    :=TPLCMemoryManager.Create;
+  FPLCs[Result].S7200AnInput     :=TPLCMemoryManager.Create;
+  FPLCs[Result].S7200AnOutput    :=TPLCMemoryManager.Create;
 
-    Inputs.MaxBlockItems:=MaxBlockSize;
-    Outputs.MaxBlockItems:=MaxBlockSize;
-    PeripheralInputs.MaxBlockItems:=MaxBlockSize;
-    Timers.MaxBlockItems:=MaxBlockSize;
-    Counters.MaxBlockItems:=MaxBlockSize;
-    Flags.MaxBlockItems:=MaxBlockSize;
+  FPLCs[Result].Inputs.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].Outputs.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].PeripheralInputs.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].Timers.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].Counters.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].Flags.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
 
-    S7200SMs.MaxBlockItems:=MaxBlockSize;
-    S7200Timers.MaxBlockItems:=MaxBlockSize;
-    S7200Counters.MaxBlockItems:=MaxBlockSize;
-    S7200AnInput.MaxBlockItems:=MaxBlockSize;
-    S7200AnOutput.MaxBlockItems:=MaxBlockSize;
-  end;
+  FPLCs[Result].S7200SMs.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].S7200Timers.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].S7200Counters.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].S7200AnInput.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
+  FPLCs[Result].S7200AnOutput.MaxBlockItems:=FPLCs[Result].MaxBlockSize;
 end;
 
 procedure TSiemensProtocolFamily.DeletePLC(PLCIndex: Integer);
@@ -1446,27 +1444,25 @@ begin
   hPLC:=High(FPLCs);
 
   if (PLCIndex>=0) AND (PLCIndex<=hPLC) then begin
+    FPLCs[PLCIndex].Inputs.Destroy;
+    FPLCs[PLCIndex].Outputs.Destroy;
+    FPLCs[PLCIndex].PeripheralInputs.Destroy;
 
-    with FPLCs[PLCIndex] do begin
-      FreeAndNil(Inputs);
-      FreeAndNil(Outputs);
-      FreeAndNil(PeripheralInputs);
-
-      for db:=0 to High(DBs) do begin
-        FreeAndNil(DBs[db].DBArea);
-      end;
-      SetLength(DBs,0);
-
-      FreeAndNil(Timers);
-      FreeAndNil(Counters);
-      FreeAndNil(Flags);
-
-      FreeAndNil(S7200SMs);
-      FreeAndNil(S7200Timers);
-      FreeAndNil(S7200Counters);
-      FreeAndNil(S7200AnInput);
-      FreeAndNil(S7200AnOutput);
+    for db:=0 to High(FPLCs[PLCIndex].DBs) do begin
+      FPLCs[PLCIndex].DBs[db].DBArea.Destroy;
     end;
+    SetLength(FPLCs[PLCIndex].DBs, 0);
+
+    FPLCs[PLCIndex].Timers.Destroy;
+    FPLCs[PLCIndex].Counters.Destroy;
+    FPLCs[PLCIndex].Flags.Destroy;
+
+    FPLCs[PLCIndex].S7200SMs.Destroy;
+    FPLCs[PLCIndex].S7200Timers.Destroy;
+    FPLCs[PLCIndex].S7200Counters.Destroy;
+    FPLCs[PLCIndex].S7200AnInput.Destroy;
+    FPLCs[PLCIndex].S7200AnOutput.Destroy;
+
     FPLCs[PLCIndex]:=FPLCs[hPLC];
     SetLength(FPLCs, hPLC);
   end;

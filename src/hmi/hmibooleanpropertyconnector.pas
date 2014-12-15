@@ -347,7 +347,8 @@ constructor TObjectWithBooleanPropetiesColletionItem.Create(
   ACollection: TCollection);
 begin
   inherited Create(ACollection);
-  fRequiredTypeName:=PTypeInfo(TypeInfo(Boolean)).Name ;
+  fRequiredTypeName:=PTypeInfo(TypeInfo(Boolean)).Name;
+  fRequiredTypeKind:=PTypeInfo(TypeInfo(Boolean)).Kind;
 end;
 
 procedure TObjectWithBooleanPropetiesColletionItem.ApplyResult(Result: Boolean);

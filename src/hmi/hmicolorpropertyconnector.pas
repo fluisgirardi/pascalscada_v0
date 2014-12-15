@@ -447,7 +447,8 @@ constructor TObjectWithColorPropetiesColletionItem.Create(
   ACollection: TCollection);
 begin
   inherited Create(ACollection);
-  fRequiredTypeName:=PTypeInfo(TypeInfo(TColor)).Name ;
+  fRequiredTypeName:=PTypeInfo(TypeInfo(TColor)).Name;
+  fRequiredTypeKind:=PTypeInfo(TypeInfo(TColor)).Kind;
 end;
 
 destructor TObjectWithColorPropetiesColletionItem.Destroy;
@@ -459,10 +460,8 @@ end;
 
 procedure TObjectWithColorPropetiesColletionItem.ApplyResult(Result: TColor);
 begin
-  if (not AcceptObject(TargetObject)) or
-     (not AcceptObjectProperty(TargetObjectProperty)) then exit;
-
-  SetPropValue(TargetObject,TargetObjectProperty,Result);
+  if (AcceptObject(FTargetObject)) AND (AcceptObjectProperty(FTargetObjectProperty)) then
+    SetPropValue(FTargetObject,FTargetObjectProperty,Result);
 end;
 
 procedure TObjectWithColorPropetiesColletionItem.Loaded;
@@ -510,4 +509,4 @@ begin
   Result:=inherited GetDisplayName+', Result='+ColorToString(ZoneResult);
 end;
 
-end.
+end.

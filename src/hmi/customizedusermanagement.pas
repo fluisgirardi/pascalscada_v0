@@ -11,9 +11,12 @@ type
   TGetUserNameAndLogin       = procedure(var UserInfo:String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
   TValidadeSecurityCode      = procedure(const securityCode:String) of object;
+  TRegisterSecurityCode      = procedure(const securityCode:String) of object;
   TLogoutEvent               = TNotifyEvent;
   TCanAccessEvent            = procedure(securityCode:String; var CanAccess:Boolean) of object;
   TUIDCanAccessEvent         = procedure(aUID:Integer; securityCode:String; var CanAccess:Boolean) of object;
+
+  { TCustomizedUserManagement }
 
   TCustomizedUserManagement = class(TBasicUserManagement)
   private
@@ -21,6 +24,7 @@ type
     FGetUserName              :TGetUserNameAndLogin;
     FGetUserLogin             :TGetUserNameAndLogin;
     FManageUsersAndGroupsEvent:TManageUsersAndGroupsEvent;
+    FRegisterSecurityCode     :TRegisterSecurityCode;
     FUIDCanAccessEvent        :TUIDCanAccessEvent;
     FValidadeSecurityCode     :TValidadeSecurityCode;
     FCanAccessEvent           :TCanAccessEvent;
@@ -37,6 +41,7 @@ type
 
     //Security codes management
     procedure ValidateSecurityCode(sc:String); override;
+    procedure RegisterSecurityCode(sc: String); override;
 
     function  CanAccess(sc:String):Boolean; override;
   published
@@ -56,6 +61,7 @@ type
     property OnGetUserLogin        :TGetUserNameAndLogin       read FGetUserLogin              write FGetUserLogin;
     property OnManageUsersAndGroups:TManageUsersAndGroupsEvent read FManageUsersAndGroupsEvent write FManageUsersAndGroupsEvent;
     property OnValidadeSecurityCode:TValidadeSecurityCode      read FValidadeSecurityCode      write FValidadeSecurityCode;
+    property OnRegisterSecurityCode:TRegisterSecurityCode      read FRegisterSecurityCode      write FRegisterSecurityCode;
     property OnCanAccess           :TCanAccessEvent            read FCanAccessEvent            write FCanAccessEvent;
     property OnUIDCanAccess        :TUIDCanAccessEvent         read FUIDCanAccessEvent         write FUIDCanAccessEvent;
     property OnLogout              :TLogoutEvent               read FLogoutEvent               write FLogoutEvent;
@@ -134,6 +140,12 @@ procedure TCustomizedUserManagement.ValidateSecurityCode(sc:String);
 begin
   if Assigned(FValidadeSecurityCode) then
     FValidadeSecurityCode(sc);
+end;
+
+procedure TCustomizedUserManagement.RegisterSecurityCode(sc: String);
+begin
+  if Assigned(FRegisterSecurityCode) then
+    FRegisterSecurityCode(sc);
 end;
 
 function  TCustomizedUserManagement.CanAccess(sc:String):Boolean;
