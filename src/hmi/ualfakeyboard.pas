@@ -538,7 +538,7 @@ begin
 
   with Sender as TSpeedButton do begin
     FKeyboard.Press(Tag);
-    Application.ProcessMessages;
+    //Application.ProcessMessages;
     if (tag=VK_ESCAPE) or (FReturnCloseKeyBoard and (tag=VK_RETURN)) then
       Close;
   end;

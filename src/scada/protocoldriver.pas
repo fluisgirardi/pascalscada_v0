@@ -799,12 +799,15 @@ var
 begin
   PScanReadThread.Terminate;
   PScanReadThread.WaitFor;
+  PScanReadThread.Destroy;
 
   PScanWriteThread.Terminate;
   PScanWriteThread.WaitFor;
+  PScanWriteThread.Destroy;
 
   PScanUpdateThread.Terminate;
   PScanUpdateThread.WaitFor;
+  PScanUpdateThread.Destroy;
 
   for c:=0 to High(PTags) do
     TPLCTag(PTags[c]).RemoveDriver;

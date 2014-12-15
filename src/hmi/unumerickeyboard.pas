@@ -204,7 +204,7 @@ begin
 
   with Sender as TSpeedButton do begin
     keyboard.Press(Tag);
-    Application.ProcessMessages;
+    //Application.ProcessMessages;
     if (tag=VK_ESCAPE) or (tag=VK_RETURN) then
       close;
   end;

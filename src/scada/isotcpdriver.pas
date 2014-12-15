@@ -244,7 +244,7 @@ begin
   UpdatePLCs;
 end;
 
-function TISOTCPDriver.ConnectPLC(var CPU:TS7CPU):Boolean;
+function TISOTCPDriver.connectPLC(var CPU: TS7CPU): Boolean;
 var
   IOResult:TIOPacket;
   msg:BYTES;
@@ -338,6 +338,8 @@ begin
   try
     res:=PCommPort.IOCommandSync(iocWrite,Length(msgOut),msgOut,0,DriverID,0,nil);
     if res=0 then begin
+      SetLength(msgIn,0);
+      SetLength(msgOut,0);
       Result:=false;
       exit;
     end;

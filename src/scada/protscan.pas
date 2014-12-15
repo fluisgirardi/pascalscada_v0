@@ -176,6 +176,7 @@ begin
   FInitEvent.Destroy;
   FWaitToWrite.Destroy;
   FSpool.Destroy;
+  FEnd.Destroy;
   inherited Destroy;
 end;
 

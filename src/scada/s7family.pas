@@ -737,6 +737,10 @@ type
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
+
+    //: @exclude
+    destructor Destroy; override;
+
     //: @seealso(TProtocolDriver.SizeOfTag)
     function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
 
@@ -772,6 +776,15 @@ begin
   FProtocolReady:=false;
   PDUIncoming:=0;
   PDUOutgoing:=0;
+end;
+
+destructor TSiemensProtocolFamily.Destroy;
+var
+  c: Integer;
+begin
+  inherited Destroy;
+  for c:=0 to High(FPLCs) do
+    DeletePLC(c);
 end;
 
 function  TSiemensProtocolFamily.SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;

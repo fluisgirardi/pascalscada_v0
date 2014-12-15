@@ -1010,6 +1010,7 @@ end;
 destructor TEventNotificationThread.Destroy;
 begin
   inherited Destroy;
+  FInitEvent.Destroy;
   FDoSomethingEvent.Destroy;
   FSpool.Destroy;
 end;
@@ -1699,12 +1700,12 @@ begin
     //return the command ID.
     Result := PPacketID;
 
-    if pkt=nil then
-      Dispose(PPacket);
-
     if Assigned(OnEnd) then
       OnEnd(Self);
   finally
+    if pkt=nil then
+      Dispose(PPacket);
+
     if InIOCmdCS then
       PIOCmdCS.Leave;
 
