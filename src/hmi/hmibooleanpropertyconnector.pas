@@ -126,6 +126,7 @@ type
   THMIBooleanPropertyConnector = class(TComponent, IHMITagInterface)
   private
     FTag:TPLCTag;
+    FFirstReadOk:Boolean;
     FConditionZones:TBooleanZones;
     FObjects:TObjectWithBooleanPropetiesColletion;
     procedure ConditionItemChanged(Sender: TObject);
@@ -232,7 +233,9 @@ end;
 
 procedure THMIBooleanPropertyConnector.NotifyReadOk;
 begin
-  RecalculateObjectsProperties;
+  if FFirstReadOk then
+    RecalculateObjectsProperties;
+  FFirstReadOk:=false;
 end;
 
 procedure THMIBooleanPropertyConnector.NotifyReadFault;
@@ -307,6 +310,7 @@ begin
   FObjects:=TObjectWithBooleanPropetiesColletion.Create(Self);
   FObjects.OnCollectionItemChange:=ObjectItemChanged;
   FObjects.OnNeedCompState:=CollectionNeedsComponentState;
+  FFirstReadOk:=true;
 end;
 
 destructor THMIBooleanPropertyConnector.Destroy;

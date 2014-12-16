@@ -107,6 +107,7 @@ type
   TObjectWithColorPropetiesColletionItem = class(TObjectColletionItem, IUnknown, IHMITagInterface)
   private
     FTag:TPLCTag;
+    FirstReadOk:Boolean;
 
     function  QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
     function _AddRef: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
@@ -367,12 +368,14 @@ end;
 
 procedure TObjectWithColorPropetiesColletionItem.NotifyReadOk;
 begin
-  RecalculateObjectsProperties;
+  if FirstReadOk then
+    RecalculateObjectsProperties;
+  FirstReadOk:=false;
 end;
 
 procedure TObjectWithColorPropetiesColletionItem.NotifyReadFault;
 begin
-  RecalculateObjectsProperties;
+  //RecalculateObjectsProperties;
 end;
 
 procedure TObjectWithColorPropetiesColletionItem.NotifyWriteOk;
@@ -449,6 +452,7 @@ begin
   inherited Create(ACollection);
   fRequiredTypeName:=PTypeInfo(TypeInfo(TColor)).Name;
   fRequiredTypeKind:=PTypeInfo(TypeInfo(TColor)).Kind;
+  FirstReadOk:=true;
 end;
 
 destructor TObjectWithColorPropetiesColletionItem.Destroy;

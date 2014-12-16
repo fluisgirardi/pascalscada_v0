@@ -105,6 +105,8 @@ type
 
   TPascalSCADALogin_LogoutAction = class(TPascalSCADAUserManagementAction)
   private
+    FAfterLogin: TNotifyEvent;
+    FBeforeLogin: TNotifyEvent;
     FWithUserLoggedInImageIndex,
     FWithoutUserLoggedInImageIndex:LongInt;
     FWithUserLoggedInCaption,
@@ -138,6 +140,8 @@ type
     property WithoutUserLoggedInCaption:String     read FWithoutUserLoggedInCaption    write SetWithoutUserLoggedInCaption;
     property WithoutUserLoggedInHint:String        read FWithoutUserLoggedInHint       write SetWithoutUserLoggedInHint;
     property WithoutUserLoggedInImageIndex:LongInt read FWithoutUserLoggedInImageIndex write SetWithoutUserLoggedInImageIndex;
+    property BeforeLogin:TNotifyEvent              read FBeforeLogin                   write FBeforeLogin;
+    property AfterLogin:TNotifyEvent               read FAfterLogin                    write FAfterLogin;
   end;
 
   { TPascalSCADAManageUsersAction }
@@ -304,7 +308,13 @@ begin
     if TBasicUserManagement(GetControlSecurityManager.UserManagement).UserLogged then begin
       GetControlSecurityManager.Logout;
     end else begin
+      if Assigned(FBeforeLogin) then
+        FBeforeLogin(Self);
+
       GetControlSecurityManager.Login;
+
+      if Assigned(FAfterLogin) then
+        FAfterLogin(Self);
     end;
   UpdateMyState;
 end;
