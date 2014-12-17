@@ -97,6 +97,7 @@ type
   public
     {: @exclude }
     constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
     {: @exclude }
     procedure Loaded; virtual;
   end;
@@ -118,6 +119,11 @@ begin
   inherited Create(Collection);
   if Collection is THMIBasicColletion then
      THMIBasicColletion(Collection).NeedCurrentCompState;
+end;
+
+destructor THMIBasicColletionItem.Destroy;
+begin
+  inherited Destroy;
 end;
 
 procedure THMIBasicColletionItem.Loaded;

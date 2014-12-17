@@ -10,22 +10,27 @@ uses
 
 type
 
-  //{$DEFINE RGN_DETECT_RECTANGLES}
+  {$DEFINE RGN_DETECT_RECTANGLES}
 
   { THMIBasicControl }
 
   THMIBasicControl = class(TCustomControl)
   private
-    FInternalControlArea:TBGRABitmap;
-    function ControlArea(pixel: TBGRAPixel): Boolean;
+    //{$IFDEF WINDOWS}
+    UpdatingShape,
+    UpdateShapeOnPaint:Boolean;
+    //{$ENDIF}
   protected
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
+    function ControlArea(pixel: TBGRAPixel): Boolean;
     function  CanRepaint:Boolean; virtual;
-    procedure SetBorderColor(AValue: TColor); virtual;
-    procedure SetColor(AValue: TColor); virtual;
+    procedure DrawControl; virtual;
+    procedure UpdateShape; virtual;
     procedure Paint; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
+  protected
+    procedure SetBorderColor(AValue: TColor); virtual; abstract;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -44,12 +49,7 @@ begin
   Result:=FUpdatingCount=0;
 end;
 
-procedure THMIBasicControl.SetBorderColor(AValue: TColor);
-begin
-
-end;
-
-procedure THMIBasicControl.SetColor(AValue: TColor);
+procedure THMIBasicControl.DrawControl;
 begin
 
 end;
@@ -59,17 +59,18 @@ begin
   Result:=pixel.alpha>0;
 end;
 
-procedure THMIBasicControl.Paint;
+procedure THMIBasicControl.UpdateShape;
 var
-  p:TBGRAPixel;
+  p:PBGRAPixel;
   x, y:Integer;
+  arect:TRect;
 
-  {$IFDEF CONTINUOUS_ROW_AS_RECTANGLE}
+  {$IFDEF RGN_CONTINUOUS_ROW_AS_RECTANGLE}
   started:boolean;
   x0, x1:Integer;
   {$ENDIF}
 
-  {$IFDEF DETECT_RECTANGLES}
+  {$IFDEF RGN_DETECT_RECTANGLES}
   xa, x1:Integer;
   y1:Integer;
   invalidline:boolean;
@@ -84,7 +85,10 @@ var
   {$ENDIF}
 
 begin
-  FInternalControlArea.Assign(FControlArea);
+  if (not UpdatingShape) then begin
+    UpdateShapeOnPaint:=true;
+    exit;
+  end;
 
   {$IFDEF RGN_PIXEL_BY_PIXEL}
   frgn:=TRegion.Create;
@@ -97,6 +101,8 @@ begin
       inc(p);
     end;
   end;
+  SetShape(frgn);
+  FreeAndNil(frgn);
   {$ENDIF}
 
   {$IFDEF RGN_CONTINUOUS_ROW_AS_RECTANGLE}
@@ -133,6 +139,8 @@ begin
         frgn.AddRectangle(x0,y,x1,y+1);
     end;
   end;
+  SetShape(frgn);
+  FreeAndNil(frgn);
   {$ENDIF}
 
   {$IFDEF RGN_DETECT_RECTANGLES}
@@ -163,6 +171,8 @@ begin
       end;
     end;
   end;
+  SetShape(frgn);
+  FreeAndNil(frgn);
   {$ENDIF}
 
   {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES))}
@@ -174,7 +184,7 @@ begin
   fbmp.Height:=FControlArea.Height;
 
 
-  //build a triangle
+  //build shape
   for y:=0 to FControlArea.Height-1 do begin
     pb:=PByte(fbmp.ScanLine[y]);
     {$IFNDEF LCLGtk2}
@@ -210,9 +220,28 @@ begin
   {$ENDIF}
 end;
 
+procedure THMIBasicControl.Paint;
+begin
+  if assigned(FControlArea) then begin
+    //{$ifdef WINDOWS}
+    UpdatingShape:=True;
+    try
+      if UpdateShapeOnPaint then begin
+        UpdateShape;
+        UpdateShapeOnPaint:=false;
+      end;
+    finally
+      UpdatingShape:=false;
+    end;
+    //{$endif}
+    FControlArea.Draw(Canvas, 0, 0, False);
+  end;
+  inherited Paint;
+end;
+
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
 begin
-  if ControlArea(FInternalControlArea.ScanAt(Message.Pos.X,Message.Pos.Y)) then
+  if Assigned(FControlArea) and ControlArea(FControlArea.ScanAt(Message.Pos.X,Message.Pos.Y)) then
     Message.Result:=1
   else
     Message.Result:=0;
@@ -221,13 +250,12 @@ end;
 constructor THMIBasicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FInternalControlArea:=TBGRABitmap.Create;
-  DoubleBuffered:=true;
+  FControlArea:=TBGRABitmap.Create;
 end;
 
 destructor THMIBasicControl.Destroy;
 begin
-  FInternalControlArea.Destroy;
+  FControlArea.Destroy;
   inherited Destroy;
 end;
 
