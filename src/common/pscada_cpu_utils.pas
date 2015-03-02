@@ -12,9 +12,9 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  **********************************************************************}
-{$i ../common/language.inc}
-{$i ../common/delphiver.inc}
-unit pascalScadaMTPCPU;
+{$i ../common/pscada_settings.inc}
+{$i ../common/pscada_compiler_versions.inc}
+unit pSCADA_cpu_utils;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -23,24 +23,13 @@ unit pascalScadaMTPCPU;
 interface
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
-uses Windows;
+uses pSCADA_types, Windows;
 {$ELSEIF defined(freebsd) or defined(darwin)}
-uses ctypes, sysctl;
+uses pSCADA_types, ctypes, sysctl;
 {$ELSEIF defined(linux)}
 {$linklib c}
-uses ctypes;
+uses pSCADA_types, ctypes;
 {$IFEND}
-
-type
-  {$IFNDEF FPC}
-    {$IFDEF DELPHI_XE2_UP}
-    crossNativeUInt = NativeUInt;
-    {$ELSE}
-    crossNativeUInt = Cardinal;
-    {$ENDIF}
-  {$ELSE}
-    crossNativeUInt = PtrUInt;
-  {$ENDIF}
 
 function GetSystemThreadCount: LongInt;
 

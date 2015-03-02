@@ -13,4 +13,3 @@ History:
     {$DEFINE pSCADA_CONSOLE}
   {$IFEND}
 {$ENDIF}
-

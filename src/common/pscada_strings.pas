@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de tradução do PascalSCADA.)
@@ -16,7 +16,7 @@
   ***********************************************************************
 }
 {$ENDIF}
-unit hsstrings;
+unit pSCADA_strings;
 
 {$IFDEF FPC}
 {$mode delphi}

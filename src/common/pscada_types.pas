@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
 
@@ -24,7 +24,7 @@ interface
 uses
   Classes, SysUtils
   {$IFDEF FPC}
-  , LCLVersion;
+  , LCLVersion
   {$ENDIF};
 
 type
@@ -43,6 +43,16 @@ type
   {$ENDIF}
   TNeedCompStateEvent = procedure(var CurState:TComponentState) of object;
   THasCustomHint = (hchNo,hchYes);
+
+  {$IFNDEF FPC}
+    {$IFDEF DELPHI_XE2_UP}
+    crossNativeUInt = NativeUInt;
+    {$ELSE}
+    crossNativeUInt = Cardinal;
+    {$ENDIF}
+  {$ELSE}
+    crossNativeUInt = PtrUInt;
+  {$ENDIF}
 
   const
     pSCADAFullVersion = 000070300;

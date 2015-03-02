@@ -218,10 +218,3 @@ Delphi versions:
 {$ENDIF}
 
 
-// Include testings for fpc and unix. Delphi skip this test avoiding
-// errors of type "undefined constants"
-{$IFDEF FPC}
-  {$i console.inc}
-{$ENDIF}
-
-

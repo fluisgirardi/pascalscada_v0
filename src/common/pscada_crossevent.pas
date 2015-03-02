@@ -1,5 +1,5 @@
-{$i ../common/language.inc}
-{$I ../common/delphiver.inc}
+{$i ../common/pscada_settings.inc}
+{$I ../common/pscada_compiler_versions.inc}
 {$IFDEF PORTUGUES}
 {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
