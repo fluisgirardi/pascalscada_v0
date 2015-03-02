@@ -10,15 +10,13 @@
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 }
 {$ENDIF}
-unit hsutils;
+unit pSCADA_utils;
 
 {$IFDEF FPC}
 {$mode delphi}
 {$ENDIF}
 
 interface
-
-uses SysUtils;
 
 {$IFDEF PORTUGUES}
 {:
@@ -31,21 +29,15 @@ uses SysUtils;
   @returns(Cardinal. Returns Base^Expoent calculation.)
 }
 {$ENDIF}
-function Power(Base:LongInt; Expoent:Cardinal):Cardinal;
+function BitToDec(Bit:Byte):QWord;
 
 implementation
 
-function Power(Base:LongInt; Expoent:Cardinal):Cardinal;
-var
-  c:LongInt;
+function BitToDec(Bit:Byte):QWord;
 begin
-  if Expoent=0 then begin
-    Result:=1;
-    exit;
-  end;
-  Result:=Base;
-  for c:=2 to Expoent do
-    Result := Result*Base;
+  if not (byte in [0..63]) then 
+    raise Exception.Create('Fora do range de 64 bits (0..63)');
+  Result:=1 shl Bit;
 end;
 
 end.

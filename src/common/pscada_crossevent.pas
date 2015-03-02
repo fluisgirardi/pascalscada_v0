@@ -24,7 +24,7 @@
     project.
 }
 {$ENDIF}
-unit CrossEvent;
+unit pSCADA_CrossEvent;
 
 {$IFDEF FPC}
   {$mode delphi}

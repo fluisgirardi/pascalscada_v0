@@ -26,7 +26,7 @@
  priority (messages that must be processed before others).
 }
 {$ENDIF}
-unit MessageSpool;
+unit pSCADA_MessageQueue;
 
 {$IFDEF FPC}
 {$mode delphi}
