@@ -1,4 +1,4 @@
-unit ualfakeyboard;
+unit hmialfakeyboard;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Buttons, ExtCtrls,
-  crosskeyevents, pscada_common;
+  hmicrosskeyevents;
 
 type
 
@@ -167,7 +167,7 @@ uses strutils,
   {$R *.dfm}
 {$ELSE}
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
-    {$R ualfakeyboard.lfm}
+    {$R hmialfakeyboard.lfm}
   {$IFEND}
 {$ENDIF}
 

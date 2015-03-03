@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Controle de deslocamento de controles (animação) nos eixos X e Y da janela.)

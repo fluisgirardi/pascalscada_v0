@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 //: Unit do assistente mapeador de elementos de bloco.
 {$ELSE}
@@ -42,7 +42,7 @@ var
 
 implementation
 
-uses hsstrings;
+uses pSCADA_Strings;
 
 {$IFNDEF FPC}
   {$R *.dfm}
@@ -86,4 +86,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

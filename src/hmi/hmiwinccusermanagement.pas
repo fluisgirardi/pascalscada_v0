@@ -1,4 +1,4 @@
-﻿{$I ../common/delphiver.inc}
+﻿{$I ../common/pscada_compiler_versions.inc}
 unit HMIWinCCUserManagement;
 
 interface
@@ -201,7 +201,7 @@ begin
 
   culogin:=GetCurrentUserLogin;
   if culogin<>FCurrentUserLogin then begin
-    GetControlSecurityManager.UpdateControls;
+    GetHMIControlSecurityManager.UpdateControls;
     try
       DoUserChanged;
     finally

@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Escala definida pelo usuário.)

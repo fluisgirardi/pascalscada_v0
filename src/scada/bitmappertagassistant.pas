@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {:
   @abstract(Implementation of BitMapper for TPLCNumber.)
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
@@ -23,8 +23,8 @@ interface
 implementation
 
 uses
-  Classes, SysUtils, ProtocolTypes, plcnumber, ubitmapper, hsstrings, Controls,
-  Dialogs, TagBit;
+  Classes, SysUtils, ProtocolTypes, plcnumber, ubitmapper,
+  pSCADA_Strings, Controls, Dialogs, TagBit;
 
 { TBitMapTagAssistant }
 

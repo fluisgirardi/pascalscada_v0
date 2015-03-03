@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -165,7 +165,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, HMIControlSecurityManager;
 
 constructor THMIAnimation.Create(AOwner:TComponent);
 begin
@@ -177,7 +177,7 @@ begin
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=NeedComState;
    FAnimationZones.OnCollectionItemChange:=ZoneChange;
-   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+   GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIAnimation.Destroy;
@@ -186,7 +186,7 @@ begin
       FTag.RemoveCallBacks(Self as IHMITagInterface);
    FTimer.Destroy;
    FAnimationZones.Destroy;
-   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+   GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 
@@ -195,7 +195,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetControlSecurityManager do begin
+    with GetHMIControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);

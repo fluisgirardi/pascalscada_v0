@@ -1,4 +1,4 @@
-﻿{$i ../common/language.inc}
+﻿{$i ../common/pscada_settings.inc}
 {:
   @abstract(Implementation of TagAssistant for Siemens.)
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
@@ -26,7 +26,7 @@ implementation
 uses
   Classes, SysUtils, isotcpdriver, ProtocolTypes, PLCTagNumber,PLCStructElement,
   us7tagbuilder, PLCBlockElement, PLCNumber, TagBit, plcblock, tag, Controls,
-  PLCStruct, hsstrings, Dialogs, StrUtils, ProtocolDriver, s7family;
+  PLCStruct, pSCADA_Strings, Dialogs, StrUtils, ProtocolDriver, s7family;
 
 procedure OpenTagEditor(aProtocolDriver,
                         aOwnerOfNewTags: TComponent;

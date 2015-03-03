@@ -1,4 +1,4 @@
-﻿{$i ../common/language.inc}
+﻿{$i ../common/pscada_settings.inc}
 {:
   @abstract(Implementation of TagAssistant for ModBus.)
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
@@ -50,7 +50,7 @@ implementation
 
 uses
   PLCBlockElement, ValueProcessor, PLCTagNumber, PLCString,
-  PLCBlock, Controls, Dialogs, hsstrings, ProtocolDriver;
+  PLCBlock, Controls, Dialogs, pSCADA_Strings, ProtocolDriver;
 
 procedure OpenTagEditor(aProtocolDriver,
                         aOwnerOfNewTags: TComponent;

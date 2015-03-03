@@ -1,10 +1,10 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 //: Teclado numérico.
 {$ELSE}
 //: Vitual numeric keyboard.
 {$ENDIF}
-unit unumerickeyboard;
+unit HMINumericKeyboard;
 
 {$IFDEF FPC}
 {$MODE Delphi}
@@ -13,7 +13,7 @@ unit unumerickeyboard;
 interface
 
 uses
-  SysUtils, Forms, Classes, types, Controls, Buttons, crosskeyevents
+  SysUtils, Forms, Classes, types, Controls, Buttons, HMICrossKeyevents
   {$IFDEF FPC}, LResources, LCLIntf, LCLType{$ENDIF};
 
 type
@@ -71,7 +71,7 @@ uses InterfaceBase;
   {$R *.dfm}
 {$ELSE}
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
-    {$R unumerickeyboard.lfm}
+    {$R hminumerickeyboard.lfm}
   {$IFEND}
 {$ENDIF}
 
@@ -227,7 +227,7 @@ end;
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION < 20400) }
     initialization
-    {$i unumerickeyboard.lrs}
+    {$i hminumerickeyboard.lrs}
   {$IFEND}
 {$ENDIF}
 

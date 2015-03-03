@@ -1,4 +1,4 @@
-unit BasicUserManagement;
+unit HMIBasicUserManagement;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -7,7 +7,7 @@ unit BasicUserManagement;
 interface
 
 uses
-  SysUtils, Classes, ExtCtrls, usrmgnt_login;
+  SysUtils, Classes, ExtCtrls, HMIUserMgnt_Login;
 
 type
   TVKType = (vktNone, vktAlphaNumeric, vktNumeric);
@@ -92,14 +92,14 @@ type
 
 implementation
 
-uses Controls, Forms, ControlSecurityManager, hsstrings;
+uses Controls, Forms, HMIControlSecurityManager, pSCADA_Strings;
 
 constructor TBasicUserManagement.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
 
-  if GetControlSecurityManager.UserManagement=nil then
-    GetControlSecurityManager.UserManagement:=Self
+  if GetHMIControlSecurityManager.UserManagement=nil then
+    GetHMIControlSecurityManager.UserManagement:=Self
   else
     raise Exception.Create(SUserManagementIsSet);
 
@@ -114,8 +114,8 @@ end;
 
 destructor  TBasicUserManagement.Destroy;
 begin
-  if GetControlSecurityManager.UserManagement=Self then
-    GetControlSecurityManager.UserManagement:=nil;
+  if GetHMIControlSecurityManager.UserManagement=Self then
+    GetHMIControlSecurityManager.UserManagement:=nil;
 
   if FRegisteredSecurityCodes<>nil then
     FRegisteredSecurityCodes.Destroy;
@@ -162,7 +162,7 @@ begin
           FCurrentUserLogin:=frmLogin.edtusername.Text;
           FLoggedSince:=Now;
           Result:=true;
-          GetControlSecurityManager.UpdateControls;
+          GetHMIControlSecurityManager.UpdateControls;
           DoSuccessfulLogin;
         end else begin
           DoFailureLogin;
@@ -191,7 +191,7 @@ begin
   FCurrentUserLogin:='';
   FUID:=-1;
   FLoggedSince:=Now;
-  GetControlSecurityManager.UpdateControls;
+  GetHMIControlSecurityManager.UpdateControls;
 end;
 
 procedure   TBasicUserManagement.Manage;

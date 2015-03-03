@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um controle para a exibição de valores de qualquer tag.)
@@ -183,7 +183,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, HMIControlSecurityManager;
 
 constructor THMILabel.Create(AOwner:TComponent);
 begin
@@ -193,14 +193,14 @@ begin
   AutoSize:=False;
   FIsEnabled:=true;
   FNumberFormat := '#0.0';
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor  THMILabel.Destroy;
 begin
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
@@ -209,7 +209,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetControlSecurityManager do begin
+    with GetHMIControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);

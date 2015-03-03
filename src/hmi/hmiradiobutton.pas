@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   ATUALMENTE ESTE CONTROLE não funciona no Lazarus.
@@ -61,7 +61,7 @@ type
 
 implementation
 
-uses ControlSecurityManager;
+uses HMIControlSecurityManager;
 
 constructor THMIRadioButton.Create(AOwner:TComponent);
 begin
@@ -70,12 +70,12 @@ begin
   fCompStyle := csRadioButton;
   {$ENDIF}
   OtherValuesIS := isUnchecked;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIRadioButton.Destroy;
 begin
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

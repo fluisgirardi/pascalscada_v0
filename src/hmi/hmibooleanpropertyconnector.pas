@@ -167,7 +167,7 @@ type
 
 implementation
 
-uses typinfo, rttiutils, hsstrings;
+uses typinfo, rttiutils, pSCADA_Strings;
 
 { THMIBooleanPropertyConnector }
 

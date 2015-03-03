@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um controle para exibição de valores numéricos em forma de barra de progresso.)
@@ -116,20 +116,20 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, HMIControlSecurityManager;
 
 constructor THMIProgressBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FIsEnabled:=true;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIProgressBar.Destroy;
 begin
   if Assigned(FTag) then
     Ftag.RemoveCallBacks(Self as IHMITagInterface);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
@@ -167,7 +167,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetControlSecurityManager do begin
+    with GetHMIControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);

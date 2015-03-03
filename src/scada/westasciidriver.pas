@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implmentação do driver West n6100 ASCII.)
@@ -25,7 +25,7 @@ unit WestASCIIDriver;
 interface
 
 uses
-  Classes, SysUtils, ProtocolDriver, Tag, ProtocolTypes, commtypes
+  Classes, SysUtils, ProtocolDriver, Tag, ProtocolTypes, pSCADA_Types
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -326,8 +326,8 @@ var
 
 implementation
 
-uses PLCTagNumber, math, dateutils, hsstrings,
-  crossdatetime, pascalScadaMTPCPU;
+uses PLCTagNumber, math, dateutils, pSCADA_Strings,
+     pSCADA_CrossDatetime, pSCADA_CPU_Utils;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin

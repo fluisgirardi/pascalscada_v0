@@ -23,11 +23,11 @@ unit MutexClient;
 {$mode delphi}
 {$ENDIF}
 
-{$I ../common/delphiver.inc}
+{$I ../common/pscada_compiler_versions.inc}
 interface
 
 uses
-  Classes, SysUtils, CommPort, commtypes, socket_types, CrossEvent,
+  Classes, SysUtils, CommPort, pSCADA_Types, socket_types, pSCADA_CrossEvent,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -125,7 +125,7 @@ type
 
 implementation
 
-uses hsstrings, dateutils{$IFNDEF FPC}, Windows{$ENDIF};
+uses pSCADA_Strings, dateutils{$IFNDEF FPC}, Windows{$ENDIF};
 
 { TMutexClientThread }
 

@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {:
   @abstract(Implementation of BlockElementMapper for TPLCBlock.)
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
@@ -22,7 +22,7 @@ implementation
 
 uses
   Classes, SysUtils, ProtocolTypes, plcblock, uelementmapper, ustructuremapper,
-  plcblockelement, plcstructelement, tag, plcstruct, hsstrings, Controls,
+  plcblockelement, plcstructelement, tag, plcstruct, pSCADA_Strings, Controls,
   Dialogs, math, StrUtils;
 
 procedure BlockElementMapper(Target,

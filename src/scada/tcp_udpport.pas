@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um socket TCP/UDP sobre IP cliente.)
@@ -16,12 +16,12 @@ unit tcp_udpport;
 {$mode delphi}
 {$ENDIF}
 
-{$I ../common/delphiver.inc}
+{$I ../common/pscada_compiler_versions.inc}
 
 interface
 
 uses
-  Classes, SysUtils, CommPort, commtypes, socket_types
+  Classes, SysUtils, CommPort, pSCADA_Types, socket_types
   {$IFDEF FPC}, fptimer, ExtCtrls{$ELSE}, Extctrls{$ENDIF}
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     , Windows,
@@ -194,7 +194,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses pSCADA_Strings;
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
@@ -601,4 +601,4 @@ begin
 
 end;
 
-end.
+end.

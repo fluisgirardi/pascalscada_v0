@@ -1,5 +1,5 @@
-﻿{$i ../common/language.inc}
-{$I ../common/delphiver.inc}
+﻿{$i ../common/pscada_settings.inc}
+{$I ../common/pscada_compiler_versions.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de registro de componentes do PascalSCADA. Para Lazarus e Delphi.)
@@ -23,7 +23,7 @@ uses
   Classes, hsstrings, HMIEdit, HMILabel, HMICheckBox, HMIRadioButton,
   HMITrackBar, HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar,
   HMIAnimation, HMIText, HMIZones, hmipropeditor, HMIControlDislocatorAnimation,
-  ControlSecurityManager, ActnList, CustomizedUserManagement, Controls,
+  HMIControlSecurityManager, ActnList, CustomizedUserManagement, Controls,
 
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,

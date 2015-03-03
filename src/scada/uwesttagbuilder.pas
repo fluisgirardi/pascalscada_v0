@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
 Unit que implementa o West 6100+ TagBuilder assistente.
@@ -68,7 +68,7 @@ implementation
   {$IFEND}
 {$ENDIF}
 
-uses hsstrings;
+uses pSCADA_Strings;
 
 procedure TWestTagBuilder.Button1Click(Sender: TObject);
 var
@@ -227,4 +227,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

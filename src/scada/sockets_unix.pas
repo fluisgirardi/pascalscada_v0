@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 //: Implementa funções de socket para unix.
 {$ELSE}
@@ -13,7 +13,7 @@ unit sockets_unix;
 interface
 
 uses
-  unix, baseunix, Sockets, socket_types, commtypes, termio;
+  unix, baseunix, Sockets, socket_types, pSCADA_Types, termio;
 
   {$IFDEF PORTUGUES}
   {:
@@ -355,4 +355,4 @@ begin
     Result:=nbytes;
 end;
 
-end.
+end.

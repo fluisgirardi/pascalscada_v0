@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit do formulário assistente de criação de estruturas do tag TPLCStruct.)
@@ -79,7 +79,7 @@ var
 
 implementation
 
-uses Tag, ubitmapper, hsstrings;
+uses Tag, ubitmapper, pSCADA_Strings;
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
@@ -352,4 +352,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

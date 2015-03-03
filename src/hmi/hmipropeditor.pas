@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementacao dos editores de algumas propriedades de controles
@@ -26,7 +26,7 @@ interface
 uses
   Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, Tag,
   typinfo, HMIControlDislocatorAnimation, hmiobjectcolletion,
-  ControlSecurityManager, Graphics,
+  HMIControlSecurityManager, Graphics,
   {$IFDEF FPC}
     PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList,
     hmibooleanpropertyconnector, hmicolorpropertyconnector;
@@ -414,7 +414,7 @@ var
    x:TStringList;
 begin
    Proc('');
-   x:=GetControlSecurityManager.GetRegisteredAccessCodes;
+   x:=GetHMIControlSecurityManager.GetRegisteredAccessCodes;
    for i:=0 to x.Count-1 do begin
      proc(x.Strings[i]);
    end;

@@ -5,7 +5,7 @@ unit HMIKeyboardManager;
 interface
 
 uses
-  Classes, Forms, Controls, sysutils, unumerickeyboard, ualfakeyboard;
+  Classes, Forms, Controls, sysutils, HMINumericKeyboard, HMIAlfaKeyboard;
 
 type
 
@@ -40,7 +40,7 @@ type
   THMIKeyboardManager = class(TComponent)
   protected
     FNumericKeyBoard:TpsHMIfrmNumericKeyBoard;
-    FAlphaNumericKeyboard:TpsHMIfrmAlphaKeyboard;
+    FAlphaNumericKeyboard:TpSCADAfrmAlphaKeyboard;
     FOnFocusChange: THMIFocusChangeEvent;
     FLastFocusedControl:TWinControl;
     FKeyboarTypeForControl:TOnScreenKeyboard;
@@ -126,19 +126,19 @@ begin
     end;
     oskAlphaNumeric: begin
       CloseNumKB;
-      FAlphaNumericKeyboard:=TpsHMIfrmAlphaKeyboard.Create(Self,
-                                                           FLastFocusedControl,
-                                                           askoShowFxxKeys in FAlphaNumKBOptions,
-                                                           askoShowTab in FAlphaNumKBOptions,
-                                                           askoShowCaps in FAlphaNumKBOptions,
-                                                           askoShowShift in FAlphaNumKBOptions,
-                                                           askoShowCtrl in FAlphaNumKBOptions,
-                                                           askoShowAlt in FAlphaNumKBOptions,
-                                                           askoShowSymbols in FAlphaNumKBOptions,
-                                                           askoShowNumbers in FAlphaNumKBOptions,
-                                                           askoShowFastNavigation in FAlphaNumKBOptions,
-                                                           askoShowNavigation in FAlphaNumKBOptions,
-                                                           askoCloseOnPressEnter in FAlphaNumKBOptions);
+      FAlphaNumericKeyboard:=TpSCADAfrmAlphaKeyboard.Create(Self,
+                                                            FLastFocusedControl,
+                                                            askoShowFxxKeys in FAlphaNumKBOptions,
+                                                            askoShowTab in FAlphaNumKBOptions,
+                                                            askoShowCaps in FAlphaNumKBOptions,
+                                                            askoShowShift in FAlphaNumKBOptions,
+                                                            askoShowCtrl in FAlphaNumKBOptions,
+                                                            askoShowAlt in FAlphaNumKBOptions,
+                                                            askoShowSymbols in FAlphaNumKBOptions,
+                                                            askoShowNumbers in FAlphaNumKBOptions,
+                                                            askoShowFastNavigation in FAlphaNumKBOptions,
+                                                            askoShowNavigation in FAlphaNumKBOptions,
+                                                            askoCloseOnPressEnter in FAlphaNumKBOptions);
       FAlphaNumericKeyboard.OnClose:=AlphaKBClosed;
       FAlphaNumericKeyboard.ShowAlongsideOfTheTarget;
     end;

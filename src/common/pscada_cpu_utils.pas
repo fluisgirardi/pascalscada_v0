@@ -45,6 +45,8 @@ More efficient thread switch, checking the OS/number of processors.
 {$ENDIF}
 procedure CrossThreadSwitch;
 
+function SetThreadCPUAffinityMask(ThreadID:TpSCADAThreadID; CPUAffinity:TpSCADA_CPUs):Boolean;
+
 implementation
 
 {$IFDEF Linux}
@@ -126,7 +128,7 @@ begin
     {$IFEND}
 end;
 
-function SetThreadCPUAffinityMask(ThreadID:TpSCADAThreadID; CPUAffinity:TpSCADA_CPUs);
+function SetThreadCPUAffinityMask(ThreadID:TpSCADAThreadID; CPUAffinity:TpSCADA_CPUs):Boolean;
 begin
 
 end;

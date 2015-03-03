@@ -194,7 +194,7 @@ type
     FTXBytesSecond,
     FRXBytesSecond:Int64;
 
-    FOwnerThread:TPSThreadID;
+    FOwnerThread:TpSCADAThreadID;
 
     {$IFDEF PORTUGUES}
     //: Abertura forcada da porta em edicao

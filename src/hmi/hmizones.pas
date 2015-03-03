@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Unit de coleções de zonas gráficas e de texto.)
@@ -18,7 +18,7 @@ unit HMIZones;
 
 interface
 
-uses Classes, SysUtils, hsutils, Controls, Graphics, hmibasiccolletion
+uses Classes, SysUtils, pSCADA_Utils, Controls, Graphics, hmibasiccolletion
   {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type
@@ -764,7 +764,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses pSCADA_Strings;
 
 { TAnimationZone }
 
@@ -1077,7 +1077,7 @@ begin
             begin
                bit := Trunc(Value1);
                value := Trunc(v);
-               bit := Power(2,bit);
+               bit := BitToDec(bit);
                if ((value and bit)=bit)=FIncludeV1 then begin
                   Result := Self.items[c] as TZone;
                   Break;

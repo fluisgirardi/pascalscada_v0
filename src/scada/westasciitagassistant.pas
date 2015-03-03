@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {:
   @abstract(Implementation of TagAssistant for WestASCII.)
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
@@ -22,7 +22,7 @@ implementation
 
 uses
   Classes, SysUtils, westasciidriver, ProtocolTypes, PLCTagNumber,
-  uwesttagbuilder, Controls, hsstrings, Dialogs;
+  uwesttagbuilder, Controls, pSCADA_Strings, Dialogs;
 
 procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);

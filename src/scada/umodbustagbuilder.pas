@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 //: Unit do assistente Modbus TagBuilder.
 {$ELSE}
@@ -115,7 +115,7 @@ var
 
 implementation
 
-uses hsstrings;
+uses pSCADA_Strings;
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }

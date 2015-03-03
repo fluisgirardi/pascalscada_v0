@@ -3,7 +3,7 @@ unit hmibasiccolletion;
 interface
 
 uses
-  Classes, SysUtils, pscommontypes;
+  Classes, SysUtils, pSCADA_Types;
 
 type
 

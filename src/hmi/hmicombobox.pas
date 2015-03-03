@@ -147,7 +147,7 @@ type
 
 implementation
 
-uses ControlSecurityManager, hsstrings;
+uses HMIControlSecurityManager, pSCADA_Strings;
 
 { THMIComboBox }
 
@@ -158,7 +158,7 @@ begin
   if Trim(AValue)='' then
     Self.CanBeAccessed(true)
   else
-    with GetControlSecurityManager do begin
+    with GetHMIControlSecurityManager do begin
       ValidateSecurityCode(AValue);
       if not SecurityCodeExists(AValue) then
         RegisterSecurityCode(AValue);
@@ -320,14 +320,14 @@ begin
   SetStyle(csDropDownList);
   FIsEnabled:=true;
   FAllowSetIndex:=false;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIComboBox.Destroy;
 begin
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
