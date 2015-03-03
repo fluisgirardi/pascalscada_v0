@@ -1,4 +1,4 @@
-object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
+object pSCADAfrmAlphaKeyboard: TpSCADAfrmAlphaKeyboard
   Left = 404
   Height = 277
   Top = 168

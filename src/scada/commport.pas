@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -22,7 +22,10 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs,
+  Commtypes, Classes, SyncObjs,
+  pSCADA_MessageQueue,
+  pSCADA_CrossEvent,
+  pSCADA_Types,
   {$IFDEF FPC}
   ExtCtrls
   {$ELSE}
@@ -54,7 +57,7 @@ type
     FError:TIOResult;
     FDoSomethingEvent,
     FInitEvent:TCrossEvent;
-    FSpool:TMessageSpool;
+    FSpool:TpSCADAMessageQueue;
     procedure DoSomething;
     procedure WaitToDoSomething;
 
@@ -989,7 +992,12 @@ const
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings, crossdatetime, pascalScadaMTPCPU;
+uses SysUtils,
+    ProtocolDriver,
+    pSCADA_Strings,
+    pSCADA_CrossDatetime,
+    pSCADA_CPU_Utils,
+    pSCADA_Constants;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1002,7 +1010,7 @@ constructor TEventNotificationThread.Create(CreateSuspended: Boolean; AOwner:TCo
 begin
   inherited Create(CreateSuspended);
   FOwner:=AOwner;
-  FSpool:=TMessageSpool.Create;
+  FSpool:=TpSCADAMessageQueue.Create;
   FDoSomethingEvent:=TCrossEvent.Create(nil,true,false,'DoSomethingEventThread'+IntToStr(UniqueID));
   FInitEvent:=TCrossEvent.Create(nil,true,false,'WasInitialized'+IntToStr(UniqueID));
 end;

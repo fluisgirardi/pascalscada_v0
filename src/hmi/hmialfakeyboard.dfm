@@ -1,4 +1,4 @@
-object Form1: TForm1
+object pSCADAfrmAlphaKeyboard: TpSCADAfrmAlphaKeyboard
   Left = 434
   Top = 155
   BorderStyle = bsNone

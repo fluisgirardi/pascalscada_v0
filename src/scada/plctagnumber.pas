@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa o tag PLC numérico com comunicação.)
@@ -141,7 +141,7 @@ type
 
 implementation
 
-uses hsstrings, math, crossdatetime;
+uses math, pSCADA_Strings, pSCADA_CrossDatetime;
 
 function TPLCTagNumber.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin

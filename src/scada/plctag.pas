@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementa a base para Tags de comunicação.)
@@ -701,7 +701,10 @@ type
 
 implementation
 
-uses hsutils, hsstrings, dateutils, crossdatetime;
+uses pSCADA_utils,
+     pSCADA_Strings,
+     pSCADA_crossdatetime,
+     dateutils;
 
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
@@ -1251,7 +1254,7 @@ begin
     ptBit:
        while valueidx<Length(Values) do begin
          if Values[valueidx]<>0 then
-           PtrByteWalker^:=PtrByteWalker^ + (power(2,valueidx mod 8) AND $FF);
+           PtrByteWalker^:=PtrByteWalker^ + (BitToDec(valueidx mod 8) AND $FF);
 
          inc(valueidx);
          if (valueidx mod 8)=0 then
@@ -1804,7 +1807,7 @@ begin
   case FProtocolTagType of
     ptBit: begin
        while AreaIdx<AreaSize do begin
-         bitaux := Power(2,AreaIdx mod 8);
+         bitaux := BitToDec(AreaIdx mod 8);
          if (PtrByteWalker^ AND bitaux)=bitaux then
            AddToResult(1, Result)
          else

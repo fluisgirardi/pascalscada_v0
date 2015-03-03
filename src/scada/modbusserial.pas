@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -21,7 +21,7 @@ unit ModBusSerial;
 interface
 
 uses
-  Classes, ModBusDriver, Tag, commtypes, crc16utils;
+  Classes, ModBusDriver, Tag, pSCADA_Types, pSCADA_crc16utils;
 
 type
 
@@ -70,7 +70,7 @@ type
 
 implementation
 
-uses Math, PLCMemoryManager, SysUtils, crossdatetime;
+uses Math, PLCMemoryManager, SysUtils, pSCADA_CrossDatetime;
 
 constructor TModBusRTUDriver.Create(AOwner: TComponent);
 begin

@@ -14,7 +14,7 @@ type
 
   { TpsHMIfrmAlphaKeyboard }
 
-  TpsHMIfrmAlphaKeyboard = class(TForm)
+  TpSCADAfrmAlphaKeyboard = class(TForm)
     Btn_0: TSpeedButton;
     Btn_1: TSpeedButton;
     Btn_Q: TSpeedButton;
@@ -153,7 +153,7 @@ type
   end; 
 
 var
-  psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard;
+  pSCADAfrmAlphaKeyboard: TpSCADAfrmAlphaKeyboard;
 
 implementation
 
@@ -174,9 +174,9 @@ uses strutils,
 { TpsHMIfrmAlphaKeyboard }
 
 var
-  LastAlphaKeyboard:TpsHMIfrmAlphaKeyboard;
+  LastAlphaKeyboard:TpSCADAfrmAlphaKeyboard;
 
-constructor TpsHMIfrmAlphaKeyboard.Create(TheOwner: TComponent;
+constructor TpSCADAfrmAlphaKeyboard.Create(TheOwner: TComponent;
   Target: TWinControl; ShowFxxKeys, ShowTab, ShowCaps, ShowShift, ShowCtrl,
   ShowAlt, ShowSymbols, ShowNumbers, ShowFastNavigation, ShowNavigation,
   CloseOnPressEnter: Boolean);
@@ -288,7 +288,7 @@ begin
   EnableGroup(FNumbersKeyGroup, ShowNumbers);
 end;
 
-destructor TpsHMIfrmAlphaKeyboard.Destroy;
+destructor TpSCADAfrmAlphaKeyboard.Destroy;
 begin
   ModifierRelease;
   Fkeyboard.destroy;
@@ -304,14 +304,14 @@ begin
 
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.ShowAlongsideOfTheTarget;
+procedure TpSCADAfrmAlphaKeyboard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
   //BringToFrontWithoutActivate;
   ShowOnTop;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.FormCreate(Sender: TObject);
+procedure TpSCADAfrmAlphaKeyboard.FormCreate(Sender: TObject);
 var
   c:LongInt;
 begin
@@ -406,7 +406,7 @@ begin
   Btn_Z.Tag:=VK_Z;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.FormMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TpSCADAfrmAlphaKeyboard.FormMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: LongInt);
 begin
   OffsetX:=X;
@@ -414,7 +414,7 @@ begin
   Timer1.Enabled:=true;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+procedure TpSCADAfrmAlphaKeyboard.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: LongInt);
 begin
   CurX:=X;
@@ -422,14 +422,14 @@ begin
   MoveOperation:=True;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.FormMouseUp(Sender: TObject; Button: TMouseButton;
+procedure TpSCADAfrmAlphaKeyboard.FormMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: LongInt);
 begin
   Timer1.Enabled:=false;
   MoveOperation:=False;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.FormPaint(Sender: TObject);
+procedure TpSCADAfrmAlphaKeyboard.FormPaint(Sender: TObject);
 begin
   Canvas.Font.Size:=8;
   Canvas.Font.Style:=[fsBold];
@@ -439,7 +439,7 @@ begin
   canvas.TextOut(62,257,'the keyboard');
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.ModifierPress(Sender: TObject);
+procedure TpSCADAfrmAlphaKeyboard.ModifierPress(Sender: TObject);
 var
   x:TSpeedButton;
 begin
@@ -502,19 +502,19 @@ begin
   x.Destroy;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.ModifierRelease();
+procedure TpSCADAfrmAlphaKeyboard.ModifierRelease();
 begin
   Fkeyboard.Unapply(CurrentState);
   Application.ProcessMessages;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.DoClose(var CloseAction: TCloseAction);
+procedure TpSCADAfrmAlphaKeyboard.DoClose(var CloseAction: TCloseAction);
 begin
   inherited DoClose(CloseAction);
   CloseAction:=caFree;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.Timer1Timer(Sender: TObject);
+procedure TpSCADAfrmAlphaKeyboard.Timer1Timer(Sender: TObject);
 begin
   if not MoveOperation then exit;
   MoveOperation:=False;
@@ -530,7 +530,7 @@ begin
     Top:=Top-(OffsetY-CurY);
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.BtnPress(Sender: TObject);
+procedure TpSCADAfrmAlphaKeyboard.BtnPress(Sender: TObject);
 begin
   if FTarget=nil then exit;
 
@@ -545,12 +545,12 @@ begin
   BringToFrontWithoutActivate;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.BringToFrontWithoutActivate;
+procedure TpSCADAfrmAlphaKeyboard.BringToFrontWithoutActivate;
 begin
   WidgetSet.SetWindowPos(Self.Handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE+SWP_NOSIZE+SWP_NOACTIVATE);
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.ReturnFocusToTarget;
+procedure TpSCADAfrmAlphaKeyboard.ReturnFocusToTarget;
 begin
   FFormOwner.Show;
   FTarget.SetFocus;
@@ -559,7 +559,7 @@ begin
 end;
 
 
-procedure TpsHMIfrmAlphaKeyboard.GotoBetterPosition;
+procedure TpSCADAfrmAlphaKeyboard.GotoBetterPosition;
 var
   sw, sh:Integer;
   frect, t_rect: TRect;

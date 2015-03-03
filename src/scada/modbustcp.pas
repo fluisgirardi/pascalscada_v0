@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -24,7 +24,7 @@ unit ModBusTCP;
 interface
 
 uses
-  ModBusDriver, Tag, commtypes, Classes;
+  ModBusDriver, Tag, pSCADA_Types, Classes;
 
 type
 
@@ -73,7 +73,7 @@ type
 
 implementation
 
-uses Math, PLCMemoryManager, SysUtils, crossdatetime{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses Math, PLCMemoryManager, SysUtils, pSCADA_CrossDatetime{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 constructor TModBusTCPDriver.Create(AOwner: TComponent);
 begin

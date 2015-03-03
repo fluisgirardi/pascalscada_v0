@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Implementação da base de um driver de protocolo.)
@@ -27,8 +27,15 @@ unit ProtocolDriver;
 interface
 
 uses
-  SysUtils, Classes, CommPort, CommTypes, ProtocolTypes, protscanupdate,
-  protscan, CrossEvent, Tag, syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
+  SysUtils, Classes, syncobjs,
+  CommPort,
+  CommTypes,
+  ProtocolTypes,
+  protscanupdate,
+  protscan,
+  pSCADA_CrossEvent,
+  pSCADA_Types,
+  Tag {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
 
@@ -737,7 +744,7 @@ var
 
 implementation
 
-uses PLCTag, hsstrings, math, crossdatetime, pascalScadaMTPCPU;
+uses PLCTag, pSCADA_Strings, math, pSCADA_CrossDatetime, pSCADA_CPU_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver

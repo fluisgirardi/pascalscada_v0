@@ -126,5 +126,10 @@ begin
     {$IFEND}
 end;
 
+function SetThreadCPUAffinityMask(ThreadID:TpSCADAThreadID; CPUAffinity:TpSCADA_CPUs);
+begin
+
+end;
+
 end.
 

@@ -1,4 +1,4 @@
-{$i ../common/language.inc}
+{$i ../common/pscada_settings.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação do protocolo ISOTCP.)
@@ -29,7 +29,7 @@ unit ISOTCPDriver;
 interface
 
 uses
-  classes, sysutils, S7Types, commtypes, s7family, Tag;
+  classes, sysutils, S7Types, commtypes, s7family, Tag, pSCADA_Types;
 
 type
 
@@ -223,7 +223,7 @@ const
 
 implementation
 
-uses math, hsstrings, pascalScadaMTPCPU;
+uses math, pSCADA_Strings, pSCADA_CPU_Utils;
 
 constructor TISOTCPDriver.Create(AOwner:TComponent);
 begin

@@ -249,7 +249,7 @@ type
 
 implementation
 
-uses pascalScadaMTPCPU;
+uses pSCADA_CPU_Utils;
 
 procedure TCrossThread.WakeUp;
 begin
