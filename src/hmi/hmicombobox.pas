@@ -9,6 +9,17 @@ uses
 
 type
 
+  { TComboboxItemInfo }
+
+  TComboboxItemInfo = class
+  private
+    FObject: TObject;
+    FTagValue: Double;
+  published
+    property TagValue:Double read FTagValue write FTagValue;
+    property ItemObject:TObject read FObject write FObject;
+  end;
+
   { THMIComboBox }
 
   THMIComboBox = class(TCustomComboBox, IHMIInterface, IHMITagInterface)
@@ -239,16 +250,35 @@ var
   valueReal: Double;
   ValueInt: Int64;
   NewIndex: Integer;
+  foundValue: Integer;
+  found: Boolean;
+  obj: Integer;
 begin
-  //este controle aceita somente valores inteiros, portanto
-  //valores reais serão tratados como não existentes na lista.
   NewIndex:=-1;
   if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
     valueReal:=(FTag as ITagNumeric).GetValue;
-    ValueInt:=Trunc(valueReal);
 
-    if ((valueReal-ValueInt)=0) and ((ValueInt>=0) and (ValueInt<Items.Count)) then
-      NewIndex:=ValueInt;
+    foundValue:=-1;
+    found:=false;
+    for obj:=0 to Items.Count-1 do begin
+      if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then begin
+        found:=true;
+        if TComboboxItemInfo(Items.Objects[obj]).TagValue=valueReal then begin
+          foundValue:=obj;
+          break;
+        end;
+      end;
+    end;
+
+    if found then begin
+      NewIndex:=foundValue;
+    end else begin
+      ValueInt:=Trunc(valueReal);
+
+      if ((valueReal-ValueInt)=0) and ((ValueInt>=0) and (ValueInt<Items.Count)) then
+        NewIndex:=ValueInt;
+
+    end;
   end;
   InternalSetItemIndex(NewIndex);
 end;
@@ -260,11 +290,19 @@ begin
 end;
 
 procedure THMIComboBox.Select;
+  function GetItemValue:Double;
+  begin
+    if (Items.Objects[GetItemIndex]<>nil) and (Items.Objects[GetItemIndex] is TComboboxItemInfo) then
+      Result := TComboboxItemInfo(Items.Objects[GetItemIndex]).TagValue
+    else
+      Result := GetItemIndex;
+  end;
+
   function SendValue:Boolean;
   begin
     Result:=true;
     if Assigned(FBeforeSendValueToTag) then
-      FBeforeSendValueToTag(Self,GetItemIndex, Result);
+      FBeforeSendValueToTag(Self,GetItemValue, Result);
   end;
 
   procedure AfterSendValue;
@@ -275,7 +313,7 @@ procedure THMIComboBox.Select;
 
 begin
   if (FTag<>nil) and Supports(FTag, ITagNumeric) and SendValue then begin
-    (FTag as ITagNumeric).Value:=GetItemIndex;
+    (FTag as ITagNumeric).Value:=GetItemValue;
     AfterSendValue;
   end;
   inherited Select;
@@ -324,7 +362,12 @@ begin
 end;
 
 destructor THMIComboBox.Destroy;
+var
+  obj: Integer;
 begin
+  for obj:=0 to Items.Count-1 do
+    if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then
+      Items.Objects[obj].Free;
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
