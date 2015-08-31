@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -168,7 +168,7 @@ type
 
 implementation
 
-uses pSCADA_Strings, math;
+uses hsstrings, math;
 
 constructor TPLCBlock.Create(AOwner:TComponent);
 begin

@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação do tag de mapeamento de bits.)
@@ -27,7 +27,7 @@ unit TagBit;
 interface
 
 uses
-  SysUtils, Classes, PLCNumber, ProtocolTypes, variants, pSCADA_Utils, Tag;
+  SysUtils, Classes, PLCNumber, ProtocolTypes, variants, hsutils, Tag;
 
 type
 
@@ -151,7 +151,7 @@ type
 
 implementation
 
-uses pSCADA_Strings, pSCADA_CrossDatetime;
+uses hsstrings, crossdatetime;
 
 constructor TTagBit.Create(AOwner:TComponent);
 begin
@@ -294,7 +294,7 @@ var
 begin
    Result := 0;
    for c:=PStartBit to PEndBit do begin
-      Result := Result or BitToDec(c);
+      Result := Result or Power(2,c);
    end;
 end;
 
@@ -304,7 +304,7 @@ var
 begin
    Result := -1;
    for c:=PStartBit to PEndBit do begin
-      Result := Result xor BitToDec(c);
+      Result := Result xor Power(2,c);
    end;
 end;
 

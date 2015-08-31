@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa uma porta de comunicação serial multiplataforma.)
@@ -21,7 +21,7 @@ interface
 
 uses
 
-  {$IFDEF FPC} LCLIntf, {$ENDIF} pSCADA_Types, CommPort, SysUtils, Classes,
+  {$IFDEF FPC} LCLIntf, {$ENDIF} commtypes, CommPort, SysUtils, Classes,
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)} Windows,{$IFEND}
   {$IFDEF UNIX} Serial, Unix, BaseUnix, termio, {$ENDIF}
   DateUtils;
@@ -366,7 +366,7 @@ var PortPrefix:array[0..0] of string = ('tty');
 
 implementation
 
-uses pSCADA_Strings, pSCADA_CrossDatetime;
+uses hsstrings, crossdatetime;
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
@@ -1074,4 +1074,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.

@@ -1,5 +1,5 @@
-{$i ../common/pscada_settings.inc}
-{$I ../common/pscada_compiler_versions.inc}
+{$i ../common/language.inc}
+{$I ../common/delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit de registro de componentes do PascalSCADA. Para Lazarus e Delphi.)
@@ -28,12 +28,12 @@ implementation
 uses
   Classes, SerialPort, ModBusSerial, LinearScaleProcessor, PLCTagNumber,
   PLCBlock, PLCBlockElement, PLCString, PLCNumber, UserScale, ValueProcessor,
-  scadapropeditor, pSCADA_Strings, TagBit, ProtocolDriver, WestASCIIDriver,
+  scadapropeditor, hsstrings, TagBit, ProtocolDriver, WestASCIIDriver,
   IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   {$IFDEF FPC}
-    LResources, pSCADA_Constants, PropEdits, ComponentEditors;
+    LResources, lazlclversion, PropEdits, ComponentEditors;
   {$ELSE}
     Types, 
     {$IFDEF DELPHI2009_UP}

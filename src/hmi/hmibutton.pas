@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 //: Classe que implementa um botão (precisa ser implementada).
 {$ELSE}
@@ -218,7 +218,7 @@ type
 
 implementation
 
-uses hsstrings, HMIControlSecurityManager;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIButton.Create(AOwner:TComponent);
 begin
@@ -240,7 +240,7 @@ begin
    FColorDown:=clBtnFace;
    FColorUp:= clBtnFace;
    FColorGrayed:=clBtnShadow;
-   GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
+   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIButton.Destroy;
@@ -250,7 +250,7 @@ begin
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
-   GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 
@@ -308,7 +308,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetHMIControlSecurityManager do begin
+    with GetControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);

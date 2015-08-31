@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Define um controle de opções para leitura/escrita de valores de tags numéricos.)
@@ -139,7 +139,7 @@ type
 
 implementation
 
-uses hsstrings, HMIControlSecurityManager;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIRadioGroup.Create(AOwner:TComponent);
 begin
@@ -148,14 +148,14 @@ begin
    FLoaded:=false;
    FIsEnabled:=true;
    FDefaultIndex:=-1;
-   GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
+   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor  THMIRadioGroup.Destroy;
 begin
    if FTag<>nil then
       FTag.RemoveCallBacks(Self as IHMITagInterface);
-   GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 
@@ -164,7 +164,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetHMIControlSecurityManager do begin
+    with GetControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);

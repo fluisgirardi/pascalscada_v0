@@ -1,53 +1,53 @@
-﻿{$I ../common/pscada_compiler_versions.inc}
-unit HMIWinCCUserManagement;
+﻿{$I ../common/delphiver.inc}
+unit WinCCUserManagement;
 
 interface
 
 uses
-  Classes, sysutils, HMIBasicUserManagement, windows, ExtCtrls;
+  Classes, sysutils, BasicUserManagement, windows, ExtCtrls;
 
 type
-  THMIWCCPWRTLogin                   = function(monitor:AnsiChar)                                 :Boolean;  stdcall;
-  THMIWCCPWRTLogout                  = function()                                                 :Boolean;  stdcall;
-  THMIWCCPWRTGetCurrentUser          = function(Buffer:PAnsiChar; bufsize:LongInt)                :Boolean;  stdcall;
-  THMIWCCPWRTGetLoginPriority        = function()                                                 :Cardinal; stdcall;
-  THMIWCCPWRTPermissionToString      = function(perm:Cardinal; permstr:PAnsiChar; bufsize:LongInt):Boolean;  stdcall;
-  THMIWCCPWRTCheckPermission         = function(permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
-  THMIWCCPWRTCheckPermissionOnArea   = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
-  THMIWCCPWRTCheckPermissionOnAreaID = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
-  THMIWCCPWRTSilentLogin             = function(login:PAnsiChar; password:PAnsiChar)              :Boolean;  stdcall;
+  TPWRTLogin                   = function(monitor:AnsiChar)                                 :Boolean;  stdcall;
+  TPWRTLogout                  = function()                                                 :Boolean;  stdcall;
+  TPWRTGetCurrentUser          = function(Buffer:PAnsiChar; bufsize:LongInt)                :Boolean;  stdcall;
+  TPWRTGetLoginPriority        = function()                                                 :Cardinal; stdcall;
+  TPWRTPermissionToString      = function(perm:Cardinal; permstr:PAnsiChar; bufsize:LongInt):Boolean;  stdcall;
+  TPWRTCheckPermission         = function(permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
+  TPWRTCheckPermissionOnArea   = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
+  TPWRTCheckPermissionOnAreaID = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
+  TPWRTSilentLogin             = function(login:PAnsiChar; password:PAnsiChar)              :Boolean;  stdcall;
 
-  THMIWCCPermission = class(TObject)
+  TPermission = class(TObject)
   public
     AuthID:LongInt;
   end;
 
-  THMIWCCAuthorization = class(TObject)
+  TAuthorization = class(TObject)
   public
     AuthorizationName:String;
     Valid:Boolean;
   end;
 
-  THMIAuthorizations = array of TAuthorization;
+  TAuthorizations = array of TAuthorization;
 
   { TWinCCUserManagement }
 
-  THMIWinCCUserManagement = class(THMIBasicUserManagement)
+  TWinCCUserManagement = class(TBasicUserManagement)
   private
     FCheckTimer                :TTimer;
     FInLoginProcess            :Boolean;
     FAuthorizationList         :TStrings;
     procedure CheckAuthChanges(Sender:TObject);
   private
-    PWRTLogin                  :THMIWCCPWRTLogin;
-    PWRTLogout                 :THMIWCCPWRTLogout;
-    PWRTGetCurrentUser         :THMIWCCPWRTGetCurrentUser;
-    PWRTGetLoginPriority       :THMIWCCPWRTGetLoginPriority;
-    PWRTPermissionToString     :THMIWCCPWRTPermissionToString;
-    PWRTCheckPermission        :THMIWCCPWRTCheckPermission;
-    PWRTCheckPermissionOnArea  :THMIWCCPWRTCheckPermissionOnArea;
-    PWRTCheckPermissionOnAreaID:THMIWCCPWRTCheckPermissionOnAreaID;
-    PWRTSilentLogin            :THMIWCCPWRTSilentLogin;
+    PWRTLogin                  :TPWRTLogin;
+    PWRTLogout                 :TPWRTLogout;
+    PWRTGetCurrentUser         :TPWRTGetCurrentUser;
+    PWRTGetLoginPriority       :TPWRTGetLoginPriority;
+    PWRTPermissionToString     :TPWRTPermissionToString;
+    PWRTCheckPermission        :TPWRTCheckPermission;
+    PWRTCheckPermissionOnArea  :TPWRTCheckPermissionOnArea;
+    PWRTCheckPermissionOnAreaID:TPWRTCheckPermissionOnAreaID;
+    PWRTSilentLogin            :TPWRTSilentLogin;
     hUseAdmin:THANDLE;
     fUseAdminLoaded:Boolean;
     fAuthorizationCache:TStringList;
@@ -87,14 +87,14 @@ type
 
 implementation
 
-uses HMIControlSecurityManager, hsstrings, StrUtils, StdCtrls
+uses ControlSecurityManager, hsstrings, StrUtils, StdCtrls
      {$IFDEF FPC}
      , TextStrings
      {$ELSE}
      , hmitextstrings
      {$ENDIF};
 
-constructor THMIWinCCUserManagement.Create(AOwner: TComponent);
+constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
   fUseAdminLoaded:=false;
   inherited Create(AOwner);
@@ -109,13 +109,13 @@ begin
   fAuthorizationCache:=nil;
 end;
 
-procedure THMIWinCCUserManagement.AfterConstruction;
+procedure TWinCCUserManagement.AfterConstruction;
 begin
   inherited AfterConstruction;
   FCheckTimer.Enabled:=true;
 end;
 
-destructor THMIWinCCUserManagement.Destroy;
+destructor TWinCCUserManagement.Destroy;
 begin
   //unload the library if it´s loaded
   if hUseAdmin<>0 then
@@ -126,7 +126,7 @@ begin
   inherited Destroy;
 end;
 
-procedure THMIWinCCUserManagement.LoadUseAdmin;
+procedure TWinCCUserManagement.LoadUseAdmin;
 begin
   hUseAdmin:=LoadLibrary('UseAdmin.dll');
   if hUseAdmin=0 then begin
@@ -147,7 +147,7 @@ begin
   fUseAdminLoaded:=true;
 end;
 
-procedure THMIWinCCUserManagement.SetAuthorizationList(AValue: TStrings);
+procedure TWinCCUserManagement.SetAuthorizationList(AValue: TStrings);
 var
   l, p, AuthNumber: LongInt;
   newAuthorizationCache:TStringList;
@@ -193,7 +193,7 @@ begin
   end;
 end;
 
-procedure THMIWinCCUserManagement.CheckAuthChanges(Sender:TObject);
+procedure TWinCCUserManagement.CheckAuthChanges(Sender:TObject);
 var
   culogin:String;
 begin
@@ -201,7 +201,7 @@ begin
 
   culogin:=GetCurrentUserLogin;
   if culogin<>FCurrentUserLogin then begin
-    GetHMIControlSecurityManager.UpdateControls;
+    GetControlSecurityManager.UpdateControls;
     try
       DoUserChanged;
     finally
@@ -210,7 +210,7 @@ begin
   end;
 end;
 
-function THMIWinCCUserManagement.CheckUserAndPassword(User, Pass: String;
+function TWinCCUserManagement.CheckUserAndPassword(User, Pass: String;
   var UID: Integer; LoginAction: Boolean): Boolean;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
@@ -222,12 +222,12 @@ begin
     UID:=-1;
 end;
 
-function THMIWinCCUserManagement.GetLoggedUser:Boolean;
+function TWinCCUserManagement.GetLoggedUser:Boolean;
 begin
  Result := GetCurrentUserLogin<>'';
 end;
 
-function THMIWinCCUserManagement.GetCurrentUserLogin:String;
+function TWinCCUserManagement.GetCurrentUserLogin:String;
 var
   buffer1:PAnsiChar;
   c:LongInt;
@@ -247,14 +247,14 @@ begin
   FreeMem(buffer1);
 end;
 
-procedure THMIWinCCUserManagement.Loaded;
+procedure TWinCCUserManagement.Loaded;
 begin
   inherited Loaded;
   if FAuthorizationList.Count>0 then
     SetAuthorizationList(FAuthorizationList);
 end;
 
-function  THMIWinCCUserManagement.Login: Boolean;
+function  TWinCCUserManagement.Login: Boolean;
 begin
   if FInLoginProcess then exit;
   FInLoginProcess:=true;
@@ -265,7 +265,7 @@ begin
   end;
 end;
 
-procedure THMIWinCCUserManagement.Logout;
+procedure TWinCCUserManagement.Logout;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
@@ -273,18 +273,18 @@ begin
     inherited Logout;
 end;
 
-procedure THMIWinCCUserManagement.Manage;
+procedure TWinCCUserManagement.Manage;
 begin
   raise exception.Create(SUseTheWinCCUserManager);
 end;
 
-procedure   THMIWinCCUserManagement.ValidateSecurityCode(sc:String);
+procedure   TWinCCUserManagement.ValidateSecurityCode(sc:String);
 begin
   if not SecurityCodeExists(sc) then
     raise exception.Create(SUseTheWinCCUserManager);
 end;
 
-function    THMIWinCCUserManagement.CanAccess(sc:String):Boolean;
+function    TWinCCUserManagement.CanAccess(sc:String):Boolean;
 var
   p, p2, i:Cardinal;
   auth:TStringList;
@@ -312,7 +312,7 @@ begin
   Result:=PWRTCheckPermission(p2,1);
 end;
 
-function    THMIWinCCUserManagement.SecurityCodeExists(sc:String):Boolean;
+function    TWinCCUserManagement.SecurityCodeExists(sc:String):Boolean;
 var
   x:TStringList;
   c:LongInt;
@@ -322,17 +322,17 @@ begin
   x.Destroy;
 end;
 
-procedure   THMIWinCCUserManagement.RegisterSecurityCode(sc:String);
+procedure   TWinCCUserManagement.RegisterSecurityCode(sc:String);
 begin
   raise exception.Create(SUseTheWinCCUserManager);
 end;
 
-procedure   THMIWinCCUserManagement.UnregisterSecurityCode(sc:String);
+procedure   TWinCCUserManagement.UnregisterSecurityCode(sc:String);
 begin
   //does nothing.
 end;
 
-function    THMIWinCCUserManagement.GetRegisteredAccessCodes:TStringList;
+function    TWinCCUserManagement.GetRegisteredAccessCodes:TStringList;
 var
   buffer1:PAnsiChar;
   c:LongInt;
@@ -367,18 +367,18 @@ begin
   end;
 end;
 
-procedure THMIWinCCUserManagement.ClearAuthorizationCache;
+procedure TWinCCUserManagement.ClearAuthorizationCache;
 begin
   fAuthorizationCache.Destroy;
   fAuthorizationCache:=nil;
 end;
 
-function THMIWinCCUserManagement.CanAccessViaWinCCAuthCode(Code: LongInt): Boolean;
+function TWinCCUserManagement.CanAccessViaWinCCAuthCode(Code: LongInt): Boolean;
 begin
   Result := PWRTCheckPermission(code,0);
 end;
 
-function THMIWinCCUserManagement.CheckIfUserIsAllowed(sc: String;
+function TWinCCUserManagement.CheckIfUserIsAllowed(sc: String;
   RequireUserLogin: Boolean; var userlogin: String): Boolean;
 begin
   raise exception.Create(SWCCNotSupportCheckUserAuth);

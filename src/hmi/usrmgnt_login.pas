@@ -1,5 +1,5 @@
-{$i ../common/pscada_settings.inc}
-unit HMIUserMgnt_Login;
+{$i ../common/language.inc}
+unit usrmgnt_login;
 
 {$IFDEF FPC}
   {$MODE Delphi}
@@ -44,7 +44,7 @@ implementation
 
 {$IFDEF FPC}
   {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20400) }
-    {$R hmiusermgnt_login.lfm}
+    {$R usrmgnt_login.lfm}
   {$IFEND}
 {$ELSE}
   {$R *.dfm}

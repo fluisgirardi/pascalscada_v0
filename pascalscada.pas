@@ -7,10 +7,10 @@ unit pascalscada;
 interface
 
 uses
-  CommPort, commtypes, IBoxDriver, ISOTCPDriver, LinearScaleProcessor, 
-  ModBusDriver, ModBusSerial, ModBusTCP, MutexClient, mutexserver, 
-  OPCDAProtocol, PLCBlock, PLCBlockElement, PLCMemoryManager, PLCNumber, 
-  PLCString, PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, 
+  CommPort, commtypes, crc16utils, IBoxDriver, ISOTCPDriver, 
+  LinearScaleProcessor, ModBusDriver, ModBusSerial, ModBusTCP, MutexClient, 
+  mutexserver, OPCDAProtocol, PLCBlock, PLCBlockElement, PLCMemoryManager, 
+  PLCNumber, PLCString, PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, 
   ProtocolDriver, ProtocolTypes, protscan, protscanupdate, s7family, S7Types, 
   scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, 
   tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, 

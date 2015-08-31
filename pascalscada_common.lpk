@@ -2,7 +2,6 @@
 <CONFIG>
   <Package Version="4">
     <Name Value="pascalscada_common"/>
-    <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
@@ -10,46 +9,53 @@
         <OtherUnitFiles Value="src/common"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <MsgFileName Value=""/>
+        </CompilerMessages>
+        <CompilerPath Value="$(CompPath)"/>
+      </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
     <Files Count="9">
       <Item1>
-        <Filename Value="src/common/pscada_constants.pas"/>
-        <UnitName Value="pscada_constants"/>
+        <Filename Value="src/common/crossdatetime.pas"/>
+        <UnitName Value="crossdatetime"/>
       </Item1>
       <Item2>
-        <Filename Value="src/common/pscada_cpu_utils.pas"/>
-        <UnitName Value="pSCADA_cpu_utils"/>
+        <Filename Value="src/common/crossevent.pas"/>
+        <UnitName Value="CrossEvent"/>
       </Item2>
       <Item3>
-        <Filename Value="src/common/pscada_crc16utils.pas"/>
-        <UnitName Value="crc16utils"/>
+        <Filename Value="src/common/hsstrings.pas"/>
+        <UnitName Value="hsstrings"/>
       </Item3>
       <Item4>
-        <Filename Value="src/common/pscada_crossdatetime.pas"/>
-        <UnitName Value="pSCADA_crossdatetime"/>
+        <Filename Value="src/common/hsutils.pas"/>
+        <UnitName Value="hsutils"/>
       </Item4>
       <Item5>
-        <Filename Value="src/common/pscada_crossevent.pas"/>
-        <UnitName Value="pSCADA_CrossEvent"/>
+        <Filename Value="src/common/lazlclversion.pas"/>
+        <UnitName Value="lazlclversion"/>
       </Item5>
       <Item6>
-        <Filename Value="src/common/pscada_messagequeue.pas"/>
-        <UnitName Value="pSCADA_MessageQueue"/>
+        <Filename Value="src/common/messagespool.pas"/>
+        <UnitName Value="MessageSpool"/>
       </Item6>
       <Item7>
-        <Filename Value="src/common/pscada_strings.pas"/>
-        <UnitName Value="pSCADA_strings"/>
+        <Filename Value="src/common/pascalScadaMTPCPU.pas"/>
+        <UnitName Value="pascalScadaMTPCPU"/>
       </Item7>
       <Item8>
-        <Filename Value="src/common/pscada_types.pas"/>
-        <UnitName Value="pSCADA_Types"/>
+        <Filename Value="src/common/pscada_common.pas"/>
+        <UnitName Value="pscada_common"/>
       </Item8>
       <Item9>
-        <Filename Value="src/common/pscada_utils.pas"/>
-        <UnitName Value="pSCADA_utils"/>
+        <Filename Value="src/common/pscommontypes.pas"/>
+        <UnitName Value="pscommontypes"/>
       </Item9>
     </Files>
+    <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="LCL"/>

@@ -1,5 +1,4 @@
-{$i ../common/pscada_settings.inc}
-{$I ../common/pscada_compiler_versions.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação dos editores de algumas propriedades de componentes
@@ -23,6 +22,12 @@
 {$ENDIF}
 unit scadapropeditor;
 
+{$IFDEF FPC}
+{$MODE Delphi}
+{$ENDIF}
+
+{$I ../common/delphiver.inc}
+
 interface
 
 uses
@@ -37,7 +42,7 @@ uses
   {$IFEND}
   
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, pSCADA_Constants;
+    PropEdits, ComponentEditors, lazlclversion;
   {$ELSE}
     Types,
     //Delphi 6 ou superior

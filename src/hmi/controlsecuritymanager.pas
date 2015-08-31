@@ -1,4 +1,4 @@
-unit HMIControlSecurityManager;
+unit ControlSecurityManager;
 
 {$IFDEF FPC}
 {$MODE Delphi}
@@ -7,12 +7,12 @@ unit HMIControlSecurityManager;
 interface
 
 uses
-  Classes, sysutils, HMITypes, ActnList, PLCTag, HMIBasicUserManagement;
+  Classes, sysutils, HMITypes, ActnList, PLCTag, BasicUserManagement;
 
 type
 
 
-  THMIControlSecurityManager = class(TComponent)
+  TControlSecurityManager = class(TComponent)
   private
     FControls:array of IHMIInterface;
     FUserManagement:TBasicUserManagement;
@@ -171,11 +171,11 @@ type
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
   end;
 
-  function GetHMIControlSecurityManager:THMIControlSecurityManager;
+  function GetControlSecurityManager:TControlSecurityManager;
 
 implementation
 
-uses pSCADA_Strings, Dialogs, Controls;
+uses hsstrings, Dialogs, Controls;
 
 { TPascalSCADACheckSpecialTokenAction }
 
@@ -184,7 +184,7 @@ begin
   if FSecurityCode=AValue then Exit;
 
   if Trim(AValue)<>'' then
-    with GetHMIControlSecurityManager do begin
+    with GetControlSecurityManager do begin
       ValidateSecurityCode(AValue);
       if not SecurityCodeExists(AValue) then
         RegisterSecurityCode(AValue);
@@ -195,7 +195,7 @@ end;
 
 function TPascalSCADACheckSpecialTokenAction.Execute: Boolean;
 begin
-  if GetHMIControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode, FRequireLoginAlways, FAuthorizedBy) then
+  if GetControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode, FRequireLoginAlways, FAuthorizedBy) then
     Result:=inherited Execute
   else
     Result:=false;
@@ -272,8 +272,8 @@ end;
 
 procedure TPascalSCADALogin_LogoutAction.UpdateMyState;
 begin
-  if GetHMIControlSecurityManager.UserManagement<>nil then
-    if TBasicUserManagement(GetHMIControlSecurityManager.UserManagement).UserLogged then begin
+  if GetControlSecurityManager.UserManagement<>nil then
+    if TBasicUserManagement(GetControlSecurityManager.UserManagement).UserLogged then begin
       inherited Caption   :=FWithUserLoggedInCaption;
       inherited Hint      :=FWithUserLoggedInHint;
       inherited ImageIndex:=FWithUserLoggedInImageIndex;
@@ -304,14 +304,14 @@ end;
 
 procedure TPascalSCADALogin_LogoutAction.ExecuteTarget(Target: TObject);
 begin
-  if GetHMIControlSecurityManager.UserManagement<>nil then
-    if TBasicUserManagement(GetHMIControlSecurityManager.UserManagement).UserLogged then begin
-      GetHMIControlSecurityManager.Logout;
+  if GetControlSecurityManager.UserManagement<>nil then
+    if TBasicUserManagement(GetControlSecurityManager.UserManagement).UserLogged then begin
+      GetControlSecurityManager.Logout;
     end else begin
       if Assigned(FBeforeLogin) then
         FBeforeLogin(Self);
 
-      GetHMIControlSecurityManager.Login;
+      GetControlSecurityManager.Login;
 
       if Assigned(FAfterLogin) then
         FAfterLogin(Self);
@@ -319,21 +319,21 @@ begin
   UpdateMyState;
 end;
 
-constructor THMIControlSecurityManager.Create(AOwner: TComponent);
+constructor TControlSecurityManager.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FUserManagement:=nil;
   SetLength(FControls,0);
 end;
 
-destructor THMIControlSecurityManager.Destroy;
+destructor TControlSecurityManager.Destroy;
 begin
   if Length(FControls)>0 then
     raise Exception.Create(SSecurityControlBusy);
   inherited Destroy;
 end;
 
-function   THMIControlSecurityManager.Login:Boolean;
+function   TControlSecurityManager.Login:Boolean;
 begin
   if FUserManagement<>nil then
     Result:=TBasicUserManagement(FUserManagement).Login
@@ -341,33 +341,33 @@ begin
     Result:=false;
 end;
 
-procedure  THMIControlSecurityManager.Logout;
+procedure  TControlSecurityManager.Logout;
 begin
   if FUserManagement<>nil then
     TBasicUserManagement(FUserManagement).Logout
 end;
 
-procedure  THMIControlSecurityManager.Manage;
+procedure  TControlSecurityManager.Manage;
 begin
   if FUserManagement<>nil then
     TBasicUserManagement(FUserManagement).Manage;
 end;
 
-function THMIControlSecurityManager.GetCurrentUserlogin: String;
+function TControlSecurityManager.GetCurrentUserlogin: String;
 begin
   Result:='';
   if FUserManagement<>nil then
     Result:=TBasicUserManagement(FUserManagement).CurrentUserLogin;
 end;
 
-procedure  THMIControlSecurityManager.TryAccess(sc:String);
+procedure  TControlSecurityManager.TryAccess(sc:String);
 begin
   if FUserManagement<>nil then
     if not TBasicUserManagement(FUserManagement).CanAccess(sc) then
       raise Exception.Create(SAccessDenied);
 end;
 
-procedure THMIControlSecurityManager.SetUserManagement(um:TBasicUserManagement);
+procedure TControlSecurityManager.SetUserManagement(um:TBasicUserManagement);
 begin
   if (um<>nil) and (not (um is TBasicUserManagement)) then
     raise Exception.Create(SInvalidUserManager);
@@ -379,7 +379,7 @@ begin
   UpdateControls;
 end;
 
-procedure  THMIControlSecurityManager.RegisterControl(control:IHMIInterface);
+procedure  TControlSecurityManager.RegisterControl(control:IHMIInterface);
 var
   h:LongInt;
 begin
@@ -389,7 +389,7 @@ begin
   control.CanBeAccessed(CanAccess(control.GetControlSecurityCode));
 end;
 
-procedure  THMIControlSecurityManager.UnRegisterControl(control:IHMIInterface);
+procedure  TControlSecurityManager.UnRegisterControl(control:IHMIInterface);
 var
   c, h:LongInt;
 begin
@@ -402,7 +402,7 @@ begin
     end;
 end;
 
-procedure  THMIControlSecurityManager.UpdateControls;
+procedure  TControlSecurityManager.UpdateControls;
 var
   c:LongInt;
 begin
@@ -410,7 +410,7 @@ begin
     FControls[c].CanBeAccessed(CanAccess(FControls[c].GetControlSecurityCode));
 end;
 
-function   THMIControlSecurityManager.CanAccess(sc:String):Boolean;
+function   TControlSecurityManager.CanAccess(sc:String):Boolean;
 begin
   Result:=true;
 
@@ -420,19 +420,19 @@ begin
     Result:=TBasicUserManagement(FUserManagement).CanAccess(sc);
 end;
 
-procedure  THMIControlSecurityManager.ValidateSecurityCode(sc:String);
+procedure  TControlSecurityManager.ValidateSecurityCode(sc:String);
 begin
   if FUserManagement<>nil then
     TBasicUserManagement(FUserManagement).ValidateSecurityCode(sc);
 end;
 
-procedure  THMIControlSecurityManager.RegisterSecurityCode(sc:String);
+procedure  TControlSecurityManager.RegisterSecurityCode(sc:String);
 begin
   if FUserManagement<>nil then
     TBasicUserManagement(FUserManagement).RegisterSecurityCode(sc);
 end;
 
-procedure  THMIControlSecurityManager.UnregisterSecurityCode(sc:String);
+procedure  TControlSecurityManager.UnregisterSecurityCode(sc:String);
 var
   being_used:Boolean;
   c:LongInt;
@@ -458,14 +458,14 @@ begin
     TBasicUserManagement(FUserManagement).UnregisterSecurityCode(sc);
 end;
 
-function   THMIControlSecurityManager.SecurityCodeExists(sc:String):Boolean;
+function   TControlSecurityManager.SecurityCodeExists(sc:String):Boolean;
 begin
   Result:=false;
   if FUserManagement<>nil then
     Result:=TBasicUserManagement(FUserManagement).SecurityCodeExists(sc);
 end;
 
-function   THMIControlSecurityManager.GetRegisteredAccessCodes:TStringList;
+function   TControlSecurityManager.GetRegisteredAccessCodes:TStringList;
 begin
   if FUserManagement=nil then begin
     Result:=TStringList.Create
@@ -473,7 +473,7 @@ begin
     Result:=TBasicUserManagement(FUserManagement).GetRegisteredAccessCodes;
 end;
 
-function THMIControlSecurityManager.CheckIfUserIsAllowed(sc: String;
+function TControlSecurityManager.CheckIfUserIsAllowed(sc: String;
   RequireUserLogin: Boolean; var userlogin: String): Boolean;
 begin
   Result:=false;
@@ -529,12 +529,12 @@ constructor TPascalSCADAUserManagementAction.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FEnabled:=true;
-  GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor TPascalSCADAUserManagementAction.Destroy;
 begin
-  GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
@@ -544,8 +544,8 @@ end;
 
 procedure TPascalSCADALoginAction.CanBeAccessed(a: Boolean);
 begin
-  if GetHMIControlSecurityManager.UserManagement<>nil then
-    with GetHMIControlSecurityManager.UserManagement as TBasicUserManagement do
+  if GetControlSecurityManager.UserManagement<>nil then
+    with GetControlSecurityManager.UserManagement as TBasicUserManagement do
       inherited CanBeAccessed(not UserLogged);
 end;
 
@@ -556,7 +556,7 @@ end;
 
 procedure TPascalSCADALoginAction.ExecuteTarget(Target: TObject);
 begin
-  GetHMIControlSecurityManager.Login;
+  GetControlSecurityManager.Login;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -565,8 +565,8 @@ end;
 
 procedure TPascalSCADALogoutAction.CanBeAccessed(a: Boolean);
 begin
-  if GetHMIControlSecurityManager.UserManagement<>nil then
-    with GetHMIControlSecurityManager.UserManagement as TBasicUserManagement do
+  if GetControlSecurityManager.UserManagement<>nil then
+    with GetControlSecurityManager.UserManagement as TBasicUserManagement do
       inherited CanBeAccessed(UserLogged);
 end;
 
@@ -577,7 +577,7 @@ end;
 
 procedure TPascalSCADALogoutAction.ExecuteTarget(Target: TObject);
 begin
-  GetHMIControlSecurityManager.Logout;
+  GetControlSecurityManager.Logout;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -586,8 +586,8 @@ end;
 
 procedure TPascalSCADAManageUsersAction.CanBeAccessed(a: Boolean);
 begin
-  if GetHMIControlSecurityManager.UserManagement<>nil then
-    with GetHMIControlSecurityManager.UserManagement as TBasicUserManagement do
+  if GetControlSecurityManager.UserManagement<>nil then
+    with GetControlSecurityManager.UserManagement as TBasicUserManagement do
       inherited CanBeAccessed(UserLogged);
 end;
 
@@ -598,7 +598,7 @@ end;
 
 procedure TPascalSCADAManageUsersAction.ExecuteTarget(Target: TObject);
 begin
-  GetHMIControlSecurityManager.Manage;
+  GetControlSecurityManager.Manage;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -613,7 +613,7 @@ end;
 
 function TPascalSCADASecureAction.Execute: Boolean;
 begin
-  if GetHMIControlSecurityManager.CanAccess(FSecurityCode) then
+  if GetControlSecurityManager.CanAccess(FSecurityCode) then
     Result:=inherited Execute
   else
     Result:=false;
@@ -624,7 +624,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetHMIControlSecurityManager do begin
+    with GetControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);
@@ -640,16 +640,16 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 
 var
-  QPascalHMIControlSecurityManager:THMIControlSecurityManager;
+  QPascalControlSecurityManager:TControlSecurityManager;
 
-function GetHMIControlSecurityManager:THMIControlSecurityManager;
+function GetControlSecurityManager:TControlSecurityManager;
 begin
-  Result:=QPascalHMIControlSecurityManager;
+  Result:=QPascalControlSecurityManager;
 end;
 
 initialization
-  QPascalHMIControlSecurityManager:=THMIControlSecurityManager.Create(nil);
+  QPascalControlSecurityManager:=TControlSecurityManager.Create(nil);
 finalization
-  QPascalHMIControlSecurityManager.Destroy;
+  QPascalControlSecurityManager.Destroy;
 
 end.

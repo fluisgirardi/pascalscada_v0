@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -10,7 +10,7 @@
   @abstract(Unit that implement CRC-16 functions)
 }
 {$ENDIF}
-unit pSCADA_crc16utils;
+unit crc16utils;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -18,7 +18,7 @@ unit pSCADA_crc16utils;
 
 interface
 
-uses pSCADA_Types;
+uses commtypes;
 
 {$IFDEF PORTUGUES}
 {:

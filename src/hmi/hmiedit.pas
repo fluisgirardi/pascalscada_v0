@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa uma caixa para entrada de valores em Tags.)
@@ -378,7 +378,7 @@ type
 
 implementation
 
-uses hsstrings, HMIControlSecurityManager;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMIEdit.Create(AOwner:TComponent);
 begin
@@ -399,14 +399,14 @@ begin
   FShowFocused := true;
   FFreezeValue := true;
   FNumberFormat := '#0.0';
-  GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor  THMIEdit.Destroy;
 begin
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
-  GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
@@ -443,7 +443,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetHMIControlSecurityManager do begin
+    with GetControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);

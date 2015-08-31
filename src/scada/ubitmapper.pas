@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 //: Unit do assistente de mapeamento de bits.
 {$ELSE}
@@ -86,4 +86,4 @@ initialization
   {$I ubitmapper.lrs}
   {$IFEND}
 {$ENDIF}
-end.
+end.

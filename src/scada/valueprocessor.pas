@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação de processadores de escala.)
@@ -428,7 +428,7 @@ type
     
 implementation
 
-uses PLCNumber, pSCADA_Strings;
+uses PLCNumber, hsstrings;
 
 ////////////////////////////////////////////////////////////////////////////////
 // TScaleQueueItem implementation

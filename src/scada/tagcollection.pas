@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementa uma coleção de tags.)
@@ -19,7 +19,7 @@ unit tagcollection;
 interface
 
 uses
-  Classes, SysUtils, PLCTag, ProtocolTypes, Tag, pSCADA_Types
+  Classes, SysUtils, PLCTag, ProtocolTypes, Tag, pscommontypes
   {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type
@@ -179,7 +179,7 @@ type
 
 implementation
 
-uses pSCADA_Strings;
+uses hsstrings;
 
 constructor TTagCollectionItem.Create(Collection: TCollection);
 begin

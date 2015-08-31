@@ -1,5 +1,5 @@
-{$i ../common/pscada_settings.inc}
-{$I ../common/pscada_compiler_versions.inc}
+{$i ../common/language.inc}
+{$I ../common/delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação da base de todos os tags.)
@@ -999,7 +999,7 @@ type
 
 implementation
 
-uses pSCADA_Strings;
+uses hsstrings;
 
 
 constructor TTag.Create(AOwner:TComponent);

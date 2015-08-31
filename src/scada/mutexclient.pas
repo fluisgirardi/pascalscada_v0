@@ -1,4 +1,4 @@
-﻿{$i ../common/pscada_settings.inc}
+﻿{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um mutex de rede.)
@@ -23,11 +23,11 @@ unit MutexClient;
 {$mode delphi}
 {$ENDIF}
 
-{$I ../common/pscada_compiler_versions.inc}
+{$I ../common/delphiver.inc}
 interface
 
 uses
-  Classes, SysUtils, CommPort, pSCADA_Types, socket_types, pSCADA_CrossEvent,
+  Classes, SysUtils, CommPort, commtypes, socket_types, CrossEvent,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -125,7 +125,7 @@ type
 
 implementation
 
-uses pSCADA_Strings, dateutils{$IFNDEF FPC}, Windows{$ENDIF};
+uses hsstrings, dateutils{$IFNDEF FPC}, Windows{$ENDIF};
 
 { TMutexClientThread }
 

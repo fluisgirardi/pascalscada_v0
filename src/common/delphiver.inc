@@ -1,9 +1,12 @@
 {
+
+
 ****************************** History  *******************************
 ***********************************************************************
 07/2013 - Define CONSOLEPASCALSCADA if fpc >= 2.7.1
 @author(Juanjo Montero <juanjo.montero@gmail.com>)
 ***********************************************************************
+
 
 PascalSCADA Project.
 
@@ -215,6 +218,13 @@ Delphi versions:
   {$IFNDEF DELPHI2009_UP}
     {$MESSAGE ERROR 'Only Delphi 2009 or later are supported!' }
   {$ENDIF}
+{$ENDIF}
+
+
+// Include testings for fpc and unix. Delphi skip this test avoiding
+// errors of type "undefined constants"
+{$IFDEF FPC}
+  {$i console.inc}
 {$ENDIF}
 
 

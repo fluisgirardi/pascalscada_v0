@@ -12,9 +12,9 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  **********************************************************************}
-{$i ../common/pscada_settings.inc}
-{$i ../common/pscada_compiler_versions.inc}
-unit pSCADA_cpu_utils;
+{$i ../common/language.inc}
+{$i ../common/delphiver.inc}
+unit pascalScadaMTPCPU;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -23,13 +23,24 @@ unit pSCADA_cpu_utils;
 interface
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
-uses pSCADA_types, Windows;
+uses Windows;
 {$ELSEIF defined(freebsd) or defined(darwin)}
-uses pSCADA_types, ctypes, sysctl;
+uses ctypes, sysctl;
 {$ELSEIF defined(linux)}
 {$linklib c}
-uses pSCADA_types, ctypes;
+uses ctypes;
 {$IFEND}
+
+type
+  {$IFNDEF FPC}
+    {$IFDEF DELPHI_XE2_UP}
+    crossNativeUInt = NativeUInt;
+    {$ELSE}
+    crossNativeUInt = Cardinal;
+    {$ENDIF}
+  {$ELSE}
+    crossNativeUInt = PtrUInt;
+  {$ENDIF}
 
 function GetSystemThreadCount: LongInt;
 
@@ -44,8 +55,6 @@ More efficient thread switch, checking the OS/number of processors.
 }
 {$ENDIF}
 procedure CrossThreadSwitch;
-
-function SetThreadCPUAffinityMask(ThreadID:TpSCADAThreadID; CPUAffinity:TpSCADA_CPUs):Boolean;
 
 implementation
 
@@ -126,11 +135,6 @@ begin
     SwitchToThread;
     {$ENDIF}
     {$IFEND}
-end;
-
-function SetThreadCPUAffinityMask(ThreadID:TpSCADAThreadID; CPUAffinity:TpSCADA_CPUs):Boolean;
-begin
-
 end;
 
 end.

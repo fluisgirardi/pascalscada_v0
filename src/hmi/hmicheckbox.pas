@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit que implementa um controle CheckBox ligado a um Tag.)
@@ -472,7 +472,7 @@ type
 
 implementation
 
-uses hsstrings, HMIControlSecurityManager;
+uses hsstrings, ControlSecurityManager;
 
 constructor THMICheckBox.Create(AOwner:TComponent);
 begin
@@ -501,7 +501,7 @@ begin
   FOtherValues := IsGrayed;
   FWriteTrue := true;
   FWriteFalse := true;
-  GetHMIControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMICheckBox.Destroy;
@@ -511,7 +511,7 @@ begin
   FFontFalse.Destroy;
   FFontTrue.Destroy;
   FFontGrayed.Destroy;
-  GetHMIControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
@@ -732,7 +732,7 @@ begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
   else
-    with GetHMIControlSecurityManager do begin
+    with GetControlSecurityManager do begin
       ValidateSecurityCode(sc);
       if not SecurityCodeExists(sc) then
         RegisterSecurityCode(sc);

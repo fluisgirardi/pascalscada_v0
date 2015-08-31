@@ -1,9 +1,9 @@
-unit HMICustomizedUserManagement;
+unit CustomizedUserManagement;
 
 interface
 
 uses
-  Classes, HMIBasicUserManagement;
+  Classes, BasicUserManagement;
 
 type
   TCheckUserAndPasswordEvent = procedure(user, pass:String; var aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;

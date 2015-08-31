@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação para Tags String.)
@@ -20,7 +20,7 @@ interface
 
 uses
   SysUtils, Classes, Tag, TagBlock, ProtocolTypes, ProtocolDriver, Math,
-  pSCADA_Utils;
+  hsutils;
 
 type
 
@@ -208,7 +208,7 @@ type
 
 implementation
 
-uses variants, pSCADA_Strings{$IFDEF FPC}, LazUTF8{$ENDIF};
+uses variants, hsstrings{$IFDEF FPC}, LazUTF8{$ENDIF};
 
 constructor TPLCString.Create(AOwner:TComponent);
 begin
@@ -290,9 +290,9 @@ begin
        //passa bit a bit para montar a string
        //build the string, bit by bit
        while bit<maxbits do begin
-         aux1 := BitToDec(ValueBitP);
+         aux1 := Power(2,ValueBitP);
          if ((ValueAux2 and aux1)=aux1) then
-           ValueAux := ValueAux + BitToDec(ByteBitP);
+           ValueAux := ValueAux + Power(2,ByteBitP);
 
          inc(bit);
          inc(ByteBitP);
@@ -358,9 +358,9 @@ begin
        //passa bit a bit para montar a string
        //build the string, bit by bite
        while bit<maxbits do begin
-         aux1 := BitToDec(ValueBitP);
+         aux1 := Power(2,ValueBitP);
          if ((ValueAux2 and aux1)=aux1) then
-           ValueAux := ValueAux + BitToDec(ByteBitP);
+           ValueAux := ValueAux + Power(2,ByteBitP);
 
          inc(bit);
          inc(ByteBitP);
@@ -428,7 +428,7 @@ begin
     //encodes a SIEMENS string, 7 or 8 bits of length
     stSIEMENS:
     begin
-      MaxLen := Min(PStringSize, BitToDec(PByteSize)-1);
+      MaxLen := Min(PStringSize, power(2,PByteSize)-1);
       strlen := Min(MaxLen,Length(value));
       maxbits := PByteSize * (strlen+2);
       bit := 0;
@@ -444,13 +444,13 @@ begin
         //
         //stores in the first two bytes, the length of string.
         if bit<(2*PByteSize) then begin
-          aux1 := BitToDec(ByteBitP);
+          aux1 := Power(2,ByteBitP);
           if bit<PByteSize then begin
             if (MaxLen and aux1)=aux1 then
-              ValueAux := ValueAux + BitToDec(ValueBitP);
+              ValueAux := ValueAux + Power(2,ValueBitP);
           end else begin
             if (strLen and aux1)=aux1 then
-              ValueAux := ValueAux + BitToDec(ValueBitP);
+              ValueAux := ValueAux + Power(2,ValueBitP);
           end;
         end else begin
           if bit=(2*PByteSize) then begin
@@ -459,9 +459,9 @@ begin
           end;
           //processa os bytes da string
           //processes the bytes of string.
-          aux1 := BitToDec(ByteBitP);
+          aux1 := Power(2,ByteBitP);
           if (ord(value[ByteP]) and aux1)=aux1 then begin
-            ValueAux := ValueAux + BitToDec(ValueBitP);
+            ValueAux := ValueAux + Power(2,ValueBitP);
           end;
         end;
 
@@ -491,7 +491,7 @@ begin
     //C string format, 7 or 8 bits.
     stC:
     begin
-      strlen := Min(Length(value), BitToDec(PByteSize)-1);
+      strlen := Min(Length(value), power(2,PByteSize)-1);
       maxbits := PByteSize * (strlen);
       bit := 0;
       ByteBitP := 0;
@@ -502,9 +502,9 @@ begin
       while bit<maxbits do begin
         //processa os bytes da string
         //processes the bytes of string.
-        aux1 := BitToDec(ByteBitP);
+        aux1 := Power(2,ByteBitP);
         if (ord(value[ByteP]) and aux1)=aux1 then
-          ValueAux := ValueAux + BitToDec(ValueBitP);
+          ValueAux := ValueAux + Power(2,ValueBitP);
 
         inc(bit);
         inc(ByteBitP);

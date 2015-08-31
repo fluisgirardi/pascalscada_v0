@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementa um tag PLC numérico para uso geral.)
@@ -262,7 +262,7 @@ type
 
 implementation
 
-uses tag, pSCADA_Strings;
+uses tag, hsstrings;
 
 constructor TPLCNumber.Create(AOwner: TComponent);
 begin

@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Atualiza os valores dos tags.)
@@ -22,11 +22,7 @@ unit protscanupdate;
 interface
 
 uses
-  Classes, SysUtils, syncobjs,
-  pSCADA_CrossEvent,
-  ProtocolTypes,
-  pSCADA_MessageQueue,
-  tag;
+  Classes, SysUtils, CrossEvent, ProtocolTypes, MessageSpool, syncobjs, tag;
 
 type
 
@@ -59,7 +55,7 @@ type
     FCmd:TTagCommand;
     PGetValues:TGetValues;
     PScanTags:TGetMultipleValues;
-    FSpool:TpSCADAMessageQueue;
+    FSpool:TMessageSpool;
     PScannedValues:TArrayOfScanUpdateRec;
     procedure SyncCallBack;
     procedure SyncException;
@@ -138,7 +134,7 @@ type
 
 implementation
 
-uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, pSCADA_Strings, pSCADA_CrossDatetime,
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings, crossdatetime,
   dateutils;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +150,7 @@ begin
   FOwnerProtocolDriver:=OwnerProtocol;
   Priority := tpHighest;
   FUserUpdateTimePRoc:=usrUpdTime;
-  FSpool := TpSCADAMessageQueue.Create;
+  FSpool := TMessageSpool.Create;
   FEnd := TCrossEvent.Create(nil, true, false, 'EndOfThread'+IntToStr(UniqueID));
   FEnd.ResetEvent;
   FSleepInterruptable := TCrossEvent.Create(nil,false,false,'ScanUpdateThreadSleepInterruptable'+IntToStr(UniqueID));

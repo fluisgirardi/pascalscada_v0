@@ -1,5 +1,5 @@
-﻿{$i ../common/pscada_settings.inc}
-{$i ../common/pscada_compiler_versions.inc}
+﻿{$i ../common/language.inc}
+{$i ../common/delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -11,7 +11,7 @@
     @abstract(Multi-platform virtual keyboard unit.)
 }
 {$ENDIF}
-unit hmicrosskeyevents;
+unit crosskeyevents;
 
 interface
 

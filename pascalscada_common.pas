@@ -7,9 +7,8 @@ unit pascalscada_common;
 interface
 
 uses
-  pscada_constants, pSCADA_cpu_utils, pscada_crc16utils, pSCADA_crossdatetime, 
-  pSCADA_CrossEvent, pSCADA_MessageQueue, pSCADA_strings, pSCADA_Types, 
-  pSCADA_utils, LazarusPackageIntf;
+  crossdatetime, CrossEvent, hsstrings, hsutils, lazlclversion, MessageSpool, 
+  pascalScadaMTPCPU, pscada_common, pscommontypes, LazarusPackageIntf;
 
 implementation
 

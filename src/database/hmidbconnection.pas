@@ -20,7 +20,7 @@ unit HMIDBConnection;
 interface
 
 uses
-  Classes, sysutils, ZConnection, ZPropertyEditor, pSCADAMessageQueue, CrossEvent,
+  Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
   syncobjs, ZDataset, psbufdataset;
 
 type
@@ -152,7 +152,7 @@ type
   {$ENDIF}
   TProcessSQLCommandThread=class(TCrossThread)
   private
-    FSpool:TpSCADAMessageQueue;
+    FSpool:TMessageSpool;
     FEnd:TCrossEvent;
     cmd:PSQLCmdRec;
     fds:TFPSBufDataSet;
@@ -403,7 +403,7 @@ end;
 constructor TProcessSQLCommandThread.Create(CreateSuspended: Boolean; ExecSQLProc:TExecSQLProc);
 begin
   inherited Create(CreateSuspended);
-  FSpool:=TpSCADAMessageQueue.Create;
+  FSpool:=TMessageSpool.Create;
   FEnd:=TCrossEvent.Create(nil,true,false,'');
   fOnExecSQL:=ExecSQLProc;
 end;

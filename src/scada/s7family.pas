@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação do protocolo ISOTCP.)
@@ -35,7 +35,7 @@ interface
 
 uses
   classes, sysutils, ProtocolDriver, S7Types, Tag, ProtocolTypes,
-  commtypes, pSCADA_Types;
+  commtypes;
 
 type
   {$IFDEF PORTUGUES}
@@ -761,8 +761,8 @@ type
 
 implementation
 
-uses PLCTagNumber, PLCString, PLCStruct, pSCADA_Strings, PLCBlock, PLCMemoryManager,
-  dateutils, strutils, math, pSCADA_CrossDatetime;
+uses PLCTagNumber, PLCString, PLCStruct, hsstrings, PLCBlock, PLCMemoryManager,
+  dateutils, strutils, math, crossdatetime;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES

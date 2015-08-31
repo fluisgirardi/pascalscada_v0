@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
@@ -14,12 +14,7 @@ unit IBoxDriver;
 interface
 
 uses
-  Classes, sysutils,
-  pSCADA_Types,
-  ProtocolDriver,
-  commtypes,
-  Tag,
-  ProtocolTypes;
+  Classes, sysutils, ProtocolDriver, commtypes, Tag, ProtocolTypes;
 
 type
   {:
@@ -242,8 +237,7 @@ type
 
 implementation
 
-uses PLCTagNumber, dateutils, math, pSCADA_Strings, pSCADA_CrossDatetime,
-  pSCADA_Utils;
+uses PLCTagNumber, dateutils, math, hsstrings, crossdatetime;
 
 destructor  TIBoxDriver.Destroy;
 begin

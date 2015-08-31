@@ -1,5 +1,5 @@
-{$i ../common/pscada_settings.inc}
-{$I ../common/pscada_compiler_versions.inc}
+{$i ../common/language.inc}
+{$I ../common/delphiver.inc}
 {$IFDEF PORTUGUES}
 {:
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -24,7 +24,7 @@
     project.
 }
 {$ENDIF}
-unit pSCADA_CrossEvent;
+unit CrossEvent;
 
 {$IFDEF FPC}
   {$mode delphi}
@@ -249,7 +249,7 @@ type
 
 implementation
 
-uses pSCADA_CPU_Utils;
+uses pascalScadaMTPCPU;
 
 procedure TCrossThread.WakeUp;
 begin

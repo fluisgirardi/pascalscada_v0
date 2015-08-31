@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementa a base para Tags Blocos.)
@@ -98,7 +98,7 @@ type
 
 implementation
 
-uses pSCADA_CrossDatetime;
+uses crossdatetime;
 
 procedure TTagBlock.ScanRead;
 var

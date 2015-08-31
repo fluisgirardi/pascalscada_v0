@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
  @abstract(Unit que implementa o enfileiramento de mensagens internas do programa,
@@ -26,7 +26,7 @@
  priority (messages that must be processed before others).
 }
 {$ENDIF}
-unit pSCADA_MessageQueue;
+unit MessageSpool;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -132,7 +132,7 @@ type
    priority (messages that must be processed before others).
   }
   {$ENDIF}
-  TpSCADAMessageQueue = class(TObject)
+  TMessageSpool = class(TObject)
   private
     FCs:TCriticalSection;
     FirstMessage:PMsgPkg;
@@ -234,9 +234,9 @@ type
 
 implementation
 
-uses pSCADA_Strings;
+uses hsstrings;
 
-constructor TpSCADAMessageQueue.Create;
+constructor TMessageSpool.Create;
 begin
   FCs := TCriticalSection.Create;
   FirstMessage := nil;
@@ -245,7 +245,7 @@ begin
   FMsgCount := 0;
 end;
 
-destructor TpSCADAMessageQueue.Destroy;
+destructor TMessageSpool.Destroy;
 var
   msg, nextmsg:PMsgPkg;
 begin
@@ -261,7 +261,7 @@ begin
   FCs := nil;
 end;
 
-function TpSCADAMessageQueue.PeekMessage(out Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
+function TMessageSpool.PeekMessage(out Msg:TMSMsg; uFilterMinMsg, uFilterMaxMsg:Cardinal; Remove:Boolean):Boolean;
 var
   curmsg, aux:PMsgPkg;
   found:Boolean;
@@ -344,7 +344,7 @@ begin
   FCs.Release;
 end;
 
-procedure TpSCADAMessageQueue.PostMessage(MsgID:Cardinal; wParam, lParam:Pointer; Priority:Boolean);
+procedure TMessageSpool.PostMessage(MsgID:Cardinal; wParam, lParam:Pointer; Priority:Boolean);
 var
   msg, aux:PMsgPkg;
   err:boolean;

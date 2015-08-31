@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -27,7 +27,7 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryManager, PLCBlock, PLCString, pSCADA_Types, pSCADA_Utils
+  PLCMemoryManager, PLCBlock, PLCString
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -273,7 +273,7 @@ type
 
 implementation
 
-uses pSCADA_CrossDatetime, pSCADA_CPU_Utils;
+uses crossdatetime, pascalScadaMTPCPU;
 
 
 constructor TModBusDriver.Create(AOwner:TComponent);

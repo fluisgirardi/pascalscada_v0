@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
 @abstract(Processa os pedidos de leitura e escrita por scan.)
@@ -22,10 +22,7 @@ unit protscan;
 interface
 
 uses
-  Classes, SysUtils, syncobjs,
-  pSCADA_CrossEvent,
-  protscanupdate,
-  pSCADA_MessageQueue,
+  Classes, SysUtils, CrossEvent, protscanupdate, MessageSpool, syncobjs,
   ProtocolTypes{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -57,7 +54,7 @@ type
 
     FMinScan:Cardinal;
     erro:Exception;
-    FSpool:TpSCADAMessageQueue;
+    FSpool:TMessageSpool;
     PScanUpdater:TScanUpdate;
 
     procedure SyncException;
@@ -154,7 +151,7 @@ type
 
 implementation
 
-uses pSCADA_Strings, pSCADA_CPU_Utils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses hsstrings, pascalScadaMTPCPU{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread
@@ -165,7 +162,7 @@ constructor TScanThread.Create(StartSuspended:Boolean; ScanUpdater:TScanUpdate);
 begin
   inherited Create(StartSuspended);
   Priority := tpHighest;
-  FSpool := TpSCADAMessageQueue.Create;
+  FSpool := TMessageSpool.Create;
   PScanUpdater := ScanUpdater;
   FInitEvent   := TCrossEvent.Create(nil,true,false,'ScanThreadInit'+IntToStr(UniqueID));
   FWaitToWrite := TCrossEvent.Create(nil,true,false,'WaitToWrite'+IntToStr(UniqueID));

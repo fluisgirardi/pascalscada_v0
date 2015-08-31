@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -22,10 +22,7 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, SyncObjs,
-  pSCADA_MessageQueue,
-  pSCADA_CrossEvent,
-  pSCADA_Types,
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs,
   {$IFDEF FPC}
   ExtCtrls
   {$ELSE}
@@ -57,7 +54,7 @@ type
     FError:TIOResult;
     FDoSomethingEvent,
     FInitEvent:TCrossEvent;
-    FSpool:TpSCADAMessageQueue;
+    FSpool:TMessageSpool;
     procedure DoSomething;
     procedure WaitToDoSomething;
 
@@ -194,7 +191,7 @@ type
     FTXBytesSecond,
     FRXBytesSecond:Int64;
 
-    FOwnerThread:TpSCADAThreadID;
+    FOwnerThread:TPSThreadID;
 
     {$IFDEF PORTUGUES}
     //: Abertura forcada da porta em edicao
@@ -992,12 +989,7 @@ const
 
 implementation
 
-uses SysUtils,
-    ProtocolDriver,
-    pSCADA_Strings,
-    pSCADA_CrossDatetime,
-    pSCADA_CPU_Utils,
-    pSCADA_Constants;
+uses SysUtils, ProtocolDriver, hsstrings, crossdatetime, pascalScadaMTPCPU;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1010,7 +1002,7 @@ constructor TEventNotificationThread.Create(CreateSuspended: Boolean; AOwner:TCo
 begin
   inherited Create(CreateSuspended);
   FOwner:=AOwner;
-  FSpool:=TpSCADAMessageQueue.Create;
+  FSpool:=TMessageSpool.Create;
   FDoSomethingEvent:=TCrossEvent.Create(nil,true,false,'DoSomethingEventThread'+IntToStr(UniqueID));
   FInitEvent:=TCrossEvent.Create(nil,true,false,'WasInitialized'+IntToStr(UniqueID));
 end;

@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Classes para organização de blocos de memória de um CLP.)
@@ -557,7 +557,7 @@ type
 
 implementation
 
-uses Math, pSCADA_Strings, pSCADA_CrossDatetime;
+uses Math, hsstrings, crossdatetime;
 
 constructor TRegisterRange.Create(AdrStart,AdrEnd:Cardinal);
 begin

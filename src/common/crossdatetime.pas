@@ -1,4 +1,4 @@
-unit pSCADA_crossdatetime;
+unit crossdatetime;
 
 {$IFDEF FPC}
 {$mode delphi}
@@ -56,4 +56,4 @@ initialization
   end;
 {$ENDIF}
 end.
-
+

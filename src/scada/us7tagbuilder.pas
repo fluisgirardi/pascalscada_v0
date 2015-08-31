@@ -1,4 +1,4 @@
-{$i ../common/pscada_settings.inc}
+{$i ../common/language.inc}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Unit do formulário TagBuilder para a familia de drivers da Siemens.)
@@ -299,7 +299,7 @@ var
 
 implementation
 
-uses ubitmapper, pSCADA_Strings;
+uses ubitmapper, hsstrings;
 
 {$IFDEF FPC }
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400) }
