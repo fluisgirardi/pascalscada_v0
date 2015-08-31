@@ -2,6 +2,7 @@
 <CONFIG>
   <Package Version="4">
     <Name Value="pascalscada_hmi"/>
+    <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
@@ -14,12 +15,9 @@
           <SyntaxMode Value="Delphi"/>
         </SyntaxOptions>
       </Parsing>
-      <Other>
-        <CompilerPath Value="$(CompPath)"/>
-      </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="41">
+    <Files Count="42">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -186,28 +184,34 @@
         <AddToUsesPkgSection Value="False"/>
         <UnitName Value="HMITransparentButton"/>
       </Item41>
+      <Item42>
+        <Filename Value="src/hmi/hmi_computedimagelist.pas"/>
+        <UnitName Value="HMI_ComputedImageList"/>
+      </Item42>
     </Files>
-    <Type Value="RunAndDesignTime"/>
-    <RequiredPkgs Count="5">
+    <RequiredPkgs Count="6">
       <Item1>
-        <PackageName Value="BGRABitmapPack"/>
+        <PackageName Value="bgracontrols"/>
       </Item1>
       <Item2>
+        <PackageName Value="BGRABitmapPack"/>
+      </Item2>
+      <Item3>
         <PackageName Value="pascalscada"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
-      </Item2>
-      <Item3>
+      </Item3>
+      <Item4>
         <PackageName Value="pascalscada_common"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
-      </Item3>
-      <Item4>
-        <PackageName Value="IDEIntf"/>
       </Item4>
       <Item5>
-        <PackageName Value="LCL"/>
+        <PackageName Value="IDEIntf"/>
       </Item5>
+      <Item6>
+        <PackageName Value="LCL"/>
+      </Item6>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

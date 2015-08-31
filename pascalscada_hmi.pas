@@ -16,7 +16,7 @@ uses
   HMIEdit, HMIKeyboardManager, HMILabel, hmiobjectcolletion, HMIProgressBar, 
   hmipropeditor, HMIRadioButton, HMIRadioGroup, hmiregister, HMIScrollBar, 
   HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, ualfakeyboard, 
-  unumerickeyboard, usrmgnt_login, LazarusPackageIntf;
+  unumerickeyboard, usrmgnt_login, HMI_ComputedImageList, LazarusPackageIntf;
 
 implementation
 

@@ -147,7 +147,8 @@ type
   private
     FTag:TPLCTag;
     FConditionZones:TColorZones;
-    FObjects:TObjectWithColorPropetiesColletion;    procedure ConditionItemChanged(Sender: TObject);
+    FObjects:TObjectWithColorPropetiesColletion;
+    procedure ConditionItemChanged(Sender: TObject);
     procedure CollectionNeedsComponentState(var CurState: TComponentState);
     procedure ObjectItemChanged(Sender: TObject);
     function GetConditionZones: TColorZones;
@@ -310,7 +311,7 @@ var
   i: Integer;
 begin
   inherited Notification(AComponent, Operation);
-  if Operation=opRemove then begin
+  if (Operation=opRemove) and Assigned(FObjects) then begin
     for i:=0 to FObjects.Count-1 do begin
       if TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).TargetObject=AComponent then begin
         TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).TargetObject:=nil;
