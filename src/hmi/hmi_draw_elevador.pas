@@ -94,16 +94,16 @@ begin
   //coordenadas que desenham o pé do elevador.
   //###############################################################################
   x[0].X:=0;
-  x[0].Y:=Height-BodyWidth-(BorderWidth div 2)-(BorderWidth mod 2);
+  x[0].Y:=Height-BodyWidth-(BorderWidth/2);
 
   x[1].X:=3*BodyWidth-1;
-  x[1].Y:=Height-BodyWidth-(BorderWidth div 2)-(BorderWidth mod 2);
+  x[1].Y:=Height-BodyWidth-(BorderWidth/2);
 
   x[2].X:=2*BodyWidth-1;
-  x[2].Y:=Height-(BorderWidth div 2)-(BorderWidth mod 2);
+  x[2].Y:=Height-(BorderWidth/2);
 
   x[3].X:=BodyWidth;
-  x[3].Y:=Height-(BorderWidth div 2)-(BorderWidth mod 2);
+  x[3].Y:=Height-(BorderWidth/2);
 
   //###############################################################################
   //preenchimento do pé do elevador.
