@@ -48,6 +48,7 @@ begin
   if (FValveBodyPercent<0) or (FValveBodyPercent>1) then
     raise exception.Create('ValveBodyPercent accepts values between [0.0 .. 1.0]');
   FValveBodyPercent:=AValue;
+  InvalidateDraw;
 end;
 
 procedure THMIBasicValve.DrawControl;
@@ -55,16 +56,22 @@ var
   emptyArea: TBGRABitmap;
   p:array of TPointF;
 begin
-  if Height<=Width then
-    emptyArea := TBGRABitmap.Create(Width, Height)
-  else
-    emptyArea := TBGRABitmap.Create(Height, Width);
+  if (Width=0) or (Height=0) then begin
+    emptyArea := TBGRABitmap.Create;
+  end else begin
+    if Height<=Width then
+      emptyArea := TBGRABitmap.Create(Width, Height)
+    else
+      emptyArea := TBGRABitmap.Create(Height, Width);
+  end;
   //----------------------------------------------------------------------------
   try
     FControlArea.Assign(emptyArea);
   finally
     FreeAndNil(emptyArea);
   end;
+
+  if (Width=0) or (Height=0) then exit;
 
   SetLength(p, 4);
 

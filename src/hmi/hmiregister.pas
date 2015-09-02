@@ -33,6 +33,7 @@ uses
   hmibooleanpropertyconnector, HMIComboBox, HMIKeyboardManager,
   hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca,
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton,
+  HMI_Draw_Valves,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -76,7 +77,7 @@ begin
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);
   RegisterComponents(strControlsPallete,  [THMIFitaBasica, THMIElevadorBasico,
                                            THMIRedlerBasico, THMIRoscaBasica,
-                                           THMIPolyline]);
+                                           THMIPolyline, THMIBasicValve]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 

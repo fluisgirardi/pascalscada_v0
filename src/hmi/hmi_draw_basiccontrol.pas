@@ -279,9 +279,8 @@ begin
   try
     inherited Resize;
   finally
-    DrawControl;
-    UpdateShape;
-    Invalidate;
+    InvalidateDraw;
+    Repaint;
   end;
 end;
 
