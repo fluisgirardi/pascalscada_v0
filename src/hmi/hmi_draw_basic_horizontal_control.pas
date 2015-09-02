@@ -15,20 +15,12 @@ type
   THMIBasicHorizontalControl = class(THMIBasicControl)
   protected
     FBodyHeight: Byte;
-    FBodyColor: TColor;
-
-    FBorderColor: TColor;
-    FBorderSize: Byte;
 
     procedure SetBodyHeight(AValue: Byte); virtual;
     procedure SetBodyColor(AValue: TColor); virtual;
-    procedure SetBorderColor(AValue: TColor); override;
-    procedure SetBorderSize(AValue: Byte); virtual;
 
     property BodyHeight:Byte read FBodyHeight write SetBodyHeight;
     property BodyColor:TColor read FBodyColor Write SetBodyColor;
-    property BorderColor:TColor read FBorderColor write SetBorderColor;
-    property BorderSize:Byte read FBorderSize write SetBorderSize;
 
   public
     constructor Create(AOwner: TComponent); override;
@@ -45,15 +37,7 @@ begin
   BodyColor:=clSilver;
   BodyHeight:=12; //inicializa o desenho com 12px de largura do
   BorderColor:=clBlack;
-  BorderSize:=1;
   EndUpdate;
-end;
-
-procedure THMIBasicHorizontalControl.SetBorderSize(AValue: Byte);
-begin
-  if FBorderSize=AValue then Exit;
-  FBorderSize:=AValue;
-  Invalidate;
 end;
 
 procedure THMIBasicHorizontalControl.SetBodyHeight(AValue: Byte);
@@ -74,13 +58,6 @@ procedure THMIBasicHorizontalControl.SetBodyColor(AValue: TColor);
 begin
   if FBodyColor=AValue then Exit;
   FBodyColor:=AValue;
-  Invalidate;
-end;
-
-procedure THMIBasicHorizontalControl.SetBorderColor(AValue: TColor);
-begin
-  if FBorderColor=AValue then Exit;
-  FBorderColor:=AValue;
   Invalidate;
 end;
 

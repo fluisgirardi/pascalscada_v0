@@ -112,6 +112,8 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
+
+    property OnClick;
   end;
 
 implementation

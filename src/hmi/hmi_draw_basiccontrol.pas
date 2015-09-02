@@ -15,25 +15,35 @@ type
   { THMIBasicControl }
 
   THMIBasicControl = class(TCustomControl)
-  private
   protected
+    FBorderColor:TColor;
+    FBodyColor: TColor;
+
+    FBorderWidth:Integer;
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
     function ControlArea(pixel: TBGRAPixel): Boolean;
     function  CanRepaint:Boolean; virtual;
+    procedure InvalidateDraw; virtual;
     procedure DrawControl; virtual;
     procedure UpdateShape; virtual;
     procedure Paint; override;
     procedure Resize; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
     procedure SetParent(NewParent: TWinControl); override;
-    procedure SetBorderColor(AValue: TColor); virtual; abstract;
+    procedure SetBodyColor(AValue: TColor); virtual;
+    procedure SetBorderColor(AValue: TColor); virtual;
+    procedure SetBorderWidth(AValue: Integer); virtual;
     procedure Loaded; override;
+    property BorderColor:TColor read FBorderColor write SetBorderColor default clBlack;
+    property BorderWidth:Integer read FBorderWidth write SetBorderWidth default 1;
+    property BodyColor:TColor read FBodyColor write SetBodyColor default clSilver;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure BeginUpdate; virtual;
     procedure EndUpdate; virtual;
+    procedure Invalidate; override;
   end;
 
 implementation
@@ -47,9 +57,40 @@ begin
   Result:=FUpdatingCount=0;
 end;
 
+procedure THMIBasicControl.InvalidateDraw;
+var
+  emptyArea: TBGRABitmap;
+begin
+  emptyArea := TBGRABitmap.Create();
+  try
+    FControlArea.Assign(emptyArea);
+  finally
+    FreeAndNil(emptyArea);
+  end;
+  Invalidate;
+end;
+
 procedure THMIBasicControl.DrawControl;
 begin
+  //metodo sobrescrito nas classes filhas.
+end;
 
+procedure THMIBasicControl.SetBorderWidth(AValue: Integer);
+begin
+  if FBorderWidth=AValue then Exit;
+  if AValue<0 then exit;
+  FBorderWidth:=AValue;
+  if ComponentState*[csReading, csLoading]=[] then
+    InvalidateDraw;
+end;
+
+procedure THMIBasicControl.SetBodyColor(AValue: TColor);
+begin
+  if FBodyColor=AValue then Exit;
+  FBodyColor:=AValue;
+
+  if ComponentState*[csReading, csLoading]=[] then
+    Invalidate;
 end;
 
 function THMIBasicControl.ControlArea(pixel:TBGRAPixel):Boolean;
@@ -222,17 +263,12 @@ end;
 procedure THMIBasicControl.Paint;
 begin
   if assigned(FControlArea) then begin
-    //{$ifdef WINDOWS}
-    try
-      if FControlArea.Empty Or (FControlArea.Width<>Width) Or (FControlArea.Height<>Height) then begin
-        DrawControl;
-        UpdateShape;
-        Exit;
-      end;
-    finally
-
+    if FControlArea.Empty Or (FControlArea.Width<>Width) Or (FControlArea.Height<>Height) then begin
+      DrawControl;
+      UpdateShape;
+      Repaint;
+      exit;
     end;
-    //{$endif}
     FControlArea.Draw(Canvas, 0, 0, False);
   end;
   inherited Paint;
@@ -260,11 +296,19 @@ end;
 procedure THMIBasicControl.SetParent(NewParent: TWinControl);
 begin
   inherited SetParent(NewParent);
-  if NewParent<>nil then begin
+  if (NewParent<>nil) and (ComponentState*[csReading, csLoading]=[]) then begin
     DrawControl;
     UpdateShape;
     Invalidate;
   end;
+end;
+
+procedure THMIBasicControl.SetBorderColor(AValue: TColor);
+begin
+  if AValue=FBorderColor then exit;
+  FBorderColor:=AValue;
+  if ComponentState*[csReading, csLoading]=[] then
+    Invalidate;
 end;
 
 procedure THMIBasicControl.Loaded;
@@ -279,6 +323,9 @@ end;
 constructor THMIBasicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FBodyColor:=clSilver;
+  FBorderColor:=clBlack;
+  FBorderWidth:=1;
   FControlArea:=TBGRABitmap.Create;
   if [csLoading, csReading]*ComponentState<>[] then
     BeginUpdate;
@@ -304,6 +351,14 @@ begin
   if FUpdatingCount=0 then
     Invalidate;
 
+end;
+
+procedure THMIBasicControl.Invalidate;
+begin
+  if FUpdatingCount=0 then begin
+    DrawControl;
+    inherited Invalidate;
+  end;
 end;
 
 end.

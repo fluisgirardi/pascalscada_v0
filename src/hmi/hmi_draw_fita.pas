@@ -35,7 +35,7 @@ begin
   //###############################################################################
   FControlArea.CanvasBGRA.Brush.Color:=FBodyColor;
   FControlArea.CanvasBGRA.Pen.Color  :=FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  :=FBorderSize;
+  FControlArea.CanvasBGRA.Pen.Width  :=FBorderWidth;
 
   //desenha o quadrado da fita.
   FControlArea.CanvasBGRA.Rectangle(FBodyHeight div 2,0,Width-(FBodyHeight div 2), FBodyHeight);

@@ -37,7 +37,7 @@ var
   minheight: Integer;
 begin
   {espaco para as pás e mais um pixel para o eixo central.}
-  minheight:=2*FBorderSize+2+1;
+  minheight:=2*FBorderWidth+2+1;
   if AValue<minheight then exit;
   inherited SetBodyHeight(AValue);
 end;
@@ -59,16 +59,16 @@ begin
   //###############################################################################
   FControlArea.CanvasBGRA.Brush.Color:=FBodyColor;
   FControlArea.CanvasBGRA.Pen.Color  :=FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  :=FBorderSize;
+  FControlArea.CanvasBGRA.Pen.Width  :=FBorderWidth;
 
   //desenha o quadrado da fita.
   FControlArea.CanvasBGRA.Rectangle(0, 0, Width, FBodyHeight);
 
   //evita um lado menor que o outro.
   if (FBodyHeight mod 2) = 1 then
-    eixo_h:=(FBodyHeight-(2*FBorderSize)) div 3
+    eixo_h:=(FBodyHeight-(2*FBorderWidth)) div 3
   else
-    eixo_h:=(FBodyHeight-(2*FBorderSize)) div 4;
+    eixo_h:=(FBodyHeight-(2*FBorderWidth)) div 4;
 
   //menor tamanho do eixo
   if eixo_h<1 then eixo_h:=1;
@@ -78,7 +78,7 @@ begin
   //###############################################################################
   FControlArea.CanvasBGRA.Brush.Color:=FBorderColor;
   FControlArea.CanvasBGRA.Pen.Color  :=FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  :=FBorderSize;
+  FControlArea.CanvasBGRA.Pen.Width  :=FBorderWidth;
 
   eixo_top:=(FBodyHeight - eixo_h) div 2;
 
@@ -86,9 +86,9 @@ begin
   FControlArea.CanvasBGRA.Rectangle(0, eixo_top, Width, eixo_top+eixo_h);
 
   //desenha as pás do redler.
-  pa_h := FBodyHeight - (2*FBorderSize) - eixo_h;
+  pa_h := FBodyHeight - (2*FBorderWidth) - eixo_h;
   pa_x:=FBodyHeight div 2;
-  while (pa_x+eixo_h)<(Width-(2*FBorderSize)) do begin
+  while (pa_x+eixo_h)<(Width-(2*FBorderWidth)) do begin
     //desenha em baixo do eixo...
     if (pa_x mod 12)=0 then
       FControlArea.CanvasBGRA.Rectangle(pa_x, eixo_top+eixo_h, pa_x+eixo_h, eixo_top+eixo_h+pa_h)

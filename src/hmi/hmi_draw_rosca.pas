@@ -45,7 +45,7 @@ begin
   //###############################################################################
   FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
   FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  := FBorderSize;
+  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
 
   //desenha o quadrado da rosca.
   FControlArea.CanvasBGRA.Rectangle(0, 0, Width, FBodyHeight);
@@ -65,7 +65,7 @@ begin
     inc(line_x, FBodyHeight);
   end;
   //desenha a "rosca"
-  FControlArea.CanvasBGRA.Pen.Width  :=FBorderSize+1;
+  FControlArea.CanvasBGRA.Pen.Width  :=FBorderWidth+1;
   FControlArea.CanvasBGRA.Polyline(x);
 end;
 
