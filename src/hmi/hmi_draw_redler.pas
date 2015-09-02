@@ -16,6 +16,7 @@ type
 
   THMIRedlerBasico = class(THMIBasicHorizontalControl)
   protected
+    procedure UpdateShape; override;
     procedure SetBodyHeight(AValue: Byte); override;
     procedure DrawControl; override;
   end;
@@ -23,6 +24,13 @@ type
 implementation
 
 { TRedlerBasico }
+
+procedure THMIRedlerBasico.UpdateShape;
+begin
+  //evita chamar o metodo herdado
+  //pois este e um controle retangular
+  //e nao necessita de cortes.
+end;
 
 procedure THMIRedlerBasico.SetBodyHeight(AValue: Byte);
 var

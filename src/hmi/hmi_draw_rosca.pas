@@ -17,6 +17,7 @@ type
   THMIRoscaBasica = class(THMIBasicHorizontalControl)
   protected
     procedure DrawControl; override;
+    procedure UpdateShape; override;
   end;
 
 implementation
@@ -66,9 +67,13 @@ begin
   //desenha a "rosca"
   FControlArea.CanvasBGRA.Pen.Width  :=FBorderSize+1;
   FControlArea.CanvasBGRA.Polyline(x);
+end;
 
-  //desenha o controle.
-  FControlArea.Draw(Canvas,0,0, true);
+procedure THMIRoscaBasica.UpdateShape;
+begin
+  //evita chamar o metodo herdado
+  //pois este e um controle retangular
+  //e nao necessita de cortes.
 end;
 
 end.

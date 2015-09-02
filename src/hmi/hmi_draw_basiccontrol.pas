@@ -16,10 +16,6 @@ type
 
   THMIBasicControl = class(TCustomControl)
   private
-    //{$IFDEF WINDOWS}
-    UpdatingShape,
-    UpdateShapeOnPaint:Boolean;
-    //{$ENDIF}
   protected
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
@@ -28,11 +24,11 @@ type
     procedure DrawControl; virtual;
     procedure UpdateShape; virtual;
     procedure Paint; override;
+    procedure Resize; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
-  protected
+    procedure SetParent(NewParent: TWinControl); override;
     procedure SetBorderColor(AValue: TColor); virtual; abstract;
     procedure Loaded; override;
-    procedure Loading; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -58,7 +54,7 @@ end;
 
 function THMIBasicControl.ControlArea(pixel:TBGRAPixel):Boolean;
 begin
-  Result:=pixel.alpha>0;
+  Result:=pixel.alpha>127;
 end;
 
 procedure THMIBasicControl.UpdateShape;
@@ -87,10 +83,7 @@ var
   {$ENDIF}
 
 begin
-  if (not UpdatingShape) then begin
-    UpdateShapeOnPaint:=true;
-    exit;
-  end;
+  if Parent=nil then exit;
 
   {$IFDEF RGN_PIXEL_BY_PIXEL}
   frgn:=TRegion.Create;
@@ -230,19 +223,30 @@ procedure THMIBasicControl.Paint;
 begin
   if assigned(FControlArea) then begin
     //{$ifdef WINDOWS}
-    UpdatingShape:=True;
     try
-      if UpdateShapeOnPaint then begin
+      if FControlArea.Empty Or (FControlArea.Width<>Width) Or (FControlArea.Height<>Height) then begin
+        DrawControl;
         UpdateShape;
-        UpdateShapeOnPaint:=false;
+        Exit;
       end;
     finally
-      UpdatingShape:=false;
+
     end;
     //{$endif}
     FControlArea.Draw(Canvas, 0, 0, False);
   end;
   inherited Paint;
+end;
+
+procedure THMIBasicControl.Resize;
+begin
+  try
+    inherited Resize;
+  finally
+    DrawControl;
+    UpdateShape;
+    Invalidate;
+  end;
 end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
@@ -253,21 +257,23 @@ begin
     Message.Result:=0;
 end;
 
+procedure THMIBasicControl.SetParent(NewParent: TWinControl);
+begin
+  inherited SetParent(NewParent);
+  if NewParent<>nil then begin
+    DrawControl;
+    UpdateShape;
+    Invalidate;
+  end;
+end;
+
 procedure THMIBasicControl.Loaded;
 begin
-  DebugLn('Loaded');
   inherited Loaded;
   DrawControl;
   UpdateShape;
   EndUpdate;
   InvalidateControl(true,false);
-  DebugLn('END: Loaded');
-end;
-
-procedure THMIBasicControl.Loading;
-begin
-  inherited Loading;
-  DebugLn('THMIBasicControl.Loading...');
 end;
 
 constructor THMIBasicControl.Create(AOwner: TComponent);
@@ -276,9 +282,6 @@ begin
   FControlArea:=TBGRABitmap.Create;
   if [csLoading, csReading]*ComponentState<>[] then
     BeginUpdate;
-
-  DebugLn('THMIBasicControl.Create...');
-
 end;
 
 destructor THMIBasicControl.Destroy;
