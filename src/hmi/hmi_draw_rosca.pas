@@ -6,7 +6,7 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control,
-  BGRABitmap, BGRABitmapTypes, BGRAGtkBitmap;
+  BGRABitmap, BGRABitmapTypes;
 
 type
 
