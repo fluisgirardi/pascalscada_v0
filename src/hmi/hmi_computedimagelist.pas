@@ -26,18 +26,45 @@ type
     function Add: TColorCollectionitem;
   end;
 
+  { TComputedImageList }
+
   TComputedImageList = class(TBGRAImageList)
   private
+    FBaseImage: TBitmap;
+    FImageColors: TColorCollection;
+    procedure SetBaseImage(AValue: TBitmap);
+    procedure SetImageColors(AValue: TColorCollection);
     { Private declarations }
   protected
     { Protected declarations }
   public
-    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
   published
-    { Published declarations }
+    property BaseImage:TBitmap read FBaseImage write SetBaseImage;
+    property ImageColors:TColorCollection read FImageColors write SetImageColors;
   end;
 
 implementation
+
+{ TComputedImageList }
+
+procedure TComputedImageList.SetBaseImage(AValue: TBitmap);
+begin
+  if FBaseImage=AValue then Exit;
+  if Assigned(FBaseImage) then FBaseImage.Assign(AValue);
+end;
+
+procedure TComputedImageList.SetImageColors(AValue: TColorCollection);
+begin
+  if FImageColors=AValue then Exit;
+  if Assigned(FImageColors) then FImageColors.Assign(AValue);
+end;
+
+constructor TComputedImageList.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FBaseImage:=TBitmap.Create;
+end;
 
 { TColorCollection }
 

@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, sysutils, Controls, Graphics, BGRABitmap, BGRABitmapTypes, LCLIntf,
-  LMessages;
+  LMessages, LCLProc;
 
 type
 
@@ -31,6 +31,8 @@ type
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
   protected
     procedure SetBorderColor(AValue: TColor); virtual; abstract;
+    procedure Loaded; override;
+    procedure Loading; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -145,34 +147,38 @@ begin
 
   {$IFDEF RGN_DETECT_RECTANGLES}
   frgn:=TRegion.Create;
-  for y:=0 to FControlArea.Height-1 do begin
-    for x:=0 to FControlArea.Width-1 do begin
-      if ControlArea(FControlArea.ScanLine[y][x]) and (PtInRegion(frgn.Handle, x, y)=false) then begin
-        for x1:=x to FControlArea.Width-2 do begin
-          if ControlArea(FControlArea.ScanLine[y][x1+1])=false then break;
-          if PtInRegion(frgn.Handle, x1+1, y) then break;
-        end;
-
-        invalidline:=false;
-        for y1:=y to FControlArea.Height-2 do begin
-          for xa:=x to x1 do begin
-            if ControlArea(FControlArea.ScanLine[y1+1][xa])=false then begin
-              invalidline:=true;
-              break;
-            end;
-            if PtInRegion(frgn.Handle, xa, y1+1) then begin
-              invalidline:=true;
-              break;
-            end;
+  try
+    for y:=0 to FControlArea.Height-1 do begin
+      for x:=0 to FControlArea.Width-1 do begin
+        if ControlArea(FControlArea.ScanLine[y][x]) and (PtInRegion(frgn.Handle, x, y)=false) then begin
+          for x1:=x to FControlArea.Width-2 do begin
+            if ControlArea(FControlArea.ScanLine[y][x1+1])=false then break;
+            if PtInRegion(frgn.Handle, x1+1, y) then break;
           end;
-          if invalidline then break;
+
+          invalidline:=false;
+          for y1:=y to FControlArea.Height-2 do begin
+            for xa:=x to x1 do begin
+              if ControlArea(FControlArea.ScanLine[y1+1][xa])=false then begin
+                invalidline:=true;
+                break;
+              end;
+              if PtInRegion(frgn.Handle, xa, y1+1) then begin
+                invalidline:=true;
+                break;
+              end;
+            end;
+            if invalidline then break;
+          end;
+          frgn.AddRectangle(x,y,x1+1,y1+1);
         end;
-        frgn.AddRectangle(x,y,x1+1,y1+1);
       end;
     end;
+    SetShape(frgn);
+  finally
+    FreeAndNil(frgn);
   end;
-  SetShape(frgn);
-  FreeAndNil(frgn);
+
   {$ENDIF}
 
   {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES))}
@@ -247,15 +253,37 @@ begin
     Message.Result:=0;
 end;
 
+procedure THMIBasicControl.Loaded;
+begin
+  DebugLn('Loaded');
+  inherited Loaded;
+  DrawControl;
+  UpdateShape;
+  EndUpdate;
+  InvalidateControl(true,false);
+  DebugLn('END: Loaded');
+end;
+
+procedure THMIBasicControl.Loading;
+begin
+  inherited Loading;
+  DebugLn('THMIBasicControl.Loading...');
+end;
+
 constructor THMIBasicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FControlArea:=TBGRABitmap.Create;
+  if [csLoading, csReading]*ComponentState<>[] then
+    BeginUpdate;
+
+  DebugLn('THMIBasicControl.Create...');
+
 end;
 
 destructor THMIBasicControl.Destroy;
 begin
-  FControlArea.Destroy;
+  FreeAndNil(FControlArea);
   inherited Destroy;
 end;
 

@@ -169,27 +169,16 @@ begin
     p[i].y:=TPointCollectionItem(FPointCoordinates.Items[i]).Y;
   end;
 
-  //FControlArea.PenStyle:=psSolid;
-  //FControlArea.JoinStyle:=pjsBevel;
   aColor:=ColorToBGRA(FLineColor);
   FControlArea.CanvasBGRA.Pen.Style:=psSolid;
-  //if FLineColor<>clNone then
-    FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
-  //else
-  //  FControlArea.CanvasBGRA.Pen.Color:=clBlack;
-
+  FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
   FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
-  //FControlArea.DrawPolyLineAntialias(p, aColor, FLineWidth);
   FControlArea.CanvasBGRA.Polyline(p);
 end;
 
 procedure THMIPolyline.Loaded;
 begin
   inherited Loaded;
-  DrawControl;
-  UpdateShape;
-  EndUpdate;
-  InvalidateControl(true,false);
 end;
 
 constructor THMIPolyline.Create(AOwner: TComponent);
@@ -201,13 +190,11 @@ begin
   FLineWidth:=2;
   FLineColor:=clBlack;
   FOnlyColorChanged:=false;
-  if [csLoading, csReading]*ComponentState<>[] then
-    BeginUpdate;
 end;
 
 destructor THMIPolyline.Destroy;
 begin
-  FPointCoordinates.Destroy;
+  FreeAndNil(FPointCoordinates);
   inherited Destroy;
 end;
 
