@@ -9,14 +9,14 @@ interface
 uses
   BasicUserManagement, ControlSecurityManager, crosskeyevents, 
   CustomizedUserManagement, hmi_draw_basic_horizontal_control, 
-  hmi_draw_basiccontrol, hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, 
-  hmi_draw_rosca, hmi_polyline, HMIAnimation, hmibasiccolletion, 
-  hmibooleanpropertyconnector, HMIButton, HMICheckBox, 
-  hmicolorpropertyconnector, HMIComboBox, HMIControlDislocatorAnimation, 
-  HMIEdit, HMIKeyboardManager, HMILabel, hmiobjectcolletion, HMIProgressBar, 
-  hmipropeditor, HMIRadioButton, HMIRadioGroup, hmiregister, HMIScrollBar, 
-  HMIText, HMITrackBar, HMITypes, HMIUpDown, HMIZones, ualfakeyboard, 
-  unumerickeyboard, usrmgnt_login, HMI_ComputedImageList, LazarusPackageIntf;
+  hmi_draw_basiccontrol, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca, 
+  hmi_polyline, HMIAnimation, hmibasiccolletion, hmibooleanpropertyconnector, 
+  HMIButton, HMICheckBox, hmicolorpropertyconnector, HMIComboBox, 
+  HMIControlDislocatorAnimation, HMIEdit, HMIKeyboardManager, HMILabel, 
+  hmiobjectcolletion, HMIProgressBar, hmipropeditor, HMIRadioButton, 
+  HMIRadioGroup, hmiregister, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
+  HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
+  HMI_ComputedImageList, HMI_Draw_Valves, hmi_draw_elevador, LazarusPackageIntf;
 
 implementation
 
