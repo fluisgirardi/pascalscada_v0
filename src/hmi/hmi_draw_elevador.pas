@@ -43,7 +43,7 @@ procedure THMIElevadorBasico.SetHeadColor(AValue: TColor);
 begin
   if FHeadColor=AValue then Exit;
   FHeadColor:=AValue;
-  Invalidate;
+  InvalidateDraw;
 end;
 
 procedure THMIElevadorBasico.DrawControl;
@@ -169,6 +169,7 @@ begin
   if Height<Constraints.MinHeight then
     Height:=Constraints.MinHeight;
   Width:=FBodyWidth*3;
+  InvalidateShape;
   EndUpdate;
 end;
 
@@ -176,7 +177,7 @@ procedure THMIElevadorBasico.SetFooterColor(AValue: TColor);
 begin
   if FFooterColor=AValue then Exit;
   FFooterColor:=AValue;
-  Invalidate;
+  InvalidateDraw;
 end;
 
 end.

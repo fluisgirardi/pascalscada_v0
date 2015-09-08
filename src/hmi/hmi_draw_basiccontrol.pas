@@ -18,13 +18,15 @@ type
   protected
     FBorderColor:TColor;
     FBodyColor: TColor;
+    FShouldRedraw:Boolean;
 
     FBorderWidth:Integer;
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
-    function ControlArea(pixel: TBGRAPixel): Boolean;
+    function  ControlArea(pixel: TBGRAPixel): Boolean; virtual;
     function  CanRepaint:Boolean; virtual;
     procedure InvalidateDraw; virtual;
+    procedure InvalidateShape; virtual;
     procedure DrawControl; virtual;
     procedure UpdateShape; virtual;
     procedure Paint; override;
@@ -58,6 +60,12 @@ begin
 end;
 
 procedure THMIBasicControl.InvalidateDraw;
+begin
+  FShouldRedraw:=true;
+  Invalidate;
+end;
+
+procedure THMIBasicControl.InvalidateShape;
 var
   emptyArea: TBGRABitmap;
 begin
@@ -81,7 +89,7 @@ begin
   if AValue<0 then exit;
   FBorderWidth:=AValue;
   if ComponentState*[csReading, csLoading]=[] then
-    InvalidateDraw;
+    InvalidateShape;
 end;
 
 procedure THMIBasicControl.SetBodyColor(AValue: TColor);
@@ -90,7 +98,7 @@ begin
   FBodyColor:=AValue;
 
   if ComponentState*[csReading, csLoading]=[] then
-    Invalidate;
+    InvalidateDraw;
 end;
 
 function THMIBasicControl.ControlArea(pixel:TBGRAPixel):Boolean;
@@ -266,8 +274,11 @@ begin
     if FControlArea.Empty Or (FControlArea.Width<>Width) Or (FControlArea.Height<>Height) then begin
       DrawControl;
       UpdateShape;
-      Repaint;
-      exit;
+    end else begin
+      if FShouldRedraw then begin
+        DrawControl;
+        FShouldRedraw:=false;
+      end;
     end;
     FControlArea.Draw(Canvas, 0, 0, False);
   end;
@@ -279,8 +290,7 @@ begin
   try
     inherited Resize;
   finally
-    InvalidateDraw;
-    Repaint;
+    InvalidateShape;
   end;
 end;
 
@@ -307,7 +317,7 @@ begin
   if AValue=FBorderColor then exit;
   FBorderColor:=AValue;
   if ComponentState*[csReading, csLoading]=[] then
-    Invalidate;
+    InvalidateDraw;
 end;
 
 procedure THMIBasicControl.Loaded;
@@ -355,7 +365,6 @@ end;
 procedure THMIBasicControl.Invalidate;
 begin
   if FUpdatingCount=0 then begin
-    DrawControl;
     inherited Invalidate;
   end;
 end;
