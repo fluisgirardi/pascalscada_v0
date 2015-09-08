@@ -21,7 +21,7 @@ type
  public
    //: @exclude
    function GetComponentState:TComponentState;
- published
+ public
 
     {$IFDEF PORTUGUES}
     {:
