@@ -10,7 +10,7 @@ uses
 
 type
 
-  { THMIPneumaticValve }
+  TValveType = (vtSimple, vtPneumaticOnOff, vtPneumaticProportional);
 
   { THMIBasicValve }
 
@@ -18,8 +18,10 @@ type
   private
     FMirrored: Boolean;
     FValveBodyPercent: Double;
+    FValveType: TValveType;
     procedure SetMirrored(AValue: Boolean);
     procedure SetValveBodyPercent(AValue: Double);
+    procedure SetValveType(AValue: TValveType);
   protected
     procedure DrawControl; override;
   public
@@ -32,6 +34,7 @@ type
 
     property Mirrored:Boolean read FMirrored write SetMirrored default false;
     property ValveBodyPercent:Double read FValveBodyPercent write SetValveBodyPercent;
+    property ValveType:TValveType read FValveType write SetValveType default vtSimple;
 
     property OnClick;
   end;
@@ -44,7 +47,7 @@ procedure THMIBasicValve.SetMirrored(AValue: Boolean);
 begin
   if FMirrored=AValue then Exit;
   FMirrored:=AValue;
-  InvalidateDraw;
+  InvalidateShape;
 end;
 
 procedure THMIBasicValve.SetValveBodyPercent(AValue: Double);
@@ -53,7 +56,14 @@ begin
   if (FValveBodyPercent<0) or (FValveBodyPercent>1) then
     raise exception.Create('ValveBodyPercent accepts values between [0.0 .. 1.0]');
   FValveBodyPercent:=AValue;
-  InvalidateDraw;
+  InvalidateShape;
+end;
+
+procedure THMIBasicValve.SetValveType(AValue: TValveType);
+begin
+  if FValveType=AValue then Exit;
+  FValveType:=AValue;
+  InvalidateShape;
 end;
 
 procedure THMIBasicValve.DrawControl;
@@ -68,6 +78,10 @@ begin
     FreeAndNil(emptyArea);
   end;
 
+  FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
+  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
+  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
+
   SetLength(p, 4);
   IF Width>=Height THEN BEGIN
     p[0].x:=FBorderWidth/2;
@@ -81,6 +95,48 @@ begin
 
     p[3].x:=FBorderWidth/2;
     p[3].y:=Height-(FBorderWidth/2);
+
+    FControlArea.CanvasBGRA.PolygonF(p);
+
+    //risco
+    case FValveType of
+      vtPneumaticProportional,
+      vtPneumaticOnOff:
+        FControlArea.CanvasBGRA.PolylineF([PointF(Width/2,
+                                                  (BorderWidth/2)),
+                                           PointF(Width/2,
+                                                  (1-(FValveBodyPercent/2))*Height-(BorderWidth/2))]);
+    end;
+
+    case FValveType of
+      vtPneumaticOnOff: begin
+        //  p[0].x:=FBorderWidth/2;
+        //  p[0].y:=(1-FValveBodyPercent)*Height;
+        //
+        //  p[1].x:=Width-(FBorderWidth/2);
+        //  p[1].y:=Height-(FBorderWidth/2);
+        //
+        //  p[2].x:=Width-(FBorderWidth/2);
+        //  p[2].y:=(1-FValveBodyPercent)*Height;
+        //
+        //  p[3].x:=FBorderWidth/2;
+        //  p[3].y:=Height-(FBorderWidth/2);
+        //FControlArea.CanvasBGRA.);
+      end;
+      vtPneumaticProportional: begin
+        FControlArea.FillEllipseAntialias(Width/2-(FBorderWidth/2),
+                                          ((1-FValveBodyPercent)*Height/2)-(FBorderWidth/2),
+                                          Height*(1-FValveBodyPercent)/2,
+                                          Height*(1-FValveBodyPercent)/2 ,
+                                          ColorToBGRA(FBodyColor));
+        FControlArea.EllipseAntialias(Width/2-(FBorderWidth/2),
+                                      ((1-FValveBodyPercent)*Height/2)-(FBorderWidth/2),
+                                      Height*(1-FValveBodyPercent)/2,
+                                      Height*(1-FValveBodyPercent)/2 ,
+                                      ColorToBGRA(FBorderColor),
+                                      FBorderWidth);
+      end;
+    end;
   end else begin
     p[0].x:=(1-FValveBodyPercent)*Width;
     p[0].y:=FBorderWidth/2;
@@ -93,13 +149,25 @@ begin
 
     p[3].x:=Width-(FBorderWidth/2);
     p[3].y:=FBorderWidth/2;
+
+    FControlArea.CanvasBGRA.PolygonF(p);
+
+    case FValveType of
+      vtPneumaticProportional,
+      vtPneumaticOnOff:
+        FControlArea.CanvasBGRA.PolylineF([PointF((BorderWidth/2),
+                                                  Height/2),
+                                           PointF((1-(FValveBodyPercent/2))*Width-(BorderWidth/2),
+                                                  Height/2)]);
+    end;
   end;
 
-  FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
-  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
-
-  FControlArea.CanvasBGRA.PolygonF(p);
+  if FMirrored then begin
+    if Height<=Width then
+      FControlArea.VerticalFlip
+    else
+      FControlArea.HorizontalFlip;
+  end;
 end;
 
 constructor THMIBasicValve.Create(AOwner: TComponent);
