@@ -557,7 +557,7 @@ begin
   if not COMExist(PPortName) then
     goto erro1;
 
-  PPortHandle := CreateFile(PChar(PPortName), GENERIC_READ or GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH or FILE_FLAG_OVERLAPPED, 0);
+  PPortHandle := CreateFile(PChar('\\.\'+ PPortName), GENERIC_READ or GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH or FILE_FLAG_OVERLAPPED, 0);
   if PPortHandle=INVALID_HANDLE_VALUE then begin
     RefreshLastOSError;
     goto erro1;
@@ -1074,4 +1074,4 @@ begin
 {$ENDIF}
 end;
 
-end.
+end.
