@@ -70,6 +70,9 @@ procedure THMIBasicValve.DrawControl;
 var
   emptyArea: TBGRABitmap;
   p:array of TPointF;
+  alturaideal: real;
+  larguraideal: real;
+  larguradoquadrado: real;
 begin
   emptyArea := TBGRABitmap.Create(Width, Height);
   try
@@ -103,25 +106,28 @@ begin
       vtPneumaticProportional,
       vtPneumaticOnOff:
         FControlArea.CanvasBGRA.PolylineF([PointF( ifthen(((Width+FBorderWidth) mod 2)=1,Width,Width+1)/2,
-                                                   (FBorderWidth/2)),
+                                                   (FBorderWidth)),
                                            PointF( ifthen(((Width+FBorderWidth) mod 2)=1,Width,Width+1)/2,
                                                    (1-(FValveBodyPercent/2))*Height-(FBorderWidth/2))]);
     end;
 
     case FValveType of
       vtPneumaticProportional: begin
-      //  p[0].x:=(1-FValveBodyPercent)*Height;
-      //  p[0].y:=;
-      //
-      //  p[1].x:=Width-(FBorderWidth/2);
-      //  p[1].y:=Height-(FBorderWidth/2);
-      //
-      //  p[2].x:=Width-(FBorderWidth/2);
-      //  p[2].y:=(1-FValveBodyPercent)*Height;
-      //
-      //  p[3].x:=FBorderWidth/2;
-      //  p[3].y:=Height-(FBorderWidth/2);
-      //FControlArea.CanvasBGRA.);
+        larguraideal:=Width/2-Fborderwidth;
+        alturaideal:=(Width/4)*(Fvalvebodypercent*Height)/Width+((1-Fvalvebodypercent)*Height)-Fborderwidth;
+        larguradoquadrado:=min(larguraideal, alturaideal);
+        p[0].x:=(Width-larguradoquadrado)/2;
+        p[0].y:=FBorderWidth div 2 + FBorderWidth mod 2;
+
+        p[1].x:=Width-((Width-larguradoquadrado)/2);
+        p[1].y:=p[0].y;
+
+        p[2].x:=p[1].x;
+        p[2].y:=larguradoquadrado+(FBorderWidth div 2 + FBorderWidth mod 2);
+
+        p[3].x:=p[0].x;
+        p[3].y:=p[2].y;
+        FControlArea.CanvasBGRA.PolygonF(p);
       end;
       vtPneumaticOnOff: begin
         FControlArea.Pie(Width/2,
@@ -154,12 +160,27 @@ begin
     case FValveType of
       vtPneumaticProportional,
       vtPneumaticOnOff:
-        FControlArea.CanvasBGRA.PolylineF([PointF(FBorderWidth/2, ifthen(((Height+FBorderWidth) mod 2)=1,Height,Height+1)/2),
+        FControlArea.CanvasBGRA.PolylineF([PointF(FBorderWidth, ifthen(((Height+FBorderWidth) mod 2)=1,Height,Height+1)/2),
                                            PointF((1-(FValveBodyPercent/2))*Width-(BorderWidth/2), ifthen(((Height+FBorderWidth) mod 2)=1,Height,Height+1)/2)]);
     end;
 
     case FValveType of
       vtPneumaticProportional: begin
+        larguraideal:=Height/2-Fborderwidth;
+        alturaideal:=(Height/4)*(Fvalvebodypercent*Width)/Height+((1-Fvalvebodypercent)*Width)-Fborderwidth;
+        larguradoquadrado:=min(larguraideal, alturaideal);
+        p[0].x:=FBorderWidth div 2 + FBorderWidth mod 2;
+        p[0].y:=(Height-larguradoquadrado)/2;
+
+        p[1].x:=larguradoquadrado+(FBorderWidth div 2 + FBorderWidth mod 2);
+        p[1].y:= p[0].y;
+
+        p[2].x:=p[1].x;
+        p[2].y:=Height-((Height-larguradoquadrado)/2);
+
+        p[3].x:=p[0].x;
+        p[3].y:=p[2].y;
+        FControlArea.CanvasBGRA.PolygonF(p);
 
       end;
       vtPneumaticOnOff: begin
