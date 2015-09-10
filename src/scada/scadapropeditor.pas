@@ -332,7 +332,7 @@ begin
   if ProtocolDriver.HasTabBuilderEditor then
     Result:=1
   else
-    Result:=0;;
+    Result:=0;
 end;
 
 procedure TProtocolDriverComponentEditor.Edit;

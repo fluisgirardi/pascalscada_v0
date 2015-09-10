@@ -6,7 +6,7 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes, hmibasiccolletion;
+  BGRABitmapTypes, hmibasiccolletion, LMessages;
 
 type
 
@@ -46,11 +46,19 @@ type
     procedure PointChanged(Sender: TObject);
   protected
     FPointCoordinates:TPointCollection;
+    FDesignDrawing:Boolean;
+    FOldAlign:TAlign;
+
     procedure DrawControl; override;
     procedure Loaded; override;
 
     procedure BeginDrawPolyline; virtual;
     procedure EndDrawPolyline; virtual;
+    procedure OptimizeDraw; virtual;
+
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+
+    procedure CMDesignHitTest(var Message: TLMessage); message CM_DESIGNHITTEST;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -61,6 +69,8 @@ type
   end;
 
 implementation
+
+uses math;
 
 { TPointCollection }
 
@@ -157,14 +167,8 @@ var
   p:array of TPoint;
   aColor: TBGRAPixel;
   i: Integer;
-  emptyArea: TBGRABitmap;
 begin
-  emptyArea := TBGRABitmap.Create(Width,Height);
-  try
-    FControlArea.Assign(emptyArea);
-  finally
-    FreeAndNil(emptyArea);
-  end;
+  inherited DrawControl;
 
   SetLength(p, FPointCoordinates.Count);
   for i:=0 to FPointCoordinates.Count-1 do begin
@@ -185,13 +189,87 @@ begin
 end;
 
 procedure THMIPolyline.BeginDrawPolyline;
+var
+  p: Integer;
 begin
-
+  if FDesignDrawing then exit;
+  BeginUpdate;
+  for p:=0 to PointCoordinates.Count-1 do begin
+    TPointCollectionItem(PointCoordinates.Items[p]).X:=TPointCollectionItem(PointCoordinates.Items[p]).X+Left;
+    TPointCollectionItem(PointCoordinates.Items[p]).Y:=TPointCollectionItem(PointCoordinates.Items[p]).y+Top;
+  end;
+  FOldAlign:=Align;
+  Align:=alClient;
+  FDesignDrawing:=true;
+  EndUpdate;
 end;
 
 procedure THMIPolyline.EndDrawPolyline;
 begin
+  Align:=FOldAlign;
+  FDesignDrawing:=False;
+  OptimizeDraw;
+end;
 
+procedure THMIPolyline.OptimizeDraw;
+var
+  p: Integer;
+  minx,
+  maxx,
+  miny,
+  maxy: Integer;
+begin
+  BeginUpdate;
+  for p:=0 to PointCoordinates.Count-1 do begin
+    if p=0 then begin
+      minx:=TPointCollectionItem(PointCoordinates.Items[p]).X;
+      maxx:=minx;
+      miny:=TPointCollectionItem(PointCoordinates.Items[p]).Y;
+      maxy:=miny;
+      continue;
+    end;
+    minx:=min(TPointCollectionItem(PointCoordinates.Items[p]).X, minx);
+    maxx:=max(TPointCollectionItem(PointCoordinates.Items[p]).X, maxx);
+
+    miny:=min(TPointCollectionItem(PointCoordinates.Items[p]).Y, miny);
+    maxy:=max(TPointCollectionItem(PointCoordinates.Items[p]).Y, maxy);
+  end;
+
+  Left:=Max(minx-(FBorderWidth div 2),0);
+  Top :=Max(miny-(FBorderWidth div 2),0);
+  Width :=(maxx-minx)+(FBorderWidth div 2) + (FBorderWidth mod 2);
+  Height:=(maxy-miny)+(FBorderWidth div 2) + (FBorderWidth mod 2);
+
+  for p:=0 to PointCoordinates.Count-1 do begin
+    TPointCollectionItem(PointCoordinates.Items[p]).X:=TPointCollectionItem(PointCoordinates.Items[p]).X-minx;
+    TPointCollectionItem(PointCoordinates.Items[p]).Y:=TPointCollectionItem(PointCoordinates.Items[p]).Y-miny;
+  end;
+  EndUpdate;
+end;
+
+procedure THMIPolyline.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+var
+  ponto: TPointCollectionItem;
+begin
+  if Shift=[ssShift, ssLeft] then begin
+    EndDrawPolyline;
+    exit;
+  end;
+
+  ponto:=FPointCoordinates.Add;
+  ponto.X:=X;
+  ponto.Y:=Y;
+  inherited MouseDown(Button, Shift, X, Y);
+
+end;
+
+procedure THMIPolyline.CMDesignHitTest(var Message: TLMessage);
+begin
+  //aShiftState:=KeysToShiftState(PtrUInt(Message.WParam));
+  //p:=TSmallPoint(longint(Message.LParam));
+  if FDesignDrawing then
+    Message.Result:=1;
 end;
 
 constructor THMIPolyline.Create(AOwner: TComponent);
