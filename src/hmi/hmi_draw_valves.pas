@@ -10,7 +10,7 @@ uses
 
 type
 
-  TValveType = (vtSimple, vtPneumaticOnOff, vtPneumaticProportional);
+  TValveType = (vtSimple, vtPneumaticOnOff, vtPneumaticProportional,vtMotorisedProportional);
 
   { THMIBasicValve }
 
@@ -68,18 +68,16 @@ end;
 
 procedure THMIBasicValve.DrawControl;
 var
-  emptyArea: TBGRABitmap;
   p:array of TPointF;
   alturaideal: real;
   larguraideal: real;
   larguradoquadrado: real;
+  TextoX: real ;
+  TextoY: real ;
+  tw: Integer;
+  th: Integer;
 begin
-  emptyArea := TBGRABitmap.Create(Width, Height);
-  try
-    FControlArea.Assign(emptyArea);
-  finally
-    FreeAndNil(emptyArea);
-  end;
+  inherited DrawControl;
 
   FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
   FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
@@ -104,7 +102,8 @@ begin
     //risco
     case FValveType of
       vtPneumaticProportional,
-      vtPneumaticOnOff:
+      vtPneumaticOnOff,
+      vtMotorisedProportional:
         FControlArea.CanvasBGRA.PolylineF([PointF( ifthen(((Width+FBorderWidth) mod 2)=1,Width,Width+1)/2,
                                                    (FBorderWidth)),
                                            PointF( ifthen(((Width+FBorderWidth) mod 2)=1,Width,Width+1)/2,
@@ -112,7 +111,7 @@ begin
     end;
 
     case FValveType of
-      vtPneumaticProportional: begin
+      vtPneumaticProportional, vtMotorisedProportional: begin
         larguraideal:=Width/2-Fborderwidth;
         alturaideal:=(Width/4)*(Fvalvebodypercent*Height)/Width+((1-Fvalvebodypercent)*Height)-Fborderwidth;
         larguradoquadrado:=min(larguraideal, alturaideal);
@@ -128,6 +127,15 @@ begin
         p[3].x:=p[0].x;
         p[3].y:=p[2].y;
         FControlArea.CanvasBGRA.PolygonF(p);
+
+        if FValveType= vtMotorisedProportional then begin
+          FControlArea.CanvasBGRA.Font.Height := trunc(larguradoquadrado * 0.65 - Fborderwidth);
+          FControlArea.CanvasBGRA.Font.Orientation :=0;
+          TextoX:= Width/2 - (Fcontrolarea.CanvasBGRA.TextWidth('M'))/2;
+          TextoY:= (Larguradoquadrado-Fcontrolarea.CanvasBGRA.TextHeight('M'))/2;
+          FControlArea.CanvasBGRA.TextOut(Trunc(TextoX), Trunc(TextoY),'M');
+
+        end;
       end;
       vtPneumaticOnOff: begin
         FControlArea.Pie(Width/2,
@@ -159,13 +167,14 @@ begin
     //risco
     case FValveType of
       vtPneumaticProportional,
-      vtPneumaticOnOff:
+      vtPneumaticOnOff,
+      vtMotorisedProportional:
         FControlArea.CanvasBGRA.PolylineF([PointF(FBorderWidth, ifthen(((Height+FBorderWidth) mod 2)=1,Height,Height+1)/2),
                                            PointF((1-(FValveBodyPercent/2))*Width-(BorderWidth/2), ifthen(((Height+FBorderWidth) mod 2)=1,Height,Height+1)/2)]);
     end;
 
     case FValveType of
-      vtPneumaticProportional: begin
+      vtPneumaticProportional,vtMotorisedProportional: begin
         larguraideal:=Height/2-Fborderwidth;
         alturaideal:=(Height/4)*(Fvalvebodypercent*Width)/Height+((1-Fvalvebodypercent)*Width)-Fborderwidth;
         larguradoquadrado:=min(larguraideal, alturaideal);
@@ -182,6 +191,17 @@ begin
         p[3].y:=p[2].y;
         FControlArea.CanvasBGRA.PolygonF(p);
 
+        if FValveType= vtMotorisedProportional then begin
+          FControlArea.CanvasBGRA.Font.Height := trunc(larguradoquadrado * 0.65 - Fborderwidth);
+          FControlArea.CanvasBGRA.Font.Orientation :=900;
+          tw:=Fcontrolarea.CanvasBGRA.TextHeight('M');
+          TextoX:= (Larguradoquadrado-tw)/2;
+          th:=Fcontrolarea.CanvasBGRA.TextWidth('M');
+          TextoY:= Height/2 - th/2 + th;
+          FControlArea.CanvasBGRA.TextOut(Trunc(TextoX),Trunc(TextoY),'M');
+
+
+      end;
       end;
       vtPneumaticOnOff: begin
         FControlArea.Pie(((1-FValveBodyPercent)*Width)+(FBorderWidth/2),

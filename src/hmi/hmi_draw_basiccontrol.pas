@@ -79,8 +79,15 @@ begin
 end;
 
 procedure THMIBasicControl.DrawControl;
+var
+  emptyArea: TBGRABitmap;
 begin
-  //metodo sobrescrito nas classes filhas.
+  emptyArea := TBGRABitmap.Create(Width,Height);
+  try
+    FControlArea.Assign(emptyArea);
+  finally
+    FreeAndNil(emptyArea);
+  end;
 end;
 
 procedure THMIBasicControl.SetBorderWidth(AValue: Integer);

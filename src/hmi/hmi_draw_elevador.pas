@@ -49,14 +49,9 @@ end;
 procedure THMIElevadorBasico.DrawControl;
 var
   x:array of TPointF;
-  emptyArea: TBGRABitmap;
 begin
-  emptyArea := TBGRABitmap.Create(Width,Height);
-  try
-    FControlArea.Assign(emptyArea);
-  finally
-    FreeAndNil(emptyArea);
-  end;
+  inherited DrawControl;
+
 
   FControlArea.CanvasBGRA.AntialiasingMode:=amOff;
 
