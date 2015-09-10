@@ -23,6 +23,12 @@ type
     FBorderWidth:Integer;
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
+
+    function Cateto(p0, p1: Integer): Integer;
+    function Degrees(x0, x1, y0, y1: Integer): Double;
+    function Hipotenusa(x0, x1, y0, y1: Integer): Double;
+    function Seno(x0, x1, y0, y1: Integer): Double;
+
     function  ControlArea(pixel: TBGRAPixel): Boolean; virtual;
     function  CanRepaint:Boolean; virtual;
     procedure InvalidateDraw; virtual;
@@ -106,6 +112,38 @@ begin
 
   if ComponentState*[csReading, csLoading]=[] then
     InvalidateDraw;
+end;
+
+function THMIBasicControl.Cateto(p0,p1:Integer):Integer;
+begin
+  if p1>=p0 then
+    Result:=p1-p0
+  else
+    Result:=p0-p1;
+end;
+
+function THMIBasicControl.Hipotenusa(x0, x1, y0, y1:Integer):Double;
+begin
+  Result:=sqrt(Power(Cateto(x0,x1),2)+
+               Power(Cateto(y0,y1),2));
+end;
+
+function THMIBasicControl.Seno(x0,x1,y0,y1:Integer):Double;
+begin
+  Result:=Cateto(y0,y1)/Hipotenusa(x0,x1,y0,y1);
+end;
+
+function THMIBasicControl.Degrees(x0,x1,y0,y1:Integer):Double;
+var
+  CatetoAdj: Integer;
+  CatetoOposto: Integer;
+  SomaCatetos: Integer;
+begin
+  CatetoAdj:=Cateto(x0,x1);
+  CatetoOposto:=Cateto(y0,y1);
+  SomaCatetos:=CatetoAdj+CatetoOposto;
+
+  Result:=CatetoOposto/SomaCatetos*90;
 end;
 
 function THMIBasicControl.ControlArea(pixel:TBGRAPixel):Boolean;

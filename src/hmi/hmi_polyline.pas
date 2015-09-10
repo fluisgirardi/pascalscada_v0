@@ -47,16 +47,20 @@ type
   protected
     FPointCoordinates:TPointCollection;
     FDesignDrawing:Boolean;
+    FCtrlOnLastMouseMove:Boolean;
+    FPointInfo:String;
+    FPointInfoWidth:Integer;
     FOldAlign:TAlign;
 
     procedure DrawControl; override;
-    procedure Loaded; override;
 
     procedure BeginDrawPolyline; virtual;
+    procedure BeginEmptyPolyline; virtual;
     procedure EndDrawPolyline; virtual;
     procedure OptimizeDraw; virtual;
 
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
 
     procedure CMDesignHitTest(var Message: TLMessage); message CM_DESIGNHITTEST;
   public
@@ -70,7 +74,7 @@ type
 
 implementation
 
-uses math;
+uses math, windows;
 
 { TPointCollection }
 
@@ -116,9 +120,7 @@ end;
 procedure THMIPolyline.PointChanged(Sender: TObject);
 begin
   if [csLoading, csReading]*ComponentState=[] then begin
-    DrawControl;
-    UpdateShape;
-    Invalidate;
+    InvalidateShape;
   end;
 end;
 
@@ -127,9 +129,7 @@ begin
   if FLineWidth=AValue then Exit;
   FLineWidth:=AValue;
   if [csLoading, csReading]*ComponentState=[] then begin
-    DrawControl;
-    UpdateShape;
-    Invalidate;
+    InvalidateShape;
   end;
 end;
 
@@ -139,16 +139,12 @@ procedure THMIPolyline.SetLineColor(AValue: TColor);
 begin
   if FLineColor=AValue then Exit;
 
-  //NeedUpdateShape:=(AValue=clNone) or (FLineColor=clNone);
-
   FLineColor:=AValue;
   Visible:=(AValue<>clNone);
   if not Visible then exit;
 
   if [csLoading, csReading]*ComponentState=[] then begin
-    DrawControl;
-    //if NeedUpdateShape then UpdateShape;
-    Invalidate;
+    InvalidateDraw;
   end;
 end;
 
@@ -156,9 +152,7 @@ procedure THMIPolyline.setPointCoordinates(AValue: TPointCollection);
 begin
   FPointCoordinates.Assign(AValue);
   if [csLoading, csReading]*ComponentState=[] then begin
-    DrawControl;
-    UpdateShape;
-    Invalidate;
+    InvalidateShape;
   end;
 end;
 
@@ -167,6 +161,8 @@ var
   p:array of TPoint;
   aColor: TBGRAPixel;
   i: Integer;
+  afillcolor: TBGRAPixel;
+  abordercolor: TBGRAPixel;
 begin
   inherited DrawControl;
 
@@ -181,11 +177,24 @@ begin
   FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
   FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
   FControlArea.CanvasBGRA.Polyline(p);
-end;
 
-procedure THMIPolyline.Loaded;
-begin
-  inherited Loaded;
+  if csDesigning in ComponentState then begin
+    if FPointInfo='' then exit;
+    afillcolor:=ColorToBGRA(FBodyColor);
+    abordercolor:=ColorToBGRA(FBorderColor);
+
+    afillcolor.alpha:=160;
+    abordercolor.alpha:=160;
+
+    FControlArea.Rectangle(Width-FPointInfoWidth-5,
+                           0,
+                           Width,
+                           FControlArea.CanvasBGRA.TextHeight(FPointInfo)+5,
+                           abordercolor,
+                           afillcolor,
+                           dmSet);
+    FControlArea.TextOut(Width,0, FPointInfo,ColorToBGRA(FBorderColor),taRightJustify);
+  end;
 end;
 
 procedure THMIPolyline.BeginDrawPolyline;
@@ -198,6 +207,17 @@ begin
     TPointCollectionItem(PointCoordinates.Items[p]).X:=TPointCollectionItem(PointCoordinates.Items[p]).X+Left;
     TPointCollectionItem(PointCoordinates.Items[p]).Y:=TPointCollectionItem(PointCoordinates.Items[p]).y+Top;
   end;
+  FOldAlign:=Align;
+  Align:=alClient;
+  FDesignDrawing:=true;
+  EndUpdate;
+end;
+
+procedure THMIPolyline.BeginEmptyPolyline;
+begin
+  if FDesignDrawing then exit;
+  BeginUpdate;
+  PointCoordinates.Clear;
   FOldAlign:=Align;
   Align:=alClient;
   FDesignDrawing:=true;
@@ -251,23 +271,109 @@ procedure THMIPolyline.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
 var
   ponto: TPointCollectionItem;
+  lastpoint: TPointCollectionItem;
+  p45: LongInt;
+  curDegrees: Double;
+
+
 begin
-  if Shift=[ssShift, ssLeft] then begin
-    EndDrawPolyline;
-    exit;
+  if csDesigning in ComponentState then begin
+    if Shift=[ssShift, ssLeft] then begin
+      EndDrawPolyline;
+      exit;
+    end;
+
+
+    if PointCoordinates.Count=0 then
+      lastpoint:=nil
+    else
+      lastpoint:=TPointCollectionItem(PointCoordinates.Items[PointCoordinates.Count-1]);
+
+    if (lastpoint<>nil) AND (Shift=[ssCtrl, ssLeft]) then begin
+      ponto:=FPointCoordinates.Add;
+      curDegrees:=Degrees(X, lastpoint.X, Y, lastpoint.Y);
+      case Trunc(curDegrees) of
+        0..15: begin     //0 degrees
+          ponto.Y:=lastpoint.Y;
+          ponto.X:=X;
+        end;
+        16..37, 54..75: begin    //30 e 60 degrees
+          if Y>=lastpoint.Y then
+            ponto.Y:=lastpoint.Y+Trunc(sin(degtorad(curDegrees))*Hipotenusa(X, lastpoint.X, Y, lastpoint.Y))
+          else
+            ponto.Y:=lastpoint.Y-Trunc(sin(degtorad(curDegrees))*Hipotenusa(X, lastpoint.X, Y, lastpoint.Y));
+          ponto.X:=X;
+        end;
+        38..53: begin    //45 degrees
+          p45:=Max(Cateto(X,lastpoint.X), Cateto(Y,lastpoint.Y));
+          if X>=lastpoint.X then
+            ponto.X:=lastpoint.X+p45
+          else
+            ponto.X:=lastpoint.X-p45;
+
+          if Y>=lastpoint.Y then
+            ponto.Y:=lastpoint.Y+p45
+          else
+            ponto.Y:=lastpoint.Y-p45;
+
+        end;
+        76..90: begin    //30 degrees
+          ponto.X:=lastpoint.X;
+          ponto.Y:=Y;
+        end;
+      end;
+    end;
+
+    if (lastpoint=nil) OR (Shift=[ssLeft]) then begin
+      ponto:=FPointCoordinates.Add;
+      ponto.X:=X;
+      ponto.Y:=Y;
+    end;
   end;
-
-  ponto:=FPointCoordinates.Add;
-  ponto.X:=X;
-  ponto.Y:=Y;
   inherited MouseDown(Button, Shift, X, Y);
+end;
 
+procedure THMIPolyline.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  lastpoint: TPointCollectionItem;
+  tw: Integer;
+begin
+  if csDesigning in ComponentState then begin;
+    if PointCoordinates.Count=0 then
+      lastpoint:=nil
+    else
+      lastpoint:=TPointCollectionItem(PointCoordinates.Items[PointCoordinates.Count-1]);
+
+    if Shift=[ssCtrl] then begin
+      FCtrlOnLastMouseMove:=true;
+
+      if lastpoint=nil then
+        FPointInfo:=Format('x=%d, y=%d',[X,Y])
+      else
+        FPointInfo:=Format('x=%d, y=%d, Degrees=%d',[X,Y,Trunc(Degrees(x,lastpoint.X,Y,lastpoint.Y))]);
+
+      tw:=FControlArea.CanvasBGRA.TextWidth(FPointInfo);
+      if tw=FPointInfoWidth then
+        InvalidateDraw
+      else begin
+        FPointInfoWidth:=tw;
+        InvalidateShape;
+      end;
+
+    end else begin
+      if FCtrlOnLastMouseMove then begin
+        FCtrlOnLastMouseMove:=false;
+        FPointInfo:='';
+        FPointInfoWidth:=0;
+        InvalidateShape;
+      end;
+    end;
+  end;
+  inherited MouseMove(Shift, X, Y);
 end;
 
 procedure THMIPolyline.CMDesignHitTest(var Message: TLMessage);
 begin
-  //aShiftState:=KeysToShiftState(PtrUInt(Message.WParam));
-  //p:=TSmallPoint(longint(Message.LParam));
   if FDesignDrawing then
     Message.Result:=1;
 end;
@@ -279,6 +385,7 @@ begin
   FPointCoordinates.OnCollectionItemChange:=@PointChanged;
   FPointCoordinates.OnNeedCompState:=@CollectionNeedsComponentState;
   FLineWidth:=2;
+  FCtrlOnLastMouseMove:=false;
   FLineColor:=clBlack;
   FOnlyColorChanged:=false;
 end;

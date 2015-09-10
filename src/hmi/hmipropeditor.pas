@@ -196,6 +196,7 @@ type
   THMIPolylineComponentEditor = class(TDefaultComponentEditor)
   protected
     procedure DrawPolyline;
+    procedure DrawEmptyPolyline;
   public
     procedure ExecuteVerb(Index: LongInt); override;
     function  GetVerb(Index: LongInt): string; override;
@@ -214,20 +215,32 @@ begin
   THMIPolylineAccess(Polyline).BeginDrawPolyline;
 end;
 
+procedure THMIPolylineComponentEditor.DrawEmptyPolyline;
+begin
+  THMIPolylineAccess(Polyline).BeginEmptyPolyline;
+end;
+
 procedure THMIPolylineComponentEditor.ExecuteVerb(Index: LongInt);
 begin
-  if Index=0 then DrawPolyline;
+  case Index of
+    0: DrawPolyline;
+    1: DrawEmptyPolyline;
+  end;
 end;
 
 function THMIPolylineComponentEditor.GetVerb(Index: LongInt): string;
 begin
-  if Index=0 then
-    Result:='Draw...';
+  case Index of
+   0: Result:='Draw...';
+   1: Result:='Clear and draw...';
+   else
+     Result:=inherited GetVerb(Index);
+  end;
 end;
 
 function THMIPolylineComponentEditor.GetVerbCount: LongInt;
 begin
-  Result:=1;
+  Result:=2;
 end;
 
 function THMIPolylineComponentEditor.Polyline: THMIPolyline;
