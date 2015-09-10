@@ -48,6 +48,9 @@ type
     FPointCoordinates:TPointCollection;
     procedure DrawControl; override;
     procedure Loaded; override;
+
+    procedure BeginDrawPolyline; virtual;
+    procedure EndDrawPolyline; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -179,6 +182,16 @@ end;
 procedure THMIPolyline.Loaded;
 begin
   inherited Loaded;
+end;
+
+procedure THMIPolyline.BeginDrawPolyline;
+begin
+
+end;
+
+procedure THMIPolyline.EndDrawPolyline;
+begin
+
 end;
 
 constructor THMIPolyline.Create(AOwner: TComponent);

@@ -29,7 +29,7 @@ uses
   ControlSecurityManager, Graphics,
   {$IFDEF FPC}
     PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList,
-    hmibooleanpropertyconnector, hmicolorpropertyconnector;
+    hmibooleanpropertyconnector, hmicolorpropertyconnector, hmi_polyline;
   {$ELSE}
     Types,
     //if is a delphi 6+
@@ -189,9 +189,51 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
   end;
 
+  THMIPolylineAccess = class(THMIPolyline);
+
+  { THMIPolylineComponentEditor }
+
+  THMIPolylineComponentEditor = class(TDefaultComponentEditor)
+  protected
+    procedure DrawPolyline;
+  public
+    procedure ExecuteVerb(Index: LongInt); override;
+    function  GetVerb(Index: LongInt): string; override;
+    function  GetVerbCount: LongInt; override;
+    function  Polyline: THMIPolyline; virtual;
+  end;
+
 implementation
 
 uses HMITypes;
+
+{ THMIPolylineComponentEditor }
+
+procedure THMIPolylineComponentEditor.DrawPolyline;
+begin
+  THMIPolylineAccess(Polyline).BeginDrawPolyline;
+end;
+
+procedure THMIPolylineComponentEditor.ExecuteVerb(Index: LongInt);
+begin
+  if Index=0 then DrawPolyline;
+end;
+
+function THMIPolylineComponentEditor.GetVerb(Index: LongInt): string;
+begin
+  if Index=0 then
+    Result:='Draw...';
+end;
+
+function THMIPolylineComponentEditor.GetVerbCount: LongInt;
+begin
+  Result:=1;
+end;
+
+function THMIPolylineComponentEditor.Polyline: THMIPolyline;
+begin
+  Result:=THMIPolyline(GetComponent);
+end;
 
 { TSelectOnlyTColorPropPropertyEditor }
 

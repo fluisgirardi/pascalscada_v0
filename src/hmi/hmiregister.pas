@@ -128,6 +128,9 @@ begin
                                      TPascalSCADALogin_LogoutAction,
                                      TPascalSCADAManageUsersAction,
                                      TPascalSCADASecureAction],nil);
+
+
+  RegisterComponentEditor(THMIPolyline, THMIPolylineComponentEditor);
 end;
 
 end.
