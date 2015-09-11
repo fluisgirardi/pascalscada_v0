@@ -74,7 +74,7 @@ type
 
 implementation
 
-uses math, windows;
+uses math;
 
 { TPointCollection }
 

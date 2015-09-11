@@ -72,10 +72,6 @@ var
   alturaideal: real;
   larguraideal: real;
   larguradoquadrado: real;
-  TextoX: real ;
-  TextoY: real ;
-  tw: Integer;
-  th: Integer;
 begin
   inherited DrawControl;
 
@@ -129,11 +125,9 @@ begin
         FControlArea.CanvasBGRA.PolygonF(p);
 
         if FValveType= vtMotorisedProportional then begin
-          FControlArea.CanvasBGRA.Font.Height := trunc(larguradoquadrado * 0.65 - Fborderwidth);
-          FControlArea.CanvasBGRA.Font.Orientation :=0;
-          TextoX:= Width/2 - (Fcontrolarea.CanvasBGRA.TextWidth('M'))/2;
-          TextoY:= (Larguradoquadrado-Fcontrolarea.CanvasBGRA.TextHeight('M'))/2;
-          FControlArea.CanvasBGRA.TextOut(Trunc(TextoX), Trunc(TextoY),'M');
+          FControlArea.FontHeight := trunc(larguradoquadrado * 0.9 - 2*Fborderwidth);
+          FControlArea.FontOrientation :=0;
+          FControlArea.TextOut(Width/2,Trunc((larguradoquadrado-FControlArea.FontHeight)/2),'M',colortobgra(FBordercolor), taCenter);
 
         end;
       end;
@@ -192,14 +186,9 @@ begin
         FControlArea.CanvasBGRA.PolygonF(p);
 
         if FValveType= vtMotorisedProportional then begin
-          FControlArea.CanvasBGRA.Font.Height := trunc(larguradoquadrado * 0.65 - Fborderwidth);
-          FControlArea.CanvasBGRA.Font.Orientation :=900;
-          tw:=Fcontrolarea.CanvasBGRA.TextHeight('M');
-          TextoX:= (Larguradoquadrado-tw)/2;
-          th:=Fcontrolarea.CanvasBGRA.TextWidth('M');
-          TextoY:= Height/2 - th/2 + th;
-          FControlArea.CanvasBGRA.TextOut(Trunc(TextoX),Trunc(TextoY),'M');
-
+          FControlArea.FontHeight := trunc(larguradoquadrado * 0.9 - Fborderwidth);
+          FControlArea.FontOrientation :=900;
+          FControlArea.TextOut(Trunc((larguradoquadrado-FControlArea.FontHeight)/2),Height/2 ,'M',colortobgra(FBordercolor), taCenter);
 
       end;
       end;
