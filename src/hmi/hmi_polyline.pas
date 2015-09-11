@@ -37,10 +37,7 @@ type
   THMIPolyline = class(THMIBasicControl)
   private
     FLineColor: TColor;
-    FLineWidth: Integer;
-    FOnlyColorChanged:Boolean;
     procedure SetLineColor(AValue: TColor);
-    procedure SetLineWidth(AValue: Integer);
     procedure setPointCoordinates(AValue: TPointCollection);
     procedure CollectionNeedsComponentState(var CurState: TComponentState);
     procedure PointChanged(Sender: TObject);
@@ -68,7 +65,7 @@ type
     destructor Destroy; override;
   published
     property LineColor:TColor read FLineColor write SetLineColor default clBlack;
-    property LineWidth:Integer read FLineWidth write SetLineWidth default 2;
+    property LineWidth:Integer read FBorderWidth write SetBorderWidth default 2;
     property PointCoordinates:TPointCollection read FPointCoordinates write setPointCoordinates;
   end;
 
@@ -124,18 +121,7 @@ begin
   end;
 end;
 
-procedure THMIPolyline.SetLineWidth(AValue: Integer);
-begin
-  if FLineWidth=AValue then Exit;
-  FLineWidth:=AValue;
-  if [csLoading, csReading]*ComponentState=[] then begin
-    InvalidateShape;
-  end;
-end;
-
 procedure THMIPolyline.SetLineColor(AValue: TColor);
-//var
-//  NeedUpdateShape: Boolean;
 begin
   if FLineColor=AValue then Exit;
 
@@ -158,25 +144,26 @@ end;
 
 procedure THMIPolyline.DrawControl;
 var
-  p:array of TPoint;
-  aColor: TBGRAPixel;
+  p:array of TPointF;
   i: Integer;
   afillcolor: TBGRAPixel;
   abordercolor: TBGRAPixel;
+  pc: TPointCollectionItem;
 begin
   inherited DrawControl;
 
   SetLength(p, FPointCoordinates.Count);
   for i:=0 to FPointCoordinates.Count-1 do begin
-    p[i].x:=TPointCollectionItem(FPointCoordinates.Items[i]).X;
-    p[i].y:=TPointCollectionItem(FPointCoordinates.Items[i]).Y;
+    pc:=TPointCollectionItem(FPointCoordinates.Items[i]);
+    p[i].x:=pc.X + ifthen((FBorderWidth mod 2)=1, ifthen((pc.X mod 2)=0, 1), 0.5);
+    p[i].y:=pc.Y+ifthen((FBorderWidth mod 2)=0,0.5);
   end;
 
-  aColor:=ColorToBGRA(FLineColor);
-  FControlArea.CanvasBGRA.Pen.Style:=psSolid;
-  FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
-  FControlArea.CanvasBGRA.Pen.Width:=FLineWidth;
-  FControlArea.CanvasBGRA.Polyline(p);
+  //FControlArea.CanvasBGRA.Pen.Style:=psSolid;
+  //FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
+  //FControlArea.CanvasBGRA.Pen.Width:=FBorderWidth;
+  //FControlArea.CanvasBGRA.Pen.JoinStyle:=pjsRound;
+  FControlArea.DrawPolyLineAntialias(p, ColorToBGRA(FBorderColor),FBorderWidth);
 
   if csDesigning in ComponentState then begin
     if FPointInfo='' then exit;
@@ -187,13 +174,13 @@ begin
     abordercolor.alpha:=160;
 
     FControlArea.Rectangle(Width-FPointInfoWidth-5,
-                           0,
-                           Width,
+                           -1,
+                           Width + 1,
                            FControlArea.CanvasBGRA.TextHeight(FPointInfo)+5,
                            abordercolor,
                            afillcolor,
-                           dmSet);
-    FControlArea.TextOut(Width,0, FPointInfo,ColorToBGRA(FBorderColor),taRightJustify);
+                           dmDrawWithTransparency);
+    FControlArea.TextOut(Width-2,1, FPointInfo,ColorToBGRA(FBorderColor),taRightJustify);
   end;
 end;
 
@@ -255,11 +242,12 @@ begin
     maxy:=max(TPointCollectionItem(PointCoordinates.Items[p]).Y, maxy);
   end;
 
-  Left:=Max(minx-(FBorderWidth div 2),0);
-  Top :=Max(miny-(FBorderWidth div 2),0);
-  Width :=(maxx-minx)+(FBorderWidth div 2) + (FBorderWidth mod 2);
-  Height:=(maxy-miny)+(FBorderWidth div 2) + (FBorderWidth mod 2);
-
+  DisableAutoSizing;
+  Left:=Max(minx-FBorderWidth,0);
+  Top :=Max(miny-FBorderWidth,0);
+  Width :=(maxx-minx)+FBorderWidth;
+  Height:=(maxy-miny)+FBorderWidth;
+  EnableAutoSizing;
   for p:=0 to PointCoordinates.Count-1 do begin
     TPointCollectionItem(PointCoordinates.Items[p]).X:=TPointCollectionItem(PointCoordinates.Items[p]).X-minx;
     TPointCollectionItem(PointCoordinates.Items[p]).Y:=TPointCollectionItem(PointCoordinates.Items[p]).Y-miny;
@@ -274,8 +262,6 @@ var
   lastpoint: TPointCollectionItem;
   p45: LongInt;
   curDegrees: Double;
-
-
 begin
   if csDesigning in ComponentState then begin
     if Shift=[ssShift, ssLeft] then begin
@@ -384,10 +370,9 @@ begin
   FPointCoordinates:=TPointCollection.Create(Self);
   FPointCoordinates.OnCollectionItemChange:=@PointChanged;
   FPointCoordinates.OnNeedCompState:=@CollectionNeedsComponentState;
-  FLineWidth:=2;
+  FBorderWidth:=2;
   FCtrlOnLastMouseMove:=false;
   FLineColor:=clBlack;
-  FOnlyColorChanged:=false;
 end;
 
 destructor THMIPolyline.Destroy;

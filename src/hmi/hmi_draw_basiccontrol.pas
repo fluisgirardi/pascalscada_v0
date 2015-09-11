@@ -129,8 +129,14 @@ begin
 end;
 
 function THMIBasicControl.Seno(x0,x1,y0,y1:Integer):Double;
+var
+  hip: Double;
 begin
-  Result:=Cateto(y0,y1)/Hipotenusa(x0,x1,y0,y1);
+  hip:=Hipotenusa(x0,x1,y0,y1);
+  if hip=0 then
+    Result:=0
+  else
+    Result:=Cateto(y0,y1)/hip;
 end;
 
 function THMIBasicControl.Degrees(x0,x1,y0,y1:Integer):Double;
@@ -142,8 +148,10 @@ begin
   CatetoAdj:=Cateto(x0,x1);
   CatetoOposto:=Cateto(y0,y1);
   SomaCatetos:=CatetoAdj+CatetoOposto;
-
-  Result:=CatetoOposto/SomaCatetos*90;
+  if SomaCatetos=0 then
+    Result:=0
+  else
+    Result:=CatetoOposto/SomaCatetos*90;
 end;
 
 function THMIBasicControl.ControlArea(pixel:TBGRAPixel):Boolean;
