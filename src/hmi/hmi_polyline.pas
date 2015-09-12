@@ -26,6 +26,8 @@ type
   end;
 
   TPointCollection = class(THMIBasicColletion)
+  protected
+    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
   public
     constructor Create(AOwner:TComponent);
     function Add:TPointCollectionItem;
@@ -36,7 +38,6 @@ type
 
   THMIPolyline = class(THMIBasicControl)
   private
-    FLineColor: TColor;
     procedure SetLineColor(AValue: TColor);
     procedure setPointCoordinates(AValue: TPointCollection);
     procedure CollectionNeedsComponentState(var CurState: TComponentState);
@@ -64,7 +65,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
-    property LineColor:TColor read FLineColor write SetLineColor default clBlack;
+    property LineColor:TColor read FBorderColor write SetLineColor default clBlack;
     property LineWidth:Integer read FBorderWidth write SetBorderWidth default 2;
     property PointCoordinates:TPointCollection read FPointCoordinates write setPointCoordinates;
   end;
@@ -74,6 +75,14 @@ implementation
 uses math;
 
 { TPointCollection }
+
+procedure TPointCollection.Notify(Item: TCollectionItem;
+  Action: TCollectionNotification);
+begin
+  inherited Notify(Item, Action);
+  if assigned(OnCollectionItemChange) then
+    OnCollectionItemChange(Self);
+end;
 
 constructor TPointCollection.Create(AOwner: TComponent);
 begin
@@ -123,9 +132,9 @@ end;
 
 procedure THMIPolyline.SetLineColor(AValue: TColor);
 begin
-  if FLineColor=AValue then Exit;
+  if FBorderColor=AValue then Exit;
 
-  FLineColor:=AValue;
+  FBorderColor:=AValue;
   Visible:=(AValue<>clNone);
   if not Visible then exit;
 
@@ -156,17 +165,13 @@ begin
   for i:=0 to FPointCoordinates.Count-1 do begin
     pc:=TPointCollectionItem(FPointCoordinates.Items[i]);
     p[i].x:=pc.X + ifthen((FBorderWidth mod 2)=1, ifthen((pc.X mod 2)=0, 1), 0.5);
-    p[i].y:=pc.Y+ifthen((FBorderWidth mod 2)=0,0.5);
+    p[i].y:=pc.Y + ifthen((FBorderWidth mod 2)=0, 0.5);
   end;
 
-  //FControlArea.CanvasBGRA.Pen.Style:=psSolid;
-  //FControlArea.CanvasBGRA.Pen.Color:=FLineColor;
-  //FControlArea.CanvasBGRA.Pen.Width:=FBorderWidth;
-  //FControlArea.CanvasBGRA.Pen.JoinStyle:=pjsRound;
   FControlArea.DrawPolyLineAntialias(p, ColorToBGRA(FBorderColor),FBorderWidth);
 
   if csDesigning in ComponentState then begin
-    if FPointInfo='' then exit;
+    if (FPointInfo='') or (FDesignDrawing=false) then exit;
     afillcolor:=ColorToBGRA(FBodyColor);
     abordercolor:=ColorToBGRA(FBorderColor);
 
@@ -184,40 +189,6 @@ begin
   end;
 end;
 
-procedure THMIPolyline.BeginDrawPolyline;
-var
-  p: Integer;
-begin
-  if FDesignDrawing then exit;
-  BeginUpdate;
-  for p:=0 to PointCoordinates.Count-1 do begin
-    TPointCollectionItem(PointCoordinates.Items[p]).X:=TPointCollectionItem(PointCoordinates.Items[p]).X+Left;
-    TPointCollectionItem(PointCoordinates.Items[p]).Y:=TPointCollectionItem(PointCoordinates.Items[p]).y+Top;
-  end;
-  FOldAlign:=Align;
-  Align:=alClient;
-  FDesignDrawing:=true;
-  EndUpdate;
-end;
-
-procedure THMIPolyline.BeginEmptyPolyline;
-begin
-  if FDesignDrawing then exit;
-  BeginUpdate;
-  PointCoordinates.Clear;
-  FOldAlign:=Align;
-  Align:=alClient;
-  FDesignDrawing:=true;
-  EndUpdate;
-end;
-
-procedure THMIPolyline.EndDrawPolyline;
-begin
-  Align:=FOldAlign;
-  FDesignDrawing:=False;
-  OptimizeDraw;
-end;
-
 procedure THMIPolyline.OptimizeDraw;
 var
   p: Integer;
@@ -225,34 +196,84 @@ var
   maxx,
   miny,
   maxy: Integer;
+  pc: TPointCollectionItem;
 begin
   BeginUpdate;
-  for p:=0 to PointCoordinates.Count-1 do begin
-    if p=0 then begin
-      minx:=TPointCollectionItem(PointCoordinates.Items[p]).X;
-      maxx:=minx;
-      miny:=TPointCollectionItem(PointCoordinates.Items[p]).Y;
-      maxy:=miny;
-      continue;
+  try
+    for p:=0 to PointCoordinates.Count-1 do begin
+      pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+      if p=0 then begin
+        minx:=pc.X;
+        maxx:=minx;
+        miny:=pc.Y;
+        maxy:=miny;
+        continue;
+      end;
+      minx:=min(pc.X, minx);
+      maxx:=max(pc.X, maxx);
+
+      miny:=min(pc.Y, miny);
+      maxy:=max(pc.Y, maxy);
     end;
-    minx:=min(TPointCollectionItem(PointCoordinates.Items[p]).X, minx);
-    maxx:=max(TPointCollectionItem(PointCoordinates.Items[p]).X, maxx);
 
-    miny:=min(TPointCollectionItem(PointCoordinates.Items[p]).Y, miny);
-    maxy:=max(TPointCollectionItem(PointCoordinates.Items[p]).Y, maxy);
+
+    DisableAutoSizing;
+    Left:=Max(minx,0);
+    Top :=Max(miny-ifthen((miny mod 2)=0,1),0);
+    Width :=(maxx-minx)+FBorderWidth;
+    Height:=(maxy-miny)+FBorderWidth;
+    EnableAutoSizing;
+    for p:=0 to PointCoordinates.Count-1 do begin
+      pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+      pc.X:=pc.X-minx;
+      pc.Y:=pc.Y-miny+ifthen((miny mod 2)=0,1);
+    end;
+  finally
+    EndUpdate;
+  end;
+end;
+
+procedure THMIPolyline.BeginDrawPolyline;
+var
+  p: Integer;
+  pc: TPointCollectionItem;
+begin
+  if FDesignDrawing then exit;
+  BeginUpdate;
+  try
+    for p:=0 to PointCoordinates.Count-1 do begin
+      pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+      pc.X:=pc.X+Left;
+      pc.Y:=pc.y+Top;
+    end;
+    FOldAlign:=Align;
+    Align:=alClient;
+    FDesignDrawing:=true;
+  finally
+    EndUpdate;
   end;
 
-  DisableAutoSizing;
-  Left:=Max(minx-FBorderWidth,0);
-  Top :=Max(miny-FBorderWidth,0);
-  Width :=(maxx-minx)+FBorderWidth;
-  Height:=(maxy-miny)+FBorderWidth;
-  EnableAutoSizing;
-  for p:=0 to PointCoordinates.Count-1 do begin
-    TPointCollectionItem(PointCoordinates.Items[p]).X:=TPointCollectionItem(PointCoordinates.Items[p]).X-minx;
-    TPointCollectionItem(PointCoordinates.Items[p]).Y:=TPointCollectionItem(PointCoordinates.Items[p]).Y-miny;
+end;
+
+procedure THMIPolyline.BeginEmptyPolyline;
+begin
+  if FDesignDrawing then exit;
+  BeginUpdate;
+  try
+    PointCoordinates.Clear;
+    FOldAlign:=Align;
+    Align:=alClient;
+    FDesignDrawing:=true;
+  finally
+    EndUpdate;
   end;
-  EndUpdate;
+end;
+
+procedure THMIPolyline.EndDrawPolyline;
+begin
+  Align:=FOldAlign;
+  FDesignDrawing:=False;
+  OptimizeDraw;
 end;
 
 procedure THMIPolyline.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -268,7 +289,6 @@ begin
       EndDrawPolyline;
       exit;
     end;
-
 
     if PointCoordinates.Count=0 then
       lastpoint:=nil
@@ -372,7 +392,7 @@ begin
   FPointCoordinates.OnNeedCompState:=@CollectionNeedsComponentState;
   FBorderWidth:=2;
   FCtrlOnLastMouseMove:=false;
-  FLineColor:=clBlack;
+  FBorderColor:=clBlack;
 end;
 
 destructor THMIPolyline.Destroy;
