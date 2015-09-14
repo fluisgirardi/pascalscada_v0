@@ -78,7 +78,8 @@ begin
   RegisterComponents(strControlsPallete,  [THMIFitaBasica, THMIElevadorBasico,
                                            THMIRedlerBasico, THMIRoscaBasica,
                                            THMIPolyline, THMIBasicValve,
-                                           THMIBasicEletricMotor]);
+                                           THMIBasicEletricMotor,
+                                           THMIFlowPolyline]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 

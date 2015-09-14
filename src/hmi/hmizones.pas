@@ -976,7 +976,12 @@ end;
 
 function  TZone.GetDisplayName: string;
 begin
-  case FZoneType of
+   if FDefaultZone then begin
+     Result:='(Default)';
+     exit;
+   end;
+
+   case FZoneType of
     ztEqual:
        Result:='Value='+FloatToStr(Value1);
 

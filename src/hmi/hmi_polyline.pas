@@ -38,7 +38,6 @@ type
 
   THMIPolyline = class(THMIBasicControl)
   private
-    procedure SetLineColor(AValue: TColor);
     procedure setPointCoordinates(AValue: TPointCollection);
     procedure CollectionNeedsComponentState(var CurState: TComponentState);
     procedure PointChanged(Sender: TObject);
@@ -49,6 +48,11 @@ type
     FPointInfo:String;
     FPointInfoWidth:Integer;
     FOldAlign:TAlign;
+
+    procedure SetBorderWidth(AValue: Integer); override;
+    procedure SetLineColor(AValue: TColor); virtual;
+
+    procedure DoLineColorChange; virtual;
 
     procedure DrawControl; override;
 
@@ -70,9 +74,272 @@ type
     property PointCoordinates:TPointCollection read FPointCoordinates write setPointCoordinates;
   end;
 
+  THMIFlowPolyline = class;
+
+  IColorChangeNotification = interface
+  ['{7A61F363-CBE0-4271-8E5E-BBDCE708084E}']
+    procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
+    procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
+    procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
+    procedure NotifyChange(const WhoChanged:THMIFlowPolyline);
+  end;
+
+  { THMIFlowSourceCollectionItem }
+
+  THMIFlowSourceCollectionItem = class(THMIBasicColletionItem)
+  private
+    FHMIObject: THMIFlowPolyline;
+    procedure setHMIObject(AValue: THMIFlowPolyline);
+  published
+    property HMIObject:THMIFlowPolyline read FHMIObject write setHMIObject;
+  end;
+
+
+  THMIFlowSourceCollection = Class(THMIBasicColletion)
+  public
+    constructor Create(AOwner:TComponent);
+    function Add:THMIFlowSourceCollectionItem;
+  end;
+
+  TColorMixBehavior = (cmbLastColor, cmbAnd, cmbOr, cmbXor, cmbEmpty, cmbMultipleColorsReplace);
+
+  { THMIFlowPolyline }
+
+  THMIFlowPolyline = class(THMIPolyline, IColorChangeNotification)
+  private
+    FEmptyColor: TColor;
+    FFlowSources: THMIFlowSourceCollection;
+
+    FFlowDest:array of IColorChangeNotification;
+    FMultipleColorBehavior: TColorMixBehavior;
+    FMultipleColorsReplace: TColor;
+
+    procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
+    procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
+    procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
+    procedure NotifyChange(const WhoChanged:THMIFlowPolyline);
+    procedure SetEmptyColor(AValue: TColor);
+    procedure setFlowSources(AValue: THMIFlowSourceCollection);
+    procedure setMultipleColorsBehavior(AValue: TColorMixBehavior);
+    procedure setMultipleColorsReplace(AValue: TColor);
+  protected
+    procedure DoLineColorChange; override;
+    procedure RecalculateColor(WhoChanged:THMIFlowPolyline=nil); virtual;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    property EmptyColor:TColor read FEmptyColor write SetEmptyColor default clBlack;
+    property MultipleColorBehavior:TColorMixBehavior read FMultipleColorBehavior write setMultipleColorsBehavior;
+    property MultipleColorsReplace:TColor read FMultipleColorsReplace write setMultipleColorsReplace;
+    property FlowSource:THMIFlowSourceCollection read FFlowSources write setFlowSources;
+  end;
+
 implementation
 
 uses math;
+
+{ THMIFlowPolyline }
+
+procedure THMIFlowPolyline.AddNotifyCallback(WhoNotify: IColorChangeNotification
+  );
+var
+  i: Integer;
+begin
+  for i:=0 to High(FFlowDest) do
+    if FFlowDest[i]=WhoNotify then
+      exit;
+
+  i:=Length(FFlowDest);
+  SetLength(FFlowDest,i+1);
+  FFlowDest[i]:=WhoNotify;
+end;
+
+procedure THMIFlowPolyline.RemoveNotifyCallback(
+  WhoRemove: IColorChangeNotification);
+var
+  h, i: Integer;
+  found:Boolean;
+begin
+  h:=High(FFlowDest);
+  for i:=0 to h do
+    if FFlowDest[i]=WhoRemove then begin
+      found:=true;
+      break;
+    end;
+
+  if found then begin
+    FFlowDest[i]:=FFlowDest[h];
+    SetLength(FFlowDest,h);
+  end;
+end;
+
+procedure THMIFlowPolyline.NotifyFree(const WhoWasDestroyed: THMIFlowPolyline);
+var
+  i: Integer;
+begin
+  for i:=0 to FFlowSources.Count-1 do begin
+    if THMIFlowSourceCollectionItem(FFlowSources.Items[i]).HMIObject = WhoWasDestroyed then begin
+      FFlowSources.Delete(i);
+      break;
+    end;
+  end;
+end;
+
+procedure THMIFlowPolyline.NotifyChange(const WhoChanged: THMIFlowPolyline);
+begin
+  RecalculateColor(WhoChanged);
+end;
+
+procedure THMIFlowPolyline.SetEmptyColor(AValue: TColor);
+begin
+  if FEmptyColor=AValue then Exit;
+  FEmptyColor:=AValue;
+  RecalculateColor;
+end;
+
+procedure THMIFlowPolyline.setFlowSources(AValue: THMIFlowSourceCollection);
+begin
+  if FFlowSources=AValue then Exit;
+  FFlowSources.Assign(AValue);
+end;
+
+procedure THMIFlowPolyline.setMultipleColorsBehavior(AValue: TColorMixBehavior);
+begin
+  if FMultipleColorBehavior=AValue then Exit;
+  FMultipleColorBehavior:=AValue;
+  RecalculateColor;
+end;
+
+procedure THMIFlowPolyline.setMultipleColorsReplace(AValue: TColor);
+begin
+  if FMultipleColorsReplace=AValue then Exit;
+  FMultipleColorsReplace:=AValue;
+  RecalculateColor;
+end;
+
+procedure THMIFlowPolyline.DoLineColorChange;
+var
+  i: Integer;
+begin
+  for i:=0 to High(FFlowDest) do
+    try
+      FFlowDest[i].NotifyChange(Self);
+    finally
+    end;
+end;
+
+procedure THMIFlowPolyline.RecalculateColor(WhoChanged: THMIFlowPolyline);
+var
+  fs, validObject: THMIFlowSourceCollectionItem;
+  i: Integer;
+  MultipleColors: Boolean;
+  CalculatedColor: TColor;
+begin
+  validObject:=nil;
+  fs:=nil;
+  MultipleColors:=false;
+  for i:=0 to FFlowSources.Count-1 do begin
+    fs:=THMIFlowSourceCollectionItem(FFlowSources.Items[i]);
+    if fs.HMIObject.LineColor=FEmptyColor then continue;
+
+    if validObject=nil then
+      validObject:=fs
+    else begin
+      if validObject.HMIObject.LineColor<>fs.HMIObject.LineColor then begin
+        MultipleColors:=true;
+        break;
+      end;
+    end;
+  end;
+
+  if MultipleColors then
+    case FMultipleColorBehavior of
+      cmbLastColor:
+        if Assigned(WhoChanged) and (WhoChanged.LineColor<>FEmptyColor) then
+          LineColor:=WhoChanged.LineColor;
+      cmbEmpty:
+        LineColor:=FEmptyColor;
+      cmbMultipleColorsReplace:
+        LineColor:=FMultipleColorsReplace;
+      cmbAnd,
+      cmbOr,
+      cmbXor: begin
+        CalculatedColor:=FEmptyColor;
+        for i:=0 to FFlowSources.Count-1 do begin
+          fs:=THMIFlowSourceCollectionItem(FFlowSources.Items[i]);
+          if fs.HMIObject.LineColor=FEmptyColor then continue;
+          if CalculatedColor=FEmptyColor then
+            CalculatedColor:=fs.HMIObject.LineColor
+          else
+            case FMultipleColorBehavior of
+              cmbAnd:
+                CalculatedColor:=CalculatedColor AND fs.HMIObject.LineColor;
+              cmbOr:
+                CalculatedColor:=CalculatedColor OR  fs.HMIObject.LineColor;
+              cmbXor:
+                CalculatedColor:=CalculatedColor XOR fs.HMIObject.LineColor;
+            end;
+        end;
+        LineColor:=CalculatedColor;
+      end;
+    end
+  else
+    if Assigned(fs) and Assigned(fs.HMIObject) then
+      LineColor:=fs.HMIObject.LineColor;
+
+end;
+
+constructor THMIFlowPolyline.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FFlowSources:=THMIFlowSourceCollection.Create(Self);
+end;
+
+destructor THMIFlowPolyline.Destroy;
+var
+  i: Integer;
+begin
+  for i:=0 to High(FFlowDest) do
+    FFlowDest[i].NotifyFree(Self);
+  for i:=0 to FFlowSources.Count-1 do
+    THMIFlowSourceCollectionItem(FFlowSources.Items[i]).HMIObject:=nil;
+  FreeAndNil(FFlowSources);
+  inherited Destroy;
+end;
+
+{ THMIFlowObjectCollection }
+
+constructor THMIFlowSourceCollection.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner,THMIFlowSourceCollectionItem);
+end;
+
+function THMIFlowSourceCollection.Add: THMIFlowSourceCollectionItem;
+begin
+  Result:=THMIFlowSourceCollectionItem(inherited Add);
+end;
+
+{ THMIFlowObjectCollectionItem }
+
+procedure THMIFlowSourceCollectionItem.setHMIObject(AValue: THMIFlowPolyline);
+begin
+  if FHMIObject=AValue then Exit;
+  if supports(Collection.Owner, IColorChangeNotification) then begin
+    if Assigned(FHMIObject) then
+      (FHMIObject as IColorChangeNotification).RemoveNotifyCallback(Collection.Owner as IColorChangeNotification);
+
+    if AValue=nil then begin
+      FHMIObject:=AValue
+    end else begin
+      if Supports(AValue, IColorChangeNotification) then begin
+        (AValue as IColorChangeNotification).AddNotifyCallback(Collection.Owner as IColorChangeNotification);
+        FHMIObject:=AValue;
+      end else
+        raise Exception.Create('Object don´t support the IColorChangeNotification interface!');
+    end;
+  end;
+end;
 
 { TPointCollection }
 
@@ -136,11 +403,26 @@ begin
 
   FBorderColor:=AValue;
   Visible:=(AValue<>clNone);
+
+  try
+    DoLineColorChange;
+  finally
+  end;
+
   if not Visible then exit;
 
   if [csLoading, csReading]*ComponentState=[] then begin
     InvalidateDraw;
   end;
+end;
+
+procedure THMIPolyline.DoLineColorChange;
+begin
+end;
+
+procedure THMIPolyline.SetBorderWidth(AValue: Integer);
+begin
+  inherited;
 end;
 
 procedure THMIPolyline.setPointCoordinates(AValue: TPointCollection);
