@@ -17,7 +17,7 @@
       </Parsing>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="43">
+    <Files Count="44">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -192,6 +192,10 @@
         <Filename Value="src/hmi/hmi_draw_elevador.pas"/>
         <UnitName Value="hmi_draw_elevador"/>
       </Item43>
+      <Item44>
+        <Filename Value="src/hmi/hmibasiceletricmotor.pas"/>
+        <UnitName Value="HMIBasicEletricMotor"/>
+      </Item44>
     </Files>
     <RequiredPkgs Count="6">
       <Item1>

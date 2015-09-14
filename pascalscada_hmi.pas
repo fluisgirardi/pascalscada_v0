@@ -16,7 +16,8 @@ uses
   hmiobjectcolletion, HMIProgressBar, hmipropeditor, HMIRadioButton, 
   HMIRadioGroup, hmiregister, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
   HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
-  HMI_ComputedImageList, HMI_Draw_Valves, hmi_draw_elevador, LazarusPackageIntf;
+  HMI_ComputedImageList, HMI_Draw_Valves, hmi_draw_elevador, 
+  HMIBasicEletricMotor, LazarusPackageIntf;
 
 implementation
 
