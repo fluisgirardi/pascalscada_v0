@@ -240,7 +240,7 @@ begin
   fs:=nil;
   MultipleColors:=false;
   for i:=0 to FFlowSources.Count-1 do begin
-    fs:=THMIFlowSourceCollectionItem(FFlowSources.Items[i]);
+   fs:=THMIFlowSourceCollectionItem(FFlowSources.Items[i]);
     if fs.HMIObject.LineColor=FEmptyColor then continue;
 
     if validObject=nil then
