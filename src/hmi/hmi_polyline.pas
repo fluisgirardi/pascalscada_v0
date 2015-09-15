@@ -285,8 +285,10 @@ begin
       end;
     end
   else
-    if Assigned(fs) and Assigned(fs.HMIObject) then
-      LineColor:=fs.HMIObject.LineColor;
+    if Assigned(validObject) and Assigned(validObject.HMIObject) then
+      LineColor:=validObject.HMIObject.LineColor
+    else
+      LineColor:=FEmptyColor;
 
 end;
 
