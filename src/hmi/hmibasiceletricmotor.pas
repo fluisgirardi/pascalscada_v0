@@ -20,6 +20,14 @@ type
     procedure DrawControl; override;
 
   published
+    property Action;
+    property OnClick;
+    property OnMouseDown;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property PopupMenu;
+    property Enabled;
+
     property BorderColor;
     property BorderWidth;
     property BodyColor;
@@ -52,21 +60,21 @@ begin
                                     trunc(20/52*height),
                                     Trunc(0.07*Width),
                                     Trunc(32/52*Height), true);
-  FControlArea.RoundRectAntialias(Trunc(0.04*Width),
-                         Trunc(0.06*Height),
-                         Trunc(0.19*Width),
-                         Trunc(0.94*Height),
-                         Trunc(0.075*width),
-                         Trunc(0.075*width),
-                         ColorToBGRA(FBorderColor),
-                         FBorderWidth,
-                         ColorToBGRA(FBodyColor));
   FControlArea.RoundRectAntialias(Trunc(0.19*Width)-1,
                          Trunc(0.06*Height),
                          Width - FBorderWidth,
                          Trunc(0.94*Height),
                          Trunc(0.2*width),
                          Trunc(0.2*width),
+                         ColorToBGRA(FBorderColor),
+                         FBorderWidth,
+                         ColorToBGRA(FBodyColor));
+  FControlArea.RoundRectAntialias(Trunc(0.04*Width),
+                         Trunc(0.06*Height),
+                         Trunc(0.19*Width),
+                         Trunc(0.94*Height),
+                         Trunc(0.075*width),
+                         Trunc(0.075*width),
                          ColorToBGRA(FBorderColor),
                          FBorderWidth,
                          ColorToBGRA(FBodyColor));
