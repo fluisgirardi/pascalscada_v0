@@ -19,7 +19,8 @@ unit HMIProgressBar;
 interface
 
 uses
-  SysUtils, Classes, Controls, ComCtrls, HMITypes, PLCTag, ProtocolTypes, Tag;
+  SysUtils, Classes, Controls, ComCtrls, HMITypes, PLCTag, ProtocolTypes, Tag,
+  hmi_draw_basiccontrol, Graphics;
 
 type
 
@@ -39,13 +40,22 @@ type
   of your development environment.)
   }
   {$ENDIF}
-  THMIProgressBar = class(TProgressBar, IHMIInterface, IHMITagInterface)
+
+  { THMIProgressBar }
+
+  THMIProgressBar = class(THMIBasicControl, IHMIInterface, IHMITagInterface)
   private
+    FMax: Double;
+    FMin: Double;
+    FOrientation: TProgressBarOrientation;
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
 
     FSecurityCode:String;
+    procedure SetMax(AValue: Double);
+    procedure SetMin(AValue: Double);
+    procedure SetOrientation(AValue: TProgressBarOrientation);
     procedure SetSecurityCode(sc:String);
 
     //: @seealso(IHMIInterface.SetHMITag)
@@ -70,24 +80,19 @@ type
     procedure NotifyTagChange(Sender:TObject);
     procedure RemoveTag(Sender:TObject);
   protected
+    function Progress:Double;
     //: @exclude
     procedure SetEnabled(e:Boolean); override;
     //: @exclude
     procedure Loaded; override;
+    procedure UpdateShape; override;
+    procedure DrawControl; override;
   public
     constructor Create(AOwner: TComponent); override;
-    //: @exclude
     destructor Destroy; override;
   published
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
-
-    {$IFDEF PORTUGUES}
-    //: Informa a posição (valor do tag) atual.
-    {$ELSE}
-    //: Tells the current position (tag value).
-    {$ENDIF}
-    property Position:Double read GetPosition;
 
     {$IFDEF PORTUGUES}
     {:
@@ -112,18 +117,25 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
-
+    property Min: Double read FMin write SetMin;
+    property Max: Double read FMax write SetMax;
+    property Orientation: TProgressBarOrientation read FOrientation write SetOrientation default pbHorizontal;
+    property Color: TColor read FBodyColor write SetBodyColor default clGreen;
+    property Cursor;
+    property Align;
     property OnClick;
+    property BorderColor;
   end;
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, BGRABitmap, BGRABitmapTypes;
 
 constructor THMIProgressBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FIsEnabled:=true;
+  FBodyColor:=clGreen;
   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
@@ -139,6 +151,36 @@ procedure THMIProgressBar.Loaded;
 begin
    inherited Loaded;
    NotifyTagChange(Self);
+end;
+
+procedure THMIProgressBar.UpdateShape;
+begin
+  //this control is a rect, so, it will not be shaped.
+  //inherited UpdateShape;
+end;
+
+procedure THMIProgressBar.DrawControl;
+begin
+  inherited DrawControl;
+  FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
+  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
+  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
+
+  FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
+  FControlArea.CanvasBGRA.Pen.Width  :=0;
+  FControlArea.CanvasBGRA.Brush.Color:= clDefault;
+
+
+  FControlArea.RectangleAntialias(FBorderWidth/2,
+                                  FBorderWidth/2,
+                                  Width-FBorderWidth,
+                                  Height/(FMax-FMin)*(FMax-Progress),
+                                  ColorToBGRA(FBorderColor),
+                                  0,
+                                  ColorToBGRA(clSilver));
+
+
+
 end;
 
 function THMIProgressBar.GetControlSecurityCode:String;
@@ -164,7 +206,7 @@ begin
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
-procedure THMIProgressBar.SetSecurityCode(Sc:String);
+procedure THMIProgressBar.SetSecurityCode(sc: String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -178,6 +220,27 @@ begin
     end;
 
   FSecurityCode:=sc;
+end;
+
+procedure THMIProgressBar.SetMin(AValue: Double);
+begin
+  if FMin=AValue then Exit;
+  FMin:=AValue;
+  InvalidateDraw;
+end;
+
+procedure THMIProgressBar.SetOrientation(AValue: TProgressBarOrientation);
+begin
+  if FOrientation=AValue then Exit;
+  FOrientation:=AValue;
+  InvalidateDraw;
+end;
+
+procedure THMIProgressBar.SetMax(AValue: Double);
+begin
+  if FMax=AValue then Exit;
+  FMax:=AValue;
+  InvalidateDraw;
 end;
 
 procedure THMIProgressBar.SetHMITag(t:TPLCTag);
@@ -201,6 +264,7 @@ begin
     NotifyTagChange(self);
   end;
   FTag := t;
+  InvalidateDraw;
 end;
 
 function  THMIProgressBar.GetHMITag:TPLCTag;
@@ -242,13 +306,23 @@ begin
     exit;
 
   if (FTag<>nil) and (Supports(FTag, ITagNumeric)) then
-    inherited Position := Trunc((FTag as ITagNumeric).Value);
+    InvalidateDraw;
 end;
 
 procedure THMIProgressBar.RemoveTag(Sender:TObject);
 begin
-  if FTag=Sender then
+  if FTag=Sender then begin
     FTag := nil;
+    InvalidateDraw;
+  end;
+end;
+
+function THMIProgressBar.Progress: Double;
+begin
+  if (FTag<>nil) and (Supports(FTag,ITagNumeric)) then
+    Result:=(FTag as ITagNumeric).GetValue
+  else
+    Result:=FMin;
 end;
 
 end.
