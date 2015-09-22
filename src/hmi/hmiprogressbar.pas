@@ -166,18 +166,69 @@ begin
   FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
   FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
 
-  FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
-  FControlArea.CanvasBGRA.Pen.Width  :=0;
-  FControlArea.CanvasBGRA.Brush.Color:= clDefault;
+
+  case Orientation of
+    pbVertical: begin
+      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
+      FControlArea.CanvasBGRA.Pen.Width  :=0;
+      FControlArea.CanvasBGRA.Brush.Color:= clDefault;
+      FControlArea.RectangleAntialias(FBorderWidth/2,
+                                      FBorderWidth/2,
+                                      Width-FBorderWidth,
+                                      Height/(FMax-FMin)*(FMax-Progress),
+                                      ColorToBGRA(FBorderColor),
+                                      0,
+                                      ColorToBGRA(clSilver));
+
+    end;
+
+    pbHorizontal: begin
+      FControlArea.CanvasBGRA.Brush.Color:= clSilver;
+      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
+      FControlArea.CanvasBGRA.Pen.Width  :=0;
+      FControlArea.RectangleAntialias(FBorderWidth/2,
+                                      FBorderWidth/2,
+                                      width/(FMax-FMin)*(Progress-FMin),
+                                      height-FBorderWidth,
+                                      ColorToBGRA(FBorderColor),
+                                      0,
+                                      ColorToBGRA(FBodyColor));
+
+    end;
+
+    pbRightToLeft: begin
+      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
+      FControlArea.CanvasBGRA.Pen.Width  :=0;
+      FControlArea.CanvasBGRA.Brush.Color:= clDefault;
+      FControlArea.RectangleAntialias(FBorderWidth/2,
+                                      FBorderWidth/2,
+                                       width/(FMax-FMin)*(FMax-Progress),
+                                       height-FBorderWidth,
+                                      ColorToBGRA(FBorderColor),
+                                      0,
+                                      ColorToBGRA(clSilver));
+
+    end;
+    pbTopDown: begin
+      FControlArea.CanvasBGRA.Brush.Color:= clSilver;
+      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
+      FControlArea.CanvasBGRA.Pen.Width  :=0;
+      FControlArea.RectangleAntialias(FBorderWidth/2,
+                                      FBorderWidth/2,
+                                      width-FBorderWidth,
+                                      height/(FMax-FMin)*(Progress-FMin),
+                                      ColorToBGRA(FBorderColor),
+                                      0,
+                                      ColorToBGRA(FBodycolor));
+
+    end;
 
 
-  FControlArea.RectangleAntialias(FBorderWidth/2,
-                                  FBorderWidth/2,
-                                  Width-FBorderWidth,
-                                  Height/(FMax-FMin)*(FMax-Progress),
-                                  ColorToBGRA(FBorderColor),
-                                  0,
-                                  ColorToBGRA(clSilver));
+
+  end;
+
+
+
 
 
 
