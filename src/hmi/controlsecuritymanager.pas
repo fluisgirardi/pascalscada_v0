@@ -58,7 +58,12 @@ type
     property RequireLoginAlways:Boolean read FRequireLoginAlways write FRequireLoginAlways;
   end;
 
+  { TPascalSCADAUserManagementAction }
+
   TPascalSCADAUserManagementAction = class(TAction, IHMIInterface)
+  private
+    FDisableIfNotAuthorized: Boolean;
+    procedure SetDisableIfNotAuthorized(AValue: Boolean);
   protected
     FEnabled,
     FAccessAllowed:Boolean;
@@ -79,6 +84,7 @@ type
     destructor Destroy; override;
   published
     property Enabled:Boolean read FEnabled write SetEnabled default true;
+    property DisableIfNotAuthorized:Boolean read FDisableIfNotAuthorized write SetDisableIfNotAuthorized default true;
   end;
 
   { TPascalSCADALoginAction }
@@ -485,6 +491,14 @@ end;
 //PascaSCADA user management Standart actions
 ////////////////////////////////////////////////////////////////////////////////
 
+procedure TPascalSCADAUserManagementAction.SetDisableIfNotAuthorized(
+  AValue: Boolean);
+begin
+  if FDisableIfNotAuthorized=AValue then Exit;
+  FDisableIfNotAuthorized:=AValue;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(FSecurityCode));
+end;
+
 procedure TPascalSCADAUserManagementAction.SetEnabled(AValue: Boolean);
 begin
   if FEnabled=AValue then Exit;
@@ -505,7 +519,7 @@ end;
 
 procedure TPascalSCADAUserManagementAction.CanBeAccessed(a: Boolean);
 begin
-  FAccessAllowed:=a;
+  FAccessAllowed:=a or (FDisableIfNotAuthorized=false);
   inherited Enabled:=FEnabled and FAccessAllowed;
 end;
 
@@ -529,6 +543,7 @@ constructor TPascalSCADAUserManagementAction.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FEnabled:=true;
+  FDisableIfNotAuthorized:=true;
   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
@@ -615,8 +630,10 @@ function TPascalSCADASecureAction.Execute: Boolean;
 begin
   if GetControlSecurityManager.CanAccess(FSecurityCode) then
     Result:=inherited Execute
-  else
+  else begin
+    MessageDlg('Error','Access denied!',mtInformation,[mbOK],0);
     Result:=false;
+  end;
 end;
 
 procedure TPascalSCADASecureAction.SetSecurityCode(sc:String);
