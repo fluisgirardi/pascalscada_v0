@@ -1064,6 +1064,7 @@ begin
       if (not found) and TZone(Items[c]).DefaultZone then begin
          Result := TZone(Items[c]);
          found := true;
+         continue;
       end;
 
       with Items[c] as TZone do
@@ -1213,7 +1214,7 @@ procedure TGraphicZone.SetFileName(fn:String);
 var
    notify:Boolean;
 begin
-   if not FileExists(fn) then
+   if (Trim(fn)<>'') AND (not FileExists(fn)) then
       raise exception.Create(SfileNotFound);
       
    notify := (fn<>FFileName);
