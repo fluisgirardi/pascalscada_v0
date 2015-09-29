@@ -12,6 +12,8 @@ uses
 type
 
 
+  { TControlSecurityManager }
+
   TControlSecurityManager = class(TComponent)
   private
     FControls:array of IHMIInterface;
@@ -20,7 +22,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function   Login:Boolean;
+    function   Login(Userlogin, Userpassword: String; var UID: Integer):Boolean; overload;
+    function   Login:Boolean; overload;
+
     procedure  Logout;
     procedure  Manage;
     function   GetCurrentUserlogin:String;
@@ -337,6 +341,14 @@ begin
   if Length(FControls)>0 then
     raise Exception.Create(SSecurityControlBusy);
   inherited Destroy;
+end;
+
+function TControlSecurityManager.Login(Userlogin, Userpassword: String; var UID:Integer): Boolean; overload;
+begin
+  if FUserManagement<>nil then
+    Result:=TBasicUserManagement(FUserManagement).Login(Userlogin,Userpassword,UID)
+  else
+    Result:=false;
 end;
 
 function   TControlSecurityManager.Login:Boolean;

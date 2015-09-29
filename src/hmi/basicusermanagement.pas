@@ -68,7 +68,8 @@ type
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
-    function    Login:Boolean; virtual;
+    function    Login:Boolean; virtual; overload;
+    function    Login(Userlogin, userpassword: String; var UID: Integer):Boolean; virtual;
     procedure   Logout; virtual;
     procedure   Manage; virtual;
 
@@ -181,6 +182,20 @@ begin
   finally
     FreeAndNil(frmLogin);
     FreeAndNil(frozenTimer);
+  end;
+end;
+
+function TBasicUserManagement.Login(Userlogin, userpassword: String; var UID:Integer):Boolean; overload;
+begin
+  Result:=CheckUserAndPassword(Userlogin, userpassword, UID, true);
+  if Result then begin
+    FLoggedUser:=true;
+    FUID:=UID;
+    FCurrentUserLogin:=Userlogin;
+    FLoggedSince:=Now;
+    Result:=true;
+    GetControlSecurityManager.UpdateControls;
+    DoSuccessfulLogin;
   end;
 end;
 
