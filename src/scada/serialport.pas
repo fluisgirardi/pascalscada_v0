@@ -347,7 +347,7 @@ const FILE_ANY_ACCESS         =0;
 
 {$IFDEF UNIX}
 {$IFDEF LINUX}
-var PortPrefix:array[0..1] of string = ('ttyS','ttyUSB');
+var PortPrefix:array[0..0] of string = ('tty');
 {$ENDIF}
 {$IFDEF FREEBSD}
 var PortPrefix:array[0..0] of string = ('cuad');
@@ -833,6 +833,7 @@ begin
 {$IFDEF UNIX}
 var
    c:LongInt;
+   fd: cint;
 begin
   if PAcceptAnyPortName then begin
     Result:=true;
@@ -841,10 +842,12 @@ begin
 
   Result := false;
   for c:=0 to high(PortPrefix) do
-     if (LeftStr(v, Length(PortPrefix[c]))=PortPrefix[c]) and FileExists('/dev/'+v) then begin
-        Result := true;
-        exit;
-     end;
+    if (Pos(PortPrefix[c], v)>0) and FileExists('/dev/'+v) then begin
+      fd:=fpopen('/dev/'+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
+
+      Result := true;
+      exit;
+    end;
 {$ENDIF}
 end;
 
