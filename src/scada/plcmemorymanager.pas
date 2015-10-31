@@ -961,39 +961,38 @@ end;
 function TPLCMemoryManager.SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):LongInt;
 var
   blk, AdrEnd, LenUtil, Moved:LongInt;
+  srcidx, dstidx: Integer;
 begin
   AdrEnd := AdrStart + Length(Values) - 1;
   Moved:=0;
 
   for blk := 0 to High(Blocks) do begin
     LenUtil:=0;
-    if (Blocks[blk].AddressStart<=AdrStart) AND (Blocks[blk].AddressEnd>=AdrEnd) then begin
-      LenUtil := (AdrEnd - AdrStart) + 1;
-      Move(Values[0], Blocks[blk].FValues[AdrStart - Blocks[blk].AddressStart], LenUtil*SizeOf(Double));
+
+    if ((Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd)) OR       //if block starts is over the requested address range...
+       ((Blocks[blk].AddressEnd>=AdrStart)   AND (Blocks[blk].AddressEnd<=AdrEnd))   OR       //OR block end is over the requested address range...
+       ((AdrStart>=Blocks[blk].AddressStart) AND (AdrStart<=Blocks[blk].AddressEnd)) OR       //OR the request start is over the block address range.
+       ((AdrEnd>=Blocks[blk].AddressStart)   AND (AdrEnd<=Blocks[blk].AddressEnd)) then begin //OR the request end is over the block address range, So, ladies and gentlemen, we have a memory overlap...
+
+      LenUtil := Min(AdrEnd,Blocks[blk].AddressEnd) - Max(AdrStart,Blocks[blk].AddressStart) + 1;
+
       Blocks[blk].Updated;
       Blocks[blk].LastError:=LastResult;
       Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
-    end else begin
-      if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
-        LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
-        if Blocks[blk].Size<=LenUtil then
-          Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], Blocks[blk].Size*SizeOf(Double))
-        else
-          Move(Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].FValues[0], LenUtil*SizeOf(Double));
 
-        Blocks[blk].Updated;
-        Blocks[blk].LastError:=LastResult;
-        Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
+      srcidx:=0;
+      dstidx:=0;
+      if Blocks[blk].AddressStart>=AdrStart then begin
+        dstidx:=0;
+        srcidx:=Blocks[blk].AddressStart - AdrStart;
       end else begin
-        if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
-          LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
-          Move(Values[0], Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], LenUtil*SizeOf(Double));
-          Blocks[blk].Updated;
-          Blocks[blk].LastError:=LastResult;
-          Blocks[blk].ReadSuccess:=Blocks[blk].ReadSuccess+1;
-        end;
+        dstidx:=AdrStart - Blocks[blk].AddressStart;
+        srcidx:=0;
       end;
+
+      Move(Values[srcidx], Blocks[blk].FValues[dstidx], LenUtil*SizeOf(Double))
     end;
+
     inc(Moved, LenUtil);
     if Moved>=Length(Values) then break;
   end;
@@ -1007,19 +1006,13 @@ begin
   AdrEnd := AdrStart + Len * RegSize - 1;
 
   for blk := 0 to High(Blocks) do begin
-    if (Blocks[blk].AddressStart<=AdrStart) AND (Blocks[blk].AddressEnd>=AdrEnd) then begin
+    if ((Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd)) OR       //if block starts is over the requested address range...
+       ((Blocks[blk].AddressEnd>=AdrStart)   AND (Blocks[blk].AddressEnd<=AdrEnd))   OR       //OR block end is over the requested address range...
+       ((AdrStart>=Blocks[blk].AddressStart) AND (AdrStart<=Blocks[blk].AddressEnd)) OR       //OR the request start is over the block address range.
+       ((AdrEnd>=Blocks[blk].AddressStart)   AND (AdrEnd<=Blocks[blk].AddressEnd)) then begin //OR the request end is over the block address range, So, ladies and gentlemen, we have a memory overlap...
+
       Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
       Blocks[blk].LastError  := Fault;
-    end else begin
-      if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
-        Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
-        Blocks[blk].LastError  := Fault;
-      end else begin
-        if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
-          Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
-          Blocks[blk].LastError  := Fault;
-        end;
-      end;
     end;
   end;
 end;
@@ -1027,34 +1020,35 @@ end;
 function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt;
 var
   blk, AdrEnd, LenUtil, Moved:LongInt;
+  srcidx, dstidx: Integer;
 begin
-  AdrEnd := AdrStart + Length(Values) - 1;
+  AdrEnd := AdrStart + Min(Length(Values), Len) - 1;
   Moved:=0;
 
   for blk := 0 to High(Blocks) do begin
     LenUtil:=0;
-    if (Blocks[blk].AddressStart<=AdrStart) AND (Blocks[blk].AddressEnd>=AdrEnd) then begin
-      LenUtil := (AdrEnd - AdrStart) + 1;
+
+    if ((Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd)) OR       //if block starts is over the requested address range...
+       ((Blocks[blk].AddressEnd>=AdrStart)   AND (Blocks[blk].AddressEnd<=AdrEnd))   OR       //OR block end is over the requested address range...
+       ((AdrStart>=Blocks[blk].AddressStart) AND (AdrStart<=Blocks[blk].AddressEnd)) OR       //OR the request start is over the block address range.
+       ((AdrEnd>=Blocks[blk].AddressStart)   AND (AdrEnd<=Blocks[blk].AddressEnd)) then begin //OR the request end is over the block address range, So, ladies and gentlemen, we have a memory overlap...
+
+      LenUtil := Min(AdrEnd,Blocks[blk].AddressEnd) - Max(AdrStart,Blocks[blk].AddressStart) + 1;
+
       LastResult:=Blocks[blk].LastError;
       ValueTimeStamp:=Blocks[blk].LastUpdate;
-      Move(Blocks[blk].FValues[AdrStart - Blocks[blk].AddressStart], Values[0], LenUtil*SizeOf(Double))
-    end else begin
-      if (Blocks[blk].AddressStart>=AdrStart) AND (Blocks[blk].AddressStart<=AdrEnd) then begin
-        LenUtil := (AdrEnd - Blocks[blk].AddressStart) + 1;
-        LastResult:=Blocks[blk].LastError;
-        ValueTimeStamp:=Blocks[blk].LastUpdate;
-        if Blocks[blk].Size<=LenUtil then
-          Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], Blocks[blk].Size*SizeOf(Double))
-        else
-          Move(Blocks[blk].FValues[0], Values[Blocks[blk].AddressStart - AdrStart], LenUtil*SizeOf(Double));
+
+      srcidx:=0;
+      dstidx:=0;
+      if Blocks[blk].AddressStart>=AdrStart then begin
+        srcidx:=0;
+        dstidx:=Blocks[blk].AddressStart - AdrStart;
       end else begin
-        if (Blocks[blk].AddressEnd>=AdrStart) AND (Blocks[blk].AddressEnd<=AdrEnd) then begin
-          LenUtil := (Blocks[blk].AddressEnd - AdrStart) + 1;
-          LastResult:=Blocks[blk].LastError;
-          ValueTimeStamp:=Blocks[blk].LastUpdate;
-          Move(Blocks[blk].FValues[Blocks[blk].AddressEnd - AdrStart + 1], Values[0], LenUtil*SizeOf(Double));
-        end
+        srcidx:=AdrStart - Blocks[blk].AddressStart;
+        dstidx:=0;
       end;
+
+      Move(Blocks[blk].FValues[srcidx], Values[dstidx], LenUtil*SizeOf(Double))
     end;
     inc(Moved, LenUtil);
     if Moved>=Length(Values) then break;
