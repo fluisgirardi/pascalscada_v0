@@ -297,8 +297,10 @@ begin
     PValueRaw := PBlock.ValueRaw[PIndex];
     PValueTimeStamp := PBlock.ValueTimestamp;
 
-    if notify then
+    if notify or PFirstUpdate then begin
+      PFirstUpdate:=false;
       NotifyChange();
+    end;
   end;
 end;
 

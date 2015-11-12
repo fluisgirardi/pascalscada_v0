@@ -338,8 +338,10 @@ begin
         PLastSyncWriteCmdResult := LastResult;
     end;
 
-    if notify then
+    if notify or PFirstUpdate then begin
+      if TagCommand in [tcRead,tcScanRead] then PFirstUpdate:=false;
       NotifyChange;
+    end;
 
     if (TagCommand in [tcRead,tcScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PValueTimeStamp) then
       NotifyUpdate;

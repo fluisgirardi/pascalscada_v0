@@ -667,6 +667,13 @@ type
     PGUID:String;
 
     {$IFDEF PORTUGUES}
+    //: Primeira atualização do tag?
+    {$ELSE}
+    //: First tag update? so fires
+    {$ENDIF}
+    PFirstUpdate:Boolean;
+
+    {$IFDEF PORTUGUES}
     //: Notifica quando uma letura tem exito.
     {$ELSE}
     //: Notifies when a successful read occurs.
@@ -1013,6 +1020,7 @@ begin
   PCommWriteErrors := 0;
   PCommWriteOk := 0;
   PUpdateTime:=1000;
+  PFirstUpdate:=true;
 
   {$IFNDEF FPC}
   fHandle:=AllocateHWnd(WndMethod);

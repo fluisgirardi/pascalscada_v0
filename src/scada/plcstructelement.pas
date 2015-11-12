@@ -204,8 +204,10 @@ begin
 
     Result:=PValueRaw;
 
-    if notify then
+    if notify or PFirstUpdate then begin
+      PFirstUpdate:=false;
       NotifyChange();
+    end;
 
     SetLength(data,0);
     SetLength(converted_value,0);

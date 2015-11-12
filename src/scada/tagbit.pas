@@ -369,7 +369,8 @@ begin
     bold := GetBits(POldValue);
     bnew := GetBits(value);
 
-    if bold<>bnew then begin
+    if (bold<>bnew) or PFirstUpdate then begin
+       PFirstUpdate:=False;
        PValueRaw:=bnew;
        PValueTimeStamp := CrossNow;
 

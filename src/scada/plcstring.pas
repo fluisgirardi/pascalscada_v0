@@ -651,7 +651,8 @@ begin
         PLastSyncWriteCmdResult := LastResult;
     end;
 
-    if notify then begin
+    if notify or PFirstUpdate then begin
+      if TagCommand in [tcRead,tcScanRead] then PFirstUpdate:=false;
       PValue := EncodeValues(PValues);
       NotifyChange;
     end;
