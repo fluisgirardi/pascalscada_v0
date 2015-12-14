@@ -40,14 +40,19 @@ type
     development environment.
   }
   {$ENDIF}
+
+  { THMILabel }
+
   THMILabel = class(TLabel, IHMIInterface, IHMITagInterface)
   private
+    FFormatDateTimeOptions: TFormatDateTimeOptions;
     FNumberFormat:string;
     FPrefix, FSufix:string;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
 
     FSecurityCode:String;
+    procedure SetFormatDateTimeOptions(AValue: TFormatDateTimeOptions);
     procedure SetSecurityCode(sc:String);
 
     procedure SetFormat(f:string);
@@ -179,6 +184,12 @@ type
     {$ENDIF}
     property SecurityCode:String read FSecurityCode write SetSecurityCode;
 
+    {$IFDEF PORTUGUES}
+    //: Configuraçoes de formataçao data/hora.
+    {$ELSE}
+    //: Date/time format options.
+    {$ENDIF}
+    property FormatDateTimeOptions:TFormatDateTimeOptions read FFormatDateTimeOptions write SetFormatDateTimeOptions;
   end;
 
 implementation
@@ -204,7 +215,7 @@ begin
   inherited Destroy;
 end;
 
-procedure THMILabel.SetSecurityCode(Sc:String);
+procedure THMILabel.SetSecurityCode(sc: String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -218,6 +229,13 @@ begin
     end;
 
   FSecurityCode:=sc;
+end;
+
+procedure THMILabel.SetFormatDateTimeOptions(AValue: TFormatDateTimeOptions);
+begin
+  if FFormatDateTimeOptions=AValue then Exit;
+  FFormatDateTimeOptions:=AValue;
+  RefreshTagValue;
 end;
 
 procedure THMILabel.SetFormat(f:string);
@@ -284,7 +302,7 @@ begin
   end;
 
   if (FTag<>nil) AND Supports(FTag, ITagInterface) then
-    inherited Caption := (FTag as ITagInterface).GetValueAsText(FPrefix, FSufix, FNumberFormat);
+    inherited Caption := (FTag as ITagInterface).GetValueAsText(FPrefix, FSufix, FNumberFormat, FFormatDateTimeOptions);
 end;
 
 function  THMILabel.GetCaption:TCaption;
