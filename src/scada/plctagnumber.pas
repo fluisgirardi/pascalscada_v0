@@ -44,7 +44,6 @@ type
   {$ENDIF}
   TPLCTagNumber = class(TPLCNumberMappable, IScanableTagInterface, ITagInterface, ITagNumeric)
   private
-    function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
@@ -141,7 +140,7 @@ type
 
 implementation
 
-uses hsstrings, math, crossdatetime;
+uses hsstrings, math, crossdatetime, dateutils;
 
 function TPLCTagNumber.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin
@@ -151,14 +150,6 @@ end;
 function TPLCTagNumber.GetValueRaw:Double;
 begin
   Result := PValueRaw;
-end;
-
-function TPLCTagNumber.GetValueAsText(Prefix, Sufix, Format:string):String;
-begin
-   if Trim(Format)<>'' then
-      Result := Prefix + FormatFloat(Format,Value)+Sufix
-   else
-      Result := Prefix + FloatToStr(Value)+Sufix;
 end;
 
 function  TPLCTagNumber.GetVariantValue:Variant;

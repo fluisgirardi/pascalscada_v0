@@ -57,7 +57,6 @@ type
     procedure SetBlock(blk:TPLCBlock);
     procedure SetIndex(i:Cardinal); virtual;
 
-    function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
@@ -181,14 +180,6 @@ begin
      Result := PBlock.ValueRaw[PIndex]
   else
      Result := PValueRaw ;
-end;
-
-function TPLCBlockElement.GetValueAsText(Prefix, Sufix, Format:string):String;
-begin
-   if Trim(Format)<>'' then
-      Result := Prefix + FormatFloat(Format,Value)+Sufix
-   else
-      Result := Prefix + FloatToStr(Value)+Sufix;
 end;
 
 function  TPLCBlockElement.GetVariantValue:Variant;

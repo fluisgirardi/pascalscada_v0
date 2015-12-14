@@ -19,7 +19,7 @@ unit ProtocolTypes;
 interface
 
 
-uses Tag, variants, Classes;
+uses Tag, variants, Classes, sysutils;
 
 
 type
@@ -258,7 +258,7 @@ type
     {$ELSE}
     //: Returns the tag value as string, including the format (if applicable), prefix and suffix.
     {$ENDIF}
-    function  GetValueAsText(Prefix, Sufix, Format:string):String;
+    function  GetValueAsText(Prefix, Sufix, Format:string; FormatDateTimeOptions:TFormatDateTimeOptions=[]):String;
 
     {$IFDEF PORTUGUES}
     //: Retorna o valor do tag como variant.

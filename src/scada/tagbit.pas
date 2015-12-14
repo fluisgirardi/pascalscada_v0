@@ -36,7 +36,7 @@ type
   {$ELSE}
   //: Defines the acceptable range of bits.
   {$ENDIF}
-  TBitRange = 0..31;
+  TBitRange = 0..63;
 
   {$IFDEF PORTUGUES}
   {:
@@ -86,7 +86,6 @@ type
     function  GetBitMask:LongInt;
     function  GetInvBitMask:LongInt;
 
-    function  GetValueAsText(Prefix, Sufix, Format:string):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
@@ -213,14 +212,6 @@ begin
       Result := GetBits((PNumber as ITagNumeric).Value);
   end else
     Result := PValueRaw;
-end;
-
-function TTagBit.GetValueAsText(Prefix, Sufix, Format:string):String;
-begin
-   if Trim(Format)<>'' then
-      Result := Prefix + FormatFloat(Format,Value) + Sufix
-   else
-      Result := Prefix + FloatToStr(Value) + Sufix;
 end;
 
 function  TTagBit.GetVariantValue:Variant;

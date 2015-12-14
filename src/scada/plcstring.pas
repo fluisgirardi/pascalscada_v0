@@ -76,7 +76,7 @@ type
     function  EncodeValues(values:TArrayOfDouble):String;
     function  DecodeValue(value:AnsiString):TArrayOfDouble;
     
-    function  GetValueAsText(Prefix, Sufix, Format:string):String;
+    function  GetValueAsText(Prefix, Sufix, Format:string; FormatDateTimeOptions:TFormatDateTimeOptions=[]):String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
@@ -531,7 +531,7 @@ begin
 
 end;
 
-function TPLCString.GetValueAsText(Prefix, Sufix, Format:string):String;
+function TPLCString.GetValueAsText(Prefix, Sufix, Format:string; FormatDateTimeOptions:TFormatDateTimeOptions=[]):String;
 begin
    Result := Prefix + Value + Sufix;
 end;

@@ -28,7 +28,7 @@ unit PLCNumber;
 interface
 
 uses
-  SysUtils, Classes, PLCTag, ValueProcessor, ProtocolTypes;
+  SysUtils, Classes, PLCTag, ValueProcessor, ProtocolTypes, dateutils;
 
 type
 
@@ -45,6 +45,8 @@ type
   {$ENDIF}
   TPLCNumber = class(TPLCTag)
   protected
+    //: @seealso(ITagInterface.GetValueAsText);
+    function GetValueAsText(Prefix, Sufix, Format: string; FormatDateTimeOptions:TFormatDateTimeOptions=[]): String; virtual;
     //: @seealso(TTag.AsyncNotifyChange)    
     procedure AsyncNotifyChange(data:Pointer); override;
     //: @seealso(TTag.GetValueChangeData)
@@ -274,6 +276,52 @@ destructor TPLCNumber.Destroy;
 begin
   SetScaleProcessor(nil);
   inherited Destroy;
+end;
+
+function TPLCNumber.GetValueAsText(Prefix, Sufix, Format:string; FormatDateTimeOptions:TFormatDateTimeOptions=[]):String;
+begin
+  //if none of date time format chars is present, format as number.
+  if (Pos('c', format)=0) AND
+     (Pos('f', format)=0) AND
+     (Pos('d', format)=0) AND
+     (Pos('dd', format)=0) AND
+     (Pos('ddd', format)=0) AND
+     (Pos('dddd', format)=0) AND
+     (Pos('ddddd', format)=0) AND
+     (Pos('dddddd', format)=0) AND
+     (Pos('m', format)=0) AND
+     (Pos('mm', format)=0) AND
+     (Pos('mmm', format)=0) AND
+     (Pos('mmmm', format)=0) AND
+     (Pos('y', format)=0) AND
+     (Pos('yy', format)=0) AND
+     (Pos('yyyy', format)=0) AND
+     (Pos('h', format)=0) AND
+     (Pos('hh', format)=0) AND
+     (Pos('n', format)=0) AND
+     (Pos('nn', format)=0) AND
+     (Pos('s', format)=0) AND
+     (Pos('ss', format)=0) AND
+     (Pos('t', format)=0) AND
+     (Pos('tt', format)=0) AND
+     (Pos('am/pm', format)=0) AND
+     (Pos('a/p', format)=0) AND
+     (Pos('/', format)=0) AND
+     (Pos(':', format)=0) AND
+     (Pos('"xx"', format)=0) AND
+     (Pos('''xx''', format)=0) AND
+     (Pos('z', format)=0) AND
+     (Pos('zzz', format)=0) then begin
+
+     if Trim(Format)<>'' then
+        Result := Prefix + FormatFloat(Format,Value)+Sufix
+     else
+        Result := Prefix + FloatToStr(Value)+Sufix;
+
+  end else begin
+    //the datetime number must be in milliseconds (1 unit=1ms)...
+    Result:=FormatDateTime(Format,TimeStampToDateTime(MSecsToTimeStamp(Value)));
+  end;
 end;
 
 procedure TPLCNumber.AsyncNotifyChange(data:Pointer);
