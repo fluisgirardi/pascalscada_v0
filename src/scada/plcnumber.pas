@@ -320,7 +320,11 @@ begin
 
   end else begin
     //the datetime number must be in milliseconds (1 unit=1ms)...
+    {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION < 20701)}
     Result:=FormatDateTime(Format,TimeStampToDateTime(MSecsToTimeStamp(Value)));
+    {$ELSE}
+    Result:=FormatDateTime(Format,TimeStampToDateTime(MSecsToTimeStamp(Value)),FormatDateTimeOptions);
+    {$IFEND}
   end;
 end;
 

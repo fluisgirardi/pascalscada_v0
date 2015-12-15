@@ -34,6 +34,11 @@ type
   {$ENDIF}
   TArrayOfObject = array of TObject;
 
+  {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION < 20701)}
+  TFormatDateTimeOption = (fdoInterval);
+  TFormatDateTimeOptions =  set of TFormatDateTimeOption;
+  {$IFEND}
+
   {$IFDEF PORTUGUES}
   {:
   Enumera todos os possíveis tipos de dados retornados por um protocolo.
