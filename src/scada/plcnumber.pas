@@ -321,9 +321,9 @@ begin
   end else begin
     //the datetime number must be in milliseconds (1 unit=1ms)...
     {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION < 20701)}
-    Result:=FormatDateTime(Format,TimeStampToDateTime(MSecsToTimeStamp(Value)));
+    Result:=Prefix + FormatDateTime(Format,TimeStampToDateTime(MSecsToTimeStamp(Trunc(Value)))) + Sufix;
     {$ELSE}
-    Result:=FormatDateTime(Format,TimeStampToDateTime(MSecsToTimeStamp(Value)),FormatDateTimeOptions);
+    Result:=Prefix + FormatDateTime(Format,TimeStampToDateTime(MSecsToTimeStamp(Trunc(Value))),FormatDateTimeOptions) + Sufix;
     {$IFEND}
   end;
 end;
