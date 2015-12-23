@@ -1864,7 +1864,7 @@ var
 
   ivalues:TArrayOfDouble;
   EntireTagList: TList;
-  ReqItem:PReqItem;
+  ReqItem, ReqItem2:PReqItem;
   c: Integer;
   started: TDateTime;
 
@@ -2175,6 +2175,16 @@ begin
         if MilliSecondsBetween(Now, started)>100 then break;
 
         if not AcceptThisRequest(FPLCs[ReqItem.iPLC], ReqItem.iSize) then begin
+          for c2:=(c+1) to EntireTagList.Count-1 do begin
+            ReqItem2:=EntireTagList.Items[c2];
+            if ReqItem2.Read then continue;
+
+            if AcceptThisRequest(FPLCs[ReqItem2.iPLC], ReqItem2.iSize) then begin
+              AddToReqList(ReqItem2.iPLC, ReqItem2.iDB, ReqItem2.iReqType, ReqItem2.iStartAddress, ReqItem2.iSize);
+              AddToReadRequest(msgout, ReqItem2.iReqType, ReqItem2.iDBNum, ReqItem2.iStartAddress, ReqItem2.iSize);
+              ReqItem2.Read:=true;
+            end;
+          end;
           onereqdone:=True;
           ReadQueuedRequests(FPLCs[ReqItem.iPLC]);
           Reset;
