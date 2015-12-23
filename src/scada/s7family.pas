@@ -45,7 +45,8 @@ type
     iDBNum,
     iReqType,
     iStartAddress,
-    iSize:LongInt;
+    iSize,
+    UpdateRate:LongInt;
     Read,
     NeedUpdate:Boolean;
   end;
@@ -787,6 +788,7 @@ var
   ReqItem1:PReqItem absolute Item1;
   ReqItem2:PReqItem absolute Item2;
   BitCombination:Integer;
+  ScanPercent1, ScanPercent2:Double;
 begin
   BitCombination:=ifthen(ReqItem1^.NeedUpdate,1,0)+ifthen(ReqItem2^.NeedUpdate,2,0);
   case BitCombination of
@@ -794,15 +796,26 @@ begin
       Result:=-1;
     2:
       Result:= 1;
-    0,3:
-      if ReqItem1.LastUpdate=ReqItem2.LastUpdate then
+    0,3: begin
+      //if ReqItem1.LastUpdate=ReqItem2.LastUpdate then
+      //  Result:=0
+      //else begin
+      //  if ReqItem1.LastUpdate<ReqItem2.LastUpdate then
+      //    Result:=-1
+      //  else
+      //    Result:=1;
+      //end;
+      ScanPercent1:=(MilliSecondsBetween(Now,ReqItem1.LastUpdate)/ReqItem1.UpdateRate);
+      ScanPercent2:=(MilliSecondsBetween(Now,ReqItem2.LastUpdate)/ReqItem2.UpdateRate);
+      if ScanPercent1=ScanPercent2 then
         Result:=0
       else begin
-        if ReqItem1.LastUpdate<ReqItem2.LastUpdate then
+        if ScanPercent1>ScanPercent2 then
           Result:=-1
         else
           Result:=1;
       end;
+    end;
 
   end;
 end;
@@ -1949,7 +1962,7 @@ var
     Reset;
   end;
 
-  procedure AddToTagList(iPLC, iDB, iDBNum, iReqType, iStartAddress, iSize:LongInt; LastUpdate:TDateTime; NeedUpdate:Boolean);
+  procedure AddToTagList(iPLC, iDB, iDBNum, iReqType, iStartAddress, iSize, UpdateRate:LongInt; LastUpdate:TDateTime; NeedUpdate:Boolean);
   var
     info:PReqItem;
   begin
@@ -1961,6 +1974,7 @@ var
     info^.iStartAddress :=iStartAddress;
     info^.iSize         :=iSize;
     info^.LastUpdate    :=LastUpdate;
+    info^.UpdateRate    :=UpdateRate;
     info^.NeedUpdate    :=NeedUpdate;
     info^.Read          :=false;
 
@@ -1996,255 +2010,159 @@ begin
       //DBs     //////////////////////////////////////////////////////////////////
       for db := 0 to high(FPLCs[plc].DBs) do begin
         for block := 0 to High(FPLCs[plc].DBs[db].DBArea.Blocks) do begin
-          //if FPLCs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh then begin
-          //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].DBs[db].DBArea.Blocks[block].Size) then begin
-          //    onereqdone:=True;
-          //    ReadQueuedRequests(FPLCs[plc]);
-          //    Reset;
-          //  end;
-          //  pkg_initialized;
-          //  AddToReqList(plc, db, vtS7_DB, FPLCs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FPLCs[plc].DBs[db].DBArea.Blocks[block].Size);
-          //  AddToReadRequest(msgout, vtS7_DB, FPLCs[plc].DBs[db].DBNum, FPLCs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FPLCs[plc].DBs[db].DBArea.Blocks[block].Size);
-          //end else begin
-          //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].DBs[db].DBArea.Blocks[block].LastUpdate)>TimeElapsed) then begin
-          //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].DBs[db].DBArea.Blocks[block].Size) then begin
-          //      QueueOutOfScanReq(plc, db, vtS7_DB, FPLCs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FPLCs[plc].DBs[db].DBArea.Blocks[block].Size);
-          //    end;
-          //  end;
-          //end;//
-          AddToTagList(plc, db, FPLCs[plc].DBs[db].DBNum, vtS7_DB, FPLCs[plc].DBs[db].DBArea.Blocks[block].AddressStart, FPLCs[plc].DBs[db].DBArea.Blocks[block].Size, FPLCs[plc].DBs[db].DBArea.Blocks[block].LastUpdate, FPLCs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh);
+          AddToTagList(plc,
+                       db,
+                       FPLCs[plc].DBs[db].DBNum,
+                       vtS7_DB,
+                       FPLCs[plc].DBs[db].DBArea.Blocks[block].AddressStart,
+                       FPLCs[plc].DBs[db].DBArea.Blocks[block].Size,
+                       FPLCs[plc].DBs[db].DBArea.Blocks[block].ScanTime,
+                       FPLCs[plc].DBs[db].DBArea.Blocks[block].LastUpdate,
+                       FPLCs[plc].DBs[db].DBArea.Blocks[block].NeedRefresh);
         end;
       end;
 
       //INPUTS////////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].Inputs.Blocks) do begin
-        //if FPLCs[plc].Inputs.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].Inputs.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    initialized:=False;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_Inputs, FPLCs[plc].Inputs.Blocks[block].AddressStart, FPLCs[plc].Inputs.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_Inputs, 0, FPLCs[plc].Inputs.Blocks[block].AddressStart, FPLCs[plc].Inputs.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].Inputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].Inputs.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_Inputs, FPLCs[plc].Inputs.Blocks[block].AddressStart, FPLCs[plc].Inputs.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_Inputs, FPLCs[plc].Inputs.Blocks[block].AddressStart, FPLCs[plc].Inputs.Blocks[block].Size, FPLCs[plc].Inputs.Blocks[block].LastUpdate, FPLCs[plc].Inputs.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_Inputs,
+                     FPLCs[plc].Inputs.Blocks[block].AddressStart,
+                     FPLCs[plc].Inputs.Blocks[block].Size,
+                     FPLCs[plc].Inputs.Blocks[block].ScanTime,
+                     FPLCs[plc].Inputs.Blocks[block].LastUpdate,
+                     FPLCs[plc].Inputs.Blocks[block].NeedRefresh);
       end;
 
       //OUTPUTS///////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].Outputs.Blocks) do begin
-        //if FPLCs[plc].Outputs.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].Outputs.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_Outputs, FPLCs[plc].Outputs.Blocks[block].AddressStart, FPLCs[plc].Outputs.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_Outputs, 0, FPLCs[plc].Outputs.Blocks[block].AddressStart, FPLCs[plc].Outputs.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].Outputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].Outputs.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_Outputs, FPLCs[plc].Outputs.Blocks[block].AddressStart, FPLCs[plc].Outputs.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_Outputs, FPLCs[plc].Outputs.Blocks[block].AddressStart, FPLCs[plc].Outputs.Blocks[block].Size, FPLCs[plc].Outputs.Blocks[block].LastUpdate, FPLCs[plc].Outputs.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_Outputs,
+                     FPLCs[plc].Outputs.Blocks[block].AddressStart,
+                     FPLCs[plc].Outputs.Blocks[block].Size,
+                     FPLCs[plc].Outputs.Blocks[block].ScanTime,
+                     FPLCs[plc].Outputs.Blocks[block].LastUpdate,
+                     FPLCs[plc].Outputs.Blocks[block].NeedRefresh);
       end;
 
       //Timers///////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].Timers.Blocks) do begin
-        //if FPLCs[plc].Timers.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].Timers.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_Timer, FPLCs[plc].Timers.Blocks[block].AddressStart, FPLCs[plc].Timers.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_Timer, 0, FPLCs[plc].Timers.Blocks[block].AddressStart, FPLCs[plc].Timers.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].Timers.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].Timers.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_Timer, FPLCs[plc].Timers.Blocks[block].AddressStart, FPLCs[plc].Timers.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_Timer, FPLCs[plc].Timers.Blocks[block].AddressStart, FPLCs[plc].Timers.Blocks[block].Size, FPLCs[plc].Timers.Blocks[block].LastUpdate, FPLCs[plc].Timers.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_Timer,
+                     FPLCs[plc].Timers.Blocks[block].AddressStart,
+                     FPLCs[plc].Timers.Blocks[block].Size,
+                     FPLCs[plc].Timers.Blocks[block].ScanTime,
+                     FPLCs[plc].Timers.Blocks[block].LastUpdate,
+                     FPLCs[plc].Timers.Blocks[block].NeedRefresh);
       end;
 
       //Counters//////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].Counters.Blocks) do begin
-        //if FPLCs[plc].Counters.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].Counters.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_Counter, FPLCs[plc].Counters.Blocks[block].AddressStart, FPLCs[plc].Counters.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_Counter, 0, FPLCs[plc].Counters.Blocks[block].AddressStart, FPLCs[plc].Counters.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].Counters.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].Counters.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_Counter, FPLCs[plc].Counters.Blocks[block].AddressStart, FPLCs[plc].Counters.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_Counter, FPLCs[plc].Counters.Blocks[block].AddressStart, FPLCs[plc].Counters.Blocks[block].Size, FPLCs[plc].Counters.Blocks[block].LastUpdate, FPLCs[plc].Counters.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_Counter,
+                     FPLCs[plc].Counters.Blocks[block].AddressStart,
+                     FPLCs[plc].Counters.Blocks[block].Size,
+                     FPLCs[plc].Counters.Blocks[block].ScanTime,
+                     FPLCs[plc].Counters.Blocks[block].LastUpdate,
+                     FPLCs[plc].Counters.Blocks[block].NeedRefresh);
       end;
 
       //Flags///////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].Flags.Blocks) do begin
-        //if FPLCs[plc].Flags.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].Flags.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_Flags, FPLCs[plc].Flags.Blocks[block].AddressStart, FPLCs[plc].Flags.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_Flags, 0, FPLCs[plc].Flags.Blocks[block].AddressStart, FPLCs[plc].Flags.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].Flags.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].Flags.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_Flags, FPLCs[plc].Flags.Blocks[block].AddressStart, FPLCs[plc].Flags.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_Flags, FPLCs[plc].Flags.Blocks[block].AddressStart, FPLCs[plc].Flags.Blocks[block].Size, FPLCs[plc].Flags.Blocks[block].LastUpdate, FPLCs[plc].Flags.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_Flags,
+                     FPLCs[plc].Flags.Blocks[block].AddressStart,
+                     FPLCs[plc].Flags.Blocks[block].Size,
+                     FPLCs[plc].Flags.Blocks[block].ScanTime,
+                     FPLCs[plc].Flags.Blocks[block].LastUpdate,
+                     FPLCs[plc].Flags.Blocks[block].NeedRefresh);
       end;
 
       //PeripheralInputs///////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].PeripheralInputs.Blocks) do begin
-        //if FPLCs[plc].PeripheralInputs.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].PeripheralInputs.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_Peripheral, FPLCs[plc].PeripheralInputs.Blocks[block].AddressStart, FPLCs[plc].PeripheralInputs.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_Peripheral, 0, FPLCs[plc].PeripheralInputs.Blocks[block].AddressStart, FPLCs[plc].PeripheralInputs.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].PeripheralInputs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].PeripheralInputs.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_Peripheral, FPLCs[plc].PeripheralInputs.Blocks[block].AddressStart, FPLCs[plc].PeripheralInputs.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_Peripheral, FPLCs[plc].PeripheralInputs.Blocks[block].AddressStart, FPLCs[plc].PeripheralInputs.Blocks[block].Size, FPLCs[plc].PeripheralInputs.Blocks[block].LastUpdate, FPLCs[plc].PeripheralInputs.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_Peripheral,
+                     FPLCs[plc].PeripheralInputs.Blocks[block].AddressStart,
+                     FPLCs[plc].PeripheralInputs.Blocks[block].Size,
+                     FPLCs[plc].PeripheralInputs.Blocks[block].ScanTime,
+                     FPLCs[plc].PeripheralInputs.Blocks[block].LastUpdate,
+                     FPLCs[plc].PeripheralInputs.Blocks[block].NeedRefresh);
       end;
 
       //S7200AnInput///////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].S7200AnInput.Blocks) do begin
-        //if FPLCs[plc].S7200AnInput.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200AnInput.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_200_AnInput, FPLCs[plc].S7200AnInput.Blocks[block].AddressStart, FPLCs[plc].S7200AnInput.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_200_AnInput, 0, FPLCs[plc].S7200AnInput.Blocks[block].AddressStart, FPLCs[plc].S7200AnInput.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].S7200AnInput.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200AnInput.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_200_AnInput, FPLCs[plc].S7200AnInput.Blocks[block].AddressStart, FPLCs[plc].S7200AnInput.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_200_AnInput, FPLCs[plc].S7200AnInput.Blocks[block].AddressStart, FPLCs[plc].S7200AnInput.Blocks[block].Size, FPLCs[plc].S7200AnInput.Blocks[block].LastUpdate, FPLCs[plc].S7200AnInput.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_200_AnInput,
+                     FPLCs[plc].S7200AnInput.Blocks[block].AddressStart,
+                     FPLCs[plc].S7200AnInput.Blocks[block].Size,
+                     FPLCs[plc].S7200AnInput.Blocks[block].ScanTime,
+                     FPLCs[plc].S7200AnInput.Blocks[block].LastUpdate,
+                     FPLCs[plc].S7200AnInput.Blocks[block].NeedRefresh);
       end;
 
       //S7200AnOutput//////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].S7200AnOutput.Blocks) do begin
-        //if FPLCs[plc].S7200AnOutput.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200AnOutput.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_200_AnOutput, FPLCs[plc].S7200AnOutput.Blocks[block].AddressStart, FPLCs[plc].S7200AnOutput.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_200_AnOutput, 0, FPLCs[plc].S7200AnOutput.Blocks[block].AddressStart, FPLCs[plc].S7200AnOutput.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].S7200AnOutput.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200AnOutput.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_200_AnOutput, FPLCs[plc].S7200AnOutput.Blocks[block].AddressStart, FPLCs[plc].S7200AnOutput.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_200_AnOutput, FPLCs[plc].S7200AnOutput.Blocks[block].AddressStart, FPLCs[plc].S7200AnOutput.Blocks[block].Size, FPLCs[plc].S7200AnOutput.Blocks[block].LastUpdate, FPLCs[plc].S7200AnOutput.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_200_AnOutput,
+                     FPLCs[plc].S7200AnOutput.Blocks[block].AddressStart,
+                     FPLCs[plc].S7200AnOutput.Blocks[block].Size,
+                     FPLCs[plc].S7200AnOutput.Blocks[block].ScanTime,
+                     FPLCs[plc].S7200AnOutput.Blocks[block].LastUpdate,
+                     FPLCs[plc].S7200AnOutput.Blocks[block].NeedRefresh);
       end;
 
       //S7200Timers///////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].S7200Timers.Blocks) do begin
-        //if FPLCs[plc].S7200Timers.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200Timers.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_200_Timer, FPLCs[plc].S7200Timers.Blocks[block].AddressStart, FPLCs[plc].S7200Timers.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_200_Timer, 0, FPLCs[plc].S7200Timers.Blocks[block].AddressStart, FPLCs[plc].S7200Timers.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].S7200Timers.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200Timers.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_200_Timer, FPLCs[plc].S7200Timers.Blocks[block].AddressStart, FPLCs[plc].S7200Timers.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_200_Timer, FPLCs[plc].S7200Timers.Blocks[block].AddressStart, FPLCs[plc].S7200Timers.Blocks[block].Size, FPLCs[plc].S7200Timers.Blocks[block].LastUpdate, FPLCs[plc].S7200Timers.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_200_Timer,
+                     FPLCs[plc].S7200Timers.Blocks[block].AddressStart,
+                     FPLCs[plc].S7200Timers.Blocks[block].Size,
+                     FPLCs[plc].S7200Timers.Blocks[block].ScanTime,
+                     FPLCs[plc].S7200Timers.Blocks[block].LastUpdate,
+                     FPLCs[plc].S7200Timers.Blocks[block].NeedRefresh);
       end;
 
       //S7200Counters//////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].S7200Counters.Blocks) do begin
-        //if FPLCs[plc].S7200Counters.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200Counters.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_200_Counter, FPLCs[plc].S7200Counters.Blocks[block].AddressStart, FPLCs[plc].S7200Counters.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_200_Counter, 0, FPLCs[plc].S7200Counters.Blocks[block].AddressStart, FPLCs[plc].S7200Counters.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].S7200Counters.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200Counters.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_200_Counter, FPLCs[plc].S7200Counters.Blocks[block].AddressStart, FPLCs[plc].S7200Counters.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_200_Counter, FPLCs[plc].S7200Counters.Blocks[block].AddressStart, FPLCs[plc].S7200Counters.Blocks[block].Size, FPLCs[plc].S7200Counters.Blocks[block].LastUpdate, FPLCs[plc].S7200Counters.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_200_Counter,
+                     FPLCs[plc].S7200Counters.Blocks[block].AddressStart,
+                     FPLCs[plc].S7200Counters.Blocks[block].Size,
+                     FPLCs[plc].S7200Counters.Blocks[block].ScanTime,
+                     FPLCs[plc].S7200Counters.Blocks[block].LastUpdate,
+                     FPLCs[plc].S7200Counters.Blocks[block].NeedRefresh);
       end;
 
       //S7200SMs//////////////////////////////////////////////////////////////////
       for block := 0 to High(FPLCs[plc].S7200SMs.Blocks) do begin
-        //if FPLCs[plc].S7200SMs.Blocks[block].NeedRefresh then begin
-        //  if not AcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200SMs.Blocks[block].Size) then begin
-        //    onereqdone:=True;
-        //    ReadQueuedRequests(FPLCs[plc]);
-        //    Reset;
-        //  end;
-        //  pkg_initialized;
-        //  AddToReqList(plc, 0, vtS7_200_SM, FPLCs[plc].S7200SMs.Blocks[block].AddressStart, FPLCs[plc].S7200SMs.Blocks[block].Size);
-        //  AddToReadRequest(msgout, vtS7_200_SM, 0, FPLCs[plc].S7200SMs.Blocks[block].AddressStart, FPLCs[plc].S7200SMs.Blocks[block].Size);
-        //end else begin
-        //  if PReadSomethingAlways and (MilliSecondsBetween(anow,FPLCs[plc].S7200SMs.Blocks[block].LastUpdate)>TimeElapsed) then begin
-        //    if OutOfScanAcceptThisRequest(FPLCs[plc], FPLCs[plc].S7200SMs.Size) then begin
-        //      QueueOutOfScanReq(plc, -1, vtS7_200_SM, FPLCs[plc].S7200SMs.Blocks[block].AddressStart, FPLCs[plc].S7200SMs.Blocks[block].Size);
-        //    end;
-        //  end;
-        //end;
-        AddToTagList(plc, 0, 0, vtS7_200_SM, FPLCs[plc].S7200SMs.Blocks[block].AddressStart, FPLCs[plc].S7200SMs.Blocks[block].Size, FPLCs[plc].S7200SMs.Blocks[block].LastUpdate, FPLCs[plc].S7200SMs.Blocks[block].NeedRefresh);
+        AddToTagList(plc,
+                     0,
+                     0,
+                     vtS7_200_SM,
+                     FPLCs[plc].S7200SMs.Blocks[block].AddressStart,
+                     FPLCs[plc].S7200SMs.Blocks[block].Size,
+                     FPLCs[plc].S7200SMs.Blocks[block].ScanTime,
+                     FPLCs[plc].S7200SMs.Blocks[block].LastUpdate,
+                     FPLCs[plc].S7200SMs.Blocks[block].NeedRefresh);
       end;
 
       EntireTagList.Sort(@SortTagList);
@@ -2282,33 +2200,6 @@ begin
   finally
     FreeAndNil(EntireTagList);
   end;
-
-  //if (not onereqdone) then begin
-  //  if PReadSomethingAlways and (Length(ReqOutOfScan)>0) then begin
-  //    Reset;
-  //    pkg_initialized;
-  //    for i:=0 to High(ReqOutOfScan) do begin
-  //      if i=0 then
-  //        plc:=ReqOutOfScan[i].PLCIdx;
-  //
-  //      if ReqOutOfScan[i].DBIdx<>-1 then begin
-  //        AddToReqList(ReqOutOfScan[i].PLCIdx, ReqOutOfScan[i].DBIdx, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
-  //        AddToReadRequest(msgout, ReqOutOfScan[i].ReqType, FPLCs[ReqOutOfScan[i].PLCIdx].DBs[ReqOutOfScan[i].DBIdx].DBNum, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size)
-  //      end else begin
-  //        AddToReqList(ReqOutOfScan[i].PLCIdx, 0, ReqOutOfScan[i].ReqType, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size);
-  //        AddToReadRequest(msgout, ReqOutOfScan[i].ReqType, 0, ReqOutOfScan[i].StartAddress, ReqOutOfScan[i].Size)
-  //      end;
-  //      if (i=High(ReqOutOfScan)) then
-  //        ReadQueuedRequests(FPLCs[ReqOutOfScan[i].PLCIdx])
-  //      else begin
-  //        if (i+1)<High(ReqOutOfScan) then begin
-  //          if ReqOutOfScan[i].PLCIdx<>ReqOutOfScan[i+1].PLCIdx then
-  //            ReadQueuedRequests(FPLCs[ReqOutOfScan[i].PLCIdx])
-  //        end;
-  //      end;
-  //    end;
-  //  end;
-  //end;
 
   SetLength(ivalues,0);
   SetLength(msgin,0);
