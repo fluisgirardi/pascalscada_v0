@@ -121,8 +121,8 @@ procedure CrossThreadSwitch;
 begin
   if GetSystemThreadCount>1 then
     {$IFDEF FPC}
-    //ThreadSwitch
-    Sleep(1)
+    ThreadSwitch
+    //Sleep(1)
     {$ELSE}
     SwitchToThread
     {$ENDIF}

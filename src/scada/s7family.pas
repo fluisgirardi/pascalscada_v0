@@ -1865,7 +1865,7 @@ var
   ivalues:TArrayOfDouble;
   EntireTagList: TList;
   ReqItem, ReqItem2:PReqItem;
-  c: Integer;
+  c, c2: Integer;
   started: TDateTime;
 
   procedure pkg_initialized;
@@ -1931,8 +1931,7 @@ var
     end;
     inc(MsgOutSize, 12);
     inc(IncomingPDUSize,4+iSize);
-    if (iSize mod 2)=1 then
-      inc(IncomingPDUSize);
+    IncomingPDUSize:=IncomingPDUSize+(iSize mod 2);
 
     inc(OutgoingPDUSize,12);
 
