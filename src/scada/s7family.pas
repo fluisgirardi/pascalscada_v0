@@ -731,7 +731,7 @@ type
     @param(ResultValues TArrayOfDouble. Values of the last request.)
     }
     {$ENDIF}
-    procedure UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
+    function UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList):TArrayOfDouble;
     //: @seealso(TProtocolDriver.DoAddTag)
     procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
     //: @seealso(TProtocolDriver.DoDelTag)
@@ -779,10 +779,9 @@ uses PLCTagNumber, PLCString, PLCStruct, hsstrings, PLCBlock, PLCMemoryManager,
   dateutils, strutils, math, crossdatetime;
 
 ////////////////////////////////////////////////////////////////////////////////
-// CONSTRUTORES E DESTRUTORES
-// CONSTRUCTORS AND DESTRUCTORS
+// ORDENAÇAO DA LISTA DE TAGS
+// TAG LIST SORTER
 ////////////////////////////////////////////////////////////////////////////////
-
 function SortTagList(Item1, Item2: Pointer): Integer;
 var
   ReqItem1:PReqItem absolute Item1;
@@ -797,14 +796,6 @@ begin
     2:
       Result:= 1;
     0,3: begin
-      //if ReqItem1.LastUpdate=ReqItem2.LastUpdate then
-      //  Result:=0
-      //else begin
-      //  if ReqItem1.LastUpdate<ReqItem2.LastUpdate then
-      //    Result:=-1
-      //  else
-      //    Result:=1;
-      //end;
       ScanPercent1:=(MilliSecondsBetween(Now,ReqItem1.LastUpdate)/ReqItem1.UpdateRate);
       ScanPercent2:=(MilliSecondsBetween(Now,ReqItem2.LastUpdate)/ReqItem2.UpdateRate);
       if ScanPercent1=ScanPercent2 then
@@ -819,6 +810,11 @@ begin
 
   end;
 end;
+
+////////////////////////////////////////////////////////////////////////////////
+// CONSTRUTORES E DESTRUTORES
+// CONSTRUCTORS AND DESTRUCTORS
+////////////////////////////////////////////////////////////////////////////////
 
 constructor TSiemensProtocolFamily.Create(AOwner:TComponent);
 begin
@@ -1112,7 +1108,7 @@ begin
   if exchange(CPU,Msg,msgIn,false) then begin
     res := SetupPDU(msgIn, false, pdu);
     if res=0 then begin
-      CPU.MaxPDULen:=GetByte(pdu.param,6)*256+GetByte(pdu.param,7);
+      CPU.MaxPDULen:=GetByte(PByte(pdu.param),6)*256+GetByte(PByte(pdu.param),7);
       CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes of header + 2 bytes of error code + 2 bytes of read request + 4 bytes of informations about the request.
       //ajusta o tamanho máximo dos blocos;
       //adjust the maximum block size.
@@ -1246,9 +1242,7 @@ begin
   AddParam(msgOut, param);
 
   SetupPDU(msgOut, true, PDU);
-  NumReq:=GetByte(PDU.param,1);
-  NumReq:=NumReq+1;
-  SetByte(PDU.param,1,NumReq);
+  inc(PDU.param^.res);
 
   SetLength(param, 0);
 end;
@@ -1317,9 +1311,7 @@ begin
   AddParam(msgOut, param);
 
   SetupPDU(msgOut, true, PDU);
-  NumReq:=GetByte(PDU.param,1);
-  NumReq:=NumReq+1;
-  SetByte(PDU.param,1,NumReq);
+  inc(PDU.param^.res);
 
   SetLength(param, 0);
 end;
@@ -1367,7 +1359,7 @@ begin
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   end;
 
-  SetBytes(pdu.param, paramlen, param);
+  SetBytes(PByte(pdu.param), paramlen, param);
   PPDUHeader(pdu.header)^.param_len:=SwapBytesInWord(paramlen + Length(param));
 end;
 
@@ -1390,7 +1382,7 @@ begin
     datalen  := SwapBytesInWord(PPDUHeader(pdu.header)^.data_len);
   end;
 
-  SetBytes(pdu.data, datalen, data);
+  SetBytes(PByte(pdu.data), datalen, data);
   PPDUHeader(pdu.header)^.data_len:=SwapBytesInWord(datalen + Length(data));
 end;
 
@@ -1532,49 +1524,53 @@ begin
   end;
 end;
 
-procedure TSiemensProtocolFamily.UpdateMemoryManager(pkgin, pkgout:BYTES; writepkg:Boolean; ReqList:TS7ReqList; var ResultValues:TArrayOfDouble);
+function TSiemensProtocolFamily.UpdateMemoryManager(pkgin, pkgout: BYTES;
+  writepkg: Boolean; ReqList: TS7ReqList): TArrayOfDouble;
 var
   PDU:TPDU;
   NumResults,
   CurResult,
   DataLen,
-  DataIdx,
+  //DataIdx,
   ResultLen,
   ResultCode,
   CurValue:LongInt;
   ProtocolErrorCode:TProtocolIOResult;
+  Data:PByte;
 begin
   if writepkg then begin
     SetupPDU(pkgout, true, PDU);
-    if GetByte(PDU.param,0)<>S7FuncWrite then exit;
+    if PDU.param^.ParamType<>S7FuncWrite then
+      exit;
   end else begin
     SetupPDU(pkgin, false, PDU);
-    if GetByte(PDU.param,0)<>S7FuncRead then exit;
+    if PDU.param^.ParamType<>S7FuncRead then
+      exit;
   end;
-  NumResults:=GetByte(PDU.param, 1);
+  NumResults:=PDU.param^.res;
   CurResult:=0;
-  DataIdx:=0;
+  //DataIdx:=0;
   DataLen:=PDU.data_len;
   while CurResult<NumResults do begin
-    ResultCode:=GetByte(PDU.data, DataIdx);
+    ResultCode:=PDU.data^.ErrorCode;
 
     if writepkg and (ResultCode=0) then
       ProtocolErrorCode:=ioOk
     else
       ProtocolErrorCode:=S7ErrorCodeToProtocolErrorCode(ResultCode);
 
-    if (writepkg or (ResultCode=$FF)) AND (DataLen>4) then begin
-      ResultLen:=GetByte(PDU.data, DataIdx+2)*$100 + GetByte(PDU.data, DataIdx+3);
+    if (writepkg or (ResultCode=$FF)) AND (DataLen>=4) then begin
+      ResultLen:=SwapBytesInWord(PDU.data^.Length);
       //o tamanho está em bits, precisa de ajuste.
       //if the size is in bits, adjust to bytes
-      if GetByte(PDU.data, DataIdx+1)=4 then
+      if PDU.data^.DataLenghtUnit=4 then
         ResultLen:=ResultLen div 8
       else begin
         //3 o restultado já está em bytes
         //e 9 o resultado está em bits, mas cada bit em um byte.
         //if 3, the result already is in bytes
         //if 9, the result is in bits, but each byte stores one bit
-        if not (GetByte(PDU.data, DataIdx+1) in [3,9]) then
+        if not (PDU.data^.DataLenghtUnit in [3,9]) then
           exit;
       end;
     end else begin
@@ -1585,45 +1581,48 @@ begin
 
     //move os dados recebidos para as respectivas areas.
     //move the received data to their area.
-    SetLength(ResultValues,0);
+    SetLength(Result,0);
     if ResultLen>0 then begin
-      SetLength(ResultValues,ResultLen);
+      SetLength(Result,ResultLen);
       CurValue:=0;
-      while (CurValue<ResultLen) AND (CurValue<Length(ResultValues)) do begin
-        ResultValues[CurValue]:=GetByte(PDU.data, DataIdx+4+CurValue);
+      Data:=PByte(PDU.data);
+      inc(Data,4);
+      while (CurValue<ResultLen) AND (CurValue<Length(Result)) do begin
+        Result[CurValue]:=Data[CurValue];
         inc(CurValue);
       end;
 
       FProtocolReady:=true;
 
-      with ReqList[CurResult] do begin
-        if (PLCIdx>=0) and (PLCIdx<=High(FPLCs)) then
-          case ReqType of
+      //with ReqList[CurResult] do begin
+        if (ReqList[CurResult].PLCIdx>=0) and (ReqList[CurResult].PLCIdx<=High(FPLCs)) then begin
+          case ReqList[CurResult].ReqType of
             vtS7_DB:
-              if (DBIdx>=0) AND (DBIdx<=High(FPLCs[PLCIdx].DBs)) then
-                FPLCs[PLCIdx].DBs[DBIdx].DBArea.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_Inputs:
-               FPLCs[PLCIdx].Inputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_Outputs:
-               FPLCs[PLCIdx].Outputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_200_AnInput:
-               FPLCs[PLCIdx].S7200AnInput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_200_AnOutput:
-               FPLCs[PLCIdx].S7200AnOutput.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_Timer:
-               FPLCs[PLCIdx].Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_Counter:
-               FPLCs[PLCIdx].Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_Flags:
-               FPLCs[PLCIdx].Flags.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_200_SM:
-               FPLCs[PLCIdx].S7200SMs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_200_Timer:
-               FPLCs[PLCIdx].S7200Timers.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_200_Counter:
-               FPLCs[PLCIdx].S7200Counters.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
-            vtS7_Peripheral:
-               FPLCs[PLCIdx].PeripheralInputs.SetValues(StartAddress,ResultLen,1,ResultValues, ProtocolErrorCode);
+                     if (ReqList[CurResult].DBIdx>=0) AND (ReqList[CurResult].DBIdx<=High(FPLCs[ReqList[CurResult].PLCIdx].DBs)) then begin
+                       //FPLCs[ReqList[CurResult].PLCIdx].DBs[ReqList[CurResult].DBIdx].DBArea.SetValues(ReqList[CurResult].StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+                     end;
+          //  vtS7_Inputs:
+          //     FPLCs[PLCIdx].Inputs.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_Outputs:
+          //     FPLCs[PLCIdx].Outputs.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_200_AnInput:
+          //     FPLCs[PLCIdx].S7200AnInput.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_200_AnOutput:
+          //     FPLCs[PLCIdx].S7200AnOutput.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_Timer:
+          //     FPLCs[PLCIdx].Timers.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_Counter:
+          //     FPLCs[PLCIdx].Counters.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_Flags:
+          //     FPLCs[PLCIdx].Flags.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_200_SM:
+          //     FPLCs[PLCIdx].S7200SMs.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_200_Timer:
+          //     FPLCs[PLCIdx].S7200Timers.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_200_Counter:
+          //     FPLCs[PLCIdx].S7200Counters.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
+          //  vtS7_Peripheral:
+          //     FPLCs[PLCIdx].PeripheralInputs.SetValues(StartAddress,ResultLen,1,Result, ProtocolErrorCode);
           end;
       end;
     end else begin
@@ -1661,16 +1660,11 @@ begin
       end;
     end;
 
-    DataIdx:=DataIdx+ResultLen+4;
-    dec(DataLen,ResultLen);
-
-    //pelo que entendi, um resultado nunca vem com tamanho impar
-    //no pacote.
-    //the size of result never is a odd number
-    if (ResultLen mod 2)=1 then begin
-      inc(DataIdx);
-      dec(DataLen);
-    end;
+    Data:=PByte(PDU.data);
+    Inc(Data,ResultLen+4+(ResultLen mod 2));
+    //DataIdx:=DataIdx+ResultLen+4;
+    dec(DataLen,ResultLen+(ResultLen mod 2));
+    PDU.data:=PPDUDataHeader(Data);
 
     //proximo resultado.
     //goto the next result.
@@ -1954,7 +1948,7 @@ var
   procedure ReadQueuedRequests(var CPU:TS7CPU);
   begin
     if exchange(CPU, msgout, msgin, false) then begin
-      UpdateMemoryManager(msgin, msgout, False, ReqList, ivalues);
+      UpdateMemoryManager(msgin, msgout, False, ReqList);
       NeedSleep:=-1;
     end else
       NeedSleep:=1;
@@ -2394,7 +2388,7 @@ begin
 
     if exchange(PLCPtr^, msgout, msgin, True) then begin
       SetupPDU(msgin,false,incomingPDU);
-      if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
+      if (incomingPDU.data_len>0) and (incomingPDU.data^.ErrorCode=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
         if foundplc then begin
@@ -2404,14 +2398,14 @@ begin
           ReqList[0].ReqType:=ReqType;
           ReqList[0].StartAddress:=tagrec.Address+BytesSent+tagrec.OffSet;
           ReqList[0].Size:=BytesToSend;
-          UpdateMemoryManager(msgin, msgout, true, ReqList, ivalues);
+          UpdateMemoryManager(msgin, msgout, true, ReqList);
         end;
       end else begin
         if hasAtLeastOneSuccess then begin
           Result:=ioPartialOk
         end else
           if incomingPDU.data_len>0 then begin
-            Result:=S7ErrorCodeToProtocolErrorCode(GetByte(incomingPDU.data,0))
+            Result:=S7ErrorCodeToProtocolErrorCode(incomingPDU.data^.ErrorCode)
           end else
             Result := ioCommError;
         exit;
@@ -2550,7 +2544,7 @@ begin
 
     if exchange(PLCPtr^, msgout, msgin, false) then begin
       SetupPDU(msgin,false,incomingPDU);
-      if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
+      if (incomingPDU.data_len>0) and (incomingPDU.data^.ErrorCode=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
         if foundplc then begin
@@ -2560,7 +2554,7 @@ begin
           ReqList[0].ReqType:=ReqType;
           ReqList[0].StartAddress:=tagrec.Address+BytesReceived+tagrec.OffSet;
           ReqList[0].Size:=BytesToRecv;
-          UpdateMemoryManager(msgin, msgout, false, ReqList, ivalues);
+          ivalues:=UpdateMemoryManager(msgin, msgout, false, ReqList);
           Move(ivalues[0],Values[BytesReceived], Length(ivalues)*sizeof(Double));
         end;
       end else begin
@@ -2568,7 +2562,7 @@ begin
           Result:=ioPartialOk
         end else
           if incomingPDU.data_len>0 then begin
-            Result:=S7ErrorCodeToProtocolErrorCode(GetByte(incomingPDU.data,0))
+            Result:=S7ErrorCodeToProtocolErrorCode(incomingPDU.data^.ErrorCode)
           end else
             Result := ioCommError;
         exit;

@@ -49,7 +49,7 @@ type
   @member Error         Only present in type 2 and 3 headers. This contains error information.
   }
   {$ENDIF}
-  TPDUHeader = record
+  TPDUHeader = packed record
       P,
       PDUHeadertype,
       a,b:Byte;
@@ -58,6 +58,20 @@ type
       data_len:Word;
       Error:Word;
   end;
+
+  TPDUParamHeader = packed record
+      ParamType,
+      res:Byte
+  end;
+  PPDUParamHeader = ^TPDUParamHeader;
+
+  TPDUDataHeader = packed record
+      ErrorCode,
+      DataLenghtUnit:Byte;
+      Length:Word;
+  end;
+  PPDUDataHeader = ^TPDUDataHeader;
+
 
   {$IFDEF PORTUGUES}
   {:
@@ -96,9 +110,9 @@ type
   }
   {$ENDIF}
   TPDU = record
-    header:PByte;
-    param:PByte;
-    data:PByte;
+    header:PPDUHeader;
+    param:PPDUParamHeader;
+    data:PPDUDataHeader;
     udata:PByte;
     header_len:LongInt;
     param_len:LongInt;
