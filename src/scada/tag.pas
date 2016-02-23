@@ -185,7 +185,9 @@ type
                        ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
                        ioIllegalStationAddress, ioObjectNotExists,
                        ioIllegalMemoryAddress, ioUnknownError, ioEmptyPacket,
-                       ioPartialOk);
+                       ioPartialOk, ioAcknowledge, ioBusy, ioNACK,
+                       ioMemoryParityError, ioGatewayUnavailable,
+                       ioDeviceGatewayFailedToRespond);
 
   {$IFDEF PORTUGUES}
   {:
