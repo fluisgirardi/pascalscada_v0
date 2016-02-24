@@ -495,8 +495,22 @@ begin
           Result := ioIllegalRegAddress;
         $03:
           Result := ioIllegalValue;
-        $04,$05,$06,$07,$08:
+        $04:
           Result := ioPLCError;
+        $05:
+          Result := ioAcknowledge;
+        $06:
+          Result := ioBusy;
+        $07:
+          Result := ioNACK;
+        $08:
+          Result := ioMemoryParityError;
+        $0A:
+          Result := ioGatewayUnavailable;
+        $0B:
+          Result := ioDeviceGatewayFailedToRespond;
+        else
+          Result := ioCommError;
       end;
 
       address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
