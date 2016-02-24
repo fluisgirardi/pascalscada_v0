@@ -28,9 +28,7 @@ type
   TAlphaNumericScreenKeyBoardOptions = set of TAlphaNumericScreenKeyBoardOption;
 
 
-  THMIFocusChangeEvent = procedure(oldFocusedControl,
-                                   newFocusedControl:TControl;
-                                   const ClickEvent, ExitEvent:TNotifyEvent;
+  THMIFocusChangeEvent = procedure(FocusedControl:TControl;
                                    var KeyboarTypeForControl:TOnScreenKeyboard;
                                    var NumericKBOptions:TNumericScreenKeyboardOptions;
                                    var AlphaNumKBOptions:TAlphaNumericScreenKeyBoardOptions) of object;
@@ -38,7 +36,12 @@ type
   { THMIKeyboardManager }
 
   THMIKeyboardManager = class(TComponent)
+  private
+    function SameMethod(AMethod1, AMethod2: TNotifyEvent): boolean;
   protected
+    FOldOnEnterEvent,
+    FOldOnClickEvent,
+    FOldOnExitEvent:TNotifyEvent;
     FNumericKeyBoard:TpsHMIfrmNumericKeyBoard;
     FAlphaNumericKeyboard:TpsHMIfrmAlphaKeyboard;
     FOnFocusChange: THMIFocusChangeEvent;
@@ -49,12 +52,15 @@ type
     procedure ControlFocusChanged(Sender: TObject; LastControl: TControl);
     procedure NumKBClosed(Sender: TObject; var CloseAction: TCloseAction);
     procedure AlphaKBClosed(Sender: TObject; var CloseAction: TCloseAction);
+    procedure ShowKeyboard(sender:TObject);
     procedure ClickEvent(Sender:TObject);
+    procedure EnterEvent(Sender:TObject);
     procedure ExitEvent(Sender:TObject);
     procedure CloseNumKB;
     procedure CloseAlphaKB;
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -83,19 +89,38 @@ begin
      CloseNumKB;
    end;
 
+  if FLastFocusedControl<>nil then begin
+     if SameMethod(FLastFocusedControl.OnClick, EnterEvent) then FLastFocusedControl.OnClick:=FOldOnClickEvent;
+     if SameMethod(FLastFocusedControl.OnEnter, EnterEvent) then FLastFocusedControl.OnEnter:=FOldOnEnterEvent;
+     if SameMethod(FLastFocusedControl.OnExit,  ExitEvent)  then FLastFocusedControl.OnExit :=FOldOnExitEvent;
+  end;
+
   try
-    if Assigned(FOnFocusChange) then
-      OnFocusChange(FLastFocusedControl,
-                    fLastControl,
-                    ClickEvent,
-                    ExitEvent,
-                    FKeyboarTypeForControl,
-                    FNumericKBOptions,
-                    FAlphaNumKBOptions);
+    if fLastControl<>nil then begin
+      FOldOnClickEvent := fLastControl.OnClick;
+      FOldOnEnterEvent := fLastControl.OnEnter;
+      FOldOnExitEvent  := fLastControl.OnExit;
+      if Assigned(FOnFocusChange) then
+        OnFocusChange(fLastControl,
+                      FKeyboarTypeForControl,
+                      FNumericKBOptions,
+                      FAlphaNumKBOptions);
+      if FKeyboarTypeForControl<>oskNone then begin
+        fLastControl.OnClick:=ClickEvent;
+        fLastControl.OnEnter:=EnterEvent;
+        fLastControl.OnExit :=ExitEvent;
+      end;
+    end;
   finally
     if ((fLastControl<>FNumericKeyBoard) and (fLastControl<>FAlphaNumericKeyboard)) or (fLastControl=nil) then
       FLastFocusedControl:=fLastControl;
   end;
+end;
+
+function THMIKeyboardManager.SameMethod(AMethod1, AMethod2: TNotifyEvent): boolean;
+begin
+  result := (TMethod(AMethod1).Code = TMethod(AMethod2).Code)
+            and (TMethod(AMethod1).Data = TMethod(AMethod2).Data);
 end;
 
 procedure THMIKeyboardManager.NumKBClosed(Sender: TObject;
@@ -110,7 +135,7 @@ begin
   FAlphaNumericKeyboard:=nil;
 end;
 
-procedure THMIKeyboardManager.ClickEvent(Sender: TObject);
+procedure THMIKeyboardManager.ShowKeyboard(sender: TObject);
 begin
   case FKeyboarTypeForControl of
     oskNone:
@@ -145,10 +170,29 @@ begin
   end;
 end;
 
+procedure THMIKeyboardManager.ClickEvent(Sender: TObject);
+begin
+  ShowKeyboard(Sender);
+
+  if Assigned(FOldOnClickEvent) then
+    FOldOnClickEvent(Sender);
+end;
+
+procedure THMIKeyboardManager.EnterEvent(Sender: TObject);
+begin
+  ShowKeyboard(Sender);
+
+  if Assigned(FOldOnEnterEvent) then
+    FOldOnEnterEvent(Sender);
+end;
+
 procedure THMIKeyboardManager.ExitEvent(Sender: TObject);
 begin
  CloseAlphaKB;
  CloseNumKB;
+
+ if Assigned(FOldOnExitEvent) then
+   FOldOnExitEvent(Sender);
 end;
 
 procedure THMIKeyboardManager.CloseNumKB;
@@ -180,6 +224,8 @@ end;
 constructor THMIKeyboardManager.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FAlphaNumericKeyboard:=nil;
+  FNumericKeyBoard:=nil;
   Screen.AddHandlerActiveControlChanged(ControlFocusChanged);
 end;
 
