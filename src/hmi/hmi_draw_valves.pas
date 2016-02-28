@@ -37,6 +37,7 @@ type
     property ValveType:TValveType read FValveType write SetValveType default vtSimple;
 
     property OnClick;
+    property Action;
   end;
 
 implementation
