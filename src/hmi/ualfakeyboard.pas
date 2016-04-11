@@ -209,6 +209,7 @@ begin
 
   curcontrol:=FTarget;
   FFormOwner:=nil;
+  ControlStyle:=ControlStyle+[csNoFocus];
   while (curcontrol<>nil) and (FFormOwner=nil) do begin
     if (curcontrol.Parent=nil) and (curcontrol is TCustomForm) then
       FFormOwner:=curcontrol as TCustomForm;

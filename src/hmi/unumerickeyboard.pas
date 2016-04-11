@@ -48,10 +48,8 @@ type
     FFormOwner:TCustomForm;
     keyboard:TCrossKeyEvents;
     procedure GotoBetterPosition;
-    procedure ReturnFocusToTarget;
   protected
     procedure DoClose(var CloseAction: TCloseAction); override;
-    procedure BringToFrontWithoutActivate;
   public
     constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
     destructor Destroy; override;
@@ -79,8 +77,6 @@ var
   LastNumericKeyBoard: TpsHMIfrmNumericKeyBoard;
 
 constructor TpsHMIfrmNumericKeyBoard.Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
-var
-  curcontrol:TControl;
 begin
   inherited Create(TheOwner);
 
@@ -97,14 +93,9 @@ begin
   FormStyle:=fsSystemStayOnTop;
   {$ENDIF}
 
-  curcontrol:=FTarget;
+  ControlStyle:=ControlStyle+[csNoFocus];
   FFormOwner:=nil;
-  while (curcontrol<>nil) and (FFormOwner=nil) do begin
-    if (curcontrol.Parent=nil) and (curcontrol is TCustomForm) then
-      FFormOwner:=curcontrol as TCustomForm;
-
-    curcontrol:=curcontrol.Parent;
-  end;
+  FFormOwner:=GetParentForm(Target);
   LastNumericKeyBoard:=Self;
 end;
 
@@ -154,19 +145,13 @@ begin
   end;
 end;
 
-procedure TpsHMIfrmNumericKeyBoard.ReturnFocusToTarget;
-begin
-  FFormOwner.Show;
-  FTarget.SetFocus;
-  Application.ProcessMessages;
-  BringToFrontWithoutActivate;
-end;
-
 procedure TpsHMIfrmNumericKeyBoard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
-  //BringToFrontWithoutActivate;
-  ShowOnTop;
+  Show;
+  Application.ProcessMessages;
+  GetParentForm(FTarget).ShowOnTop;
+  Application.ProcessMessages;
 end;
 
 procedure TpsHMIfrmNumericKeyBoard.FormCreate(Sender: TObject);
@@ -200,15 +185,11 @@ procedure TpsHMIfrmNumericKeyBoard.BtnPress(Sender: TObject);
 begin
   if FTarget=nil then exit;
 
-  ReturnFocusToTarget;
-
   with Sender as TSpeedButton do begin
     keyboard.Press(Tag);
-    //Application.ProcessMessages;
     if (tag=VK_ESCAPE) or (tag=VK_RETURN) then
       close;
   end;
-  BringToFrontWithoutActivate;
 end;
 
 procedure TpsHMIfrmNumericKeyBoard.DoClose(var CloseAction: TCloseAction);
@@ -217,11 +198,6 @@ begin
   if LastNumericKeyBoard=Self then
     LastNumericKeyBoard:=nil;
   CloseAction:=caFree;
-end;
-
-procedure TpsHMIfrmNumericKeyBoard.BringToFrontWithoutActivate;
-begin
-  WidgetSet.SetWindowPos(Self.Handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE+SWP_NOSIZE+SWP_NOACTIVATE);
 end;
 
 {$IFDEF FPC }
