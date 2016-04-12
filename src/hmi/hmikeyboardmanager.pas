@@ -73,7 +73,9 @@ type
 
 implementation
 
+{$IFDEF DEBUG}
 uses LCLProc;
+{$ENDIF}
 
 { THMIKeyboardManager }
 
@@ -82,6 +84,7 @@ procedure THMIKeyboardManager.ControlFocusChanged(Sender: TObject;
 var
   fLastControl: TWinControl;
 begin
+  {$IFDEF DEBUG}
   DebugLn('=====================================================================');
   if FLastFocusedControl<>nil then
     DebugLn('Last control name:', FLastFocusedControl.Name)
@@ -92,68 +95,81 @@ begin
     DebugLn('Current control name:', LastControl.Name)
   else
     DebugLn('Current focused control IS NULL (LastControl=nil)');
+  {$ENDIF}
 
   if LastControl=FNumericKeyBoard then begin
+    {$IFDEF DEBUG}
     DebugLn('LastControl=FNumericKeyBoard EXITING!');
+    {$ENDIF}
     exit;
   end;
 
   if LastControl=FAlphaNumericKeyboard then begin
+    {$IFDEF DEBUG}
     DebugLn('LastControl=FAlphaNumericKeyboard EXITING!');
+    {$ENDIF}
     exit;
   end;
 
   if LastControl=FLastFocusedControl then begin
+    {$IFDEF DEBUG}
     DebugLn('LastControl=FLastFocusedControl EXITING!');
+    {$ENDIF}
     exit;
   end;
 
   if assigned(LastControl) and (LastControl is TWinControl) then begin
-    DebugLn('Cur focused control is TWinControl');
+    {$IFDEF DEBUG}DebugLn('Cur focused control is TWinControl');{$ENDIF}
     if (not SameMethod(TWinControl(LastControl).OnClick,ClickEvent)) or
        (not SameMethod(TWinControl(LastControl).OnEnter,EnterEvent)) or
        (not SameMethod(TWinControl(LastControl).OnExit, ExitEvent)) then begin
       fLastControl:=TWinControl(LastControl);
-      DebugLn('fLastControl:=TWinControl(LastControl)');
+      {$IFDEF DEBUG}DebugLn('fLastControl:=TWinControl(LastControl)');{$ENDIF}
     end else begin
+      {$IFDEF DEBUG}
       DebugLn('Cur focused control has all events assigned to current handler?!?');
       if not SameMethod(TWinControl(LastControl).OnClick,ClickEvent) then DebugLn('TWinControl(LastControl).OnClick<>ClickEvent');
       if not SameMethod(TWinControl(LastControl).OnEnter,EnterEvent) then DebugLn('TWinControl(LastControl).OnEnter<>EnterEvent');
       if not SameMethod(TWinControl(LastControl).OnExit, ExitEvent)  then DebugLn('TWinControl(LastControl).OnExit<>ExitEvent');
+      {$ENDIF}
       exit;
     end;
   end else begin
     fLastControl:=nil;
+    {$IFDEF DEBUG}
     DebugLn('Cur focused control IS NOT a TWinControl');
+    {$ENDIF}
   end;
 
   if (fLastControl<>FLastFocusedControl) and (fLastControl<>FNumericKeyBoard) and (fLastControl<>FAlphaNumericKeyboard) then begin
+    {$IFDEF DEBUG}
     DebugLn('Closing all keyboards...');
+    {$ENDIF}
     CloseAlphaKB;
     CloseNumKB;
   end;
 
   if FLastFocusedControl<>nil then begin
-    DebugLn('Restoring the default event handles for control ',FLastFocusedControl.Name);
+    {$IFDEF DEBUG}DebugLn('Restoring the default event handles for control ',FLastFocusedControl.Name);{$ENDIF}
     if SameMethod(FLastFocusedControl.OnClick, ClickEvent) then begin
-      DebugLn('Restoring OnClick');
+      {$IFDEF DEBUG}DebugLn('Restoring OnClick');{$ENDIF}
       FLastFocusedControl.OnClick:=FOldOnClickEvent;
     end;
 
     if SameMethod(FLastFocusedControl.OnEnter, EnterEvent) then begin
-      DebugLn('Restoring OnEnter');
+      {$IFDEF DEBUG}DebugLn('Restoring OnEnter');{$ENDIF}
       FLastFocusedControl.OnEnter:=FOldOnEnterEvent;
     end;
 
     if SameMethod(FLastFocusedControl.OnExit,  ExitEvent)  then begin
-      DebugLn('Restoring OnEnter');
+      {$IFDEF DEBUG}DebugLn('Restoring OnEnter');{$ENDIF}
       FLastFocusedControl.OnExit :=FOldOnExitEvent;
     end;
   end;
 
   try
     if fLastControl<>nil then begin
-      DebugLn('Backup of event handlers of the new focused control ',fLastControl.Name);
+      {$IFDEF DEBUG}DebugLn('Backup of event handlers of the new focused control ',fLastControl.Name);{$ENDIF}
       FOldOnClickEvent := fLastControl.OnClick;
       FOldOnEnterEvent := fLastControl.OnEnter;
       FOldOnExitEvent  := fLastControl.OnExit;
@@ -162,28 +178,33 @@ begin
                       FKeyboarTypeForControl,
                       FNumericKBOptions,
                       FAlphaNumKBOptions);
-        DebugLn('OnFocusChange fired');
-      end else
-        DebugLn('FOnFocusChange event is NULL');
+        {$IFDEF DEBUG}DebugLn('OnFocusChange fired');{$ENDIF}
+      end else begin
+        {$IFDEF DEBUG}DebugLn('FOnFocusChange event is NULL');{$ENDIF}
+      end;
+
       if FKeyboarTypeForControl=oskNone then begin
-        DebugLn('FKeyboarTypeForControl=oskNone');
+        {$IFDEF DEBUG}DebugLn('FKeyboarTypeForControl=oskNone');{$ENDIF}
         fLastControl:=nil;
         FLastFocusedControl:=Nil;
       end else begin
-        DebugLn('FKeyboarTypeForControl<>oskNone');
+        {$IFDEF DEBUG}DebugLn('FKeyboarTypeForControl<>oskNone');{$ENDIF}
         fLastControl.OnClick:=ClickEvent;
         fLastControl.OnEnter:=EnterEvent;
         fLastControl.OnExit :=ExitEvent;
-        DebugLn('setup up of new event handlers...');
+        {$IFDEF DEBUG}DebugLn('setup up of new event handlers...');{$ENDIF}
       end;
-    end else
-      DebugLn('fLastControl=nil');
+    end else begin
+      {$IFDEF DEBUG}DebugLn('fLastControl=nil');{$ENDIF}
+    end;
   finally
     if ((fLastControl<>FNumericKeyBoard) and (fLastControl<>FAlphaNumericKeyboard)) or (fLastControl=nil) then begin
+      {$IFDEF DEBUG}
       if fLastControl=nil then
         DebugLn('FLastFocusedControl:=fLastControl(NULL)')
       else
         DebugLn('FLastFocusedControl:=fLastControl');
+      {$ENDIF}
       FLastFocusedControl:=fLastControl;
     end;
   end;
