@@ -1,8 +1,9 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <Package Version="4">
     <PathDelim Value="\"/>
     <Name Value="pascalscada"/>
+    <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
       <Version Value="11"/>
       <PathDelim Value="\"/>
@@ -13,7 +14,6 @@
       </SearchPaths>
       <Parsing>
         <SyntaxOptions>
-          <SyntaxMode Value="Delphi"/>
           <CStyleOperator Value="False"/>
           <StaticKeyword Value="True"/>
           <UseAnsiStrings Value="False"/>
@@ -25,14 +25,12 @@
       <Other>
         <WriteFPCLogo Value="False"/>
         <CompilerMessages>
-          <IgnoredMessages idx5024="True" idx5057="True"/>
-          <UseMsgFile Value="True"/>
+          <IgnoredMessages idx5057="True" idx5024="True"/>
         </CompilerMessages>
-        <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="56">
+    <Files Count="57">
       <Item1>
         <Filename Value="src\scada\commport.pas"/>
         <UnitName Value="CommPort"/>
@@ -258,8 +256,11 @@
         <Filename Value="src\scada\blockstructtagassistant.pas"/>
         <UnitName Value="blockstructtagassistant"/>
       </Item56>
+      <Item57>
+        <Filename Value="src\scada\s7scanreq.pas"/>
+        <UnitName Value="s7scanreq"/>
+      </Item57>
     </Files>
-    <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="pascalscada_common"/>

@@ -17,7 +17,7 @@ uses
   UserScale, ustructuremapper, uwesttagbuilder, ValueProcessor, 
   WestASCIIDriver, siemenstagassistant, modbustagassistant, 
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant, 
-  LazarusPackageIntf;
+  s7scanreq, LazarusPackageIntf;
 
 implementation
 
