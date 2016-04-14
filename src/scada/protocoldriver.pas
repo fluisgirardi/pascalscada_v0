@@ -20,10 +20,6 @@
 {$ENDIF}
 unit ProtocolDriver;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -575,7 +571,7 @@ type
     @returns(The current word size on protocol of the tag, OR 0 (zero) if it fails.)
     }
     {$ENDIF}
-    function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; virtual; abstract;
+    function  SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; virtual; abstract;
 
     {$IFDEF PORTUGUES}
     {:
@@ -759,18 +755,18 @@ begin
 
   PCallersCS := TCriticalSection.Create;
 
-  PScanUpdateThread := TScanUpdate.Create(true, Self, UpdateUserTime);
+  PScanUpdateThread := TScanUpdate.Create(true, Self, @UpdateUserTime);
   {$IFNDEF WINCE}
   PScanUpdateThread.Priority:=tpHighest;
   {$ENDIF}
-  PScanUpdateThread.OnGetValue     := SafeGetValue;
-  PScanUpdateThread.OnScanTags     := GetMultipleValues;
+  PScanUpdateThread.OnGetValue     := @SafeGetValue;
+  PScanUpdateThread.OnScanTags     := @GetMultipleValues;
 
   PScanReadThread := TScanThread.Create(true, PScanUpdateThread);
   {$IFNDEF WINCE}
   PScanReadThread.Priority:=tpTimeCritical;
   {$ENDIF}
-  PScanReadThread.OnDoScanRead := SafeScanRead;
+  PScanReadThread.OnDoScanRead := @SafeScanRead;
   PScanReadThread.OnDoScanWrite := nil;
 
   PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
@@ -778,7 +774,7 @@ begin
   PScanWriteThread.Priority:=tpTimeCritical;
   {$ENDIF}
   PScanWriteThread.OnDoScanRead    := nil;
-  PScanWriteThread.OnDoScanWrite   := SafeScanWrite;
+  PScanWriteThread.OnDoScanWrite   := @SafeScanWrite;
 end;
 
 procedure TProtocolDriver.AfterConstruction;
@@ -1309,17 +1305,17 @@ end;
 
 function  TProtocolDriver.GetPortOpenedEvent:TNotifyEvent;
 begin
-  Result := DoPortOpened;
+  Result := @DoPortOpened;
 end;
 
 function  TProtocolDriver.GetPortClosedEvent:TNotifyEvent;
 begin
-  Result := DoPortClosed;
+  Result := @DoPortClosed;
 end;
 
 function  TProtocolDriver.GetPortDisconnectedEvent:TNotifyEvent;
 begin
-  Result := DoPortDisconnected;
+  Result := @DoPortDisconnected;
 end;
 
 function  TProtocolDriver.NotifyThisEvents:TNotifyThisEvents;

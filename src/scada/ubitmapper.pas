@@ -6,10 +6,6 @@
 {$ENDIF}
 unit ubitmapper;
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -86,4 +82,4 @@ initialization
   {$I ubitmapper.lrs}
   {$IFEND}
 {$ENDIF}
-end.
+end.

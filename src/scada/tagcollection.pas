@@ -12,10 +12,6 @@
 {$ENDIF}
 unit tagcollection;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -64,10 +60,10 @@ type
     {$ELSE}
     //: Returns the tag collection item description.
     {$ENDIF}
-    function  GetDisplayName: string; override;
+    function  GetDisplayName: AnsiString; override;
   public
     //: @exclude
-    constructor Create(Collection: TCollection); override;
+    constructor Create(aCollection: TCollection); override;
     //: @exclude
     destructor  Destroy; override;
 
@@ -155,7 +151,7 @@ type
     property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
   public
     //: @exclude
-    constructor Create(ItemClass: TCollectionItemClass);
+    constructor Create(aItemClass: TCollectionItemClass);
 
     {$IFDEF PORTUGUES}
     {:
@@ -181,9 +177,9 @@ implementation
 
 uses hsstrings;
 
-constructor TTagCollectionItem.Create(Collection: TCollection);
+constructor TTagCollectionItem.Create(aCollection: TCollection);
 begin
-  inherited create(Collection);
+  inherited create(aCollection);
   FTag:=nil;
 end;
 
@@ -219,7 +215,7 @@ begin
       OnItemChange(Self);
 end;
 
-function    TTagCollectionItem.GetDisplayName: string;
+function    TTagCollectionItem.GetDisplayName: AnsiString;
 begin
   if FTag=nil then
     Result := SEmpty
@@ -267,7 +263,7 @@ begin
     FTag := nil;
 end;
 
-function TTagCollectionItem.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult;
+function TTagCollectionItem.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   if GetInterface(IID, Obj) then
     result:=S_OK
@@ -275,12 +271,12 @@ begin
     result:=E_NOINTERFACE;
 end;
 
-function TTagCollectionItem._AddRef: LongInt;
+function TTagCollectionItem._AddRef: LongInt;{$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   result:=-1;
 end;
 
-function TTagCollectionItem._Release: LongInt;
+function TTagCollectionItem._Release: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 begin
   result:=-1;
 end;
@@ -289,9 +285,9 @@ end;
 // TTagCollection
 //******************************************************************************
 
-constructor TTagCollection.Create(ItemClass: TCollectionItemClass);
+constructor TTagCollection.Create(aItemClass: TCollectionItemClass);
 begin
-  inherited Create(ItemClass);
+  inherited Create(aItemClass);
 end;
 
 function    TTagCollection.GetComponentState:TComponentState;

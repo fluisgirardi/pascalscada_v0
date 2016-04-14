@@ -12,10 +12,6 @@
 {$ENDIF}
 unit crc16utils;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses commtypes;

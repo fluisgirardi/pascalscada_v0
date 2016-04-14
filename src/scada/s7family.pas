@@ -27,30 +27,14 @@
 {$ENDIF}
 unit s7family;
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF}
-
 interface
 
 uses
-  classes, sysutils, ProtocolDriver, S7Types, Tag, ProtocolTypes,
+  classes, sysutils, ProtocolDriver, S7Types, Tag, ProtocolTypes, fgl, s7scanreq,
   commtypes;
 
 type
-  TReqItem = record
-    LastUpdate:TDateTime;
-    iPLC,
-    iDB,
-    iDBNum,
-    iReqType,
-    iStartAddress,
-    iSize,
-    UpdateRate:LongInt;
-    Read,
-    NeedUpdate:Boolean;
-  end;
-  PReqItem = ^TReqItem;
+  TS7ScanReqList = specialize TFPGList<TS7ScanReqItem>;
 
   {$IFDEF PORTUGUES}
   {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
@@ -756,7 +740,7 @@ type
     destructor Destroy; override;
 
     //: @seealso(TProtocolDriver.SizeOfTag)
-    function    SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
+    function    SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
 
     //: @seealso(TProtocolDriver.LiteralTagAddress)
     function LiteralTagAddress(aTag: TTag; aBlockTag: TTag=nil):String; override;
@@ -785,8 +769,8 @@ uses PLCTagNumber, PLCString, PLCStruct, hsstrings, PLCBlock, PLCMemoryManager,
 
 function SortTagList(Item1, Item2: Pointer): Integer;
 var
-  ReqItem1:PReqItem absolute Item1;
-  ReqItem2:PReqItem absolute Item2;
+  ReqItem1:PS7ScanReqItem absolute Item1;
+  ReqItem2:PS7ScanReqItem absolute Item2;
   BitCombination:Integer;
   ScanPercent1, ScanPercent2:Double;
 begin
@@ -805,8 +789,8 @@ begin
       //  else
       //    Result:=1;
       //end;
-      ScanPercent1:=(MilliSecondsBetween(Now,ReqItem1.LastUpdate)/ReqItem1.UpdateRate);
-      ScanPercent2:=(MilliSecondsBetween(Now,ReqItem2.LastUpdate)/ReqItem2.UpdateRate);
+      ScanPercent1:=(MilliSecondsBetween(Now,ReqItem1^.LastUpdate)/ReqItem1^.UpdateRate);
+      ScanPercent2:=(MilliSecondsBetween(Now,ReqItem2^.LastUpdate)/ReqItem2^.UpdateRate);
       if ScanPercent1=ScanPercent2 then
         Result:=0
       else begin
@@ -816,7 +800,37 @@ begin
           Result:=1;
       end;
     end;
+  end;
+end;
 
+function SortGenericTagList(const Item1, Item2: TS7ScanReqItem): Integer;
+var
+  BitCombination:Integer;
+  ScanPercent1, ScanPercent2:Double;
+begin
+  BitCombination:=ifthen(Item1.NeedUpdate,1,0)+ifthen(Item2.NeedUpdate,2,0);
+  case BitCombination of
+    1:
+      Result:=-1;
+    2:
+      Result:= 1;
+    0,3: begin
+      ScanPercent1:=0;
+      if Item1.UpdateRate<>0 then
+      ScanPercent1:=(MilliSecondsBetween(Now,Item1.LastUpdate)/Item1.UpdateRate);
+
+      ScanPercent2:=0;
+      if Item2.UpdateRate<>0 then
+      ScanPercent2:=(MilliSecondsBetween(Now,Item2.LastUpdate)/Item2.UpdateRate);
+      if ScanPercent1=ScanPercent2 then
+        Result:=0
+      else begin
+        if ScanPercent1>ScanPercent2 then
+          Result:=-1
+        else
+          Result:=1;
+      end;
+    end;
   end;
 end;
 
@@ -838,7 +852,7 @@ begin
     DeletePLC(c);
 end;
 
-function  TSiemensProtocolFamily.SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
+function  TSiemensProtocolFamily.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
 begin
   //todos os tipos são retornados como byte
   //all kinds of tags are returned as byte
@@ -1863,8 +1877,8 @@ var
   OutOffScanOutgoingPDUSize, OutOffScanIncomingPDUSize:LongInt;
 
   ivalues:TArrayOfDouble;
-  EntireTagList: TList;
-  ReqItem, ReqItem2:PReqItem;
+  EntireTagList: TS7ScanReqList;
+  ReqItem, ReqItem2:TS7ScanReqItem;
   c, c2: Integer;
   started: TDateTime;
 
@@ -1963,19 +1977,19 @@ var
 
   procedure AddToTagList(iPLC, iDB, iDBNum, iReqType, iStartAddress, iSize, UpdateRate:LongInt; LastUpdate:TDateTime; NeedUpdate:Boolean);
   var
-    info:PReqItem;
+    info:TS7ScanReqItem;
   begin
-    new(info);
-    info^.iPLC          :=iPLC;
-    info^.iDB           :=iDB;
-    info^.iDBNum        :=iDBNum;
-    info^.iReqType      :=iReqType;
-    info^.iStartAddress :=iStartAddress;
-    info^.iSize         :=iSize;
-    info^.LastUpdate    :=LastUpdate;
-    info^.UpdateRate    :=UpdateRate;
-    info^.NeedUpdate    :=NeedUpdate;
-    info^.Read          :=false;
+    //new(info);
+    info.iPLC          :=iPLC;
+    info.iDB           :=iDB;
+    info.iDBNum        :=iDBNum;
+    info.iReqType      :=iReqType;
+    info.iStartAddress :=iStartAddress;
+    info.iSize         :=iSize;
+    info.LastUpdate    :=LastUpdate;
+    info.UpdateRate    :=UpdateRate;
+    info.NeedUpdate    :=NeedUpdate;
+    info.Read          :=false;
 
     EntireTagList.add(info);
   end;
@@ -1996,7 +2010,7 @@ begin
   onereqdone:=false;
   NeedSleep:=ifthen(Length(FPLCs)<=0,-1,1);
 
-  EntireTagList:=TList.Create;
+  EntireTagList:=TS7ScanReqList.Create;
   try
     for plc:=0 to High(FPLCs) do begin
       if not FPLCs[plc].Connected then
@@ -2164,7 +2178,7 @@ begin
                      FPLCs[plc].S7200SMs.Blocks[block].NeedRefresh);
       end;
 
-      EntireTagList.Sort(@SortTagList);
+      EntireTagList.Sort(@SortGenericTagList);
       started:=Now;
 
       for c:=0 to EntireTagList.Count-1 do begin
@@ -2202,7 +2216,6 @@ begin
       end;
 
       for c:=EntireTagList.Count-1 downto 0 do begin
-        Dispose(EntireTagList.Items[c]);
         EntireTagList.Delete(c);
       end;
     end;
@@ -2319,7 +2332,7 @@ begin
     exit;
   end;
 
-  if not PLCPtr.Connected then
+  if not PLCPtr^.Connected then
     if not connectPLC(PLCPtr^) then begin
       Result:=ioDriverError;
       exit;
@@ -2362,7 +2375,7 @@ begin
       ReqType := vtS7_Peripheral;
   end;
 
-  MaxBytesToSend:=PLCPtr.MaxPDULen-28;
+  MaxBytesToSend:=PLCPtr^.MaxPDULen-28;
   BytesSent:=0;
   hasAtLeastOneSuccess:=false;
 
@@ -2478,7 +2491,7 @@ begin
     exit;
   end;
 
-  if not PLCPtr.Connected then
+  if not PLCPtr^.Connected then
     if not connectPLC(PLCPtr^) then begin
       Result:=ioDriverError;
       exit;
@@ -2519,7 +2532,7 @@ begin
       ReqType := vtS7_Peripheral;
   end;
 
-  MaxBytesToRecv:=PLCPtr.MaxPDULen-18; //10 bytes of header, 2 bytes of error code, 2 bytes of read request, 4 bytes of result header.
+  MaxBytesToRecv:=PLCPtr^.MaxPDULen-18; //10 bytes of header, 2 bytes of error code, 2 bytes of read request, 4 bytes of result header.
   BytesReceived:=0;
   hasAtLeastOneSuccess:=false;
 

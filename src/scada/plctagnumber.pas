@@ -20,10 +20,6 @@
 {$ENDIF}
 unit PLCTagNumber;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -46,14 +42,14 @@ type
   private
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
-    function  IsValidValue(Value:Variant):Boolean;
+    function  IsValidValue(aValue:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
   protected
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCNumber.SetValueRaw)
     function  GetValueRaw:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
-    procedure SetValueRaw(Value:Double); override;
+    procedure SetValueRaw(aValue:Double); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
     procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
     //: @seealso(TTag.Size)
@@ -68,7 +64,7 @@ type
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
-    procedure Write(Value:Double); overload;
+    procedure Write(aValue:Double); overload;
   published
     //: @seealso(TTag.AutoRead)
     property AutoRead;
@@ -144,7 +140,7 @@ uses hsstrings, math, crossdatetime, dateutils;
 
 function TPLCTagNumber.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin
-  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCTagNumber.TagCommandCallBack);
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=Pointer(@TPLCTagNumber.TagCommandCallBack));
 end;
 
 function TPLCTagNumber.GetValueRaw:Double;
@@ -179,13 +175,15 @@ begin
             raise exception.Create(SinvalidValue);
 end;
 
-function  TPLCTagNumber.IsValidValue(Value:Variant):Boolean;
+function  TPLCTagNumber.IsValidValue(aValue:Variant):Boolean;
 var
    aux:Double;
+   aValueStr: String;
 begin
-   Result := VarIsNumeric(Value) or
-             (VarIsStr(Value) and TryStrToFloat(Value,aux)) or
-             VarIsType(Value, varboolean);
+   aValueStr:=aValue;
+   Result := VarIsNumeric(aValue) or
+             (VarIsStr(aValue) and TryStrToFloat(aValueStr,aux)) or
+             VarIsType(aValue, varboolean);
 end;
 
 function TPLCTagNumber.GetValueTimestamp:TDatetime;
@@ -193,13 +191,13 @@ begin
    Result := PValueTimeStamp;
 end;
 
-procedure TPLCTagNumber.SetValueRaw(Value:Double);
+procedure TPLCTagNumber.SetValueRaw(aValue:Double);
 var
   towrite:TArrayOfDouble;
 begin
   PModified:=true;
   SetLength(towrite,1);
-  towrite[0] := Value;
+  towrite[0] := aValue;
   if FSyncWrites then
     Write(towrite,1,0)
   else
@@ -261,13 +259,13 @@ begin
   SetLength(PlcValues,0);
 end;
 
-procedure TPLCTagNumber.Write(Value: Double);
+procedure TPLCTagNumber.Write(aValue: Double);
 var
   x:TArrayOfDouble;
 begin
   SetLength(x,1);
   try
-    x[0]:=Value;
+    x[0]:=aValue;
     Write(x,1,0);
   finally
     SetLength(x,0);

@@ -13,7 +13,6 @@
 unit CommPort;
 
 {$IFDEF FPC}
-{$mode delphi}
 {$IFDEF DEBUG}
   {$DEFINE FDEBUG}
 {$ENDIF}
@@ -1045,22 +1044,22 @@ var
 begin
   FInitEvent.SetEvent;
   while not Terminated do begin
-    try
+    //try
       WaitToDoSomething;
       while FSpool.PeekMessage(PMsg,PSM_COMMERROR,PSM_PORT_EVENT,true) do begin
         case PMsg.MsgID of
           PSM_COMMERROR:
           begin
             FEvent:=PMsg.wParam;
-            FError:=TIOResult(PMsg.lParam);
-            Synchronize(SyncCommErrorEvent);
+            FError:=TIOResult(PtrUint(PMsg.lParam));
+            Synchronize(@SyncCommErrorEvent);
             Dispose(PCommPortErrorEvent(FEvent));
           end;
           PSM_PORT_EVENT:begin
             FEvent:=PMsg.wParam;
             AtMainThread:=PMsg.lParam<>nil;
             if AtMainThread then
-              Synchronize(SyncPortEvent)
+              Synchronize(@SyncPortEvent)
             else begin
               evt:=PNotifyEvent(FEvent)^;
               if Assigned(evt) then
@@ -1070,14 +1069,14 @@ begin
           end;
         end;
       end;
-    except
-      on e:Exception do begin
-        {$IFDEF FDEBUG}
-        DebugLn('Exception in UpdateThread: '+ E.Message);
-        DumpStack;
-        {$ENDIF}
-      end;
-    end;
+    //except
+    //  on e:Exception do begin
+    //    {$IFDEF FDEBUG}
+    //    DebugLn('Exception in UpdateThread: '+ E.Message);
+    //    DumpStack;
+    //    {$ENDIF}
+    //  end;
+    //end;
   end;
 end;
 
@@ -1087,7 +1086,7 @@ var
 begin
   new(p);
   p^:=Event;
-  FSpool.PostMessage(PSM_COMMERROR, p, Pointer(Error),false);
+  FSpool.PostMessage(PSM_COMMERROR, p, Pointer(PtrUInt(Error)),false);
   DoSomething;
 end;
 
@@ -1144,7 +1143,7 @@ begin
   FOwnerThread:=GetCurrentThreadId;
   FExclusiveDevice:=false;
   FTimer := {$IFDEF FPC_BUG}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(Self);
-  FTimer.OnTimer:=TimerStatistics;
+  FTimer.OnTimer:=@TimerStatistics;
   FTimer.Enabled:=false;
   FTimer.Interval:=1000;
   FLastOSErrorMessage:='';
@@ -1261,7 +1260,7 @@ begin
   if csDestroying in ComponentState then
      exit;
 
-  FDelayBetweenCmds:=Packet.DelayBetweenCommand;
+  FDelayBetweenCmds:=Packet^.DelayBetweenCommand;
   case cmd of
     iocRead:
       Read(Packet);
@@ -1280,8 +1279,8 @@ begin
         Read(Packet);
       end;
   end;
-  FRXBytes := FRXBytes + Packet.Received;
-  FTXBytes := FTXBytes + Packet.Written;
+  FRXBytes := FRXBytes + Packet^.Received;
+  FTXBytes := FTXBytes + Packet^.Written;
 end;
 
 procedure TCommPortDriver.CommError(WriteCmd:Boolean; Error:TIOResult);
@@ -1289,9 +1288,9 @@ var
   evt:TCommPortErrorEvent;
 begin
   if WriteCmd then begin
-    evt := DoWriteError
+    evt := @DoWriteError
   end else begin
-    evt := DoReadError;
+    evt := @DoReadError;
   end;
 
   if Assigned(evt) then
@@ -1310,7 +1309,7 @@ begin
   if MainThreadID=GetCurrentThreadId then
     DoPortOpened(Self)
   else
-    PEventUpdater.DoCommPortEvent(DoPortOpened, true);
+    PEventUpdater.DoCommPortEvent(@DoPortOpened, true);
 
   for c:=0 to High(EventInterfaces) do
     if ntePortOpen in EventInterfaces[c].NotifyThisEvents then
@@ -1324,7 +1323,7 @@ begin
   if MainThreadID=GetCurrentThreadId then
     DoPortOpenError(self)
   else
-    PEventUpdater.DoCommPortEvent(DoPortOpenError, true);
+    PEventUpdater.DoCommPortEvent(@DoPortOpenError, true);
 end;
 
 procedure TCommPortDriver.CommPortClose;
@@ -1336,7 +1335,7 @@ begin
   if MainThreadID=GetCurrentThreadId then
     DoPortClose(self)
   else
-    PEventUpdater.DoCommPortEvent(DoPortClose, true);
+    PEventUpdater.DoCommPortEvent(@DoPortClose, true);
 
   for c:=0 to High(EventInterfaces) do
     if ntePortClosed in EventInterfaces[c].NotifyThisEvents then
@@ -1350,7 +1349,7 @@ begin
   if MainThreadID=GetCurrentThreadId then
     DoPortCloseError(self)
   else
-    PEventUpdater.DoCommPortEvent(DoPortCloseError, true);
+    PEventUpdater.DoCommPortEvent(@DoPortCloseError, true);
 end;
 
 procedure TCommPortDriver.CommPortDisconected;
@@ -1362,7 +1361,7 @@ begin
   if MainThreadID=GetCurrentThreadId then
     DoPortDisconnected(Self)
   else
-    PEventUpdater.DoCommPortEvent(DoPortDisconnected, true);
+    PEventUpdater.DoCommPortEvent(@DoPortDisconnected, true);
   for c:=0 to High(EventInterfaces) do
     if ntePortDisconnected in EventInterfaces[c].NotifyThisEvents then
       PEventUpdater.DoCommPortEvent(EventInterfaces[c].GetPortDisconnectedEvent, false);
@@ -1722,15 +1721,15 @@ begin
      PIOCmdCS.Enter;
      //verify if the communication port is active.
      if PActive then begin
-       try
+       //try
          //executes the I/O command.
          IOCommand(cmd,Packet);
-       except
-         if cmd in [iocRead, iocReadWrite, iocWriteRead] then
-           Packet^.ReadIOResult := iorPortError;
-         if cmd in [iocWrite, iocReadWrite, iocWriteRead] then
-           Packet^.WriteIOResult := iorPortError;
-       end;
+       //except
+       //  if cmd in [iocRead, iocReadWrite, iocWriteRead] then
+       //    Packet^.ReadIOResult := iorPortError;
+       //  if cmd in [iocWrite, iocReadWrite, iocWriteRead] then
+       //    Packet^.WriteIOResult := iorPortError;
+       //end;
      end else begin
        if cmd in [iocRead, iocReadWrite, iocWriteRead] then
          Packet^.ReadIOResult := iorNotReady;

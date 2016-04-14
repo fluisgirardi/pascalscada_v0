@@ -6,30 +6,30 @@ LazarusResources.Add('TfrmMapElements','FORMDATA',[
   +'tyle'#7#8'bsDialog'#7'Caption'#6#21'Map block elements...'#12'ClientHeight'
   +#3#157#0#11'ClientWidth'#3'!'#1#11'Font.Height'#2#245#9'Font.Name'#6#13'MS S'
   +'ans Serif'#12'OnCloseQuery'#7#14'FormCloseQuery'#8'OnCreate'#7#10'FormCreat'
-  +'e'#6'OnShow'#7#8'FormShow'#10'LCLVersion'#6#6'0.9.29'#0#6'TLabel'#6'Label1'
-  +#4'Left'#2#0#6'Height'#2#19#3'Top'#2#8#5'Width'#2#127#7'Caption'#6#24'&Map e'
-  +'lements from index'#12'FocusControl'#7#10'startindex'#11'ParentColor'#8#0#0
-  +#6'TLabel'#6'Label2'#4'Left'#3#128#0#6'Height'#2#22#3'Top'#2#23#5'Width'#2#25
-  +#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#3'&TO'#12'FocusContro'
-  +'l'#7#8'endindex'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6'TLabel'#6
-  +'Label3'#4'Left'#2#0#6'Height'#2#19#3'Top'#2'8'#5'Width'#2'z'#7'Caption'#6#22
-  +'&Names of new elements'#12'FocusControl'#7#12'elementnames'#11'ParentColor'
-  +#8#0#0#9'TSpinEdit'#10'startindex'#4'Left'#2#0#6'Height'#2#24#3'Top'#2#24#5
-  +'Width'#2'x'#8'MaxValue'#2#0#8'TabOrder'#2#0#0#0#9'TSpinEdit'#8'endindex'#4
-  +'Left'#3#168#0#6'Height'#2#24#3'Top'#2#23#5'Width'#2'x'#8'MaxValue'#2#0#8'Ta'
-  +'bOrder'#2#1#0#0#5'TEdit'#12'elementnames'#4'Left'#2#0#6'Height'#2#24#3'Top'
-  +#2'H'#5'Width'#3#151#0#8'TabOrder'#2#2#4'Text'#6#6'%t_e%e'#0#0#9'TGroupBox'#9
-  +'GroupBox1'#4'Left'#3#175#0#6'Height'#2'>'#3'Top'#2'8'#5'Width'#2'q'#7'Capti'
-  +'on'#6#12'Name pattern'#12'ClientHeight'#2'+'#11'ClientWidth'#2'o'#8'TabOrde'
-  +'r'#2#3#0#6'TLabel'#6'Label4'#4'Left'#2#3#6'Height'#2#19#3'Top'#2#3#5'Width'
-  +#2'T'#7'Caption'#6#15'%t - Block name'#11'ParentColor'#8#0#0#6'TLabel'#6'Lab'
-  +'el5'#4'Left'#2#3#6'Height'#2#19#3'Top'#2#19#5'Width'#2'o'#7'Caption'#6#19'%'
-  +'e - Element number'#11'ParentColor'#8#0#0#0#9'TCheckBox'#20'ElementsStartFr'
-  +'omOne'#4'Left'#2#0#6'Height'#2#22#3'Top'#2'`'#5'Width'#3#165#0#7'Caption'#6
-  +#28'&Element number start from 1'#8'TabOrder'#2#4#0#0#7'TButton'#7'Button1'#4
-  +'Left'#3#133#0#6'Height'#2#25#3'Top'#3#128#0#5'Width'#2'K'#7'Caption'#6#7'&C'
-  +'ancel'#11'ModalResult'#2#2#7'OnClick'#7#12'Button1Click'#8'TabOrder'#2#5#0#0
-  +#7'TButton'#7'Button2'#4'Left'#3#213#0#6'Height'#2#25#3'Top'#3#128#0#5'Width'
-  +#2'K'#7'Caption'#6#3'&OK'#7'Default'#9#11'ModalResult'#2#1#7'OnClick'#7#12'B'
-  +'utton2Click'#8'TabOrder'#2#6#0#0#0
-]);
+  +'e'#6'OnShow'#7#8'FormShow'#10'LCLVersion'#6#3'1.7'#7'Visible'#8#0#6'TLabel'
+  +#6'Label1'#4'Left'#2#0#6'Height'#2#14#3'Top'#2#8#5'Width'#3#142#0#7'Caption'
+  +#6#24'&Map elements from index'#12'FocusControl'#7#10'startindex'#11'ParentC'
+  +'olor'#8#0#0#6'TLabel'#6'Label2'#4'Left'#3#128#0#6'Height'#2#22#3'Top'#2#23#5
+  +'Width'#2#25#9'Alignment'#7#8'taCenter'#8'AutoSize'#8#7'Caption'#6#3'&TO'#12
+  +'FocusControl'#7#8'endindex'#6'Layout'#7#8'tlCenter'#11'ParentColor'#8#0#0#6
+  +'TLabel'#6'Label3'#4'Left'#2#0#6'Height'#2#14#3'Top'#2'8'#5'Width'#3#134#0#7
+  +'Caption'#6#22'&Names of new elements'#12'FocusControl'#7#12'elementnames'#11
+  +'ParentColor'#8#0#0#9'TSpinEdit'#10'startindex'#4'Left'#2#0#6'Height'#2#26#3
+  +'Top'#2#24#5'Width'#2'x'#8'MaxValue'#2#0#8'TabOrder'#2#0#0#0#9'TSpinEdit'#8
+  +'endindex'#4'Left'#3#168#0#6'Height'#2#26#3'Top'#2#23#5'Width'#2'x'#8'MaxVal'
+  +'ue'#2#0#8'TabOrder'#2#1#0#0#5'TEdit'#12'elementnames'#4'Left'#2#0#6'Height'
+  +#2#26#3'Top'#2'H'#5'Width'#3#151#0#8'TabOrder'#2#2#4'Text'#6#6'%t_e%e'#0#0#9
+  +'TGroupBox'#9'GroupBox1'#4'Left'#3#175#0#6'Height'#2'>'#3'Top'#2'8'#5'Width'
+  +#2'q'#7'Caption'#6#12'Name pattern'#12'ClientHeight'#2','#11'ClientWidth'#2
+  +'i'#8'TabOrder'#2#3#0#6'TLabel'#6'Label4'#4'Left'#2#3#6'Height'#2#14#3'Top'#2
+  +#3#5'Width'#2'\'#7'Caption'#6#15'%t - Block name'#11'ParentColor'#8#0#0#6'TL'
+  +'abel'#6'Label5'#4'Left'#2#3#6'Height'#2#14#3'Top'#2#19#5'Width'#2'z'#7'Capt'
+  +'ion'#6#19'%e - Element number'#11'ParentColor'#8#0#0#0#9'TCheckBox'#20'Elem'
+  +'entsStartFromOne'#4'Left'#2#0#6'Height'#2#20#3'Top'#2'`'#5'Width'#3#190#0#7
+  +'Caption'#6#28'&Element number start from 1'#8'TabOrder'#2#4#0#0#7'TButton'#7
+  +'Button1'#4'Left'#3#133#0#6'Height'#2#25#3'Top'#3#128#0#5'Width'#2'K'#7'Capt'
+  +'ion'#6#7'&Cancel'#11'ModalResult'#2#2#7'OnClick'#7#12'Button1Click'#8'TabOr'
+  +'der'#2#5#0#0#7'TButton'#7'Button2'#4'Left'#3#213#0#6'Height'#2#25#3'Top'#3
+  +#128#0#5'Width'#2'K'#7'Caption'#6#3'&OK'#7'Default'#9#11'ModalResult'#2#1#7
+  +'OnClick'#7#12'Button2Click'#8'TabOrder'#2#6#0#0#0
+]);

@@ -13,7 +13,6 @@
 unit protscanupdate;
 
 {$IFDEF FPC}
-{$mode delphi}
 {$IFDEF DEBUG}
   {$DEFINE FDEBUG}
 {$ENDIF}
@@ -189,14 +188,14 @@ begin
   FTempo:=0;
   FVezes:=0;
   while not Terminated do begin
-    try
+    //try
       CheckScanReadOrWrite;
       if Assigned(PScanTags) then begin
         SetLength(PScannedValues,0);
         timeout:=PScanTags(PScannedValues);
         if Length(PScannedValues)>0 then begin
           FInicio:=CrossNow;
-          Synchronize(UpdateMultipleTags);
+          Synchronize(@UpdateMultipleTags);
           FValor:=MilliSecondsBetween(CrossNow,FInicio);
 
           inc(FTempo,FValor);
@@ -212,16 +211,16 @@ begin
         FSleepInterruptable.WaitFor(timeout-1)
       else
         FSleepInterruptable.WaitFor(1);
-    except
-      on E: Exception do begin
-        {$IFDEF FDEBUG}
-        DebugLn('TScanUpdate.Execute:: ' + e.Message);
-        DumpStack;
-        {$ENDIF}
-        Ferro := E;
-        Synchronize(SyncException);
-      end;
-    end;
+    //except
+    //  on E: Exception do begin
+    //    {$IFDEF FDEBUG}
+    //    DebugLn('TScanUpdate.Execute:: ' + e.Message);
+    //    DumpStack;
+    //    {$ENDIF}
+    //    Ferro := E;
+    //    Synchronize(@SyncException);
+    //  end;
+    //end;
   end;
   FEnd.SetEvent;
 end;
@@ -244,10 +243,10 @@ end;
 
 procedure TScanUpdate.SyncException;
 begin
-  try
-    //Application.ShowException(Ferro);
-  except
-  end;
+  //try
+  //  Application.ShowException(Ferro);
+  //except
+  //end;
 end;
 
 procedure TScanUpdate.UpdateMultipleTags;
@@ -279,7 +278,7 @@ var
   PMsg:TMSMsg;
 begin
   while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANREAD,PSM_TAGSCANWRITE,true) do begin
-    try
+    //try
       case PMsg.MsgID of
         PSM_TAGSCANWRITE: begin
           x := PScanWriteRec(PMsg.wParam);
@@ -294,7 +293,7 @@ begin
 
           //sincroniza com o tag.
           //sync tag (update it)
-          Synchronize(SyncCallBack);
+          Synchronize(@SyncCallBack);
 
           //libera a memoria ocupada
           //pelo pacote
@@ -316,7 +315,7 @@ begin
 
           FCmd:=tcScanRead;
 
-          Synchronize(SyncCallBack);
+          Synchronize(@SyncCallBack);
 
           //libera a memoria ocupada pelos pacotes
           //free the memory of the request
@@ -325,31 +324,31 @@ begin
           TagCBack:=nil;
         end;
       end;
-    except
-      on E: Exception do begin
-        {$IFDEF FDEBUG}
-        DebugLn('TScanUpdate.Execute:: ' + e.Message);
-        DumpStack;
-        {$ENDIF}
-        Ferro := E;
-        Synchronize(SyncException);
-      end;
-    end;
+    //except
+    //  on E: Exception do begin
+    //    {$IFDEF FDEBUG}
+    //    DebugLn('TScanUpdate.Execute:: ' + e.Message);
+    //    DumpStack;
+    //    {$ENDIF}
+    //    Ferro := E;
+    //    Synchronize(@SyncException);
+    //  end;
+    //end;
   end;
 end;
 
 procedure TScanUpdate.SyncCallBack;
 begin
   if Terminated then exit;
-  try
+  //try
     if Assigned(TagCBack) then
       TagCBack(Fvalues.Values,Fvalues.ValuesTimestamp,FCmd,Fvalues.LastQueryResult, Fvalues.RealOffset);
-  except
-    on erro:Exception do begin
-      Ferro:=erro;
-      SyncException;
-    end;
-  end;
+  //except
+  //  on erro:Exception do begin
+  //    Ferro:=erro;
+  //    SyncException;
+  //  end;
+  //end;
 end;
 
 end.

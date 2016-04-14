@@ -20,10 +20,6 @@
 {$ENDIF}
 unit PLCBlockElement;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -59,7 +55,7 @@ type
 
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
-    function  IsValidValue(Value:Variant):Boolean;
+    function  IsValidValue(aValue:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
 
     //implements the IHMITagInterface
@@ -73,7 +69,7 @@ type
     //: @seealso(TPLCNumber.GetValueRaw)
     function  GetValueRaw:Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
-    procedure SetValueRaw(Value:Double); override;
+    procedure SetValueRaw(aValue:Double); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -209,13 +205,15 @@ begin
             raise exception.Create(SinvalidValue);
 end;
 
-function  TPLCBlockElement.IsValidValue(Value:Variant):Boolean;
+function  TPLCBlockElement.IsValidValue(aValue:Variant):Boolean;
 var
    aux:Double;
+   aValueStr: String;
 begin
-   Result := VarIsNumeric(Value) or
-             (VarIsStr(Value) and TryStrToFloat(Value,aux)) or
-             VarIsType(Value, varboolean);
+   aValueStr:=aValue;
+   Result := VarIsNumeric(aValue) or
+             (VarIsStr(aValue) and TryStrToFloat(aValueStr,aux)) or
+             VarIsType(aValue, varboolean);
 end;
 
 function TPLCBlockElement.GetValueTimestamp:TDatetime;
@@ -223,10 +221,10 @@ begin
    Result := PValueTimeStamp;
 end;
 
-procedure TPLCBlockElement.SetValueRaw(Value:Double);
+procedure TPLCBlockElement.SetValueRaw(aValue:Double);
 begin
   if Assigned(PBlock) then
-    PBlock.ValueRaw[PIndex] := Value
+    PBlock.ValueRaw[PIndex] := aValue
   else
     if PValueRaw<>Value then begin
       PValueRaw:=Value;

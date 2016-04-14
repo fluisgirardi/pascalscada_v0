@@ -19,10 +19,6 @@
 {$ENDIF}
 unit mutexserver;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 {$I ../common/delphiver.inc}
 interface
 
@@ -239,7 +235,7 @@ begin
   CloseSocket(FSocket);
 
   //remove the connection thread from the main thread list.
-  Synchronize(ClientFinished);
+  Synchronize(@ClientFinished);
 
   while not FEnd.SetEvent do Sleep(1);
 end;
@@ -278,7 +274,7 @@ var
     //launch a new thread that will handle this new connection
     setblockingmode(ClientSocket,MODE_NONBLOCKING);
     FClientThread := TClientThread.Create(True, ClientSocket, FMutex, FRemoveClientThread);
-    Synchronize(AddClientToMainThread);
+    Synchronize(@AddClientToMainThread);
     FClientThread.WakeUp;
   end;
 
@@ -453,7 +449,7 @@ begin
 
     //wait for connections?? must be done on another thread, because accept
     //is a blocking call...
-    FAcceptThread:=TAcceptThread.Create(true, FSocket, FMutex, AddClientThread, RemoveClientThread);
+    FAcceptThread:=TAcceptThread.Create(true, FSocket, FMutex, @AddClientThread, @RemoveClientThread);
     FAcceptThread.WakeUp;
   end else begin
     //close the socket...
@@ -554,4 +550,4 @@ begin
   inherited Destroy;
 end;
 
-end.
+end.

@@ -13,7 +13,6 @@
 unit protscan;
 
 {$IFDEF FPC}
-{$mode delphi}
 {$IFDEF DEBUG}
   {$DEFINE FDEBUG}
 {$ENDIF}
@@ -189,24 +188,25 @@ begin
   FInitEvent.SetEvent;
   while not Terminated do begin
     CheckScanWriteCmd;
-    if Assigned(FDoScanRead) then
-      try
+    if Assigned(FDoScanRead) then begin
+      //try
         NeedSleep:=0;
         FDoScanRead(Self, NeedSleep);
         if NeedSleep>0 then
           Sleep(NeedSleep);
         if NeedSleep<0 then
           CrossThreadSwitch;
-      except
-        on E: Exception do begin
-          {$IFDEF FDEBUG}
-          DebugLn('TScanThread.Execute::' + e.Message);
-          DumpStack;
-          {$ENDIF}
-          erro := E;
-          Synchronize(SyncException);
-        end;
-      end;
+      //except
+      //  on E: Exception do begin
+      //    {$IFDEF FDEBUG}
+      //    DebugLn('TScanThread.Execute::' + e.Message);
+      //    DumpStack;
+      //    {$ENDIF}
+      //    erro := E;
+      //    Synchronize(@SyncException);
+      //  end;
+      //end;
+    end;
 
     if FMinScan>0 then
       Sleep(FMinScan);
@@ -235,10 +235,10 @@ end;
 
 procedure TScanThread.SyncException;
 begin
-  try
-    //Application.ShowException(erro);
-  except
-  end;
+  //try
+  //  Application.ShowException(erro);
+  //except
+  //end;
 end;
 
 procedure TScanThread.WaitInit;

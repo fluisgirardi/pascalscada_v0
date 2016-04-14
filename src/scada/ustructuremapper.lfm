@@ -13,7 +13,8 @@ object frmStructureEditor: TfrmStructureEditor
   OnCreate = FormCreate
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '0.9.28.2'
+  LCLVersion = '1.7'
+  Visible = False
   object Panel1: TPanel
     Left = 0
     Height = 40
@@ -37,7 +38,7 @@ object frmStructureEditor: TfrmStructureEditor
     end
     object SpinEdit1: TSpinEdit
       Left = 192
-      Height = 21
+      Height = 26
       Top = 8
       Width = 121
       MaxValue = 2147483647
@@ -82,6 +83,8 @@ object frmStructureEditor: TfrmStructureEditor
     Height = 339
     Top = 40
     Width = 712
+    HorzScrollBar.Page = 1
+    VertScrollBar.Page = 1
     Align = alClient
     TabOrder = 1
   end

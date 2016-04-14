@@ -21,10 +21,6 @@
 {$ENDIF}
 unit PLCStruct;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -84,7 +80,7 @@ end;
 
 function TPLCStruct.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin
-  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCStruct.TagCommandCallBack);
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=Pointer(@TPLCStruct.TagCommandCallBack));
 end;
 
 procedure TPLCStruct.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);

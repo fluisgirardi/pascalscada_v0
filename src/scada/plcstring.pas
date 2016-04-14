@@ -12,10 +12,6 @@
 {$ENDIF}
 unit PLCString;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -64,8 +60,8 @@ type
     PStringSize:Cardinal;
     POnAsyncStringValueChange:TASyncStringValueChange;
 
-    procedure SetBlockSize(size:Cardinal);
-    procedure SetStringSize(size:Cardinal);
+    procedure SetBlockSize(asize:Cardinal);
+    procedure SetStringSize(asize:Cardinal);
     procedure SetByteSize(bsize:Byte);
     procedure SetStringType(stype:TPLCStringTypes);
     procedure SetDummySize(s:Cardinal);
@@ -538,7 +534,7 @@ end;
 
 function TPLCString.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin
-  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCString.TagCommandCallBack);
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=Pointer(@TPLCString.TagCommandCallBack));
 end;
 
 procedure TPLCString.SetPLCHack(v:Cardinal);
@@ -660,10 +656,10 @@ begin
   end;
 end;
 
-procedure TPLCString.SetBlockSize(size:Cardinal);
+procedure TPLCString.SetBlockSize(asize:Cardinal);
 begin
   if size>0 then begin
-    PSize := size;
+    PSize := asize;
     SetLength(PValues, PSize);
     if PProtocolDriver<>nil then begin
       if PAutoRead then begin
@@ -674,9 +670,9 @@ begin
   end;
 end;
 
-procedure TPLCString.SetStringSize(size:Cardinal);
+procedure TPLCString.SetStringSize(asize:Cardinal);
 begin
-   if (PByteSize=8) and (size>255) or ((PByteSize=7) and (size>127)) then
+   if (PByteSize=8) and (size>255) or ((PByteSize=7) and (asize>127)) then
      raise Exception.Create(SstringSizeOutOfBounds);
    PStringSize := size;
    SetBlockSize(CalcBlockSize(false));

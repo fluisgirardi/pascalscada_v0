@@ -12,10 +12,6 @@
 {$ENDIF}
 unit PLCMemoryManager;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses SysUtils, DateUtils, Tag, SyncObjs, Classes;
@@ -544,9 +540,9 @@ type
     //: @seealso(TPLCMemoryManager.Destroy)
     destructor Destroy; override;
     //: @seealso(TPLCMemoryManager.AddAddress)
-    procedure AddAddress(Address,Size,RegSize,Scan:Cardinal); override;
+    procedure AddAddress(Address,aSize,RegSize,Scan:Cardinal); override;
     //: @seealso(TPLCMemoryManager.RemoveAddress)
-    procedure RemoveAddress(Address,Size,RegSize:Cardinal); override;
+    procedure RemoveAddress(Address,aSize,RegSize:Cardinal); override;
     //: @seealso(TPLCMemoryManager.SetValues)
     function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):LongInt; override;
     //: @seealso(TPLCMemoryManager.GetValues)
@@ -1068,21 +1064,21 @@ begin
   inherited Destroy;
 end;
 
-procedure   TPLCMemoryManagerSafe.AddAddress(Address,Size,RegSize,Scan:Cardinal);
+procedure   TPLCMemoryManagerSafe.AddAddress(Address,aSize,RegSize,Scan:Cardinal);
 begin
   try
     FMutex.Enter;
-    inherited AddAddress(Address,Size,RegSize,Scan);
+    inherited AddAddress(Address,aSize,RegSize,Scan);
   finally
     FMutex.Leave;
   end;
 end;
 
-procedure   TPLCMemoryManagerSafe.RemoveAddress(Address,Size,RegSize:Cardinal);
+procedure   TPLCMemoryManagerSafe.RemoveAddress(Address,aSize,RegSize:Cardinal);
 begin
   try
     FMutex.Enter;
-    inherited RemoveAddress(Address,Size,RegSize);
+    inherited RemoveAddress(Address,aSize,RegSize);
   finally
     FMutex.Leave;
   end;

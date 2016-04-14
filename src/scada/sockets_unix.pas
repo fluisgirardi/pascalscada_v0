@@ -6,10 +6,6 @@
 {$ENDIF}
 unit sockets_unix;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -355,4 +351,4 @@ begin
     Result:=nbytes;
 end;
 
-end.
+end.

@@ -12,10 +12,6 @@
 {$ENDIF}
 unit socket_types;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

@@ -6,10 +6,6 @@
 {$ENDIF}
 unit uelementmapper;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -86,4 +82,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

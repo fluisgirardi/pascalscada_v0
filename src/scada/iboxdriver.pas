@@ -7,10 +7,6 @@
 }
 unit IBoxDriver;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -250,7 +246,7 @@ var
   c,h:LongInt;
   sum:cardinal;
 begin
-  try
+  //try
     Result := false;
     if Length(pkg)<2 then exit;
     sum :=0;
@@ -259,9 +255,9 @@ begin
       sum := sum + pkg[c];
     sum := (sum xor $FFFFFFFF)+1;
     Result := (pkg[h]=(sum and $FF));
-  except
-    Result := false;
-  end;
+  //except
+  //  Result := false;
+  //end;
 end;
 
 procedure TIBoxDriver.CalculateCheckSum(var pkg:BYTES);

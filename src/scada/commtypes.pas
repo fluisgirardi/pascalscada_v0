@@ -13,10 +13,6 @@
 
 unit commtypes;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses Classes;

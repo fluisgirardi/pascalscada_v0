@@ -12,10 +12,6 @@
 {$ENDIF}
 unit ProtocolTypes;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 

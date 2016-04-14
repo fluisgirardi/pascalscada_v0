@@ -22,10 +22,6 @@
 {$ENDIF}
 unit ISOTCPDriver;
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF}
-
 interface
 
 uses

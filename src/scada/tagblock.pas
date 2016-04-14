@@ -12,10 +12,6 @@
 {$ENDIF}
 unit TagBlock;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

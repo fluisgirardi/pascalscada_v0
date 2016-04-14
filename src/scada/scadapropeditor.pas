@@ -22,10 +22,6 @@
 {$ENDIF}
 unit scadapropeditor;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 {$I ../common/delphiver.inc}
 
 interface
@@ -63,9 +59,9 @@ type
   TPortPropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
-    function  GetValue: string; override;
+    function  GetValue: AnsiString; override;
     procedure GetValues(Proc: TGetStrProc); override;
-    procedure SetValue(const Value: string); override;
+    procedure SetValue(const Value: AnsiString); override;
   end;
 
   {$IFDEF PORTUGUES}
@@ -124,7 +120,7 @@ type
     function GetTheOwner: TComponent; override;
   public
     procedure ExecuteVerb(Index: LongInt); override;
-    function  GetVerb(Index: LongInt): string; override;
+    function  GetVerb(Index: LongInt): AnsiString; override;
     function  GetVerbCount: LongInt; override;
     procedure Edit; override;
     function  ProtocolDriver: TProtocolDriver; virtual;
@@ -150,7 +146,7 @@ type
     function GetTheOwner: TComponent; override;
   public
     procedure ExecuteVerb(Index: LongInt); override;
-    function GetVerb(Index: LongInt): string; override;
+    function GetVerb(Index: LongInt): AnsiString; override;
     function GetVerbCount: LongInt; override;
     procedure Edit; override;
   end;
@@ -174,9 +170,9 @@ type
   public
     procedure ExecuteVerb(Index: LongInt); override;
     {$if declared(has_customhints)}
-    function GetCustomHint: String; override;
+    function GetCustomHint: AnsiString; override;
     {$ifend}
-    function GetVerb(Index: LongInt): string; override;
+    function GetVerb(Index: LongInt): AnsiString; override;
     function GetVerbCount: LongInt; override;
     procedure Edit; override;
   end;
@@ -193,7 +189,7 @@ begin
                  paValueEditable{$ENDIF}{$ENDIF}];
 end;
 
-function  TPortPropertyEditor.GetValue: string;
+function  TPortPropertyEditor.GetValue: AnsiString;
 begin
    Result := GetStrValue;
 end;
@@ -237,7 +233,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TPortPropertyEditor.SetValue(const Value: string);
+procedure TPortPropertyEditor.SetValue(const Value: AnsiString);
 begin
    SetStrValue(Value);
    if GetComponent(0) is TSerialPortDriver then
@@ -312,7 +308,7 @@ end;
 
 procedure TProtocolDriverComponentEditor.OpenTagBuilder;
 begin
-  ProtocolDriver.OpenTagEditor(AddTagInEditor, CreateComponent);
+  ProtocolDriver.OpenTagEditor(@AddTagInEditor, @CreateComponent);
 end;
 
 procedure TProtocolDriverComponentEditor.ExecuteVerb(Index: LongInt);
@@ -321,7 +317,7 @@ begin
     OpenTagBuilder();
 end;
 
-function TProtocolDriverComponentEditor.GetVerb(Index: LongInt): string;
+function TProtocolDriverComponentEditor.GetVerb(Index: LongInt): AnsiString;
 begin
   if Index=0 then
     Result:='Tag Builder';
@@ -358,7 +354,7 @@ end;
 procedure TTagBitMapperComponentEditor.OpenBitMapper;
 begin
   if (GetComponent is TPLCNumberMappable) then
-    TPLCNumberMappable(GetComponent).OpenBitMapper(AddTagInEditor, CreateComponent);
+    TPLCNumberMappable(GetComponent).OpenBitMapper(@AddTagInEditor, @CreateComponent);
 end;
 
 procedure TTagBitMapperComponentEditor.ExecuteVerb(Index: LongInt);
@@ -367,7 +363,7 @@ begin
     OpenBitMapper();
 end;
 
-function  TTagBitMapperComponentEditor.GetVerb(Index: LongInt): string;
+function  TTagBitMapperComponentEditor.GetVerb(Index: LongInt): AnsiString;
 begin
   if Index=0 then
     Result:='Map bits';
@@ -391,7 +387,7 @@ end;
 procedure TBlockElementMapperComponentEditor.OpenElementMapper;
 begin
   if (GetComponent is TPLCBlock) then
-    TPLCBlock(GetComponent).MapElements(AddTagInEditor, CreateComponent);
+    TPLCBlock(GetComponent).MapElements(@AddTagInEditor, @CreateComponent);
 end;
 
 procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: LongInt);
@@ -401,7 +397,7 @@ begin
 end;
 
 {$if declared(has_customhints)}
-function TBlockElementMapperComponentEditor.GetCustomHint: String;
+function TBlockElementMapperComponentEditor.GetCustomHint: AnsiString;
 begin
   if GetComponent is TPLCStruct then begin
     Result:=Result+'Structure size in bytes:'+IntToStr(TPLCStruct(GetComponent).Size);
@@ -415,7 +411,7 @@ begin
 end;
 {$ifend}
 
-function  TBlockElementMapperComponentEditor.GetVerb(Index: LongInt): string;
+function  TBlockElementMapperComponentEditor.GetVerb(Index: LongInt): AnsiString;
 begin
   Result:='Unknow option...';
   if Index=0 then begin

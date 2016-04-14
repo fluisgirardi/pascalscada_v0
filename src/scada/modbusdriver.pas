@@ -19,10 +19,6 @@
 {$ENDIF}
 unit ModBusDriver;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -259,7 +255,7 @@ type
     //: @exclude
     destructor Destroy; override;
     //: @seealso(TProtocolDriver.SizeOfTag)
-    function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
+    function  SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
 
     //: @seealso(TProtocolDriver.OpenTagEditor)
     procedure OpenTagEditor(InsertHook: TAddTagInEditorHook;
@@ -452,39 +448,39 @@ end;
 
 
 
-function  TModBusDriver.SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
+function  TModBusDriver.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
 var
   FunctionCode:Cardinal;
 begin
   FunctionCode := 0;
-  if (Tag is TPLCTagNumber) then begin
+  if (aTag is TPLCTagNumber) then begin
     if (isWrite) then
-      FunctionCode := TPLCTagNumber(Tag).MemWriteFunction
+      FunctionCode := TPLCTagNumber(aTag).MemWriteFunction
     else
-      FunctionCode := TPLCTagNumber(Tag).MemReadFunction;
+      FunctionCode := TPLCTagNumber(aTag).MemReadFunction;
   end;
 
   //TPLCBlock and TPLCStruct
-  if (Tag is TPLCBlock) then begin
+  if (aTag is TPLCBlock) then begin
     if (isWrite) then
-      FunctionCode := TPLCBlock(Tag).MemWriteFunction
+      FunctionCode := TPLCBlock(aTag).MemWriteFunction
     else
-      FunctionCode := TPLCBlock(Tag).MemReadFunction;
+      FunctionCode := TPLCBlock(aTag).MemReadFunction;
   end;
 
   //TPLCString
-  if (Tag is TPLCString) then begin
+  if (aTag is TPLCString) then begin
     if (isWrite) then
-      FunctionCode := TPLCString(Tag).MemWriteFunction
+      FunctionCode := TPLCString(aTag).MemWriteFunction
     else
-      FunctionCode := TPLCString(Tag).MemReadFunction;
+      FunctionCode := TPLCString(aTag).MemReadFunction;
   end;
 
 
   //retorna o tamanho em bits dos registradores lidos/escritos por
   //cada tipo de função de leitura/escrita
   //
-  //return the size in bits of the tag
+  //return the size in bits of the atag
   case FunctionCode of
     1,2,5,15: begin
       Result := 1;
@@ -766,8 +762,8 @@ var
 begin
   try
     if FMustReleaseResources then begin
-      starts:=HighLatencyOperationWillBegin;
-      ends  :=HighLatencyOperationWasEnded;
+      starts:=@HighLatencyOperationWillBegin;
+      ends  :=@HighLatencyOperationWasEnded;
     end else begin
       starts:=nil;
       ends  :=nil;

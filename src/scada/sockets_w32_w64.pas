@@ -6,10 +6,6 @@
 {$ENDIF}
 unit sockets_w32_w64;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

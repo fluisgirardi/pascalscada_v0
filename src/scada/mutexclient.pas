@@ -19,10 +19,6 @@
 {$ENDIF}
 unit MutexClient;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 {$I ../common/delphiver.inc}
 interface
 
@@ -165,7 +161,7 @@ var
       LastPingSent:=Now;
   end;
 
-  function PingServer:Boolean;
+  function InternalPingServer:Boolean;
   begin
     Result:=true;
     if MilliSecondsBetween(now,LastPingSent)>=1000 then begin
@@ -202,7 +198,7 @@ begin
           end;
         end;
       until GetNumberOfBytesInReceiveBuffer(FSocket)<=0;
-      PingServer;
+      InternalPingServer;
     finally
       FSocketMutex.Leave;
     end;
@@ -494,9 +490,9 @@ begin
     FConnected:=1;
     FConnectionStatusThread:=TMutexClientThread.Create(true, FSocket);
     FConnectionStatusThread.FreeOnTerminate:=true;
-    FConnectionStatusThread.OnTerminate:=ConnectionFinished;
-    FConnectionStatusThread.onConnectionBroken:=ConnectionFinished;
-    FConnectionStatusThread.onServerHasBeenFinished:=ConnectionFinished;
+    FConnectionStatusThread.OnTerminate:=@ConnectionFinished;
+    FConnectionStatusThread.onConnectionBroken:=@ConnectionFinished;
+    FConnectionStatusThread.onServerHasBeenFinished:=@ConnectionFinished;
 
 
     //after setup the thread, wake up it.

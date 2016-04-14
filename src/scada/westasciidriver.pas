@@ -18,10 +18,6 @@
 {$ENDIF}
 unit WestASCIIDriver;
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF}
-
 interface
 
 uses
@@ -306,7 +302,7 @@ type
     function    DeviceActive(DeviceID:TWestAddressRange):TProtocolIOResult;
 
     // @seealso(TProtocolDriver.SizeOfTag);
-    function SizeOfTag(Tag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE; override;
+    function SizeOfTag(aTag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE; override;
 
     // @seealso(TProtocolDriver.OpenTagEditor);
     procedure OpenTagEditor(InsertHook: TAddTagInEditorHook;
@@ -1289,7 +1285,7 @@ begin
   WestReg.LastReadResult:=stablereg.IOResult;
 end;
 
-function  TWestASCIIDriver.SizeOfTag(Tag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE;
+function  TWestASCIIDriver.SizeOfTag(aTag: TTag; isWrite: Boolean; var ProtocolTagType: TProtocolTagType): BYTE;
 begin
   // todos os registradores do west são de 32 bits (ponto flutuante);
   //

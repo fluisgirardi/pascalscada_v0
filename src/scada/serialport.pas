@@ -12,11 +12,6 @@
 {$ENDIF}
 unit SerialPort;
 
-{$IFDEF FPC}
-{$LongStrings ON}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

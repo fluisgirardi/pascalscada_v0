@@ -12,10 +12,6 @@
 {$ENDIF}
 unit ustructuremapper;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -52,7 +48,7 @@ type
     procedure BitBtn2Click(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormClose(Sender: TObject; var aAction: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
   private
@@ -98,33 +94,33 @@ end;
 
 procedure TfrmStructureEditor.Button1Click(Sender: TObject);
 var
-  tag, lastitem:TS7TagItemEditor;
+  aTag, lastitem:TS7TagItemEditor;
 begin
-  tag:=TS7TagItemEditor.Create(Self);
-  tag.Parent := ScrollBox1;
-  tag.PopulateCombo;
-  tag.OnCheckNames:=CheckNames;
-  tag.OnUpClick:=btnUpClick;
-  tag.OnDownClickEvent:=btnDownClick;
-  tag.OnDelClickEvent:=btnDelClick;
-  tag.OnBitsClickEvent:=btnBitsClick;
-  tag.OnDelBitItem:=BitItemDeleted;
-  tag.TagScan:=1000;
-  tag.TagType:=pttDefault;
-  tag.SwapBytes:=false;
-  tag.SwapWords:=false;
+  aTag:=TS7TagItemEditor.Create(Self);
+  aTag.Parent := ScrollBox1;
+  aTag.PopulateCombo;
+  aTag.OnCheckNames:=@CheckNames;
+  aTag.OnUpClick:=@btnUpClick;
+  aTag.OnDownClickEvent:=@btnDownClick;
+  aTag.OnDelClickEvent:=@btnDelClick;
+  aTag.OnBitsClickEvent:=@btnBitsClick;
+  aTag.OnDelBitItem:=@BitItemDeleted;
+  aTag.TagScan:=1000;
+  aTag.TagType:=pttDefault;
+  aTag.SwapBytes:=false;
+  aTag.SwapWords:=false;
   if FTagList.Count>0 then begin
     lastitem:=TS7TagItemEditor(FTagList.Items[FTagList.Count-1]);
-    tag.Top:=lastitem.Top+lastitem.Height;
+    aTag.Top:=lastitem.Top+lastitem.Height;
   end else begin
-    tag.Top:=0;
+    aTag.Top:=0;
   end;
 
-  while not tag.AcceptName('StructItem'+IntToStr(FItemId)) do
+  while not aTag.AcceptName('StructItem'+IntToStr(FItemId)) do
     inc(FItemId);
-  tag.TagName:='StructItem'+IntToStr(FItemId);  
+  aTag.TagName:='StructItem'+IntToStr(FItemId);
 
-  FTagList.Add(tag);
+  FTagList.Add(aTag);
 end;
 
 procedure TfrmStructureEditor.BitBtn2Click(Sender: TObject);
@@ -146,7 +142,7 @@ begin
 end;
 
 procedure TfrmStructureEditor.FormClose(Sender: TObject;
-  var Action: TCloseAction);
+  var aAction: TCloseAction);
 begin
   //
 end;
@@ -161,7 +157,7 @@ var
   t,b:LongInt;
 begin
   for t:=0 to FTagList.Count-1 do begin
-    if FTagList.Items[t]=Sender then continue;
+    if TObject(FTagList.Items[t])=Sender then continue;
     if TS7TagItemEditor(FTagList.Items[t]).TagName=NewName then begin
       AcceptNewName:=false;
       exit;
@@ -203,22 +199,22 @@ procedure TfrmStructureEditor.btnDownClick(Sender:TObject);
 var
   idx:LongInt;
   nexttop, actualTop:LongInt;
-  next:TS7TagItemEditor;
+  aNext:TS7TagItemEditor;
 begin
   if not (Sender is TS7TagItemEditor) then exit;
 
   idx := FTagList.IndexOf(Sender);
   if (idx<>-1) and (idx<(FTagList.Count-1)) then begin
-    next:=TS7TagItemEditor(FTagList.Items[idx+1]);
+    aNext:=TS7TagItemEditor(FTagList.Items[idx+1]);
 
-    nexttop:=next.Top;
+    nexttop:=aNext.Top;
     actualTop:=(Sender as TS7TagItemEditor).Top;
 
     FTagList.Exchange(idx+1, idx);
 
     (Sender as TS7TagItemEditor).Top:=nexttop;
-    next.TabOrder:=(Sender as TS7TagItemEditor).TabOrder;
-    next.Top:=actualTop;
+    aNext.TabOrder:=(Sender as TS7TagItemEditor).TabOrder;
+    aNext.Top:=actualTop;
   end;
 end;
 
@@ -352,4 +348,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.

@@ -14,10 +14,6 @@
 {$ENDIF}
 unit PLCStructElement;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -45,7 +41,7 @@ type
     //: @seealso(TPLCTag.GetValueRaw)
     function GetValueRaw: Double; override;
     //: @seealso(TPLCNumber.SetValueRaw)
-    procedure SetValueRaw(Value: Double); override;
+    procedure SetValueRaw(aValue: Double); override;
     //: @seealso(TPLCBlockElement.SetIndex)
     procedure SetIndex(i: Cardinal); override;
     //: @seealso(TPLCTag.SetTagType)
@@ -214,13 +210,13 @@ begin
   end;
 end;
 
-procedure TPLCStructItem.SetValueRaw(Value:Double);
+procedure TPLCStructItem.SetValueRaw(aValue:Double);
 var
   blkvalues, values:TArrayOfDouble;
 begin
   if Assigned(PBlock) then begin
     SetLength(values,1);
-    values[0]:=Value;
+    values[0]:=aValue;
     blkvalues := TagValuesToPLCValues(values,0);
     if PBlock.SyncWrites then
       PBlock.Write(blkvalues,Length(blkvalues),PIndex)

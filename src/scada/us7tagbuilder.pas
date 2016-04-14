@@ -12,10 +12,6 @@
 {$ENDIF}
 unit us7tagbuilder;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -240,7 +236,7 @@ type
     procedure MemoryAreaClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormClose(Sender: TObject; var aAction: TCloseAction);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure Button1Click(Sender: TObject);
     procedure btnUpClick(Sender: TObject);
@@ -326,7 +322,7 @@ begin
     Left :=16;
     Top  := 2;
     Width:=137;
-    OnExit:=edtItemNameExit;
+    OnExit:=@edtItemNameExit;
   end;
 
   lblStart:=TLabel.Create(Self);
@@ -364,7 +360,7 @@ begin
     MinValue:=0;
     Top:=2;
     Width:=41;
-    OnChange := SpinEditChanges;
+    OnChange := @SpinEditChanges;
   end;
 
   spinEnd:=TSpinEdit.Create(Self);
@@ -376,7 +372,7 @@ begin
     MinValue:=0;
     Top:=2;
     Width:=41;
-    OnChange := SpinEditChanges;
+    OnChange := @SpinEditChanges;
   end;
 
   btnDel:=TButton.Create(Self);
@@ -387,7 +383,7 @@ begin
     Left:=503;
     Top:=3;
     Width:=33;
-    OnClick:=btnDelClick;
+    OnClick:=@btnDelClick;
   end;
 end;
 
@@ -500,7 +496,7 @@ begin
   DelTimer:=TTimer.Create(Self);  
   DelTimer.Enabled:=false;
   DelTimer.Interval:=10;
-  DelTimer.OnTimer:=OnDelTimer;
+  DelTimer.OnTimer:=@OnDelTimer;
 
   FSkip:=false;
   FSwapWords:=false;
@@ -533,7 +529,7 @@ begin
     Width:=152;
     Left:=2;
     Top:=2;
-    OnExit:=edtItemNameExit;
+    OnExit:=@edtItemNameExit;
   end;
 
   //correção
@@ -560,10 +556,10 @@ begin
     top:=2;
     Style:=csDropDownList;
     Width:=78;
-    OnChange:=optChange;
-    OnEnter:=edtItemNameExit;
-    OnClick:=edtItemNameExit;
-    OnDropDown:=edtItemNameExit;
+    OnChange:=@optChange;
+    OnEnter:=@edtItemNameExit;
+    OnClick:=@edtItemNameExit;
+    OnDropDown:=@edtItemNameExit;
   end;
 
   spinScan:=TSpinEdit.Create(Self);
@@ -576,7 +572,7 @@ begin
     Value:=1000;
     Top:=2;
     Width:=55;
-    OnChange:=optChange;
+    OnChange:=@optChange;
   end;
 
   optSwapBytes:=TCheckBox.Create(Self);
@@ -589,7 +585,7 @@ begin
     Width:=50;
     Checked:=FSwapBytes;
     Enabled:=false;
-    OnClick:=optChange;
+    OnClick:=@optChange;
   end;
 
   optSwapWords:=TCheckBox.Create(Self);
@@ -602,7 +598,7 @@ begin
     Width:=51;
     Checked:=FSwapWords;
     Enabled:=false;
-    OnClick:=optChange;
+    OnClick:=@optChange;
   end;
 
   optSkip:=TCheckBox.Create(Self);
@@ -614,7 +610,7 @@ begin
     Top:=4;
     Width:=15;
     Checked:=FSkip;
-    OnClick:=optChange;
+    OnClick:=@optChange;
   end;
 
   btnUp:=TButton.Create(Self);
@@ -625,7 +621,7 @@ begin
     Left:=437;
     Top:=3;
     Width:=33;
-    OnClick:=btnClick;
+    OnClick:=@btnClick;
   end;
 
   btnDown:=TButton.Create(Self);
@@ -636,7 +632,7 @@ begin
     Left:=470;
     Top:=3;
     Width:=33;
-    OnClick:=btnClick;
+    OnClick:=@btnClick;
   end;
 
   btnDel:=TButton.Create(Self);
@@ -647,7 +643,7 @@ begin
     Left:=503;
     Top:=3;
     Width:=33;
-    OnClick:=btnClick;
+    OnClick:=@btnClick;
   end;
 
   btnBits:=TButton.Create(Self);
@@ -658,7 +654,7 @@ begin
     Left:=536;
     Top:=3;
     Width:=28;
-    OnClick:=btnClick;
+    OnClick:=@btnClick;
   end;
 end;
 
@@ -727,8 +723,8 @@ var
 begin
   tb:=TTagBitItemEditor.Create(Self);
   tb.Parent:=BitArea;
-  tb.OnDelClick:=DelBitItem;
-  tb.OnCheckNames:=CheckNames;
+  tb.OnDelClick:=@DelBitItem;
+  tb.OnCheckNames:=@CheckNames;
   tb.Top:=BitList.Count*tb.Height+1;
   BitList.Add(tb);
   Self.Height:=TagArea.Height+(tb.Height*BitList.Count)+3;
@@ -1124,7 +1120,7 @@ begin
 end;
 
 procedure TfrmS7TagBuilder.FormClose(Sender: TObject;
-  var Action: TCloseAction);
+  var aAction: TCloseAction);
 begin
   //
 end;
@@ -1137,52 +1133,52 @@ end;
 
 procedure TfrmS7TagBuilder.Button1Click(Sender: TObject);
 var
-  tag, lastitem:TS7TagItemEditor;
+  aTag, lastitem:TS7TagItemEditor;
 begin
   inc(FItemId);
 
-  tag:=TS7TagItemEditor.Create(Self);
-  tag.Parent := ScrollBox1;
-  tag.PopulateCombo;
-  tag.OnCheckNames:=CheckNames;
-  tag.OnUpClick:=btnUpClick;
-  tag.OnDownClickEvent:=btnDownClick;
-  tag.OnDelClickEvent:=btnDelClick;
-  tag.OnBitsClickEvent:=btnBitsClick;
-  tag.OnTypeChange:=StructItemTypeChanged;
-  tag.OnSkipChange:=SkipChanged;
-  tag.OnDelBitItem:=BitItemDeleted;
-  tag.TagScan:=1000;
-  tag.TagType:=pttDefault;
-  tag.SwapBytes:=false;
-  tag.SwapWords:=false;
+  aTag:=TS7TagItemEditor.Create(Self);
+  aTag.Parent := ScrollBox1;
+  aTag.PopulateCombo;
+  aTag.OnCheckNames:=@CheckNames;
+  aTag.OnUpClick:=@btnUpClick;
+  aTag.OnDownClickEvent:=@btnDownClick;
+  aTag.OnDelClickEvent:=@btnDelClick;
+  aTag.OnBitsClickEvent:=@btnBitsClick;
+  aTag.OnTypeChange:=@StructItemTypeChanged;
+  aTag.OnSkipChange:=@SkipChanged;
+  aTag.OnDelBitItem:=@BitItemDeleted;
+  aTag.TagScan:=1000;
+  aTag.TagType:=pttDefault;
+  aTag.SwapBytes:=false;
+  aTag.SwapWords:=false;
   if TagList.Count>0 then begin
     lastitem:=TS7TagItemEditor(taglist.Items[TagList.Count-1]);
-    tag.Top:=lastitem.Top+lastitem.Height;
+    aTag.Top:=lastitem.Top+lastitem.Height;
   end else begin
-    tag.Top:=0;
+    aTag.Top:=0;
   end;
 
-  tag.EnableScanRate(optplctagnumber.Checked);
+  aTag.EnableScanRate(optplctagnumber.Checked);
   case MemoryArea.ItemIndex of
     0,1,6: begin
-      tag.TagType:=pttByte;
+      aTag.TagType:=pttByte;
     end;
     4,5,7..11: begin
-      tag.TagType:=pttWord;
+      aTag.TagType:=pttWord;
     end;
     2,3,12: begin
       //does nothing...
     end;
   end;
   
-  tag.EnableTagType((not optplcblock.Checked) and (MemoryArea.ItemIndex in [2,3,12]));
+  aTag.EnableTagType((not optplcblock.Checked) and (MemoryArea.ItemIndex in [2,3,12]));
 
-  TagList.Add(tag);
+  TagList.Add(aTag);
 
-  while not tag.AcceptName('StructItem'+IntToStr(FItemId)) do
+  while not aTag.AcceptName('StructItem'+IntToStr(FItemId)) do
     inc(FItemId);
-  tag.TagName:='StructItem'+IntToStr(FItemId);
+  aTag.TagName:='StructItem'+IntToStr(FItemId);
   UpdateStatusAndBlockName;
   FStructureModified:=true;
 end;
@@ -1216,23 +1212,23 @@ procedure TfrmS7TagBuilder.btnDownClick(Sender: TObject);
 var
   idx:LongInt;
   nexttop, actualTop:LongInt;
-  next:TS7TagItemEditor;
+  aNext:TS7TagItemEditor;
 begin
   if not (Sender is TS7TagItemEditor) then exit;
 
   idx := TagList.IndexOf(Sender);
   if (idx<>-1) and (idx<(TagList.Count-1)) then begin
     FStructureModified:=true;  
-    next:=TS7TagItemEditor(TagList.Items[idx+1]);
+    aNext:=TS7TagItemEditor(TagList.Items[idx+1]);
 
-    nexttop:=next.Top;
+    nexttop:=aNext.Top;
     actualTop:=(Sender as TS7TagItemEditor).Top;
 
     TagList.Exchange(idx+1, idx);
 
     (Sender as TS7TagItemEditor).Top:=nexttop;
-    next.TabOrder:=(Sender as TS7TagItemEditor).TabOrder;
-    next.Top:=actualTop;
+    aNext.TabOrder:=(Sender as TS7TagItemEditor).TabOrder;
+    aNext.Top:=actualTop;
   end;
   UpdateStatusAndBlockName;
 end;
@@ -1397,7 +1393,7 @@ var
   t,b:LongInt;
 begin
   for t:=0 to TagList.Count-1 do begin
-    if TagList.Items[t]=Sender then continue;
+    if TObject(TagList.Items[t])=Sender then continue;
     if TS7TagItemEditor(TagList.Items[t]).TagName=NewName then begin
       AcceptNewName:=false;
       exit;

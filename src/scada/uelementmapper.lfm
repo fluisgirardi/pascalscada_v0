@@ -13,12 +13,13 @@ object frmMapElements: TfrmMapElements
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
-  LCLVersion = '0.9.29'
+  LCLVersion = '1.7'
+  Visible = False
   object Label1: TLabel
     Left = 0
-    Height = 19
+    Height = 14
     Top = 8
-    Width = 127
+    Width = 142
     Caption = '&Map elements from index'
     FocusControl = startindex
     ParentColor = False
@@ -37,16 +38,16 @@ object frmMapElements: TfrmMapElements
   end
   object Label3: TLabel
     Left = 0
-    Height = 19
+    Height = 14
     Top = 56
-    Width = 122
+    Width = 134
     Caption = '&Names of new elements'
     FocusControl = elementnames
     ParentColor = False
   end
   object startindex: TSpinEdit
     Left = 0
-    Height = 24
+    Height = 26
     Top = 24
     Width = 120
     MaxValue = 0
@@ -54,7 +55,7 @@ object frmMapElements: TfrmMapElements
   end
   object endindex: TSpinEdit
     Left = 168
-    Height = 24
+    Height = 26
     Top = 23
     Width = 120
     MaxValue = 0
@@ -62,7 +63,7 @@ object frmMapElements: TfrmMapElements
   end
   object elementnames: TEdit
     Left = 0
-    Height = 24
+    Height = 26
     Top = 72
     Width = 151
     TabOrder = 2
@@ -74,31 +75,31 @@ object frmMapElements: TfrmMapElements
     Top = 56
     Width = 113
     Caption = 'Name pattern'
-    ClientHeight = 43
-    ClientWidth = 111
+    ClientHeight = 44
+    ClientWidth = 105
     TabOrder = 3
     object Label4: TLabel
       Left = 3
-      Height = 19
+      Height = 14
       Top = 3
-      Width = 84
+      Width = 92
       Caption = '%t - Block name'
       ParentColor = False
     end
     object Label5: TLabel
       Left = 3
-      Height = 19
+      Height = 14
       Top = 19
-      Width = 111
+      Width = 122
       Caption = '%e - Element number'
       ParentColor = False
     end
   end
   object ElementsStartFromOne: TCheckBox
     Left = 0
-    Height = 22
+    Height = 20
     Top = 96
-    Width = 165
+    Width = 190
     Caption = '&Element number start from 1'
     TabOrder = 4
   end
@@ -123,4 +124,4 @@ object frmMapElements: TfrmMapElements
     OnClick = Button2Click
     TabOrder = 6
   end
-end
+end

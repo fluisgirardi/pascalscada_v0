@@ -15,7 +15,6 @@
 unit ModBusTCP;
 
 {$IFDEF FPC}
-{$mode delphi}
 {$IFDEF DEBUG}
   {$DEFINE FDEBUG}
 {$ENDIF}

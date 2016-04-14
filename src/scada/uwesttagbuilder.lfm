@@ -10,7 +10,8 @@ object WestTagBuilder: TWestTagBuilder
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   OnCreate = FormCreate
-  LCLVersion = '0.9.28.3'
+  LCLVersion = '1.7'
+  Visible = False
   object Panel1: TPanel
     Left = 0
     Height = 43
@@ -33,13 +34,13 @@ object WestTagBuilder: TWestTagBuilder
       Left = 271
       Height = 14
       Top = 13
-      Width = 10
+      Width = 19
       Caption = 'at�'
       ParentColor = False
     end
     object AdrStart: TSpinEdit
       Left = 216
-      Height = 21
+      Height = 26
       Top = 10
       Width = 49
       MaxValue = 99
@@ -49,7 +50,7 @@ object WestTagBuilder: TWestTagBuilder
     end
     object AdrEnd: TSpinEdit
       Left = 292
-      Height = 21
+      Height = 26
       Top = 10
       Width = 49
       MaxValue = 99
@@ -59,9 +60,9 @@ object WestTagBuilder: TWestTagBuilder
     end
     object ZeroFill: TCheckBox
       Left = 352
-      Height = 17
+      Height = 20
       Top = 10
-      Width = 177
+      Width = 219
       Caption = 'Preencher com zeros o endereço'
       TabOrder = 2
     end
@@ -72,6 +73,8 @@ object WestTagBuilder: TWestTagBuilder
     Height = 350
     Top = 63
     Width = 564
+    HorzScrollBar.Page = 1
+    VertScrollBar.Page = 1
     Align = alClient
     BorderStyle = bsNone
     Color = clBtnFace
@@ -123,7 +126,7 @@ object WestTagBuilder: TWestTagBuilder
       Left = 5
       Height = 14
       Top = 5
-      Width = 48
+      Width = 56
       Caption = 'Variável'
       Font.Height = -11
       Font.Name = 'MS Sans Serif'
@@ -135,7 +138,7 @@ object WestTagBuilder: TWestTagBuilder
       Left = 196
       Height = 14
       Top = 6
-      Width = 74
+      Width = 80
       Caption = 'Nome do tag'
       Font.Height = -11
       Font.Name = 'MS Sans Serif'
@@ -147,7 +150,7 @@ object WestTagBuilder: TWestTagBuilder
       Left = 402
       Height = 14
       Top = 6
-      Width = 57
+      Width = 63
       Caption = 'Varredura'
       Font.Height = -11
       Font.Name = 'MS Sans Serif'

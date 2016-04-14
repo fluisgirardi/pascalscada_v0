@@ -12,10 +12,6 @@
 {$ENDIF}
 unit UserScale;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

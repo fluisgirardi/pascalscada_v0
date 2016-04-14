@@ -6,10 +6,6 @@
 {$ENDIF}
 unit uModbusTagBuilder;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -202,7 +198,7 @@ begin
     Height  := 21;
     Width   := 22;
     Caption := 'Up';
-    OnClick := UpClick;
+    OnClick := @UpClick;
   end;
 
   Down:=TButton.Create(Self);
@@ -213,7 +209,7 @@ begin
     Height  := 21;
     Width   := 34;
     Caption := 'Down';
-    OnClick := DownClick;
+    OnClick := @DownClick;
   end;
 
   Del:=TButton.Create(Self);
@@ -224,7 +220,7 @@ begin
     Height  := 21;
     Width   := 25;
     Caption := 'Del';
-    OnClick := DelClick;
+    OnClick := @DelClick;
   end;
 end;
 
@@ -463,7 +459,7 @@ begin
   newitem.Parent := ScrollBox1;
   newitem.Prior := CurItem;
   newitem.Next  := nil;
-  newitem.OnDelClick := DelItem;
+  newitem.OnDelClick := @DelItem;
   newitem.Top := 200;
 
   if CurItem<>nil then

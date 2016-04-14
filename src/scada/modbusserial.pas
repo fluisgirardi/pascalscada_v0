@@ -14,10 +14,6 @@
 {$ENDIF}
 unit ModBusSerial;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

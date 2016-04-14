@@ -20,10 +20,6 @@
 {$ENDIF}
 unit Tag;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -1095,22 +1091,23 @@ begin
   //notifica controles e objetos dependentes
   //
   //Notify the dependent objects.
-  for c:=0 to High(PNotificationInterfaces) do
-    try
+  for c:=0 to High(PNotificationInterfaces) do begin
+    //try
       PNotificationInterfaces[c].NotifyTagChange(self);
-    except
-    end;
+    //except
+    //end;
+  end;
 
   //notificação de mudanca após notificar os controles.
   //
   //Notify the change after notify the dependent objects.
-  try
+  //try
     if Assigned(POnValueChangeLast) then
       POnValueChangeLast(Self);
-  except
-  end;
+  //except
+  //end;
 
-  if Assigned(POnAsyncValueChange) then begin
+  if Assigned(POnAsyncValueChange) and (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then begin
     {$IFNDEF CONSOLEPASCALSCADA}
       x:=GetValueChangeData;
     {$ELSE}
@@ -1121,7 +1118,7 @@ begin
     {$IFDEF FPC}
 
       {$IFNDEF CONSOLEPASCALSCADA}
-        Application.QueueAsyncCall(ASyncMethod,PtrInt(x));
+        Application.QueueAsyncCall(@ASyncMethod,PtrInt(x));
       {$ELSE}
         TThread.Queue(nil, ASyncMethod);
       {$ENDIF}
@@ -1190,11 +1187,12 @@ procedure TTag.NotifyReadOk;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do
-    try
+  for c:=0 to High(PNotificationInterfaces) do begin
+    //try
       PNotificationInterfaces[c].NotifyReadOk;
-    except
-    end;
+    //except
+    //end;
+  end;
 
   if Assigned(POnReadOk) then
     POnReadOk(self)
@@ -1204,11 +1202,12 @@ procedure TTag.NotifyReadFault;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do
-    try
+  for c:=0 to High(PNotificationInterfaces) do begin
+    //try
       PNotificationInterfaces[c].NotifyReadFault;
-    except
-    end;
+    //except
+    //end;
+  end;
 
   if Assigned(POnReadFail) then
     POnReadFail(self)
@@ -1227,11 +1226,12 @@ procedure TTag.NotifyWriteOk;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do
-    try
+  for c:=0 to High(PNotificationInterfaces) do begin
+    //try
       PNotificationInterfaces[c].NotifyWriteOk;
-    except
-    end;
+    //except
+    //end;
+  end;
 
   if Assigned(POnWriteOk) then
     POnWriteOk(self)
@@ -1241,11 +1241,12 @@ procedure TTag.NotifyWriteFault;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do
-    try
+  for c:=0 to High(PNotificationInterfaces) do begin
+    //try
       PNotificationInterfaces[c].NotifyWriteFault;
-    except
-    end;
+    //except
+    //end;
+  end;
 
   if Assigned(POnWriteFail) then
     POnWriteFail(self)

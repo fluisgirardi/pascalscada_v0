@@ -21,10 +21,6 @@
 {$ENDIF}
 unit PLCBlock;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -185,7 +181,7 @@ end;
 
 function TPLCBlock.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin
-  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=@TPLCBlock.TagCommandCallBack);
+  Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=Pointer(@TPLCBlock.TagCommandCallBack));
 end;
 
 procedure TPLCBlock.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);

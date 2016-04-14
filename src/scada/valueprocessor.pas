@@ -12,10 +12,6 @@
 {$ENDIF}
 unit ValueProcessor;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -186,7 +182,7 @@ type
     procedure SetScaleProcessor(SP:TScaleProcessor);
   protected
     //: @exclude
-    function  GetDisplayName: string; override;
+    function  GetDisplayName: AnsiString; override;
   public
     {$IFDEF PORTUGUES}
     {:
@@ -281,7 +277,7 @@ type
     function GetOwner: TPersistent; override;
   public
     //: @exclude
-    constructor Create(Owner:TPersistent);
+    constructor Create(aOwner:TPersistent);
 
     {$IFDEF PORTUGUES}
     {:
@@ -410,9 +406,9 @@ type
     destructor  Destroy; override;
 
     //: @seealso(TScalePIPE.SetInGetOut)
-    function SetInGetOut(Sender: TComponent; Input: Double): Double; override;
+    function SetInGetOut(Sender: TComponent; aInput: Double): Double; override;
     //: @seealso(TScalePIPE.SetOutGetIn)
-    function SetOutGetIn(Sender: TComponent; Output: Double): Double; override;
+    function SetOutGetIn(Sender: TComponent; aOutput: Double): Double; override;
   published
 
     {$IFDEF PORTUGUES}
@@ -450,7 +446,7 @@ begin
   SProcessor := SP;
 end;
 
-function TScaleQueueItem.GetDisplayName: string;
+function TScaleQueueItem.GetDisplayName: AnsiString;
 begin
    if SProcessor<>nil then
       Result := SProcessor.Name
@@ -483,10 +479,10 @@ end;
 // TScalePIPE implementation
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TScaleQueue.Create(Owner:TPersistent);
+constructor TScaleQueue.Create(aOwner:TPersistent);
 begin
   inherited Create(TScaleQueueItem);
-  FOwner:=Owner;
+  FOwner:=aOwner;
 end;
 
 function TScaleQueue.GetOwner:TPersistent;
@@ -550,14 +546,14 @@ begin
   FScaleQueue.Assign(ScaleQueue);
 end;
 
-function TScalesQueue.SetInGetOut(Sender:TComponent; Input:Double):Double;
+function TScalesQueue.SetInGetOut(Sender:TComponent; aInput:Double):Double;
 begin
-   Result := FScaleQueue.SetInGetOut(Sender,Input);
+   Result := FScaleQueue.SetInGetOut(Sender,aInput);
 end;
 
-function TScalesQueue.SetOutGetIn(Sender:TComponent; Output:Double):Double;
+function TScalesQueue.SetOutGetIn(Sender:TComponent; aOutput:Double):Double;
 begin
-   Result := FScaleQueue.SetOutGetIn(Sender, Output);
+   Result := FScaleQueue.SetOutGetIn(Sender, aOutput);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////

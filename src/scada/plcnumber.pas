@@ -21,10 +21,6 @@
 {$ENDIF}
 unit PLCNumber;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

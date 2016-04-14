@@ -19,10 +19,6 @@
 {$ENDIF}
 unit PLCTag;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -1025,7 +1021,7 @@ begin
   tr.WriteFunction := PWriteFunction;
   tr.Retries := PRetries;
   tr.UpdateTime := PUpdateTime;
-  tr.CallBack := TagCommandCallBack;
+  tr.CallBack := @TagCommandCallBack;
 end;
 
 procedure TPLCTag.ScanRead;
@@ -1062,7 +1058,7 @@ end;
 
 function TPLCTag.IsMyCallBack(Cback:TTagCommandCallBack):Boolean;
 begin
-  Result:=(TMethod(Cback).Data=Self);
+  Result:=(TMethod(Cback).Data=Pointer(Self));
 end;
 
 procedure TPLCTag.Loaded;

@@ -12,10 +12,6 @@
 {$ENDIF}
 unit tcp_udpport;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 {$I ../common/delphiver.inc}
 
 interface
@@ -207,7 +203,7 @@ begin
   freconnectTimer:={$IFDEF FPC_BUG}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(nil);
   freconnectTimer.Enabled:=false;
   freconnectTimer.Interval:=5000;
-  freconnectTimer.OnTimer:=TryReconnectTimer;
+  freconnectTimer.OnTimer:=@TryReconnectTimer;
 end;
 
 destructor  TTCP_UDPPort.Destroy;
@@ -320,7 +316,7 @@ begin
     end;
 
     if lidos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, CommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, @CommPortDisconected) then
         break;
       if incRetries then
         inc(tentativas);
@@ -357,7 +353,7 @@ begin
     end;
 
     if escritos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, CommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, @CommPortDisconected) then
         break;
       if incRetries then
         inc(tentativas);
@@ -601,4 +597,4 @@ begin
 
 end;
 
-end.
+end.

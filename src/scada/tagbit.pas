@@ -20,10 +20,6 @@
 {$ENDIF}
 unit TagBit;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -81,14 +77,14 @@ type
     procedure SetStartBit(b:TBitRange);
     procedure SetEndBit(b:TBitRange);
 
-    function  GetBits(value:double):Double;
-    function  SetBits(OriginalValue, Value:Double):Double;
+    function  GetBits(avalue:double):Double;
+    function  SetBits(OriginalValue, aValue:Double):Double;
     function  GetBitMask:LongInt;
     function  GetInvBitMask:LongInt;
 
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
-    function  IsValidValue(Value:Variant):Boolean;
+    function  IsValidValue(aValue:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
 
     //IHMITagInterface
@@ -241,13 +237,15 @@ begin
             raise exception.Create(SinvalidValue);
 end;
 
-function  TTagBit.IsValidValue(Value:Variant):Boolean;
+function  TTagBit.IsValidValue(aValue:Variant):Boolean;
 var
    aux:Double;
+   aValueStr: AnsiString;
 begin
-   Result := VarIsNumeric(Value) or
-             (VarIsStr(Value) and TryStrToFloat(Value,aux)) or
-             VarIsType(Value, varboolean);
+   aValueStr:=aValue;
+   Result := VarIsNumeric(aValue) or
+             (VarIsStr(aValue) and TryStrToFloat(aValueStr,aux)) or
+             VarIsType(aValue, varboolean);
 end;
 
 function TTagBit.GetValueTimestamp:TDatetime;
@@ -267,16 +265,16 @@ begin
      end;
 end;
 
-function  TTagBit.GetBits(value:double):Double;
+function  TTagBit.GetBits(aValue:double):Double;
 begin
-   Result:=((Trunc(value) and PNormalMask) shr PStartBit);
+   Result:=((Trunc(aValue) and PNormalMask) shr PStartBit);
 end;
 
-function  TTagBit.SetBits(OriginalValue, Value:Double):Double;
+function  TTagBit.SetBits(OriginalValue, aValue:Double):Double;
 begin
    Result :=
             ((Trunc(OriginalValue) and PInvMask) or
-             ((Trunc(value) shl PStartBit) and PNormalMask));
+             ((Trunc(aValue) shl PStartBit) and PNormalMask));
 end;
 
 function  TTagBit.GetBitMask:LongInt;
@@ -349,13 +347,13 @@ end;
 
 procedure TTagBit.NotifyTagChange(Sender:TObject);
 var
-  value, bold, bnew :double;
+  aValue, bold, bnew :double;
 begin
   if PNumber<>nil then begin
     if PUseRaw then
-      value := PNumber.ValueRaw
+      aValue := PNumber.ValueRaw
     else
-      value := PNumber.Value;
+      aValue := PNumber.Value;
 
     bold := GetBits(POldValue);
     bnew := GetBits(value);

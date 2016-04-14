@@ -12,10 +12,6 @@ Unit that implements the West 6100+ TagBuilder wizard.
 {$ENDIF}
 unit uwesttagbuilder;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -227,4 +223,4 @@ initialization
   {$IFEND}
 {$ENDIF}
 
-end.
+end.
