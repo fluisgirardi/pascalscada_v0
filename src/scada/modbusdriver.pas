@@ -23,10 +23,13 @@ interface
 
 uses
   SysUtils, Classes, CommTypes, ProtocolDriver, ProtocolTypes, Tag, PLCTagNumber,
-  PLCMemoryManager, PLCBlock, PLCString
+  PLCMemoryManager, PLCBlock, PLCString, fgl, modbus_tagscan_req
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
+
+  TReqList = specialize TFPGList<TReqItem>;
+
   {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -269,8 +272,39 @@ type
 
 implementation
 
-uses crossdatetime, pascalScadaMTPCPU;
+uses crossdatetime, pascalScadaMTPCPU, math, dateutils;
 
+function SortGenericTagList(const Item1, Item2: TReqItem): Integer;
+var
+  BitCombination:Integer;
+  ScanPercent1, ScanPercent2:Double;
+begin
+
+  BitCombination:=ifthen(Item1.NeedUpdate,1,0)+ifthen(Item2.NeedUpdate,2,0);
+  case BitCombination of
+    1:
+      Result:=-1;
+    2:
+      Result:= 1;
+    0,3: begin
+      ScanPercent1:=0;
+      if Item1.UpdateRate<>0 then ScanPercent1:=(MilliSecondsBetween(Now,Item1.LastUpdate)/Item1.UpdateRate);
+
+      ScanPercent2:=0;
+      if Item2.UpdateRate<>0 then ScanPercent2:=(MilliSecondsBetween(Now,Item2.LastUpdate)/Item2.UpdateRate);
+
+
+      if ScanPercent1=ScanPercent2 then
+        Result:=0
+      else begin
+        if ScanPercent1>ScanPercent2 then
+          Result:=-1
+        else
+          Result:=1;
+      end;
+    end;
+  end;
+end;
 
 constructor TModBusDriver.Create(AOwner:TComponent);
 begin
@@ -520,6 +554,24 @@ var
   lastPLC:LongInt;
   tr:TTagRec;
   values:TArrayOfDouble;
+  EntireTagList:TReqList;
+  c: Integer;
+
+  procedure AddToTagList(station,func,startaddress,size, UpdateRate:LongInt; LastUpdate:TDateTime; NeedUpdate:Boolean);
+  var
+    info:TReqItem;
+  begin
+    info.station      :=station;
+    info.func         :=func;
+    info.startaddress :=startaddress;
+    info.size         :=size;
+    info.LastUpdate   :=LastUpdate;
+    info.UpdateRate   :=UpdateRate;
+    info.NeedUpdate   :=NeedUpdate;
+    info.Read         :=false;
+
+    EntireTagList.add(info);
+  end;
 begin
   try
     minScan := -1;
@@ -529,113 +581,49 @@ begin
       CrossThreadSwitch;
       exit;
     end;
+
+    EntireTagList:=TReqList.Create;
+
     for plc:= 0 to High(PModbusPLC) do begin
-      for block := 0 to High(PModBusPLC[plc].Outputs.Blocks) do
-        if PModBusPLC[plc].Outputs.Blocks[block].NeedRefresh then begin
-          done := true;
-          BuildTagRec(PModBusPLC[plc].Station,1,PModBusPLC[plc].Outputs.Blocks[block].AddressStart,PModBusPLC[plc].Outputs.Blocks[block].Size, tr);
-          FMustReleaseResources:=true;
-          DoRead(tr,values,false);
-          FMustReleaseResources:=false;
-        end else begin
-          if first then begin
-            lastType := 1;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].Outputs.Blocks[block];
-            minScan := PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
-            first:=False;
-          end;
-          if PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 1;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].Outputs.Blocks[block];
-            minScan := PModBusPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
-          end;
-        end;
+      for block := 0 to High(PModBusPLC[plc].Outputs.Blocks) do begin
+        AddToTagList(PModBusPLC[plc].Station,1,PModBusPLC[plc].Outputs.Blocks[block].AddressStart,PModBusPLC[plc].Outputs.Blocks[block].Size, PModBusPLC[plc].Outputs.Blocks[block].ScanTime, PModBusPLC[plc].Outputs.Blocks[block].LastUpdate,PModBusPLC[plc].Outputs.Blocks[block].NeedRefresh);
+      end;
 
-      for block := 0 to High(PModBusPLC[plc].Inputs.Blocks) do
-        if PModBusPLC[plc].Inputs.Blocks[block].NeedRefresh then begin
-          done := true;
-          BuildTagRec(PModBusPLC[plc].Station,2,PModBusPLC[plc].Inputs.Blocks[block].AddressStart,PModBusPLC[plc].Inputs.Blocks[block].Size, tr);
-          FMustReleaseResources:=true;
-          DoRead(tr,values,false);
-          FMustReleaseResources:=false;
-        end else begin
-          if first then begin
-            lastType := 2;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].Inputs.Blocks[block];
-            minScan := PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
-            first:=False;
-          end;
-          if PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 2;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].Inputs.Blocks[block];
-            minScan := PModBusPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
-          end;
-        end;
+      for block := 0 to High(PModBusPLC[plc].Inputs.Blocks) do begin
+        AddToTagList(PModBusPLC[plc].Station,2,PModBusPLC[plc].Inputs.Blocks[block].AddressStart,PModBusPLC[plc].Inputs.Blocks[block].Size,PModBusPLC[plc].Inputs.Blocks[block].ScanTime,PModBusPLC[plc].Inputs.Blocks[block].LastUpdate,PModBusPLC[plc].Inputs.Blocks[block].NeedRefresh);
+      end;
 
-      for block := 0 to High(PModBusPLC[plc].Registers.Blocks) do
-        if PModBusPLC[plc].Registers.Blocks[block].NeedRefresh then begin
-          done := true;
-          BuildTagRec(PModBusPLC[plc].Station,3,PModBusPLC[plc].Registers.Blocks[block].AddressStart,PModBusPLC[plc].Registers.Blocks[block].Size, tr);
-          FMustReleaseResources:=true;
-          DoRead(tr,values,false);
-          FMustReleaseResources:=false;
-        end else begin
-          if first then begin
-            lastType := 3;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].Registers.Blocks[block];
-            minScan := PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
-            first:=False;
-          end;
-          if PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 3;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].Registers.Blocks[block];
-            minScan := PModBusPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
-          end;
-        end;
+      for block := 0 to High(PModBusPLC[plc].Registers.Blocks) do begin
+        AddToTagList(PModBusPLC[plc].Station,3,PModBusPLC[plc].Registers.Blocks[block].AddressStart,PModBusPLC[plc].Registers.Blocks[block].Size,PModBusPLC[plc].Registers.Blocks[block].ScanTime,PModBusPLC[plc].Registers.Blocks[block].LastUpdate,PModBusPLC[plc].Registers.Blocks[block].NeedRefresh);
+      end;
 
-      for block := 0 to High(PModBusPLC[plc].AnalogReg.Blocks) do
-        if PModBusPLC[plc].AnalogReg.Blocks[block].NeedRefresh then begin
-          done := true;
-          BuildTagRec(PModBusPLC[plc].Station,4,PModBusPLC[plc].AnalogReg.Blocks[block].AddressStart,PModBusPLC[plc].AnalogReg.Blocks[block].Size, tr);
-          FMustReleaseResources:=true;
-          DoRead(tr,values,false);
-          FMustReleaseResources:=false;
-        end else begin
-          if first then begin
-            lastType := 4;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].AnalogReg.Blocks[block];
-            minScan := PModBusPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate;
-            first:=False;
-          end;
-          if PModBusPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 4;
-            lastPLC := PModBusPLC[plc].Station;
-            lastBlock := PModBusPLC[plc].AnalogReg.Blocks[block];
-            minScan := PModBusPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate;
-          end;
-        end;
+      for block := 0 to High(PModBusPLC[plc].AnalogReg.Blocks) do begin
+        AddToTagList(PModBusPLC[plc].Station,4,PModBusPLC[plc].AnalogReg.Blocks[block].AddressStart,PModBusPLC[plc].AnalogReg.Blocks[block].Size,PModBusPLC[plc].AnalogReg.Blocks[block].ScanTime,PModBusPLC[plc].AnalogReg.Blocks[block].LastUpdate,PModBusPLC[plc].AnalogReg.Blocks[block].NeedRefresh);
+      end;
     end;
-    //se nao fez leitura de nenhum bloco
-    //faz atualiza o bloco que esta quase vencendo
-    //o tempo de scan...
+
+    EntireTagList.Sort(@SortGenericTagList);
+
+    //faz a leitura do bloco que mais precisa ser lido
     //
-    //if does nothing, update the tag with the oldest timestamp
-    if (PReadSomethingAlways) and (Length(PModbusPLC)>0) and ((not done) and (not first)) then begin
+    //update the tag 
+    if (EntireTagList.Count>0) and (EntireTagList.Items[0].NeedUpdate or PReadSomethingAlways) then begin
       //compila o bloco do mais necessitado;
       //build the tagrec record.
-      BuildTagRec(lastPLC,lastType,lastBlock.AddressStart,lastBlock.Size, tr);
+      BuildTagRec(EntireTagList.Items[0].station,
+                  EntireTagList.Items[0].func,
+                  EntireTagList.Items[0].startaddress,
+                  EntireTagList.Items[0].size, tr);
       FMustReleaseResources:=true;
       DoRead(tr,values,false);
       FMustReleaseResources:=false;
     end else
       NeedSleep := 1;
+
+    for c:=EntireTagList.Count-1 downto 0 do begin
+      EntireTagList.Delete(c);
+    end;
+    FreeAndNil(EntireTagList);
   finally
     FProtocolReady:=true;
     SetLength(values,0);
