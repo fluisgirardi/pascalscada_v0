@@ -1,7 +1,5 @@
 unit hmicolorpropertyconnector;
 
-{$mode delphi}
-
 interface
 
 uses
@@ -30,7 +28,7 @@ type
   TColorZones = class(TZones)
   public
     //: @exclude
-    constructor Create(Owner:TPersistent);
+    constructor Create(aOwner:TPersistent);
 
     {$IFDEF PORTUGUES}
     //: Adiciona uma nova zona de cor.
@@ -63,7 +61,7 @@ type
     FResult: TColor;
     procedure SetZoneResult(AValue: TColor);
   protected
-    function GetDisplayName: string; override;
+    function GetDisplayName: AnsiString; override;
   published
     property ZoneResult:TColor read FResult write SetZoneResult;
   end;
@@ -129,7 +127,7 @@ type
     procedure RecalculateObjectsProperties;
     procedure SetHMITag(AValue: TPLCTag);
   protected
-    function GetDisplayName: string; override;
+    function GetDisplayName: AnsiString; override;
   public
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
@@ -324,11 +322,11 @@ constructor THMIColorPropertyConnector.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FConditionZones:=TColorZones.Create(Self);
-  FConditionZones.OnCollectionItemChange:=ConditionItemChanged;
-  FConditionZones.OnNeedCompState:=CollectionNeedsComponentState;
+  FConditionZones.OnCollectionItemChange:=@ConditionItemChanged;
+  FConditionZones.OnNeedCompState:=@CollectionNeedsComponentState;
   FObjects:=TObjectWithColorPropetiesColletion.Create(Self);
-  FObjects.OnCollectionItemChange:=ObjectItemChanged;
-  FObjects.OnNeedCompState:=CollectionNeedsComponentState;
+  FObjects.OnCollectionItemChange:=@ObjectItemChanged;
+  FObjects.OnNeedCompState:=@CollectionNeedsComponentState;
 end;
 
 destructor THMIColorPropertyConnector.Destroy;
@@ -439,7 +437,7 @@ begin
   FTag:=AValue;
 end;
 
-function TObjectWithColorPropetiesColletionItem.GetDisplayName: string;
+function TObjectWithColorPropetiesColletionItem.GetDisplayName: AnsiString;
 begin
   if Assigned(TargetObject) and (TargetObjectProperty<>'') then
     Result:=TargetObject.Name+'.'+TargetObjectProperty
@@ -451,8 +449,8 @@ constructor TObjectWithColorPropetiesColletionItem.Create(
   ACollection: TCollection);
 begin
   inherited Create(ACollection);
-  fRequiredTypeName:=PTypeInfo(TypeInfo(TColor)).Name;
-  fRequiredTypeKind:=PTypeInfo(TypeInfo(TColor)).Kind;
+  fRequiredTypeName:=PTypeInfo(TypeInfo(TColor))^.Name;
+  fRequiredTypeKind:=PTypeInfo(TypeInfo(TColor))^.Kind;
   FirstReadOk:=true;
 end;
 
@@ -490,9 +488,9 @@ end;
 
 { TColorZones}
 
-constructor TColorZones.Create(Owner: TPersistent);
+constructor TColorZones.Create(aOwner: TPersistent);
 begin
-  inherited Create(Owner, TColorZone);
+  inherited Create(aOwner, TColorZone);
 end;
 
 function TColorZones.Add: TColorZone;
@@ -509,7 +507,7 @@ begin
   NotifyChange;
 end;
 
-function TColorZone.GetDisplayName: string;
+function TColorZone.GetDisplayName: AnsiString;
 begin
   Result:=inherited GetDisplayName+', Result='+ColorToString(ZoneResult);
 end;

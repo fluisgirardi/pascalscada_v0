@@ -178,7 +178,7 @@ end;
 function  TPLCTagNumber.IsValidValue(aValue:Variant):Boolean;
 var
    aux:Double;
-   aValueStr: String;
+   aValueStr: AnsiString;
 begin
    aValueStr:=aValue;
    Result := VarIsNumeric(aValue) or

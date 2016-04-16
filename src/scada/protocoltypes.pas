@@ -259,7 +259,7 @@ type
     {$ELSE}
     //: Returns the tag value as string, including the format (if applicable), prefix and suffix.
     {$ENDIF}
-    function  GetValueAsText(Prefix, Sufix, Format:string; FormatDateTimeOptions:TFormatDateTimeOptions=[]):String;
+    function  GetValueAsText(Prefix, Sufix, Format:AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]):AnsiString;
 
     {$IFDEF PORTUGUES}
     //: Retorna o valor do tag como variant.
@@ -373,17 +373,17 @@ type
     {$ELSE}
     //: Returns the text value of tag.
     {$ENDIF}
-    function  GetValue:String;
+    function  GetValue:AnsiString;
 
     {$IFDEF PORTUGUES}
     //: Escreve um texto no tag.
     {$ELSE}
     //: Writes a text value on tag.
     {$ENDIF}
-    procedure SetValue(v:String);
+    procedure SetValue(v:AnsiString);
 
     //: Read/write a text value on tag.
-    property Value:String read GetValue write SetValue;
+    property Value:AnsiString read GetValue write SetValue;
   end;
 
 const

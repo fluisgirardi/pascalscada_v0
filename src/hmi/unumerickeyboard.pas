@@ -6,10 +6,6 @@
 {$ENDIF}
 unit unumerickeyboard;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

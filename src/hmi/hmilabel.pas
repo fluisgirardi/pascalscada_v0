@@ -12,10 +12,6 @@
 {$ENDIF}
 unit HMILabel;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

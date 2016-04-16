@@ -31,7 +31,7 @@ var
   ctrl, variable:LongInt;
   frm:TWestTagBuilder;
   sctrl,
-  formatmask:String;
+  formatmask:AnsiString;
 begin
   frm:=TWestTagBuilder.Create(nil);
   try

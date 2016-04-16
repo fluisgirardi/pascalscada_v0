@@ -13,6 +13,7 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
   FormStyle = fsStayOnTop
   OnCreate = FormCreate
   ShowInTaskBar = stNever
+  LCLVersion = '1.7'
   Visible = False
   object Btn_1: TSpeedButton
     Left = 1

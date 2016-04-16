@@ -54,7 +54,7 @@ type
   {$ENDIF}
   TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private
-    PValue:String;
+    PValue:AnsiString;
     PByteSize:Byte;
     PStringType:TPLCStringTypes;
     PStringSize:Cardinal;
@@ -66,13 +66,13 @@ type
     procedure SetStringType(stype:TPLCStringTypes);
     procedure SetDummySize(s:Cardinal);
 
-    function  GetValue:String;
-    procedure SetValue(Value:String);
+    function  GetValue:AnsiString;
+    procedure SetValue(Value:AnsiString);
     function  CalcBlockSize(IsWrite:Boolean):Cardinal;
-    function  EncodeValues(values:TArrayOfDouble):String;
+    function  EncodeValues(values:TArrayOfDouble):AnsiString;
     function  DecodeValue(value:AnsiString):TArrayOfDouble;
     
-    function  GetValueAsText(Prefix, Sufix, Format:string; FormatDateTimeOptions:TFormatDateTimeOptions=[]):String;
+    function  GetValueAsText(Prefix, Sufix, Format:AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]):AnsiString;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
@@ -103,7 +103,7 @@ type
     //: @seealso(TPLCTag.SetMemWriteFunction)
     procedure SetMemWriteFunction(v:Cardinal); override;
     //: @seealso(TPLCTag.SetPath)
-    procedure SetPath(v:String); override;
+    procedure SetPath(v:AnsiString); override;
     //: @seealso(TPLCTag.SetProtocolDriver)
     procedure SetProtocolDriver(p:TProtocolDriver); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
@@ -119,7 +119,7 @@ type
     {$ELSE}
     //: Read/writes a string value on your device
     {$ENDIF}
-    property Value:String read PValue write SetValue;
+    property Value:AnsiString read PValue write SetValue;
 
     //: @seealso(TTagBlock.Read)
     procedure Read; override;
@@ -251,7 +251,7 @@ end;
 //codifica uma array de valores em uma string
 //
 //decodes the string from a array of double.
-function  TPLCString.EncodeValues(values:TArrayOfDouble):String;
+function  TPLCString.EncodeValues(values:TArrayOfDouble):AnsiString;
 var
   aux1, maxbits, bit:LongInt;
   ValueAux2, ValueP, ByteP, ValueBitP, ByteBitP:LongInt;
@@ -527,7 +527,7 @@ begin
 
 end;
 
-function TPLCString.GetValueAsText(Prefix, Sufix, Format:string; FormatDateTimeOptions:TFormatDateTimeOptions=[]):String;
+function TPLCString.GetValueAsText(Prefix, Sufix, Format:AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]):AnsiString;
 begin
    Result := Prefix + Value + Sufix;
 end;
@@ -585,7 +585,7 @@ begin
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.SetPath(v:String);
+procedure TPLCString.SetPath(v:AnsiString);
 begin
   inherited SetPath(v);
   SetBlockSize(CalcBlockSize(false));
@@ -703,12 +703,12 @@ begin
 
 end;
 
-function  TPLCString.GetValue:String;
+function  TPLCString.GetValue:AnsiString;
 begin
   Result := PValue;
 end;
 
-procedure TPLCString.SetValue(Value:String);
+procedure TPLCString.SetValue(Value:AnsiString);
 var
   x:TArrayOfDouble;
 begin

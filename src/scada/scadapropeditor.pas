@@ -212,7 +212,7 @@ begin
 {$IFDEF UNIX}
 var
    c, d:LongInt;
-   pname:String;
+   pname:AnsiString;
 begin
    Proc('(none)');
    for d:=0 to High(PortPrefix) do

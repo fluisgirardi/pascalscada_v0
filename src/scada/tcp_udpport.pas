@@ -516,7 +516,7 @@ begin
     channel.sin_port        := htons(FPortNumber); //PORT NUMBER
 
     {$IF defined(FPC) AND defined(UNIX)}
-    channel.sin_addr.S_addr := longword(htonl(LongInt(ServerAddr.Addr.s_addr)));
+    channel.sin_addr.S_addr := longword(htonl(LongWord(ServerAddr.Addr.s_addr)));
     {$IFEND}
 
     {$IF defined(FPC) AND defined(WINCE)}

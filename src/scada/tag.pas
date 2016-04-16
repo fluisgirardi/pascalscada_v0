@@ -261,7 +261,7 @@ type
     Size:LongInt;
     OffSet:LongInt;
     RealOffset:LongInt;
-    Path:String;
+    Path:AnsiString;
     ReadFunction:LongInt;
     WriteFunction:LongInt;
     Retries:LongInt;
@@ -404,7 +404,7 @@ type
   end;
 
   TASyncValueChangeNotify = procedure(Sender:TObject; const Value:TArrayOfDouble) of object;
-  TASyncStringValueChange = procedure(Sender:TObject; const Value:String) of object;
+  TASyncStringValueChange = procedure(Sender:TObject; const Value:AnsiString) of object;
 
   {$IFNDEF FPC}
   TLMessage = TMessage;
@@ -557,7 +557,7 @@ type
     {$ELSE}
     //: Stores the textual memory address of the tag.
     {$ENDIF}
-    PPath:String;
+    PPath:AnsiString;
 
     {$IFDEF PORTUGUES}
     //: Armazena a função usada para leitura da memória.
@@ -662,7 +662,7 @@ type
     {$ELSE}
     //: Stores the unique tag identification.
     {$ENDIF}
-    PGUID:String;
+    PGUID:AnsiString;
 
     {$IFDEF PORTUGUES}
     //: Primeira atualização do tag?
@@ -897,7 +897,7 @@ type
     {$ELSE}
     //: Long address (text), if supported by the protocol driver.
     {$ENDIF}
-    property LongAddress:String read PPath;
+    property LongAddress:AnsiString read PPath;
 
     {$IFDEF PORTUGUES}
     //: Evento chamado quando uma leitura do tag tem exito.

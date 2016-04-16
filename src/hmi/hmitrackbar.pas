@@ -14,10 +14,6 @@
 {$ENDIF}
 unit HMITrackBar;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

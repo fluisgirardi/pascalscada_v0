@@ -13,10 +13,6 @@
 {$ENDIF}
 unit HMIControlDislocatorAnimation;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -430,7 +426,7 @@ end;
 
 procedure THMIControlDislocatorAnimation.SetEnableMaxY(v:Boolean);
 begin
-  FMinY:=v;
+  FMaxY:=v;
   MoveObject;
 end;
 

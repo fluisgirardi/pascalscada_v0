@@ -12,10 +12,6 @@
 {$ENDIF}
 unit HMIEdit;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -395,7 +391,7 @@ begin
   end;
 
   FFontChangeEvent := Font.OnChange;
-  Font.OnChange := FontChange;
+  Font.OnChange := @FontChange;
   FShowFocused := true;
   FFreezeValue := true;
   FNumberFormat := '#0.0';
@@ -636,7 +632,7 @@ begin
       showMinus   :=(FEnableMin AND (FMinLimit<0)) or ((FEnableMin=false) and FNumericKBShowMinus);
       showDecPoint:=(Pos('.', FNumberFormat)>0) or FNumericKBShowDecimal;
       FNumericKB:=TpsHMIfrmNumericKeyBoard.Create(Self,Self,showMinus,showDecPoint);
-      FNumericKB.OnClose:=NumericKBClosed;
+      FNumericKB.OnClose:=@NumericKBClosed;
       FNumericKB.ShowAlongsideOfTheTarget;
       exit;
     end;

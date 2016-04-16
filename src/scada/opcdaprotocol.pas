@@ -12,27 +12,27 @@ type
   TOPCDAProtocol = class(TProtocolDriver)
   private
     FHost,
-    FServer:String;
-    procedure SetHost(const AValue: String);
-    procedure SetServer(const AValue: String);
+    FServer:AnsiString;
+    procedure SetHost(const AValue: AnsiString);
+    procedure SetServer(const AValue: AnsiString);
   protected
 
   published
-    property Host:String read FHost write SetHost;
-    property Server:String read FServer write SetServer;
+    property Host:AnsiString read FHost write SetHost;
+    property Server:AnsiString read FServer write SetServer;
   end;
 
 implementation
 
 { TOPCDAProtocol }
 
-procedure TOPCDAProtocol.SetHost(const AValue: String);
+procedure TOPCDAProtocol.SetHost(const AValue: AnsiString);
 begin
   if FHost=AValue then exit;
   FHost:=AValue;
 end;
 
-procedure TOPCDAProtocol.SetServer(const AValue: String);
+procedure TOPCDAProtocol.SetServer(const AValue: AnsiString);
 begin
   if FServer=AValue then exit;
   FServer:=AValue;

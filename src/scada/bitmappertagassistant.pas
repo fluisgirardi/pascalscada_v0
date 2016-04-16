@@ -55,9 +55,9 @@ var
     if dlg.Wordnamestartsfrom1.Checked then inc(wordnum);
   end;
 
-  function GetNewTagBitName:String;
+  function GetNewTagBitName:AnsiString;
   var
-    n:String;
+    n:AnsiString;
   begin
     n:=IntToStr(bitnum);
     Result:=dlg.edtNamepattern.Text;

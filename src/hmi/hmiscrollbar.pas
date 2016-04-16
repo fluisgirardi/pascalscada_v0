@@ -14,10 +14,6 @@
 {$ENDIF}
 unit HMIScrollBar;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

@@ -90,9 +90,9 @@ type
     //thread de execução do scan dos tags
     //Scan read thread object
     PScanReadThread:TScanThread;
-    //Thread de execução de escritas
-    //scan write thead object
-    PScanWriteThread:TScanThread;
+    ////Thread de execução de escritas
+    ////scan write thead object
+    //PScanWriteThread:TScanThread;
     //thread de atualização dos pedidos dos tags
     //thread that updates tag values.
     PScanUpdateThread:TScanUpdate;
@@ -105,8 +105,8 @@ type
     //procedures to handle the taglist.
     function  GetTagCount:LongInt;
     function  GetTag(index:LongInt):TTag;
-    function  GetTagName(index:LongInt):String;
-    function  GetTagByName(Nome:String):TTag;
+    function  GetTagName(index:LongInt):AnsiString;
+    function  GetTagByName(Nome:AnsiString):TTag;
 
     //metodo chamado pela thread de scan para ler valores do dispositivo.
     //procedure called to read data from your device.
@@ -638,7 +638,7 @@ type
     {$ELSE}
     //: Returns the literal address of the tag.
     {$ENDIF}
-    function LiteralTagAddress(aTag:TTag; aBlockTag:TTag=nil):String; virtual;
+    function LiteralTagAddress(aTag:TTag; aBlockTag:TTag=nil):AnsiString; virtual;
 
     {$IFDEF PORTUGUES}
     //: Conta os tags dependentes desse driver de protocolo.
@@ -659,14 +659,14 @@ type
     {$ELSE}
     //: Return the tag names.
     {$ENDIF}
-    property TagName[index:LongInt]:String read GetTagName;
+    property TagName[index:LongInt]:AnsiString read GetTagName;
 
     {$IFDEF PORTUGUES}
     //: Lista cada tag dependente desse driver usando o nome do tag como indice.
     {$ELSE}
     //: Returns the tag by the name index.
     {$ENDIF}
-    property TagByName[Nome:String]:TTag read GetTagByName;
+    property TagByName[Nome:AnsiString]:TTag read GetTagByName;
 
     {$IFDEF PORTUGUES}
     //: Chama o editor de tags do driver.
@@ -767,14 +767,14 @@ begin
   PScanReadThread.Priority:=tpTimeCritical;
   {$ENDIF}
   PScanReadThread.OnDoScanRead := @SafeScanRead;
-  PScanReadThread.OnDoScanWrite := nil;
+  PScanReadThread.OnDoScanWrite := @SafeScanWrite;
 
-  PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
-  {$IFNDEF WINCE}
-  PScanWriteThread.Priority:=tpTimeCritical;
-  {$ENDIF}
-  PScanWriteThread.OnDoScanRead    := nil;
-  PScanWriteThread.OnDoScanWrite   := @SafeScanWrite;
+  //PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
+  //{$IFNDEF WINCE}
+  //PScanWriteThread.Priority:=tpTimeCritical;
+  //{$ENDIF}
+  //PScanWriteThread.OnDoScanRead    := nil;
+  //PScanWriteThread.OnDoScanWrite   := @SafeScanWrite;
 end;
 
 procedure TProtocolDriver.AfterConstruction;
@@ -785,8 +785,8 @@ begin
   PScanReadThread.WakeUp;
   PScanReadThread.WaitInit;
 
-  PScanWriteThread.WakeUp;
-  PScanWriteThread.WaitInit;
+  //PScanWriteThread.WakeUp;
+  //PScanWriteThread.WaitInit;
 end;
 
 destructor TProtocolDriver.Destroy;
@@ -797,9 +797,9 @@ begin
   PScanReadThread.WaitFor;
   PScanReadThread.Destroy;
 
-  PScanWriteThread.Terminate;
-  PScanWriteThread.WaitFor;
-  PScanWriteThread.Destroy;
+  //PScanWriteThread.Terminate;
+  //PScanWriteThread.WaitFor;
+  //PScanWriteThread.Destroy;
 
   PScanUpdateThread.Terminate;
   PScanUpdateThread.WaitFor;
@@ -958,7 +958,7 @@ begin
   end;
 end;
 
-function TProtocolDriver.GetTagName(index:LongInt):String;
+function TProtocolDriver.GetTagName(index:LongInt):AnsiString;
 begin
   Result:='';
   //FCritical.Enter;
@@ -971,7 +971,7 @@ begin
 
 end;
 
-function TProtocolDriver.GetTagByName(Nome:String):TTag;
+function TProtocolDriver.GetTagByName(Nome:AnsiString):TTag;
 var
   c:LongInt;
 begin
@@ -1077,8 +1077,8 @@ begin
 
     //posta uma mensagem de Escrita por Scan
     //send the scanwrite message to thread.
-    if (PScanWriteThread<>nil) then begin
-      PScanWriteThread.ScanWrite(pkg);
+    if (PScanReadThread<>nil) then begin
+      PScanReadThread.ScanWrite(pkg);
       CrossThreadSwitch;
     end;
 
@@ -1135,7 +1135,7 @@ begin
   end;
 end;
 
-function TProtocolDriver.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):String;
+function TProtocolDriver.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):AnsiString;
 begin
   Result:='';
 end;

@@ -1,7 +1,5 @@
 unit hmibooleanpropertyconnector;
 
-{$mode delphi}
-
 interface
 
 uses
@@ -30,7 +28,7 @@ type
   TBooleanZones = class(TZones)
   public
     //: @exclude
-    constructor Create(Owner:TPersistent);
+    constructor Create(aOwner:TPersistent);
 
     {$IFDEF PORTUGUES}
     //: Adiciona uma nova zona boolean.
@@ -63,7 +61,7 @@ type
     FResult: Boolean;
     procedure SetZoneResult(AValue: Boolean);
   protected
-    function GetDisplayName: string; override;
+    function GetDisplayName: AnsiString; override;
   published
     property ZoneResult:Boolean read FResult write SetZoneResult;
   end;
@@ -111,7 +109,7 @@ type
     fLastResultApplied: Boolean;
     procedure SetInvertedResult(AValue: Boolean);
   protected
-    function GetDisplayName: string; override;
+    function GetDisplayName: Ansistring; override;
   public
     constructor Create(ACollection: TCollection); override;
     procedure ApplyResult(Result:Boolean); virtual;
@@ -305,11 +303,11 @@ constructor THMIBooleanPropertyConnector.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FConditionZones:=TBooleanZones.Create(Self);
-  FConditionZones.OnCollectionItemChange:=ConditionItemChanged;
-  FConditionZones.OnNeedCompState:=CollectionNeedsComponentState;
+  FConditionZones.OnCollectionItemChange:=@ConditionItemChanged;
+  FConditionZones.OnNeedCompState:=@CollectionNeedsComponentState;
   FObjects:=TObjectWithBooleanPropetiesColletion.Create(Self);
-  FObjects.OnCollectionItemChange:=ObjectItemChanged;
-  FObjects.OnNeedCompState:=CollectionNeedsComponentState;
+  FObjects.OnCollectionItemChange:=@ObjectItemChanged;
+  FObjects.OnNeedCompState:=@CollectionNeedsComponentState;
   FFirstReadOk:=true;
 end;
 
@@ -339,7 +337,7 @@ begin
   if fModified then ApplyResult(fLastResultApplied);
 end;
 
-function TObjectWithBooleanPropetiesColletionItem.GetDisplayName: string;
+function TObjectWithBooleanPropetiesColletionItem.GetDisplayName: Ansistring;
 begin
   if Assigned(TargetObject) and (TargetObjectProperty<>'') then
     Result:=TargetObject.Name+'.'+TargetObjectProperty
@@ -351,8 +349,8 @@ constructor TObjectWithBooleanPropetiesColletionItem.Create(
   ACollection: TCollection);
 begin
   inherited Create(ACollection);
-  fRequiredTypeName:=PTypeInfo(TypeInfo(Boolean)).Name;
-  fRequiredTypeKind:=PTypeInfo(TypeInfo(Boolean)).Kind;
+  fRequiredTypeName:=PTypeInfo(TypeInfo(Boolean))^.Name;
+  fRequiredTypeKind:=PTypeInfo(TypeInfo(Boolean))^.Kind;
 end;
 
 procedure TObjectWithBooleanPropetiesColletionItem.ApplyResult(Result: Boolean);
@@ -378,9 +376,9 @@ end;
 
 { TBooleanZones}
 
-constructor TBooleanZones.Create(Owner: TPersistent);
+constructor TBooleanZones.Create(aOwner: TPersistent);
 begin
-  inherited Create(Owner, TBooleanZone);
+  inherited Create(aOwner, TBooleanZone);
 end;
 
 function TBooleanZones.Add: TBooleanZone;
@@ -397,7 +395,7 @@ begin
   NotifyChange;
 end;
 
-function TBooleanZone.GetDisplayName: string;
+function TBooleanZone.GetDisplayName: Ansistring;
 begin
   Result:=inherited GetDisplayName+', Result='+BoolToStr(ZoneResult,'True','False');
 end;

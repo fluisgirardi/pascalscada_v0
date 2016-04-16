@@ -45,7 +45,7 @@ type
     procedure OnTagNameEnter(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
-    VarDesc,TagNames, OldTagName:array[$00..$1B] of string;
+    VarDesc,TagNames, OldTagName:array[$00..$1B] of AnsiString;
   public
     Variaveis:array[$00..$1B] of TVarItem;
     destructor Destroy; override;

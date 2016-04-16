@@ -743,7 +743,7 @@ type
     function    SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
 
     //: @seealso(TProtocolDriver.LiteralTagAddress)
-    function LiteralTagAddress(aTag: TTag; aBlockTag: TTag=nil):String; override;
+    function LiteralTagAddress(aTag: TTag; aBlockTag: TTag=nil):AnsiString; override;
 
     //: @seealso(TProtocolDriver.OpenTagEditor)
     procedure OpenTagEditor(InsertHook: TAddTagInEditorHook;
@@ -860,9 +860,9 @@ begin
   Result:=8;
 end;
 
-function TSiemensProtocolFamily.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):String;
+function TSiemensProtocolFamily.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):AnsiString;
 
-  function DescTagArea(area:LongInt):String;
+  function DescTagArea(area:LongInt):AnsiString;
   begin
     case area of
       1:
@@ -894,7 +894,7 @@ function TSiemensProtocolFamily.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):S
     end;
   end;
 
-  function SiemensDescOfType(atype:TTagType):String;
+  function SiemensDescOfType(atype:TTagType):AnsiString;
   begin
     case atype of
       pttDefault, pttShortInt, pttByte:
@@ -906,7 +906,7 @@ function TSiemensProtocolFamily.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):S
     end;
   end;
 
-  function PascalDescOfType(atype:TTagType):String;
+  function PascalDescOfType(atype:TTagType):AnsiString;
   begin
     case atype of
       pttDefault, pttByte:

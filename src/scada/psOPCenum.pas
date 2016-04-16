@@ -20,7 +20,7 @@ type
   TOPCServerList = class(TObject)
   private
     FCATIDs: array of TGUID;
-    FComputerName: string;
+    FComputerName: AnsiString;
     FOnProgress: TOPCRegistryProgressEvent;
     FRegistryConnected: Boolean;
     FRegistryOpened: Boolean;
@@ -28,36 +28,36 @@ type
     FServerList: TStringList;
     FUseRegistry: Boolean;
     FUseServerBrowser: Boolean;
-    procedure AddItem(ProgID: string; CLSID: TGUID; Description: string;
-      Vendor: string);
+    procedure AddItem(ProgID: AnsiString; CLSID: TGUID; Description: AnsiString;
+      Vendor: AnsiString);
     procedure DestroyList;
     function GetCLSID(Index: LongInt): TCLSID;
     function GetCount: LongInt;
-    function GetDescription(Index: LongInt): string;
-    function GetProgID(Index: LongInt): string;
+    function GetDescription(Index: LongInt): AnsiString;
+    function GetProgID(Index: LongInt): AnsiString;
     function GetServerList: TStrings;
-    function GetVendor(Index: LongInt): string;
+    function GetVendor(Index: LongInt): AnsiString;
     procedure ListCategory(OPCServerList: IOPCServerList; CATID: TGUID);
     procedure ListCategory2(OPCServerList: IOPCServerList2; CATID: TGUID);
     procedure SetupListFromRegistry;
     procedure SetupListFromServerBrowser;
   public
-    constructor Create(ComputerName: string; UseRegistry: Boolean;
+    constructor Create(ComputerName: AnsiString; UseRegistry: Boolean;
       CATIDs: array of TGUID);
     destructor Destroy; override;
     function Update: LongInt;
     property CLSID[Index: LongInt]: TCLSID read GetCLSID;
     property Count: LongInt read GetCount;
-    property Description[Index: LongInt]: string read GetDescription;
+    property Description[Index: LongInt]: AnsiString read GetDescription;
     property Items: TStrings read GetServerList;
     property OnProgress: TOPCRegistryProgressEvent read FOnProgress
       write FOnProgress;
-    property ProgID[Index: LongInt]: string read GetProgID;
+    property ProgID[Index: LongInt]: AnsiString read GetProgID;
     property RegistryConnected: Boolean read FRegistryConnected;
     property RegistryOpened: Boolean read FRegistryOpened;
     property ServerBrowserObjectCreated: Boolean
       read FServerBrowserObjectCreated;
-    property Vendor[Index: LongInt]: string read GetVendor;
+    property Vendor[Index: LongInt]: AnsiString read GetVendor;
   end;
 
 implementation
@@ -67,14 +67,14 @@ uses
 
 type
   TOPCServerInfo = class(TObject)
-    ProgID: string;
+    ProgID: AnsiString;
     CLSID: TCLSID;
-    Description: string;
-    Vendor: string;
+    Description: AnsiString;
+    Vendor: AnsiString;
   end;
 
-procedure TOPCServerList.AddItem(ProgID: string; CLSID: TGUID;
-  Description: string; Vendor: string);
+procedure TOPCServerList.AddItem(ProgID: AnsiString; CLSID: TGUID;
+  Description: AnsiString; Vendor: AnsiString);
 var
   ServerInfo: TOPCServerInfo;
   I: LongInt;
@@ -98,7 +98,7 @@ begin
   end;
 end;
 
-constructor TOPCServerList.Create(ComputerName: string; UseRegistry: Boolean;
+constructor TOPCServerList.Create(ComputerName: AnsiString; UseRegistry: Boolean;
   CATIDs: array of TGUID);
 var
   NumCATIDs: LongInt;
@@ -160,12 +160,12 @@ begin
   end;
 end;
 
-function TOPCServerList.GetDescription(Index: LongInt): string;
+function TOPCServerList.GetDescription(Index: LongInt): AnsiString;
 begin
   Result := TOPCServerInfo(FServerList.Objects[Index]).Description;
 end;
 
-function TOPCServerList.GetProgID(Index: LongInt): string;
+function TOPCServerList.GetProgID(Index: LongInt): AnsiString;
 begin
   Result := TOPCServerInfo(FServerList.Objects[Index]).ProgID;
 end;
@@ -258,9 +258,9 @@ var
   Index: LongInt;
   ProgID: WideString;
   CLSID: TGUID;
-  Description: string;
-  Vendor: string;
-  ComputerName: string;
+  Description: AnsiString;
+  Vendor: AnsiString;
+  ComputerName: AnsiString;
 begin
   Reg := TRegistry.Create;
   try

@@ -12,10 +12,6 @@
 {$ENDIF}
 unit HMITypes;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

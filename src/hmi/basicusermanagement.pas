@@ -1,9 +1,5 @@
 unit BasicUserManagement;
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF}
-
 interface
 
 uses
@@ -139,7 +135,7 @@ begin
   frozenTimer.Enabled:=false;
   frozenTimer.Interval:=LoginFrozenTime;
   frozenTimer.Tag:=1; //login
-  frozenTimer.OnTimer:=UnfreezeLogin;
+  frozenTimer.OnTimer:=@UnfreezeLogin;
   frmLogin:=TpsHMIfrmUserAuthentication.Create(nil);
   {$IFDEF FPC}
   frmLogin.FormStyle:=fsSystemStayOnTop;
@@ -276,7 +272,7 @@ begin
   frozenTimer.Enabled:=false;
   frozenTimer.Interval:=LoginFrozenTime;
   frozenTimer.Tag:=2; //Check
-  frozenTimer.OnTimer:=UnfreezeLogin;
+  frozenTimer.OnTimer:=@UnfreezeLogin;
   frmCheckIfUserIsAllowed:=TpsHMIfrmUserAuthentication.Create(nil);
   {$IFDEF FPC}
   frmCheckIfUserIsAllowed.FormStyle:=fsSystemStayOnTop;

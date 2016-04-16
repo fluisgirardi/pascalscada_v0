@@ -1,10 +1,6 @@
 {$i ../common/language.inc}
 unit usrmgnt_login;
 
-{$IFDEF FPC}
-  {$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

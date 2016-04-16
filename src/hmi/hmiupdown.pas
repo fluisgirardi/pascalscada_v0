@@ -13,10 +13,6 @@
 {$ENDIF}
 unit HMIUpDown;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

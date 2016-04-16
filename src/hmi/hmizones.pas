@@ -12,10 +12,6 @@
 {$ENDIF}
 unit HMIZones;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses Classes, SysUtils, hsutils, Controls, Graphics, hmibasiccolletion

@@ -1,7 +1,5 @@
 unit HMI_ComputedImageList;
 
-{$mode delphi}
-
 interface
 
 uses

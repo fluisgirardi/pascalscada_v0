@@ -38,9 +38,9 @@ var
   tagelement:TPLCBlockElement;
   FBlockStructTag: TPLCBlock;
 
-  function GetNewTagElementName:String;
+  function GetNewTagElementName:AnsiString;
   var
-    n:String;
+    n:AnsiString;
   begin
     n:=IntToStr(elementnumber);
     Result:=dlg.elementnames.Text;
@@ -120,10 +120,10 @@ var
     end;
   end;
 
-  function GetValueWithZeros(value, endvalue:LongInt; toFill:Boolean):String;
+  function GetValueWithZeros(value, endvalue:LongInt; toFill:Boolean):AnsiString;
   var
     numdig, dig:LongInt;
-    strendval, fill:STring;
+    strendval, fill:AnsiString;
   begin
     strendval:=IntToStr(endvalue);
 
@@ -138,7 +138,7 @@ var
       Result:=IntToStr(value);
   end;
 
-  function GetName(namepattern:String):String;
+  function GetName(namepattern:AnsiString):AnsiString;
   var
     has_atleastonereplacement:Boolean;
   begin

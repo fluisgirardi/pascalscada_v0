@@ -12,10 +12,6 @@
 {$ENDIF}
 unit HMIAnimation;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -171,12 +167,12 @@ constructor THMIAnimation.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
    FTimer:=TTimer.Create(Self);
-   FTimer.OnTimer:=BlinkTimer;
+   FTimer.OnTimer:=@BlinkTimer;
    FTimer.Enabled:=false;
    FIsEnabled:=true;
    FAnimationZones:=TGraphicZones.Create(Self);
-   FAnimationZones.OnNeedCompState:=NeedComState;
-   FAnimationZones.OnCollectionItemChange:=ZoneChange;
+   FAnimationZones.OnNeedCompState:=@NeedComState;
+   FAnimationZones.OnCollectionItemChange:=@ZoneChange;
    GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 

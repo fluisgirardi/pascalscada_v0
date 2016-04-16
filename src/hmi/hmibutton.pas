@@ -6,10 +6,6 @@
 {$ENDIF}
 unit HMIButton;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

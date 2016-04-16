@@ -37,7 +37,7 @@ type
   end;
 
   { TfrmModbusTagBuilder }
-  Strings = array of string;
+  Strings = array of AnsiString;
 
   TfrmModbusTagBuilder = class(TForm)
     PageControl1: TPageControl;

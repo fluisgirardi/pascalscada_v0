@@ -243,7 +243,7 @@ type
     {$ELSE}
     //: Sets a new unique tag identification. Called by the Tag Manager.
     {$ENDIF}
-    procedure SetGUID(v:String);
+    procedure SetGUID(v:AnsiString);
 
     //##########################################################################
 
@@ -349,7 +349,7 @@ type
     @param(v String. The long address of the tag (text).)
     }
     {$ENDIF}
-    procedure SetPath(v:String); virtual;
+    procedure SetPath(v:AnsiString); virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -627,7 +627,7 @@ type
     {$ELSE}
     //: Tells the unique tag identification.
     {$ENDIF}
-    property TagGUID:String read PGUID write SetGUID;
+    property TagGUID:AnsiString read PGUID write SetGUID;
 
     {$IFDEF PORTUGUES}
     {:
@@ -961,7 +961,7 @@ begin
     PProtocolDriver.AddTag(Self);
 end;
 
-procedure TPLCTag.SetPath(v:String);
+procedure TPLCTag.SetPath(v:AnsiString);
 begin
   if PPath=v then exit;
 
@@ -1083,7 +1083,7 @@ begin
     AddTag(Self);
 end;
 
-procedure TPLCTag.SetGUID(v:String);
+procedure TPLCTag.SetGUID(v:AnsiString);
 begin
   if ComponentState*[csReading]=[] then exit;
   PGUID:=v;

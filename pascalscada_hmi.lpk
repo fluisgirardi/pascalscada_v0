@@ -12,7 +12,7 @@
       </SearchPaths>
       <Parsing>
         <SyntaxOptions>
-          <SyntaxMode Value="Delphi"/>
+          <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
     </CompilerOptions>

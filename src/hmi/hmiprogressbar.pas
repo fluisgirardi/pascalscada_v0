@@ -12,10 +12,6 @@
 {$ENDIF}
 unit HMIProgressBar;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

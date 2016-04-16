@@ -1,7 +1,5 @@
 unit HMITransparentButton;
 
-{$mode delphi}
-
 interface
 
 uses

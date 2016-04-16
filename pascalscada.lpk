@@ -15,13 +15,27 @@
       <Parsing>
         <SyntaxOptions>
           <CStyleOperator Value="False"/>
+          <IncludeAssertionCode Value="True"/>
           <StaticKeyword Value="True"/>
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
+        <Checks>
+          <IOChecks Value="True"/>
+          <RangeChecks Value="True"/>
+          <OverflowChecks Value="True"/>
+          <StackChecks Value="True"/>
+        </Checks>
+        <VerifyObjMethodCallValidity Value="True"/>
       </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <UseHeaptrc Value="True"/>
+          <TrashVariables Value="True"/>
+        </Debugging>
+      </Linking>
       <Other>
         <WriteFPCLogo Value="False"/>
         <CompilerMessages>

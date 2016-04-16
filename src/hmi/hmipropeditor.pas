@@ -15,7 +15,6 @@
 unit hmipropeditor;
 
 {$IFDEF FPC}
-{$MODE Delphi}
 {$MACRO ON}
 {$ENDIF}
 
@@ -56,9 +55,9 @@ type
   TZoneFileNamePropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
-    function  GetValue: string; override;
+    function  GetValue: AnsiString; override;
     procedure Edit; override;
-    procedure SetValue(const Value: string); override;
+    procedure SetValue(const Value: AnsiString); override;
   end;
 
   {$IFDEF FPC}
@@ -151,7 +150,7 @@ type
   TPositionPropertyEditor = class(TStringProperty)
   public
     function  GetAttributes: TPropertyAttributes; override;
-    function  GetValue: string; override;
+    function  GetValue: AnsiString; override;
     procedure Edit; override;
   end;
 
@@ -199,7 +198,7 @@ type
     procedure DrawEmptyPolyline;
   public
     procedure ExecuteVerb(Index: LongInt); override;
-    function  GetVerb(Index: LongInt): string; override;
+    function  GetVerb(Index: LongInt): AnsiString; override;
     function  GetVerbCount: LongInt; override;
     function  Polyline: THMIPolyline; virtual;
   end;
@@ -228,7 +227,7 @@ begin
   end;
 end;
 
-function THMIPolylineComponentEditor.GetVerb(Index: LongInt): string;
+function THMIPolylineComponentEditor.GetVerb(Index: LongInt): AnsiString;
 begin
   case Index of
    0: Result:='Draw...';
@@ -254,7 +253,7 @@ constructor TSelectOnlyTColorPropPropertyEditor.Create(
   Hook: TPropertyEditorHook; APropCount: Integer);
 begin
   inherited Create(Hook, APropCount);
-  FOnlyPropertiesOfType:=PTypeInfo(TypeInfo(TColor)).Name;
+  FOnlyPropertiesOfType:=PTypeInfo(TypeInfo(TColor))^.Name;
   FExpectedClass:=TObjectWithColorPropetiesColletionItem;
 end;
 
@@ -264,7 +263,7 @@ constructor TSelectOnlyBooleanPropPropertyEditor.Create(
   Hook: TPropertyEditorHook; APropCount: Integer);
 begin
   inherited Create(Hook, APropCount);
-  FOnlyPropertiesOfType:=PTypeInfo(TypeInfo(Boolean)).Name;
+  FOnlyPropertiesOfType:=PTypeInfo(TypeInfo(Boolean))^.Name;
   FExpectedClass:=TObjectWithBooleanPropetiesColletionItem;
 end;
 
@@ -306,7 +305,7 @@ begin
 
        tdata:=GetTypeData(obj.ClassInfo);
 
-       GetMem(PL,tdata.PropCount*SizeOf(Pointer));
+       GetMem(PL,tdata^.PropCount*SizeOf(Pointer));
        try
          nprops:=GetPropList(obj,PL);
          for p:=0 to nprops-1 do begin
@@ -335,7 +334,7 @@ begin
                  paValueEditable{$ENDIF}{$ENDIF}];
 end;
 
-function  TZoneFileNamePropertyEditor.GetValue: string;
+function  TZoneFileNamePropertyEditor.GetValue: AnsiString;
 begin
    Result := GetStrValue;
 end;
@@ -360,7 +359,7 @@ begin
   end;
 end;
 
-procedure TZoneFileNamePropertyEditor.SetValue(const Value: string);
+procedure TZoneFileNamePropertyEditor.SetValue(const Value: AnsiString);
 begin
    SetStrValue(Value);
    if GetComponent(0) is TGraphicZone then
@@ -485,7 +484,7 @@ begin
                  paValueEditable{$ENDIF}{$ENDIF}];
 end;
 
-function  TPositionPropertyEditor.GetValue: string;
+function  TPositionPropertyEditor.GetValue: AnsiString;
 begin
    Result := GetStrValue;
 end;

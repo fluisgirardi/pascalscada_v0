@@ -25,7 +25,7 @@ type
   {$ELSE}
   //: Name check routine.
   {$ENDIF}
-  TCheckNames = procedure (Sender:TObject; NewName:String; var AcceptNewName:Boolean) of object;
+  TCheckNames = procedure (Sender:TObject; NewName:AnsiString; var AcceptNewName:Boolean) of object;
 
   {$IFDEF PORTUGUES}
   {:
@@ -42,7 +42,7 @@ type
   {$ENDIF}
   TTagBitItemEditor = class(TPanel)
   private
-    FTagName:String;
+    FTagName:AnsiString;
     FStartBit,
     FEndBit:LongInt;
     FCheckNames:TCheckNames;
@@ -53,7 +53,7 @@ type
     spinEnd:TSpinEdit;
     btnDel:TButton;
     fondelclick:TNotifyEvent;
-    procedure SetTagName(newname:String);
+    procedure SetTagName(newname:AnsiString);
     procedure SetStartBit(bitindex:LongInt);
     procedure SetEndBit(bitindex:LongInt);
   private
@@ -64,7 +64,7 @@ type
     constructor Create(AOwner:TComponent); override;
     destructor Destroy; override;
   published
-    property TagName:String read FTagName write SetTagName;
+    property TagName:AnsiString read FTagName write SetTagName;
     property StartBit:LongInt read FStartBit write SetStartBit;
     property EndBit:LongInt read FEndBit write SetEndBit;
     property OnCheckNames:TCheckNames read FCheckNames write FCheckNames;
@@ -86,7 +86,7 @@ type
   {$ENDIF}
   TS7TagItemEditor = class(TPanel)
   private
-    FTagName:String;
+    FTagName:AnsiString;
     FTagType:TTagType;
     FTagScan:TRefreshTime;
     FSwapWords,
@@ -115,14 +115,14 @@ type
     FOnTypeChange,
     FOnSkipChange,
     FOnDelBitItem:TNotifyEvent;
-    procedure SetTagName(newName:String);
+    procedure SetTagName(newName:AnsiString);
     procedure SetTagType(newType:TTagType);
     procedure SetTagScan(newScan:TRefreshTime);
     procedure SetSwapBytes(swap:Boolean);
     procedure SetSwapWords(swap:Boolean);
     procedure SetSkipTag(Skip:Boolean);
   private
-    procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
+    procedure CheckNames(Sender:TObject; NewName:AnsiString; var AcceptNewName:Boolean);
     procedure btnClick(Sender:TObject);
     procedure optChange(Sender:TObject);
     procedure edtItemNameExit(Sender:TObject);
@@ -147,9 +147,9 @@ type
     function  AddBit:TTagBitItemEditor;
     procedure DelBit(index:LongInt);
     function  GetIndex(tbitEditor:TTagBitItemEditor):LongInt;
-    function  AcceptName(TheName:String):Boolean;
+    function  AcceptName(TheName:AnsiString):Boolean;
   published
-    property TagName:String Read FTagName write SetTagName;
+    property TagName:AnsiString Read FTagName write SetTagName;
     property TagType:TTagType read FTagType write SetTagType;
     property TagScan:TRefreshTime read FTagScan write SetTagScan;
     property SwapBytes:Boolean read FSwapBytes write SetSwapBytes;
@@ -265,7 +265,7 @@ type
     procedure UpdateStructItems;
     procedure SkipChanged(Sender:TObject);
     procedure StructItemTypeChanged(Sender:TObject);
-    procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
+    procedure CheckNames(Sender:TObject; NewName:AnsiString; var AcceptNewName:Boolean);
     function GetStructItemsCount:LongInt;
     function GetStructItem(index:LongInt):TS7TagItemEditor;
     function GetStructureSizeInBytes:LongInt;
@@ -398,7 +398,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TTagBitItemEditor.SetTagName(newname:String);
+procedure TTagBitItemEditor.SetTagName(newname:AnsiString);
 var
   accept:Boolean;
 begin
@@ -761,7 +761,7 @@ begin
   Result:=BitList.IndexOf(tbitEditor);
 end;
 
-function  TS7TagItemEditor.AcceptName(TheName:String):Boolean;
+function  TS7TagItemEditor.AcceptName(TheName:AnsiString):Boolean;
 var
   accept1, accept2 :Boolean;
 begin
@@ -782,7 +782,7 @@ begin
   Result:=accept1 and accept2;
 end;
 
-procedure TS7TagItemEditor.SetTagName(newName:String);
+procedure TS7TagItemEditor.SetTagName(newName:AnsiString);
 var
   accept:Boolean;
 begin
@@ -850,7 +850,7 @@ procedure TS7TagItemEditor.edtItemNameExit(Sender:TObject);
 var
   accept1, accept2 :Boolean;
   b:LongInt;
-  oldname:String;
+  oldname:AnsiString;
 begin
   if not edtItemName.Modified then exit;
 
@@ -956,7 +956,7 @@ end;
 
 //evento chamado pelos bits do tag para verificar seu nome...
 //event called by bit itens to check theirs names.
-procedure TS7TagItemEditor.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
+procedure TS7TagItemEditor.CheckNames(Sender:TObject; NewName:AnsiString; var AcceptNewName:Boolean);
 var
   b:LongInt;
 begin
@@ -1267,9 +1267,9 @@ var
     if frmbit.Wordnamestartsfrom1.Checked then inc(wordnum);
   end;
 
-  function GetNewTagBitName:String;
+  function GetNewTagBitName:AnsiString;
   var
-    n:String;
+    n:AnsiString;
   begin
     n:=IntToStr(bitnum);
     Result:=frmbit.edtNamepattern.Text;
@@ -1388,7 +1388,7 @@ begin
   end;
 end;
 
-procedure TfrmS7TagBuilder.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
+procedure TfrmS7TagBuilder.CheckNames(Sender:TObject; NewName:AnsiString; var AcceptNewName:Boolean);
 var
   t,b:LongInt;
 begin
@@ -1608,7 +1608,7 @@ end;
 
 procedure TfrmS7TagBuilder.UpdateFlagDBandVStrucItemName;
 var
-  nome, nome2:String;
+  nome, nome2:AnsiString;
   curtype:TTagType;
 begin
   if TagList.Count<=0 then exit;
@@ -1720,7 +1720,7 @@ end;
 procedure TfrmS7TagBuilder.btnNextClick(Sender: TObject);
 var
   curitem:LongInt;
-  nome,nome2:String;
+  nome,nome2:AnsiString;
 begin
   if (FStructureModified=false) and
      (MessageDlg('Do you want initialize the structure?', mtConfirmation, [mbYes,mbNo],0)=mrYes) then begin
@@ -1830,7 +1830,7 @@ end;
 
 procedure TfrmS7TagBuilder.UpdateStatusAndBlockName;
 var
-  strblockname, starttype, endtype:String;
+  strblockname, starttype, endtype:AnsiString;
   curitem:LongInt;
 begin
   if BlockName.Modified then exit;

@@ -14,10 +14,6 @@
 {$ENDIF}
 unit HMIRadioButton;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

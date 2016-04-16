@@ -28,7 +28,7 @@ uses Windows;
 uses ctypes, sysctl;
 {$ELSEIF defined(linux)}
 {$linklib c}
-uses ctypes;
+uses ctypes, sysutils;
 {$IFEND}
 
 type

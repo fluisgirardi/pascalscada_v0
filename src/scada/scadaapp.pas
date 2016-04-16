@@ -10,11 +10,11 @@ type
   TScadaApp = class(TComponent)
   private
     PZConnection:TZConnection;
-    procedure DropTable(tablename:String);
+    procedure DropTable(tablename:AnsiString);
     procedure CheckDBConnection;
     procedure SetDBConnection(db:TZConnection);
-    function TableExists(tablename:String):Boolean;
-    function FieldExists(tablename, fieldname:String):TFieldType;
+    function TableExists(tablename:AnsiString):Boolean;
+    function FieldExists(tablename, fieldname:AnsiString):TFieldType;
     procedure CheckSystemTables;
 
     //procedure para criação de tabelas especificas do sistema.
@@ -82,17 +82,17 @@ begin
     raise Exception.Create(SDBConnectionRequired);
 end;
 
-procedure TScadaApp.DropTable(tablename:String);
+procedure TScadaApp.DropTable(tablename:AnsiString);
 begin
    CheckDBConnection;
 
    PZConnection.ExecuteDirect('DROP TABLE '+tablename);
 end;
 
-function TScadaApp.TableExists(tablename:String):Boolean;
+function TScadaApp.TableExists(tablename:AnsiString):Boolean;
 var
   affected:LongInt;
-  tname,sql:String;
+  tname,sql:AnsiString;
   found:boolean;
 begin
   CheckDBConnection;
@@ -128,7 +128,7 @@ begin
 
 end;
 
-function TScadaApp.FieldExists(tablename, fieldname:String):TFieldType;
+function TScadaApp.FieldExists(tablename, fieldname:AnsiString):TFieldType;
 var
   x:TZQuery;
 begin

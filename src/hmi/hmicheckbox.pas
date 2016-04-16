@@ -12,10 +12,6 @@
 {$ENDIF}
 unit HMICheckBox;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -490,11 +486,11 @@ begin
 
   FIsEnabled:=true;
   FFontFalse  := TFont.Create;
-  FFontFalse.OnChange := FontChange;
+  FFontFalse.OnChange := @FontChange;
   FFontTrue   := TFont.Create;
-  FFontTrue.OnChange := FontChange;
+  FFontTrue.OnChange := @FontChange;
   FFontGrayed := TFont.Create;
-  FFontGrayed.OnChange := FontChange;
+  FFontGrayed.OnChange := @FontChange;
   FColorTrue := clBtnFace;
   FColorFalse:= clBtnFace;
   FColorGrayed:= clBtnFace;

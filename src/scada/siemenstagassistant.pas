@@ -67,10 +67,10 @@ var
     end;
   end;
 
-  function GetValueWithZeros(value, endvalue:LongInt; toFill:Boolean):String;
+  function GetValueWithZeros(value, endvalue:LongInt; toFill:Boolean):AnsiString;
   var
     numdig, dig:LongInt;
-    strendval, fill:STring;
+    strendval, fill:AnsiString;
   begin
     strendval:=IntToStr(endvalue);
 
@@ -85,7 +85,7 @@ var
       Result:=IntToStr(value);
   end;
 
-  function ReplaceBlockNamePattern(namepattern:String):String;
+  function ReplaceBlockNamePattern(namepattern:AnsiString):AnsiString;
   var
     has_atleastonereplacement:Boolean;
   begin
@@ -130,7 +130,7 @@ var
     Result:= StringReplace(Result,'%0di',GetValueWithZeros(curdb-frmS7tb.spinDBNumber.Value,   frmS7tb.spinFinalDBNumber.Value-frmS7tb.spinDBNumber.Value  , true),[rfReplaceAll]);
   end;
 
-  function GetItemName(namepattern:String):String;
+  function GetItemName(namepattern:AnsiString):AnsiString;
   var
     has_atleastonereplacement,
     has_atleastoneDBreplacement:Boolean;

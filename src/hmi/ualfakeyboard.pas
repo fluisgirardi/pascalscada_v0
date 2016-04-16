@@ -1,9 +1,5 @@
 unit ualfakeyboard;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

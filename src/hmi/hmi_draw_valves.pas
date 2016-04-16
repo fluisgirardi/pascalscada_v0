@@ -1,7 +1,5 @@
 unit HMI_Draw_Valves;
 
-{$mode delphi}
-
 interface
 
 uses

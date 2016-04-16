@@ -149,7 +149,7 @@ type
   private
     FLogActions,
     FReadedLogActions:Boolean;
-    FLogFile:String;
+    FLogFile:AnsiString;
     FLogFileStream:TFileStream;
     FReadRetries: Cardinal;
     FWriteRetries: Cardinal;
@@ -170,7 +170,7 @@ type
     {: @exclude }
     FLastOSErrorNumber:LongInt;
     {: @exclude }
-    FLastOSErrorMessage:String;
+    FLastOSErrorMessage:AnsiString;
     {: @exclude }
     {$IFDEF FPC_BUG}FTimer:TFPTimer;{$ELSE}FTimer:TTimer;{$ENDIF}
     {: @exclude }
@@ -270,7 +270,7 @@ type
     procedure  SetLogActions(Log:Boolean);
 
     //: @seealso(TCommPortDriver.LogFile)
-    procedure  SetLogFile(nFile:String);
+    procedure  SetLogFile(nFile:AnsiString);
 
     {$IFDEF PORTUGUES}
     //: Registra uma ação de IO no log de comunicações.
@@ -929,7 +929,7 @@ type
     {$ELSE}
     //: The last error message registered by the OS.
     {$ENDIF}
-    property LastOSErrorMessage:String read FLastOSErrorMessage;
+    property LastOSErrorMessage:AnsiString read FLastOSErrorMessage;
 
     {$IFDEF PORTUGUES}
     //: Informa quantos comandos são processados por segundos. Atualizado a cada 1 segundo.
@@ -978,7 +978,7 @@ type
     {$ELSE}
     //: File to store the log of I/O actions of the communication port.
     {$ENDIF}
-    property LogFile:String read FLogFile write SetLogFile;
+    property LogFile:AnsiString read FLogFile write SetLogFile;
   end;
 
 {$IFNDEF FPC}
@@ -1850,7 +1850,7 @@ begin
   end;
 end;
 
-procedure  TCommPortDriver.SetLogFile(nFile:String);
+procedure  TCommPortDriver.SetLogFile(nFile:AnsiString);
 var
   islogging:Boolean;
 begin
@@ -1867,7 +1867,7 @@ begin
 end;
 
 procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
-  function bufferToHex(Buf:BYTES):String;
+  function bufferToHex(Buf:BYTES):AnsiString;
   var
     c:LongInt;
   begin
@@ -1876,7 +1876,7 @@ procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
       Result:=Result+IntToHex(Buf[c],2)+' ';
   end;
 
-  function TranslateCmdName(cmd:TIOCommand):String;
+  function TranslateCmdName(cmd:TIOCommand):AnsiString;
   begin
     case cmd of
       iocNone:
@@ -1892,20 +1892,20 @@ procedure  TCommPortDriver.LogAction(cmd:TIOCommand; Packet:TIOPacket);
     end;
   end;
 
-  function TranslateResultName(res:TIOResult):String;
+  function TranslateResultName(res:TIOResult):AnsiString;
   const
-    EnumMap: array[TIOResult] of String = ('iorOK       ',
-                                           'iorTimeOut  ',
-                                           'iorNotReady ',
-                                           'iorNone     ',
-                                           'iorPortError');
+    EnumMap: array[TIOResult] of AnsiString = ('iorOK',
+                                               'iorTimeOut',
+                                               'iorNotReady',
+                                               'iorNone',
+                                               'iorPortError');
   begin
     Result := EnumMap[res];
   end;
 
   var
     FS:TStringStream;
-    timestamp:String;
+    timestamp:AnsiString;
 begin
   if not FLogActions then exit;
 

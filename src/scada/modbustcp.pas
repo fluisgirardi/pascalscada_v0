@@ -301,9 +301,6 @@ var
    address, len:Cardinal;
    foundPLC:Boolean;
    aux:TPLCMemoryManager;
-   {$IFDEF FDEBUG}
-   debug:string;
-   {$ENDIF}
 begin
   //se algumas das IOs falhou,
   //if some IO fail.

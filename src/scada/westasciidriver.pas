@@ -827,7 +827,7 @@ var
    caso:BYTE;
    numaux:Extended;
    c:LongInt;
-   aux:String;
+   aux:AnsiString;
 begin
   caso:=255;
 
@@ -883,7 +883,7 @@ var
    caso:BYTE;
    c:LongInt;
    numaux:Double;
-   aux:String;
+   aux:AnsiString;
 begin
    caso:=255;
 

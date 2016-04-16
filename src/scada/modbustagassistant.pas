@@ -31,7 +31,7 @@ type
     function SelectedReadFuntion(dlg:TfrmModbusTagBuilder):LongInt;
     function SelectedWriteFuntion(dlg:TfrmModbusTagBuilder):LongInt;
     function SeekFirstItem(LastItem:TTagNamesItemEditor):TTagNamesItemEditor;
-    function BuildItemName(nameprefix:String; ZeroFill:Boolean; index, NumZeros:LongInt):String;
+    function BuildItemName(nameprefix:AnsiString; ZeroFill:Boolean; index, NumZeros:LongInt):AnsiString;
     public
       //: Opens the Tag Builder of the ModBus protocol driver
       procedure OpenTagEditor(OwnerOfNewTags:TComponent; InsertHook:TAddTagInEditorHook;
@@ -312,10 +312,10 @@ begin
     Result:=TTagNamesItemEditor(Result.Prior);
 end;
 
-function TModBusTagAssistant.BuildItemName(nameprefix: String;
-  ZeroFill: Boolean; index, NumZeros: LongInt): String;
+function TModBusTagAssistant.BuildItemName(nameprefix: AnsiString;
+  ZeroFill: Boolean; index, NumZeros: LongInt): AnsiString;
 var
-  idxfmt, numfmt:String;
+  idxfmt, numfmt:AnsiString;
   c:LongInt;
 begin
   if ZeroFill then begin

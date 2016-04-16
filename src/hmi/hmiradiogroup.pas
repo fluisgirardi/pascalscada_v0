@@ -13,10 +13,6 @@
 {$ENDIF}
 unit HMIRadioGroup;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses

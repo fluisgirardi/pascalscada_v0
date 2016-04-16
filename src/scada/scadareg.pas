@@ -70,8 +70,8 @@ begin
   RegisterComponents(strTagsPallete,      [TPLCStruct]);
   RegisterComponents(strTagsPallete,      [TPLCStructItem]);
 
-  RegisterPropertyEditor(TypeInfo(string), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(LongInt),TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
   //end securitycode property editor.
 
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);

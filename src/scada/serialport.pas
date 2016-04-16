@@ -172,7 +172,7 @@ type
     {$IF defined(WIN32) or defined(WIN64)}
     function MakeDCBString:AnsiString;
     {$IFEND}
-    function COMExist(v:String):Boolean;
+    function COMExist(v:AnsiString):Boolean;
   protected
     procedure Read(Packet:PIOPacket); override;
     procedure Write(Packet:PIOPacket); override;
@@ -342,19 +342,19 @@ const FILE_ANY_ACCESS         =0;
 
 {$IFDEF UNIX}
 {$IFDEF LINUX}
-var PortPrefix:array[0..0] of string = ('tty');
+var PortPrefix:array[0..0] of AnsiString = ('tty');
 {$ENDIF}
 {$IFDEF FREEBSD}
-var PortPrefix:array[0..0] of string = ('cuad');
+var PortPrefix:array[0..0] of AnsiString = ('cuad');
 {$ENDIF}
 {$IFDEF NETBSD}
-var PortPrefix:array[0..0] of string = ('cuad');
+var PortPrefix:array[0..0] of AnsiString = ('cuad');
 {$ENDIF}
 {$IFDEF OPENBSD}
-var PortPrefix:array[0..0] of string = ('cuad');
+var PortPrefix:array[0..0] of AnsiString = ('cuad');
 {$ENDIF}
 {$ifdef SunOS}
-var PortPrefix:array[0..0] of string = ('tty');
+var PortPrefix:array[0..0] of AnsiString = ('tty');
 {$ENDIF}
 {$ENDIF}
 
@@ -808,7 +808,7 @@ begin
        raise Exception.Create(v+': '+SserialPortNotExist);
 end;
 
-function TSerialPortDriver.COMExist(v:String):Boolean;
+function TSerialPortDriver.COMExist(v:AnsiString):Boolean;
 {$IF defined(WIN32) or defined(WIN64)}
 var
   dcbstring:AnsiString;

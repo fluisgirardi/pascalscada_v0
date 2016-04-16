@@ -55,7 +55,7 @@ type
     FTagList,
     ItemsToDel:TList;
     FItemId:LongInt;
-    procedure CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
+    procedure CheckNames(Sender:TObject; NewName:AnsiString; var AcceptNewName:Boolean);
     procedure btnUpClick(Sender:TObject);
     procedure btnDownClick(Sender:TObject);
     procedure btnDelClick(Sender:TObject);
@@ -152,7 +152,7 @@ begin
   Button1Click(Sender);
 end;
 
-procedure TfrmStructureEditor.CheckNames(Sender:TObject; NewName:String; var AcceptNewName:Boolean);
+procedure TfrmStructureEditor.CheckNames(Sender:TObject; NewName:AnsiString; var AcceptNewName:Boolean);
 var
   t,b:LongInt;
 begin
@@ -251,9 +251,9 @@ var
     if frmbit.Wordnamestartsfrom1.Checked then inc(wordnum);
   end;
 
-  function GetNewTagBitName:String;
+  function GetNewTagBitName:AnsiString;
   var
-    n:String;
+    n:AnsiString;
   begin
     n:=IntToStr(bitnum);
     Result:=frmbit.edtNamepattern.Text;

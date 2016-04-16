@@ -1,7 +1,5 @@
 unit HMIComboBox;
 
-{$mode delphi}
-
 interface
 
 uses

@@ -16,10 +16,10 @@ uses
 //{$IFEND}
   Windows, ActiveX, psOPCtypes, psOPCDA;
 
-function ServerAddGroup(ServerIf: IOPCServer; Name: string; Active: BOOL;
+function ServerAddGroup(ServerIf: IOPCServer; Name: AnsiString; Active: BOOL;
           UpdateRate: DWORD; ClientHandle: OPCHANDLE; var GroupIf: IOPCItemMgt;
           var ServerHandle: OPCHANDLE): HResult;
-function GroupAddItem(GroupIf: IOPCItemMgt; ItemID: string;
+function GroupAddItem(GroupIf: IOPCItemMgt; ItemID: AnsiString;
           ClientHandle: OPCHANDLE; DataType: TVarType;
           var ServerHandle: OPCHANDLE; var CanonicalType: TVarType): HResult;
 function GroupRemoveItem(GroupIf: IOPCItemMgt;
@@ -46,7 +46,7 @@ implementation
 // utility functions wrapping OPC methods
 
 // wrapper for IOPCServer.AddGroup
-function ServerAddGroup(ServerIf: IOPCServer; Name: string; Active: BOOL;
+function ServerAddGroup(ServerIf: IOPCServer; Name: AnsiString; Active: BOOL;
           UpdateRate: DWORD; ClientHandle: OPCHANDLE; var GroupIf: IOPCItemMgt;
           var ServerHandle: OPCHANDLE): HResult;
 var
@@ -69,7 +69,7 @@ begin
 end;
 
 // wrapper for IOPCItemMgt.AddItems (single item only)
-function GroupAddItem(GroupIf: IOPCItemMgt; ItemID: string;
+function GroupAddItem(GroupIf: IOPCItemMgt; ItemID: AnsiString;
           ClientHandle: OPCHANDLE; DataType: TVarType;
           var ServerHandle: OPCHANDLE; var CanonicalType: TVarType): HResult;
 var
@@ -229,7 +229,7 @@ end;
 
 // wrapper for IOPCSyncIO.Read (single item only)
 function ReadOPCGroupItemValue(GroupIf: IUnknown; ItemServerHandle: OPCHANDLE;
-          var ItemValue: string; var ItemQuality: Word): HResult;
+          var ItemValue: AnsiString; var ItemQuality: Word): HResult;
 var
   SyncIOIf: IOPCSyncIO;
   Errors: PResultList;

@@ -1,7 +1,5 @@
 unit HMIKeyboardManager;
 
-{$mode delphi}
-
 interface
 
 uses

@@ -1,7 +1,5 @@
 unit HMIBasicEletricMotor;
 
-{$mode delphi}
-
 interface
 
 uses

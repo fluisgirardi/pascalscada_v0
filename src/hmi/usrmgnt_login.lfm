@@ -13,35 +13,36 @@ object psHMIfrmUserAuthentication: TpsHMIfrmUserAuthentication
   Font.Name = 'MS Sans Serif'
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '1.2.6.0'
+  LCLVersion = '1.7'
+  Visible = False
   object Label1: TLabel
     Left = 8
-    Height = 13
+    Height = 14
     Top = 8
-    Width = 48
+    Width = 58
     Caption = '&Username'
     FocusControl = edtusername
     ParentColor = False
   end
   object Label2: TLabel
     Left = 8
-    Height = 13
+    Height = 14
     Top = 56
-    Width = 46
+    Width = 52
     Caption = '&Password'
     FocusControl = edtPassword
     ParentColor = False
   end
   object edtusername: TEdit
     Left = 8
-    Height = 21
+    Height = 26
     Top = 24
     Width = 289
     TabOrder = 0
   end
   object edtPassword: TEdit
     Left = 8
-    Height = 21
+    Height = 26
     Top = 72
     Width = 289
     EchoMode = emPassword

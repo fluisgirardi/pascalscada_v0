@@ -14,10 +14,6 @@
 {$ENDIF}
 unit HMIText;
 
-{$IFDEF FPC}
-{$MODE Delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -146,11 +142,11 @@ constructor THMIText.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
    FTimer:=TTimer.Create(Self);
-   FTimer.OnTimer:=BlinkTimer;
+   FTimer.OnTimer:=@BlinkTimer;
    FTimer.Enabled:=false;
    FTextZones:=TTextZones.Create(Self);
-   FTextZones.OnNeedCompState:=NeedComState;
-   FTextZones.OnCollectionItemChange:=ZoneChange;
+   FTextZones.OnNeedCompState:=@NeedComState;
+   FTextZones.OnCollectionItemChange:=@ZoneChange;
 end;
 
 destructor THMIText.Destroy;
