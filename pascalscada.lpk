@@ -10,7 +10,7 @@
       <SearchPaths>
         <IncludeFiles Value="src\scada"/>
         <OtherUnitFiles Value="src\scada"/>
-        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)-$(LCLWidgetType)"/>
       </SearchPaths>
       <Parsing>
         <SyntaxOptions>

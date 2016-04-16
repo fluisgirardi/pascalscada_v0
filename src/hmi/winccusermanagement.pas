@@ -54,7 +54,7 @@ type
     procedure LoadUseAdmin;
     procedure SetAuthorizationList(AValue: TStrings);
   protected
-    function CheckUserAndPassword(User, Pass: UTF8String; var UID:Integer; LoginAction:Boolean): Boolean; override;
+    function CheckUserAndPassword(User, Pass: UTF8String; var aUID:Integer; LoginAction:Boolean): Boolean; override;
     function GetLoggedUser:Boolean; override;
     function GetCurrentUserLogin:UTF8String; override;
     procedure Loaded; override;
@@ -102,7 +102,7 @@ begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
   FCheckTimer:=TTimer.Create(Self);
-  FCheckTimer.OnTimer :=CheckAuthChanges;
+  FCheckTimer.OnTimer :=@CheckAuthChanges;
   FCheckTimer.Interval:=1000;
   FCheckTimer.Enabled:=false;
   FAuthorizationList:=TTextStrings.Create;
@@ -211,15 +211,15 @@ begin
 end;
 
 function TWinCCUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
-  var UID: Integer; LoginAction: Boolean): Boolean;
+  var aUID: Integer; LoginAction: Boolean): Boolean;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
   Result:=PWRTSilentLogin(PAnsiChar(AnsiString(User)),PAnsiChar(AnsiString(Pass))); //log into WinCC
   if Result then
-    UID:=1
+    aUID:=1
   else
-    UID:=-1;
+    aUID:=-1;
 end;
 
 function TWinCCUserManagement.GetLoggedUser:Boolean;

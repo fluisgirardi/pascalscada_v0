@@ -110,7 +110,7 @@ implementation
 
 function setblockingmode(fd:TSocket; mode:u_long):LongInt;
 begin
-  if ioctlsocket(fd, FIONBIO, mode)=SOCKET_ERROR then
+  if ioctlsocket(fd, LongInt(FIONBIO), mode)=SOCKET_ERROR then
     Result:=-1
   else
     Result:=0;
