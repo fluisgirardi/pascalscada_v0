@@ -266,25 +266,23 @@ begin
   FYLinearScale.Input:=FTag.Value;
 
   if FMinX and (FXLinearScale.Output<FMinXValue) then
-     outx:=FMinXValue
-  else
-     outx:=FXLinearScale.Output;
-
-  if FMaxX and (FXLinearScale.Output>FMaxXValue) then
-     outx:=FMaxXValue
-  else
-     outx:=FXLinearScale.Output;
+    outx:=FMinXValue
+  else begin
+    if FMaxX and (FXLinearScale.Output>FMaxXValue) then
+      outx:=FMaxXValue
+    else
+      outx:=FXLinearScale.Output;
+  end;
 
 
   if FMinY and (FYLinearScale.Output<FMinYValue) then
      outY:=FMinYValue
-  else
-     outY:=FYLinearScale.Output;
-
-  if FMaxY and (FYLinearScale.Output>FMaxYValue) then
-     outY:=FMaxYValue
-  else
-     outY:=FYLinearScale.Output;
+  else begin
+    if FMaxY and (FYLinearScale.Output>FMaxYValue) then
+      outY:=FMaxYValue
+    else
+      outY:=FYLinearScale.Output;
+  end;
 
   FTarget.Left:=trunc(outX);
   FTarget.Top :=trunc(outY);

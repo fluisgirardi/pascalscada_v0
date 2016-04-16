@@ -190,6 +190,7 @@ begin
         fLastControl.OnClick:=@ClickEvent;
         fLastControl.OnEnter:=@EnterEvent;
         fLastControl.OnExit :=@ExitEvent;
+        fLastControl.FreeNotification(Self);
         {$IFDEF DEBUG}DebugLn('setup up of new event handlers...');{$ENDIF}
       end;
     end else begin
@@ -316,7 +317,8 @@ begin
   inherited Notification(AComponent, Operation);
   if (Operation=opRemove) and (FLastFocusedControl=AComponent) then begin
     FLastFocusedControl:=nil;
-    ExitEvent(nil);
+    CloseAlphaKB;
+    CloseNumKB;
   end;
 end;
 
