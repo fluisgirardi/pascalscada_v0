@@ -91,7 +91,7 @@ type
     FActiveLoaded:Boolean;
     FConnected:LongInt;
     FPort: Word;
-    FServerHost:String;
+    FServerHost:AnsiString;
     FSocket: TSocket;
     FDefaultBehavior:Boolean;
     FConnectionStatusThread:TMutexClientThread;
@@ -99,7 +99,7 @@ type
     procedure Disconnect;
     procedure setActive(AValue: Boolean);
     procedure SetPort(AValue: Word);
-    procedure SetServerHost(AValue: String);
+    procedure SetServerHost(AValue: AnsiString);
     procedure ConnectionFinished(Sender:TObject);
     {$IFDEF FPC}
     function InterLockedExchangePointer(var Target: Pointer;Source : Pointer) : Pointer;
@@ -114,7 +114,7 @@ type
     function Leave: Boolean;
   published
     property Active:Boolean read FActive write setActive stored true default false;
-    property Host:String read FServerHost write SetServerHost stored true nodefault;
+    property Host:AnsiString read FServerHost write SetServerHost stored true nodefault;
     property DefaultBehavior:Boolean read FDefaultBehavior write FDefaultBehavior stored true default false;
     property Port:Word read FPort write SetPort stored true default 52321;
   end;
@@ -479,7 +479,7 @@ begin
     {$IFEND}
 
     {$IF defined(WIN32) OR defined(WIN64)}
-    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
+    channel.sin_addr.S_addr := PInAddr(Serveraddr^.h_addr)^.S_addr;
     {$IFEND}
 
     if connect_with_timeout(FSocket,@channel,sizeof(channel),2000)<>0 then begin
@@ -556,7 +556,7 @@ begin
   FPort:=AValue;
 end;
 
-procedure TMutexClient.SetServerHost(AValue: String);
+procedure TMutexClient.SetServerHost(AValue: AnsiString);
 begin
   if FActive then
     raise exception.Create(SimpossibleToChangeWhenActive);

@@ -57,7 +57,7 @@ type
 
   TTCP_UDPPort = class(TCommPortDriver)
   private
-    FHostName:String;
+    FHostName:AnsiString;
     FPortNumber:LongInt;
     FTimeout:LongInt;
     FSocket:Tsocket;
@@ -67,7 +67,7 @@ type
     FEnableAutoReconnect:Boolean;
     FReconnectRetriesLimit:Cardinal;
     procedure TryReconnectTimer(Sender: TObject);
-    procedure SetHostname(target:string);
+    procedure SetHostname(target:Ansistring);
     procedure SetPortNumber(pn:LongInt);
     procedure SetTimeout(t:LongInt);
     procedure SetPortType(pt:TPortType);
@@ -113,7 +113,7 @@ type
     {$ELSE}
     //: Hostname or address of the server to connect.
     {$ENDIF}
-    property Host:String read FHostName write SetHostname nodefault;
+    property Host:AnsiString read FHostName write SetHostname nodefault;
 
     {$IFDEF PORTUGUES}
     //: Porta do servidor que se deseja conectar. Para Modbus TCP use 502 e para Siemens ISOTCP use 102.
@@ -219,7 +219,7 @@ begin
   Active:=true;
 end;
 
-procedure TTCP_UDPPort.SetHostname(target:string);
+procedure TTCP_UDPPort.SetHostname(target:Ansistring);
 begin
   DoExceptionInActive;
   FHostName:=target;
@@ -524,7 +524,7 @@ begin
     {$IFEND}
 
     {$IF defined(WIN32) OR defined(WIN64)}
-    channel.sin_addr.S_addr := PInAddr(Serveraddr.h_addr^).S_addr;
+    channel.sin_addr.S_addr := PInAddr(ServerAddr^.h_addr)^.S_addr;
     {$IFEND}
 
     if connect_with_timeout(FSocket,@channel,sizeof(channel),FTimeout)<>0 then begin

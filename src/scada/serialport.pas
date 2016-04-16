@@ -141,7 +141,7 @@ type
   {$ENDIF}
   TSerialPortDriver = class(TCommPortDriver)
   private
-    PPortName:String;
+    PPortName:AnsiString;
     PTimeout:LongInt;
     PBaundRate:TSerialBaudRate;
     PStopBits:TSerialStopBits;
@@ -149,7 +149,7 @@ type
     PDataBits:TSerialDataBits;
     PAcceptAnyPortName:Boolean;
     {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
-    PPortEventName:String;
+    PPortEventName:AnsiString;
     PSavedDCB:DCB;
     PDCB:DCB;
     ComTimeouts:COMMTIMEOUTS;
@@ -168,9 +168,9 @@ type
     procedure SetStopBits(v:TSerialStopBits);
     procedure SetParity(v:TSerialParity);
     procedure SetDataBits(v:TSerialDataBits);
-    procedure SetCOMPort(v:String);
+    procedure SetCOMPort(v:AnsiString);
     {$IF defined(WIN32) or defined(WIN64)}
-    function MakeDCBString:String;
+    function MakeDCBString:AnsiString;
     {$IFEND}
     function COMExist(v:String):Boolean;
   protected
@@ -215,7 +215,7 @@ type
     On Windows the name is COMx, ob Linux is ttySx and on FreeBSD is cuadx.
     }
     {$ENDIF}
-    property COMPort:string read PPortName write SetCOMPort;
+    property COMPort:AnsiString read PPortName write SetCOMPort;
 
     {$IFDEF PORTUGUES}
     {: Informa a duração máxima de uma ação leitura ou escrita. }
@@ -528,7 +528,7 @@ end;
 procedure TSerialPortDriver.PortStart(var Ok:Boolean);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  strdcb:String;
+  strdcb:AnsiString;
 label erro1, erro2, erro3;
 begin
   if PActive then begin
@@ -780,7 +780,7 @@ end;
 function TSerialPortDriver.ComSettingsOK:Boolean;
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  strdcb:String;
+  strdcb:AnsiString;
   vardcb:DCB;
 begin
   strdcb := MakeDCBString;
@@ -796,7 +796,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TSerialPortDriver.SetCOMPort(v:String);
+procedure TSerialPortDriver.SetCOMPort(v:AnsiString);
 begin
   DoExceptionInActive;
   if COMExist(v) then
@@ -811,7 +811,7 @@ end;
 function TSerialPortDriver.COMExist(v:String):Boolean;
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  dcbstring:String;
+  dcbstring:AnsiString;
   d:DCB;
 begin
   if PAcceptAnyPortName then begin
@@ -861,7 +861,7 @@ end;
 procedure TSerialPortDriver.SetBaundRate(v:TSerialBaudRate);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  dcbstring:String;
+  dcbstring:AnsiString;
   d:DCB;
   Old:TSerialBaudRate;
 begin
@@ -890,7 +890,7 @@ end;
 procedure TSerialPortDriver.SetStopBits(v:TSerialStopBits);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  dcbstring:String;
+  dcbstring:AnsiString;
   d:DCB;
   Old:TSerialStopBits;
 begin
@@ -919,7 +919,7 @@ end;
 procedure TSerialPortDriver.SetParity(v:TSerialParity);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  dcbstring:String;
+  dcbstring:AnsiString;
   d:DCB;
   Old:TSerialParity;
 begin
@@ -948,7 +948,7 @@ end;
 procedure TSerialPortDriver.SetDataBits(v:TSerialDataBits);
 {$IF defined(WIN32) or defined(WIN64)}
 var
-  dcbstring:String;
+  dcbstring:AnsiString;
   d:DCB;
   Old:TSerialDataBits;
 begin
@@ -975,7 +975,7 @@ begin
 end;
 
 {$IF defined(WIN32) or defined(WIN64)}
-function TSerialPortDriver.MakeDCBString:String;
+function TSerialPortDriver.MakeDCBString:AnsiString;
 begin
   Result := '';
   case PBaundRate of

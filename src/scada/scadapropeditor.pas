@@ -198,7 +198,7 @@ procedure TPortPropertyEditor.GetValues(Proc: TGetStrProc);
 {$IF defined(WIN32) or defined(WIN64)}
 var
   c:LongInt;
-  dcbstring, comname:String;
+  dcbstring, comname:AnsiString;
   d:DCB;
 begin
   Proc('(none)');
