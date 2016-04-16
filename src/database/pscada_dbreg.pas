@@ -3,10 +3,6 @@ unit pscada_dbreg;
 
 {$I ../../src/common/delphiver.inc}
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses Classes;
@@ -38,9 +34,9 @@ begin
   RegisterComponents(strDatabasePallete,  [THMIDBConnection]);
   RegisterComponents(strFPCPallete,       [TFPSBufDataSet]);
 
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection, 'Protocol', THMIDBProtocolPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection, 'Database', THMIDBDatabasePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIDBConnection, 'Catalog',  THMIDBCatalogPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIDBConnection, 'Protocol', THMIDBProtocolPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIDBConnection, 'Database', THMIDBDatabasePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIDBConnection, 'Catalog',  THMIDBCatalogPropertyEditor);
 end;
 
 end.

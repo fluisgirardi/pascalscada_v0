@@ -1,9 +1,5 @@
 unit dbstructurechecker;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -23,49 +19,49 @@ type
   protected
     FState:TDatabaseObjectState;
     FGenerateDDL:Boolean;
-    function  ValidateName(Name:String; NameKind:TDatabaseNameKind):Boolean; virtual;
+    function  ValidateName(Name:AnsiString; NameKind:TDatabaseNameKind):Boolean; virtual;
     function  GetCurrentState:TDatabaseObjectState; virtual;
     procedure ResetState; virtual;
-    function  GenerateDDL:String;
+    function  GenerateDDL:AnsiString;
   end;
 
   //simple index declaration (for primary and unique keys)
   TIndex = class(TDatabaseObject)
   protected
     FTableOwner:TTableMetadata;
-    FIndexName:string;
+    FIndexName:AnsiString;
     FFields:TStringList;
-    procedure AddFieldToIndex(FieldName:String); virtual;
+    procedure AddFieldToIndex(FieldName:AnsiString); virtual;
     function GetFieldCount:LongInt;
-    function GetField(index:LongInt):String;
+    function GetField(index:LongInt):AnsiString;
   public
-    constructor Create(OwnerTable:TTableMetadata; IndexName:String);
+    constructor Create(OwnerTable:TTableMetadata; IndexName:AnsiString);
     destructor Destroy; override;
 
     function GetCurrentState:TDatabaseObjectState; override;
 
-    property IndexName:String read FIndexName;
+    property IndexName:AnsiString read FIndexName;
     property FieldCount:LongInt read GetFieldCount;
-    property IndexField[index:LongInt]:String read GetField;
+    property IndexField[index:LongInt]:AnsiString read GetField;
   end;
 
   TUniqueIndex = class(TIndex)
   public
-    procedure AddFieldToIndex(FieldName:String); override;
+    procedure AddFieldToIndex(FieldName:AnsiString); override;
   end;
 
   TUniqueIndexClass = class of TUniqueIndex;
 
   TPrimaryKeyIndex = class(TIndex)
   public
-    procedure AddFieldToIndex(FieldName: String); override;
+    procedure AddFieldToIndex(FieldName: AnsiString); override;
   end;
 
   TPrimaryKeyIndexClass = class of TPrimaryKeyIndex;
 
   TFieldLink = record
     SourceField,
-    Field:String;
+    Field:AnsiString;
   end;
 
   TFieldLinks = array of TFieldLink;
@@ -79,11 +75,11 @@ type
     FUpdateAction,
     FDeleteAction:TForeignKeyRestriction;
   public
-    constructor Create(OwnerTable:TTableMetadata; IndexName, SourceTable:String;
+    constructor Create(OwnerTable:TTableMetadata; aIndexName, aSourceTable:AnsiString;
                        UpdateAction:TForeignKeyRestriction = fkrNoAction;
                        DeleteAction:TForeignKeyRestriction = fkrNoAction);
     destructor Destroy; override;
-    procedure addFieldLink(SourceField, Field:String);
+    procedure addFieldLink(SourceField, Field:AnsiString);
   end;
 
   TForeignKeyClass = class of TForeignKey;
@@ -92,19 +88,19 @@ type
 
   TCollumnDefinition = class(TObject)
   private
-    FFieldName   :String;
+    FFieldName   :AnsiString;
     FFieldType   :TFieldType;
     FNotNull     :Boolean;
-    FDefaultValue:String;
+    FDefaultValue:AnsiString;
     FSize        :LongInt; //string size
     FOwnerTable  :TTableMetadata;
   public
-    constructor Create(OnwerTable:TTableMetadata; FieldName:String; FieldType:TFieldType; Size:LongInt = -1; Nullable:Boolean = true; DefaultValue:String = '');
+    constructor Create(OnwerTable:TTableMetadata; FieldName:AnsiString; FieldType:TFieldType; Size:LongInt = -1; Nullable:Boolean = true; DefaultValue:AnsiString = '');
     destructor Destroy;  override;
-    property FieldName   :String     read FFieldName;
+    property FieldName   :AnsiString read FFieldName;
     property FieldType   :TFieldType read FFieldType;
     property NotNull     :Boolean    read FNotNull     write FNotNull;
-    property DefaultValue:String     read FDefaultValue;
+    property DefaultValue:AnsiString read FDefaultValue;
     property Size        :LongInt    read FSize;
   end;
 
@@ -117,24 +113,24 @@ type
     FFields:array of TCollumnDefinition;
     FOwnerDatabase: TDatabaseMetadata;
     FPK:TPrimaryKeyIndex;
-    FTableName: String;
+    FTableName: AnsiString;
     FUniqueIndexes:array of TUniqueIndex;
   public
-    constructor Create(OwnerDatabase:TDatabaseMetadata; TableName:String);
+    constructor Create(OwnerDatabase:TDatabaseMetadata; TableName:AnsiString);
     destructor Destroy; override;
-    function addCollumn(FieldName:String; FieldType:TFieldType; Size:LongInt = -1; NotNull:Boolean = false; DefaultValue:String = ''):TCollumnDefinition;
-    function addPrimaryKey(pkName:String):TPrimaryKeyIndex;
-    function addUniqueIndex(uniquename:String):TUniqueIndex;
-    function addForeignKey(IndexName, SourceTable:String;
+    function addCollumn(FieldName:AnsiString; FieldType:TFieldType; Size:LongInt = -1; NotNull:Boolean = false; DefaultValue:AnsiString = ''):TCollumnDefinition;
+    function addPrimaryKey(pkName:AnsiString):TPrimaryKeyIndex;
+    function addUniqueIndex(uniquename:AnsiString):TUniqueIndex;
+    function addForeignKey(IndexName, SourceTable:AnsiString;
                             UpdateAction:TForeignKeyRestriction = fkrNoAction;
                             DeleteAction:TForeignKeyRestriction = fkrNoAction):TForeignKey;
   public
-    function ValidateName(Name: String; NameKind: TDatabaseNameKind): Boolean;
+    function ValidateName(Name: AnsiString; NameKind: TDatabaseNameKind): Boolean;
        override;
-    function FieldExists(fieldname:String; var field:TCollumnDefinition):Boolean;
+    function FieldExists(fieldname:AnsiString; var field:TCollumnDefinition):Boolean;
     function GetCurrentState:TDatabaseObjectState; override;
     procedure ResetState; override;
-    property TableName:String read FTableName;
+    property TableName:AnsiString read FTableName;
     property OwnerDatabase:TDatabaseMetadata read FOwnerDatabase;
   end;
 
@@ -148,11 +144,11 @@ type
      FTableMetadataClass:TTableMetadataClass;
    public
      constructor Create; virtual;
-     function   ValidateName(Name:String; NameKind:TDatabaseNameKind):Boolean; override;
+     function   ValidateName(Name:AnsiString; NameKind:TDatabaseNameKind):Boolean; override;
      destructor Destroy; override;
-     function   AddTable(TableName:String):TTableMetadata;
-     procedure  DeleteTable(TableName:String);
-     function   FindTableDef(TableName:String; var index:LongInt):TTableMetadata; overload;
+     function   AddTable(TableName:AnsiString):TTableMetadata;
+     procedure  DeleteTable(TableName:AnsiString);
+     function   FindTableDef(TableName:AnsiString; var index:LongInt):TTableMetadata; overload;
      function   GetCurrentState: TDatabaseObjectState; override;
      procedure  ResetState; override;
    end;
@@ -168,7 +164,7 @@ begin
   FTableMetadataClass:=TTableMetadata;
 end;
 
-function TDatabaseMetadata.ValidateName(Name: String;
+function TDatabaseMetadata.ValidateName(Name: AnsiString;
   NameKind: TDatabaseNameKind): Boolean;
 begin
   Result:=true;
@@ -187,7 +183,7 @@ begin
   FTables.Destroy;
 end;
 
-function TDatabaseMetadata.AddTable(TableName: String):TTableMetadata;
+function TDatabaseMetadata.AddTable(TableName: AnsiString):TTableMetadata;
 var
   tabledef:TTableMetadata;
   h:LongInt;
@@ -198,13 +194,13 @@ begin
     tabledef:=FTableMetadataClass.Create(Self,TableName);
     FTables.Add(tabledef);
     Result:=tabledef;
-    FTables.Sort(SortTableList);
+    FTables.Sort(@SortTableList);
   end else
     raise exception.Create('Tabela já existe no metadados.');
 
 end;
 
-procedure TDatabaseMetadata.DeleteTable(TableName: String);
+procedure TDatabaseMetadata.DeleteTable(TableName: AnsiString);
 var
   tabledef:TTableMetadata;
   i:LongInt;
@@ -217,7 +213,7 @@ begin
   FTables.Delete(i);
 end;
 
-function TDatabaseMetadata.FindTableDef(TableName: String; var index:LongInt): TTableMetadata;
+function TDatabaseMetadata.FindTableDef(TableName: AnsiString; var index:LongInt): TTableMetadata;
 var
   i:LongInt;
 begin
@@ -267,8 +263,8 @@ end;
 { TCollumnDefinition }
 
 constructor TCollumnDefinition.Create(OnwerTable: TTableMetadata;
-  FieldName: String; FieldType: TFieldType; Size: LongInt; Nullable: Boolean;
-  DefaultValue: String);
+  FieldName: AnsiString; FieldType: TFieldType; Size: LongInt; Nullable: Boolean;
+  DefaultValue: AnsiString);
 begin
 
 end;
@@ -280,7 +276,7 @@ end;
 
 { TDatabaseObject }
 
-function TDatabaseObject.ValidateName(Name: String; NameKind: TDatabaseNameKind
+function TDatabaseObject.ValidateName(Name: AnsiString; NameKind: TDatabaseNameKind
   ): Boolean;
 begin
   Result:=true;
@@ -296,7 +292,7 @@ begin
   FState:=dosUnknown;
 end;
 
-function TDatabaseObject.GenerateDDL: String;
+function TDatabaseObject.GenerateDDL: AnsiString;
 begin
   Result:='';
 end;
@@ -304,7 +300,7 @@ end;
 { TTableMetadata }
 
 constructor TTableMetadata.Create(OwnerDatabase: TDatabaseMetadata;
-  TableName: String);
+  TableName: AnsiString);
 begin
   inherited Create;
   if (OwnerDatabase=nil) then
@@ -322,30 +318,30 @@ begin
   inherited Destroy;
 end;
 
-function TTableMetadata.addCollumn(FieldName: String; FieldType: TFieldType;
-  Size: LongInt; NotNull: Boolean; DefaultValue: String): TCollumnDefinition;
+function TTableMetadata.addCollumn(FieldName: AnsiString; FieldType: TFieldType;
+  Size: LongInt; NotNull: Boolean; DefaultValue: AnsiString): TCollumnDefinition;
 begin
 
 end;
 
-function TTableMetadata.addPrimaryKey(pkName: String): TPrimaryKeyIndex;
+function TTableMetadata.addPrimaryKey(pkName: AnsiString): TPrimaryKeyIndex;
 begin
 
 end;
 
-function TTableMetadata.addUniqueIndex(uniquename: String): TUniqueIndex;
+function TTableMetadata.addUniqueIndex(uniquename: AnsiString): TUniqueIndex;
 begin
 
 end;
 
-function TTableMetadata.addForeignKey(IndexName, SourceTable: String;
+function TTableMetadata.addForeignKey(IndexName, SourceTable: AnsiString;
   UpdateAction: TForeignKeyRestriction; DeleteAction: TForeignKeyRestriction
   ): TForeignKey;
 begin
 
 end;
 
-function TTableMetadata.ValidateName(Name: String; NameKind: TDatabaseNameKind
+function TTableMetadata.ValidateName(Name: AnsiString; NameKind: TDatabaseNameKind
   ): Boolean;
 begin
   if FOwnerDatabase<>nil then
@@ -354,7 +350,7 @@ begin
     raise Exception.Create('Invalid Database');
 end;
 
-function TTableMetadata.FieldExists(fieldname: String;
+function TTableMetadata.FieldExists(fieldname: AnsiString;
   var field: TCollumnDefinition): Boolean;
 begin
 
@@ -370,7 +366,7 @@ begin
   inherited ResetState;
 end;
 
-constructor TIndex.Create(OwnerTable:TTableMetadata; IndexName:String);
+constructor TIndex.Create(OwnerTable:TTableMetadata; IndexName:AnsiString);
 begin
   //TODO: must validate the index name first with the database driver.
   //TODO: must check if the name of the index don't already exists on schema.
@@ -391,7 +387,7 @@ begin
   inherited Destroy;
 end;
 
-procedure  TIndex.AddFieldToIndex(FieldName:String);
+procedure  TIndex.AddFieldToIndex(FieldName:AnsiString);
 var
   ffield:TCollumnDefinition;
   found:Boolean;
@@ -418,7 +414,7 @@ begin
   Result:=FFields.Count;
 end;
 
-function TIndex.GetField(index:LongInt):String;
+function TIndex.GetField(index:LongInt):AnsiString;
 begin
   if (index<0) or (index>=FFields.Count) then
     raise Exception.Create('Fora dos limites!');
@@ -433,14 +429,14 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-procedure TUniqueIndex.AddFieldToIndex(FieldName:String);
+procedure TUniqueIndex.AddFieldToIndex(FieldName:AnsiString);
 begin
   inherited AddFieldToIndex(FieldName);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-procedure TPrimaryKeyIndex.AddFieldToIndex(FieldName: String);
+procedure TPrimaryKeyIndex.AddFieldToIndex(FieldName: AnsiString);
 var
   ffield:TCollumnDefinition;
 begin
@@ -451,8 +447,8 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-constructor TForeignKey.Create(OwnerTable:TTableMetadata; IndexName,
-                               SourceTable:String;
+constructor TForeignKey.Create(OwnerTable:TTableMetadata; aIndexName,
+                               aSourceTable:AnsiString;
                                UpdateAction:TForeignKeyRestriction = fkrNoAction;
                                DeleteAction:TForeignKeyRestriction = fkrNoAction);
 begin
@@ -467,7 +463,7 @@ begin
    inherited Destroy;
 end;
 
-procedure   TForeignKey.addFieldLink(SourceField, Field:String);
+procedure   TForeignKey.addFieldLink(SourceField, Field:AnsiString);
 begin
 
 end;
