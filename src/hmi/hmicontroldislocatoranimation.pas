@@ -51,7 +51,7 @@ type
 
     FGetPositionP0,
     FGetPositionP1,
-    FGoToP0:String;
+    FGoToP0:UTF8String;
 
     procedure MoveObject;
     procedure SetStartLeft(v:LongInt);
@@ -63,7 +63,7 @@ type
     procedure SetPLCTag(t:TPLCNumber);
     procedure SetControl(t:TControl);
 
-    procedure PropertyDoesNothing(v:String);
+    procedure PropertyDoesNothing(v:UTF8String);
 
     procedure SetEnableMinX(v:Boolean);
     procedure SetEnableMaxX(v:Boolean);
@@ -208,20 +208,20 @@ type
     {$ELSE}
     //: Gets the actual position of the control as the initial position (P0).
     {$ENDIF}
-    property Gets_P0_Position:String read FGetPositionP0 write PropertyDoesNothing;
+    property Gets_P0_Position:UTF8String read FGetPositionP0 write PropertyDoesNothing;
     {$IFDEF PORTUGUES}
     //: Pega a posição atual do controle como posição final (P1).
     {$ELSE}
     //: Gets the actual position of the control as the final position (P1).
     {$ENDIF}
-    property Gets_P1_Position:String read FGetPositionP1 write PropertyDoesNothing;
+    property Gets_P1_Position:UTF8String read FGetPositionP1 write PropertyDoesNothing;
 
     {$IFDEF PORTUGUES}
     //: Reposiciona o controle para a posição inicial definida.
     {$ELSE}
     //: Puts the control in the initial position defined.
     {$ENDIF}
-    property GoTo_P0_Position:String read FGoToP0        write PropertyDoesNothing;
+    property GoTo_P0_Position:UTF8String read FGoToP0        write PropertyDoesNothing;
   end;
 
 
@@ -370,7 +370,7 @@ begin
   MoveObject;
 end;
 
-procedure THMIControlDislocatorAnimation.PropertyDoesNothing(v:String);
+procedure THMIControlDislocatorAnimation.PropertyDoesNothing(v: UTF8String);
 begin
 
 end;

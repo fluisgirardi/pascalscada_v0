@@ -15,7 +15,7 @@ unit HMITypes;
 interface
 
 uses
-  PLCTag;
+  Controls, PLCTag;
 
 type
   {$IFDEF PORTUGUES}
@@ -131,7 +131,7 @@ type
     {$ELSE}
     //: Gets the access code of the control.
     {$ENDIF}
-    function GetControlSecurityCode:String;
+    function GetControlSecurityCode:UTF8String;
 
     {$IFDEF PORTUGUES}
     //: Remove o codigo de segurança do controle, tornando-o inseguro.
@@ -173,8 +173,8 @@ type
   TBeforeSendNumericValueToTagEvent = procedure(Sender:TObject; Value:Double; var SendIt:Boolean) of object;
   TAfterSendNumericValueToTagEvent = procedure(Sender:TObject; Value:Double) of object;
 
-  TBeforeSendStringValueToTagEvent = procedure(Sender:TObject; Value:String; var SendIt:Boolean) of object;
-  TAfterSendStringValueToTagEvent = procedure(Sender:TObject; Value:String) of object;
+  TBeforeSendStringValueToTagEvent = procedure(Sender:TObject; Value:TCaption; var SendIt:Boolean) of object;
+  TAfterSendStringValueToTagEvent = procedure(Sender:TObject; Value:TCaption) of object;
 
   TOnScreenKeyboardBehavior = (oskbDisabled, oskbEnabled, oskbManager);
 

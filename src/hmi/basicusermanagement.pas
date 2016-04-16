@@ -8,7 +8,7 @@ uses
 type
   TVKType = (vktNone, vktAlphaNumeric, vktNumeric);
 
-  TUserChangedEvent = procedure(Sender:TObject; const OldUsername, NewUserName:String) of object;
+  TUserChangedEvent = procedure(Sender:TObject; const OldUsername, NewUserName:UTF8String) of object;
 
   { TBasicUserManagement }
 
@@ -16,7 +16,7 @@ type
   protected
 {}  FLoggedUser:Boolean;
 {}  FCurrentUserName,
-{}  FCurrentUserLogin:String;
+{}  FCurrentUserLogin:UTF8String;
     FUID:Integer;
 {}  FLoggedSince:TDateTime;
 {}  FInactiveTimeOut:Cardinal;
@@ -42,11 +42,11 @@ type
     procedure DoSuccessfulLogin; virtual;
     procedure DoFailureLogin; virtual;
 
-    function CheckUserAndPassword(User, Pass:String; var UserID:Integer; LoginAction:Boolean):Boolean; virtual;
+    function CheckUserAndPassword(User, Pass:UTF8String; var UserID:Integer; LoginAction:Boolean):Boolean; virtual;
 
     function GetLoggedUser:Boolean; virtual;
-    function GetCurrentUserName:String; virtual;
-    function GetCurrentUserLogin:String; virtual;
+    function GetCurrentUserName:UTF8String; virtual;
+    function GetCurrentUserLogin:UTF8String; virtual;
 
     //read only properties.
     property LoggedSince:TDateTime read GetLoginTime;
@@ -60,31 +60,31 @@ type
     property SuccessfulLogin:TNotifyEvent read FSuccessfulLogin write FSuccessfulLogin;
     property FailureLogin:TNotifyEvent read FFailureLogin write FFailureLogin;
     property UserChanged:TUserChangedEvent read FUserChanged write FUserChanged;
-    function CanAccess(sc:String; aUID:Integer):Boolean; virtual; overload;
+    function CanAccess(sc:UTF8String; aUID:Integer):Boolean; virtual; overload;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
     function    Login:Boolean; virtual; overload;
-    function    Login(Userlogin, userpassword: String; var UID: Integer):Boolean; virtual;
+    function    Login(Userlogin, userpassword: UTF8String; var UID: Integer):Boolean; virtual;
     procedure   Logout; virtual;
     procedure   Manage; virtual;
 
     //Security codes management
-    procedure   ValidateSecurityCode(sc:String); virtual;
-    function    SecurityCodeExists(sc:String):Boolean; virtual;
-    procedure   RegisterSecurityCode(sc:String); virtual;
-    procedure   UnregisterSecurityCode(sc:String); virtual;
+    procedure   ValidateSecurityCode(sc:UTF8String); virtual;
+    function    SecurityCodeExists(sc:UTF8String):Boolean; virtual;
+    procedure   RegisterSecurityCode(sc:UTF8String); virtual;
+    procedure   UnregisterSecurityCode(sc:UTF8String); virtual;
 
-    function    CanAccess(sc:String):Boolean; virtual;
+    function    CanAccess(sc:UTF8String):Boolean; virtual;
     function    GetRegisteredAccessCodes:TStringList; virtual;
 
-    function    CheckIfUserIsAllowed(sc: String; RequireUserLogin: Boolean; var userlogin: String): Boolean; virtual;
+    function    CheckIfUserIsAllowed(sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean; virtual;
 
     //read only properties.
     property UID:Integer read GetUID;
     property UserLogged:Boolean read GetLoggedUser;
-    property CurrentUserName:String read GetCurrentUserName;
-    property CurrentUserLogin:String read GetCurrentUserLogin;
+    property CurrentUserName:UTF8String read GetCurrentUserName;
+    property CurrentUserLogin:UTF8String read GetCurrentUserLogin;
   end;
 
 implementation
@@ -181,7 +181,7 @@ begin
   end;
 end;
 
-function TBasicUserManagement.Login(Userlogin, userpassword: String; var UID:Integer):Boolean; overload;
+function TBasicUserManagement.Login(Userlogin, userpassword: UTF8String; var UID: Integer): Boolean;
 begin
   Result:=CheckUserAndPassword(Userlogin, userpassword, UID, true);
   if Result then begin
@@ -210,29 +210,29 @@ begin
   //has nothing to do here!
 end;
 
-procedure   TBasicUserManagement.ValidateSecurityCode(sc:String);
+procedure TBasicUserManagement.ValidateSecurityCode(sc: UTF8String);
 begin
   //raise a exception if the security code is invalid.
 end;
 
-function    TBasicUserManagement.SecurityCodeExists(sc:String):Boolean;
+function TBasicUserManagement.SecurityCodeExists(sc: UTF8String): Boolean;
 begin
   Result:=FRegisteredSecurityCodes.IndexOf(sc)>=0;
 end;
 
-procedure   TBasicUserManagement.RegisterSecurityCode(sc:String);
+procedure TBasicUserManagement.RegisterSecurityCode(sc: UTF8String);
 begin
   if Not SecurityCodeExists(sc) then
     FRegisteredSecurityCodes.Add(sc);
 end;
 
-procedure   TBasicUserManagement.UnregisterSecurityCode(sc:String);
+procedure TBasicUserManagement.UnregisterSecurityCode(sc: UTF8String);
 begin
   if SecurityCodeExists(sc) then
     FRegisteredSecurityCodes.Delete(FRegisteredSecurityCodes.IndexOf(sc));
 end;
 
-function    TBasicUserManagement.CanAccess(sc:String):Boolean;
+function TBasicUserManagement.CanAccess(sc: UTF8String): Boolean;
 begin
   Result:=false;
 end;
@@ -243,8 +243,8 @@ begin
   Result.Assign(FRegisteredSecurityCodes);
 end;
 
-function TBasicUserManagement.CheckIfUserIsAllowed(sc: String;
-  RequireUserLogin: Boolean; var userlogin: String): Boolean;
+function TBasicUserManagement.CheckIfUserIsAllowed(sc: UTF8String;
+  RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean;
 var
   frozenTimer:TTimer;
   aUserID:Integer;
@@ -319,7 +319,7 @@ begin
   //
 end;
 
-function TBasicUserManagement.CheckUserAndPassword(User, Pass: String;
+function TBasicUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
   var UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
@@ -330,17 +330,17 @@ begin
   Result:=FLoggedUser;
 end;
 
-function TBasicUserManagement.GetCurrentUserName:String;
+function TBasicUserManagement.GetCurrentUserName: UTF8String;
 begin
   Result:=FCurrentUserName;
 end;
 
-function TBasicUserManagement.GetCurrentUserLogin:String;
+function TBasicUserManagement.GetCurrentUserLogin: UTF8String;
 begin
   Result:=FCurrentUserLogin;
 end;
 
-function TBasicUserManagement.CanAccess(sc: String; aUID: Integer): Boolean;
+function TBasicUserManagement.CanAccess(sc: UTF8String; aUID: Integer): Boolean;
 begin
   Result:=false;
 end;

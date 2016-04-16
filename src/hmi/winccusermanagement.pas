@@ -24,7 +24,7 @@ type
 
   TAuthorization = class(TObject)
   public
-    AuthorizationName:String;
+    AuthorizationName:AnsiString;
     Valid:Boolean;
   end;
 
@@ -54,9 +54,9 @@ type
     procedure LoadUseAdmin;
     procedure SetAuthorizationList(AValue: TStrings);
   protected
-    function CheckUserAndPassword(User, Pass: String; var UID:Integer; LoginAction:Boolean): Boolean; override;
+    function CheckUserAndPassword(User, Pass: UTF8String; var UID:Integer; LoginAction:Boolean): Boolean; override;
     function GetLoggedUser:Boolean; override;
-    function GetCurrentUserLogin:String; override;
+    function GetCurrentUserLogin:UTF8String; override;
     procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -66,16 +66,16 @@ type
     procedure Logout; override;
     procedure Manage; override;
 
-    procedure   ValidateSecurityCode(sc:String); override;
-    function    SecurityCodeExists(sc:String):Boolean; override;
-    procedure   RegisterSecurityCode(sc:String); override;
-    procedure   UnregisterSecurityCode(sc:String); override;
+    procedure   ValidateSecurityCode(sc:UTF8String); override;
+    function    SecurityCodeExists(sc:UTF8String):Boolean; override;
+    procedure   RegisterSecurityCode(sc:UTF8String); override;
+    procedure   UnregisterSecurityCode(sc:UTF8String); override;
 
-    function    CanAccess(sc:String):Boolean; override;
+    function    CanAccess(sc:UTF8String):Boolean; override;
     function    GetRegisteredAccessCodes:TStringList; override;
     procedure   ClearAuthorizationCache;
     function    CanAccessViaWinCCAuthCode(Code:LongInt):Boolean;
-    function    CheckIfUserIsAllowed(sc: String; RequireUserLogin: Boolean; var userlogin: String): Boolean; override;
+    function    CheckIfUserIsAllowed(sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean; override;
   published
     property FailureLogin;
     property LoginRetries;
@@ -152,8 +152,8 @@ var
   l, p, AuthNumber: LongInt;
   newAuthorizationCache:TStringList;
   ValidFormat: Boolean;
-  strNum: String;
-  strAuthName: String;
+  strNum: UTF8String;
+  strAuthName: UTF8String;
 begin
   newAuthorizationCache:=TStringList.Create;
   try
@@ -195,7 +195,7 @@ end;
 
 procedure TWinCCUserManagement.CheckAuthChanges(Sender:TObject);
 var
-  culogin:String;
+  culogin:UTF8String;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
@@ -210,7 +210,7 @@ begin
   end;
 end;
 
-function TWinCCUserManagement.CheckUserAndPassword(User, Pass: String;
+function TWinCCUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
   var UID: Integer; LoginAction: Boolean): Boolean;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
@@ -227,7 +227,7 @@ begin
  Result := GetCurrentUserLogin<>'';
 end;
 
-function TWinCCUserManagement.GetCurrentUserLogin:String;
+function TWinCCUserManagement.GetCurrentUserLogin:UTF8String;
 var
   buffer1:PAnsiChar;
   c:LongInt;
@@ -278,13 +278,13 @@ begin
   raise exception.Create(SUseTheWinCCUserManager);
 end;
 
-procedure   TWinCCUserManagement.ValidateSecurityCode(sc:String);
+procedure   TWinCCUserManagement.ValidateSecurityCode(sc:UTF8String);
 begin
   if not SecurityCodeExists(sc) then
     raise exception.Create(SUseTheWinCCUserManager);
 end;
 
-function    TWinCCUserManagement.CanAccess(sc:String):Boolean;
+function    TWinCCUserManagement.CanAccess(sc:UTF8String):Boolean;
 var
   p, p2, i:Cardinal;
   auth:TStringList;
@@ -312,7 +312,7 @@ begin
   Result:=PWRTCheckPermission(p2,1);
 end;
 
-function    TWinCCUserManagement.SecurityCodeExists(sc:String):Boolean;
+function    TWinCCUserManagement.SecurityCodeExists(sc:UTF8String):Boolean;
 var
   x:TStringList;
   c:LongInt;
@@ -322,12 +322,12 @@ begin
   x.Destroy;
 end;
 
-procedure   TWinCCUserManagement.RegisterSecurityCode(sc:String);
+procedure   TWinCCUserManagement.RegisterSecurityCode(sc:UTF8String);
 begin
   raise exception.Create(SUseTheWinCCUserManager);
 end;
 
-procedure   TWinCCUserManagement.UnregisterSecurityCode(sc:String);
+procedure   TWinCCUserManagement.UnregisterSecurityCode(sc:UTF8String);
 begin
   //does nothing.
 end;
@@ -378,8 +378,8 @@ begin
   Result := PWRTCheckPermission(code,0);
 end;
 
-function TWinCCUserManagement.CheckIfUserIsAllowed(sc: String;
-  RequireUserLogin: Boolean; var userlogin: String): Boolean;
+function TWinCCUserManagement.CheckIfUserIsAllowed(sc: UTF8String;
+  RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean;
 begin
   raise exception.Create(SWCCNotSupportCheckUserAuth);
 end;

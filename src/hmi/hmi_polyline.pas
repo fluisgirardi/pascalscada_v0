@@ -19,7 +19,7 @@ type
     procedure setX(AValue: Integer);
     procedure setY(AValue: Integer);
   protected
-    function GetDisplayName: string; override;
+    function GetDisplayName: AnsiString; override;
   published
     property X:Integer read FX write setX;
     property Y:Integer read FY write setY;
@@ -45,7 +45,7 @@ type
     FPointCoordinates:TPointCollection;
     FDesignDrawing:Boolean;
     FCtrlOnLastMouseMove:Boolean;
-    FPointInfo:String;
+    FPointInfo:AnsiString;
     FPointInfoWidth:Integer;
     FOldAlign:TAlign;
 
@@ -379,7 +379,7 @@ begin
   NotifyChange;
 end;
 
-function TPointCollectionItem.GetDisplayName: string;
+function TPointCollectionItem.GetDisplayName: AnsiString;
 begin
   Result:='(x='+IntToStr(FX)+', y='+IntToStr(FY)+')';
 end;

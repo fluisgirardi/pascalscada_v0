@@ -41,8 +41,8 @@ type
     FIsEnabledBySecurity:Boolean;
     FModified:Boolean;
 
-    FSecurityCode:String;
-    procedure SetSecurityCode(sc:String);
+    FSecurityCode:UTF8String;
+    procedure SetSecurityCode(sc:UTF8String);
 
     function  GetPosition:LongInt;
     procedure RefreshTagValue;
@@ -53,7 +53,7 @@ type
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -128,7 +128,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
 
     {$IFDEF PORTUGUES}
     //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
@@ -199,7 +199,7 @@ begin
   Result:=Ftag;
 end;
 
-function THMITrackBar.GetControlSecurityCode:String;
+function THMITrackBar.GetControlSecurityCode: UTF8String;
 begin
    Result:=FSecurityCode;
 end;
@@ -222,7 +222,7 @@ begin
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
-procedure THMITrackBar.SetSecurityCode(sc: String);
+procedure THMITrackBar.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)

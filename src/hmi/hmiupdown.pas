@@ -42,8 +42,8 @@ type
     FMax,FMin:Double;
     FEnableMax, FEnableMin:Boolean;
 
-    FSecurityCode:String;
-    procedure SetSecurityCode(sc:String);
+    FSecurityCode:UTF8String;
+    procedure SetSecurityCode(sc:UTF8String);
 
     //implements the IHMIInterface interface
     //: @seealso(IHMIInterface.SetHMITag)
@@ -52,7 +52,7 @@ type
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -152,7 +152,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -187,7 +187,7 @@ begin
    inherited Destroy;
 end;
 
-procedure THMIUpDown.SetSecurityCode(Sc:String);
+procedure THMIUpDown.SetSecurityCode(Sc:UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -234,7 +234,7 @@ begin
    Result:=FTag;
 end;
 
-function THMIUpDown.GetControlSecurityCode:String;
+function THMIUpDown.GetControlSecurityCode:UTF8String;
 begin
    Result:=FSecurityCode;
 end;

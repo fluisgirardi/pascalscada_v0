@@ -48,11 +48,11 @@ type
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
 
-    FSecurityCode:String;
+    FSecurityCode:UTF8String;
     procedure SetMax(AValue: Double);
     procedure SetMin(AValue: Double);
     procedure SetOrientation(AValue: TProgressBarOrientation);
-    procedure SetSecurityCode(sc:String);
+    procedure SetSecurityCode(sc:UTF8String);
 
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -60,7 +60,7 @@ type
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -112,7 +112,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
     property Min: Double read FMin write SetMin;
     property Max: Double read FMax write SetMax;
     property Orientation: TProgressBarOrientation read FOrientation write SetOrientation default pbHorizontal;
@@ -230,7 +230,7 @@ begin
 
 end;
 
-function THMIProgressBar.GetControlSecurityCode:String;
+function THMIProgressBar.GetControlSecurityCode:UTF8String;
 begin
    Result:=FSecurityCode;
 end;
@@ -253,7 +253,7 @@ begin
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
-procedure THMIProgressBar.SetSecurityCode(sc: String);
+procedure THMIProgressBar.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)

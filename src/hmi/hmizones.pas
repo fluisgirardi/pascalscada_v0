@@ -563,13 +563,13 @@ type
   TGraphicZone = class(TAnimationZone)
   private
      FILIsDefault:Boolean;
-     FFileName:String;
+     FFileName:AnsiString;
      FImageList:TImageList;
      FImageIndex:LongInt;
      FColor:TColor;
      FTransparent:Boolean;
      procedure SetILAsDefault(b:Boolean);
-     procedure SetFileName(fn:String);
+     procedure SetFileName(fn:AnsiString);
      procedure SetImageList(il:TImageList);
      procedure SetImageIndex(aIndex:LongInt);
      procedure SetColor(c:TColor);
@@ -614,7 +614,7 @@ type
      @seealso(ImageListAsDefault)
      }
      {$ENDIF}
-     property FileName:String read FFileName write SetFileName nodefault;
+     property FileName:AnsiString read FFileName write SetFileName nodefault;
 
      {$IFDEF PORTUGUES}
      {:
@@ -1206,7 +1206,7 @@ begin
       NotifyChange;
 end;
 
-procedure TGraphicZone.SetFileName(fn:String);
+procedure TGraphicZone.SetFileName(fn: AnsiString);
 var
    notify:Boolean;
 begin

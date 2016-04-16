@@ -26,7 +26,7 @@ type
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
   protected
     FTag:TPLCTag;
-    FSecurityCode: String;
+    FSecurityCode: UTF8String;
     FAllowSetIndex,
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -42,10 +42,10 @@ type
     procedure SetItems(const Value: TStrings); override;
 
     procedure InternalSetItemIndex(const Val: integer); virtual;
-    procedure SetSecurityCode(AValue: String); virtual;
+    procedure SetSecurityCode(AValue: UTF8String); virtual;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-    function  GetControlSecurityCode:String; virtual;
+    function  GetControlSecurityCode:UTF8String; virtual;
     //: @seealso(IHMIInterface.MakeUnsecure)
     procedure MakeUnsecure; virtual;
     //: @seealso(IHMIInterface.SetHMITag)
@@ -130,7 +130,7 @@ type
     property PLCTag:TPLCTag read GetHMITag write SetHMITag;
     property PopupMenu;
     //property ReadOnly;
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
     property ShowHint;
     property Sorted;
     //property Style;
@@ -160,7 +160,7 @@ uses ControlSecurityManager, hsstrings;
 
 { THMIComboBox }
 
-procedure THMIComboBox.SetSecurityCode(AValue: String);
+procedure THMIComboBox.SetSecurityCode(AValue: UTF8String);
 begin
   if FSecurityCode=AValue then Exit;
 
@@ -178,7 +178,7 @@ begin
   FSecurityCode:=AValue;
 end;
 
-function THMIComboBox.GetControlSecurityCode: String;
+function THMIComboBox.GetControlSecurityCode: UTF8String;
 begin
   Result:=FSecurityCode;
 end;

@@ -88,7 +88,7 @@ begin
   {$IFEND}
   RegisterComponents(strUserManagement,   [TCustomizedUserManagement]);
 
-  RegisterPropertyEditor(TypeInfo(string), TGraphicZone,                   'FileName' ,        TZoneFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), TGraphicZone,               'FileName' ,        TZoneFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(LongInt),TZone,                          'BlinkWith',        TZoneBlinkWithPropertyEditor);
 
   {$IFDEF FPC}
@@ -98,28 +98,28 @@ begin
   RegisterPropertyEditor(TypeInfo(LongInt), TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
   {$IFEND}
   RegisterPropertyEditor(TypeInfo(TCaption),TTextZone,                      'Text',                          TStringMultilinePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(String)  ,TObjectWithBooleanPropetiesColletionItem,'TargetObjectProperty', TSelectOnlyBooleanPropPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(String)  ,TObjectWithColorPropetiesColletionItem,  'TargetObjectProperty', TSelectOnlyTColorPropPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString)  ,TObjectWithBooleanPropetiesColletionItem,'TargetObjectProperty', TSelectOnlyBooleanPropPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString)  ,TObjectWithColorPropetiesColletionItem,  'TargetObjectProperty', TSelectOnlyTColorPropPropertyEditor);
   {$ENDIF}
 
-  RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'Gets_P1_Position', TPositionPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIControlDislocatorAnimation, 'GoTo_P0_Position', TPositionPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Ansistring), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Ansistring), THMIControlDislocatorAnimation, 'Gets_P1_Position', TPositionPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Ansistring), THMIControlDislocatorAnimation, 'GoTo_P0_Position', TPositionPropertyEditor);
 
   //securitycode property editor.
-  RegisterPropertyEditor(TypeInfo(string), THMIEdit, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMILabel, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMICheckBox, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIRadioButton, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMITrackBar, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIProgressBar, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIRadioGroup, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIUpDown, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIScrollBar, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIAnimation, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), THMIText, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), TPascalSCADASecureAction, 'SecurityCode', TSecurityCodePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(string), TPascalSCADACheckSpecialTokenAction, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIEdit, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMILabel, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMICheckBox, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIRadioButton, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMITrackBar, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIProgressBar, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIRadioGroup, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIUpDown, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIScrollBar, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIAnimation, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIText, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADASecureAction, 'SecurityCode', TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADACheckSpecialTokenAction, 'SecurityCode', TSecurityCodePropertyEditor);
 
   //////////////////////////////////////////////////////////////////////////////
   //Actions

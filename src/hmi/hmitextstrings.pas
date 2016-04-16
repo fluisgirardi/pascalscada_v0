@@ -38,7 +38,7 @@ type
   TTextLineRange = record
     StartPos: LongInt; // start of line in Text
     EndPos: LongInt; // end of line in Text (= start of newline character(s))
-    Line: string; // cached line as string
+    Line: AnsiString; // cached line as string
     TheObject: TObject; // user data
   end;
 
@@ -51,30 +51,30 @@ type
     FLineCount: LongInt;
     FLineCapacity: LongInt;
     FLineRanges: ^TTextLineRange;// array of TTextLineRange
-    FText: string;
+    FText: UTF8string;
     FUpdateCount: LongInt;
     FChangedWhileUpdate: boolean;
-    function GetTextStr: string; override;
-    procedure SetTextStr(const AValue: string); override;
+    function GetTextStr: UTF8string; override;
+    procedure SetTextStr(const AValue: UTF8string); override;
     procedure BuildArrays; virtual;
     function GetCount: LongInt; override;
     procedure Changed; virtual;
     procedure Changing; virtual;
-    function Get(Index: LongInt): string; override;
+    function Get(Index: LongInt): UTF8string; override;
     procedure ClearArrays;
     function GetObject(Index: LongInt): TObject; override;
-    procedure Put(Index: LongInt; const S: string); override;
+    procedure Put(Index: LongInt; const S: UTF8string); override;
     procedure PutObject(Index: LongInt; AnObject: TObject); override;
     function GetLineLen(Index: LongInt; IncludeNewLineChars: boolean): LongInt; inline;
     function GetLineEnd(Index: LongInt; IncludeNewLineChars: boolean): LongInt;
     function HasObjects: boolean;
-    function CountLineEndings(const s: string): LongInt;
+    function CountLineEndings(const s: UTF8string): LongInt;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear; override;
     procedure SetText(TheText: PChar); override;
-    procedure Insert(Index: LongInt; const S: string); override;
+    procedure Insert(Index: LongInt; const S: UTF8string); override;
     procedure Delete(Index: LongInt); override;
     procedure Exchange(Index1, Index2: LongInt); override;
     procedure Move(CurIndex, NewIndex: LongInt); override;
@@ -82,12 +82,12 @@ type
     procedure BeginUpdate;
     procedure EndUpdate;
     function GetText: PChar; override;
-    function IndexOf(const S: string): LongInt; override;
-    function Add(const S: string): LongInt; override;
-    function AddObject(const S: string; AObject: TObject): LongInt; override;
+    function IndexOf(const S: UTF8string): LongInt; override;
+    function Add(const S: UTF8string): LongInt; override;
+    function AddObject(const S: UTF8string; AObject: TObject): LongInt; override;
     procedure AddStrings(TheStrings: TStrings); override;
   public
-    property Text: string read FText write SetTextStr;
+    property Text: UTF8string read FText write SetTextStr;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChanging: TNotifyEvent read FOnChanging write FOnChanging;
   end;
@@ -102,12 +102,12 @@ implementation
 
 { TTextStrings }
 
-function TTextStrings.GetTextStr: string;
+function TTextStrings.GetTextStr: UTF8string;
 begin
   Result:=FText;
 end;
 
-procedure TTextStrings.SetTextStr(const AValue: string);
+procedure TTextStrings.SetTextStr(const AValue: UTF8string);
 begin
   if FText=AValue then exit;
   FText:=AValue;
@@ -180,7 +180,7 @@ begin
       FOnChanging(Self);
 end;
 
-function TTextStrings.Get(Index: LongInt): string;
+function TTextStrings.Get(Index: LongInt): UTF8string;
 begin
   if not FArraysValid then BuildArrays;
   if (Index<0) or (Index>=FLineCount) then
@@ -215,7 +215,7 @@ begin
     Result:=nil;
 end;
 
-procedure TTextStrings.Put(Index: LongInt; const S: string);
+procedure TTextStrings.Put(Index: LongInt; const S: UTF8string);
 var
   OldLineLen: LongInt;
   NewLineLen: LongInt;
@@ -298,7 +298,7 @@ begin
   Result:=false;
 end;
 
-function TTextStrings.CountLineEndings(const s: string): LongInt;
+function TTextStrings.CountLineEndings(const s: UTF8string): LongInt;
 var
   p: LongInt;
   l: LongInt;
@@ -345,7 +345,7 @@ begin
   FArraysValid:=false;
 end;
 
-procedure TTextStrings.Insert(Index: LongInt; const S: string);
+procedure TTextStrings.Insert(Index: LongInt; const S: UTF8string);
 var
   NewStartPos: LongInt;
   NewLineCharCount: LongInt;
@@ -528,7 +528,7 @@ var
   SrcPos1: LongInt;
   SrcPos2: LongInt;
   SrcPos3: LongInt;
-  LineStr: String;
+  LineStr: UTF8String;
   LineLen: LongInt;
   i: LongInt;
   Obj: TObject;
@@ -648,19 +648,19 @@ begin
   Result:=PChar(FText);
 end;
 
-function TTextStrings.IndexOf(const S: string): LongInt;
+function TTextStrings.IndexOf(const S: UTF8string): LongInt;
 begin
   Result:=inherited IndexOf(S);
 end;
 
-function TTextStrings.Add(const S: string): LongInt;
+function TTextStrings.Add(const S: UTF8string): LongInt;
 begin
   Result:=AddObject(S,nil);
 end;
 
-function TTextStrings.AddObject(const S: string; AObject: TObject): LongInt;
+function TTextStrings.AddObject(const S: UTF8string; AObject: TObject): LongInt;
 var
-  e: String;
+  e: UTF8String;
   NewLineCount: LongInt;
   OldTxtLen: LongInt;
   p: LongInt;

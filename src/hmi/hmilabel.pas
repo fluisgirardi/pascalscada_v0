@@ -42,25 +42,25 @@ type
   THMILabel = class(TLabel, IHMIInterface, IHMITagInterface)
   private
     FFormatDateTimeOptions: TFormatDateTimeOptions;
-    FNumberFormat:string;
-    FPrefix, FSufix:string;
+    FNumberFormat:AnsiString;
+    FPrefix, FSufix:TCaption;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
 
-    FSecurityCode:String;
+    FSecurityCode:UTF8String;
     procedure SetFormatDateTimeOptions(AValue: TFormatDateTimeOptions);
-    procedure SetSecurityCode(sc:String);
+    procedure SetSecurityCode(sc:UTF8String);
 
-    procedure SetFormat(f:string);
-    procedure SetPrefix(s:String);
-    procedure SetSufix(s:String);
+    procedure SetFormat(f:AnsiString);
+    procedure SetPrefix(s:TCaption);
+    procedure SetSufix(s:TCaption);
     function  GetCaption:TCaption;
 
     //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -124,7 +124,7 @@ type
     your development environment.
     }
     {$ENDIF}
-    property NumberFormat:string read FNumberFormat write SetFormat;
+    property NumberFormat:AnsiString read FNumberFormat write SetFormat;
 
     {$IFDEF PORTUGUES}
     {:
@@ -156,7 +156,7 @@ type
     @name is the text that will be show at the left (before) of the tag value.
     }
     {$ENDIF}
-    property Prefix:string read FPrefix write SetPrefix;
+    property Prefix:TCaption read FPrefix write SetPrefix;
 
     {$IFDEF PORTUGUES}
     {:
@@ -169,7 +169,7 @@ type
     Useful to show the engineering unit of the tag.
     }
     {$ENDIF}
-    property Sufix:String read FSufix write SetSufix;
+    property Sufix:TCaption read FSufix write SetSufix;
     //: @exclude
     property AutoSize default False;
 
@@ -178,7 +178,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
 
     {$IFDEF PORTUGUES}
     //: Configuraçoes de formataçao data/hora.
@@ -211,7 +211,7 @@ begin
   inherited Destroy;
 end;
 
-procedure THMILabel.SetSecurityCode(sc: String);
+procedure THMILabel.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -234,7 +234,7 @@ begin
   RefreshTagValue;
 end;
 
-procedure THMILabel.SetFormat(f:string);
+procedure THMILabel.SetFormat(f: AnsiString);
 begin
   FNumberFormat := f;
   RefreshTagValue;
@@ -273,13 +273,13 @@ begin
     inherited Caption := SWithoutTag;
 end;
 
-procedure THMILabel.SetPrefix(s:String);
+procedure THMILabel.SetPrefix(s: TCaption);
 begin
   FPrefix := s;
   RefreshTagValue;
 end;
 
-procedure THMILabel.SetSufix(s:String);
+procedure THMILabel.SetSufix(s: TCaption);
 begin
   FSufix := s;
   RefreshTagValue;
@@ -306,7 +306,7 @@ begin
   Result := inherited Caption;
 end;
 
-function THMILabel.GetControlSecurityCode:String;
+function THMILabel.GetControlSecurityCode: UTF8String;
 begin
    Result:=FSecurityCode;
 end;

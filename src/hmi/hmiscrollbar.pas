@@ -43,8 +43,8 @@ type
     FCmdCount:LongInt;
     FLastPosition:LongInt;
 
-    FSecurityCode:String;
-    procedure SetSecurityCode(sc:String);
+    FSecurityCode:UTF8String;
+    procedure SetSecurityCode(sc:UTF8String);
 
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -52,7 +52,7 @@ type
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -121,7 +121,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -143,7 +143,7 @@ begin
    inherited Destroy;
 end;
 
-procedure THMIScrollBar.SetSecurityCode(Sc:String);
+procedure THMIScrollBar.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -188,7 +188,7 @@ begin
    Result:=FTag;
 end;
 
-function THMIScrollBar.GetControlSecurityCode:String;
+function THMIScrollBar.GetControlSecurityCode: UTF8String;
 begin
    Result:=FSecurityCode;
 end;

@@ -50,17 +50,17 @@ type
     FValueTrue, FValueFalse:Double;
     FWriteTrue, FWriteFalse:Boolean;
     FColorFalse, FColorTrue, FColorGrayed:TColor;
-    FCaptionFalse, FCaptionTrue, FCaptionGrayed:string;
+    FCaptionFalse, FCaptionTrue, FCaptionGrayed:TCaption;
     FFontFalse, FFontTrue, FFontGrayed:TFont;
     FOtherValues:TOtherValues;
 
-    FSecurityCode:String;
-    procedure SetSecurityCode(sc:String);
+    FSecurityCode:UTF8String;
+    procedure SetSecurityCode(sc:UTF8String);
 
     function  GetTagValue:Double;
-    procedure SetCaptionFalse(v:String);
-    procedure SetCaptionTrue(v:String);
-    procedure SetCaptionGrayed(v:String);
+    procedure SetCaptionFalse (v:TCaption);
+    procedure SetCaptionTrue  (v:TCaption);
+    procedure SetCaptionGrayed(v:TCaption);
     procedure SetColorFalse(c:TColor);
     procedure SetColorTrue(c:TColor);
     procedure SetColorGrayed(c:TColor);
@@ -98,7 +98,7 @@ type
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -218,7 +218,7 @@ type
     @seealso(Caption)
     }
     {$ENDIF}
-    property CaptionFalse:String read FCaptionFalse write SetCaptionFalse stored true nodefault;
+    property CaptionFalse:TCaption read FCaptionFalse write SetCaptionFalse stored true nodefault;
 
     {$IFDEF PORTUGUES}
     {:
@@ -231,7 +231,7 @@ type
     @seealso(Caption)
     }
     {$ENDIF}
-    property CaptionTrue:String read FCaptionTrue write SetCaptionTrue stored true nodefault;
+    property CaptionTrue:TCaption read FCaptionTrue write SetCaptionTrue stored true nodefault;
 
     {$IFDEF PORTUGUES}
     {:
@@ -245,7 +245,7 @@ type
     @seealso(Caption)
     }
     {$ENDIF}
-    property CaptionGrayed:string read FCaptionGrayed write SetCaptionGrayed stored true nodefault;
+    property CaptionGrayed:TCaption read FCaptionGrayed write SetCaptionGrayed stored true nodefault;
 
     {$IFDEF PORTUGUES}
     {:
@@ -449,7 +449,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
 
     {$IFDEF PORTUGUES}
     //: Evento disparado antes do HMIEdit enviar um valor ao tag associado
@@ -548,7 +548,7 @@ begin
    Result := FTag;
 end;
 
-function THMICheckBox.GetControlSecurityCode:String;
+function THMICheckBox.GetControlSecurityCode:UTF8String;
 begin
    Result:=FSecurityCode;
 end;
@@ -723,7 +723,7 @@ begin
 end;
 {$ENDIF}
 
-procedure THMICheckBox.SetSecurityCode(sc: String);
+procedure THMICheckBox.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -747,7 +747,7 @@ begin
 end;
 
 
-procedure THMICheckBox.SetCaptionFalse(v:String);
+procedure THMICheckBox.SetCaptionFalse(v:TCaption);
 begin
   if v=FCaptionFalse then exit;
 
@@ -755,7 +755,7 @@ begin
   RefreshTagValue(GetTagValue);
 end;
 
-procedure THMICheckBox.SetCaptionTrue(v:String);
+procedure THMICheckBox.SetCaptionTrue(v:TCaption);
 begin
   if v=FCaptionTrue then exit;
 
@@ -763,7 +763,7 @@ begin
   RefreshTagValue(GetTagValue);
 end;
 
-procedure THMICheckBox.SetCaptionGrayed(v:String);
+procedure THMICheckBox.SetCaptionGrayed(v:TCaption);
 begin
   if v=FCaptionGrayed then exit;
 

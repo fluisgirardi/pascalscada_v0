@@ -6,15 +6,15 @@ uses
   Classes, BasicUserManagement;
 
 type
-  TCheckUserAndPasswordEvent = procedure(user, pass:String; var aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;
+  TCheckUserAndPasswordEvent = procedure(user, pass:UTF8String; var aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;
   TUserStillLoggedEvent      = procedure(var StillLogged:Boolean) of object;
-  TGetUserNameAndLogin       = procedure(var UserInfo:String) of object;
+  TGetUserNameAndLogin       = procedure(var UserInfo:UTF8String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
-  TValidadeSecurityCode      = procedure(const securityCode:String) of object;
-  TRegisterSecurityCode      = procedure(const securityCode:String) of object;
+  TValidadeSecurityCode      = procedure(const securityCode:UTF8String) of object;
+  TRegisterSecurityCode      = procedure(const securityCode:UTF8String) of object;
   TLogoutEvent               = TNotifyEvent;
-  TCanAccessEvent            = procedure(securityCode:String; var CanAccess:Boolean) of object;
-  TUIDCanAccessEvent         = procedure(aUID:Integer; securityCode:String; var CanAccess:Boolean) of object;
+  TCanAccessEvent            = procedure(securityCode:UTF8String; var CanAccess:Boolean) of object;
+  TUIDCanAccessEvent         = procedure(aUID:Integer; securityCode:UTF8String; var CanAccess:Boolean) of object;
 
   { TCustomizedUserManagement }
 
@@ -30,20 +30,20 @@ type
     FCanAccessEvent           :TCanAccessEvent;
     FLogoutEvent              :TLogoutEvent;
   protected
-    function  CheckUserAndPassword(User, Pass:String; var UserID:Integer; LoginAction:Boolean):Boolean; override;
+    function  CheckUserAndPassword(User, Pass:UTF8String; var UserID:Integer; LoginAction:Boolean):Boolean; override;
 
-    function  GetCurrentUserName:String; override;
-    function  GetCurrentUserLogin:String; override;
-    function CanAccess(sc: String; aUID: Integer): Boolean; override; overload;
+    function  GetCurrentUserName:UTF8String; override;
+    function  GetCurrentUserLogin:UTF8String; override;
+    function CanAccess(sc: UTF8String; aUID: Integer): Boolean; override; overload;
   public
     procedure Logout; override;
     procedure Manage; override;
 
     //Security codes management
-    procedure ValidateSecurityCode(sc:String); override;
-    procedure RegisterSecurityCode(sc: String); override;
+    procedure ValidateSecurityCode(sc:UTF8String); override;
+    procedure RegisterSecurityCode(sc: UTF8String); override;
 
-    function  CanAccess(sc:String):Boolean; override;
+    function  CanAccess(sc:UTF8String):Boolean; override;
   published
     property UID;
     property CurrentUserName;
@@ -71,7 +71,7 @@ implementation
 
 uses sysutils;
 
-function TCustomizedUserManagement.CheckUserAndPassword(User, Pass: String;
+function TCustomizedUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
   var UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
@@ -83,7 +83,7 @@ begin
   end;
 end;
 
-function  TCustomizedUserManagement.GetCurrentUserName:String;
+function TCustomizedUserManagement.GetCurrentUserName: UTF8String;
 begin
   Result:='';
   if FLoggedUser then
@@ -95,7 +95,7 @@ begin
     end;
 end;
 
-function  TCustomizedUserManagement.GetCurrentUserLogin:String;
+function TCustomizedUserManagement.GetCurrentUserLogin: UTF8String;
 begin
   Result:='';
   if FLoggedUser then
@@ -107,7 +107,7 @@ begin
     end;
 end;
 
-function TCustomizedUserManagement.CanAccess(sc: String; aUID: Integer
+function TCustomizedUserManagement.CanAccess(sc: UTF8String; aUID: Integer
   ): Boolean;
 begin
   Result:=(Trim(sc)='');
@@ -136,19 +136,19 @@ begin
     FManageUsersAndGroupsEvent(Self);
 end;
 
-procedure TCustomizedUserManagement.ValidateSecurityCode(sc:String);
+procedure TCustomizedUserManagement.ValidateSecurityCode(sc: UTF8String);
 begin
   if Assigned(FValidadeSecurityCode) then
     FValidadeSecurityCode(sc);
 end;
 
-procedure TCustomizedUserManagement.RegisterSecurityCode(sc: String);
+procedure TCustomizedUserManagement.RegisterSecurityCode(sc: UTF8String);
 begin
   if Assigned(FRegisterSecurityCode) then
     FRegisterSecurityCode(sc);
 end;
 
-function  TCustomizedUserManagement.CanAccess(sc:String):Boolean;
+function TCustomizedUserManagement.CanAccess(sc: UTF8String): Boolean;
 begin
   Result:=(Trim(sc)='');
   if FLoggedUser then

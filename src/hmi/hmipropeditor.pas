@@ -90,19 +90,16 @@ type
   {$IFEND}
 
   {$IFNDEF DELPHI4_UP}
-
-  { TTargetObjectPropPropertyEditor }
-
   TSelectObjectPropPropertyEditor = class(TStringPropertyEditor)
   protected
-    FOnlyPropertiesOfType:String;
+    FOnlyPropertiesOfType:AnsiString;
     FExpectedClass:TObjectColletionItemClass;
   public
     constructor Create(Hook: TPropertyEditorHook; APropCount: Integer);
       override;
     function  GetAttributes: TPropertyAttributes; override;
     procedure GetValues(Proc: TGetStrProc); override;
-    procedure SetValue(const NewValue: ansistring); override;
+    procedure SetValue(const NewValue: AnsiString); override;
   end;
 
   { TSelectOnlyBooleanPropPropertyEditor }
@@ -319,7 +316,7 @@ begin
      end;
 end;
 
-procedure TSelectObjectPropPropertyEditor.SetValue(const NewValue: ansistring);
+procedure TSelectObjectPropPropertyEditor.SetValue(const NewValue: AnsiString);
 begin
   if NewValue='(none)' then
     inherited SetValue('')
@@ -491,7 +488,7 @@ end;
 
 procedure TPositionPropertyEditor.Edit;
 var
-  pname:String;
+  pname:AnsiString;
 begin
   if GetComponent(0) is THMIControlDislocatorAnimation then begin
     with GetComponent(0) as THMIControlDislocatorAnimation do begin

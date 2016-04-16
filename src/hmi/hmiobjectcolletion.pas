@@ -31,17 +31,17 @@ type
     FTargetObject,
     FTargetObjectLoaded: TComponent;
     FTargetObjectProperty,
-    FTargetObjectPropertyLoaded: String;
+    FTargetObjectPropertyLoaded: AnsiString;
     procedure SetTargetObject(AValue: TComponent);
-    procedure SetTargetObjectProperty(AValue: String);
+    procedure SetTargetObjectProperty(AValue: AnsiString);
   protected
-    fRequiredTypeName:String;
+    fRequiredTypeName:AnsiString;
     fRequiredTypeKind:TTypeKind;
     function AcceptObject(obj:TComponent):Boolean; virtual;
-    function AcceptObjectProperty(PropertyName:String):Boolean; virtual;
+    function AcceptObjectProperty(PropertyName:AnsiString):Boolean; virtual;
   published
     property TargetObject:TComponent read FTargetObject write SetTargetObject;
-    property TargetObjectProperty:String read FTargetObjectProperty write SetTargetObjectProperty;
+    property TargetObjectProperty:AnsiString read FTargetObjectProperty write SetTargetObjectProperty;
   public
     procedure Loaded; override;
     constructor Create(ACollection: TCollection); override;
@@ -75,7 +75,7 @@ begin
     FTargetObject.FreeNotification(TComponent(Collection.Owner));
 end;
 
-procedure TObjectColletionItem.SetTargetObjectProperty(AValue: String);
+procedure TObjectColletionItem.SetTargetObjectProperty(AValue: AnsiString);
 begin
   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
     FTargetObjectPropertyLoaded:=AValue;
@@ -115,7 +115,7 @@ begin
   end;
 end;
 
-function TObjectColletionItem.AcceptObjectProperty(PropertyName: String
+function TObjectColletionItem.AcceptObjectProperty(PropertyName: AnsiString
   ): Boolean;
 var
   helper:TPropInfoList;

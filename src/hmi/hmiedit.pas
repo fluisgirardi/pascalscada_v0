@@ -54,9 +54,9 @@ type
     FFontChangeEvent:TNotifyEvent;
     FBlockFontChange:Boolean;
     FBlockChange:Boolean;
-    oldValue:string;
-    FPrefix, FSufix:string;
-    FNumberFormat:string;
+    oldValue:TCaption;
+    FPrefix, FSufix:TCaption;
+    FNumberFormat:AnsiString;
     FSend:TSendChange;
     FFreezeValue:Boolean;
     FFreezedValue:Boolean;
@@ -81,12 +81,12 @@ type
     {$ENDIF}
     FMinLimit, FMaxLimit:Double;
 
-    FSecurityCode:String;
-    procedure SetSecurityCode(sc:String);
+    FSecurityCode:UTF8String;
+    procedure SetSecurityCode(sc:UTF8String);
 
     procedure RemoveHMITag(Sender:TObject);
 
-    procedure SetFormat(f:string);
+    procedure SetFormat(f:AnsiString);
     function  GetText:TCaption;
     procedure RefreshTagValue;
     procedure SetSend(s:TSendChange);
@@ -94,10 +94,10 @@ type
     procedure RepaintFocus;
     function  GetColor:TColor;
     procedure FontChange(Sender: TObject);
-    procedure SetPrefix(s:String);
-    procedure SetSufix(s:String);
+    procedure SetPrefix(s:TCaption);
+    procedure SetSufix(s:TCaption);
 
-    procedure SendValue(txt:String);
+    procedure SendValue(txt:TCaption);
 
     //implements the IHMITagInterface
     procedure NotifyReadOk;
@@ -122,7 +122,7 @@ type
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -199,7 +199,7 @@ type
     development environment.
     }
     {$ENDIF}
-    property NumberFormat:string read FNumberFormat write SetFormat;
+    property NumberFormat:AnsiString read FNumberFormat write SetFormat;
 
     {$IFDEF PORTUGUES}
     {:
@@ -276,7 +276,7 @@ type
     tag @bold(when the control doesn't has the focus).
     }
     {$ENDIF}
-    property Prefix:string read FPrefix write SetPrefix;
+    property Prefix:TCaption read FPrefix write SetPrefix;
 
     {$IFDEF PORTUGUES}
     {:
@@ -290,7 +290,7 @@ type
     engineering unit of the tag.
     }
     {$ENDIF}
-    property Sufix:String read FSufix write SetSufix;
+    property Sufix:TCaption read FSufix write SetSufix;
 
     {$IFDEF PORTUGUES}
     {:
@@ -338,7 +338,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
 
     {$IFDEF PORTUGUES}
     {:
@@ -434,7 +434,7 @@ begin
                    //isn´t need.
 end;
 
-procedure THMIEdit.SetSecurityCode(sc: String);
+procedure THMIEdit.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -462,7 +462,7 @@ begin
   CanBeAccessed(true);
 end;
 
-function THMIEdit.GetControlSecurityCode:String;
+function THMIEdit.GetControlSecurityCode:UTF8String;
 begin
    Result:=FSecurityCode;
 end;
@@ -524,7 +524,7 @@ begin
   Result := FTag;
 end;
 
-procedure THMIEdit.SetFormat(f:string);
+procedure THMIEdit.SetFormat(f:AnsiString);
 begin
   FNumberFormat := f;
   RefreshTagValue;
@@ -589,13 +589,13 @@ begin
     FDefColor := c;
 end;
 
-procedure THMIEdit.SetPrefix(s:String);
+procedure THMIEdit.SetPrefix(s:TCaption);
 begin
   FPrefix := s;
   RefreshTagValue;
 end;
 
-procedure THMIEdit.SetSufix(s:String);
+procedure THMIEdit.SetSufix(s:TCaption);
 begin
   FSufix := s;
   RefreshTagValue;
@@ -690,7 +690,7 @@ begin
   end;
 end;
 
-procedure THMIEdit.SendValue(txt: String);
+procedure THMIEdit.SendValue(txt: TCaption);
 var
   x:Double;
 

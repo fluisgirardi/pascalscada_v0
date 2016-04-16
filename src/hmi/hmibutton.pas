@@ -32,8 +32,8 @@ type
     FColorDown, FColorUp, FColorGrayed:TColor;
     FCaptionDown, FCaptionUp, FCaptionGrayed:TCaption;
 
-    FSecurityCode:String;
-    procedure SetSecurityCode(sc:String);
+    FSecurityCode:UTF8String;
+    procedure SetSecurityCode(sc:UTF8String);
 
     function GetTagValue:Double;
     procedure SetValue(value:Double);
@@ -59,7 +59,7 @@ type
     function  GetHMITag:TPLCTag;
 
     //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:String;
+     function GetControlSecurityCode:UTF8String;
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean);
     //: @seealso(IHMIInterface.MakeUnsecure)
@@ -209,7 +209,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:String read FSecurityCode write SetSecurityCode;
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
   end;
 
 implementation
@@ -299,7 +299,7 @@ begin
    end;
 end;
 
-procedure THMIButton.SetSecurityCode(Sc:String);
+procedure THMIButton.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -358,7 +358,7 @@ begin
    Result := FTag;
 end;
 
-function THMIButton.GetControlSecurityCode:String;
+function THMIButton.GetControlSecurityCode: UTF8String;
 begin
    Result:=FSecurityCode;
 end;
