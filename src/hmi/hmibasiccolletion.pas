@@ -53,7 +53,7 @@ type
     property OnNeedCompState:TNeedCompStateEvent read FOnNeedCompState write FOnNeedCompState;
  public
     //: @exclude
-    constructor Create(Owner:TPersistent; ItemClass: TCollectionItemClass); virtual;
+    constructor Create(aOwner:TPersistent; aItemClass: TCollectionItemClass); virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -96,7 +96,7 @@ type
     procedure NotifyChange; virtual;
   public
     {: @exclude }
-    constructor Create(Collection: TCollection); override;
+    constructor Create(aCollection: TCollection); override;
     destructor Destroy; override;
     {: @exclude }
     procedure Loaded; virtual;
@@ -114,9 +114,9 @@ begin
         OnCollectionItemChange(Self);
 end;
 
-constructor THMIBasicColletionItem.Create(Collection: TCollection);
+constructor THMIBasicColletionItem.Create(aCollection: TCollection);
 begin
-  inherited Create(Collection);
+  inherited Create(aCollection);
   if Collection is THMIBasicColletion then
      THMIBasicColletion(Collection).NeedCurrentCompState;
 end;
@@ -132,11 +132,11 @@ end;
 
 { THMIBasicColletion }
 
-constructor THMIBasicColletion.Create(Owner: TPersistent;
-  ItemClass: TCollectionItemClass);
+constructor THMIBasicColletion.Create(aOwner: TPersistent;
+  aItemClass: TCollectionItemClass);
 begin
-  inherited Create(ItemClass);
-  FOwner:=Owner;
+  inherited Create(aItemClass);
+  FOwner:=aOwner;
 end;
 
 function THMIBasicColletion.GetOwner: TPersistent;

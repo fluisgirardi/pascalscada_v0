@@ -105,7 +105,7 @@ begin
   helper := TPropInfoList.Create(obj,[fRequiredTypeKind]);
   try
     for pidx:=0 to helper.Count-1 do begin
-      if helper.Items[pidx].PropType.Name=fRequiredTypeName then begin
+      if helper.Items[pidx]^.PropType^.Name=fRequiredTypeName then begin
         Result:=true;
         Exit;
       end;
@@ -126,8 +126,8 @@ begin
   helper := TPropInfoList.Create(FTargetObject,[fRequiredTypeKind]);
   try
     for pidx:=0 to helper.Count-1 do begin
-      if (lowercase(helper.Items[pidx].Name)=LowerCase(PropertyName)) and
-         (helper.Items[pidx].PropType.Name=fRequiredTypeName)  then begin
+      if (lowercase(helper.Items[pidx]^.Name)=LowerCase(PropertyName)) and
+         (helper.Items[pidx]^.PropType^.Name=fRequiredTypeName)  then begin
         Result:=true;
         Exit;
       end;

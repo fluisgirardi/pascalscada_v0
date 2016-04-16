@@ -63,7 +63,7 @@ type
 
   protected
      {: @exclude }
-     function  GetDisplayName: string; override;
+     function  GetDisplayName: AnsiString; override;
   published
      {$IFDEF PORTUGUES}
      {:
@@ -254,7 +254,7 @@ type
   protected
      procedure Loaded; override;
   public
-     constructor Create(Collection: TCollection); override;
+     constructor Create(aCollection: TCollection); override;
      destructor Destroy; override;
   published
      {$IFDEF PORTUGUES}
@@ -307,7 +307,7 @@ type
   TZones = class(THMIBasicColletion)
   public
      //: @exclude
-     constructor Create(Owner:TPersistent; ItemClass: TCollectionItemClass); override;
+     constructor Create(aOwner:TPersistent; aItemClass: TCollectionItemClass); override;
 
      {$IFDEF PORTUGUES}
      {:
@@ -370,7 +370,7 @@ type
      procedure SetVerAlignment(x:TTextLayout);
   public
     //: @exclude
-    constructor Create(Collection: TCollection); override;
+    constructor Create(aCollection: TCollection); override;
     destructor Destroy; override;
   published
 
@@ -535,7 +535,7 @@ type
   TTextZones = class(TZones)
   public
     //: @exclude
-    constructor Create(Owner:TPersistent);
+    constructor Create(aOwner:TPersistent);
 
     {$IFDEF PORTUGUES}
     //: Adiciona uma nova zona de texto na coleção.
@@ -571,12 +571,12 @@ type
      procedure SetILAsDefault(b:Boolean);
      procedure SetFileName(fn:String);
      procedure SetImageList(il:TImageList);
-     procedure SetImageIndex(index:LongInt);
+     procedure SetImageIndex(aIndex:LongInt);
      procedure SetColor(c:TColor);
      procedure SetTransparent(b:Boolean);
   public
      //: @exclude
-     constructor Create(Collection: TCollection); override;
+     constructor Create(aCollection: TCollection); override;
   published
 
      {$IFDEF PORTUGUES}
@@ -695,7 +695,7 @@ type
   TGraphicZones = class(TZones)
   public
     //: @exclude
-    constructor Create(Owner:TPersistent);
+    constructor Create(aOwner:TPersistent);
 
     {$IFDEF PORTUGUES}
     //: Adiciona uma nova zona gráfica a coleção.
@@ -726,7 +726,7 @@ type
   TColorZones = class(TZones)
   public
     //: @exclude
-    constructor Create(Owner:TPersistent);
+    constructor Create(aOwner:TPersistent);
 
     {$IFDEF PORTUGUES}
     //: Adiciona uma nova zona de cor a coleção.
@@ -844,9 +844,9 @@ begin
   SetBlinkWithZoneNumber(FBlinkWithIndex);
 end;
 
-constructor TAnimationZone.Create(Collection: TCollection);
+constructor TAnimationZone.Create(aCollection: TCollection);
 begin
-  inherited Create(Collection);
+  inherited Create(aCollection);
   FBlinkWithIndex := -1;
   FValue1:=Index;
   FValue2:=FValue1;
@@ -863,9 +863,9 @@ end;
 
 { TColorZones }
 
-constructor TColorZones.Create(Owner: TPersistent);
+constructor TColorZones.Create(aOwner: TPersistent);
 begin
-  inherited create(Owner,TColorZone);
+  inherited create(aOwner,TColorZone);
 end;
 
 function TColorZones.Add: TColorZone;
@@ -970,7 +970,7 @@ begin
    NotifyChange;
 end;
 
-function  TZone.GetDisplayName: string;
+function  TZone.GetDisplayName: AnsiString;
 begin
    if FDefaultZone then begin
      Result:='(Default)';
@@ -1038,9 +1038,9 @@ end;
 // TZones implementation
 //############################################################
 
-constructor TZones.Create(Owner:TPersistent; ItemClass: TCollectionItemClass);
+constructor TZones.Create(aOwner:TPersistent; aItemClass: TCollectionItemClass);
 begin
-  inherited Create(Owner, ItemClass);
+  inherited Create(aOwner, aItemClass);
 end;
 
 //seleciona a zona de acordo com seu critério de seleção
@@ -1113,11 +1113,11 @@ end;
 // TTextZone implementation
 //############################################################
 
-constructor TTextZone.Create(Collection: TCollection);
+constructor TTextZone.Create(aCollection: TCollection);
 begin
-   inherited Create(Collection);
+   inherited Create(aCollection);
    FFont := TFont.Create;
-   FFont.OnChange := FontChanges;
+   FFont.OnChange := @FontChanges;
    FVerAlignment:=tlTop;
    FHorAlignment:=taLeftJustify;
 end;
@@ -1172,9 +1172,9 @@ end;
 //############################################################
 // TTextZones implementation
 //############################################################
-constructor TTextZones.Create(Owner:TPersistent);
+constructor TTextZones.Create(aOwner:TPersistent);
 begin
-   inherited Create(Owner, TTextZone);
+   inherited Create(aOwner, TTextZone);
 end;
 
 function TTextZones.Add:TTextZone;
@@ -1186,9 +1186,9 @@ end;
 // TGraphicZone implementation
 //############################################################
 
-constructor TGraphicZone.Create(Collection: TCollection);
+constructor TGraphicZone.Create(aCollection: TCollection);
 begin
-   inherited Create(Collection);
+   inherited Create(aCollection);
    FILIsDefault := true;
    FTransparent := true;
    FImageList := nil;
@@ -1239,19 +1239,19 @@ begin
    NotifyChange;
 end;
 
-procedure TGraphicZone.SetImageIndex(index:LongInt);
+procedure TGraphicZone.SetImageIndex(aIndex:LongInt);
 var
    notify:Boolean;
 begin
    if [csReading, csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
-      FImageIndex:=index;
+      FImageIndex:=aIndex;
       exit;
    end;
 
    if FImageList<>nil then begin
-      if (index>=0) and (index<=(FImageList.Count-1)) then begin
-         notify := (FImageIndex<>index);
-         FImageIndex:=index;
+      if (aIndex>=0) and (aIndex<=(FImageList.Count-1)) then begin
+         notify := (FImageIndex<>aIndex);
+         FImageIndex:=aIndex;
       end else begin
          notify:= FImageIndex<>-1;
          FImageIndex:=-1;
@@ -1288,9 +1288,9 @@ end;
 //############################################################
 // TGraphicZones implementation
 //############################################################
-constructor TGraphicZones.Create(Owner:TPersistent);
+constructor TGraphicZones.Create(aOwner:TPersistent);
 begin
-   inherited Create(Owner, TGraphicZone);
+   inherited Create(aOwner, TGraphicZone);
 end;
 
 function TGraphicZones.Add:TGraphicZone;

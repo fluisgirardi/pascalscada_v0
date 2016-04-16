@@ -118,9 +118,9 @@ begin
 
   if assigned(LastControl) and (LastControl is TWinControl) then begin
     {$IFDEF DEBUG}DebugLn('Cur focused control is TWinControl');{$ENDIF}
-    if (not SameMethod(TWinControl(LastControl).OnClick,ClickEvent)) or
-       (not SameMethod(TWinControl(LastControl).OnEnter,EnterEvent)) or
-       (not SameMethod(TWinControl(LastControl).OnExit, ExitEvent)) then begin
+    if (not SameMethod(TWinControl(LastControl).OnClick,@ClickEvent)) or
+       (not SameMethod(TWinControl(LastControl).OnEnter,@EnterEvent)) or
+       (not SameMethod(TWinControl(LastControl).OnExit, @ExitEvent)) then begin
       fLastControl:=TWinControl(LastControl);
       {$IFDEF DEBUG}DebugLn('fLastControl:=TWinControl(LastControl)');{$ENDIF}
     end else begin
@@ -149,17 +149,17 @@ begin
 
   if FLastFocusedControl<>nil then begin
     {$IFDEF DEBUG}DebugLn('Restoring the default event handles for control ',FLastFocusedControl.Name);{$ENDIF}
-    if SameMethod(FLastFocusedControl.OnClick, ClickEvent) then begin
+    if SameMethod(FLastFocusedControl.OnClick, @ClickEvent) then begin
       {$IFDEF DEBUG}DebugLn('Restoring OnClick');{$ENDIF}
       FLastFocusedControl.OnClick:=FOldOnClickEvent;
     end;
 
-    if SameMethod(FLastFocusedControl.OnEnter, EnterEvent) then begin
+    if SameMethod(FLastFocusedControl.OnEnter, @EnterEvent) then begin
       {$IFDEF DEBUG}DebugLn('Restoring OnEnter');{$ENDIF}
       FLastFocusedControl.OnEnter:=FOldOnEnterEvent;
     end;
 
-    if SameMethod(FLastFocusedControl.OnExit,  ExitEvent)  then begin
+    if SameMethod(FLastFocusedControl.OnExit,  @ExitEvent)  then begin
       {$IFDEF DEBUG}DebugLn('Restoring OnEnter');{$ENDIF}
       FLastFocusedControl.OnExit :=FOldOnExitEvent;
     end;
@@ -187,9 +187,9 @@ begin
         FLastFocusedControl:=Nil;
       end else begin
         {$IFDEF DEBUG}DebugLn('FKeyboarTypeForControl<>oskNone');{$ENDIF}
-        fLastControl.OnClick:=ClickEvent;
-        fLastControl.OnEnter:=EnterEvent;
-        fLastControl.OnExit :=ExitEvent;
+        fLastControl.OnClick:=@ClickEvent;
+        fLastControl.OnEnter:=@EnterEvent;
+        fLastControl.OnExit :=@ExitEvent;
         {$IFDEF DEBUG}DebugLn('setup up of new event handlers...');{$ENDIF}
       end;
     end else begin
@@ -237,7 +237,7 @@ begin
                                                         FLastFocusedControl,
                                                         nskoShowMinus in FNumericKBOptions,
                                                         nskoShowDecimalPoint in FNumericKBOptions);
-      FNumericKeyBoard.OnClose:=NumKBClosed;
+      FNumericKeyBoard.OnClose:=@NumKBClosed;
       FNumericKeyBoard.ShowAlongsideOfTheTarget;
     end;
     oskAlphaNumeric: begin
@@ -255,7 +255,7 @@ begin
                                                            askoShowFastNavigation in FAlphaNumKBOptions,
                                                            askoShowNavigation in FAlphaNumKBOptions,
                                                            askoCloseOnPressEnter in FAlphaNumKBOptions);
-      FAlphaNumericKeyboard.OnClose:=AlphaKBClosed;
+      FAlphaNumericKeyboard.OnClose:=@AlphaKBClosed;
       FAlphaNumericKeyboard.ShowAlongsideOfTheTarget;
     end;
   end;
@@ -266,7 +266,7 @@ begin
   ShowKeyboard(Sender);
 
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
-    application.QueueAsyncCall(PassFocusToLastValidControl,0);
+    application.QueueAsyncCall(@PassFocusToLastValidControl,0);
 
   if Assigned(FOldOnClickEvent) then
     FOldOnClickEvent(Sender);
@@ -278,7 +278,7 @@ begin
     ShowKeyboard(Sender);
 
     if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
-      application.QueueAsyncCall(PassFocusToLastValidControl,0);
+      application.QueueAsyncCall(@PassFocusToLastValidControl,0);
   end;
 
   if Assigned(FOldOnEnterEvent) then
@@ -327,12 +327,12 @@ begin
   FNumericKeyBoard:=nil;
   FLastFocusedControl:=nil;
   FShowKeyboardOnEnter:=false;
-  Screen.AddHandlerActiveControlChanged(ControlFocusChanged);
+  Screen.AddHandlerActiveControlChanged(@ControlFocusChanged);
 end;
 
 destructor THMIKeyboardManager.Destroy;
 begin
-  Screen.RemoveHandlerActiveControlChanged(ControlFocusChanged);
+  Screen.RemoveHandlerActiveControlChanged(@ControlFocusChanged);
   inherited Destroy;
 end;
 
