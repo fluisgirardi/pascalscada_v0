@@ -1,7 +1,5 @@
 unit pscommontypes;
 
-{$mode objfpc}{$H+}
-
 interface
 
 uses

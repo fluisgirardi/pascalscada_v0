@@ -28,10 +28,6 @@
 {$ENDIF}
 unit MessageSpool;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses

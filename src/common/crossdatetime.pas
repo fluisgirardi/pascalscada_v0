@@ -1,9 +1,5 @@
 unit crossdatetime;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -56,4 +52,4 @@ initialization
   end;
 {$ENDIF}
 end.
-
+

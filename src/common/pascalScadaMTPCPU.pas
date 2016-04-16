@@ -16,10 +16,6 @@
 {$i ../common/delphiver.inc}
 unit pascalScadaMTPCPU;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}

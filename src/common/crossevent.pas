@@ -27,8 +27,6 @@
 unit CrossEvent;
 
 {$IFDEF FPC}
-  {$mode delphi}
-
   {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20404)}
   {$DEFINE USE_TTHREAD_START}
   {$IFEND}
@@ -82,7 +80,7 @@ type
   {$ENDIF}
   TINTRTLEvent = record
     EventAttr:Pointer;
-    Name:String;
+    Name:AnsiString;
     condvar: pthread_cond_t;
     mutex: pthread_mutex_t;
     isset: boolean;
@@ -178,7 +176,7 @@ type
       @seealso(WaitFor)
       }
       {$ENDIF}
-      constructor Create(EventAttributes : PSecurityAttributes; AManualReset,InitialState : Boolean;const Name : string);
+      constructor Create(EventAttributes : PSecurityAttributes; AManualReset,InitialState : Boolean;const Name : AnsiString);
 
       {$IFDEF PORTUGUES}
       //: Destroi o objeto de eventos.
@@ -269,7 +267,7 @@ begin
   {$ENDIF}
 end;
 
-constructor TCrossEvent.Create(EventAttributes : PSecurityAttributes; AManualReset,InitialState : Boolean;const Name : string);
+constructor TCrossEvent.Create(EventAttributes : PSecurityAttributes; AManualReset,InitialState : Boolean;const Name : AnsiString);
 begin
   inherited Create;
   FManualReset := AManualReset;

@@ -12,10 +12,6 @@
 {$ENDIF}
 unit hsutils;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses SysUtils;

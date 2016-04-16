@@ -18,10 +18,6 @@
 {$ENDIF}
 unit hsstrings;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 resourcestring
