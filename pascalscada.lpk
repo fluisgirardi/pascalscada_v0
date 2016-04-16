@@ -14,9 +14,7 @@
       </SearchPaths>
       <Parsing>
         <SyntaxOptions>
-          <CStyleOperator Value="False"/>
           <IncludeAssertionCode Value="True"/>
-          <StaticKeyword Value="True"/>
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
