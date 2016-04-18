@@ -331,6 +331,7 @@ begin
 
   PrepareToSend(msgOut);
 
+  HighLatencyOperationWillBegin(nil);
   try
     res:=PCommPort.IOCommandSync(iocWrite,Length(msgOut),msgOut,0,DriverID,0,nil);
     if res=0 then begin
@@ -354,7 +355,7 @@ begin
 
     Result:=BytesRead>ISOTCPMinPacketLen;
   finally
-
+    HighLatencyOperationWasEnded(nil);
   end;
 end;
 

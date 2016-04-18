@@ -198,8 +198,10 @@ begin
           Synchronize(@UpdateMultipleTags);
           FValor:=MilliSecondsBetween(CrossNow,FInicio);
 
-          inc(FTempo,FValor);
-          inc(FVezes);
+          FTempo:=FTempo+FValor;
+          FVezes:=FVezes+1;
+          timeout:=timeout-FValor;
+
           FMedia:=FTempo div FVezes;
           if Assigned(FUserUpdateTimePRoc) then
             FUserUpdateTimePRoc(FMedia);
