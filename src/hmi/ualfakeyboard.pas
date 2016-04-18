@@ -304,8 +304,8 @@ end;
 procedure TpsHMIfrmAlphaKeyboard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
-  //BringToFrontWithoutActivate;
-  ShowOnTop;
+  Show;
+  GetParentForm(FTarget).ShowOnTop;
 end;
 
 procedure TpsHMIfrmAlphaKeyboard.FormCreate(Sender: TObject);

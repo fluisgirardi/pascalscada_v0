@@ -145,9 +145,7 @@ procedure TpsHMIfrmNumericKeyBoard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
   Show;
-  Application.ProcessMessages;
   GetParentForm(FTarget).ShowOnTop;
-  Application.ProcessMessages;
 end;
 
 procedure TpsHMIfrmNumericKeyBoard.FormCreate(Sender: TObject);
