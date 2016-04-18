@@ -283,7 +283,7 @@ var
 begin
    Result := 0;
    for c:=PStartBit to PEndBit do begin
-      Result := Result or Power(2,c);
+      Result := Result or LongInt(Power(2,c));
    end;
 end;
 
@@ -293,7 +293,7 @@ var
 begin
    Result := -1;
    for c:=PStartBit to PEndBit do begin
-      Result := Result xor Power(2,c);
+      Result := Result xor LongInt(Power(2,c));
    end;
 end;
 
