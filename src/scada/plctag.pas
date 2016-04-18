@@ -1124,7 +1124,7 @@ begin
       FCurrentWordSize:=16;
     pttLongInt, pttDWord, pttFloat:
       FCurrentWordSize:=32;
-    pttDouble:
+    pttDouble,pttQWord,pttInt64:
       FCurrentWordSize:=64;
   end;
 
@@ -1172,7 +1172,7 @@ var
   PtrByte, PtrByteWalker:PByte;
   PtrWordWalker:PWord;
   PtrDWordWalker:PDWord;
-  PtrDoubleWalker:PDouble;
+  PtrQWordWalker:PQWord;
 
   AreaSize:LongInt;
   AreaIdx:LongInt;
@@ -1188,10 +1188,10 @@ var
 
   procedure ResetPointers;
   begin
-    PtrByteWalker  :=PtrByte;
-    PtrWordWalker  :=PWord(PtrByte);
-    PtrDWordWalker :=PDWord(PtrByte);
-    PtrDoubleWalker:=PDouble(PtrByte);
+    PtrByteWalker :=PtrByte;
+    PtrWordWalker :=PWord(PtrByte);
+    PtrDWordWalker:=PDWord(PtrByte);
+    PtrQWordWalker:=PQWord(PtrByte);
   end;
 
   procedure AddToResult(ValueToAdd:Double; var Result:TArrayOfDouble);
@@ -1277,10 +1277,13 @@ begin
        end;
     ptQWord, ptInt64, ptDouble:
       while valueidx<Length(Values) do begin
-          PtrDoubleWalker^:=Values[valueidx];
+        if FProtocolTagType=ptDouble then
+          PDouble(PtrQWordWalker)^:=Values[valueidx]
+        else
+          PtrQWordWalker^:=Trunc(Values[valueidx]);
 
         inc(valueidx);
-        Inc(PtrDoubleWalker);
+        Inc(PtrQWordWalker);
       end;
   end;
 
@@ -1375,14 +1378,16 @@ begin
       end;
     end;
 
+    pttInt64,
+    pttQWord,
     pttDouble: begin
-      inc(PtrDoubleWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
+      inc(PtrQWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
       inc(AreaIdx,        (((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize)*8);
       while AreaIdx<AreaSize do begin
 
         if FSwapDWords then begin
           //initialize Dword Pointers
-          PtrDWord1:=PDWord(PtrDoubleWalker);
+          PtrDWord1:=PDWord(PtrQWordWalker);
           PtrDWord2:=PtrDWord1;
           inc(PtrDWord2);
 
@@ -1394,7 +1399,7 @@ begin
 
         if FSwapWords then begin
           //initializes DWord Pointers
-          PtrDWord1:=PDWord(PtrDoubleWalker);
+          PtrDWord1:=PDWord(PtrQWordWalker);
           PtrDWord2:=PtrDWord1;
           inc(PtrDWord2);
 
@@ -1421,7 +1426,7 @@ begin
 
         if FSwapBytes then begin
           //initializes DWord Pointers
-          PtrDWord1:=PDWord(PtrDoubleWalker);
+          PtrDWord1:=PDWord(PtrQWordWalker);
           PtrDWord2:=PtrDWord1;
           inc(PtrDWord2);
 
@@ -1476,13 +1481,21 @@ begin
           PtrByte2^:=ByteAux;
         end;
 
-        if IsNan(PDouble(PtrDoubleWalker)^) or IsInfinite(PDouble(PtrDoubleWalker)^) then
-          SetExceptionMask([exInvalidOp, exDenormalized, {exZeroDivide,} exOverflow, exUnderflow, exPrecision]);
+        case FTagType of
+          pttQWord:
+            AddToResult(PtrQWordWalker^, Result);
+          pttInt64:
+            AddToResult(PInt64(PtrQWordWalker)^, Result);
+          pttDouble: begin
+            if IsNan(PDouble(PtrQWordWalker)^) or IsInfinite(PDouble(PtrQWordWalker)^) then
+              SetExceptionMask([exInvalidOp, exDenormalized, {exZeroDivide,} exOverflow, exUnderflow, exPrecision]);
 
-        AddToResult(PDouble(PtrDoubleWalker)^, Result);
+            AddToResult(PDouble(PtrQWordWalker)^, Result);
+          end;
+        end;
 
         inc(AreaIdx, 8);
-        inc(PtrDoubleWalker);
+        inc(PtrQWordWalker);
       end;
     end;
   end;
@@ -1494,7 +1507,7 @@ var
   PtrByte, PtrByteWalker:PByte;
   PtrWordWalker:PWord;
   PtrDWordWalker:PDWord;
-  PtrDoubleWalker:PDouble;
+  PtrQWordWalker:PQWord;
 
   AreaSize:LongInt;
   AreaIdx:LongInt;
@@ -1514,10 +1527,10 @@ var
 
   procedure ResetPointers;
   begin
-    PtrByteWalker  :=PtrByte;
-    PtrWordWalker  :=PWord(PtrByte);
-    PtrDWordWalker :=PDWord(PtrByte);
-    PtrDoubleWalker:=PDouble(PtrByte);
+    PtrByteWalker :=PtrByte;
+    PtrWordWalker :=PWord(PtrByte);
+    PtrDWordWalker:=PDWord(PtrByte);
+    PtrQWordWalker:=PQWord(PtrByte);
   end;
 
   procedure AddToResult(ValueToAdd:Double; var Result:TArrayOfDouble);
@@ -1565,7 +1578,7 @@ begin
       AreaSize := ProtocolSize*2;
     ptDWord, ptLongInt, ptFloat:
       AreaSize := ProtocolSize*4;
-    ptDouble:
+    ptQWord, ptInt64, ptDouble:
       AreaSize := ProtocolSize*8;
   end;
 
@@ -1590,22 +1603,23 @@ begin
        end;
     ptDWord, ptLongInt, ptFloat:
        while valueidx<ProtocolSize do begin
-         if FProtocolTagType = ptFloat then
-           PSingle(PtrDWordWalker)^:=FRawProtocolValues[valueidx+ProtocolOffSet]
-         else begin
-           if FProtocolTagType = ptLongInt then
-             PLongInt(PtrDWordWalker)^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet])
-           else
-             PtrDWordWalker^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]) AND $FFFFFFFF;
+         case FProtocolTagType of
+           ptLongInt: PLongInt(PtrDWordWalker)^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]);
+           ptDWord:   PtrDWordWalker^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]) AND $FFFFFFFF;
+           ptFloat:   PSingle(PtrDWordWalker)^:=FRawProtocolValues[valueidx+ProtocolOffSet];
          end;
          inc(valueidx);
          Inc(PtrDWordWalker);
        end;
-    ptDouble:
+    ptQWord, ptInt64, ptDouble:
        while valueidx<ProtocolSize do begin
-         PDouble(PtrDoubleWalker)^:=FRawProtocolValues[valueidx+ProtocolOffSet];
+         case FProtocolTagType of
+           ptInt64:  PInt64(PtrQWordWalker)^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]);
+           ptQWord:  PQWord(PtrQWordWalker)^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]);
+           ptDouble: PDouble(PtrQWordWalker)^:=FRawProtocolValues[valueidx+ProtocolOffSet];
+         end;
          inc(valueidx);
-         Inc(PtrDoubleWalker);
+         Inc(PtrQWordWalker);
        end;
   end;
 
@@ -1685,15 +1699,17 @@ begin
          Inc(PtrDWordWalker);
        end;
     end;
+    pttQWord,
+    pttInt64,
     pttDouble: begin
-       inc(PtrDoubleWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
+       inc(PtrQWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
        while valueidx<Length(Values) do begin
 
-         PDouble(PtrDoubleWalker)^:=Values[valueidx];
+         PDouble(PtrQWordWalker)^:=Values[valueidx];
 
          if FSwapDWords then begin
            //initialize Dword Pointers
-           PtrDWord1:=PDWord(PtrDoubleWalker);
+           PtrDWord1:=PDWord(PtrQWordWalker);
            PtrDWord2:=PtrDWord1;
            inc(PtrDWord2);
 
@@ -1705,7 +1721,7 @@ begin
 
          if FSwapWords then begin
            //initializes DWord Pointers
-           PtrDWord1:=PDWord(PtrDoubleWalker);
+           PtrDWord1:=PDWord(PtrQWordWalker);
            PtrDWord2:=PtrDWord1;
            inc(PtrDWord2);
 
@@ -1732,7 +1748,7 @@ begin
 
          if FSwapBytes then begin
            //initializes DWord Pointers
-           PtrDWord1:=PDWord(PtrDoubleWalker);
+           PtrDWord1:=PDWord(PtrQWordWalker);
            PtrDWord2:=PtrDWord1;
            inc(PtrDWord2);
 
@@ -1788,7 +1804,7 @@ begin
          end;
 
          inc(valueidx);
-         Inc(PtrDoubleWalker);
+         Inc(PtrQWordWalker);
        end;
     end;
   end;
@@ -1851,11 +1867,20 @@ begin
         inc(PtrDWordWalker);
       end;
     end;
+    ptInt64,
+    ptQWord,
     ptDouble: begin
       while AreaIdx<AreaSize do begin
-        AddToResult(PDouble(PtrDoubleWalker)^, Result);
+        case FProtocolTagType of
+          ptQWord:
+            AddToResult(PtrQWordWalker^, Result);
+          ptInt64:
+            AddToResult(PInt64(PtrQWordWalker)^, Result);
+          ptDouble:
+            AddToResult(PDouble(PtrQWordWalker)^, Result);
+        end;
         inc(AreaIdx, 8);
-        inc(PtrDoubleWalker);
+        inc(PtrQWordWalker);
       end;
     end;
   end;
