@@ -1039,6 +1039,11 @@ begin
   {$IFNDEF FPC}
   DeallocateHWnd(fHandle);
   {$ENDIF}
+
+  {$IFNDEF CONSOLEPASCALSCADA}
+  Application.RemoveAsyncCalls(Self);
+  {$ENDIF}
+
   inherited Destroy;
 end;
 
@@ -1082,49 +1087,39 @@ begin
   //demais controles.
   //
   // Notify the change before notify the dependent objects.
-  try
-    if Assigned(POnValueChangeFirst) then
-      POnValueChangeFirst(Self);
-  except
-  end;
+  if Assigned(POnValueChangeFirst) then
+    POnValueChangeFirst(Self);
 
   //notifica controles e objetos dependentes
   //
   //Notify the dependent objects.
   for c:=0 to High(PNotificationInterfaces) do begin
-    //try
-      PNotificationInterfaces[c].NotifyTagChange(self);
-    //except
-    //end;
+    PNotificationInterfaces[c].NotifyTagChange(self);
   end;
 
   //notificação de mudanca após notificar os controles.
   //
   //Notify the change after notify the dependent objects.
-  //try
-    if Assigned(POnValueChangeLast) then
-      POnValueChangeLast(Self);
-  //except
-  //end;
+  if Assigned(POnValueChangeLast) then
+    POnValueChangeLast(Self);
 
-  if Assigned(POnAsyncValueChange) and (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then begin
+  if Assigned(POnAsyncValueChange) then begin
     {$IFNDEF CONSOLEPASCALSCADA}
-      x:=GetValueChangeData;
+    x:=GetValueChangeData;
     {$ELSE}
-      FUserData:=GetValueChangeData;
+    FUserData:=GetValueChangeData;
     {$ENDIF}
 
 
     {$IFDEF FPC}
-
       {$IFNDEF CONSOLEPASCALSCADA}
+      if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then
         Application.QueueAsyncCall(@ASyncMethod,PtrInt(x));
       {$ELSE}
-        TThread.Queue(nil, ASyncMethod);
+      TThread.Queue(nil, ASyncMethod);
       {$ENDIF}
-
     {$ELSE}
-    PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
+      PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
     {$ENDIF}
   end;
 end;
