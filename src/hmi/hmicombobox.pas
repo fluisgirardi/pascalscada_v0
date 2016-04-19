@@ -70,6 +70,7 @@ type
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
+    procedure RefreshCombo(Data: PtrInt);
   published
     property Align;
     property Anchors;
@@ -156,7 +157,7 @@ type
 
 implementation
 
-uses ControlSecurityManager, hsstrings;
+uses ControlSecurityManager, hsstrings, forms;
 
 { THMIComboBox }
 
@@ -207,7 +208,7 @@ begin
   if t<>nil then begin
     t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
-    NotifyTagChange(Self);
+    RefreshCombo(0);
   end;
   FTag := t;
 end;
@@ -244,41 +245,9 @@ begin
 end;
 
 procedure THMIComboBox.NotifyTagChange(Sender: TObject);
-var
-  valueReal: Double;
-  ValueInt: Int64;
-  NewIndex: Integer;
-  foundValue: Integer;
-  found: Boolean;
-  obj: Integer;
 begin
-  NewIndex:=-1;
-  if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
-    valueReal:=(FTag as ITagNumeric).GetValue;
-
-    foundValue:=-1;
-    found:=false;
-    for obj:=0 to Items.Count-1 do begin
-      if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then begin
-        found:=true;
-        if TComboboxItemInfo(Items.Objects[obj]).TagValue=valueReal then begin
-          foundValue:=obj;
-          break;
-        end;
-      end;
-    end;
-
-    if found then begin
-      NewIndex:=foundValue;
-    end else begin
-      ValueInt:=Trunc(valueReal);
-
-      if ((valueReal-ValueInt)=0) and ((ValueInt>=0) and (ValueInt<Items.Count)) then
-        NewIndex:=ValueInt;
-
-    end;
-  end;
-  InternalSetItemIndex(NewIndex);
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+     Application.QueueAsyncCall(@RefreshCombo,0);
 end;
 
 procedure THMIComboBox.RemoveTag(Sender: TObject);
@@ -337,7 +306,7 @@ end;
 procedure THMIComboBox.SetItems(const Value: TStrings);
 begin
   inherited SetItems(Value);
-  NotifyTagChange(Self);
+  RefreshCombo(0);
 end;
 
 procedure THMIComboBox.InternalSetItemIndex(const Val: integer);
@@ -363,6 +332,7 @@ destructor THMIComboBox.Destroy;
 var
   obj: Integer;
 begin
+  Application.RemoveAsyncCalls(Self);
   for obj:=0 to Items.Count-1 do
     if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then
       Items.Objects[obj].Free;
@@ -370,6 +340,44 @@ begin
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
+end;
+
+procedure THMIComboBox.RefreshCombo(Data: PtrInt);
+var
+  valueReal: Double;
+  ValueInt: Int64;
+  NewIndex: Integer;
+  foundValue: Integer;
+  found: Boolean;
+  obj: Integer;
+begin
+  NewIndex:=-1;
+  if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
+    valueReal:=(FTag as ITagNumeric).GetValue;
+
+    foundValue:=-1;
+    found:=false;
+    for obj:=0 to Items.Count-1 do begin
+      if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then begin
+        found:=true;
+        if TComboboxItemInfo(Items.Objects[obj]).TagValue=valueReal then begin
+          foundValue:=obj;
+          break;
+        end;
+      end;
+    end;
+
+    if found then begin
+      NewIndex:=foundValue;
+    end else begin
+      ValueInt:=Trunc(valueReal);
+
+      if ((valueReal-ValueInt)=0) and ((ValueInt>=0) and (ValueInt<Items.Count)) then
+        NewIndex:=ValueInt;
+
+    end;
+  end;
+  InternalSetItemIndex(NewIndex);
 end;
 
 end.

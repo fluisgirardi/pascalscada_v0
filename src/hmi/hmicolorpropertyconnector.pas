@@ -250,22 +250,22 @@ end;
 
 procedure THMIColorPropertyConnector.NotifyReadOk;
 begin
-  RecalculateObjectsProperties;
+  //RecalculateObjectsProperties;
 end;
 
 procedure THMIColorPropertyConnector.NotifyReadFault;
 begin
-  RecalculateObjectsProperties;
+  //RecalculateObjectsProperties;
 end;
 
 procedure THMIColorPropertyConnector.NotifyWriteOk;
 begin
-  RecalculateObjectsProperties;
+  //RecalculateObjectsProperties;
 end;
 
 procedure THMIColorPropertyConnector.NotifyWriteFault;
 begin
-  RecalculateObjectsProperties;
+  NotifyTagChange(Self);
 end;
 
 procedure THMIColorPropertyConnector.NotifyTagChange(Sender: TObject);
@@ -368,7 +368,7 @@ end;
 procedure TObjectWithColorPropetiesColletionItem.NotifyReadOk;
 begin
   if FirstReadOk then
-    RecalculateObjectsProperties;
+    NotifyTagChange(Self);
   FirstReadOk:=false;
 end;
 
@@ -379,12 +379,12 @@ end;
 
 procedure TObjectWithColorPropetiesColletionItem.NotifyWriteOk;
 begin
-  RecalculateObjectsProperties;
+  //RecalculateObjectsProperties;
 end;
 
 procedure TObjectWithColorPropetiesColletionItem.NotifyWriteFault;
 begin
-  RecalculateObjectsProperties;
+  NotifyTagChange(Self);
 end;
 
 procedure TObjectWithColorPropetiesColletionItem.NotifyTagChange(Sender: TObject

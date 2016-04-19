@@ -90,6 +90,8 @@ type
     //: @exclude
     procedure SetHMITag(t:TPLCTag); override;
     //: @exclude
+    procedure NotifyWriteFault; override;
+    //: @exclude
     procedure NotifyTagChange(Sender:TObject); override;
 
 
@@ -100,6 +102,7 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor Destroy; override;
+    procedure RefreshText(Data: PtrInt);
   published
     {$IFDEF PORTUGUES}
     {:
@@ -136,7 +139,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, Forms;
 
 constructor THMIText.Create(AOwner:TComponent);
 begin
@@ -153,12 +156,26 @@ destructor THMIText.Destroy;
 begin
    FTimer.Destroy;
    FTextZones.Destroy;
+   Application.RemoveAsyncCalls(Self);
    inherited Destroy;
+end;
+
+procedure THMIText.RefreshText(Data: PtrInt);
+var
+   value:Double;
+begin
+   value := 0;
+   if [csReading]*ComponentState=[] then begin
+
+      if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+         value := (FTag as ITagNumeric).Value;
+   end;
+   SetValue(value);
 end;
 
 procedure THMIText.ZoneChange(Sender:TObject);
 begin
-   NotifyTagChange(Self);
+   RefreshText(0);
 end;
 
 procedure THMIText.NeedComState(var CurState:TComponentState);
@@ -177,17 +194,15 @@ begin
   inherited SetHMITag(t);
 end;
 
-procedure THMIText.NotifyTagChange(Sender:TObject);
-var
-   value:Double;
+procedure THMIText.NotifyWriteFault;
 begin
-   value := 0;
-   if [csReading]*ComponentState=[] then begin
-   
-      if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-         value := (FTag as ITagNumeric).Value;
-   end;
-   SetValue(value);
+  NotifyTagChange(Self);
+end;
+
+procedure THMIText.NotifyTagChange(Sender:TObject);
+begin
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshText,0);
 end;
 
 procedure THMIText.SetValue(v:Double);
@@ -204,7 +219,7 @@ end;
 
 procedure THMIText.RefreshTagValue;
 begin
-  NotifyTagChange(self);
+  RefreshText(0);
 end;
 
 procedure THMIText.ShowZone(zone:TTextZone);
@@ -235,7 +250,7 @@ procedure THMIText.Loaded;
 begin
    inherited Loaded;
    FTextZones.Loaded;
-   NotifyTagChange(Self);
+   RefreshText(0);
 end;
 
 //timer procedure (does a blink effect)

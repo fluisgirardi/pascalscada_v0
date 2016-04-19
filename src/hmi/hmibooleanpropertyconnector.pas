@@ -232,23 +232,23 @@ end;
 procedure THMIBooleanPropertyConnector.NotifyReadOk;
 begin
   if FFirstReadOk then
-    RecalculateObjectsProperties;
+    NotifyTagChange(Self);
   FFirstReadOk:=false;
 end;
 
 procedure THMIBooleanPropertyConnector.NotifyReadFault;
 begin
-  RecalculateObjectsProperties;
+
 end;
 
 procedure THMIBooleanPropertyConnector.NotifyWriteOk;
 begin
-  RecalculateObjectsProperties;
+
 end;
 
 procedure THMIBooleanPropertyConnector.NotifyWriteFault;
 begin
-  RecalculateObjectsProperties;
+  NotifyTagChange(Self);
 end;
 
 procedure THMIBooleanPropertyConnector.NotifyTagChange(Sender: TObject);

@@ -80,6 +80,7 @@ type
     constructor Create(AOwner: TComponent); override;
     //: @exclude
     destructor Destroy; override;
+    procedure RefreshScrollBar(Data: PtrInt);
   published
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
@@ -126,7 +127,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, Forms;
 
 constructor THMIScrollBar.Create(AOwner: TComponent);
 begin
@@ -137,10 +138,21 @@ end;
 
 destructor THMIScrollBar.Destroy;
 begin
-   if FTag<>nil then
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
-   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
-   inherited Destroy;
+  Application.RemoveAsyncCalls(Self);
+  if FTag<>nil then
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  inherited Destroy;
+end;
+
+procedure THMIScrollBar.RefreshScrollBar(Data: PtrInt);
+begin
+  if not FBusy then begin
+    if (FTag=nil) then exit;
+
+    if Supports(FTag, ITagNumeric) then
+      Position := Trunc((FTag as ITagNumeric).Value);
+  end;
 end;
 
 procedure THMIScrollBar.SetSecurityCode(sc: UTF8String);
@@ -178,7 +190,7 @@ begin
    if t<>nil then begin
       t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;
-      NotifyTagChange(self);
+      RefreshScrollBar(0);
    end;
    FTag := t;
 end;
@@ -282,12 +294,8 @@ end;
 
 procedure THMIScrollBar.NotifyTagChange(Sender:TObject);
 begin
-   if not FBusy then begin
-      if (FTag=nil) then exit;
-
-      if Supports(FTag, ITagNumeric) then
-         Position := Trunc((FTag as ITagNumeric).Value);
-   end;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    application.QueueAsyncCall(@RefreshScrollBar,0);
 end;
 
 procedure THMIScrollBar.RemoveTag(Sender:TObject);

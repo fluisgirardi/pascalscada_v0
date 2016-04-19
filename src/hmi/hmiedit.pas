@@ -88,7 +88,7 @@ type
 
     procedure SetFormat(f:AnsiString);
     function  GetText:TCaption;
-    procedure RefreshTagValue;
+    procedure RefreshTagValue(DataPtr:PtrInt);
     procedure SetSend(s:TSendChange);
     procedure SetShowFocused(f:Boolean);
     procedure RepaintFocus;
@@ -400,6 +400,7 @@ end;
 
 destructor  THMIEdit.Destroy;
 begin
+  Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
@@ -508,7 +509,7 @@ begin
   if t<>nil then begin
     t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
-    RefreshTagValue;
+    RefreshTagValue(0);
   end;
   FTag := t;
 
@@ -527,7 +528,7 @@ end;
 procedure THMIEdit.SetFormat(f:AnsiString);
 begin
   FNumberFormat := f;
-  RefreshTagValue;
+  RefreshTagValue(0);
 end;
 
 procedure THMIEdit.RemoveHMITag(Sender:TObject);
@@ -592,13 +593,13 @@ end;
 procedure THMIEdit.SetPrefix(s:TCaption);
 begin
   FPrefix := s;
-  RefreshTagValue;
+  RefreshTagValue(0);
 end;
 
 procedure THMIEdit.SetSufix(s:TCaption);
 begin
   FSufix := s;
-  RefreshTagValue;
+  RefreshTagValue(0);
 end;
 
 procedure THMIEdit.SetMinLimit(v:Double);
@@ -663,7 +664,7 @@ begin
   FDefFontColor := Font.Color;
 end;
 
-procedure THMIEdit.RefreshTagValue;
+procedure THMIEdit.RefreshTagValue(DataPtr: PtrInt);
 begin
   if ([csReading]*ComponentState<>[]) or (FTag=nil) or Modified then begin
     exit;
@@ -752,7 +753,7 @@ begin
      ( (not (scPressESC in FSend)) and (key=VK_ESCAPE)) then begin
      Modified := false;
      FFreezedValue := false;
-     RefreshTagValue;
+     RefreshTagValue(0);
   end;
 
   inherited KeyDown(Key, Shift);
@@ -771,7 +772,7 @@ begin
   end;
 
   Modified := false;
-  RefreshTagValue;
+  RefreshTagValue(0);
 
   HideScreenKeyboard;
 
@@ -783,7 +784,7 @@ begin
   oldValue := Text;
   HasFocus := true;
   RepaintFocus;
-  RefreshTagValue;
+  RefreshTagValue(0);
   SelectAll;
   inherited DoEnter;
 end;
@@ -831,12 +832,13 @@ end;
 
 procedure THMIEdit.NotifyWriteFault;
 begin
-  RefreshTagValue;
+  NotifyTagChange(Self);
 end;
 
 procedure THMIEdit.NotifyTagChange(Sender:TObject);
 begin
-  RefreshTagValue;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshTagValue,0);
 end;
 
 procedure THMIEdit.RemoveTag(Sender:TObject);

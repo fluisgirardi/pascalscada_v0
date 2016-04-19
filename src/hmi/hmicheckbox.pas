@@ -132,6 +132,7 @@ type
     {$IFDEF FPC}
     //: @exclude
     procedure EditingDone; override;
+    procedure RefreshCheckBox(Data: PtrInt);
     {$ENDIF}
   published
     {$IFDEF PORTUGUES}
@@ -468,7 +469,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, Forms;
 
 constructor THMICheckBox.Create(AOwner:TComponent);
 begin
@@ -502,11 +503,12 @@ end;
 
 destructor THMICheckBox.Destroy;
 begin
+  Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
-  FFontFalse.Destroy;
-  FFontTrue.Destroy;
-  FFontGrayed.Destroy;
+  FreeAndNil(FFontFalse);
+  FreeAndNil(FFontTrue);
+  FreeAndNil(FFontGrayed);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -518,6 +520,16 @@ begin
 
   inherited EditingDone;
 end;
+
+procedure THMICheckBox.RefreshCheckBox(Data: PtrInt);
+begin
+  if ([csReading]*ComponentState<>[]) or (FTag=nil) then begin
+    exit;
+  end;
+
+  RefreshTagValue(GetTagValue);
+end;
+
 {$ENDIF}
 
 procedure THMICheckBox.SetHMITag(t:TPLCTag);
@@ -889,11 +901,8 @@ end;
 
 procedure THMICheckBox.NotifyTagChange(Sender:TObject);
 begin
-  if ([csReading]*ComponentState<>[]) or (FTag=nil) then begin
-    exit;
-  end;
-
-  RefreshTagValue(GetTagValue);
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshCheckBox,0);
 end;
 
 procedure THMICheckBox.RemoveTag(Sender:TObject);

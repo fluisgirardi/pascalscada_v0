@@ -96,6 +96,7 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+    procedure RefreshAnimation(Data: PtrInt);
   published
 
     {$IFDEF PORTUGUES}
@@ -161,7 +162,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, Forms;
 
 constructor THMIAnimation.Create(AOwner:TComponent);
 begin
@@ -178,12 +179,23 @@ end;
 
 destructor THMIAnimation.Destroy;
 begin
-   if FTag<>nil then
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
-   FTimer.Destroy;
-   FAnimationZones.Destroy;
-   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
-   inherited Destroy;
+  Application.RemoveAsyncCalls(Self);
+  if FTag<>nil then
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  FTimer.Destroy;
+  FAnimationZones.Destroy;
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  inherited Destroy;
+end;
+
+procedure THMIAnimation.RefreshAnimation(Data: PtrInt);
+begin
+   if [csReading]*ComponentState=[] then begin
+      if FTag=nil then exit;
+
+      if Supports(FTag, ITagNumeric) then
+         SetValue((FTag as ITagNumeric).Value)
+   end;
 end;
 
 procedure THMIAnimation.SetSecurityCode(sc: UTF8String);
@@ -206,7 +218,7 @@ procedure THMIAnimation.ZoneChange(Sender:TObject);
 begin
    if [csReading]*ComponentState<>[] then exit;
 
-   NotifyTagChange(self);
+   RefreshAnimation(0);
 end;
 
 function  THMIAnimation.GetAnimationZones:TGraphicZones;
@@ -306,7 +318,7 @@ begin
    if t<>nil then begin
       t.AddCallBacks(Self As IHMITagInterface);
       FTag := t;
-      NotifyTagChange(self);
+      RefreshAnimation(0);
    end;
    FTag := t;
 end;
@@ -332,7 +344,7 @@ procedure THMIAnimation.Loaded;
 begin
   inherited Loaded;
   FAnimationZones.Loaded;
-  NotifyTagChange(Self);
+  RefreshAnimation(0);
 end;
 
 procedure THMIAnimation.BlinkTimer(Sender:TObject);
@@ -369,13 +381,8 @@ end;
 
 procedure THMIAnimation.NotifyTagChange(Sender:TObject);
 begin
-   if [csReading]*ComponentState=[] then begin
-
-      if FTag=nil then exit;
-
-      if Supports(FTag, ITagNumeric) then
-         SetValue((FTag as ITagNumeric).Value)
-   end;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshAnimation,0);
 end;
 
 procedure THMIAnimation.RemoveTag(Sender:TObject);

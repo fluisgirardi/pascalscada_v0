@@ -45,7 +45,7 @@ type
     procedure SetSecurityCode(sc:UTF8String);
 
     function  GetPosition:LongInt;
-    procedure RefreshTagValue;
+    procedure RefreshTagValue(DataPtr:PtrInt);
 
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -140,7 +140,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, Forms;
 
 constructor THMITrackBar.Create(AOwner: TComponent);
 begin
@@ -151,6 +151,7 @@ end;
 
 destructor THMITrackBar.Destroy;
 begin
+  Application.RemoveAsyncCalls(Self);
   if Assigned(FTag) then
     Ftag.RemoveCallBacks(self as IHMITagInterface);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
@@ -160,10 +161,10 @@ end;
 procedure THMITrackBar.Loaded;
 begin
   inherited Loaded;
-  RefreshTagValue;
+  RefreshTagValue(0);
 end;
 
-procedure THMITrackBar.RefreshTagValue;
+procedure THMITrackBar.RefreshTagValue(DataPtr: PtrInt);
 begin
    if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
       inherited Position := Trunc((Ftag as ITagNumeric).Value);
@@ -189,7 +190,7 @@ begin
   if t<>nil then begin
     t.AddCallBacks(self as IHMITagInterface);
     FTag := t;
-    RefreshTagValue;
+    RefreshTagValue(0);
   end;
   FTag := t;
 end;
@@ -316,12 +317,13 @@ end;
 
 procedure THMITrackBar.NotifyWriteFault;
 begin
-  RefreshTagValue;
+  NotifyTagChange(Self);
 end;
 
 procedure THMITrackBar.NotifyTagChange(Sender:TObject);
 begin
-  RefreshTagValue;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshTagValue,0);
 end;
 
 procedure THMITrackBar.RemoveTag(Sender:TObject);

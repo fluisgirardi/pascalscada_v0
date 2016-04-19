@@ -53,7 +53,7 @@ type
     FGetPositionP1,
     FGoToP0:UTF8String;
 
-    procedure MoveObject;
+    procedure MoveObject(DataPtr:PtrInt);
     procedure SetStartLeft(v:LongInt);
     procedure SetStartTop(v:LongInt);
     procedure SetEndLeft(v:LongInt);
@@ -227,7 +227,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, Forms;
 
 constructor THMIControlDislocatorAnimation.Create(AOwner:TComponent);
 begin
@@ -248,15 +248,16 @@ begin
 
   FXLinearScale.Destroy;
   FYLinearScale.Destroy;
+  Application.RemoveAsyncCalls(Self);
   inherited Destroy;
 end;
 
 procedure THMIControlDislocatorAnimation.Loaded;
 begin
-  MoveObject;
+  MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.MoveObject;
+procedure THMIControlDislocatorAnimation.MoveObject(DataPtr: PtrInt);
 var
   outX, outY:Double;
 begin
@@ -292,28 +293,28 @@ procedure THMIControlDislocatorAnimation.SetStartLeft(v:LongInt);
 begin
   FStartLeft:=v;
   FXLinearScale.SysMin:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetStartTop(v:LongInt);
 begin
   FStartTop:=v;
   FYLinearScale.SysMin:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetEndLeft(v:LongInt);
 begin
   FEndLeft:=v;
   FXLinearScale.SysMax:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetEndTop(v:LongInt);
 begin
   FEndTop:=v;
   FYLinearScale.SysMax:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetValueStart(v:Double);
@@ -321,7 +322,7 @@ begin
   FStartValue:=v;
   FXLinearScale.PLCMin:=v;
   FYLinearScale.PLCMin:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetValueEnd(v:Double);
@@ -329,7 +330,7 @@ begin
   FEndValue:=v;
   FXLinearScale.PLCMax:=v;
   FYLinearScale.PLCMax:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetPLCTag(t:TPLCNumber);
@@ -350,7 +351,7 @@ begin
   if t<>nil then begin
     t.AddCallBacks(self as IHMITagInterface);
     FTag := t;
-    MoveObject;
+    MoveObject(0);
   end;
   FTag := t;
 end;
@@ -365,7 +366,7 @@ begin
   end;
 
   FTarget:=t;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.PropertyDoesNothing(v: UTF8String);
@@ -390,12 +391,13 @@ end;
 
 procedure THMIControlDislocatorAnimation.NotifyWriteFault;
 begin
-
+  NotifyTagChange(Self);
 end;
 
 procedure THMIControlDislocatorAnimation.NotifyTagChange(Sender:TObject);
 begin
-  MoveObject;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@MoveObject,0);
 end;
 
 procedure THMIControlDislocatorAnimation.RemoveTag(Sender:TObject);
@@ -407,49 +409,49 @@ end;
 procedure THMIControlDislocatorAnimation.SetEnableMinX(v:Boolean);
 begin
   FMinX:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetEnableMaxX(v:Boolean);
 begin
   FMaxX:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetEnableMinY(v:Boolean);
 begin
   FMinY:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetEnableMaxY(v:Boolean);
 begin
   FMaxY:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetMinX(v:LongInt);
 begin
   FMinXValue:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetMaxX(v:LongInt);
 begin
   FMaxXValue:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetMinY(v:LongInt);
 begin
   FMinYValue:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 procedure THMIControlDislocatorAnimation.SetMaxY(v:LongInt);
 begin
   FMaxYValue:=v;
-  MoveObject;
+  MoveObject(0);
 end;
 
 end.

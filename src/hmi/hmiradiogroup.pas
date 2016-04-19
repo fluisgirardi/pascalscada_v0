@@ -82,6 +82,7 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+    procedure RefreshRadioGroup(Data: PtrInt);
   published
     {$IFDEF PORTUGUES}
     //: @name retorna qual a opção selecionada.
@@ -135,7 +136,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, Forms;
 
 constructor THMIRadioGroup.Create(AOwner:TComponent);
 begin
@@ -149,10 +150,28 @@ end;
 
 destructor  THMIRadioGroup.Destroy;
 begin
-   if FTag<>nil then
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
-   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
-   inherited Destroy;
+  Application.RemoveAsyncCalls(Self);
+  if FTag<>nil then
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  inherited Destroy;
+end;
+
+procedure THMIRadioGroup.RefreshRadioGroup(Data: PtrInt);
+var
+   Value:Double;
+begin
+   Value := 0;
+
+   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+      Value := (FTag as ITagNumeric).Value;
+
+   FIgnore:=true;
+   if (Value>=0) and (Value<Items.Count) then
+      inherited ItemIndex:= Trunc(Value)
+   else
+      inherited ItemIndex := FDefaultIndex;
+   FIgnore:=false;
 end;
 
 procedure THMIRadioGroup.SetSecurityCode(sc: UTF8String);
@@ -191,7 +210,7 @@ begin
    if t<>nil then begin
       t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;
-      NotifyTagChange(self);
+      RefreshRadioGroup(0);
    end;
    FTag := t;
 end;
@@ -250,7 +269,7 @@ begin
      FDefaultIndex:=-1
   else
      FDefaultIndex:=v;
-  NotifyTagChange(Self);
+  RefreshRadioGroup(0);
 end;
 
 function  THMIRadioGroup.GetIndex:LongInt;
@@ -292,20 +311,9 @@ begin
 end;
 
 procedure THMIRadioGroup.NotifyTagChange(Sender:TObject);
-var
-   Value:Double;
 begin
-   Value := 0;
-
-   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-      Value := (FTag as ITagNumeric).Value;
-
-   FIgnore:=true;
-   if (Value>=0) and (Value<Items.Count) then
-      inherited ItemIndex:= Trunc(Value)
-   else
-      inherited ItemIndex := FDefaultIndex;
-   FIgnore:=false;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshRadioGroup,0);
 end;
 
 procedure THMIRadioGroup.RemoveTag(Sender:TObject);

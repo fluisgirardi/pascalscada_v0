@@ -86,6 +86,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure RefreshProgress(Data: PtrInt);
   published
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
@@ -125,7 +126,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager, BGRABitmap, BGRABitmapTypes;
+uses hsstrings, ControlSecurityManager, BGRABitmap, BGRABitmapTypes, Forms;
 
 constructor THMIProgressBar.Create(AOwner: TComponent);
 begin
@@ -137,16 +138,26 @@ end;
 
 destructor THMIProgressBar.Destroy;
 begin
+  Application.RemoveAsyncCalls(Self);
   if Assigned(FTag) then
     Ftag.RemoveCallBacks(Self as IHMITagInterface);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
+procedure THMIProgressBar.RefreshProgress(Data: PtrInt);
+begin
+  if ([csReading]*ComponentState<>[]) or (FTag=nil) then
+    exit;
+
+  if (FTag<>nil) and (Supports(FTag, ITagNumeric)) then
+    InvalidateDraw;
+end;
+
 procedure THMIProgressBar.Loaded;
 begin
    inherited Loaded;
-   NotifyTagChange(Self);
+   RefreshProgress(0);
 end;
 
 procedure THMIProgressBar.UpdateShape;
@@ -218,16 +229,7 @@ begin
                                       ColorToBGRA(FBodycolor));
 
     end;
-
-
-
   end;
-
-
-
-
-
-
 end;
 
 function THMIProgressBar.GetControlSecurityCode:UTF8String;
@@ -308,7 +310,7 @@ begin
   if t<>nil then begin
     t.AddCallBacks(Self as IHMITagInterface);
     FTag := t;
-    NotifyTagChange(self);
+    RefreshProgress(0);
   end;
   FTag := t;
   InvalidateDraw;
@@ -349,11 +351,8 @@ end;
 
 procedure THMIProgressBar.NotifyTagChange(Sender:TObject);
 begin
-  if ([csReading]*ComponentState<>[]) or (FTag=nil) then
-    exit;
-
-  if (FTag<>nil) and (Supports(FTag, ITagNumeric)) then
-    InvalidateDraw;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshProgress, 0);
 end;
 
 procedure THMIProgressBar.RemoveTag(Sender:TObject);

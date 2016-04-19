@@ -66,12 +66,6 @@ type
     //: @seealso(IHMIInterface.MakeUnsecure)
     procedure MakeUnsecure;
 
-    //the procedurs below implements the IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure RemoveTag(Sender:TObject);
   protected
     //: @exclude
     FTag:TPLCTag;
@@ -82,7 +76,12 @@ type
     //: @exclude
     procedure RefreshTagValue; virtual;
 
-    //IHMITagInterface, visible to THMIText
+    //the procedurs below implements the IHMITagInterface
+    procedure NotifyReadOk; virtual;
+    procedure NotifyReadFault; virtual;
+    procedure NotifyWriteOk; virtual;
+    procedure NotifyWriteFault; virtual;
+    procedure RemoveTag(Sender:TObject); virtual;
     procedure NotifyTagChange(Sender:TObject); virtual;
 
   public
@@ -90,6 +89,7 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+    procedure RefreshLabel(Data: PtrInt);
   published
 
     {$IFDEF PORTUGUES}
@@ -190,7 +190,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, Forms;
 
 constructor THMILabel.Create(AOwner:TComponent);
 begin
@@ -205,10 +205,16 @@ end;
 
 destructor  THMILabel.Destroy;
 begin
+  Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveCallBacks(Self as IHMITagInterface);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
+end;
+
+procedure THMILabel.RefreshLabel(Data: PtrInt);
+begin
+  RefreshTagValue;
 end;
 
 procedure THMILabel.SetSecurityCode(sc: UTF8String);
@@ -346,12 +352,13 @@ end;
 
 procedure THMILabel.NotifyWriteFault;
 begin
-  RefreshTagValue;
+  NotifyTagChange(Self);
 end;
 
 procedure THMILabel.NotifyTagChange(Sender:TObject);
 begin
-  RefreshTagValue;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshLabel,0);
 end;
 
 procedure THMILabel.RemoveTag(Sender:TObject);

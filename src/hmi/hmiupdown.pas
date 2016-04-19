@@ -82,6 +82,7 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+    procedure RefreshUpDown(Data: PtrInt);
   published
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
@@ -157,7 +158,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses hsstrings, ControlSecurityManager, Forms;
 
 constructor THMIUpDown.Create(AOwner:TComponent);
 begin
@@ -181,10 +182,19 @@ end;
 
 destructor THMIUpDown.Destroy;
 begin
-   if FTag<>nil then
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
-   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
-   inherited Destroy;
+  Application.RemoveAsyncCalls(Self);
+  if FTag<>nil then
+    FTag.RemoveCallBacks(Self as IHMITagInterface);
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  inherited Destroy;
+end;
+
+procedure THMIUpDown.RefreshUpDown(Data: PtrInt);
+begin
+   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+      FPosition := (FTag as ITagNumeric).Value;
+
+   inherited Position:=50;
 end;
 
 procedure THMIUpDown.SetSecurityCode(Sc:UTF8String);
@@ -224,7 +234,7 @@ begin
    if t<>nil then begin
       t.AddCallBacks(Self as IHMITagInterface);
       FTag := t;
-      NotifyTagChange(self);
+      RefreshUpDown(0);
    end;
    FTag := t;
 end;
@@ -260,7 +270,7 @@ end;
 procedure THMIUpDown.Loaded;
 begin
   inherited Loaded;
-  NotifyTagChange(Self);
+  RefreshUpDown(0);
 end;
 
 procedure THMIUpDown.Click(Button: TUDBtnType);
@@ -341,10 +351,8 @@ end;
 
 procedure THMIUpDown.NotifyTagChange(Sender:TObject);
 begin
-  if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-     FPosition := (FTag as ITagNumeric).Value;
-
-  inherited Position:=50;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@RefreshUpDown, 0);
 end;
 
 procedure THMIUpDown.RemoveTag(Sender:TObject);
