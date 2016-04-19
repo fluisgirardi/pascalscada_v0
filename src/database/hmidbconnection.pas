@@ -259,6 +259,7 @@ type
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private
     FConnectRead:Boolean;
+    FLibraryLocation: String;
     FSyncConnection,
     FASyncConnection:TZConnection;
     FASyncQuery:TZQuery;
@@ -266,6 +267,7 @@ type
     FSQLSpooler:TProcessSQLCommandThread;
     function  GetSyncConnection:TZConnection;
     procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPSBufDataSet);
+    procedure SetLibraryLocation(AValue: String);
   protected
     FProtocol: string;
     FHostName: string;
@@ -298,6 +300,13 @@ type
     //: If true, connects or are connected on database.
     {$ENDIF}
     property Connected:Boolean read GetConnected write SetConnected;
+
+    {$IFDEF PORTUGUES}
+    //: Força o ZeosLib usar a biblioteca de acesso nativo apontada por este caminho.
+    {$ELSE}
+    //: If true, connects or are connected on database.
+    {$ENDIF}
+    property LibraryLocation:String read FLibraryLocation write SetLibraryLocation nodefault;
 
     {$IFDEF PORTUGUES}
     //: Driver de banco de dados em uso para conexão ao banco de dados.
@@ -568,6 +577,18 @@ begin
   finally
     FCS.Leave;
   end;
+end;
+
+procedure THMIDBConnection.SetLibraryLocation(AValue: String);
+begin
+  FSyncConnection.LibraryLocation:=AValue;
+  FCS.Enter;
+  try
+    FASyncConnection.LibraryLocation:=AValue;
+  finally
+    FCS.Leave;
+  end;
+  FHostName:=FSyncConnection.LibraryLocation;
 end;
 
 function  THMIDBConnection.GetConnected:Boolean;
