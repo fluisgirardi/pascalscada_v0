@@ -209,8 +209,8 @@ begin
       end else
         timeout:=1;
 
-      if (timeout-1)>0 then
-        FSleepInterruptable.WaitFor(timeout-1)
+      if (timeout)>0 then
+        FSleepInterruptable.WaitFor(timeout)
       else
         FSleepInterruptable.WaitFor(1);
     //except

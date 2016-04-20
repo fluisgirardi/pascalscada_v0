@@ -106,37 +106,37 @@ end;
 procedure TpsHMIfrmNumericKeyBoard.GotoBetterPosition;
 var
   sw, sh:Integer;
-  frect, t_rect: TRect;
+  numkeyboard_rect, target_rect: TRect;
 begin
   //auto posicionamento do popup.
   //t_point:=FTarget.ClientOrigin;
-  WidgetSet.GetWindowRect(Target.Handle,t_rect);
-  WidgetSet.GetWindowRect(Self.Handle,frect);
+  WidgetSet.GetWindowRect(Target.Handle,target_rect);
+  WidgetSet.GetWindowRect(Self.Handle,numkeyboard_rect);
   sw:=Screen.Width;
   sh:=Screen.Height;
 
-  if (t_rect.Top+(frect.Bottom-frect.Top)+FTarget.Height)<=sh then
-    Top:=t_rect.Top+FTarget.Height   //borda superior do form com borda inferior do target
+  if (target_rect.Top+(numkeyboard_rect.Bottom-numkeyboard_rect.Top)+FTarget.Height)<=sh then
+    Top:=target_rect.Top+FTarget.Height   //borda superior do form com borda inferior do target
   else begin
-    if (t_rect.Top - (frect.Bottom - frect.Top))>=0 then
-      Top:=t_rect.Top - (frect.Bottom - frect.Top)  //borda inferior do form com borda superior do target
+    if (target_rect.Top - (numkeyboard_rect.Bottom - numkeyboard_rect.Top))>=0 then
+      Top:=target_rect.Top - (numkeyboard_rect.Bottom - numkeyboard_rect.Top)  //borda inferior do form com borda superior do target
     else begin
-      Top:= (t_rect.Top+((t_rect.Bottom-t_rect.Top) div 2) - ((frect.Bottom-frect.Top) div 2)); //meio
+      Top:= (target_rect.Top+((target_rect.Bottom-target_rect.Top) div 2) - ((numkeyboard_rect.Bottom-numkeyboard_rect.Top) div 2)); //meio
       if Top<0 then Top:=0;
-      if (Top+(frect.Bottom - frect.Top))>Screen.Height then Top:=Screen.Height - (frect.Bottom - frect.Top);
+      if (Top+(numkeyboard_rect.Bottom - numkeyboard_rect.Top))>Screen.Height then Top:=Screen.Height - (numkeyboard_rect.Bottom - numkeyboard_rect.Top);
     end;
   end;
 
-  if ((t_rect.Left+FTarget.Width)-(frect.Right-frect.Left))>=0 then
-    Left:=((t_rect.Left+FTarget.Width)-(frect.Right-frect.Left))  //borda direita do form com
+  if ((target_rect.Left+FTarget.Width)-(numkeyboard_rect.Right-numkeyboard_rect.Left))>=0 then
+    Left:=((target_rect.Left+FTarget.Width)-(numkeyboard_rect.Right-numkeyboard_rect.Left))  //borda direita do form com
                                                                 //borda direita do target
   else begin
-    if (t_rect.Left+(frect.Right-frect.Left))<=sw then
-      Left:=t_rect.Left   //borda esquerda do form com borda esquerda do target
+    if (target_rect.Left+(numkeyboard_rect.Right-numkeyboard_rect.Left))<=sw then
+      Left:=target_rect.Left   //borda esquerda do form com borda esquerda do target
     else begin
-      Left:= (t_rect.Left+((t_rect.Right-t_rect.Left) div 2) - ((frect.Right-frect.Left) div 2)); //meio
+      Left:= (target_rect.Left+((target_rect.Right-target_rect.Left) div 2) - ((numkeyboard_rect.Right-numkeyboard_rect.Left) div 2)); //meio
       if Left<0 then Left:=0;
-      if (Left+(frect.Right - frect.Left))>Screen.Width then Left:=Screen.Width - (frect.Right - frect.Left);
+      if (Left+(numkeyboard_rect.Right - numkeyboard_rect.Left))>Screen.Width then Left:=Screen.Width - (numkeyboard_rect.Right - numkeyboard_rect.Left);
     end;
   end;
 end;
