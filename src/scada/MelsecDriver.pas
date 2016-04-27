@@ -339,13 +339,47 @@ begin
 
         //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
         //calculates the remaining package length at the communication buffer.
-        FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
+        //FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
+        if tagrec.ReadFunction = 1 then //bytes
+        begin
+          FRemainingBytes := 2;
+          if IOResult1.BufferToRead[2] = 208 then
+            FRemainingBytes := 4;
+          if IOResult1.BufferToRead[2] = 166 then
+            FRemainingBytes := 5;
+          if ((IOResult1.BufferToRead[0] = 0) and (IOResult1.BufferToRead[1] = 0) and (IOResult1.BufferToRead[2] = 0)) then
+            FRemainingBytes := 6;
+          qttags := tagrec.Size;
+          if qttags <= 2 then
+            FRemainingBytes := FRemainingBytes + 1
+          else
+          begin
+            if (qttags mod 2 <> 0) then
+              FRemainingBytes := FRemainingBytes + 1;
+            FRemainingBytes := FRemainingBytes + (qttags div 2);
+          end;
+        end;
+
+        if tagrec.ReadFunction = 3 then //float
+        begin
+          FRemainingBytes := 3;
+          if IOResult1.BufferToRead[2] = 208 then
+            FRemainingBytes := 5;
+          if IOResult1.BufferToRead[2] = 166 then
+            FRemainingBytes := 6;
+          if IOResult1.BufferToRead[7] = 2 then
+            FRemainingBytes := 0;
+          qttags := tagrec.Size;
+          FRemainingBytes := FRemainingBytes + (qttags * 2) - 1
+        end;
 
         if FRemainingBytes>0 then
         begin
-          qttags := tagrec.Size;
-          if qttags > 1 then
-            FRemainingBytes := FRemainingBytes + (qttags {tagsize} * 2) - 1;
+          {qttags := tagrec.Size;
+          if ((qttags > 1) and (tagrec.ReadFunction <> 1)) then
+            FRemainingBytes := FRemainingBytes + (qttags * 2) - 1
+          else if ((qttags > 2) and (tagrec.ReadFunction = 1)) then
+            FRemainingBytes := FRemainingBytes + (qttags div 2);  }
           res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2,starts,ends);
 
           if res<>0 then

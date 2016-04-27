@@ -118,54 +118,107 @@ begin
   //comeca a decodificar o pacote...
   //decodes the packet.
 
-  //leitura de bits das entradas ou saidas
-  //request to read the digital input/outpus (coils)
-  case pkg.BufferToRead[7] of
-    $03: begin
-      //acerta onde vao ser colocados os valores decodificados...
-      //where the data decoded will be stored.
-      if foundPLC then begin
-        if pkg.BufferToWrite[7]=$01 then
-          aux := PMelsecPLC[plc].OutPuts
-        else
-          aux := PMelsecPLC[plc].Inputs;
-      end;
 
-      if Result=ioOk then begin
+  //se for bit
+  if (pkg.BufferToWrite[13] = 1) then //byte
+  begin
+    if (pkg.BufferToWrite[12] = 20) then //escrita
+    begin
+      if Result=ioOk then
+      begin
         address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
         len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
+
+        SetLength(values,len);
+
+        i := 0;
+        while (i<len) do
+        begin
+           values[i] := pkg.BufferToWrite[21] + pkg.BufferToWrite[22];
+           inc(i);
+        end;
+
+        if Length(PMelsecPLC)>0 then
+          PMelsecPLC[0].OutPuts.SetValues(address,len,1,Values,Result);
+      end
+      else
+        if foundPLC then
+          PMelsecPLC[plc].Registers.SetFault(address,len,1,Result);
+    end;
+
+    if (pkg.BufferToWrite[12] = 4) then //leitura
+    begin
+      //acerta onde vao ser colocados os valores decodificados...
+      //where the data decoded will be stored.
+      if Result=ioOk then
+      begin
+        address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
+        len := pkg.BufferToWrite[19];
         SetLength(Values,len);
 
         i := 0;
-        c := 0;
-        c2:= 11;
-        while (i<len) and (c2<Length(pkg.BufferToRead)) do begin
-          if (c=10) then begin
-            c:=0;
-            inc(c2);
-          end;
-          //Values[i]:=IfThen(((LongInt(pkg.BufferToRead[c2]) and (1 shl c))=(1 shl c)),1,0);
-          Values[i]:= 1;
-          if LongInt(pkg.BufferToRead[c2]) = 0 then
-            Values[i]:= 0;
 
-          inc(i);
-          inc(c);
+        for I := 0 to len - 1 do
+        begin
+          SetLength(Values,1);
+          c2 := (i div 2) + 11;
+          if (i mod 2 = 0) then
+            Values[0]:= byte(pkg.BufferToRead[c2] shr 4)
+          else
+          begin
+            c := LongInt(byte(pkg.BufferToRead[c2]));
+            if c = 17 then
+              c := 1;
+            if c = 16 then
+              c := 0;
+            Values[0] := c;
+          end;
+          if Length(PMelsecPLC)>0 then
+            PMelsecPLC[0].OutPuts.SetValues(address,1,1,Values,Result);
+          address := address + 1;
         end;
-        //if foundPLC then
-          //aux.SetValues(address,len,1,Values,Result);
+      end
+      else
+        if foundPLC then
+          PMelsecPLC[0].OutPuts.SetFault(address,len,1,Result);
+    end;
+  end;
+
+
+
+
+  ///////////////////////////////////////
+  /// se for float
+  if (pkg.BufferToWrite[13] = 0) then //float
+  begin
+    //escrita
+    if (pkg.BufferToWrite[12] = 20) then //escrita
+    begin
+      if Result=ioOk then
+      begin
+        address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
+        len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
+
+        SetLength(values,len);
+
+        i := 0;
+        while (i<len) do
+        begin
+          values[i] := pkg.BufferToWrite[21] + pkg.BufferToWrite[22];
+          inc(i);
+        end;
+
         if Length(PMelsecPLC)>0 then
           PMelsecPLC[0].OutPuts.SetValues(address,len,1,Values,Result);
-      end else
+      end
+      else
         if foundPLC then
-          aux.SetFault(address,len,1,Result);
+          PMelsecPLC[plc].Registers.SetFault(address,len,1,Result);
     end;
 
-    //leitura de words dos registradores ou das entradas analogicas
-    //request to read registers/analog registers
-    $04,$06,$08,$10,$12,$14,$16,$18,$20,$22: begin
-      //acerta onde vao ser colocados os valores decodificados...
-      //where the data decoded will be stored.
+    //leitura
+    if (pkg.BufferToWrite[12] = 4) then //leitura
+    begin
       if Result=ioOk then
       begin
         address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
@@ -185,135 +238,72 @@ begin
       end
       else
         if foundPLC then
-          aux.SetFault(address,len,1,Result);
+          PMelsecPLC[0].Registers.SetFault(address,len,1,Result);
     end;
+  end;
 
-    // decodifica a escrita de uma saida digital
-    // decodes a write to a single coil
-    $05: begin
-      if Result=ioOk then begin
-        address := (pkg.BufferToWrite[8] * 256) + pkg.BufferToWrite[9];
-        SetLength(values,1);
+ { if (pkg.BufferToRead[7] in [$03, $04, $05]) then
+  begin
+    //acerta onde vao ser colocados os valores decodificados...
+    //where the data decoded will be stored.
+    if Result=ioOk then
+    begin
+      address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
+      len := pkg.BufferToWrite[19];
+      SetLength(Values,len);
 
-        if (pkg.BufferToWrite[10]=0) and (pkg.BufferToWrite[11]=0) then
-           values[0] := 0
+      i := 0;
+
+      for I := 0 to len - 1 do
+      begin
+        SetLength(Values,1);
+        c2 := (i div 2) + 11;
+        if (i mod 2 = 0) then
+          Values[0]:= byte(pkg.BufferToRead[c2] shr 4)
         else
-           values[0] := 1;
-
-        if foundPLC then
-          PMelsecPLC[plc].OutPuts.SetValues(address,1,1,values,Result);
-      end else
-        if foundPLC then
-          PMelsecPLC[plc].OutPuts.SetFault(address,1,1,Result);
-    end;
-
-    
-
-    // decodifica o status do escravo
-    // decodes a the current state of the slave
-    $07: begin
-      if foundPLC then begin
-        if Result=ioOk then begin
-          PMelsecPLC[plc].Status07Value :=LongInt(pkg.BufferToRead[8]);
-          PMelsecPLC[plc].Status07TimeStamp := CrossNow;
+        begin
+          c := LongInt(byte(pkg.BufferToRead[c2]));
+          if c = 17 then
+            c := 1;
+          if c = 16 then
+            c := 0;
+          Values[0] := c;
         end;
-        PMelsecPLC[plc].Status07LastError := Result;
+        if Length(PMelsecPLC)>0 then
+          PMelsecPLC[0].OutPuts.SetValues(address,1,1,Values,Result);
+        address := address + 1;
       end;
-    end;
+    end
+    else
+      if foundPLC then
+        PMelsecPLC[0].OutPuts.SetFault(address,len,1,Result);
+  end;
+
+  if not (pkg.BufferToRead[7] in [$03, $04, $05, $07, $0F, $02]) then
+  begin
+
+  end;
+
+
 
     // decodifica a escrita de multiplos saidas digitais
     // decodes a write to multiple coils.
-    $0F: begin
-      if Result=ioOk then begin
-        address := (pkg.BufferToWrite[08] * 256) + pkg.BufferToWrite[09];
-        len     := (pkg.BufferToWrite[10] * 256) + pkg.BufferToWrite[11];
+  if pkg.BufferToRead[7] = $0F then
+  begin
 
-        SetLength(values,len);
-
-        i := 0;
-        c := 0;
-        c2:= 13;
-        while (i<len) and (c2<Length(pkg.BufferToRead)) do begin
-          if (c=8) then begin
-            c:=0;
-            inc(c2);
-          end;
-          Values[i]:=IfThen(((LongInt(pkg.BufferToWrite[c2]) and (1 shl c))=(1 shl c)),1,0);
-          inc(i);
-          inc(c);
-        end;
-
-        if foundPLC then
-          PMelsecPLC[plc].OutPuts.SetValues(address,len,1,values,Result);
-      end else
-        if foundPLC then
-          PMelsecPLC[plc].OutPuts.SetFault(address,len,1,Result);
-    end;
+    end
+    else
+      if foundPLC then
+        PMelsecPLC[plc].OutPuts.SetFault(address,len,1,Result);
+  end;
 
     // decodifica a escrita de multiplos registros
     // decodes a write to a multiple registers
-    $02: begin
-      if Result=ioOk then begin
-        //address := (pkg.BufferToWrite[08] * 256) + pkg.BufferToWrite[09];
-        //len     := (pkg.BufferToWrite[10] * 256) + pkg.BufferToWrite[11];
-        address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
-        len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
+  if pkg.BufferToRead[7] = $02 then
+  begin
 
-        SetLength(values,len);
-
-        i := 0;
-        while (i<len) do begin
-           values[i] := pkg.BufferToWrite[21] + pkg.BufferToWrite[22];
-           inc(i);
-        end;
-
-        //if foundPLC then
-          //PMelsecPLC[plc].Registers.SetValues(address,len,1,values,Result);
-        if Length(PMelsecPLC)>0 then
-          PMelsecPLC[0].OutPuts.SetValues(address,len,1,Values,Result);
-      end else
-        if foundPLC then
-          PMelsecPLC[plc].Registers.SetFault(address,len,1,Result);
-    end;
-    else begin
-      //tratamento de erros modbus
-      //modbus error handling.
-      case pkg.BufferToRead[8] of
-        $01:
-          Result := ioIllegalFunction;
-        $02:
-          Result := ioIllegalRegAddress;
-        $03:
-          Result := ioIllegalValue;
-        $04,$05,$06,$07,$08:
-          Result := ioPLCError;
-        else
-          Result := ioCommError;
-      end;
-
-      address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
-      len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
-
-      case pkg.BufferToWrite[7] of
-        $01: begin
-          if foundPLC then
-            PMelsecPLC[plc].OutPuts.SetFault(address,len,1,Result);
-        end;
-        $02: begin
-          if foundPLC then
-            PMelsecPLC[plc].Inputs.SetFault(address,len,1,Result);
-        end;
-        $03: begin
-          if foundPLC then
-            PMelsecPLC[plc].Registers.SetFault(address,len,1,Result);
-        end;
-        $04: begin
-          if foundPLC then
-            PMelsecPLC[plc].AnalogReg.SetFault(address,len,1,Result);
-        end;
-      end;
-    end;
-  end;
+  end; }
+    
 end;
 
 function TMelsecTCPDriver.EncodePkg(TagObj: TTagRec; ToWrite: TArrayOfDouble;
@@ -350,6 +340,7 @@ begin
         dataLength    := 12;
         valorProc     := TagObj.Address;
         iSubCommand   := 1;
+        tamanho       := TagObj.Size;
 
         SetLength(Result,22);
         Result[00] := frame;
@@ -372,8 +363,10 @@ begin
         Result[16] := valorProc shr 8;
         Result[17] := valorProc shr 16;
         Result[18] := $90;
-        Result[19] := $01;
-        Result[20] := $00;
+        //Result[19] := $01;
+        //Result[20] := $00;
+        Result[19] := tamanho;
+        Result[20] := tamanho shr 8;
         Result[21] := 0;
       end;
 
@@ -418,8 +411,6 @@ begin
         Result[16] := valorProc shr 8;
         Result[17] := valorProc shr 16;
         Result[18] := $A8;
-        //Result[19] := $01;
-        //Result[20] := $00;
         Result[19] := tamanho;
         Result[20] := tamanho shr 8;
         Result[21] := 0;
