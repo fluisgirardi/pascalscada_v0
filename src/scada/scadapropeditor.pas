@@ -167,6 +167,8 @@ type
   TBlockElementMapperComponentEditor = class(TInsertTagsOnFormComponentEditor)
   private
     procedure OpenElementMapper;
+  protected
+    function GetTheOwner: TComponent; override;
   public
     procedure ExecuteVerb(Index: LongInt); override;
     {$if declared(has_customhints)}
@@ -388,6 +390,11 @@ procedure TBlockElementMapperComponentEditor.OpenElementMapper;
 begin
   if (GetComponent is TPLCBlock) then
     TPLCBlock(GetComponent).MapElements(@AddTagInEditor, @CreateComponent);
+end;
+
+function TBlockElementMapperComponentEditor.GetTheOwner: TComponent;
+begin
+  Result:=GetComponent().Owner;
 end;
 
 procedure TBlockElementMapperComponentEditor.ExecuteVerb(Index: LongInt);

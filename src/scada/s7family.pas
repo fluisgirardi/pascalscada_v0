@@ -2215,9 +2215,7 @@ begin
         ReadQueuedRequests(FPLCs[plc]);
       end;
 
-      for c:=EntireTagList.Count-1 downto 0 do begin
-        EntireTagList.Delete(c);
-      end;
+      EntireTagList.Clear;
     end;
   finally
     FreeAndNil(EntireTagList);

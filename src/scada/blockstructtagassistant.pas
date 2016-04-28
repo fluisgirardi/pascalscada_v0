@@ -90,7 +90,7 @@ begin
       end;
     end;
   finally
-    dlg.Destroy;
+    FreeAndNil(dlg);
   end;
 end;
 
