@@ -121,7 +121,7 @@ type
     function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     function  DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
 
-    function PlcDeviceType(memReadFunction: integer): integer; virtual;
+    function PlcDeviceType(memReadWriteFunction: integer): integer; virtual;
 
     property Output_M_MaxHole:Cardinal read POutput_M_MaxHole write SetOutput_M_MaxHole default 10;
     property Output_SM_MaxHole:Cardinal read POutput_SM_MaxHole write SetOutput_SM_MaxHole default 10;
@@ -954,7 +954,7 @@ begin
     inherited;
 end;
 
-function TMelsecDriver.PlcDeviceType(memReadFunction: integer): integer;
+function TMelsecDriver.PlcDeviceType(memReadWriteFunction: integer): integer;
 begin
   Result := 0;
 end;
@@ -1141,7 +1141,7 @@ end;
 procedure SetTagBuilderToolForMelsecProtocolFamily(TagBuilderTool:TOpenTagEditor);
 begin
   if assigned(MelsecTagBuilderEditor) then
-    raise Exception.Create('A Tag Builder editor for Modbus RTU/TCP protocol family was already assigned.')
+    raise Exception.Create('A Tag Builder editor for MC protocol family was already assigned.')
   else
     MelsecTagBuilderEditor:=TagBuilderTool;
 end;

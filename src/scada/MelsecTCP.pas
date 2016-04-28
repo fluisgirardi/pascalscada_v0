@@ -34,7 +34,7 @@ type
     function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; override;
     function RemainingBytesWrite(buffer: BYTES): LongInt; override;
     function RemainingBytesRead(buffer:BYTES; TagObj:TTagRec): LongInt; override;
-    function PlcDeviceType(memReadFunction: integer): integer; override;
+    function PlcDeviceType(memReadWriteFunction: integer): integer; override;
   public
   constructor Create(AOwner: TComponent); override;
   published
@@ -570,9 +570,9 @@ begin
   end;
 end;
 
-function TMelsecTCPDriver.PlcDeviceType(memReadFunction: integer): integer;
+function TMelsecTCPDriver.PlcDeviceType(memReadWriteFunction: integer): integer;
 begin
-  case memReadFunction of
+  case memReadWriteFunction of
     $01: Result := $90; //memory M
     $02: Result := $91; //memory SM
     $03: Result := $92; //memory L
