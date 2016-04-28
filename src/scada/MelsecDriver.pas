@@ -3,18 +3,12 @@
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
-  @abstract(Implementa a base para os drivers de protocolo ModBus RTU e ModBus TCP.)
+  @abstract(Implementa a base para os drivers de protocolo MC PROTOCOL.)
 }
 {$ELSE}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-  @abstract(Unit that implements the base of ModBus RTU and ModBus TCP protocol drivers.)
-
-  ****************************** History  *******************************
-  ***********************************************************************
-  07/2013 - Moved OpenTagEditor to TagBuilderAssistant to remove form dependencies
-  @author(Juanjo Montero <juanjo.montero@gmail.com>)
-  ***********************************************************************
+  @abstract(Unit that implements the base of MC PROTOCOL drivers.)
 }
 {$ENDIF}
 unit MelsecDriver;
@@ -32,11 +26,20 @@ uses
 
 type
   TMelsecPLC = record
-    Station:LongInt;
-    Inputs:TPLCMemoryManager;
-    OutPuts:TPLCMemoryManager;
-    Registers:TPLCMemoryManager;
-    AnalogReg:TPLCMemoryManager;
+    Station: LongInt;
+
+    OutPuts_M: TPLCMemoryManager;
+    OutPuts_SM: TPLCMemoryManager;
+    OutPuts_L: TPLCMemoryManager;
+    OutPuts_F: TPLCMemoryManager;
+    OutPuts_V: TPLCMemoryManager;
+    OutPuts_X: TPLCMemoryManager;
+    OutPuts_Y: TPLCMemoryManager;
+    OutPuts_B: TPLCMemoryManager;
+
+    Registers_D :TPLCMemoryManager;
+    Registers_SD :TPLCMemoryManager;
+
     Status07Value:Double;
     Status07TimeStamp:TDateTime;
     Status07LastError:TProtocolIOResult;
@@ -50,20 +53,41 @@ type
     PFirstRequestLen,
     PFuncByteOffset,
     PCRCLen:LongInt;
-    POutputMaxHole:Cardinal;
-    PInputMaxHole:Cardinal;
-    PRegistersMaxHole:Cardinal;
+
+    POutput_M_MaxHole:Cardinal;
+    POutput_SM_MaxHole: Cardinal;
+    POutput_L_MaxHole: Cardinal;
+    POutput_F_MaxHole: Cardinal;
+    POutput_V_MaxHole: Cardinal;
+    POutput_X_MaxHole: Cardinal;
+    POutput_Y_MaxHole: Cardinal;
+    POutput_B_MaxHole: Cardinal;
+
+    PRegisters_D_MaxHole:Cardinal;
+    PRegisters_SD_MaxHole:Cardinal;
+
     PInternalDelayBetweenCmds:Cardinal;
     PMelsecPLC:array of TMelsecPLC;
     function  GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:LongInt):Boolean;
-    procedure SetOutputMaxHole(v:Cardinal);
-    procedure SetInputMaxHole(v:Cardinal);
-    procedure SetRegisterMaxHole(v:Cardinal);
-    procedure BuildTagRec(plc,func,startaddress,size:LongInt; var tr:TTagRec);
 
+    procedure SetOutput_M_MaxHole(v:Cardinal);
+    procedure SetOutput_SM_MaxHole(v:Cardinal);
+    procedure SetOutput_L_MaxHole(v:Cardinal);
+    procedure SetOutput_F_MaxHole(v:Cardinal);
+    procedure SetOutput_V_MaxHole(v:Cardinal);
+    procedure SetOutput_X_MaxHole(v:Cardinal);
+    procedure SetOutput_Y_MaxHole(v:Cardinal);
+    procedure SetOutput_B_MaxHole(v:Cardinal);
+
+    procedure SetRegister_D_MaxHole(v:Cardinal);
+    procedure SetRegister_SD_MaxHole(v:Cardinal);
+
+
+    procedure BuildTagRec(plc,func,startaddress,size:LongInt; var tr:TTagRec);
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:LongInt):BYTES; virtual;
     function  DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TProtocolIOResult; virtual;
-    function RemainingBytes(buffer:BYTES):LongInt; virtual;
+    function RemainingBytesWrite(buffer:BYTES):LongInt; virtual;
+    function RemainingBytesRead(buffer:BYTES; TagObj:TTagRec):LongInt; virtual;
     procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
     procedure DoDelTag(TagObj:TTag); override;
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
@@ -71,9 +95,19 @@ type
     function  DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     function  DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
 
-    property OutputMaxHole:Cardinal read POutputMaxHole write SetOutputMaxHole default 50;
-    property InputMaxHole:Cardinal read PInputMaxHole write SetInputMaxHole default 50;
-    property RegisterMaxHole:Cardinal read PRegistersMaxHole write SetRegisterMaxHole default 10;
+    function PlcDeviceType(memReadFunction: integer): integer; virtual;
+
+    property Output_M_MaxHole:Cardinal read POutput_M_MaxHole write SetOutput_M_MaxHole default 10;
+    property Output_SM_MaxHole:Cardinal read POutput_SM_MaxHole write SetOutput_SM_MaxHole default 10;
+    property Output_L_MaxHole:Cardinal read POutput_L_MaxHole write SetOutput_L_MaxHole default 10;
+    property Output_F_MaxHole:Cardinal read POutput_F_MaxHole write SetOutput_F_MaxHole default 10;
+    property Output_V_MaxHole:Cardinal read POutput_V_MaxHole write SetOutput_V_MaxHole default 10;
+    property Output_X_MaxHole:Cardinal read POutput_X_MaxHole write SetOutput_X_MaxHole default 10;
+    property Output_Y_MaxHole:Cardinal read POutput_Y_MaxHole write SetOutput_Y_MaxHole default 10;
+    property Output_B_MaxHole:Cardinal read POutput_B_MaxHole write SetOutput_B_MaxHole default 10;
+
+    property Register_D_MaxHole:Cardinal read PRegisters_D_MaxHole write SetRegister_D_MaxHole default 10;
+    property Register_SD_MaxHole:Cardinal read PRegisters_SD_MaxHole write SetRegister_SD_MaxHole default 10;
 
   public
     constructor Create(AOwner:TComponent); override;
@@ -116,10 +150,19 @@ constructor TMelsecDriver.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FProtocolReady:=false;
-  POutputMaxHole := 50;
-  PInputMaxHole := 50;
-  PRegistersMaxHole := 50;
-  //PRegistersMaxHole := 0;
+
+  POutput_M_MaxHole := 10;
+  POutput_SM_MaxHole := 10;
+  POutput_L_MaxHole:= 10;
+  POutput_F_MaxHole:= 10;
+  POutput_V_MaxHole:= 10;
+  POutput_X_MaxHole:= 10;
+  POutput_Y_MaxHole:= 10;
+  POutput_B_MaxHole:= 10;
+
+  PRegisters_D_MaxHole:= 10;
+  PRegisters_SD_MaxHole:= 10;
+
   PReadSomethingAlways := true;
   PInternalDelayBetweenCmds:=5;
   SetLength(PMelsecPLC,0);
@@ -136,11 +179,18 @@ var
   plc:LongInt;
 begin
   inherited Destroy;
-  for plc:=0 to High(PMelsecPLC) do begin
-      PMelsecPLC[plc].Inputs.Destroy;
-      PMelsecPLC[plc].OutPuts.Destroy;
-      PMelsecPLC[plc].Registers.Destroy;
-      PMelsecPLC[plc].AnalogReg.Destroy;
+  for plc:=0 to High(PMelsecPLC) do
+  begin
+    PMelsecPLC[plc].OutPuts_M.Destroy;
+    PMelsecPLC[plc].OutPuts_SM.Destroy;
+    PMelsecPLC[plc].OutPuts_L.Destroy;
+    PMelsecPLC[plc].OutPuts_F.Destroy;
+    PMelsecPLC[plc].OutPuts_V.Destroy;
+    PMelsecPLC[plc].OutPuts_X.Destroy;
+    PMelsecPLC[plc].OutPuts_Y.Destroy;
+    PMelsecPLC[plc].OutPuts_B.Destroy;
+    PMelsecPLC[plc].Registers_D.Destroy;
+    PMelsecPLC[plc].Registers_SD.Destroy;
   end;
   SetLength(PMelsecPLC,0);
 end;
@@ -176,39 +226,76 @@ begin
         end;
       //se nao encontrou o plc, adiciona!
       //if not found the slave, add it.
-      if not found then begin
+      if not found then
+      begin
         plc:=length(PMelsecPLC);
         SetLength(PMelsecPLC,plc+1);
         PMelsecPLC[plc].Station := station;
-        PMelsecPLC[plc].Inputs := TPLCMemoryManager.Create();
-        PMelsecPLC[plc].Inputs.MaxBlockItems := 10;
-        //PMelsecPLC[plc].Inputs.MaxBlockItems := 2000;
-        PMelsecPLC[plc].Inputs.MaxHole := PInputMaxHole;
-        PMelsecPLC[plc].OutPuts := TPLCMemoryManager.Create();
-        PMelsecPLC[plc].OutPuts.MaxBlockItems := 10;
-        //PMelsecPLC[plc].OutPuts.MaxBlockItems := 2000;
-        PMelsecPLC[plc].OutPuts.MaxHole := POutputMaxHole;
-        PMelsecPLC[plc].Registers := TPLCMemoryManager.Create();
-        PMelsecPLC[plc].Registers.MaxBlockItems := 10;
-        //PMelsecPLC[plc].Registers.MaxBlockItems := 125;
-        PMelsecPLC[plc].Registers.MaxHole := PRegistersMaxHole;
-        PMelsecPLC[plc].AnalogReg := TPLCMemoryManager.Create();
-        //PMelsecPLC[plc].AnalogReg.MaxBlockItems := 125;
-        PMelsecPLC[plc].AnalogReg.MaxBlockItems := 10;
-        PMelsecPLC[plc].AnalogReg.MaxHole := PRegistersMaxHole;
+
+        PMelsecPLC[plc].OutPuts_M := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_M.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_M.MaxHole := POutput_M_MaxHole;
+
+        PMelsecPLC[plc].OutPuts_SM := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_SM.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_SM.MaxHole := POutput_SM_MaxHole;
+
+        PMelsecPLC[plc].OutPuts_L := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_L.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_L.MaxHole := POutput_L_MaxHole;
+
+        PMelsecPLC[plc].OutPuts_F := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_F.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_F.MaxHole := POutput_F_MaxHole;
+
+        PMelsecPLC[plc].OutPuts_V := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_V.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_V.MaxHole := POutput_V_MaxHole;
+
+        PMelsecPLC[plc].OutPuts_X := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_X.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_X.MaxHole := POutput_X_MaxHole;
+
+        PMelsecPLC[plc].OutPuts_Y := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_Y.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_Y.MaxHole := POutput_Y_MaxHole;
+
+        PMelsecPLC[plc].OutPuts_B := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].OutPuts_B.MaxBlockItems := 10;
+        PMelsecPLC[plc].OutPuts_B.MaxHole := POutput_B_MaxHole;
+
+        PMelsecPLC[plc].Registers_D := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].Registers_D.MaxBlockItems := 10;
+        PMelsecPLC[plc].Registers_D.MaxHole := PRegisters_D_MaxHole;
+
+        PMelsecPLC[plc].Registers_SD := TPLCMemoryManager.Create();
+        PMelsecPLC[plc].Registers_SD.MaxBlockItems := 10;
+        PMelsecPLC[plc].Registers_SD.MaxHole := PRegisters_SD_MaxHole;
       end;
 
-      valido := (memtype in [1..4]);
+      valido := (memtype in [1..16]);
 
       case memtype of
         1:
-          PMelsecPLC[plc].OutPuts.AddAddress(mem,size,1,scantime);
+          PMelsecPLC[plc].OutPuts_M.AddAddress(mem,size,1,scantime);
         2:
-          PMelsecPLC[plc].Inputs.AddAddress(mem,size,1,scantime);
+          PMelsecPLC[plc].OutPuts_SM.AddAddress(mem,size,1,scantime);
         3:
-          PMelsecPLC[plc].Registers.AddAddress(mem,size,1,scantime);
+          PMelsecPLC[plc].OutPuts_L.AddAddress(mem,size,1,scantime);
         4:
-          PMelsecPLC[plc].AnalogReg.AddAddress(mem,size,1,scantime);
+          PMelsecPLC[plc].OutPuts_F.AddAddress(mem,size,1,scantime);
+        5:
+          PMelsecPLC[plc].OutPuts_V.AddAddress(mem,size,1,scantime);
+        6:
+          PMelsecPLC[plc].OutPuts_X.AddAddress(mem,size,1,scantime);
+        7:
+          PMelsecPLC[plc].OutPuts_Y.AddAddress(mem,size,1,scantime);
+        8:
+          PMelsecPLC[plc].OutPuts_B.AddAddress(mem,size,1,scantime);
+        9:
+          PMelsecPLC[plc].Registers_D.AddAddress(mem,size,1,scantime);
+        16:
+          PMelsecPLC[plc].Registers_SD.AddAddress(mem,size,1,scantime);
       end;
     end;
   inherited DoAddTag(TagObj, valido);
@@ -245,13 +332,25 @@ begin
       if found then begin
         case memtype of
           1:
-            PMelsecPLC[plc].OutPuts.RemoveAddress(mem,size,1);
+            PMelsecPLC[plc].OutPuts_M.RemoveAddress(mem,size,1);
           2:
-            PMelsecPLC[plc].Inputs.RemoveAddress(mem,size,1);
+            PMelsecPLC[plc].OutPuts_SM.RemoveAddress(mem,size,1);
           3:
-            PMelsecPLC[plc].Registers.RemoveAddress(mem,size,1);
+            PMelsecPLC[plc].OutPuts_L.RemoveAddress(mem,size,1);
           4:
-            PMelsecPLC[plc].AnalogReg.RemoveAddress(mem,size,1);
+            PMelsecPLC[plc].OutPuts_F.RemoveAddress(mem,size,1);
+          5:
+            PMelsecPLC[plc].OutPuts_V.RemoveAddress(mem,size,1);
+          6:
+            PMelsecPLC[plc].OutPuts_X.RemoveAddress(mem,size,1);
+          7:
+            PMelsecPLC[plc].OutPuts_Y.RemoveAddress(mem,size,1);
+          8:
+            PMelsecPLC[plc].OutPuts_B.RemoveAddress(mem,size,1);
+          9:
+            PMelsecPLC[plc].Registers_D.RemoveAddress(mem,size,1);
+          16:
+            PMelsecPLC[plc].Registers_SD.RemoveAddress(mem,size,1);
         end;
       end;
     end;
@@ -287,13 +386,25 @@ begin
 
   case TagObj.ReadFunction of
     $01:
-      PMelsecPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_M.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $02:
-      PMelsecPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_SM.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $03:
-      PMelsecPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_L.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $04:
-      PMelsecPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp)
+      PMelsecPLC[plc].OutPuts_F.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    $05:
+      PMelsecPLC[plc].OutPuts_V.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    $06:
+      PMelsecPLC[plc].OutPuts_X.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    $07:
+      PMelsecPLC[plc].OutPuts_Y.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    $08:
+      PMelsecPLC[plc].OutPuts_B.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    $09:
+      PMelsecPLC[plc].Registers_D.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+    $16:
+      PMelsecPLC[plc].Registers_SD.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
   end;
 
   if values.LastQueryResult=ioOk then begin
@@ -339,47 +450,10 @@ begin
 
         //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
         //calculates the remaining package length at the communication buffer.
-        //FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
-        if tagrec.ReadFunction = 1 then //bytes
-        begin
-          FRemainingBytes := 2;
-          if IOResult1.BufferToRead[2] = 208 then
-            FRemainingBytes := 4;
-          if IOResult1.BufferToRead[2] = 166 then
-            FRemainingBytes := 5;
-          if ((IOResult1.BufferToRead[0] = 0) and (IOResult1.BufferToRead[1] = 0) and (IOResult1.BufferToRead[2] = 0)) then
-            FRemainingBytes := 6;
-          qttags := tagrec.Size;
-          if qttags <= 2 then
-            FRemainingBytes := FRemainingBytes + 1
-          else
-          begin
-            if (qttags mod 2 <> 0) then
-              FRemainingBytes := FRemainingBytes + 1;
-            FRemainingBytes := FRemainingBytes + (qttags div 2);
-          end;
-        end;
-
-        if tagrec.ReadFunction = 3 then //float
-        begin
-          FRemainingBytes := 3;
-          if IOResult1.BufferToRead[2] = 208 then
-            FRemainingBytes := 5;
-          if IOResult1.BufferToRead[2] = 166 then
-            FRemainingBytes := 6;
-          if IOResult1.BufferToRead[7] = 2 then
-            FRemainingBytes := 0;
-          qttags := tagrec.Size;
-          FRemainingBytes := FRemainingBytes + (qttags * 2) - 1
-        end;
+        FRemainingBytes := RemainingBytesRead(IOResult1.BufferToRead, tagrec);
 
         if FRemainingBytes>0 then
         begin
-          {qttags := tagrec.Size;
-          if ((qttags > 1) and (tagrec.ReadFunction <> 1)) then
-            FRemainingBytes := FRemainingBytes + (qttags * 2) - 1
-          else if ((qttags > 2) and (tagrec.ReadFunction = 1)) then
-            FRemainingBytes := FRemainingBytes + (qttags div 2);  }
           res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2,starts,ends);
 
           if res<>0 then
@@ -425,103 +499,295 @@ begin
     minScan := -1;
     first:=true;
     done := false;
-    if ([csDestroying]*ComponentState<>[]) then begin
+    if ([csDestroying]*ComponentState<>[]) then
+    begin
       CrossThreadSwitch;
       exit;
     end;
-    for plc:= 0 to High(PMelsecPLC) do begin
-      for block := 0 to High(PMelsecPLC[plc].Outputs.Blocks) do
-        if PMelsecPLC[plc].Outputs.Blocks[block].NeedRefresh then begin
-          done := true;
-          BuildTagRec(PMelsecPLC[plc].Station,1,PMelsecPLC[plc].Outputs.Blocks[block].AddressStart,PMelsecPLC[plc].Outputs.Blocks[block].Size, tr);
-          FMustReleaseResources:=true;
-          DoRead(tr,values,false);
-          FMustReleaseResources:=false;
-        end else begin
-          if first then begin
-            lastType := 1;
-            lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].Outputs.Blocks[block];
-            minScan := PMelsecPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
-            first:=False;
-          end;
-          if PMelsecPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 1;
-            lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].Outputs.Blocks[block];
-            minScan := PMelsecPLC[plc].Outputs.Blocks[block].MilisecondsFromLastUpdate;
-          end;
-        end;
 
-      for block := 0 to High(PMelsecPLC[plc].Inputs.Blocks) do
-        if PMelsecPLC[plc].Inputs.Blocks[block].NeedRefresh then begin
-          done := true;
-          BuildTagRec(PMelsecPLC[plc].Station,2,PMelsecPLC[plc].Inputs.Blocks[block].AddressStart,PMelsecPLC[plc].Inputs.Blocks[block].Size, tr);
-          FMustReleaseResources:=true;
-          DoRead(tr,values,false);
-          FMustReleaseResources:=false;
-        end else begin
-          if first then begin
-            lastType := 2;
-            lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].Inputs.Blocks[block];
-            minScan := PMelsecPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
-            first:=False;
-          end;
-          if PMelsecPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 2;
-            lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].Inputs.Blocks[block];
-            minScan := PMelsecPLC[plc].Inputs.Blocks[block].MilisecondsFromLastUpdate;
-          end;
-        end;
+    for plc:= 0 to High(PMelsecPLC) do
+    begin
 
-//      for block := 0 to High(PMelsecPLC[plc].Registers.Blocks) do
-      for block := 0 to High(PMelsecPLC[plc].Registers.Blocks) do
-        if PMelsecPLC[plc].Registers.Blocks[block].NeedRefresh then
+      //memory "M"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_M.Blocks) do
+        if PMelsecPLC[plc].OutPuts_M.Blocks[block].NeedRefresh then
         begin
           done := true;
-          BuildTagRec(PMelsecPLC[plc].Station,3,PMelsecPLC[plc].Registers.Blocks[block].AddressStart,PMelsecPLC[plc].Registers.Blocks[block].Size, tr);
+          BuildTagRec(PMelsecPLC[plc].Station,1,PMelsecPLC[plc].OutPuts_M.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_M.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 1;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_M.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_M.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_M.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 1;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_M.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_M.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+      //memory "SM"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_SM.Blocks) do
+        if PMelsecPLC[plc].OutPuts_SM.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,2,PMelsecPLC[plc].OutPuts_SM.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_SM.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 2;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_SM.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_SM.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_SM.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 2;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_SM.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_SM.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+      //memory "L"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_L.Blocks) do
+        if PMelsecPLC[plc].OutPuts_L.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,3,PMelsecPLC[plc].OutPuts_L.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_L.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 3;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_L.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_L.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_L.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 3;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_L.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_L.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+      //memory "F"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_F.Blocks) do
+        if PMelsecPLC[plc].OutPuts_F.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,4,PMelsecPLC[plc].OutPuts_F.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_F.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 4;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_F.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_F.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_F.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 4;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_F.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_F.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+      //memory "V"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_V.Blocks) do
+        if PMelsecPLC[plc].OutPuts_V.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,5,PMelsecPLC[plc].OutPuts_V.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_V.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 5;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_V.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_V.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_V.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 5;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_V.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_V.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+      //memory "X"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_X.Blocks) do
+        if PMelsecPLC[plc].OutPuts_X.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,6,PMelsecPLC[plc].OutPuts_X.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_X.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 6;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_X.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_X.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_X.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 6;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_X.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_X.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+      //memory "Y"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_Y.Blocks) do
+        if PMelsecPLC[plc].OutPuts_Y.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,7,PMelsecPLC[plc].OutPuts_Y.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_Y.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 7;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_Y.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_Y.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_Y.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 7;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_Y.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_Y.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+      //memory "B"
+      for block := 0 to High(PMelsecPLC[plc].OutPuts_B.Blocks) do
+        if PMelsecPLC[plc].OutPuts_B.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,8,PMelsecPLC[plc].OutPuts_B.Blocks[block].AddressStart,PMelsecPLC[plc].OutPuts_B.Blocks[block].Size, tr);
+          FMustReleaseResources:=true;
+          DoRead(tr,values,false);
+          FMustReleaseResources:=false;
+        end
+        else
+        begin
+          if first then
+          begin
+            lastType := 8;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_B.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_B.Blocks[block].MilisecondsFromLastUpdate;
+            first:=False;
+          end;
+          if PMelsecPLC[plc].OutPuts_B.Blocks[block].MilisecondsFromLastUpdate>minScan then
+          begin
+            lastType := 8;
+            lastPLC := PMelsecPLC[plc].Station;
+            lastBlock := PMelsecPLC[plc].OutPuts_B.Blocks[block];
+            minScan := PMelsecPLC[plc].OutPuts_B.Blocks[block].MilisecondsFromLastUpdate;
+          end;
+        end;
+
+
+      //memory "D"
+      for block := 0 to High(PMelsecPLC[plc].Registers_D.Blocks) do
+        if PMelsecPLC[plc].Registers_D.Blocks[block].NeedRefresh then
+        begin
+          done := true;
+          BuildTagRec(PMelsecPLC[plc].Station,9,PMelsecPLC[plc].Registers_D.Blocks[block].AddressStart,PMelsecPLC[plc].Registers_D.Blocks[block].Size, tr);
           FMustReleaseResources:=true;
           DoRead(tr,values,false);
           FMustReleaseResources:=false;
         end else
         begin
           if first then begin
-            lastType := 3;
+            lastType := 9;
             lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].Registers.Blocks[block];
-            minScan := PMelsecPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
+            lastBlock := PMelsecPLC[plc].Registers_D.Blocks[block];
+            minScan := PMelsecPLC[plc].Registers_D.Blocks[block].MilisecondsFromLastUpdate;
             first:=False;
           end;
-          if PMelsecPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 3;
+          if PMelsecPLC[plc].Registers_D.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
+            lastType := 9;
             lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].Registers.Blocks[block];
-            minScan := PMelsecPLC[plc].Registers.Blocks[block].MilisecondsFromLastUpdate;
+            lastBlock := PMelsecPLC[plc].Registers_D.Blocks[block];
+            minScan := PMelsecPLC[plc].Registers_D.Blocks[block].MilisecondsFromLastUpdate;
           end;
         end;
 
-      for block := 0 to High(PMelsecPLC[plc].AnalogReg.Blocks) do
-        if PMelsecPLC[plc].AnalogReg.Blocks[block].NeedRefresh then begin
+      //memory "SD"
+      for block := 0 to High(PMelsecPLC[plc].Registers_SD.Blocks) do
+        if PMelsecPLC[plc].Registers_SD.Blocks[block].NeedRefresh then begin
           done := true;
-          BuildTagRec(PMelsecPLC[plc].Station,4,PMelsecPLC[plc].AnalogReg.Blocks[block].AddressStart,PMelsecPLC[plc].AnalogReg.Blocks[block].Size, tr);
+          BuildTagRec(PMelsecPLC[plc].Station,16,PMelsecPLC[plc].Registers_SD.Blocks[block].AddressStart,PMelsecPLC[plc].Registers_SD.Blocks[block].Size, tr);
           FMustReleaseResources:=true;
           DoRead(tr,values,false);
           FMustReleaseResources:=false;
         end else begin
           if first then begin
-            lastType := 4;
+            lastType := 16;
             lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].AnalogReg.Blocks[block];
-            minScan := PMelsecPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate;
+            lastBlock := PMelsecPLC[plc].Registers_SD.Blocks[block];
+            minScan := PMelsecPLC[plc].Registers_SD.Blocks[block].MilisecondsFromLastUpdate;
             first:=False;
           end;
-          if PMelsecPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
-            lastType := 4;
+          if PMelsecPLC[plc].Registers_SD.Blocks[block].MilisecondsFromLastUpdate>minScan then begin
+            lastType := 16;
             lastPLC := PMelsecPLC[plc].Station;
-            lastBlock := PMelsecPLC[plc].AnalogReg.Blocks[block];
-            minScan := PMelsecPLC[plc].AnalogReg.Blocks[block].MilisecondsFromLastUpdate;
+            lastBlock := PMelsecPLC[plc].Registers_SD.Blocks[block];
+            minScan := PMelsecPLC[plc].Registers_SD.Blocks[block].MilisecondsFromLastUpdate;
           end;
         end;
     end;
@@ -567,18 +833,7 @@ begin
 
         //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
         //calculates the remaining package length at the communication buffer.
-        FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
-
-        //clear the remaining buffer...
-(*        if (IOResult1.BufferToRead[PFuncByteOffset-1]<>pkg[PFuncByteOffset-1]) or
-           ((IOResult1.BufferToRead[PFuncByteOffset]<>pkg[PFuncByteOffset]) and
-            (not (IOResult1.BufferToRead[PFuncByteOffset] in [$81..$88])))then begin
-           repeat
-             res := PCommPort.IOCommandSync(iocRead,0,nil,1,DriverID,0,@IOResult2);
-           until IOResult2.ReadIOResult=iorTimeOut;
-           Result:=ioCommError;
-           exit;
-        end; *)
+        FRemainingBytes:=RemainingBytesWrite(IOResult1.BufferToRead);
 
         if FRemainingBytes>0 then begin
           res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2);
@@ -673,45 +928,140 @@ begin
     inherited;
 end;
 
-function TMelsecDriver.RemainingBytes(buffer: BYTES): LongInt;
+function TMelsecDriver.PlcDeviceType(memReadFunction: integer): integer;
+begin
+  Result := 0;
+end;
+
+function TMelsecDriver.RemainingBytesWrite(buffer: BYTES): LongInt;
 begin
   Result:=0;
 end;
 
-procedure TMelsecDriver.SetInputMaxHole(v: Cardinal);
-var
-  plc:LongInt;
+function TMelsecDriver.RemainingBytesRead(buffer: BYTES;
+  TagObj: TTagRec): LongInt;
 begin
-  if v = PInputMaxHole then exit;
-
-  PInputMaxHole:=v;
-
-  for plc:=0 to High(PMelsecPLC) do
-    PMelsecPLC[plc].Inputs.MaxHole := v;
+  Result:=0;
 end;
 
-procedure TMelsecDriver.SetOutputMaxHole(v: Cardinal);
+procedure TMelsecDriver.SetOutput_M_MaxHole(v: Cardinal);
 var
   plc:LongInt;
 begin
-  if v = POutputMaxHole then exit;
+  if v = POutput_M_MaxHole then exit;
 
-  POutputMaxHole:=v;
+  POutput_M_MaxHole:=v;
 
   for plc:=0 to High(PMelsecPLC) do
-    PMelsecPLC[plc].OutPuts.MaxHole := v;
+    PMelsecPLC[plc].OutPuts_M.MaxHole := v;
 end;
 
-procedure TMelsecDriver.SetRegisterMaxHole(v: Cardinal);
+procedure TMelsecDriver.SetOutput_SM_MaxHole(v: Cardinal);
 var
   plc:LongInt;
 begin
-  if v = PRegistersMaxHole then exit;
+  if v = POutput_SM_MaxHole then exit;
 
-  PRegistersMaxHole:=v;
+  POutput_SM_MaxHole:=v;
 
   for plc:=0 to High(PMelsecPLC) do
-    PMelsecPLC[plc].Registers.MaxHole := v;
+    PMelsecPLC[plc].OutPuts_SM.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetOutput_L_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = POutput_L_MaxHole then exit;
+
+  POutput_L_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].OutPuts_L.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetOutput_F_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = POutput_F_MaxHole then exit;
+
+  POutput_F_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].OutPuts_F.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetOutput_V_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = POutput_V_MaxHole then exit;
+
+  POutput_V_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].OutPuts_V.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetOutput_X_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = POutput_X_MaxHole then exit;
+
+  POutput_X_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].OutPuts_X.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetOutput_Y_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = POutput_Y_MaxHole then exit;
+
+  POutput_Y_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].OutPuts_Y.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetOutput_B_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = POutput_B_MaxHole then exit;
+
+  POutput_B_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].OutPuts_B.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetRegister_D_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = PRegisters_D_MaxHole then exit;
+
+  PRegisters_D_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].Registers_D.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetRegister_SD_MaxHole(v: Cardinal);
+var
+  plc:LongInt;
+begin
+  if v = PRegisters_SD_MaxHole then exit;
+
+  PRegisters_SD_MaxHole:=v;
+
+  for plc:=0 to High(PMelsecPLC) do
+    PMelsecPLC[plc].Registers_SD.MaxHole := v;
 end;
 
 function TMelsecDriver.SizeOfTag(Tag: TTag; isWrite: Boolean;
@@ -749,11 +1099,11 @@ begin
   //
   //return the size in bits of the tag
   case FunctionCode of
-    1,2,5,15: begin
+    1,2,3,4,5,6,7,8: begin
       Result := 1;
       ProtocolTagType:=ptBit;
     end;
-    3,4,6,16: begin
+    9,16: begin
       Result := 16;
       ProtocolTagType:=ptWord;
     end
