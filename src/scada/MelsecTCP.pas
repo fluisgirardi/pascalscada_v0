@@ -585,7 +585,7 @@ begin
 //    $11: Result := $A2; //memory DX
 //    $12: Result := $A3; //memory DY
     $09: Result := $A8; //memory D
-    $16: Result := $A9; //memory SD
+    $10: Result := $A9; //memory SD
   end;
 end;
 
@@ -627,7 +627,7 @@ begin
       Result := Result + (qttags div 2);
     end;
   end;
-  if (TagObj.ReadFunction in [9,16]) then //float
+  if (TagObj.ReadFunction in [9,10,16]) then //float
   begin
     Result := 3;
     if buffer[2] = 208 then

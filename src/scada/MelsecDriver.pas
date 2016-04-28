@@ -2,7 +2,6 @@
 {$IFDEF PORTUGUES}
 {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
-
   @abstract(Implementa a base para os drivers de protocolo MC PROTOCOL.)
 }
 {$ELSE}
@@ -10,6 +9,33 @@
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   @abstract(Unit that implements the base of MC PROTOCOL drivers.)
 }
+
+(*
+As variáveis possíveis de serem utilizadas no CLP mitsubishi com protocolo "MC Protocol" são as seguintes:
+Memórias outputs: M, SM, L, F, V, X, Y, B
+Memórias registros: D, SD
+Tabela para setar as propriedades MemReadFunction, MemWriteFunction e MemAddress
+
+The possible variables to be used in the PLC protocol by Mitsubishi " MC Protocol" are the following
+Memories outputs: M, SM, L, F, V, X, Y, B
+Memories records: D, SD
+Table to set MemReadFunction, MemWriteFunction and MemAddress
+
+
+Variavel/variables | MemReadFunction | MemWriteFunction | MemAddress
+M                  |      1          |        1         | valor/value
+SM                 |      2          |        2         | valor/value
+L                  |      3          |        3         | valor/value
+F                  |      4          |        4         | valor/value
+V                  |      5          |        5         | valor/value
+X                  |      6          |        6         | valor/value
+Y                  |      7          |        7         | valor/value
+B                  |      8          |        8         | valor/value
+D                  |      9          |        9         | valor/value
+SD                 |      16         |        16        | valor/value
+
+*)
+
 {$ENDIF}
 unit MelsecDriver;
 
@@ -403,7 +429,7 @@ begin
       PMelsecPLC[plc].OutPuts_B.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $09:
       PMelsecPLC[plc].Registers_D.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
-    $16:
+    $10:
       PMelsecPLC[plc].Registers_SD.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
   end;
 
