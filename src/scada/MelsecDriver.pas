@@ -11,28 +11,28 @@
 }
 
 (*
-As variáveis possíveis de serem utilizadas no CLP mitsubishi com protocolo "MC Protocol" são as seguintes:
+As variáveis possíveis de serem utilizadas no CLP mitsubishi com protocolo "MC Protocol" para series Q/L são as seguintes:
 Memórias outputs: M, SM, L, F, V, X, Y, B
 Memórias registros: D, SD
 Tabela para setar as propriedades MemReadFunction, MemWriteFunction e MemAddress
 
-The possible variables to be used in the PLC protocol by Mitsubishi " MC Protocol" are the following
+The possible variables to be used in the PLC protocol by Mitsubishi " MC Protocol" for series Q/L are the following
 Memories outputs: M, SM, L, F, V, X, Y, B
 Memories records: D, SD
 Table to set MemReadFunction, MemWriteFunction and MemAddress
 
 
 Variavel/variables | MemReadFunction | MemWriteFunction | MemAddress
-M                  |      1          |        1         | valor/value
-SM                 |      2          |        2         | valor/value
-L                  |      3          |        3         | valor/value
-F                  |      4          |        4         | valor/value
-V                  |      5          |        5         | valor/value
-X                  |      6          |        6         | valor/value
-Y                  |      7          |        7         | valor/value
-B                  |      8          |        8         | valor/value
-D                  |      9          |        9         | valor/value
-SD                 |      16         |        16        | valor/value
+M                  |      1          |        1         | valor/value       internal relay
+SM                 |      2          |        2         | valor/value       Special relay
+L                  |      3          |        3         | valor/value       Latch relay
+F                  |      4          |        4         | valor/value       Annunciator
+V                  |      5          |        5         | valor/value       Edge relay
+X                  |      6          |        6         | valor/value       Input
+Y                  |      7          |        7         | valor/value       Output
+B                  |      8          |        8         | valor/value       Link relay
+D                  |      9          |        9         | valor/value       Data register
+SD                 |      16         |        16        | valor/value       Special register
 
 *)
 
@@ -71,6 +71,8 @@ type
     Status07LastError:TProtocolIOResult;
   end;
 
+  TSeriesCLP = (Serie_Q_L,Serie_IQR);
+
   TMelsecDriver = class(TProtocolDriver)
   private
     FMustReleaseResources:Boolean;
@@ -92,9 +94,12 @@ type
     PRegisters_D_MaxHole:Cardinal;
     PRegisters_SD_MaxHole:Cardinal;
 
+    FSerieCLP : TSeriesCLP;
+
     PInternalDelayBetweenCmds:Cardinal;
     PMelsecPLC:array of TMelsecPLC;
     function  GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:LongInt):Boolean;
+    procedure SetSerieCLP(NewSerieCLP:TSeriesCLP);
 
     procedure SetOutput_M_MaxHole(v:Cardinal);
     procedure SetOutput_SM_MaxHole(v:Cardinal);
@@ -134,6 +139,8 @@ type
 
     property Register_D_MaxHole:Cardinal read PRegisters_D_MaxHole write SetRegister_D_MaxHole default 10;
     property Register_SD_MaxHole:Cardinal read PRegisters_SD_MaxHole write SetRegister_SD_MaxHole default 10;
+
+    property SerieCLP:TSeriesCLP read FSerieCLP write SetSerieCLP default Serie_Q_L;
 
   public
     constructor Create(AOwner:TComponent); override;
@@ -1088,6 +1095,11 @@ begin
 
   for plc:=0 to High(PMelsecPLC) do
     PMelsecPLC[plc].Registers_SD.MaxHole := v;
+end;
+
+procedure TMelsecDriver.SetSerieCLP(NewSerieCLP: TSeriesCLP);
+begin
+  FSerieCLP := NewSerieCLP;
 end;
 
 function TMelsecDriver.SizeOfTag(Tag: TTag; isWrite: Boolean;

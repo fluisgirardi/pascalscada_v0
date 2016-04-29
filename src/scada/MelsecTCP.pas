@@ -49,6 +49,7 @@ type
     property Output_B_MaxHole;
     property Register_D_MaxHole;
     property Register_SD_MaxHole;
+    property SerieCLP;
   end;
 
 implementation
