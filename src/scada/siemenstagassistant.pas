@@ -292,7 +292,7 @@ begin
                     PLCStation:=frmS7tb.PLCStation.Value;
                     MemReadFunction := GetTagType;
                     if MemReadFunction=4 then
-                      MemFile_DB:=spinDBNumber.Value;
+                      MemFile_DB:=curdb;
                     MemAddress:=curaddress;
 
                     RefreshTime:=StructItem[curstructitem].TagScan;
