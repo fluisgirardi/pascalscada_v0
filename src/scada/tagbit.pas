@@ -71,7 +71,7 @@ type
     PStartBit:TBitRange;
     PEndBit:TBitRange;
     POldValue:Double;
-    PNormalMask, PInvMask:LongInt;
+    PNormalMask, PInvMask:Qword;
     procedure SetNumber(number:TPLCNumber);
     procedure SetUseRaw(use:Boolean);
     procedure SetStartBit(b:TBitRange);
@@ -79,8 +79,8 @@ type
 
     function  GetBits(avalue:double):Double;
     function  SetBits(OriginalValue, aValue:Double):Double;
-    function  GetBitMask:LongInt;
-    function  GetInvBitMask:LongInt;
+    function GetBitMask: Qword;
+    function GetInvBitMask: Qword;
 
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
@@ -253,7 +253,7 @@ begin
    Result := PValueTimeStamp;
 end;
 
-procedure TTagBit.SetValueRaw(BitValue:Double);
+procedure TTagBit.SetValueRaw(bitValue: Double);
 begin
   PValueRaw:=BitValue;
   if (PNumber<>nil) and Supports(PNumber, ITagNumeric) then
@@ -265,35 +265,37 @@ begin
      end;
 end;
 
-function  TTagBit.GetBits(aValue:double):Double;
+function TTagBit.GetBits(avalue: double): Double;
+var
+   x:Int64;
 begin
-   Result:=((Trunc(aValue) and PNormalMask) shr PStartBit);
+   x:=(Trunc(aValue) and PNormalMask) shr LongInt(PStartBit);
+   Result:=x;
 end;
 
 function  TTagBit.SetBits(OriginalValue, aValue:Double):Double;
 begin
-   Result :=
-            ((Trunc(OriginalValue) and PInvMask) or
+   Result :=((Trunc(OriginalValue) and PInvMask) or
              ((Trunc(aValue) shl PStartBit) and PNormalMask));
 end;
 
-function  TTagBit.GetBitMask:LongInt;
+function TTagBit.GetBitMask: Qword;
 var
-   c:LongInt;
+   c:byte;
 begin
    Result := 0;
    for c:=PStartBit to PEndBit do begin
-      Result := Result or LongInt(Power(2,c));
+      Result := Result or (qword(1) shl c);
    end;
 end;
 
-function  TTagBit.GetInvBitMask:LongInt;
+function  TTagBit.GetInvBitMask:Qword;
 var
-   c:LongInt;
+   c:byte;
 begin
-   Result := -1;
+   Result := Qword(-1);
    for c:=PStartBit to PEndBit do begin
-      Result := Result xor LongInt(Power(2,c));
+      Result := Result xor (qword(1) shl c);
    end;
 end;
 
@@ -356,7 +358,7 @@ begin
       aValue := PNumber.Value;
 
     bold := GetBits(POldValue);
-    bnew := GetBits(value);
+    bnew := GetBits(aValue);
 
     if (bold<>bnew) or PFirstUpdate then begin
        PFirstUpdate:=False;
@@ -365,7 +367,7 @@ begin
 
        NotifyChange();
     end;
-    POldValue := value;
+    POldValue := aValue;
   end;
 end;
 

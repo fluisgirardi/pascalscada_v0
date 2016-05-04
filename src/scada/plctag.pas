@@ -1705,7 +1705,12 @@ begin
        inc(PtrQWordWalker,((Offset*FCurrentWordSize) mod FProtocolWordSize) div FCurrentWordSize);
        while valueidx<Length(Values) do begin
 
-         PDouble(PtrQWordWalker)^:=Values[valueidx];
+         if FTagType=pttInt64 then
+           PInt64(PtrQWordWalker)^:=trunc(Values[valueidx]);
+         if FTagType=pttQWord then
+           PtrQWordWalker^:=QWord(trunc(Values[valueidx]));
+         if FTagType=pttDouble then
+           PDouble(PtrQWordWalker)^:=Values[valueidx];
 
          if FSwapDWords then begin
            //initialize Dword Pointers
