@@ -35,6 +35,8 @@ type
   {$ENDIF}
   THMIUpDown = class(TUpDown, IHMIInterface, IHMITagInterface)
   private
+    FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
+    FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -154,6 +156,20 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado antes do HMIEdit enviar um valor ao tag associado
+    {$ELSE}
+    //: Event triggered before HMIEdit send a value to linked tag.
+    {$ENDIF}
+    property BeforeSendAValueToTag:TBeforeSendNumericValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado quando o HMIEdit enviou um valor ao tag associado
+    {$ELSE}
+    //: Event triggered when the HMIEdit sent a value to linked tag.
+    {$ENDIF}
+    property AfterSendValueToTag:TAfterSendNumericValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
   end;
 
 implementation
@@ -197,7 +213,7 @@ begin
    inherited Position:=50;
 end;
 
-procedure THMIUpDown.SetSecurityCode(Sc:UTF8String);
+procedure THMIUpDown.SetSecurityCode(sc: UTF8String);
 begin
   if Trim(sc)='' then
     Self.CanBeAccessed(true)
@@ -275,7 +291,21 @@ end;
 
 procedure THMIUpDown.Click(Button: TUDBtnType);
 var
-   Value:Double;
+  aValue:Double;
+
+  procedure DoAfterSendValue(ivalue:Double);
+  begin
+    if Assigned(FAfterSendValueToTag) then
+      FAfterSendValueToTag(Self,ivalue);
+  end;
+
+  function SendIt(ivalue:Double):Boolean;
+  begin
+    if Assigned(FBeforeSendValueToTag) then
+      FBeforeSendValueToTag(Self,ivalue,Result)
+    else
+      Result:=true;
+  end;
 begin
    if FTag=nil then exit;
    
@@ -283,19 +313,21 @@ begin
      
    case Button of
      btNext:
-        Value := Position+FIncrement;
+        aValue := Position+FIncrement;
      else
-        Value := Position-FIncrement;
+        aValue := Position-FIncrement;
    end;
 
-   if (FEnableMax And (Value>FMax)) then
-      Value := FMax;
+   if (FEnableMax And (aValue>FMax)) then
+      aValue := FMax;
       
-   if (FEnableMin And (Value<FMin)) then
-      Value := FMin;
+   if (FEnableMin And (aValue<FMin)) then
+      aValue := FMin;
 
-   if Supports(FTag, ITagNumeric) then
-      (FTag as ITagNumeric).Value := Value;
+   if Supports(FTag, ITagNumeric) and SendIt(aValue) then begin
+      (FTag as ITagNumeric).Value := aValue;
+      DoAfterSendValue(aValue);
+   end;
 
    inherited Click(Button);
 end;

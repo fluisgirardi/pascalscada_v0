@@ -113,6 +113,7 @@ type
     FFlowDest:array of IColorChangeNotification;
     FMultipleColorBehavior: TColorMixBehavior;
     FMultipleColorsReplace: TColor;
+    FOnColorChange: TNotifyEvent;
 
     procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
     procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
@@ -133,6 +134,7 @@ type
     property MultipleColorBehavior:TColorMixBehavior read FMultipleColorBehavior write setMultipleColorsBehavior;
     property MultipleColorsReplace:TColor read FMultipleColorsReplace write setMultipleColorsReplace;
     property FlowSource:THMIFlowSourceCollection read FFlowSources write setFlowSources;
+    property OnColorChange:TNotifyEvent read FOnColorChange write FOnColorChange;
   end;
 
 implementation
@@ -227,6 +229,9 @@ begin
       FFlowDest[i].NotifyChange(Self);
     finally
     end;
+
+  if Assigned(FOnColorChange) then
+    FOnColorChange(Self);
 end;
 
 procedure THMIFlowPolyline.RecalculateColor(WhoChanged: THMIFlowPolyline);

@@ -23,7 +23,7 @@ unit hmipropeditor;
 interface
 
 uses
-  Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, Tag,
+  Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver,
   typinfo, HMIControlDislocatorAnimation, hmiobjectcolletion,
   ControlSecurityManager, Graphics,
   {$IFDEF FPC}

@@ -36,6 +36,7 @@ type
   THMITrackBar = class(TTrackBar, IHMIInterface, IHMITagInterface)
   private
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
+    FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     Ftag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -136,6 +137,13 @@ type
     //: Event triggered when the HMIEdit sent a value to linked tag.
     {$ENDIF}
     property AfterSendValueToTag:TAfterSendNumericValueToTagEvent read FAfterSendValueToTag write FAfterSendValueToTag;
+
+    {$IFDEF PORTUGUES}
+    //: Evento disparado antes do HMIEdit enviar um valor ao tag associado
+    {$ELSE}
+    //: Event triggered before HMIEdit send a value to linked tag.
+    {$ENDIF}
+    property BeforeSendAValueToTag:TBeforeSendNumericValueToTagEvent read FBeforeSendValueToTag write FBeforeSendValueToTag;
   end;
 
 implementation
