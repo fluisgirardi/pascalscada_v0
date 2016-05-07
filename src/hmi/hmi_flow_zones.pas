@@ -5,7 +5,7 @@ unit hmi_flow_zones;
 interface
 
 uses
-  Classes, SysUtils, hmicolorpropertyconnector, HMIZones;
+  Classes, SysUtils, hmicolorpropertyconnector, HMIZones, Graphics;
 
 type
   THMIFlowZone = class(TColorZone)
@@ -14,6 +14,8 @@ type
     FFlow: Boolean;
     procedure SetBorderColor(AValue: TColor);
     procedure SetFlow(AValue: Boolean);
+  protected
+    function GetDisplayName: AnsiString; override;
   published
     property Flow:Boolean read FFlow write SetFlow;
     property BorderColor:TColor read FBorderColor write SetBorderColor;
@@ -32,6 +34,8 @@ type
   end;
 
 implementation
+
+uses strutils;
 
 { THMIFlowZones }
 
@@ -52,6 +56,11 @@ begin
   if FFlow=AValue then Exit;
   FFlow:=AValue;
   NotifyChange;
+end;
+
+function THMIFlowZone.GetDisplayName: AnsiString;
+begin
+  Result:=inherited GetDisplayName+' '+IfThen(FFlow,'','BREAK FLOW');
 end;
 
 procedure THMIFlowZone.SetBorderColor(AValue: TColor);

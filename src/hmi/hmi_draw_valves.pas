@@ -48,14 +48,14 @@ implementation
 
 uses math;
 
-procedure THMIBasicValve.SetMirrored(AValue: Boolean);
+procedure THMICustomBasicValve.SetMirrored(AValue: Boolean);
 begin
   if FMirrored=AValue then Exit;
   FMirrored:=AValue;
   InvalidateShape;
 end;
 
-procedure THMIBasicValve.SetValveBodyPercent(AValue: Double);
+procedure THMICustomBasicValve.SetValveBodyPercent(AValue: Double);
 begin
   if FValveBodyPercent=AValue then Exit;
   if (FValveBodyPercent<0) or (FValveBodyPercent>1) then
@@ -64,14 +64,14 @@ begin
   InvalidateShape;
 end;
 
-procedure THMIBasicValve.SetValveType(AValue: TValveType);
+procedure THMICustomBasicValve.SetValveType(AValue: TValveType);
 begin
   if FValveType=AValue then Exit;
   FValveType:=AValue;
   InvalidateShape;
 end;
 
-procedure THMIBasicValve.DrawControl;
+procedure THMICustomBasicValve.DrawControl;
 var
   p:array of TPointF;
   alturaideal: real;
@@ -219,7 +219,7 @@ begin
   end;
 end;
 
-constructor THMIBasicValve.Create(AOwner: TComponent);
+constructor THMICustomBasicValve.Create(AOwner: TComponent);
 begin
   FMirrored:=false;
   FValveBodyPercent:=0.7;

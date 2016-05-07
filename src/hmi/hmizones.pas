@@ -754,13 +754,30 @@ type
   TColorZone = class(TAnimationZone)
   private
     FColor: TColor;
+    procedure SetColor(AValue: TColor);
+  protected
+    function GetDisplayName: AnsiString; override;
   published
-    property Color:TColor read FColor write FColor;
+    property Color:TColor read FColor write SetColor;
   end;
 
 implementation
 
 uses hsstrings;
+
+{ TColorZone }
+
+procedure TColorZone.SetColor(AValue: TColor);
+begin
+  if FColor=AValue then Exit;
+  FColor:=AValue;
+  NotifyChange;
+end;
+
+function TColorZone.GetDisplayName: AnsiString;
+begin
+  Result:=inherited GetDisplayName+', Result='+ColorToString(FColor);
+end;
 
 { TAnimationZone }
 
