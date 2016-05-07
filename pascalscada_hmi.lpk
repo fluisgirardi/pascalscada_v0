@@ -17,7 +17,7 @@
       </Parsing>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="44">
+    <Files Count="46">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -196,6 +196,14 @@
         <Filename Value="src/hmi/hmibasiceletricmotor.pas"/>
         <UnitName Value="HMIBasicEletricMotor"/>
       </Item44>
+      <Item45>
+        <Filename Value="src/hmi/hmi_flow_zones.pas"/>
+        <UnitName Value="hmi_flow_zones"/>
+      </Item45>
+      <Item46>
+        <Filename Value="src/hmi/hmi_draw_flow_valve.pas"/>
+        <UnitName Value="hmi_draw_flow_valve"/>
+      </Item46>
     </Files>
     <RequiredPkgs Count="6">
       <Item1>

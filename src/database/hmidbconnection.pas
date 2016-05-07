@@ -13,10 +13,6 @@
 {$ENDIF}
 unit HMIDBConnection;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
-
 interface
 
 uses
@@ -62,12 +58,20 @@ type
   {$ENDIF}
   TExecSQLProc = procedure(sqlcmd:String; outputdataset:TFPSBufDataSet) of object;
 
+  TStartTransaction = procedure of object;
+
+  TCommitTransaction = procedure of object;
+
+  TRollbackTransaction = procedure of object;
+
   {$IFDEF PORTUGUES}
   //: Método usado pela thread para retornar um dataset após a execução da consulta.
   {$ELSE}
   //: Procedure called by thread to return the dataset after the query execution.
   {$ENDIF}
   TReturnDataSetProc = procedure(Sender:TObject; DS:TFPSBufDataSet; error:Exception) of object;
+
+  TReturnTransactionStatementsProc = procedure(Sender:TObject; aStatements:TStringList; Sucess:Boolean; LineOfError:Integer; Error:Exception) of object;
 
   {$IFDEF PORTUGUES}
   //: Inteface para interação com objetos privados do THMIDBConnection
@@ -139,6 +143,14 @@ type
   {$ENDIF}
   PSQLCmdRec = ^TSQLCmdRec;
 
+  TStatementCmdRec = record
+    statements:TStringList;
+    ReturnTransactionResult:TReturnTransactionStatementsProc;
+    FreeStatemensAfterExecute,
+    ReturnSync:Boolean;
+  end;
+  PStatementCmdRec = ^TStatementCmdRec;
+
   {$IFDEF PORTUGUES}
   {:
   Fila de execução assincrona de comandos SQL.
@@ -152,18 +164,24 @@ type
   {$ENDIF}
   TProcessSQLCommandThread=class(TCrossThread)
   private
-    FSpool:TMessageSpool;
+    FQueue:TMessageSpool;
     FEnd:TCrossEvent;
     cmd:PSQLCmdRec;
+    statements:PStatementCmdRec;
     fds:TFPSBufDataSet;
     ferror:Exception;
+    fLineError:Integer;
     FErrorOnSync:Boolean;
     fOnExecSQL:TExecSQLProc;
+    fStartTransaction:TStartTransaction;
+    fCommitTransaction:TCommitTransaction;
+    fRollbackTransaction:TRollbackTransaction;
   protected
     //: @exclude
     procedure Execute; override;
     //: @exclude
     procedure ReturnData;
+    procedure ReturnStatementsResults;
   public
     {$IFDEF PORTUGUES}
     {:
@@ -187,7 +205,10 @@ type
                                      to executes the SQL queries.)
     }
     {$ENDIF}
-    constructor Create(CreateSuspended: Boolean; ExecSQLProc:TExecSQLProc);
+    constructor Create(CreateSuspended: Boolean; ExecSQLProc:TExecSQLProc;
+                       StartTransactionProc:TStartTransaction;
+                       CommitTransactionProc:TCommitTransaction;
+                       RollbackTransactionProc:TRollbackTransaction);
     //: @exclude
     destructor Destroy; override;
     {$IFDEF PORTUGUES}
@@ -242,6 +263,8 @@ type
     }
     {$ENDIF}
     procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
+
+    procedure ExecTransaction(aStatements:TStringList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
   end;
 
   {$IFDEF PORTUGUES}
@@ -288,11 +311,14 @@ type
     procedure SetUser(x: String);
     procedure SetPassword(x: String);
     procedure SetCatalog(x: String);
-
+    procedure StartTransaction;
+    procedure CommitTransaction;
+    procedure RollBackTransaction;
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
     procedure   ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
+    procedure   ExecTransaction(statements:TStringList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -359,7 +385,8 @@ type
   end;
 
 const
-  SQLCommandMSG = 1024;
+  SQLCommandMSG        = 0;
+  StatementsCommandMSG = 1;
 
 implementation
 
@@ -409,12 +436,18 @@ end;
 //SQL COMMANDS QUEUE THREAD CLASS.
 //##############################################################################
 
-constructor TProcessSQLCommandThread.Create(CreateSuspended: Boolean; ExecSQLProc:TExecSQLProc);
+constructor TProcessSQLCommandThread.Create(CreateSuspended: Boolean;
+  ExecSQLProc: TExecSQLProc; StartTransactionProc: TStartTransaction;
+  CommitTransactionProc: TCommitTransaction;
+  RollbackTransactionProc: TRollbackTransaction);
 begin
   inherited Create(CreateSuspended);
-  FSpool:=TMessageSpool.Create;
+  FQueue:=TMessageSpool.Create;
   FEnd:=TCrossEvent.Create(nil,true,false,'');
   fOnExecSQL:=ExecSQLProc;
+  fStartTransaction:=StartTransactionProc;
+  fCommitTransaction:=CommitTransactionProc;
+  fRollbackTransaction:=RollbackTransactionProc;
 end;
 
 destructor  TProcessSQLCommandThread.Destroy;
@@ -426,10 +459,11 @@ end;
 procedure   TProcessSQLCommandThread.Execute;
 var
   msg:TMSMsg;
+  s: Integer;
 begin
   FEnd.ResetEvent;
   while not Terminated do begin
-    while FSpool.PeekMessage(msg,0,0,true) do begin
+    while FQueue.PeekMessage(msg,0,0,true) do begin
       //executa o comando sql
       //executes the sql commmand.
       FErrorOnSync:=false;
@@ -454,7 +488,7 @@ begin
             if Assigned(cmd^.ReturnDataSetCallback) then begin
               if cmd^.ReturnSync then begin
                 FErrorOnSync:=true;
-                Synchronize(ReturnData);
+                Synchronize(@ReturnData);
               end else
                 ReturnData;
             end;
@@ -467,12 +501,62 @@ begin
               ferror:=e;
               try
                 if Assigned(cmd^.ReturnDataSetCallback) then
-                  Synchronize(ReturnData);
+                  Synchronize(@ReturnData);
               finally
                 Dispose(cmd);
               end;
             end;
           end;
+        end;
+      end;
+
+      if (msg.MsgID=StatementsCommandMSG) and (msg.wParam<>nil) then begin
+        statements:=PStatementCmdRec(msg.wParam);
+        try
+          if statements^.statements=nil then exit;
+
+          if not Assigned(fStartTransaction) then exit;
+          if not Assigned(fCommitTransaction) then exit;
+          if not Assigned(fRollbackTransaction) then exit;
+
+          if not Assigned(fOnExecSQL) then exit;
+
+          fStartTransaction();
+          try
+            ferror:=nil;
+            try
+              for s:=0 to statements^.statements.Count-1 do begin
+                fOnExecSQL(statements^.statements.Strings[s], nil);
+              end;
+              fLineError:=0;
+            except
+              on e:Exception do begin
+                ferror:=e;
+                fLineError:=s;
+                exit;
+              end;
+            end;
+          finally
+            if ferror=nil then
+              fCommitTransaction()
+            else
+              fRollbackTransaction();
+
+            if Assigned(statements^.ReturnTransactionResult) then begin
+              if statements^.ReturnSync then
+                Synchronize(@ReturnStatementsResults)
+              else begin
+                if ferror=nil then
+                  statements^.ReturnTransactionResult(self, statements^.statements, True, -1, nil)
+                else
+                  statements^.ReturnTransactionResult(self, statements^.statements, false, fLineError, ferror)
+              end;
+            end;
+          end;
+        finally
+          if statements^.FreeStatemensAfterExecute then
+            FreeAndNil(statements^.statements);
+          Dispose(statements);
         end;
       end;
     end;
@@ -487,6 +571,14 @@ begin
     cmd^.ReturnDataSetCallback(self,nil,ferror)
   else
     cmd^.ReturnDataSetCallback(self,fds,nil);
+end;
+
+procedure TProcessSQLCommandThread.ReturnStatementsResults;
+begin
+  if ferror=nil then
+    statements^.ReturnTransactionResult(self, statements^.statements, True, -1, nil)
+  else
+    statements^.ReturnTransactionResult(self, statements^.statements, false, fLineError, ferror)
 end;
 
 function    TProcessSQLCommandThread.WaitEnd(Timeout:Cardinal):TWaitResult;
@@ -507,7 +599,24 @@ begin
   sqlcmd^.SQLCmd:=sql;
   sqlcmd^.ReturnSync:=ReturnSync;
   sqlcmd^.ReturnDataSetCallback:=ReturnDataCallback;
-  FSpool.PostMessage(SQLCommandMSG,sqlcmd,nil,true);
+  FQueue.PostMessage(SQLCommandMSG,sqlcmd,nil,true);
+end;
+
+procedure TProcessSQLCommandThread.ExecTransaction(aStatements: TStringList;
+  ReturnTransactionResult: TReturnTransactionStatementsProc;
+  FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean);
+var
+  statementcmd:PStatementCmdRec;
+begin
+  if aStatements=nil then exit;
+
+  new(statementcmd);
+  statementcmd^.statements:=aStatements;
+  statementcmd^.ReturnTransactionResult:=ReturnTransactionResult;
+  statementcmd^.FreeStatemensAfterExecute:=FreeStatemensAfterExecute;
+  statementcmd^.ReturnSync:=ReturnSync;
+
+  FQueue.PostMessage(StatementsCommandMSG,statementcmd,nil,true);
 end;
 
 //##############################################################################
@@ -525,7 +634,10 @@ begin
   FASyncQuery:=TZQuery.Create(nil);
   FASyncQuery.Connection:=FASyncConnection;
 
-  FSQLSpooler:=TProcessSQLCommandThread.Create(true,ExecuteSQLCommand);
+  FSQLSpooler:=TProcessSQLCommandThread.Create(true,@ExecuteSQLCommand,
+                                               @StartTransaction,
+                                               @CommitTransaction,
+                                               @RollBackTransaction);
   FSQLSpooler.WakeUp;
 end;
 
@@ -562,18 +674,57 @@ begin
   FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync);
 end;
 
+procedure THMIDBConnection.ExecTransaction(statements: TStringList;
+  ReturnTransactionResult: TReturnTransactionStatementsProc;
+  FreeStatemensAfterExecute, ReturnSync: Boolean);
+begin
+  FSQLSpooler.ExecTransaction(statements,ReturnTransactionResult,FreeStatemensAfterExecute,ReturnSync);
+end;
+
+procedure THMIDBConnection.StartTransaction;
+begin
+  FCS.Enter;
+  try
+    FASyncConnection.StartTransaction;
+  finally
+    FCS.Leave;
+  end;
+end;
+
+procedure THMIDBConnection.CommitTransaction;
+begin
+  FCS.Enter;
+  try
+    FASyncConnection.Commit;
+  finally
+    FCS.Leave;
+  end;
+end;
+
+procedure THMIDBConnection.RollBackTransaction;
+begin
+  FCS.Enter;
+  try
+    FASyncConnection.Rollback;
+  finally
+    FCS.Leave;
+  end;
+end;
+
 procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPSBufDataSet);
 begin
   FCS.Enter;
   try
-    FASyncQuery.SQL.Clear;
-    FASyncQuery.SQL.Add(sqlcmd);
-    if outputdataset<>nil then begin
+    if outputdataset=nil then begin
+      if not FASyncConnection.ExecuteDirect(sqlcmd) then
+        raise exception.Create('erro executando consulta!');
+    end else begin
+      FASyncQuery.SQL.Clear;
+      FASyncQuery.SQL.Add(sqlcmd);
       FASyncQuery.Open;
       outputdataset.CopyFromDataset(FASyncQuery);
-    end else
-      FASyncQuery.ExecSQL;
-    FASyncQuery.Close;
+      FASyncQuery.Close;
+    end;
   finally
     FCS.Leave;
   end;

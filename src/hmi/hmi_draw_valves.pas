@@ -12,7 +12,7 @@ type
 
   { THMIBasicValve }
 
-  THMIBasicValve = class(THMIBasicControl)
+  THMICustomBasicValve = class(THMIBasicControl)
   private
     FMirrored: Boolean;
     FValveBodyPercent: Double;
@@ -22,17 +22,23 @@ type
     procedure SetValveType(AValue: TValveType);
   protected
     procedure DrawControl; override;
+
+    property Mirrored:Boolean read FMirrored write SetMirrored default false;
+    property ValveBodyPercent:Double read FValveBodyPercent write SetValveBodyPercent;
+    property ValveType:TValveType read FValveType write SetValveType default vtSimple;
   public
     constructor Create(AOwner: TComponent); override;
+  end;
+
+  THMIBasicValve = class(THMICustomBasicValve)
   published
     property BodyColor;
     property BorderColor;
     property BorderWidth;
 
-
-    property Mirrored:Boolean read FMirrored write SetMirrored default false;
-    property ValveBodyPercent:Double read FValveBodyPercent write SetValveBodyPercent;
-    property ValveType:TValveType read FValveType write SetValveType default vtSimple;
+    property Mirrored;
+    property ValveBodyPercent;
+    property ValveType;
 
     property OnClick;
     property Action;

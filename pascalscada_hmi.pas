@@ -4,6 +4,7 @@
 
 unit pascalscada_hmi;
 
+{$warn 5023 off : no warning about unused units}
 interface
 
 uses
@@ -17,7 +18,7 @@ uses
   HMIRadioGroup, hmiregister, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
   HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
   HMI_ComputedImageList, HMI_Draw_Valves, hmi_draw_elevador, 
-  HMIBasicEletricMotor, LazarusPackageIntf;
+  HMIBasicEletricMotor, hmi_flow_zones, hmi_draw_flow_valve, LazarusPackageIntf;
 
 implementation
 

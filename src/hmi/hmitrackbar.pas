@@ -258,10 +258,18 @@ procedure THMITrackBar.WriteValue;
     if Assigned(FAfterSendValueToTag) then
       FAfterSendValueToTag(Self,Position);
   end;
+
+  function SendIt(ivalue:Double):Boolean;
+  begin
+    if Assigned(FBeforeSendValueToTag) then
+      FBeforeSendValueToTag(Self,ivalue,Result)
+    else
+      Result:=true;
+  end;
 begin
   if [csLoading,csReading]*ComponentState<>[] then exit;
 
-  if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then begin
+  if (FTag<>nil) AND Supports(Ftag, ITagNumeric) and SendIt(Position) then begin
     (Ftag as ITagNumeric).Value := Position;
     DoAfterSendValue;
   end;
