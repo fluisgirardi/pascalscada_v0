@@ -102,7 +102,7 @@ type
 
   { TObjectWithColorPropetiesColletionItem }
 
-  TObjectWithColorPropetiesColletionItem = class(TObjectColletionItem, IUnknown, IHMITagInterface)
+  TObjectWithColorPropetiesColletionItem = class(TObjectColletionItem, IUnknown)
   private
     FTag:TPLCTag;
     FirstReadOk:Boolean;
@@ -111,18 +111,10 @@ type
     function _AddRef: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
     function _Release: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 
-    //: @seealso(IHMITagInterface.NotifyReadOk)
-    procedure NotifyReadOk;
-    //: @seealso(IHMITagInterface.NotifyReadFault)
-    procedure NotifyReadFault;
-    //: @seealso(IHMITagInterface.NotifyWriteOk)
-    procedure NotifyWriteOk;
-    //: @seealso(IHMITagInterface.NotifyWriteFault)
-    procedure NotifyWriteFault;
-    //: @seealso(IHMITagInterface.NotifyTagChange)
-    procedure NotifyTagChange(Sender:TObject);
-    //: @seealso(IHMITagInterface.RemoveTag)
-    procedure RemoveTag(Sender:TObject);
+    procedure ReadOkCallBack(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
 
     procedure RecalculateObjectsProperties;
     procedure SetHMITag(AValue: TPLCTag);
@@ -141,7 +133,7 @@ type
 
   { THMIBooleanPropertyConnector }
 
-  THMIColorPropertyConnector = class(TComponent, IHMITagInterface)
+  THMIColorPropertyConnector = class(TComponent)
   private
     FTag:TPLCTag;
     FConditionZones:TColorZones;
@@ -155,18 +147,9 @@ type
     procedure SetHMITag(AValue: TPLCTag);
     procedure SetObjects(AValue: TObjectWithColorPropetiesColletion);
 
-    //: @seealso(IHMITagInterface.NotifyReadOk)
-    procedure NotifyReadOk;
-    //: @seealso(IHMITagInterface.NotifyReadFault)
-    procedure NotifyReadFault;
-    //: @seealso(IHMITagInterface.NotifyWriteOk)
-    procedure NotifyWriteOk;
-    //: @seealso(IHMITagInterface.NotifyWriteFault)
-    procedure NotifyWriteFault;
-    //: @seealso(IHMITagInterface.NotifyTagChange)
-    procedure NotifyTagChange(Sender:TObject);
-    //: @seealso(IHMITagInterface.RemoveTag)
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
 
     procedure RecalculateObjectsProperties;
   protected
@@ -229,13 +212,15 @@ begin
      raise Exception.Create(SonlyNumericTags);
 
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if AValue<>nil then begin
-    AValue.AddCallBacks(Self as IHMITagInterface);
+    AValue.AddWriteFaultHandler(@WriteFaultCallBack);
+    AValue.AddTagChangeHandler(@TagChangeCallBack);
+    AValue.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := AValue;
     RecalculateObjectsProperties;
   end;
@@ -248,32 +233,17 @@ begin
   FObjects.Assign(AValue);
 end;
 
-procedure THMIColorPropertyConnector.NotifyReadOk;
+procedure THMIColorPropertyConnector.WriteFaultCallBack(Sender: TObject);
 begin
-  //RecalculateObjectsProperties;
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIColorPropertyConnector.NotifyReadFault;
-begin
-  //RecalculateObjectsProperties;
-end;
-
-procedure THMIColorPropertyConnector.NotifyWriteOk;
-begin
-  //RecalculateObjectsProperties;
-end;
-
-procedure THMIColorPropertyConnector.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIColorPropertyConnector.NotifyTagChange(Sender: TObject);
+procedure THMIColorPropertyConnector.TagChangeCallBack(Sender: TObject);
 begin
   RecalculateObjectsProperties;
 end;
 
-procedure THMIColorPropertyConnector.RemoveTag(Sender: TObject);
+procedure THMIColorPropertyConnector.RemoveTagCallBack(Sender: TObject);
 begin
   if Sender=FTag then
      FTag:=nil;
@@ -365,35 +335,29 @@ begin
   Result:=-1;
 end;
 
-procedure TObjectWithColorPropetiesColletionItem.NotifyReadOk;
-begin
-  if FirstReadOk then
-    NotifyTagChange(Self);
-  FirstReadOk:=false;
-end;
-
-procedure TObjectWithColorPropetiesColletionItem.NotifyReadFault;
-begin
-  //RecalculateObjectsProperties;
-end;
-
-procedure TObjectWithColorPropetiesColletionItem.NotifyWriteOk;
-begin
-  //RecalculateObjectsProperties;
-end;
-
-procedure TObjectWithColorPropetiesColletionItem.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure TObjectWithColorPropetiesColletionItem.NotifyTagChange(Sender: TObject
+procedure TObjectWithColorPropetiesColletionItem.ReadOkCallBack(Sender: TObject
   );
+begin
+  if FirstReadOk then begin
+    TagChangeCallBack(Self);
+    FirstReadOk:=false;
+  end;
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.WriteFaultCallBack(
+  Sender: TObject);
+begin
+  TagChangeCallBack(Self);
+end;
+
+procedure TObjectWithColorPropetiesColletionItem.TagChangeCallBack(
+  Sender: TObject);
 begin
   RecalculateObjectsProperties;
 end;
 
-procedure TObjectWithColorPropetiesColletionItem.RemoveTag(Sender: TObject);
+procedure TObjectWithColorPropetiesColletionItem.RemoveTagCallBack(
+  Sender: TObject);
 begin
   if Sender=FTag then
      FTag:=nil;
@@ -424,13 +388,16 @@ begin
      raise Exception.Create(SonlyNumericTags);
 
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if AValue<>nil then begin
-    AValue.AddCallBacks(Self as IHMITagInterface);
+    AValue.AddReadOkHandler(@ReadOkCallBack);
+    AValue.AddWriteFaultHandler(@WriteFaultCallBack);
+    AValue.AddTagChangeHandler(@TagChangeCallBack);
+    AValue.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := AValue;
     RecalculateObjectsProperties;
   end;
@@ -457,7 +424,7 @@ end;
 destructor TObjectWithColorPropetiesColletionItem.Destroy;
 begin
   if Assigned(FTag) then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   inherited Destroy;
 end;
 

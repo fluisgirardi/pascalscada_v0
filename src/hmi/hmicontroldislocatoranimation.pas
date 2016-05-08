@@ -32,7 +32,7 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  THMIControlDislocatorAnimation = class(TComponent, IHMITagInterface)
+  THMIControlDislocatorAnimation = class(TComponent)
   private
     FStartLeft,
     FEndLeft:LongInt;
@@ -75,13 +75,9 @@ type
     procedure SetMinY(v:LongInt);
     procedure SetMaxY(v:LongInt);
 
-    //implements the ihmiTagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //@exclude
     procedure Loaded; override;
@@ -243,7 +239,7 @@ destructor  THMIControlDislocatorAnimation.Destroy;
 begin
 
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   FXLinearScale.Destroy;
@@ -343,13 +339,15 @@ begin
   //se ja estou associado a um tag, remove
   //if the control is linked with some tag, remove the old link.
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if t<>nil then begin
-    t.AddCallBacks(self as IHMITagInterface);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
     MoveObject(0);
   end;
@@ -374,33 +372,18 @@ begin
 
 end;
 
-procedure THMIControlDislocatorAnimation.NotifyReadOk;
+procedure THMIControlDislocatorAnimation.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIControlDislocatorAnimation.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIControlDislocatorAnimation.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIControlDislocatorAnimation.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIControlDislocatorAnimation.NotifyTagChange(Sender:TObject);
+procedure THMIControlDislocatorAnimation.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@MoveObject,0);
 end;
 
-procedure THMIControlDislocatorAnimation.RemoveTag(Sender:TObject);
+procedure THMIControlDislocatorAnimation.RemoveTagCallBack(Sender: TObject);
 begin
   if FTag=Sender then
      FTag:=nil;

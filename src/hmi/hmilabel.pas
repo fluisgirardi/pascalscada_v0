@@ -39,7 +39,7 @@ type
 
   { THMILabel }
 
-  THMILabel = class(TLabel, IHMIInterface, IHMITagInterface)
+  THMILabel = class(TLabel, IHMIInterface)
   private
     FFormatDateTimeOptions: TFormatDateTimeOptions;
     FNumberFormat:AnsiString;
@@ -76,13 +76,9 @@ type
     //: @exclude
     procedure RefreshTagValue; virtual;
 
-    //the procedurs below implements the IHMITagInterface
-    procedure NotifyReadOk; virtual;
-    procedure NotifyReadFault; virtual;
-    procedure NotifyWriteOk; virtual;
-    procedure NotifyWriteFault; virtual;
-    procedure RemoveTag(Sender:TObject); virtual;
-    procedure NotifyTagChange(Sender:TObject); virtual;
+    procedure WriteFaultCallBack(Sender:TObject); virtual;
+    procedure RemoveTagCallBack(Sender:TObject); virtual;
+    procedure TagChangeCallBack(Sender:TObject); virtual;
 
   public
     //: @exclude
@@ -207,7 +203,7 @@ destructor  THMILabel.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -263,13 +259,15 @@ begin
   //
   //if the control is linked with some tag, remove the old link.
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if t<>nil then begin
-    t.AddCallBacks(Self as IHMITagInterface);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
     RefreshTagValue;
   end;
@@ -335,33 +333,18 @@ begin
   inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
-procedure THMILabel.NotifyReadOk;
+procedure THMILabel.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMILabel.NotifyReadFault;
-begin
-
-end;
-
-procedure THMILabel.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMILabel.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMILabel.NotifyTagChange(Sender:TObject);
+procedure THMILabel.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshLabel,0);
 end;
 
-procedure THMILabel.RemoveTag(Sender:TObject);
+procedure THMILabel.RemoveTagCallBack(Sender: TObject);
 begin
   if FTag=Sender then
     FTag := nil;

@@ -33,7 +33,7 @@ type
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  THMIRadioGroup = class(TRadioGroup, IHMIInterface, IHMITagInterface)
+  THMIRadioGroup = class(TRadioGroup, IHMIInterface)
   private
     FTag:TPLCTag;
     FIsEnabled,
@@ -60,13 +60,9 @@ type
     function  GetIndex:LongInt;
     procedure SetIndex(v:LongInt);
 
-    //implements the IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     {$IFNDEF FPC}
     procedure Click; override;
@@ -152,7 +148,7 @@ destructor  THMIRadioGroup.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -202,13 +198,15 @@ begin
    //se ja estou associado a um tag, remove
    //remove the old link.
    if FTag<>nil then begin
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
+      FTag.RemoveAllHandlersFromObject(Self);
    end;
 
    //adiona o callback para o novo tag
    //link with the new tag.
    if t<>nil then begin
-      t.AddCallBacks(Self as IHMITagInterface);
+      t.AddWriteFaultHandler(@WriteFaultCallBack);
+      t.AddTagChangeHandler(@TagChangeCallBack);
+      t.AddRemoveTagHandler(@RemoveTagCallBack);
       FTag := t;
       RefreshRadioGroup(0);
    end;
@@ -290,33 +288,18 @@ begin
 end;
 {$ENDIF}
 
-procedure THMIRadioGroup.NotifyReadOk;
+procedure THMIRadioGroup.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIRadioGroup.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIRadioGroup.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIRadioGroup.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIRadioGroup.NotifyTagChange(Sender:TObject);
+procedure THMIRadioGroup.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshRadioGroup,0);
 end;
 
-procedure THMIRadioGroup.RemoveTag(Sender:TObject);
+procedure THMIRadioGroup.RemoveTagCallBack(Sender: TObject);
 begin
   if FTag=Sender then
     FTag := nil;

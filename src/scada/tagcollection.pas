@@ -30,7 +30,7 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  TTagCollectionItem=class(TCollectionItem, IUnknown, IHMITagInterface)
+  TTagCollectionItem=class(TCollectionItem, IUnknown)
   private
     FTag:TPLCTag;
     procedure SetTag(t:TPLCTag);
@@ -39,13 +39,9 @@ type
     function _AddRef: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
     function _Release: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
 
-    //IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
 
     {$IFDEF PORTUGUES}
@@ -186,7 +182,7 @@ end;
 destructor  TTagCollectionItem.Destroy;
 begin
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   Inherited Destroy;
 end;
 
@@ -198,10 +194,13 @@ begin
     raise Exception.Create(SinvalidTag);
 
   if Ftag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
 
-  if t<>nil then
-    FTag.AddCallBacks(Self as IHMITagInterface);
+  if t<>nil then begin
+    FTag.AddRemoveTagHandler(@RemoveTagCallBack);
+    FTag.AddWriteFaultHandler(@WriteFaultCallBack);
+    FTag.AddTagChangeHandler(@TagChangeCallBack);
+  end;
 
   FTag:=t;
 
@@ -230,34 +229,19 @@ begin
   //run only when object is loaded.
 end;
 
-procedure TTagCollectionItem.NotifyReadOk;
+procedure TTagCollectionItem.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure TTagCollectionItem.NotifyReadFault;
-begin
-
-end;
-
-procedure TTagCollectionItem.NotifyWriteOk;
-begin
-
-end;
-
-procedure TTagCollectionItem.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure TTagCollectionItem.NotifyTagChange(Sender:TObject);
+procedure TTagCollectionItem.TagChangeCallBack(Sender: TObject);
 begin
   with Collection as TTagCollection do
     if Assigned(OnValuesChange) then
       OnValuesChange(Self);
 end;
 
-procedure TTagCollectionItem.RemoveTag(Sender:TObject);
+procedure TTagCollectionItem.RemoveTagCallBack(Sender: TObject);
 begin
   if FTag=sender then
     FTag := nil;

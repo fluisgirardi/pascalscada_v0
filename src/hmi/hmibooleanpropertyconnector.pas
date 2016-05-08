@@ -121,7 +121,7 @@ type
 
   { THMIBooleanPropertyConnector }
 
-  THMIBooleanPropertyConnector = class(TComponent, IHMITagInterface)
+  THMIBooleanPropertyConnector = class(TComponent)
   private
     FTag:TPLCTag;
     FFirstReadOk:Boolean;
@@ -137,17 +137,13 @@ type
     procedure SetObjects(AValue: TObjectWithBooleanPropetiesColletion);
 
     //: @seealso(IHMITagInterface.NotifyReadOk)
-    procedure NotifyReadOk;
-    //: @seealso(IHMITagInterface.NotifyReadFault)
-    procedure NotifyReadFault;
-    //: @seealso(IHMITagInterface.NotifyWriteOk)
-    procedure NotifyWriteOk;
+    procedure ReadOkCallBack(Sender:TObject);
     //: @seealso(IHMITagInterface.NotifyWriteFault)
-    procedure NotifyWriteFault;
+    procedure WriteFaultCallBack(Sender:TObject);
     //: @seealso(IHMITagInterface.NotifyTagChange)
-    procedure NotifyTagChange(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
     //: @seealso(IHMITagInterface.RemoveTag)
-    procedure RemoveTag(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
 
     procedure RecalculateObjectsProperties;
   protected
@@ -210,13 +206,16 @@ begin
      raise Exception.Create(SonlyNumericTags);
 
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if AValue<>nil then begin
-    AValue.AddCallBacks(Self as IHMITagInterface);
+    AValue.AddReadOkHandler(@ReadOkCallBack);
+    AValue.AddTagChangeHandler(@TagChangeCallBack);
+    AValue.AddWriteFaultHandler(@WriteFaultCallBack);
+    AValue.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := AValue;
     RecalculateObjectsProperties;
   end;
@@ -229,34 +228,25 @@ begin
   FObjects.Assign(AValue);
 end;
 
-procedure THMIBooleanPropertyConnector.NotifyReadOk;
+procedure THMIBooleanPropertyConnector.ReadOkCallBack(Sender: TObject);
 begin
-  if FFirstReadOk then
-    NotifyTagChange(Self);
-  FFirstReadOk:=false;
+  if FFirstReadOk then begin
+    TagChangeCallBack(Self);
+    FFirstReadOk:=false;
+  end;
 end;
 
-procedure THMIBooleanPropertyConnector.NotifyReadFault;
+procedure THMIBooleanPropertyConnector.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIBooleanPropertyConnector.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIBooleanPropertyConnector.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIBooleanPropertyConnector.NotifyTagChange(Sender: TObject);
+procedure THMIBooleanPropertyConnector.TagChangeCallBack(Sender: TObject);
 begin
   RecalculateObjectsProperties;
 end;
 
-procedure THMIBooleanPropertyConnector.RemoveTag(Sender: TObject);
+procedure THMIBooleanPropertyConnector.RemoveTagCallBack(Sender: TObject);
 begin
   if Sender=FTag then
      FTag:=nil;

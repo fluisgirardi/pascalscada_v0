@@ -40,16 +40,13 @@ type
     destructor Destroy; override;
   end;
 
-  THMICustomLinkedFlowValve = class(THMICustomFlowValve, IHMITagInterface)
+  THMICustomLinkedFlowValve = class(THMICustomFlowValve)
   private
     FPLCTag: TPLCTag;
     procedure SetHMITag(AValue: TPLCTag);
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
     procedure UpdateValveDelayed(Data: PtrInt);
   protected
     procedure UpdateValve; override;
@@ -90,45 +87,32 @@ begin
   //se ja estou associado a um tag, remove
   //removes the old link.
   if FPLCTag<>nil then begin
-    FPLCTag.RemoveCallBacks(self as IHMITagInterface);
+    FPLCTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if AValue<>nil then begin
-    AValue.AddCallBacks(self as IHMITagInterface);
+    AValue.AddWriteFaultHandler(@WriteFaultCallBack);
+    AValue.AddTagChangeHandler(@TagChangeCallBack);
+    AValue.AddRemoveTagHandler(@RemoveTagCallBack);
     FPLCTag := AValue;
     UpdateValve;
   end;
   FPLCTag := AValue;
 end;
 
-procedure THMICustomLinkedFlowValve.NotifyReadOk;
-begin
-
-end;
-
-procedure THMICustomLinkedFlowValve.NotifyReadFault;
-begin
-
-end;
-
-procedure THMICustomLinkedFlowValve.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMICustomLinkedFlowValve.NotifyWriteFault;
+procedure THMICustomLinkedFlowValve.WriteFaultCallBack(Sender: TObject);
 begin
   UpdateValve;
 end;
 
-procedure THMICustomLinkedFlowValve.NotifyTagChange(Sender: TObject);
+procedure THMICustomLinkedFlowValve.TagChangeCallBack(Sender: TObject);
 begin
   UpdateValve;
 end;
 
-procedure THMICustomLinkedFlowValve.RemoveTag(Sender: TObject);
+procedure THMICustomLinkedFlowValve.RemoveTagCallBack(Sender: TObject);
 begin
   if FPLCTag=Sender then
     FPLCTag:=nil;
@@ -161,7 +145,7 @@ end;
 destructor THMICustomLinkedFlowValve.Destroy;
 begin
   if Assigned(FPLCTag) then
-    FPLCTag.RemoveCallBacks(self as IHMITagInterface);
+    FPLCTag.RemoveAllHandlersFromObject(Self);
   Application.RemoveAsyncCalls(Self);
   inherited Destroy;
 end;

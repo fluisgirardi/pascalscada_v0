@@ -40,7 +40,7 @@ type
 
   { THMICheckBox }
 
-  THMICheckBox = class(TCheckBox, IHMIInterface, IHMITagInterface)
+  THMICheckBox = class(TCheckBox, IHMIInterface)
   private
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
@@ -84,13 +84,9 @@ type
 
     function  GetAllowGrayed:Boolean;
 
-    //implementes the IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -505,7 +501,7 @@ destructor THMICheckBox.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FFontFalse);
   FreeAndNil(FFontTrue);
   FreeAndNil(FFontGrayed);
@@ -542,13 +538,15 @@ begin
   //se ja estou associado a um tag, remove
   //if the control is linked with some tag, remove the link.
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if t<>nil then begin
-    t.AddCallBacks(Self as IHMITagInterface);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
     RefreshTagValue(GetTagValue);
   end;
@@ -879,33 +877,18 @@ begin
   result := inherited AllowGrayed;
 end;
 
-procedure THMICheckBox.NotifyReadOk;
+procedure THMICheckBox.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMICheckBox.NotifyReadFault;
-begin
-
-end;
-
-procedure THMICheckBox.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMICheckBox.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMICheckBox.NotifyTagChange(Sender:TObject);
+procedure THMICheckBox.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshCheckBox,0);
 end;
 
-procedure THMICheckBox.RemoveTag(Sender:TObject);
+procedure THMICheckBox.RemoveTagCallBack(Sender: TObject);
 begin
   if Ftag=Sender then
     FTag:=nil;

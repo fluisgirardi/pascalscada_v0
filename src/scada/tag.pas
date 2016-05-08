@@ -276,61 +276,7 @@ type
   {$ENDIF}
   PTagRec = ^TTagRec;
 
-  {$IFDEF PORTUGUES}
-  {:
-  Interface de notificação de eventos do tag. Usado para notificar os controles
-  ligados ao tag sobre o que ocorre com o tag.
-  }
-  {$ELSE}
-  {:
-  Tag events notification interface. Used to notifies the linked controls about
-  any event that occurs with the tag.
-  }
-  {$ENDIF}
-  IHMITagInterface = interface
-    ['{4301B240-79D9-41F9-A814-68CFEFD032B8}']
-    {$IFDEF PORTUGUES}
-    //: Chama o evento quando o tag tem uma letura com exito.
-    {$ELSE}
-    //: Called when the tag has a successful read.
-    {$ENDIF}
-    procedure NotifyReadOk;
-
-    {$IFDEF PORTUGUES}
-    //: Chama o evento quando uma leitura falha.
-    {$ELSE}
-    //: Called when the tag has a fault read.
-    {$ENDIF}
-    procedure NotifyReadFault;
-
-    {$IFDEF PORTUGUES}
-    //: Chama o evento quando uma escrita tem sucesso.
-    {$ELSE}
-    //: Called when the tag has a successful write.
-    {$ENDIF}
-    procedure NotifyWriteOk;
-
-    {$IFDEF PORTUGUES}
-    //: Chama o evento quando uma escrita do tag falha.
-    {$ELSE}
-    //: Called when the tag has a fault write.
-    {$ENDIF}
-    procedure NotifyWriteFault;
-
-    {$IFDEF PORTUGUES}
-    //: Chama o evento quando o valor do tag muda.
-    {$ELSE}
-    //: Called when the tag value changes.
-    {$ENDIF}
-    procedure NotifyTagChange(Sender:TObject);
-
-    {$IFDEF PORTUGUES}
-    //: Notifica o objeto dependente que o tag será removido.
-    {$ELSE}
-    //: Notifies the control about the destruction of the tag.
-    {$ENDIF}
-    procedure RemoveTag(Sender:TObject);
-  end;
+  TTagNotificationList = array of TNotifyEvent;
 
   {$IFDEF PORTUGUES}
   //: Interface de gerenciamento de identificação do tag.
@@ -440,6 +386,13 @@ type
       {$ENDIF}
     {$ENDIF}
   protected
+    FReadOKNotificationList,
+    FReadFaultNotificationList,
+    FWriteOKNotificationList,
+    FWriteFaultNotificationList,
+    FChangeNotificationList,
+    FTagRemovalNotificationList:TTagNotificationList;
+
     {$IFDEF PORTUGUES}
     //: Realiza a chamado do evento assincrono informando a mudança do valor do tag.
     {$ELSE}
@@ -642,20 +595,6 @@ type
     //: Stores the event called when the tag value was updated.
     {$ENDIF}
     POnUpdate:TNotifyEvent;
-
-    {$IFDEF PORTUGUES}
-    //: Armazena a interface de notificação de eventos de todos os objetos dependentes.
-    {$ELSE}
-    //: Stores the notification event interface of all dependent objects.
-    {$ENDIF}
-    PNotificationInterfaces:array of IHMITagInterface;
-
-    {$IFDEF PORTUGUES}
-    //: Conta os objetos que dependem desse tag.
-    {$ELSE}
-    //: Number of dependent objects.
-    {$ENDIF}
-    PNotificationInterfacesCount:LongInt;
 
     {$IFDEF PORTUGUES}
     //: Armazena o identificador desse tag. GUID
@@ -961,34 +900,25 @@ type
     //: Asynchronous event called when the tag value changes.
     {$ENDIF}
     property OnAsyncValueChange:TASyncValueChangeNotify read POnAsyncValueChange  write POnAsyncValueChange;
+
+    function IndexOf(List:TTagNotificationList; aHandler:TNotifyEvent):Integer;
+    procedure AddToList(var List:TTagNotificationList; const aHandler:TNotifyEvent);
+    procedure DeleteFromList(var List:TTagNotificationList; const aIndex:Integer);
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
 
-    {$IFDEF PORTUGUES}
-    //: Adiciona uma nova interface para ser notificada dos eventos do tag.
-    {$ELSE}
-    //: Adds a new notification interface to the tag notification list.
-    {$ENDIF}
-    procedure AddCallBacks(ITag:IHMITagInterface);
 
-    {$IFDEF PORTUGUES}
-    //: Remove uma interface da lista de notificações do tag.
-    {$ELSE}
-    //: Remove a interface from the tag notification list.
-    {$ENDIF}
-    procedure RemoveCallBacks(ITag:IHMITagInterface);
 
-    {$IFNDEF FPC}
-    {$IFDEF PORTUGUES}
-    //: Retorna o manipulador do tag.
-    {$ELSE}
-    //: Returns the tag handle.
-    {$ENDIF}
-    property Handle:HWND read fHandle;
-    {$ENDIF}
+    procedure AddReadOkHandler(aCallBack:TNotifyEvent);
+    procedure AddReadFaultHandler(aCallBack:TNotifyEvent);
+    procedure AddWriteOkHandler(aCallBack:TNotifyEvent);
+    procedure AddWriteFaultHandler(aCallBack:TNotifyEvent);
+    procedure AddTagChangeHandler(aCallBack:TNotifyEvent);
+    procedure AddRemoveTagHandler(aCallBack:TNotifyEvent);
+    procedure RemoveAllHandlersFromObject(aObject:TObject);
   end;
 
   TScanUpdateRec = record
@@ -1012,7 +942,7 @@ var
   x:TGuid;
 begin
   inherited Create(AOwner);
-  PNotificationInterfacesCount := 0;
+
   PCommReadErrors := 0;
   PCommReadOK := 0;
   PCommWriteErrors := 0;
@@ -1020,9 +950,12 @@ begin
   PUpdateTime:=1000;
   PFirstUpdate:=true;
 
-  {$IFNDEF FPC}
-  fHandle:=AllocateHWnd(WndMethod);
-  {$ENDIF}
+  FReadOKNotificationList     := TTagNotificationList.Create;
+  FReadFaultNotificationList  := TTagNotificationList.Create;
+  FWriteOKNotificationList    := TTagNotificationList.Create;
+  FWriteFaultNotificationList := TTagNotificationList.Create;
+  FChangeNotificationList     := TTagNotificationList.Create;
+  FTagRemovalNotificationList := TTagNotificationList.Create;
 
   if ComponentState*[csReading, csLoading]=[] then begin
     CreateGUID(x);
@@ -1034,11 +967,15 @@ destructor TTag.Destroy;
 var
   c:LongInt;
 begin
-  for c := 0 to High(PNotificationInterfaces) do
-    PNotificationInterfaces[c].RemoveTag(Self);
-  {$IFNDEF FPC}
-  DeallocateHWnd(fHandle);
-  {$ENDIF}
+  for c := 0 to high(FTagRemovalNotificationList) do
+    FTagRemovalNotificationList[c](Self);
+
+  SetLength(FReadOKNotificationList,0);
+  SetLength(FReadFaultNotificationList,0);
+  SetLength(FWriteOKNotificationList,0);
+  SetLength(FWriteFaultNotificationList,0);
+  SetLength(FChangeNotificationList,0);
+  SetLength(FTagRemovalNotificationList,0);
 
   {$IFNDEF CONSOLEPASCALSCADA}
   Application.RemoveAsyncCalls(Self);
@@ -1047,32 +984,111 @@ begin
   inherited Destroy;
 end;
 
-procedure TTag.AddCallBacks(ITag:IHMITagInterface);
+function TTag.IndexOf(List: TTagNotificationList; aHandler: TNotifyEvent
+  ): Integer;
+var
+  c: Integer;
 begin
-  if (ITag<>nil) and ((ITag as IHMITagInterface)=nil) then
-    raise Exception.Create(SinvalidInterface);
-  
-  inc(PNotificationInterfacesCount);
-  SetLength(PNotificationInterfaces, PNotificationInterfacesCount);
-  PNotificationInterfaces[PNotificationInterfacesCount-1]:=ITag;
+  if aHandler<>nil then
+    for c:=0 to High(List) do begin
+      if (TMethod(List[c]).Code=TMethod(aHandler).Code) and (TMethod(List[c]).Data=TMethod(aHandler).Data) then begin
+        Result:=c;
+        exit;
+      end;
+    end;
+  Result:=-1;
 end;
 
-procedure TTag.RemoveCallBacks(ITag:IHMITagInterface);
+procedure TTag.AddToList(var List: TTagNotificationList;
+  const aHandler: TNotifyEvent);
 var
-  c,h:LongInt;
-  found:Boolean;
+  h: Integer;
 begin
-  found:=false;
-  h := High(PNotificationInterfaces);
-  for c:=0 to h do
-    if (ITag)=(PNotificationInterfaces[c]) then begin
-      found := true;
-      break;
+  if IndexOf(List, aHandler)=-1 then begin
+    h:=Length(List);
+    SetLength(List, h+1);
+    List[h]:=aHandler;
+  end;
+end;
+
+procedure TTag.DeleteFromList(var List: TTagNotificationList;
+  const aIndex: Integer);
+var
+  h: Integer;
+begin
+  h:=High(List);
+  List[aIndex]:=List[h];
+  SetLength(List,h);
+end;
+
+procedure TTag.AddReadOkHandler(aCallBack: TNotifyEvent);
+begin
+  AddToList(FReadOKNotificationList, aCallBack);
+end;
+
+procedure TTag.AddReadFaultHandler(aCallBack: TNotifyEvent);
+begin
+  AddToList(FReadFaultNotificationList, aCallBack);
+end;
+
+procedure TTag.AddWriteOkHandler(aCallBack: TNotifyEvent);
+begin
+  AddToList(FWriteOKNotificationList, aCallBack);
+end;
+
+procedure TTag.AddWriteFaultHandler(aCallBack: TNotifyEvent);
+begin
+  AddToList(FWriteFaultNotificationList, aCallBack);
+end;
+
+procedure TTag.AddTagChangeHandler(aCallBack: TNotifyEvent);
+begin
+  AddToList(FChangeNotificationList, aCallBack);
+end;
+
+procedure TTag.AddRemoveTagHandler(aCallBack: TNotifyEvent);
+begin
+  AddToList(FTagRemovalNotificationList, aCallBack);
+end;
+
+procedure TTag.RemoveAllHandlersFromObject(aObject: TObject);
+var
+  i: Integer;
+begin
+  for i:=High(FReadOKNotificationList) downto 0 do begin
+    if TMethod(FReadOKNotificationList[i]).Data = Pointer(aObject) then begin
+      DeleteFromList(FReadOKNotificationList, i);
     end;
-  if found then begin
-    PNotificationInterfaces[c] := PNotificationInterfaces[h];
-    dec(PNotificationInterfacesCount);
-    SetLength(PNotificationInterfaces, PNotificationInterfacesCount);
+  end;
+
+  for i:=high(FReadFaultNotificationList) downto 0 do begin
+    if TMethod(FReadFaultNotificationList[i]).Data = Pointer(aObject) then begin
+      DeleteFromList(FReadFaultNotificationList,i);
+    end;
+  end;
+
+  for i:=high(FWriteOKNotificationList) downto 0 do begin
+    if TMethod(FWriteOKNotificationList[i]).Data = Pointer(aObject) then begin
+      DeleteFromList(FWriteOKNotificationList,i);
+    end;
+  end;
+
+  for i:=high(FWriteFaultNotificationList) downto 0 do begin
+    if TMethod(FWriteFaultNotificationList[i]).Data = Pointer(aObject) then begin
+      DeleteFromList(FWriteFaultNotificationList,i);
+    end;
+  end;
+
+  for i:=high(FChangeNotificationList) downto 0 do begin
+    if TMethod(FChangeNotificationList[i]).Data = Pointer(aObject) then begin
+      DeleteFromList(FChangeNotificationList,i);
+    end;
+  end;
+
+  for i:=high(FTagRemovalNotificationList) downto 0 do begin
+    if TMethod(FTagRemovalNotificationList[i]).Data = Pointer(aObject) then begin
+      DeleteFromList(FTagRemovalNotificationList,i);
+    end;
   end;
 end;
 
@@ -1093,8 +1109,8 @@ begin
   //notifica controles e objetos dependentes
   //
   //Notify the dependent objects.
-  for c:=0 to High(PNotificationInterfaces) do begin
-    PNotificationInterfaces[c].NotifyTagChange(self);
+  for c:=0 to high(FChangeNotificationList) do begin
+    FChangeNotificationList[c](self);
   end;
 
   //notificação de mudanca após notificar os controles.
@@ -1182,12 +1198,8 @@ procedure TTag.NotifyReadOk;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do begin
-    //try
-      PNotificationInterfaces[c].NotifyReadOk;
-    //except
-    //end;
-  end;
+  for c:=0 to high(FReadOKNotificationList) do
+    FReadOKNotificationList[c](Self);
 
   if Assigned(POnReadOk) then
     POnReadOk(self)
@@ -1197,12 +1209,8 @@ procedure TTag.NotifyReadFault;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do begin
-    //try
-      PNotificationInterfaces[c].NotifyReadFault;
-    //except
-    //end;
-  end;
+  for c:=0 to high(FReadFaultNotificationList) do
+    FReadFaultNotificationList[c](self);
 
   if Assigned(POnReadFail) then
     POnReadFail(self)
@@ -1221,12 +1229,8 @@ procedure TTag.NotifyWriteOk;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do begin
-    //try
-      PNotificationInterfaces[c].NotifyWriteOk;
-    //except
-    //end;
-  end;
+  for c:=0 to high(FWriteOKNotificationList) do
+    FWriteOKNotificationList[c](Self);
 
   if Assigned(POnWriteOk) then
     POnWriteOk(self)
@@ -1236,12 +1240,8 @@ procedure TTag.NotifyWriteFault;
 var
   c:LongInt;
 begin
-  for c:=0 to High(PNotificationInterfaces) do begin
-    //try
-      PNotificationInterfaces[c].NotifyWriteFault;
-    //except
-    //end;
-  end;
+  for c:=0 to high(FWriteFaultNotificationList) do
+    FWriteFaultNotificationList[c](Self);
 
   if Assigned(POnWriteFail) then
     POnWriteFail(self)

@@ -45,7 +45,7 @@ type
   @seealso(TPLCBlock)
   }
   {$ENDIF}
-  TPLCBlockElement = class(TPLCNumberMappable, ITagInterface, ITagNumeric, IHMITagInterface)
+  TPLCBlockElement = class(TPLCNumberMappable, ITagInterface, ITagNumeric)
   private
     PBlock:TPLCBlock;
   protected
@@ -58,13 +58,9 @@ type
     function  IsValidValue(aValue:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
 
-    //implements the IHMITagInterface
-    procedure NotifyReadOk; virtual;
-    procedure NotifyReadFault; virtual;
-    procedure NotifyWriteOk; virtual;
-    procedure NotifyWriteFault; virtual;
-    procedure NotifyTagChange(Sender:TObject); virtual;
-    procedure RemoveTag(Sender:TObject); virtual;
+    procedure WriteFaultCallback(Sender:TObject); virtual;
+    procedure TagChangeCallback(Sender:TObject); virtual;
+    procedure RemoveTagCallBack(Sender:TObject); virtual;
   protected
     //: @seealso(TPLCNumber.GetValueRaw)
     function  GetValueRaw:Double; override;
@@ -124,38 +120,30 @@ end;
 destructor  TPLCBlockElement.Destroy;
 begin
   if Assigned(PBlock) then
-     PBlock.RemoveCallBacks(Self as IHMITagInterface);
+     PBlock.RemoveAllHandlersFromObject(Self);
   PBlock:=nil;
   inherited Destroy;
 end;
 
 procedure TPLCBlockElement.SetBlock(blk:TPLCBlock);
 begin
+  if blk=PLCBlock then exit;
   //esta removendo do bloco.
   //removing the link with the block
-  if (blk=nil) and (Assigned(PBlock)) then begin
-    PBlock.RemoveCallBacks(Self as IHMITagInterface);
-    PBlock := nil;
-    exit;
+  if Assigned(PBlock) then begin
+    PBlock.RemoveAllHandlersFromObject(Self);
   end;
 
   //se esta setando o bloco
   //if the block is being set
-  if (blk<>nil) and (PBlock=nil) then begin
-    PBlock := blk;
-    PBlock.AddCallBacks(Self as IHMITagInterface);
-    exit;
+  if (blk<>nil) then begin
+    blk.AddRemoveTagHandler(@RemoveTagCallBack);
+    blk.AddTagChangeHandler(@TagChangeCallback);
+    blk.AddWriteFaultHandler(@WriteFaultCallback);
+    if PIndex>=blk.Size then
+      PIndex := blk.Size - 1;
   end;
-
-  //se esta setado o bloco, mas esta trocando
-  //if the block is being replaced.
-  if blk<>PBlock then begin
-    PBlock.RemoveCallBacks(Self as IHMITagInterface);
-    PBlock := blk;
-    PBlock.AddCallBacks(Self as IHMITagInterface);
-    if PIndex>=PBlock.Size then
-      PIndex := PBlock.Size - 1;
-  end;
+  PBlock:=blk;
 end;
 
 procedure TPLCBlockElement.SetIndex(i:Cardinal);
@@ -257,27 +245,23 @@ begin
     PBlock.Write(values, 1, PIndex)
 end;
 
-procedure TPLCBlockElement.NotifyReadOk;
+procedure TPLCBlockElement.WriteFaultCallback(Sender: TObject);
+var
+  notify:Boolean;
 begin
+  if Assigned(PBlock) then begin
+    notify := (PValueRaw<>PBlock.ValueRaw[PIndex]) or (IsNan(PBlock.ValueRaw[PIndex]) and (not IsNan(PValueRaw)));
+    PValueRaw := PBlock.ValueRaw[PIndex];
+    PValueTimeStamp := PBlock.ValueTimestamp;
 
+    if notify or PFirstUpdate then begin
+      PFirstUpdate:=false;
+      NotifyWriteFault();
+    end;
+  end;
 end;
 
-procedure TPLCBlockElement.NotifyReadFault;
-begin
-
-end;
-
-procedure TPLCBlockElement.NotifyWriteOk;
-begin
-
-end;
-
-procedure TPLCBlockElement.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure TPLCBlockElement.NotifyTagChange(Sender:TObject);
+procedure TPLCBlockElement.TagChangeCallback(Sender:TObject);
 var
   notify:Boolean;
 begin
@@ -293,7 +277,7 @@ begin
   end;
 end;
 
-procedure TPLCBlockElement.RemoveTag(Sender:TObject);
+procedure TPLCBlockElement.RemoveTagCallBack(Sender: TObject);
 begin
   if PBlock=sender then
     PBlock := nil;

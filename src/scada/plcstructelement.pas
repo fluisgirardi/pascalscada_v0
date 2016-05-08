@@ -48,8 +48,8 @@ type
     procedure SetTagType(newType: TTagType); override;
 
     //IHMITagInterface
-    procedure NotifyTagChange(Sender:TObject); override;
-    procedure RemoveTag(Sender:TObject); override;
+    procedure TagChangeCallback(Sender:TObject); override;
+    procedure RemoveTagCallBack(Sender:TObject); override;
     //: @exclude
     procedure Loaded; override;
     procedure UpdateTagSizeOnProtocol; override;
@@ -90,17 +90,17 @@ end;
 destructor TPLCStructItem.Destroy;
 begin
   if Assigned(PBlock) then
-    PBlock.RemoveCallBacks(Self as IHMITagInterface);
+    PBlock.RemoveAllHandlersFromObject(Self);
   PBlock:=nil;
   inherited Destroy;
 end;
 
-procedure TPLCStructItem.NotifyTagChange(Sender:TObject);
+procedure TPLCStructItem.TagChangeCallback(Sender:TObject);
 begin
   GetValueRaw();
 end;
 
-procedure TPLCStructItem.RemoveTag(Sender:TObject);
+procedure TPLCStructItem.RemoveTagCallBack(Sender:TObject);
 begin
   if PBlock=sender then
     PBlock := nil;
@@ -131,31 +131,23 @@ end;
 
 procedure TPLCStructItem.SetBlock(blk:TPLCStruct);
 begin
+  if blk=PLCBlock then exit;
   //esta removendo do bloco.
-  //if the structure is being removed.
-  if (blk=nil) and (Assigned(PBlock)) then begin
-    PBlock.RemoveCallBacks(Self as IHMITagInterface);
-    PBlock := nil;
-    exit;
+  //removing the link with the block
+  if Assigned(PBlock) then begin
+    PBlock.RemoveAllHandlersFromObject(Self);
   end;
 
   //se esta setando o bloco
-  //if the structure is being set.
-  if (blk<>nil) and (PBlock=nil) then begin
-    PBlock := blk;
-    PBlock.AddCallBacks(Self as IHMITagInterface);
-    exit;
+  //if the block is being set
+  if (blk<>nil) then begin
+    blk.AddRemoveTagHandler(@RemoveTagCallBack);
+    blk.AddTagChangeHandler(@TagChangeCallback);
+    blk.AddWriteFaultHandler(@WriteFaultCallback);
+    if PIndex>=blk.Size then
+      PIndex := blk.Size - 1;
   end;
-
-  //se esta setado o bloco, mas esta trocando
-  //if the structure is being replaced.
-  if blk<>PBlock then begin
-    PBlock.RemoveCallBacks(Self as IHMITagInterface);
-    PBlock := blk;
-    PBlock.AddCallBacks(Self as IHMITagInterface);
-    if PIndex>=PBlock.Size then
-      PIndex := 0;
-  end;
+  PBlock:=blk;
 end;
 
 function  TPLCStructItem.GetValueRaw: Double;

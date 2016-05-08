@@ -90,9 +90,9 @@ type
     //: @exclude
     procedure SetHMITag(t:TPLCTag); override;
     //: @exclude
-    procedure NotifyWriteFault; override;
+    procedure WriteFaultCallBack(Sender:TObject); override;
     //: @exclude
-    procedure NotifyTagChange(Sender:TObject); override;
+    procedure TagChangeCallBack(Sender:TObject); override;
 
 
     //: @exclude
@@ -194,12 +194,12 @@ begin
   inherited SetHMITag(t);
 end;
 
-procedure THMIText.NotifyWriteFault;
+procedure THMIText.WriteFaultCallBack(Sender:TObject);
 begin
-  NotifyTagChange(Self);
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIText.NotifyTagChange(Sender:TObject);
+procedure THMIText.TagChangeCallBack(Sender:TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshText,0);

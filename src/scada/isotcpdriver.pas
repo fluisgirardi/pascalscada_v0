@@ -322,6 +322,7 @@ begin
   if PCommPort=nil then exit;
 
   Result := Inherited exchange(CPU, msgOut, msgIn, IsWrite);
+  Result := false;
 
   if Length(msgOut)<7 then
     SetLength(msgOut, 7);
@@ -342,6 +343,7 @@ begin
     end;
     retries:=0;
 
+    BytesRead:=0;
     resget := getResponse(msgIn, BytesRead);
     while (resget<>iorOk) and (retries<3) do begin
 
@@ -353,7 +355,7 @@ begin
       resget := getResponse(msgIn, BytesRead);
     end;
 
-    Result:=BytesRead>ISOTCPMinPacketLen;
+    Result:= BytesRead>ISOTCPMinPacketLen;
   finally
     HighLatencyOperationWasEnded(nil);
   end;

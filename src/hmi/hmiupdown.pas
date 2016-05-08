@@ -33,7 +33,7 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  THMIUpDown = class(TUpDown, IHMIInterface, IHMITagInterface)
+  THMIUpDown = class(TUpDown, IHMIInterface)
   private
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
@@ -65,13 +65,9 @@ type
     procedure SetMax(v:Double);
     procedure SetMin(v:Double);
 
-    //implements the IHMITagInterface interface.
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: @exclude
     procedure SetEnabled(e:Boolean); override;
@@ -200,7 +196,7 @@ destructor THMIUpDown.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -241,14 +237,16 @@ begin
    //
    //Remove the old link
    if FTag<>nil then begin
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
+      FTag.RemoveAllHandlersFromObject(Self);
    end;
 
    //adiona o callback para o novo tag
    //
    //link with the new tag.
    if t<>nil then begin
-      t.AddCallBacks(Self as IHMITagInterface);
+      t.AddWriteFaultHandler(@WriteFaultCallBack);
+      t.AddTagChangeHandler(@TagChangeCallBack);
+      t.AddRemoveTagHandler(@RemoveTagCallBack);
       FTag := t;
       RefreshUpDown(0);
    end;
@@ -361,33 +359,18 @@ begin
   FMin := v;
 end;
 
-procedure THMIUpDown.NotifyReadOk;
+procedure THMIUpDown.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIUpDown.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIUpDown.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIUpDown.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIUpDown.NotifyTagChange(Sender:TObject);
+procedure THMIUpDown.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshUpDown, 0);
 end;
 
-procedure THMIUpDown.RemoveTag(Sender:TObject);
+procedure THMIUpDown.RemoveTagCallBack(Sender: TObject);
 begin
   if Ftag=Sender then
     FTag:=nil;

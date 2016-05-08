@@ -39,7 +39,7 @@ type
     IDE.)
   }
   {$ENDIF}
-  THMIAnimation = class(TImage, IHMIInterface, IHMITagInterface)
+  THMIAnimation = class(TImage, IHMIInterface)
   private
     FAnimationZones:TGraphicZones;
     FTag:TPLCTag;
@@ -59,13 +59,9 @@ type
     procedure NeedComState(var CurState:TComponentState);
     procedure BlinkTimer(Sender:TObject);
 
-    //Implements the IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: @exclude
     procedure SetValue(v:Double);
@@ -181,7 +177,7 @@ destructor THMIAnimation.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   FTimer.Destroy;
   FAnimationZones.Destroy;
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
@@ -310,13 +306,15 @@ begin
    //se ja estou associado a um tag, remove
    //if the control are linked with some tag, remove the link.
    if FTag<>nil then begin
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
+      FTag.RemoveAllHandlersFromObject(Self);
    end;
 
    //adiona o callback para o novo tag
    //link with the new tag.
    if t<>nil then begin
-      t.AddCallBacks(Self As IHMITagInterface);
+      t.AddRemoveTagHandler(@RemoveTagCallBack);
+      t.AddTagChangeHandler(@TagChangeCallBack);
+      t.AddWriteFaultHandler(@WriteFaultCallBack);
       FTag := t;
       RefreshAnimation(0);
    end;
@@ -359,33 +357,18 @@ begin
   end;
 end;
 
-procedure THMIAnimation.NotifyReadOk;
+procedure THMIAnimation.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIAnimation.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIAnimation.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIAnimation.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIAnimation.NotifyTagChange(Sender:TObject);
+procedure THMIAnimation.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshAnimation,0);
 end;
 
-procedure THMIAnimation.RemoveTag(Sender:TObject);
+procedure THMIAnimation.RemoveTagCallBack(Sender: TObject);
 begin
   FTag:=nil;
 end;

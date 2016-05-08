@@ -64,7 +64,7 @@ type
   significant bit. Therefore Endbit must be greater or equal than StartBit.
   }
   {$ENDIF}
-  TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric, IHMITagInterface)
+  TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric)
   private
     PNumber:TPLCNumber;
     PUseRaw:Boolean;
@@ -87,13 +87,10 @@ type
     function  IsValidValue(aValue:Variant):Boolean;
     function  GetValueTimestamp:TDatetime;
 
-    //IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(bitValue:Double); override;
@@ -161,7 +158,7 @@ end;
 destructor  TTagBit.Destroy;
 begin
   if PNumber<>nil then
-     PNumber.RemoveCallBacks(Self as IHMITagInterface);
+     PNumber.RemoveAllHandlersFromObject(Self);
   PNumber:=nil;
   inherited Destroy;
 end;
@@ -169,34 +166,25 @@ end;
 
 procedure TTagBit.SetNumber(number:TPLCNumber);
 begin
+  if number=PNumber then exit;
+
   if (number<>nil) and ((not Supports(number, ITagInterface)) or (not Supports(number, ITagNumeric))) then
      raise Exception.Create(SinvalidTag);
 
   //esta removendo o tag.
   //the link with tag is being removed.
-  if (number=nil) and (PNumber<>nil) then begin
-    PNumber.RemoveCallBacks(Self as IHMITagInterface);
-    PNumber := nil;
-    exit;
-  end;
+  if (PNumber<>nil) then
+    PNumber.RemoveAllHandlersFromObject(Self);
 
   //se esta setando o tag
   //a new tag link is being set.
-  if (number<>nil) and (PNumber=nil) then begin
-    PNumber := number;
-    PNumber.AddCallBacks(Self as IHMITagInterface);
-    NotifyTagChange(self);
-    exit;
+  if (number<>nil) then begin
+    number.AddWriteFaultHandler(@WriteFaultCallBack);
+    number.AddTagChangeHandler(@TagChangeCallBack);
+    number.AddRemoveTagHandler(@RemoveTagCallBack);
+    TagChangeCallBack(self);
   end;
-
-  //esta trocando de tag
-  //replacing the tag link
-  if number<>PNumber then begin
-    PNumber.RemoveCallBacks(Self as IHMITagInterface);
-    PNumber := number;
-    PNumber.AddCallBacks(Self as IHMITagInterface);
-    NotifyTagChange(self);
-  end;
+  PNumber:=number;
 end;
 
 function TTagBit.GetValueRaw:Double;
@@ -303,7 +291,7 @@ procedure TTagBit.SetUseRaw(use:Boolean);
 begin
    if use<>PUseRaw then begin
       PUseRaw := use;
-      NotifyTagChange(self);
+      NotifyChange;
    end;
 end;
 
@@ -313,7 +301,7 @@ begin
       PStartBit:=b;
       PNormalMask := GetBitMask;
       PInvMask    := GetInvBitMask;
-      NotifyTagChange(self);
+      NotifyChange;
    end;
 end;
 
@@ -323,31 +311,17 @@ begin
       PEndBit:=b;
       PNormalMask := GetBitMask;
       PInvMask    := GetInvBitMask;
-      NotifyTagChange(self);
+      NotifyChange;
    end
 end;
 
-procedure TTagBit.NotifyReadOk;
+procedure TTagBit.WriteFaultCallBack(Sender:TObject);
 begin
-
+  TagChangeCallBack(Sender);
+  NotifyWriteFault;
 end;
 
-procedure TTagBit.NotifyReadFault;
-begin
-
-end;
-
-procedure TTagBit.NotifyWriteOk;
-begin
-
-end;
-
-procedure TTagBit.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure TTagBit.NotifyTagChange(Sender:TObject);
+procedure TTagBit.TagChangeCallBack(Sender: TObject);
 var
   aValue, bold, bnew :double;
 begin
@@ -371,7 +345,7 @@ begin
   end;
 end;
 
-procedure TTagBit.RemoveTag(Sender:TObject);
+procedure TTagBit.RemoveTagCallBack(Sender: TObject);
 begin
   if PNumber=sender then
     PNumber := nil;

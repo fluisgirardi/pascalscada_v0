@@ -33,7 +33,7 @@ type
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  THMITrackBar = class(TTrackBar, IHMIInterface, IHMITagInterface)
+  THMITrackBar = class(TTrackBar, IHMIInterface)
   private
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
@@ -60,13 +60,9 @@ type
     //: @seealso(IHMIInterface.MakeUnsecure)
     procedure MakeUnsecure;
 
-    //implements the IHMITagInterface interface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: @exclude
     procedure SetEnabled(e:Boolean); override;
@@ -161,7 +157,7 @@ destructor THMITrackBar.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if Assigned(FTag) then
-    Ftag.RemoveCallBacks(self as IHMITagInterface);
+    Ftag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -190,13 +186,15 @@ begin
   //se ja estou associado a um tag, remove
   //removes the old link.
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if t<>nil then begin
-    t.AddCallBacks(self as IHMITagInterface);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
     RefreshTagValue(0);
   end;
@@ -316,33 +314,18 @@ end;
 // END OF PROCESSING OF EVENTS
 //------------------------------------------------------------------------------
 
-procedure THMITrackBar.NotifyReadOk;
+procedure THMITrackBar.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMITrackBar.NotifyReadFault;
-begin
-
-end;
-
-procedure THMITrackBar.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMITrackBar.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMITrackBar.NotifyTagChange(Sender:TObject);
+procedure THMITrackBar.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshTagValue,0);
 end;
 
-procedure THMITrackBar.RemoveTag(Sender:TObject);
+procedure THMITrackBar.RemoveTagCallBack(Sender: TObject);
 begin
   if Ftag=Sender then
     FTag:=nil;

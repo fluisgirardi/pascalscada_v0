@@ -40,7 +40,7 @@ type
 
   { THMIEdit }
 
-  THMIEdit = class(TEdit, IHMIInterface, IHMITagInterface)
+  THMIEdit = class(TEdit, IHMIInterface)
   private
     FAfterSendValueToTag: TAfterSendStringValueToTagEvent;
     FAlignment:TAlignment;
@@ -99,13 +99,9 @@ type
 
     procedure SendValue(txt:TCaption);
 
-    //implements the IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
 
     procedure SetMinLimit(v:Double);
     procedure SetMaxLimit(v:Double);
@@ -402,7 +398,7 @@ destructor  THMIEdit.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -501,13 +497,15 @@ begin
   //
   //if the control is linked with some tag, removes the link.
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link the control with the new tag.
   if t<>nil then begin
-    t.AddCallBacks(Self as IHMITagInterface);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
     RefreshTagValue(0);
   end;
@@ -815,33 +813,18 @@ begin
   inherited Change;
 end;
 
-procedure THMIEdit.NotifyReadOk;
+procedure THMIEdit.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIEdit.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIEdit.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIEdit.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIEdit.NotifyTagChange(Sender:TObject);
+procedure THMIEdit.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshTagValue,0);
 end;
 
-procedure THMIEdit.RemoveTag(Sender:TObject);
+procedure THMIEdit.RemoveTagCallBack(Sender: TObject);
 begin
   if Ftag=Sender then
     FTag:=nil;

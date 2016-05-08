@@ -39,7 +39,7 @@ type
 
   { THMIProgressBar }
 
-  THMIProgressBar = class(THMIBasicControl, IHMIInterface, IHMITagInterface)
+  THMIProgressBar = class(THMIBasicControl, IHMIInterface)
   private
     FMax: Double;
     FMin: Double;
@@ -68,13 +68,9 @@ type
 
     function  GetPosition:Double;
 
-    //implements the IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     function Progress:Double;
     //: @exclude
@@ -140,7 +136,7 @@ destructor THMIProgressBar.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if Assigned(FTag) then
-    Ftag.RemoveCallBacks(Self as IHMITagInterface);
+    Ftag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -302,13 +298,15 @@ begin
   //se ja estou associado a um tag, remove
   //if the control is linked with some tag, remove the old link.
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link with the new tag.
   if t<>nil then begin
-    t.AddCallBacks(Self as IHMITagInterface);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
     RefreshProgress(0);
   end;
@@ -329,33 +327,18 @@ begin
    end;
 end;
 
-procedure THMIProgressBar.NotifyReadOk;
+procedure THMIProgressBar.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIProgressBar.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIProgressBar.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIProgressBar.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIProgressBar.NotifyTagChange(Sender:TObject);
+procedure THMIProgressBar.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshProgress, 0);
 end;
 
-procedure THMIProgressBar.RemoveTag(Sender:TObject);
+procedure THMIProgressBar.RemoveTagCallBack(Sender: TObject);
 begin
   if FTag=Sender then begin
     FTag := nil;

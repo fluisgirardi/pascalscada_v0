@@ -20,7 +20,7 @@ type
 
   { THMIComboBox }
 
-  THMIComboBox = class(TCustomComboBox, IHMIInterface, IHMITagInterface)
+  THMIComboBox = class(TCustomComboBox, IHMIInterface)
   private
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
@@ -55,18 +55,10 @@ type
     //: @seealso(IHMIInterface.CanBeAccessed)
     procedure CanBeAccessed(a:Boolean); virtual;
 
-    //: @seealso(IHMITagInterface.NotifyReadOk)
-    procedure NotifyReadOk; virtual;
-    //: @seealso(IHMITagInterface.NotifyReadFault)
-    procedure NotifyReadFault; virtual;
-    //: @seealso(IHMITagInterface.NotifyWriteOk)
-    procedure NotifyWriteOk; virtual;
-    //: @seealso(IHMITagInterface.NotifyWriteFault)
-    procedure NotifyWriteFault; virtual;
-    //: @seealso(IHMITagInterface.NotifyTagChange)
-    procedure NotifyTagChange(Sender:TObject); virtual;
-    //: @seealso(IHMITagInterface.RemoveTag)
-    procedure RemoveTag(Sender:TObject); virtual;
+
+    procedure WriteFaultCallBack(Sender:TObject); virtual;
+    procedure TagChangeCallBack(Sender:TObject); virtual;
+    procedure RemoveTagCallBack(Sender:TObject); virtual;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -200,13 +192,15 @@ begin
   //se ja estou associado a um tag, remove
   //if the control is linked with some tag, removes the link.
   if FTag<>nil then begin
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   //link the control with the new tag.
   if t<>nil then begin
-    t.AddCallBacks(Self as IHMITagInterface);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
     RefreshCombo(0);
   end;
@@ -224,33 +218,18 @@ begin
   SetEnabled(FIsEnabled);
 end;
 
-procedure THMIComboBox.NotifyReadOk;
+procedure THMIComboBox.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIComboBox.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIComboBox.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIComboBox.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIComboBox.NotifyTagChange(Sender: TObject);
+procedure THMIComboBox.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
      Application.QueueAsyncCall(@RefreshCombo,0);
 end;
 
-procedure THMIComboBox.RemoveTag(Sender: TObject);
+procedure THMIComboBox.RemoveTagCallBack(Sender: TObject);
 begin
   if Ftag=Sender then
     FTag:=nil;
@@ -337,7 +316,7 @@ begin
     if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then
       Items.Objects[obj].Free;
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;

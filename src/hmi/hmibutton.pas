@@ -18,7 +18,7 @@ type
   {$ELSE}
   //: Must be implemented.
   {$ENDIF}
-  THMIButton = class(TSpeedButton, IHMIInterface, IHMITagInterface)
+  THMIButton = class(TSpeedButton, IHMIInterface)
   private
     FTag:TPLCTag;
     FIsEnabled,
@@ -38,13 +38,9 @@ type
     function GetTagValue:Double;
     procedure SetValue(value:Double);
 
-    //IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: Evita o processamento da mensagem no botão.
     procedure CMButtonPressed(var Message: TMessage); message CM_BUTTONPRESSED;
@@ -242,7 +238,7 @@ end;
 destructor THMIButton.Destroy;
 begin
    if FTag<>nil then
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
+      FTag.RemoveAllHandlersFromObject(Self);
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
@@ -341,14 +337,15 @@ begin
 
   //se ja estou associado a um tag, remove
   if FTag<>nil then begin
-     FTag.RemoveCallBacks(Self as IHMITagInterface);
+     FTag.RemoveAllHandlersFromObject(Self);
   end;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
-     t.AddCallBacks(Self as IHMITagInterface);
+     t.AddRemoveTagHandler(@RemoveTagCallBack);
+
      FTag := t;
-     NotifyTagChange(self);
+     TagChangeCallBack(self);
   end;
   FTag := t;
 end;
@@ -431,7 +428,7 @@ end;
 procedure THMIButton.SetOtherValues(v: TOtherValues);
 begin
    FOtherValues:=V;
-   NotifyTagChange(self);
+   TagChangeCallBack(self);
 end;
 
 procedure THMIButton.SetButtonType(v:TButtonType);
@@ -514,36 +511,21 @@ end;
 procedure THMIButton.SetValueDown(v:Double);
 begin
    FValueDown:=v;
-   NotifyTagChange(self);
+   TagChangeCallBack(self);
 end;
 
 procedure THMIButton.SetValueUp(v:Double);
 begin
    FValueUp:=v;
-   NotifyTagChange(self);
+   TagChangeCallBack(self);
 end;
 
-procedure THMIButton.NotifyReadOk;
+procedure THMIButton.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Self);
 end;
 
-procedure THMIButton.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIButton.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIButton.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIButton.NotifyTagChange(Sender:TObject);
+procedure THMIButton.TagChangeCallBack(Sender: TObject);
 var
    value:Double;
 begin
@@ -565,7 +547,7 @@ begin
    end;
 end;
 
-procedure THMIButton.RemoveTag(Sender:TObject);
+procedure THMIButton.RemoveTagCallBack(Sender: TObject);
 begin
    FTag := nil;
 end;

@@ -33,7 +33,7 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  THMIScrollBar = class(TScrollBar, IHMIInterface, IHMITagInterface)
+  THMIScrollBar = class(TScrollBar, IHMIInterface)
   private
     FTag:TPLCTag;
     FIsEnabled,
@@ -60,13 +60,9 @@ type
 
     procedure WriteValue(Value:LongInt);
 
-    //implements the IHMITagInterface
-    procedure NotifyReadOk;
-    procedure NotifyReadFault;
-    procedure NotifyWriteOk;
-    procedure NotifyWriteFault;
-    procedure NotifyTagChange(Sender:TObject);
-    procedure RemoveTag(Sender:TObject);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: @exclude
      procedure SetEnabled(e:Boolean); override;
@@ -140,7 +136,7 @@ destructor THMIScrollBar.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
-    FTag.RemoveCallBacks(Self as IHMITagInterface);
+    FTag.RemoveAllHandlersFromObject(Self);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -182,13 +178,15 @@ begin
    //se ja estou associado a um tag, remove
    //removes the old link.
    if FTag<>nil then begin
-      FTag.RemoveCallBacks(Self as IHMITagInterface);
+      FTag.RemoveAllHandlersFromObject(Self);
    end;
 
    //adiona o callback para o novo tag
    //link with the new tag.
    if t<>nil then begin
-      t.AddCallBacks(Self as IHMITagInterface);
+      t.AddWriteFaultHandler(@WriteFaultCallBack);
+      t.AddTagChangeHandler(@TagChangeCallBack);
+      t.AddRemoveTagHandler(@RemoveTagCallBack);
       FTag := t;
       RefreshScrollBar(0);
    end;
@@ -272,33 +270,18 @@ begin
       (FTag as ITagNumeric).Value:=Value;
 end;
 
-procedure THMIScrollBar.NotifyReadOk;
+procedure THMIScrollBar.WriteFaultCallBack(Sender: TObject);
 begin
-
+  TagChangeCallBack(Sender);
 end;
 
-procedure THMIScrollBar.NotifyReadFault;
-begin
-
-end;
-
-procedure THMIScrollBar.NotifyWriteOk;
-begin
-
-end;
-
-procedure THMIScrollBar.NotifyWriteFault;
-begin
-  NotifyTagChange(Self);
-end;
-
-procedure THMIScrollBar.NotifyTagChange(Sender:TObject);
+procedure THMIScrollBar.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     application.QueueAsyncCall(@RefreshScrollBar,0);
 end;
 
-procedure THMIScrollBar.RemoveTag(Sender:TObject);
+procedure THMIScrollBar.RemoveTagCallBack(Sender: TObject);
 begin
   if FTag=Sender then
     FTag := nil;
