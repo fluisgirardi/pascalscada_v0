@@ -17,7 +17,7 @@
       </Parsing>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="46">
+    <Files Count="47">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -204,6 +204,10 @@
         <Filename Value="src/hmi/hmi_draw_flow_valve.pas"/>
         <UnitName Value="hmi_draw_flow_valve"/>
       </Item46>
+      <Item47>
+        <Filename Value="src/hmi/hmi_draw_flow_pump.pas"/>
+        <UnitName Value="hmi_draw_flow_pump"/>
+      </Item47>
     </Files>
     <RequiredPkgs Count="6">
       <Item1>

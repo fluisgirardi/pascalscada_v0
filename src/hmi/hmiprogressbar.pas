@@ -45,26 +45,10 @@ type
     FMin: Double;
     FOrientation: TProgressBarOrientation;
     FTag:TPLCTag;
-    FIsEnabled,
-    FIsEnabledBySecurity:Boolean;
 
-    FSecurityCode:UTF8String;
     procedure SetMax(AValue: Double);
     procedure SetMin(AValue: Double);
     procedure SetOrientation(AValue: TProgressBarOrientation);
-    procedure SetSecurityCode(sc:UTF8String);
-
-    //: @seealso(IHMIInterface.SetHMITag)
-    procedure SetHMITag(t:TPLCTag);                    //seta um tag
-    //: @seealso(IHMIInterface.GetHMITag)
-    function  GetHMITag:TPLCTag;
-
-    //: @seealso(IHMIInterface.GetControlSecurityCode)
-     function GetControlSecurityCode:UTF8String;
-    //: @seealso(IHMIInterface.CanBeAccessed)
-    procedure CanBeAccessed(a:Boolean);
-    //: @seealso(IHMIInterface.MakeUnsecure)
-    procedure MakeUnsecure;
 
     function  GetPosition:Double;
 
@@ -74,7 +58,8 @@ type
   protected
     function Progress:Double;
     //: @exclude
-    procedure SetEnabled(e:Boolean); override;
+    function GetHMITag: TPLCTag; override;
+    procedure SetHMITag(t: TPLCTag); override;
     //: @exclude
     procedure Loaded; override;
     procedure UpdateShape; override;
@@ -109,7 +94,7 @@ type
     {$ELSE}
     //: Security code that allows access to control.
     {$ENDIF}
-    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
+    property SecurityCode;
     property Min: Double read FMin write SetMin;
     property Max: Double read FMax write SetMax;
     property Orientation: TProgressBarOrientation read FOrientation write SetOrientation default pbHorizontal;
@@ -129,7 +114,6 @@ begin
   inherited Create(AOwner);
   FIsEnabled:=true;
   FBodyColor:=clGreen;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIProgressBar.Destroy;
@@ -226,45 +210,6 @@ begin
 
     end;
   end;
-end;
-
-function THMIProgressBar.GetControlSecurityCode:UTF8String;
-begin
-   Result:=FSecurityCode;
-end;
-
-procedure THMIProgressBar.CanBeAccessed(a:Boolean);
-begin
-  FIsEnabledBySecurity := a;
-  SetEnabled(FIsEnabled);
-end;
-
-procedure THMIProgressBar.MakeUnsecure;
-begin
-  FSecurityCode:='';
-  CanBeAccessed(true);
-end;
-
-procedure THMIProgressBar.SetEnabled(e:Boolean);
-begin
-  FIsEnabled:=e;
-  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
-end;
-
-procedure THMIProgressBar.SetSecurityCode(sc: UTF8String);
-begin
-  if Trim(sc)='' then
-    Self.CanBeAccessed(true)
-  else
-    with GetControlSecurityManager do begin
-      ValidateSecurityCode(sc);
-      if not SecurityCodeExists(sc) then
-        RegisterSecurityCode(sc);
-
-      Self.CanBeAccessed(CanAccess(sc));
-    end;
-
-  FSecurityCode:=sc;
 end;
 
 procedure THMIProgressBar.SetMin(AValue: Double);

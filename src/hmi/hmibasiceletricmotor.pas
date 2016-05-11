@@ -8,15 +8,18 @@ uses
 
 type
 
-  { THMIBasicEletricMotor }
+  { THMICustomBasicEletricMotor }
 
-  THMIBasicEletricMotor = class(THMIBasicControl)
+  THMICustomBasicEletricMotor = class(THMIBasicControl)
   private
     FMirrored: Boolean;
     procedure SetMirrored(AValue: Boolean);
   protected
     procedure DrawControl; override;
+    property Mirrored: Boolean Read FMirrored Write SetMirrored Default false;
+  end;
 
+  THMIBasicEletricMotor = class(THMICustomBasicEletricMotor)
   published
     property Action;
     property OnClick;
@@ -29,7 +32,7 @@ type
     property BorderColor;
     property BorderWidth;
     property BodyColor;
-    property Mirrored: Boolean Read FMirrored Write SetMirrored Default false;
+    property Mirrored;
   end;
 
 
@@ -38,14 +41,14 @@ implementation
 
 { THMIBasicEletricMotor }
 
-procedure THMIBasicEletricMotor.SetMirrored(AValue: Boolean);
+procedure THMICustomBasicEletricMotor.SetMirrored(AValue: Boolean);
 begin
   if FMirrored=AValue then Exit;
   FMirrored:=AValue;
   invalidateShape;
 end;
 
-procedure THMIBasicEletricMotor.DrawControl;
+procedure THMICustomBasicEletricMotor.DrawControl;
 begin
   inherited DrawControl;
 

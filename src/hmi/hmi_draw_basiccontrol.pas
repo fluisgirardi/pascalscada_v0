@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, sysutils, Controls, Graphics, BGRABitmap, BGRABitmapTypes, LCLIntf,
-  LMessages, LCLProc;
+  LMessages, LCLProc, ControlSecurityManager, HMITypes, PLCTag;
 
 type
 
@@ -14,7 +14,33 @@ type
 
   { THMIBasicControl }
 
-  THMIBasicControl = class(TCustomControl)
+  THMIBasicControl = class(TCustomControl, IHMIInterface)
+  protected
+    FSecurityCode:UTF8String;
+    FIsEnabled,
+    FIsEnabledBySecurity:Boolean;
+    //: @seealso(IHMIInterface.SetHMITag)
+    procedure SetHMITag(t:TPLCTag); virtual;                    //seta um tag
+    //: @seealso(IHMIInterface.GetHMITag)
+    function  GetHMITag:TPLCTag; virtual;
+
+    //: @seealso(IHMIInterface.GetControlSecurityCode)
+     function GetControlSecurityCode:UTF8String;
+    //: @seealso(IHMIInterface.CanBeAccessed)
+    procedure CanBeAccessed(a:Boolean);
+    //: @seealso(IHMIInterface.MakeUnsecure)
+    procedure MakeUnsecure;
+
+    //: @exclude
+    procedure SetEnabled(e:Boolean); override;
+    procedure SetSecurityCode(sc: UTF8String);
+
+    {$IFDEF PORTUGUES}
+    //: Codigo de segurança que libera acesso ao controle
+    {$ELSE}
+    //: Security code that allows access to control.
+    {$ENDIF}
+    property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
   protected
     FBorderColor:TColor;
     FBodyColor: TColor;
@@ -112,6 +138,55 @@ begin
 
   if ComponentState*[csReading, csLoading]=[] then
     InvalidateDraw;
+end;
+
+procedure THMIBasicControl.SetSecurityCode(sc: UTF8String);
+begin
+  if Trim(sc)='' then
+    Self.CanBeAccessed(true)
+  else
+    with GetControlSecurityManager do begin
+      ValidateSecurityCode(sc);
+      if not SecurityCodeExists(sc) then
+        RegisterSecurityCode(sc);
+
+      Self.CanBeAccessed(CanAccess(sc));
+    end;
+
+  FSecurityCode:=sc;
+end;
+
+procedure THMIBasicControl.SetHMITag(t: TPLCTag);
+begin
+
+end;
+
+function THMIBasicControl.GetHMITag: TPLCTag;
+begin
+  Result:=nil;
+end;
+
+function THMIBasicControl.GetControlSecurityCode: UTF8String;
+begin
+  Result:=FSecurityCode;
+end;
+
+procedure THMIBasicControl.CanBeAccessed(a: Boolean);
+begin
+  FIsEnabledBySecurity :=a;
+  SetEnabled(FIsEnabled);
+end;
+
+procedure THMIBasicControl.MakeUnsecure;
+begin
+  FSecurityCode:='';
+  CanBeAccessed(true);
+end;
+
+procedure THMIBasicControl.SetEnabled(e: Boolean);
+begin
+  FIsEnabled:=e;
+  inherited SetEnabled(FIsEnabled and FIsEnabledBySecurity);
 end;
 
 function THMIBasicControl.Cateto(p0,p1:Integer):Integer;
@@ -389,12 +464,15 @@ begin
   FBorderColor:=clBlack;
   FBorderWidth:=1;
   FControlArea:=TBGRABitmap.Create;
+  FIsEnabled:=true;
   if [csLoading, csReading]*ComponentState<>[] then
     BeginUpdate;
+  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIBasicControl.Destroy;
 begin
+  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   FreeAndNil(FControlArea);
   inherited Destroy;
 end;

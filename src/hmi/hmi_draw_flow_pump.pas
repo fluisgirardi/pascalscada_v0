@@ -1,15 +1,15 @@
-unit hmi_draw_flow_valve;
+unit hmi_draw_flow_pump;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, hmi_flow_zones, HMI_Draw_Valves, hmi_polyline, HMIZones,
+  Classes, SysUtils, hmi_flow_zones, HMIBasicEletricMotor, hmi_polyline, HMIZones,
   PLCTag, Tag, ExtCtrls;
 
 type
-  THMICustomFlowValve = class(THMICustomBasicValve, IColorChangeNotification)
+  THMICustomFlowPump = class(THMICustomBasicEletricMotor, IColorChangeNotification)
   protected
     procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
     procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
@@ -18,21 +18,21 @@ type
   protected
     FInputPolyline: THMIFlowPolyline;
     FOutputPolyline: THMIFlowPolyline;
-    FValveStates: THMIFlowZones;
+    FPumpStates: THMIFlowZones;
     FCurrentZone,
     FOwnerZone: THMIFlowZone;
     FZoneTimer:TTimer;
     procedure SetInputPolyline(AValue: THMIFlowPolyline);
     procedure SetOutputPolyline(AValue: THMIFlowPolyline);
-    procedure SetValveStates(AValue: THMIFlowZones);
+    procedure SetPumpStates(AValue: THMIFlowZones);
     procedure ShowZone(aZone:THMIFlowZone);
     procedure UpdateValve; virtual;
     procedure UpdateFlow; virtual;
     property InputPolyline:THMIFlowPolyline read FInputPolyline write SetInputPolyline;
     property OutputPolyline:THMIFlowPolyline read FOutputPolyline write SetOutputPolyline;
-    property ValveStates:THMIFlowZones read FValveStates write SetValveStates;
-    procedure ValveStateChanged(Sender: TObject);
-    procedure ValveStateNeedsComponentState(var CurState: TComponentState);
+    property PumpStates:THMIFlowZones read FPumpStates write SetPumpStates;
+    procedure PumpStateChanged(Sender: TObject);
+    procedure PumpStateNeedsComponentState(var CurState: TComponentState);
     procedure NextZone(Sender: TObject);
     procedure Loaded; override;
   public
@@ -40,7 +40,7 @@ type
     destructor Destroy; override;
   end;
 
-  THMICustomLinkedFlowValve = class(THMICustomFlowValve)
+  THMICustomLinkedFlowPump = class(THMICustomFlowPump)
   private
     FPLCTag: TPLCTag;
     procedure SetHMITag(AValue: TPLCTag);
@@ -55,21 +55,25 @@ type
     destructor Destroy; override;
   end;
 
-  THMILinkedFlowValve = class(THMICustomLinkedFlowValve)
+  THMILinkedFlowPump = class(THMICustomLinkedFlowPump)
   published
     property InputPolyline;
     property OutputPolyline;
     property PLCTag;
-    property ValveStates;
+    property PumpStates;
 
-    property Mirrored;
-    property ValveBodyPercent;
-    property ValveType;
+    property Action;
+    property OnClick;
+    property OnMouseDown;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property PopupMenu;
+    property Enabled;
 
     property SecurityCode;
 
-    property OnClick;
-    property Action;
+    property BorderWidth;
+    property Mirrored;
   end;
 
 implementation
@@ -78,7 +82,7 @@ uses Forms, ProtocolTypes, hsstrings, math;
 
 { THMICustomLinkedFlowValve }
 
-procedure THMICustomLinkedFlowValve.SetHMITag(AValue: TPLCTag);
+procedure THMICustomLinkedFlowPump.SetHMITag(AValue: TPLCTag);
 begin
   //se o tag esta entre um dos aceitos.
   //
@@ -104,28 +108,28 @@ begin
   FPLCTag := AValue;
 end;
 
-procedure THMICustomLinkedFlowValve.WriteFaultCallBack(Sender: TObject);
+procedure THMICustomLinkedFlowPump.WriteFaultCallBack(Sender: TObject);
 begin
   UpdateValve;
 end;
 
-procedure THMICustomLinkedFlowValve.TagChangeCallBack(Sender: TObject);
+procedure THMICustomLinkedFlowPump.TagChangeCallBack(Sender: TObject);
 begin
   UpdateValve;
 end;
 
-procedure THMICustomLinkedFlowValve.RemoveTagCallBack(Sender: TObject);
+procedure THMICustomLinkedFlowPump.RemoveTagCallBack(Sender: TObject);
 begin
   if FPLCTag=Sender then
     FPLCTag:=nil;
 end;
 
-procedure THMICustomLinkedFlowValve.UpdateValve;
+procedure THMICustomLinkedFlowPump.UpdateValve;
 begin
   Application.QueueAsyncCall(@UpdateValveDelayed,0);
 end;
 
-procedure THMICustomLinkedFlowValve.UpdateValveDelayed(Data: PtrInt);
+procedure THMICustomLinkedFlowPump.UpdateValveDelayed(Data: PtrInt);
 var
   zone: THMIFlowZone;
   value:Double = Infinity;
@@ -133,7 +137,7 @@ begin
   if Assigned(FPLCTag) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 
-  zone:=THMIFlowZone(FValveStates.GetZoneFromValue(value));
+  zone:=THMIFlowZone(FPumpStates.GetZoneFromValue(value));
   if FOwnerZone<>zone then begin
     FOwnerZone:=zone;
     ShowZone(FOwnerZone);
@@ -144,7 +148,7 @@ begin
   end;
 end;
 
-destructor THMICustomLinkedFlowValve.Destroy;
+destructor THMICustomLinkedFlowPump.Destroy;
 begin
   if Assigned(FPLCTag) then
     FPLCTag.RemoveAllHandlersFromObject(Self);
@@ -154,12 +158,12 @@ end;
 
 { THMICustomFlowValve }
 
-procedure THMICustomFlowValve.SetValveStates(AValue: THMIFlowZones);
+procedure THMICustomFlowPump.SetPumpStates(AValue: THMIFlowZones);
 begin
-  FValveStates.Assign(AValue);
+  FPumpStates.Assign(AValue);
 end;
 
-procedure THMICustomFlowValve.ShowZone(aZone: THMIFlowZone);
+procedure THMICustomFlowPump.ShowZone(aZone: THMIFlowZone);
 begin
   FCurrentZone:=aZone;
   if aZone<>nil then begin
@@ -169,12 +173,12 @@ begin
   end;
 end;
 
-procedure THMICustomFlowValve.UpdateValve;
+procedure THMICustomFlowPump.UpdateValve;
 begin
   //does nothing
 end;
 
-procedure THMICustomFlowValve.UpdateFlow;
+procedure THMICustomFlowPump.UpdateFlow;
 begin
   if assigned(FCurrentZone) and Assigned(FInputPolyline) and assigned(FOutputPolyline) then begin
     if FCurrentZone.Flow then
@@ -184,31 +188,31 @@ begin
   end;
 end;
 
-procedure THMICustomFlowValve.AddNotifyCallback(
+procedure THMICustomFlowPump.AddNotifyCallback(
   WhoNotify: IColorChangeNotification);
 begin
 
 end;
 
-procedure THMICustomFlowValve.RemoveNotifyCallback(
+procedure THMICustomFlowPump.RemoveNotifyCallback(
   WhoRemove: IColorChangeNotification);
 begin
 
 end;
 
-procedure THMICustomFlowValve.NotifyFree(const WhoWasDestroyed: THMIFlowPolyline
+procedure THMICustomFlowPump.NotifyFree(const WhoWasDestroyed: THMIFlowPolyline
   );
 begin
   if WhoWasDestroyed=FInputPolyline then FInputPolyline:=nil;
   if WhoWasDestroyed=FOutputPolyline then FOutputPolyline:=nil;
 end;
 
-procedure THMICustomFlowValve.NotifyChange(const WhoChanged: THMIFlowPolyline);
+procedure THMICustomFlowPump.NotifyChange(const WhoChanged: THMIFlowPolyline);
 begin
   UpdateFlow;
 end;
 
-procedure THMICustomFlowValve.SetInputPolyline(AValue: THMIFlowPolyline);
+procedure THMICustomFlowPump.SetInputPolyline(AValue: THMIFlowPolyline);
 begin
   if FInputPolyline=AValue then
     Exit;
@@ -226,56 +230,56 @@ begin
   UpdateFlow;
 end;
 
-procedure THMICustomFlowValve.SetOutputPolyline(AValue: THMIFlowPolyline);
+procedure THMICustomFlowPump.SetOutputPolyline(AValue: THMIFlowPolyline);
 begin
   if FOutputPolyline=AValue then exit;
   FOutputPolyline:=AValue;
   UpdateFlow;
 end;
 
-constructor THMICustomFlowValve.Create(AOwner: TComponent);
+constructor THMICustomFlowPump.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FValveStates:=THMIFlowZones.Create(Self);
-  FValveStates.OnCollectionItemChange:=@ValveStateChanged;
-  FValveStates.OnNeedCompState:=@ValveStateNeedsComponentState;
+  FPumpStates:=THMIFlowZones.Create(Self);
+  FPumpStates.OnCollectionItemChange:=@PumpStateChanged;
+  FPumpStates.OnNeedCompState:=@PumpStateNeedsComponentState;
 
   FZoneTimer:=TTimer.Create(self);
   FZoneTimer.Enabled:=false;
   FZoneTimer.OnTimer:=@NextZone;
 end;
 
-destructor THMICustomFlowValve.Destroy;
+destructor THMICustomFlowPump.Destroy;
 begin
   FreeAndNil(FZoneTimer);
-  FreeAndNil(FValveStates);
+  FreeAndNil(FPumpStates);
   inherited Destroy;
 end;
 
-procedure THMICustomFlowValve.NextZone(Sender: TObject);
+procedure THMICustomFlowPump.NextZone(Sender: TObject);
 begin
   if FCurrentZone.BlinkWith<0 then
     FZoneTimer.Enabled:=false
   else begin
-    if FZoneTimer.Interval<>THMIFlowZone(FValveStates.Items[FCurrentZone.BlinkWith]).BlinkTime then
-      FZoneTimer.Interval := THMIFlowZone(FValveStates.Items[FCurrentZone.BlinkWith]).BlinkTime;
-    ShowZone(THMIFlowZone(FValveStates.Items[FCurrentZone.BlinkWith]));
+    if FZoneTimer.Interval<>THMIFlowZone(FPumpStates.Items[FCurrentZone.BlinkWith]).BlinkTime then
+      FZoneTimer.Interval := THMIFlowZone(FPumpStates.Items[FCurrentZone.BlinkWith]).BlinkTime;
+    ShowZone(THMIFlowZone(FPumpStates.Items[FCurrentZone.BlinkWith]));
     if not FZoneTimer.Enabled then FZoneTimer.Enabled:=true;
   end;
 end;
 
-procedure THMICustomFlowValve.Loaded;
+procedure THMICustomFlowPump.Loaded;
 begin
   inherited Loaded;
-  FValveStates.Loaded;
+  FPumpStates.Loaded;
 end;
 
-procedure THMICustomFlowValve.ValveStateChanged(Sender: TObject);
+procedure THMICustomFlowPump.PumpStateChanged(Sender: TObject);
 begin
   UpdateValve;
 end;
 
-procedure THMICustomFlowValve.ValveStateNeedsComponentState(
+procedure THMICustomFlowPump.PumpStateNeedsComponentState(
   var CurState: TComponentState);
 begin
   CurState:=ComponentState;
