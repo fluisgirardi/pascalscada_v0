@@ -169,6 +169,7 @@ type
     PRegistersMaxHole:Cardinal;
     PInternalDelayBetweenCmds:Cardinal;
     PModbusPLC:array of TModBusPLC;
+    function  AllowBroadCast:Boolean; virtual;
     function  GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:LongInt):Boolean;
     procedure SetOutputMaxHole(v:Cardinal);
     procedure SetInputMaxHole(v:Cardinal);
@@ -332,6 +333,10 @@ begin
   SetLength(PModbusPLC,0);
 end;
 
+function TModBusDriver.AllowBroadCast: Boolean;
+begin
+  Result:=false;
+end;
 
 function TModBusDriver.GetTagProperts(TagObj:TTag; var Station, Address, Size, RegType, ScanTime:LongInt):Boolean;
 var
@@ -690,43 +695,56 @@ begin
     pkg := EncodePkg(tagrec,values,rl);
     if PCommPort<>nil then begin
       PCommPort.Lock(DriverID);
-      res := PCommPort.IOCommandSync(iocWriteRead,Length(pkg),pkg,PFirstRequestLen,DriverID,PInternalDelayBetweenCmds,@IOResult1);
+      try
+        if AllowBroadCast and (tagrec.Station=0) then begin
+          res := PCommPort.IOCommandSync(iocWrite,Length(pkg),pkg,0,DriverID,0,@IOResult1);
+          case IOResult1.WriteIOResult of
+            iorOK:        Result:=ioOk;
+            iorTimeOut:   Result:=ioTimeOut;
+            iorNotReady:  Result:=ioDriverError;
+            iorNone:      Result:=ioNone;
+            iorPortError: Result:=ioDriverError;
+          end;
+          Exit;
+        end else
+          res := PCommPort.IOCommandSync(iocWriteRead,Length(pkg),pkg,PFirstRequestLen,DriverID,PInternalDelayBetweenCmds,@IOResult1);
 
-      //se o resultado de leitura deu ok, le o resto do pacote.
-      //if the IO result is OK, reads the remaing packet...
-      if (res<>0) and (IOResult1.ReadIOResult=iorOK) then begin
+        //se o resultado de leitura deu ok, le o resto do pacote.
+        //if the IO result is OK, reads the remaing packet...
+        if (res<>0) and (IOResult1.ReadIOResult=iorOK) then begin
 
-        //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
-        //calculates the remaining package length at the communication buffer.
-        FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
+          //retorna o numero de bytes que está aguardando ser lido no buffer da porta de comunicação.
+          //calculates the remaining package length at the communication buffer.
+          FRemainingBytes:=RemainingBytes(IOResult1.BufferToRead);
 
-        //clear the remaining buffer...
-        if (IOResult1.BufferToRead[PFuncByteOffset-1]<>pkg[PFuncByteOffset-1]) or
-           ((IOResult1.BufferToRead[PFuncByteOffset]<>pkg[PFuncByteOffset]) and
-            (not (IOResult1.BufferToRead[PFuncByteOffset] in [$81..$88])))then begin
-           repeat
-             res := PCommPort.IOCommandSync(iocRead,0,nil,1,DriverID,0,@IOResult2);
-           until IOResult2.ReadIOResult=iorTimeOut;
-           Result:=ioCommError;
-           exit;
-        end;
+          //clear the remaining buffer...
+          if (IOResult1.BufferToRead[PFuncByteOffset-1]<>pkg[PFuncByteOffset-1]) or
+             ((IOResult1.BufferToRead[PFuncByteOffset]<>pkg[PFuncByteOffset]) and
+              (not (IOResult1.BufferToRead[PFuncByteOffset] in [$81..$88])))then begin
+             repeat
+               res := PCommPort.IOCommandSync(iocRead,0,nil,1,DriverID,0,@IOResult2);
+             until IOResult2.ReadIOResult=iorTimeOut;
+             Result:=ioCommError;
+             exit;
+          end;
 
-        if FRemainingBytes>0 then begin
-          res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2);
+          if FRemainingBytes>0 then begin
+            res := PCommPort.IOCommandSync(iocRead,0,nil,FRemainingBytes,DriverID,0,@IOResult2);
 
-          if res<>0 then begin
-            IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
-            IOResult1.Received:=IOResult1.Received + IOResult2.Received;
-            if IOResult2.ReadIOResult<>iorOK then
-              IOResult1.ReadIOResult:=IOResult2.ReadIOResult;
-          end else
-            Result:=ioDriverError;
-        end;
-        Result := DecodePkg(IOResult1,tempValues);
-      end else
-        Result:=ioEmptyPacket;
-
-      PCommPort.Unlock(DriverID);
+            if res<>0 then begin
+              IOResult1.BufferToRead:=ConcatenateBYTES(IOResult1.BufferToRead, IOResult2.BufferToRead);
+              IOResult1.Received:=IOResult1.Received + IOResult2.Received;
+              if IOResult2.ReadIOResult<>iorOK then
+                IOResult1.ReadIOResult:=IOResult2.ReadIOResult;
+            end else
+              Result:=ioDriverError;
+          end;
+          Result := DecodePkg(IOResult1,tempValues);
+        end else
+          Result:=ioEmptyPacket;
+      finally
+        PCommPort.Unlock(DriverID);
+      end;
     end else
       Result := ioNullDriver;
   finally

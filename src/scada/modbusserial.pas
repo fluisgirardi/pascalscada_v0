@@ -45,6 +45,7 @@ type
 
   TModBusRTUDriver = class(TModBusDriver)
   protected
+    function AllowBroadCast: Boolean; override;
     //:  @seealso(TModBusDriver.EncodePkg)
     function  EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:LongInt):BYTES; override;
     //:  @seealso(TModBusDriver.DecodePkg)
@@ -74,6 +75,11 @@ begin
   PFirstRequestLen:=3;
   PFuncByteOffset:=1;
   PCRCLen:=2;
+end;
+
+function TModBusRTUDriver.AllowBroadCast: Boolean;
+begin
+  Result:=true;
 end;
 
 function  TModBusRTUDriver.EncodePkg(TagObj:TTagRec; ToWrite:TArrayOfDouble; var ResultLen:LongInt):BYTES;
