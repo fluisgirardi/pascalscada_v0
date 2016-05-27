@@ -212,19 +212,23 @@
     <RequiredPkgs Count="6">
       <Item1>
         <PackageName Value="bgracontrols"/>
+        <MinVersion Major="3" Minor="7" Valid="True"/>
+        <DefaultFilename Value="bgracontrols/bgracontrols.lpk" Prefer="True"/>
       </Item1>
       <Item2>
-        <PackageName Value="BGRABitmapPack"/>
-      </Item2>
-      <Item3>
         <PackageName Value="pascalscada"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
-      </Item3>
-      <Item4>
+      </Item2>
+      <Item3>
         <PackageName Value="pascalscada_common"/>
         <MinVersion Minor="7" Release="3" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="BGRABitmapPack"/>
+        <MinVersion Major="8" Minor="8" Release="4" Valid="True"/>
+        <DefaultFilename Value="bgrabitmap/bgrabitmappack.lpk" Prefer="True"/>
       </Item4>
       <Item5>
         <PackageName Value="IDEIntf"/>
