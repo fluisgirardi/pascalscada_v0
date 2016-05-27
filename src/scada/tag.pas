@@ -950,13 +950,6 @@ begin
   PUpdateTime:=1000;
   PFirstUpdate:=true;
 
-  FReadOKNotificationList     := TTagNotificationList.Create;
-  FReadFaultNotificationList  := TTagNotificationList.Create;
-  FWriteOKNotificationList    := TTagNotificationList.Create;
-  FWriteFaultNotificationList := TTagNotificationList.Create;
-  FChangeNotificationList     := TTagNotificationList.Create;
-  FTagRemovalNotificationList := TTagNotificationList.Create;
-
   if ComponentState*[csReading, csLoading]=[] then begin
     CreateGUID(x);
     PGUID:=GUIDToString(x);
