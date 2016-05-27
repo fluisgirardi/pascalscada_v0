@@ -29,13 +29,15 @@ type
   THMIFocusChangeEvent = procedure(FocusedControl:TControl;
                                    var KeyboarTypeForControl:TOnScreenKeyboard;
                                    var NumericKBOptions:TNumericScreenKeyboardOptions;
-                                   var AlphaNumKBOptions:TAlphaNumericScreenKeyBoardOptions) of object;
+                                   var AlphaNumKBOptions:TAlphaNumericScreenKeyBoardOptions;
+                                   var ShowKeyboardNow:Boolean) of object;
 
   { THMIKeyboardManager }
 
   THMIKeyboardManager = class(TComponent)
   private
-    FShowKeyboardOnEnter: Boolean;
+    FShowKeyboardOnEnter,
+    FShowKeyBoardNow: Boolean;
     function SameMethod(AMethod1, AMethod2: TNotifyEvent): boolean;
   protected
     FOldOnEnterEvent,
@@ -175,7 +177,8 @@ begin
         OnFocusChange(fLastControl,
                       FKeyboarTypeForControl,
                       FNumericKBOptions,
-                      FAlphaNumKBOptions);
+                      FAlphaNumKBOptions,
+                      FShowKeyBoardNow);
         {$IFDEF DEBUG}DebugLn('OnFocusChange fired');{$ENDIF}
       end else begin
         {$IFDEF DEBUG}DebugLn('FOnFocusChange event is NULL');{$ENDIF}
@@ -276,7 +279,8 @@ end;
 
 procedure THMIKeyboardManager.EnterEvent(Sender: TObject);
 begin
-  if FShowKeyboardOnEnter then begin
+  if FShowKeyboardOnEnter or FShowKeyBoardNow then begin
+    FShowKeyBoardNow:=false;
     ShowKeyboard(Sender);
 
     //if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
