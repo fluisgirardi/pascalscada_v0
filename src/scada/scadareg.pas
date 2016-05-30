@@ -33,7 +33,7 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   {$IFDEF FPC}
-    LResources, lazlclversion, PropEdits, ComponentEditors;
+    LResources, PropEdits, ComponentEditors;
   {$ELSE}
     Types, 
     {$IFDEF DELPHI2009_UP}

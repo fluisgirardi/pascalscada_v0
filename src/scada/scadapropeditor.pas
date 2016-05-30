@@ -38,7 +38,7 @@ uses
   {$IFEND}
   
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, lazlclversion;
+    PropEdits, ComponentEditors;
   {$ELSE}
     Types,
     //Delphi 6 ou superior
