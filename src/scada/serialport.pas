@@ -16,7 +16,7 @@ interface
 
 uses
 
-  {$IFDEF FPC} LCLIntf, {$ENDIF} commtypes, CommPort, SysUtils, Classes,
+  commtypes, CommPort, SysUtils, Classes,
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)} Windows,{$IFEND}
   {$IFDEF UNIX} Serial, Unix, BaseUnix, termio, {$ENDIF}
   DateUtils;

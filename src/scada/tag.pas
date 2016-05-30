@@ -1125,7 +1125,7 @@ begin
       if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then
         Application.QueueAsyncCall(@ASyncMethod,PtrInt(x));
       {$ELSE}
-      TThread.Queue(nil, ASyncMethod);
+      TThread.Queue(nil, @ASyncMethod);
       {$ENDIF}
     {$ELSE}
       PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
