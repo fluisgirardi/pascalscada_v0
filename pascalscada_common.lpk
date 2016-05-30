@@ -17,7 +17,7 @@
       </Parsing>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="9">
+    <Files Count="8">
       <Item1>
         <Filename Value="src/common/crossdatetime.pas"/>
         <UnitName Value="crossdatetime"/>
@@ -35,33 +35,26 @@
         <UnitName Value="hsutils"/>
       </Item4>
       <Item5>
-        <Filename Value="src/common/lazlclversion.pas"/>
-        <UnitName Value="lazlclversion"/>
-      </Item5>
-      <Item6>
         <Filename Value="src/common/messagespool.pas"/>
         <UnitName Value="MessageSpool"/>
-      </Item6>
-      <Item7>
+      </Item5>
+      <Item6>
         <Filename Value="src/common/pascalScadaMTPCPU.pas"/>
         <UnitName Value="pascalScadaMTPCPU"/>
-      </Item7>
-      <Item8>
+      </Item6>
+      <Item7>
         <Filename Value="src/common/pscada_common.pas"/>
         <UnitName Value="pscada_common"/>
-      </Item8>
-      <Item9>
+      </Item7>
+      <Item8>
         <Filename Value="src/common/pscommontypes.pas"/>
         <UnitName Value="pscommontypes"/>
-      </Item9>
+      </Item8>
     </Files>
-    <RequiredPkgs Count="2">
+    <RequiredPkgs Count="1">
       <Item1>
-        <PackageName Value="LCL"/>
-      </Item1>
-      <Item2>
         <PackageName Value="FCL"/>
-      </Item2>
+      </Item1>
     </RequiredPkgs>
     <UsageOptions>
       <CustomOptions Value="-dUseCThreads"/>

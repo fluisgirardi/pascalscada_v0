@@ -27,7 +27,7 @@ uses
   typinfo, HMIControlDislocatorAnimation, hmiobjectcolletion,
   ControlSecurityManager, Graphics,
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, lazlclversion, GraphPropEdits, ImgList,
+    PropEdits, ComponentEditors, GraphPropEdits, ImgList,
     hmibooleanpropertyconnector, hmicolorpropertyconnector, hmi_polyline;
   {$ELSE}
     Types,

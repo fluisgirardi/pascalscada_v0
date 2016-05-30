@@ -13,7 +13,7 @@ implementation
 
 uses hsstrings, HMIDBConnection, psbufdataset,
   {$IFDEF FPC}
-    LResources, lazlclversion, PropEdits, ComponentEditors;
+    LResources, PropEdits, ComponentEditors;
   {$ELSE}
     Types,
     {$IFDEF DELPHI2009_UP}

@@ -4,10 +4,11 @@
 
 unit pascalscada_common;
 
+{$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  crossdatetime, CrossEvent, hsstrings, hsutils, lazlclversion, MessageSpool, 
+  crossdatetime, CrossEvent, hsstrings, hsutils, MessageSpool, 
   pascalScadaMTPCPU, pscada_common, pscommontypes, LazarusPackageIntf;
 
 implementation

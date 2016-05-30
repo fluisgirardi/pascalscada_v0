@@ -38,7 +38,7 @@ uses
   {$IFEND}
 
   {$IFDEF FPC}
-    LResources, lazlclversion, PropEdits, ComponentEditors;
+    LResources, PropEdits, ComponentEditors;
   {$ELSE}
     {$IFDEF DELPHI2009_UP}
       //demais versoes do delphi
