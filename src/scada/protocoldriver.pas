@@ -24,9 +24,10 @@ interface
 
 uses
   SysUtils, Classes, CommPort, CommTypes, ProtocolTypes, protscanupdate,
-  protscan, CrossEvent, Tag, syncobjs {$IFNDEF FPC}, Windows{$ENDIF};
+  protscan, CrossEvent, Tag, syncobjs, fgl {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
+  TTagList = specialize TFPGList<TTag>;
 
   {$IFDEF PORTUGUES}
   {:
@@ -74,14 +75,11 @@ type
   {$ELSE}
 
   {$ENDIF}
-
-  { TProtocolDriver }
-
   TProtocolDriver = class(TComponent, IPortDriverEventNotification)
   private
     //Array de tags associados ao driver.
     //Array of linked tags.
-    PTags:array of TTag;
+    PTags:TTagList;
 
     //Tempo de gasto em millisegundos atualizando valores dos tags (e seus dependentes)
     //Time used in milliseconds to update the tag value and their dependents. 
@@ -745,6 +743,7 @@ begin
   inherited Create(AOwner);
   PDriverID := DriverCount;
   Inc(DriverCount);
+  PTags:=TTagList.Create;
 
   FProtocolReady:=true;
 
@@ -805,8 +804,8 @@ begin
   PScanUpdateThread.WaitFor;
   PScanUpdateThread.Destroy;
 
-  for c:=0 to High(PTags) do
-    TPLCTag(PTags[c]).RemoveDriver;
+  for c:=PTags.Count-1 downto 0 do
+    TPLCTag(PTags.Items[c]).RemoveDriver;
 
   SetCommPort(nil);
 
@@ -815,7 +814,7 @@ begin
 
   FPause.Destroy;
   
-  SetLength(PTags,0);
+  FreeAndNil(PTags);
   PCallersCS.Destroy;
   inherited Destroy;
 end;
@@ -854,39 +853,22 @@ begin
 end;
 
 procedure TProtocolDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
-var
-  c:LongInt;
 begin
-  for c:=0 to High(PTags) do
-    if PTags[c]=TagObj then
-      raise Exception.Create(STagAlreadyRegiteredWithThisDriver);
+  if PTags.IndexOf(TagObj)<>-1 then
+    raise Exception.Create(STagAlreadyRegiteredWithThisDriver);
 
-  c:=Length(Ptags);
-  SetLength(PTags,c+1);
-  PTags[c] := TagObj;
+  PTags.Add(TagObj);
 
   (TagObj as IScanableTagInterface).SetTagValidity(TagValid);
 end;
 
 procedure TProtocolDriver.DoDelTag(TagObj:TTag);
-var
-  c:LongInt;
-  h:LongInt;
-  found:boolean;
 begin
-  if Length(PTags)<=0 then exit;
+  if PTags.Count<=0 then exit;
 
-  h:=High(PTags);
-  found := false;
-  for c:=0 to h do
-    if PTags[c]=TagObj then begin
-      found := true;
-      break;
-    end;
-  if found then begin
-    (PTags[c] as IScanableTagInterface).SetTagValidity(false);
-    PTags[c] := PTags[h];
-    SetLength(PTags,h);
+  if PTags.IndexOf(TagObj)<>-1 then begin
+    (TagObj as IScanableTagInterface).SetTagValidity(false);
+    PTags.Remove(TagObj);
   end;
 end;
 
@@ -933,7 +915,7 @@ end;
 
 procedure TProtocolDriver.DoExceptionIndexOut(index:LongInt);
 begin
-  if (index>high(PTags)) then
+  if (index>=PTags.Count) then
     raise Exception.Create(SoutOfBounds);
 end;
 
@@ -941,7 +923,7 @@ function TProtocolDriver.GetTagCount: LongInt;
 begin
   //FCritical.Enter;
   try
-    Result := Length(PTags);
+    Result := PTags.Count;
   finally
     //FCritical.Leave;
   end;
@@ -978,9 +960,9 @@ begin
   Result := nil;
   //FCritical.Enter;
   try
-    for c:=0 to High(PTags) do
-      if PTags[c].Name = Nome then begin
-        Result := PTags[c];
+    for c:=0 to PTags.Count-1 do
+      if PTags.Items[c].Name = Nome then begin
+        Result := PTags.Items[c];
         break;
       end;
   finally
@@ -989,17 +971,11 @@ begin
 end;
 
 function TProtocolDriver.IsMyTag(TagObj:TTag):Boolean;
-var
-  c:LongInt;
 begin
   Result := false;
   //FCritical.Enter;
   try
-    for c:=0 to High(PTags) do
-      if TagObj=PTags[c] then begin
-        Result := true;
-        break;
-      end;
+    Result:=PTags.IndexOf(TagObj)<>-1;
   finally
     //FCritical.Leave;
   end;
@@ -1286,7 +1262,6 @@ begin
             SetLength(ScanReadRec.Values, tr.Size);
             DoGetValue(tr, ScanReadRec);
 
-            MultiValues[valueSet].Owner         :=Tag[t];
             MultiValues[valueSet].LastResult    :=ScanReadRec.LastQueryResult;
             MultiValues[valueSet].CallBack      :=tr.CallBack;
             MultiValues[valueSet].Values        :=ScanReadRec.Values;

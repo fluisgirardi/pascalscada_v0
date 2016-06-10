@@ -922,7 +922,6 @@ type
   end;
 
   TScanUpdateRec = record
-    Owner:TTag;
     CallBack:TTagCommandCallBack;
     ValueTimeStamp:TDateTime;
     LastResult:TProtocolIOResult;
