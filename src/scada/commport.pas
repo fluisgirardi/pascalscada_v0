@@ -21,12 +21,7 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs,
-  {$IFDEF FPC}
-  fptimer
-  {$ELSE}
-  Extctrls
-  {$ENDIF}
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -171,8 +166,6 @@ type
     FLastOSErrorNumber:LongInt;
     {: @exclude }
     FLastOSErrorMessage:AnsiString;
-    {: @exclude }
-    {$IFDEF FPC}FTimer:TFPTimer;{$ELSE}FTimer:TTimer;{$ENDIF}
     {: @exclude }
     FLastPkgId:Cardinal;
     {: @exclude }
@@ -1142,10 +1135,6 @@ begin
   inherited Create(AOwner);
   FOwnerThread:=GetCurrentThreadId;
   FExclusiveDevice:=false;
-  FTimer := {$IFDEF FPC}TFPTimer{$ELSE}TTimer{$ENDIF}.Create(Self);
-  FTimer.OnTimer:=@TimerStatistics;
-  FTimer.Enabled:=false;
-  FTimer.Interval:=1000;
   FLastOSErrorMessage:='';
   FLastOSErrorNumber:=0;
   FReadRetries:=3;
@@ -1176,7 +1165,6 @@ begin
   PIOCmdCS.Destroy;
   PLockCS.Destroy;
   PLockEvent.Destroy;
-  FTimer.Destroy;
   inherited Destroy;
 end;
 
@@ -1513,9 +1501,6 @@ begin
     end else begin
        InternalPortStop(x);
     end;
-    //habilita o timer de estatisticas.
-    //enables the statistical timer.
-    FTimer.Enabled := PActive;
   end;
 end;
 
