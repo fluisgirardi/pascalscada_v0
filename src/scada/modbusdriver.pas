@@ -693,7 +693,7 @@ var
 begin
   try
     pkg := EncodePkg(tagrec,values,rl);
-    if PCommPort<>nil then begin
+    if (PCommPort<>nil) and PCommPort.ReallyActive  then begin
       PCommPort.Lock(DriverID);
       try
         if AllowBroadCast and (tagrec.Station=0) then begin
@@ -776,7 +776,7 @@ begin
     end;
 
     pkg := EncodePkg(tagrec,nil,rl);
-    if PCommPort<>nil then begin
+    if (PCommPort<>nil) and PCommPort.ReallyActive then begin
       PCommPort.Lock(DriverID);
       res := PCommPort.IOCommandSync(iocWriteRead,Length(pkg),pkg,PFirstRequestLen,DriverID,PInternalDelayBetweenCmds,@IOResult1,starts,ends);
 

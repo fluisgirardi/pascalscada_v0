@@ -879,7 +879,7 @@ type
     Return true if the communication port is open really.
     }
     {$ENDIF}
-    function ReallyActive:Boolean;
+    function ReallyActive:Boolean; virtual;
   published
 
     {$IFDEF PORTUGUES}

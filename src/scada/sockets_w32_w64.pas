@@ -246,16 +246,14 @@ begin
 
   retval:=0;
   nbytes:=0;
-  {$IFDEF FPC}
   retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
-  {$ELSE}
-  retval:=ioctlsocket(FSocket,FIONREAD,nbytes);
-  {$ENDIF}
+
   if retval<>0 then begin
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
+    InterLockedExchange(FSocket,INVALID_SOCKET);
     Result:=false;
     exit;
   end;
@@ -284,6 +282,7 @@ begin
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
+    InterLockedExchange(FSocket,INVALID_SOCKET);
     Result:=false;
     exit;
   end;
@@ -301,6 +300,7 @@ begin
         DoCommPortDisconected();
       CommResult:=iorPortError;
       PActive:=false;
+      InterLockedExchange(FSocket,INVALID_SOCKET);
       Result:=false;
       exit;
     end;
@@ -310,6 +310,7 @@ begin
         DoCommPortDisconected();
       CommResult:=iorNotReady;
       PActive:=false;
+      InterLockedExchange(FSocket,INVALID_SOCKET);
       Result:=false;
       exit;
     end;
