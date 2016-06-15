@@ -9,7 +9,7 @@ unit sockets_w32_w64;
 interface
 
 uses
-  windows, {$IFDEF FPC}WinSock2, {$ELSE} WinSock, {$ENDIF}socket_types, hsstrings, sysutils, commtypes;
+  windows, {$IFDEF FPC}WinSock2, {$ELSE} WinSock, {$ENDIF}socket_types, hsstrings, commtypes;
 
   {$IFDEF PORTUGUES}
   {:
@@ -253,7 +253,12 @@ begin
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
+    {$IF defined(WINDOWS) and defined(CPU64)}
+    InterLockedExchange64(FSocket,INVALID_SOCKET);
+    {$ELSE}
     InterLockedExchange(FSocket,INVALID_SOCKET);
+    {$ENDIF}
+
     Result:=false;
     exit;
   end;
@@ -282,7 +287,11 @@ begin
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
+    {$IF defined(WINDOWS) and defined(CPU64)}
+    InterLockedExchange64(FSocket,INVALID_SOCKET);
+    {$ELSE}
     InterLockedExchange(FSocket,INVALID_SOCKET);
+    {$ENDIF}
     Result:=false;
     exit;
   end;
@@ -300,7 +309,11 @@ begin
         DoCommPortDisconected();
       CommResult:=iorPortError;
       PActive:=false;
+      {$IF defined(WINDOWS) and defined(CPU64)}
+      InterLockedExchange64(FSocket,INVALID_SOCKET);
+      {$ELSE}
       InterLockedExchange(FSocket,INVALID_SOCKET);
+      {$ENDIF}
       Result:=false;
       exit;
     end;
@@ -310,7 +323,11 @@ begin
         DoCommPortDisconected();
       CommResult:=iorNotReady;
       PActive:=false;
+      {$IF defined(WINDOWS) and defined(CPU64)}
+      InterLockedExchange64(FSocket,INVALID_SOCKET);
+      {$ELSE}
       InterLockedExchange(FSocket,INVALID_SOCKET);
+      {$ENDIF}
       Result:=false;
       exit;
     end;
