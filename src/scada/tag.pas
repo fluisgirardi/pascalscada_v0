@@ -933,9 +933,6 @@ type
 
 implementation
 
-uses hsstrings;
-
-
 constructor TTag.Create(AOwner:TComponent);
 var
   x:TGuid;

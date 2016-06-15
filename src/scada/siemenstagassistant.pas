@@ -24,9 +24,9 @@ interface
 implementation
 
 uses
-  Classes, SysUtils, isotcpdriver, ProtocolTypes, PLCTagNumber,PLCStructElement,
+  Classes, SysUtils, ProtocolTypes, PLCTagNumber,PLCStructElement,
   us7tagbuilder, PLCBlockElement, PLCNumber, TagBit, plcblock, tag, Controls,
-  PLCStruct, hsstrings, Dialogs, StrUtils, ProtocolDriver, s7family;
+  PLCStruct, Dialogs, StrUtils, ProtocolDriver, s7family;
 
 procedure OpenTagEditor(aProtocolDriver,
                         aOwnerOfNewTags: TComponent;

@@ -22,7 +22,7 @@ implementation
 
 uses
   Classes, SysUtils, westasciidriver, ProtocolTypes, PLCTagNumber,
-  uwesttagbuilder, Controls, hsstrings, Dialogs;
+  uwesttagbuilder, Controls, Dialogs;
 
 procedure OpenTagEditor(aProtocolDriver, aOwnerOfNewTags: TComponent;
   InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);

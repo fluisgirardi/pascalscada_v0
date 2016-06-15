@@ -15,7 +15,7 @@ unit tagcollection;
 interface
 
 uses
-  Classes, SysUtils, PLCTag, ProtocolTypes, Tag, pscommontypes
+  Classes, SysUtils, PLCTag, ProtocolTypes, pscommontypes
   {$IFNDEF FPC}, StdCtrls{$ENDIF};
 
 type

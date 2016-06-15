@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement, PLCStruct, Tag,
   bitmappertagassistant, blockstructtagassistant, ProtocolDriver,
-  PLCNumber, ProtocolTypes,
+  PLCNumber,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,

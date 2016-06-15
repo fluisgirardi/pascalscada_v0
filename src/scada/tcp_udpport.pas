@@ -332,8 +332,12 @@ function TTCP_UDPPort.ReallyActive: Boolean;
 var
   x:Tsocket;
 begin
-  {$IF defined(WINDOWS) and defined(CPU64)}
-  InterLockedExchange64(x, FSocket);
+  {$IF defined(WINDOWS)}
+    {$IF defined(CPU64)}
+    InterLockedExchange64(x, FSocket);
+    {$ELSE}
+    InterLockedExchange(LongInt(x), LongInt(FSocket));
+    {$ENDIF}
   {$ELSE}
   InterLockedExchange(x, FSocket);
   {$ENDIF}
@@ -418,7 +422,7 @@ end;
 
 function  TTCP_UDPPort.GetReconnectInterval:Integer;
 begin
-  InterLockedExchange(Result,FReconnectInterval);
+  InterLockedExchange({%H-}Result,FReconnectInterval);
 end;
 
 procedure TTCP_UDPPort.SetReconnectInterval(v: Integer);
@@ -551,7 +555,7 @@ begin
       {$IF defined(CPU64)}
       InterLockedExchange64(FSocket, INVALID_SOCKET);
       {$ELSE}
-      InterLockedExchange(FSocket, INVALID_SOCKET);
+      InterLockedExchange(LongInt(FSocket), LongInt(INVALID_SOCKET));
       {$ENDIF}
     {$ELSE}
     InterLockedExchange(FSocket, -1);
@@ -760,8 +764,12 @@ begin
     Ok:=true;
     PActive:=true;
     InterLockedExchange(FReconnectRetries, 0);
-    {$IF defined(WINDOWS) and defined(CPU64)}
+    {$IF defined(WINDOWS)}
+    {$IF defined(CPU64)}
     InterLockedExchange64(FSocket,ASocket);
+    {$ELSE}
+    InterLockedExchange(LongInt(FSocket),LongInt(ASocket));
+    {$ENDIF}
     {$ELSE}
     InterLockedExchange(FSocket,ASocket);
     {$ENDIF}
@@ -773,7 +781,7 @@ begin
         {$IF defined(CPU64)}
         InterLockedExchange64(FSocket, INVALID_SOCKET);
         {$ELSE}
-        InterLockedExchange(FSocket, INVALID_SOCKET);
+        InterLockedExchange(LongInt(FSocket), LongInt(INVALID_SOCKET));
         {$ENDIF}
       {$ELSE}
       InterLockedExchange(FSocket, -1);

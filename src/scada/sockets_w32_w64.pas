@@ -108,6 +108,8 @@ uses
 
 implementation
 
+uses sysutils;
+
 function setblockingmode(fd:TSocket; mode:u_long):LongInt;
 begin
   if ioctlsocket(fd, LongInt(FIONBIO), mode)=SOCKET_ERROR then
@@ -119,7 +121,7 @@ end;
 function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:LongInt):LongInt;
 var
   sel:TFDSet;
-  mode:u_long;
+  mode:LongInt;
   tv : TTimeVal;
   p:ptimeval;
 begin
@@ -159,7 +161,7 @@ end;
 function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
 var
   sel:TFDSet;
-  mode:u_long;
+  mode:LongInt;
   tv : TTimeVal;
   p:ptimeval;
 begin
@@ -199,7 +201,7 @@ end;
 function socket_send(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
 var
   sel:TFDSet;
-  mode:u_long;
+  mode:LongInt;
   tv : TTimeVal;
   p:ptimeval;
 begin
@@ -253,10 +255,10 @@ begin
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
-    {$IF defined(WINDOWS) and defined(CPU64)}
+    {$IF defined(CPU64)}
     InterLockedExchange64(FSocket,INVALID_SOCKET);
     {$ELSE}
-    InterLockedExchange(FSocket,INVALID_SOCKET);
+    InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
     {$ENDIF}
 
     Result:=false;
@@ -287,10 +289,10 @@ begin
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
-    {$IF defined(WINDOWS) and defined(CPU64)}
+    {$IF defined(CPU64)}
     InterLockedExchange64(FSocket,INVALID_SOCKET);
     {$ELSE}
-    InterLockedExchange(FSocket,INVALID_SOCKET);
+    InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
     {$ENDIF}
     Result:=false;
     exit;
@@ -309,10 +311,10 @@ begin
         DoCommPortDisconected();
       CommResult:=iorPortError;
       PActive:=false;
-      {$IF defined(WINDOWS) and defined(CPU64)}
+      {$IF defined(CPU64)}
       InterLockedExchange64(FSocket,INVALID_SOCKET);
       {$ELSE}
-      InterLockedExchange(FSocket,INVALID_SOCKET);
+      InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
       {$ENDIF}
       Result:=false;
       exit;
@@ -323,10 +325,10 @@ begin
         DoCommPortDisconected();
       CommResult:=iorNotReady;
       PActive:=false;
-      {$IF defined(WINDOWS) and defined(CPU64)}
+      {$IF defined(CPU64)}
       InterLockedExchange64(FSocket,INVALID_SOCKET);
       {$ELSE}
-      InterLockedExchange(FSocket,INVALID_SOCKET);
+      InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
       {$ENDIF}
       Result:=false;
       exit;
