@@ -18,6 +18,14 @@ type
   protected
     procedure DrawControl; override;
     procedure UpdateShape; override;
+
+  published
+    property OnClick;
+    property OnMouseDown;
+    property OnMouseUp;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
   end;
 
 implementation

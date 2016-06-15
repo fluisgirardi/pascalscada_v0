@@ -31,6 +31,12 @@ type
 
     property BodyWidth:Byte read FBodyWidth write SetBodyWidth default 12;
     property BorderWidth default 1;
+    property OnClick;
+    property OnMouseDown;
+    property OnMouseUp;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
   end;
 
 implementation

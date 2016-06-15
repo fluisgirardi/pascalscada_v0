@@ -15,6 +15,13 @@ type
   THMIFitaBasica = class(THMIBasicHorizontalControl)
   protected
     procedure DrawControl; override;
+  published
+    property OnClick;
+    property OnMouseDown;
+    property OnMouseUp;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
   end;
 
 implementation
