@@ -69,7 +69,7 @@ var
   Mask: DWORD;
   SystemInfo: SYSTEM_INFO;
 begin
-  if GetProcessAffinityMask(GetCurrentProcess, ProcessAffinityMask, SystemAffinityMask)
+  if GetProcessAffinityMask(GetCurrentProcess, {%H-}ProcessAffinityMask, {%H-}SystemAffinityMask)
   then begin
     Result := 0;
     for i := 0 to 31 do begin
@@ -79,7 +79,7 @@ begin
     end;
   end else begin
     //can't get the affinity mask so we just report the total number of processors
-    GetSystemInfo(SystemInfo);
+    GetSystemInfo({%H-}SystemInfo);
     Result := SystemInfo.dwNumberOfProcessors;
   end;
 end;

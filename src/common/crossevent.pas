@@ -79,8 +79,6 @@ type
   }
   {$ENDIF}
   TINTRTLEvent = record
-    EventAttr:Pointer;
-    Name:AnsiString;
     condvar: pthread_cond_t;
     mutex: pthread_mutex_t;
     isset: boolean;
@@ -176,7 +174,7 @@ type
       @seealso(WaitFor)
       }
       {$ENDIF}
-      constructor Create(EventAttributes : PSecurityAttributes; AManualReset,InitialState : Boolean;const Name : AnsiString);
+      constructor Create(AManualReset, InitialState : Boolean);
 
       {$IFDEF PORTUGUES}
       //: Destroi o objeto de eventos.
@@ -247,7 +245,9 @@ type
 
 implementation
 
+{$if defined(NeedCrossEvents)}
 uses pascalScadaMTPCPU;
+{$ifend}
 
 procedure TCrossThread.WakeUp;
 begin
@@ -267,7 +267,7 @@ begin
   {$ENDIF}
 end;
 
-constructor TCrossEvent.Create(EventAttributes : PSecurityAttributes; AManualReset,InitialState : Boolean;const Name : AnsiString);
+constructor TCrossEvent.Create(AManualReset, InitialState: Boolean);
 begin
   inherited Create;
   FManualReset := AManualReset;
@@ -277,8 +277,6 @@ begin
   pthread_mutex_init(@FEvent.mutex, nil);
   FEvent.isset:= InitialState;
   FEvent.IsDestroing := false;
-  FEvent.Name:=Name;
-  FEvent.EventAttr:=EventAttributes;
   {$ELSE}
   {$IFDEF WinCE}
   FEvent :=  CreateEvent(nil,AManualReset,InitialState,nil);
@@ -288,7 +286,7 @@ begin
   {$IFEND}
 end;
 
-destructor TCrossEvent.destroy;
+destructor TCrossEvent.Destroy;
 begin
   {$if defined(NeedCrossEvents)}
   pthread_mutex_lock(@FEvent.mutex);
