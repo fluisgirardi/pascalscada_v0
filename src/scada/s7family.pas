@@ -391,7 +391,7 @@ type
     @returns(The error number of PDU, if exists.)
     }
     {$ENDIF}
-    function  SetupPDU(var msg:BYTES; MsgOutgoing:Boolean; out PDU:TPDU):LongInt; virtual;
+    function  SetupPDU(var msg:BYTES; MsgOutgoing:Boolean; out PDU:TPDU; out error:integer):Boolean; virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -1060,10 +1060,11 @@ end;
 function TSiemensProtocolFamily.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;
 var
   pduo:TPDU;
-  res:LongInt;
+  res:Boolean;
+  err:Integer;
 begin
-  res := SetupPDU(msgOut, true, pduo);
-  if res<>0 then  begin
+
+  if SetupPDU(msgOut, true, pduo, err)=false then  begin
     Result:=False;
     exit;
   end;
@@ -1105,7 +1106,7 @@ function  TSiemensProtocolFamily.NegotiatePDUSize(var CPU:TS7CPU):Boolean;
 var
   param, Msg, msgIn:BYTES;
   pdu:TPDU;
-  res:LongInt;
+  err:Integer;
   db:LongInt;
 begin
   Result := false;
@@ -1125,8 +1126,8 @@ begin
   InitiatePDUHeader(msg,1);
   AddParam(Msg,param);
   if exchange(CPU,Msg,msgIn,false) then begin
-    res := SetupPDU(msgIn, false, pdu);
-    if res=0 then begin
+
+    if SetupPDU(msgIn, false, pdu, err) then begin
       CPU.MaxPDULen:=GetByte(pdu.param,6)*256+GetByte(pdu.param,7);
       CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes of header + 2 bytes of error code + 2 bytes of read request + 4 bytes of informations about the request.
       //ajusta o tamanho máximo dos blocos;
@@ -1153,36 +1154,46 @@ begin
   end;
 end;
 
-function  TSiemensProtocolFamily.SetupPDU(var msg:BYTES; MsgOutgoing:Boolean; out PDU:TPDU):LongInt;
+function TSiemensProtocolFamily.SetupPDU(var msg: BYTES; MsgOutgoing: Boolean;
+  out PDU: TPDU; out error: integer): Boolean;
 var
   position:LongInt;
 begin
+  Result := false;
+
   if MsgOutgoing then
     position:=PDUOutgoing
   else
     position:=PDUIncoming;
 
-  Result := 0;
+  if length(msg)<position then exit;
 
   PDU.header:=@msg[position];
   PDU.header_len:=10;
   if PPDUHeader(PDU.header)^.PDUHeadertype in [2,3] then begin
     PDU.header_len:=12;
-    Result:=SwapBytesInWord(PPDUHeader(PDU.header)^.Error);
+    //Result:=SwapBytesInWord(PPDUHeader(PDU.header)^.Error);
   end;
+
+  if length(msg)<(position+PDU.header_len) then exit;
 
   PDU.param:=@msg[position+PDU.header_len];
   PDU.param_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.param_len);
 
+  if length(msg)<(position+PDU.header_len+PDU.param_len) then exit;
+
   if High(msg)>=(position + PDU.header_len + PDU.param_len) then begin
     PDU.data:=@msg[position + PDU.header_len + PDU.param_len];
     PDU.data_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.data_len);
+
+    if length(msg)<(position+PDU.header_len+PDU.param_len+PDU.data_len) then exit;
   end else begin
     PDU.data:=nil;
     PDU.data_len:=0;
   end;
   PDU.user_data_len:=0;
-  PDU.udata:=nil
+  PDU.udata:=nil;
+  Result := true;
 end;
 
 procedure TSiemensProtocolFamily.PrepareReadRequest(var msgOut:BYTES);
@@ -1217,6 +1228,7 @@ var
   NumReq:Byte;
   intArray:array[0..3] of byte;
   intStart:LongInt absolute intArray;
+  err:LongInt;
 begin
   SetLength(param, 12);
   param[00] := $12;
@@ -1260,7 +1272,7 @@ begin
 
   AddParam(msgOut, param);
 
-  SetupPDU(msgOut, true, PDU);
+  SetupPDU(msgOut, true, PDU, err);
   NumReq:=GetByte(PDU.param,1);
   NumReq:=NumReq+1;
   SetByte(PDU.param,1,NumReq);
@@ -1277,6 +1289,7 @@ var
   p:PS7Req;
   PDU:TPDU;
   NumReq:Byte;
+  Err:LongInt;
   intArray:array[0..3] of byte;
   intStart:LongInt absolute intArray;
 begin
@@ -1331,7 +1344,7 @@ begin
 
   AddParam(msgOut, param);
 
-  SetupPDU(msgOut, true, PDU);
+  SetupPDU(msgOut, true, PDU, Err);
   NumReq:=GetByte(PDU.param,1);
   NumReq:=NumReq+1;
   SetByte(PDU.param,1,NumReq);
@@ -1368,9 +1381,9 @@ end;
 procedure TSiemensProtocolFamily.AddParam(var MsgOut:BYTES; const param:BYTES);
 var
   pdu:TPDU;
-  paramlen, extra, newparamlen:LongInt;
+  paramlen, extra, newparamlen, err:LongInt;
 begin
-  SetupPDU(MsgOut, true, pdu);
+  SetupPDU(MsgOut, true, pdu, err);
   paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   newparamlen := Length(param);
 
@@ -1378,7 +1391,7 @@ begin
 
   if Length(MsgOut)<(PDUOutgoing+10+extra+paramlen+newparamlen) then begin
     SetLength(MsgOut,(PDUOutgoing+10+extra+paramlen+newparamlen));
-    SetupPDU(MsgOut, true, pdu);
+    SetupPDU(MsgOut, true, pdu, err);
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   end;
 
@@ -1389,9 +1402,9 @@ end;
 procedure TSiemensProtocolFamily.AddData(var MsgOut:BYTES; const data:BYTES);
 var
   pdu:TPDU;
-  paramlen, datalen, extra, newdatalen:LongInt;
+  paramlen, datalen, extra, newdatalen, err:LongInt;
 begin
-  SetupPDU(MsgOut, true, pdu);
+  SetupPDU(MsgOut, true, pdu, err);
   paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
   datalen  := SwapBytesInWord(PPDUHeader(pdu.header)^.data_len);
   newdatalen := Length(data);
@@ -1400,7 +1413,7 @@ begin
 
   if Length(MsgOut)<(PDUOutgoing+10+extra+paramlen+datalen+newdatalen) then begin
     SetLength(MsgOut,(PDUOutgoing+10+extra+paramlen+datalen+newdatalen));
-    SetupPDU(MsgOut, true, pdu);
+    SetupPDU(MsgOut, true, pdu, err);
     paramlen := SwapBytesInWord(PPDUHeader(pdu.header)^.param_len);
     datalen  := SwapBytesInWord(PPDUHeader(pdu.header)^.data_len);
   end;
@@ -1556,14 +1569,15 @@ var
   DataIdx,
   ResultLen,
   ResultCode,
-  CurValue:LongInt;
+  CurValue,
+  err:LongInt;
   ProtocolErrorCode:TProtocolIOResult;
 begin
   if writepkg then begin
-    SetupPDU(pkgout, true, PDU);
+    if not SetupPDU(pkgout, true, PDU, err) then exit;
     if GetByte(PDU.param,0)<>S7FuncWrite then exit;
   end else begin
-    SetupPDU(pkgin, false, PDU);
+    if not SetupPDU(pkgin, false, PDU, err) then exit;
     if GetByte(PDU.param,0)<>S7FuncRead then exit;
   end;
   NumResults:=GetByte(PDU.param, 1);
@@ -2289,7 +2303,7 @@ var
   BytesToSend,
   BytesSent,
   ReqType,
-  dbidx:LongInt;
+  dbidx, err:LongInt;
   foundplc,
   hasAtLeastOneSuccess:Boolean;
   PLCPtr:PS7CPU;
@@ -2401,7 +2415,7 @@ begin
     end;
 
     if exchange(PLCPtr^, msgout, msgin, True) then begin
-      SetupPDU(msgin,false,incomingPDU);
+      SetupPDU(msgin,false,incomingPDU, err);
       if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
@@ -2449,7 +2463,7 @@ var
   BytesToRecv,
   BytesReceived,
   ReqType,
-  dbidx:LongInt;
+  dbidx, Err:LongInt;
   foundplc,
   hasAtLeastOneSuccess:Boolean;
   PLCPtr:PS7CPU;
@@ -2558,7 +2572,7 @@ begin
     end;
 
     if exchange(PLCPtr^, msgout, msgin, false) then begin
-      SetupPDU(msgin,false,incomingPDU);
+      SetupPDU(msgin,false,incomingPDU, Err);
       if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
