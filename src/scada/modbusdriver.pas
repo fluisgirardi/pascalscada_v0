@@ -174,7 +174,7 @@ type
     procedure SetOutputMaxHole(v:Cardinal);
     procedure SetInputMaxHole(v:Cardinal);
     procedure SetRegisterMaxHole(v:Cardinal);
-    procedure BuildTagRec(plc,func,startaddress,size:LongInt; var tr:TTagRec);
+    procedure BuildTagRec(plc,func,startaddress,size:LongInt; out tr:TTagRec);
 
     {$IFDEF PORTUGUES}
     //: Cria um pacote modbus
@@ -552,11 +552,6 @@ end;
 procedure TModBusDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 var
   plc,block:LongInt;
-  done,first:Boolean;
-  minScan:Int64;
-  lastType:LongInt;
-  lastBlock:TRegisterRange;
-  lastPLC:LongInt;
   tr:TTagRec;
   values:TArrayOfDouble;
   EntireTagList:TReqList;
@@ -579,9 +574,6 @@ var
   end;
 begin
   try
-    minScan := -1;
-    first:=true;
-    done := false;
     if ([csDestroying]*ComponentState<>[]) then begin
       CrossThreadSwitch;
       exit;
@@ -862,7 +854,8 @@ begin
     PModbusPLC[plc].Registers.MaxHole := v;
 end;
 
-procedure TModBusDriver.BuildTagRec(plc,func,startaddress,size:LongInt; var tr:TTagRec);
+procedure TModBusDriver.BuildTagRec(plc, func, startaddress, size: LongInt; out
+  tr: TTagRec);
 begin
   with tr do begin
     Station := plc;

@@ -23,7 +23,7 @@ unit MutexClient;
 interface
 
 uses
-  Classes, SysUtils, CommPort, commtypes, socket_types, CrossEvent,
+  Classes, SysUtils, socket_types, CrossEvent,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -110,7 +110,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
     function    TryEnter:Boolean; overload;
-    function    TryEnter(PickedTheDefaultBehavior: Boolean): Boolean; overload;
+    function    TryEnter(out PickedTheDefaultBehavior: Boolean): Boolean; overload;
     function Leave: Boolean;
   published
     property Active:Boolean read FActive write setActive stored true default false;
@@ -143,11 +143,7 @@ end;
 
 procedure TMutexClientThread.Execute;
 var
-  serverrequest,
-  request:Byte;
-  commresult: TIOResult;
-  incRetries: Boolean;
-  StillActive: Boolean;
+  serverrequest:Byte;
 
   function SendPingCmd:Boolean;
   var
@@ -210,7 +206,7 @@ end;
 
 procedure TMutexClientThread.DisconnectFromServer;
 var
-  request, response:Byte;
+  request:Byte;
 begin
   FSocketMutex.Enter;
   request:=253;//try enter on mutex
@@ -236,11 +232,14 @@ function TMutexClientThread.PingServer: Boolean;
 var
   request: byte;
 begin
+  Result:=false;
   request:=254;
   if socket_send(FSocket,@request,1,0,1000)<1 then
     ConnectionIsGone
-  else
+  else begin
     LastPingSent:=Now;
+    Result:=true;
+  end;
 end;
 
 constructor TMutexClientThread.Create(CreateSuspended: Boolean; aSocket: Tsocket
@@ -248,7 +247,7 @@ constructor TMutexClientThread.Create(CreateSuspended: Boolean; aSocket: Tsocket
 begin
   inherited Create(CreateSuspended);
   FSocketMutex:=TCriticalSection.Create;
-  FEnd:=TCrossEvent.Create(nil,true,false,'');
+  FEnd:=TCrossEvent.Create(true, false);
   FSocket:=aSocket;
   Quit:=false;
 end;
@@ -548,9 +547,6 @@ begin
   if FActive then
     raise exception.Create(SimpossibleToChangeWhenActive);
 
-  if (AValue<1) or (AValue>65535) then
-    raise exception.Create(SimpossibleToChangeWhenActive);
-
   if FPort=AValue then Exit;
 
   FPort:=AValue;
@@ -618,9 +614,7 @@ begin
   Result:=TryEnter(adefaultbehavior);
 end;
 
-function TMutexClient.TryEnter(PickedTheDefaultBehavior: Boolean): Boolean;
-var
-  request, response:Byte;
+function TMutexClient.TryEnter(out PickedTheDefaultBehavior: Boolean): Boolean;
 begin
   Result:=FDefaultBehavior;
   PickedTheDefaultBehavior:=true;
@@ -640,8 +634,6 @@ begin
 end;
 
 function TMutexClient.Leave:Boolean;
-var
-  request, response:Byte;
 begin
   Result:=True;
 

@@ -23,7 +23,7 @@ unit TagBit;
 interface
 
 uses
-  SysUtils, Classes, PLCNumber, ProtocolTypes, variants, hsutils, Tag;
+  SysUtils, Classes, PLCNumber, ProtocolTypes, variants;
 
 type
 

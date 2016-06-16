@@ -47,7 +47,6 @@ type
     FOwnerProtocolDriver:TComponent;
     FSleepInterruptable:TCrossEvent;
     FEnd:TCrossEvent;
-    Ferro:Exception;
     TagCBack:TTagCommandCallBack;
     FTagRec:PTagRec;
     Fvalues:TScanReadRec;
@@ -150,9 +149,9 @@ begin
   Priority := tpHighest;
   FUserUpdateTimePRoc:=usrUpdTime;
   FSpool := TMessageSpool.Create;
-  FEnd := TCrossEvent.Create(nil, true, false, 'EndOfThread'+IntToStr(UniqueID));
+  FEnd := TCrossEvent.Create(true, false);
   FEnd.ResetEvent;
-  FSleepInterruptable := TCrossEvent.Create(nil,false,false,'ScanUpdateThreadSleepInterruptable'+IntToStr(UniqueID));
+  FSleepInterruptable := TCrossEvent.Create(false, false);
 end;
 
 destructor TScanUpdate.Destroy;
@@ -253,7 +252,7 @@ end;
 
 procedure TScanUpdate.UpdateMultipleTags;
 var
-  c, pt:LongInt;
+  c:LongInt;
   found:Boolean;
 begin
   for c:=0 to High(PScannedValues) do begin

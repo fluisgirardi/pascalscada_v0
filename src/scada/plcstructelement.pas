@@ -109,7 +109,6 @@ end;
 procedure TPLCStructItem.Loaded;
 var
   oldwordsize:Byte;
-  oldprotocol:TProtocolDriver;
 begin
   oldwordsize:=FCurrentWordSize;
   inherited Loaded;

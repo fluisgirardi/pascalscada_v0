@@ -23,7 +23,7 @@ unit mutexserver;
 interface
 
 uses
-  Classes, SysUtils, CommPort, commtypes, socket_types, CrossEvent,
+  Classes, SysUtils, socket_types, CrossEvent,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -34,7 +34,7 @@ uses
     sockets_w32_w64
   {$ELSE}
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-  , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix, BaseUnix{$ENDIF}
+  , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix{$ENDIF}
             {$IFDEF WINCE} , sockets_wince {$ENDIF}
             {$IFDEF FDEBUG}, LCLProc{$ENDIF}
   {$IFEND}
@@ -257,7 +257,7 @@ begin
   inherited Create(CreateSuspended);
   FSocket             := ClientSocket;
   FMutex              := ServerMutex;
-  FEnd                := TCrossEvent.Create(nil,true,false,'');
+  FEnd                := TCrossEvent.Create(true, false);
   FRemoveClientThread :=RemoveClientThread;
   FEnd.ResetEvent;
   FIntoCriticalSection:=false;
@@ -345,7 +345,7 @@ begin
   FMutex              := ServerMutex;
   FAddClientThread    := AddClientThread;
   FRemoveClientThread := RemoveClientThread;
-  FEnd                := TCrossEvent.Create(nil,true,false,'');
+  FEnd                := TCrossEvent.Create(true, false);
 
   FEnd.ResetEvent;
 end;
@@ -363,7 +363,6 @@ var
 {$IFEND}
 
 {$IF defined(WIN32) or defined(WIN64)}
-  ServerAddr:PHostEnt;
   channel:sockaddr_in;
 {$IFEND}
 
@@ -471,9 +470,6 @@ end;
 procedure TMutexServer.SetPort(AValue: Word);
 begin
   if FActive then
-    raise exception.Create(SimpossibleToChangeWhenActive);
-
-  if (AValue<1) or (AValue>65535) then
     raise exception.Create(SimpossibleToChangeWhenActive);
 
   if FPort=AValue then Exit;

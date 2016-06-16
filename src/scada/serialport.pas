@@ -361,7 +361,7 @@ var PortPrefix:array[0..0] of AnsiString = ('tty');
 
 implementation
 
-uses hsstrings, crossdatetime;
+uses hsstrings{$IFDEF UNIX}, crossdatetime{$ENDIF};
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
@@ -828,7 +828,7 @@ begin
 {$IFDEF UNIX}
 var
    c:LongInt;
-   fd: cint;
+   //fd: cint;
 begin
   if PAcceptAnyPortName then begin
     Result:=true;
@@ -838,7 +838,7 @@ begin
   Result := false;
   for c:=0 to high(PortPrefix) do
     if (Pos(PortPrefix[c], v)>0) and FileExists('/dev/'+v) then begin
-      fd:=fpopen('/dev/'+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
+      //fd:=fpopen('/dev/'+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
 
       Result := true;
       exit;

@@ -750,7 +750,7 @@ begin
   FReadCS := TCriticalSection.Create;
   FWriteCS:= TCriticalSection.Create;
 
-  FPause := TCrossEvent.Create(nil,true,true,'');
+  FPause := TCrossEvent.Create(true, true);
 
   PCallersCS := TCriticalSection.Create;
 

@@ -231,6 +231,8 @@ var
   ReconnectInterval:Integer;
   msbetween: Int64;
 begin
+  ReconnectInterval:=0;
+  ReconnectTimerRunning:=false;
   while not Terminated do begin
 
     if ReconnectTimerRunning then begin
@@ -267,8 +269,8 @@ constructor TConnectThread.Create;
 begin
   inherited Create(True);
   FMessageQueue:=TMessageSpool.Create;
-  FEnd:=TCrossEvent.Create(nil,true,false,'');
-  FSomethingToDo:=TCrossEvent.Create(nil,false,false,'');
+  FEnd:=TCrossEvent.Create(true, false);
+  FSomethingToDo:=TCrossEvent.Create(false, false);
 end;
 
 procedure TConnectThread.Terminate;
@@ -422,7 +424,8 @@ end;
 
 function  TTCP_UDPPort.GetReconnectInterval:Integer;
 begin
-  InterLockedExchange({%H-}Result,FReconnectInterval);
+  Result:=0;
+  InterLockedExchange(Result,FReconnectInterval);
 end;
 
 procedure TTCP_UDPPort.SetReconnectInterval(v: Integer);
@@ -530,7 +533,7 @@ var
 begin
   FSocketMutex.Enter;
   try
-    if FSocket>=0 then begin
+    if {$IFDEF WINDOWS}FSocket<>INVALID_SOCKET{$ELSE}FSocket>=0{$ENDIF} then begin
       SetLength(buffer,5);
       {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
       fpshutdown(FSocket,SHUT_WR);
@@ -656,7 +659,7 @@ begin
     // NAME RESOLUTION OVER LINUX/FREEBSD and others.
     //##########################################################################
     {$IF defined(FPC) and defined(UNIX)}
-      if not GetHostByName(FHostName,ServerAddr) then begin
+      if not GetHostByName(FHostName,{%H-}ServerAddr) then begin
         ServerAddr.Addr:=StrToHostAddr(FHostName);
         if ServerAddr.Addr.s_addr=0 then begin
           PActive:=false;

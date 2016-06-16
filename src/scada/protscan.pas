@@ -52,7 +52,6 @@ type
     FDoScanWrite:TScanWriteProc;
 
     FMinScan:Cardinal;
-    erro:Exception;
     FSpool:TMessageSpool;
     PScanUpdater:TScanUpdate;
 
@@ -163,9 +162,9 @@ begin
   Priority := tpHighest;
   FSpool := TMessageSpool.Create;
   PScanUpdater := ScanUpdater;
-  FInitEvent   := TCrossEvent.Create(nil,true,false,'ScanThreadInit'+IntToStr(UniqueID));
-  FWaitToWrite := TCrossEvent.Create(nil,true,false,'WaitToWrite'+IntToStr(UniqueID));
-  FEnd         := TCrossEvent.Create(nil,true,false,'');
+  FInitEvent   := TCrossEvent.Create(true, false);
+  FWaitToWrite := TCrossEvent.Create(true, false);
+  FEnd         := TCrossEvent.Create(true, false);
   FMinScan := 0;
 end;
 

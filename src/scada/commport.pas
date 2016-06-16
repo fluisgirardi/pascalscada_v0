@@ -995,8 +995,8 @@ begin
   inherited Create(CreateSuspended);
   FOwner:=AOwner;
   FSpool:=TMessageSpool.Create;
-  FDoSomethingEvent:=TCrossEvent.Create(nil,true,false,'DoSomethingEventThread'+IntToStr(UniqueID));
-  FInitEvent:=TCrossEvent.Create(nil,true,false,'WasInitialized'+IntToStr(UniqueID));
+  FDoSomethingEvent:=TCrossEvent.Create(true, false);
+  FInitEvent:=TCrossEvent.Create(true, false);
 end;
 
 destructor TEventNotificationThread.Destroy;
@@ -1141,7 +1141,7 @@ begin
   FWriteRetries:=3;
   PIOCmdCS := TCriticalSection.Create;
   PLockCS  := TCriticalSection.Create;
-  PLockEvent := TCrossEvent.Create(nil,True,True,Name);
+  PLockEvent := TCrossEvent.Create(True, True);
   PUnlocked:=0;
   PClearBufOnErr := true;
 

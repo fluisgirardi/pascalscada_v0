@@ -760,7 +760,7 @@ type
 implementation
 
 uses PLCTagNumber, PLCString, PLCStruct, hsstrings, PLCBlock, PLCMemoryManager,
-  dateutils, strutils, math, crossdatetime;
+  dateutils, strutils, math;
 
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUTORES E DESTRUTORES
@@ -1111,6 +1111,7 @@ begin
   Result := false;
   SetLength(param,8);
   SetLength(msg, PDUOutgoing+10+8);
+  SetLength(msgIn, 0);
 
   param[0] := $F0;
   param[1] := 0;
@@ -1863,11 +1864,9 @@ end;
 
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 var
-  plc, db, block, retries, i:LongInt;
-  TimeElapsed:Int64;
+  plc, db, block, retries:LongInt;
   msgout, msgin:BYTES;
-  initialized, onereqdone:Boolean;
-  anow:TDateTime;
+  initialized:Boolean;
   ReqList:TS7ReqList;
   ReqOutOfScan:TS7ReqList;
   MsgOutSize:LongInt;
@@ -2005,9 +2004,6 @@ begin
     exit;
   end;
 
-  anow:=CrossNow;
-  TimeElapsed:=5;
-  onereqdone:=false;
   NeedSleep:=ifthen(Length(FPLCs)<=0,-1,1);
 
   EntireTagList:=TS7ScanReqList.Create;
@@ -2199,7 +2195,6 @@ begin
               ReqItem2.Read:=true;
             end;
           end;
-          onereqdone:=True;
           ReadQueuedRequests(FPLCs[ReqItem.iPLC]);
           Reset;
           if ReqItem.NeedUpdate=false then exit;
@@ -2212,7 +2207,6 @@ begin
         ReqItem.Read:=true;
       end;
       if RequestsPendding then begin
-        onereqdone:=true;
         ReadQueuedRequests(FPLCs[plc]);
       end;
 
@@ -2308,6 +2302,8 @@ begin
   PLCPtr:=nil;
   foundplc:=false;
   dbidx:=-1;
+  SetLength(msgin,0);
+  SetLength(ivalues,0);
   for c:=0 to High(FPLCs) do
     if (FPLCs[c].Slot=tagrec.Slot) and (FPLCs[c].Rack=tagrec.Rack) and (FPLCs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FPLCs[c];
@@ -2466,6 +2462,7 @@ begin
   PLCPtr:=nil;
   foundplc:=false;
   dbidx:=-1;
+  SetLength(ivalues, 0);
   for c:=0 to High(FPLCs) do
     if (FPLCs[c].Slot=tagrec.Slot) and (FPLCs[c].Rack=tagrec.Rack) and (FPLCs[c].Station=tagrec.Station) then begin
       PLCPtr:=@FPLCs[c];
@@ -2603,6 +2600,8 @@ var
   paramToRun, msgout, msgin:BYTES;
 begin
   SetLength(paramToRun,20);
+  SetLength(msgout, 0);
+  SetLength(msgin, 0);
   paramToRun[00]:=$28;
   paramToRun[01]:=0;
   paramToRun[02]:=0;

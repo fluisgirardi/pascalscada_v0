@@ -16,8 +16,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls,
-  ExtCtrls, ComCtrls, Spin, tag {$IFDEF FPC}, LCLIntf, LResources{$ENDIF}
-  {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}, windows{$IFEND};
+  ExtCtrls, ComCtrls, Spin, tag {$IFDEF FPC}, LCLIntf, LResources{$ENDIF};
 
 type
   {$IFDEF PORTUGUES}

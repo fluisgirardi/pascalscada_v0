@@ -398,7 +398,7 @@ initialization
   version := MAKEWORD( 2, 0 );
 
   //check for error
-  if WSAStartup( version, wsaData ) <> 0 then
+  if WSAStartup( version, {%H-}wsaData ) <> 0 then
     raise Exception.Create(SerrorInitializingWinsock);
 
   //check for correct version

@@ -219,7 +219,7 @@ const
 
 implementation
 
-uses math, hsstrings, pascalScadaMTPCPU;
+uses math, pascalScadaMTPCPU;
 
 constructor TISOTCPDriver.Create(AOwner:TComponent);
 begin

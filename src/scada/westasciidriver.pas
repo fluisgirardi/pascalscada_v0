@@ -655,7 +655,7 @@ begin
       break;
     end;
 
-  if Length(Values)>0 then
+  if Length({%H-}Values)>0 then
     Result := ParameterValue(tagrec.Station,ParameterList[tagrec.Address].ParameterID,Values[0],dec)
   else begin
     Result := ioDriverError;
