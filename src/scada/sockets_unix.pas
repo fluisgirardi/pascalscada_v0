@@ -241,7 +241,6 @@ begin
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
-    InterLockedExchange(FSocket,-1);
     Result:=false;
     exit;
   end;
@@ -270,7 +269,6 @@ begin
       DoCommPortDisconected();
     CommResult:=iorPortError;
     PActive:=false;
-    InterLockedExchange(FSocket,-1);
     Result:=false;
     exit;
   end;
@@ -281,7 +279,6 @@ begin
         DoCommPortDisconected();
       CommResult:=iorPortError;
       PActive:=false;
-      InterLockedExchange(FSocket,-1);
       Result:=false;
       exit;
     end;
@@ -294,7 +291,6 @@ begin
         DoCommPortDisconected();
       CommResult:=iorPortError;
       PActive:=false;
-      InterLockedExchange(FSocket,-1);
       Result:=false;
       exit;
     end;
@@ -304,7 +300,6 @@ begin
         DoCommPortDisconected();
       CommResult:=iorNotReady;
       PActive:=false;
-      InterLockedExchange(FSocket,-1);
       Result:=false;
       exit;
     end;

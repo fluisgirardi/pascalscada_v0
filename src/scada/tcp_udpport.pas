@@ -47,18 +47,32 @@ type
     FReconnectSocket: TConnectEvent;
     FMessageQueue:TMessageSpool;
     ReconnectTimerRunning:longint;
+    function GetEnableAutoReconnect:Boolean;
+
+    function GetReconnectInterval:Integer;
+    function GetReconnectRetries:Integer;
+
+    procedure SetReconnectInterval(aValue:Integer);
+    procedure SetEnableAutoReconnect(aValue:Boolean);
   protected
     procedure Execute; override;
   public
     constructor Create;
     procedure Terminate;
     procedure Connect;
+    procedure Disconnect;
     procedure WaitThenConnect(Interval:Integer);
     procedure WaitEnd;
     procedure DisableAutoReconnect;
   published
     property ConnectSocket:TConnectEvent read FConnectSocket write FConnectSocket;
     property ReconnectSocket:TConnectEvent read FReconnectSocket write FReconnectSocket;
+    property DisconnectSocket:TConnectEvent read FDisconnectSocket write FDisconnectSocket;
+
+    property EnableAutoReconnect:Boolean read GetEnableAutoReconnect write SetEnableAutoReconnect;
+    property ReconnectInterval:Integer read GetReconnectInterval write SetReconnectInterval;
+    property ReconnectRetries:Integer read GetReconnectRetries write SetReconnectRetries;
+
   end;
 
   {$IFDEF PORTUGUES}
@@ -92,6 +106,7 @@ type
     FReconnectRetriesLimit:Cardinal;
     FConnectThread:TConnectThread;
     FSocketMutex:syncobjs.TCriticalSection;
+    procedure CloseMySocket(var closed: Boolean);
     procedure DoReconnect;
     function GetEnableAutoReconect: Boolean;
     procedure SetHostname(target:Ansistring);
@@ -286,6 +301,12 @@ begin
   while not FSomethingToDo.SetEvent do;
 end;
 
+procedure TConnectThread.Disconnect;
+begin
+  FMessageQueue.PostMessage(3,nil,nil,false);
+  while not FSomethingToDo.SetEvent do;
+end;
+
 procedure TConnectThread.WaitThenConnect(Interval: Integer);
 var
   res:LongInt;
@@ -313,7 +334,11 @@ begin
   inherited Create(AOwner);
   FPortNumber:=102;
   FTimeout:=1000;
-  FSocket:=0;
+  {$IF defined(WINDOWS)}
+  FSocket:=INVALID_SOCKET;
+  {$ELSE}
+  FSocket:=-1;
+  {$ENDIF}
   FEnableAutoReconnect:=1;
   FReconnectRetriesLimit:=0;
   FReconnectInterval:=5000;
@@ -531,44 +556,50 @@ begin
   Ok:=true;
 end;
 
-procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
+procedure TTCP_UDPPort.CloseMySocket(var closed:Boolean);
 var
   buffer:BYTES;
   lidos:LongInt;
 begin
+  closed:=false;
+  if {$IFDEF WINDOWS}FSocket<>INVALID_SOCKET{$ELSE}FSocket>=0{$ENDIF} then begin
+    SetLength(buffer,5);
+    {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
+    fpshutdown(FSocket,SHUT_WR);
+    lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
+    while lidos>0 do begin
+      lidos := fprecv(FSocket, @Buffer[0], 1, 0);
+      lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
+    end;
+    {$ELSE}
+    Shutdown(FSocket,1);
+    lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
+    while lidos>0 do begin
+      lidos := Recv(FSocket, Buffer[0], 1, 0);
+      lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
+    end;
+    {$IFEND}
+    CloseSocket(FSocket);
+  end;
+  PActive:=false;
+  closed:=true;
+  {$IF defined(WINDOWS)}
+    {$IF defined(CPU64)}
+    InterLockedExchange64(FSocket, INVALID_SOCKET);
+    {$ELSE}
+    InterLockedExchange(LongInt(FSocket), LongInt(INVALID_SOCKET));
+    {$ENDIF}
+  {$ELSE}
+  InterLockedExchange(FSocket, -1);
+  {$ENDIF}
+  SetLength(Buffer,0);
+end;
+
+procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
+begin
   FSocketMutex.Enter;
   try
-    if {$IFDEF WINDOWS}FSocket<>INVALID_SOCKET{$ELSE}FSocket>=0{$ENDIF} then begin
-      SetLength(buffer,5);
-      {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-      fpshutdown(FSocket,SHUT_WR);
-      lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
-      while lidos>0 do begin
-        lidos := fprecv(FSocket, @Buffer[0], 1, 0);
-        lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
-      end;
-      {$ELSE}
-      Shutdown(FSocket,1);
-      lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
-      while lidos>0 do begin
-        lidos := Recv(FSocket, Buffer[0], 1, 0);
-        lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
-      end;
-      {$IFEND}
-      CloseSocket(FSocket);
-    end;
-    PActive:=false;
-    Ok:=true;
-    {$IF defined(WINDOWS)}
-      {$IF defined(CPU64)}
-      InterLockedExchange64(FSocket, INVALID_SOCKET);
-      {$ELSE}
-      InterLockedExchange(LongInt(FSocket), LongInt(INVALID_SOCKET));
-      {$ENDIF}
-    {$ELSE}
-    InterLockedExchange(FSocket, -1);
-    {$ENDIF}
-    SetLength(Buffer,0);
+    closeMySocket(ok);
   finally
     FSocketMutex.Leave;
   end;
@@ -633,8 +664,10 @@ var
   flag, bufsize, sockType, sockProto:LongInt;
   ASocket:Tsocket;
 begin
-  Ok:=false;
   FSocketMutex.Enter;
+  closeMySocket(ok);
+  Ok:=false;
+
   try
     //##########################################################################
     // RESOLUCAO DE NOMES SOBRE WINDOWS 32/64 BITS.
