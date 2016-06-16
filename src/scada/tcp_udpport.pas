@@ -44,9 +44,10 @@ type
   TConnectThread = class(TCrossThread)
   private
     FActive:Boolean;
-    FConnectSocket: TConnectEvent;
+    FCheckSocket,
+    FConnectSocket,
     FDisconnectSocket: TConnectEvent;
-    FEnd,FSomethingToDo:TCrossEvent;
+    FEnd:TCrossEvent;
     FReconnectSocket: TConnectEvent;
     FMessageQueue:TMessageSpool;
 
@@ -65,7 +66,6 @@ type
     procedure Execute; override;
   public
     constructor Create;
-    procedure Terminate;
     procedure Connect;
     procedure Disconnect;
     procedure NotifyDisconnect;
@@ -75,6 +75,7 @@ type
     property ConnectSocket:TConnectEvent read FConnectSocket write FConnectSocket;
     property ReconnectSocket:TConnectEvent read FReconnectSocket write FReconnectSocket;
     property DisconnectSocket:TConnectEvent read FDisconnectSocket write FDisconnectSocket;
+    property CheckSocket:TConnectEvent read FCheckSocket write FCheckSocket;
 
     property EnableAutoReconnect:Boolean read GetEnableAutoReconnect write SetEnableAutoReconnect;
     property ReconnectInterval:Integer read GetReconnectInterval write SetReconnectInterval;
@@ -148,6 +149,7 @@ type
     procedure connectSocket(var Ok: Boolean);
     procedure CloseMySocket(var closed: Boolean);
     procedure reconnectSocket(var Ok:Boolean);
+    procedure CheckSocket(var Ok:Boolean);
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -282,16 +284,12 @@ var
 begin
   ReconnectTimerRunning:=false;
   while not Terminated do begin
-
-    if ReconnectTimerRunning then begin
-      FSomethingToDo.WaitFor(FReconnectInterval);
-    end else
-      FSomethingToDo.WaitFor($FFFFFFFF);
-
     while FMessageQueue.PeekMessage(msg,0,100,true) do begin
       Ok:=false;
       case msg.MsgID of
-        0: if Assigned(FConnectSocket) then begin
+        0: begin
+          FActive:=true;
+          if Assigned(FConnectSocket) then begin
              FConnectSocket(Ok);
              if (Ok) then
                ReconnectTimerRunning:=false
@@ -301,6 +299,7 @@ begin
                  ReconnectStarted:=Now;
                end;
            end;
+        end;
         1: begin
           ReconnectTimerRunning:=true;
           ReconnectStarted:=Now;
@@ -309,21 +308,36 @@ begin
           ReconnectTimerRunning:=false;
         end;
         3: begin
+            FActive:=false;
             if Assigned(DisconnectSocket) then
               DisconnectSocket(Ok);
             ReconnectTimerRunning:=false;
            end;
       end;
     end;
-    msbetween:=MilliSecondsBetween(now,ReconnectStarted);
 
-    if (ReconnectTimerRunning) and (msbetween>=ReconnectInterval) then begin
+    if FActive then begin
+      OK:=true;
+      if assigned(FCheckSocket) then
+        FCheckSocket(Ok);
+      if not ok then begin
+        if ReconnectTimerRunning=false then
+          ReconnectStarted:=Now;
+        ReconnectTimerRunning:=true;
+      end;
+    end;
+
+
+    msbetween:=MilliSecondsBetween(now,ReconnectStarted);
+    if (FAutoReconnect=1) and (ReconnectTimerRunning) and (msbetween>=ReconnectInterval) then begin
       ReconnectStarted:=Now;
       Ok:=false;
       if Assigned(FReconnectSocket) then FReconnectSocket(Ok);
       if Ok then
         ReconnectTimerRunning:=false;
     end;
+
+    Sleep(250);
   end;
   FEnd.SetEvent;
 end;
@@ -333,31 +347,21 @@ begin
   inherited Create(True);
   FMessageQueue:=TMessageSpool.Create;
   FEnd:=TCrossEvent.Create(true, false);
-  FSomethingToDo:=TCrossEvent.Create(false, false);
-end;
-
-procedure TConnectThread.Terminate;
-begin
-  inherited Terminate;
-  FSomethingToDo.SetEvent;
 end;
 
 procedure TConnectThread.Connect;
 begin
   FMessageQueue.PostMessage(0,nil,nil,false);
-  while not FSomethingToDo.SetEvent do;
 end;
 
 procedure TConnectThread.Disconnect;
 begin
   FMessageQueue.PostMessage(3,nil,nil,false);
-  while not FSomethingToDo.SetEvent do;
 end;
 
 procedure TConnectThread.NotifyDisconnect;
 begin
   FMessageQueue.PostMessage(1,nil,nil,false);
-  while not FSomethingToDo.SetEvent do;
 end;
 
 procedure TConnectThread.WaitEnd;
@@ -369,7 +373,6 @@ end;
 procedure TConnectThread.StopAutoReconnect;
 begin
   FMessageQueue.PostMessage(2,nil,nil,false);
-  while not FSomethingToDo.SetEvent do;
 end;
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
@@ -389,6 +392,7 @@ begin
   FConnectThread.ConnectSocket:=@connectSocket;
   FConnectThread.ReconnectSocket:=@reconnectSocket;
   FConnectThread.DisconnectSocket:=@CloseMySocket;
+  FConnectThread.CheckSocket:=@CheckSocket;
   FConnectThread.WakeUp;
 end;
 
@@ -425,6 +429,11 @@ procedure TTCP_UDPPort.reconnectSocket(var Ok: Boolean);
 begin
   CloseMySocket(Ok);
   connectSocket(Ok);
+end;
+
+procedure TTCP_UDPPort.CheckSocket(var Ok:Boolean);
+begin
+  Ok:=ReallyActive;
 end;
 
 procedure TTCP_UDPPort.SetHostname(target:Ansistring);
@@ -685,7 +694,6 @@ var
   flag, bufsize, sockType, sockProto:LongInt;
   ASocket:Tsocket;
 begin
-  closeMySocket(ok);
   Ok:=false;
 
   try

@@ -170,7 +170,7 @@ var
   sel:tpollfd;
   mode:LongInt;
 begin
-  Result:=fprecv(sock, buf, len, flags);
+  Result:=fprecv(sock, buf, len, flags or msg_nosignal);
 
   if  Result < 0 then begin
     if fpGetErrno in [ESysEINTR, ESysEAGAIN] then begin
@@ -200,7 +200,7 @@ var
   sel:tpollfd;
   mode:LongInt;
 begin
-  Result:=fpsend(sock, buf, len, flags);
+  Result:=fpsend(sock, buf, len, flags or msg_nosignal);
 
   if Result < 0 then begin
     if fpGetErrno in [ESysEINTR, ESysEAGAIN] then begin
