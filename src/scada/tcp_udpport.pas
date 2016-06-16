@@ -46,6 +46,7 @@ type
     FEnd,FSomethingToDo:TCrossEvent;
     FReconnectSocket: TConnectEvent;
     FMessageQueue:TMessageSpool;
+    ReconnectTimerRunning:longint;
   protected
     procedure Execute; override;
   public
@@ -226,16 +227,16 @@ uses hsstrings, dateutils, sysutils;
 procedure TConnectThread.Execute;
 var
   msg: TMSMsg;
-  ReconnectTimerRunning, Ok:Boolean;
+  Ok:Boolean;
   ReconnectStarted:TDateTime;
   ReconnectInterval:Integer;
   msbetween: Int64;
 begin
   ReconnectInterval:=0;
-  ReconnectTimerRunning:=false;
+  ReconnectTimerRunning:=0;
   while not Terminated do begin
 
-    if ReconnectTimerRunning then begin
+    if ReconnectTimerRunning<>0 then begin
       FSomethingToDo.WaitFor(ReconnectInterval);
     end else
       FSomethingToDo.WaitFor($FFFFFFFF);
@@ -244,21 +245,21 @@ begin
       case msg.MsgID of
         0: if Assigned(FConnectSocket) then FConnectSocket(Ok);
         1: begin
-          ReconnectTimerRunning:=true;
+          ReconnectTimerRunning:=1;
           ReconnectInterval:=PtrUint(msg.wParam);
           ReconnectStarted:=Now;
         end;
         2: begin
-          ReconnectTimerRunning:=false;
+          ReconnectTimerRunning:=0;
         end;
       end;
     msbetween:=MilliSecondsBetween(now,ReconnectStarted);
-    if ReconnectTimerRunning and (msbetween>=ReconnectInterval) then begin
+    if (ReconnectTimerRunning=1) and (msbetween>=ReconnectInterval) then begin
       ReconnectStarted:=Now;
       Ok:=false;
       if Assigned(FReconnectSocket) then FReconnectSocket(Ok);
       if Ok then
-        ReconnectTimerRunning:=false;
+        ReconnectTimerRunning:=0;
 
     end;
   end;
@@ -286,7 +287,11 @@ begin
 end;
 
 procedure TConnectThread.WaitThenConnect(Interval: Integer);
+var
+  res:LongInt;
 begin
+  interlockedexchange(res,ReconnectTimerRunning);
+  if res = 1 then exit;
   FMessageQueue.PostMessage(1,Pointer(PtrUInt(Interval)),nil,false);
   while not FSomethingToDo.SetEvent do;
 end;
@@ -776,6 +781,7 @@ begin
     {$ELSE}
     InterLockedExchange(FSocket,ASocket);
     {$ENDIF}
+    DoPortOpened(Self);
   finally
     FSocketMutex.Leave;
     if not Ok then begin

@@ -250,7 +250,7 @@ var
 begin
   CPU.Connected:=false;
   Result:=false;
-  if PCommPort=nil then exit;
+  if (PCommPort=nil) or (PCommPort.ReallyActive=false) then exit;
 
   //incializa conexao
   //
@@ -319,7 +319,7 @@ var
   retries, BytesRead:LongInt;
   resget:TIOResult;
 begin
-  if PCommPort=nil then exit;
+  if (PCommPort=nil) or (PCommPort.ReallyActive=false) then exit;
 
   Result := Inherited exchange(CPU, msgOut, msgIn, IsWrite);
   Result := false;
