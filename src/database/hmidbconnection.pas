@@ -443,7 +443,7 @@ constructor TProcessSQLCommandThread.Create(CreateSuspended: Boolean;
 begin
   inherited Create(CreateSuspended);
   FQueue:=TMessageSpool.Create;
-  FEnd:=TCrossEvent.Create(nil,true,false,'');
+  FEnd:=TCrossEvent.Create(true,false);
   fOnExecSQL:=ExecSQLProc;
   fStartTransaction:=StartTransactionProc;
   fCommitTransaction:=CommitTransactionProc;
