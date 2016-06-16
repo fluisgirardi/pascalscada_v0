@@ -259,7 +259,6 @@ begin
     found:=false;
     if TProtocolDriver(FOwnerProtocolDriver).IsMyTag(TTag(TMethod(PScannedValues[c].CallBack).Data)) and ((TTag(TMethod(PScannedValues[c].CallBack).Data).ComponentState*[csDestroying])=[]) then begin
       found:=true;
-      break;
     end;
     if not found then continue;
     with PScannedValues[c] do
