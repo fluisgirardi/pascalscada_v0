@@ -38,15 +38,21 @@ type
 
   TConnectEvent=procedure(var Ok:Boolean) of object;
 
+
   { TConnectThread }
 
   TConnectThread = class(TCrossThread)
   private
+    FActive:Boolean;
     FConnectSocket: TConnectEvent;
+    FDisconnectSocket: TConnectEvent;
     FEnd,FSomethingToDo:TCrossEvent;
     FReconnectSocket: TConnectEvent;
     FMessageQueue:TMessageSpool;
-    ReconnectTimerRunning:longint;
+
+    FAutoReconnect,
+    FReconnectInterval,
+    FReconnectRetries:Integer;
     function GetEnableAutoReconnect:Boolean;
 
     function GetReconnectInterval:Integer;
@@ -54,6 +60,7 @@ type
 
     procedure SetReconnectInterval(aValue:Integer);
     procedure SetEnableAutoReconnect(aValue:Boolean);
+    procedure SetReconnectRetries(AValue: Integer);
   protected
     procedure Execute; override;
   public
@@ -61,9 +68,9 @@ type
     procedure Terminate;
     procedure Connect;
     procedure Disconnect;
-    procedure WaitThenConnect(Interval:Integer);
+    procedure NotifyDisconnect;
     procedure WaitEnd;
-    procedure DisableAutoReconnect;
+    procedure StopAutoReconnect;
   published
     property ConnectSocket:TConnectEvent read FConnectSocket write FConnectSocket;
     property ReconnectSocket:TConnectEvent read FReconnectSocket write FReconnectSocket;
@@ -71,7 +78,6 @@ type
 
     property EnableAutoReconnect:Boolean read GetEnableAutoReconnect write SetEnableAutoReconnect;
     property ReconnectInterval:Integer read GetReconnectInterval write SetReconnectInterval;
-    property ReconnectRetries:Integer read GetReconnectRetries write SetReconnectRetries;
 
   end;
 
@@ -97,30 +103,26 @@ type
   private
     FHostName:AnsiString;
     FPortNumber:LongInt;
-    FReconnectInterval,
     FTimeout:LongInt;
     FSocket:Tsocket;
     FPortType:TPortType;
     FExclusiveReaded:Boolean;
-    FEnableAutoReconnect:Integer;
-    FReconnectRetriesLimit:Cardinal;
+
     FConnectThread:TConnectThread;
-    FSocketMutex:syncobjs.TCriticalSection;
-    procedure CloseMySocket(var closed: Boolean);
     procedure DoReconnect;
-    function GetEnableAutoReconect: Boolean;
+
+    function  GetEnableAutoReconect: Boolean;
+    function  GetReconnectInterval:Integer;
+
+    procedure setEnableAutoReconnect(v:Boolean);
+    procedure SetReconnectInterval(v:Integer);
+
     procedure SetHostname(target:Ansistring);
     procedure SetPortNumber(pn:LongInt);
     procedure SetTimeout(t:LongInt);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
-
-    procedure setEnableAutoReconnect(v:Boolean);
-    function GetReconnectInterval:Integer;
-    procedure SetReconnectInterval(v:Integer);
   protected
-    //: @exclude
-    FReconnectRetries:Integer;
     //: @exclude
     procedure Loaded; override;
     //: @seealso(TCommPortDriver.Read)
@@ -144,6 +146,7 @@ type
     procedure DoPortOpenError(sender: TObject); override;
 
     procedure connectSocket(var Ok: Boolean);
+    procedure CloseMySocket(var closed: Boolean);
     procedure reconnectSocket(var Ok:Boolean);
   public
     //: @exclude
@@ -210,13 +213,6 @@ type
     {$ENDIF}
     property ReconnectRetryInterval:Integer read GetReconnectInterval write SetReconnectInterval stored true default 5000;
 
-    {$IFDEF PORTUGUES}
-    //: Limite máximo de tentativas de reconexão. O contador de tentativas é reiniciado após uma conexão com sucesso.
-    {$ELSE}
-    //: Maximum limit of connection retries.
-    {$ENDIF}
-    property ReconnectRetriesLimit:Cardinal read FReconnectRetriesLimit write FReconnectRetriesLimit stored true default 0;
-
     //: @seealso TCommPortDriver.OnCommPortOpened
     property OnCommPortOpened;
     //: @seealso TCommPortDriver.OnCommPortOpenError
@@ -239,43 +235,94 @@ uses hsstrings, dateutils, sysutils;
 
 { TConnectThread }
 
+function TConnectThread.GetEnableAutoReconnect: Boolean;
+var
+  res: cardinal;
+begin
+  InterLockedExchange(res,FAutoReconnect);
+  Result:=res=1;
+end;
+
+function TConnectThread.GetReconnectInterval: Integer;
+begin
+  Result:=0;
+  InterLockedExchange(Result,FReconnectInterval);
+end;
+
+function TConnectThread.GetReconnectRetries: Integer;
+begin
+  Result:=0;
+  InterLockedExchange(Result,FReconnectRetries);
+end;
+
+procedure TConnectThread.SetReconnectInterval(aValue: Integer);
+begin
+  InterLockedExchange(FReconnectInterval,aValue);
+end;
+
+procedure TConnectThread.SetEnableAutoReconnect(aValue: Boolean);
+begin
+  if aValue then
+    InterLockedExchange(FAutoReconnect,1)
+  else
+    InterLockedExchange(FAutoReconnect,0);
+end;
+
+procedure TConnectThread.SetReconnectRetries(AValue: Integer);
+begin
+  InterLockedExchange(FReconnectRetries,AValue);
+end;
+
 procedure TConnectThread.Execute;
 var
   msg: TMSMsg;
-  Ok:Boolean;
+  Ok, ReconnectTimerRunning:Boolean;
   ReconnectStarted:TDateTime;
-  ReconnectInterval:Integer;
   msbetween: Int64;
 begin
-  ReconnectInterval:=0;
-  ReconnectTimerRunning:=0;
+  ReconnectTimerRunning:=false;
   while not Terminated do begin
 
-    if ReconnectTimerRunning<>0 then begin
-      FSomethingToDo.WaitFor(ReconnectInterval);
+    if ReconnectTimerRunning then begin
+      FSomethingToDo.WaitFor(FReconnectInterval);
     end else
       FSomethingToDo.WaitFor($FFFFFFFF);
 
-    while FMessageQueue.PeekMessage(msg,0,100,true) do
+    while FMessageQueue.PeekMessage(msg,0,100,true) do begin
+      Ok:=false;
       case msg.MsgID of
-        0: if Assigned(FConnectSocket) then FConnectSocket(Ok);
+        0: if Assigned(FConnectSocket) then begin
+             FConnectSocket(Ok);
+             if (Ok) then
+               ReconnectTimerRunning:=false
+             else
+               if(FAutoReconnect=1) then begin
+                 ReconnectTimerRunning:=true;
+                 ReconnectStarted:=Now;
+               end;
+           end;
         1: begin
-          ReconnectTimerRunning:=1;
-          ReconnectInterval:=PtrUint(msg.wParam);
+          ReconnectTimerRunning:=true;
           ReconnectStarted:=Now;
         end;
         2: begin
-          ReconnectTimerRunning:=0;
+          ReconnectTimerRunning:=false;
         end;
+        3: begin
+            if Assigned(DisconnectSocket) then
+              DisconnectSocket(Ok);
+            ReconnectTimerRunning:=false;
+           end;
       end;
+    end;
     msbetween:=MilliSecondsBetween(now,ReconnectStarted);
-    if (ReconnectTimerRunning=1) and (msbetween>=ReconnectInterval) then begin
+
+    if (ReconnectTimerRunning) and (msbetween>=ReconnectInterval) then begin
       ReconnectStarted:=Now;
       Ok:=false;
       if Assigned(FReconnectSocket) then FReconnectSocket(Ok);
       if Ok then
-        ReconnectTimerRunning:=0;
-
+        ReconnectTimerRunning:=false;
     end;
   end;
   FEnd.SetEvent;
@@ -307,13 +354,9 @@ begin
   while not FSomethingToDo.SetEvent do;
 end;
 
-procedure TConnectThread.WaitThenConnect(Interval: Integer);
-var
-  res:LongInt;
+procedure TConnectThread.NotifyDisconnect;
 begin
-  interlockedexchange(res,ReconnectTimerRunning);
-  if res = 1 then exit;
-  FMessageQueue.PostMessage(1,Pointer(PtrUInt(Interval)),nil,false);
+  FMessageQueue.PostMessage(1,nil,nil,false);
   while not FSomethingToDo.SetEvent do;
 end;
 
@@ -323,7 +366,7 @@ begin
     CheckSynchronize(5);
 end;
 
-procedure TConnectThread.DisableAutoReconnect;
+procedure TConnectThread.StopAutoReconnect;
 begin
   FMessageQueue.PostMessage(2,nil,nil,false);
   while not FSomethingToDo.SetEvent do;
@@ -339,15 +382,13 @@ begin
   {$ELSE}
   FSocket:=-1;
   {$ENDIF}
-  FEnableAutoReconnect:=1;
-  FReconnectRetriesLimit:=0;
-  FReconnectInterval:=5000;
-
-  FSocketMutex:=Syncobjs.TCriticalSection.Create;
 
   FConnectThread:=TConnectThread.Create;
+  FConnectThread.EnableAutoReconnect:=true;
+  FConnectThread.ReconnectInterval:=5000;
   FConnectThread.ConnectSocket:=@connectSocket;
   FConnectThread.ReconnectSocket:=@reconnectSocket;
+  FConnectThread.DisconnectSocket:=@CloseMySocket;
   FConnectThread.WakeUp;
 end;
 
@@ -357,7 +398,6 @@ begin
   FConnectThread.Terminate;
   FConnectThread.WaitEnd;
   FreeAndNil(FConnectThread);
-  FreeAndNil(FSocketMutex);
 end;
 
 function TTCP_UDPPort.ReallyActive: Boolean;
@@ -383,7 +423,7 @@ end;
 
 procedure TTCP_UDPPort.reconnectSocket(var Ok: Boolean);
 begin
-  InterLockedIncrement(FReconnectRetries);
+  CloseMySocket(Ok);
   connectSocket(Ok);
 end;
 
@@ -438,29 +478,20 @@ begin
 end;
 
 procedure TTCP_UDPPort.setEnableAutoReconnect(v:Boolean);
-var
-  x: Integer;
 begin
-  try
-    InterLockedExchange(x, FEnableAutoReconnect);
-    if (v=false) and (x<>0) then
-      FConnectThread.DisableAutoReconnect;
-  finally
-    x:=0;
-    if v then x:=1;
-    InterLockedExchange(FEnableAutoReconnect,x);
-  end;
-end;
+    FConnectThread.EnableAutoReconnect:=v;
+    if v=false then
+      FConnectThread.StopAutoReconnect;
+ end;
 
 function  TTCP_UDPPort.GetReconnectInterval:Integer;
 begin
-  Result:=0;
-  InterLockedExchange(Result,FReconnectInterval);
+  Result:=FConnectThread.ReconnectInterval;
 end;
 
 procedure TTCP_UDPPort.SetReconnectInterval(v: Integer);
 begin
-  InterLockedExchange(FReconnectInterval,v);
+  FConnectThread.ReconnectInterval:=v;
 end;
 
 procedure TTCP_UDPPort.Loaded;
@@ -473,7 +504,7 @@ procedure TTCP_UDPPort.Read(Packet:PIOPacket);
 var
   lidos:LongInt;
   tentativas:Cardinal;
-  incretries:Boolean;
+  incretries, donothing:Boolean;
 begin
   tentativas := 0;
   lidos := 0;
@@ -486,7 +517,7 @@ begin
     end;
 
     if lidos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, @CommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, donothing, FSocket, @CommPortDisconected) then
         break;
       if incRetries then
         inc(tentativas);
@@ -510,7 +541,7 @@ procedure TTCP_UDPPort.Write(Packet:PIOPacket);
 var
   escritos:LongInt;
   tentativas:Cardinal;
-  incretries:Boolean;
+  incretries, donothing:Boolean;
 begin
   tentativas := 0;
   escritos := 0;
@@ -523,7 +554,7 @@ begin
     end;
 
     if escritos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, PActive, FSocket, @CommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, donothing, FSocket, @CommPortDisconected) then
         break;
       if incRetries then
         inc(tentativas);
@@ -560,49 +591,50 @@ procedure TTCP_UDPPort.CloseMySocket(var closed:Boolean);
 var
   buffer:BYTES;
   lidos:LongInt;
+  ASocket: Tsocket;
 begin
-  closed:=false;
-  if {$IFDEF WINDOWS}FSocket<>INVALID_SOCKET{$ELSE}FSocket>=0{$ENDIF} then begin
-    SetLength(buffer,5);
-    {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-    fpshutdown(FSocket,SHUT_WR);
-    lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
-    while lidos>0 do begin
-      lidos := fprecv(FSocket, @Buffer[0], 1, 0);
-      lidos := fprecv(FSocket, @Buffer[0], 1, MSG_PEEK);
-    end;
-    {$ELSE}
-    Shutdown(FSocket,1);
-    lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
-    while lidos>0 do begin
-      lidos := Recv(FSocket, Buffer[0], 1, 0);
-      lidos := Recv(FSocket, Buffer[0], 1, MSG_PEEK);
-    end;
-    {$IFEND}
-    CloseSocket(FSocket);
-  end;
-  PActive:=false;
-  closed:=true;
   {$IF defined(WINDOWS)}
     {$IF defined(CPU64)}
+    InterLockedExchange64(ASocket, FSocket);
     InterLockedExchange64(FSocket, INVALID_SOCKET);
     {$ELSE}
+    InterLockedExchange(LongInt(ASocket), LongInt(FSocket));
     InterLockedExchange(LongInt(FSocket), LongInt(INVALID_SOCKET));
     {$ENDIF}
   {$ELSE}
+  InterLockedExchange(ASocket, FSocket);
   InterLockedExchange(FSocket, -1);
   {$ENDIF}
+
+  closed:=false;
+  if {$IFDEF WINDOWS}ASocket<>INVALID_SOCKET{$ELSE}ASocket>=0{$ENDIF} then begin
+    SetLength(buffer,5);
+    {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
+    fpshutdown(ASocket,SHUT_WR);
+    lidos := fprecv(ASocket, @Buffer[0], 1, MSG_PEEK);
+    while lidos>0 do begin
+      lidos := fprecv(ASocket, @Buffer[0], 1, 0);
+      lidos := fprecv(ASocket, @Buffer[0], 1, MSG_PEEK);
+    end;
+    {$ELSE}
+    Shutdown(ASocket,1);
+    lidos := Recv(ASocket, Buffer[0], 1, MSG_PEEK);
+    while lidos>0 do begin
+      lidos := Recv(ASocket, Buffer[0], 1, 0);
+      lidos := Recv(ASocket, Buffer[0], 1, MSG_PEEK);
+    end;
+    {$IFEND}
+    CloseSocket(ASocket);
+  end;
+  closed:=true;
   SetLength(Buffer,0);
 end;
 
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
-  FSocketMutex.Enter;
-  try
-    closeMySocket(ok);
-  finally
-    FSocketMutex.Leave;
-  end;
+  if ([csDesigning]*ComponentState=[]) or FExclusiveDevice then
+    FConnectThread.Disconnect;
+  Ok:=true;
 end;
 
 function  TTCP_UDPPort.ComSettingsOK:Boolean;
@@ -611,24 +643,13 @@ begin
 end;
 
 procedure TTCP_UDPPort.DoReconnect;
-var
-  RetriesLimit, Retries, Interval, x: Integer;
 begin
-  InterLockedExchange(RetriesLimit, FReconnectRetriesLimit);
-  InterLockedExchange(Retries, FReconnectRetries);
-  InterLockedExchange(Interval, FReconnectInterval);
-
-  InterLockedExchange(x, FEnableAutoReconnect);
-  if (x<>0) and ((RetriesLimit=0) or (Retries<=RetriesLimit)) then
-    FConnectThread.WaitThenConnect(Interval);
+    FConnectThread.NotifyDisconnect;
 end;
 
 function TTCP_UDPPort.GetEnableAutoReconect: Boolean;
-var
-  x: Integer;
 begin
-  InterLockedExchange(x,FEnableAutoReconnect);
-  Result:=x<>0;
+  Result:=FConnectThread.EnableAutoReconnect;
 end;
 
 procedure TTCP_UDPPort.DoPortDisconnected(sender: TObject);
@@ -664,7 +685,6 @@ var
   flag, bufsize, sockType, sockProto:LongInt;
   ASocket:Tsocket;
 begin
-  FSocketMutex.Enter;
   closeMySocket(ok);
   Ok:=false;
 
@@ -686,7 +706,6 @@ begin
       ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
       {$IFEND}
       if ServerAddr=nil then begin
-        PActive:=false;
         RefreshLastOSError;
         exit;
       end;
@@ -700,7 +719,6 @@ begin
       if not GetHostByName(FHostName,{%H-}ServerAddr) then begin
         ServerAddr.Addr:=StrToHostAddr(FHostName);
         if ServerAddr.Addr.s_addr=0 then begin
-          PActive:=false;
           RefreshLastOSError;
           exit;
         end;
@@ -723,7 +741,6 @@ begin
           sockType  := SOCK_DGRAM;
         end
       else begin
-        PActive:=false;
         exit;
       end;
     end;
@@ -733,7 +750,6 @@ begin
     ASocket := fpSocket(PF_INET, sockType, sockProto);
 
     if ASocket<0 then begin
-      PActive:=false;
       RefreshLastOSError;
       exit;
     end;
@@ -742,7 +758,6 @@ begin
     ASocket :=   Socket(PF_INET, sockType, sockProto);
 
     if ASocket=INVALID_SOCKET then begin
-      PActive:=false;
       RefreshLastOSError;
       exit;
     end;
@@ -798,13 +813,10 @@ begin
     {$IFEND}
 
     if connect_with_timeout(ASocket,@channel,sizeof(channel),FTimeout)<>0 then begin
-      PActive:=false;
       RefreshLastOSError;
       exit;
     end;
     Ok:=true;
-    PActive:=true;
-    InterLockedExchange(FReconnectRetries, 0);
     {$IF defined(WINDOWS)}
     {$IF defined(CPU64)}
     InterLockedExchange64(FSocket,ASocket);
@@ -816,18 +828,9 @@ begin
     {$ENDIF}
     DoPortOpened(Self);
   finally
-    FSocketMutex.Leave;
     if not Ok then begin
-      CloseSocket(FSocket);
-      {$IF defined(WINDOWS)}
-        {$IF defined(CPU64)}
-        InterLockedExchange64(FSocket, INVALID_SOCKET);
-        {$ELSE}
-        InterLockedExchange(LongInt(FSocket), LongInt(INVALID_SOCKET));
-        {$ENDIF}
-      {$ELSE}
-      InterLockedExchange(FSocket, -1);
-      {$ENDIF}
+      CloseMySocket(Ok);
+      Ok:=false;
       CommPortOpenError;
     end;
   end;

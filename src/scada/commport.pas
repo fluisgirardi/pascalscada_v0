@@ -1498,8 +1498,10 @@ begin
   end else begin
     if v then begin
        InternalPortStart(x);
+       PActive:=x;
     end else begin
        InternalPortStop(x);
+       PActive:=x=false
     end;
   end;
 end;
@@ -1556,7 +1558,7 @@ begin
 
     PIOCmdCS.Enter;
     InIOCmdCS:=true;
-    if (not PActive) then
+    if (not ReallyActive) then
        exit;
 
     if Assigned(OnBegin) then
@@ -1645,7 +1647,7 @@ begin
 
     PIOCmdCS.Enter;
     InIOCmdCS:=true;
-    if (not PActive) then
+    if (not ReallyActive) then
        exit;
 
     if Assigned(OnBegin) then
@@ -1705,7 +1707,7 @@ begin
   try
      PIOCmdCS.Enter;
      //verify if the communication port is active.
-     if PActive then begin
+     if ReallyActive then begin
        //try
          //executes the I/O command.
          IOCommand(cmd,Packet);
