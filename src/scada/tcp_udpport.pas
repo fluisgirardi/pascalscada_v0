@@ -512,7 +512,7 @@ procedure TTCP_UDPPort.Read(Packet:PIOPacket);
 var
   lidos:LongInt;
   tentativas:Cardinal;
-  incretries, donothing:Boolean;
+  incretries:Boolean;
 begin
   tentativas := 0;
   lidos := 0;
@@ -549,7 +549,7 @@ procedure TTCP_UDPPort.Write(Packet:PIOPacket);
 var
   escritos:LongInt;
   tentativas:Cardinal;
-  incretries, donothing:Boolean;
+  incretries:Boolean;
 begin
   tentativas := 0;
   escritos := 0;
@@ -692,9 +692,10 @@ var
 
   flag, bufsize, sockType, sockProto:LongInt;
   ASocket:Tsocket;
+  MustCloseSocket: Boolean;
 begin
   Ok:=false;
-
+  MustCloseSocket:=false;
   try
     //##########################################################################
     // RESOLUCAO DE NOMES SOBRE WINDOWS 32/64 BITS.
@@ -769,6 +770,7 @@ begin
       exit;
     end;
     {$IFEND}
+    MustCloseSocket:=true;
 
     //##########################################################################
     //SETA AS OPCOES DO SOCKET
@@ -813,7 +815,7 @@ begin
     channel.sin_addr.S_addr := PInAddr(ServerAddr^.h_addr)^.S_addr;
     {$IFEND}
 
-    if connect_without_timeout(ASocket,@channel,sizeof(channel))<>0 then begin
+    if connect_with_timeout(ASocket,@channel,sizeof(channel),FTimeout)<>0 then begin
       RefreshLastOSError;
       exit;
     end;
@@ -837,6 +839,14 @@ begin
     DoPortOpened(Self);
   finally
     if not Ok then begin
+      if MustCloseSocket then begin
+        {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
+        fpshutdown(ASocket,SHUT_WR);
+        {$ELSE}
+        shutdown(ASocket, 1);
+        {$IFEND}
+        CloseSocket(ASocket);
+      end;
       CloseMySocket(Ok);
       Ok:=false;
       CommPortOpenError;

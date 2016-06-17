@@ -2414,8 +2414,7 @@ begin
       AddDataToWriteRequest(msgout, ReqType, 0, tagrec.Address+tagrec.OffSet+BytesSent, BytesBuffer);
     end;
 
-    if exchange(PLCPtr^, msgout, msgin, True) then begin
-      SetupPDU(msgin,false,incomingPDU, err);
+    if exchange(PLCPtr^, msgout, msgin, True) and SetupPDU(msgin,false,incomingPDU, err) then begin
       if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
