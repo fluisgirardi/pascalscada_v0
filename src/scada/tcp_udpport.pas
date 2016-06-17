@@ -815,16 +815,16 @@ begin
     channel.sin_addr.S_addr := PInAddr(ServerAddr^.h_addr)^.S_addr;
     {$IFEND}
 
-    if connect_with_timeout(ASocket,@channel,sizeof(channel),FTimeout)<>0 then begin
-      RefreshLastOSError;
-      exit;
-    end;
-
     //##########################################################################
     //SETA O MODO DE OPERACAO DE NAO BLOQUEIO DE CHAMADA.
     //SET THE NON-BLOCKING OPERATING MODE OF THE SOCKET
     //##########################################################################
     setblockingmode(ASocket,MODE_NONBLOCKING);
+
+    if connect_with_timeout(ASocket,@channel,sizeof(channel),FTimeout)<>0 then begin
+      RefreshLastOSError;
+      exit;
+    end;
 
     Ok:=true;
     {$IF defined(WINDOWS)}
