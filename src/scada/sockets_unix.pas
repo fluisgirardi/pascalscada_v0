@@ -42,6 +42,7 @@ uses
   }
   {$ENDIF}
   function connect_with_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen; timeout:LongInt):LongInt;
+  function connect_without_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen):LongInt;
 
   {$IFDEF PORTUGUES}
   {:
@@ -84,7 +85,7 @@ uses
   @returns(@True if stills connected.)
   }
   {$ENDIF}
-  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var FSocket:TSocket; CloseSocketProc:TConnectEvent; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 
   {$IFDEF PORTUGUES}
   {:
@@ -165,6 +166,18 @@ begin
   end;
 end;
 
+function connect_without_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen):LongInt;
+var
+  sel:tpollfd;
+  mode:LongInt;
+begin
+  Result:=0;
+
+  if fpconnect(sock, address, address_len) <> 0 then begin
+    Result := -1;   //error.
+  end;
+end;
+
 function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
 var
   sel:tpollfd;
@@ -225,10 +238,13 @@ begin
   end;
 end;
 
-function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+function CheckConnection(var CommResult: TIOResult; var incRetries: Boolean;
+  var FSocket: TSocket; CloseSocketProc: TConnectEvent;
+  DoCommPortDisconected: TDisconnectNotifierProc): Boolean;
 var
   retval, nbytes:LongInt;
   sel:tpollfd;
+  closed: Boolean;
 begin
   Result:=true;
 
@@ -237,10 +253,10 @@ begin
   retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
 
   if retval<>0 then begin
+    if Assigned(CloseSocketProc) then CloseSocketProc(closed);
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=false;
     Result:=false;
     exit;
   end;
@@ -265,20 +281,20 @@ begin
   end;
 
   if (retval<0) then begin //error on socket...
+    if Assigned(CloseSocketProc) then CloseSocketProc(closed);
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=false;
     Result:=false;
     exit;
   end;
 
   if (retval=1) then begin  // seems there is something in our receive buffer!!
     if ((sel.revents and POLLERR)=POLLERR) or ((sel.revents and POLLHUP)=POLLHUP) or ((sel.revents and POLLNVAL)=POLLNVAL) then begin
+      if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorPortError;
-      PActive:=false;
       Result:=false;
       exit;
     end;
@@ -287,19 +303,19 @@ begin
     retval:=FpIOCtl(FSocket,FIONREAD,@nbytes);
 
     if (retval<>0) then begin  // some error occured
+      if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorPortError;
-      PActive:=false;
       Result:=false;
       exit;
     end;
 
     if (nbytes=0) then begin
+      if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorNotReady;
-      PActive:=false;
       Result:=false;
       exit;
     end;

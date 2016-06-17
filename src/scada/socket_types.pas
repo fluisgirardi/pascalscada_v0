@@ -24,6 +24,7 @@ uses
   {$IFEND}
 
 type
+  TConnectEvent=procedure(var Ok:Boolean) of object;
 
   //@exclude
   {$IF defined(FPC) AND (FPC_FULLVERSION >= 20400)}

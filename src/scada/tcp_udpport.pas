@@ -36,9 +36,6 @@ uses
 
 type
 
-  TConnectEvent=procedure(var Ok:Boolean) of object;
-
-
   { TConnectThread }
 
   TConnectThread = class(TCrossThread)
@@ -295,14 +292,16 @@ begin
                ReconnectTimerRunning:=false
              else
                if(FAutoReconnect=1) then begin
-                 ReconnectTimerRunning:=true;
-                 ReconnectStarted:=Now;
+                  if ReconnectTimerRunning=false then
+                    ReconnectStarted:=Now;
+                  ReconnectTimerRunning:=true;
                end;
            end;
         end;
         1: begin
+          if ReconnectTimerRunning=false then
+            ReconnectStarted:=Now;
           ReconnectTimerRunning:=true;
-          ReconnectStarted:=Now;
         end;
         2: begin
           ReconnectTimerRunning:=false;
@@ -526,7 +525,7 @@ begin
     end;
 
     if lidos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, donothing, FSocket, @CommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, FSocket, @CloseMySocket, @CommPortDisconected) then
         break;
       if incRetries then
         inc(tentativas);
@@ -563,7 +562,7 @@ begin
     end;
 
     if escritos<=0 then begin
-      if not CheckConnection(Packet^.ReadIOResult, incretries, donothing, FSocket, @CommPortDisconected) then
+      if not CheckConnection(Packet^.ReadIOResult, incretries, FSocket, @CloseMySocket, @CommPortDisconected) then
         break;
       if incRetries then
         inc(tentativas);
@@ -772,12 +771,6 @@ begin
     {$IFEND}
 
     //##########################################################################
-    //SETA O MODO DE OPERACAO DE NAO BLOQUEIO DE CHAMADA.
-    //SET THE NON-BLOCKING OPERATING MODE OF THE SOCKET
-    //##########################################################################
-    setblockingmode(ASocket,MODE_NONBLOCKING);
-
-    //##########################################################################
     //SETA AS OPCOES DO SOCKET
     //OPCOES DE TIMEOUT IRÃO SER FEITAS USANDO SELECT/FPSELECT
     //POIS ESTAS OPÇÕES NÃO SAO SUPORTADAS POR ALGUNS SISTEMAS OPERACIONAIS
@@ -820,10 +813,17 @@ begin
     channel.sin_addr.S_addr := PInAddr(ServerAddr^.h_addr)^.S_addr;
     {$IFEND}
 
-    if connect_with_timeout(ASocket,@channel,sizeof(channel),FTimeout)<>0 then begin
+    if connect_without_timeout(ASocket,@channel,sizeof(channel))<>0 then begin
       RefreshLastOSError;
       exit;
     end;
+
+    //##########################################################################
+    //SETA O MODO DE OPERACAO DE NAO BLOQUEIO DE CHAMADA.
+    //SET THE NON-BLOCKING OPERATING MODE OF THE SOCKET
+    //##########################################################################
+    setblockingmode(ASocket,MODE_NONBLOCKING);
+
     Ok:=true;
     {$IF defined(WINDOWS)}
     {$IF defined(CPU64)}
