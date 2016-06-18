@@ -39,9 +39,6 @@ SD                 |      16         |        16        | valor/value       Spec
 {$ENDIF}
 unit MelsecDriver;
 
-{$IFDEF FPC}
-{$mode delphi}
-{$ENDIF}
 
 interface
 
@@ -72,6 +69,8 @@ type
   end;
 
   TSeriesCLP = (Serie_Q_L,Serie_IQR);
+
+  { TMelsecDriver }
 
   TMelsecDriver = class(TProtocolDriver)
   private
@@ -145,9 +144,9 @@ type
   public
     constructor Create(AOwner:TComponent); override;
     destructor Destroy; override;
-    function  SizeOfTag(Tag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
-    procedure OpenTagEditor(OwnerOfNewTags: TComponent;
-       InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc); override;
+    function  SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
+    procedure OpenTagEditor(InsertHook:TAddTagInEditorHook;
+      CreateProc:TCreateTagProc); override;
     function HasTabBuilderEditor: Boolean; override;
   end;
 
@@ -158,9 +157,7 @@ implementation
 
 uses crossdatetime, pascalScadaMTPCPU;
 
-{ TMelsecDriver }
-
-procedure TMelsecDriver.BuildTagRec(plc, func, startaddress, size: Integer;
+procedure TMelsecDriver.BuildTagRec(plc, func, startaddress, size: LongInt;
   var tr: TTagRec);
 begin
   with tr do begin
@@ -462,8 +459,8 @@ var
 begin
   try
     if FMustReleaseResources then begin
-      starts:=HighLatencyOperationWillBegin;
-      ends  :=HighLatencyOperationWasEnded;
+      starts:=@HighLatencyOperationWillBegin;
+      ends  :=@HighLatencyOperationWasEnded;
     end else
     begin
       starts:=nil;
@@ -517,7 +514,7 @@ begin
   end;
 end;
 
-procedure TMelsecDriver.DoScanRead(Sender: TObject; var NeedSleep: Integer);
+procedure TMelsecDriver.DoScanRead(Sender: TObject; var NeedSleep: LongInt);
 var
   plc,block:LongInt;
   done,first:Boolean;
@@ -897,13 +894,13 @@ begin
 end;
 
 function TMelsecDriver.EncodePkg(TagObj: TTagRec; ToWrite: TArrayOfDouble;
-  var ResultLen: Integer): BYTES;
+  var ResultLen: LongInt): BYTES;
 begin
   Result:=nil;
 end;
 
 function TMelsecDriver.GetTagProperts(TagObj: TTag; var Station, Address, Size,
-  RegType, ScanTime: Integer): Boolean;
+  RegType, ScanTime: LongInt): Boolean;
 var
   found:Boolean;
 begin
@@ -951,12 +948,11 @@ end;
 var
   MelsecTagBuilderEditor:TOpenTagEditor = nil;
 
-
-procedure TMelsecDriver.OpenTagEditor(OwnerOfNewTags: TComponent;
-  InsertHook: TAddTagInEditorHook; CreateProc: TCreateTagProc);
+procedure TMelsecDriver.OpenTagEditor(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
 begin
   if Assigned(MelsecTagBuilderEditor) then
-    MelsecTagBuilderEditor(Self,OwnerOfNewTags,InsertHook,CreateProc)
+    MelsecTagBuilderEditor(Self,Self.Owner,InsertHook,CreateProc)
   else
     inherited;
 end;
@@ -1102,33 +1098,33 @@ begin
   FSerieCLP := NewSerieCLP;
 end;
 
-function TMelsecDriver.SizeOfTag(Tag: TTag; isWrite: Boolean;
+function TMelsecDriver.SizeOfTag(aTag: TTag; isWrite: Boolean;
   var ProtocolTagType: TProtocolTagType): BYTE;
 var
   FunctionCode:Cardinal;
 begin
   FunctionCode := 0;
-  if (Tag is TPLCTagNumber) then begin
+  if (aTag is TPLCTagNumber) then begin
     if (isWrite) then
-      FunctionCode := TPLCTagNumber(Tag).MemWriteFunction
+      FunctionCode := TPLCTagNumber(aTag).MemWriteFunction
     else
-      FunctionCode := TPLCTagNumber(Tag).MemReadFunction;
+      FunctionCode := TPLCTagNumber(aTag).MemReadFunction;
   end;
 
   //TPLCBlock and TPLCStruct
-  if (Tag is TPLCBlock) then begin
+  if (aTag is TPLCBlock) then begin
     if (isWrite) then
-      FunctionCode := TPLCBlock(Tag).MemWriteFunction
+      FunctionCode := TPLCBlock(aTag).MemWriteFunction
     else
-      FunctionCode := TPLCBlock(Tag).MemReadFunction;
+      FunctionCode := TPLCBlock(aTag).MemReadFunction;
   end;
 
   //TPLCString
-  if (Tag is TPLCString) then begin
+  if (aTag is TPLCString) then begin
     if (isWrite) then
-      FunctionCode := TPLCString(Tag).MemWriteFunction
+      FunctionCode := TPLCString(aTag).MemWriteFunction
     else
-      FunctionCode := TPLCString(Tag).MemReadFunction;
+      FunctionCode := TPLCString(aTag).MemReadFunction;
   end;
 
 

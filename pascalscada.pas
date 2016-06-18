@@ -4,20 +4,21 @@
 
 unit pascalscada;
 
+{$warn 5023 off : no warning about unused units}
 interface
 
 uses
+  MelsecDriver, MelsecTCP, bitmappertagassistant, blockstructtagassistant, 
   CommPort, commtypes, crc16utils, IBoxDriver, ISOTCPDriver, 
-  LinearScaleProcessor, ModBusDriver, ModBusSerial, ModBusTCP, MutexClient, 
-  mutexserver, OPCDAProtocol, PLCBlock, PLCBlockElement, PLCMemoryManager, 
-  PLCNumber, PLCString, PLCStruct, PLCStructElement, PLCTag, PLCTagNumber, 
-  ProtocolDriver, ProtocolTypes, protscan, protscanupdate, s7family, S7Types, 
-  scadapropeditor, scadareg, SerialPort, Tag, TagBit, TagBlock, tagcollection, 
-  tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, 
-  UserScale, ustructuremapper, uwesttagbuilder, ValueProcessor, 
-  WestASCIIDriver, siemenstagassistant, modbustagassistant, 
-  westasciitagassistant, bitmappertagassistant, blockstructtagassistant, 
-  s7scanreq, LazarusPackageIntf;
+  LinearScaleProcessor, ModBusDriver, ModBusSerial, modbustagassistant, 
+  ModBusTCP, MutexClient, mutexserver, OPCDAProtocol, PLCBlock, 
+  PLCBlockElement, PLCMemoryManager, PLCNumber, PLCString, PLCStruct, 
+  PLCStructElement, PLCTag, PLCTagNumber, ProtocolDriver, ProtocolTypes, 
+  protscan, protscanupdate, s7family, s7scanreq, S7Types, scadapropeditor, 
+  scadareg, SerialPort, siemenstagassistant, Tag, TagBit, TagBlock, 
+  tagcollection, tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, 
+  us7tagbuilder, UserScale, ustructuremapper, uwesttagbuilder, ValueProcessor, 
+  WestASCIIDriver, westasciitagassistant, LazarusPackageIntf;
 
 implementation
 

@@ -30,7 +30,7 @@ uses
   PLCBlock, PLCBlockElement, PLCString, PLCNumber, UserScale, ValueProcessor,
   scadapropeditor, hsstrings, TagBit, ProtocolDriver, WestASCIIDriver,
   IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
-  mutexserver, MutexClient, siemenstagassistant, modbustagassistant,
+  mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
@@ -50,25 +50,26 @@ uses
   {$ENDIF}
 procedure Register;
 begin
-  RegisterComponents(strPortsPallete,     [TSerialPortDriver]);
-  RegisterComponents(strPortsPallete,     [TTCP_UDPPort]);
-  RegisterComponents(strProtocolsPallete, [TModBusRTUDriver]);
-  RegisterComponents(strProtocolsPallete, [TModBusTCPDriver]);
-  RegisterComponents(strProtocolsPallete, [TWestASCIIDriver]);
-  RegisterComponents(strProtocolsPallete, [TIBoxDriver]);
-  RegisterComponents(strProtocolsPallete, [TISOTCPDriver]);
-  RegisterComponents(strUtilsPallete,     [TScalesQueue]);
-  RegisterComponents(strUtilsPallete,     [TLinearScaleProcessor]);
-  RegisterComponents(strUtilsPallete,     [TUserScale]);
-  RegisterComponents(strUtilsPallete,     [TMutexServer]);
-  RegisterComponents(strUtilsPallete,     [TMutexClient]);
-  RegisterComponents(strTagsPallete,      [TPLCTagNumber]);
-  RegisterComponents(strTagsPallete,      [TPLCBlock]);
-  RegisterComponents(strTagsPallete,      [TPLCBlockElement]);
-  RegisterComponents(strTagsPallete,      [TPLCString]);
-  RegisterComponents(strTagsPallete,      [TTagBit]);
-  RegisterComponents(strTagsPallete,      [TPLCStruct]);
-  RegisterComponents(strTagsPallete,      [TPLCStructItem]);
+  RegisterComponents(strPortsPallete,     [TSerialPortDriver,
+                                           TTCP_UDPPort]);
+  RegisterComponents(strProtocolsPallete, [TModBusRTUDriver,
+                                           TModBusTCPDriver,
+                                           TWestASCIIDriver,
+                                           TIBoxDriver,
+                                           TISOTCPDriver,
+                                           TMelsecTCPDriver]);
+  RegisterComponents(strUtilsPallete,     [TScalesQueue,
+                                           TLinearScaleProcessor,
+                                           TUserScale,
+                                           TMutexServer,
+                                           TMutexClient]);
+  RegisterComponents(strTagsPallete,      [TPLCTagNumber,
+                                           TPLCBlock,
+                                           TPLCBlockElement,
+                                           TPLCString,
+                                           TTagBit,
+                                           TPLCStruct,
+                                           TPLCStructItem]);
 
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
