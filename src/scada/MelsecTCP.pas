@@ -149,43 +149,31 @@ begin
 
         if Length(PMelsecPLC)>0 then
         begin
-          if pkg.BufferToWrite[18] = 144 then  //M
-            PMelsecPLC[0].OutPuts_M.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 145 then  //SM
-            PMelsecPLC[0].OutPuts_SM.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 146 then  //L
-            PMelsecPLC[0].OutPuts_L.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 147 then  //F
-            PMelsecPLC[0].OutPuts_F.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 148 then  //V
-            PMelsecPLC[0].OutPuts_V.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 156 then  //X
-            PMelsecPLC[0].OutPuts_X.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 157 then  //Y
-            PMelsecPLC[0].OutPuts_Y.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 160 then  //B
-            PMelsecPLC[0].OutPuts_B.SetValues(address,len,1,Values,Result);
+          case pkg.BufferToWrite[18] of
+            144: PMelsecPLC[0].OutPuts_M.SetValues(address,len,1,Values,Result);
+            145: PMelsecPLC[0].OutPuts_SM.SetValues(address,len,1,Values,Result);
+            146: PMelsecPLC[0].OutPuts_L.SetValues(address,len,1,Values,Result);
+            147: PMelsecPLC[0].OutPuts_F.SetValues(address,len,1,Values,Result);
+            148: PMelsecPLC[0].OutPuts_V.SetValues(address,len,1,Values,Result);
+            156: PMelsecPLC[0].OutPuts_X.SetValues(address,len,1,Values,Result);
+            157: PMelsecPLC[0].OutPuts_Y.SetValues(address,len,1,Values,Result);
+            160: PMelsecPLC[0].OutPuts_B.SetValues(address,len,1,Values,Result);
+          end;
         end;
       end
       else
         if foundPLC then
         begin
-          if pkg.BufferToWrite[18] = 144 then   //M
-            PMelsecPLC[plc].OutPuts_M.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 145 then   //SM
-            PMelsecPLC[plc].OutPuts_SM.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 146 then   //L
-            PMelsecPLC[plc].OutPuts_L.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 147 then   //F
-            PMelsecPLC[plc].OutPuts_F.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 148 then   //V
-            PMelsecPLC[plc].OutPuts_V.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 156 then   //X
-            PMelsecPLC[plc].OutPuts_X.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 157 then   //Y
-            PMelsecPLC[plc].OutPuts_Y.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 160 then   //B
-            PMelsecPLC[plc].OutPuts_B.SetFault(address,len,1,Result);
+          case pkg.BufferToWrite[18] of
+            144: PMelsecPLC[plc].OutPuts_M.SetFault(address,len,1,Result);
+            145: PMelsecPLC[plc].OutPuts_SM.SetFault(address,len,1,Result);
+            146: PMelsecPLC[plc].OutPuts_L.SetFault(address,len,1,Result);
+            147: PMelsecPLC[plc].OutPuts_F.SetFault(address,len,1,Result);
+            148: PMelsecPLC[plc].OutPuts_V.SetFault(address,len,1,Result);
+            156: PMelsecPLC[plc].OutPuts_X.SetFault(address,len,1,Result);
+            157: PMelsecPLC[plc].OutPuts_Y.SetFault(address,len,1,Result);
+            160: PMelsecPLC[plc].OutPuts_B.SetFault(address,len,1,Result);
+          end;
         end;
     end;
 
@@ -218,22 +206,16 @@ begin
           end;
           if Length(PMelsecPLC)>0 then
           begin
-            if pkg.BufferToWrite[18] = 144 then  //M
-              PMelsecPLC[0].OutPuts_M.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 145 then //SM
-              PMelsecPLC[0].OutPuts_SM.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 146 then //L
-              PMelsecPLC[0].OutPuts_L.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 147 then //F
-              PMelsecPLC[0].OutPuts_F.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 148 then //V
-              PMelsecPLC[0].OutPuts_V.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 156 then //X
-              PMelsecPLC[0].OutPuts_X.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 157 then //Y
-              PMelsecPLC[0].OutPuts_Y.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 160 then //B
-              PMelsecPLC[0].OutPuts_B.SetValues(address,1,1,Values,Result);
+            case pkg.BufferToWrite[18] of
+              144: PMelsecPLC[0].OutPuts_M.SetValues(address,1,1,Values,Result);
+              145: PMelsecPLC[0].OutPuts_SM.SetValues(address,1,1,Values,Result);
+              146: PMelsecPLC[0].OutPuts_L.SetValues(address,1,1,Values,Result);
+              147: PMelsecPLC[0].OutPuts_F.SetValues(address,1,1,Values,Result);
+              148: PMelsecPLC[0].OutPuts_V.SetValues(address,1,1,Values,Result);
+              156: PMelsecPLC[0].OutPuts_X.SetValues(address,1,1,Values,Result);
+              157: PMelsecPLC[0].OutPuts_Y.SetValues(address,1,1,Values,Result);
+              160: PMelsecPLC[0].OutPuts_B.SetValues(address,1,1,Values,Result);
+            end;
           end;
           address := address + 1;
         end;
@@ -241,22 +223,16 @@ begin
       else
         if foundPLC then
         begin
-          if pkg.BufferToWrite[18] = 144 then     //M
-            PMelsecPLC[0].OutPuts_M.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 145 then    //SM
-            PMelsecPLC[0].OutPuts_SM.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 146 then    //L
-            PMelsecPLC[0].OutPuts_L.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 147 then    //F
-            PMelsecPLC[0].OutPuts_F.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 148 then    //V
-            PMelsecPLC[0].OutPuts_V.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 156 then    //X
-            PMelsecPLC[0].OutPuts_X.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 157 then    //Y
-            PMelsecPLC[0].OutPuts_Y.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 160 then    //B
-            PMelsecPLC[0].OutPuts_B.SetFault(address,len,1,Result);
+          case pkg.BufferToWrite[18] of
+            144: PMelsecPLC[0].OutPuts_M.SetFault(address,len,1,Result);
+            145: PMelsecPLC[0].OutPuts_SM.SetFault(address,len,1,Result);
+            146: PMelsecPLC[0].OutPuts_L.SetFault(address,len,1,Result);
+            147: PMelsecPLC[0].OutPuts_F.SetFault(address,len,1,Result);
+            148: PMelsecPLC[0].OutPuts_V.SetFault(address,len,1,Result);
+            156: PMelsecPLC[0].OutPuts_X.SetFault(address,len,1,Result);
+            157: PMelsecPLC[0].OutPuts_Y.SetFault(address,len,1,Result);
+            160: PMelsecPLC[0].OutPuts_B.SetFault(address,len,1,Result);
+          end;
         end;
     end;
   end;
@@ -291,19 +267,19 @@ begin
 
         if Length(PMelsecPLC)>0 then
         begin
-          if pkg.BufferToWrite[18] = 168 then     //D
-            PMelsecPLC[0].Registers_D.SetValues(address,len,1,Values,Result);
-          if pkg.BufferToWrite[18] = 169 then     //SD
-            PMelsecPLC[0].Registers_SD.SetValues(address,len,1,Values,Result);
+          case pkg.BufferToWrite[18] of
+            168: PMelsecPLC[0].Registers_D.SetValues(address,len,1,Values,Result);
+            169: PMelsecPLC[0].Registers_SD.SetValues(address,len,1,Values,Result);
+          end;
         end;
       end
       else
         if foundPLC then
         begin
-          if pkg.BufferToWrite[18] = 168 then     //D
-            PMelsecPLC[plc].Registers_D.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 169 then     //SD
-            PMelsecPLC[plc].Registers_SD.SetFault(address,len,1,Result);
+          case pkg.BufferToWrite[18] of
+            168: PMelsecPLC[plc].Registers_D.SetFault(address,len,1,Result);
+            169: PMelsecPLC[plc].Registers_SD.SetFault(address,len,1,Result);
+          end;
         end;
     end;
 
@@ -324,10 +300,10 @@ begin
 
           if Length(PMelsecPLC)>0 then
           begin
-            if pkg.BufferToWrite[18] = 168 then     //D
-              PMelsecPLC[0].Registers_D.SetValues(address,1,1,Values,Result);
-            if pkg.BufferToWrite[18] = 169 then     //SD
-              PMelsecPLC[0].Registers_SD.SetValues(address,1,1,Values,Result);
+            case pkg.BufferToWrite[18] of
+              168: PMelsecPLC[0].Registers_D.SetValues(address,1,1,Values,Result);
+              169: PMelsecPLC[0].Registers_SD.SetValues(address,1,1,Values,Result);
+            end;
           end;
           address := address + 1;
         end;
@@ -336,10 +312,10 @@ begin
       else
         if foundPLC then
         begin
-          if pkg.BufferToWrite[18] = 168 then     //D
-            PMelsecPLC[0].Registers_D.SetFault(address,len,1,Result);
-          if pkg.BufferToWrite[18] = 169 then     //SD
-            PMelsecPLC[0].Registers_SD.SetFault(address,len,1,Result);
+          case pkg.BufferToWrite[18] of
+            168: PMelsecPLC[0].Registers_D.SetFault(address,len,1,Result);
+            169: PMelsecPLC[0].Registers_SD.SetFault(address,len,1,Result);
+          end;
         end;
     end;
   end;
