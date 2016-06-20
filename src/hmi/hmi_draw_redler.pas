@@ -6,33 +6,33 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basic_horizontal_control,
-  BGRABitmap, BGRABitmapTypes;
+  BGRABitmap, BGRABitmapTypes, hmi_polyline;
 
 type
 
-  { TRedlerBasico }
+  { THMICustomBasicRedler }
 
-  { THMIRedlerBasico }
-
-  THMIRedlerBasico = class(THMIBasicHorizontalControl)
+  THMICustomBasicRedler = class(THMIBasicHorizontalControl)
   protected
     procedure UpdateShape; override;
     procedure SetBodyHeight(AValue: Byte); override;
     procedure DrawControl; override;
   end;
 
+  THMIRedlerBasico = class(THMICustomBasicRedler);
+
 implementation
 
-{ TRedlerBasico }
+{ THMICustomBasicRedler }
 
-procedure THMIRedlerBasico.UpdateShape;
+procedure THMICustomBasicRedler.UpdateShape;
 begin
   //evita chamar o metodo herdado
   //pois este e um controle retangular
   //e nao necessita de cortes.
 end;
 
-procedure THMIRedlerBasico.SetBodyHeight(AValue: Byte);
+procedure THMICustomBasicRedler.SetBodyHeight(AValue: Byte);
 var
   minheight: Integer;
 begin
@@ -42,7 +42,7 @@ begin
   inherited SetBodyHeight(AValue);
 end;
 
-procedure THMIRedlerBasico.DrawControl;
+procedure THMICustomBasicRedler.DrawControl;
 var
   eixo_h, eixo_top, pa_h, pa_x:Integer;
   emptyArea: TBGRABitmap;

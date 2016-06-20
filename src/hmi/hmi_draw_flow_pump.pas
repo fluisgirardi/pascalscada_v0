@@ -28,9 +28,9 @@ type
     procedure ShowZone(aZone:THMIFlowZone);
     procedure UpdateValve; virtual;
     procedure UpdateFlow; virtual;
-    property InputPolyline:THMIFlowPolyline read FInputPolyline write SetInputPolyline;
-    property OutputPolyline:THMIFlowPolyline read FOutputPolyline write SetOutputPolyline;
-    property PumpStates:THMIFlowZones read FPumpStates write SetPumpStates;
+    property  InputPolyline:THMIFlowPolyline read FInputPolyline write SetInputPolyline;
+    property  OutputPolyline:THMIFlowPolyline read FOutputPolyline write SetOutputPolyline;
+    property  ColorAndFlowStates:THMIFlowZones read FPumpStates write SetPumpStates;
     procedure PumpStateChanged(Sender: TObject);
     procedure PumpStateNeedsComponentState(var CurState: TComponentState);
     procedure NextZone(Sender: TObject);
@@ -60,7 +60,7 @@ type
     property InputPolyline;
     property OutputPolyline;
     property PLCTag;
-    property PumpStates;
+    property ColorAndFlowStates;
 
     property Action;
     property OnClick;
