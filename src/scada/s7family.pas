@@ -143,14 +143,14 @@ type
     {$ELSE}
     //: Gets a byte from a pointer of bytes.
     {$ENDIF}
-    function  GetByte(Ptr:PByte; idx:LongInt):LongInt;
+    //function  GetByte(Ptr:PByte; idx:LongInt):LongInt;
 
     {$IFDEF PORTUGUES}
     //: Seta um byte em um ponteiro de bytes.
     {$ELSE}
     //: Sets a byte in a pointer of bytes.
     {$ENDIF}
-    procedure SetByte(Ptr:PByte; idx:LongInt; value:Byte);
+    //procedure SetByte(Ptr:PByte; idx:LongInt; value:Byte);
 
     {$IFDEF PORTUGUES}
     //: Seta varios bytes em um ponteiro de bytes.
@@ -1128,7 +1128,7 @@ begin
   if exchange(CPU,Msg,msgIn,false) then begin
 
     if SetupPDU(msgIn, false, pdu, err) then begin
-      CPU.MaxPDULen:=GetByte(pdu.param,6)*256+GetByte(pdu.param,7);
+      CPU.MaxPDULen:=pdu.param[6]*256+pdu.param[7];
       CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes of header + 2 bytes of error code + 2 bytes of read request + 4 bytes of informations about the request.
       //ajusta o tamanho máximo dos blocos;
       //adjust the maximum block size.
@@ -1273,9 +1273,9 @@ begin
   AddParam(msgOut, param);
 
   SetupPDU(msgOut, true, PDU, err);
-  NumReq:=GetByte(PDU.param,1);
+  NumReq:=PDU.param[1];
   NumReq:=NumReq+1;
-  SetByte(PDU.param,1,NumReq);
+  PDU.param[1]:=NumReq;
 
   SetLength(param, 0);
 end;
@@ -1345,9 +1345,9 @@ begin
   AddParam(msgOut, param);
 
   SetupPDU(msgOut, true, PDU, Err);
-  NumReq:=GetByte(PDU.param,1);
+  NumReq:=PDU.param[1];
   NumReq:=NumReq+1;
-  SetByte(PDU.param,1,NumReq);
+  PDU.param[1]:=NumReq;
 
   SetLength(param, 0);
 end;
@@ -1575,17 +1575,17 @@ var
 begin
   if writepkg then begin
     if not SetupPDU(pkgout, true, PDU, err) then exit;
-    if GetByte(PDU.param,0)<>S7FuncWrite then exit;
+    if PDU.param[0]<>S7FuncWrite then exit;
   end else begin
     if not SetupPDU(pkgin, false, PDU, err) then exit;
-    if GetByte(PDU.param,0)<>S7FuncRead then exit;
+    if PDU.param[0]<>S7FuncRead then exit;
   end;
-  NumResults:=GetByte(PDU.param, 1);
+  NumResults:=PDU.param[1];
   CurResult:=0;
   DataIdx:=0;
   DataLen:=PDU.data_len;
   while CurResult<NumResults do begin
-    ResultCode:=GetByte(PDU.data, DataIdx);
+    ResultCode:=PDU.data[DataIdx];
 
     if writepkg and (ResultCode=0) then
       ProtocolErrorCode:=ioOk
@@ -1593,17 +1593,17 @@ begin
       ProtocolErrorCode:=S7ErrorCodeToProtocolErrorCode(ResultCode);
 
     if (writepkg or (ResultCode=$FF)) AND (DataLen>4) then begin
-      ResultLen:=GetByte(PDU.data, DataIdx+2)*$100 + GetByte(PDU.data, DataIdx+3);
+      ResultLen:=PDU.data[DataIdx+2]*$100 + PDU.data[DataIdx+3];
       //o tamanho está em bits, precisa de ajuste.
       //if the size is in bits, adjust to bytes
-      if GetByte(PDU.data, DataIdx+1)=4 then
+      if PDU.data[DataIdx+1]=4 then
         ResultLen:=ResultLen div 8
       else begin
         //3 o restultado já está em bytes
         //e 9 o resultado está em bits, mas cada bit em um byte.
         //if 3, the result already is in bytes
         //if 9, the result is in bits, but each byte stores one bit
-        if not (GetByte(PDU.data, DataIdx+1) in [3,9]) then
+        if not (PDU.data[DataIdx+1] in [3,9]) then
           exit;
       end;
     end else begin
@@ -1619,7 +1619,7 @@ begin
       SetLength(ResultValues,ResultLen);
       CurValue:=0;
       while (CurValue<ResultLen) AND (CurValue<Length(ResultValues)) do begin
-        ResultValues[CurValue]:=GetByte(PDU.data, DataIdx+4+CurValue);
+        ResultValues[CurValue]:=PDU.data[DataIdx+4+CurValue];
         inc(CurValue);
       end;
 
@@ -2415,7 +2415,7 @@ begin
     end;
 
     if exchange(PLCPtr^, msgout, msgin, True) and SetupPDU(msgin,false,incomingPDU, err) then begin
-      if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
+      if (incomingPDU.data_len>0) and (incomingPDU.data[0]=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
         if foundplc then begin
@@ -2432,7 +2432,7 @@ begin
           Result:=ioPartialOk
         end else
           if incomingPDU.data_len>0 then begin
-            Result:=S7ErrorCodeToProtocolErrorCode(GetByte(incomingPDU.data,0))
+            Result:=S7ErrorCodeToProtocolErrorCode(incomingPDU.data[0])
           end else
             Result := ioCommError;
         exit;
@@ -2572,7 +2572,7 @@ begin
 
     if exchange(PLCPtr^, msgout, msgin, false) then begin
       SetupPDU(msgin,false,incomingPDU, Err);
-      if (incomingPDU.data_len>0) and (GetByte(incomingPDU.data,0)=$FF) then begin
+      if (incomingPDU.data_len>0) and (incomingPDU.data[0]=$FF) then begin
         hasAtLeastOneSuccess:=true;
         Result:=ioOk;
         if foundplc then begin
@@ -2590,7 +2590,7 @@ begin
           Result:=ioPartialOk
         end else
           if incomingPDU.data_len>0 then begin
-            Result:=S7ErrorCodeToProtocolErrorCode(GetByte(incomingPDU.data,0))
+            Result:=S7ErrorCodeToProtocolErrorCode(incomingPDU.data[0])
           end else
             Result := ioCommError;
         exit;
@@ -2727,24 +2727,6 @@ begin
     exit;
   end;
   raise Exception.Create(SinvalidTag);
-end;
-
-function TSiemensProtocolFamily.GetByte(Ptr:PByte; idx:LongInt):LongInt;
-var
-  inptr:PByte;
-begin
-  inptr:=Ptr;
-  inc(inptr, idx);
-  Result := inptr^;
-end;
-
-procedure TSiemensProtocolFamily.SetByte(Ptr:PByte; idx:LongInt; value:Byte);
-var
-  inptr:PByte;
-begin
-  inptr:=Ptr;
-  inc(inptr, idx);
-  inptr^ := value;
 end;
 
 procedure TSiemensProtocolFamily.SetBytes(Ptr:PByte; idx:LongInt; values:BYTES);
