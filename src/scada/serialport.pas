@@ -342,7 +342,7 @@ const FILE_ANY_ACCESS         =0;
 
 {$IFDEF UNIX}
 {$IFDEF LINUX}
-var PortPrefix:array[0..0] of AnsiString = ('tty');
+var PortPrefix:array[0..2] of AnsiString = ('tty', 'ttyUSB', 'ttyACM');
 {$ENDIF}
 {$IFDEF FREEBSD}
 var PortPrefix:array[0..0] of AnsiString = ('cuad');

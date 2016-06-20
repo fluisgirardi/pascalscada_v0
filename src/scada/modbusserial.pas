@@ -340,9 +340,9 @@ begin
           aux := PModbusPLC[plc].Inputs;
       end;
 
+      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
+      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-        len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
         SetLength(Values,len);
 
         i := 0;
@@ -376,9 +376,9 @@ begin
           aux := PModbusPLC[plc].AnalogReg;
       end;
 
+      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
+      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-        len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
         SetLength(Values,len);
 
         // data are ok
@@ -396,8 +396,9 @@ begin
     // decodifica a escrita de uma saida digital
     // decodes a write to a single coil
     $05: begin
+      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+
         SetLength(values,1);
 
         if (pkg.BufferToWrite[4]=0) and (pkg.BufferToWrite[5]=0) then
@@ -415,8 +416,8 @@ begin
     // decodifica a escrita de um registro
     // decodes a write to a single register
     $06: begin
+      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
         SetLength(values,1);
 
         values[0] := pkg.BufferToWrite[4]*256+pkg.BufferToWrite[5];
@@ -442,10 +443,9 @@ begin
     // decodifica a escrita de multiplos saidas digitais
     // decodes a write to multiple coils.
     $0F: begin
+      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-        len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
-
         SetLength(values,len);
 
         i := 0;
@@ -470,9 +470,9 @@ begin
     // decodifica a escrita de multiplos registros
     // decodes a write to a multiple registers
     $10: begin
+      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
+      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-        len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
 
         SetLength(values,len);
 
