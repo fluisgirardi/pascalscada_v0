@@ -20,6 +20,8 @@ type
     procedure UpdateShape; override;
 
   published
+    property BorderColor;
+    property BodyColor;
     property OnClick;
     property OnMouseDown;
     property OnMouseUp;

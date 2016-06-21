@@ -19,7 +19,11 @@ type
     procedure DrawControl; override;
   end;
 
-  THMIRedlerBasico = class(THMICustomBasicRedler);
+  THMIRedlerBasico = class(THMICustomBasicRedler)
+  published
+    property BodyColor;
+    property BorderColor;
+  end;
 
 implementation
 
