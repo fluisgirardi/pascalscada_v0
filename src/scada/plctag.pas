@@ -1238,6 +1238,7 @@ begin
   end;
 
   GetMem(PtrByte, AreaSize);
+  FillByte(PtrByte^,AreaSize,0);
   ResetPointers;
 
   //move os dados para area de trabalho.
