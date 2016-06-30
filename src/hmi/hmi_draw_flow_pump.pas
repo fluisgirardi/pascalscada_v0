@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, hmi_flow_zones, HMIBasicEletricMotor, hmi_polyline, HMIZones,
-  PLCTag, Tag, ExtCtrls;
+  PLCTag, Tag, ExtCtrls,Graphics;
 
 type
   THMICustomFlowPump = class(THMICustomBasicEletricMotor, IColorChangeNotification)
@@ -40,8 +40,11 @@ type
     destructor Destroy; override;
   end;
 
+  { THMICustomLinkedFlowPump }
+
   THMICustomLinkedFlowPump = class(THMICustomFlowPump)
   private
+    FOnStateChange: TNotifyEvent;
     FPLCTag: TPLCTag;
     procedure SetHMITag(AValue: TPLCTag);
     procedure WriteFaultCallBack(Sender:TObject);
@@ -51,6 +54,7 @@ type
   protected
     procedure UpdateValve; override;
     property PLCTag:TPLCTag read FPLCTag write SetHMITag;
+    property OnStateChange:TNotifyEvent read FOnStateChange write FOnStateChange;
   public
     destructor Destroy; override;
   end;
@@ -61,6 +65,7 @@ type
     property OutputPolyline;
     property PLCTag;
     property ColorAndFlowStates;
+    property CurrentBodyColor:TColor read FBodyColor;
 
     property Action;
     property OnClick;
@@ -74,6 +79,7 @@ type
 
     property BorderWidth;
     property Mirrored;
+    property OnStateChange;
   end;
 
 implementation
@@ -146,6 +152,12 @@ begin
        FZoneTimer.Enabled :=  FCurrentZone.BlinkWith<>(-1);
     end;
   end;
+
+  if Assigned(FOnStateChange) then
+    try
+      FOnStateChange(Self);
+    except
+    end;
 end;
 
 destructor THMICustomLinkedFlowPump.Destroy;

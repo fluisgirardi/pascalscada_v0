@@ -72,6 +72,7 @@ type
     property LineColor:TColor read FBorderColor write SetLineColor default clBlack;
     property LineWidth:Integer read FBorderWidth write SetBorderWidth default 2;
     property PointCoordinates:TPointCollection read FPointCoordinates write setPointCoordinates;
+    property Visible;
   end;
 
   THMIFlowPolyline = class;
