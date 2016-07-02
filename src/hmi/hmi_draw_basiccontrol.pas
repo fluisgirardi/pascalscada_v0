@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, sysutils, Controls, Graphics, BGRABitmap, BGRABitmapTypes, LCLIntf,
-  LMessages, LCLProc, ControlSecurityManager, HMITypes, PLCTag;
+  LMessages, ControlSecurityManager, HMITypes, PLCTag;
 
 type
 
@@ -50,6 +50,8 @@ type
     FControlArea:TBGRABitmap;
     FUpdatingCount:Cardinal;
 
+    FOldWidth, FOldHeight:Integer;
+
     function Cateto(p0, p1: Integer): Integer;
     function Degrees(x0, x1, y0, y1: Integer): Double;
     function Hipotenusa(x0, x1, y0, y1: Integer): Double;
@@ -82,7 +84,7 @@ type
 
 implementation
 
-uses math {$IFDEF DEBUG}, LCLProc{$ENDIF};
+uses math;
 
 { TBasicSCADAControl }
 
@@ -418,7 +420,10 @@ begin
   try
     inherited Resize;
   finally
-    InvalidateShape;
+    if (Width<>FOldWidth) or (FOldHeight<>Height) then
+      InvalidateShape;
+    FOldWidth:=Width;
+    FOldHeight:=Height;
   end;
 end;
 
@@ -465,6 +470,8 @@ begin
   FBorderWidth:=1;
   FControlArea:=TBGRABitmap.Create;
   FIsEnabled:=true;
+  FOldHeight:=0;
+  FOldWidth:=0;
   if [csLoading, csReading]*ComponentState<>[] then
     BeginUpdate;
   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);

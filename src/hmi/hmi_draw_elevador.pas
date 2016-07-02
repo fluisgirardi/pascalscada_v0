@@ -10,9 +10,7 @@ uses
 
 type
 
-  { THMIElevadorBasico }
-
-  THMIElevadorBasico = class(THMIBasicControl)
+  THMICustomElevadorBasico = class(THMIBasicControl)
   protected
     FBodyWidth: Byte;
     FFooterColor: TColor;
@@ -23,7 +21,7 @@ type
     procedure DrawControl; override;
   public
     constructor Create(AOwner: TComponent); override;
-  published
+  protected
     property HeadColor:TColor read FHeadColor write SetHeadColor default clSilver;
     property BodyColor default clSilver;
     property FooterColor:TColor read FFooterColor write SetFooterColor default clSilver;
@@ -31,6 +29,16 @@ type
 
     property BodyWidth:Byte read FBodyWidth write SetBodyWidth default 12;
     property BorderWidth default 1;
+  end;
+
+  THMIElevadorBasico = class(THMICustomElevadorBasico)
+  published
+    property HeadColor;
+    property BodyColor;
+    property BodyWidth;
+    property FooterColor;
+    property BorderColor;
+
     property OnClick;
     property OnMouseDown;
     property OnMouseUp;
@@ -45,14 +53,14 @@ uses Dialogs;
 
 { TElevadorBasico }
 
-procedure THMIElevadorBasico.SetHeadColor(AValue: TColor);
+procedure THMICustomElevadorBasico.SetHeadColor(AValue: TColor);
 begin
   if FHeadColor=AValue then Exit;
   FHeadColor:=AValue;
   InvalidateDraw;
 end;
 
-procedure THMIElevadorBasico.DrawControl;
+procedure THMICustomElevadorBasico.DrawControl;
 var
   x:array of TPointF;
 begin
@@ -146,20 +154,20 @@ begin
                                      PointF(2*FBodyWidth, Height-BodyWidth-(BorderWidth/2))]);
 end;
 
-constructor THMIElevadorBasico.Create(AOwner: TComponent);
+constructor THMICustomElevadorBasico.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   BeginUpdate;
-  HeadColor:=clSilver;
-  BodyColor:=clSilver;
-  FooterColor:=clSilver;
-  BorderColor:=clBlack;
-  BorderWidth:=1;
-  BodyWidth:=12; //inicializa o desenho com 12px de largura do
+  FHeadColor:=clSilver;
+  FBodyColor:=clSilver;
+  FFooterColor:=clSilver;
+  FBorderColor:=clBlack;
+  FBorderWidth:=1;
+  FBodyWidth:=12; //inicializa o desenho com 12px de largura do
   EndUpdate;
 end;
 
-procedure THMIElevadorBasico.SetBodyWidth(AValue: Byte);
+procedure THMICustomElevadorBasico.SetBodyWidth(AValue: Byte);
 begin
   if FBodyWidth=AValue then Exit;
   FBodyWidth:=AValue;
@@ -174,7 +182,7 @@ begin
   EndUpdate;
 end;
 
-procedure THMIElevadorBasico.SetFooterColor(AValue: TColor);
+procedure THMICustomElevadorBasico.SetFooterColor(AValue: TColor);
 begin
   if FFooterColor=AValue then Exit;
   FFooterColor:=AValue;
