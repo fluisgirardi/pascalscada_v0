@@ -44,9 +44,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="17.176978"
-     inkscape:cy="2.7952801"
+     inkscape:zoom="11.313708"
+     inkscape:cx="23.13514"
+     inkscape:cy="24.315043"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -82,34 +82,38 @@
      inkscape:label="Camada 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <path
-       inkscape:connector-curvature="0"
-       style="fill:#e60012;opacity:0.391"
-       d="M 23.999999,3.5 32.2,17.265701 23.999999,31.031402 15.800001,17.364735 23.999999,3.5 Z m 0,27.531402 16.000001,0 L 48,44.5 32.000001,44.5 23.999999,31.031402 Z m 0,0 -15.9999992,0 L 0,44.5 l 15.999999,0 8,-13.468598 z"
-       id="path3" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.4597578px;line-height:125%;font-family:Verdana;text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#008000;fill-opacity:1;stroke:none"
-       x="-0.11803147"
-       y="38.606735"
-       id="text2383"
-       sodipodi:linespacing="125%"
-       transform="matrix(0.70710678,-0.70710678,0.70710678,0.70710678,0,0)"><tspan
-         sodipodi:role="line"
-         x="-0.11803198"
-         y="38.606735"
-         id="tspan2387">MELSEC</tspan></text>
-    <text
-       transform="matrix(0.7071068,-0.7071068,0.7071068,0.7071068,0,0)"
-       sodipodi:linespacing="125%"
-       id="text2411"
-       y="52.505779"
-       x="0.61789298"
-       style="font-size:15.60892391px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Verdana"
-       xml:space="preserve"><tspan
-         id="tspan2413"
-         y="52.505779"
-         x="0.61789352"
-         sodipodi:role="line">TCP</tspan></text>
+    <g
+       id="g4140"
+       transform="translate(0.04830234,1.2803578)">
+      <path
+         id="path3"
+         d="m 20.017038,10.460645 6.839156,11.481191 -6.839156,11.48119 -6.839153,-11.398592 6.839153,-11.563789 z m 0,22.962381 13.344693,0 6.672347,11.233394 -13.344692,0 -6.672348,-11.233394 z m 0,0 -13.3446919,0 L 0,44.65642 l 13.344692,0 6.672346,-11.233394 z"
+         style="opacity:1;fill:#ff0000"
+         inkscape:connector-curvature="0" />
+      <text
+         transform="matrix(0.99999999,1.411685e-4,-1.411685e-4,0.99999999,0,0)"
+         sodipodi:linespacing="125%"
+         id="text2383"
+         y="8.8796587"
+         x="23.851465"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.91423512px;line-height:125%;font-family:Verdana;text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#008000;fill-opacity:1;stroke:none"
+         xml:space="preserve"><tspan
+           id="tspan2387"
+           y="8.8796587"
+           x="23.851463"
+           sodipodi:role="line">MELSEC</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:11.74774456px;line-height:125%;font-family:Verdana;text-align:center;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+         x="35.551476"
+         y="20.392973"
+         id="text2411"
+         sodipodi:linespacing="125%"
+         transform="matrix(0.99994651,-0.01034315,0.01034315,0.99994651,0,0)"><tspan
+           sodipodi:role="line"
+           x="35.551476"
+           y="20.392973"
+           id="tspan2413">TCP</tspan></text>
+    </g>
   </g>
 </svg>
