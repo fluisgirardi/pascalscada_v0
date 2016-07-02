@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="24"
-   height="24"
-   viewBox="0 0 24 24"
+   width="48"
+   height="48"
+   viewBox="0 0 48 48"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="22.627417"
-     inkscape:cx="5.5922929"
-     inkscape:cy="14.0271"
+     inkscape:zoom="8"
+     inkscape:cx="-8.9391868"
+     inkscape:cy="10.918687"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -76,27 +76,31 @@
      inkscape:label="Camada 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1028.3622)">
-    <rect
-       style="fill:#b3b3b3;stroke:#000000;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none"
-       id="rect4139"
-       width="20.110395"
-       height="3.0979624"
-       x="1.8317612"
-       y="1037.2456" />
-    <ellipse
-       style="fill:#b3b3b3;stroke:#000000;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none"
-       id="path4141"
-       cx="1.8248233"
-       cy="1038.796"
-       rx="1.4350541"
-       ry="1.5507202" />
-    <ellipse
-       style="fill:#b3b3b3;stroke:#000000;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none"
-       id="path4141-3"
-       cx="21.893759"
-       cy="1038.7972"
-       rx="1.4350541"
-       ry="1.5507202" />
+     transform="translate(0,-1004.3622)">
+    <g
+       id="g4141"
+       transform="translate(0.07820868,-8.6241281)">
+      <rect
+         y="1033.832"
+         x="3.5290484"
+         height="6.3002505"
+         width="40.898022"
+         id="rect4139"
+         style="fill:#ffffff;stroke:#000000;stroke-width:0.81347024;stroke-miterlimit:4;stroke-dasharray:none" />
+      <ellipse
+         ry="3.153662"
+         rx="2.9184344"
+         cy="1036.9851"
+         cx="3.5149388"
+         id="path4141"
+         style="fill:#ffffff;stroke:#000000;stroke-width:0.81347024;stroke-miterlimit:4;stroke-dasharray:none" />
+      <ellipse
+         ry="3.153662"
+         rx="2.9184344"
+         cy="1036.9875"
+         cx="44.328644"
+         id="path4141-3"
+         style="fill:#ffffff;stroke:#000000;stroke-width:0.81347024;stroke-miterlimit:4;stroke-dasharray:none" />
+    </g>
   </g>
 </svg>

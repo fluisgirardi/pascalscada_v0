@@ -7,41 +7,17 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="24"
-   height="24"
-   viewBox="0 0 24 24"
+   width="48"
+   height="48"
+   viewBox="0 0 48 48"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="THMITransparentButton.svg">
   <defs
-     id="defs4">
-    <linearGradient
-       inkscape:collect="always"
-       id="linearGradient4509">
-      <stop
-         style="stop-color:#f2f2f2;stop-opacity:1"
-         offset="0"
-         id="stop4511" />
-      <stop
-         style="stop-color:#cccccc;stop-opacity:1"
-         offset="1"
-         id="stop4513" />
-    </linearGradient>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient4509"
-       id="linearGradient4515"
-       x1="3.4913397"
-       y1="1032.4528"
-       x2="21.301592"
-       y2="1039.7668"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.0956995,0,0,1.0956995,-1.4735982,-95.363541)" />
-  </defs>
+     id="defs4" />
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -49,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11.313709"
-     inkscape:cx="-7.2762109"
-     inkscape:cy="16.888151"
+     inkscape:zoom="4.0000002"
+     inkscape:cx="-40.73199"
+     inkscape:cy="0.0098798239"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -120,22 +96,26 @@
      inkscape:label="Camada 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1028.3622)">
-    <path
-       style="fill:url(#linearGradient4515);fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.2191399;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 2.3518611,1043.9085 19.5146849,0 0,-7.3362 -19.5146849,0 z"
-       id="path4507"
-       inkscape:connector-curvature="0" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:4.33666372px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="4.4803081"
-       y="1041.6398"
-       id="text4517"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         id="tspan4519"
-         x="4.4803081"
-         y="1041.6398">Button</tspan></text>
+     transform="translate(0,-1004.3622)">
+    <g
+       id="g4150"
+       transform="translate(-1.2967032,-6.7074)">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4507"
+         d="m 2.6935013,1043.5669 45.2064037,0 0,-16.9946 -45.2064037,0 z"
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.2022804;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4517"
+         y="1038.3113"
+         x="7.6241179"
+         style="font-style:normal;font-weight:normal;font-size:10.04602242px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.51899999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           y="1038.3113"
+           x="7.6241179"
+           id="tspan4519"
+           sodipodi:role="line">Button</tspan></text>
+    </g>
   </g>
 </svg>

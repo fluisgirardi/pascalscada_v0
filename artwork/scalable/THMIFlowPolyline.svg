@@ -9,13 +9,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="24"
-   height="24"
-   viewBox="0 0 24 24"
+   width="48"
+   height="48"
+   viewBox="0 0 48 48"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="THMIPolyLine.svg">
+   sodipodi:docname="THMIFlowPolyline.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11.313709"
-     inkscape:cx="33.837019"
-     inkscape:cy="21.47752"
+     inkscape:zoom="5.6568545"
+     inkscape:cx="0.7030504"
+     inkscape:cy="26.224306"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -76,21 +76,25 @@
      inkscape:label="Camada 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1028.3622)">
-    <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
-       d="m 20.21024,1035.1289 0,10.3966 -17.0724537,0 9.6785237,0"
-       id="path4322"
-       inkscape:connector-curvature="0" />
-    <path
-       style="fill:#000000;fill-rule:evenodd;stroke:#ff0000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 4.7729708,1038.8829 8.5294752,0 0,1.0607 1.851396,-1.0689 -1.840503,-1.0626 -0.01089,1.0708"
-       id="path4326"
-       inkscape:connector-curvature="0" />
-    <path
-       style="fill:none;fill-rule:evenodd;stroke:#ff0000;stroke-width:1.20000005;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 3.1377863,1045.5263 7.1594557,0"
-       id="path4328"
-       inkscape:connector-curvature="0" />
+     transform="translate(0,-1004.3622)">
+    <g
+       id="g4141"
+       transform="translate(-1.2322644,-4.0148828)">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4322"
+         d="m 45.826477,1018.6279 0,25.9961 -42.6886907,0 24.2005937,0"
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3.0005312;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4326"
+         d="m 7.2264713,1028.0146 21.3274637,0 0,2.6522 4.629309,-2.6727 -4.602072,-2.657 -0.02723,2.6775"
+         style="fill:#000000;fill-rule:evenodd;stroke:#ff0000;stroke-width:2.50044274px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4328"
+         d="m 3.1377863,1044.626 17.9018087,0"
+         style="fill:none;fill-rule:evenodd;stroke:#ff0000;stroke-width:3.0005312;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
   </g>
 </svg>

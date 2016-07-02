@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="24"
-   height="24"
-   viewBox="0 0 24 24"
+   width="48"
+   height="48"
+   viewBox="0 0 48 48"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="32"
-     inkscape:cx="10.463118"
-     inkscape:cy="13.525236"
+     inkscape:zoom="4"
+     inkscape:cx="-31.886637"
+     inkscape:cy="29.338439"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -72,19 +72,23 @@
      inkscape:label="Camada 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1028.3622)">
-    <rect
-       style="fill:#b3b3b3;stroke:#000000;stroke-width:0.099;stroke-miterlimit:4;stroke-dasharray:none"
-       id="rect3403"
-       width="22.143265"
-       height="6.3475738"
-       x="0.9397133"
-       y="1036.704" />
-    <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.09891193;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 1.0034071,1042.9814 3.6635258,-6.2073 3.6635257,6.2073 3.6635254,-6.2073 3.663526,6.2073 3.663526,-6.2073 3.737744,6.2542"
-       id="path4205"
-       inkscape:connector-curvature="0"
-       sodipodi:nodetypes="ccccccc" />
+     transform="translate(0,-1004.3622)">
+    <g
+       id="g4139"
+       transform="translate(-0.13634598,0.67987833)">
+      <rect
+         y="1021.1384"
+         x="1.2069293"
+         height="13.145863"
+         width="45.858833"
+         id="rect3403"
+         style="fill:#ffffff;stroke:#000000;stroke-width:1.03343201;stroke-miterlimit:4;stroke-dasharray:none" />
+      <path
+         sodipodi:nodetypes="ccccccc"
+         inkscape:connector-curvature="0"
+         id="path4205"
+         d="m 1.316188,1033.4743 7.594709,-11.9787 7.594709,11.9787 7.594709,-11.9787 7.594708,11.9787 7.59471,-11.9787 7.748567,12.0692"
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.99806631;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
   </g>
 </svg>

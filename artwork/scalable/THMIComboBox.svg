@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="24"
-   height="24"
-   viewBox="0 0 24 24"
+   width="48"
+   height="48"
+   viewBox="0 0 48 48"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="11.313709"
-     inkscape:cx="4.580833"
-     inkscape:cy="12.268548"
+     inkscape:zoom="8.0000004"
+     inkscape:cx="46.3658"
+     inkscape:cy="17.77076"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -80,63 +80,66 @@
      inkscape:label="Camada 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1028.3622)">
-    <rect
-       style="fill:#b3b3b3;stroke:#000000;stroke-width:0.10016873;stroke-miterlimit:4;stroke-dasharray:none"
-       id="rect3403"
-       width="22.673346"
-       height="6.346405"
-       x="0.6148535"
-       y="1030.5616" />
-    <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 18.849112,1033.4949 1.903295,1.0988 1.903295,-1.0988"
-       id="path4227"
-       inkscape:connector-curvature="0" />
-    <rect
-       style="fill:#e6e6e6;stroke:#000000;stroke-width:0.09965564;stroke-miterlimit:4;stroke-dasharray:none"
-       id="rect4229"
-       width="22.427319"
-       height="12.134802"
-       x="0.73573375"
-       y="1036.937" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:4.86444378px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="0.91981792"
-       y="1041.9807"
-       id="text4231"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         id="tspan4233"
-         x="0.91981792"
-         y="1041.9807">item1</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:4.86444378px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="0.91051948"
-       y="1047.823"
-       id="text4231-8"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         id="tspan4233-8"
-         x="0.91051948"
-         y="1047.823">item2</tspan></text>
-    <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.1;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
-       d="m 1.328125,1043.0814 21.431874,0"
-       id="path4255"
-       inkscape:connector-curvature="0" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:3.21051788px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="1.0297399"
-       y="1034.8678"
-       id="text4231-6"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         id="tspan4233-2"
-         x="1.0297399"
-         y="1034.8678">Combobox</tspan></text>
+     transform="translate(0,-1004.3622)">
+    <g
+       id="g4173">
+      <rect
+         y="1009.38"
+         x="0.74852753"
+         height="13.016453"
+         width="46.502945"
+         id="rect3403"
+         style="fill:#008000;stroke:#000000;stroke-width:0.82039851;stroke-miterlimit:4;stroke-dasharray:none" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path4227"
+         d="m 38.146923,1015.3961 3.903651,2.2537 3.903651,-2.2537"
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.02549815;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <rect
+         y="1022.4559"
+         x="0.99645245"
+         height="24.888433"
+         width="45.998344"
+         id="rect4229"
+         style="fill:#f9f9f9;stroke:#000000;stroke-width:0.82039851;stroke-miterlimit:4;stroke-dasharray:none" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4231"
+         y="1032.8005"
+         x="1.3740084"
+         style="font-style:normal;font-weight:normal;font-size:9.97695541px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           y="1032.8005"
+           x="1.3740084"
+           id="tspan4233"
+           sodipodi:role="line">item1</tspan></text>
+      <text
+         sodipodi:linespacing="125%"
+         id="text4231-8"
+         y="1044.7831"
+         x="1.3549373"
+         style="font-style:normal;font-weight:normal;font-size:9.97695541px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           y="1044.7831"
+           x="1.3549373"
+           id="tspan4233-8"
+           sodipodi:role="line">item2</tspan></text>
+      <path
+         inkscape:connector-curvature="0"
+         id="path4255"
+         d="m 2.2114447,1035.058 43.9566923,0"
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.61529887;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4231-6"
+         y="1018.2119"
+         x="1.5994579"
+         style="font-style:normal;font-weight:normal;font-size:6.58476019px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         xml:space="preserve"><tspan
+           y="1018.2119"
+           x="1.5994579"
+           id="tspan4233-2"
+           sodipodi:role="line">Combobox</tspan></text>
+    </g>
   </g>
 </svg>
