@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="24"
+   height="24"
+   viewBox="0 0 24 24"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="THMITransparentButton.svg">
+  <defs
+     id="defs4">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4509">
+      <stop
+         style="stop-color:#f2f2f2;stop-opacity:1"
+         offset="0"
+         id="stop4511" />
+      <stop
+         style="stop-color:#cccccc;stop-opacity:1"
+         offset="1"
+         id="stop4513" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4509"
+       id="linearGradient4515"
+       x1="3.4913397"
+       y1="1032.4528"
+       x2="21.301592"
+       y2="1039.7668"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.0956995,0,0,1.0956995,-1.4735982,-95.363541)" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="11.313709"
+     inkscape:cx="-7.2762109"
+     inkscape:cy="16.888151"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     units="px"
+     inkscape:window-width="1600"
+     inkscape:window-height="837"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1">
+    <sodipodi:guide
+       position="187.88837,905.60178"
+       orientation="0,1"
+       id="guide3338" />
+    <sodipodi:guide
+       position="190.91883,772.26164"
+       orientation="0,1"
+       id="guide3340" />
+    <sodipodi:guide
+       position="-7.1973368,25.632621"
+       orientation="1,0"
+       id="guide4300" />
+    <sodipodi:guide
+       position="28.031733,23.738585"
+       orientation="1,0"
+       id="guide3353" />
+    <sodipodi:guide
+       position="23.770152,17.488266"
+       orientation="1,0"
+       id="guide4169" />
+    <sodipodi:guide
+       position="-4.4194174,8.9272231"
+       orientation="0,1"
+       id="guide4391" />
+    <sodipodi:guide
+       position="6.8942911,19.290757"
+       orientation="0,1"
+       id="guide4499" />
+    <sodipodi:guide
+       position="5.347495,12.59534"
+       orientation="0,1"
+       id="guide4501" />
+    <sodipodi:guide
+       position="3.4913397,16.661204"
+       orientation="1,0"
+       id="guide4503" />
+    <sodipodi:guide
+       position="21.301592,17.567184"
+       orientation="1,0"
+       id="guide4505" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Camada 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1028.3622)">
+    <path
+       style="fill:url(#linearGradient4515);fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.2191399;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 2.3518611,1043.9085 19.5146849,0 0,-7.3362 -19.5146849,0 z"
+       id="path4507"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:4.33666372px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="4.4803081"
+       y="1041.6398"
+       id="text4517"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4519"
+         x="4.4803081"
+         y="1041.6398">Button</tspan></text>
+  </g>
+</svg>
