@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Win64"/>
+    <Units Count="19">
+      <Unit0>
+        <Filename Value="modbusrtu_broadcast.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="21"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="umain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="10"/>
+        <CursorPos Y="40"/>
+        <UsageCount Value="21"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\..\src\scada\modbusserial.pas"/>
+        <UnitName Value="ModBusSerial"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="251"/>
+        <CursorPos Y="268"/>
+        <UsageCount Value="10"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\..\src\scada\modbusdriver.pas"/>
+        <UnitName Value="ModBusDriver"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="685"/>
+        <CursorPos X="42" Y="703"/>
+        <UsageCount Value="10"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\src\scada\sockets_w32_w64.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="389"/>
+        <CursorPos X="32" Y="401"/>
+        <UsageCount Value="10"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="C:\lazarus1_6\fpc\3.0.0\source\packages\rtl-extra\src\win\winsock2.pp"/>
+        <UnitName Value="WinSock2"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="23"/>
+        <CursorPos X="3" Y="41"/>
+        <UsageCount Value="10"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="C:\lazarus1_6\fpc\3.0.0\source\rtl\win\wininc\base.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="68"/>
+        <CursorPos X="6" Y="86"/>
+        <UsageCount Value="10"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\src\scada\tcp_udpport.pas"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="260"/>
+        <CursorPos X="50" Y="273"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="C:\lazarus1_6\fpc\3.0.0\source\rtl\inc\systemh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1326"/>
+        <CursorPos X="10" Y="1355"/>
+        <UsageCount Value="10"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\..\src\scada\mutexclient.pas"/>
+        <UnitName Value="MutexClient"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="238"/>
+        <CursorPos X="39" Y="250"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\..\src\scada\tag.pas"/>
+        <UnitName Value="Tag"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1147"/>
+        <CursorPos X="25" Y="1159"/>
+        <UsageCount Value="10"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\..\src\common\crossevent.pas"/>
+        <UnitName Value="CrossEvent"/>
+        <TopLine Value="130"/>
+        <CursorPos X="3" Y="136"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\..\src\common\pascalScadaMTPCPU.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="60"/>
+        <CursorPos X="72" Y="72"/>
+        <UsageCount Value="10"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="..\..\src\scada\protscan.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="153"/>
+        <CursorPos X="44" Y="167"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="..\..\src\scada\protocoldriver.pas"/>
+        <UnitName Value="ProtocolDriver"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="741"/>
+        <CursorPos X="32" Y="753"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="..\..\src\scada\protscanupdate.pas"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="142"/>
+        <CursorPos X="45" Y="154"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="..\..\src\scada\commport.pas"/>
+        <UnitName Value="CommPort"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="1132"/>
+        <CursorPos X="42" Y="1144"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="..\..\src\scada\mutexserver.pas"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="336"/>
+        <CursorPos X="51" Y="348"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="..\..\src\scada\blockstructtagassistant.pas"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="185"/>
+        <CursorPos X="37" Y="197"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit18>
+    </Units>
+    <JumpHistory Count="12" HistoryIndex="11">
+      <Position1>
+        <Filename Value="..\..\src\common\crossevent.pas"/>
+        <Caret Line="269" Column="3" TopLine="268"/>
+      </Position1>
+      <Position2>
+        <Filename Value="..\..\src\scada\protscan.pas"/>
+      </Position2>
+      <Position3>
+        <Filename Value="..\..\src\scada\protocoldriver.pas"/>
+      </Position3>
+      <Position4>
+        <Filename Value="..\..\src\scada\protscanupdate.pas"/>
+      </Position4>
+      <Position5>
+        <Filename Value="..\..\src\scada\protscanupdate.pas"/>
+        <Caret Line="152" Column="30" TopLine="140"/>
+      </Position5>
+      <Position6>
+        <Filename Value="..\..\src\scada\commport.pas"/>
+      </Position6>
+      <Position7>
+        <Filename Value="..\..\src\scada\commport.pas"/>
+        <Caret Line="999" Column="45" TopLine="986"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\..\src\scada\mutexclient.pas"/>
+        <Caret Line="549" TopLine="538"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\src\scada\mutexserver.pas"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\src\scada\mutexserver.pas"/>
+        <Caret Line="260" Column="45" TopLine="248"/>
+      </Position10>
+      <Position11>
+        <Filename Value="..\..\src\scada\tcp_udpport.pas"/>
+        <Caret Line="535" Column="6" TopLine="524"/>
+      </Position11>
+      <Position12>
+        <Filename Value="..\..\src\scada\blockstructtagassistant.pas"/>
+      </Position12>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

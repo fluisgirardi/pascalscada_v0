@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="4">
+      <Unit0>
+        <Filename Value="coletor_peso.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="unit1.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Unit1"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="34"/>
+        <CursorPos X="3" Y="81"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="../../src/scada/plcmemorymanager.pas"/>
+        <UnitName Value="PLCMemoryManager"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="963"/>
+        <CursorPos Y="1002"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="../../src/scada/modbusserial.pas"/>
+        <UnitName Value="ModBusSerial"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="355"/>
+        <CursorPos Y="392"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit3>
+    </Units>
+    <JumpHistory Count="8" HistoryIndex="7">
+      <Position1>
+        <Filename Value="../../src/scada/plcmemorymanager.pas"/>
+        <Caret Line="1002" TopLine="978"/>
+      </Position1>
+      <Position2>
+        <Filename Value="../../src/scada/modbusserial.pas"/>
+        <Caret Line="344" Column="70" TopLine="325"/>
+      </Position2>
+      <Position3>
+        <Filename Value="../../src/scada/modbusserial.pas"/>
+        <Caret Line="394" TopLine="371"/>
+      </Position3>
+      <Position4>
+        <Filename Value="../../src/scada/plcmemorymanager.pas"/>
+        <Caret Line="1002" TopLine="963"/>
+      </Position4>
+      <Position5>
+        <Filename Value="../../src/scada/modbusserial.pas"/>
+        <Caret Line="380" Column="70" TopLine="344"/>
+      </Position5>
+      <Position6>
+        <Filename Value="../../src/scada/modbusserial.pas"/>
+        <Caret Line="393" TopLine="370"/>
+      </Position6>
+      <Position7>
+        <Filename Value="../../src/scada/plcmemorymanager.pas"/>
+        <Caret Line="1002" TopLine="963"/>
+      </Position7>
+      <Position8>
+        <Filename Value="../../src/scada/modbusserial.pas"/>
+        <Caret Line="475" Column="70" TopLine="457"/>
+      </Position8>
+    </JumpHistory>
+  </ProjectSession>
+  <Debugging>
+    <BreakPoints Count="1">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/scada/modbusserial.pas"/>
+        <Line Value="364"/>
+      </Item1>
+    </BreakPoints>
+  </Debugging>
+</CONFIG>
