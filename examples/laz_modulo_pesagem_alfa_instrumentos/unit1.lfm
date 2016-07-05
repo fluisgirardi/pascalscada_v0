@@ -7,6 +7,7 @@ object Form1: TForm1
   ClientHeight = 355
   ClientWidth = 627
   OnCreate = FormCreate
+  LCLVersion = '1.7'
   Visible = False
   object HMILabel1: THMILabel
     Left = 160
@@ -273,8 +274,6 @@ object Form1: TForm1
     FormatDateTimeOptions = []
   end
   object SerialPortDriver1: TSerialPortDriver
-    Active = True
-    COMPort = 'ttyUSB0'
     Timeout = 100
     left = 40
     top = 16

@@ -78,6 +78,13 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  {$IFDEF LINUX}
+  SerialPortDriver1.COMPort := 'ttyUSB0';
+  {$ENDIF}
+  {$IFDEF WINDOWS}
+  SerialPortDriver1.COMPort := 'COM1';
+  {$ENDIF}
+  SerialPortDriver1.Active := True;
 
 end;
 
