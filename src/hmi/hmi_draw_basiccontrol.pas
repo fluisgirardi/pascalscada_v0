@@ -503,6 +503,7 @@ end;
 procedure THMIBasicControl.Invalidate;
 begin
   if FUpdatingCount=0 then begin
+    FShouldRedraw:=true;
     inherited Invalidate;
   end;
 end;
