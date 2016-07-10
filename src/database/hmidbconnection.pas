@@ -279,6 +279,9 @@ type
   @bold(Uses the ZeosLib project.)
   }
   {$ENDIF}
+
+  { THMIDBConnection }
+
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private
     FConnectRead:Boolean;
@@ -288,9 +291,11 @@ type
     FASyncQuery:TZQuery;
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
+    function  getProperties: TStrings;
     function  GetSyncConnection:TZConnection;
     procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPSBufDataSet);
     procedure SetLibraryLocation(AValue: String);
+    procedure SetProperties(AValue: TStrings);
   protected
     FProtocol: string;
     FHostName: string;
@@ -299,6 +304,7 @@ type
     FUser: string;
     FPassword: string;
     FCatalog: string;
+    FProperties:TStringList;
     procedure Loaded; override;
   protected
     function GetConnected:Boolean;
@@ -354,6 +360,13 @@ type
     //: Port number to connect on database (TCP/UDP connections)
     {$ENDIF}
     property Port:     LongInt read FPort        write SetPort default 0;
+
+    {$IFDEF PORTUGUES}
+    //: Lista de propriedades da conexão
+    {$ELSE}
+    //: Connections properties.
+    {$ENDIF}
+    property Properties:TStrings read getProperties write SetProperties;
 
     {$IFDEF PORTUGUES}
     //: Banco de dados a conectar.
@@ -633,6 +646,7 @@ begin
   FASyncConnection:=TZConnection.Create(nil);
   FASyncQuery:=TZQuery.Create(nil);
   FASyncQuery.Connection:=FASyncConnection;
+  FProperties:=TStringList.Create;
 
   FSQLSpooler:=TProcessSQLCommandThread.Create(true,@ExecuteSQLCommand,
                                                @StartTransaction,
@@ -650,11 +664,12 @@ begin
   FSQLSpooler.Terminate;
   while FSQLSpooler.WaitEnd(1)<>wrSignaled do
     CheckSynchronize(1);
-  FSQLSpooler.Destroy;
 
-  FASyncQuery.Destroy;
-  FSyncConnection.Destroy;
-  FASyncConnection.Destroy;
+  FreeAndNil(FSQLSpooler);
+  FreeAndNil(FASyncQuery);
+  FreeAndNil(FSyncConnection);
+  FreeAndNil(FASyncConnection);
+  FreeAndNil(FProperties);
   FCS.Destroy;
 end;
 
@@ -669,6 +684,11 @@ begin
   Result:=FSyncConnection;
 end;
 
+function THMIDBConnection.getProperties: TStrings;
+begin
+  Result:=FProperties;
+end;
+
 procedure THMIDBConnection.ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
 begin
   FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync);
@@ -676,7 +696,7 @@ end;
 
 procedure THMIDBConnection.ExecTransaction(statements: TStringList;
   ReturnTransactionResult: TReturnTransactionStatementsProc;
-  FreeStatemensAfterExecute, ReturnSync: Boolean);
+  FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean);
 begin
   FSQLSpooler.ExecTransaction(statements,ReturnTransactionResult,FreeStatemensAfterExecute,ReturnSync);
 end;
@@ -740,6 +760,18 @@ begin
     FCS.Leave;
   end;
   FHostName:=FSyncConnection.LibraryLocation;
+end;
+
+procedure THMIDBConnection.SetProperties(AValue: TStrings);
+begin
+  FSyncConnection.Properties.Assign(AValue);
+  FCS.Enter;
+  try
+    FASyncConnection.Properties.Assign(AValue);
+  finally
+    FCS.Leave;
+  end;
+  FProperties.Assign(AValue);
 end;
 
 function  THMIDBConnection.GetConnected:Boolean;
