@@ -82,7 +82,8 @@ begin
                                            THMIBasicEletricMotor,
                                            THMIFlowPolyline,
                                            THMILinkedFlowValve,
-                                           THMILinkedFlowPump]);
+                                           THMILinkedFlowPump,
+                                           THMILinkedFlowElevator]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
