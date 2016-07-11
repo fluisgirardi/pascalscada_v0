@@ -6,7 +6,7 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes;
+  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag;
 
 type
 
@@ -47,9 +47,168 @@ type
     property OnMouseMove;
   end;
 
+  { THMICustomFlowElevator }
+
+  THMICustomFlowElevator = class(THMICustomElevadorBasico, IColorChangeNotification)
+  protected
+    procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
+    procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
+    procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
+    procedure NotifyChange(const WhoChanged:THMIFlowPolyline);
+  protected
+    FInputPolyline: THMIFlowPolyline;
+    FOutputPolyline: THMIFlowPolyline;
+    FElevatorStates: THMIFlowZones;
+    FCurrentZone,
+    FOwnerZone: THMIFlowZone;
+    FZoneTimer:TTimer;
+    procedure SetInputPolyline(AValue: THMIFlowPolyline);
+    procedure SetOutputPolyline(AValue: THMIFlowPolyline);
+    procedure SetElevatorStates(AValue: THMIFlowZones);
+    procedure ShowZone(aZone:THMIFlowZone);
+    procedure UpdateFlow; virtual;
+    property  InputPolyline:THMIFlowPolyline read FInputPolyline write SetInputPolyline;
+    property  OutputPolyline:THMIFlowPolyline read FOutputPolyline write SetOutputPolyline;
+    property  ColorAndFlowStates:THMIFlowZones read FElevatorStates write SetElevatorStates;
+    procedure StateChanged(Sender: TObject);
+    procedure StatesNeedsComponentState(var CurState: TComponentState);
+    procedure NextZone(Sender: TObject);
+    procedure Loaded; override;
+    procedure UpdateControl; virtual;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
+  { THMICustomLinkedFlowElevator }
+
+  THMICustomLinkedFlowElevator = class(THMICustomFlowElevator)
+  private
+    FOnStateChange: TNotifyEvent;
+    FPLCTag: TPLCTag;
+    procedure SetHMITag(AValue: TPLCTag);
+    procedure WriteFaultCallBack(Sender:TObject);
+    procedure TagChangeCallBack(Sender:TObject);
+    procedure RemoveTagCallBack(Sender:TObject);
+    procedure UpdateControlDelayed(Data: PtrInt);
+  protected
+    procedure UpdateControl; override;
+    property PLCTag:TPLCTag read FPLCTag write SetHMITag;
+    property OnStateChange:TNotifyEvent read FOnStateChange write FOnStateChange;
+  public
+    destructor Destroy; override;
+  end;
+
+  THMILinkedFlowElevator = class(THMICustomLinkedFlowElevator)
+  published
+    property InputPolyline;
+    property OutputPolyline;
+    property PLCTag;
+    property ColorAndFlowStates;
+    property CurrentBodyColor:TColor read FBodyColor;
+
+    property Action;
+    property OnClick;
+    property OnMouseDown;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property PopupMenu;
+    property Enabled;
+
+    property BodyWidth;
+
+    property SecurityCode;
+
+    property BorderWidth;
+    property OnStateChange;
+  end;
+
 implementation
 
-uses Dialogs;
+uses ProtocolTypes, hsstrings, forms;
+
+{ THMICustomLinkedFlowElevator }
+
+procedure THMICustomLinkedFlowElevator.SetHMITag(AValue: TPLCTag);
+begin
+  //se o tag esta entre um dos aceitos.
+  //
+  //check if the tag is valid (only numeric tags);
+  if (AValue<>nil) and (not Supports(AValue, ITagNumeric)) then
+     raise Exception.Create(SonlyNumericTags);
+
+  //se ja estou associado a um tag, remove
+  //removes the old link.
+  if FPLCTag<>nil then begin
+    FPLCTag.RemoveAllHandlersFromObject(Self);
+  end;
+
+  //adiona o callback para o novo tag
+  //link with the new tag.
+  if AValue<>nil then begin
+    AValue.AddWriteFaultHandler(@WriteFaultCallBack);
+    AValue.AddTagChangeHandler(@TagChangeCallBack);
+    AValue.AddRemoveTagHandler(@RemoveTagCallBack);
+    FPLCTag := AValue;
+    UpdateControl;
+  end;
+  FPLCTag := AValue;
+end;
+
+procedure THMICustomLinkedFlowElevator.WriteFaultCallBack(Sender: TObject);
+begin
+  UpdateControl;
+end;
+
+procedure THMICustomLinkedFlowElevator.TagChangeCallBack(Sender: TObject);
+begin
+  UpdateControl;
+end;
+
+procedure THMICustomLinkedFlowElevator.RemoveTagCallBack(Sender: TObject);
+begin
+  if FPLCTag=Sender then
+    FPLCTag:=nil;
+end;
+
+procedure THMICustomLinkedFlowElevator.UpdateControlDelayed(Data: PtrInt);
+var
+  value: Double;
+  zone: THMIFlowZone;
+begin
+  if Assigned(FPLCTag) then
+    value:=(FPLCTag as ITagNumeric).GetValue;
+
+  zone:=THMIFlowZone(FElevatorStates.GetZoneFromValue(value));
+  if FOwnerZone<>zone then begin
+    FOwnerZone:=zone;
+    ShowZone(FOwnerZone);
+    if FCurrentZone<>nil then begin
+       FZoneTimer.Interval := FCurrentZone.BlinkTime;
+       FZoneTimer.Enabled :=  FCurrentZone.BlinkWith<>(-1);
+    end;
+  end;
+
+  if Assigned(FOnStateChange) then
+    try
+      FOnStateChange(Self);
+    except
+    end;
+end;
+
+procedure THMICustomLinkedFlowElevator.UpdateControl;
+begin
+  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) and (ComponentState*[csDesigning]=[]) then
+    Application.QueueAsyncCall(@UpdateControlDelayed,0);
+end;
+
+destructor THMICustomLinkedFlowElevator.Destroy;
+begin
+  if Assigned(FPLCTag) then
+    FPLCTag.RemoveAllHandlersFromObject(Self);
+  Application.RemoveAsyncCalls(Self);
+  inherited Destroy;
+end;
 
 { TElevadorBasico }
 
@@ -187,6 +346,131 @@ begin
   if FFooterColor=AValue then Exit;
   FFooterColor:=AValue;
   InvalidateDraw;
+end;
+
+{ TCustomFlowElevator }
+
+procedure THMICustomFlowElevator.SetElevatorStates(AValue: THMIFlowZones);
+begin
+  FElevatorStates.Assign(AValue);
+end;
+
+procedure THMICustomFlowElevator.ShowZone(aZone: THMIFlowZone);
+begin
+  FCurrentZone:=aZone;
+  if aZone<>nil then begin
+    BeginUpdate;
+    SetBodyColor(aZone.Color);
+    SetHeadColor(aZone.Color);
+    SetFooterColor(aZone.Color);
+    SetBorderColor(aZone.BorderColor);
+    EndUpdate;
+    UpdateFlow;
+  end;
+end;
+
+procedure THMICustomFlowElevator.UpdateFlow;
+begin
+  if assigned(FCurrentZone) and Assigned(FInputPolyline) and assigned(FOutputPolyline) then begin
+    if FCurrentZone.Flow then
+      FOutputPolyline.LineColor:=FInputPolyline.LineColor
+    else
+      FOutputPolyline.LineColor:=FOutputPolyline.EmptyColor;
+  end;
+end;
+
+procedure THMICustomFlowElevator.StateChanged(Sender: TObject);
+begin
+  UpdateControl;
+end;
+
+procedure THMICustomFlowElevator.StatesNeedsComponentState(
+  var CurState: TComponentState);
+begin
+  CurState:=ComponentState;
+end;
+
+procedure THMICustomFlowElevator.NextZone(Sender: TObject);
+begin
+
+end;
+
+procedure THMICustomFlowElevator.Loaded;
+begin
+  inherited Loaded;
+end;
+
+procedure THMICustomFlowElevator.UpdateControl;
+begin
+
+end;
+
+constructor THMICustomFlowElevator.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FElevatorStates:=THMIFlowZones.Create(Self);
+  FElevatorStates.OnCollectionItemChange:=@StateChanged;
+  FElevatorStates.OnNeedCompState:=@StatesNeedsComponentState;
+
+  FZoneTimer:=TTimer.Create(self);
+  FZoneTimer.Enabled:=false;
+  FZoneTimer.OnTimer:=@NextZone;
+end;
+
+destructor THMICustomFlowElevator.Destroy;
+begin
+  FreeAndNil(FZoneTimer);
+  FreeAndNil(FElevatorStates);
+  inherited Destroy;
+end;
+
+procedure THMICustomFlowElevator.AddNotifyCallback(
+  WhoNotify: IColorChangeNotification);
+begin
+
+end;
+
+procedure THMICustomFlowElevator.RemoveNotifyCallback(
+  WhoRemove: IColorChangeNotification);
+begin
+
+end;
+
+procedure THMICustomFlowElevator.NotifyFree(const WhoWasDestroyed: THMIFlowPolyline
+  );
+begin
+  if WhoWasDestroyed=FInputPolyline then FInputPolyline:=nil;
+  if WhoWasDestroyed=FOutputPolyline then FOutputPolyline:=nil;
+end;
+
+procedure THMICustomFlowElevator.NotifyChange(const WhoChanged: THMIFlowPolyline);
+begin
+  UpdateFlow;
+end;
+
+procedure THMICustomFlowElevator.SetInputPolyline(AValue: THMIFlowPolyline);
+begin
+  if FInputPolyline=AValue then
+    Exit;
+
+  if Assigned(aValue) and (not Supports(AValue, IColorChangeNotification)) then
+    exit;
+
+  if Assigned(FInputPolyline) then
+    (FInputPolyline as IColorChangeNotification).RemoveNotifyCallback(Self as IColorChangeNotification);
+
+  if Assigned(aValue) then
+    (AValue as IColorChangeNotification).AddNotifyCallback(self as IColorChangeNotification);
+
+  FInputPolyline:=AValue;
+  UpdateFlow;
+end;
+
+procedure THMICustomFlowElevator.SetOutputPolyline(AValue: THMIFlowPolyline);
+begin
+  if FOutputPolyline=AValue then exit;
+  FOutputPolyline:=AValue;
+  UpdateFlow;
 end;
 
 end.
