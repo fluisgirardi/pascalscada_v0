@@ -39,7 +39,7 @@ type
     IDE.)
   }
   {$ENDIF}
-  THMIAnimation = class(TImage, IHMIInterface)
+  THMIAnimation = class(TCustomImage, IHMIInterface)
   private
     FAnimationZones:TGraphicZones;
     FTag:TPLCTag;
@@ -154,6 +154,44 @@ type
     //: Security code that allows access to control.
     {$ENDIF}
     property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
+
+    property AntialiasingMode;
+    property Align;
+    property Anchors;
+    property AutoSize;
+    property BorderSpacing;
+    property Center;
+    property KeepOriginXWhenClipped;
+    property KeepOriginYWhenClipped;
+    property Constraints;
+    property DragCursor;
+    property DragMode;
+    property OnChangeBounds;
+    property OnClick;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+    property OnMouseWheelDown;
+    property OnMouseWheelUp;
+    property OnPaint;
+    property OnPictureChanged;
+    property OnPaintBackground;
+    property OnResize;
+    property OnStartDrag;
+    property ParentShowHint;
+    property PopupMenu;
+    property Proportional;
+    property ShowHint;
+    property Stretch;
+    property Transparent;
+    property Visible;
   end;
 
 implementation
@@ -342,7 +380,7 @@ procedure THMIAnimation.Loaded;
 begin
   inherited Loaded;
   FAnimationZones.Loaded;
-  RefreshAnimation(0);
+  SetValue(0);
 end;
 
 procedure THMIAnimation.BlinkTimer(Sender:TObject);
