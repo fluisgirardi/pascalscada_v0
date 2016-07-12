@@ -9,6 +9,9 @@ uses
   PLCTag, Tag, ExtCtrls,Graphics;
 
 type
+
+  { THMICustomFlowPump }
+
   THMICustomFlowPump = class(THMICustomBasicEletricMotor, IColorChangeNotification)
   protected
     procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
@@ -26,7 +29,6 @@ type
     procedure SetOutputPolyline(AValue: THMIFlowPolyline);
     procedure SetPumpStates(AValue: THMIFlowZones);
     procedure ShowZone(aZone:THMIFlowZone);
-    procedure UpdateValve; virtual;
     procedure UpdateFlow; virtual;
     property  InputPolyline:THMIFlowPolyline read FInputPolyline write SetInputPolyline;
     property  OutputPolyline:THMIFlowPolyline read FOutputPolyline write SetOutputPolyline;
@@ -35,6 +37,7 @@ type
     procedure PumpStateNeedsComponentState(var CurState: TComponentState);
     procedure NextZone(Sender: TObject);
     procedure Loaded; override;
+    procedure UpdateValve; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -132,7 +135,8 @@ end;
 
 procedure THMICustomLinkedFlowPump.UpdateValve;
 begin
-  Application.QueueAsyncCall(@UpdateValveDelayed,0);
+  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then
+    Application.QueueAsyncCall(@UpdateValveDelayed,0);
 end;
 
 procedure THMICustomLinkedFlowPump.UpdateValveDelayed(Data: PtrInt);
@@ -183,11 +187,6 @@ begin
     SetBorderColor(aZone.BorderColor);
     UpdateFlow;
   end;
-end;
-
-procedure THMICustomFlowPump.UpdateValve;
-begin
-  //does nothing
 end;
 
 procedure THMICustomFlowPump.UpdateFlow;
@@ -284,6 +283,11 @@ procedure THMICustomFlowPump.Loaded;
 begin
   inherited Loaded;
   FPumpStates.Loaded;
+end;
+
+procedure THMICustomFlowPump.UpdateValve;
+begin
+
 end;
 
 procedure THMICustomFlowPump.PumpStateChanged(Sender: TObject);

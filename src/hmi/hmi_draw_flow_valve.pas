@@ -122,7 +122,8 @@ end;
 
 procedure THMICustomLinkedFlowValve.UpdateValve;
 begin
-  Application.QueueAsyncCall(@UpdateValveDelayed,0);
+  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then
+    Application.QueueAsyncCall(@UpdateValveDelayed,0);
 end;
 
 procedure THMICustomLinkedFlowValve.UpdateValveDelayed(Data: PtrInt);
