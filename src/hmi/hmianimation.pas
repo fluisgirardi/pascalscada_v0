@@ -161,8 +161,6 @@ type
     property AutoSize;
     property BorderSpacing;
     property Center;
-    property KeepOriginXWhenClipped;
-    property KeepOriginYWhenClipped;
     property Constraints;
     property DragCursor;
     property DragMode;
@@ -182,7 +180,6 @@ type
     property OnMouseWheelUp;
     property OnPaint;
     property OnPictureChanged;
-    property OnPaintBackground;
     property OnResize;
     property OnStartDrag;
     property ParentShowHint;
