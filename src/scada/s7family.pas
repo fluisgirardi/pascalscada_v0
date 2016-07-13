@@ -1175,24 +1175,32 @@ begin
     //Result:=SwapBytesInWord(PPDUHeader(PDU.header)^.Error);
   end;
 
-  if length(msg)<(position+PDU.header_len) then exit;
+  if High(msg)>=(position+PDU.header_len) then begin
+    PDU.param:=@msg[position+PDU.header_len];
+    PDU.param_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.param_len);
 
-  PDU.param:=@msg[position+PDU.header_len];
-  PDU.param_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.param_len);
+    if High(msg)>=(position + PDU.header_len + PDU.param_len) then begin
+      PDU.data:=@msg[position + PDU.header_len + PDU.param_len];
+      PDU.data_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.data_len);
 
-  if length(msg)<(position+PDU.header_len+PDU.param_len) then exit;
-
-  if High(msg)>=(position + PDU.header_len + PDU.param_len) then begin
-    PDU.data:=@msg[position + PDU.header_len + PDU.param_len];
-    PDU.data_len:=SwapBytesInWord(PPDUHeader(PDU.header)^.data_len);
-
-    if length(msg)<(position+PDU.header_len+PDU.param_len+PDU.data_len) then exit;
+      if length(msg)<(position+PDU.header_len+PDU.param_len+PDU.data_len) then exit;
+    end else begin
+      PDU.data:=nil;
+      PDU.data_len:=0;
+    end;
+    PDU.user_data_len:=0;
+    PDU.udata:=nil;
   end else begin
+    PDU.param:=nil;
+    PDU.param_len:=0;
+
     PDU.data:=nil;
     PDU.data_len:=0;
+
+    PDU.user_data_len:=0;
+    PDU.udata:=nil;
   end;
-  PDU.user_data_len:=0;
-  PDU.udata:=nil;
+
   Result := true;
 end;
 
