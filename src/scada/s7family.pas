@@ -1583,10 +1583,10 @@ var
 begin
   if writepkg then begin
     if not SetupPDU(pkgout, true, PDU, err) then exit;
-    if PDU.param[0]<>S7FuncWrite then exit;
+    if (PDU.param=nil) or (PDU.param[0]<>S7FuncWrite) then exit;
   end else begin
     if not SetupPDU(pkgin, false, PDU, err) then exit;
-    if PDU.param[0]<>S7FuncRead then exit;
+    if (PDU.param=nil) or (PDU.param[0]<>S7FuncRead) then exit;
   end;
   NumResults:=PDU.param[1];
   CurResult:=0;
