@@ -238,7 +238,9 @@ begin
   end;
 end;
 
-function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var FSocket:TSocket; CloseSocketProc:TConnectEvent; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+function CheckConnection(var CommResult: TIOResult; var incRetries: Boolean;
+  var FSocket: TSocket; CloseSocketProc: TConnectEvent;
+  DoCommPortDisconected: TDisconnectNotifierProc): Boolean;
 var
   retval, nbytes:LongInt;
   t:TTimeVal;
@@ -256,12 +258,6 @@ begin
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    {$IF defined(CPU64)}
-    InterLockedExchange64(FSocket,INVALID_SOCKET);
-    {$ELSE}
-    InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
-    {$ENDIF}
-
     Result:=false;
     exit;
   end;
@@ -290,33 +286,19 @@ begin
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    {$IF defined(CPU64)}
-    InterLockedExchange64(FSocket,INVALID_SOCKET);
-    {$ELSE}
-    InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
-    {$ENDIF}
     Result:=false;
     exit;
   end;
 
   if (retval=1) then begin  // seems there is something in our receive buffer!!
     // now we check how many bytes are in receive buffer
-    {$IFDEF FPC}
     retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
-    {$ELSE}
-    retval:=ioctlsocket(FSocket,FIONREAD,nbytes);
-    {$ENDIF};
 
     if (retval<>0) then begin  // some error occured
       if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorPortError;
-      {$IF defined(CPU64)}
-      InterLockedExchange64(FSocket,INVALID_SOCKET);
-      {$ELSE}
-      InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
-      {$ENDIF}
       Result:=false;
       exit;
     end;
@@ -326,11 +308,6 @@ begin
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorNotReady;
-      {$IF defined(CPU64)}
-      InterLockedExchange64(FSocket,INVALID_SOCKET);
-      {$ELSE}
-      InterLockedExchange(LongInt(FSocket),LongInt(INVALID_SOCKET));
-      {$ENDIF}
       Result:=false;
       exit;
     end;

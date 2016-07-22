@@ -76,7 +76,7 @@ uses
   @returns(@True if stills connected.)
   }
   {$ENDIF}
-  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var FSocket:TSocket; CloseSocketProc:TConnectEvent; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 
   {$IFDEF PORTUGUES}
   {:
@@ -238,7 +238,9 @@ begin
   end;
 end;
 
-function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:Sockets.TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+function CheckConnection(var CommResult: TIOResult; var incRetries: Boolean;
+  var FSocket: TSocket; CloseSocketProc: TConnectEvent;
+  DoCommPortDisconected: TDisconnectNotifierProc): Boolean;
 var
   retval, nbytes:LongInt;
   t:TTimeVal;
@@ -251,11 +253,10 @@ begin
   retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
 
   if retval<>0 then begin
+    if Assigned(CloseSocketProc) then CloseSocketProc(closed);
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=false;
-    InterLockedExchange(FSocket,-1);
     Result:=false;
     exit;
   end;
@@ -280,11 +281,10 @@ begin
   end;
 
   if (retval<0) then begin //error on socket...
+    if Assigned(CloseSocketProc) then CloseSocketProc(closed);
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=false;
-    InterLockedExchange(FSocket,-1);
     Result:=false;
     exit;
   end;
@@ -294,21 +294,19 @@ begin
     retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
 
     if (retval<>0) then begin  // some error occured
+      if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorPortError;
-      PActive:=false;
-      InterLockedExchange(FSocket,-1);
       Result:=false;
       exit;
     end;
 
     if (nbytes=0) then begin
+      if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorNotReady;
-      PActive:=false;
-      InterLockedExchange(FSocket,-1);
       Result:=false;
       exit;
     end;
