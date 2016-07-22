@@ -76,7 +76,7 @@ uses
   @returns(@True if stills connected.)
   }
   {$ENDIF}
-  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+  function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var FSocket:TSocket; CloseSocketProc:TConnectEvent; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 
   {$IFDEF PORTUGUES}
   {:
@@ -238,11 +238,12 @@ begin
   end;
 end;
 
-function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var PActive:Boolean; var FSocket:TSocket; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
+function CheckConnection(var CommResult:TIOResult; var incRetries:Boolean; var FSocket:TSocket; CloseSocketProc:TConnectEvent; DoCommPortDisconected:TDisconnectNotifierProc):Boolean;
 var
   retval, nbytes:LongInt;
   t:TTimeVal;
   readset:TFDSet;
+  closed: Boolean;
 begin
   Result:=true;
 
@@ -251,10 +252,10 @@ begin
   retval:=ioctlsocket(FSocket,FIONREAD,@nbytes);
 
   if retval<>0 then begin
+    if Assigned(CloseSocketProc) then CloseSocketProc(closed);
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=false;
     {$IF defined(CPU64)}
     InterLockedExchange64(FSocket,INVALID_SOCKET);
     {$ELSE}
@@ -285,10 +286,10 @@ begin
   end;
 
   if (retval<0) then begin //error on socket...
+    if Assigned(CloseSocketProc) then CloseSocketProc(closed);
     if Assigned(DoCommPortDisconected) then
       DoCommPortDisconected();
     CommResult:=iorPortError;
-    PActive:=false;
     {$IF defined(CPU64)}
     InterLockedExchange64(FSocket,INVALID_SOCKET);
     {$ELSE}
@@ -307,10 +308,10 @@ begin
     {$ENDIF};
 
     if (retval<>0) then begin  // some error occured
+      if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorPortError;
-      PActive:=false;
       {$IF defined(CPU64)}
       InterLockedExchange64(FSocket,INVALID_SOCKET);
       {$ELSE}
@@ -321,10 +322,10 @@ begin
     end;
 
     if (nbytes=0) then begin
+      if Assigned(CloseSocketProc) then CloseSocketProc(closed);
       if Assigned(DoCommPortDisconected) then
         DoCommPortDisconected();
       CommResult:=iorNotReady;
-      PActive:=false;
       {$IF defined(CPU64)}
       InterLockedExchange64(FSocket,INVALID_SOCKET);
       {$ELSE}

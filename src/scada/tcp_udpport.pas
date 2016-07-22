@@ -236,7 +236,7 @@ uses hsstrings, dateutils, sysutils;
 
 function TConnectThread.GetEnableAutoReconnect: Boolean;
 var
-  res: cardinal;
+  res: LongInt;
 begin
   InterLockedExchange(res,FAutoReconnect);
   Result:=res=1;
