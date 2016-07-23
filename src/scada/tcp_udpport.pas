@@ -379,7 +379,7 @@ begin
   inherited Create(AOwner);
   FPortNumber:=102;
   FTimeout:=1000;
-  {$IF defined(WINDOWS)}
+  {$IF defined(WIN32) or defined(WIN64)}
   FSocket:=INVALID_SOCKET;
   {$ELSE}
   FSocket:=-1;

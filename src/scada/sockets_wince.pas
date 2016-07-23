@@ -9,7 +9,7 @@ unit sockets_wince;
 interface
 
 uses
-  windows, Sockets, socket_types, commtypes;
+  windows, winsock, Sockets, socket_types, commtypes;
 
   {$IFDEF PORTUGUES}
   {:
@@ -106,19 +106,22 @@ uses
   {$ENDIF}
   function GetNumberOfBytesInReceiveBuffer(socket:Tsocket):LongInt;
 
+
+const
+  SOMAXCONN = $7fffffff;
+
 implementation
 
-uses winsock;
-
-function setblockingmode(fd:sockets.Tsocket; mode:u_long):LongInt;
+function setblockingmode(fd: TSocket; mode: dword): LongInt;
 begin
-  if ioctlsocket(fd, FIONBIO, mode)=SOCKET_ERROR then
+  if ioctlsocket(fd, LongInt(FIONBIO), mode)=SOCKET_ERROR then
     Result:=-1
   else
     Result:=0;
 end;
 
-function connect_with_timeout(sock:sockets.Tsocket; address:sockets.psockaddr; address_len:t_socklen; timeout:LongInt):LongInt;
+function connect_with_timeout(sock: Tsocket; address: sockets.PSockAddr;
+  address_len: t_socklen; timeout: LongInt): LongInt;
 var
   sel:TFDSet;
   mode:u_long;
@@ -158,7 +161,8 @@ begin
   end;
 end;
 
-function socket_recv(sock:sockets.Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
+function socket_recv(sock: Tsocket; buf: PByte; len: Cardinal; flags,
+  timeout: LongInt): LongInt;
 var
   sel:TFDSet;
   mode:u_long;
@@ -198,7 +202,8 @@ begin
   end;
 end;
 
-function socket_send(sock:sockets.Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;
+function socket_send(sock: Tsocket; buf: PByte; len: Cardinal; flags,
+  timeout: LongInt): LongInt;
 var
   sel:TFDSet;
   mode:u_long;
@@ -245,6 +250,7 @@ var
   retval, nbytes:LongInt;
   t:TTimeVal;
   readset:TFDSet;
+  closed:Boolean;
 begin
   Result:=true;
 

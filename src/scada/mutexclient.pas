@@ -474,7 +474,7 @@ begin
     {$IFEND}
 
     {$IF defined(FPC) AND defined(WINCE)}
-    channel.sin_addr := StrToNetAddr(FHostName);
+    channel.sin_addr := StrToNetAddr(FServerHost);
     {$IFEND}
 
     {$IF defined(WIN32) OR defined(WIN64)}
