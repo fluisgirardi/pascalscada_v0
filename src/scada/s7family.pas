@@ -1060,7 +1060,6 @@ end;
 function TSiemensProtocolFamily.exchange(var CPU:TS7CPU; var msgOut:BYTES; var msgIn:BYTES; IsWrite:Boolean):Boolean;
 var
   pduo:TPDU;
-  res:Boolean;
   err:Integer;
 begin
 

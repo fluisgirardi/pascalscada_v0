@@ -167,9 +167,6 @@ begin
 end;
 
 function connect_without_timeout(sock:Tsocket; address:PSockAddr; address_len:t_socklen):LongInt;
-var
-  sel:tpollfd;
-  mode:LongInt;
 begin
   Result:=0;
 
