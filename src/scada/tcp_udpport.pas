@@ -299,9 +299,11 @@ begin
            end;
         end;
         1: begin
-          if ReconnectTimerRunning=false then
-            ReconnectStarted:=Now;
-          ReconnectTimerRunning:=true;
+          if FActive then begin
+            if ReconnectTimerRunning=false then
+              ReconnectStarted:=Now;
+            ReconnectTimerRunning:=true;
+          end;
         end;
         2: begin
           ReconnectTimerRunning:=false;

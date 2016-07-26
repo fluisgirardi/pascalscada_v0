@@ -297,6 +297,7 @@ begin
               ExpectedResponse:=false;
           end;
         end;
+        CheckSynchronize(1);
       until (GetNumberOfBytesInReceiveBuffer(FSocket)<=0) and ExpectedResponse;
     end else
       ConnectionIsGone;
