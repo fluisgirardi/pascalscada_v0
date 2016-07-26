@@ -121,7 +121,7 @@ type
 
 implementation
 
-uses hsstrings, dateutils{$IFNDEF FPC}, Windows{$ENDIF};
+uses hsstrings, dateutils, hsutils{$IFNDEF FPC}, Windows{$ENDIF};
 
 { TMutexClientThread }
 
@@ -538,15 +538,15 @@ begin
   if FActive then
     raise exception.Create(SimpossibleToChangeWhenActive);
 
-  if (FHostName=trim(target)) then exit;
+  if (FServerHost=trim(AValue)) then exit;
 
-  if (trim(target)='') then begin
-    FHostName:=trim(target);
+  if (trim(AValue)='') then begin
+    FServerHost:=trim(AValue);
     exit;
   end;
 
-  if FHostName<>target then begin
-    ip:=ExplodeString('.',target);
+  if FServerHost<>AValue then begin
+    ip:=ExplodeString('.',AValue);
     if Length(ip)<>4 then
       goto err;
 
@@ -562,12 +562,12 @@ begin
     if ZeroCount=4 then goto err;
     if FFCount=4   then goto err;
 
-    FHostName:=target;
+    FServerHost:=AValue;
     exit;
   end;
 
 err:
-  raise Exception.Create(Format('The address "%s" is not a valid IPv4 address',[target]));
+  raise Exception.Create(Format('The address "%s" is not a valid IPv4 address',[AValue]));
 end;
 
 procedure TMutexClient.ConnectionFinished(Sender: TObject);
