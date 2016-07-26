@@ -230,7 +230,7 @@ type
 
 implementation
 
-uses hsstrings, dateutils, sysutils;
+uses hsstrings, dateutils, sysutils, hsutils;
 
 { TConnectThread }
 
@@ -436,9 +436,47 @@ begin
 end;
 
 procedure TTCP_UDPPort.SetHostname(target:Ansistring);
+var
+  ip: TStringArray;
+  i, ZeroCount, FFCount: Integer;
+  octeto: Longint;
+
+label
+  err;
+
 begin
   DoExceptionInActive;
-  FHostName:=target;
+
+  if (FHostName=trim(target)) then exit;
+
+  if (trim(target)='') then begin
+    FHostName:=trim(target);
+    exit;
+  end;
+
+  if FHostName<>target then begin
+    ip:=ExplodeString('.',target);
+    if Length(ip)<>4 then
+      goto err;
+
+    ZeroCount:=0;
+    FFCount:=0;
+    for i:=0 to 3 do begin
+      if TryStrToInt(ip[i],octeto)=false then goto err;
+      if not (octeto in [0..255]) then goto err;
+      if ((i=0) or (i=3)) and ((octeto=0) or (octeto=255)) then goto err;
+      if octeto=0   then ZeroCount:=ZeroCount + 1;
+      if octeto=255 then FFCount  :=FFCount   + 1;
+    end;
+    if ZeroCount=4 then goto err;
+    if FFCount=4   then goto err;
+
+    FHostName:=target;
+    exit;
+  end;
+
+err:
+  raise Exception.Create(Format('The address "%s" is not a valid IPv4 address',[target]));
 end;
 
 procedure TTCP_UDPPort.SetPortNumber(pn:LongInt);
@@ -686,7 +724,6 @@ var
 {$IFEND}
 
 {$IF defined(WIN32) or defined(WIN64)}
-  ServerAddr:PHostEnt;
   channel:sockaddr_in;
 {$IFEND}
 
@@ -697,28 +734,6 @@ begin
   Ok:=false;
   MustCloseSocket:=false;
   try
-    //##########################################################################
-    // RESOLUCAO DE NOMES SOBRE WINDOWS 32/64 BITS.
-    // NAME RESOLUTION OVER WINDOWS 32/64 BITS.
-    //##########################################################################
-    {$IF defined(WIN32) or defined(WIN64)}
-      //se esta usando FPC ou um Delphi abaixo da versao 2009, usa a versão
-      //ansistring, caso seja uma versao delphi 2009 ou superior
-      //usa a versao unicode.
-      //
-      //if the name resolution is being done using FPC or a Delphi 2009 or older
-      //uses the ansistring version, otherwise uses the unicode version.
-      {$IF defined(FPC) OR (not defined(DELPHI2009_UP))}
-      ServerAddr := GetHostByName(PAnsiChar(FHostName));
-      {$ELSE}
-      ServerAddr := GetHostByName(PAnsiChar(AnsiString(FHostName)));
-      {$IFEND}
-      if ServerAddr=nil then begin
-        RefreshLastOSError;
-        exit;
-      end;
-    {$IFEND}
-
     //##########################################################################
     // RESOLUCAO DE NOMES SOBRE LINUX/FREEBSD e outros.
     // NAME RESOLUTION OVER LINUX/FREEBSD and others.
@@ -812,7 +827,7 @@ begin
     {$IFEND}
 
     {$IF defined(WIN32) OR defined(WIN64)}
-    channel.sin_addr.S_addr := PInAddr(ServerAddr^.h_addr)^.S_addr;
+    channel.sin_addr.S_addr := inet_addr(PAnsiChar(FHostName));
     {$IFEND}
 
     //##########################################################################
