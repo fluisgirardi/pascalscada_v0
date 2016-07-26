@@ -459,7 +459,7 @@ begin
     CloseSocket(FSocket);
 
     //destroy all client threads...
-    for ct:=0 to High(FClients) do begin
+    for ct:=High(FClients) downto 0 do begin
       FClients[ct].Terminate;
       //FClients[ct].de;
     end;

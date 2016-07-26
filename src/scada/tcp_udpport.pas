@@ -280,6 +280,7 @@ var
   msbetween: Int64;
 begin
   ReconnectTimerRunning:=false;
+  ReconnectStarted:=now;
   while not Terminated do begin
     while FMessageQueue.PeekMessage(msg,0,100,true) do begin
       Ok:=false;
