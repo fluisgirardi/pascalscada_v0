@@ -184,9 +184,11 @@ begin
   for i:=0 to FFlowSources.Count-1 do begin
     if THMIFlowSourceCollectionItem(FFlowSources.Items[i]).HMIObject = WhoWasDestroyed then begin
       FFlowSources.Delete(i);
-      break;
+      exit;
     end;
   end;
+
+  RemoveNotifyCallback(WhoWasDestroyed as IColorChangeNotification);
 end;
 
 procedure THMIFlowPolyline.NotifyChange(const WhoChanged: THMIFlowPolyline);
