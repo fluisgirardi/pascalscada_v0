@@ -6,7 +6,7 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag;
+  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones;
 
 type
 
@@ -47,6 +47,37 @@ type
     property OnMouseMove;
   end;
 
+  { THMIElevatorFlowZone }
+
+  THMIElevatorFlowZone = class(THMIFlowZone)
+  private
+    FPaintBodyWithFlowColor: Boolean;
+    FPaintFooterWithFlowColor: Boolean;
+    FPaintHeaderWithFlowColor: Boolean;
+    procedure SetPaintBodyWithFlowColor(AValue: Boolean);
+    procedure SetPaintFooterWithFlowColor(AValue: Boolean);
+    procedure SetPaintHeaderWithFlowColor(AValue: Boolean);
+  published
+    property PaintHeaderWithFlowColor:Boolean read FPaintHeaderWithFlowColor write SetPaintHeaderWithFlowColor;
+    property PaintBodyWithFlowColor:Boolean read FPaintBodyWithFlowColor write SetPaintBodyWithFlowColor;
+    property PaintFooterWithFlowColor:Boolean read FPaintFooterWithFlowColor write SetPaintFooterWithFlowColor;
+  end;
+
+  { THMIElevatorFlowZones }
+
+  THMIElevatorFlowZones = class(TZones)
+    //: @exclude
+    constructor Create(aOwner:TPersistent);
+
+    {$IFDEF PORTUGUES}
+    //: Adiciona uma nova zona de cor.
+    {$ELSE}
+    //: Adds a new color and flow zone into the collection.
+    {$ENDIF}
+    function Add:THMIElevatorFlowZone;
+  end;
+
+
   { THMICustomFlowElevator }
 
   THMICustomFlowElevator = class(THMICustomElevadorBasico, IColorChangeNotification)
@@ -58,18 +89,18 @@ type
   protected
     FInputPolyline: THMIFlowPolyline;
     FOutputPolyline: THMIFlowPolyline;
-    FElevatorStates: THMIFlowZones;
+    FElevatorStates: THMIElevatorFlowZones;
     FCurrentZone,
-    FOwnerZone: THMIFlowZone;
+    FOwnerZone: THMIElevatorFlowZone;
     FZoneTimer:TTimer;
     procedure SetInputPolyline(AValue: THMIFlowPolyline);
     procedure SetOutputPolyline(AValue: THMIFlowPolyline);
-    procedure SetElevatorStates(AValue: THMIFlowZones);
-    procedure ShowZone(aZone:THMIFlowZone);
+    procedure SetElevatorStates(AValue: THMIElevatorFlowZones);
+    procedure ShowZone(aZone:THMIElevatorFlowZone);
     procedure UpdateFlow; virtual;
     property  InputPolyline:THMIFlowPolyline read FInputPolyline write SetInputPolyline;
     property  OutputPolyline:THMIFlowPolyline read FOutputPolyline write SetOutputPolyline;
-    property  ColorAndFlowStates:THMIFlowZones read FElevatorStates write SetElevatorStates;
+    property  ColorAndFlowStates:THMIElevatorFlowZones read FElevatorStates write SetElevatorStates;
     procedure StateChanged(Sender: TObject);
     procedure StatesNeedsComponentState(var CurState: TComponentState);
     procedure NextZone(Sender: TObject);
@@ -127,6 +158,41 @@ implementation
 
 uses ProtocolTypes, hsstrings, forms;
 
+{ THMIElevatorFlowZones }
+
+constructor THMIElevatorFlowZones.Create(aOwner: TPersistent);
+begin
+  inherited Create(aOwner, THMIElevatorFlowZone);
+end;
+
+function THMIElevatorFlowZones.Add: THMIElevatorFlowZone;
+begin
+  Result:=THMIElevatorFlowZone(inherited Add);
+end;
+
+{ THMIElevatorFlowZone }
+
+procedure THMIElevatorFlowZone.SetPaintBodyWithFlowColor(AValue: Boolean);
+begin
+  if FPaintBodyWithFlowColor=AValue then Exit;
+  FPaintBodyWithFlowColor:=AValue;
+  NotifyChange;
+end;
+
+procedure THMIElevatorFlowZone.SetPaintFooterWithFlowColor(AValue: Boolean);
+begin
+  if FPaintFooterWithFlowColor=AValue then Exit;
+  FPaintFooterWithFlowColor:=AValue;
+  NotifyChange;
+end;
+
+procedure THMIElevatorFlowZone.SetPaintHeaderWithFlowColor(AValue: Boolean);
+begin
+  if FPaintHeaderWithFlowColor=AValue then Exit;
+  FPaintHeaderWithFlowColor:=AValue;
+  NotifyChange;
+end;
+
 { THMICustomLinkedFlowElevator }
 
 procedure THMICustomLinkedFlowElevator.SetHMITag(AValue: TPLCTag);
@@ -174,12 +240,12 @@ end;
 procedure THMICustomLinkedFlowElevator.UpdateControlDelayed(Data: PtrInt);
 var
   value: Double;
-  zone: THMIFlowZone;
+  zone: THMIElevatorFlowZone;
 begin
   if Assigned(FPLCTag) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 
-  zone:=THMIFlowZone(FElevatorStates.GetZoneFromValue(value));
+  zone:=THMIElevatorFlowZone(FElevatorStates.GetZoneFromValue(value));
   if FOwnerZone<>zone then begin
     FOwnerZone:=zone;
     ShowZone(FOwnerZone);
@@ -350,31 +416,35 @@ end;
 
 { TCustomFlowElevator }
 
-procedure THMICustomFlowElevator.SetElevatorStates(AValue: THMIFlowZones);
+procedure THMICustomFlowElevator.SetElevatorStates(AValue: THMIElevatorFlowZones
+  );
 begin
   FElevatorStates.Assign(AValue);
 end;
 
-procedure THMICustomFlowElevator.ShowZone(aZone: THMIFlowZone);
+procedure THMICustomFlowElevator.ShowZone(aZone: THMIElevatorFlowZone);
 begin
   FCurrentZone:=aZone;
   if aZone<>nil then begin
     BeginUpdate;
-    SetBodyColor(aZone.Color);
-    SetHeadColor(aZone.Color);
-    SetFooterColor(aZone.Color);
+    if aZone.PaintBodyWithFlowColor=false   then SetBodyColor(aZone.Color);
+    if aZone.PaintHeaderWithFlowColor=false then SetHeadColor(aZone.Color);
+    if aZone.PaintFooterWithFlowColor=false then SetFooterColor(aZone.Color);
     SetBorderColor(aZone.BorderColor);
-    EndUpdate;
     UpdateFlow;
+    EndUpdate;
   end;
 end;
 
 procedure THMICustomFlowElevator.UpdateFlow;
 begin
   if assigned(FCurrentZone) and Assigned(FInputPolyline) and assigned(FOutputPolyline) then begin
-    if FCurrentZone.Flow then
+    if FCurrentZone.Flow then begin
+      if FCurrentZone.PaintBodyWithFlowColor   then SetBodyColor(FInputPolyline.LineColor);
+      if FCurrentZone.PaintHeaderWithFlowColor then SetHeadColor(FInputPolyline.LineColor);
+      if FCurrentZone.PaintFooterWithFlowColor then SetFooterColor(FInputPolyline.LineColor);
       FOutputPolyline.LineColor:=FInputPolyline.LineColor
-    else
+    end else
       FOutputPolyline.LineColor:=FOutputPolyline.EmptyColor;
   end;
 end;
@@ -408,7 +478,7 @@ end;
 constructor THMICustomFlowElevator.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FElevatorStates:=THMIFlowZones.Create(Self);
+  FElevatorStates:=THMIElevatorFlowZones.Create(Self);
   FElevatorStates.OnCollectionItemChange:=@StateChanged;
   FElevatorStates.OnNeedCompState:=@StatesNeedsComponentState;
 
