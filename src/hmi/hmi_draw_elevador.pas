@@ -51,13 +51,18 @@ type
 
   THMIElevatorFlowZone = class(THMIFlowZone)
   private
+    FEmptyColor: TColor;
     FPaintBodyWithFlowColor: Boolean;
     FPaintFooterWithFlowColor: Boolean;
     FPaintHeaderWithFlowColor: Boolean;
+    procedure SetEmptyColor(AValue: TColor);
     procedure SetPaintBodyWithFlowColor(AValue: Boolean);
     procedure SetPaintFooterWithFlowColor(AValue: Boolean);
     procedure SetPaintHeaderWithFlowColor(AValue: Boolean);
+  public
+    constructor Create(aCollection: TCollection); override;
   published
+    property EmptyColor:TColor read FEmptyColor write SetEmptyColor;
     property PaintHeaderWithFlowColor:Boolean read FPaintHeaderWithFlowColor write SetPaintHeaderWithFlowColor;
     property PaintBodyWithFlowColor:Boolean read FPaintBodyWithFlowColor write SetPaintBodyWithFlowColor;
     property PaintFooterWithFlowColor:Boolean read FPaintFooterWithFlowColor write SetPaintFooterWithFlowColor;
@@ -179,6 +184,13 @@ begin
   NotifyChange;
 end;
 
+procedure THMIElevatorFlowZone.SetEmptyColor(AValue: TColor);
+begin
+  if FEmptyColor=AValue then Exit;
+  FEmptyColor:=AValue;
+  NotifyChange;
+end;
+
 procedure THMIElevatorFlowZone.SetPaintFooterWithFlowColor(AValue: Boolean);
 begin
   if FPaintFooterWithFlowColor=AValue then Exit;
@@ -191,6 +203,12 @@ begin
   if FPaintHeaderWithFlowColor=AValue then Exit;
   FPaintHeaderWithFlowColor:=AValue;
   NotifyChange;
+end;
+
+constructor THMIElevatorFlowZone.Create(aCollection: TCollection);
+begin
+  inherited Create(aCollection);
+  FEmptyColor:=clSilver;
 end;
 
 { THMICustomLinkedFlowElevator }
@@ -440,9 +458,28 @@ procedure THMICustomFlowElevator.UpdateFlow;
 begin
   if assigned(FCurrentZone) and Assigned(FInputPolyline) and assigned(FOutputPolyline) then begin
     if FCurrentZone.Flow then begin
-      if FCurrentZone.PaintBodyWithFlowColor   then SetBodyColor(FInputPolyline.LineColor);
-      if FCurrentZone.PaintHeaderWithFlowColor then SetHeadColor(FInputPolyline.LineColor);
-      if FCurrentZone.PaintFooterWithFlowColor then SetFooterColor(FInputPolyline.LineColor);
+
+      if FCurrentZone.FPaintBodyWithFlowColor   then begin
+        if FInputPolyline.LineColor=FInputPolyline.EmptyColor then
+          SetBodyColor(FCurrentZone.EmptyColor)
+        else
+          SetBodyColor(FInputPolyline.LineColor);
+      end;
+
+      if FCurrentZone.FPaintHeaderWithFlowColor then begin
+        if FInputPolyline.LineColor=FInputPolyline.EmptyColor then
+          SetHeadColor(FCurrentZone.EmptyColor)
+        else
+          SetHeadColor(FInputPolyline.LineColor);
+      end;
+
+      if FCurrentZone.FPaintFooterWithFlowColor then  begin
+        if FInputPolyline.LineColor=FInputPolyline.EmptyColor then
+          SetFooterColor(FCurrentZone.EmptyColor)
+        else
+          SetFooterColor(FInputPolyline.LineColor);
+      end;
+
       FOutputPolyline.LineColor:=FInputPolyline.LineColor
     end else
       FOutputPolyline.LineColor:=FOutputPolyline.EmptyColor;
