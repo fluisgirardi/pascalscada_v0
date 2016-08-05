@@ -362,6 +362,9 @@ type
   {$ELSE}
   //: Base class for all tags.
   {$ENDIF}
+
+  { TTag }
+
   TTag = class(TComponent)
   private
     {$IFDEF FPC}
@@ -919,6 +922,9 @@ type
     procedure AddTagChangeHandler(aCallBack:TNotifyEvent);
     procedure AddRemoveTagHandler(aCallBack:TNotifyEvent);
     procedure RemoveAllHandlersFromObject(aObject:TObject);
+
+    function CountObjectsLinkedWithTagChangeHandler:Integer;
+    function GetObjectLinkedWithTagChangeHandler(Index:Integer):TObject;
   end;
 
   TScanUpdateRec = record
@@ -1079,6 +1085,20 @@ begin
       DeleteFromList(FTagRemovalNotificationList,i);
     end;
   end;
+end;
+
+function TTag.CountObjectsLinkedWithTagChangeHandler: Integer;
+begin
+  Result:=Length(FChangeNotificationList);
+end;
+
+function TTag.GetObjectLinkedWithTagChangeHandler(Index: Integer): TObject;
+begin
+
+  if (Index >= 0) and (Index < Length(FChangeNotificationList)) then begin
+    Result:= TObject(TMethod(FChangeNotificationList[Index]).Data);
+  end;
+
 end;
 
 procedure TTag.NotifyChange;
