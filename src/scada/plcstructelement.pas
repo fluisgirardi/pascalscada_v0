@@ -33,9 +33,13 @@ type
     @abstract(Class of a tag item of a structure communication tag.)
   }
   {$ENDIF}
+
+  { TPLCStructItem }
+
   TPLCStructItem = class(TPLCBlockElement, ITagInterface, ITagNumeric)
   private
     PBlock:TPLCStruct;
+    function GetMySize(newType: TTagType): Integer;
   protected
     procedure SetBlock(blk:TPLCStruct);
     //: @seealso(TPLCTag.GetValueRaw)
@@ -115,7 +119,6 @@ begin
   FCurrentWordSize:=oldwordsize;
 
   UpdateTagSizeOnProtocol;
-
 end;
 
 procedure TPLCStructItem.UpdateTagSizeOnProtocol;
@@ -131,21 +134,24 @@ end;
 procedure TPLCStructItem.SetBlock(blk:TPLCStruct);
 begin
   if blk=PLCBlock then exit;
+  //se esta setando o bloco
+  //if the block is being set
+  if (blk<>nil) then begin
+    if (PIndex+GetMySize(FTagType))>blk.Size then
+      raise Exception.Create(STagIdxMoreSizeExceedStructLen);
+
+    blk.AddRemoveTagHandler(@RemoveTagCallBack);
+    blk.AddTagChangeHandler(@TagChangeCallback);
+    blk.AddWriteFaultHandler(@WriteFaultCallback);
+  end;
+
   //esta removendo do bloco.
   //removing the link with the block
   if Assigned(PBlock) then begin
     PBlock.RemoveAllHandlersFromObject(Self);
   end;
 
-  //se esta setando o bloco
-  //if the block is being set
-  if (blk<>nil) then begin
-    blk.AddRemoveTagHandler(@RemoveTagCallBack);
-    blk.AddTagChangeHandler(@TagChangeCallback);
-    blk.AddWriteFaultHandler(@WriteFaultCallback);
-    if PIndex>=blk.Size then
-      PIndex := blk.Size - 1;
-  end;
+
   PBlock:=blk;
 end;
 
@@ -234,25 +240,30 @@ begin
   inherited SetIndex(i);
 end;
 
-procedure TPLCStructItem.SetTagType(newType:TTagType);
-var
-  MySize:LongInt;
+function TPLCStructItem.GetMySize(newType:TTagType):Integer;
 begin
   case newType of
     pttDefault:
       if FProtocolWordSize=1 then
-        MySize:=1
+        Result:=1
       else
-        MySize := FProtocolWordSize div 8;
+        Result := FProtocolWordSize div 8;
     pttByte, pttShortInt:
-      MySize:=1;
+      Result:=1;
     pttSmallInt, pttWord:
-      MySize:=2;
+      Result:=2;
     pttLongInt, pttDWord, pttFloat:
-      MySize:=4;
+      Result:=4;
     pttInt64, pttQWord, pttDouble:
-      MySize:=8;
+      Result:=8;
   end;
+end;
+
+procedure TPLCStructItem.SetTagType(newType:TTagType);
+var
+  MySize: Integer;
+begin
+  MySize:=GetMySize(newType);
 
   if PBlock<>nil then
     if (PIndex+MySize)>PBlock.Size then

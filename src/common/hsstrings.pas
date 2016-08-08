@@ -185,6 +185,7 @@ resourcestring
   SMBTBLabel5                   = 'Zero Fill';
   SMBTBLabel6                   = 'Qtd. de digitos';
   SMBTBLabel7                   = 'Escala';
+  STagIdxMoreSizeExceedStructLen= 'Indice do item da estrutura mais o seu tamanho excedem o tamanho da área de dados da estrutura';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -330,6 +331,7 @@ resourcestring
   SMBTBLabel5                   = 'Zero Fill';
   SMBTBLabel6                   = 'Qtd. de digitos';
   SMBTBLabel7                   = 'Scale';
+  STagIdxMoreSizeExceedStructLen= 'Struct item index more struct item size exceeds the data length of the struct';
   {$ENDIF}
 
 {$IFNDEF FPC}

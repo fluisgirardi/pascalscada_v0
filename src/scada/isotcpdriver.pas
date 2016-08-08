@@ -59,6 +59,9 @@ type
   @seealso(TSiemensProtocolFamily).
   }
   {$ENDIF}
+
+  { TISOTCPDriver }
+
   TISOTCPDriver = class(TSiemensProtocolFamily)
   private
     procedure SetPLCRack(AValue: longint);
@@ -98,6 +101,13 @@ type
     procedure PrepareToSend(var msg: BYTES); override;
     //: @exclude
     procedure Loaded; override;
+
+    //: seealso(TSiemensProtocolFamily.doRead)
+    function DoRead(const tagrec: TTagRec; out Values: TArrayOfDouble;
+      Sync: Boolean): TProtocolIOResult; override;
+    //: seealso(TSiemensProtocolFamily.doWrite)
+    function DoWrite(const tagrec: TTagRec; const Values: TArrayOfDouble;
+      Sync: Boolean): TProtocolIOResult; override;
   public
     constructor Create(AOwner:TComponent); override;
 
@@ -459,6 +469,30 @@ procedure TISOTCPDriver.Loaded;
 begin
   inherited Loaded;
   UpdatePLCs;
+end;
+
+function TISOTCPDriver.DoRead(const tagrec: TTagRec; out
+  Values: TArrayOfDouble; Sync: Boolean): TProtocolIOResult;
+var
+  atagrec: TTagRec;
+begin
+  atagrec:=tagrec;
+  atagrec.Rack:=FPLCRack;
+  atagrec.Slot:=FPLCSlot;
+  atagrec.Station:=FPLCStation;
+  Result:=inherited DoRead(atagrec, Values, Sync);
+end;
+
+function TISOTCPDriver.DoWrite(const tagrec: TTagRec;
+  const Values: TArrayOfDouble; Sync: Boolean): TProtocolIOResult;
+var
+  atagrec: TTagRec;
+begin
+  atagrec:=tagrec;
+  atagrec.Rack:=FPLCRack;
+  atagrec.Slot:=FPLCSlot;
+  atagrec.Station:=FPLCStation;
+  Result:=inherited DoWrite(atagrec, Values, Sync);
 end;
 
 procedure TISOTCPDriver.SetPLCRack(AValue: longint);
