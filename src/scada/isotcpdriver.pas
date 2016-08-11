@@ -25,7 +25,7 @@ unit ISOTCPDriver;
 interface
 
 uses
-  classes, sysutils, S7Types, commtypes, s7family, Tag;
+  classes, sysutils, S7Types, commtypes, s7family, Tag, ProtocolTypes;
 
 type
 
@@ -105,6 +105,7 @@ type
     //: seealso(TSiemensProtocolFamily.doRead)
     function DoRead(const tagrec: TTagRec; out Values: TArrayOfDouble;
       Sync: Boolean): TProtocolIOResult; override;
+    procedure DoGetValue(TagRec: TTagRec; var values: TScanReadRec); override;
     //: seealso(TSiemensProtocolFamily.doWrite)
     function DoWrite(const tagrec: TTagRec; const Values: TArrayOfDouble;
       Sync: Boolean): TProtocolIOResult; override;
@@ -481,6 +482,14 @@ begin
   atagrec.Slot:=FPLCSlot;
   atagrec.Station:=FPLCStation;
   Result:=inherited DoRead(atagrec, Values, Sync);
+end;
+
+procedure TISOTCPDriver.DoGetValue(TagRec: TTagRec; var values: TScanReadRec);
+begin
+  TagRec.Station:=FPLCStation;
+  TagRec.Slot:=FPLCSlot;
+  TagRec.Rack:=FPLCRack;
+  inherited DoGetValue(TagRec, values);
 end;
 
 function TISOTCPDriver.DoWrite(const tagrec: TTagRec;
