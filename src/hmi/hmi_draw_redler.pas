@@ -21,6 +21,7 @@ type
 
   THMIRedlerBasico = class(THMICustomBasicRedler)
   published
+    property OnClick;
     property BodyColor;
     property BorderColor;
   end;
