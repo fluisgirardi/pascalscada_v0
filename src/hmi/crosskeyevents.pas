@@ -313,6 +313,11 @@ uses gdk2, gtk2, gdk2x, glib2, LCLType, ctypes;
 uses {$IFDEF FPC}qt4, qtwidgets, qtobjects, LCLType{$ENDIF};
 {$IFEND}
 
+{$IF defined(LCLCarbon)}
+uses {$IFDEF FPC}LCLType{$ENDIF};
+{$IFEND}
+
+
 //se não esta definido FPC (consequentemente não estará definida LCLwin32),
 //estou usando Delphi, consequentemente, Windows...
 //
