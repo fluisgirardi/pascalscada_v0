@@ -18,7 +18,7 @@ uses
 
   commtypes, CommPort, SysUtils, Classes,
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)} Windows,{$IFEND}
-  {$IFDEF UNIX} Serial, Unix, BaseUnix, termio, {$ENDIF}
+  {$IFDEF UNIX} {$IFNDEF DARWIN}Serial, {$ENDIF} Unix, BaseUnix, termio, {$ENDIF}
   DateUtils;
 
 
@@ -139,6 +139,17 @@ type
   @seealso(TCommPortDriver)
   }
   {$ENDIF}
+
+  {$IFDEF DARWIN}
+  TSerialHandle = cint;
+
+  TSerialState = record
+    LineState:LongWord;
+    tios:termios;
+  end;
+
+  {$ENDIF}
+
   TSerialPortDriver = class(TCommPortDriver)
   private
     PPortName:AnsiString;
@@ -356,6 +367,9 @@ var PortPrefix:array[0..0] of AnsiString = ('cuad');
 {$ifdef SunOS}
 var PortPrefix:array[0..0] of AnsiString = ('tty');
 {$ENDIF}
+{$ifdef Darwin}
+var PortPrefix:array[0..0] of AnsiString = ('tty.');
+{$ENDIF}
 {$ENDIF}
 
 
@@ -435,7 +449,7 @@ begin
   Packet^.Received := 0;
   Packet^.ReadIOResult:=iorNone;
   While (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
-     lidos := SerRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
+     lidos := FpRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
      Packet^.Received := Packet^.Received + lidos;
      if (MilliSecondsBetween(CrossNow,start)>PTimeout) then begin
         inc(tentativas);
@@ -502,7 +516,7 @@ begin
 
   Packet^.Written := 0;
   While (Packet^.Written<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
-    escritos := SerWrite (PPortHandle,Packet^.BufferToWrite[Packet^.Written], Packet^.ToWrite-Packet^.Written);
+    escritos := FpWrite (PPortHandle,Packet^.BufferToWrite[Packet^.Written], Packet^.ToWrite-Packet^.Written);
     Packet^.Written := Packet^.Written + escritos;
     Inc(tentativas);
   end;
@@ -636,8 +650,10 @@ begin
   
   //se e para salvar as configs da porta...
   //backup the serial port settings.
+  {$IFNDEF DARWIN}
   if PBackupPortSettings then
     PSavedState := SerSaveState(PPortHandle);
+  {$ENDIF}
 
   r := 0;
   fillchar(tios, sizeof(tios), #0);
@@ -769,9 +785,11 @@ begin
 {$IFDEF UNIX}
   if PActive then begin
     InternalClearALLBuffers;
+    {$IFNDEF DARWIN}
     if PBackupPortSettings then
       SerRestoreState(PPortHandle,PSavedState);
-    SerClose(PPortHandle);
+    {$ENDIF}
+    FpClose(PPortHandle);
   end;
   ok := true;
 {$ENDIF}

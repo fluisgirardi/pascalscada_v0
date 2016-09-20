@@ -114,6 +114,14 @@ uses
   }
   {$ENDIF}
   function GetNumberOfBytesInReceiveBuffer(socket:Tsocket):LongInt;
+
+{$IFDEF DARWIN}
+const
+  msg_nosignal = $20000;
+
+{$ENDIF}
+
+
 implementation
 
 function setblockingmode(fd:TSocket; mode:LongInt):LongInt;
