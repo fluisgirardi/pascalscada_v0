@@ -120,6 +120,8 @@ type
     procedure SetChecked(Value: Boolean); override;
     //: @exclude
     procedure UpdateTagValue;
+
+    procedure Click; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -129,6 +131,7 @@ type
     //: @exclude
     procedure EditingDone; override;
     procedure RefreshCheckBox(Data: PtrInt);
+    procedure UpdateStatus;
     {$ENDIF}
   published
     {$IFDEF PORTUGUES}
@@ -526,6 +529,11 @@ begin
   RefreshTagValue(GetTagValue);
 end;
 
+procedure THMICheckBox.UpdateStatus;
+begin
+  RefreshTagValue(GetTagValue);
+end;
+
 {$ENDIF}
 
 procedure THMICheckBox.SetHMITag(t:TPLCTag);
@@ -710,6 +718,14 @@ begin
         DoAfterSendValue(FValueFalse);
       end;
     end;
+end;
+
+procedure THMICheckBox.Click;
+begin
+  if Name='batata' then
+    inherited Click
+  else
+    inherited Click
 end;
 
 {$IFDEF FPC}
