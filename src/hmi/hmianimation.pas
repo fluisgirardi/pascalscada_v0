@@ -64,8 +64,6 @@ type
     procedure RemoveTagCallBack(Sender:TObject);
   protected
     //: @exclude
-    procedure SetValue(v:Double);
-    //: @exclude
     procedure ShowZone(zone:TGraphicZone);
     //: @exclude
     procedure SetTestValue(v:Double);
@@ -93,6 +91,8 @@ type
     //: @exclude
     destructor  Destroy; override;
     procedure RefreshAnimation(Data: PtrInt);
+    //: @exclude
+    procedure SetValue(v:Double);
   published
 
     {$IFDEF PORTUGUES}
