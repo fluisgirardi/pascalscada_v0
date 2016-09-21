@@ -277,7 +277,7 @@ end;
 
 procedure THMIRadioGroup.SetIndex(v:LongInt);
 begin
-
+  inherited ItemIndex := v;
 end;
 
 {$IFNDEF FPC}
