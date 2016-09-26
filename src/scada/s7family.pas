@@ -2355,10 +2355,8 @@ begin
     end;
 
   case tagrec.ReadFunction of
-    1: begin
-      Result:=ioIllegalFunction;
-      exit;
-    end;
+    1:
+      ReqType := vtS7_Inputs;
     2:
       ReqType := vtS7_Outputs;
     3:
