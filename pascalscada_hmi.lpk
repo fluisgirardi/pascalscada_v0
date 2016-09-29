@@ -15,6 +15,11 @@
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
+      <Other>
+        <ExecuteBefore>
+          <Command Value="./updaterevision.sh"/>
+        </ExecuteBefore>
+      </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
     <Files Count="47">

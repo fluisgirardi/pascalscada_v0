@@ -15,9 +15,14 @@
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
+      <Other>
+        <ExecuteBefore>
+          <Command Value="./updaterevision.sh"/>
+        </ExecuteBefore>
+      </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
-    <Files Count="8">
+    <Files Count="9">
       <Item1>
         <Filename Value="src/common/crossdatetime.pas"/>
         <UnitName Value="crossdatetime"/>
@@ -50,6 +55,10 @@
         <Filename Value="src/common/pscommontypes.pas"/>
         <UnitName Value="pscommontypes"/>
       </Item8>
+      <Item9>
+        <Filename Value="src/common/pscadaversion.pas"/>
+        <UnitName Value="pscadaversion"/>
+      </Item9>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

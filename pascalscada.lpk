@@ -39,6 +39,9 @@
         <CompilerMessages>
           <IgnoredMessages idx5057="True" idx5024="True"/>
         </CompilerMessages>
+        <ExecuteBefore>
+          <Command Value=".\updaterevision.sh"/>
+        </ExecuteBefore>
       </Other>
     </CompilerOptions>
     <Version Minor="7" Release="3"/>
