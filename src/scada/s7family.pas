@@ -2669,7 +2669,8 @@ begin
   case code of
     $FF: Result:=ioOk;
     $06: Result:=ioIllegalRequest;
-    $0A ,$03: Result:=ioObjectNotExists;
+    $0A: Result:=ioObjectNotExists;
+    $03: Result:=ioObjectAccessNotAllowed;
     $05: Result:=ioIllegalMemoryAddress;
     else
       Result:=ioUnknownError;

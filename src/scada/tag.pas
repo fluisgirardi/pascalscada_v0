@@ -180,10 +180,10 @@ type
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
                        ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
                        ioIllegalStationAddress, ioObjectNotExists,
-                       ioIllegalMemoryAddress, ioUnknownError, ioEmptyPacket,
-                       ioPartialOk, ioAcknowledge, ioBusy, ioNACK,
-                       ioMemoryParityError, ioGatewayUnavailable,
-                       ioDeviceGatewayFailedToRespond);
+                       ioObjectAccessNotAllowed, ioIllegalMemoryAddress,
+                       ioUnknownError, ioEmptyPacket, ioPartialOk,
+                       ioAcknowledge, ioBusy, ioNACK, ioMemoryParityError,
+                       ioGatewayUnavailable, ioDeviceGatewayFailedToRespond);
 
   {$IFDEF PORTUGUES}
   {:
