@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement, PLCStruct, Tag,
   bitmappertagassistant, blockstructtagassistant, ProtocolDriver,
-  PLCNumber,
+  PLCNumber, fpexprpars,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -73,6 +73,7 @@ type
   public
     function  GetAttributes: TPropertyAttributes; override;
     procedure GetValues(Proc: TGetStrProc); override;
+    procedure SetValue(const NewValue: ansistring); override;
   end;
 
   {$IFNDEF FPC}
@@ -254,12 +255,34 @@ procedure TElementIndexPropertyEditor.GetValues(Proc: TGetStrProc);
 var
    i:LongInt;
 begin
-   if (GetComponent(0) is TPLCBlockElement) and (TPLCBlockElement(GetComponent(0)).PLCBlock <> nil) then
-      for i := 0 to LongInt(TPLCBlockElement(GetComponent(0)).PLCBlock.Size)-1 do begin
-          Proc(IntToStr(i));
-      end;
+  if (GetComponent(0) is TPLCBlockElement) and (TPLCBlockElement(GetComponent(0)).PLCBlock <> nil) then
+    for i := 0 to LongInt(TPLCBlockElement(GetComponent(0)).PLCBlock.Size)-1 do begin
+      Proc(IntToStr(i));
+    end;
 end;
 
+procedure TElementIndexPropertyEditor.SetValue(const NewValue: AnsiString);
+var
+  aux: Longint;
+  parser: TFPExpressionParser;
+  rt: TFPExpressionResult;
+begin
+  WriteLn('teste');
+  if TryStrToInt(NewValue,aux) then
+    inherited SetValue(NewValue)
+  else begin
+    parser:=TFPExpressionParser.Create(nil);
+    try
+      parser.BuiltIns:=[bcMath];
+      parser.Expression:=NewValue;
+      rt:=parser.Evaluate;
+      if rt.ResultType=rtInteger then
+        inherited SetValue(IntToStr(parser.AsInteger));
+    finally
+      FreeAndNil(rt);
+    end;
+  end;
+end;
 
 {function  TComponentNameEditorEx.GetAttributes: TPropertyAttributes;
 begin

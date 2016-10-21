@@ -71,9 +71,9 @@ begin
                                            TPLCStruct,
                                            TPLCStructItem]);
 
-  RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver,              'COMPort'  ,        TPortPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(AnsiString), TPLCBlockElement,               'Index'    ,        TElementIndexPropertyEditor);
-  //end securitycode property editor.
+  RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlockElement,  'Index'  , TElementIndexPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStructItem,    'Index'  , TElementIndexPropertyEditor);
 
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
