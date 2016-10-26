@@ -38,7 +38,7 @@ uses
   {$IFEND}
   
   {$IFDEF FPC}
-    PropEdits, ComponentEditors;
+    PropEdits, ComponentEditors, typinfo;
   {$ELSE}
     Types,
     //Delphi 6 ou superior
@@ -70,7 +70,13 @@ type
   //: Property editor of TPLCBlockElement.Index property.
   {$ENDIF}
   TElementIndexPropertyEditor = class(TIntegerProperty)
+  private
+    procedure SetValue(const index: Integer; const NewValue: Int64);
+  protected
+    procedure ExpTag(var Result: TFPExpressionResult;
+      const Args: TExprParameterArray);
   public
+    function GetPropType(Index:Integer): PTypeInfo;
     function  GetAttributes: TPropertyAttributes; override;
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const NewValue: ansistring); override;
@@ -182,7 +188,7 @@ type
 
 implementation
 
-uses PLCBlock;
+uses PLCBlock, RtlConsts;
 
 function  TPortPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
@@ -243,12 +249,23 @@ begin
       TSerialPortDriver(GetComponent(0)).Active := false;
 end;
 
+procedure TElementIndexPropertyEditor.ExpTag(var Result: TFPExpressionResult;
+  const Args: TExprParameterArray);
+begin
+  Result.ResInteger:=(GetComponent(0) as TPLCBlockElement).Tag;
+end;
+
+function TElementIndexPropertyEditor.GetPropType(Index: Integer): PTypeInfo;
+begin
+  Result:=GetInstProp[Index].PropInfo^.PropType;
+end;
+
 //editores de propriedades de BlinkWith
 function  TElementIndexPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
    if GetComponent(0) is TPLCBlockElement then
       Result := [paValueList{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
-                 paValueEditable{$ENDIF}{$ENDIF}];
+                 paValueEditable{$ENDIF}{$ENDIF}, paMultiSelect];
 end;
 
 procedure TElementIndexPropertyEditor.GetValues(Proc: TGetStrProc);
@@ -261,27 +278,68 @@ begin
     end;
 end;
 
-procedure TElementIndexPropertyEditor.SetValue(const NewValue: AnsiString);
+procedure TElementIndexPropertyEditor.SetValue(const NewValue: ansistring);
 var
   aux: Longint;
   parser: TFPExpressionParser;
   rt: TFPExpressionResult;
+  idx, i: Integer;
 begin
-  WriteLn('teste');
-  if TryStrToInt(NewValue,aux) then
+  if (not (NewValue[1] in ['+','-','*','/'])) and TryStrToInt(NewValue,aux) then
     inherited SetValue(NewValue)
   else begin
     parser:=TFPExpressionParser.Create(nil);
     try
       parser.BuiltIns:=[bcMath];
-      parser.Expression:=NewValue;
-      rt:=parser.Evaluate;
-      if rt.ResultType=rtInteger then
-        inherited SetValue(IntToStr(parser.AsInteger));
+      for i:=0 to PropCount-1 do begin
+        idx:=parser.Identifiers.IndexOfIdentifier('Tag');
+        if idx>=0 then
+          parser.Identifiers.Delete(idx);
+
+        parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCBlockElement).Tag);
+
+        writeln('NewValue=',NewValue,', NewValue[1]=',NewValue[1]);
+        if (NewValue[1]='+') or (NewValue[1]='-') or (NewValue[1]='*') or (NewValue[1]='/')  then begin
+          parser.Expression:=IntToStr((GetComponent(i) as TPLCBlockElement).Index)+NewValue
+        end else
+          parser.Expression:=NewValue;
+        rt:=parser.Evaluate;
+        case rt.ResultType of
+          rtInteger: SetValue(i, parser.AsInteger);
+          rtFloat:   SetValue(i, Trunc(parser.AsFloat));
+        end;
+      end;
     finally
       FreeAndNil(rt);
     end;
   end;
+end;
+
+procedure TElementIndexPropertyEditor.SetValue(const index:Integer; const NewValue: Int64);
+
+  procedure Error(const Args: array of const);
+  begin
+    raise EPropertyError.CreateResFmt(@SOutOfRange, Args);
+  end;
+
+var
+  L: Int64;
+begin
+  L:=NewValue;
+  with GetTypeData(GetPropType(index))^ do
+    if OrdType = otULong then begin   // unsigned compare and reporting needed
+      if (L < Cardinal(MinValue)) or (L > Cardinal(MaxValue)) then begin
+        // bump up to Int64 to get past the %d in the format string
+        Error([Int64(Cardinal(MinValue)), Int64(Cardinal(MaxValue))]);
+        exit;
+      end
+    end else
+      if (L < MinValue) or (L > MaxValue) then begin
+        Error([MinValue, MaxValue]);
+        exit;
+      end;
+  with GetInstProp[index] do SetOrdProp(Instance, PropInfo, NewValue);
+  Modified;
 end;
 
 {function  TComponentNameEditorEx.GetAttributes: TPropertyAttributes;
