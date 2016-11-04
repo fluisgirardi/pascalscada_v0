@@ -166,6 +166,13 @@ type
     PReadSomethingAlways:Boolean;
 
     {$IFDEF PORTUGUES}
+    //: Faltando comentário
+    {$ELSE}
+    //: Missing comment.
+    {$ENDIF}
+    PUpdatingMultipleTags:Integer;
+
+    {$IFDEF PORTUGUES}
     // Indica se o driver está pronto.
     {$ELSE}
     //: Tells if the protocol driver is ready
@@ -524,6 +531,9 @@ type
     procedure AddTag(TagObj:TTag);
 
 
+    procedure StartUpdateMultipleTags;
+    procedure StopUpdateMultipleTags;
+
     {$IFDEF PORTUGUES}
     {:
     Remove um tag do scan do driver.
@@ -880,17 +890,50 @@ begin
   try
     //tenta entrar no Mutex
     //try enter on mutex
+
+    if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)=0 then begin
+      while not FPause.ResetEvent do
+        CrossThreadSwitch;
+
+      FWriteCS.Enter;
+      FReadCS.Enter;
+    end;
+
+
+    
+    DoAddTag(TagObj,false);
+  finally
+    if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)=0 then begin
+      FReadCS.Leave;
+      FWriteCS.Leave;
+      while not FPause.SetEvent do
+        CrossThreadSwitch;
+    end;
+  end;
+end;
+
+procedure TProtocolDriver.StartUpdateMultipleTags;
+begin
+  if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)=0 then begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
     FWriteCS.Enter;
     FReadCS.Enter;
-    
-    DoAddTag(TagObj,false);
-  finally
+  end;
+  InterLockedIncrement(PUpdatingMultipleTags);
+end;
+
+procedure TProtocolDriver.StopUpdateMultipleTags;
+begin
+  if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)>0 then begin
+
     FReadCS.Leave;
     FWriteCS.Leave;
-    FPause.SetEvent;
+
+    while not FPause.SetEvent do
+      CrossThreadSwitch;
+    InterLockedDecrement(PUpdatingMultipleTags);
   end;
 end;
 
@@ -899,17 +942,23 @@ begin
   try
     //tenta entrar no Mutex
     //try enter on mutex
-    while not FPause.ResetEvent do
-      CrossThreadSwitch;
+    if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)=0 then begin
+      while not FPause.ResetEvent do
+        CrossThreadSwitch;
 
-    FWriteCS.Enter;
-    FReadCS.Enter;
+      FWriteCS.Enter;
+      FReadCS.Enter;
+    end;
 
     DoDelTag(TagObj);
   finally
-    FReadCS.Leave;
-    FWriteCS.Leave;
-    FPause.SetEvent;
+    if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)=0 then begin
+      FReadCS.Leave;
+      FWriteCS.Leave;
+
+      while not FPause.SetEvent do
+        CrossThreadSwitch;
+    end;
   end;
 end;
 
