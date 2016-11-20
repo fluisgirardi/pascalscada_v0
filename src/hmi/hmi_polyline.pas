@@ -490,38 +490,33 @@ var
   maxy: Integer;
   pc: TPointCollectionItem;
 begin
-  BeginUpdate;
-  try
-    for p:=0 to PointCoordinates.Count-1 do begin
-      pc:=TPointCollectionItem(PointCoordinates.Items[p]);
-      if p=0 then begin
-        minx:=pc.X;
-        maxx:=minx;
-        miny:=pc.Y;
-        maxy:=miny;
-        continue;
-      end;
-      minx:=min(pc.X, minx);
-      maxx:=max(pc.X, maxx);
-
-      miny:=min(pc.Y, miny);
-      maxy:=max(pc.Y, maxy);
+  for p:=0 to PointCoordinates.Count-1 do begin
+    pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+    if p=0 then begin
+      minx:=pc.X;
+      maxx:=minx;
+      miny:=pc.Y;
+      maxy:=miny;
+      continue;
     end;
+    minx:=min(pc.X, minx);
+    maxx:=max(pc.X, maxx);
+
+    miny:=min(pc.Y, miny);
+    maxy:=max(pc.Y, maxy);
+  end;
 
 
-    DisableAutoSizing;
-    Left:=Max(minx,0);
-    Top :=Max(miny-ifthen((miny mod 2)=0,1),0);
-    Width :=(maxx-minx)+FBorderWidth;
-    Height:=(maxy-miny)+FBorderWidth;
-    EnableAutoSizing;
-    for p:=0 to PointCoordinates.Count-1 do begin
-      pc:=TPointCollectionItem(PointCoordinates.Items[p]);
-      pc.X:=pc.X-minx;
-      pc.Y:=pc.Y-miny+ifthen((miny mod 2)=0,1);
-    end;
-  finally
-    EndUpdate;
+  DisableAutoSizing;
+  Left:=Max(minx,0);
+  Top :=Max(miny-ifthen((miny mod 2)=0,1),0);
+  Width :=(maxx-minx)+FBorderWidth;
+  Height:=(maxy-miny)+FBorderWidth;
+  EnableAutoSizing;
+  for p:=0 to PointCoordinates.Count-1 do begin
+    pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+    pc.X:=pc.X-minx;
+    pc.Y:=pc.Y-miny+ifthen((miny mod 2)=0,1);
   end;
 end;
 
@@ -531,34 +526,26 @@ var
   pc: TPointCollectionItem;
 begin
   if FDesignDrawing then exit;
-  BeginUpdate;
-  try
-    for p:=0 to PointCoordinates.Count-1 do begin
-      pc:=TPointCollectionItem(PointCoordinates.Items[p]);
-      pc.X:=pc.X+Left;
-      pc.Y:=pc.y+Top;
-    end;
-    FOldAlign:=Align;
-    Align:=alClient;
-    FDesignDrawing:=true;
-  finally
-    EndUpdate;
+
+  for p:=0 to PointCoordinates.Count-1 do begin
+    pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+    pc.X:=pc.X+Left;
+    pc.Y:=pc.y+Top;
   end;
+  FOldAlign:=Align;
+  Align:=alClient;
+  FDesignDrawing:=true;
 
 end;
 
 procedure THMIPolyline.BeginEmptyPolyline;
 begin
   if FDesignDrawing then exit;
-  BeginUpdate;
-  try
-    PointCoordinates.Clear;
-    FOldAlign:=Align;
-    Align:=alClient;
-    FDesignDrawing:=true;
-  finally
-    EndUpdate;
-  end;
+
+  PointCoordinates.Clear;
+  FOldAlign:=Align;
+  Align:=alClient;
+  FDesignDrawing:=true;
 end;
 
 procedure THMIPolyline.EndDrawPolyline;

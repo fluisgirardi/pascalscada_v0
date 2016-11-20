@@ -400,21 +400,18 @@ end;
 constructor THMICustomElevadorBasico.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  BeginUpdate;
   FHeadColor:=clSilver;
   FBodyColor:=clSilver;
   FFooterColor:=clSilver;
   FBorderColor:=clBlack;
   FBorderWidth:=1;
   FBodyWidth:=12; //inicializa o desenho com 12px de largura do
-  EndUpdate;
 end;
 
 procedure THMICustomElevadorBasico.SetBodyWidth(AValue: Byte);
 begin
   if FBodyWidth=AValue then Exit;
   FBodyWidth:=AValue;
-  BeginUpdate;
   Constraints.MinWidth:=FBodyWidth*3;
   Constraints.MaxWidth:=FBodyWidth*3;
   Constraints.MinHeight:=FBodyWidth*2+3;
@@ -422,7 +419,6 @@ begin
     Height:=Constraints.MinHeight;
   Width:=FBodyWidth*3;
   InvalidateShape;
-  EndUpdate;
 end;
 
 procedure THMICustomElevadorBasico.SetFooterColor(AValue: TColor);
@@ -444,13 +440,12 @@ procedure THMICustomFlowElevator.ShowZone(aZone: THMIElevatorFlowZone);
 begin
   FCurrentZone:=aZone;
   if aZone<>nil then begin
-    BeginUpdate;
     if aZone.PaintBodyWithFlowColor=false   then SetBodyColor(aZone.Color);
     if aZone.PaintHeaderWithFlowColor=false then SetHeadColor(aZone.Color);
     if aZone.PaintFooterWithFlowColor=false then SetFooterColor(aZone.Color);
     SetBorderColor(aZone.BorderColor);
     UpdateFlow;
-    EndUpdate;
+    InvalidateDraw;
   end;
 end;
 

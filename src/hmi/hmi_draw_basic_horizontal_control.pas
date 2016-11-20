@@ -33,25 +33,21 @@ implementation
 constructor THMIBasicHorizontalControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  BeginUpdate;
   BodyColor:=clSilver;
   BodyHeight:=12; //inicializa o desenho com 12px de largura do
   BorderColor:=clBlack;
-  EndUpdate;
 end;
 
 procedure THMIBasicHorizontalControl.SetBodyHeight(AValue: Byte);
 begin
   if (FBodyHeight=AValue) or (AValue<5) then Exit;
   FBodyHeight:=AValue;
-  BeginUpdate;
   Constraints.MinHeight:=FBodyHeight;
   Constraints.MaxHeight:=FBodyHeight;
   Constraints.MinWidth :=FBodyHeight*2+3;
   if Width<Constraints.MinWidth then
     Width:=Constraints.MinHeight;
   Height:=FBodyHeight;
-  EndUpdate;
 end;
 
 procedure THMIBasicHorizontalControl.SetBodyColor(AValue: TColor);

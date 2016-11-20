@@ -44,6 +44,7 @@ type
   protected
     FBorderColor:TColor;
     FBodyColor: TColor;
+    FUpdateShape,
     FShouldRedraw:Boolean;
 
     FBorderWidth:Integer;
@@ -58,7 +59,6 @@ type
     function Seno(x0, x1, y0, y1: Integer): Double;
 
     function  ControlArea(pixel: TBGRAPixel): Boolean; virtual;
-    function  CanRepaint:Boolean; virtual;
     procedure InvalidateDraw; virtual;
     procedure InvalidateShape; virtual;
     procedure DrawControl; virtual;
@@ -77,9 +77,6 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure BeginUpdate; virtual;
-    procedure EndUpdate; virtual;
-    procedure Invalidate; override;
   end;
 
 implementation
@@ -87,11 +84,6 @@ implementation
 uses math;
 
 { TBasicSCADAControl }
-
-function THMIBasicControl.CanRepaint: Boolean;
-begin
-  Result:=FUpdatingCount=0;
-end;
 
 procedure THMIBasicControl.InvalidateDraw;
 begin
@@ -103,6 +95,7 @@ procedure THMIBasicControl.InvalidateShape;
 var
   emptyArea: TBGRABitmap;
 begin
+  FUpdateShape:=true;
   emptyArea := TBGRABitmap.Create();
   try
     FControlArea.Assign(emptyArea);
@@ -401,15 +394,18 @@ end;
 procedure THMIBasicControl.Paint;
 begin
   if assigned(FControlArea) then begin
-    if FControlArea.Empty Or (FControlArea.Width<>Width) Or (FControlArea.Height<>Height) then begin
+    if FControlArea.Empty Or FUpdateShape then begin
       DrawControl;
       UpdateShape;
-    end else begin
-      if FShouldRedraw then begin
-        DrawControl;
-        FShouldRedraw:=false;
-      end;
+      FShouldRedraw:=false;
+      FUpdateShape:=false;
     end;
+
+    if FShouldRedraw then begin
+      DrawControl;
+      FShouldRedraw:=false;
+    end;
+
     FControlArea.Draw(Canvas, 0, 0, False);
   end;
   inherited Paint;
@@ -456,15 +452,14 @@ end;
 procedure THMIBasicControl.Loaded;
 begin
   inherited Loaded;
-  DrawControl;
-  UpdateShape;
-  EndUpdate;
-  InvalidateControl(true,false);
+  InvalidateShape;
 end;
 
 constructor THMIBasicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FShouldRedraw:=false;
+  FUpdateShape:=false;
   FBodyColor:=clSilver;
   FBorderColor:=clBlack;
   FBorderWidth:=1;
@@ -472,8 +467,6 @@ begin
   FIsEnabled:=true;
   FOldHeight:=0;
   FOldWidth:=0;
-  if [csLoading, csReading]*ComponentState<>[] then
-    BeginUpdate;
   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
@@ -482,30 +475,6 @@ begin
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   FreeAndNil(FControlArea);
   inherited Destroy;
-end;
-
-procedure THMIBasicControl.BeginUpdate;
-begin
-  if FUpdatingCount<Cardinal(-1) then
-   inc(FUpdatingCount);
-end;
-
-procedure THMIBasicControl.EndUpdate;
-begin
-  if FUpdatingCount>0 then
-    Dec(FUpdatingCount);
-
-  if FUpdatingCount=0 then
-    Invalidate;
-
-end;
-
-procedure THMIBasicControl.Invalidate;
-begin
-  if FUpdatingCount=0 then begin
-    FShouldRedraw:=true;
-    inherited Invalidate;
-  end;
 end;
 
 end.
