@@ -54,7 +54,7 @@ procedure THMIBasicHorizontalControl.SetBodyColor(AValue: TColor);
 begin
   if FBodyColor=AValue then Exit;
   FBodyColor:=AValue;
-  Invalidate;
+  InvalidateDraw;
 end;
 
 end.
