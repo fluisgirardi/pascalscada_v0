@@ -71,6 +71,7 @@ type
     property CurrentBodyColor:TColor read FBodyColor;
 
     property Action;
+    property DrawPump;
     property OnClick;
     property OnMouseDown;
     property OnMouseLeave;
