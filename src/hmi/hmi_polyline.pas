@@ -91,6 +91,8 @@ type
   private
     FHMIObject: THMIFlowPolyline;
     procedure setHMIObject(AValue: THMIFlowPolyline);
+  protected
+    function GetDisplayName: string; override;
   published
     property HMIObject:THMIFlowPolyline read FHMIObject write setHMIObject;
   end;
@@ -349,6 +351,14 @@ begin
         raise Exception.Create('Object don´t support the IColorChangeNotification interface!');
     end;
   end;
+end;
+
+function THMIFlowSourceCollectionItem.GetDisplayName: string;
+begin
+  if Assigned(FHMIObject) then
+    Result:=FHMIObject.Name
+  else
+    Result:='(Unassigned)';
 end;
 
 { TPointCollection }

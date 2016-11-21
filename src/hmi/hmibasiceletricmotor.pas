@@ -69,13 +69,14 @@ begin
   FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
   FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
 
-  if FDrawPump then
+  if FDrawPump then begin
     FControlArea.CanvasBGRA.Rectangle(Trunc(0.07*width),0+FBorderWidth,Trunc((0.07*width)+(0.09)*Width), Trunc(0.10*Height),true);
 
-  FControlArea.CanvasBGRA.Rectangle(0+FBorderWidth,
-                                    trunc(20/52*height),
-                                    Trunc(0.07*Width),
-                                    Trunc(32/52*Height), true);
+    FControlArea.CanvasBGRA.Rectangle(0+FBorderWidth,
+                                      trunc(20/52*height),
+                                      Trunc(0.07*Width),
+                                      Trunc(32/52*Height), true);
+  end;
   FControlArea.RoundRectAntialias(Trunc(0.19*Width)-1,
                          Trunc(0.06*Height),
                          Width - FBorderWidth,
