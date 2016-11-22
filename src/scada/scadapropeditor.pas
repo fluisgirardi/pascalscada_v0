@@ -69,18 +69,38 @@ type
   {$ELSE}
   //: Property editor of TPLCBlockElement.Index property.
   {$ENDIF}
-  TElementIndexPropertyEditor = class(TIntegerProperty)
+
+  { TIntegerExpressionPropertyEditor }
+
+  TIntegerExpressionPropertyEditor = class(TIntegerProperty)
   private
     procedure SetValue(const index: Integer; const NewValue: Int64);
   protected
-    procedure ExpTag(var Result: TFPExpressionResult;
-      const Args: TExprParameterArray);
+    procedure RegisterExpressionVariables(const i:Integer; var parser: TFPExpressionParser); virtual;
   public
-    function GetPropType(Index:Integer): PTypeInfo;
-    function  GetAttributes: TPropertyAttributes; override;
-    procedure GetValues(Proc: TGetStrProc); override;
+    function  GetPropType(Index:Integer): PTypeInfo;
     procedure SetValue(const NewValue: ansistring); override;
   end;
+
+  { TElementIndexPropertyEditor }
+
+  TElementIndexPropertyEditor = class(TIntegerExpressionPropertyEditor)
+  protected
+    procedure RegisterExpressionVariables(const i: Integer;
+  var parser: TFPExpressionParser); override;
+  public
+    procedure GetValues(Proc: TGetStrProc); override;
+    function  GetAttributes: TPropertyAttributes; override;
+  end;
+
+  { TTagAddressPropertyEditor }
+
+  TTagAddressPropertyEditor = class(TIntegerExpressionPropertyEditor)
+  protected
+    procedure RegisterExpressionVariables(const i: Integer;
+               var parser: TFPExpressionParser); override;
+  end;
+
 
   {$IFNDEF FPC}
   //: @exclude
@@ -188,7 +208,7 @@ type
 
 implementation
 
-uses PLCBlock, RtlConsts;
+uses PLCBlock, PLCTagNumber, PLCString, RtlConsts;
 
 function  TPortPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
@@ -249,41 +269,26 @@ begin
       TSerialPortDriver(GetComponent(0)).Active := false;
 end;
 
-procedure TElementIndexPropertyEditor.ExpTag(var Result: TFPExpressionResult;
-  const Args: TExprParameterArray);
+////////////////////////////////////////////////////////////////////////////////
+//TIntegerExpressionPropertyEditor
+////////////////////////////////////////////////////////////////////////////////
+procedure TIntegerExpressionPropertyEditor.RegisterExpressionVariables(
+  const i: Integer; var parser: TFPExpressionParser);
 begin
-  Result.ResInteger:=(GetComponent(0) as TPLCBlockElement).Tag;
+  //virtual method.
 end;
 
-function TElementIndexPropertyEditor.GetPropType(Index: Integer): PTypeInfo;
+function TIntegerExpressionPropertyEditor.GetPropType(Index: Integer): PTypeInfo;
 begin
   Result:=GetInstProp[Index].PropInfo^.PropType;
 end;
 
-//editores de propriedades de BlinkWith
-function  TElementIndexPropertyEditor.GetAttributes: TPropertyAttributes;
-begin
-   if GetComponent(0) is TPLCBlockElement then
-      Result := [paValueList{$IFNDEF FPC}{$IFDEF DELPHI2005_UP}, paReadOnly,
-                 paValueEditable{$ENDIF}{$ENDIF}, paMultiSelect];
-end;
-
-procedure TElementIndexPropertyEditor.GetValues(Proc: TGetStrProc);
-var
-   i:LongInt;
-begin
-  if (GetComponent(0) is TPLCBlockElement) and (TPLCBlockElement(GetComponent(0)).PLCBlock <> nil) then
-    for i := 0 to LongInt(TPLCBlockElement(GetComponent(0)).PLCBlock.Size)-1 do begin
-      Proc(IntToStr(i));
-    end;
-end;
-
-procedure TElementIndexPropertyEditor.SetValue(const NewValue: ansistring);
+procedure TIntegerExpressionPropertyEditor.SetValue(const NewValue: ansistring);
 var
   aux: Longint;
   parser: TFPExpressionParser;
   rt: TFPExpressionResult;
-  idx, i: Integer;
+  i: Integer;
 begin
   if (not (NewValue[1] in ['+','-','*','/'])) and TryStrToInt(NewValue,aux) then
     inherited SetValue(NewValue)
@@ -292,15 +297,10 @@ begin
     try
       parser.BuiltIns:=[bcMath];
       for i:=0 to PropCount-1 do begin
-        idx:=parser.Identifiers.IndexOfIdentifier('Tag');
-        if idx>=0 then
-          parser.Identifiers.Delete(idx);
+        RegisterExpressionVariables(i, parser);
 
-        parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCBlockElement).Tag);
-
-        writeln('NewValue=',NewValue,', NewValue[1]=',NewValue[1]);
         if (NewValue[1]='+') or (NewValue[1]='-') or (NewValue[1]='*') or (NewValue[1]='/')  then begin
-          parser.Expression:=IntToStr((GetComponent(i) as TPLCBlockElement).Index)+NewValue
+          parser.Expression:=OrdValueToVisualValue(GetOrdValueAt(i))+NewValue
         end else
           parser.Expression:=NewValue;
         rt:=parser.Evaluate;
@@ -315,7 +315,7 @@ begin
   end;
 end;
 
-procedure TElementIndexPropertyEditor.SetValue(const index:Integer; const NewValue: Int64);
+procedure TIntegerExpressionPropertyEditor.SetValue(const index:Integer; const NewValue: Int64);
 
   procedure Error(const Args: array of const);
   begin
@@ -342,10 +342,149 @@ begin
   Modified;
 end;
 
-{function  TComponentNameEditorEx.GetAttributes: TPropertyAttributes;
+////////////////////////////////////////////////////////////////////////////////
+//TElementIndexPropertyEditor
+////////////////////////////////////////////////////////////////////////////////
+function  TElementIndexPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
-  Result := [paMultiSelect];
-end;}
+   if GetComponent(0) is TPLCBlockElement then
+      Result := [paValueList, paMultiSelect];
+end;
+
+procedure TElementIndexPropertyEditor.RegisterExpressionVariables(
+  const i: Integer; var parser: TFPExpressionParser);
+begin
+  if assigned(parser) then begin
+    //unregister all possible registered variables.
+    parser.Identifiers.Clear;
+
+    if (GetComponent(i) is TPLCBlockElement) then begin
+      //register only if the property is not being edited,
+      //to avoid circular references.
+      if (lowercase(GetPropInfo^.Name)<>'tag') then
+        parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCBlockElement).Tag);
+    end;
+  end;
+end;
+
+procedure TElementIndexPropertyEditor.GetValues(Proc: TGetStrProc);
+var
+   i:LongInt;
+begin
+  if (GetComponent(0) is TPLCBlockElement) and (TPLCBlockElement(GetComponent(0)).PLCBlock <> nil) then
+    for i := 0 to LongInt(TPLCBlockElement(GetComponent(0)).PLCBlock.Size)-1 do begin
+      Proc(IntToStr(i));
+    end;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//TTagAddressPropertyEditor
+////////////////////////////////////////////////////////////////////////////////
+procedure TTagAddressPropertyEditor.RegisterExpressionVariables(
+  const i: Integer; var parser: TFPExpressionParser);
+var
+  propertyName: String;
+begin
+  if assigned(parser) then begin
+    //unregister all possible registered variables.
+    parser.Identifiers.Clear;
+
+    propertyName:=lowercase(GetPropInfo^.Name);
+
+    if (GetComponent(i) is TPLCTagNumber) then begin
+      //register only if the property is not being edited,
+      //to avoid circular references.
+      if (propertyName<>'plcrack') then
+        parser.Identifiers.AddIntegerVariable('plcrack', (GetComponent(i) as TPLCTagNumber).plcrack);
+
+      if (propertyName<>'plcslot') then
+        parser.Identifiers.AddIntegerVariable('plcslot', (GetComponent(i) as TPLCTagNumber).plcslot);
+
+      if (propertyName<>'plcstation') then
+        parser.Identifiers.AddIntegerVariable('plcstation', (GetComponent(i) as TPLCTagNumber).plcstation);
+
+      if (propertyName<>'memfile_db') then
+        parser.Identifiers.AddIntegerVariable('memfile_db', (GetComponent(i) as TPLCTagNumber).memfile_db);
+
+      if (propertyName<>'memaddress') then
+        parser.Identifiers.AddIntegerVariable('memaddress', (GetComponent(i) as TPLCTagNumber).memaddress);
+
+      if (propertyName<>'memsubelement') then
+        parser.Identifiers.AddIntegerVariable('memsubelement', (GetComponent(i) as TPLCTagNumber).memsubelement);
+
+      if (propertyName<>'memreadfunction') then
+        parser.Identifiers.AddIntegerVariable('memreadfunction', (GetComponent(i) as TPLCTagNumber).memreadfunction);
+
+      if (propertyName<>'memwritefunction') then
+        parser.Identifiers.AddIntegerVariable('memwritefunction', (GetComponent(i) as TPLCTagNumber).memwritefunction);
+
+      if (propertyName<>'tag') then
+        parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCTagNumber).Tag);
+    end;
+
+    if (GetComponent(i) is TPLCBlock) then begin
+      //register only if the property is not being edited,
+      //to avoid circular references.
+      if (propertyName<>'plcrack') then
+        parser.Identifiers.AddIntegerVariable('plcrack', (GetComponent(i) as TPLCBlock).plcrack);
+
+      if (propertyName<>'plcslot') then
+        parser.Identifiers.AddIntegerVariable('plcslot', (GetComponent(i) as TPLCBlock).plcslot);
+
+      if (propertyName<>'plcstation') then
+        parser.Identifiers.AddIntegerVariable('plcstation', (GetComponent(i) as TPLCBlock).plcstation);
+
+      if (propertyName<>'memfile_db') then
+        parser.Identifiers.AddIntegerVariable('memfile_db', (GetComponent(i) as TPLCBlock).memfile_db);
+
+      if (propertyName<>'memaddress') then
+        parser.Identifiers.AddIntegerVariable('memaddress', (GetComponent(i) as TPLCBlock).memaddress);
+
+      if (propertyName<>'memsubelement') then
+        parser.Identifiers.AddIntegerVariable('memsubelement', (GetComponent(i) as TPLCBlock).memsubelement);
+
+      if (propertyName<>'memreadfunction') then
+        parser.Identifiers.AddIntegerVariable('memreadfunction', (GetComponent(i) as TPLCBlock).memreadfunction);
+
+      if (propertyName<>'memwritefunction') then
+        parser.Identifiers.AddIntegerVariable('memwritefunction', (GetComponent(i) as TPLCBlock).memwritefunction);
+
+      if (propertyName<>'tag') then
+        parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCBlock).Tag);
+    end;
+
+    if (GetComponent(i) is TPLCString) then begin
+      //register only if the property is not being edited,
+      //to avoid circular references.
+      if (propertyName<>'plcrack') then
+        parser.Identifiers.AddIntegerVariable('plcrack', (GetComponent(i) as TPLCString).plcrack);
+
+      if (propertyName<>'plcslot') then
+        parser.Identifiers.AddIntegerVariable('plcslot', (GetComponent(i) as TPLCString).plcslot);
+
+      if (propertyName<>'plcstation') then
+        parser.Identifiers.AddIntegerVariable('plcstation', (GetComponent(i) as TPLCString).plcstation);
+
+      if (propertyName<>'memfile_db') then
+        parser.Identifiers.AddIntegerVariable('memfile_db', (GetComponent(i) as TPLCString).memfile_db);
+
+      if (propertyName<>'memaddress') then
+        parser.Identifiers.AddIntegerVariable('memaddress', (GetComponent(i) as TPLCString).memaddress);
+
+      if (propertyName<>'memsubelement') then
+        parser.Identifiers.AddIntegerVariable('memsubelement', (GetComponent(i) as TPLCString).memsubelement);
+
+      if (propertyName<>'memreadfunction') then
+        parser.Identifiers.AddIntegerVariable('memreadfunction', (GetComponent(i) as TPLCString).memreadfunction);
+
+      if (propertyName<>'memwritefunction') then
+        parser.Identifiers.AddIntegerVariable('memwritefunction', (GetComponent(i) as TPLCString).memwritefunction);
+
+      if (propertyName<>'tag') then
+        parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCString).Tag);
+    end;
+  end;
+end;
 
 ///////////////////////////////////////
 //editor base para os demais editores.

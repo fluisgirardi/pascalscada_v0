@@ -75,6 +75,42 @@ begin
   RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlockElement,  'Index'  , TElementIndexPropertyEditor);
   RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStructItem,    'Index'  , TElementIndexPropertyEditor);
 
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'PLCRack'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'PLCSlot'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'PLCStation'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'MemFile_DB'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'MemAddress'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'MemSubElement'   , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'MemReadFunction' , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCTagNumber, 'MemWriteFunction', TTagAddressPropertyEditor);
+
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'PLCRack'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'PLCSlot'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'PLCStation'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'MemFile_DB'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'MemAddress'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'MemSubElement'   , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'MemReadFunction' , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCBlock,     'MemWriteFunction', TTagAddressPropertyEditor);
+
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'PLCRack'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'PLCSlot'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'PLCStation'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'MemFile_DB'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'MemAddress'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'MemSubElement'   , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'MemReadFunction' , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCStruct,    'MemWriteFunction', TTagAddressPropertyEditor);
+
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'PLCRack'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'PLCSlot'         , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'PLCStation'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemFile_DB'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemAddress'      , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemSubElement'   , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemReadFunction' , TTagAddressPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemWriteFunction', TTagAddressPropertyEditor);
+
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
   RegisterComponentEditor(TPLCBlock,          TBlockElementMapperComponentEditor);
