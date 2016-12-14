@@ -279,9 +279,9 @@ begin
   msg[13] := ifthen(FConnectionWay=ISOTCP, 1, $4D);    //'M',
   msg[14] := ifthen(FConnectionWay=ISOTCP, 0, $57);    //'W',
   msg[15] := $C2;  // $C2,
-  msg[16] := 2;    // 2,
-  msg[17] := ifthen(FConnectionWay=ISOTCP, CPU.Rack+1, $4D);    //'M',
-  msg[18] := ifthen(FConnectionWay=ISOTCP, CPU.Slot,   $57);    //'W',
+  msg[16] := 2;
+  msg[17] := ifthen(FConnectionWay=ISOTCP, 2{1=PG, 2=OP, 3=S7 Basic Comm?}, $4D);
+  msg[18] := ifthen(FConnectionWay=ISOTCP, CPU.Slot or CPU.Rack shl 5,      $57);
   msg[19] := $C0;  // $C0,
   msg[20] := 1;    // 1,
   msg[21] := 9;    // 9;

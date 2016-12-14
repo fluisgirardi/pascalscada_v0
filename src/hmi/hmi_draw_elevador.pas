@@ -86,6 +86,13 @@ type
   { THMICustomFlowElevator }
 
   THMICustomFlowElevator = class(THMICustomElevadorBasico, IColorChangeNotification)
+  private
+    FUseStaticBodyColor: Boolean;
+    FUseStaticFooterColor: Boolean;
+    FUseStaticHeaderColor: Boolean;
+    procedure SetUseStaticBodyColor(AValue: Boolean);
+    procedure SetUseStaticFooterColor(AValue: Boolean);
+    procedure SetUseStaticHeaderColor(AValue: Boolean);
   protected
     procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
     procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
@@ -106,6 +113,9 @@ type
     property  InputPolyline:THMIFlowPolyline read FInputPolyline write SetInputPolyline;
     property  OutputPolyline:THMIFlowPolyline read FOutputPolyline write SetOutputPolyline;
     property  ColorAndFlowStates:THMIElevatorFlowZones read FElevatorStates write SetElevatorStates;
+    property  UseStaticHeaderColor:Boolean read FUseStaticHeaderColor write SetUseStaticHeaderColor default false;
+    property  UseStaticBodyColor:Boolean   read FUseStaticBodyColor   write SetUseStaticBodyColor   default false;
+    property  UseStaticFooterColor:Boolean read FUseStaticFooterColor write SetUseStaticFooterColor default false;
     procedure StateChanged(Sender: TObject);
     procedure StatesNeedsComponentState(var CurState: TComponentState);
     procedure NextZone(Sender: TObject);
@@ -142,6 +152,10 @@ type
     property PLCTag;
     property ColorAndFlowStates;
     property CurrentBodyColor:TColor read FBodyColor;
+    property BodyColor;
+    property FooterColor;
+    property HeadColor;
+    property BorderColor;
 
     property Action;
     property OnClick;
@@ -154,6 +168,10 @@ type
     property BodyWidth;
 
     property SecurityCode;
+
+    property UseStaticBodyColor;
+    property UseStaticFooterColor;
+    property UseStaticHeaderColor;
 
     property BorderWidth;
     property OnStateChange;
@@ -440,9 +458,9 @@ procedure THMICustomFlowElevator.ShowZone(aZone: THMIElevatorFlowZone);
 begin
   FCurrentZone:=aZone;
   if aZone<>nil then begin
-    if aZone.PaintBodyWithFlowColor=false   then SetBodyColor(aZone.Color);
-    if aZone.PaintHeaderWithFlowColor=false then SetHeadColor(aZone.Color);
-    if aZone.PaintFooterWithFlowColor=false then SetFooterColor(aZone.Color);
+    if (FUseStaticBodyColor=false)   and (aZone.PaintBodyWithFlowColor=false)   then SetBodyColor(aZone.Color);
+    if (FUseStaticHeaderColor=false) and (aZone.PaintHeaderWithFlowColor=false) then SetHeadColor(aZone.Color);
+    if (FUseStaticFooterColor=false) and (aZone.PaintFooterWithFlowColor=false) then SetFooterColor(aZone.Color);
     SetBorderColor(aZone.BorderColor);
     UpdateFlow;
     InvalidateDraw;
@@ -454,21 +472,21 @@ begin
   if assigned(FCurrentZone) and Assigned(FInputPolyline) and assigned(FOutputPolyline) then begin
     if FCurrentZone.Flow then begin
 
-      if FCurrentZone.FPaintBodyWithFlowColor   then begin
+      if (FUseStaticBodyColor=false) and FCurrentZone.FPaintBodyWithFlowColor   then begin
         if FInputPolyline.LineColor=FInputPolyline.EmptyColor then
           SetBodyColor(FCurrentZone.EmptyColor)
         else
           SetBodyColor(FInputPolyline.LineColor);
       end;
 
-      if FCurrentZone.FPaintHeaderWithFlowColor then begin
+      if (FUseStaticHeaderColor=false) and FCurrentZone.FPaintHeaderWithFlowColor then begin
         if FInputPolyline.LineColor=FInputPolyline.EmptyColor then
           SetHeadColor(FCurrentZone.EmptyColor)
         else
           SetHeadColor(FInputPolyline.LineColor);
       end;
 
-      if FCurrentZone.FPaintFooterWithFlowColor then  begin
+      if (FUseStaticFooterColor=false) and FCurrentZone.FPaintFooterWithFlowColor then  begin
         if FInputPolyline.LineColor=FInputPolyline.EmptyColor then
           SetFooterColor(FCurrentZone.EmptyColor)
         else
@@ -524,6 +542,27 @@ begin
   FreeAndNil(FZoneTimer);
   FreeAndNil(FElevatorStates);
   inherited Destroy;
+end;
+
+procedure THMICustomFlowElevator.SetUseStaticBodyColor(AValue: Boolean);
+begin
+  if FUseStaticBodyColor=AValue then Exit;
+  FUseStaticBodyColor:=AValue;
+  ShowZone(FCurrentZone);
+end;
+
+procedure THMICustomFlowElevator.SetUseStaticFooterColor(AValue: Boolean);
+begin
+  if FUseStaticFooterColor=AValue then Exit;
+  FUseStaticFooterColor:=AValue;
+  ShowZone(FCurrentZone);
+end;
+
+procedure THMICustomFlowElevator.SetUseStaticHeaderColor(AValue: Boolean);
+begin
+  if FUseStaticHeaderColor=AValue then Exit;
+  FUseStaticHeaderColor:=AValue;
+  ShowZone(FCurrentZone);
 end;
 
 procedure THMICustomFlowElevator.AddNotifyCallback(

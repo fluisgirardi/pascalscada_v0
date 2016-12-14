@@ -334,7 +334,8 @@ begin
     if (FAutoReconnect=1) and (ReconnectTimerRunning) and (msbetween>=ReconnectInterval) then begin
       ReconnectStarted:=Now;
       Ok:=false;
-      if Assigned(FReconnectSocket) then FReconnectSocket(Ok);
+      if Assigned(FReconnectSocket) then
+        FReconnectSocket(Ok);
       if Ok then
         ReconnectTimerRunning:=false;
     end;
