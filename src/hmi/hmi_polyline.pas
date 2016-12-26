@@ -470,7 +470,8 @@ begin
     p[i].y:=pc.Y + ifthen((FBorderWidth mod 2)=0, 0.5);
   end;
 
-  FControlArea.DrawPolyLineAntialias(p, ColorToBGRA(FBorderColor),FBorderWidth);
+  if Visible or (csDesigning in ComponentState)
+  then FControlArea.DrawPolyLineAntialias(p, ColorToBGRA(FBorderColor),FBorderWidth);
 
   if csDesigning in ComponentState then begin
     if (FPointInfo='') or (FDesignDrawing=false) then exit;
