@@ -1743,25 +1743,30 @@ begin
     3:
       FPLCs[plc].Flags.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     4: begin
-      if tr.File_DB<=0 then
+      if tr.File_DB=0 then
         tr.File_DB:=1;
 
-      founddb:=false;
-      for db:=0 to high(FPLCs[plc].DBs) do
-        if FPLCs[plc].DBs[db].DBNum=tr.File_DB then begin
-          founddb:=true;
-          break;
+      if (tr.File_DB<0) or (tr.File_DB>65535) then begin
+        valido:=false;
+      end else begin
+
+        founddb:=false;
+        for db:=0 to high(FPLCs[plc].DBs) do
+          if FPLCs[plc].DBs[db].DBNum=tr.File_DB then begin
+            founddb:=true;
+            break;
+          end;
+
+        if not founddb then begin
+          db:=Length(FPLCs[plc].DBs);
+          SetLength(FPLCs[plc].DBs, db+1);
+          FPLCs[plc].DBs[db].DBNum:=tr.File_DB;
+          FPLCs[plc].DBs[db].DBArea:=TPLCMemoryManager.Create;
+          FPLCs[plc].DBs[db].DBArea.MaxBlockItems:=FPLCs[plc].MaxBlockSize;
         end;
 
-      if not founddb then begin
-        db:=Length(FPLCs[plc].DBs);
-        SetLength(FPLCs[plc].DBs, db+1);
-        FPLCs[plc].DBs[db].DBNum:=tr.File_DB;
-        FPLCs[plc].DBs[db].DBArea:=TPLCMemoryManager.Create;
-        FPLCs[plc].DBs[db].DBArea.MaxBlockItems:=FPLCs[plc].MaxBlockSize;
+        FPLCs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
       end;
-
-      FPLCs[plc].DBs[db].DBArea.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);
     end;
     5:
       FPLCs[plc].Counters.AddAddress(tr.Address,tr.Size,1,tr.UpdateTime);

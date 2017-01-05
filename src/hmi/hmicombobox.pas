@@ -258,9 +258,12 @@ procedure THMIComboBox.Select;
   end;
 
 begin
-  if (FTag<>nil) and Supports(FTag, ITagNumeric) and SendValue then begin
-    (FTag as ITagNumeric).Value:=GetItemValue;
-    AfterSendValue;
+  if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
+    if SendValue then begin
+      (FTag as ITagNumeric).Value:=GetItemValue;
+      AfterSendValue;
+    end else
+      TagChangeCallBack(Self);
   end;
   inherited Select;
 end;
