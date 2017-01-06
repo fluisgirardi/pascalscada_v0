@@ -16,6 +16,7 @@ type
   protected
     procedure DrawControl; override;
   published
+    property BodyHeight;
     property BodyColor;
     property BorderColor;
     property OnClick;

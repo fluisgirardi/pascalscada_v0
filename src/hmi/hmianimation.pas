@@ -19,6 +19,7 @@ uses
   Dialogs, ExtCtrls, HMIZones, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
+  TZoneChanged = procedure(Sender:TObject; ZoneIndex:Integer) of object;
 
   {$IFDEF PORTUGUES}
   {:
@@ -51,6 +52,8 @@ type
     FTimer:TTimer;
 
     FSecurityCode:UTF8String;
+    FZoneChanged: TZoneChanged;
+    function GetAnimationZone: TAnimationZone;
     procedure SetSecurityCode(sc:UTF8String);
 
     procedure ZoneChange(Sender:TObject);
@@ -93,6 +96,7 @@ type
     procedure RefreshAnimation(Data: PtrInt);
     //: @exclude
     procedure SetValue(v:Double);
+    property CurrentAnimationZone:TAnimationZone read GetAnimationZone;
   published
 
     {$IFDEF PORTUGUES}
@@ -189,6 +193,7 @@ type
     property Stretch;
     property Transparent;
     property Visible;
+    property ZoneChanged:TZoneChanged read FZoneChanged write FZoneChanged;
   end;
 
 implementation
@@ -243,6 +248,11 @@ begin
     end;
 
   FSecurityCode:=sc;
+end;
+
+function THMIAnimation.GetAnimationZone: TAnimationZone;
+begin
+  Result:=FCurrentZone;
 end;
 
 procedure THMIAnimation.ZoneChange(Sender:TObject);
@@ -315,7 +325,12 @@ begin
       Transparent := zone.Transparent;
       if zone.Transparent then
          Picture.Bitmap.TransparentColor:=zone.TransparentColor;
-   end;
+
+      if Assigned(FZoneChanged) then
+         FZoneChanged(Self, zone.Index);
+   end else
+     if Assigned(FZoneChanged) then
+        FZoneChanged(Self, -1);
 end;
 
 procedure THMIAnimation.SetTestValue(v:Double);
