@@ -82,6 +82,7 @@ type
     destructor  Destroy; override;
     procedure RefreshUpDown(Data: PtrInt);
   published
+    property Align;
     //: @exclude
     property Enabled:Boolean read FIsEnabled write SetEnabled;
 
