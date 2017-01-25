@@ -539,6 +539,9 @@ end;
 
 destructor THMICustomFlowElevator.Destroy;
 begin
+  if Assigned(FInputPolyline) then
+    (FInputPolyline as IColorChangeNotification).RemoveNotifyCallback(Self as IColorChangeNotification);
+
   FreeAndNil(FZoneTimer);
   FreeAndNil(FElevatorStates);
   inherited Destroy;

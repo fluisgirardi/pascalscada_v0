@@ -406,7 +406,8 @@ begin
       FShouldRedraw:=false;
     end;
 
-    FControlArea.Draw(Canvas, 0, 0, False);
+    if Visible then
+      FControlArea.Draw(Canvas, 0, 0, False);
   end;
   inherited Paint;
 end;
