@@ -187,7 +187,7 @@ begin
   FTempo:=0;
   FVezes:=0;
   while not Terminated do begin
-    //try
+    try
       CheckScanReadOrWrite;
       if Assigned(PScanTags) then begin
         SetLength(PScannedValues,0);
@@ -212,7 +212,7 @@ begin
         FSleepInterruptable.WaitFor(timeout)
       else
         FSleepInterruptable.WaitFor(1);
-    //except
+    except
     //  on E: Exception do begin
     //    {$IFDEF FDEBUG}
     //    DebugLn('TScanUpdate.Execute:: ' + e.Message);
@@ -221,7 +221,7 @@ begin
     //    Ferro := E;
     //    Synchronize(@SyncException);
     //  end;
-    //end;
+    end;
   end;
   FEnd.SetEvent;
 end;

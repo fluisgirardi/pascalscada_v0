@@ -495,7 +495,10 @@ begin
             fds:=nil;
 
           if Assigned(fOnExecSQL) then
-            fOnExecSQL(cmd^.SQLCmd, fds);
+            try
+              fOnExecSQL(cmd^.SQLCmd, fds);
+            finally
+            end;
 
           try
             if Assigned(cmd^.ReturnDataSetCallback) then begin

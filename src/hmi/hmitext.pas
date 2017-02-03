@@ -229,12 +229,12 @@ begin
     TLabel(Self).Caption := '';
     TLabel(Self).Transparent:=true;
   end else begin
-    TLabel(self).Caption := Prefix+zone.Text+Sufix;
-    TLabel(self).Color:=zone.Color;
-    TLabel(self).Transparent:=zone.Transparent;
-    TLabel(self).Font.Assign(zone.Font);
-    TLabel(self).Layout:=zone.VerticalAlignment;
-    TLabel(self).Alignment:=zone.HorizontalAlignment;
+    TLabel(self).Caption    := Prefix+zone.Text+Sufix;
+    TLabel(self).Color      := zone.Color;
+    TLabel(self).Transparent:= zone.Transparent;
+    TLabel(self).Font       := zone.Font;
+    TLabel(self).Layout     := zone.VerticalAlignment;
+    TLabel(self).Alignment  := zone.HorizontalAlignment;
   end;
 end;
 

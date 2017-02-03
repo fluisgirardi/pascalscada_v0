@@ -64,6 +64,8 @@ type
   protected
      {: @exclude }
      function  GetDisplayName: AnsiString; override;
+  public
+     procedure AssignTo(Dest: TPersistent); override;
   published
      {$IFDEF PORTUGUES}
      {:
@@ -256,6 +258,7 @@ type
   public
      constructor Create(aCollection: TCollection); override;
      destructor Destroy; override;
+     procedure AssignTo(Dest: TPersistent); override;
   published
      {$IFDEF PORTUGUES}
      {:
@@ -372,6 +375,7 @@ type
     //: @exclude
     constructor Create(aCollection: TCollection); override;
     destructor Destroy; override;
+    procedure AssignTo(Dest: TPersistent); override;
   published
 
      {$IFDEF PORTUGUES}
@@ -878,6 +882,21 @@ begin
   inherited Destroy;
 end;
 
+procedure TAnimationZone.AssignTo(Dest: TPersistent);
+var
+  aDest: TAnimationZone;
+begin
+   if Dest is TAnimationZone then begin
+      aDest:=Dest as TAnimationZone;
+
+      inherited AssignTo(Dest);
+
+      aDest.BlinkTime:=FBlinkTime;
+      aDest.BlinkWith:=FBlinkWithIndex;
+   end else
+     inherited AssignTo(Dest);
+end;
+
 { TColorZones }
 
 constructor TColorZones.Create(aOwner: TPersistent);
@@ -1051,6 +1070,23 @@ begin
   end;
 end;
 
+procedure TZone.AssignTo(Dest: TPersistent);
+var
+  aDest: TZone;
+begin
+   if Dest is TZone then begin
+      aDest:=Dest as TZone;
+
+      aDest.FValue1      := FValue1;
+      aDest.FValue2      := FValue2;
+      aDest.FIncludeV1   := FIncludeV1;
+      aDest.FIncludeV2   := FIncludeV2;
+      aDest.FDefaultZone := FDefaultZone;
+      aDest.FZoneType    := FZoneType;
+   end else
+     inherited AssignTo(Dest);
+end;
+
 //############################################################
 // TZones implementation
 //############################################################
@@ -1141,8 +1177,27 @@ end;
 
 destructor TTextZone.Destroy;
 begin
-  FFont.Destroy;
+  FreeAndNil(FFont);
   inherited Destroy;
+end;
+
+procedure TTextZone.AssignTo(Dest: TPersistent);
+var
+  aDest: TTextZone;
+begin
+  if Dest is TTextZone then begin
+     aDest:=Dest as TTextZone;
+
+     inherited AssignTo(Dest);
+
+     aDest.FText          := FText;
+     aDest.FColor         := FColor;
+     aDest.FTransparent   := FTransparent;
+     aDest.FHorAlignment  := FHorAlignment;
+     aDest.FVerAlignment  := FVerAlignment;
+     aDest.FFont.Assign(FFont);
+  end else
+    inherited AssignTo(Dest);
 end;
 
 procedure TTextZone.SetText(t:TCaption);

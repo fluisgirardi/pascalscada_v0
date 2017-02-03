@@ -89,6 +89,8 @@ type
     function GetInt64 (Offset:Integer; aSwapBytes, aSwapWords, aSwapDWords:Boolean):Int64;
     function GetDouble(Offset:Integer; aSwapBytes, aSwapWords, aSwapDWords:Boolean):Double;
 
+    function GetSiemensString(Offset:Integer; MaxStringSize:Integer = 255):String;
+
   end;
 
   procedure SetStructItemMapper(StructItemMapperTool:TOpenTagEditor);
@@ -336,6 +338,23 @@ var
 begin
   aResQWord:=GetQWord(Offset,aSwapBytes,aSwapWords,aSwapDWords);
   Result:=aResQWord;
+end;
+
+function TPLCStruct.GetSiemensString(Offset: Integer; MaxStringSize: Integer
+  ): String;
+var
+  maxSize, curSize: Byte;
+  i: Integer;
+  limit: integer;
+begin
+  maxSize:=GetByte(Offset);
+  curSize:=GetByte(Offset+1);
+
+  Result:='';
+  limit:=min(min(min(curSize,maxSize),MaxStringSize),Size-Offset);
+  for i:=0 to limit do begin
+    Result:=Result+chr(GetByte(Offset+2+i));
+  end;
 end;
 
 var
