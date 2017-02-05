@@ -8,17 +8,18 @@ uses
   Classes, SysUtils, ExtCtrls, fgl;
 
 type
-  TCallbackList = specialize TFPGList<TNotifyEvent>;
+  TCallbackList = array of TNotifyEvent;
 
   { TTimerEntry }
 
   TTimerEntry = class(TObject)
   private
-    Timer:TTimer;
-    CallbackList:TCallbackList;
+    FInterval:LongWord;
+    FID:LongInt;
+    FTimer:TTimer;
+    FCallbackList:TCallbackList;
     procedure OnTimer(Sender: TObject);
   public
-    constructor Create(Interval:LongWord); overload;
     constructor Create(Interval:LongWord; aCallBack:TNotifyEvent); overload;
     destructor Destroy; override;
     procedure AddTimerCallback(aCallBack:TNotifyEvent);
@@ -43,61 +44,97 @@ type
     procedure RemoveCallbacksFromObject(aObject:TObject);
   end;
 
+  function GetAnimationTimer:TTimerManager;
+
 implementation
 
 { TTimerEntry }
+
+function SortCallbackList(const Item1, Item2: TNotifyEvent): Integer;
+begin
+  //if (TMethod(Item1).Data=TMethod(Item2).Data) and (TMethod(Item1).Code=TMethod(Item2).Code) then
+  //  Result:=0
+  //else begin
+  //  if Pointer(Item1)<Pointer(Item2) then
+  //    Result:=-1
+  //  else
+  //    Result:=1;
+  //end;
+end;
 
 procedure TTimerEntry.OnTimer(Sender: TObject);
 var
   i: Integer;
 begin
-  for i:=0 to CallbackList.Count-1 do
+  for i:=0 to High(FCallbackList) do
     try
-      CallbackList.Items[i](Sender);
+      FCallbackList[i](Sender);
     except
     end;
 end;
 
-constructor TTimerEntry.Create(Interval: LongWord);
-begin
-  CallbackList:=TCallbackList.Create;
-  Timer:=TTimer.Create(nil);
-  Timer.OnTimer := @OnTimer;
-end;
+var
+  TimerCount:Integer = 0;
 
 constructor TTimerEntry.Create(Interval: LongWord; aCallBack: TNotifyEvent);
 begin
-  Create(Interval);
+  inherited Create;
+  FInterval:=Interval;
+  FID:=TimerCount;
+  Inc(TimerCount);
+  SetLength(FCallbackList, 0);
+  FTimer:=TTimer.Create(nil);
+  FTimer.Interval := Interval;
+  FTimer.OnTimer  := @OnTimer;
+  FTimer.Enabled  := true;
   AddTimerCallback(aCallBack);
 end;
 
 destructor TTimerEntry.Destroy;
 begin
+  SetLength(FCallbackList,0);
   inherited Destroy;
 end;
 
 procedure TTimerEntry.AddTimerCallback(aCallBack: TNotifyEvent);
+var
+  i: Integer;
+  found: Boolean;
 begin
-  if CallbackList.IndexOf(aCallBack)=-1 then
-    CallbackList.Add(aCallBack);
+  found:=false;
+  for i:=0 to High(FCallbackList) do
+    if (TMethod(FCallbackList[i]).Data=TMethod(aCallBack).Data) and (TMethod(FCallbackList[i]).Code=TMethod(aCallBack).Code) then begin
+      found:=true;
+      break;
+    end;
+  if not found then begin
+    i:=Length(FCallbackList);
+    SetLength(FCallbackList,i+1);
+    FCallbackList[i]:=aCallBack;
+  end;
 end;
 
 procedure TTimerEntry.RemoveCallback(aCallBack: TNotifyEvent);
 var
-  idx: LongInt;
+  i: Integer;
 begin
-  idx:=CallbackList.IndexOf(aCallBack);
-  if idx>=0 then
-    CallbackList.Delete(idx);
+  for i:=High(FCallbackList) downto 0 do
+    if (TMethod(FCallbackList[i]).Data=TMethod(aCallBack).Data) and (TMethod(FCallbackList[i]).Code=TMethod(aCallBack).Code) then begin
+      FCallbackList[i]:=FCallbackList[High(FCallbackList)];
+      SetLength(FCallbackList,High(FCallbackList));
+    end;
 end;
 
 procedure TTimerEntry.RemoveCallbacksFromObject(aObject: TObject);
 var
   i: Integer;
 begin
-  for i:=CallbackList.Count-1 downto 0 do
-    if TMethod(CallbackList.Items[i]).Data = Pointer(aObject) then
-      CallbackList.Delete(i);
+  for i:=high(FCallbackList) downto 0 do
+    if TMethod(FCallbackList[i]).Data=Pointer(aObject) then begin
+      FCallbackList[i]:=FCallbackList[High(FCallbackList)];
+      SetLength(FCallbackList,High(FCallbackList));
+    end;
+
 end;
 
 { TTimerManager }
@@ -136,14 +173,35 @@ begin
 end;
 
 procedure TTimerManager.RemoveCallback(aCallBack: TNotifyEvent);
+var
+  k: Integer;
 begin
-  //for k:=0 to fTimerList.Count-1
+  for k:=0 to fTimerList.Count-1 do
+    fTimerList.KeyData[fTimerList.Keys[k]].RemoveCallback(aCallBack);
 end;
 
 procedure TTimerManager.RemoveCallbacksFromObject(aObject: TObject);
+var
+  k: Integer;
 begin
-
+  for k:=0 to fTimerList.Count-1 do
+    fTimerList.KeyData[fTimerList.Keys[k]].RemoveCallbacksFromObject(aObject);
 end;
+
+var
+  FAnimationTimerManager:TTimerManager;
+
+function GetAnimationTimer:TTimerManager;
+begin
+  Result:=FAnimationTimerManager;
+end;
+
+initialization
+  FAnimationTimerManager:=TTimerManager.Create;
+
+finalization
+  FreeAndNil(FAnimationTimerManager);
+
 
 end.
 

@@ -49,7 +49,6 @@ type
     FTestValue:Double;
     FCurrentZone,
     FOwnerZone:TGraphicZone;
-    FTimer:TTimer;
 
     FSecurityCode:UTF8String;
     FZoneChanged: TZoneChanged;
@@ -198,14 +197,11 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager, Forms;
+uses hsstrings, ControlSecurityManager, Forms, hmi_animation_timers;
 
 constructor THMIAnimation.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
-   FTimer:=TTimer.Create(Self);
-   FTimer.OnTimer:=@BlinkTimer;
-   FTimer.Enabled:=false;
    FIsEnabled:=true;
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=@NeedComState;
@@ -216,10 +212,12 @@ end;
 destructor THMIAnimation.Destroy;
 begin
   Application.RemoveAsyncCalls(Self);
+  GetAnimationTimer.RemoveCallbacksFromObject(Self);
+
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
-  FTimer.Destroy;
-  FAnimationZones.Destroy;
+
+  FreeAndNil(FAnimationZones);
   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
@@ -279,12 +277,12 @@ end;
 
 procedure THMIAnimation.SetValue(v:Double);
 begin
-   FOwnerZone:=FAnimationZones.GetZoneFromValue(v) as TGraphicZone;
-   FTimer.Enabled:=false;
-   ShowZone(FOwnerZone);
-   if FCurrentZone<>nil then begin
-      FTimer.Interval := FOwnerZone.BlinkTime;
-      FTimer.Enabled := FOwnerZone.BlinkWith<>(-1);
+   FCurrentZone:=FAnimationZones.GetZoneFromValue(v) as TGraphicZone;
+   GetAnimationTimer.RemoveCallback(@BlinkTimer);
+   ShowZone(FCurrentZone);
+   //FOwnerZoneShowed:=true;
+   if (FCurrentZone<>nil) and (FCurrentZone.BlinkWith<>(-1)) and (FCurrentZone.BlinkTime>0) then begin
+     GetAnimationTimer.AddTimerCallback(FCurrentZone.BlinkTime,@BlinkTimer);
    end;
 end;
 
@@ -397,14 +395,13 @@ end;
 
 procedure THMIAnimation.BlinkTimer(Sender:TObject);
 begin
-  if FCurrentZone.BlinkWith<0 then
-    FTimer.Enabled:=false
-  else begin
-    if FTimer.Interval<>TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime then
-      FTimer.Interval := TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
-    ShowZone(TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]));
-    if not FTimer.Enabled then FTimer.Enabled:=true;
-  end;
+  if (FCurrentZone.BlinkWith<0) or (TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime<>FCurrentZone.BlinkTime) then
+    GetAnimationTimer.RemoveCallback(@BlinkTimer); //FTimer.Enabled:=false
+
+  if (FCurrentZone.BlinkWith>=0) AND (TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime<>FCurrentZone.BlinkTime) and (TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime>0) then
+      GetAnimationTimer.AddTimerCallback(TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]).BlinkTime, @BlinkTimer);
+
+  ShowZone(TGraphicZone(FAnimationZones.Items[FCurrentZone.BlinkWith]));
 end;
 
 procedure THMIAnimation.WriteFaultCallBack(Sender: TObject);

@@ -39,7 +39,6 @@ type
     FTextZones:TTextZones;
     FTestValue:Double;
     FCurrentZone:TTextZone;
-    FTimer:TTimer;
     FOwnerZoneShowed:Boolean;
     function  GetTextZones:TTextZones;
     procedure SetTextZones(zt:TTextZones);
@@ -139,14 +138,11 @@ type
 
 implementation
 
-uses hsstrings, Forms;
+uses hsstrings, Forms, hmi_animation_timers;
 
 constructor THMIText.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
-   FTimer:=TTimer.Create(Self);
-   FTimer.OnTimer:=@BlinkTimer;
-   FTimer.Enabled:=false;
    FTextZones:=TTextZones.Create(Self);
    FTextZones.OnNeedCompState:=@NeedComState;
    FTextZones.OnCollectionItemChange:=@ZoneChange;
@@ -154,9 +150,11 @@ end;
 
 destructor THMIText.Destroy;
 begin
-   FTimer.Destroy;
-   FTextZones.Destroy;
    Application.RemoveAsyncCalls(Self);
+   GetAnimationTimer.RemoveCallbacksFromObject(Self);
+
+   FreeAndNil(FTextZones);
+
    inherited Destroy;
 end;
 
@@ -208,12 +206,11 @@ end;
 procedure THMIText.SetValue(v:Double);
 begin
    FCurrentZone:=FTextZones.GetZoneFromValue(v) as TTextZone;
-   FTimer.Enabled:=false;
+   GetAnimationTimer.RemoveCallback(@BlinkTimer);
    ShowZone(FCurrentZone);
    FOwnerZoneShowed:=true;
-   if FCurrentZone<>nil then begin
-      FTimer.Interval := FCurrentZone.BlinkTime;
-      FTimer.Enabled := FCurrentZone.BlinkWith<>(-1);
+   if (FCurrentZone<>nil) and (FCurrentZone.BlinkWith<>(-1)) and (FCurrentZone.BlinkTime>0) then begin
+     GetAnimationTimer.AddTimerCallback(FCurrentZone.BlinkTime,@BlinkTimer);
    end;
 end;
 
@@ -256,14 +253,13 @@ end;
 //timer procedure (does a blink effect)
 procedure THMIText.BlinkTimer(Sender:TObject);
 begin
-  if FCurrentZone.BlinkWith<0 then
-    FTimer.Enabled:=false
-  else begin
-    FTimer.Enabled:=false;
-    FTimer.Interval := TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]).BlinkTime;
-    ShowZone(TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]));
-    FTimer.Enabled:=true;
-  end;
+  if (FCurrentZone.BlinkWith<0) or (TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]).BlinkTime<>FCurrentZone.BlinkTime) then
+    GetAnimationTimer.RemoveCallback(@BlinkTimer); //FTimer.Enabled:=false
+
+  if (FCurrentZone.BlinkWith>=0) AND (TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]).BlinkTime<>FCurrentZone.BlinkTime) and (TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]).BlinkTime>0) then
+      GetAnimationTimer.AddTimerCallback(TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]).BlinkTime, @BlinkTimer);
+
+  ShowZone(TTextZone(FTextZones.Items[FCurrentZone.BlinkWith]));
 end;
 
 function THMIText.GetTextZones:TTextZones;
