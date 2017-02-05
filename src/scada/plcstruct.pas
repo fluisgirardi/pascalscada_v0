@@ -343,7 +343,7 @@ end;
 function TPLCStruct.GetSiemensString(Offset: Integer; MaxStringSize: Integer
   ): String;
 var
-  maxSize, curSize: Byte;
+  maxSize, curSize, b: Byte;
   i: Integer;
   limit: integer;
 begin
@@ -352,7 +352,9 @@ begin
 
   Result:='';
   limit:=min(min(min(curSize,maxSize),MaxStringSize),Size-Offset);
-  for i:=0 to limit do begin
+  for i:=0 to limit-1 do begin
+    b:=GetByte(Offset+2+i);
+    if b=0 then break;
     Result:=Result+chr(GetByte(Offset+2+i));
   end;
 end;
