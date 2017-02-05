@@ -17,9 +17,11 @@ interface
 
 uses
   Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
-  syncobjs, ZDataset, psbufdataset;
+  syncobjs, ZDataset, psbufdataset, fgl;
 
 type
+
+  THMIDBConnectionStatementList = specialize TFPGList<UTF8String>;
 
   {$IFDEF PORTUGUES}
   //: Editor da propriedade THMIDBConnection.Database.
@@ -56,7 +58,7 @@ type
   {$ELSE}
   //: Procedure called by thread to execute the query.
   {$ENDIF}
-  TExecSQLProc = procedure(sqlcmd:String; outputdataset:TFPSBufDataSet) of object;
+  TExecSQLProc = procedure(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet) of object;
 
   TStartTransaction = procedure of object;
 
@@ -71,7 +73,7 @@ type
   {$ENDIF}
   TReturnDataSetProc = procedure(Sender:TObject; DS:TFPSBufDataSet; error:Exception) of object;
 
-  TReturnTransactionStatementsProc = procedure(Sender:TObject; aStatements:TStringList; Sucess:Boolean; LineOfError:Integer; Error:Exception) of object;
+  TReturnTransactionStatementsProc = procedure(Sender:TObject; aStatements:THMIDBConnectionStatementList; Sucess:Boolean; LineOfError:Integer; Error:Exception) of object;
 
   {$IFDEF PORTUGUES}
   //: Inteface para interação com objetos privados do THMIDBConnection
@@ -144,7 +146,7 @@ type
   PSQLCmdRec = ^TSQLCmdRec;
 
   TStatementCmdRec = record
-    statements:TStringList;
+    statements:THMIDBConnectionStatementList;
     ReturnTransactionResult:TReturnTransactionStatementsProc;
     FreeStatemensAfterExecute,
     ReturnSync:Boolean;
@@ -264,7 +266,7 @@ type
     {$ENDIF}
     procedure ExecSQLWithResultSet(sql:String; ReturnDataCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
 
-    procedure ExecTransaction(aStatements:TStringList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
+    procedure ExecTransaction(aStatements:THMIDBConnectionStatementList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
   end;
 
   {$IFDEF PORTUGUES}
@@ -279,9 +281,6 @@ type
   @bold(Uses the ZeosLib project.)
   }
   {$ENDIF}
-
-  { THMIDBConnection }
-
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private
     FConnectRead:Boolean;
@@ -293,7 +292,7 @@ type
     FSQLSpooler:TProcessSQLCommandThread;
     function  getProperties: TStrings;
     function  GetSyncConnection:TZConnection;
-    procedure ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPSBufDataSet);
+    procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet);
     procedure SetLibraryLocation(AValue: String);
     procedure SetProperties(AValue: TStrings);
   protected
@@ -324,7 +323,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
     procedure   ExecSQL(sql:String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
-    procedure   ExecTransaction(statements:TStringList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
+    procedure   ExecTransaction(statements:THMIDBConnectionStatementList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -542,7 +541,7 @@ begin
             ferror:=nil;
             try
               for s:=0 to statements^.statements.Count-1 do begin
-                fOnExecSQL(statements^.statements.Strings[s], nil);
+                fOnExecSQL(statements^.statements.Items[s], nil);
               end;
               fLineError:=0;
             except
@@ -618,7 +617,8 @@ begin
   FQueue.PostMessage(SQLCommandMSG,sqlcmd,nil,true);
 end;
 
-procedure TProcessSQLCommandThread.ExecTransaction(aStatements: TStringList;
+procedure TProcessSQLCommandThread.ExecTransaction(
+  aStatements: THMIDBConnectionStatementList;
   ReturnTransactionResult: TReturnTransactionStatementsProc;
   FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean);
 var
@@ -697,7 +697,7 @@ begin
   FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync);
 end;
 
-procedure THMIDBConnection.ExecTransaction(statements: TStringList;
+procedure THMIDBConnection.ExecTransaction(statements: THMIDBConnectionStatementList;
   ReturnTransactionResult: TReturnTransactionStatementsProc;
   FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean);
 begin
@@ -734,7 +734,7 @@ begin
   end;
 end;
 
-procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:String; outputdataset:TFPSBufDataSet);
+procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet);
 begin
   FCS.Enter;
   try
