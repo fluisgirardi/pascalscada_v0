@@ -58,7 +58,7 @@ type
   {$ELSE}
   //: Procedure called by thread to execute the query.
   {$ENDIF}
-  TExecSQLProc = procedure(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet) of object;
+  TExecSQLProc = procedure(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean) of object;
 
   TStartTransaction = procedure of object;
 
@@ -292,7 +292,7 @@ type
     FSQLSpooler:TProcessSQLCommandThread;
     function  getProperties: TStrings;
     function  GetSyncConnection:TZConnection;
-    procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet);
+    procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean);
     procedure SetLibraryLocation(AValue: String);
     procedure SetProperties(AValue: TStrings);
   protected
@@ -472,6 +472,7 @@ procedure   TProcessSQLCommandThread.Execute;
 var
   msg:TMSMsg;
   s: Integer;
+  err: Boolean;
 begin
   FEnd.ResetEvent;
   while not Terminated do begin
@@ -495,7 +496,7 @@ begin
 
           if Assigned(fOnExecSQL) then
             try
-              fOnExecSQL(cmd^.SQLCmd, fds);
+              fOnExecSQL(cmd^.SQLCmd, fds, err);
             finally
             end;
 
@@ -540,10 +541,11 @@ begin
           try
             ferror:=nil;
             try
-              for s:=0 to statements^.statements.Count-1 do begin
-                fOnExecSQL(statements^.statements.Items[s], nil);
-              end;
               fLineError:=0;
+              for s:=0 to statements^.statements.Count-1 do begin
+                fOnExecSQL(statements^.statements.Items[s], nil, err);
+                if err then break;
+              end;
             except
               on e:Exception do begin
                 ferror:=e;
@@ -552,7 +554,7 @@ begin
               end;
             end;
           finally
-            if ferror=nil then
+            if (err=false) and (ferror=nil) then
               fCommitTransaction()
             else
               fRollbackTransaction();
@@ -561,7 +563,7 @@ begin
               if statements^.ReturnSync then
                 Synchronize(@ReturnStatementsResults)
               else begin
-                if ferror=nil then
+                if (err=false) and (ferror=nil) then
                   statements^.ReturnTransactionResult(self, statements^.statements, True, -1, nil)
                 else
                   statements^.ReturnTransactionResult(self, statements^.statements, false, fLineError, ferror)
@@ -734,19 +736,26 @@ begin
   end;
 end;
 
-procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet);
+procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd: Utf8String;
+  outputdataset: TFPSBufDataSet; out Error: Boolean);
 begin
   FCS.Enter;
   try
-    if outputdataset=nil then begin
-      if not FASyncConnection.ExecuteDirect(sqlcmd) then
-        raise exception.Create('erro executando consulta!');
-    end else begin
-      FASyncQuery.SQL.Clear;
-      FASyncQuery.SQL.Add(sqlcmd);
-      FASyncQuery.Open;
-      outputdataset.CopyFromDataset(FASyncQuery);
-      FASyncQuery.Close;
+    try
+      Error:=false;
+      if outputdataset=nil then begin
+        if not FASyncConnection.ExecuteDirect(sqlcmd) then begin
+          Error := true;
+        end;
+      end else begin
+        FASyncQuery.SQL.Clear;
+        FASyncQuery.SQL.Add(sqlcmd);
+        FASyncQuery.Open;
+        outputdataset.CopyFromDataset(FASyncQuery);
+        FASyncQuery.Close;
+      end;
+    except
+      Error:=true;
     end;
   finally
     FCS.Leave;

@@ -183,7 +183,8 @@ type
                        ioObjectAccessNotAllowed, ioIllegalMemoryAddress,
                        ioUnknownError, ioEmptyPacket, ioPartialOk,
                        ioAcknowledge, ioBusy, ioNACK, ioMemoryParityError,
-                       ioGatewayUnavailable, ioDeviceGatewayFailedToRespond);
+                       ioGatewayUnavailable, ioDeviceGatewayFailedToRespond,
+                       ioReadOnlyProtocol);
 
   {$IFDEF PORTUGUES}
   {:

@@ -27,7 +27,7 @@ uses
   protscan, CrossEvent, Tag, syncobjs, fgl {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
-  TTagList = specialize TFPGList<TTag>;
+  TTagList = specialize TFPGObjectList<TTag>;
 
   {$IFDEF PORTUGUES}
   {:
@@ -75,11 +75,18 @@ type
   {$ELSE}
 
   {$ENDIF}
+
+  { TProtocolDriver }
+
   TProtocolDriver = class(TComponent, IPortDriverEventNotification)
   private
     //Array de tags associados ao driver.
     //Array of linked tags.
     PTags:TTagList;
+
+    //Armazena se o protocolo está em modo somente leitura
+    //stores if the protocol is in read-only mode
+    FReadOnly:LongInt;
 
     //Tempo de gasto em millisegundos atualizando valores dos tags (e seus dependentes)
     //Time used in milliseconds to update the tag value and their dependents. 
@@ -98,6 +105,7 @@ type
     //excessao caso o index to tag esteja fora dos limites
     //raises an exception if the that index is out of bounds.
     procedure DoExceptionIndexOut(index:LongInt);
+    function GetIsReadOnly: Boolean;
 
     //metodos para manipulação da lista de tags
     //procedures to handle the taglist.
@@ -123,6 +131,7 @@ type
     procedure DoPortClosed(Sender: TObject);
     procedure DoPortDisconnected(Sender: TObject);
     procedure DoPortRemoved(Sender:TObject);
+    procedure SetIsReadOnly(AValue: Boolean);
     procedure UpdateUserTime(usertime:Double);
   protected
 
@@ -505,6 +514,13 @@ type
     //: Tells if the protocol driver must read something on each scan cycle.
     {$ENDIF}
     property ReadSomethingAlways:Boolean read PReadSomethingAlways write PReadSomethingAlways default true;
+
+    {$IFDEF PORTUGUES}
+    //: Habilita/desabilita o modo somente leitura do protocolo.
+    {$ELSE}
+    //: Average time in milliseconds used to update values of tags and their dependents.
+    {$ENDIF}
+    property ReadOnly:Boolean read GetIsReadOnly write SetIsReadOnly;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -751,6 +767,7 @@ uses PLCTag, hsstrings, math, crossdatetime, pascalScadaMTPCPU;
 constructor TProtocolDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FReadOnly:=0;
   PDriverID := DriverCount;
   Inc(DriverCount);
   PTags:=TTagList.Create;
@@ -968,6 +985,14 @@ begin
     raise Exception.Create(SoutOfBounds);
 end;
 
+function TProtocolDriver.GetIsReadOnly: Boolean;
+var
+  FInReadOnlyMode: LongInt;
+begin
+  InterLockedExchange(FInReadOnlyMode,FReadOnly);
+  Result:=FInReadOnlyMode=1;
+end;
+
 function TProtocolDriver.GetTagCount: LongInt;
 begin
   //FCritical.Enter;
@@ -1067,6 +1092,12 @@ function TProtocolDriver.ScanWrite(const tagrec:TTagRec; const Values:TArrayOfDo
 var
    pkg:PScanWriteRec;
 begin
+  //read only protocol.
+  if GetIsReadOnly then begin
+    tagrec.CallBack(Values,Now,tcScanWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    exit;
+  end;
+
   try
     PCallersCS.Enter;
     //verifica se esta em edição, caso positivo evita o comando.
@@ -1087,7 +1118,6 @@ begin
        inc(FScanWriteID);
        
     //cria um pacote de escrita por scan
-    //
     //creates the message of scan write
     New(pkg);
     pkg^.SWID:=FScanReadID;
@@ -1141,6 +1171,11 @@ procedure TProtocolDriver.Write(const tagrec:TTagRec; const Values:TArrayOfDoubl
 var
   res:TProtocolIOResult;
 begin
+  if GetIsReadOnly then begin
+    tagrec.CallBack(Values,Now,tcWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    exit;
+  end;
+
   try
     //tenta entrar no Mutex
     //try enter on mutex
@@ -1220,6 +1255,12 @@ end;
 
 function  TProtocolDriver.SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
 begin
+
+  if GetIsReadOnly then begin
+    Result:=ioReadOnlyProtocol;
+    exit;
+  end;
+
   try
     //tenta entrar no Mutex
     //try enter on mutex
@@ -1408,6 +1449,14 @@ procedure TProtocolDriver.DoPortRemoved(Sender:TObject);
 begin
   if CommunicationPort=Sender then
     CommunicationPort:=nil;
+end;
+
+procedure TProtocolDriver.SetIsReadOnly(AValue: Boolean);
+begin
+  if AValue then
+    InterLockedExchange(FReadOnly,1)
+  else
+    InterLockedExchange(FReadOnly, 0);
 end;
 
 procedure TProtocolDriver.UpdateUserTime(usertime: Double);
