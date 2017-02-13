@@ -281,10 +281,14 @@ type
   @bold(Uses the ZeosLib project.)
   }
   {$ENDIF}
+
+  { THMIDBConnection }
+
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private
     FConnectRead:Boolean;
     FLibraryLocation: String;
+    FReadOnly: Boolean;
     FSyncConnection,
     FASyncConnection:TZConnection;
     FASyncQuery:TZQuery;
@@ -295,6 +299,7 @@ type
     procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean);
     procedure SetLibraryLocation(AValue: String);
     procedure SetProperties(AValue: TStrings);
+    procedure SetReadOnly(AValue: Boolean);
   protected
     FProtocol: string;
     FHostName: string;
@@ -394,6 +399,13 @@ type
     //: See the documentation of TZConnection.Catalog of ZeosLib for more information.
     {$ENDIF}
     property Catalog:  string  read FCatalog     write SetCatalog;
+
+    {$IFDEF PORTUGUES}
+    //: Verifique a documentação do TZConnection.ReadOnly do ZeosLib para maiores informações.
+    {$ELSE}
+    //: See the documentation of TZConnection.ReadOnly of ZeosLib for more information.
+    {$ENDIF}
+    property ReadOnly:Boolean  read FReadOnly    write SetReadOnly;
   end;
 
 const
@@ -741,6 +753,12 @@ procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd: Utf8String;
 begin
   FCS.Enter;
   try
+
+    if FASyncConnection.ReadOnly then begin
+      Error:=true;
+      exit;
+    end;
+
     try
       Error:=false;
       if outputdataset=nil then begin
@@ -784,6 +802,18 @@ begin
     FCS.Leave;
   end;
   FProperties.Assign(AValue);
+end;
+
+procedure THMIDBConnection.SetReadOnly(AValue: Boolean);
+begin
+  FSyncConnection.ReadOnly:=AValue;
+  FCS.Enter;
+  try
+    FASyncConnection.ReadOnly:=AValue;
+  finally
+    FCS.Leave;
+  end;
+  FReadOnly:=FSyncConnection.ReadOnly;
 end;
 
 function  THMIDBConnection.GetConnected:Boolean;

@@ -63,6 +63,8 @@ type
     property InputMaxHole;
     //:  @seealso(TModBusDriver.RegisterMaxHole)
     property RegisterMaxHole;
+
+    property ReadOnly;
   end;
 
 implementation

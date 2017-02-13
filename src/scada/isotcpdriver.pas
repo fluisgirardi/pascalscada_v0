@@ -223,6 +223,8 @@ type
     }
     {$ENDIF}
     property PLCStation:LongInt read FPLCStation write SetPLCStation default 2;
+
+    property ReadOnly;
   end;
 
 const

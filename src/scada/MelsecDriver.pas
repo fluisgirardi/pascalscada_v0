@@ -141,6 +141,8 @@ type
 
     property SerieCLP:TSeriesCLP read FSerieCLP write SetSerieCLP default Serie_Q_L;
 
+    property ReadOnly;
+
   public
     constructor Create(AOwner:TComponent); override;
     destructor Destroy; override;

@@ -313,6 +313,8 @@ type
   published
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
+
+    property ReadOnly;
   end;
 
   procedure SetTagBuilderToolForWest6100Protocol(TagBuilderTool:TOpenTagEditor);
