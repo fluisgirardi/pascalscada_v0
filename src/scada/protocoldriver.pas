@@ -27,7 +27,7 @@ uses
   protscan, CrossEvent, Tag, syncobjs, fgl {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
-  TTagList = specialize TFPGObjectList<TTag>;
+  TTagList = specialize TFPGList<TTag>;
 
   {$IFDEF PORTUGUES}
   {:
