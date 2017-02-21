@@ -34,7 +34,7 @@ uses
   hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca,
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
-  hmi_draw_flow_pump,
+  hmi_draw_flow_pump, hmi_draw_basic_vector_control,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -83,7 +83,8 @@ begin
                                            THMIFlowPolyline,
                                            THMILinkedFlowValve,
                                            THMILinkedFlowPump,
-                                           THMILinkedFlowElevator]);
+                                           THMILinkedFlowElevator,
+                                           THMIBasicVectorControl]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
