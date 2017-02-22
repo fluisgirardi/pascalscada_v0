@@ -2392,6 +2392,10 @@ begin
       ReqType := vtS7_200_Timer;
     12:
       ReqType := vtS7_Peripheral;
+    else begin
+      Result:=ioTagError;
+      Exit;
+    end;
   end;
 
   MaxBytesToSend:=PLCPtr^.MaxPDULen-28;
@@ -2549,6 +2553,10 @@ begin
       ReqType := vtS7_200_Timer;
     12:
       ReqType := vtS7_Peripheral;
+    else begin
+      Result:=ioTagError;
+      exit;
+    end;
   end;
 
   MaxBytesToRecv:=PLCPtr^.MaxPDULen-18; //10 bytes of header, 2 bytes of error code, 2 bytes of read request, 4 bytes of result header.
