@@ -25,6 +25,7 @@ type
     FSVGDrawing: TBGRASVG;
     procedure DrawControl; override;
     procedure ReloadDrawing; virtual;
+    procedure Loaded; override;
     property  SVGContents:TStrings read FSVGContents write SetSVGContents;
     property  Stretch:Boolean read FStretch write SetStretch;
     property  Proportional:Boolean read FProportional write SetProportional;
@@ -37,6 +38,7 @@ type
   published
     property SVGContents;
     property Stretch;
+    property Proportional;
   end;
 
 implementation
@@ -47,8 +49,10 @@ procedure THMICustomVectorControl.SetSVGContents(AValue: TStrings);
 begin
   if Assigned(AValue) then begin
     FSVGContents.Assign(AValue);
-    ReloadDrawing;
-    InvalidateShape;
+    if ([csReading,csLoading]*ComponentState)=[] then begin
+      ReloadDrawing;
+      InvalidateShape;
+    end;
   end;
 end;
 
@@ -56,14 +60,16 @@ procedure THMICustomVectorControl.SetStretch(AValue: Boolean);
 begin
   if FStretch=AValue then Exit;
   FStretch:=AValue;
-  InvalidateShape;
+  if ([csReading,csLoading]*ComponentState)=[] then
+    InvalidateShape;
 end;
 
 procedure THMICustomVectorControl.SetProportional(AValue: Boolean);
 begin
   if FProportional=AValue then Exit;
   FProportional:=AValue;
-  InvalidateShape;
+  if ([csReading,csLoading]*ComponentState)=[] then
+    InvalidateShape;
 end;
 
 procedure THMICustomVectorControl.DrawControl;
@@ -76,14 +82,14 @@ begin
                               tlTop,
                               0,
                               0,
-                              FControlArea.Canvas2D.Width,
-                              FControlArea.Canvas2D.Height)
+                              FControlArea.Canvas2D.Width-1,
+                              FControlArea.Canvas2D.Height-1)
     else
       FSVGDrawing.StretchDraw(FControlArea.Canvas2D,
                               0,
                               0,
-                              FControlArea.Canvas2D.Width,
-                              FControlArea.Canvas2D.Height)
+                              FControlArea.Canvas2D.Width-1,
+                              FControlArea.Canvas2D.Height-1)
   end else
     FSVGDrawing.Draw(FControlArea.Canvas2D, 0, 0, cuPixel);
 end;
@@ -102,6 +108,13 @@ begin
   finally
     FreeAndNil(SVGStream);
   end;
+end;
+
+procedure THMICustomVectorControl.Loaded;
+begin
+  inherited Loaded;
+  ReloadDrawing;
+  InvalidateShape;
 end;
 
 constructor THMICustomVectorControl.Create(AOwner: TComponent);
