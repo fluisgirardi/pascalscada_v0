@@ -87,16 +87,28 @@ type
 
   { THMIFlowSourceCollectionItem }
 
-  THMIFlowSourceCollectionItem = class(THMIBasicColletionItem)
-  private
-    FHMIObject: THMIFlowPolyline;
-    procedure setHMIObject(AValue: THMIFlowPolyline);
+  THMIFlowPolylineCollectionItem = class(THMIBasicColletionItem)
   protected
+    FHMIObject: THMIFlowPolyline;
+    procedure setHMIObject(AValue: THMIFlowPolyline); virtual;
     function GetDisplayName: string; override;
   published
     property HMIObject:THMIFlowPolyline read FHMIObject write setHMIObject;
   end;
 
+  { THMIFlowPolylineCollection }
+
+  THMIFlowPolylinesCollection = Class(THMIBasicColletion)
+  public
+    constructor Create(AOwner:TComponent);
+    function Add:THMIFlowPolylineCollectionItem;
+  end;
+
+
+  THMIFlowSourceCollectionItem = class (THMIFlowPolylineCollectionItem)
+  protected
+    procedure setHMIObject(AValue: THMIFlowPolyline); override;
+  end;
 
   THMIFlowSourceCollection = Class(THMIBasicColletion)
   public
@@ -143,6 +155,39 @@ type
 implementation
 
 uses math;
+
+{ THMIFlowPolylineCollection }
+
+constructor THMIFlowPolylinesCollection.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner,THMIFlowPolylineCollectionItem);
+end;
+
+function THMIFlowPolylinesCollection.Add: THMIFlowPolylineCollectionItem;
+begin
+  Result:=THMIFlowPolylineCollectionItem(inherited Add);
+end;
+
+{ THMIFlowSourceCollectionItem }
+
+procedure THMIFlowSourceCollectionItem.setHMIObject(AValue: THMIFlowPolyline);
+begin
+  if FHMIObject=AValue then Exit;
+  if supports(Collection.Owner, IColorChangeNotification) then begin
+    if Assigned(FHMIObject) then
+      (FHMIObject as IColorChangeNotification).RemoveNotifyCallback(Collection.Owner as IColorChangeNotification);
+
+    if AValue=nil then begin
+      inherited setHMIObject(AValue)
+    end else begin
+      if Supports(AValue, IColorChangeNotification) then begin
+        (AValue as IColorChangeNotification).AddNotifyCallback(Collection.Owner as IColorChangeNotification);
+        inherited setHMIObject(AValue);
+      end else
+        raise Exception.Create('Object don´t support the IColorChangeNotification interface!');
+    end;
+  end;
+end;
 
 { THMIFlowPolyline }
 
@@ -335,26 +380,12 @@ end;
 
 { THMIFlowObjectCollectionItem }
 
-procedure THMIFlowSourceCollectionItem.setHMIObject(AValue: THMIFlowPolyline);
+procedure THMIFlowPolylineCollectionItem.setHMIObject(AValue: THMIFlowPolyline);
 begin
-  if FHMIObject=AValue then Exit;
-  if supports(Collection.Owner, IColorChangeNotification) then begin
-    if Assigned(FHMIObject) then
-      (FHMIObject as IColorChangeNotification).RemoveNotifyCallback(Collection.Owner as IColorChangeNotification);
-
-    if AValue=nil then begin
-      FHMIObject:=AValue
-    end else begin
-      if Supports(AValue, IColorChangeNotification) then begin
-        (AValue as IColorChangeNotification).AddNotifyCallback(Collection.Owner as IColorChangeNotification);
-        FHMIObject:=AValue;
-      end else
-        raise Exception.Create('Object don´t support the IColorChangeNotification interface!');
-    end;
-  end;
+  FHMIObject:=AValue;
 end;
 
-function THMIFlowSourceCollectionItem.GetDisplayName: string;
+function THMIFlowPolylineCollectionItem.GetDisplayName: string;
 begin
   if Assigned(FHMIObject) then
     Result:=FHMIObject.Name
