@@ -18,6 +18,8 @@ type
     function GetOwner: TPersistent; override;
     //: @exclude
     procedure NeedCurrentCompState;
+
+    procedure DoOnChange(const Item:TObject); virtual;
  public
    //: @exclude
    function GetComponentState:TComponentState;
@@ -54,6 +56,9 @@ type
  public
     //: @exclude
     constructor Create(aOwner:TPersistent; aItemClass: TCollectionItemClass); virtual;
+
+    //: @exclude
+    function Add: TCollectionItem;
 
     {$IFDEF PORTUGUES}
     {:
@@ -110,8 +115,7 @@ procedure THMIBasicColletionItem.NotifyChange;
 begin
   if Collection is THMIBasicColletion then
     with Collection as THMIBasicColletion do
-      if Assigned(OnCollectionItemChange) then
-        OnCollectionItemChange(Self);
+      DoOnChange(Self);
 end;
 
 constructor THMIBasicColletionItem.Create(aCollection: TCollection);
@@ -139,6 +143,13 @@ begin
   FOwner:=aOwner;
 end;
 
+function THMIBasicColletion.Add: TCollectionItem;
+begin
+  Result:=inherited Add;
+  if (GetComponentState*[csReading,csLoading])=[] then
+    DoOnChange(Result);
+end;
+
 function THMIBasicColletion.GetOwner: TPersistent;
 begin
   Result:=FOwner;
@@ -154,6 +165,16 @@ procedure THMIBasicColletion.NeedCurrentCompState;
 begin
   if assigned(FOnNeedCompState) then
      FOnNeedCompState(FComponentState);
+end;
+
+procedure THMIBasicColletion.DoOnChange(const Item: TObject);
+begin
+  if Assigned(FOnColletionItemChange) then begin
+    if Assigned(Item) then
+      FOnColletionItemChange(Item)
+    else
+      FOnColletionItemChange(Self);
+  end;
 end;
 
 procedure THMIBasicColletion.Loaded;

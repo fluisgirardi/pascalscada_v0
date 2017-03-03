@@ -84,7 +84,8 @@ begin
                                            THMILinkedFlowValve,
                                            THMILinkedFlowPump,
                                            THMILinkedFlowElevator,
-                                           THMIBasicVectorControl]);
+                                           THMIBasicVectorControl,
+                                           THMIFlowVectorControl]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
