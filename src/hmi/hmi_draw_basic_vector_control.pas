@@ -25,6 +25,7 @@ type
     procedure SetSVGContents(AValue: TStrings);
   protected
     FSVGDrawing: TBGRASVG;
+    procedure CheckAutoSize;
     procedure DrawControl; override;
     procedure ReloadDrawing; virtual;
     procedure Loaded; override;
@@ -153,6 +154,54 @@ type
     destructor Destroy; override;
   end;
 
+  THMI2OutFlowVectorControl = class(THMICustomFlowVectorControl)
+  protected
+    function GetOutput1: THMIFlowPolyline;
+    function GetOutput2: THMIFlowPolyline;
+    procedure SetOutput1(AValue: THMIFlowPolyline);
+    procedure SetOutput2(AValue: THMIFlowPolyline);
+
+    property Output1:THMIFlowPolyline read GetOutput1 write SetOutput1;
+    property Output2:THMIFlowPolyline read GetOutput2 write SetOutput2;
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+  THMI3OutFlowVectorControl = class(THMI2OutFlowVectorControl)
+  private
+    function GetOutput3: THMIFlowPolyline;
+    procedure SetOutput3(AValue: THMIFlowPolyline);
+  protected
+    property Output3:THMIFlowPolyline read GetOutput3 write SetOutput3;
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+  TForkedFlowValveOrientation = (ffvRight, ffvLeft);
+
+  { THMIForkedFlowValve }
+
+  THMIForkedFlowValve = class(THMI2OutFlowVectorControl)
+  private
+    FOrientation,
+    FOrientationLoaded: TForkedFlowValveOrientation;
+    procedure SetOrientation(AValue: TForkedFlowValveOrientation);
+  protected
+    procedure Loaded; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property AutoSize;
+    property ColorAndFlowStates;
+    property InputFlowPolyline;
+    property PLCTag;
+    property Proportional;
+    property Stretch;
+    property OutputPolylineLeft:THMIFlowPolyline read GetOutput1 write SetOutput1;
+    property OutputPolylineRight:THMIFlowPolyline read GetOutput2 write SetOutput2;
+    property Orientation:TForkedFlowValveOrientation read FOrientation write SetOrientation;
+  end;
+
   THMIBasicVectorControl = class(THMICustomVectorControl)
   published
     property AutoSize;
@@ -175,7 +224,115 @@ type
 
 implementation
 
-uses strutils, math, ProtocolTypes, hsstrings, Forms;
+uses strutils, math, ProtocolTypes, hsstrings, Forms, LResources;
+
+{ THMIForkedFlowValve }
+
+procedure THMIForkedFlowValve.SetOrientation(AValue: TForkedFlowValveOrientation
+  );
+var
+  //ms: TLazarusResourceStream;
+  lrs: TLResource;
+  sz: Int64;
+begin
+  if (ComponentState*[csReading,csLoading])<>[] then begin
+    FOrientationLoaded:=AValue;
+    exit;
+  end;
+
+  if FOrientation=AValue then Exit;
+  FOrientation:=AValue;
+  CheckAutoSize;
+
+  case FOrientation of
+    ffvRight: lrs:=LazarusResources.Find('forked_valve_right');
+    ffvLeft:  lrs:=LazarusResources.Find('forked_valve_left');
+  end;
+
+  FSVGContents.Clear;
+  if Assigned(lrs) then
+     FSVGContents.Text:=lrs.Value;
+
+  ShowZone(FCurrentZone);
+  InvalidateShape;
+end;
+
+procedure THMIForkedFlowValve.Loaded;
+begin
+  inherited Loaded;
+  case FOrientationLoaded of
+    ffvRight: FOrientation:=ffvLeft;
+    ffvLeft:  FOrientation:=ffvRight;
+  end;
+  SetOrientation(FOrientationLoaded);
+end;
+
+constructor THMIForkedFlowValve.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FOrientation:=ffvRight;
+  if ([csDesigning]*ComponentState)<>[] then AdjustSize;
+end;
+
+{ THMI3OutFlowVectorControl }
+
+function THMI3OutFlowVectorControl.GetOutput3: THMIFlowPolyline;
+begin
+  if FFlowOutputs.Count>2 then
+    Result:=THMIOutputCollectionItem(FFlowOutputs.Items[2]).OutputPolyline
+  else
+    Result:=nil;
+end;
+
+procedure THMI3OutFlowVectorControl.SetOutput3(AValue: THMIFlowPolyline);
+begin
+  if FFlowOutputs.Count>2 then
+    THMIOutputCollectionItem(FFlowOutputs.Items[2]).OutputPolyline:=AValue;
+end;
+
+constructor THMI3OutFlowVectorControl.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  while FFlowOutputs.Count<3 do
+    FFlowOutputs.Add;
+end;
+
+{ THMI2OutFlowVectorControl }
+
+function THMI2OutFlowVectorControl.GetOutput1: THMIFlowPolyline;
+begin
+  if FFlowOutputs.Count>0 then
+    Result:=THMIOutputCollectionItem(FFlowOutputs.Items[0]).OutputPolyline
+  else
+    Result:=nil;
+end;
+
+function THMI2OutFlowVectorControl.GetOutput2: THMIFlowPolyline;
+begin
+  if FFlowOutputs.Count>1 then
+    Result:=THMIOutputCollectionItem(FFlowOutputs.Items[1]).OutputPolyline
+  else
+    Result:=nil;
+end;
+
+procedure THMI2OutFlowVectorControl.SetOutput1(AValue: THMIFlowPolyline);
+begin
+  if FFlowOutputs.Count>0 then
+    THMIOutputCollectionItem(FFlowOutputs.Items[0]).OutputPolyline:=AValue;
+end;
+
+procedure THMI2OutFlowVectorControl.SetOutput2(AValue: THMIFlowPolyline);
+begin
+  if FFlowOutputs.Count>1 then
+    THMIOutputCollectionItem(FFlowOutputs.Items[1]).OutputPolyline:=AValue;
+end;
+
+constructor THMI2OutFlowVectorControl.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  while FFlowOutputs.Count<2 do
+    FFlowOutputs.Add;
+end;
 
 { TOutputChange }
 
@@ -677,6 +834,14 @@ begin
   end;
 end;
 
+procedure THMICustomVectorControl.CheckAutoSize;
+begin
+  if AutoSize then begin
+    InvalidatePreferredSize;
+    AdjustSize;
+  end;
+end;
+
 procedure THMICustomVectorControl.SetStretch(AValue: Boolean);
 begin
   if FStretch=AValue then Exit;
@@ -729,6 +894,7 @@ begin
   finally
     FreeAndNil(SVGStream);
   end;
+  CheckAutoSize;
 end;
 
 procedure THMICustomVectorControl.Loaded;
@@ -763,6 +929,10 @@ begin
   FreeAndNil(FSVGContents);
   inherited Destroy;
 end;
+
+initialization
+
+{$I hmi_draw_basic_vector_control.lrs}
 
 end.
 

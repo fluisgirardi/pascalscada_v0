@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="44"
+   height="44"
+   viewBox="0 0 11.641666 11.641667"
+   version="1.1"
+   id="svg18161"
+   inkscape:version="0.92.1 unknown"
+   sodipodi:docname="seta_esquerda.svg">
+  <defs
+     id="defs18155" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="19.068182"
+     inkscape:cx="11.799762"
+     inkscape:cy="22"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1920"
+     inkscape:window-height="1030"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata18158">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Camada 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-285.35832)">
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 7.805211,294.61874 V 288.7979"
+       id="pathRight"
+       inkscape:connector-curvature="0"
+       inkscape:label="#pathRight" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 8.2020833,289.19478 H 3.175"
+       id="pathLeft"
+       inkscape:connector-curvature="0"
+       inkscape:label="#pathLeft" />
+    <path
+       transform="matrix(0,0.12682876,-0.07574955,0,26.452181,250.06842)"
+       sodipodi:type="star"
+       style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="LeftArrow"
+       sodipodi:sides="3"
+       sodipodi:cx="308.49753"
+       sodipodi:cy="314.95084"
+       sodipodi:r1="33.579025"
+       sodipodi:r2="16.789513"
+       sodipodi:arg1="1.5707963"
+       sodipodi:arg2="2.6179939"
+       inkscape:flatsided="true"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z"
+       inkscape:label="#LeftArrow"
+       inkscape:transform-center-x="2.3126594e-06"
+       inkscape:transform-center-y="2.240853" />
+    <path
+       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z"
+       inkscape:randomized="0"
+       inkscape:rounded="0"
+       inkscape:flatsided="true"
+       sodipodi:arg2="2.6179939"
+       sodipodi:arg1="1.5707963"
+       sodipodi:r2="16.789513"
+       sodipodi:r1="33.579025"
+       sodipodi:cy="314.95084"
+       sodipodi:cx="308.49753"
+       sodipodi:sides="3"
+       id="RightArrow"
+       style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       sodipodi:type="star"
+       transform="matrix(0.12682961,0,0,0.07574827,-31.321379,270.54833)"
+       inkscape:transform-center-x="-2.2429341"
+       inkscape:transform-center-y="-3.5503127e-06"
+       inkscape:label="#path4858" />
+    <path
+       transform="rotate(90)"
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 288.79791,-8.2020788 h 0.79375 v 0.79375 h -0.79375 z"
+       id="pathJoin" />
+  </g>
+</svg>
