@@ -202,6 +202,25 @@ type
     property Orientation:TForkedFlowValveOrientation read FOrientation write SetOrientation;
   end;
 
+  { THMIThreeWayFlowValve }
+
+  THMIThreeWayFlowValve = class(THMI3OutFlowVectorControl)
+  protected
+    procedure Loaded; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property AutoSize;
+    property ColorAndFlowStates;
+    property InputFlowPolyline;
+    property PLCTag;
+    property Proportional;
+    property Stretch;
+    property OutputPolylineLeft:THMIFlowPolyline read GetOutput1 write SetOutput1;
+    property OutputPolylineMiddle:THMIFlowPolyline read GetOutput2 write SetOutput2;
+    property OutputPolylineRight:THMIFlowPolyline read GetOutput3 write SetOutput3;
+  end;
+
   THMIBasicVectorControl = class(THMICustomVectorControl)
   published
     property AutoSize;
@@ -225,6 +244,27 @@ type
 implementation
 
 uses strutils, math, ProtocolTypes, hsstrings, Forms, LResources;
+
+{ THMIThreeWayFlowValve }
+
+procedure THMIThreeWayFlowValve.Loaded;
+begin
+  inherited Loaded;
+  CheckAutoSize;
+end;
+
+constructor THMIThreeWayFlowValve.Create(AOwner: TComponent);
+var
+  lrs: TLResource;
+begin
+  inherited Create(AOwner);
+
+  lrs:=LazarusResources.Find('three-way-flow-valve');
+
+  FSVGContents.Clear;
+  if Assigned(lrs) then
+   FSVGContents.Text:=lrs.Value;
+end;
 
 { THMIForkedFlowValve }
 
@@ -800,6 +840,7 @@ procedure THMICustomFlowVectorControl.Loaded;
 begin
   inherited Loaded;
   FStates.Loaded;
+  CheckAutoSize;
 end;
 
 constructor THMICustomFlowVectorControl.Create(AOwner: TComponent);

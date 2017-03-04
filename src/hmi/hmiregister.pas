@@ -86,7 +86,8 @@ begin
                                            THMILinkedFlowElevator,
                                            THMIBasicVectorControl,
                                            THMIFlowVectorControl,
-                                           THMIForkedFlowValve]);
+                                           THMIForkedFlowValve,
+                                           THMIThreeWayFlowValve]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
