@@ -692,7 +692,8 @@ begin
     if (FCurrentZone<>nil) and (FCurrentZone.BlinkWith<>(-1)) and (FCurrentZone.BlinkTime>0) then begin
       GetAnimationTimer.AddTimerCallback(FCurrentZone.BlinkTime,@BlinkTimer);
     end;
-  end;
+  end else
+    ShowZone(FCurrentZone);
 
   if Assigned(FOnDrawChanges) then
     try
