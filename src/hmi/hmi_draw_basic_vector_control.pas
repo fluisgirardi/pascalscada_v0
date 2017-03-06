@@ -140,6 +140,8 @@ type
     procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
     procedure NotifyChange(const WhoChanged:THMIFlowPolyline);
   protected
+    procedure Notification(AComponent: TComponent; Operation: TOperation);
+      override;
     procedure ShowZone(aZone:THMIVectorFlowZone);
     procedure UpdateDrawAndFlow;
     procedure SetHMITag(t: TPLCTag); override;
@@ -410,7 +412,15 @@ end;
 procedure THMIOutputCollectionItem.SetOuputPolyline(AValue: THMIFlowPolyline);
 begin
   if FOuputPolyline=AValue then Exit;
+
+  if Assigned(AValue) then
+    AValue.FreeNotification(TComponent(Collection.Owner));
+
+  if Assigned(FOuputPolyline) then
+    FOuputPolyline.RemoveFreeNotification(TComponent(Collection.Owner));
+
   FOuputPolyline:=AValue;
+
   NotifyChange;
 end;
 
@@ -721,6 +731,21 @@ procedure THMICustomFlowVectorControl.NotifyChange(
   const WhoChanged: THMIFlowPolyline);
 begin
   UpdateDrawAndFlow;
+end;
+
+procedure THMICustomFlowVectorControl.Notification(AComponent: TComponent;
+  Operation: TOperation);
+var
+  i: Integer;
+begin
+  inherited Notification(AComponent, Operation);
+  if Operation=opRemove then begin
+    if AComponent=FInputFlowPolyline then
+      FInputFlowPolyline:=nil;
+    for i:=0 to FFlowOutputs.Count-1 do
+      if THMIOutputCollectionItem(FFlowOutputs).FOuputPolyline=AComponent then
+        THMIOutputCollectionItem(FFlowOutputs).FOuputPolyline:=nil;
+  end;
 end;
 
 procedure THMICustomFlowVectorControl.ShowZone(aZone: THMIVectorFlowZone);
