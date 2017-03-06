@@ -743,8 +743,8 @@ begin
     if AComponent=FInputFlowPolyline then
       FInputFlowPolyline:=nil;
     for i:=0 to FFlowOutputs.Count-1 do
-      if THMIOutputCollectionItem(FFlowOutputs).FOuputPolyline=AComponent then
-        THMIOutputCollectionItem(FFlowOutputs).FOuputPolyline:=nil;
+      if THMIOutputCollectionItem(FFlowOutputs.Items[i]).FOuputPolyline=AComponent then
+        THMIOutputCollectionItem(FFlowOutputs.Items[i]).FOuputPolyline:=nil;
   end;
 end;
 
