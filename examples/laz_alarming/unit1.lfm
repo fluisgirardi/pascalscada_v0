@@ -1,0 +1,1017 @@
+object Form1: TForm1
+  Left = 0
+  Height = 657
+  Top = 0
+  Width = 1242
+  Caption = 'Form1'
+  ClientHeight = 657
+  ClientWidth = 1242
+  OnCreate = FormCreate
+  Visible = False
+  object Label1: TLabel
+    Left = 112
+    Height = 184
+    Top = 24
+    Width = 189
+    AutoSize = False
+    Caption = 'This PLCBlock has 2 words of size.'#10'Each bit represents one alarm message.'#10#10'The alarm register occurs on TPLCBlock.OnValueChange event.'#10#10'The bits is only used to trigger the alarm start/end'
+    ParentColor = False
+    WordWrap = True
+  end
+  object HMICheckBox1: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 208
+    Width = 128
+    Enabled = True
+    ParentColor = False
+    TabOrder = 0
+    PLCTag = PLCBlock1_e0_bit0
+    CaptionFalse = 'Alarm message 1'
+    CaptionTrue = 'Alarm message 1'
+    CaptionGrayed = 'Alarm message 1'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox2: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 228
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 1
+    PLCTag = PLCBlock1_e0_bit1
+    CaptionFalse = 'Alarm message 2'
+    CaptionTrue = 'Alarm message 2'
+    CaptionGrayed = 'Alarm message 2'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox3: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 248
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 2
+    PLCTag = PLCBlock1_e0_bit2
+    CaptionFalse = 'Alarm message 3'
+    CaptionTrue = 'Alarm message 3'
+    CaptionGrayed = 'Alarm message 3'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox4: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 267
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 3
+    PLCTag = PLCBlock1_e0_bit3
+    CaptionFalse = 'Alarm message 4'
+    CaptionTrue = 'Alarm message 4'
+    CaptionGrayed = 'Alarm message 4'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox5: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 287
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 4
+    PLCTag = PLCBlock1_e0_bit4
+    CaptionFalse = 'Alarm message 5'
+    CaptionTrue = 'Alarm message 5'
+    CaptionGrayed = 'Alarm message 5'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox6: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 307
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 5
+    PLCTag = PLCBlock1_e0_bit5
+    CaptionFalse = 'Alarm message 6'
+    CaptionTrue = 'Alarm message 6'
+    CaptionGrayed = 'Alarm message 6'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox7: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 326
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 6
+    PLCTag = PLCBlock1_e0_bit6
+    CaptionFalse = 'Alarm message 7'
+    CaptionTrue = 'Alarm message 7'
+    CaptionGrayed = 'Alarm message 7'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox8: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 346
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 7
+    PLCTag = PLCBlock1_e0_bit7
+    CaptionFalse = 'Alarm message 8'
+    CaptionTrue = 'Alarm message 8'
+    CaptionGrayed = 'Alarm message 8'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox9: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 366
+    Width = 129
+    Enabled = True
+    ParentColor = False
+    TabOrder = 8
+    PLCTag = PLCBlock1_e0_bit8
+    CaptionFalse = 'Alarm message 9'
+    CaptionTrue = 'Alarm message 9'
+    CaptionGrayed = 'Alarm message 9'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox10: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 385
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 9
+    PLCTag = PLCBlock1_e0_bit9
+    CaptionFalse = 'Alarm message 10'
+    CaptionTrue = 'Alarm message 10'
+    CaptionGrayed = 'Alarm message 10'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox11: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 405
+    Width = 134
+    Enabled = True
+    ParentColor = False
+    TabOrder = 10
+    PLCTag = PLCBlock1_e0_bit10
+    CaptionFalse = 'Alarm message 11'
+    CaptionTrue = 'Alarm message 11'
+    CaptionGrayed = 'Alarm message 11'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox12: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 425
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 11
+    PLCTag = PLCBlock1_e0_bit11
+    CaptionFalse = 'Alarm message 12'
+    CaptionTrue = 'Alarm message 12'
+    CaptionGrayed = 'Alarm message 12'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox13: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 444
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 12
+    PLCTag = PLCBlock1_e0_bit12
+    CaptionFalse = 'Alarm message 13'
+    CaptionTrue = 'Alarm message 13'
+    CaptionGrayed = 'Alarm message 13'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox14: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 464
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 13
+    PLCTag = PLCBlock1_e0_bit13
+    CaptionFalse = 'Alarm message 14'
+    CaptionTrue = 'Alarm message 14'
+    CaptionGrayed = 'Alarm message 14'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox15: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 484
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 14
+    PLCTag = PLCBlock1_e0_bit14
+    CaptionFalse = 'Alarm message 15'
+    CaptionTrue = 'Alarm message 15'
+    CaptionGrayed = 'Alarm message 15'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox16: THMICheckBox
+    Left = 112
+    Height = 22
+    Top = 504
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 15
+    PLCTag = PLCBlock1_e0_bit15
+    CaptionFalse = 'Alarm message 16'
+    CaptionTrue = 'Alarm message 16'
+    CaptionGrayed = 'Alarm message 16'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox17: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 208
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 16
+    PLCTag = PLCBlock1_e1_bit0
+    CaptionFalse = 'Alarm message 17'
+    CaptionTrue = 'Alarm message 17'
+    CaptionGrayed = 'Alarm message 17'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox18: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 228
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 17
+    PLCTag = PLCBlock1_e1_bit1
+    CaptionFalse = 'Alarm message 18'
+    CaptionTrue = 'Alarm message 18'
+    CaptionGrayed = 'Alarm message 18'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox19: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 248
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 18
+    PLCTag = PLCBlock1_e1_bit2
+    CaptionFalse = 'Alarm message 19'
+    CaptionTrue = 'Alarm message 19'
+    CaptionGrayed = 'Alarm message 19'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox20: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 267
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 19
+    PLCTag = PLCBlock1_e1_bit3
+    CaptionFalse = 'Alarm message 20'
+    CaptionTrue = 'Alarm message 20'
+    CaptionGrayed = 'Alarm message 20'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox21: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 287
+    Width = 134
+    Enabled = True
+    ParentColor = False
+    TabOrder = 20
+    PLCTag = PLCBlock1_e1_bit4
+    CaptionFalse = 'Alarm message 21'
+    CaptionTrue = 'Alarm message 21'
+    CaptionGrayed = 'Alarm message 21'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox22: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 307
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 21
+    PLCTag = PLCBlock1_e1_bit5
+    CaptionFalse = 'Alarm message 22'
+    CaptionTrue = 'Alarm message 22'
+    CaptionGrayed = 'Alarm message 22'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox23: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 326
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 22
+    PLCTag = PLCBlock1_e1_bit6
+    CaptionFalse = 'Alarm message 23'
+    CaptionTrue = 'Alarm message 23'
+    CaptionGrayed = 'Alarm message 23'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox24: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 346
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 23
+    PLCTag = PLCBlock1_e1_bit7
+    CaptionFalse = 'Alarm message 24'
+    CaptionTrue = 'Alarm message 24'
+    CaptionGrayed = 'Alarm message 24'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox25: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 366
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 24
+    PLCTag = PLCBlock1_e1_bit8
+    CaptionFalse = 'Alarm message 25'
+    CaptionTrue = 'Alarm message 25'
+    CaptionGrayed = 'Alarm message 25'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox26: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 385
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 25
+    PLCTag = PLCBlock1_e1_bit9
+    CaptionFalse = 'Alarm message 26'
+    CaptionTrue = 'Alarm message 26'
+    CaptionGrayed = 'Alarm message 26'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox27: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 405
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 26
+    PLCTag = PLCBlock1_e1_bit10
+    CaptionFalse = 'Alarm message 27'
+    CaptionTrue = 'Alarm message 27'
+    CaptionGrayed = 'Alarm message 27'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox28: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 425
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 27
+    PLCTag = PLCBlock1_e1_bit11
+    CaptionFalse = 'Alarm message 28'
+    CaptionTrue = 'Alarm message 28'
+    CaptionGrayed = 'Alarm message 28'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox29: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 444
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 28
+    PLCTag = PLCBlock1_e1_bit12
+    CaptionFalse = 'Alarm message 29'
+    CaptionTrue = 'Alarm message 29'
+    CaptionGrayed = 'Alarm message 29'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox30: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 464
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 29
+    PLCTag = PLCBlock1_e1_bit13
+    CaptionFalse = 'Alarm message 30'
+    CaptionTrue = 'Alarm message 30'
+    CaptionGrayed = 'Alarm message 30'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox31: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 484
+    Width = 134
+    Enabled = True
+    ParentColor = False
+    TabOrder = 30
+    PLCTag = PLCBlock1_e1_bit14
+    CaptionFalse = 'Alarm message 31'
+    CaptionTrue = 'Alarm message 31'
+    CaptionGrayed = 'Alarm message 31'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object HMICheckBox32: THMICheckBox
+    Left = 256
+    Height = 22
+    Top = 504
+    Width = 135
+    Enabled = True
+    ParentColor = False
+    TabOrder = 31
+    PLCTag = PLCBlock1_e1_bit15
+    CaptionFalse = 'Alarm message 32'
+    CaptionTrue = 'Alarm message 32'
+    CaptionGrayed = 'Alarm message 32'
+    ValueFalse = 0
+    ValueTrue = 1
+  end
+  object DBGrid1: TDBGrid
+    Left = 2
+    Height = 100
+    Top = 544
+    Width = 1240
+    Color = clWindow
+    Columns = <    
+      item
+        Title.Caption = 'ID'
+        Width = 40
+        FieldName = 'di_alarm'
+      end    
+      item
+        Title.Caption = 'Started'
+        Width = 130
+        FieldName = 'dt_started'
+      end    
+      item
+        Title.Caption = 'Finished'
+        Width = 130
+        FieldName = 'dt_finished'
+      end    
+      item
+        Title.Caption = 'Ack'
+        Width = 130
+        FieldName = 'dt_ack'
+      end    
+      item
+        Title.Caption = 'Message'
+        Width = 300
+        FieldName = 'st_message'
+      end    
+      item
+        Title.Caption = 'User name'
+        Width = 100
+        FieldName = 'st_user'
+      end    
+      item
+        Title.Caption = 'Tagname'
+        Width = 100
+        FieldName = 'st_tagname'
+      end    
+      item
+        Title.Caption = 'Tag value'
+        Width = 100
+        FieldName = 'nr_tagvalue'
+      end>
+    DataSource = DataSource1
+    Scrollbars = ssAutoVertical
+    TabOrder = 32
+  end
+  object HMILabel1: THMILabel
+    Left = 448
+    Height = 17
+    Top = 49
+    Width = 65
+    Enabled = True
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlock1_e0
+    FormatDateTimeOptions = []
+  end
+  object HMILabel2: THMILabel
+    Left = 448
+    Height = 17
+    Top = 77
+    Width = 65
+    Enabled = True
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCBlock1_e1
+    FormatDateTimeOptions = []
+  end
+  object ZConnection1: TZConnection
+    ControlsCodePage = cCP_UTF8
+    AutoEncodeStrings = False
+    Properties.Strings = (
+      'AutoEncodeStrings='
+    )
+    Connected = True
+    DesignConnection = True
+    Port = 0
+    Database = '/home/fabiolg/FFCRepo/ffcrepo/gerais/base_libs/pascalscada/examples/laz_alarming/alarms.db3'
+    Protocol = 'sqlite-3'
+    Left = 31
+    Top = 19
+  end
+  object InsertAlarmQuery: TZQuery
+    Connection = ZConnection1
+    Params = <>
+    Left = 31
+    Top = 56
+  end
+  object PLCBlock1: TPLCBlock
+    TagGUID = '{089898CE-3451-4B5A-B83A-EB4F11D8395D}'
+    AutoRead = False
+    AutoWrite = False
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusRTUDriver1
+    Size = 2
+    OnValueChangeLast = PLCBlock1ValueChangeLast
+    TagType = pttWord
+    Left = 72
+    Top = 19
+  end
+  object PLCBlock1_e0: TPLCBlockElement
+    TagGUID = '{1E0292C7-09FD-4A71-9F21-D657F6B98ACB}'
+    PLCBlock = PLCBlock1
+    Index = 0
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+    Left = 72
+    Top = 56
+  end
+  object PLCBlock1_e1: TPLCBlockElement
+    TagGUID = '{57EF4B1C-5743-470D-9AFB-E38720844A87}'
+    PLCBlock = PLCBlock1
+    Index = 1
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+    Left = 72
+    Top = 56
+  end
+  object PLCBlock1_e0_bit0: TTagBit
+    TagGUID = '{DCA1214C-127D-4C55-8C68-85B5B1B05966}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 0
+    EndBit = 0
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit1: TTagBit
+    TagGUID = '{CDF16FD6-F191-4521-AD90-FEA78170CBEC}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 1
+    EndBit = 1
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit2: TTagBit
+    TagGUID = '{AE6DFE4A-5E7D-43BC-8361-BEA8583C260E}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 2
+    EndBit = 2
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit3: TTagBit
+    TagGUID = '{F8F5E5A4-073E-4F8C-8574-140885755135}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 3
+    EndBit = 3
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit4: TTagBit
+    TagGUID = '{C6C54E48-F59F-4302-9B75-7FF1C6190824}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 4
+    EndBit = 4
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit5: TTagBit
+    TagGUID = '{67F81EA8-EF74-4F27-A14B-9885925170F0}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 5
+    EndBit = 5
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit6: TTagBit
+    TagGUID = '{CAF6124D-C059-41B6-9379-368E15E7B229}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 6
+    EndBit = 6
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit7: TTagBit
+    TagGUID = '{26B157E7-2EBB-45C0-9C80-7330E8F27F54}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 7
+    EndBit = 7
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit8: TTagBit
+    TagGUID = '{4412F9D9-4954-453C-9122-ED209550423B}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 8
+    EndBit = 8
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit9: TTagBit
+    TagGUID = '{F7296B85-0798-40C5-9293-448846AABDCC}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 9
+    EndBit = 9
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit10: TTagBit
+    TagGUID = '{DCC83606-1F14-439E-932F-FB8AE26DCB36}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 10
+    EndBit = 10
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit11: TTagBit
+    TagGUID = '{379741B0-B7A6-4A6B-A21E-5C8C9F68014E}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 11
+    EndBit = 11
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit12: TTagBit
+    TagGUID = '{86BC8C00-A96D-4B9C-A5E2-F0B9944678AC}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 12
+    EndBit = 12
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit13: TTagBit
+    TagGUID = '{7C4DA5B7-FCD5-4B64-829E-0D131A9D86F2}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 13
+    EndBit = 13
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit14: TTagBit
+    TagGUID = '{F7D5F483-7690-4CFF-A142-B823B7FEB8EC}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 14
+    EndBit = 14
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e0_bit15: TTagBit
+    TagGUID = '{4952EE69-4214-494F-96C4-F2F2717C6A69}'
+    PLCTag = PLCBlock1_e0
+    UseRawValue = False
+    StartBit = 15
+    EndBit = 15
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit0: TTagBit
+    TagGUID = '{A631CDAF-3C02-4B43-BE37-0FD6BE681CD5}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 0
+    EndBit = 0
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit1: TTagBit
+    TagGUID = '{8D783E2F-5331-4183-9BFC-8F4E4FA0B53E}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 1
+    EndBit = 1
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit2: TTagBit
+    TagGUID = '{92001D28-ADBE-4FD4-884B-138D362C1C2D}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 2
+    EndBit = 2
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit3: TTagBit
+    TagGUID = '{718E255F-19CB-4D82-B4AA-BE0A4F4FA782}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 3
+    EndBit = 3
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit4: TTagBit
+    TagGUID = '{3100EBE0-5B45-45A6-9AAA-ABBEA3C409FD}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 4
+    EndBit = 4
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit5: TTagBit
+    TagGUID = '{8C023487-8B19-4970-A2D0-3B5ABC3337A3}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 5
+    EndBit = 5
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit6: TTagBit
+    TagGUID = '{D92BEA5C-70A5-4E38-A309-467E35053993}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 6
+    EndBit = 6
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit7: TTagBit
+    TagGUID = '{EC383472-B414-4606-8B87-1E7771EADC91}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 7
+    EndBit = 7
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit8: TTagBit
+    TagGUID = '{065B739A-DC2A-4F5E-BF73-367248ABFDB8}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 8
+    EndBit = 8
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit9: TTagBit
+    TagGUID = '{AC7EAAFA-9C31-45C9-90C3-2814B0FB81EA}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 9
+    EndBit = 9
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit10: TTagBit
+    TagGUID = '{07067BBE-F284-415B-8A6B-2631D2431BA6}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 10
+    EndBit = 10
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit11: TTagBit
+    TagGUID = '{64BCA8FA-890C-4DF0-9DBA-CE1EBFA9C6F0}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 11
+    EndBit = 11
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit12: TTagBit
+    TagGUID = '{B6C003AD-F0F8-4E68-89E4-DAD757B5C756}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 12
+    EndBit = 12
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit13: TTagBit
+    TagGUID = '{44DC5718-6E3D-45AE-9FEB-E435B30FC883}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 13
+    EndBit = 13
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit14: TTagBit
+    TagGUID = '{3B833126-4A9B-42B2-81F0-C29A60424411}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 14
+    EndBit = 14
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object PLCBlock1_e1_bit15: TTagBit
+    TagGUID = '{57FDDCDD-C985-41AF-984F-A0E13C15D86E}'
+    PLCTag = PLCBlock1_e1
+    UseRawValue = False
+    StartBit = 15
+    EndBit = 15
+    EnableMaxValue = False
+    EnableMinValue = False
+    MaxValue = 0
+    MinValue = 0
+  end
+  object ActiveAlarms: TZQuery
+    Connection = ZConnection1
+    SQL.Strings = (
+      'SELECT * FROM tbl_alarm WHERE dt_finished IS NULL ORDER BY dt_started DESC;'
+    )
+    Params = <>
+    Left = 400
+    Top = 216
+  end
+  object DataSource1: TDataSource
+    DataSet = ActiveAlarms
+    Left = 400
+    Top = 248
+  end
+  object UpdateActiveAlarms: TTimer
+    OnTimer = UpdateActiveAlarmsTimer
+    Left = 400
+    Top = 288
+  end
+  object UpdateAlarms: TZQuery
+    Connection = ZConnection1
+    Params = <>
+    Left = 31
+    Top = 88
+  end
+  object ModBusRTUDriver1: TModBusRTUDriver
+    ReadOnly = False
+    Left = 24
+    Top = 144
+  end
+end
