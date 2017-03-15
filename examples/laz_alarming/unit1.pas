@@ -167,8 +167,10 @@ begin
       idx:=w*16+b;
       bitValue:=1 shl b;
 
-      if AlarmBitID[idx]<>0 then
+      if AlarmBitID[idx]<>0 then begin
         FinishAlarm(AlarmBitID[idx], Now);
+        AlarmBitID[idx]:=0;
+      end;
 
       if (WordValue and bitValue)=bitValue then
         AlarmBitID[idx]:=InsertAlarm(now, AlarmMessages[idx], GetControlSecurityManager.GetCurrentUserlogin, format('PLCBlock1[%d].bit%d',[w,b]), 1)
