@@ -13,6 +13,9 @@ type
   private
     FObject: TObject;
     FTagValue: Double;
+  public
+    constructor Create; overload;
+    constructor Create(anObject:TObject; aTagValue:Double);
   published
     property TagValue:Double read FTagValue write FTagValue;
     property ItemObject:TObject read FObject write FObject;
@@ -150,6 +153,18 @@ type
 implementation
 
 uses ControlSecurityManager, hsstrings, forms;
+
+constructor TComboboxItemInfo.Create;
+begin
+  inherited Create;
+end;
+
+constructor TComboboxItemInfo.Create(anObject: TObject; aTagValue: Double);
+begin
+  inherited Create;
+  FObject   := anObject;
+  FTagValue := aTagValue;
+end;
 
 { THMIComboBox }
 
