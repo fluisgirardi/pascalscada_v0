@@ -740,7 +740,7 @@ var
   i: Integer;
 begin
   inherited Notification(AComponent, Operation);
-  if Operation=opRemove then begin
+  if (Operation=opRemove) and (AComponent<>Self) then begin
     if AComponent=FInputFlowPolyline then
       FInputFlowPolyline:=nil;
     for i:=0 to FFlowOutputs.Count-1 do
