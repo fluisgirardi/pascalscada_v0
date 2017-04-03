@@ -4,6 +4,7 @@
     <PathDelim Value="\"/>
     <Name Value="pascalscada"/>
     <Type Value="RunAndDesignTime"/>
+    <Author Value="Fabio Luis Girardi &lt;fabio@pascalscada.com>"/>
     <CompilerOptions>
       <Version Value="11"/>
       <PathDelim Value="\"/>
@@ -39,12 +40,11 @@
         <CompilerMessages>
           <IgnoredMessages idx5057="True" idx5024="True"/>
         </CompilerMessages>
-        <ExecuteBefore>
-          <Command Value=".\updaterevision.sh"/>
-        </ExecuteBefore>
       </Other>
     </CompilerOptions>
-    <Version Minor="7" Release="3"/>
+    <Description Value="PascalSCADA main components"/>
+    <License Value="LGPL v2.1 with linking exception"/>
+    <Version Minor="7" Release="4"/>
     <Files Count="59">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
@@ -287,7 +287,8 @@
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="pascalscada_common"/>
-        <MinVersion Minor="7" Release="3" Valid="True"/>
+        <MaxVersion Minor="7" Release="3"/>
+        <MinVersion Minor="7" Release="4" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item1>
       <Item2>

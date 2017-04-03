@@ -3,6 +3,7 @@
   <Package Version="4">
     <Name Value="pascalscada_common"/>
     <Type Value="RunAndDesignTime"/>
+    <Author Value="Fabio Luis Girardi &lt;fabio@pascalscada.com>"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
@@ -15,13 +16,10 @@
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
-      <Other>
-        <ExecuteBefore>
-          <Command Value="./updaterevision.sh"/>
-        </ExecuteBefore>
-      </Other>
     </CompilerOptions>
-    <Version Minor="7" Release="3"/>
+    <Description Value="Common methods for all PascalSCADA packages"/>
+    <License Value="LGPL v2.1 with linking exception"/>
+    <Version Minor="7" Release="4"/>
     <Files Count="9">
       <Item1>
         <Filename Value="src/common/crossdatetime.pas"/>
