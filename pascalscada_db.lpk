@@ -51,13 +51,11 @@ Built on top of ZeosLib"/>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="4"/>
         <MinVersion Minor="7" Release="4" Valid="True"/>
-        <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item1>
       <Item2>
         <PackageName Value="zcomponent"/>
         <MaxVersion Major="7"/>
-        <MinVersion Major="7" Minor="2" Valid="True"/>
-        <DefaultFilename Value="zeoslib\packages\lazarus\zcomponent.lpk" Prefer="True"/>
+        <MinVersion Major="7" Minor="1" Valid="True"/>
       </Item2>
       <Item3>
         <PackageName Value="FCL"/>

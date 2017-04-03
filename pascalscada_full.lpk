@@ -23,21 +23,18 @@
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="pascalscada"/>
-        <MaxVersion Minor="7" Release="3"/>
+        <MaxVersion Minor="7" Release="4"/>
         <MinVersion Minor="7" Release="4" Valid="True"/>
-        <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada_hmi"/>
-        <MaxVersion Minor="7" Release="3"/>
+        <MaxVersion Minor="7" Release="4"/>
         <MinVersion Minor="7" Release="4" Valid="True"/>
-        <DefaultFilename Value="pascalscada_hmi.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="pascalscada_db"/>
-        <MaxVersion Minor="7" Release="3"/>
+        <MaxVersion Minor="7" Release="4"/>
         <MinVersion Minor="7" Release="4" Valid="True"/>
-        <DefaultFilename Value="pascalscada_db.lpk" Prefer="True"/>
       </Item3>
     </RequiredPkgs>
     <UsageOptions>

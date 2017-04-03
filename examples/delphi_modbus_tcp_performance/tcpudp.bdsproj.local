@@ -1,8 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject>
-	<Transactions>
-    <Transaction>2010/01/09 12:06:05.256.pas,C:\Documents and Settings\Fabio\My Documents\Borland Studio Projects\Unit2.pas=C:\pascalscada\examples\tcp_udp_delphi\Unit2.pas</Transaction>
-    <Transaction>2010/01/09 12:06:05.256.dfm,C:\Documents and Settings\Fabio\My Documents\Borland Studio Projects\Unit2.dfm=C:\pascalscada\examples\tcp_udp_delphi\Unit2.dfm</Transaction>
-    <Transaction>2010/01/09 12:06:10.801.bdsproj,C:\Documents and Settings\Fabio\My Documents\Borland Studio Projects\Project2.bdsproj=C:\pascalscada\examples\tcp_udp_delphi\tcpudp.bdsproj</Transaction>
-  </Transactions>
-</BorlandProject>
