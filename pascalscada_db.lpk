@@ -55,8 +55,8 @@ Built on top of ZeosLib"/>
       </Item1>
       <Item2>
         <PackageName Value="zcomponent"/>
-        <MaxVersion Major="7"/>
-        <MinVersion Major="7" Minor="2" Valid="True"/>
+        <MaxVersion Major="7" Minor="1"/>
+        <MinVersion Major="7" Minor="1" Valid="True"/>
         <DefaultFilename Value="zeoslib\packages\lazarus\zcomponent.lpk" Prefer="True"/>
       </Item2>
       <Item3>
