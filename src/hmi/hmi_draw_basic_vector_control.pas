@@ -144,6 +144,7 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
     procedure ShowZone(aZone:THMIVectorFlowZone);
+    procedure StatesChanged(Sender: TObject);
     procedure UpdateDrawAndFlow;
     procedure SetHMITag(t: TPLCTag); override;
     procedure Loaded; override;
@@ -823,18 +824,29 @@ begin
   end;
 
   FlowOutput:=-1;
-  if Assigned(outputChangeObj) then FlowOutput:=outputChangeObj.OutputIndex;
+  if Assigned(outputChangeObj) then FlowOutput:=outputChangeObj.OutputIndex-1;
 
   for o:=0 to FFlowOutputs.Count-1 do
     with FFlowOutputs.Items[o] as THMIOutputCollectionItem do begin
-      if (o=FlowOutput) and Assigned(OutputPolyline) and Assigned(FInputFlowPolyline) then
-        OutputPolyline.LineColor:=FInputFlowPolyline.LineColor
-      else
+      if (o=FlowOutput) then begin
+        if Assigned(OutputPolyline) and Assigned(FInputFlowPolyline) then begin
+          if FInputFlowPolyline.LineColor=FInputFlowPolyline.EmptyColor then
+            OutputPolyline.LineColor:=OutputPolyline.EmptyColor
+          else
+            OutputPolyline.LineColor:=FInputFlowPolyline.LineColor
+        end;
+      end else begin
         if Assigned(OutputPolyline) then
           OutputPolyline.LineColor:=OutputPolyline.EmptyColor;
+      end;
     end;
 
   InvalidateDraw;
+end;
+
+procedure THMICustomFlowVectorControl.StatesChanged(Sender: TObject);
+begin
+  UpdateDrawAndFlow;
 end;
 
 procedure THMICustomFlowVectorControl.UpdateDrawAndFlow;
@@ -873,6 +885,7 @@ procedure THMICustomFlowVectorControl.Loaded;
 begin
   inherited Loaded;
   FStates.Loaded;
+  FFlowOutputs.Loaded;
   CheckAutoSize;
 end;
 
@@ -880,8 +893,10 @@ constructor THMICustomFlowVectorControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FFlowOutputs:=THMIOutputCollection.Create(Self);
+  FFlowOutputs.OnNeedCompState:=@GetCurrentComponentState;
   FStates:=THMIVectorFlowZones.Create(Self);
   FStates.OnNeedCompState:=@GetCurrentComponentState;
+  FStates.OnCollectionItemChange:=@StatesChanged;
 end;
 
 destructor THMICustomFlowVectorControl.Destroy;
