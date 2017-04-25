@@ -140,6 +140,7 @@ type
     procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
     procedure NotifyChange(const WhoChanged:THMIFlowPolyline);
   protected
+    procedure GetCurrentComponentState(var CurState: TComponentState);
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
     procedure ShowZone(aZone:THMIVectorFlowZone);
@@ -241,6 +242,7 @@ type
     property Proportional;
     property Stretch;
     property SVGContents;
+    property OnClick;
   end;
 
 implementation
@@ -668,7 +670,6 @@ end;
 
 procedure THMICustomFlowVectorControl.SetStates(AValue: THMIVectorFlowZones);
 begin
-  if AValue=nil then Exit;
   FStates.Assign(AValue);
 end;
 
@@ -732,6 +733,12 @@ procedure THMICustomFlowVectorControl.NotifyChange(
   const WhoChanged: THMIFlowPolyline);
 begin
   UpdateDrawAndFlow;
+end;
+
+procedure THMICustomFlowVectorControl.GetCurrentComponentState(
+  var CurState: TComponentState);
+begin
+  CurState:=ComponentState;
 end;
 
 procedure THMICustomFlowVectorControl.Notification(AComponent: TComponent;
@@ -874,6 +881,7 @@ begin
   inherited Create(AOwner);
   FFlowOutputs:=THMIOutputCollection.Create(Self);
   FStates:=THMIVectorFlowZones.Create(Self);
+  FStates.OnNeedCompState:=@GetCurrentComponentState;
 end;
 
 destructor THMICustomFlowVectorControl.Destroy;
