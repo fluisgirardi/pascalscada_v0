@@ -1,14 +1,13 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <General>
       <MainUnit Value="0"/>
       <Title Value="Monitoramento e controle de horimetros"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
       <Icon Value="0"/>
-      <ActiveWindowIndexAtStart Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
@@ -27,7 +26,6 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
     <RequiredPackages Count="9">
@@ -70,10 +68,7 @@
       <Unit0>
         <Filename Value="horimetros.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="horimetros"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="15"/>
+        <CursorPos Y="15"/>
         <UsageCount Value="61"/>
       </Unit0>
       <Unit1>
@@ -82,9 +77,7 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="umain"/>
-        <EditorIndex Value="0"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="1"/>
         <TopLine Value="114"/>
         <CursorPos X="60" Y="114"/>
         <UsageCount Value="61"/>
@@ -97,8 +90,6 @@
         <ComponentName Value="dmtags"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <UnitName Value="udm"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="151"/>
         <CursorPos X="139" Y="168"/>
         <UsageCount Value="61"/>
@@ -109,15 +100,12 @@
         <ComponentName Value="dmdb"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <UnitName Value="udmdb"/>
         <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="86"/>
+        <TopLine Value="169"/>
         <CursorPos X="16" Y="92"/>
         <UsageCount Value="61"/>
         <Bookmarks Count="1">
-          <Item0 X="3" Y="181" ID="0"/>
+          <Item0 X="3" Y="181"/>
         </Bookmarks>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -125,22 +113,18 @@
       <Unit4>
         <Filename Value="../pascalscada/plcnumber.pas"/>
         <UnitName Value="PLCNumber"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="68"/>
         <CursorPos X="14" Y="87"/>
         <UsageCount Value="9"/>
       </Unit4>
       <Unit5>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/db.pas"/>
-        <UnitName Value="db"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="30"/>
         <CursorPos X="41" Y="50"/>
         <UsageCount Value="11"/>
       </Unit5>
       <Unit6>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/dataset.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="2061"/>
         <CursorPos X="3" Y="2064"/>
         <UsageCount Value="9"/>
@@ -151,18 +135,15 @@
         <ComponentName Value="frmPopup"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="upopuphorimetro"/>
-        <EditorIndex Value="1"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="25"/>
         <CursorPos X="17" Y="37"/>
         <UsageCount Value="59"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit7>
       <Unit8>
         <Filename Value="../pascalscada/ucrosstimer.pas"/>
-        <UnitName Value="ucrosstimer"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="13"/>
         <CursorPos X="21" Y="25"/>
         <UsageCount Value="9"/>
@@ -170,7 +151,6 @@
       <Unit9>
         <Filename Value="../../lazarus/lcl/extctrls.pp"/>
         <UnitName Value="ExtCtrls"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="360"/>
         <CursorPos X="25" Y="372"/>
         <UsageCount Value="9"/>
@@ -178,7 +158,6 @@
       <Unit10>
         <Filename Value="../../lazarus/lcl/customtimer.pas"/>
         <UnitName Value="CustomTimer"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="31"/>
         <CursorPos X="15" Y="43"/>
         <UsageCount Value="9"/>
@@ -186,7 +165,6 @@
       <Unit11>
         <Filename Value="../../lazarus/lcl/dbgrids.pas"/>
         <UnitName Value="DBGrids"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="406"/>
         <CursorPos X="32" Y="256"/>
         <UsageCount Value="13"/>
@@ -194,14 +172,12 @@
       <Unit12>
         <Filename Value="../../lazarus/lcl/grids.pas"/>
         <UnitName Value="Grids"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="519"/>
         <CursorPos X="33" Y="543"/>
         <UsageCount Value="13"/>
       </Unit12>
       <Unit13>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/rtl/inc/mouseh.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="65"/>
         <CursorPos X="11" Y="62"/>
         <UsageCount Value="11"/>
@@ -210,8 +186,6 @@
         <Filename Value="ulogin.pas"/>
         <ComponentName Value="frmLogin"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="ulogin"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="13"/>
         <CursorPos X="23" Y="47"/>
         <UsageCount Value="40"/>
@@ -222,8 +196,6 @@
         <ComponentName Value="frmGraficos"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="ugraficos"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="46"/>
         <CursorPos X="50" Y="62"/>
         <UsageCount Value="41"/>
@@ -234,8 +206,6 @@
         <ComponentName Value="frmFiltro"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="ufiltro"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="8"/>
         <CursorPos X="24" Y="15"/>
         <UsageCount Value="32"/>
@@ -245,18 +215,14 @@
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmRelatorios"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="urelatorios"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="18"/>
         <CursorPos X="36" Y="23"/>
         <UsageCount Value="31"/>
       </Unit17>
       <Unit18>
         <Filename Value="../pascalscada/ZeosLib/src/component/ZAbstractRODataset.pas"/>
-        <UnitName Value="ZAbstractRODataset"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="1415"/>
-        <CursorPos X="1" Y="1434"/>
+        <CursorPos Y="1434"/>
         <UsageCount Value="11"/>
       </Unit18>
       <Unit19>
@@ -264,16 +230,11 @@
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmUsuarios"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="ugerenciamentousuarios"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="1"/>
         <UsageCount Value="29"/>
       </Unit19>
       <Unit20>
         <Filename Value="../../controlsecuritymanager.pas"/>
         <UnitName Value="ControlSecurityManager"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="149"/>
         <CursorPos X="3" Y="151"/>
         <UsageCount Value="11"/>
@@ -282,23 +243,18 @@
       <Unit21>
         <Filename Value="../../customizedusermanagement.pas"/>
         <UnitName Value="CustomizedUserManagement"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
         <CursorPos X="78" Y="13"/>
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit21>
       <Unit22>
         <Filename Value="../../../../lazarus/lcl/include/containedaction.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="41"/>
-        <CursorPos X="1" Y="53"/>
+        <CursorPos Y="53"/>
         <UsageCount Value="10"/>
       </Unit22>
       <Unit23>
         <Filename Value="../../zeoslib/src/dbc/ZDbcSqLiteUtils.pas"/>
-        <UnitName Value="ZDbcSqLiteUtils"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="248"/>
         <CursorPos X="13" Y="258"/>
         <UsageCount Value="10"/>
@@ -306,11 +262,9 @@
       </Unit23>
       <Unit24>
         <Filename Value="../../zeoslib/src/component/ZAbstractRODataset.pas"/>
-        <UnitName Value="ZAbstractRODataset"/>
         <EditorIndex Value="3"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="1839"/>
-        <CursorPos X="1" Y="1855"/>
+        <CursorPos Y="1855"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -335,15 +289,15 @@
       </Position4>
       <Position5>
         <Filename Value="umain.pas"/>
-        <Caret Line="311" Column="1" TopLine="302"/>
+        <Caret Line="311" TopLine="302"/>
       </Position5>
       <Position6>
         <Filename Value="umain.pas"/>
-        <Caret Line="281" Column="1" TopLine="259"/>
+        <Caret Line="281" TopLine="259"/>
       </Position6>
       <Position7>
         <Filename Value="umain.pas"/>
-        <Caret Line="326" Column="1" TopLine="268"/>
+        <Caret Line="326" TopLine="268"/>
       </Position7>
       <Position8>
         <Filename Value="umain.pas"/>
@@ -355,7 +309,7 @@
       </Position9>
       <Position10>
         <Filename Value="umain.pas"/>
-        <Caret Line="1" Column="48" TopLine="1"/>
+        <Caret Column="48"/>
       </Position10>
       <Position11>
         <Filename Value="umain.pas"/>
@@ -367,7 +321,6 @@
       </Position12>
       <Position13>
         <Filename Value="umain.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
       </Position13>
       <Position14>
         <Filename Value="upopuphorimetro.pas"/>
@@ -375,11 +328,11 @@
       </Position14>
       <Position15>
         <Filename Value="udmdb.pas"/>
-        <Caret Line="87" Column="1" TopLine="76"/>
+        <Caret Line="87" TopLine="76"/>
       </Position15>
       <Position16>
         <Filename Value="../../zeoslib/src/component/ZAbstractRODataset.pas"/>
-        <Caret Line="1855" Column="1" TopLine="1839"/>
+        <Caret Line="1855" TopLine="1839"/>
       </Position16>
     </JumpHistory>
   </ProjectOptions>
@@ -399,12 +352,6 @@
         </Win32>
       </Options>
     </Linking>
-    <Other>
-      <CompilerMessages>
-        <UseMsgFile Value="True"/>
-      </CompilerMessages>
-      <CompilerPath Value="$(CompPath)"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="4">
@@ -422,5 +369,4 @@
       </Item4>
     </Exceptions>
   </Debugging>
-  <EditorMacros Count="0"/>
 </CONFIG>

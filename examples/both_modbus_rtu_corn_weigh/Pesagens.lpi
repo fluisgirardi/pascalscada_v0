@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <General>
       <MainUnit Value="0"/>
       <UseXPManifest Value="True"/>
       <Icon Value="0"/>
-      <ActiveWindowIndexAtStart Value="0"/>
     </General>
     <VersionInfo>
       <Language Value=""/>
@@ -49,7 +48,6 @@
       <Unit0>
         <Filename Value="Pesagens.lpr"/>
         <IsPartOfProject Value="True"/>
-        <TopLine Value="1"/>
         <CursorPos X="13" Y="7"/>
         <UsageCount Value="25"/>
       </Unit0>
@@ -59,9 +57,6 @@
         <ComponentName Value="DM"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <UnitName Value="uDM"/>
-        <EditorIndex Value="2"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="146"/>
         <CursorPos X="16" Y="166"/>
         <UsageCount Value="25"/>
@@ -74,11 +69,9 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="uMain"/>
         <IsVisibleTab Value="True"/>
-        <EditorIndex Value="0"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="56"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="48"/>
         <CursorPos X="34" Y="79"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
@@ -90,10 +83,7 @@
         <ComponentName Value="Imagens"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <UnitName Value="uDMImg"/>
         <EditorIndex Value="1"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
         <CursorPos X="17" Y="7"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
@@ -117,34 +107,27 @@
       </Unit5>
       <Unit6>
         <Filename Value="../ZeosLib/src/plain/ZPlainMySqlConstants.pas"/>
-        <UnitName Value="ZPlainMySqlConstants"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="1"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
       </Unit6>
       <Unit7>
         <Filename Value="../ZeosLib/src/dbc/ZDbcMySqlResultSet.pas"/>
-        <UnitName Value="ZDbcMySqlResultSet"/>
         <TopLine Value="401"/>
         <CursorPos X="28" Y="412"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
       </Unit7>
       <Unit8>
-        <Filename Value="//VBOXSVR/lazarus/components/codetools/eventcodetool.pas"/>
+        <Filename Value="/VBOXSVR/lazarus/components/codetools/eventcodetool.pas"/>
         <UnitName Value="EventCodeTool"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="114"/>
         <CursorPos X="44" Y="122"/>
         <UsageCount Value="10"/>
       </Unit8>
       <Unit9>
         <Filename Value="../../../ZeosLib/src/dbc/ZDbcMySqlUtils.pas"/>
-        <UnitName Value="ZDbcMySqlUtils"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="439"/>
-        <CursorPos X="1" Y="453"/>
+        <CursorPos Y="453"/>
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
@@ -168,7 +151,7 @@
       </Position4>
       <Position5>
         <Filename Value="uMain.pas"/>
-        <Caret Line="12" Column="30" TopLine="1"/>
+        <Caret Line="12" Column="30"/>
       </Position5>
       <Position6>
         <Filename Value="uMain.pas"/>
@@ -192,7 +175,7 @@
       </Position10>
       <Position11>
         <Filename Value="uMain.pas"/>
-        <Caret Line="13" Column="39" TopLine="1"/>
+        <Caret Line="13" Column="39"/>
       </Position11>
     </JumpHistory>
   </ProjectOptions>
@@ -203,9 +186,6 @@
         <UseAnsiStrings Value="False"/>
       </SyntaxOptions>
     </Parsing>
-    <Other>
-      <CompilerPath Value="$(CompPath)"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">
@@ -220,5 +200,4 @@
       </Item3>
     </Exceptions>
   </Debugging>
-  <EditorMacros Count="0"/>
 </CONFIG>

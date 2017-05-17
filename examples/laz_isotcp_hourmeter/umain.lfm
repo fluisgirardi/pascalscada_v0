@@ -3,12 +3,14 @@ object frmMain: TfrmMain
   Height = 621
   Top = 97
   Width = 1289
+  ActiveControl = DBGrid1
   Caption = 'Hourmeter control'
   ClientHeight = 621
   ClientWidth = 1289
   OnCreate = FormCreate
   OnShow = FormShow
-  LCLVersion = '1.1'
+  LCLVersion = '1.6.5.0'
+  Visible = False
   object DBGrid1: TDBGrid
     Left = 0
     Height = 80
@@ -2411,19 +2413,16 @@ object frmMain: TfrmMain
     Height = 64
     Top = 471
     Width = 64
-    Enabled = True
-    OnClick = anFornoClick
-    Transparent = True
     Zones = <    
       item
         Value1 = 1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 80
-        BlinkWith = 1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 80
+        BlinkWith = 1
         ImageList = ImageList1
         ImageIndex = 0
       end    
@@ -2432,10 +2431,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 80
-        BlinkWith = 2
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 80
+        BlinkWith = 2
         ImageList = ImageList1
         ImageIndex = 1
       end    
@@ -2444,10 +2443,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 80
-        BlinkWith = 0
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 80
+        BlinkWith = 0
         ImageList = ImageList1
         ImageIndex = 2
       end    
@@ -2456,34 +2455,34 @@ object frmMain: TfrmMain
         Value2 = 2
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = ImageList1
         ImageIndex = 3
       end>
     PLCTag = dmtags.MB2_0
+    Enabled = True
     SecurityCode = '5'
+    OnClick = anFornoClick
+    Transparent = True
   end
   object anRotativa: THMIAnimation
     Left = 605
     Height = 39
     Top = 524
     Width = 47
-    Enabled = True
-    OnClick = anRotativaClick
-    Transparent = True
     Zones = <    
       item
         Value1 = 1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = motorh
         ImageIndex = 0
       end    
@@ -2492,34 +2491,34 @@ object frmMain: TfrmMain
         Value2 = 2
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = motorh
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB1_1
+    Enabled = True
     SecurityCode = '5'
+    OnClick = anRotativaClick
+    Transparent = True
   end
   object anAtomizador: THMIAnimation
     Left = 664
     Height = 47
     Top = 93
     Width = 39
-    Enabled = True
-    OnClick = anAtomizadorClick
-    Transparent = True
     Zones = <    
       item
         Value1 = 1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = motorv
         ImageIndex = 0
       end    
@@ -2528,268 +2527,34 @@ object frmMain: TfrmMain
         Value2 = 2
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = motorv
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB0_7
+    Enabled = True
     SecurityCode = '5'
+    OnClick = anAtomizadorClick
+    Transparent = True
   end
   object anZaranda: THMIAnimation
     Left = 604
     Height = 39
     Top = 566
     Width = 47
-    Enabled = True
-    OnClick = anZarandaClick
-    Picture.Data = {
-      07544269746D6170DA1C0000424DDA1C00000000000036000000280000002F00
-      0000270000000100200000000000A41C00006400000064000000000000000000
-      0000DBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFBCCCC7FF8B93
-      90FF7F8483FF6C6F6DFF838786FF838786FF838685FF7A7D7BFFAEBCB8FFAFBD
-      B9FF8D9693FF868B89FF848886FF7D807EFF7B7F7EFF7B7F7EFF7B7F7EFF7B7F
-      7EFF7B7F7EFF7B7F7EFF7B7F7EFF7B7F7EFF7B7F7EFF7B7F7EFF7B7F7EFF7B7F
-      7EFF7B7F7EFF7B7F7EFF818584FF848A88FF8A9390FFA2AFABFFD5E7E2FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FF899491FFDBEE
-      E8FFDBEEE8FFDBEEE8FFBBCAC5FF8A928FFF858887FF9A9A9AFFC0BFBFFFA9A8
-      A8FF050505FFC1C0C0FFC1C0C0FFC1C0C0FFAFAEAEFF646666FFA4A4A4FFC1C0
-      C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0
-      C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0
-      C0FFC1C0C0FFC1C0C0FFC1C0C0FFC1C0C0FFB0AFAFFF868887FF838886FF868E
-      8CFFADBCB7FFD9ECE6FFDBEEE8FFDBEEE8FFDBEEE8FF899491FFDBEEE8FFDBEE
-      E8FFCBDCD7FF858786FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFACABACFF0505
-      05FFC5C3C4FFC5C3C4FFC5C3C4FFB3B1B2FF949293FFC5C3C4FFC5C3C4FFC5C3
-      C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3
-      C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3
-      C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FFC5C3C4FF3D3C3CFF000000FFA1A0
-      A0FF848685FF868B8AFF8D9593FFC3D4CFFF899491FFDBEEE8FFDBEEE8FF7C81
-      80FFC8C6C8FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFB0AEB0FF050505FFC9C7
-      C9FFC9C7C9FFC9C7C9FFB6B4B6FF979597FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7
-      C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7
-      C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7
-      C9FFC9C7C9FFC9C7C9FFC9C7C9FFC9C7C9FF3E3D3EFF000000FFC3C1C3FFC9C7
-      C9FFC9C7C9FFC7C5C7FF8D908FFF767E7CFFDBEEE8FF919B98FFB9B6B9FFCECA
-      CDFFCECACDFFCECACDFFCECACDFFCECACDFFB4B1B4FF060506FFCECACDFFCECA
-      CDFFCECACDFFBBB7BAFF9A9799FFC2BEC1FF6B696BFF313031FF1F1F1FFF1010
-      10FF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C
-      0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0E0E0EFF222222FF3B3A
-      3BFF535253FF6B696BFF838183FF313031FF000000FFC4C0C3FFCECACDFFCECA
-      CDFFCECACDFFCECACDFF6D6F6FFFBAC9C4FF989899FFD2CED1FFD2CED1FFD2CE
-      D1FFD2CED1FFD2CED1FFD2CED1FFB8B4B7FF060606FFD2CED1FFD2CED1FFD2CE
-      D1FFBEBBBDFF9D9A9CFFC0BCBFFF5C5A5BFFA09D9FFFB8B4B7FFC8C4C7FFCCC8
-      CBFFCDC9CCFFCDC9CCFFCECACDFFCECACDFFCFCBCEFFCFCBCEFFD0CCCFFFD0CC
-      CFFFD0CCCFFFD1CDD0FFD1CDD0FFD2CED1FFD0CCCFFFBAB7B9FFA19EA0FF8784
-      86FF6D6B6DFF545354FF121212FF000000FF0B0A0BFF151515FF2E2D2DFF4746
-      47FF605E5FFF686869FF7F8382FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2
-      D5FFD6D2D5FFD6D2D5FFBCB8BBFF060606FFD6D2D5FFD6D2D5FFD6D2D5FFC2BE
-      C1FFA09D9FFFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2
-      D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2
-      D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2D5FFD6D2
-      D5FFD6D2D5FF424142FF000000FFCFCCCEFFC5C2C5FFABA8AAFF928F91FFA3A0
-      A3FF7F7F7FFF8F9192FFDAD5DAFFDAD5DAFFDAD5DAFFDAD5DAFFDAD5DAFFDAD5
-      DAFFDAD5DAFFBFBBBFFF060606FFDAD5DAFFDAD5DAFFDAD5DAFFC6C1C6FFA39F
-      A3FFDAD5DAFFDAD5DAFFDAD5DAFFDAD5DAFF6A676AFF2F2E2FFF2F2E2FFF2F2E
-      2FFF2F2E2FFF2F2E2FFF2F2E2FFF2F2E2FFF2F2E2FFF2F2E2FFF2F2E2FFF2F2E
-      2FFF2F2E2FFF2F2E2FFF302F30FF3F3E3FFF585658FF716F71FF8A878AFFA29E
-      A2FF3A393AFF000000FFD3CED3FFDAD5DAFFDAD5DAFFDAD5DAFFDAD5DAFF8180
-      82FF909393FFDED9DEFFDED9DEFFDED9DEFFDED9DEFFDED9DEFFDED9DEFFDED9
-      DEFFC3BEC3FF060606FFDED9DEFFDED9DEFFDED9DEFFC9C5C9FFA6A2A6FFDED9
-      DEFFDED9DEFFDED9DEFFDED9DEFFCCC7CCFFC3BEC3FFC3BEC3FFC3BEC3FFC3BE
-      C3FFC3BEC3FFC3BEC3FFC3BEC3FFC3BEC3FFC3BEC3FFC3BEC3FFC3BEC3FFC3BE
-      C3FFC3BEC3FFC3BEC3FFB1ADB1FF979497FF7E7B7EFF636163FF494749FF0E0E
-      0EFF000000FFD1CCD1FFDED9DEFFDED9DEFFDED9DEFFDED9DEFF838284FF9293
-      95FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFC5C1
-      C5FF060606FFE1DDE2FFE1DDE2FFE1DDE2FFCCC7CCFFA9A6A9FFE1DDE2FFE1DD
-      E2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DD
-      E2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DD
-      E2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FFE1DDE2FF464446FF0000
-      00FFB8B4B8FFBEBABEFFBEBABEFFBEBABEFFCAC7CBFF848485FF949597FFE6E0
-      E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFCAC3C9FF0606
-      06FFE6E0E6FFE6E0E6FFE6E0E6FFD1CAD0FFADA8ACFFE6E0E6FFE6E0E6FFE6E0
-      E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0
-      E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0
-      E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FFE6E0E6FF474547FF000000FF0000
-      00FF000000FF000000FF000000FF4E4C4EFF878687FF969699FFEAE3EBFFEAE3
-      EBFFEAE3EBFFEAE3EBFFEAE3EBFFEAE3EBFFEAE3EBFFCDC6CDFF060606FFEAE3
-      EBFFEAE3EBFFEAE3EBFFD3CCD3FF797579FF9A959AFF9A959AFF9A959AFF9A95
-      9AFF9A959AFF9A959AFF9A959AFF9A959AFF9A959AFF9A959AFF9A959AFF9A95
-      9AFF9A959AFF9A959AFF9A959AFF9A959AFF9A959AFF9A959AFF9A959AFF9A95
-      9AFF9A959AFF9A959AFF9A959AFF9A959AFF302E30FF000000FF5C595CFF5F5C
-      5FFF5F5C5FFF5F5C5FFF8F8A8FFF89878AFF99999CFFEEE7EFFFEEE7EFFFEEE7
-      EFFFEEE7EFFFEEE7EFFFEEE7EFFFEEE7EFFFD0CAD1FF060606FFEEE7EFFFEEE7
-      EFFFEEE7EFFFD7D0D7FFB2ADB3FFEEE7EFFFEEE7EFFFEEE7EFFFEEE7EFFFDFD9
-      E0FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2
-      D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2D9FFD8D2
-      D9FFE0DAE1FFEEE7EFFFEEE7EFFF4A484AFF000000FFE7E0E8FFEEE7EFFFEEE7
-      EFFFEEE7EFFFEEE7EFFF8B8A8CFF9B9B9EFFF2EAF3FFF2EAF3FFF2EAF3FFF2EA
-      F3FFF2EAF3FFF2EAF3FFF2EAF3FFD3CCD4FF070607FFF2EAF3FFF2EAF3FFF2EA
-      F3FFDBD2DBFFB5B0B6FFF2EAF3FFF2EAF3FFF2EAF3FFF2EAF3FF4C494CFF0000
-      00FF000000FF000000FF000000FF000000FF000000FF000000FF000000FF0000
-      00FF000000FF000000FF000000FF000000FF000000FF000000FF000000FF5350
-      53FFF2EAF3FFF2EAF3FF4C494CFF000000FFEBE3ECFFF2EAF3FFF2EAF3FFF2EA
-      F3FFF2EAF3FF8D8B8EFF9C9C9FFFF6EEF6FFF6EEF6FFF6EEF6FFF6EEF6FFF6EE
-      F6FFF6EEF6FFF6EEF6FFD7D0D8FF070607FFF6EEF6FFE6DFE6FFF6EEF6FFDDD5
-      DDFFB8B3B9FFF6EEF6FFF6EEF6FFF6EEF6FFF6EEF6FFE7DFE7FFDED7DFFFDED7
-      DFFFDED7DFFFDED7DFFFDED7DFFFDED7DFFFDED7DFFFDED7DFFFDED7DFFFDED7
-      DFFFDED7DFFFDED7DFFFDED7DFFFDED7DFFFDED7DFFFDED7DFFFE8E0E8FFF6EE
-      F6FFF6EEF6FF4D4A4DFF000000FFEEE7EEFFF6EEF6FFF6EEF6FFF6EEF6FFF6EE
-      F6FF8F8D91FF9F9DA2FFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1
-      FBFFFBF1FBFFDBD3DCFF070607FF5D595DFF060606FFB4ADB5FFE2D8E2FFBCB5
-      BDFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1
-      FBFFFBF1FBFFADA6AEFFA49EA5FFA49EA5FFA49EA5FF9B969CFFBEB7BFFFFBF1
-      FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1FBFFFBF1
-      FBFF4E4B4EFF000000FFA6A0A7FFACA5ADFFACA5ADFFACA5ADFFBEB7BFFF918E
-      93FF9F9EA2FFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3
-      FDFFDDD4DEFF070707FF161516FF000000FF767176FFE4DAE4FFBEB6BFFFFDF3
-      FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3
-      FDFFA59FA6FFFDF3FDFFC7BFC8FFD5CDD6FFEDE4EDFFB5AEB6FFFDF3FDFFFDF3
-      FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFFFDF3FDFF4F4B
-      4FFF000000FF000000FF000000FF000000FF000000FF363436FF928F94FF9D9D
-      A0FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFD9D2
-      DAFF070607FF898389FF2B292BFFCCC5CDFFE0D7E0FFBBB4BCFFF9F0F9FFF9F0
-      F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFA39D
-      A4FFB2ACB3FFB2ACB3FFB2ACB3FFA8A2A9FFB4AEB5FFF9F0F9FFF9F0F9FFF9F0
-      F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FFF9F0F9FF4E4A4EFF0000
-      00FF878287FF8C868CFF8C868CFF8C868CFFA49EA5FF918D93FF9C9B9FFFF5EC
-      F6FFF5ECF6FFF5ECF6FFF5ECF6FFF5ECF6FFF5ECF6FFF5ECF6FFD6CED7FF0706
-      07FFF5ECF6FFF5ECF6FFF5ECF6FFDDD4DDFFB8B1B9FFF5ECF6FFF5ECF6FFF5EC
-      F6FFF5ECF6FFF0E7F1FFEDE5EEFFEDE5EEFFEDE5EEFFEDE5EEFFEBE2ECFFDFD7
-      E0FFDFD7E0FFDFD7E0FFDFD7E0FFECE3EDFFEDE5EEFFEDE5EEFFEDE5EEFFEDE5
-      EEFFEDE5EEFFEDE5EEFFF0E7F1FFF5ECF6FFF5ECF6FF4D4A4DFF000000FFEDE5
-      EEFFF5ECF6FFF5ECF6FFF5ECF6FFF5ECF6FF8F8C90FF9A9A9DFFF1E9F2FFF1E9
-      F2FFF1E9F2FFF1E9F2FFF1E9F2FFF1E9F2FFF1E9F2FFD2CBD3FF070607FFF1E9
-      F2FFF1E9F2FFF1E9F2FFDAD1DAFFB5AFB6FFF1E9F2FFF1E9F2FFF1E9F2FFF1E9
-      F2FF4B494BFF000000FF000000FF000000FF000000FF000000FF000000FF0000
-      00FF000000FF000000FF000000FF000000FF000000FF000000FF000000FF0000
-      00FF000000FF535053FFF1E9F2FFF1E9F2FF4B494BFF000000FFEAE2EBFFF1E9
-      F2FFF1E9F2FFF1E9F2FFF1E9F2FF8D8B8EFF98989BFFECE6EEFFECE6EEFFECE6
-      EEFFECE6EEFFECE6EEFFECE6EEFFECE6EEFFCEC9D0FF060606FFECE6EEFFECE6
-      EEFFECE6EEFFD5CED6FFB1ADB3FFECE6EEFFECE6EEFFECE6EEFFECE6EEFFD2CD
-      D4FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2
-      C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2C8FFC7C2
-      C8FFD3CED5FFECE6EEFFECE6EEFF4A484AFF000000FFE5DFE7FFECE6EEFFECE6
-      EEFFECE6EEFFECE6EEFF8B898CFF959698FFE8E2E9FFE8E2E9FFE8E2E9FFE8E2
-      E9FFE8E2E9FFE8E2E9FFE8E2E9FFCBC5CBFF060606FFE8E2E9FFE8E2E9FFE8E2
-      E9FFD1CBD1FF7D797DFFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09B
-      A0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09B
-      A0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09BA0FFA09B
-      A0FFA09BA0FFA09BA0FF323032FF000000FF787478FF7B787BFF7B787BFF7B78
-      7BFFA29DA2FF888689FF949497FFE4DFE5FFE4DFE5FFE4DFE5FFE4DFE5FFE4DF
-      E5FFE4DFE5FFE4DFE5FFC8C3C8FF060606FFE4DFE5FFE4DFE5FFE4DFE5FFCFC8
-      CFFFA7A3A7FFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8
-      DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8
-      DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8DEFFDDD8
-      DEFFDDD8DEFF454345FF000000FF000000FF000000FF000000FF000000FF4E4C
-      4EFF868587FF929395FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DC
-      E1FFE0DCE1FFC4C0C4FF060606FFE0DCE1FFE0DCE1FFE0DCE1FFCBC6CBFFA9A5
-      A9FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DC
-      E1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DC
-      E1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DCE1FFE0DC
-      E1FF454445FF000000FF9D999DFFA29EA2FFA29EA2FFA29EA2FFB7B3B7FF8483
-      85FF909193FFDCD7DDFFDCD7DDFFDCD7DDFFDCD7DDFFDCD7DDFFDCD7DDFFDCD7
-      DDFFC1BCC2FF060606FFDCD7DDFFDCD7DDFFDCD7DDFFC7C3C8FFA5A1A5FFDCD7
-      DDFFDCD7DDFFDCD7DDFFDCD7DDFFD3CFD4FFCECACFFFCECACFFFCECACFFFCECA
-      CFFFCECACFFFCECACFFFCECACFFFCECACFFFCECACFFFCECACFFFCECACFFFCECA
-      CFFFCECACFFFCECACFFFBFBBC0FFA5A2A6FF8D8A8DFF747175FF5A585BFF1414
-      14FF000000FFD0CCD1FFDCD7DDFFDCD7DDFFDCD7DDFFDCD7DDFF828283FF8E90
-      92FFD8D5D9FFD8D5D9FFD8D5D9FFD8D5D9FFD8D5D9FFD8D5D9FFD8D5D9FFBDBB
-      BEFF060606FFD8D5D9FFD8D5D9FFD8D5D9FFC4C0C5FFA29FA2FFD8D5D9FFD8D5
-      D9FFD8D5D9FFD8D5D9FF5B5A5CFF1A1A1AFF1A1A1AFF1A1A1AFF1A1A1AFF1A1A
-      1AFF1A1A1AFF1A1A1AFF1A1A1AFF1A1A1AFF1A1A1AFF1A1A1AFF1A1A1AFF1A1A
-      1AFF1B1A1BFF2C2B2CFF454445FF5E5C5EFF787678FF918F92FF353435FF0000
-      00FFD1CED2FFD8D5D9FFD8D5D9FFD8D5D9FFD8D5D9FF808081FF818786FFCDCA
-      CDFFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFBAB6BAFF0606
-      06FFD4D0D4FFD4D0D4FFD4D0D4FFC0BDC0FF9E9B9EFFD4D0D4FFD4D0D4FFD4D0
-      D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0
-      D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0
-      D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FFD4D0D4FF424142FF000000FFCDCA
-      CDFFCDC9CDFFB3B0B3FF999699FFA29FA2FF7E7F7FFFD3E6E0FF808283FFD0CD
-      D0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFB6B4B6FF060606FFD0CD
-      D0FFD0CDD0FFD0CDD0FFBDBABDFF9B999BFFC8C5C8FF686768FFA8A6A8FFC1BF
-      C1FFCFCCCFFFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CD
-      D0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFD0CDD0FFC1BF
-      C1FFA8A6A8FF8E8C8EFF757475FF5C5B5CFF151415FF000000FF101010FF0D0D
-      0DFF252525FF3E3D3EFF565556FF636264FFDBEEE8FFB4C3BEFF9B9A9CFFCBC9
-      CCFFCBC9CCFFCBC9CCFFCBC9CCFFCBC9CCFFB2B0B3FF060506FFCBC9CCFFCBC9
-      CCFFCBC9CCFFB8B6B9FF989698FFC2C0C2FF6C6B6DFF2B2B2CFF1A1A1AFF0D0C
-      0DFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C
-      0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF0C0C0CFF1A1A1AFF3231
-      32FF4A494AFF616062FF797879FF2C2C2DFF000000FFBBB9BCFFCBC9CCFFCBC9
-      CCFFCBC9CCFFCBC9CCFF666A6AFFDBEEE8FFDBEEE8FF8D9794FFB9B8BAFFC7C6
-      C8FFC7C6C8FFC7C6C8FFC7C6C8FFAEADAFFF050505FFC7C6C8FFC7C6C8FFC7C6
-      C8FFB4B3B5FF959596FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6
-      C8FFC7C6C8FFC6C5C7FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6
-      C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6C8FFC7C6
-      C8FFC7C6C8FFC7C6C8FF3D3D3EFF000000FFC1C0C2FFC7C6C8FFC7C6C8FFA8A7
-      A9FF828887FF7D8784FFDBEEE8FFDBEEE8FFDAEDE7FF797F7DFFA3A3A4FFC3C2
-      C4FFC3C2C4FFC3C2C4FFABAAACFF050505FFC3C2C4FFC3C2C4FFC3C2C4FFB1B0
-      B2FF929293FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2
-      C4FFC2C1C3FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2
-      C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2C4FFC3C2
-      C4FFC3C2C4FF3C3C3CFF000000FF8E8F90FF828686FF878F8DFFACBAB6FFDBEE
-      E8FF899491FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFB4C3BFFF899190FF8387
-      87FF969797FFAAAAABFF222222FFBFBFC0FFBFBFC0FFBFBFC0FFADADAEFF666A
-      69FF838685FF99999AFFB8B8B9FFBFBFC0FFBFBFC0FFBFBFC0FFBFBFC0FFBEBE
-      BFFFBFBFC0FFBFBFC0FFBFBFC0FFBFBFC0FFBFBFC0FFBFBFC0FFBFBFC0FFBFBF
-      C0FFBFBFC0FFBFBFC0FFBFBFC0FFBFBFC0FFBBBBBCFFA4A4A4FF868888FF8286
-      84FF707575FF6D7472FFC1D1CCFFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FF5D64
-      62FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFBECE
-      C9FF8A9592FF8A9290FF8A9290FF899290FF89928FFF868E8BFFC2D2CDFFDBEE
-      E8FFBFCFCAFF96A19DFF89928FFF87918EFF88918EFF88918EFF646766FF5C5C
-      5CFF777777FF777777FF777777FF777777FF777777FF777777FF777777FF7777
-      77FF777777FF777777FF747474FF4A4B4AFFA4B2ADFFD3E6E0FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFD3E6E0FF161613FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FF878F8CFF717171FF7575
-      75FF757575FF757575FF757575FF757575FF757575FF757575FF757575FF7575
-      75FF757575FF727272FF636464FFCDDFD9FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FF6B736FFF534B34FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FF878F8CFFB3B3B3FFB3B3B3FFB3B3
-      B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3
-      B3FFB3B3B3FF848685FFCDDFD9FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFBDCDC8FF12110EFFD5BD79FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FF878F8CFFB3B3B3FFB3B3B3FFB3B3B3FFB3B3
-      B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3
-      B3FF848685FFCDDFD9FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FF414540FF807249FFEDD287FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FF878F8CFFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3
-      B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FF8486
-      85FFCDDFD9FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FF9AA7
-      A3FF242219FFE7CD81FFEDD287FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FF878F8CFFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3
-      B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FFB3B3B3FF848685FFCDDF
-      D9FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFD5E7E2FF1F1F1BFFAD99
-      5FFFECD184FFEDD287FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
-      E8FF88928FFF7E8280FF7E8280FF7E8280FF7E8280FF7E8280FF7E8280FF7E82
-      80FF7E8280FF7E8280FF7E8280FF7E8280FF7E8280FF646866FFD2E4DEFFDBEE
-      E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FF707975FF4C442EFFECD081FFECD1
-      84FFEDD287FF
-    }
-    Transparent = True
     Zones = <    
       item
         Value1 = 0
         Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = True
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = motorh
         ImageIndex = 2
       end    
@@ -2798,10 +2563,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = motorh
         ImageIndex = 0
       end    
@@ -2810,34 +2575,34 @@ object frmMain: TfrmMain
         Value2 = 2
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = motorh
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB1_0
+    Enabled = True
     SecurityCode = '5'
+    OnClick = anZarandaClick
+    Transparent = True
   end
   object anBomba_de_Produto: THMIAnimation
     Left = 926
     Height = 55
     Top = 530
     Width = 78
-    Enabled = True
-    OnClick = anBomba_de_ProdutoClick
-    Transparent = True
     Zones = <    
       item
         Value1 = 1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = ImageList2
         ImageIndex = 0
       end    
@@ -2846,45 +2611,48 @@ object frmMain: TfrmMain
         Value2 = 2
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = ImageList2
         ImageIndex = 1
       end>
     PLCTag = dmtags.MB1_2
+    Enabled = True
     SecurityCode = '5'
+    OnClick = anBomba_de_ProdutoClick
+    Transparent = True
   end
   object anVentilador: THMIAnimation
     Left = 416
     Height = 91
     Top = 88
     Width = 154
-    Enabled = True
-    OnClick = anVentiladorClick
-    Transparent = True
     Zones = <    
       item
         Value1 = 1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         ImageList = ImageList3
         ImageIndex = 0
       end>
     PLCTag = dmtags.MB0_6
+    Enabled = True
     SecurityCode = '5'
+    OnClick = anVentiladorClick
+    Transparent = True
   end
   object HMICheckBox1: THMICheckBox
     Left = 128
-    Height = 21
+    Height = 22
     Top = 104
-    Width = 80
+    Width = 81
     Enabled = True
     ParentColor = False
     TabOrder = 1
@@ -2905,16 +2673,17 @@ object frmMain: TfrmMain
     ParentFont = False
     NumberFormat = '#0.0'
     PLCTag = ShowTags
+    FormatDateTimeOptions = []
     Zones = <    
       item
         Value1 = 0
         Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clBlack
         Transparent = True
       end    
@@ -2923,10 +2692,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         HorizontalAlignment = taRightJustify
         VerticalAlignment = tlCenter
         Text = 'Forno'
@@ -2945,16 +2714,17 @@ object frmMain: TfrmMain
     ParentFont = False
     NumberFormat = '#0.0'
     PLCTag = ShowTags
+    FormatDateTimeOptions = []
     Zones = <    
       item
         Value1 = 0
         Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clBlack
         Transparent = True
       end    
@@ -2963,10 +2733,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         HorizontalAlignment = taRightJustify
         VerticalAlignment = tlCenter
         Text = 'Ventilador'
@@ -2985,16 +2755,17 @@ object frmMain: TfrmMain
     ParentFont = False
     NumberFormat = '#0.0'
     PLCTag = ShowTags
+    FormatDateTimeOptions = []
     Zones = <    
       item
         Value1 = 0
         Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clBlack
         Transparent = True
       end    
@@ -3003,10 +2774,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         VerticalAlignment = tlCenter
         Text = 'Atomizador'
         Color = clBlack
@@ -3024,16 +2795,17 @@ object frmMain: TfrmMain
     ParentFont = False
     NumberFormat = '#0.0'
     PLCTag = ShowTags
+    FormatDateTimeOptions = []
     Zones = <    
       item
         Value1 = 0
         Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clBlack
         Transparent = True
       end    
@@ -3042,10 +2814,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         HorizontalAlignment = taRightJustify
         VerticalAlignment = tlCenter
         Text = 'Bomba de produto'
@@ -3064,16 +2836,17 @@ object frmMain: TfrmMain
     ParentFont = False
     NumberFormat = '#0.0'
     PLCTag = ShowTags
+    FormatDateTimeOptions = []
     Zones = <    
       item
         Value1 = 0
         Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clBlack
         Transparent = True
       end    
@@ -3082,10 +2855,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         HorizontalAlignment = taRightJustify
         VerticalAlignment = tlCenter
         Text = 'Rotativa'
@@ -3104,16 +2877,17 @@ object frmMain: TfrmMain
     ParentFont = False
     NumberFormat = '#0.0'
     PLCTag = ShowTags
+    FormatDateTimeOptions = []
     Zones = <    
       item
         Value1 = 0
         Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clBlack
         Transparent = True
       end    
@@ -3122,10 +2896,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         HorizontalAlignment = taRightJustify
         VerticalAlignment = tlCenter
         Text = 'Zaranda'
@@ -3145,6 +2919,7 @@ object frmMain: TfrmMain
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido1
     Sufix = ' hour(s) running'
+    FormatDateTimeOptions = []
   end
   object HMILabel2: THMILabel
     Left = 248
@@ -3157,6 +2932,7 @@ object frmMain: TfrmMain
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido2
     Sufix = ' hour(s) running'
+    FormatDateTimeOptions = []
   end
   object HMILabel3: THMILabel
     Left = 706
@@ -3168,6 +2944,7 @@ object frmMain: TfrmMain
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido3
     Sufix = ' hour(s) running'
+    FormatDateTimeOptions = []
   end
   object HMILabel4: THMILabel
     Left = 868
@@ -3180,6 +2957,7 @@ object frmMain: TfrmMain
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido4
     Sufix = ' hour(s) running'
+    FormatDateTimeOptions = []
   end
   object HMILabel5: THMILabel
     Left = 440
@@ -3192,6 +2970,7 @@ object frmMain: TfrmMain
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido5
     Sufix = ' hour(s) running'
+    FormatDateTimeOptions = []
   end
   object HMILabel6: THMILabel
     Left = 440
@@ -3204,24 +2983,23 @@ object frmMain: TfrmMain
     NumberFormat = '#0'
     PLCTag = dmtags.TDecorrido6
     Sufix = ' hour(s) running'
+    FormatDateTimeOptions = []
   end
   object HMIAnimation2: THMIAnimation
     Left = 212
     Height = 168
     Top = 281
     Width = 211
-    Enabled = True
-    Transparent = True
     Zones = <    
       item
         Value1 = 1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 100
-        BlinkWith = 1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 100
+        BlinkWith = 1
         ImageList = fire
         ImageIndex = 0
       end    
@@ -3230,10 +3008,10 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 100
-        BlinkWith = 2
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 100
+        BlinkWith = 2
         ImageList = fire
         ImageIndex = 1
       end    
@@ -3242,14 +3020,16 @@ object frmMain: TfrmMain
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 100
-        BlinkWith = 0
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 100
+        BlinkWith = 0
         ImageList = fire
         ImageIndex = 2
       end>
     PLCTag = dmtags.MB2_0
+    Enabled = True
+    Transparent = True
   end
   object LeftToolbar: TPanel
     Left = 0
@@ -3279,22 +3059,22 @@ object frmMain: TfrmMain
       end
       object ToolButton2: TToolButton
         Left = 1
-        Top = 116
+        Top = 156
         Action = secureGraphics
       end
       object ToolButton3: TToolButton
         Left = 1
-        Top = 168
+        Top = 208
         Action = secureRelatorioAcionamento
       end
       object ToolButton4: TToolButton
         Left = 1
-        Top = 272
+        Top = 312
         Action = PascalSCADAManageUsersAction1
       end
       object ToolButton5: TToolButton
         Left = 1
-        Top = 220
+        Top = 260
         Action = secureAlarmes
       end
       object ToolButton6: TToolButton
@@ -3304,6 +3084,7 @@ object frmMain: TfrmMain
       end
       object ToolButton7: TToolButton
         Left = 1
+        Height = 50
         Top = 106
         Width = 50
         Caption = 'ToolButton7'
@@ -3594,16 +3375,17 @@ object frmMain: TfrmMain
       NumberFormat = '#0.0'
       PLCTag = ShowTags
       SecurityCode = '5'
+      FormatDateTimeOptions = []
       Zones = <      
         item
           Value1 = 0
           Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = False
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           Color = clBlack
           Transparent = True
         end      
@@ -3612,10 +3394,10 @@ object frmMain: TfrmMain
           Value2 = 1
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = False
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
           Text = 'Martelo'
@@ -3639,6 +3421,7 @@ object frmMain: TfrmMain
       PLCTag = dmtags.TDecorrido8
       Sufix = ' hour(s) running'
       SecurityCode = '5'
+      FormatDateTimeOptions = []
     end
     object anMartelo: THMIText
       Left = 1
@@ -3659,16 +3442,17 @@ object frmMain: TfrmMain
       NumberFormat = '#0.0'
       PLCTag = dmtags.MB0_1
       SecurityCode = '5'
+      FormatDateTimeOptions = []
       Zones = <      
         item
           Value1 = 0
           Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = True
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
           Text = 'Switched Off'
@@ -3682,10 +3466,10 @@ object frmMain: TfrmMain
           Value2 = 1
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = False
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
           Text = 'Switched ON'
@@ -3717,16 +3501,17 @@ object frmMain: TfrmMain
       NumberFormat = '#0.0'
       PLCTag = ShowTags
       SecurityCode = '5'
+      FormatDateTimeOptions = []
       Zones = <      
         item
           Value1 = 0
           Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = False
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           Color = clBlack
           Transparent = True
         end      
@@ -3735,10 +3520,10 @@ object frmMain: TfrmMain
           Value2 = 1
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = False
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
           Text = 'Filtro Manga'
@@ -3762,6 +3547,7 @@ object frmMain: TfrmMain
       PLCTag = dmtags.TDecorrido7
       Sufix = ' hour(s) running'
       SecurityCode = '5'
+      FormatDateTimeOptions = []
     end
     object anFiltro_Manga: THMIText
       Left = 1
@@ -3782,16 +3568,17 @@ object frmMain: TfrmMain
       NumberFormat = '#0.0'
       PLCTag = dmtags.MB1_3
       SecurityCode = '5'
+      FormatDateTimeOptions = []
       Zones = <      
         item
           Value1 = 0
           Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = True
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
           Text = 'Switched Off'
@@ -3805,10 +3592,10 @@ object frmMain: TfrmMain
           Value2 = 1
           IncludeValue1 = False
           IncludeValue2 = False
-          BlinkTime = 0
-          BlinkWith = -1
           DefaultZone = False
           ZoneType = ztEqual
+          BlinkTime = 0
+          BlinkWith = -1
           HorizontalAlignment = taCenter
           VerticalAlignment = tlCenter
           Text = 'Switched ON'
