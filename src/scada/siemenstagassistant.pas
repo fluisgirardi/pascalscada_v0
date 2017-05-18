@@ -300,7 +300,7 @@ begin
                     SwapBytes:=StructItem[curstructitem].SwapBytes;
                     SwapWords:=StructItem[curstructitem].SwapWords;
 
-                    ProtocolDriver:=TProtocolDriver(ProtocolDriver);
+                    ProtocolDriver:=TProtocolDriver(aProtocolDriver);
                   end;
 
                 end else begin
