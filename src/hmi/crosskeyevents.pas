@@ -674,6 +674,7 @@ begin
     VK_NUMPAD9: Result := QtKey_9;
     VK_MULTIPLY: Result := QtKey_Asterisk;
     VK_ADD: Result := QtKey_Plus;
+    VK_OEM_PERIOD: REsult := QtKey_Comma;
     VK_SEPARATOR: Result := QtKey_Comma;
     VK_SUBTRACT: Result := QtKey_Minus;
     VK_DECIMAL: Result := QtKey_Period;
