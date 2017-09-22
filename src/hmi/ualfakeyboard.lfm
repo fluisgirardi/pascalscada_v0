@@ -14,8 +14,7 @@ object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnPaint = FormPaint
-  LCLVersion = '1.7'
-  Visible = False
+  LCLVersion = '1.6.4.0'
   object Btn_1: TSpeedButton
     Left = 46
     Height = 45

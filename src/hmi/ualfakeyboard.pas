@@ -215,7 +215,7 @@ begin
   LastAlphaKeyboard:=Self;
 
   CurrentState:=[ssCtrl, ssAlt, ssShift];
-  ModifierRelease();
+  FKeyboard.Apply([]);
   CurrentState:=[];
 
   FReturnCloseKeyBoard:=CloseOnPressEnter;

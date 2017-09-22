@@ -66,7 +66,7 @@ type
     {$ELSE}
     //: Creates the key event emulator.
     {$ENDIF}
-    constructor Create(Target:TWinControl);
+    constructor Create(Target:TWinControl); virtual;
 
     {$IFDEF PORTUGUES}
     //: Configura o controle alvo dos eventos de tecla.
@@ -143,14 +143,22 @@ type
   {$IFEND}
 
   {$IF defined(LCLwin32) OR (not defined(FPC))}
+
+  { TWindowsKeyEvents }
+
   TWindowsKeyEvents = class(TCrossKeyEvents)
-    protected
+  protected
+      FCurrentShiftState: TShiftState;
       //: @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;
       //: @seealso(TCrossKeyEvents.DoUp)
       procedure DoUp(Key: LongWord); override;
       //: @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
+      procedure Apply(Shift: TShiftState); override;
+      procedure Unapply(Shift: TShiftState); override;
+  public
+      constructor Create(Target: TWinControl); override;
   end;
   {$IFEND}
 
@@ -714,9 +722,13 @@ end;
 {$IF defined(LCLwin32) OR (not defined(FPC))}
 procedure TWindowsKeyEvents.DoDown(Key: LongWord);
 begin
+  if (Key in [VK_A..VK_Z]) and (FShitfState = []) then
+    Key := Key+32;
+
   SendMessage(FTarget.Handle,WM_KEYDOWN,Key,0);
-  if (Key<>VK_DELETE) AND (Key in [VK_0..VK_9,PSVK_DECIMAL,PSVK_BACK,PSVK_SUBTRACT]) then
-    SendMessage(FTarget.Handle,WM_CHAR,Key,0);
+  SendMessage(FTarget.Handle,WM_CHAR,Key,0);
+  //if (Key<>VK_DELETE) AND (Key in [VK_0..VK_9,PSVK_DECIMAL,PSVK_BACK,PSVK_SUBTRACT]) then
+  //  SendMessage(FTarget.Handle,WM_CHAR,Key,0);
 end;
 
 procedure TWindowsKeyEvents.DoUp(Key: LongWord);
@@ -727,6 +739,24 @@ end;
 function TWindowsKeyEvents.TranlateVirtualKey(Key: Word): LongWord;
 begin
   Result := key;
+end;
+
+procedure TWindowsKeyEvents.Apply(Shift: TShiftState);
+begin
+  inherited Apply(Shift);
+  FShitfState := Shift;
+end;
+
+procedure TWindowsKeyEvents.Unapply(Shift: TShiftState);
+begin
+  inherited Unapply(Shift);
+  FShitfState := Shift;
+end;
+
+constructor TWindowsKeyEvents.Create(Target: TWinControl);
+begin
+  inherited Create(Target);
+  FShitfState:=[];
 end;
 
 {$IFEND}

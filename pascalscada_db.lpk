@@ -17,11 +17,6 @@
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
-      <Other>
-        <ExecuteBefore>
-          <Command Value=".\updaterevision.sh"/>
-        </ExecuteBefore>
-      </Other>
     </CompilerOptions>
     <Description Value="PascalSCADA database layer for historical, recipes and user management
 Built on top of ZeosLib"/>
