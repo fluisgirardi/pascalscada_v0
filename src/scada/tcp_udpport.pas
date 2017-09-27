@@ -63,6 +63,7 @@ type
     procedure Execute; override;
   public
     constructor Create;
+    destructor Destroy; override;
     procedure Connect;
     procedure Disconnect;
     procedure NotifyDisconnect;
@@ -352,6 +353,13 @@ begin
   FEnd:=TCrossEvent.Create(true, false);
 end;
 
+destructor TConnectThread.Destroy;
+begin
+  FreeAndNil(FMessageQueue);
+  FreeAndNil(FEnd);
+  inherited;
+end;
+
 procedure TConnectThread.Connect;
 begin
   FMessageQueue.PostMessage(0,nil,nil,false);
@@ -401,10 +409,10 @@ end;
 
 destructor  TTCP_UDPPort.Destroy;
 begin
-  inherited Destroy;
   FConnectThread.Terminate;
   FConnectThread.WaitEnd;
   FreeAndNil(FConnectThread);
+  inherited Destroy;
 end;
 
 function TTCP_UDPPort.ReallyActive: Boolean;
@@ -682,7 +690,7 @@ end;
 
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
-  if ([csDesigning]*ComponentState=[]) or FExclusiveDevice then
+  if ([csDesigning,csDestroying]*ComponentState=[]) or FExclusiveDevice then
     FConnectThread.Disconnect;
   Ok:=true;
 end;

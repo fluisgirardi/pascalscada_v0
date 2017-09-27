@@ -92,6 +92,7 @@ end;
 
 destructor TTimerEntry.Destroy;
 begin
+  FreeAndNil(FTimer);
   SetLength(FCallbackList,0);
   inherited Destroy;
 end;
@@ -145,7 +146,14 @@ begin
 end;
 
 destructor TTimerManager.Destroy;
+var
+  i: Integer;
 begin
+
+  for i:=fTimerList.Count-1 downto 0 do begin
+     fTimerList.KeyData[fTimerList.Keys[i]].Destroy;
+     fTimerList.Delete(i);
+  end;
   FreeAndNil(fTimerList);
   inherited Destroy;
 end;
