@@ -390,7 +390,7 @@ procedure THMIAnimation.Loaded;
 begin
   inherited Loaded;
   FAnimationZones.Loaded;
-  SetValue(0);
+  TagChangeCallBack(FTag);
 end;
 
 procedure THMIAnimation.BlinkTimer(Sender:TObject);

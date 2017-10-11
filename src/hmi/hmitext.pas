@@ -247,7 +247,7 @@ procedure THMIText.Loaded;
 begin
    inherited Loaded;
    FTextZones.Loaded;
-   RefreshText(0);
+   TagChangeCallBack(FTag);
 end;
 
 //timer procedure (does a blink effect)

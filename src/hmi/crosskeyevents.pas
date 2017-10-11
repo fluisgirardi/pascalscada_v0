@@ -726,7 +726,8 @@ begin
     Key := Key+32;
 
   SendMessage(FTarget.Handle,WM_KEYDOWN,Key,0);
-  SendMessage(FTarget.Handle,WM_CHAR,Key,0);
+  if (Key<>VK_DELETE) then
+    SendMessage(FTarget.Handle,WM_CHAR,Key,0);
   //if (Key<>VK_DELETE) AND (Key in [VK_0..VK_9,PSVK_DECIMAL,PSVK_BACK,PSVK_SUBTRACT]) then
   //  SendMessage(FTarget.Handle,WM_CHAR,Key,0);
 end;
