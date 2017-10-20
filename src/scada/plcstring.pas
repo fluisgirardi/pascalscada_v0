@@ -20,6 +20,9 @@ uses
 
 type
 
+
+  CP850AnsiString = type AnsiString(850);
+
   {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi fabio@pascalscada.com)
@@ -52,6 +55,9 @@ type
     @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
+
+  { TPLCString }
+
   TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private
     PValue:AnsiString;
@@ -69,8 +75,8 @@ type
     function  GetValue:AnsiString;
     procedure SetValue(Value:AnsiString);
     function  CalcBlockSize(IsWrite:Boolean):Cardinal;
-    function  EncodeValues(values:TArrayOfDouble):AnsiString;
-    function  DecodeValue(value:AnsiString):TArrayOfDouble;
+    function  EncodeValues(values:TArrayOfDouble):UTF8String;
+    function  DecodeValue(value: UTF8String): TArrayOfDouble;
     
     function  GetValueAsText(Prefix, Sufix, Format:AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]):AnsiString;
     function  GetVariantValue:Variant;
@@ -251,7 +257,7 @@ end;
 //codifica uma array de valores em uma string
 //
 //decodes the string from a array of double.
-function  TPLCString.EncodeValues(values:TArrayOfDouble):AnsiString;
+function TPLCString.EncodeValues(values: TArrayOfDouble): UTF8String;
 var
   aux1, maxbits, bit:LongInt;
   ValueAux2, ValueP, ByteP, ValueBitP, ByteBitP:LongInt;
@@ -264,8 +270,9 @@ begin
   else
     BitsByType := 8;
 
+  Result := '';
+
   if Length(values)<=0 then begin
-    Result := '';
     exit;
   end;
 
@@ -307,7 +314,7 @@ begin
              strlen := min(strlen,ValueAux);
            end else begin
              {$IFDEF FPC}
-             Result := Result + AnsiToUtf8(chr(ValueAux));
+             Result := Result + AnsiToUtf8(CP850AnsiString(chr(ValueAux)));
              {$ELSE}
              Result := Result + chr(ValueAux);
              {$ENDIF}
@@ -327,6 +334,7 @@ begin
          if ValueBitP>=BitsByType then begin
            ValueBitP := 0;
            Inc(ValueP);
+           if ValueP>High(values) then exit;
            ValueAux2 := Trunc(values[ValueP]);
          end;
        end;
@@ -402,7 +410,7 @@ end;
 
 //codifica uma uma string em array de valores
 //encodes a string to a array of double.
-function  TPLCString.DecodeValue(value:AnsiString):TArrayOfDouble;
+function TPLCString.DecodeValue(value: UTF8String): TArrayOfDouble;
 var
   ValueAux, aux1, maxbits, bit, bs:LongInt;
   ValueP, ByteP, ValueBitP, ByteBitP:LongInt;
@@ -674,7 +682,7 @@ procedure TPLCString.SetStringSize(asize:Cardinal);
 begin
    if (PByteSize=8) and (size>255) or ((PByteSize=7) and (asize>127)) then
      raise Exception.Create(SstringSizeOutOfBounds);
-   PStringSize := size;
+   PStringSize := asize;
    SetBlockSize(CalcBlockSize(false));
 end;
 

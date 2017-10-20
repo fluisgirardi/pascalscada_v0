@@ -10,7 +10,6 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
   ClientWidth = 239
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
-  FormStyle = fsSystemStayOnTop
   OnCreate = FormCreate
   ShowInTaskBar = stNever
   LCLVersion = '1.6.4.0'

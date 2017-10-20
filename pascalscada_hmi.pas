@@ -18,7 +18,7 @@ uses
   HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
   HMI_ComputedImageList, HMI_Draw_Valves, hmi_draw_elevador, 
   HMIBasicEletricMotor, hmi_flow_zones, hmi_draw_flow_valve, 
-  hmi_draw_flow_pump, LazarusPackageIntf;
+  hmi_draw_flow_pump, hmi_tachart_tag_source_list, LazarusPackageIntf;
 
 implementation
 

@@ -7,8 +7,6 @@ object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
   Caption = 'Alfanumeric keyboard'
   ClientHeight = 277
   ClientWidth = 723
-  Color = clSilver
-  FormStyle = fsStayOnTop
   OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove

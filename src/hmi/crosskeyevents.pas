@@ -585,7 +585,13 @@ var
   qevt:QKeyEventH;
   ktxt:WideString;
 begin
-  ktxt:=chr(key);
+  if (Key in [QtKey_A..QtKey_Z]) then begin
+    if (FShitfState=[ssShift])  then
+      ktxt:=chr(key)
+    else
+      ktxt:=chr(key+32)
+  end else
+    ktxt:=chr(key);
 
   qevt:=QKeyEvent_create(QEventKeyPress, key, QtNoModifier, @ktxt, false, 1);
 
