@@ -42,7 +42,7 @@ type
   TPLCNumber = class(TPLCTag)
   protected
     //: @seealso(ITagInterface.GetValueAsText);
-    function GetValueAsText(Prefix, Sufix, Format: AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]): AnsiString; virtual;
+    function GetValueAsText(Prefix, Sufix, Format: UTF8String; FormatDateTimeOptions:TFormatDateTimeOptions=[]): UTF8String; virtual;
     //: @seealso(TTag.AsyncNotifyChange)    
     procedure AsyncNotifyChange(data:Pointer); override;
     //: @seealso(TTag.GetValueChangeData)
@@ -274,7 +274,7 @@ begin
   inherited Destroy;
 end;
 
-function TPLCNumber.GetValueAsText(Prefix, Sufix, Format:AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]):AnsiString;
+function TPLCNumber.GetValueAsText(Prefix, Sufix, Format:UTF8String; FormatDateTimeOptions:TFormatDateTimeOptions=[]):UTF8String;
 begin
   //if none of date time format chars is present, format as number.
   if (Pos('c', format)=0) AND

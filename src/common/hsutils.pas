@@ -35,17 +35,20 @@ function ExplodeString(delimiter:string; str:string; limit:integer=MaxInt):TStri
 
 implementation
 
+uses math;
+
 function Power(Base:LongInt; Expoent:Cardinal):Cardinal;
 var
   c:LongInt;
 begin
-  if Expoent=0 then begin
-    Result:=1;
-    exit;
-  end;
-  Result:=Base;
-  for c:=2 to Expoent do
-    Result := Result*Base;
+  Result:=trunc(math.power(base, Expoent));
+  //if Expoent=0 then begin
+  //  Result:=1;
+  //  exit;
+  //end;
+  //Result:=Base;
+  //for c:=2 to Expoent do
+  //  Result := Result*Base;
 end;
 
 function ExplodeString(delimiter:string; str:string; limit:integer=MaxInt):TStringArray;

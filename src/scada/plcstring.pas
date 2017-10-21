@@ -19,9 +19,47 @@ uses
   hsutils;
 
 type
+  CP437AnsiString    = type AnsiString(437);
+  CP646AnsiString    = type AnsiString(20127);
+  CP850AnsiString    = type AnsiString(850);
+  CP852AnsiString    = type Ansistring(852);
+  CP856AnsiString    = type Ansistring(856);
+  CP866AnsiString    = type Ansistring(866);
+  CP874AnsiString    = type Ansistring(874);
+  CP1250AnsiString   = type Ansistring(1250);
+  CP1251AnsiString   = type Ansistring(1251);
+  CP1252AnsiString   = type Ansistring(1252);
+  CP1253AnsiString   = type Ansistring(1253);
+  CP1254AnsiString   = type Ansistring(1254);
+  CP1255AnsiString   = type Ansistring(1255);
+  CP1256AnsiString   = type Ansistring(1256);
+  CP1257AnsiString   = type Ansistring(1257);
+  CP1258AnsiString   = type Ansistring(1258);
+  CP8859_1AnsiString = type Ansistring(28591);
+  CP8859_2AnsiString = type Ansistring(28592);
+  CP8859_5AnsiString = type Ansistring(28595);
 
+  TStringEncodings = (UTF_8,
+                      CP437,
+                      CP646,
+                      CP850,
+                      CP852,
+                      CP856,
+                      CP866,
+                      CP874,
+                      CP1250,
+                      CP1251,
+                      CP1252,
+                      CP1253,
+                      CP1254,
+                      CP1255,
+                      CP1256,
+                      CP1257,
+                      CP1258,
+                      CP8859_1,
+                      CP8859_2,
+                      CP8859_5);
 
-  CP850AnsiString = type AnsiString(850);
 
   {$IFDEF PORTUGUES}
   {:
@@ -60,25 +98,29 @@ type
 
   TPLCString = class(TTagBlock, IScanableTagInterface, ITagInterface, ITagString)
   private
-    PValue:AnsiString;
+    FStringEncoding: TStringEncodings;
+    PValue:UTF8String;
     PByteSize:Byte;
     PStringType:TPLCStringTypes;
     PStringSize:Cardinal;
     POnAsyncStringValueChange:TASyncStringValueChange;
 
+    function ConvertRawByteStringToUTF8(aInput: RawByteString): UTF8String;
+    function ConvertUTF8CharToByte(aInput: UTF8String; aPos: Integer): Byte;
     procedure SetBlockSize(asize:Cardinal);
+    procedure SetStringEncoding(AValue: TStringEncodings);
     procedure SetStringSize(asize:Cardinal);
     procedure SetByteSize(bsize:Byte);
     procedure SetStringType(stype:TPLCStringTypes);
     procedure SetDummySize(s:Cardinal);
 
-    function  GetValue:AnsiString;
-    procedure SetValue(Value:AnsiString);
+    function  GetValue:UTF8String;
+    procedure SetValue(Value:UTF8String);
     function  CalcBlockSize(IsWrite:Boolean):Cardinal;
-    function  EncodeValues(values:TArrayOfDouble):UTF8String;
-    function  DecodeValue(value: UTF8String): TArrayOfDouble;
+    function  ArrayOfValuesToString(values:TArrayOfDouble):UTF8String;
+    function  StringToArrayOfValues(value: UTF8String): TArrayOfDouble;
     
-    function  GetValueAsText(Prefix, Sufix, Format:AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]):AnsiString;
+    function  GetValueAsText(Prefix, Sufix, Format:UTF8String; FormatDateTimeOptions:TFormatDateTimeOptions=[]):UTF8String;
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
@@ -125,7 +167,7 @@ type
     {$ELSE}
     //: Read/writes a string value on your device
     {$ENDIF}
-    property Value:AnsiString read PValue write SetValue;
+    property Value:UTF8String read PValue write SetValue;
 
     //: @seealso(TTagBlock.Read)
     procedure Read; override;
@@ -182,7 +224,7 @@ type
     {$ELSE}
     //: Size in bits of each character of string.
     {$ENDIF}
-    property ByteSize:Byte read PByteSize write SetByteSize default 8;
+    property ByteSize:Byte read PByteSize write SetByteSize default 8; deprecated;
     
     //: @seealso(TTag.OnValueChange)
     property OnValueChange stored false;
@@ -206,6 +248,8 @@ type
     property Size write SetDummySize;
     //: @seealso(TPLCTag.SyncWrites)
     property SyncWrites;
+
+    property StringEncoding:TStringEncodings read FStringEncoding write SetStringEncoding default UTF_8;
   end;
 
 implementation
@@ -239,7 +283,7 @@ var
 begin
   x:=PAutoWrite;
   PAutoWrite := true;
-  values:=DecodeValue(PValue);
+  values:=StringToArrayOfValues(PValue);
   ScanWrite(values,PSize,0);
   PAutoWrite := x;
   SetLength(values,0);
@@ -249,24 +293,119 @@ procedure TPLCString.WriteDirect;
 var
   values:TArrayOfDouble;
 begin
-  values:=DecodeValue(PValue);
+  values:=StringToArrayOfValues(PValue);
   Write(values,PSize,0);
   SetLength(values,0);
 end;
 
+function TPLCString.ConvertRawByteStringToUTF8(aInput:RawByteString):UTF8String;
+var
+     CP437Str:   CP437AnsiString;
+     CP646Str:   CP646AnsiString;
+     CP850Str:   CP850AnsiString;
+     CP852Str:   CP852AnsiString;
+     CP856Str:   CP856AnsiString;
+     CP866Str:   CP866AnsiString;
+     CP874Str:   CP874AnsiString;
+    CP1250Str:  CP1250AnsiString;
+    CP1251Str:  CP1251AnsiString;
+    CP1252Str:  CP1252AnsiString;
+    CP1253Str:  CP1253AnsiString;
+    CP1254Str:  CP1254AnsiString;
+    CP1255Str:  CP1255AnsiString;
+    CP1256Str:  CP1256AnsiString;
+    CP1257Str:  CP1257AnsiString;
+    CP1258Str:  CP1258AnsiString;
+  CP8859_1Str:CP8859_1AnsiString;
+  CP8859_2Str:CP8859_2AnsiString;
+  CP8859_5Str:CP8859_5AnsiString;
+  c: Integer;
+
+begin
+  case FStringEncoding of
+    UTF_8:    begin                      Result :=aInput;                  end;
+    CP437:    begin    CP437Str:=''; for c:=1 to Length(aInput) do begin    CP437Str:=   CP437Str + aInput[c]; end; Result:=   CP437Str; end;
+    CP646:    begin    CP646Str:=''; for c:=1 to Length(aInput) do begin    CP646Str:=   CP646Str + aInput[c]; end; Result:=   CP646Str; end;
+    CP850:    begin    CP850Str:=''; for c:=1 to Length(aInput) do begin    CP850Str:=   CP850Str + aInput[c]; end; Result:=   CP850Str; end;
+    CP852:    begin    CP852Str:=''; for c:=1 to Length(aInput) do begin    CP852Str:=   CP852Str + aInput[c]; end; Result:=   CP852Str; end;
+    CP856:    begin    CP856Str:=''; for c:=1 to Length(aInput) do begin    CP856Str:=   CP856Str + aInput[c]; end; Result:=   CP856Str; end;
+    CP866:    begin    CP866Str:=''; for c:=1 to Length(aInput) do begin    CP866Str:=   CP866Str + aInput[c]; end; Result:=   CP866Str; end;
+    CP874:    begin    CP874Str:=''; for c:=1 to Length(aInput) do begin    CP874Str:=   CP874Str + aInput[c]; end; Result:=   CP874Str; end;
+    CP1250:   begin   CP1250Str:=''; for c:=1 to Length(aInput) do begin   CP1250Str:=  CP1250Str + aInput[c]; end; Result:=  CP1250Str; end;
+    CP1251:   begin   CP1251Str:=''; for c:=1 to Length(aInput) do begin   CP1251Str:=  CP1251Str + aInput[c]; end; Result:=  CP1251Str; end;
+    CP1252:   begin   CP1252Str:=''; for c:=1 to Length(aInput) do begin   CP1252Str:=  CP1252Str + aInput[c]; end; Result:=  CP1252Str; end;
+    CP1253:   begin   CP1253Str:=''; for c:=1 to Length(aInput) do begin   CP1253Str:=  CP1253Str + aInput[c]; end; Result:=  CP1253Str; end;
+    CP1254:   begin   CP1254Str:=''; for c:=1 to Length(aInput) do begin   CP1254Str:=  CP1254Str + aInput[c]; end; Result:=  CP1254Str; end;
+    CP1255:   begin   CP1255Str:=''; for c:=1 to Length(aInput) do begin   CP1255Str:=  CP1255Str + aInput[c]; end; Result:=  CP1255Str; end;
+    CP1256:   begin   CP1256Str:=''; for c:=1 to Length(aInput) do begin   CP1256Str:=  CP1256Str + aInput[c]; end; Result:=  CP1256Str; end;
+    CP1257:   begin   CP1257Str:=''; for c:=1 to Length(aInput) do begin   CP1257Str:=  CP1257Str + aInput[c]; end; Result:=  CP1257Str; end;
+    CP1258:   begin   CP1258Str:=''; for c:=1 to Length(aInput) do begin   CP1258Str:=  CP1258Str + aInput[c]; end; Result:=  CP1258Str; end;
+    CP8859_1: begin CP8859_1Str:=''; for c:=1 to Length(aInput) do begin CP8859_1Str:=CP8859_1Str + aInput[c]; end; Result:=CP8859_1Str; end;
+    CP8859_2: begin CP8859_2Str:=''; for c:=1 to Length(aInput) do begin CP8859_2Str:=CP8859_2Str + aInput[c]; end; Result:=CP8859_2Str; end;
+    CP8859_5: begin CP8859_5Str:=''; for c:=1 to Length(aInput) do begin CP8859_5Str:=CP8859_5Str + aInput[c]; end; Result:=CP8859_5Str; end;
+  end;
+end;
+
+function TPLCString.ConvertUTF8CharToByte(aInput:UTF8String; aPos:Integer):Byte;
+var
+     CP437Str:   CP437AnsiString;
+     CP646Str:   CP646AnsiString;
+     CP850Str:   CP850AnsiString;
+     CP852Str:   CP852AnsiString;
+     CP856Str:   CP856AnsiString;
+     CP866Str:   CP866AnsiString;
+     CP874Str:   CP874AnsiString;
+    CP1250Str:  CP1250AnsiString;
+    CP1251Str:  CP1251AnsiString;
+    CP1252Str:  CP1252AnsiString;
+    CP1253Str:  CP1253AnsiString;
+    CP1254Str:  CP1254AnsiString;
+    CP1255Str:  CP1255AnsiString;
+    CP1256Str:  CP1256AnsiString;
+    CP1257Str:  CP1257AnsiString;
+    CP1258Str:  CP1258AnsiString;
+  CP8859_1Str:CP8859_1AnsiString;
+  CP8859_2Str:CP8859_2AnsiString;
+  CP8859_5Str:CP8859_5AnsiString;
+begin
+  case FStringEncoding of
+    UTF_8:    begin                      Result := byte(     aInput[aPos]); end;
+    CP437:    begin    CP437Str:=aInput; Result := byte(   CP437Str[aPos]); end;
+    CP646:    begin    CP646Str:=aInput; Result := byte(   CP646Str[aPos]); end;
+    CP850:    begin    CP850Str:=aInput; Result := byte(   CP850Str[aPos]); end;
+    CP852:    begin    CP852Str:=aInput; Result := byte(   CP852Str[aPos]); end;
+    CP856:    begin    CP856Str:=aInput; Result := byte(   CP856Str[aPos]); end;
+    CP866:    begin    CP866Str:=aInput; Result := byte(   CP866Str[aPos]); end;
+    CP874:    begin    CP874Str:=aInput; Result := byte(   CP874Str[aPos]); end;
+    CP1250:   begin   CP1250Str:=aInput; Result := byte(  CP1250Str[aPos]); end;
+    CP1251:   begin   CP1251Str:=aInput; Result := byte(  CP1251Str[aPos]); end;
+    CP1252:   begin   CP1252Str:=aInput; Result := byte(  CP1252Str[aPos]); end;
+    CP1253:   begin   CP1253Str:=aInput; Result := byte(  CP1253Str[aPos]); end;
+    CP1254:   begin   CP1254Str:=aInput; Result := byte(  CP1254Str[aPos]); end;
+    CP1255:   begin   CP1255Str:=aInput; Result := byte(  CP1255Str[aPos]); end;
+    CP1256:   begin   CP1256Str:=aInput; Result := byte(  CP1256Str[aPos]); end;
+    CP1257:   begin   CP1257Str:=aInput; Result := byte(  CP1257Str[aPos]); end;
+    CP1258:   begin   CP1258Str:=aInput; Result := byte(  CP1258Str[aPos]); end;
+    CP8859_1: begin CP8859_1Str:=aInput; Result := byte(CP8859_1Str[aPos]); end;
+    CP8859_2: begin CP8859_2Str:=aInput; Result := byte(CP8859_2Str[aPos]); end;
+    CP8859_5: begin CP8859_5Str:=aInput; Result := byte(CP8859_5Str[aPos]); end;
+  end;
+end;
+
 //codifica uma array de valores em uma string
 //
-//decodes the string from a array of double.
-function TPLCString.EncodeValues(values: TArrayOfDouble): UTF8String;
+//encodes a string from a array of double.
+function TPLCString.ArrayOfValuesToString(values: TArrayOfDouble): UTF8String;
 var
   aux1, maxbits, bit:LongInt;
   ValueAux2, ValueP, ByteP, ValueBitP, ByteBitP:LongInt;
   ValueAux, strLen, BitsByType :Byte;
+  AResult:RawByteString;
 begin
   //use a funcao de leitura
   //what's the current register size in bits
   if PProtocolDriver<>nil then
-    BitsByType := Min(PProtocolDriver.SizeOfTag(Self, false, FProtocolTagType),32)
+    BitsByType := Min(PProtocolDriver.SizeOfTag(Self, false, FProtocolTagType),64)
   else
     BitsByType := 8;
 
@@ -275,6 +414,8 @@ begin
   if Length(values)<=0 then begin
     exit;
   end;
+
+  AResult:= '';
 
   case PStringType of
      //string formato SIEMENS de 7 ou 8 bits
@@ -292,60 +433,52 @@ begin
        ValueAux2 := Trunc(values[ValueP]);
        //passa bit a bit para montar a string
        //build the string, bit by bit
-       while bit<maxbits do begin
-         aux1 := Power(2,ValueBitP);
-         if ((ValueAux2 and aux1)=aux1) then
-           ValueAux := ValueAux + Power(2,ByteBitP);
+       try
+         while bit<maxbits do begin
+           aux1 := Power(2,ValueBitP);
+           if ((ValueAux2 and aux1)=aux1) then
+             ValueAux := ValueAux + Power(2,ByteBitP);
 
-         inc(bit);
-         inc(ByteBitP);
-         inc(ValueBitP);
+           inc(bit);
+           inc(ByteBitP);
+           inc(ValueBitP);
 
-         //incrementa os ponteiros
-         //increment pointers
-         if ByteBitP>=PByteSize then begin
-           //se esta nos primeiros 2 bytes
-           //acha o tamanho real da string
-           //(o menor dos dois primeiros bytes)
-           //
-           //if the I'm on the first two bytes
-           //gets the real size of the string
-           if ByteP<2 then begin
-             strlen := min(strlen,ValueAux);
-           end else begin
-             {$IFDEF FPC}
-             Result := Result + AnsiToUtf8(CP850AnsiString(chr(ValueAux)));
-             {$ELSE}
-             Result := Result + chr(ValueAux);
-             {$ENDIF}
-             //se alcançou o tamanho da string.
-             //if all string is decoded, finish.
-             {$IFDEF FPC}
-             if UTF8Length(Result)>=strlen then
-             {$ELSE}
-             if Length(Result)>=strlen then
-             {$ENDIF}
-               exit;
+           //incrementa os ponteiros
+           //increment pointers
+           if ByteBitP>=PByteSize then begin
+             //se esta nos primeiros 2 bytes
+             //acha o tamanho real da string
+             //(o menor dos dois primeiros bytes)
+             //
+             //if looking at the first two bytes
+             //gets the real size of the string
+             if ByteP<2 then begin
+               strlen := min(strlen,ValueAux);
+             end else begin
+               AResult := AResult + Char(ValueAux);
+               //se alcançou o tamanho da string.
+               //if all string is decoded, finish.
+               if Length(AResult)>=strlen then
+                 exit;
+             end;
+             inc(ByteP);
+             ByteBitP := 0;
+             ValueAux := 0;
            end;
-           inc(ByteP);
-           ByteBitP := 0;
-           ValueAux := 0;
+           if ValueBitP>=BitsByType then begin
+             ValueBitP := 0;
+             Inc(ValueP);
+             if ValueP>High(values) then exit;
+             ValueAux2 := Trunc(values[ValueP]);
+           end;
          end;
-         if ValueBitP>=BitsByType then begin
-           ValueBitP := 0;
-           Inc(ValueP);
-           if ValueP>High(values) then exit;
-           ValueAux2 := Trunc(values[ValueP]);
-         end;
-       end;
-       if ByteBitP<=PByteSize then begin
-         {$IFDEF FPC}
-         Result := Result + AnsiToUtf8(char(ValueAux));
-         {$ELSE}
-         Result := Result + chr(ValueAux);
-         {$ENDIF}
+         if ByteBitP<=PByteSize then
+           AResult := AResult + Char(ValueAux);
+       finally
+         Result:=ConvertRawByteStringToUTF8(AResult);
        end;
      end;
+
 
       //string formato C de 7 ou 8 bits
       //C string, 7 or 8 bits per character.
@@ -360,57 +493,54 @@ begin
        ValueAux := 0;
        ValueAux2 := Trunc(values[ValueP]);
        //passa bit a bit para montar a string
-       //build the string, bit by bite
-       while bit<maxbits do begin
-         aux1 := Power(2,ValueBitP);
-         if ((ValueAux2 and aux1)=aux1) then
-           ValueAux := ValueAux + Power(2,ByteBitP);
+       //build the string, bit by bit
+       try
+         while bit<maxbits do begin
+           aux1 := Power(2,ValueBitP);
+           if ((ValueAux2 and aux1)=aux1) then
+             ValueAux := ValueAux + Power(2,ByteBitP);
 
-         inc(bit);
-         inc(ByteBitP);
-         inc(ValueBitP);
+           inc(bit);
+           inc(ByteBitP);
+           inc(ValueBitP);
 
-         //incrementa os ponteiros
-         //increment the pointers
-         if ByteBitP>=PByteSize then begin
-           //se encontrou um byte ZERO (fim de string)
-           //para de processar os valores.
-           //
-           //if found the terminator, finish the string.
-           if ValueAux=0 then
-             exit
-           else
-             {$IFDEF FPC}
-             Result := Result + AnsiToUtf8(chr(ValueAux));
-             {$ELSE}
-             Result := Result + chr(ValueAux);
-             {$ENDIF}
-           //inc(ByteP);
-           ByteBitP := 0;
-           ValueAux := 0;
+           //incrementa os ponteiros
+           //increment the pointers
+           if ByteBitP>=PByteSize then begin
+             //se encontrou um byte ZERO (fim de string)
+             //para de processar os valores.
+             //
+             //if found the terminator, finish the string.
+             if ValueAux=0 then
+               exit
+             else
+               AResult := AResult + Char(ValueAux);
+             //inc(ByteP);
+             ByteBitP := 0;
+             ValueAux := 0;
+           end;
+           if ValueBitP>=BitsByType then begin
+             ValueBitP := 0;
+             Inc(ValueP);
+             if ValueP>High(values) then exit;
+             ValueAux2 := Trunc(values[ValueP]);
+           end;
          end;
-         if ValueBitP>=BitsByType then begin
-           ValueBitP := 0;
-           Inc(ValueP);
-           ValueAux2 := Trunc(values[ValueP]);
+         if ByteBitP<=PByteSize then begin
+           AResult := AResult + Char(ValueAux);
          end;
-       end;
-       if ByteBitP<=PByteSize then begin
-         {$IFDEF FPC}
-         Result := Result + AnsiToUtf8(chr(ValueAux));
-         {$ELSE}
-         Result := Result + chr(ValueAux);
-         {$ENDIF}
+       finally
+         Result:=ConvertRawByteStringToUTF8(AResult);
        end;
      end;
      else
-       Result := '';
+       Result := ''; //unknown string type...
   end;
 end;
 
 //codifica uma uma string em array de valores
 //encodes a string to a array of double.
-function TPLCString.DecodeValue(value: UTF8String): TArrayOfDouble;
+function TPLCString.StringToArrayOfValues(value: UTF8String): TArrayOfDouble;
 var
   ValueAux, aux1, maxbits, bit, bs:LongInt;
   ValueP, ByteP, ValueBitP, ByteBitP:LongInt;
@@ -433,7 +563,7 @@ begin
     stSIEMENS:
     begin
       MaxLen := Min(PStringSize, power(2,PByteSize)-1);
-      strlen := Min(MaxLen,Length(value));
+      strlen := Min(MaxLen,ifthen(FStringEncoding=UTF_8, Length(value), UTF8Length(value)));
       maxbits := PByteSize * (strlen+2);
       bit := 0;
       ByteBitP := 0;
@@ -464,7 +594,7 @@ begin
           //processa os bytes da string
           //processes the bytes of string.
           aux1 := Power(2,ByteBitP);
-          if (ord(value[ByteP]) and aux1)=aux1 then begin
+          if (ConvertUTF8CharToByte(value, ByteP) and aux1)=aux1 then begin
             ValueAux := ValueAux + Power(2,ValueBitP);
           end;
         end;
@@ -507,7 +637,7 @@ begin
         //processa os bytes da string
         //processes the bytes of string.
         aux1 := Power(2,ByteBitP);
-        if (ord(value[ByteP]) and aux1)=aux1 then
+        if (ConvertUTF8CharToByte(value, ByteP) and aux1)=aux1 then
           ValueAux := ValueAux + Power(2,ValueBitP);
 
         inc(bit);
@@ -535,7 +665,7 @@ begin
 
 end;
 
-function TPLCString.GetValueAsText(Prefix, Sufix, Format:AnsiString; FormatDateTimeOptions:TFormatDateTimeOptions=[]):AnsiString;
+function TPLCString.GetValueAsText(Prefix, Sufix, Format:UTF8String; FormatDateTimeOptions:TFormatDateTimeOptions=[]):UTF8String;
 begin
    Result := Prefix + Value + Sufix;
 end;
@@ -657,7 +787,7 @@ begin
 
     if notify or PFirstUpdate then begin
       if TagCommand in [tcRead,tcScanRead] then PFirstUpdate:=false;
-      PValue := EncodeValues(PValues);
+      PValue := ArrayOfValuesToString(PValues);
       NotifyChange;
     end;
   finally
@@ -676,6 +806,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TPLCString.SetStringEncoding(AValue: TStringEncodings);
+begin
+  if FStringEncoding=AValue then Exit;
+  FStringEncoding:=AValue;
 end;
 
 procedure TPLCString.SetStringSize(asize:Cardinal);
@@ -703,7 +839,7 @@ begin
   if stype=PStringType then exit;
   PStringType := stype;
   SetBlockSize(CalcBlockSize(false));
-  EncodeValues(PValues);
+  PValue := ArrayOfValuesToString(PValues);
 end;
 
 procedure TPLCString.SetDummySize(s:Cardinal);
@@ -711,20 +847,16 @@ begin
 
 end;
 
-function  TPLCString.GetValue:AnsiString;
+function  TPLCString.GetValue:UTF8String;
 begin
   Result := PValue;
 end;
 
-procedure TPLCString.SetValue(Value:AnsiString);
+procedure TPLCString.SetValue(Value:UTF8String);
 var
   x:TArrayOfDouble;
 begin
-  {$IFDEF FPC}
-  x:=DecodeValue(Utf8ToAnsi(Value));
-  {$ELSE}
-  x:=DecodeValue(AnsiString(Value));
-  {$ENDIF}
+  x:=StringToArrayOfValues(Value);
   if FSyncWrites then
     Write(x,Length(x),0)
   else
@@ -754,7 +886,7 @@ begin
       strlen := 1;
   end;
 
-  Result := strlen div BitsByType + IfThen((strlen mod BitsByType)>0,1,0);
+  Result := strlen div BitsByType + IfThen((strlen mod BitsByType)=0,0,1);
 end;
 
 function  TPLCString.GetVariantValue:Variant;
