@@ -127,6 +127,7 @@ type
     FFastNavigationKeyGroup:TList;
     FReturnCloseKeyBoard:Boolean;
     procedure DoClose(var CloseAction: TCloseAction); override;
+    procedure GotoBetterPositionDelayed(Data: PtrInt);
   public
     constructor Create(TheOwner: TComponent;
                        Target:TWinControl;
@@ -512,6 +513,11 @@ begin
   CloseAction:=caFree;
 end;
 
+procedure TpsHMIfrmAlphaKeyboard.GotoBetterPositionDelayed(Data: PtrInt);
+begin
+  GotoBetterPosition;
+end;
+
 procedure TpsHMIfrmAlphaKeyboard.Timer1Timer(Sender: TObject);
 begin
   if not MoveOperation then exit;
@@ -562,6 +568,12 @@ var
   sw, sh:Integer;
   frect, t_rect: TRect;
 begin
+  if Assigned(FTarget.Parent) and (FTarget.Parent.Name = 'psHMIfrmUserAuthentication') and (TForm(FTarget.Parent).Top>0) then begin
+    TForm(FTarget.Parent).Top:=0;
+    if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+      Application.QueueAsyncCall(@GotoBetterPositionDelayed, 0);
+    exit;
+  end;
   //auto posicionamento do popup.
   //t_point:=FTarget.ClientOrigin;
   WidgetSet.GetWindowRect(FTarget.Handle,t_rect);
