@@ -118,8 +118,8 @@ begin
   if (target_rect.Top+(numkeyboard_rect.Bottom-numkeyboard_rect.Top)+FTarget.Height)<=sh then
     Top:=target_rect.Top+FTarget.Height   //borda superior do form com borda inferior do target
   else begin
-    if (target_rect.Top - (numkeyboard_rect.Bottom - numkeyboard_rect.Top))>=0 then
-      Top:=target_rect.Top - (numkeyboard_rect.Bottom - numkeyboard_rect.Top)  //borda inferior do form com borda superior do target
+    if (target_rect.Top - (numkeyboard_rect.Bottom - numkeyboard_rect.Top) - 30)>=0 then
+      Top:=target_rect.Top - (numkeyboard_rect.Bottom - numkeyboard_rect.Top) - 30  //borda inferior do form com borda superior do target
     else begin
       Top:= (target_rect.Top+((target_rect.Bottom-target_rect.Top) div 2) - ((numkeyboard_rect.Bottom-numkeyboard_rect.Top) div 2)); //meio
       if Top<0 then Top:=0;
@@ -146,6 +146,7 @@ begin
   GotoBetterPosition;
   Show;
   GetParentForm(FTarget).ShowOnTop;
+  Refresh;
 end;
 
 procedure TpsHMIfrmNumericKeyBoard.FormCreate(Sender: TObject);

@@ -306,6 +306,7 @@ begin
   GotoBetterPosition;
   Show;
   GetParentForm(FTarget).ShowOnTop;
+  Refresh;
 end;
 
 procedure TpsHMIfrmAlphaKeyboard.FormCreate(Sender: TObject);
@@ -571,8 +572,8 @@ begin
   if (t_rect.Top+(frect.Bottom-frect.Top)+FTarget.Height)<=sh then
     Top:=t_rect.Top+FTarget.Height   //borda superior do form com borda inferior do target
   else begin
-    if (t_rect.Top - (frect.Bottom - frect.Top))>=0 then
-      Top:=t_rect.Top - (frect.Bottom - frect.Top)  //borda inferior do form com borda superior do target
+    if (t_rect.Top - (frect.Bottom - frect.Top) - 30)>=0 then  //30px is the window title
+      Top:=t_rect.Top - (frect.Bottom - frect.Top) - 30  //borda inferior do form com borda superior do target
     else begin
       Top:= (t_rect.Top+((t_rect.Bottom-t_rect.Top) div 2) - ((frect.Bottom-frect.Top) div 2)); //meio
       if Top<0 then Top:=0;

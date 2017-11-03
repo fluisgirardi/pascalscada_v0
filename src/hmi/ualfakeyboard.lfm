@@ -3,16 +3,22 @@ object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
   Height = 277
   Top = 168
   Width = 723
-  BorderStyle = bsNone
+  BorderStyle = bsToolWindow
   Caption = 'Alfanumeric keyboard'
   ClientHeight = 277
   ClientWidth = 723
+  Constraints.MaxHeight = 277
+  Constraints.MaxWidth = 723
+  Constraints.MinHeight = 277
+  Constraints.MinWidth = 723
   OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnPaint = FormPaint
-  LCLVersion = '1.6.4.0'
+  ShowInTaskBar = stNever
+  LCLVersion = '1.6.5.0'
+  Visible = False
   object Btn_1: TSpeedButton
     Left = 46
     Height = 45
