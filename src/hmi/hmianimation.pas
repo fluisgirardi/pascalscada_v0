@@ -95,6 +95,7 @@ type
     procedure RefreshAnimation(Data: PtrInt);
     //: @exclude
     procedure SetValue(v:Double);
+    procedure ShowDefaultZone;
     property CurrentAnimationZone:TAnimationZone read GetAnimationZone;
   published
 
@@ -225,10 +226,12 @@ end;
 procedure THMIAnimation.RefreshAnimation(Data: PtrInt);
 begin
    if [csReading]*ComponentState=[] then begin
-      if FTag=nil then exit;
-
-      if Supports(FTag, ITagNumeric) then
-         SetValue((FTag as ITagNumeric).Value)
+      if FTag=nil then begin
+        ShowDefaultZone;
+      end else begin
+        if Supports(FTag, ITagNumeric) then
+           SetValue((FTag as ITagNumeric).Value)
+      end;
    end;
 end;
 
@@ -278,6 +281,17 @@ end;
 procedure THMIAnimation.SetValue(v:Double);
 begin
    FCurrentZone:=FAnimationZones.GetZoneFromValue(v) as TGraphicZone;
+   GetAnimationTimer.RemoveCallback(@BlinkTimer);
+   ShowZone(FCurrentZone);
+   //FOwnerZoneShowed:=true;
+   if (FCurrentZone<>nil) and (FCurrentZone.BlinkWith<>(-1)) and (FCurrentZone.BlinkTime>0) then begin
+     GetAnimationTimer.AddTimerCallback(FCurrentZone.BlinkTime,@BlinkTimer);
+   end;
+end;
+
+procedure THMIAnimation.ShowDefaultZone;
+begin
+   FCurrentZone:=FAnimationZones.GetDefaultZone as TGraphicZone;
    GetAnimationTimer.RemoveCallback(@BlinkTimer);
    ShowZone(FCurrentZone);
    //FOwnerZoneShowed:=true;

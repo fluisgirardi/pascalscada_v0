@@ -34,6 +34,9 @@ type
     @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
+
+  { THMIText }
+
   THMIText = class(THMILabel)
   private
     FTextZones:TTextZones;
@@ -57,6 +60,8 @@ type
     }
     {$ENDIF}
     procedure SetValue(v:Double);
+
+    procedure ShowDefaultZone;
 
     {$IFDEF PORTUGUES}
     {:
@@ -159,21 +164,20 @@ begin
 end;
 
 procedure THMIText.RefreshText(Data: PtrInt);
-var
-   value:Double;
 begin
-   value := 0;
-   if [csReading]*ComponentState=[] then begin
-
-      if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-         value := (FTag as ITagNumeric).Value;
-   end;
-   SetValue(value);
+  if [csReading]*ComponentState=[] then begin
+     if FTag=nil then begin
+       ShowDefaultZone;
+     end else begin
+       if Supports(FTag, ITagNumeric) then
+          SetValue((FTag as ITagNumeric).Value)
+     end;
+  end;
 end;
 
 procedure THMIText.ZoneChange(Sender:TObject);
 begin
-   RefreshText(0);
+  TagChangeCallBack(Self);
 end;
 
 procedure THMIText.NeedComState(var CurState:TComponentState);
@@ -206,6 +210,17 @@ end;
 procedure THMIText.SetValue(v:Double);
 begin
    FCurrentZone:=FTextZones.GetZoneFromValue(v) as TTextZone;
+   GetAnimationTimer.RemoveCallback(@BlinkTimer);
+   ShowZone(FCurrentZone);
+   FOwnerZoneShowed:=true;
+   if (FCurrentZone<>nil) and (FCurrentZone.BlinkWith<>(-1)) and (FCurrentZone.BlinkTime>0) then begin
+     GetAnimationTimer.AddTimerCallback(FCurrentZone.BlinkTime,@BlinkTimer);
+   end;
+end;
+
+procedure THMIText.ShowDefaultZone;
+begin
+   FCurrentZone:=FTextZones.GetDefaultZone as TTextZone;
    GetAnimationTimer.RemoveCallback(@BlinkTimer);
    ShowZone(FCurrentZone);
    FOwnerZoneShowed:=true;

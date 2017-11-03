@@ -337,6 +337,8 @@ type
      }
      {$ENDIF}
      function  GetZoneFromValue(v:Double):TZone; virtual;
+
+     function  GetDefaultZone:TZone;
   end;
 
   {$IFDEF PORTUGUES}
@@ -1160,6 +1162,21 @@ begin
                end;
          end; //end do case
    end; //end do for
+end;
+
+function TZones.GetDefaultZone:TZone;
+var
+   c, value, bit:LongInt;
+   found:Boolean;
+begin
+   Result:=nil;
+   found := false;
+   for c := 0 to Count - 1 do begin
+     if (not found) and TZone(Items[c]).DefaultZone then begin
+        Result := TZone(Items[c]);
+        exit;
+     end;
+   end;
 end;
 
 //############################################################
