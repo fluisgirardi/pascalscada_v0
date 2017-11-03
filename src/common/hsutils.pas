@@ -41,14 +41,15 @@ function Power(Base:LongInt; Expoent:Cardinal):Cardinal;
 var
   c:LongInt;
 begin
-  Result:=trunc(math.power(base, Expoent));
-  //if Expoent=0 then begin
-  //  Result:=1;
-  //  exit;
-  //end;
-  //Result:=Base;
-  //for c:=2 to Expoent do
-  //  Result := Result*Base;
+  //don't use math.power and trunc together,
+  //conversions from real to integer make it slower!
+  Result := 1;
+  while (Expoent<>0) do begin
+    if (Expoent and 1)=1 then
+      Result := Result * base;
+    Expoent:=Expoent shr 1;
+    Base := Base * Base;
+  end;
 end;
 
 function ExplodeString(delimiter:string; str:string; limit:integer=MaxInt):TStringArray;
