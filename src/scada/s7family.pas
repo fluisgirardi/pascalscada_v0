@@ -2026,18 +2026,20 @@ begin
   end;
 
   if retries>=3 then begin
-    NeedSleep:=-1;
+    NeedSleep:=500;
     exit;
   end;
 
-  NeedSleep:=ifthen(Length(FPLCs)<=0,-1,1);
+  NeedSleep:=ifthen(Length(FPLCs)<=0,500,-1);
 
   EntireTagList:=TS7ScanReqList.Create;
   try
     for plc:=0 to High(FPLCs) do begin
       if not FPLCs[plc].Connected then
-        if not connectPLC(FPLCs[plc]) then exit;
-
+        if not connectPLC(FPLCs[plc]) then begin
+          NeedSleep:=500;
+          exit;
+        end;
       Reset;
       OutOffScanOutgoingPDUSize:=0;
       OutOffScanIncomingPDUSize:=0;

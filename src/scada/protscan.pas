@@ -188,23 +188,23 @@ begin
   while not Terminated do begin
     CheckScanWriteCmd;
     if Assigned(FDoScanRead) then begin
-      //try
+      try
         NeedSleep:=0;
         FDoScanRead(Self, NeedSleep);
         if NeedSleep>0 then
           Sleep(NeedSleep);
         if NeedSleep<0 then
           CrossThreadSwitch;
-      //except
-      //  on E: Exception do begin
-      //    {$IFDEF FDEBUG}
-      //    DebugLn('TScanThread.Execute::' + e.Message);
-      //    DumpStack;
-      //    {$ENDIF}
-      //    erro := E;
-      //    Synchronize(@SyncException);
-      //  end;
-      //end;
+      except
+        //on E: Exception do begin
+        //  {$IFDEF FDEBUG}
+        //  DebugLn('TScanThread.Execute::' + e.Message);
+        //  DumpStack;
+        //  {$ENDIF}
+        //  erro := E;
+        //  Synchronize(@SyncException);
+        //end;
+      end;
     end;
 
     if FMinScan>0 then
