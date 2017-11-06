@@ -1884,4 +1884,10 @@ object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
     left = 88
     top = 304
   end
+  object Timer2: TTimer
+    Interval = 10
+    OnTimer = Timer2Timer
+    left = 552
+    top = 232
+  end
 end

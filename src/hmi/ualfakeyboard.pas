@@ -94,6 +94,7 @@ type
     Btn_Down: TSpeedButton;
     Btn_Up: TSpeedButton;
     Timer1: TTimer;
+    Timer2: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: LongInt);
@@ -104,6 +105,7 @@ type
     procedure ModifierPress(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure BtnPress(Sender: TObject);
+    procedure Timer2Timer(Sender: TObject);
   private
     //move operations
     OffsetX, OffsetY:LongInt;
@@ -129,8 +131,6 @@ type
     fStartedAt:TDateTime;
     procedure DoClose(var CloseAction: TCloseAction); override;
     procedure GotoBetterPositionDelayed(Data: PtrInt);
-    procedure DoShow; override;
-    procedure ReturnFocusToTargetDelayed(Data: PtrInt);
   public
     constructor Create(TheOwner: TComponent;
                        Target:TWinControl;
@@ -314,7 +314,9 @@ procedure TpsHMIfrmAlphaKeyboard.Notification(AComponent: TComponent;
 begin
   inherited Notification(AComponent, Operation);
   if (Operation=opRemove) and (AComponent = FTarget) then begin
-    Application.RemoveAsyncCalls(Self);
+    FTarget:=nil;
+    FFormOwner:=nil;
+    Timer2.Enabled:=false;
     Close;
   end;
 end;
@@ -527,12 +529,6 @@ begin
   GotoBetterPosition;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.DoShow;
-begin
-  inherited DoShow;
-  ReturnFocusToTarget;
-end;
-
 procedure TpsHMIfrmAlphaKeyboard.Timer1Timer(Sender: TObject);
 begin
   if not MoveOperation then exit;
@@ -562,23 +558,18 @@ begin
   end;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.ReturnFocusToTarget;
+procedure TpsHMIfrmAlphaKeyboard.Timer2Timer(Sender: TObject);
 begin
-  fStartedAt:=Now;
-  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
-    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
+  ReturnFocusToTarget;
 end;
 
-procedure TpsHMIfrmAlphaKeyboard.ReturnFocusToTargetDelayed(Data: PtrInt);
+procedure TpsHMIfrmAlphaKeyboard.ReturnFocusToTarget;
 begin
-  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) and (MilliSecondsBetween(now,fStartedAt)<5) then begin
-    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
-    exit;
+  if Assigned(FFormOwner) then begin
+    FFormOwner.Show;
+    FFormOwner.BringToFront;
+    Application.ProcessMessages;
   end;
-
-  FFormOwner.Show;
-  FFormOwner.BringToFront;
-  Application.ProcessMessages;
 end;
 
 procedure TpsHMIfrmAlphaKeyboard.GotoBetterPosition;

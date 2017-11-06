@@ -656,4 +656,10 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
     OnClick = BtnPress
     ParentFont = False
   end
+  object Timer1: TTimer
+    Interval = 10
+    OnTimer = Timer1Timer
+    left = 152
+    top = 96
+  end
 end

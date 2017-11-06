@@ -10,7 +10,7 @@ interface
 
 uses
   SysUtils, Forms, Classes, types, Controls, Buttons, crosskeyevents
-  {$IFDEF FPC}, LResources, LCLIntf, LCLType{$ENDIF};
+  {$IFDEF FPC}, LResources, LCLIntf, LCLType, ExtCtrls{$ENDIF};
 
 type
 
@@ -35,9 +35,11 @@ type
     Btn_Ok: TSpeedButton;
     Btn_Left: TSpeedButton;
     Btn_Rigth: TSpeedButton;
+    Timer1: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure BtnPress(Sender: TObject);
-  private
+    procedure Timer1Timer(Sender: TObject);
+  protected
     FShowMinus,
     FShowDecimal:Boolean;
     FTarget:TWinControl;
@@ -46,10 +48,7 @@ type
     fStartedAt:TDateTime;
     procedure GotoBetterPosition;
     procedure ReturnFocusToTarget;
-  protected
     procedure DoClose(var CloseAction: TCloseAction); override;
-    procedure DoShow; override;
-    procedure ReturnFocusToTargetDelayed(Data: PtrInt);
   public
     constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
     destructor Destroy; override;
@@ -162,7 +161,9 @@ procedure TpsHMIfrmNumericKeyBoard.Notification(AComponent: TComponent;
 begin
   inherited Notification(AComponent, Operation);
   if (Operation=opRemove) and (AComponent = FTarget) then begin
-    Application.RemoveAsyncCalls(Self);
+    FTarget:=nil;
+    FFormOwner:=nil;
+    Timer1.Enabled:=false;
     Close;
   end;
 end;
@@ -207,6 +208,11 @@ begin
   end;
 end;
 
+procedure TpsHMIfrmNumericKeyBoard.Timer1Timer(Sender: TObject);
+begin
+  ReturnFocusToTarget;
+end;
+
 procedure TpsHMIfrmNumericKeyBoard.DoClose(var CloseAction: TCloseAction);
 begin
   inherited DoClose(CloseAction);
@@ -215,29 +221,13 @@ begin
   CloseAction:=caFree;
 end;
 
-procedure TpsHMIfrmNumericKeyBoard.DoShow;
-begin
-  inherited DoShow;
-  ReturnFocusToTarget;
-end;
-
-procedure TpsHMIfrmNumericKeyBoard.ReturnFocusToTargetDelayed(Data: PtrInt);
-begin
-  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) and (MilliSecondsBetween(now,fStartedAt)<5) then begin
-    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
-    exit;
-  end;
-
-  FFormOwner.Show;
-  FFormOwner.BringToFront;
-  Application.ProcessMessages;
-end;
-
 procedure TpsHMIfrmNumericKeyBoard.ReturnFocusToTarget;
 begin
-  fStartedAt:=Now;
-  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
-    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
+  if Assigned(FFormOwner) then begin
+    FFormOwner.Show;
+    FFormOwner.BringToFront;
+    Application.ProcessMessages;
+  end;
 end;
 
 {$IFDEF FPC }
