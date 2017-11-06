@@ -12,7 +12,7 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
   Font.Name = 'MS Sans Serif'
   OnCreate = FormCreate
   ShowInTaskBar = stNever
-  LCLVersion = '1.6.4.0'
+  LCLVersion = '1.6.5.0'
   Visible = False
   object Btn_1: TSpeedButton
     Left = 1

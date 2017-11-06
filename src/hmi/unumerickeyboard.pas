@@ -43,13 +43,18 @@ type
     FTarget:TWinControl;
     FFormOwner:TCustomForm;
     keyboard:TCrossKeyEvents;
+    fStartedAt:TDateTime;
     procedure GotoBetterPosition;
+    procedure ReturnFocusToTarget;
   protected
     procedure DoClose(var CloseAction: TCloseAction); override;
+    procedure DoShow; override;
+    procedure ReturnFocusToTargetDelayed(Data: PtrInt);
   public
     constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
     destructor Destroy; override;
     procedure ShowAlongsideOfTheTarget;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
     property Target:TWinControl read FTarget;
   end;
@@ -59,7 +64,7 @@ var
 
 implementation
 
-uses InterfaceBase;
+uses dateutils, InterfaceBase;
 
 {$IFNDEF FPC}
   {$R *.dfm}
@@ -75,6 +80,9 @@ var
 constructor TpsHMIfrmNumericKeyBoard.Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean);
 begin
   inherited Create(TheOwner);
+
+  if not Assigned(Target) then
+    raise Exception.Create('Nil target!');
 
   if Assigned(LastNumericKeyBoard) then begin
     LastNumericKeyBoard.Close;
@@ -93,6 +101,8 @@ begin
   FFormOwner:=nil;
   FFormOwner:=GetParentForm(Target);
   LastNumericKeyBoard:=Self;
+
+  FTarget.FreeNotification(Self);
 end;
 
 destructor TpsHMIfrmNumericKeyBoard.Destroy;
@@ -145,8 +155,16 @@ procedure TpsHMIfrmNumericKeyBoard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
   Show;
-  GetParentForm(FTarget).ShowOnTop;
-  Refresh;
+end;
+
+procedure TpsHMIfrmNumericKeyBoard.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation=opRemove) and (AComponent = FTarget) then begin
+    Application.RemoveAsyncCalls(Self);
+    Close;
+  end;
 end;
 
 procedure TpsHMIfrmNumericKeyBoard.FormCreate(Sender: TObject);
@@ -183,7 +201,9 @@ begin
   with Sender as TSpeedButton do begin
     keyboard.Press(Tag);
     if (tag=VK_ESCAPE) or (tag=VK_RETURN) then
-      close;
+      Close
+    else
+      ReturnFocusToTarget;
   end;
 end;
 
@@ -193,6 +213,31 @@ begin
   if LastNumericKeyBoard=Self then
     LastNumericKeyBoard:=nil;
   CloseAction:=caFree;
+end;
+
+procedure TpsHMIfrmNumericKeyBoard.DoShow;
+begin
+  inherited DoShow;
+  ReturnFocusToTarget;
+end;
+
+procedure TpsHMIfrmNumericKeyBoard.ReturnFocusToTargetDelayed(Data: PtrInt);
+begin
+  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) and (MilliSecondsBetween(now,fStartedAt)<5) then begin
+    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
+    exit;
+  end;
+
+  FFormOwner.Show;
+  FFormOwner.BringToFront;
+  Application.ProcessMessages;
+end;
+
+procedure TpsHMIfrmNumericKeyBoard.ReturnFocusToTarget;
+begin
+  fStartedAt:=Now;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
 end;
 
 {$IFDEF FPC }

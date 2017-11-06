@@ -3,6 +3,7 @@ object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
   Height = 277
   Top = 168
   Width = 723
+  BorderIcons = []
   BorderStyle = bsToolWindow
   Caption = 'Alfanumeric keyboard'
   ClientHeight = 277

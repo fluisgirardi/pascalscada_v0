@@ -115,7 +115,7 @@ type
     FKeyboard:TCrossKeyEvents;
 
     CurrentState:TShiftState;
-    procedure BringToFrontWithoutActivate;
+    //procedure BringToFrontWithoutActivate;
     procedure GotoBetterPosition;
     procedure ModifierRelease();
     procedure ReturnFocusToTarget;
@@ -126,8 +126,11 @@ type
     FNavigationKeyGroup,
     FFastNavigationKeyGroup:TList;
     FReturnCloseKeyBoard:Boolean;
+    fStartedAt:TDateTime;
     procedure DoClose(var CloseAction: TCloseAction); override;
     procedure GotoBetterPositionDelayed(Data: PtrInt);
+    procedure DoShow; override;
+    procedure ReturnFocusToTargetDelayed(Data: PtrInt);
   public
     constructor Create(TheOwner: TComponent;
                        Target:TWinControl;
@@ -145,6 +148,7 @@ type
                        CloseOnPressEnter:Boolean); overload;
     destructor Destroy; override;
     procedure ShowAlongsideOfTheTarget;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
     property Target:TWinControl read FTarget;
   end; 
@@ -154,7 +158,7 @@ var
 
 implementation
 
-uses strutils,
+uses strutils, dateutils,
      {$IFDEF FPC}InterfaceBase, keyboard, LResources, LCLIntf, LCLType{$ENDIF}
      {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64) or defined(MSWINDOWS)}
      , windows
@@ -178,7 +182,6 @@ constructor TpsHMIfrmAlphaKeyboard.Create(TheOwner: TComponent;
   ShowAlt, ShowSymbols, ShowNumbers, ShowFastNavigation, ShowNavigation,
   CloseOnPressEnter: Boolean);
 var
-  curcontrol:TControl;
   k: TKeyEvent;
 
   procedure EnableGroup(Group:TList; EnableGroup:Boolean);
@@ -193,6 +196,9 @@ var
 begin
   inherited Create(TheOwner);
 
+  if not Assigned(Target) then
+    raise Exception.Create('Nil target!');
+
   if Assigned(LastAlphaKeyboard) then begin
     LastAlphaKeyboard.Close;
     LastAlphaKeyboard:=nil;
@@ -204,15 +210,10 @@ begin
   FormStyle:=fsSystemStayOnTop;
   {$ENDIF}
 
-  curcontrol:=FTarget;
-  FFormOwner:=nil;
-  ControlStyle:=ControlStyle+[csNoFocus];
-  while (curcontrol<>nil) and (FFormOwner=nil) do begin
-    if (curcontrol.Parent=nil) and (curcontrol is TCustomForm) then
-      FFormOwner:=curcontrol as TCustomForm;
+  FTarget.FreeNotification(Self);
 
-    curcontrol:=curcontrol.Parent;
-  end;
+  FFormOwner:=GetParentForm(Target);
+  ControlStyle:=ControlStyle+[csNoFocus];
   LastAlphaKeyboard:=Self;
 
   CurrentState:=[ssCtrl, ssAlt, ssShift];
@@ -306,8 +307,16 @@ procedure TpsHMIfrmAlphaKeyboard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
   Show;
-  GetParentForm(FTarget).ShowOnTop;
-  Refresh;
+end;
+
+procedure TpsHMIfrmAlphaKeyboard.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation=opRemove) and (AComponent = FTarget) then begin
+    Application.RemoveAsyncCalls(Self);
+    Close;
+  end;
 end;
 
 procedure TpsHMIfrmAlphaKeyboard.FormCreate(Sender: TObject);
@@ -518,6 +527,12 @@ begin
   GotoBetterPosition;
 end;
 
+procedure TpsHMIfrmAlphaKeyboard.DoShow;
+begin
+  inherited DoShow;
+  ReturnFocusToTarget;
+end;
+
 procedure TpsHMIfrmAlphaKeyboard.Timer1Timer(Sender: TObject);
 begin
   if not MoveOperation then exit;
@@ -538,30 +553,33 @@ procedure TpsHMIfrmAlphaKeyboard.BtnPress(Sender: TObject);
 begin
   if FTarget=nil then exit;
 
-  ReturnFocusToTarget;
-
   with Sender as TSpeedButton do begin
     FKeyboard.Press(Tag);
-    //Application.ProcessMessages;
     if (tag=VK_ESCAPE) or (FReturnCloseKeyBoard and (tag=VK_RETURN)) then
-      Close;
+      Close
+    else
+      ReturnFocusToTarget;
   end;
-  BringToFrontWithoutActivate;
-end;
-
-procedure TpsHMIfrmAlphaKeyboard.BringToFrontWithoutActivate;
-begin
-  WidgetSet.SetWindowPos(Self.Handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE+SWP_NOSIZE+SWP_NOACTIVATE);
 end;
 
 procedure TpsHMIfrmAlphaKeyboard.ReturnFocusToTarget;
 begin
-  FFormOwner.Show;
-  FTarget.SetFocus;
-  Application.ProcessMessages;
-  BringToFrontWithoutActivate;
+  fStartedAt:=Now;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
 end;
 
+procedure TpsHMIfrmAlphaKeyboard.ReturnFocusToTargetDelayed(Data: PtrInt);
+begin
+  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) and (MilliSecondsBetween(now,fStartedAt)<5) then begin
+    Application.QueueAsyncCall(@ReturnFocusToTargetDelayed, 0);
+    exit;
+  end;
+
+  FFormOwner.Show;
+  FFormOwner.BringToFront;
+  Application.ProcessMessages;
+end;
 
 procedure TpsHMIfrmAlphaKeyboard.GotoBetterPosition;
 var

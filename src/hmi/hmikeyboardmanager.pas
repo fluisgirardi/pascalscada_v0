@@ -269,8 +269,6 @@ procedure THMIKeyboardManager.ClickEvent(Sender: TObject);
 begin
   ShowKeyboard(Sender);
 
-  //if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
-  //  application.QueueAsyncCall(@PassFocusToLastValidControl,0);
   PassFocusToLastValidControl(0);
 
   if Assigned(FOldOnClickEvent) then
@@ -283,8 +281,6 @@ begin
     FShowKeyBoardNow:=false;
     ShowKeyboard(Sender);
 
-    //if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
-    //  application.QueueAsyncCall(@PassFocusToLastValidControl,0);
     PassFocusToLastValidControl(0);
   end;
 
