@@ -173,6 +173,8 @@ begin
       FOldOnClickEvent := fLastControl.OnClick;
       FOldOnEnterEvent := fLastControl.OnEnter;
       FOldOnExitEvent  := fLastControl.OnExit;
+      
+      FKeyboarTypeForControl := oskNone;
       if Assigned(FOnFocusChange) then begin
         OnFocusChange(fLastControl,
                       FKeyboarTypeForControl,
