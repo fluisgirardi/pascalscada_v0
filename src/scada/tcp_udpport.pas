@@ -362,17 +362,20 @@ end;
 
 procedure TConnectThread.Connect;
 begin
-  FMessageQueue.PostMessage(0,nil,nil,false);
+  if Assigned(FMessageQueue) then
+    FMessageQueue.PostMessage(0,nil,nil,false);
 end;
 
 procedure TConnectThread.Disconnect;
 begin
-  FMessageQueue.PostMessage(3,nil,nil,false);
+  if Assigned(FMessageQueue) then
+    FMessageQueue.PostMessage(3,nil,nil,false);
 end;
 
 procedure TConnectThread.NotifyDisconnect;
 begin
-  FMessageQueue.PostMessage(1,nil,nil,false);
+  if Assigned(FMessageQueue) then
+    FMessageQueue.PostMessage(1,nil,nil,false);
 end;
 
 procedure TConnectThread.WaitEnd;
@@ -383,8 +386,11 @@ end;
 
 procedure TConnectThread.StopAutoReconnect;
 begin
-  FMessageQueue.PostMessage(2,nil,nil,false);
+  if Assigned(FMessageQueue) then
+    FMessageQueue.PostMessage(2,nil,nil,false);
 end;
+
+////////////////////////////////////////////////////////////////////////////////
 
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
@@ -409,6 +415,7 @@ end;
 
 destructor  TTCP_UDPPort.Destroy;
 begin
+  Active := false;
   FConnectThread.Terminate;
   FConnectThread.WaitEnd;
   FreeAndNil(FConnectThread);
@@ -690,7 +697,7 @@ end;
 
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
-  if ([csDesigning,csDestroying]*ComponentState=[]) or FExclusiveDevice then
+  if (([csDesigning,csDestroying]*ComponentState=[]) or FExclusiveDevice) and Assigned(FConnectThread) then
     FConnectThread.Disconnect;
   Ok:=true;
 end;
