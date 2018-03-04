@@ -280,7 +280,7 @@ var
   i: Integer;
 begin
   inherited Notification(AComponent, Operation);
-  if Operation=opRemove then begin
+  if (Operation=opRemove) and Assigned(FObjects) and (AComponent<>Self) then begin
     for i:=0 to FObjects.Count-1 do begin
       if TObjectWithBooleanPropetiesColletionItem(FObjects.Items[i]).TargetObject=AComponent then begin
         TObjectWithBooleanPropetiesColletionItem(FObjects.Items[i]).TargetObject:=nil;

@@ -36,6 +36,8 @@ uses
 type
   TS7ScanReqList = specialize TFPGList<TS7ScanReqItem>;
 
+  TS7PDUSize = (pduAuto, pdu240, pdu480, pdu960);
+
   {$IFDEF PORTUGUES}
   {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
      de Thomas Hergenhahn (thomas.hergenhahn@web.de).
@@ -130,6 +132,9 @@ type
   { TSiemensProtocolFamily }
 
   TSiemensProtocolFamily = class(TProtocolDriver)
+  private
+    FPDUSize: TS7PDUSize;
+    procedure SetPDUSize(AValue: TS7PDUSize);
   protected
     {$IFDEF PORTUGUES}
     //: Retorna uma estrutura com informações sobre o tag.
@@ -753,6 +758,8 @@ type
   published
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
+
+    property ForcePDUSize:TS7PDUSize read FPDUSize write SetPDUSize;
   end;
 
   procedure SetTagBuilderToolForSiemensS7ProtocolFamily(TagBuilderTool:TOpenTagEditor);
@@ -1127,7 +1134,7 @@ begin
   if exchange(CPU,Msg,msgIn,false) then begin
 
     if SetupPDU(msgIn, false, pdu, err) then begin
-      CPU.MaxPDULen:=pdu.param[6]*256+pdu.param[7];
+      CPU.MaxPDULen:=480; //pdu.param[6]*256+pdu.param[7];
       CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes of header + 2 bytes of error code + 2 bytes of read request + 4 bytes of informations about the request.
       //ajusta o tamanho máximo dos blocos;
       //adjust the maximum block size.
@@ -1587,7 +1594,7 @@ begin
     if not SetupPDU(pkgin, false, PDU, err) then exit;
     if (PDU.param=nil) or (PDU.param[0]<>S7FuncRead) then exit;
   end;
-  NumResults:=PDU.param[1];
+  NumResults:=Min(PDU.param[1], Length(ReqList));
   CurResult:=0;
   DataIdx:=0;
   DataLen:=PDU.data_len;
@@ -2690,6 +2697,12 @@ begin
     else
       Result:=ioUnknownError;
   end;
+end;
+
+procedure TSiemensProtocolFamily.SetPDUSize(AValue: TS7PDUSize);
+begin
+  if FPDUSize=AValue then Exit;
+  FPDUSize:=AValue;
 end;
 
 function  TSiemensProtocolFamily.GetTagInfo(tagobj:TTag):TTagRec;
