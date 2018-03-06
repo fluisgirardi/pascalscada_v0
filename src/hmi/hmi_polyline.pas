@@ -132,6 +132,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation);
+      override;
   published
     property EmptyColor:TColor read FEmptyColor write SetEmptyColor default clBlack;
     property MultipleColorBehavior:TColorMixBehavior read FMultipleColorBehavior write setMultipleColorsBehavior;
@@ -321,6 +323,20 @@ begin
   inherited Destroy;
 end;
 
+procedure THMIFlowPolyline.Notification(AComponent: TComponent;
+  Operation: TOperation);
+var
+  i: Integer;
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation=opRemove) and (AComponent<>Self) then begin
+    for i:=0 to FFlowSources.Count-1 do
+      if THMIFlowSourceCollectionItem(FFlowSources.Items[i]).FHMIObject=AComponent then begin
+        THMIFlowSourceCollectionItem(FFlowSources.Items[i]).FHMIObject:=nil;
+      end;
+  end;
+end;
+
 { THMIFlowObjectCollection }
 
 constructor THMIFlowSourceCollection.Create(AOwner: TComponent);
@@ -339,14 +355,17 @@ procedure THMIFlowSourceCollectionItem.setHMIObject(AValue: THMIFlowPolyline);
 begin
   if FHMIObject=AValue then Exit;
   if supports(Collection.Owner, IColorChangeNotification) then begin
-    if Assigned(FHMIObject) then
+    if Assigned(FHMIObject) then begin
       (FHMIObject as IColorChangeNotification).RemoveNotifyCallback(Collection.Owner as IColorChangeNotification);
+      FHMIObject.RemoveFreeNotification(TComponent(Collection.Owner));
+    end;
 
     if AValue=nil then begin
       FHMIObject:=AValue
     end else begin
       if Supports(AValue, IColorChangeNotification) then begin
         (AValue as IColorChangeNotification).AddNotifyCallback(Collection.Owner as IColorChangeNotification);
+        AValue.FreeNotification(TComponent(Collection.Owner));
         FHMIObject:=AValue;
       end else
         raise Exception.Create('Object don´t support the IColorChangeNotification interface!');

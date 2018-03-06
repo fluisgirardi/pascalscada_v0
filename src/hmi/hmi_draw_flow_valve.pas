@@ -38,6 +38,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   end;
 
   THMICustomLinkedFlowValve = class(THMICustomFlowValve)
@@ -217,11 +218,15 @@ begin
   if Assigned(aValue) and (not Supports(AValue, IColorChangeNotification)) then
     exit;
 
-  if Assigned(FInputPolyline) then
+  if Assigned(FInputPolyline) then begin
     (FInputPolyline as IColorChangeNotification).RemoveNotifyCallback(Self as IColorChangeNotification);
+    FInputPolyline.RemoveFreeNotification(Self);
+  end;
 
-  if Assigned(aValue) then
+  if Assigned(aValue) then begin
     (AValue as IColorChangeNotification).AddNotifyCallback(self as IColorChangeNotification);
+    aValue.FreeNotification(Self);
+  end;
 
   FInputPolyline:=AValue;
   UpdateFlow;
@@ -230,6 +235,13 @@ end;
 procedure THMICustomFlowValve.SetOutputPolyline(AValue: THMIFlowPolyline);
 begin
   if FOutputPolyline=AValue then exit;
+
+  if assigned(FOutputPolyline) then
+    FOutputPolyline.RemoveFreeNotification(Self);
+
+  if Assigned(AValue) then
+    AValue.FreeNotification(Self);
+
   FOutputPolyline:=AValue;
   UpdateFlow;
 end;
@@ -254,6 +266,19 @@ begin
   FreeAndNil(FZoneTimer);
   FreeAndNil(FValveStates);
   inherited Destroy;
+end;
+
+procedure THMICustomFlowValve.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation=opRemove) and (AComponent<>Self) then begin
+    if AComponent=FInputPolyline then
+      FInputPolyline:=nil;
+
+    if AComponent=FOutputPolyline then
+      FOutputPolyline:=nil;
+  end;
 end;
 
 procedure THMICustomFlowValve.NextZone(Sender: TObject);
