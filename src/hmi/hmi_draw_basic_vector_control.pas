@@ -786,12 +786,37 @@ var
     end;
   end;
 
-  procedure ApplyColorToSVGElement(const aColorChange:TSVGColorChange; aSVGItem:TSVGElement; const AColor:TColor);
+  procedure ApplyColorToSVGElement(const aColorChange:TSVGChange; aSVGItem:TSVGElement; const AColor:TColor);
+  var
+    originalStrokeColor: TBGRAPixel;
+    HasBorder: Boolean;
   begin
-    if aColorChange is TSVGFillChange then
-      aSVGItem.fillColor:=ColorToBGRA(AColor);
-    if aColorChange is TSVGBorderChange then
+    if aColorChange is TSVGFillChange then begin
+      originalStrokeColor := aSVGItem.strokeColor;
+      if aColorChange is TSVGFillChange then begin
+        HasBorder:= aSVGItem.isStrokeNone=false;
+
+        aSVGItem.fill     :='fill';
+        aSVGItem.fillColor:=ColorToBGRA(AColor);
+
+        if HasBorder then begin
+          aSVGItem.stroke      := 'stroke';
+          aSVGItem.strokeColor := BGRA(0,0,0,0);
+          aSVGItem.strokeColor := BGRA(255,255,255,255);
+          aSVGItem.strokeColor := originalStrokeColor;
+        end;
+      end;
+    end;
+
+    if aColorChange is TSVGBorderChange then begin
+      aSVGItem.stroke      := 'stroke';
       aSVGItem.strokeColor:=ColorToBGRA(AColor);
+    end;
+
+    if aColorChange is TOutputChange then begin
+      aSVGItem.stroke      := 'stroke';
+      aSVGItem.strokeColor:=ColorToBGRA(AColor);
+    end;;
   end;
 begin
   ReloadDrawing;
