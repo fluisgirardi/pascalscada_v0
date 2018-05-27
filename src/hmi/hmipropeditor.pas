@@ -61,7 +61,6 @@ type
   end;
 
   {$IFDEF FPC}
-  {$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
   {$IFDEF PORTUGUES}
   {:
   Editor da propriedade TGraphicZone.ImageIndex
@@ -87,7 +86,7 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const NewValue: ansistring); override;
   end;
-  {$IFEND}
+
 
   {$IFNDEF DELPHI4_UP}
   TSelectObjectPropPropertyEditor = class(TStringPropertyEditor)
@@ -364,7 +363,6 @@ begin
 end;
 
 {$IFDEF FPC}
-{$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
 procedure TGraphiZoneImageIndexPropertyEditor.SetValue(const NewValue: ansistring);
 var
   x:LongInt;
@@ -430,7 +428,6 @@ begin
   Proc('(none)');
   inherited GetValues(Proc);
 end;
-{$IFEND}
 {$ENDIF}
 
 function  TZoneBlinkWithPropertyEditor.GetAttributes: TPropertyAttributes;

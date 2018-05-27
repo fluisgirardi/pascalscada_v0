@@ -248,7 +248,7 @@ type
 
 implementation
 
-uses strutils, math, ProtocolTypes, hsstrings, Forms, LResources;
+uses strutils, math, ProtocolTypes, hsstrings, Forms, LResources, Controls;
 
 { THMIThreeWayFlowValve }
 
@@ -1036,6 +1036,7 @@ begin
   inherited Create(AOwner);
   FSVGDrawing:=TBGRASVG.Create;
   FSVGContents:=TTextStrings.Create;
+  ControlStyle := ControlStyle + [csAcceptsControls];
 end;
 
 destructor THMICustomVectorControl.Destroy;

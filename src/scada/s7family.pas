@@ -133,7 +133,8 @@ type
 
   TSiemensProtocolFamily = class(TProtocolDriver)
   private
-    FPDUSize: TS7PDUSize;
+    FForcedPDUSize: TS7PDUSize;
+    FPDUSizeInBytes:Cardinal;
     procedure SetPDUSize(AValue: TS7PDUSize);
   protected
     {$IFDEF PORTUGUES}
@@ -759,7 +760,7 @@ type
     //: @seealso(TProtocolDriver.ReadSomethingAlways)
     property ReadSomethingAlways;
 
-    property ForcePDUSize:TS7PDUSize read FPDUSize write SetPDUSize;
+    property ForcePDUSize:TS7PDUSize read FForcedPDUSize write SetPDUSize;
   end;
 
   procedure SetTagBuilderToolForSiemensS7ProtocolFamily(TagBuilderTool:TOpenTagEditor);
@@ -1114,6 +1115,7 @@ var
   pdu:TPDU;
   err:Integer;
   db:LongInt;
+  ForcedPduSize:Cardinal;
 begin
   Result := false;
   SetLength(param,8);
@@ -1129,12 +1131,14 @@ begin
   param[6] := 3;
   param[7] := $C0;
 
+  InterLockedExchange(ForcedPduSize,FPDUSizeInBytes);
+
   InitiatePDUHeader(msg,1);
   AddParam(Msg,param);
   if exchange(CPU,Msg,msgIn,false) then begin
 
     if SetupPDU(msgIn, false, pdu, err) then begin
-      CPU.MaxPDULen:=480; //pdu.param[6]*256+pdu.param[7];
+      CPU.MaxPDULen:=Min(ForcedPduSize, pdu.param[6]*256+pdu.param[7]);
       CPU.MaxBlockSize:=CPU.MaxPDULen-18; //10 bytes of header + 2 bytes of error code + 2 bytes of read request + 4 bytes of informations about the request.
       //ajusta o tamanho máximo dos blocos;
       //adjust the maximum block size.
@@ -2701,8 +2705,14 @@ end;
 
 procedure TSiemensProtocolFamily.SetPDUSize(AValue: TS7PDUSize);
 begin
-  if FPDUSize=AValue then Exit;
-  FPDUSize:=AValue;
+  if FForcedPDUSize=AValue then Exit;
+  FForcedPDUSize:=AValue;
+  Case FForcedPDUSize of
+    pduAuto: FPDUSizeInBytes:=960; //negotiate PDU will use the smallest PDU size
+    pdu240:  FPDUSizeInBytes:=240;
+    pdu480:  FPDUSizeInBytes:=480;
+    pdu960:  FPDUSizeInBytes:=960;
+  end;
 end;
 
 function  TSiemensProtocolFamily.GetTagInfo(tagobj:TTag):TTagRec;

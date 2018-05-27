@@ -100,7 +100,6 @@ begin
   RegisterPropertyEditor(TypeInfo(LongInt),TZone,                          'BlinkWith',        TZoneBlinkWithPropertyEditor);
 
   {$IFDEF FPC}
-  {$if declared(pslcl_fullversion) and (pslcl_fullversion>=093000)}
   RegisterPropertyEditor(TypeInfo(LongInt), TGraphicZone,                   'ImageIndex',                    TGraphiZoneImageIndexPropertyEditor);
   RegisterPropertyEditor(TypeInfo(LongInt), TPascalSCADALogin_LogoutAction, 'WithUserLoggedInImageIndex',    TPascalSCADALoginLogoutImageIndexPropertyEditor);
   RegisterPropertyEditor(TypeInfo(LongInt), TPascalSCADALogin_LogoutAction, 'WithoutUserLoggedInImageIndex', TPascalSCADALoginLogoutImageIndexPropertyEditor);
@@ -108,7 +107,6 @@ begin
   RegisterPropertyEditor(TypeInfo(TCaption),TTextZone,                      'Text',                          TStringMultilinePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString)  ,TObjectWithBooleanPropetiesColletionItem,'TargetObjectProperty', TSelectOnlyBooleanPropPropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString)  ,TObjectWithColorPropetiesColletionItem,  'TargetObjectProperty', TSelectOnlyTColorPropPropertyEditor);
-  {$ENDIF}
 
   RegisterPropertyEditor(TypeInfo(Ansistring), THMIControlDislocatorAnimation, 'Gets_P0_Position', TPositionPropertyEditor);
   RegisterPropertyEditor(TypeInfo(Ansistring), THMIControlDislocatorAnimation, 'Gets_P1_Position', TPositionPropertyEditor);
