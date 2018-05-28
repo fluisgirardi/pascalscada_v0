@@ -208,9 +208,10 @@ begin
       end else
         timeout:=1;
 
-      if (timeout)>0 then
+      if not FSleepInterruptable.ResetEvent then FSleepInterruptable.ResetEvent;
+      if (timeout)>0 then begin
         FSleepInterruptable.WaitFor(timeout)
-      else
+      end else
         FSleepInterruptable.WaitFor(1);
     except
     //  on E: Exception do begin
