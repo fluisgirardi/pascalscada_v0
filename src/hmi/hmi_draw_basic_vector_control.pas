@@ -195,6 +195,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
   published
+    property OnClick;
+    property Action;
     property AutoSize;
     property ColorAndFlowStates;
     property InputFlowPolyline;
