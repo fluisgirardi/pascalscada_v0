@@ -849,6 +849,8 @@ begin
   FProtocolReady:=false;
   PDUIncoming:=0;
   PDUOutgoing:=0;
+  FForcedPDUSize:=pduAuto;
+  FPDUSizeInBytes:=960;
 end;
 
 destructor TSiemensProtocolFamily.Destroy;
