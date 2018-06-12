@@ -38,6 +38,8 @@ type
 
   THMIPolyline = class(THMIBasicControl)
   private
+    FPenStyle: TPenStyle;
+    procedure SetPenStyle(AValue: TPenStyle);
     procedure setPointCoordinates(AValue: TPointCollection);
     procedure CollectionNeedsComponentState(var CurState: TComponentState);
     procedure PointChanged(Sender: TObject);
@@ -71,6 +73,7 @@ type
   published
     property LineColor:TColor read FBorderColor write SetLineColor default clBlack;
     property LineWidth:Integer read FBorderWidth write SetBorderWidth default 2;
+    property PenStyle:TPenStyle read FPenStyle write SetPenStyle default psSolid;
     property PointCoordinates:TPointCollection read FPointCoordinates write setPointCoordinates;
     property Visible;
   end;
@@ -465,6 +468,13 @@ begin
   inherited;
 end;
 
+procedure THMIPolyline.SetPenStyle(AValue: TPenStyle);
+begin
+  if FPenStyle=AValue then Exit;
+  FPenStyle:=AValue;
+  InvalidateShape;
+end;
+
 procedure THMIPolyline.setPointCoordinates(AValue: TPointCollection);
 begin
   FPointCoordinates.Assign(AValue);
@@ -490,8 +500,9 @@ begin
     p[i].y:=pc.Y + ifthen((FBorderWidth mod 2)=0, 0.5);
   end;
 
-  if Visible or (csDesigning in ComponentState)
-  then FControlArea.DrawPolyLineAntialias(p, ColorToBGRA(FBorderColor),FBorderWidth);
+  FControlArea.PenStyle:=FPenStyle;
+  if Visible or (csDesigning in ComponentState) then
+    FControlArea.DrawPolyLineAntialias(p, ColorToBGRA(FBorderColor),FBorderWidth);
 
   if csDesigning in ComponentState then begin
     if (FPointInfo='') or (FDesignDrawing=false) then exit;
@@ -703,6 +714,7 @@ begin
   FBorderWidth:=2;
   FCtrlOnLastMouseMove:=false;
   FBorderColor:=clBlack;
+  FPenStyle:=psSolid;
 end;
 
 destructor THMIPolyline.Destroy;

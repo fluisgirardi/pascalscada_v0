@@ -1,0 +1,13 @@
+zeosPackageRev   = ' ZeosLib package Revision: 4053';
+zeosSourcesRev   = ' ZeosLib sources Revision: 4030';
+zeosPQLibRev     = ' ZeosLib PostgreSQL Lib Revision: 4030';
+zeosMySQLLibRev  = ' ZeosLib MySQL Library Revision: 4030';
+zeosSQLiteLibRev = ' ZeosLib SQLite Library Revision: 4030';
+zeosTestsRev     = ' ZeosLib Tests Revision: 4030';
+zeosDBaseRev     = ' ZeosLib databases Revision: 4030';
+bgrabitmapRev    = ' BGRABitmap Revision: 96';
+bgracontrolsRev  = ' BGRAControls Revision: 250';
+pSCADACommonRev  = ' PascalSCADA Common Revision: 1190';
+pSCADADBaseRev   = ' PascalSCADA Database Revision: 1190';
+pSCADAHClRev     = ' PascalSCADA HCl Revision: 1190';
+pSCADAScadaRev   = ' PascalSCADA SCADA Revision: 1190';
