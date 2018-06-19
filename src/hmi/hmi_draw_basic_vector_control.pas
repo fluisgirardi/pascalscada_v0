@@ -125,6 +125,7 @@ type
     FStates: THMIVectorFlowZones;
     FCurrentZone,
     FOwnerZone: THMIVectorFlowZone;
+    FZoneChanged: TNotifyEvent;
     procedure BlinkTimer(Sender: TObject);
     procedure RemoveTagCallBack(Sender: TObject);
     procedure SetFlowOutputs(AValue: THMIOutputCollection);
@@ -153,6 +154,7 @@ type
     property FlowOutputPolylines:THMIOutputCollection read FFlowOutputs write SetFlowOutputs;
     property PLCTag:TPLCTag read FPLCTag write SetHMITag;
     property OnDrawChanges:TNotifyEvent read FOnDrawChanges write FOnDrawChanges;
+    property ZoneChanged:TNotifyEvent read FZoneChanged write FZoneChanged;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -246,6 +248,7 @@ type
     property Stretch;
     property SVGContents;
     property OnClick;
+    property ZoneChanged;
   end;
 
 implementation
@@ -766,6 +769,7 @@ var
   aSVGElement: TSVGElement       = nil;
   ColorObj: TSVGColorChange      = nil;
   outputChangeObj: TOutputChange = nil;
+  CurrentZoneChanged: Boolean;
 
   function FindSVGElement(const aSVGId:AnsiString; const SVGContents:TSVGContent; out SVGElement:TSVGElement):Boolean;
   var
@@ -822,6 +826,7 @@ var
   end;
 begin
   ReloadDrawing;
+  CurrentZoneChanged := FCurrentZone<>aZone;
   FCurrentZone:=aZone;
   if aZone<>nil then begin
     for l:=0 to fCurrentZone.FSVGChanges.Count-1 do begin
@@ -869,6 +874,8 @@ begin
     end;
 
   InvalidateDraw;
+
+  //if CurrentZoneChanged and ;
 end;
 
 procedure THMICustomFlowVectorControl.StatesChanged(Sender: TObject);
