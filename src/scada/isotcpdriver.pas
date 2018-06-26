@@ -553,7 +553,7 @@ begin
       end;
       1:
         with FPLCs[0] do begin
-          StillConnected:=(Rack=FPLCRack) AND (Slot=FPLCSlot) AND (Station=FPLCStation);
+          StillConnected:=Connected and (Rack=FPLCRack) AND (Slot=FPLCSlot) AND (Station=FPLCStation);
           Rack     :=FPLCRack;
           Slot     :=FPLCSlot;
           Station  :=FPLCStation;
