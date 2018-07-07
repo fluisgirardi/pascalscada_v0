@@ -283,7 +283,7 @@ begin
   ReconnectTimerRunning:=false;
   ReconnectStarted:=now;
   while not Terminated do begin
-    while FMessageQueue.PeekMessage(msg,0,100,true) do begin
+    while FMessageQueue.PeekMessage(msg,0,100,true) and not Terminated do begin
       Ok:=false;
       case msg.MsgID of
         0: begin
@@ -319,7 +319,7 @@ begin
       end;
     end;
 
-    if FActive then begin
+    if FActive and not Terminated then begin
       OK:=true;
       if assigned(FCheckSocket) then
         FCheckSocket(Ok);
@@ -332,7 +332,8 @@ begin
 
 
     msbetween:=MilliSecondsBetween(now,ReconnectStarted);
-    if (FAutoReconnect=1) and (ReconnectTimerRunning) and (msbetween>=ReconnectInterval) then begin
+    if (FAutoReconnect=1) and (ReconnectTimerRunning)
+       and (msbetween>=ReconnectInterval) and not Terminated then begin
       ReconnectStarted:=Now;
       Ok:=false;
       if Assigned(FReconnectSocket) then
@@ -341,8 +342,16 @@ begin
         ReconnectTimerRunning:=false;
     end;
 
-    Sleep(250);
+    if not Terminated then
+      Sleep(250);
   end;
+
+  //terminated, close the socket...
+  FActive:=false;
+  if Assigned(DisconnectSocket) then
+    DisconnectSocket(Ok);
+  ReconnectTimerRunning:=false;
+
   FEnd.SetEvent;
 end;
 

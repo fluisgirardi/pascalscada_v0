@@ -73,7 +73,10 @@ begin
   then begin
     Result := 0;
     for i := 0 to 31 do begin
+      {$PUSH}
+      {$R-}
       Mask := 1 shl i;
+      {$POP}
       if (ProcessAffinityMask and Mask)<>0 then
         inc(Result);
     end;
