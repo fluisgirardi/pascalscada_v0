@@ -19,7 +19,7 @@
     </CompilerOptions>
     <Description Value="Common methods for all PascalSCADA packages"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="4"/>
+    <Version Minor="7" Release="5"/>
     <Files Count="9">
       <Item1>
         <Filename Value="src/common/crossdatetime.pas"/>
