@@ -409,7 +409,7 @@ begin
 
         // data are ok
         for i:=0 to Len-1 do begin
-          if (10+i*20)<Length(pkg.BufferToRead) then
+          if (10+i*2)<Length(pkg.BufferToRead) then
             Values[i]:=(LongInt(pkg.BufferToRead[9+(i*2)]) shl 8) + LongInt(pkg.BufferToRead[10+i*2])
           else
             Values[i]:=0
