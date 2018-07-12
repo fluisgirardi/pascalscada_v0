@@ -184,7 +184,7 @@ type
     //: @seealso(TPLCTag.Write)
     procedure Write; overload; virtual;
     //: @seealso(TPLCTag.Write)
-    procedure ScanWrite; overload; virtual;
+    function ScanWrite:Int64; overload; virtual;
     {$IFDEF PORTUGUES}
     //: Remove a sequência de processamento de escalas.
     {$ELSE}
@@ -424,14 +424,17 @@ begin
   SetLength(towrite,0);
 end;
 
-procedure TPLCNumber.ScanWrite;
+function TPLCNumber.ScanWrite: Int64;
 var
   towrite:TArrayOfDouble;
 begin
   SetLength(towrite,1);
-  towrite[0]:=PValueRaw;
-  ScanWrite(towrite,1,0);
-  SetLength(towrite,0);
+  try
+    towrite[0]:=PValueRaw;
+    Result:=ScanWrite(towrite,1,0);
+  finally
+    SetLength(towrite,0);
+  end;
 end;
 
 procedure TPLCNumber.RemoveScaleProcessor;

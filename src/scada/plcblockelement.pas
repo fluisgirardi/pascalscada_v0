@@ -72,9 +72,9 @@ type
     //: @exclude
     destructor  Destroy; override;
     //: @seealso(TPLCTag.ScanRead)
-    procedure ScanRead; override;
+    function ScanRead:Int64; override;
     //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
+    function ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal; const IgnoreAutoWrite:Boolean = false):Int64; override;
     //: @seealso(TPLCTag.Read)
     procedure Read; override;
     //: @seealso(TPLCTag.Write)
@@ -220,16 +220,19 @@ begin
     end;
 end;
 
-procedure TPLCBlockElement.ScanRead;
+function TPLCBlockElement.ScanRead: Int64;
 begin
   if Assigned(PBlock) then
-    PBlock.ScanRead;
+    Result:=PBlock.ScanRead;
 end;
 
-procedure TPLCBlockElement.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
+function TPLCBlockElement.ScanWrite(Values: TArrayOfDouble; Count,
+  Offset: Cardinal; const IgnoreAutoWrite: Boolean): Int64;
 begin
   if Assigned(PBlock) then
-    PBlock.ScanWrite(values, 1, PIndex)
+    Result := PBlock.ScanWrite(values, 1, PIndex, IgnoreAutoWrite)
+  else
+    Result:=-1;
 end;
 
 procedure TPLCBlockElement.Read;

@@ -155,7 +155,7 @@ type
     //: @seealso(TPLCTag.SetProtocolDriver)
     procedure SetProtocolDriver(p:TProtocolDriver); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
+    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -735,7 +735,9 @@ begin
   SetBlockSize(CalcBlockSize(false));
 end;
 
-procedure TPLCString.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);
+procedure TPLCString.TagCommandCallBack(const ReqID: LongWord;
+  Values: TArrayOfDouble; ValuesTimeStamp: TDateTime; TagCommand: TTagCommand;
+  LastResult: TProtocolIOResult; Offset: LongInt);
 var
   c:LongInt;
   notify:Boolean;
@@ -857,11 +859,14 @@ var
   x:TArrayOfDouble;
 begin
   x:=StringToArrayOfValues(Value);
-  if FSyncWrites then
-    Write(x,Length(x),0)
-  else
-    ScanWrite(x,Length(x),0);
-  SetLength(x,0);
+  try
+    if FSyncWrites then
+      Write(x,Length(x),0)
+    else
+      ScanWrite(x,Length(x),0);
+  finally
+    SetLength(x,0);
+  end;
 end;
 
 function TPLCString.CalcBlockSize(IsWrite:Boolean):Cardinal;

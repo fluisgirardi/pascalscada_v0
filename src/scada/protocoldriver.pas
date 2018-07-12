@@ -127,10 +127,13 @@ type
     //procedure called to update values of multiples tag (single or block)
     function  GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):LongInt;
 
+    function SafeSingleScanRead(var TagRec: TTagRec; var values: TArrayOfDouble): TProtocolIOResult;
+
     procedure DoPortOpened(Sender: TObject);
     procedure DoPortClosed(Sender: TObject);
     procedure DoPortDisconnected(Sender: TObject);
     procedure DoPortRemoved(Sender:TObject);
+
     procedure SetIsReadOnly(AValue: Boolean);
     procedure UpdateUserTime(usertime:Double);
   protected
@@ -767,6 +770,12 @@ uses PLCTag, hsstrings, math, crossdatetime, pascalScadaMTPCPU;
 constructor TProtocolDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FScanReadID  := 0;
+  FScanWriteID := 0;
+  FReadID      := 0;
+  FWriteID     := 0;
+
+
   FReadOnly:=0;
   PDriverID := DriverCount;
   Inc(DriverCount);
@@ -792,8 +801,9 @@ begin
   {$IFNDEF WINCE}
   PScanReadThread.Priority:=tpTimeCritical;
   {$ENDIF}
-  PScanReadThread.OnDoScanRead := @SafeScanRead;
-  PScanReadThread.OnDoScanWrite := @SafeScanWrite;
+  PScanReadThread.OnDoScanRead       := @SafeScanRead;
+  PScanReadThread.OnDoScanWrite      := @SafeScanWrite;
+  PScanReadThread.OnDoSingleScanRead := @SafeSingleScanRead;
 
   //PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
   //{$IFNDEF WINCE}
@@ -1056,6 +1066,8 @@ begin
 end;
 
 function TProtocolDriver.ScanRead(const tagrec:TTagRec):Cardinal;
+var
+   pkg:PScanReqRec;
 begin
   try
     PCallersCS.Enter;
@@ -1072,14 +1084,29 @@ begin
     //
     //increment the scan read unique identification
     if FScanReadID=$FFFFFFFF then
-       FScanReadID := 0
+       FScanReadID := 1
     else
        inc(FScanReadID);
+
+    //cria um pacote de leitura por scan
+    //creates the message of scan read
+    New(pkg);
+    //copia o TagRec
+    //copy the tagrec
+    pkg^.Tag:=tagrec;
+    //copia o id da requisição
+    //copy the request id
+    pkg^.Tag.ID:=FScanReadID;
+    //copia os valores
+    //copy the values
+    SetLength(pkg^.Values, 0);
+    pkg^.RequestResult:=ioNone;
+    pkg^.ValueTimeStamp:=CrossNow;
 
     //posta uma mensagem de Leitura por Scan
     //send a message requesting a scanread
     if (PScanUpdateThread<>nil) then
-      PScanUpdateThread.ScanRead(tagrec);
+      PScanReadThread.ScanRead(pkg);
 
     Result := FScanReadID;
 
@@ -1090,11 +1117,12 @@ end;
 
 function TProtocolDriver.ScanWrite(const tagrec:TTagRec; const Values:TArrayOfDouble):Cardinal;
 var
-   pkg:PScanWriteRec;
+   pkg:PScanReqRec;
 begin
   //read only protocol.
   if GetIsReadOnly then begin
-    tagrec.CallBack(Values,Now,tcScanWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    tagrec.CallBack(0, Values,Now,tcScanWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    Result:=0;
     exit;
   end;
 
@@ -1113,21 +1141,23 @@ begin
     //
     //increment the scan write unique identification
     if FScanWriteID=$FFFFFFFF then
-       FScanWriteID := 0
+       FScanWriteID := 1
     else
        inc(FScanWriteID);
        
     //cria um pacote de escrita por scan
     //creates the message of scan write
     New(pkg);
-    pkg^.SWID:=FScanReadID;
     //copia o TagRec
     //copy the tagrec
     Move(tagrec, pkg^.Tag, sizeof(TTagRec));
+    //copia o id da requisição
+    //copy the request id
+    pkg^.Tag.ID:=FScanWriteID;
     //copia os valores
     //copy the values
-    pkg^.ValuesToWrite := Values;
-    pkg^.WriteResult:=ioNone;
+    pkg^.Values := Values;
+    pkg^.RequestResult:=ioNone;
     pkg^.ValueTimeStamp:=CrossNow;
 
     //posta uma mensagem de Escrita por Scan
@@ -1158,7 +1188,7 @@ begin
     FReadCS.Enter;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(Values,CrossNow,tcRead,res,tagrec.RealOffset);
+      tagrec.CallBack(0, Values,CrossNow,tcRead,res,tagrec.RealOffset);
   finally
     FReadCS.Leave;
     FWriteCS.Leave;
@@ -1172,7 +1202,7 @@ var
   res:TProtocolIOResult;
 begin
   if GetIsReadOnly then begin
-    tagrec.CallBack(Values,Now,tcWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    tagrec.CallBack(0, Values,Now,tcWrite,ioReadOnlyProtocol,tagrec.RealOffset);
     exit;
   end;
 
@@ -1187,7 +1217,7 @@ begin
 
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(Values,CrossNow,tcWrite,res,tagrec.RealOffset);
+      tagrec.CallBack(0, Values,CrossNow,tcWrite,res,tagrec.RealOffset);
   finally
     FReadCS.Leave;
     FWriteCS.Leave;
@@ -1271,6 +1301,25 @@ begin
     FReadCS.Enter;
 
     Result := DoWrite(TagRec,values,false)
+  finally
+    FReadCS.Leave;
+    FWriteCS.Leave;
+    FPause.SetEvent;
+  end;
+end;
+
+function  TProtocolDriver.SafeSingleScanRead(var TagRec:TTagRec; var values:TArrayOfDouble):TProtocolIOResult;
+begin
+  try
+    //tenta entrar no Mutex
+    //try enter on mutex
+    while not FPause.ResetEvent do
+      CrossThreadSwitch;
+
+    FWriteCS.Enter;
+    FReadCS.Enter;
+
+    Result := DoRead(TagRec,values,false)
   finally
     FReadCS.Leave;
     FWriteCS.Leave;

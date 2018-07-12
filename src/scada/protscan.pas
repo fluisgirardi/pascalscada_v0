@@ -44,6 +44,7 @@ type
   {$ENDIF}
   TScanThread = class(TCrossThread)
   private
+    FDoSingleScanRead: TSingleScanReadProc;
     FInitEvent:TCrossEvent;
     FWaitToWrite:TCrossEvent;
     FEnd:TCrossEvent;
@@ -58,6 +59,13 @@ type
     procedure SyncException;
     function  WaitEnd(timeout:Cardinal):TWaitResult;
   protected
+    {$IFDEF PORTUGUES}
+    //:Ordena a thread verificar se há comandos de escrita pendentes.
+    {$ELSE}
+    //: Verifies if the thread has write requests on queue.
+    {$ENDIF}
+    procedure CheckScanWriteCmd;
+
     //: @exclude
     procedure Execute; override;
   public
@@ -65,13 +73,6 @@ type
     constructor Create(StartSuspended:Boolean; ScanUpdater:TScanUpdate);
     //: @exclude
     destructor Destroy; override;
-
-    {$IFDEF PORTUGUES}
-    //:Ordena a thread verificar se há comandos de escrita pendentes.
-    {$ELSE}
-    //: Verifies if the thread has write requests on queue.
-    {$ENDIF}
-    procedure CheckScanWriteCmd;
 
     {$IFDEF PORTUGUES}
     //: Sinaliza para thread Terminar.
@@ -97,7 +98,7 @@ type
     {:
     Solicita uma escrita de valores por scan para a thread do driver de protocolo.
 
-    @param(SWPkg PScanWriteRec. Ponteiro para estrutura com as informações
+    @param(SWPkg PScanReadRec. Ponteiro para estrutura com as informações
            da escrita por scan do tag.)
     @raises(Exception caso a thread esteja suspensa ou não sinalize a sua
             inicialização em 5 segundos.)
@@ -106,12 +107,32 @@ type
     {:
     Put a values write request to be processed by the scan (queue) of protocol.
 
-    @param(SWPkg PScanWriteRec. Points to a structure with informations about
+    @param(SWPkg PScanReadRec. Points to a structure with informations about
            the write command.)
     @raises(Exception if the thread didn't responds.)
     }
     {$ENDIF}
-    procedure ScanWrite(SWPkg:PScanWriteRec);
+    procedure ScanWrite(SWPkg:PScanReqRec);
+
+    {$IFDEF PORTUGUES}
+    {:
+    Solicita uma leitura de valores por scan para a thread do driver de protocolo.
+
+    @param(SWPkg PScanReadRec. Ponteiro para estrutura com as informações
+           da escrita por scan do tag.)
+    @raises(Exception caso a thread esteja suspensa ou não sinalize a sua
+            inicialização em 5 segundos.)
+    }
+    {$ELSE}
+    {:
+    Put a read request to be processed by the scan (queue) of protocol.
+
+    @param(SWPkg PScanReadRec. Points to a structure with informations about
+           the write command.)
+    @raises(Exception if the thread didn't responds.)
+    }
+    {$ENDIF}
+    procedure ScanRead(SRPkg:PScanReqRec);
   published
     {$IFDEF PORTUGUES}
     {:
@@ -145,6 +166,14 @@ type
     }
     {$ENDIF}
     property OnDoScanWrite:TScanWriteProc read FDoScanWrite write FDoScanWrite;
+
+    {$IFDEF PORTUGUES}
+    //: Evento chamado para realizar a leitura de valoes de um tag.
+    {$ELSE}
+    //: Event called to execute a single scan read.
+    {$ENDIF}
+    property OnDoSingleScanRead:TSingleScanReadProc read FDoSingleScanRead write FDoSingleScanRead;
+
   end;
 
 implementation
@@ -216,18 +245,39 @@ end;
 procedure TScanThread.CheckScanWriteCmd;
 var
   PMsg:TMSMsg;
-  pkg:PScanWriteRec;
+  pkg:PScanReqRec;
 begin
-  if Assigned(FDoScanWrite) then begin
-    FWaitToWrite.WaitFor(1);
-    FWaitToWrite.ResetEvent;
-    while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_TAGSCANWRITE,true) do begin
-       pkg := PScanWriteRec(PMsg.wParam);
+  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_TAGSCANWRITE,true) do begin
+    case PMsg.MsgID of
+      PSM_SINGLESCANREAD: begin
+        if Assigned(FDoSingleScanRead) then begin
+          FWaitToWrite.WaitFor(1); //TODO -oFabio: Why we should wait 1ms?
+          FWaitToWrite.ResetEvent;
 
-       pkg^.WriteResult := FDoScanWrite(pkg^.Tag,pkg^.ValuesToWrite);
+          pkg := PScanReqRec(PMsg.wParam);
 
-       if PScanUpdater<>nil then
-         PScanUpdater.ScanWriteCallBack(pkg);
+          pkg^.RequestResult := FDoSingleScanRead(pkg^.Tag, pkg^.Values);
+
+          if PScanUpdater<>nil then
+            PScanUpdater.ScanRequestCallBack(pkg, false);
+        end else                            
+          Dispose(PScanReqRec(PMsg.wParam));
+      end;
+
+      PSM_TAGSCANWRITE: begin
+        if Assigned(FDoScanWrite) then begin
+          FWaitToWrite.WaitFor(1); //TODO -oFabio: Why we should wait 1ms?
+          FWaitToWrite.ResetEvent;
+
+          pkg := PScanReqRec(PMsg.wParam);
+
+          pkg^.RequestResult := FDoScanWrite(pkg^.Tag,pkg^.Values);
+
+          if PScanUpdater<>nil then
+            PScanUpdater.ScanRequestCallBack(pkg);
+        end else
+          Dispose(PScanReqRec(PMsg.wParam));
+      end;
     end;
   end;
 end;
@@ -245,7 +295,7 @@ begin
   while FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled do ;
 end;
 
-procedure TScanThread.ScanWrite(SWPkg:PScanWriteRec);
+procedure TScanThread.ScanWrite(SWPkg: PScanReqRec);
 begin
   if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
     raise Exception.Create(SthreadSuspended);
@@ -253,6 +303,17 @@ begin
   //envia a mensagem
   //sends the message.
   FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
+  FWaitToWrite.SetEvent;
+end;
+
+procedure TScanThread.ScanRead(SRPkg: PScanReqRec);
+begin
+  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
+    raise Exception.Create(SthreadSuspended);
+
+  //envia a mensagem
+  //sends the message.
+  FSpool.PostMessage(PSM_SINGLESCANREAD, SRPkg, nil,true);
   FWaitToWrite.SetEvent;
 end;
 

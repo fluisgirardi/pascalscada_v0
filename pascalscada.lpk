@@ -44,7 +44,7 @@
     </CompilerOptions>
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="4"/>
+    <Version Minor="7" Release="6"/>
     <Files Count="59">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
@@ -287,8 +287,8 @@
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="pascalscada_common"/>
-        <MaxVersion Minor="7" Release="3"/>
-        <MinVersion Minor="7" Release="4" Valid="True"/>
+        <MaxVersion Minor="7" Release="4"/>
+        <MinVersion Minor="7" Release="6" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item1>
       <Item2>

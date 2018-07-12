@@ -54,7 +54,7 @@ type
 
 implementation
 
-uses Math, PLCMemoryManager, SysUtils, crossdatetime{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses Math, PLCMemoryManager, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 { TMelsecTCPDriver }
 
@@ -73,7 +73,6 @@ var
    i,c,c2,plc:LongInt;
    address, len:Cardinal;
    foundPLC:Boolean;
-   aux:TPLCMemoryManager;
    {$IFDEF FDEBUG}
    debug:string;
    {$ENDIF}
@@ -324,7 +323,6 @@ end;
 function TMelsecTCPDriver.EncodePkg(TagObj: TTagRec; ToWrite: TArrayOfDouble;
   var ResultLen: Integer): BYTES;
 var
-  i, c, c2, size:LongInt;
   NetworkNumber, PcNumber, IoNumber, ChannelNumber, CpuTimer,
   iMainCommand, iSubCommand, frame, dataLength: integer;
 begin

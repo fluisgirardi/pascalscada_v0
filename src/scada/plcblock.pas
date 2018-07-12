@@ -61,7 +61,7 @@ type
     //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
+    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -95,12 +95,12 @@ type
     procedure WriteDirect;
 
     //: @seealso(TPLCTag.ScanRead)
-    procedure ScanRead; override;
-    //: @seealso(TPLCTag.ScanWrite)
+    function ScanRead:Int64; override;
+    //: @seealso(TPLCTag.Read)
     procedure Read; override;
 
     //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
+    function ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal; const IgnoreAutoWrite:Boolean = false):Int64; override;
     //: @seealso(TPLCTag.Write)
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
@@ -184,7 +184,9 @@ begin
   Result:=inherited IsMyCallBack(Cback) and (TMethod(Cback).Code=Pointer(@TPLCBlock.TagCommandCallBack));
 end;
 
-procedure TPLCBlock.TagCommandCallBack(Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt);
+procedure TPLCBlock.TagCommandCallBack(const ReqID: LongWord;
+  Values: TArrayOfDouble; ValuesTimeStamp: TDateTime; TagCommand: TTagCommand;
+  LastResult: TProtocolIOResult; Offset: LongInt);
 var
   c:LongInt;
   notify:Boolean;
@@ -194,7 +196,7 @@ begin
   if (csDestroying in ComponentState) then exit;
   PreviousTimestamp:=PValueTimeStamp;
   try
-    inherited TagCommandCallBack(Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
+    inherited TagCommandCallBack(ReqID, Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
     TagValues:=PLCValuesToTagValues(Values, Offset);
     notify := false;
     case TagCommand of
@@ -287,12 +289,16 @@ var
 begin
   PModified:=true;
   SetLength(towrite,1);
-  towrite[0] := Value;
-  if FSyncWrites then
-    Write(towrite,1,index)
-  else
-    ScanWrite(towrite,1,index);
-  SetLength(towrite,0);
+  try
+    towrite[0] := Value;
+    if FSyncWrites then
+      Write(towrite,1,index)
+    else
+      ScanWrite(towrite,1,index);
+  finally
+    SetLength(towrite,0);
+  end;
+
 end;
 
 function TPLCBlock.GetValues:TArrayOfDouble;
@@ -306,11 +312,14 @@ var
 begin
   PModified:=true;
   towrite := values;
-  if FSyncWrites then
-    Write(towrite,PSize,0)
-  else
-    ScanWrite(towrite,PSize,0);
-  SetLength(towrite,0);
+  try
+    if FSyncWrites then
+      Write(towrite,PSize,0)
+    else
+      ScanWrite(towrite,PSize,0);
+  finally
+    SetLength(towrite,0);
+  end;
 end;
 
 procedure TPLCBlock.AsyncNotifyChange(data: Pointer);
@@ -345,9 +354,12 @@ var
   x:Boolean;
 begin
   x:=PAutoWrite;
-  PAutoWrite := true;
-  ScanWrite(PValues,PSize,0);
-  PAutoWrite := x;
+  try
+    PAutoWrite := true;
+    ScanWrite(PValues,PSize,0);
+  finally
+    PAutoWrite := x;
+  end;
 end;
 
 procedure TPLCBlock.WriteDirect;
@@ -355,9 +367,9 @@ begin
   Write(PValues,PSize,0);
 end;
 
-procedure TPLCBlock.ScanRead;
+function TPLCBlock.ScanRead: Int64;
 begin
-  inherited ScanRead;
+  Result := inherited ScanRead;
 end;
 
 procedure TPLCBlock.Read;
@@ -365,13 +377,17 @@ begin
   inherited Read;
 end;
 
-procedure TPLCBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
+function TPLCBlock.ScanWrite(Values: TArrayOfDouble; Count, Offset: Cardinal;
+  const IgnoreAutoWrite: Boolean): Int64;
 var
   PLCValues:TArrayOfDouble;
 begin
   PLCValues:=TagValuesToPLCValues(Values,Offset);
-  inherited ScanWrite(PLCValues, Count, Offset);
-  SetLength(PLCValues,0);
+  try
+    Result := inherited ScanWrite(PLCValues, Count, Offset, IgnoreAutoWrite);
+  finally
+    SetLength(PLCValues,0);
+  end;
 end;
 
 procedure TPLCBlock.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);

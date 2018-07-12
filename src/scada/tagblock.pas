@@ -42,9 +42,9 @@ type
     {$ENDIF}
     PValues:TArrayOfDouble;
     //: @seealso(TPLCTag.ScanRead)
-    procedure ScanRead; override;
+    function ScanRead:Int64; override;
     //: @seealso(TPLCTag.ScanWrite)
-    procedure ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
+    function ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal; const IgnoreAutoWrite:Boolean = false):Int64; override;
     //: @seealso(TPLCTag.Read)
     procedure Read; override;
     //: @seealso(TPLCTag.Write)
@@ -96,32 +96,38 @@ implementation
 
 uses crossdatetime;
 
-procedure TTagBlock.ScanRead;
+function TTagBlock.ScanRead: Int64;
 var
   tr:TTagRec;
 begin
   inherited ScanRead;
-  if (PProtocolDriver<>nil) and PAutoRead then begin
+  if (PProtocolDriver<>nil) then begin
     BuildTagRec(tr,0,0);
-    PProtocolDriver.ScanRead(tr);
-  end;
+    Result:=PProtocolDriver.ScanRead(tr);
+  end else
+    Result:=-1;
 end;
 
-procedure TTagBlock.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal);
+function TTagBlock.ScanWrite(Values: TArrayOfDouble; Count, Offset: Cardinal;
+  const IgnoreAutoWrite: Boolean): Int64;
 var
   tr:TTagRec;
 begin
+  Result:=-1;
   if Count=0 then exit;
   if (PProtocolDriver<>nil) then begin
-    if PAutoWrite then begin
+    if PAutoWrite or IgnoreAutoWrite then begin
       BuildTagRec(tr,Count,Offset);
-      PProtocolDriver.ScanWrite(tr,Values);
+      Result:=PProtocolDriver.ScanWrite(tr,Values);
     end else begin
-      TagCommandCallBack(Values,CrossNow,tcScanWrite,ioOk,Offset);
+      TagCommandCallBack(0, Values,CrossNow,tcScanWrite,ioOk,Offset);
       Dec(PCommWriteOk);
+      Result:=-1;
     end;
-  end else
-    TagCommandCallBack(Values,CrossNow,tcScanWrite,ioNullDriver,Offset);
+  end else begin
+    TagCommandCallBack(0, Values,CrossNow,tcScanWrite,ioNullDriver,Offset);
+    Result:=-1;
+  end;
 end;
 
 procedure TTagBlock.Read;
@@ -143,7 +149,7 @@ begin
     BuildTagRec(tr,Count,Offset);
     PProtocolDriver.Write(tr,Values);
   end else
-    TagCommandCallBack(Values,CrossNow,tcWrite,ioNullDriver,Offset);
+    TagCommandCallBack(0, Values,CrossNow,tcWrite,ioNullDriver,Offset);
 end;
 
 

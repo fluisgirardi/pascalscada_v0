@@ -112,7 +112,7 @@ type
     @raises(Exception if the thread was not initialized.)
     }
     {$ENDIF}
-    procedure ScanWriteCallBack(SWPkg:PScanWriteRec);
+    procedure ScanRequestCallBack(SReqPkg:PScanReqRec; IsScanWrite:Boolean = true);
   published
 
     {$IFDEF PORTUGUES}
@@ -237,10 +237,15 @@ begin
   FSleepInterruptable.SetEvent;
 end;
 
-procedure TScanUpdate.ScanWriteCallBack(SWPkg:PScanWriteRec);
+procedure TScanUpdate.ScanRequestCallBack(SReqPkg: PScanReqRec;
+  IsScanWrite: Boolean);
 begin
-   FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
-   FSleepInterruptable.SetEvent;
+  if IsScanWrite then
+    FSpool.PostMessage(PSM_TAGSCANWRITE,SReqPkg,nil,true)
+  else
+    FSpool.PostMessage(PSM_SINGLESCANREAD,SReqPkg,nil,true);
+
+  FSleepInterruptable.SetEvent;
 end;
 
 procedure TScanUpdate.SyncException;
@@ -264,7 +269,7 @@ begin
     if not found then continue;
     with PScannedValues[c] do
       try
-        CallBack(Values, ValueTimeStamp, tcScanRead, LastResult, 0);
+        CallBack(0, Values, ValueTimeStamp, tcScanRead, LastResult, 0);
         SetLength(Values,0);
       finally
       end;
@@ -274,22 +279,25 @@ end;
 
 procedure TScanUpdate.CheckScanReadOrWrite;
 var
-  x:PScanWriteRec;
+  x:PScanReqRec;
   PMsg:TMSMsg;
 begin
-  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANREAD,PSM_TAGSCANWRITE,true) do begin
+  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANREAD,PSM_SINGLESCANREAD,true) do begin
     //try
       case PMsg.MsgID of
-        PSM_TAGSCANWRITE: begin
-          x := PScanWriteRec(PMsg.wParam);
+        PSM_TAGSCANWRITE, PSM_SINGLESCANREAD: begin
+          x := PScanReqRec(PMsg.wParam);
 
           TagCBack                := x^.Tag.CallBack;
-          Fvalues.Values          := x^.ValuesToWrite;
+          Fvalues.Values          := x^.Values;
           Fvalues.Offset          := x^.Tag.OffSet;
           Fvalues.RealOffset      := x^.Tag.RealOffset;
           Fvalues.ValuesTimestamp := x^.ValueTimeStamp;
-          Fvalues.LastQueryResult := x^.WriteResult;
-          FCmd:=tcScanWrite;
+          Fvalues.LastQueryResult := x^.RequestResult;
+          if PMsg.MsgID=PSM_TAGSCANWRITE then
+            FCmd:=tcScanWrite
+          else
+            FCmd:=tcSingleScanRead;
 
           //sincroniza com o tag.
           //sync tag (update it)
@@ -298,7 +306,7 @@ begin
           //libera a memoria ocupada
           //pelo pacote
           //free the memory of the request
-          SetLength(x^.ValuesToWrite,0);
+          SetLength(x^.Values,0);
           Dispose(x);
           TagCBack:=nil;
         end;
@@ -338,11 +346,18 @@ begin
 end;
 
 procedure TScanUpdate.SyncCallBack;
+var
+  ReqID: LongWord;
 begin
   if Terminated then exit;
   //try
+    if Assigned(FTagRec) then
+      ReqID:=FTagRec^.ID
+    else
+      ReqID:=0;
+
     if Assigned(TagCBack) then
-      TagCBack(Fvalues.Values,Fvalues.ValuesTimestamp,FCmd,Fvalues.LastQueryResult, Fvalues.RealOffset);
+      TagCBack(ReqID, Fvalues.Values,Fvalues.ValuesTimestamp,FCmd,Fvalues.LastQueryResult, Fvalues.RealOffset);
   //except
   //  on erro:Exception do begin
   //    Ferro:=erro;
