@@ -132,6 +132,9 @@ type
     property MinValue;
     //: @seealso(TTag.OnUpdate)
     property OnUpdate;
+
+    property LastScanReadReqID;
+    property LastScanWriteReqID;
   end;
 
 implementation
@@ -212,7 +215,7 @@ begin
   inherited ScanRead;
   if (PProtocolDriver<>nil) then begin
     BuildTagRec(tr,0,0);
-    Result := PProtocolDriver.ScanRead(tr);
+    Result := PProtocolDriver.SingleScanRead(tr);
   end else
     Result:=-1;
 end;
@@ -297,7 +300,10 @@ begin
   try
     notify := false;
     case TagCommand of
-      tcScanRead,tcRead,tcInternalUpdate, tcSingleScanRead:
+      tcScanRead,
+      tcRead,
+      tcInternalUpdate,
+      tcSingleScanRead:
       begin
         if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
           notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
@@ -339,7 +345,7 @@ begin
     end;
 
     if notify or PFirstUpdate then begin
-      if TagCommand in [tcRead,tcScanRead] then PFirstUpdate:=false;
+      if TagCommand in [tcRead,tcScanRead,tcSingleScanRead] then PFirstUpdate:=false;
       NotifyChange;
     end;
 

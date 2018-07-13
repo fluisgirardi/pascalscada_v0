@@ -132,7 +132,7 @@ type
     @raises(Exception if the thread didn't responds.)
     }
     {$ENDIF}
-    procedure ScanRead(SRPkg:PScanReqRec);
+    procedure SingleScanRead(SRPkg:PScanReqRec);
   published
     {$IFDEF PORTUGUES}
     {:
@@ -247,7 +247,7 @@ var
   PMsg:TMSMsg;
   pkg:PScanReqRec;
 begin
-  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_TAGSCANWRITE,true) do begin
+  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_SINGLESCANREAD,true) do begin
     case PMsg.MsgID of
       PSM_SINGLESCANREAD: begin
         if Assigned(FDoSingleScanRead) then begin
@@ -306,7 +306,7 @@ begin
   FWaitToWrite.SetEvent;
 end;
 
-procedure TScanThread.ScanRead(SRPkg: PScanReqRec);
+procedure TScanThread.SingleScanRead(SRPkg: PScanReqRec);
 begin
   if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
     raise Exception.Create(SthreadSuspended);

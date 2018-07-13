@@ -103,7 +103,7 @@ begin
   inherited ScanRead;
   if (PProtocolDriver<>nil) then begin
     BuildTagRec(tr,0,0);
-    Result:=PProtocolDriver.ScanRead(tr);
+    Result:=PProtocolDriver.SingleScanRead(tr);
   end else
     Result:=-1;
 end;

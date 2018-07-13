@@ -602,7 +602,7 @@ type
 
     {$IFDEF PORTUGUES}
     {:
-    Solicita a leitura por scan (@bold(assincrona)) de um tag.
+    Solicita uma leitura por scan (@bold(assincrona)) de um tag.
     @param(tagrec TTagRec. Estrutura com as informações do tag que se deseja ler.)
     @returns(Cardinal. Número único do pedido de leitura por scan.)
     }
@@ -613,7 +613,7 @@ type
     @returns(Cardinal. The unique identification number of the request.)
     }
     {$ENDIF}
-    function  ScanRead(const tagrec:TTagRec):Cardinal;
+    function  SingleScanRead(const tagrec:TTagRec):Cardinal;
 
     {$IFDEF PORTUGUES}
     {:
@@ -1065,7 +1065,7 @@ begin
   end;
 end;
 
-function TProtocolDriver.ScanRead(const tagrec:TTagRec):Cardinal;
+function TProtocolDriver.SingleScanRead(const tagrec: TTagRec): Cardinal;
 var
    pkg:PScanReqRec;
 begin
@@ -1106,7 +1106,7 @@ begin
     //posta uma mensagem de Leitura por Scan
     //send a message requesting a scanread
     if (PScanUpdateThread<>nil) then
-      PScanReadThread.ScanRead(pkg);
+      PScanReadThread.SingleScanRead(pkg);
 
     Result := FScanReadID;
 

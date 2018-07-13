@@ -301,8 +301,12 @@ begin
 
           //sincroniza com o tag.
           //sync tag (update it)
-          Synchronize(@SyncCallBack);
-
+          FTagRec:=@x^.Tag;
+          try
+            Synchronize(@SyncCallBack);
+          finally      
+            FTagRec:=nil;
+          end;
           //libera a memoria ocupada
           //pelo pacote
           //free the memory of the request
