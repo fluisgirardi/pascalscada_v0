@@ -1,0 +1,46 @@
+object frmTComponentTagEditor: TfrmTComponentTagEditor
+  Left = 0
+  Height = 126
+  Top = 0
+  Width = 393
+  BorderStyle = bsDialog
+  Caption = 'TComponent Tag editor'
+  ClientHeight = 126
+  ClientWidth = 393
+  Position = poScreenCenter
+  Visible = False
+  object ButtonPanel1: TButtonPanel
+    Left = 6
+    Height = 39
+    Top = 81
+    Width = 381
+    OKButton.Name = 'OKButton'
+    OKButton.DefaultCaption = True
+    HelpButton.Name = 'HelpButton'
+    HelpButton.DefaultCaption = True
+    CloseButton.Name = 'CloseButton'
+    CloseButton.DefaultCaption = True
+    CancelButton.Name = 'CancelButton'
+    CancelButton.DefaultCaption = True
+    TabOrder = 0
+    ShowButtons = [pbOK, pbCancel]
+  end
+  object Label1: TLabel
+    Left = 16
+    Height = 17
+    Top = 13
+    Width = 37
+    Caption = 'Label1'
+    ParentColor = False
+  end
+  object SpinEdit1: TSpinEdit
+    Tag = 12
+    Left = 16
+    Height = 29
+    Top = 32
+    Width = 362
+    MaxValue = 2147483647
+    MinValue = -2147483648
+    TabOrder = 1
+  end
+end

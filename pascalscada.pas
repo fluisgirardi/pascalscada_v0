@@ -17,7 +17,7 @@ uses
   scadareg, SerialPort, siemenstagassistant, Tag, TagBit, TagBlock, 
   tagcollection, tcp_udpport, ubitmapper, uelementmapper, uModbusTagBuilder, 
   us7tagbuilder, UserScale, ustructuremapper, uwesttagbuilder, ValueProcessor, 
-  WestASCIIDriver, westasciitagassistant, LazarusPackageIntf;
+  WestASCIIDriver, westasciitagassistant, comptagedt, LazarusPackageIntf;
 
 implementation
 

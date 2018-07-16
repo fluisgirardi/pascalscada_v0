@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement, PLCStruct, Tag,
   bitmappertagassistant, blockstructtagassistant, ProtocolDriver,
-  PLCNumber, fpexprpars,
+  PLCNumber, comptagedt, fpexprpars,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -206,9 +206,40 @@ type
     procedure Edit; override;
   end;
 
+  procedure ChangeComponentTag(Sender: TObject);
+
 implementation
 
-uses PLCBlock, PLCTagNumber, PLCString, RtlConsts;
+uses PLCBlock, PLCTagNumber, PLCString, RtlConsts, IDEMsgIntf, FormEditingIntf,
+  Controls;
+
+procedure ChangeComponentTag(Sender: TObject);
+var
+  aSelected: TPersistentSelectionList;
+  frm: TfrmTComponentTagEditor;
+begin
+  aSelected:=TPersistentSelectionList.Create;
+  try
+    if Assigned(GlobalDesignHook) then begin
+      GlobalDesignHook.GetSelection(aSelected);
+      if (aSelected.Count=1) and (aSelected.Items[0] is TComponent) then begin
+        frm:=TfrmTComponentTagEditor.Create(nil);
+        try
+          frm.Label1.Caption:=Format('Set new value %s.Tag', [TComponent(aSelected.Items[0]).Name]);
+          frm.SpinEdit1.Value:=TComponent(aSelected.Items[0]).Tag;
+          if frm.ShowModal=mrOK then begin
+            TComponent(aSelected.Items[0]).Tag:=frm.SpinEdit1.Value;
+            GlobalDesignHook.Modified(aSelected.Items[0]);
+          end;
+        finally
+          FreeAndNil(frm);
+        end;
+      end;
+    end;
+  finally
+    FreeAndNil(aSelected);
+  end;
+end;
 
 function  TPortPropertyEditor.GetAttributes: TPropertyAttributes;
 begin

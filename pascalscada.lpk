@@ -45,7 +45,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="6"/>
-    <Files Count="59">
+    <Files Count="60">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -283,6 +283,10 @@
         <Filename Value="src\scada\westasciitagassistant.pas"/>
         <UnitName Value="westasciitagassistant"/>
       </Item59>
+      <Item60>
+        <Filename Value="src\scada\comptagedt.pas"/>
+        <UnitName Value="comptagedt"/>
+      </Item60>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

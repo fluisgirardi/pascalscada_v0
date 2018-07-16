@@ -33,7 +33,7 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   {$IFDEF FPC}
-    LResources, PropEdits, ComponentEditors;
+    LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
     Types, 
     {$IFDEF DELPHI2009_UP}
@@ -49,6 +49,9 @@ uses
     {$ENDIF}
   {$ENDIF}
 procedure Register;
+var
+  Cat: TIDECommandCategory;
+  CmdMyTool: TIDECommand;
 begin
   RegisterComponents(strPortsPallete,     [TSerialPortDriver,
                                            TTCP_UDPPort]);
@@ -114,6 +117,11 @@ begin
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
   RegisterComponentEditor(TPLCBlock,          TBlockElementMapperComponentEditor);
+
+  Cat:=IDECommandList.FindCategoryByName(CommandCategoryToolMenuName);
+  CmdMyTool := RegisterIDECommand(Cat,'Change component tag', 'Change the Tag property of a TComponent', VK_F2, [ssShift], nil, @ChangeComponentTag);
+  RegisterIDEMenuCommand(itmSecondaryTools, 'EditTag', 'Change component tag', nil, nil, CmdMyTool);
+
 end;
 
 {$IFDEF FPC}
