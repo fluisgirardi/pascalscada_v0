@@ -7,6 +7,7 @@ object frmTComponentTagEditor: TfrmTComponentTagEditor
   Caption = 'TComponent Tag editor'
   ClientHeight = 126
   ClientWidth = 393
+  OnActivate = FormActivate
   Position = poScreenCenter
   Visible = False
   object ButtonPanel1: TButtonPanel
@@ -16,6 +17,7 @@ object frmTComponentTagEditor: TfrmTComponentTagEditor
     Width = 381
     OKButton.Name = 'OKButton'
     OKButton.DefaultCaption = True
+    OKButton.Enabled = False
     HelpButton.Name = 'HelpButton'
     HelpButton.DefaultCaption = True
     CloseButton.Name = 'CloseButton'
@@ -33,14 +35,13 @@ object frmTComponentTagEditor: TfrmTComponentTagEditor
     Caption = 'Label1'
     ParentColor = False
   end
-  object SpinEdit1: TSpinEdit
+  object Edit1: TEdit
     Tag = 12
     Left = 16
     Height = 29
     Top = 32
     Width = 362
-    MaxValue = 2147483647
-    MinValue = -2147483648
+    OnChange = Edit1Change
     TabOrder = 1
   end
 end

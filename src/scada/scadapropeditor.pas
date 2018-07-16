@@ -210,7 +210,7 @@ type
 
 implementation
 
-uses PLCBlock, PLCTagNumber, PLCString, RtlConsts, IDEMsgIntf, FormEditingIntf,
+uses PLCBlock, PLCTagNumber, PLCString, RtlConsts, FormEditingIntf,
   Controls;
 
 procedure ChangeComponentTag(Sender: TObject);
@@ -226,9 +226,10 @@ begin
         frm:=TfrmTComponentTagEditor.Create(nil);
         try
           frm.Label1.Caption:=Format('Set new value %s.Tag', [TComponent(aSelected.Items[0]).Name]);
-          frm.SpinEdit1.Value:=TComponent(aSelected.Items[0]).Tag;
+          frm.Edit1.Text:=IntToStr(TComponent(aSelected.Items[0]).Tag);
+          frm.Edit1.SelectAll;
           if frm.ShowModal=mrOK then begin
-            TComponent(aSelected.Items[0]).Tag:=frm.SpinEdit1.Value;
+            TComponent(aSelected.Items[0]).Tag:=frm.Value;
             GlobalDesignHook.Modified(aSelected.Items[0]);
           end;
         finally
