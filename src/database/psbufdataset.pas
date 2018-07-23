@@ -11,11 +11,15 @@ type
 
   TFPSBufDataSet = class (TBufDataset)
   public
+    {$IFNDEF FPC}
     Procedure CopyFromDataset(DataSet : TDataSet; CopyData : Boolean = True);
+    {$ENDIF}
   end;
 
 implementation
 
+
+{$IFNDEF FPC}
 { TFPSBufDataSet }
 
 procedure TFPSBufDataSet.CopyFromDataset(DataSet: TDataSet; CopyData: Boolean = True);
@@ -91,6 +95,7 @@ begin
     end;
     end;
 end;
+{$ENDIF}
 
 end.
 
