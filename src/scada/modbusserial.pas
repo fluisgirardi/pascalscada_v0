@@ -523,19 +523,19 @@ begin
       case pkg.BufferToWrite[1] of
         $01: begin
           if foundPLC then
-            PModbusPLC[plc].OutPuts.SetFault(address,len,1,Result);
+            PModbusPLC[plc].OutPuts.SetFault(address,len,1,Result, true);
         end;
         $02: begin
           if foundPLC then
-            PModbusPLC[plc].Inputs.SetFault(address,len,1,Result);
+            PModbusPLC[plc].Inputs.SetFault(address,len,1,Result, true);
         end;
         $03: begin
           if foundPLC then
-            PModbusPLC[plc].Registers.SetFault(address,len,1,Result);
+            PModbusPLC[plc].Registers.SetFault(address,len,1,Result, true);
         end;
         $04: begin
           if foundPLC then
-            PModbusPLC[plc].AnalogReg.SetFault(address,len,1,Result);
+            PModbusPLC[plc].AnalogReg.SetFault(address,len,1,Result, true);
         end;
       end;
     end;
