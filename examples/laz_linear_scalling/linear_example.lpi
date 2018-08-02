@@ -1,20 +1,16 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <General>
       <MainUnit Value="0"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
       <Icon Value="0"/>
-      <ActiveWindowIndexAtStart Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
     </i18n>
-    <VersionInfo>
-      <StringTable ProductVersion=""/>
-    </VersionInfo>
     <BuildModes Count="1" Active="Default">
       <Item1 Name="Default" Default="True"/>
     </BuildModes>
@@ -29,31 +25,30 @@
         <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="2">
+    <RequiredPackages Count="3">
       <Item1>
-        <PackageName Value="pascalscada"/>
+        <PackageName Value="pascalscada_hmi"/>
       </Item1>
       <Item2>
-        <PackageName Value="LCL"/>
+        <PackageName Value="pascalscada"/>
       </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="7">
       <Unit0>
         <Filename Value="linear_example.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="linear_example"/>
         <UsageCount Value="20"/>
       </Unit0>
       <Unit1>
         <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="umain"/>
-        <EditorIndex Value="0"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="3"/>
-        <CursorPos X="8" Y="41"/>
+        <CursorPos X="3" Y="9"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -62,12 +57,12 @@
         <Filename Value="udm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="DataModule1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <UnitName Value="udm"/>
-        <EditorIndex Value="3"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="21"/>
-        <CursorPos X="123" Y="18"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="7"/>
+        <CursorPos X="29" Y="31"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -75,63 +70,72 @@
       <Unit3>
         <Filename Value="../../valueprocessor.pas"/>
         <UnitName Value="ValueProcessor"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="433"/>
         <CursorPos X="3" Y="440"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit3>
       <Unit4>
         <Filename Value="../../hsstrings.pas"/>
-        <UnitName Value="hsstrings"/>
-        <EditorIndex Value="2"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="226"/>
         <CursorPos X="25" Y="247"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="../../src/scada/valueprocessor.pas"/>
+        <UnitName Value="ValueProcessor"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="175"/>
+        <CursorPos X="42" Y="659"/>
+        <UsageCount Value="10"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="../../src/scada/scadareg.pas"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="25"/>
+        <CursorPos X="50" Y="61"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit6>
     </Units>
-    <JumpHistory Count="18" HistoryIndex="17">
+    <JumpHistory Count="26" HistoryIndex="25">
       <Position1>
         <Filename Value="umain.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
       </Position1>
       <Position2>
         <Filename Value="umain.pas"/>
-        <Caret Line="37" Column="8" TopLine="1"/>
+        <Caret Line="37" Column="8"/>
       </Position2>
       <Position3>
         <Filename Value="umain.pas"/>
-        <Caret Line="38" Column="8" TopLine="1"/>
+        <Caret Line="38" Column="8"/>
       </Position3>
       <Position4>
         <Filename Value="umain.pas"/>
-        <Caret Line="39" Column="8" TopLine="1"/>
+        <Caret Line="39" Column="8"/>
       </Position4>
       <Position5>
         <Filename Value="umain.pas"/>
-        <Caret Line="38" Column="8" TopLine="1"/>
+        <Caret Line="38" Column="8"/>
       </Position5>
       <Position6>
         <Filename Value="umain.pas"/>
-        <Caret Line="37" Column="8" TopLine="1"/>
+        <Caret Line="37" Column="8"/>
       </Position6>
       <Position7>
         <Filename Value="umain.pas"/>
-        <Caret Line="38" Column="8" TopLine="1"/>
+        <Caret Line="38" Column="8"/>
       </Position7>
       <Position8>
         <Filename Value="umain.pas"/>
-        <Caret Line="39" Column="8" TopLine="1"/>
+        <Caret Line="39" Column="8"/>
       </Position8>
       <Position9>
         <Filename Value="umain.pas"/>
-        <Caret Line="40" Column="8" TopLine="1"/>
+        <Caret Line="40" Column="8"/>
       </Position9>
       <Position10>
         <Filename Value="umain.pas"/>
@@ -166,9 +170,41 @@
         <Caret Line="40" Column="8" TopLine="3"/>
       </Position17>
       <Position18>
-        <Filename Value="../../valueprocessor.pas"/>
-        <Caret Line="431" Column="21" TopLine="415"/>
+        <Filename Value="udm.pas"/>
+        <Caret Line="9" Column="40"/>
       </Position18>
+      <Position19>
+        <Filename Value="udm.pas"/>
+        <Caret Line="27" Column="49"/>
+      </Position19>
+      <Position20>
+        <Filename Value="udm.pas"/>
+        <Caret Line="21" Column="37"/>
+      </Position20>
+      <Position21>
+        <Filename Value="udm.pas"/>
+        <Caret Line="9" Column="40"/>
+      </Position21>
+      <Position22>
+        <Filename Value="udm.pas"/>
+        <Caret Line="32" Column="29"/>
+      </Position22>
+      <Position23>
+        <Filename Value="umain.pas"/>
+        <Caret Line="9" Column="14"/>
+      </Position23>
+      <Position24>
+        <Filename Value="../../src/scada/scadareg.pas"/>
+        <Caret Line="40" Column="45" TopLine="25"/>
+      </Position24>
+      <Position25>
+        <Filename Value="../../src/scada/scadareg.pas"/>
+        <Caret Line="61" Column="50" TopLine="25"/>
+      </Position25>
+      <Position26>
+        <Filename Value="udm.pas"/>
+        <Caret Line="32" Column="29"/>
+      </Position26>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
@@ -187,9 +223,6 @@
         </Win32>
       </Options>
     </Linking>
-    <Other>
-      <CompilerPath Value="$(CompPath)"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

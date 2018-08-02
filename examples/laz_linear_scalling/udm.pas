@@ -15,7 +15,6 @@ type
   TDataModule1 = class(TDataModule)
     LinearScale_1_is_100: TLinearScaleProcessor;
     ModBusTCPDriver1: TModBusTCPDriver;
-    Linear1_is_100_on_PLC: TPIPE;
     PLCBlock1: TPLCBlock;
     TCP_UDPPort1: TTCP_UDPPort;
     Word1: TPLCBlockElement;
@@ -42,6 +41,8 @@ var
 implementation
 
 {$R *.lfm}
+
+{ TDataModule1 }
 
 end.
 

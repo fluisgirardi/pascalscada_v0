@@ -4,14 +4,6 @@ object DataModule1: TDataModule1
   HorizontalOffset = 709
   VerticalOffset = 127
   Width = 383
-  object Linear1_is_100_on_PLC: TScalesQueue
-    ScalesQueue = <    
-      item
-        ScaleProcessor = LinearScale_1_is_100
-      end>
-    left = 144
-    top = 40
-  end
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
     Host = '127.0.0.1'
@@ -22,6 +14,7 @@ object DataModule1: TDataModule1
   end
   object ModBusTCPDriver1: TModBusTCPDriver
     CommunicationPort = TCP_UDPPort1
+    ReadOnly = False
     left = 40
     top = 8
   end
@@ -54,7 +47,7 @@ object DataModule1: TDataModule1
   end
   object Word2: TPLCBlockElement
     TagGUID = '{3233190C-3306-44F5-9D94-17FD05507912}'
-    ScaleProcessor = Linear1_is_100_on_PLC
+    ScaleProcessor = LinearScale_1_is_100
     PLCBlock = PLCBlock1
     Index = 1
     EnableMaxValue = False
@@ -77,7 +70,7 @@ object DataModule1: TDataModule1
   end
   object Word4: TPLCBlockElement
     TagGUID = '{D09BFBD4-4580-4F25-91C9-A4AC186EA817}'
-    ScaleProcessor = Linear1_is_100_on_PLC
+    ScaleProcessor = LinearScale_1_is_100
     PLCBlock = PLCBlock1
     Index = 3
     EnableMaxValue = False
