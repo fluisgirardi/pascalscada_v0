@@ -12,20 +12,9 @@ object DM: TDM
   end
   object ModBusRTUDriver1: TModBusRTUDriver
     CommunicationPort = SerialPortDriver1
+    ReadOnly = False
     left = 40
     top = 56
-  end
-  object MySQLConnection: TZConnection
-    ControlsCodePage = cCP_UTF8
-    AutoEncodeStrings = False
-    HostName = 'localhost'
-    Port = 0
-    Database = 'dbtemperaturas'
-    User = 'root'
-    Password = 'cetis'
-    Protocol = 'mysql-5'
-    left = 164
-    top = 8
   end
   object PesoBalancaW1W2: TPLCBlock
     Tag = 1
@@ -495,72 +484,6 @@ object DM: TDM
     MinValue = 0
     left = 400
     top = 392
-  end
-  object AlarmesCorrentes: TZQuery
-    Connection = MySQLConnection
-    ReadOnly = True
-    SQL.Strings = (
-      'SELECT * FROM alarmes WHERE dt_saida IS NULL'
-    )
-    Params = <>
-    left = 40
-    top = 424
-    object AlarmesCorrentesid: TLargeintField
-      DisplayWidth = 10
-      FieldKind = fkData
-      FieldName = 'id'
-      Index = 0
-      LookupCache = False
-      ProviderFlags = [pfInUpdate, pfInWhere]
-      ReadOnly = False
-      Required = True
-    end
-    object AlarmesCorrentesdt_entrada: TDateTimeField
-      DisplayWidth = 10
-      FieldKind = fkData
-      FieldName = 'dt_entrada'
-      Index = 1
-      LookupCache = False
-      ProviderFlags = [pfInUpdate, pfInWhere]
-      ReadOnly = False
-      Required = True
-    end
-    object AlarmesCorrentesdt_saida: TDateTimeField
-      DisplayWidth = 10
-      FieldKind = fkData
-      FieldName = 'dt_saida'
-      Index = 2
-      LookupCache = False
-      ProviderFlags = [pfInUpdate, pfInWhere]
-      ReadOnly = False
-      Required = False
-    end
-    object AlarmesCorrentestagid: TLargeintField
-      DisplayWidth = 10
-      FieldKind = fkData
-      FieldName = 'tagid'
-      Index = 3
-      LookupCache = False
-      ProviderFlags = [pfInUpdate, pfInWhere]
-      ReadOnly = False
-      Required = True
-    end
-    object AlarmesCorrentesmensagem: TStringField
-      DisplayWidth = 100
-      FieldKind = fkData
-      FieldName = 'mensagem'
-      Index = 4
-      LookupCache = False
-      ProviderFlags = [pfInUpdate, pfInWhere]
-      ReadOnly = False
-      Required = True
-      Size = 100
-    end
-  end
-  object dsAlarmesCorrentes: TDataSource
-    DataSet = AlarmesCorrentes
-    left = 128
-    top = 424
   end
   object ValvulaBalanca: TPLCTagNumber
     TagGUID = '{DF71347C-C82D-4219-B179-8799F0701F6A}'

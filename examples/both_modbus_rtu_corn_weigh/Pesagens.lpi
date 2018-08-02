@@ -10,7 +10,6 @@
     <VersionInfo>
       <Language Value=""/>
       <CharSet Value=""/>
-      <StringTable ProductVersion=""/>
     </VersionInfo>
     <BuildModes Count="1">
       <Item1 Name="default" Default="True"/>
@@ -44,7 +43,7 @@
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="10">
+    <Units Count="11">
       <Unit0>
         <Filename Value="Pesagens.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -57,8 +56,9 @@
         <ComponentName Value="DM"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <TopLine Value="146"/>
-        <CursorPos X="16" Y="166"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="107"/>
+        <CursorPos X="5" Y="121"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -69,10 +69,9 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="48"/>
-        <CursorPos X="34" Y="79"/>
+        <TopLine Value="62"/>
+        <CursorPos X="56" Y="84"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -131,8 +130,17 @@
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
+      <Unit10>
+        <Filename Value="../../zeoslib/src/component/ZAbstractConnection.pas"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="946"/>
+        <CursorPos Y="961"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit10>
     </Units>
-    <JumpHistory Count="11" HistoryIndex="10">
+    <JumpHistory Count="20" HistoryIndex="19">
       <Position1>
         <Filename Value="uMain.pas"/>
         <Caret Line="59" Column="39" TopLine="39"/>
@@ -177,6 +185,42 @@
         <Filename Value="uMain.pas"/>
         <Caret Line="13" Column="39"/>
       </Position11>
+      <Position12>
+        <Filename Value="uDMImg.pas"/>
+        <Caret Line="7" Column="17"/>
+      </Position12>
+      <Position13>
+        <Filename Value="uMain.pas"/>
+        <Caret Line="84" Column="56" TopLine="62"/>
+      </Position13>
+      <Position14>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="200" Column="9" TopLine="183"/>
+      </Position14>
+      <Position15>
+        <Filename Value="../../zeoslib/src/component/ZAbstractConnection.pas"/>
+        <Caret Line="961" TopLine="946"/>
+      </Position15>
+      <Position16>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="131" Column="20" TopLine="108"/>
+      </Position16>
+      <Position17>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="130" Column="20" TopLine="107"/>
+      </Position17>
+      <Position18>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="101" Column="61" TopLine="77"/>
+      </Position18>
+      <Position19>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="100" Column="61" TopLine="76"/>
+      </Position19>
+      <Position20>
+        <Filename Value="uDM.pas"/>
+        <Caret Line="103" Column="66" TopLine="75"/>
+      </Position20>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>

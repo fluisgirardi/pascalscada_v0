@@ -20,7 +20,6 @@ type
   TDM = class(TDataModule)
     SerialPortDriver1: TSerialPortDriver;
     ModBusRTUDriver1: TModBusRTUDriver;
-    MySQLConnection: TZConnection;
     PesoBalancaW1W2: TPLCBlock;
     PesoProdutoW1W2: TPLCBlock;
     PesoACCAtualW1W2: TPLCBlock;
@@ -54,8 +53,6 @@ type
     ala6: TTagBit;
     ala7: TTagBit;
     ala8: TTagBit;
-    AlarmesCorrentes: TZQuery;
-    dsAlarmesCorrentes: TDataSource;
     AlarmesCorrentesid: TLargeintField;
     AlarmesCorrentesdt_entrada: TDateTimeField;
     AlarmesCorrentestagid: TLargeintField;
@@ -90,7 +87,7 @@ uses hsutils, ProtocolTypes, Math;
 
 procedure TDM.DataModuleCreate(Sender: TObject);
 begin
-  MySQLConnection.ExecuteDirect('UPDATE alarmes Set dt_saida=dt_entrada WHERE dt_saida IS NULL')
+  //MySQLConnection.ExecuteDirect('UPDATE alarmes Set dt_saida=dt_entrada WHERE dt_saida IS NULL')
 end;
 
 procedure TDM.ala1ValueChange(Sender: TObject);
@@ -120,9 +117,9 @@ begin
   else
     sql := 'UPDATE alarmes Set dt_saida=Now() WHERE dt_saida is null and tagid='+IntToStr(id);
 
-  MySQLConnection.ExecuteDirect(sql);
-  AlarmesCorrentes.Open;
-  AlarmesCorrentes.Refresh;
+  //MySQLConnection.ExecuteDirect(sql);
+  //AlarmesCorrentes.Open;
+  //AlarmesCorrentes.Refresh;
 end;
 
 procedure TDM.GravarValueChange(Sender: TObject);
@@ -196,8 +193,8 @@ begin
   repeat
     if PesoProdutoW1W2.LastSyncReadStatus=ioOk then begin
       pesoprod := PesoProduto.Value;
-      sql := 'SELECT InsereTemp(NOW(), '+FloatToSQLNumer(pesoprod)+', 0, 0, 0, 0, 1, ''Balança Milho'',''Pesagens'','''','' Kg'', 1, 1);';
-      MySQLConnection.ExecuteDirect(sql);
+      //sql := 'SELECT InsereTemp(NOW(), '+FloatToSQLNumer(pesoprod)+', 0, 0, 0, 0, 1, ''Balança Milho'',''Pesagens'','''','' Kg'', 1, 1);';
+      //MySQLConnection.ExecuteDirect(sql);
     end;
     inc(tentativas)
   until (PesoProdutoW1W2.LastSyncReadStatus=ioOk) or (tentativas=3);
