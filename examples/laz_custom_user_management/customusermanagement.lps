@@ -1,16 +1,12 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <BuildModes Active="Default"/>
-    <Units Count="8">
+    <Units Count="10">
       <Unit0>
         <Filename Value="customusermanagement.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="customusermanagement"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="1"/>
         <UsageCount Value="22"/>
       </Unit0>
       <Unit1>
@@ -19,12 +15,9 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="umain"/>
         <IsVisibleTab Value="True"/>
-        <EditorIndex Value="0"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="61"/>
-        <CursorPos X="36" Y="87"/>
+        <TopLine Value="67"/>
+        <CursorPos X="3" Y="69"/>
         <UsageCount Value="22"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -32,7 +25,6 @@
       <Unit2>
         <Filename Value="../../controlsecuritymanager.pas"/>
         <UnitName Value="ControlSecurityManager"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="43"/>
         <CursorPos X="52" Y="55"/>
         <UsageCount Value="10"/>
@@ -41,7 +33,6 @@
       <Unit3>
         <Filename Value="../../customizedusermanagement.pas"/>
         <UnitName Value="CustomizedUserManagement"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="101"/>
         <CursorPos X="28" Y="127"/>
         <UsageCount Value="10"/>
@@ -49,26 +40,21 @@
       </Unit3>
       <Unit4>
         <Filename Value="../../../../lazarus/lcl/include/customform.inc"/>
-        <EditorIndex Value="1"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="360"/>
-        <CursorPos X="1" Y="372"/>
+        <CursorPos Y="372"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit4>
       <Unit5>
         <Filename Value="../../../../lazarus/lcl/include/wincontrol.inc"/>
-        <EditorIndex Value="2"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="5487"/>
-        <CursorPos X="1" Y="5499"/>
+        <CursorPos Y="5499"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit5>
       <Unit6>
         <Filename Value="../../basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="120"/>
         <CursorPos X="106" Y="134"/>
         <UsageCount Value="10"/>
@@ -76,107 +62,131 @@
       </Unit6>
       <Unit7>
         <Filename Value="../../usrmgnt_login.pas"/>
-        <UnitName Value="usrmgnt_login"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="41"/>
         <CursorPos X="37" Y="56"/>
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="../../src/hmi/customizedusermanagement.pas"/>
+        <UnitName Value="CustomizedUserManagement"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="133"/>
+        <CursorPos X="30" Y="145"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../src/hmi/basicusermanagement.pas"/>
+        <UnitName Value="BasicUserManagement"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="151"/>
+        <CursorPos X="14" Y="151"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit9>
     </Units>
-    <General>
-      <ActiveWindowIndexAtStart Value="0"/>
-    </General>
-    <JumpHistory Count="22" HistoryIndex="21">
+    <JumpHistory Count="25" HistoryIndex="24">
       <Position1>
         <Filename Value="umain.pas"/>
-        <Caret Line="64" Column="47" TopLine="36"/>
+        <Caret Line="44" Column="64" TopLine="28"/>
       </Position1>
       <Position2>
         <Filename Value="umain.pas"/>
-        <Caret Line="65" Column="47" TopLine="37"/>
+        <Caret Line="101" Column="15" TopLine="68"/>
       </Position2>
       <Position3>
         <Filename Value="umain.pas"/>
-        <Caret Line="64" Column="47" TopLine="36"/>
+        <Caret Line="69" Column="82" TopLine="59"/>
       </Position3>
       <Position4>
         <Filename Value="umain.pas"/>
-        <Caret Line="65" Column="47" TopLine="37"/>
+        <Caret Line="65" TopLine="59"/>
       </Position4>
       <Position5>
         <Filename Value="umain.pas"/>
-        <Caret Line="72" Column="39" TopLine="46"/>
+        <Caret Line="66" TopLine="59"/>
       </Position5>
       <Position6>
         <Filename Value="umain.pas"/>
-        <Caret Line="79" Column="1" TopLine="52"/>
+        <Caret Line="67" TopLine="59"/>
       </Position6>
       <Position7>
         <Filename Value="umain.pas"/>
-        <Caret Line="60" Column="6" TopLine="49"/>
+        <Caret Line="68" TopLine="59"/>
       </Position7>
       <Position8>
-        <Filename Value="umain.pas"/>
-        <Caret Line="73" Column="3" TopLine="63"/>
+        <Filename Value="../../src/hmi/customizedusermanagement.pas"/>
+        <Caret Line="84" TopLine="69"/>
       </Position8>
       <Position9>
         <Filename Value="umain.pas"/>
-        <Caret Line="74" Column="3" TopLine="64"/>
+        <Caret Line="65" TopLine="59"/>
       </Position9>
       <Position10>
         <Filename Value="umain.pas"/>
-        <Caret Line="75" Column="3" TopLine="65"/>
+        <Caret Line="66" TopLine="59"/>
       </Position10>
       <Position11>
         <Filename Value="umain.pas"/>
-        <Caret Line="74" Column="3" TopLine="64"/>
+        <Caret Line="67" TopLine="59"/>
       </Position11>
       <Position12>
         <Filename Value="umain.pas"/>
-        <Caret Line="73" Column="3" TopLine="63"/>
+        <Caret Line="68" TopLine="59"/>
       </Position12>
       <Position13>
-        <Filename Value="umain.pas"/>
-        <Caret Line="82" Column="36" TopLine="1"/>
+        <Filename Value="../../src/hmi/customizedusermanagement.pas"/>
+        <Caret Line="84" TopLine="69"/>
       </Position13>
       <Position14>
-        <Filename Value="umain.pas"/>
-        <Caret Line="31" Column="38" TopLine="25"/>
+        <Filename Value="../../src/hmi/basicusermanagement.pas"/>
+        <Caret Line="165" TopLine="151"/>
       </Position14>
       <Position15>
         <Filename Value="umain.pas"/>
-        <Caret Line="32" Column="38" TopLine="26"/>
+        <Caret Line="70" TopLine="61"/>
       </Position15>
       <Position16>
         <Filename Value="umain.pas"/>
-        <Caret Line="44" Column="64" TopLine="28"/>
+        <Caret Line="95" Column="3" TopLine="88"/>
       </Position16>
       <Position17>
-        <Filename Value="../../../../lazarus/lcl/include/customform.inc"/>
-        <Caret Line="372" Column="1" TopLine="360"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="92" TopLine="79"/>
       </Position17>
       <Position18>
-        <Filename Value="../../../../lazarus/lcl/include/customform.inc"/>
-        <Caret Line="383" Column="1" TopLine="363"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="41" Column="15" TopLine="27"/>
       </Position18>
       <Position19>
-        <Filename Value="../../../../lazarus/lcl/include/customform.inc"/>
-        <Caret Line="151" Column="1" TopLine="139"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="92" TopLine="73"/>
       </Position19>
       <Position20>
-        <Filename Value="../../../../lazarus/lcl/include/wincontrol.inc"/>
-        <Caret Line="5499" Column="1" TopLine="5487"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="41" TopLine="23"/>
       </Position20>
       <Position21>
-        <Filename Value="../../../../lazarus/lcl/include/customform.inc"/>
-        <Caret Line="372" Column="1" TopLine="360"/>
+        <Filename Value="umain.pas"/>
+        <Caret Line="70" TopLine="67"/>
       </Position21>
       <Position22>
         <Filename Value="umain.pas"/>
-        <Caret Line="101" Column="15" TopLine="68"/>
+        <Caret Line="44" Column="5" TopLine="30"/>
       </Position22>
+      <Position23>
+        <Filename Value="umain.pas"/>
+        <Caret Line="61" TopLine="46"/>
+      </Position23>
+      <Position24>
+        <Filename Value="umain.pas"/>
+        <Caret Line="43" TopLine="29"/>
+      </Position24>
+      <Position25>
+        <Filename Value="umain.pas"/>
+        <Caret Line="109" Column="27" TopLine="79"/>
+      </Position25>
     </JumpHistory>
   </ProjectSession>
-  <EditorMacros Count="0"/>
 </CONFIG>

@@ -36,11 +36,11 @@ type
     TILabel2: TTILabel;
     procedure Action1Execute(Sender: TObject);
     procedure Action2Execute(Sender: TObject);
-    procedure CustomizedUserManagement1CanAccess(securityCode: String;
+    procedure CustomizedUserManagement1CanAccess(securityCode: UTF8String;
       var CanAccess: Boolean);
-    procedure CustomizedUserManagement1CheckUserAndPass(user, pass: String;
-      var ValidUser: Boolean);
-    procedure CustomizedUserManagement1GetUserLogin(var UserInfo: String);
+    procedure CustomizedUserManagement1CheckUserAndPass(user, pass: UTF8String;
+      var aUID: Integer; var ValidUser: Boolean; LoginAction: Boolean);
+    procedure CustomizedUserManagement1GetUserLogin(var UserInfo: UTF8String);
     procedure CustomizedUserManagement1Logout(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -58,16 +58,8 @@ implementation
 
 { TForm1 }
 
-procedure TForm1.CustomizedUserManagement1CheckUserAndPass(user, pass: String;
-  var ValidUser: Boolean);
-begin
-  //check the user login and password
-  ValidUser:=(((user='fabio') and (pass='123')) or ((user='user') and (pass='321')) or ((user='root') and (pass='333')));
-  if ValidUser then
-    LastValidUser:=user;
-end;
-
-procedure TForm1.CustomizedUserManagement1GetUserLogin(var UserInfo: String);
+procedure TForm1.CustomizedUserManagement1GetUserLogin(var UserInfo: UTF8String
+  );
 begin
   UserInfo:=LastValidUser; //return last logged user login.
 end;
@@ -87,15 +79,6 @@ begin
              mtInformation,[mbok],0);
 end;
 
-procedure TForm1.CustomizedUserManagement1CanAccess(securityCode: String;
-  var CanAccess: Boolean);
-begin
-  //check if the current user can access the securityCode
-  CanAccess :=((LastValidUser='fabio') and (securityCode='autorizacao1')) or
-              ((LastValidUser='user') and (securityCode='autorizacao2')) or
-              ((LastValidUser='root') and ((securityCode='autorizacao1') or (securityCode='autorizacao2')));
-end;
-
 procedure TForm1.Action1Execute(Sender: TObject);
 begin
   ShowMessage('The current can access the authorization "autorizacao1"!');
@@ -104,6 +87,26 @@ end;
 procedure TForm1.Action2Execute(Sender: TObject);
 begin
   ShowMessage('The current can access the authorization "autorizacao2"!');
+end;
+
+procedure TForm1.CustomizedUserManagement1CanAccess(securityCode: UTF8String;
+  var CanAccess: Boolean);
+begin
+  //check if the current user can access the securityCode
+  CanAccess :=((LastValidUser='fabio') and (securityCode='autorizacao1')) or
+              ((LastValidUser='user') and (securityCode='autorizacao2')) or
+              ((LastValidUser='root') and ((securityCode='autorizacao1') or (securityCode='autorizacao2')));
+
+end;
+
+procedure TForm1.CustomizedUserManagement1CheckUserAndPass(user,
+  pass: UTF8String; var aUID: Integer; var ValidUser: Boolean;
+  LoginAction: Boolean);
+begin
+  //check the user login and password
+  ValidUser:=(((user='fabio') and (pass='123')) or ((user='user') and (pass='321')) or ((user='root') and (pass='333')));
+  if ValidUser then
+    LastValidUser:=user;
 end;
 
 end.

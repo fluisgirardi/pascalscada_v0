@@ -4,14 +4,14 @@ object Form1: TForm1
   Top = 101
   Width = 522
   Caption = 'Form1'
-  ClientHeight = 355
+  ClientHeight = 351
   ClientWidth = 522
   Menu = MainMenu1
   OnCreate = FormCreate
-  LCLVersion = '1.1'
+  LCLVersion = '1.8.0.6'
   object HMIEdit1: THMIEdit
     Left = 237
-    Height = 23
+    Height = 29
     Top = 156
     Width = 80
     Alignment = taRightJustify
@@ -30,7 +30,7 @@ object Form1: TForm1
   end
   object HMIEdit2: THMIEdit
     Left = 237
-    Height = 23
+    Height = 29
     Top = 200
     Width = 80
     Alignment = taRightJustify
@@ -49,7 +49,7 @@ object Form1: TForm1
   end
   object TILabel1: TTILabel
     Left = 96
-    Height = 13
+    Height = 17
     Top = 16
     Width = 107
     Font.Style = [fsBold]
@@ -59,26 +59,26 @@ object Form1: TForm1
   end
   object Label1: TLabel
     Left = 8
-    Height = 13
+    Height = 17
     Top = 16
-    Width = 71
+    Width = 74
     Caption = 'Current user:'
     ParentColor = False
   end
   object TILabel2: TTILabel
     Left = 96
-    Height = 13
+    Height = 17
     Top = 40
-    Width = 117
+    Width = 115
     Link.TIObject = CustomizedUserManagement1
     Link.TIPropertyName = 'LoggedSince'
     ParentFont = False
   end
   object Label2: TLabel
     Left = 8
-    Height = 13
+    Height = 17
     Top = 40
-    Width = 77
+    Width = 76
     Caption = 'Logged since:'
     ParentColor = False
   end
