@@ -1,7 +1,7 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <General>
       <MainUnit Value="0"/>
       <UseXPManifest Value="True"/>
@@ -39,9 +39,6 @@
       <Unit0>
         <Filename Value="project1.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="project1"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
         <CursorPos X="31" Y="15"/>
         <UsageCount Value="75"/>
       </Unit0>
@@ -49,17 +46,19 @@
         <Filename Value="unit1.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
-        <WindowIndex Value="0"/>
+        <IsVisibleTab Value="True"/>
         <TopLine Value="53"/>
-        <CursorPos X="7" Y="64"/>
+        <CursorPos X="39" Y="58"/>
         <UsageCount Value="75"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="../../plctagnumber.pas"/>
         <UnitName Value="PLCTagNumber"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="100"/>
         <CursorPos X="11" Y="101"/>
         <UsageCount Value="25"/>
@@ -68,7 +67,6 @@
       <Unit3>
         <Filename Value="../../plcnumber.pas"/>
         <UnitName Value="PLCNumber"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="21"/>
         <CursorPos X="26" Y="21"/>
         <UsageCount Value="10"/>
@@ -77,16 +75,14 @@
       <Unit4>
         <Filename Value="../../plctag.pas"/>
         <UnitName Value="PLCTag"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="582"/>
-        <CursorPos X="1" Y="587"/>
+        <CursorPos Y="587"/>
         <UsageCount Value="33"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
       <Unit5>
         <Filename Value="../../protocoldriver.pas"/>
         <UnitName Value="ProtocolDriver"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="684"/>
         <CursorPos X="30" Y="691"/>
         <UsageCount Value="17"/>
@@ -95,7 +91,6 @@
       <Unit6>
         <Filename Value="../../modbustcp.pas"/>
         <UnitName Value="ModBusTCP"/>
-        <TopLine Value="1"/>
         <CursorPos X="10" Y="18"/>
         <UsageCount Value="8"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -103,34 +98,30 @@
       <Unit7>
         <Filename Value="../../modbusdriver.pas"/>
         <UnitName Value="ModBusDriver"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="833"/>
-        <CursorPos X="1" Y="852"/>
+        <CursorPos Y="852"/>
         <UsageCount Value="16"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit7>
       <Unit8>
         <Filename Value="../../plcblock.pas"/>
         <UnitName Value="PLCBlock"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="99"/>
-        <CursorPos X="1" Y="106"/>
+        <CursorPos Y="106"/>
         <UsageCount Value="30"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit8>
       <Unit9>
         <Filename Value="../../tagblock.pas"/>
         <UnitName Value="TagBlock"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="90"/>
-        <CursorPos X="1" Y="97"/>
+        <CursorPos Y="97"/>
         <UsageCount Value="23"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
       <Unit10>
         <Filename Value="../../protocoltypes.pas"/>
         <UnitName Value="ProtocolTypes"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="134"/>
         <CursorPos X="15" Y="141"/>
         <UsageCount Value="18"/>
@@ -138,17 +129,14 @@
       </Unit10>
       <Unit11>
         <Filename Value="../../protscanupdate.pas"/>
-        <UnitName Value="protscanupdate"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="230"/>
-        <CursorPos X="1" Y="253"/>
+        <CursorPos Y="253"/>
         <UsageCount Value="11"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit11>
       <Unit12>
         <Filename Value="../../plcblockelement.pas"/>
         <UnitName Value="PLCBlockElement"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="154"/>
         <CursorPos X="24" Y="172"/>
         <UsageCount Value="28"/>
@@ -156,8 +144,6 @@
       </Unit12>
       <Unit13>
         <Filename Value="../../protscan.pas"/>
-        <UnitName Value="protscan"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="160"/>
         <CursorPos X="34" Y="167"/>
         <UsageCount Value="10"/>
@@ -166,7 +152,6 @@
       <Unit14>
         <Filename Value="../../hmiedit.pas"/>
         <UnitName Value="HMIEdit"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="347"/>
         <CursorPos X="11" Y="354"/>
         <UsageCount Value="9"/>
@@ -175,7 +160,6 @@
       <Unit15>
         <Filename Value="../../hmitrackbar.pas"/>
         <UnitName Value="HMITrackBar"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="98"/>
         <CursorPos X="24" Y="101"/>
         <UsageCount Value="9"/>
@@ -183,7 +167,6 @@
       </Unit15>
       <Unit16>
         <Filename Value="unit1.lfm"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="170"/>
         <CursorPos X="17" Y="188"/>
         <UsageCount Value="9"/>
@@ -192,7 +175,6 @@
       <Unit17>
         <Filename Value="../../hmiscrollbar.pas"/>
         <UnitName Value="HMIScrollBar"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="69"/>
         <CursorPos X="21" Y="94"/>
         <UsageCount Value="9"/>
@@ -200,17 +182,14 @@
       </Unit17>
       <Unit18>
         <Filename Value="../../s7family.pas"/>
-        <UnitName Value="s7family"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="360"/>
-        <CursorPos X="1" Y="369"/>
+        <CursorPos Y="369"/>
         <UsageCount Value="14"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit18>
       <Unit19>
         <Filename Value="../../modbusserial.pas"/>
         <UnitName Value="ModBusSerial"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="207"/>
         <CursorPos X="3" Y="214"/>
         <UsageCount Value="9"/>
@@ -226,8 +205,6 @@
       </Unit20>
       <Unit21>
         <Filename Value="../../tagcollection.pas"/>
-        <UnitName Value="tagcollection"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="167"/>
         <CursorPos X="3" Y="174"/>
         <UsageCount Value="12"/>
@@ -236,7 +213,6 @@
       <Unit22>
         <Filename Value="../../tag.pas"/>
         <UnitName Value="Tag"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="193"/>
         <CursorPos X="14" Y="200"/>
         <UsageCount Value="17"/>
@@ -244,8 +220,6 @@
       </Unit22>
       <Unit23>
         <Filename Value="../../hsstrings.pas"/>
-        <UnitName Value="hsstrings"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="44"/>
         <CursorPos X="82" Y="76"/>
         <UsageCount Value="12"/>
@@ -254,7 +228,6 @@
       <Unit24>
         <Filename Value="../../plcstruct.pas"/>
         <UnitName Value="PLCStruct"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="32"/>
         <CursorPos X="25" Y="41"/>
         <UsageCount Value="16"/>
@@ -262,26 +235,19 @@
       </Unit24>
       <Unit25>
         <Filename Value="../../scada.pas"/>
-        <UnitName Value="scada"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="26"/>
+        <CursorPos Y="26"/>
         <UsageCount Value="9"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit25>
       <Unit26>
         <Filename Value="../../plcstructelement.pas"/>
         <UnitName Value="PLCStructElement"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
         <CursorPos X="15" Y="17"/>
         <UsageCount Value="17"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit26>
       <Unit27>
         <Filename Value="../../scadareg.pas"/>
-        <UnitName Value="scadareg"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="39"/>
         <CursorPos X="58" Y="50"/>
         <UsageCount Value="9"/>
@@ -289,21 +255,18 @@
       </Unit27>
       <Unit28>
         <Filename Value="../../../../lazarus/lcl/interfaces/gtk2/gtk2widgetset.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="1841"/>
-        <CursorPos X="1" Y="1855"/>
+        <CursorPos Y="1855"/>
         <UsageCount Value="9"/>
       </Unit28>
       <Unit29>
         <Filename Value="../../../../lazarus/lcl/include/control.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="3149"/>
-        <CursorPos X="1" Y="3163"/>
+        <CursorPos Y="3163"/>
         <UsageCount Value="9"/>
       </Unit29>
       <Unit30>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/classes/classesh.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="1596"/>
         <CursorPos X="15" Y="1603"/>
         <UsageCount Value="10"/>
@@ -311,7 +274,6 @@
       <Unit31>
         <Filename Value="../../../fortes4lazarus/trunk/rlreport.pas"/>
         <UnitName Value="RLReport"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="10765"/>
         <CursorPos X="44" Y="10778"/>
         <UsageCount Value="10"/>
@@ -319,7 +281,6 @@
       <Unit32>
         <Filename Value="../../isotcpdriver.pas"/>
         <UnitName Value="ISOTCPDriver"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="21"/>
         <CursorPos X="36" Y="58"/>
         <UsageCount Value="11"/>
@@ -327,16 +288,15 @@
       </Unit32>
       <Unit33>
         <Filename Value="../../../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/sysutils/sysutilh.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="47"/>
         <CursorPos X="4" Y="66"/>
         <UsageCount Value="11"/>
       </Unit33>
     </Units>
-    <JumpHistory Count="0" HistoryIndex="-1"/>
+    <JumpHistory HistoryIndex="-1"/>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="9"/>
+    <Version Value="11"/>
     <Target>
       <Filename Value="project1"/>
     </Target>
@@ -351,9 +311,6 @@
         </Win32>
       </Options>
     </Linking>
-    <Other>
-      <CompilerPath Value="$(CompPath)"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Watches Count="1">
@@ -373,4 +330,4 @@
       </Item3>
     </Exceptions>
   </Debugging>
-</CONFIG>
+</CONFIG>
