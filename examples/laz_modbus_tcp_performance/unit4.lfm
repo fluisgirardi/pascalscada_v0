@@ -1,15 +1,15 @@
 object Form1: TForm1
   Left = 244
-  Height = 295
+  Height = 400
   Top = 108
   Width = 652
   ActiveControl = Panel1
   BorderIcons = [biSystemMenu]
   Caption = 'TESTE'
-  ClientHeight = 295
+  ClientHeight = 400
   ClientWidth = 652
   OnCreate = FormCreate
-  LCLVersion = '1.3'
+  LCLVersion = '1.8.0.6'
   object Panel1: TPanel
     Left = 0
     Height = 80
@@ -31,6 +31,7 @@ object Form1: TForm1
       ParentColor = False
       NumberFormat = '#0.0'
       PLCTag = PLCBlockElement2
+      FormatDateTimeOptions = []
     end
     object HMILabel2: THMILabel
       Left = 96
@@ -42,6 +43,7 @@ object Form1: TForm1
       ParentColor = False
       NumberFormat = '#0.0'
       PLCTag = PLCBlockElement1
+      FormatDateTimeOptions = []
     end
     object Label1: TLabel
       Left = 280
@@ -55,7 +57,7 @@ object Form1: TForm1
     end
     object HMIEdit1: THMIEdit
       Left = 96
-      Height = 25
+      Height = 29
       Top = 32
       Width = 65
       Alignment = taRightJustify
@@ -73,7 +75,7 @@ object Form1: TForm1
     end
     object HMIEdit2: THMIEdit
       Left = 168
-      Height = 25
+      Height = 29
       Top = 32
       Width = 65
       Alignment = taRightJustify
@@ -122,7 +124,7 @@ object Form1: TForm1
   end
   object Chart1: TChart
     Left = 0
-    Height = 215
+    Height = 320
     Top = 80
     Width = 408
     AxisList = <    
@@ -142,38 +144,30 @@ object Form1: TForm1
       'TAChart'
     )
     Align = alClient
-    ParentColor = False
     object Chart1LineSeries1: TLineSeries
       LinePen.Color = clLime
       LinePen.Width = 2
       Source = ListChartSource1
     end
-    object Chart1Line1: TLine
-      Pen.Color = clGradientActiveCaption
-      Position = 2150
-    end
-    object Chart1Line2: TLine
-      Pen.Color = clRed
-      Position = 0
-    end
   end
   object TIPropertyGrid1: TTIPropertyGrid
     Left = 408
-    Height = 215
+    Height = 320
     Top = 80
     Width = 244
     Align = alRight
+    CheckboxForBoolean = False
     DefaultValueFont.Color = clWindowText
     Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar]
     Indent = 12
     NameFont.Color = clWindowText
-    TIObject = PLCBlock1
+    TIObject = TCP_UDPPort1
     ValueFont.Color = clMaroon
   end
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
-    Host = '192.168.0.1'
-    Port = 502
+    Host = '127.0.0.1'
+    Port = 1502
     Timeout = 50
     ExclusiveDevice = True
     left = 32
@@ -181,6 +175,7 @@ object Form1: TForm1
   end
   object ModBusTCPDriver1: TModBusTCPDriver
     CommunicationPort = TCP_UDPPort1
+    ReadOnly = False
     left = 32
     top = 80
   end

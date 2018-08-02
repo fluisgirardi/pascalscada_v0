@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <General>
       <MainUnit Value="0"/>
       <UseXPManifest Value="True"/>
       <Icon Value="0"/>
     </General>
-    <VersionInfo>
-      <StringTable ProductVersion=""/>
-    </VersionInfo>
     <BuildModes Count="1">
       <Item1 Name="default" Default="True"/>
     </BuildModes>
@@ -61,8 +58,8 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit4"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="39"/>
-        <CursorPos X="37" Y="71"/>
+        <TopLine Value="56"/>
+        <CursorPos X="34" Y="69"/>
         <UsageCount Value="103"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -426,7 +423,7 @@
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit58>
     </Units>
-    <JumpHistory Count="28" HistoryIndex="27">
+    <JumpHistory Count="29" HistoryIndex="28">
       <Position1>
         <Filename Value="unit4.pas"/>
         <Caret Line="93" Column="37" TopLine="61"/>
@@ -539,6 +536,10 @@
         <Filename Value="unit4.pas"/>
         <Caret Line="70" Column="37" TopLine="38"/>
       </Position28>
+      <Position29>
+        <Filename Value="unit4.pas"/>
+        <Caret Line="71" Column="37" TopLine="47"/>
+      </Position29>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>

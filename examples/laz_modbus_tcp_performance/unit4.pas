@@ -66,7 +66,7 @@ begin
   inc(px);
   y:=TCP_UDPPort1.CommandsPerSecond div 2;
   ListChartSource1.Add(px,y,IntToStr(px), clGreen);
-  Inc(cmdmedios, y); //now modbus does executes 2 IO commands to do a read/write of a tag value
+  Inc(cmdmedios, y); //now modbus executes 2 IO commands to do a read/write of a tag value
   inc(cmdcount);
   Label1.Caption:=FormatFloat('#0',y);
   Label2.Caption:='TX: '+FormatFloat('#0.0',TCP_UDPPort1.TXBytesSecond/1024)+' kb/s';
