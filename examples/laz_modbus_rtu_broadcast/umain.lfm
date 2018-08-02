@@ -1,13 +1,12 @@
 object Form1: TForm1
-  Left = 0
+  Left = 785
   Height = 379
-  Top = 0
+  Top = 206
   Width = 604
   Caption = 'Form1'
   ClientHeight = 379
   ClientWidth = 604
-  LCLVersion = '1.6.0.4'
-  Visible = False
+  LCLVersion = '1.8.0.6'
   object TIPropertyGrid1: TTIPropertyGrid
     Left = 304
     Height = 379
@@ -23,14 +22,13 @@ object Form1: TForm1
     ValueFont.Color = clMaroon
   end
   object SerialPortDriver1: TSerialPortDriver
-    Active = True
-    COMPort = 'COM1'
     Timeout = 100
     left = 16
     top = 16
   end
   object ModBusRTUDriver1: TModBusRTUDriver
     CommunicationPort = SerialPortDriver1
+    ReadOnly = False
     left = 48
     top = 16
   end
