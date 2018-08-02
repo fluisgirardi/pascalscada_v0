@@ -9,7 +9,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, tachartlazaruspkg, lazreport, umain, udm, pascalscada, zcomponent,
   udmdb, upopuphorimetro, ugraficos, ufiltro, urelatorios,
-  fortes324forlaz, ugerenciamentousuarios;
+  ugerenciamentousuarios;
 
 {$R *.res}
 

@@ -1,13 +1,13 @@
 object frmRelatorios: TfrmRelatorios
   Left = 306
-  Height = 501
+  Height = 520
   Top = 136
   Width = 797
   Caption = 'frmRelatorios'
-  ClientHeight = 501
+  ClientHeight = 520
   ClientWidth = 797
   OnCreate = FormCreate
-  LCLVersion = '0.9.31'
+  LCLVersion = '1.8.0.6'
   object RLReport1: TRLReport
     Left = 0
     Height = 1123
@@ -187,9 +187,6 @@ object frmRelatorios: TfrmRelatorios
   end
   object RLPDFFilter1: TRLPDFFilter
     DocumentInfo.Creator = 'FortesReport (Open Source) v3.24(B14)  \251 Copyright © 1999-2008 Fortes Informática'
-    DocumentInfo.ModDate = 0
-    ViewerOptions = []
-    FontEncoding = feNoEncoding
     DisplayName = 'Documento PDF'
     left = 208
     top = 4

@@ -12,9 +12,6 @@
     <i18n>
       <EnableI18N LFM="False"/>
     </i18n>
-    <VersionInfo>
-      <StringTable ProductVersion=""/>
-    </VersionInfo>
     <BuildModes Count="1" Active="Default">
       <Item1 Name="Default" Default="True"/>
     </BuildModes>
@@ -30,11 +27,10 @@
     </RunParams>
     <RequiredPackages Count="9">
       <Item1>
-        <PackageName Value="pascalscada_hmi"/>
+        <PackageName Value="frce"/>
       </Item1>
       <Item2>
-        <PackageName Value="fortes324forlaz"/>
-        <MinVersion Major="3" Minor="24" Release="2" Valid="True"/>
+        <PackageName Value="pascalscada_hmi"/>
       </Item2>
       <Item3>
         <PackageName Value="lazreport"/>
@@ -77,7 +73,7 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="3"/>
         <TopLine Value="114"/>
         <CursorPos X="60" Y="114"/>
         <UsageCount Value="61"/>
@@ -100,8 +96,7 @@
         <ComponentName Value="dmdb"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="169"/>
+        <TopLine Value="92"/>
         <CursorPos X="16" Y="92"/>
         <UsageCount Value="61"/>
         <Bookmarks Count="1">
@@ -135,7 +130,7 @@
         <ComponentName Value="frmPopup"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="25"/>
         <CursorPos X="17" Y="37"/>
         <UsageCount Value="59"/>
@@ -206,18 +201,25 @@
         <ComponentName Value="frmFiltro"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="8"/>
         <CursorPos X="24" Y="15"/>
         <UsageCount Value="32"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit16>
       <Unit17>
         <Filename Value="urelatorios.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmRelatorios"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="18"/>
-        <CursorPos X="36" Y="23"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="63" Y="8"/>
         <UsageCount Value="31"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit17>
       <Unit18>
         <Filename Value="../pascalscada/ZeosLib/src/component/ZAbstractRODataset.pas"/>
@@ -262,7 +264,7 @@
       </Unit23>
       <Unit24>
         <Filename Value="../../zeoslib/src/component/ZAbstractRODataset.pas"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="1839"/>
         <CursorPos Y="1855"/>
         <UsageCount Value="10"/>
@@ -270,7 +272,7 @@
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit24>
     </Units>
-    <JumpHistory Count="16" HistoryIndex="15">
+    <JumpHistory Count="17" HistoryIndex="16">
       <Position1>
         <Filename Value="umain.pas"/>
         <Caret Line="298" Column="3" TopLine="298"/>
@@ -334,6 +336,10 @@
         <Filename Value="../../zeoslib/src/component/ZAbstractRODataset.pas"/>
         <Caret Line="1855" TopLine="1839"/>
       </Position16>
+      <Position17>
+        <Filename Value="udmdb.pas"/>
+        <Caret Line="92" Column="16" TopLine="92"/>
+      </Position17>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
