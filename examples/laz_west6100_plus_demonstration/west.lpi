@@ -1,7 +1,7 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <General>
       <MainUnit Value="0"/>
       <UseXPManifest Value="True"/>
@@ -10,7 +10,6 @@
     <VersionInfo>
       <Language Value=""/>
       <CharSet Value=""/>
-      <StringTable ProductVersion=""/>
     </VersionInfo>
     <BuildModes Count="1">
       <Item1 Name="default" Default="True"/>
@@ -40,32 +39,32 @@
       <Unit0>
         <Filename Value="west.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="west"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="15"/>
+        <CursorPos Y="15"/>
         <UsageCount Value="50"/>
       </Unit0>
       <Unit1>
         <Filename Value="unit1.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
+        <IsVisibleTab Value="True"/>
         <TopLine Value="19"/>
         <CursorPos X="34" Y="19"/>
         <UsageCount Value="50"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="../../westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
         <TopLine Value="11"/>
-        <CursorPos X="1" Y="1"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="13"/>
       </Unit2>
       <Unit3>
         <Filename Value="../../../Temperaturas/Desenvolvimento/Protocolos_delphi/West.pas"/>
-        <UnitName Value="West"/>
         <TopLine Value="381"/>
         <CursorPos X="4" Y="379"/>
         <UsageCount Value="9"/>
@@ -73,14 +72,12 @@
       <Unit4>
         <Filename Value="../../protocoldriver.pas"/>
         <UnitName Value="ProtocolDriver"/>
-        <TopLine Value="1"/>
         <CursorPos X="7" Y="12"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="14"/>
       </Unit4>
       <Unit5>
         <Filename Value="../../protscan.pas"/>
-        <UnitName Value="protscan"/>
         <TopLine Value="109"/>
         <CursorPos X="3" Y="113"/>
         <SyntaxHighlighter Value="Delphi"/>
@@ -89,8 +86,7 @@
       <Unit6>
         <Filename Value="../../protocoltypes.pas"/>
         <UnitName Value="ProtocolTypes"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="4"/>
+        <CursorPos Y="4"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="15"/>
       </Unit6>
@@ -128,7 +124,6 @@
       </Unit10>
       <Unit11>
         <Filename Value="../../../ZeosLib/src/component/ZPropertyEditor.pas"/>
-        <UnitName Value="ZPropertyEditor"/>
         <TopLine Value="484"/>
         <CursorPos X="35" Y="25"/>
         <SyntaxHighlighter Value="Delphi"/>
@@ -164,7 +159,6 @@
         <Filename Value="../../hmilabel.pas"/>
         <UnitName Value="HMILabel"/>
         <TopLine Value="73"/>
-        <CursorPos X="1" Y="1"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="9"/>
       </Unit16>
@@ -180,7 +174,7 @@
         <Filename Value="../../hmicheckbox.pas"/>
         <UnitName Value="HMICheckBox"/>
         <TopLine Value="415"/>
-        <CursorPos X="1" Y="428"/>
+        <CursorPos Y="428"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="12"/>
       </Unit18>
@@ -188,7 +182,6 @@
         <Filename Value="../../hmiprogressbar.pas"/>
         <UnitName Value="HMIProgressBar"/>
         <TopLine Value="25"/>
-        <CursorPos X="1" Y="1"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="9"/>
       </Unit19>
@@ -196,7 +189,7 @@
         <Filename Value="../../hmiradiobutton.pas"/>
         <UnitName Value="HMIRadioButton"/>
         <TopLine Value="46"/>
-        <CursorPos X="1" Y="59"/>
+        <CursorPos Y="59"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
       </Unit20>
@@ -231,7 +224,7 @@
         <Filename Value="../../hmiscrollbar.pas"/>
         <UnitName Value="HMIScrollBar"/>
         <TopLine Value="45"/>
-        <CursorPos X="1" Y="96"/>
+        <CursorPos Y="96"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
       </Unit25>
@@ -275,7 +268,6 @@
         <Filename Value="../../hmizones.pas"/>
         <UnitName Value="HMIZones"/>
         <TopLine Value="25"/>
-        <CursorPos X="1" Y="1"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="9"/>
       </Unit31>
@@ -289,8 +281,6 @@
       <Unit33>
         <Filename Value="../../plctagnumber.pas"/>
         <UnitName Value="PLCTagNumber"/>
-        <TopLine Value="1"/>
-        <CursorPos X="1" Y="1"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
       </Unit33>
@@ -319,7 +309,7 @@
       <Unit37>
         <Filename Value="../../../../lazarus/lcl/include/wincontrol.inc"/>
         <TopLine Value="4173"/>
-        <CursorPos X="1" Y="4186"/>
+        <CursorPos Y="4186"/>
         <UsageCount Value="9"/>
       </Unit37>
       <Unit38>
@@ -344,7 +334,7 @@
         <Filename Value="../../tag.pas"/>
         <UnitName Value="Tag"/>
         <TopLine Value="221"/>
-        <CursorPos X="1" Y="235"/>
+        <CursorPos Y="235"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
       </Unit41>
@@ -358,7 +348,7 @@
         <Filename Value="../../../../lazarus/lcl/widgetset/wsstdctrls.pp"/>
         <UnitName Value="WSStdCtrls"/>
         <TopLine Value="536"/>
-        <CursorPos X="1" Y="564"/>
+        <CursorPos Y="564"/>
         <UsageCount Value="9"/>
       </Unit43>
       <Unit44>
@@ -371,9 +361,8 @@
       </Unit44>
       <Unit45>
         <Filename Value="../../scada.pas"/>
-        <UnitName Value="scada"/>
         <TopLine Value="3"/>
-        <CursorPos X="1" Y="25"/>
+        <CursorPos Y="25"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="9"/>
       </Unit45>
@@ -387,17 +376,15 @@
       </Unit46>
       <Unit47>
         <Filename Value="../../scadareg.pas"/>
-        <UnitName Value="scadareg"/>
-        <TopLine Value="1"/>
         <CursorPos X="84" Y="8"/>
         <SyntaxHighlighter Value="Delphi"/>
         <UsageCount Value="10"/>
       </Unit47>
     </Units>
-    <JumpHistory Count="0" HistoryIndex="-1"/>
+    <JumpHistory HistoryIndex="-1"/>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="9"/>
+    <Version Value="11"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
     </SearchPaths>
@@ -413,13 +400,13 @@
         </Win32>
       </Options>
     </Linking>
-    <Other>
-      <CompilerPath Value="$(CompPath)"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <BreakPoints Count="1">
       <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsGlobal"/>
+        <WatchKind Value="wpkWrite"/>
         <Source Value="../../plctagnumber.pas"/>
         <Line Value="189"/>
       </Item1>
