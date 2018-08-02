@@ -232,7 +232,7 @@ object Form1: TForm1
   end
   object Tag1: TPLCTagNumber
     TagGUID = '{32EF1438-AECD-4DFB-8E61-BA7094C2ACDB}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -245,7 +245,7 @@ object Form1: TForm1
   end
   object Tag2: TPLCTagNumber
     TagGUID = '{649F715C-7883-41E3-8581-0219018EFBB7}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -258,7 +258,7 @@ object Form1: TForm1
   end
   object Tag3: TPLCTagNumber
     TagGUID = '{84DE6B0F-7D55-4741-8011-2AD9CC33BC42}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -271,7 +271,7 @@ object Form1: TForm1
   end
   object Tag4: TPLCTagNumber
     TagGUID = '{FEEE0DC4-A1B2-4A90-971B-D45A0F1E0BF6}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -284,7 +284,7 @@ object Form1: TForm1
   end
   object Tag5: TPLCTagNumber
     TagGUID = '{48210D42-6F66-4B21-A4AD-3362BFD4A36C}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -297,7 +297,7 @@ object Form1: TForm1
   end
   object Tag6: TPLCTagNumber
     TagGUID = '{6357A440-F2F3-499B-959C-F9764B107103}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -310,7 +310,7 @@ object Form1: TForm1
   end
   object Tag7: TPLCTagNumber
     TagGUID = '{9A09F36B-11B9-44E1-870A-567E07F62A5E}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -323,7 +323,7 @@ object Form1: TForm1
   end
   object Tag8: TPLCTagNumber
     TagGUID = '{22213319-3367-4EA2-A26B-A16DD64C18AB}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -336,7 +336,7 @@ object Form1: TForm1
   end
   object Tag9: TPLCTagNumber
     TagGUID = '{65133ED7-E4F6-44A2-943F-A234417F57FB}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -349,7 +349,7 @@ object Form1: TForm1
   end
   object Tag10: TPLCTagNumber
     TagGUID = '{57F08081-2FD3-4043-B1FB-81D65BD1205F}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -362,7 +362,7 @@ object Form1: TForm1
   end
   object Tag11: TPLCTagNumber
     TagGUID = '{583C1396-69F3-4EC0-A715-BE918195A41C}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -375,7 +375,7 @@ object Form1: TForm1
   end
   object Tag12: TPLCTagNumber
     TagGUID = '{52CC2F11-D436-4BC7-BF9C-FAD8C06DD206}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -388,7 +388,7 @@ object Form1: TForm1
   end
   object Tag13: TPLCTagNumber
     TagGUID = '{9A4676A1-8017-4E57-8810-AE78BA74E250}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -401,7 +401,7 @@ object Form1: TForm1
   end
   object Tag14: TPLCTagNumber
     TagGUID = '{4816CC2B-1E04-4A3B-A312-08C8ABD5F66A}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -414,7 +414,7 @@ object Form1: TForm1
   end
   object Tag15: TPLCTagNumber
     TagGUID = '{77D1D333-22A7-459E-B9B0-0E1CC1F7444C}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -427,7 +427,7 @@ object Form1: TForm1
   end
   object Tag16: TPLCTagNumber
     TagGUID = '{843AC181-4B4E-4261-AE7D-6E3CEA760D2F}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -440,7 +440,7 @@ object Form1: TForm1
   end
   object Tag17: TPLCTagNumber
     TagGUID = '{D6D3ED0D-F50D-4FD9-A869-72C4C54422A1}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -453,7 +453,7 @@ object Form1: TForm1
   end
   object Tag18: TPLCTagNumber
     TagGUID = '{5EBD4DED-4F12-4261-A9FB-281D92A81488}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -466,7 +466,7 @@ object Form1: TForm1
   end
   object Tag19: TPLCTagNumber
     TagGUID = '{F7E262A5-431A-4373-B547-33BBA8959371}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -479,7 +479,7 @@ object Form1: TForm1
   end
   object Tag20: TPLCTagNumber
     TagGUID = '{55CD4977-6BD9-4192-BE99-C8B0DE3CD152}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
@@ -492,7 +492,7 @@ object Form1: TForm1
   end
   object PLCBlock1: TPLCBlock
     TagGUID = '{2771C5CD-D417-40A4-8AAA-BEDDEF7C0614}'
-    PLCHack = 0
+    PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
     MemFile_DB = 0
