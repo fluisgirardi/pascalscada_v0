@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <BuildModes Active="Default"/>
-    <Units Count="11">
+    <Units Count="12">
       <Unit0>
         <Filename Value="rank.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="rank"/>
         <UsageCount Value="25"/>
       </Unit0>
       <Unit1>
@@ -16,17 +15,15 @@
         <ComponentName Value="frmRank"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="umain"/>
         <IsVisibleTab Value="True"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="30" Y="10"/>
+        <TopLine Value="244"/>
+        <CursorPos Y="252"/>
         <UsageCount Value="25"/>
+        <Loaded Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="../pascalscada/src/common/crossevent.pas"/>
         <UnitName Value="CrossEvent"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="238"/>
         <CursorPos X="57" Y="247"/>
         <UsageCount Value="12"/>
@@ -34,16 +31,13 @@
       <Unit3>
         <Filename Value="../pascalscada/src/scada/commport.pas"/>
         <UnitName Value="CommPort"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="1732"/>
-        <CursorPos X="1" Y="1750"/>
+        <CursorPos Y="1750"/>
         <UsageCount Value="12"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit3>
       <Unit4>
         <Filename Value="../pascalscada/src/scada/commtypes.pas"/>
-        <UnitName Value="commtypes"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="80"/>
         <CursorPos X="24" Y="97"/>
         <UsageCount Value="12"/>
@@ -51,14 +45,12 @@
       </Unit4>
       <Unit5>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/classes/classesh.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="1637"/>
         <CursorPos X="15" Y="1651"/>
         <UsageCount Value="10"/>
       </Unit5>
       <Unit6>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/rtl/objpas/classes/classes.inc"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="206"/>
         <CursorPos X="3" Y="208"/>
         <UsageCount Value="10"/>
@@ -66,16 +58,13 @@
       <Unit7>
         <Filename Value="../pascalscada/src/scada/serialport.pas"/>
         <UnitName Value="SerialPort"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="618"/>
-        <CursorPos X="1" Y="633"/>
+        <CursorPos Y="633"/>
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit7>
       <Unit8>
         <Filename Value="../pascalscada/zeoslib/src/component/ZAbstractRODataset.pas"/>
-        <UnitName Value="ZAbstractRODataset"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="416"/>
         <CursorPos X="14" Y="430"/>
         <UsageCount Value="10"/>
@@ -83,8 +72,6 @@
       </Unit8>
       <Unit9>
         <Filename Value="../fpcbuild251/fpcbuild/fpcsrc/packages/fcl-db/src/base/db.pas"/>
-        <UnitName Value="db"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="1273"/>
         <CursorPos X="3" Y="1288"/>
         <UsageCount Value="10"/>
@@ -92,14 +79,41 @@
       <Unit10>
         <Filename Value="../pascalscada/src/scada/plctagnumber.pas"/>
         <UnitName Value="PLCTagNumber"/>
-        <WindowIndex Value="0"/>
         <TopLine Value="291"/>
         <CursorPos X="25" Y="291"/>
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit10>
+      <Unit11>
+        <Filename Value="../../zeoslib/src/dbc/ZDbcSqLiteUtils.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="225"/>
+        <CursorPos Y="237"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit11>
     </Units>
-    <JumpHistory Count="0" HistoryIndex="-1"/>
+    <JumpHistory Count="2" HistoryIndex="1">
+      <Position1>
+        <Filename Value="umain.pas"/>
+        <Caret Line="231" Column="28" TopLine="143"/>
+      </Position1>
+      <Position2>
+        <Filename Value="../../zeoslib/src/dbc/ZDbcSqLiteUtils.pas"/>
+        <Caret Line="237" TopLine="225"/>
+      </Position2>
+    </JumpHistory>
   </ProjectSession>
-  <EditorMacros Count="0"/>
+  <Debugging>
+    <BreakPoints Count="1">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="umain.pas"/>
+        <Line Value="252"/>
+      </Item1>
+    </BreakPoints>
+  </Debugging>
 </CONFIG>

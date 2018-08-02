@@ -228,7 +228,7 @@ constructor TCommThread.Create(CreateSuspended: Boolean;
 begin
   inherited Create(CreateSuspended, StackSize);
   FSerialPort:=aSerialPort;
-  FEnd:=TCrossEvent.Create(nil,true,false,'');
+  FEnd:=TCrossEvent.Create(true,false);
 end;
 
 procedure TCommThread.WaitEnd;
