@@ -1683,29 +1683,29 @@ begin
           case ReqType of
             vtS7_DB:
               if (DBIdx>=0) AND (DBIdx<=High(FPLCs[PLCIdx].DBs)) then
-                FPLCs[PLCIdx].DBs[DBIdx].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+                FPLCs[PLCIdx].DBs[DBIdx].DBArea.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_Inputs:
-               FPLCs[PLCIdx].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].Inputs.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_Outputs:
-               FPLCs[PLCIdx].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].Outputs.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_200_AnInput:
-               FPLCs[PLCIdx].S7200AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].S7200AnInput.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_200_AnOutput:
-               FPLCs[PLCIdx].S7200AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].S7200AnOutput.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_Timer:
-               FPLCs[PLCIdx].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_Counter:
-               FPLCs[PLCIdx].Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_Flags:
-               FPLCs[PLCIdx].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].Flags.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_200_SM:
-               FPLCs[PLCIdx].S7200SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].S7200SMs.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_200_Timer:
-               FPLCs[PLCIdx].S7200Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].S7200Timers.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_200_Counter:
-               FPLCs[PLCIdx].S7200Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].S7200Counters.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
             vtS7_Peripheral:
-               FPLCs[PLCIdx].PeripheralInputs.SetFault(StartAddress,Size,1,ProtocolErrorCode);
+               FPLCs[PLCIdx].PeripheralInputs.SetFault(StartAddress,Size,1,ProtocolErrorCode, true);
           end;
       end;
     end;

@@ -468,7 +468,7 @@ type
     @seealso(SetValues)
     }
     {$ENDIF}
-    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult); virtual;
+    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult; const MarkAsUpdated:Boolean = false); virtual;
   published
 
     {$IFDEF PORTUGUES}
@@ -548,7 +548,7 @@ type
     //: @seealso(TPLCMemoryManager.GetValues)
     function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt; override;
     //: @seealso(TPLCMemoryManager.SetFault)
-    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult); override;
+    procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult; const MarkAsUpdated:Boolean = false); override;
   end;
 
 implementation
@@ -995,7 +995,8 @@ begin
   Result:=ifthen(Moved=Length(Values),0,ifthen(Moved<Length(Values),-1,1));
 end;
 
-procedure TPLCMemoryManager.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
+procedure TPLCMemoryManager.SetFault(AdrStart, Len, RegSize: Cardinal;
+  Fault: TProtocolIOResult; const MarkAsUpdated: Boolean);
 var
   blk, AdrEnd:LongInt;
 begin
@@ -1009,6 +1010,8 @@ begin
 
       Blocks[blk].ReadFaults := Blocks[blk].ReadFaults+1;
       Blocks[blk].LastError  := Fault;
+      if MarkAsUpdated then
+        Blocks[blk].Updated;
     end;
   end;
 end;
@@ -1104,11 +1107,12 @@ begin
   end;
 end;
 
-procedure   TPLCMemoryManagerSafe.SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult);
+procedure TPLCMemoryManagerSafe.SetFault(AdrStart, Len, RegSize: Cardinal;
+  Fault: TProtocolIOResult; const MarkAsUpdated: Boolean);
 begin
   try
     FMutex.Enter;
-    inherited SetFault(AdrStart, Len, RegSize, Fault);
+    inherited SetFault(AdrStart, Len, RegSize, Fault, MarkAsUpdated);
   finally
     FMutex.Leave;
   end;

@@ -457,7 +457,6 @@ var
   rl:LongInt;
   res:LongInt;
   starts, ends:TNotifyEvent;
-  qttags: integer;
 begin
   try
     if FMustReleaseResources then begin
