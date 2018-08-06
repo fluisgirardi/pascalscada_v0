@@ -19,8 +19,8 @@
     </CompilerOptions>
     <Description Value="Common methods for all PascalSCADA packages"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="6"/>
-    <Files Count="9">
+    <Version Minor="7" Release="7"/>
+    <Files Count="10">
       <Item1>
         <Filename Value="src/common/crossdatetime.pas"/>
         <UnitName Value="crossdatetime"/>
@@ -55,8 +55,12 @@
       </Item8>
       <Item9>
         <Filename Value="src/common/pscadaversion.pas"/>
-        <UnitName Value="pscadaversion"/>
+        <UnitName Value="pSCADAVersion"/>
       </Item9>
+      <Item10>
+        <Filename Value="src/common/crossthreads.pas"/>
+        <UnitName Value="crossthreads"/>
+      </Item10>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>
