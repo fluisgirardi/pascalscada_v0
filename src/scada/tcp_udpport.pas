@@ -17,7 +17,8 @@ unit tcp_udpport;
 interface
 
 uses
-  Classes, CommPort, commtypes, socket_types, CrossEvent, MessageSpool, syncobjs
+  Classes, CommPort, commtypes, socket_types, CrossEvent, MessageSpool,
+  syncobjs, crossthreads
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     , Windows,
     {$IFDEF FPC}
@@ -38,7 +39,7 @@ type
 
   { TConnectThread }
 
-  TConnectThread = class(TCrossThread)
+  TConnectThread = class(TpSCADACoreAffinityThread)
   private
     FActive:Boolean;
     FCheckSocket,

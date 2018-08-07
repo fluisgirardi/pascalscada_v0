@@ -21,7 +21,7 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
@@ -40,14 +40,13 @@ type
   This class is used internaly by the TCommPortDriver.
   }
   {$ENDIF}
-  TEventNotificationThread = class(TCrossThread)
+  TEventNotificationThread = class(TpSCADACoreAffinityThreadWithLoop)
   private
     PMsg:TMSMsg;
     FOwner:TComponent;
     FEvent:Pointer;
     FError:TIOResult;
-    FDoSomethingEvent,
-    FInitEvent:TCrossEvent;
+    FDoSomethingEvent:TCrossEvent;
     FSpool:TMessageSpool;
     procedure DoSomething;
     procedure WaitToDoSomething;
@@ -55,12 +54,11 @@ type
     procedure SyncCommErrorEvent;
     procedure SyncPortEvent;
   protected
-    procedure Execute; override;
+    procedure Loop; override;
   public
     constructor Create(CreateSuspended: Boolean; AOwner:TComponent);
     destructor  Destroy; override;
-    procedure   WaitInit;
-    procedure   Terminate;
+    procedure   Terminate; override;
     {$IFDEF PORTUGUES}
     //: Envia uma mensagem de erro de comunicação para a aplicação;
     {$ELSE}
@@ -996,21 +994,13 @@ begin
   FOwner:=AOwner;
   FSpool:=TMessageSpool.Create;
   FDoSomethingEvent:=TCrossEvent.Create(true, false);
-  FInitEvent:=TCrossEvent.Create(true, false);
 end;
 
 destructor TEventNotificationThread.Destroy;
 begin
   inherited Destroy;
-  FInitEvent.Destroy;
-  FDoSomethingEvent.Destroy;
-  FSpool.Destroy;
-end;
-
-procedure TEventNotificationThread.WaitInit;
-begin
-  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create(SUpdateThreadWinit);
+  FreeAndNil(FDoSomethingEvent);
+  FreeAndNil(FSpool);
 end;
 
 procedure TEventNotificationThread.DoSomething;
@@ -1030,47 +1020,44 @@ begin
   DoSomething;
 end;
 
-procedure TEventNotificationThread.Execute;
+procedure TEventNotificationThread.Loop;
 var
   AtMainThread:Boolean;
   evt:TNotifyEvent;
 begin
-  FInitEvent.SetEvent;
-  while not Terminated do begin
-    //try
-      WaitToDoSomething;
-      while FSpool.PeekMessage(PMsg,PSM_COMMERROR,PSM_PORT_EVENT,true) do begin
-        case PMsg.MsgID of
-          PSM_COMMERROR:
-          begin
-            FEvent:=PMsg.wParam;
-            FError:=TIOResult(PtrUint(PMsg.lParam));
-            Synchronize(@SyncCommErrorEvent);
-            Dispose(PCommPortErrorEvent(FEvent));
+  //try
+    WaitToDoSomething;
+    while FSpool.PeekMessage(PMsg,PSM_COMMERROR,PSM_PORT_EVENT,true) do begin
+      case PMsg.MsgID of
+        PSM_COMMERROR:
+        begin
+          FEvent:=PMsg.wParam;
+          FError:=TIOResult(PtrUint(PMsg.lParam));
+          Synchronize(@SyncCommErrorEvent);
+          Dispose(PCommPortErrorEvent(FEvent));
+        end;
+        PSM_PORT_EVENT:begin
+          FEvent:=PMsg.wParam;
+          AtMainThread:=PMsg.lParam<>nil;
+          if AtMainThread then
+            Synchronize(@SyncPortEvent)
+          else begin
+            evt:=PNotifyEvent(FEvent)^;
+            if Assigned(evt) then
+              evt(nil);
           end;
-          PSM_PORT_EVENT:begin
-            FEvent:=PMsg.wParam;
-            AtMainThread:=PMsg.lParam<>nil;
-            if AtMainThread then
-              Synchronize(@SyncPortEvent)
-            else begin
-              evt:=PNotifyEvent(FEvent)^;
-              if Assigned(evt) then
-                evt(nil);
-            end;
-            Dispose(PNotifyEvent(FEvent));
-          end;
+          Dispose(PNotifyEvent(FEvent));
         end;
       end;
-    //except
-    //  on e:Exception do begin
-    //    {$IFDEF FDEBUG}
-    //    DebugLn('Exception in UpdateThread: '+ E.Message);
-    //    DumpStack;
-    //    {$ENDIF}
-    //  end;
-    //end;
-  end;
+    end;
+  //except
+  //  on e:Exception do begin
+  //    {$IFDEF FDEBUG}
+  //    DebugLn('Exception in UpdateThread: '+ E.Message);
+  //    DumpStack;
+  //    {$ENDIF}
+  //  end;
+  //end;
 end;
 
 procedure TEventNotificationThread.DoCommErrorEvent(Event:TCommPortErrorEvent; Error:TIOResult; MainThread:Boolean);
@@ -1147,7 +1134,7 @@ begin
 
   PEventUpdater:=TEventNotificationThread.Create(true, Self);
   PEventUpdater.WakeUp;
-  PEventUpdater.WaitInit;
+  PEventUpdater.WaitLoopStarts;
 end;
 
 destructor TCommPortDriver.Destroy;

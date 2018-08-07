@@ -22,7 +22,7 @@ interface
 
 uses
   Classes, SysUtils, CrossEvent, protscanupdate, MessageSpool, syncobjs,
-  ProtocolTypes{$IFNDEF FPC}, Windows{$ENDIF};
+  crossthreads, ProtocolTypes{$IFNDEF FPC}, Windows{$ENDIF};
 
 type
 
@@ -42,12 +42,10 @@ type
   @seealso(TProtocolDriver)
   }
   {$ENDIF}
-  TScanThread = class(TCrossThread)
+  TScanThread = class(TpSCADACoreAffinityThreadWithLoop)
   private
     FDoSingleScanRead: TSingleScanReadProc;
-    FInitEvent:TCrossEvent;
     FWaitToWrite:TCrossEvent;
-    FEnd:TCrossEvent;
 
     FDoScanRead:TScanReadProc;
     FDoScanWrite:TScanWriteProc;
@@ -57,7 +55,6 @@ type
     PScanUpdater:TScanUpdate;
 
     procedure SyncException;
-    function  WaitEnd(timeout:Cardinal):TWaitResult;
   protected
     {$IFDEF PORTUGUES}
     //:Ordena a thread verificar se há comandos de escrita pendentes.
@@ -67,7 +64,7 @@ type
     procedure CheckScanWriteCmd;
 
     //: @exclude
-    procedure Execute; override;
+    procedure Loop; override;
   public
     //: @exclude
     constructor Create(StartSuspended:Boolean; ScanUpdater:TScanUpdate);
@@ -79,20 +76,7 @@ type
     {$ELSE}
     //: Requests the thread finalization.
     {$ENDIF}
-    procedure Terminate;
-
-    {$IFDEF PORTUGUES}
-    {:
-    Ao chamar @name, espera a thread sinalizar a sua inicialização. Se ela já foi
-    inicializada, não faz nada.
-    }
-    {$ELSE}
-    {:
-    When @name is called, waits the thread initialization. If it's already
-    initialized, does nothing.
-    }
-    {$ENDIF}
-    procedure WaitInit;
+    procedure Terminate; override;
 
     {$IFDEF PORTUGUES}
     {:
@@ -191,55 +175,45 @@ begin
   Priority := tpHighest;
   FSpool := TMessageSpool.Create;
   PScanUpdater := ScanUpdater;
-  FInitEvent   := TCrossEvent.Create(true, false);
   FWaitToWrite := TCrossEvent.Create(true, false);
-  FEnd         := TCrossEvent.Create(true, false);
   FMinScan := 0;
 end;
 
 destructor TScanThread.Destroy;
 begin
   Terminate;
-  FInitEvent.Destroy;
-  FWaitToWrite.Destroy;
-  FSpool.Destroy;
-  FEnd.Destroy;
+  FreeAndNil(FWaitToWrite);
+  FreeAndNil(FSpool);
   inherited Destroy;
 end;
 
-procedure TScanThread.Execute;
+procedure TScanThread.Loop;
 var
   NeedSleep:LongInt;
 begin
-  //sinaliza q a fila de mensagens esta criada
-  //set as initialized the thread
-  FInitEvent.SetEvent;
-  while not Terminated do begin
-    CheckScanWriteCmd;
-    if Assigned(FDoScanRead) then begin
-      try
-        NeedSleep:=0;
-        FDoScanRead(Self, NeedSleep);
-        if NeedSleep>0 then
-          Sleep(NeedSleep);
-        if NeedSleep<0 then
-          CrossThreadSwitch;
-      except
-        //on E: Exception do begin
-        //  {$IFDEF FDEBUG}
-        //  DebugLn('TScanThread.Execute::' + e.Message);
-        //  DumpStack;
-        //  {$ENDIF}
-        //  erro := E;
-        //  Synchronize(@SyncException);
-        //end;
-      end;
+  CheckScanWriteCmd;
+  if Assigned(FDoScanRead) then begin
+    try
+      NeedSleep:=0;
+      FDoScanRead(Self, NeedSleep);
+      if NeedSleep>0 then
+        Sleep(NeedSleep);
+      if NeedSleep<0 then
+        CrossThreadSwitch;
+    except
+      //on E: Exception do begin
+      //  {$IFDEF FDEBUG}
+      //  DebugLn('TScanThread.Execute::' + e.Message);
+      //  DumpStack;
+      //  {$ENDIF}
+      //  erro := E;
+      //  Synchronize(@SyncException);
+      //end;
     end;
-
-    if FMinScan>0 then
-      Sleep(FMinScan);
   end;
-  FEnd.SetEvent;
+
+  if FMinScan>0 then
+    Sleep(FMinScan);
 end;
 
 procedure TScanThread.CheckScanWriteCmd;
@@ -290,15 +264,9 @@ begin
   //end;
 end;
 
-procedure TScanThread.WaitInit;
-begin
-  while FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled do ;
-end;
-
 procedure TScanThread.ScanWrite(SWPkg: PScanReqRec);
 begin
-  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create(SthreadSuspended);
+  WaitLoopStarts;
 
   //envia a mensagem
   //sends the message.
@@ -308,8 +276,7 @@ end;
 
 procedure TScanThread.SingleScanRead(SRPkg: PScanReqRec);
 begin
-  if FInitEvent.WaitFor($FFFFFFFF)<>wrSignaled then
-    raise Exception.Create(SthreadSuspended);
+  WaitLoopStarts;
 
   //envia a mensagem
   //sends the message.
@@ -319,15 +286,10 @@ end;
 
 procedure TScanThread.Terminate;
 begin
-  TCrossThread(self).Terminate;
+  inherited Terminate;
   repeat
      CheckSynchronize(1);
   until WaitEnd(1)=wrSignaled;
-end;
-
-function  TScanThread.WaitEnd(timeout:Cardinal):TWaitResult;
-begin
-   Result := FEnd.WaitFor(timeout);
 end;
 
 end.

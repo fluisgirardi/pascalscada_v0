@@ -18,7 +18,7 @@ interface
 
 uses
   Classes, sysutils, ZConnection, ZPropertyEditor, MessageSpool, CrossEvent,
-  syncobjs, ZDataset, psbufdataset, fgl;
+  syncobjs, ZDataset, psbufdataset, fgl, crossthreads;
 
 type
 
@@ -165,7 +165,7 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
-  TProcessSQLCommandThread=class(TCrossThread)
+  TProcessSQLCommandThread=class(TpSCADACoreAffinityThread)
   private
     FQueue:TMessageSpool;
     FEnd:TCrossEvent;

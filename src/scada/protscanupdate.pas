@@ -21,7 +21,8 @@ unit protscanupdate;
 interface
 
 uses
-  Classes, SysUtils, CrossEvent, ProtocolTypes, MessageSpool, syncobjs, tag;
+  Classes, SysUtils, CrossEvent, ProtocolTypes, MessageSpool, syncobjs, tag,
+  crossthreads;
 
 type
 
@@ -41,12 +42,11 @@ type
   @seealso(TProtocolDriver)
   }
   {$ENDIF}
-  TScanUpdate = class(TCrossThread)
+  TScanUpdate = class(TpSCADACoreAffinityThreadWithLoop)
   private
     FUserUpdateTimePRoc:TUserUpdateTimeProc;
     FOwnerProtocolDriver:TComponent;
     FSleepInterruptable:TCrossEvent;
-    FEnd:TCrossEvent;
     TagCBack:TTagCommandCallBack;
     FTagRec:PTagRec;
     Fvalues:TScanReadRec;
@@ -59,10 +59,9 @@ type
     procedure SyncException;
     procedure UpdateMultipleTags;
     procedure CheckScanReadOrWrite;
-    function  WaitEnd(timeout:Cardinal):TWaitResult;
   protected
     //: @exclude
-    procedure Execute; override;
+    procedure Loop; override;
   public
     //: @exclude
     constructor Create(StartSuspended:Boolean; OwnerProtocol:TComponent; usrUpdTime:TUserUpdateTimeProc);
@@ -74,7 +73,7 @@ type
     {$ELSE}
     //: Requests the thread finalization.
     {$ENDIF}
-    procedure Terminate;
+    procedure Terminate; override;
 
     {$IFDEF PORTUGUES}
     {:
@@ -149,88 +148,69 @@ begin
   Priority := tpHighest;
   FUserUpdateTimePRoc:=usrUpdTime;
   FSpool := TMessageSpool.Create;
-  FEnd := TCrossEvent.Create(true, false);
-  FEnd.ResetEvent;
   FSleepInterruptable := TCrossEvent.Create(false, false);
 end;
 
 destructor TScanUpdate.Destroy;
 begin
   inherited Destroy;
+
   FSleepInterruptable.SetEvent;
-  FSleepInterruptable.Destroy;
-  FSpool.Destroy;
-  FEnd.Destroy;
+  FreeAndNil(FSleepInterruptable);
+  FreeAndNil(FSpool);
 end;
 
 procedure TScanUpdate.Terminate;
 begin
-  TCrossThread(self).Terminate;
+  inherited Terminate;
   FSleepInterruptable.SetEvent;
   repeat
      CheckSynchronize(1);
   until WaitEnd(1)=wrSignaled;
 end;
 
-function  TScanUpdate.WaitEnd(timeout:Cardinal):TWaitResult;
-begin
-   Result := FEnd.WaitFor(timeout);
-end;
-
-procedure TScanUpdate.Execute;
+procedure TScanUpdate.Loop;
 var
-  timeout:LongInt;
+  i, FValor, timeout:LongInt;
   FInicio:TDateTime;
-  FTempo, FVezes, FValor:LongInt;
-  FMedia:Double;
-  i: Integer;
 begin
-  FTempo:=0;
-  FVezes:=0;
-  while not Terminated do begin
-    try
-      CheckScanReadOrWrite;
-      if Assigned(PScanTags) then begin
-        SetLength(PScannedValues,0);
-        timeout:=PScanTags(PScannedValues);
-        if Length(PScannedValues)>0 then begin
-          FInicio:=CrossNow;
-          Synchronize(@UpdateMultipleTags);
-          FValor:=MilliSecondsBetween(CrossNow,FInicio);
+  try
+    CheckScanReadOrWrite;
+    if Assigned(PScanTags) then begin
+      SetLength(PScannedValues,0);
+      timeout:=PScanTags(PScannedValues);
+      if Length(PScannedValues)>0 then begin
+        FInicio:=CrossNow;
+        Synchronize(@UpdateMultipleTags);
+        FValor:=MilliSecondsBetween(CrossNow,FInicio);
 
-          for i:=0 to High(PScannedValues) do
-            SetLength(PScannedValues[i].Values, 0);
+        for i:=0 to High(PScannedValues) do
+          SetLength(PScannedValues[i].Values, 0);
 
-          SetLength(PScannedValues, 0);
+        SetLength(PScannedValues, 0);
 
-          FTempo:=FTempo+FValor;
-          FVezes:=FVezes+1;
-          timeout:=timeout-FValor;
-
-          FMedia:=FTempo div FVezes;
-          if Assigned(FUserUpdateTimePRoc) then
-            FUserUpdateTimePRoc(FMedia);
-        end;
+        timeout:=timeout-FValor;
       end else
         timeout:=1;
+    end else
+      timeout:=1;
 
-      if not FSleepInterruptable.ResetEvent then FSleepInterruptable.ResetEvent;
-      if (timeout)>0 then begin
-        FSleepInterruptable.WaitFor(timeout)
-      end else
-        FSleepInterruptable.WaitFor(1);
-    except
-    //  on E: Exception do begin
-    //    {$IFDEF FDEBUG}
-    //    DebugLn('TScanUpdate.Execute:: ' + e.Message);
-    //    DumpStack;
-    //    {$ENDIF}
-    //    Ferro := E;
-    //    Synchronize(@SyncException);
-    //  end;
-    end;
+    if not FSleepInterruptable.ResetEvent then FSleepInterruptable.ResetEvent;
+    if (timeout)>0 then begin
+      FSleepInterruptable.WaitFor(timeout)
+    end else
+      FSleepInterruptable.WaitFor(1);
+  except
+  //  on E: Exception do begin
+  //    {$IFDEF FDEBUG}
+  //    DebugLn('TScanUpdate.Execute:: ' + e.Message);
+  //    DumpStack;
+  //    {$ENDIF}
+  //    Ferro := E;
+  //    Synchronize(@SyncException);
+  //  end;
   end;
-  FEnd.SetEvent;
+
 end;
 
 procedure TScanUpdate.ScanRead(Tag:TTagRec);
@@ -276,11 +256,9 @@ begin
     with PScannedValues[c] do
       try
         CallBack(0, Values, ValueTimeStamp, tcScanRead, LastResult, 0);
-        SetLength(Values,0);
       finally
       end;
   end;
-  SetLength(PScannedValues,0);
 end;
 
 procedure TScanUpdate.CheckScanReadOrWrite;

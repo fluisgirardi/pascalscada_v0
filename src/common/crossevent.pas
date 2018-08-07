@@ -26,15 +26,7 @@
 {$ENDIF}
 unit CrossEvent;
 
-{$IFDEF FPC}
-  {$IF defined(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20404)}
-  {$DEFINE USE_TTHREAD_START}
-  {$IFEND}
-{$ELSE}
-  {$IFDEF DELPHI2010_UP}
-    {$DEFINE USE_TTHREAD_START}
-  {$ENDIF}
-{$ENDIF}
+{$mode objfpc}{$H+}
 
 {$if (not defined(WINDOWS)) and (not defined(WIN32)) and (not defined(WIN64))}
 {$DEFINE NeedCrossEvents}
@@ -84,31 +76,7 @@ type
     isset: boolean;
     IsDestroing:boolean;
   end;
-{$IFEND}
-
-  {$IFDEF PORTUGUES}
-  //: Classe base para threads.
-  {$ELSE}
-  //: Thread base class.
-  {$ENDIF}
-  TCrossThread = class(TThread)
-   private
-     function GetUniqueID:Int64;
-   public
-     {$IFDEF PORTUGUES}
-     //: Acorda/inicia uma thread suspensa.
-     {$ELSE}
-     //: Wake/starts a suspended thread.
-     {$ENDIF}
-     procedure WakeUp;
-
-     {$IFDEF PORTUGUES}
-     //: Fornece o número único da thread.
-     {$ELSE}
-     //: Provides a unique number of identification.
-     {$ENDIF}
-     property UniqueID:Int64 read GetUniqueID;
-  end;
+  {$IFEND}
 
   {$IFDEF PORTUGUES}
   {:
@@ -249,24 +217,6 @@ implementation
 uses pascalScadaMTPCPU;
 {$ifend}
 
-procedure TCrossThread.WakeUp;
-begin
-  {$IFDEF USE_TTHREAD_START}
-    Start;
-  {$ELSE}
-    Resume;
-  {$ENDIF}
-end;
-
-function TCrossThread.GetUniqueID:Int64;
-begin
-  {$IFDEF UNIX}
-  Result := Int64(ThreadID);
-  {$ELSE}
-  Result := ThreadID;
-  {$ENDIF}
-end;
-
 constructor TCrossEvent.Create(AManualReset, InitialState: Boolean);
 begin
   inherited Create;
@@ -304,6 +254,7 @@ begin
   {$IFEND}
   inherited destroy;
 end;
+
 function TCrossEvent.ResetEvent:Boolean;
 begin
   {$if defined(NeedCrossEvents)}

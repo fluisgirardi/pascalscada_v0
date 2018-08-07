@@ -23,7 +23,7 @@ unit mutexserver;
 interface
 
 uses
-  Classes, SysUtils, socket_types, CrossEvent,
+  Classes, SysUtils, socket_types, CrossEvent, crossthreads,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -43,12 +43,12 @@ uses
 type
   { TAcceptThread }
 
-  TAcceptThread = Class(TCrossThread)
+  TAcceptThread = Class(TpSCADACoreAffinityThread)
   private
     FServerSocket:TSocket;
     FMutex:TCriticalSection;
     FEnd:TCrossEvent;
-    FClientThread:TCrossThread;
+    FClientThread:TpSCADACoreAffinityThread;
     FAddClientThread,
     FRemoveClientThread:TNotifyEvent;
     function WaitEnd(timeout:Cardinal): TWaitResult;
@@ -66,7 +66,7 @@ type
 
   { TClientThread }
 
-  TClientThread = Class(TCrossThread)
+  TClientThread = Class(TpSCADACoreAffinityThread)
   private
     FSocket:TSocket;
     FMutex:TCriticalSection;
@@ -242,7 +242,7 @@ end;
 
 procedure TClientThread.Terminate;
 begin
-  TCrossThread(self).Terminate;
+  TpSCADACoreAffinityThread(self).Terminate;
   repeat
      CheckSynchronize(1);
   until WaitEnd(1)=wrSignaled;
@@ -316,7 +316,7 @@ end;
 
 procedure TAcceptThread.Terminate;
 begin
-  TCrossThread(self).Terminate;
+  TpSCADACoreAffinityThread(self).Terminate;
   repeat
      CheckSynchronize(1);
   until WaitEnd(1)=wrSignaled;

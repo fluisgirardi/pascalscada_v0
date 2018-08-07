@@ -819,7 +819,7 @@ begin
   PScanUpdateThread.WakeUp;
 
   PScanReadThread.WakeUp;
-  PScanReadThread.WaitInit;
+  PScanReadThread.WaitLoopStarts;
 
   //PScanWriteThread.WakeUp;
   //PScanWriteThread.WaitInit;

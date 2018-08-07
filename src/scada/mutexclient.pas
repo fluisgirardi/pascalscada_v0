@@ -23,7 +23,7 @@ unit MutexClient;
 interface
 
 uses
-  Classes, SysUtils, socket_types, CrossEvent,
+  Classes, SysUtils, socket_types, CrossEvent, crossthreads,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -44,7 +44,7 @@ type
 
   { TMutexClientThread }
 
-  TMutexClientThread = class(TCrossThread)
+  TMutexClientThread = class(TpSCADACoreAffinityThread)
   private
     fConnectionBroken: TNotifyEvent;
     FOwnMutex:Boolean;
