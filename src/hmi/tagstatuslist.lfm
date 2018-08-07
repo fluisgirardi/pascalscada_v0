@@ -96,6 +96,7 @@ object frmTagStatusList: TfrmTagStatusList
     TabOrder = 1
   end
   object Timer1: TTimer
+    Interval = 250
     OnTimer = Timer1Timer
     left = 700
     top = 195
