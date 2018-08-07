@@ -1007,7 +1007,7 @@ function TProtocolDriver.GetTagCount: LongInt;
 begin
   //FCritical.Enter;
   try
-    Result := PTags.Count;
+    InterLockedExchange(Result, PTags.Count);
   finally
     //FCritical.Leave;
   end;
@@ -1352,7 +1352,8 @@ var
   tr:TTagRec;
   remainingMs:Int64;
   ScanReadRec:TScanReadRec;
-  doneOne:Boolean;
+  doneOne, PortError:Boolean;
+  ErrorStatus: TProtocolIOResult;
 begin
   doneOne:=false;
   try
@@ -1367,10 +1368,16 @@ begin
     FReadCS.Enter;
 
     if ComponentState*[csDestroying]<>[] then exit;
+    PortError:=false;
 
-    if (PCommPort=nil) or (not PCommPort.ReallyActive) then begin
-      Result:=50; //waits 50ms
-      exit;
+    if (PCommPort=nil) then begin
+      PortError:=true;
+      ErrorStatus:=ioNullCommPort;
+    end else begin
+      if (PCommPort.ReallyActive=false) then begin
+        PortError:=true;
+        ErrorStatus:=ioCommPortClosed;
+      end;
     end;
 
     for t:=0 to TagCount-1 do begin
@@ -1394,9 +1401,16 @@ begin
           end else begin
 
             tagiface.BuildTagRec(tr,0,0);
-
             SetLength(ScanReadRec.Values, tr.Size);
-            DoGetValue(tr, ScanReadRec);
+            if PortError then begin
+              ScanReadRec.ValuesTimestamp:=CrossNow;
+              ScanReadRec.LastQueryResult:=ErrorStatus;
+              ScanReadRec.Offset:=0;
+              ScanReadRec.ReadFaults:=0;
+              ScanReadRec.ReadsOK:=0;
+              ScanReadRec.RealOffset:=0;
+            end else
+              DoGetValue(tr, ScanReadRec);
 
             if ScanReadRec.ValuesTimestamp>tagiface.GetLastUpdateTimestamp then begin
               doneOne:=true;

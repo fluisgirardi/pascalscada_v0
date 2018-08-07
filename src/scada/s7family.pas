@@ -2364,13 +2364,13 @@ begin
   end;
 
   if retries>=3 then begin
-    Result:=ioDriverError;
+    Result:=ioAdapterInitFail;
     exit;
   end;
 
   if not PLCPtr^.Connected then
     if not connectPLC(PLCPtr^) then begin
-      Result:=ioDriverError;
+      Result:=ioConnectPLCFailed;
       exit;
     end;
 

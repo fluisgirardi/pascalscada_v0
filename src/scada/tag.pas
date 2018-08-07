@@ -184,7 +184,8 @@ type
                        ioUnknownError, ioEmptyPacket, ioPartialOk,
                        ioAcknowledge, ioBusy, ioNACK, ioMemoryParityError,
                        ioGatewayUnavailable, ioDeviceGatewayFailedToRespond,
-                       ioReadOnlyProtocol);
+                       ioReadOnlyProtocol, ioCommPortClosed, ioNullCommPort,
+                       ioConnectPLCFailed, ioAdapterInitFail);
 
   {$IFDEF PORTUGUES}
   {:
