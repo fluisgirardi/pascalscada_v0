@@ -66,20 +66,18 @@ type
   @value(ptDouble    Float, 64 bits sized.)
   }
   {$ENDIF}
-  TProtocolTagType = (
-                   ptBit,
-                   ptShortInt,
-                   ptByte,
-                   ptSmallInt,
-                   ptWord,
-                   ptLongInt,
-                   ptDWord,
-                   ptFloat,
-                   ptInt64,
-                   ptQWord,
-                   ptDouble
-                  );
-
+  TProtocolTagType = (ptBit,
+                      ptShortInt,
+                      ptByte,
+                      ptSmallInt,
+                      ptWord,
+                      ptLongInt,
+                      ptDWord,
+                      ptFloat,
+                      ptInt64,
+                      ptQWord,
+                      ptDouble
+                     );
 
   {$IFDEF PORTUGUES}
   //: Adiciona um tag no editor de formulário do Delphi/Lazarus.
@@ -403,6 +401,18 @@ type
   end;
 
 const
+
+  ProtocolTagTypeSizeInBits:array[low(TProtocolTagType)..high(TProtocolTagType)] of integer = (1,
+                                                                                               8,
+                                                                                               8,
+                                                                                               16,
+                                                                                               16,
+                                                                                               32,
+                                                                                               32,
+                                                                                               32,
+                                                                                               64,
+                                                                                               64,
+                                                                                               64);
 
   {$IFDEF PORTUGUES}
   //: Constante de mensagem para leitura de tag por scan.

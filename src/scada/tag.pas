@@ -351,6 +351,8 @@ type
     //: Gets a structure with informations about the tag.
     {$ENDIF}
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
+
+    function GetLastUpdateTimestamp:TDateTime;
   end;
 
   TASyncValueChangeNotify = procedure(Sender:TObject; const Value:TArrayOfDouble) of object;
@@ -940,8 +942,24 @@ type
 
   TArrayOfScanUpdateRec = array of TScanUpdateRec;
 
+  function TagSizeInBits(const TagType:TTagType; const pttDefaultSize:Integer):Integer;
 
 implementation
+
+function TagSizeInBits(const TagType: TTagType; const pttDefaultSize: Integer
+  ): Integer;
+var
+  SizeInBits:array[low(TTagType)..high(TTagType)] of integer = (
+              0,          //pttDefault
+              08, 08,     //pttShortInt, pttByte,            //8 bits
+              16, 16,     //pttSmallInt, pttWord,            //16 bits
+              32, 32, 32, //pttLongInt,  pttDWord, pttFloat, //32 bits
+              64, 64, 64  //pttInt64,    pttQWord, pttDouble //64 bits
+             );
+begin
+  SizeInBits[pttDefault]:=pttDefaultSize;
+  Result:=SizeInBits[TagType];
+end;
 
 constructor TTag.Create(AOwner:TComponent);
 var

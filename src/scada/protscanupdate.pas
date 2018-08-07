@@ -183,6 +183,7 @@ var
   FInicio:TDateTime;
   FTempo, FVezes, FValor:LongInt;
   FMedia:Double;
+  i: Integer;
 begin
   FTempo:=0;
   FVezes:=0;
@@ -196,6 +197,11 @@ begin
           FInicio:=CrossNow;
           Synchronize(@UpdateMultipleTags);
           FValor:=MilliSecondsBetween(CrossNow,FInicio);
+
+          for i:=0 to High(PScannedValues) do
+            SetLength(PScannedValues[i].Values, 0);
+
+          SetLength(PScannedValues, 0);
 
           FTempo:=FTempo+FValor;
           FVezes:=FVezes+1;

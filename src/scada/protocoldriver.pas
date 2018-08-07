@@ -1392,19 +1392,22 @@ begin
             end else
               Result := Min(remainingMs, Result);
           end else begin
-            doneOne:=true;
-            inc(valueSet);
-            SetLength(MultiValues,valueSet+1);
 
             tagiface.BuildTagRec(tr,0,0);
 
             SetLength(ScanReadRec.Values, tr.Size);
             DoGetValue(tr, ScanReadRec);
 
-            MultiValues[valueSet].LastResult    :=ScanReadRec.LastQueryResult;
-            MultiValues[valueSet].CallBack      :=tr.CallBack;
-            MultiValues[valueSet].Values        :=ScanReadRec.Values;
-            MultiValues[valueSet].ValueTimeStamp:=ScanReadRec.ValuesTimestamp;
+            if ScanReadRec.ValuesTimestamp>tagiface.GetLastUpdateTimestamp then begin
+              doneOne:=true;
+              inc(valueSet);
+              SetLength(MultiValues,valueSet+1);
+
+              MultiValues[valueSet].LastResult    :=ScanReadRec.LastQueryResult;
+              MultiValues[valueSet].CallBack      :=tr.CallBack;
+              MultiValues[valueSet].Values        :=ScanReadRec.Values;
+              MultiValues[valueSet].ValueTimeStamp:=ScanReadRec.ValuesTimestamp;
+            end;
           end;
         end;
       end;

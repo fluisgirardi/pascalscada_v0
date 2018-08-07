@@ -500,6 +500,8 @@ type
     //: @exclude
     procedure Loaded; override;
 
+    function GetLastUpdateTimestamp:TDateTime; virtual;
+
     //: @seealso(TTag.AutoRead)
     property AutoRead write SetAutoRead default true;
     //: @seealso(TTag.AutoWrite)
@@ -1122,6 +1124,11 @@ begin
     AddTag(Self);
 end;
 
+function TPLCTag.GetLastUpdateTimestamp: TDateTime;
+begin
+  Result:=PValueTimeStamp;
+end;
+
 procedure TPLCTag.SetGUID(v:AnsiString);
 begin
   if ComponentState*[csReading]=[] then exit;
@@ -1224,6 +1231,7 @@ var
   PtrByte1, PtrByte2:PByte;
   PtrWord1, PtrWord2:PWord;
   PtrDWord1, PtrDWord2:PDWord;
+  pttSize, ttSize, resIdx: Integer;
 
   procedure ResetPointers;
   begin
@@ -1237,35 +1245,38 @@ var
   var
     i:LongInt;
   begin
-    i:=Length(Result);
-    SetLength(Result,i+1);
-    Result[i]:=ValueToAdd;
+    //i:=Length(Result);
+    //SetLength(Result,i+1);
+    Result[resIdx]:=ValueToAdd;
+    resIdx:=resIdx+1;
   end;
 
 begin
-  if (FTagType=pttDefault) OR
-     ((FProtocolTagType=ptByte) AND (FTagType=pttByte)) OR
-     ((FProtocolTagType=ptShortInt) AND (FTagType=pttShortInt)) OR
-     ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
-     ((FProtocolTagType=ptSmallInt) AND (FTagType=pttSmallInt)) OR
-     ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
-     ((FProtocolTagType=ptLongInt) AND (FTagType=pttLongInt)) OR
-     ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat)) Or
-     ((FProtocolTagType=ptInt64) AND (FTagType=pttInt64)) Or
-     ((FProtocolTagType=ptQWord) AND (FTagType=pttQWord)) Or
-     ((FProtocolTagType=ptDouble) AND (FTagType=pttDouble))
-  then begin
+  pttSize := ProtocolTagTypeSizeInBits[FProtocolTagType];
+  ttSize  := TagSizeInBits(FTagType,pttSize);
+  resIdx  := 0;
+  //if (FTagType=pttDefault) OR
+  //   ((FProtocolTagType=ptByte) AND (FTagType=pttByte)) OR
+  //   ((FProtocolTagType=ptShortInt) AND (FTagType=pttShortInt)) OR
+  //   ((FProtocolTagType=ptWord) AND (FTagType=pttWord)) OR
+  //   ((FProtocolTagType=ptSmallInt) AND (FTagType=pttSmallInt)) OR
+  //   ((FProtocolTagType=ptDWord) AND (FTagType=pttDWord)) OR
+  //   ((FProtocolTagType=ptLongInt) AND (FTagType=pttLongInt)) OR
+  //   ((FProtocolTagType=ptFloat) AND (FTagType=pttFloat)) Or
+  //   ((FProtocolTagType=ptInt64) AND (FTagType=pttInt64)) Or
+  //   ((FProtocolTagType=ptQWord) AND (FTagType=pttQWord)) Or
+  //   ((FProtocolTagType=ptDouble) AND (FTagType=pttDouble))
+  if pttSize=ttSize then begin
     Result:=Values;
     exit;
   end;
 
-  //calcula quantos bytes precisam ser alocados.
-  //calculate how many bytes must be allocated.
-  SetLength(Result,0);
+  resIdx  := 0;
+  SetLength(Result, ((Length(Values)*pttSize) div ttSize)+ifthen(((Length(Values)*pttSize) mod ttSize)<>0,1,0));
 
   case FProtocolTagType of
     ptBit:
-      AreaSize := Length(Values) div 8;
+      AreaSize := Length(Values) div 8 + ifthen((Length(Values) mod 8) <> 0, 1, 0);
     ptByte, ptShortInt:
       AreaSize := Length(Values);
     ptWord, ptSmallInt:

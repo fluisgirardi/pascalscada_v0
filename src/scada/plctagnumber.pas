@@ -305,10 +305,11 @@ begin
       tcInternalUpdate,
       tcSingleScanRead:
       begin
+        PValueTimeStamp := ValuesTimeStamp;
+
         if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
           notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
           PValueRaw := TagValues[0];
-          PValueTimeStamp := ValuesTimeStamp;
           if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then begin
             PModified:=False;
             IncCommReadOK(1);
@@ -321,6 +322,7 @@ begin
       end;
       tcScanWrite,tcWrite:
       begin
+        PValueTimeStamp := ValuesTimeStamp;
         if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
           if LastResult=ioOk then begin
             PModified:=False;
@@ -345,7 +347,7 @@ begin
     end;
 
     if notify or PFirstUpdate then begin
-      if TagCommand in [tcRead,tcScanRead,tcSingleScanRead] then PFirstUpdate:=false;
+      if (TagCommand in [tcRead,tcScanRead,tcSingleScanRead]) or (ProtocolDriver=nil) then PFirstUpdate:=false;
       NotifyChange;
     end;
 

@@ -200,14 +200,14 @@ begin
     TagValues:=PLCValuesToTagValues(Values, Offset);
     notify := false;
     case TagCommand of
-      tcScanRead, tcRead, tcInternalUpdate:
+      tcScanRead, tcRead, tcInternalUpdate, tcSingleScanRead:
       begin
+        PValueTimeStamp := ValuesTimeStamp;
         if LastResult in [ioOk, ioNullDriver] then begin
           for c := 0 to High(TagValues) do begin
             notify := notify or (PValues[c+Offset]<>TagValues[c]) or (IsNan(TagValues[c]) and (not IsNaN(PValues[c+Offset])));
             PValues[c+Offset]:=TagValues[c];
           end;
-          PValueTimeStamp := ValuesTimeStamp;
           if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then begin
             IncCommReadOK(1);
             PModified:=false;
@@ -220,6 +220,7 @@ begin
       end;
       tcScanWrite,tcWrite:
       begin
+        PValueTimeStamp := ValuesTimeStamp;
         if LastResult in [ioOk, ioNullDriver] then begin
           if LastResult=ioOk then begin
             IncCommWriteOK(1);
@@ -229,7 +230,7 @@ begin
             notify := notify or (PValues[c+Offset]<>TagValues[c]);
             PValues[c+Offset]:=TagValues[c]
           end;
-          PValueTimeStamp := ValuesTimeStamp;
+
         end else
           IncCommWriteFaults(1);
       end;
@@ -247,11 +248,11 @@ begin
     end;
 
     if notify or PFirstUpdate then begin
-      if TagCommand in [tcRead,tcScanRead] then PFirstUpdate:=false;
+      if (TagCommand in [tcRead, tcScanRead, tcSingleScanRead]) or (ProtocolDriver=nil) then PFirstUpdate:=false;
       NotifyChange;
     end;
 
-    if (TagCommand in [tcRead,tcScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PValueTimeStamp) then
+    if (TagCommand in [tcRead, tcScanRead, tcSingleScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PValueTimeStamp) then
       NotifyUpdate;
 
   finally

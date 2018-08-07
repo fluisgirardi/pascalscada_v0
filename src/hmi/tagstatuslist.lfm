@@ -1,0 +1,103 @@
+object frmTagStatusList: TfrmTagStatusList
+  Left = 0
+  Height = 634
+  Top = 0
+  Width = 1402
+  Caption = 'frmTagStatusList'
+  ClientHeight = 634
+  ClientWidth = 1402
+  Visible = False
+  object ButtonPanel1: TButtonPanel
+    Left = 6
+    Height = 39
+    Top = 589
+    Width = 1390
+    OKButton.Name = 'OKButton'
+    OKButton.DefaultCaption = True
+    HelpButton.Name = 'HelpButton'
+    HelpButton.DefaultCaption = True
+    CloseButton.Name = 'CloseButton'
+    CloseButton.DefaultCaption = True
+    CancelButton.Name = 'CancelButton'
+    CancelButton.DefaultCaption = True
+    TabOrder = 0
+    ShowButtons = [pbClose]
+  end
+  object StringGrid1: TStringGrid
+    Left = 0
+    Height = 583
+    Top = 0
+    Width = 1402
+    Align = alClient
+    ColCount = 15
+    Columns = <    
+      item
+        Title.Caption = 'Tag name'
+        Width = 200
+      end    
+      item
+        Title.Caption = 'Class'
+        Width = 150
+      end    
+      item
+        Title.Caption = 'Status'
+        Width = 150
+      end    
+      item
+        Title.Caption = 'M. addr.'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'M. F. DB'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'MRF'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'M.sub el.'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'MWF'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'M. Path'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'P. Rack.'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'P. Slot'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'P. Station'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'Scan'
+        Width = 60
+      end    
+      item
+        Title.Caption = 'TagType'
+        Width = 80
+      end    
+      item
+        Title.Caption = 'Updated at'
+        Width = 200
+      end>
+    FixedCols = 0
+    RowCount = 1
+    TabOrder = 1
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    left = 700
+    top = 195
+  end
+end
