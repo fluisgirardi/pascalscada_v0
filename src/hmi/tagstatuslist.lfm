@@ -94,6 +94,7 @@ object frmTagStatusList: TfrmTagStatusList
     FixedCols = 0
     RowCount = 1
     TabOrder = 1
+    OnPrepareCanvas = StringGrid1PrepareCanvas
   end
   object Timer1: TTimer
     Interval = 250

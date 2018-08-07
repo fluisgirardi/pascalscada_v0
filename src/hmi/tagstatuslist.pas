@@ -13,6 +13,8 @@ type
     ButtonPanel1: TButtonPanel;
     StringGrid1: TStringGrid;
     Timer1: TTimer;
+    procedure StringGrid1PrepareCanvas(sender: TObject; aCol, aRow: Integer;
+      aState: TGridDrawState);
     procedure Timer1Timer(Sender: TObject);
   private
 
@@ -97,6 +99,19 @@ begin
       Continue;
     end;
   end;
+end;
+
+procedure TfrmTagStatusList.StringGrid1PrepareCanvas(sender: TObject; aCol,
+  aRow: Integer; aState: TGridDrawState);
+begin
+  if aRow>0 then begin
+    if lowercase(StringGrid1.Rows[aRow].Strings[2])<>'iook' then begin
+      StringGrid1.Canvas.Brush.Color:=clYellow;
+      StringGrid1.Canvas.Pen.Color:=clBlack;
+    end;
+
+  end;
+
 end;
 
 end.
