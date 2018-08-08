@@ -244,10 +244,12 @@ end;
 
 function  TPortPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
-   if GetComponent(0) is TSerialPortDriver then
-      Result := [paValueList{$IFDEF FPC}, paPickList{$ELSE}
-                 {$IFDEF DELPHI2005_UP}, paReadOnly,
-                 paValueEditable{$ENDIF}{$ENDIF}];
+   if (GetComponent(0) is TSerialPortDriver) and (GetComponent(0) as TSerialPortDriver).AcceptAnyPortName=false then
+     Result := [paValueList{$IFDEF FPC}, paPickList{$ELSE}
+                {$IFDEF DELPHI2005_UP}, paReadOnly,
+                paValueEditable{$ENDIF}{$ENDIF}]
+   else
+     Result:=inherited GetAttributes;
 end;
 
 function  TPortPropertyEditor.GetValue: AnsiString;
