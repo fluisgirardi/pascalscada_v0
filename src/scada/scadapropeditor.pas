@@ -274,6 +274,15 @@ begin
 var
    c, d:LongInt;
    pname:AnsiString;
+
+   function PortDirPrefix:AnsiString;
+   begin
+     if Assigned(GetComponent(0)) and (GetComponent(0) is TSerialPortDriver) then
+       Result:=(GetComponent(0) as TSerialPortDriver).DevDir
+     else
+       Result:='/dev/';
+   end;
+
 begin
    Proc('(none)');
    for d:=0 to High(PortPrefix) do
@@ -284,7 +293,7 @@ begin
       for c:=0 to 255 do begin
          pname:=PortPrefix[d]+IntToStr(c);
       {$ENDIF}
-         if FileExists('/dev/'+pname) then
+         if FileExists(PortDirPrefix+pname) then // Added DevDir property.
             Proc(pname);
       end;
 {$ENDIF}

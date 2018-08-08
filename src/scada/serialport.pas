@@ -21,7 +21,6 @@ uses
   {$IFDEF UNIX} {$IFNDEF DARWIN}Serial, {$ENDIF} Unix, BaseUnix, termio, {$ENDIF}
   DateUtils;
 
-
 type
 
   {$IFDEF PORTUGUES}
@@ -171,6 +170,8 @@ type
     PPortHandle:TSerialHandle;
     PSavedState:TSerialState;
     {$IFEND}
+
+    PPortDirPrefix : string;
     PBackupPortSettings:Boolean;
     PRWTimeout:LongInt;    
     procedure SetTimeOut(v:LongInt);
@@ -179,6 +180,10 @@ type
     procedure SetStopBits(v:TSerialStopBits);
     procedure SetParity(v:TSerialParity);
     procedure SetDataBits(v:TSerialDataBits);
+
+    procedure SetDevDir(DDir : AnsiString);
+    function GetDevDir : AnsiString;
+
     procedure SetCOMPort(v:AnsiString);
     {$IF defined(WIN32) or defined(WIN64)}
     function MakeDCBString:AnsiString;
@@ -227,6 +232,32 @@ type
     }
     {$ENDIF}
     property COMPort:AnsiString read PPortName write SetCOMPort;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Diretório onde o PascaSCADA irá tentar localizar e abrir (caso Active=true)
+    o device da porta serial em sistema operacinais Linux/Unix.
+
+    Esta propriedade é útil para pessoas que usam emuladores de porta serial
+    nestes sistemas operacionais.
+
+    Em sistemas operacionais Windows, esta propriedade não tem utilidade, sendo
+    mantida visível apenas para compatibilidade do projeto usuário ao longo de
+    multiplos sistemas operacionais.
+    }
+    {$ELSE}
+    {:
+    Folder where PascalSCADA will search and open (if Active=true) the serial
+    port device on Linux/Unix operating systems.
+
+    This property is useful for people that uses serial port emulators on these
+    operating systems.
+
+    On windows this property is useless, only visible by user project
+    compatibility across multiple OS.
+    }
+    {$ENDIF}
+    property DevDir : AnsiString read GetDevDir write SetDevDir;
 
     {$IFDEF PORTUGUES}
     {: Informa a duração máxima de uma ação leitura ou escrita. }
@@ -353,16 +384,20 @@ const FILE_ANY_ACCESS         =0;
 
 {$IFDEF UNIX}
 {$IFDEF LINUX}
-var PortPrefix:array[0..2] of AnsiString = ('tty', 'ttyUSB', 'ttyACM');
+var PortPrefix:array[0..7] of string = ('ttyADV', 'ttyAP', 'ttyS','ttyUSB', 'vttyAP', 'ttyMP', 'ttyr', 'ttyB');
+//var PortPrefix:array[0..2] of AnsiString = ('tty', 'ttyUSB', 'ttyACM');
 {$ENDIF}
 {$IFDEF FREEBSD}
-var PortPrefix:array[0..0] of AnsiString = ('cuad');
+var PortPrefix:array[0..8] of string = ('cuad','cuau','cuaU','ttyu','ttyU', 'vttyAP', 'ttyMP', 'ttyr', 'ttyB');
+//var PortPrefix:array[0..0] of AnsiString = ('cuad');
 {$ENDIF}
 {$IFDEF NETBSD}
-var PortPrefix:array[0..0] of AnsiString = ('cuad');
+var PortPrefix:array[0..8] of string = ('cuad','cuau','cuaU','ttyu','ttyU', 'vttyAP', 'ttyMP', 'ttyr', 'ttyB');
+//var PortPrefix:array[0..0] of AnsiString = ('cuad');
 {$ENDIF}
 {$IFDEF OPENBSD}
-var PortPrefix:array[0..0] of AnsiString = ('cuad');
+var PortPrefix:array[0..8] of string = ('cuad','cuau','cuaU','ttyu','ttyU', 'vttyAP', 'ttyMP', 'ttyr', 'ttyB');
+//var PortPrefix:array[0..0] of AnsiString = ('cuad');
 {$ENDIF}
 {$ifdef SunOS}
 var PortPrefix:array[0..0] of AnsiString = ('tty');
@@ -398,6 +433,7 @@ begin
   PRWTimeout := 20;
   {$IFDEF UNIX}
   LockOpen:=false;
+  PPortDirPrefix:='/dev/';
   {$ENDIF}
 end;
 
@@ -814,6 +850,18 @@ begin
 {$ENDIF}
 end;
 
+function TSerialPortDriver.GetDevDir : AnsiString;
+begin
+  Result := PPortDirPrefix;
+end;
+
+procedure TSerialPortDriver.SetDevDir(DDir : AnsiString);
+begin
+  DoExceptionInActive;
+  PPortDirPrefix := DDir;
+  if (DDir = '(none)') or (DDir = '') then PPortDirPrefix := '/dev/';
+end;
+
 procedure TSerialPortDriver.SetCOMPort(v:AnsiString);
 begin
   DoExceptionInActive;
@@ -855,7 +903,7 @@ begin
 
   Result := false;
   for c:=0 to high(PortPrefix) do
-    if (Pos(PortPrefix[c], v)>0) and FileExists('/dev/'+v) then begin
+    if (LeftStr(v, Length(PortPrefix[c]))=PortPrefix[c]) and FileExists(PPortDirPrefix+v) then begin // Added PDevDir
       //fd:=fpopen('/dev/'+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
 
       Result := true;
