@@ -775,6 +775,7 @@ begin
   FReadID      := 0;
   FWriteID     := 0;
 
+  PUpdatingMultipleTags:=0;
 
   FReadOnly:=0;
   PDriverID := DriverCount;
@@ -804,13 +805,6 @@ begin
   PScanReadThread.OnDoScanRead       := @SafeScanRead;
   PScanReadThread.OnDoScanWrite      := @SafeScanWrite;
   PScanReadThread.OnDoSingleScanRead := @SafeSingleScanRead;
-
-  //PScanWriteThread := TScanThread.Create(true, PScanUpdateThread);
-  //{$IFNDEF WINCE}
-  //PScanWriteThread.Priority:=tpTimeCritical;
-  //{$ENDIF}
-  //PScanWriteThread.OnDoScanRead    := nil;
-  //PScanWriteThread.OnDoScanWrite   := @SafeScanWrite;
 end;
 
 procedure TProtocolDriver.AfterConstruction;
@@ -926,8 +920,6 @@ begin
       FReadCS.Enter;
     end;
 
-
-    
     DoAddTag(TagObj,false);
   finally
     if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)=0 then begin
@@ -941,26 +933,28 @@ end;
 
 procedure TProtocolDriver.StartUpdateMultipleTags;
 begin
-  if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)=0 then begin
+  //if I'm the first starting this multiple tags update,
+  //gets the mutexes
+  if InterLockedIncrement(PUpdatingMultipleTags)=1 then begin
     while not FPause.ResetEvent do
       CrossThreadSwitch;
 
     FWriteCS.Enter;
     FReadCS.Enter;
   end;
-  InterLockedIncrement(PUpdatingMultipleTags);
 end;
 
 procedure TProtocolDriver.StopUpdateMultipleTags;
 begin
-  if InterLockedExchange(PUpdatingMultipleTags,PUpdatingMultipleTags)>0 then begin
+  if InterLockedDecrement(PUpdatingMultipleTags)<=0 then begin
 
     FReadCS.Leave;
     FWriteCS.Leave;
 
     while not FPause.SetEvent do
       CrossThreadSwitch;
-    InterLockedDecrement(PUpdatingMultipleTags);
+
+    InterLockedExchange(PUpdatingMultipleTags, 0);
   end;
 end;
 
