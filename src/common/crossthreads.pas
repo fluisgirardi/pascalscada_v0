@@ -157,7 +157,7 @@ class function TpSCADACoreAffinityThread.GetSystemThreadCount: cint32;
 //returns total number of processors available to system including logical hyperthreaded processors
 var
   i: cint32;
-  ProcessAffinityMask, SystemAffinityMask: crossNativeUInt;
+  ProcessAffinityMask, SystemAffinityMask: NativeUInt;
   Mask: DWORD;
   SystemInfo: SYSTEM_INFO;
 begin
