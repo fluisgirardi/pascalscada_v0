@@ -400,7 +400,8 @@ begin
     //7 bytes que não serve para nada
     //ou se serve pra algo, eu não sei.
     //
-    //Sometimes the PLC sends a packet with 7 bytes of len, without a useful function.
+    //Sometimes the PLC sends a useless
+    //packet, with 7 bytes of len.
     while len = 7 do begin
       //le novamente...
       //reads again.
