@@ -760,7 +760,7 @@ var
 
 implementation
 
-uses PLCTag, hsstrings, math, crossdatetime, pascalScadaMTPCPU;
+uses dateutils, PLCTag, hsstrings, math, crossdatetime, pascalScadaMTPCPU;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -1407,6 +1407,13 @@ begin
               DoGetValue(tr, ScanReadRec);
 
             if ScanReadRec.ValuesTimestamp>tagiface.GetLastUpdateTimestamp then begin
+              //calcula o tempo para a proxima atualização
+              if first then begin
+                 Result:=tagiface.GetUpdateTime-MilliSecondsBetween(CrossNow,ScanReadRec.ValuesTimestamp);
+                 first:=false;
+               end else
+                 Result := Min(tagiface.GetUpdateTime-MilliSecondsBetween(CrossNow,ScanReadRec.ValuesTimestamp), Result);
+
               doneOne:=true;
               inc(valueSet);
               SetLength(MultiValues,valueSet+1);
@@ -1423,7 +1430,6 @@ begin
 
   finally
     FReadCS.Leave;
-    if doneOne then Result:=0;
     FPause.SetEvent;
   end;
 end;

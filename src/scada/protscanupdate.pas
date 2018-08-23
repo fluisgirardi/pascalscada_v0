@@ -190,8 +190,7 @@ begin
         SetLength(PScannedValues, 0);
 
         timeout:=timeout-FValor;
-      end else
-        timeout:=1;
+      end;
     end else
       timeout:=1;
 

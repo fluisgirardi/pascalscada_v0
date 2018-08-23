@@ -2225,7 +2225,7 @@ begin
         if (PReadSomethingAlways=false) AND (ReqItem.NeedUpdate=false) then continue;
         if MilliSecondsBetween(Now, started)>100 then break;
 
-        if not AcceptThisRequest(FPLCs[ReqItem.iPLC], ReqItem.iSize) and ((c+1) < EntireTagList.Count) then begin
+        if not AcceptThisRequest(FPLCs[ReqItem.iPLC], ReqItem.iSize) then begin
           for c2:=(c+1) to EntireTagList.Count-1 do begin
             ReqItem2:=EntireTagList.Items[c2];
             if ReqItem2.Read then continue;
@@ -2238,6 +2238,7 @@ begin
           end;
           ReadQueuedRequests(FPLCs[ReqItem.iPLC]);
           Reset;
+          Break;
           if ReqItem.NeedUpdate=false then exit;
         end;
         pkg_initialized;

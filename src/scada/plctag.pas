@@ -56,6 +56,7 @@ type
     procedure GetNewProtocolTagSize;
     function RemainingMiliseconds:Int64; virtual;
     function RemainingMilisecondsForNextScan:Int64; virtual;
+    function GetUpdateTime:Int64; virtual;
     function IsValidTag:Boolean; virtual;
     procedure SetTagValidity(TagValidity:Boolean); virtual;
     property Modified:Boolean read PModified;
@@ -1959,6 +1960,11 @@ end;
 function TPLCTag.RemainingMilisecondsForNextScan:Int64;
 begin
   Result:=PUpdateTime-MilliSecondsBetween(CrossNow,PLastScanTimeStamp);
+end;
+
+function TPLCTag.GetUpdateTime: Int64;
+begin
+  Result:=PUpdateTime;
 end;
 
 function TPLCTag.IsValidTag:Boolean;

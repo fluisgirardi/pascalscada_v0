@@ -354,6 +354,8 @@ type
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
 
     function GetLastUpdateTimestamp:TDateTime;
+
+    function GetUpdateTime:Int64;
   end;
 
   TASyncValueChangeNotify = procedure(Sender:TObject; const Value:TArrayOfDouble) of object;
