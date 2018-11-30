@@ -130,6 +130,24 @@ type
   end;
   {$IFEND}
 
+   {$IF defined(LCLgtk3)}
+  { TGTK3KeyEvents }
+  TGTK3KeyEvents = class(TCrossKeyEvents)
+    protected
+      //: @seealso(TCrossKeyEvents.DoDown)
+      procedure DoDown(Key: LongWord); override;
+      //: @seealso(TCrossKeyEvents.DoUp)
+      procedure DoUp(Key: LongWord); override;
+      //: @seealso(TCrossKeyEvents.TranlateVirtualKey)
+      function TranlateVirtualKey(Key: Word): LongWord; override;
+    public
+      //: @seealso(TCrossKeyEvents.Apply)
+      procedure Apply(Shift: TShiftState); override;
+      //: @seealso(TCrossKeyEvents.Unapply)
+      procedure Unapply(Shift: TShiftState); override;
+  end;
+  {$IFEND}
+
   {$IF defined(LCLqt)}
   TQT4KeyEvents = class(TCrossKeyEvents)
     protected
@@ -331,6 +349,10 @@ implementation
 
 {$IF defined(LCLgtk2)}
 uses gdk2, gtk2, gdk2x, glib2, LCLType, ctypes;
+{$IFEND}
+
+{$IF defined(LCLgtk3)}
+uses LazGdk3, LazGtk3, LazGLib2, LCLType, ctypes;
 {$IFEND}
 
 {$IF defined(LCLqt)}
@@ -593,6 +615,210 @@ begin
 end;
 
 procedure TGTK2KeyEvents.Unapply(Shift: TShiftState);
+begin
+  if ssCtrl in Shift then  FShitfState:=FShitfState-[ssCtrl];
+  if ssAlt in Shift then   FShitfState:=FShitfState-[ssAlt];
+  if ssShift in Shift then FShitfState:=FShitfState-[ssShift];
+end;
+{$IFEND}
+
+{$IF defined(LCLgtk3)}
+procedure TGTK3KeyEvents.DoDown(Key: LongWord);
+var
+  gev:TGdkEvent;
+  keys:PPGdkKeymapKey;
+  nkeys:cint;
+  effectivegroup, level:Integer;
+  consumedkeys:TGdkModifierType;
+begin
+  if FTarget=nil then exit;
+  gev.key.window:=PGtkWidget(Ftarget.Handle)^.window;
+  gev.key.type_:=GDK_KEY_PRESS;
+  gev.key.send_event:=1;
+
+  gev.key.time:=10;
+  gev.key.state:=0;
+  gev.key.length:=1;
+
+  if ssShift in FShitfState then
+    gev.key.state:=gev.key.state or GDK_SHIFT_MASK;
+
+  if ssCtrl in FShitfState  then
+    gev.key.state:=gev.key.state or GDK_CONTROL_MASK;
+
+  if ssAlt in FShitfState   then
+    gev.key.state:=gev.key.state or GDK_MOD1_MASK;
+
+  gev.key.string_:=gdk_keyval_name(key);
+
+  gdk_keymap_get_entries_for_keyval(nil,key,keys,@nkeys);
+
+  if keys=nil then begin
+    gev.key.hardware_keycode:=GDK_KEY_a;
+    gev.key.group:=1;
+  end else begin
+    gev.key.hardware_keycode:=keys^^.keycode;
+    gev.key.group:=keys^^.group;
+    g_free(keys);
+  end;
+
+  gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),gev.key.hardware_keycode,gev.key.state,gev.key.group,@gev.key.keyval,@effectivegroup,@level,@consumedkeys);
+
+  gdk_event_put(@gev);
+end;
+
+procedure TGTK3KeyEvents.DoUp(Key: LongWord);
+var
+  gev:TGdkEvent;
+  keys:PPGdkKeymapKey;
+  nkeys:gint;
+begin
+  if FTarget=nil then exit;
+  gev.key.window:=PGtkWidget(Ftarget.Handle)^.window;
+  gev.key.type_:=GDK_KEY_RELEASE;
+  gev.key.send_event:=1;
+  gev.key.time:=10;
+  gev.key.state:=0;
+  gev.key.keyval:=key;
+  gev.key.length:=1;
+  gev.key.string_:=gdk_keyval_name(key);
+
+  gdk_keymap_get_entries_for_keyval(nil,gev.key.keyval,keys,@nkeys);
+
+  if keys=nil then begin
+    gev.key.hardware_keycode:=GDK_KEY_a;
+    gev.key.group:=1;
+  end else begin
+    gev.key.hardware_keycode:=keys^^.keycode;
+    gev.key.group:=keys^^.group;
+    g_free(keys);
+  end;
+
+  gdk_event_put(@gev);
+end;
+
+function TGTK3KeyEvents.TranlateVirtualKey(Key: Word): LongWord;
+begin
+  case Key of
+    VK_BACK: Result := GDK_KEY_BackSpace;
+    VK_TAB: Result := GDK_KEY_Tab;
+    VK_CLEAR: Result := GDK_KEY_Clear;
+    VK_RETURN: Result := GDK_KEY_Return;
+    VK_SHIFT: Result := GDK_KEY_Shift_L;
+    VK_CONTROL: Result := GDK_KEY_Control_L;
+    VK_MENU: Result := GDK_KEY_Menu; // alt key crashes app, GDK_KEY_Alt_R;
+    VK_CAPITAL: Result := GDK_KEY_Caps_Lock;
+
+    VK_ESCAPE: Result := GDK_KEY_Escape;
+    VK_SPACE: Result := GDK_KEY_space;
+    VK_PRIOR: Result := GDK_KEY_Prior;
+    VK_NEXT: Result := GDK_KEY_Next;
+    VK_END: Result := GDK_KEY_End;
+    VK_HOME: Result := GDK_KEY_Home;
+    VK_LEFT: Result := GDK_KEY_Left;
+    VK_UP: Result := GDK_KEY_Up;
+    VK_RIGHT: Result := GDK_KEY_Right;
+    VK_DOWN: Result := GDK_KEY_Down;
+    VK_SELECT: Result := GDK_KEY_Select;
+    VK_PRINT: Result := GDK_KEY_Print;
+    VK_EXECUTE: Result := GDK_KEY_Execute;
+
+    VK_INSERT: Result := GDK_KEY_Insert;
+    VK_DELETE: Result := GDK_KEY_Delete;
+    VK_HELP: Result := GDK_KEY_Help;
+    VK_0: Result := GDK_KEY_0;
+    VK_1: Result := GDK_KEY_1;
+    VK_2: Result := GDK_KEY_2;
+    VK_3: Result := GDK_KEY_3;
+    VK_4: Result := GDK_KEY_4;
+    VK_5: Result := GDK_KEY_5;
+    VK_6: Result := GDK_KEY_6;
+    VK_7: Result := GDK_KEY_7;
+    VK_8: Result := GDK_KEY_8;
+    VK_9: Result := GDK_KEY_9;
+
+    VK_A: Result := GDK_KEY_a;
+    VK_B: Result := GDK_KEY_b;
+    VK_C: Result := GDK_KEY_c;
+    VK_D: Result := GDK_KEY_d;
+    VK_E: Result := GDK_KEY_e;
+    VK_F: Result := GDK_KEY_f;
+    VK_G: Result := GDK_KEY_g;
+    VK_H: Result := GDK_KEY_h;
+    VK_I: Result := GDK_KEY_i;
+    VK_J: Result := GDK_KEY_j;
+    VK_K: Result := GDK_KEY_k;
+    VK_L: Result := GDK_KEY_l;
+    VK_M: Result := GDK_KEY_m;
+    VK_N: Result := GDK_KEY_n;
+    VK_O: Result := GDK_KEY_o;
+    VK_P: Result := GDK_KEY_p;
+    VK_Q: Result := GDK_KEY_q;
+    VK_R: Result := GDK_KEY_r;
+    VK_S: Result := GDK_KEY_s;
+    VK_T: Result := GDK_KEY_t;
+    VK_U: Result := GDK_KEY_u;
+    VK_V: Result := GDK_KEY_v;
+    VK_W: Result := GDK_KEY_w;
+    VK_X: Result := GDK_KEY_x;
+    VK_Y: Result := GDK_KEY_y;
+    VK_Z: Result := GDK_KEY_z;
+
+    VK_NUMPAD0: Result := GDK_KEY_KP_0;
+    VK_NUMPAD1: Result := GDK_KEY_KP_1;
+    VK_NUMPAD2: Result := GDK_KEY_KP_2;
+    VK_NUMPAD3: Result := GDK_KEY_KP_3;
+    VK_NUMPAD4: Result := GDK_KEY_KP_4;
+    VK_NUMPAD5: Result := GDK_KEY_KP_5;
+    VK_NUMPAD6: Result := GDK_KEY_KP_6;
+    VK_NUMPAD7: Result := GDK_KEY_KP_7;
+    VK_NUMPAD8: Result := GDK_KEY_KP_8;
+    VK_NUMPAD9: Result := GDK_KEY_KP_9;
+    VK_MULTIPLY: Result := GDK_KEY_KP_Multiply;
+    VK_ADD: Result := GDK_KEY_KP_Add;
+    VK_SEPARATOR: Result := GDK_KEY_KP_Separator;
+    VK_SUBTRACT: Result := GDK_KEY_KP_Subtract;
+    VK_DECIMAL: Result := GDK_KEY_KP_Decimal;
+    VK_DIVIDE: Result := GDK_KEY_KP_Divide;
+    VK_F1: Result := GDK_KEY_F1;
+    VK_F2: Result := GDK_KEY_F2;
+    VK_F3: Result := GDK_KEY_F3;
+    VK_F4: Result := GDK_KEY_F4;
+    VK_F5: Result := GDK_KEY_F5;
+    VK_F6: Result := GDK_KEY_F6;
+    VK_F7: Result := GDK_KEY_F7;
+    VK_F8: Result := GDK_KEY_F8;
+    VK_F9: Result := GDK_KEY_F9;
+    VK_F10: Result := GDK_KEY_F10;
+    VK_F11: Result := GDK_KEY_F11;
+    VK_F12: Result := GDK_KEY_F12;
+    VK_F13: Result := GDK_KEY_F13;
+    VK_F14: Result := GDK_KEY_F14;
+    VK_F15: Result := GDK_KEY_F15;
+    VK_F16: Result := GDK_KEY_F16;
+    VK_F17: Result := GDK_KEY_F17;
+    VK_F18: Result := GDK_KEY_F18;
+    VK_F19: Result := GDK_KEY_F19;
+    VK_F20: Result := GDK_KEY_F20;
+    VK_F21: Result := GDK_KEY_F21;
+    VK_F22: Result := GDK_KEY_F22;
+    VK_F23: Result := GDK_KEY_F23;
+    VK_F24: Result := GDK_KEY_F24;
+    VK_NUMLOCK: Result := GDK_KEY_Num_Lock;
+    VK_SCROLL: Result := GDK_KEY_Scroll_Lock;
+  else
+    Result := GDK_KEY_VoidSymbol;
+  end;
+end;
+
+procedure TGTK3KeyEvents.Apply(Shift: TShiftState);
+begin
+  if ssCtrl in Shift then  FShitfState:=FShitfState+[ssCtrl];
+  if ssAlt in Shift then   FShitfState:=FShitfState+[ssAlt];
+  if ssShift in Shift then FShitfState:=FShitfState+[ssShift];
+end;
+
+procedure TGTK3KeyEvents.Unapply(Shift: TShiftState);
 begin
   if ssCtrl in Shift then  FShitfState:=FShitfState-[ssCtrl];
   if ssAlt in Shift then   FShitfState:=FShitfState-[ssAlt];

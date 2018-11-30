@@ -27,6 +27,8 @@ type
   }
   {$ENDIF}
   TObjectColletionItem = Class(THMIBasicColletionItem)
+  private
+    FTag: PtrUInt;
   protected
     FTargetObject,
     FTargetObjectLoaded: TComponent;
@@ -40,6 +42,7 @@ type
     function AcceptObject(obj:TComponent):Boolean; virtual;
     function AcceptObjectProperty(PropertyName:AnsiString):Boolean; virtual;
   published
+    property Tag:PtrUInt read FTag write FTag;
     property TargetObject:TComponent read FTargetObject write SetTargetObject;
     property TargetObjectProperty:AnsiString read FTargetObjectProperty write SetTargetObjectProperty;
   public

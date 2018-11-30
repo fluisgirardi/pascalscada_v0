@@ -2221,9 +2221,11 @@ begin
       RequestsPendding:=false;
       for c:=0 to EntireTagList.Count-1 do begin
         ReqItem:=EntireTagList.Items[c];
+        //if tag was read on a previous PDU fill, go to next...
         if ReqItem.Read then continue;
+
+        //if ReadSomethingAlways is disabled and tag don't need to be updated, go to next.
         if (PReadSomethingAlways=false) AND (ReqItem.NeedUpdate=false) then continue;
-        //if MilliSecondsBetween(Now, started)>100 then break;
 
         if not AcceptThisRequest(FPLCs[ReqItem.iPLC], ReqItem.iSize) then begin
           for c2:=(c+1) to EntireTagList.Count-1 do begin
