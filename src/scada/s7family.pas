@@ -128,9 +128,6 @@ type
 
   }
   {$ENDIF}
-
-  { TSiemensProtocolFamily }
-
   TSiemensProtocolFamily = class(TProtocolDriver)
   private
     FForcedPDUSize: TS7PDUSize;
@@ -1375,25 +1372,25 @@ end;
 procedure TSiemensProtocolFamily.AddDataToWriteRequest(var msgOut:BYTES; iArea, iDBnum, iStart:LongInt; buffer:BYTES);
 var
   da:BYTES;
-  extra:LongInt;
+  //extra:LongInt;
   bufferlen:LongInt;
   lastdatabyte:LongInt;
 begin
   bufferlen:=Length(buffer);
 
-  extra := (bufferlen mod 2);
+  //extra := 0; //(bufferlen mod 2);
 
-  SetLength(da,4+bufferlen+extra);
+  SetLength(da,4+bufferlen{+extra});
   da[00] := $00;
   da[01] := $04; //04 bits,
   da[02] := (bufferlen*8) div 256;
   da[03] := (bufferlen*8) mod 256;
   Move(buffer[0],da[4],Length(buffer));
 
-  if extra=1 then begin
-    lastdatabyte:=High(da);
-    da[lastdatabyte]:=$80;
-  end;
+  //if extra=1 then begin
+  //  lastdatabyte:=High(da);
+  //  da[lastdatabyte]:=$80;
+  //end;
 
   AddData(msgOut, da);
 end;

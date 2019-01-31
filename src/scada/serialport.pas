@@ -59,7 +59,10 @@ type
   }
   {$ENDIF}
   TSerialBaudRate = (br110, br300, br600, br1200, br2400, br4800, br9600,
-                     br19200, br38400, br57600, br115200);
+                     br19200, br38400, br57600, br115200, br230400, br460800,
+                     br500000, br576000, br921600, br1000000, br1152000,
+                     br1500000, br2000000, br2500000, br3000000, br3500000,
+                     br4000000);
 
   {$IFDEF PORTUGUES}
   {:
@@ -740,10 +743,58 @@ begin
        tios.c_ispeed := B115200;
        tios.c_ospeed := B115200;
      end;
-     else begin
-       tios.c_ispeed := B19200;
-       tios.c_ospeed := B19200;
+     br230400: begin
+       tios.c_ispeed := B230400;
+       tios.c_ospeed := B230400;
      end;
+     br460800: begin
+       tios.c_ispeed := B460800;
+       tios.c_ospeed := B460800;
+     end;
+     //br500000: begin
+     //  tios.c_ispeed := B500000;
+     //  tios.c_ospeed := B500000;
+     //end;
+     //br576000: begin
+     //  tios.c_ispeed := B576000;
+     //  tios.c_ospeed := B576000;
+     //end;
+     //br921600: begin
+     //  tios.c_ispeed := B921600;
+     //  tios.c_ospeed := B921600;
+     //end;
+     //br1000000: begin
+     //  tios.c_ispeed := B1000000;
+     //  tios.c_ospeed := B1000000;
+     //end;
+     //br1152000: begin
+     //  tios.c_ispeed := B1152000;
+     //  tios.c_ospeed := B1152000;
+     //end;
+     //br1500000: begin
+     //  tios.c_ispeed := B1500000;
+     //  tios.c_ospeed := B1500000;
+     //end;
+     //br2000000: begin
+     //  tios.c_ispeed := B2000000;
+     //  tios.c_ospeed := B2000000;
+     //end;
+     //br2500000: begin
+     //  tios.c_ispeed := B2500000;
+     //  tios.c_ospeed := B2500000;
+     //end;
+     //br3000000: begin
+     //  tios.c_ispeed := B3000000;
+     //  tios.c_ospeed := B3000000;
+     //end;
+     //br3500000: begin
+     //  tios.c_ispeed := B3500000;
+     //  tios.c_ospeed := B3500000;
+     //end;
+     //br4000000: begin
+     //  tios.c_ispeed := B4000000;
+     //  tios.c_ospeed := B4000000;
+     //end;
   end;
   
   tios.c_cflag := tios.c_ispeed or CREAD or CLOCAL;

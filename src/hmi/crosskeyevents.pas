@@ -1167,6 +1167,10 @@ begin
   Result:=TGtk2KeyEvents.Create(Target);
   {$IFEND}
 
+  {$IF defined(LCLgtk3)}
+  Result:=TGtk3KeyEvents.Create(Target);
+  {$IFEND}
+
   {$IF defined(LCLqt)}
   Result:=TQt4KeyEvents.Create(Target);
   {$IFEND}

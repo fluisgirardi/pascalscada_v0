@@ -276,7 +276,7 @@ var
 initialization
   //sets the main thread affinity with first core.
   {$IFDEF UNIX}
-  sched_setaffinity(GetProcessID,SizeOf(FirstCoreSet), @FirstCoreSet);
+  //sched_setaffinity(GetProcessID,SizeOf(FirstCoreSet), @FirstCoreSet);
   {$ELSE}
   //{$ERROR Implementation missing for Windows!}
   {$ENDIF}

@@ -153,9 +153,6 @@ type
   @seealso(TModBusTCPDriver)
   }
   {$ENDIF}
-
-  { TModBusDriver }
-
   TModBusDriver = class(TProtocolDriver)
   private
     FMustReleaseResources:Boolean;

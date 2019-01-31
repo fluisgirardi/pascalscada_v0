@@ -36,9 +36,6 @@ type
     development environment.
   }
   {$ENDIF}
-
-  { THMILabel }
-
   THMILabel = class(TLabel, IHMIInterface)
   private
     FFormatDateTimeOptions: TFormatDateTimeOptions;
