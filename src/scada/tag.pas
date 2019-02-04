@@ -14,7 +14,14 @@
   ***********************************************************************
   07/2013 - Avoid the use of Linux-Widget if fpc >= 2.7.1 (CONSOLEPASCALSCADA)
   @author(Juanjo Montero <juanjo.montero@gmail.com>)
+
+  02/2019 - Use a single implementation to all targets and cut off GUI
+            dependency (LCL) and the need of source defines
+            (CONSOLEPASCALSCADA).
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   ***********************************************************************
+
+
 }
 
 {$ENDIF}
@@ -23,18 +30,7 @@ unit Tag;
 interface
 
 uses
-  SysUtils, Classes
-
-  {$IFDEF FPC}
-
-    {$IFNDEF CONSOLEPASCALSCADA}
-       ,LCLIntf, LCLType, Interfaces, Forms
-    {$ENDIF}
-
-  {$ELSE}
-  ,Windows, Messages
-  {$ENDIF}
-  ;
+  SysUtils, Classes;
 
 {$IFNDEF FPC}
 const
@@ -376,27 +372,8 @@ type
 
   TTag = class(TComponent)
   private
-    {$IFDEF FPC}
-      {$IFDEF CONSOLEPASCALSCADA}
-        FUserData:Pointer;
-      {$ENDIF}
-    {$ENDIF}
-
-    {$IFNDEF FPC}
-      fHandle:HWND;
-         {$IFDEF PORTUGUES}
-         //: Processa as mensagens do tag.
-         {$ELSE}
-         //: Processes the tag messages.
-         {$ENDIF}
-      procedure wndMethod(var Msg:TLMessage); virtual;
-    {$ELSE}
-      {$IFNDEF CONSOLEPASCALSCADA}
-        procedure ASyncMethod(Data: PtrInt); virtual;
-      {$ELSE}
-        procedure ASyncMethod(); virtual;
-      {$ENDIF}
-    {$ENDIF}
+    FQueuedData:TList;
+    procedure ASyncMethod(); virtual;
   protected
     FReadOKNotificationList,
     FReadFaultNotificationList,
@@ -970,6 +947,8 @@ var
 begin
   inherited Create(AOwner);
 
+  FQueuedData:=TList.Create;
+
   PCommReadErrors := 0;
   PCommReadOK := 0;
   PCommWriteErrors := 0;
@@ -997,9 +976,8 @@ begin
   SetLength(FChangeNotificationList,0);
   SetLength(FTagRemovalNotificationList,0);
 
-  {$IFNDEF CONSOLEPASCALSCADA}
-  Application.RemoveAsyncCalls(Self);
-  {$ENDIF}
+  TThread.RemoveQueuedEvents(@ASyncMethod);
+  FreeAndNil(FQueuedData);
 
   inherited Destroy;
 end;
@@ -1129,9 +1107,6 @@ end;
 procedure TTag.NotifyChange;
 var
   c:LongInt;
-{$IFNDEF CONSOLEPASCALSCADA}
-  x:Pointer;
-{$ENDIF}
 begin
   //notifica a mudanca antes de notificar os
   //demais controles.
@@ -1153,65 +1128,26 @@ begin
   if Assigned(POnValueChangeLast) then
     POnValueChangeLast(Self);
 
-  if Assigned(POnAsyncValueChange) then begin
-    {$IFNDEF CONSOLEPASCALSCADA}
-    x:=GetValueChangeData;
-    {$ELSE}
-    FUserData:=GetValueChangeData;
-    {$ENDIF}
-
-
-    {$IFDEF FPC}
-      {$IFNDEF CONSOLEPASCALSCADA}
-      if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then
-        Application.QueueAsyncCall(@ASyncMethod,PtrInt(x));
-      {$ELSE}
-      TThread.Queue(nil, @ASyncMethod);
-      {$ENDIF}
-    {$ELSE}
-      PostMessage(fHandle,PM_ASYNCVALUECHANGE,PtrInt(x),0);
-    {$ENDIF}
+  if Assigned(POnAsyncValueChange) and Assigned(FQueuedData) then begin
+    FQueuedData.Add(GetValueChangeData);
+    TThread.Queue(nil, @ASyncMethod);
   end;
 end;
 
-{$IFNDEF FPC}
-procedure TTag.wndMethod(var Msg: TLMessage);
+procedure TTag.ASyncMethod();
 var
-  handled:Boolean;
-  FData:Pointer;
+  FUserData: Pointer;
 begin
-  handled:=true;
-  case Msg.msg of
-    PM_ASYNCVALUECHANGE: begin
-      FData:=Pointer(Msg.wParam);
-      AsyncNotifyChange(FData);
-      ReleaseChangeData(FData);
-    end
-    else
-      handled:=false;
-  end;
-
-  if handled then
-    msg.Result:=0
-  else
-    inherited Dispatch(Msg);
-end;
-{$ELSE}
-  {$IFNDEF CONSOLEPASCALSCADA}
-    procedure TTag.ASyncMethod(Data: PtrInt);
-    begin
-      AsyncNotifyChange(Pointer(Data));
-      ReleaseChangeData(Pointer(Data));
-    end;
-  {$ELSE}
-    procedure TTag.ASyncMethod();
-    begin
+  if assigned(FQueuedData) and (FQueuedData.Count>0) then begin
+    FUserData:=FQueuedData.First;
+    try
+      FQueuedData.Remove(FUserData);
       AsyncNotifyChange(Pointer(FUserData));
+    finally
       ReleaseChangeData(Pointer(FUserData));
     end;
-  {$ENDIF}
-
-{$ENDIF}
+  end;
+end;
 
 procedure TTag.AsyncNotifyChange(data:Pointer);
 begin
