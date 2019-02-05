@@ -30,7 +30,7 @@ unit Tag;
 interface
 
 uses
-  SysUtils, Classes;
+  SysUtils, Classes, crossthreads, MessageSpool, CrossEvent;
 
 {$IFNDEF FPC}
 const
@@ -362,14 +362,25 @@ type
   PtrInt = LongInt;
   {$ENDIF}
 
+  TDelayedAsyncCaller = Class(TpSCADACoreAffinityThreadWithLoop)
+  private
+    msgQueue:TThreadList;
+    aSomethingToDoEvt:TCrossEvent;
+  protected
+    procedure Loop; override;
+  public
+    constructor Create(CreateSuspended: Boolean; const StackSize: SizeUInt=
+                       DefaultStackSize);
+    destructor Destroy; override;
+    procedure QueueAsyncCall(aProc: TThreadMethod);
+    procedure RemoveAllHandlesOfObj(anObject:TObject);
+  end;
+
   {$IFDEF PORTUGUES}
   //: Classe base para todos os tags.
   {$ELSE}
   //: Base class for all tags.
   {$ENDIF}
-
-  { TTag }
-
   TTag = class(TComponent)
   private
     FQueuedData:TList;
@@ -922,9 +933,13 @@ type
 
   TArrayOfScanUpdateRec = array of TScanUpdateRec;
 
-  function TagSizeInBits(const TagType:TTagType; const pttDefaultSize:Integer):Integer;
+  function  TagSizeInBits(const TagType:TTagType; const pttDefaultSize:Integer):Integer;
+  procedure QueueAsyncCall(aProc:TThreadMethod);
+  procedure RemoveAllDelayedCallsOfObj(anObject:TObject);
 
 implementation
+
+uses syncobjs;
 
 function TagSizeInBits(const TagType: TTagType; const pttDefaultSize: Integer
   ): Integer;
@@ -939,6 +954,78 @@ var
 begin
   SizeInBits[pttDefault]:=pttDefaultSize;
   Result:=SizeInBits[TagType];
+end;
+
+{ TDelayedAsyncCaller }
+
+procedure TDelayedAsyncCaller.Loop;
+var
+  aList: TList;
+  aProc: Pointer;
+begin
+  if aSomethingToDoEvt.WaitFor(1000)=wrSignaled then begin
+    aList := msgQueue.LockList;
+    try
+      while aList.Count>0 do begin;
+        aProc:=aList.First;
+        aList.Remove(aProc);
+        Queue(TThreadMethod(aProc^));
+        Dispose(PMethod(aProc));
+      end;
+      while not aSomethingToDoEvt.ResetEvent do;
+    finally
+      msgQueue.UnlockList;
+    end;
+  end;
+end;
+
+constructor TDelayedAsyncCaller.Create(CreateSuspended: Boolean;
+  const StackSize: SizeUInt);
+begin
+  inherited Create(CreateSuspended, StackSize);
+  msgQueue:=TThreadList.Create;
+  msgQueue.Duplicates:=dupAccept;
+  aSomethingToDoEvt:=TCrossEvent.Create(True, False);
+end;
+
+destructor TDelayedAsyncCaller.Destroy;
+begin
+  Terminate;
+  FreeAndNil(aSomethingToDoEvt);
+  WaitForLoopTerminates;
+  FreeAndNil(msgQueue);
+  RemoveQueuedEvents(Self);
+  inherited Destroy;
+end;
+
+procedure TDelayedAsyncCaller.QueueAsyncCall(aProc: TThreadMethod);
+var
+  arec:PMethod;
+begin
+  if Assigned(msgQueue) then begin
+    New(arec);
+    arec^:=TMethod(aProc);
+    msgQueue.Add(arec);
+  end;
+  while not aSomethingToDoEvt.SetEvent do;
+end;
+
+procedure TDelayedAsyncCaller.RemoveAllHandlesOfObj(anObject: TObject);
+var
+  aList: TList;
+  aProc: Pointer;
+  i: Integer;
+begin
+  aList := msgQueue.LockList;
+  try
+    for i:=aList.Count-1 downto 0 do begin;
+      aProc:=aList.Items[i];
+      if TObject(TMethod(aProc^).Data)=anObject then
+        aList.Delete(i);
+    end;
+  finally
+    msgQueue.UnlockList;
+  end;
 end;
 
 constructor TTag.Create(AOwner:TComponent);
@@ -976,7 +1063,11 @@ begin
   SetLength(FChangeNotificationList,0);
   SetLength(FTagRemovalNotificationList,0);
 
-  TThread.RemoveQueuedEvents(@ASyncMethod);
+  RemoveAllHandlersFromObject(Self);
+  for c:=FQueuedData.Count-1 downto 0 do begin
+    ReleaseChangeData(FQueuedData.Items[c]);
+    FQueuedData.Delete(c);
+  end;
   FreeAndNil(FQueuedData);
 
   inherited Destroy;
@@ -1130,7 +1221,7 @@ begin
 
   if Assigned(POnAsyncValueChange) and Assigned(FQueuedData) then begin
     FQueuedData.Add(GetValueChangeData);
-    TThread.Queue(nil, @ASyncMethod);
+    QueueAsyncCall(@ASyncMethod);
   end;
 end;
 
@@ -1244,5 +1335,26 @@ begin
   if value>0 then
     NotifyWriteFault;
 end;
+
+var
+  DelayedAsyncThread:TDelayedAsyncCaller;
+
+procedure QueueAsyncCall(aProc:TThreadMethod);
+begin
+  DelayedAsyncThread.QueueAsyncCall(aProc);
+end;
+
+procedure RemoveAllDelayedCallsOfObj(anObject:TObject);
+begin
+  DelayedAsyncThread.RemoveAllHandlesOfObj(anObject);
+end;
+
+initialization
+  DelayedAsyncThread:=TDelayedAsyncCaller.Create(true);
+  DelayedAsyncThread.Start;
+
+finalization
+  DelayedAsyncThread.Terminate;
+  FreeAndNil(DelayedAsyncThread);
 
 end.
