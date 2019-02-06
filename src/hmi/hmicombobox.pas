@@ -3,8 +3,7 @@ unit HMIComboBox;
 interface
 
 uses
-  Classes, sysutils, StdCtrls, HMITypes, Tag, PLCTag, ProtocolTypes, Controls,
-  LMessages;
+  Classes, sysutils, StdCtrls, HMITypes, Tag, PLCTag, ProtocolTypes;
 
 type
 
@@ -63,13 +62,10 @@ type
     procedure WriteFaultCallBack(Sender:TObject); virtual;
     procedure TagChangeCallBack(Sender:TObject); virtual;
     procedure RemoveTagCallBack(Sender:TObject); virtual;
-
-    procedure SetParent(NewParent: TWinControl); override;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
     procedure RefreshCombo(Data: PtrInt);
-    procedure WndProc(var Message: TLMessage); override;
   published
     property Align;
     property Anchors;
@@ -161,8 +157,7 @@ type
 
 implementation
 
-uses ControlSecurityManager, hsstrings, forms
-  {$IFDEF LCLqt}, qt4, QtWSControls, qtwidgets{$ENDIF};
+uses ControlSecurityManager, hsstrings, forms;
 
 constructor TComboboxItemInfo.Create;
 begin
@@ -258,15 +253,6 @@ procedure THMIComboBox.RemoveTagCallBack(Sender: TObject);
 begin
   if Ftag=Sender then
     FTag:=nil;
-end;
-
-procedure THMIComboBox.SetParent(NewParent: TWinControl);
-begin
-  inherited SetParent(NewParent);
-  {$IFDEF LCLQt}
-  //HandleNeeded;
-  TQtComboBox(Handle).setFocusPolicy(QtStrongFocus);
-  {$ENDIF}
 end;
 
 procedure THMIComboBox.Select;
@@ -395,14 +381,5 @@ begin
   end;
   InternalSetItemIndex(NewIndex);
 end;
-
-procedure THMIComboBox.WndProc(var Message: TLMessage);
-begin
-  //if (Message.Msg=LM_CHANGED) OR (Message.Msg=LM_SELCHANGE) then
-  //  Message.Result:=0
-  //else
-    inherited WndProc(Message);
-end;
-
 
 end.
