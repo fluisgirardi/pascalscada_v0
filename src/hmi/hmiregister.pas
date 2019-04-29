@@ -24,7 +24,7 @@ uses
   HMITrackBar, HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar,
   HMIAnimation, HMIText, HMIZones, hmipropeditor, HMIControlDislocatorAnimation,
   ControlSecurityManager, ActnList, CustomizedUserManagement, Controls,
-
+  scadapropeditor,
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
   {$IFEND}
@@ -126,6 +126,11 @@ begin
   RegisterPropertyEditor(TypeInfo(UTF8String), THMIText, 'SecurityCode', TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADASecureAction, 'SecurityCode', TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADACheckSpecialTokenAction, 'SecurityCode', TSecurityCodePropertyEditor);
+
+  RegisterPropertyEditor(TypeInfo(Integer),   TControl,   'Width',            TControlPosSizePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Integer),   TControl,   'Height',           TControlPosSizePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Integer),   TControl,   'Left',             TControlPosSizePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(Integer),   TControl,   'top',              TControlPosSizePropertyEditor);
 
   //////////////////////////////////////////////////////////////////////////////
   //Actions

@@ -459,6 +459,7 @@ end;
 constructor THMIBasicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  Color:=clBackground;
   FShouldRedraw:=false;
   FUpdateShape:=false;
   FBodyColor:=clSilver;

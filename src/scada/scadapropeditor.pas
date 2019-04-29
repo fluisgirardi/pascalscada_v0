@@ -101,13 +101,6 @@ type
                var parser: TFPExpressionParser); override;
   end;
 
-  TWinControlPosSizePropertyEditor = class(TIntegerExpressionPropertyEditor)
-  protected
-    procedure RegisterExpressionVariables(const i: Integer;
-                 var parser: TFPExpressionParser); override;
-  end;
-
-
   {$IFNDEF FPC}
   //: @exclude
   TDefaultComponentEditor = class(TComponentEditor);
@@ -245,38 +238,6 @@ begin
     end;
   finally
     FreeAndNil(aSelected);
-  end;
-end;
-
-{ TWinControlPosSizePropertyEditor }
-
-procedure TWinControlPosSizePropertyEditor.RegisterExpressionVariables(
-  const i: Integer; var parser: TFPExpressionParser);
-var
-  propertyName: AnsiString;
-begin
-  if assigned(parser) then begin
-    //unregister all possible registered variables.
-    parser.Identifiers.Clear;
-
-    propertyName:=lowercase(GetPropInfo^.Name);
-
-    if (GetComponent(i) is TWinControl) then begin
-      //register only if the property is not being edited,
-      //to avoid circular references.
-
-      if (propertyName<>'left') then
-        parser.Identifiers.AddIntegerVariable('left', (GetComponent(i) as TWinControl).Left);
-
-      if (propertyName<>'top') then
-        parser.Identifiers.AddIntegerVariable('top', (GetComponent(i) as TWinControl).top);
-
-      if (propertyName<>'width') then
-        parser.Identifiers.AddIntegerVariable('width', (GetComponent(i) as TWinControl).Width);
-
-      if (propertyName<>'height') then
-        parser.Identifiers.AddIntegerVariable('height', (GetComponent(i) as TWinControl).Height);
-    end;
   end;
 end;
 

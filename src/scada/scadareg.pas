@@ -32,7 +32,6 @@ uses
   IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
-  Controls,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -117,11 +116,6 @@ begin
   RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemSubElement'   , TTagAddressPropertyEditor);
   RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemReadFunction' , TTagAddressPropertyEditor);
   RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemWriteFunction', TTagAddressPropertyEditor);
-
-  RegisterPropertyEditor(TypeInfo(Integer),   TWinControl,   'Width',            TWinControlPosSizePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(Integer),   TWinControl,   'Height',           TWinControlPosSizePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(Integer),   TWinControl,   'Left',             TWinControlPosSizePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(Integer),   TWinControl,   'top',              TWinControlPosSizePropertyEditor);
 
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);

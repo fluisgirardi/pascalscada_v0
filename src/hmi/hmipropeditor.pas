@@ -23,9 +23,9 @@ unit hmipropeditor;
 interface
 
 uses
-  Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver,
-  typinfo, HMIControlDislocatorAnimation, hmiobjectcolletion,
-  ControlSecurityManager, Graphics,
+  Classes, SysUtils, HMIZones, Dialogs, Menus, ProtocolDriver, typinfo,
+  HMIControlDislocatorAnimation, hmiobjectcolletion, Controls,
+  ControlSecurityManager, Graphics, scadapropeditor, fpexprpars,
   {$IFDEF FPC}
     PropEdits, ComponentEditors, GraphPropEdits, ImgList,
     hmibooleanpropertyconnector, hmicolorpropertyconnector, hmi_polyline;
@@ -199,9 +199,50 @@ type
     function  Polyline: THMIPolyline; virtual;
   end;
 
+  TControlPosSizePropertyEditor = class(TIntegerExpressionPropertyEditor)
+  protected
+    procedure RegisterExpressionVariables(const i: Integer;
+                 var parser: TFPExpressionParser); override;
+  end;
+
 implementation
 
 uses HMITypes;
+
+{ TControlPosSizePropertyEditor }
+
+procedure TControlPosSizePropertyEditor.RegisterExpressionVariables(
+  const i: Integer; var parser: TFPExpressionParser);
+var
+  propertyName: AnsiString;
+begin
+  if assigned(parser) then begin
+    //unregister all possible registered variables.
+    parser.Identifiers.Clear;
+
+    propertyName:=lowercase(GetPropInfo^.Name);
+
+    if (GetComponent(i) is TControl) then begin
+      //register only if the property is not being edited,
+      //to avoid circular references.
+
+      if (propertyName<>'left') then
+        parser.Identifiers.AddIntegerVariable('left', (GetComponent(i) as TControl).Left);
+
+      if (propertyName<>'top') then
+        parser.Identifiers.AddIntegerVariable('top', (GetComponent(i) as TControl).top);
+
+      if (propertyName<>'width') then
+        parser.Identifiers.AddIntegerVariable('width', (GetComponent(i) as TControl).Width);
+
+      if (propertyName<>'height') then
+        parser.Identifiers.AddIntegerVariable('height', (GetComponent(i) as TControl).Height);
+
+      if (propertyName<>'tag') then
+        parser.Identifiers.AddIntegerVariable('tag', (GetComponent(i) as TControl).Tag);
+    end;
+  end;
+end;
 
 { THMIPolylineComponentEditor }
 
