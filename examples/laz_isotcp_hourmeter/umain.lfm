@@ -1,16 +1,15 @@
 object frmMain: TfrmMain
   Left = 73
-  Height = 621
+  Height = 807
   Top = 97
   Width = 1289
   ActiveControl = DBGrid1
   Caption = 'Hourmeter control'
-  ClientHeight = 621
+  ClientHeight = 807
   ClientWidth = 1289
   OnCreate = FormCreate
   OnShow = FormShow
-  LCLVersion = '1.6.5.0'
-  Visible = False
+  LCLVersion = '2.0.3.0'
   object DBGrid1: TDBGrid
     Left = 0
     Height = 80
@@ -49,7 +48,7 @@ object frmMain: TfrmMain
   end
   object Image1: TImage
     Left = 0
-    Height = 541
+    Height = 727
     Top = 80
     Width = 1289
     Align = alClient
@@ -2423,6 +2422,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 80
         BlinkWith = 1
+        FileName = ''
         ImageList = ImageList1
         ImageIndex = 0
       end    
@@ -2435,6 +2435,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 80
         BlinkWith = 2
+        FileName = ''
         ImageList = ImageList1
         ImageIndex = 1
       end    
@@ -2447,6 +2448,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 80
         BlinkWith = 0
+        FileName = ''
         ImageList = ImageList1
         ImageIndex = 2
       end    
@@ -2459,6 +2461,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = ImageList1
         ImageIndex = 3
       end>
@@ -2483,6 +2486,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = motorh
         ImageIndex = 0
       end    
@@ -2495,6 +2499,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = motorh
         ImageIndex = 1
       end>
@@ -2519,6 +2524,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = motorv
         ImageIndex = 0
       end    
@@ -2531,6 +2537,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = motorv
         ImageIndex = 1
       end>
@@ -2547,14 +2554,13 @@ object frmMain: TfrmMain
     Width = 47
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
         DefaultZone = True
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = motorh
         ImageIndex = 2
       end    
@@ -2567,6 +2573,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = motorh
         ImageIndex = 0
       end    
@@ -2579,6 +2586,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = motorh
         ImageIndex = 1
       end>
@@ -2603,6 +2611,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = ImageList2
         ImageIndex = 0
       end    
@@ -2615,6 +2624,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = ImageList2
         ImageIndex = 1
       end>
@@ -2639,6 +2649,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 0
         BlinkWith = -1
+        FileName = ''
         ImageList = ImageList3
         ImageIndex = 0
       end>
@@ -2650,9 +2661,9 @@ object frmMain: TfrmMain
   end
   object HMICheckBox1: THMICheckBox
     Left = 128
-    Height = 22
+    Height = 23
     Top = 104
-    Width = 81
+    Width = 83
     Enabled = True
     ParentColor = False
     TabOrder = 1
@@ -2660,7 +2671,6 @@ object frmMain: TfrmMain
     CaptionFalse = 'Show tags'
     CaptionTrue = 'Show tags'
     CaptionGrayed = 'Show tags'
-    ValueFalse = 0
     ValueTrue = 1
   end
   object HMIText1: THMIText
@@ -2676,8 +2686,6 @@ object frmMain: TfrmMain
     FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
         DefaultZone = False
@@ -2717,8 +2725,6 @@ object frmMain: TfrmMain
     FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
         DefaultZone = False
@@ -2758,8 +2764,6 @@ object frmMain: TfrmMain
     FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
         DefaultZone = False
@@ -2798,8 +2802,6 @@ object frmMain: TfrmMain
     FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
         DefaultZone = False
@@ -2839,8 +2841,6 @@ object frmMain: TfrmMain
     FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
         DefaultZone = False
@@ -2880,8 +2880,6 @@ object frmMain: TfrmMain
     FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
         DefaultZone = False
@@ -3000,6 +2998,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 100
         BlinkWith = 1
+        FileName = ''
         ImageList = fire
         ImageIndex = 0
       end    
@@ -3012,6 +3011,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 100
         BlinkWith = 2
+        FileName = ''
         ImageList = fire
         ImageIndex = 1
       end    
@@ -3024,6 +3024,7 @@ object frmMain: TfrmMain
         ZoneType = ztEqual
         BlinkTime = 100
         BlinkWith = 0
+        FileName = ''
         ImageList = fire
         ImageIndex = 2
       end>
@@ -3059,22 +3060,22 @@ object frmMain: TfrmMain
       end
       object ToolButton2: TToolButton
         Left = 1
-        Top = 156
+        Top = 114
         Action = secureGraphics
       end
       object ToolButton3: TToolButton
         Left = 1
-        Top = 208
+        Top = 166
         Action = secureRelatorioAcionamento
       end
       object ToolButton4: TToolButton
         Left = 1
-        Top = 312
+        Top = 270
         Action = PascalSCADAManageUsersAction1
       end
       object ToolButton5: TToolButton
         Left = 1
-        Top = 260
+        Top = 218
         Action = secureAlarmes
       end
       object ToolButton6: TToolButton
@@ -3084,7 +3085,6 @@ object frmMain: TfrmMain
       end
       object ToolButton7: TToolButton
         Left = 1
-        Height = 50
         Top = 106
         Width = 50
         Caption = 'ToolButton7'
@@ -3378,8 +3378,6 @@ object frmMain: TfrmMain
       FormatDateTimeOptions = []
       Zones = <      
         item
-          Value1 = 0
-          Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
           DefaultZone = False
@@ -3445,8 +3443,6 @@ object frmMain: TfrmMain
       FormatDateTimeOptions = []
       Zones = <      
         item
-          Value1 = 0
-          Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
           DefaultZone = True
@@ -3504,8 +3500,6 @@ object frmMain: TfrmMain
       FormatDateTimeOptions = []
       Zones = <      
         item
-          Value1 = 0
-          Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
           DefaultZone = False
@@ -3571,8 +3565,6 @@ object frmMain: TfrmMain
       FormatDateTimeOptions = []
       Zones = <      
         item
-          Value1 = 0
-          Value2 = 0
           IncludeValue1 = False
           IncludeValue2 = False
           DefaultZone = True
@@ -3609,8 +3601,8 @@ object frmMain: TfrmMain
   object motorh: TImageList
     Height = 39
     Width = 47
-    left = 144
-    top = 272
+    Left = 144
+    Top = 272
     Bitmap = {
       4C69030000002F00000027000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
@@ -4305,8 +4297,8 @@ object frmMain: TfrmMain
   object motorv: TImageList
     Height = 47
     Width = 39
-    left = 144
-    top = 310
+    Left = 144
+    Top = 310
     Bitmap = {
       4C6902000000270000002F000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF000B4000181071009E178000BF188800BF1B9100BE1F9A00BE20A400BE23AD
@@ -4772,8 +4764,8 @@ object frmMain: TfrmMain
   object ImageList1: TImageList
     Height = 64
     Width = 64
-    left = 144
-    top = 350
+    Left = 144
+    Top = 350
     Bitmap = {
       4C69040000004000000040000000CCCCCCFFCCCCCCFFCCCCCCFFCCCCCCFFCCCC
       CCFFCCCCCCFFCCCCCCFFCCCCCCFFCCCCCCFFCCCCCCFFCCCCCCFFCCCCCCFFCCCC
@@ -6829,8 +6821,8 @@ object frmMain: TfrmMain
   object ImageList2: TImageList
     Height = 55
     Width = 78
-    left = 145
-    top = 382
+    Left = 145
+    Top = 382
     Bitmap = {
       4C69020000004E00000037000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
@@ -7910,8 +7902,8 @@ object frmMain: TfrmMain
   object ImageList3: TImageList
     Height = 91
     Width = 154
-    left = 144
-    top = 414
+    Left = 144
+    Top = 414
     Bitmap = {
       4C69010000009A0000005B000000000000FF000000FF0B0E0BFFDBEEE8FFDBEE
       E8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEEE8FFDBEE
@@ -9678,18 +9670,17 @@ object frmMain: TfrmMain
     MemSubElement = 0
     MemReadFunction = 0
     MemWriteFunction = 0
+    LongAddress = ''
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 144
-    top = 224
+    Left = 144
+    Top = 224
   end
   object fire: TImageList
     Height = 168
     Width = 211
-    left = 232
-    top = 408
+    Left = 232
+    Top = 408
     Bitmap = {
       4C6903000000D3000000A8000000000514FF000514FF000413FF000413FF0004
       13FF000413FF000413FF000514FF000514FF000514FF000413FF000413FF0003
@@ -22991,20 +22982,20 @@ object frmMain: TfrmMain
     Enabled = False
     Interval = 10
     OnTimer = Timer1Timer
-    left = 16
-    top = 536
+    Left = 16
+    Top = 536
   end
   object Timer2: TTimer
     Interval = 250
     OnTimer = Timer2Timer
-    left = 16
-    top = 496
+    Left = 16
+    Top = 496
   end
   object ImageList4: TImageList
     Height = 48
     Width = 48
-    left = 144
-    top = 464
+    Left = 144
+    Top = 464
     Bitmap = {
       4C69060000003000000030000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
@@ -24739,13 +24730,13 @@ object frmMain: TfrmMain
   end
   object ApplicationProperties1: TApplicationProperties
     OnException = ApplicationProperties1Exception
-    left = 226
-    top = 167
+    Left = 226
+    Top = 167
   end
   object ActionList1: TActionList
     Images = ImageList4
-    left = 162
-    top = 140
+    Left = 162
+    Top = 140
     object PascalSCADALoginAction1: TPascalSCADALoginAction
       Category = 'PascalSCADA User Management'
       Caption = 'Login'

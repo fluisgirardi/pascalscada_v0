@@ -103,7 +103,7 @@ var
 
 implementation
 
-uses udmdb, udm, upopuphorimetro, ugraficos, ufiltro, urelatorios;
+uses udmdb, udm, upopuphorimetro, ugraficos, ufiltro;
 
 {$R *.lfm}
 
@@ -219,42 +219,42 @@ begin
 end;
 
 procedure TfrmMain.secureAlarmesExecute(Sender: TObject);
-var
-  filtro:TfrmFiltro;
+//var
+//  filtro:TfrmFiltro;
 begin
-  filtro:=TfrmFiltro.Create(self);
-  try
-    if filtro.ShowModal=mrOK then begin
-      with dmdb do begin
-        AlarmesQuery.Close;
-        AlarmesQuery.ParamByName('datai').AsDateTime:=filtro.DateInicial.Date;
-        AlarmesQuery.ParamByName('dataf').AsDateTime:=filtro.DateFinal.Date;
-        AlarmesQuery.Open;
-
-        with frmRelatorios do begin
-          RLReport1.DataSource:=AlarmeDatasource;
-          RLDBText1.DataSource:=AlarmeDatasource;
-          RLDBText2.DataSource:=AlarmeDatasource;
-          RLDBText3.DataSource:=AlarmeDatasource;
-          RLDBText4.DataSource:=AlarmeDatasource;
-
-          RLLabel2.Caption:='Iniciado em';
-          RLLabel3.Caption:='Finalizado em';
-          RLLabel4.Caption:='Duração';
-          RLLabel5.Caption:='Equipamento';
-
-          RLLabel1.Caption:='Relatório de Alarmes de Horimetro';
-
-          RLLabel6.Caption:='Intervalo de '+DateToStr(filtro.DateInicial.Date)+' até '+DateToStr(filtro.DateFinal.Date);
-
-          RLReport1.Preview;
-        end;
-      end;
-    end;
-  finally
-    dmdb.AlarmesQuery.Close;
-    filtro.Destroy;
-  end;
+  //filtro:=TfrmFiltro.Create(self);
+  //try
+  //  if filtro.ShowModal=mrOK then begin
+  //    with dmdb do begin
+  //      AlarmesQuery.Close;
+  //      AlarmesQuery.ParamByName('datai').AsDateTime:=filtro.DateInicial.Date;
+  //      AlarmesQuery.ParamByName('dataf').AsDateTime:=filtro.DateFinal.Date;
+  //      AlarmesQuery.Open;
+  //
+  //      with frmRelatorios do begin
+  //        RLReport1.DataSource:=AlarmeDatasource;
+  //        RLDBText1.DataSource:=AlarmeDatasource;
+  //        RLDBText2.DataSource:=AlarmeDatasource;
+  //        RLDBText3.DataSource:=AlarmeDatasource;
+  //        RLDBText4.DataSource:=AlarmeDatasource;
+  //
+  //        RLLabel2.Caption:='Iniciado em';
+  //        RLLabel3.Caption:='Finalizado em';
+  //        RLLabel4.Caption:='Duração';
+  //        RLLabel5.Caption:='Equipamento';
+  //
+  //        RLLabel1.Caption:='Relatório de Alarmes de Horimetro';
+  //
+  //        RLLabel6.Caption:='Intervalo de '+DateToStr(filtro.DateInicial.Date)+' até '+DateToStr(filtro.DateFinal.Date);
+  //
+  //        RLReport1.Preview;
+  //      end;
+  //    end;
+  //  end;
+  //finally
+  //  dmdb.AlarmesQuery.Close;
+  //  filtro.Destroy;
+  //end;
 end;
 
 procedure TfrmMain.secureGraphicsExecute(Sender: TObject);
@@ -270,42 +270,42 @@ begin
 end;
 
 procedure TfrmMain.secureRelatorioAcionamentoExecute(Sender: TObject);
-var
-  filtro:TfrmFiltro;
+//var
+//  filtro:TfrmFiltro;
 begin
-  filtro:=TfrmFiltro.Create(self);
-  try
-    if filtro.ShowModal=mrOK then begin
-      with dmdb do begin
-        AcionamentoQuery.Close;
-        AcionamentoQuery.ParamByName('datai').AsDateTime:=filtro.DateInicial.Date;
-        AcionamentoQuery.ParamByName('dataf').AsDateTime:=filtro.DateFinal.Date;
-        AcionamentoQuery.Open;
-
-        with frmRelatorios do begin
-          RLReport1.DataSource:=AcionamentoDatasource;
-          RLDBText1.DataSource:=AcionamentoDatasource;
-          RLDBText2.DataSource:=AcionamentoDatasource;
-          RLDBText3.DataSource:=AcionamentoDatasource;
-          RLDBText4.DataSource:=AcionamentoDatasource;
-
-          RLLabel2.Caption:='Ligado em';
-          RLLabel3.Caption:='Desligado em';
-          RLLabel4.Caption:='Duração';
-          RLLabel5.Caption:='Equipamento';
-
-          RLLabel1.Caption:='Relatório de acionamentos';
-
-          RLLabel6.Caption:='Intervalo de '+DateToStr(filtro.DateInicial.Date)+' até '+DateToStr(filtro.DateFinal.Date);
-
-          RLReport1.Preview;
-        end;
-      end;
-    end;
-  finally
-    dmdb.AcionamentoQuery.Close;
-    filtro.Destroy;
-  end;
+  //filtro:=TfrmFiltro.Create(self);
+  //try
+  //  if filtro.ShowModal=mrOK then begin
+  //    with dmdb do begin
+  //      AcionamentoQuery.Close;
+  //      AcionamentoQuery.ParamByName('datai').AsDateTime:=filtro.DateInicial.Date;
+  //      AcionamentoQuery.ParamByName('dataf').AsDateTime:=filtro.DateFinal.Date;
+  //      AcionamentoQuery.Open;
+  //
+  //      with frmRelatorios do begin
+  //        RLReport1.DataSource:=AcionamentoDatasource;
+  //        RLDBText1.DataSource:=AcionamentoDatasource;
+  //        RLDBText2.DataSource:=AcionamentoDatasource;
+  //        RLDBText3.DataSource:=AcionamentoDatasource;
+  //        RLDBText4.DataSource:=AcionamentoDatasource;
+  //
+  //        RLLabel2.Caption:='Ligado em';
+  //        RLLabel3.Caption:='Desligado em';
+  //        RLLabel4.Caption:='Duração';
+  //        RLLabel5.Caption:='Equipamento';
+  //
+  //        RLLabel1.Caption:='Relatório de acionamentos';
+  //
+  //        RLLabel6.Caption:='Intervalo de '+DateToStr(filtro.DateInicial.Date)+' até '+DateToStr(filtro.DateFinal.Date);
+  //
+  //        RLReport1.Preview;
+  //      end;
+  //    end;
+  //  end;
+  //finally
+  //  dmdb.AcionamentoQuery.Close;
+  //  filtro.Destroy;
+  //end;
 end;
 
 procedure TfrmMain.Timer1Timer(Sender: TObject);
