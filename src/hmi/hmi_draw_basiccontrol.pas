@@ -77,6 +77,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Invalidate; override;
   end;
 
 implementation
@@ -95,6 +96,7 @@ procedure THMIBasicControl.InvalidateShape;
 var
   emptyArea: TBGRABitmap;
 begin
+  if [csDestroying]*ComponentState<>[] then exit;
   FUpdateShape:=true;
   emptyArea := TBGRABitmap.Create();
   try
@@ -511,6 +513,20 @@ begin
     FOldWidth:=Width;
     FOldHeight:=Height;
   end;
+end;
+
+procedure THMIBasicControl.Invalidate;
+begin
+  //GTK2 bug: if control is empty and setshape was applied,
+  //Invalidate will not call Paint, because all control area
+  //is "transparent", so Paint don't have anything to do...
+  {$IF defined(LCLGtk2)} //maybe more need this trick...
+  if ([csDestroying]*ComponentState=[]) and Assigned(FControlArea) and FControlArea.Empty then begin
+    DrawControl;
+    UpdateShape;
+  end;
+  {$IFEND}
+  inherited Invalidate;
 end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);

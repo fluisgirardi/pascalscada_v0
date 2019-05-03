@@ -62,6 +62,7 @@ type
     procedure BeginEmptyPolyline; virtual;
     procedure EndDrawPolyline; virtual;
     procedure OptimizeDraw; virtual;
+    procedure OptimizeDrawAfterFinish; virtual;
 
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -435,7 +436,7 @@ end;
 
 procedure THMIPolyline.PointChanged(Sender: TObject);
 begin
-  if [csLoading, csReading]*ComponentState=[] then begin
+  if [csLoading, csReading, csDestroying]*ComponentState=[] then begin
     InvalidateShape;
   end;
 end;
@@ -565,6 +566,48 @@ begin
   end;
 end;
 
+procedure THMIPolyline.OptimizeDrawAfterFinish;
+var
+  p: Integer;
+  minx,
+  maxx,
+  miny,
+  maxy, sTop, sLeft: Integer;
+  pc: TPointCollectionItem;
+begin
+  sLeft:=Left;
+  sTop :=Top;
+  //find min/max of x,y coordinates...
+  for p:=0 to PointCoordinates.Count-1 do begin
+    pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+    if p=0 then begin
+      minx:=pc.X;
+      maxx:=minx;
+      miny:=pc.Y;
+      maxy:=miny;
+      continue;
+    end;
+    minx:=min(pc.X, minx);
+    maxx:=max(pc.X, maxx);
+
+    miny:=min(pc.Y, miny);
+    maxy:=max(pc.Y, maxy);
+  end;
+
+
+  DisableAutoSizing;
+  Left:=Max(minx-(FBorderWidth div 2), 0);
+  Top :=Max(miny-(FBorderWidth div 2), 0);
+  Width :=(maxx-minx)+2*FBorderWidth;
+  Height:=(maxy-miny)+2*FBorderWidth;
+  EnableAutoSizing;
+  for p:=0 to PointCoordinates.Count-1 do begin
+    pc:=TPointCollectionItem(PointCoordinates.Items[p]);
+    pc.X:=pc.X+(FBorderWidth div 2)-minx;
+    pc.Y:=pc.Y+(FBorderWidth div 2)-miny;
+  end;
+end;
+
 procedure THMIPolyline.BeginDrawPolyline;
 var
   p: Integer;
@@ -574,8 +617,8 @@ begin
 
   for p:=0 to PointCoordinates.Count-1 do begin
     pc:=TPointCollectionItem(PointCoordinates.Items[p]);
-    pc.X:=pc.X+Left;
-    pc.Y:=pc.y+Top;
+    pc.X:=pc.X+Left; //+(FBorderWidth div 2);
+    pc.Y:=pc.y+Top ; //+(FBorderWidth div 2);
   end;
   FOldAlign:=Align;
   Align:=alClient;
@@ -597,7 +640,7 @@ procedure THMIPolyline.EndDrawPolyline;
 begin
   Align:=FOldAlign;
   FDesignDrawing:=False;
-  OptimizeDraw;
+  OptimizeDrawAfterFinish;
 end;
 
 procedure THMIPolyline.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
