@@ -10,7 +10,7 @@ uses
 
 type
 
-  {$DEFINE RGN_DETECT_RECTANGLES}
+  {$DEFINE ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
 
   { THMIBasicControl }
 
@@ -235,9 +235,53 @@ var
   x, y:Integer;
   arect:TRect;
 
-  {$IFDEF RGN_CONTINUOUS_ROW_AS_RECTANGLE}
+  {$IF defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE) OR defined(ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE)}
   started:boolean;
   x0, x1:Integer;
+  {$IFDEF ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
+  fbmp: TBitmap;
+  pb:PByte;
+
+  procedure Draw1BitBMPLine(abmp:TBitmap; FromX, ToX, Y:Integer);
+  var
+    sl: PByte;
+    aBit: Word;
+    aX: Integer;
+  begin
+    sl:=abmp.ScanLine[y];
+    inc(sl,FromX div 8);
+    {$IFNDEF LCLGtk2}
+    aBit:=128;
+    aBit:=aBit shr (FromX mod 8);
+    {$ELSE}
+    abit:=1;
+    aBit:=aBit shl (FromX mod 8);
+    {$ENDIF}
+
+    for aX:=FromX to ToX-1 do begin
+      sl^:=sl^+aBit;
+
+      {$IFNDEF LCLGtk2}
+      aBit:=aBit shr 1;
+      {$ELSE}
+      aBit:=aBit shl 1;
+      {$ENDIF}
+
+      {$IFNDEF LCLGtk2}
+      if aBit=0 then begin
+        aBit:=128;
+        inc(sl);
+      end;
+      {$ELSE}
+      if aBit=256 then begin
+        aBit:=1;
+        inc(sl);
+      end;
+      {$ENDIF}
+    end;
+
+  end;
+  {$ENDIF}
   {$ENDIF}
 
   {$IFDEF RGN_DETECT_RECTANGLES}
@@ -246,14 +290,15 @@ var
   invalidline:boolean;
   {$ENDIF}
 
-  {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES))}
+  {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES)) AND (not defined(ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE))}
   pb:PByte;
   bit:PtrInt;
   fbmp: TBitmap;
   {$ELSE}
+  {$IFNDEF ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
   frgn: TRegion;
   {$ENDIF}
-
+  {$ENDIF}
 begin
   if Parent=nil then exit;
 
@@ -343,10 +388,54 @@ begin
   finally
     FreeAndNil(frgn);
   end;
-
   {$ENDIF}
 
-  {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES))}
+
+  {$IFDEF ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
+  fbmp:=TBitmap.Create;
+  fbmp.Monochrome :=true;
+  fbmp.PixelFormat:=pf1bit;
+  fbmp.Width:=FControlArea.Width;
+  fbmp.Height:=FControlArea.Height;
+  fbmp.Canvas.Pen.Color:=clBlackOpaque;
+
+  for y:=0 to FControlArea.Height-1 do begin
+    p:=FControlArea.ScanLine[y];
+    started:=false;
+    for x:=0 to FControlArea.Width-1 do begin
+      if ControlArea(p^) then begin
+        if started then begin
+          x1:=x+1;
+        end else begin
+          x0:=x;
+          x1:=x+1;
+          started:=true;
+        end;
+      end else begin
+        if started then begin
+          if x0=x1 then
+            Draw1BitBMPLine(fbmp, x0, x0+1,y)
+          else
+            Draw1BitBMPLine(fbmp, x0, x1,  y);
+        end;
+        started:=false;
+      end;
+      inc(p);
+    end;
+
+    //the
+    if started then begin
+      if x0=x1 then
+        Draw1BitBMPLine(fbmp, x0, x0+1,y)
+      else
+        Draw1BitBMPLine(fbmp, x0, x1,  y);
+    end;
+  end;
+  SetShape(fbmp);
+  FreeAndNil(fbmp);
+  {$ENDIF}
+
+  {$IF (not defined(RGN_PIXEL_BY_PIXEL)) AND (not defined(RGN_CONTINUOUS_ROW_AS_RECTANGLE)) AND (not defined(RGN_DETECT_RECTANGLES)) AND (not defined(ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE))}
   //////////////////////////////////////////////////////////////////////////////
   fbmp:=TBitmap.Create;
   fbmp.Monochrome :=true;
