@@ -368,6 +368,14 @@ uses qt5, qtwidgets, qtobjects, LCLType;
 uses {$IFDEF FPC}LCLType{$ENDIF};
 {$IFEND}
 
+{$IF defined(LCLCUSTOMDRAWN)}
+uses {$IFDEF FPC}LCLType{$ENDIF};
+{$IFEND}
+
+{$IF defined(LCLFPGUI)}
+uses {$IFDEF FPC}LCLType{$ENDIF};
+{$IFEND}
+
 
 //se não esta definido FPC (consequentemente não estará definida LCLwin32),
 //estou usando Delphi, consequentemente, Windows...

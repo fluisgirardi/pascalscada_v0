@@ -529,36 +529,39 @@ var
   minx,
   maxx,
   miny,
-  maxy: Integer;
+  maxy, sTop, sLeft: Integer;
   pc: TPointCollectionItem;
 begin
+  sLeft:=Left;
+  sTop :=Top;
+  //find min/max of x,y coordinates...
   for p:=0 to PointCoordinates.Count-1 do begin
     pc:=TPointCollectionItem(PointCoordinates.Items[p]);
     if p=0 then begin
-      minx:=pc.X;
+      minx:=Left + pc.X;
       maxx:=minx;
-      miny:=pc.Y;
+      miny:=Top + pc.Y;
       maxy:=miny;
       continue;
     end;
-    minx:=min(pc.X, minx);
-    maxx:=max(pc.X, maxx);
+    minx:=min(Left + pc.X, minx);
+    maxx:=max(Left + pc.X, maxx);
 
-    miny:=min(pc.Y, miny);
-    maxy:=max(pc.Y, maxy);
+    miny:=min(Top + pc.Y, miny);
+    maxy:=max(Top  + pc.Y, maxy);
   end;
 
 
   DisableAutoSizing;
-  Left:=Max(minx,0);
-  Top :=Max(miny-ifthen((miny mod 2)=0,1),0);
-  Width :=(maxx-minx)+FBorderWidth;
-  Height:=(maxy-miny)+FBorderWidth;
+  Left:=minx-(FBorderWidth div 2);
+  Top :=miny-(FBorderWidth div 2);
+  Width :=(maxx-minx)+2*FBorderWidth;
+  Height:=(maxy-miny)+2*FBorderWidth;
   EnableAutoSizing;
   for p:=0 to PointCoordinates.Count-1 do begin
     pc:=TPointCollectionItem(PointCoordinates.Items[p]);
-    pc.X:=pc.X-minx;
-    pc.Y:=pc.Y-miny+ifthen((miny mod 2)=0,1);
+    pc.X:=pc.X+(FBorderWidth div 2)-(minx-sLeft);
+    pc.Y:=pc.Y+(FBorderWidth div 2)-(miny-sTop);
   end;
 end;
 

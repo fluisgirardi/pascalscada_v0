@@ -192,6 +192,7 @@ type
   protected
     procedure DrawPolyline;
     procedure DrawEmptyPolyline;
+    procedure OptimizePolyline;
   public
     procedure ExecuteVerb(Index: LongInt); override;
     function  GetVerb(Index: LongInt): AnsiString; override;
@@ -256,19 +257,26 @@ begin
   THMIPolylineAccess(Polyline).BeginEmptyPolyline;
 end;
 
+procedure THMIPolylineComponentEditor.OptimizePolyline;
+begin
+  THMIPolylineAccess(Polyline).OptimizeDraw;
+end;
+
 procedure THMIPolylineComponentEditor.ExecuteVerb(Index: LongInt);
 begin
   case Index of
     0: DrawPolyline;
     1: DrawEmptyPolyline;
+    2: OptimizePolyline;
   end;
 end;
 
 function THMIPolylineComponentEditor.GetVerb(Index: LongInt): AnsiString;
 begin
   case Index of
-   0: Result:='Draw...';
-   1: Result:='Clear and draw...';
+   0: Result:='Continue draw';
+   1: Result:='Clear draw';
+   2: Result:='Optimize';
    else
      Result:=inherited GetVerb(Index);
   end;
@@ -276,7 +284,7 @@ end;
 
 function THMIPolylineComponentEditor.GetVerbCount: LongInt;
 begin
-  Result:=2;
+  Result:=3;
 end;
 
 function THMIPolylineComponentEditor.Polyline: THMIPolyline;
