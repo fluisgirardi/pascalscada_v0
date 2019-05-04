@@ -379,9 +379,11 @@ begin
 end;
 
 procedure TPLCNumber.SetScaleProcessor(sp:TScaleProcessor);
+var
+  oldValue: Double;
 begin
   if sp=PScaleProcessor then exit;
-
+  oldValue:=Value;
   if PScaleProcessor<>nil then
     PScaleProcessor.RemoveFreeNotification(self);
 
@@ -389,6 +391,8 @@ begin
     sp.FreeNotification(self);
 
   PScaleProcessor := sp;
+  if Value<>oldValue then
+    NotifyChange;
 end;
 
 procedure TPLCNumber.SetMinLimit(v:Double);

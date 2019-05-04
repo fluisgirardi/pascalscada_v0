@@ -271,8 +271,8 @@ begin
   inherited Terminate;
 end;
 
-var
-  FirstCoreSet:cuint32 = 1;
+//var
+//  FirstCoreSet:cuint32 = 1;
 initialization
   //sets the main thread affinity with first core.
   {$IFDEF UNIX}
