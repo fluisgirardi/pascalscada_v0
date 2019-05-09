@@ -10,11 +10,14 @@ uses
 
 type
 
+  TDragManagerAccess = Class(TDragManager);
+
   {$DEFINE ONE_BIT_BMP_CONTINUOUS_ROW_AS_RECTANGLE}
 
   { THMIBasicControl }
 
   THMIBasicControl = class(TCustomControl, IHMIInterface)
+
   protected
     FSecurityCode:UTF8String;
     FIsEnabled,
@@ -35,6 +38,10 @@ type
     procedure SetEnabled(e:Boolean); override;
     procedure SetSecurityCode(sc: UTF8String);
 
+    procedure DoMouseDown(var Message: TLMMouse; Button: TMouseButton;
+      Shift: TShiftState); virtual;
+    procedure DoMouseUp(var Message: TLMMouse; Button: TMouseButton); virtual;
+
     {$IFDEF PORTUGUES}
     //: Codigo de segurança que libera acesso ao controle
     {$ELSE}
@@ -52,6 +59,34 @@ type
     FUpdatingCount:Cardinal;
 
     FOldWidth, FOldHeight:Integer;
+
+    function  IsControlArea(X,Y:Integer):Boolean; virtual;
+    procedure ForwardMouseMessage(var Message:TLMMouse); virtual;
+
+    procedure WMLButtonDown(var Message: TLMLButtonDown); message LM_LBUTTONDOWN;
+    procedure WMRButtonDown(var Message: TLMRButtonDown); message LM_RBUTTONDOWN;
+    procedure WMMButtonDown(var Message: TLMMButtonDown); message LM_MBUTTONDOWN;
+    procedure WMXButtonDown(var Message: TLMXButtonDown); message LM_XBUTTONDOWN;
+
+    procedure WMLButtonUp(var Message: TLMLButtonUp); message LM_LBUTTONUP;
+    procedure WMRButtonUp(var Message: TLMRButtonUp); message LM_RBUTTONUP;
+    procedure WMMButtonUp(var Message: TLMMButtonUp); message LM_MBUTTONUP;
+    procedure WMXButtonUp(var Message: TLMXButtonUp); message LM_XBUTTONUP;
+
+    procedure WMLButtonDBLCLK(var Message: TLMLButtonDblClk); message LM_LBUTTONDBLCLK;
+    procedure WMRButtonDBLCLK(var Message: TLMRButtonDblClk); message LM_RBUTTONDBLCLK;
+    procedure WMMButtonDBLCLK(var Message: TLMMButtonDblClk); message LM_MBUTTONDBLCLK;
+    procedure WMXButtonDBLCLK(var Message: TLMXButtonDblClk); message LM_XBUTTONDBLCLK;
+    procedure WMLButtonTripleCLK(var Message: TLMLButtonTripleClk); message LM_LBUTTONTRIPLECLK;
+    procedure WMRButtonTripleCLK(var Message: TLMRButtonTripleClk); message LM_RBUTTONTRIPLECLK;
+    procedure WMMButtonTripleCLK(var Message: TLMMButtonTripleClk); message LM_MBUTTONTRIPLECLK;
+    procedure WMXButtonTripleCLK(var Message: TLMXButtonTripleClk); message LM_XBUTTONTRIPLECLK;
+    procedure WMLButtonQuadCLK(var Message: TLMLButtonQuadClk); message LM_LBUTTONQUADCLK;
+    procedure WMRButtonQuadCLK(var Message: TLMRButtonQuadClk); message LM_RBUTTONQUADCLK;
+    procedure WMMButtonQuadCLK(var Message: TLMMButtonQuadClk); message LM_MBUTTONQUADCLK;
+    procedure WMXButtonQuadCLK(var Message: TLMXButtonQuadClk); message LM_XBUTTONQUADCLK;
+
+    procedure WMMouseMove(var Message: TLMMouseMove); message LM_MOUSEMOVE;
 
     function Cateto(p0, p1: Integer): Integer;
     function Degrees(x0, x1, y0, y1: Integer): Double;
@@ -82,7 +117,7 @@ type
 
 implementation
 
-uses math;
+uses math, LCLType, Forms;
 
 { TBasicSCADAControl }
 
@@ -151,6 +186,373 @@ begin
     end;
 
   FSecurityCode:=sc;
+end;
+
+function THMIBasicControl.IsControlArea(X, Y:Integer): Boolean;
+begin
+  Result:=Assigned(FControlArea) and
+          (x>=0) and
+          (x<FControlArea.Width) and
+          (y>=0) and
+          (y<FControlArea.Height) and
+          ControlArea(FControlArea.ScanAt(X, Y));
+end;
+
+procedure THMIBasicControl.ForwardMouseMessage(var Message: TLMMouse);
+var
+  oldEnableState: Boolean;
+  ClientPoint, GlobalPoint:TPoint;
+  aControl: TControl;
+begin
+  oldEnableState:=Enabled;
+  Enabled:=false;
+  try
+    ClientPoint.x:=Message.XPos;
+    ClientPoint.y:=Message.YPos;
+    GlobalPoint:=ClientToScreen(ClientPoint);
+    ClientPoint:=ClientToParent(ClientPoint);
+    if (Name='LinhaCondensado') then
+      aControl:=nil;
+
+    aControl:= Parent.ControlAtPos(ClientPoint, false, true);
+    repeat
+      if Assigned(aControl) and (aControl is TWinControl) and (TWinControl(aControl).ControlCount>0) then begin
+        aControl:=TWinControl(aControl).ControlAtPos(aControl.ScreenToClient(GlobalPoint),false,true);
+      end;
+    until (Assigned(aControl)=false) or (not (aControl is TWinControl)) or (TWinControl(aControl).ControlCount=0);
+
+    if Assigned(aControl) then begin
+      ClientPoint:= aControl.ScreenToClient(GlobalPoint);
+      Message.XPos:=ClientPoint.x;
+      Message.YPos:=ClientPoint.y;
+      aControl.Dispatch(Message)
+    end else
+      if Assigned(Parent) then begin
+        ClientPoint:= Parent.ScreenToClient(GlobalPoint);
+        Message.XPos:=ClientPoint.x;
+        Message.YPos:=ClientPoint.y;
+        Parent.Dispatch(Message);
+      end;
+  finally
+    Enabled:=oldEnableState;
+  end;
+end;
+
+procedure THMIBasicControl.DoMouseDown(var Message: TLMMouse; Button: TMouseButton;
+  Shift: TShiftState);
+var
+  MP: TPoint;
+begin
+  if not (csNoStdEvents in ControlStyle) then
+  begin
+    MP := GetMousePosFromMessage(Message.Pos);
+    MouseDown(Button, KeysToShiftState(Message.Keys) + Shift, MP.X, MP.Y);
+  end;
+end;
+
+procedure THMIBasicControl.DoMouseUp(var Message: TLMMouse; Button: TMouseButton);
+var
+  P, MP: TPoint;
+begin
+  if not (csNoStdEvents in ControlStyle) then
+  begin
+    MP := GetMousePosFromMessage(Message.Pos);
+    if (Button in [mbLeft, mbRight]) and DragManager.IsDragging then
+    begin
+      P := ClientToScreen(MP);
+      TDragManagerAccess(DragManager).MouseUp(Button, KeysToShiftState(Message.Keys), P.X, P.Y);
+      Message.Result := 1;
+    end;
+    MouseUp(Button, KeysToShiftState(Message.Keys), MP.X, MP.Y);
+  end;
+end;
+
+procedure THMIBasicControl.WMLButtonDown(var Message: TLMLButtonDown);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbLeft in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    if csClickEvents in ControlStyle then
+      Include(FControlState, csClicked);
+    DoMouseDown(Message, mbLeft, []);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMRButtonDown(var Message: TLMRButtonDown);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbRight in CaptureMouseButtons) then
+      MouseCapture := True;
+    DoMouseDown(Message, mbRight, []);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+
+procedure THMIBasicControl.WMMButtonDown(var Message: TLMMButtonDown);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+
+    if (csCaptureMouse in ControlStyle) and (mbMiddle in CaptureMouseButtons) then
+        MouseCapture := True;
+
+    DoMouseDown(Message, mbMiddle, []);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMXButtonDown(var Message: TLMXButtonDown);
+var
+  Btn: TMouseButton;
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (Message.Keys and MK_XBUTTON1) <> 0 then Btn := mbExtra1
+    else if (Message.Keys and MK_XBUTTON2) <> 0 then Btn := mbExtra2
+    else Exit;
+
+    if (csCaptureMouse in ControlStyle) and (Btn in CaptureMouseButtons) then
+      MouseCapture := True;
+
+
+    DoMouseDown(Message, Btn, []);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+
+procedure THMIBasicControl.WMLButtonUp(var Message: TLMLButtonUp);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+
+    if (csCaptureMouse in ControlStyle) and (mbLeft in CaptureMouseButtons) then
+      MouseCapture := False;
+
+    if csClicked in ControlState then  begin
+      Exclude(FControlState, csClicked);
+      Click;
+    end;
+
+    DoMouseUp(Message, mbLeft);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMRButtonUp(var Message: TLMRButtonUp);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbRight in CaptureMouseButtons) then
+      MouseCapture := False;
+
+    //MouseUp event is independent of return values of contextmenu
+    DoMouseUp(Message, mbRight);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+{------------------------------------------------------------------------------
+  Method: THMIBasicControl.WMMButtonUp
+  Params: Message
+  Returns: Nothing
+
+  Mouse event handler
+ ------------------------------------------------------------------------------}
+procedure THMIBasicControl.WMMButtonUp(var Message: TLMMButtonUp);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbMiddle in CaptureMouseButtons) then
+      MouseCapture := False;
+
+    DoMouseUp(Message, mbMiddle);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMXButtonUp(var Message: TLMXButtonUp);
+var
+  Btn: TMouseButton;
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (Message.Keys and MK_XBUTTON1) <> 0 then Btn := mbExtra1
+    else if (Message.Keys and MK_XBUTTON2) <> 0 then Btn := mbExtra2
+    else Exit;
+
+    if (csCaptureMouse in ControlStyle) and (Btn in CaptureMouseButtons) then
+      MouseCapture := False;
+
+    DoMouseUp(Message, Btn);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMLButtonDBLCLK(var Message: TLMLButtonDblClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    //TODO: SendCancelMode(self);
+    if (csCaptureMouse in ControlStyle) and (mbLeft in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    // first send a mouse down
+    DoMouseDown(Message, mbLeft ,[ssDouble]);
+    // then send the double click
+    if csClickEvents in ControlStyle then
+      DblClick;
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMRButtonDBLCLK(var Message: TLMRButtonDblClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbRight in CaptureMouseButtons) then
+      MouseCapture := True;
+    DoMouseDown(Message, mbRight ,[ssDouble]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMMButtonDBLCLK(var Message: TLMMButtonDblClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbMiddle in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, mbMiddle ,[ssDouble]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMXButtonDBLCLK(var Message: TLMXButtonDblClk);
+var
+  Btn: TMouseButton;
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (Message.Keys and MK_XBUTTON1) <> 0 then Btn := mbExtra1
+    else if (Message.Keys and MK_XBUTTON2) <> 0 then Btn := mbExtra2
+    else Exit;
+
+    if (csCaptureMouse in ControlStyle) and (Btn in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, Btn, [ssDouble]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMLButtonTripleCLK(var Message: TLMLButtonTripleClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbLeft in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    if csClickEvents in ControlStyle then TripleClick;
+    DoMouseDown(Message, mbLeft ,[ssTriple]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMRButtonTripleCLK(var Message: TLMRButtonTripleClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbRight in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, mbRight ,[ssTriple]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMMButtonTripleCLK(var Message: TLMMButtonTripleClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbMiddle in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, mbMiddle ,[ssTriple]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMXButtonTripleCLK(var Message: TLMXButtonTripleClk);
+var
+  Btn: TMouseButton;
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (Message.Keys and MK_XBUTTON1) <> 0 then Btn := mbExtra1
+    else if (Message.Keys and MK_XBUTTON2) <> 0 then Btn := mbExtra2
+    else Exit;
+
+    if (csCaptureMouse in ControlStyle) and (Btn in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, Btn, [ssTriple]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMLButtonQuadCLK(var Message: TLMLButtonQuadClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbLeft in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    if csClickEvents in ControlStyle then QuadClick;
+    DoMouseDown(Message, mbLeft ,[ssQuad]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMRButtonQuadCLK(var Message: TLMRButtonQuadClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbRight in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, mbRight ,[ssQuad]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMMButtonQuadCLK(var Message: TLMMButtonQuadClk);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (csCaptureMouse in ControlStyle) and (mbMiddle in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, mbMiddle ,[ssQuad]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMXButtonQuadCLK(var Message: TLMXButtonQuadClk);
+var
+  Btn: TMouseButton;
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    if (Message.Keys and MK_XBUTTON1) <> 0 then Btn := mbExtra1
+    else if (Message.Keys and MK_XBUTTON2) <> 0 then Btn := mbExtra2
+    else Exit;
+
+    if (csCaptureMouse in ControlStyle) and (Btn in CaptureMouseButtons) then
+      MouseCapture := True;
+
+    DoMouseDown(Message, Btn, [ssQuad]);
+  end else
+    ForwardMouseMessage(Message);
+end;
+
+procedure THMIBasicControl.WMMouseMove(var Message: TLMMouseMove);
+var
+  MP: TPoint;
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then begin
+    MP := GetMousePosFromMessage(Message.Pos);
+    UpdateMouseCursor(MP.X,MP.Y);
+    if not (csNoStdEvents in ControlStyle) then
+      MouseMove(KeystoShiftState(Word(Message.Keys)), MP.X, MP.Y);
+  end else
+    ForwardMouseMessage(Message);
 end;
 
 procedure THMIBasicControl.SetHMITag(t: TPLCTag);
@@ -302,6 +704,10 @@ var
   {$ENDIF}
   {$ENDIF}
 begin
+  {$IF defined(LCLqt) or defined(LCLQt5)}
+  Color:=clBackground;
+  exit;
+  {$IFEND}
   if Parent=nil then exit;
 
   {$IFDEF RGN_PIXEL_BY_PIXEL}
@@ -531,11 +937,19 @@ end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
 begin
-  if Assigned(FControlArea) and ControlArea(FControlArea.ScanAt(Message.Pos.X,Message.Pos.Y)) then
+  if IsControlArea(Message.XPos, Message.YPos) then
     Message.Result:=1
   else
     Message.Result:=0;
 end;
+
+//procedure THMIBasicControl.TransparentHitTest(var Message: TCMHitTest);
+//begin
+//  //if (not Assigned(FControlArea)) or (not ControlArea(FControlArea.ScanAt(Message.Pos.X,Message.Pos.Y))) then
+//  //  Message.Result:=HTTRANSPARENT
+//  //else
+//    Message.Result:=0;
+//end;
 
 procedure THMIBasicControl.SetParent(NewParent: TWinControl);
 begin
