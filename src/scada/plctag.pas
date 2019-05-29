@@ -1121,6 +1121,8 @@ begin
     UpdateTagSizeOnProtocol;
   end;
 
+  RebuildValues;
+
   with FTagManager as TTagMananger do
     AddTag(Self);
 end;
@@ -1188,6 +1190,7 @@ end;
 procedure TPLCTag.SetSwapDWords(v:Boolean);
 begin
   if v=FSwapDWords then exit;
+  if [csReading, csLoading]*ComponentState<>[] then exit;
 
   FSwapDWords:=v;
   RebuildValues;
@@ -1196,6 +1199,7 @@ end;
 procedure TPLCTag.SetSwapWords(v:Boolean);
 begin
   if v=FSwapWords then exit;
+  if [csReading, csLoading]*ComponentState<>[] then exit;
 
   FSwapWords:=v;
   RebuildValues;
@@ -1204,6 +1208,7 @@ end;
 procedure TPLCTag.SetSwapBytes(v:Boolean);
 begin
   if v=FSwapBytes then exit;
+  if [csReading, csLoading]*ComponentState<>[] then exit;
 
   FSwapBytes:=v;
   RebuildValues;
