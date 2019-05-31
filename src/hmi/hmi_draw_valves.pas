@@ -52,8 +52,7 @@ procedure THMICustomBasicValve.SetMirrored(AValue: Boolean);
 begin
   if FMirrored=AValue then Exit;
   FMirrored:=AValue;
-  FUpdateShape:=true;
-  Invalidate;
+  InvalidateShape;
 end;
 
 procedure THMICustomBasicValve.SetValveBodyPercent(AValue: Double);
@@ -62,16 +61,14 @@ begin
   if (FValveBodyPercent<0) or (FValveBodyPercent>1) then
     raise exception.Create('ValveBodyPercent accepts values between [0.0 .. 1.0]');
   FValveBodyPercent:=AValue;
-  FUpdateShape:=true;
-  Invalidate;
+  InvalidateShape;
 end;
 
 procedure THMICustomBasicValve.SetValveType(AValue: TValveType);
 begin
   if FValveType=AValue then Exit;
   FValveType:=AValue;
-  FUpdateShape:=true;
-  Invalidate;
+  InvalidateShape;
 end;
 
 procedure THMICustomBasicValve.DrawControl;

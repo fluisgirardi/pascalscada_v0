@@ -101,6 +101,7 @@ type
     procedure Paint; override;
     procedure Resize; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
+    procedure CMDesignHitTest(var Message: TCMHittest) ; message CM_DESIGNHITTEST;
     procedure SetParent(NewParent: TWinControl); override;
     procedure SetBodyColor(AValue: TColor); virtual;
     procedure SetBorderColor(AValue: TColor); virtual;
@@ -893,7 +894,11 @@ begin
   if assigned(FControlArea) then begin
     if FControlArea.Empty Or FUpdateShape then begin
       DrawControl;
+      {$IF defined(LCLqt) or defined(LCLQt5)}
+      Color:=clBackground;
+      {$ELSE}
       UpdateShape;
+      {$IFEND}
       FShouldRedraw:=false;
       FUpdateShape:=false;
     end;
@@ -936,6 +941,14 @@ begin
 end;
 
 procedure THMIBasicControl.CMHitTest(var Message: TCMHittest);
+begin
+  if IsControlArea(Message.XPos, Message.YPos) then
+    Message.Result:=1
+  else
+    Message.Result:=0;
+end;
+
+procedure THMIBasicControl.CMDesignHitTest(var Message: TCMHittest);
 begin
   if IsControlArea(Message.XPos, Message.YPos) then
     Message.Result:=1

@@ -1190,27 +1190,33 @@ end;
 procedure TPLCTag.SetSwapDWords(v:Boolean);
 begin
   if v=FSwapDWords then exit;
-  if [csReading, csLoading]*ComponentState<>[] then exit;
 
   FSwapDWords:=v;
+
+  if [csReading, csLoading]*ComponentState<>[] then exit;
+
   RebuildValues;
 end;
 
 procedure TPLCTag.SetSwapWords(v:Boolean);
 begin
   if v=FSwapWords then exit;
-  if [csReading, csLoading]*ComponentState<>[] then exit;
 
   FSwapWords:=v;
+
+  if [csReading, csLoading]*ComponentState<>[] then exit;
+
   RebuildValues;
 end;
 
 procedure TPLCTag.SetSwapBytes(v:Boolean);
 begin
   if v=FSwapBytes then exit;
-  if [csReading, csLoading]*ComponentState<>[] then exit;
 
   FSwapBytes:=v;
+
+  if [csReading, csLoading]*ComponentState<>[] then exit;
+
   RebuildValues;
 end;
 
