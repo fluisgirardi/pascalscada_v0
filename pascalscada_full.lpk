@@ -3,7 +3,7 @@
   <Package Version="4">
     <PathDelim Value="\"/>
     <Name Value="pascalscada_full"/>
-    <Type Value="RunAndDesignTime"/>
+    <Type Value="DesignTime"/>
     <Author Value="Fabio Luis Girardi &lt;fabio@pascalscada.com>"/>
     <CompilerOptions>
       <Version Value="11"/>
@@ -22,10 +22,9 @@
     <Version Minor="7" Release="7"/>
     <RequiredPkgs Count="3">
       <Item1>
-        <PackageName Value="pascalscada"/>
-        <MaxVersion Minor="7" Release="6"/>
+        <PackageName Value="pascalscada_dsng"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
-        <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
+        <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada_hmi"/>

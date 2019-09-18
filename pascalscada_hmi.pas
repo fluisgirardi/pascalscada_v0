@@ -17,10 +17,9 @@ uses
   hmiobjectcolletion, HMIProgressBar, hmipropeditor, HMIRadioButton, 
   HMIRadioGroup, hmiregister, HMIScrollBar, HMIText, HMITrackBar, HMITypes, 
   HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
-  HMI_ComputedImageList, HMI_Draw_Valves, hmi_draw_elevador, 
-  HMIBasicEletricMotor, hmi_flow_zones, hmi_draw_flow_valve, 
-  hmi_draw_flow_pump, hmi_tachart_tag_source_list, tagstatuslist, 
-  LazarusPackageIntf;
+  HMI_Draw_Valves, hmi_draw_elevador, HMIBasicEletricMotor, hmi_flow_zones, 
+  hmi_draw_flow_valve, hmi_draw_flow_pump, hmi_tachart_tag_source_list, 
+  tagstatuslist, hmidrawingintf, LazarusPackageIntf;
 
 implementation
 

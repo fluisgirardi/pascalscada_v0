@@ -2,20 +2,29 @@
 <CONFIG>
   <Package Version="4">
     <Name Value="pascalscada_common"/>
-    <Type Value="RunAndDesignTime"/>
     <Author Value="Fabio Luis Girardi &lt;fabio@pascalscada.com>"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
         <IncludeFiles Value="src/common"/>
         <OtherUnitFiles Value="src/common"/>
-        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)-$(LCLWidgetType)"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)-$(LCLWidgetType)/common"/>
       </SearchPaths>
       <Parsing>
         <SyntaxOptions>
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
       </Parsing>
+      <CodeGeneration>
+        <Optimizations>
+          <OptimizationLevel Value="3"/>
+        </Optimizations>
+      </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <GenerateDebugInfo Value="False"/>
+        </Debugging>
+      </Linking>
     </CompilerOptions>
     <Description Value="Common methods for all PascalSCADA packages"/>
     <License Value="LGPL v2.1 with linking exception"/>

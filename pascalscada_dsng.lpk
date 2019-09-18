@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="pascalscada_dsng"/>
+    <Type Value="DesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <IncludeFiles Value="src/scada_dsng"/>
+        <OtherUnitFiles Value="src/scada_dsng"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)-$(LCLWidgetType)/scada_dsng"/>
+      </SearchPaths>
+      <CodeGeneration>
+        <Optimizations>
+          <OptimizationLevel Value="3"/>
+        </Optimizations>
+      </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <GenerateDebugInfo Value="False"/>
+        </Debugging>
+      </Linking>
+    </CompilerOptions>
+    <Version Minor="7" Release="7"/>
+    <Files Count="14">
+      <Item1>
+        <Filename Value="src/scada_dsng/bitmappertagassistant.pas"/>
+        <UnitName Value="bitmappertagassistant"/>
+      </Item1>
+      <Item2>
+        <Filename Value="src/scada_dsng/blockstructtagassistant.pas"/>
+        <UnitName Value="blockstructtagassistant"/>
+      </Item2>
+      <Item3>
+        <Filename Value="src/scada_dsng/comptagedt.pas"/>
+        <UnitName Value="comptagedt"/>
+      </Item3>
+      <Item4>
+        <Filename Value="src/scada_dsng/modbustagassistant.pas"/>
+        <UnitName Value="modbustagassistant"/>
+      </Item4>
+      <Item5>
+        <Filename Value="src/scada_dsng/scadapropeditor.pas"/>
+        <UnitName Value="scadapropeditor"/>
+      </Item5>
+      <Item6>
+        <Filename Value="src/scada_dsng/scadareg.pas"/>
+        <HasRegisterProc Value="True"/>
+        <AddToUsesPkgSection Value="False"/>
+        <UnitName Value="scadareg"/>
+      </Item6>
+      <Item7>
+        <Filename Value="src/scada_dsng/siemenstagassistant.pas"/>
+        <UnitName Value="siemenstagassistant"/>
+      </Item7>
+      <Item8>
+        <Filename Value="src/scada_dsng/ubitmapper.pas"/>
+        <UnitName Value="ubitmapper"/>
+      </Item8>
+      <Item9>
+        <Filename Value="src/scada_dsng/uelementmapper.pas"/>
+        <UnitName Value="uelementmapper"/>
+      </Item9>
+      <Item10>
+        <Filename Value="src/scada_dsng/umodbustagbuilder.pas"/>
+        <UnitName Value="uModbusTagBuilder"/>
+      </Item10>
+      <Item11>
+        <Filename Value="src/scada_dsng/us7tagbuilder.pas"/>
+        <UnitName Value="us7tagbuilder"/>
+      </Item11>
+      <Item12>
+        <Filename Value="src/scada_dsng/ustructuremapper.pas"/>
+        <UnitName Value="ustructuremapper"/>
+      </Item12>
+      <Item13>
+        <Filename Value="src/scada_dsng/uwesttagbuilder.pas"/>
+        <UnitName Value="uwesttagbuilder"/>
+      </Item13>
+      <Item14>
+        <Filename Value="src/scada_dsng/westasciitagassistant.pas"/>
+        <UnitName Value="westasciitagassistant"/>
+      </Item14>
+    </Files>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="IDEIntf"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

@@ -4,19 +4,13 @@
 
 unit pascalscada_common;
 
+{$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  crossdatetime, crossevent, hsstrings, hsutils, MessageSpool, 
-  pascalScadaMTPCPU, pscada_common, pscommontypes, pSCADAVersion, 
-  crossthreads, LazarusPackageIntf;
+  crossdatetime, CrossEvent, hsstrings, hsutils, MessageSpool, 
+  pascalScadaMTPCPU, pscada_common, pscommontypes, pSCADAVersion, crossthreads;
 
 implementation
 
-procedure Register;
-begin
-end;
-
-initialization
-  RegisterPackage('pascalscada_common', @Register);
 end.

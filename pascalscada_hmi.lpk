@@ -185,51 +185,50 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <UnitName Value="HMITransparentButton"/>
       </Item40>
       <Item41>
-        <Filename Value="src/hmi/hmi_computedimagelist.pas"/>
-        <UnitName Value="HMI_ComputedImageList"/>
-      </Item41>
-      <Item42>
         <Filename Value="src/hmi/hmi_draw_valves.pas"/>
         <UnitName Value="HMI_Draw_Valves"/>
-      </Item42>
-      <Item43>
+      </Item41>
+      <Item42>
         <Filename Value="src/hmi/hmi_draw_elevador.pas"/>
         <UnitName Value="hmi_draw_elevador"/>
-      </Item43>
-      <Item44>
+      </Item42>
+      <Item43>
         <Filename Value="src/hmi/hmibasiceletricmotor.pas"/>
         <UnitName Value="HMIBasicEletricMotor"/>
-      </Item44>
-      <Item45>
+      </Item43>
+      <Item44>
         <Filename Value="src/hmi/hmi_flow_zones.pas"/>
         <UnitName Value="hmi_flow_zones"/>
-      </Item45>
-      <Item46>
+      </Item44>
+      <Item45>
         <Filename Value="src/hmi/hmi_draw_flow_valve.pas"/>
         <UnitName Value="hmi_draw_flow_valve"/>
-      </Item46>
-      <Item47>
+      </Item45>
+      <Item46>
         <Filename Value="src/hmi/hmi_draw_flow_pump.pas"/>
         <UnitName Value="hmi_draw_flow_pump"/>
-      </Item47>
-      <Item48>
+      </Item46>
+      <Item47>
         <Filename Value="src/hmi/hmi_tachart_tag_source_list.pas"/>
         <UnitName Value="hmi_tachart_tag_source_list"/>
-      </Item48>
-      <Item49>
+      </Item47>
+      <Item48>
         <Filename Value="src/hmi/tagstatuslist.pas"/>
         <UnitName Value="tagstatuslist"/>
+      </Item48>
+      <Item49>
+        <Filename Value="src/hmi/hmidrawingintf.pas"/>
+        <UnitName Value="hmidrawingintf"/>
       </Item49>
     </Files>
     <RequiredPkgs Count="7">
       <Item1>
-        <PackageName Value="TAChartLazarusPkg"/>
+        <PackageName Value="pascalscada_dsng"/>
+        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
       </Item1>
       <Item2>
-        <PackageName Value="bgracontrols"/>
-        <MaxVersion Major="3" Minor="7"/>
-        <MinVersion Major="4" Minor="3" Valid="True"/>
-        <DefaultFilename Value="bgracontrols/bgracontrols.lpk" Prefer="True"/>
+        <PackageName Value="TAChartLazarusPkg"/>
       </Item2>
       <Item3>
         <PackageName Value="pascalscada"/>
