@@ -28,6 +28,11 @@ uses
 
 type
 
+  TInputBlockSize = 0..2000;
+  TOutputBlockSize = TInputBlockSize;
+  THoldingRegistersBlockSize = 0..125;
+  TAnalogBlockSize = THoldingRegistersBlockSize;
+
   TReqList = specialize TFPGList<TReqItem>;
 
   {$IFDEF PORTUGUES}
@@ -156,13 +161,21 @@ type
   TModBusDriver = class(TProtocolDriver)
   private
     FMustReleaseResources:Boolean;
+    PAnalogRegsMaxBlockSize: TAnalogBlockSize;
+    PHoldingRegsMaxBlockSize: THoldingRegistersBlockSize;
+    PInputBlockSize: TInputBlockSize;
+    POutputBlockSize: TOutputBlockSize;
+    procedure SetAnalogRegsMaxBlockSize(AValue: TAnalogBlockSize);
+    procedure SetHoldingRegsMaxBlockSize(AValue: THoldingRegistersBlockSize);
+    procedure SetInputBlockSize(AValue: TInputBlockSize);
+    procedure SetOutputBlockSize(AValue: TOutputBlockSize);
 
   protected
     PFirstRequestLen,
     PFuncByteOffset,
     PCRCLen:LongInt;
-    POutputMaxHole:Cardinal;
-    PInputMaxHole:Cardinal;
+    POutputMaxHole,
+    PInputMaxHole,
     PRegistersMaxHole:Cardinal;
     PInternalDelayBetweenCmds:Cardinal;
     PModbusPLC:array of TModBusPLC;
@@ -250,6 +263,62 @@ type
     }
     {$ENDIF}
     property RegisterMaxHole:Cardinal read PRegistersMaxHole write SetRegisterMaxHole default 10;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Informa quantos bits de entrada podem ser lidos no mesmo bloco de dados.
+    um bloco continuo.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ELSE}
+    {:
+    How many input bits can be read in single block.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ENDIF}
+    property InputsMaxBlockSize:TInputBlockSize read PInputBlockSize write SetInputBlockSize default 2000;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Informa quantos bits de saída podem ser lidos no mesmo bloco de dados.
+    um bloco continuo.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ELSE}
+    {:
+    How many output bits can be read in single block.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ENDIF}
+    property OutputsMaxBlockSize:TOutputBlockSize read POutputBlockSize write SetOutputBlockSize default 2000;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Informa quantas entradas analógicas (words) podem ser lidos no mesmo bloco de dados.
+    um bloco continuo.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ELSE}
+    {:
+    How many analog inputs (words) can be read in single block.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ENDIF}
+    property AnalogRegsMaxBlockSize:TAnalogBlockSize read PAnalogRegsMaxBlockSize write SetAnalogRegsMaxBlockSize default 125;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Informa quantos registradores (words) podem ser lidos no mesmo bloco de dados.
+    um bloco continuo.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ELSE}
+    {:
+    How many holding registers (words) can be read in single block.
+    @seealso(TPLCMemoryManager.MaxBlockItems)
+    }
+    {$ENDIF}
+    property HoldingRegsMaxBlockSize:THoldingRegistersBlockSize read PHoldingRegsMaxBlockSize write SetHoldingRegsMaxBlockSize default 125;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -311,6 +380,10 @@ begin
   POutputMaxHole := 50;
   PInputMaxHole := 50;
   PRegistersMaxHole := 10;
+  PInputBlockSize:=2000;
+  POutputBlockSize:=2000;
+  PHoldingRegsMaxBlockSize:=125;
+  PAnalogRegsMaxBlockSize:=125;
   PReadSomethingAlways := true;
   PInternalDelayBetweenCmds:=5;
   SetLength(PModbusPLC,0);
@@ -328,6 +401,51 @@ begin
       PModbusPLC[plc].AnalogReg.Destroy;
   end;
   SetLength(PModbusPLC,0);
+end;
+
+procedure TModBusDriver.SetAnalogRegsMaxBlockSize(AValue: TAnalogBlockSize);
+var
+  plc: Integer;
+begin
+  if PAnalogRegsMaxBlockSize=AValue then Exit;
+  PAnalogRegsMaxBlockSize:=AValue;
+
+  for plc:=0 to High(PModbusPLC) do
+    PModbusPLC[plc].AnalogReg.MaxBlockItems := AValue;
+end;
+
+procedure TModBusDriver.SetHoldingRegsMaxBlockSize(
+  AValue: THoldingRegistersBlockSize);
+var
+  plc: Integer;
+begin
+  if PHoldingRegsMaxBlockSize=AValue then Exit;
+  PHoldingRegsMaxBlockSize:=AValue;
+
+  for plc:=0 to High(PModbusPLC) do
+    PModbusPLC[plc].Registers.MaxBlockItems := AValue;
+end;
+
+procedure TModBusDriver.SetInputBlockSize(AValue: TInputBlockSize);
+var
+  plc: Integer;
+begin
+  if PInputBlockSize=AValue then Exit;
+  PInputBlockSize:=AValue;
+
+  for plc:=0 to High(PModbusPLC) do
+    PModbusPLC[plc].Inputs.MaxBlockItems := AValue;
+end;
+
+procedure TModBusDriver.SetOutputBlockSize(AValue: TOutputBlockSize);
+var
+  plc: Integer;
+begin
+  if POutputBlockSize=AValue then Exit;
+  POutputBlockSize:=AValue;
+
+  for plc:=0 to High(PModbusPLC) do
+    PModbusPLC[plc].OutPuts.MaxBlockItems := AValue;
 end;
 
 function TModBusDriver.AllowBroadCast: Boolean;
@@ -409,16 +527,16 @@ begin
         SetLength(PModbusPLC,plc+1);
         PModbusPLC[plc].Station := station;
         PModbusPLC[plc].Inputs := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Inputs.MaxBlockItems := 2000;
+        PModbusPLC[plc].Inputs.MaxBlockItems := PInputBlockSize;
         PModbusPLC[plc].Inputs.MaxHole := PInputMaxHole;
         PModbusPLC[plc].OutPuts := TPLCMemoryManager.Create();
-        PModbusPLC[plc].OutPuts.MaxBlockItems := 2000;
+        PModbusPLC[plc].OutPuts.MaxBlockItems := POutputBlockSize;
         PModbusPLC[plc].OutPuts.MaxHole := POutputMaxHole;
         PModbusPLC[plc].Registers := TPLCMemoryManager.Create();
-        PModbusPLC[plc].Registers.MaxBlockItems := 125;
+        PModbusPLC[plc].Registers.MaxBlockItems := PHoldingRegsMaxBlockSize;
         PModbusPLC[plc].Registers.MaxHole := PRegistersMaxHole;
         PModbusPLC[plc].AnalogReg := TPLCMemoryManager.Create();
-        PModbusPLC[plc].AnalogReg.MaxBlockItems := 125;
+        PModbusPLC[plc].AnalogReg.MaxBlockItems := PAnalogRegsMaxBlockSize;
         PModbusPLC[plc].AnalogReg.MaxHole := PRegistersMaxHole;
       end;
 

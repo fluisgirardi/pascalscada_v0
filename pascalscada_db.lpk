@@ -22,7 +22,7 @@
 Built on top of ZeosLib"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="4">
+    <Files Count="5">
       <Item1>
         <Filename Value="src\database\dbstructurechecker.pas"/>
         <UnitName Value="dbstructurechecker"/>
@@ -40,6 +40,10 @@ Built on top of ZeosLib"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="pscada_dbreg"/>
       </Item4>
+      <Item5>
+        <Filename Value="src\database\hmidbconnection_dsgn.pas"/>
+        <UnitName Value="hmidbconnection_dsgn"/>
+      </Item5>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>

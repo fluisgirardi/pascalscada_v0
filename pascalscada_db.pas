@@ -4,11 +4,12 @@
 
 unit pascalscada_db;
 
+{$warn 5023 off : no warning about unused units}
 interface
 
 uses
   dbstructurechecker, HMIDBConnection, psbufdataset, pscada_dbreg, 
-  LazarusPackageIntf;
+  hmidbconnection_dsgn, LazarusPackageIntf;
 
 implementation
 

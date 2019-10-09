@@ -219,24 +219,24 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
     </Files>
     <RequiredPkgs Count="7">
       <Item1>
-        <PackageName Value="pascalscada_dsng"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
-        <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
-      </Item1>
-      <Item2>
-        <PackageName Value="TAChartLazarusPkg"/>
-      </Item2>
-      <Item3>
         <PackageName Value="pascalscada"/>
         <MaxVersion Minor="7" Release="6"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
-      </Item3>
-      <Item4>
+      </Item1>
+      <Item2>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="6"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="pascalscada_dsng"/>
+        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="TAChartLazarusPkg"/>
       </Item4>
       <Item5>
         <PackageName Value="BGRABitmapPack"/>

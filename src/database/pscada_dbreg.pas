@@ -11,7 +11,7 @@ procedure Register;
 
 implementation
 
-uses hsstrings, HMIDBConnection, psbufdataset,
+uses hsstrings, HMIDBConnection, hmidbconnection_dsgn, psbufdataset,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors;
   {$ELSE}

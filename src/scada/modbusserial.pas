@@ -63,6 +63,14 @@ type
     property InputMaxHole;
     //:  @seealso(TModBusDriver.RegisterMaxHole)
     property RegisterMaxHole;
+    //:  @seealso(TModBusDriver.InputsMaxBlockSize)
+    property InputsMaxBlockSize;                
+    //:  @seealso(TModBusDriver.OutputsMaxBlockSize)
+    property OutputsMaxBlockSize;               
+    //:  @seealso(TModBusDriver.AnalogRegsMaxBlockSize)
+    property AnalogRegsMaxBlockSize;            
+    //:  @seealso(TModBusDriver.HoldingRegsMaxBlockSize)
+    property HoldingRegsMaxBlockSize;
 
     property ReadOnly;
   end;

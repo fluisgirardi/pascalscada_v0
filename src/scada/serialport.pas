@@ -154,6 +154,8 @@ type
 
   TSerialPortDriver = class(TCommPortDriver)
   private
+    PActivatedOnLoad:Boolean;
+    PPortNameLoaded,
     PPortName:AnsiString;
     PTimeout:LongInt;
     PBaundRate:TSerialBaudRate;
@@ -205,6 +207,10 @@ type
     function  ComSettingsOK:Boolean; override;
     {: @exclude }
     procedure ClearALLBuffers; override;
+    {: @exclude }
+    procedure SetActive(v: Boolean); override;
+    {: @exclude }
+    procedure Loaded; override;
   public
     {$IFDEF PORTUGUES}
     {:
@@ -916,6 +922,12 @@ end;
 procedure TSerialPortDriver.SetCOMPort(v:AnsiString);
 begin
   DoExceptionInActive;
+
+  if ([csLoading,csReading]*ComponentState)<>[] then begin
+    PPortNameLoaded:=v;
+    Exit;
+  end;
+
   if COMExist(v) then
     PPortName := v
   else
@@ -1187,6 +1199,22 @@ begin
   fpioctl(LongInt(PPortHandle), TIOCFLUSH, nil);
   {$ENDIF}
 {$ENDIF}
+end;
+
+procedure TSerialPortDriver.SetActive(v: Boolean);
+begin
+  if [csLoading, csReading]*ComponentState<>[] then begin
+    PActivatedOnLoad:=v;
+    exit;
+  end;
+  inherited SetActive(v);
+end;
+
+procedure TSerialPortDriver.Loaded;
+begin
+  inherited Loaded;
+  COMPort:=PPortNameLoaded;
+  SetActive(PActivatedOnLoad);
 end;
 
 end.
