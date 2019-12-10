@@ -918,8 +918,10 @@ begin
             Result:=ioDriverError;
         end;
         Result := DecodePkg(IOResult1,values);
-      end else
-        Result:=ioEmptyPacket;
+      end else begin
+        Result:=DecodePkg(IOResult1, Values);
+        //Result:=ioEmptyPacket;
+      end;
 
       PCommPort.Unlock(DriverID);
     end else

@@ -363,6 +363,10 @@ begin
 
   //leitura de bits das entradas ou saidas
   //request to read the digital input/outpus (coils)
+  if Length(pkg.BufferToRead)<8 then begin
+    SetLength(pkg.BufferToRead, 8);
+    pkg.BufferToRead[7]:=0;
+  end;
   case pkg.BufferToRead[7] of
     $01,$02: begin
       //acerta onde vao ser colocados os valores decodificados...
@@ -551,8 +555,12 @@ begin
           Result := ioGatewayUnavailable;
         $0B:
           Result := ioDeviceGatewayFailedToRespond;
-        else
-          Result := ioCommError;
+        else begin
+          if pkg.ReadIOResult=iorTimeOut then
+            Result := ioTimeOut
+          else
+            Result := ioCommError;
+        end;
       end;
 
       address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
