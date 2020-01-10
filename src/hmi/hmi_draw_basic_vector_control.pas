@@ -874,8 +874,6 @@ begin
     end;
 
   InvalidateDraw;
-
-  //if CurrentZoneChanged and ;
 end;
 
 procedure THMICustomFlowVectorControl.StatesChanged(Sender: TObject);

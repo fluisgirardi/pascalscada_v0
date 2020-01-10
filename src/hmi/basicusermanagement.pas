@@ -33,7 +33,7 @@ type
     frmLogin, frmCheckIfUserIsAllowed:TpsHMIfrmUserAuthentication;
 
     function  GetLoginTime:TDateTime;
-    procedure SetInactiveTimeOut(t:Cardinal);
+    procedure SetInactiveTimeOut({%H-}t:Cardinal);
     procedure UnfreezeLogin(Sender:TObject);
     function  GetUID: Integer;
   protected
@@ -42,7 +42,7 @@ type
     procedure DoSuccessfulLogin; virtual;
     procedure DoFailureLogin; virtual;
 
-    function CheckUserAndPassword(User, Pass:UTF8String; var UserID:Integer; LoginAction:Boolean):Boolean; virtual;
+    function CheckUserAndPassword({%H-}User, {%H-}Pass:UTF8String; out {%H-}UserID:Integer; {%H-}LoginAction:Boolean):Boolean; virtual;
 
     function GetLoggedUser:Boolean; virtual;
     function GetCurrentUserName:UTF8String; virtual;
@@ -60,7 +60,7 @@ type
     property SuccessfulLogin:TNotifyEvent read FSuccessfulLogin write FSuccessfulLogin;
     property FailureLogin:TNotifyEvent read FFailureLogin write FFailureLogin;
     property UserChanged:TUserChangedEvent read FUserChanged write FUserChanged;
-    function CanAccess(sc:UTF8String; aUID:Integer):Boolean; virtual; overload;
+    function CanAccess({%H-}sc:UTF8String; {%H-}aUID:Integer):Boolean; virtual; overload;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -70,15 +70,15 @@ type
     procedure   Manage; virtual;
 
     //Security codes management
-    procedure   ValidateSecurityCode(sc:UTF8String); virtual;
-    function    SecurityCodeExists(sc:UTF8String):Boolean; virtual;
-    procedure   RegisterSecurityCode(sc:UTF8String); virtual;
-    procedure   UnregisterSecurityCode(sc:UTF8String); virtual;
+    procedure   ValidateSecurityCode({%H-}sc:UTF8String); virtual;
+    function    SecurityCodeExists({%H-}sc:UTF8String):Boolean; virtual;
+    procedure   RegisterSecurityCode({%H-}sc:UTF8String); virtual;
+    procedure   UnregisterSecurityCode({%H-}sc:UTF8String); virtual;
 
-    function    CanAccess(sc:UTF8String):Boolean; virtual;
+    function    CanAccess({%H-}sc:UTF8String):Boolean; virtual;
     function    GetRegisteredAccessCodes:TStringList; virtual;
 
-    function    CheckIfUserIsAllowed(sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean; virtual;
+    function    CheckIfUserIsAllowed({%H-}sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean; virtual;
 
     //read only properties.
     property UID:Integer read GetUID;
@@ -319,8 +319,8 @@ begin
   //
 end;
 
-function TBasicUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
-  var UserID: Integer; LoginAction: Boolean): Boolean;
+function TBasicUserManagement.CheckUserAndPassword(User, Pass: UTF8String; out
+  UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
 end;

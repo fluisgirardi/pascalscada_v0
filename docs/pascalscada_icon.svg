@@ -15,7 +15,10 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   sodipodi:docname="pascalscada_icon.svg">
+   sodipodi:docname="pascalscada_icon.svg"
+   inkscape:export-filename="/home/eletromep/MEP/gerais/base_libs/pascalscada/docs/pascalscada_icon.svg.png"
+   inkscape:export-xdpi="39.970001"
+   inkscape:export-ydpi="39.970001">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -26,7 +29,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="53.593038"
+     inkscape:cx="-90.692676"
      inkscape:cy="51.92715"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -44,7 +47,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -56,6 +59,13 @@
     <g
        id="g876"
        transform="translate(0,-7.5033951)">
+      <rect
+         style="fill:#ffffff;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none"
+         id="rect830"
+         width="56.006958"
+         height="34.824718"
+         x="2.4999993"
+         y="253.50679" />
       <path
          style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.02306023"
          d="m 2.5000069,288.81407 v -16.01016 l 18.3127671,4.90689 v -4.96716 l 18.537631,4.96716 v -4.96716 l 18.537627,4.96716 v 11.16354 z"
@@ -77,13 +87,6 @@
          d="m 51.602437,267.6763 -1.205172,-3.15208 c -0.568127,-1.48588 -3.277483,-0.72038 -4.11498,-2.38817 -0.837497,-1.66782 0.717813,-6.39284 0.717813,-6.39284 0,0 0.729372,3.48767 1.696482,4.67111 0.967109,1.18344 3.181713,0.9381 3.585914,2.18778 0.4042,1.24971 -0.680057,5.0742 -0.680057,5.0742 z"
          style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.03218161px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          inkscape:connector-curvature="0" />
-      <rect
-         style="fill:none;stroke:#000000;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none"
-         id="rect830"
-         width="56.006958"
-         height="34.824718"
-         x="2.4999993"
-         y="253.50679" />
       <path
          style="fill:none;stroke:#000000;stroke-width:3;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          d="M 13.249943,294.49985 H 47.546611"

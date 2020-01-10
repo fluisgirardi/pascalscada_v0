@@ -436,7 +436,7 @@ var
   consumedkeys:TGdkModifierType;
 begin
   if FTarget=nil then exit;
-  gev.key.window:=PGtkWidget(Ftarget.Handle)^.window;
+  gev.key.window:={%H-}PGtkWidget(Ftarget.Handle)^.window;
   gev.key._type:=GDK_KEY_PRESS;
   gev.key.send_event:=1;
 
@@ -455,7 +455,7 @@ begin
 
   gev.key._string:=gdk_keyval_name(key);
 
-  gdk_keymap_get_entries_for_keyval(nil,key,keys,@nkeys);
+  gdk_keymap_get_entries_for_keyval(nil,key,{%H-}keys,@nkeys);
 
   if keys=nil then begin
     gev.key.hardware_keycode:=GDK_KEY_a;
@@ -478,7 +478,7 @@ var
   nkeys:cint;
 begin
   if FTarget=nil then exit;
-  gev.key.window:=PGtkWidget(Ftarget.Handle)^.window;
+  gev.key.window:={%H-}PGtkWidget(Ftarget.Handle)^.window;
   gev.key._type:=GDK_KEY_RELEASE;
   gev.key.send_event:=1;
   gev.key.time:=10;
@@ -487,7 +487,7 @@ begin
   gev.key.length:=1;
   gev.key._string:=gdk_keyval_name(key);
 
-  gdk_keymap_get_entries_for_keyval(nil,gev.key.keyval,keys,@nkeys);
+  gdk_keymap_get_entries_for_keyval(nil,gev.key.keyval,{%H-}keys,@nkeys);
 
   if keys=nil then begin
     gev.key.hardware_keycode:=GDK_KEY_a;

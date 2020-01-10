@@ -183,7 +183,6 @@ type
                        StartTransactionProc:TStartTransaction;
                        CommitTransactionProc:TCommitTransaction;
                        RollbackTransactionProc:TRollbackTransaction);
-    procedure AfterConstruction; override;
     //: @exclude
     destructor Destroy; override;
     {$IFDEF PORTUGUES}
@@ -406,11 +405,6 @@ begin
   fRollbackTransaction:=RollbackTransactionProc;
 end;
 
-procedure TProcessSQLCommandThread.AfterConstruction;
-begin
-  //inherited AfterConstruction;
-end;
-
 destructor  TProcessSQLCommandThread.Destroy;
 begin
   inherited Destroy;
@@ -434,7 +428,8 @@ procedure   TProcessSQLCommandThread.ProcessMessages;
 var
   msg:TMSMsg;
   s: Integer;
-  err: Boolean;
+  err, isASelect: Boolean;
+  sql: String;
 begin
   while FQueue.PeekMessage(msg,0,0,true) do begin
     //executa o comando sql
@@ -449,7 +444,12 @@ begin
         //if are to return the data,
         //creates the dataset.
         ferror:=nil;
-        if Assigned(cmd^.ReturnDataSetCallback) then
+
+        isASelect:=false;
+        sql:=Trim(LowerCase(cmd^.SQLCmd));
+        isASelect:=pos('select',sql)=0;
+
+        if Assigned(cmd^.ReturnDataSetCallback) and isASelect then
           fds:=TFPSBufDataSet.Create(Nil)
         else
           fds:=nil;

@@ -27,6 +27,7 @@
       <Linking>
         <Debugging>
           <GenerateDebugInfo Value="False"/>
+          <UseLineInfoUnit Value="False"/>
         </Debugging>
       </Linking>
       <Other>

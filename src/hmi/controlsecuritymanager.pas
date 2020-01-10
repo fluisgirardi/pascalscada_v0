@@ -52,7 +52,7 @@ type
     procedure SetSecurityCode(AValue: UTF8String);
   public
     function Execute: Boolean; override;
-    function HandlesTarget(Target: TObject): Boolean; override;
+    function HandlesTarget({%H-}Target: TObject): Boolean; override;
   published
     property AuthorizedBy:UTF8String read FAuthorizedBy;
     property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
@@ -77,10 +77,10 @@ type
     procedure CanBeAccessed(a:Boolean); virtual;
 
     //unused procedures
-    procedure SetHMITag(t:TPLCTag);
+    procedure SetHMITag({%H-}t:TPLCTag);
     function  GetHMITag:TPLCTag;
   public
-    function HandlesTarget(Target: TObject): Boolean; override;
+    function HandlesTarget({%H-}Target: TObject): Boolean; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
@@ -92,20 +92,20 @@ type
 
   TPascalSCADALoginAction = class(TPascalSCADAUserManagementAction)
   protected
-    procedure CanBeAccessed(a: Boolean); override;
+    procedure CanBeAccessed({%H-}a: Boolean); override;
   public
-    procedure UpdateTarget(Target: TObject); override;
-    procedure ExecuteTarget(Target: TObject); override;
+    procedure UpdateTarget({%H-}Target: TObject); override;
+    procedure ExecuteTarget({%H-}Target: TObject); override;
   end;
 
   { TPascalSCADALogoutAction }
 
   TPascalSCADALogoutAction = class(TPascalSCADAUserManagementAction)
   protected
-    procedure CanBeAccessed(a: Boolean); override;
+    procedure CanBeAccessed({%H-}a: Boolean); override;
   public
-    procedure UpdateTarget(Target: TObject); override;
-    procedure ExecuteTarget(Target: TObject); override;
+    procedure UpdateTarget({%H-}Target: TObject); override;
+    procedure ExecuteTarget({%H-}Target: TObject); override;
   end;
 
   { TPascalSCADALogin_LogoutAction }
@@ -131,11 +131,11 @@ type
     procedure SetWithoutUserLoggedInImageIndex(const AValue: LongInt);
     procedure UpdateMyState;
   protected
-    procedure CanBeAccessed(a: Boolean); override;
+    procedure CanBeAccessed({%H-}a: Boolean); override;
   public
     constructor Create(AOwner: TComponent); override;
-    procedure UpdateTarget(Target: TObject); override;
-    procedure ExecuteTarget(Target: TObject); override;
+    procedure UpdateTarget({%H-}Target: TObject); override;
+    procedure ExecuteTarget({%H-}Target: TObject); override;
   published
     property Caption:TCaption read GetCurrentCaption;
     property Hint:TTranslateString read GetCurrentHintMessage;
@@ -155,10 +155,10 @@ type
 
   TPascalSCADAManageUsersAction = class(TPascalSCADAUserManagementAction)
   protected
-    procedure CanBeAccessed(a: Boolean); override;
+    procedure CanBeAccessed({%H-}a: Boolean); override;
   public
-    procedure UpdateTarget(Target: TObject); override;
-    procedure ExecuteTarget(Target: TObject); override;
+    procedure UpdateTarget({%H-}Target: TObject); override;
+    procedure ExecuteTarget({%H-}Target: TObject); override;
   end;
 
   { TPascalSCADASecureAction }

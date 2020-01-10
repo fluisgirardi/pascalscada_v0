@@ -23,7 +23,7 @@ type
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     //: @seealso(IHMIInterface.SetHMITag)
-    procedure SetHMITag(t:TPLCTag); virtual;                    //seta um tag
+    procedure SetHMITag({%H-}t:TPLCTag); virtual;                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
     function  GetHMITag:TPLCTag; virtual;
 

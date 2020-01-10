@@ -6,7 +6,7 @@ uses
   Classes, BasicUserManagement;
 
 type
-  TCheckUserAndPasswordEvent = procedure(user, pass:UTF8String; var aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;
+  TCheckUserAndPasswordEvent = procedure(user, pass:UTF8String; out aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;
   TUserStillLoggedEvent      = procedure(var StillLogged:Boolean) of object;
   TGetUserNameAndLogin       = procedure(var UserInfo:UTF8String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
@@ -30,7 +30,7 @@ type
     FCanAccessEvent           :TCanAccessEvent;
     FLogoutEvent              :TLogoutEvent;
   protected
-    function  CheckUserAndPassword(User, Pass:UTF8String; var UserID:Integer; LoginAction:Boolean):Boolean; override;
+    function  CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
 
     function  GetCurrentUserName:UTF8String; override;
     function  GetCurrentUserLogin:UTF8String; override;
@@ -72,7 +72,7 @@ implementation
 uses sysutils;
 
 function TCustomizedUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
-  var UserID: Integer; LoginAction: Boolean): Boolean;
+  out UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
   try
@@ -144,6 +144,7 @@ end;
 
 procedure TCustomizedUserManagement.RegisterSecurityCode(sc: UTF8String);
 begin
+  Inherited RegisterSecurityCode(sc);
   if Assigned(FRegisterSecurityCode) then
     FRegisterSecurityCode(sc);
 end;
