@@ -181,7 +181,7 @@ type
                        ioAcknowledge, ioBusy, ioNACK, ioMemoryParityError,
                        ioGatewayUnavailable, ioDeviceGatewayFailedToRespond,
                        ioReadOnlyProtocol, ioCommPortClosed, ioNullCommPort,
-                       ioConnectPLCFailed, ioAdapterInitFail);
+                       ioConnectPLCFailed, ioAdapterInitFail, ioNullTagBlock);
 
   {$IFDEF PORTUGUES}
   {:

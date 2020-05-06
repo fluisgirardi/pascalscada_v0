@@ -45,6 +45,7 @@ type
     FMin: Double;
     FOrientation: TProgressBarOrientation;
     FTag:TPLCTag;
+    FRefreshPending:Boolean;
 
     procedure SetMax(AValue: Double);
     procedure SetMin(AValue: Double);
@@ -107,7 +108,8 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager, BGRABitmap, BGRABitmapTypes, Forms;
+uses hsstrings, ControlSecurityManager, Math, BGRABitmap, BGRABitmapTypes,
+  Forms;
 
 constructor THMIProgressBar.Create(AOwner: TComponent);
 begin
@@ -127,6 +129,7 @@ end;
 
 procedure THMIProgressBar.RefreshProgress(Data: PtrInt);
 begin
+  FRefreshPending:=false;
   if ([csReading]*ComponentState<>[]) or (FTag=nil) then
     exit;
 
@@ -162,7 +165,7 @@ begin
       FControlArea.RectangleAntialias(FBorderWidth/2,
                                       FBorderWidth/2,
                                       Width-FBorderWidth,
-                                      Height/(FMax-FMin)*(FMax-Progress),
+                                      Height/ifthen((FMax-FMin)*(FMax-Progress)=0,1,(FMax-FMin)*(FMax-Progress)),
                                       ColorToBGRA(FBorderColor),
                                       0,
                                       ColorToBGRA(clSilver));
@@ -175,7 +178,7 @@ begin
       FControlArea.CanvasBGRA.Pen.Width  :=0;
       FControlArea.RectangleAntialias(FBorderWidth/2,
                                       FBorderWidth/2,
-                                      width/(FMax-FMin)*(Progress-FMin),
+                                      width/ifthen((FMax-FMin)*(Progress-FMin)=0,1,(FMax-FMin)*(Progress-FMin)),
                                       height-FBorderWidth,
                                       ColorToBGRA(FBorderColor),
                                       0,
@@ -189,7 +192,7 @@ begin
       FControlArea.CanvasBGRA.Brush.Color:= clDefault;
       FControlArea.RectangleAntialias(FBorderWidth/2,
                                       FBorderWidth/2,
-                                       width/(FMax-FMin)*(FMax-Progress),
+                                       width/ifthen((FMax-FMin)*(FMax-Progress)=0,1,(FMax-FMin)*(FMax-Progress)),
                                        height-FBorderWidth,
                                       ColorToBGRA(FBorderColor),
                                       0,
@@ -203,7 +206,7 @@ begin
       FControlArea.RectangleAntialias(FBorderWidth/2,
                                       FBorderWidth/2,
                                       width-FBorderWidth,
-                                      height/(FMax-FMin)*(Progress-FMin),
+                                      height/ifthen((FMax-FMin)*(Progress-FMin)=0,1,(FMax-FMin)*(Progress-FMin)),
                                       ColorToBGRA(FBorderColor),
                                       0,
                                       ColorToBGRA(FBodycolor));
@@ -279,8 +282,10 @@ end;
 
 procedure THMIProgressBar.TagChangeCallBack(Sender: TObject);
 begin
-  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+  if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) and (FRefreshPending=false) then begin
+    FRefreshPending:=true;
     Application.QueueAsyncCall(@RefreshProgress, 0);
+  end;
 end;
 
 procedure THMIProgressBar.RemoveTagCallBack(Sender: TObject);

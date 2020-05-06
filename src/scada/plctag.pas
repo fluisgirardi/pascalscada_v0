@@ -496,7 +496,12 @@ type
     @param(Offset Cardinal: Tells offset after the address where the values will be written.)
     }
     {$ENDIF}
-    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); overload; virtual; abstract; 
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); overload; virtual; abstract;
+
+    function GetLastAsyncReadStatus : TProtocolIOResult;  virtual;
+    function GetLastAsyncWriteStatus: TProtocolIOResult; virtual;
+    function GetLastSyncReadStatus  : TProtocolIOResult;   virtual;
+    function GetLastSyncWriteStatus : TProtocolIOResult;  virtual;
 
     //: @exclude
     procedure Loaded; override;
@@ -660,7 +665,7 @@ type
     @seealso(TProtocolIOResult)
     }
     {$ENDIF}
-    property LastSyncReadStatus:TProtocolIOResult Read PLastSyncReadCmdResult;
+    property LastSyncReadStatus:TProtocolIOResult Read GetLastSyncReadStatus;
 
     {$IFDEF PORTUGUES}
     {:
@@ -673,7 +678,7 @@ type
     @seealso(TProtocolIOResult)
     }
     {$ENDIF}
-    property LastSyncWriteStatus:TProtocolIOResult Read PLastSyncWriteCmdResult;
+    property LastSyncWriteStatus:TProtocolIOResult Read GetLastSyncWriteStatus;
 
     {$IFDEF PORTUGUES}
     {:
@@ -686,7 +691,7 @@ type
     @seealso(TProtocolIOResult)
     }
     {$ENDIF}
-    property LastASyncReadStatus:TProtocolIOResult Read PLastASyncReadCmdResult;
+    property LastASyncReadStatus:TProtocolIOResult Read GetLastASyncReadStatus;
 
     {$IFDEF PORTUGUES}
     {:
@@ -1061,6 +1066,26 @@ begin
   Result:=-1;
 end;
 
+function TPLCTag.GetLastAsyncReadStatus: TProtocolIOResult;
+begin
+  Result:=PLastASyncReadCmdResult;
+end;
+
+function TPLCTag.GetLastAsyncWriteStatus: TProtocolIOResult;
+begin
+  Result:=PLastASyncWriteCmdResult;
+end;
+
+function TPLCTag.GetLastSyncReadStatus: TProtocolIOResult;
+begin
+  Result:=PLastSyncReadCmdResult;
+end;
+
+function TPLCTag.GetLastSyncWriteStatus: TProtocolIOResult;
+begin
+  Result:=PLastSyncWriteCmdResult;
+end;
+
 procedure TPLCTag.GetNewProtocolTagSize;
 begin
   if PProtocolDriver=nil then begin
@@ -1278,7 +1303,7 @@ begin
   //   ((FProtocolTagType=ptInt64) AND (FTagType=pttInt64)) Or
   //   ((FProtocolTagType=ptQWord) AND (FTagType=pttQWord)) Or
   //   ((FProtocolTagType=ptDouble) AND (FTagType=pttDouble))
-  if pttSize=ttSize then begin
+  if (pttSize=ttSize) or (FProtocolTagType=ptUnknown) then begin
     Result:=Values;
     exit;
   end;

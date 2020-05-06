@@ -50,6 +50,12 @@ type
     PBlock:TPLCBlock;
   protected
     PIndex:Cardinal;
+
+    function GetLastAsyncReadStatus: TProtocolIOResult;  override;
+    function GetLastAsyncWriteStatus: TProtocolIOResult; override;
+    function GetLastSyncReadStatus: TProtocolIOResult;   override;
+    function GetLastSyncWriteStatus: TProtocolIOResult;  override;
+
     procedure SetBlock(blk:TPLCBlock);
     procedure SetIndex(i:Cardinal); virtual;
 
@@ -102,6 +108,11 @@ type
     property MaxValue;
     //: @seealso(TPLCNumber.MinValue)
     property MinValue;
+
+    property LastASyncReadStatus;
+    property LastASyncWriteStatus;
+    property LastSyncReadStatus;
+    property LastSyncWriteStatus;
   end;
 
 implementation
@@ -123,6 +134,38 @@ begin
      PBlock.RemoveAllHandlersFromObject(Self);
   PBlock:=nil;
   inherited Destroy;
+end;
+
+function TPLCBlockElement.GetLastAsyncReadStatus: TProtocolIOResult;
+begin
+  if Assigned(PBlock) then
+    Result:=PBlock.LastASyncReadStatus
+  else
+    Result:=ioNullTagBlock
+end;
+
+function TPLCBlockElement.GetLastAsyncWriteStatus: TProtocolIOResult;
+begin
+  if Assigned(PBlock) then
+    Result:=PBlock.LastASyncWriteStatus
+  else
+    Result:=ioNullTagBlock
+end;
+
+function TPLCBlockElement.GetLastSyncReadStatus: TProtocolIOResult;
+begin
+  if Assigned(PBlock) then
+    Result:=PBlock.LastSyncReadStatus
+  else
+    Result:=ioNullTagBlock;
+end;
+
+function TPLCBlockElement.GetLastSyncWriteStatus: TProtocolIOResult;
+begin
+  if Assigned(PBlock) then
+    Result:=PBlock.LastSyncWriteStatus
+  else
+    Result:=ioNullTagBlock;
 end;
 
 procedure TPLCBlockElement.SetBlock(blk:TPLCBlock);

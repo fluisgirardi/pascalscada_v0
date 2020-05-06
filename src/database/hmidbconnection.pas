@@ -253,12 +253,13 @@ type
   @bold(Uses the ZeosLib project.)
   }
   {$ENDIF}
-
-  { THMIDBConnection }
-
   THMIDBConnection = class(TComponent, IHMIDBConnection)
   private
     FConnectRead:Boolean;
+    FCustomCommitTransaction: TNotifyEvent;
+    FCustomExecSQL: TExecSQLProc;
+    FCustomRollbackTransaction: TNotifyEvent;
+    FCustomStartTransaction: TNotifyEvent;
     FLibraryLocation: String;
     FReadOnly: Boolean;
     FSyncConnection,
@@ -378,6 +379,11 @@ type
     //: See the documentation of TZConnection.ReadOnly of ZeosLib for more information.
     {$ENDIF}
     property ReadOnly:Boolean  read FReadOnly    write SetReadOnly;
+
+    property OnCustomStartTransaction:TNotifyEvent read FCustomStartTransaction write FCustomStartTransaction;
+    property OnCustomCommitTransaction:TNotifyEvent read FCustomCommitTransaction write FCustomCommitTransaction;
+    property OnCustomRollbackTransaction:TNotifyEvent read FCustomRollbackTransaction write FCustomRollbackTransaction;
+    property OnCustomExecSQL:TExecSQLProc read FCustomExecSQL write FCustomExecSQL;
   end;
 
 const
@@ -447,12 +453,13 @@ begin
 
         isASelect:=false;
         sql:=Trim(LowerCase(cmd^.SQLCmd));
-        isASelect:=pos('select',sql)=0;
+        isASelect:=pos('select',sql)=1;
 
-        if Assigned(cmd^.ReturnDataSetCallback) and isASelect then
-          fds:=TFPSBufDataSet.Create(Nil)
-        else
+        if Assigned(cmd^.ReturnDataSetCallback) and isASelect then begin
+          fds:=TFPSBufDataSet.Create(Nil);
+        end else begin
           fds:=nil;
+        end;
 
         if Assigned(fOnExecSQL) then
           try
@@ -675,63 +682,90 @@ end;
 
 procedure THMIDBConnection.StartTransaction;
 begin
-  FCS.Enter;
-  try
-    FASyncConnection.StartTransaction;
-  finally
-    FCS.Leave;
+  if Assigned(FCustomStartTransaction) then
+    FCustomStartTransaction(Self)
+  else begin
+    FCS.Enter;
+    try
+      FASyncConnection.StartTransaction;
+    finally
+      FCS.Leave;
+    end;
   end;
 end;
 
 procedure THMIDBConnection.CommitTransaction;
 begin
-  FCS.Enter;
-  try
-    FASyncConnection.Commit;
-  finally
-    FCS.Leave;
+  if Assigned(FCustomCommitTransaction) then
+    FCustomCommitTransaction(Self)
+  else begin
+    FCS.Enter;
+    try
+      FASyncConnection.Commit;
+    finally
+      FCS.Leave;
+    end;
   end;
 end;
 
 procedure THMIDBConnection.RollBackTransaction;
 begin
-  FCS.Enter;
-  try
-    FASyncConnection.Rollback;
-  finally
-    FCS.Leave;
+  if Assigned(FCustomRollbackTransaction) then
+    FCustomRollbackTransaction(Self)
+  else begin
+    FCS.Enter;
+    try
+      FASyncConnection.Rollback;
+    finally
+      FCS.Leave;
+    end;
   end;
 end;
 
 procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd: Utf8String;
   outputdataset: TFPSBufDataSet; out Error: Boolean);
+var
+  ts: TStringStream;
+  msg: String;
 begin
-  FCS.Enter;
-  try
-
-    if FASyncConnection.ReadOnly then begin
-      Error:=true;
-      exit;
-    end;
-
+  if Assigned(FCustomExecSQL) then
+    FCustomExecSQL(sqlcmd,outputdataset,Error)
+  else begin
+    FCS.Enter;
     try
-      Error:=false;
-      if outputdataset=nil then begin
-        if not FASyncConnection.ExecuteDirect(sqlcmd) then begin
-          Error := true;
-        end;
-      end else begin
-        FASyncQuery.SQL.Clear;
-        FASyncQuery.SQL.Add(sqlcmd);
-        FASyncQuery.Open;
-        outputdataset.CopyFromDataset(FASyncQuery);
-        FASyncQuery.Close;
+
+      if FASyncConnection.ReadOnly then begin
+        Error:=true;
+        exit;
       end;
-    except
-      Error:=true;
+
+      try
+        Error:=false;
+        if outputdataset=nil then begin
+          if not FASyncConnection.ExecuteDirect(sqlcmd) then begin
+            Error := true;
+          end;
+        end else begin
+          FASyncQuery.SQL.Clear;
+          FASyncQuery.SQL.Add(sqlcmd);
+          FASyncQuery.Open;
+          outputdataset.CopyFromDataset(FASyncQuery);
+          FASyncQuery.Close;
+        end;
+      except
+        on e:Exception do begin
+          msg:=e.Message;
+          writeln(e.Message);
+          WriteLn(sqlcmd);
+          //ts:=TStringStream.Create(sqlcmd);
+          //ts.SaveToFile('/tmp/teste.txt');
+          //ts.Free;
+          Error:=true;
+        end;
+      end;
+    finally
+      FCS.Leave;
     end;
-  finally
-    FCS.Leave;
   end;
 end;
 

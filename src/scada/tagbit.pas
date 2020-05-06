@@ -23,7 +23,7 @@ unit TagBit;
 interface
 
 uses
-  SysUtils, Classes, PLCNumber, ProtocolTypes, variants;
+  SysUtils, Classes, PLCNumber, ProtocolTypes, variants, tag;
 
 type
 
@@ -96,6 +96,11 @@ type
     procedure SetValueRaw(bitValue:Double); override;
     //: @seealso(TPLCNumber.GetValueRaw)
     function  GetValueRaw:Double; override;
+
+    function GetLastAsyncReadStatus: TProtocolIOResult;  override;
+    function GetLastAsyncWriteStatus: TProtocolIOResult; override;
+    function GetLastSyncReadStatus: TProtocolIOResult;   override;
+    function GetLastSyncWriteStatus: TProtocolIOResult;  override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -139,6 +144,11 @@ type
     property MaxValue;
     //: @seealso(TPLCNumber.MinValue)
     property MinValue;
+
+    property LastASyncReadStatus;
+    property LastASyncWriteStatus;
+    property LastSyncReadStatus;
+    property LastSyncWriteStatus;
   end;
 
 implementation
@@ -196,6 +206,38 @@ begin
       Result := GetBits((PNumber as ITagNumeric).Value);
   end else
     Result := PValueRaw;
+end;
+
+function TTagBit.GetLastAsyncReadStatus: TProtocolIOResult;
+begin
+  if Assigned(PNumber) then
+    Result:=PNumber.LastASyncReadStatus
+  else
+    Result:=ioNullTagBlock
+end;
+
+function TTagBit.GetLastAsyncWriteStatus: TProtocolIOResult;
+begin
+  if Assigned(PNumber) then
+    Result:=PNumber.LastASyncWriteStatus
+  else
+    Result:=ioNullTagBlock
+end;
+
+function TTagBit.GetLastSyncReadStatus: TProtocolIOResult;
+begin
+  if Assigned(PNumber) then
+    Result:=PNumber.LastSyncReadStatus
+  else
+    Result:=ioNullTagBlock;
+end;
+
+function TTagBit.GetLastSyncWriteStatus: TProtocolIOResult;
+begin
+  if Assigned(PNumber) then
+    Result:=PNumber.LastSyncWriteStatus
+  else
+    Result:=ioNullTagBlock;
 end;
 
 function  TTagBit.GetVariantValue:Variant;

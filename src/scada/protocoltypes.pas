@@ -66,7 +66,8 @@ type
   @value(ptDouble    Float, 64 bits sized.)
   }
   {$ENDIF}
-  TProtocolTagType = (ptBit,
+  TProtocolTagType = (ptUnknown,
+                      ptBit,
                       ptShortInt,
                       ptByte,
                       ptSmallInt,
@@ -402,7 +403,8 @@ type
 
 const
 
-  ProtocolTagTypeSizeInBits:array[low(TProtocolTagType)..high(TProtocolTagType)] of integer = (1,
+  ProtocolTagTypeSizeInBits:array[low(TProtocolTagType)..high(TProtocolTagType)] of integer = (0,
+                                                                                               1,
                                                                                                8,
                                                                                                8,
                                                                                                16,

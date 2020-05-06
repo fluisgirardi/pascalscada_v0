@@ -41,7 +41,7 @@ type
   }
   {$ENDIF}
   THMIAnimation = class(TCustomImage, IHMIInterface)
-  private
+  protected
     FAnimationZones:TGraphicZones;
     FTag:TPLCTag;
     FIsEnabled,
@@ -225,7 +225,7 @@ end;
 
 procedure THMIAnimation.RefreshAnimation(Data: PtrInt);
 begin
-   if [csReading]*ComponentState=[] then begin
+   if [csReading,csDestroying]*ComponentState=[] then begin
       if FTag=nil then begin
         ShowDefaultZone;
       end else begin
@@ -258,7 +258,7 @@ end;
 
 procedure THMIAnimation.ZoneChange(Sender:TObject);
 begin
-   if [csReading]*ComponentState<>[] then exit;
+   if [csReading,csDestroying]*ComponentState<>[] then exit;
 
    RefreshAnimation(0);
 end;
@@ -425,7 +425,7 @@ end;
 
 procedure THMIAnimation.TagChangeCallBack(Sender: TObject);
 begin
-  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+  if ((Application.Flags*[AppDoNotCallAsyncQueue])=[]) and (([csDestroying]*ComponentState)=[]) then
     Application.QueueAsyncCall(@RefreshAnimation,0);
 end;
 

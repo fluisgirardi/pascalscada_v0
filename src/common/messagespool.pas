@@ -225,6 +225,8 @@ type
     }
     {$ENDIF}
     procedure PostMessage(MsgID:Cardinal; wParam, lParam:Pointer; Priority:Boolean);
+
+    function GetMsgCount:Integer;
   end;
 
 
@@ -425,6 +427,16 @@ begin
   //libera a fila.
   //releases the mutex.
   FCs.Release;
+end;
+
+function TMessageSpool.GetMsgCount: Integer;
+begin
+  try
+    FCs.Enter;
+    Result:=FMsgCount;
+  finally
+    FCs.Leave;
+  end;
 end;
 
 end.

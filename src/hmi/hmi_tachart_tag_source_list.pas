@@ -82,7 +82,7 @@ end;
 procedure THMITaChartTagValuesSource.ClearCaches;
 begin
   //FExtent := EmptyExtent;
-  FExtentIsValid := true;
+  //FExtentIsValid := true;
   FValuesTotal := 0;
   FValuesTotalIsValid := true;
 end;
