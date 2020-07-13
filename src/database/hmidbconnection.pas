@@ -12,15 +12,19 @@
 }
 {$ENDIF}
 {$H+}
+{$MODEsWITCH TYPEHELPERS}
 unit HMIDBConnection;
 
 interface
 
 uses
-  Classes, sysutils, ZConnection, MessageSpool, CrossEvent,
-  syncobjs, ZDataset, psbufdataset, fgl, crossthreads;
+  Classes, sysutils, SQLDB, SQLite3Conn, PQConnection, mysql40conn,
+  MessageSpool, CrossEvent, syncobjs, psbufdataset, fgl, crossthreads;
 
 type
+  TSQLConnectorHelper = class helper for TSQLConnector
+    function ExecuteDirect(sqlStmt:String):Boolean;
+  end;
 
   THMIDBConnectionStatementList = specialize TFPGList<UTF8String>;
 
@@ -58,7 +62,7 @@ type
     {$ELSE}
     //: Returns the TZConnection to be used by property editors.
     {$ENDIF}
-    function GetSyncConnection:TZConnection;
+    function GetSyncConnection:TSQLConnector;
 
     {$IFDEF PORTUGUES}
     {:
@@ -263,12 +267,13 @@ type
     FLibraryLocation: String;
     FReadOnly: Boolean;
     FSyncConnection,
-    FASyncConnection:TZConnection;
-    FASyncQuery:TZQuery;
+    FASyncConnection:TSQLConnector;
+    FASyncQuery:TSQLQuery;
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
+    function GetPort: LongInt;
     function  getProperties: TStrings;
-    function  GetSyncConnection:TZConnection;
+    function  GetSyncConnection:TSQLConnector;
     procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean);
     procedure SetLibraryLocation(AValue: String);
     procedure SetProperties(AValue: TStrings);
@@ -276,7 +281,6 @@ type
   protected
     FProtocol: string;
     FHostName: string;
-    FPort: LongInt;
     FDatabase: string;
     FUser: string;
     FPassword: string;
@@ -336,7 +340,7 @@ type
     {$ELSE}
     //: Port number to connect on database (TCP/UDP connections)
     {$ENDIF}
-    property Port:     LongInt read FPort        write SetPort default 0;
+    property Port:     LongInt read GetPort      write SetPort stored false default 0 ;
 
     {$IFDEF PORTUGUES}
     //: Lista de propriedades da conexão
@@ -390,7 +394,53 @@ const
   SQLCommandMSG        = 0;
   StatementsCommandMSG = 1;
 
+  SupportedZConnProt:array[0..15] of string = ('firebird',
+                                               'firebird-1.0',
+                                               'firebird-1.5',
+                                               'firebird-2.0',
+                                               'firebird-2.1',
+                                               'firebird-2.5',
+                                               'firebird-3.0',
+                                               'mysql',
+                                               'mysql-4.1',
+                                               'mysql-5',
+                                               'postgresql',
+                                               'postgresql-7',
+                                               'postgresql-8',
+                                               'postgresql-9',
+                                               'sqlite',
+                                               'sqlite-3');
+
+  ZConnToSQLDBProtocolMap:Array[0..15] of string = ('Firebird',
+                                                    'Firebird',
+                                                    'Firebird',
+                                                    'Firebird',
+                                                    'Firebird',
+                                                    'Firebird',
+                                                    'Firebird',
+                                                    'MySQL 4.0',
+                                                    'MySQL 4.1',
+                                                    'MySQL 5.0',
+                                                    'PostgreSQL',
+                                                    'PostgreSQL',
+                                                    'PostgreSQL',
+                                                    'PostgreSQL',
+                                                    'SQLite3',
+                                                    'SQLite3');
+
 implementation
+
+{ TSQLConnectorHelper }
+
+function TSQLConnectorHelper.ExecuteDirect(sqlStmt: String): Boolean;
+begin
+  Result:=false;
+  try
+    self.ExecuteDirect(sqlStmt);
+    Result:=true;
+  except
+  end;
+end;
 
 //##############################################################################
 //THREAD DE EXECUÇÃO DOS COMANDOS SQL THMIDBCONNECTION
@@ -615,10 +665,10 @@ constructor THMIDBConnection.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FCS:=TCriticalSection.Create;
-  FSyncConnection:=TZConnection.Create(nil);
-  FASyncConnection:=TZConnection.Create(nil);
-  FASyncQuery:=TZQuery.Create(FASyncConnection);
-  FASyncQuery.Connection:=FASyncConnection;
+  FSyncConnection:=TSQLConnector.Create(nil);
+  FASyncConnection:=TSQLConnector.Create(nil);
+  FASyncQuery:=TSQLQuery.Create(FASyncConnection);
+  FASyncQuery.SQLConnection:=FASyncConnection;
   FProperties:=TStringList.Create;
 
   FSQLSpooler:=TProcessSQLCommandThread.Create(true,@ExecuteSQLCommand,
@@ -655,7 +705,7 @@ begin
   Connected:=FConnectRead;
 end;
 
-function THMIDBConnection.GetSyncConnection:TZConnection;
+function THMIDBConnection.GetSyncConnection:TSQLConnector;
 begin
   Result:=FSyncConnection;
 end;
@@ -663,6 +713,11 @@ end;
 function THMIDBConnection.getProperties: TStrings;
 begin
   Result:=FProperties;
+end;
+
+function THMIDBConnection.GetPort: LongInt;
+begin
+  result := StrToIntDef(FSyncConnection.Params.Values['Port'],0);
 end;
 
 procedure THMIDBConnection.ExecSQL(sql: UTF8String;
@@ -701,7 +756,7 @@ begin
   else begin
     FCS.Enter;
     try
-      FASyncConnection.Commit;
+      FASyncConnection.Transaction.Commit;
     finally
       FCS.Leave;
     end;
@@ -715,7 +770,7 @@ begin
   else begin
     FCS.Enter;
     try
-      FASyncConnection.Rollback;
+      FASyncConnection.Transaction.Rollback;
     finally
       FCS.Leave;
     end;
@@ -734,7 +789,7 @@ begin
     FCS.Enter;
     try
 
-      if FASyncConnection.ReadOnly then begin
+      if FASyncConnection.Tag=1 then begin
         Error:=true;
         exit;
       end;
@@ -771,22 +826,22 @@ end;
 
 procedure THMIDBConnection.SetLibraryLocation(AValue: String);
 begin
-  FSyncConnection.LibraryLocation:=AValue;
-  FCS.Enter;
-  try
-    FASyncConnection.LibraryLocation:=AValue;
-  finally
-    FCS.Leave;
-  end;
-  FHostName:=FSyncConnection.LibraryLocation;
+  //FSyncConnection.LibraryLocation:=AValue;
+  //FCS.Enter;
+  //try
+  //  FASyncConnection.LibraryLocation:=AValue;
+  //finally
+  //  FCS.Leave;
+  //end;
+  //FHostName:=FSyncConnection.LibraryLocation;
 end;
 
 procedure THMIDBConnection.SetProperties(AValue: TStrings);
 begin
-  FSyncConnection.Properties.Assign(AValue);
+  FSyncConnection.Params.Assign(AValue);
   FCS.Enter;
   try
-    FASyncConnection.Properties.Assign(AValue);
+    FASyncConnection.Params.Assign(AValue);
   finally
     FCS.Leave;
   end;
@@ -795,14 +850,14 @@ end;
 
 procedure THMIDBConnection.SetReadOnly(AValue: Boolean);
 begin
-  FSyncConnection.ReadOnly:=AValue;
+  FSyncConnection.Tag:=AValue.ToInteger;
   FCS.Enter;
   try
-    FASyncConnection.ReadOnly:=AValue;
+    FASyncConnection.Tag:=AValue.ToInteger;
   finally
     FCS.Leave;
   end;
-  FReadOnly:=FSyncConnection.ReadOnly;
+  FReadOnly:=(FSyncConnection.Tag=(true.ToInteger));
 end;
 
 function  THMIDBConnection.GetConnected:Boolean;
@@ -812,14 +867,15 @@ end;
 
 procedure THMIDBConnection.SetProtocol(x: String);
 begin
-  FSyncConnection.Protocol:=x;
+  //SupportedZConnProt.;
+  FSyncConnection.ConnectorType:=x;
   FCS.Enter;
   try
-    FASyncConnection.Protocol:=x;
+    FASyncConnection.ConnectorType:=x;
   finally
     FCS.Leave;
   end;
-  FProtocol:=FSyncConnection.Protocol;
+  FProtocol:=FSyncConnection.ConnectorType;
 end;
 
 procedure THMIDBConnection.SetHostName(x: String);
@@ -836,38 +892,42 @@ end;
 
 procedure THMIDBConnection.SetPort(x: LongInt);
 begin
-  FSyncConnection.Port:=x;
   FCS.Enter;
   try
-    FASyncConnection.Port:=x;
+    if x<>0 then begin
+      FSyncConnection.Params.Values['Port'] :=IntToStr(x);
+      FaSyncConnection.Params.Values['Port']:=IntToStr(x);
+    end else begin
+      with FSyncConnection.params  do if IndexOfName('Port') > -1 then Delete(IndexOfName('Port'));
+      with FASyncConnection.params do if IndexOfName('Port') > -1 then Delete(IndexOfName('Port'));
+    end;
   finally
     FCS.Leave;
   end;
-  FPort:=FSyncConnection.Port;
 end;
 
 procedure THMIDBConnection.SetDatabase(x: String);
 begin
-  FSyncConnection.Database:=x;
+  FSyncConnection.DatabaseName:=x;
   FCS.Enter;
   try
-    FASyncConnection.Database:=x;
+    FASyncConnection.DatabaseName:=x;
   finally
     FCS.Leave;
   end;
-  FDatabase:=FSyncConnection.Database;
+  FDatabase:=FSyncConnection.DatabaseName;
 end;
 
 procedure THMIDBConnection.SetUser(x: String);
 begin
-  FSyncConnection.User:=x;
+  FSyncConnection.Role:=x;
   FCS.Enter;
   try
-    FASyncConnection.User:=x;
+    FASyncConnection.Role:=x;
   finally
     FCS.Leave;
   end;
-  FUser:=FSyncConnection.User;
+  FUser:=FSyncConnection.Role;
 end;
 
 procedure THMIDBConnection.SetPassword(x: String);
@@ -884,14 +944,15 @@ end;
 
 procedure THMIDBConnection.SetCatalog(x: String);
 begin
-  FSyncConnection.Catalog:=x;
-  FCS.Enter;
-  try
-    FASyncConnection.Catalog:=x;
-  finally
-    FCS.Leave;
-  end;
-  FCatalog:=FSyncConnection.Catalog;
+  FCatalog:=x;
+  //FSyncConnection.Catalog:=x;
+  //FCS.Enter;
+  //try
+  //  FASyncConnection.Catalog:=x;
+  //finally
+  //  FCS.Leave;
+  //end;
+  //FCatalog:=FSyncConnection.Catalog;
 end;
 
 procedure THMIDBConnection.SetConnected(x:Boolean);

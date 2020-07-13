@@ -35,8 +35,6 @@ begin
   RegisterComponents(strFPCPallete,       [TFPSBufDataSet]);
 
   RegisterPropertyEditor(TypeInfo(AnsiString), THMIDBConnection, 'Protocol', THMIDBProtocolPropertyEditor);
-  RegisterPropertyEditor(TypeInfo(AnsiString), THMIDBConnection, 'Database', THMIDBDatabasePropertyEditor);
-  RegisterPropertyEditor(TypeInfo(AnsiString), THMIDBConnection, 'Catalog',  THMIDBCatalogPropertyEditor);
 end;
 
 end.
