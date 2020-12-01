@@ -175,8 +175,8 @@ end;
 
 destructor TPLCBlock.Destroy;
 begin
-   inherited Destroy;
-   SetLength(PValues,0);
+  SetLength(PValues,0);
+  inherited Destroy;
 end;
 
 function TPLCBlock.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
@@ -204,9 +204,14 @@ begin
       begin
         PValueTimeStamp := ValuesTimeStamp;
         if LastResult in [ioOk, ioNullDriver] then begin
-          for c := 0 to High(TagValues) do begin
-            notify := notify or (PValues[c+Offset]<>TagValues[c]) or (IsNan(TagValues[c]) and (not IsNaN(PValues[c+Offset])));
-            PValues[c+Offset]:=TagValues[c];
+          for c := low(TagValues) to High(TagValues) do begin
+            if (c+Offset<Length(PValues)) then begin
+              notify := notify or (PValues[c+Offset]<>TagValues[c]) or (IsNan(TagValues[c]) and (not IsNaN(PValues[c+Offset])));
+              PValues[c+Offset]:=TagValues[c]
+            end else begin
+              writeln({$I %FILE%},' at line ',{$I %LINE%},' (',{$I %CurrentRoutine%} ,'): Please fix-me: ',ClassName,'(',Name,') PValuesLen=',Length(PValues),' offset=',Offset,' TagValues Len=',Length(TagValues));
+              break;
+            end;
           end;
           if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then begin
             IncCommReadOK(1);
@@ -279,8 +284,9 @@ end;
 
 function  TPLCBlock.GetValue(Index:LongInt):Double;
 begin
-   if ((index<0) or (Index>High(PValues))) then
-     raise Exception.Create(SoutOfBounds);
+   if ((index<0) or (Index>High(PValues))) then begin
+     raise Exception.Create(Format(SoutOfBounds2,[ClassName, Name, Index,Length(PValues)]));
+   end;
    Result := PValues[Index];
 end;
 

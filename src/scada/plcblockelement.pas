@@ -46,7 +46,7 @@ type
   }
   {$ENDIF}
   TPLCBlockElement = class(TPLCNumberMappable, ITagInterface, ITagNumeric)
-  private
+  protected
     PBlock:TPLCBlock;
   protected
     PIndex:Cardinal;

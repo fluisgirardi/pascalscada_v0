@@ -36,16 +36,6 @@ type
     procedure SetInput(value:Double);
     function  GetOutput:Double;
     procedure SetOutput(value:Double);
-    procedure DoExceptionIndexOut(index:LongInt);
-    function  GetProperty(index:LongInt):Double;
-    procedure SetProperty(index:LongInt; Value:Double);
-  protected
-    {$IFDEF PORTUGUES}
-    //: Array que armazena o valor das propriedades;
-    {$ELSE}
-    //: Store the values of all properties.
-    {$ENDIF}
-    FProperts:array of Double;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -115,13 +105,6 @@ type
     }
     {$ENDIF}
     function SetOutGetIn(Sender:TComponent; Output:Double):Double; virtual;
-
-    {$IFDEF PORTUGUES}
-    //: Retorna uma propriedade da escala da array de propriedades.
-    {$ELSE}
-    //: Returns each property of the scale processor.
-    {$ENDIF}
-    property Propriedade[index:LongInt]:Double read GetProperty write SetProperty;
   published
 
     {$IFDEF PORTUGUES}
@@ -562,14 +545,12 @@ end;
 constructor TScaleProcessor.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  SetLength(FProperts,8);
 end;
 
 destructor TScaleProcessor.Destroy;
 var
   c:LongInt;
 begin
-  SetLength(FProperts,0);
   for c:=0 to High(FQueueItems) do
     TScaleQueueItem(FQueueItems[c]).RemoveScaleProcessor;
   SetLength(FQueueItems,0);
@@ -627,12 +608,6 @@ begin
   Result := Output;
 end;
 
-function  TScaleProcessor.GetProperty(index:LongInt):Double;
-begin
-  DoExceptionIndexOut(index);
-  Result := FProperts[index];
-end;
-
 procedure TScaleProcessor.SetInput(value:Double);
 begin
   FValueIn := value;
@@ -647,18 +622,5 @@ function  TScaleProcessor.GetOutput:Double;
 begin
   Result := SetInGetOut(self, FValueIn);
 end;
-
-procedure TScaleProcessor.SetProperty(index:LongInt; Value:Double);
-begin
-  DoExceptionIndexOut(index);
-  FProperts[index] := Value;
-end;
-
-procedure TScaleProcessor.DoExceptionIndexOut(index:LongInt);
-begin
-  if (index<0) or (index>=Length(FProperts)) then
-    raise Exception.Create(SoutOfBounds);
-end;
-
 
 end.

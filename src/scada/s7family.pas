@@ -854,9 +854,9 @@ destructor TSiemensProtocolFamily.Destroy;
 var
   c: Integer;
 begin
-  inherited Destroy;
   for c:=0 to High(FPLCs) do
     DeletePLC(c);
+  inherited Destroy;
 end;
 
 function  TSiemensProtocolFamily.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;

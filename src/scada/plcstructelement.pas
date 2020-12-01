@@ -38,7 +38,7 @@ type
 
   TPLCStructItem = class(TPLCBlockElement, ITagInterface, ITagNumeric)
   private
-    PBlock:TPLCStruct;
+    function GetBlock: TPLCStruct;
     function GetMySize(newType: TTagType): Integer;
   protected
     procedure SetBlock(blk:TPLCStruct);
@@ -60,8 +60,6 @@ type
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
-    //: @exclude
-    destructor Destroy; override;
   published
     //: @seealso(TPLCTag.TagType);
     property TagType;
@@ -77,7 +75,7 @@ type
     {$ELSE}
     //: Structure tag which the item belongs.
     {$ENDIF}
-    property PLCBlock:TPLCStruct read PBlock write SetBlock;
+    property PLCBlock:TPLCStruct read GetBlock write SetBlock;
   end;
 
 implementation
@@ -89,14 +87,6 @@ begin
   inherited Create(AOwner);
   FProtocolTagType:=ptByte;
   FProtocolWordSize:=8;
-end;
-
-destructor TPLCStructItem.Destroy;
-begin
-  if Assigned(PBlock) then
-    PBlock.RemoveAllHandlersFromObject(Self);
-  PBlock:=nil;
-  inherited Destroy;
 end;
 
 procedure TPLCStructItem.TagChangeCallback(Sender:TObject);
@@ -238,6 +228,13 @@ begin
       raise Exception.Create(SItemOutOfStructure);
 
   inherited SetIndex(i);
+end;
+
+function TPLCStructItem.GetBlock: TPLCStruct;
+begin
+  Result:=nil;
+  if assigned(PBlock) then
+    Result:=PBlock as TPLCStruct;
 end;
 
 function TPLCStructItem.GetMySize(newType:TTagType):Integer;

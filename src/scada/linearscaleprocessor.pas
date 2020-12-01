@@ -49,6 +49,14 @@ type
     procedure SetPLCMin(v:double);
     procedure SetPLCMax(v:double);
   protected
+    FSysMin,
+    FSysMax,
+    FRawMin,
+    FRawMax,
+    FSysMinLoaded,
+    FSysMaxLoaded,
+    FRawMinLoaded,
+    FRawMaxLoaded:Double;
     //: @exclude
     procedure Loaded; override;
   public
@@ -125,81 +133,92 @@ uses hsstrings;
 constructor TLinearScaleProcessor.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  if csDesigning in ComponentState then begin
-    FProperts[0] := 0;
-    FProperts[1] := 100;
-    FProperts[2] := 0;
-    FProperts[3] := 32000;
-  end else begin
-    FProperts[0] := 0;
-    FProperts[1] := 0;
-    FProperts[2] := 0;
-    FProperts[3] := 0;
-  end;
+  FSysMin := 0;
+  FSysMax := 100;
+  FRawMin := 0;
+  FRawMax := 32000;
 end;
 
 function TLinearScaleProcessor.GetSysMin:Double;
 begin
-  Result := FProperts[0];
+  Result := FSysMin;
 end;
 
 function TLinearScaleProcessor.GetSysMax:Double;
 begin
-  Result := FProperts[1];
+  Result := FSysMax;
 end;
 
 function TLinearScaleProcessor.GetPLCMin:Double;
 begin
-  Result := FProperts[2];
+  Result := FRawMin;
 end;
 
 function TLinearScaleProcessor.GetPLCMax:Double;
 begin
-  Result := FProperts[3];
+  Result := FRawMax;
 end;
 
 procedure TLinearScaleProcessor.SetSysMin(v:double);
 begin
-  FProperts[0] := v;
+  if [csLoading,csReading]*ComponentState=[] then
+    FSysMin := v
+  else
+    FSysMinLoaded := v;
 end;
 
 procedure TLinearScaleProcessor.SetSysMax(v:double);
 begin
-  FProperts[1] := v;
+  if [csLoading,csReading]*ComponentState=[] then
+    FSysMax := v
+  else
+    FSysMaxLoaded := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMin(v:double);
 begin
-  FProperts[2] := v;
+  if [csLoading,csReading]*ComponentState=[] then
+    FRawMin := v
+  else
+    FRawMinLoaded := v;
 end;
 
 procedure TLinearScaleProcessor.SetPLCMax(v:double);
 begin
-  FProperts[3] := v;
+  if [csLoading,csReading]*ComponentState=[] then
+    FRawMax := v
+  else
+    FRawMaxLoaded := v;
 end;
 
 function  TLinearScaleProcessor.SetInGetOut(Sender:TComponent; Entrada:Double):Double;
 var
   divisor:Double;
 begin
-  divisor := (FProperts[3]-FProperts[2]);
+  divisor := (FRawMax-FRawMin);
   if divisor=0 then divisor:=1;
-  Result := (Entrada-FProperts[2])*(FProperts[1]-FProperts[0])/divisor+FProperts[0];
+  Result := (Entrada-FRawMin)*(FSysMax-FSysMin)/divisor+FSysMin;
 end;
 
 function TLinearScaleProcessor.SetOutGetIn(Sender:TComponent; Saida:Double):Double;
 var
   divisor:Double;
 begin
-  divisor := (FProperts[1]-FProperts[0]);
+  divisor := (FSysMax-FSysMin);
   if divisor=0 then divisor:=1;
-  Result := (Saida-FProperts[0])*(FProperts[3]-FProperts[2])/divisor+FProperts[2];
+  Result := (Saida-FSysMin)*(FRawMax-FRawMin)/divisor+FRawMin;
 end;
 
 procedure TLinearScaleProcessor.Loaded;
 begin
   inherited Loaded;
-  if (FProperts[0]=FProperts[1]) or (FProperts[2]=FProperts[3]) then
+
+  FSysMin := FSysMinLoaded;
+  FSysMax := FSysMaxLoaded;
+  FRawMin := FRawMinLoaded;
+  FRawMax := FRawMaxLoaded;
+
+  if (FSysMin=FSysMax) or (FRawMin=FRawMax) then
     raise Exception.Create(SinvalidValue);
 end;
 
