@@ -57,6 +57,7 @@ resourcestring
   STagAlreadyRegiteredWithThisDriver = 'Este Tag já esta registrado com este driver!'; //ok
   SerrorInitializingWinsock = 'Falha inicializando WinSock!';  //ok
   SoutOfBounds = 'Fora dos limites!'; //ok
+  SoutOfBounds2 = '%s(%s) Index %d Out of bounds(2)!'; //ok
   SimpossibleToChangeWhenActive = 'Impossível mudar propriedades de comunicação quando ativo!'; //ok
   SimpossibleToRemoveWhenBusy = 'Impossível remover conexão enquanto ela estiver em uso!';      //ok
   SincrementMustBeGreaterThanZero = 'Incremento deve ser um valor maior que zero!'; //ok
@@ -200,6 +201,7 @@ resourcestring
   STagAlreadyRegiteredWithThisDriver = 'This Tag already linked with this protocol driver!'; //ok
   SerrorInitializingWinsock = 'Error initializing the WinSock!';  //ok
   SoutOfBounds = 'Out of bounds!'; //ok
+  SoutOfBounds2 = '%s(%s) Index %d Out of bounds(2)!'; //ok
   SimpossibleToChangeWhenActive = 'Cannot change the communication port properties while it''s active!'; //ok
   SimpossibleToRemoveWhenBusy = 'Cannot remove the the connection while it''s being used!';      //ok
   SincrementMustBeGreaterThanZero = 'The increment must be a value greater than zero!'; //ok
