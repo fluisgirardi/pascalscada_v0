@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="11"/>
+    <BuildModes Active="Default"/>
+    <Units Count="3">
+      <Unit0>
+        <Filename Value="enumserial.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="umain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="15"/>
+        <CursorPos X="42" Y="48"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="263"/>
+        <CursorPos Y="288"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit2>
+    </Units>
+    <JumpHistory Count="9" HistoryIndex="8">
+      <Position1>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="63" Column="15" TopLine="42"/>
+      </Position1>
+      <Position2>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="288" TopLine="270"/>
+      </Position2>
+      <Position3>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="63" Column="15" TopLine="42"/>
+      </Position3>
+      <Position4>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="288" Column="4" TopLine="259"/>
+      </Position4>
+      <Position5>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="288" TopLine="259"/>
+      </Position5>
+      <Position6>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="289" TopLine="259"/>
+      </Position6>
+      <Position7>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="294" TopLine="260"/>
+      </Position7>
+      <Position8>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="295" TopLine="261"/>
+      </Position8>
+      <Position9>
+        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/scada_dsng/scadapropeditor.pas"/>
+        <Caret Line="288" TopLine="263"/>
+      </Position9>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
