@@ -493,7 +493,7 @@ end;
 function TControlSecurityManager.CheckIfUserIsAllowed(sc: UTF8String;
   RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean;
 begin
-  Result:=false;
+  Result:=(Trim(sc)='');
   if FUserManagement<>nil then
     Result:=TBasicUserManagement(FUserManagement).CheckIfUserIsAllowed(sc, RequireUserLogin, userlogin);
 end;
