@@ -209,7 +209,9 @@ begin
               notify := notify or (PValues[c+Offset]<>TagValues[c]) or (IsNan(TagValues[c]) and (not IsNaN(PValues[c+Offset])));
               PValues[c+Offset]:=TagValues[c]
             end else begin
+              {$IFNDEF WINDOWS}
               writeln({$I %FILE%},' at line ',{$I %LINE%},' (',{$I %CurrentRoutine%} ,'): Please fix-me: ',ClassName,'(',Name,') PValuesLen=',Length(PValues),' offset=',Offset,' TagValues Len=',Length(TagValues));
+              {$ENDIF}
               break;
             end;
           end;

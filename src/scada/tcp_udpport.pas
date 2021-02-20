@@ -156,6 +156,8 @@ type
     destructor  Destroy; override;
 
     function ReallyActive: Boolean; override;
+
+    class function ValidIPv4(aIPv4:String):Boolean;
   published
     {$IFDEF PORTUGUES}
     //: Nome ou endereço do servidor onde se deseja conectar.
@@ -453,6 +455,31 @@ begin
   {$ENDIF}
 end;
 
+class function TTCP_UDPPort.ValidIPv4(aIPv4: String): Boolean;
+var
+  ip: TStringArray;
+  i, ZeroCount, FFCount: Integer;
+  octeto: Longint;
+
+begin
+  ip:=ExplodeString('.',aIPv4);
+  if Length(ip)<>4 then
+    exit(false);
+
+  ZeroCount:=0;
+  FFCount:=0;
+  for i:=0 to 3 do begin
+    if TryStrToInt(ip[i],octeto)=false then exit(false);
+    if not (octeto in [0..255]) then exit(false);
+    if ((i=0) or (i=3)) and ((octeto=0) or (octeto=255)) then exit(false);
+    if octeto=0   then ZeroCount:=ZeroCount + 1;
+    if octeto=255 then FFCount  :=FFCount   + 1;
+  end;
+  if ZeroCount=4 then exit(false);
+  if FFCount=4   then exit(false);
+  Result:=true;
+end;
+
 procedure TTCP_UDPPort.reconnectSocket(var Ok: Boolean);
 begin
   CloseMySocket(Ok);
@@ -465,13 +492,6 @@ begin
 end;
 
 procedure TTCP_UDPPort.SetHostname(target:Ansistring);
-var
-  ip: TStringArray;
-  i, ZeroCount, FFCount: Integer;
-  octeto: Longint;
-
-label
-  err;
 
 begin
   DoExceptionInActive;
@@ -483,29 +503,13 @@ begin
     exit;
   end;
 
-  if FHostName<>target then begin
-    ip:=ExplodeString('.',target);
-    if Length(ip)<>4 then
-      goto err;
-
-    ZeroCount:=0;
-    FFCount:=0;
-    for i:=0 to 3 do begin
-      if TryStrToInt(ip[i],octeto)=false then goto err;
-      if not (octeto in [0..255]) then goto err;
-      if ((i=0) or (i=3)) and ((octeto=0) or (octeto=255)) then goto err;
-      if octeto=0   then ZeroCount:=ZeroCount + 1;
-      if octeto=255 then FFCount  :=FFCount   + 1;
-    end;
-    if ZeroCount=4 then goto err;
-    if FFCount=4   then goto err;
-
-    FHostName:=target;
-    exit;
+  if (FHostName<>target) then begin
+    if ValidIPv4(target) then begin
+      FHostName:=target;
+      exit;
+    end else
+      raise Exception.Create(Format('The address "%s" is not a valid IPv4 address',[target]));
   end;
-
-err:
-  raise Exception.Create(Format('The address "%s" is not a valid IPv4 address',[target]));
 end;
 
 procedure TTCP_UDPPort.SetPortNumber(pn:LongInt);

@@ -159,6 +159,7 @@ type
   @value(ioTimeout                Communication timeout.)
   @value(ioIllegalFunction        Invalid IO function.)
   @value(ioIllegalRegAddress      Invalid memory address.)
+  @value(ioIllegalRegSize         Invalid memory size.)
   @value(ioIllegalValue           Invalid value.)
   @value(ioPLCError               Device error.)
   @value(ioTagError               Internal tag error.)
@@ -176,9 +177,9 @@ type
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
                        ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
                        ioIllegalStationAddress, ioObjectNotExists,
-                       ioObjectAccessNotAllowed, ioIllegalMemoryAddress,
-                       ioUnknownError, ioEmptyPacket, ioPartialOk,
-                       ioAcknowledge, ioBusy, ioNACK, ioMemoryParityError,
+                       ioObjectAccessNotAllowed, ioIllegalMemoryAddress, ioNACK,
+                       ioUnknownError, ioEmptyPacket, ioPartialOk, ioBusy,
+                       ioAcknowledge, ioMemoryParityError, ioIllegalRegSize,
                        ioGatewayUnavailable, ioDeviceGatewayFailedToRespond,
                        ioReadOnlyProtocol, ioCommPortClosed, ioNullCommPort,
                        ioConnectPLCFailed, ioAdapterInitFail, ioNullTagBlock);

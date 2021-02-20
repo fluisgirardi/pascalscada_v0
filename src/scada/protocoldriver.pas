@@ -307,6 +307,8 @@ type
     {$ENDIF}
     function  NotifyThisEvents:TNotifyThisEvents; virtual;
 
+    function NeedsExternalPort:Boolean; virtual;
+
     {$IFDEF PORTUGUES}
     {:
     Procedimento chamado pela porta de comunicação é aberta.
@@ -1364,13 +1366,15 @@ begin
     if ComponentState*[csDestroying]<>[] then exit;
     PortError:=false;
 
-    if (PCommPort=nil) then begin
-      PortError:=true;
-      ErrorStatus:=ioNullCommPort;
-    end else begin
-      if (PCommPort.ReallyActive=false) then begin
+    if NeedsExternalPort then begin
+      if (PCommPort=nil) then begin
         PortError:=true;
-        ErrorStatus:=ioCommPortClosed;
+        ErrorStatus:=ioNullCommPort;
+      end else begin
+        if (PCommPort.ReallyActive=false) then begin
+          PortError:=true;
+          ErrorStatus:=ioCommPortClosed;
+        end;
       end;
     end;
 
@@ -1452,6 +1456,11 @@ end;
 function  TProtocolDriver.NotifyThisEvents:TNotifyThisEvents;
 begin
   Result:=[];
+end;
+
+function TProtocolDriver.NeedsExternalPort: Boolean;
+begin
+  Result:=true;
 end;
 
 procedure TProtocolDriver.DoPortOpened(Sender: TObject);

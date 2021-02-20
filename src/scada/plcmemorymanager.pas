@@ -243,6 +243,7 @@ type
     //segmented binary search of memory address
     function FindAddresBySegment(const address, startindex, endindex:LongInt; var idx:LongInt):Boolean;
     procedure AddAddress(Add,Scan:LongInt); overload;
+    function GetMinScanTime: Cardinal;
     procedure RemoveAddress(Add:LongInt); overload;
     procedure SetHoleSize(size:LongInt);
     procedure SetBlockSize(size:LongInt);
@@ -529,6 +530,8 @@ type
     //: How many memories are handled by the manager.
     {$ENDIF}
     property Size:LongInt read GetSize;
+
+    property MinScanTime:Cardinal read GetMinScanTime;
   end;
 
   TPLCMemoryManagerSafe = class(TPLCMemoryManager)
@@ -740,6 +743,18 @@ begin
       FAddress[c].MinScan := Scan;
     end;
   end;
+end;
+
+function TPLCMemoryManager.GetMinScanTime: Cardinal;
+var
+  c: Integer;
+begin
+  Result := 0;
+
+  for c:=0 to High(Blocks) do
+    Result := Result + Blocks[c].ScanTime;
+
+  if Result=0 then Result:=-1;
 end;
 
 procedure TPLCMemoryManager.RemoveAddress(Add:LongInt);

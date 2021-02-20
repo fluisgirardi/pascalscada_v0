@@ -320,10 +320,8 @@ begin
 
   //se a checagem crc nao bate, sai
   //verify the CRC of incoming packet.
-  if (Result=ioOk) and ((not Test_crc(pkg.BufferToWrite)) or (not Test_crc(pkg.BufferToRead))) then begin
+  if (Result=ioOk) and ((not Test_crc(pkg.BufferToWrite)) or (not Test_crc(pkg.BufferToRead))) then
     Result := ioCommError;
-    exit;
-  end;
 
   //procura o plc
   //search de PLC
