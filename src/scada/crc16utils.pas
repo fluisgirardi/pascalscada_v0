@@ -103,7 +103,8 @@ begin
     inc(i);
   end;
   
-  Result := ((n+2)<=Length(Pkg)) and ((Cardinal(pkg[n+1])=(crc shr 8)) or (Cardinal(pkg[n])=(crc and 255)));
+  //CRC must matches the two bytes, so should be a AND, not a OR
+  Result := ((n+2)<=Length(Pkg)) and ((Cardinal(pkg[n+1])=(crc shr 8)) AND (Cardinal(pkg[n])=(crc and 255)));
 
 end;
 
