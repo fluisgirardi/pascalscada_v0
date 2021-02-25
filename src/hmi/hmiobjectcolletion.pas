@@ -67,6 +67,8 @@ begin
   if AValue=Collection.Owner then exit;
 
   if AValue=nil then begin
+    if assigned(FTargetObject) then
+      FTargetObject.RemoveFreeNotification(TComponent(Collection.Owner));
     FTargetObject:=nil;
     FTargetObjectProperty:='';
     exit;

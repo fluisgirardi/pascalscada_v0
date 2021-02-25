@@ -137,11 +137,6 @@ begin
   frozenTimer.Tag:=1; //login
   frozenTimer.OnTimer:=@UnfreezeLogin;
   frmLogin:=TpsHMIfrmUserAuthentication.Create(nil);
-  {$IFDEF FPC}
-  frmLogin.FormStyle:=fsSystemStayOnTop;
-  {$ELSE}
-  frmLogin.FormStyle:=fsStayOnTop;
-  {$ENDIF}
   retries:=0;
   aborted:=false;
   loggedin:=False;

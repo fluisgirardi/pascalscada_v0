@@ -150,6 +150,7 @@ begin
   end;
 
   if FLastFocusedControl<>nil then begin
+    FLastFocusedControl.RemoveFreeNotification(Self);
     {$IFDEF DEBUG}DebugLn('Restoring the default event handles for control ',FLastFocusedControl.Name);{$ENDIF}
     if SameMethod(FLastFocusedControl.OnClick, @ClickEvent) then begin
       {$IFDEF DEBUG}DebugLn('Restoring OnClick');{$ENDIF}

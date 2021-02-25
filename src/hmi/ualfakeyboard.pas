@@ -294,6 +294,9 @@ begin
   if LastAlphaKeyboard=Self then
     LastAlphaKeyboard:=nil;
 
+  if Assigned(FTarget) then
+    FTarget.RemoveFreeNotification(Self);
+
   FreeAndNil(FFxxKeyGroup);
   FreeAndNil(FNumbersKeyGroup);
   FreeAndNil(FSymbolsKeyGroup);
@@ -306,7 +309,7 @@ end;
 procedure TpsHMIfrmAlphaKeyboard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
-  Show;
+  ShowOnTop;
 end;
 
 procedure TpsHMIfrmAlphaKeyboard.Notification(AComponent: TComponent;
@@ -577,7 +580,7 @@ var
   sw, sh:Integer;
   frect, t_rect: TRect;
 begin
-  if Assigned(FTarget.Parent) and (FTarget.Parent.Name = 'psHMIfrmUserAuthentication') and (TForm(FTarget.Parent).Top>0) then begin
+  if Assigned(FTarget) and Assigned(FTarget.Parent) and (FTarget.Parent.Name = 'psHMIfrmUserAuthentication') and (TForm(FTarget.Parent).Top>0) then begin
     TForm(FTarget.Parent).Top:=0;
     if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
       Application.QueueAsyncCall(@GotoBetterPositionDelayed, 0);

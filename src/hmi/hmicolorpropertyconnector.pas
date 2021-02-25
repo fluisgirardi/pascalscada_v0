@@ -245,8 +245,9 @@ end;
 
 procedure THMIColorPropertyConnector.RemoveTagCallBack(Sender: TObject);
 begin
-  if Sender=FTag then
+  if Sender=FTag then begin
      FTag:=nil;
+  end;
 end;
 
 procedure THMIColorPropertyConnector.RecalculateObjectsProperties;
@@ -254,7 +255,7 @@ var
   x: TColorZone;
   o: Integer;
 begin
-  if csDesigning in ComponentState then exit;
+  if [csReading,csLoading,csDesigning]*ComponentState<>[] then exit;
   if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin
     x:=TColorZone(FConditionZones.GetZoneFromValue((FTag as ITagNumeric).Value));
     if x=nil then exit;
@@ -278,14 +279,19 @@ procedure THMIColorPropertyConnector.Notification(AComponent: TComponent;
 var
   i: Integer;
 begin
-  inherited Notification(AComponent, Operation);
-  if (Operation=opRemove) and Assigned(FObjects) then begin
+  if (Operation=opRemove) then begin
+    if Assigned(FObjects) then
     for i:=0 to FObjects.Count-1 do begin
       if TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).TargetObject=AComponent then begin
-        TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).TargetObject:=nil;
+          TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).TargetObject:=nil;
       end;
     end;
+    if AComponent=FTag then begin
+      FTag.RemoveAllHandlersFromObject(Self);
+      FTag:=nil;
+    end;
   end;
+  inherited Notification(AComponent, Operation);
 end;
 
 constructor THMIColorPropertyConnector.Create(AOwner: TComponent);
@@ -368,7 +374,7 @@ var
   x: TColorZone;
   o: Integer;
 begin
-  if csDesigning in THMIBasicColletion(Collection).GetComponentState then exit;
+  if [csReading,csLoading,csDesigning]*THMIBasicColletion(Collection).GetComponentState<>[] then exit;
   if not (Collection.Owner is THMIColorPropertyConnector) then exit;
 
   if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin

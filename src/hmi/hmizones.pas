@@ -871,16 +871,24 @@ constructor TAnimationZone.Create(aCollection: TCollection);
 begin
   inherited Create(aCollection);
   FBlinkWithIndex := -1;
-  FValue1:=Index;
-  FValue2:=FValue1;
+  if (([csDesigning]*(Collection.Owner as TComponent).ComponentState)=[]) or (([csReading,csLoading]*(Collection.Owner as TComponent).ComponentState)<>[]) then begin
+    FValue1:=0;
+    FValue2:=0;
+  end else begin
+    FValue1:=Index;
+    FValue2:=FValue1;
+  end;
 end;
 
 destructor TAnimationZone.Destroy;
 var
   i: Integer;
 begin
-  for i:=0 to High(FReferencedBy) do
+  for i:=0 to High(FReferencedBy) do begin
     FReferencedBy[i].RemoveBlinkZone;
+    FReferencedBy[i].RemReference(Self);
+  end;
+
   inherited Destroy;
 end;
 

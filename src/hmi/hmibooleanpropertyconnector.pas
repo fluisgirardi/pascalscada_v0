@@ -257,7 +257,7 @@ var
   x: TBooleanZone;
   o: Integer;
 begin
-  if csDesigning in ComponentState then exit;
+  if [csReading,csLoading,csDesigning]*ComponentState<>[] then exit;
   if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin
     x:=TBooleanZone(FConditionZones.GetZoneFromValue((FTag as ITagNumeric).Value));
     if x=nil then exit;

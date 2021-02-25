@@ -458,8 +458,7 @@ begin
   gdk_keymap_get_entries_for_keyval(nil,key,{%H-}keys,@nkeys);
 
   if keys=nil then begin
-    gev.key.hardware_keycode:=GDK_KEY_a;
-    gev.key.group:=1;
+    exit;
   end else begin
     gev.key.hardware_keycode:=keys^.keycode;
     gev.key.group:=keys^.group;
@@ -481,7 +480,7 @@ begin
   gev.key.window:={%H-}PGtkWidget(Ftarget.Handle)^.window;
   gev.key._type:=GDK_KEY_RELEASE;
   gev.key.send_event:=1;
-  gev.key.time:=10;
+  gev.key.time:=0;
   gev.key.state:=0;
   gev.key.keyval:=key;
   gev.key.length:=1;
@@ -490,8 +489,7 @@ begin
   gdk_keymap_get_entries_for_keyval(nil,gev.key.keyval,{%H-}keys,@nkeys);
 
   if keys=nil then begin
-    gev.key.hardware_keycode:=GDK_KEY_a;
-    gev.key.group:=1;
+    exit;
   end else begin
     gev.key.hardware_keycode:=keys^.keycode;
     gev.key.group:=keys^.group;
@@ -610,6 +608,7 @@ begin
     VK_F24: Result := GDK_KEY_F24;
     VK_NUMLOCK: Result := GDK_KEY_Num_Lock;
     VK_SCROLL: Result := GDK_KEY_Scroll_Lock;
+    VK_OEM_PERIOD: Result:= GDK_KEY_KP_Decimal;
   else
     Result := GDK_KEY_VoidSymbol;
   end;

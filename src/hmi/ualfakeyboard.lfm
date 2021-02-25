@@ -12,14 +12,14 @@ object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
   Constraints.MaxWidth = 723
   Constraints.MinHeight = 277
   Constraints.MinWidth = 723
+  FormStyle = fsSystemStayOnTop
   OnCreate = FormCreate
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnPaint = FormPaint
   ShowInTaskBar = stNever
-  LCLVersion = '1.6.5.0'
-  Visible = False
+  LCLVersion = '2.0.11.0'
   object Btn_1: TSpeedButton
     Left = 46
     Height = 45
@@ -1881,13 +1881,13 @@ object psHMIfrmAlphaKeyboard: TpsHMIfrmAlphaKeyboard
     Enabled = False
     Interval = 50
     OnTimer = Timer1Timer
-    left = 88
-    top = 304
+    Left = 88
+    Top = 304
   end
   object Timer2: TTimer
     Interval = 10
     OnTimer = Timer2Timer
-    left = 552
-    top = 232
+    Left = 552
+    Top = 232
   end
 end

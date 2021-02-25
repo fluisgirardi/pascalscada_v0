@@ -92,9 +92,7 @@ begin
   FShowMinus:=ShowMinus;
   FTarget:=Target;
   keyboard:=CreateCrossKeyEvents(Target);
-  {$IFDEF LCL}
   FormStyle:=fsSystemStayOnTop;
-  {$ENDIF}
 
   ControlStyle:=ControlStyle+[csNoFocus];
   FFormOwner:=nil;
@@ -106,10 +104,14 @@ end;
 
 destructor TpsHMIfrmNumericKeyBoard.Destroy;
 begin
-  inherited Destroy;
   if LastNumericKeyBoard=Self then
     LastNumericKeyBoard:=nil;
   keyboard.Destroy;
+
+  if Assigned(FTarget) then
+    FTarget.RemoveFreeNotification(Self);
+
+  inherited Destroy;
 end;
 
 procedure TpsHMIfrmNumericKeyBoard.GotoBetterPosition;
@@ -153,7 +155,7 @@ end;
 procedure TpsHMIfrmNumericKeyBoard.ShowAlongsideOfTheTarget;
 begin
   GotoBetterPosition;
-  Show;
+  ShowOnTop;
 end;
 
 procedure TpsHMIfrmNumericKeyBoard.Notification(AComponent: TComponent;
@@ -188,7 +190,8 @@ begin
   Btn_Ok.Tag:=VK_RETURN;
 
   Btn_Back.Tag:=VK_BACK;
-  Btn_DecSeparator.Tag:=VK_OEM_PERIOD; //Who is in delphi?
+  Btn_DecSeparator.Tag:=VK_OEM_PERIOD;
+
   Btn_Minus.Tag:=VK_SUBTRACT;
 
   Btn_Minus.Visible:=FShowMinus;

@@ -10,10 +10,10 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
   ClientWidth = 239
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
+  FormStyle = fsStayOnTop
   OnCreate = FormCreate
   ShowInTaskBar = stNever
-  LCLVersion = '1.6.5.0'
-  Visible = False
+  LCLVersion = '2.0.11.0'
   object Btn_1: TSpeedButton
     Left = 1
     Height = 45
@@ -659,7 +659,7 @@ object psHMIfrmNumericKeyBoard: TpsHMIfrmNumericKeyBoard
   object Timer1: TTimer
     Interval = 10
     OnTimer = Timer1Timer
-    left = 152
-    top = 96
+    Left = 152
+    Top = 96
   end
 end
