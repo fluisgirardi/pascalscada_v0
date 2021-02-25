@@ -27,7 +27,6 @@
       <Linking>
         <Debugging>
           <GenerateDebugInfo Value="False"/>
-          <UseLineInfoUnit Value="False"/>
         </Debugging>
       </Linking>
       <Other>
@@ -40,7 +39,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="39">
+    <Files Count="40">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -197,17 +196,18 @@
         <Filename Value="src\scada\westasciidriver.pas"/>
         <UnitName Value="WestASCIIDriver"/>
       </Item39>
+      <Item40>
+        <Filename Value="src\scada\numexprtag.pas"/>
+        <UnitName Value="numexprtag"/>
+      </Item40>
     </Files>
-    <RequiredPkgs Count="2">
+    <RequiredPkgs Count="1">
       <Item1>
-        <PackageName Value="LazUtils"/>
-      </Item1>
-      <Item2>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="6"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
-      </Item2>
+      </Item1>
     </RequiredPkgs>
     <UsageOptions>
       <CustomOptions Value="-dUseCThreads"/>
