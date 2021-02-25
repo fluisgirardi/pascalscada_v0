@@ -201,13 +201,16 @@
         <UnitName Value="numexprtag"/>
       </Item40>
     </Files>
-    <RequiredPkgs Count="1">
+    <RequiredPkgs Count="2">
       <Item1>
+        <PackageName Value="LCLBase"/>
+      </Item1>
+      <Item2>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="6"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
-      </Item1>
+      </Item2>
     </RequiredPkgs>
     <UsageOptions>
       <CustomOptions Value="-dUseCThreads"/>
