@@ -8,12 +8,12 @@ object Form1: TForm1
   ClientHeight = 427
   ClientWidth = 884
   OnCreate = FormCreate
-  LCLVersion = '0.9.31'
+  LCLVersion = '2.0.11.0'
   object Label1: TLabel
     Left = 8
-    Height = 16
+    Height = 15
     Top = 8
-    Width = 513
+    Width = 516
     Caption = 'Crie no seu PLC o DB1 com 40 bytes de tamanho (10 DWORDs ou  10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -23,9 +23,9 @@ object Form1: TForm1
   end
   object Label2: TLabel
     Left = 8
-    Height = 16
+    Height = 15
     Top = 24
-    Width = 497
+    Width = 500
     Caption = 'Create the DB1 in your PLC with 40 bytes sized (10 DWORDs or 10 Floats)'
     Font.Height = -12
     Font.Name = 'Sans'
@@ -35,16 +35,19 @@ object Form1: TForm1
   end
   object HMIEdit1: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 88
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 0
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD00
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object Label3: TLabel
     Left = 80
@@ -60,120 +63,147 @@ object Form1: TForm1
   end
   object HMIEdit2: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 112
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 1
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD04
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit3: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 136
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 2
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD08
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit4: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 160
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 3
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD12
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit5: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 184
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 4
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD16
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit6: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 208
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 5
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD20
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit7: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 232
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 6
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD24
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit8: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 256
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 7
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD28
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit9: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 280
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 8
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD32
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit10: THMIEdit
     Left = 80
-    Height = 19
+    Height = 28
     Top = 304
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 9
     NumberFormat = '#0.0'
     PLCTag = DataModule1.DB1_DBD36
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object Label4: TLabel
     Left = 0
@@ -307,16 +337,19 @@ object Form1: TForm1
   end
   object HMIEdit11: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 88
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 10
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD00
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object Label24: TLabel
     Left = 280
@@ -332,126 +365,153 @@ object Form1: TForm1
   end
   object HMIEdit12: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 112
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 11
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD04
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit13: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 136
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 12
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD08
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit14: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 160
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 13
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD12
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit15: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 184
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 14
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD16
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit16: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 208
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 15
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD20
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit17: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 232
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 16
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD24
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit18: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 256
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 17
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD28
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit19: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 280
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 18
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD32
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit20: THMIEdit
     Left = 280
-    Height = 19
+    Height = 28
     Top = 304
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 19
     NumberFormat = '#0.0'
     PLCTag = DataModule1.MD36
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object Label25: TLabel
     Left = 8
-    Height = 14
+    Height = 16
     Top = 45
-    Width = 179
+    Width = 200
     Caption = 'TCP_UDP Port Commands/second'
     ParentColor = False
   end
@@ -469,9 +529,9 @@ object Form1: TForm1
   end
   object Label27: TLabel
     Left = 273
-    Height = 14
+    Height = 16
     Top = 45
-    Width = 34
+    Width = 36
     Caption = 'cmd/s'
     ParentColor = False
   end
@@ -481,20 +541,20 @@ object Form1: TForm1
     Top = 0
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_0
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -503,10 +563,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -517,20 +577,20 @@ object Form1: TForm1
     Top = 24
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_1
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -539,10 +599,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -553,20 +613,20 @@ object Form1: TForm1
     Top = 48
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_2
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -575,10 +635,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -589,20 +649,20 @@ object Form1: TForm1
     Top = 72
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_3
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -611,10 +671,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -625,20 +685,20 @@ object Form1: TForm1
     Top = 94
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_4
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -647,10 +707,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -661,20 +721,20 @@ object Form1: TForm1
     Top = 118
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_5
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -683,10 +743,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -697,20 +757,20 @@ object Form1: TForm1
     Top = 144
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_6
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -719,10 +779,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -733,20 +793,20 @@ object Form1: TForm1
     Top = 168
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.I0_7
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -755,10 +815,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -849,20 +909,20 @@ object Form1: TForm1
     Top = 192
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_0
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -871,10 +931,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -885,20 +945,20 @@ object Form1: TForm1
     Top = 216
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_1
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -907,10 +967,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -921,20 +981,20 @@ object Form1: TForm1
     Top = 242
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_2
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -943,10 +1003,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -957,20 +1017,20 @@ object Form1: TForm1
     Top = 266
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_3
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -979,10 +1039,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -993,20 +1053,20 @@ object Form1: TForm1
     Top = 288
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_4
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -1015,10 +1075,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -1029,20 +1089,20 @@ object Form1: TForm1
     Top = 312
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_5
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -1051,10 +1111,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -1065,20 +1125,20 @@ object Form1: TForm1
     Top = 338
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_6
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -1087,10 +1147,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -1101,20 +1161,20 @@ object Form1: TForm1
     Top = 362
     Width = 17
     Color = clSilver
+    Enabled = True
     ParentColor = False
     Transparent = False
     NumberFormat = '#0.0'
     PLCTag = DataModule1.Q0_7
+    FormatDateTimeOptions = []
     Zones = <    
       item
-        Value1 = 0
-        Value2 = 0
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clSilver
         Transparent = False
       end    
@@ -1123,10 +1183,10 @@ object Form1: TForm1
         Value2 = 1
         IncludeValue1 = False
         IncludeValue2 = False
-        BlinkTime = 0
-        BlinkWith = -1
         DefaultZone = False
         ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
         Color = clLime
         Transparent = False
       end>
@@ -1351,16 +1411,19 @@ object Form1: TForm1
   end
   object HMIEdit21: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 88
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 21
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C0
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object Label54: TLabel
     Left = 433
@@ -1376,126 +1439,154 @@ object Form1: TForm1
   end
   object HMIEdit22: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 112
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 22
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C1
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit23: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 136
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 23
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C2
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit24: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 160
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 24
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C3
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit25: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 184
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 25
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C4
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit26: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 208
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 26
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C5
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit27: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 232
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 27
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C6
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit28: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 256
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 28
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C7
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit29: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 280
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 29
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C8
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object HMIEdit30: THMIEdit
     Left = 433
-    Height = 19
+    Height = 28
     Top = 304
     Width = 112
     Color = clWindow
+    Enabled = True
     Font.Color = clWindowText
     ParentFont = False
     TabOrder = 30
     NumberFormat = '#0.0'
     PLCTag = DataModule1.C9
     FreezeValueOnFocus = False
+    EnableMinValue = False
+    EnableMaxValue = False
   end
   object TIPropertyGrid1: TTIPropertyGrid
     Left = 608
     Height = 379
     Top = 0
     Width = 264
+    CheckboxForBoolean = False
     DefaultValueFont.Color = clWindowText
     Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar]
     Indent = 12
@@ -1505,9 +1596,9 @@ object Form1: TForm1
   end
   object RadioButton1: TRadioButton
     Left = 601
-    Height = 20
+    Height = 22
     Top = 392
-    Width = 44
+    Width = 57
     Caption = 'DB1'
     Checked = True
     OnClick = RadioButton1Click
@@ -1517,9 +1608,9 @@ object Form1: TForm1
   object RadioButton2: TRadioButton
     Tag = 1
     Left = 657
-    Height = 20
+    Height = 22
     Top = 392
-    Width = 45
+    Width = 57
     Caption = 'MDs'
     OnClick = RadioButton1Click
     TabOrder = 33
@@ -1527,9 +1618,9 @@ object Form1: TForm1
   object RadioButton3: TRadioButton
     Tag = 2
     Left = 713
-    Height = 20
+    Height = 22
     Top = 392
-    Width = 71
+    Width = 88
     Caption = 'Counters'
     OnClick = RadioButton1Click
     TabOrder = 32
@@ -1537,9 +1628,9 @@ object Form1: TForm1
   object RadioButton4: TRadioButton
     Tag = 3
     Left = 793
-    Height = 20
+    Height = 22
     Top = 392
-    Width = 32
+    Width = 42
     Caption = 'IB'
     OnClick = RadioButton1Click
     TabOrder = 35
@@ -1547,9 +1638,9 @@ object Form1: TForm1
   object RadioButton5: TRadioButton
     Tag = 4
     Left = 841
-    Height = 20
+    Height = 22
     Top = 392
-    Width = 37
+    Width = 49
     Caption = 'QB'
     OnClick = RadioButton1Click
     TabOrder = 36
@@ -1686,15 +1777,14 @@ object Form1: TForm1
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    left = 520
-    top = 32
+    Left = 520
+    Top = 32
   end
   object HMIControlDislocatorAnimation1: THMIControlDislocatorAnimation
     P0_X = 48
     P0_Y = 344
     P1_X = 440
     P1_Y = 344
-    ValueP0 = 0
     ValueP1 = 10000
     PLCTag = DataModule1.DB1_DBD00
     Control = ToggleBox1
@@ -1709,7 +1799,7 @@ object Form1: TForm1
     Gets_P0_Position = 'Gets initial position'
     Gets_P1_Position = 'Gets final position'
     GoTo_P0_Position = 'Controls go to P0 position'
-    left = 104
-    top = 344
+    Left = 104
+    Top = 344
   end
 end

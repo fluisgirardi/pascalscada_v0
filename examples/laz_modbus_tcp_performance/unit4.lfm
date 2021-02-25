@@ -148,14 +148,6 @@ object Form1: TForm1
       LinePen.Width = 2
       Source = ListChartSource1
     end
-    object Chart1Line1: TLine
-      Pen.Color = clGradientActiveCaption
-      Position = 2150
-    end
-    object Chart1Line2: TLine
-      Pen.Color = clRed
-      Position = 0
-    end
   end
   object TIPropertyGrid1: TTIPropertyGrid
     Left = 408

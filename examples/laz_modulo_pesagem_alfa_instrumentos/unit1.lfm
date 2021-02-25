@@ -1,14 +1,13 @@
 object Form1: TForm1
-  Left = 0
+  Left = 416
   Height = 355
-  Top = 0
+  Top = 163
   Width = 627
   Caption = 'Form1'
   ClientHeight = 355
   ClientWidth = 627
   OnCreate = FormCreate
-  LCLVersion = '1.7'
-  Visible = False
+  LCLVersion = '2.0.11.0'
   object HMILabel1: THMILabel
     Left = 160
     Height = 17
@@ -274,14 +273,16 @@ object Form1: TForm1
     FormatDateTimeOptions = []
   end
   object SerialPortDriver1: TSerialPortDriver
+    DevDir = '/dev/'
     Timeout = 100
-    left = 40
-    top = 16
+    Left = 40
+    Top = 16
   end
   object ModBusRTUDriver1: TModBusRTUDriver
     CommunicationPort = SerialPortDriver1
-    left = 40
-    top = 64
+    ReadOnly = False
+    Left = 40
+    Top = 64
   end
   object Bloco1: TPLCBlock
     TagGUID = '{780B5707-0E86-4650-A99B-7DEC974FCAB5}'
@@ -295,9 +296,10 @@ object Form1: TForm1
     MemWriteFunction = 16
     ProtocolDriver = ModBusRTUDriver1
     UpdateTime = 100
+    LongAddress = ''
     Size = 6
-    left = 40
-    top = 120
+    Left = 40
+    Top = 120
   end
   object Tag1: TPLCBlockElement
     TagGUID = '{FFC55767-6828-4866-92C3-047DAA91814E}'
@@ -305,10 +307,8 @@ object Form1: TForm1
     Index = 0
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 40
-    top = 168
+    Left = 40
+    Top = 168
   end
   object Tag2: TPLCBlockElement
     TagGUID = '{2647B7B7-2404-415D-8376-D61089504833}'
@@ -316,10 +316,8 @@ object Form1: TForm1
     Index = 1
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 40
-    top = 168
+    Left = 40
+    Top = 168
   end
   object Tag3: TPLCBlockElement
     TagGUID = '{9A70AA61-4DFD-44A4-8C36-332AF8DD7771}'
@@ -327,10 +325,8 @@ object Form1: TForm1
     Index = 2
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 40
-    top = 168
+    Left = 40
+    Top = 168
   end
   object Tag4: TPLCBlockElement
     TagGUID = '{4378B37A-BE94-43FD-99C8-7178BB7654C1}'
@@ -338,10 +334,8 @@ object Form1: TForm1
     Index = 3
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 40
-    top = 168
+    Left = 40
+    Top = 168
   end
   object Tag5: TPLCBlockElement
     TagGUID = '{DBF2C1F1-8F39-48EA-ABB6-50CBC62BB7CA}'
@@ -349,10 +343,8 @@ object Form1: TForm1
     Index = 4
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 40
-    top = 168
+    Left = 40
+    Top = 168
   end
   object Tag6: TPLCBlockElement
     TagGUID = '{88BECFC0-EA47-4220-B2E1-DA51F0E54C31}'
@@ -360,10 +352,8 @@ object Form1: TForm1
     Index = 5
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 40
-    top = 168
+    Left = 40
+    Top = 168
   end
   object Tag1_bit0: TTagBit
     TagGUID = '{85842478-33B5-4447-9D3C-F23897484420}'
@@ -373,10 +363,8 @@ object Form1: TForm1
     EndBit = 0
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit1: TTagBit
     TagGUID = '{98F5141D-CDA1-40D1-84A5-4101B2989293}'
@@ -386,10 +374,8 @@ object Form1: TForm1
     EndBit = 1
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit2: TTagBit
     TagGUID = '{B0A2CF26-D20B-4268-8C20-9A5E704C4FD1}'
@@ -399,10 +385,8 @@ object Form1: TForm1
     EndBit = 2
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit3: TTagBit
     TagGUID = '{2A4D5D86-0068-4915-ADFD-968371B46128}'
@@ -412,10 +396,8 @@ object Form1: TForm1
     EndBit = 3
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit4: TTagBit
     TagGUID = '{88FD9F30-B976-49B8-87F9-EE8B41D549B3}'
@@ -425,10 +407,8 @@ object Form1: TForm1
     EndBit = 4
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit5: TTagBit
     TagGUID = '{CF392FA7-8176-4C41-BFCE-FFDA51A4F9FE}'
@@ -438,10 +418,8 @@ object Form1: TForm1
     EndBit = 5
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit6: TTagBit
     TagGUID = '{03CD6DCF-06DC-4251-A5E4-D499E231EC7D}'
@@ -451,10 +429,8 @@ object Form1: TForm1
     EndBit = 6
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit7: TTagBit
     TagGUID = '{B847197D-C98A-44DB-8DF9-319A24D135B8}'
@@ -464,10 +440,8 @@ object Form1: TForm1
     EndBit = 7
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit8: TTagBit
     TagGUID = '{4BA10281-B616-426D-9D1D-8CA2CCE122ED}'
@@ -477,10 +451,8 @@ object Form1: TForm1
     EndBit = 8
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit9: TTagBit
     TagGUID = '{1B739502-1553-4047-BDC5-2B7677C941E7}'
@@ -490,10 +462,8 @@ object Form1: TForm1
     EndBit = 9
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit10: TTagBit
     TagGUID = '{9B7C1A92-56AB-42B9-A9E8-4A248FDF2D33}'
@@ -503,10 +473,8 @@ object Form1: TForm1
     EndBit = 10
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit11: TTagBit
     TagGUID = '{C4C472B3-1E24-4F46-A448-89C11B5F6A81}'
@@ -516,10 +484,8 @@ object Form1: TForm1
     EndBit = 11
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit12: TTagBit
     TagGUID = '{68EF27C4-19A4-471E-946B-6E3F075C8C81}'
@@ -529,10 +495,8 @@ object Form1: TForm1
     EndBit = 12
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit13: TTagBit
     TagGUID = '{2830F30B-BDF8-402C-AD46-1D3106BF0832}'
@@ -542,10 +506,8 @@ object Form1: TForm1
     EndBit = 13
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit14: TTagBit
     TagGUID = '{E9810787-9C26-424A-80A0-4AEA217AAE56}'
@@ -555,10 +517,8 @@ object Form1: TForm1
     EndBit = 14
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
   object Tag1_bit15: TTagBit
     TagGUID = '{37F7A115-6832-4A16-91C9-97536743F4F3}'
@@ -568,9 +528,7 @@ object Form1: TForm1
     EndBit = 15
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 88
-    top = 168
+    Left = 88
+    Top = 168
   end
 end

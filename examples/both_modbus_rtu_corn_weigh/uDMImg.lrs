@@ -1,5 +1,3 @@
-{ This is an automatically generated lazarus resource file }
-
 LazarusResources.Add('TImagens','FORMDATA',[
   'TPF0'#8'TImagens'#7'Imagens'#14'OldCreateOrder'#8#6'Height'#3'X'#1#16'Horizo'
   +'ntalOffset'#3#172#1#14'VerticalOffset'#3#191#0#5'Width'#3#183#1#0#10'TImage'

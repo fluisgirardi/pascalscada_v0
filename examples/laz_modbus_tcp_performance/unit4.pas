@@ -16,8 +16,6 @@ type
 
   TForm1 = class(TForm)
     Chart1: TChart;
-    Chart1Line1: TLine;
-    Chart1Line2: TLine;
     Chart1LineSeries1: TLineSeries;
     CustomizedUserManagement1: TCustomizedUserManagement;
     HMIEdit1: THMIEdit;

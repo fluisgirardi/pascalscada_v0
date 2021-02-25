@@ -1,0 +1,104 @@
+object Form1: TForm1
+  Left = 456
+  Height = 359
+  Top = 251
+  Width = 398
+  Caption = 'Form1'
+  ClientHeight = 359
+  ClientWidth = 398
+  LCLVersion = '2.0.11.0'
+  object HMITrackBar1: THMITrackBar
+    Left = 142
+    Height = 25
+    Top = 246
+    Width = 226
+    Enabled = True
+    TabOrder = 0
+    PLCTag = PLCTagNumber1
+  end
+  object HMITrackBar2: THMITrackBar
+    Left = 142
+    Height = 25
+    Top = 288
+    Width = 226
+    Enabled = True
+    TabOrder = 1
+    PLCTag = PLCTagNumber2
+  end
+  object HMILabel1: THMILabel
+    Left = 272
+    Height = 17
+    Top = 72
+    Width = 121
+    Enabled = True
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = NumericExprTag1
+    Prefix = 'A+B='
+    FormatDateTimeOptions = []
+  end
+  object HMILabel2: THMILabel
+    Left = 272
+    Height = 17
+    Top = 120
+    Width = 65
+    Enabled = True
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    Prefix = 'A='
+    FormatDateTimeOptions = []
+  end
+  object HMILabel3: THMILabel
+    Left = 272
+    Height = 17
+    Top = 148
+    Width = 65
+    Enabled = True
+    ParentColor = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber2
+    Prefix = 'B='
+    FormatDateTimeOptions = []
+  end
+  object NumericExprTag1: TNumericExprTag
+    TagGUID = '{9F18EC77-FFEC-4845-B131-3D2E7597E37A}'
+    A = PLCTagNumber1
+    B = PLCTagNumber2
+    Expression = 'A+B'
+    Left = 120
+    Top = 72
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{E3DFAA60-9D68-42F0-A8DB-461EB6A03FB6}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 64
+    Top = 152
+  end
+  object PLCTagNumber2: TPLCTagNumber
+    TagGUID = '{82954D6E-2657-4BD0-8D8D-0923C0465F25}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 64
+    Top = 216
+  end
+end

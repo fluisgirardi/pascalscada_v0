@@ -43,6 +43,7 @@ type
     ZTable1idtpw03: TLargeintField;
     ZTable1y0: TLargeintField;
     ZTable1y1: TLargeintField;
+    procedure DataModuleCreate(Sender: TObject);
     procedure SPDCommErrorReading(Error: TIOResult);
     procedure SPDCommErrorWriting(Error: TIOResult);
     procedure SPDCommPortOpened(Sender: TObject);
@@ -69,6 +70,12 @@ procedure TDM.SPDCommErrorReading(Error: TIOResult);
 begin
     i:=i+1;
     fPrincipal.Memo1.Lines.Add(IntToStr(i)+' - Erro de comunicação na Leitura. ->'+IntToStr(SPD.LastOSErrorNumber)+'-'+SPD.LastOSErrorMessage);
+end;
+
+procedure TDM.DataModuleCreate(Sender: TObject);
+begin
+  SPD.COMPort:='your serial port name here';
+  SPD.Active:=true;
 end;
 
 procedure TDM.SPDCommErrorWriting(Error: TIOResult);

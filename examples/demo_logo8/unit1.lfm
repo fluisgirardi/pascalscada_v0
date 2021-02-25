@@ -1,17 +1,17 @@
 object Form1: TForm1
-  Left = 0
-  Height = 291
-  Top = 0
-  Width = 395
+  Left = 562
+  Height = 298
+  Top = 193
+  Width = 413
   Caption = 'Siemens LogoV8 communication example'
-  ClientHeight = 291
-  ClientWidth = 395
-  Visible = False
+  ClientHeight = 298
+  ClientWidth = 413
+  LCLVersion = '2.0.11.0'
   object Label1: TLabel
     Left = 0
-    Height = 238
+    Height = 211
     Top = 0
-    Width = 395
+    Width = 413
     Align = alTop
     Caption = 'The Variable area from Logo V8 and S7-200 is equivalent to DB1 from S7-1200/300/400/1500.'#10#10'Because of this, you will see one tag with property MemFileDB =1'#10#10' Flags are equal  to all Siemens PLC''s. On Both (PLC and PascalSCADA) you shold address your variables ponting to the byte that each  one is stored. So, if you are mapping VW6 or MB6, the MemAddress of your tag will be =6.'#10#10'Other details you should see here.'#10#10'On logo 8, you shold link you V area with properties of blocks of your logic to exchange data. '
     ParentColor = False
@@ -37,10 +37,7 @@ object Form1: TForm1
     Enabled = True
     Increment = 1
     Max = 100
-    Min = 0
-    Position = 0
     TabOrder = 0
-    Wrap = False
     PLCTag = VW2
   end
   object HMIUpDown2: THMIUpDown
@@ -51,10 +48,7 @@ object Form1: TForm1
     Enabled = True
     Increment = 1
     Max = 100
-    Min = 0
-    Position = 0
     TabOrder = 1
-    Wrap = False
     PLCTag = MW0
   end
   object HMILabel2: THMILabel
@@ -73,15 +67,17 @@ object Form1: TForm1
     Active = True
     Host = '192.168.0.4'
     ExclusiveDevice = True
-    left = 56
-    top = 113
+    Left = 56
+    Top = 113
   end
   object ISOTCPDriver1: TISOTCPDriver
     CommunicationPort = TCP_UDPPort1
+    ForcePDUSize = pdu240
     ConnectionWay = ISOTCP
     PLCStation = 0
-    left = 89
-    top = 112
+    ReadOnly = False
+    Left = 89
+    Top = 112
   end
   object VW2: TPLCTagNumber
     TagGUID = '{B32FE66D-9D49-419E-8474-68A5C5F834DD}'
@@ -95,14 +91,13 @@ object Form1: TForm1
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
     UpdateTime = 100
+    LongAddress = ''
     TagType = pttSmallInt
     SwapBytes = True
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 121
-    top = 112
+    Left = 121
+    Top = 112
   end
   object MW0: TPLCTagNumber
     TagGUID = '{D3C236CB-0449-4013-8C7A-CBC6DF17E7A2}'
@@ -116,13 +111,12 @@ object Form1: TForm1
     MemWriteFunction = 0
     ProtocolDriver = ISOTCPDriver1
     UpdateTime = 100
+    LongAddress = ''
     TagType = pttSmallInt
     SwapBytes = True
     EnableMaxValue = False
     EnableMinValue = False
-    MaxValue = 0
-    MinValue = 0
-    left = 161
-    top = 112
+    Left = 161
+    Top = 112
   end
 end

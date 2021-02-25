@@ -69,7 +69,6 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <TopLine Value="247"/>
         <CursorPos X="3" Y="274"/>
@@ -188,9 +187,12 @@
         <ComponentName Value="frmGraficos"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="46"/>
         <CursorPos X="50" Y="62"/>
         <UsageCount Value="41"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit15>
       <Unit16>
         <Filename Value="ufiltro.pas"/>
@@ -198,16 +200,19 @@
         <ComponentName Value="frmFiltro"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="8"/>
         <CursorPos X="24" Y="15"/>
         <UsageCount Value="32"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit16>
       <Unit17>
         <Filename Value="urelatorios.pas"/>
         <ComponentName Value="frmRelatorios"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="6"/>
         <CursorPos X="68" Y="8"/>
         <UsageCount Value="31"/>
         <Loaded Value="True"/>
@@ -223,8 +228,13 @@
         <Filename Value="ugerenciamentousuarios.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmUsuarios"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="3"/>
         <UsageCount Value="29"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit19>
       <Unit20>
         <Filename Value="../../controlsecuritymanager.pas"/>

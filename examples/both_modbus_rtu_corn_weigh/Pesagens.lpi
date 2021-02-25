@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="10"/>
+    <Version Value="11"/>
     <General>
       <MainUnit Value="0"/>
       <UseXPManifest Value="True"/>
@@ -10,22 +10,25 @@
     <VersionInfo>
       <Language Value=""/>
       <CharSet Value=""/>
-      <StringTable ProductVersion=""/>
     </VersionInfo>
     <BuildModes Count="1">
       <Item1 Name="default" Default="True"/>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
-      <IgnoreBinaries Value="False"/>
-      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
-      <ExcludeFileFilter Value="*.(bak|ppu|ppw|o|so);*~;backup"/>
     </PublishOptions>
     <RunParams>
       <local>
-        <FormatVersion Value="1"/>
         <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default">
+          <local>
+            <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+          </local>
+        </Mode0>
+      </Modes>
     </RunParams>
     <RequiredPackages Count="4">
       <Item1>
@@ -48,6 +51,7 @@
       <Unit0>
         <Filename Value="Pesagens.lpr"/>
         <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="13" Y="7"/>
         <UsageCount Value="25"/>
       </Unit0>
@@ -57,11 +61,11 @@
         <ComponentName Value="DM"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <TopLine Value="146"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="125"/>
         <CursorPos X="16" Y="166"/>
         <UsageCount Value="25"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="uMain.pas"/>
@@ -69,13 +73,10 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="48"/>
-        <CursorPos X="34" Y="79"/>
+        <CursorPos X="80" Y="71"/>
         <UsageCount Value="25"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="uDMImg.pas"/>
@@ -83,11 +84,9 @@
         <ComponentName Value="Imagens"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="17" Y="7"/>
         <UsageCount Value="25"/>
-        <Loaded Value="True"/>
-        <LoadedDesigner Value="True"/>
       </Unit3>
       <Unit4>
         <Filename Value="../HMI_SCADA/commport.pas"/>
@@ -132,52 +131,7 @@
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit9>
     </Units>
-    <JumpHistory Count="11" HistoryIndex="10">
-      <Position1>
-        <Filename Value="uMain.pas"/>
-        <Caret Line="59" Column="39" TopLine="39"/>
-      </Position1>
-      <Position2>
-        <Filename Value="uMain.pas"/>
-        <Caret Line="61" Column="114" TopLine="39"/>
-      </Position2>
-      <Position3>
-        <Filename Value="uDM.pas"/>
-        <Caret Line="82" Column="29" TopLine="73"/>
-      </Position3>
-      <Position4>
-        <Filename Value="uDM.pas"/>
-        <Caret Line="83" Column="29" TopLine="73"/>
-      </Position4>
-      <Position5>
-        <Filename Value="uMain.pas"/>
-        <Caret Line="12" Column="30"/>
-      </Position5>
-      <Position6>
-        <Filename Value="uMain.pas"/>
-        <Caret Line="71" Column="5" TopLine="53"/>
-      </Position6>
-      <Position7>
-        <Filename Value="uMain.pas"/>
-        <Caret Line="39" Column="26" TopLine="26"/>
-      </Position7>
-      <Position8>
-        <Filename Value="uDM.pas"/>
-        <Caret Line="117" Column="124" TopLine="93"/>
-      </Position8>
-      <Position9>
-        <Filename Value="uDM.pas"/>
-        <Caret Line="116" Column="124" TopLine="92"/>
-      </Position9>
-      <Position10>
-        <Filename Value="uDM.pas"/>
-        <Caret Line="120" Column="125" TopLine="90"/>
-      </Position10>
-      <Position11>
-        <Filename Value="uMain.pas"/>
-        <Caret Line="13" Column="39"/>
-      </Position11>
-    </JumpHistory>
+    <JumpHistory HistoryIndex="-1"/>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>

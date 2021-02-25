@@ -1,5 +1,3 @@
-{ This is an automatically generated lazarus resource file }
-
 LazarusResources.Add('TForm1','FORMDATA',[
   'TPF0'#6'TForm1'#5'Form1'#4'Left'#3#244#0#6'Height'#3''''#1#3'Top'#2'l'#5'Wid'
   +'th'#3#140#2#13'ActiveControl'#7#6'Panel1'#11'BorderIcons'#11#12'biSystemMen'
@@ -19,55 +17,51 @@ LazarusResources.Add('TForm1','FORMDATA',[
   +'Top'#2' '#5'Width'#2'A'#9'Alignment'#7#14'taRightJustify'#5'Color'#7#8'clWi'
   +'ndow'#7'Enabled'#9#10'Font.Color'#7#12'clWindowText'#10'ParentFont'#8#8'Tab'
   +'Order'#2#0#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'PLCBlockElement1'#14'E'
-  +'nableMinValue'#8#14'EnableMaxValue'#8#8'MinValue'#5#0#0#0#0#0#0#0#0#0#0#8'M'
-  +'axValue'#5#0#0#0#0#0#0#0#0#0#0#0#0#8'THMIEdit'#8'HMIEdit2'#4'Left'#3#168#0#6
-  +'Height'#2#25#3'Top'#2' '#5'Width'#2'A'#9'Alignment'#7#14'taRightJustify'#5
-  +'Color'#7#8'clWindow'#7'Enabled'#9#10'Font.Color'#7#12'clWindowText'#10'Pare'
-  +'ntFont'#8#8'TabOrder'#2#1#12'NumberFormat'#6#4'#0.0'#6'PLCTag'#7#16'PLCBloc'
-  +'kElement2'#14'EnableMinValue'#8#14'EnableMaxValue'#8#8'MinValue'#5#0#0#0#0#0
-  +#0#0#0#0#0#8'MaxValue'#5#0#0#0#0#0#0#0#0#0#0#0#0#6'TLabel'#6'Label2'#4'Left'
-  +#3#24#1#6'Height'#2#17#3'Top'#2' '#5'Width'#2'i'#9'Alignment'#7#14'taRightJu'
-  +'stify'#8'AutoSize'#8#7'Caption'#6#6'Label1'#11'ParentColor'#8#0#0#6'TLabel'
-  +#6'Label3'#4'Left'#3#24#1#6'Height'#2#17#3'Top'#2'0'#5'Width'#2'i'#9'Alignme'
-  +'nt'#7#14'taRightJustify'#8'AutoSize'#8#7'Caption'#6#6'Label1'#11'ParentColo'
-  +'r'#8#0#0#6'TLabel'#6'Label4'#4'Left'#3#24#1#6'Height'#2#17#3'Top'#2#16#5'Wi'
-  +'dth'#2'i'#9'Alignment'#7#14'taRightJustify'#8'AutoSize'#8#7'Caption'#6#6'La'
-  +'bel1'#11'ParentColor'#8#0#0#0#6'TChart'#6'Chart1'#4'Left'#2#0#6'Height'#3
+  +'nableMinValue'#8#14'EnableMaxValue'#8#8'MinValue'#2#0#8'MaxValue'#2#0#0#0#8
+  +'THMIEdit'#8'HMIEdit2'#4'Left'#3#168#0#6'Height'#2#25#3'Top'#2' '#5'Width'#2
+  +'A'#9'Alignment'#7#14'taRightJustify'#5'Color'#7#8'clWindow'#7'Enabled'#9#10
+  +'Font.Color'#7#12'clWindowText'#10'ParentFont'#8#8'TabOrder'#2#1#12'NumberFo'
+  +'rmat'#6#4'#0.0'#6'PLCTag'#7#16'PLCBlockElement2'#14'EnableMinValue'#8#14'En'
+  +'ableMaxValue'#8#8'MinValue'#2#0#8'MaxValue'#2#0#0#0#6'TLabel'#6'Label2'#4'L'
+  +'eft'#3#24#1#6'Height'#2#17#3'Top'#2' '#5'Width'#2'i'#9'Alignment'#7#14'taRi'
+  +'ghtJustify'#8'AutoSize'#8#7'Caption'#6#6'Label1'#11'ParentColor'#8#0#0#6'TL'
+  +'abel'#6'Label3'#4'Left'#3#24#1#6'Height'#2#17#3'Top'#2'0'#5'Width'#2'i'#9'A'
+  +'lignment'#7#14'taRightJustify'#8'AutoSize'#8#7'Caption'#6#6'Label1'#11'Pare'
+  +'ntColor'#8#0#0#6'TLabel'#6'Label4'#4'Left'#3#24#1#6'Height'#2#17#3'Top'#2#16
+  +#5'Width'#2'i'#9'Alignment'#7#14'taRightJustify'#8'AutoSize'#8#7'Caption'#6#6
+  +'Label1'#11'ParentColor'#8#0#0#0#6'TChart'#6'Chart1'#4'Left'#2#0#6'Height'#3
   +#215#0#3'Top'#2'P'#5'Width'#3#152#1#8'AxisList'#14#1#6'Minors'#14#0#27'Title'
   +'.LabelFont.Orientation'#3#132#3#0#1#9'Alignment'#7#9'calBottom'#6'Minors'#14
   +#0#0#0#16'Foot.Brush.Color'#7#9'clBtnFace'#15'Foot.Font.Color'#7#6'clBlue'#17
   +'Title.Brush.Color'#7#9'clBtnFace'#16'Title.Font.Color'#7#6'clBlue'#18'Title'
   +'.Text.Strings'#1#6#7'TAChart'#0#5'Align'#7#8'alClient'#11'ParentColor'#8#0
   +#11'TLineSeries'#17'Chart1LineSeries1'#13'LinePen.Color'#7#6'clLime'#13'Line'
-  +'Pen.Width'#2#2#6'Source'#7#16'ListChartSource1'#0#0#5'TLine'#11'Chart1Line1'
-  +#9'Pen.Color'#7#23'clGradientActiveCaption'#8'Position'#5#0#0#0#0#0#0'`'#134
-  +#10'@'#0#0#5'TLine'#11'Chart1Line2'#9'Pen.Color'#7#5'clRed'#8'Position'#5#0#0
-  +#0#0#0#0#0#0#0#0#0#0#0#15'TTIPropertyGrid'#15'TIPropertyGrid1'#4'Left'#3#152
-  +#1#6'Height'#3#215#0#3'Top'#2'P'#5'Width'#3#244#0#5'Align'#7#7'alRight'#22'D'
-  +'efaultValueFont.Color'#7#12'clWindowText'#6'Filter'#11#9'tkInteger'#6'tkCha'
-  +'r'#13'tkEnumeration'#7'tkFloat'#5'tkSet'#8'tkMethod'#9'tkSString'#9'tkLStri'
-  +'ng'#9'tkAString'#9'tkWString'#9'tkVariant'#7'tkArray'#8'tkRecord'#11'tkInte'
-  +'rface'#7'tkClass'#8'tkObject'#7'tkWChar'#6'tkBool'#7'tkInt64'#7'tkQWord'#10
-  +'tkDynArray'#14'tkInterfaceRaw'#9'tkProcVar'#9'tkUString'#7'tkUChar'#0#6'Ind'
-  +'ent'#2#12#14'NameFont.Color'#7#12'clWindowText'#8'TIObject'#7#9'PLCBlock1'
-  +#15'ValueFont.Color'#7#8'clMaroon'#0#0#12'TTCP_UDPPort'#12'TCP_UDPPort1'#6'A'
-  +'ctive'#9#4'Host'#6#11'192.168.0.1'#4'Port'#3#246#1#7'Timeout'#2'2'#15'Exclu'
-  +'siveDevice'#9#4'left'#2' '#3'top'#2'0'#0#0#16'TModBusTCPDriver'#16'ModBusTC'
-  +'PDriver1'#17'CommunicationPort'#7#12'TCP_UDPPort1'#4'left'#2' '#3'top'#2'P'
-  +#0#0#6'TTimer'#6'Timer1'#7'OnTimer'#7#11'Timer1Timer'#4'left'#3#8#1#3'top'#2
-  +'h'#0#0#16'TListChartSource'#16'ListChartSource1'#4'left'#3#8#1#3'top'#2'G'#0
-  +#0#9'TPLCBlock'#9'PLCBlock1'#7'TagGUID'#6'&{06F8086D-E87B-49A3-B683-BF54E4F5'
-  +'FC67}'#7'PLCRack'#2#0#7'PLCSlot'#2#0#10'PLCStation'#2#1#10'MemFile_DB'#2#0
-  +#10'MemAddress'#2#0#13'MemSubElement'#2#0#15'MemReadFunction'#2#3#16'MemWrit'
-  +'eFunction'#2#16#14'ProtocolDriver'#7#16'ModBusTCPDriver1'#10'UpdateTime'#2
-  +'2'#4'Size'#2#10#4'left'#2' '#3'top'#3#128#0#0#0#16'TPLCBlockElement'#16'PLC'
-  +'BlockElement1'#7'TagGUID'#6'&{CFED774D-C3B2-47F8-81A8-4A04801FE886}'#8'PLCB'
-  +'lock'#7#9'PLCBlock1'#5'Index'#2#0#14'EnableMaxValue'#8#14'EnableMinValue'#8
-  +#8'MaxValue'#5#0#0#0#0#0#0#0#0#0#0#8'MinValue'#5#0#0#0#0#0#0#0#0#0#0#4'left'
-  +#2' '#3'top'#3#184#0#0#0#16'TPLCBlockElement'#16'PLCBlockElement2'#7'TagGUID'
-  ,#6'&{F50CFDA9-7C53-493A-A66B-E018BBFBC669}'#8'PLCBlock'#7#9'PLCBlock1'#5'Ind'
-  +'ex'#2#1#14'EnableMaxValue'#8#14'EnableMinValue'#8#8'MaxValue'#5#0#0#0#0#0#0
-  +#0#0#0#0#8'MinValue'#5#0#0#0#0#0#0#0#0#0#0#4'left'#2' '#3'top'#3#240#0#0#0#25
-  +'TCustomizedUserManagement'#25'CustomizedUserManagement1'#12'LoginRetries'#2
-  +#0#15'LoginFrozenTime'#2#0#4'left'#3#248#1#3'top'#2#16#0#0#0
+  +'Pen.Width'#2#2#6'Source'#7#16'ListChartSource1'#0#0#0#15'TTIPropertyGrid'#15
+  +'TIPropertyGrid1'#4'Left'#3#152#1#6'Height'#3#215#0#3'Top'#2'P'#5'Width'#3
+  +#244#0#5'Align'#7#7'alRight'#22'DefaultValueFont.Color'#7#12'clWindowText'#6
+  +'Filter'#11#9'tkInteger'#6'tkChar'#13'tkEnumeration'#7'tkFloat'#5'tkSet'#8't'
+  +'kMethod'#9'tkSString'#9'tkLString'#9'tkAString'#9'tkWString'#9'tkVariant'#7
+  +'tkArray'#8'tkRecord'#11'tkInterface'#7'tkClass'#8'tkObject'#7'tkWChar'#6'tk'
+  +'Bool'#7'tkInt64'#7'tkQWord'#10'tkDynArray'#14'tkInterfaceRaw'#9'tkProcVar'#9
+  +'tkUString'#7'tkUChar'#0#6'Indent'#2#12#14'NameFont.Color'#7#12'clWindowText'
+  +#8'TIObject'#7#9'PLCBlock1'#15'ValueFont.Color'#7#8'clMaroon'#0#0#12'TTCP_UD'
+  +'PPort'#12'TCP_UDPPort1'#6'Active'#9#4'Host'#6#11'192.168.0.1'#4'Port'#3#246
+  +#1#7'Timeout'#2'2'#15'ExclusiveDevice'#9#4'left'#2' '#3'top'#2'0'#0#0#16'TMo'
+  +'dBusTCPDriver'#16'ModBusTCPDriver1'#17'CommunicationPort'#7#12'TCP_UDPPort1'
+  +#4'left'#2' '#3'top'#2'P'#0#0#6'TTimer'#6'Timer1'#7'OnTimer'#7#11'Timer1Time'
+  +'r'#4'left'#3#8#1#3'top'#2'h'#0#0#16'TListChartSource'#16'ListChartSource1'#4
+  +'left'#3#8#1#3'top'#2'G'#0#0#9'TPLCBlock'#9'PLCBlock1'#7'TagGUID'#6'&{06F808'
+  +'6D-E87B-49A3-B683-BF54E4F5FC67}'#7'PLCRack'#2#0#7'PLCSlot'#2#0#10'PLCStatio'
+  +'n'#2#1#10'MemFile_DB'#2#0#10'MemAddress'#2#0#13'MemSubElement'#2#0#15'MemRe'
+  +'adFunction'#2#3#16'MemWriteFunction'#2#16#14'ProtocolDriver'#7#16'ModBusTCP'
+  +'Driver1'#10'UpdateTime'#2'2'#4'Size'#2#10#4'left'#2' '#3'top'#3#128#0#0#0#16
+  +'TPLCBlockElement'#16'PLCBlockElement1'#7'TagGUID'#6'&{CFED774D-C3B2-47F8-81'
+  +'A8-4A04801FE886}'#8'PLCBlock'#7#9'PLCBlock1'#5'Index'#2#0#14'EnableMaxValue'
+  +#8#14'EnableMinValue'#8#8'MaxValue'#2#0#8'MinValue'#2#0#4'left'#2' '#3'top'#3
+  +#184#0#0#0#16'TPLCBlockElement'#16'PLCBlockElement2'#7'TagGUID'#6'&{F50CFDA9'
+  +'-7C53-493A-A66B-E018BBFBC669}'#8'PLCBlock'#7#9'PLCBlock1'#5'Index'#2#1#14'E'
+  +'nableMaxValue'#8#14'EnableMinValue'#8#8'MaxValue'#2#0#8'MinValue'#2#0#4'lef'
+  +'t'#2' '#3'top'#3#240#0#0#0#25'TCustomizedUserManagement'#25'CustomizedUserM'
+  +'anagement1'#12'LoginRetries'#2#0#15'LoginFrozenTime'#2#0#4'left'#3#248#1#3
+  ,'top'#2#16#0#0#0
 ]);

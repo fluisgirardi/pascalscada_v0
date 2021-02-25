@@ -1,33 +1,27 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="9"/>
+    <Version Value="11"/>
     <General>
       <MainUnit Value="0"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
       <Icon Value="0"/>
-      <ActiveWindowIndexAtStart Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
     </i18n>
-    <VersionInfo>
-      <StringTable ProductVersion=""/>
-    </VersionInfo>
     <BuildModes Count="1" Active="Default">
       <Item1 Name="Default" Default="True"/>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
-      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
-      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
     </PublishOptions>
     <RunParams>
-      <local>
-        <FormatVersion Value="1"/>
-        <LaunchingApplication PathPlusParams="/usr/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
-      </local>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default"/>
+      </Modes>
     </RunParams>
     <RequiredPackages Count="2">
       <Item1>
@@ -41,17 +35,15 @@
       <Unit0>
         <Filename Value="linear_example.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="linear_example"/>
         <UsageCount Value="20"/>
       </Unit0>
       <Unit1>
         <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="umain"/>
-        <EditorIndex Value="0"/>
-        <WindowIndex Value="0"/>
+        <IsVisibleTab Value="True"/>
         <TopLine Value="3"/>
         <CursorPos X="8" Y="41"/>
         <UsageCount Value="20"/>
@@ -62,11 +54,10 @@
         <Filename Value="udm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="DataModule1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <UnitName Value="udm"/>
-        <EditorIndex Value="3"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="21"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="11"/>
         <CursorPos X="123" Y="18"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
@@ -75,63 +66,56 @@
       <Unit3>
         <Filename Value="../../valueprocessor.pas"/>
         <UnitName Value="ValueProcessor"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="433"/>
         <CursorPos X="3" Y="440"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit3>
       <Unit4>
         <Filename Value="../../hsstrings.pas"/>
-        <UnitName Value="hsstrings"/>
-        <EditorIndex Value="2"/>
-        <WindowIndex Value="0"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="226"/>
         <CursorPos X="25" Y="247"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
     </Units>
-    <JumpHistory Count="18" HistoryIndex="17">
+    <JumpHistory Count="17" HistoryIndex="16">
       <Position1>
         <Filename Value="umain.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
       </Position1>
       <Position2>
         <Filename Value="umain.pas"/>
-        <Caret Line="37" Column="8" TopLine="1"/>
+        <Caret Line="37" Column="8"/>
       </Position2>
       <Position3>
         <Filename Value="umain.pas"/>
-        <Caret Line="38" Column="8" TopLine="1"/>
+        <Caret Line="38" Column="8"/>
       </Position3>
       <Position4>
         <Filename Value="umain.pas"/>
-        <Caret Line="39" Column="8" TopLine="1"/>
+        <Caret Line="39" Column="8"/>
       </Position4>
       <Position5>
         <Filename Value="umain.pas"/>
-        <Caret Line="38" Column="8" TopLine="1"/>
+        <Caret Line="38" Column="8"/>
       </Position5>
       <Position6>
         <Filename Value="umain.pas"/>
-        <Caret Line="37" Column="8" TopLine="1"/>
+        <Caret Line="37" Column="8"/>
       </Position6>
       <Position7>
         <Filename Value="umain.pas"/>
-        <Caret Line="38" Column="8" TopLine="1"/>
+        <Caret Line="38" Column="8"/>
       </Position7>
       <Position8>
         <Filename Value="umain.pas"/>
-        <Caret Line="39" Column="8" TopLine="1"/>
+        <Caret Line="39" Column="8"/>
       </Position8>
       <Position9>
         <Filename Value="umain.pas"/>
-        <Caret Line="40" Column="8" TopLine="1"/>
+        <Caret Line="40" Column="8"/>
       </Position9>
       <Position10>
         <Filename Value="umain.pas"/>
@@ -165,10 +149,6 @@
         <Filename Value="umain.pas"/>
         <Caret Line="40" Column="8" TopLine="3"/>
       </Position17>
-      <Position18>
-        <Filename Value="../../valueprocessor.pas"/>
-        <Caret Line="431" Column="21" TopLine="415"/>
-      </Position18>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
@@ -187,9 +167,6 @@
         </Win32>
       </Options>
     </Linking>
-    <Other>
-      <CompilerPath Value="$(CompPath)"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

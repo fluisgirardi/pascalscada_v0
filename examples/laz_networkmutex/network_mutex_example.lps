@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="10"/>
+    <Version Value="11"/>
     <BuildModes Active="Default"/>
     <Units Count="4">
       <Unit0>
@@ -17,8 +17,10 @@
         <Filename Value="unit1.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
+        <IsVisibleTab Value="True"/>
         <TopLine Value="4"/>
         <CursorPos Y="40"/>
         <UsageCount Value="20"/>
@@ -30,16 +32,15 @@
         <UnitName Value="MutexClient"/>
         <EditorIndex Value="1"/>
         <TopLine Value="309"/>
-        <CursorPos X="3" Y="314"/>
+        <CursorPos X="15" Y="316"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
         <Filename Value="../../src/scada/mutexserver.pas"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <TopLine Value="189"/>
-        <CursorPos X="54" Y="200"/>
+        <CursorPos X="29" Y="203"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
       </Unit3>
@@ -54,5 +55,9 @@
         <Caret Line="184" Column="3" TopLine="177"/>
       </Position2>
     </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode="default"/>
+    </RunParams>
   </ProjectSession>
 </CONFIG>

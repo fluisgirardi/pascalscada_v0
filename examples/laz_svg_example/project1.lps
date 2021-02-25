@@ -17,16 +17,18 @@
         <Filename Value="unit1.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
+        <IsVisibleTab Value="True"/>
         <CursorPos X="29" Y="20"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
-        <EditorIndex Value="2"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <EditorIndex Value="1"/>
         <TopLine Value="765"/>
         <CursorPos X="29" Y="784"/>
         <UsageCount Value="10"/>
@@ -35,144 +37,110 @@
       <Unit3>
         <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
         <UnitName Value="BGRASVGShapes"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="3373"/>
         <CursorPos Y="3381"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="/home_ssd/eletromep/development/lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
+        <Filename Value="../../../../lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
         <UnitName Value="TextStrings"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="236"/>
         <CursorPos Y="264"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
       </Unit4>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="29">
+    <JumpHistory Count="22" HistoryIndex="21">
       <Position1>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="829" TopLine="812"/>
       </Position1>
       <Position2>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="830" TopLine="812"/>
       </Position2>
       <Position3>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="831" TopLine="812"/>
       </Position3>
       <Position4>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="832" TopLine="812"/>
       </Position4>
       <Position5>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="833" TopLine="812"/>
       </Position5>
       <Position6>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="836" TopLine="812"/>
       </Position6>
       <Position7>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="837" TopLine="812"/>
       </Position7>
       <Position8>
-        <Filename Value="/home_ssd/eletromep/development/lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
+        <Filename Value="../../../../lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
         <Caret Line="258" TopLine="236"/>
       </Position8>
       <Position9>
-        <Filename Value="/home_ssd/eletromep/development/lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
+        <Filename Value="../../../../lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
         <Caret Line="259" TopLine="236"/>
       </Position9>
       <Position10>
-        <Filename Value="/home_ssd/eletromep/development/lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
+        <Filename Value="../../../../lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
         <Caret Line="261" TopLine="236"/>
       </Position10>
       <Position11>
-        <Filename Value="/home_ssd/eletromep/development/lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
+        <Filename Value="../../../../lazarus/fixes_2_0/components/lazutils/textstrings.pas"/>
         <Caret Line="264" TopLine="236"/>
       </Position11>
       <Position12>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="838" TopLine="812"/>
       </Position12>
       <Position13>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="839" TopLine="812"/>
       </Position13>
       <Position14>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="777" TopLine="755"/>
       </Position14>
       <Position15>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="778" TopLine="755"/>
       </Position15>
       <Position16>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="779" TopLine="755"/>
       </Position16>
       <Position17>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="780" TopLine="755"/>
       </Position17>
       <Position18>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="781" TopLine="755"/>
       </Position18>
       <Position19>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="3381" TopLine="3359"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Caret Line="778" TopLine="765"/>
       </Position19>
       <Position20>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
-        <Caret Line="778" TopLine="765"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Caret Line="779" TopLine="765"/>
       </Position20>
       <Position21>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
-        <Caret Line="779" TopLine="765"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Caret Line="780" TopLine="765"/>
       </Position21>
       <Position22>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
-        <Caret Line="780" TopLine="765"/>
-      </Position22>
-      <Position23>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="754" Column="16" TopLine="735"/>
-      </Position23>
-      <Position24>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="725" Column="16" TopLine="703"/>
-      </Position24>
-      <Position25>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="3386" TopLine="3378"/>
-      </Position25>
-      <Position26>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="3387" TopLine="3378"/>
-      </Position26>
-      <Position27>
-        <Filename Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Caret Line="784" Column="29" TopLine="765"/>
-      </Position27>
-      <Position28>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="755" Column="16" TopLine="736"/>
-      </Position28>
-      <Position29>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="723" Column="16" TopLine="701"/>
-      </Position29>
-      <Position30>
-        <Filename Value="../../../../../../fabiolg/.fixes_2_0/onlinepackagemanager/packages/bgrabitmap-master/bgrabitmap/bgrasvgshapes.pas"/>
-        <Caret Line="3381" Column="3" TopLine="3379"/>
-      </Position30>
+      </Position22>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
@@ -185,14 +153,14 @@
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
-        <Source Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Source Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Line Value="828"/>
       </Item1>
       <Item2>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
-        <Source Value="/home_ssd/eletromep/development/base_libs/pascalscada/src/hmi/hmi_draw_basic_vector_control.pas"/>
+        <Source Value="../../src/hmi/hmi_draw_basic_vector_control.pas"/>
         <Line Value="778"/>
       </Item2>
       <Item3>
