@@ -207,9 +207,8 @@
       </Item1>
       <Item2>
         <PackageName Value="pascalscada_common"/>
-        <MaxVersion Minor="7" Release="6"/>
+        <MaxVersion Minor="7" Release="7"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
-        <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item2>
     </RequiredPkgs>
     <UsageOptions>

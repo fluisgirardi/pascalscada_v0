@@ -91,7 +91,6 @@
       <Item2>
         <PackageName Value="pascalscada"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
-        <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
       </Item2>
     </RequiredPkgs>
     <UsageOptions>

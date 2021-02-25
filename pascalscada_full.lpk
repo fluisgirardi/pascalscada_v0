@@ -33,20 +33,18 @@
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="pascalscada_dsng"/>
+        <MaxVersion Minor="7" Release="7"/>        
         <MinVersion Minor="7" Release="7" Valid="True"/>
-        <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada_hmi"/>
-        <MaxVersion Minor="7" Release="6"/>
+        <MaxVersion Minor="7" Release="7"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
-        <DefaultFilename Value="pascalscada_hmi.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="pascalscada_db"/>
-        <MaxVersion Minor="7" Release="6"/>
+        <MaxVersion Minor="7" Release="7"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
-        <DefaultFilename Value="pascalscada_db.lpk" Prefer="True"/>
       </Item3>
     </RequiredPkgs>
     <UsageOptions>
