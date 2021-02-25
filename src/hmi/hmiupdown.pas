@@ -204,10 +204,11 @@ end;
 
 procedure THMIUpDown.RefreshUpDown(Data: PtrInt);
 begin
-   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-      FPosition := (FTag as ITagNumeric).Value;
+  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+    FPosition := (FTag as ITagNumeric).Value;
 
-   inherited Position:=50;
+  inherited Position:=50;
 end;
 
 procedure THMIUpDown.SetSecurityCode(sc: UTF8String);

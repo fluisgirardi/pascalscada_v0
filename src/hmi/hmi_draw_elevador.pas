@@ -280,6 +280,7 @@ var
   value: Double;
   zone: THMIElevatorFlowZone;
 begin
+  if [csReading,csLoading]*ComponentState<>[] then exit;
   if Assigned(FPLCTag) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 

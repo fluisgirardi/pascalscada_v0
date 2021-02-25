@@ -257,6 +257,7 @@ procedure THMIControlDislocatorAnimation.MoveObject(DataPtr: PtrInt);
 var
   outX, outY:Double;
 begin
+  if [csReading,csLoading]*ComponentState<>[] then exit;
   if (FTarget=nil) or (FTag=nil) then exit;
 
   FXLinearScale.Input:=FTag.Value;

@@ -143,6 +143,7 @@ end;
 
 procedure THMIScrollBar.RefreshScrollBar(Data: PtrInt);
 begin
+  if [csReading,csLoading]*ComponentState<>[] then exit;
   if not FBusy then begin
     if (FTag=nil) then exit;
 

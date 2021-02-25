@@ -288,7 +288,7 @@ end;
 
 procedure THMILabel.RefreshTagValue;
 begin
-  if (csReading in ComponentState) or (FTag=nil) then begin
+  if ([csReading, csLoading]*ComponentState<>[]) then begin
     if (csDesigning in ComponentState) then begin
       if (FTag=nil) then
         inherited Caption := SWithoutTag

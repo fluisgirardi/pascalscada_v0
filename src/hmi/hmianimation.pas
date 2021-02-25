@@ -225,7 +225,7 @@ end;
 
 procedure THMIAnimation.RefreshAnimation(Data: PtrInt);
 begin
-   if [csReading,csDestroying]*ComponentState=[] then begin
+   if [csReading,csDestroying,csLoading]*ComponentState=[] then begin
       if FTag=nil then begin
         ShowDefaultZone;
       end else begin

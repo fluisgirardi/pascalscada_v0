@@ -130,7 +130,7 @@ end;
 procedure THMIProgressBar.RefreshProgress(Data: PtrInt);
 begin
   FRefreshPending:=false;
-  if ([csReading]*ComponentState<>[]) or (FTag=nil) then
+  if ([csReading,csLoading]*ComponentState<>[]) or (FTag=nil) then
     exit;
 
   if (FTag<>nil) and (Supports(FTag, ITagNumeric)) then

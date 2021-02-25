@@ -689,6 +689,7 @@ var
   zone: THMIVectorFlowZone;
   value:Double = Infinity;
 begin
+  if [csReading,csLoading]*ComponentState<>[] then exit;
   if Assigned(FPLCTag) and Supports(FPLCTag, ITagNumeric) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 
@@ -774,17 +775,29 @@ var
   function FindSVGElement(const aSVGId:AnsiString; const SVGContents:TSVGContent; out SVGElement:TSVGElement):Boolean;
   var
     i: Integer;
+    a, b, c: Boolean;
   begin
     Result:=False;
     if SVGContents=nil then exit;
     for i:=0 to SVGContents.ElementCount-1 do begin
-      if LowerCase(SVGContents.Element[i].Attribute['id'])=aSVGId then begin
+      a:=SVGContents.IsSVGElement[i];
+      if a then
+        b:=SVGContents.Element[i].HasAttribute('id')
+      else
+        b:=false;
+
+      if b then
+        c:=LowerCase(SVGContents.Element[i].Attribute['id'])=aSVGId
+      else
+        c:=false;
+
+      if (a and b and c) then begin
         Result:=true;
         SVGElement:=SVGContents.Element[i];
         break;
       end else
-        if SVGContents.Element[i] is TSVGGroup then begin
-          if FindSVGElement(aSVGId,TSVGGroup(SVGContents.Element[i]).Content,SVGElement) then begin
+        if SVGContents.IsSVGElement[i] and (SVGContents.ElementObject[i] is TSVGGroup) then begin
+          if FindSVGElement(aSVGId,TSVGGroup(SVGContents.ElementObject[i]).Content,SVGElement) then begin
             Result:=true;
             Break;
           end;

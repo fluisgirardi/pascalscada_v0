@@ -157,17 +157,19 @@ procedure THMIRadioGroup.RefreshRadioGroup(Data: PtrInt);
 var
    Value:Double;
 begin
-   Value := 0;
+  if [csReading,csLoading]*ComponentState<>[] then exit;
 
-   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-      Value := (FTag as ITagNumeric).Value;
+  Value := 0;
 
-   FIgnore:=true;
-   if (Value>=0) and (Value<Items.Count) then
-      inherited ItemIndex:= Trunc(Value)
-   else
-      inherited ItemIndex := FDefaultIndex;
-   FIgnore:=false;
+  if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+    Value := (FTag as ITagNumeric).Value;
+
+  FIgnore:=true;
+  if (Value>=0) and (Value<Items.Count) then
+    inherited ItemIndex:= Trunc(Value)
+  else
+    inherited ItemIndex := FDefaultIndex;
+  FIgnore:=false;
 end;
 
 procedure THMIRadioGroup.SetSecurityCode(sc: UTF8String);

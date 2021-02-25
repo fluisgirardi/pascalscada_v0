@@ -170,9 +170,10 @@ end;
 
 procedure THMITrackBar.RefreshTagValue(DataPtr: PtrInt);
 begin
-   if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
-      inherited Position := Trunc((Ftag as ITagNumeric).Value);
-   FModified:=false;
+  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
+    inherited Position := Trunc((Ftag as ITagNumeric).Value);
+  FModified:=false;
 end;
 
 procedure THMITrackBar.SetHMITag(t:TPLCTag);

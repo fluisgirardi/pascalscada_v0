@@ -354,6 +354,7 @@ var
   obj: Integer;
 begin
   NewIndex:=-1;
+  if [csReading,csLoading]*ComponentState<>[] then exit;
   if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
     valueReal:=(FTag as ITagNumeric).GetValue;
 

@@ -147,6 +147,7 @@ var
   zone: THMIFlowZone;
   value:Double = Infinity;
 begin
+  if [csReading,csLoading]*ComponentState<>[] then exit;
   if Assigned(FPLCTag) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 

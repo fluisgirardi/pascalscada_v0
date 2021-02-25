@@ -664,7 +664,7 @@ end;
 
 procedure THMIEdit.RefreshTagValue(DataPtr: PtrInt);
 begin
-  if ([csReading]*ComponentState<>[]) or (FTag=nil) or Modified then begin
+  if ([csReading,csLoading]*ComponentState<>[]) or (FTag=nil) or Modified then begin
     exit;
   end;
 

@@ -522,7 +522,7 @@ end;
 
 procedure THMICheckBox.RefreshCheckBox(Data: PtrInt);
 begin
-  if ([csReading]*ComponentState<>[]) or (FTag=nil) then begin
+  if ([csReading, csLoading]*ComponentState<>[]) or (FTag=nil) then begin
     exit;
   end;
 
