@@ -5,7 +5,7 @@ unit numexprtag;
 interface
 
 uses
-  Classes, SysUtils, fpexprpars, PLCNumber, PLCTagNumber, ProtocolTypes, Tag;
+  Classes, SysUtils, fpexprpars, PLCNumber, ProtocolTypes, Tag;
 
 type
 
