@@ -32,6 +32,7 @@ uses
   IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
+  numexprtag,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -72,7 +73,8 @@ begin
                                            TPLCString,
                                            TTagBit,
                                            TPLCStruct,
-                                           TPLCStructItem]);
+                                           TPLCStructItem,
+                                           TNumericExprTag]);
 
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
   {$IF defined(WIN32) or defined(WIN64)}
