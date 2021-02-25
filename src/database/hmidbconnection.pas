@@ -810,8 +810,10 @@ begin
       except
         on e:Exception do begin
           msg:=e.Message;
+          {$IFNDEF WINDOWS}
           writeln(e.Message);
           WriteLn(sqlcmd);
+          {$ENDIF}
           //ts:=TStringStream.Create(sqlcmd);
           //ts.SaveToFile('/tmp/teste.txt');
           //ts.Free;
