@@ -38,6 +38,9 @@ type
   @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
+
+  { TPLCTagNumber }
+
   TPLCTagNumber = class(TPLCNumberMappable, IScanableTagInterface, ITagInterface, ITagNumeric)
   private
     function  GetVariantValue:Variant;
@@ -65,6 +68,8 @@ type
     procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
 
     procedure Write(aValue:Double); overload;
+
+    procedure SetMinMaxValues(aMin, aMax: Double); override;
   published
     //: @seealso(TTag.AutoRead)
     property AutoRead;
@@ -282,6 +287,11 @@ begin
   finally
     SetLength(x,0);
   end;
+end;
+
+procedure TPLCTagNumber.SetMinMaxValues(aMin, aMax: Double);
+begin
+  inherited SetMinMaxValues(aMin, aMax);
 end;
 
 procedure TPLCTagNumber.TagCommandCallBack(const ReqID: LongWord;

@@ -39,6 +39,9 @@ type
     @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
+
+  { TPLCNumber }
+
   TPLCNumber = class(TPLCTag)
   protected
     //: @seealso(ITagInterface.GetValueAsText);
@@ -49,6 +52,7 @@ type
     function GetValueChangeData: Pointer; override;
     //: @seealso(TTag.ReleaseChangeData)
     procedure ReleaseChangeData(data: Pointer); override;
+    procedure SetMinMaxValues(aMin, aMax: Double); virtual;
   protected
     {$IFDEF PORTUGUES}
     //: Armazena se devem ser verificados limites minimos e máximos
@@ -350,6 +354,13 @@ begin
   x:=data;
   SetLength(x^,0);
   Dispose(x);
+end;
+
+procedure TPLCNumber.SetMinMaxValues(aMin, aMax: Double);
+begin
+  if aMin > aMax then raise Exception.Create('Min value is greater than Max value');
+  FMinLimit:=aMin;
+  FMaxLimit:=aMax;
 end;
 
 function  TPLCNumber.GetValue:Double;
