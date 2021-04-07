@@ -52,6 +52,7 @@ type
   protected
     procedure UpdateValve; override;
     property PLCTag:TPLCTag read FPLCTag write SetHMITag;
+    procedure Loaded; override;
   public
     destructor Destroy; override;
   end;
@@ -127,12 +128,18 @@ begin
     Application.QueueAsyncCall(@UpdateValveDelayed,0);
 end;
 
+procedure THMICustomLinkedFlowValve.Loaded;
+begin
+  inherited Loaded;
+  TagChangeCallBack(Self);
+end;
+
 procedure THMICustomLinkedFlowValve.UpdateValveDelayed(Data: PtrInt);
 var
   zone: THMIFlowZone;
   value:Double = Infinity;
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if Assigned(FPLCTag) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 

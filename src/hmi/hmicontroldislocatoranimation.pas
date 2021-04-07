@@ -250,14 +250,15 @@ end;
 
 procedure THMIControlDislocatorAnimation.Loaded;
 begin
-  MoveObject(0);
+  inherited Loaded;
+  TagChangeCallBack(Self);
 end;
 
 procedure THMIControlDislocatorAnimation.MoveObject(DataPtr: PtrInt);
 var
   outX, outY:Double;
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTarget=nil) or (FTag=nil) then exit;
 
   FXLinearScale.Input:=FTag.Value;

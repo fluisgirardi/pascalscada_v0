@@ -143,6 +143,7 @@ type
     procedure UpdateControl; override;
     property PLCTag:TPLCTag read FPLCTag write SetHMITag;
     property OnStateChange:TNotifyEvent read FOnStateChange write FOnStateChange;
+    procedure Loaded; override;
   public
     destructor Destroy; override;
   end;
@@ -280,7 +281,7 @@ var
   value: Double;
   zone: THMIElevatorFlowZone;
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if Assigned(FPLCTag) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 
@@ -305,6 +306,12 @@ procedure THMICustomLinkedFlowElevator.UpdateControl;
 begin
   if (Application.Flags*[AppDoNotCallAsyncQueue]=[]) and (ComponentState*[csDesigning]=[]) then
     Application.QueueAsyncCall(@UpdateControlDelayed,0);
+end;
+
+procedure THMICustomLinkedFlowElevator.Loaded;
+begin
+  inherited Loaded;
+  TagChangeCallBack(Self);
 end;
 
 destructor THMICustomLinkedFlowElevator.Destroy;

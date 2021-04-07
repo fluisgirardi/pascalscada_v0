@@ -71,6 +71,7 @@ type
     {$IF (not defined(WIN32)) and (not defined(WIN64))}
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt); override;
     {$IFEND}
+    procedure Loaded; override;
   public
     //: @exclude
     constructor Create(AOwner: TComponent); override;
@@ -143,7 +144,7 @@ end;
 
 procedure THMIScrollBar.RefreshScrollBar(Data: PtrInt);
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if not FBusy then begin
     if (FTag=nil) then exit;
 
@@ -261,6 +262,13 @@ begin
     inherited MouseUp(Button, Shift, X, Y);
   end;
 end;
+
+procedure THMIScrollBar.Loaded;
+begin
+  inherited Loaded;
+  TagChangeCallBack(Self);
+end;
+
 {$IFEND}
 
 procedure THMIScrollBar.WriteValue(Value:LongInt);

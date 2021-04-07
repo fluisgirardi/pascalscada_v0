@@ -255,7 +255,7 @@ var
   x: TColorZone;
   o: Integer;
 begin
-  if [csReading,csLoading,csDesigning]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDesigning,csDestroying]*ComponentState<>[] then exit;
   if Assigned(FTag) and Supports(FTag,ITagNumeric) then begin
     x:=TColorZone(FConditionZones.GetZoneFromValue((FTag as ITagNumeric).Value));
     if x=nil then exit;
@@ -271,7 +271,7 @@ begin
   inherited Loaded;
   FConditionZones.Loaded;
   FObjects.Loaded;
-  RecalculateObjectsProperties;
+  TagChangeCallBack(Self);
 end;
 
 procedure THMIColorPropertyConnector.Notification(AComponent: TComponent;

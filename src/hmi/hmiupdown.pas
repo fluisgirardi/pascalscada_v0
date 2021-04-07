@@ -204,7 +204,7 @@ end;
 
 procedure THMIUpDown.RefreshUpDown(Data: PtrInt);
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
     FPosition := (FTag as ITagNumeric).Value;
 
@@ -286,7 +286,7 @@ end;
 procedure THMIUpDown.Loaded;
 begin
   inherited Loaded;
-  RefreshUpDown(0);
+  TagChangeCallBack(Self);
 end;
 
 procedure THMIUpDown.Click(Button: TUDBtnType);

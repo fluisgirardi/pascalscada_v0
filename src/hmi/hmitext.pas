@@ -165,7 +165,7 @@ end;
 
 procedure THMIText.RefreshText(Data: PtrInt);
 begin
-  if [csLoading,csReading]*ComponentState=[] then begin
+  if [csLoading,csReading,csDestroying]*ComponentState=[] then begin
      if FTag=nil then begin
        ShowDefaultZone;
      end else begin

@@ -62,6 +62,7 @@ type
     procedure WriteFaultCallBack(Sender:TObject); virtual;
     procedure TagChangeCallBack(Sender:TObject); virtual;
     procedure RemoveTagCallBack(Sender:TObject); virtual;
+    procedure Loaded; override;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -255,6 +256,12 @@ begin
     FTag:=nil;
 end;
 
+procedure THMIComboBox.Loaded;
+begin
+  inherited Loaded;
+  TagChangeCallBack(Self);
+end;
+
 procedure THMIComboBox.Select;
   function GetItemValue:Double;
   begin
@@ -354,7 +361,7 @@ var
   obj: Integer;
 begin
   NewIndex:=-1;
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin
     valueReal:=(FTag as ITagNumeric).GetValue;
 

@@ -165,12 +165,12 @@ end;
 procedure THMITrackBar.Loaded;
 begin
   inherited Loaded;
-  RefreshTagValue(0);
+  TagChangeCallBack(Self);
 end;
 
 procedure THMITrackBar.RefreshTagValue(DataPtr: PtrInt);
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
     inherited Position := Trunc((Ftag as ITagNumeric).Value);
   FModified:=false;

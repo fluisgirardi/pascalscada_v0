@@ -122,6 +122,7 @@ type
     procedure UpdateTagValue;
 
     procedure Click; override;
+    procedure Loaded; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -522,7 +523,7 @@ end;
 
 procedure THMICheckBox.RefreshCheckBox(Data: PtrInt);
 begin
-  if ([csReading, csLoading]*ComponentState<>[]) or (FTag=nil) then begin
+  if ([csReading, csLoading, csDestroying]*ComponentState<>[]) or (FTag=nil) then begin
     exit;
   end;
 
@@ -591,8 +592,6 @@ end;
 
 procedure THMICheckBox.RefreshTagValue(x:Double);
 begin
-  if csDestroying in ComponentState then exit;
-
   if x=FValueTrue then begin
     inherited State := cbChecked;
     inherited Font.Assign(FFontTrue);
@@ -726,6 +725,12 @@ begin
     inherited Click
   else
     inherited Click
+end;
+
+procedure THMICheckBox.Loaded;
+begin
+  inherited Loaded;
+  TagChangeCallBack(Self);
 end;
 
 {$IFDEF FPC}

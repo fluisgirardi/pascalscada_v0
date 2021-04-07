@@ -77,6 +77,8 @@ type
     procedure RemoveTagCallBack(Sender:TObject); virtual;
     procedure TagChangeCallBack(Sender:TObject); virtual;
 
+    procedure Loaded; override;
+
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -289,17 +291,18 @@ end;
 procedure THMILabel.RefreshTagValue;
 begin
   if ([csReading, csLoading]*ComponentState<>[]) then begin
-    if (csDesigning in ComponentState) then begin
-      if (FTag=nil) then
-        inherited Caption := SWithoutTag
-      else
-        inherited Caption := FTag.Name;
-    end;
     exit;
   end;
 
-  if (FTag<>nil) AND Supports(FTag, ITagInterface) then
-    inherited Caption := (FTag as ITagInterface).GetValueAsText(FPrefix, FSufix, FNumberFormat, FFormatDateTimeOptions);
+  if (FTag<>nil) then begin
+    if Supports(FTag, ITagInterface) then
+       inherited Caption := (FTag as ITagInterface).GetValueAsText(FPrefix, FSufix, FNumberFormat, FFormatDateTimeOptions);
+  end else begin
+    if (csDesigning in ComponentState) then begin
+      inherited Caption := SWithoutTag
+    end else
+      inherited Caption := '';
+  end;
 end;
 
 function  THMILabel.GetCaption:TCaption;
@@ -339,6 +342,12 @@ procedure THMILabel.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@RefreshLabel,0);
+end;
+
+procedure THMILabel.Loaded;
+begin
+  inherited Loaded;
+  TagChangeCallBack(Self);
 end;
 
 procedure THMILabel.RemoveTagCallBack(Sender: TObject);

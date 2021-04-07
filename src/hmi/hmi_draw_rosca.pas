@@ -10,8 +10,6 @@ uses
 
 type
 
-  { TRedlerBasico }
-
   { THMIRoscaBasica }
 
   THMIRoscaBasica = class(THMIBasicHorizontalControl)

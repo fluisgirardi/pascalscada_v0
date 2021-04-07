@@ -689,7 +689,7 @@ var
   zone: THMIVectorFlowZone;
   value:Double = Infinity;
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if Assigned(FPLCTag) and Supports(FPLCTag, ITagNumeric) then
     value:=(FPLCTag as ITagNumeric).GetValue;
 
@@ -932,6 +932,7 @@ begin
   FStates.Loaded;
   FFlowOutputs.Loaded;
   CheckAutoSize;
+  TagChangeCallBack(Self);
 end;
 
 constructor THMICustomFlowVectorControl.Create(AOwner: TComponent);

@@ -157,7 +157,7 @@ procedure THMIRadioGroup.RefreshRadioGroup(Data: PtrInt);
 var
    Value:Double;
 begin
-  if [csReading,csLoading]*ComponentState<>[] then exit;
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
 
   Value := 0;
 
@@ -261,6 +261,7 @@ procedure THMIRadioGroup.Loaded;
 begin
    inherited Loaded;
    FLoaded:=true;
+   TagChangeCallBack(Self);
 end;
 
 procedure THMIRadioGroup.SetDefaultIndex(v:LongInt);

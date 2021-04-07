@@ -479,6 +479,7 @@ end;
 procedure THMIEdit.Loaded;
 begin
   inherited Loaded;
+  TagChangeCallBack(Self);
   if not HasFocus then begin
     FDefFontColor := Font.Color;
     FDefColor := inherited Color;
@@ -664,7 +665,7 @@ end;
 
 procedure THMIEdit.RefreshTagValue(DataPtr: PtrInt);
 begin
-  if ([csReading,csLoading]*ComponentState<>[]) or (FTag=nil) or Modified then begin
+  if ([csReading,csLoading,csDestroying]*ComponentState<>[]) or (FTag=nil) or Modified then begin
     exit;
   end;
 
