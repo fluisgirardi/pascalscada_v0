@@ -1036,6 +1036,7 @@ begin
   tr.Address := PAddress;
   tr.SubElement := PSubElement;
   Count := ifthen(Count=0, PSize, Count);
+  tr.Count:=Count;
 
   //calcula o tamanho real e o offset de acordo com
   //o tipo de tag e tamanho da palavra de dados

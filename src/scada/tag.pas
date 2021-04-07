@@ -261,6 +261,7 @@ type
     Address:LongInt;
     SubElement:LongInt;
     Size:LongInt;
+    Count:LongInt;
     OffSet:LongInt;
     RealOffset:LongInt;
     Path:AnsiString;
