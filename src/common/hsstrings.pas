@@ -120,6 +120,7 @@ resourcestring
   SSecurityControlBusy      = 'Gerenciador de segurança ainda em uso.';
   SUserManagementIsSet      = 'Já existe um gerenciador de usuários ativo na aplicação.';
   SInvalidUserManager       = 'Gerenciador de usuarios invalido!';
+  SMinIsGreaterThanMax      = 'Valor minimo é maior que o valor máximo';
 
   us7tb_tabsheet1_caption       = 'Area e tipo';
   us7tb_plcaddres_caption       = 'Endereco do CLP';
@@ -267,6 +268,7 @@ resourcestring
   SDriverRequired           = 'You must assign one driver to build tags';
   SBlockRequired            = 'A block or structure tag is required to map their elements';
   SNumberTagRequired        = 'A numeric tag is required to build bits';
+  SMinIsGreaterThanMax      = 'Min value is greater than Max value';
 
   us7tb_tabsheet1_caption       = 'Area and type';
   us7tb_plcaddres_caption       = 'PLC Address';
