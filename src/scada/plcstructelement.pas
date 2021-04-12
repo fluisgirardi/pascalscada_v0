@@ -60,6 +60,7 @@ type
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
+    procedure SetMinMaxValues(aMin, aMax: Double); override;
   published
     //: @seealso(TPLCTag.TagType);
     property TagType;
@@ -87,6 +88,11 @@ begin
   inherited Create(AOwner);
   FProtocolTagType:=ptByte;
   FProtocolWordSize:=8;
+end;
+
+procedure TPLCStructItem.SetMinMaxValues(aMin, aMax: Double);
+begin
+  inherited SetMinMaxValues(aMin, aMax);
 end;
 
 procedure TPLCStructItem.TagChangeCallback(Sender:TObject);
