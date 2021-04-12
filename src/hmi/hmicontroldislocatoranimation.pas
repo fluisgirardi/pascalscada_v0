@@ -32,6 +32,9 @@ type
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
   }
   {$ENDIF}
+
+  { THMIControlDislocatorAnimation }
+
   THMIControlDislocatorAnimation = class(TComponent)
   private
     FStartLeft,
@@ -86,6 +89,7 @@ type
     constructor Create(AOwner:TComponent); override;
     //: @exclude
     destructor  Destroy; override;
+    procedure SetPositionsAndMinMax(vP0X,vP0Y,vP1X,vP1Y: LongInt);
   published
     {$IFDEF PORTUGUES}
     //: Posição inicial no eixo X (propriedade Left do controle)
@@ -246,6 +250,38 @@ begin
   FYLinearScale.Destroy;
   Application.RemoveAsyncCalls(Self);
   inherited Destroy;
+end;
+
+procedure THMIControlDislocatorAnimation.SetPositionsAndMinMax(vP0X, vP0Y,
+  vP1X, vP1Y: LongInt);
+begin
+
+  if vP0X>vP1X then begin
+    SetMaxX(vP0X);
+    SetMinX(vP1X);
+  end else begin
+    SetMaxX(vP1X);
+    SetMinX(vP0X);
+  end;
+
+  if vP0Y>vP1Y then begin
+    SetMaxY(vP0Y);
+    SetMinY(vP1Y);
+  end else begin
+    SetMaxY(vP1Y);
+    SetMinY(vP0Y);
+  end;
+
+  SetStartLeft(vP0X);
+  SetEndLeft(vP1X);
+  SetStartTop(vP0Y);
+  SetEndTop(vP1Y);
+
+  EnableXMax:=True;
+  EnableXMin:=True;
+  EnableYMax:=True;
+  EnableYMin:=True;
+
 end;
 
 procedure THMIControlDislocatorAnimation.Loaded;
