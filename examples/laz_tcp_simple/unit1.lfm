@@ -1,0 +1,33 @@
+object Form1: TForm1
+  Left = 2929
+  Height = 240
+  Top = 246
+  Width = 320
+  Caption = 'Form1'
+  ClientHeight = 240
+  ClientWidth = 320
+  OnCreate = FormCreate
+  LCLVersion = '2.0.13.0'
+  object Edit1: TEdit
+    Left = 16
+    Height = 29
+    Top = 8
+    Width = 288
+    TabOrder = 0
+    Text = 'Edit1'
+  end
+  object Label1: TLabel
+    Left = 16
+    Height = 16
+    Top = 40
+    Width = 40
+    Caption = 'Label1'
+    ParentColor = False
+  end
+  object TCP_UDPPort1: TTCP_UDPPort
+    Host = ''
+    ExclusiveDevice = False
+    Left = 32
+    Top = 96
+  end
+end
