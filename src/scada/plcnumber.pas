@@ -39,9 +39,6 @@ type
     @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
-
-  { TPLCNumber }
-
   TPLCNumber = class(TPLCTag)
   protected
     //: @seealso(ITagInterface.GetValueAsText);
@@ -358,7 +355,7 @@ end;
 
 procedure TPLCNumber.SetMinMaxValues(aMin, aMax: Double);
 begin
-  if aMin > aMax then raise Exception.Create('Min value is greater than Max value');
+  if aMin > aMax then raise Exception.Create(SMinIsGreaterThanMax);
   FMinLimit:=aMin;
   FMaxLimit:=aMax;
 end;

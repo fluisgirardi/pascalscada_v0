@@ -80,11 +80,13 @@ type
   {$ENDIF}
 
   {$IFDEF UNIX}
-  function sched_getaffinity(pid:Ptruint; cpusetsize:longint; cpuset:pointer):longint; cdecl; external;
-  function sched_setaffinity(pid:Ptruint; cpusetsize:longint; cpuset:pointer):longint; cdecl; external;
+  function sched_getaffinity(pid:Ptruint; cpusetsize:longint; cpuset:pointer):cint; cdecl; external;
+  function sched_setaffinity(pid:Ptruint; cpusetsize:longint; cpuset:pointer):cint; cdecl; external;
 
-  function pthread_setaffinity_np(pid:TThreadID; cpusetsize:longint; cpuset:pointer):longint; cdecl; external;
-  function pthread_getaffinity_np(pid:TThreadID; cpusetsize:longint; cpuset:pointer):longint; cdecl; external;
+  function pthread_setaffinity_np(pid:TThreadID; cpusetsize:longint; cpuset:pointer):cint; cdecl; external;
+  function pthread_getaffinity_np(pid:TThreadID; cpusetsize:longint; cpuset:pointer):cint; cdecl; external;
+
+  function pthread_setname_np(thread:TThreadID; name:PChar):cint;               cdecl; external;
   {$ENDIF}
 
 

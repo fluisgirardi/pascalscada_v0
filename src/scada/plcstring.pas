@@ -80,7 +80,7 @@ type
   @value(stC The string finishes when a ASCII char 0 (string terminator) is found.)
   }
   {$ENDIF}
-  TPLCStringTypes = (stSIEMENS, stC);
+  TPLCStringTypes = (stSIEMENS, stC, stROCKWELL);
 
   {$IFDEF PORTUGUES}
   {:
@@ -104,9 +104,6 @@ type
     PStringType:TPLCStringTypes;
     PStringSize:Cardinal;
     POnAsyncStringValueChange:TASyncStringValueChange;
-
-    function ConvertRawByteStringToUTF8(aInput: RawByteString): UTF8String;
-    function ConvertUTF8CharToByte(aInput: UTF8String; aPos: Integer): Byte;
     procedure SetBlockSize(asize:Cardinal);
     procedure SetStringEncoding(AValue: TStringEncodings);
     procedure SetStringSize(asize:Cardinal);
@@ -124,7 +121,7 @@ type
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
-    function GetValueTimestamp:TDatetime;
+    function  GetValueTimestamp:TDatetime;
   protected
     //: @seealso(TTag.AsyncNotifyChange)
     procedure AsyncNotifyChange(data:Pointer); override;
@@ -162,6 +159,11 @@ type
     //: @exclude
     destructor  Destroy; override;
 
+    class function ConvertRawByteStringToUTF8(aInput: RawByteString;
+      aInputEncoding: TStringEncodings): UTF8String;
+    class function ConvertUTF8CharToByte(aInput: UTF8String;
+      aInputEncoding: TStringEncodings; aPos: Integer): Byte;
+
     {$IFDEF PORTUGUES}
     //: Lê/escreve uma string do equipamento.
     {$ELSE}
@@ -172,7 +174,7 @@ type
     //: @seealso(TTagBlock.Read)
     procedure Read; override;
 
-        {$IFDEF PORTUGUES}
+    {$IFDEF PORTUGUES}
     {:
     @name escreve assincronamente os valores atribuidos ao bloco.
     @bold(Só tem efeito caso AutoWrite = @false.)
@@ -298,7 +300,8 @@ begin
   SetLength(values,0);
 end;
 
-function TPLCString.ConvertRawByteStringToUTF8(aInput:RawByteString):UTF8String;
+class function TPLCString.ConvertRawByteStringToUTF8(aInput: RawByteString;
+  aInputEncoding: TStringEncodings): UTF8String;
 var
      CP437Str:   CP437AnsiString;
      CP646Str:   CP646AnsiString;
@@ -322,7 +325,7 @@ var
   c: Integer;
 
 begin
-  case FStringEncoding of
+  case aInputEncoding of
     UTF_8:    begin                      Result :=aInput;                  end;
     CP437:    begin    CP437Str:=''; for c:=1 to Length(aInput) do begin    CP437Str:=   CP437Str + aInput[c]; end; Result:=   CP437Str; end;
     CP646:    begin    CP646Str:=''; for c:=1 to Length(aInput) do begin    CP646Str:=   CP646Str + aInput[c]; end; Result:=   CP646Str; end;
@@ -346,7 +349,8 @@ begin
   end;
 end;
 
-function TPLCString.ConvertUTF8CharToByte(aInput:UTF8String; aPos:Integer):Byte;
+class function TPLCString.ConvertUTF8CharToByte(aInput: UTF8String;
+  aInputEncoding: TStringEncodings; aPos: Integer): Byte;
 var
      CP437Str:   CP437AnsiString;
      CP646Str:   CP646AnsiString;
@@ -368,7 +372,7 @@ var
   CP8859_2Str:CP8859_2AnsiString;
   CP8859_5Str:CP8859_5AnsiString;
 begin
-  case FStringEncoding of
+  case aInputEncoding of
     UTF_8:    begin                      Result := byte(     aInput[aPos]); end;
     CP437:    begin    CP437Str:=aInput; Result := byte(   CP437Str[aPos]); end;
     CP646:    begin    CP646Str:=aInput; Result := byte(   CP646Str[aPos]); end;
@@ -475,7 +479,7 @@ begin
          if ByteBitP<=PByteSize then
            AResult := AResult + Char(ValueAux);
        finally
-         Result:=ConvertRawByteStringToUTF8(AResult);
+         Result:=ConvertRawByteStringToUTF8(AResult,FStringEncoding);
        end;
      end;
 
@@ -530,7 +534,7 @@ begin
            AResult := AResult + Char(ValueAux);
          end;
        finally
-         Result:=ConvertRawByteStringToUTF8(AResult);
+         Result:=ConvertRawByteStringToUTF8(AResult,FStringEncoding);
        end;
      end;
      else
@@ -594,7 +598,7 @@ begin
           //processa os bytes da string
           //processes the bytes of string.
           aux1 := Power(2,ByteBitP);
-          if (ConvertUTF8CharToByte(value, ByteP) and aux1)=aux1 then begin
+          if (ConvertUTF8CharToByte(value,FStringEncoding, ByteP) and aux1)=aux1 then begin
             ValueAux := ValueAux + Power(2,ValueBitP);
           end;
         end;
@@ -637,7 +641,7 @@ begin
         //processa os bytes da string
         //processes the bytes of string.
         aux1 := Power(2,ByteBitP);
-        if (ConvertUTF8CharToByte(value, ByteP) and aux1)=aux1 then
+        if (ConvertUTF8CharToByte(value, FStringEncoding, ByteP) and aux1)=aux1 then
           ValueAux := ValueAux + Power(2,ValueBitP);
 
         inc(bit);
@@ -818,7 +822,7 @@ end;
 
 procedure TPLCString.SetStringSize(asize:Cardinal);
 begin
-   if (PByteSize=8) and (size>255) or ((PByteSize=7) and (asize>127)) then
+   if (PByteSize=8) and (size>255) or ((PByteSize=7) and (asize>127)) or ((PStringType=stROCKWELL) and (asize>84)) then
      raise Exception.Create(SstringSizeOutOfBounds);
    PStringSize := asize;
    SetBlockSize(CalcBlockSize(false));

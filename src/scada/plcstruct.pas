@@ -75,8 +75,8 @@ type
     class procedure AddWord (aArray: TArrayOfDouble; offset: Integer; aWord:  Word;     aSwapBytes: Boolean);
     class procedure AddWord (aArray: TArrayOfDouble; offset: Integer; aWord:  SmallInt; aSwapBytes: Boolean);
 
-    class procedure AddCString      (aArray: TArrayOfDouble; offset: Integer; aString: AnsiString);
-    class procedure AddSiemensString(aArray: TArrayOfDouble; offset: Integer; aString: AnsiString; MaxSize: Byte);
+    class procedure AddCString      (var aArray: TArrayOfDouble; offset: Integer; aString: AnsiString);
+    class procedure AddSiemensString(var aArray: TArrayOfDouble; offset: Integer; aString: AnsiString; MaxSize: Byte);
 
     function GetByte(Offset:Integer):Byte;
     function GetWord(Offset:Integer; aSwapBytes:Boolean):Word;
@@ -216,7 +216,8 @@ begin
   AddQWord(aArray,offset,asQWord,aSwapBytes,aSwapWords,aSwapDWords);
 end;
 
-class procedure TPLCStruct.AddCString(aArray:TArrayOfDouble; offset:Integer; aString:AnsiString);
+class procedure TPLCStruct.AddCString(var aArray: TArrayOfDouble;
+  offset: Integer; aString: AnsiString);
 var
   i: Integer;
 begin
@@ -225,7 +226,8 @@ begin
   addByte(aArray,Length(aString),0);
 end;
 
-class procedure TPLCStruct.AddSiemensString(aArray:TArrayOfDouble; offset:Integer; aString:AnsiString; MaxSize:Byte);
+class procedure TPLCStruct.AddSiemensString(var aArray: TArrayOfDouble;
+  offset: Integer; aString: AnsiString; MaxSize: Byte);
 var
   aSize:Byte;
   i: Integer;

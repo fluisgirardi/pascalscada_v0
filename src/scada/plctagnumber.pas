@@ -38,9 +38,6 @@ type
   @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
-
-  { TPLCTagNumber }
-
   TPLCTagNumber = class(TPLCNumberMappable, IScanableTagInterface, ITagInterface, ITagNumeric)
   private
     function  GetVariantValue:Variant;
