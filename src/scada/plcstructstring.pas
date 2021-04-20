@@ -98,6 +98,7 @@ type
     function ValidSettings(aBlockSize, aIndex, aStrSize:Cardinal; aStrType:TPLCStringTypes):Boolean;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
   published
     {$IFDEF PORTUGUES}
@@ -435,6 +436,13 @@ begin
   inherited Create(AOwner);
   PStringSize := 10;
   PStringType := stC;
+end;
+
+destructor TPLCStructString.Destroy;
+begin
+  if Assigned(PBlock) then
+    PBlock.RemoveAllHandlersFromObject(Self);
+  inherited Destroy;
 end;
 
 end.
