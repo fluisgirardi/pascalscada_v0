@@ -101,6 +101,7 @@ type
 
   TTCP_UDPPort = class(TCommPortDriver)
   private
+    fPortID:TPortUniqueID;
     FHostName:AnsiString;
     FPortNumber:LongInt;
     FTimeout:LongInt;
@@ -122,6 +123,7 @@ type
     procedure SetTimeout(t:LongInt);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
+    procedure RecalcPortId;
   protected
     //: @exclude
     procedure Loaded; override;
@@ -156,6 +158,8 @@ type
     destructor  Destroy; override;
 
     function ReallyActive: Boolean; override;
+
+    function getPortId:TPortUniqueID; override;
 
     class function ValidIPv4(aIPv4:String):Boolean;
   published
@@ -455,6 +459,11 @@ begin
   {$ENDIF}
 end;
 
+function TTCP_UDPPort.getPortId: TPortUniqueID;
+begin
+  InterlockedExchange64(Result, fPortID);
+end;
+
 class function TTCP_UDPPort.ValidIPv4(aIPv4: String): Boolean;
 var
   ip: TStringArray;
@@ -500,12 +509,14 @@ begin
 
   if (trim(target)='') then begin
     FHostName:=trim(target);
+    RecalcPortId;
     exit;
   end;
 
   if (FHostName<>target) then begin
     if ValidIPv4(target) then begin
       FHostName:=target;
+      RecalcPortId;
       exit;
     end else
       raise Exception.Create(Format('The address "%s" is not a valid IPv4 address',[target]));
@@ -519,6 +530,8 @@ begin
     FPortNumber:=pn
   else
     raise Exception.Create(SportNumberRangeError);
+
+  RecalcPortID;
 end;
 
 procedure TTCP_UDPPort.SetTimeout(t:LongInt);
@@ -531,6 +544,7 @@ procedure TTCP_UDPPort.SetPortType(pt:TPortType);
 begin
   DoExceptionInActive;
   FPortType:=pt;
+  RecalcPortId;
 end;
 
 procedure TTCP_UDPPort.SetExclusive(b:Boolean);
@@ -556,11 +570,47 @@ begin
     FExclusiveDevice := b;
 end;
 
+procedure TTCP_UDPPort.RecalcPortId;
+var
+  aID:TPortUniqueID = 0;
+  abytes:array[0..7] of byte absolute aID;
+  ip: TStringArray;
+  aux: Longint;
+  i: Integer;
+begin
+  aID:=0;
+  case FPortType of
+    ptTCP: abytes[7]:=2;
+    ptUDP: abytes[7]:=3;
+  end;
+  if ValidIPv4(FHostName) then begin
+    ip:=ExplodeString('.',FHostName);
+    for i:=0 to 3 do begin
+      if TryStrToInt(ip[i],aux) then
+        abytes[i]:=aux
+      else begin
+        abytes[0]:=0;
+        abytes[1]:=1;
+        abytes[2]:=2;
+        abytes[3]:=3;
+        abytes[7]:= abytes[7] or $80;
+        break;
+      end;
+    end;
+  end else begin
+    abytes[7]:= abytes[7] or $80;
+  end;
+
+  PWord(@abytes[4])^:=FPortNumber;
+
+  InterlockedExchange64(fPortID, aID);
+end;
+
 procedure TTCP_UDPPort.setEnableAutoReconnect(v:Boolean);
 begin
-    FConnectThread.EnableAutoReconnect:=v;
-    if v=false then
-      FConnectThread.StopAutoReconnect;
+  FConnectThread.EnableAutoReconnect:=v;
+  if v=false then
+    FConnectThread.StopAutoReconnect;
  end;
 
 function  TTCP_UDPPort.GetReconnectInterval:Integer;

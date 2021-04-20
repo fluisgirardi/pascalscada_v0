@@ -25,6 +25,8 @@ uses
   {$IFNDEF FPC}, Windows{$ENDIF};
 
 type
+  TPortUniqueID = QWord;
+
   {$IFDEF PORTUGUES}
   {:
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
@@ -878,6 +880,8 @@ type
     }
     {$ENDIF}
     function ReallyActive:Boolean; virtual;
+
+    function    getPortId:TPortUniqueID; virtual;
   published
 
     {$IFDEF PORTUGUES}
@@ -1456,6 +1460,11 @@ begin
     end;
   end else
     Result:=PActive;
+end;
+
+function TCommPortDriver.getPortId: TPortUniqueID;
+begin
+
 end;
 
 procedure TCommPortDriver.SetActive(v:Boolean);
