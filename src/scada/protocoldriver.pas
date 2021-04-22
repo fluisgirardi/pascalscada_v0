@@ -1144,9 +1144,11 @@ begin
     //cria um pacote de escrita por scan
     //creates the message of scan write
     New(pkg);
+    FillByte(pkg^,SizeOf(Pkg^),0);
     //copia o TagRec
     //copy the tagrec
-    Move(tagrec, pkg^.Tag, sizeof(TTagRec));
+    pkg^.Tag:=tagrec;
+    pkg^.Tag.Path:=tagrec.Path;
     //copia o id da requisição
     //copy the request id
     pkg^.Tag.ID:=FScanWriteID;

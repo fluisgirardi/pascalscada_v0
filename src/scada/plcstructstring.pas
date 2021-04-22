@@ -355,7 +355,7 @@ begin
         SetLength(aux,PStringSize+4);
         PCurrStrSize:=Length(AValue);
 
-        PBlock.AddDWord(aux,PIndex,PCurrStrSize,false,false);
+        PBlock.AddDWord(aux,0,PCurrStrSize,false,false);
         limit:=min(PStringSize,Length(AValue));
         for c:=4 to high(aux) do begin
           if (c-4)<limit then
@@ -367,7 +367,7 @@ begin
       end
       else exit;
     end;
-    PBlock.ScanWrite(aux,Length(aux), PIndex);
+    PBlock.ScanWrite(aux, Length(aux), PIndex);
   end;
 
   if PValue<>AValue then NotifyChange;
