@@ -262,14 +262,13 @@ begin
     inherited MouseUp(Button, Shift, X, Y);
   end;
 end;
+{$IFEND}
 
 procedure THMIScrollBar.Loaded;
 begin
   inherited Loaded;
   TagChangeCallBack(Self);
 end;
-
-{$IFEND}
 
 procedure THMIScrollBar.WriteValue(Value:LongInt);
 begin

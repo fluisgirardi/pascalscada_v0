@@ -77,6 +77,8 @@ type
     function GetImageList: TCustomImageList; override;
   public
     procedure SetValue(const NewValue: ansistring); override;
+    procedure ListDrawValue(const CurValue: ansistring; Index: integer;
+      ACanvas: TCanvas; const ARect: TRect; AState: TPropEditDrawState); override;
   end;
 
   TPascalSCADALoginLogoutImageIndexPropertyEditor = class(TImageIndexPropertyEditor)
@@ -422,7 +424,7 @@ begin
     else begin
       if GetImageList<>nil then begin
         x:=StrToInt(NewValue);
-        if x in [0..GetImageList.Count-2] then
+        if (x>=0) and (x<GetImageList.Count) then
           inherited SetValue(NewValue)
         else
           inherited SetValue('-1');
@@ -432,6 +434,59 @@ begin
   except
     inherited SetValue('-1');
   end;
+end;
+
+procedure TGraphiZoneImageIndexPropertyEditor.ListDrawValue(
+  const CurValue: ansistring; Index: integer; ACanvas: TCanvas;
+  const ARect: TRect; AState: TPropEditDrawState);
+var
+  Images: TCustomImageList;
+  R: TRect;
+  OldColor: TColor;
+
+  procedure DrawText;
+  var
+    Style: TTextStyle;
+  begin
+    FillChar(Style{%H-},SizeOf(Style),0);
+    With Style do begin
+      Alignment := taLeftJustify;
+      Layout := tlCenter;
+      Opaque := False;
+      Clipping := True;
+      ShowPrefix := True;
+      WordBreak := False;
+      SingleLine := True;
+      SystemFont := False;
+    end;
+    ACanvas.TextRect(ARect, ARect.Left+2,ARect.Top, CurValue, Style);
+  end;
+
+begin
+  if Index=0 then  begin
+    DrawText;
+    exit;
+  end;
+  dec(Index);
+  Images := GetImageList;
+  R := ARect;
+  if Assigned(Images) then
+  begin
+    if (pedsInComboList in AState) and not (pedsInEdit in AState) then
+    begin
+      OldColor := ACanvas.Brush.Color;
+      if pedsSelected in AState then
+        ACanvas.Brush.Color := clHighlight
+      else
+        ACanvas.Brush.Color := clWhite;
+      ACanvas.FillRect(R);
+      ACanvas.Brush.Color := OldColor;
+    end;
+
+    Images.Draw(ACanvas, R.Left+Images.Width+ 3, R.Top + 1, Index, True);
+    R.Left := R.Left + Images.Width + 2;
+  end;
+  DrawText;
 end;
 
 function TGraphiZoneImageIndexPropertyEditor.GetImageList: TCustomImageList;
