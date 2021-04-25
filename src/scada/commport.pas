@@ -140,6 +140,9 @@ type
   After do this, your communication port already is thread-safe!
   }
   {$ENDIF}
+
+  { TCommPortDriver }
+
   TCommPortDriver = class(TComponent)
   private
     FLogActions,
@@ -881,7 +884,27 @@ type
     {$ENDIF}
     function ReallyActive:Boolean; virtual;
 
-    function    getPortId:TPortUniqueID; virtual;
+    {$IFDEF PORTUGUES}
+    {:
+    Encerra o handle da porta aberta e abre um novo handle.
+    }
+    {$ELSE}
+    {:
+    Closes the current port handle and opens a new one.
+    } 
+    {$ENDIF}
+    procedure RenewHandle; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Retorna um identificador da conexão
+    }
+    {$ELSE}
+    {:
+    Returns a connection identifier.
+    } 
+    {$ENDIF}
+    function getPortId:TPortUniqueID; virtual;
   published
 
     {$IFDEF PORTUGUES}
@@ -1460,6 +1483,11 @@ begin
     end;
   end else
     Result:=PActive;
+end;
+
+procedure TCommPortDriver.RenewHandle;
+begin
+
 end;
 
 function TCommPortDriver.getPortId: TPortUniqueID;

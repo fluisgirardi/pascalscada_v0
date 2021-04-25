@@ -152,6 +152,8 @@ type
 
   {$ENDIF}
 
+  { TSerialPortDriver }
+
   TSerialPortDriver = class(TCommPortDriver)
   private
     PActivatedOnLoad:Boolean;
@@ -211,6 +213,11 @@ type
     procedure SetActive(v: Boolean); override;
     {: @exclude }
     procedure Loaded; override;
+  public
+    //: @seealso TCommPortDriver.RenewHandle
+    procedure RenewHandle; override;
+    //: @seealso TCommPortDriver.getPortId
+    function getPortId: TPortUniqueID; override;
   public
     {$IFDEF PORTUGUES}
     {:
@@ -1215,6 +1222,18 @@ begin
   inherited Loaded;
   COMPort:=PPortNameLoaded;
   SetActive(PActivatedOnLoad);
+end;
+
+procedure TSerialPortDriver.RenewHandle;
+begin
+  inherited RenewHandle;
+  {TODO}
+end;
+
+function TSerialPortDriver.getPortId: TPortUniqueID;
+begin
+  Result:=inherited getPortId;
+  {TODO}
 end;
 
 end.

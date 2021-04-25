@@ -157,9 +157,14 @@ type
     //: @exclude
     destructor  Destroy; override;
 
+    //: @seealso TCommPortDriver.ReallyActive
     function ReallyActive: Boolean; override;
 
-    function getPortId:TPortUniqueID; override;
+    //: @seealso TCommPortDriver.RenewHandle
+    procedure RenewHandle; override;
+
+    //: @seealso TCommPortDriver.getPortId
+    function getPortId: TPortUniqueID; override;
 
     class function ValidIPv4(aIPv4:String):Boolean;
   published
@@ -457,6 +462,14 @@ begin
   {$ELSE}
   Result:=x<>INVALID_SOCKET;
   {$ENDIF}
+end;
+
+procedure TTCP_UDPPort.RenewHandle;
+begin
+  if ReallyActive then begin
+    FConnectThread.Disconnect;
+    FConnectThread.Connect;
+  end;
 end;
 
 function TTCP_UDPPort.getPortId: TPortUniqueID;
