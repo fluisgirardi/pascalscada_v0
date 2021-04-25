@@ -1632,6 +1632,11 @@ var
   end;
 
 begin
+  if (FProtocolTagType=ptUnknown) or (PProtocolDriver=nil) then begin
+    Result:=Values;
+    exit
+  end;
+
   if (FTagType=pttDefault) OR
      ((FProtocolTagType=ptByte) AND (FTagType=pttByte)) OR
      ((FProtocolTagType=ptShortInt) AND (FTagType=pttShortInt)) OR
