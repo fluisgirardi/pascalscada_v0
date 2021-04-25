@@ -1632,7 +1632,7 @@ var
   end;
 
 begin
-  if (FProtocolTagType=ptUnknown) or (PProtocolDriver=nil) then begin
+  if (FProtocolTagType=ptUnknown) then begin
     Result:=Values;
     exit
   end;

@@ -61,6 +61,8 @@ type
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     procedure SetMinMaxValues(aMin, aMax: Double); override;
+    //: @seealso(TPLCTag.Write)
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); override;
   published
     //: @seealso(TPLCTag.TagType);
     property TagType;
@@ -93,6 +95,16 @@ end;
 procedure TPLCStructItem.SetMinMaxValues(aMin, aMax: Double);
 begin
   inherited SetMinMaxValues(aMin, aMax);
+end;
+
+procedure TPLCStructItem.Write(Values: TArrayOfDouble; Count, Offset: Cardinal);
+var
+  blkvalues: TArrayOfDouble;
+begin
+  if Assigned(PBlock) then begin
+    blkvalues := TagValuesToPLCValues(values,0);
+    PBlock.Write(blkvalues,Length(blkvalues),PIndex+Offset)
+  end;
 end;
 
 procedure TPLCStructItem.TagChangeCallback(Sender:TObject);
