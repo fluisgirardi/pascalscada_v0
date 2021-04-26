@@ -1002,7 +1002,7 @@ procedure TPLCTag.SetPath(v:AnsiString);
 begin
   if PPath=v then exit;
 
-  if (PProtocolDriver<>nil) AND PAutoRead then
+  if (PProtocolDriver<>nil) AND PAutoRead and (PPath.Trim<>'')then
     PProtocolDriver.RemoveTag(Self);
 
   PPath := v;
@@ -1010,7 +1010,7 @@ begin
   if ([csReading,csLoading]*ComponentState=[]) then
     GetNewProtocolTagSize;
 
-  if (PProtocolDriver<>nil) AND PAutoRead then
+  if (PProtocolDriver<>nil) AND PAutoRead and (PPath.Trim<>'') then
     PProtocolDriver.AddTag(Self);
 end;
 
