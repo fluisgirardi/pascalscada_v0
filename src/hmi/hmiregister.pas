@@ -69,7 +69,8 @@ begin
   RegisterComponents(strControlsPallete,  [THMIScrollBar]);
   RegisterComponents(strControlsPallete,  [THMIAnimation]);
   RegisterComponents(strControlsPallete,  [THMIText]);
-  RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation]);
+  RegisterComponents(strControlsPallete,  [THMIControlDislocatorAnimation,
+                                           THMIControlDislocatorAnimation2]);
   RegisterComponents(strControlsPallete,  [THMIBooleanPropertyConnector]);
   RegisterComponents(strControlsPallete,  [THMIColorPropertyConnector]);
   RegisterComponents(strControlsPallete,  [THMITransparentButton]);

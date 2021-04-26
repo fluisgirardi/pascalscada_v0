@@ -35,7 +35,7 @@ type
 
   { THMIControlDislocatorAnimation }
 
-  THMIControlDislocatorAnimation = class(TComponent)
+  THMICustomControlDislocatorAnimation = class(TComponent)
   private
     FStartLeft,
     FEndLeft:LongInt;
@@ -46,7 +46,7 @@ type
     FTarget:TControl;
     FXLinearScale,
     FYLinearScale:TLinearScaleProcessor;
-    FTag:TPLCNumber;
+    FTag, FTagLoaded:TPLCNumber;
     FMinX, FMaxX,
     FMinY, FMaxY:Boolean;
     FMinXValue, FMaxXValue,
@@ -56,14 +56,12 @@ type
     FGetPositionP1,
     FGoToP0:UTF8String;
 
-    procedure MoveObject(DataPtr:PtrInt);
     procedure SetStartLeft(v:LongInt);
     procedure SetStartTop(v:LongInt);
     procedure SetEndLeft(v:LongInt);
     procedure SetEndTop(v:LongInt);
     procedure SetValueStart(v:Double);
     procedure SetValueEnd(v:Double);
-    procedure SetPLCTag(t:TPLCNumber);
     procedure SetControl(t:TControl);
 
     procedure PropertyDoesNothing(v:UTF8String);
@@ -83,7 +81,17 @@ type
     procedure RemoveTagCallBack(Sender:TObject);
   protected
     //@exclude
+    procedure MoveObject(DataPtr:PtrInt); virtual;
+    //@exclude
     procedure Loaded; override;
+    procedure SetPLCTag(t:TPLCNumber);
+
+    {$IFDEF PORTUGUES}
+    //: Tag numérico que irá controlar a animação.
+    {$ELSE}
+    //: Numeric tag that will control the animation.
+    {$ENDIF}
+    property PLCTag:TPLCNumber read FTag write SetPLCTag;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -132,13 +140,6 @@ type
     //: Value of the tag that will move the control to the final coordinates (P1_X; P1_Y);
     {$ENDIF}
     property ValueP1:Double read FEndValue write SetValueEnd;
-
-    {$IFDEF PORTUGUES}
-    //: Tag numérico que irá controlar a animação.
-    {$ELSE}
-    //: Numeric tag that will control the animation.
-    {$ENDIF}
-    property PLCTag:TPLCNumber read FTag write SetPLCTag;
 
     {$IFDEF PORTUGUES}
     //: Controle que será manipulado.
@@ -224,12 +225,122 @@ type
     property GoTo_P0_Position:UTF8String read FGoToP0        write PropertyDoesNothing;
   end;
 
+  THMIControlDislocatorAnimation = class(THMICustomControlDislocatorAnimation)
+  published
+    property PLCTag;
+  end;
+
+  { THMIControlDislocatorAnimation2 }
+
+  THMIControlDislocatorAnimation2 = Class(THMIControlDislocatorAnimation)
+  private
+    FTagY, FTagYLoaded: TPLCNumber;
+  protected
+    procedure MoveObject(DataPtr: PtrInt); override;
+    procedure SetPLCTagY(t: TPLCNumber);
+    procedure Loaded; override;
+  public
+    destructor Destroy; override;
+  published
+    {$IFDEF PORTUGUES}
+    //: Tag numérico que irá controlar a animação.
+    {$ELSE}
+    //: Numeric tag that will control the animation.
+    {$ENDIF}
+    property PLCTagX:TPLCNumber read FTag write SetPLCTag;
+    {$IFDEF PORTUGUES}
+    //: Tag numérico que irá controlar a animação.
+    {$ELSE}
+    //: Numeric tag that will control the animation.
+    {$ENDIF}
+    property PLCTagy:TPLCNumber read FTagY write SetPLCTagY;
+  end;
+
 
 implementation
 
 uses hsstrings, Forms;
 
-constructor THMIControlDislocatorAnimation.Create(AOwner:TComponent);
+{ THMIControlDislocatorAnimation2 }
+
+procedure THMIControlDislocatorAnimation2.MoveObject(DataPtr: PtrInt);
+var
+  outX, outY:Double;
+begin
+  if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
+  if (FTarget=nil) or (FTag=nil) or (FTagY=nil) then exit;
+
+  FXLinearScale.Input:=FTag.Value;
+  FYLinearScale.Input:=FTagY.Value;
+
+  if FMinX and (FXLinearScale.Output<FMinXValue) then
+    outx:=FMinXValue
+  else begin
+    if FMaxX and (FXLinearScale.Output>FMaxXValue) then
+      outx:=FMaxXValue
+    else
+      outx:=FXLinearScale.Output;
+  end;
+
+
+  if FMinY and (FYLinearScale.Output<FMinYValue) then
+     outY:=FMinYValue
+  else begin
+    if FMaxY and (FYLinearScale.Output>FMaxYValue) then
+      outY:=FMaxYValue
+    else
+      outY:=FYLinearScale.Output;
+  end;
+
+  if FStartLeft<>FEndLeft then
+    FTarget.Left:=trunc(outX);
+  if FStartTop<>FEndTop then
+    FTarget.Top :=trunc(outY);
+end;
+
+procedure THMIControlDislocatorAnimation2.SetPLCTagY(t: TPLCNumber);
+begin
+  if [csReading,csLoading]*ComponentState<>[] then begin
+    FTagYLoaded:=t;
+    exit;
+  end;
+
+  //se o tag esta entre um dos aceitos.
+  //Checks if the tag is valid (only numeric tag are acceptable)
+  if (t<>nil) and (not Supports(t, ITagNumeric)) then
+     raise Exception.Create(SonlyNumericTags);
+
+  //se ja estou associado a um tag, remove
+  //if the control is linked with some tag, remove the old link.
+  if FTagY<>nil then begin
+    FTagY.RemoveAllHandlersFromObject(Self);
+  end;
+
+  //adiona o callback para o novo tag
+  //link with the new tag.
+  if t<>nil then begin
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
+    FTagY := t;
+    MoveObject(0);
+  end;
+  FTagY := t;
+end;
+
+procedure THMIControlDislocatorAnimation2.Loaded;
+begin
+  inherited Loaded;
+end;
+
+destructor THMIControlDislocatorAnimation2.Destroy;
+begin
+  if Assigned(FTagY) then
+     FTagY.RemoveAllHandlersFromObject(Self);
+  inherited Destroy;
+end;
+
+constructor THMICustomControlDislocatorAnimation.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   FGetPositionP0:=SGetP0;
@@ -239,12 +350,10 @@ begin
   FYLinearScale:=TLinearScaleProcessor.Create(Self);
 end;
 
-destructor  THMIControlDislocatorAnimation.Destroy;
+destructor  THMICustomControlDislocatorAnimation.Destroy;
 begin
-
-  if FTag<>nil then begin
+  if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
-  end;
 
   FXLinearScale.Destroy;
   FYLinearScale.Destroy;
@@ -252,7 +361,7 @@ begin
   inherited Destroy;
 end;
 
-procedure THMIControlDislocatorAnimation.SetPositionsAndMinMax(vP0X, vP0Y,
+procedure THMICustomControlDislocatorAnimation.SetPositionsAndMinMax(vP0X, vP0Y,
   vP1X, vP1Y: LongInt);
 begin
 
@@ -284,13 +393,14 @@ begin
 
 end;
 
-procedure THMIControlDislocatorAnimation.Loaded;
+procedure THMICustomControlDislocatorAnimation.Loaded;
 begin
   inherited Loaded;
+  SetPLCTag(FTagLoaded);
   TagChangeCallBack(Self);
 end;
 
-procedure THMIControlDislocatorAnimation.MoveObject(DataPtr: PtrInt);
+procedure THMICustomControlDislocatorAnimation.MoveObject(DataPtr: PtrInt);
 var
   outX, outY:Double;
 begin
@@ -325,35 +435,35 @@ begin
     FTarget.Top :=trunc(outY);
 end;
 
-procedure THMIControlDislocatorAnimation.SetStartLeft(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetStartLeft(v:LongInt);
 begin
   FStartLeft:=v;
   FXLinearScale.SysMin:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetStartTop(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetStartTop(v:LongInt);
 begin
   FStartTop:=v;
   FYLinearScale.SysMin:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetEndLeft(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetEndLeft(v:LongInt);
 begin
   FEndLeft:=v;
   FXLinearScale.SysMax:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetEndTop(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetEndTop(v:LongInt);
 begin
   FEndTop:=v;
   FYLinearScale.SysMax:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetValueStart(v:Double);
+procedure THMICustomControlDislocatorAnimation.SetValueStart(v:Double);
 begin
   FStartValue:=v;
   FXLinearScale.PLCMin:=v;
@@ -361,7 +471,7 @@ begin
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetValueEnd(v:Double);
+procedure THMICustomControlDislocatorAnimation.SetValueEnd(v:Double);
 begin
   FEndValue:=v;
   FXLinearScale.PLCMax:=v;
@@ -369,8 +479,12 @@ begin
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetPLCTag(t:TPLCNumber);
+procedure THMICustomControlDislocatorAnimation.SetPLCTag(t:TPLCNumber);
 begin
+  if [csReading,csLoading]*ComponentState<>[] then begin
+    FTagLoaded:=t;
+    exit;
+  end;
   //se o tag esta entre um dos aceitos.
   //Checks if the tag is valid (only numeric tag are acceptable)
   if (t<>nil) and (not Supports(t, ITagNumeric)) then
@@ -394,7 +508,7 @@ begin
   FTag := t;
 end;
 
-procedure THMIControlDislocatorAnimation.SetControl(t:TControl);
+procedure THMICustomControlDislocatorAnimation.SetControl(t:TControl);
 begin
   if t=FTarget then exit;
 
@@ -407,71 +521,71 @@ begin
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.PropertyDoesNothing(v: UTF8String);
+procedure THMICustomControlDislocatorAnimation.PropertyDoesNothing(v: UTF8String);
 begin
 
 end;
 
-procedure THMIControlDislocatorAnimation.WriteFaultCallBack(Sender: TObject);
+procedure THMICustomControlDislocatorAnimation.WriteFaultCallBack(Sender: TObject);
 begin
   TagChangeCallBack(Self);
 end;
 
-procedure THMIControlDislocatorAnimation.TagChangeCallBack(Sender: TObject);
+procedure THMICustomControlDislocatorAnimation.TagChangeCallBack(Sender: TObject);
 begin
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
     Application.QueueAsyncCall(@MoveObject,0);
 end;
 
-procedure THMIControlDislocatorAnimation.RemoveTagCallBack(Sender: TObject);
+procedure THMICustomControlDislocatorAnimation.RemoveTagCallBack(Sender: TObject);
 begin
   if FTag=Sender then
      FTag:=nil;
 end;
 
-procedure THMIControlDislocatorAnimation.SetEnableMinX(v:Boolean);
+procedure THMICustomControlDislocatorAnimation.SetEnableMinX(v:Boolean);
 begin
   FMinX:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetEnableMaxX(v:Boolean);
+procedure THMICustomControlDislocatorAnimation.SetEnableMaxX(v:Boolean);
 begin
   FMaxX:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetEnableMinY(v:Boolean);
+procedure THMICustomControlDislocatorAnimation.SetEnableMinY(v:Boolean);
 begin
   FMinY:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetEnableMaxY(v:Boolean);
+procedure THMICustomControlDislocatorAnimation.SetEnableMaxY(v:Boolean);
 begin
   FMaxY:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetMinX(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetMinX(v:LongInt);
 begin
   FMinXValue:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetMaxX(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetMaxX(v:LongInt);
 begin
   FMaxXValue:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetMinY(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetMinY(v:LongInt);
 begin
   FMinYValue:=v;
   MoveObject(0);
 end;
 
-procedure THMIControlDislocatorAnimation.SetMaxY(v:LongInt);
+procedure THMICustomControlDislocatorAnimation.SetMaxY(v:LongInt);
 begin
   FMaxYValue:=v;
   MoveObject(0);
