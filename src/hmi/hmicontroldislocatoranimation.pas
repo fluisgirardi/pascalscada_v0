@@ -60,8 +60,6 @@ type
     procedure SetStartTop(v:LongInt);
     procedure SetEndLeft(v:LongInt);
     procedure SetEndTop(v:LongInt);
-    procedure SetValueStart(v:Double);
-    procedure SetValueEnd(v:Double);
     procedure SetControl(t:TControl);
 
     procedure PropertyDoesNothing(v:UTF8String);
@@ -86,12 +84,28 @@ type
     procedure Loaded; override;
     procedure SetPLCTag(t:TPLCNumber);
 
+    procedure SetValueStart(v:Double); virtual;
+    procedure SetValueEnd(v:Double); virtual;
+
     {$IFDEF PORTUGUES}
     //: Tag numérico que irá controlar a animação.
     {$ELSE}
     //: Numeric tag that will control the animation.
     {$ENDIF}
     property PLCTag:TPLCNumber read FTag write SetPLCTag;
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas Inicias (P0_X; P0_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the Initial coordinates (P0_X; P0_Y);
+    {$ENDIF}
+    property ValueP0:Double read FStartValue write SetValueStart;
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas finais (P1_X; P1_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the final coordinates (P1_X; P1_Y);
+    {$ENDIF}
+    property ValueP1:Double read FEndValue write SetValueEnd;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -126,20 +140,6 @@ type
     //: Final position on Y axis (Top property of the control)
     {$ENDIF}
     property P1_Y:LongInt read FEndTop write SetEndTop;
-
-    {$IFDEF PORTUGUES}
-    //: Valor do tag que irá fazer o controle ir para as coordenadas Inicias (P0_X; P0_Y);
-    {$ELSE}
-    //: Value of the tag that will move the control to the Initial coordinates (P0_X; P0_Y);
-    {$ENDIF}
-    property ValueP0:Double read FStartValue write SetValueStart;
-
-    {$IFDEF PORTUGUES}
-    //: Valor do tag que irá fazer o controle ir para as coordenadas finais (P1_X; P1_Y);
-    {$ELSE}
-    //: Value of the tag that will move the control to the final coordinates (P1_X; P1_Y);
-    {$ENDIF}
-    property ValueP1:Double read FEndValue write SetValueEnd;
 
     {$IFDEF PORTUGUES}
     //: Controle que será manipulado.
@@ -228,17 +228,25 @@ type
   THMIControlDislocatorAnimation = class(THMICustomControlDislocatorAnimation)
   published
     property PLCTag;
+    property ValueP0;
+    property ValueP1;
   end;
 
   { THMIControlDislocatorAnimation2 }
 
   THMIControlDislocatorAnimation2 = Class(THMICustomControlDislocatorAnimation)
   private
+    FEndValueY: Double;
+    FStartValueY: Double;
     FTagY, FTagYLoaded: TPLCNumber;
+    procedure SetValueEndY(AValue: Double);
+    procedure SetValueStartY(AValue: Double);
   protected
     procedure MoveObject(DataPtr: PtrInt); override;
     procedure SetPLCTagY(t: TPLCNumber);
     procedure Loaded; override;
+    procedure SetValueStart(v:Double); override;
+    procedure SetValueEnd(v:Double); override;
   public
     destructor Destroy; override;
   published
@@ -254,6 +262,34 @@ type
     //: Numeric tag that will control the animation.
     {$ENDIF}
     property PLCTagy:TPLCNumber read FTagY write SetPLCTagY;
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas Inicias (P0_X; P0_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the Initial coordinates (P0_X; P0_Y);
+    {$ENDIF}
+    property ValueP0x:Double read FStartValue write SetValueStart;
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas finais (P1_X; P1_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the final coordinates (P1_X; P1_Y);
+    {$ENDIF}
+    property ValueP1x:Double read FEndValue write SetValueEnd;
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas Inicias (P0_X; P0_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the Initial coordinates (P0_X; P0_Y);
+    {$ENDIF}
+    property ValueP0y:Double read FStartValueY write SetValueStartY;
+
+    {$IFDEF PORTUGUES}
+    //: Valor do tag que irá fazer o controle ir para as coordenadas finais (P1_X; P1_Y);
+    {$ELSE}
+    //: Value of the tag that will move the control to the final coordinates (P1_X; P1_Y);
+    {$ENDIF}
+    property ValueP1y:Double read FEndValueY write SetValueEndY;
   end;
 
 
@@ -262,6 +298,20 @@ implementation
 uses hsstrings, Forms;
 
 { THMIControlDislocatorAnimation2 }
+
+procedure THMIControlDislocatorAnimation2.SetValueEndY(AValue: Double);
+begin
+  FEndValueY:=AValue;
+  FYLinearScale.PLCMax:=AValue;
+  MoveObject(0);
+end;
+
+procedure THMIControlDislocatorAnimation2.SetValueStartY(AValue: Double);
+begin
+  FStartValueY:=AValue;
+  FYLinearScale.PLCMin:=AValue;
+  MoveObject(0);
+end;
 
 procedure THMIControlDislocatorAnimation2.MoveObject(DataPtr: PtrInt);
 var
@@ -331,6 +381,20 @@ end;
 procedure THMIControlDislocatorAnimation2.Loaded;
 begin
   inherited Loaded;
+end;
+
+procedure THMIControlDislocatorAnimation2.SetValueStart(v: Double);
+begin
+  FStartValue:=v;
+  FXLinearScale.PLCMin:=v;
+  MoveObject(0);
+end;
+
+procedure THMIControlDislocatorAnimation2.SetValueEnd(v: Double);
+begin
+  FEndValue:=v;
+  FXLinearScale.PLCMax:=v;
+  MoveObject(0);
 end;
 
 destructor THMIControlDislocatorAnimation2.Destroy;
