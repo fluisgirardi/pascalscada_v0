@@ -232,7 +232,7 @@ type
 
   { THMIControlDislocatorAnimation2 }
 
-  THMIControlDislocatorAnimation2 = Class(THMIControlDislocatorAnimation)
+  THMIControlDislocatorAnimation2 = Class(THMICustomControlDislocatorAnimation)
   private
     FTagY, FTagYLoaded: TPLCNumber;
   protected
