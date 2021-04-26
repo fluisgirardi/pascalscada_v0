@@ -319,8 +319,10 @@ begin
       outY:=FYLinearScale.Output;
   end;
 
-  FTarget.Left:=trunc(outX);
-  FTarget.Top :=trunc(outY);
+  if FStartLeft<>FEndLeft then
+    FTarget.Left:=trunc(outX);
+  if FStartTop<>FEndTop then
+    FTarget.Top :=trunc(outY);
 end;
 
 procedure THMIControlDislocatorAnimation.SetStartLeft(v:LongInt);

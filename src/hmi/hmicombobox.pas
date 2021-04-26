@@ -246,6 +246,7 @@ end;
 
 procedure THMIComboBox.TagChangeCallBack(Sender: TObject);
 begin
+  if csDestroying in ComponentState then exit;
   if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
      Application.QueueAsyncCall(@RefreshCombo,0);
 end;
