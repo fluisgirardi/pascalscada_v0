@@ -18,6 +18,9 @@ type
   {$ELSE}
   //: Must be implemented.
   {$ENDIF}
+
+  { THMIButton }
+
   THMIButton = class(TSpeedButton, IHMIInterface)
   private 
     FRegInSecMan:Boolean;
@@ -93,6 +96,7 @@ type
     
     procedure SetValueDown(v:Double);
     procedure SetValueUp(v:Double);
+    procedure Loaded; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -531,6 +535,12 @@ procedure THMIButton.SetValueUp(v:Double);
 begin
    FValueUp:=v;
    TagChangeCallBack(self);
+end;
+
+procedure THMIButton.Loaded;
+begin
+  inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
 end;
 
 procedure THMIButton.WriteFaultCallBack(Sender: TObject);

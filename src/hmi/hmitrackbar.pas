@@ -178,6 +178,7 @@ end;
 procedure THMITrackBar.Loaded;
 begin
   inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   TagChangeCallBack(Self);
 end;
 

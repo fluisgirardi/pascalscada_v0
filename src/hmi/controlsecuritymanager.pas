@@ -25,7 +25,7 @@ type
     procedure  Manage;
     function   GetCurrentUserlogin:UTF8String;
     procedure  TryAccess(sc:UTF8String);
-    function  RegisterControl(control:IHMIInterface):Boolean;
+    function   RegisterControl(control:IHMIInterface):Boolean;
     procedure  UnRegisterControl(control:IHMIInterface);
     procedure  UpdateControls;
     function   CanAccess(sc:UTF8String):Boolean;
@@ -79,6 +79,7 @@ type
     //unused procedures
     procedure SetHMITag({%H-}t:TPLCTag);
     function  GetHMITag:TPLCTag;
+    procedure Loaded; override;
   public
     function HandlesTarget({%H-}Target: TObject): Boolean; override;
     constructor Create(AOwner: TComponent); override;
@@ -409,11 +410,6 @@ begin
     Result:=true;
   except
   end;
-
-  try
-    control.CanBeAccessed(CanAccess(control.GetControlSecurityCode));
-  except
-  end;
 end;
 
 procedure  TControlSecurityManager.UnRegisterControl(control:IHMIInterface);
@@ -558,6 +554,12 @@ function TPascalSCADAUserManagementAction.GetHMITag: TPLCTag;
 begin
   Result:=nil;
   //does nothing
+end;
+
+procedure TPascalSCADAUserManagementAction.Loaded;
+begin
+  inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
 end;
 
 function TPascalSCADAUserManagementAction.HandlesTarget(Target: TObject): Boolean;

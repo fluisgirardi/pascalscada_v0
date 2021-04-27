@@ -300,6 +300,7 @@ end;
 procedure THMIUpDown.Loaded;
 begin
   inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   TagChangeCallBack(Self);
 end;
 

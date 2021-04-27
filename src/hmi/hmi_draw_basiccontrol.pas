@@ -986,6 +986,7 @@ end;
 procedure THMIBasicControl.Loaded;
 begin
   inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   InvalidateShape;
 end;
 

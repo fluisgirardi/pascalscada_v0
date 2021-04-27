@@ -492,6 +492,7 @@ end;
 procedure THMIEdit.Loaded;
 begin
   inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   TagChangeCallBack(Self);
   if not HasFocus then begin
     FDefFontColor := Font.Color;

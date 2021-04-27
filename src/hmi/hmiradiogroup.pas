@@ -274,6 +274,7 @@ end;
 procedure THMIRadioGroup.Loaded;
 begin
    inherited Loaded;
+   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
    FLoaded:=true;
    TagChangeCallBack(Self);
 end;

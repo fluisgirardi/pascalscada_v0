@@ -417,6 +417,7 @@ end;
 procedure THMIAnimation.Loaded;
 begin
   inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   FAnimationZones.Loaded;
   TagChangeCallBack(FTag);
 end;

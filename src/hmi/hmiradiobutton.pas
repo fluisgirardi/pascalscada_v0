@@ -115,6 +115,7 @@ end;
 procedure THMIRadioButton.Loaded;
 begin
   inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
 end;
 
 {$IFDEF FPC}

@@ -361,6 +361,7 @@ end;
 procedure THMILabel.Loaded;
 begin
   inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   TagChangeCallBack(Self);
 end;
 
