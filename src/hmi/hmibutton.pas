@@ -19,7 +19,8 @@ type
   //: Must be implemented.
   {$ENDIF}
   THMIButton = class(TSpeedButton, IHMIInterface)
-  private
+  private 
+    FRegInSecMan:Boolean;
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -214,35 +215,47 @@ uses hsstrings, ControlSecurityManager;
 
 constructor THMIButton.Create(AOwner:TComponent);
 begin
-   inherited Create(AOwner);
-   TSpeedButton(Self).AllowAllUp:=true;
-   TSpeedButton(Self).GroupIndex:=$FAB1016;
-   if csDesigning in componentState then begin
-      FValueDown  := 1;
-      FValueUp := 0;
-   end else begin
-      FValueDown  := 0;
-      FValueUp := 0;
-   end;
-   FIsEnabled:=true;
-   FClickFlag:=false;
-   FGlyphDown:=TBitmap.Create;
-   FGlyphUp:=TBitmap.Create;
-   FGlyphGrayed:=TBitmap.Create;
-   FColorDown:=clBtnFace;
-   FColorUp:= clBtnFace;
-   FColorGrayed:=clBtnShadow;
-   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+  TSpeedButton(Self).AllowAllUp:=true;
+  TSpeedButton(Self).GroupIndex:=$FAB1016;
+  if csDesigning in componentState then begin
+    FValueDown  := 1;
+    FValueUp := 0;
+  end else begin
+    FValueDown  := 0;
+    FValueUp := 0;
+  end;
+  FIsEnabled:=true;
+  FClickFlag:=false;
+  FGlyphDown:=TBitmap.Create;
+  FGlyphUp:=TBitmap.Create;
+  FGlyphGrayed:=TBitmap.Create;
+  FColorDown:=clBtnFace;
+  FColorUp:= clBtnFace;
+  FColorGrayed:=clBtnShadow;
 end;
 
 destructor THMIButton.Destroy;
 begin
+   if FRegInSecMan then
+     GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+   else begin
+     {$IFNDEF WINDOWS}
+     writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+     {$ENDIF}
+   end;
+
    if FTag<>nil then
       FTag.RemoveAllHandlersFromObject(Self);
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
-   GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
    inherited Destroy;
 end;
 

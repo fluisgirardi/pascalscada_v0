@@ -34,7 +34,8 @@ type
   }
   {$ENDIF}
   THMIScrollBar = class(TScrollBar, IHMIInterface)
-  private
+  private 
+    FRegInSecMan:Boolean;
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -129,16 +130,28 @@ uses hsstrings, ControlSecurityManager, Forms;
 constructor THMIScrollBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   FIsEnabled:=true;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIScrollBar.Destroy;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

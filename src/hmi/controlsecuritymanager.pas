@@ -8,7 +8,6 @@ uses
 
 type
 
-
   { TControlSecurityManager }
 
   TControlSecurityManager = class(TComponent)
@@ -26,7 +25,7 @@ type
     procedure  Manage;
     function   GetCurrentUserlogin:UTF8String;
     procedure  TryAccess(sc:UTF8String);
-    procedure  RegisterControl(control:IHMIInterface);
+    function  RegisterControl(control:IHMIInterface):Boolean;
     procedure  UnRegisterControl(control:IHMIInterface);
     procedure  UpdateControls;
     function   CanAccess(sc:UTF8String):Boolean;
@@ -63,6 +62,7 @@ type
 
   TPascalSCADAUserManagementAction = class(TAction, IHMIInterface)
   private
+    FRegInSecMan:Boolean;
     FDisableIfNotAuthorized: Boolean;
     procedure SetDisableIfNotAuthorized(AValue: Boolean);
   protected
@@ -338,7 +338,7 @@ end;
 destructor TControlSecurityManager.Destroy;
 begin
   if Length(FControls)>0 then
-    raise Exception.Create(SSecurityControlBusy);
+    writeln('FIX-ME: ',SSecurityControlBusy,' ',{$i %FILE%},':',{$i %LINE%});
   inherited Destroy;
 end;
 
@@ -396,19 +396,30 @@ begin
   UpdateControls;
 end;
 
-procedure  TControlSecurityManager.RegisterControl(control:IHMIInterface);
+function TControlSecurityManager.RegisterControl(control: IHMIInterface
+  ): Boolean;
 var
   h:LongInt;
 begin
-  h:=Length(FControls);
-  SetLength(FControls,h+1);
-  FControls[h]:=control;
-  control.CanBeAccessed(CanAccess(control.GetControlSecurityCode));
+  Result:=false;
+  try
+    h:=Length(FControls);
+    SetLength(FControls,h+1);
+    FControls[h]:=control;
+    Result:=true;
+  except
+  end;
+
+  try
+    control.CanBeAccessed(CanAccess(control.GetControlSecurityCode));
+  except
+  end;
 end;
 
 procedure  TControlSecurityManager.UnRegisterControl(control:IHMIInterface);
 var
   c, h:LongInt;
+  found: Boolean;
 begin
   h:=High(FControls);
   for c:=0 to h do
@@ -416,7 +427,11 @@ begin
       FControls[c]:=FControls[h];
       SetLength(FControls,h);
       break;
+      found:=true;
     end;
+
+  if not found then
+    writeln('FIX-ME: Control not found! ',{$i %FILE%},':',{$i %LINE%});
 end;
 
 procedure  TControlSecurityManager.UpdateControls;
@@ -553,14 +568,25 @@ end;
 constructor TPascalSCADAUserManagementAction.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   FEnabled:=true;
   FDisableIfNotAuthorized:=true;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor TPascalSCADAUserManagementAction.Destroy;
 begin
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   inherited Destroy;
 end;
 

@@ -35,6 +35,8 @@ type
   }
   {$ENDIF}
   THMIRadioButton = class(THMICheckBox)
+  private
+    FRegInSecMan:Boolean;
   protected
   {$IFDEF FPC}
     //: @exclude
@@ -62,16 +64,28 @@ uses ControlSecurityManager;
 constructor THMIRadioButton.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   {$IFDEF FPC}
   fCompStyle := csRadioButton;
   {$ENDIF}
   OtherValuesIS := isUnchecked;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+
 end;
 
 destructor THMIRadioButton.Destroy;
 begin
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   inherited Destroy;
 end;
 

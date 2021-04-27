@@ -17,7 +17,8 @@ type
   { THMIBasicControl }
 
   THMIBasicControl = class(TCustomControl, IHMIInterface)
-
+  private
+    FRegInSecMan:Boolean;
   protected
     FSecurityCode:UTF8String;
     FIsEnabled,
@@ -991,6 +992,12 @@ end;
 constructor THMIBasicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   Color:=clBackground;
   FShouldRedraw:=false;
   FUpdateShape:=false;
@@ -1001,12 +1008,18 @@ begin
   FIsEnabled:=true;
   FOldHeight:=0;
   FOldWidth:=0;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIBasicControl.Destroy;
 begin
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   FreeAndNil(FControlArea);
   inherited Destroy;
 end;

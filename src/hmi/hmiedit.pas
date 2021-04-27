@@ -41,7 +41,8 @@ type
   { THMIEdit }
 
   THMIEdit = class(TEdit, IHMIInterface)
-  private
+  private 
+    FRegInSecMan:Boolean;
     FAfterSendValueToTag: TAfterSendStringValueToTagEvent;
     FAlignment:TAlignment;
     FBeforeSendValueToTag: TBeforeSendStringValueToTagEvent;
@@ -375,6 +376,12 @@ uses hsstrings, ControlSecurityManager;
 constructor THMIEdit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   inherited Color:=clWindow;
   Font.Color     :=clWindowText;
   FAlignment := taRightJustify;
@@ -391,15 +398,21 @@ begin
   FShowFocused := true;
   FFreezeValue := true;
   FNumberFormat := '#0.0';
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor  THMIEdit.Destroy;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

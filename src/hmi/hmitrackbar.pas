@@ -35,6 +35,7 @@ type
   {$ENDIF}
   THMITrackBar = class(TTrackBar, IHMIInterface)
   private
+    FRegInSecMan:Boolean;
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     Ftag:TPLCTag;
@@ -149,16 +150,28 @@ uses hsstrings, ControlSecurityManager, Forms;
 constructor THMITrackBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   FIsEnabled:=true;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMITrackBar.Destroy;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   if Assigned(FTag) then
     Ftag.RemoveAllHandlersFromObject(Self);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

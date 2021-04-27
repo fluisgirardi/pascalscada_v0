@@ -41,6 +41,7 @@ type
 
   THMIProgressBar = class(THMIBasicControl, IHMIInterface)
   private
+    FRegInSecMan:Boolean;
     FMax: Double;
     FMin: Double;
     FOrientation: TProgressBarOrientation;
@@ -114,16 +115,29 @@ uses hsstrings, ControlSecurityManager, Math, BGRABitmap, BGRABitmapTypes,
 constructor THMIProgressBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   FIsEnabled:=true;
   FBodyColor:=clGreen;
 end;
 
 destructor THMIProgressBar.Destroy;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   if Assigned(FTag) then
     Ftag.RemoveAllHandlersFromObject(Self);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

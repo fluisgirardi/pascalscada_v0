@@ -25,6 +25,7 @@ type
 
   THMIComboBox = class(TCustomComboBox, IHMIInterface)
   private
+    FRegInSecMan:Boolean;
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
   protected
@@ -332,23 +333,35 @@ end;
 constructor THMIComboBox.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   SetStyle(csDropDownList);
   FIsEnabled:=true;
   FAllowSetIndex:=false;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIComboBox.Destroy;
 var
   obj: Integer;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   for obj:=0 to Items.Count-1 do
     if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then
       Items.Objects[obj].Free;
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

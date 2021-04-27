@@ -41,6 +41,8 @@ type
   }
   {$ENDIF}
   THMIAnimation = class(TCustomImage, IHMIInterface)
+  private
+    FRegInSecMan:Boolean;
   protected
     FAnimationZones:TGraphicZones;
     FTag:TPLCTag;
@@ -203,15 +205,28 @@ uses hsstrings, ControlSecurityManager, Forms, hmi_animation_timers;
 constructor THMIAnimation.Create(AOwner:TComponent);
 begin
    inherited Create(AOwner);
+   FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+   if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
    FIsEnabled:=true;
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=@NeedComState;
    FAnimationZones.OnCollectionItemChange:=@ZoneChange;
-   GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMIAnimation.Destroy;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   GetAnimationTimer.RemoveCallbacksFromObject(Self);
 
@@ -219,7 +234,6 @@ begin
     FTag.RemoveAllHandlersFromObject(Self);
 
   FreeAndNil(FAnimationZones);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

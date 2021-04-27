@@ -35,6 +35,7 @@ type
   {$ENDIF}
   THMIUpDown = class(TUpDown, IHMIInterface)
   private
+    FRegInSecMan:Boolean;
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
@@ -176,6 +177,12 @@ uses hsstrings, ControlSecurityManager, Forms;
 constructor THMIUpDown.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
   if csDesigning in ComponentState then begin
     FIncrement := 1;
     FPosition := 0;
@@ -190,15 +197,22 @@ begin
   inherited Position:=50;
   FEnableMin := false;
   FEnableMax := false;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+
 end;
 
 destructor THMIUpDown.Destroy;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 

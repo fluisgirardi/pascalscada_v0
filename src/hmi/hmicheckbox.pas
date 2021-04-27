@@ -41,7 +41,8 @@ type
   { THMICheckBox }
 
   THMICheckBox = class(TCheckBox, IHMIInterface)
-  private
+  private    
+    FRegInSecMan:Boolean;
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
@@ -474,6 +475,13 @@ uses hsstrings, ControlSecurityManager, Forms;
 constructor THMICheckBox.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
+  if not FRegInSecMan then begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   FIsEnabled := inherited Enabled;
   if csDesigning in componentState then begin
     FValueTrue := 1;
@@ -498,18 +506,24 @@ begin
   FOtherValues := IsGrayed;
   FWriteTrue := true;
   FWriteFalse := true;
-  GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
 end;
 
 destructor THMICheckBox.Destroy;
 begin
+  if FRegInSecMan then
+    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
+  else begin
+    {$IFNDEF WINDOWS}
+    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
+    {$ENDIF}
+  end;
+
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FFontFalse);
   FreeAndNil(FFontTrue);
   FreeAndNil(FFontGrayed);
-  GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface);
   inherited Destroy;
 end;
 
