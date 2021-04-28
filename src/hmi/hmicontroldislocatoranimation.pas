@@ -61,6 +61,7 @@ type
     procedure SetEndLeft(v:LongInt);
     procedure SetEndTop(v:LongInt);
     procedure SetControl(t:TControl);
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     procedure PropertyDoesNothing(v:UTF8String);
 
@@ -576,13 +577,25 @@ procedure THMICustomControlDislocatorAnimation.SetControl(t:TControl);
 begin
   if t=FTarget then exit;
 
+  if assigned(t) then
+     t.RemoveFreeNotification(Self);
+
   if FTarget<>nil then begin
     FTarget.Left:=FStartLeft;
     FTarget.Top:=FStartTop;
+    FTarget.FreeNotification(Self);
   end;
 
   FTarget:=t;
   MoveObject(0);
+end;
+
+procedure THMICustomControlDislocatorAnimation.Notification(
+  AComponent: TComponent; Operation: TOperation);
+begin
+  if (AComponent=FTarget) and (Operation=opRemove) then
+     FTarget:=nil;
+  inherited Notification(AComponent, Operation);
 end;
 
 procedure THMICustomControlDislocatorAnimation.PropertyDoesNothing(v: UTF8String);
