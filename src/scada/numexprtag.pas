@@ -29,6 +29,8 @@ type
     FvarI: TPLCNumber;
     FvarJ: TPLCNumber;
     procedure CalculateValue;
+    procedure ExprIfThen(var Result: TFPExpressionResult;
+      const Args: TExprParameterArray);
     function GetValueTimestamp: TDatetime;
     function GetVariantValue: Variant;
     function IsValidValue(aValue: Variant): Boolean;
@@ -74,7 +76,7 @@ type
 
 implementation
 
-uses Variants, hsstrings;
+uses Variants, Math, hsstrings;
 
 { TNumericExprTag }
 
@@ -121,6 +123,25 @@ begin
    Result := PValueTimeStamp;
 end;
 
+procedure TNumericExprTag.ExprIfThen(var Result: TFPExpressionResult; Const Args: TExprParameterArray);
+const
+  TypeNames:array[Low(TResultType)..High(TResultType)] of string = ('Boolean','Integer','Float','DateTime','String','Currency');
+begin
+  if Length(Args)<>3 then
+    raise exception.Create('IfThen param count mismatch.');
+
+  if Args[0].ResultType<>rtBoolean then
+    raise exception.Create('IfThen param0 (condition) type mismatch. Expected Boolean, got '+TypeNames[Args[0].ResultType]);
+
+  if Args[1].ResultType<>rtFloat then
+    raise exception.Create('IfThen param1 (valueTrue) type mismatch. Expected Float, got '+TypeNames[Args[1].ResultType]);
+
+  if Args[2].ResultType<>rtFloat then
+    raise exception.Create('IfThen param2 (valueFalse) type mismatch. Expected Float, got '+TypeNames[Args[2].ResultType]);
+
+  Result.resFloat := ifthen(Args[0].ResBoolean,Args[1].ResFloat,Args[2].ResFloat);
+end;
+
 procedure TNumericExprTag.CalculateValue;
 var
   FParser: TFPExpressionParser;
@@ -129,7 +150,8 @@ begin
   if [csLoading,csReading]*ComponentState=[] then begin
     FParser := TFpExpressionParser.Create(self);
     try
-      FParser.BuiltIns := [bcMath, bcBoolean];
+      FParser.BuiltIns := [bcMath, bcBoolean,bcUser];
+      FParser.Identifiers.AddFunction('ifthen', 'F', 'BFF', @ExprIfThen);
       if Assigned(FvarA) then
         FParser.Identifiers.AddFloatVariable('A', (FvarA as ITagNumeric).GetValue);
 
