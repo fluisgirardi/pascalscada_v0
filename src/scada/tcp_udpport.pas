@@ -20,7 +20,7 @@ uses
   Classes, CommPort, commtypes, socket_types, CrossEvent, MessageSpool,
   syncobjs, crossthreads
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
-    , Windows,
+    , Windows, {$IF defined(WIN32)}JwaWinBase,{$ENDIF}
     {$IFDEF FPC}
     WinSock2,
     {$ELSE}

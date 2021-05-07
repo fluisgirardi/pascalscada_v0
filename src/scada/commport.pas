@@ -22,10 +22,16 @@ interface
 
 uses
   Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads
-  {$IFNDEF FPC}, Windows{$ENDIF};
+  {$IFNDEF FPC}, Windows{$ENDIF}
+  {$IF defined(WIN32) or defined(WIN64)}, JwaWinBase, JwaWinType{$IFEND};
 
 type
+  {$IF defined(WIN32) or defined(WIN64)}
+  TPortUniqueID = LONGLONG;
+  {$ELSE}
   TPortUniqueID = QWord;
+  {$IFEND}
+
 
   {$IFDEF PORTUGUES}
   {:
@@ -160,7 +166,7 @@ type
     {: @exclude }
     PEventUpdater:TEventNotificationThread;
     {: @exclude }
-    PIOCmdCS, PLockCS:TCriticalSection;
+    PIOCmdCS, PLockCS:SyncObjs.TCriticalSection;
     {: @exclude }
     PLockEvent:TCrossEvent;
     {: @exclude }
@@ -1153,8 +1159,8 @@ begin
   FLastOSErrorNumber:=0;
   FReadRetries:=3;
   FWriteRetries:=3;
-  PIOCmdCS := TCriticalSection.Create;
-  PLockCS  := TCriticalSection.Create;
+  PIOCmdCS := SyncObjs.TCriticalSection.Create;
+  PLockCS  := SyncObjs.TCriticalSection.Create;
   PLockEvent := TCrossEvent.Create(True, True);
   PUnlocked:=0;
   PClearBufOnErr := true;
