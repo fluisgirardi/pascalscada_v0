@@ -153,9 +153,9 @@ end;
 
 procedure THMIProgressBar.Loaded;
 begin
-   inherited Loaded;
-   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
-   TagChangeCallBack(Self);
+  inherited Loaded;
+  CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
+  TagChangeCallBack(GetHMITag);
 end;
 
 procedure THMIProgressBar.UpdateShape;
@@ -165,6 +165,8 @@ begin
 end;
 
 procedure THMIProgressBar.DrawControl;
+var
+  aux: Double;
 begin
   inherited DrawControl;
   FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
@@ -177,10 +179,11 @@ begin
       FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
       FControlArea.CanvasBGRA.Brush.Color:= clDefault;
-      FControlArea.RectangleAntialias(FBorderWidth/2,
-                                      FBorderWidth/2,
+      aux:=Height*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin)));
+      FControlArea.RectangleAntialias(0,
+                                      0,
                                       Width-FBorderWidth,
-                                      Height/ifthen((FMax-FMin)*(FMax-Progress)=0,1,(FMax-FMin)*(FMax-Progress)),
+                                      Height*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin))),//Height/ifthen((FMax-FMin)*(FMax-Progress)=0,1,(FMax-FMin)*(FMax-Progress)),
                                       ColorToBGRA(FBorderColor),
                                       0,
                                       ColorToBGRA(clSilver));
@@ -191,9 +194,9 @@ begin
       FControlArea.CanvasBGRA.Brush.Color:= clSilver;
       FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.RectangleAntialias(FBorderWidth/2,
-                                      FBorderWidth/2,
-                                      width/ifthen((FMax-FMin)*(Progress-FMin)=0,1,(FMax-FMin)*(Progress-FMin)),
+      FControlArea.RectangleAntialias(0,//FBorderWidth/2,
+                                      0,//FBorderWidth/2,
+                                      Width*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin))),
                                       height-FBorderWidth,
                                       ColorToBGRA(FBorderColor),
                                       0,
@@ -205,7 +208,7 @@ begin
       FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
       FControlArea.CanvasBGRA.Brush.Color:= clDefault;
-      FControlArea.RectangleAntialias(FBorderWidth/2,
+      FControlArea.RectangleAntialias(FBorderWidth/2,//TODO
                                       FBorderWidth/2,
                                        width/ifthen((FMax-FMin)*(FMax-Progress)=0,1,(FMax-FMin)*(FMax-Progress)),
                                        height-FBorderWidth,
@@ -218,7 +221,7 @@ begin
       FControlArea.CanvasBGRA.Brush.Color:= clSilver;
       FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.RectangleAntialias(FBorderWidth/2,
+      FControlArea.RectangleAntialias(FBorderWidth/2,//TODO
                                       FBorderWidth/2,
                                       width-FBorderWidth,
                                       height/ifthen((FMax-FMin)*(Progress-FMin)=0,1,(FMax-FMin)*(Progress-FMin)),

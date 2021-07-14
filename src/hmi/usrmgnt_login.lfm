@@ -1,63 +1,28 @@
 object psHMIfrmUserAuthentication: TpsHMIfrmUserAuthentication
-  Left = 476
-  Height = 146
-  Top = 151
+  Left = 844
+  Height = 210
+  Top = 86
   Width = 305
-  ActiveControl = edtusername
+  AutoSize = True
   BorderIcons = []
   BorderStyle = bsDialog
   Caption = 'User Authentication'
-  ClientHeight = 146
+  ClientHeight = 210
   ClientWidth = 305
-  Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Height = -12
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '2.0.11.0'
-  object Label1: TLabel
-    Left = 8
-    Height = 14
-    Top = 8
-    Width = 58
-    Caption = '&Username'
-    FocusControl = edtusername
-    ParentColor = False
-  end
-  object Label2: TLabel
-    Left = 8
-    Height = 14
-    Top = 56
-    Width = 54
-    Caption = '&Password'
-    FocusControl = edtPassword
-    ParentColor = False
-  end
-  object edtusername: TEdit
-    Left = 8
-    Height = 24
-    Top = 24
-    Width = 289
-    TabOrder = 0
-  end
-  object edtPassword: TEdit
-    Left = 8
-    Height = 24
-    Top = 72
-    Width = 289
-    EchoMode = emPassword
-    PasswordChar = '*'
-    TabOrder = 1
-  end
+  LCLVersion = '2.2.0.2'
   object Panel1: TPanel
     Left = 0
     Height = 35
-    Top = 111
+    Top = 106
     Width = 305
-    Align = alBottom
+    Align = alTop
     BevelOuter = bvNone
     ClientHeight = 35
     ClientWidth = 305
-    TabOrder = 2
+    TabOrder = 0
     object Panel2: TPanel
       Left = 120
       Height = 35
@@ -89,5 +54,64 @@ object psHMIfrmUserAuthentication: TpsHMIfrmUserAuthentication
         TabOrder = 1
       end
     end
+  end
+  object Panel3: TPanel
+    Left = 0
+    Height = 104
+    Top = 2
+    Width = 305
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 104
+    ClientWidth = 305
+    TabOrder = 1
+    object Label1: TLabel
+      Left = 8
+      Height = 15
+      Top = 8
+      Width = 55
+      Caption = '&Username'
+      FocusControl = edtusername
+    end
+    object edtusername: TEdit
+      Left = 8
+      Height = 25
+      Top = 24
+      Width = 289
+      TabOrder = 0
+    end
+    object Label2: TLabel
+      Left = 8
+      Height = 15
+      Top = 56
+      Width = 51
+      Caption = '&Password'
+      FocusControl = edtPassword
+    end
+    object edtPassword: TEdit
+      Left = 8
+      Height = 25
+      Top = 72
+      Width = 289
+      EchoMode = emPassword
+      PasswordChar = '*'
+      TabOrder = 1
+    end
+  end
+  object lblRequiredPerm: TLabel
+    Left = 0
+    Height = 1
+    Top = 0
+    Width = 305
+    Align = alTop
+    WordWrap = True
+  end
+  object lblHint: TLabel
+    Left = 0
+    Height = 1
+    Top = 1
+    Width = 305
+    Align = alTop
+    WordWrap = True
   end
 end

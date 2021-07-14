@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="pascalscada"/>
     <Type Value="RunAndDesignTime"/>
@@ -39,7 +39,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="41">
+    <Files Count="43">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -204,7 +204,16 @@
         <Filename Value="src\scada\plcstructstring.pas"/>
         <UnitName Value="plcstructstring"/>
       </Item41>
+      <Item42>
+        <Filename Value="src\scada\redundancyctrl.pas"/>
+        <UnitName Value="redundancyctrl"/>
+      </Item42>
+      <Item43>
+        <Filename Value="src\scada\socketserver.pas"/>
+        <UnitName Value="socketserver"/>
+      </Item43>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="LCLBase"/>

@@ -48,6 +48,7 @@ type
     FTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
+    FValueTrueLoaded, FValueFalseLoaded,
     FValueTrue, FValueFalse:Double;
     FWriteTrue, FWriteFalse:Boolean;
     FColorFalse, FColorTrue, FColorGrayed:TColor;
@@ -662,6 +663,11 @@ end;
 
 procedure THMICheckBox.SetValueTrue(v:Double);
 begin
+  if ((ComponentState*[csReading, csLoading])<>[]) then begin
+    FValueTrueLoaded:=v;
+    exit;
+  end;
+
   if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueFalse) then
     raise Exception.Create(StheValueMustBeDifferentOfValueFalseProperty);
 
@@ -675,6 +681,11 @@ end;
 
 procedure THMICheckBox.SetValueFalse(v:Double);
 begin
+  if ((ComponentState*[csReading, csLoading])<>[]) then begin
+    FValueFalseLoaded:=v;
+    exit;
+  end;
+
   if ((ComponentState*[csReading, csLoading])=[]) and (v=FValueTrue) then
     raise Exception.Create(StheValueMustBeDifferentOfValueTrueProperty);
 
@@ -745,6 +756,8 @@ procedure THMICheckBox.Loaded;
 begin
   inherited Loaded;
   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
+  FValueFalse := FValueFalseLoaded;
+  FValueTrue  := FValueTrueLoaded;
   TagChangeCallBack(Self);
 end;
 

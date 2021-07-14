@@ -208,12 +208,12 @@ type
     {: @exclude }
     function  ComSettingsOK:Boolean; override;
     {: @exclude }
-    procedure ClearALLBuffers; override;
-    {: @exclude }
     procedure SetActive(v: Boolean); override;
     {: @exclude }
     procedure Loaded; override;
   public
+    {: @exclude }
+    procedure ClearALLBuffers; override;
     //: @seealso TCommPortDriver.RenewHandle
     procedure RenewHandle; override;
     //: @seealso TCommPortDriver.getPortId

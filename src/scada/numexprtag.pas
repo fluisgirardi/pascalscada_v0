@@ -125,7 +125,11 @@ end;
 
 procedure TNumericExprTag.ExprIfThen(var Result: TFPExpressionResult; Const Args: TExprParameterArray);
 const
+  {$IF FPC_FULLVERSION>=030200}
   TypeNames:array[Low(TResultType)..High(TResultType)] of string = ('Boolean','Integer','Float','DateTime','String','Currency');
+  {$ELSE}
+  TypeNames:array[Low(TResultType)..High(TResultType)] of string = ('Boolean','Integer','Float','DateTime','String');
+  {$ENDIF}
 begin
   if Length(Args)<>3 then
     raise exception.Create('IfThen param count mismatch.');

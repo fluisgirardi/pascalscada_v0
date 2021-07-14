@@ -78,7 +78,7 @@ type
     function    CanAccess({%H-}sc:UTF8String):Boolean; virtual;
     function    GetRegisteredAccessCodes:TStringList; virtual;
 
-    function    CheckIfUserIsAllowed({%H-}sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean; virtual;
+    function    CheckIfUserIsAllowed({%H-}sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String; const UserHint:String): Boolean; virtual;
 
     //read only properties.
     property UID:Integer read GetUID;
@@ -124,7 +124,7 @@ var
   frozenTimer:TTimer;
   retries:LongInt;
   aborted, loggedin:Boolean;
-  aUserID: Integer;
+  aUserID, PreferredWidth, PreferredHeight: Integer;
 begin
   if Assigned(frmLogin) then begin
     frmLogin.ShowOnTop;
@@ -136,14 +136,21 @@ begin
   frozenTimer.Interval:=LoginFrozenTime;
   frozenTimer.Tag:=1; //login
   frozenTimer.OnTimer:=@UnfreezeLogin;
-  frmLogin:=TpsHMIfrmUserAuthentication.Create(nil);
+
   retries:=0;
   aborted:=false;
   loggedin:=False;
   Result:=false;
+
+  frmLogin:=TpsHMIfrmUserAuthentication.Create(nil);
   try
     frmLogin.edtusername.Text:='';
     frmLogin.FocusControl:=fcUserName;
+
+    frmLogin.AutoSize:=true;
+    frmLogin.HandleNeeded;
+    frmLogin.GetPreferredSize(PreferredWidth,PreferredHeight);
+
     while (not loggedin) and (not aborted) do begin
       frmLogin.edtPassword.Text:='';
       if frmLogin.ShowModal=mrOk then begin
@@ -239,10 +246,11 @@ begin
 end;
 
 function TBasicUserManagement.CheckIfUserIsAllowed(sc: UTF8String;
-  RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean;
+  RequireUserLogin: Boolean; var userlogin: UTF8String; const UserHint: String
+  ): Boolean;
 var
   frozenTimer:TTimer;
-  aUserID:Integer;
+  aUserID, PreferredWidth, PreferredHeight:Integer;
 
 begin
   Result:=false;
@@ -268,19 +276,32 @@ begin
   frozenTimer.Interval:=LoginFrozenTime;
   frozenTimer.Tag:=2; //Check
   frozenTimer.OnTimer:=@UnfreezeLogin;
-  frmCheckIfUserIsAllowed:=TpsHMIfrmUserAuthentication.Create(nil);
-  {$IFDEF FPC}
-  frmCheckIfUserIsAllowed.FormStyle:=fsSystemStayOnTop;
-  {$ELSE}
-  frmCheckIfUserIsAllowed.FormStyle:=fsStayOnTop;
-  {$ENDIF}
 
-  frmCheckIfUserIsAllowed.Caption:=Format(SLoginCaptionToken, [sc]);
   Result:=false;
+
+  frmCheckIfUserIsAllowed:=TpsHMIfrmUserAuthentication.Create(nil);
   try
+    frmCheckIfUserIsAllowed.FormStyle:=fsSystemStayOnTop;
+
+    frmCheckIfUserIsAllowed.Caption:=SLoginRequired;
+    if trim(sc)<>'' then begin
+      frmCheckIfUserIsAllowed.lblRequiredPerm.BorderSpacing.Around:=3;
+      frmCheckIfUserIsAllowed.lblRequiredPerm.Caption:=format(SRequiredPerm,[sc]);
+    end;
+    if trim(UserHint)<>'' then begin
+      frmCheckIfUserIsAllowed.lblHint.BorderSpacing.Around:=3;
+      frmCheckIfUserIsAllowed.lblHint.BorderSpacing.Top:=8;
+      frmCheckIfUserIsAllowed.lblHint.Caption:=UserHint;
+    end;
+
     frmCheckIfUserIsAllowed.FocusControl:=fcUserName;
     frmCheckIfUserIsAllowed.edtusername.Text:='';
     frmCheckIfUserIsAllowed.edtPassword.Text:='';
+
+    frmCheckIfUserIsAllowed.AutoSize:=true;
+    frmCheckIfUserIsAllowed.HandleNeeded;
+    frmCheckIfUserIsAllowed.GetPreferredSize(PreferredWidth,PreferredHeight);
+
     if frmCheckIfUserIsAllowed.ShowModal=mrOk then begin
       if CheckUserAndPassword(frmCheckIfUserIsAllowed.edtusername.Text, frmCheckIfUserIsAllowed.edtPassword.Text, aUserID, false) then begin
         if CanAccess(sc,aUserID) then begin

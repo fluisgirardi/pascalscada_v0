@@ -32,21 +32,14 @@ uses
   IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
-  numexprtag, plcstructstring,
+  numexprtag, plcstructstring, redundancyctrl,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
-    Types, 
-    {$IFDEF DELPHI2009_UP}
-      //demais versoes do delphi
-      //others versions of delphi.
-      DesignIntf, DesignEditors;
+    {$IFDEF PORTUGUES}
+      {$MESSAGE ERROR 'Somente Lazarus/Freepascal é suportado!'}
     {$ELSE}
-      {$IFDEF PORTUGUES}
-        {$MESSAGE ERROR 'Somente versões posteriores ao Delphi 2009 são suportadas!'}
-      {$ELSE}
-        {$MESSAGE ERROR 'Only Delphi 2009 or later are supported!'}
-      {$ENDIF}
+      {$MESSAGE ERROR 'Only Lazarus/Freepascal are supported!'}
     {$ENDIF}
   {$ENDIF}
 procedure Register;
@@ -66,7 +59,8 @@ begin
                                            TLinearScaleProcessor,
                                            TUserScale,
                                            TMutexServer,
-                                           TMutexClient]);
+                                           TMutexClient,
+                                           TRedundancyCtrl]);
   RegisterComponents(strTagsPallete,      [TPLCTagNumber,
                                            TPLCBlock,
                                            TPLCBlockElement,
@@ -130,9 +124,9 @@ begin
 
 end;
 
-{$IFDEF FPC}
 initialization
-  {$I pascalscada.lrs}
-{$ENDIF}
+
+{$I pascalscada.lrs}
+
 end.
 

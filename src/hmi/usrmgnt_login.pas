@@ -17,10 +17,13 @@ type
     Label1: TLabel;
     Label2: TLabel;
     edtPassword: TEdit;
+    lblRequiredPerm: TLabel;
+    lblHint: TLabel;
     Panel1: TPanel;
     Panel2: TPanel;
     btnOk: TBitBtn;
     btnCancel: TBitBtn;
+    Panel3: TPanel;
     procedure FormShow(Sender: TObject);
   private
     FFocusControl:TFocusedControl;

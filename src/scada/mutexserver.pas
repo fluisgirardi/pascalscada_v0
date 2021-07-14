@@ -23,7 +23,7 @@ unit mutexserver;
 interface
 
 uses
-  Classes, SysUtils, socket_types, CrossEvent, crossthreads,
+  Classes, SysUtils, socket_types, CrossEvent, crossthreads, socketserver,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -43,20 +43,12 @@ uses
 type
   { TAcceptThread }
 
-  TAcceptThread = Class(TpSCADACoreAffinityThread)
+  TAcceptThread = Class(TSocketAcceptThread)
   private
-    FServerSocket:TSocket;
     FMutex:TCriticalSection;
-    FEnd:TCrossEvent;
-    FClientThread:TpSCADACoreAffinityThread;
-    FAddClientThread,
-    FRemoveClientThread:TNotifyEvent;
-    function WaitEnd(timeout:Cardinal): TWaitResult;
-    procedure AddClientToMainThread;
   protected
-    procedure Execute; override;
+    procedure LaunchNewThread; override;
   public
-    procedure Terminate;
     constructor Create(CreateSuspended: Boolean;
                        ServerSocket:TSocket;
                        ServerMutex:syncobjs.TCriticalSection;
@@ -66,19 +58,13 @@ type
 
   { TClientThread }
 
-  TClientThread = Class(TpSCADACoreAffinityThread)
+  TClientThread = Class(TSocketClientThread)
   private
-    FSocket:TSocket;
     FMutex:TCriticalSection;
-    FEnd:TCrossEvent;
     FIntoCriticalSection:Boolean;
-    FRemoveClientThread:TNotifyEvent;
-    function WaitEnd(timeout:Cardinal): TWaitResult;
-    procedure ClientFinished;
   protected
-    procedure Execute; override;
+    procedure ThreadLoop; override;
   public
-    procedure Terminate;
     constructor Create(CreateSuspended: Boolean;
                        ClientSocket:TSocket;
                        ServerMutex:syncobjs.TCriticalSection;
@@ -117,20 +103,7 @@ implementation
 uses dateutils, hsstrings {$IF defined(WIN32) or defined(WIN64)} , Windows{$IFEND};
 
 
-{ TClientThread }
-
-function TClientThread.WaitEnd(timeout: Cardinal): TWaitResult;
-begin
-  Result := FEnd.WaitFor(timeout);
-end;
-
-procedure TClientThread.ClientFinished;
-begin
-  if Assigned(FRemoveClientThread) then
-    FRemoveClientThread(Self);
-end;
-
-procedure TClientThread.Execute;
+procedure TClientThread.ThreadLoop;
 var
   ClientCmd, Response:Byte;
   FaultCount:LongInt;
@@ -230,23 +203,6 @@ begin
     FMutex.Leave;
     FIntoCriticalSection:=false;
   end;
-
-  //Close the socket.
-  CloseSocket(FSocket);
-
-  //remove the connection thread from the main thread list.
-  Synchronize(@ClientFinished);
-
-  while not FEnd.SetEvent do Sleep(1);
-end;
-
-procedure TClientThread.Terminate;
-begin
-  TpSCADACoreAffinityThread(self).Terminate;
-  repeat
-     CheckSynchronize(1);
-  until WaitEnd(1)=wrSignaled;
-  FEnd.Destroy;
 end;
 
 constructor TClientThread.Create(CreateSuspended: Boolean;
@@ -254,84 +210,20 @@ constructor TClientThread.Create(CreateSuspended: Boolean;
                                  ServerMutex: syncobjs.TCriticalSection;
                                  RemoveClientThread:TNotifyEvent);
 begin
-  inherited Create(CreateSuspended);
-  FSocket             := ClientSocket;
+  inherited Create(CreateSuspended,ClientSocket,RemoveClientThread);
   FMutex              := ServerMutex;
-  FEnd                := TCrossEvent.Create(true, false);
-  FRemoveClientThread :=RemoveClientThread;
-  FEnd.ResetEvent;
   FIntoCriticalSection:=false;
 end;
 
 { TAcceptThread }
 
-procedure TAcceptThread.Execute;
-var
-  ClientSocket:TSocket;
-
-  procedure LaunchNewThread;
-  begin
-    //launch a new thread that will handle this new connection
-    setblockingmode(ClientSocket,MODE_NONBLOCKING);
-    FClientThread := TClientThread.Create(True, ClientSocket, FMutex, FRemoveClientThread);
-    Synchronize(@AddClientToMainThread);
-    FClientThread.WakeUp;
-  end;
-
+procedure TAcceptThread.LaunchNewThread;
 begin
-
-  while not Terminated do begin
-    //linux, bsd
-    {$IF defined(FPC) AND defined(UNIX)}
-    ClientSocket:=fpAccept(FServerSocket,nil,nil);
-
-    if ClientSocket>0 then
-      LaunchNewThread
-    else
-      Sleep(5);
-    {$IFEND}
-
-    //WINCE
-    {$IF defined(FPC) AND defined(WINCE)}
-    ClientSocket:=fpAccept(FServerSocket,nil,nil);
-
-    if ClientSocket<>INVALID_SOCKET then
-      LaunchNewThread
-    else
-      Sleep(5);
-    {$IFEND}
-
-    //WINDOWS
-    {$IF defined(WIN32) or defined(WIN64)}
-    ClientSocket:=  Accept(FServerSocket,nil,nil);
-
-    if ClientSocket<>INVALID_SOCKET then
-      LaunchNewThread
-    else
-      Sleep(5);
-    {$IFEND}
-  end;
-  while not FEnd.SetEvent do Sleep(1);
-end;
-
-procedure TAcceptThread.Terminate;
-begin
-  TpSCADACoreAffinityThread(self).Terminate;
-  repeat
-     CheckSynchronize(1);
-  until WaitEnd(1)=wrSignaled;
-  FEnd.Destroy;
-end;
-
-function TAcceptThread.WaitEnd(timeout:Cardinal): TWaitResult;
-begin
-  Result := FEnd.WaitFor(timeout);
-end;
-
-procedure TAcceptThread.AddClientToMainThread;
-begin
-  if Assigned(FAddClientThread) then
-    FAddClientThread(FClientThread);
+  //launch a new thread that will handle this new connection
+  setblockingmode(ClientSocket,MODE_NONBLOCKING);
+  FClientThread := TClientThread.Create(True, ClientSocket, FMutex, FRemoveClientThread);
+  Synchronize(@AddClientToMainThread);
+  FClientThread.WakeUp;
 end;
 
 constructor TAcceptThread.Create(CreateSuspended: Boolean;
@@ -340,14 +232,8 @@ constructor TAcceptThread.Create(CreateSuspended: Boolean;
                                  AddClientThread,
                                  RemoveClientThread:TNotifyEvent);
 begin
-  inherited Create(CreateSuspended);
-  FServerSocket       := ServerSocket;
+  inherited Create(CreateSuspended,FServerSocket,AddClientThread,RemoveClientThread);
   FMutex              := ServerMutex;
-  FAddClientThread    := AddClientThread;
-  FRemoveClientThread := RemoveClientThread;
-  FEnd                := TCrossEvent.Create(true, false);
-
-  FEnd.ResetEvent;
 end;
 
 { TMutexServer }

@@ -8,7 +8,7 @@ unit pascalscada_hmi;
 interface
 
 uses
-  BasicUserManagement, ControlSecurityManager, crosskeyevents, 
+  BasicUserManagement, crosskeyevents, ControlSecurityManager, 
   CustomizedUserManagement, hmi_draw_basic_horizontal_control, 
   hmi_draw_basiccontrol, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca, 
   hmi_polyline, HMIAnimation, hmibasiccolletion, hmibooleanpropertyconnector, 

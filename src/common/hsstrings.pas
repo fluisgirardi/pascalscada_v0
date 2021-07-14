@@ -158,8 +158,10 @@ resourcestring
   SWinCCAreInstalled            = 'WinCC está instalado?';
   SUseTheWinCCUserManager       = 'Cadastre a informação de segurança usando o Security Manager do WinCC!';
   SWCCNotSupportCheckUserAuth   = 'Este metodo não é suportado pelo gerenciador de segurança do WinCC';
+  SLoginRequired                = 'Login necessário';
   SLoginCaptionToken            = 'Informe um usuário que tenha autorização para "%s".';
   SAccessDenied                 = 'Acesso negado!';
+  SRequiredPerm                 = 'Permissão necessária:'+LineEnding+'%s';
 
   SMBTBStatiomAddress           = 'Qual o endereço (nó) da estação (CLP) que contem as memórias que se deseja mapear?';
   SMBTBTagType                  = 'Qual o tipo de memória você deseja criar como tag?';
@@ -306,8 +308,10 @@ resourcestring
   SWinCCAreInstalled            = 'WinCC is installed?';
   SUseTheWinCCUserManager       = 'Use the WinCC Security Manager to insert a new Security Code/Authorization!';
   SWCCNotSupportCheckUserAuth   = 'This method is not supported by WinCC security Manager';
+  SLoginRequired                = 'Login required';
   SLoginCaptionToken            = 'Enter a user that can access the "%s" token.';
   SAccessDenied                 = 'Access denied!';
+  SRequiredPerm                 = 'Authorization required:'+LineEnding+'%s';
 
   SMBTBStatiomAddress           = 'What are the address of your Modbus Device?';
   SMBTBTagType                  = 'What are the tag type you want use in your application?';

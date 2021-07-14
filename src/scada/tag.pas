@@ -173,7 +173,7 @@ type
   @value(ioPartialOk              An action was partially successful.)
   }
   {$ENDIF}
-  TProtocolIOResult = (ioNone, ioDriverError, ioCommError, ioOk, ioTimeOut,
+  TProtocolIOResult = (ioNone, ioOk, ioDriverError, ioCommError, ioTimeOut,
                        ioIllegalFunction, ioIllegalRegAddress,ioIllegalValue,
                        ioPLCError, ioTagError, ioNullDriver, ioIllegalRequest,
                        ioIllegalStationAddress, ioObjectNotExists,

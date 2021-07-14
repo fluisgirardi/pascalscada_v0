@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="pascalscada_hmi"/>
     <Type Value="RunAndDesignTime"/>
     <Author Value="Fabio Luis Girardi &lt;fabio@pascalscada.com>"/>
@@ -39,12 +39,12 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <UnitName Value="BasicUserManagement"/>
       </Item1>
       <Item2>
-        <Filename Value="src/hmi/controlsecuritymanager.pas"/>
-        <UnitName Value="ControlSecurityManager"/>
-      </Item2>
-      <Item3>
         <Filename Value="src/hmi/crosskeyevents.pas"/>
         <UnitName Value="crosskeyevents"/>
+      </Item2>
+      <Item3>
+        <Filename Value="src/hmi/controlsecuritymanager.pas"/>
+        <UnitName Value="ControlSecurityManager"/>
       </Item3>
       <Item4>
         <Filename Value="src/hmi/customizedusermanagement.pas"/>
@@ -229,6 +229,7 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <UnitName Value="tagstatuslist"/>
       </Item48>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="7">
       <Item1>
         <PackageName Value="pascalscada"/>

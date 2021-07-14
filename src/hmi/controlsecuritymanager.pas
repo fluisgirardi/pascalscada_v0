@@ -34,7 +34,7 @@ type
     procedure  UnregisterSecurityCode(sc:UTF8String);
     function   SecurityCodeExists(sc:UTF8String):Boolean;
     function   GetRegisteredAccessCodes:TStringList;
-    function   CheckIfUserIsAllowed(sc:UTF8String; RequireUserLogin:Boolean; var userlogin:UTF8String):Boolean;
+    function   CheckIfUserIsAllowed(sc:UTF8String; RequireUserLogin:Boolean; var userlogin:UTF8String; const UserHint:String):Boolean;
   published
     property UserManagement:TBasicUserManagement read FUserManagement write SetUserManagement;
   end;
@@ -203,7 +203,7 @@ end;
 
 function TPascalSCADACheckSpecialTokenAction.Execute: Boolean;
 begin
-  if GetControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode, FRequireLoginAlways, FAuthorizedBy) then
+  if GetControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode, FRequireLoginAlways, FAuthorizedBy, Hint) then
     Result:=inherited Execute
   else
     Result:=false;
@@ -502,11 +502,12 @@ begin
 end;
 
 function TControlSecurityManager.CheckIfUserIsAllowed(sc: UTF8String;
-  RequireUserLogin: Boolean; var userlogin: UTF8String): Boolean;
+  RequireUserLogin: Boolean; var userlogin: UTF8String; const UserHint: String
+  ): Boolean;
 begin
   Result:=(Trim(sc)='');
   if FUserManagement<>nil then
-    Result:=TBasicUserManagement(FUserManagement).CheckIfUserIsAllowed(sc, RequireUserLogin, userlogin);
+    Result:=TBasicUserManagement(FUserManagement).CheckIfUserIsAllowed(sc, RequireUserLogin, userlogin, UserHint);
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
