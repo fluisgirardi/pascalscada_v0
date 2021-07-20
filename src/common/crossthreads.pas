@@ -63,6 +63,7 @@ type
   protected
     procedure Execute; override;
     procedure Loop; virtual; abstract;
+    procedure LoopTerminated; virtual;
   public
     constructor Create(CreateSuspended: Boolean; const StackSize: SizeUInt=
       DefaultStackSize);
@@ -102,7 +103,14 @@ begin
   while not Terminated do
     Loop;
 
+  LoopTerminated;
+
   while not FEndLoop.SetEvent do;
+end;
+
+procedure TpSCADACoreAffinityThreadWithLoop.LoopTerminated;
+begin
+
 end;
 
 constructor TpSCADACoreAffinityThreadWithLoop.Create(CreateSuspended: Boolean;
