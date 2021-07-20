@@ -3,7 +3,8 @@ unit BasicUserManagement;
 interface
 
 uses
-  SysUtils, Classes, ExtCtrls, usrmgnt_login;
+  SysUtils, Classes, ExtCtrls, Dialogs, Controls, Forms, StdCtrls, Graphics,
+  usrmgnt_login, ChipCardReader;
 
 type
   TVKType = (vktNone, vktAlphaNumeric, vktNumeric);
@@ -13,6 +14,12 @@ type
   { TBasicUserManagement }
 
   TBasicUserManagement = class(TComponent)
+  private
+    FChipCardReader: TChipCardReader;
+    procedure CheckIfCardHasBeenRemoved(Sender: TObject);
+    procedure ChipCardReaderProc(Data: PtrInt);
+    procedure SetChipCardReader(AValue: TChipCardReader);
+    procedure WarningCanBeClosed(Sender: TObject; var CanClose: Boolean);
   protected
 {}  FLoggedUser:Boolean;
 {}  FCurrentUserName,
@@ -30,7 +37,7 @@ type
 
     FRegisteredSecurityCodes:TStringList;
 
-    frmLogin, frmCheckIfUserIsAllowed:TpsHMIfrmUserAuthentication;
+    frmLoginDlg:TpsHMIfrmUserAuthentication;
 
     function  GetLoginTime:TDateTime;
     procedure SetInactiveTimeOut({%H-}t:Cardinal);
@@ -43,6 +50,7 @@ type
     procedure DoFailureLogin; virtual;
 
     function CheckUserAndPassword({%H-}User, {%H-}Pass:UTF8String; out {%H-}UserID:Integer; {%H-}LoginAction:Boolean):Boolean; virtual;
+    function CheckUserChipCard(aChipCardCode:UTF8String; out userlogin:String; out {%H-}UserID:Integer; {%H-}LoginAction:Boolean):Boolean; virtual;
 
     function GetLoggedUser:Boolean; virtual;
     function GetCurrentUserName:UTF8String; virtual;
@@ -61,6 +69,11 @@ type
     property FailureLogin:TNotifyEvent read FFailureLogin write FFailureLogin;
     property UserChanged:TUserChangedEvent read FUserChanged write FUserChanged;
     function CanAccess({%H-}sc:UTF8String; {%H-}aUID:Integer):Boolean; virtual; overload;
+    property ChipCardReader:TChipCardReader read FChipCardReader write SetChipCardReader;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure WaitForEmptyChipCard; virtual;
+    procedure StartDelayedChipCardRead;
+    procedure StopDelayedChipCardRead;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -87,9 +100,12 @@ type
     property CurrentUserLogin:UTF8String read GetCurrentUserLogin;
   end;
 
+const
+  mrOKChipCard = mrLast + 1;
+
 implementation
 
-uses Controls, Forms, ControlSecurityManager, hsstrings;
+uses ControlSecurityManager, hsstrings;
 
 constructor TBasicUserManagement.Create(AOwner:TComponent);
 begin
@@ -111,6 +127,7 @@ end;
 
 destructor  TBasicUserManagement.Destroy;
 begin
+  Application.RemoveAllHandlersOfObject(Self);
   if GetControlSecurityManager.UserManagement=Self then
     GetControlSecurityManager.UserManagement:=nil;
 
@@ -124,10 +141,11 @@ var
   frozenTimer:TTimer;
   retries:LongInt;
   aborted, loggedin:Boolean;
-  aUserID, PreferredWidth, PreferredHeight: Integer;
+  aUserID, PreferredWidth, PreferredHeight, res: Integer;
+  aUserLogin: String;
 begin
-  if Assigned(frmLogin) then begin
-    frmLogin.ShowOnTop;
+  if Assigned(frmLoginDlg) then begin
+    frmLoginDlg.ShowOnTop;
     exit;
   end;
 
@@ -142,43 +160,69 @@ begin
   loggedin:=False;
   Result:=false;
 
-  frmLogin:=TpsHMIfrmUserAuthentication.Create(nil);
+  frmLoginDlg:=TpsHMIfrmUserAuthentication.Create(nil);
   try
-    frmLogin.edtusername.Text:='';
-    frmLogin.FocusControl:=fcUserName;
+    frmLoginDlg.edtusername.Text:='';
+    frmLoginDlg.FocusControl:=fcUserName;
 
-    frmLogin.AutoSize:=true;
-    frmLogin.HandleNeeded;
-    frmLogin.GetPreferredSize(PreferredWidth,PreferredHeight);
+    frmLoginDlg.AutoSize:=true;
+    frmLoginDlg.HandleNeeded;
+    frmLoginDlg.GetPreferredSize(PreferredWidth,PreferredHeight);
 
     while (not loggedin) and (not aborted) do begin
-      frmLogin.edtPassword.Text:='';
-      if frmLogin.ShowModal=mrOk then begin
-        if CheckUserAndPassword(frmLogin.edtusername.Text, frmLogin.edtPassword.Text, aUserID, true) then begin
-          FLoggedUser:=true;
-          FUID:=aUserID;
-          loggedin:=true;
-          FCurrentUserLogin:=frmLogin.edtusername.Text;
-          FLoggedSince:=Now;
-          Result:=true;
-          GetControlSecurityManager.UpdateControls;
-          DoSuccessfulLogin;
-        end else begin
-          DoFailureLogin;
-          inc(retries);
-          if (FLoginRetries>0) and (retries>=FLoginRetries) then begin
-            frmLogin.DisableEntry;
-            frozenTimer.Enabled:=true;
-            frmLogin.ShowModal;
-            retries:=0;
+      frmLoginDlg.edtPassword.Text:='';
+      try
+        if Assigned(FChipCardReader) then begin
+          if not FChipCardReader.ChipCardReady then
+            FChipCardReader.InitializeChipCard;
+          if FChipCardReader.ChipCardReady then begin
+            WaitForEmptyChipCard;
+            StartDelayedChipCardRead;
           end;
         end;
-      end else
-        aborted:=true;
-      frmLogin.FocusControl:=fcPassword;
+
+        res:=frmLoginDlg.ShowModal;
+        if res in [mrOK, mrOKChipCard] then begin
+          if ((res=mrOk)         and CheckUserAndPassword(frmLoginDlg.edtusername.Text, frmLoginDlg.edtPassword.Text, aUserID, true)) or
+             ((res=mrOKChipCard) and CheckUserChipCard(frmLoginDlg.ChipCardCode, aUserLogin, aUserID, true)) then begin
+            FLoggedUser:=true;
+            FUID:=aUserID;
+            loggedin:=true;
+
+            if res=mrOK then
+              FCurrentUserLogin:=frmLoginDlg.edtusername.Text
+            else
+              FCurrentUserLogin:=aUserLogin;
+
+            FLoggedSince:=Now;
+            Result:=true;
+            GetControlSecurityManager.UpdateControls;
+            DoSuccessfulLogin;
+          end else begin
+            DoFailureLogin;
+            inc(retries);
+            if (FLoginRetries>0) and (retries>=FLoginRetries) then begin
+              frmLoginDlg.DisableEntry;
+              frozenTimer.Enabled:=true;
+              frmLoginDlg.ShowModal;
+              retries:=0;
+            end;
+          end;
+        end else
+          aborted:=true;
+
+        frmLoginDlg.FocusControl:=fcPassword;
+      finally
+        if Assigned(FChipCardReader) then begin
+          if FChipCardReader.ChipCardReady then begin
+            StopDelayedChipCardRead;
+            FChipCardReader.FinishChipCard;
+          end;
+        end;
+      end;
     end;
   finally
-    FreeAndNil(frmLogin);
+    FreeAndNil(frmLoginDlg);
     FreeAndNil(frozenTimer);
   end;
 end;
@@ -250,7 +294,8 @@ function TBasicUserManagement.CheckIfUserIsAllowed(sc: UTF8String;
   ): Boolean;
 var
   frozenTimer:TTimer;
-  aUserID, PreferredWidth, PreferredHeight:Integer;
+  aUserID, PreferredWidth, PreferredHeight, res:Integer;
+  aUserLogin: String;
 
 begin
   Result:=false;
@@ -266,8 +311,8 @@ begin
 
   //se existe um dialogo de permissão especial aberto
   //chama ele...
-  if Assigned(frmCheckIfUserIsAllowed) then begin
-    frmCheckIfUserIsAllowed.ShowOnTop;
+  if Assigned(frmLoginDlg) then begin
+    frmLoginDlg.ShowOnTop;
     exit;
   end;
 
@@ -279,40 +324,66 @@ begin
 
   Result:=false;
 
-  frmCheckIfUserIsAllowed:=TpsHMIfrmUserAuthentication.Create(nil);
+  frmLoginDlg:=TpsHMIfrmUserAuthentication.Create(nil);
   try
-    frmCheckIfUserIsAllowed.FormStyle:=fsSystemStayOnTop;
+    frmLoginDlg.FormStyle:=fsSystemStayOnTop;
 
-    frmCheckIfUserIsAllowed.Caption:=SLoginRequired;
+    frmLoginDlg.Caption:=SLoginRequired;
     if trim(sc)<>'' then begin
-      frmCheckIfUserIsAllowed.lblRequiredPerm.BorderSpacing.Around:=3;
-      frmCheckIfUserIsAllowed.lblRequiredPerm.Caption:=format(SRequiredPerm,[sc]);
+      frmLoginDlg.lblRequiredPerm.BorderSpacing.Around:=3;
+      frmLoginDlg.lblRequiredPerm.Caption:=format(SRequiredPerm,[sc]);
     end;
     if trim(UserHint)<>'' then begin
-      frmCheckIfUserIsAllowed.lblHint.BorderSpacing.Around:=3;
-      frmCheckIfUserIsAllowed.lblHint.BorderSpacing.Top:=8;
-      frmCheckIfUserIsAllowed.lblHint.Caption:=UserHint;
+      frmLoginDlg.lblHint.BorderSpacing.Around:=3;
+      frmLoginDlg.lblHint.BorderSpacing.Top:=8;
+      frmLoginDlg.lblHint.Caption:=UserHint;
     end;
 
-    frmCheckIfUserIsAllowed.FocusControl:=fcUserName;
-    frmCheckIfUserIsAllowed.edtusername.Text:='';
-    frmCheckIfUserIsAllowed.edtPassword.Text:='';
+    frmLoginDlg.FocusControl:=fcUserName;
+    frmLoginDlg.edtusername.Text:='';
+    frmLoginDlg.edtPassword.Text:='';
 
-    frmCheckIfUserIsAllowed.AutoSize:=true;
-    frmCheckIfUserIsAllowed.HandleNeeded;
-    frmCheckIfUserIsAllowed.GetPreferredSize(PreferredWidth,PreferredHeight);
+    frmLoginDlg.AutoSize:=true;
+    frmLoginDlg.HandleNeeded;
+    frmLoginDlg.GetPreferredSize(PreferredWidth,PreferredHeight);
 
-    if frmCheckIfUserIsAllowed.ShowModal=mrOk then begin
-      if CheckUserAndPassword(frmCheckIfUserIsAllowed.edtusername.Text, frmCheckIfUserIsAllowed.edtPassword.Text, aUserID, false) then begin
-        if CanAccess(sc,aUserID) then begin
-          Result:=true;
-          userlogin:=frmCheckIfUserIsAllowed.edtusername.Text;
-        end else
-          Result:=false;
+    try
+      if Assigned(FChipCardReader) then begin
+        if not FChipCardReader.ChipCardReady then
+          FChipCardReader.InitializeChipCard;
+        if FChipCardReader.ChipCardReady then begin
+          WaitForEmptyChipCard;
+          StartDelayedChipCardRead;
+        end;
+      end;
+
+      res := frmLoginDlg.ShowModal;
+      if res in [mrOk, mrOKChipCard] then begin
+        if ((res=mrOk)         and CheckUserAndPassword(frmLoginDlg.edtusername.Text, frmLoginDlg.edtPassword.Text, aUserID, false)) or
+           ((res=mrOKChipCard) and CheckUserChipCard(frmLoginDlg.ChipCardCode, aUserLogin, aUserID, false)) then begin
+          if CanAccess(sc,aUserID) then begin
+            Result:=true;
+
+            if res=mrOK then
+              userlogin:=frmLoginDlg.edtusername.Text
+            else
+              userlogin:=aUserLogin;
+
+          end else
+            Result:=false;
+        end;
+      end;
+
+    finally
+      if Assigned(FChipCardReader) then begin
+        if FChipCardReader.ChipCardReady then begin
+          StopDelayedChipCardRead;
+          FChipCardReader.FinishChipCard;
+        end;
       end;
     end;
   finally
-    FreeAndNil(frmCheckIfUserIsAllowed);
+    FreeAndNil(frmLoginDlg);
     FreeAndNil(frozenTimer);
   end;
 end;
@@ -320,6 +391,48 @@ end;
 function TBasicUserManagement.GetUID: Integer;
 begin
   Result:=FUID;
+end;
+
+procedure TBasicUserManagement.SetChipCardReader(AValue: TChipCardReader);
+begin
+  if FChipCardReader=AValue then Exit;
+
+  if Assigned(FChipCardReader) then
+    FChipCardReader.RemoveFreeNotification(Self);
+
+  if Assigned(AValue) then
+    AValue.FreeNotification(Self);
+
+  FChipCardReader:=AValue;
+end;
+
+procedure TBasicUserManagement.CheckIfCardHasBeenRemoved(Sender: TObject);
+begin
+  if assigned(FChipCardReader) and (Sender is TTimer) and (TTimer(sender).Owner is TForm) then begin
+    if FChipCardReader.IsEmptyChipCard then begin
+      TForm(TTimer(sender).Owner).ModalResult:=mrOK;
+      TTimer(sender).Enabled:=false;
+    end;
+  end;
+end;
+
+procedure TBasicUserManagement.ChipCardReaderProc(Data: PtrInt);
+begin
+  if assigned(FChipCardReader) and Assigned(frmLoginDlg) then begin
+    if FChipCardReader.ChipCardRead(frmLoginDlg.ChipCardCode) then begin
+      frmLoginDlg.ModalResult:=mrOKChipCard;
+    end else
+      StartDelayedChipCardRead;
+  end;
+end;
+
+procedure TBasicUserManagement.WarningCanBeClosed(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  if Assigned(FChipCardReader) then
+    canClose:=FChipCardReader.IsEmptyChipCard
+  else
+    CanClose:=true;
 end;
 
 function    TBasicUserManagement.GetLoginTime:TDateTime;
@@ -337,6 +450,12 @@ end;
 
 function TBasicUserManagement.CheckUserAndPassword(User, Pass: UTF8String; out
   UserID: Integer; LoginAction: Boolean): Boolean;
+begin
+  Result:=false;
+end;
+
+function TBasicUserManagement.CheckUserChipCard(aChipCardCode: UTF8String; out
+  userlogin: String; out UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
 end;
@@ -361,6 +480,61 @@ begin
   Result:=false;
 end;
 
+procedure TBasicUserManagement.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation=opRemove) and (AComponent=FChipCardReader) then
+    FChipCardReader:=nil;
+end;
+
+procedure TBasicUserManagement.WaitForEmptyChipCard;
+var
+  frm: TForm;
+  lbl: TLabel;
+  tmr: TTimer;
+begin
+  if Assigned(FChipCardReader) then begin
+    frm:=TForm.CreateNew(Self);
+    try
+      frm.SetBounds(0,0,320,240);
+      frm.Position:=poScreenCenter;
+      frm.BorderStyle:=bsNone;
+      lbl:=TLabel.Create(frm);
+      lbl.Align:=alClient;
+      lbl.WordWrap:=true;
+      lbl.Alignment:=taCenter;
+      lbl.Layout:=tlCenter;
+      lbl.font.Style:=[fsBold];
+      lbl.font.Height:=16;
+      lbl.Caption:=SRemoveChipCard;
+      lbl.Parent:=frm;
+      tmr:=TTimer.Create(frm);
+      tmr.Interval:=100;
+      tmr.OnTimer:=@CheckIfCardHasBeenRemoved;
+      frm.OnCloseQuery:=@WarningCanBeClosed;
+      repeat
+        if not FChipCardReader.IsEmptyChipCard then
+          frm.ShowModal;
+      until FChipCardReader.IsEmptyChipCard;
+    finally
+      FreeAndNil(frm);
+    end;
+  end;
+end;
+
+procedure TBasicUserManagement.StartDelayedChipCardRead;
+begin
+  if assigned(FChipCardReader) and ((Application.Flags*[AppDoNotCallAsyncQueue])=[]) then begin
+    Application.QueueAsyncCall(@ChipCardReaderProc,0);
+  end;
+end;
+
+procedure TBasicUserManagement.StopDelayedChipCardRead;
+begin
+  Application.RemoveAsyncCalls(Self);
+end;
+
 procedure TBasicUserManagement.DoSuccessfulLogin;
 begin
   if Assigned(FSuccessfulLogin) then
@@ -378,13 +552,9 @@ begin
   if sender is TTimer then begin
     TTimer(sender).Enabled:=false;
     case TTimer(sender).Tag of
-      1: if Assigned(frmLogin) then begin
-           frmLogin.Close;
-           frmLogin.EnableEntry;
-         end;
-      2: if Assigned(frmCheckIfUserIsAllowed) then begin
-          frmCheckIfUserIsAllowed.Close;
-          frmCheckIfUserIsAllowed.EnableEntry;
+      1,2: if Assigned(frmLoginDlg) then begin
+           frmLoginDlg.Close;
+           frmLoginDlg.EnableEntry;
          end;
     end;
   end;

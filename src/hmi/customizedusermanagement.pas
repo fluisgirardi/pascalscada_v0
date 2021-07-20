@@ -7,6 +7,7 @@ uses
 
 type
   TCheckUserAndPasswordEvent = procedure(user, pass:UTF8String; out aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;
+  TCheckUserChipCard         = procedure(aChipCardCode: UTF8String; out  userlogin: String; out UserID: Integer; var ValidChipCard:Boolean; LoginAction: Boolean) of object;
   TUserStillLoggedEvent      = procedure(var StillLogged:Boolean) of object;
   TGetUserNameAndLogin       = procedure(var UserInfo:UTF8String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
@@ -21,6 +22,7 @@ type
   TCustomizedUserManagement = class(TBasicUserManagement)
   private
     FCheckUserAndPasswordEvent:TCheckUserAndPasswordEvent;
+    FCheckUserChipCardEvent: TCheckUserChipCard;
     FGetUserName              :TGetUserNameAndLogin;
     FGetUserLogin             :TGetUserNameAndLogin;
     FManageUsersAndGroupsEvent:TManageUsersAndGroupsEvent;
@@ -30,10 +32,11 @@ type
     FCanAccessEvent           :TCanAccessEvent;
     FLogoutEvent              :TLogoutEvent;
   protected
-    function  CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
+    function CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
+    function CheckUserChipCard(aChipCardCode: UTF8String; out  userlogin: String; out UserID: Integer; LoginAction: Boolean): Boolean; override;
 
-    function  GetCurrentUserName:UTF8String; override;
-    function  GetCurrentUserLogin:UTF8String; override;
+    function GetCurrentUserName:UTF8String; override;
+    function GetCurrentUserLogin:UTF8String; override;
     function CanAccess(sc: UTF8String; aUID: Integer): Boolean; override; overload;
   public
     procedure Logout; override;
@@ -46,6 +49,7 @@ type
     function  CanAccess(sc:UTF8String):Boolean; override;
   published
     property UID;
+    property ChipCardReader;
     property CurrentUserName;
     property CurrentUserLogin;
     property LoggedSince;
@@ -55,8 +59,10 @@ type
 
     property SuccessfulLogin;
     property FailureLogin;
+
   published
     property OnCheckUserAndPass    :TCheckUserAndPasswordEvent read FCheckUserAndPasswordEvent write FCheckUserAndPasswordEvent;
+    property OnCheckUserChipCard   :TCheckUserChipCard         read FCheckUserChipCardEvent    write FCheckUserChipCardEvent;
     property OnGetUserName         :TGetUserNameAndLogin       read FGetUserName               write FGetUserName;
     property OnGetUserLogin        :TGetUserNameAndLogin       read FGetUserLogin              write FGetUserLogin;
     property OnManageUsersAndGroups:TManageUsersAndGroupsEvent read FManageUsersAndGroupsEvent write FManageUsersAndGroupsEvent;
@@ -78,6 +84,22 @@ begin
   try
     if Assigned(FCheckUserAndPasswordEvent) then
       FCheckUserAndPasswordEvent(user,Pass,UserID,Result,LoginAction);
+  except
+    Result:=false;
+  end;
+end;
+
+function TCustomizedUserManagement.CheckUserChipCard(aChipCardCode: UTF8String;
+  out userlogin: String; out UserID: Integer; LoginAction: Boolean): Boolean;
+begin
+  Result:=false;
+  try
+    if Assigned(FCheckUserChipCardEvent) then
+      FCheckUserChipCardEvent(aChipCardCode,
+                              userlogin,
+                              UserID,
+                              Result,
+                              LoginAction);
   except
     Result:=false;
   end;

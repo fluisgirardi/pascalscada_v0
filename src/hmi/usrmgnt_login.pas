@@ -28,10 +28,9 @@ type
   private
     FFocusControl:TFocusedControl;
   public
-    { Public declarations }
+    ChipCardCode:String;
     procedure EnableEntry;
     procedure DisableEntry;
-
   published
     property FocusControl:TFocusedControl read FFocusControl write FFocusControl;
   end;
