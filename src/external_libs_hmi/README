@@ -1,0 +1,6 @@
+WARNING!! WARNING!! WARNING!! WARNING!! 
+
+WARNING 1: This package only is aimed to works on Linux, FreeBSD and probably macOS!
+WARNING 2: This package was only tested on Linux!
+WARNING 3: This package will add a static link to libhidapi. So install it first or you will got a non working Lazarus install. On Debian, Ubuntu, Mint and derivates, please install the package libhidapi-dev: sudo apt install libhidapi-dev
+WARNING 4: THIS DOESN'T WORKS ON WINDOWS. 

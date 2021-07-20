@@ -1,0 +1,12 @@
+DRIVER=="hid-generic", ENV{HID_ID}=="0003:0000FFFF:00000035", ENV{HID_NAME}=="Sycreader RFID Technology Co., Ltd SYC ID&IC USB Reader", ACTION=="add", SUBSYSTEM=="hid", RUN="/bin/sh -c 'echo -n %E{DEVPATH} | cut -d/ -f 7 > /sys/bus/usb/drivers/usbhid/unbind'"
+
+
+# HIDAPI/libusb
+SUBSYSTEM=="usbmisc", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="0035", MODE="0666"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", MODE="0666"
+
+# If you are using the hidraw implementation, then do something like the
+# following, substituting the VID and PID with your device. Busnum 1 is USB.
+
+# HIDAPI/hidraw
+KERNEL=="hidraw*", ATTRS{busnum}=="1", ATTRS{idVendor}=="ffff", ATTRS{idProduct}=="0035", MODE="0666"
