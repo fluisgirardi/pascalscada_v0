@@ -337,6 +337,11 @@ end;
 
 destructor TSycRFIDReader.Destroy;
 begin
+  if FSycRFIDReader.Suspended then begin
+    FSycRFIDReader.WakeUp;
+    FSycRFIDReader.LoopStarted(1000);
+  end;
+
   FSycRFIDReader.Terminate;
 
   repeat
