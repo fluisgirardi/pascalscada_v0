@@ -41,7 +41,7 @@ type
     constructor Create(CreateSuspended: Boolean; const StackSize: SizeUInt=
   DefaultStackSize);
     destructor Destroy; override;
-    function getLastHIDRead(out strBuffer:String):Boolean;
+    function getLastHIDRead(out strBuffer:UTF8String):Boolean;
     function ReadPending:Boolean;
     property VID:Word read GetVID write SetVID;
     property PID:Word read GetPID write SetPID;
@@ -66,7 +66,7 @@ type
     function InitializeChipCard:Boolean; override;
     function IsEmptyChipCard:Boolean; override;
     function ChipCardReady: Boolean; override;
-    function ChipCardRead(var aChipCardCode:String):Boolean; override;
+    function ChipCardRead(var aChipCardCode:UTF8String):Boolean; override;
     function FinishChipCard:Boolean; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -232,7 +232,7 @@ begin
   inherited Destroy;
 end;
 
-function TSycreaderRFID_USBHIDReader.getLastHIDRead(out strBuffer: String
+function TSycreaderRFID_USBHIDReader.getLastHIDRead(out strBuffer: UTF8String
   ): Boolean;
 var
   auxptr: PStrRec;
@@ -289,19 +289,23 @@ end;
 procedure TSycRFIDReader.Loaded;
 begin
   inherited Loaded;
-  FSycRFIDReader.WakeUp;
+  if ([csDesigning]*ComponentState)=[] then
+    FSycRFIDReader.WakeUp;
 end;
 
 function TSycRFIDReader.InitializeChipCard: Boolean;
 begin
-  FSycRFIDReader.WakeUp;
-  FSycRFIDReader.LoopStarted(1000);
-  Result:=FSycRFIDReader.GetReady;
+  if ([csDesigning]*ComponentState)=[] then begin
+    FSycRFIDReader.WakeUp;
+    FSycRFIDReader.LoopStarted(1000);
+    Result:=FSycRFIDReader.GetReady;
+  end else
+    exit(true);
 end;
 
 function TSycRFIDReader.IsEmptyChipCard: Boolean;
 var
-  aux: String;
+  aux: UTF8String;
 begin
   Result:=false;
   repeat
@@ -315,7 +319,7 @@ begin
   Result:=FSycRFIDReader.GetReady;
 end;
 
-function TSycRFIDReader.ChipCardRead(var aChipCardCode: String): Boolean;
+function TSycRFIDReader.ChipCardRead(var aChipCardCode: UTF8String): Boolean;
 begin
   Result:=FSycRFIDReader.getLastHIDRead(aChipCardCode);
 end;
