@@ -24,6 +24,7 @@ type
     procedure  Logout;
     procedure  Manage;
     function   GetCurrentUserlogin:UTF8String;
+    function   GetCurrentUserName:UTF8String;
     procedure  TryAccess(sc:UTF8String);
     function   RegisterControl(control:IHMIInterface):Boolean;
     procedure  UnRegisterControl(control:IHMIInterface);
@@ -376,6 +377,13 @@ begin
   Result:='';
   if FUserManagement<>nil then
     Result:=TBasicUserManagement(FUserManagement).CurrentUserLogin;
+end;
+
+function TControlSecurityManager.GetCurrentUserName: UTF8String;
+begin
+  Result:='';
+    if FUserManagement<>nil then
+      Result:=TBasicUserManagement(FUserManagement).CurrentUserName;
 end;
 
 procedure  TControlSecurityManager.TryAccess(sc:UTF8String);

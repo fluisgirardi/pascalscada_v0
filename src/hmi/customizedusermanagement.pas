@@ -1,5 +1,7 @@
 unit CustomizedUserManagement;
 
+{$mode objfpc}{$H+}
+
 interface
 
 uses
@@ -7,7 +9,7 @@ uses
 
 type
   TCheckUserAndPasswordEvent = procedure(user, pass:UTF8String; out aUID:Integer; var ValidUser:Boolean; LoginAction:Boolean) of object;
-  TCheckUserChipCard         = procedure(aChipCardCode: UTF8String; out  userlogin: String; out UserID: Integer; var ValidChipCard:Boolean; LoginAction: Boolean) of object;
+  TCheckUserChipCard         = procedure(aChipCardCode: UTF8String; var  userlogin: UTF8String; var UserID: Integer; var ValidChipCard:Boolean; LoginAction: Boolean) of object;
   TUserStillLoggedEvent      = procedure(var StillLogged:Boolean) of object;
   TGetUserNameAndLogin       = procedure(var UserInfo:UTF8String) of object;
   TManageUsersAndGroupsEvent = TNotifyEvent;
@@ -22,7 +24,7 @@ type
   TCustomizedUserManagement = class(TBasicUserManagement)
   private
     FCheckUserAndPasswordEvent:TCheckUserAndPasswordEvent;
-    FCheckUserChipCardEvent: TCheckUserChipCard;
+    FCheckUserChipCardEvent   :TCheckUserChipCard;
     FGetUserName              :TGetUserNameAndLogin;
     FGetUserLogin             :TGetUserNameAndLogin;
     FManageUsersAndGroupsEvent:TManageUsersAndGroupsEvent;
@@ -33,7 +35,7 @@ type
     FLogoutEvent              :TLogoutEvent;
   protected
     function CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
-    function CheckUserChipCard(aChipCardCode: UTF8String; out  userlogin: String; out UserID: Integer; LoginAction: Boolean): Boolean; override;
+    function CheckUserChipCard(aChipCardCode: UTF8String; var userlogin: UTF8String; var UserID: Integer; LoginAction: Boolean): Boolean; override;
 
     function GetCurrentUserName:UTF8String; override;
     function GetCurrentUserLogin:UTF8String; override;
@@ -90,7 +92,7 @@ begin
 end;
 
 function TCustomizedUserManagement.CheckUserChipCard(aChipCardCode: UTF8String;
-  out userlogin: String; out UserID: Integer; LoginAction: Boolean): Boolean;
+  var userlogin: UTF8String; var UserID: Integer; LoginAction: Boolean): Boolean;
 begin
   Result:=false;
   try

@@ -1,5 +1,7 @@
 unit BasicUserManagement;
 
+{$mode objfpc}{$H+}
+
 interface
 
 uses
@@ -50,7 +52,7 @@ type
     procedure DoFailureLogin; virtual;
 
     function CheckUserAndPassword({%H-}User, {%H-}Pass:UTF8String; out {%H-}UserID:Integer; {%H-}LoginAction:Boolean):Boolean; virtual;
-    function CheckUserChipCard(aChipCardCode:UTF8String; out userlogin:String; out {%H-}UserID:Integer; {%H-}LoginAction:Boolean):Boolean; virtual;
+    function CheckUserChipCard(aChipCardCode:UTF8String; var userlogin:UTF8String; var {%H-}UserID:Integer; {%H-}LoginAction:Boolean):Boolean; virtual;
 
     function GetLoggedUser:Boolean; virtual;
     function GetCurrentUserName:UTF8String; virtual;
@@ -141,8 +143,8 @@ var
   frozenTimer:TTimer;
   retries:LongInt;
   aborted, loggedin:Boolean;
-  aUserID, PreferredWidth, PreferredHeight, res: Integer;
-  aUserLogin: String;
+  aUserIDCC, PreferredWidth, PreferredHeight, res, aUserIDDlg: Integer;
+  aUserLogin: UTF8String;
 begin
   if Assigned(frmLoginDlg) then begin
     frmLoginDlg.ShowOnTop;
@@ -183,16 +185,18 @@ begin
 
         res:=frmLoginDlg.ShowModal;
         if res in [mrOK, mrOKChipCard] then begin
-          if ((res=mrOk)         and CheckUserAndPassword(frmLoginDlg.edtusername.Text, frmLoginDlg.edtPassword.Text, aUserID, true)) or
-             ((res=mrOKChipCard) and CheckUserChipCard(frmLoginDlg.ChipCardCode, aUserLogin, aUserID, true)) then begin
+          if ((res=mrOk)         and CheckUserAndPassword(frmLoginDlg.edtusername.Text, frmLoginDlg.edtPassword.Text, aUserIDDlg, true)) or
+             ((res=mrOKChipCard) and CheckUserChipCard(frmLoginDlg.ChipCardCode, aUserLogin, aUserIDCC, true)) then begin
             FLoggedUser:=true;
-            FUID:=aUserID;
             loggedin:=true;
 
-            if res=mrOK then
+            if res=mrOK then begin
+              FUID:=aUserIDDlg;
               FCurrentUserLogin:=frmLoginDlg.edtusername.Text
-            else
+            end else begin
+              FUID:=aUserIDCC;
               FCurrentUserLogin:=aUserLogin;
+            end;
 
             FLoggedSince:=Now;
             Result:=true;
@@ -295,7 +299,7 @@ function TBasicUserManagement.CheckIfUserIsAllowed(sc: UTF8String;
 var
   frozenTimer:TTimer;
   aUserID, PreferredWidth, PreferredHeight, res:Integer;
-  aUserLogin: String;
+  aUserLogin: UTF8String;
 
 begin
   Result:=false;
@@ -454,8 +458,9 @@ begin
   Result:=false;
 end;
 
-function TBasicUserManagement.CheckUserChipCard(aChipCardCode: UTF8String; out
-  userlogin: String; out UserID: Integer; LoginAction: Boolean): Boolean;
+function TBasicUserManagement.CheckUserChipCard(aChipCardCode: UTF8String;
+  var userlogin: UTF8String; var UserID: Integer; LoginAction: Boolean
+  ): Boolean;
 begin
   Result:=false;
 end;

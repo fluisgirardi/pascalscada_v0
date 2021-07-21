@@ -1,5 +1,7 @@
 unit ChipCardReader;
 
+{$mode objfpc}{$H+}
+
 interface
 
 uses
@@ -14,7 +16,7 @@ type
     function InitializeChipCard:Boolean; virtual;
     function ChipCardReady:Boolean; virtual;
     function IsEmptyChipCard:Boolean; virtual;
-    function ChipCardRead(var aChipCardCode:String):Boolean; virtual;
+    function ChipCardRead(var aChipCardCode:UTF8String):Boolean; virtual;
     function FinishChipCard:Boolean; Virtual;
   end;
 
@@ -37,7 +39,7 @@ begin
   Result:=true;
 end;
 
-function TChipCardReader.ChipCardRead(var aChipCardCode: String): Boolean;
+function TChipCardReader.ChipCardRead(var aChipCardCode: UTF8String): Boolean;
 begin
   Result:=false;
 end;

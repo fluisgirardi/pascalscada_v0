@@ -1,6 +1,8 @@
 {$i ../common/language.inc}
 unit usrmgnt_login;
 
+{$mode objfpc}{$H+}
+
 interface
 
 uses
@@ -28,7 +30,7 @@ type
   private
     FFocusControl:TFocusedControl;
   public
-    ChipCardCode:String;
+    ChipCardCode:UTF8String;
     procedure EnableEntry;
     procedure DisableEntry;
   published
