@@ -15,14 +15,14 @@
         </SyntaxOptions>
       </Parsing>
     </CompilerOptions>
-    <Files>
+    <Files Count="1">
       <Item>
         <Filename Value="src/external_libs_hmi/sycreader_rfid_reader.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="sycreader_rfid_reader"/>
       </Item>
     </Files>
-    <RequiredPkgs>
+    <RequiredPkgs Count="3">
       <Item>
         <PackageName Value="pascalscada_hmi"/>
       </Item>
