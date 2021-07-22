@@ -21,6 +21,7 @@
     <Files Count="2">
       <Item2>
         <Filename Value="src\external_libs_hmi\sycreader_rfid_reader.pas"/>
+        <HasRegisterProc Value="True"/>
         <UnitName Value="sycreader_rfid_reader"/>
       </Item2>
     </Files>
