@@ -14,7 +14,6 @@ implementation
 
 procedure Register;
 begin
-  RegisterUnit('sycreader_rfid_reader', @sycreader_rfid_reader.Register);
 end;
 
 initialization
