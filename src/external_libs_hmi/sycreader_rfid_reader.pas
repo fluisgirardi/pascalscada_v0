@@ -176,7 +176,7 @@ begin
     FSNMutex.Leave;
   end;
 
-  if ShouldReopen then begin
+  if ShouldReopen or (Device=nil) then begin
     InterlockedExchange(FReady, 0);
 
     if assigned(Device) then begin
@@ -190,6 +190,12 @@ begin
   if Assigned(Device) then begin
     InterlockedExchange(FReady, 1);
     Num := Device^.ReadTimeout(Buffer, SizeOf(Buffer),1000);
+
+    if num<0 then begin
+      Device^.Close;
+      Device:=nil
+    end;
+
     if Num<>8 then exit;
     if FNextBuffer=nil  then begin
       New(FNextBuffer);
@@ -206,6 +212,8 @@ begin
         Dispose(auxptr);
       FNextBuffer:=nil;
     end;
+  end else begin
+    Sleep(50);
   end;
 end;
 
