@@ -121,7 +121,15 @@ begin
         // computes the CRC
         Calcul_crc(Result);
       end;
-
+      $11: begin
+        //encode a packet to ID
+        SetLength(Result,4);
+        Result[0] := TagObj.Station and $FF;
+        Result[1] := TagObj.ReadFunction and $FF;
+        // Calcula CRC
+        // computes the CRC
+        Calcul_crc(Result);
+      end;
       $07: begin
         // Lê o Status
         //encode a packet to read the device status.
@@ -161,6 +169,8 @@ begin
         ResultLen := 5;
       $08:
         ResultLen := 8;
+      $11:
+        ResultLen := 5+(TagObj.Size);
       else
       begin
         ResultLen := 0;
@@ -388,14 +398,39 @@ begin
           aux := PModbusPLC[plc].AnalogReg;
       end;
 
-      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+      address := Cardinal((pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3]);
+      len     := Cardinal((pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5]);
+
       if Result=ioOk then begin
         SetLength(Values,len);
 
         // data are ok
         for i:=0 to Len-1 do begin
           Values[i]:=(LongInt(pkg.BufferToRead[3+(i*2)]) shl 8) + LongInt(pkg.BufferToRead[4+i*2]);
+        end;
+
+        if foundPLC then
+          aux.SetValues(address,len,1,Values, Result);
+      end else
+        if foundPLC then
+          aux.SetFault(address,len,1,Result);
+    end;
+    $11: begin
+      //acerta onde vao ser colocados os valores decodificados...
+      //where the data decoded will be stored.
+      if foundPLC then begin
+        aux := PModbusPLC[plc].Registers;
+      end;
+
+      address := 0;
+      len     := Cardinal(pkg.BufferToRead[2])-4;
+
+      if Result=ioOk then begin
+        SetLength(Values,len);
+
+        // data are ok
+        for i:=0 to Len-1 do begin
+          Values[i]:=LongInt(pkg.BufferToRead[3+i]);
         end;
 
         if foundPLC then
@@ -543,7 +578,7 @@ begin
           if foundPLC then
             PModbusPLC[plc].Inputs.SetFault(address,len,1,Result, true);
         end;
-        $03: begin
+        $03,$11: begin
           if foundPLC then
             PModbusPLC[plc].Registers.SetFault(address,len,1,Result, true);
         end;
@@ -565,9 +600,9 @@ begin
       Result:=2; //is remaining the CRC at the buffer.
     end else begin
       case buffer[PFuncByteOffset] of
-        1,2,3,4:
+        $01,$02,$03,$04,$11:
           Result:=buffer[PFuncByteOffset+1]+2;
-        5,6,15,16:
+        $05,$06,$0F,$10:
           Result:=5;
       end;
     end;
