@@ -474,7 +474,10 @@ end;
 
 function TTCP_UDPPort.getPortId: TPortUniqueID;
 begin
+  {$IFNDEF CPUARM}
+  { TODO : ARMHF this not works }
   InterlockedExchange64(Result, fPortID);
+  {$ENDIF}
 end;
 
 class function TTCP_UDPPort.ValidIPv4(aIPv4: String): Boolean;
@@ -616,7 +619,10 @@ begin
 
   PWord(@abytes[4])^:=FPortNumber;
 
+  {$IFNDEF CPUARM}
+  { TODO : ARMHF this not works }
   InterlockedExchange64(fPortID, aID);
+  {$ENDIF}
 end;
 
 procedure TTCP_UDPPort.setEnableAutoReconnect(v:Boolean);

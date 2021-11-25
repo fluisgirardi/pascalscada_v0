@@ -10,7 +10,7 @@ uses
   , Windows;
   {$ELSEIF defined(freebsd) or defined(darwin)}
   , sysctl;
-  {$ELSEIF defined(linux)}
+  {$ELSEIF defined(linux) or defined(android)}
   {$linklib c};
   {$IFEND}
 

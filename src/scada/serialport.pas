@@ -156,6 +156,7 @@ type
 
   TSerialPortDriver = class(TCommPortDriver)
   private
+    FRenewHandleOnCommErr: Boolean;
     PActivatedOnLoad:Boolean;
     PPortNameLoaded,
     PPortName:AnsiString;
@@ -181,6 +182,7 @@ type
     PPortDirPrefix : string;
     PBackupPortSettings:Boolean;
     PRWTimeout:LongInt;    
+    procedure SetRenewHandleOnCommErr(AValue: Boolean);
     procedure SetTimeOut(v:LongInt);
     procedure SetRWTimeout(v:LongInt);
     procedure SetBaundRate(v:TSerialBaudRate);
@@ -274,6 +276,8 @@ type
     }
     {$ENDIF}
     property DevDir : AnsiString read GetDevDir write SetDevDir;
+
+    property RenewHandleOnCommError:Boolean read FRenewHandleOnCommErr write SetRenewHandleOnCommErr;
 
     {$IFDEF PORTUGUES}
     {: Informa a duração máxima de uma ação leitura ou escrita. }
@@ -490,7 +494,7 @@ begin
 
 {$IFDEF UNIX}
 var
-  lidos:Cardinal;
+  lidos:LongInt;
   tentativas:Cardinal;
   start:TDateTime;
   Req, Rem:TimeSpec;
@@ -501,12 +505,23 @@ begin
   Packet^.Received := 0;
   Packet^.ReadIOResult:=iorNone;
   While (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
-     lidos := FpRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
-     Packet^.Received := Packet^.Received + lidos;
+     fpseterrno(0);
+     lidos := FileRead(PPortHandle,Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received);
+     if lidos >= 0 then begin
+       Packet^.Received := Packet^.Received + lidos;
+     end else begin
+       lidos:=fpgeterrno;
+       writeln('fpgeterrno=',lidos);
+       if lidos=ESysEINVAL then begin
+         writeln('Renew Handle called');
+         RenewHandle;
+       end;
+     end;
      if (MilliSecondsBetween(CrossNow,start)>PTimeout) then begin
         inc(tentativas);
         start:=CrossNow;
      end;
+
      //faz esperar 0,1ms
      //waits 0,1ms
      Req.tv_sec:=0;
@@ -524,8 +539,12 @@ begin
   Packet^.ReadRetries := tentativas;
   if Packet^.ToRead>Packet^.Received then begin
     Packet^.ReadIOResult := iorTimeOut;
-    if PClearBufOnErr then
-      InternalClearALLBuffers;
+    if FRenewHandleOnCommErr then
+       RenewHandle
+    else begin
+      if PClearBufOnErr then
+        InternalClearALLBuffers;
+    end;
   end else
     Packet^.ReadIOResult := iorOK;
 
@@ -561,25 +580,39 @@ begin
 {$IFEND}
 {$IFDEF UNIX}
 var
-  escritos:Cardinal;
+  escritos:LongInt;
   tentativas:Cardinal;
 begin
   tentativas := 0;
 
   Packet^.Written := 0;
+  fpseterrno(0);
   While (Packet^.Written<Packet^.ToWrite) and (tentativas<Packet^.WriteRetries) do begin
-    escritos := FpWrite (PPortHandle,Packet^.BufferToWrite[Packet^.Written], Packet^.ToWrite-Packet^.Written);
-    Packet^.Written := Packet^.Written + escritos;
+    escritos := FileWrite(PPortHandle, Packet^.BufferToWrite[Packet^.Written], Packet^.ToWrite-Packet^.Written);
+    if escritos>=0 then begin
+      Packet^.Written := Packet^.Written + escritos;
+    end else begin
+      escritos:=fpgeterrno;
+      if escritos=ESysEINVAL then begin
+        writeln('Renew Handle called');
+        RenewHandle;
+      end;
+    end;
     Inc(tentativas);
   end;
 
   Packet^.WriteRetries := tentativas;
   if Packet^.ToWrite>Packet^.Written then begin
     Packet^.WriteIOResult := iorTimeOut;
-    if PClearBufOnErr then
-       InternalClearALLBuffers;
+    if FRenewHandleOnCommErr then
+       RenewHandle
+    else begin
+      if PClearBufOnErr then
+        InternalClearALLBuffers;
+    end;
   end else
     Packet^.WriteIOResult := iorOK;
+
 {$ENDIF}
 {$IF defined(WINCE)}
 var
@@ -988,6 +1021,13 @@ begin
   PTimeout := v;
 end;
 
+procedure TSerialPortDriver.SetRenewHandleOnCommErr(AValue: Boolean);
+begin
+  if FRenewHandleOnCommErr=AValue then Exit;
+  DoExceptionInActive;
+  FRenewHandleOnCommErr:=AValue;
+end;
+
 procedure TSerialPortDriver.SetRWTimeout(v:LongInt);
 begin
   DoExceptionInActive;
@@ -1225,9 +1265,14 @@ begin
 end;
 
 procedure TSerialPortDriver.RenewHandle;
+var
+  v: Boolean;
 begin
-  inherited RenewHandle;
-  {TODO}
+  {$IFNDEF WINDOWS}writeln('RenewHandle: Port Stop');{$ENDIF}
+  PortStop(v);
+  {$IFNDEF WINDOWS}writeln('RenewHandle: Port Start');{$ENDIF}
+  PortStart(v);
+  {$IFNDEF WINDOWS}writeln('RenewHandle: Done');{$ENDIF}
 end;
 
 function TSerialPortDriver.getPortId: TPortUniqueID;

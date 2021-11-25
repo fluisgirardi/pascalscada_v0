@@ -924,6 +924,8 @@ type
 
     function CountObjectsLinkedWithTagChangeHandler:Integer;
     function GetObjectLinkedWithTagChangeHandler(Index:Integer):TObject;
+
+    property TagGUID:AnsiString read PGUID;
   end;
 
   TScanUpdateRec = record
@@ -1047,7 +1049,7 @@ begin
 
   if ComponentState*[csReading, csLoading]=[] then begin
     CreateGUID(x);
-    PGUID:=GUIDToString(x);
+    PGUID:=UpperCase(GUIDToString(x));
   end;
 end;
 

@@ -67,6 +67,7 @@ type
   public
     constructor Create(CreateSuspended: Boolean;
                        ClientSocket:TSocket;
+                       ClientSockinfo:TSockAddr;
                        ServerMutex:syncobjs.TCriticalSection;
                        RemoveClientThread:TNotifyEvent);
   end;
@@ -206,11 +207,10 @@ begin
 end;
 
 constructor TClientThread.Create(CreateSuspended: Boolean;
-                                 ClientSocket: TSocket;
-                                 ServerMutex: syncobjs.TCriticalSection;
-                                 RemoveClientThread:TNotifyEvent);
+  ClientSocket: TSocket; ClientSockinfo: TSockAddr;
+  ServerMutex: syncobjs.TCriticalSection; RemoveClientThread: TNotifyEvent);
 begin
-  inherited Create(CreateSuspended,ClientSocket,RemoveClientThread);
+  inherited Create(CreateSuspended,ClientSocket,ClientSockinfo,RemoveClientThread);
   FMutex              := ServerMutex;
   FIntoCriticalSection:=false;
 end;
@@ -221,7 +221,7 @@ procedure TAcceptThread.LaunchNewThread;
 begin
   //launch a new thread that will handle this new connection
   setblockingmode(ClientSocket,MODE_NONBLOCKING);
-  FClientThread := TClientThread.Create(True, ClientSocket, FMutex, FRemoveClientThread);
+  FClientThread := TClientThread.Create(True, ClientSocket, ClientSockInfo, FMutex, FRemoveClientThread);
   Synchronize(@AddClientToMainThread);
   FClientThread.WakeUp;
 end;

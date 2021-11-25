@@ -48,6 +48,8 @@ type
     function WaitEnd(timeout:Cardinal): TWaitResult;
     procedure AddClientToMainThread;
   protected
+    ClientSockInfoLen:TSocklen;
+    ClientSockInfo:TSockAddr;
     ClientSocket:TSocket;
     procedure Execute; override;
     procedure LaunchNewThread; virtual;
@@ -63,6 +65,7 @@ type
 
   TSocketClientThread = Class(TpSCADACoreAffinityThread)
   protected
+    FClientInfo:TSockAddr;
     FSocket:TSocket;
     FEnd:TCrossEvent;
     FRemoveClientThread:TNotifyEvent;
@@ -75,6 +78,7 @@ type
     procedure Terminate;
     constructor Create(CreateSuspended: Boolean;
                        ClientSocket:TSocket;
+                       ClientSockinfo:TSockAddr;
                        RemoveClientThread:TNotifyEvent); virtual;
   end;
 
@@ -121,10 +125,12 @@ begin
 end;
 
 constructor TSocketClientThread.Create(CreateSuspended: Boolean;
-  ClientSocket: TSocket; RemoveClientThread: TNotifyEvent);
+  ClientSocket: TSocket; ClientSockinfo: TSockAddr;
+  RemoveClientThread: TNotifyEvent);
 begin
   inherited Create(CreateSuspended);
   FSocket             := ClientSocket;
+  FClientInfo         := ClientSockinfo;
   FEnd                := TCrossEvent.Create(true, false);
   FRemoveClientThread :=RemoveClientThread;
   FEnd.ResetEvent;
@@ -148,7 +154,8 @@ begin
   while not Terminated do begin
     //Linux, BSDs
     {$IF defined(FPC) AND defined(UNIX)}
-    ClientSocket:=fpAccept(FServerSocket,nil,nil);
+    ClientSockInfoLen:=sizeof(ClientSockInfo);
+    ClientSocket:=fpAccept(FServerSocket, @ClientSockInfo, @ClientSockInfoLen);
 
     if ClientSocket>0 then
       LaunchNewThread

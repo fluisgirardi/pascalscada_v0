@@ -635,6 +635,8 @@ type
     //: @exclude
     destructor Destroy; override;
 
+    constructor CreateWithGUID(AOwner:TComponent; aGuid:String); virtual;
+
     {$IFDEF PORTUGUES}
     {:
     Método chamado pelo driver de protocolo que elimina referências a ele.
@@ -767,6 +769,14 @@ begin
   PProtocolDriver := nil;
   (FTagManager as TTagMananger).RemoveTag(Self);
   inherited Destroy;
+end;
+
+constructor TPLCTag.CreateWithGUID(AOwner: TComponent; aGuid: String);
+begin
+  Create(AOwner);
+  StringToGUID(aGuid); //EConvError should abort everything
+  Self.PGUID:=UpperCase(aGuid);
+  TTagMananger(FTagManager).AddTag(Self);
 end;
 
 procedure TPLCTag.RemoveDriver;
@@ -1121,7 +1131,7 @@ var
   x:TGuid;
 begin
   CreateGUID(x);
-  PGUID:=GUIDToString(x);
+  PGUID:=UpperCase(GUIDToString(x));
 end;
 
 function TPLCTag.IsMyCallBack(Cback:TTagCommandCallBack):Boolean;
@@ -1161,7 +1171,7 @@ end;
 procedure TPLCTag.SetGUID(v:AnsiString);
 begin
   if ComponentState*[csReading]=[] then exit;
-  PGUID:=v;
+  PGUID:=UpperCase(v);
 end;
 
 procedure TPLCTag.SetTagType(newType:TTagType);
@@ -2040,7 +2050,7 @@ var
 begin
   for c:=0 to High(ftags) do begin
     if ftags[c]=Tag then exit;
-    if ftags[c].TagGUID=tag.TagGUID then begin
+    if (ftags[c]<>Tag) and (ftags[c].TagGUID=tag.TagGUID) then begin
       if Supports(Tag, IManagedTagInterface) then
         (Tag as IManagedTagInterface).RebuildTagGUID
       else

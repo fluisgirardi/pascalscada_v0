@@ -218,8 +218,8 @@ begin
   FRawMin := FRawMinLoaded;
   FRawMax := FRawMaxLoaded;
 
-  if (FSysMin=FSysMax) or (FRawMin=FRawMax) then
-    raise Exception.Create(SinvalidValue);
+  //if (FSysMin=FSysMax) or (FRawMin=FRawMax) then
+  //  raise Exception.Create(SinvalidValue);
 end;
 
 end.

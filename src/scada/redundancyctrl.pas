@@ -23,6 +23,36 @@ uses
   {$IFEND};
 
 type
+  TClientAddresses = packed record
+    HostAddr1,
+    HostAddr2,
+    HostAddr3,
+    HostAddr4:TIn_addr;
+  end;
+
+  TRedundancyCtrl = class;
+
+  TClientHi = packed record
+    Cmd:Word;
+    HostUUID:TGuid;
+  end;
+  PClientHi = ^TClientHi;
+
+  TServerQuit = TClientHi;
+  PServerQuit = ^TServerQuit;
+
+  TClientGoto = packed record
+    Cmd:Word;
+    HostUUID:TGuid;
+    ClientAddr:TClientAddresses;
+  end;
+
+  TPingCmd = packed record
+    Cmd:Word;
+    HostUUID:TGuid;
+    PingNr:LongWord;
+  end;
+  PPingCmd = ^TPingCmd;
 
   TIPv4CollectionItem = class(TCollectionItem)
   private
@@ -55,11 +85,51 @@ type
 
   TRedundancyAcceptSocket = class(TSocketAcceptThread)
   protected
+    FOwner:TComponent;
     procedure LaunchNewThread; override;
+  public
+    constructor Create(CreateSuspended: Boolean;
+                       aOwner:TRedundancyCtrl;
+                       ServerSocket: TSocket;
+                       AddClientThread, RemoveClientThread: TNotifyEvent);
   end;
 
-  TRedundancyClient = class (TSocketClientThread)
+  //server socket,
 
+  { TRedundancyClient }
+  TClientState  = (Unitialized, //new client arrives
+                   HiReceived,  //new client identified said hello
+                   Quit,        //Unidentified client or another error detected. Quit initiated.
+                   QuitDone,    //Unidentified client or another error detected. Quit sent
+                   GoodbyeGoto, //new identified client connected to a non active server. Redirecting to the correct server...
+                   Ping,        //ping cmd must be done
+                   PingDone,    //ping cmd done, wait for a pong
+                   PongDone,    //Pong cmd received
+                   WaitingPong, //waiting for a pong cmd
+                   Ready,       //client is ready, waiting for a new command.
+                   ReadyWaiting //client is ready, waiting to be marked as active master
+                  );
+
+  { TRedundancyServerClient }
+
+  TRedundancyServerClient = class (TSocketClientThread)
+  private
+    CurState:TClientState;
+    FServerPriority:TIPv4Collection;
+    FOwner:TRedundancyCtrl;
+    FLastCmdSentAt:TDateTime;
+    FPingSeq:LongWord;
+    procedure LoadServerPriority;
+    function ImTheActiveServer:Boolean;
+    function GetActiveServerIPv4Addr:TClientAddresses;
+    function ServerGUID:TGuid;
+  protected
+    procedure ThreadLoop; override;
+    constructor Create(CreateSuspended: Boolean;
+                       aOwner:TRedundancyCtrl;
+                       ClientSocket: TSocket;
+                       ClientSockinfo: TSockAddr;
+                       RemoveClientThread: TNotifyEvent);
   end;
 
   { TRedundancyClientManager }
@@ -99,11 +169,199 @@ type
     property ServerPriority:TIPv4Collection read FServerPriority write SetServerPriority;
   end;
 
+const
+  ClientHi:Word   = $0101;
+  ServerQuit:Word = $DEAD;
+  ClientGoto      = $6070;
+  PingReq         = $1001;
+  PingRply        = $0110;
+
 resourcestring
   FInvalidIPv4 = '(invalid)';
   FEmptyIPv4   = '(empty)';
 
 implementation
+
+uses DateUtils;
+
+{ TRedundancyServerClient }
+
+procedure TRedundancyServerClient.LoadServerPriority;
+begin
+  if Assigned(FOwner) then
+    FServerPriority.Assign(FOwner.FServerPriority);
+end;
+
+function TRedundancyServerClient.ImTheActiveServer: Boolean;
+begin
+  //TODO
+end;
+
+function TRedundancyServerClient.GetActiveServerIPv4Addr: TClientAddresses;
+begin
+  //TODO
+end;
+
+function TRedundancyServerClient.ServerGUID: TGuid;
+begin
+  //TODO
+end;
+
+procedure TRedundancyServerClient.ThreadLoop;
+var
+  buffer:array[0..1023] of Byte;
+  ImAtList, found: Boolean;
+  colItem: TIPv4CollectionItem;
+  i: Integer;
+  msgQ: TServerQuit;
+  msgGoto: TClientGoto;
+  msgPing: TPingCmd;
+begin
+  while not Terminated do begin
+    case CurState of
+      Unitialized: begin
+        FLastCmdSentAt:=Now;
+        FPingSeq:=1;
+        if (socket_recv(FSocket,@buffer[0],sizeof(TClientHi),MSG_NOSIGNAL, 1000)=sizeof(TClientHi)) and
+           (PClientHi(@buffer[0])^.Cmd = ClientHi) and
+           (IsEqualGUID(PClientHi(@buffer[0])^.HostUUID, ServerGUID))
+           then begin
+             if FClientInfo.sa_family=AF_INET then begin
+               Synchronize(@LoadServerPriority);
+               found:=false;
+               ImAtList:=false;
+               for i:=0 to FServerPriority.Count-1 do begin
+                 colItem:=TIPv4CollectionItem(FServerPriority.Items[i]);
+                 //I'm a RedundancyServer, check if the incomming client is
+                 //a redundancy server too
+                 if ImAtList then begin
+                   if (StrToNetAddr(colItem.FIPv4Address1).s_addr=FClientInfo.sin_addr.s_addr) or
+                      (StrToNetAddr(colItem.FIPv4Address2).s_addr=FClientInfo.sin_addr.s_addr) or
+                      (StrToNetAddr(colItem.FIPv4Address3).s_addr=FClientInfo.sin_addr.s_addr) or
+                      (StrToNetAddr(colItem.FIPv4Address4).s_addr=FClientInfo.sin_addr.s_addr) then begin
+                      found:=true;
+                      break;
+                   end;
+                 end else begin
+                   //Current machine belongs to redundancy servers set?
+                   if IPv4BelongsToLocalHost(colItem.FIPv4Address1) or
+                      IPv4BelongsToLocalHost(colItem.FIPv4Address2) or
+                      IPv4BelongsToLocalHost(colItem.FIPv4Address3) or
+                      IPv4BelongsToLocalHost(colItem.FIPv4Address4) then begin
+                      ImAtList:=true;
+                   end;
+                 end;
+               end;
+
+               //new client is comming from a low priority server
+               if found then begin
+                 if ImTheActiveServer then begin
+                   CurState:=Ready;
+                 end else begin
+                   CurState:=HiReceived;
+                 end;
+               end else begin
+                 //I'm a redundancy partner?
+                 if ImAtList then begin
+                   //I'm the currenty redundancy server?
+                   if ImTheActiveServer then begin
+                     CurState:=Ready;
+                   end else begin
+                     CurState:=GoodbyeGoto;
+                   end;
+                 end else begin
+                   CurState:=Quit;
+                 end;
+               end;
+             end;
+        end else
+          CurState:=Quit;
+      end;
+
+      HiReceived:
+        CurState:=ReadyWaiting;
+
+      Quit: begin
+        msgQ.Cmd:=ServerQuit;
+        msgq.HostUUID:=ServerGUID;
+        try
+          socket_send(FSocket,@msgQ,SizeOf(msgQ),MSG_NOSIGNAL, 1000);
+        except
+        end;
+        CurState:=QuitDone;
+      end;
+
+      QuitDone:
+        Terminate;
+
+      GoodbyeGoto: begin
+        msgGoto.Cmd:=ClientGoto;
+        msgGoto.HostUUID:=ServerGUID;
+        msgGoto.ClientAddr:=GetActiveServerIPv4Addr;
+
+        //if connection is dead, ignore this and mark this as quitdone, to terminate this thread;
+        try
+          socket_send(FSocket,@msgGoto,SizeOf(msgGoto),MSG_NOSIGNAL, 1000);
+        except
+        end;
+        CurState:=QuitDone;
+      end;
+
+      Ping: begin
+        msgPing.Cmd:=PingReq;
+        msgPing.HostUUID:=ServerGUID;
+        msgPing.PingNr:=FPingSeq;
+        inc(FPingSeq);
+
+        try
+          if socket_send(FSocket,@msgPing,SizeOf(msgPing),MSG_NOSIGNAL, 1000)<SizeOf(msgPing) then
+            CurState:=QuitDone;
+        except
+          CurState:=QuitDone;
+        end;
+        CurState:=WaitingPong;
+      end;
+
+      WaitingPong: begin
+        if (socket_recv(FSocket,@buffer[0],sizeof(TPingCmd),MSG_NOSIGNAL, 10000)=sizeof(TPingCmd)) and
+           (PPingCmd(@buffer[0])^.Cmd = PingRply) and
+           (IsEqualGUID(PPingCmd(@buffer[0])^.HostUUID, ServerGUID)) and
+           (PPingCmd(@buffer[0])^.PingNr = FPingSeq)
+           then
+             CurState:=ReadyWaiting
+           else
+             CurState:=QuitDone;
+      end;
+
+      Ready: begin
+        if ImTheActiveServer then begin
+          //TODO: now checks the queued updates cmds and send it to the clients
+        end else
+          CurState:=ReadyWaiting;
+      end;
+
+      ReadyWaiting: begin
+        if ImTheActiveServer then
+          CurState:=Ready
+        else begin
+          if MilliSecondsBetween(Now,FLastCmdSentAt)>10000 then
+            CurState:=Ping;
+        end;
+        Sleep(10);
+      end;
+    end;
+  end;
+end;
+
+constructor TRedundancyServerClient.Create(CreateSuspended: Boolean;
+  aOwner: TRedundancyCtrl; ClientSocket: TSocket; ClientSockinfo: TSockAddr;
+  RemoveClientThread: TNotifyEvent);
+begin
+  inherited Create(CreateSuspended, ClientSocket, ClientSockinfo,
+    RemoveClientThread);
+  FOwner:=aOwner;
+  FServerPriority:=TIPv4Collection.Create;
+end;
 
 { TRedundancyClientManager }
 
@@ -149,9 +407,17 @@ procedure TRedundancyAcceptSocket.LaunchNewThread;
 begin
   //launch a new thread that will handle this new connection
   setblockingmode(ClientSocket,MODE_NONBLOCKING);
-  FClientThread := TRedundancyClient.Create(True, ClientSocket, FRemoveClientThread);
+  FClientThread := TRedundancyServerClient.Create(True, FOwner as TRedundancyCtrl, ClientSocket, ClientSockInfo, FRemoveClientThread);
   Synchronize(@AddClientToMainThread);
   FClientThread.WakeUp;
+end;
+
+constructor TRedundancyAcceptSocket.Create(CreateSuspended: Boolean;
+  aOwner: TRedundancyCtrl; ServerSocket: TSocket; AddClientThread,
+  RemoveClientThread: TNotifyEvent);
+begin
+  inherited create(CreateSuspended, ServerSocket, AddClientThread, RemoveClientThread);
+  FOwner:=aOwner;
 end;
 
 { TRedundancyCtrl }
