@@ -232,7 +232,7 @@ constructor TAcceptThread.Create(CreateSuspended: Boolean;
                                  AddClientThread,
                                  RemoveClientThread:TNotifyEvent);
 begin
-  inherited Create(CreateSuspended,FServerSocket,AddClientThread,RemoveClientThread);
+  inherited Create(CreateSuspended,ServerSocket,AddClientThread,RemoveClientThread);
   FMutex              := ServerMutex;
 end;
 
