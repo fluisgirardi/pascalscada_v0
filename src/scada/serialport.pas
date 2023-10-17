@@ -1185,9 +1185,37 @@ begin
       Result := 'baud=57600 ';
     br115200:
       Result := 'baud=115200 ';
+   // estava faltando essas velocidade (foi testato com hardware até o 2000000)
+    br230400:
+      Result := 'baud=230400 ';
+    br460800:
+      Result := 'baud=460800 ';
+    br500000:
+      Result := 'baud=500000 ';
+    br576000:
+      Result := 'baud=576000 ';
+    br921600:
+      Result := 'baud=921600 ';
+    br1000000:
+      Result := 'baud=1000000 ';
+    br1152000:
+      Result := 'baud=1152000 ';
+    br1500000:
+      Result := 'baud=1500000 ';
+    br2000000:
+      Result := 'baud=2000000 ';
+    br2500000:
+      Result := 'baud=2500000 ';
+    br3000000:
+      Result := 'baud=3000000 ';
+    br3500000:
+      Result := 'baud=3500000 ';
+    br4000000:
+      Result := 'baud=4000000 ';
+    ////////////////////////////////////////////////////////////////////////////
     else
       Result := 'baud=19200 ';
-  end;
+  end; 
 
   case PParity of
     spNone:
