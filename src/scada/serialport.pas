@@ -778,6 +778,13 @@ begin
        tios.c_ispeed := B9600;
        tios.c_ospeed := B9600;
      end;
+    //estava faltando essa velocidade de baudrate /////////////////////////////
+     br19200: begin
+       tios.c_ispeed := B19200;
+       tios.c_ospeed := B19200;
+     end;
+     /////////////////////////////////////////////////////////////////////////// 
+     
      br38400: begin
        tios.c_ispeed := B38400;
        tios.c_ospeed := B38400;
