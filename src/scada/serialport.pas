@@ -486,7 +486,8 @@ begin
     ReadFile(PPortHandle, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, lidos, @POverlapped);
 
     WaitForSingleObject(POverlapped.hEvent, PTimeout);
-    GetOverlappedResult(PPortHandle,POverlapped,lidos,true);
+    //IMPORTANTE , FOI MUDADO PARA "FALSE" PARA NÃO TRAVAR EM CASO DE DESLIGAMENTO DO USB
+    GetOverlappedResult(PPortHandle,POverlapped,lidos,false);  
     Packet^.Received := Packet^.Received + lidos;
     Inc(tentativas);
   end;
