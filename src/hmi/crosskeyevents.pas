@@ -438,9 +438,9 @@ begin
   if FTarget=nil then exit;
   gev.key.window:={%H-}PGtkWidget(Ftarget.Handle)^.window;
   gev.key._type:=GDK_KEY_PRESS;
-  gev.key.send_event:=1;
+  gev.key.send_event:=0;
 
-  gev.key.time:=10;
+  gev.key.time:=0;
   gev.key.state:=0;
   gev.key.length:=1;
 
@@ -479,7 +479,7 @@ begin
   if FTarget=nil then exit;
   gev.key.window:={%H-}PGtkWidget(Ftarget.Handle)^.window;
   gev.key._type:=GDK_KEY_RELEASE;
-  gev.key.send_event:=1;
+  gev.key.send_event:=0;
   gev.key.time:=0;
   gev.key.state:=0;
   gev.key.keyval:=key;
@@ -1171,20 +1171,26 @@ end;
 function CreateCrossKeyEvents(Target:TWinControl):TCrossKeyEvents;
 begin
   {$IF defined(LCLgtk2)}
-  Result:=TGtk2KeyEvents.Create(Target);
+  exit(TGtk2KeyEvents.Create(Target));
   {$IFEND}
 
   {$IF defined(LCLgtk3)}
-  Result:=TGtk3KeyEvents.Create(Target);
+  exit(TGtk3KeyEvents.Create(Target));
   {$IFEND}
 
   {$IF defined(LCLqt)}
-  Result:=TQt4KeyEvents.Create(Target);
+  exit(TQt4KeyEvents.Create(Target));
+  {$IFEND}
+
+  {$IF defined(LCLqt5)}
+  exit(TQt5KeyEvents.Create(Target));
   {$IFEND}
 
   {$IF defined(LCLwin32) OR (not defined(FPC))}
-  Result:=TWindowsKeyEvents.Create(Target);
+  exit(TWindowsKeyEvents.Create(Target));
   {$IFEND}
+
+  raise exception.Create('No screen keyboard defined to this widgetset.');
 end;
 
 initialization
@@ -1200,4 +1206,3 @@ PSVK_SUBTRACT := VK_SUBTRACT;
 {$ENDIF}
 
 end.
-
