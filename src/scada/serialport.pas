@@ -149,7 +149,6 @@ type
     LineState:LongWord;
     tios:termios;
   end;
-
   {$ENDIF}
 
   { TSerialPortDriver }
@@ -486,7 +485,12 @@ begin
     ReadFile(PPortHandle, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, lidos, @POverlapped);
 
     WaitForSingleObject(POverlapped.hEvent, PTimeout);
-    GetOverlappedResult(PPortHandle,POverlapped,lidos,true);
+    // Foi mudado para FALSE para não travar em caso de desligamento do conversor USB
+    // para maiores detalhes
+    // https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresult
+    // procure pelo item "bWait"
+    GetOverlappedResult(PPortHandle,POverlapped,lidos,false);
+    //**************************************************************************
     Packet^.Received := Packet^.Received + lidos;
     Inc(tentativas);
   end;
@@ -777,6 +781,12 @@ begin
        tios.c_ispeed := B9600;
        tios.c_ospeed := B9600;
      end;
+     //estava faltando essa velocidade de baudrate *****************************
+     br19200: begin
+       tios.c_ispeed := B19200;
+       tios.c_ospeed := B19200;
+     end;
+     //*************************************************************************
      br38400: begin
        tios.c_ispeed := B38400;
        tios.c_ospeed := B38400;
@@ -1177,6 +1187,34 @@ begin
       Result := 'baud=57600 ';
     br115200:
       Result := 'baud=115200 ';
+    // estava faltando essas velocidade (foi testato com hardware até o 2000000)
+    br230400:
+      Result := 'baud=230400 ';
+    br460800:
+      Result := 'baud=460800 ';
+    br500000:
+      Result := 'baud=500000 ';
+    br576000:
+      Result := 'baud=576000 ';
+    br921600:
+      Result := 'baud=921600 ';
+    br1000000:
+      Result := 'baud=1000000 ';
+    br1152000:
+      Result := 'baud=1152000 ';
+    br1500000:
+      Result := 'baud=1500000 ';
+    br2000000:
+      Result := 'baud=2000000 ';
+    br2500000:
+      Result := 'baud=2500000 ';
+    br3000000:
+      Result := 'baud=3000000 ';
+    br3500000:
+      Result := 'baud=3500000 ';
+    br4000000:
+      Result := 'baud=4000000 ';
+    ////////////////////////////////////////////////////////////////////////////
     else
       Result := 'baud=19200 ';
   end;
