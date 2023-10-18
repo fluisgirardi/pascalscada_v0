@@ -149,7 +149,6 @@ type
     LineState:LongWord;
     tios:termios;
   end;
-
   {$ENDIF}
 
   { TSerialPortDriver }
@@ -486,7 +485,13 @@ begin
     ReadFile(PPortHandle, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, lidos, @POverlapped);
 
     WaitForSingleObject(POverlapped.hEvent, PTimeout);
+
+    // Foi mudado para FALSE para não travar em caso de desligamento do conversor USB
+    // para maiores detalhes
+    // https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresult
+    // procure pelo parametro "bWait"
     GetOverlappedResult(PPortHandle,POverlapped,lidos,false);
+
     Packet^.Received := Packet^.Received + lidos;
     Inc(tentativas);
   end;

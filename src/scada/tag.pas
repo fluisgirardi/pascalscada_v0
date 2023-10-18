@@ -708,6 +708,8 @@ type
     {$ELSE}
     //: Tell how many read errors occurred.
     {$ENDIF}
+
+    // added the possibility of reset the comm error count
     property CommReadErrors:Cardinal read PCommReadErrors write PCommReadErrors;
 
     {$IFDEF PORTUGUES}

@@ -636,13 +636,17 @@ begin
   //
   //return the size in bits of the atag
   case FunctionCode of
-    1,2,5,15: begin
+    $01,$02,$05,$0F: begin
       Result := 1;
       ProtocolTagType:=ptBit;
     end;
-    3,4,6,16: begin
+    $03,$04,$06,$10: begin
       Result := 16;
       ProtocolTagType:=ptWord;
+    end;
+    $11: begin
+      Result := 8;
+      ProtocolTagType:=ptByte;
     end
     else
       Result := 16;
@@ -774,10 +778,10 @@ begin
       PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $02:
       PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
-    $03:
+    $03,$11:
       PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
     $04:
-      PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp)
+      PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
   end;
 
   if values.LastQueryResult=ioOk then begin
