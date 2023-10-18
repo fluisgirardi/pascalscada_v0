@@ -19,11 +19,10 @@ unit CommPort;
 {$ENDIF}
 
 interface
-// tem que compilar o scada/pascal com a dependencia do "ararat synapse"
-// para localizar portas seriais ativas  
+
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads, synaser
-  {$IFNDEF FPC}, Windows{$ENDIF}; 
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads
+  {$IFNDEF FPC}, Windows{$ENDIF}
   {$IF defined(WIN32) or defined(WIN64)}, JwaWinBase, JwaWinType{$IFEND};
 
 type
@@ -155,16 +154,6 @@ type
     FLogActions,
     FReadedLogActions:Boolean;
     FLogFile:AnsiString;
-    // vaiaveis acrecentadas para funções extras ///////////////////////////////
-    FTraffic_read:AnsiString;
-    FTraffic_read_1:AnsiString;
-    FTraffic_read_2:AnsiString;
-    FTraffic_write:AnsiString;
-    Fport:String;
-    FVport:Boolean;
-    //FEport : string;
-    FAlport : string;
-    ///////////////////////////////////////////////////////////////////////////
     FLogFileStream:TFileStream;
     FReadRetries: Cardinal;
     FWriteRetries: Cardinal;
@@ -291,13 +280,6 @@ type
     //: Register an IO action on communications log.
     {$ENDIF}
     procedure  LogAction(cmd:TIOCommand; Packet:TIOPacket);
-    // cria um procedimento para leitura do trafico de dados em um memo ////////
-    procedure  Traffic(cmd:TIOCommand; Packet:TIOPacket);
-
-    //////////////////////////////////////////////////////////////////////////// 
-
-
-    
   protected
     FDelayBetweenCmds:Cardinal;
 
@@ -1021,26 +1003,6 @@ type
     //: File to store the log of I/O actions of the communication port.
     {$ENDIF}
     property LogFile:AnsiString read FLogFile write SetLogFile;
-
-     ////////////////////////////////////////////////////////////////////////////
-    // coletar trafego de dados para colocar em um memo
-    property Traffic_read:AnsiString read FTraffic_read;
-    property Traffic_write:AnsiString read FTraffic_write;
-
-    // define as portas com existentes no inicio da comunição
-    property ExistPort :String read Fport write Fport;
-
-    // define se vai usar o verificador de porta existente (falso como padrão
-    // para TCP/IP ou manter o modo antigo)
-    property CheckPort :boolean  read FVport write FVport default false;
-
-    // encontra as portas seriais
-    //property ScanPort :String  read FEport write FEport;
-
-    // informa que houve desconexão da porta serial
-    property StatePort :String  read FAlport write FAlport;
-    ////////////////////////////////////////////////////////////////////////////
-    
   end;
 
 {$IFNDEF FPC}
@@ -1771,122 +1733,14 @@ begin
 end;
 
 procedure TCommPortDriver.InternalIOCommand(cmd:TIOCommand; Packet:PIOPacket);
-var X : integer;
-   Str :  TStringList ;
-   Y : integer;
-   Z : integer;
-   {$IFDEF UNIX}
-    porta : STRING;
-   {$ENDIF}
 begin
-
   try
      PIOCmdCS.Enter;
      //verify if the communication port is active.
-     if ReallyActive then
-     begin
-     //try
-       {$IF defined(WIN32) or defined(WIN64)}
-       // verificação de porta ativa ? /////////////////////////////////////////
-       if (FVport = true) then
-       begin
-            // cria uma lista de strings que vão conter as portas seriais*******
-            Str := TStringList.Create;
-            // limpa qualquer string *******************************************
-            str.Clear;
-            // faz a leitura das portas existentes e transfere para a lista ****
-            STR.CommaText:= synaser.GetSerialPortNames();
-
-            // inicia como zero até encontrar a porta
-            Y := 0;
-            // verifique todas as portas conforme quantidade de portas seriais
-            // encontrada
-            for Z := 0 to STR.Count-1 do
-            begin
-                 //  na configuração Iguale com a porta configurada do
-                 //pascalscada -------------------------------------------------
-                 {
-                    EX: ExistPort := SerialPortDriver1.COMPort;
-                 }
-                 if(Fport =  Str.ValueFromIndex[Z]) then
-                 begin
-                      // informa que a porta existe ----------------------------
-                      y:=1;
-                 end;
-                 // saia da rotina , a porta ja foi encontrada
-                 if(Y = 1) then break;
-            end;
-            // fim do uso da stringlist criada *********************************
-            Str.Free;
-
-       end;
-       /////////////////////////////////////////////////////////////////////////
-
-       // a Porta COM Existe ? ou verificação desativada ?
-        if((y = 1 )or(FVport = false)) then
-        begin
-             //executes the I/O command.
-             IOCommand(cmd,Packet);
-             // informa ao usuario que está normal
-             FAlport := '0';
-        end
-        else
-        begin
-             X := 0;
-             Y := 0;
-             // desativa serial para nova conexão
-             Active := false;
-             // enquanto for diferente , tentar conectar novamente (10 tenstativas)
-             while (Y <> 1)and(X < 10) do
-             begin
-                  // cria uma lista de strings que vão conter as portas seriais
-                  Str := TStringList.Create;
-                  // limpa qualquer string *************************************
-                  str.Clear;
-                  // faz a leitura das portas existentes e transfere
-                  STR.CommaText:= synaser.GetSerialPortNames();
-
-                  // verifique todas as portas conforme quantidade de portas seriais
-                  for Z := 0 to STR.Count-1 do
-                  begin
-                       // compare com a porta configurada do pascalscada
-                       if(Fport =  Str.ValueFromIndex[Z]) then
-                       begin
-                            y:=1;
-                            // reativa porta para tentar novamente
-                            active := true;
-                            // saia da rotina , a porta ja foi encontrada
-                            if(Y = 1) then break;
-                       end;
-                  end;
-                  // fim de uso da variavel stringlist ------------------------------
-                  str.Free;
-
-                  // informa o usuario que está tentando reconectar
-                  FAlport := '1';
-                  // aguar um tempo
-                  if ( y <> 1) then Sleep(500);
-                  // acrecenta para contagem de numeros de tentativas
-                  X := x+1;
-                  // reativa porta para tentar novamente
-                  active := true;
-             end;
-
-             // chegou no numero de tentativas , abortar ///////////////////////
-             if( X = 10) then
-             begin
-                  // mantem a conexão desativada
-                  Active := false;
-                  // informa que a porta foi desativada pelo software
-                  FAlport := '2';
-             end;
-        end;
-       {$IFEND}
-
-       {$IFDEF UNIX}
-       //executes the I/O command.
-       IOCommand(cmd,Packet);
-       {$ENDIF}
+     if ReallyActive then begin
+       //try
+         //executes the I/O command.
+         IOCommand(cmd,Packet);
        //except
        //  if cmd in [iocRead, iocReadWrite, iocWriteRead] then
        //    Packet^.ReadIOResult := iorPortError;
@@ -1899,16 +1753,12 @@ begin
        if cmd in [iocWrite, iocReadWrite, iocWriteRead] then
          Packet^.WriteIOResult := iorNotReady;
      end;
-
-     // Executa debug dos pacotes enviados ou recebidos ////////////////////////
-     Traffic(cmd, Packet^);
-
      if FLogActions then
        LogAction(cmd, Packet^);
   finally
      PIOCmdCS.Leave;
   end;
-end;                            
+end;
 
 procedure TCommPortDriver.InternalPortStart(var Ok:Boolean);
 begin
@@ -2103,33 +1953,5 @@ begin
     FS.Free;
   end;
 end;
-// efetua amostragem do trafefgo recebidos e enviados //////////////////////////
-procedure  TCommPortDriver.Traffic(cmd:TIOCommand; Packet:TIOPacket);
-  function bufferToHex(Buf:BYTES):AnsiString;
-  var
-    c:LongInt;
-  begin
-    Result:='';
-    for c:=0 to High(Buf) do
-      Result:=Result+IntToHex(Buf[c],2)+' ';
-  end;
 
-begin
-    if cmd=iocRead then begin
-      FTraffic_read_1 :=  bufferToHex(Packet.BufferToRead);
-    end;
-
-    if cmd=iocWriteRead then begin
-      FTraffic_write := bufferToHex(Packet.BufferToWrite);
-      FTraffic_read_2 :=  bufferToHex(Packet.BufferToRead);
-
-    end;
-    FTraffic_read := FTraffic_read_2 + FTraffic_read_1;
-end;
-
-// encontra portas seriais e passa para uma stringlist (commatext)
-class function TCommPortDriver.GetSerialPortNames: string;
-begin
-  Result := synaser.GetSerialPortNames();
-end;                                                                            
 end.
