@@ -240,28 +240,28 @@ begin
       ExitEvent(nil);
     oskNumeric: begin
       CloseAlphaKB;
-      FNumericKeyBoard:=TpsHMIfrmNumericKeyBoard.Create(Self,
-                                                        FLastFocusedControl,
-                                                        nskoShowMinus in FNumericKBOptions,
-                                                        nskoShowDecimalPoint in FNumericKBOptions);
+      FNumericKeyBoard:=TpsHMIfrmNumericKeyBoard.CreateOrGetLast(Self,
+                                                                 FLastFocusedControl,
+                                                                 nskoShowMinus in FNumericKBOptions,
+                                                                 nskoShowDecimalPoint in FNumericKBOptions);
       FNumericKeyBoard.OnClose:=@NumKBClosed;
       FNumericKeyBoard.ShowAlongsideOfTheTarget;
     end;
     oskAlphaNumeric: begin
       CloseNumKB;
-      FAlphaNumericKeyboard:=TpsHMIfrmAlphaKeyboard.Create(Self,
-                                                           FLastFocusedControl,
-                                                           askoShowFxxKeys in FAlphaNumKBOptions,
-                                                           askoShowTab in FAlphaNumKBOptions,
-                                                           askoShowCaps in FAlphaNumKBOptions,
-                                                           askoShowShift in FAlphaNumKBOptions,
-                                                           askoShowCtrl in FAlphaNumKBOptions,
-                                                           askoShowAlt in FAlphaNumKBOptions,
-                                                           askoShowSymbols in FAlphaNumKBOptions,
-                                                           askoShowNumbers in FAlphaNumKBOptions,
-                                                           askoShowFastNavigation in FAlphaNumKBOptions,
-                                                           askoShowNavigation in FAlphaNumKBOptions,
-                                                           askoCloseOnPressEnter in FAlphaNumKBOptions);
+      FAlphaNumericKeyboard:=TpsHMIfrmAlphaKeyboard.CreateOrGetLast(Self,
+                                                                    FLastFocusedControl,
+                                                                    askoShowFxxKeys in FAlphaNumKBOptions,
+                                                                    askoShowTab in FAlphaNumKBOptions,
+                                                                    askoShowCaps in FAlphaNumKBOptions,
+                                                                    askoShowShift in FAlphaNumKBOptions,
+                                                                    askoShowCtrl in FAlphaNumKBOptions,
+                                                                    askoShowAlt in FAlphaNumKBOptions,
+                                                                    askoShowSymbols in FAlphaNumKBOptions,
+                                                                    askoShowNumbers in FAlphaNumKBOptions,
+                                                                    askoShowFastNavigation in FAlphaNumKBOptions,
+                                                                    askoShowNavigation in FAlphaNumKBOptions,
+                                                                    askoCloseOnPressEnter in FAlphaNumKBOptions);
       FAlphaNumericKeyboard.OnClose:=@AlphaKBClosed;
       FAlphaNumericKeyboard.ShowAlongsideOfTheTarget;
     end;

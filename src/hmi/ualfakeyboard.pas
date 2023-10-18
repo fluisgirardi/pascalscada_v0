@@ -147,6 +147,20 @@ type
 
                        CloseOnPressEnter:Boolean); overload;
     destructor Destroy; override;
+    class function CreateOrGetLast(TheOwner: TComponent;
+                       Target:TWinControl;
+                       ShowFxxKeys,
+                       ShowTab,
+                       ShowCaps,
+                       ShowShift,
+                       ShowCtrl,
+                       ShowAlt,
+                       ShowSymbols,
+                       ShowNumbers,
+                       ShowFastNavigation,
+                       ShowNavigation,
+
+                       CloseOnPressEnter:Boolean):TpsHMIfrmAlphaKeyboard;
     procedure ShowAlongsideOfTheTarget;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
@@ -177,21 +191,21 @@ uses strutils, dateutils,
 var
   LastAlphaKeyboard:TpsHMIfrmAlphaKeyboard;
 
+procedure EnableGroup(Group:TList; EnableGroup:Boolean);
+var
+  i: Integer;
+begin
+  for i:=0 to Group.Count-1 do begin
+    TSpeedButton(Group.Items[i]).Enabled:=TSpeedButton(Group.Items[i]).Enabled and EnableGroup;
+  end;
+end;
+
 constructor TpsHMIfrmAlphaKeyboard.Create(TheOwner: TComponent;
   Target: TWinControl; ShowFxxKeys, ShowTab, ShowCaps, ShowShift, ShowCtrl,
   ShowAlt, ShowSymbols, ShowNumbers, ShowFastNavigation, ShowNavigation,
   CloseOnPressEnter: Boolean);
 var
   k: TKeyEvent;
-
-  procedure EnableGroup(Group:TList; EnableGroup:Boolean);
-  var
-    i: Integer;
-  begin
-    for i:=0 to Group.Count-1 do begin
-      TSpeedButton(Group.Items[i]).Enabled:=TSpeedButton(Group.Items[i]).Enabled and EnableGroup;
-    end;
-  end;
 
 begin
   inherited Create(TheOwner);
@@ -200,8 +214,7 @@ begin
     raise Exception.Create('Nil target!');
 
   if Assigned(LastAlphaKeyboard) then begin
-    LastAlphaKeyboard.Close;
-    LastAlphaKeyboard:=nil;
+    FreeAndNil(LastAlphaKeyboard);
   end;
 
   FTarget:=Target;
@@ -285,6 +298,40 @@ begin
   EnableGroup(FFxxKeyGroup, ShowFxxKeys);
   EnableGroup(FSymbolsKeyGroup, ShowSymbols);
   EnableGroup(FNumbersKeyGroup, ShowNumbers);
+end;
+
+class function TpsHMIfrmAlphaKeyboard.CreateOrGetLast(TheOwner: TComponent;
+  Target: TWinControl; ShowFxxKeys, ShowTab, ShowCaps, ShowShift, ShowCtrl,
+  ShowAlt, ShowSymbols, ShowNumbers, ShowFastNavigation, ShowNavigation,
+  CloseOnPressEnter: Boolean): TpsHMIfrmAlphaKeyboard;
+begin
+  if Assigned(LastAlphaKeyboard) and (LastAlphaKeyboard.FTarget=Target) then begin
+    LastAlphaKeyboard.FormStyle:=fsSystemStayOnTop;
+
+    LastAlphaKeyboard.ControlStyle:=LastAlphaKeyboard.ControlStyle+[csNoFocus];
+    LastAlphaKeyboard.FFormOwner:=GetParentForm(Target);
+
+    LastAlphaKeyboard.Btn_Caps.Enabled :=LastAlphaKeyboard.Btn_Caps.Enabled and ShowCaps;
+    LastAlphaKeyboard.Btn_Tab.Enabled  :=LastAlphaKeyboard.Btn_Tab.Enabled and ShowTab;
+    LastAlphaKeyboard.Btn_Shift.Enabled:=LastAlphaKeyboard.Btn_Shift.Enabled and ShowShift and ShowSymbols;
+    LastAlphaKeyboard.Btn_Ctrl.Enabled :=LastAlphaKeyboard.Btn_Ctrl.Enabled and ShowCtrl;
+    LastAlphaKeyboard.Btn_Alt.Enabled  :=LastAlphaKeyboard.Btn_Alt.Enabled and ShowAlt;
+
+    EnableGroup(LastAlphaKeyboard.FNavigationKeyGroup,     ShowNavigation);
+    EnableGroup(LastAlphaKeyboard.FFastNavigationKeyGroup, ShowFastNavigation);
+    EnableGroup(LastAlphaKeyboard.FFxxKeyGroup,            ShowFxxKeys);
+    EnableGroup(LastAlphaKeyboard.FSymbolsKeyGroup,        ShowSymbols);
+    EnableGroup(LastAlphaKeyboard.FNumbersKeyGroup,        ShowNumbers);
+
+    exit(LastAlphaKeyboard)
+  end else begin
+    FreeAndNil(LastAlphaKeyboard);
+    exit(TpsHMIfrmAlphaKeyboard.Create(TheOwner, Target, ShowFxxKeys, ShowTab,
+                                       ShowCaps, ShowShift, ShowCtrl, ShowAlt,
+                                       ShowSymbols, ShowNumbers,
+                                       ShowFastNavigation, ShowNavigation,
+                                       CloseOnPressEnter));
+  end;
 end;
 
 destructor TpsHMIfrmAlphaKeyboard.Destroy;
@@ -620,4 +667,3 @@ begin
 end;
 
 end.
-

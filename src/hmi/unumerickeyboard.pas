@@ -50,6 +50,7 @@ type
     procedure ReturnFocusToTarget;
     procedure DoClose(var CloseAction: TCloseAction); override;
   public
+    class function CreateOrGetLast(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean):TpsHMIfrmNumericKeyBoard;
     constructor Create(TheOwner: TComponent; Target:TWinControl; ShowMinus, ShowDecimal:Boolean); overload;
     destructor Destroy; override;
     procedure ShowAlongsideOfTheTarget;
@@ -84,8 +85,7 @@ begin
     raise Exception.Create('Nil target!');
 
   if Assigned(LastNumericKeyBoard) then begin
-    LastNumericKeyBoard.Close;
-    LastNumericKeyBoard:=nil;
+    FreeAndNil(LastNumericKeyBoard);
   end;
 
   FShowDecimal:=ShowDecimal;
@@ -93,13 +93,36 @@ begin
   FTarget:=Target;
   keyboard:=CreateCrossKeyEvents(Target);
   FormStyle:=fsSystemStayOnTop;
+  Btn_Minus.Visible:=ShowMinus;
+  Btn_DecSeparator.Visible:=ShowDecimal;
 
   ControlStyle:=ControlStyle+[csNoFocus];
-  FFormOwner:=nil;
   FFormOwner:=GetParentForm(Target);
+
   LastNumericKeyBoard:=Self;
 
   FTarget.FreeNotification(Self);
+end;
+
+class function TpsHMIfrmNumericKeyBoard.CreateOrGetLast(TheOwner: TComponent;
+  Target: TWinControl; ShowMinus, ShowDecimal: Boolean
+  ): TpsHMIfrmNumericKeyBoard;
+begin
+  if Assigned(LastNumericKeyBoard) and (LastNumericKeyBoard.FTarget=Target) then begin
+    LastNumericKeyBoard.FShowDecimal:=ShowDecimal;
+    LastNumericKeyBoard.FShowMinus:=ShowMinus;
+    LastNumericKeyBoard.FormStyle:=fsSystemStayOnTop;
+    LastNumericKeyBoard.Btn_Minus.Visible:=ShowMinus;
+    LastNumericKeyBoard.Btn_DecSeparator.Visible:=ShowDecimal;
+
+    LastNumericKeyBoard.ControlStyle:=LastNumericKeyBoard.ControlStyle+[csNoFocus];
+    LastNumericKeyBoard.FFormOwner:=GetParentForm(Target);
+
+    exit(LastNumericKeyBoard)
+  end else begin
+    FreeAndNil(LastNumericKeyBoard);
+    exit(TpsHMIfrmNumericKeyBoard.Create(TheOwner, Target, ShowMinus, ShowDecimal));
+  end;
 end;
 
 destructor TpsHMIfrmNumericKeyBoard.Destroy;
@@ -218,6 +241,7 @@ end;
 
 procedure TpsHMIfrmNumericKeyBoard.DoClose(var CloseAction: TCloseAction);
 begin
+  CloseAction:=caFree;
   inherited DoClose(CloseAction);
   if LastNumericKeyBoard=Self then
     LastNumericKeyBoard:=nil;
