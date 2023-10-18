@@ -708,7 +708,8 @@ type
     {$ELSE}
     //: Tell how many read errors occurred.
     {$ENDIF}
-    property CommReadErrors:Cardinal read PCommReadErrors;
+    // foi colocado a condição para poder zerar os erros ///////////////////////
+    property CommReadErrors:Cardinal read PCommReadErrors write PCommReadErrors;
 
     {$IFDEF PORTUGUES}
     //: Informa o total de leituras com exito do tag.
