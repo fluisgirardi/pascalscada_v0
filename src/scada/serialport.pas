@@ -149,8 +149,6 @@ type
     LineState:LongWord;
     tios:termios;
   end;
-                                 //IMPORTANTE , FOI MUDADO PARA "FALSE" PARA NÃO TRAVAR EM CASO DE DESLIGAMENTO DO USB
-    GetOverlappedResult(PPortHandle,POverlapped,lidos,false);
   {$ENDIF}
 
   { TSerialPortDriver }
