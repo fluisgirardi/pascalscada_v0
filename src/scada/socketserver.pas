@@ -48,7 +48,9 @@ type
     function WaitEnd(timeout:Cardinal): TWaitResult;
     procedure AddClientToMainThread;
   protected
+    {$IF defined(FPC) AND defined(UNIX)}
     ClientSockInfoLen:TSocklen;
+    {$ENDIF}
     ClientSockInfo:TSockAddr;
     ClientSocket:TSocket;
     procedure Execute; override;

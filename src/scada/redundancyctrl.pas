@@ -27,7 +27,7 @@ type
     HostAddr1,
     HostAddr2,
     HostAddr3,
-    HostAddr4:TIn_addr;
+    HostAddr4:TInAddr;
   end;
 
   TRedundancyCtrl = class;
