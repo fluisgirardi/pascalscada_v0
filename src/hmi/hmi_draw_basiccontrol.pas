@@ -8,6 +8,13 @@ uses
   Classes, sysutils, Controls, Graphics, BGRABitmap, BGRABitmapTypes, LCLIntf,
   LMessages, ControlSecurityManager, HMITypes, PLCTag;
 
+{$IF defined(CM_DESIGNERHITTEST)}
+
+{$ELSE}
+const
+  CM_DESIGNERHITTEST = CM_BASE + 100;
+{$ENDIF}
+
 type
 
   TDragManagerAccess = Class(TDragManager);
@@ -102,7 +109,7 @@ type
     procedure Paint; override;
     procedure Resize; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
-    procedure CMDesignHitTest(var Message: TCMHittest) ; message CM_DESIGNHITTEST;
+    procedure CMDesigerHitTest(var Message: TCMHittest) ; message CM_DESIGNERHITTEST;
     procedure SetParent(NewParent: TWinControl); override;
     procedure SetBodyColor(AValue: TColor); virtual;
     procedure SetBorderColor(AValue: TColor); virtual;
@@ -949,12 +956,18 @@ begin
     Message.Result:=0;
 end;
 
-procedure THMIBasicControl.CMDesignHitTest(var Message: TCMHittest);
+procedure THMIBasicControl.CMDesigerHitTest(var Message: TCMHittest);
+var
+  p: TPoint;
 begin
-  if IsControlArea(Message.XPos, Message.YPos) then
-    Message.Result:=1
+  writeln('MX=',Message.XPos,'  MY=',Message.YPos);
+  p:=ParentToClient(Point(Message.XPos, Message.YPos),GetDesignerForm(Self));
+  writeln('pX=',p.X,'  pY=',p.Y);
+
+  if IsControlArea(p.X,p.Y) then
+    Message.Result:=0
   else
-    Message.Result:=0;
+    Message.Result:=1;
 end;
 
 //procedure THMIBasicControl.TransparentHitTest(var Message: TCMHitTest);
@@ -1026,4 +1039,3 @@ begin
 end;
 
 end.
-
