@@ -29,9 +29,9 @@ type
   {$ELSE}
   //: Procedure called by thread to execute the query.
   {$ENDIF}
-  TExecSQLProc = procedure(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean) of object;
+  TExecSQLProc = procedure(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean; NewConnection:Boolean) of object;
 
-  TStartTransaction = procedure of object;
+  TStartTransaction = procedure(NewConnection:Boolean) of object;
 
   TCommitTransaction = procedure of object;
 
@@ -79,7 +79,7 @@ type
                          called to return the data to the application.)
     }
     {$ENDIF}
-    procedure ExecSQL(sql:UTF8String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
+    procedure ExecSQL(sql:UTF8String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true; NewConnection:Boolean=true);
   end;
 
   {$IFDEF PORTUGUES}
@@ -97,7 +97,7 @@ type
   {$ENDIF}
   TSQLCmdRec = record
     SQLCmd:String;
-    ReturnSync:Boolean;
+    ReturnSync, NewConnection:Boolean;
     ReturnDataSetCallback:TReturnDataSetProc;
   end;
 
@@ -120,7 +120,7 @@ type
     statements:THMIDBConnectionStatementList;
     ReturnTransactionResult:TReturnTransactionStatementsProc;
     FreeStatemensAfterExecute,
-    ReturnSync:Boolean;
+    ReturnSync, NewConnection:Boolean;
   end;
   PStatementCmdRec = ^TStatementCmdRec;
 
@@ -149,6 +149,7 @@ type
     fStartTransaction:TStartTransaction;
     fCommitTransaction:TCommitTransaction;
     fRollbackTransaction:TRollbackTransaction;
+    function GetPendingMsgs: Integer;
     procedure ProcessMessages;
   protected
     //: @exclude
@@ -218,7 +219,7 @@ type
     @param(sql String. SQL query command.)
     }
     {$ENDIF}
-    procedure ExecSQLWithoutResultSet(sql:UTF8String; ReturnSync:Boolean=true);
+    procedure ExecSQLWithoutResultSet(sql:UTF8String; ReturnSync:Boolean=true; NewConnection:Boolean=true);
 
     {$IFDEF PORTUGUES}
     {:
@@ -236,9 +237,10 @@ type
                                                   to return the dataset.)
     }
     {$ENDIF}
-    procedure ExecSQLWithResultSet(sql:UTF8String; ReturnDataCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
+    procedure ExecSQLWithResultSet(sql:UTF8String; ReturnDataCallback:TReturnDataSetProc; ReturnSync, NewConnection:Boolean);
 
-    procedure ExecTransaction(aStatements:THMIDBConnectionStatementList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
+    procedure ExecTransaction(aStatements:THMIDBConnectionStatementList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync, NewConnection:Boolean);
+    property PendingMsgs:Integer read GetPendingMsgs;
   end;
 
   {$IFDEF PORTUGUES}
@@ -267,9 +269,10 @@ type
     FASyncQuery:TZQuery;
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
+    function  GetPendingSQLCmds: Integer;
     function  getProperties: TStrings;
     function  GetSyncConnection:TZConnection;
-    procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean);
+    procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean; NewConnection:Boolean);
     procedure SetLibraryLocation(AValue: String);
     procedure SetProperties(AValue: TStrings);
     procedure SetReadOnly(AValue: Boolean);
@@ -294,14 +297,15 @@ type
     procedure SetUser(x: String);
     procedure SetPassword(x: String);
     procedure SetCatalog(x: String);
-    procedure StartTransaction;
+    procedure StartTransaction(NewConnection:Boolean);
     procedure CommitTransaction;
     procedure RollBackTransaction;
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
-    procedure   ExecSQL(sql:UTF8String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true);
-    procedure   ExecTransaction(statements:THMIDBConnectionStatementList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true);
+    procedure   ExecSQL(sql:UTF8String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true; NewConnection:Boolean=false);
+    procedure   ExecTransaction(statements:THMIDBConnectionStatementList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true; NewConnection:Boolean=false);
+    property    GetPendingSQLCommands:Integer read GetPendingSQLCmds;
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -463,7 +467,7 @@ begin
 
         if Assigned(fOnExecSQL) then
           try
-            fOnExecSQL(cmd^.SQLCmd, fds, err);
+            fOnExecSQL(cmd^.SQLCmd, fds, err, cmd^.NewConnection);
           finally
           end;
 
@@ -496,21 +500,20 @@ begin
     if (msg.MsgID=StatementsCommandMSG) and (msg.wParam<>nil) then begin
       statements:=PStatementCmdRec(msg.wParam);
       try
-        if statements^.statements=nil then exit;
 
+        if statements^.statements=nil then exit;
         if not Assigned(fStartTransaction) then exit;
         if not Assigned(fCommitTransaction) then exit;
         if not Assigned(fRollbackTransaction) then exit;
-
         if not Assigned(fOnExecSQL) then exit;
 
-        fStartTransaction();
         try
+          fStartTransaction(statements^.NewConnection);
           ferror:=nil;
           try
             fLineError:=0;
             for s:=0 to statements^.statements.Count-1 do begin
-              fOnExecSQL(statements^.statements.Items[s], nil, err);
+              fOnExecSQL(statements^.statements.Items[s], nil, err, false);
               if err then break;
             end;
           except
@@ -546,6 +549,11 @@ begin
   end;
 end;
 
+function TProcessSQLCommandThread.GetPendingMsgs: Integer;
+begin
+  Result:=FQueue.GetMsgCount;
+end;
+
 procedure   TProcessSQLCommandThread.ReturnData;
 begin
   if ferror<>nil then
@@ -568,13 +576,13 @@ begin
 end;
 
 procedure TProcessSQLCommandThread.ExecSQLWithoutResultSet(sql: UTF8String;
-  ReturnSync: Boolean);
+  ReturnSync: Boolean; NewConnection: Boolean);
 begin
-  ExecSQLWithResultSet(sql, nil, ReturnSync);
+  ExecSQLWithResultSet(sql, nil, ReturnSync, NewConnection);
 end;
 
 procedure TProcessSQLCommandThread.ExecSQLWithResultSet(sql: UTF8String;
-  ReturnDataCallback: TReturnDataSetProc; ReturnSync: Boolean);
+  ReturnDataCallback: TReturnDataSetProc; ReturnSync, NewConnection: Boolean);
 var
   sqlcmd:PSQLCmdRec;
 begin
@@ -582,6 +590,7 @@ begin
   new(sqlcmd);
   sqlcmd^.SQLCmd:=sql;
   sqlcmd^.ReturnSync:=ReturnSync;
+  sqlcmd^.NewConnection:=NewConnection;
   sqlcmd^.ReturnDataSetCallback:=ReturnDataCallback;
   FQueue.PostMessage(SQLCommandMSG,sqlcmd,nil,true);
 end;
@@ -589,7 +598,7 @@ end;
 procedure TProcessSQLCommandThread.ExecTransaction(
   aStatements: THMIDBConnectionStatementList;
   ReturnTransactionResult: TReturnTransactionStatementsProc;
-  FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean);
+  FreeStatemensAfterExecute: Boolean; ReturnSync, NewConnection: Boolean);
 var
   statementcmd:PStatementCmdRec;
 begin
@@ -601,6 +610,7 @@ begin
   statementcmd^.ReturnTransactionResult:=ReturnTransactionResult;
   statementcmd^.FreeStatemensAfterExecute:=FreeStatemensAfterExecute;
   statementcmd^.ReturnSync:=ReturnSync;
+  statementcmd^.NewConnection:=NewConnection;
 
   FQueue.PostMessage(StatementsCommandMSG,statementcmd,nil,true);
 end;
@@ -665,28 +675,40 @@ begin
   Result:=FProperties;
 end;
 
+function THMIDBConnection.GetPendingSQLCmds: Integer;
+begin
+  result := FSQLSpooler.PendingMsgs;
+end;
+
 procedure THMIDBConnection.ExecSQL(sql: UTF8String;
-  ReturnDatasetCallback: TReturnDataSetProc; ReturnSync: Boolean);
+  ReturnDatasetCallback: TReturnDataSetProc; ReturnSync: Boolean;
+  NewConnection: Boolean);
 begin
   if Assigned(FSQLSpooler) THEN
-    FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync);
+    FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync, NewConnection);
 end;
 
-procedure THMIDBConnection.ExecTransaction(statements: THMIDBConnectionStatementList;
+procedure THMIDBConnection.ExecTransaction(
+  statements: THMIDBConnectionStatementList;
   ReturnTransactionResult: TReturnTransactionStatementsProc;
-  FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean);
+  FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean;
+  NewConnection: Boolean);
 begin
   if Assigned(FSQLSpooler) THEN
-    FSQLSpooler.ExecTransaction(statements,ReturnTransactionResult,FreeStatemensAfterExecute,ReturnSync);
+    FSQLSpooler.ExecTransaction(statements,ReturnTransactionResult,FreeStatemensAfterExecute,ReturnSync,NewConnection);
 end;
 
-procedure THMIDBConnection.StartTransaction;
+procedure THMIDBConnection.StartTransaction(NewConnection: Boolean);
 begin
   if Assigned(FCustomStartTransaction) then
     FCustomStartTransaction(Self)
   else begin
     FCS.Enter;
     try
+      if NewConnection then begin
+        FASyncConnection.Disconnect;
+        FASyncConnection.Connect;
+      end;
       FASyncConnection.StartTransaction;
     finally
       FCS.Leave;
@@ -723,13 +745,13 @@ begin
 end;
 
 procedure THMIDBConnection.ExecuteSQLCommand(sqlcmd: Utf8String;
-  outputdataset: TFPSBufDataSet; out Error: Boolean);
+  outputdataset: TFPSBufDataSet; out Error: Boolean; NewConnection: Boolean);
 var
   ts: TStringStream;
   msg: String;
 begin
   if Assigned(FCustomExecSQL) then
-    FCustomExecSQL(sqlcmd,outputdataset,Error)
+    FCustomExecSQL(sqlcmd,outputdataset,Error,NewConnection)
   else begin
     FCS.Enter;
     try
@@ -740,6 +762,12 @@ begin
       end;
 
       try
+
+        if NewConnection then begin
+          FASyncConnection.Disconnect;
+          FASyncConnection.Connect;
+        end;
+
         Error:=false;
         if outputdataset=nil then begin
           if not FASyncConnection.ExecuteDirect(sqlcmd) then begin
