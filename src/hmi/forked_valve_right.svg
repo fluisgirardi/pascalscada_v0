@@ -2,20 +2,20 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="44"
    height="44"
    viewBox="0 0 11.641666 11.641667"
    version="1.1"
    id="svg18161"
-   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
-   sodipodi:docname="forked_valve_right.svg">
+   inkscape:version="1.2.2 (1:1.2.2+202212051552+b0a8486541)"
+   sodipodi:docname="forked_valve_right.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs18155" />
   <sodipodi:namedview
@@ -26,17 +26,20 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="16"
-     inkscape:cx="8.2955805"
-     inkscape:cy="18.296102"
+     inkscape:cx="2.03125"
+     inkscape:cy="18.34375"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      units="px"
      inkscape:window-width="1920"
-     inkscape:window-height="1023"
+     inkscape:window-height="1021"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata18158">
     <rdf:RDF>
@@ -65,41 +68,19 @@
        id="pathRight"
        inkscape:connector-curvature="0" />
     <path
-       transform="matrix(0.12892726,0,0,0.07417652,-35.93728,271.09703)"
-       sodipodi:type="star"
-       style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:0.27055582;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="LeftArrow"
-       sodipodi:sides="3"
-       sodipodi:cx="308.49753"
-       sodipodi:cy="314.95084"
-       sodipodi:r1="33.579025"
-       sodipodi:r2="16.789513"
-       sodipodi:arg1="1.5707963"
-       sodipodi:arg2="2.6179939"
-       inkscape:flatsided="true"
-       inkscape:rounded="0"
-       inkscape:randomized="0"
-       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z"
+       style="opacity:1;fill:#cccccc;stroke:#000000;stroke-width:2.70556;stroke-linecap:round;stroke-linejoin:bevel"
+       inkscape:label="#LeftArrow"
        inkscape:transform-center-y="2.1943685"
-       inkscape:label="#LeftArrow" />
+       transform="matrix(0.12892726,0,0,0.07417652,-35.93728,271.09703)"
+       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z" />
     <path
-       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z"
-       inkscape:randomized="0"
-       inkscape:rounded="0"
-       inkscape:flatsided="true"
-       sodipodi:arg2="2.6179939"
-       sodipodi:arg1="1.5707963"
-       sodipodi:r2="16.789513"
-       sodipodi:r1="33.579025"
-       sodipodi:cy="314.95084"
-       sodipodi:cx="308.49753"
-       sodipodi:sides="3"
        id="RightArrow"
-       style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:0.27055578;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       sodipodi:type="star"
-       transform="matrix(0,-0.12892724,0.07417655,0,-14.261198,328.96853)"
+       style="opacity:1;fill:#cccccc;stroke:#000000;stroke-width:2.70556;stroke-linecap:round;stroke-linejoin:bevel"
        inkscape:transform-center-x="-2.1963938"
-       inkscape:transform-center-y="-7.5862073e-06" />
+       inkscape:transform-center-y="-7.5862073e-06"
+       transform="matrix(0,-0.12892724,0.07417655,0,-14.261198,328.96853)"
+       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z" />
     <path
        inkscape:connector-curvature="0"
        id="pathJoin"
