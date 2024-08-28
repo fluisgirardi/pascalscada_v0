@@ -146,7 +146,7 @@ begin
                 tplc.RefreshTime:=confItem.Scan.Value;
                 tplc.ProtocolDriver := FDriver;
                 if confItem.PIPES.ItemIndex<>-1 then
-                  tplc.ScaleProcessor:=TPIPE(ItemPtr[confItem.PIPES.ItemIndex]);
+                  tplc.ScaleProcessor:=TScalesQueue(ItemPtr[confItem.PIPES.ItemIndex]);
                 InsertHook(tplc);
               end else begin
                 tstr := TPLCString(CreateProc(TPLCString));
@@ -241,7 +241,7 @@ begin
                 tblk.Size := Element+1;
                 tbel.Index:=Element;
                 if confItem.PIPES.ItemIndex<>-1 then
-                  tbel.ScaleProcessor:=TPIPE(ItemPtr[confItem.PIPES.ItemIndex]);
+                  tbel.ScaleProcessor:=TScalesQueue(ItemPtr[confItem.PIPES.ItemIndex]);
                 InsertHook(tbel);
               end;
 
