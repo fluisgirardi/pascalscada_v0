@@ -698,6 +698,12 @@ begin
       exit;
     end;
 
+    //avoid high cpu consumption with linked tags and not assigned communcation port
+    if (not Assigned(PCommPort)) or (PCommPort.ReallyActive=false) then begin
+      NeedSleep:=1;
+      exit;
+    end;
+
     EntireTagList:=TReqList.Create;
 
     for plc:= 0 to High(PModbusPLC) do begin

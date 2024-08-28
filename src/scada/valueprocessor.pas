@@ -402,8 +402,6 @@ type
     property Escalas:TScaleQueue read GetScaleQueue write SetScaleQueue stored false; // to be removed after 1.0
     property ScalesQueue:TScaleQueue read GetScaleQueue write SetScaleQueue stored true;
   end;
-
-  TPIPE = class(TScalesQueue);
     
 implementation
 
