@@ -448,30 +448,30 @@ begin
     if (msg.MsgID=SQLCommandMSG) and (msg.wParam<>nil) then begin
       cmd:=PSQLCmdRec(msg.wParam);
       try
-        //se é necessario retornar algo
-        //cria o dataset de retorno de dados.
-        //
-        //if are to return the data,
-        //creates the dataset.
-        ferror:=nil;
+        try
+          //se é necessario retornar algo
+          //cria o dataset de retorno de dados.
+          //
+          //if are to return the data,
+          //creates the dataset.
+          ferror:=nil;
 
-        isASelect:=false;
-        sql:=Trim(LowerCase(cmd^.SQLCmd));
-        isASelect:=pos('select',sql)=1;
+          isASelect:=false;
+          sql:=Trim(LowerCase(cmd^.SQLCmd));
+          isASelect:=pos('select',sql)=1;
 
-        if Assigned(cmd^.ReturnDataSetCallback) and isASelect then begin
-          fds:=TFPSBufDataSet.Create(Nil);
-        end else begin
-          fds:=nil;
-        end;
-
-        if Assigned(fOnExecSQL) then
-          try
-            fOnExecSQL(cmd^.SQLCmd, fds, err, cmd^.NewConnection);
-          finally
+          if Assigned(cmd^.ReturnDataSetCallback) and isASelect then begin
+            fds:=TFPSBufDataSet.Create(Nil);
+          end else begin
+            fds:=nil;
           end;
 
-        try
+          if Assigned(fOnExecSQL) then
+            try
+              fOnExecSQL(cmd^.SQLCmd, fds, err, cmd^.NewConnection);
+            finally
+            end;
+
           if Assigned(cmd^.ReturnDataSetCallback) then begin
             if cmd^.ReturnSync then begin
               FErrorOnSync:=true;
@@ -479,28 +479,23 @@ begin
             end else
               ReturnData;
           end;
-        finally
-          Dispose(cmd);
-        end;
-      except
-        on e:Exception do begin
-          if not FErrorOnSync then  begin
-            ferror:=e;
-            try
+        except
+          on e:Exception do begin
+            if not FErrorOnSync then begin
+              ferror:=e;
               if Assigned(cmd^.ReturnDataSetCallback) then
-                Synchronize(@ReturnData);
-            finally
-              Dispose(cmd);
+                Synchronize(@ReturnData);;
             end;
           end;
         end;
+      finally
+        if Assigned(cmd) then Dispose(cmd);
       end;
     end;
 
     if (msg.MsgID=StatementsCommandMSG) and (msg.wParam<>nil) then begin
       statements:=PStatementCmdRec(msg.wParam);
       try
-
         if statements^.statements=nil then exit;
         if not Assigned(fStartTransaction) then exit;
         if not Assigned(fCommitTransaction) then exit;
@@ -705,11 +700,19 @@ begin
   else begin
     FCS.Enter;
     try
-      if NewConnection then begin
-        FASyncConnection.Disconnect;
-        FASyncConnection.Connect;
+      try
+        if NewConnection then begin
+          FASyncConnection.Disconnect;
+          FASyncConnection.Connect;
+        end;
+        FASyncConnection.StartTransaction;
+      except
+        on e:Exception do begin
+          {$IFNDEF WINDOWS}
+          writeln('Start transaction exception: ', e.Message);
+          {$ENDIF}
+        end;
       end;
-      FASyncConnection.StartTransaction;
     finally
       FCS.Leave;
     end;
