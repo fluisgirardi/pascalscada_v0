@@ -11,10 +11,13 @@ uses
 type
 
   THMICustomElevadorBasico = class(THMIBasicControl)
+  private
+    FHeadAtLeft: Boolean;
   protected
     FBodyWidth: Byte;
     FFooterColor: TColor;
     FHeadColor: TColor;
+    procedure SetHeadAtLeft(AValue: Boolean);
     procedure SetBodyWidth(AValue: Byte);
     procedure SetFooterColor(AValue: TColor);
     procedure SetHeadColor(AValue: TColor);
@@ -22,6 +25,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
   protected
+    property HeadAtLeft:Boolean read FHeadAtLeft write SetHeadAtLeft default false;
     property HeadColor:TColor read FHeadColor write SetHeadColor default clSilver;
     property BodyColor default clSilver;
     property FooterColor:TColor read FFooterColor write SetFooterColor default clSilver;
@@ -33,6 +37,7 @@ type
 
   THMIElevadorBasico = class(THMICustomElevadorBasico)
   published
+    property HeadAtLeft;
     property HeadColor;
     property BodyColor;
     property BodyWidth;
@@ -157,6 +162,7 @@ type
     property CurrentBodyColor:TColor read FBodyColor;
     property BodyColor;
     property FooterColor;
+    property HeadAtLeft;
     property HeadColor;
     property BorderColor;
 
@@ -345,17 +351,31 @@ begin
   //###############################################################################
   SetLength(x,4);
 
-  x[0].X:=BodyWidth;
-  x[0].Y:=(BorderWidth/2);
+  if FHeadAtLeft then begin
+    x[0].X:=0;
+    x[0].Y:=BodyWidth + (BorderWidth/2);
 
-  x[1].X:=2*BodyWidth-1;
-  x[1].Y:=(BorderWidth/2);
+    x[1].X:=BodyWidth;
+    x[1].Y:=(BorderWidth/2);
 
-  x[2].X:=3*BodyWidth-1;
-  x[2].Y:=BodyWidth + (BorderWidth/2);
+    x[2].X:=2*BodyWidth-1;
+    x[2].Y:=(BorderWidth/2);
 
-  x[3].X:=BodyWidth;
-  x[3].Y:=BodyWidth + (BorderWidth/2);
+    x[3].X:=2*BodyWidth-1;
+    x[3].Y:=BodyWidth + (BorderWidth/2);
+  end else begin
+    x[0].X:=BodyWidth;
+    x[0].Y:=(BorderWidth/2);
+
+    x[1].X:=2*BodyWidth-1;
+    x[1].Y:=(BorderWidth/2);
+
+    x[2].X:=3*BodyWidth-1;
+    x[2].Y:=BodyWidth + (BorderWidth/2);
+
+    x[3].X:=BodyWidth;
+    x[3].Y:=BodyWidth + (BorderWidth/2);
+  end;
 
   //###############################################################################
   //preenchimento da cabeça do elevador, cor e diametro da linha.
@@ -434,6 +454,13 @@ begin
   FBorderColor:=clBlack;
   FBorderWidth:=1;
   FBodyWidth:=12; //inicializa o desenho com 12px de largura do
+end;
+
+procedure THMICustomElevadorBasico.SetHeadAtLeft(AValue: Boolean);
+begin
+  if FHeadAtLeft=AValue then Exit;
+  FHeadAtLeft:=AValue;
+  InvalidateShape;
 end;
 
 procedure THMICustomElevadorBasico.SetBodyWidth(AValue: Byte);
