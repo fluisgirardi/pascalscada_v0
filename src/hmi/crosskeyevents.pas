@@ -161,10 +161,19 @@ type
   {$IFEND}
 
   {$IF defined(LCLqt5)}
-
-  { TQT5KeyEvents }
-
   TQT5KeyEvents = class(TCrossKeyEvents)
+    protected
+      //: @seealso(TCrossKeyEvents.DoDown)
+      procedure DoDown(Key: LongWord); override;
+      //: @seealso(TCrossKeyEvents.DoUp)
+      procedure DoUp(Key: LongWord); override;
+      //: @seealso(TCrossKeyEvents.TranlateVirtualKey)
+      function TranlateVirtualKey(Key: Word): LongWord; override;
+  end;
+  {$IFEND}
+
+  {$IF defined(LCLqt6)}
+  TQT6KeyEvents = class(TCrossKeyEvents)
     protected
       //: @seealso(TCrossKeyEvents.DoDown)
       procedure DoDown(Key: LongWord); override;

@@ -93,7 +93,7 @@ type
     function    CanAccess({%H-}sc:UTF8String):Boolean; virtual;
     function    GetRegisteredAccessCodes:TStringList; virtual;
 
-    function    CheckIfUserIsAllowed({%H-}sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String; const UserHint:String): Boolean; virtual;
+    function    CheckIfUserIsAllowed({%H-}sc: UTF8String; RequireUserLogin: Boolean; var userlogin: UTF8String; const UserHint:UTF8String): Boolean; virtual;
 
     //read only properties.
     property UID:Integer read GetUID;
@@ -294,8 +294,8 @@ begin
 end;
 
 function TBasicUserManagement.CheckIfUserIsAllowed(sc: UTF8String;
-  RequireUserLogin: Boolean; var userlogin: UTF8String; const UserHint: String
-  ): Boolean;
+  RequireUserLogin: Boolean; var userlogin: UTF8String;
+  const UserHint: UTF8String): Boolean;
 var
   frozenTimer:TTimer;
   aUserID, PreferredWidth, PreferredHeight, res:Integer;
