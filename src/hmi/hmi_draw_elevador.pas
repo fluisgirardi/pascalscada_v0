@@ -453,6 +453,7 @@ begin
   FFooterColor:=clSilver;
   FBorderColor:=clBlack;
   FBorderWidth:=1;
+  FHeadAtLeft:=false;
   FBodyWidth:=12; //inicializa o desenho com 12px de largura do
 end;
 
