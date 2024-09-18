@@ -648,8 +648,10 @@ begin
       Result := 8;
       ProtocolTagType:=ptByte;
     end
-    else
+    else begin
       Result := 16;
+      ProtocolTagType:=ptWord;
+    end
   end;
 end;
 
