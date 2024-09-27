@@ -157,6 +157,12 @@ type
     FLogFileStream:TFileStream;
     FReadRetries: Cardinal;
     FWriteRetries: Cardinal;
+
+    FTraffic_receiver_1 :AnsiString;
+    FTraffic_receiver_2 :AnsiString;
+    FTraffic_receiver :AnsiString;
+    FTraffic_send :AnsiString;
+
     { @exclude }
     PLockedBy:Cardinal;
     {: @exclude }
@@ -289,6 +295,9 @@ type
     //: Stores if the communication port is exclusive (like serial port)
     {$ENDIF}
     FExclusiveDevice:Boolean;
+
+    // recolhe trafego de dados
+    procedure  Traffic(cmd:TIOCommand; Packet:TIOPacket);
 
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
@@ -1003,6 +1012,10 @@ type
     //: File to store the log of I/O actions of the communication port.
     {$ENDIF}
     property LogFile:AnsiString read FLogFile write SetLogFile;
+
+    // variavel onde vai ser armazenado do bytes de recebimento e envio para amostra
+    property Traffic_receiver:AnsiString read FTraffic_receiver;
+    property Traffic_send:AnsiString read FTraffic_send;
   end;
 
 {$IFNDEF FPC}
@@ -1677,8 +1690,8 @@ begin
 
     PIOCmdCS.Enter;
     InIOCmdCS:=true;
-    if (not ReallyActive) then
-       exit;
+    //if (not ReallyActive) then
+       //exit;
 
     if Assigned(OnBegin) then
       OnBegin(Self);
@@ -1704,6 +1717,8 @@ begin
     PPacket^.Res2 := nil;
     SetLength(PPacket^.BufferToRead,BytesToRead);
 
+    if (not ReallyActive) then
+    exit;
     //executes the I/O command.
     InternalIOCommand(Cmd,@PPacket^);
 
@@ -1753,6 +1768,8 @@ begin
        if cmd in [iocWrite, iocReadWrite, iocWriteRead] then
          Packet^.WriteIOResult := iorNotReady;
      end;
+     // dados de bytes
+     Traffic(cmd, Packet^);
      if FLogActions then
        LogAction(cmd, Packet^);
   finally
@@ -1952,6 +1969,30 @@ begin
   finally
     FS.Free;
   end;
+end;
+
+// efetua amostragem do trafefgo recebidos e enviados //////////////////////////
+procedure  TCommPortDriver.Traffic(cmd:TIOCommand; Packet:TIOPacket);
+  function bufferToHex(Buf:BYTES):AnsiString;
+  var
+    c:LongInt;
+  begin
+    Result:='';
+    for c:=0 to High(Buf) do
+      Result:=Result+IntToHex(Buf[c],2)+' ';
+  end;
+
+begin
+    if cmd=iocRead then begin
+      FTraffic_receiver_1 :=  bufferToHex(Packet.BufferToRead);
+    end;
+
+    if cmd=iocWriteRead then begin
+      FTraffic_send := bufferToHex(Packet.BufferToWrite);
+      FTraffic_receiver_2 :=  bufferToHex(Packet.BufferToRead);
+
+    end;
+    FTraffic_receiver := FTraffic_receiver_2 + FTraffic_receiver_1;
 end;
 
 end.
