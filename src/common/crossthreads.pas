@@ -147,7 +147,7 @@ end;
 
 procedure TpSCADACoreAffinityThreadWithLoop.WaitForLoopTerminates;
 begin
-  if Assigned(FEndLoop) then
+  if Assigned(FEndLoop) and (self.ThreadID=MainThreadID) then
     while FEndLoop.WaitFor(1)<>wrSignaled do
       CheckSynchronize(1);
 end;
