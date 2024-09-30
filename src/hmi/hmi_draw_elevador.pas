@@ -17,6 +17,7 @@ type
     FBodyWidth: Byte;
     FFooterColor: TColor;
     FHeadColor: TColor;
+    FExitPoint:TPoint;
     procedure SetHeadAtLeft(AValue: Boolean);
     procedure SetBodyWidth(AValue: Byte);
     procedure SetFooterColor(AValue: TColor);
@@ -99,6 +100,7 @@ type
     procedure SetUseStaticFooterColor(AValue: Boolean);
     procedure SetUseStaticHeaderColor(AValue: Boolean);
   protected
+    procedure UpdateInOutLines; virtual;
     procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
     procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
     procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
@@ -110,6 +112,8 @@ type
     FCurrentZone,
     FOwnerZone: THMIElevatorFlowZone;
     FZoneTimer:TTimer;
+    procedure ChangeBounds(ALeft, ATop, AWidth, AHeight: Integer;
+      KeepBase: Boolean); override;
     procedure SetInputPolyline(AValue: THMIFlowPolyline);
     procedure SetOutputPolyline(AValue: THMIFlowPolyline);
     procedure SetElevatorStates(AValue: THMIElevatorFlowZones);
@@ -126,6 +130,7 @@ type
     procedure NextZone(Sender: TObject);
     procedure Loaded; override;
     procedure UpdateControl; virtual;
+    procedure UpdateShape; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -152,6 +157,8 @@ type
   public
     destructor Destroy; override;
   end;
+
+  { THMILinkedFlowElevator }
 
   THMILinkedFlowElevator = class(THMICustomLinkedFlowElevator)
   published
@@ -355,6 +362,9 @@ begin
     x[0].X:=0;
     x[0].Y:=BodyWidth + (BorderWidth/2);
 
+    FExitPoint:=x[0].Truncate;
+    FExitPoint.X:=FExitPoint.X+8;
+
     x[1].X:=BodyWidth;
     x[1].Y:=(BorderWidth/2);
 
@@ -372,6 +382,9 @@ begin
 
     x[2].X:=3*BodyWidth-1;
     x[2].Y:=BodyWidth + (BorderWidth/2);
+
+    FExitPoint:=x[2].Truncate;
+    FExitPoint.X:=FExitPoint.X-8;
 
     x[3].X:=BodyWidth;
     x[3].Y:=BodyWidth + (BorderWidth/2);
@@ -563,6 +576,12 @@ begin
 
 end;
 
+procedure THMICustomFlowElevator.UpdateShape;
+begin
+  inherited UpdateShape;
+  UpdateInOutLines;
+end;
+
 constructor THMICustomFlowElevator.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -618,6 +637,12 @@ begin
   ShowZone(FCurrentZone);
 end;
 
+procedure THMICustomFlowElevator.UpdateInOutLines;
+begin
+  if Assigned(FOutputPolyline) then
+    FOutputPolyline.UpdateEndPoints(false,ControlToScreen(FExitPoint));
+end;
+
 procedure THMICustomFlowElevator.AddNotifyCallback(
   WhoNotify: IColorChangeNotification);
 begin
@@ -642,6 +667,13 @@ begin
   UpdateFlow;
 end;
 
+procedure THMICustomFlowElevator.ChangeBounds(ALeft, ATop, AWidth,
+  AHeight: Integer; KeepBase: Boolean);
+begin
+  inherited ChangeBounds(ALeft, ATop, AWidth, AHeight, KeepBase);
+  UpdateInOutLines;
+end;
+
 procedure THMICustomFlowElevator.SetInputPolyline(AValue: THMIFlowPolyline);
 begin
   if FInputPolyline=AValue then
@@ -662,6 +694,7 @@ begin
 
   FInputPolyline:=AValue;
   UpdateFlow;
+  UpdateInOutLines;
 end;
 
 procedure THMICustomFlowElevator.SetOutputPolyline(AValue: THMIFlowPolyline);
@@ -676,6 +709,7 @@ begin
 
   FOutputPolyline:=AValue;
   UpdateFlow;
+  UpdateInOutLines;
 end;
 
 end.

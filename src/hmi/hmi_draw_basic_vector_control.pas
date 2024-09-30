@@ -141,6 +141,7 @@ type
     procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
     procedure NotifyChange(const WhoChanged:THMIFlowPolyline);
   protected
+    procedure UpdateInOutLines; virtual;
     procedure GetCurrentComponentState(var CurState: TComponentState);
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
@@ -160,8 +161,11 @@ type
     destructor Destroy; override;
   end;
 
+  { THMI2OutFlowVectorControl }
+
   THMI2OutFlowVectorControl = class(THMICustomFlowVectorControl)
   protected
+    procedure UpdateInOutLines; override;
     function GetOutput1: THMIFlowPolyline;
     function GetOutput2: THMIFlowPolyline;
     procedure SetOutput1(AValue: THMIFlowPolyline);
@@ -193,7 +197,10 @@ type
     FOrientationLoaded: TForkedFlowValveOrientation;
     procedure SetOrientation(AValue: TForkedFlowValveOrientation);
   protected
+    procedure UpdateInOutLines; override;
     procedure Loaded; override;
+    procedure ChangeBounds(ALeft, ATop, AWidth, AHeight: Integer; KeepBase: Boolean
+  ); override;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -305,6 +312,40 @@ begin
 
   ShowZone(FCurrentZone);
   InvalidateShape;
+  UpdateInOutLines;
+end;
+
+procedure THMIForkedFlowValve.UpdateInOutLines;
+var
+  aX, aY: Int64;
+begin
+  if FOrientation=ffvRight then begin
+    aX:=Trunc(Width *0.31);
+  end else begin
+    aX:=Trunc(Width *0.645);
+  end;
+  aY:=Trunc(Height*0.31);
+
+  if Assigned(FInputFlowPolyline) then begin
+    if Orientation=ffvRight then
+      FInputFlowPolyline.UpdateEndPoints(true, ControlToScreen(Point(aX, aY)))
+    else
+      FInputFlowPolyline.UpdateEndPoints(true, ControlToScreen(Point(aX, aY)))
+  end;
+
+  if Assigned(GetOutput1) then begin
+    if Orientation=ffvRight then
+      GetOutput1.UpdateEndPoints(false, ControlToScreen(point(aX, Height)))
+    else
+      GetOutput1.UpdateEndPoints(false, ControlToScreen(point(0,  aY)));
+  end;
+
+  if Assigned(GetOutput2) then begin
+    if Orientation=ffvRight then
+      GetOutput2.UpdateEndPoints(false, ControlToScreen(point(Width , aY)))
+    else
+      GetOutput2.UpdateEndPoints(false, ControlToScreen(point(aX,  Height)));
+  end;
 end;
 
 procedure THMIForkedFlowValve.Loaded;
@@ -315,6 +356,13 @@ begin
     ffvLeft:  FOrientation:=ffvRight;
   end;
   SetOrientation(FOrientationLoaded);
+end;
+
+procedure THMIForkedFlowValve.ChangeBounds(ALeft, ATop, AWidth,
+  AHeight: Integer; KeepBase: Boolean);
+begin
+  inherited ChangeBounds(ALeft, ATop, AWidth, AHeight, KeepBase);
+  UpdateInOutLines;
 end;
 
 constructor THMIForkedFlowValve.Create(AOwner: TComponent);
@@ -349,6 +397,11 @@ end;
 
 { THMI2OutFlowVectorControl }
 
+procedure THMI2OutFlowVectorControl.UpdateInOutLines;
+begin
+  inherited UpdateInOutLines;
+end;
+
 function THMI2OutFlowVectorControl.GetOutput1: THMIFlowPolyline;
 begin
   if FFlowOutputs.Count>0 then
@@ -369,12 +422,16 @@ procedure THMI2OutFlowVectorControl.SetOutput1(AValue: THMIFlowPolyline);
 begin
   if FFlowOutputs.Count>0 then
     THMIOutputCollectionItem(FFlowOutputs.Items[0]).OutputPolyline:=AValue;
+
+  UpdateInOutLines;
 end;
 
 procedure THMI2OutFlowVectorControl.SetOutput2(AValue: THMIFlowPolyline);
 begin
   if FFlowOutputs.Count>1 then
     THMIOutputCollectionItem(FFlowOutputs.Items[1]).OutputPolyline:=AValue;
+
+  UpdateInOutLines;
 end;
 
 constructor THMI2OutFlowVectorControl.Create(AOwner: TComponent);
@@ -672,6 +729,7 @@ begin
 
   FInputFlowPolyline:=AValue;
   UpdateDrawAndFlow;
+  UpdateInOutLines;
 end;
 
 procedure THMICustomFlowVectorControl.SetStates(AValue: THMIVectorFlowZones);
@@ -740,6 +798,11 @@ procedure THMICustomFlowVectorControl.NotifyChange(
   const WhoChanged: THMIFlowPolyline);
 begin
   UpdateDrawAndFlow;
+end;
+
+procedure THMICustomFlowVectorControl.UpdateInOutLines;
+begin
+  //
 end;
 
 procedure THMICustomFlowVectorControl.GetCurrentComponentState(

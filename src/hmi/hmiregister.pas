@@ -24,7 +24,7 @@ uses
   HMITrackBar, HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar,
   HMIAnimation, HMIText, HMIZones, hmipropeditor, HMIControlDislocatorAnimation,
   ControlSecurityManager, ActnList, CustomizedUserManagement, Controls,
-  scadapropeditor,
+  scadapropeditor, HMIFlowImage,
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
   {$IFEND}
@@ -88,7 +88,8 @@ begin
                                            THMIBasicVectorControl,
                                            THMIFlowVectorControl,
                                            THMIForkedFlowValve,
-                                           THMIThreeWayFlowValve]);
+                                           THMIThreeWayFlowValve,
+                                           THMIFlowImage]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 

@@ -109,28 +109,46 @@ type
   end;
 
   TColorMixBehavior = (cmbLastColor, cmbAnd, cmbOr, cmbXor, cmbEmpty, cmbMultipleColorsReplace);
+  TPointDirection = (pdVertical, pdHorizontal);
 
   { THMIFlowPolyline }
 
   THMIFlowPolyline = class(THMIPolyline, IColorChangeNotification)
   private
+    FStartPInit, FEndPInit:Boolean;
+    FStartP, FEndP:TPoint;
+    FAutoHeightDistribution:SmallInt;
+    FAutoEndPointOffset: Integer;
+    FAutoRoute: Boolean;
+    FAutoStartPointOffset: Integer;
     FEmptyColor: TColor;
+    FEndDireciton: TPointDirection;
     FFlowSources: THMIFlowSourceCollection;
 
     FFlowDest:array of IColorChangeNotification;
     FMultipleColorBehavior: TColorMixBehavior;
     FMultipleColorsReplace: TColor;
     FOnColorChange: TNotifyEvent;
+    FStartDireciton: TPointDirection;
 
     procedure AddNotifyCallback(WhoNotify:IColorChangeNotification);
+    function GetAutoHeightDistribution: double;
     procedure RemoveNotifyCallback(WhoRemove:IColorChangeNotification);
     procedure NotifyFree(const WhoWasDestroyed:THMIFlowPolyline);
     procedure NotifyChange(const WhoChanged:THMIFlowPolyline);
+    procedure SetAutoEndPointDirection(AValue: TPointDirection);
+    procedure SetAutoEndPointOffset(AValue: Integer);
+    procedure SetAutoHeightDistribution(AValue: double);
+    procedure SetAutoRoute(AValue: Boolean);
+    procedure SetAutoStartPointDirection(AValue: TPointDirection);
+    procedure SetAutoStartPointOffset(AValue: Integer);
     procedure SetEmptyColor(AValue: TColor);
     procedure setFlowSources(AValue: THMIFlowSourceCollection);
     procedure setMultipleColorsBehavior(AValue: TColorMixBehavior);
     procedure setMultipleColorsReplace(AValue: TColor);
   protected
+    procedure AdjustCoordinates; virtual;
+    procedure RecalculateMidPoints; virtual;
     procedure DoLineColorChange; override;
     procedure RecalculateColor(WhoChanged:THMIFlowPolyline=nil); virtual;
   public
@@ -138,7 +156,14 @@ type
     destructor Destroy; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation);
       override;
+    procedure UpdateEndPoints(EndPoint:Boolean; ScreenPoint:TPoint);
   published
+    property AutoRoute:Boolean read FAutoRoute write SetAutoRoute default false;
+    property AutoStartPointDirection:TPointDirection read FStartDireciton write SetAutoStartPointDirection;
+    property AutoStartPointOffset:Integer read FAutoStartPointOffset write SetAutoStartPointOffset;
+    property AutoEndPointDirection:TPointDirection read FEndDireciton write SetAutoEndPointDirection;
+    property AutoEndPointOffset:Integer read FAutoEndPointOffset write SetAutoEndPointOffset;
+    property AutoHeightDistribution:double read GetAutoHeightDistribution write SetAutoHeightDistribution;
     property EmptyColor:TColor read FEmptyColor write SetEmptyColor default clBlack;
     property MultipleColorBehavior:TColorMixBehavior read FMultipleColorBehavior write setMultipleColorsBehavior;
     property MultipleColorsReplace:TColor read FMultipleColorsReplace write setMultipleColorsReplace;
@@ -164,6 +189,11 @@ begin
   i:=Length(FFlowDest);
   SetLength(FFlowDest,i+1);
   FFlowDest[i]:=WhoNotify;
+end;
+
+function THMIFlowPolyline.GetAutoHeightDistribution: double;
+begin
+  Result:=FAutoHeightDistribution/100;
 end;
 
 procedure THMIFlowPolyline.RemoveNotifyCallback(
@@ -204,6 +234,57 @@ begin
   RecalculateColor(WhoChanged);
 end;
 
+procedure THMIFlowPolyline.SetAutoEndPointDirection(AValue: TPointDirection);
+begin
+  if FEndDireciton=AValue then Exit;
+  FEndDireciton:=AValue;
+end;
+
+procedure THMIFlowPolyline.SetAutoEndPointOffset(AValue: Integer);
+begin
+  if FAutoEndPointOffset=AValue then Exit;
+  FAutoEndPointOffset:=AValue;
+end;
+
+procedure THMIFlowPolyline.SetAutoHeightDistribution(AValue: double);
+var
+  aux: Int64;
+begin
+  if (AValue<0) or (AValue>100) then
+    exit;
+
+  aux:=Trunc(AValue*100.0);
+
+  if aux=FAutoHeightDistribution then
+    exit;
+
+  FAutoHeightDistribution:=aux;
+
+  RecalculateMidPoints;
+  InvalidateShape;
+end;
+
+procedure THMIFlowPolyline.SetAutoRoute(AValue: Boolean);
+begin
+  if FAutoRoute=AValue then Exit;
+  FAutoRoute:=AValue;
+  UpdateEndPoints(false, FStartP);
+  UpdateEndPoints(True,  FEndP);
+  RecalculateMidPoints;
+end;
+
+procedure THMIFlowPolyline.SetAutoStartPointDirection(AValue: TPointDirection);
+begin
+  if FStartDireciton=AValue then Exit;
+  FStartDireciton:=AValue;
+end;
+
+procedure THMIFlowPolyline.SetAutoStartPointOffset(AValue: Integer);
+begin
+  if FAutoStartPointOffset=AValue then Exit;
+  FAutoStartPointOffset:=AValue;
+end;
+
 procedure THMIFlowPolyline.SetEmptyColor(AValue: TColor);
 begin
   if FEmptyColor=AValue then Exit;
@@ -229,6 +310,67 @@ begin
   if FMultipleColorsReplace=AValue then Exit;
   FMultipleColorsReplace:=AValue;
   RecalculateColor;
+end;
+
+procedure THMIFlowPolyline.AdjustCoordinates;
+begin
+  if FAutoRoute and (PointCoordinates.Count<>6) then begin
+    while PointCoordinates.Count>6 do
+      PointCoordinates.Delete(0);
+
+    while PointCoordinates.Count<6 do
+      PointCoordinates.Add;
+  end;
+end;
+
+procedure THMIFlowPolyline.RecalculateMidPoints;
+var
+  h, p1y, p5y, diff: Integer;
+  sh: Int64;
+begin
+  if FAutoRoute=false then exit;
+  AdjustCoordinates;
+  //pt1
+  case FStartDireciton of
+    pdVertical: begin
+      TPointCollectionItem(PointCoordinates.Items[1]).FX := TPointCollectionItem(PointCoordinates.Items[0]).FX;
+      TPointCollectionItem(PointCoordinates.Items[1]).FY := TPointCollectionItem(PointCoordinates.Items[0]).FY+FAutoStartPointOffset;
+    end;
+    pdHorizontal: begin
+      TPointCollectionItem(PointCoordinates.Items[1]).FX := TPointCollectionItem(PointCoordinates.Items[0]).FX+FAutoStartPointOffset;
+      TPointCollectionItem(PointCoordinates.Items[1]).FY := TPointCollectionItem(PointCoordinates.Items[0]).FY;
+    end;
+  end;
+
+  h:=PointCoordinates.Count-1;
+  //pt4
+  case FEndDireciton of
+    pdVertical: begin
+      TPointCollectionItem(PointCoordinates.Items[h-1]).FX := TPointCollectionItem(PointCoordinates.Items[h]).FX;
+      TPointCollectionItem(PointCoordinates.Items[h-1]).FY := TPointCollectionItem(PointCoordinates.Items[h]).FY+FAutoEndPointOffset;
+    end;
+    pdHorizontal: begin
+      TPointCollectionItem(PointCoordinates.Items[h-1]).FX := TPointCollectionItem(PointCoordinates.Items[h]).FX+FAutoEndPointOffset;
+      TPointCollectionItem(PointCoordinates.Items[h-1]).FY := TPointCollectionItem(PointCoordinates.Items[h]).FY;
+    end;
+  end;
+
+  p1y := TPointCollectionItem(PointCoordinates.Items[1]).FY;
+  p5y := TPointCollectionItem(PointCoordinates.Items[h]).FY;
+  diff := p5y - p1y;
+  sh := trunc(diff * (FAutoHeightDistribution/10000));
+
+  //pt2
+  TPointCollectionItem(PointCoordinates.Items[2]).FX := TPointCollectionItem(PointCoordinates.Items[1]).FX;
+  TPointCollectionItem(PointCoordinates.Items[2]).FY := TPointCollectionItem(PointCoordinates.Items[1]).FY + sh;
+
+  //pt3 //NOTE: Must be tested.
+  TPointCollectionItem(PointCoordinates.Items[h-2]).FX := TPointCollectionItem(PointCoordinates.Items[h-1]).FX;
+  TPointCollectionItem(PointCoordinates.Items[h-2]).FY := TPointCollectionItem(PointCoordinates.Items[2]).FY;
+
+  //TPointCollectionItem(PointCoordinates.Items[3]).FX := TPointCollectionItem(PointCoordinates.Items[2]).FX;
+  //TPointCollectionItem(PointCoordinates.Items[3]).FY := TPointCollectionItem(PointCoordinates.Items[h-2]).FY;
+  OptimizeDraw;
 end;
 
 procedure THMIFlowPolyline.DoLineColorChange;
@@ -313,6 +455,7 @@ constructor THMIFlowPolyline.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FFlowSources:=THMIFlowSourceCollection.Create(Self);
+  FAutoHeightDistribution:=5000;
 end;
 
 destructor THMIFlowPolyline.Destroy;
@@ -339,6 +482,32 @@ begin
         THMIFlowSourceCollectionItem(FFlowSources.Items[i]).FHMIObject:=nil;
       end;
   end;
+end;
+
+procedure THMIFlowPolyline.UpdateEndPoints(EndPoint: Boolean;
+  ScreenPoint: TPoint);
+var
+  pt: Integer = 0;
+  p: TPoint;
+begin
+
+  if EndPoint then
+    FEndP:=ScreenPoint
+  else
+    FStartP:=ScreenPoint;
+
+  if FAutoRoute=false then
+    exit;
+
+  AdjustCoordinates;
+  if EndPoint then
+    pt:=PointCoordinates.Count-1;
+
+  p:=ScreenToControl(ScreenPoint);
+  TPointCollectionItem(PointCoordinates.Items[pt]).FX:=p.X;
+  TPointCollectionItem(PointCoordinates.Items[pt]).FY:=p.Y;
+
+  RecalculateMidPoints;
 end;
 
 { THMIFlowObjectCollection }

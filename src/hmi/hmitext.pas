@@ -203,7 +203,7 @@ end;
 
 procedure THMIText.TagChangeCallBack(Sender:TObject);
 begin
-  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+  if (([csLoading,csReading]*ComponentState)=[]) and (Application.Flags*[AppDoNotCallAsyncQueue]=[]) then
     Application.QueueAsyncCall(@RefreshText,0);
 end;
 
