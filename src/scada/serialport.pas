@@ -17,7 +17,7 @@ interface
 uses
 
   commtypes, CommPort, SysUtils, Classes,
-  {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)} Windows,{$IFEND}
+  {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)} Registry, Windows,{$IFEND}
   {$IFDEF UNIX} {$IFNDEF DARWIN}Serial, {$ENDIF} Unix, BaseUnix, termio, {$ENDIF}
   DateUtils;
 
@@ -196,7 +196,10 @@ type
     {$IF defined(WIN32) or defined(WIN64)}
     function MakeDCBString:AnsiString;
     {$IFEND}
-    function COMExist(v:AnsiString):Boolean;
+    //function COMExist(v:AnsiString):Boolean;
+	{$IFDEF MSWINDOWS}
+    function  GetPortas: string;
+    {$ENDIF}
   protected
     procedure Read(Packet:PIOPacket); override;
     procedure Write(Packet:PIOPacket); override;
@@ -387,6 +390,8 @@ type
     property ReadRetries;
     //: @seealso TCommPortDriver.WriteRetries
     property WriteRetries;
+	// tornar publica para o usuario saber e tomar medida quando desconectado
+	function COMExist(v:AnsiString):Boolean;
   end;
 
 
@@ -436,6 +441,9 @@ function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
 begin
   result := (((DeviceType) shl 16) or ((Access) shl 14) or ((Func) shl 2) or (Method));
 end;
+var
+ // copia a porta COM ajustada no Serialport.pas (SetCOMPort)
+ copiar_porta : ansistring;
 {$IFEND}
 
 
@@ -473,28 +481,28 @@ var
   lidos:Cardinal;
   tentativas:Cardinal;
 begin
-  tentativas := 0;
+  // somente se a porta com existe
+     if COMExist(copiar_porta) then
+     begin
+          tentativas := 0;
 
-  Packet^.Received:=0;
-  While (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do begin
-
-    ResetEvent(POverlapped.hEvent);
-    POverlapped.Offset := 0;
-    POverlapped.OffsetHigh := 0;
-
-    ReadFile(PPortHandle, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, lidos, @POverlapped);
-
-    WaitForSingleObject(POverlapped.hEvent, PTimeout);
-
-    // Foi mudado para FALSE para não travar em caso de desligamento do conversor USB
-    // para maiores detalhes
-    // https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresult
-    // procure pelo parametro "bWait"
-    GetOverlappedResult(PPortHandle,POverlapped,lidos,false);
-
-    Packet^.Received := Packet^.Received + lidos;
-    Inc(tentativas);
-  end;
+          Packet^.Received:=0;
+          While (Packet^.Received<Packet^.ToRead) and (tentativas<Packet^.ReadRetries) do
+          begin
+               ResetEvent(POverlapped.hEvent);
+               POverlapped.Offset := 0;
+               POverlapped.OffsetHigh := 0;
+               ReadFile(PPortHandle, Packet^.BufferToRead[Packet^.Received], Packet^.ToRead-Packet^.Received, lidos, @POverlapped);
+               WaitForSingleObject(POverlapped.hEvent, PTimeout);
+               // Foi mudado para FALSE para não travar em caso de desligamento do conversor USB
+    		   // para maiores detalhes
+    		   // https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresult
+    		   // procure pelo parametro "bWait"
+               GetOverlappedResult(PPortHandle,POverlapped,lidos,false);
+               Packet^.Received := Packet^.Received + lidos;
+               Inc(tentativas);
+          end;
+     end;
 {$IFEND}
 
 {$IFDEF UNIX}
@@ -562,26 +570,33 @@ procedure TSerialPortDriver.Write(Packet:PIOPacket);
 var
   escritos:Cardinal;
 begin
-  ResetEvent(POverlapped.hEvent);
-  POverlapped.Offset := 0;
-  POverlapped.OffsetHigh := 0;
-  if not WriteFile(PPortHandle, Packet^.BufferToWrite[0], Packet^.ToWrite, Packet^.Written, @POverlapped) then begin
-    case WaitForSingleObject(POverlapped.hEvent, PTimeout) of
-      WAIT_OBJECT_0:
-        begin
-          Packet^.WriteIOResult := iorOK;
-          GetOverlappedResult(PPortHandle,POverlapped,escritos,true);
-          Packet^.Written := escritos;
-        end;
-      else begin
-        Packet^.WriteIOResult := iorTimeOut;
-        if PClearBufOnErr then
-           InternalClearALLBuffers;
-      end;
-    end;
-  end else begin
-    Packet^.WriteIOResult := iorOK;
-  end;
+  // somente se a porta com existe
+     if COMExist(copiar_porta) then
+     begin
+          ResetEvent(POverlapped.hEvent);
+          POverlapped.Offset := 0;
+          POverlapped.OffsetHigh := 0;
+          if not WriteFile(PPortHandle, Packet^.BufferToWrite[0], Packet^.ToWrite, Packet^.Written, @POverlapped) then
+          begin
+               case WaitForSingleObject(POverlapped.hEvent, PTimeout) of  WAIT_OBJECT_0:
+               begin
+                    Packet^.WriteIOResult := iorOK;
+                    GetOverlappedResult(PPortHandle,POverlapped,escritos,true);
+                    Packet^.Written := escritos;
+               end;
+               else
+               begin
+                    Packet^.WriteIOResult := iorTimeOut;
+                    if PClearBufOnErr then
+                    InternalClearALLBuffers;
+               end;
+               end;
+          end
+          else
+          begin
+               Packet^.WriteIOResult := iorOK;
+          end;
+     end;
 {$IFEND}
 {$IFDEF UNIX}
 var
@@ -653,13 +668,14 @@ begin
   ComTimeouts.WriteTotalTimeoutMultiplier := 2;
   ComTimeouts.WriteTotalTimeoutConstant := (PTimeout div 4);
 
-  if not COMExist(PPortName) then
-    goto erro1;
+  // desabilitado pois impedia a reconexão da porta serial após evendo de desconexão
+  //if not COMExist(PPortName) then
+    //goto erro1;
 
   PPortHandle := CreateFile(PChar('\\.\'+ PPortName), GENERIC_READ or GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH or FILE_FLAG_OVERLAPPED, 0);
   if PPortHandle=INVALID_HANDLE_VALUE then begin
     RefreshLastOSError;
-    goto erro1;
+    //goto erro1;
   end;
 
   //seta o tamanho dos buffer se leitura e escrita
@@ -980,14 +996,16 @@ begin
     PPortNameLoaded:=v;
     Exit;
   end;
-
+  {$IF defined(WIN32) or defined(WIN64)}
+  copiar_porta := V;
+  {$IFEND}
   if COMExist(v) then
     PPortName := v
   else
     if (v='(none)') or (v='') then
-       PPortName:=''
-    else
-       raise Exception.Create(v+': '+SserialPortNotExist);
+       PPortName:='';
+    //else
+       //raise Exception.Create(v+': '+SserialPortNotExist);
 end;
 
 function TSerialPortDriver.COMExist(v:AnsiString):Boolean;
@@ -995,13 +1013,33 @@ function TSerialPortDriver.COMExist(v:AnsiString):Boolean;
 var
   dcbstring:AnsiString;
   d:DCB;
+  str: Tstringlist;
+  Y : integer;
+  N : integer;
 begin
   if PAcceptAnyPortName then begin
     Result:=true;
     exit;
   end;
-  dcbstring := v+': baud=1200 parity=N data=8 stop=1';
-  Result := BuildCommDCB(PChar(dcbstring),d)
+  //dcbstring := v+': baud=1200 parity=N data=8 stop=1';
+  //Result := BuildCommDCB(PChar(dcbstring),d)
+  
+  { com essa abordagem é possive listar as portas COM acima de 10 e tambem
+  portas Virtuais que tem nomes diferentes " qualquer nome ele lista"}
+
+  // cria uma lista de portas "ativas" do sistema
+  str:= Tstringlist.Create;
+  // copia as portas da função Get portas
+  str.CommaText:= GetPortas ;
+  // faz uma contagem de portas ativas
+  Y := 0;
+  for N:=0 to (str.Count - 1) do begin
+     if(v = str.ValueFromIndex[N]) then y:= 1;
+  end;
+  if( Y = 1 ) then result := true;
+  if( Y = 0 ) then result := false;
+  // libera a lista
+  str.Free;
 {$IFEND}
 {$IF defined(WINCE)}
 begin
@@ -1321,5 +1359,46 @@ begin
   Result:=inherited getPortId;
   {TODO}
 end;
+
+// somente para windows , pega o valor diretamente no registro do windows
+// a vantagem é que é possivel listar portas acima de COM9 e tambem portas Virtuais
+// que tenha nomes diferentes (qualquer nome)
+{$IFDEF MSWINDOWS}
+function TSerialPortDriver.GetPortas: string;
+var
+  Registro: TRegistry;
+  lista: TStringList;
+  valor: TStringList;
+  numero: integer;
+begin
+     // cria lista de portas
+     lista := TStringList.Create;
+     // cria lista de valores
+     valor := TStringList.Create;
+     // cria os dados de registro a serem lidos
+     Registro := TRegistry.Create;
+     try
+         // especifica o caminho do registro
+         Registro.RootKey := HKEY_LOCAL_MACHINE;
+         // abre o caminho do registro onde tem as portas seriais
+         Registro.OpenKeyReadOnly('\HARDWARE\DEVICEMAP\SERIALCOMM');
+         // recolhe valores do registro  ( dados no registro)
+         Registro.GetValueNames(Lista);
+         // conforme a quantidade de portas que estavam no registro
+         for numero := 0 to lista.Count - 1 do
+         // adicionar no valor os dados recolhido na string
+         valor.Add(PChar(Registro.ReadString(lista[numero])));
+         // o valor retornado separados em ponto e virgula
+         Result := valor.CommaText;
+  finally
+        // finaliza a lista de registro
+        Registro.Free;
+        // finaliza o uso da lista
+        lista.Free;
+        // finaliza o uso da lista de valores
+        valor.Free;
+  end;
+end;
+{$ENDIF}
 
 end.
