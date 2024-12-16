@@ -997,8 +997,8 @@ end;
 destructor TDelayedAsyncCaller.Destroy;
 begin
   Terminate;
-  FreeAndNil(aSomethingToDoEvt);
   WaitForLoopTerminates;
+  FreeAndNil(aSomethingToDoEvt);
   FreeAndNil(msgQueue);
   RemoveQueuedEvents(Self);
   inherited Destroy;
