@@ -294,6 +294,7 @@ var
 begin
   ReconnectTimerRunning:=false;
   ReconnectStarted:=now;
+  while FEnd.ResetEvent=false do ;
   while not Terminated do begin
     while FMessageQueue.PeekMessage(msg,0,100,true) and not Terminated do begin
       Ok:=false;
