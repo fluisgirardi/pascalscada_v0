@@ -434,8 +434,10 @@ begin
       found:=true;
     end;
 
+  {$IFNDEF WINDOWS}
   if not found then
     writeln('FIX-ME: Control not found! ',{$i %FILE%},':',{$i %LINE%});
+  {$ENDIF}
 end;
 
 procedure  TControlSecurityManager.UpdateControls;

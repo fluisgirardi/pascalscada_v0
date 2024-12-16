@@ -1013,6 +1013,9 @@ begin
   if Assigned(FInputFlowPolyline) then
     (FInputFlowPolyline as IColorChangeNotification).RemoveNotifyCallback(Self as IColorChangeNotification);
 
+  if Assigned(FPLCTag) then
+    FPLCTag.RemoveAllHandlersFromObject(Self);
+
   Application.RemoveAsyncCalls(Self);
 
   FreeAndNil(FFlowOutputs);
