@@ -884,7 +884,10 @@ destructor TAnimationZone.Destroy;
 var
   i: Integer;
 begin
-  for i:=0 to High(FReferencedBy) do begin
+  if Assigned(FBlinkWith) then
+     FBlinkWith.RemReference(Self);
+
+  for i:=High(FReferencedBy) downto 0 do begin
     FReferencedBy[i].RemoveBlinkZone;
     FReferencedBy[i].RemReference(Self);
   end;

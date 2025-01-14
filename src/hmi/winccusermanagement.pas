@@ -4,14 +4,16 @@ unit WinCCUserManagement;
 interface
 
 uses
-  Classes, sysutils, BasicUserManagement, windows, ExtCtrls;
+  Classes, sysutils, BasicUserManagement, windows, ExtCtrls, ctypes;
+
+{$ALIGN 1}
 
 type
   TPWRTLogin                   = function(monitor:AnsiChar)                                 :Boolean;  stdcall;
   TPWRTLogout                  = function()                                                 :Boolean;  stdcall;
   TPWRTGetCurrentUser          = function(Buffer:PAnsiChar; bufsize:LongInt)                :Boolean;  stdcall;
   TPWRTGetLoginPriority        = function()                                                 :Cardinal; stdcall;
-  TPWRTPermissionToString      = function(perm:Cardinal; permstr:PAnsiChar; bufsize:LongInt):Boolean;  stdcall;
+  TPWRTPermissionToString      = function(perm:clong; permstr:LPSTR;     bufsize:cint)      :Boolean;  stdcall;
   TPWRTCheckPermission         = function(permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
   TPWRTCheckPermissionOnArea   = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
   TPWRTCheckPermissionOnAreaID = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
@@ -140,7 +142,7 @@ begin
   PWRTLogout                 :=TPWRTLogout(GetProcAddress(hUseAdmin,'PWRTLogout'));
   PWRTGetCurrentUser         :=TPWRTGetCurrentUser(GetProcAddress(hUseAdmin,'PWRTGetCurrentUser'));
   PWRTGetLoginPriority       :=TPWRTGetLoginPriority(GetProcAddress(hUseAdmin,'PWRTGetLoginPriority'));
-  PWRTPermissionToString     :=TPWRTPermissionToString(GetProcAddress(hUseAdmin,'PWRTPermissionToString'));
+  PWRTPermissionToString     :=TPWRTPermissionToString(GetProcAddress(hUseAdmin,'PWRTPermissionToStringA'));
   PWRTCheckPermission        :=TPWRTCheckPermission(GetProcAddress(hUseAdmin,'PWRTCheckPermission'));
   PWRTCheckPermissionOnArea  :=TPWRTCheckPermissionOnArea(GetProcAddress(hUseAdmin,'PWRTCheckPermissionOnArea'));
   PWRTCheckPermissionOnAreaID:=TPWRTCheckPermissionOnAreaID(GetProcAddress(hUseAdmin,'PWRTCheckPermissionOnAreaID'));
@@ -338,6 +340,7 @@ function    TWinCCUserManagement.GetRegisteredAccessCodes:TStringList;
 var
   buffer1:PAnsiChar;
   c:LongInt;
+  auxStr:String;
 begin
   if not fUseAdminLoaded then LoadUseAdmin;
 
@@ -346,23 +349,27 @@ begin
   if fAuthorizationCache=nil then begin
 
     buffer1:=GetMemory(512);
+    try
+      Result:=TStringList.Create;
+      for c:=1 to 1100 do begin
+        buffer1[0]:=#0;
+        PWRTPermissionToString(c,buffer1,510);
 
-    Result:=TStringList.Create;
-    for c:=1 to 1100 do begin
-      buffer1[0]:=#0;
-      PWRTPermissionToString(c,buffer1,510);
+        if strcomp(buffer1,'')<>0 then begin
+          auxStr:=buffer1;
+          {$IFDEF DELPHI2009_UP}
+          Result.AddObject(auxStr,TObject(Pointer(c)));
+          {$ELSE}
+          Result.AddObject(buffer1,TObject(Pointer(PtrUInt(c))));
+          {$ENDIF}
+        end;
 
-      if strcomp(buffer1,'')<>0 then begin
-        {$IFDEF DELPHI2009_UP}
-        Result.AddObject((buffer1),TObject(Pointer(c)));
-        {$ELSE}
-        Result.AddObject(buffer1,TObject(Pointer(PtrUInt(c))));
-        {$ENDIF}
       end;
+      fAuthorizationCache:=TStringList.Create;
+      fAuthorizationCache.Assign(Result);
+    finally
+      Freememory(buffer1);
     end;
-    fAuthorizationCache:=TStringList.Create;
-    fAuthorizationCache.Assign(Result);
-    FreeMem(buffer1);
   end else begin
     Result:=TStringList.Create;
     Result.Assign(fAuthorizationCache);
