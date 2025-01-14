@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement, PLCStruct, Tag,
   bitmappertagassistant, blockstructtagassistant, ProtocolDriver,
-  PLCNumber, comptagedt, fpexprpars,
+  PLCNumber, plcstructstring, comptagedt, fpexprpars,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -62,6 +62,10 @@ type
     function  GetValue: AnsiString; override;
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const Value: AnsiString); override;
+    // somente para windows
+    {$IFDEF MSWINDOWS}
+    function  GetPortas: string;
+    {$ENDIF}
   end;
 
   {$IFDEF PORTUGUES}
@@ -97,6 +101,13 @@ type
 
   TTagAddressPropertyEditor = class(TIntegerExpressionPropertyEditor)
   protected
+    procedure RegisterExpressionVariables(const i: Integer;
+               var parser: TFPExpressionParser); override;
+  end;
+
+  { TWinControlBoundsEditor }
+
+  TWinControlBoundsEditor = class(TIntegerExpressionPropertyEditor)
     procedure RegisterExpressionVariables(const i: Integer;
                var parser: TFPExpressionParser); override;
   end;
@@ -210,7 +221,7 @@ type
 implementation
 
 uses PLCBlock, PLCTagNumber, PLCString, RtlConsts, FormEditingIntf,
-  Controls;
+  Controls {$IFDEF WINDOWS} , Registry{$ENDIF};
 
 procedure ChangeComponentTag(Sender: TObject);
 var
@@ -262,7 +273,25 @@ var
   c:LongInt;
   dcbstring, comname:AnsiString;
   d:DCB;
+  str: Tstringlist;
 begin
+{ com essa abordagem é possive listar as portas COM acima de 10 e tambem
+  portas Virtuais que tem nomes diferentes " qualquer nome ele lista"}
+
+  // cria a primeira porta
+  Proc('(none)');
+  // cria uma lista de portas "ativas" do sistema
+  str:= Tstringlist.Create;
+  // copia as portas da função Get portas
+  str.CommaText:= GetPortas ;
+  // faz uma contagem de portas ativas
+  for c:=0 to (str.Count - 1) do begin
+     // transfere os valores para a listagem COMport
+     Proc(str.ValueFromIndex[c]);
+  end;
+  // libera a lista
+  str.Free;
+  {
   Proc('(none)');
   for c:=1 to 255 do begin
      comname := 'COM'+IntToStr(c);
@@ -270,6 +299,7 @@ begin
      if BuildCommDCB(PChar(dcbstring),d) then
         Proc(comname);
   end;
+}
 {$IFEND}
 {$IFDEF UNIX}
 var
@@ -389,7 +419,7 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 function  TElementIndexPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
-   if GetComponent(0) is TPLCBlockElement then
+   if (GetComponent(0) is TPLCBlockElement) or (GetComponent(0) is TPLCStructString)  then
       Result := [paValueList, paMultiSelect];
 end;
 
@@ -405,6 +435,13 @@ begin
       //to avoid circular references.
       if (lowercase(GetPropInfo^.Name)<>'tag') then
         parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCBlockElement).Tag);
+    end;
+
+    if (GetComponent(i) is TPLCStructString) then begin
+      //register only if the property is not being edited,
+      //to avoid circular references.
+      if (lowercase(GetPropInfo^.Name)<>'tag') then
+        parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCStructString).Tag);
     end;
   end;
 end;
@@ -524,6 +561,40 @@ begin
 
       if (propertyName<>'tag') then
         parser.Identifiers.AddIntegerVariable('Tag', (GetComponent(i) as TPLCString).Tag);
+    end;
+  end;
+end;
+
+{ TWinControlBoundsEditor }
+
+procedure TWinControlBoundsEditor.RegisterExpressionVariables(const i: Integer;
+  var parser: TFPExpressionParser);
+var
+  propertyName: String;
+begin
+  if assigned(parser) then begin
+    //unregister all possible registered variables.
+    parser.Identifiers.Clear;
+
+    propertyName:=lowercase(GetPropInfo^.Name);
+
+    if (GetComponent(i) is TWinControl) then begin
+      //register only if the property is not being edited,
+      //to avoid circular references.
+      if (propertyName<>'width') then
+        parser.Identifiers.AddIntegerVariable('width', (GetComponent(i) as TWinControl).Width);
+
+      if (propertyName<>'height') then
+        parser.Identifiers.AddIntegerVariable('height', (GetComponent(i) as TWinControl).Height);
+
+      if (propertyName<>'left') then
+        parser.Identifiers.AddIntegerVariable('left', (GetComponent(i) as TWinControl).Left);
+
+      if (propertyName<>'top') then
+        parser.Identifiers.AddIntegerVariable('top', (GetComponent(i) as TWinControl).Top);
+
+      if (propertyName<>'tag') then
+              parser.Identifiers.AddIntegerVariable('tag', (GetComponent(i) as TWinControl).Tag);
     end;
   end;
 end;
@@ -708,5 +779,45 @@ begin
   OpenElementMapper();
 end;
 
+// somente para windows , pega o valor diretamente no registro do windows
+// a vantagem é que é possivel listar portas acimma de COM9 e tambem portas Virtuais
+// que tenha nomes diferentes (qualquer nome)
+{$IFDEF MSWINDOWS}
+function TPortPropertyEditor.GetPortas: string;
+var
+  Registro: TRegistry;
+  lista: TStringList;
+  valor: TStringList;
+  numero: integer;
+begin
+  // cria lista de portas
+  lista := TStringList.Create;
+  // cria lista de valores
+  valor := TStringList.Create;
+  // cria os dados de registro a serem lidos
+  Registro := TRegistry.Create;
+  try
+    // especifica o caminho do registro
+    Registro.RootKey := HKEY_LOCAL_MACHINE;
+    // abre o caminho do registro onde tem as portas seriais
+    Registro.OpenKeyReadOnly('\HARDWARE\DEVICEMAP\SERIALCOMM');
+    // recolhe valores do registro  ( dados no registro)
+    Registro.GetValueNames(Lista);
+    // conforme a quantidade de portas que estavam no registro
+    for numero := 0 to lista.Count - 1 do
+    // adicionar no valor os dados recolhido na string
+    valor.Add(PChar(Registro.ReadString(lista[numero])));
+    // o valor retornado separados em ponto e virgula
+    Result := valor.CommaText;
+  finally
+     // finaliza a lista de registro
+     Registro.Free;
+     // finaliza o uso da lista
+     lista.Free;
+     // finaliza o uso da lista de valores
+     valor.Free;
+  end;
+end;
+{$ENDIF}
 end.
 
