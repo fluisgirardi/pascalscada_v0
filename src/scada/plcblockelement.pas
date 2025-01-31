@@ -254,9 +254,10 @@ end;
 
 procedure TPLCBlockElement.SetValueRaw(aValue:Double);
 begin
-  if Assigned(PBlock) then
-    PBlock.ValueRaw[PIndex] := aValue
-  else
+  if Assigned(PBlock) then begin
+    PBlock.ValueRaw[PIndex] := aValue;
+    PValueRaw := aValue;
+  end else
     if PValueRaw<>Value then begin
       PValueRaw:=Value;
       NotifyChange;
@@ -266,7 +267,9 @@ end;
 function TPLCBlockElement.ScanRead: Int64;
 begin
   if Assigned(PBlock) then
-    Result:=PBlock.ScanRead;
+    Result:=PBlock.ScanRead
+  else
+    Result:=-1;
 end;
 
 function TPLCBlockElement.ScanWrite(Values: TArrayOfDouble; Count,
