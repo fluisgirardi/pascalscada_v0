@@ -20,6 +20,7 @@ type
     iReqType,
     iStartAddress,
     iSize,
+    NextUpdtInMs,
     UpdateRate:LongInt;
     Read,
     NeedUpdate:Boolean;

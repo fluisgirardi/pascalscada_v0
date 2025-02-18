@@ -64,6 +64,8 @@ type
 
   TISOTCPDriver = class(TSiemensProtocolFamily)
   private
+    FISOConnType: TISOTCPConnType;
+    procedure SetISOConnType(AValue: TISOTCPConnType);
     procedure SetPLCRack(AValue: longint);
     procedure SetPLCSlot(AValue: LongInt);
     procedure SetPLCStation(AValue: LongInt);
@@ -139,6 +141,19 @@ type
     }
     {$ENDIF}
     property ConnectionWay:TISOTCPConnectionWay read FConnectionWay write SetISOConnectionWay;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Define o tipo de conexão com o CLP.
+    @seealso(TISOTCPConnType)
+    }
+    {$ELSE}
+    {:
+    Defines connection type to the PLC.
+    @seealso(TISOTCPConnType)
+    }
+    {$ENDIF}
+    Property ISOTCPConnType:TISOTCPConnType read FISOConnType write SetISOConnType default ctOP;
 
     {$IFDEF PORTUGUES}
     {:
@@ -243,6 +258,7 @@ begin
 
   PDUIncoming:=7;
   PDUOutgoing:=7;
+  FISOConnType:=ctOP;
 end;
 
 procedure TISOTCPDriver.UpdatePLCAddress(Rack, Slot, Station: LongInt);
@@ -260,6 +276,7 @@ var
   res:LongInt;
   len:Cardinal;
   retries:LongInt;
+  ConnType:array[low(TISOTCPConnType)..high(TISOTCPConnType)] of byte = (1, 2, 3);
 begin
   CPU.Connected:=false;
   Result:=false;
@@ -282,8 +299,8 @@ begin
   msg[14] := ifthen(FConnectionWay=ISOTCP, 0, $57);    //'W',
   msg[15] := $C2;  // $C2,
   msg[16] := 2;
-  msg[17] := ifthen(FConnectionWay=ISOTCP, 2{1=PG, 2=OP, 3=S7 Basic Comm?}, $4D);
-  msg[18] := ifthen(FConnectionWay=ISOTCP, CPU.Slot or CPU.Rack shl 5,      $57);
+  msg[17] := ifthen(FConnectionWay=ISOTCP, ConnType[FISOConnType], $4D);
+  msg[18] := ifthen(FConnectionWay=ISOTCP, (CPU.Rack shl 5) or CPU.Slot,    $57);
   msg[19] := $C0;  // $C0,
   msg[20] := 1;    // 1,
   msg[21] := 9;    // 9;
@@ -507,6 +524,13 @@ begin
   Result:=inherited DoWrite(atagrec, Values, Sync);
 end;
 
+procedure TISOTCPDriver.SetISOConnType(AValue: TISOTCPConnType);
+begin
+  if FISOConnType=AValue then Exit;
+  FISOConnType:=AValue;
+  //TODO: reset the conection and stabilish it again using the new way.
+end;
+
 procedure TISOTCPDriver.SetPLCRack(AValue: longint);
 begin
   if FPLCRack=AValue then Exit;
@@ -594,7 +618,9 @@ end;
 
 procedure TISOTCPDriver.SetISOConnectionWay(NewISOConWay:TISOTCPConnectionWay);
 begin
+  if NewISOConWay = FConnectionWay then exit;
   FConnectionWay:=NewISOConWay;
+  //TODO: reset the conection and stabilish it again using the new way.
 end;
 
 function TISOTCPDriver.GetTagInfo(tagobj: TTag): TTagRec;

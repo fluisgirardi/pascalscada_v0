@@ -328,6 +328,13 @@ type
   {$ENDIF}
   TISOTCPConnectionWay = (ISOTCP,ISOTCP_VIA_CP243);
 
+  {$IFDEF PORTUGUES}
+  //: Tipo de conexão com o CLP
+  {$ELSE}
+  //: PLC connection type
+  {$ENDIF}
+  TISOTCPConnType = (ctPG, ctOP, ctBasic);
+
 const
   {$IFDEF PORTUGUES}
   //: Identifica a area de informações do S7-200

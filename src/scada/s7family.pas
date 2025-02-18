@@ -36,7 +36,17 @@ uses
 type
   TS7ScanReqList = specialize TFPGList<TS7ScanReqItem>;
 
+  //TODO Documentation
   TS7PDUSize = (pduAuto, pdu240, pdu480, pdu960);
+
+  //TODO Documentation
+  TS7Protection = record
+    sch_schal:Byte; //Protection level set with the mode selector.
+    sch_par:Byte;   //Password level, 0 : no password
+    sch_rel:Byte;   //Valid protection level of the CPU
+    bart_sch:Byte;  //Mode selector setting (1:RUN, 2:RUN-P, 3:STOP, 4:MRES, 0:undefined or cannot be determined)
+    anl_sch:Byte;   //Startup switch setting (1:CRST, 2:WRST, 0:undefined, does not exist of cannot be determined)
+  end;
 
   {$IFDEF PORTUGUES}
   {: Familia de drivers Siemens S7. Baseado na biblioteca LibNodave
@@ -854,9 +864,9 @@ destructor TSiemensProtocolFamily.Destroy;
 var
   c: Integer;
 begin
+  inherited Destroy; //stops all drivers first.
   for c:=0 to High(FPLCs) do
     DeletePLC(c);
-  inherited Destroy;
 end;
 
 function  TSiemensProtocolFamily.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
@@ -1901,6 +1911,7 @@ end;
 procedure TSiemensProtocolFamily.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 var
   plc, db, block, retries:LongInt;
+  FMaxUpdtRate:Integer = 0;
   msgout, msgin:BYTES;
   initialized:Boolean;
   ReqList:TS7ReqList;
@@ -1914,7 +1925,7 @@ var
   ivalues:TArrayOfDouble;
   EntireTagList: TS7ScanReqList;
   ReqItem, ReqItem2:TS7ScanReqItem;
-  c, c2: Integer;
+  c, c2, FNextReadIn: Integer;
   started: TDateTime;
 
   procedure pkg_initialized;
@@ -2025,6 +2036,10 @@ var
     info.UpdateRate    :=UpdateRate;
     info.NeedUpdate    :=NeedUpdate;
     info.Read          :=false;
+    info.NextUpdtInMs  := MilliSecondsBetween(now, LastUpdate); //just for debugging
+    info.NextUpdtInMs  := max(0, UpdateRate-info.NextUpdtInMs);
+    if UpdateRate>0 then
+      FMaxUpdtRate:=max(FMaxUpdtRate, UpdateRate);
 
     EntireTagList.add(info);
   end;
@@ -2040,7 +2055,7 @@ begin
     exit;
   end;
 
-  NeedSleep:=ifthen(Length(FPLCs)<=0,500,-1);
+  NeedSleep:=ifthen(Length(FPLCs)<=0,500,-10);
 
   EntireTagList:=TS7ScanReqList.Create;
   try
@@ -2216,13 +2231,17 @@ begin
       started:=Now;
 
       RequestsPendding:=false;
+      FNextReadIn:=$7FFFFFFF;
       for c:=0 to EntireTagList.Count-1 do begin
         ReqItem:=EntireTagList.Items[c];
         //if tag was read on a previous PDU fill, go to next...
         if ReqItem.Read then continue;
 
         //if ReadSomethingAlways is disabled and tag don't need to be updated, go to next.
-        if (PReadSomethingAlways=false) AND (ReqItem.NeedUpdate=false) then continue;
+        if (PReadSomethingAlways=false) AND (ReqItem.NeedUpdate=false) then begin
+          FNextReadIn := min(FNextReadIn, ReqItem.NextUpdtInMs);
+          continue;
+        end;
 
         if not AcceptThisRequest(FPLCs[ReqItem.iPLC], ReqItem.iSize) then begin
           for c2:=(c+1) to EntireTagList.Count-1 do begin
@@ -2237,6 +2256,7 @@ begin
           end;
           ReadQueuedRequests(FPLCs[ReqItem.iPLC]);
           Reset;
+          FNextReadIn:=0; //IO acts as a sleep
           Break;
           if ReqItem.NeedUpdate=false then exit;
         end;
@@ -2254,6 +2274,13 @@ begin
       EntireTagList.Clear;
     end;
   finally
+    if FNextReadIn<>$7fffffff then begin
+      NeedSleep:=min(FMaxUpdtRate, FNextReadIn)-1; //sleep and wakeup in X-1 ms
+    end;
+
+    if (PReadSomethingAlways) then
+      NeedSleep:=-10; //do not sleep
+
     FreeAndNil(EntireTagList);
   end;
 
@@ -2783,6 +2810,201 @@ begin
   inc(inptr, idx);
   Move(values[0],inptr^,Length(values));
 end;
+
+{
+
+public int ReadSZL(int ID, int Index, ref S7SZL SZL, ref int Size)
+{
+	int Length;
+	int DataSZL;
+	int Offset = 0;
+	bool Done = false;
+	bool First = true;
+	byte Seq_in = 0x00;
+	ushort Seq_out = 0x0000;
+
+	_LastError = 0;
+	Time_ms = 0;
+	int Elapsed = Environment.TickCount;
+	SZL.Header.LENTHDR = 0;
+
+	do
+	{
+		if (First)
+		{
+			S7.SetWordAt(S7_SZL_FIRST, 11, ++Seq_out);
+			S7.SetWordAt(S7_SZL_FIRST, 29, (ushort)ID);
+			S7.SetWordAt(S7_SZL_FIRST, 31, (ushort)Index);
+			SendPacket(S7_SZL_FIRST);
+		}
+		else
+		{
+			S7.SetWordAt(S7_SZL_NEXT, 11, ++Seq_out);
+			PDU[24] = (byte)Seq_in;
+			SendPacket(S7_SZL_NEXT);
+		}
+		if (_LastError != 0)
+			return _LastError;
+
+		Length = RecvIsoPacket();
+		if (_LastError == 0)
+		{
+			if (First)
+			{
+				if (Length > 32) // the minimum expected
+				{
+					if ((S7.GetWordAt(PDU, 27) == 0) && (PDU[29] == (byte)0xFF))
+					{
+						// Gets Amount of this slice
+						DataSZL = S7.GetWordAt(PDU, 31) - 8; // Skips extra params (ID, Index ...)
+						Done = PDU[26] == 0x00;
+						Seq_in = (byte)PDU[24]; // Slice sequence
+						SZL.Header.LENTHDR = S7.GetWordAt(PDU, 37);
+						SZL.Header.N_DR = S7.GetWordAt(PDU, 39);
+						Array.Copy(PDU, 41, SZL.Data, Offset, DataSZL);
+						//                                SZL.Copy(PDU, 41, Offset, DataSZL);
+						Offset += DataSZL;
+						SZL.Header.LENTHDR += SZL.Header.LENTHDR;
+					}
+					else
+						_LastError = S7Consts.errCliInvalidPlcAnswer;
+				}
+				else
+					_LastError = S7Consts.errIsoInvalidPDU;
+			}
+			else
+			{
+				if (Length > 32) // the minimum expected
+				{
+					if ((S7.GetWordAt(PDU, 27) == 0) && (PDU[29] == (byte)0xFF))
+					{
+						// Gets Amount of this slice
+						DataSZL = S7.GetWordAt(PDU, 31);
+						Done = PDU[26] == 0x00;
+						Seq_in = (byte)PDU[24]; // Slice sequence
+						Array.Copy(PDU, 37, SZL.Data, Offset, DataSZL);
+						Offset += DataSZL;
+						SZL.Header.LENTHDR += SZL.Header.LENTHDR;
+					}
+					else
+						_LastError = S7Consts.errCliInvalidPlcAnswer;
+				}
+				else
+					_LastError = S7Consts.errIsoInvalidPDU;
+			}
+		}
+		First = false;
+	}
+	while (!Done && (_LastError == 0));
+	if (_LastError == 0)
+	{
+		Size = SZL.Header.LENTHDR;
+		Time_ms = Environment.TickCount - Elapsed;
+	}
+	return _LastError;
+}
+
+function TSiemensProtocolFamily.SetSessionPassword(Password:String):Integer;
+{
+// S7 Set Session Password
+byte[] S7_SET_PWD = {
+	0x03, 0x00, 0x00, 0x25,
+	0x02, 0xf0, 0x80, 0x32,
+	0x07, 0x00, 0x00, 0x27,
+	0x00, 0x00, 0x08, 0x00,
+	0x0c, 0x00, 0x01, 0x12,
+	0x04, 0x11, 0x45, 0x01,
+	0x00, 0xff, 0x09, 0x00,
+	0x08,
+	// 8 Char Encoded Password
+	0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00
+};
+
+	byte[] pwd = { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
+	int Length;
+	_LastError = 0;
+	int Elapsed = Environment.TickCount;
+	// Encodes the Password
+	S7.SetCharsAt(pwd, 0, Password);
+	pwd[0] = (byte)(pwd[0] ^ 0x55);
+	pwd[1] = (byte)(pwd[1] ^ 0x55);
+	for (int c = 2; c < 8; c++)
+	{
+		pwd[c] = (byte)(pwd[c] ^ 0x55 ^ pwd[c - 2]);
+	}
+	Array.Copy(pwd, 0, S7_SET_PWD, 29, 8);
+	// Sends the telegrem
+	SendPacket(S7_SET_PWD);
+	if (_LastError == 0)
+	{
+		Length = RecvIsoPacket();
+		if (Length > 32) // the minimum expected
+		{
+			ushort Result = S7.GetWordAt(PDU, 27);
+			if (Result != 0)
+				_LastError = CpuError(Result);
+		}
+		else
+			_LastError = S7Consts.errIsoInvalidPDU;
+	}
+	if (_LastError == 0)
+		Time_ms = Environment.TickCount - Elapsed;
+	return _LastError;
+}
+
+function TSiemensProtocolFamily.ClearSessionPassword:integer;
+{
+
+// S7 Clear Session Password
+byte[] S7_CLR_PWD = {
+	0x03, 0x00, 0x00, 0x1d,
+	0x02, 0xf0, 0x80, 0x32,
+	0x07, 0x00, 0x00, 0x29,
+	0x00, 0x00, 0x08, 0x00,
+	0x04, 0x00, 0x01, 0x12,
+	0x04, 0x11, 0x45, 0x02,
+	0x00, 0x0a, 0x00, 0x00,
+	0x00
+};
+
+	int Length;
+	_LastError = 0;
+	int Elapsed = Environment.TickCount;
+	SendPacket(S7_CLR_PWD);
+	if (_LastError == 0)
+	{
+		Length = RecvIsoPacket();
+		if (Length > 30) // the minimum expected
+		{
+			ushort Result = S7.GetWordAt(PDU, 27);
+			if (Result != 0)
+				_LastError = CpuError(Result);
+		}
+		else
+			_LastError = S7Consts.errIsoInvalidPDU;
+	}
+	return _LastError;
+}
+
+function TSiemensProtocolFamily.GetProtection(out Protection:TS7Protection):Integer;
+begin
+	S7Client.S7SZL SZL = new S7Client.S7SZL();
+	int Size = 256;
+	SZL.Data = new byte[Size];
+	_LastError = ReadSZL(0x0232, 0x0004, ref SZL, ref Size);
+	if (_LastError == 0)
+	{
+		Protection.sch_schal = S7.GetWordAt(SZL.Data, 2);
+		Protection.sch_par = S7.GetWordAt(SZL.Data, 4);
+		Protection.sch_rel = S7.GetWordAt(SZL.Data, 6);
+		Protection.bart_sch = S7.GetWordAt(SZL.Data, 8);
+		Protection.anl_sch = S7.GetWordAt(SZL.Data, 10);
+	}
+	return _LastError;
+end;
+
+}
 
 var
   TagBuilderEditor:TOpenTagEditor = nil;
