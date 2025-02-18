@@ -41,6 +41,7 @@ type
 
   THMIProgressBar = class(THMIBasicControl, IHMIInterface)
   private
+    FBackgroundColor: TColor;
     FRegInSecMan:Boolean;
     FMax: Double;
     FMin: Double;
@@ -48,6 +49,7 @@ type
     FTag:TPLCTag;
     FRefreshPending:Boolean;
 
+    procedure SetBackgroundColor(AValue: TColor);
     procedure SetMax(AValue: Double);
     procedure SetMin(AValue: Double);
     procedure SetOrientation(AValue: TProgressBarOrientation);
@@ -100,6 +102,7 @@ type
     property Min: Double read FMin write SetMin;
     property Max: Double read FMax write SetMax;
     property Orientation: TProgressBarOrientation read FOrientation write SetOrientation default pbHorizontal;
+    property BackgroundColor:TColor read FBackgroundColor write SetBackgroundColor default clSilver;
     property Color: TColor read FBodyColor write SetBodyColor default clGreen;
     property Cursor;
     property Align;
@@ -123,6 +126,7 @@ begin
   end;
   FIsEnabled:=true;
   FBodyColor:=clGreen;
+  FBackgroundColor:=clSilver;
 end;
 
 destructor THMIProgressBar.Destroy;
@@ -167,37 +171,42 @@ end;
 procedure THMIProgressBar.DrawControl;
 var
   aux: Double;
+
+function ProgressNormalized:Double;
+begin
+  Result:=((Progress-FMin)/ifthen((FMax-FMin)=0,1,(FMax-FMin)));
+  if Result<0 then Result:=0;
+  if Result>1 then Result:=1;
+end;
+
 begin
   inherited DrawControl;
-  FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
+  FControlArea.CanvasBGRA.Brush.Color:= FBackgroundColor;
   FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
   FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
-
+  FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
 
   case Orientation of
     pbVertical: begin
-      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.CanvasBGRA.Brush.Color:= clDefault;
+      FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
       aux:=Height*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin)));
-      FControlArea.RectangleAntialias(0,
-                                      0,
-                                      Width-FBorderWidth,
-                                      Height*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin))),//Height/ifthen((FMax-FMin)*(FMax-Progress)=0,1,(FMax-FMin)*(FMax-Progress)),
+      FControlArea.RectangleAntialias(FBorderWidth,
+                                      Height-(Height*ProgressNormalized),
+                                      Width-(FBorderWidth*2),
+                                      Height-FBorderWidth,
                                       ColorToBGRA(FBorderColor),
                                       0,
-                                      ColorToBGRA(clSilver));
+                                      ColorToBGRA(FBodyColor));
 
     end;
 
     pbHorizontal: begin
-      FControlArea.CanvasBGRA.Brush.Color:= clSilver;
-      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.RectangleAntialias(0,//FBorderWidth/2,
-                                      0,//FBorderWidth/2,
-                                      Width*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin))),
-                                      height-FBorderWidth,
+      FControlArea.RectangleAntialias(FBorderWidth,
+                                      FBorderWidth,
+                                      Width*ProgressNormalized,
+                                      height-(FBorderWidth*2),
                                       ColorToBGRA(FBorderColor),
                                       0,
                                       ColorToBGRA(FBodyColor));
@@ -205,29 +214,28 @@ begin
     end;
 
     pbRightToLeft: begin
-      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
       FControlArea.CanvasBGRA.Brush.Color:= clDefault;
-      FControlArea.RectangleAntialias(FBorderWidth/2,//TODO
-                                      FBorderWidth/2,
-                                       width/ifthen((FMax-FMin)*(FMax-Progress)=0,1,(FMax-FMin)*(FMax-Progress)),
-                                       height-FBorderWidth,
+      FControlArea.RectangleAntialias(Width-(Width*ProgressNormalized),
+                                      FBorderWidth,
+                                      Width-FBorderWidth,
+                                      height-(FBorderWidth*2),
                                       ColorToBGRA(FBorderColor),
                                       0,
-                                      ColorToBGRA(clSilver));
+                                      ColorToBGRA(FBodyColor));
 
     end;
     pbTopDown: begin
-      FControlArea.CanvasBGRA.Brush.Color:= clSilver;
-      FControlArea.CanvasBGRA.Rectangle(0,0,Width,Height);
       FControlArea.CanvasBGRA.Pen.Width  :=0;
-      FControlArea.RectangleAntialias(FBorderWidth/2,//TODO
-                                      FBorderWidth/2,
-                                      width-FBorderWidth,
-                                      height/ifthen((FMax-FMin)*(Progress-FMin)=0,1,(FMax-FMin)*(Progress-FMin)),
+      FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
+      aux:=Height*((FMax-Progress)/ifthen((FMax-FMin)=0,1,(FMax-FMin)));
+      FControlArea.RectangleAntialias(FBorderWidth,
+                                      FBorderWidth,
+                                      Width-(FBorderWidth*2),
+                                      Height*ProgressNormalized,
                                       ColorToBGRA(FBorderColor),
                                       0,
-                                      ColorToBGRA(FBodycolor));
+                                      ColorToBGRA(FBodyColor));
 
     end;
   end;
@@ -252,6 +260,15 @@ begin
   if FMax=AValue then Exit;
   FMax:=AValue;
   InvalidateDraw;
+end;
+
+procedure THMIProgressBar.SetBackgroundColor(AValue: TColor);
+begin
+  if FBackgroundColor=AValue then Exit;
+  FBackgroundColor:=AValue;
+
+  if ComponentState*[csReading, csLoading]=[] then
+    InvalidateDraw;
 end;
 
 procedure THMIProgressBar.SetHMITag(t:TPLCTag);
