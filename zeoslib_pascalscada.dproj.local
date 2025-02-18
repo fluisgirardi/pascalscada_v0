@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<BorlandProject>
-	<Transactions>
-    <Transaction>2012/10/17 00:39:45.680.pas,C:\pascalscada\zeoslib\src\dbc\ZDbcInterbase6Metadata.pas=</Transaction>
-    <Transaction>2012/10/17 00:39:46.520.pas,C:\pascalscada\ZeosLib\src\dbc\ZDbcSqLite.pas=</Transaction>
-    <Transaction>2012/10/17 00:39:53.433.pas,C:\pascalscada\ZeosLib\src\core\ZVariables.pas=</Transaction>
-    <Transaction>2012/10/17 00:40:01.818.pas,C:\pascalscada\ZeosLib\src\component\ZSqlProcessor.pas=</Transaction>
-  </Transactions>
-</BorlandProject>
