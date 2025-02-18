@@ -18,14 +18,10 @@
       </Parsing>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
-        <Optimizations>
-          <OptimizationLevel Value="3"/>
-        </Optimizations>
       </CodeGeneration>
       <Linking>
         <Debugging>
-          <GenerateDebugInfo Value="False"/>
-          <UseLineInfoUnit Value="False"/>
+          <DebugInfoType Value="dsDwarf3"/>
         </Debugging>
       </Linking>
     </CompilerOptions>
@@ -33,7 +29,7 @@
 Built on top of LCL controls, added SCADA features like Tag link and security"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="49">
+    <Files Count="52">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -232,6 +228,18 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <Filename Value="src/hmi/chipcardreader.pas"/>
         <UnitName Value="ChipCardReader"/>
       </Item49>
+      <Item50>
+        <Filename Value="src/hmi/hmiflowimage.pas"/>
+        <UnitName Value="HMIFlowImage"/>
+      </Item50>
+      <Item51>
+        <Filename Value="src/hmi/hmifaceplatecontainer.pas"/>
+        <UnitName Value="hmifaceplatecontainer"/>
+      </Item51>
+      <Item52>
+        <Filename Value="src/hmi/hmifaceplatedsgn.pas"/>
+        <UnitName Value="hmifaceplatedsgn"/>
+      </Item52>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="7">

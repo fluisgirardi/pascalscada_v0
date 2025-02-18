@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="pascalscada_db"/>
     <Type Value="RunAndDesignTime"/>
@@ -19,16 +19,7 @@
       </Parsing>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
-        <Optimizations>
-          <OptimizationLevel Value="3"/>
-        </Optimizations>
       </CodeGeneration>
-      <Linking>
-        <Debugging>
-          <GenerateDebugInfo Value="False"/>
-          <UseLineInfoUnit Value="False"/>
-        </Debugging>
-      </Linking>
     </CompilerOptions>
     <Description Value="PascalSCADA database layer for historical, recipes and user management
 Built on top of ZeosLib"/>
@@ -57,18 +48,16 @@ Built on top of ZeosLib"/>
         <UnitName Value="hmidbconnection_dsgn"/>
       </Item5>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
       <Item1>
+        <PackageName Value="zcomponentdesign"/>
+      </Item1>
+      <Item2>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="6"/>
         <MinVersion Minor="7" Release="7" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
-      </Item1>
-      <Item2>
-        <PackageName Value="zcomponent"/>
-        <MaxVersion Major="7" Minor="1"/>
-        <MinVersion Major="7" Minor="1" Valid="True"/>
-        <DefaultFilename Value="zeoslib\packages\lazarus\zcomponent.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="FCL"/>

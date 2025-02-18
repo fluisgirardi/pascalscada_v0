@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="pascalscada_dsng"/>
     <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
@@ -12,9 +12,6 @@
       </SearchPaths>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
-        <Optimizations>
-          <OptimizationLevel Value="3"/>
-        </Optimizations>
       </CodeGeneration>
       <Linking>
         <Debugging>
@@ -84,6 +81,7 @@
         <UnitName Value="westasciitagassistant"/>
       </Item14>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="IDEIntf"/>

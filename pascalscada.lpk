@@ -20,15 +20,7 @@
       </Parsing>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
-        <Optimizations>
-          <OptimizationLevel Value="3"/>
-        </Optimizations>
       </CodeGeneration>
-      <Linking>
-        <Debugging>
-          <GenerateDebugInfo Value="False"/>
-        </Debugging>
-      </Linking>
       <Other>
         <WriteFPCLogo Value="False"/>
         <CompilerMessages>
@@ -39,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="43">
+    <Files Count="42">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -205,13 +197,9 @@
         <UnitName Value="plcstructstring"/>
       </Item41>
       <Item42>
-        <Filename Value="src\scada\redundancyctrl.pas"/>
-        <UnitName Value="redundancyctrl"/>
-      </Item42>
-      <Item43>
         <Filename Value="src\scada\socketserver.pas"/>
         <UnitName Value="socketserver"/>
-      </Item43>
+      </Item42>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

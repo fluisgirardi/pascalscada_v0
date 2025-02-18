@@ -19,7 +19,8 @@ uses
   HMIUpDown, HMIZones, ualfakeyboard, unumerickeyboard, usrmgnt_login, 
   HMI_Draw_Valves, hmi_draw_elevador, HMIBasicEletricMotor, hmi_flow_zones, 
   hmi_draw_flow_valve, hmi_draw_flow_pump, hmi_tachart_tag_source_list, 
-  tagstatuslist, ChipCardReader, LazarusPackageIntf;
+  tagstatuslist, ChipCardReader, HMIFlowImage, hmifaceplatecontainer, 
+  hmifaceplatedsgn, LazarusPackageIntf;
 
 implementation
 

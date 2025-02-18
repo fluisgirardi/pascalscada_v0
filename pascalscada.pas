@@ -15,7 +15,7 @@ uses
   PLCTagNumber, ProtocolDriver, ProtocolTypes, protscan, protscanupdate, 
   s7family, s7scanreq, S7Types, SerialPort, Tag, TagBit, TagBlock, 
   tagcollection, tcp_udpport, UserScale, ValueProcessor, WestASCIIDriver, 
-  numexprtag, plcstructstring, redundancyctrl, socketserver, LazarusPackageIntf;
+  numexprtag, plcstructstring, socketserver, LazarusPackageIntf;
 
 implementation
 
