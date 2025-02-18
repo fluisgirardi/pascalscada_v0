@@ -1622,7 +1622,7 @@ var
 
   bitaux:LongInt;
 
-  ProtocolOffSet, ProtocolSize:LongInt;
+  ProtocolOffSet, ProtocolSize, bit:LongInt;
 
   procedure ResetPointers;
   begin
@@ -1693,6 +1693,16 @@ begin
   //move the raw values to the work memory to don't loose data.
   valueidx:=0;
   case FProtocolTagType of
+    ptBit: begin
+      while valueidx<ProtocolSize do begin
+        bit:=(valueidx+ProtocolOffSet) mod 8;
+
+        PtrByteWalker^:=PtrByteWalker^ or (trunc(FRawProtocolValues[valueidx+ProtocolOffSet]) shl bit);
+        if bit>=7 then
+          Inc(PtrByteWalker);
+        inc(valueidx);
+      end;
+    end;
     ptByte, ptShortInt:
        while valueidx<ProtocolSize do begin
          PtrByteWalker^:=trunc(FRawProtocolValues[valueidx+ProtocolOffSet]) AND $FF;
