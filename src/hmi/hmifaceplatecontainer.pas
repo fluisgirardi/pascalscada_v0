@@ -15,40 +15,24 @@ type
   TFaceplateFrame = class(TFrame)
   private
     ffaceplatetag: TPLCStruct;
+    FOnLoaded: TNotifyEvent;
+    FTransparent: Boolean;
     procedure AddBlockDelayed(Data: PtrInt);
+    procedure setTransparent(AValue: Boolean);
   protected
     procedure AddDesignBlock;
     procedure setfaceplateTag(AValue: TPLCStruct);
     procedure Loaded; override;
-    procedure Updating; override;
-    procedure Update; override;
-    procedure AfterConstruction; override;
   public
     constructor Create(TheOwner: TComponent); override;
     function CreateInstance(TheOwner: TComponent):TFaceplateFrame;
   published
     property FaceplatePLCTag:TPLCStruct read ffaceplatetag write setfaceplateTag;
+    property OnLoaded:TNotifyEvent read FOnLoaded write FOnLoaded;
+    property Transparent:Boolean read FTransparent write setTransparent;
   end;
 
   TFaceplateFormClass = class of TFaceplateFrame;
-
-  { TFaceplateContainer }
-
-  TFaceplateContainer = class(TPanel)
-  private
-    ffaceplate: TFaceplateFrame;
-    FFaceplateInstance: TFaceplateFrame;
-    ffaceplatetag: TPLCStruct;
-    procedure setFaceplate(AValue: TFaceplateFrame);
-    procedure setfaceplateTag(AValue: TPLCStruct);
-    procedure Notification(AComponent: TComponent; Operation: TOperation);
-      override;
-  public
-    property FaceplateInstanc:TFaceplateFrame read FFaceplateInstance;
-  published
-    property Faceplate:TFaceplateFrame read ffaceplate write setFaceplate;
-    property FaceplatePLCTag:TPLCStruct read ffaceplatetag write setfaceplateTag;
-  end;
 
 implementation
 
@@ -79,6 +63,12 @@ begin
     Components[c].SetSubComponent(true);
   end;
   AddDesignBlock;
+end;
+
+procedure TFaceplateFrame.setTransparent(AValue: Boolean);
+begin
+  if FTransparent=AValue then Exit;
+  FTransparent:=AValue;
 end;
 
 procedure TFaceplateFrame.AddDesignBlock;
@@ -116,81 +106,19 @@ end;
 procedure TFaceplateFrame.Loaded;
 begin
   inherited Loaded;
-  writeln('Loaded');
   AddDesignBlock;
-end;
 
-procedure TFaceplateFrame.Updating;
-begin
-  inherited Updating;
-  writeln('updating');
-  AddDesignBlock;
-end;
 
-procedure TFaceplateFrame.Update;
-begin
-  inherited Update;
-  writeln('Update');
-  AddDesignBlock;
-end;
-
-procedure TFaceplateFrame.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  writeln('after construction');
-  AddDesignBlock
+  if Assigned(FOnLoaded) then
+    FOnLoaded(Self);
 end;
 
 constructor TFaceplateFrame.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner); 
   SetSubComponent(true);
-  writeln('Create');
-  Application.QueueAsyncCall(@AddBlockDelayed, 0);
-
-end;
-
-{ TFaceplateContainer }
-
-procedure TFaceplateContainer.setFaceplate(AValue: TFaceplateFrame);
-begin
-  if ffaceplate=AValue then Exit;
-  if not (AValue is TFaceplateFrame) then exit;
-
-  if Assigned(ffaceplate) then
-    ffaceplate.RemoveFreeNotification(self);
-
-  ffaceplate:=AValue;
-
-  if Assigned(ffaceplate) then
-    ffaceplate.FreeNotification(self);
-
-  if Assigned(FFaceplateInstance) then
-    FreeAndNil(FFaceplateInstance);
-
-  //ffaceplate.SetFaceplateTag(ffaceplatetag);
-  if {(([csDesigning]*ComponentState)=[]) and} Assigned(ffaceplate) then begin
-    FFaceplateInstance:=ffaceplate.CreateInstance(Self);
-    FFaceplateInstance.SetBounds(0,0,Width,Height);
-    FFaceplateInstance.SetParent(self);
-    FFaceplateInstance.Show;
-  end;
-end;
-
-procedure TFaceplateContainer.setfaceplateTag(AValue: TPLCStruct);
-begin
-  if ffaceplatetag=AValue then Exit;
-  ffaceplatetag:=AValue;
-  if Assigned(ffaceplate) then
-    ffaceplate.SetFaceplateTag(AValue);
-end;
-
-procedure TFaceplateContainer.Notification(AComponent: TComponent;
-  Operation: TOperation);
-begin
-  if (Operation=opRemove) and (AComponent=ffaceplate) then
-    setFaceplate(nil);
-  inherited Notification(AComponent, Operation);
+  //writeln('Create');
+  //Application.QueueAsyncCall(@AddBlockDelayed, 0);
 end;
 
 end.

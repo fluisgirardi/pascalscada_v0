@@ -94,8 +94,7 @@ begin
                                            THMIFlowVectorControl,
                                            THMIForkedFlowValve,
                                            THMIThreeWayFlowValve,
-                                           THMIFlowImage,
-                                           TFaceplateContainer]);
+                                           THMIFlowImage]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
