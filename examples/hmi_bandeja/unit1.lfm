@@ -1,0 +1,121 @@
+object Form1: TForm1
+  Left = 408
+  Height = 330
+  Top = 250
+  Width = 467
+  Caption = 'Form1'
+  ClientHeight = 330
+  ClientWidth = 467
+  object HMIBandeja1: THMIBandeja
+    Left = 168
+    Height = 50
+    Top = 40
+    Width = 170
+    BorderColorPLCTag = BorderTag1
+    BackgroundColorPLCTag = BackgroundTag1
+    BandejaTextPLCTag = CaptionTag
+    BevelWidth = 5
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 0
+  end
+  object HMILabel1: THMILabel
+    Left = 288
+    Height = 17
+    Top = 128
+    Width = 161
+    Alignment = taRightJustify
+    Enabled = True
+    NumberFormat = '#0'
+    PLCTag = BorderTag1
+    FormatDateTimeOptions = []
+  end
+  object HMILabel2: THMILabel
+    Left = 288
+    Height = 17
+    Top = 184
+    Width = 161
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = CaptionTag
+    FormatDateTimeOptions = []
+  end
+  object HMILabel3: THMILabel
+    Left = 288
+    Height = 17
+    Top = 156
+    Width = 161
+    Alignment = taRightJustify
+    Enabled = True
+    NumberFormat = '#0'
+    PLCTag = BackgroundTag1
+    FormatDateTimeOptions = []
+  end
+  object TCP_UDPPort1: TTCP_UDPPort
+    Active = True
+    Host = '192.168.0.180'
+    ExclusiveDevice = False
+    Left = 48
+    Top = 23
+  end
+  object CLPVirtual: TISOTCPDriver
+    CommunicationPort = TCP_UDPPort1
+    ForcePDUSize = pdu240
+    ConnectionWay = ISOTCP
+    ReadOnly = False
+    Left = 48
+    Top = 84
+  end
+  object PLCStruct1: TPLCStruct
+    TagGUID = '{BD21AB34-9B2B-4EE9-9841-B40CA6493801}'
+    CommReadErrors = 9879
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 50
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 4
+    MemWriteFunction = 0
+    ProtocolDriver = CLPVirtual
+    UpdateTime = 100
+    LongAddress = ''
+    Size = 20
+    TagType = pttByte
+    Left = 48
+    Top = 152
+  end
+  object BackgroundTag1: TPLCStructItem
+    TagGUID = '{6B1A8B06-60C8-4428-8C0C-9BD0FC15AD3C}'
+    PLCBlock = PLCStruct1
+    Index = 0
+    EnableMaxValue = False
+    EnableMinValue = False
+    TagType = pttDWord
+    SwapBytes = True
+    SwapWords = True
+    Left = 48
+    Top = 208
+  end
+  object BorderTag1: TPLCStructItem
+    TagGUID = '{8FD78C40-4997-402F-84A0-E74B675295FA}'
+    PLCBlock = PLCStruct1
+    Index = 4
+    EnableMaxValue = False
+    EnableMinValue = False
+    TagType = pttDWord
+    SwapBytes = True
+    SwapWords = True
+    Left = 152
+    Top = 208
+  end
+  object CaptionTag: TPLCStructString
+    TagGUID = '{C9AE0882-E525-4BBB-ACFF-F2B9F7030DF1}'
+    Index = 8
+    PLCBlock = PLCStruct1
+    StringSize = 8
+    StringType = stSIEMENS
+    Left = 48
+    Top = 264
+  end
+end

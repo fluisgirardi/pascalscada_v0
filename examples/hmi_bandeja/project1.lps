@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="project1.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="21"/>
+      </Unit>
+      <Unit>
+        <Filename Value="unit1.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Unit1"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <UnitName Value="HMIBandeja"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="143"/>
+        <CursorPos X="26" Y="169"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="9">
+      <Position>
+        <Filename Value="unit1.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="25" Column="19"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="189" Column="3" TopLine="181"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="191" Column="3" TopLine="166"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="182" Column="33" TopLine="159"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="24" Column="14"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="182" Column="22" TopLine="181"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="24" Column="40" TopLine="24"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="182" Column="48" TopLine="180"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmibandeja.pas"/>
+        <Caret Line="24" Column="14"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
