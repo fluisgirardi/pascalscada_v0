@@ -20,13 +20,14 @@ uses
   HMI_Draw_Valves, hmi_draw_elevador, HMIBasicEletricMotor, hmi_flow_zones, 
   hmi_draw_flow_valve, hmi_draw_flow_pump, hmi_tachart_tag_source_list, 
   tagstatuslist, ChipCardReader, HMIFlowImage, hmifaceplatecontainer, 
-  hmifaceplatedsgn, LazarusPackageIntf;
+  hmifaceplatedsgn, HMIBandeja, LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
   RegisterUnit('hmiregister', @hmiregister.Register);
+  RegisterUnit('HMIBandeja', @HMIBandeja.Register);
 end;
 
 initialization

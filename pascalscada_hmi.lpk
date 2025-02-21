@@ -8,7 +8,7 @@
       <Version Value="11"/>
       <SearchPaths>
         <IncludeFiles Value="src/hmi"/>
-        <OtherUnitFiles Value="src/hmi"/>
+        <OtherUnitFiles Value="src/hmi;src"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)-$(LCLWidgetType)"/>
       </SearchPaths>
       <Parsing>
@@ -29,7 +29,7 @@
 Built on top of LCL controls, added SCADA features like Tag link and security"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="52">
+    <Files Count="53">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
         <UnitName Value="BasicUserManagement"/>
@@ -240,6 +240,11 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <Filename Value="src/hmi/hmifaceplatedsgn.pas"/>
         <UnitName Value="hmifaceplatedsgn"/>
       </Item52>
+      <Item53>
+        <Filename Value="src/hmi/hmibandeja.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="HMIBandeja"/>
+      </Item53>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="7">
