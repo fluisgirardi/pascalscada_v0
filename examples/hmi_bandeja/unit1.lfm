@@ -6,6 +6,7 @@ object Form1: TForm1
   Caption = 'Form1'
   ClientHeight = 330
   ClientWidth = 467
+  Font.Style = [fsBold]
   object HMIBandeja1: THMIBandeja
     Left = 168
     Height = 50
@@ -14,9 +15,12 @@ object Form1: TForm1
     BorderColorPLCTag = BorderTag1
     BackgroundColorPLCTag = BackgroundTag1
     BandejaTextPLCTag = CaptionTag
+    OnConvertDintToColor = HMIBandeja1ConvertDintToColor
     BevelWidth = 5
+    Font.Color = clWhite
     ParentBackground = False
     ParentColor = False
+    ParentFont = False
     TabOrder = 0
   end
   object HMILabel1: THMILabel
@@ -51,6 +55,18 @@ object Form1: TForm1
     PLCTag = BackgroundTag1
     FormatDateTimeOptions = []
   end
+  object Panel1: TPanel
+    Left = 256
+    Height = 26
+    Top = 248
+    Width = 50
+    BevelColor = clGradientActiveCaption
+    BevelWidth = 2
+    Caption = '1234567890'
+    Font.Height = -8
+    ParentFont = False
+    TabOrder = 1
+  end
   object TCP_UDPPort1: TTCP_UDPPort
     Active = True
     Host = '192.168.0.180'
@@ -68,7 +84,7 @@ object Form1: TForm1
   end
   object PLCStruct1: TPLCStruct
     TagGUID = '{BD21AB34-9B2B-4EE9-9841-B40CA6493801}'
-    CommReadErrors = 9879
+    CommReadErrors = 44966
     PLCRack = 0
     PLCSlot = 0
     PLCStation = 0
