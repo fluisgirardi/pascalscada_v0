@@ -9,11 +9,13 @@ uses
   PLCNumber, plcstructstring;
 
 type
+  TOnConvertDintToColor = function(Sender:TObject; const aColorDint:LongInt; out Lum:LongInt):TColor of object;
 
   { THMIBandeja }
 
   THMIBandeja = class(TCustomPanel)
   private
+    fOnConvertDintToColor: TOnConvertDintToColor;
     procedure TagBackgroundColorChanged(Sender: TObject);
     procedure TagBandejaTextChanged(Sender: TObject);
     procedure TagBorderColorChanged(Sender: TObject);
@@ -32,6 +34,7 @@ type
     property BorderColorPLCTag:TPLCNumber read FBorderColorPLCTag Write SetBorderColorPLCTag;
     property BackgroundColorPLCTag:TPLCNumber read FBackgroundColorPLCTag Write SetBackgroundColorPLCTag;
     property BandejaTextPLCTag:TPLCStructString read FBandejaTextPLCTag write SetBandejaTextPLCTag;
+    property OnConvertDintToColor:TOnConvertDintToColor read fOnConvertDintToColor write FOnConvertDintToColor;
   published
     property Align;
     property Alignment;
@@ -106,14 +109,7 @@ type
     property OnUnDock;
   end;
 
-procedure Register;
-
 implementation
-
-procedure Register;
-begin
-  RegisterComponents('PascalSCADA HCl',[THMIBandeja]);
-end;
 
 { THMIBandeja }
 
@@ -165,14 +161,16 @@ var
   lum: LongInt;
 begin
   if Assigned(FBackgroundColorPLCTag) then begin
-    Color:=DIntToColor(Trunc(FBackgroundColorPLCTag.Value), lum);
+    if Assigned(fOnConvertDintToColor) then
+      Color:=fOnConvertDintToColor(Self, Trunc(FBackgroundColorPLCTag.Value), lum)
+    else
+      Color:=DIntToColor(Trunc(FBackgroundColorPLCTag.Value), lum);
 
     if lum>127 then
       Font.Color:=clBlack
     else
       Font.Color:=clWhite;
   end;
-
 end;
 
 procedure THMIBandeja.TagBandejaTextChanged(Sender: TObject);
@@ -185,8 +183,12 @@ procedure THMIBandeja.TagBorderColorChanged(Sender: TObject);
 var
   aux: LongInt;
 begin
-  if Assigned(FBorderColorPLCTag) then
-    BevelColor:=DIntToColor(Trunc(FBorderColorPLCTag.Value), aux);
+  if Assigned(FBorderColorPLCTag) then begin
+    if Assigned(fOnConvertDintToColor) then
+      Color:=fOnConvertDintToColor(Self, Trunc(FBorderColorPLCTag.Value), aux)
+    else
+      BevelColor:=DIntToColor(Trunc(FBorderColorPLCTag.Value), aux);
+  end;
 end;
 
 function THMIBandeja.DIntToColor(aDInt: LongInt; out Lumin:LongInt): TColor;
