@@ -27,7 +27,6 @@ implementation
 procedure Register;
 begin
   RegisterUnit('hmiregister', @hmiregister.Register);
-  RegisterUnit('HMIBandeja', @HMIBandeja.Register);
 end;
 
 initialization

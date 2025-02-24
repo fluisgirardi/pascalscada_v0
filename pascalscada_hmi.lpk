@@ -242,7 +242,6 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
       </Item52>
       <Item53>
         <Filename Value="src/hmi/hmibandeja.pas"/>
-        <HasRegisterProc Value="True"/>
         <UnitName Value="HMIBandeja"/>
       </Item53>
     </Files>
