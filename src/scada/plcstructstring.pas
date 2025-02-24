@@ -392,7 +392,7 @@ begin
     else exit(false);
   end;
 
-  if (aindex+RealSize)>=aBlockSize then exit(false);
+  if (aindex+RealSize)>aBlockSize then exit(false);
 
   Result:=true;
 end;
