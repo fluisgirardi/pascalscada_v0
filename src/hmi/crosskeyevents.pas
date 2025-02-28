@@ -368,9 +368,12 @@ uses LazGdk3, LazGtk3, LazGLib2, LCLType, ctypes;
 uses qt4, qtwidgets, qtobjects, LCLType;
 {$IFEND}
 
-
 {$IF defined(LCLqt5)}
 uses qt5, qtwidgets, qtobjects, LCLType;
+{$IFEND}
+
+{$IF defined(LCLqt6)}
+uses qt6, qtwidgets, qtobjects, LCLType;
 {$IFEND}
 
 {$IF defined(LCLCarbon)}
@@ -653,17 +656,17 @@ begin
   gev.key.send_event:=1;
 
   gev.key.time:=10;
-  gev.key.state:=0;
+  gev.key.state:=[];
   gev.key.length:=1;
 
   if ssShift in FShitfState then
-    gev.key.state:=gev.key.state or GDK_SHIFT_MASK;
+    gev.key.state:=gev.key.state + [GDK_SHIFT_MASK];
 
   if ssCtrl in FShitfState  then
-    gev.key.state:=gev.key.state or GDK_CONTROL_MASK;
+    gev.key.state:=gev.key.state + [GDK_CONTROL_MASK];
 
   if ssAlt in FShitfState   then
-    gev.key.state:=gev.key.state or GDK_MOD1_MASK;
+    gev.key.state:=gev.key.state + [GDK_MOD1_MASK];
 
   gev.key.string_:=gdk_keyval_name(key);
 
@@ -678,7 +681,7 @@ begin
     g_free(keys);
   end;
 
-  gdk_keymap_translate_keyboard_state(gdk_keymap_get_default(),gev.key.hardware_keycode,gev.key.state,gev.key.group,@gev.key.keyval,@effectivegroup,@level,@consumedkeys);
+  gdk_keymap_translate_keyboard_state(gdk_keymap_get_for_display(gdk_display_get_default()),gev.key.hardware_keycode,gev.key.state,gev.key.group,@gev.key.keyval,@effectivegroup,@level,@consumedkeys);
 
   gdk_event_put(@gev);
 end;
@@ -694,7 +697,7 @@ begin
   gev.key.type_:=GDK_KEY_RELEASE;
   gev.key.send_event:=1;
   gev.key.time:=10;
-  gev.key.state:=0;
+  gev.key.state:=[];
   gev.key.keyval:=key;
   gev.key.length:=1;
   gev.key.string_:=gdk_keyval_name(key);
@@ -1134,6 +1137,152 @@ begin
 end;
 {$IFEND}
 
+{$IF defined(LCLqt6)}
+procedure TQT6KeyEvents.DoDown(Key: LongWord);
+var
+  qevt:QKeyEventH;
+  ktxt:WideString;
+begin
+  if (Key in [QtKey_A..QtKey_Z]) then begin
+    if (FShitfState=[ssShift])  then
+      ktxt:=chr(key)
+    else
+      ktxt:=chr(key+32)
+  end else
+    ktxt:=chr(key);
+
+  qevt:=QKeyEvent_create(QEventKeyPress, key, QtNoModifier, @ktxt, false, 1);
+
+  QCoreApplication_sendEvent(TQtWidget(FTarget.Handle).Widget,qevt);
+  QKeyEvent_destroy(qevt);
+end;
+
+procedure TQT6KeyEvents.DoUp(Key: LongWord);
+var
+  qevt:QKeyEventH;
+begin
+  qevt:=QKeyEvent_create(QEventKeyRelease, key, QtNoModifier, nil, false, 1);
+
+  QCoreApplication_sendEvent(TQtWidget(FTarget.Handle).Widget,qevt);
+  QKeyEvent_destroy(qevt);
+end;
+
+function TQT6KeyEvents.TranlateVirtualKey(Key: Word): LongWord;
+begin
+  case Key of
+    VK_BACK: Result := QtKey_Backspace;
+    VK_TAB: Result := QtKey_Tab;
+    VK_CLEAR: Result := QtKey_Clear;
+    VK_RETURN: Result := QtKey_Return;
+    VK_SHIFT: Result := QtKey_Shift;
+    VK_CONTROL: Result := QtKey_Control;
+    VK_MENU: Result := QtKey_Menu; // alt key crashes app, QtKey_Alt_R;
+    VK_CAPITAL: Result := QtKey_CapsLock;
+
+    VK_ESCAPE: Result := QtKey_Escape;
+    VK_SPACE: Result := QtKey_space;
+    VK_PRIOR: Result := QtKey_PageUp;
+    VK_NEXT: Result := QtKey_PageDown;
+    VK_END: Result := QtKey_End;
+    VK_HOME: Result := QtKey_Home;
+    VK_LEFT: Result := QtKey_Left;
+    VK_UP: Result := QtKey_Up;
+    VK_RIGHT: Result := QtKey_Right;
+    VK_DOWN: Result := QtKey_Down;
+    VK_SELECT: Result := QtKey_Select;
+    VK_PRINT: Result := QtKey_Print;
+    VK_EXECUTE: Result := QtKey_Execute;
+
+    VK_INSERT: Result := QtKey_Insert;
+    VK_DELETE: Result := QtKey_Delete;
+    VK_HELP: Result := QtKey_Help;
+    VK_0: Result := QtKey_0;
+    VK_1: Result := QtKey_1;
+    VK_2: Result := QtKey_2;
+    VK_3: Result := QtKey_3;
+    VK_4: Result := QtKey_4;
+    VK_5: Result := QtKey_5;
+    VK_6: Result := QtKey_6;
+    VK_7: Result := QtKey_7;
+    VK_8: Result := QtKey_8;
+    VK_9: Result := QtKey_9;
+
+    VK_A: Result := QtKey_a;
+    VK_B: Result := QtKey_b;
+    VK_C: Result := QtKey_c;
+    VK_D: Result := QtKey_d;
+    VK_E: Result := QtKey_e;
+    VK_F: Result := QtKey_f;
+    VK_G: Result := QtKey_g;
+    VK_H: Result := QtKey_h;
+    VK_I: Result := QtKey_i;
+    VK_J: Result := QtKey_j;
+    VK_K: Result := QtKey_k;
+    VK_L: Result := QtKey_l;
+    VK_M: Result := QtKey_m;
+    VK_N: Result := QtKey_n;
+    VK_O: Result := QtKey_o;
+    VK_P: Result := QtKey_p;
+    VK_Q: Result := QtKey_q;
+    VK_R: Result := QtKey_r;
+    VK_S: Result := QtKey_s;
+    VK_T: Result := QtKey_t;
+    VK_U: Result := QtKey_u;
+    VK_V: Result := QtKey_v;
+    VK_W: Result := QtKey_w;
+    VK_X: Result := QtKey_x;
+    VK_Y: Result := QtKey_y;
+    VK_Z: Result := QtKey_z;
+
+    VK_NUMPAD0: Result := QtKey_0;
+    VK_NUMPAD1: Result := QtKey_1;
+    VK_NUMPAD2: Result := QtKey_2;
+    VK_NUMPAD3: Result := QtKey_3;
+    VK_NUMPAD4: Result := QtKey_4;
+    VK_NUMPAD5: Result := QtKey_5;
+    VK_NUMPAD6: Result := QtKey_6;
+    VK_NUMPAD7: Result := QtKey_7;
+    VK_NUMPAD8: Result := QtKey_8;
+    VK_NUMPAD9: Result := QtKey_9;
+    VK_MULTIPLY: Result := QtKey_Asterisk;
+    VK_ADD: Result := QtKey_Plus;
+    VK_OEM_PERIOD: REsult := QtKey_Comma;
+    VK_SEPARATOR: Result := QtKey_Comma;
+    VK_SUBTRACT: Result := QtKey_Minus;
+    VK_DECIMAL: Result := QtKey_Period;
+    VK_DIVIDE: Result := QtKey_Slash;
+    VK_F1: Result := QtKey_F1;
+    VK_F2: Result := QtKey_F2;
+    VK_F3: Result := QtKey_F3;
+    VK_F4: Result := QtKey_F4;
+    VK_F5: Result := QtKey_F5;
+    VK_F6: Result := QtKey_F6;
+    VK_F7: Result := QtKey_F7;
+    VK_F8: Result := QtKey_F8;
+    VK_F9: Result := QtKey_F9;
+    VK_F10: Result := QtKey_F10;
+    VK_F11: Result := QtKey_F11;
+    VK_F12: Result := QtKey_F12;
+    VK_F13: Result := QtKey_F13;
+    VK_F14: Result := QtKey_F14;
+    VK_F15: Result := QtKey_F15;
+    VK_F16: Result := QtKey_F16;
+    VK_F17: Result := QtKey_F17;
+    VK_F18: Result := QtKey_F18;
+    VK_F19: Result := QtKey_F19;
+    VK_F20: Result := QtKey_F20;
+    VK_F21: Result := QtKey_F21;
+    VK_F22: Result := QtKey_F22;
+    VK_F23: Result := QtKey_F23;
+    VK_F24: Result := QtKey_F24;
+    VK_NUMLOCK: Result := QtKey_NumLock;
+    VK_SCROLL: Result := QtKey_ScrollLock;
+  else
+    Result := QtKey_0;
+  end;
+end;
+{$IFEND}
+
 {$IF defined(LCLwin32) OR (not defined(FPC))}
 procedure TWindowsKeyEvents.DoDown(Key: LongWord);
 begin
@@ -1193,6 +1342,10 @@ begin
 
   {$IF defined(LCLqt5)}
   exit(TQt5KeyEvents.Create(Target));
+  {$IFEND}
+
+  {$IF defined(LCLqt6)}
+  exit(TQT6KeyEvents.Create(Target));
   {$IFEND}
 
   {$IF defined(LCLwin32) OR (not defined(FPC))}

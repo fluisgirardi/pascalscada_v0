@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  PLCStruct, PLCStructElement, plcstructstring;
+  LCLType, PLCStruct, PLCStructElement, plcstructstring, LMessages;
 
 type
 
@@ -17,15 +17,18 @@ type
     ffaceplatetag: TPLCStruct;
     FOnLoaded: TNotifyEvent;
     FTransparent: Boolean;
-    procedure AddBlockDelayed(Data: PtrInt);
     procedure setTransparent(AValue: Boolean);
   protected
-    procedure AddDesignBlock;
+
+    function  IsControlArea(X,Y:Integer):Boolean; virtual;
+
     procedure setfaceplateTag(AValue: TPLCStruct);
     procedure Loaded; override;
+    procedure CMHitTest(var Message: TCMHittest); message CM_HITTEST;
+    //procedure CMDesigerHitTest(var Message: TCMHittest) ; message CM_DESIGNERHITTEST;
   public
     constructor Create(TheOwner: TComponent); override;
-    function CreateInstance(TheOwner: TComponent):TFaceplateFrame;
+    procedure Paint; override;
   published
     property FaceplatePLCTag:TPLCStruct read ffaceplatetag write setfaceplateTag;
     property OnLoaded:TNotifyEvent read FOnLoaded write FOnLoaded;
@@ -36,33 +39,14 @@ type
 
 implementation
 
-uses StdCtrls;
+uses StdCtrls, LazRegions, LCLIntf, Math;
 
 { TFaceplate }
 
-function TFaceplateFrame.CreateInstance(TheOwner: TComponent): TFaceplateFrame;
-var
-  frmcls: TFaceplateFormClass;
+procedure TFaceplateFrame.Paint;
 begin
-  frmcls:=TFaceplateFormClass(Self.ClassType);
-  if frmcls.InheritsFrom(TFaceplateFrame) then
-    writeln;
-  writeln(frmcls.ClassName);
-  result:=frmcls.Create(self);
-  if Result is frmcls then
-    writeln;
-end;
-
-procedure TFaceplateFrame.AddBlockDelayed(Data: PtrInt);
-var
-  c: Integer;
-begin
-  writeln('AddBlock delayed');
-  for c:=0 to ComponentCount-1 do begin
-    writeln(Components[c].Name,'.SetSubComponent(True);');
-    Components[c].SetSubComponent(true);
-  end;
-  AddDesignBlock;
+  //EraseBackground(Canvas.Handle);
+  inherited Paint;
 end;
 
 procedure TFaceplateFrame.setTransparent(AValue: Boolean);
@@ -71,19 +55,9 @@ begin
   FTransparent:=AValue;
 end;
 
-procedure TFaceplateFrame.AddDesignBlock;
-var
-  lbl: TLabel;
+function TFaceplateFrame.IsControlArea(X, Y: Integer): Boolean;
 begin
-  exit;
-  if (csDesigning in ComponentState) and Assigned(Parent) then begin
-    lbl:=TLabel.Create(Self);
-    lbl.Transparent:=true;
-    lbl.Caption:='';
-    lbl.Align:=alClient;
-    lbl.Parent:=Self;
-    lbl.BringToFront;
-  end;
+  Result:=not FTransparent;
 end;
 
 procedure TFaceplateFrame.setfaceplateTag(AValue: TPLCStruct);
@@ -104,21 +78,44 @@ begin
 end;
 
 procedure TFaceplateFrame.Loaded;
+var
+  c: Integer;
+  rgn, rgn2: HRGN;
 begin
   inherited Loaded;
-  AddDesignBlock;
-
+  rgn:=CreateRectRgn(0,0,0,0);
+  try
+    for c:=0 to ControlCount-1 do begin
+      try
+        rgn2:=CreateRectRgn(
+                            Controls[c].Left,
+                            Controls[c].Top,
+                            Controls[c].Left + Controls[c].Width,
+                            Controls[c].Top + Controls[c].Height);
+        CombineRgn(rgn,rgn,rgn2,RGN_OR);
+        Controls[c].ControlStyle:=Controls[c].ControlStyle+[csNoDesignSelectable];
+      finally
+        DeleteObject(Rgn2);
+      end;
+    end;
+    SetWindowRgn(Handle,rgn,true);
+  finally
+    DeleteObject(rgn);
+  end;
 
   if Assigned(FOnLoaded) then
     FOnLoaded(Self);
 end;
 
+procedure TFaceplateFrame.CMHitTest(var Message: TCMHittest);
+begin
+  Message.Result:=ifthen(FTransparent,0,1);
+end;
+
 constructor TFaceplateFrame.Create(TheOwner: TComponent);
 begin
-  inherited Create(TheOwner); 
-  SetSubComponent(true);
-  //writeln('Create');
-  //Application.QueueAsyncCall(@AddBlockDelayed, 0);
+  inherited Create(TheOwner);
+  ControlStyle:=ControlStyle+[csOwnedChildrenNotSelectable];// + [csOpaque];
 end;
 
 end.
