@@ -1,0 +1,225 @@
+object Form1: TForm1
+  Left = 408
+  Height = 401
+  Top = 250
+  Width = 618
+  Caption = 'Form1'
+  ClientHeight = 401
+  ClientWidth = 618
+  object HMIFlowVectorControl1: THMIFlowVectorControl
+    Left = 200
+    Height = 320
+    Top = 24
+    Width = 107
+    ColorAndFlowStates = <    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = False
+        IncludeValue2 = False
+        DefaultZone = False
+        ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
+        Color = clLime
+        Flow = False
+        BorderColor = clGreen
+        SVGChanges.Strings = (
+          'lightGreen.fill=fill'
+          'lightGreen.border=border'
+          'flow.output=1'
+        )
+      end    
+      item
+        Value1 = 2
+        Value2 = 2
+        IncludeValue1 = False
+        IncludeValue2 = False
+        DefaultZone = False
+        ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
+        Color = clYellow
+        Flow = False
+        BorderColor = clBlack
+        SVGChanges.Strings = (
+          'lightYellow.fill=fill'
+        )
+      end    
+      item
+        Value1 = 3
+        Value2 = 3
+        IncludeValue1 = False
+        IncludeValue2 = False
+        DefaultZone = False
+        ZoneType = ztEqual
+        BlinkTime = 0
+        BlinkWith = -1
+        Color = clRed
+        Flow = False
+        BorderColor = clBlack
+        SVGChanges.Strings = (
+          'lightRed.fill=fill'
+        )
+      end>
+    FlowOutputPolylines = <    
+      item
+        OutputPolyline = SaidaSinalVerde
+      end>
+    InputFlowPolyline = RuaComFluxo
+    PLCTag = PLCTagNumber1
+    Proportional = True
+    Stretch = True
+    SVGContents.Strings = (
+      '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+      '<!-- Created with Inkscape (http://www.inkscape.org/) -->'
+      ''
+      '<svg'
+      '   width="64"'
+      '   height="192"'
+      '   viewBox="0 0 16.933333 50.8"'
+      '   version="1.1"'
+      '   id="svg1"'
+      '   inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"'
+      '   sodipodi:docname="semaforo.svg"'
+      '   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"'
+      '   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"'
+      '   xmlns="http://www.w3.org/2000/svg"'
+      '   xmlns:svg="http://www.w3.org/2000/svg">'
+      '  <sodipodi:namedview'
+      '     id="namedview1"'
+      '     pagecolor="#ffffff"'
+      '     bordercolor="#000000"'
+      '     borderopacity="0.25"'
+      '     inkscape:showpageshadow="2"'
+      '     inkscape:pageopacity="0.0"'
+      '     inkscape:pagecheckerboard="0"'
+      '     inkscape:deskcolor="#d1d1d1"'
+      '     inkscape:document-units="px"'
+      '     inkscape:zoom="4.1979167"'
+      '     inkscape:cx="32.039702"'
+      '     inkscape:cy="95.28536"'
+      '     inkscape:window-width="1920"'
+      '     inkscape:window-height="1008"'
+      '     inkscape:window-x="0"'
+      '     inkscape:window-y="0"'
+      '     inkscape:window-maximized="1"'
+      '     inkscape:current-layer="layer1" />'
+      '  <defs'
+      '     id="defs1" />'
+      '  <g'
+      '     inkscape:label="Camada 1"'
+      '     inkscape:groupmode="layer"'
+      '     id="layer1">'
+      '    <rect'
+      '       style="fill:#808080;stroke:#333333;stroke-width:1.85269;stroke-linejoin:bevel;stroke-dasharray:none"'
+      '       id="rect1"'
+      '       width="15.080647"'
+      '       height="48.947311"'
+      '       x="0.92634284"'
+      '       y="0.92634308"'
+      '       ry="3.1513648" />'
+      '    <circle'
+      '       style="fill:#808080;stroke:#333333;stroke-width:2;stroke-linejoin:bevel;stroke-dasharray:none"'
+      '       id="lightRed"'
+      '       cx="8.4666662"'
+      '       cy="9.8637714"'
+      '       r="5.2627792" />'
+      '    <circle'
+      '       style="fill:#808080;stroke:#333333;stroke-width:2;stroke-linejoin:bevel;stroke-dasharray:none"'
+      '       id="lightYellow"'
+      '       cx="8.4666662"'
+      '       cy="25.209604"'
+      '       r="5.2627792" />'
+      '    <circle'
+      '       style="fill:#808080;stroke:#333333;stroke-width:2;stroke-linejoin:bevel;stroke-dasharray:none"'
+      '       id="lightGreen"'
+      '       cx="8.4666662"'
+      '       cy="41.084606"'
+      '       r="5.2627792" />'
+      '  </g>'
+      '</svg>'
+    )
+  end
+  object HMITrackBar1: THMITrackBar
+    Left = 48
+    Height = 180
+    Top = 112
+    Width = 37
+    Max = 3
+    Orientation = trVertical
+    Reversed = True
+    Enabled = True
+    TabOrder = 1
+    PLCTag = PLCTagNumber1
+  end
+  object RuaComFluxo: THMIFlowPolyline
+    Left = 128
+    Height = 16
+    Top = 160
+    Width = 16
+    LineColor = clGradientActiveCaption
+    LineWidth = 3
+    PointCoordinates = <    
+      item
+        X = 1
+        Y = 1
+      end    
+      item
+        X = 11
+        Y = 11
+      end>
+    AutoStartPointDirection = pdVertical
+    AutoStartPointOffset = 0
+    AutoEndPointDirection = pdVertical
+    AutoEndPointOffset = 0
+    AutoHeightDistribution = 50
+    MultipleColorBehavior = cmbLastColor
+    MultipleColorsReplace = clBlack
+    FlowSource = <>
+  end
+  object SaidaSinalVerde: THMIFlowPolyline
+    Left = 352
+    Height = 74
+    Top = 235
+    Width = 165
+    LineWidth = 3
+    PointCoordinates = <    
+      item
+        X = 1
+        Y = 37
+      end    
+      item
+        X = 119
+        Y = 71
+      end    
+      item
+        X = 162
+        Y = 1
+      end>
+    AutoStartPointDirection = pdVertical
+    AutoStartPointOffset = 0
+    AutoEndPointDirection = pdVertical
+    AutoEndPointOffset = 0
+    AutoHeightDistribution = 50
+    MultipleColorBehavior = cmbLastColor
+    MultipleColorsReplace = clBlack
+    FlowSource = <>
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{F818D8E4-C50F-4F50-BFB4-7FB35E7F1763}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 48
+    Top = 16
+  end
+end

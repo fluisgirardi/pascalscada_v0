@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="64"
+   height="192"
+   viewBox="0 0 16.933333 50.8"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (1:1.4+202410161351+e7c3feb100)"
+   sodipodi:docname="semaforo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="4.1979167"
+     inkscape:cx="32.039702"
+     inkscape:cy="95.28536"
+     inkscape:window-width="1920"
+     inkscape:window-height="1008"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Camada 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#808080;stroke:#333333;stroke-width:1.85269;stroke-linejoin:bevel;stroke-dasharray:none"
+       id="rect1"
+       width="15.080647"
+       height="48.947311"
+       x="0.92634284"
+       y="0.92634308"
+       ry="3.1513648" />
+    <circle
+       style="fill:#808080;stroke:#333333;stroke-width:2;stroke-linejoin:bevel;stroke-dasharray:none"
+       id="lightRed"
+       cx="8.4666662"
+       cy="9.8637714"
+       r="5.2627792" />
+    <circle
+       style="fill:#808080;stroke:#333333;stroke-width:2;stroke-linejoin:bevel;stroke-dasharray:none"
+       id="lightYellow"
+       cx="8.4666662"
+       cy="25.209604"
+       r="5.2627792" />
+    <circle
+       style="fill:#808080;stroke:#333333;stroke-width:2;stroke-linejoin:bevel;stroke-dasharray:none"
+       id="lightGreen"
+       cx="8.4666662"
+       cy="41.084606"
+       r="5.2627792" />
+  </g>
+</svg>
