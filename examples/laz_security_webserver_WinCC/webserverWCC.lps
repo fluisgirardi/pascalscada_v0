@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="webserverWCC.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="4"/>
+        <CursorPos X="42" Y="17"/>
+        <UsageCount Value="59"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="umain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="323"/>
+        <CursorPos X="60" Y="341"/>
+        <FoldState Value=" T0jQNo072E1 Pj3kPSr"/>
+        <UsageCount Value="59"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="udmdb.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="dmdb"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <TopLine Value="40"/>
+        <CursorPos X="5" Y="58"/>
+        <UsageCount Value="55"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="13"/>
+        <TopLine Value="1780"/>
+        <CursorPos X="17" Y="1791"/>
+        <UsageCount Value="28"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-web\src\base\fphttpserver.pp"/>
+        <EditorIndex Value="11"/>
+        <TopLine Value="734"/>
+        <CursorPos X="16" Y="758"/>
+        <UsageCount Value="28"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-net\src\ssockets.pp"/>
+        <EditorIndex Value="12"/>
+        <TopLine Value="704"/>
+        <CursorPos X="12" Y="729"/>
+        <UsageCount Value="28"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-json\src\fpjson.pp"/>
+        <EditorIndex Value="10"/>
+        <TopLine Value="474"/>
+        <CursorPos X="3" Y="474"/>
+        <UsageCount Value="27"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\pascalscada\src\hmi\winccusermanagement.pas"/>
+        <UnitName Value="WinCCUserManagement"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="283"/>
+        <CursorPos X="3" Y="288"/>
+        <UsageCount Value="27"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\pascalscada\src\hmi\basicusermanagement.pas"/>
+        <UnitName Value="BasicUserManagement"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="59"/>
+        <CursorPos X="21" Y="83"/>
+        <UsageCount Value="27"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-web\src\base\httpdefs.pp"/>
+        <UnitName Value="HTTPDefs"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="502"/>
+        <CursorPos X="23" Y="513"/>
+        <UsageCount Value="17"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-base\src\inifiles.pp"/>
+        <UnitName Value="IniFiles"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="203"/>
+        <CursorPos X="3" Y="215"/>
+        <UsageCount Value="17"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\sysutils\finah.inc"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="18"/>
+        <CursorPos X="59" Y="23"/>
+        <UsageCount Value="17"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-db\src\base\db.pas"/>
+        <UnitName Value="DB"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1725"/>
+        <CursorPos X="55" Y="1739"/>
+        <UsageCount Value="16"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\objpas.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="137"/>
+        <CursorPos X="42" Y="148"/>
+        <UsageCount Value="15"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <UnitName Value="CentralUserManagement"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="240"/>
+        <CursorPos X="33" Y="249"/>
+        <FoldState Value=" T3kg0E2 PgiE0%"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\sysutils\sysutilh.inc"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="129"/>
+        <CursorPos X="4" Y="130"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="183" TopLine="111"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="184" TopLine="111"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="185" TopLine="111"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="200" Column="51" TopLine="185"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="182" Column="58" TopLine="177"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="181" Column="19" TopLine="175"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="31" Column="14" TopLine="15"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="196" Column="3" TopLine="188"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="31" Column="14" TopLine="17"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="196" Column="3" TopLine="187"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="36" Column="23" TopLine="17"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="236" Column="3" TopLine="220"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="30" Column="20" TopLine="22"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="173" Column="23" TopLine="169"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="172" TopLine="164"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\src\hmi\winccusermanagement.pas"/>
+        <Caret Line="72" Column="27" TopLine="68"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="36" Column="14" TopLine="22"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="244" Column="20" TopLine="218"/>
+      </Position>
+      <Position>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\sysutils\sysutilh.inc"/>
+        <Caret Line="144" Column="4" TopLine="129"/>
+      </Position>
+      <Position>
+        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\sysutils\sysutilh.inc"/>
+        <Caret Line="143" Column="4" TopLine="129"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="226" Column="7" TopLine="113"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="257" Column="42" TopLine="234"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="247" Column="71" TopLine="225"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="241" Column="34" TopLine="225"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="244" Column="55" TopLine="225"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="254" Column="15" TopLine="232"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="258" Column="50" TopLine="242"/>
+      </Position>
+      <Position>
+        <Filename Value="..\pascalscada\centralusermanagement.pas"/>
+        <Caret Line="257" Column="23" TopLine="242"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="247" TopLine="230"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="32" Column="14" TopLine="17"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
