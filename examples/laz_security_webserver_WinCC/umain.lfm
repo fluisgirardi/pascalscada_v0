@@ -1,0 +1,98 @@
+object Form1: TForm1
+  Left = 199
+  Height = 240
+  Top = 250
+  Width = 454
+  Caption = 'Form1'
+  ClientHeight = 240
+  ClientWidth = 454
+  OnCreate = FormCreate
+  object HMIEdit1: THMIEdit
+    Left = 72
+    Height = 23
+    Top = 88
+    Width = 80
+    Color = clWindow
+    Enabled = True
+    Font.Color = clWindowText
+    ParentFont = False
+    TabOrder = 2
+    NumberFormat = '#0.0'
+    EnableMinValue = False
+    EnableMaxValue = False
+    SecurityCode = 'Picture Editing'
+  end
+  object Button1: TButton
+    Left = 164
+    Height = 25
+    Top = 85
+    Width = 236
+    Action = PascalSCADALoginAction1
+    TabOrder = 0
+  end
+  object Button2: TButton
+    Left = 164
+    Height = 25
+    Top = 120
+    Width = 236
+    Action = PascalSCADALogoutAction1
+    TabOrder = 1
+  end
+  object Label1: TLabel
+    Left = 23
+    Height = 15
+    Top = 86
+    Width = 34
+    Caption = 'Label1'
+  end
+  object HMILabel1: THMILabel
+    Left = 72
+    Height = 17
+    Top = 131
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    SecurityCode = 'Picture Editing'
+    FormatDateTimeOptions = []
+  end
+  object WinCCUserManagement1: TWinCCUserManagement
+    LoginRetries = 0
+    LoginFrozenTime = 0
+    Left = 48
+    Top = 24
+  end
+  object ActionList1: TActionList
+    Left = 208
+    Top = 8
+    object PascalSCADALoginAction1: TPascalSCADALoginAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADALoginAction1'
+    end
+    object PascalSCADALogoutAction1: TPascalSCADALogoutAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADALogoutAction1'
+    end
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 107
+    Top = 170
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{F6804AF7-8730-465A-9267-7EA597ED363B}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 41
+    Top = 165
+  end
+end

@@ -1,0 +1,461 @@
+object dmdb: Tdmdb
+  OldCreateOrder = False
+  Height = 339
+  HorizontalOffset = 350
+  VerticalOffset = 250
+  Width = 389
+  object SQLServerWINCC: TZConnection
+    ControlsCodePage = cCP_UTF8
+    Properties.Strings = (
+      'RawStringEncoding=DB_CP'
+    )
+    DesignConnection = True
+    DisableSavepoints = False
+    HostName = '127.0.0.1'
+    Port = 0
+    Database = 'Provider=SQLNCLI11.1;Integrated Security=SSPI;Persist Security Info=False;User ID="";Initial Catalog=CC_testeCon_25_03_05_04_02_22;Data Source=WIN-LCEA7E6AEU0\WINCC;Initial File Name="";Server SPN=""'
+    Protocol = 'ado'
+    Left = 40
+    Top = 16
+  end
+  object BuscaUserName: TZReadOnlyQuery
+    Connection = SQLServerWINCC
+    SQL.Strings = (
+      'SELECT *'
+      '  FROM [CC_testeCon_25_03_05_04_02_22].[dbo].[PW_USER]'
+      '  WHERE UPPER([name])=UPPER(:username) and [ID]<1000'
+    )
+    Params = <    
+      item
+        Name = 'username'
+      end>
+    Left = 40
+    Top = 80
+    ParamData = <    
+      item
+        Name = 'username'
+      end>
+    object BuscaUserNameID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'ID'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object BuscaUserNameNAME: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'NAME'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 25
+    end
+    object BuscaUserNamePASS: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PASS'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 25
+    end
+    object BuscaUserNameGRPID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'GRPID'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object BuscaUserNameEXPTIME: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'EXPTIME'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object BuscaUserNameWEBSTARTPICTURE: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'WEBSTARTPICTURE'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object BuscaUserNameWEBSTARTLANG: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WEBSTARTLANG'
+      Index = 6
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object BuscaUserNameNTUSER: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'NTUSER'
+      Index = 7
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object BuscaUserNameDESCRIPTION: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'DESCRIPTION'
+      Index = 8
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object BuscaUserNameFLAGS: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'FLAGS'
+      Index = 9
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object BuscaUserNamePassWordHash: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PassWordHash'
+      Index = 10
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object BuscaUserNamePW_Version: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PW_Version'
+      Index = 11
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object BuscaUserNamePWC_StartPicture: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PWC_StartPicture'
+      Index = 12
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object BuscaUserNamePWC_ReservedLicense: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PWC_ReservedLicense'
+      Index = 13
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object BuscaUserNameWEBUSEHORN: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WEBUSEHORN'
+      Index = 14
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+  end
+  object UIDCanAccessTable: TZReadOnlyQuery
+    Connection = SQLServerWINCC
+    SQL.Strings = (
+      'SELECT *'
+      '  FROM [dbo].[PW_PERM] perm'
+      'join [dbo].[PW_LINE] line on perm.LINENUM = line.LINENUM'
+      'join [dbo].[TXTTable] txt on txt.TEXTID = line.LINENAME'
+      'WHERE [id]=:uid and UPPER(txt.L1033)=UPPER(:securitycode) and perm.WHOLELINEPERM=1'
+    )
+    Params = <    
+      item
+        Name = 'uid'
+      end    
+      item
+        Name = 'securitycode'
+      end>
+    Left = 40
+    Top = 144
+    ParamData = <    
+      item
+        Name = 'uid'
+      end    
+      item
+        Name = 'securitycode'
+      end>
+    object UIDCanAccessTableID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'ID'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableLINENUM: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENUM'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableWHOLELINEPERM: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WHOLELINEPERM'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL1: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL1'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL2: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL2'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL3: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL3'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL4: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL4'
+      Index = 6
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL5: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL5'
+      Index = 7
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL6: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL6'
+      Index = 8
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL7: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL7'
+      Index = 9
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePERMCOL8: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL8'
+      Index = 10
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableLINENUM_1: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENUM_1'
+      Index = 11
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableLINENAME: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENAME'
+      Index = 12
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableLINEAREASPEC: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINEAREASPEC'
+      Index = 13
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableTEXTID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'TEXTID'
+      Index = 14
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableL1033: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'L1033'
+      Index = 15
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 400
+    end
+    object UIDCanAccessTableRecordVersion: TZBytesField
+      FieldKind = fkData
+      FieldName = 'RecordVersion'
+      Index = 16
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 8
+    end
+    object UIDCanAccessTableRecordId: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'RecordId'
+      Index = 17
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+  end
+  object REGISTERsecuritycode: TZReadOnlyQuery
+    Connection = SQLServerWINCC
+    SQL.Strings = (
+      'SELECT *'
+      '  FROM [dbo].[PW_LINE] line'
+      '  join [dbo].[TXTTable] txt on line.LINENAME=txt.TEXTID '
+      ' where ((:tipobusca=0) AND UPPER(:securitycode)=txt.L1033) OR (:tipobusca=1)'
+    )
+    Params = <    
+      item
+        Name = 'tipobusca'
+      end    
+      item
+        Name = 'securitycode'
+      end>
+    Left = 40
+    Top = 200
+    ParamData = <    
+      item
+        Name = 'tipobusca'
+      end    
+      item
+        Name = 'securitycode'
+      end>
+    object REGISTERsecuritycodeLINENUM: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENUM'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object REGISTERsecuritycodeLINENAME: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENAME'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object REGISTERsecuritycodeLINEAREASPEC: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINEAREASPEC'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object REGISTERsecuritycodeTEXTID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'TEXTID'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object REGISTERsecuritycodeL1033: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'L1033'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 400
+    end
+    object REGISTERsecuritycodeRecordVersion: TZBytesField
+      FieldKind = fkData
+      FieldName = 'RecordVersion'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 8
+    end
+    object REGISTERsecuritycodeRecordId: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'RecordId'
+      Index = 6
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+  end
+end

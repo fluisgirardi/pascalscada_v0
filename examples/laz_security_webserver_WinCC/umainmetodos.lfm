@@ -1,0 +1,19 @@
+object Form1: TForm1
+  Left = 350
+  Height = 240
+  Top = 250
+  Width = 320
+  Caption = 'Form1'
+  object CustomizedUserManagement1: TCustomizedUserManagement
+    LoginRetries = 0
+    LoginFrozenTime = 0
+    OnCheckUserAndPass = CustomizedUserManagement1CheckUserAndPass
+    OnCheckUserChipCard = CustomizedUserManagement1CheckUserChipCard
+    OnValidadeSecurityCode = CustomizedUserManagement1ValidadeSecurityCode
+    OnRegisterSecurityCode = CustomizedUserManagement1RegisterSecurityCode
+    OnCanAccess = CustomizedUserManagement1CanAccess
+    OnUIDCanAccess = CustomizedUserManagement1UIDCanAccess
+    Left = 102
+    Top = 61
+  end
+end
