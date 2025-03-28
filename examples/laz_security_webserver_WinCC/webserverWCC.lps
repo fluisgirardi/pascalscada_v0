@@ -8,7 +8,6 @@
       <Unit>
         <Filename Value="webserverWCC.lpr"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <CursorPos X="5" Y="6"/>
         <UsageCount Value="131"/>
         <Loaded Value="True"/>
@@ -19,10 +18,11 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="527"/>
-        <CursorPos X="10" Y="556"/>
-        <FoldState Value=" T0k2No071C251 Pidl8S7"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="128"/>
+        <CursorPos X="29" Y="187"/>
+        <FoldState Value=" T0k2No071C251 Pidl6S9"/>
         <ExtraEditorCount Value="1"/>
         <ExtraEditor1>
           <EditorIndex Value="-1"/>
@@ -40,7 +40,7 @@
         <ComponentName Value="dmdb"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="42"/>
         <CursorPos X="5" Y="73"/>
         <UsageCount Value="127"/>
@@ -164,10 +164,10 @@
       <Unit>
         <Filename Value="..\..\src\hmi\centralusermanagement.pas"/>
         <UnitName Value="CentralUserManagement"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="238"/>
-        <CursorPos X="47" Y="242"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="15" Y="20"/>
         <UsageCount Value="11"/>
+        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\src\hmi\customizedusermanagement.pas"/>
@@ -209,7 +209,7 @@
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\packages\fcl-web\src\base\fphttpserver.pp"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="8"/>
         <TopLine Value="199"/>
         <CursorPos X="14" Y="192"/>
         <UsageCount Value="23"/>
@@ -232,14 +232,14 @@
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\fgl.pp"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="7"/>
         <TopLine Value="394"/>
         <UsageCount Value="12"/>
         <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\classesh.inc"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="1786"/>
         <CursorPos X="21" Y="1800"/>
         <UsageCount Value="11"/>
@@ -247,7 +247,7 @@
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\lists.inc"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="6"/>
         <TopLine Value="990"/>
         <CursorPos X="5" Y="999"/>
         <UsageCount Value="11"/>
@@ -255,7 +255,7 @@
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\classes.inc"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="407"/>
         <CursorPos Y="397"/>
         <UsageCount Value="10"/>
@@ -263,10 +263,6 @@
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\lists.inc"/>
-        <Caret Line="942" Column="3" TopLine="940"/>
-      </Position>
       <Position>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\classesh.inc"/>
         <Caret Line="304" Column="15" TopLine="286"/>
@@ -383,6 +379,10 @@
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\packages\fcl-web\src\base\fphttpserver.pp"/>
         <Caret Line="224" Column="3" TopLine="208"/>
       </Position>
+      <Position>
+        <Filename Value="webserverWCC.lpr"/>
+        <Caret Line="6" Column="5"/>
+      </Position>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
@@ -396,7 +396,7 @@
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="umain.pas"/>
-        <Line Value="289"/>
+        <Line Value="287"/>
       </Item>
     </BreakPoints>
   </Debugging>

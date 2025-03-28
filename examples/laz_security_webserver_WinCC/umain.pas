@@ -185,8 +185,6 @@ begin
         AResponse.Code    := 501;
       end;
       '/uidcanaccess': begin
-        AResponse.Code    := 200;
-        exit;
         try
           logindata := GetJSON(ARequest.Content);
         except

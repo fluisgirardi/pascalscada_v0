@@ -6,7 +6,7 @@ interface
 
 uses
   BasicUserManagement, ControlSecurityManager, fpjson, jsonparser, Classes,
-  fpwebsocketclient, SysUtils, Forms;
+  fphttpclient, SysUtils, Forms;
 
 type
 
