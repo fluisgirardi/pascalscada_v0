@@ -202,6 +202,7 @@ begin
             Result:=true;
             GetControlSecurityManager.UpdateControls;
             DoSuccessfulLogin;
+            DoUserChanged;
           end else begin
             DoFailureLogin;
             inc(retries);
@@ -242,17 +243,23 @@ begin
     Result:=true;
     GetControlSecurityManager.UpdateControls;
     DoSuccessfulLogin;
+    DoUserChanged;
   end;
 end;
 
 procedure   TBasicUserManagement.Logout;
+var
+  AUserChanged:Boolean;
 begin
+  AUserChanged := FLoggedUser or (FUID>=0);
   FLoggedUser:=false;
   FCurrentUserName:='';
   FCurrentUserLogin:='';
   FUID:=-1;
   FLoggedSince:=Now;
   GetControlSecurityManager.UpdateControls;
+  if AUserChanged then
+    DoUserChanged;
 end;
 
 procedure   TBasicUserManagement.Manage;
