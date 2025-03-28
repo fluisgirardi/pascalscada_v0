@@ -4,7 +4,11 @@
     <Version Value="12"/>
     <PathDelim Value="\"/>
     <General>
-      <SessionStorage Value="InProjectDir"/>
+      <Flags>
+        <SaveClosedFiles Value="False"/>
+        <SaveJumpHistory Value="False"/>
+      </Flags>
+      <SessionStorage Value="None"/>
       <Title Value="project1"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>

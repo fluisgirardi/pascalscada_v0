@@ -46,7 +46,6 @@ object Form1: TForm1
     Width = 100
     Enabled = True
     TabOrder = 4
-    SecurityCode = 'Picture Editing'
   end
   object HMITrackBar2: THMITrackBar
     Left = 80
@@ -55,15 +54,24 @@ object Form1: TForm1
     Width = 100
     Enabled = True
     TabOrder = 5
-    SecurityCode = 'Hardcopy'
+  end
+  object Button5: TButton
+    Left = 8
+    Height = 25
+    Top = 72
+    Width = 75
+    Caption = 'Button5'
+    TabOrder = 6
+    OnClick = Button5Click
   end
   object CentralUserManagement1: TCentralUserManagement
     LoginRetries = 0
     LoginFrozenTime = 0
+    RaiseExceptOnConnFailure = False
     AuthServer = '127.0.0.1'
     AuthServerPort = 7561
-    Left = 64
-    Top = 32
+    Left = 56
+    Top = 16
   end
   object ActionList1: TActionList
     Left = 184
@@ -81,14 +89,14 @@ object Form1: TForm1
       Caption = 'PascalSCADASecureAction1'
       DisableIfNoHandler = False
       OnExecute = PascalSCADASecureAction1Execute
-      SecurityCode = 'Hardcopy'
+      SecurityCode = 'Edição de mensagens'
     end
     object PascalSCADASecureAction2: TPascalSCADASecureAction
       Category = 'PascalSCADA User Management'
       Caption = 'PascalSCADASecureAction2'
       DisableIfNoHandler = False
       OnExecute = PascalSCADASecureAction2Execute
-      SecurityCode = 'Picture Editing'
+      SecurityCode = 'Administração de Usuário'
     end
   end
 end

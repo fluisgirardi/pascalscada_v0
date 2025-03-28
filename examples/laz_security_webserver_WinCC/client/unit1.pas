@@ -18,6 +18,7 @@ type
     Button2: TButton;
     Button3: TButton;
     Button4: TButton;
+    Button5: TButton;
     CentralUserManagement1: TCentralUserManagement;
     HMITrackBar1: THMITrackBar;
     HMITrackBar2: THMITrackBar;
@@ -25,6 +26,7 @@ type
     PascalSCADALogoutAction1: TPascalSCADALogoutAction;
     PascalSCADASecureAction1: TPascalSCADASecureAction;
     PascalSCADASecureAction2: TPascalSCADASecureAction;
+    procedure Button5Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure PascalSCADASecureAction1Execute(Sender: TObject);
     procedure PascalSCADASecureAction2Execute(Sender: TObject);
@@ -45,7 +47,12 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  //PascalSCADASecureAction1.SecurityCode:='pqp';
+  ;
+end;
+
+procedure TForm1.Button5Click(Sender: TObject);
+begin
+  CentralUserManagement1.UseCentralUserAsLocalUser:=true
 end;
 
 procedure TForm1.PascalSCADASecureAction1Execute(Sender: TObject);
