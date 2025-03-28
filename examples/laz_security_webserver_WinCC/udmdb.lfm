@@ -6,14 +6,20 @@ object dmdb: Tdmdb
   Width = 389
   object SQLServerWINCC: TZConnection
     ControlsCodePage = cCP_UTF8
+    RawCharacterTransliterateOptions.SQL = True
+    ClientCodepage = 'CP_UTF16'
     Properties.Strings = (
+      'codepage=CP_UTF16'
+      'controls_cp=CP_UTF8'
       'RawStringEncoding=DB_CP'
     )
+    Connected = True
     DesignConnection = True
     DisableSavepoints = False
     HostName = '127.0.0.1'
     Port = 0
-    Database = 'Provider=SQLNCLI11.1;Integrated Security=SSPI;Persist Security Info=False;User ID="";Initial Catalog=CC_testeCon_25_03_05_04_02_22;Data Source=WIN-LCEA7E6AEU0\WINCC;Initial File Name="";Server SPN=""'
+    Database = 'Provider=MSOLEDBSQL.1;Persist Security Info=False;User ID=sa;Initial Catalog=CC_RacaoSJC_25_01_10_16_31_29;Data Source=WSR-086-000-129\WINCC;Initial File Name="";Trust Server Certificate=True;Server SPN="";Authentication="";Access Token=""'
+    Password = 'AlfaSJC25#'
     Protocol = 'ado'
     Left = 40
     Top = 16
@@ -22,7 +28,7 @@ object dmdb: Tdmdb
     Connection = SQLServerWINCC
     SQL.Strings = (
       'SELECT *'
-      '  FROM [CC_testeCon_25_03_05_04_02_22].[dbo].[PW_USER]'
+      '  FROM [dbo].[PW_USER]'
       '  WHERE UPPER([name])=UPPER(:username) and [ID]<1000'
     )
     Params = <    
@@ -185,7 +191,15 @@ object dmdb: Tdmdb
       '  FROM [dbo].[PW_PERM] perm'
       'join [dbo].[PW_LINE] line on perm.LINENUM = line.LINENUM'
       'join [dbo].[TXTTable] txt on txt.TEXTID = line.LINENAME'
-      'WHERE [id]=:uid and UPPER(txt.L1033)=UPPER(:securitycode) and perm.WHOLELINEPERM=1'
+      'join [dbo].[PW_USER] tuser on perm.[id]=tuser.ID'
+      'WHERE tuser.ID=:uid and UPPER(txt.L1046)=UPPER(:securitycode) and perm.WHOLELINEPERM=1'
+      'UNION '
+      'SELECT *       '
+      '  FROM [dbo].[PW_PERM] perm'
+      'join [dbo].[PW_LINE] line on perm.LINENUM = line.LINENUM'
+      'join [dbo].[TXTTable] txt on txt.TEXTID = line.LINENAME'
+      'join [dbo].[PW_USER] tuser on perm.[id]=tuser.GRPID'
+      'WHERE tuser.ID=:uid and UPPER(txt.L1046)=UPPER(:securitycode) and perm.WHOLELINEPERM=1'
     )
     Params = <    
       item
@@ -338,20 +352,10 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableL1033: TZRawStringField
-      FieldKind = fkData
-      FieldName = 'L1033'
-      Index = 15
-      LookupCache = False
-      ProviderFlags = [pfInUpdate, pfInWhere]
-      ReadOnly = True
-      Required = False
-      Size = 400
-    end
     object UIDCanAccessTableRecordVersion: TZBytesField
       FieldKind = fkData
       FieldName = 'RecordVersion'
-      Index = 16
+      Index = 15
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
@@ -361,7 +365,159 @@ object dmdb: Tdmdb
     object UIDCanAccessTableRecordId: TZIntegerField
       FieldKind = fkData
       FieldName = 'RecordId'
+      Index = 16
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableL1046: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'L1046'
       Index = 17
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 400
+    end
+    object UIDCanAccessTableID_1: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'ID_1'
+      Index = 18
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableNAME: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'NAME'
+      Index = 19
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 25
+    end
+    object UIDCanAccessTablePASS: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PASS'
+      Index = 20
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 25
+    end
+    object UIDCanAccessTableGRPID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'GRPID'
+      Index = 21
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableEXPTIME: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'EXPTIME'
+      Index = 22
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableWEBSTARTPICTURE: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'WEBSTARTPICTURE'
+      Index = 23
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object UIDCanAccessTableWEBSTARTLANG: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WEBSTARTLANG'
+      Index = 24
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableNTUSER: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'NTUSER'
+      Index = 25
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object UIDCanAccessTableDESCRIPTION: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'DESCRIPTION'
+      Index = 26
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object UIDCanAccessTableFLAGS: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'FLAGS'
+      Index = 27
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePassWordHash: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PassWordHash'
+      Index = 28
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object UIDCanAccessTablePW_Version: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PW_Version'
+      Index = 29
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTablePWC_StartPicture: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PWC_StartPicture'
+      Index = 30
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object UIDCanAccessTablePWC_ReservedLicense: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PWC_ReservedLicense'
+      Index = 31
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object UIDCanAccessTableWEBUSEHORN: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WEBUSEHORN'
+      Index = 32
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
@@ -374,23 +530,31 @@ object dmdb: Tdmdb
       'SELECT *'
       '  FROM [dbo].[PW_LINE] line'
       '  join [dbo].[TXTTable] txt on line.LINENAME=txt.TEXTID '
-      ' where ((:tipobusca=0) AND UPPER(:securitycode)=txt.L1033) OR (:tipobusca=1)'
+      ' where ((:tipobusca=0) AND (UPPER(txt.L1046)=UPPER(:securitycode))) OR (:tipobusca=1)'
     )
     Params = <    
       item
+        DataType = ftInteger
         Name = 'tipobusca'
+        SQLType = stInteger
       end    
       item
+        DataType = ftString
         Name = 'securitycode'
+        SQLType = stString
       end>
     Left = 40
     Top = 200
     ParamData = <    
       item
+        DataType = ftInteger
         Name = 'tipobusca'
+        SQLType = stInteger
       end    
       item
+        DataType = ftString
         Name = 'securitycode'
+        SQLType = stString
       end>
     object REGISTERsecuritycodeLINENUM: TZIntegerField
       FieldKind = fkData
@@ -428,20 +592,10 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object REGISTERsecuritycodeL1033: TZRawStringField
-      FieldKind = fkData
-      FieldName = 'L1033'
-      Index = 4
-      LookupCache = False
-      ProviderFlags = [pfInUpdate, pfInWhere]
-      ReadOnly = True
-      Required = False
-      Size = 400
-    end
     object REGISTERsecuritycodeRecordVersion: TZBytesField
       FieldKind = fkData
       FieldName = 'RecordVersion'
-      Index = 5
+      Index = 4
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
@@ -451,11 +605,21 @@ object dmdb: Tdmdb
     object REGISTERsecuritycodeRecordId: TZIntegerField
       FieldKind = fkData
       FieldName = 'RecordId'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object REGISTERsecuritycodeL1046: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'L1046'
       Index = 6
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
       Required = False
+      Size = 400
     end
   end
 end
