@@ -566,6 +566,9 @@ type
   @seealso(TGraphicZones)
   }
   {$ENDIF}
+
+  { TGraphicZone }
+
   TGraphicZone = class(TAnimationZone)
   private
      FILIsDefault:Boolean;
@@ -583,6 +586,7 @@ type
   public
      //: @exclude
      constructor Create(aCollection: TCollection); override;
+     procedure Assign(Source: TPersistent); override;
   published
 
      {$IFDEF PORTUGUES}
@@ -698,6 +702,9 @@ type
   @seealso(TGraphicZone)
   }
   {$ENDIF}
+
+  { TGraphicZones }
+
   TGraphicZones = class(TZones)
   public
     //: @exclude
@@ -1294,6 +1301,27 @@ begin
    FImageList := nil;
    FImageIndex := -1;
    FColor := clWhite;
+end;
+
+procedure TGraphicZone.Assign(Source: TPersistent);
+var
+  Src: TGraphicZone;
+begin
+  if Source is TGraphicZone then begin
+     Src:=Source as TGraphicZone;
+
+     FValue1      := Src.FValue1;
+     FValue2      := Src.FValue2;
+     FIncludeV1   := Src.FIncludeV1;
+     FIncludeV2   := Src.FIncludeV2;
+     FDefaultZone := Src.FDefaultZone;
+     FZoneType    := Src.FZoneType;
+     FImageList   := Src.FImageList;
+     FImageIndex  := Src.FImageIndex;
+     FBlinkTime   := Src.FBlinkTime;
+     BlinkWith    := Src.BlinkWith;
+  end else
+    inherited Assign(Source);
 end;
 
 procedure TGraphicZone.SetILAsDefault(b:Boolean);
