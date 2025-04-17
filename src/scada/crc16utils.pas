@@ -80,6 +80,8 @@ significative.
 }
 {$ENDIF}
 function Calcul_crc(var Pkg:BYTES):Cardinal;
+function Calculate_CRC8(var data:BYTES):Byte;
+function Fast_CRC_Cal8Bits(data:BYTES):Byte;
 
 implementation
 
@@ -132,6 +134,72 @@ begin
   result := crc;
 end;
 
+function Calculate_CRC8(var data:BYTES):Byte;
+var
+  crc:Byte;
+  i, j: Integer;
+begin
+  crc := $ff;
+  for i := 0 to high(data) do begin
+    crc := crc xor data[i];
+    for j := 0 to 7 do begin
+      if ((crc and $80) <> 0) then
+        crc := byte(((Word(crc) shl 1) xor $31))
+      else
+        crc := byte(Word(crc) shl 1);
+    end;
+  end;
+  exit(crc);
+end;
+
+function Fast_CRC_Cal8Bits(data:BYTES):Byte;
+const
+  CrcTable:array[0..255] of byte = ( // 0x97 Polynomial Table, 8-bit, sourcer32@gmail.com
+                                    $00,$97,$B9,$2E,$E5,$72,$5C,$CB,
+                                    $5D,$CA,$E4,$73,$B8,$2F,$01,$96,
+                                    $BA,$2D,$03,$94,$5F,$C8,$E6,$71,
+                                    $E7,$70,$5E,$C9,$02,$95,$BB,$2C,
+                                    $E3,$74,$5A,$CD,$06,$91,$BF,$28,
+                                    $BE,$29,$07,$90,$5B,$CC,$E2,$75,
+                                    $59,$CE,$E0,$77,$BC,$2B,$05,$92,
+                                    $04,$93,$BD,$2A,$E1,$76,$58,$CF,
+                                    $51,$C6,$E8,$7F,$B4,$23,$0D,$9A,
+                                    $0C,$9B,$B5,$22,$E9,$7E,$50,$C7,
+                                    $EB,$7C,$52,$C5,$0E,$99,$B7,$20,
+                                    $B6,$21,$0F,$98,$53,$C4,$EA,$7D,
+                                    $B2,$25,$0B,$9C,$57,$C0,$EE,$79,
+                                    $EF,$78,$56,$C1,$0A,$9D,$B3,$24,
+                                    $08,$9F,$B1,$26,$ED,$7A,$54,$C3,
+                                    $55,$C2,$EC,$7B,$B0,$27,$09,$9E,
+                                    $A2,$35,$1B,$8C,$47,$D0,$FE,$69,
+                                    $FF,$68,$46,$D1,$1A,$8D,$A3,$34,
+                                    $18,$8F,$A1,$36,$FD,$6A,$44,$D3,
+                                    $45,$D2,$FC,$6B,$A0,$37,$19,$8E,
+                                    $41,$D6,$F8,$6F,$A4,$33,$1D,$8A,
+                                    $1C,$8B,$A5,$32,$F9,$6E,$40,$D7,
+                                    $FB,$6C,$42,$D5,$1E,$89,$A7,$30,
+                                    $A6,$31,$1F,$88,$43,$D4,$FA,$6D,
+                                    $F3,$64,$4A,$DD,$16,$81,$AF,$38,
+                                    $AE,$39,$17,$80,$4B,$DC,$F2,$65,
+                                    $49,$DE,$F0,$67,$AC,$3B,$15,$82,
+                                    $14,$83,$AD,$3A,$F1,$66,$48,$DF,
+                                    $10,$87,$A9,$3E,$F5,$62,$4C,$DB,
+                                    $4D,$DA,$F4,$63,$A8,$3F,$11,$86,
+                                    $AA,$3D,$13,$84,$4F,$D8,$F6,$61,
+                                    $F7,$60,$4E,$D9,$12,$85,$AB,$3C
+                                   );
+var
+  i: Integer;
+  crc:Byte;
+begin
+  crc:=0;
+  for i:=0 to High(data) do begin
+    crc := crc xor data[i]; // Apply Byte
+    crc := CrcTable[crc and $FF]; // One round of 8-bits
+  end;
+
+  exit(crc);
+end;
 
 end.
  
