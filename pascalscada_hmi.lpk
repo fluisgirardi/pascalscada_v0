@@ -245,12 +245,12 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
         <UnitName Value="HMIBandeja"/>
       </Item53>
       <Item54>
-        <Filename Value="src/hmi/hmieventlogger.pas"/>
-        <UnitName Value="HMIEventLogger"/>
-      </Item54>
-      <Item55>
         <Filename Value="src/hmi/centralusermanagement.pas"/>
         <UnitName Value="CentralUserManagement"/>
+      </Item54>
+      <Item55>
+        <Filename Value="src/hmi/hmieventlogger.pas"/>
+        <UnitName Value="HMIEventLogger"/>
       </Item55>
     </Files>
     <CompatibilityMode Value="True"/>

@@ -322,8 +322,11 @@ var
   c:LongInt;
 begin
   x:=GetRegisteredAccessCodes;
-  Result:=x.IndexOf(sc)<>-1;
-  x.Destroy;
+  try
+    Result:=x.IndexOf(sc)<>-1;
+  finally
+    x.Destroy;
+  end;
 end;
 
 procedure   TWinCCUserManagement.RegisterSecurityCode(sc:UTF8String);

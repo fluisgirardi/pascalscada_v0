@@ -5,7 +5,8 @@ unit CentralUserManagement;
 interface
 
 uses
-  BasicUserManagement, fpjson, jsonparser, Classes, fphttpclient, SysUtils;
+  BasicUserManagement, ControlSecurityManager, fpjson, jsonparser, Classes,
+  fphttpclient, SysUtils, Forms;
 
 type
 
@@ -15,25 +16,30 @@ type
   private
     FAuthServer: String;
     FAuthServerPort: Word;
+    FRaiseExceptOnConnFailure: Boolean;
+    FUseCentralUserAsLocalUser: Boolean;
     function PostMethod(aAPIEndpoint: String; aJsonData: TJSONData;
       var ReturnData: UTF8String): Boolean;
+    function PostMethodInt(aAPIEndpoint: String; aJsonData: TJSONData;
+      var ReturnData: UTF8String): Integer;
     procedure setAuthServer(AValue: String);
     procedure SetAuthServerPort(AValue: Word);
+    procedure SetUseCentralUserAsLocalUser(AValue: Boolean);
+    procedure UpdateControlSecureState(Data: PtrInt);
 
   protected
     function CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
-    function CheckUserChipCard(aChipCardCode: UTF8String; var userlogin: UTF8String; var UserID: Integer; LoginAction: Boolean): Boolean; override;
-
-    function GetCurrentUserName:UTF8String; override;
-    function GetCurrentUserLogin:UTF8String; override;
     function CanAccess(sc: UTF8String; aUID: Integer): Boolean; override; overload;
-    function GetRegisteredAccessCodes: TStringList; override;
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    function  GetRegisteredAccessCodes: TStringList; override;
     procedure Manage; override;
 
     //Security codes management
     procedure ValidateSecurityCode(sc:UTF8String); override;
     procedure RegisterSecurityCode(sc: UTF8String); override;
+    function SecurityCodeExists(sc: UTF8String): Boolean; override;
 
     function  CanAccess(sc:UTF8String):Boolean; override;
   published
@@ -48,9 +54,12 @@ type
 
     property SuccessfulLogin;
     property FailureLogin;
+    property UserChanged;
   published
+    property RaiseExceptOnConnFailure:Boolean read FRaiseExceptOnConnFailure write FRaiseExceptOnConnFailure;
     property AuthServer:String read FAuthServer write setAuthServer;
     property AuthServerPort:Word read FAuthServerPort Write SetAuthServerPort;
+    property UseCentralUserAsLocalUser:Boolean read FUseCentralUserAsLocalUser write SetUseCentralUserAsLocalUser;
   end;
 
 const
@@ -61,11 +70,16 @@ const
   _ManagementNotAvailable = 'User management not available, check the user management on the server!';
   _ManagementValidateSC = 'User can not access Security Code';
   _ManagementValidateRSC = 'Security Code is not found';
+  _CannotConnectOnSecServer = 'Conneciton to security server failed';
+  _SecurityServerRejectedSC = 'Security server has been rejected this security code';
+  _SecurityServerCannotRegisterSC = 'Security server cannot register this security code';
   _uidcanaccess = 'uidcanaccess';
   _securitycode = 'securitycode';
   _uid = 'uid';
+  _login = 'login';
   _registersecuritycode = 'registersecuritycode';
   _validadesecuritycode = 'validadesecuritycode';
+  _FUseCentralUserAsLocalUser = 'UseCentralUserAsLocalUser';
 
 
 implementation
@@ -73,7 +87,13 @@ implementation
 { TCentralUserManagement }
 
 function TCentralUserManagement.PostMethod(aAPIEndpoint: String;
-  aJsonData: TJSONData; var ReturnData:UTF8String): Boolean;
+  aJsonData: TJSONData; var ReturnData: UTF8String): Boolean;
+begin
+  exit(PostMethodInt(aAPIEndpoint,aJsonData,ReturnData)=200);
+end;
+
+function TCentralUserManagement.PostMethodInt(aAPIEndpoint: String;
+  aJsonData: TJSONData; var ReturnData: UTF8String): Integer;
 var
   wc: TFPHTTPClient;
   ms, sl: TStringStream;
@@ -96,7 +116,7 @@ begin
       finally
         FreeAndNil(sl)
       end;
-      Exit(wc.ResponseStatusCode=200);
+      Exit(wc.ResponseStatusCode);
     finally
       FreeAndNil(ms);
     end;
@@ -119,6 +139,18 @@ begin
   Logout;
 end;
 
+procedure TCentralUserManagement.SetUseCentralUserAsLocalUser(AValue: Boolean);
+begin
+  if FUseCentralUserAsLocalUser=AValue then Exit;
+  FUseCentralUserAsLocalUser:=AValue;
+  GetControlSecurityManager.UpdateControls;
+end;
+
+procedure TCentralUserManagement.UpdateControlSecureState(Data: PtrInt);
+begin
+  GetControlSecurityManager.UpdateControls;
+end;
+
 function TCentralUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
   out UserID: Integer; LoginAction: Boolean): Boolean;
 var
@@ -138,7 +170,7 @@ begin
         exit(false);
       end;
       try
-        if (UserData is TJSONObject) and TJSONObject(UserData).Find('UID',aUID) then begin
+        if (UserData is TJSONObject) and TJSONObject(UserData).Find(_uid,aUID) then begin
           UserID:=aUID.AsInteger;
           exit(True);
         end else
@@ -154,38 +186,61 @@ begin
   end;
 end;
 
-function TCentralUserManagement.CheckUserChipCard(aChipCardCode: UTF8String;
-  var userlogin: UTF8String;
-  var UserID: Integer; LoginAction: Boolean): Boolean;
-begin
-  Result:=inherited CheckUserChipCard(aChipCardCode, userlogin, UserID,
-    LoginAction);
-end;
-
-function TCentralUserManagement.GetCurrentUserName: UTF8String;
-begin
-  Result:=inherited GetCurrentUserName;
-end;
-
-function TCentralUserManagement.GetCurrentUserLogin: UTF8String;
-begin
-  Result:=inherited GetCurrentUserLogin;
-end;
-
 function TCentralUserManagement.CanAccess(sc: UTF8String; aUID: Integer
   ): Boolean;
 var
   jobj: TJSONObject;
   aux: UTF8String;
+  CentralData: TJSONData;
+  jUID:TJSONNumber;
+  jLogin:TJSONString;
 begin
   jobj:=TJSONObject.Create;
   try
     jobj.Add(_uid, aUID);
     jobj.Add(_securitycode, sc);
-    exit(PostMethod(_uidcanaccess, jobj, aux));
+    jobj.Add(_FUseCentralUserAsLocalUser, FUseCentralUserAsLocalUser);
+    Result:=PostMethod(_uidcanaccess, jobj, aux);
+    if FUseCentralUserAsLocalUser then begin
+      try
+        CentralData:=GetJSON(aux);
+      except
+        exit;
+      end;
+
+      if (CentralData is TJSONObject) then begin
+        if TJSONObject(CentralData).Find(_uid,jUID) then begin
+          if FUID<>jUID.AsInteger then begin
+            //delay a Control security refresh
+            if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+              Application.QueueAsyncCall(@UpdateControlSecureState,0);
+          end;
+          FUID:=jUID.AsInteger;
+        end;
+
+        if TJSONObject(CentralData).Find(_login,jLogin) then begin
+          FCurrentUserLogin:=jLogin.AsString;
+        end;
+
+        exit;
+      end;
+    end;
   finally
     FreeAndNil(jobj);
   end;
+end;
+
+constructor TCentralUserManagement.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FRaiseExceptOnConnFailure:=false;
+end;
+
+destructor TCentralUserManagement.Destroy;
+begin
+  if Assigned(Application) then
+    Application.RemoveAllHandlersOfObject(Self);
+  inherited Destroy;
 end;
 
 function TCentralUserManagement.GetRegisteredAccessCodes: TStringList;
@@ -242,8 +297,17 @@ begin
   jobj:=TJSONObject.Create;
   try
     jobj.Add(_securitycode, sc);
-    if not PostMethod(_validadesecuritycode, jobj, aux) then
-      raise Exception.Create(_ManagementValidateSC);
+    case PostMethodInt(_validadesecuritycode, jobj, aux) of
+      0: if FRaiseExceptOnConnFailure then
+        raise Exception.Create(_CannotConnectOnSecServer);
+      200: ;
+      404: ;
+      405:
+        raise Exception.Create(_SecurityServerRejectedSC);
+      else begin
+
+      end;
+    end;
   finally
     FreeAndNil(jobj);
   end;
@@ -257,10 +321,33 @@ begin
   jobj:=TJSONObject.Create;
   try
     jobj.Add(_securitycode, sc);
-    if not PostMethod(_registersecuritycode, jobj, aux) then
-      raise Exception.Create(_ManagementValidateRSC);
+    case PostMethodInt(_registersecuritycode, jobj, aux) of
+      0:
+        if FRaiseExceptOnConnFailure then
+          raise Exception.Create(_CannotConnectOnSecServer);
+      200: ;
+      404: ;
+      405:
+        raise Exception.Create(_SecurityServerCannotRegisterSC);
+      else begin
+
+      end;
+    end;
   finally
     FreeAndNil(jobj);
+  end;
+end;
+
+function TCentralUserManagement.SecurityCodeExists(sc: UTF8String): Boolean;
+var
+  x:TStringList;
+  c:LongInt;
+begin
+  x:=GetRegisteredAccessCodes;
+  try
+    Result:=x.IndexOf(sc)<>-1;
+  finally
+    x.Destroy;
   end;
 end;
 
