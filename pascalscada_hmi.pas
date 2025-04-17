@@ -20,7 +20,8 @@ uses
   HMI_Draw_Valves, hmi_draw_elevador, HMIBasicEletricMotor, hmi_flow_zones, 
   hmi_draw_flow_valve, hmi_draw_flow_pump, hmi_tachart_tag_source_list, 
   tagstatuslist, ChipCardReader, HMIFlowImage, hmifaceplatecontainer, 
-  hmifaceplatedsgn, HMIBandeja, CentralUserManagement, LazarusPackageIntf;
+  hmifaceplatedsgn, HMIBandeja, HMIEventLogger, CentralUserManagement, 
+  LazarusPackageIntf;
 
 implementation
 
