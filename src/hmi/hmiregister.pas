@@ -15,7 +15,7 @@ unit hmiregister;
 
 interface
 
-uses hmifaceplatecontainer;
+uses hmifaceplatecontainer, HMIEventLogger;
 
 procedure Register;
 
@@ -99,7 +99,8 @@ begin
                                            THMIForkedFlowValve,
                                            THMIThreeWayFlowValve,
                                            THMIFlowImage,
-                                           THMIBandeja]);
+                                           THMIBandeja,
+                                           THMIEventLogger]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 
