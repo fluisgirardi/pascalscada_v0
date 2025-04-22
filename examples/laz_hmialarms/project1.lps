@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="project1.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="unit1.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Unit1"/>
+        <TopLine Value="49"/>
+        <CursorPos X="3" Y="123"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/database/hmidbconnection.pas"/>
+        <UnitName Value="HMIDBConnection"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="972"/>
+        <CursorPos X="6" Y="992"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../../../../fpclaz/fpc_stable_laz_stable/fpcsrc/packages/rtl-objpas/src/inc/strutils.pp"/>
+        <UnitName Value="StrUtils"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="173"/>
+        <CursorPos X="10" Y="191"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <UnitName Value="HMIAlarmLogger"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="202"/>
+        <CursorPos Y="220"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../../../../fpclaz/fpc_stable_laz_stable/config_lazarus/onlinepackagemanager/packages/zeosdbo/src/dbc/ZDbcPostgreSql.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="602"/>
+        <CursorPos Y="670"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/scada/tag.pas"/>
+        <UnitName Value="Tag"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="1201"/>
+        <CursorPos Y="1219"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/scada/plctagnumber.pas"/>
+        <UnitName Value="PLCTagNumber"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="335"/>
+        <CursorPos Y="358"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <UnitName Value="HMIZones"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="939"/>
+        <CursorPos Y="959"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/scada/plctag.pas"/>
+        <UnitName Value="PLCTag"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="1142"/>
+        <CursorPos Y="1160"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/hmi/hmibasiccolletion.pas"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="57"/>
+        <CursorPos X="17" Y="80"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="204" Column="18" TopLine="186"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="51" Column="3" TopLine="10"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="57" Column="7" TopLine="40"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="936" Column="4" TopLine="934"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="257" Column="19" TopLine="233"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="57" Column="21" TopLine="41"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="936" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="940" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="941" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="946" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="947" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="948" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="952" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="58" Column="16" TopLine="39"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="957" TopLine="950"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="962" TopLine="950"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="957" Column="50" TopLine="950"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="48" Column="54" TopLine="34"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="86" Column="18" TopLine="65"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="334" Column="54" TopLine="329"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="321" Column="17" TopLine="305"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="80" Column="15" TopLine="68"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="287" Column="25" TopLine="271"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="936" TopLine="918"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="937" TopLine="918"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="938" TopLine="918"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="957" TopLine="939"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="958" TopLine="939"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmizones.pas"/>
+        <Caret Line="959" TopLine="939"/>
+      </Position>
+      <Position>
+        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Caret Line="277" TopLine="270"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+  <Debugging>
+    <BreakPoints>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="unit1.pas"/>
+        <Line Value="80"/>
+      </Item>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/hmi/hmialarmlogger.pas"/>
+        <Line Value="277"/>
+      </Item>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/hmi/hmizones.pas"/>
+        <Line Value="936"/>
+      </Item>
+      <Item>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="../../src/hmi/hmizones.pas"/>
+        <Line Value="957"/>
+      </Item>
+    </BreakPoints>
+  </Debugging>
+</CONFIG>
