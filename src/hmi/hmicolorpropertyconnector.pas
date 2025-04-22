@@ -63,6 +63,7 @@ type
   protected
     function GetDisplayName: AnsiString; override;
   published
+    property DefaultZone;
     property ZoneResult:TColor read FResult write SetZoneResult;
   end;
 

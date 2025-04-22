@@ -202,7 +202,7 @@ function TEventTagColletionItem.GetDisplayName: string;
 begin
   Result:=inttostr(FTagID) + ' = ' + FTagDesc+' (';
   if Assigned(FPLCTag) then begin
-    if PLCTag.Name.IsEmpty then
+    if String(PLCTag.Name).IsEmpty then
       Result:=Result+'<empty name>'
     else
       Result:=Result+FPLCTag.Name;

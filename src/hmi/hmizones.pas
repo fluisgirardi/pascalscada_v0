@@ -64,6 +64,21 @@ type
   protected
      {: @exclude }
      function  GetDisplayName: AnsiString; override;
+
+     {$IFDEF PORTUGUES}
+     {:
+     Se @true torna a zona padrão, exibindo-a quando nenhuma zona for selecionada
+     em função do valor do tag.
+     @seealso(ZoneType)
+     }
+     {$ELSE}
+     {:
+     If @true makes the zone default, showing it when no animation zone is
+     selected depending of the tag value.
+     @seealso(ZoneType)
+     }
+     {$ENDIF}
+     property DefaultZone:Boolean read FDefaultZone write SetAsDefaultZone;
   public
      procedure AssignTo(Dest: TPersistent); override;
   published
@@ -118,21 +133,6 @@ type
      }
      {$ENDIF}
      property IncludeValue2:Boolean read FIncludeV2 write SetIncV2;
-
-     {$IFDEF PORTUGUES}
-     {:
-     Se @true torna a zona padrão, exibindo-a quando nenhuma zona for selecionada
-     em função do valor do tag.
-     @seealso(ZoneType)
-     }
-     {$ELSE}
-     {:
-     If @true makes the zone default, showing it when no animation zone is
-     selected depending of the tag value.
-     @seealso(ZoneType)
-     }
-     {$ENDIF}
-     property DefaultZone:Boolean read FDefaultZone write SetAsDefaultZone;
 
      {$IFDEF PORTUGUES}
      {:
@@ -291,6 +291,8 @@ type
      }
      {$ENDIF}
      property BlinkWith:LongInt read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
+
+     property DefaultZone;
   end;
 
 

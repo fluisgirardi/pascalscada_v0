@@ -7,7 +7,8 @@ interface
 
 uses
   Classes, SysUtils, StrUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  LazUTF8, HMIZones, PLCTag, ProtocolTypes, HMIDBConnection;
+  LazUTF8, HMIZones, PLCTag, ProtocolTypes, HMIDBConnection, psBufDataset,
+  hmibasiccolletion;
 
 type
 
@@ -16,24 +17,26 @@ type
   TAlarmItem=class(TZone)
   private
     FAlarmMessage: String;
+    FDefaultZone: Boolean;
     FExtraInfo: String;
-    FLastEventGUID: TGuid;
-    FLastEventIntID: Int64;
-    FLastEventPointerID: Pointer;
+    FLastAlarmGUID: TGuid;
+    FLastAlarmIntID: Int64;
+    FLastAlarmPointerID: Pointer;
     FLastTagValue: Double;
     FPLCTag: TPLCTag;
     FLastValueInitialized:Boolean;
     procedure SetAlarmMessage(AValue: String);
+    procedure SetAsDefaultZone(AValue: Boolean);
     procedure SetExtraInfo(AValue: String);
     procedure SetLastTagValue(AValue: Double);
     procedure SetPLCTag(AValue: TPLCTag);
-    property DefaultZone;
   public
-    property LastAlarmGUID:TGuid read FLastEventGUID write FLastEventGUID;
-    property LastAlarmPointerID:Pointer read FLastEventPointerID write FLastEventPointerID;
-    property LastAlarmIntID:Int64 read FLastEventIntID write fLastEventIntID;
+    property LastAlarmGUID:TGuid read FLastAlarmGUID write FLastAlarmGUID;
+    property LastAlarmPointerID:Pointer read FLastAlarmPointerID write FLastAlarmPointerID;
+    property LastAlarmIntID:Int64 read FLastAlarmIntID write fLastAlarmIntID;
     property LastTagValue:Double read FLastTagValue write SetLastTagValue;
     function LastValueInitialized:Boolean;
+    function AlarmActive:Boolean;
   published
     property PLCTag:TPLCTag read FPLCTag write SetPLCTag;
     property AlarmMessage:String read FAlarmMessage write SetAlarmMessage;
@@ -42,7 +45,7 @@ type
 
   { TAlarmMessagesCollection }
 
-  TAlarmMessagesCollection = class(TOwnedCollection)
+  TAlarmMessagesCollection = class(THMIBasicColletion)
   public
     function Add: TAlarmItem;
   end;
@@ -61,9 +64,14 @@ type
     FFinishAllPendingAlarms: TFinishAllPendingAlarms;
     FGenerateNewAlarmID: TGenerateNewAlarmID;
     FIncomingAlarm: TIncomingAlarm;
+    FOnRefreshActiveAlarms: TNotifyEvent;
     FOutgoingAlarm: TOutgoingAlarm;
     FInternalAlarmIDCounter:Integer;
     procedure FinishAllPendingAlarmsDelayed;
+    procedure GetComponentState(var CurState: TComponentState);
+    procedure RefreshActiveAlarmTables(Sender: TObject; DS: TFPSBufDataSet;
+      error: Exception);
+    procedure RefreshActiveAlarmTablesDelayed;
     procedure SetAlarmMessages(AValue: TAlarmMessagesCollection);
     procedure SetAsyncDBConnection(AValue: THMIDBConnection);
     procedure TagFromListChanged(Sender: TObject);
@@ -87,9 +95,12 @@ type
     property OnOutgoingAlarm         :TOutgoingAlarm          read FOutgoingAlarm          write FOutgoingAlarm     ;
     property OnFinishAllPendingAlarms:TFinishAllPendingAlarms read FFinishAllPendingAlarms write FFinishAllPendingAlarms;
     property OnGenerateNewAlarmID    :TGenerateNewAlarmID     read FGenerateNewAlarmID     write FGenerateNewAlarmID;
+    property OnRefreshActiveAlarms   :TNotifyEvent            read FOnRefreshActiveAlarms  write FOnRefreshActiveAlarms;
   end;
 
 implementation
+
+uses Math;
 
 
 { TAlarmItem }
@@ -107,6 +118,12 @@ begin
   FAlarmMessage:=AValue;
 end;
 
+procedure TAlarmItem.SetAsDefaultZone(AValue: Boolean);
+begin
+  if FDefaultZone=AValue then Exit;
+  FDefaultZone:=AValue;
+end;
+
 procedure TAlarmItem.SetExtraInfo(AValue: String);
 begin
   if FExtraInfo=AValue then Exit;
@@ -122,6 +139,11 @@ end;
 function TAlarmItem.LastValueInitialized: Boolean;
 begin
   exit(FLastValueInitialized);
+end;
+
+function TAlarmItem.AlarmActive: Boolean;
+begin
+  exit((not IsEqualGUID(fLastAlarmGUID, GUID_NULL)) or (fLastAlarmIntID<>0) or Assigned(FLastAlarmPointerID))
 end;
 
 { TAlarmMessagesCollection }
@@ -149,6 +171,26 @@ begin
 
 end;
 
+procedure THMIAlarmLogger.GetComponentState(var CurState: TComponentState);
+begin
+  CurState:=ComponentState;
+end;
+
+procedure THMIAlarmLogger.RefreshActiveAlarmTables(Sender: TObject;
+  DS: TFPSBufDataSet; error: Exception);
+begin
+  TThread.ForceQueue(nil, @RefreshActiveAlarmTablesDelayed);
+end;
+
+procedure THMIAlarmLogger.RefreshActiveAlarmTablesDelayed;
+begin
+  if Assigned(FOnRefreshActiveAlarms) then
+    try
+      FOnRefreshActiveAlarms(Self);
+    except
+    end;
+end;
+
 procedure THMIAlarmLogger.SetAsyncDBConnection(AValue: THMIDBConnection);
 begin
   if FAsyncDBConnection=AValue then Exit;
@@ -167,13 +209,15 @@ procedure THMIAlarmLogger.TagFromListChanged(Sender: TObject);
 var
   c, i: Integer;
   auxItem: TAlarmItem;
-  NewIntID: Int64;
+  NewIntID, bit, value, NewAlarmIntID: Int64;
   TagValue: Double;
-  NewGUID: TGuid;
+  NewGUID, NewAlarmeGUID: TGuid;
   SQL: UTF8String;
   sqlcmds: THMIDBConnectionStatementList;
   EventTimestamp: TDateTime;
+  AlarmActive: Boolean;
 begin
+  if ([csReading, csLoading]*ComponentState)<>[] then exit;
   EventTimestamp:=Now;
   if Assigned(FAlarmMessages) then begin
     for c:=0 to FAlarmMessages.Count-1 do begin
@@ -184,17 +228,39 @@ begin
           if auxItem.LastValueInitialized and (TagValue=auxItem.LastTagValue) then
             exit;
 
-          if (not IsEqualGUID(auxItem.LastAlarmGUID, GUID_NULL)) or (auxItem.LastAlarmIntID<>0) or Assigned(auxItem.LastAlarmPointerID) then begin
-            DoOutgoingAlarm(auxItem.PLCTag, EventTimestamp, auxItem.LastAlarmIntID, auxItem.LastAlarmGUID, SQL);
-            if Assigned(FAsyncDBConnection) and FAsyncDBConnection.Connected and (UTF8Length(UTF8Trim(SQL))>0) then
-              FAsyncDBConnection.ExecSQL(SQL,nil,false);
-            auxItem.LastAlarmGUID  := GUID_NULL;
-            auxItem.LastAlarmIntID := 0;
-            auxItem.LastAlarmPointerID:=nil;
+          bit := Trunc(auxItem.Value1);
+          value := Trunc(TagValue);
+          bit := Trunc(Power(2,bit));
+
+          AlarmActive :=((auxItem.ZoneType=ztEqual      ) and (TagValue=auxItem.Value1)) or
+                        ((auxItem.ZoneType=ztRange      ) and (((TagValue>auxItem.Value1) OR (auxItem.IncludeValue1 AND (TagValue>=auxItem.Value1))) AND ((TagValue<auxItem.Value2) OR (auxItem.IncludeValue2 AND (TagValue<=auxItem.Value2))))) OR
+                        ((auxItem.ZoneType=ztBit        ) and (((value and bit)=bit)=auxitem.IncludeValue1)) OR
+                        ((auxItem.ZoneType=ztNotEqual   ) and (TagValue<>auxItem.Value1)) OR
+                        ((auxItem.ZoneType=ztOutOfRange ) and (((TagValue<auxItem.Value1) OR (auxItem.IncludeValue1 AND (TagValue<=auxItem.Value1))) OR ((TagValue>auxItem.Value2) OR (auxItem.IncludeValue2 AND (TagValue>=auxItem.Value2))))) OR
+                        ((auxItem.ZoneType=ztGreaterThan) and ((TagValue>auxItem.Value1) OR (auxItem.IncludeValue1 AND (TagValue>=auxItem.Value1)))) OR
+                        ((auxItem.ZoneType=ztLessThan   ) and ((TagValue<auxItem.Value1) OR (auxItem.IncludeValue1 AND (TagValue<=auxItem.Value1))));
+
+          if AlarmActive then begin
+            //alarme ativo e nao tenho ID do alarme, registra o alarme.
+            if IsEqualGUID(auxItem.LastAlarmGUID, GUID_NULL) AND (auxItem.LastAlarmIntID=0) AND (auxItem.LastAlarmPointerID=nil) and GenerateNewAlarmID(NewAlarmIntID, NewAlarmeGUID) then begin
+              DoIncomingAlarm(auxItem.PLCTag, EventTimestamp, auxItem, NewAlarmIntID, NewAlarmeGUID, SQL);
+              if Assigned(FAsyncDBConnection) and FAsyncDBConnection.Connected and (UTF8Length(UTF8Trim(SQL))>0) then
+                FAsyncDBConnection.ExecSQL(SQL,@RefreshActiveAlarmTables,false);
+              auxItem.LastAlarmGUID      := NewAlarmeGUID;
+              auxItem.LastAlarmIntID     := NewAlarmIntID;
+              auxItem.LastAlarmPointerID := nil;
+            end;
+          end else begin
+            //alarme inativo e tenho algum ID do alarme, registra a saida do alarme.
+            if (not IsEqualGUID(auxItem.LastAlarmGUID, GUID_NULL)) or (auxItem.LastAlarmIntID<>0) or Assigned(auxItem.LastAlarmPointerID) then begin
+              DoOutgoingAlarm(auxItem.PLCTag, EventTimestamp, auxItem.LastAlarmIntID, auxItem.LastAlarmGUID, SQL);
+              if Assigned(FAsyncDBConnection) and FAsyncDBConnection.Connected and (UTF8Length(UTF8Trim(SQL))>0) then
+                FAsyncDBConnection.ExecSQL(SQL,@RefreshActiveAlarmTables,false);
+              auxItem.LastAlarmGUID  := GUID_NULL;
+              auxItem.LastAlarmIntID := 0;
+              auxItem.LastAlarmPointerID:=nil;
+            end;
           end;
-
-          //TODO Check if in alarm
-
         finally
           auxItem.LastTagValue := TagValue;
         end;
@@ -218,7 +284,9 @@ begin
         auxItem.PLCTag.AddTagChangeHandler(@TagFromListChanged);
       end;
     end;
+    AlarmMessages.Loaded;
   end;
+
 
   TThread.ForceQueue(nil, @FinishAllPendingAlarmsDelayed);
 end;
@@ -265,6 +333,7 @@ constructor THMIAlarmLogger.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FAlarmMessages:=TAlarmMessagesCollection.Create(Self, TAlarmItem);
+  FAlarmMessages.OnNeedCompState:=@GetComponentState;
 end;
 
 destructor THMIAlarmLogger.Destroy;
