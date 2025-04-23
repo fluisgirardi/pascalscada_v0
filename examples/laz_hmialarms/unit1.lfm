@@ -1,0 +1,312 @@
+object Form1: TForm1
+  Left = 431
+  Height = 462
+  Top = 124
+  Width = 1361
+  Caption = 'Form1'
+  ClientHeight = 462
+  ClientWidth = 1361
+  OnCreate = FormCreate
+  object HMITrackBar1: THMITrackBar
+    Left = 168
+    Height = 37
+    Top = 80
+    Width = 100
+    Enabled = True
+    TabOrder = 0
+    PLCTag = PLCTagNumber1
+  end
+  object DBGrid1: TDBGrid
+    Left = 0
+    Height = 132
+    Top = 330
+    Width = 1361
+    Align = alBottom
+    Color = clYellow
+    Columns = <    
+      item
+        Title.Caption = 'ID Int'
+        Width = 45
+        FieldName = 'id_alarme'
+      end    
+      item
+        Title.Caption = 'UUID'
+        Width = 180
+        FieldName = 'uuid_alarme'
+      end    
+      item
+        Title.Caption = 'Dt. inicio alarme'
+        Width = 130
+        FieldName = 'dt_inicio'
+      end    
+      item
+        Title.Caption = 'Dt. fim alarme'
+        Width = 130
+        FieldName = 'dt_termino'
+      end    
+      item
+        Title.Caption = 'Dt. reconhecimento'
+        Width = 130
+        FieldName = 'dt_ack'
+      end    
+      item
+        Title.Caption = 'Mensagem'
+        Width = 300
+        FieldName = 'ds_msg'
+      end    
+      item
+        Title.Caption = 'Nome tag'
+        Width = 90
+        FieldName = 'ds_nometag'
+      end    
+      item
+        Title.Caption = 'Valor'
+        Width = 45
+        FieldName = 'nr_tagvalue'
+      end    
+      item
+        Title.Caption = 'Usuário'
+        Width = 120
+        FieldName = 'ds_username'
+      end    
+      item
+        Title.Caption = 'Local'
+        Width = 120
+        FieldName = 'ds_local'
+      end>
+    DataSource = ds_AlarmesAtivos
+    FixedCols = 0
+    Options = [dgTitles, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
+    ReadOnly = True
+    TabOrder = 1
+  end
+  object ComboBox1: TComboBox
+    Left = 1136
+    Height = 26
+    Top = 296
+    Width = 212
+    Color = clWindow
+    ItemHeight = 0
+    ItemIndex = 0
+    Items.Strings = (
+      'Ativos'
+      'Ativos e nao reconhecidos'
+      'Não reconhecidos'
+      'Inativos não reconhecidos'
+      'TODOS'
+    )
+    Style = csDropDownList
+    TabOrder = 2
+    Text = 'Ativos'
+    OnChange = ComboBox1EditingDone
+  end
+  object HMIAlarmLogger1: THMIAlarmLogger
+    AlarmMessages = <    
+      item
+        Value1 = 1
+        Value2 = 1
+        IncludeValue1 = True
+        IncludeValue2 = False
+        ZoneType = ztEqual
+        PLCTag = PLCTagNumber1
+        AlarmMessage = 'Alarme de teste'
+      end>
+    AsyncDBConnection = HMIDBConnection1
+    OnIncomingAlarm = HMIAlarmLogger1IncomingAlarm
+    OnOutgoingAlarm = HMIAlarmLogger1OutgoingAlarm
+    OnFinishAllPendingAlarms = HMIAlarmLogger1FinishAllPendingAlarms
+    OnRefreshActiveAlarms = HMIAlarmLogger1RefreshActiveAlarms
+    Left = 56
+    Top = 88
+  end
+  object HMIDBConnection1: THMIDBConnection
+    Connected = True
+    LibraryLocation = ''
+    Protocol = 'postgresql'
+    HostName = '127.0.0.1'
+    Port = 5432
+    Database = 'prime_data'
+    User = 'postgres'
+    Password = 'Idt2014#'
+    ReadOnly = False
+    Left = 56
+    Top = 24
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{F601FEBB-E20C-4CF8-B99A-897690FCFB21}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 56
+    Top = 152
+  end
+  object AtualizaDelay: TTimer
+    Interval = 500
+    OnTimer = AtualizaDelayTimer
+    Left = 56
+    Top = 216
+  end
+  object ZConnection1: TZConnection
+    ControlsCodePage = cCP_UTF8
+    Properties.Strings = (
+      'RawStringEncoding=DB_CP'
+    )
+    Connected = True
+    DesignConnection = True
+    DisableSavepoints = False
+    HostName = '127.0.0.1'
+    Port = 5432
+    Database = 'prime_data'
+    User = 'postgres'
+    Password = 'Idt2014#'
+    Protocol = 'postgresql'
+    Left = 344
+    Top = 24
+  end
+  object tbl_AlarmesAtivos: TZReadOnlyQuery
+    Connection = ZConnection1
+    SQL.Strings = (
+      'SELECT id_alarme, '
+      '       dt_inicio, '
+      '       dt_termino, '
+      '       CAST(textos.get_text(cd_mensagem, ''pt_br'') as VARCHAR(255)) as ds_msg, '
+      '       nr_tagvalue, '
+      '       CAST(textos.get_text(cd_nometag, ''pt_br'') as VARCHAR(255)) as ds_nometag, '
+      '       CAST(textos.get_text(cd_nomeusuario, ''pt_br'') as VARCHAR(255)) as ds_username, '
+      '       CAST(textos.get_text(cd_local, ''pt_br'') as VARCHAR(255)) as ds_local, '
+      '       dt_ack, '
+      '       uuid_alarme'
+      'FROM alarms.tbl_alarmes'
+      'where (:view=0 and  dt_termino is null) or '
+      '      (:view=1 and  dt_termino is null and dt_ack is null) or '
+      '      (:view=2 and  dt_ack is null) or '
+      '      (:view=3 and  not dt_termino is null and dt_ack is null) or '
+      '      (:view=4)'
+      ' order by dt_inicio DESC '
+    )
+    Params = <    
+      item
+        DataType = ftInteger
+        Name = 'view'
+        SQLType = stInteger
+        Value = '0'
+      end>
+    Left = 344
+    Top = 88
+    ParamData = <    
+      item
+        DataType = ftInteger
+        Name = 'view'
+        SQLType = stInteger
+        Value = '0'
+      end>
+    object tbl_AlarmesAtivosid_alarme: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'id_alarme'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object tbl_AlarmesAtivosdt_inicio: TZDateTimeField
+      FieldKind = fkData
+      FieldName = 'dt_inicio'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object tbl_AlarmesAtivosdt_termino: TZDateTimeField
+      FieldKind = fkData
+      FieldName = 'dt_termino'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object tbl_AlarmesAtivosds_msg: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'ds_msg'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 255
+    end
+    object tbl_AlarmesAtivosnr_tagvalue: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'nr_tagvalue'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object tbl_AlarmesAtivosds_nometag: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'ds_nometag'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 255
+    end
+    object tbl_AlarmesAtivosds_username: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'ds_username'
+      Index = 6
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 255
+    end
+    object tbl_AlarmesAtivosds_local: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'ds_local'
+      Index = 7
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 255
+    end
+    object tbl_AlarmesAtivosdt_ack: TZDateTimeField
+      FieldKind = fkData
+      FieldName = 'dt_ack'
+      Index = 8
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object tbl_AlarmesAtivosuuid_alarme: TZGuidField
+      FieldKind = fkData
+      FieldName = 'uuid_alarme'
+      Index = 9
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 38
+    end
+  end
+  object ds_AlarmesAtivos: TDataSource
+    DataSet = tbl_AlarmesAtivos
+    Left = 344
+    Top = 152
+  end
+end

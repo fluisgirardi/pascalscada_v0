@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="project1.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="64" Y="13"/>
+        <UsageCount Value="32"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="udm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="dm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <TopLine Value="9"/>
+        <CursorPos X="26" Y="16"/>
+        <UsageCount Value="32"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../src/hmi/hmieventlogger.pas"/>
+        <UnitName Value="HMIEventLogger"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="188"/>
+        <CursorPos X="27" Y="205"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="uusermanagement.pas"/>
+        <ComponentName Value="frmUserManagement"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="495"/>
+        <CursorPos X="29" Y="511"/>
+        <UsageCount Value="15"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="udm.lfm"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="umainexemplo.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="6" Y="9"/>
+        <UsageCount Value="31"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="25">
+      <Position>
+        <Filename Value="uusermanagement.pas"/>
+        <Caret Line="12" Column="39"/>
+      </Position>
+      <Position>
+        <Filename Value="uusermanagement.pas"/>
+        <Caret Line="10" Column="52"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="57" Column="31" TopLine="30"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="64" Column="31" TopLine="37"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="72" Column="31" TopLine="45"/>
+      </Position>
+      <Position>
+        <Filename Value="project1.lpr"/>
+        <Caret Line="27"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="73" Column="31" TopLine="45"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="238" Column="22" TopLine="235"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="239" Column="22" TopLine="236"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="240" Column="22" TopLine="237"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="241" Column="22" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="240" Column="22" TopLine="237"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="239" Column="22" TopLine="236"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="240" Column="22" TopLine="237"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="241" Column="22" TopLine="238"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="242" Column="22" TopLine="239"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="243" Column="22" TopLine="240"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="244" Column="22" TopLine="241"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="245" Column="22" TopLine="239"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="177" TopLine="170"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="200" TopLine="170"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="248" Column="18" TopLine="239"/>
+      </Position>
+      <Position>
+        <Filename Value="udm.pas"/>
+        <Caret Line="16" Column="26" TopLine="9"/>
+      </Position>
+      <Position>
+        <Filename Value="umainexemplo.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="umainexemplo.pas"/>
+        <Caret Line="8" Column="71"/>
+      </Position>
+      <Position>
+        <Filename Value="umainexemplo.pas"/>
+        <Caret Line="9" Column="6"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

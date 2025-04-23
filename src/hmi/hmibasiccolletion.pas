@@ -7,6 +7,8 @@ uses
 
 type
 
+  { THMIBasicColletion }
+
   THMIBasicColletion = class(TCollection)
   private
     FOwner:TPersistent;
@@ -23,6 +25,7 @@ type
  public
    //: @exclude
    function GetComponentState:TComponentState;
+   procedure Assign(Source: TPersistent); override;
  public
 
     {$IFDEF PORTUGUES}
@@ -159,6 +162,31 @@ function THMIBasicColletion.GetComponentState: TComponentState;
 begin
   NeedCurrentCompState;
   Result := FComponentState;
+end;
+
+procedure THMIBasicColletion.Assign(Source: TPersistent);
+var
+  I: Integer;
+begin
+  If Source is THMIBasicColletion then
+    begin
+    BeginUpdate;
+    try
+      Clear;
+      For I:=0 To THMIBasicColletion(Source).Count-1 do
+       Add;
+
+      For I:=0 To Self.Count-1 do begin
+       Items[I].Assign(THMIBasicColletion(Source).Items[I]);
+       DoOnChange(Self.Items[I]);
+      end;
+    finally
+      EndUpdate;
+    end;
+    exit;
+    end
+  else
+    Inherited Assign(Source);
 end;
 
 procedure THMIBasicColletion.NeedCurrentCompState;
