@@ -166,6 +166,8 @@ begin
     else
       Color:=DIntToColor(Trunc(FBackgroundColorPLCTag.Value), lum);
 
+    Visible:= not (Color = 0);
+
     if lum>127 then
       Font.Color:=clBlack
     else
