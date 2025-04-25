@@ -5,8 +5,8 @@ unit CentralUserManagement;
 interface
 
 uses
-  BasicUserManagement, ControlSecurityManager, fpjson, jsonparser, Classes,
-  fphttpclient, SysUtils, Forms;
+  BasicUserManagement, ControlSecurityManager, fpjson, jsonparser, StrUtils,
+  Classes, fphttpclient, SysUtils, Forms, fpopenssl, sslsockets, opensslsockets;
 
 type
 
@@ -17,7 +17,9 @@ type
     FAuthServer: String;
     FAuthServerPort: Word;
     FRaiseExceptOnConnFailure: Boolean;
+    FUseCachedAuthorizations: Boolean;
     FUseCentralUserAsLocalUser: Boolean;
+    FUseSSL: Boolean;
     function PostMethod(aAPIEndpoint: String; aJsonData: TJSONData;
       var ReturnData: UTF8String): Boolean;
     function PostMethodInt(aAPIEndpoint: String; aJsonData: TJSONData;
@@ -28,6 +30,7 @@ type
     procedure UpdateControlSecureState(Data: PtrInt);
 
   protected
+    FCachedAuthorizations:TJSONObject;
     function CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
     function CanAccess(sc: UTF8String; aUID: Integer): Boolean; override; overload;
   public
@@ -35,6 +38,7 @@ type
     destructor Destroy; override;
     function  GetRegisteredAccessCodes: TStringList; override;
     procedure Manage; override;
+    procedure Logout; override;
 
     //Security codes management
     procedure ValidateSecurityCode(sc:UTF8String); override;
@@ -58,8 +62,10 @@ type
   published
     property RaiseExceptOnConnFailure:Boolean read FRaiseExceptOnConnFailure write FRaiseExceptOnConnFailure;
     property AuthServer:String read FAuthServer write setAuthServer;
-    property AuthServerPort:Word read FAuthServerPort Write SetAuthServerPort;
+    property AuthServerPort:Word read FAuthServerPort Write SetAuthServerPort;                                    
+    property UseCachedAuthorizations:Boolean read FUseCachedAuthorizations write FUseCachedAuthorizations;
     property UseCentralUserAsLocalUser:Boolean read FUseCentralUserAsLocalUser write SetUseCentralUserAsLocalUser;
+    property UseSSL:Boolean read FUseSSL write FUseSSL;
   end;
 
 const
@@ -80,6 +86,7 @@ const
   _registersecuritycode = 'registersecuritycode';
   _validadesecuritycode = 'validadesecuritycode';
   _FUseCentralUserAsLocalUser = 'UseCentralUserAsLocalUser';
+  _authorizations = 'authorizations';
 
 
 implementation
@@ -107,7 +114,7 @@ begin
       sl:=TStringStream.Create;
       try
         try
-          wc.Post('http://'+FAuthServer+':'+FAuthServerPort.ToString+'/'+aAPIEndpoint, sl);
+          wc.Post(ifthen(FUseSSL,'https','http')+'://'+FAuthServer+':'+FAuthServerPort.ToString+'/'+aAPIEndpoint, sl);
         except
         end;
         sl.Position:=0;
@@ -170,8 +177,13 @@ begin
         exit(false);
       end;
       try
+        if LoginAction and Assigned(FCachedAuthorizations) then
+          FreeAndNil(FCachedAuthorizations);
+
         if (UserData is TJSONObject) and TJSONObject(UserData).Find(_uid,aUID) then begin
           UserID:=aUID.AsInteger;
+          if LoginAction and TJSONObject(UserData).Find(_authorizations,FCachedAuthorizations) then
+            FCachedAuthorizations:=TJSONObject(FCachedAuthorizations.Clone);
           exit(True);
         end else
           exit(false);
@@ -194,7 +206,15 @@ var
   CentralData: TJSONData;
   jUID:TJSONNumber;
   jLogin:TJSONString;
+  aBoolVar:TJSONBoolean;
 begin
+  if (aUID<0) and (FUID<0) then exit(false);
+
+  if (FUID>0) and (aUID=FUID) and FUseCachedAuthorizations and Assigned(FCachedAuthorizations) then begin
+    Result:=FCachedAuthorizations.Find(sc, aBoolVar);
+    exit;
+  end;
+
   jobj:=TJSONObject.Create;
   try
     jobj.Add(_uid, aUID);
@@ -234,6 +254,7 @@ constructor TCentralUserManagement.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FRaiseExceptOnConnFailure:=false;
+  FCachedAuthorizations:=TJSONObject.Create;
 end;
 
 destructor TCentralUserManagement.Destroy;
@@ -287,6 +308,16 @@ end;
 procedure TCentralUserManagement.Manage;
 begin
   raise Exception.Create(_ManagementNotAvailable);
+end;
+
+procedure TCentralUserManagement.Logout;
+begin
+  if Assigned(FCachedAuthorizations) then
+    FreeAndNil(FCachedAuthorizations);
+
+  FCachedAuthorizations:=TJSONObject.Create;
+
+  inherited Logout;
 end;
 
 procedure TCentralUserManagement.ValidateSecurityCode(sc: UTF8String);

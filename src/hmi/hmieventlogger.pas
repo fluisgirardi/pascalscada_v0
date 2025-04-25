@@ -41,10 +41,12 @@ type
 
   TEventTagColletionItem=class(TCollectionItem)
   private
+    FIgnoreDescriptionList: Boolean;
     FLastEventGUID: TGuid;
     FLastEventIntID: Int64;
     FLastEventPointerID: Pointer;
     FLastTagValue: Double;
+    FPendingUpdate: Boolean;
     FPLCTag: TPLCTag;
     FTagDesc: String;
     FTagID: Integer;
@@ -62,12 +64,14 @@ type
     property LastEventPointerID:Pointer read FLastEventPointerID write FLastEventPointerID;
     property LastEventIntID:Int64 read FLastEventIntID write fLastEventIntID;
     property LastTagValue:Double read FLastTagValue write SetLastTagValue;
+    property PendingUpdate:Boolean read FPendingUpdate write FPendingUpdate;
     function LastValueInitialized:Boolean;
   published
     property PLCTag:TPLCTag read FPLCTag write SetPLCTag;
     property TagID:Integer  read FTagID write SetTagID;
     property TagPath:String read FTagPath write SetTagPath;
     property TagDesc:String read FTagDesc write SetTagDesc;
+    property IgnoreDescriptionList:Boolean read FIgnoreDescriptionList write FIgnoreDescriptionList;
   end;
 
   { TEventTagColletion }
@@ -88,6 +92,7 @@ type
   THMIEventLogger = class(TComponent)
   private
     FAsyncDBConnection: THMIDBConnection;
+    FCurrentEventTimestamp: TDateTime;
     FEventDescriptions: TEventCollection;
     FEventTags: TEventTagColletion;
     FOnFinishAllTagEvents: TFinishAllTagEvents;
@@ -98,6 +103,8 @@ type
     procedure SetAsyncDBConnection(AValue: THMIDBConnection);
     procedure SetEventDescriptions(AValue: TEventCollection);
     procedure SetEventTags(AValue: TEventTagColletion);
+    procedure TagChangedDelayed;
+    procedure TagChangedDelayed2(Data: PtrInt);
     procedure TagFromListChanged(Sender: TObject);
     procedure FinishAllEventsDelayed;
   protected
@@ -122,6 +129,7 @@ type
     property OnFinishAllTagEvents:TFinishAllTagEvents read FOnFinishAllTagEvents write FOnFinishAllTagEvents;
     property OnNewTagEvent:TNewTagEvent read FOnNewTagEvent write FOnNewTagEvent;
     property OnGenerateNewEventID:TGenerateNewEventID read FOnGenerateNewEventID write FOnGenerateNewEventID;
+    property CurrentEventTimestamp:TDateTime read FCurrentEventTimestamp;
   end;
 
 implementation
@@ -257,6 +265,29 @@ begin
     FEventTags.Assign(AValue);
 end;
 
+procedure THMIEventLogger.TagChangedDelayed;
+var
+  auxItem: TEventTagColletionItem;
+  c: Integer;
+begin
+  if Assigned(FEventTags) then begin
+     for c:=0 to FEventTags.Count-1 do begin
+       auxItem:=TEventTagColletionItem(FEventTags.Items[c]);
+       if Assigned(auxItem.PLCTag) then begin
+         if auxItem.PendingUpdate then begin
+           TagFromListChanged(auxItem.PLCTag);
+         end;
+       end else
+         auxItem.PendingUpdate:=false;
+     end;
+  end;
+end;
+
+procedure THMIEventLogger.TagChangedDelayed2(Data: PtrInt);
+begin
+  TagFromListChanged(TObject(Data));
+end;
+
 procedure THMIEventLogger.TagFromListChanged(Sender: TObject);
 var
   c, i: Integer;
@@ -267,40 +298,58 @@ var
   NewGUID: TGuid;
   SQL: String;
   sqlcmds: THMIDBConnectionStatementList;
+  b, a, c1: Boolean;
 begin
+  if ([csReading,csLoading]*ComponentState<>[]) then
+    exit;
+
   if Assigned(FEventTags) then begin
     for c:=0 to FEventTags.Count-1 do begin
       auxItem:=TEventTagColletionItem(FEventTags.Items[c]);
       if assigned(auxItem.PLCTag) and (auxItem.PLCTag=Sender) then begin
         auxReal:=(auxItem.PLCTag as ITagNumeric).GetValue;
+
         try
           if auxItem.LastValueInitialized and (auxReal=auxItem.LastTagValue) then
             exit;
 
           TagValue:=trunc(auxReal);
+          FCurrentEventTimestamp:=Now;
 
           FinishCurrentEvent(auxItem);
 
           for i:=0 to FEventDescriptions.Count-1 do begin
             auxItemEvt:=TEventCollectionItem(FEventDescriptions.Items[i]);
-            if auxItemEvt.EventValue=TagValue then begin
+            if (auxItemEvt.EventValue=TagValue) or (auxItem.FIgnoreDescriptionList) then begin
               if not GenerateNewEventID(NewIntID, NewGUID) then exit;
               try
                 sqlcmds:=THMIDBConnectionStatementList.Create;
                 DoNewTagEvent(auxItem.PLCTag, auxItem, NewIntID, NewGUID,auxItemEvt, sqlcmds);
-                if Assigned(FAsyncDBConnection) and FAsyncDBConnection.Connected and (sqlcmds.Count > 0) then
-                  FAsyncDBConnection.ExecTransaction(sqlcmds,nil,true, false)
-                else
+                a:=Assigned(FAsyncDBConnection);
+                b:=FAsyncDBConnection.Connected;
+                c1:=(sqlcmds.Count > 0);
+                if a and b and c1 then begin
+                  FAsyncDBConnection.ExecTransaction(sqlcmds,nil,true, false);
+                  auxItem.PendingUpdate:=false;
+                end else begin
                   FreeAndNil(sqlcmds);
+                  if FAsyncDBConnection.Connected=false then begin
+                    auxItem.PendingUpdate:=true;
+                    auxItem.FLastValueInitialized:=false;
+                    Application.QueueAsyncCall(@TagChangedDelayed2, PtrInt(Sender));
+                  end;
+                end;
                 exit;
               finally
                 auxItem.LastEventGUID:= NewGUID;
                 auxItem.LastEventIntID:= NewIntID;
               end;
+              break;
             end;
           end;
         finally
-          auxItem.LastTagValue:=auxReal;
+          if not auxItem.PendingUpdate then
+            auxItem.LastTagValue:=auxReal;
         end;
       end;
     end;
