@@ -69,7 +69,10 @@ object Form1: TForm1
     LoginFrozenTime = 0
     RaiseExceptOnConnFailure = False
     AuthServer = '127.0.0.1'
-    AuthServerPort = 7561
+    AuthServerPort = 8443
+    UseCachedAuthorizations = True
+    UseCentralUserAsLocalUser = False
+    UseSSL = True
     Left = 56
     Top = 16
   end
