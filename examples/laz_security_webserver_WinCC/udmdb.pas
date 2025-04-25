@@ -12,6 +12,39 @@ type
   { Tdmdb }
 
   Tdmdb = class(TDataModule)
+    AuthorizationsFromUserDESCRIPTION: TZRawStringField;
+    AuthorizationsFromUserEXPTIME: TZIntegerField;
+    AuthorizationsFromUserFLAGS: TZIntegerField;
+    AuthorizationsFromUserGRPID: TZIntegerField;
+    AuthorizationsFromUserID: TZIntegerField;
+    AuthorizationsFromUserID_1: TZIntegerField;
+    AuthorizationsFromUserL1046: TZRawStringField;
+    AuthorizationsFromUserLINEAREASPEC: TZIntegerField;
+    AuthorizationsFromUserLINENAME: TZIntegerField;
+    AuthorizationsFromUserLINENUM: TZIntegerField;
+    AuthorizationsFromUserLINENUM_1: TZIntegerField;
+    AuthorizationsFromUserNAME: TZRawStringField;
+    AuthorizationsFromUserNTUSER: TZRawStringField;
+    AuthorizationsFromUserPASS: TZRawStringField;
+    AuthorizationsFromUserPassWordHash: TZRawStringField;
+    AuthorizationsFromUserPERMCOL1: TZIntegerField;
+    AuthorizationsFromUserPERMCOL2: TZIntegerField;
+    AuthorizationsFromUserPERMCOL3: TZIntegerField;
+    AuthorizationsFromUserPERMCOL4: TZIntegerField;
+    AuthorizationsFromUserPERMCOL5: TZIntegerField;
+    AuthorizationsFromUserPERMCOL6: TZIntegerField;
+    AuthorizationsFromUserPERMCOL7: TZIntegerField;
+    AuthorizationsFromUserPERMCOL8: TZIntegerField;
+    AuthorizationsFromUserPWC_ReservedLicense: TZIntegerField;
+    AuthorizationsFromUserPWC_StartPicture: TZRawStringField;
+    AuthorizationsFromUserPW_Version: TZIntegerField;
+    AuthorizationsFromUserRecordId: TZIntegerField;
+    AuthorizationsFromUserRecordVersion: TZBytesField;
+    AuthorizationsFromUserTEXTID: TZIntegerField;
+    AuthorizationsFromUserWEBSTARTLANG: TZIntegerField;
+    AuthorizationsFromUserWEBSTARTPICTURE: TZRawStringField;
+    AuthorizationsFromUserWEBUSEHORN: TZIntegerField;
+    AuthorizationsFromUserWHOLELINEPERM: TZIntegerField;
     REGISTERsecuritycodeL1046: TZRawStringField;
     REGISTERsecuritycodeLINEAREASPEC: TZIntegerField;
     REGISTERsecuritycodeLINENAME: TZIntegerField;
@@ -71,6 +104,7 @@ type
     UIDCanAccessTableWEBUSEHORN: TZIntegerField;
     UIDCanAccessTableWHOLELINEPERM: TZIntegerField;
     REGISTERsecuritycode: TZReadOnlyQuery;
+    AuthorizationsFromUser: TZReadOnlyQuery;
   private
 
   public

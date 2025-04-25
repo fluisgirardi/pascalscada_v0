@@ -18,10 +18,10 @@ object dmdb: Tdmdb
     DisableSavepoints = False
     HostName = '127.0.0.1'
     Port = 0
-    Database = 'Provider=MSOLEDBSQL.1;Persist Security Info=False;User ID=sa;Initial Catalog=CC_RacaoSJC_25_01_10_16_31_29;Data Source=WSR-086-000-129\WINCC;Initial File Name="";Trust Server Certificate=True;Server SPN="";Authentication="";Access Token=""'
+    Database = 'Provider=MSOLEDBSQL.1;Integrated Security=SSPI;Persist Security Info=False;User ID="";Initial Catalog=CC_RacaoSJC_25_01_10_16_31_29;Data Source=WSR-086-000-129\WINCC;Initial File Name="";Trust Server Certificate=True;Server SPN="";Authentication="";Access Token=""'
     Password = 'AlfaSJC25#'
     Protocol = 'ado'
-    Left = 40
+    Left = 64
     Top = 16
   end
   object BuscaUserName: TZReadOnlyQuery
@@ -35,7 +35,7 @@ object dmdb: Tdmdb
       item
         Name = 'username'
       end>
-    Left = 40
+    Left = 64
     Top = 80
     ParamData = <    
       item
@@ -208,7 +208,7 @@ object dmdb: Tdmdb
       item
         Name = 'securitycode'
       end>
-    Left = 40
+    Left = 64
     Top = 144
     ParamData = <    
       item
@@ -543,7 +543,7 @@ object dmdb: Tdmdb
         Name = 'securitycode'
         SQLType = stString
       end>
-    Left = 40
+    Left = 64
     Top = 200
     ParamData = <    
       item
@@ -620,6 +620,340 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
       Size = 400
+    end
+  end
+  object AuthorizationsFromUser: TZReadOnlyQuery
+    Connection = SQLServerWINCC
+    SQL.Strings = (
+      'SELECT *'
+      '  FROM [dbo].[PW_PERM] perm'
+      'join [dbo].[PW_LINE] line on perm.LINENUM = line.LINENUM'
+      'join [dbo].[TXTTable] txt on txt.TEXTID = line.LINENAME'
+      'join [dbo].[PW_USER] tuser on perm.[id]=tuser.ID'
+      'WHERE tuser.ID=:uid and perm.WHOLELINEPERM=1'
+      'UNION '
+      'SELECT *       '
+      '  FROM [dbo].[PW_PERM] perm'
+      'join [dbo].[PW_LINE] line on perm.LINENUM = line.LINENUM'
+      'join [dbo].[TXTTable] txt on txt.TEXTID = line.LINENAME'
+      'join [dbo].[PW_USER] tuser on perm.[id]=tuser.GRPID'
+      'WHERE tuser.ID=:uid and perm.WHOLELINEPERM=1'
+    )
+    Params = <    
+      item
+        Name = 'uid'
+      end>
+    Left = 64
+    Top = 264
+    ParamData = <    
+      item
+        Name = 'uid'
+      end>
+    object AuthorizationsFromUserID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'ID'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserLINENUM: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENUM'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserWHOLELINEPERM: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WHOLELINEPERM'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL1: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL1'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL2: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL2'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL3: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL3'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL4: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL4'
+      Index = 6
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL5: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL5'
+      Index = 7
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL6: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL6'
+      Index = 8
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL7: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL7'
+      Index = 9
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPERMCOL8: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PERMCOL8'
+      Index = 10
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserLINENUM_1: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENUM_1'
+      Index = 11
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserLINENAME: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINENAME'
+      Index = 12
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserLINEAREASPEC: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'LINEAREASPEC'
+      Index = 13
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserTEXTID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'TEXTID'
+      Index = 14
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserL1046: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'L1046'
+      Index = 15
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 400
+    end
+    object AuthorizationsFromUserRecordId: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'RecordId'
+      Index = 16
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserRecordVersion: TZBytesField
+      FieldKind = fkData
+      FieldName = 'RecordVersion'
+      Index = 17
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 8
+    end
+    object AuthorizationsFromUserID_1: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'ID_1'
+      Index = 18
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserNAME: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'NAME'
+      Index = 19
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 25
+    end
+    object AuthorizationsFromUserPASS: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PASS'
+      Index = 20
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 25
+    end
+    object AuthorizationsFromUserGRPID: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'GRPID'
+      Index = 21
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserEXPTIME: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'EXPTIME'
+      Index = 22
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserWEBSTARTPICTURE: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'WEBSTARTPICTURE'
+      Index = 23
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object AuthorizationsFromUserWEBSTARTLANG: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WEBSTARTLANG'
+      Index = 24
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserNTUSER: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'NTUSER'
+      Index = 25
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object AuthorizationsFromUserDESCRIPTION: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'DESCRIPTION'
+      Index = 26
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object AuthorizationsFromUserFLAGS: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'FLAGS'
+      Index = 27
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPassWordHash: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PassWordHash'
+      Index = 28
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object AuthorizationsFromUserPW_Version: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PW_Version'
+      Index = 29
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserPWC_StartPicture: TZRawStringField
+      FieldKind = fkData
+      FieldName = 'PWC_StartPicture'
+      Index = 30
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      Size = 256
+    end
+    object AuthorizationsFromUserPWC_ReservedLicense: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'PWC_ReservedLicense'
+      Index = 31
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+    end
+    object AuthorizationsFromUserWEBUSEHORN: TZIntegerField
+      FieldKind = fkData
+      FieldName = 'WEBUSEHORN'
+      Index = 32
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
     end
   end
 end

@@ -12,6 +12,19 @@ uses
   jsonparser, Sockets, StrUtils;
 
 type
+  TJSONObjectExt = class helper for TJSONObject
+    function AddOrSet(const AName: TJSONStringType; AValue: TJSONData): Integer; overload;
+    function AddOrSet(const AName: TJSONStringType; AValue: Boolean): Integer; overload;
+    function AddOrSet(const AName: TJSONStringType; AValue: TJSONFloat): Integer; overload;
+    function AddOrSet(const AName, AValue: TJSONStringType): Integer; overload;
+    function AddOrSet(const AName : String; AValue: TJSONUnicodeStringType): Integer; overload;
+    function AddOrSet(const AName: TJSONStringType; Avalue: Int64): Integer; overload;
+    function AddOrSet(const AName: TJSONStringType; Avalue: QWord): Integer; overload;
+    function AddOrSet(const AName: TJSONStringType; Avalue: Integer): Integer; overload;
+    function AddOrSet(const AName: TJSONStringType): Integer; overload;
+    function AddOrSet(const AName: TJSONStringType; AValue : TJSONArray): Integer; overload;
+  end;
+
   TLogEntry = record
     EvtType:TEventType;
     EvtMsg, From:String;
@@ -32,6 +45,7 @@ type
     msgList:TThreadList;
     procedure AcceptIdle(Sender: TObject);
     procedure LeSCNoArquivoIni(aJArray: TJSONArray);
+    procedure GetAuthorizedReplacedSC(var aOriginalAuths:TJSONObject);
     function  SecurityCodeReplaced(aOriginalSecCode:String; var aReplacedSecurityCode:String):Boolean;
     procedure RequestError(Sender: TObject; E: Exception);
     procedure WSRequest(Sender: TObject;
@@ -77,6 +91,126 @@ implementation
 
 {$R *.lfm}
 
+{ TJSONObjectExt }
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType; AValue: TJSONData
+  ): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType; AValue: Boolean
+  ): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType;
+  AValue: TJSONFloat): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName, AValue: TJSONStringType): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: String;
+  AValue: TJSONUnicodeStringType): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType; Avalue: Int64
+  ): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType; Avalue: QWord
+  ): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType; Avalue: Integer
+  ): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName));
+end;
+
+function TJSONObjectExt.AddOrSet(const AName: TJSONStringType;
+  AValue: TJSONArray): Integer;
+var
+  aux: TJSONData;
+begin
+  aux:=Find(AName);
+  if assigned(aux) then begin
+    Remove(aux);
+  end;
+  exit(Add(AName, AValue));
+end;
+
 { TSecWSThread }
 
 procedure TSecWSThread.AcceptIdle(Sender: TObject);
@@ -104,6 +238,7 @@ var
   r, aUID: Integer;
   ja: TJSONArray;
   ms: TStringStream;
+  jobj, jAuth: TJSONObject;
 
   function CentralUserData(aPrefix:String):String;
   const
@@ -147,20 +282,36 @@ begin
           FPass:=password.AsString;
           Synchronize(@ChecarUsuarioNaAplicacaoComWinCC);
 
-          if FLoginOk then begin;
+          if FLoginOk then begin
             try
               dm:=Tdmdb.Create(nil);
               try
                 dm.BuscaUserName.Close;
-                dm.BuscaUserName.ParamByName('username').Value:=FUser;
-                dm.BuscaUserName.Open;
-                if dm.BuscaUserName.RecordCount=1 then begin
-                  AResponse.Content := '{ "uid": '+dm.BuscaUserNameID.AsString+' }';
-                  AResponse.Code    := 200;
-                end else begin
-                  AResponse.Content := '{"error": "Tabela de usuarios retornou mais de um usuario com mesmo nome" }';
-                  AResponse.Code    := 500;
-                end;
+                  dm.BuscaUserName.ParamByName('username').Value:=FUser;
+                  dm.BuscaUserName.Open;
+                  if dm.BuscaUserName.RecordCount=1 then begin
+                    jobj:=TJSONObject.Create;
+                    try
+                      jobj.add('uid',dm.BuscaUserNameID.Value);
+                      dm.AuthorizationsFromUser.Close;
+                      dm.AuthorizationsFromUser.ParamByName('uid').AsInteger:=dm.BuscaUserNameID.Value;
+                      dm.AuthorizationsFromUser.Open;
+                      jAuth:=TJSONObject.Create;
+                      for r:=1 to dm.AuthorizationsFromUser.RecordCount do begin
+                        dm.AuthorizationsFromUser.RecNo:=r;
+                        jAuth.AddOrSet(dm.AuthorizationsFromUserL1046.AsString, true);
+                      end;
+                      GetAuthorizedReplacedSC(jAuth);
+                      jobj.Add('authorizations',jAuth);
+                      AResponse.Content := jobj.AsJSON;
+                      AResponse.Code    := 200;
+                    finally
+                      FreeAndNil(jobj);
+                    end;
+                  end else begin
+                    AResponse.Content := '{"error": "Tabela de usuarios retornou mais de um usuario com mesmo nome" }';
+                    AResponse.Code    := 500;
+                  end;
               finally
                 FreeAndNil(dm);
               end;
@@ -509,6 +660,40 @@ begin
   end;
 end;
 
+procedure TSecWSThread.GetAuthorizedReplacedSC(var aOriginalAuths: TJSONObject);
+var
+  inif: TIniFile;
+  auxS, RealAuth, SecCode: String;
+  sl: TStringList;
+  i: Integer;
+  jBool:TJSONBoolean;
+begin
+  if not Assigned(aOriginalAuths) then exit;
+  cs.Enter;
+  try
+    inif:=TIniFile.Create(ExtractFilePath(ParamStr(0))+IniFileName);
+    try
+      sl:=TStringList.Create;
+      try
+        inif.ReadSectionValues(SectionName,sl);
+
+        for i:=0 to sl.Count-1 do begin
+          SecCode :=sl.Names[i];
+          RealAuth:=sl.ValueFromIndex[i];
+          if (not RealAuth.IsEmpty) and aOriginalAuths.Find(RealAuth, jBool) then
+            aOriginalAuths.AddOrSet(SecCode,true);
+        end;
+      finally
+        FreeAndNil(sl);
+      end;
+    finally
+      FreeAndNil(inif);
+    end;
+  finally
+    cs.Leave;
+  end;
+end;
+
 function TSecWSThread.SecurityCodeReplaced(aOriginalSecCode: String;
   var aReplacedSecurityCode: String): Boolean;
 var
@@ -546,13 +731,19 @@ begin
       ws.AdminName:='GP2e';
       ws.AdminMail:='coordenacao@gp2e.com.br';
       ws.AcceptIdleTimeout :=1000;
-      ws.Port              :=7561;
       ws.OnAcceptIdle      :=@AcceptIdle;
       ws.OnRequest         :=@WSRequest;
       ws.OnRequestError    :=@RequestError;
       ws.QueueSize         :=100;
       ws.LookupHostNames   :=false;
-      //ws.Threaded          :=true;
+      ws.Threaded          :=true;
+      {$IF FPC_FULLVERSION > 30300}
+      ws.Port              :=8443;
+      ws.UseSSL            :=true;
+      {$ELSE}
+      ws.Port              :=7561;
+      ws.UseSSL            :=false;
+      {$ENDIF}
       ws.Active            :=true;
     finally
       if Assigned(ws) then
@@ -570,19 +761,7 @@ constructor TSecWSThread.Create(CreateSuspended: Boolean;
 begin
   inherited Create(CreateSuspended, StackSize);
   cs:=TCriticalSection.Create;
-  //log:=nil;
-  //try
-  //  log:=TEventLog.Create(nil);
-  //  log.Identification:='Prime-Wincc Security server';
-  //  log.RaiseExceptionOnError:=false;
-  //  log.AppendContent:=true;
-  //  log.LogType:=ltFile;
-  //  log.FileName:=ExtractFilePath(Application.ExeName)+'security.log';
-  //  log.Active:=true;
-  //except
-  //  if Assigned(log) then
-  //    FreeAndNil(log);
-  //end;
+
   msgList:=TThreadList.Create;
   msgList.Duplicates:=dupAccept;
 end;
