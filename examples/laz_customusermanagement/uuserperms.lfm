@@ -1,0 +1,95 @@
+object frmUserPerms: TfrmUserPerms
+  Left = 1660
+  Height = 534
+  Top = 235
+  Width = 900
+  BorderStyle = bsDialog
+  Caption = 'Permissões do usuário'
+  ClientHeight = 534
+  ClientWidth = 900
+  Font.Height = -12
+  Position = poScreenCenter
+  LCLVersion = '1.6.0.4'
+  object Panel1: TPanel
+    Left = 0
+    Height = 35
+    Top = 499
+    Width = 900
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 35
+    ClientWidth = 900
+    TabOrder = 0
+    object Panel2: TPanel
+      Left = 730
+      Height = 35
+      Top = 0
+      Width = 170
+      Align = alRight
+      BevelOuter = bvNone
+      ClientHeight = 35
+      ClientWidth = 170
+      TabOrder = 0
+      object BitBtn1: TBitBtn
+        Left = 0
+        Height = 30
+        Top = 2
+        Width = 75
+        Default = True
+        DefaultCaption = True
+        Kind = bkOK
+        ModalResult = 1
+        TabOrder = 0
+      end
+      object BitBtn2: TBitBtn
+        Left = 88
+        Height = 30
+        Top = 2
+        Width = 75
+        Cancel = True
+        DefaultCaption = True
+        Kind = bkCancel
+        ModalResult = 2
+        TabOrder = 1
+      end
+    end
+  end
+  object CheckListBox1: TTreeView
+    Left = 0
+    Height = 499
+    Top = 0
+    Width = 900
+    Align = alClient
+    ReadOnly = True
+    ScrollBars = ssAutoVertical
+    SortType = stText
+    StateImages = ImageList1
+    TabOrder = 1
+    OnDeletion = CheckListBox1Deletion
+    OnKeyDown = CheckListBox1KeyDown
+    Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+  end
+  object ImageList1: TImageList
+    left = 272
+    top = 504
+  end
+  object PopupMenu1: TPopupMenu
+    left = 383
+    top = 504
+    object MenuItem1: TMenuItem
+      Tag = 1
+      Caption = 'Somente a &permissão'
+      OnClick = MenuItem1Click
+    end
+    object MenuItem2: TMenuItem
+      Tag = 2
+      Caption = 'Somente as sub-permissões'
+      OnClick = MenuItem2Click
+    end
+    object MenuItem3: TMenuItem
+      Tag = 3
+      Caption = '&Tudo'
+      OnClick = MenuItem3Click
+    end
+  end
+end

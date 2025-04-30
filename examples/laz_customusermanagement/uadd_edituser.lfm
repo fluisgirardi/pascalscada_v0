@@ -1,0 +1,172 @@
+object frmInsertEditUser: TfrmInsertEditUser
+  Left = 357
+  Height = 232
+  Top = 113
+  Width = 316
+  BorderStyle = bsDialog
+  Caption = 'Inserir/Editar usuário'
+  ClientHeight = 232
+  ClientWidth = 316
+  Font.Height = -12
+  OnClose = FormClose
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  LCLVersion = '1.4.4.0'
+  object Panel1: TPanel
+    Left = 0
+    Height = 32
+    Top = 200
+    Width = 316
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 32
+    ClientWidth = 316
+    TabOrder = 5
+    object Panel2: TPanel
+      Left = 112
+      Height = 32
+      Top = 0
+      Width = 204
+      Align = alRight
+      BevelOuter = bvNone
+      ClientHeight = 32
+      ClientWidth = 204
+      TabOrder = 0
+      object BitBtn1: TBitBtn
+        Left = 8
+        Height = 30
+        Top = 0
+        Width = 95
+        Caption = '&OK'
+        Kind = bkOK
+        ModalResult = 1
+        OnClick = BitBtn1Click
+        TabOrder = 0
+      end
+      object BitBtn2: TBitBtn
+        Left = 106
+        Height = 30
+        Top = 0
+        Width = 95
+        Cancel = True
+        DefaultCaption = True
+        Kind = bkCancel
+        ModalResult = 2
+        OnClick = BitBtn2Click
+        TabOrder = 1
+      end
+    end
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 17
+    Top = 40
+    Width = 30
+    Caption = 'Login'
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 17
+    Top = 96
+    Width = 136
+    Caption = 'Identificação do Usuário'
+    ParentColor = False
+  end
+  object DBEdit1: TDBEdit
+    Left = 8
+    Height = 27
+    Top = 56
+    Width = 136
+    DataField = 'ds_login'
+    DataSource = dsUsers
+    CharCase = ecNormal
+    MaxLength = 1020
+    TabOrder = 0
+  end
+  object DBEdit2: TDBEdit
+    Left = 8
+    Height = 27
+    Top = 112
+    Width = 304
+    DataField = 'ds_fullname'
+    DataSource = dsUsers
+    CharCase = ecNormal
+    MaxLength = 1020
+    TabOrder = 2
+  end
+  object DBCheckBox1: TDBCheckBox
+    Left = 160
+    Height = 21
+    Top = 56
+    Width = 152
+    Caption = 'Usuário bloqueado'
+    DataField = 'op_blocked'
+    DataSource = dsUsers
+    TabOrder = 1
+    ValueChecked = 'True'
+    ValueUnchecked = 'False'
+  end
+  object Label3: TLabel
+    Left = 8
+    Height = 17
+    Top = 11
+    Width = 26
+    Caption = 'UID:'
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object DBText1: TDBText
+    Left = 40
+    Height = 17
+    Top = 11
+    Width = 50
+    DataField = 'id_user'
+    DataSource = dsUsers
+    Font.Style = [fsBold]
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label4: TLabel
+    Left = 8
+    Height = 17
+    Top = 152
+    Width = 35
+    Caption = 'Senha'
+    ParentColor = False
+  end
+  object edtSenha1: TEdit
+    Left = 8
+    Height = 27
+    Top = 168
+    Width = 149
+    EchoMode = emPassword
+    PasswordChar = '*'
+    TabOrder = 3
+    Text = 'edtSenha1'
+  end
+  object edtSenha2: TEdit
+    Left = 163
+    Height = 27
+    Top = 168
+    Width = 149
+    EchoMode = emPassword
+    PasswordChar = '*'
+    TabOrder = 4
+    Text = 'edtSenha2'
+  end
+  object Label5: TLabel
+    Left = 163
+    Height = 17
+    Top = 152
+    Width = 89
+    Caption = 'Confirme senha'
+    ParentColor = False
+  end
+  object dsUsers: TDataSource
+    DataSet = dm.tblUsers
+    left = 216
+    top = 8
+  end
+end

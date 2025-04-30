@@ -64,6 +64,21 @@ type
   protected
      {: @exclude }
      function  GetDisplayName: AnsiString; override;
+
+     {$IFDEF PORTUGUES}
+     {:
+     Se @true torna a zona padrão, exibindo-a quando nenhuma zona for selecionada
+     em função do valor do tag.
+     @seealso(ZoneType)
+     }
+     {$ELSE}
+     {:
+     If @true makes the zone default, showing it when no animation zone is
+     selected depending of the tag value.
+     @seealso(ZoneType)
+     }
+     {$ENDIF}
+     property DefaultZone:Boolean read FDefaultZone write SetAsDefaultZone;
   public
      procedure AssignTo(Dest: TPersistent); override;
   published
@@ -118,21 +133,6 @@ type
      }
      {$ENDIF}
      property IncludeValue2:Boolean read FIncludeV2 write SetIncV2;
-
-     {$IFDEF PORTUGUES}
-     {:
-     Se @true torna a zona padrão, exibindo-a quando nenhuma zona for selecionada
-     em função do valor do tag.
-     @seealso(ZoneType)
-     }
-     {$ELSE}
-     {:
-     If @true makes the zone default, showing it when no animation zone is
-     selected depending of the tag value.
-     @seealso(ZoneType)
-     }
-     {$ENDIF}
-     property DefaultZone:Boolean read FDefaultZone write SetAsDefaultZone;
 
      {$IFDEF PORTUGUES}
      {:
@@ -291,6 +291,8 @@ type
      }
      {$ENDIF}
      property BlinkWith:LongInt read GetBlinkWithZoneNumber write SetBlinkWithZoneNumber nodefault;
+
+     property DefaultZone;
   end;
 
 
@@ -566,6 +568,9 @@ type
   @seealso(TGraphicZones)
   }
   {$ENDIF}
+
+  { TGraphicZone }
+
   TGraphicZone = class(TAnimationZone)
   private
      FILIsDefault:Boolean;
@@ -583,6 +588,7 @@ type
   public
      //: @exclude
      constructor Create(aCollection: TCollection); override;
+     procedure Assign(Source: TPersistent); override;
   published
 
      {$IFDEF PORTUGUES}
@@ -698,6 +704,9 @@ type
   @seealso(TGraphicZone)
   }
   {$ENDIF}
+
+  { TGraphicZones }
+
   TGraphicZones = class(TZones)
   public
     //: @exclude
@@ -1294,6 +1303,27 @@ begin
    FImageList := nil;
    FImageIndex := -1;
    FColor := clWhite;
+end;
+
+procedure TGraphicZone.Assign(Source: TPersistent);
+var
+  Src: TGraphicZone;
+begin
+  if Source is TGraphicZone then begin
+     Src:=Source as TGraphicZone;
+
+     FValue1      := Src.FValue1;
+     FValue2      := Src.FValue2;
+     FIncludeV1   := Src.FIncludeV1;
+     FIncludeV2   := Src.FIncludeV2;
+     FDefaultZone := Src.FDefaultZone;
+     FZoneType    := Src.FZoneType;
+     FImageList   := Src.FImageList;
+     FImageIndex  := Src.FImageIndex;
+     FBlinkTime   := Src.FBlinkTime;
+     BlinkWith    := Src.BlinkWith;
+  end else
+    inherited Assign(Source);
 end;
 
 procedure TGraphicZone.SetILAsDefault(b:Boolean);

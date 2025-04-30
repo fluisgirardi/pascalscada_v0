@@ -1,0 +1,106 @@
+object frmAddGroup: TfrmAddGroup
+  Left = 2643
+  Height = 146
+  Top = 185
+  Width = 370
+  BorderStyle = bsDialog
+  Caption = 'Adicionar novo grupo de permissões'
+  ClientHeight = 146
+  ClientWidth = 370
+  Position = poScreenCenter
+  LCLVersion = '2.0.13.0'
+  object Panel1: TPanel
+    Left = 0
+    Height = 32
+    Top = 114
+    Width = 370
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 32
+    ClientWidth = 370
+    TabOrder = 0
+    object Panel2: TPanel
+      Left = 166
+      Height = 32
+      Top = 0
+      Width = 204
+      Align = alRight
+      BevelOuter = bvNone
+      ClientHeight = 32
+      ClientWidth = 204
+      TabOrder = 0
+      object BitBtn1: TBitBtn
+        Left = 8
+        Height = 30
+        Top = 0
+        Width = 95
+        Caption = '&OK'
+        Kind = bkOK
+        ModalResult = 1
+        TabOrder = 0
+      end
+      object BitBtn2: TBitBtn
+        Left = 106
+        Height = 30
+        Top = 0
+        Width = 95
+        Cancel = True
+        DefaultCaption = True
+        Kind = bkCancel
+        ModalResult = 2
+        TabOrder = 1
+      end
+    end
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 13
+    Top = 8
+    Width = 33
+    Caption = 'Nome'
+    Font.Height = -12
+    ParentColor = False
+    ParentFont = False
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 13
+    Top = 64
+    Width = 107
+    Caption = 'Descrição do grupo'
+    Font.Height = -12
+    ParentColor = False
+    ParentFont = False
+  end
+  object DBEdit1: TDBEdit
+    Left = 8
+    Height = 25
+    Top = 24
+    Width = 358
+    DataField = 'ds_groupname'
+    DataSource = dsGroups
+    CharCase = ecNormal
+    Font.Height = -12
+    MaxLength = 0
+    ParentFont = False
+    TabOrder = 1
+  end
+  object DBEdit2: TDBEdit
+    Left = 8
+    Height = 25
+    Top = 80
+    Width = 358
+    DataField = 'ds_groupdescription'
+    DataSource = dsGroups
+    CharCase = ecNormal
+    Font.Height = -12
+    MaxLength = 255
+    ParentFont = False
+    TabOrder = 2
+  end
+  object dsGroups: TDataSource
+    DataSet = dm.tblGroups
+    Left = 244
+    Top = 36
+  end
+end

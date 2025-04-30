@@ -731,7 +731,10 @@ begin
   if not SendIt then exit;
 
   if Supports(FTag, ITagNumeric) then begin
-    x:=StrToFloat(Txt);
+    if not TryStrToFloat(Txt,x) then begin
+      inherited Text:=oldValue;
+      exit;
+    end;
     if (FEnableMax and (x>FMaxLimit)) or (FEnableMin and (x<FMinLimit)) then
       raise Exception.Create(SoutOfBounds);
 
@@ -811,9 +814,10 @@ begin
   if (FTag<>nil) AND Supports(FTag, ITagInterface) then begin
     itag := (FTag as ITagInterface);
     if (itag<>nil) then begin
-      if itag.IsValidValue(Text) then
-        oldValue := Text
-      else begin
+      if itag.IsValidValue(Text) or (Text='-') then begin
+        if Text<>'-' then
+          oldValue := Text
+      end else begin
         FBlockChange:=true;
         inherited Text := oldValue;
         FBlockChange:=false;

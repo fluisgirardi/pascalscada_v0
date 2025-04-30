@@ -1,0 +1,406 @@
+object dm: Tdm
+  OnCreate = FormCreate
+  OldCreateOrder = False
+  Left = 341
+  Top = 250
+  Height = 568
+  HorizontalOffset = 0
+  VerticalOffset = 0
+  Width = 438
+  object PGConnUsers: TZConnection
+    ControlsCodePage = cCP_UTF8
+    Properties.Strings = (
+      'RawStringEncoding=DB_CP'
+    )
+    Connected = True
+    DesignConnection = True
+    DisableSavepoints = False
+    HostName = '127.0.0.1'
+    Port = 0
+    Database = 'prime_users'
+    User = 'postgres'
+    Password = 'Idt2014#'
+    Protocol = 'postgresql'
+    Left = 120
+    Top = 56
+  end
+  object tblUsers: TZTable
+    Connection = PGConnUsers
+    TableName = 'tbl_user'
+    Left = 120
+    Top = 112
+    object tblUsersid_user: TLargeintField
+      DisplayWidth = 10
+      FieldKind = fkData
+      FieldName = 'id_user'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+    end
+    object tblUsersds_login: TStringField
+      DisplayWidth = 1020
+      FieldKind = fkData
+      FieldName = 'ds_login'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+      Size = 1020
+    end
+    object tblUsersds_password: TStringField
+      DisplayWidth = 1020
+      FieldKind = fkData
+      FieldName = 'ds_password'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+      Size = 1020
+    end
+    object tblUsersds_fullname: TStringField
+      DisplayWidth = 1020
+      FieldKind = fkData
+      FieldName = 'ds_fullname'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 1020
+    end
+    object tblUsersop_blocked: TBooleanField
+      DisplayWidth = 5
+      FieldKind = fkData
+      FieldName = 'op_blocked'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+      DisplayValues = 'True;False'
+    end
+    object tblUserscd_alias_for_user: TLongintField
+      FieldKind = fkData
+      FieldName = 'cd_alias_for_user'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+    end
+    object tblUsersds_automated_login_code: TStringField
+      FieldKind = fkData
+      FieldName = 'ds_automated_login_code'
+      Index = 6
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 255
+    end
+  end
+  object tblObjects: TZTable
+    Connection = PGConnUsers
+    TableName = 'tbl_object'
+    Left = 120
+    Top = 168
+    object tblObjectsid_object: TLargeintField
+      DisplayWidth = 10
+      FieldKind = fkData
+      FieldName = 'id_object'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+    end
+    object tblObjectsds_object: TStringField
+      DisplayWidth = 1020
+      FieldKind = fkData
+      FieldName = 'ds_object'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+      Size = 1020
+    end
+    object tblObjectsds_longdescription: TStringField
+      DisplayWidth = 1020
+      FieldKind = fkData
+      FieldName = 'ds_longdescription'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 1020
+    end
+  end
+  object tblListPermsOfUser: TZQuery
+    Connection = PGConnUsers
+    SQL.Strings = (
+      'SELECT *,'
+      '                     (SELECT COUNT(id_permission)>0'
+      '                        FROM tbl_permission p'
+      '                       WHERE p.cd_object=o.id_object AND'
+      '                             (p.cd_user=:uid or '
+      '                              exists (select cd_group '
+      '                                       from tbl_group_member gm '
+      '                                      where gm.cd_group=p.cd_group and gm.cd_user=:uid))) AS AccessAllowed'
+      '                FROM tbl_object o'
+    )
+    Params = <    
+      item
+        DataType = ftInteger
+        Name = 'uid'
+        ParamType = ptInput
+        SQLType = stInteger
+      end>
+    Left = 120
+    Top = 280
+    ParamData = <    
+      item
+        DataType = ftInteger
+        Name = 'uid'
+        ParamType = ptInput
+        SQLType = stInteger
+      end>
+  end
+  object tblPermission: TZTable
+    Connection = PGConnUsers
+    TableName = 'tbl_permission'
+    Left = 120
+    Top = 224
+  end
+  object tblListPermsOfUser1: TZQuery
+    Connection = PGConnUsers
+    SQL.Strings = (
+      'SELECT *,'
+      '                     (SELECT COUNT(id_permission)>0'
+      '                        FROM tbl_permission'
+      '                       WHERE cd_object=id_object AND'
+      '                             cd_user=:uid) AS AccessAllowed'
+      '                FROM tbl_object'
+    )
+    Params = <    
+      item
+        DataType = ftInteger
+        Name = 'uid'
+        ParamType = ptInput
+        SQLType = stInteger
+      end>
+    Left = 120
+    Top = 336
+    ParamData = <    
+      item
+        DataType = ftInteger
+        Name = 'uid'
+        ParamType = ptInput
+        SQLType = stInteger
+      end>
+  end
+  object CustomizedUserManagement1: TCustomizedUserManagement
+    LoginRetries = 0
+    LoginFrozenTime = 0
+    SuccessfulLogin = CustomizedUserManagement1SuccessfulLogin
+    FailureLogin = CustomizedUserManagement1FailureLogin
+    OnCheckUserAndPass = CustomizedUserManagement1CheckUserAndPass
+    OnCheckUserChipCard = CustomizedUserManagement1CheckUserChipCard
+    OnGetUserName = CustomizedUserManagement1GetUserName
+    OnGetUserLogin = CustomizedUserManagement1GetUserLogin
+    OnManageUsersAndGroups = CustomizedUserManagement1ManageUsersAndGroups
+    OnValidadeSecurityCode = CustomizedUserManagement1ValidadeSecurityCode
+    OnRegisterSecurityCode = CustomizedUserManagement1RegisterSecurityCode
+    OnCanAccess = CustomizedUserManagement1CanAccess
+    OnUIDCanAccess = CustomizedUserManagement1UIDCanAccess
+    OnLogout = CustomizedUserManagement1Logout
+    Left = 120
+    Top = 8
+  end
+  object tblGroups: TZTable
+    Connection = PGConnUsers
+    TableName = 'public.tbl_group'
+    Left = 120
+    Top = 392
+    object tblGroupsds_groupname: TStringField
+      FieldKind = fkData
+      FieldName = 'ds_groupname'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 255
+    end
+    object tblGroupsds_groupdescription: TStringField
+      FieldKind = fkData
+      FieldName = 'ds_groupdescription'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 255
+    end
+    object tblGroupsop_unloggedin: TBooleanField
+      FieldKind = fkData
+      FieldName = 'op_unloggedin'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+      DisplayValues = 'True;False'
+    end
+    object tblGroupsop_admin: TBooleanField
+      FieldKind = fkData
+      FieldName = 'op_admin'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+      DisplayValues = 'True;False'
+    end
+    object tblGroupsid_group: TLongintField
+      FieldKind = fkData
+      FieldName = 'id_group'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+    end
+  end
+  object tblListPermsOfGroup: TZQuery
+    Connection = PGConnUsers
+    SQL.Strings = (
+      'SELECT *,'
+      '                     (SELECT COUNT(id_permission)>0'
+      '                        FROM tbl_permission'
+      '                       WHERE cd_object=id_object AND'
+      '                             cd_group =:gid) AS AccessAllowed'
+      '                FROM tbl_object'
+    )
+    Params = <    
+      item
+        Name = 'gid'
+      end>
+    Left = 120
+    Top = 448
+    ParamData = <    
+      item
+        Name = 'gid'
+      end>
+  end
+  object tblListMembersOfGroup: TZQuery
+    Connection = PGConnUsers
+    SQL.Strings = (
+      'SELECT *,'
+      '                     (SELECT COUNT(cd_group)>0'
+      '                        FROM tbl_group_member tgm'
+      '                       WHERE tgm.cd_user =tu.id_user AND'
+      '                             tgm.cd_group =:gid) AS Member'
+      '                FROM tbl_user tu '
+    )
+    Params = <    
+      item
+        Name = 'gid'
+      end>
+    Left = 120
+    Top = 504
+    ParamData = <    
+      item
+        Name = 'gid'
+      end>
+    object tblListMembersOfGroupid_user: TLongintField
+      FieldKind = fkData
+      FieldName = 'id_user'
+      Index = 0
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+    end
+    object tblListMembersOfGroupds_login: TStringField
+      FieldKind = fkData
+      FieldName = 'ds_login'
+      Index = 1
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 255
+    end
+    object tblListMembersOfGroupds_password: TStringField
+      FieldKind = fkData
+      FieldName = 'ds_password'
+      Index = 2
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 255
+    end
+    object tblListMembersOfGroupds_fullname: TStringField
+      FieldKind = fkData
+      FieldName = 'ds_fullname'
+      Index = 3
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+      Size = 255
+    end
+    object tblListMembersOfGroupop_blocked: TBooleanField
+      FieldKind = fkData
+      FieldName = 'op_blocked'
+      Index = 4
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = True
+      DisplayValues = 'True;False'
+    end
+    object tblListMembersOfGroupcd_alias_for_user: TLongintField
+      FieldKind = fkData
+      FieldName = 'cd_alias_for_user'
+      Index = 5
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = False
+      Required = False
+    end
+    object tblListMembersOfGroupmember: TBooleanField
+      FieldKind = fkData
+      FieldName = 'member'
+      Index = 6
+      LookupCache = False
+      ProviderFlags = [pfInUpdate, pfInWhere]
+      ReadOnly = True
+      Required = False
+      DisplayValues = 'True;False'
+    end
+  end
+  object SecurityActions: TActionList
+    Left = 288
+    Top = 8
+    object PascalSCADALoginAction1: TPascalSCADALoginAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADALoginAction1'
+    end
+    object PascalSCADALogoutAction1: TPascalSCADALogoutAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADALogoutAction1'
+    end
+    object PascalSCADAManageUsersAction1: TPascalSCADAManageUsersAction
+      Category = 'PascalSCADA User Management'
+      Caption = 'PascalSCADAManageUsersAction1'
+    end
+  end
+end

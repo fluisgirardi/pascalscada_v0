@@ -306,6 +306,12 @@ type
     procedure   ExecSQL(sql:UTF8String; ReturnDatasetCallback:TReturnDataSetProc; ReturnSync:Boolean=true; NewConnection:Boolean=false);
     procedure   ExecTransaction(statements:THMIDBConnectionStatementList; ReturnTransactionResult:TReturnTransactionStatementsProc; FreeStatemensAfterExecute:Boolean; ReturnSync:Boolean=true; NewConnection:Boolean=false);
     property    GetPendingSQLCommands:Integer read GetPendingSQLCmds;
+  public
+    class function FormatPGDatetime(aDateTime: TDateTime): String;
+    class function FormatSQLNumber(aNumber: Double; decimalplaces: Byte=0): String;
+    class function FormatSQLString(aStr: String; EmptyIsNull: Boolean=false
+      ): String;
+    class function FormatSQLUUID(aUUID: TGuid): String;
   published
     {$IFDEF PORTUGUES}
     //: Caso @true, conecta ou está conectado ao banco de dados.
@@ -395,6 +401,8 @@ const
   StatementsCommandMSG = 1;
 
 implementation
+
+uses StrUtils, hsutils;
 
 //##############################################################################
 //THREAD DE EXECUÇÃO DOS COMANDOS SQL THMIDBCONNECTION
@@ -942,6 +950,55 @@ begin
       FCS.Leave;
     end;
   end;
+end;
+
+class function THMIDBConnection.FormatPGDatetime(aDateTime: TDateTime): String;
+var
+  x:TFormatSettings;
+begin
+  x:=DefaultFormatSettings;
+  x.DateSeparator:='-';
+  result:=''''+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',aDateTime, x)+'''';
+end;
+
+class function THMIDBConnection.FormatSQLNumber(aNumber: Double;
+  decimalplaces: Byte): String;
+var
+  x:TFormatSettings;
+  fmtMask: String;
+begin
+  x:=DefaultFormatSettings;
+  x.DecimalSeparator:='.';
+  fmtMask := '#0';
+  if decimalplaces>0 then
+    fmtMask:=fmtMask + x.DecimalSeparator + AddChar('0','',decimalplaces);
+  result:=FormatFloat(fmtMask,aNumber, x);
+end;
+
+class function THMIDBConnection.FormatSQLString(aStr: String; EmptyIsNull:Boolean=false): String;
+var
+  p: TStringArray;
+  s: Integer;
+  sep: String;
+begin
+  if (aStr='') and EmptyIsNull then begin
+    Result:='NULL';
+    exit;
+  end;
+
+  p:=ExplodeString('''',aStr);
+  Result:='';
+  sep:='';
+  for s:=0 to High(p) do begin
+    result:=Result+sep+p[s];
+    sep:='''''';
+  end;
+  Result:=''''+Result+'''';
+end;
+
+class function THMIDBConnection.FormatSQLUUID(aUUID: TGuid): String;
+begin
+  Result:=''''+GUIDToString(aUUID)+'''';
 end;
 
 end.
