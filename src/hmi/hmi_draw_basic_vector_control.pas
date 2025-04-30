@@ -703,7 +703,11 @@ end;
 
 procedure THMICustomFlowVectorControl.BlinkTimer(Sender: TObject);
 begin
-  if (FCurrentZone.BlinkWith<0) or (THMIVectorFlowZone(FStates.Items[FCurrentZone.BlinkWith]).BlinkTime<>FCurrentZone.BlinkTime) then
+  if FCurrentZone=nil then begin
+    GetAnimationTimer.RemoveCallback(@BlinkTimer);
+    exit;
+  end;
+  if (FCurrentZone.BlinkWith<0) or ((FCurrentZone.BlinkWith<FStates.Count) and (THMIVectorFlowZone(FStates.Items[FCurrentZone.BlinkWith]).BlinkTime<>FCurrentZone.BlinkTime)) then
     GetAnimationTimer.RemoveCallback(@BlinkTimer);
 
   if (FCurrentZone.BlinkWith>=0) AND (THMIVectorFlowZone(FStates.Items[FCurrentZone.BlinkWith]).BlinkTime<>FCurrentZone.BlinkTime) and (THMIVectorFlowZone(FStates.Items[FCurrentZone.BlinkWith]).BlinkTime>0) then
@@ -755,8 +759,11 @@ begin
   if FOwnerZone<>zone then begin
     FOwnerZone:=zone;
     ShowZone(FOwnerZone);
-    if (FCurrentZone<>nil) and (FCurrentZone.BlinkWith<>(-1)) and (FCurrentZone.BlinkTime>0) then begin
+
+    if (FOwnerZone<>nil) and (FOwnerZone.BlinkWith<>(-1)) and (FOwnerZone.BlinkTime>0) then begin
       GetAnimationTimer.AddTimerCallback(FCurrentZone.BlinkTime,@BlinkTimer);
+    end else begin
+      GetAnimationTimer.RemoveCallback(@BlinkTimer);
     end;
   end else
     ShowZone(FCurrentZone);
