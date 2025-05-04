@@ -9,6 +9,28 @@ uses
   Classes, fphttpclient, SysUtils, Forms, fpopenssl, sslsockets, opensslsockets;
 
 type
+  TCheckUserChanges = function(out ChangeData:UTF8String):Integer of object;
+  TRemoteUserChanged = procedure(aUID:integer; aUserName:String; AuthData: TJSONObject) of object;
+
+  TSyncRec = record
+    UID:Integer;
+    UserName:String;
+    AuthData:TJSONObject;
+  end;
+  PSyncRec = ^TSyncRec;
+
+  TCheckUserChangeThread = class(TThread)
+  private
+    FCheckUserChanged: TCheckUserChanges;
+    FOnUserChanged: TRemoteUserChanged;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(CreateSuspended: Boolean; const StackSize: SizeUInt=
+  DefaultStackSize);
+    property OnUserChanged:TRemoteUserChanged read FOnUserChanged write FOnUserChanged;
+    property CheckUserChanged:TCheckUserChanges read FCheckUserChanged write FCheckUserChanged;
+  end;
 
   { TCentralUserManagement }
 
@@ -19,11 +41,18 @@ type
     FRaiseExceptOnConnFailure: Boolean;
     FUseCachedAuthorizations: Boolean;
     FUseCentralUserAsLocalUser: Boolean;
+    FWait,
     FUseSSL: Boolean;
+    FCacheUpdateCount:Integer;
+    FCheckUserChangedThread:TCheckUserChangeThread;
+    function CheckServerUserChanged(out ChangeData: UTF8String): Integer;
+    function GetCacheUptCount: Integer;
     function PostMethod(aAPIEndpoint: String; aJsonData: TJSONData;
       var ReturnData: UTF8String): Boolean;
     function PostMethodInt(aAPIEndpoint: String; aJsonData: TJSONData;
       var ReturnData: UTF8String): Integer;
+    procedure RemoteUserChanged(aUID:integer; aUserName:String; AuthData: TJSONObject);
+    procedure RemoteUserChangedRemotely(Data: PtrInt);
     procedure setAuthServer(AValue: String);
     procedure SetAuthServerPort(AValue: Word);
     procedure SetUseCentralUserAsLocalUser(AValue: Boolean);
@@ -31,8 +60,13 @@ type
 
   protected
     FCachedAuthorizations:TJSONObject;
+    FRegisteredSC: TStringList;
+    FUseCentralUserAsLocalUserLoading: Boolean;
+    FValidatedSC: TStringList;
+    FRegisteredSCLastQuery: TDateTime;
     function CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
     function CanAccess(sc: UTF8String; aUID: Integer): Boolean; override; overload;
+    procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -66,6 +100,7 @@ type
     property UseCachedAuthorizations:Boolean read FUseCachedAuthorizations write FUseCachedAuthorizations;
     property UseCentralUserAsLocalUser:Boolean read FUseCentralUserAsLocalUser write SetUseCentralUserAsLocalUser;
     property UseSSL:Boolean read FUseSSL write FUseSSL;
+    property CachedUpdateCount:Integer read GetCacheUptCount;
   end;
 
 const
@@ -87,9 +122,64 @@ const
   _validadesecuritycode = 'validadesecuritycode';
   _FUseCentralUserAsLocalUser = 'UseCentralUserAsLocalUser';
   _authorizations = 'authorizations';
-
+  _userchanged = 'userchanged';
+  _username = 'username';
 
 implementation
+
+uses DateUtils, Dialogs;
+
+{ TCheckUserChangeThread }
+
+procedure TCheckUserChangeThread.Execute;
+var
+  aux: Integer;
+  JsonData:UTF8String;
+  UserData: TJSONData;
+  jAux:TJSONObject;
+  jNumber:TJSONNumber;
+  jStr:TJSONString;
+
+  procedure DoUserChange(aUID2:Integer; aUsername:string; aData2:TJSONObject);
+  begin
+    if (not Terminated) and (aux=200) and Assigned(FOnUserChanged) then
+      FOnUserChanged(aUID2, aUsername, aData2);
+  end;
+
+begin
+  while not Terminated do begin
+    try
+      if Assigned(FCheckUserChanged) then begin
+        aux:=FCheckUserChanged(JsonData);
+        if aux=0 then begin
+          Sleep(100);
+          continue;
+        end;
+        try
+          UserData:=GetJSON(JsonData);
+          try
+            if (UserData is TJSONObject) and  TJSONObject(UserData).Find(_authorizations, jAux) and TJSONObject(UserData).Find(_uid, jNumber) and TJSONObject(UserData).Find(_username, jStr)  then begin
+              DoUserChange(jNumber.AsInteger, jStr.AsString, jAux.Clone as TJSONObject);
+            end else begin
+              DoUserChange(-1, '', nil);
+            end;
+          finally
+            FreeAndNil(UserData);
+          end;
+        except
+          DoUserChange(-1, '', nil);
+        end;
+      end;
+    except
+    end;
+  end;
+end;
+
+constructor TCheckUserChangeThread.Create(CreateSuspended: Boolean;
+  const StackSize: SizeUInt);
+begin
+  inherited Create(CreateSuspended, StackSize);
+end;
 
 { TCentralUserManagement }
 
@@ -97,6 +187,26 @@ function TCentralUserManagement.PostMethod(aAPIEndpoint: String;
   aJsonData: TJSONData; var ReturnData: UTF8String): Boolean;
 begin
   exit(PostMethodInt(aAPIEndpoint,aJsonData,ReturnData)=200);
+end;
+
+function TCentralUserManagement.CheckServerUserChanged(out ChangeData:UTF8String):Integer;
+var
+  jobj: TJSONObject;
+  aux: UTF8String;
+begin
+  jobj:=TJSONObject.Create;
+  try
+    jobj.Add('wait',FWait); //fist cycle dont have to wait.
+    Result:=PostMethodInt(_userchanged, jobj, ChangeData);
+    FWait:=Result=200;
+  finally
+    FreeAndNil(jobj);
+  end;
+end;
+
+function TCentralUserManagement.GetCacheUptCount: Integer;
+begin
+  Exit(FCacheUpdateCount);
 end;
 
 function TCentralUserManagement.PostMethodInt(aAPIEndpoint: String;
@@ -132,6 +242,52 @@ begin
   end;
 end;
 
+procedure TCentralUserManagement.RemoteUserChanged(aUID: integer;
+  aUserName: String; AuthData: TJSONObject);
+var
+  aux: PSyncRec;
+begin
+  new(aux);
+  aux^.UserName := aUserName;
+  aux^.UID      := aUID;
+  aux^.AuthData := AuthData;
+  if Application.Flags*[AppDoNotCallAsyncQueue]=[] then begin
+    Application.QueueAsyncCall(@RemoteUserChangedRemotely, PtrInt(aux));
+  end;
+end;
+
+procedure TCentralUserManagement.RemoteUserChangedRemotely(Data: PtrInt);
+var
+  aux:PSyncRec;
+  Sender: TObject;
+  updateCtrls: Boolean = false;
+begin
+  //Sender:=TObject(Data);
+  aux:=PSyncRec(data);
+  try
+    if (data<>0) and Assigned(aux^.AuthData) and (aux^.AuthData is TJSONObject) then begin
+      if Assigned(FCachedAuthorizations) then
+        FreeAndNil(FCachedAuthorizations);
+
+      FCachedAuthorizations:=aux^.AuthData;
+      updateCtrls := FUID<>aux^.UID;
+      FUID:=aux^.UID;
+      FCurrentUserLogin:=aux^.UserName;
+      FCurrentUserName :=aux^.UserName;
+      inc(FCacheUpdateCount);
+    //end else begin
+    //  FCachedAuthorizations.Clear;
+    end;
+  finally
+    if Assigned(aux) then
+      Dispose(aux);
+  end;
+
+  if updateCtrls then
+    GetControlSecurityManager.UpdateControls;;
+
+end;
+
 procedure TCentralUserManagement.setAuthServer(AValue: String);
 begin
   if FAuthServer=AValue then Exit;
@@ -149,8 +305,25 @@ end;
 procedure TCentralUserManagement.SetUseCentralUserAsLocalUser(AValue: Boolean);
 begin
   if FUseCentralUserAsLocalUser=AValue then Exit;
+  if [csReading,csLoading]*ComponentState<>[] then begin
+    FUseCentralUserAsLocalUserLoading:=AValue;
+    exit;
+  end;
   FUseCentralUserAsLocalUser:=AValue;
   GetControlSecurityManager.UpdateControls;
+  if AValue then begin
+    FWait:=false;
+    FCheckUserChangedThread := TCheckUserChangeThread.Create(true);
+    FCheckUserChangedThread.CheckUserChanged:=@CheckServerUserChanged;
+    FCheckUserChangedThread.OnUserChanged:=@RemoteUserChanged;
+    FCheckUserChangedThread.FreeOnTerminate:=true;
+    FCheckUserChangedThread.Start;
+  end else begin
+    FCheckUserChangedThread.CheckUserChanged:=nil;
+    FCheckUserChangedThread.OnUserChanged:=nil;
+    FCheckUserChangedThread.Terminate;
+    FCheckUserChangedThread:=Nil;
+  end;
 end;
 
 procedure TCentralUserManagement.UpdateControlSecureState(Data: PtrInt);
@@ -201,17 +374,18 @@ end;
 function TCentralUserManagement.CanAccess(sc: UTF8String; aUID: Integer
   ): Boolean;
 var
-  jobj: TJSONObject;
+  jobj, jAux: TJSONObject;
   aux: UTF8String;
   CentralData: TJSONData;
   jUID:TJSONNumber;
   jLogin:TJSONString;
   aBoolVar:TJSONBoolean;
 begin
-  if (aUID<0) and (FUID<0) then exit(false);
+  if (aUID<0) and (FUID<0) then
+    exit(false);
 
   if (FUID>0) and (aUID=FUID) and FUseCachedAuthorizations and Assigned(FCachedAuthorizations) then begin
-    Result:=FCachedAuthorizations.Find(sc, aBoolVar);
+    Result:=FCachedAuthorizations.Find(sc, aBoolVar) or FCachedAuthorizations.Find(Utf8ToAnsi(sc), aBoolVar); //TODO Check
     exit;
   end;
 
@@ -231,10 +405,17 @@ begin
       if (CentralData is TJSONObject) then begin
         if TJSONObject(CentralData).Find(_uid,jUID) then begin
           if FUID<>jUID.AsInteger then begin
+            if TJSONObject(CentralData).Find(_authorizations, jAux) then begin
+              if Assigned(FCachedAuthorizations) then
+                FreeAndNil(FCachedAuthorizations);
+              FCachedAuthorizations:=TJSONObject(jAux.Clone);
+            end;
+
             //delay a Control security refresh
             if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
               Application.QueueAsyncCall(@UpdateControlSecureState,0);
           end;
+          Result:=FCachedAuthorizations.Find(sc, aBoolVar);
           FUID:=jUID.AsInteger;
         end;
 
@@ -250,17 +431,29 @@ begin
   end;
 end;
 
+procedure TCentralUserManagement.Loaded;
+begin
+  inherited Loaded;
+  SetUseCentralUserAsLocalUser(FUseCentralUserAsLocalUserLoading);
+end;
+
 constructor TCentralUserManagement.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FWait:=false;
   FRaiseExceptOnConnFailure:=false;
   FCachedAuthorizations:=TJSONObject.Create;
+  FValidatedSC:=TStringList.Create;
 end;
 
 destructor TCentralUserManagement.Destroy;
 begin
+  if Assigned(FCheckUserChangedThread) then
+    SetUseCentralUserAsLocalUser(false);
   if Assigned(Application) then
     Application.RemoveAllHandlersOfObject(Self);
+  if Assigned(FValidatedSC) then
+    FreeAndNil(FValidatedSC);
   inherited Destroy;
 end;
 
@@ -325,13 +518,15 @@ var
   jobj: TJSONObject;
   aux: UTF8String;
 begin
+  if Assigned(FValidatedSC) and (FValidatedSC.IndexOf(sc)>=0) then exit;
+
   jobj:=TJSONObject.Create;
   try
     jobj.Add(_securitycode, sc);
     case PostMethodInt(_validadesecuritycode, jobj, aux) of
       0: if FRaiseExceptOnConnFailure then
         raise Exception.Create(_CannotConnectOnSecServer);
-      200: ;
+      200: FValidatedSC.Add(sc);
       404: ;
       405:
         raise Exception.Create(_SecurityServerRejectedSC);
@@ -349,6 +544,8 @@ var
   jobj: TJSONObject;
   aux: UTF8String;
 begin
+  if SecurityCodeExists(sc) then
+    exit;
   jobj:=TJSONObject.Create;
   try
     jobj.Add(_securitycode, sc);
@@ -371,15 +568,16 @@ end;
 
 function TCentralUserManagement.SecurityCodeExists(sc: UTF8String): Boolean;
 var
-  x:TStringList;
   c:LongInt;
 begin
-  x:=GetRegisteredAccessCodes;
-  try
-    Result:=x.IndexOf(sc)<>-1;
-  finally
-    x.Destroy;
+  if SecondsBetween(Now, FRegisteredSCLastQuery)>300 then begin
+    if Assigned(FRegisteredSC) then
+      FreeAndNil(FRegisteredSC);
+    FRegisteredSC:=GetRegisteredAccessCodes;
+    FRegisteredSCLastQuery:=Now;
   end;
+
+  Result:=Assigned(FRegisteredSC) and (FRegisteredSC.IndexOf(sc)>=0);
 end;
 
 function TCentralUserManagement.CanAccess(sc: UTF8String): Boolean;

@@ -462,6 +462,7 @@ begin
         auxItem.PLCTag.RemoveFreeNotification(Self);
       end;
     end;
+    FreeAndNil(FEventTags);
   end;
 
   inherited Destroy;
