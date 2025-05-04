@@ -8,8 +8,8 @@ uses
   sslbase, sslsockets, fpopenssl, openssl, opensslsockets, Classes, SysUtils,
   Forms, Controls, Graphics, Dialogs, ActnList, StdCtrls, ExtCtrls, DBGrids,
   udmdb, IniFiles, syncobjs, eventlog, RTTICtrls, WinCCUserManagement, HMIEdit,
-  ControlSecurityManager, HMILabel, PLCTagNumber, fphttpserver, fpjson,
-  jsonparser, Sockets, StrUtils;
+  ControlSecurityManager, HMILabel, PLCTagNumber, PLCString, tcp_udpport,
+  ISOTCPDriver, fphttpserver, fpjson, jsonparser, ActiveX, Sockets, StrUtils;
 
 type
   TJSONObjectExt = class helper for TJSONObject
@@ -35,10 +35,13 @@ type
 
   TSecWSThread = class(TThread)
   private
-    FUser, FPass, FCurrUserLogin:String;
+    FUser, FPass,
+    FCurrUserLogin:String;
     FLoginOk:Boolean;
+    UserChanged: TEvent;
     ws:TFPHttpServer;
     cs:TCriticalSection;
+    QueuedClients: cardinal;
     //log:TEventLog;
     //FEvtType:TEventType;
     //FEvtMsg:String;
@@ -62,6 +65,7 @@ type
     constructor Create(CreateSuspended: Boolean; const StackSize: SizeUInt=
   DefaultStackSize);
     destructor Destroy; override;
+    function SetUserChanged: String;
   end;
 
 
@@ -70,8 +74,13 @@ type
   TForm1 = class(TForm)
     EventLog1: TEventLog;
     Memo1: TMemo;
+    S7_CLP1: TISOTCPDriver;
+    TCP_UDPPort1: TTCP_UDPPort;
+    Timer1: TTimer;
+    UserName: TPLCString;
     WinCCUserManagement1: TWinCCUserManagement;
     procedure FormCreate(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
   private
     wst:TSecWSThread;
     procedure WSTTerminated(Sender: TObject);
@@ -82,6 +91,7 @@ type
 
 var
   Form1: TForm1;
+  FLastUserloggedIn: String;
 
 const
   SectionName = 'Securty Override';
@@ -234,276 +244,420 @@ var
   jUseCentralUserAsLocalUser:TJSONBoolean;
   dm: Tdmdb;
   uid: TJSONNumber;
-  a, b, c, UseCentralUserAsLocalUser: Boolean;
+  jBool:TJSONBoolean;
+  a, b, c, UseCentralUserAsLocalUser, IncDec: Boolean;
   r, aUID: Integer;
   ja: TJSONArray;
   ms: TStringStream;
   jobj, jAuth: TJSONObject;
+  jsonStr: TJSONStringType;
+  aux: Cardinal;
+  wr:TWaitResult;
+  reqData: TJSONData;
 
-  function CentralUserData(aPrefix:String):String;
+  procedure CentralUserData(aObj:TJSONObject);
   const
     bVal:array[low(boolean)..high(Boolean)] of string = ('false', 'true');
   begin
-    Result:='';
-    if UseCentralUserAsLocalUser then begin
-      Result:=aPrefix+'"UseCentralUserAsLocalUser": '+bVal[UseCentralUserAsLocalUser]+', "uid": '+aUID.ToString+', "login": "'+aCurrUserLogin+'"';
+    //Result:='';
+    if UseCentralUserAsLocalUser and Assigned(aObj) then begin
+      aObj.AddOrSet('UseCentralUserAsLocalUser', UseCentralUserAsLocalUser);
+      aObj.AddOrSet('uid', aUID);
+      aObj.AddOrSet('login',aCurrUserLogin);
+      //Result:=aPrefix+'"UseCentralUserAsLocalUser": '+bVal[UseCentralUserAsLocalUser]+', "uid": '+aUID.ToString+', "login": "'+aCurrUserLogin+'"';
     end;
   end;
 
 begin
+  CoInitialize(nil);
   try
-    cliIPAddr:=IPToString(ARequest.Connection.Socket.RemoteAddress.sin_addr);
-    AddToLog(etInfo,  cliIPAddr, ARequest.Method.ToUpper.Trim+' '+ARequest.URL);
-    AddToLog(etDebug, cliIPAddr, 'Request content: '+ARequest.Content);
-    if ARequest.Method.ToUpper.Trim<>'POST' then begin
-      AResponse.Code:=405;
-      exit;
-    end;
+    try
+      cliIPAddr:=IPToString(ARequest.Connection.Socket.RemoteAddress.sin_addr);
+      AddToLog(etInfo,  cliIPAddr, ARequest.Method.ToUpper.Trim+' '+ARequest.URL);
+      AddToLog(etDebug, cliIPAddr, 'Request content: '+ARequest.Content);
+      if ARequest.Method.ToUpper.Trim<>'POST' then begin
+        AResponse.Code:=405;
+        exit;
+      end;
 
-    AResponse.ContentType:='application/json';
-    AResponse.AcceptCharset:='utf-8';
-    UseCentralUserAsLocalUser := false;
-    case ARequest.URL of
-      '/checkuserpwd': begin
-        try
-          logindata := GetJSON(ARequest.Content);
-        except
-          AResponse.Content := 'Requisicao invalida';
-          AResponse.Code    := 500;
-          exit;
+      AResponse.ContentType:='application/json';
+      AResponse.AcceptCharset:='utf-8';
+      UseCentralUserAsLocalUser := false;
+      case ARequest.URL of
+        '/checkuserpwd': begin
+          try
+            logindata := GetJSON(ARequest.Content);
+          except
+            AResponse.Content := '{"error": "Requisicao invalida"}';
+            AResponse.Code    := 500;
+            exit;
+          end;
+          if Assigned(logindata) and
+             (logindata is TJSONObject) and
+             TJSONObject(logindata).Find('user',username) and
+             TJSONObject(logindata).Find('password',password)
+          then begin
+            FLoginOk:=false;
+            FUser:=username.AsString;
+            FPass:=password.AsString;
+            Synchronize(@ChecarUsuarioNaAplicacaoComWinCC);
+
+            if FLoginOk then begin
+              try
+                dm:=Tdmdb.Create(nil);
+                try
+                  dm.BuscaUserName.Close;
+                    dm.BuscaUserName.ParamByName('username').Value:=FUser;
+                    dm.BuscaUserName.Open;
+                    if dm.BuscaUserName.RecordCount=1 then begin
+                      jobj:=TJSONObject.Create;
+                      try
+                        jobj.add('uid',dm.BuscaUserNameID.Value);
+                        dm.AuthorizationsFromUser.Close;
+                        dm.AuthorizationsFromUser.ParamByName('uid').AsInteger:=dm.BuscaUserNameID.Value;
+                        dm.AuthorizationsFromUser.Open;
+                        jAuth:=TJSONObject.Create;
+                        for r:=1 to dm.AuthorizationsFromUser.RecordCount do begin
+                          dm.AuthorizationsFromUser.RecNo:=r;
+                          jAuth.AddOrSet(dm.AuthorizationsFromUserL1046.AsString, true);
+                        end;
+                        GetAuthorizedReplacedSC(jAuth);
+                        jobj.Add('authorizations',jAuth);
+                        AResponse.Content := jobj.AsJSON;
+                        AResponse.Code    := 200;
+                      finally
+                        FreeAndNil(jobj);
+                      end;
+                    end else begin
+                      AResponse.Content := '{"error": "Tabela de usuarios retornou zero ou mais de um usuario com mesmo nome" }';
+                      AResponse.Code    := 500;
+                    end;
+                finally
+                  FreeAndNil(dm);
+                end;
+              except
+                on e:Exception do begin
+                  jobj:=TJSONObject.Create();
+                  try
+                    jobj.AddOrSet('error', e.Message);
+                    AResponse.Content := jobj.AsJSON;
+                    AResponse.Code    := 500;
+                  finally
+                    FreeAndNil(jobj);
+                  end;
+                end;
+              end;
+
+            end else begin
+              AResponse.Code    := 401;
+            end;
+          end else begin
+            AResponse.Content := 'Requisicao JSON mal formada';
+            AResponse.Code    := 500;
+            exit;
+          end;
         end;
-        if Assigned(logindata) and
-           (logindata is TJSONObject) and
-           TJSONObject(logindata).Find('user',username) and
-           TJSONObject(logindata).Find('password',password)
-        then begin
-          FLoginOk:=false;
-          FUser:=username.AsString;
-          FPass:=password.AsString;
-          Synchronize(@ChecarUsuarioNaAplicacaoComWinCC);
-
-          if FLoginOk then begin
-            try
+        '/checkuserchipcard': begin
+          AResponse.Content := '{"error:" "Login por chipcard/autenticacao via RFID nao suportada" }';
+          AResponse.Code    := 501;
+        end;
+        '/uidcanaccess': begin
+          try
+            logindata := GetJSON(ARequest.Content);
+          except
+            AResponse.Content := '{"error": "Requisicao invalida"}';
+            AResponse.Code    := 500;
+            exit;
+          end;
+          if Assigned(logindata) and
+             (logindata is TJSONObject) and
+             TJSONObject(logindata).Find('uid',uid) and
+             TJSONObject(logindata).Find('securitycode',SecurityCode)
+          then begin
+            aUID:=uid.AsInteger;
+            if TJSONObject(logindata).Find('UseCentralUserAsLocalUser',jUseCentralUserAsLocalUser) and jUseCentralUserAsLocalUser.AsBoolean then begin
+              Synchronize(@GetLoggedWinCCUser);
+              aCurrUserLogin:=FCurrUserLogin;
               dm:=Tdmdb.Create(nil);
               try
                 dm.BuscaUserName.Close;
-                  dm.BuscaUserName.ParamByName('username').Value:=FUser;
-                  dm.BuscaUserName.Open;
-                  if dm.BuscaUserName.RecordCount=1 then begin
-                    jobj:=TJSONObject.Create;
-                    try
-                      jobj.add('uid',dm.BuscaUserNameID.Value);
-                      dm.AuthorizationsFromUser.Close;
-                      dm.AuthorizationsFromUser.ParamByName('uid').AsInteger:=dm.BuscaUserNameID.Value;
-                      dm.AuthorizationsFromUser.Open;
-                      jAuth:=TJSONObject.Create;
-                      for r:=1 to dm.AuthorizationsFromUser.RecordCount do begin
-                        dm.AuthorizationsFromUser.RecNo:=r;
-                        jAuth.AddOrSet(dm.AuthorizationsFromUserL1046.AsString, true);
-                      end;
-                      GetAuthorizedReplacedSC(jAuth);
-                      jobj.Add('authorizations',jAuth);
-                      AResponse.Content := jobj.AsJSON;
-                      AResponse.Code    := 200;
-                    finally
-                      FreeAndNil(jobj);
+                dm.BuscaUserName.ParamByName('username').Value:=aCurrUserLogin;
+                dm.BuscaUserName.Open;
+                if dm.BuscaUserName.RecordCount=1 then begin
+                  UseCentralUserAsLocalUser := true;
+                  aUID := dm.BuscaUserNameID.Value;
+                end;
+                dm.SQLServerWINCC.Disconnect;
+              finally
+                FreeAndNil(dm);
+              end;
+            end;
+
+
+            try
+              dm:=Tdmdb.Create(nil);
+              try
+                jobj:=TJSONObject.Create;
+                try
+                  if uid.AsInt64<>aUID then begin
+                    dm.AuthorizationsFromUser.Close;
+                    dm.AuthorizationsFromUser.ParamByName('uid').AsInteger:=aUID;
+                    dm.AuthorizationsFromUser.Open;
+                    jAuth:=TJSONObject.Create;
+                    for r:=1 to dm.AuthorizationsFromUser.RecordCount do begin
+                      dm.AuthorizationsFromUser.RecNo:=r;
+                      jAuth.AddOrSet(dm.AuthorizationsFromUserL1046.AsString, true);
                     end;
-                  end else begin
-                    AResponse.Content := '{"error": "Tabela de usuarios retornou mais de um usuario com mesmo nome" }';
-                    AResponse.Code    := 500;
+                    GetAuthorizedReplacedSC(jAuth);
+                    jobj.Add('authorizations',jAuth);
                   end;
+
+                  CentralUserData(jobj);
+
+                  dm.UIDCanAccessTable.Close;
+                  dm.UIDCanAccessTable.ParamByName('uid').AsInteger:=aUID;
+                  dm.UIDCanAccessTable.ParamByName('securitycode').Value:=securitycode.AsString;
+                  dm.UIDCanAccessTable.Open;
+                  if dm.UIDCanAccessTable.RecordCount>=1 then begin
+                    jobj.AddOrSet('WinCCAuthCount', dm.UIDCanAccessTable.RecordCount);
+                    AResponse.Content:= jobj.AsJSON;
+                    AResponse.Code := 200; //o UID X TEM acesso ao security code ORIGINAL
+                  end else begin
+
+                    if SecurityCodeReplaced(SecurityCode.AsString, newSecCode) then begin
+                      dm.UIDCanAccessTable.Close;
+                      dm.UIDCanAccessTable.ParamByName('uid').AsInteger:=uid.AsInteger;
+                      dm.UIDCanAccessTable.ParamByName('securitycode').AsString:=UTF8Encode(newSecCode);
+                      dm.UIDCanAccessTable.Open;
+
+                      if dm.UIDCanAccessTable.RecordCount=1 then begin
+                        jobj.AddOrSet('WinCCReplacedAuthCount', dm.UIDCanAccessTable.RecordCount);
+                        AResponse.Content:=jobj.AsJSON;
+                        AResponse.Code    := 200; //o UID X TEM acesso ao security code substitudo
+                      end else begin
+                        jsonStr:=jobj.AsJSON;
+                        AResponse.Content:=jobj.AsJSON;
+                        AResponse.Code    := 403; //o UID X NAO TEM acesso ao security code substitudo
+                      end;
+                    end else begin
+                      jsonStr:=jobj.AsJSON;
+                      AResponse.Content:=jobj.AsJSON;
+                      AResponse.Code    := 403; //security code sem substituto
+                    end;
+                  end;
+                finally
+                  FreeAndNil(jobj);
+                end;
               finally
                 FreeAndNil(dm);
               end;
             except
               on e:Exception do begin
-                AResponse.Content := '{"error": "Erro criando conexao com SQLServer WinCC" }';
-                AResponse.Code    := 500;
-              end;
-            end;
-
-          end else begin
-            AResponse.Code    := 401;
-          end;
-        end else begin
-          AResponse.Content := 'Requisicao JSON mal formada';
-          AResponse.Code    := 500;
-          exit;
-        end;
-      end;
-      '/checkuserchipcard': begin
-        AResponse.Content := '{"error:" "Login por chipcard/autenticacao via RFID nao suportada" }';
-        AResponse.Code    := 501;
-      end;
-      '/uidcanaccess': begin
-        try
-          logindata := GetJSON(ARequest.Content);
-        except
-          AResponse.Content := 'Requisicao invalida';
-          AResponse.Code    := 500;
-          exit;
-        end;
-        if Assigned(logindata) and
-           (logindata is TJSONObject) and
-           TJSONObject(logindata).Find('uid',uid) and
-           TJSONObject(logindata).Find('securitycode',SecurityCode)
-        then begin
-          aUID:=uid.AsInteger;
-          if TJSONObject(logindata).Find('UseCentralUserAsLocalUser',jUseCentralUserAsLocalUser) and jUseCentralUserAsLocalUser.AsBoolean then begin
-            Synchronize(@GetLoggedWinCCUser);
-            aCurrUserLogin:=FCurrUserLogin;
-            dm:=Tdmdb.Create(nil);
-            try
-              dm.BuscaUserName.Close;
-              dm.BuscaUserName.ParamByName('username').Value:=aCurrUserLogin;
-              dm.BuscaUserName.Open;
-              if dm.BuscaUserName.RecordCount=1 then begin
-                UseCentralUserAsLocalUser := true;
-                aUID := dm.BuscaUserNameID.Value;
-              end;
-              dm.SQLServerWINCC.Disconnect;
-            finally
-              FreeAndNil(dm);
-            end;
-          end;
-
-          try
-            dm:=Tdmdb.Create(nil);
-            try
-              dm.UIDCanAccessTable.Close;
-              dm.UIDCanAccessTable.ParamByName('uid').AsInteger:=aUID;
-              dm.UIDCanAccessTable.ParamByName('securitycode').Value:=securitycode.AsString;
-              dm.UIDCanAccessTable.Open;
-              if dm.UIDCanAccessTable.RecordCount>=1 then begin
-                AResponse.Content:= '{ "WinCCAuthCount": '+dm.UIDCanAccessTable.RecordCount.ToString+CentralUserData(', ')+' }';
-                AResponse.Code := 200; //o UID X TEM acesso ao security code ORIGINAL
-              end else begin
-
-                if SecurityCodeReplaced(SecurityCode.AsString, newSecCode) then begin
-                  dm.UIDCanAccessTable.Close;
-                  dm.UIDCanAccessTable.ParamByName('uid').AsInteger:=uid.AsInteger;
-                  dm.UIDCanAccessTable.ParamByName('securitycode').AsString:=UTF8Encode(newSecCode);
-                  dm.UIDCanAccessTable.Open;
-
-                  if dm.UIDCanAccessTable.RecordCount=1 then begin
-                    AResponse.Content:= '{ "WinCCReplacedAuthCount": '+dm.UIDCanAccessTable.RecordCount.ToString+CentralUserData(', ')+' }';
-                    AResponse.Code    := 200; //o UID X TEM acesso ao security code substitudo
-                  end else begin
-                    AResponse.Content:= '{'+CentralUserData('')+'}';
-                    AResponse.Code    := 403; //o UID X NAO TEM acesso ao security code substitudo
-                  end;
-                end else begin
-                  AResponse.Content:= '{'+CentralUserData('')+'}';
-                  AResponse.Code    := 403; //security code sem substituto
+                jobj:=TJSONObject.Create();
+                try
+                  jobj.AddOrSet('error', e.Message);
+                  AResponse.Content := jobj.AsJSON;
+                  AResponse.Code    := 500;
+                finally
+                  FreeAndNil(jobj);
                 end;
               end;
-            finally
-              FreeAndNil(dm);
             end;
-          except
-            on e:Exception do begin
-              AResponse.Content := '{"error": "Erro criando conexao com SQLServer WinCC" }';
-              AResponse.Code    := 500;
-            end;
+          end else begin
+            AResponse.Content := '{"error": "Requisicao mal formada"}';
+            AResponse.Code    := 500;
+            exit;
           end;
-        end else begin
-          AResponse.Content := 'Requisicao JSON mal formada';
-          AResponse.Code    := 500;
-          exit;
         end;
-      end;
-      '/validadesecuritycode': begin
-        AResponse.Code:=200;
-      end;
-      '/registersecuritycode': begin
-        try
-          logindata := GetJSON(ARequest.Content);
-        except
-          AResponse.Content := 'Requisicao invalida';
-          AResponse.Code    := 500;
-          exit;
+        '/validadesecuritycode': begin
+          AResponse.Code:=200;
         end;
-        a:=Assigned(logindata);
-        b:=(logindata is TJSONObject);
-        if a and b then
-          c:=TJSONObject(logindata).Find('securitycode',securitycode);
-        if a and b and c then begin
+        '/registersecuritycode': begin
           try
-            dm:=Tdmdb.Create(nil);
+            logindata := GetJSON(ARequest.Content);
+          except
+            AResponse.Content := '{"error": "Requisicao invalida"}';
+            AResponse.Code    := 500;
+            exit;
+          end;
+          a:=Assigned(logindata);
+          b:=(logindata is TJSONObject);
+          if a and b then
+            c:=TJSONObject(logindata).Find('securitycode',securitycode);
+          if a and b and c then begin
             try
-              dm.REGISTERsecuritycode.Close;
-              dm.REGISTERsecuritycode.ParamByName('tipobusca').AsInteger   := 0;
-              dm.REGISTERsecuritycode.ParamByName('securitycode').Value := securitycode.AsString;
-              dm.REGISTERsecuritycode.Open;
-              if dm.REGISTERsecuritycode.RecordCount=1 then begin
-                AResponse.Code    := 200;
-              end else begin
-                if RegistraSCNoArquivoIni(securitycode.AsString) then
-                  AResponse.Code    := 200
-                else
-                  AResponse.Code    := 404;
+              dm:=Tdmdb.Create(nil);
+              try
+                dm.REGISTERsecuritycode.Close;
+                dm.REGISTERsecuritycode.ParamByName('tipobusca').AsInteger   := 0;
+                dm.REGISTERsecuritycode.ParamByName('securitycode').Value := securitycode.AsString;
+                dm.REGISTERsecuritycode.Open;
+                if dm.REGISTERsecuritycode.RecordCount=1 then begin
+                  AResponse.Code    := 200;
+                end else begin
+                  if RegistraSCNoArquivoIni(securitycode.AsString) then
+                    AResponse.Code    := 200
+                  else
+                    AResponse.Code    := 404;
+                end;
+              finally
+                FreeAndNil(dm);
+              end;
+            except
+              on e:Exception do begin
+                jobj:=TJSONObject.Create();
+                try
+                  jobj.AddOrSet('error', e.Message);
+                  AResponse.Content := jobj.AsJSON;
+                  AResponse.Code    := 500;
+                finally
+                  FreeAndNil(jobj);
+                end;
+              end;
+            end;
+          end else begin
+            AResponse.Content := '{"error": "JSON mal formado"}';
+            AResponse.Code    := 500;
+            exit;
+          end;
+        end;
+        '/enumsecuritycodes': begin
+          dm:=Tdmdb.Create(nil);
+          try
+            dm.REGISTERsecuritycode.Close;
+            dm.REGISTERsecuritycode.ParamByName('tipobusca').AsInteger := 1;
+            dm.REGISTERsecuritycode.ParamByName('securitycode').Value  := '';
+            dm.REGISTERsecuritycode.Open;
+
+            ja:=TJSONArray.Create;
+            try
+              for r:=1 to dm.REGISTERsecuritycode.RecordCount do begin
+                dm.REGISTERsecuritycode.RecNo:=r;
+                ja.Add(dm.REGISTERsecuritycodeL1046.AsString);
+              end;
+
+              LeSCNoArquivoIni(ja);
+
+              ms:=TStringStream.Create(ja.AsJSON);
+              try
+                ms.Position:=0;
+                AResponse.ContentStream:=ms;
+                AResponse.ContentLength:=ms.Size;
+                AResponse.Code:=200;
+                AResponse.SendContent;
+                AddToLog(etInfo, cliIPAddr, 'Response: '+AResponse.Code.ToString+' '+ms.DataString);
+              finally
+                FreeAndNil(ms);
               end;
             finally
-              FreeAndNil(dm);
+              FreeAndNil(ja);
             end;
-          except
-            on e:Exception do begin
-              AResponse.Content := '{"error": "exception occurred"}';
-              AResponse.Code    := 500;
+          finally
+            dm.SQLServerWINCC.Disconnect;
+            FreeAndNil(dm);
+          end;
+        end;
+
+        '/userchanged': begin
+          try
+            try
+              reqData := GetJSON(ARequest.Content);
+            except
+            end;
+
+            if (reqData is TJSONObject) and TJSONObject(reqData).Find('wait', jBool) and (jBool.AsBoolean=false) then begin
+              IncDec:=false;
+              wr:=wrSignaled
+            end else begin
+              IncDec:=true;
+              InterlockedIncrement(QueuedClients);
+              //wait 120s for a user change
+              wr:=UserChanged.WaitFor(120000);
+            end;
+
+            case wr of
+              wrSignaled: begin
+                try
+                  dm:=Tdmdb.Create(nil);
+                  try
+                    dm.BuscaUserName.Close;
+                    dm.BuscaUserName.ParamByName('username').Value:=FLastUserLoggedIn;
+                    dm.BuscaUserName.Open;
+                    case dm.BuscaUserName.RecordCount of
+                      0: ;
+                      1: begin
+                        jobj:=TJSONObject.Create;
+                        try
+                          jobj.AddOrSet('uid',dm.BuscaUserNameID.Value);
+                          jobj.AddOrSet('username',FLastUserLoggedIn);
+                          CentralUserData(jobj);
+                          dm.AuthorizationsFromUser.Close;
+                          dm.AuthorizationsFromUser.ParamByName('uid').AsInteger:=dm.BuscaUserNameID.Value;
+                          dm.AuthorizationsFromUser.Open;
+                          jAuth:=TJSONObject.Create;
+                          for r:=1 to dm.AuthorizationsFromUser.RecordCount do begin
+                            dm.AuthorizationsFromUser.RecNo:=r;
+                            jAuth.AddOrSet(dm.AuthorizationsFromUserL1046.AsString, true);
+                          end;
+                          GetAuthorizedReplacedSC(jAuth);
+                          jobj.Add('authorizations',jAuth);
+                          AResponse.Content := jobj.AsJSON;
+                          AResponse.Code    := 200;
+                        finally
+                          FreeAndNil(jobj);
+                        end;
+                      end
+                      else begin
+                        AResponse.Content := '{"error": "Tabela de usuarios retornou mais de um usuario com mesmo nome" }';
+                        AResponse.Code    := 500;
+                      end;
+                    end;
+                  finally
+                    FreeAndNil(dm);
+                  end;
+                except
+                  on e:Exception do begin
+                    jobj:=TJSONObject.Create();
+                    try
+                      jobj.AddOrSet('error', e.Message);
+                      AResponse.Content := jobj.AsJSON;
+                      AResponse.Code    := 500;
+                    finally
+                      FreeAndNil(jobj);
+                    end;
+                  end;
+                end;
+              end;
+              else begin
+                AResponse.Code:=408;
+                AResponse.SendContent;
+              end;
+            end;
+          finally
+            if IncDec then  begin
+              aux := InterlockedDecrement(QueuedClients);
+              if aux<=0 then begin
+                if aux<0 then
+                  InterlockedExchange(QueuedClients, 0);
+                UserChanged.ResetEvent;
+              end;
             end;
           end;
-        end else begin
-          AResponse.Content := 'Requisicao JSON mal formada';
-          AResponse.Code    := 500;
           exit;
         end;
       end;
-      '/enumsecuritycodes': begin
-        dm:=Tdmdb.Create(nil);
-        try
-          dm.REGISTERsecuritycode.Close;
-          dm.REGISTERsecuritycode.ParamByName('tipobusca').AsInteger := 1;
-          dm.REGISTERsecuritycode.ParamByName('securitycode').Value  := '';
-          dm.REGISTERsecuritycode.Open;
 
-          ja:=TJSONArray.Create;
-          try
-            for r:=1 to dm.REGISTERsecuritycode.RecordCount do begin
-              dm.REGISTERsecuritycode.RecNo:=r;
-              ja.Add(dm.REGISTERsecuritycodeL1046.AsString);
-            end;
+    finally
+      if not Assigned(AResponse.ContentStream) then
+        AddToLog(etInfo, cliIPAddr, 'Response: '+AResponse.Code.ToString+' '+AResponse.Content);
 
-            LeSCNoArquivoIni(ja);
-
-            ms:=TStringStream.Create(ja.AsJSON);
-            try
-              ms.Position:=0;
-              AResponse.ContentStream:=ms;
-              AResponse.ContentLength:=ms.Size;
-              AResponse.Code:=200;
-              AResponse.SendContent;
-              AddToLog(etInfo, cliIPAddr, 'Response: '+AResponse.Code.ToString+' '+ms.DataString);
-            finally
-              FreeAndNil(ms);
-            end;
-          finally
-            FreeAndNil(ja);
-          end;
-        finally
-          dm.SQLServerWINCC.Disconnect;
-          FreeAndNil(dm);
-        end;
-      end;
+      if AResponse.Code=0 then
+        AResponse.Code:=404;
+      if not AResponse.ContentSent then
+        AResponse.SendContent;
     end;
-
   finally
-    if not Assigned(AResponse.ContentStream) then
-      AddToLog(etInfo, cliIPAddr, 'Response: '+AResponse.Code.ToString+' '+AResponse.Content);
-
-    if AResponse.Code=0 then
-      AResponse.Code:=404;
-    if not AResponse.ContentSent then
-      AResponse.SendContent;
+    CoUninitialize;
   end;
 end;
 
@@ -560,9 +714,15 @@ begin
   end;
 end;
 
+function TSecWSThread.SetUserChanged:String;
+begin
+  if Assigned(UserChanged) then begin
+    UserChanged.SetEvent;
+  end;
+end;
+
 procedure TSecWSThread.GetLoggedWinCCUser;
 begin
-  FCurrUserLogin:='';
   if Assigned(Form1) and Assigned(Form1.WinCCUserManagement1) then
     FCurrUserLogin:=Form1.WinCCUserManagement1.CurrentUserLogin;
 end;
@@ -725,35 +885,40 @@ end;
 
 procedure TSecWSThread.Execute;
 begin
-  while not Terminated do begin
-    ws:=TFPHttpServer.Create(nil);
-    try
-      ws.AdminName:='GP2e';
-      ws.AdminMail:='coordenacao@gp2e.com.br';
-      ws.AcceptIdleTimeout :=1000;
-      ws.OnAcceptIdle      :=@AcceptIdle;
-      ws.OnRequest         :=@WSRequest;
-      ws.OnRequestError    :=@RequestError;
-      ws.QueueSize         :=100;
-      ws.LookupHostNames   :=false;
-      ws.Threaded          :=true;
-      {$IF FPC_FULLVERSION > 30300}
-      ws.Port              :=8443;
-      ws.UseSSL            :=true;
-      {$ELSE}
-      ws.Port              :=7561;
-      ws.UseSSL            :=false;
-      {$ENDIF}
-      ws.Active            :=true;
-    finally
-      if Assigned(ws) then
-        FreeAndNil(ws);
+  CoInitialize(nil);
+  try
+    while not Terminated do begin
+      ws:=TFPHttpServer.Create(nil);
+      try
+        ws.AdminName:='GP2e';
+        ws.AdminMail:='coordenacao@gp2e.com.br';
+        ws.AcceptIdleTimeout :=1000;
+        ws.OnAcceptIdle      :=@AcceptIdle;
+        ws.OnRequest         :=@WSRequest;
+        ws.OnRequestError    :=@RequestError;
+        ws.QueueSize         :=100;
+        ws.LookupHostNames   :=false;
+        ws.Threaded          :=true;
+        {$IF FPC_FULLVERSION > 30300}
+        ws.Port              :=8443;
+        ws.UseSSL            :=true;
+        {$ELSE}
+        ws.Port              :=7561;
+        ws.UseSSL            :=false;
+        {$ENDIF}
+        ws.Active            :=true;
+      finally
+        if Assigned(ws) then
+          FreeAndNil(ws);
+      end;
     end;
-  end;
 
-  if Assigned(cs)  then FreeAndNil(cs);
-  //if Assigned(log) then FreeAndNil(log);
-  if Assigned(msgList) then FreeAndNil(msgList);
+    if Assigned(cs)  then FreeAndNil(cs);
+    //if Assigned(log) then FreeAndNil(log);
+    if Assigned(msgList) then FreeAndNil(msgList);
+  finally
+    CoUninitialize;
+  end;
 end;
 
 constructor TSecWSThread.Create(CreateSuspended: Boolean;
@@ -764,11 +929,14 @@ begin
 
   msgList:=TThreadList.Create;
   msgList.Duplicates:=dupAccept;
+
+  UserChanged:=TEvent.Create(nil, true, false, '');
 end;
 
 destructor TSecWSThread.Destroy;
 begin
   inherited Destroy;
+  if Assigned(UserChanged) then FreeAndNil(UserChanged);
   if Assigned(cs) then FreeAndNil(cs);
   if Assigned(msgList) then FreeAndNil(msgList);
 end;
@@ -790,6 +958,14 @@ begin
   end;
 
   IniciaWSThread;
+end;
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  if FLastUserloggedIn<>UserName.Value then begin
+    wst.SetUserChanged;
+    FLastUserloggedIn:=UserName.Value;
+  end;
 end;
 
 procedure TForm1.WSTTerminated(Sender: TObject);

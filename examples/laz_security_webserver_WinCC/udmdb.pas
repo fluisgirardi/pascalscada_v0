@@ -5,106 +5,108 @@ unit udmdb;
 interface
 
 uses
-  Classes, SysUtils, DB, ZConnection, ZDataset, ZAbstractRODataset;
+  Classes, SysUtils, PLCString, ISOTCPDriver, tcp_udpport, DB, ZConnection,
+  ZDataset, ZAbstractRODataset;
 
 type
 
   { Tdmdb }
 
   Tdmdb = class(TDataModule)
-    AuthorizationsFromUserDESCRIPTION: TZRawStringField;
-    AuthorizationsFromUserEXPTIME: TZIntegerField;
-    AuthorizationsFromUserFLAGS: TZIntegerField;
-    AuthorizationsFromUserGRPID: TZIntegerField;
-    AuthorizationsFromUserID: TZIntegerField;
-    AuthorizationsFromUserID_1: TZIntegerField;
-    AuthorizationsFromUserL1046: TZRawStringField;
-    AuthorizationsFromUserLINEAREASPEC: TZIntegerField;
-    AuthorizationsFromUserLINENAME: TZIntegerField;
-    AuthorizationsFromUserLINENUM: TZIntegerField;
-    AuthorizationsFromUserLINENUM_1: TZIntegerField;
-    AuthorizationsFromUserNAME: TZRawStringField;
-    AuthorizationsFromUserNTUSER: TZRawStringField;
-    AuthorizationsFromUserPASS: TZRawStringField;
-    AuthorizationsFromUserPassWordHash: TZRawStringField;
-    AuthorizationsFromUserPERMCOL1: TZIntegerField;
-    AuthorizationsFromUserPERMCOL2: TZIntegerField;
-    AuthorizationsFromUserPERMCOL3: TZIntegerField;
-    AuthorizationsFromUserPERMCOL4: TZIntegerField;
-    AuthorizationsFromUserPERMCOL5: TZIntegerField;
-    AuthorizationsFromUserPERMCOL6: TZIntegerField;
-    AuthorizationsFromUserPERMCOL7: TZIntegerField;
-    AuthorizationsFromUserPERMCOL8: TZIntegerField;
-    AuthorizationsFromUserPWC_ReservedLicense: TZIntegerField;
-    AuthorizationsFromUserPWC_StartPicture: TZRawStringField;
-    AuthorizationsFromUserPW_Version: TZIntegerField;
-    AuthorizationsFromUserRecordId: TZIntegerField;
-    AuthorizationsFromUserRecordVersion: TZBytesField;
-    AuthorizationsFromUserTEXTID: TZIntegerField;
-    AuthorizationsFromUserWEBSTARTLANG: TZIntegerField;
-    AuthorizationsFromUserWEBSTARTPICTURE: TZRawStringField;
-    AuthorizationsFromUserWEBUSEHORN: TZIntegerField;
-    AuthorizationsFromUserWHOLELINEPERM: TZIntegerField;
-    REGISTERsecuritycodeL1046: TZRawStringField;
-    REGISTERsecuritycodeLINEAREASPEC: TZIntegerField;
-    REGISTERsecuritycodeLINENAME: TZIntegerField;
-    REGISTERsecuritycodeLINENUM: TZIntegerField;
-    REGISTERsecuritycodeRecordId: TZIntegerField;
-    REGISTERsecuritycodeRecordVersion: TZBytesField;
-    REGISTERsecuritycodeTEXTID: TZIntegerField;
-    SQLServerWINCC: TZConnection;
-    BuscaUserName: TZReadOnlyQuery;
-    BuscaUserNameDESCRIPTION: TZRawStringField;
-    BuscaUserNameEXPTIME: TZIntegerField;
-    BuscaUserNameFLAGS: TZIntegerField;
-    BuscaUserNameGRPID: TZIntegerField;
-    BuscaUserNameID: TZIntegerField;
-    BuscaUserNameNAME: TZRawStringField;
-    BuscaUserNameNTUSER: TZRawStringField;
-    BuscaUserNamePASS: TZRawStringField;
-    BuscaUserNamePassWordHash: TZRawStringField;
-    BuscaUserNamePWC_ReservedLicense: TZIntegerField;
-    BuscaUserNamePWC_StartPicture: TZRawStringField;
-    BuscaUserNamePW_Version: TZIntegerField;
-    BuscaUserNameWEBSTARTLANG: TZIntegerField;
-    BuscaUserNameWEBSTARTPICTURE: TZRawStringField;
-    BuscaUserNameWEBUSEHORN: TZIntegerField;
-    UIDCanAccessTable: TZReadOnlyQuery;
-    UIDCanAccessTableDESCRIPTION: TZRawStringField;
-    UIDCanAccessTableEXPTIME: TZIntegerField;
-    UIDCanAccessTableFLAGS: TZIntegerField;
-    UIDCanAccessTableGRPID: TZIntegerField;
-    UIDCanAccessTableID: TZIntegerField;
-    UIDCanAccessTableID_1: TZIntegerField;
-    UIDCanAccessTableL1046: TZRawStringField;
-    UIDCanAccessTableLINEAREASPEC: TZIntegerField;
-    UIDCanAccessTableLINENAME: TZIntegerField;
-    UIDCanAccessTableLINENUM: TZIntegerField;
-    UIDCanAccessTableLINENUM_1: TZIntegerField;
-    UIDCanAccessTableNAME: TZRawStringField;
-    UIDCanAccessTableNTUSER: TZRawStringField;
-    UIDCanAccessTablePASS: TZRawStringField;
-    UIDCanAccessTablePassWordHash: TZRawStringField;
-    UIDCanAccessTablePERMCOL1: TZIntegerField;
-    UIDCanAccessTablePERMCOL2: TZIntegerField;
-    UIDCanAccessTablePERMCOL3: TZIntegerField;
-    UIDCanAccessTablePERMCOL4: TZIntegerField;
-    UIDCanAccessTablePERMCOL5: TZIntegerField;
-    UIDCanAccessTablePERMCOL6: TZIntegerField;
-    UIDCanAccessTablePERMCOL7: TZIntegerField;
-    UIDCanAccessTablePERMCOL8: TZIntegerField;
-    UIDCanAccessTablePWC_ReservedLicense: TZIntegerField;
-    UIDCanAccessTablePWC_StartPicture: TZRawStringField;
-    UIDCanAccessTablePW_Version: TZIntegerField;
-    UIDCanAccessTableRecordId: TZIntegerField;
-    UIDCanAccessTableRecordVersion: TZBytesField;
-    UIDCanAccessTableTEXTID: TZIntegerField;
-    UIDCanAccessTableWEBSTARTLANG: TZIntegerField;
-    UIDCanAccessTableWEBSTARTPICTURE: TZRawStringField;
-    UIDCanAccessTableWEBUSEHORN: TZIntegerField;
-    UIDCanAccessTableWHOLELINEPERM: TZIntegerField;
-    REGISTERsecuritycode: TZReadOnlyQuery;
     AuthorizationsFromUser: TZReadOnlyQuery;
+    AuthorizationsFromUserDESCRIPTION: TStringField;
+    AuthorizationsFromUserEXPTIME: TLongintField;
+    AuthorizationsFromUserFLAGS: TLongintField;
+    AuthorizationsFromUserGRPID: TLongintField;
+    AuthorizationsFromUserID: TLongintField;
+    AuthorizationsFromUserID_1: TLongintField;
+    AuthorizationsFromUserL1046: TStringField;
+    AuthorizationsFromUserLINEAREASPEC: TLongintField;
+    AuthorizationsFromUserLINENAME: TLongintField;
+    AuthorizationsFromUserLINENUM: TLongintField;
+    AuthorizationsFromUserLINENUM_1: TLongintField;
+    AuthorizationsFromUserNAME: TStringField;
+    AuthorizationsFromUserNTUSER: TStringField;
+    AuthorizationsFromUserPASS: TStringField;
+    AuthorizationsFromUserPassWordHash: TStringField;
+    AuthorizationsFromUserPERMCOL1: TLongintField;
+    AuthorizationsFromUserPERMCOL2: TLongintField;
+    AuthorizationsFromUserPERMCOL3: TLongintField;
+    AuthorizationsFromUserPERMCOL4: TLongintField;
+    AuthorizationsFromUserPERMCOL5: TLongintField;
+    AuthorizationsFromUserPERMCOL6: TLongintField;
+    AuthorizationsFromUserPERMCOL7: TLongintField;
+    AuthorizationsFromUserPERMCOL8: TLongintField;
+    AuthorizationsFromUserPWC_ReservedLicense: TLongintField;
+    AuthorizationsFromUserPWC_StartPicture: TStringField;
+    AuthorizationsFromUserPW_Version: TLongintField;
+    AuthorizationsFromUserRecordId: TLongintField;
+    AuthorizationsFromUserRecordVersion: TBytesField;
+    AuthorizationsFromUserTEXTID: TLongintField;
+    AuthorizationsFromUserWEBSTARTLANG: TLongintField;
+    AuthorizationsFromUserWEBSTARTPICTURE: TStringField;
+    AuthorizationsFromUserWEBUSEHORN: TLongintField;
+    AuthorizationsFromUserWHOLELINEPERM: TLongintField;
+    BuscaUserName: TZReadOnlyQuery;
+    BuscaUserNameDESCRIPTION: TStringField;
+    BuscaUserNameEXPTIME: TLongintField;
+    BuscaUserNameFLAGS: TLongintField;
+    BuscaUserNameGRPID: TLongintField;
+    BuscaUserNameID: TLongintField;
+    BuscaUserNameNAME: TStringField;
+    BuscaUserNameNTUSER: TStringField;
+    BuscaUserNamePASS: TStringField;
+    BuscaUserNamePassWordHash: TStringField;
+    BuscaUserNamePWC_ReservedLicense: TLongintField;
+    BuscaUserNamePWC_StartPicture: TStringField;
+    BuscaUserNamePW_Version: TLongintField;
+    BuscaUserNameWEBSTARTLANG: TLongintField;
+    BuscaUserNameWEBSTARTPICTURE: TStringField;
+    BuscaUserNameWEBUSEHORN: TLongintField;
+    REGISTERsecuritycode: TZReadOnlyQuery;
+    REGISTERsecuritycodeL1046: TStringField;
+    REGISTERsecuritycodeLINEAREASPEC: TLongintField;
+    REGISTERsecuritycodeLINENAME: TLongintField;
+    REGISTERsecuritycodeLINENUM: TLongintField;
+    REGISTERsecuritycodeRecordId: TLongintField;
+    REGISTERsecuritycodeRecordVersion: TBytesField;
+    REGISTERsecuritycodeTEXTID: TLongintField;
+    SQLServerWINCC: TZConnection;
+    UIDCanAccessTable: TZReadOnlyQuery;
+    UIDCanAccessTableDESCRIPTION: TStringField;
+    UIDCanAccessTableEXPTIME: TLongintField;
+    UIDCanAccessTableFLAGS: TLongintField;
+    UIDCanAccessTableGRPID: TLongintField;
+    UIDCanAccessTableID: TLongintField;
+    UIDCanAccessTableID_1: TLongintField;
+    UIDCanAccessTableL1046: TStringField;
+    UIDCanAccessTableLINEAREASPEC: TLongintField;
+    UIDCanAccessTableLINENAME: TLongintField;
+    UIDCanAccessTableLINENUM: TLongintField;
+    UIDCanAccessTableLINENUM_1: TLongintField;
+    UIDCanAccessTableNAME: TStringField;
+    UIDCanAccessTableNTUSER: TStringField;
+    UIDCanAccessTablePASS: TStringField;
+    UIDCanAccessTablePassWordHash: TStringField;
+    UIDCanAccessTablePERMCOL1: TLongintField;
+    UIDCanAccessTablePERMCOL2: TLongintField;
+    UIDCanAccessTablePERMCOL3: TLongintField;
+    UIDCanAccessTablePERMCOL4: TLongintField;
+    UIDCanAccessTablePERMCOL5: TLongintField;
+    UIDCanAccessTablePERMCOL6: TLongintField;
+    UIDCanAccessTablePERMCOL7: TLongintField;
+    UIDCanAccessTablePERMCOL8: TLongintField;
+    UIDCanAccessTablePWC_ReservedLicense: TLongintField;
+    UIDCanAccessTablePWC_StartPicture: TStringField;
+    UIDCanAccessTablePW_Version: TLongintField;
+    UIDCanAccessTableRecordId: TLongintField;
+    UIDCanAccessTableRecordVersion: TBytesField;
+    UIDCanAccessTableTEXTID: TLongintField;
+    UIDCanAccessTableWEBSTARTLANG: TLongintField;
+    UIDCanAccessTableWEBSTARTPICTURE: TStringField;
+    UIDCanAccessTableWEBUSEHORN: TLongintField;
+    UIDCanAccessTableWHOLELINEPERM: TLongintField;
+    procedure DataModuleCreate(Sender: TObject);
   private
 
   public
@@ -119,6 +121,12 @@ implementation
 {$R *.lfm}
 
 { Tdmdb }
+
+
+procedure Tdmdb.DataModuleCreate(Sender: TObject);
+begin
+
+end;
 
 end.
 

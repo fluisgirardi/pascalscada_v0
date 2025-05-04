@@ -1,9 +1,10 @@
 object dmdb: Tdmdb
+  OnCreate = DataModuleCreate
   OldCreateOrder = False
-  Height = 339
+  Height = 469
   HorizontalOffset = 350
   VerticalOffset = 250
-  Width = 389
+  Width = 770
   object SQLServerWINCC: TZConnection
     ControlsCodePage = cCP_UTF8
     RawCharacterTransliterateOptions.SQL = True
@@ -13,18 +14,21 @@ object dmdb: Tdmdb
       'controls_cp=CP_UTF8'
       'RawStringEncoding=DB_CP'
     )
+    ReadOnly = True
     Connected = True
     DesignConnection = True
     DisableSavepoints = False
     HostName = '127.0.0.1'
     Port = 0
-    Database = 'Provider=MSOLEDBSQL.1;Integrated Security=SSPI;Persist Security Info=False;User ID="";Initial Catalog=CC_RacaoSJC_25_01_10_16_31_29;Data Source=WSR-086-000-129\WINCC;Initial File Name="";Trust Server Certificate=True;Server SPN="";Authentication="";Access Token=""'
+    Database = 'Provider=MSOLEDBSQL.1;Password=AlfaSJC25#;Persist Security Info=True;User ID=sa;Initial Catalog=CC_RacaoSJC_25_01_10_16_31_29;Data Source=WSR-086-000-129\WINCC;Initial File Name="";Trust Server Certificate=True;Server SPN="";Authentication="";Access Token=""'
+    User = 'sa'
     Password = 'AlfaSJC25#'
     Protocol = 'ado'
     Left = 64
     Top = 16
   end
   object BuscaUserName: TZReadOnlyQuery
+    DisableZFields = True
     Connection = SQLServerWINCC
     SQL.Strings = (
       'SELECT *'
@@ -41,7 +45,7 @@ object dmdb: Tdmdb
       item
         Name = 'username'
       end>
-    object BuscaUserNameID: TZIntegerField
+    object BuscaUserNameID: TLongintField
       FieldKind = fkData
       FieldName = 'ID'
       Index = 0
@@ -50,7 +54,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object BuscaUserNameNAME: TZRawStringField
+    object BuscaUserNameNAME: TStringField
       FieldKind = fkData
       FieldName = 'NAME'
       Index = 1
@@ -60,7 +64,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 25
     end
-    object BuscaUserNamePASS: TZRawStringField
+    object BuscaUserNamePASS: TStringField
       FieldKind = fkData
       FieldName = 'PASS'
       Index = 2
@@ -70,7 +74,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 25
     end
-    object BuscaUserNameGRPID: TZIntegerField
+    object BuscaUserNameGRPID: TLongintField
       FieldKind = fkData
       FieldName = 'GRPID'
       Index = 3
@@ -79,7 +83,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object BuscaUserNameEXPTIME: TZIntegerField
+    object BuscaUserNameEXPTIME: TLongintField
       FieldKind = fkData
       FieldName = 'EXPTIME'
       Index = 4
@@ -88,7 +92,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object BuscaUserNameWEBSTARTPICTURE: TZRawStringField
+    object BuscaUserNameWEBSTARTPICTURE: TStringField
       FieldKind = fkData
       FieldName = 'WEBSTARTPICTURE'
       Index = 5
@@ -98,7 +102,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object BuscaUserNameWEBSTARTLANG: TZIntegerField
+    object BuscaUserNameWEBSTARTLANG: TLongintField
       FieldKind = fkData
       FieldName = 'WEBSTARTLANG'
       Index = 6
@@ -107,7 +111,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object BuscaUserNameNTUSER: TZRawStringField
+    object BuscaUserNameNTUSER: TStringField
       FieldKind = fkData
       FieldName = 'NTUSER'
       Index = 7
@@ -117,7 +121,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object BuscaUserNameDESCRIPTION: TZRawStringField
+    object BuscaUserNameDESCRIPTION: TStringField
       FieldKind = fkData
       FieldName = 'DESCRIPTION'
       Index = 8
@@ -127,7 +131,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object BuscaUserNameFLAGS: TZIntegerField
+    object BuscaUserNameFLAGS: TLongintField
       FieldKind = fkData
       FieldName = 'FLAGS'
       Index = 9
@@ -136,7 +140,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object BuscaUserNamePassWordHash: TZRawStringField
+    object BuscaUserNamePassWordHash: TStringField
       FieldKind = fkData
       FieldName = 'PassWordHash'
       Index = 10
@@ -146,7 +150,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object BuscaUserNamePW_Version: TZIntegerField
+    object BuscaUserNamePW_Version: TLongintField
       FieldKind = fkData
       FieldName = 'PW_Version'
       Index = 11
@@ -155,7 +159,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object BuscaUserNamePWC_StartPicture: TZRawStringField
+    object BuscaUserNamePWC_StartPicture: TStringField
       FieldKind = fkData
       FieldName = 'PWC_StartPicture'
       Index = 12
@@ -165,7 +169,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object BuscaUserNamePWC_ReservedLicense: TZIntegerField
+    object BuscaUserNamePWC_ReservedLicense: TLongintField
       FieldKind = fkData
       FieldName = 'PWC_ReservedLicense'
       Index = 13
@@ -174,7 +178,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object BuscaUserNameWEBUSEHORN: TZIntegerField
+    object BuscaUserNameWEBUSEHORN: TLongintField
       FieldKind = fkData
       FieldName = 'WEBUSEHORN'
       Index = 14
@@ -185,6 +189,7 @@ object dmdb: Tdmdb
     end
   end
   object UIDCanAccessTable: TZReadOnlyQuery
+    DisableZFields = True
     Connection = SQLServerWINCC
     SQL.Strings = (
       'SELECT *'
@@ -217,7 +222,7 @@ object dmdb: Tdmdb
       item
         Name = 'securitycode'
       end>
-    object UIDCanAccessTableID: TZIntegerField
+    object UIDCanAccessTableID: TLongintField
       FieldKind = fkData
       FieldName = 'ID'
       Index = 0
@@ -226,7 +231,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableLINENUM: TZIntegerField
+    object UIDCanAccessTableLINENUM: TLongintField
       FieldKind = fkData
       FieldName = 'LINENUM'
       Index = 1
@@ -235,7 +240,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableWHOLELINEPERM: TZIntegerField
+    object UIDCanAccessTableWHOLELINEPERM: TLongintField
       FieldKind = fkData
       FieldName = 'WHOLELINEPERM'
       Index = 2
@@ -244,7 +249,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL1: TZIntegerField
+    object UIDCanAccessTablePERMCOL1: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL1'
       Index = 3
@@ -253,7 +258,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL2: TZIntegerField
+    object UIDCanAccessTablePERMCOL2: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL2'
       Index = 4
@@ -262,7 +267,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL3: TZIntegerField
+    object UIDCanAccessTablePERMCOL3: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL3'
       Index = 5
@@ -271,7 +276,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL4: TZIntegerField
+    object UIDCanAccessTablePERMCOL4: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL4'
       Index = 6
@@ -280,7 +285,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL5: TZIntegerField
+    object UIDCanAccessTablePERMCOL5: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL5'
       Index = 7
@@ -289,7 +294,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL6: TZIntegerField
+    object UIDCanAccessTablePERMCOL6: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL6'
       Index = 8
@@ -298,7 +303,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL7: TZIntegerField
+    object UIDCanAccessTablePERMCOL7: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL7'
       Index = 9
@@ -307,7 +312,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePERMCOL8: TZIntegerField
+    object UIDCanAccessTablePERMCOL8: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL8'
       Index = 10
@@ -316,7 +321,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableLINENUM_1: TZIntegerField
+    object UIDCanAccessTableLINENUM_1: TLongintField
       FieldKind = fkData
       FieldName = 'LINENUM_1'
       Index = 11
@@ -325,7 +330,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableLINENAME: TZIntegerField
+    object UIDCanAccessTableLINENAME: TLongintField
       FieldKind = fkData
       FieldName = 'LINENAME'
       Index = 12
@@ -334,7 +339,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableLINEAREASPEC: TZIntegerField
+    object UIDCanAccessTableLINEAREASPEC: TLongintField
       FieldKind = fkData
       FieldName = 'LINEAREASPEC'
       Index = 13
@@ -343,7 +348,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableTEXTID: TZIntegerField
+    object UIDCanAccessTableTEXTID: TLongintField
       FieldKind = fkData
       FieldName = 'TEXTID'
       Index = 14
@@ -352,17 +357,17 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableRecordVersion: TZBytesField
+    object UIDCanAccessTableL1046: TStringField
       FieldKind = fkData
-      FieldName = 'RecordVersion'
+      FieldName = 'L1046'
       Index = 15
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
       Required = False
-      Size = 8
+      Size = 400
     end
-    object UIDCanAccessTableRecordId: TZIntegerField
+    object UIDCanAccessTableRecordId: TLongintField
       FieldKind = fkData
       FieldName = 'RecordId'
       Index = 16
@@ -371,17 +376,17 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableL1046: TZRawStringField
+    object UIDCanAccessTableRecordVersion: TBytesField
       FieldKind = fkData
-      FieldName = 'L1046'
+      FieldName = 'RecordVersion'
       Index = 17
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
       Required = False
-      Size = 400
+      Size = 8
     end
-    object UIDCanAccessTableID_1: TZIntegerField
+    object UIDCanAccessTableID_1: TLongintField
       FieldKind = fkData
       FieldName = 'ID_1'
       Index = 18
@@ -390,7 +395,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableNAME: TZRawStringField
+    object UIDCanAccessTableNAME: TStringField
       FieldKind = fkData
       FieldName = 'NAME'
       Index = 19
@@ -400,7 +405,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 25
     end
-    object UIDCanAccessTablePASS: TZRawStringField
+    object UIDCanAccessTablePASS: TStringField
       FieldKind = fkData
       FieldName = 'PASS'
       Index = 20
@@ -410,7 +415,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 25
     end
-    object UIDCanAccessTableGRPID: TZIntegerField
+    object UIDCanAccessTableGRPID: TLongintField
       FieldKind = fkData
       FieldName = 'GRPID'
       Index = 21
@@ -419,7 +424,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableEXPTIME: TZIntegerField
+    object UIDCanAccessTableEXPTIME: TLongintField
       FieldKind = fkData
       FieldName = 'EXPTIME'
       Index = 22
@@ -428,7 +433,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableWEBSTARTPICTURE: TZRawStringField
+    object UIDCanAccessTableWEBSTARTPICTURE: TStringField
       FieldKind = fkData
       FieldName = 'WEBSTARTPICTURE'
       Index = 23
@@ -438,7 +443,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object UIDCanAccessTableWEBSTARTLANG: TZIntegerField
+    object UIDCanAccessTableWEBSTARTLANG: TLongintField
       FieldKind = fkData
       FieldName = 'WEBSTARTLANG'
       Index = 24
@@ -447,7 +452,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableNTUSER: TZRawStringField
+    object UIDCanAccessTableNTUSER: TStringField
       FieldKind = fkData
       FieldName = 'NTUSER'
       Index = 25
@@ -457,7 +462,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object UIDCanAccessTableDESCRIPTION: TZRawStringField
+    object UIDCanAccessTableDESCRIPTION: TStringField
       FieldKind = fkData
       FieldName = 'DESCRIPTION'
       Index = 26
@@ -467,7 +472,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object UIDCanAccessTableFLAGS: TZIntegerField
+    object UIDCanAccessTableFLAGS: TLongintField
       FieldKind = fkData
       FieldName = 'FLAGS'
       Index = 27
@@ -476,7 +481,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePassWordHash: TZRawStringField
+    object UIDCanAccessTablePassWordHash: TStringField
       FieldKind = fkData
       FieldName = 'PassWordHash'
       Index = 28
@@ -486,7 +491,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object UIDCanAccessTablePW_Version: TZIntegerField
+    object UIDCanAccessTablePW_Version: TLongintField
       FieldKind = fkData
       FieldName = 'PW_Version'
       Index = 29
@@ -495,7 +500,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTablePWC_StartPicture: TZRawStringField
+    object UIDCanAccessTablePWC_StartPicture: TStringField
       FieldKind = fkData
       FieldName = 'PWC_StartPicture'
       Index = 30
@@ -505,7 +510,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object UIDCanAccessTablePWC_ReservedLicense: TZIntegerField
+    object UIDCanAccessTablePWC_ReservedLicense: TLongintField
       FieldKind = fkData
       FieldName = 'PWC_ReservedLicense'
       Index = 31
@@ -514,7 +519,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object UIDCanAccessTableWEBUSEHORN: TZIntegerField
+    object UIDCanAccessTableWEBUSEHORN: TLongintField
       FieldKind = fkData
       FieldName = 'WEBUSEHORN'
       Index = 32
@@ -525,6 +530,7 @@ object dmdb: Tdmdb
     end
   end
   object REGISTERsecuritycode: TZReadOnlyQuery
+    DisableZFields = True
     Connection = SQLServerWINCC
     SQL.Strings = (
       'SELECT *'
@@ -556,7 +562,7 @@ object dmdb: Tdmdb
         Name = 'securitycode'
         SQLType = stString
       end>
-    object REGISTERsecuritycodeLINENUM: TZIntegerField
+    object REGISTERsecuritycodeLINENUM: TLongintField
       FieldKind = fkData
       FieldName = 'LINENUM'
       Index = 0
@@ -565,7 +571,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object REGISTERsecuritycodeLINENAME: TZIntegerField
+    object REGISTERsecuritycodeLINENAME: TLongintField
       FieldKind = fkData
       FieldName = 'LINENAME'
       Index = 1
@@ -574,7 +580,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object REGISTERsecuritycodeLINEAREASPEC: TZIntegerField
+    object REGISTERsecuritycodeLINEAREASPEC: TLongintField
       FieldKind = fkData
       FieldName = 'LINEAREASPEC'
       Index = 2
@@ -583,7 +589,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object REGISTERsecuritycodeTEXTID: TZIntegerField
+    object REGISTERsecuritycodeTEXTID: TLongintField
       FieldKind = fkData
       FieldName = 'TEXTID'
       Index = 3
@@ -592,17 +598,17 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object REGISTERsecuritycodeRecordVersion: TZBytesField
+    object REGISTERsecuritycodeL1046: TStringField
       FieldKind = fkData
-      FieldName = 'RecordVersion'
+      FieldName = 'L1046'
       Index = 4
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
       Required = False
-      Size = 8
+      Size = 400
     end
-    object REGISTERsecuritycodeRecordId: TZIntegerField
+    object REGISTERsecuritycodeRecordId: TLongintField
       FieldKind = fkData
       FieldName = 'RecordId'
       Index = 5
@@ -611,18 +617,19 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object REGISTERsecuritycodeL1046: TZRawStringField
+    object REGISTERsecuritycodeRecordVersion: TBytesField
       FieldKind = fkData
-      FieldName = 'L1046'
+      FieldName = 'RecordVersion'
       Index = 6
       LookupCache = False
       ProviderFlags = [pfInUpdate, pfInWhere]
       ReadOnly = True
       Required = False
-      Size = 400
+      Size = 8
     end
   end
   object AuthorizationsFromUser: TZReadOnlyQuery
+    DisableZFields = True
     Connection = SQLServerWINCC
     SQL.Strings = (
       'SELECT *'
@@ -649,7 +656,7 @@ object dmdb: Tdmdb
       item
         Name = 'uid'
       end>
-    object AuthorizationsFromUserID: TZIntegerField
+    object AuthorizationsFromUserID: TLongintField
       FieldKind = fkData
       FieldName = 'ID'
       Index = 0
@@ -658,7 +665,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserLINENUM: TZIntegerField
+    object AuthorizationsFromUserLINENUM: TLongintField
       FieldKind = fkData
       FieldName = 'LINENUM'
       Index = 1
@@ -667,7 +674,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserWHOLELINEPERM: TZIntegerField
+    object AuthorizationsFromUserWHOLELINEPERM: TLongintField
       FieldKind = fkData
       FieldName = 'WHOLELINEPERM'
       Index = 2
@@ -676,7 +683,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL1: TZIntegerField
+    object AuthorizationsFromUserPERMCOL1: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL1'
       Index = 3
@@ -685,7 +692,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL2: TZIntegerField
+    object AuthorizationsFromUserPERMCOL2: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL2'
       Index = 4
@@ -694,7 +701,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL3: TZIntegerField
+    object AuthorizationsFromUserPERMCOL3: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL3'
       Index = 5
@@ -703,7 +710,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL4: TZIntegerField
+    object AuthorizationsFromUserPERMCOL4: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL4'
       Index = 6
@@ -712,7 +719,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL5: TZIntegerField
+    object AuthorizationsFromUserPERMCOL5: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL5'
       Index = 7
@@ -721,7 +728,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL6: TZIntegerField
+    object AuthorizationsFromUserPERMCOL6: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL6'
       Index = 8
@@ -730,7 +737,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL7: TZIntegerField
+    object AuthorizationsFromUserPERMCOL7: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL7'
       Index = 9
@@ -739,7 +746,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPERMCOL8: TZIntegerField
+    object AuthorizationsFromUserPERMCOL8: TLongintField
       FieldKind = fkData
       FieldName = 'PERMCOL8'
       Index = 10
@@ -748,7 +755,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserLINENUM_1: TZIntegerField
+    object AuthorizationsFromUserLINENUM_1: TLongintField
       FieldKind = fkData
       FieldName = 'LINENUM_1'
       Index = 11
@@ -757,7 +764,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserLINENAME: TZIntegerField
+    object AuthorizationsFromUserLINENAME: TLongintField
       FieldKind = fkData
       FieldName = 'LINENAME'
       Index = 12
@@ -766,7 +773,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserLINEAREASPEC: TZIntegerField
+    object AuthorizationsFromUserLINEAREASPEC: TLongintField
       FieldKind = fkData
       FieldName = 'LINEAREASPEC'
       Index = 13
@@ -775,7 +782,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserTEXTID: TZIntegerField
+    object AuthorizationsFromUserTEXTID: TLongintField
       FieldKind = fkData
       FieldName = 'TEXTID'
       Index = 14
@@ -784,7 +791,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserL1046: TZRawStringField
+    object AuthorizationsFromUserL1046: TStringField
       FieldKind = fkData
       FieldName = 'L1046'
       Index = 15
@@ -794,7 +801,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 400
     end
-    object AuthorizationsFromUserRecordId: TZIntegerField
+    object AuthorizationsFromUserRecordId: TLongintField
       FieldKind = fkData
       FieldName = 'RecordId'
       Index = 16
@@ -803,7 +810,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserRecordVersion: TZBytesField
+    object AuthorizationsFromUserRecordVersion: TBytesField
       FieldKind = fkData
       FieldName = 'RecordVersion'
       Index = 17
@@ -813,7 +820,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 8
     end
-    object AuthorizationsFromUserID_1: TZIntegerField
+    object AuthorizationsFromUserID_1: TLongintField
       FieldKind = fkData
       FieldName = 'ID_1'
       Index = 18
@@ -822,7 +829,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserNAME: TZRawStringField
+    object AuthorizationsFromUserNAME: TStringField
       FieldKind = fkData
       FieldName = 'NAME'
       Index = 19
@@ -832,7 +839,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 25
     end
-    object AuthorizationsFromUserPASS: TZRawStringField
+    object AuthorizationsFromUserPASS: TStringField
       FieldKind = fkData
       FieldName = 'PASS'
       Index = 20
@@ -842,7 +849,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 25
     end
-    object AuthorizationsFromUserGRPID: TZIntegerField
+    object AuthorizationsFromUserGRPID: TLongintField
       FieldKind = fkData
       FieldName = 'GRPID'
       Index = 21
@@ -851,7 +858,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserEXPTIME: TZIntegerField
+    object AuthorizationsFromUserEXPTIME: TLongintField
       FieldKind = fkData
       FieldName = 'EXPTIME'
       Index = 22
@@ -860,7 +867,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserWEBSTARTPICTURE: TZRawStringField
+    object AuthorizationsFromUserWEBSTARTPICTURE: TStringField
       FieldKind = fkData
       FieldName = 'WEBSTARTPICTURE'
       Index = 23
@@ -870,7 +877,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object AuthorizationsFromUserWEBSTARTLANG: TZIntegerField
+    object AuthorizationsFromUserWEBSTARTLANG: TLongintField
       FieldKind = fkData
       FieldName = 'WEBSTARTLANG'
       Index = 24
@@ -879,7 +886,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserNTUSER: TZRawStringField
+    object AuthorizationsFromUserNTUSER: TStringField
       FieldKind = fkData
       FieldName = 'NTUSER'
       Index = 25
@@ -889,7 +896,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object AuthorizationsFromUserDESCRIPTION: TZRawStringField
+    object AuthorizationsFromUserDESCRIPTION: TStringField
       FieldKind = fkData
       FieldName = 'DESCRIPTION'
       Index = 26
@@ -899,7 +906,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object AuthorizationsFromUserFLAGS: TZIntegerField
+    object AuthorizationsFromUserFLAGS: TLongintField
       FieldKind = fkData
       FieldName = 'FLAGS'
       Index = 27
@@ -908,7 +915,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPassWordHash: TZRawStringField
+    object AuthorizationsFromUserPassWordHash: TStringField
       FieldKind = fkData
       FieldName = 'PassWordHash'
       Index = 28
@@ -918,7 +925,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object AuthorizationsFromUserPW_Version: TZIntegerField
+    object AuthorizationsFromUserPW_Version: TLongintField
       FieldKind = fkData
       FieldName = 'PW_Version'
       Index = 29
@@ -927,7 +934,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserPWC_StartPicture: TZRawStringField
+    object AuthorizationsFromUserPWC_StartPicture: TStringField
       FieldKind = fkData
       FieldName = 'PWC_StartPicture'
       Index = 30
@@ -937,7 +944,7 @@ object dmdb: Tdmdb
       Required = False
       Size = 256
     end
-    object AuthorizationsFromUserPWC_ReservedLicense: TZIntegerField
+    object AuthorizationsFromUserPWC_ReservedLicense: TLongintField
       FieldKind = fkData
       FieldName = 'PWC_ReservedLicense'
       Index = 31
@@ -946,7 +953,7 @@ object dmdb: Tdmdb
       ReadOnly = True
       Required = False
     end
-    object AuthorizationsFromUserWEBUSEHORN: TZIntegerField
+    object AuthorizationsFromUserWEBUSEHORN: TLongintField
       FieldKind = fkData
       FieldName = 'WEBUSEHORN'
       Index = 32
