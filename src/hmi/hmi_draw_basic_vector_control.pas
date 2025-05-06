@@ -958,7 +958,7 @@ begin
            FindSVGElement(ColorObj.SVGID, FSVGDrawing.Content, aSVGElement) then begin
           if ColorObj is TSVGStopOpacityChange then
             ApplyOpacityToSVGElement(ColorObj, aSVGElement, ColorObj.FColorOpacity);
-          if (ColorObj is TSVGFillChange) or (ColorObj is TSVGBorderChange) or (ColorObj is TSVGStopColorChange)
+          if (ColorObj is TSVGFillChange) or (ColorObj is TSVGBorderChange) or (ColorObj is TSVGStopColorChange) then
             case ColorObj.ColorSource of
               csCustom: ApplyColorToSVGElement(ColorObj, aSVGElement, ColorObj.CustomColor);
               csFill:   ApplyColorToSVGElement(ColorObj, aSVGElement, fCurrentZone.Color);
