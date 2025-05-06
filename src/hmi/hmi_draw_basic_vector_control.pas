@@ -50,8 +50,9 @@ type
     FSVGId      : AnsiString;
     FCustomColor: TColor;
     FColorSource: TColorSource;
+    FColorOpacity: Integer;
   public
-    constructor Create(aSVGId:AnsiString; aColorSource:TColorSource; aCustomColor:TColor);
+    constructor Create(aSVGId:AnsiString; aColorSource:TColorSource; aCustomColor:TColor = $000000; aCustomOpacity: Integer = 0);
     property SVGID:AnsiString read FSVGId;
     property CustomColor:TColor read FCustomColor;
     property ColorSource:TColorSource read FColorSource;
@@ -61,7 +62,8 @@ type
 
   TSVGFillChange   = class(TSVGColorChange);
   TSVGBorderChange = class(TSVGColorChange);
-
+  TSVGStopColorChange = class(TSVGColorChange);
+  TSVGStopOpacityChange = class(TSVGColorChange);
   { TOutputChange }
 
   TOutputChange = class(TSVGChange)
@@ -231,6 +233,7 @@ type
     property PLCTag;
     property Proportional;
     property Stretch;
+    property OnClick;
     property OutputPolylineLeft:THMIFlowPolyline read GetOutput1 write SetOutput1;
     property OutputPolylineMiddle:THMIFlowPolyline read GetOutput2 write SetOutput2;
     property OutputPolylineRight:THMIFlowPolyline read GetOutput3 write SetOutput3;
@@ -452,12 +455,13 @@ end;
 { TSVGFillChange }
 
 constructor TSVGColorChange.Create(aSVGId: AnsiString;
-  aColorSource: TColorSource; aCustomColor: TColor);
+  aColorSource: TColorSource; aCustomColor: TColor; aCustomOpacity: Integer);
 begin
   inherited Create;
   FSVGId       := aSVGId;
   FCustomColor := aCustomColor;
   FColorSource := aColorSource;
+  FColorOpacity := aCustomOpacity;
 end;
 
 { THMIOutputCollection }
@@ -595,16 +599,18 @@ begin
       //checks if some_id is valid.
       if pos(' ',LineParts2[0])>0 then exit;
       //some_id.fill=... or some_id.border=...
-      if (LineParts2[1]='fill') or (LineParts2[1]='border') then begin
+      if (LineParts2[1]='fill') or (LineParts2[1]='stop-color') or (LineParts2[1]='border') then begin
         if (LineParts1[1]='fill') or (LineParts1[1]='border') or (LineParts1[1]='flow') then begin
           Result:=true;
         end else begin
           Result:=ValidRGBHex(LineParts1[1]);
         end;
-      end else begin
-        if (LineParts2[0]='flow') and (LineParts2[1]='output') then begin
-          result := TryStrToInt(LineParts1[1],aux);
-        end;
+      end;
+      if (LineParts2[0]='flow') and (LineParts2[1]='output') then begin
+        result := TryStrToInt(LineParts1[1],aux);
+      end;
+      if (LineParts2[1]='stop-opacity') then begin
+        result := TryStrToInt(LineParts1[1],aux) and (aux >= 0) and (aux <= 100);
       end;
     end;
   end;
@@ -641,33 +647,40 @@ begin
       aClass:=0;
       if (LineParts2[1]='fill')   then AClass:=1;
       if (LineParts2[1]='border') then AClass:=2;
-      if (LineParts2[0]='flow') and (LineParts2[1]='output') then AClass:=3;
+      if (LineParts2[1]='stop-color') then AClass:=3;
+      if (LineParts2[1]='stop-opacity') then AClass:=5;
+      if (LineParts2[0]='flow') and (LineParts2[1]='output') then AClass:=4;
 
-      if aClass in [1..2] then
-        if (LineParts1[1]='fill') then begin
+      if aClass in [1..3] then
+        case LineParts1[1] of
+        'fill': begin
           aColor:=clBlack;
           aColorSource:=csFill;
-        end else
-          if (LineParts1[1]='border') then begin
+        end;
+        'border': begin
             aColor:=clBlack;
             aColorSource:=csBorder;
-          end else
-            if (LineParts1[1]='flow') then begin
-              aColor:=clBlack;
-              aColorSource:=csFlow;
-            end else begin
-              if ValidRGBHex(LineParts1[1]) then begin
-                aColor:=RGBHexToColor(LineParts1[1]);
-                aColorSource:=csCustom;
-              end else
-                aClass:=0;
-            end;
+        end;
+        'flow': begin
+            aColor:=clBlack;
+            aColorSource:=csFlow;
+        end else begin
+            if ValidRGBHex(LineParts1[1]) then begin
+              aColor:=RGBHexToColor(LineParts1[1]);
+              aColorSource:=csCustom;
+            end else
+              aClass:=0;
+          end;
+        end;
 
       case aClass of
         1: Result:=TSVGFillChange.Create  (LineParts2[0], aColorSource, aColor);
         2: Result:=TSVGBorderChange.Create(LineParts2[0], aColorSource, aColor);
-        3: if TryStrToInt(LineParts1[1],aux) then
+        3: Result:=TSVGStopColorChange.Create(LineParts2[0], aColorSource, aColor);
+        4: if TryStrToInt(LineParts1[1],aux) then
              Result:=TOutputChange.Create(aux);
+        5: if TryStrToInt(LineParts1[1],aux) then
+             Result:=TSVGStopOpacityChange.Create(LineParts2[0], aColorSource, $000000, aux);
       end;
     end;
   end;
@@ -865,6 +878,18 @@ var
             Break;
           end;
         end;
+        if SVGContents.IsSVGElement[i] and (SVGContents.ElementObject[i] is TSVGDefine) then begin
+          if FindSVGElement(aSVGId,TSVGDefine(SVGContents.ElementObject[i]).Content,SVGElement) then begin
+            Result:=true;
+            Break;
+          end;
+        end;
+        if SVGContents.IsSVGElement[i] and (SVGContents.ElementObject[i] is TSVGLinearGradient) then begin
+          if FindSVGElement(aSVGId,TSVGLinearGradient(SVGContents.ElementObject[i]).Content,SVGElement) then begin
+            Result:=true;
+            Break;
+          end;
+        end;
     end;
   end;
 
@@ -895,10 +920,21 @@ var
       aSVGItem.strokeColor:=ColorToBGRA(AColor);
     end;
 
+    if aColorChange is TSVGStopColorChange then begin
+      TSVGStopGradient(aSVGItem).stopColor :=ColorToBGRA(AColor);
+    end;
+
     if aColorChange is TOutputChange then begin
       aSVGItem.stroke      := 'stroke';
       aSVGItem.strokeColor:=ColorToBGRA(AColor);
-    end;;
+    end;
+  end;
+
+  procedure ApplyOpacityToSVGElement(const aColorChange:TSVGChange; aSVGItem:TSVGElement; const AOpacity:integer);
+  begin
+    if aColorChange is TSVGStopOpacityChange then begin
+      TSVGStopGradient(aSVGItem).stopOpacity :=AOpacity /100;
+    end;
   end;
 begin
   ReloadDrawing;
@@ -913,15 +949,17 @@ begin
         ColorObj:=TSVGFillChange(fCurrentZone.FSVGChanges.Objects[l]);
         if (Assigned(aSVGElement) and (aSVGElement.Attribute['id']=ColorObj.SVGID)) or
            FindSVGElement(ColorObj.SVGID, FSVGDrawing.Content, aSVGElement) then begin
-
-          case ColorObj.ColorSource of
-            csCustom: ApplyColorToSVGElement(ColorObj, aSVGElement, ColorObj.CustomColor);
-            csFill:   ApplyColorToSVGElement(ColorObj, aSVGElement, fCurrentZone.Color);
-            csBorder: ApplyColorToSVGElement(ColorObj, aSVGElement, fCurrentZone.BorderColor);
-            csFlow:
-              if Assigned(FInputFlowPolyline) and (FInputFlowPolyline.LineColor<>FInputFlowPolyline.EmptyColor) then
-                ApplyColorToSVGElement(ColorObj, aSVGElement, FInputFlowPolyline.LineColor);
-          end;
+          if ColorObj is TSVGStopOpacityChange then
+            ApplyOpacityToSVGElement(ColorObj, aSVGElement, ColorObj.FColorOpacity);
+          if (ColorObj is TSVGFillChange) or (ColorObj is TSVGBorderChange) or (ColorObj is TSVGStopColorChange)
+            case ColorObj.ColorSource of
+              csCustom: ApplyColorToSVGElement(ColorObj, aSVGElement, ColorObj.CustomColor);
+              csFill:   ApplyColorToSVGElement(ColorObj, aSVGElement, fCurrentZone.Color);
+              csBorder: ApplyColorToSVGElement(ColorObj, aSVGElement, fCurrentZone.BorderColor);
+              csFlow:
+                if Assigned(FInputFlowPolyline) and (FInputFlowPolyline.LineColor<>FInputFlowPolyline.EmptyColor) then
+                  ApplyColorToSVGElement(ColorObj, aSVGElement, FInputFlowPolyline.LineColor);
+            end;
         end;
       end;
 
