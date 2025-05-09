@@ -20,8 +20,9 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Unit1"/>
-        <TopLine Value="49"/>
-        <CursorPos X="3" Y="123"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="101"/>
+        <CursorPos X="29" Y="131"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -29,7 +30,7 @@
       <Unit>
         <Filename Value="../../src/database/hmidbconnection.pas"/>
         <UnitName Value="HMIDBConnection"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="7"/>
         <TopLine Value="972"/>
         <CursorPos X="6" Y="992"/>
         <UsageCount Value="10"/>
@@ -38,17 +39,15 @@
       <Unit>
         <Filename Value="../../../../../fpclaz/fpc_stable_laz_stable/fpcsrc/packages/rtl-objpas/src/inc/strutils.pp"/>
         <UnitName Value="StrUtils"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="173"/>
         <CursorPos X="10" Y="191"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
         <UnitName Value="HMIAlarmLogger"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="1"/>
         <TopLine Value="202"/>
         <CursorPos Y="220"/>
         <UsageCount Value="10"/>
@@ -56,17 +55,16 @@
       </Unit>
       <Unit>
         <Filename Value="../../../../../fpclaz/fpc_stable_laz_stable/config_lazarus/onlinepackagemanager/packages/zeosdbo/src/dbc/ZDbcPostgreSql.pas"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="602"/>
         <CursorPos Y="670"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit>
       <Unit>
         <Filename Value="../../src/scada/tag.pas"/>
         <UnitName Value="Tag"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="1201"/>
         <CursorPos Y="1219"/>
         <UsageCount Value="10"/>
@@ -75,7 +73,7 @@
       <Unit>
         <Filename Value="../../src/scada/plctagnumber.pas"/>
         <UnitName Value="PLCTagNumber"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="335"/>
         <CursorPos Y="358"/>
         <UsageCount Value="10"/>
@@ -84,7 +82,7 @@
       <Unit>
         <Filename Value="../../src/hmi/hmizones.pas"/>
         <UnitName Value="HMIZones"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="2"/>
         <TopLine Value="939"/>
         <CursorPos Y="959"/>
         <UsageCount Value="10"/>
@@ -93,7 +91,7 @@
       <Unit>
         <Filename Value="../../src/scada/plctag.pas"/>
         <UnitName Value="PLCTag"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="6"/>
         <TopLine Value="1142"/>
         <CursorPos Y="1160"/>
         <UsageCount Value="10"/>
@@ -101,7 +99,7 @@
       </Unit>
       <Unit>
         <Filename Value="../../src/hmi/hmibasiccolletion.pas"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="3"/>
         <TopLine Value="57"/>
         <CursorPos X="17" Y="80"/>
         <UsageCount Value="10"/>
@@ -109,14 +107,6 @@
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
-        <Caret Line="204" Column="18" TopLine="186"/>
-      </Position>
-      <Position>
-        <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
-        <Caret Line="51" Column="3" TopLine="10"/>
-      </Position>
       <Position>
         <Filename Value="../../src/hmi/hmizones.pas"/>
         <Caret Line="57" Column="7" TopLine="40"/>
@@ -229,6 +219,14 @@
         <Filename Value="../../src/hmi/hmialarmlogger.pas"/>
         <Caret Line="277" TopLine="270"/>
       </Position>
+      <Position>
+        <Filename Value="unit1.pas"/>
+        <Caret Line="80" TopLine="62"/>
+      </Position>
+      <Position>
+        <Filename Value="unit1.pas"/>
+        <Caret Line="131" Column="15" TopLine="105"/>
+      </Position>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
@@ -237,13 +235,6 @@
   </ProjectSession>
   <Debugging>
     <BreakPoints>
-      <Item>
-        <Kind Value="bpkSource"/>
-        <WatchScope Value="wpsLocal"/>
-        <WatchKind Value="wpkWrite"/>
-        <Source Value="unit1.pas"/>
-        <Line Value="80"/>
-      </Item>
       <Item>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>

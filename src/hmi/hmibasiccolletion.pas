@@ -149,7 +149,7 @@ end;
 function THMIBasicColletion.Add: TCollectionItem;
 begin
   Result:=inherited Add;
-  if (GetComponentState*[csReading,csLoading])=[] then
+  if ((GetComponentState*[csReading,csLoading])=[]) and (UpdateCount=0) then
     DoOnChange(Result);
 end;
 
@@ -177,11 +177,11 @@ begin
        Add;
 
       For I:=0 To Self.Count-1 do begin
-       Items[I].Assign(THMIBasicColletion(Source).Items[I]);
-       DoOnChange(Self.Items[I]);
+       THMIBasicColletionItem(THMIBasicColletion(Source).Items[I]).AssignTo(THMIBasicColletionItem(Items[I]));
       end;
     finally
       EndUpdate;
+      DoOnChange(nil)
     end;
     exit;
     end
