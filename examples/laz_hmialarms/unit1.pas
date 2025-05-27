@@ -127,6 +127,8 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  ZConnection1.Connected := true;
+  HMIDBConnection1.Connected := true;
   tbl_AlarmesAtivos.ParamByName('view').AsInteger:=ComboBox1.ItemIndex;
   tbl_AlarmesAtivos.Open;
 end;

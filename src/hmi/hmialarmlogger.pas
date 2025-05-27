@@ -133,7 +133,22 @@ end;
 procedure TAlarmItem.SetPLCTag(AValue: TPLCTag);
 begin
   if FPLCTag=AValue then Exit;
+
+  if Collection.Owner is THMIAlarmLogger then begin
+    if assigned(FPLCTag) then begin
+      FPLCTag.RemoveAllHandlersFromObject(Collection.Owner as THMIAlarmLogger);
+      (Collection.Owner as THMIAlarmLogger).RemoveFreeNotification(FPLCTag);
+    end;
+
+    if assigned(AValue) and (((Collection as THMIBasicColletion).GetComponentState*[csReading,csLoading])=[]) then begin
+      AValue.AddTagChangeHandler(@THMIAlarmLogger(Collection.Owner).TagFromListChanged);
+      (Collection.Owner as THMIAlarmLogger).FreeNotification(AValue);
+    end;
+  end;
+
   FPLCTag:=AValue;
+
+
 end;
 
 function TAlarmItem.LastValueInitialized: Boolean;
@@ -228,9 +243,12 @@ begin
           if auxItem.LastValueInitialized and (TagValue=auxItem.LastTagValue) then
             exit;
 
-          bit := Trunc(auxItem.Value1);
+          if auxItem.ZoneType=ztBit  then begin
+            bit := Trunc(auxItem.Value1);
+            bit := Trunc(Power(2,bit));
+          end;
           value := Trunc(TagValue);
-          bit := Trunc(Power(2,bit));
+
 
           AlarmActive :=((auxItem.ZoneType=ztEqual      ) and (TagValue=auxItem.Value1)) or
                         ((auxItem.ZoneType=ztRange      ) and (((TagValue>auxItem.Value1) OR (auxItem.IncludeValue1 AND (TagValue>=auxItem.Value1))) AND ((TagValue<auxItem.Value2) OR (auxItem.IncludeValue2 AND (TagValue<=auxItem.Value2))))) OR

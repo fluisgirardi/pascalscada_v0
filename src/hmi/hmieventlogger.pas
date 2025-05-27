@@ -178,6 +178,19 @@ end;
 procedure TEventTagColletionItem.SetPLCTag(AValue: TPLCTag);
 begin
   if FPLCTag=AValue then Exit;
+
+  if Collection.Owner is THMIEventLogger then begin
+    if assigned(FPLCTag) then begin
+      FPLCTag.RemoveAllHandlersFromObject(Collection.Owner as THMIEventLogger);
+      (Collection.Owner as THMIEventLogger).RemoveFreeNotification(FPLCTag);
+    end;
+
+    if assigned(AValue) and ((((Collection as TOwnedCollection).Owner as TComponent).ComponentState*[csReading,csLoading])=[]) then begin
+      AValue.AddTagChangeHandler(@THMIEventLogger(Collection.Owner).TagFromListChanged);
+      (Collection.Owner as THMIEventLogger).FreeNotification(AValue);
+    end;
+  end;
+
   FPLCTag:=AValue;
 end;
 

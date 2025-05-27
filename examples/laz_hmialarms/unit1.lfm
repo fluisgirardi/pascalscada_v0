@@ -120,14 +120,14 @@ object Form1: TForm1
     Top = 88
   end
   object HMIDBConnection1: THMIDBConnection
-    Connected = True
+    Connected = False
     LibraryLocation = ''
     Protocol = 'postgresql'
     HostName = '127.0.0.1'
     Port = 5432
     Database = 'prime_data'
     User = 'postgres'
-    Password = 'Idt2014#'
+    Password = 'postgres'
     ReadOnly = False
     Left = 56
     Top = 24
@@ -159,14 +159,13 @@ object Form1: TForm1
     Properties.Strings = (
       'RawStringEncoding=DB_CP'
     )
-    Connected = True
     DesignConnection = True
     DisableSavepoints = False
     HostName = '127.0.0.1'
     Port = 5432
     Database = 'prime_data'
     User = 'postgres'
-    Password = 'Idt2014#'
+    Password = 'postgres'
     Protocol = 'postgresql'
     Left = 344
     Top = 24
@@ -197,7 +196,7 @@ object Form1: TForm1
         DataType = ftInteger
         Name = 'view'
         SQLType = stInteger
-        Value = '0'
+        Value = 0
       end>
     Left = 344
     Top = 88
@@ -206,7 +205,7 @@ object Form1: TForm1
         DataType = ftInteger
         Name = 'view'
         SQLType = stInteger
-        Value = '0'
+        Value = 0
       end>
     object tbl_AlarmesAtivosid_alarme: TZIntegerField
       FieldKind = fkData
