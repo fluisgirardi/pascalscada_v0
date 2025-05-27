@@ -7,8 +7,8 @@ object Form1: TForm1
   ClientHeight = 309
   ClientWidth = 965
   FormStyle = fsSystemStayOnTop
-  LCLVersion = '4.0.0.3'
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   object Memo1: TMemo
     Left = 0
     Height = 309
@@ -49,7 +49,7 @@ object Form1: TForm1
   end
   object UserName: TPLCString
     TagGUID = '{2C66A635-236B-47C5-A7BE-4D02B2E225D3}'
-    CommReadErrors = 62753
+    CommReadErrors = 111233
     PLCRack = 0
     PLCSlot = 0
     PLCStation = 0

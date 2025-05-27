@@ -3,12 +3,12 @@
   <ProjectSession>
     <PathDelim Value="\"/>
     <Version Value="12"/>
-    <BuildModes Active="Release"/>
+    <BuildModes Active="Debug"/>
     <Units>
       <Unit>
         <Filename Value="webserverWCC.lpr"/>
         <IsPartOfProject Value="True"/>
-        <CursorPos X="5" Y="6"/>
+        <CursorPos X="18" Y="17"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit>
@@ -18,9 +18,11 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="80"/>
-        <CursorPos X="22" Y="94"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="298"/>
+        <CursorPos X="22" Y="587"/>
+        <FoldState Value=" T0o1P(082D25141 Pmbo4Qr"/>
         <ExtraEditorCount Value="1"/>
         <ExtraEditor1>
           <EditorIndex Value="-1"/>
@@ -38,11 +40,9 @@
         <ComponentName Value="dmdb"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="100"/>
-        <CursorPos X="3" Y="128"/>
-        <UsageCount Value="199"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="67" Y="10"/>
+        <UsageCount Value="200"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -51,28 +51,28 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1780"/>
         <CursorPos X="17" Y="1791"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="9"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-web\src\base\fphttpserver.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="734"/>
         <CursorPos X="16" Y="758"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="9"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-net\src\ssockets.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="704"/>
         <CursorPos X="12" Y="729"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="9"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-json\src\fpjson.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="474"/>
         <CursorPos X="3" Y="474"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="8"/>
       </Unit>
       <Unit>
         <Filename Value="..\pascalscada\src\hmi\winccusermanagement.pas"/>
@@ -80,7 +80,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="283"/>
         <CursorPos X="3" Y="288"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="8"/>
       </Unit>
       <Unit>
         <Filename Value="..\pascalscada\src\hmi\basicusermanagement.pas"/>
@@ -88,45 +88,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="59"/>
         <CursorPos X="21" Y="83"/>
-        <UsageCount Value="13"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-web\src\base\httpdefs.pp"/>
-        <UnitName Value="HTTPDefs"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="502"/>
-        <CursorPos X="23" Y="513"/>
-        <UsageCount Value="3"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-base\src\inifiles.pp"/>
-        <UnitName Value="IniFiles"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="203"/>
-        <CursorPos X="3" Y="215"/>
-        <UsageCount Value="3"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\sysutils\finah.inc"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="18"/>
-        <CursorPos X="59" Y="23"/>
-        <UsageCount Value="3"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\packages\fcl-db\src\base\db.pas"/>
-        <UnitName Value="DB"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="1725"/>
-        <CursorPos X="55" Y="1739"/>
-        <UsageCount Value="2"/>
-      </Unit>
-      <Unit>
-        <Filename Value="C:\lazarus_32\fpc\3.2.2\source\rtl\objpas\objpas.pp"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="137"/>
-        <CursorPos X="42" Y="148"/>
-        <UsageCount Value="1"/>
+        <UsageCount Value="8"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\src\hmi\winccusermanagement.pas"/>
@@ -134,7 +96,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="52"/>
         <CursorPos X="26" Y="62"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="3"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\src\hmi\centralusermanagement.pas"/>
@@ -142,7 +104,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="162"/>
         <CursorPos X="9" Y="164"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="11"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\src\hmi\customizedusermanagement.pas"/>
@@ -150,21 +112,21 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="33"/>
         <CursorPos X="15" Y="48"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="5"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\packages\fcl-base\src\eventlog.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="102"/>
         <CursorPos Y="118"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="11"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\sysutils\osutilsh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="32"/>
         <CursorPos X="13" Y="62"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="11"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\packages\fcl-web\src\base\httpdefs.pp"/>
@@ -172,7 +134,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="460"/>
         <CursorPos X="3" Y="471"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="9"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\packages\rtl-objpas\src\inc\strutils.pp"/>
@@ -180,62 +142,54 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="185"/>
         <CursorPos X="10" Y="191"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="10"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\packages\fcl-web\src\base\fphttpserver.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="197"/>
         <CursorPos X="14" Y="192"/>
-        <UsageCount Value="28"/>
+        <UsageCount Value="23"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\packages\rtl-extra\src\inc\socketsh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="78"/>
         <CursorPos X="11" Y="93"/>
-        <UsageCount Value="12"/>
-      </Unit>
-      <Unit>
-        <Filename Value="..\..\src\hmi\basicusermanagement.pas"/>
-        <UnitName Value="BasicUserManagement"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="87"/>
-        <CursorPos X="14" Y="102"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="7"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\fgl.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="394"/>
-        <UsageCount Value="17"/>
+        <UsageCount Value="12"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\classesh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1786"/>
         <CursorPos X="21" Y="1800"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="11"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\lists.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="990"/>
         <CursorPos X="5" Y="999"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="11"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\fstable_lfix4.0_win32\fpcsrc\rtl\objpas\classes\classes.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="406"/>
         <CursorPos Y="397"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="10"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\src\database\hmidbconnection_dsgn.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="22" Y="8"/>
-        <UsageCount Value="6"/>
+        <UsageCount Value="1"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\ftrunk_lfix_win32\fpcsrc\packages\fcl-web\src\base\httpdefs.pp"/>
@@ -243,124 +197,151 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="565"/>
         <CursorPos X="15" Y="580"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="7"/>
       </Unit>
       <Unit>
         <Filename Value="C:\fpclaz\ftrunk_lfix_win32\fpcsrc\packages\fcl-base\src\syncobjs.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="94"/>
         <CursorPos X="40" Y="108"/>
+        <UsageCount Value="5"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\fpclaz\ftrunk_lfix_win32\fpcsrc\packages\fcl-web\src\base\fphttpserver.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="399"/>
+        <CursorPos X="29" Y="417"/>
+        <UsageCount Value="33"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\fpclaz\ftrunk_lfix_win32\fpcsrc\packages\winunits-base\src\activex.pp"/>
+        <UnitName Value="ActiveX"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="4472"/>
+        <CursorPos X="24" Y="4498"/>
         <UsageCount Value="10"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="26">
+    <JumpHistory HistoryIndex="29">
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="376" Column="46" TopLine="277"/>
-      </Position>
-      <Position>
-        <Filename Value="umain.pas"/>
-        <Caret Line="726" Column="42" TopLine="702"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="60" Column="33" TopLine="47"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="376" Column="46" TopLine="277"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="714" Column="45" TopLine="702"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="728" Column="41" TopLine="704"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="966" Column="29" TopLine="951"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="69" Column="14" TopLine="55"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="726" Column="42" TopLine="713"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="60" Column="33" TopLine="47"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="376" Column="46" TopLine="277"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="726" Column="42" TopLine="702"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="60" Column="33" TopLine="47"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="376" Column="46" TopLine="277"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="716" TopLine="702"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="714" Column="23" TopLine="699"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="69" Column="14" TopLine="55"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="724" Column="19" TopLine="710"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="966" Column="5" TopLine="940"/>
-      </Position>
-      <Position>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="131" Column="3" TopLine="103"/>
+        <Caret Line="759" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="908" TopLine="894"/>
-      </Position>
-      <Position>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="131" Column="3" TopLine="103"/>
-      </Position>
-      <Position>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="130" Column="3" TopLine="102"/>
-      </Position>
-      <Position>
-        <Filename Value="udmdb.pas"/>
-        <Caret Line="129" Column="3" TopLine="101"/>
+        <Caret Line="758" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="956" Column="23" TopLine="937"/>
+        <Caret Line="761" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="959" Column="23" TopLine="940"/>
+        <Caret Line="759" Column="117" TopLine="740"/>
       </Position>
       <Position>
         <Filename Value="umain.pas"/>
-        <Caret Line="55" Column="18" TopLine="36"/>
+        <Caret Line="60" Column="22" TopLine="58"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="763" Column="25" TopLine="745"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="70" Column="19" TopLine="50"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="955" Column="21" TopLine="929"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="681" Column="12" TopLine="668"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="68" Column="15" TopLine="54"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="947" Column="33" TopLine="928"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="303" Column="23" TopLine="292"/>
+      </Position>
+      <Position>
+        <Filename Value="umain.pas"/>
+        <Caret Line="691" Column="19" TopLine="672"/>
       </Position>
     </JumpHistory>
     <RunParams>
@@ -369,15 +350,6 @@
     </RunParams>
   </ProjectSession>
   <Debugging>
-    <BreakPoints>
-      <Item>
-        <Kind Value="bpkSource"/>
-        <WatchScope Value="wpsLocal"/>
-        <WatchKind Value="wpkWrite"/>
-        <Source Value="umain.pas"/>
-        <Line Value="967"/>
-      </Item>
-    </BreakPoints>
     <Watches>
       <Item>
         <Expression Value="jsonStr"/>
