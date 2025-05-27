@@ -137,6 +137,7 @@ type
   {$ENDIF}
   TProcessSQLCommandThread=class(TpSCADACoreAffinityThread)
   private
+    FProcessingCmd:Integer;
     FQueue:TMessageSpool;
     FEnd:TCrossEvent;
     cmd:PSQLCmdRec;
@@ -455,6 +456,7 @@ begin
     FErrorOnSync:=false;
     if (msg.MsgID=SQLCommandMSG) and (msg.wParam<>nil) then begin
       cmd:=PSQLCmdRec(msg.wParam);
+      InterlockedExchange(FProcessingCmd,1);
       try
         try
           //se é necessario retornar algo
@@ -498,12 +500,14 @@ begin
         end;
       finally
         if Assigned(cmd) then Dispose(cmd);
+        InterlockedExchange(FProcessingCmd,0);
       end;
     end;
 
     if (msg.MsgID=StatementsCommandMSG) and (msg.wParam<>nil) then begin
       statements:=PStatementCmdRec(msg.wParam);
       try
+        InterlockedExchange(FProcessingCmd,1);
         if statements^.statements=nil then exit;
         if not Assigned(fStartTransaction) then exit;
         if not Assigned(fCommitTransaction) then exit;
@@ -544,9 +548,12 @@ begin
           end;
         end;
       finally
-        if statements^.FreeStatemensAfterExecute then
+        if statements^.FreeStatemensAfterExecute then begin
+          statements^.statements.Clear;
           FreeAndNil(statements^.statements);
+        end;
         Dispose(statements);
+        InterlockedExchange(FProcessingCmd,0);
       end;
     end;
   end;
@@ -554,7 +561,7 @@ end;
 
 function TProcessSQLCommandThread.GetPendingMsgs: Integer;
 begin
-  Result:=FQueue.GetMsgCount;
+  Result:=FQueue.GetMsgCount+InterlockedExchange(FProcessingCmd,FProcessingCmd);
 end;
 
 procedure   TProcessSQLCommandThread.ReturnData;
@@ -780,13 +787,16 @@ begin
         end;
 
         Error:=false;
+        FASyncQuery.SQL.Clear;
+        FASyncQuery.SQL.Add(sqlcmd);
         if outputdataset=nil then begin
-          if not FASyncConnection.ExecuteDirect(sqlcmd) then begin
+          try
+            FASyncQuery.ExecSQL
+          except
             Error := true;
           end;
         end else begin
-          FASyncQuery.SQL.Clear;
-          FASyncQuery.SQL.Add(sqlcmd);
+
           FASyncQuery.Open;
           outputdataset.CopyFromDataset(FASyncQuery);
           FASyncQuery.Close;
