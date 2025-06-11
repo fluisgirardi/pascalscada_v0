@@ -1358,6 +1358,9 @@ begin
    
    if il=FImageList then exit;
 
+   if assigned(FImageList) then
+      FImageList.RemoveFreeNotification(TGraphicZones(Collection).Owner as TComponent);
+
    FImageList := il;
 
    if il=nil then

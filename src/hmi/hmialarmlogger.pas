@@ -78,15 +78,16 @@ type
 
   protected
     procedure Loaded; override;
-    procedure DoIncomingAlarm         (Sender:TObject; aTimeStamp:TDateTime; AlarmMsgItem:TAlarmItem; AlarmIntID:Int64; AlarmGUID:TGuid; var AlarmIncommingSQL:UTF8String);
+    procedure DoIncomingAlarm         (Sender:TObject; aTimeStamp:TDateTime; AlarmMsgItem:TAlarmItem; AlarmIntID:Int64; AlarmGUID:TGuid; var AlarmIncommingSQL:UTF8String); virtual;
     procedure DoOutgoingAlarm(Sender: TObject; aTimeStamp: TDateTime;
-      AlarmIntID: Int64; AlarmGUID: TGuid; var OutgoingAlarmSQL: UTF8String);
-    procedure DoFinishAllPendingAlarms(Sender:TObject; var FinishAllPendingAlarmsSQL:UTF8String);
-    function  GenerateNewAlarmID      (var AlarmIntID:Int64; var AlarmGUID:TGuid):Boolean;
+      AlarmIntID: Int64; AlarmGUID: TGuid; var OutgoingAlarmSQL: UTF8String); virtual;
+    procedure DoFinishAllPendingAlarms(Sender:TObject; var FinishAllPendingAlarmsSQL:UTF8String); virtual;
+    function  GenerateNewAlarmID      (var AlarmIntID:Int64; var AlarmGUID:TGuid):Boolean; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
     procedure   Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure   FinishAllAlarms;
   published
     property AlarmMessages:TAlarmMessagesCollection read FAlarmMessages write SetAlarmMessages;
     property AsyncDBConnection:THMIDBConnection read FAsyncDBConnection write SetAsyncDBConnection;
@@ -408,6 +409,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure THMIAlarmLogger.FinishAllAlarms;
+begin
+  TThread.ForceQueue(nil, @FinishAllPendingAlarmsDelayed);
 end;
 
 end.
