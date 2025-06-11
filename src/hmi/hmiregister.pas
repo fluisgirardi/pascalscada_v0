@@ -37,7 +37,7 @@ uses
   hmi_polyline, hmicolorpropertyconnector, HMITransparentButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
   hmi_draw_flow_pump, hmi_draw_basic_vector_control, HMIBandeja,
-  CentralUserManagement,
+  CentralUserManagement, TagLinkedSeriesSource,
   {$IFEND}
 
   {$IFDEF FPC}
@@ -101,7 +101,8 @@ begin
                                            THMIFlowImage,
                                            THMIBandeja,
                                            THMIEventLogger,
-                                           THMIAlarmLogger]);
+                                           THMIAlarmLogger,
+                                           TTagLinkedSeriesSource]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
 

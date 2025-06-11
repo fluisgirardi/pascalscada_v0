@@ -89,6 +89,8 @@ type
 
     //: @exclude
     procedure Loaded; override;
+
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -271,8 +273,17 @@ begin
 end;
 
 procedure THMIAnimation.ZoneChange(Sender:TObject);
+var
+  az: TGraphicZone;
+  c: Integer;
 begin
-   if [csReading,csDestroying]*ComponentState<>[] then exit;
+   if [csReading,csDestroying, csLoading, csUpdating]*ComponentState<>[] then exit;
+
+   for c:=0 to FAnimationZones.Count-1 do begin
+     az:=TGraphicZone(FAnimationZones.Items[c]);
+     if assigned(az.ImageList) then
+       az.ImageList.FreeNotification(Self);
+   end;
 
    RefreshAnimation(0);
 end;
@@ -420,6 +431,35 @@ begin
   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   FAnimationZones.Loaded;
   TagChangeCallBack(FTag);
+end;
+
+procedure THMIAnimation.Notification(AComponent: TComponent;
+  Operation: TOperation);
+var
+  az: TGraphicZone;
+  c: Integer;
+  UpdateDone: Boolean;
+begin
+  inherited Notification(AComponent, Operation);
+
+  if (Operation=opRemove) then begin
+    if AComponent=self then exit;
+    Updating;
+    try
+      UpdateDone:=false;
+      for c:=0 to FAnimationZones.Count-1 do begin
+         az:=TGraphicZone(FAnimationZones.Items[c]);
+         if assigned(az.ImageList) and (az.ImageList=AComponent) then begin
+           az.ImageList := nil;
+           UpdateDone:=true;
+         end;
+       end;
+    finally
+      Updated;
+      if UpdateDone then
+        TagChangeCallBack(FTag);
+    end;
+  end;
 end;
 
 procedure THMIAnimation.BlinkTimer(Sender:TObject);

@@ -89,7 +89,7 @@ type
 
   { THMIEventLogger }
 
-  THMIEventLogger = class(TComponent)
+  THMICustomEventLogger = class(TComponent)
   private
     FAsyncDBConnection: THMIDBConnection;
     FCurrentEventTimestamp: TDateTime;
@@ -124,12 +124,21 @@ type
     property AsyncDBConnection:THMIDBConnection read FAsyncDBConnection write SetAsyncDBConnection;
     property EventDescriptions:TEventCollection read FEventDescriptions write SetEventDescriptions;
     property EventTags:TEventTagColletion read FEventTags write SetEventTags;
-  published
+  protected
     property OnTagEventFinished:TTagEventFinished read FOnTagEventFinished write FOnTagEventFinished;
     property OnFinishAllTagEvents:TFinishAllTagEvents read FOnFinishAllTagEvents write FOnFinishAllTagEvents;
     property OnNewTagEvent:TNewTagEvent read FOnNewTagEvent write FOnNewTagEvent;
     property OnGenerateNewEventID:TGenerateNewEventID read FOnGenerateNewEventID write FOnGenerateNewEventID;
     property CurrentEventTimestamp:TDateTime read FCurrentEventTimestamp;
+  end;
+
+  THMIEventLogger = class(THMICustomEventLogger)
+  published
+    property OnTagEventFinished   ;
+    property OnFinishAllTagEvents ;
+    property OnNewTagEvent        ;
+    property OnGenerateNewEventID ;
+    property CurrentEventTimestamp;
   end;
 
 implementation
@@ -179,15 +188,15 @@ procedure TEventTagColletionItem.SetPLCTag(AValue: TPLCTag);
 begin
   if FPLCTag=AValue then Exit;
 
-  if Collection.Owner is THMIEventLogger then begin
+  if Collection.Owner is THMICustomEventLogger then begin
     if assigned(FPLCTag) then begin
-      FPLCTag.RemoveAllHandlersFromObject(Collection.Owner as THMIEventLogger);
-      (Collection.Owner as THMIEventLogger).RemoveFreeNotification(FPLCTag);
+      FPLCTag.RemoveAllHandlersFromObject(Collection.Owner as THMICustomEventLogger);
+      (Collection.Owner as THMICustomEventLogger).RemoveFreeNotification(FPLCTag);
     end;
 
     if assigned(AValue) and ((((Collection as TOwnedCollection).Owner as TComponent).ComponentState*[csReading,csLoading])=[]) then begin
-      AValue.AddTagChangeHandler(@THMIEventLogger(Collection.Owner).TagFromListChanged);
-      (Collection.Owner as THMIEventLogger).FreeNotification(AValue);
+      AValue.AddTagChangeHandler(@THMICustomEventLogger(Collection.Owner).TagFromListChanged);
+      (Collection.Owner as THMICustomEventLogger).FreeNotification(AValue);
     end;
   end;
 
@@ -250,15 +259,15 @@ begin
   inherited Create(AOwner, TEventTagColletionItem);
 end;
 
-{ THMIEventLogger }
+{ THMICustomEventLogger }
 
-procedure THMIEventLogger.SetEventDescriptions(AValue: TEventCollection);
+procedure THMICustomEventLogger.SetEventDescriptions(AValue: TEventCollection);
 begin
   if assigned(FEventDescriptions) then
     FEventDescriptions.Assign(AValue);
 end;
 
-procedure THMIEventLogger.SetAsyncDBConnection(AValue: THMIDBConnection);
+procedure THMICustomEventLogger.SetAsyncDBConnection(AValue: THMIDBConnection);
 begin
   if FAsyncDBConnection=AValue then Exit;
 
@@ -272,13 +281,13 @@ begin
   FAsyncDBConnection:=AValue;
 end;
 
-procedure THMIEventLogger.SetEventTags(AValue: TEventTagColletion);
+procedure THMICustomEventLogger.SetEventTags(AValue: TEventTagColletion);
 begin
   if Assigned(FEventTags) then
     FEventTags.Assign(AValue);
 end;
 
-procedure THMIEventLogger.TagChangedDelayed;
+procedure THMICustomEventLogger.TagChangedDelayed;
 var
   auxItem: TEventTagColletionItem;
   c: Integer;
@@ -296,12 +305,12 @@ begin
   end;
 end;
 
-procedure THMIEventLogger.TagChangedDelayed2(Data: PtrInt);
+procedure THMICustomEventLogger.TagChangedDelayed2(Data: PtrInt);
 begin
   TagFromListChanged(TObject(Data));
 end;
 
-procedure THMIEventLogger.TagFromListChanged(Sender: TObject);
+procedure THMICustomEventLogger.TagFromListChanged(Sender: TObject);
 var
   c, i: Integer;
   auxItem: TEventTagColletionItem;
@@ -369,7 +378,7 @@ begin
   end;
 end;
 
-procedure THMIEventLogger.FinishAllEventsDelayed;
+procedure THMICustomEventLogger.FinishAllEventsDelayed;
 var
   SQL: String;
 begin
@@ -378,7 +387,7 @@ begin
     FAsyncDBConnection.ExecSQL(SQL,nil,false)
 end;
 
-procedure THMIEventLogger.FinishCurrentEvent(aItem:TEventTagColletionItem);
+procedure THMICustomEventLogger.FinishCurrentEvent(aItem:TEventTagColletionItem);
 var
   auxItem: TEventTagColletionItem;
   SQL: String;
@@ -394,7 +403,7 @@ begin
   end;
 end;
 
-procedure THMIEventLogger.Loaded;
+procedure THMICustomEventLogger.Loaded;
 var
   c: Integer;
   auxItem: TEventTagColletionItem;
@@ -414,20 +423,20 @@ begin
   TThread.ForceQueue(nil, @FinishAllEventsDelayed);
 end;
 
-procedure THMIEventLogger.DoTagEventFinished(Sender: TObject;
+procedure THMICustomEventLogger.DoTagEventFinished(Sender: TObject;
   EventIntID: Int64; EventGUID: TGuid; var FinishEventSQL: String);
 begin
   if Assigned(FOnTagEventFinished) then
     FOnTagEventFinished(Sender, EventIntID, EventGUID, FinishEventSQL);
 end;
 
-procedure THMIEventLogger.DoFinishAllTagEvents(Sender: TObject; var FinishAllEventsSQL: String);
+procedure THMICustomEventLogger.DoFinishAllTagEvents(Sender: TObject; var FinishAllEventsSQL: String);
 begin
   if Assigned(FOnFinishAllTagEvents) then
     FOnFinishAllTagEvents(Sender, FinishAllEventsSQL);
 end;
 
-procedure THMIEventLogger.DoNewTagEvent(Sender: TObject;
+procedure THMICustomEventLogger.DoNewTagEvent(Sender: TObject;
   TagItem: TEventTagColletionItem; EventIntID: Int64; EventGUID: TGuid;
   EventDesc: TEventCollectionItem;
   var NewEventSQL: THMIDBConnectionStatementList);
@@ -436,7 +445,7 @@ begin
     FOnNewTagEvent(Sender, TagItem, EventIntID, EventGUID, EventDesc, NewEventSQL);
 end;
 
-function THMIEventLogger.GenerateNewEventID(var EventIntID: Int64;
+function THMICustomEventLogger.GenerateNewEventID(var EventIntID: Int64;
   var EventGUID: TGuid): Boolean;
 begin
   Result:=false;
@@ -451,14 +460,14 @@ begin
   end;
 end;
 
-constructor THMIEventLogger.Create(AOwner: TComponent);
+constructor THMICustomEventLogger.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FEventTags:=TEventTagColletion.Create(Self);
   FEventDescriptions:=TEventCollection.Create(Self);
 end;
 
-destructor THMIEventLogger.Destroy;
+destructor THMICustomEventLogger.Destroy;
 var
   auxItem: TEventTagColletionItem;
   c: Integer;
@@ -481,7 +490,7 @@ begin
   inherited Destroy;
 end;
 
-procedure THMIEventLogger.Notification(AComponent: TComponent;
+procedure THMICustomEventLogger.Notification(AComponent: TComponent;
   Operation: TOperation);
 var
   auxItem: TEventTagColletionItem;
