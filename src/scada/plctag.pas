@@ -1213,6 +1213,9 @@ begin
       FCurrentWordSize:=64;
   end;
 
+  if FProtocolWordSize=0 then
+    FProtocolWordSize:=1;
+
   if FCurrentWordSize>=FProtocolWordSize then begin
     Tamanho := (FCurrentWordSize div FProtocolWordSize)*PSize;
   end else begin
