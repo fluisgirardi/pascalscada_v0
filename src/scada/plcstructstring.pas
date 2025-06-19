@@ -205,6 +205,9 @@ begin
 
   if PBlock=AValue then Exit;
 
+  if Assigned(PBlock) then
+    PBlock.RemoveAllHandlersFromObject(Self);
+
   if Assigned(AValue) then begin
     if not ValidSettings(AValue.Size,PIndex,PStringSize,PStringType) then
       exit;
@@ -212,10 +215,11 @@ begin
     AValue.AddTagChangeHandler(@BlockTagChange);
     AValue.AddRemoveTagHandler(@BlockRemoveTag);
     aValue.AddWriteFaultHandler(@BlockWriteFault);
+
+    BlockTagChange(AValue);
   end;
 
-  if Assigned(PBlock) then
-    PBlock.RemoveAllHandlersFromObject(Self);
+
 
   PBlock:=AValue;
 end;
