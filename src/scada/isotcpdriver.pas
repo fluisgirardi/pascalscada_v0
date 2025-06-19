@@ -303,7 +303,7 @@ begin
   msg[18] := ifthen(FConnectionWay=ISOTCP, (CPU.Rack shl 5) or CPU.Slot,    $57);
   msg[19] := $C0;  // $C0,
   msg[20] := 1;    // 1,
-  msg[21] := 9;    // 9;
+  msg[21] := 11;    // 9;
   PrepareToSend(msg);
 
   try
