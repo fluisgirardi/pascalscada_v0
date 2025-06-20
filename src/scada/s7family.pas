@@ -40,6 +40,9 @@ type
   TS7PDUSize = (pduAuto, pdu240, pdu480, pdu960);
 
   //TODO Documentation
+  TS7PLCType = (s7_300, s7_et200s, s7_400, s7_1200, s7_1500, s7_et200sp, s7_200);
+
+  //TODO Documentation
   TS7Protection = record
     sch_schal:Byte; //Protection level set with the mode selector.
     sch_par:Byte;   //Password level, 0 : no password
@@ -1128,7 +1131,7 @@ var
 begin
   Result := false;
   SetLength(param,8);
-  SetLength(msg, PDUOutgoing+10+8);
+  SetLength(msg, PDUOutgoing+10+8); //ISO = 25 bytes
   SetLength(msgIn, 0);
 
   param[0] := $F0;
@@ -1137,8 +1140,8 @@ begin
   param[3] := 1;
   param[4] := 0;
   param[5] := 1;
-  param[6] := 3;
-  param[7] := $C0;
+  param[6] := 3;   //PDU size 960
+  param[7] := $C0; //PDU size 960
 
   InterLockedExchange(ForcedPduSize,FPDUSizeInBytes);
 
@@ -2737,10 +2740,10 @@ begin
   if FForcedPDUSize=AValue then Exit;
   FForcedPDUSize:=AValue;
   Case FForcedPDUSize of
-    pduAuto: FPDUSizeInBytes:=960; //negotiate PDU will use the smallest PDU size
-    pdu240:  FPDUSizeInBytes:=240;
-    pdu480:  FPDUSizeInBytes:=480;
-    pdu960:  FPDUSizeInBytes:=960;
+    pduAuto: FPDUSizeInBytes:=1920; //negotiate PDU will use the smallest PDU size, In the future, this value should be increased?
+    pdu240:  FPDUSizeInBytes:= 240;
+    pdu480:  FPDUSizeInBytes:= 480;
+    pdu960:  FPDUSizeInBytes:= 960;
   end;
 end;
 
