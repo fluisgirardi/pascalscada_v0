@@ -342,7 +342,7 @@ begin
 
           for i:=0 to FEventDescriptions.Count-1 do begin
             auxItemEvt:=TEventCollectionItem(FEventDescriptions.Items[i]);
-            if (auxItemEvt.EventValue=TagValue) or (auxItem.FIgnoreDescriptionList) then begin
+            if (auxItemEvt.EventValue=TagValue) or ((auxItem.FIgnoreDescriptionList) and ([csDesigning]*ComponentState=[])) then begin
               if not GenerateNewEventID(NewIntID, NewGUID) then exit;
               try
                 sqlcmds:=THMIDBConnectionStatementList.Create;
