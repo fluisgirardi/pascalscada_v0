@@ -85,6 +85,9 @@
               </Win32>
             </Options>
           </Linking>
+          <Other>
+            <CustomOptions Value="-dRELEASENOMEMOLOG"/>
+          </Other>
         </CompilerOptions>
       </Item>
     </BuildModes>

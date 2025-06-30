@@ -323,6 +323,7 @@ begin
                 try
                   dm:=Tdmdb.Create(nil);
                   try
+                    dm.SQLServerWINCC.Connect;
                     dm.BuscaUserName.Close;
                       dm.BuscaUserName.ParamByName('username').Value:=FUser;
                       dm.BuscaUserName.Open;
@@ -402,6 +403,7 @@ begin
                 aCurrUserLogin:=FCurrUserLogin;
                 dm:=Tdmdb.Create(nil);
                 try
+                  dm.SQLServerWINCC.Connect;
                   dm.BuscaUserName.Close;
                   dm.BuscaUserName.ParamByName('username').Value:=aCurrUserLogin;
                   dm.BuscaUserName.Open;
@@ -419,6 +421,7 @@ begin
               try
                 dm:=Tdmdb.Create(nil);
                 try
+                  dm.SQLServerWINCC.Connect;
                   jobj:=TJSONObject.Create;
                   try
                     if uid.AsInt64<>aUID then begin
@@ -511,6 +514,7 @@ begin
               try
                 dm:=Tdmdb.Create(nil);
                 try
+                  dm.SQLServerWINCC.Connect;
                   dm.REGISTERsecuritycode.Close;
                   dm.REGISTERsecuritycode.ParamByName('tipobusca').AsInteger   := 0;
                   dm.REGISTERsecuritycode.ParamByName('securitycode').Value := securitycode.AsString;
@@ -551,6 +555,7 @@ begin
         '/enumsecuritycodes': begin
           dm:=Tdmdb.Create(nil);
           try
+            dm.SQLServerWINCC.Connect;
             dm.REGISTERsecuritycode.Close;
             dm.REGISTERsecuritycode.ParamByName('tipobusca').AsInteger := 1;
             dm.REGISTERsecuritycode.ParamByName('securitycode').Value  := '';
@@ -609,6 +614,7 @@ begin
                 try
                   dm:=Tdmdb.Create(nil);
                   try
+                    dm.SQLServerWINCC.Connect;
                     dm.BuscaUserName.Close;
                     dm.BuscaUserName.ParamByName('username').Value:=FLastUserLoggedIn;
                     dm.BuscaUserName.Open;
@@ -656,12 +662,12 @@ begin
                     end;
                   end;
                 end;
-              end;
+              end; //end of wrSignaled
               else begin
                 AResponse.Code:=408;
                 AResponse.SendContent;
               end;
-            end;
+            end; //case end
           finally
             if Assigned(reqData) then
               FreeAndNil(reqData);
@@ -730,9 +736,11 @@ begin
           logEntry^.EvtMsg:=logEntry^.EvtMsg.Replace(#13,' ', [rfIgnoreCase,rfReplaceAll]);
 
           form1.EventLog1.Log(logEntry^.EvtType, logEntry^.EvtMsg);
+          {$IFNDEF RELEASENOMEMOLOG}
           Form1.Memo1.Lines.Insert(0,FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+' '+PadLeft(Form1.EventLog1.EventTypeToString(logEntry^.EvtType).ToUpper,15)+' '+logEntry^.EvtMsg);
-          if Form1.Memo1.Lines.Count>1000 then
-            Form1.Memo1.Lines.Delete(1000);
+          while Form1.Memo1.Lines.Count>5 do
+            Form1.Memo1.Lines.Delete(5);
+          {$ENDIF}
 
         finally
           if Assigned(logEntry) then

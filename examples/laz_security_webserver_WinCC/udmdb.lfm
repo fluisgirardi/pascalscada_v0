@@ -15,15 +15,14 @@ object dmdb: Tdmdb
       'RawStringEncoding=DB_CP'
     )
     ReadOnly = True
-    Connected = True
     DesignConnection = True
     DisableSavepoints = False
-    HostName = '127.0.0.1'
+    HostName = '192.168.1.202'
     Port = 0
-    Database = 'Provider=MSOLEDBSQL.1;Password=AlfaSJC25#;Persist Security Info=True;User ID=sa;Initial Catalog=CC_RacaoSJC_25_01_10_16_31_29;Data Source=WSR-086-000-129\WINCC;Initial File Name="";Trust Server Certificate=True;Server SPN="";Authentication="";Access Token=""'
+    Database = 'Provider=MSOLEDBSQL.1;Password=AlfaSJC25#;Persist Security Info=True;User ID=sa;Initial Catalog=CC_RacaoSJC_25_01_10_16_31_29;Data Source=192.168.1.202\WINCC;Initial File Name="";Trust Server Certificate=True;Server SPN="";Authentication="";Access Token=""'
     User = 'sa'
     Password = 'AlfaSJC25#'
-    Protocol = 'ado'
+    Protocol = 'OleDB'
     Left = 64
     Top = 16
   end
