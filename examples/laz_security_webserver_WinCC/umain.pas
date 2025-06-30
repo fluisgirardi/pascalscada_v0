@@ -41,7 +41,7 @@ type
 
   TSecWSThread = class(TThread)
   private
-    FUser, FPass,
+    FUser, FPass, FLastUserloggedIn,
     FCurrUserLogin:String;
     FLoginOk:Boolean;
     UserChanged: TCrossEvent;
@@ -83,14 +83,11 @@ type
   TForm1 = class(TForm)
     EventLog1: TEventLog;
     Memo1: TMemo;
-    S7_CLP1: TISOTCPDriver;
-    TCP_UDPPort1: TTCP_UDPPort;
     Timer1: TTimer;
-    UserName: TPLCString;
     WinCCUserManagement1: TWinCCUserManagement;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+    //procedure Timer1Timer(Sender: TObject);
   private
     wst:TSecWSThread;
     procedure WSTTerminated(Sender: TObject);
@@ -101,7 +98,6 @@ type
 
 var
   Form1: TForm1;
-  FLastUserloggedIn: String;
 
 const
   SectionName = 'Securty Override';
@@ -236,7 +232,9 @@ end;
 procedure TSecWSThread.AcceptIdle(Sender: TObject);
 begin
   if Terminated and Assigned(ws) then
-    ws.Active:=false;
+    ws.Active:=false
+  else
+    Synchronize(@GetLoggedWinCCUser);
 end;
 
 procedure TSecWSThread.RequestError(Sender: TObject; E: Exception);
@@ -289,7 +287,12 @@ begin
     try
       cliIPAddr:=IPToString(ARequest.Connection.Socket.RemoteAddress.sin_addr);
       AddToLog(etInfo,  cliIPAddr, ARequest.Method.ToUpper.Trim+' '+ARequest.URL);
-      AddToLog(etDebug, cliIPAddr, 'Request content: '+ARequest.Content);
+
+      if ARequest.URL.Contains('/checkuserpwd', true) then
+        AddToLog(etDebug, cliIPAddr, 'Request content: Login attempt. Request data omitted')
+      else
+        AddToLog(etDebug, cliIPAddr, 'Request content: '+ARequest.Content);
+
       if ARequest.Method.ToUpper.Trim<>'POST' then begin
         AResponse.Code:=405;
         exit;
@@ -304,6 +307,7 @@ begin
           try
             logindata := GetJSON(ARequest.Content);
           except
+            AddToLog(etDebug, cliIPAddr, 'Invalid request content: '+ARequest.Content);
             AResponse.Content := '{"error": "Requisicao invalida"}';
             AResponse.Code    := 500;
             exit;
@@ -314,6 +318,8 @@ begin
                TJSONObject(logindata).Find('user',username) and
                TJSONObject(logindata).Find('password',password)
             then begin
+              AddToLog(etDebug, cliIPAddr, 'Request content: Login attempt of '+username.AsString);
+
               FLoginOk:=false;
               FUser:=username.AsString;
               FPass:=password.AsString;
@@ -616,15 +622,27 @@ begin
                   try
                     dm.SQLServerWINCC.Connect;
                     dm.BuscaUserName.Close;
-                    dm.BuscaUserName.ParamByName('username').Value:=FLastUserLoggedIn;
+                    dm.BuscaUserName.ParamByName('username').Value:=FCurrUserLogin;
                     dm.BuscaUserName.Open;
                     case dm.BuscaUserName.RecordCount of
-                      0: ;
+                      0: begin
+                        jobj:=TJSONObject.Create;
+                        try
+                          jobj.AddOrSet('uid',-1);
+                          jobj.AddOrSet('username','');
+                          CentralUserData(jobj);
+                          jobj.Add('authorizations',TJSONObject.Create);
+                          AResponse.Content := jobj.AsJSON;
+                          AResponse.Code    := 200;
+                        finally
+                          FreeAndNil(jobj);
+                        end;
+                      end;
                       1: begin
                         jobj:=TJSONObject.Create;
                         try
                           jobj.AddOrSet('uid',dm.BuscaUserNameID.Value);
-                          jobj.AddOrSet('username',FLastUserLoggedIn);
+                          jobj.AddOrSet('username',FCurrUserLogin);
                           CentralUserData(jobj);
                           dm.AuthorizationsFromUser.Close;
                           dm.AuthorizationsFromUser.ParamByName('uid').AsInteger:=dm.BuscaUserNameID.Value;
@@ -738,8 +756,8 @@ begin
           form1.EventLog1.Log(logEntry^.EvtType, logEntry^.EvtMsg);
           {$IFNDEF RELEASENOMEMOLOG}
           Form1.Memo1.Lines.Insert(0,FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',Now)+' '+PadLeft(Form1.EventLog1.EventTypeToString(logEntry^.EvtType).ToUpper,15)+' '+logEntry^.EvtMsg);
-          while Form1.Memo1.Lines.Count>5 do
-            Form1.Memo1.Lines.Delete(5);
+          while Form1.Memo1.Lines.Count>100 do
+            Form1.Memo1.Lines.Delete(100);
           {$ENDIF}
 
         finally
@@ -775,8 +793,17 @@ end;
 
 procedure TSecWSThread.GetLoggedWinCCUser;
 begin
-  if Assigned(Form1) and Assigned(Form1.WinCCUserManagement1) then
+  if Assigned(Form1) and Assigned(Form1.WinCCUserManagement1) then begin
     FCurrUserLogin:=Form1.WinCCUserManagement1.CurrentUserLogin;
+
+    if FLastUserloggedIn<>FCurrUserLogin then begin
+      try
+        SetUserChanged;
+      finally
+        FLastUserloggedIn:=FCurrUserLogin;
+      end;
+    end;
+  end;
 end;
 
 function TSecWSThread.IPToString(aIP: in_addr): String;
@@ -986,6 +1013,7 @@ begin
   msgList.Duplicates:=dupAccept;
 
   UserChanged:=TCrossEvent.Create(true, false);
+  FLastUserloggedIn:='@#$%^&*(';
 end;
 
 destructor TSecWSThread.Destroy;
@@ -1021,14 +1049,6 @@ begin
   while assigned(wst) do begin
     CheckSynchronize(10);
     Application.ProcessMessages;
-  end;
-end;
-
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
-  if FLastUserloggedIn<>UserName.Value then begin
-    wst.SetUserChanged;
-    FLastUserloggedIn:=UserName.Value;
   end;
 end;
 

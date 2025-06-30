@@ -43,45 +43,7 @@ object Form1: TForm1
     Top = 16
   end
   object Timer1: TTimer
-    OnTimer = Timer1Timer
     Left = 121
     Top = 107
-  end
-  object UserName: TPLCString
-    TagGUID = '{2C66A635-236B-47C5-A7BE-4D02B2E225D3}'
-    CommReadErrors = 111233
-    PLCRack = 0
-    PLCSlot = 0
-    PLCStation = 0
-    MemFile_DB = 98
-    MemAddress = 0
-    MemSubElement = 0
-    MemReadFunction = 4
-    MemWriteFunction = 0
-    ProtocolDriver = S7_CLP1
-    UpdateTime = 500
-    LongAddress = ''
-    StringSize = 50
-    StringType = stSIEMENS
-    Size = 52
-    Left = 220
-    Top = 172
-  end
-  object TCP_UDPPort1: TTCP_UDPPort
-    Active = True
-    Host = '192.168.1.2'
-    ExclusiveDevice = True
-    Left = 220
-    Top = 44
-  end
-  object S7_CLP1: TISOTCPDriver
-    CommunicationPort = TCP_UDPPort1
-    ReadSomethingAlways = False
-    ForcePDUSize = pdu240
-    ConnectionWay = ISOTCP
-    PLCStation = 0
-    ReadOnly = False
-    Left = 220
-    Top = 108
   end
 end
