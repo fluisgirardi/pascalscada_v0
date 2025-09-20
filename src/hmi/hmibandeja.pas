@@ -69,12 +69,12 @@ type
     property ParentFont;
     property ParentShowHint;
     property PopupMenu;
-    property ShowAccelChar;
+    //property ShowAccelChar;
     property ShowHint;
     property TabOrder;
     property TabStop;
     property UseDockManager default True;
-    property VerticalAlignment;
+    //property VerticalAlignment;
     property Visible;
     property Wordwrap;
     property OnChangeBounds;

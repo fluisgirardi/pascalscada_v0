@@ -197,7 +197,7 @@ end;
 
 procedure THMIBasicColletion.DoOnChange(const Item: TObject);
 begin
-  if Assigned(FOnColletionItemChange) then begin
+  if (UpdateCount=0) and Assigned(FOnColletionItemChange) then begin
     if Assigned(Item) then
       FOnColletionItemChange(Item)
     else
