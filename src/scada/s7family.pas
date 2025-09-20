@@ -2059,6 +2059,7 @@ begin
   end;
 
   NeedSleep:=ifthen(Length(FPLCs)<=0,500,-10);
+  FNextReadIn:=$7FFFFFFF;
 
   EntireTagList:=TS7ScanReqList.Create;
   try
@@ -2281,7 +2282,7 @@ begin
       NeedSleep:=min(FMaxUpdtRate, FNextReadIn)-1; //sleep and wakeup in X-1 ms
     end;
 
-    if (PReadSomethingAlways) then
+    if (PReadSomethingAlways) and (Length(FPLCs)>0) and PCommPort.ReallyActive then
       NeedSleep:=-10; //do not sleep
 
     FreeAndNil(EntireTagList);

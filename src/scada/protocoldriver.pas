@@ -1344,7 +1344,7 @@ end;
 
 function  TProtocolDriver.GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):LongInt;
 var
-  t, valueSet:LongInt;
+  t, valueSet, IntTagCount:LongInt;
   first:Boolean;
   tagiface:IScanableTagInterface;
   tr:TTagRec;
@@ -1379,6 +1379,8 @@ begin
         end;
       end;
     end;
+
+    IntTagCount := TagCount;
 
     for t:=0 to TagCount-1 do begin
       if Supports(Tag[t], IScanableTagInterface) then begin
@@ -1437,6 +1439,8 @@ begin
   finally
     FReadCS.Leave;
     FPause.SetEvent;
+    if (ErrorStatus in [ioNullCommPort, ioCommPortClosed]) or (IntTagCount<=0) then
+      Sleep(50);
   end;
 end;
 
