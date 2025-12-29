@@ -2282,7 +2282,7 @@ begin
       NeedSleep:=min(FMaxUpdtRate, FNextReadIn)-1; //sleep and wakeup in X-1 ms
     end;
 
-    if (PReadSomethingAlways) and (Length(FPLCs)>0) and PCommPort.ReallyActive then
+    if (PReadSomethingAlways) and (Length(FPLCs)>0) and assigned(PCommPort) and PCommPort.ReallyActive then
       NeedSleep:=-10; //do not sleep
 
     FreeAndNil(EntireTagList);

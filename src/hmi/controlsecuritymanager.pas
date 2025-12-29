@@ -430,8 +430,8 @@ begin
     if FControls[c]=control then begin
       FControls[c]:=FControls[h];
       SetLength(FControls,h);
-      break;
       found:=true;
+      break;
     end;
 
   {$IFNDEF WINDOWS}
