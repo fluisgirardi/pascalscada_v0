@@ -225,6 +225,8 @@ begin
 
     propertyName:=lowercase(GetPropInfo^.Name);
 
+    parser.Identifiers.AddIntegerVariable('selindex', i);
+
     if (GetComponent(i) is TControl) then begin
       //register only if the property is not being edited,
       //to avoid circular references.
@@ -240,10 +242,12 @@ begin
 
       if (propertyName<>'height') then
         parser.Identifiers.AddIntegerVariable('height', (GetComponent(i) as TControl).Height);
-
-      if (propertyName<>'tag') then
-        parser.Identifiers.AddIntegerVariable('tag', (GetComponent(i) as TControl).Tag);
     end;
+
+    //register only if the property is not being edited,
+    //to avoid circular references.
+    if (GetComponent(i) is TComponent) and (propertyName<>'tag') then
+      parser.Identifiers.AddIntegerVariable('tag', (GetComponent(i) as TComponent).Tag);
   end;
 end;
 

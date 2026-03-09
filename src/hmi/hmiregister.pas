@@ -150,6 +150,7 @@ begin
   RegisterPropertyEditor(TypeInfo(Integer),    TControl,                                 'Height',                        TControlPosSizePropertyEditor);
   RegisterPropertyEditor(TypeInfo(Integer),    TControl,                                 'Left',                          TControlPosSizePropertyEditor);
   RegisterPropertyEditor(TypeInfo(Integer),    TControl,                                 'top',                           TControlPosSizePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(PtrInt),     TComponent,                               'tag',                           TControlPosSizePropertyEditor);
 
   //////////////////////////////////////////////////////////////////////////////
   //Actions

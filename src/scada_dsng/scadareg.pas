@@ -116,11 +116,11 @@ begin
   RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemReadFunction' , TTagAddressPropertyEditor);
   RegisterPropertyEditor(TypeInfo(Cardinal),   TPLCString,    'MemWriteFunction', TTagAddressPropertyEditor);
 
-  RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Width'          , TWinControlBoundsEditor);
-  RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Height'         , TWinControlBoundsEditor);
-  RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Left'           , TWinControlBoundsEditor);
-  RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Top'            , TWinControlBoundsEditor);
-  RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Tag'            , TWinControlBoundsEditor);
+  //RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Width'          , TWinControlBoundsEditor);
+  //RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Height'         , TWinControlBoundsEditor);
+  //RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Left'           , TWinControlBoundsEditor);
+  //RegisterPropertyEditor(TypeInfo(Cardinal),   TWinControl,    'Top'            , TWinControlBoundsEditor);
+  //RegisterPropertyEditor(TypeInfo(Cardinal),   TComponent,     'Tag'            , TWinControlBoundsEditor);
 
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
