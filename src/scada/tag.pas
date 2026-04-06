@@ -1,5 +1,8 @@
 {$i ../common/language.inc}
 {$I ../common/delphiver.inc}
+{$mode ObjFPC}{$H+}
+{$modeswitch typehelpers}
+{$modeswitch advancedrecords}
 {$IFDEF PORTUGUES}
 {:
   @abstract(Implementação da base de todos os tags.)
@@ -183,6 +186,10 @@ type
                        ioGatewayUnavailable, ioDeviceGatewayFailedToRespond,
                        ioReadOnlyProtocol, ioCommPortClosed, ioNullCommPort,
                        ioConnectPLCFailed, ioAdapterInitFail, ioNullTagBlock);
+
+  TProtocolIOResultHelper = type helper to TProtocolIOResult
+    function ToString: string;
+  end;  
 
   {$IFDEF PORTUGUES}
   {:
@@ -961,6 +968,13 @@ var
 begin
   SizeInBits[pttDefault]:=pttDefaultSize;
   Result:=SizeInBits[TagType];
+end;
+
+{TProtocolIOResultHelper}
+
+function TProtocolIOResultHelper.ToString: string;
+begin
+  Result := GetEnumName(TypeInfo(TProtocolIOResult), Ord(self));
 end;
 
 { TDelayedAsyncCaller }
