@@ -382,7 +382,7 @@ begin
         end;
       end;
     finally
-      FreeAndNil(rt);
+      FreeAndNil(parser);
     end;
   end;
 end;
