@@ -63,7 +63,7 @@ type
     FRegisteredSC: TStringList;
     FUseCentralUserAsLocalUserLoading: Boolean;
     FValidatedSC: TStringList;
-    FRegisteredSCLastQuery: TDateTime;
+    FRegisteredSCLastQuery: QWord;
     function CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
     function CanAccess(sc: UTF8String; aUID: Integer): Boolean; override; overload;
     procedure Loaded; override;
@@ -570,11 +570,11 @@ function TCentralUserManagement.SecurityCodeExists(sc: UTF8String): Boolean;
 var
   c:LongInt;
 begin
-  if SecondsBetween(Now, FRegisteredSCLastQuery)>300 then begin
+  if (GetTickCount64 - FRegisteredSCLastQuery)>300000 then begin
     if Assigned(FRegisteredSC) then
       FreeAndNil(FRegisteredSC);
     FRegisteredSC:=GetRegisteredAccessCodes;
-    FRegisteredSCLastQuery:=Now;
+    FRegisteredSCLastQuery:=GetTickCount64;
   end;
 
   Result:=Assigned(FRegisteredSC) and (FRegisteredSC.IndexOf(sc)>=0);

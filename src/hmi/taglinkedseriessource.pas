@@ -147,7 +147,7 @@ begin
       if FUseNowInsteadTagTimestamp then
         x := Now
       else if Assigned(FPLCTag) and Supports(FPLCTag, ITagNumeric) then
-        x := (FPLCTag as ITagNumeric).GetValueTimestamp
+        x := (FPLCTag as ITagNumeric).GetClockMonotonicTimestamp //TODO -o replace by updatetimestamp
       else
         Exit;
 
@@ -183,7 +183,7 @@ begin
     if FUseNowInsteadTagTimestamp then
       x := Now
     else
-      x := (FPLCTag as ITagNumeric).GetValueTimestamp;
+      x := (FPLCTag as ITagNumeric).GetClockMonotonicTimestamp;  //TODO: replace by lastupdate timestamp
 
     Add(x, (FPLCTag as ITagNumeric).Value);
     DeleteOldData;
@@ -218,7 +218,7 @@ begin
   if FUseNowInsteadTagTimestamp then
     LimitTime := IncMilliSecond(Now, -Int64(FXAxisMaximumInterval))
   else if Assigned(FPLCTag) and Supports(FPLCTag, ITagNumeric) then
-    LimitTime := IncMilliSecond((FPLCTag as ITagNumeric).GetValueTimestamp, -Int64(FXAxisMaximumInterval))
+    LimitTime := IncMilliSecond((FPLCTag as ITagNumeric).GetClockMonotonicTimestamp, -Int64(FXAxisMaximumInterval)) //TODO
   else
     Exit;
 

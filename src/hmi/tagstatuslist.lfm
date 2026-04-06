@@ -6,7 +6,7 @@ object frmTagStatusList: TfrmTagStatusList
   Caption = 'frmTagStatusList'
   ClientHeight = 634
   ClientWidth = 1402
-  Visible = False
+  LCLVersion = '4.5.0.0'
   object ButtonPanel1: TButtonPanel
     Left = 6
     Height = 39
@@ -99,7 +99,7 @@ object frmTagStatusList: TfrmTagStatusList
   object Timer1: TTimer
     Interval = 250
     OnTimer = Timer1Timer
-    left = 700
-    top = 195
+    Left = 700
+    Top = 195
   end
 end

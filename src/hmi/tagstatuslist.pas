@@ -75,7 +75,7 @@ begin
         StringGrid1.Rows[t+1].Strings[11]:=inttostr(PLCStation);
         StringGrid1.Rows[t+1].Strings[12]:=inttostr(RefreshTime);
         StringGrid1.Rows[t+1].Strings[13]:=GetEnumName(TypeInfo(TagType), integer(TagType));
-        StringGrid1.Rows[t+1].Strings[14]:=FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', ValueTimestamp);
+        StringGrid1.Rows[t+1].Strings[14]:=FormatFloat('#0.000', ClockMonotonicTimeStamp / 1000);
       end;
       Continue;
     end;
@@ -94,7 +94,7 @@ begin
         StringGrid1.Rows[t+1].Strings[11]:=inttostr(PLCStation);
         StringGrid1.Rows[t+1].Strings[12]:=inttostr(RefreshTime);
         StringGrid1.Rows[t+1].Strings[13]:=GetEnumName(TypeInfo(TagType), integer(TagType));
-        StringGrid1.Rows[t+1].Strings[14]:=FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', ValueTimestamp);
+        StringGrid1.Rows[t+1].Strings[14]:=FormatFloat('#0.000', ClockMonotonicTimeStamp / 1000);
       end;
       Continue;
     end;
