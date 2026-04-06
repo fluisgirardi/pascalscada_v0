@@ -105,12 +105,12 @@ type
                var parser: TFPExpressionParser); override;
   end;
 
-  { TWinControlBoundsEditor }
-
-  TWinControlBoundsEditor = class(TIntegerExpressionPropertyEditor)
-    procedure RegisterExpressionVariables(const i: Integer;
-               var parser: TFPExpressionParser); override;
-  end;
+  //{ TWinControlBoundsEditor }
+  //
+  //TWinControlBoundsEditor = class(TIntegerExpressionPropertyEditor)
+  //  procedure RegisterExpressionVariables(const i: Integer;
+  //             var parser: TFPExpressionParser); override;
+  //end;
 
   {$IFNDEF FPC}
   //: @exclude
@@ -398,18 +398,8 @@ var
   L: Int64;
 begin
   L:=NewValue;
-  with GetTypeData(GetPropType(index))^ do
-    if OrdType = otULong then begin   // unsigned compare and reporting needed
-      if (L < Cardinal(MinValue)) or (L > Cardinal(MaxValue)) then begin
-        // bump up to Int64 to get past the %d in the format string
-        Error([Int64(Cardinal(MinValue)), Int64(Cardinal(MaxValue))]);
-        exit;
-      end
-    end else
-      if (L < MinValue) or (L > MaxValue) then begin
-        Error([MinValue, MaxValue]);
-        exit;
-      end;
+  
+
   with GetInstProp[index] do SetOrdProp(Instance, PropInfo, NewValue);
   Modified;
 end;
@@ -565,39 +555,7 @@ begin
   end;
 end;
 
-{ TWinControlBoundsEditor }
 
-procedure TWinControlBoundsEditor.RegisterExpressionVariables(const i: Integer;
-  var parser: TFPExpressionParser);
-var
-  propertyName: String;
-begin
-  if assigned(parser) then begin
-    //unregister all possible registered variables.
-    parser.Identifiers.Clear;
-
-    propertyName:=lowercase(GetPropInfo^.Name);
-
-    if (GetComponent(i) is TWinControl) then begin
-      //register only if the property is not being edited,
-      //to avoid circular references.
-      if (propertyName<>'width') then
-        parser.Identifiers.AddIntegerVariable('width', (GetComponent(i) as TWinControl).Width);
-
-      if (propertyName<>'height') then
-        parser.Identifiers.AddIntegerVariable('height', (GetComponent(i) as TWinControl).Height);
-
-      if (propertyName<>'left') then
-        parser.Identifiers.AddIntegerVariable('left', (GetComponent(i) as TWinControl).Left);
-
-      if (propertyName<>'top') then
-        parser.Identifiers.AddIntegerVariable('top', (GetComponent(i) as TWinControl).Top);
-
-      if (propertyName<>'tag') then
-              parser.Identifiers.AddIntegerVariable('tag', (GetComponent(i) as TWinControl).Tag);
-    end;
-  end;
-end;
 
 ///////////////////////////////////////
 //editor base para os demais editores.
