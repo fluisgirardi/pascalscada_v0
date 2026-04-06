@@ -511,11 +511,11 @@ begin
 var
   lidos:LongInt;
   tentativas:Cardinal;
-  start:TDateTime;
+  start:QWord;
   Req, Rem:TimeSpec;
 begin
   tentativas := 0;
-  start := CrossNow;
+  start := GetTickCount64;
 
   Packet^.Received := 0;
   Packet^.ReadIOResult:=iorNone;
@@ -532,9 +532,9 @@ begin
          RenewHandle;
        end;
      end;
-     if (MilliSecondsBetween(CrossNow,start)>PTimeout) then begin
+     if ((GetTickCount64 - start)>PTimeout) then begin
         inc(tentativas);
-        start:=CrossNow;
+        start:=GetTickCount64;
      end;
 
      //faz esperar 0,1ms

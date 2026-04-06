@@ -38,12 +38,15 @@ type
   @author(Fabio Luis Girardi fabio@pascalscada.com)
   }
   {$ENDIF}
+
+  { TPLCTagNumber }
+
   TPLCTagNumber = class(TPLCNumberMappable, IScanableTagInterface, ITagInterface, ITagNumeric)
   private
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(aValue:Variant):Boolean;
-    function  GetValueTimestamp:TDatetime;
+    function  GetClockMonotonicTimestamp:QWord;
   protected
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCNumber.SetValueRaw)
@@ -51,7 +54,7 @@ type
     //: @seealso(TPLCNumber.SetValueRaw)
     procedure SetValueRaw(aValue:Double); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
+    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
     //: @seealso(TTag.Size)
     property Size nodefault;
   public
@@ -107,7 +110,7 @@ type
     //: @seealso(TTag.ScanRate)
     property UpdateTime;
     //: @seealso(TPLCTag.ValueTimestamp)
-    property ValueTimestamp;
+    property ClockMonotonicTimeStamp;
     //: @seealso(TTag.LongAddress)
     property LongAddress;
     //: @seealso(TPLCTag.SyncWrites)
@@ -191,9 +194,9 @@ begin
              VarIsType(aValue, varboolean);
 end;
 
-function TPLCTagNumber.GetValueTimestamp:TDatetime;
+function TPLCTagNumber.GetClockMonotonicTimestamp:QWord;
 begin
-   Result := PValueTimeStamp;
+   Result := PClockMonotonicTimeStamp;
 end;
 
 procedure TPLCTagNumber.SetValueRaw(aValue:Double);
@@ -235,12 +238,12 @@ begin
         BuildTagRec(tr,0,0);
         Result:=PProtocolDriver.ScanWrite(tr,PlcValues);
       end else begin
-        TagCommandCallBack(0, PlcValues,CrossNow,tcScanWrite,ioOk,0);
+        TagCommandCallBack(0, PlcValues,GetTickCount64,tcScanWrite,ioOk,0);
         Dec(PCommWriteOk);
         Result:=-1;
       end;
     end else begin
-      TagCommandCallBack(0, PlcValues, CrossNow, tcScanWrite, ioNullDriver, Offset);
+      TagCommandCallBack(0, PlcValues, GetTickCount64, tcScanWrite, ioNullDriver, Offset);
       Result:=-1;
     end;
 
@@ -269,7 +272,7 @@ begin
     BuildTagRec(tr,0,0);
     PProtocolDriver.Write(tr,PlcValues);
   end else
-     TagCommandCallBack(0, PlcValues, CrossNow, tcWrite, ioNullDriver, Offset);
+     TagCommandCallBack(0, PlcValues, GetTickCount64, tcWrite, ioNullDriver, Offset);
   SetLength(PlcValues,0);
 end;
 
@@ -292,14 +295,14 @@ begin
 end;
 
 procedure TPLCTagNumber.TagCommandCallBack(const ReqID: LongWord;
-  Values: TArrayOfDouble; ValuesTimeStamp: TDateTime; TagCommand: TTagCommand;
+  Values: TArrayOfDouble; ValuesTimeStamp: QWord; TagCommand: TTagCommand;
   LastResult: TProtocolIOResult; Offset: LongInt);
 var
   notify:Boolean;
   TagValues:TArrayOfDouble;
-  PreviousTimestamp:TDateTime;
+  PreviousTimestamp:QWord;
 begin
-  PreviousTimestamp:=PValueTimeStamp;
+  PreviousTimestamp:=PClockMonotonicTimeStamp;
   if (csDestroying in ComponentState) then exit;
   inherited TagCommandCallBack(ReqID, Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
   TagValues:=PLCValuesToTagValues(Values, Offset);
@@ -312,7 +315,7 @@ begin
       tcInternalUpdate,
       tcSingleScanRead:
       begin
-        PValueTimeStamp := ValuesTimeStamp;
+        PClockMonotonicTimeStamp := ValuesTimeStamp;
 
         if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
           notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
@@ -329,7 +332,7 @@ begin
       end;
       tcScanWrite,tcWrite:
       begin
-        PValueTimeStamp := ValuesTimeStamp;
+        PClockMonotonicTimeStamp := ValuesTimeStamp;
         if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
           if LastResult=ioOk then begin
             PModified:=False;
@@ -358,7 +361,7 @@ begin
       NotifyChange;
     end;
 
-    if (TagCommand in [tcRead,tcScanRead, tcSingleScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PValueTimeStamp) then
+    if (TagCommand in [tcRead,tcScanRead, tcSingleScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PClockMonotonicTimeStamp) then
       NotifyUpdate;
   finally
     SetLength(TagValues,0);

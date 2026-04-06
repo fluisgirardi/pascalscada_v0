@@ -87,7 +87,7 @@ type
     //: @seealso(TTag.ScanRate)
     property UpdateTime;
     //: @seealso(TPLCTag.ValueTimestamp)
-    property ValueTimestamp;
+    property ClockMonotonicTimeStamp;
     //: @seealso(TTag.LongAddress)
     property LongAddress;
   end;
@@ -120,12 +120,12 @@ begin
       BuildTagRec(tr,Count,Offset);
       Result:=PProtocolDriver.ScanWrite(tr,Values);
     end else begin
-      TagCommandCallBack(0, Values,CrossNow,tcScanWrite,ioOk,Offset);
+      TagCommandCallBack(0, Values,GetTickCount64,tcScanWrite,ioOk,Offset);
       Dec(PCommWriteOk);
       Result:=-1;
     end;
   end else begin
-    TagCommandCallBack(0, Values,CrossNow,tcScanWrite,ioNullDriver,Offset);
+    TagCommandCallBack(0, Values,GetTickCount64,tcScanWrite,ioNullDriver,Offset);
     Result:=-1;
   end;
 end;
@@ -149,7 +149,7 @@ begin
     BuildTagRec(tr,Count,Offset);
     PProtocolDriver.Write(tr,Values);
   end else
-    TagCommandCallBack(0, Values,CrossNow,tcWrite,ioNullDriver,Offset);
+    TagCommandCallBack(0, Values,GetTickCount64,tcWrite,ioNullDriver,Offset);
 end;
 
 

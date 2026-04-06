@@ -109,7 +109,7 @@ var
   ClientCmd, Response:Byte;
   FaultCount:LongInt;
   Quit:Boolean;
-  LastPingSent: TDateTime;
+  LastPingSent: QWord;
 
   const FaultLimit = 10;
 
@@ -119,7 +119,7 @@ var
       2: begin
         if FIntoCriticalSection or FMutex.TryEnter then begin
           FIntoCriticalSection:=true;
-          LastPingSent:=Now;
+          LastPingSent:=GetTickCount64;
           Response:=21;
         end else begin
           FIntoCriticalSection:=false;
@@ -149,7 +149,7 @@ var
       //client ping response.
       254: begin
         FaultCount:=0;
-        LastPingSent:=Now;
+        LastPingSent:=GetTickCount64;
       end;
     end;
   end;
@@ -170,10 +170,10 @@ begin
   FaultCount:=0;
   Quit:=false;
 
-  LastPingSent:=Now;
+  LastPingSent:=GetTickCount64;
   while ((not Terminated) and (not Quit)) and (FaultCount<FaultLimit) do begin
     //if more than one seconds was elapsed, send a ping command.
-    if MilliSecondsBetween(Now,LastPingSent)>=1000 then begin
+    if (GetTickCount64 - LastPingSent)>=1000 then begin
       Response:=255;
 
       if socket_send(FSocket, @Response, 1, 0, 1000)<1 then begin
@@ -181,7 +181,7 @@ begin
         Break;
       end;
 
-      LastPingSent:=Now;
+      LastPingSent:=GetTickCount64;
       if socket_recv(FSocket, @Response, 1, 0, 1000)>=1 then
         ProcClientCommand(Response)
       else

@@ -190,7 +190,7 @@ type
   resultado de uma solicitação e os respectivos valores.    
   @param(ReqID LongWord: Identificador de requisição ScanRead/ScanWrite.)
   @param(Values TArrayOfDouble: Array com os valores lidos/escritos.)
-  @param(ValuesTimeStamp TDateTime: Data/Hora em que esses valores foram lidos/escritos.)
+  @param(ValuesTimeStamp QWord: Informacao de clock monotonico do momento que esses valores foram lidos/escritos.)
   @param(TagCommand TTagCommand: Tipo de comando.)
   @param(LastResult TProtocolIOResult: Resultado do driver ao processar o pedido.)
   @param(Offset Cardinal: Posição dentro do bloco onde os valores começam.)
@@ -201,13 +201,13 @@ type
   of an request and theirs values.
   @param(ReqID LongWord: The ScanRead/ScanWrite request id.)
   @param(Values TArrayOfDouble: Array with the values read/written.)
-  @param(ValuesTimeStamp TDateTime: Date/Time when these values are read/written.)
+  @param(ValuesTimeStamp QWord: Clock monotonic when these values are read/written.)
   @param(TagCommand TTagCommand: Command type.)
   @param(LastResult TProtocolIOResult: I/O result after process this request.)
   @param(Offset Cardinal: Block Offset.)
   }
   {$ENDIF}
-  TTagCommandCallBack = procedure(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:LongInt) of object;
+  TTagCommandCallBack = procedure(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult; OffSet:LongInt) of object;
 
   {$IFDEF PORTUGUES}
   {:
@@ -351,7 +351,7 @@ type
     {$ENDIF}
     procedure BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
 
-    function GetLastUpdateTimestamp:TDateTime;
+    function GetLastUpdateTimestamp:QWord;
 
     function GetUpdateTime:Int64;
   end;
@@ -933,7 +933,7 @@ type
 
   TScanUpdateRec = record
     CallBack:TTagCommandCallBack;
-    ValueTimeStamp:TDateTime;
+    ClkMonotonicTStamp:QWord;
     LastResult:TProtocolIOResult;
     Values:TArrayOfDouble;
   end;

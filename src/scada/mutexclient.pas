@@ -52,7 +52,7 @@ type
     FSocket:Tsocket;
     FEnd:TCrossEvent;
     FSocketMutex:TCriticalSection;
-    LastPingSent:TDateTime;
+    LastPingSent:QWord;
     Quit:Boolean;
   private
     procedure ConnectionIsGone;
@@ -154,20 +154,20 @@ var
       ConnectionIsGone;
       Result:=false;
     end else
-      LastPingSent:=Now;
+      LastPingSent:=GetTickCount64;
   end;
 
   function InternalPingServer:Boolean;
   begin
     Result:=true;
-    if MilliSecondsBetween(now,LastPingSent)>=1000 then begin
+    if (GetTickCount64 - LastPingSent)>=1000 then begin
       Result:=SendPingCmd;
     end;
   end;
 
 begin
   FEnd.ResetEvent;
-  LastPingSent:=Now;
+  LastPingSent:=GetTickCount64;
   while (not Terminated) AND (not Quit) do begin
     FSocketMutex.Enter;
     try
@@ -237,7 +237,7 @@ begin
   if socket_send(FSocket,@request,1,0,1000)<1 then
     ConnectionIsGone
   else begin
-    LastPingSent:=Now;
+    LastPingSent:=GetTickCount64;
     Result:=true;
   end;
 end;

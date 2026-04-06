@@ -475,7 +475,7 @@ begin
       if foundPLC then begin
         if Result=ioOk then begin
           PModbusPLC[plc].Status07Value :=LongInt(pkg.BufferToRead[8]);
-          PModbusPLC[plc].Status07TimeStamp := CrossNow;
+          PModbusPLC[plc].Status07TimeStamp := GetTickCount64;
         end;
         PModbusPLC[plc].Status07LastError := Result;
       end;

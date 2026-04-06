@@ -64,6 +64,9 @@ type
   significant bit. Therefore Endbit must be greater or equal than StartBit.
   }
   {$ENDIF}
+
+  { TTagBit }
+
   TTagBit = class(TPLCNumber, ITagInterface, ITagNumeric)
   private
     PNumber:TPLCNumber;
@@ -85,7 +88,7 @@ type
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(aValue:Variant):Boolean;
-    function  GetValueTimestamp:TDatetime;
+    function  GetClockMonotonicTimestamp:QWord;
 
 
     procedure WriteFaultCallBack(Sender:TObject);
@@ -278,9 +281,9 @@ begin
              VarIsType(aValue, varboolean);
 end;
 
-function TTagBit.GetValueTimestamp:TDatetime;
+function TTagBit.GetClockMonotonicTimestamp: QWord;
 begin
-   Result := PValueTimeStamp;
+   Result := PClockMonotonicTimeStamp;
 end;
 
 procedure TTagBit.SetValueRaw(bitValue: Double);
@@ -379,7 +382,7 @@ begin
     if (bold<>bnew) or PFirstUpdate then begin
        PFirstUpdate:=False;
        PValueRaw:=bnew;
-       PValueTimeStamp := CrossNow;
+       PClockMonotonicTimeStamp := GetTickCount64;
 
        NotifyChange();
     end;

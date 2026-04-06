@@ -65,7 +65,7 @@ type
   private
     FStartAddress:LongInt;
     FEndAddress:LongInt;
-    FLastUpdate:TDateTime;
+    FLastUpdate:QWord;
     FMinScanTime:Cardinal;
     FReadOK, FReadFault:Cardinal;
     procedure SetReadOK(value:Cardinal);
@@ -180,7 +180,7 @@ type
     {$ELSE}
     //: @name tells the timestamp of the last update.
     {$ENDIF}
-    property LastUpdate:TDateTime read FLastUpdate write FLastUpdate;
+    property LastUpdate:QWord read FLastUpdate write FLastUpdate;
 
     {$IFDEF PORTUGUES}
     //: @name diz quantos milisegundos se passaram desde a última atualização de dados.
@@ -233,6 +233,9 @@ type
             and the better organization of it.)
   }
   {$ENDIF}
+
+  { TPLCMemoryManager }
+
   TPLCMemoryManager = class
   private
     FAddress:array of TMemoryRec;
@@ -416,7 +419,7 @@ type
     @param(RegSise Cardinal. Tamanho da variável em relação ao menor tamanho de palavra.)
     @param(Values TArrayOfDouble. Array onde serão retornados os valores armazenados no gerenciador de variaveis.)
     @param(LastResult TProtocolIOResult. Último resultado de E/S do conjunto de variáveis.)
-    @param(ValueTimeStamp TDateTime. Data hora em que os valores foram atualizados no gerenciador de memórias.)
+    @param(ValueTimeStamp QWord. Data hora em que os valores foram atualizados no gerenciador de memórias.)
 
     Cada item da array retornado representa o valor da menor palavra daquela área.
 
@@ -434,7 +437,7 @@ type
     @param(RegSize Cardinal. Word size of your variable compared with the smaller word of your device.)
     @param(Values TArrayOfDouble. Array that will return the values that are stored in the memory manager.)
     @param(LastResult TProtocolIOResult. Last I/O result of the memory range.)
-    @param(ValueTimeStamp TDateTime. Date time of the last update of the values on the memory manager.)
+    @param(ValueTimeStamp QWord. Date time of the last update of the values on the memory manager.)
 
     One value on Values array represents the value of the smaller word of your device.
 
@@ -444,7 +447,7 @@ type
     @seealso(GetValues)
     }
     {$ENDIF}
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt; virtual;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:QWord):LongInt; virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -534,6 +537,8 @@ type
     property MinScanTime:Cardinal read GetMinScanTime;
   end;
 
+  { TPLCMemoryManagerSafe }
+
   TPLCMemoryManagerSafe = class(TPLCMemoryManager)
   private
     FMutex:TCriticalSection;
@@ -549,7 +554,7 @@ type
     //: @seealso(TPLCMemoryManager.SetValues)
     function  SetValues(AdrStart,Len,RegSize:Cardinal; Values:TArrayOfDouble; LastResult:TProtocolIOResult):LongInt; override;
     //: @seealso(TPLCMemoryManager.GetValues)
-    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt; override;
+    function  GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:QWord):LongInt; override;
     //: @seealso(TPLCMemoryManager.SetFault)
     procedure SetFault(AdrStart,Len,RegSize:Cardinal; Fault:TProtocolIOResult; const MarkAsUpdated:Boolean = false); override;
   end;
@@ -576,7 +581,7 @@ end;
 
 procedure TRegisterRange.Updated;
 begin
-  FLastUpdate := CrossNow;
+  FLastUpdate := GetTickCount64;
 end;
 
 function  TRegisterRange.GetValue(index:LongInt):Double;
@@ -596,7 +601,7 @@ end;
 
 function TRegisterRange.GetMsecLastUpdate:Int64;
 begin
-  Result := MilliSecondsBetween(CrossNow,FLastUpdate);
+  Result := (GetTickCount64 - FLastUpdate);
 end;
 
 function TRegisterRange.NeedRefresh:Boolean;
@@ -827,7 +832,7 @@ begin
       SetLength(newBlocks,Length(newBlocks)+1);
 
       newBlocks[BlockIndex] := CreateRegisterRange(adrStart,adrEnd);
-      newBlocks[BlockIndex].LastUpdate := CrossNow;
+      newBlocks[BlockIndex].LastUpdate := GetTickCount64;
       newBlocks[BlockIndex].ScanTime := mscan;
       inc(BlockIndex);
 
@@ -849,7 +854,7 @@ begin
     if c=High(FAddress) then begin
       SetLength(newBlocks,Length(newBlocks)+1);
       newBlocks[BlockIndex] := CreateRegisterRange(adrStart,adrEnd);
-      newBlocks[BlockIndex].LastUpdate := CrossNow;
+      newBlocks[BlockIndex].LastUpdate := GetTickCount64;
       newBlocks[BlockIndex].ScanTime := mscan;
       inc(BlockIndex);
     end;
@@ -1030,7 +1035,9 @@ begin
   end;
 end;
 
-function TPLCMemoryManager.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt;
+function TPLCMemoryManager.GetValues(AdrStart, Len, RegSize: Cardinal;
+  var Values: TArrayOfDouble; var LastResult: TProtocolIOResult;
+  var ValueTimeStamp: QWord): LongInt;
 var
   blk, AdrEnd, LenUtil, Moved:LongInt;
   srcidx, dstidx: Integer;
@@ -1111,7 +1118,9 @@ begin
   end;
 end;
 
-function    TPLCMemoryManagerSafe.GetValues(AdrStart,Len,RegSize:Cardinal; var Values:TArrayOfDouble; var LastResult:TProtocolIOResult; var ValueTimeStamp:TDateTime):LongInt;
+function TPLCMemoryManagerSafe.GetValues(AdrStart, Len, RegSize: Cardinal;
+  var Values: TArrayOfDouble; var LastResult: TProtocolIOResult;
+  var ValueTimeStamp: QWord): LongInt;
 begin
   try
     FMutex.Enter;

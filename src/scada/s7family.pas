@@ -807,8 +807,8 @@ begin
       //  else
       //    Result:=1;
       //end;
-      ScanPercent1:=(MilliSecondsBetween(Now,ReqItem1^.LastUpdate)/ReqItem1^.UpdateRate);
-      ScanPercent2:=(MilliSecondsBetween(Now,ReqItem2^.LastUpdate)/ReqItem2^.UpdateRate);
+      ScanPercent1:=((GetTickCount64 - ReqItem1^.LastUpdate)/ReqItem1^.UpdateRate);
+      ScanPercent2:=((GetTickCount64 - ReqItem2^.LastUpdate)/ReqItem2^.UpdateRate);
       if ScanPercent1=ScanPercent2 then
         Result:=0
       else begin
@@ -835,11 +835,11 @@ begin
     0,3: begin
       ScanPercent1:=0;
       if Item1.UpdateRate<>0 then
-      ScanPercent1:=(MilliSecondsBetween(Now,Item1.LastUpdate)/Item1.UpdateRate);
+      ScanPercent1:=((GetTickCount64 - Item1.LastUpdate)/Item1.UpdateRate);
 
       ScanPercent2:=0;
       if Item2.UpdateRate<>0 then
-      ScanPercent2:=(MilliSecondsBetween(Now,Item2.LastUpdate)/Item2.UpdateRate);
+      ScanPercent2:=((GetTickCount64 - Item2.LastUpdate)/Item2.UpdateRate);
       if ScanPercent1=ScanPercent2 then
         Result:=0
       else begin
@@ -1929,7 +1929,6 @@ var
   EntireTagList: TS7ScanReqList;
   ReqItem, ReqItem2:TS7ScanReqItem;
   c, c2, FNextReadIn: Integer;
-  started: TDateTime;
 
   procedure pkg_initialized;
   begin
@@ -2024,7 +2023,7 @@ var
     Reset;
   end;
 
-  procedure AddToTagList(iPLC, iDB, iDBNum, iReqType, iStartAddress, iSize, UpdateRate:LongInt; LastUpdate:TDateTime; NeedUpdate:Boolean);
+  procedure AddToTagList(iPLC, iDB, iDBNum, iReqType, iStartAddress, iSize, UpdateRate:LongInt; LastUpdate:QWord; NeedUpdate:Boolean);
   var
     info:TS7ScanReqItem;
   begin
@@ -2039,7 +2038,7 @@ var
     info.UpdateRate    :=UpdateRate;
     info.NeedUpdate    :=NeedUpdate;
     info.Read          :=false;
-    info.NextUpdtInMs  := MilliSecondsBetween(now, LastUpdate); //just for debugging
+    info.NextUpdtInMs  := (GetTickCount64 - LastUpdate); //just for debugging
     info.NextUpdtInMs  := max(0, UpdateRate-info.NextUpdtInMs);
     if UpdateRate>0 then
       FMaxUpdtRate:=max(FMaxUpdtRate, UpdateRate);
@@ -2232,7 +2231,6 @@ begin
       end;
 
       EntireTagList.Sort(@SortGenericTagList);
-      started:=Now;
 
       RequestsPendding:=false;
       FNextReadIn:=$7FFFFFFF;
@@ -2313,11 +2311,11 @@ begin
 
   case TagRec.ReadFunction of
     1:
-      FPLCs[plc].Inputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].Inputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     2:
-      FPLCs[plc].Outputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].Outputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     3:
-      FPLCs[plc].Flags.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].Flags.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     4: begin
       if TagRec.File_DB<=0 then
         TagRec.File_DB:=1;
@@ -2331,24 +2329,24 @@ begin
 
       if not founddb then exit;
 
-      FPLCs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].DBs[db].DBArea.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     end;
     5:
-      FPLCs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     6:
-      FPLCs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     7:
-      FPLCs[plc].S7200SMs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].S7200SMs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     8:
-      FPLCs[plc].S7200AnInput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].S7200AnInput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     9:
-      FPLCs[plc].S7200AnOutput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].S7200AnOutput.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     10:
-      FPLCs[plc].S7200Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].S7200Counters.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     11:
-      FPLCs[plc].S7200Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].S7200Timers.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     12:
-      FPLCs[plc].PeripheralInputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      FPLCs[plc].PeripheralInputs.GetValues(TagRec.Address,TagRec.Size,1, values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
   end;
 end;
 

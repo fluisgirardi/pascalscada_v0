@@ -201,7 +201,7 @@ begin
     notify := (IsNan(converted_value[0]) and (not IsNan(PValueRaw))) or
               ((not IsNan(converted_value[0])) and IsNan(PValueRaw)) or (PValueRaw<>converted_value[0]) ;
     PValueRaw := converted_value[0];
-    PValueTimeStamp := PBlock.ValueTimestamp;
+    PClockMonotonicTimeStamp := PBlock.ClockMonotonicTimeStamp;
 
     Result:=PValueRaw;
 

@@ -1097,7 +1097,7 @@ begin
     //copy the values
     SetLength(pkg^.Values, 0);
     pkg^.RequestResult:=ioNone;
-    pkg^.ValueTimeStamp:=CrossNow;
+    pkg^.ClkMonotonicTStamp:=GetTickCount64;
 
     //posta uma mensagem de Leitura por Scan
     //send a message requesting a scanread
@@ -1117,7 +1117,7 @@ var
 begin
   //read only protocol.
   if GetIsReadOnly then begin
-    tagrec.CallBack(0, Values,Now,tcScanWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    tagrec.CallBack(0, Values,GetTickCount64,tcScanWrite,ioReadOnlyProtocol,tagrec.RealOffset);
     Result:=0;
     exit;
   end;
@@ -1156,7 +1156,7 @@ begin
     //copy the values
     pkg^.Values := Values;
     pkg^.RequestResult:=ioNone;
-    pkg^.ValueTimeStamp:=CrossNow;
+    pkg^.ClkMonotonicTStamp:=GetTickCount64;
 
     //posta uma mensagem de Escrita por Scan
     //send the scanwrite message to thread.
@@ -1186,7 +1186,7 @@ begin
     FReadCS.Enter;
     res := DoRead(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(0, Values,CrossNow,tcRead,res,tagrec.RealOffset);
+      tagrec.CallBack(0, Values,GetTickCount64,tcRead,res,tagrec.RealOffset);
   finally
     FReadCS.Leave;
     FWriteCS.Leave;
@@ -1200,7 +1200,7 @@ var
   res:TProtocolIOResult;
 begin
   if GetIsReadOnly then begin
-    tagrec.CallBack(0, Values,Now,tcWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    tagrec.CallBack(0, Values,GetTickCount64,tcWrite,ioReadOnlyProtocol,tagrec.RealOffset);
     exit;
   end;
 
@@ -1215,7 +1215,7 @@ begin
 
     res := DoWrite(tagrec,Values,true);
     if assigned(tagrec.CallBack) then
-      tagrec.CallBack(0, Values,CrossNow,tcWrite,res,tagrec.RealOffset);
+      tagrec.CallBack(0, Values,GetTickCount64,tcWrite,res,tagrec.RealOffset);
   finally
     FReadCS.Leave;
     FWriteCS.Leave;
@@ -1405,7 +1405,7 @@ begin
             tagiface.BuildTagRec(tr,0,0);
             SetLength(ScanReadRec.Values, tr.Size);
             if PortError then begin
-              ScanReadRec.ValuesTimestamp:=CrossNow;
+              ScanReadRec.ClkMonotonicTStamp:=GetTickCount64;
               ScanReadRec.LastQueryResult:=ErrorStatus;
               ScanReadRec.Offset:=0;
               ScanReadRec.ReadFaults:=0;
@@ -1414,22 +1414,22 @@ begin
             end else
               DoGetValue(tr, ScanReadRec);
 
-            if ScanReadRec.ValuesTimestamp>tagiface.GetLastUpdateTimestamp then begin
+            if ScanReadRec.ClkMonotonicTStamp>tagiface.GetLastUpdateTimestamp then begin
               //calcula o tempo para a proxima atualização
               if first then begin
-                 Result:=tagiface.GetUpdateTime-MilliSecondsBetween(CrossNow,ScanReadRec.ValuesTimestamp);
+                 Result:=tagiface.GetUpdateTime-(GetTickCount64 - ScanReadRec.ClkMonotonicTStamp);
                  first:=false;
                end else
-                 Result := Min(tagiface.GetUpdateTime-MilliSecondsBetween(CrossNow,ScanReadRec.ValuesTimestamp), Result);
+                 Result := Min(tagiface.GetUpdateTime-(GetTickCount64 - ScanReadRec.ClkMonotonicTStamp), Result);
 
               doneOne:=true;
               inc(valueSet);
               SetLength(MultiValues,valueSet+1);
 
-              MultiValues[valueSet].LastResult    :=ScanReadRec.LastQueryResult;
-              MultiValues[valueSet].CallBack      :=tr.CallBack;
-              MultiValues[valueSet].Values        :=ScanReadRec.Values;
-              MultiValues[valueSet].ValueTimeStamp:=ScanReadRec.ValuesTimestamp;
+              MultiValues[valueSet].LastResult        :=ScanReadRec.LastQueryResult;
+              MultiValues[valueSet].CallBack          :=tr.CallBack;
+              MultiValues[valueSet].Values            :=ScanReadRec.Values;
+              MultiValues[valueSet].ClkMonotonicTStamp:=ScanReadRec.ClkMonotonicTStamp;
             end;
           end;
         end;

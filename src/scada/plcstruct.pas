@@ -48,7 +48,7 @@ type
     //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
+    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
     //: @seealso(TPLCTag.SetTagType)
     procedure SetTagType(newType:TTagType); override;
     //: @seealso(TPLCTag.SwapDWords)
@@ -111,7 +111,7 @@ begin
 end;
 
 procedure TPLCStruct.TagCommandCallBack(const ReqID: LongWord;
-  Values: TArrayOfDouble; ValuesTimeStamp: TDateTime; TagCommand: TTagCommand;
+  Values: TArrayOfDouble; ValuesTimeStamp: QWord; TagCommand: TTagCommand;
   LastResult: TProtocolIOResult; Offset: LongInt);
 begin
   inherited TagCommandCallBack(ReqID, Values, ValuesTimeStamp, TagCommand, LastResult, Offset);

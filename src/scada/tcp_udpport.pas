@@ -289,11 +289,11 @@ procedure TConnectThread.Execute;
 var
   msg: TMSMsg;
   Ok, ReconnectTimerRunning:Boolean;
-  ReconnectStarted:TDateTime;
+  ReconnectStarted:QWord;
   msbetween: Int64;
 begin
   ReconnectTimerRunning:=false;
-  ReconnectStarted:=now;
+  ReconnectStarted:=GetTickCount64;
   while FEnd.ResetEvent=false do ;
   while not Terminated do begin
     while FMessageQueue.PeekMessage(msg,0,100,true) and not Terminated do begin
@@ -308,7 +308,7 @@ begin
              else
                if(FAutoReconnect=1) then begin
                   if ReconnectTimerRunning=false then
-                    ReconnectStarted:=Now;
+                    ReconnectStarted:=GetTickCount64;
                   ReconnectTimerRunning:=true;
                end;
            end;
@@ -316,7 +316,7 @@ begin
         1: begin
           if FActive then begin
             if ReconnectTimerRunning=false then
-              ReconnectStarted:=Now;
+              ReconnectStarted:=GetTickCount64;
             ReconnectTimerRunning:=true;
           end;
         end;
@@ -338,16 +338,16 @@ begin
         FCheckSocket(Ok);
       if not ok then begin
         if ReconnectTimerRunning=false then
-          ReconnectStarted:=Now;
+          ReconnectStarted:=GetTickCount64;
         ReconnectTimerRunning:=true;
       end;
     end;
 
 
-    msbetween:=MilliSecondsBetween(now,ReconnectStarted);
+    msbetween:=(GetTickCount64 - ReconnectStarted);
     if (FAutoReconnect=1) and (ReconnectTimerRunning)
        and (msbetween>=ReconnectInterval) and not Terminated then begin
-      ReconnectStarted:=Now;
+      ReconnectStarted:=GetTickCount64;
       Ok:=false;
       if Assigned(FReconnectSocket) then
         FReconnectSocket(Ok);

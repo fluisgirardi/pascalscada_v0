@@ -134,7 +134,7 @@ type
   {$ENDIF}
   TScanReadRec = record
     Values:TArrayOfDouble;
-    ValuesTimestamp:TDateTime;
+    ClkMonotonicTStamp:QWord;
     ReadsOK,ReadFaults:Cardinal;
     LastQueryResult:TProtocolIOResult;
     Offset,
@@ -167,7 +167,7 @@ type
     Tag:TTagRec;
     Values:TArrayOfDouble;
     RequestResult:TProtocolIOResult;
-    ValueTimeStamp:TDateTime;
+    ClkMonotonicTStamp:QWord;
   end;
   PScanReqRec = ^TScanReqRec;
 
@@ -302,7 +302,7 @@ type
     {$ELSE}
     //: Returns the date/time of the last time wich the tag was updated.
     {$ENDIF}
-    function  GetValueTimestamp:TDatetime;
+    function  GetClockMonotonicTimestamp:QWord;
 
     {$IFDEF PORTUGUES}
     //: Lê/Escreve um valor variant do tag.
@@ -316,7 +316,7 @@ type
     {$ELSE}
     //: Returns the date/time of the last time wich the tag was updated.
     {$ENDIF}
-    property  ValueTimestamp:TDatetime read GetValueTimestamp;
+    property  ClockMonotonicTimestamp:QWord read GetClockMonotonicTimestamp;
   end;
 
 

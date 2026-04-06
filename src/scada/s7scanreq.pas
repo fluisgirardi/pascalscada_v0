@@ -13,7 +13,7 @@ type
   { TReqItem }
 
   TS7ScanReqItem = record
-    LastUpdate:TDateTime;
+    LastUpdate:QWord;
     iPLC,
     iDB,
     iDBNum,

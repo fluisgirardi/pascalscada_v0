@@ -45,6 +45,9 @@ type
   @seealso(TPLCBlock)
   }
   {$ENDIF}
+
+  { TPLCBlockElement }
+
   TPLCBlockElement = class(TPLCNumberMappable, ITagInterface, ITagNumeric)
   protected
     PBlock:TPLCBlock;
@@ -62,7 +65,7 @@ type
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(aValue:Variant):Boolean;
-    function  GetValueTimestamp:TDatetime;
+    function  GetClockMonotonicTimestamp:QWord;
 
     procedure WriteFaultCallback(Sender:TObject); virtual;
     procedure TagChangeCallback(Sender:TObject); virtual;
@@ -247,9 +250,9 @@ begin
              VarIsType(aValue, varboolean);
 end;
 
-function TPLCBlockElement.GetValueTimestamp:TDatetime;
+function TPLCBlockElement.GetClockMonotonicTimestamp: QWord;
 begin
-   Result := PValueTimeStamp;
+   Result := PClockMonotonicTimeStamp;
 end;
 
 procedure TPLCBlockElement.SetValueRaw(aValue:Double);
@@ -301,7 +304,7 @@ begin
   if Assigned(PBlock) then begin
     notify := (PValueRaw<>PBlock.ValueRaw[PIndex]) or (IsNan(PBlock.ValueRaw[PIndex]) and (not IsNan(PValueRaw)));
     PValueRaw := PBlock.ValueRaw[PIndex];
-    PValueTimeStamp := PBlock.ValueTimestamp;
+    PClockMonotonicTimeStamp := PBlock.ClockMonotonicTimeStamp;
 
     if notify or PFirstUpdate then begin
       PFirstUpdate:=false;
@@ -317,7 +320,7 @@ begin
   if Assigned(PBlock) then begin
     notify := (PValueRaw<>PBlock.ValueRaw[PIndex]) or (IsNan(PBlock.ValueRaw[PIndex]) and (not IsNan(PValueRaw)));
     PValueRaw := PBlock.ValueRaw[PIndex];
-    PValueTimeStamp := PBlock.ValueTimestamp;
+    PClockMonotonicTimeStamp := PBlock.ClockMonotonicTimeStamp;
 
     if notify or PFirstUpdate then begin
       PFirstUpdate:=false;

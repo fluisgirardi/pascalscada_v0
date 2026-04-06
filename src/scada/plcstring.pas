@@ -121,7 +121,7 @@ type
     function  GetVariantValue:Variant;
     procedure SetVariantValue(V:Variant);
     function  IsValidValue(Value:Variant):Boolean;
-    function  GetValueTimestamp:TDatetime;
+    function  GetClockMonotonicTimestamp:QWord;
   protected
     //: @seealso(TTag.AsyncNotifyChange)
     procedure AsyncNotifyChange(data:Pointer); override;
@@ -152,7 +152,7 @@ type
     //: @seealso(TPLCTag.SetProtocolDriver)
     procedure SetProtocolDriver(p:TProtocolDriver); override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
+    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -740,7 +740,7 @@ begin
 end;
 
 procedure TPLCString.TagCommandCallBack(const ReqID: LongWord;
-  Values: TArrayOfDouble; ValuesTimeStamp: TDateTime; TagCommand: TTagCommand;
+  Values: TArrayOfDouble; ValuesTimeStamp: QWord; TagCommand: TTagCommand;
   LastResult: TProtocolIOResult; Offset: LongInt);
 var
   c:LongInt;
@@ -757,7 +757,7 @@ begin
             notify := notify or (PValues[c+Offset]<>values[c]);
             PValues[c+Offset]:=values[c];
           end;
-          PValueTimeStamp := ValuesTimeStamp;
+          PClockMonotonicTimeStamp := ValuesTimeStamp;
           if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then
            IncCommReadOK(1);
         end else begin
@@ -914,9 +914,9 @@ begin
             VarIsType(Value,vardate) or VarIsType(Value,varboolean);
 end;
 
-function  TPLCString.GetValueTimestamp:TDatetime;
+function TPLCString.GetClockMonotonicTimestamp: QWord;
 begin
-   Result := PValueTimeStamp;
+   Result := PClockMonotonicTimeStamp;
 end;
 
 procedure TPLCString.AsyncNotifyChange(data:Pointer);

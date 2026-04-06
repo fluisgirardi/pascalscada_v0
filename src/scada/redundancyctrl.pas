@@ -117,7 +117,7 @@ type
     CurState:TClientState;
     FServerPriority:TIPv4Collection;
     FOwner:TRedundancyCtrl;
-    FLastCmdSentAt:TDateTime;
+    FLastCmdSentAt:QWord;
     FPingSeq:LongWord;
     procedure LoadServerPriority;
     function ImTheActiveServer:Boolean;
@@ -220,7 +220,7 @@ begin
   while not Terminated do begin
     case CurState of
       Unitialized: begin
-        FLastCmdSentAt:=Now;
+        FLastCmdSentAt:=GetTickCount64;
         FPingSeq:=1;
         if (socket_recv(FSocket,@buffer[0],sizeof(TClientHi),MSG_NOSIGNAL, 1000)=sizeof(TClientHi)) and
            (PClientHi(@buffer[0])^.Cmd = ClientHi) and
@@ -344,7 +344,7 @@ begin
         if ImTheActiveServer then
           CurState:=Ready
         else begin
-          if MilliSecondsBetween(Now,FLastCmdSentAt)>10000 then
+          if (GetTickCount64 - FLastCmdSentAt)>10000 then
             CurState:=Ping;
         end;
         Sleep(10);

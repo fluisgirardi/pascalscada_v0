@@ -84,7 +84,7 @@ type
     Registers:TPLCMemoryManager;
     AnalogReg:TPLCMemoryManager;
     Status07Value:Double;
-    Status07TimeStamp:TDateTime;
+    Status07TimeStamp:QWord;
     Status07LastError:TProtocolIOResult;
   end;
 
@@ -355,10 +355,10 @@ begin
       Result:= 1;
     0,3: begin
       ScanPercent1:=0;
-      if Item1.UpdateRate<>0 then ScanPercent1:=(MilliSecondsBetween(Now,Item1.LastUpdate)/Item1.UpdateRate);
+      if Item1.UpdateRate<>0 then ScanPercent1:=((GetTickCount64 - Item1.LastUpdate)/Item1.UpdateRate);
 
       ScanPercent2:=0;
-      if Item2.UpdateRate<>0 then ScanPercent2:=(MilliSecondsBetween(Now,Item2.LastUpdate)/Item2.UpdateRate);
+      if Item2.UpdateRate<>0 then ScanPercent2:=((GetTickCount64 - Item2.LastUpdate)/Item2.UpdateRate);
 
 
       if ScanPercent1=ScanPercent2 then
@@ -678,7 +678,7 @@ var
   EntireTagList:TReqList;
   c: Integer;
 
-  procedure AddToTagList(station,func,startaddress,size, UpdateRate:LongInt; LastUpdate:TDateTime; NeedUpdate:Boolean);
+  procedure AddToTagList(station,func,startaddress,size, UpdateRate:LongInt; LastUpdate:QWord; NeedUpdate:Boolean);
   var
     info:TReqItem;
   begin
@@ -773,7 +773,7 @@ begin
     end;
 
   if not found then begin
-    values.ValuesTimestamp := CrossNow;
+    values.ClkMonotonicTStamp := GetTickCount64;
     values.ReadsOK := 0;
     values.ReadFaults := 1;
     values.LastQueryResult := ioDriverError;
@@ -783,13 +783,13 @@ begin
 
   case TagObj.ReadFunction of
     $01:
-      PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PModbusPLC[plc].OutPuts.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $02:
-      PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PModbusPLC[plc].Inputs.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $03,$11:
-      PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PModbusPLC[plc].Registers.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $04:
-      PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PModbusPLC[plc].AnalogReg.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
   end;
 
   if values.LastQueryResult=ioOk then begin

@@ -61,7 +61,7 @@ type
     //: @seealso(TPLCTag.IsMyCallBack)
     function IsMyCallBack(Cback: TTagCommandCallBack): Boolean; override;
     //: @seealso(TPLCTag.TagCommandCallBack)
-    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
+    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -185,16 +185,16 @@ begin
 end;
 
 procedure TPLCBlock.TagCommandCallBack(const ReqID: LongWord;
-  Values: TArrayOfDouble; ValuesTimeStamp: TDateTime; TagCommand: TTagCommand;
+  Values: TArrayOfDouble; ValuesTimeStamp: QWord; TagCommand: TTagCommand;
   LastResult: TProtocolIOResult; Offset: LongInt);
 var
   c:LongInt;
   notify:Boolean;
   TagValues:TArrayOfDouble;
-  PreviousTimestamp:TDateTime;
+  PreviousTimestamp:QWord;
 begin
   if (csDestroying in ComponentState) then exit;
-  PreviousTimestamp:=PValueTimeStamp;
+  PreviousTimestamp:=PClockMonotonicTimeStamp;
   try
     inherited TagCommandCallBack(ReqID, Values, ValuesTimeStamp, TagCommand, LastResult, Offset);
     TagValues:=PLCValuesToTagValues(Values, Offset);
@@ -202,7 +202,7 @@ begin
     case TagCommand of
       tcScanRead, tcRead, tcInternalUpdate, tcSingleScanRead:
       begin
-        PValueTimeStamp := ValuesTimeStamp;
+        PClockMonotonicTimeStamp := ValuesTimeStamp;
         if LastResult in [ioOk, ioNullDriver] then begin
           for c := low(TagValues) to High(TagValues) do begin
             if (c+Offset<Length(PValues)) then begin
@@ -227,7 +227,7 @@ begin
       end;
       tcScanWrite,tcWrite:
       begin
-        PValueTimeStamp := ValuesTimeStamp;
+        PClockMonotonicTimeStamp := ValuesTimeStamp;
         if LastResult in [ioOk, ioNullDriver] then begin
           if LastResult=ioOk then begin
             IncCommWriteOK(1);
@@ -259,7 +259,7 @@ begin
       NotifyChange;
     end;
 
-    if (TagCommand in [tcRead, tcScanRead, tcSingleScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PValueTimeStamp) then
+    if (TagCommand in [tcRead, tcScanRead, tcSingleScanRead]) and (LastResult=ioOk) and (PreviousTimestamp<>PClockMonotonicTimeStamp) then
       NotifyUpdate;
 
   finally

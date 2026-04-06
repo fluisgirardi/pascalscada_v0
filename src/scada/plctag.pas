@@ -87,14 +87,14 @@ type
     {$ELSE}
     //: Date/time of the last scan read request of tag.
     {$ENDIF}
-    PLastScanTimeStamp:TDateTime;
+    PLastScanTimeStamp:QWord;
 
     {$IFDEF PORTUGUES}
-    //: Data/Hora da última atualização do valor do tag.
+    //: Clock monotonico da última atualização do valor do tag.
     {$ELSE}
-    //: Date/time of the last update of the tag value.
+    //: Monotonic clock of the last update of the tag value.
     {$ENDIF}
-    PValueTimeStamp:TDateTime;
+    PClockMonotonicTimeStamp:QWord;
 
     {$IFDEF PORTUGUES}
     //: Armazena o resultado da última leitura @bold(sincrona) realizada pelo tag.
@@ -435,7 +435,7 @@ type
     {$ELSE}
     //: Procedure called by the protocol driver to update tag values.
     {$ENDIF}
-    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:TDateTime; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); virtual;
+    procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); virtual;
 
     {$IFDEF PORTUGUES}
     {:
@@ -506,7 +506,7 @@ type
     //: @exclude
     procedure Loaded; override;
 
-    function GetLastUpdateTimestamp:TDateTime; virtual;
+    function GetLastUpdateTimestamp:QWord; virtual;
 
     //: @seealso(TTag.AutoRead)
     property AutoRead write SetAutoRead default true;
@@ -565,7 +565,7 @@ type
     {$ELSE}
     //: Date/time of the last update of the tag value.
     {$ENDIF}
-    property ValueTimestamp:TDateTime read PValueTimeStamp;
+    property ClockMonotonicTimeStamp:QWord read PClockMonotonicTimeStamp;
 
     {$IFDEF PORTUGUES}
     //: Caso @true, a escrita de valoes do tag vai ser @bold(sincrona).
@@ -729,7 +729,7 @@ uses hsutils, hsstrings, dateutils, crossdatetime;
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  PValueTimeStamp:=CrossNow;
+  PClockMonotonicTimeStamp:=GetTickCount64;
   PAutoRead:=true;
   PAutoWrite:=true;
   PValidTag:=false;
@@ -821,22 +821,22 @@ begin
 end;
 
 procedure TPLCTag.TagCommandCallBack(const ReqID: LongWord;
-  Values: TArrayOfDouble; ValuesTimeStamp: TDateTime; TagCommand: TTagCommand;
+  Values: TArrayOfDouble; ValuesTimeStamp: QWord; TagCommand: TTagCommand;
   LastResult: TProtocolIOResult; Offset: LongInt);
 var
   c, poffset:LongInt;
 begin
-  if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) and (ValuesTimeStamp<>PValueTimeStamp) then begin
-    inc(FTotalTime, MilliSecondsBetween(ValuesTimeStamp,PValueTimeStamp));
+  if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) and (ValuesTimeStamp<>PClockMonotonicTimeStamp) then begin
+    inc(FTotalTime, (ValuesTimeStamp - PClockMonotonicTimeStamp));
     inc(FReadCount);
   end;
 
   case TagCommand of
     tcScanRead:                    
-      PLastScanTimeStamp:=CrossNow;
+      PLastScanTimeStamp:=GetTickCount64;
 
     tcSingleScanRead: begin
-      PLastScanTimeStamp:=CrossNow;
+      PLastScanTimeStamp:=GetTickCount64;
       FLastScanReadReqID:=ReqID;
     end;
 
@@ -868,7 +868,7 @@ begin
 
   if (PProtocolDriver<>nil) then begin
     if v then begin
-      PLastScanTimeStamp:=CrossNow;
+      PLastScanTimeStamp:=GetTickCount64;
       PProtocolDriver.AddTag(self)
     end else
       PProtocolDriver.RemoveTag(self);
@@ -1163,9 +1163,9 @@ begin
     AddTag(Self);
 end;
 
-function TPLCTag.GetLastUpdateTimestamp: TDateTime;
+function TPLCTag.GetLastUpdateTimestamp: QWord;
 begin
-  Result:=PValueTimeStamp;
+  Result:=PClockMonotonicTimeStamp;
 end;
 
 procedure TPLCTag.SetGUID(v:AnsiString);
@@ -1261,7 +1261,7 @@ end;
 
 procedure TPLCTag.RebuildValues;
 begin
-  TagCommandCallBack(0, FRawProtocolValues,ValueTimestamp,tcInternalUpdate,ioOk,0);
+  TagCommandCallBack(0, FRawProtocolValues,ClockMonotonicTimeStamp,tcInternalUpdate,ioOk,0);
 end;
 
 function TPLCTag.PLCValuesToTagValues(Values:TArrayOfDouble; Offset:Cardinal):TArrayOfDouble;
@@ -2019,12 +2019,12 @@ end;
 
 function TPLCTag.RemainingMiliseconds:Int64;
 begin
-  Result:=PUpdateTime-MilliSecondsBetween(CrossNow,PValueTimeStamp);
+  Result:=PUpdateTime-(GetTickCount64 - PClockMonotonicTimeStamp);
 end;
 
 function TPLCTag.RemainingMilisecondsForNextScan:Int64;
 begin
-  Result:=PUpdateTime-MilliSecondsBetween(CrossNow,PLastScanTimeStamp);
+  Result:=PUpdateTime-(GetTickCount64 - PLastScanTimeStamp);
 end;
 
 function TPLCTag.GetUpdateTime: Int64;

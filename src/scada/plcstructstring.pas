@@ -73,7 +73,7 @@ type
     {$ELSE}
     //: Returns the date/time of the last time wich the tag was updated.
     {$ENDIF}
-    function  GetValueTimestamp:TDatetime;
+    function  GetClockMonotonicTimestamp:QWord;
   private
     POnAsyncStringValueChange: TASyncStringValueChange;
     ////////////////////////////////////////////////////////////////////////////
@@ -423,11 +423,11 @@ begin
             VarIsType(Value,vardate) or VarIsType(Value,varboolean);
 end;
 
-function TPLCStructString.GetValueTimestamp: TDatetime;
+function TPLCStructString.GetClockMonotonicTimestamp: QWord;
 begin
   Result:=0;
   if Assigned(PBlock) then
-    Result:=PBlock.ValueTimestamp;
+    Result:=PBlock.ClockMonotonicTimeStamp;
 end;
 
 function TPLCStructString.GetValue: UTF8String;

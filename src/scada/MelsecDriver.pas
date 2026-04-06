@@ -64,7 +64,7 @@ type
     Registers_SD :TPLCMemoryManager;
 
     Status07Value:Double;
-    Status07TimeStamp:TDateTime;
+    Status07TimeStamp:QWord;
     Status07LastError:TProtocolIOResult;
   end;
 
@@ -408,7 +408,7 @@ begin
     end;
 
   if not found then begin
-    values.ValuesTimestamp := CrossNow;
+    values.ClkMonotonicTStamp := GetTickCount64;
     values.ReadsOK := 0;
     values.ReadFaults := 1;
     values.LastQueryResult := ioDriverError;
@@ -418,25 +418,25 @@ begin
 
   case TagObj.ReadFunction of
     $01:
-      PMelsecPLC[plc].OutPuts_M.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_M.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $02:
-      PMelsecPLC[plc].OutPuts_SM.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_SM.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $03:
-      PMelsecPLC[plc].OutPuts_L.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_L.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $04:
-      PMelsecPLC[plc].OutPuts_F.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_F.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $05:
-      PMelsecPLC[plc].OutPuts_V.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_V.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $06:
-      PMelsecPLC[plc].OutPuts_X.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_X.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $07:
-      PMelsecPLC[plc].OutPuts_Y.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_Y.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $08:
-      PMelsecPLC[plc].OutPuts_B.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].OutPuts_B.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $09:
-      PMelsecPLC[plc].Registers_D.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].Registers_D.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
     $10:
-      PMelsecPLC[plc].Registers_SD.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ValuesTimestamp);
+      PMelsecPLC[plc].Registers_SD.GetValues(TagObj.Address,TagObj.Size,1,values.Values, values.LastQueryResult, values.ClkMonotonicTStamp);
   end;
 
   if values.LastQueryResult=ioOk then begin

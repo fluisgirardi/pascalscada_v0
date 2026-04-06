@@ -31,7 +31,7 @@ type
     procedure CalculateValue;
     procedure ExprIfThen(var Result: TFPExpressionResult;
       const Args: TExprParameterArray);
-    function GetValueTimestamp: TDatetime;
+    function GetClockMonotonicTimestamp: QWord;
     function GetVariantValue: Variant;
     function IsValidValue(aValue: Variant): Boolean;
     procedure SetExpr(AValue: String);
@@ -118,12 +118,13 @@ begin
              VarIsType(aValue, varboolean);
 end;
 
-function TNumericExprTag.GetValueTimestamp:TDatetime;
+function TNumericExprTag.GetClockMonotonicTimestamp: QWord;
 begin
-   Result := PValueTimeStamp;
+   Result := PClockMonotonicTimeStamp;
 end;
 
-procedure TNumericExprTag.ExprIfThen(var Result: TFPExpressionResult; Const Args: TExprParameterArray);
+procedure TNumericExprTag.ExprIfThen(var Result: TFPExpressionResult;
+  const Args: TExprParameterArray);
 const
   {$IF FPC_FULLVERSION>=030200}
   TypeNames:array[Low(TResultType)..High(TResultType)] of string = ('Boolean','Integer','Float','DateTime','String','Currency');
@@ -194,7 +195,7 @@ begin
         exprValue:=FParser.Evaluate.ResFloat;
         if exprValue<>PValueRaw then begin
           PValueRaw:=exprValue;
-          PValueTimeStamp:=Now;
+          PClockMonotonicTimeStamp:=GetTickCount64;
           NotifyChange;
         end;
       except

@@ -9,7 +9,7 @@ uses
 
 type
   TReqItem = record
-    LastUpdate:TDateTime;
+    LastUpdate:QWord;
 
     station,
     func,

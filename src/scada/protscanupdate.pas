@@ -172,7 +172,7 @@ end;
 procedure TScanUpdate.Loop;
 var
   i, FValor, timeout:LongInt;
-  FInicio:TDateTime;
+  FInicio:QWord;
 begin
   try
     CheckScanReadOrWrite;
@@ -180,9 +180,9 @@ begin
       SetLength(PScannedValues,0);
       timeout:=PScanTags(PScannedValues);
       if Length(PScannedValues)>0 then begin
-        FInicio:=CrossNow;
+        FInicio:=GetTickCount64;
         Synchronize(@UpdateMultipleTags);
-        FValor:=MilliSecondsBetween(CrossNow,FInicio);
+        FValor:=(GetTickCount64 - FInicio);
 
         for i:=0 to High(PScannedValues) do
           SetLength(PScannedValues[i].Values, 0);
@@ -254,7 +254,7 @@ begin
     if not found then continue;
     with PScannedValues[c] do
       try
-        CallBack(0, Values, ValueTimeStamp, tcScanRead, LastResult, 0);
+        CallBack(0, Values, GetTickCount64, tcScanRead, LastResult, 0);
       finally
       end;
   end;
@@ -275,7 +275,7 @@ begin
           Fvalues.Values          := x^.Values;
           Fvalues.Offset          := x^.Tag.OffSet;
           Fvalues.RealOffset      := x^.Tag.RealOffset;
-          Fvalues.ValuesTimestamp := x^.ValueTimeStamp;
+          Fvalues.ClkMonotonicTStamp := x^.ClkMonotonicTStamp;
           Fvalues.LastQueryResult := x^.RequestResult;
           if PMsg.MsgID=PSM_TAGSCANWRITE then
             FCmd:=tcScanWrite
@@ -344,7 +344,7 @@ begin
       ReqID:=0;
 
     if Assigned(TagCBack) then
-      TagCBack(ReqID, Fvalues.Values,Fvalues.ValuesTimestamp,FCmd,Fvalues.LastQueryResult, Fvalues.RealOffset);
+      TagCBack(ReqID, Fvalues.Values,Fvalues.ClkMonotonicTStamp,FCmd,Fvalues.LastQueryResult, Fvalues.RealOffset);
   //except
   //  on erro:Exception do begin
   //    Ferro:=erro;

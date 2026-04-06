@@ -27,7 +27,7 @@ type
     RefCount:Cardinal;
     MinScanTime:Cardinal;
     Value:Double;
-    TimeStamp:TDateTime;
+    ClkMonoTStamp:QWord;
     LastReadResult:TProtocolIOResult;
   end;
 
@@ -62,7 +62,7 @@ type
   }
   TPID20xRegister = Record
     RefCount:Cardinal;
-    TimeStamp:TDateTime;
+    ClkMonoTStamp:QWord;
     LastReadResult:TProtocolIOResult;
     MinScantime:Cardinal;
 
@@ -123,7 +123,7 @@ type
   }
   TPID203Register = record
     RefCount:Cardinal;
-    TimeStamp:TDateTime;
+    ClkMonoTStamp:QWord;
     LastReadResult:TProtocolIOResult;
     MinScantime:Cardinal;
 
@@ -476,47 +476,47 @@ begin
     tr.SubElement:=0;
 
     with PStations[plc].PID96 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=96;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID168 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=168;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID200 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=200;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
     with PStations[plc].PID201 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=201;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
     with PStations[plc].PID202 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=202;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID203 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=203;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
       end;
 
     with PStations[plc].PID204 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=204;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
@@ -525,7 +525,7 @@ begin
     //pid 205 é um comando, deixe-o fora do scan.
     /////////////////////////////////////////////
     with PStations[plc].PID247 do
-      if (RefCount>0) and (MilliSecondsBetween(CrossNow,TimeStamp)>MinScanTime) then begin
+      if (RefCount>0) and ((GetTickCount64 - ClkMonoTStamp)>MinScanTime) then begin
         tr.Address:=247;
         dosomething:=true;
         DoRead(tr,dummyValue,false);
@@ -547,19 +547,19 @@ var
 begin
   if not (tagrec.Station in [0..255]) then begin
     values.LastQueryResult := ioIllegalStationAddress;
-    values.ValuesTimestamp :=CrossNow;
+    values.ClkMonotonicTStamp :=GetTickCount64;
     exit;
   end;
 
   if not (tagrec.Address in [0,96,168,200..205,247]) then begin
     values.LastQueryResult := ioIllegalRegAddress;
-    values.ValuesTimestamp :=CrossNow;
+    values.ClkMonotonicTStamp :=GetTickCount64;
     exit;
   end;
 
   if (Tagrec.Address in [200..202]) and (not (Tagrec.SubElement in [0..16])) then begin
     values.LastQueryResult := ioIllegalRegAddress;
-    values.ValuesTimestamp :=CrossNow;
+    values.ClkMonotonicTStamp :=GetTickCount64;
     exit;
   end;
 
@@ -572,21 +572,21 @@ begin
 
   if not found then begin
     values.LastQueryResult:=ioDriverError;
-    values.ValuesTimestamp :=CrossNow;
+    values.ClkMonotonicTStamp :=GetTickCount64;
     exit;
   end;
 
   SetLength(values.Values,1);
   case TagRec.Address of
     96: begin
-      values.Values[0]      :=PStations[plc].PID96.Value;
-      values.ValuesTimestamp:=PStations[plc].PID96.TimeStamp;
-      values.LastQueryResult:=PStations[plc].PID96.LastReadResult;
+      values.Values[0]         :=PStations[plc].PID96.Value;
+      values.ClkMonotonicTStamp:=PStations[plc].PID96.ClkMonoTStamp;
+      values.LastQueryResult   :=PStations[plc].PID96.LastReadResult;
     end;
     168: begin
-      values.Values[0]      :=PStations[plc].PID168.Value;
-      values.ValuesTimestamp:=PStations[plc].PID168.TimeStamp;
-      values.LastQueryResult:=PStations[plc].PID168.LastReadResult;
+      values.Values[0]         :=PStations[plc].PID168.Value;
+      values.ClkMonotonicTStamp:=PStations[plc].PID168.ClkMonoTStamp;
+      values.LastQueryResult   :=PStations[plc].PID168.LastReadResult;
     end;
     200..202: begin
       if TagRec.Address=200 then
@@ -596,8 +596,8 @@ begin
       if TagRec.Address=202 then
         pid20x := PStations[plc].PID202;
 
-      Values.ValuesTimestamp:=pid20x.TimeStamp;
-      values.LastQueryResult:=pid20x.LastReadResult;
+      Values.ClkMonotonicTStamp:=pid20x.ClkMonoTStamp;
+      values.LastQueryResult   :=pid20x.LastReadResult;
 
       with pid20x do begin
         Case TagRec.SubElement of
@@ -636,8 +636,8 @@ begin
           16:
             values.Values[0] := OperatingMode;
           else begin
-            Values.ValuesTimestamp:=CrossNow;
-            values.LastQueryResult:=ioIllegalRegAddress;
+            Values.ClkMonotonicTStamp:=GetTickCount64;
+            values.LastQueryResult   :=ioIllegalRegAddress;
           end;
         end;
       end;
@@ -645,19 +645,19 @@ begin
     203: begin
     end;
     204: begin
-      values.Values[0]      :=PStations[plc].PID204.Value;
-      values.ValuesTimestamp:=PStations[plc].PID204.TimeStamp;
-      values.LastQueryResult:=PStations[plc].PID204.LastReadResult;
+      values.Values[0]         :=PStations[plc].PID204.Value;
+      values.ClkMonotonicTStamp:=PStations[plc].PID204.ClkMonoTStamp;
+      values.LastQueryResult   :=PStations[plc].PID204.LastReadResult;
     end;
     205: begin
-      values.Values[0]      :=PStations[plc].PID205.Value;
-      values.ValuesTimestamp:=PStations[plc].PID205.TimeStamp;
-      values.LastQueryResult:=PStations[plc].PID205.LastReadResult;
+      values.Values[0]         :=PStations[plc].PID205.Value;
+      values.ClkMonotonicTStamp:=PStations[plc].PID205.ClkMonoTStamp;
+      values.LastQueryResult   :=PStations[plc].PID205.LastReadResult;
     end;
     247: begin
-      values.Values[0]      :=PStations[plc].PID247.Value;
-      values.ValuesTimestamp:=PStations[plc].PID247.TimeStamp;
-      values.LastQueryResult:=PStations[plc].PID247.LastReadResult;
+      values.Values[0]         :=PStations[plc].PID247.Value;
+      values.ClkMonotonicTStamp:=PStations[plc].PID247.ClkMonoTStamp;
+      values.LastQueryResult   :=PStations[plc].PID247.LastReadResult;
     end;
   end;
 end;
@@ -741,7 +741,7 @@ begin
         if found then begin
           PStations[plc].PID96.Value := Values[0];
           PStations[plc].PID96.LastReadResult:=Result;
-          PStations[plc].PID96.TimeStamp := CrossNow;
+          PStations[plc].PID96.ClkMonoTStamp := GetTickCount64;
         end;
       end;
       //Voltagem da bateria.
@@ -773,7 +773,7 @@ begin
         if found then begin
           PStations[plc].PID168.Value := Values[0];
           PStations[plc].PID168.LastReadResult:=Result;
-          PStations[plc].PID168.TimeStamp := CrossNow;
+          PStations[plc].PID168.ClkMonoTStamp := GetTickCount64;
         end;
       end;
       200..202: begin
@@ -909,7 +909,7 @@ begin
 
         Result := ioOk;
         pid20x.LastReadResult:=Result;
-        pid20x.TimeStamp:=CrossNow;
+        pid20x.ClkMonoTStamp:=GetTickCount64;
 
         if found then
           case tagrec.Address of
@@ -995,11 +995,11 @@ begin
           if tagrec.Address=204 then begin
             PStations[plc].PID204.Value:= Values[0];
             PStations[plc].PID204.LastReadResult:=Result;
-            PStations[plc].PID204.TimeStamp:=CrossNow;
+            PStations[plc].PID204.ClkMonoTStamp:=GetTickCount64;
           end else begin
             PStations[plc].PID205.Value:= Values[0];
             PStations[plc].PID205.LastReadResult:=Result;
-            PStations[plc].PID205.TimeStamp:=CrossNow;
+            PStations[plc].PID205.ClkMonoTStamp:=GetTickCount64;
           end;
         end;
       end;
@@ -1032,7 +1032,7 @@ begin
         if found then begin
           PStations[plc].PID247.Value := Values[0];
           PStations[plc].PID247.LastReadResult:=Result;
-          PStations[plc].PID247.TimeStamp:=CrossNow;
+          PStations[plc].PID247.ClkMonoTStamp:=GetTickCount64;
         end;
       end;
     end;
