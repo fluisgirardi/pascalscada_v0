@@ -215,12 +215,9 @@ begin
     AValue.AddTagChangeHandler(@BlockTagChange);
     AValue.AddRemoveTagHandler(@BlockRemoveTag);
     aValue.AddWriteFaultHandler(@BlockWriteFault);
-
+    AValue.AddReadOkHandler(@BlockReadOk); // <- Adicione isso
     BlockTagChange(AValue);
   end;
-
-
-
   PBlock:=AValue;
 end;
 
@@ -263,6 +260,7 @@ end;
 
 procedure TPLCStructString.BlockReadOk(Sender: TObject);
 begin
+   BlockTagChange(Sender);
   { TODO -oFabio : Not necessary yet. }
 end;
 
@@ -382,6 +380,7 @@ procedure TPLCStructString.Loaded;
 begin
   inherited Loaded;
   SetBlock(PLoadedBlock);
+  BlockTagChange(Self); // força leitura inicial do valor
 end;
 
 function TPLCStructString.ValidSettings(aBlockSize, aIndex, aStrSize: Cardinal;

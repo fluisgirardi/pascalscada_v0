@@ -11,8 +11,6 @@ uses
 type
   TTagLinkUpdateType = (tlCyclic, tlTagUpdate, tlTagChange);
 
-  { TTagLinkedSeriesSource }
-
   TTagLinkedSeriesSource = class(TListChartSource)
   private
     FCyclicUptimeTime: LongWord;
@@ -22,6 +20,8 @@ type
     FUseNowInsteadTagTimestamp: Boolean;
     FXAxisMaximumInterval: LongWord;
     FUpdateTimer: TTimer;
+    FYMinOffset: Double;
+    FYMaxOffset: Double;
     function GetParentChart: TChart;
     procedure SetCyclicUptimeTime(AValue: LongWord);
     procedure SetEnableXAxisMaxInterval(AValue: Boolean);
@@ -34,6 +34,7 @@ type
     procedure TagChanged(Sender: TObject);
     procedure TimerCyclic(Sender: TObject);
     procedure DoAddDataPoint;
+    procedure UpdateYAxis(Chart: TChart);
   protected
     procedure Loaded; override;
     procedure DeleteOldData;
@@ -48,6 +49,8 @@ type
     property EnableXAxisMaxInterval: Boolean read FEnableXAxisMaxInterval write SetEnableXAxisMaxInterval;
     property XAxisMaximumInterval: LongWord read FXAxisMaximumInterval write SetXAxisMaximumInterval;
     property UseNowInsteadTagTimestamp: Boolean read FUseNowInsteadTagTimestamp write SetUseNowInsteadTagTimestamp;
+    property YMinOffset: Double read FYMinOffset write FYMinOffset;
+    property YMaxOffset: Double read FYMaxOffset write FYMaxOffset;
   end;
 
 implementation
@@ -116,7 +119,7 @@ begin
   begin
     Chart.BottomAxis.OnGetMarkText := @FormatAxisXLabel;
     Chart.BottomAxis.Marks.Style := smsValue;
-    Chart.BottomAxis.Marks.Distance := 15; // aumenta o espaço entre rótulos para evitar sobreposição
+    Chart.BottomAxis.Marks.Distance := 15;
   end;
 end;
 
@@ -177,6 +180,8 @@ procedure TTagLinkedSeriesSource.DoAddDataPoint;
 var
   x, minX: TDateTime;
   chart: TChart;
+  s: TBasicChartSeries;
+  seriesInactive: Boolean;
 begin
   if Supports(FPLCTag, ITagNumeric) then
   begin
@@ -185,10 +190,35 @@ begin
     else
       x := (FPLCTag as ITagNumeric).GetClockMonotonicTimestamp;  //TODO: replace by lastupdate timestamp
 
+    chart := GetParentChart;
+
+    // se a série que usa este Source estiver desativada: apenas limpa e sai
+    seriesInactive := False;
+    if Assigned(chart) then
+      for s in chart.Series do
+        if (s is TLineSeries) and (TLineSeries(s).Source = Self) then
+        begin
+          if not TLineSeries(s).Active then
+            seriesInactive := True;
+          Break;
+        end;
+
+    if seriesInactive then
+    begin
+      Clear; // limpa o histórico desta fonte
+      if Assigned(chart) then
+      begin
+        UpdateYAxis(chart); // recalcula eixo Y só com séries ativas
+        chart.Invalidate;
+      end;
+      Notify;
+      Exit;
+    end;
+
+    // comportamento normal
     Add(x, (FPLCTag as ITagNumeric).Value);
     DeleteOldData;
 
-    chart := GetParentChart;
     if Assigned(chart) then
     begin
       SetXAxisTimeFormat(chart);
@@ -199,13 +229,78 @@ begin
         chart.BottomAxis.Range.UseMax := True;
         chart.BottomAxis.Range.Min := minX;
         chart.BottomAxis.Range.Max := x;
-        chart.Invalidate;
       end;
+
+      UpdateYAxis(chart);
+      chart.Invalidate;
     end;
 
     Notify;
   end;
 end;
+
+procedure TTagLinkedSeriesSource.UpdateYAxis(Chart: TChart);
+var
+  i, j: Integer;
+  s: TLineSeries;
+  y: Double;
+  CurMin, CurMax: Double;
+  HasData: Boolean;
+begin
+  HasData := False;
+
+  for i := 0 to Chart.SeriesCount - 1 do
+  begin
+    if not (Chart.Series[i] is TLineSeries) then Continue;
+    s := TLineSeries(Chart.Series[i]);
+
+    if not s.Active then Continue; // ignora séries desativadas
+    if s.Count = 0 then Continue;  // ignora séries sem pontos
+
+    for j := 0 to s.Count - 1 do
+    begin
+      y := s.YValue[j];
+      if not HasData then
+      begin
+        CurMin := y;
+        CurMax := y;
+        HasData := True;
+      end
+      else
+      begin
+        if y < CurMin then CurMin := y;
+        if y > CurMax then CurMax := y;
+      end;
+    end;
+  end;
+
+  if HasData then
+  begin
+    // força limites com base nos dados visíveis
+    Chart.Extent.UseYMin := True;
+    Chart.Extent.UseYMax := True;
+    Chart.Extent.YMin := CurMin - FYMinOffset;
+    Chart.Extent.YMax := CurMax + FYMaxOffset;
+
+    Chart.LeftAxis.Range.UseMin := True;
+    Chart.LeftAxis.Range.UseMax := True;
+    Chart.LeftAxis.Range.Min := Chart.Extent.YMin;
+    Chart.LeftAxis.Range.Max := Chart.Extent.YMax;
+  end
+  else
+  begin
+    // SEM dados visíveis: solta o eixo para auto-escala
+    Chart.Extent.UseYMin := False;
+    Chart.Extent.UseYMax := False;
+
+    Chart.LeftAxis.Range.UseMin := False;
+    Chart.LeftAxis.Range.UseMax := False;
+
+    // (opcional) se você quiser remover marcas antigas imediatamente:
+    // Chart.LeftAxis.Marks.Source := nil;
+  end;
+end;
+
 
 procedure TTagLinkedSeriesSource.DeleteOldData;
 var
@@ -276,6 +371,13 @@ begin
   inherited Create(AOwner);
   FUpdateTimer := TTimer.Create(Self);
   FUpdateTimer.OnTimer := @TimerCyclic;
+  FCyclicUptimeTime := 1000;
+  FUpdateTimer.Interval := FCyclicUptimeTime;
+  FXAxisMaximumInterval := 30000;
+  FEnableXAxisMaxInterval := True;
+  FYMinOffset := 0;
+  FYMaxOffset := 0;
+  FUseNowInsteadTagTimestamp := False;
 end;
 
 destructor TTagLinkedSeriesSource.Destroy;
