@@ -4,21 +4,12 @@ unit WinCCUserManagement;
 interface
 
 uses
-  Classes, sysutils, BasicUserManagement, windows, ExtCtrls, ctypes;
+  Classes, sysutils, BasicUserManagement, windows, ExtCtrls, ctypes,
+  WinCCUseAdminDLL;
 
 {$ALIGN 1}
 
 type
-  TPWRTLogin                   = function(monitor:AnsiChar)                                 :Boolean;  stdcall;
-  TPWRTLogout                  = function()                                                 :Boolean;  stdcall;
-  TPWRTGetCurrentUser          = function(Buffer:PAnsiChar; bufsize:LongInt)                :Boolean;  stdcall;
-  TPWRTGetLoginPriority        = function()                                                 :Cardinal; stdcall;
-  TPWRTPermissionToString      = function(perm:clong; permstr:LPSTR;     bufsize:cint)      :Boolean;  stdcall;
-  TPWRTCheckPermission         = function(permlevel:Cardinal; suppress_messagebox:Cardinal) :Boolean;  stdcall;
-  TPWRTCheckPermissionOnArea   = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
-  TPWRTCheckPermissionOnAreaID = function(permlevel:Cardinal; area:PAnsiChar)               :Boolean;  stdcall;
-  TPWRTSilentLogin             = function(login:PAnsiChar; password:PAnsiChar)              :Boolean;  stdcall;
-
   TPermission = class(TObject)
   public
     AuthID:LongInt;
@@ -39,21 +30,11 @@ type
     FCheckTimer                :TTimer;
     FInLoginProcess            :Boolean;
     FAuthorizationList         :TStrings;
+    FUseAdmin                  :TUseAdminDLL;
     procedure CheckAuthChanges(Sender:TObject);
   private
-    PWRTLogin                  :TPWRTLogin;
-    PWRTLogout                 :TPWRTLogout;
-    PWRTGetCurrentUser         :TPWRTGetCurrentUser;
-    PWRTGetLoginPriority       :TPWRTGetLoginPriority;
-    PWRTPermissionToString     :TPWRTPermissionToString;
-    PWRTCheckPermission        :TPWRTCheckPermission;
-    PWRTCheckPermissionOnArea  :TPWRTCheckPermissionOnArea;
-    PWRTCheckPermissionOnAreaID:TPWRTCheckPermissionOnAreaID;
-    PWRTSilentLogin            :TPWRTSilentLogin;
-    hUseAdmin:THANDLE;
-    fUseAdminLoaded:Boolean;
     fAuthorizationCache:TStringList;
-    procedure LoadUseAdmin;
+    procedure EnsureUseAdmin;
     procedure SetAuthorizationList(AValue: TStrings);
   protected
     function CheckUserAndPassword(User, Pass: UTF8String; out UserID: Integer;
@@ -100,10 +81,9 @@ uses ControlSecurityManager, hsstrings, StrUtils, StdCtrls
 
 constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
-  fUseAdminLoaded:=false;
   inherited Create(AOwner);
 
-  if not fUseAdminLoaded then LoadUseAdmin;
+  FUseAdmin:=nil; // carregado sob demanda em EnsureUseAdmin
 
   FCheckTimer:=TTimer.Create(Self);
   FCheckTimer.OnTimer :=@CheckAuthChanges;
@@ -121,34 +101,17 @@ end;
 
 destructor TWinCCUserManagement.Destroy;
 begin
-  //unload the library if it´s loaded
-  if hUseAdmin<>0 then
-    FreeLibrary(hUseAdmin);
+  FreeAndNil(FUseAdmin); // libera a DLL (Destroy de TUseAdminDLL faz o FreeLibrary)
   FreeAndNil(FCheckTimer);
   FreeAndNil(FAuthorizationList);
   FreeAndNil(fAuthorizationCache);
   inherited Destroy;
 end;
 
-procedure TWinCCUserManagement.LoadUseAdmin;
+procedure TWinCCUserManagement.EnsureUseAdmin;
 begin
-  hUseAdmin:=LoadLibrary('UseAdmin.dll');
-  if hUseAdmin=0 then begin
-    raise Exception.Create(SWinCCAreInstalled);
-  end;
-
-  //load UseAdmin functions...
-  PWRTLogin                  :=TPWRTLogin(GetProcAddress(hUseAdmin,'PWRTLogin'));
-  PWRTLogout                 :=TPWRTLogout(GetProcAddress(hUseAdmin,'PWRTLogout'));
-  PWRTGetCurrentUser         :=TPWRTGetCurrentUser(GetProcAddress(hUseAdmin,'PWRTGetCurrentUser'));
-  PWRTGetLoginPriority       :=TPWRTGetLoginPriority(GetProcAddress(hUseAdmin,'PWRTGetLoginPriority'));
-  PWRTPermissionToString     :=TPWRTPermissionToString(GetProcAddress(hUseAdmin,'PWRTPermissionToStringA'));
-  PWRTCheckPermission        :=TPWRTCheckPermission(GetProcAddress(hUseAdmin,'PWRTCheckPermission'));
-  PWRTCheckPermissionOnArea  :=TPWRTCheckPermissionOnArea(GetProcAddress(hUseAdmin,'PWRTCheckPermissionOnArea'));
-  PWRTCheckPermissionOnAreaID:=TPWRTCheckPermissionOnAreaID(GetProcAddress(hUseAdmin,'PWRTCheckPermissionOnAreaID'));
-  PWRTSilentLogin            :=TPWRTSilentLogin(GetProcAddress(hUseAdmin,'PWRTSilentLogin'));
-
-  fUseAdminLoaded:=true;
+  if FUseAdmin=nil then
+    FUseAdmin:=TUseAdminDLL.Create;
 end;
 
 procedure TWinCCUserManagement.SetAuthorizationList(AValue: TStrings);
@@ -201,7 +164,7 @@ procedure TWinCCUserManagement.CheckAuthChanges(Sender:TObject);
 var
   culogin:UTF8String;
 begin
-  if not fUseAdminLoaded then LoadUseAdmin;
+  EnsureUseAdmin;
 
   culogin:=GetCurrentUserLogin;
   if culogin<>FCurrentUserLogin then begin
@@ -217,9 +180,9 @@ end;
 function TWinCCUserManagement.CheckUserAndPassword(User, Pass: UTF8String; out
   UserID: Integer; LoginAction: Boolean): Boolean;
 begin
-  if not fUseAdminLoaded then LoadUseAdmin;
+  EnsureUseAdmin;
 
-  Result:=PWRTSilentLogin(PAnsiChar(AnsiString(User)),PAnsiChar(AnsiString(Pass))); //log into WinCC
+  Result:=FUseAdmin.SilentLogin(PAnsiChar(AnsiString(User)),PAnsiChar(AnsiString(Pass))); //log into WinCC
   if Result then
     UserID:=1
   else
@@ -236,14 +199,14 @@ var
   buffer1:PAnsiChar;
   c:LongInt;
 begin
-  if not fUseAdminLoaded then LoadUseAdmin;
+  EnsureUseAdmin;
 
-  c:=PWRTGetLoginPriority(); //forces initialization...
+  c:=FUseAdmin.GetLoginPriority; //forces initialization...
 
   buffer1:=GetMemory(512);
   buffer1[0]:=#0;
 
-  if PWRTGetCurrentUser(buffer1,510) then
+  if FUseAdmin.GetCurrentUser(buffer1,510) then
     Result:=buffer1
   else
     Result:='';
@@ -271,9 +234,9 @@ end;
 
 procedure TWinCCUserManagement.Logout;
 begin
-  if not fUseAdminLoaded then LoadUseAdmin;
+  EnsureUseAdmin;
 
-  if PWRTLogout() then
+  if FUseAdmin.Logout then
     inherited Logout;
 end;
 
@@ -296,9 +259,9 @@ var
 begin
   Result:=false;
 
-  if not fUseAdminLoaded then LoadUseAdmin;
+  EnsureUseAdmin;
 
-  p:=PWRTGetLoginPriority(); //forces a initialization... I don´t know why...
+  p:=FUseAdmin.GetLoginPriority; //forces a initialization... I don´t know why...
 
   if not SecurityCodeExists(sc) then exit;
 
@@ -313,7 +276,7 @@ begin
 
   auth.Destroy;
 
-  Result:=PWRTCheckPermission(p2,1);
+  Result:=FUseAdmin.CheckPermission(p2,1);
 end;
 
 function    TWinCCUserManagement.SecurityCodeExists(sc:UTF8String):Boolean;
@@ -345,9 +308,9 @@ var
   c:LongInt;
   auxStr:String;
 begin
-  if not fUseAdminLoaded then LoadUseAdmin;
+  EnsureUseAdmin;
 
-  c:=PWRTGetLoginPriority(); //forces initialization...
+  c:=FUseAdmin.GetLoginPriority; //forces initialization...
 
   if fAuthorizationCache=nil then begin
 
@@ -356,7 +319,7 @@ begin
       Result:=TStringList.Create;
       for c:=1 to 1100 do begin
         buffer1[0]:=#0;
-        PWRTPermissionToString(c,buffer1,510);
+        FUseAdmin.PermissionToString(c,buffer1,510);
 
         if strcomp(buffer1,'')<>0 then begin
           auxStr:=buffer1;
@@ -387,7 +350,8 @@ end;
 
 function TWinCCUserManagement.CanAccessViaWinCCAuthCode(Code: LongInt): Boolean;
 begin
-  Result := PWRTCheckPermission(code,0);
+  EnsureUseAdmin;
+  Result := FUseAdmin.CheckPermission(Code,0);
 end;
 
 function TWinCCUserManagement.CheckIfUserIsAllowed(sc: UTF8String;
