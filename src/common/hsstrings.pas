@@ -117,7 +117,7 @@ resourcestring
   SPIWInitialAddress        = 'End. inicial da PIW';
   SVInitialAddress          = 'End. inicial da V';
   SRemoveaStructItemCalled  = 'Remover o item da estrutura chamado "';
-  SSecurityControlBusy      = 'Gerenciador de segurança ainda em uso.';
+  SSecurityControlBusy      = 'Gerenciador de segurança ainda em uso. Procure por memleaks/objetos HMI esquecidos na memoria';
   SUserManagementIsSet      = 'Já existe um gerenciador de usuários ativo na aplicação.';
   SInvalidUserManager       = 'Gerenciador de usuarios invalido!';
   SMinIsGreaterThanMax      = 'Valor minimo é maior que o valor máximo';
@@ -265,7 +265,7 @@ resourcestring
   SPIWInitialAddress        = 'Initial address of PIW';
   SVInitialAddress          = 'Initial address of V';
   SRemoveaStructItemCalled  = 'Remove the structure item called "';
-  SSecurityControlBusy      = 'The security manager is busy.';
+  SSecurityControlBusy      = 'The security manager is busy. Check for memleaks/unfreed HMI objects';
   SUserManagementIsSet      = 'There are already a user management on your application.';
   SInvalidUserManager       = 'Invalid user manager!';
   SDriverRequired           = 'You must assign one driver to build tags';
