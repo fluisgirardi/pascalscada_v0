@@ -338,9 +338,14 @@ begin
 end;
 
 destructor TControlSecurityManager.Destroy;
+{$IFDEF WINDOWS}
+var
+  aux: Integer;
+{$ENDIF}
 begin
   if Length(FControls)>0 then
-    writeln('FIX-ME: ',SSecurityControlBusy,' ',{$i %FILE%},':',{$i %LINE%});
+    {$IFNDEF WINDOWS} writeln('FIX-ME: ',SSecurityControlBusy,' ',{$i %FILE%},':',{$i %LINE%});
+    {$ELSE}aux:=Length(FControls);{$ENDIF}
   inherited Destroy;
 end;
 

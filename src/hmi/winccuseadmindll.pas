@@ -52,7 +52,7 @@ type
     function CheckPermission(PermLevel:Cardinal; SuppressMessageBox:Cardinal):Boolean;
     function CheckPermissionOnArea(PermLevel:Cardinal; Area:PAnsiChar):Boolean;
     function CheckPermissionOnAreaID(PermLevel:Cardinal; Area:PAnsiChar):Boolean;
-    function SilentLogin(Login, Password:PAnsiChar):Boolean;
+    function SilentLogin(aLogin, aPassword:PAnsiChar):Boolean;
 
     property Handle:THANDLE read FHandle;
   end;
@@ -136,9 +136,9 @@ begin
   Result:=PWRTCheckPermissionOnAreaID(PermLevel,Area);
 end;
 
-function TUseAdminDLL.SilentLogin(Login, Password:PAnsiChar):Boolean;
+function TUseAdminDLL.SilentLogin(aLogin, aPassword: PAnsiChar): Boolean;
 begin
-  Result:=PWRTSilentLogin(Login,Password);
+  Result:=PWRTSilentLogin(aLogin,aPassword);
 end;
 
 end.

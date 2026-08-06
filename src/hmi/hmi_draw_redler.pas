@@ -21,6 +21,7 @@ type
 
   THMIRedlerBasico = class(THMICustomBasicRedler)
   published
+    property BodyHeight;
     property OnClick;
     property BodyColor;
     property BorderColor;
@@ -95,7 +96,7 @@ begin
   pa_x:=FBodyHeight div 2;
   while (pa_x+eixo_h)<(Width-(2*FBorderWidth)) do begin
     //desenha em baixo do eixo...
-    if (pa_x mod 12)=0 then
+    if (pa_x mod FBodyHeight)=0 then
       FControlArea.CanvasBGRA.Rectangle(pa_x, eixo_top+eixo_h, pa_x+eixo_h, eixo_top+eixo_h+pa_h)
     else
       FControlArea.CanvasBGRA.Rectangle(pa_x, 0, pa_x+eixo_h, pa_h-1);
