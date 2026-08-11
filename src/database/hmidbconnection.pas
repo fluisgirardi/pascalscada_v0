@@ -277,6 +277,7 @@ type
     function  getProperties: TStrings;
     function  GetSyncConnection:TSQLConnector;
     procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean; NewConnection:Boolean);
+    procedure PropertiesChanged(Sender: TObject);
     procedure SetLibraryLocation(AValue: String);
     procedure SetProperties(AValue: TStrings);
     procedure SetReadOnly(AValue: Boolean);
@@ -650,6 +651,7 @@ begin
   FASyncQuery.Transaction:=FASyncTransaction;
   FLibLoader:=TSQLDBLibraryLoader.Create(nil);
   FProperties:=TStringList.Create;
+  FProperties.OnChange:=@PropertiesChanged;
 
   FSQLSpooler:=TProcessSQLCommandThread.Create(true,@ExecuteSQLCommand,
                                                @StartTransaction,
@@ -684,6 +686,7 @@ end;
 procedure THMIDBConnection.Loaded;
 begin
   Inherited loaded;
+  SetProperties(FProperties);
   Connected:=FConnectRead;
 end;
 
@@ -889,6 +892,12 @@ begin
   end;
 end;
 
+procedure THMIDBConnection.PropertiesChanged(Sender: TObject);
+begin
+  if ComponentState*[csLoading,csReading,csUpdating]=[] then
+    SetProperties(FProperties);
+end;
+
 procedure THMIDBConnection.SetLibraryLocation(AValue: String);
 begin
   FLibraryLocation:=AValue;
@@ -902,14 +911,19 @@ end;
 
 procedure THMIDBConnection.SetProperties(AValue: TStrings);
 begin
-  FSyncConnection.Params.Assign(AValue);
-  FCS.Enter;
+  Updating;
   try
-    FASyncConnection.Params.Assign(AValue);
+    FSyncConnection.Params.Assign(AValue);
+    FCS.Enter;
+    try
+      FASyncConnection.Params.Assign(AValue);
+    finally
+      FCS.Leave;
+    end;
+    FProperties.Assign(AValue);
   finally
-    FCS.Leave;
+    Updated;
   end;
-  FProperties.Assign(AValue);
 end;
 
 procedure THMIDBConnection.SetReadOnly(AValue: Boolean);
