@@ -5,7 +5,7 @@ unit hmidbconnection_dsgn;
 interface
 
 uses
-  Classes, SysUtils, ZPropertyEditor;
+  Classes, SysUtils, PropEdits;
 
 type
 
@@ -14,9 +14,7 @@ type
   {$ELSE}
   //: Property editor of THMIDBConnection.Database property.
   {$ENDIF}
-  THMIDBDatabasePropertyEditor = class(TZDatabasePropertyEditor)
-  public
-    function GetZComponent: TPersistent; override;
+  THMIDBDatabasePropertyEditor = class(TStringProperty)
   end;
 
   {$IFDEF PORTUGUES}
@@ -24,9 +22,7 @@ type
   {$ELSE}
   //: Property editor of THMIDBConnection.Catalog property.
   {$ENDIF}
-  THMIDBCatalogPropertyEditor = class(TZDatabasePropertyEditor)
-  public
-    function GetZComponent: TPersistent; override;
+  THMIDBCatalogPropertyEditor = class(TStringProperty)
   end;
 
   {$IFDEF PORTUGUES}
@@ -34,55 +30,30 @@ type
   {$ELSE}
   //: Property editor of THMIDBConnection.Protocol property.
   {$ENDIF}
-  THMIDBProtocolPropertyEditor = class(TZProtocolPropertyEditor)
+  THMIDBProtocolPropertyEditor = class(TStringProperty)
   public
-    procedure GetValueList(List: TStrings); override;
+    function  GetAttributes: TPropertyAttributes; override;
+    procedure GetValues(Proc: TGetStrProc); override;
   end;
 
 implementation
 
-uses HMIDBConnection;
-
-//##############################################################################
-//EDITORES DE PROPRIEDADES DA CLASSE THMIDBCONNECTION
-//PROPERTY EDITORS OF THE CLASS THMIDBCONNECTION
-//##############################################################################
-
-function THMIDBDatabasePropertyEditor.GetZComponent:TPersistent;
-begin
-  Result:=GetComponent(0);
-  if (Result is THMIDBConnection) and Supports(Result, IHMIDBConnection) then
-    Result:=(THMIDBConnection(Result) as IHMIDBConnection).GetSyncConnection;
-end;
-
-function THMIDBCatalogPropertyEditor.GetZComponent:TPersistent;
-begin
-  Result:=GetComponent(0);
-  if (Result is THMIDBConnection) and Supports(Result, IHMIDBConnection) then
-    Result:=(THMIDBConnection(Result) as IHMIDBConnection).GetSyncConnection;
-end;
-
-var
+const
+  //protocolos suportados pelo backend SQLdb do THMIDBConnection.
+  //protocols supported by THMIDBConnection's SQLdb backend.
   SupportedDBDrivers:array[0..3] of string = ('postgresql','sqlite','mysql','firebird');
 
-//only accepted drivers are show.
-procedure THMIDBProtocolPropertyEditor.GetValueList(List: TStrings);
-var
-  i, s:LongInt;
-  found:Boolean;
+function THMIDBProtocolPropertyEditor.GetAttributes: TPropertyAttributes;
 begin
-  inherited GetValueList(List);
-  for i:=List.Count-1 downto 0 do begin
-    found:=false;
-    for s:=0 to High(SupportedDBDrivers) do
-      if pos(SupportedDBDrivers[s], List.Strings[i])<>0 then begin
-        found:=true;
-        break;
-      end;
-    if not found then
-      List.Delete(i);
-  end;
+  Result:=[paValueList, paSortList];
+end;
+
+procedure THMIDBProtocolPropertyEditor.GetValues(Proc: TGetStrProc);
+var
+  i: LongInt;
+begin
+  for i:=0 to High(SupportedDBDrivers) do
+    Proc(SupportedDBDrivers[i]);
 end;
 
 end.
-

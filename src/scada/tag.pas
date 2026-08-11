@@ -187,7 +187,7 @@ type
                        ioReadOnlyProtocol, ioCommPortClosed, ioNullCommPort,
                        ioConnectPLCFailed, ioAdapterInitFail, ioNullTagBlock);
 
-  TProtocolIOResultHelper = type helper to TProtocolIOResult
+  TProtocolIOResultHelper = type helper for TProtocolIOResult
     function ToString: string;
   end;  
 
@@ -953,7 +953,7 @@ type
 
 implementation
 
-uses syncobjs;
+uses syncobjs, TypInfo;
 
 function TagSizeInBits(const TagType: TTagType; const pttDefaultSize: Integer
   ): Integer;

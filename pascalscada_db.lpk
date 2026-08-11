@@ -22,7 +22,7 @@
       </CodeGeneration>
     </CompilerOptions>
     <Description Value="PascalSCADA database layer for historical, recipes and user management
-Built on top of ZeosLib"/>
+Built on top of SQLdb"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
     <Files Count="5">
@@ -51,7 +51,7 @@ Built on top of ZeosLib"/>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
       <Item1>
-        <PackageName Value="zcomponentdesign"/>
+        <PackageName Value="SQLDBLaz"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada_common"/>
