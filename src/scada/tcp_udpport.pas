@@ -900,7 +900,16 @@ begin
     //AREN'T SUPPORTED BY SOME OSes LIKE WINDOWS CE
     //##########################################################################
     flag:=1;
-    bufsize := 1024*16;
+    //2026-08-12 Fabio Luis Girardi <fabio@pascalscada.com>
+    //256KB: big enough that the advertised TCP receive window can hold a large
+    //single-burst response (e.g. S7CommPlus EXPLORE of the OMS TypeInfo container,
+    //which can be tens of KB) without the window ever being the limiting factor.
+    //Some PLC firmware aborts a large response outright if it doesn't fit within
+    //the client's currently advertised window rather than blocking on flow control -
+    //confirmed against real S7-1500 hardware, where a 16KB window (the old default,
+    //fine for classic S7's small PDUs) caused a large S7CommPlus Explore response to
+    //be aborted by the PLC (diagnostic fragment + RST) while a >64KB window did not.
+    bufsize := 1024*256;
     //UNIX AND WINDOWS CE
     {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
     fpsetsockopt(ASocket, SOL_SOCKET,  SO_RCVBUF,    @bufsize,  sizeof(LongInt));

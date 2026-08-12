@@ -1,0 +1,1436 @@
+{$i ../common/language.inc}
+{$IFDEF PORTUGUES}
+{:
+  @abstract(Sessão/transporte do protocolo S7CommPlus (CLPs S7-1200/1500 da Siemens).)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Implementa o transporte ISO-on-TCP (TPKT+COTP, igual ao S7 clássico, porém com o TSAP
+  remoto fixo "SIMATIC-ROOT-HMI") e o estabelecimento de sessão S7CommPlus versão V1
+  (CreateObject + SetupSession, sem TLS). V2/V3/TLS ficam para uma fase futura - ver
+  ActivateTLS/Authenticate (ainda não implementados).
+
+  Portado de python-snap7/s7commplus/connection.py e client.py (referência:
+  thomas-v2/S7CommPlusDriver, C#, LGPL-3.0).
+}
+{$ELSE}
+{:
+  @abstract(S7CommPlus session/transport (Siemens S7-1200/1500 PLCs).)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Implements the ISO-on-TCP transport (TPKT+COTP, same as legacy S7, but with the fixed
+  remote TSAP "SIMATIC-ROOT-HMI") and S7CommPlus V1 session establishment (CreateObject +
+  SetupSession, no TLS). V2/V3/TLS are left for a future phase - see ActivateTLS/Authenticate
+  (not yet implemented).
+
+  Ported from python-snap7/s7commplus/connection.py and client.py (reference:
+  thomas-v2/S7CommPlusDriver, C#, LGPL-3.0).
+}
+{$ENDIF}
+unit S7PlusConnection;
+
+{$mode Delphi}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
+  S7PlusTypeInfo;
+
+type
+  ES7PlusError = class(Exception);
+
+  //: Called with a human-readable trace line for every relevant protocol step.
+  //: Assign it (e.g. to a WriteLn wrapper) to diagnose a connection against real hardware.
+  TS7PlusDebugEvent = procedure(Sender:TObject; const Msg:String) of object;
+
+  { TS7PlusConnection }
+
+  TS7PlusConnection = class
+  private
+    FCommPort:TCommPortDriver;
+    FDriverID:Cardinal;
+
+    FSequenceNumber:Word;
+    FSessionId:Cardinal;
+    FProtocolVersion:Byte;
+    FConnected:Boolean;
+    FServerSessionVersion:TBytes;
+    FSessionSetupOK:Boolean;
+    FSrcRef:Word;
+    FLastReturnValue:QWord;
+    FOnDebug:TS7PlusDebugEvent;
+
+    //-- V2+ TLS/IntegrityId ---------------------------------------------------
+    FUseTLS:Boolean;
+    FTLSActive:Boolean;
+    FSSLCtx:PSSLCTX;
+    FSSL:PSSL;
+    FReadBIO, FWriteBIO:PBIO;
+    FWithIntegrityId:Boolean;
+    FIntegrityIdRead, FIntegrityIdWrite:Cardinal;
+    FRecvBuf:TBytes;
+
+    //-- Symbolic (LID) resolution cache: the OMS type-info container is expensive to
+    //-- EXPLORE (can be a large, multi-fragment response) - fetch it once per connection.
+    FTypeInfoCached:Boolean;
+    FTypeInfoObjects:TS7PlusObjectArray;
+    FExploreDelayMs:Integer;
+
+    function EnsureTypeInfoObjects:Boolean;
+    //: Reads LID=1 of a DB to get its type-info RID (0 if the DB has no readable value) -
+    //: needed because instance DBs' type-info RID differs from their own object RID.
+    function ReadDBTypeInfoRid(DBAccessArea:Cardinal; out TiRid:Cardinal):Boolean;
+
+    procedure Debug(const Msg:String);
+    function NextSequenceNumber:Word;
+
+    //-- TPKT/COTP transport --------------------------------------------------
+    function CotpConnect:Boolean;
+    function TransportSend(const Frame:TBytes):Boolean;
+    function TransportRecv(out Frame:TBytes):TIOResult;
+
+    //-- TLS tunnel (V2+), on top of the raw COTP transport above --------------
+    function ActivateTLS:Boolean;
+    procedure TLSFlushOutgoing;
+    function TLSReadIncoming:Boolean;
+    procedure ReleaseTLS;
+    //: Routes a logical S7CommPlus frame through TLS (if active) or straight to the
+    //: raw COTP transport (if not) - every session-handshake/request method below
+    //: sends/receives through these instead of TransportSend/TransportRecv directly.
+    function LogicalSend(const Frame:TBytes):Boolean;
+    function LogicalRecv(out Frame:TBytes):TIOResult;
+    //: Reads N bytes from FRecvBuf, topping it up via LogicalRecv as needed.
+    function EnsureBuffered(N:Integer):Boolean;
+    //: Receives a possibly multi-fragment S7CommPlus response (EXPLORE and other large
+    //: responses split across several PDUs: [$72][ver][len:2][data] with no per-fragment
+    //: trailer; a trailing len=0 fragment ends the sequence). Returns the concatenated data.
+    function ReassembledRecv(out Data:TBytes):Boolean;
+
+    //-- S7CommPlus session handshake (V1/V2) ----------------------------------
+    function InitSSL:Boolean;
+    function CreateSession:Boolean;
+    function SetupSession:Boolean;
+
+    //-- payload builders/parsers ----------------------------------------------
+    function BuildAreaPayload(AccessArea, AccessSubArea:Cardinal; Start:Integer; const WriteData:TBytes; IsWrite:Boolean; SizeIfRead:Integer):TBytes;
+    function BuildSymbolicPayload(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const WriteData:TBytes; IsWrite:Boolean; SymbolCrc:Cardinal):TBytes;
+    function ParseSingleReadResponse(const Response:TBytes; out Data:TBytes):Boolean;
+    function ParseSingleWriteResponse(const Response:TBytes):Boolean;
+
+    //: Best-effort scan of a tagged-object error/fault structure (the PLC attaches one
+    //: after a non-zero returnValue) for any WSTRING-typed attributes, which usually
+    //: carry a human-readable description of what was rejected and why (e.g. "Request
+    //: GetVariableSubrangeStreamed"). Returns them joined by " | ", or '' if none found.
+    function ExtractErrorText(const Data:TBytes):String;
+  public
+    constructor Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
+    destructor Destroy; override;
+
+    //: Establishes the COTP connection and the S7CommPlus V1 session (CreateObject+SetupSession).
+    function Connect:Boolean;
+    procedure Disconnect;
+
+    //: Sends a request and returns the response payload (after the 10-byte response header).
+    //: IntegrityTail is how many trailing payload bytes the V2 IntegrityId is spliced
+    //: before (4 for GetMultiVariables/SetMultiVariables, 5 for Explore). Reassemble
+    //: receives a possibly multi-fragment response (needed for Explore).
+    function SendRequest(FunctionCode:Word; const Payload:TBytes; out RespPayload:TBytes;
+                         IntegrityTail:Integer=4; Reassemble:Boolean=false):Boolean;
+
+    //: Reads raw bytes from a controller memory area (M/I/Q/counters/timers), by native RID.
+    //: Only works for areas/DBs whose value isn't symbol/LID addressed (rare in practice -
+    //: see ReadSymbolic). Kept for Phase 1 compatibility/diagnostics.
+    function ReadArea(AreaRID:Cardinal; Start, Size:Integer; out Data:TBytes):Boolean;
+    //: Writes raw bytes to a controller memory area (M/I/Q/counters/timers), by native RID.
+    function WriteArea(AreaRID:Cardinal; Start:Integer; const Data:TBytes):Boolean;
+    //: Reads raw bytes from a data block by byte offset. See ReadArea's caveat: real
+    //: S7-1200/1500 firmware requires symbolic (LID) access for DB variables - use
+    //: ReadSymbolic/BrowseDB instead for actual data, not this.
+    function DBRead(DBNumber, Start, Size:Integer; out Data:TBytes):Boolean;
+    //: Writes raw bytes to a data block by byte offset. See DBRead's caveat.
+    function DBWrite(DBNumber, Start:Integer; const Data:TBytes):Boolean;
+
+    //-- Symbolic (LID-based) access - the only way to reliably read/write DB variables
+    //-- and native-area (M/I/Q/Timers/Counters) named tags on real S7-1200/1500 firmware.
+
+    //: Reads a variable's raw bytes by its resolved LID path (see BrowseDB/BrowseNativeArea).
+    function ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes; SymbolCrc:Cardinal=0):Boolean;
+    //: Writes a variable's raw bytes by its resolved LID path.
+    function WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SymbolCrc:Cardinal=0):Boolean;
+    //: Sends an EXPLORE request for ExploreId (a RID) and reassembles the (possibly
+    //: multi-fragment) response payload.
+    function Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+    //: Browses a DB's variables via EXPLORE + the compiled type-info tree, returning a
+    //: flat list of (name, LID path, softdatatype) - the only reliable way to know a DB
+    //: variable's real address on S7CommPlus. The type-info container is cached after the
+    //: first call (any DB/area), so subsequent browses of other DBs/areas are cheap.
+    function BrowseDB(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
+    //: Browses a native process area (Inputs/Outputs/Flags/Timers/Counters) the same way,
+    //: using its fixed, well-known type-info RID (no per-DB LID=1 lookup needed).
+    function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):Boolean;
+
+    property Connected:Boolean read FConnected;
+    property SessionId:Cardinal read FSessionId;
+    property ProtocolVersion:Byte read FProtocolVersion;
+    property SessionSetupOK:Boolean read FSessionSetupOK;
+    //: Return value (VLQ64) parsed from the last GetMultiVariables/SetMultiVariables
+    //: response; 0 means the PLC reported success on that request.
+    property LastReturnValue:QWord read FLastReturnValue;
+    property OnDebug:TS7PlusDebugEvent read FOnDebug write FOnDebug;
+    //: Whether to activate TLS (after InitSSL, before CreateObject). Most S7-1200/1500
+    //: firmware from TIA Portal V15+ requires this for anything beyond the initial
+    //: handshake - default true. Set to false only for known-legacy V1-only firmware.
+    property UseTLS:Boolean read FUseTLS write FUseTLS;
+    //: True once the TLS tunnel is established and in use for all further messages.
+    property TLSActive:Boolean read FTLSActive;
+    //: Diagnostic only: milliseconds to sleep right before sending the structured
+    //: Explore(OMS TypeInfo container) request in EnsureTypeInfoObjects. Used to test
+    //: whether the PLC needs breathing room between the preceding GetMultiVariables
+    //: call and Explore. Default 0 (no delay).
+    property ExploreDelayMs:Integer read FExploreDelayMs write FExploreDelayMs;
+  end;
+
+//: Formats bytes as a space-separated hex string, for debug traces.
+function S7PlusHexStr(const B:TBytes):String;
+
+implementation
+
+function S7PlusHexStr(const B:TBytes):String;
+const
+  HexDigits:array[0..15] of Char = '0123456789ABCDEF';
+var
+  i, p:Integer;
+begin
+  if Length(B)=0 then begin
+    Result := '';
+    exit;
+  end;
+  SetLength(Result, Length(B)*3-1);
+  p := 1;
+  for i:=0 to High(B) do begin
+    if i>0 then begin
+      Result[p] := ' ';
+      inc(p);
+    end;
+    Result[p]   := HexDigits[B[i] shr 4];
+    Result[p+1] := HexDigits[B[i] and $0F];
+    inc(p, 2);
+  end;
+end;
+
+function BytesConcat(const A, B:TBytes):TBytes;
+begin
+  SetLength(Result, Length(A)+Length(B));
+  if Length(A)>0 then Move(A[0], Result[0], Length(A));
+  if Length(B)>0 then Move(B[0], Result[Length(A)], Length(B));
+end;
+
+function BytesOf(const B:array of Byte):TBytes;
+begin
+  SetLength(Result, Length(B));
+  if Length(B)>0 then
+    Move(B[0], Result[0], Length(B));
+end;
+
+function BytesCopy(const A:TBytes; Start, Len:Integer):TBytes;
+begin
+  if Len<0 then Len := 0;
+  if (Start+Len)>Length(A) then Len := Length(A)-Start;
+  if Len<0 then Len := 0;
+  SetLength(Result, Len);
+  if Len>0 then
+    Move(A[Start], Result[0], Len);
+end;
+
+//: Scalar response trailer used by some S7-1200 firmware for single-byte reads: 00 04 00 00 00 00.
+const
+  ScalarResponseSuffix:array[0..5] of Byte = ($00,$04,$00,$00,$00,$00);
+
+function EndsWithScalarSuffix(const Data:TBytes):Boolean;
+var
+  i, base:Integer;
+begin
+  Result := Length(Data)>=Length(ScalarResponseSuffix);
+  if not Result then exit;
+  base := Length(Data)-Length(ScalarResponseSuffix);
+  for i:=0 to High(ScalarResponseSuffix) do
+    if Data[base+i]<>ScalarResponseSuffix[i] then begin
+      Result := false;
+      exit;
+    end;
+end;
+
+{ TS7PlusConnection }
+
+constructor TS7PlusConnection.Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
+begin
+  inherited Create;
+  FCommPort := ACommPort;
+  FDriverID := ADriverID;
+  FSequenceNumber := 0;
+  FSessionId := 0;
+  FProtocolVersion := S7PlusVersion_V1;
+  FConnected := false;
+  FSessionSetupOK := false;
+  FSrcRef := $0001;
+  //Most S7-1200/1500 firmware from TIA Portal V15+ requires TLS for anything beyond
+  //the initial handshake (InitSSL/CreateObject) - default to on.
+  FUseTLS := true;
+  FTLSActive := false;
+  FWithIntegrityId := false;
+  FIntegrityIdRead := 0;
+  FIntegrityIdWrite := 0;
+end;
+
+destructor TS7PlusConnection.Destroy;
+begin
+  ReleaseTLS;
+  inherited Destroy;
+end;
+
+function TS7PlusConnection.NextSequenceNumber:Word;
+begin
+  Result := FSequenceNumber;
+  FSequenceNumber := (FSequenceNumber+1) and $FFFF;
+end;
+
+procedure TS7PlusConnection.Debug(const Msg:String);
+begin
+  if Assigned(FOnDebug) then
+    FOnDebug(Self, Msg);
+end;
+
+//===========================================================================
+// TPKT/COTP transport
+//===========================================================================
+
+function TS7PlusConnection.CotpConnect:Boolean;
+var
+  BasePDU, Params, CallingTSAP, CalledTSAP, PDUSizeParam, CotpPDU, Frame:TBytes;
+  TotalLen:Byte;
+  IOResult1, IOResult2:TIOPacket;
+  res:LongInt;
+  RemoteTSAPBytes:TBytes;
+  i, RespLen:Integer;
+begin
+  Result := false;
+  FConnected := false;
+  if (FCommPort=nil) or (not FCommPort.ReallyActive) then exit;
+
+  //-- Calling (local) TSAP: fixed 2-byte value $0600.
+  CallingTSAP := BytesOf([$C1, 2, Hi(S7PlusLocalTSAP), Lo(S7PlusLocalTSAP)]);
+
+  //-- Called (remote) TSAP: fixed 16-byte ASCII string "SIMATIC-ROOT-HMI".
+  SetLength(RemoteTSAPBytes, Length(S7PlusRemoteTSAP));
+  for i:=1 to Length(S7PlusRemoteTSAP) do
+    RemoteTSAPBytes[i-1] := Byte(S7PlusRemoteTSAP[i]);
+  CalledTSAP := BytesConcat(BytesOf([$C2, Length(RemoteTSAPBytes)]), RemoteTSAPBytes);
+
+  //-- Requested TPDU size: code $0A = 1024 bytes.
+  PDUSizeParam := BytesOf([$C0, 1, $0A]);
+
+  Params := BytesConcat(BytesConcat(CallingTSAP, CalledTSAP), PDUSizeParam);
+
+  //-- COTP CR base: PDU type + dst-ref(0) + src-ref + class/option(0).
+  BasePDU := BytesOf([$E0, 0,0, Hi(FSrcRef),Lo(FSrcRef), $00]);
+  TotalLen := 6 + Length(Params);
+
+  CotpPDU := BytesConcat(BytesConcat(BytesOf([TotalLen]), BasePDU), Params);
+
+  SetLength(Frame, 4+Length(CotpPDU));
+  Frame[0] := 3; Frame[1] := 0;
+  Frame[2] := Hi(Word(Length(Frame)));
+  Frame[3] := Lo(Word(Length(Frame)));
+  Move(CotpPDU[0], Frame[4], Length(CotpPDU));
+
+  Debug('COTP CR >> '+S7PlusHexStr(Frame));
+
+  res := FCommPort.IOCommandSync(iocWriteRead, Length(Frame), Frame, 4, FDriverID, 0, @IOResult1);
+  if (res=0) or (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>4) then begin
+    Debug(Format('COTP CC << falha ao ler cabecalho TPKT (res=%d ioresult=%d received=%d)',[res,Ord(IOResult1.ReadIOResult),IOResult1.Received]));
+    exit;
+  end;
+
+  RespLen := IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
+  if RespLen<4 then begin
+    Debug(Format('COTP CC << tamanho TPKT invalido (%d)',[RespLen]));
+    exit;
+  end;
+
+  res := FCommPort.IOCommandSync(iocRead, 0, nil, RespLen-4, FDriverID, 0, @IOResult2);
+  if (res=0) or (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>Cardinal(RespLen-4)) then begin
+    Debug(Format('COTP CC << falha ao ler corpo (res=%d ioresult=%d received=%d esperado=%d)',[res,Ord(IOResult2.ReadIOResult),IOResult2.Received,RespLen-4]));
+    exit;
+  end;
+
+  Debug('COTP CC << '+S7PlusHexStr(IOResult1.BufferToRead)+' '+S7PlusHexStr(IOResult2.BufferToRead));
+
+  //-- Response must be a COTP Connection Confirm ($D0).
+  if (Length(IOResult2.BufferToRead)<2) or (IOResult2.BufferToRead[1]<>$D0) then begin
+    Debug('COTP CC << PDU nao e Connection Confirm ($D0)');
+    exit;
+  end;
+
+  Result := true;
+  FConnected := true;
+  Debug('COTP conectado.');
+end;
+
+function TS7PlusConnection.TransportSend(const Frame:TBytes):Boolean;
+var
+  Msg:TBytes;
+  res:LongInt;
+begin
+  Result := false;
+  if (FCommPort=nil) or (not FCommPort.ReallyActive) then exit;
+
+  //-- COTP Data-Transfer header (3 bytes: len=2, type=$F0, EOT+seq=$80) + TPKT header (4 bytes).
+  SetLength(Msg, 7+Length(Frame));
+  Msg[4] := $02; Msg[5] := $F0; Msg[6] := $80;
+  if Length(Frame)>0 then
+    Move(Frame[0], Msg[7], Length(Frame));
+  Msg[0] := 3; Msg[1] := 0;
+  Msg[2] := Hi(Word(Length(Msg)));
+  Msg[3] := Lo(Word(Length(Msg)));
+
+  Debug('TPKT/COTP-DT >> '+S7PlusHexStr(Msg));
+
+  res := FCommPort.IOCommandSync(iocWrite, Length(Msg), Msg, 0, FDriverID, 0, nil);
+  Result := res<>0;
+  if not Result then
+    Debug('TPKT/COTP-DT >> falha ao escrever no socket');
+end;
+
+function TS7PlusConnection.TransportRecv(out Frame:TBytes):TIOResult;
+var
+  IOResult1, IOResult2:TIOPacket;
+  res, len:LongInt;
+begin
+  SetLength(Frame, 0);
+  Result := iorNotReady;
+
+  res := FCommPort.IOCommandSync(iocRead, 0, nil, 7, FDriverID, 0, @IOResult1);
+  if res=0 then begin
+    Debug('TPKT/COTP-DT << falha ao ler cabecalho (porta indisponivel)');
+    exit;
+  end;
+  if (IOResult1.ReadIOResult<>iorOK) or (IOResult1.Received<>7) then begin
+    Result := IOResult1.ReadIOResult;
+    Debug(Format('TPKT/COTP-DT << falha ao ler cabecalho (ioresult=%d received=%d)',[Ord(IOResult1.ReadIOResult),IOResult1.Received]));
+    exit;
+  end;
+
+  len := IOResult1.BufferToRead[2]*$100 + IOResult1.BufferToRead[3];
+  if len<=7 then begin
+    Result := iorOK;
+    Debug('TPKT/COTP-DT << frame vazio (len<=7)');
+    exit;
+  end;
+
+  res := FCommPort.IOCommandSync(iocRead, 0, nil, len-7, FDriverID, 0, @IOResult2);
+  if res=0 then begin
+    Debug('TPKT/COTP-DT << falha ao ler corpo (porta indisponivel)');
+    exit;
+  end;
+  if (IOResult2.ReadIOResult<>iorOK) or (IOResult2.Received<>Cardinal(len-7)) then begin
+    Result := IOResult2.ReadIOResult;
+    Debug(Format('TPKT/COTP-DT << falha ao ler corpo (ioresult=%d received=%d esperado=%d)',[Ord(IOResult2.ReadIOResult),IOResult2.Received,len-7]));
+    exit;
+  end;
+
+  SetLength(Frame, len-7);
+  if Length(Frame)>0 then
+    Move(IOResult2.BufferToRead[0], Frame[0], Length(Frame));
+  Result := iorOK;
+  Debug('TPKT/COTP-DT << '+S7PlusHexStr(Frame));
+end;
+
+//===========================================================================
+// TLS tunnel (V2+) - TLS records travel as the payload of plain COTP DT frames;
+// TPKT/COTP framing itself is never encrypted. Uses a memory-BIO pair so OpenSSL
+// never touches the socket directly - every byte it wants to send/receive is
+// pumped through TransportSend/TransportRecv above.
+//===========================================================================
+
+procedure TS7PlusConnection.TLSFlushOutgoing;
+var
+  Buf:TBytes;
+  Pending, N:clong;
+begin
+  Pending := BIO_ctrl(FWriteBIO, BIO_CTRL_PENDING, 0, nil);
+  while Pending>0 do begin
+    SetLength(Buf, Pending);
+    N := BIO_read(FWriteBIO, @Buf[0], Pending);
+    if N>0 then begin
+      SetLength(Buf, N);
+      TransportSend(Buf);
+    end;
+    Pending := BIO_ctrl(FWriteBIO, BIO_CTRL_PENDING, 0, nil);
+  end;
+end;
+
+function TS7PlusConnection.TLSReadIncoming:Boolean;
+var
+  Buf:TBytes;
+begin
+  Result := TransportRecv(Buf)=iorOK;
+  if Result and (Length(Buf)>0) then
+    BIO_write(FReadBIO, @Buf[0], Length(Buf))
+  else
+    Result := false;
+end;
+
+function TS7PlusConnection.ActivateTLS:Boolean;
+var
+  Ret, Err:cint;
+  Retries:Integer;
+begin
+  Result := false;
+
+  if not S7PlusSSLLoad then begin
+    Debug('ActivateTLS: '+S7PlusSSLLoadError);
+    exit;
+  end;
+
+  FSSLCtx := SSL_CTX_new(TLS_client_method());
+  if FSSLCtx=nil then begin
+    Debug('ActivateTLS: SSL_CTX_new falhou');
+    S7PlusSSLUnload;
+    exit;
+  end;
+
+  //Matches the cipher/group/option set known to be accepted by S7-1200/1500 firmware
+  //(TIA Portal V15+): TLS >=1.2, ECDHE/AES-GCM preferred, EC groups restricted to
+  //X25519/P-256 (the PLC RSTs the connection on unsupported groups like X448/ffdhe*).
+  S7PlusSSLCtxSetMinProtoVersion(FSSLCtx, TLS1_2_VERSION);
+  SSL_CTX_set_cipher_list(FSSLCtx,
+    'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:'+
+    'AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256');
+  S7PlusSSLCtxSet1GroupsList(FSSLCtx, 'X25519');
+  SSL_CTX_set_options(FSSLCtx, SSL_OP_NO_TICKET or SSL_OP_NO_ENCRYPT_THEN_MAC or SSL_OP_NO_EXTENDED_MASTER_SECRET);
+  //No CA/device certificate provisioned yet (out of scope for now) - accept whatever
+  //certificate the PLC presents, same as the reference implementation without tls_ca.
+  SSL_CTX_set_verify(FSSLCtx, SSL_VERIFY_NONE, nil);
+
+  FSSL := SSL_new(FSSLCtx);
+  if FSSL=nil then begin
+    Debug('ActivateTLS: SSL_new falhou');
+    SSL_CTX_free(FSSLCtx); FSSLCtx := nil;
+    exit;
+  end;
+
+  FReadBIO  := BIO_new(BIO_s_mem());
+  FWriteBIO := BIO_new(BIO_s_mem());
+  SSL_set_bio(FSSL, FReadBIO, FWriteBIO); //FSSL now owns both BIOs
+
+  SSL_set_connect_state(FSSL);
+
+  Debug('ActivateTLS: iniciando handshake TLS (tunelado em frames COTP)...');
+
+  Retries := 0;
+  repeat
+    Ret := SSL_do_handshake(FSSL);
+    if Ret=1 then begin
+      TLSFlushOutgoing;
+      break;
+    end;
+
+    Err := SSL_get_error(FSSL, Ret);
+    if Err=SSL_ERROR_WANT_READ then begin
+      TLSFlushOutgoing;
+      if not TLSReadIncoming then begin
+        Debug('ActivateTLS: falha ao ler frame COTP durante o handshake');
+        ReleaseTLS;
+        exit;
+      end;
+    end else if Err=SSL_ERROR_WANT_WRITE then
+      TLSFlushOutgoing
+    else begin
+      Debug(Format('ActivateTLS: handshake falhou (SSL_get_error=%d, ret=%d)',[Err,Ret]));
+      ReleaseTLS;
+      exit;
+    end;
+
+    inc(Retries);
+  until Retries>200; //generous cap - a real handshake takes a handful of round-trips
+
+  if Retries>200 then begin
+    Debug('ActivateTLS: handshake nao terminou dentro do limite de tentativas');
+    ReleaseTLS;
+    exit;
+  end;
+
+  FTLSActive := true;
+  Debug(Format('ActivateTLS: OK - versao=%s cipher=%s',
+               [SSL_get_version(FSSL), SSL_CIPHER_get_name(SSL_get_current_cipher(FSSL))]));
+  Result := true;
+end;
+
+procedure TS7PlusConnection.ReleaseTLS;
+begin
+  if FSSL<>nil then begin
+    SSL_free(FSSL); //also frees FReadBIO/FWriteBIO (ownership transferred by SSL_set_bio)
+    FSSL := nil;
+    FReadBIO := nil;
+    FWriteBIO := nil;
+  end;
+  if FSSLCtx<>nil then begin
+    SSL_CTX_free(FSSLCtx);
+    FSSLCtx := nil;
+  end;
+  if FTLSActive then
+    S7PlusSSLUnload;
+  FTLSActive := false;
+end;
+
+function TS7PlusConnection.LogicalSend(const Frame:TBytes):Boolean;
+var
+  N:cint;
+begin
+  if not FTLSActive then begin
+    Result := TransportSend(Frame);
+    exit;
+  end;
+
+  Result := false;
+  if Length(Frame)=0 then exit;
+
+  N := SSL_write(FSSL, @Frame[0], Length(Frame));
+  TLSFlushOutgoing;
+  Result := N=Length(Frame);
+  if not Result then
+    Debug(Format('LogicalSend: SSL_write retornou %d (esperado %d)',[N,Length(Frame)]));
+end;
+
+function TS7PlusConnection.LogicalRecv(out Frame:TBytes):TIOResult;
+var
+  Buf:array[0..65535] of Byte;
+  N, Err:cint;
+  Retries:Integer;
+begin
+  SetLength(Frame, 0);
+  if not FTLSActive then begin
+    Result := TransportRecv(Frame);
+    exit;
+  end;
+
+  Result := iorNotReady;
+  Retries := 0;
+  repeat
+    N := SSL_read(FSSL, @Buf[0], SizeOf(Buf));
+    if N>0 then begin
+      SetLength(Frame, N);
+      Move(Buf[0], Frame[0], N);
+      Result := iorOK;
+      Debug(Format('LogicalRecv: SSL_read decifrou %d bytes: ',[N])+S7PlusHexStr(Frame));
+      exit;
+    end;
+
+    Err := SSL_get_error(FSSL, N);
+    if Err=SSL_ERROR_WANT_READ then begin
+      if not TLSReadIncoming then begin
+        Debug('LogicalRecv: falha ao ler frame COTP');
+        Result := iorTimeOut;
+        exit;
+      end;
+    end else begin
+      Debug(Format('LogicalRecv: SSL_read falhou (SSL_get_error=%d)',[Err]));
+      Result := iorNotReady;
+      exit;
+    end;
+
+    inc(Retries);
+  until Retries>200;
+
+  Debug('LogicalRecv: excedeu o limite de tentativas de leitura TLS');
+end;
+
+function TS7PlusConnection.EnsureBuffered(N:Integer):Boolean;
+var
+  Chunk:TBytes;
+begin
+  Result := true;
+  while Length(FRecvBuf)<N do begin
+    if LogicalRecv(Chunk)<>iorOK then begin
+      Result := false;
+      exit;
+    end;
+    if Length(Chunk)=0 then begin
+      Result := false;
+      exit;
+    end;
+    FRecvBuf := BytesConcat(FRecvBuf, Chunk);
+  end;
+end;
+
+function TS7PlusConnection.ReassembledRecv(out Data:TBytes):Boolean;
+const
+  MaxFragments = 4096;
+  MaxTotalBytes = 16*1024*1024;
+var
+  FragLen:Integer;
+  Fragments:Integer;
+begin
+  Result := false;
+  SetLength(Data, 0);
+  Fragments := 0;
+
+  while true do begin
+    Debug(Format('ReassembledRecv: buffer atual = %d bytes, pedindo 4 (cabecalho)',[Length(FRecvBuf)]));
+    if not EnsureBuffered(4) then begin
+      Debug('ReassembledRecv: falha ao ler cabecalho de fragmento');
+      exit;
+    end;
+    if FRecvBuf[0]<>S7Plus_PROTOCOL_ID then begin
+      Debug('ReassembledRecv: cabecalho de fragmento inesperado (nao comeca com $72): '+S7PlusHexStr(BytesCopy(FRecvBuf,0,4)));
+      exit;
+    end;
+
+    //Note: the fragment's version byte (FRecvBuf[1]) is NOT checked here - continuation
+    //fragments of a large reassembled response (e.g. Explore) can legitimately carry a
+    //different version marker than the session's protocol version. The reference
+    //implementation (python-snap7's _recv_reassembled_payload) only checks the leading
+    //protocol id byte and otherwise treats every fragment identically, appending its
+    //data to the accumulated payload regardless of the version byte. Special-casing an
+    //unexpected version as an unsolicited notification to discard was found to
+    //corrupt/truncate the reassembled payload - do not reintroduce that.
+    FragLen := (FRecvBuf[2] shl 8) or FRecvBuf[3];
+    FRecvBuf := BytesCopy(FRecvBuf, 4, Length(FRecvBuf)-4);
+    Debug(Format('ReassembledRecv: cabecalho de fragmento: fragLen=%d (buffer apos remover cabecalho=%d bytes)',[FragLen, Length(FRecvBuf)]));
+
+    if FragLen=0 then break; //standalone trailer (defensive)
+
+    if not EnsureBuffered(FragLen) then begin
+      Debug('ReassembledRecv: falha ao ler corpo do fragmento');
+      exit;
+    end;
+    Data := BytesConcat(Data, BytesCopy(FRecvBuf, 0, FragLen));
+    FRecvBuf := BytesCopy(FRecvBuf, FragLen, Length(FRecvBuf)-FragLen);
+    Debug(Format('ReassembledRecv: fragmento %d consumido (%d bytes), total acumulado=%d, sobra no buffer=%d',
+                 [Fragments+1, FragLen, Length(Data), Length(FRecvBuf)]));
+
+    inc(Fragments);
+    if (Fragments>MaxFragments) or (Length(Data)>MaxTotalBytes) then begin
+      Debug('ReassembledRecv: resposta excede os limites de reassemblagem');
+      exit;
+    end;
+
+    //Next 4 bytes are either the trailer ($72 ver 0000) or the next fragment's header.
+    if not EnsureBuffered(4) then begin
+      Debug('ReassembledRecv: falha ao ler cabecalho seguinte (nem trailer nem proximo fragmento chegaram)');
+      exit;
+    end;
+    Debug('ReassembledRecv: proximos 4 bytes (trailer ou proximo cabecalho): '+S7PlusHexStr(BytesCopy(FRecvBuf,0,4)));
+    if (FRecvBuf[0]=S7Plus_PROTOCOL_ID) and (FRecvBuf[2]=0) and (FRecvBuf[3]=0) then begin
+      FRecvBuf := BytesCopy(FRecvBuf, 4, Length(FRecvBuf)-4); //consume trailer - last fragment
+      Debug('ReassembledRecv: trailer encontrado, resposta completa.');
+      break;
+    end;
+  end;
+
+  Result := true;
+end;
+
+//===========================================================================
+// S7CommPlus session handshake (V1/V2)
+//===========================================================================
+
+function TS7PlusConnection.InitSSL:Boolean;
+var
+  Seq:Word;
+  Request, Frame, Response:TBytes;
+  Version:Byte;
+  DataLen:Word;
+  Consumed:Integer;
+begin
+  Result := false;
+  Seq := NextSequenceNumber;
+
+  Request := EncodeRequestHeader(S7PlusFunc_InitSSL, Seq, 0, $30);
+  Request := BytesConcat(Request, EncodeUInt32(0)); //trailing padding
+
+  Frame := BytesConcat(EncodeS7PlusHeader(S7PlusVersion_V1, Length(Request)), Request);
+  Frame := BytesConcat(Frame, EncodeS7PlusHeader(S7PlusVersion_V1, 0)); //trailer
+
+  if not TransportSend(Frame) then exit;
+  if TransportRecv(Response)<>iorOK then exit;
+  if Length(Response)<4 then exit;
+
+  Consumed := DecodeS7PlusHeader(Response, 0, Version, DataLen);
+  if (Length(Response)-Consumed)<10 then exit; //InitSSL response too short
+
+  Result := true;
+  Debug(Format('InitSSL: version=V%d dataLen=%d',[Version,DataLen]));
+end;
+
+function TS7PlusConnection.CreateSession:Boolean;
+var
+  Seq:Word;
+  Header, Body, Request, Frame, ResponseFrame, Response:TBytes;
+  Version:Byte;
+  DataLen:Word;
+  Consumed, BodyOffset:Integer;
+  RespBody:TBytes;
+  SessId:Cardinal;
+  RetVal:QWord;
+  HasSessId:Boolean;
+begin
+  Result := false;
+  Seq := NextSequenceNumber;
+
+  Header := EncodeRequestHeader(S7PlusFunc_CreateObject, Seq, S7PlusObjId_ObjectNullServerSession, $36);
+
+  Body := EncodeUInt32(S7PlusObjId_ObjectServerSessionContainer); //RequestId
+  Body := BytesConcat(Body, BytesOf([$00, S7PlusType_UDINT]));
+  Body := BytesConcat(Body, EncodeUInt32VLQ(0)); //RequestValue = ValueUDInt(0)
+  Body := BytesConcat(Body, EncodeUInt32(0)); //unknown padding
+
+  Body := BytesConcat(Body, BytesOf([S7PlusElement_StartOfObject]));
+  Body := BytesConcat(Body, EncodeUInt32(S7PlusObjId_GetNewRIDOnServer)); //RelationId
+  Body := BytesConcat(Body, EncodeUInt32VLQ(S7PlusObjId_ClassServerSession)); //ClassId
+  Body := BytesConcat(Body, EncodeUInt32VLQ(0)); //ClassFlags
+  Body := BytesConcat(Body, EncodeUInt32VLQ(0)); //AttributeId
+
+  Body := BytesConcat(Body, BytesOf([S7PlusElement_Attribute]));
+  Body := BytesConcat(Body, EncodeUInt32VLQ(S7PlusObjId_ServerSessionClientRID));
+  Body := BytesConcat(Body, BytesOf([$00]));
+  Body := BytesConcat(Body, EncodeTypedValueRID($80C3C901));
+
+  Body := BytesConcat(Body, BytesOf([S7PlusElement_StartOfObject]));
+  Body := BytesConcat(Body, EncodeUInt32(S7PlusObjId_GetNewRIDOnServer));
+  Body := BytesConcat(Body, EncodeUInt32VLQ(S7PlusObjId_ClassSubscriptions));
+  Body := BytesConcat(Body, EncodeUInt32VLQ(0)); //ClassFlags
+  Body := BytesConcat(Body, EncodeUInt32VLQ(0)); //AttributeId
+  Body := BytesConcat(Body, BytesOf([S7PlusElement_TerminatingObject]));
+
+  Body := BytesConcat(Body, BytesOf([S7PlusElement_TerminatingObject]));
+  Body := BytesConcat(Body, EncodeUInt32(0)); //trailing padding
+
+  Request := BytesConcat(Header, Body);
+
+  Frame := BytesConcat(EncodeS7PlusHeader(S7PlusVersion_V1, Length(Request)), Request);
+  Frame := BytesConcat(Frame, EncodeS7PlusHeader(S7PlusVersion_V1, 0)); //trailer
+
+  if not LogicalSend(Frame) then exit;
+  if LogicalRecv(ResponseFrame)<>iorOK then exit;
+  if Length(ResponseFrame)<4 then exit;
+
+  Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+  Response := BytesCopy(ResponseFrame, Consumed, DataLen);
+  if Length(Response)<10 then exit; //CreateObject response too short
+
+  RespBody := BytesCopy(Response, 10, Length(Response)-10);
+  HasSessId := ParseCreateObjectSessionId(RespBody, SessId, BodyOffset, RetVal);
+
+  if HasSessId then
+    FSessionId := SessId
+  else if Length(Response)>=13 then
+    FSessionId := DecodeUInt32(Response, 9); //best-effort fallback, mirrors reference driver
+
+  FProtocolVersion := Version;
+  FLastReturnValue := RetVal;
+
+  //RetVal<>0 usually means the PLC requires TLS (not yet implemented here) - Connect will
+  //still try SetupSession and report failure through SessionSetupOK.
+  FServerSessionVersion := ParseServerSessionVersion(BytesCopy(Response, 10+BodyOffset, Length(Response)-(10+BodyOffset)));
+
+  Debug(Format('CreateObject: version=V%d sessionId=0x%.8x returnValue=%d serverSessionVersionLen=%d',
+               [Version, FSessionId, RetVal, Length(FServerSessionVersion)]));
+  if Length(FServerSessionVersion)>0 then
+    Debug('CreateObject: ServerSessionVersion = '+S7PlusHexStr(FServerSessionVersion));
+
+  Result := true;
+end;
+
+function TS7PlusConnection.SetupSession:Boolean;
+var
+  Seq:Word;
+  Header, Payload, Request, Frame, ResponseFrame, Response:TBytes;
+  Version:Byte;
+  DataLen:Word;
+  Consumed:Integer;
+  RespPayload:TBytes;
+  RetVal:QWord;
+  c:Integer;
+begin
+  Result := false;
+  if Length(FServerSessionVersion)=0 then exit;
+
+  Seq := NextSequenceNumber;
+  Header := EncodeRequestHeader(S7PlusFunc_SetMultiVariables, Seq, FSessionId, $36);
+
+  Payload := EncodeUInt32(FSessionId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //item count
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //address field count
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_ServerSessionVersion));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //ItemNumber=1
+  Payload := BytesConcat(Payload, FServerSessionVersion); //echoed verbatim
+  Payload := BytesConcat(Payload, BytesOf([$00])); //fill byte
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  Request := BytesConcat(Header, Payload);
+
+  Frame := BytesConcat(EncodeS7PlusHeader(FProtocolVersion, Length(Request)), Request);
+  Frame := BytesConcat(Frame, EncodeS7PlusHeader(FProtocolVersion, 0)); //trailer
+
+  if not LogicalSend(Frame) then exit;
+  if LogicalRecv(ResponseFrame)<>iorOK then exit;
+  if Length(ResponseFrame)<4 then exit;
+
+  Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+  Response := BytesCopy(ResponseFrame, Consumed, DataLen);
+  if Length(Response)<10 then exit;
+
+  RespPayload := BytesCopy(Response, 10, Length(Response)-10);
+  if Length(RespPayload)=0 then exit;
+
+  RetVal := DecodeUInt64VLQ(RespPayload, 0, c);
+  FLastReturnValue := RetVal;
+  Result := RetVal=0;
+  Debug(Format('SetupSession: returnValue=%d -> %s',[RetVal, BoolToStr(Result,true)]));
+end;
+
+//===========================================================================
+// Public connect/disconnect
+//===========================================================================
+
+function TS7PlusConnection.Connect:Boolean;
+begin
+  Result := false;
+  FSessionSetupOK := false;
+  FWithIntegrityId := false;
+  FIntegrityIdRead := 0;
+  FIntegrityIdWrite := 0;
+
+  if not CotpConnect then exit;
+  if not InitSSL then exit; //always unencrypted - triggers the PLC to prepare for TLS
+
+  if FUseTLS then begin
+    if not ActivateTLS then begin
+      Debug('Connect: falha ao ativar TLS - abortando conexao.');
+      exit;
+    end;
+  end;
+
+  if not CreateSession then exit; //frame header still says V1; TLS (if active) already wraps it
+
+  //Matches the reference driver: once TLS is active, subsequent PDUs use ProtocolVersion
+  //V2 regardless of what CreateObject's response header said.
+  if FTLSActive then
+    FProtocolVersion := S7PlusVersion_V2;
+
+  if Length(FServerSessionVersion)>0 then
+    FSessionSetupOK := SetupSession
+  else begin
+    FSessionSetupOK := false; //older FW band (Struct-314 SessionKey handshake) - not implemented yet
+    Debug('Connect: PLC nao enviou ServerSessionVersion escalar - SetupSession pulado (SessionSetupOK=false).');
+  end;
+
+  if FProtocolVersion>=S7PlusVersion_V3 then begin
+    if not FTLSActive then
+      Debug('Connect: PLC negociou V3 mas TLS nao esta ativo - a conexao pode nao funcionar.');
+  end else if FProtocolVersion=S7PlusVersion_V2 then begin
+    if not FTLSActive then begin
+      Debug('Connect: PLC negociou V2 mas TLS nao esta ativo (V2 exige TLS) - abortando.');
+      FConnected := false;
+      exit;
+    end;
+    FWithIntegrityId := true;
+    FIntegrityIdRead := 0;
+    FIntegrityIdWrite := 0;
+    Debug('Connect: rastreamento de IntegrityId habilitado (V2).');
+  end;
+
+  Result := true;
+  FConnected := true;
+  Debug(Format('Connect: OK - version=V%d sessionId=0x%.8x sessionSetupOK=%s tls=%s',
+               [FProtocolVersion, FSessionId, BoolToStr(FSessionSetupOK,true), BoolToStr(FTLSActive,true)]));
+end;
+
+procedure TS7PlusConnection.Disconnect;
+begin
+  FConnected := false;
+  FSessionSetupOK := false;
+  FSessionId := 0;
+  FSequenceNumber := 0;
+  FWithIntegrityId := false;
+  FIntegrityIdRead := 0;
+  FIntegrityIdWrite := 0;
+  SetLength(FServerSessionVersion, 0);
+  ReleaseTLS;
+end;
+
+//===========================================================================
+// Generic request/response
+//===========================================================================
+
+function TS7PlusConnection.SendRequest(FunctionCode:Word; const Payload:TBytes; out RespPayload:TBytes;
+                                        IntegrityTail:Integer; Reassemble:Boolean):Boolean;
+var
+  Seq:Word;
+  TransportFlags:Byte;
+  Header, ActualPayload, Request, Frame, ResponseFrame, Response, IntegrityBytes:TBytes;
+  Version:Byte;
+  DataLen:Word;
+  Consumed:Integer;
+  IsReadFunc:Boolean;
+begin
+  Result := false;
+  SetLength(RespPayload, 0);
+  if not FConnected then exit;
+
+  Seq := NextSequenceNumber;
+  if (FunctionCode=S7PlusFunc_GetMultiVariables) or (FunctionCode=S7PlusFunc_Explore) then
+    TransportFlags := $34
+  else
+    TransportFlags := $36;
+
+  //V2+: the IntegrityId (a per read/write monotonic counter) is spliced into the payload
+  //just before its trailing IntegrityTail bytes of padding (4 for GetMultiVariables/
+  //SetMultiVariables, 5 for Explore - see BuildAreaPayload/Explore's request builder).
+  IsReadFunc := IsS7PlusReadFunctionCode(FunctionCode);
+  if FWithIntegrityId and (FProtocolVersion>=S7PlusVersion_V2) then begin
+    if IsReadFunc then
+      IntegrityBytes := EncodeUInt32VLQ(FIntegrityIdRead)
+    else
+      IntegrityBytes := EncodeUInt32VLQ(FIntegrityIdWrite);
+
+    if Length(Payload)>=IntegrityTail then
+      ActualPayload := BytesConcat(BytesConcat(BytesCopy(Payload,0,Length(Payload)-IntegrityTail), IntegrityBytes), BytesCopy(Payload,Length(Payload)-IntegrityTail,IntegrityTail))
+    else
+      ActualPayload := BytesConcat(IntegrityBytes, Payload);
+
+    if IsReadFunc then
+      Debug(Format('SendRequest: IntegrityId (read) = %d',[FIntegrityIdRead]))
+    else
+      Debug(Format('SendRequest: IntegrityId (write) = %d',[FIntegrityIdWrite]));
+  end else
+    ActualPayload := Payload;
+
+  Header := EncodeRequestHeader(FunctionCode, Seq, FSessionId, TransportFlags);
+  Request := BytesConcat(Header, ActualPayload);
+
+  Frame := BytesConcat(EncodeS7PlusHeader(FProtocolVersion, Length(Request)), Request);
+  Frame := BytesConcat(Frame, EncodeS7PlusHeader(FProtocolVersion, 0)); //trailer
+
+  Debug(Format('SendRequest: functionCode=$%.4x seq=%d',[FunctionCode,Seq])+' payload='+S7PlusHexStr(ActualPayload));
+
+  if not LogicalSend(Frame) then begin
+    Debug('SendRequest: falha ao enviar');
+    exit;
+  end;
+
+  if FWithIntegrityId and (FProtocolVersion>=S7PlusVersion_V2) then begin
+    if IsReadFunc then
+      FIntegrityIdRead := (FIntegrityIdRead+1) and $FFFFFFFF
+    else
+      FIntegrityIdWrite := (FIntegrityIdWrite+1) and $FFFFFFFF;
+  end;
+
+  if Reassemble then begin
+    if not ReassembledRecv(Response) then begin
+      Debug('SendRequest: falha ao reassemblar resposta multi-fragmento');
+      exit;
+    end;
+    if Length(Response)<10 then begin
+      Debug('SendRequest: resposta reassemblada menor que o cabecalho de 10 bytes');
+      exit;
+    end;
+    RespPayload := BytesCopy(Response, 10, Length(Response)-10);
+    Result := true;
+    Debug(Format('SendRequest: respPayload reassemblado (%d bytes)',[Length(RespPayload)]));
+    exit;
+  end;
+
+  if LogicalRecv(ResponseFrame)<>iorOK then begin
+    Debug('SendRequest: falha ao receber resposta');
+    exit;
+  end;
+  if Length(ResponseFrame)<4 then begin
+    Debug(Format('SendRequest: frame de resposta vazio/curto demais (%d bytes)',[Length(ResponseFrame)]));
+    exit;
+  end;
+
+  Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+  Response := BytesCopy(ResponseFrame, Consumed, DataLen);
+  if Length(Response)<10 then begin
+    Debug('SendRequest: resposta menor que o cabecalho de 10 bytes');
+    exit;
+  end;
+
+  RespPayload := BytesCopy(Response, 10, Length(Response)-10);
+  Result := true;
+  Debug('SendRequest: respPayload='+S7PlusHexStr(RespPayload));
+end;
+
+function TS7PlusConnection.ExtractErrorText(const Data:TBytes):String;
+var
+  Offset, c, i:Integer;
+  Tag:Byte;
+  Flags, DataType:Byte;
+  Len:Cardinal;
+  Txt:String;
+begin
+  Result := '';
+  Offset := 0;
+  while Offset<Length(Data) do begin
+    Tag := Data[Offset];
+
+    if Tag=S7PlusElement_Attribute then begin
+      inc(Offset);
+      if Offset>=Length(Data) then break;
+      DecodeUInt32VLQ(Data, Offset, c); //AttrId - not needed here, just advancing Offset
+      Offset := Offset+c;
+      if (Offset+2)>Length(Data) then break;
+      Flags := Data[Offset];
+      DataType := Data[Offset+1];
+      Offset := Offset+2;
+
+      if (DataType=S7PlusType_WSTRING) and ((Flags and $10)=0) then begin
+        Len := DecodeUInt32VLQ(Data, Offset, c);
+        Offset := Offset+c;
+        if (Offset+Integer(Len))<=Length(Data) then begin
+          SetString(Txt, PAnsiChar(@Data[Offset]), Len);
+          if Result<>'' then Result := Result+' | ';
+          Result := Result+Txt;
+        end;
+        Offset := Offset+Integer(Len);
+      end else
+        Offset := SkipTypedValue(Data, Offset, DataType, Flags);
+
+    end else if Tag=S7PlusElement_StartOfObject then begin
+      inc(Offset);
+      if (Offset+4)>Length(Data) then break;
+      Offset := Offset+4; //RelationId (fixed)
+      for i:=1 to 3 do begin //ClassId, ClassFlags, AttributeId (each VLQ)
+        DecodeUInt32VLQ(Data, Offset, c);
+        Offset := Offset+c;
+      end;
+
+    end else
+      inc(Offset); //TerminatingObject/null/unknown tag - just skip one byte
+  end;
+end;
+
+//===========================================================================
+// Area / DB read-write (GetMultiVariables / SetMultiVariables, single item)
+//===========================================================================
+
+function TS7PlusConnection.BuildAreaPayload(AccessArea, AccessSubArea:Cardinal; Start:Integer; const WriteData:TBytes; IsWrite:Boolean; SizeIfRead:Integer):TBytes;
+var
+  Addr:TS7PlusItemAddress;
+  Lids:array[0..1] of Cardinal;
+begin
+  if IsWrite then begin
+    Lids[0] := Start+1;
+    Lids[1] := Length(WriteData);
+  end else begin
+    Lids[0] := Start+1;
+    Lids[1] := SizeIfRead;
+  end;
+
+  Addr := EncodeItemAddress(AccessArea, AccessSubArea, Lids);
+
+  Result := EncodeUInt32(0); //InObjectId
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1)); //item count
+  Result := BytesConcat(Result, EncodeUInt32VLQ(Addr.FieldCount));
+  Result := BytesConcat(Result, Addr.Data);
+
+  if IsWrite then begin
+    Result := BytesConcat(Result, EncodeUInt32VLQ(1)); //item number 1
+    Result := BytesConcat(Result, EncodePValueBlob(WriteData));
+    Result := BytesConcat(Result, BytesOf([$00]));
+  end;
+
+  Result := BytesConcat(Result, EncodeObjectQualifier);
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1));
+  Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
+end;
+
+function TS7PlusConnection.ParseSingleReadResponse(const Response:TBytes; out Data:TBytes):Boolean;
+var
+  Offset, c:Integer;
+  RetVal:QWord;
+  ItemNr:Cardinal;
+  Body:TBytes;
+  ErrText:String;
+begin
+  Result := false;
+  SetLength(Data, 0);
+
+  if EndsWithScalarSuffix(Response) then begin
+    Body := BytesCopy(Response, 0, Length(Response)-Length(ScalarResponseSuffix));
+    if (Length(Body)=2) and (Body[1]=0) then begin
+      SetLength(Data,1);
+      Data[0] := Body[0];
+      Result := true;
+      exit;
+    end;
+  end;
+
+  Offset := 0;
+  RetVal := DecodeUInt64VLQ(Response, Offset, c);
+  Offset := Offset+c;
+  FLastReturnValue := RetVal;
+  if RetVal<>0 then begin
+    ErrText := ExtractErrorText(BytesCopy(Response, Offset, Length(Response)-Offset));
+    if ErrText<>'' then
+      Debug(Format('ParseSingleReadResponse: PLC retornou erro (returnValue=%d): %s',[RetVal,ErrText]))
+    else
+      Debug(Format('ParseSingleReadResponse: PLC retornou erro (returnValue=%d)',[RetVal]));
+    exit;
+  end;
+
+  if Offset>=Length(Response) then begin
+    Debug('ParseSingleReadResponse: resposta sem itens apos o returnValue');
+    exit;
+  end;
+  ItemNr := DecodeUInt32VLQ(Response, Offset, c);
+  Offset := Offset+c;
+  if ItemNr=0 then begin
+    ErrText := ExtractErrorText(BytesCopy(Response, Offset, Length(Response)-Offset));
+    if ErrText<>'' then
+      Debug('ParseSingleReadResponse: itemNr=0 (nenhum valor retornado): '+ErrText)
+    else
+      Debug('ParseSingleReadResponse: itemNr=0 (nenhum valor retornado)');
+    exit;
+  end;
+
+  Data := DecodePValueToBytes(Response, Offset, c);
+  Result := true;
+end;
+
+function TS7PlusConnection.ParseSingleWriteResponse(const Response:TBytes):Boolean;
+var
+  RetVal:QWord;
+  c:Integer;
+  ErrText:String;
+begin
+  Result := false;
+  if Length(Response)=0 then exit;
+  RetVal := DecodeUInt64VLQ(Response, 0, c);
+  FLastReturnValue := RetVal;
+  Result := RetVal=0;
+  if not Result then begin
+    ErrText := ExtractErrorText(BytesCopy(Response, c, Length(Response)-c));
+    if ErrText<>'' then
+      Debug(Format('ParseSingleWriteResponse: PLC retornou erro (returnValue=%d): %s',[RetVal,ErrText]))
+    else
+      Debug(Format('ParseSingleWriteResponse: PLC retornou erro (returnValue=%d)',[RetVal]));
+  end;
+end;
+
+function TS7PlusConnection.ReadArea(AreaRID:Cardinal; Start, Size:Integer; out Data:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Result := false;
+  SetLength(Data,0);
+  Payload := BuildAreaPayload(AreaRID, S7PlusIds_ControllerAreaValueActual, Start, nil, false, Size);
+  if not SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp) then exit;
+  Result := ParseSingleReadResponse(Resp, Data);
+end;
+
+function TS7PlusConnection.WriteArea(AreaRID:Cardinal; Start:Integer; const Data:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Payload := BuildAreaPayload(AreaRID, S7PlusIds_ControllerAreaValueActual, Start, Data, true, 0);
+  Result := SendRequest(S7PlusFunc_SetMultiVariables, Payload, Resp) and ParseSingleWriteResponse(Resp);
+end;
+
+function TS7PlusConnection.DBRead(DBNumber, Start, Size:Integer; out Data:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+  AccessArea:Cardinal;
+begin
+  Result := false;
+  SetLength(Data,0);
+  AccessArea := S7PlusIds_DBAccessAreaBase + Cardinal(DBNumber and $FFFF);
+  Payload := BuildAreaPayload(AccessArea, S7PlusIds_DBValueActual, Start, nil, false, Size);
+  if not SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp) then exit;
+  Result := ParseSingleReadResponse(Resp, Data);
+end;
+
+function TS7PlusConnection.DBWrite(DBNumber, Start:Integer; const Data:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+  AccessArea:Cardinal;
+begin
+  AccessArea := S7PlusIds_DBAccessAreaBase + Cardinal(DBNumber and $FFFF);
+  Payload := BuildAreaPayload(AccessArea, S7PlusIds_DBValueActual, Start, Data, true, 0);
+  Result := SendRequest(S7PlusFunc_SetMultiVariables, Payload, Resp) and ParseSingleWriteResponse(Resp);
+end;
+
+//===========================================================================
+// Symbolic (LID-based) access - the only reliable way to read/write DB
+// variables and native-area named tags on real S7-1200/1500 firmware.
+//===========================================================================
+
+function TS7PlusConnection.BuildSymbolicPayload(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const WriteData:TBytes; IsWrite:Boolean; SymbolCrc:Cardinal):TBytes;
+var
+  AccessSubArea:Cardinal;
+  Addr:TS7PlusItemAddress;
+begin
+  if AccessArea>=S7PlusIds_DBAccessAreaBase then
+    AccessSubArea := S7PlusIds_DBValueActual
+  else
+    AccessSubArea := S7PlusIds_ControllerAreaValueActual;
+
+  Addr := EncodeItemAddress(AccessArea, AccessSubArea, Lids, SymbolCrc);
+
+  Result := EncodeUInt32(0); //InObjectId
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1)); //item count
+  Result := BytesConcat(Result, EncodeUInt32VLQ(Addr.FieldCount));
+  Result := BytesConcat(Result, Addr.Data);
+
+  if IsWrite then begin
+    Result := BytesConcat(Result, EncodeUInt32VLQ(1)); //item number 1
+    Result := BytesConcat(Result, EncodePValueBlob(WriteData));
+    Result := BytesConcat(Result, BytesOf([$00]));
+  end;
+
+  Result := BytesConcat(Result, EncodeObjectQualifier);
+  //The reference implementation only appends this VLQ(1) for writes
+  //(_build_symbolic_write_payload) - reads (_build_symbolic_read_payload) omit it
+  //entirely (with_integrity=False). Including it unconditionally made every
+  //symbolic GetMultiVariables (read) request 1 byte longer than the PLC expects.
+  if IsWrite then
+    Result := BytesConcat(Result, EncodeUInt32VLQ(1));
+  Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
+end;
+
+function TS7PlusConnection.ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes; SymbolCrc:Cardinal):Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Result := false;
+  SetLength(Data, 0);
+  Payload := BuildSymbolicPayload(AccessArea, Lids, nil, false, SymbolCrc);
+  if not SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp) then exit;
+  Result := ParseSingleReadResponse(Resp, Data);
+end;
+
+function TS7PlusConnection.WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SymbolCrc:Cardinal):Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Payload := BuildSymbolicPayload(AccessArea, Lids, Data, true, SymbolCrc);
+  Result := SendRequest(S7PlusFunc_SetMultiVariables, Payload, Resp) and ParseSingleWriteResponse(Resp);
+end;
+
+function TS7PlusConnection.Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+var
+  Payload:TBytes;
+  i:Integer;
+begin
+  Payload := EncodeUInt32(ExploreId); //ExploreId (fixed UInt32, not VLQ)
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(0)); //ExploreRequestId (0=none)
+  Payload := BytesConcat(Payload, BytesOf([1])); //ExploreChildsRecursive
+  Payload := BytesConcat(Payload, BytesOf([1])); //unknown flag - protocol always sends 1
+  Payload := BytesConcat(Payload, BytesOf([0])); //ExploreParents
+  Payload := BytesConcat(Payload, BytesOf([0])); //number of filter objects (none)
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Length(AttributeIds))); //AddressList count
+  for i:=0 to High(AttributeIds) do
+    Payload := BytesConcat(Payload, EncodeUInt32VLQ(AttributeIds[i]));
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailer: UInt32 fill
+  Payload := BytesConcat(Payload, BytesOf([0])); //+ a single filler byte (integrity_tail=5)
+
+  Result := SendRequest(S7PlusFunc_Explore, Payload, RespPayload, 5, true);
+end;
+
+function TS7PlusConnection.EnsureTypeInfoObjects:Boolean;
+var
+  RespPayload:TBytes;
+  EmptyAttrs:array of Cardinal;
+begin
+  if FTypeInfoCached then begin
+    Result := true;
+    exit;
+  end;
+  SetLength(EmptyAttrs, 0);
+  if FExploreDelayMs>0 then begin
+    Debug(Format('EnsureTypeInfoObjects: aguardando %d ms antes do Explore (diagnostico)',[FExploreDelayMs]));
+    Sleep(FExploreDelayMs);
+  end;
+  Result := Explore(S7PlusIds_ObjectOMSTypeInfoContainer, EmptyAttrs, RespPayload);
+  if not Result then begin
+    Debug('EnsureTypeInfoObjects: falha ao explorar o container de tipos (OMS)');
+    exit;
+  end;
+  Result := ExtractS7PlusTypeInfoObjects(RespPayload, FTypeInfoObjects);
+  FTypeInfoCached := Result;
+  Debug(Format('EnsureTypeInfoObjects: %d objetos de tipo carregados',[Length(FTypeInfoObjects)]));
+end;
+
+function TS7PlusConnection.ReadDBTypeInfoRid(DBAccessArea:Cardinal; out TiRid:Cardinal):Boolean;
+var
+  Data:TBytes;
+  Lids:TS7PlusLIDArray;
+begin
+  TiRid := 0;
+  SetLength(Lids, 1);
+  Lids[0] := 1;
+  Result := ReadSymbolic(DBAccessArea, Lids, Data);
+  if not Result then exit;
+  if Length(Data)<4 then begin
+    Result := false;
+    exit;
+  end;
+  TiRid := DecodeUInt32(Data, 0);
+end;
+
+function TS7PlusConnection.BrowseDB(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
+var
+  AccessArea, TiRid:Cardinal;
+  RootNodes:TS7PlusNodeArray;
+begin
+  SetLength(Vars, 0);
+  Result := false;
+  AccessArea := S7PlusIds_DBAccessAreaBase + DBNumber;
+
+  if not ReadDBTypeInfoRid(AccessArea, TiRid) then begin
+    Debug(Format('BrowseDB: falha ao ler o RID de tipo da DB%d (LID=1)',[DBNumber]));
+    exit;
+  end;
+  if TiRid=0 then begin
+    Debug(Format('BrowseDB: DB%d sem valor legivel (provavelmente so de carga/load-memory)',[DBNumber]));
+    exit;
+  end;
+  if not EnsureTypeInfoObjects then exit;
+
+  SetLength(RootNodes, 1);
+  FillChar(RootNodes[0], SizeOf(RootNodes[0]), 0);
+  RootNodes[0].NodeType := ntRoot;
+  RootNodes[0].Name := 'DB'+IntToStr(DBNumber);
+  RootNodes[0].AccessId := AccessArea;
+  RootNodes[0].RelationId := TiRid;
+
+  S7PlusBuildTree(RootNodes, FTypeInfoObjects);
+  Vars := S7PlusBuildFlatList(RootNodes);
+  Result := true;
+  Debug(Format('BrowseDB: DB%d -> %d variaveis',[DBNumber, Length(Vars)]));
+end;
+
+function TS7PlusConnection.BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):Boolean;
+var
+  RootNodes:TS7PlusNodeArray;
+begin
+  SetLength(Vars, 0);
+  Result := EnsureTypeInfoObjects;
+  if not Result then exit;
+
+  SetLength(RootNodes, 1);
+  FillChar(RootNodes[0], SizeOf(RootNodes[0]), 0);
+  RootNodes[0].NodeType := ntRoot;
+  RootNodes[0].Name := AreaName;
+  RootNodes[0].AccessId := AreaRID;
+  RootNodes[0].RelationId := TiRid;
+
+  S7PlusBuildTree(RootNodes, FTypeInfoObjects);
+  Vars := S7PlusBuildFlatList(RootNodes);
+  Debug(Format('BrowseNativeArea: %s -> %d variaveis',[AreaName, Length(Vars)]));
+end;
+
+end.
