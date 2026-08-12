@@ -51,7 +51,7 @@ type
   Defines the the update rate range of tags.
   }
   {$ENDIF}
-  TRefreshTime = 1..$7FFFFFFF;
+  TRefreshTime = 0..$7FFFFFFF;
 
   {$IFDEF PORTUGUES}
   //: Array dinamico de valores flutuantes.
