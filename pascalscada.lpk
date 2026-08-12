@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="42">
+    <Files Count="49">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -200,6 +200,34 @@
         <Filename Value="src\scada\socketserver.pas"/>
         <UnitName Value="socketserver"/>
       </Item42>
+      <Item43>
+        <Filename Value="src\scada\s7plustypes.pas"/>
+        <UnitName Value="S7PlusTypes"/>
+      </Item43>
+      <Item44>
+        <Filename Value="src\scada\s7plusvlq.pas"/>
+        <UnitName Value="S7PlusVLQ"/>
+      </Item44>
+      <Item45>
+        <Filename Value="src\scada\s7pluscodec.pas"/>
+        <UnitName Value="S7PlusCodec"/>
+      </Item45>
+      <Item46>
+        <Filename Value="src\scada\s7plusconnection.pas"/>
+        <UnitName Value="S7PlusConnection"/>
+      </Item46>
+      <Item47>
+        <Filename Value="src\scada\s7plusfamily.pas"/>
+        <UnitName Value="S7PlusFamily"/>
+      </Item47>
+      <Item48>
+        <Filename Value="src\scada\s7plusssl.pas"/>
+        <UnitName Value="S7PlusSSL"/>
+      </Item48>
+      <Item49>
+        <Filename Value="src\scada\s7plustypeinfo.pas"/>
+        <UnitName Value="S7PlusTypeInfo"/>
+      </Item49>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
