@@ -168,6 +168,11 @@ type
     //: Browses a native process area (Inputs/Outputs/Flags/Timers/Counters) the same way,
     //: using its fixed, well-known type-info RID (no per-DB LID=1 lookup needed).
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):Boolean;
+    //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and numeric
+    //: DB number, via a structured EXPLORE of the whole PLC program object tree. Used to
+    //: resolve a Path given by symbolic DB name (e.g. "BlocoSimbolico_4") to its "DB<n>"
+    //: form, since all other Path resolution is number-based.
+    function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;
 
     property Connected:Boolean read FConnected;
     property SessionId:Cardinal read FSessionId;
@@ -1431,6 +1436,23 @@ begin
   S7PlusBuildTree(RootNodes, FTypeInfoObjects);
   Vars := S7PlusBuildFlatList(RootNodes);
   Debug(Format('BrowseNativeArea: %s -> %d variaveis',[AreaName, Length(Vars)]));
+end;
+
+function TS7PlusConnection.ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;
+var
+  RespPayload:TBytes;
+  AttrIds:array[0..1] of Cardinal;
+begin
+  SetLength(Blocks, 0);
+  AttrIds[0] := S7PlusIds_ObjectVariableTypeName;
+  AttrIds[1] := S7PlusIds_BlockBlockNumber;
+  Result := Explore(S7PlusIds_NativeThePLCProgramRID, AttrIds, RespPayload);
+  if not Result then begin
+    Debug('ListDataBlocks: falha ao explorar o programa do CLP');
+    exit;
+  end;
+  Blocks := S7PlusParseExploreDataBlocks(RespPayload);
+  Debug(Format('ListDataBlocks: %d DBs encontradas',[Length(Blocks)]));
 end;
 
 end.
