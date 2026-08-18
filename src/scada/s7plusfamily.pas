@@ -31,8 +31,9 @@ unit S7PlusFamily;
 interface
 
 uses
-  Classes, SysUtils, ProtocolDriver, ProtocolTypes, Tag, CommPort, CommTypes,
-  S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock, PLCString;
+  Classes, SysUtils, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort,
+  CommTypes, S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
+  PLCString;
 
 const
   //-- Phase 1 addressing convention for TTagRec.ReadFunction/WriteFunction.
@@ -57,11 +58,21 @@ type
     Resolved:Boolean;
     AccessArea:Cardinal;
     Lids:TS7PlusLIDArray;
+    ByteOffset:Integer;   //cumulative, from resolution - see TS7PlusVarInfo.ByteOffset. -1=unknown.
+    SoftDataType:Byte;
     Data:TBytes;
     LastResult:TProtocolIOResult;
     LastScanTimeStamp:QWord;
     LastResolveAttempt:QWord;
     UpdateRate:LongInt;
+    //-- Read-dedup: when another already-independently-scanned entry's Lids is a strict
+    //-- prefix of this one's Lids (same AccessArea, both ByteOffset<>-1), this entry never
+    //-- gets its own read - DoGetValue slices its bytes out of the container entry's Data
+    //-- instead. See TS7CommPlusDriver.TryDeduplicateEntry.
+    IsDerived:Boolean;
+    ContainerPath:AnsiString;
+    DerivedOffset:Integer; //offset within the container's own Data (already Self.ByteOffset - Container.ByteOffset)
+    DerivedLen:Integer;
   end;
 
   //-- Cache of a DB's or native area's flat variable list (Name/Lids/SoftDataType), so
@@ -84,6 +95,8 @@ type
     FDBCache:array of TS7PlusDBCacheEntry;
     FIAreaVars, FQAreaVars, FMAreaVars, FTimersVars, FCountersVars:TS7PlusVarInfoArray;
     FIAreaBrowsed, FQAreaBrowsed, FMAreaBrowsed, FTimersBrowsed, FCountersBrowsed:Boolean;
+    FDBNameCache:TS7PlusDataBlockInfoArray;
+    FDBNameCacheLoaded:Boolean;
 
     function GetUseTLS:Boolean;
     procedure SetUseTLS(AValue:Boolean);
@@ -93,13 +106,18 @@ type
     function GetConnected:Boolean;
     function AreaRIDOf(ReadFunction:LongInt; out AreaRID:Cardinal):Boolean;
     procedure ConnDebug(Sender:TObject; const Msg:String);
+    procedure LockDriverIO;
+    procedure UnlockDriverIO;
 
     //-- Phase 2: symbolic Path resolution (cached) and scan-list lookups.
     function GetCachedDBVars(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetCachedAreaVars(AreaRID, TiRid:Cardinal; const AreaName:String; var Cache:TS7PlusVarInfoArray; var Browsed:Boolean; out Vars:TS7PlusVarInfoArray):Boolean;
-    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray):Boolean;
+    function GetDBNumberByName(const Name:AnsiString; out DBNumber:Integer):Boolean;
+    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte):Boolean;
     function TagPathOf(TagObj:TTag; out Path:AnsiString):Boolean;
     function FindScanEntry(const Path:AnsiString; out Index:Integer):Boolean;
+    function IsLidsPrefix(const Prefix, Full:TS7PlusLIDArray):Boolean;
+    procedure TryDeduplicateEntry(EntryIdx:Integer);
   protected
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -132,6 +150,8 @@ type
     function BrowseDB(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
     //: Browses a native process area (use the AreaRID/TiRid constants below).
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
+    //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and number.
+    function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
     //: Reads a variable's raw bytes by its resolved LID path (see BrowseDB/BrowseNativeArea).
     function ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
     //: Writes a variable's raw bytes by its resolved LID path.
@@ -225,6 +245,27 @@ begin
   Result := FConnection.Connected;
 end;
 
+//: Serializes direct/synchronous access (BrowseDB, ReadSymbolic, ...) against the
+//: background scan thread, the same way the framework already serializes DoScanRead vs.
+//: DoRead/DoWrite (see TProtocolDriver.SafeScanRead/SafeSingleScanRead). Without this,
+//: DoScanRead's own EnsureConnected call (it runs unconditionally on every tick, even
+//: with no tags registered) races with a direct call from application code on another
+//: thread, corrupting the COTP/TLS handshake on the shared socket.
+procedure TS7CommPlusDriver.LockDriverIO;
+begin
+  while not FPause.ResetEvent do
+    CrossThreadSwitch;
+  FWriteCS.Enter;
+  FReadCS.Enter;
+end;
+
+procedure TS7CommPlusDriver.UnlockDriverIO;
+begin
+  FReadCS.Leave;
+  FWriteCS.Leave;
+  FPause.SetEvent;
+end;
+
 procedure TS7CommPlusDriver.PortDisconnected(Sender:TObject);
 begin
   if FConnection<>nil then
@@ -291,26 +332,65 @@ begin
   Browsed := true;
 end;
 
-function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray):Boolean;
+function TS7CommPlusDriver.GetDBNumberByName(const Name:AnsiString; out DBNumber:Integer):Boolean;
+var
+  i:Integer;
+begin
+  Result := false;
+  DBNumber := 0;
+  if not FDBNameCacheLoaded then begin
+    //Leave FDBNameCacheLoaded false on failure, so a transient EXPLORE failure doesn't
+    //permanently blacklist symbolic DB names for the rest of the session - it'll just
+    //retry (and re-EXPLORE) on the next Path that needs it.
+    if not FConnection.ListDataBlocks(FDBNameCache) then exit;
+    FDBNameCacheLoaded := true;
+  end;
+  for i:=0 to High(FDBNameCache) do
+    if SameText(FDBNameCache[i].Name, Name) then begin
+      DBNumber := FDBNameCache[i].Number;
+      Result := true;
+      exit;
+    end;
+end;
+
+function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte):Boolean;
 var
   DotPos, DBNumber, i:Integer;
-  AreaName:AnsiString;
+  AreaName, CanonicalPath:AnsiString;
   Vars:TS7PlusVarInfoArray;
   Found:Boolean;
 begin
   Result := false;
   SetLength(Lids, 0);
   AccessArea := 0;
+  ByteOffset := -1;
+  SoftDataType := 0;
 
   DotPos := Pos('.', Path);
-  if DotPos<=1 then exit;
-  AreaName := Copy(Path, 1, DotPos-1);
+  if DotPos=1 then exit; //malformed: leading dot
+  if DotPos=0 then
+    AreaName := Path //bare Path, e.g. "DB4" or "BlocoSimbolico_4" - the DB/area root itself
+  else
+    AreaName := Copy(Path, 1, DotPos-1);
+  CanonicalPath := Path;
 
   Found := false;
   if (Length(AreaName)>2) and SameText(Copy(AreaName,1,2),'DB') and
      TryStrToInt(Copy(AreaName,3,Length(AreaName)), DBNumber) then begin
     if GetCachedDBVars(DBNumber, Vars) then begin
       AccessArea := S7PlusIds_DBAccessAreaBase + Cardinal(DBNumber);
+      Found := true;
+    end;
+  end else if GetDBNumberByName(AreaName, DBNumber) then begin
+    //Symbolic (TIA Portal) DB name, e.g. "BlocoSimbolico_4" -> DB4. BrowseDB's own flat
+    //list always names its entries by number ("DB4"/"DB4.Var1"), so rewrite the prefix
+    //before the final name lookup below.
+    if GetCachedDBVars(DBNumber, Vars) then begin
+      AccessArea := S7PlusIds_DBAccessAreaBase + Cardinal(DBNumber);
+      if DotPos=0 then
+        CanonicalPath := 'DB'+IntToStr(DBNumber)
+      else
+        CanonicalPath := 'DB'+IntToStr(DBNumber)+Copy(Path, DotPos, Length(Path));
       Found := true;
     end;
   end else if SameText(AreaName,'IArea') then begin
@@ -333,8 +413,10 @@ begin
   if not Found then exit;
 
   for i:=0 to High(Vars) do
-    if Vars[i].Name=Path then begin
+    if Vars[i].Name=CanonicalPath then begin
       Lids := Vars[i].Lids;
+      ByteOffset := Vars[i].ByteOffset;
+      SoftDataType := Vars[i].SoftDataType;
       Result := true;
       exit;
     end;
@@ -363,6 +445,77 @@ begin
     end;
   Index := -1;
   Result := false;
+end;
+
+function TS7CommPlusDriver.IsLidsPrefix(const Prefix, Full:TS7PlusLIDArray):Boolean;
+var
+  i:Integer;
+begin
+  Result := false;
+  //An empty LID path (the DB/area root itself, e.g. Path="DB4") does NOT return its
+  //children's bytes when read - confirmed against real hardware: reading a DB root
+  //returns a small fixed-size metadata object (looks like TiRid + a generation/checksum
+  //tag), not the DB's actual memory content. Treating it as a dedup container would slice
+  //completely wrong bytes for every other tag on that DB/area - never allow it.
+  if Length(Prefix)=0 then exit;
+  if Length(Prefix)>=Length(Full) then exit; //must be a STRICT (shorter) prefix
+  for i:=0 to High(Prefix) do
+    if Prefix[i]<>Full[i] then exit;
+  Result := true;
+end;
+
+//: Read-dedup: if some other already-resolved, independently-scanned entry's LID path is a
+//: prefix of this one's (same AccessArea - e.g. a struct and one of its own fields), this
+//: entry never gets its own GetMultiVariables read - DoGetValue slices its bytes out of the
+//: container's already-read Data instead (see TS7PlusVarInfo.ByteOffset for how the byte
+//: offset is computed and why it is directly comparable/subtractable across nesting levels).
+//: Symmetrically, if this entry turns out to be a container for other, already-independent
+//: entries, those get switched to derive from it instead of being read on their own.
+procedure TS7CommPlusDriver.TryDeduplicateEntry(EntryIdx:Integer);
+var
+  i, BestContainerIdx, BestLen:Integer;
+  CanBeDerived:Boolean;
+begin
+  if FScanList[EntryIdx].ByteOffset=-1 then exit; //offset unknown (e.g. inside an array)
+
+  CanBeDerived := not (TS7PlusSoftDataType(FScanList[EntryIdx].SoftDataType) in [sdtSTRING, sdtWSTRING]);
+
+  if CanBeDerived then begin
+    BestContainerIdx := -1;
+    BestLen := -1;
+    for i:=0 to High(FScanList) do begin
+      if i=EntryIdx then continue;
+      if FScanList[i].IsDerived or (not FScanList[i].Resolved) then continue;
+      if FScanList[i].AccessArea<>FScanList[EntryIdx].AccessArea then continue;
+      if FScanList[i].ByteOffset=-1 then continue;
+      if IsLidsPrefix(FScanList[i].Lids, FScanList[EntryIdx].Lids) and (Length(FScanList[i].Lids)>BestLen) then begin
+        BestLen := Length(FScanList[i].Lids);
+        BestContainerIdx := i;
+      end;
+    end;
+    if BestContainerIdx>=0 then begin
+      FScanList[EntryIdx].IsDerived := true;
+      FScanList[EntryIdx].ContainerPath := FScanList[BestContainerIdx].Path;
+      FScanList[EntryIdx].DerivedOffset := FScanList[EntryIdx].ByteOffset - FScanList[BestContainerIdx].ByteOffset;
+      FScanList[EntryIdx].DerivedLen := S7PlusDataTypeSize(FScanList[EntryIdx].SoftDataType, 0);
+      exit; //now derived - not eligible to also absorb others below
+    end;
+  end;
+
+  //This entry stayed independent - does it cover any EXISTING independent entries?
+  for i:=0 to High(FScanList) do begin
+    if i=EntryIdx then continue;
+    if FScanList[i].IsDerived or (not FScanList[i].Resolved) then continue;
+    if FScanList[i].AccessArea<>FScanList[EntryIdx].AccessArea then continue;
+    if FScanList[i].ByteOffset=-1 then continue;
+    if TS7PlusSoftDataType(FScanList[i].SoftDataType) in [sdtSTRING, sdtWSTRING] then continue;
+    if IsLidsPrefix(FScanList[EntryIdx].Lids, FScanList[i].Lids) then begin
+      FScanList[i].IsDerived := true;
+      FScanList[i].ContainerPath := FScanList[EntryIdx].Path;
+      FScanList[i].DerivedOffset := FScanList[i].ByteOffset - FScanList[EntryIdx].ByteOffset;
+      FScanList[i].DerivedLen := S7PlusDataTypeSize(FScanList[i].SoftDataType, 0);
+    end;
+  end;
 end;
 
 procedure TS7CommPlusDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
@@ -398,6 +551,17 @@ var
   Idx, i:Integer;
 begin
   if TagPathOf(TagObj, Path) and FindScanEntry(Path, Idx) then begin
+    //Entries deriving their value from this one (see TryDeduplicateEntry) can't keep
+    //pointing at it once it's gone - force them back through resolve+dedup on the next
+    //tick, where they'll either find a different container or become independent reads.
+    for i:=0 to High(FScanList) do
+      if (i<>Idx) and FScanList[i].IsDerived and (FScanList[i].ContainerPath=Path) then begin
+        FScanList[i].IsDerived := false;
+        FScanList[i].ContainerPath := '';
+        FScanList[i].Resolved := false;
+        FScanList[i].LastResolveAttempt := 0;
+      end;
+
     for i:=Idx to High(FScanList)-1 do
       FScanList[i] := FScanList[i+1];
     SetLength(FScanList, Length(FScanList)-1);
@@ -429,16 +593,20 @@ begin
   for i:=0 to High(FScanList) do
     if (not FScanList[i].Resolved) and (Now_-FScanList[i].LastResolveAttempt>=5000) then begin
       FScanList[i].LastResolveAttempt := Now_;
-      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids) then
+      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids, FScanList[i].ByteOffset, FScanList[i].SoftDataType) then begin
         FScanList[i].Resolved := true;
+        TryDeduplicateEntry(i);
+      end;
     end;
 
-  //Among the resolved tags, read the single most overdue one this tick (same "read the
-  //block that most needs it" pattern TModBusDriver.DoScanRead already uses).
+  //Among the resolved, independently-scanned tags (derived ones piggyback on their
+  //container's read - see TryDeduplicateEntry - and are never picked here), read the
+  //single most overdue one this tick (same "read the block that most needs it" pattern
+  //TModBusDriver.DoScanRead already uses).
   MostOverdueIdx := -1;
   WorstElapsed := Low(Int64);
   for i:=0 to High(FScanList) do
-    if FScanList[i].Resolved then begin
+    if FScanList[i].Resolved and (not FScanList[i].IsDerived) then begin
       Elapsed := Int64(Now_-FScanList[i].LastScanTimeStamp) - FScanList[i].UpdateRate;
       if (FScanList[i].LastScanTimeStamp=0) or (Elapsed>WorstElapsed) then begin
         WorstElapsed := Elapsed;
@@ -460,11 +628,38 @@ end;
 
 procedure TS7CommPlusDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
 var
-  Idx, i:Integer;
+  Idx, ContainerIdx, i, Len:Integer;
 begin
   SetLength(values.Values,0);
   if not FindScanEntry(TagRec.Path, Idx) then begin
     values.LastQueryResult := ioNullDriver;
+    exit;
+  end;
+
+  if FScanList[Idx].IsDerived then begin
+    //DoScanRead never reads a derived entry on its own - its bytes are sliced out of
+    //whichever entry it derives from (see TryDeduplicateEntry), which the container's
+    //OWN independent scan already keeps fresh.
+    if not FindScanEntry(FScanList[Idx].ContainerPath, ContainerIdx) then begin
+      //Container was removed since this was marked derived; DoDelTag resets Resolved to
+      //make it re-attach (or go independent) on the next scan, but until then report NA.
+      values.LastQueryResult := ioNullDriver;
+      exit;
+    end;
+    values.ClkMonotonicTStamp := FScanList[ContainerIdx].LastScanTimeStamp;
+    values.LastQueryResult := FScanList[ContainerIdx].LastResult;
+    if (FScanList[ContainerIdx].LastResult=ioOk) and (FScanList[Idx].DerivedOffset>=0) and
+       (FScanList[Idx].DerivedOffset+FScanList[Idx].DerivedLen<=Length(FScanList[ContainerIdx].Data)) then begin
+      Len := FScanList[Idx].DerivedLen;
+      SetLength(values.Values, Len);
+      for i:=0 to Len-1 do
+        values.Values[i] := FScanList[ContainerIdx].Data[FScanList[Idx].DerivedOffset+i];
+      values.ReadsOK := 1;
+      values.ReadFaults := 0;
+    end else begin
+      values.ReadsOK := 0;
+      values.ReadFaults := 1;
+    end;
     exit;
   end;
 
@@ -491,6 +686,8 @@ var
   AreaRID:Cardinal;
   AccessArea:Cardinal;
   Lids:TS7PlusLIDArray;
+  DummyOffset:Integer;
+  DummyType:Byte;
 begin
   SetLength(Values,0);
 
@@ -503,7 +700,7 @@ begin
   //Address addressing below entirely. Covers synchronous Tag.Read (DoScanRead/DoGetValue
   //handle the polled/async path separately, with their own resolution cache).
   if tagrec.Path<>'' then begin
-    if ResolvePath(tagrec.Path, AccessArea, Lids) and FConnection.ReadSymbolic(AccessArea, Lids, Data) then begin
+    if ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType) and FConnection.ReadSymbolic(AccessArea, Lids, Data) then begin
       SetLength(Values, Length(Data));
       for i:=0 to High(Data) do
         Values[i] := Data[i];
@@ -537,6 +734,8 @@ var
   AreaRID:Cardinal;
   AccessArea:Cardinal;
   Lids:TS7PlusLIDArray;
+  DummyOffset:Integer;
+  DummyType:Byte;
 begin
   if not EnsureConnected then begin
     Result := ioCommError;
@@ -549,7 +748,7 @@ begin
 
   //Symbolic (Path) tags: resolve and write by LID, bypassing the numeric addressing below.
   if tagrec.Path<>'' then begin
-    if ResolvePath(tagrec.Path, AccessArea, Lids) and FConnection.WriteSymbolic(AccessArea, Lids, Data) then
+    if ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType) and FConnection.WriteSymbolic(AccessArea, Lids, Data) then
       Result := ioOk
     else
       Result := ioCommError;
@@ -599,7 +798,12 @@ begin
   tr.Address := Start;
   tr.Size := Size;
 
-  Result := DoRead(tr, Values, true);
+  LockDriverIO;
+  try
+    Result := DoRead(tr, Values, true);
+  finally
+    UnlockDriverIO;
+  end;
   SetLength(Data, Length(Values));
   for i:=0 to High(Values) do
     Data[i] := Trunc(Values[i]) and $FF;
@@ -620,7 +824,12 @@ begin
   for i:=0 to High(Data) do
     Values[i] := Data[i];
 
-  Result := DoWrite(tr, Values, true);
+  LockDriverIO;
+  try
+    Result := DoWrite(tr, Values, true);
+  finally
+    UnlockDriverIO;
+  end;
 end;
 
 function TS7CommPlusDriver.ReadDB(DBNumber, Start, Size:Integer; out Data:TBytes):TProtocolIOResult;
@@ -635,7 +844,12 @@ begin
   tr.Address := Start;
   tr.Size := Size;
 
-  Result := DoRead(tr, Values, true);
+  LockDriverIO;
+  try
+    Result := DoRead(tr, Values, true);
+  finally
+    UnlockDriverIO;
+  end;
   SetLength(Data, Length(Values));
   for i:=0 to High(Values) do
     Data[i] := Trunc(Values[i]) and $FF;
@@ -657,58 +871,101 @@ begin
   for i:=0 to High(Data) do
     Values[i] := Data[i];
 
-  Result := DoWrite(tr, Values, true);
+  LockDriverIO;
+  try
+    Result := DoWrite(tr, Values, true);
+  finally
+    UnlockDriverIO;
+  end;
 end;
 
 function TS7CommPlusDriver.BrowseDB(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
 begin
   SetLength(Vars, 0);
-  if not EnsureConnected then begin
-    Result := ioCommError;
-    exit;
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.BrowseDB(DBNumber, Vars) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
   end;
-  if FConnection.BrowseDB(DBNumber, Vars) then
-    Result := ioOk
-  else
-    Result := ioCommError;
 end;
 
 function TS7CommPlusDriver.BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
 begin
   SetLength(Vars, 0);
-  if not EnsureConnected then begin
-    Result := ioCommError;
-    exit;
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.BrowseNativeArea(AreaRID, TiRid, AreaName, Vars) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
   end;
-  if FConnection.BrowseNativeArea(AreaRID, TiRid, AreaName, Vars) then
-    Result := ioOk
-  else
-    Result := ioCommError;
+end;
+
+function TS7CommPlusDriver.ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
+begin
+  SetLength(Blocks, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.ListDataBlocks(Blocks) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
 end;
 
 function TS7CommPlusDriver.ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
 begin
   SetLength(Data, 0);
-  if not EnsureConnected then begin
-    Result := ioCommError;
-    exit;
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.ReadSymbolic(AccessArea, Lids, Data) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
   end;
-  if FConnection.ReadSymbolic(AccessArea, Lids, Data) then
-    Result := ioOk
-  else
-    Result := ioCommError;
 end;
 
 function TS7CommPlusDriver.WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes):TProtocolIOResult;
 begin
-  if not EnsureConnected then begin
-    Result := ioCommError;
-    exit;
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.WriteSymbolic(AccessArea, Lids, Data) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
   end;
-  if FConnection.WriteSymbolic(AccessArea, Lids, Data) then
-    Result := ioOk
-  else
-    Result := ioCommError;
 end;
 
 end.

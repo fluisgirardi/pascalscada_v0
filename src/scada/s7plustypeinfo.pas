@@ -156,14 +156,41 @@ type
     Name:String;
     Lids:TS7PlusLIDArray;
     SoftDataType:Byte;
+    //: Cumulative byte offset from the DB/area root (sum of every ancestor's own
+    //: OffsetInfo.OptAddr along the struct-nesting path), used to slice a member's bytes
+    //: out of an ancestor's already-read blob instead of re-reading it independently -
+    //: see TS7CommPlusDriver.TryDeduplicateEntry. -1 means "not reliably known": this
+    //: happens for anything inside an array (S7PlusAddMDimSubnodes/array element offsets
+    //: are explicitly not computed for LID addressing today), so those never participate
+    //: in the dedup optimization and are always read independently.
+    ByteOffset:Integer;
   end;
   TS7PlusVarInfoArray = array of TS7PlusVarInfo;
+
+  //: One DB found by S7PlusParseExploreDataBlocks: its symbolic (TIA Portal) name, its
+  //: numeric DB number, and the raw RelationId ($8A0E0000+Number) it came from.
+  TS7PlusDataBlockInfo = record
+    Name:String;
+    Number:Cardinal;
+    Rid:Cardinal;
+  end;
+  TS7PlusDataBlockInfoArray = array of TS7PlusDataBlockInfo;
 
 //: Expands each ROOT node (name+AccessId+RelationId already filled) against the matching
 //: type object from TypeObjects (matched by RelationId), in place.
 procedure S7PlusBuildTree(var RootNodes:TS7PlusNodeArray; const TypeObjects:TS7PlusObjectArray);
 //: Walks the expanded tree and produces the flat list of readable (name, LID path) tags.
 function S7PlusBuildFlatList(const RootNodes:TS7PlusNodeArray):TS7PlusVarInfoArray;
+
+//: Parses the raw response of a structured EXPLORE(NativeThePLCProgramRID,
+//: [ObjectVariableTypeName, BlockBlockNumber]) call: walks the flat StartOfObject/
+//: Attribute/TerminatingObject tag stream of the whole PLC program tree (not the nested
+//: PObject form the OMS TypeInfo container uses) with an explicit stack, picking out every
+//: object whose ClassId is a DataBlock (S7PlusIds_DBClassRID) and whose RelationId falls in
+//: the DB access-area range ($8A0Exxxx) - giving the symbolic (TIA Portal) name -> DB number
+//: mapping that Path resolution needs to accept a DB's programming name instead of "DB<n>".
+//: Ported from python-snap7 client._parse_explore_datablocks.
+function S7PlusParseExploreDataBlocks(const Response:TBytes):TS7PlusDataBlockInfoArray;
 
 //: Formats a LID path as dot-separated uppercase hex, matching python-snap7's access_sequence.
 function S7PlusFormatLids(const Lids:TS7PlusLIDArray):String;
@@ -760,11 +787,12 @@ begin
   end;
 end;
 
-procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; var Result_:TS7PlusVarInfoArray); forward;
+procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset:Integer; var Result_:TS7PlusVarInfoArray); forward;
 
-procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; var Result_:TS7PlusVarInfoArray);
+procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset:Integer; var Result_:TS7PlusVarInfoArray);
 var
   NewLids:TS7PlusLIDArray;
+  NewByteOffset:Integer;
   i:Integer;
   Info:TS7PlusVarInfo;
 begin
@@ -775,44 +803,56 @@ begin
       //used to actually address the variable (it only shows up in the display name).
       Names := Names + Node.Name;
       NewLids := Lids;
+      NewByteOffset := 0;
     end;
-    ntArray: begin
-      Names := Names + Node.Name; //"[..]" index label, no dot
-      SetLength(NewLids, Length(Lids)+1);
-      if Length(Lids)>0 then Move(Lids[0], NewLids[0], Length(Lids)*SizeOf(Cardinal));
-      NewLids[High(NewLids)] := Node.AccessId;
-    end;
-    ntStructArray: begin
-      Names := Names + Node.Name;
-      SetLength(NewLids, Length(Lids)+2);
-      if Length(Lids)>0 then Move(Lids[0], NewLids[0], Length(Lids)*SizeOf(Cardinal));
-      NewLids[High(NewLids)-1] := Node.AccessId;
-      NewLids[High(NewLids)] := 1;
+    ntArray, ntStructArray: begin
+      //Array element byte offsets are not computed today (see S7PlusAddSubnodes/
+      //S7PlusAddMDimSubnodes - ElemOff/Stride are kept only for parity with the reference
+      //and explicitly not used for LID addressing), so nothing under an array element can
+      //reliably participate in the containment-based read-dedup optimization.
+      if Node.NodeType=ntArray then begin
+        Names := Names + Node.Name; //"[..]" index label, no dot
+        SetLength(NewLids, Length(Lids)+1);
+        if Length(Lids)>0 then Move(Lids[0], NewLids[0], Length(Lids)*SizeOf(Cardinal));
+        NewLids[High(NewLids)] := Node.AccessId;
+      end else begin
+        Names := Names + Node.Name;
+        SetLength(NewLids, Length(Lids)+2);
+        if Length(Lids)>0 then Move(Lids[0], NewLids[0], Length(Lids)*SizeOf(Cardinal));
+        NewLids[High(NewLids)-1] := Node.AccessId;
+        NewLids[High(NewLids)] := 1;
+      end;
+      NewByteOffset := -1;
     end;
   else //UNDEFINED / VAR member
     Names := Names + '.' + Node.Name;
     SetLength(NewLids, Length(Lids)+1);
     if Length(Lids)>0 then Move(Lids[0], NewLids[0], Length(Lids)*SizeOf(Cardinal));
     NewLids[High(NewLids)] := Node.AccessId;
+    if (ByteOffset=-1) or (not Node.HasVte) then
+      NewByteOffset := -1
+    else
+      NewByteOffset := ByteOffset + Integer(Node.Vte.OffsetInfo.OptAddr);
   end;
 
   if Length(Node.Children)>0 then begin
     //Struct-typed containers (plain UDT members, or a struct-array element) are, besides
     //being walked into for their individual fields below, also addressable as a whole -
     //the PLC resolves the LID path down to this object and (per GetMultiVariables/PValue)
-    //returns the raw byte blob for its full layout. Skip the root itself: its AccessId is
-    //the DB/area's AccessArea, not a real LID (see the ntRoot case above), so there is no
-    //LID path at all to read "the whole DB" as one item this way.
-    if (Node.NodeType<>ntRoot) then begin
-      Info.Name := Names;
-      Info.Lids := NewLids;
-      Info.SoftDataType := Node.SoftDataType;
-      SetLength(Result_, Length(Result_)+1);
-      Result_[High(Result_)] := Info;
-    end;
+    //returns the raw byte blob for its full layout. This also includes the root itself
+    //(the whole DB/area, e.g. "DB4") - EncodeItemAddress with an empty Lids array just
+    //encodes the AccessSubArea alone (field count 1, no LIDs), which addresses the area's
+    //"value actual" object directly - untested against real hardware until now, kept
+    //here experimentally to find out whether the PLC accepts it.
+    Info.Name := Names;
+    Info.Lids := NewLids;
+    Info.SoftDataType := Node.SoftDataType;
+    Info.ByteOffset := NewByteOffset;
+    SetLength(Result_, Length(Result_)+1);
+    Result_[High(Result_)] := Info;
 
     for i:=0 to High(Node.Children) do
-      S7PlusWalk(Node.Children[i], Names, NewLids, Result_);
+      S7PlusWalk(Node.Children[i], Names, NewLids, NewByteOffset, Result_);
     exit;
   end;
 
@@ -822,6 +862,7 @@ begin
   Info.Name := Names;
   Info.Lids := NewLids;
   Info.SoftDataType := Node.SoftDataType;
+  Info.ByteOffset := NewByteOffset;
   SetLength(Result_, Length(Result_)+1);
   Result_[High(Result_)] := Info;
 end;
@@ -835,7 +876,117 @@ begin
   SetLength(EmptyLids, 0);
   for i:=0 to High(RootNodes) do begin
     if Length(RootNodes[i].Children)=0 then continue;
-    S7PlusWalk(RootNodes[i], '', EmptyLids, Result);
+    S7PlusWalk(RootNodes[i], '', EmptyLids, 0, Result);
+  end;
+end;
+
+//: Decodes a block-name PValue's raw bytes: the S7-1500 sends either genuine UTF-16-BE (an
+//: embedded 0x00 high byte on every ASCII char) or packed one-byte-per-char ASCII with no
+//: high bytes at all - the presence of a null byte disambiguates the two (PLC identifiers
+//: never contain an embedded null). Block/tag names are ASCII identifiers in practice, so
+//: this only needs to handle that range, not full Unicode.
+function S7PlusDecodeNameBytes(const Value:TBytes):String;
+var
+  HasNull:Boolean;
+  i:Integer;
+begin
+  HasNull := false;
+  for i:=0 to High(Value) do
+    if Value[i]=0 then begin
+      HasNull := true;
+      break;
+    end;
+
+  Result := '';
+  if HasNull then begin
+    i := 0;
+    while i+1<=High(Value) do begin
+      if Value[i]<>0 then
+        Result := Result + Chr(Value[i]) //non-ASCII high byte: best-effort passthrough
+      else
+        Result := Result + Chr(Value[i+1]);
+      inc(i, 2);
+    end;
+  end else begin
+    SetLength(Result, Length(Value));
+    for i:=0 to High(Value) do
+      Result[i+1] := Chr(Value[i]);
+  end;
+
+  while (Length(Result)>0) and (Result[Length(Result)]=#0) do
+    SetLength(Result, Length(Result)-1);
+end;
+
+function S7PlusParseExploreDataBlocks(const Response:TBytes):TS7PlusDataBlockInfoArray;
+type
+  TStackEntry = record
+    RelId:Cardinal;
+    ClassId:Cardinal;
+    Name:String;
+  end;
+var
+  Offset, Consumed:Integer;
+  Tag:Byte;
+  RelId, ClassId, AttrId:Cardinal;
+  Value:TBytes;
+  Stack:array of TStackEntry;
+begin
+  SetLength(Result, 0);
+  SetLength(Stack, 0);
+  Offset := 0;
+
+  if Offset<Length(Response) then begin
+    DecodeUInt64VLQ(Response, Offset, Consumed); //leading ReturnValue - discarded
+    Offset := Offset+Consumed;
+  end;
+
+  while Offset<Length(Response) do begin
+    Tag := Response[Offset];
+
+    if Tag=S7PlusElement_StartOfObject then begin
+      inc(Offset);
+      if Offset+4>Length(Response) then break;
+      RelId := (Cardinal(Response[Offset]) shl 24) or (Cardinal(Response[Offset+1]) shl 16) or
+               (Cardinal(Response[Offset+2]) shl 8) or Cardinal(Response[Offset+3]);
+      Offset := Offset+4;
+      ClassId := DecodeUInt32VLQ(Response, Offset, Consumed); Offset := Offset+Consumed;
+      DecodeUInt32VLQ(Response, Offset, Consumed); Offset := Offset+Consumed; //ClassFlags, unused
+      DecodeUInt32VLQ(Response, Offset, Consumed); Offset := Offset+Consumed; //AttributeId, unused
+      SetLength(Stack, Length(Stack)+1);
+      Stack[High(Stack)].RelId := RelId;
+      Stack[High(Stack)].ClassId := ClassId;
+      Stack[High(Stack)].Name := '';
+    end
+
+    else if Tag=S7PlusElement_TerminatingObject then begin
+      inc(Offset);
+      if Length(Stack)>0 then begin
+        if (Stack[High(Stack)].ClassId=S7PlusIds_DBClassRID) and
+           ((Stack[High(Stack)].RelId shr 16)=$8A0E) then begin
+          SetLength(Result, Length(Result)+1);
+          Result[High(Result)].Name := Stack[High(Stack)].Name;
+          Result[High(Result)].Number := Stack[High(Stack)].RelId and $FFFF;
+          Result[High(Result)].Rid := Stack[High(Stack)].RelId;
+        end;
+        SetLength(Stack, Length(Stack)-1);
+      end;
+    end
+
+    else if Tag=S7PlusElement_Attribute then begin
+      inc(Offset);
+      AttrId := DecodeUInt32VLQ(Response, Offset, Consumed); Offset := Offset+Consumed;
+      try
+        Value := DecodePValueToBytes(Response, Offset, Consumed);
+      except
+        break;
+      end;
+      Offset := Offset+Consumed;
+      if (AttrId=S7PlusIds_ObjectVariableTypeName) and (Length(Stack)>0) then
+        Stack[High(Stack)].Name := S7PlusDecodeNameBytes(Value);
+    end
+
+    else
+      inc(Offset); //response preamble / unhandled element tags (e.g. Relation)
   end;
 end;
 
