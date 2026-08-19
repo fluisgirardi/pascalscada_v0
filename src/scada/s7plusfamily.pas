@@ -52,6 +52,16 @@ type
   //-- AccessArea + LID path) is lazy - it happens on first scan, not on DoAddTag, since
   //-- DoAddTag runs on whatever thread sets the tag's LongAddress (typically the main/UI
   //-- thread) and may run before the port is even open.
+  //-- One top-level member of a "whole DB/area" composite entry (see below): a single
+  //-- independently-addressable variable, read as its own item within the entry's own
+  //-- batched request, then spliced into the entry's assembled Data at ByteOffset.
+  TS7PlusCompositeItem = record
+    AccessArea:Cardinal;
+    Lids:TS7PlusLIDArray;
+    ByteOffset:Integer;
+  end;
+  TS7PlusCompositeItemArray = array of TS7PlusCompositeItem;
+
   TS7PlusScanEntry = record
     TagObj:TTag;
     Path:AnsiString;
@@ -73,6 +83,14 @@ type
     ContainerPath:AnsiString;
     DerivedOffset:Integer; //offset within the container's own Data (already Self.ByteOffset - Container.ByteOffset)
     DerivedLen:Integer;
+    //-- "Whole DB/area" tag: Path is a bare root (e.g. "DB4"/"BlocoSimbolico_4", no dot).
+    //-- Reading the root's own (empty) LID path returns an unrelated small metadata blob,
+    //-- not real memory content (confirmed against real hardware) - so instead this entry's
+    //-- Data is assembled every scan round from a batched read of every one of the DB/area's
+    //-- own top-level members (CompositeItems), spliced together at each member's own
+    //-- ByteOffset. See TS7CommPlusDriver.ResolvePath and DoScanRead.
+    IsComposite:Boolean;
+    CompositeItems:TS7PlusCompositeItemArray;
   end;
 
   //-- Cache of a DB's or native area's flat variable list (Name/Lids/SoftDataType), so
@@ -90,6 +108,7 @@ type
     FOnDebug:TS7PlusDebugEvent;
     FUseTLS:Boolean;
     FExploreDelayMs:Integer;
+    FUsername, FPassword:AnsiString;
 
     FScanList:array of TS7PlusScanEntry;
     FDBCache:array of TS7PlusDBCacheEntry;
@@ -113,11 +132,12 @@ type
     function GetCachedDBVars(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetCachedAreaVars(AreaRID, TiRid:Cardinal; const AreaName:String; var Cache:TS7PlusVarInfoArray; var Browsed:Boolean; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetDBNumberByName(const Name:AnsiString; out DBNumber:Integer):Boolean;
-    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte):Boolean;
+    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray):Boolean;
     function TagPathOf(TagObj:TTag; out Path:AnsiString):Boolean;
     function FindScanEntry(const Path:AnsiString; out Index:Integer):Boolean;
     function IsLidsPrefix(const Prefix, Full:TS7PlusLIDArray):Boolean;
     procedure TryDeduplicateEntry(EntryIdx:Integer);
+    function ReadComposite(const Items:TS7PlusCompositeItemArray; out Data:TBytes):Boolean;
   protected
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -155,7 +175,16 @@ type
     //: Reads a variable's raw bytes by its resolved LID path (see BrowseDB/BrowseNativeArea).
     function ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
     //: Writes a variable's raw bytes by its resolved LID path.
-    function WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes):TProtocolIOResult;
+    //: SoftDataType (from BrowseDB) is required for the PLC to accept the write - it's used
+    //: to encode Data as the target's own typed PValue (ValueDInt, ValueReal, ...) rather
+    //: than a generic byte array, which the PLC rejects outright. Default 0 falls back to a
+    //: byte array (only correct for genuine byte-array-typed targets).
+    function WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SoftDataType:Byte=0):TProtocolIOResult;
+    //: Reads several symbolic items in one round-trip - see TS7PlusConnection.ReadMultipleSymbolic.
+    function ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):TProtocolIOResult;
+    //: Performs PLC password authentication (legitimation) - see TS7PlusConnection.Authenticate.
+    //: Needed by some PLCs before writes are accepted (reads can remain open/unauthenticated).
+    function Authenticate(const Password:AnsiString; const Username:AnsiString=''):TProtocolIOResult;
 
     //: True when the S7CommPlus session is established (and, if UseTLS, the TLS tunnel
     //: is active and IntegrityId tracking is enabled).
@@ -173,6 +202,18 @@ type
     //: S7-1200/1500 firmware from TIA Portal V15+ for anything beyond the initial
     //: handshake. Default true; set to false only for known-legacy V1-only firmware.
     property UseTLS:Boolean read GetUseTLS write SetUseTLS default true;
+    //: PLC password for legitimation (V2+ with TLS) - some PLCs (protection level "Full
+    //: access with password" in TIA Portal) reject writes from an unauthenticated session
+    //: even though reads stay open. When set (non-empty), the driver calls Authenticate
+    //: automatically right after each new connection is established (see EnsureConnected).
+    //: Leave empty to skip legitimation entirely (the default - matches every PLC that
+    //: doesn't require it). Currently only the challenge-retrieval step of legitimation is
+    //: confirmed working against real hardware; the PLC still rejects the encrypted
+    //: response as of this writing - see TS7PlusConnection.Authenticate.
+    property Password:AnsiString read FPassword write FPassword;
+    //: Optional username for "new"-style (AES-256-CBC) legitimation. Leave empty for a
+    //: plain password login (the common case) - see Password.
+    property Username:AnsiString read FUsername write FUsername;
   end;
 
 implementation
@@ -228,6 +269,8 @@ begin
 end;
 
 function TS7CommPlusDriver.EnsureConnected:Boolean;
+var
+  WasConnected:Boolean;
 begin
   Result := false;
   if (PCommPort=nil) or (not PCommPort.ReallyActive) then exit;
@@ -239,10 +282,19 @@ begin
     FConnection.ExploreDelayMs := FExploreDelayMs;
   end;
 
-  if not FConnection.Connected then
+  WasConnected := FConnection.Connected;
+  if not WasConnected then
     FConnection.Connect;
 
   Result := FConnection.Connected;
+
+  //Authenticate once per freshly-established connection (not on every EnsureConnected call -
+  //this runs on every scan tick even with no tags due). Password='' (default) means the PLC
+  //doesn't need legitimation - skip entirely, matching every PLC that doesn't require it.
+  if Result and (not WasConnected) and (FPassword<>'') then begin
+    if not FConnection.Authenticate(FPassword, FUsername) then
+      ConnDebug(Self, 'EnsureConnected: falha na legitimacao (Username/Password) - writes podem continuar bloqueados pelo CLP.');
+  end;
 end;
 
 //: Serializes direct/synchronous access (BrowseDB, ReadSymbolic, ...) against the
@@ -353,18 +405,20 @@ begin
     end;
 end;
 
-function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte):Boolean;
+function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray):Boolean;
 var
-  DotPos, DBNumber, i:Integer;
-  AreaName, CanonicalPath:AnsiString;
+  DotPos, DBNumber, i, j, CIdx:Integer;
+  AreaName, CanonicalPath, Rest:AnsiString;
   Vars:TS7PlusVarInfoArray;
   Found:Boolean;
+  Tmp:TS7PlusCompositeItem;
 begin
   Result := false;
   SetLength(Lids, 0);
   AccessArea := 0;
   ByteOffset := -1;
   SoftDataType := 0;
+  SetLength(CompositeItems, 0);
 
   DotPos := Pos('.', Path);
   if DotPos=1 then exit; //malformed: leading dot
@@ -411,6 +465,42 @@ begin
   end;
 
   if not Found then exit;
+
+  //Bare root Path (Path="DB4"/"BlocoSimbolico_4", no dot): a "whole DB/area" tag. The root's
+  //own (empty) LID path only returns a small, unrelated metadata blob when read directly -
+  //confirmed against real hardware, see IsLidsPrefix - so instead of that, collect every one
+  //of the DB/area's own top-level members (one dot below the root, i.e. not itself another
+  //member's nested field; array elements are skipped since their ByteOffset is unreliable).
+  //DoScanRead batches all of these into one request per scan round and splices the results
+  //together at each member's own ByteOffset - see TS7CommPlusDriver.DoScanRead.
+  if DotPos=0 then begin
+    for i:=0 to High(Vars) do begin
+      if Vars[i].Name=CanonicalPath then continue; //the root entry itself, not a member
+      if Vars[i].ByteOffset=-1 then continue;
+      if (Length(Vars[i].Name)<=Length(CanonicalPath)) or
+         (Copy(Vars[i].Name,1,Length(CanonicalPath))<>CanonicalPath) or
+         (Vars[i].Name[Length(CanonicalPath)+1]<>'.') then continue;
+      Rest := Copy(Vars[i].Name, Length(CanonicalPath)+2, MaxInt);
+      if (Rest='') or (Pos('.', Rest)>0) then continue; //not a direct (top-level) member
+
+      CIdx := Length(CompositeItems);
+      SetLength(CompositeItems, CIdx+1);
+      CompositeItems[CIdx].AccessArea := AccessArea;
+      CompositeItems[CIdx].Lids := Vars[i].Lids;
+      CompositeItems[CIdx].ByteOffset := Vars[i].ByteOffset;
+    end;
+    //Insertion sort by ByteOffset ascending - composing "starting from the first element" is
+    //what makes truncating the assembled buffer to the tag's own configured Size meaningful.
+    for i:=1 to High(CompositeItems) do begin
+      Tmp := CompositeItems[i];
+      j := i;
+      while (j>0) and (CompositeItems[j-1].ByteOffset>Tmp.ByteOffset) do begin
+        CompositeItems[j] := CompositeItems[j-1];
+        Dec(j);
+      end;
+      CompositeItems[j] := Tmp;
+    end;
+  end;
 
   for i:=0 to High(Vars) do
     if Vars[i].Name=CanonicalPath then begin
@@ -518,6 +608,40 @@ begin
   end;
 end;
 
+//: Reads every member of a "whole DB/area" composite Path (see ResolvePath) in one batched
+//: request and splices the results together at each member's own ByteOffset. Used by the
+//: synchronous DoRead path; DoScanRead does its own equivalent expansion inline so a
+//: composite tag's members can share the same GetMultiVariables round-trip as any other due
+//: tag in the same scan tick, instead of a separate request just for this Path.
+function TS7CommPlusDriver.ReadComposite(const Items:TS7PlusCompositeItemArray; out Data:TBytes):Boolean;
+var
+  ReqItems:TS7PlusMultiReadItemArray;
+  Results:TS7PlusMultiReadResultArray;
+  i, b, NeedLen:Integer;
+begin
+  Result := false;
+  SetLength(Data, 0);
+  if Length(Items)=0 then exit;
+
+  SetLength(ReqItems, Length(Items));
+  for i:=0 to High(Items) do begin
+    ReqItems[i].AccessArea := Items[i].AccessArea;
+    ReqItems[i].Lids := Items[i].Lids;
+  end;
+
+  if not FConnection.ReadMultipleSymbolic(ReqItems, Results) then exit;
+
+  for i:=0 to High(Items) do begin
+    if (i>High(Results)) or (not Results[i].Ok) then continue;
+    NeedLen := Items[i].ByteOffset+Length(Results[i].Data);
+    if NeedLen>Length(Data) then
+      SetLength(Data, NeedLen);
+    for b:=0 to High(Results[i].Data) do
+      Data[Items[i].ByteOffset+b] := Results[i].Data[b];
+  end;
+  Result := true;
+end;
+
 procedure TS7CommPlusDriver.DoAddTag(TagObj:TTag; TagValid:Boolean);
 var
   Path:AnsiString;
@@ -574,11 +698,31 @@ end;
 //===========================================================================
 
 procedure TS7CommPlusDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
+const
+  //Caps how many due tags get batched into a single GetMultiVariables request. Bounds
+  //worst-case request/response size if a large burst of tags all come due at once (e.g.
+  //right after connecting); anything past the cap is still overdue and gets swept up on
+  //the very next tick(s), so this only paces catch-up, it never drops a tag. A composite
+  //("whole DB") entry counts as just one against this cap even though it expands into many
+  //wire items below - it's still a single logical tag coming due.
+  MaxBatchSize = 50;
+type
+  //-- Which scan-list entry a given batched wire item belongs to, and (for a composite
+  //-- entry's own members) where in that entry's assembled Data its bytes get spliced.
+  TBatchOwner = record
+    EntryIdx:Integer;
+    IsCompositeItem:Boolean;
+    CompByteOffset:Integer;
+  end;
 var
-  i, MostOverdueIdx:Integer;
-  Now_, Elapsed, WorstElapsed:Int64;
-  Data:TBytes;
+  i, j, EntryIdx, ItemIdx, b:Integer;
+  Now_, Elapsed:Int64;
+  DueIndices:array of Integer;
+  Items:TS7PlusMultiReadItemArray;
+  Results:TS7PlusMultiReadResultArray;
+  Owners:array of TBatchOwner;
   ok:Boolean;
+  NeedLen:Integer;
 begin
   NeedSleep := 0;
 
@@ -593,43 +737,103 @@ begin
   for i:=0 to High(FScanList) do
     if (not FScanList[i].Resolved) and (Now_-FScanList[i].LastResolveAttempt>=5000) then begin
       FScanList[i].LastResolveAttempt := Now_;
-      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids, FScanList[i].ByteOffset, FScanList[i].SoftDataType) then begin
+      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids, FScanList[i].ByteOffset, FScanList[i].SoftDataType, FScanList[i].CompositeItems) then begin
         FScanList[i].Resolved := true;
+        FScanList[i].IsComposite := Length(FScanList[i].CompositeItems)>0;
         TryDeduplicateEntry(i);
       end;
     end;
 
-  //Among the resolved, independently-scanned tags (derived ones piggyback on their
-  //container's read - see TryDeduplicateEntry - and are never picked here), read the
-  //single most overdue one this tick (same "read the block that most needs it" pattern
-  //TModBusDriver.DoScanRead already uses).
-  MostOverdueIdx := -1;
-  WorstElapsed := Low(Int64);
+  //Collect every resolved, independently-scanned tag (derived ones piggyback on their
+  //container's read - see TryDeduplicateEntry - and are never picked here) that's
+  //currently due, and read all of them in a single batched GetMultiVariables request -
+  //see TS7PlusConnection.ReadMultipleSymbolic. Items may span different DBs/areas freely.
+  SetLength(DueIndices, 0);
   for i:=0 to High(FScanList) do
     if FScanList[i].Resolved and (not FScanList[i].IsDerived) then begin
       Elapsed := Int64(Now_-FScanList[i].LastScanTimeStamp) - FScanList[i].UpdateRate;
-      if (FScanList[i].LastScanTimeStamp=0) or (Elapsed>WorstElapsed) then begin
-        WorstElapsed := Elapsed;
-        MostOverdueIdx := i;
+      if (FScanList[i].LastScanTimeStamp=0) or (Elapsed>=0) then begin
+        SetLength(DueIndices, Length(DueIndices)+1);
+        DueIndices[High(DueIndices)] := i;
+        if Length(DueIndices)>=MaxBatchSize then break;
       end;
     end;
 
-  if (MostOverdueIdx>=0) and ((FScanList[MostOverdueIdx].LastScanTimeStamp=0) or (WorstElapsed>=0)) then begin
-    ok := FConnection.ReadSymbolic(FScanList[MostOverdueIdx].AccessArea, FScanList[MostOverdueIdx].Lids, Data);
-    FScanList[MostOverdueIdx].LastScanTimeStamp := GetTickCount64;
-    if ok then begin
-      FScanList[MostOverdueIdx].Data := Data;
-      FScanList[MostOverdueIdx].LastResult := ioOk;
-    end else
-      FScanList[MostOverdueIdx].LastResult := ioCommError;
-  end else
+  if Length(DueIndices)=0 then begin
     NeedSleep := 20;
+    exit;
+  end;
+
+  //Expand each due entry into one or more wire items - a plain entry contributes exactly
+  //one item; a composite ("whole DB") entry contributes one item per top-level member, all
+  //still folded into this same round's single GetMultiVariables request.
+  SetLength(Items, 0);
+  SetLength(Owners, 0);
+  for i:=0 to High(DueIndices) do begin
+    EntryIdx := DueIndices[i];
+    if FScanList[EntryIdx].IsComposite then begin
+      for j:=0 to High(FScanList[EntryIdx].CompositeItems) do begin
+        ItemIdx := Length(Items);
+        SetLength(Items, ItemIdx+1);
+        SetLength(Owners, ItemIdx+1);
+        Items[ItemIdx].AccessArea := FScanList[EntryIdx].CompositeItems[j].AccessArea;
+        Items[ItemIdx].Lids := FScanList[EntryIdx].CompositeItems[j].Lids;
+        Owners[ItemIdx].EntryIdx := EntryIdx;
+        Owners[ItemIdx].IsCompositeItem := true;
+        Owners[ItemIdx].CompByteOffset := FScanList[EntryIdx].CompositeItems[j].ByteOffset;
+      end;
+    end else begin
+      ItemIdx := Length(Items);
+      SetLength(Items, ItemIdx+1);
+      SetLength(Owners, ItemIdx+1);
+      Items[ItemIdx].AccessArea := FScanList[EntryIdx].AccessArea;
+      Items[ItemIdx].Lids := FScanList[EntryIdx].Lids;
+      Owners[ItemIdx].EntryIdx := EntryIdx;
+      Owners[ItemIdx].IsCompositeItem := false;
+    end;
+  end;
+
+  ok := FConnection.ReadMultipleSymbolic(Items, Results);
+  Now_ := GetTickCount64; //re-stamp after the round-trip, not before
+
+  //Optimistically mark every due entry as scanned+ok this round; a composite entry gets
+  //downgraded below if any one of its own member reads actually failed.
+  for i:=0 to High(DueIndices) do begin
+    FScanList[DueIndices[i]].LastScanTimeStamp := Now_;
+    FScanList[DueIndices[i]].LastResult := ioOk;
+  end;
+
+  if not ok then begin
+    for i:=0 to High(DueIndices) do
+      FScanList[DueIndices[i]].LastResult := ioCommError;
+    exit;
+  end;
+
+  for i:=0 to High(Items) do begin
+    EntryIdx := Owners[i].EntryIdx;
+    if (i>High(Results)) or (not Results[i].Ok) then begin
+      FScanList[EntryIdx].LastResult := ioCommError;
+      continue;
+    end;
+    if Owners[i].IsCompositeItem then begin
+      NeedLen := Owners[i].CompByteOffset+Length(Results[i].Data);
+      if NeedLen>Length(FScanList[EntryIdx].Data) then
+        SetLength(FScanList[EntryIdx].Data, NeedLen);
+      for b:=0 to High(Results[i].Data) do
+        FScanList[EntryIdx].Data[Owners[i].CompByteOffset+b] := Results[i].Data[b];
+    end else
+      FScanList[EntryIdx].Data := Results[i].Data;
+  end;
 end;
 
 procedure TS7CommPlusDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
 var
   Idx, ContainerIdx, i, Len:Integer;
 begin
+  //A composite ("whole DB/area") entry's assembled Data spans every one of its members,
+  //starting at offset 0 - "reading the whole DB" as literally as the wire protocol allows.
+  //If the tag declared a smaller Size than that (e.g. a TPLCStruct meant to mirror only the
+  //DB's leading fields), truncate to it here; Size=0 (undeclared) keeps the full assembly.
   SetLength(values.Values,0);
   if not FindScanEntry(TagRec.Path, Idx) then begin
     values.LastQueryResult := ioNullDriver;
@@ -667,8 +871,11 @@ begin
   values.LastQueryResult := FScanList[Idx].LastResult;
 
   if FScanList[Idx].LastResult=ioOk then begin
-    SetLength(values.Values, Length(FScanList[Idx].Data));
-    for i:=0 to High(FScanList[Idx].Data) do
+    Len := Length(FScanList[Idx].Data);
+    if FScanList[Idx].IsComposite and (TagRec.Size>0) and (TagRec.Size<Len) then
+      Len := TagRec.Size;
+    SetLength(values.Values, Len);
+    for i:=0 to Len-1 do
       values.Values[i] := FScanList[Idx].Data[i];
     values.ReadsOK := 1;
     values.ReadFaults := 0;
@@ -688,6 +895,8 @@ var
   Lids:TS7PlusLIDArray;
   DummyOffset:Integer;
   DummyType:Byte;
+  CompositeItems:TS7PlusCompositeItemArray;
+  Len:Integer;
 begin
   SetLength(Values,0);
 
@@ -698,11 +907,24 @@ begin
 
   //Symbolic (Path) tags: resolve and read by LID, bypassing the numeric Rack/Slot/DB/
   //Address addressing below entirely. Covers synchronous Tag.Read (DoScanRead/DoGetValue
-  //handle the polled/async path separately, with their own resolution cache).
+  //handle the polled/async path separately, with their own resolution cache). A bare-root
+  //("whole DB/area") Path resolves with a non-empty CompositeItems - read via a batched
+  //multi-item request instead of the (otherwise meaningless) empty-LID ReadSymbolic.
   if tagrec.Path<>'' then begin
-    if ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType) and FConnection.ReadSymbolic(AccessArea, Lids, Data) then begin
-      SetLength(Values, Length(Data));
-      for i:=0 to High(Data) do
+    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType, CompositeItems) then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if Length(CompositeItems)>0 then
+      ok := ReadComposite(CompositeItems, Data)
+    else
+      ok := FConnection.ReadSymbolic(AccessArea, Lids, Data);
+    if ok then begin
+      Len := Length(Data);
+      if (Length(CompositeItems)>0) and (tagrec.Size>0) and (tagrec.Size<Len) then
+        Len := tagrec.Size;
+      SetLength(Values, Len);
+      for i:=0 to Len-1 do
         Values[i] := Data[i];
       Result := ioOk;
     end else
@@ -735,7 +957,8 @@ var
   AccessArea:Cardinal;
   Lids:TS7PlusLIDArray;
   DummyOffset:Integer;
-  DummyType:Byte;
+  WriteSoftDataType:Byte;
+  DummyComposite:TS7PlusCompositeItemArray;
 begin
   if not EnsureConnected then begin
     Result := ioCommError;
@@ -747,8 +970,15 @@ begin
     Data[i] := Trunc(Values[i]) and $FF;
 
   //Symbolic (Path) tags: resolve and write by LID, bypassing the numeric addressing below.
+  //Writing a bare-root ("whole DB/area") Path isn't supported - ResolvePath still returns
+  //the root's own empty LID path in that case, so this just writes to the root object as
+  //before (the same no-op-ish metadata target it always was for a bare Path). The resolved
+  //SoftDataType is required so WriteSymbolic can encode the value as the target's own typed
+  //PValue (ValueDInt, ValueReal, ...) - a generic byte-array/blob value is rejected by the
+  //PLC outright, confirmed against real hardware.
   if tagrec.Path<>'' then begin
-    if ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType) and FConnection.WriteSymbolic(AccessArea, Lids, Data) then
+    if ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite) and
+       FConnection.WriteSymbolic(AccessArea, Lids, Data, 0, WriteSoftDataType) then
       Result := ioOk
     else
       Result := ioCommError;
@@ -951,7 +1181,25 @@ begin
   end;
 end;
 
-function TS7CommPlusDriver.WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes):TProtocolIOResult;
+function TS7CommPlusDriver.ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):TProtocolIOResult;
+begin
+  SetLength(Results, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.ReadMultipleSymbolic(Items, Results) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SoftDataType:Byte):TProtocolIOResult;
 begin
   LockDriverIO;
   try
@@ -959,7 +1207,24 @@ begin
       Result := ioCommError;
       exit;
     end;
-    if FConnection.WriteSymbolic(AccessArea, Lids, Data) then
+    if FConnection.WriteSymbolic(AccessArea, Lids, Data, 0, SoftDataType) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.Authenticate(const Password:AnsiString; const Username:AnsiString):TProtocolIOResult;
+begin
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.Authenticate(Password, Username) then
       Result := ioOk
     else
       Result := ioCommError;
