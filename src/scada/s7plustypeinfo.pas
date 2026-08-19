@@ -157,9 +157,10 @@ type
     Lids:TS7PlusLIDArray;
     SoftDataType:Byte;
     //: Cumulative byte offset from the DB/area root (sum of every ancestor's own
-    //: OffsetInfo.OptAddr along the struct-nesting path), used to slice a member's bytes
-    //: out of an ancestor's already-read blob instead of re-reading it independently -
-    //: see TS7CommPlusDriver.TryDeduplicateEntry. -1 means "not reliably known": this
+    //: OffsetInfo.NonOptAddr along the struct-nesting path - the classic, byte-addressable
+    //: layout, not OptAddr's runtime-internal one), used to slice a member's bytes out of an
+    //: ancestor's already-read blob instead of re-reading it independently - see
+    //: TS7CommPlusDriver.TryDeduplicateEntry. -1 means "not reliably known": this
     //: happens for anything inside an array (S7PlusAddMDimSubnodes/array element offsets
     //: are explicitly not computed for LID addressing today), so those never participate
     //: in the dedup optimization and are always read independently.
@@ -832,7 +833,13 @@ begin
     if (ByteOffset=-1) or (not Node.HasVte) then
       NewByteOffset := -1
     else
-      NewByteOffset := ByteOffset + Integer(Node.Vte.OffsetInfo.OptAddr);
+      //NonOptAddr (not OptAddr): OptAddr is the "optimized"/runtime-internal address, which
+      //can include compiler bookkeeping gaps ahead of the first declared member (confirmed
+      //against real hardware: DB4.Var1's OptAddr was 4, not 0, throwing off "whole DB"
+      //byte-buffer assembly). NonOptAddr is the classic, byte-addressable layout (what
+      //DB.DBBx/DBWx/DBDx addressing and a "read the whole DB" buffer both expect) - see
+      //python-snap7's typeinfo.py _walk, which tracks both in parallel for the same reason.
+      NewByteOffset := ByteOffset + Integer(Node.Vte.OffsetInfo.NonOptAddr);
   end;
 
   if Length(Node.Children)>0 then begin

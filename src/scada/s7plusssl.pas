@@ -113,6 +113,23 @@ type
   TFn_BIO_ctrl = function(bp:PBIO; cmd:cint; larg:clong; parg:Pointer):clong; cdecl;
   TFn_BIO_free = function(b:PBIO):cint; cdecl;
 
+  //-- libcrypto - EVP digest/cipher, used for S7CommPlus legitimation (password
+  //-- authentication): SHA-1/SHA-256 for password hashing/key derivation, AES-256-CBC for
+  //-- the "new"-style encrypted challenge response. See S7PlusSHA1/S7PlusSHA256/
+  //-- S7PlusAES256CBCEncrypt below.
+  TFn_EVP_sha1 = function:Pointer; cdecl;
+  TFn_EVP_sha256 = function:Pointer; cdecl;
+  TFn_EVP_Digest = function(const data:Pointer; count:csize_t; md:PByte; size:pcuint;
+                             mdtype:Pointer; impl_:Pointer):cint; cdecl;
+  TFn_EVP_CIPHER_CTX_new = function:Pointer; cdecl;
+  TFn_EVP_CIPHER_CTX_free = procedure(ctx:Pointer); cdecl;
+  TFn_EVP_aes_256_cbc = function:Pointer; cdecl;
+  TFn_EVP_EncryptInit_ex = function(ctx:Pointer; cipher:Pointer; impl_:Pointer;
+                                     const key:PByte; const iv:PByte):cint; cdecl;
+  TFn_EVP_EncryptUpdate = function(ctx:Pointer; outb:PByte; outl:pcint;
+                                    const inb:PByte; inl:cint):cint; cdecl;
+  TFn_EVP_EncryptFinal_ex = function(ctx:Pointer; outb:PByte; outl:pcint):cint; cdecl;
+
 var
   //-- libssl
   TLS_client_method:TFn_TLS_client_method;
@@ -142,6 +159,15 @@ var
   BIO_write:TFn_BIO_write;
   BIO_ctrl:TFn_BIO_ctrl;
   BIO_free:TFn_BIO_free;
+  EVP_sha1:TFn_EVP_sha1;
+  EVP_sha256:TFn_EVP_sha256;
+  EVP_Digest:TFn_EVP_Digest;
+  EVP_CIPHER_CTX_new:TFn_EVP_CIPHER_CTX_new;
+  EVP_CIPHER_CTX_free:TFn_EVP_CIPHER_CTX_free;
+  EVP_aes_256_cbc:TFn_EVP_aes_256_cbc;
+  EVP_EncryptInit_ex:TFn_EVP_EncryptInit_ex;
+  EVP_EncryptUpdate:TFn_EVP_EncryptUpdate;
+  EVP_EncryptFinal_ex:TFn_EVP_EncryptFinal_ex;
 
 //: BIO_ctrl_pending() macro equivalent: how many bytes are buffered and ready to read.
 function S7PlusBIOCtrlPending(b:PBIO):clong;
@@ -149,6 +175,14 @@ function S7PlusBIOCtrlPending(b:PBIO):clong;
 function S7PlusSSLCtxSetMinProtoVersion(ctx:PSSLCTX; version:cint):clong;
 //: SSL_CTX_set1_groups_list() macro equivalent (restricts the offered EC groups).
 function S7PlusSSLCtxSet1GroupsList(ctx:PSSLCTX; const AStr:PAnsiChar):clong;
+
+//: SHA-1 digest of Data (20 bytes), via EVP_Digest. Empty result on any failure/unloaded lib.
+function S7PlusSHA1(const Data:TBytes):TBytes;
+//: SHA-256 digest of Data (32 bytes), via EVP_Digest. Empty result on any failure/unloaded lib.
+function S7PlusSHA256(const Data:TBytes):TBytes;
+//: AES-256-CBC encryption of Plaintext (Key must be 32 bytes, IV at least 16 - only the
+//: first 16 are used), with PKCS7 padding (EVP's default). Empty result on any failure.
+function S7PlusAES256CBCEncrypt(const Key, IV, Plaintext:TBytes):TBytes;
 
 implementation
 
@@ -241,6 +275,16 @@ begin
   BIO_ctrl   := TFn_BIO_ctrl(Bind(CryptoLib, 'BIO_ctrl', Missing));
   BIO_free   := TFn_BIO_free(Bind(CryptoLib, 'BIO_free', Missing));
 
+  EVP_sha1             := TFn_EVP_sha1(Bind(CryptoLib, 'EVP_sha1', Missing));
+  EVP_sha256           := TFn_EVP_sha256(Bind(CryptoLib, 'EVP_sha256', Missing));
+  EVP_Digest           := TFn_EVP_Digest(Bind(CryptoLib, 'EVP_Digest', Missing));
+  EVP_CIPHER_CTX_new   := TFn_EVP_CIPHER_CTX_new(Bind(CryptoLib, 'EVP_CIPHER_CTX_new', Missing));
+  EVP_CIPHER_CTX_free  := TFn_EVP_CIPHER_CTX_free(Bind(CryptoLib, 'EVP_CIPHER_CTX_free', Missing));
+  EVP_aes_256_cbc      := TFn_EVP_aes_256_cbc(Bind(CryptoLib, 'EVP_aes_256_cbc', Missing));
+  EVP_EncryptInit_ex   := TFn_EVP_EncryptInit_ex(Bind(CryptoLib, 'EVP_EncryptInit_ex', Missing));
+  EVP_EncryptUpdate    := TFn_EVP_EncryptUpdate(Bind(CryptoLib, 'EVP_EncryptUpdate', Missing));
+  EVP_EncryptFinal_ex  := TFn_EVP_EncryptFinal_ex(Bind(CryptoLib, 'EVP_EncryptFinal_ex', Missing));
+
   if Missing<>'' then begin
     LoadError := 'Simbolo OpenSSL nao encontrado: '+Missing+'.';
     FreeLibrary(SSLLib); SSLLib := NilHandle;
@@ -287,6 +331,67 @@ end;
 function S7PlusSSLCtxSet1GroupsList(ctx:PSSLCTX; const AStr:PAnsiChar):clong;
 begin
   Result := SSL_CTX_ctrl(ctx, SSL_CTRL_SET_GROUPS_LIST, 0, AStr);
+end;
+
+function S7PlusSHA1(const Data:TBytes):TBytes;
+var
+  Buf:array[0..63] of Byte; //EVP_MAX_MD_SIZE=64, SHA-1 only fills the first 20
+  Size:cuint;
+  DataPtr:Pointer;
+begin
+  SetLength(Result, 0);
+  if not S7PlusSSLLoaded then exit;
+  if Length(Data)>0 then DataPtr := @Data[0] else DataPtr := nil;
+  Size := 0;
+  if EVP_Digest(DataPtr, Length(Data), @Buf[0], @Size, EVP_sha1(), nil)<>1 then exit;
+  SetLength(Result, Size);
+  if Size>0 then Move(Buf[0], Result[0], Size);
+end;
+
+function S7PlusSHA256(const Data:TBytes):TBytes;
+var
+  Buf:array[0..63] of Byte;
+  Size:cuint;
+  DataPtr:Pointer;
+begin
+  SetLength(Result, 0);
+  if not S7PlusSSLLoaded then exit;
+  if Length(Data)>0 then DataPtr := @Data[0] else DataPtr := nil;
+  Size := 0;
+  if EVP_Digest(DataPtr, Length(Data), @Buf[0], @Size, EVP_sha256(), nil)<>1 then exit;
+  SetLength(Result, Size);
+  if Size>0 then Move(Buf[0], Result[0], Size);
+end;
+
+function S7PlusAES256CBCEncrypt(const Key, IV, Plaintext:TBytes):TBytes;
+var
+  Ctx:Pointer;
+  OutBuf:array of Byte;
+  OutLen1, OutLen2:cint;
+  InPtr:PByte;
+begin
+  SetLength(Result, 0);
+  if (Length(Key)<>32) or (Length(IV)<16) then exit;
+  if not S7PlusSSLLoaded then exit;
+
+  Ctx := EVP_CIPHER_CTX_new();
+  if Ctx=nil then exit;
+  try
+    if EVP_EncryptInit_ex(Ctx, EVP_aes_256_cbc(), nil, @Key[0], @IV[0])<>1 then exit;
+
+    SetLength(OutBuf, Length(Plaintext)+16); //PKCS7 padding adds at most one full block
+    OutLen1 := 0;
+    if Length(Plaintext)>0 then InPtr := @Plaintext[0] else InPtr := nil;
+    if EVP_EncryptUpdate(Ctx, @OutBuf[0], @OutLen1, InPtr, Length(Plaintext))<>1 then exit;
+
+    OutLen2 := 0;
+    if EVP_EncryptFinal_ex(Ctx, @OutBuf[OutLen1], @OutLen2)<>1 then exit;
+
+    SetLength(Result, OutLen1+OutLen2);
+    if Length(Result)>0 then Move(OutBuf[0], Result[0], Length(Result));
+  finally
+    EVP_CIPHER_CTX_free(Ctx);
+  end;
 end;
 
 initialization

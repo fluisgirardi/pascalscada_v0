@@ -75,6 +75,23 @@ function EncodeItemAddress(AccessArea, AccessSubArea:Cardinal; const Lids:array 
 
 //: Encodes raw bytes as a BLOB PValue: [flags=$00][datatype=BLOB][len:VLQ][data].
 function EncodePValueBlob(const Data:TBytes):TBytes;
+//: Encodes raw bytes as a plain BYTE array PValue (Flags=$10/array, DataType=Byte,
+//: VLQ(count), raw bytes) - matches the reference's ValueByteArray.Serialize(). Used as the
+//: fallback for write values whose SoftDataType isn't a plain scalar (arrays, strings,
+//: structs, or SoftDataType=0/unknown).
+function EncodePValueByteArray(const Data:TBytes):TBytes;
+//: Encodes a write value as its own type-specific scalar PValue (e.g. ValueDInt, ValueReal),
+//: matching the target variable's SoftDataType (as returned by BrowseDB) - required for
+//: SetMultiVariables writes to be accepted at all: a generic byte-array/blob value is
+//: rejected by the PLC regardless of session/legitimation state, confirmed against real
+//: hardware. RawData is the tag's raw big-endian byte buffer (same layout ReadSymbolic
+//: returns). Falls back to EncodePValueByteArray for any SoftDataType without a known
+//: scalar mapping (arrays, strings, structs, SoftDataType=0).
+//: SoftDataType values (see TS7PlusSoftDataType in S7PlusTypeInfo - duplicated here as
+//: raw numbers to avoid a circular unit dependency, since S7PlusTypeInfo already uses
+//: S7PlusCodec): 1=BOOL 2=BYTE 3=CHAR 4=WORD 5=INT 6=DWORD 7=DINT 8=REAL 48=LREAL
+//: 49=ULINT 50=LINT 51=LWORD 52=USINT 53=UINT 54=UDINT 55=SINT.
+function EncodeTypedWriteValue(SoftDataType:Byte; const RawData:TBytes):TBytes;
 
 //: Decodes a PValue (flags+datatype+value) to its raw big-endian bytes, regardless of type.
 function DecodePValueToBytes(const Data:TBytes; Offset:Integer; out Consumed:Integer):TBytes;
@@ -290,8 +307,94 @@ end;
 function EncodePValueBlob(const Data:TBytes):TBytes;
 begin
   Result := BytesOf([$00, S7PlusType_BLOB]);
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0)); //BlobRootId - 0 (ad-hoc blob, no root object)
   Result := BytesConcat(Result, EncodeUInt32VLQ(Length(Data)));
   Result := BytesConcat(Result, Data);
+end;
+
+function EncodePValueByteArray(const Data:TBytes):TBytes;
+begin
+  Result := BytesOf([$10, S7PlusType_BYTE]); //Flags=$10 (array), DataType=Byte
+  Result := BytesConcat(Result, EncodeUInt32VLQ(Length(Data)));
+  Result := BytesConcat(Result, Data);
+end;
+
+function BEBytesToUInt64(const Data:TBytes):QWord;
+var
+  i:Integer;
+begin
+  Result := 0;
+  for i:=0 to High(Data) do
+    Result := (Result shl 8) or Data[i];
+end;
+
+function BEBytesToInt64(const Data:TBytes):Int64;
+var
+  u:QWord;
+  Bits:Integer;
+begin
+  u := BEBytesToUInt64(Data);
+  Bits := Length(Data)*8;
+  if (Bits>0) and (Bits<64) and ((u and (QWord(1) shl (Bits-1)))<>0) then
+    Result := Int64(u) - (Int64(1) shl Bits) //sign-extend
+  else
+    Result := Int64(u);
+end;
+
+function EncodeTypedWriteValue(SoftDataType:Byte; const RawData:TBytes):TBytes;
+var
+  WireType:Byte;
+  Kind:(wkNone, wkRawByte, wkRawFloat, wkUnsignedVLQ, wkSignedVLQ);
+begin
+  Kind := wkNone;
+  case SoftDataType of
+    1{sdtBOOL}:  begin WireType := S7PlusType_BOOL;  Kind := wkRawByte; end;
+    2{sdtBYTE}:  begin WireType := S7PlusType_BYTE;  Kind := wkRawByte; end;
+    3{sdtCHAR}:  begin WireType := S7PlusType_USINT; Kind := wkRawByte; end;
+    52{sdtUSINT}:begin WireType := S7PlusType_USINT; Kind := wkRawByte; end;
+    55{sdtSINT}: begin WireType := S7PlusType_SINT;  Kind := wkRawByte; end;
+    4{sdtWORD}:  begin WireType := S7PlusType_WORD;  Kind := wkUnsignedVLQ; end;
+    53{sdtUINT}: begin WireType := S7PlusType_UINT;  Kind := wkUnsignedVLQ; end;
+    6{sdtDWORD}: begin WireType := S7PlusType_DWORD; Kind := wkUnsignedVLQ; end;
+    54{sdtUDINT}:begin WireType := S7PlusType_UDINT; Kind := wkUnsignedVLQ; end;
+    49{sdtULINT}:begin WireType := S7PlusType_ULINT; Kind := wkUnsignedVLQ; end;
+    51{sdtLWORD}:begin WireType := S7PlusType_LWORD; Kind := wkUnsignedVLQ; end;
+    5{sdtINT}:   begin WireType := S7PlusType_INT;   Kind := wkSignedVLQ; end;
+    7{sdtDINT}:  begin WireType := S7PlusType_DINT;  Kind := wkSignedVLQ; end;
+    50{sdtLINT}: begin WireType := S7PlusType_LINT;  Kind := wkSignedVLQ; end;
+    8{sdtREAL}:  begin WireType := S7PlusType_REAL;  Kind := wkRawFloat; end;
+    48{sdtLREAL}:begin WireType := S7PlusType_LREAL; Kind := wkRawFloat; end;
+  end;
+
+  case Kind of
+    wkRawByte: begin
+      Result := BytesOf([$00, WireType]);
+      if Length(RawData)>0 then
+        Result := BytesConcat(Result, BytesOf([RawData[High(RawData)]]))
+      else
+        Result := BytesConcat(Result, BytesOf([0]));
+    end;
+    wkRawFloat: begin
+      Result := BytesOf([$00, WireType]);
+      Result := BytesConcat(Result, RawData); //IEEE-754 bit pattern, passed through as-is
+    end;
+    wkUnsignedVLQ: begin
+      Result := BytesOf([$00, WireType]);
+      if Length(RawData)>4 then
+        Result := BytesConcat(Result, EncodeUInt64VLQ(BEBytesToUInt64(RawData)))
+      else
+        Result := BytesConcat(Result, EncodeUInt32VLQ(Cardinal(BEBytesToUInt64(RawData))));
+    end;
+    wkSignedVLQ: begin
+      Result := BytesOf([$00, WireType]);
+      if Length(RawData)>4 then
+        Result := BytesConcat(Result, EncodeInt64VLQ(BEBytesToInt64(RawData)))
+      else
+        Result := BytesConcat(Result, EncodeInt32VLQ(LongInt(BEBytesToInt64(RawData))));
+    end;
+  else
+    Result := EncodePValueByteArray(RawData);
+  end;
 end;
 
 function PValueElementSize(DataType:Byte):Integer;
@@ -425,7 +528,17 @@ begin
       Consumed := Consumed+c;
       Result := EncodeUInt32(val32);
     end;
-    S7PlusType_BLOB, S7PlusType_WSTRING: begin
+    S7PlusType_BLOB: begin
+      DecodeUInt32VLQ(Data, Offset+Consumed, c); //BlobRootId - not needed here, just advancing
+      Consumed := Consumed+c;
+      Len := DecodeUInt32VLQ(Data, Offset+Consumed, c);
+      Consumed := Consumed+c;
+      SetLength(Result, Len);
+      if Len>0 then
+        Move(Data[Offset+Consumed], Result[0], Len);
+      Consumed := Consumed+Integer(Len);
+    end;
+    S7PlusType_WSTRING: begin
       Len := DecodeUInt32VLQ(Data, Offset+Consumed, c);
       Consumed := Consumed+c;
       SetLength(Result, Len);
@@ -528,7 +641,13 @@ begin
     end;
     S7PlusType_RID:
       Result := Result+4;
-    S7PlusType_BLOB, S7PlusType_WSTRING: begin
+    S7PlusType_BLOB: begin
+      DecodeUInt32VLQ(Data, Result, c); //BlobRootId
+      Result := Result+c;
+      Len := DecodeUInt32VLQ(Data, Result, c);
+      Result := Result+c+Integer(Len);
+    end;
+    S7PlusType_WSTRING: begin
       Len := DecodeUInt32VLQ(Data, Result, c);
       Result := Result+c+Integer(Len);
     end;

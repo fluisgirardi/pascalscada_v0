@@ -95,6 +95,23 @@ const
   S7PlusObjId_ServerSessionClientRID   = 300;
   S7PlusObjId_ServerSessionVersion     = 306;
 
+  //-- Legitimation (password authentication, V2+ with TLS) ---------------------
+  S7PlusObjId_ServerSessionRequest       = 303;
+  S7PlusObjId_ServerSessionResponse      = 304;
+  S7PlusObjId_SessionSetupLegitimation   = 1830;
+  S7PlusObjId_EffectiveProtectionLevel   = 1842;
+  S7PlusObjId_Legitimate                 = 1846;
+  S7PlusObjId_LegitimationPayloadStruct   = 40400;
+  S7PlusObjId_LegitimationPayloadType     = 40401;
+  S7PlusObjId_LegitimationPayloadUsername = 40402;
+  S7PlusObjId_LegitimationPayloadPassword = 40403;
+
+  //-- AccessLevel values returned by EffectiveProtectionLevel (lower = more access).
+  S7PlusAccessLevel_FullAccess = 1;
+  S7PlusAccessLevel_ReadAccess = 2;
+  S7PlusAccessLevel_HMIAccess  = 3;
+  S7PlusAccessLevel_NoAccess   = 4;
+
   //-- TSAP used by every S7CommPlus connection ---------------------------------
   S7PlusLocalTSAP  = $0600;
   S7PlusRemoteTSAP : AnsiString = 'SIMATIC-ROOT-HMI'; //: 16-byte ASCII, fixed.

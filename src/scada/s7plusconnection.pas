@@ -43,6 +43,26 @@ type
   //: Assign it (e.g. to a WriteLn wrapper) to diagnose a connection against real hardware.
   TS7PlusDebugEvent = procedure(Sender:TObject; const Msg:String) of object;
 
+  //: One symbolic (LID-based) item to read in a single batched GetMultiVariables request -
+  //: see TS7PlusConnection.ReadMultipleSymbolic. Items may span different DBs/areas (each
+  //: carries its own AccessArea), matching how the reference implementation's
+  //: _build_read_payload batches items freely across DB numbers.
+  TS7PlusMultiReadItem = record
+    AccessArea:Cardinal;
+    Lids:TS7PlusLIDArray;
+  end;
+  TS7PlusMultiReadItemArray = array of TS7PlusMultiReadItem;
+
+  //: One item's result from ReadMultipleSymbolic: Ok=false means the PLC reported this
+  //: specific item as failed (e.g. bad LID) while the rest of the batch still succeeded -
+  //: distinct from ReadMultipleSymbolic itself returning false, which means the whole
+  //: request failed (comm error, or the PLC rejected it outright with a nonzero returnValue).
+  TS7PlusMultiReadResult = record
+    Data:TBytes;
+    Ok:Boolean;
+  end;
+  TS7PlusMultiReadResultArray = array of TS7PlusMultiReadResult;
+
   { TS7PlusConnection }
 
   TS7PlusConnection = class
@@ -113,15 +133,43 @@ type
 
     //-- payload builders/parsers ----------------------------------------------
     function BuildAreaPayload(AccessArea, AccessSubArea:Cardinal; Start:Integer; const WriteData:TBytes; IsWrite:Boolean; SizeIfRead:Integer):TBytes;
-    function BuildSymbolicPayload(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const WriteData:TBytes; IsWrite:Boolean; SymbolCrc:Cardinal):TBytes;
+    function BuildSymbolicPayload(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const WriteData:TBytes; IsWrite:Boolean; SymbolCrc:Cardinal; WriteSoftDataType:Byte=0):TBytes;
     function ParseSingleReadResponse(const Response:TBytes; out Data:TBytes):Boolean;
     function ParseSingleWriteResponse(const Response:TBytes):Boolean;
+    function BuildMultiSymbolicReadPayload(const Items:TS7PlusMultiReadItemArray):TBytes;
+    function ParseMultiReadResponse(const Response:TBytes; ItemCount:Integer; out Results:TS7PlusMultiReadResultArray):Boolean;
 
     //: Best-effort scan of a tagged-object error/fault structure (the PLC attaches one
     //: after a non-zero returnValue) for any WSTRING-typed attributes, which usually
     //: carry a human-readable description of what was rejected and why (e.g. "Request
     //: GetVariableSubrangeStreamed"). Returns them joined by " | ", or '' if none found.
     function ExtractErrorText(const Data:TBytes):String;
+
+    //-- Legitimation (password authentication, V2+ with TLS) - see Authenticate.
+    //: Derives the 32-byte OMS exporter secret from the active TLS session (RFC 5705,
+    //: label "EXPERIMENTAL_OMS"), used as the AES-256-CBC key material for "new"-style
+    //: legitimation. Requires TLS to be active.
+    function GetOMSSecret(out Secret:TBytes):Boolean;
+    //: Serializes the {LegitimationType, Username, Password/PasswordHash} ValueStruct sent
+    //: (encrypted, for the "new" style) as the legitimation response payload.
+    function BuildLegitimationPayload(const Password, Username:AnsiString):TBytes;
+    //: Legacy response: SHA-1(password) XORed with the challenge (first 20 bytes).
+    function BuildLegacyLegitimationResponse(const Password:AnsiString; const Challenge:TBytes):TBytes;
+    //: New-style response: the legitimation payload, AES-256-CBC encrypted with
+    //: key=SHA-256(OmsSecret) and iv=challenge[:16].
+    function BuildNewLegitimationResponse(const Password:AnsiString; const Challenge, OmsSecret:TBytes; const Username:AnsiString):TBytes;
+    //: Requests the legitimation challenge from the PLC (GetVarSubStreamed on
+    //: ServerSessionRequest).
+    function GetLegitimationChallenge(out Challenge:TBytes):Boolean;
+    //: Requests the session's current access level (GetVarSubStreamed on
+    //: EffectiveProtectionLevel) - the reference always checks this before attempting
+    //: legitimation, and skips it entirely if already at FullAccess (1). See
+    //: S7PlusAccessLevel_* constants.
+    function GetEffectiveProtectionLevel(out AccessLevel:Cardinal):Boolean;
+    //: Sends the AES-256-CBC encrypted response (SetVariable on Legitimate).
+    function SendLegitimationNew(const EncryptedResponse:TBytes):Boolean;
+    //: Sends the legacy SHA-1/XOR response (SetVariable on ServerSessionResponse).
+    function SendLegitimationLegacy(const Response:TBytes):Boolean;
   public
     constructor Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
     destructor Destroy; override;
@@ -156,7 +204,13 @@ type
     //: Reads a variable's raw bytes by its resolved LID path (see BrowseDB/BrowseNativeArea).
     function ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes; SymbolCrc:Cardinal=0):Boolean;
     //: Writes a variable's raw bytes by its resolved LID path.
-    function WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SymbolCrc:Cardinal=0):Boolean;
+    function WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SymbolCrc:Cardinal=0; SoftDataType:Byte=0):Boolean;
+    //: Reads several symbolic (LID-based) items in a single GetMultiVariables round-trip -
+    //: items may span different DBs/areas. Result=false means the whole request failed
+    //: (comm error or the PLC rejected it outright); on Result=true, check each item's own
+    //: Results[i].Ok, since the PLC can report individual items as failed within an
+    //: otherwise-successful batch (e.g. one bad LID among several good ones).
+    function ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):Boolean;
     //: Sends an EXPLORE request for ExploreId (a RID) and reassembles the (possibly
     //: multi-fragment) response payload.
     function Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
@@ -173,6 +227,13 @@ type
     //: resolve a Path given by symbolic DB name (e.g. "BlocoSimbolico_4") to its "DB<n>"
     //: form, since all other Path resolution is number-based.
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;
+    //: Performs PLC password authentication (legitimation), required by some PLCs before
+    //: SetMultiVariables/DB writes are accepted even though reads are open (a protection
+    //: level configured in TIA Portal). Must be called after Connect, with TLS active.
+    //: Tries the "new" AES-256-CBC style first, falling back to legacy SHA-1/XOR if that's
+    //: rejected. Username is only needed for the new-style with an explicit login name;
+    //: leave it empty for a plain password.
+    function Authenticate(const Password:AnsiString; const Username:AnsiString=''):Boolean;
 
     property Connected:Boolean read FConnected;
     property SessionId:Cardinal read FSessionId;
@@ -1119,6 +1180,299 @@ begin
 end;
 
 //===========================================================================
+// Legitimation (PLC password authentication, V2+ with TLS)
+//===========================================================================
+
+function StrToByteArray(const S:AnsiString):TBytes;
+begin
+  SetLength(Result, Length(S));
+  if Length(S)>0 then Move(S[1], Result[0], Length(S));
+end;
+
+function TS7PlusConnection.GetOMSSecret(out Secret:TBytes):Boolean;
+const
+  ExporterLabel = 'EXPERIMENTAL_OMS';
+var
+  Buf:array[0..31] of Byte;
+begin
+  Result := false;
+  SetLength(Secret, 0);
+  if (FSSL=nil) or (not FTLSActive) then exit;
+  if SSL_export_keying_material(FSSL, @Buf[0], 32, PAnsiChar(ExporterLabel), Length(ExporterLabel), nil, 0, 0)<>1 then exit;
+  SetLength(Secret, 32);
+  Move(Buf[0], Secret[0], 32);
+  Result := true;
+end;
+
+//: Mirrors python-snap7's _build_legitimation_payload: a Struct of 3 elements
+//: (LegitimationType:UDINT, Username:BLOB, Password[Hash]:BLOB).
+//: Mirrors the reference's ValueStruct.Serialize() (Core/PValue.cs) and buildLegitimationPayload
+//: (Legitimation/Legitimation.cs): a fixed UInt32 struct-id - Ids.LID_LegitimationPayloadStruct
+//: (40400), NOT an arbitrary/zero value: the PLC validates the struct-id against the known
+//: "LegitimationPayload" schema, so any other value (0 included) gets rejected outright. Then
+//: [VLQ elem-id][elem PValue] pairs (40401=LegitimationType, 40402=Username, 40403=Password),
+//: terminated by a $00 list-terminator byte.
+function TS7PlusConnection.BuildLegitimationPayload(const Password, Username:AnsiString):TBytes;
+var
+  LegitType:Cardinal;
+  PasswordData, UsernameData:TBytes;
+begin
+  UsernameData := StrToByteArray(Username);
+  if Username<>'' then begin
+    LegitType := 2;
+    PasswordData := StrToByteArray(Password);
+  end else begin
+    LegitType := 1;
+    PasswordData := S7PlusSHA1(StrToByteArray(Password));
+  end;
+
+  Result := BytesOf([$00, S7PlusType_STRUCT]);
+  Result := BytesConcat(Result, EncodeUInt32(S7PlusObjId_LegitimationPayloadStruct)); //fixed UInt32, not VLQ
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(S7PlusObjId_LegitimationPayloadType));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_UDINT]));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(LegitType));
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(S7PlusObjId_LegitimationPayloadUsername));
+  Result := BytesConcat(Result, EncodePValueBlob(UsernameData));
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(S7PlusObjId_LegitimationPayloadPassword));
+  Result := BytesConcat(Result, EncodePValueBlob(PasswordData));
+
+  Result := BytesConcat(Result, BytesOf([$00])); //list terminator
+end;
+
+function TS7PlusConnection.BuildLegacyLegitimationResponse(const Password:AnsiString; const Challenge:TBytes):TBytes;
+var
+  Hash:TBytes;
+  i, n:Integer;
+begin
+  Hash := S7PlusSHA1(StrToByteArray(Password));
+  n := Length(Hash);
+  if Length(Challenge)<n then n := Length(Challenge);
+  SetLength(Result, n);
+  for i:=0 to n-1 do
+    Result[i] := Hash[i] xor Challenge[i];
+end;
+
+function TS7PlusConnection.BuildNewLegitimationResponse(const Password:AnsiString; const Challenge, OmsSecret:TBytes; const Username:AnsiString):TBytes;
+var
+  Key, IV, Payload:TBytes;
+begin
+  Key := S7PlusSHA256(OmsSecret);
+  SetLength(IV, 16);
+  FillChar(IV[0], 16, 0);
+  if Length(Challenge)>0 then begin
+    if Length(Challenge)>=16 then
+      Move(Challenge[0], IV[0], 16)
+    else
+      Move(Challenge[0], IV[0], Length(Challenge));
+  end;
+
+  Payload := BuildLegitimationPayload(Password, Username);
+  Result := S7PlusAES256CBCEncrypt(Key, IV, Payload);
+end;
+
+//: Mirrors the reference's GetVarSubstreamedRequest/Response (Core/GetVarSubstreamedRequest.cs,
+//: Core/GetVarSubstreamedResponse.cs) - a genuinely different wire shape from GetMultiVariables/
+//: SetVariable, confirmed against the C# reference: InObjectId, an "Addressarray" ($20 marker +
+//: element datatype + array size + the address VLQ - not the field-count scheme used elsewhere),
+//: an ObjectQualifier, then 2 unknown bytes (0x0001) before the (spliced) IntegrityId/padding.
+//: The response carries ReturnValue, 1 unknown byte, then the challenge as a typed PValue.
+function TS7PlusConnection.GetLegitimationChallenge(out Challenge:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+  Offset, c:Integer;
+  RetVal:QWord;
+begin
+  Result := false;
+  SetLength(Challenge, 0);
+
+  Payload := EncodeUInt32(FSessionId); //InObjectId
+  Payload := BytesConcat(Payload, BytesOf([$20])); //Addressarray marker
+  Payload := BytesConcat(Payload, BytesOf([S7PlusType_UDINT])); //datatype of the address array elements
+  Payload := BytesConcat(Payload, BytesOf([1])); //array size = 1
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_ServerSessionRequest));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt16(1)); //2 bytes unknown = 0x0001
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  if not SendRequest(S7PlusFunc_GetVarSubstreamed, Payload, Resp) then exit;
+
+  Offset := 0;
+  RetVal := DecodeUInt64VLQ(Resp, Offset, c);
+  Offset := Offset+c;
+  FLastReturnValue := RetVal;
+  if RetVal<>0 then begin
+    Debug(Format('GetLegitimationChallenge: PLC retornou erro (returnValue=%d)',[RetVal]));
+    exit;
+  end;
+
+  if Offset>=Length(Resp) then begin
+    Debug('GetLegitimationChallenge: resposta curta demais (sem byte desconhecido)');
+    exit;
+  end;
+  Offset := Offset+1; //1 unknown byte before the PValue
+
+  if (Offset+2)>Length(Resp) then begin
+    Debug('GetLegitimationChallenge: resposta curta demais (sem PValue)');
+    exit;
+  end;
+  Challenge := DecodePValueToBytes(Resp, Offset, c);
+  Result := true;
+end;
+
+function TS7PlusConnection.GetEffectiveProtectionLevel(out AccessLevel:Cardinal):Boolean;
+var
+  Payload, Resp, Value:TBytes;
+  Offset, c, i:Integer;
+  RetVal:QWord;
+begin
+  Result := false;
+  AccessLevel := 0;
+
+  Payload := EncodeUInt32(FSessionId); //InObjectId
+  Payload := BytesConcat(Payload, BytesOf([$20])); //Addressarray marker
+  Payload := BytesConcat(Payload, BytesOf([S7PlusType_UDINT])); //datatype of the address array elements
+  Payload := BytesConcat(Payload, BytesOf([1])); //array size = 1
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_EffectiveProtectionLevel));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt16(1)); //2 bytes unknown = 0x0001
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  if not SendRequest(S7PlusFunc_GetVarSubstreamed, Payload, Resp) then exit;
+
+  Offset := 0;
+  RetVal := DecodeUInt64VLQ(Resp, Offset, c);
+  Offset := Offset+c;
+  FLastReturnValue := RetVal;
+  if RetVal<>0 then begin
+    Debug(Format('GetEffectiveProtectionLevel: PLC retornou erro (returnValue=%d)',[RetVal]));
+    exit;
+  end;
+
+  if Offset>=Length(Resp) then exit;
+  Offset := Offset+1; //1 unknown byte before the PValue
+
+  if (Offset+2)>Length(Resp) then exit;
+  Value := DecodePValueToBytes(Resp, Offset, c);
+  for i:=0 to High(Value) do
+    AccessLevel := (AccessLevel shl 8) or Value[i];
+  Result := true;
+end;
+
+//: Mirrors the reference's SetVariableRequest (Core/SetVariableRequest.cs): InObjectId,
+//: VLQ(1) ("always 1"), the address VLQ, the value's own PValue.Serialize(), then
+//: ObjectQualifier + 1 unknown byte before the (spliced) IntegrityId/padding - the same
+//: framing gap (missing ObjectQualifier + unknown byte) that caused every write/legitimation
+//: attempt built like SetMultiVariables to be rejected.
+function TS7PlusConnection.SendLegitimationNew(const EncryptedResponse:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+  RetVal:QWord;
+  c:Integer;
+begin
+  Result := false;
+
+  Payload := EncodeUInt32(FSessionId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //count, always 1
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_Legitimate));
+  Payload := BytesConcat(Payload, EncodePValueBlob(EncryptedResponse));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, BytesOf([$00])); //1 byte unknown
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  if not SendRequest(S7PlusFunc_SetVariable, Payload, Resp) then exit;
+  if Length(Resp)=0 then exit;
+
+  RetVal := DecodeUInt64VLQ(Resp, 0, c);
+  FLastReturnValue := RetVal;
+  Result := RetVal=0;
+  if not Result then
+    Debug(Format('SendLegitimationNew: PLC rejeitou (returnValue=%d)',[RetVal]));
+end;
+
+function TS7PlusConnection.SendLegitimationLegacy(const Response:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+  RetVal:QWord;
+  c:Integer;
+begin
+  Result := false;
+
+  Payload := EncodeUInt32(FSessionId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //count, always 1
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_ServerSessionResponse));
+  Payload := BytesConcat(Payload, BytesOf([$10, S7PlusType_USINT])); //ValueUSIntArray: flags=array
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Length(Response)));
+  Payload := BytesConcat(Payload, Response);
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, BytesOf([$00])); //1 byte unknown
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  if not SendRequest(S7PlusFunc_SetVariable, Payload, Resp) then exit;
+  if Length(Resp)=0 then exit;
+
+  RetVal := DecodeUInt64VLQ(Resp, 0, c);
+  FLastReturnValue := RetVal;
+  Result := RetVal=0;
+  if not Result then
+    Debug(Format('SendLegitimationLegacy: PLC rejeitou (returnValue=%d)',[RetVal]));
+end;
+
+function TS7PlusConnection.Authenticate(const Password:AnsiString; const Username:AnsiString):Boolean;
+var
+  Challenge, OmsSecret, Response:TBytes;
+  AccessLevel:Cardinal;
+begin
+  Result := false;
+  if not FConnected then begin
+    Debug('Authenticate: nao conectado');
+    exit;
+  end;
+
+  //The reference always queries this before attempting legitimation, and skips
+  //legitimation entirely if the session already has FullAccess - possibly required
+  //session-state sequencing, not just an optimization (untested either way against real
+  //hardware until now, since it was omitted here originally).
+  if GetEffectiveProtectionLevel(AccessLevel) then begin
+    Debug(Format('Authenticate: EffectiveProtectionLevel=%d',[AccessLevel]));
+    if AccessLevel<=S7PlusAccessLevel_FullAccess then begin
+      Debug('Authenticate: sessao ja tem FullAccess - legitimacao desnecessaria');
+      Result := true;
+      exit;
+    end;
+  end else
+    Debug('Authenticate: falha ao consultar EffectiveProtectionLevel - prosseguindo mesmo assim');
+
+  if not GetOMSSecret(OmsSecret) then begin
+    Debug('Authenticate: legitimacao requer TLS ativo (falha ao derivar o OMS exporter secret)');
+    exit;
+  end;
+
+  if not GetLegitimationChallenge(Challenge) then begin
+    Debug('Authenticate: falha ao obter o desafio (challenge) do CLP');
+    exit;
+  end;
+  Debug(Format('Authenticate: desafio recebido (%d bytes)',[Length(Challenge)]));
+
+  Response := BuildNewLegitimationResponse(Password, Challenge, OmsSecret, Username);
+  if (Length(Response)>0) and SendLegitimationNew(Response) then begin
+    Debug('Authenticate: legitimacao (AES-256-CBC) bem-sucedida');
+    Result := true;
+    exit;
+  end;
+
+  Debug('Authenticate: legitimacao AES-256-CBC falhou/indisponivel, tentando legado (SHA1 XOR)');
+  Response := BuildLegacyLegitimationResponse(Password, Challenge);
+  if SendLegitimationLegacy(Response) then begin
+    Debug('Authenticate: legitimacao (legado SHA1 XOR) bem-sucedida');
+    Result := true;
+  end else
+    Debug('Authenticate: legitimacao legada tambem falhou');
+end;
+
+//===========================================================================
 // Area / DB read-write (GetMultiVariables / SetMultiVariables, single item)
 //===========================================================================
 
@@ -1273,7 +1627,7 @@ end;
 // variables and native-area named tags on real S7-1200/1500 firmware.
 //===========================================================================
 
-function TS7PlusConnection.BuildSymbolicPayload(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const WriteData:TBytes; IsWrite:Boolean; SymbolCrc:Cardinal):TBytes;
+function TS7PlusConnection.BuildSymbolicPayload(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const WriteData:TBytes; IsWrite:Boolean; SymbolCrc:Cardinal; WriteSoftDataType:Byte):TBytes;
 var
   AccessSubArea:Cardinal;
   Addr:TS7PlusItemAddress;
@@ -1292,7 +1646,11 @@ begin
 
   if IsWrite then begin
     Result := BytesConcat(Result, EncodeUInt32VLQ(1)); //item number 1
-    Result := BytesConcat(Result, EncodePValueBlob(WriteData));
+    //Must be encoded as the target's own type-specific scalar PValue (ValueDInt, ValueReal,
+    //...), not a generic byte array/blob - confirmed against real hardware: a byte-array
+    //value gets rejected by the PLC regardless of session/legitimation state, while a
+    //correctly-typed scalar is accepted. See EncodeTypedWriteValue.
+    Result := BytesConcat(Result, EncodeTypedWriteValue(WriteSoftDataType, WriteData));
     Result := BytesConcat(Result, BytesOf([$00]));
   end;
 
@@ -1306,6 +1664,114 @@ begin
   Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
 end;
 
+//: Batched GetMultiVariables read payload, N symbolic (LID) items in one request. Ported
+//: from the reference's _build_read_payload: unlike the single-item BuildSymbolicPayload,
+//: the FieldCount here is the SUM across every item, followed by all items' address
+//: encodings concatenated back-to-back (no per-item "item number" prefix on the read
+//: side - that only exists in the write payload, one item value per write). Items may
+//: carry different AccessAreas (different DBs), matching the reference's own db_number
+//: parameter varying per item.
+function TS7PlusConnection.BuildMultiSymbolicReadPayload(const Items:TS7PlusMultiReadItemArray):TBytes;
+var
+  i:Integer;
+  AccessSubArea:Cardinal;
+  Addr:TS7PlusItemAddress;
+  AllAddrData:TBytes;
+  TotalFieldCount:Cardinal;
+begin
+  TotalFieldCount := 0;
+  SetLength(AllAddrData, 0);
+  for i:=0 to High(Items) do begin
+    if Items[i].AccessArea>=S7PlusIds_DBAccessAreaBase then
+      AccessSubArea := S7PlusIds_DBValueActual
+    else
+      AccessSubArea := S7PlusIds_ControllerAreaValueActual;
+    Addr := EncodeItemAddress(Items[i].AccessArea, AccessSubArea, Items[i].Lids, 0);
+    inc(TotalFieldCount, Cardinal(Addr.FieldCount));
+    AllAddrData := BytesConcat(AllAddrData, Addr.Data);
+  end;
+
+  Result := EncodeUInt32(0); //InObjectId
+  Result := BytesConcat(Result, EncodeUInt32VLQ(Length(Items))); //item count
+  Result := BytesConcat(Result, EncodeUInt32VLQ(TotalFieldCount));
+  Result := BytesConcat(Result, AllAddrData);
+  Result := BytesConcat(Result, EncodeObjectQualifier);
+  Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
+end;
+
+//: Generalizes ParseSingleReadResponse to N items: a values section (repeated [ItemNr
+//: VLQ][PValue], ItemNr=0 terminates) followed by an errors section (repeated [ItemNr
+//: VLQ][ErrValue VLQ64], ItemNr=0 terminates) - ported from the reference's
+//: _parse_read_response. ItemNr is 1-based and indexes back into the Items array the
+//: request was built from, in the same order. Result=false only for a whole-request
+//: failure (nonzero returnValue); an individual item missing from the values section (PLC
+//: reported it in the errors section instead) just leaves that Results[i].Ok=false.
+function TS7PlusConnection.ParseMultiReadResponse(const Response:TBytes; ItemCount:Integer; out Results:TS7PlusMultiReadResultArray):Boolean;
+var
+  Offset, c, i:Integer;
+  RetVal:QWord;
+  ItemNr:Cardinal;
+  ErrText:String;
+begin
+  Result := false;
+  SetLength(Results, ItemCount);
+  for i:=0 to ItemCount-1 do begin
+    SetLength(Results[i].Data, 0);
+    Results[i].Ok := false;
+  end;
+
+  Offset := 0;
+  RetVal := DecodeUInt64VLQ(Response, Offset, c);
+  Offset := Offset+c;
+  FLastReturnValue := RetVal;
+  if RetVal<>0 then begin
+    ErrText := ExtractErrorText(BytesCopy(Response, Offset, Length(Response)-Offset));
+    if ErrText<>'' then
+      Debug(Format('ParseMultiReadResponse: PLC retornou erro (returnValue=%d): %s',[RetVal,ErrText]))
+    else
+      Debug(Format('ParseMultiReadResponse: PLC retornou erro (returnValue=%d)',[RetVal]));
+    exit;
+  end;
+
+  //Values section.
+  while Offset<Length(Response) do begin
+    ItemNr := DecodeUInt32VLQ(Response, Offset, c);
+    Offset := Offset+c;
+    if ItemNr=0 then break;
+    if (ItemNr>=1) and (ItemNr<=Cardinal(ItemCount)) then begin
+      Results[ItemNr-1].Data := DecodePValueToBytes(Response, Offset, c);
+      Results[ItemNr-1].Ok := true;
+      Offset := Offset+c;
+    end else begin
+      //Unexpected item index - still consume its PValue to keep the parse in sync.
+      DecodePValueToBytes(Response, Offset, c);
+      Offset := Offset+c;
+    end;
+  end;
+
+  //Errors section (per-item failures within an otherwise-successful batch).
+  while Offset<Length(Response) do begin
+    ItemNr := DecodeUInt32VLQ(Response, Offset, c);
+    Offset := Offset+c;
+    if ItemNr=0 then break;
+    DecodeUInt64VLQ(Response, Offset, c); //error value - not surfaced per-item yet
+    Offset := Offset+c;
+  end;
+
+  Result := true;
+end;
+
+function TS7PlusConnection.ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  SetLength(Results, 0);
+  if Length(Items)=0 then exit(true);
+  Payload := BuildMultiSymbolicReadPayload(Items);
+  if not SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp) then exit(false);
+  Result := ParseMultiReadResponse(Resp, Length(Items), Results);
+end;
+
 function TS7PlusConnection.ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes; SymbolCrc:Cardinal):Boolean;
 var
   Payload, Resp:TBytes;
@@ -1317,11 +1783,11 @@ begin
   Result := ParseSingleReadResponse(Resp, Data);
 end;
 
-function TS7PlusConnection.WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SymbolCrc:Cardinal):Boolean;
+function TS7PlusConnection.WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SymbolCrc:Cardinal; SoftDataType:Byte):Boolean;
 var
   Payload, Resp:TBytes;
 begin
-  Payload := BuildSymbolicPayload(AccessArea, Lids, Data, true, SymbolCrc);
+  Payload := BuildSymbolicPayload(AccessArea, Lids, Data, true, SymbolCrc, SoftDataType);
   Result := SendRequest(S7PlusFunc_SetMultiVariables, Payload, Resp) and ParseSingleWriteResponse(Resp);
 end;
 
