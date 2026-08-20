@@ -185,6 +185,21 @@ type
     //: Performs PLC password authentication (legitimation) - see TS7PlusConnection.Authenticate.
     //: Needed by some PLCs before writes are accepted (reads can remain open/unauthenticated).
     function Authenticate(const Password:AnsiString; const Username:AnsiString=''):TProtocolIOResult;
+    //: Direct (low-level, not yet wired into the tag/scan framework) access to
+    //: subscriptions - see TS7PlusConnection.SubscriptionCreate/SubscriptionSetCreditLimit/
+    //: SubscriptionDelete/ParseNotification.
+    function SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):TProtocolIOResult;
+    function SubscriptionSetCreditLimit(Limit:SmallInt):TProtocolIOResult;
+    function SubscriptionDelete:TProtocolIOResult;
+    //: Blocks (up to CommunicationPort's own configured Timeout) for one incoming frame
+    //: and, if it's a Notification, parses it. ioCommError on a comm/parse failure or a
+    //: non-Notification frame arriving here (e.g. a stray response) - direct API calls and
+    //: the scan thread must not race on the same connection, so nothing else should be
+    //: expecting a reply while this is pending. ioOk with CreditTick/Values populated on
+    //: success.
+    function SubscriptionWaitNotification(out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):TProtocolIOResult;
+    //: Uploads (reads) a compiled block's raw body - see TS7PlusConnection.UploadBlock.
+    function UploadBlock(BlockType, BlockNumber:Cardinal; out Data:TBytes):TProtocolIOResult;
 
     //: True when the S7CommPlus session is established (and, if UseTLS, the TLS tunnel
     //: is active and IntegrityId tracking is enabled).
@@ -1225,6 +1240,100 @@ begin
       exit;
     end;
     if FConnection.Authenticate(Password, Username) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):TProtocolIOResult;
+begin
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.SubscriptionCreate(Items, CycleTimeMs) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.SubscriptionSetCreditLimit(Limit:SmallInt):TProtocolIOResult;
+begin
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.SubscriptionSetCreditLimit(Limit) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.SubscriptionDelete:TProtocolIOResult;
+begin
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.SubscriptionDelete then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.SubscriptionWaitNotification(out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):TProtocolIOResult;
+var
+  FrameBody:TBytes;
+begin
+  SetLength(Values, 0);
+  CreditTick := 0;
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if not FConnection.WaitForFrame(FrameBody) then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.ParseNotification(FrameBody, CreditTick, Values) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.UploadBlock(BlockType, BlockNumber:Cardinal; out Data:TBytes):TProtocolIOResult;
+begin
+  SetLength(Data, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.UploadBlock(BlockType, BlockNumber, Data) then
       Result := ioOk
     else
       Result := ioCommError;
