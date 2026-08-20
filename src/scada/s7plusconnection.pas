@@ -63,6 +63,15 @@ type
   end;
   TS7PlusMultiReadResultArray = array of TS7PlusMultiReadResult;
 
+  //: One value out of a parsed Notification (Core/Notification.cs): RefId is the same
+  //: 1-based id BuildSubscriptionReferenceList assigned to the subscribed item, Data its
+  //: raw bytes (same convention as TS7PlusMultiReadResult.Data).
+  TS7PlusNotificationValue = record
+    RefId:Cardinal;
+    Data:TBytes;
+  end;
+  TS7PlusNotificationValueArray = array of TS7PlusNotificationValue;
+
   { TS7PlusConnection }
 
   TS7PlusConnection = class
@@ -89,6 +98,12 @@ type
     FWithIntegrityId:Boolean;
     FIntegrityIdRead, FIntegrityIdWrite:Cardinal;
     FRecvBuf:TBytes;
+
+    //-- Subscriptions (on-change notifications, V2+) --------------------------
+    FSubscriptionObjectId:Cardinal;
+    FSubscriptionRelationId:Cardinal;
+    FSubscriptionChangeCounter:Byte;
+    FSubscriptionCreditLimit:SmallInt;
 
     //-- Symbolic (LID) resolution cache: the OMS type-info container is expensive to
     //-- EXPLORE (can be a large, multi-fragment response) - fetch it once per connection.
@@ -170,6 +185,15 @@ type
     function SendLegitimationNew(const EncryptedResponse:TBytes):Boolean;
     //: Sends the legacy SHA-1/XOR response (SetVariable on ServerSessionResponse).
     function SendLegitimationLegacy(const Response:TBytes):Boolean;
+
+    //-- Subscriptions (on-change notifications, V2+) - see SubscriptionCreate.
+    //: Builds the SubscriptionReferenceList attribute value (Subscriptions/Subscription.cs's
+    //: GetSubscriptionListArray): a UDInt array (Flags=$20, the same "Addressarray" flavor
+    //: GetVarSubstreamedRequest uses) encoding a create/unsubscribe header followed by, per
+    //: item, its 1-based reference id and full symbolic address (AccessArea/SymbolCrc/
+    //: AccessSubArea/Lids). Items[i]'s reference id is i+1 - callers use that same mapping
+    //: to route Notification values back to their originating item.
+    function BuildSubscriptionReferenceList(const Items:TS7PlusMultiReadItemArray):TBytes;
   public
     constructor Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
     destructor Destroy; override;
@@ -234,6 +258,45 @@ type
     //: rejected. Username is only needed for the new-style with an explicit login name;
     //: leave it empty for a plain password.
     function Authenticate(const Password:AnsiString; const Username:AnsiString=''):Boolean;
+
+    //: Creates a subscription (CreateObject, ClassId=ClassSubscription) that makes the PLC
+    //: push on-change Notifications for Items instead of having to poll them via
+    //: GetMultiVariables - see Subscriptions/Subscription.cs. Items[i]'s Notification
+    //: reference id is i+1 (1-based, matching insertion order) - see
+    //: BuildSubscriptionReferenceList. CycleTimeMs is the PLC-side sampling interval
+    //: (~100ms minimum in practice). On success, SubscriptionObjectId identifies the
+    //: subscription for SubscriptionSetCreditLimit/SubscriptionDelete.
+    function SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):Boolean;
+    //: Renews the subscription's notification "credit" - the PLC stops pushing
+    //: Notifications once NotificationCreditTick reaches the last limit set, so this must
+    //: be called again (with a higher limit) before that happens to keep updates flowing.
+    //: Fire-and-forget (TransportFlags=0x74 - the reference marks this "no response needed").
+    function SubscriptionSetCreditLimit(Limit:SmallInt):Boolean;
+    //: Deletes the active subscription (DeleteObject on the session).
+    function SubscriptionDelete:Boolean;
+    //: Parses one incoming Notification frame (unsolicited, Opcode=Notification - arrives
+    //: interleaved with ordinary responses on the same connection, so callers must peek the
+    //: opcode of whatever LogicalRecv returns before assuming it's a reply to their own
+    //: last request). Values are keyed by the same 1-based reference id
+    //: BuildSubscriptionReferenceList assigned to each subscribed item.
+    function ParseNotification(const Frame:TBytes; out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):Boolean;
+    //: Blocks (up to the CommPort's own configured Timeout) for one incoming frame and
+    //: returns its body starting at the Opcode byte (same slice ParseNotification expects,
+    //: or what SendRequest would treat as a response body's Opcode..TransportFlags prefix).
+    //: Only meaningful when nothing else is concurrently expecting a reply on this
+    //: connection - see SubscriptionWaitNotification in TS7CommPlusDriver.
+    function WaitForFrame(out FrameBody:TBytes):Boolean;
+
+    //-- Block upload (read-only, Phase 4 first slice) ------------------------
+    //: Uploads (reads) a compiled block's raw body from the PLC via GetVarSubStreamed, using
+    //: the same "Addressarray" shape confirmed for GetLegitimationChallenge/
+    //: GetEffectiveProtectionLevel, generalized to a 2-element address (BlockType,
+    //: BlockNumber) instead of a single attribute id. BlockType uses the same numbering as
+    //: TS7PlusSoftDataType's BLOCK_* values (e.g. 25=DB, 24=FC, 23=FB, 36=OB) - neither
+    //: available reference (python-snap7, thomas-v2/S7CommPlusDriver) has a validated
+    //: implementation of this; this is a first attempt, iterated against real hardware.
+    //: Does not (yet) reassemble multi-fragment responses - large blocks may fail.
+    function UploadBlock(BlockType, BlockNumber:Cardinal; out Data:TBytes):Boolean;
 
     property Connected:Boolean read FConnected;
     property SessionId:Cardinal read FSessionId;
@@ -1470,6 +1533,302 @@ begin
     Result := true;
   end else
     Debug('Authenticate: legitimacao legada tambem falhou');
+end;
+
+//===========================================================================
+// Subscriptions (on-change notifications, V2+) - Subscriptions/Subscription.cs
+//===========================================================================
+
+//: Mirrors GetSubscriptionListArray: a UDInt array (Flags=$20) encoding
+//: [create-header][unsubscribe-count=0][subscribe-count], then per item
+//: [head][refid][0][AccessArea][SymbolCrc=0][AccessSubArea][Lids...], where head packs
+//: "1+LID count" into its low 16 bits (the "1" accounts for AccessSubArea).
+function TS7PlusConnection.BuildSubscriptionReferenceList(const Items:TS7PlusMultiReadItemArray):TBytes;
+var
+  Values:array of Cardinal;
+  i, j, n:Integer;
+  Head, AccessSubArea:Cardinal;
+
+  procedure AddVal(V:Cardinal);
+  begin
+    SetLength(Values, Length(Values)+1);
+    Values[High(Values)] := V;
+  end;
+
+begin
+  SetLength(Values, 0);
+  AddVal($80000000 or (Cardinal(FSubscriptionChangeCounter) shl 16)); //create-header
+  AddVal(0); //number of items to unsubscribe
+  AddVal(Cardinal(Length(Items))); //number of items to subscribe
+
+  for i:=0 to High(Items) do begin
+    if Items[i].AccessArea>=S7PlusIds_DBAccessAreaBase then
+      AccessSubArea := S7PlusIds_DBValueActual
+    else
+      AccessSubArea := S7PlusIds_ControllerAreaValueActual;
+
+    Head := $80040000 or Cardinal(1+Length(Items[i].Lids));
+    AddVal(Head);
+    AddVal(Cardinal(i+1)); //1-based reference id
+    AddVal(0); //unknown 1
+    AddVal(Items[i].AccessArea);
+    AddVal(0); //SymbolCrc (0 = skip layout check)
+    AddVal(AccessSubArea);
+    for j:=0 to High(Items[i].Lids) do
+      AddVal(Items[i].Lids[j]);
+  end;
+
+  n := Length(Values);
+  Result := EncodeValuePUDIntArray(Values, $20);
+  if n=0 then; //silence unused-var warning on some FPC versions
+end;
+
+function TS7PlusConnection.SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):Boolean;
+var
+  Attrs:TS7PlusPObjectAttributeArray;
+  ObjBytes, Payload, Resp:TBytes;
+  BodyOffset, IntegrityTail:Integer;
+  RetVal:QWord;
+  ObjectId:Cardinal;
+
+  procedure AddAttr(AttrId:Cardinal; const Value:TBytes);
+  var n:Integer;
+  begin
+    n := Length(Attrs);
+    SetLength(Attrs, n+1);
+    Attrs[n].AttrId := AttrId;
+    Attrs[n].Value := Value;
+  end;
+
+begin
+  Result := false;
+
+  //The reference hardcodes RelationId=0x7fffc001 here, with its own comment admitting it's
+  //an unverified guess ("TODO! Unknown value!"). That was confirmed wrong against real
+  //hardware (PLC rejected it: "Download error (IDs & states [main, sub, TI, next])!") - use
+  //the same GetNewRIDOnServer sentinel our own (already-validated) session CreateObject uses
+  //to have the PLC assign a fresh RID instead of guessing one ourselves.
+  FSubscriptionRelationId := S7PlusObjId_GetNewRIDOnServer;
+  Inc(FSubscriptionChangeCounter);
+  if FSubscriptionChangeCounter=0 then FSubscriptionChangeCounter := 1; //keep it non-zero
+
+  SetLength(Attrs, 0);
+  AddAttr(S7PlusIds_ObjectVariableTypeName, EncodeValuePWString('Subscription_'+IntToStr(FSubscriptionChangeCounter)));
+  AddAttr(S7PlusObjId_SubscriptionFunctionClassId, EncodeValuePUSInt(0));
+  AddAttr(S7PlusObjId_SubscriptionMissedSendings, EncodeValuePUInt(0));
+  AddAttr(S7PlusObjId_SubscriptionSubsystemError, EncodeValuePLInt(0));
+  AddAttr(S7PlusObjId_SubscriptionRouteMode, EncodeValuePUSInt($14));
+  AddAttr(S7PlusObjId_SubscriptionActive, EncodeValuePBool(true));
+  AddAttr(S7PlusObjId_SubscriptionReferenceList, BuildSubscriptionReferenceList(Items));
+  AddAttr(S7PlusObjId_SubscriptionCycleTime, EncodeValuePUDInt(CycleTimeMs));
+  AddAttr(S7PlusObjId_SubscriptionDisabled, EncodeValuePUSInt(0));
+  AddAttr(S7PlusObjId_SubscriptionCount, EncodeValuePUSInt(0));
+  FSubscriptionCreditLimit := 10;
+  AddAttr(S7PlusObjId_SubscriptionCreditLimit, EncodeValuePInt(FSubscriptionCreditLimit));
+  AddAttr(S7PlusObjId_SubscriptionTicks, EncodeValuePUInt(65535));
+  AddAttr(1055, EncodeValuePUSInt(0)); //unknown - reference notes it works without setting it too
+
+  ObjBytes := EncodePObject(FSubscriptionRelationId, S7PlusObjId_ClassSubscription, 0, 0, Attrs);
+
+  Payload := EncodeUInt32(FSessionId); //RequestId
+  Payload := BytesConcat(Payload, EncodeValuePUDInt(0)); //RequestValue = ValueUDInt(0)
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //unknown value 1
+  Payload := BytesConcat(Payload, ObjBytes);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  IntegrityTail := Length(ObjBytes)+4; //IntegrityId splices right before [Object][padding]
+  if not SendRequest(S7PlusFunc_CreateObject, Payload, Resp, IntegrityTail) then exit;
+
+  Result := ParseCreateObjectSessionId(Resp, ObjectId, BodyOffset, RetVal) and (RetVal=0);
+  FLastReturnValue := RetVal;
+  if Result then begin
+    FSubscriptionObjectId := ObjectId;
+    Debug(Format('SubscriptionCreate: sucesso, ObjectId=%d, %d itens',[ObjectId,Length(Items)]));
+  end else
+    Debug(Format('SubscriptionCreate: falha (returnValue=%d)',[RetVal]));
+end;
+
+function TS7PlusConnection.SubscriptionSetCreditLimit(Limit:SmallInt):Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Payload := EncodeUInt32(FSubscriptionObjectId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //count, always 1
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_SubscriptionCreditLimit));
+  Payload := BytesConcat(Payload, EncodeValuePInt(Limit));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, BytesOf([$00])); //1 byte unknown
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  //Fire-and-forget: the reference sets TransportFlags=0x74 ("no response needed") for this
+  //specific call - our SendRequest always uses the normal write flags ($36) and waits for a
+  //reply, which the PLC still answers correctly, just with an extra (harmless) round-trip.
+  Result := SendRequest(S7PlusFunc_SetVariable, Payload, Resp);
+  if Result then
+    FSubscriptionCreditLimit := Limit;
+end;
+
+function TS7PlusConnection.SubscriptionDelete:Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  //The reference deletes via the SESSION id, not the subscription's own ObjectId - mirrored
+  //here as-is even though it looks unusual, since it's what's confirmed to work there.
+  Payload := EncodeUInt32(FSessionId); //DeleteObjectId
+  Payload := BytesConcat(Payload, BytesOf([$00]));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  Result := SendRequest(S7PlusFunc_DeleteObject, Payload, Resp);
+  if Result then
+    FSubscriptionObjectId := 0;
+end;
+
+//: Mirrors Notification.Deserialize. Frame is the frame body starting at the Opcode byte
+//: (the same slice SendRequest would otherwise treat as a response - callers must check the
+//: Opcode themselves, e.g. via LogicalRecv, before assuming a received frame is a normal
+//: reply). Only the common (non-alarm, non-legacy-8-byte-object) branches are implemented;
+//: anything else aborts the parse and returns false rather than risk mis-parsing.
+function TS7PlusConnection.ParseNotification(const Frame:TBytes; out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):Boolean;
+var
+  Offset, c, n:Integer;
+  ChangeCounter, ItemTag:Byte;
+  RefId:Cardinal;
+  Value:TBytes;
+begin
+  Result := false;
+  SetLength(Values, 0);
+  CreditTick := 0;
+
+  Offset := 0;
+  if Length(Frame)<1 then exit;
+  if Frame[Offset]<>S7PlusOpcode_Notification then exit;
+  Inc(Offset);
+
+  if (Offset+10)>Length(Frame) then exit;
+  Offset := Offset+4; //SubscriptionObjectId - not needed, we only track one subscription
+  Offset := Offset+6; //3x UInt16 unknown
+
+  if Offset>=Length(Frame) then exit;
+  CreditTick := Frame[Offset];
+  Inc(Offset);
+
+  DecodeUInt32VLQ(Frame, Offset, c); //NotificationSequenceNumber - not surfaced yet
+  Offset := Offset+c;
+
+  if Offset>=Length(Frame) then exit;
+  ChangeCounter := Frame[Offset];
+  if ChangeCounter>0 then
+    Inc(Offset)
+  else begin
+    //Newer S7-1500: an 8-byte UTC microsecond timestamp + change counter byte, instead.
+    if (Offset+9)>Length(Frame) then exit;
+    Offset := Offset+8+1;
+  end;
+
+  repeat
+    if Offset>=Length(Frame) then exit;
+    ItemTag := Frame[Offset];
+    Inc(Offset);
+    case ItemTag of
+      $00: ; //list terminator
+      $92: begin
+        if (Offset+4)>Length(Frame) then exit;
+        RefId := DecodeUInt32(Frame, Offset);
+        Offset := Offset+4;
+        Value := DecodePValueToBytes(Frame, Offset, c);
+        Offset := Offset+c;
+        n := Length(Values);
+        SetLength(Values, n+1);
+        Values[n].RefId := RefId;
+        Values[n].Data := Value;
+      end;
+      $9B: begin
+        RefId := DecodeUInt32VLQ(Frame, Offset, c);
+        Offset := Offset+c;
+        Value := DecodePValueToBytes(Frame, Offset, c);
+        Offset := Offset+c;
+        n := Length(Values);
+        SetLength(Values, n+1);
+        Values[n].RefId := RefId;
+        Values[n].Data := Value;
+      end;
+      $9C: begin
+        if (Offset+4)>Length(Frame) then exit;
+        Offset := Offset+4; //dummy value, unused
+      end;
+      $13, $03: begin
+        //Per-item error report (RefId + a small error code) - not surfaced per-item yet.
+        if (Offset+4)>Length(Frame) then exit;
+        Offset := Offset+4;
+      end;
+    else
+      Debug(Format('ParseNotification: item tag nao suportado ($%.2x) - abortando parse',[ItemTag]));
+      exit;
+    end;
+  until ItemTag=$00;
+
+  Result := true;
+end;
+
+function TS7PlusConnection.WaitForFrame(out FrameBody:TBytes):Boolean;
+var
+  ResponseFrame:TBytes;
+  Version:Byte;
+  DataLen:Word;
+  Consumed:Integer;
+begin
+  Result := false;
+  SetLength(FrameBody, 0);
+  if LogicalRecv(ResponseFrame)<>iorOK then exit;
+  if Length(ResponseFrame)<4 then exit;
+  Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+  FrameBody := BytesCopy(ResponseFrame, Consumed, DataLen);
+  Result := true;
+end;
+
+function TS7PlusConnection.UploadBlock(BlockType, BlockNumber:Cardinal; out Data:TBytes):Boolean;
+var
+  Payload, Resp:TBytes;
+  Offset, c:Integer;
+  RetVal:QWord;
+begin
+  Result := false;
+  SetLength(Data, 0);
+
+  Payload := EncodeUInt32(FSessionId); //InObjectId
+  Payload := BytesConcat(Payload, BytesOf([$20])); //Addressarray marker
+  Payload := BytesConcat(Payload, BytesOf([S7PlusType_UDINT])); //datatype of the address array elements
+  Payload := BytesConcat(Payload, BytesOf([2])); //array size = 2 (BlockType, BlockNumber)
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(BlockType));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(BlockNumber));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt16(1)); //2 bytes unknown = 0x0001
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  if not SendRequest(S7PlusFunc_GetVarSubstreamed, Payload, Resp) then exit;
+
+  Offset := 0;
+  RetVal := DecodeUInt64VLQ(Resp, Offset, c);
+  Offset := Offset+c;
+  FLastReturnValue := RetVal;
+  if RetVal<>0 then begin
+    Debug(Format('UploadBlock: PLC retornou erro (returnValue=%d)',[RetVal]));
+    exit;
+  end;
+
+  if Offset>=Length(Resp) then begin
+    Debug('UploadBlock: resposta curta demais (sem byte desconhecido)');
+    exit;
+  end;
+  Offset := Offset+1; //1 unknown byte before the PValue
+
+  if (Offset+2)>Length(Resp) then begin
+    Debug('UploadBlock: resposta curta demais (sem PValue)');
+    exit;
+  end;
+  Data := DecodePValueToBytes(Resp, Offset, c);
+  Result := true;
 end;
 
 //===========================================================================

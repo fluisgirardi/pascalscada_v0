@@ -93,6 +93,34 @@ function EncodePValueByteArray(const Data:TBytes):TBytes;
 //: 49=ULINT 50=LINT 51=LWORD 52=USINT 53=UINT 54=UDINT 55=SINT.
 function EncodeTypedWriteValue(SoftDataType:Byte; const RawData:TBytes):TBytes;
 
+//-- Small scalar PValue builders (Core/PValue.cs's ValueBool/ValueUSInt/.../ValueWString),
+//-- used to build ad-hoc object attributes (e.g. Subscription) rather than tag write values.
+function EncodeValuePBool(V:Boolean):TBytes;
+function EncodeValuePUSInt(V:Byte):TBytes;
+function EncodeValuePUInt(V:Word):TBytes;
+function EncodeValuePInt(V:SmallInt):TBytes;
+function EncodeValuePUDInt(V:Cardinal):TBytes;
+function EncodeValuePLInt(V:Int64):TBytes;
+//: UTF-16BE WSTRING PValue (matches the protocol's big-endian convention elsewhere).
+function EncodeValuePWString(const S:UnicodeString):TBytes;
+//: Array-of-UDInt PValue with a caller-chosen Flags byte (the reference reuses this same
+//: PValue shape with Flags=$20 - "Addressarray" - for GetVarSubstreamedRequest's address
+//: and for Subscription's SubscriptionReferenceList, not just the usual Flags=$10 array).
+function EncodeValuePUDIntArray(const Values:array of Cardinal; Flags:Byte):TBytes;
+
+//: Encodes a generic tagged object (Core/PObject.cs's PObject.Serialize()): StartOfObject,
+//: RelationId (fixed UInt32), ClassId/ClassFlags/AttributeId (VLQ), each attribute as
+//: [Attribute tag][AttrId VLQ][already-encoded PValue bytes], TerminatingObject. Used to
+//: build CreateObject request bodies for objects other than the session itself (e.g. a
+//: Subscription).
+type
+  TS7PlusPObjectAttribute = record
+    AttrId:Cardinal;
+    Value:TBytes; //an already-encoded PValue (e.g. from one of the EncodeValueP* helpers)
+  end;
+  TS7PlusPObjectAttributeArray = array of TS7PlusPObjectAttribute;
+function EncodePObject(RelationId, ClassId, ClassFlags, AttributeId:Cardinal; const Attributes:TS7PlusPObjectAttributeArray):TBytes;
+
 //: Decodes a PValue (flags+datatype+value) to its raw big-endian bytes, regardless of type.
 function DecodePValueToBytes(const Data:TBytes; Offset:Integer; out Consumed:Integer):TBytes;
 
@@ -344,7 +372,7 @@ end;
 function EncodeTypedWriteValue(SoftDataType:Byte; const RawData:TBytes):TBytes;
 var
   WireType:Byte;
-  Kind:(wkNone, wkRawByte, wkRawFloat, wkUnsignedVLQ, wkSignedVLQ);
+  Kind:(wkNone, wkRawByte, wkRawFloat, wkUnsignedVLQ, wkSignedVLQ, wkUSIntArray);
 begin
   Kind := wkNone;
   case SoftDataType of
@@ -364,6 +392,11 @@ begin
     50{sdtLINT}: begin WireType := S7PlusType_LINT;  Kind := wkSignedVLQ; end;
     8{sdtREAL}:  begin WireType := S7PlusType_REAL;  Kind := wkRawFloat; end;
     48{sdtLREAL}:begin WireType := S7PlusType_LREAL; Kind := wkRawFloat; end;
+    //TPLCString.StringToArrayOfValues already builds the classic S7 [MaxLen][CurLen][chars]
+    //byte sequence itself (confirmed in plcstring.pas), matching the reference's
+    //ValueUSIntArray (DataType=USInt) exactly - it just needs the right wire DataType, not
+    //the generic Byte-typed fallback EncodePValueByteArray uses.
+    19{sdtSTRING}: Kind := wkUSIntArray;
   end;
 
   case Kind of
@@ -392,9 +425,86 @@ begin
       else
         Result := BytesConcat(Result, EncodeInt32VLQ(LongInt(BEBytesToInt64(RawData))));
     end;
+    wkUSIntArray: begin
+      Result := BytesOf([$10, S7PlusType_USINT]);
+      Result := BytesConcat(Result, EncodeUInt32VLQ(Length(RawData)));
+      Result := BytesConcat(Result, RawData);
+    end;
   else
     Result := EncodePValueByteArray(RawData);
   end;
+end;
+
+function EncodeValuePBool(V:Boolean):TBytes;
+begin
+  Result := BytesOf([$00, S7PlusType_BOOL, Ord(V)]);
+end;
+
+function EncodeValuePUSInt(V:Byte):TBytes;
+begin
+  Result := BytesOf([$00, S7PlusType_USINT, V]);
+end;
+
+function EncodeValuePUInt(V:Word):TBytes;
+begin
+  Result := BytesConcat(BytesOf([$00, S7PlusType_UINT]), EncodeUInt32VLQ(V));
+end;
+
+function EncodeValuePInt(V:SmallInt):TBytes;
+begin
+  Result := BytesConcat(BytesOf([$00, S7PlusType_INT]), EncodeInt32VLQ(V));
+end;
+
+function EncodeValuePUDInt(V:Cardinal):TBytes;
+begin
+  Result := BytesConcat(BytesOf([$00, S7PlusType_UDINT]), EncodeUInt32VLQ(V));
+end;
+
+function EncodeValuePLInt(V:Int64):TBytes;
+begin
+  Result := BytesConcat(BytesOf([$00, S7PlusType_LINT]), EncodeInt64VLQ(V));
+end;
+
+function EncodeValuePWString(const S:UnicodeString):TBytes;
+var
+  i:Integer;
+  Chars:TBytes;
+begin
+  SetLength(Chars, Length(S)*2);
+  for i:=1 to Length(S) do begin
+    Chars[(i-1)*2]   := Hi(Word(S[i]));
+    Chars[(i-1)*2+1] := Lo(Word(S[i]));
+  end;
+  Result := BytesOf([$00, S7PlusType_WSTRING]);
+  Result := BytesConcat(Result, EncodeUInt32VLQ(Length(S)));
+  Result := BytesConcat(Result, Chars);
+end;
+
+function EncodeValuePUDIntArray(const Values:array of Cardinal; Flags:Byte):TBytes;
+var
+  i:Integer;
+begin
+  Result := BytesOf([Flags, S7PlusType_UDINT]);
+  Result := BytesConcat(Result, EncodeUInt32VLQ(Length(Values)));
+  for i:=0 to High(Values) do
+    Result := BytesConcat(Result, EncodeUInt32VLQ(Values[i]));
+end;
+
+function EncodePObject(RelationId, ClassId, ClassFlags, AttributeId:Cardinal; const Attributes:TS7PlusPObjectAttributeArray):TBytes;
+var
+  i:Integer;
+begin
+  Result := BytesOf([S7PlusElement_StartOfObject]);
+  Result := BytesConcat(Result, EncodeUInt32(RelationId));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(ClassId));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(ClassFlags));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(AttributeId));
+  for i:=0 to High(Attributes) do begin
+    Result := BytesConcat(Result, BytesOf([S7PlusElement_Attribute]));
+    Result := BytesConcat(Result, EncodeUInt32VLQ(Attributes[i].AttrId));
+    Result := BytesConcat(Result, Attributes[i].Value);
+  end;
+  Result := BytesConcat(Result, BytesOf([S7PlusElement_TerminatingObject]));
 end;
 
 function PValueElementSize(DataType:Byte):Integer;

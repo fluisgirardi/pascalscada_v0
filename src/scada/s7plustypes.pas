@@ -112,6 +112,21 @@ const
   S7PlusAccessLevel_HMIAccess  = 3;
   S7PlusAccessLevel_NoAccess   = 4;
 
+  //-- Subscriptions (on-change notifications, V2+) - Core/Ids.cs / Subscriptions/Subscription.cs.
+  //-- (Attribute 233 is S7PlusIds_ObjectVariableTypeName, already declared further below.)
+  S7PlusObjId_ClassSubscription           = 1001;
+  S7PlusObjId_SubscriptionFunctionClassId = 1082;
+  S7PlusObjId_SubscriptionMissedSendings  = 1002;
+  S7PlusObjId_SubscriptionSubsystemError  = 1003;
+  S7PlusObjId_SubscriptionRouteMode       = 1040;
+  S7PlusObjId_SubscriptionActive          = 1041;
+  S7PlusObjId_SubscriptionReferenceList   = 1048;
+  S7PlusObjId_SubscriptionCycleTime       = 1049;
+  S7PlusObjId_SubscriptionDisabled        = 1051;
+  S7PlusObjId_SubscriptionCount           = 1052;
+  S7PlusObjId_SubscriptionCreditLimit     = 1053;
+  S7PlusObjId_SubscriptionTicks           = 1054;
+
   //-- TSAP used by every S7CommPlus connection ---------------------------------
   S7PlusLocalTSAP  = $0600;
   S7PlusRemoteTSAP : AnsiString = 'SIMATIC-ROOT-HMI'; //: 16-byte ASCII, fixed.
