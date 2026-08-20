@@ -53,13 +53,41 @@ type
   //: Interface to interact with private objects of THMIDBConnection
   {$ENDIF}
   IHMIDBConnection = interface
-    ['{C5AEA572-D7F8-4116-9A4B-3C3B972DC021}']
+    ['{BCAE9EE0-A2AC-40A8-A413-E8C1ED2201F4}']
     {$IFDEF PORTUGUES}
-    //: Retorna um TSQLConnector para os editores de propriedade.
+    //: Retorna a TSQLConnector para os editores de propriedade. Chame
+    //: LockSyncConnection antes e UnlockSyncConnection depois de usá-la.
     {$ELSE}
-    //: Returns the TSQLConnector to be used by property editors.
+    //: Returns the TSQLConnector to be used by property editors. Call
+    //: LockSyncConnection before and UnlockSyncConnection after using it.
     {$ENDIF}
     function GetSyncConnection:TSQLConnector;
+
+    {$IFDEF PORTUGUES}
+    {:
+      Bloqueia o acesso sincronizado à conexão retornada por GetSyncConnection,
+      impedindo que a thread de execução assíncrona a utilize enquanto o
+      chamador estiver com ela em mãos. Deve ser pareado com
+      UnlockSyncConnection e mantido pelo menor tempo possível, pois a fila
+      de comandos assíncronos fica bloqueada enquanto o lock estiver ativo.
+    }
+    {$ELSE}
+    {:
+      Locks synchronized access to the connection returned by
+      GetSyncConnection, preventing the asynchronous execution thread from
+      using it while the caller holds it. Must be paired with
+      UnlockSyncConnection and held for as little time as possible, since the
+      asynchronous command queue is blocked while the lock is held.
+    }
+    {$ENDIF}
+    procedure LockSyncConnection;
+
+    {$IFDEF PORTUGUES}
+    //: Libera o bloqueio adquirido por LockSyncConnection.
+    {$ELSE}
+    //: Releases the lock acquired by LockSyncConnection.
+    {$ENDIF}
+    procedure UnlockSyncConnection;
 
     {$IFDEF PORTUGUES}
     {:
@@ -266,16 +294,17 @@ type
     FCustomStartTransaction: TNotifyEvent;
     FLibraryLocation: String;
     FReadOnly: Boolean;
-    FSyncConnection,
-    FASyncConnection:TSQLConnector;
-    FASyncTransaction:TSQLTransaction;
-    FASyncQuery:TSQLQuery;
+    FConnection:TSQLConnector;
+    FTransaction:TSQLTransaction;
+    FQuery:TSQLQuery;
     FLibLoader:TSQLDBLibraryLoader;
     FCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
     function  GetPendingSQLCmds: Integer;
     function  getProperties: TStrings;
     function  GetSyncConnection:TSQLConnector;
+    procedure LockSyncConnection;
+    procedure UnlockSyncConnection;
     procedure ExecuteSQLCommand(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean; NewConnection:Boolean);
     procedure PropertiesChanged(Sender: TObject);
     procedure SetLibraryLocation(AValue: String);
@@ -641,14 +670,13 @@ constructor THMIDBConnection.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FCS:=TCriticalSection.Create;
-  FSyncConnection:=TSQLConnector.Create(nil);
-  FASyncConnection:=TSQLConnector.Create(nil);
-  FASyncTransaction:=TSQLTransaction.Create(nil);
-  FASyncTransaction.Database:=FASyncConnection;
-  FASyncConnection.Transaction:=FASyncTransaction;
-  FASyncQuery:=TSQLQuery.Create(nil);
-  FASyncQuery.Database:=FASyncConnection;
-  FASyncQuery.Transaction:=FASyncTransaction;
+  FConnection:=TSQLConnector.Create(nil);
+  FTransaction:=TSQLTransaction.Create(nil);
+  FTransaction.Database:=FConnection;
+  FConnection.Transaction:=FTransaction;
+  FQuery:=TSQLQuery.Create(nil);
+  FQuery.Database:=FConnection;
+  FQuery.Transaction:=FTransaction;
   FLibLoader:=TSQLDBLibraryLoader.Create(nil);
   FProperties:=TStringList.Create;
   FProperties.OnChange:=@PropertiesChanged;
@@ -674,10 +702,9 @@ begin
       Sleep(1);
 
   FreeAndNil(FSQLSpooler);
-  FreeAndNil(FASyncQuery);
-  FreeAndNil(FASyncTransaction);
-  FreeAndNil(FSyncConnection);
-  FreeAndNil(FASyncConnection);
+  FreeAndNil(FQuery);
+  FreeAndNil(FTransaction);
+  FreeAndNil(FConnection);
   FreeAndNil(FLibLoader);
   FreeAndNil(FProperties);
   FCS.Destroy;
@@ -692,7 +719,17 @@ end;
 
 function THMIDBConnection.GetSyncConnection:TSQLConnector;
 begin
-  Result:=FSyncConnection;
+  Result:=FConnection;
+end;
+
+procedure THMIDBConnection.LockSyncConnection;
+begin
+  FCS.Enter;
+end;
+
+procedure THMIDBConnection.UnlockSyncConnection;
+begin
+  FCS.Leave;
 end;
 
 class function THMIDBConnection.MapProtocolToConnectorType(protocol: String
@@ -773,10 +810,10 @@ begin
     try
       try
         if NewConnection then begin
-          FASyncConnection.Connected:=false;
-          FASyncConnection.Connected:=true;
+          FConnection.Connected:=false;
+          FConnection.Connected:=true;
         end;
-        FASyncTransaction.StartTransaction;
+        FTransaction.StartTransaction;
       except
         on e:Exception do begin
           {$IFNDEF WINDOWS}
@@ -797,7 +834,7 @@ begin
   else begin
     FCS.Enter;
     try
-      FASyncTransaction.Commit;
+      FTransaction.Commit;
     finally
       FCS.Leave;
     end;
@@ -811,7 +848,7 @@ begin
   else begin
     FCS.Enter;
     try
-      FASyncTransaction.Rollback;
+      FTransaction.Rollback;
     finally
       FCS.Leave;
     end;
@@ -839,8 +876,8 @@ begin
       try
 
         if NewConnection then begin
-          FASyncConnection.Connected:=false;
-          FASyncConnection.Connected:=true;
+          FConnection.Connected:=false;
+          FConnection.Connected:=true;
         end;
 
         //o SQLdb exige uma transação explícita para executar comandos.
@@ -852,28 +889,28 @@ begin
         //ExecuteSQLCommand is called outside of a transaction already opened
         //by ExecTransaction, we open and commit it here, mimicking the
         //per-command autocommit the previous implementation had.
-        weStartedTx:=not FASyncTransaction.Active;
+        weStartedTx:=not FTransaction.Active;
         if weStartedTx then
-          FASyncTransaction.StartTransaction;
+          FTransaction.StartTransaction;
 
         Error:=false;
-        FASyncQuery.SQL.Clear;
-        FASyncQuery.SQL.Add(sqlcmd);
+        FQuery.SQL.Clear;
+        FQuery.SQL.Add(sqlcmd);
         if outputdataset=nil then begin
           try
-            FASyncQuery.ExecSQL
+            FQuery.ExecSQL
           except
             Error := true;
           end;
         end else begin
 
-          FASyncQuery.Open;
-          outputdataset.CopyFromDataset(FASyncQuery);
-          FASyncQuery.Close;
+          FQuery.Open;
+          outputdataset.CopyFromDataset(FQuery);
+          FQuery.Close;
         end;
 
         if weStartedTx then
-          FASyncTransaction.Commit;
+          FTransaction.Commit;
       except
         on e:Exception do begin
           msg:=e.Message;
@@ -881,8 +918,8 @@ begin
           writeln(e.Message);
           WriteLn(sqlcmd);
           {$ENDIF}
-          if weStartedTx and FASyncTransaction.Active then
-            FASyncTransaction.Rollback;
+          if weStartedTx and FTransaction.Active then
+            FTransaction.Rollback;
           Error:=true;
         end;
       end;
@@ -913,10 +950,9 @@ procedure THMIDBConnection.SetProperties(AValue: TStrings);
 begin
   Updating;
   try
-    FSyncConnection.Params.Assign(AValue);
     FCS.Enter;
     try
-      FASyncConnection.Params.Assign(AValue);
+      FConnection.Params.Assign(AValue);
     finally
       FCS.Leave;
     end;
@@ -933,15 +969,19 @@ end;
 
 function  THMIDBConnection.GetConnected:Boolean;
 begin
-  Result:=FSyncConnection.Connected;
+  FCS.Enter;
+  try
+    Result:=FConnection.Connected;
+  finally
+    FCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.SetProtocol(x: String);
 begin
-  FSyncConnection.ConnectorType:=MapProtocolToConnectorType(x);
   FCS.Enter;
   try
-    FASyncConnection.ConnectorType:=MapProtocolToConnectorType(x);
+    FConnection.ConnectorType:=MapProtocolToConnectorType(x);
     UpdateLibLoader;
   finally
     FCS.Leave;
@@ -951,22 +991,20 @@ end;
 
 procedure THMIDBConnection.SetHostName(x: String);
 begin
-  FSyncConnection.HostName:=x;
   FCS.Enter;
   try
-    FASyncConnection.HostName:=x;
+    FConnection.HostName:=x;
+    FHostName:=FConnection.HostName;
   finally
     FCS.Leave;
   end;
-  FHostName:=FSyncConnection.HostName;
 end;
 
 procedure THMIDBConnection.SetPort(x: LongInt);
 begin
-  FSyncConnection.Params.Values['Port']:=IntToStr(x);
   FCS.Enter;
   try
-    FASyncConnection.Params.Values['Port']:=IntToStr(x);
+    FConnection.Params.Values['Port']:=IntToStr(x);
   finally
     FCS.Leave;
   end;
@@ -975,46 +1013,42 @@ end;
 
 procedure THMIDBConnection.SetDatabase(x: String);
 begin
-  FSyncConnection.DatabaseName:=x;
   FCS.Enter;
   try
-    FASyncConnection.DatabaseName:=x;
+    FConnection.DatabaseName:=x;
+    FDatabase:=FConnection.DatabaseName;
   finally
     FCS.Leave;
   end;
-  FDatabase:=FSyncConnection.DatabaseName;
 end;
 
 procedure THMIDBConnection.SetUser(x: String);
 begin
-  FSyncConnection.UserName:=x;
   FCS.Enter;
   try
-    FASyncConnection.UserName:=x;
+    FConnection.UserName:=x;
+    FUser:=FConnection.UserName;
   finally
     FCS.Leave;
   end;
-  FUser:=FSyncConnection.UserName;
 end;
 
 procedure THMIDBConnection.SetPassword(x: String);
 begin
-  FSyncConnection.Password:=x;
   FCS.Enter;
   try
-    FASyncConnection.Password:=x;
+    FConnection.Password:=x;
+    FPassword:=FConnection.Password;
   finally
     FCS.Leave;
   end;
-  FPassword:=FSyncConnection.Password;
 end;
 
 procedure THMIDBConnection.SetCatalog(x: String);
 begin
-  FSyncConnection.Params.Values['Catalog']:=x;
   FCS.Enter;
   try
-    FASyncConnection.Params.Values['Catalog']:=x;
+    FConnection.Params.Values['Catalog']:=x;
   finally
     FCS.Leave;
   end;
@@ -1027,14 +1061,11 @@ begin
     FConnectRead:=x;
     exit;
   end;
-  FSyncConnection.Connected:=x;
-  if FSyncConnection.Connected=x then begin
-    FCS.Enter;
-    try
-      FASyncConnection.Connected:=x;
-    finally
-      FCS.Leave;
-    end;
+  FCS.Enter;
+  try
+    FConnection.Connected:=x;
+  finally
+    FCS.Leave;
   end;
 end;
 
