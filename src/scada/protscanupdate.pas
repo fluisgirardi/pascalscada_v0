@@ -22,11 +22,40 @@ interface
 
 uses
   Classes, SysUtils, CrossEvent, ProtocolTypes, MessageSpool, syncobjs, tag,
-  crossthreads;
+  crossthreads, fgl;
 
 type
 
   TUserUpdateTimeProc = procedure (usertime: Double) of object;
+
+  {$IFDEF PORTUGUES}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  Contexto de uma chamada de callback de tag pendente de execução na thread
+  principal. Cada mensagem drenada da fila vira um destes, permitindo que
+  vários sejam entregues em um único Synchronize.
+  }
+  {$ELSE}
+  {:
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  Context of one tag callback call pending execution on the main thread. Each
+  message drained from the queue becomes one of these, allowing several to be
+  delivered in a single Synchronize call.
+  }
+  {$ENDIF}
+  TTagCallbackContext = class
+  public
+    ReqID:LongWord;
+    Values:TArrayOfDouble;
+    ValuesTimeStamp:QWord;
+    Cmd:TTagCommand;
+    LastResult:TProtocolIOResult;
+    RealOffset:LongInt;
+    CallBack:TTagCommandCallBack;
+    procedure RunOnMainThread;
+  end;
+
+  TTagCallbackContextList = specialize TFPGObjectList<TTagCallbackContext>;
 
   {$IFDEF PORTUGUES}
   {:
@@ -47,18 +76,15 @@ type
     FUserUpdateTimePRoc:TUserUpdateTimeProc;
     FOwnerProtocolDriver:TComponent;
     FSleepInterruptable:TCrossEvent;
-    TagCBack:TTagCommandCallBack;
-    FTagRec:PTagRec;
-    Fvalues:TScanReadRec;
-    FCmd:TTagCommand;
     PGetValues:TGetValues;
     PScanTags:TGetMultipleValues;
     FSpool:TMessageSpool;
     PScannedValues:TArrayOfScanUpdateRec;
-    procedure SyncCallBack;
+    FPendingCallbacks:TTagCallbackContextList;
     procedure SyncException;
     procedure UpdateMultipleTags;
     procedure CheckScanReadOrWrite;
+    procedure FlushPendingCallbacks;
   protected
     //: @exclude
     procedure Loop; override;
@@ -149,6 +175,7 @@ begin
   FUserUpdateTimePRoc:=usrUpdTime;
   FSpool := TMessageSpool.Create;
   FSleepInterruptable := TCrossEvent.Create(false, false);
+  FPendingCallbacks := TTagCallbackContextList.Create(true);
 end;
 
 destructor TScanUpdate.Destroy;
@@ -158,6 +185,7 @@ begin
   FSleepInterruptable.SetEvent;
   FreeAndNil(FSleepInterruptable);
   FreeAndNil(FSpool);
+  FreeAndNil(FPendingCallbacks);
 end;
 
 procedure TScanUpdate.Terminate;
@@ -263,7 +291,11 @@ end;
 procedure TScanUpdate.CheckScanReadOrWrite;
 var
   x:PScanReqRec;
+  TagRec:PTagRec;
   PMsg:TMSMsg;
+  Values:TScanReadRec;
+  Cmd:TTagCommand;
+  Ctx:TTagCallbackContext;
 begin
   while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANREAD,PSM_SINGLESCANREAD,true) do begin
     //try
@@ -271,52 +303,60 @@ begin
         PSM_TAGSCANWRITE, PSM_SINGLESCANREAD: begin
           x := PScanReqRec(PMsg.wParam);
 
-          TagCBack                := x^.Tag.CallBack;
-          Fvalues.Values          := x^.Values;
-          Fvalues.Offset          := x^.Tag.OffSet;
-          Fvalues.RealOffset      := x^.Tag.RealOffset;
-          Fvalues.ClkMonotonicTStamp := x^.ClkMonotonicTStamp;
-          Fvalues.LastQueryResult := x^.RequestResult;
+          Values.Values          := x^.Values;
+          Values.Offset          := x^.Tag.OffSet;
+          Values.RealOffset      := x^.Tag.RealOffset;
+          Values.ClkMonotonicTStamp := x^.ClkMonotonicTStamp;
+          Values.LastQueryResult := x^.RequestResult;
           if PMsg.MsgID=PSM_TAGSCANWRITE then
-            FCmd:=tcScanWrite
+            Cmd:=tcScanWrite
           else
-            FCmd:=tcSingleScanRead;
+            Cmd:=tcSingleScanRead;
 
-          //sincroniza com o tag.
-          //sync tag (update it)
-          FTagRec:=@x^.Tag;
-          try
-            Synchronize(@SyncCallBack);
-          finally      
-            FTagRec:=nil;
-          end;
+          //monta o contexto e enfileira para entrega em lote na thread principal.
+          //builds the context and queues it for batched delivery on the main thread.
+          Ctx:=TTagCallbackContext.Create;
+          Ctx.ReqID           := x^.Tag.ID;
+          Ctx.Values          := Values.Values;
+          Ctx.ValuesTimeStamp := Values.ClkMonotonicTStamp;
+          Ctx.Cmd             := Cmd;
+          Ctx.LastResult      := Values.LastQueryResult;
+          Ctx.RealOffset      := Values.RealOffset;
+          Ctx.CallBack        := x^.Tag.CallBack;
+          FPendingCallbacks.Add(Ctx);
+
           //libera a memoria ocupada
           //pelo pacote
           //free the memory of the request
           SetLength(x^.Values,0);
           Dispose(x);
-          TagCBack:=nil;
         end;
         PSM_TAGSCANREAD: begin
-          FTagRec := PTagRec(PMsg.wParam);
-          TagCBack:=FTagRec^.CallBack;
-          Fvalues.Offset:=FTagRec^.OffSet;
-          Fvalues.RealOffset:=FTagRec^.RealOffset;
+          TagRec := PTagRec(PMsg.wParam);
+          Values.Offset:=TagRec^.OffSet;
+          Values.RealOffset:=TagRec^.RealOffset;
 
           if Assigned(PGetValues) then begin
-            PGetValues(FTagRec^, Fvalues)
+            PGetValues(TagRec^, Values)
           end else
-            Fvalues.LastQueryResult := ioDriverError;
+            Values.LastQueryResult := ioDriverError;
 
-          FCmd:=tcScanRead;
+          Cmd:=tcScanRead;
 
-          Synchronize(@SyncCallBack);
+          Ctx:=TTagCallbackContext.Create;
+          Ctx.ReqID           := TagRec^.ID;
+          Ctx.Values          := Values.Values;
+          Ctx.ValuesTimeStamp := Values.ClkMonotonicTStamp;
+          Ctx.Cmd             := Cmd;
+          Ctx.LastResult      := Values.LastQueryResult;
+          Ctx.RealOffset      := Values.RealOffset;
+          Ctx.CallBack        := TagRec^.CallBack;
+          FPendingCallbacks.Add(Ctx);
 
           //libera a memoria ocupada pelos pacotes
           //free the memory of the request
-          SetLength(Fvalues.Values, 0);
-          Dispose(FTagRec);
-          TagCBack:=nil;
+          SetLength(Values.Values, 0);
+          Dispose(TagRec);
         end;
       end;
     //except
@@ -330,27 +370,32 @@ begin
     //  end;
     //end;
   end;
+
+  //entrega todos os callbacks pendentes em uma unica ida a thread principal,
+  //em vez de uma chamada Synchronize bloqueante por mensagem.
+  //delivers all pending callbacks in a single trip to the main thread,
+  //instead of one blocking Synchronize call per message.
+  if FPendingCallbacks.Count>0 then
+    Synchronize(@FlushPendingCallbacks);
 end;
 
-procedure TScanUpdate.SyncCallBack;
+procedure TScanUpdate.FlushPendingCallbacks;
 var
-  ReqID: LongWord;
+  i:LongInt;
 begin
-  if Terminated then exit;
-  //try
-    if Assigned(FTagRec) then
-      ReqID:=FTagRec^.ID
-    else
-      ReqID:=0;
+  try
+    if Terminated then exit;
+    for i:=0 to FPendingCallbacks.Count-1 do
+      FPendingCallbacks[i].RunOnMainThread;
+  finally
+    FPendingCallbacks.Clear;
+  end;
+end;
 
-    if Assigned(TagCBack) then
-      TagCBack(ReqID, Fvalues.Values,Fvalues.ClkMonotonicTStamp,FCmd,Fvalues.LastQueryResult, Fvalues.RealOffset);
-  //except
-  //  on erro:Exception do begin
-  //    Ferro:=erro;
-  //    SyncException;
-  //  end;
-  //end;
+procedure TTagCallbackContext.RunOnMainThread;
+begin
+  if Assigned(CallBack) then
+    CallBack(ReqID, Values, ValuesTimeStamp, Cmd, LastResult, RealOffset);
 end;
 
 end.
