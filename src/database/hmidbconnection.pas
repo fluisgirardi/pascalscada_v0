@@ -1004,7 +1004,7 @@ procedure THMIDBConnection.SetPort(x: LongInt);
 begin
   FCS.Enter;
   try
-    FConnection.Params.Values['Port']:=IntToStr(x);
+    FConnection.Params.Values['port']:=IntToStr(x);
   finally
     FCS.Leave;
   end;
