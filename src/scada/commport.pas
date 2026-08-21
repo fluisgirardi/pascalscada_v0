@@ -21,11 +21,38 @@ unit CommPort;
 interface
 
 uses
-  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads
+  Commtypes, Classes, MessageSpool, CrossEvent, SyncObjs, crossthreads, fgl
   {$IFNDEF FPC}, Windows{$ENDIF}
   {$IF defined(WIN32) or defined(WIN64)}, windows{$IFEND};
 
 type
+
+  {$IFDEF PORTUGUES}
+  {:
+  Contexto de um evento de porta (erro de comunicação ou abertura/fechamento)
+  pendente de execução na thread principal. Cada mensagem drenada da fila vira
+  um destes, permitindo que vários sejam entregues em um único Synchronize.
+  }
+  {$ELSE}
+  {:
+  Context of one port event (comm error or open/close) pending execution on
+  the main thread. Each message drained from the queue becomes one of these,
+  allowing several to be delivered in a single Synchronize call.
+  }
+  {$ENDIF}
+  TCommEventKind = (cekCommError, cekPortEvent);
+
+  TCommEventContext = class
+  public
+    Kind:TCommEventKind;
+    ErrorEvent:TCommPortErrorEvent;
+    Error:TIOResult;
+    PortEvent:TNotifyEvent;
+    Owner:TObject;
+    procedure RunOnMainThread;
+  end;
+
+  TCommEventContextList = specialize TFPGObjectList<TCommEventContext>;
   {$IF defined(WIN32) or defined(WIN64)}
   TPortUniqueID = WINDOWS.LONGLONG;
   {$ELSE}
@@ -52,15 +79,13 @@ type
   private
     PMsg:TMSMsg;
     FOwner:TComponent;
-    FEvent:Pointer;
-    FError:TIOResult;
     FDoSomethingEvent:TCrossEvent;
     FSpool:TMessageSpool;
+    FPendingEvents:TCommEventContextList;
     procedure DoSomething;
     procedure WaitToDoSomething;
 
-    procedure SyncCommErrorEvent;
-    procedure SyncPortEvent;
+    procedure FlushPendingEvents;
   protected
     procedure Loop; override;
   public
@@ -1040,6 +1065,7 @@ begin
   FOwner:=AOwner;
   FSpool:=TMessageSpool.Create;
   FDoSomethingEvent:=TCrossEvent.Create(true, false);
+  FPendingEvents:=TCommEventContextList.Create(true);
 end;
 
 destructor TEventNotificationThread.Destroy;
@@ -1047,6 +1073,7 @@ begin
   inherited Destroy;
   FreeAndNil(FDoSomethingEvent);
   FreeAndNil(FSpool);
+  FreeAndNil(FPendingEvents);
 end;
 
 procedure TEventNotificationThread.DoSomething;
@@ -1070,6 +1097,7 @@ procedure TEventNotificationThread.Loop;
 var
   AtMainThread:Boolean;
   evt:TNotifyEvent;
+  Ctx:TCommEventContext;
 begin
   //try
     WaitToDoSomething;
@@ -1077,25 +1105,37 @@ begin
       case PMsg.MsgID of
         PSM_COMMERROR:
         begin
-          FEvent:=PMsg.wParam;
-          FError:=TIOResult(PtrUint(PMsg.lParam));
-          Synchronize(@SyncCommErrorEvent);
-          Dispose(PCommPortErrorEvent(FEvent));
+          Ctx:=TCommEventContext.Create;
+          Ctx.Kind:=cekCommError;
+          Ctx.ErrorEvent:=PCommPortErrorEvent(PMsg.wParam)^;
+          Ctx.Error:=TIOResult(PtrUint(PMsg.lParam));
+          FPendingEvents.Add(Ctx);
+          Dispose(PCommPortErrorEvent(PMsg.wParam));
         end;
         PSM_PORT_EVENT:begin
-          FEvent:=PMsg.wParam;
           AtMainThread:=PMsg.lParam<>nil;
-          if AtMainThread then
-            Synchronize(@SyncPortEvent)
-          else begin
-            evt:=PNotifyEvent(FEvent)^;
+          if AtMainThread then begin
+            Ctx:=TCommEventContext.Create;
+            Ctx.Kind:=cekPortEvent;
+            Ctx.PortEvent:=PNotifyEvent(PMsg.wParam)^;
+            Ctx.Owner:=FOwner;
+            FPendingEvents.Add(Ctx);
+          end else begin
+            evt:=PNotifyEvent(PMsg.wParam)^;
             if Assigned(evt) then
               evt(nil);
           end;
-          Dispose(PNotifyEvent(FEvent));
+          Dispose(PNotifyEvent(PMsg.wParam));
         end;
       end;
     end;
+
+    //entrega todos os eventos pendentes em uma unica ida a thread principal,
+    //em vez de uma chamada Synchronize bloqueante por mensagem.
+    //delivers all pending events in a single trip to the main thread,
+    //instead of one blocking Synchronize call per message.
+    if FPendingEvents.Count>0 then
+      Synchronize(@FlushPendingEvents);
   //except
   //  on e:Exception do begin
   //    {$IFDEF FDEBUG}
@@ -1131,27 +1171,24 @@ begin
   DoSomething;
 end;
 
-procedure TEventNotificationThread.SyncCommErrorEvent;
+procedure TEventNotificationThread.FlushPendingEvents;
 var
-  ievt:TCommPortErrorEvent;
+  i:LongInt;
 begin
-  if FEvent=nil then exit;
   try
-    ievt:=TCommPortErrorEvent(FEvent^);
-    ievt(FError);
+    if Terminated then exit;
+    for i:=0 to FPendingEvents.Count-1 do
+      FPendingEvents[i].RunOnMainThread;
   finally
+    FPendingEvents.Clear;
   end;
 end;
 
-procedure TEventNotificationThread.SyncPortEvent;
-var
-  ievt:TNotifyEvent;
+procedure TCommEventContext.RunOnMainThread;
 begin
-  if FEvent=nil then exit;
-  try
-    ievt:=TNotifyEvent(FEvent^);
-    ievt(FOwner);
-  finally
+  case Kind of
+    cekCommError: if Assigned(ErrorEvent) then ErrorEvent(Error);
+    cekPortEvent: if Assigned(PortEvent) then PortEvent(Owner);
   end;
 end;
 
