@@ -252,7 +252,7 @@ type
 
 implementation
 
-uses hsstrings, dateutils, sysutils, hsutils;
+uses hsstrings, dateutils, sysutils, hsutils, math;
 
 { TConnectThread }
 
