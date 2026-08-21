@@ -110,6 +110,7 @@ type
     FExclusiveReaded:Boolean;
 
     FConnectThread:TConnectThread;
+    PRWTimeout: LongInt;
     procedure DoReconnect;
 
     function  GetEnableAutoReconect: Boolean;
@@ -120,6 +121,7 @@ type
 
     procedure SetHostname(target:Ansistring);
     procedure SetPortNumber(pn:LongInt);
+    procedure SetRWTimeout(AValue: LongInt);
     procedure SetTimeout(t:LongInt);
     procedure SetPortType(pt:TPortType);
     procedure SetExclusive(b:Boolean);
@@ -224,6 +226,13 @@ type
     //: Time to retry a lost connection in milliseconds.
     {$ENDIF}
     property ReconnectRetryInterval:Integer read GetReconnectInterval write SetReconnectInterval stored true default 5000;
+
+    {$IFDEF PORTUGUES}
+    {: Informa o tempo em milisegundos entre uma leitura e uma escrita. }
+    {$ELSE}
+    {: Delay between commands of read and write. }
+    {$ENDIF}
+    property WriteReadDelay:LongInt read PRWTimeout write SetRWTimeout stored true default 0;
 
     //: @seealso TCommPortDriver.OnCommPortOpened
     property OnCommPortOpened;
@@ -551,6 +560,12 @@ begin
   RecalcPortID;
 end;
 
+procedure TTCP_UDPPort.SetRWTimeout(AValue: LongInt);
+begin
+  if PRWTimeout=AValue then Exit;
+  PRWTimeout:=AValue;
+end;
+
 procedure TTCP_UDPPort.SetTimeout(t:LongInt);
 begin
   DoExceptionInActive;
@@ -725,8 +740,8 @@ end;
 
 procedure TTCP_UDPPort.NeedSleepBetweenRW;
 begin
-  if FDelayBetweenCmds>0 then
-    Sleep(FDelayBetweenCmds);
+  if (FDelayBetweenCmds>0) or (PRWTimeout>0)  then
+    Sleep(max(FDelayBetweenCmds, PRWTimeout));
 end;
 
 procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
