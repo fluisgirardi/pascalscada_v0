@@ -120,7 +120,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
-  published                                                                                        
+  published
     property AsyncDBConnection:THMIDBConnection read FAsyncDBConnection write SetAsyncDBConnection;
     property EventDescriptions:TEventCollection read FEventDescriptions write SetEventDescriptions;
     property EventTags:TEventTagColletion read FEventTags write SetEventTags;
@@ -322,7 +322,7 @@ var
   sqlcmds: THMIDBConnectionStatementList;
   b, a, c1: Boolean;
 begin
-  if ([csReading,csLoading]*ComponentState<>[]) then
+  if ([csReading,csLoading,csDesignInstance,csDesigning]*ComponentState<>[]) then
     exit;
 
   if Assigned(FEventTags) then begin
@@ -358,7 +358,8 @@ begin
                   if FAsyncDBConnection.Connected=false then begin
                     auxItem.PendingUpdate:=true;
                     auxItem.FLastValueInitialized:=false;
-                    Application.QueueAsyncCall(@TagChangedDelayed2, PtrInt(Sender));
+                    if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+                      Application.QueueAsyncCall(@TagChangedDelayed2, PtrInt(Sender));
                   end;
                 end;
                 exit;
@@ -515,3 +516,4 @@ begin
 end;
 
 end.
+
