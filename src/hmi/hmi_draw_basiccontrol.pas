@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, sysutils, Controls, Graphics, BGRABitmap, BGRABitmapTypes, LCLIntf,
-  LMessages, ControlSecurityManager, HMITypes, PLCTag;
+  LMessages, ControlSecurityManager, HMITypes, PLCTag, hmi_commfaultbadge;
 
 {$IF defined(CM_DESIGNERHITTEST)}
 
@@ -30,6 +30,10 @@ type
     FSecurityCode:UTF8String;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
+    //: compartilhado com os descendentes (progresso, valvulas, bombas, etc.) - cada um chama FCommFaultLink.SetTag no seu proprio SetHMITag.
+    //: shared with descendants (progress bar, valves, pumps, etc.) - each one calls FCommFaultLink.SetTag from its own SetHMITag.
+    FCommIndicator: THMIInlineFaultIndicator;
+    FCommFaultLink: THMITagFaultBadgeLink;
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag({%H-}t:TPLCTag); virtual;                    //seta um tag
     //: @seealso(IHMIInterface.GetHMITag)
@@ -919,6 +923,10 @@ begin
     if Visible then
       FControlArea.Draw(Canvas, 0, 0, False);
   end;
+
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
+    DrawWarningIcon(Canvas, Width, Height);
+
   inherited Paint;
 end;
 
@@ -1022,10 +1030,16 @@ begin
   FIsEnabled:=true;
   FOldHeight:=0;
   FOldWidth:=0;
+
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMIBasicControl.Destroy;
 begin
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommIndicator);
+
   if FRegInSecMan then
     GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
   else begin

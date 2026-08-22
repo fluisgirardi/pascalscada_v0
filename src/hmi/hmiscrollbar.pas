@@ -18,7 +18,8 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Controls, Graphics,
-  Dialogs, StdCtrls, HMITypes, PLCTag, ProtocolTypes, Tag;
+  Dialogs, StdCtrls, HMITypes, PLCTag, ProtocolTypes, Tag, hmi_commfaultbadge,
+  LMessages;
 
 type
   {$IFDEF PORTUGUES}
@@ -37,6 +38,8 @@ type
   private 
     FRegInSecMan:Boolean;
     FTag:TPLCTag;
+    FCommIndicator:THMIInlineFaultIndicator;
+    FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FUpdateOnMove:Boolean;
@@ -45,6 +48,7 @@ type
     FLastPosition:LongInt;
 
     FSecurityCode:UTF8String;
+    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     //: @seealso(IHMIInterface.SetHMITag)
@@ -137,6 +141,9 @@ begin
     {$ENDIF}
   end;
   FIsEnabled:=true;
+
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMIScrollBar.Destroy;
@@ -152,7 +159,25 @@ begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommIndicator);
   inherited Destroy;
+end;
+
+procedure THMIScrollBar.WMPaint(var Msg: TLMPaint);
+var
+  cnv: TCanvas;
+begin
+  inherited;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
+    cnv := TCanvas.Create;
+    try
+      cnv.Handle := Msg.DC;
+      DrawWarningIcon(cnv, ClientWidth, ClientHeight);
+    finally
+      cnv.Free;
+    end;
+  end;
 end;
 
 procedure THMIScrollBar.RefreshScrollBar(Data: PtrInt);
@@ -206,6 +231,8 @@ begin
       RefreshScrollBar(0);
    end;
    FTag := t;
+   if Assigned(FCommFaultLink) then
+     FCommFaultLink.SetTag(t);
 end;
 
 function  THMIScrollBar.GetHMITag:TPLCTag;

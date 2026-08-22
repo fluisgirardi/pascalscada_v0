@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, sysutils, HMIZones, hmiobjectcolletion, ProtocolTypes, HMITypes,
-  Tag, PLCTag;
+  Tag, PLCTag, Controls, hmi_commfaultbadge;
 
 type
   //forward class declaration.
@@ -108,12 +108,18 @@ type
     fInvertResult,
     fModified,
     fLastResultApplied: Boolean;
+    FCommBadge:THMICommBadgeController;
+    FCommFaultLink:THMITagFaultBadgeLink;
     procedure SetInvertedResult(AValue: Boolean);
   protected
     function GetDisplayName: Ansistring; override;
+    procedure DoTargetObjectChanged; override;
   public
     constructor Create(ACollection: TCollection); override;
+    destructor Destroy; override;
     procedure ApplyResult(Result:Boolean); virtual;
+    //: chamado pelo conector quando o tag compartilhado muda / called by the connector when the shared tag changes
+    procedure SyncFaultLinkTag(ATag:TPLCTag);
   published
     property InvertResult:Boolean read FInvertResult write SetInvertedResult;
   end;
@@ -198,6 +204,8 @@ begin
 end;
 
 procedure THMIBooleanPropertyConnector.SetHMITag(AValue: TPLCTag);
+var
+  i: Integer;
 begin
   if FTag=AValue then Exit;
 
@@ -221,6 +229,10 @@ begin
     RecalculateObjectsProperties;
   end;
   FTag:=AValue;
+
+  if Assigned(FObjects) then
+    for i:=0 to FObjects.Count-1 do
+      TObjectWithBooleanPropetiesColletionItem(FObjects.Items[i]).SyncFaultLinkTag(FTag);
 end;
 
 procedure THMIBooleanPropertyConnector.SetObjects(
@@ -248,9 +260,15 @@ begin
 end;
 
 procedure THMIBooleanPropertyConnector.RemoveTagCallBack(Sender: TObject);
+var
+  i: Integer;
 begin
-  if Sender=FTag then
+  if Sender=FTag then begin
      FTag:=nil;
+     if Assigned(FObjects) then
+       for i:=0 to FObjects.Count-1 do
+         TObjectWithBooleanPropetiesColletionItem(FObjects.Items[i]).SyncFaultLinkTag(nil);
+  end;
 end;
 
 procedure THMIBooleanPropertyConnector.RecalculateObjectsProperties;
@@ -342,6 +360,28 @@ begin
   inherited Create(ACollection);
   fRequiredTypeName:=PTypeInfo(TypeInfo(Boolean))^.Name;
   fRequiredTypeKind:=PTypeInfo(TypeInfo(Boolean))^.Kind;
+  FCommBadge:=THMICommBadgeController.Create;
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
+end;
+
+destructor TObjectWithBooleanPropetiesColletionItem.Destroy;
+begin
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommBadge);
+  inherited Destroy;
+end;
+
+procedure TObjectWithBooleanPropetiesColletionItem.DoTargetObjectChanged;
+begin
+  if TargetObject is TControl then
+    FCommBadge.SetTarget(TControl(TargetObject))
+  else
+    FCommBadge.SetTarget(nil);
+end;
+
+procedure TObjectWithBooleanPropetiesColletionItem.SyncFaultLinkTag(ATag: TPLCTag);
+begin
+  FCommFaultLink.SetTag(ATag);
 end;
 
 procedure TObjectWithBooleanPropetiesColletionItem.ApplyResult(Result: Boolean);

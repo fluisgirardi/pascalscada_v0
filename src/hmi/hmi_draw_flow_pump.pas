@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, hmi_flow_zones, HMIBasicEletricMotor, hmi_polyline, HMIZones,
-  PLCTag, Tag, ExtCtrls,Graphics;
+  PLCTag, Tag, ExtCtrls,Graphics, hmi_commfaultbadge;
 
 type
 
@@ -119,6 +119,8 @@ begin
     UpdateValve;
   end;
   FPLCTag := AValue;
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(AValue);
 end;
 
 procedure THMICustomLinkedFlowPump.WriteFaultCallBack(Sender: TObject);

@@ -17,7 +17,7 @@ interface
 uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, Graphics, Dialogs,
   {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag,
-  unumerickeyboard, Forms;
+  unumerickeyboard, Forms, hmi_commfaultbadge, LMessages;
 
 type
   {$IFDEF PORTUGUES}
@@ -49,6 +49,8 @@ type
     FNumericKBShowDecimal: Boolean;
     FNumericKBShowMinus: Boolean;
     FTag:TPLCTag;
+    FCommIndicator:THMIInlineFaultIndicator;
+    FCommFaultLink:THMITagFaultBadgeLink;
     FShowFocused:Boolean;
     FDefFontColor:TColor;
     FDefColor:TColor;
@@ -83,6 +85,7 @@ type
     FMinLimit, FMaxLimit:Double;
 
     FSecurityCode:UTF8String;
+    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     procedure RemoveHMITag(Sender:TObject);
@@ -398,6 +401,9 @@ begin
   FShowFocused := true;
   FFreezeValue := true;
   FNumberFormat := '#0.0';
+
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor  THMIEdit.Destroy;
@@ -413,7 +419,35 @@ begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommIndicator);
   inherited Destroy;
+end;
+
+procedure THMIEdit.WMPaint(var Msg: TLMPaint);
+var
+  cnv: TCanvas;
+  atRight: Boolean;
+begin
+  inherited;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
+    //texto alinhado a esquerda/centro -> icone na esquerda; alinhado a
+    //direita -> icone na direita, pra nao ficar por cima do texto.
+    //left/center-aligned text -> icon on the left; right-aligned text ->
+    //icon on the right, so it doesn't sit on top of the text.
+    {$IFDEF FPC}
+    atRight := Self.Alignment = taRightJustify;
+    {$ELSE}
+    atRight := FAlignment = taRightJustify;
+    {$ENDIF}
+    cnv := TCanvas.Create;
+    try
+      cnv.Handle := Msg.DC;
+      DrawWarningIconAt(cnv, ClientWidth, ClientHeight, atRight);
+    finally
+      cnv.Free;
+    end;
+  end;
 end;
 
 {$IFNDEF FPC}
@@ -525,6 +559,8 @@ begin
     RefreshTagValue(0);
   end;
   FTag := t;
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(t);
 
   if (FTag=nil) and (csDesigning in ComponentState) then begin
     inherited Text := SWithoutTag;

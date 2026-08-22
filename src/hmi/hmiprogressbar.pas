@@ -16,7 +16,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, ComCtrls, HMITypes, PLCTag, ProtocolTypes, Tag,
-  hmi_draw_basiccontrol, Graphics;
+  hmi_draw_basiccontrol, Graphics, hmi_commfaultbadge;
 
 type
 
@@ -294,6 +294,8 @@ begin
     RefreshProgress(0);
   end;
   FTag := t;
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(t);
   InvalidateDraw;
 end;
 

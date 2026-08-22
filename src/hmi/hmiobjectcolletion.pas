@@ -41,6 +41,8 @@ type
     fRequiredTypeKind:TTypeKind;
     function AcceptObject(obj:TComponent):Boolean; virtual;
     function AcceptObjectProperty(PropertyName:AnsiString):Boolean; virtual;
+    //: Chamado sempre que TargetObject muda (inclusive para nil). / Called whenever TargetObject changes (including to nil).
+    procedure DoTargetObjectChanged; virtual;
   published
     property Tag:PtrUInt read FTag write FTag;
     property TargetObject:TComponent read FTargetObject write SetTargetObject;
@@ -71,6 +73,7 @@ begin
       FTargetObject.RemoveFreeNotification(TComponent(Collection.Owner));
     FTargetObject:=nil;
     FTargetObjectProperty:='';
+    DoTargetObjectChanged;
     exit;
   end;
 
@@ -78,6 +81,15 @@ begin
   FTargetObject:=AValue;
   if Collection.Owner is TComponent then
     FTargetObject.FreeNotification(TComponent(Collection.Owner));
+  DoTargetObjectChanged;
+end;
+
+procedure TObjectColletionItem.DoTargetObjectChanged;
+begin
+  //nada a fazer aqui - descendentes sobrescrevem quando precisam reagir a
+  //troca do alvo (ex.: religar um indicador visual).
+  //nothing to do here - descendants override this when they need to react
+  //to the target changing (e.g. re-attach a visual indicator).
 end;
 
 procedure TObjectColletionItem.SetTargetObjectProperty(AValue: AnsiString);

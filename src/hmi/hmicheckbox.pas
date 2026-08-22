@@ -16,7 +16,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, Graphics,
-  ProtocolTypes, Tag;
+  ProtocolTypes, Tag, hmi_commfaultbadge, LMessages;
 
 type
   {$IFDEF PORTUGUES}
@@ -46,6 +46,8 @@ type
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
+    FCommIndicator:THMIInlineFaultIndicator;
+    FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FValueTrueLoaded, FValueFalseLoaded,
@@ -57,6 +59,7 @@ type
     FOtherValues:TOtherValues;
 
     FSecurityCode:UTF8String;
+    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     function  GetTagValue:Double;
@@ -507,6 +510,9 @@ begin
   FOtherValues := IsGrayed;
   FWriteTrue := true;
   FWriteFalse := true;
+
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMICheckBox.Destroy;
@@ -522,6 +528,8 @@ begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommIndicator);
   FreeAndNil(FFontFalse);
   FreeAndNil(FFontTrue);
   FreeAndNil(FFontGrayed);
@@ -575,6 +583,8 @@ begin
     RefreshTagValue(GetTagValue);
   end;
   FTag := t;
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(t);
 end;
 
 function  THMICheckBox.GetHMITag:TPLCTag;
@@ -781,6 +791,22 @@ begin
   UpdateTagValue;
 end;
 {$ENDIF}
+
+procedure THMICheckBox.WMPaint(var Msg: TLMPaint);
+var
+  cnv: TCanvas;
+begin
+  inherited;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
+    cnv := TCanvas.Create;
+    try
+      cnv.Handle := Msg.DC;
+      DrawWarningIcon(cnv, ClientWidth, ClientHeight);
+    finally
+      cnv.Free;
+    end;
+  end;
+end;
 
 procedure THMICheckBox.SetSecurityCode(sc: UTF8String);
 begin
