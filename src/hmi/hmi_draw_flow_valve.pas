@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, hmi_flow_zones, HMI_Draw_Valves, hmi_polyline, HMIZones,
-  PLCTag, Tag, ExtCtrls;
+  PLCTag, Tag, ExtCtrls, hmi_commfaultbadge;
 
 type
   THMICustomFlowValve = class(THMICustomBasicValve, IColorChangeNotification)
@@ -104,6 +104,8 @@ begin
     UpdateValve;
   end;
   FPLCTag := AValue;
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(AValue);
 end;
 
 procedure THMICustomLinkedFlowValve.WriteFaultCallBack(Sender: TObject);

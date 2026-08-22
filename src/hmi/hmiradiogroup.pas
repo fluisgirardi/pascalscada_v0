@@ -17,7 +17,8 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Controls, Graphics,
-  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, Tag;
+  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, Tag, hmi_commfaultbadge,
+  LMessages;
 
 type
   {$IFDEF PORTUGUES}
@@ -37,12 +38,15 @@ type
   private  
     FRegInSecMan:Boolean;
     FTag:TPLCTag;
+    FCommIndicator:THMIInlineFaultIndicator;
+    FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FDefaultIndex:LongInt;
     FIgnore, FLoaded:Boolean;
 
     FSecurityCode:UTF8String;
+    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     //: @seealso(IHMIInterface.SetHMITag)
@@ -149,6 +153,8 @@ begin
    FIsEnabled:=true;
    FDefaultIndex:=-1;
 
+   FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+   FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor  THMIRadioGroup.Destroy;
@@ -164,7 +170,25 @@ begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommIndicator);
   inherited Destroy;
+end;
+
+procedure THMIRadioGroup.WMPaint(var Msg: TLMPaint);
+var
+  cnv: TCanvas;
+begin
+  inherited;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
+    cnv := TCanvas.Create;
+    try
+      cnv.Handle := Msg.DC;
+      DrawWarningIcon(cnv, ClientWidth, ClientHeight);
+    finally
+      cnv.Free;
+    end;
+  end;
 end;
 
 procedure THMIRadioGroup.RefreshRadioGroup(Data: PtrInt);
@@ -227,6 +251,8 @@ begin
       RefreshRadioGroup(0);
    end;
    FTag := t;
+   if Assigned(FCommFaultLink) then
+     FCommFaultLink.SetTag(t);
 end;
 
 function  THMIRadioGroup.GetHMITag:TPLCTag;

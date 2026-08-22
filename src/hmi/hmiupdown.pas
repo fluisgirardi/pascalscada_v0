@@ -17,7 +17,8 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, {$ENDIF} Controls, Graphics,
-  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls, Tag;
+  Dialogs, ExtCtrls, HMITypes, PLCTag, ProtocolTypes, ComCtrls, Tag,
+  hmi_commfaultbadge;
 
 type
 
@@ -39,6 +40,8 @@ type
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
+    FCommIndicator:THMIInlineFaultIndicator;
+    FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FPosition, FIncrement:Double;
@@ -76,6 +79,8 @@ type
     procedure Loaded; override;
     //: @exclude
     procedure Click(Button: TUDBtnType); override;
+    //: @exclude
+    procedure Paint; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -198,6 +203,8 @@ begin
   FEnableMin := false;
   FEnableMax := false;
 
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMIUpDown.Destroy;
@@ -213,6 +220,8 @@ begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommIndicator);
   inherited Destroy;
 end;
 
@@ -267,6 +276,8 @@ begin
       RefreshUpDown(0);
    end;
    FTag := t;
+   if Assigned(FCommFaultLink) then
+     FCommFaultLink.SetTag(t);
 end;
 
 function  THMIUpDown.GetHMITag:TPLCTag;
@@ -302,6 +313,13 @@ begin
   inherited Loaded;
   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   TagChangeCallBack(Self);
+end;
+
+procedure THMIUpDown.Paint;
+begin
+  inherited Paint;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
+    DrawWarningIcon(Canvas, Width, Height);
 end;
 
 procedure THMIUpDown.Click(Button: TUDBtnType);

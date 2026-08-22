@@ -15,7 +15,8 @@ unit HMILabel;
 interface
 
 uses
-  SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes, Tag;
+  SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes, Tag,
+  hmi_commfaultbadge;
 
 type
 
@@ -68,6 +69,10 @@ type
     //: @exclude
     FTag:TPLCTag;
     //: @exclude
+    FCommIndicator:THMIInlineFaultIndicator;
+    //: @exclude
+    FCommFaultLink:THMITagFaultBadgeLink;
+    //: @exclude
     procedure SetEnabled(e:Boolean); override;
     //: @exclude
     procedure SetHMITag(t:TPLCTag); virtual;
@@ -79,6 +84,7 @@ type
     procedure TagChangeCallBack(Sender:TObject); virtual;
 
     procedure Loaded; override;
+    procedure Paint; override;
 
   public
     //: @exclude
@@ -203,6 +209,9 @@ begin
   AutoSize:=False;
   FIsEnabled:=true;
   FNumberFormat := '#0.0';
+
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor  THMILabel.Destroy;
@@ -218,12 +227,21 @@ begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
+  FreeAndNil(FCommFaultLink);
+  FreeAndNil(FCommIndicator);
   inherited Destroy;
 end;
 
 procedure THMILabel.RefreshLabel(Data: PtrInt);
 begin
   RefreshTagValue;
+end;
+
+procedure THMILabel.Paint;
+begin
+  inherited Paint;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
+    DrawWarningIcon(Canvas, Width, Height);
 end;
 
 procedure THMILabel.SetSecurityCode(sc: UTF8String);
@@ -285,7 +303,9 @@ begin
     RefreshTagValue;
   end;
   FTag := t;
-  
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(t);
+
   if (FTag=nil) and (csDesigning in ComponentState) then
     inherited Caption := SWithoutTag;
 end;

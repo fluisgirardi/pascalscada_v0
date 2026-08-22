@@ -6,7 +6,8 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones;
+  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones,
+  hmi_commfaultbadge;
 
 type
 
@@ -271,6 +272,8 @@ begin
     UpdateControl;
   end;
   FPLCTag := AValue;
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(AValue);
 end;
 
 procedure THMICustomLinkedFlowElevator.WriteFaultCallBack(Sender: TObject);
