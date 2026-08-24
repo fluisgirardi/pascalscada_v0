@@ -18,7 +18,8 @@ interface
 
 uses
   Classes, SysUtils, Types, Controls, Graphics, Tag, PLCTag, BGRABitmap,
-  BGRABitmapTypes, base64;
+  BGRABitmapTypes, base64, Math, Forms, ExtCtrls,
+  {$IFDEF FPC}LCLIntf, LCLType{$ELSE}Windows{$ENDIF};
 
 type
   {$IFDEF PORTUGUES}
@@ -46,6 +47,30 @@ type
 
   {$IFDEF PORTUGUES}
   {:
+  Onde o THMIWarningBadge se posiciona em relacao ao controle-alvo. wbaCenter
+  e' o comportamento original (quadrado centralizado sobre o alvo inteiro).
+  wbaLeftEdge/wbaRightEdge encostam o selo numa faixa vertical numa lateral
+  do alvo, do tamanho de WarningIconMarginWidth - usado pelo THMIEdit, que
+  reserva esse mesmo espaco via gtk_entry_set_inner_border e precisa do
+  icone numa janela separada porque a faixa reservada fica sujeita a
+  repinturas internas do GtkEntry que nao passam pelo nosso hook de paint.
+  }
+  {$ELSE}
+  {:
+  Where THMIWarningBadge positions itself relative to the target control.
+  wbaCenter is the original behavior (square centered over the whole
+  target). wbaLeftEdge/wbaRightEdge flush the badge against a vertical
+  strip on one side of the target, sized to WarningIconMarginWidth - used
+  by THMIEdit, which reserves that same space via
+  gtk_entry_set_inner_border and needs the icon in a separate window
+  because that reserved strip is subject to internal GtkEntry repaints
+  that don't go through our paint hook.
+  }
+  {$ENDIF}
+  TWarningBadgeAnchor = (wbaCenter, wbaLeftEdge, wbaRightEdge);
+
+  {$IFDEF PORTUGUES}
+  {:
   Pequeno selo de aviso (ícone PNG com transparência, carregado via BGRABitmap)
   desenhado como irmão do controle-alvo (mesmo Parent), centralizado (X,Y)
   sobre seus limites. Não depende do controle-alvo ter um Paint próprio
@@ -70,6 +95,7 @@ type
   THMIWarningBadge = class(TCustomControl)
   private
     FTargetControl: TControl;
+    FAnchor: TWarningBadgeAnchor;
     procedure TargetBoundsChanged(Sender: TObject);
     procedure TargetVisibleChanged(Sender: TObject);
     procedure TargetBeforeDestruction(Sender: TObject);
@@ -81,6 +107,7 @@ type
     destructor Destroy; override;
     procedure AttachTo(ATarget: TControl);
     procedure DetachTarget;
+    procedure SetAnchor(AAnchor: TWarningBadgeAnchor);
     procedure ShowBadge;
     procedure HideBadge;
   end;
@@ -105,15 +132,28 @@ type
     FTarget: TControl;
     FBadge: THMIWarningBadge;
     FFaultCount: Integer;
+    FAnchor: TWarningBadgeAnchor;
+    FColor: TColor;
+    FHasColor: Boolean;
     procedure EnsureBadge;
     procedure UpdateBadgeVisibility;
   public
     destructor Destroy; override;
     procedure SetTarget(ATarget: TControl);
+    //: @seealso(THMIWarningBadge)
+    procedure SetAnchor(AAnchor: TWarningBadgeAnchor);
+    {$IFDEF PORTUGUES}
+    //: Cor de fundo do selo - use a mesma cor do controle-alvo pra reforcar a aparencia de que o selo "faz parte" dele.
+    {$ELSE}
+    //: Badge background color - use the same color as the target control to reinforce the look of the badge "belonging" to it.
+    {$ENDIF}
+    procedure SetColor(AColor: TColor);
     //: uma fonte de falha passou de OK para falha / a fault source went from OK to faulted
     procedure IncFault; override;
     //: uma fonte de falha passou de falha para OK / a fault source went from faulted to OK
     procedure DecFault; override;
+    //: @true se ao menos uma fonte de falha esta ativa no momento / @true if at least one fault source is currently active
+    function Faulted: Boolean;
   end;
 
   {$IFDEF PORTUGUES}
@@ -138,8 +178,15 @@ type
   private
     FOwnerControl: TControl;
     FFaultCount: Integer;
+    //: repaint de reforco, com atraso real (nao so "proxima folga do loop")
+    //: - ver comentario em IncFault.
+    //: backup repaint, with a real time delay (not just "next loop idle
+    //: slot") - see comment on IncFault.
+    FDeferredRepaintTimer: TTimer;
+    procedure DeferredRepaintTimer(Sender: TObject);
   public
     constructor Create(AOwnerControl: TControl);
+    destructor Destroy; override;
     procedure IncFault; override;
     procedure DecFault; override;
     function Faulted: Boolean;
@@ -182,11 +229,31 @@ type
   end;
 
 {$IFDEF PORTUGUES}
-//: Desenha o ícone de aviso centralizado, do tamanho da menor dimensão de ACanvas, direto num Canvas qualquer (uso pelos controles com Paint próprio).
+{:
+Desenha o ícone de aviso centralizado, do tamanho da menor dimensão de
+ACanvas, direto num Canvas qualquer (uso pelos controles com Paint
+próprio). Se AEraseBackground for @true, preenche primeiro o retângulo do
+ícone com o Brush atual de ACanvas (cor/estilo já setados pelo chamador) -
+necessário em controles cujo Paint não recobre sempre o mesmo pixel
+inteiramente a cada repintura (ex.: THMIAnimation com imagem transparente
+ou menor que o controle), senão o ícone (desenhado com transparência real,
+não opaco) vai acumulando opacidade a cada repintura até virar um bloco
+sólido.
+}
 {$ELSE}
-//: Draws the warning icon centered, sized to the smallest dimension, directly on any Canvas (used by controls that draw it in their own Paint).
+{:
+Draws the warning icon centered, sized to the smallest dimension, directly
+on any Canvas (used by controls that draw it in their own Paint). If
+AEraseBackground is @true, first fills the icon's rectangle with
+ACanvas's current Brush (color/style already set by the caller) -
+necessary on controls whose Paint doesn't always fully cover that same
+pixel on every repaint (e.g. THMIAnimation with a transparent or
+smaller-than-control image), otherwise the icon (drawn with real
+transparency, not opaque) keeps accumulating opacity on every repaint
+until it turns into a solid block.
+}
 {$ENDIF}
-procedure DrawWarningIcon(ACanvas: TCanvas; AWidth, AHeight: Integer);
+procedure DrawWarningIcon(ACanvas: TCanvas; AWidth, AHeight: Integer; AEraseBackground: Boolean = False);
 
 {$IFDEF PORTUGUES}
 {:
@@ -213,12 +280,56 @@ procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight:
 {$ENDIF}
 function WarningIconMarginWidth(AHeight: Integer): Integer;
 
+{$IFDEF PORTUGUES}
+{:
+Desenha o icone de aviso centralizado sobre AControl, usando a DC recebida
+num WMPaint (LM_PAINT). Alguns widgets GTK2 simples (ex.: TCheckBox,
+TScrollBar, TTrackBar em certos temas) nao tem janela (GdkWindow) propria -
+compartilham a do pai - e nesse caso a DC do WMPaint tem origem no PAI, nao
+no controle, fazendo um desenho ingenuo em (0,0) cair na origem do
+formulario em vez de sobre o controle. Esta rotina detecta esse caso
+(Parent.Handle=Handle) e compensa deslocando a origem da DC antes de
+desenhar.
+}
+{$ELSE}
+{:
+Draws the warning icon centered over AControl, using the DC received in a
+WMPaint (LM_PAINT). Some simple GTK2 widgets (e.g. TCheckBox, TScrollBar,
+TTrackBar under certain themes) have no window of their own (GdkWindow) -
+they share their parent's - and in that case the WMPaint's DC has its
+origin at the PARENT, not the control, so a naive draw at (0,0) lands at
+the form's origin instead of over the control. This routine detects that
+case (Parent.Handle=Handle) and compensates by shifting the DC's origin
+before drawing.
+}
+{$ENDIF}
+procedure DrawWarningIconOnControlDC(AControl: TWinControl; ADC: HDC);
+
 implementation
 
 const
   BadgeSize = 14;
   IconSideMargin = 2;
-  HealthyResults = [ioNone, ioOk, ioNullDriver];
+  //espaco deixado pra fora do selo, nos lados sem prender no icone, pra
+  //borda do controle-alvo (ex.: THMIEdit) continuar aparecendo por baixo -
+  //sem isso o selo tapa a borda inteira do lado onde fica.
+  //space left outside the badge, on the sides not anchored to the icon, so
+  //the target control's own border (e.g. THMIEdit) still shows through -
+  //without it the badge covers the whole border on the side it's on.
+  BadgeEdgeInset = 2;
+  //ioNullDriver NAO e' saudavel - significa "porta sem driver realmente
+  //ativo agora" (TModBusDriver.DoRead/DoWrite retornam isso quando
+  //PCommPort.ReallyActive=False, ex.: durante reconexao) - e alterna com
+  //ioCommError/ioTimeOut a cada ciclo quando a conexao esta genuinamente
+  //fora do ar, fazendo o selo entrar e sair repetidamente se fosse tratado
+  //como OK aqui.
+  //ioNullDriver is NOT healthy - it means "port with no really active
+  //driver right now" (TModBusDriver.DoRead/DoWrite return this when
+  //PCommPort.ReallyActive=False, e.g. while reconnecting) - and it
+  //alternates with ioCommError/ioTimeOut every cycle when the connection
+  //is genuinely down, making the badge flap in and out if treated as OK
+  //here.
+  HealthyResults = [ioNone, ioOk];
 
   //icone de aviso (triangulo amarelo com "!"), 128x128, PNG com transparencia,
   //codificado em base64 para ficar embutido no binario (sem depender de um
@@ -250,10 +361,11 @@ begin
   Result := FWarningIcon;
 end;
 
-procedure DrawWarningIcon(ACanvas: TCanvas; AWidth, AHeight: Integer);
+procedure DrawWarningIcon(ACanvas: TCanvas; AWidth, AHeight: Integer; AEraseBackground: Boolean);
 var
   Icon: TBGRABitmap;
   sz, offX, offY: Integer;
+  IconRect: TRect;
 begin
   Icon := GetWarningIcon;
   if (Icon=nil) or Icon.Empty then exit;
@@ -268,7 +380,12 @@ begin
 
   offX := (AWidth  - sz) div 2;
   offY := (AHeight - sz) div 2;
-  Icon.Draw(ACanvas, Rect(offX, offY, offX + sz, offY + sz), False);
+  IconRect := Rect(offX, offY, offX + sz, offY + sz);
+
+  if AEraseBackground then
+    ACanvas.FillRect(IconRect);
+
+  Icon.Draw(ACanvas, IconRect, False);
 end;
 
 procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean);
@@ -302,6 +419,61 @@ begin
   Result := sz + IconSideMargin*2;
 end;
 
+procedure DrawWarningIconOnControlDC(AControl: TWinControl; ADC: HDC);
+var
+  cnv: TCanvas;
+  Icon: TBGRABitmap;
+  sz, BaseX, BaseY, offX, offY: Integer;
+begin
+  Icon := GetWarningIcon;
+  if (Icon=nil) or Icon.Empty then exit;
+
+  //SetWindowOrgEx nao surtia efeito (ou surtia efeito errado) porque
+  //TBGRABitmap.Draw desenha direto na superficie GDK/Cairo, sem passar
+  //pela transformacao logica->device que a LCL emula pro resto do GDI -
+  //entao calculamos o retangulo final ja deslocado nos mesmos, em vez de
+  //depender de transformacao nenhuma da DC.
+  //SetWindowOrgEx had no effect (or the wrong effect) because
+  //TBGRABitmap.Draw draws straight onto the GDK/Cairo surface, without
+  //going through the logical->device transform the LCL emulates for the
+  //rest of the GDI - so we compute the final, already-shifted rect
+  //ourselves instead of relying on any DC transform.
+  //
+  //Nao da' pra confiar em "o controle tem janela propria" (Handle<>
+  //Parent.Handle e' sempre verdade - Handle e' so o ponteiro do GtkWidget,
+  //nao indica se ele tem GdkWindow propria) nem em csOpaque isoladamente
+  //(consertou o THMIScrollBar, mas THMICheckBox/THMITrackBar continuaram
+  //desenhando relativo ao formulario mesmo sem csOpaque) - testes ao vivo
+  //confirmaram que os tres controles que chamam esta rotina tem esse
+  //comportamento (a DC do WMPaint acaba sendo relativa ao formulario, nao
+  //ao controle), entao aplicamos o deslocamento sempre.
+  //Can't rely on "the control has its own window" (Handle<>Parent.Handle
+  //is always true - Handle is just the GtkWidget pointer, it doesn't
+  //indicate whether it has its own GdkWindow) nor on csOpaque alone (fixed
+  //THMIScrollBar, but THMICheckBox/THMITrackBar kept drawing relative to
+  //the form even without csOpaque) - live testing confirmed all three
+  //controls that call this routine have this behavior (the WMPaint's DC
+  //ends up relative to the form, not the control), so we always apply the
+  //offset.
+  BaseX := AControl.Left;
+  BaseY := AControl.Top;
+
+  sz := AControl.ClientWidth;
+  if AControl.ClientHeight<sz then sz := AControl.ClientHeight;
+  if sz<1 then exit;
+
+  offX := BaseX + (AControl.ClientWidth  - sz) div 2;
+  offY := BaseY + (AControl.ClientHeight - sz) div 2;
+
+  cnv := TCanvas.Create;
+  try
+    cnv.Handle := ADC;
+    Icon.Draw(cnv, Rect(offX, offY, offX + sz, offY + sz), False);
+  finally
+    cnv.Free;
+  end;
+end;
+
 { THMIInlineFaultIndicator }
 
 constructor THMIInlineFaultIndicator.Create(AOwnerControl: TControl);
@@ -310,19 +482,78 @@ begin
   FOwnerControl := AOwnerControl;
 end;
 
+destructor THMIInlineFaultIndicator.Destroy;
+begin
+  FreeAndNil(FDeferredRepaintTimer);
+  inherited Destroy;
+end;
+
+procedure THMIInlineFaultIndicator.DeferredRepaintTimer(Sender: TObject);
+begin
+  FDeferredRepaintTimer.Enabled := False;
+  if Assigned(FOwnerControl) and ([csDestroying]*FOwnerControl.ComponentState=[]) then
+    FOwnerControl.Repaint;
+end;
+
 procedure THMIInlineFaultIndicator.IncFault;
 begin
   inc(FFaultCount);
-  if (FFaultCount=1) and Assigned(FOwnerControl) then
-    FOwnerControl.Invalidate;
+  //Repaint (Invalidate + Update), nao so Invalidate: Invalidate apenas
+  //agenda a repintura pro proximo ciclo ocioso do loop de eventos - sem
+  //mais nada acontecendo na tela, isso podia ficar pendente ate um evento
+  //qualquer (ex.: clique do mouse) "cutucar" o loop e processa-la. Repaint
+  //forca a repintura de verdade, imediatamente - funciona pra maioria dos
+  //controles.
+  //
+  //Mas pelo menos o THMIAnimation tem sua propria troca assincrona de
+  //imagem (ShowZone: Picture.Clear + reload) disparada pela MESMA janela
+  //de tempo - um teste com log mostrou nosso Paint rodando com
+  //HasGraphic=False (pousando bem no meio dessa troca) e depois NUNCA MAIS
+  //sendo chamado, mesmo com a falha continuando ativa por varios segundos
+  //(nada mais invalida o controle nesse meio tempo). Ou seja, um unico
+  //repaint de reforco pode colidir com essa troca de imagem e "congelar"
+  //um resultado ruim na tela. Por isso o repaint de reforco usa um TTimer
+  //com atraso real (nao so "proxima folga do loop"), dando tempo de
+  //verdade pra essa troca terminar antes da segunda tentativa.
+  //Repaint (Invalidate + Update), not just Invalidate: Invalidate only
+  //schedules the repaint for the event loop's next idle cycle - with
+  //nothing else happening on screen, that could sit pending until some
+  //unrelated event (e.g. a mouse click) "nudged" the loop into processing
+  //it. Repaint forces the actual repaint right away - works for most
+  //controls.
+  //
+  //But at least THMIAnimation has its own async picture swap (ShowZone:
+  //Picture.Clear + reload) triggered in the same time window - a logged
+  //test showed our Paint running with HasGraphic=False (landing right in
+  //the middle of that swap) and then NEVER being called again, even with
+  //the fault staying active for several seconds (nothing else invalidates
+  //the control in the meantime). So a single backup repaint can collide
+  //with that picture swap and "freeze" a bad result on screen. That's why
+  //the backup repaint uses a TTimer with a real time delay (not just "next
+  //loop idle slot"), giving that swap real time to finish before the
+  //second attempt.
+  if (FFaultCount=1) and Assigned(FOwnerControl) then begin
+    FOwnerControl.Repaint;
+    if FDeferredRepaintTimer=nil then begin
+      FDeferredRepaintTimer := TTimer.Create(nil);
+      FDeferredRepaintTimer.Interval := 300;
+      FDeferredRepaintTimer.OnTimer := @DeferredRepaintTimer;
+      FDeferredRepaintTimer.Enabled := False;
+    end;
+    FDeferredRepaintTimer.Enabled := False;
+    FDeferredRepaintTimer.Enabled := True;
+  end;
 end;
 
 procedure THMIInlineFaultIndicator.DecFault;
 begin
   if FFaultCount>0 then
     dec(FFaultCount);
-  if (FFaultCount=0) and Assigned(FOwnerControl) then
-    FOwnerControl.Invalidate;
+  if (FFaultCount=0) and Assigned(FOwnerControl) then begin
+    if Assigned(FDeferredRepaintTimer) then
+      FDeferredRepaintTimer.Enabled := False;
+    FOwnerControl.Repaint;
+  end;
 end;
 
 function THMIInlineFaultIndicator.Faulted: Boolean;
@@ -394,23 +625,64 @@ end;
 
 procedure THMIWarningBadge.Reposition;
 var
-  sz: Integer;
+  sz, w: Integer;
 begin
   if FTargetControl=nil then exit;
 
-  //o simbolo tem proporcao 1:1 - usa a menor dimensao do controle-alvo para
-  //que o selo nunca ultrapasse os limites dele.
-  //the symbol has a 1:1 ratio - uses the target control's smallest dimension
-  //so the badge never overflows its bounds.
-  sz := FTargetControl.Width;
-  if FTargetControl.Height<sz then
-    sz := FTargetControl.Height;
-  if sz<1 then
-    sz := 1;
+  case FAnchor of
+    wbaLeftEdge, wbaRightEdge: begin
+      //faixa vertical do lado do alvo, do tamanho reservado por
+      //gtk_entry_set_inner_border (WarningIconMarginWidth) - a mesma
+      //largura que o THMIEdit pede pra reservar espaco de texto. Encolhida
+      //por BadgeEdgeInset no lado externo (topo, base e a lateral que NAO
+      //encosta no icone) pra deixar a borda do proprio controle-alvo
+      //aparecer ali e o selo parecer parte dele; o lado que encosta no
+      //icone/texto fica encostado, sem inset (nao ha borda ali mesmo).
+      //vertical strip on one side of the target, sized to what
+      //gtk_entry_set_inner_border reserves (WarningIconMarginWidth) - the
+      //same width THMIEdit asks to reserve for text. Shrunk by
+      //BadgeEdgeInset on the outer side (top, bottom, and the edge that
+      //does NOT touch the icon) so the target control's own border shows
+      //through there and the badge looks like part of it; the side that
+      //touches the icon/text stays flush, no inset (there's no border
+      //there anyway).
+      w := WarningIconMarginWidth(FTargetControl.Height);
+      if w<1 then w := 1;
+      if FAnchor=wbaLeftEdge then
+        SetBounds(FTargetControl.Left + BadgeEdgeInset,
+                  FTargetControl.Top  + BadgeEdgeInset,
+                  Max(1, w - BadgeEdgeInset),
+                  Max(1, FTargetControl.Height - BadgeEdgeInset*2))
+      else
+        SetBounds(FTargetControl.Left + FTargetControl.Width - w,
+                  FTargetControl.Top  + BadgeEdgeInset,
+                  Max(1, w - BadgeEdgeInset),
+                  Max(1, FTargetControl.Height - BadgeEdgeInset*2));
+    end;
+    else begin
+      //o simbolo tem proporcao 1:1 - usa a menor dimensao do controle-alvo
+      //para que o selo nunca ultrapasse os limites dele.
+      //the symbol has a 1:1 ratio - uses the target control's smallest
+      //dimension so the badge never overflows its bounds.
+      sz := FTargetControl.Width;
+      if FTargetControl.Height<sz then
+        sz := FTargetControl.Height;
+      if sz<1 then
+        sz := 1;
 
-  SetBounds(FTargetControl.Left + (FTargetControl.Width  - sz) div 2,
-            FTargetControl.Top  + (FTargetControl.Height - sz) div 2,
-            sz, sz);
+      SetBounds(FTargetControl.Left + (FTargetControl.Width  - sz) div 2,
+                FTargetControl.Top  + (FTargetControl.Height - sz) div 2,
+                sz, sz);
+    end;
+  end;
+end;
+
+procedure THMIWarningBadge.SetAnchor(AAnchor: TWarningBadgeAnchor);
+begin
+  if FAnchor=AAnchor then exit;
+  FAnchor := AAnchor;
+  if FTargetControl<>nil then
+    Reposition;
 end;
 
 procedure THMIWarningBadge.ShowBadge;
@@ -472,8 +744,34 @@ end;
 
 procedure THMICommBadgeController.EnsureBadge;
 begin
-  if FBadge=nil then
+  if FBadge=nil then begin
     FBadge := THMIWarningBadge.Create(nil);
+    FBadge.SetAnchor(FAnchor);
+    if FHasColor then
+      FBadge.Color := FColor;
+  end;
+end;
+
+procedure THMICommBadgeController.SetAnchor(AAnchor: TWarningBadgeAnchor);
+begin
+  if FAnchor=AAnchor then exit;
+  FAnchor := AAnchor;
+  if FBadge<>nil then
+    FBadge.SetAnchor(FAnchor);
+end;
+
+procedure THMICommBadgeController.SetColor(AColor: TColor);
+begin
+  if FHasColor and (FColor=AColor) then exit;
+  FColor := AColor;
+  FHasColor := True;
+  if FBadge<>nil then
+    FBadge.Color := FColor;
+end;
+
+function THMICommBadgeController.Faulted: Boolean;
+begin
+  Result := FFaultCount>0;
 end;
 
 procedure THMICommBadgeController.UpdateBadgeVisibility;

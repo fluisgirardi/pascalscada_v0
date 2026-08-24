@@ -17,7 +17,8 @@ interface
 uses
   SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, Graphics, Dialogs,
   {$IFDEF FPC}LCLIntf, LCLType,{$ELSE}Windows,{$ENDIF} ProtocolTypes, Tag,
-  unumerickeyboard, Forms, hmi_commfaultbadge, LMessages;
+  unumerickeyboard, Forms, hmi_commfaultbadge, LMessages
+  {$IFDEF LCLgtk2}, gtk2{$ENDIF};
 
 type
   {$IFDEF PORTUGUES}
@@ -49,7 +50,18 @@ type
     FNumericKBShowDecimal: Boolean;
     FNumericKBShowMinus: Boolean;
     FTag:TPLCTag;
-    FCommIndicator:THMIInlineFaultIndicator;
+    //: selo em janela separada, nao desenho inline: a area onde o icone
+    //: fica (a margem reservada via gtk_entry_set_inner_border no GTK2)
+    //: fica sujeita a repinturas internas do GtkEntry que nao passam pelo
+    //: nosso WMPaint, entao um desenho inline some intermitentemente ali -
+    //: uma janela irma com seu proprio ciclo de expose nao tem esse
+    //: problema.
+    //: separate-window badge, not inline drawing: the area where the icon
+    //: sits (the margin reserved via gtk_entry_set_inner_border on GTK2) is
+    //: subject to internal GtkEntry repaints that don't go through our
+    //: WMPaint, so an inline draw there intermittently disappears - a
+    //: sibling window with its own expose cycle doesn't have that problem.
+    FCommBadge:THMICommBadgeController;
     FCommFaultLink:THMITagFaultBadgeLink;
     FShowFocused:Boolean;
     FDefFontColor:TColor;
@@ -85,6 +97,28 @@ type
     FMinLimit, FMaxLimit:Double;
 
     FSecurityCode:UTF8String;
+    {$IFDEF LCLgtk2}
+    //: lado/estado da margem reservada dentro do GtkEntry atualmente
+    //: aplicada via gtk_entry_set_inner_border - evita chamar a API do GTK
+    //: de novo a cada repaint quando nada mudou.
+    //: side/state of the inner border currently applied to the GtkEntry via
+    //: gtk_entry_set_inner_border - avoids calling the GTK API again on
+    //: every repaint when nothing changed.
+    FFaultBorderApplied, FFaultBorderAtRight: Boolean;
+    //: aplica de fato o inner border no GtkEntry - chamado via
+    //: QueueAsyncCall, NUNCA direto do WMPaint: gtk_entry_set_inner_border
+    //: dispara um resize interno do widget, e mexer na geometria de um
+    //: widget de dentro do proprio handler de expose/paint dele e' inseguro
+    //: no GTK (gera corrupcao visual - foi a causa da faixa branca sobre o
+    //: icone).
+    //: actually applies the inner border to the GtkEntry - called via
+    //: QueueAsyncCall, NEVER directly from WMPaint: gtk_entry_set_inner_border
+    //: triggers an internal widget resize, and touching a widget's geometry
+    //: from within its own expose/paint handler is unsafe in GTK (causes
+    //: visual corruption - this was the cause of the white stripe over the
+    //: icon).
+    procedure UpdateFaultBorder(Data: PtrInt);
+    {$ENDIF}
     procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
@@ -376,6 +410,18 @@ implementation
 
 uses hsstrings, ControlSecurityManager;
 
+{$IFDEF LCLgtk2}
+//: falta no binding gtk2 empacotado com o FPC (GtkBorder/PGtkBorder ja
+//: existem, so a funcao em si nao esta la) - a funcao existe na libgtk2
+//: real (gtk_entry_set_inner_border, GTK >= 2.10), so declaramos a
+//: assinatura aqui.
+//: missing from the gtk2 binding shipped with FPC (GtkBorder/PGtkBorder
+//: already exist, only the function itself isn't there) - the function
+//: exists in the real libgtk2 (gtk_entry_set_inner_border, GTK >= 2.10), we
+//: just declare its signature here.
+procedure gtk_entry_set_inner_border(entry: PGtkEntry; border: PGtkBorder); cdecl; external gtklib;
+{$ENDIF}
+
 constructor THMIEdit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -402,8 +448,10 @@ begin
   FFreezeValue := true;
   FNumberFormat := '#0.0';
 
-  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
+  FCommBadge:=THMICommBadgeController.Create;
+  FCommBadge.SetColor(GetColor);
+  FCommBadge.SetTarget(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
 end;
 
 destructor  THMIEdit.Destroy;
@@ -420,35 +468,80 @@ begin
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommIndicator);
+  FreeAndNil(FCommBadge);
   inherited Destroy;
 end;
 
 procedure THMIEdit.WMPaint(var Msg: TLMPaint);
 var
-  cnv: TCanvas;
-  atRight: Boolean;
+  atRight, faulted: Boolean;
 begin
   inherited;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
-    //texto alinhado a esquerda/centro -> icone na esquerda; alinhado a
-    //direita -> icone na direita, pra nao ficar por cima do texto.
-    //left/center-aligned text -> icon on the left; right-aligned text ->
-    //icon on the right, so it doesn't sit on top of the text.
-    {$IFDEF FPC}
-    atRight := Self.Alignment = taRightJustify;
-    {$ELSE}
-    atRight := FAlignment = taRightJustify;
-    {$ENDIF}
-    cnv := TCanvas.Create;
-    try
-      cnv.Handle := Msg.DC;
-      DrawWarningIconAt(cnv, ClientWidth, ClientHeight, atRight);
-    finally
-      cnv.Free;
-    end;
+
+  //texto alinhado a esquerda/centro -> icone/margem na direita; alinhado a
+  //direita -> icone/margem na esquerda, pra nao ficar por cima do texto.
+  //left/center-aligned text -> icon/margin on the right; right-aligned
+  //text -> icon/margin on the left, so it doesn't sit on top of the text.
+  {$IFDEF FPC}
+  atRight := Self.Alignment <> taRightJustify;
+  {$ELSE}
+  atRight := FAlignment = taRightJustify;
+  {$ENDIF}
+
+  //reposiciona o selo (janela separada - o icone de verdade e' desenhado
+  //por ela, nao aqui) para o lado correto. Barato quando o lado nao mudou:
+  //THMICommBadgeController/THMIWarningBadge.SetAnchor ja' descartam a
+  //chamada nesse caso.
+  //repositions the badge (separate window - the icon itself is drawn by
+  //it, not here) to the correct side. Cheap when the side hasn't changed:
+  //THMICommBadgeController/THMIWarningBadge.SetAnchor already discard the
+  //call in that case.
+  if Assigned(FCommBadge) then begin
+    if atRight then
+      FCommBadge.SetAnchor(wbaRightEdge)
+    else
+      FCommBadge.SetAnchor(wbaLeftEdge);
   end;
+
+  {$IFDEF LCLgtk2}
+  //so agenda a atualizacao da margem (via QueueAsyncCall) quando o estado
+  //(com falha/sem falha, ou o lado) realmente muda - a aplicacao de fato
+  //acontece fora do WMPaint, em UpdateFaultBorder, porque
+  //gtk_entry_set_inner_border NAO pode ser chamado com seguranca de dentro
+  //do proprio handler de paint (ver comentario no campo).
+  //only schedules the border update (via QueueAsyncCall) when the state
+  //(faulted/not, or the side) actually changes - the actual application
+  //happens outside WMPaint, in UpdateFaultBorder, because
+  //gtk_entry_set_inner_border can't be safely called from within its own
+  //paint handler (see comment on the field).
+  faulted := Assigned(FCommBadge) and FCommBadge.Faulted;
+  if HandleAllocated and ((faulted<>FFaultBorderApplied) or (faulted and (atRight<>FFaultBorderAtRight))) then begin
+    FFaultBorderApplied := faulted;
+    FFaultBorderAtRight := atRight;
+    Application.QueueAsyncCall(@UpdateFaultBorder, 0);
+  end;
+  {$ENDIF}
 end;
+
+{$IFDEF LCLgtk2}
+procedure THMIEdit.UpdateFaultBorder(Data: PtrInt);
+var
+  Border: TGtkBorder;
+begin
+  if [csDestroying]*ComponentState<>[] then exit;
+  if not HandleAllocated then exit;
+
+  FillChar(Border, SizeOf(Border), 0);
+  if FFaultBorderApplied then begin
+    if FFaultBorderAtRight then
+      Border.right := WarningIconMarginWidth(ClientHeight)
+    else
+      Border.left := WarningIconMarginWidth(ClientHeight);
+  end;
+  gtk_entry_set_inner_border(PGtkEntry(Handle), @Border);
+  Invalidate;
+end;
+{$ENDIF}
 
 {$IFNDEF FPC}
 procedure THMIEdit.CreateParams(var Params: TCreateParams);
@@ -637,6 +730,11 @@ begin
   {$ENDIF}
   if not FBlockFontChange then
     FDefColor := c;
+  //selo usa a mesma cor de fundo do edit, pra parecer parte dele.
+  //badge uses the same background color as the edit, to look like it's
+  //part of it.
+  if Assigned(FCommBadge) then
+    FCommBadge.SetColor(c);
 end;
 
 procedure THMIEdit.SetPrefix(s:TCaption);
