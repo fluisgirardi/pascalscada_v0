@@ -448,8 +448,31 @@ end;
 procedure THMIAnimation.Paint;
 begin
   inherited Paint;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIcon(Canvas, Width, Height);
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
+    //TCustomImage.Paint so desenha dentro do DestRect da imagem atual (e
+    //nem isso, se a zona nao tiver grafico carregado no momento) - fora
+    //dali (ou nesses instantes) nada limpa o pixel entre uma repintura e
+    //outra. Sem apagar antes, o icone (desenhado com transparencia real)
+    //vai acumulando opacidade a cada frame da animacao ate virar um bloco
+    //solido. Erase pelo Color do proprio controle antes de desenhar.
+    //TCustomImage.Paint only draws within the current image's DestRect
+    //(and not even that, if the zone has no graphic loaded at the moment)
+    //- outside of that (or during those moments) nothing clears the pixel
+    //between one repaint and the next. Without erasing first, the icon
+    //(drawn with real transparency) keeps accumulating opacity on every
+    //animation frame until it turns into a solid block. Erase using the
+    //control's own Color before drawing.
+    //Color usa clDefault por padrao ($20000000) - passado direto pro Brush,
+    //os bytes baixos viram preto. GetRGBColorResolvingParent resolve
+    //clDefault/clNone pra cor real (do pai, se preciso) antes de usar.
+    //Color defaults to clDefault ($20000000) - passed straight to the
+    //Brush, its low bytes come out as black. GetRGBColorResolvingParent
+    //resolves clDefault/clNone to a real color (from the parent if
+    //needed) before use.
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Brush.Color := GetRGBColorResolvingParent;
+    DrawWarningIcon(Canvas, Width, Height, True);
+  end;
 end;
 
 procedure THMIAnimation.Notification(AComponent: TComponent;
