@@ -1,6 +1,8 @@
 /lib/
 src/**/backup/
-
+src/**/*.o
+src/**/*.ppu
+src/**/*.rsj
 examples/**/lib/
 examples/**/backup/
 examples/**/*.o
