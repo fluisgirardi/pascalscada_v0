@@ -257,21 +257,86 @@ procedure DrawWarningIcon(ACanvas: TCanvas; AWidth, AHeight: Integer; AEraseBack
 
 {$IFDEF PORTUGUES}
 {:
+Igual a DrawWarningIcon (centralizado, do tamanho da menor dimensão), mas
+dentro de um sub-retângulo [AOffsetX, AOffsetX+AWidth] x [AOffsetY,
+AOffsetY+AHeight] em vez de sempre a partir de (0,0) - use quando a area
+que deve exibir o icone e' uma REGIAO do controle (ex.: o corpo do motor
+sem a parte da bomba, ou a coluna central de um elevador de canecas), nao
+o controle inteiro.
+}
+{$ELSE}
+{:
+Same as DrawWarningIcon (centered, sized to the smallest dimension), but
+within a sub-rectangle [AOffsetX, AOffsetX+AWidth] x [AOffsetY,
+AOffsetY+AHeight] instead of always starting at (0,0) - use it when the
+area that should show the icon is a REGION of the control (e.g. the motor
+body without the pump part, or a bucket elevator's center column), not
+the whole control.
+}
+{$ENDIF}
+procedure DrawWarningIconCentered(ACanvas: TCanvas; AWidth, AHeight: Integer; AOffsetX: Integer = 0; AOffsetY: Integer = 0);
+
+{$IFDEF PORTUGUES}
+{:
+Igual a DrawWarningIcon (centralizado, do tamanho da menor dimensão), mas
+desenha DIRETO num TBGRABitmap (ex.: FControlArea) via CanvasBGRA, em vez
+de num TCanvas comum. Use quando precisar compor o ícone com transparência
+de verdade ANTES do SetShape calcular a máscara - .Canvas (TBitmap de
+compatibilidade) não preserva a transparência do ícone nesse cenário.
+}
+{$ELSE}
+{:
+Same as DrawWarningIcon (centered, sized to the smallest dimension), but
+draws DIRECTLY onto a TBGRABitmap (e.g. FControlArea) via CanvasBGRA,
+instead of a plain TCanvas. Use it when you need to compose the icon with
+real transparency BEFORE SetShape computes the mask - .Canvas (the
+compatibility TBitmap) doesn't preserve the icon's transparency in that
+scenario.
+}
+{$ENDIF}
+procedure DrawWarningIconOnBitmap(ADest: TBGRABitmap; AWidth, AHeight: Integer);
+
+{$IFDEF PORTUGUES}
+{:
 Desenha o ícone encostado numa lateral (esquerda ou direita) em vez de
 centralizado sobre todo o controle - usado por controles como o THMIEdit,
 onde um ícone centralizado ficaria por cima do texto. O ícone é dimensionado
 pela altura disponível (menos uma pequena margem) e alinhado verticalmente
-ao centro.
+ao centro. AVerticalOffset desloca o resultado pra baixo - use quando a
+area disponivel (AHeight) e' uma FAIXA dentro do controle, nao o controle
+inteiro (ex.: a faixa "corpo" de uma valvula, que nao comeca em y=0).
 }
 {$ELSE}
 {:
 Draws the icon flush against one side (left or right) instead of centered
 over the whole control - used by controls like THMIEdit, where a centered
 icon would sit on top of the text. The icon is sized to the available
-height (minus a small margin) and centered vertically.
+height (minus a small margin) and centered vertically. AVerticalOffset
+shifts the result down - use it when the available area (AHeight) is a
+STRIP within the control, not the whole control (e.g. a valve's "body"
+strip, which doesn't start at y=0).
 }
 {$ENDIF}
-procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean);
+procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean; AVerticalOffset: Integer = 0);
+
+{$IFDEF PORTUGUES}
+{:
+Igual a DrawWarningIconAt, mas encostado no topo ou na base (nao lateral) -
+dimensionado pela LARGURA disponivel, deslocado horizontalmente por
+AHorizontalOffset. Uso simetrico ao de AVerticalOffset em DrawWarningIconAt,
+mas pro caso em que a faixa disponivel corre no eixo X (ex.: valvula
+desenhada na vertical).
+}
+{$ELSE}
+{:
+Same as DrawWarningIconAt, but flush against the top or bottom (not a
+side) - sized to the available WIDTH, shifted horizontally by
+AHorizontalOffset. Symmetric use case to AVerticalOffset in
+DrawWarningIconAt, for when the available strip runs along the X axis
+(e.g. a vertically-drawn valve).
+}
+{$ENDIF}
+procedure DrawWarningIconAtTB(ACanvas: TCanvas; AWidth, AHeight: Integer; ABottom: Boolean; AHorizontalOffset: Integer = 0);
 
 {$IFDEF PORTUGUES}
 //: Espaço (ícone + margens) que DrawWarningIconAt ocupa para uma dada altura de controle - use para reservar espaço de texto ao lado do ícone.
@@ -388,7 +453,41 @@ begin
   Icon.Draw(ACanvas, IconRect, False);
 end;
 
-procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean);
+procedure DrawWarningIconCentered(ACanvas: TCanvas; AWidth, AHeight: Integer; AOffsetX: Integer; AOffsetY: Integer);
+var
+  Icon: TBGRABitmap;
+  sz, offX, offY: Integer;
+begin
+  Icon := GetWarningIcon;
+  if (Icon=nil) or Icon.Empty then exit;
+
+  sz := AWidth;
+  if AHeight<sz then sz := AHeight;
+  if sz<1 then exit;
+
+  offX := AOffsetX + (AWidth  - sz) div 2;
+  offY := AOffsetY + (AHeight - sz) div 2;
+  Icon.Draw(ACanvas, Rect(offX, offY, offX + sz, offY + sz), False);
+end;
+
+procedure DrawWarningIconOnBitmap(ADest: TBGRABitmap; AWidth, AHeight: Integer);
+var
+  Icon: TBGRABitmap;
+  sz, offX, offY: Integer;
+begin
+  Icon := GetWarningIcon;
+  if (Icon=nil) or Icon.Empty then exit;
+
+  sz := AWidth;
+  if AHeight<sz then sz := AHeight;
+  if sz<1 then exit;
+
+  offX := (AWidth  - sz) div 2;
+  offY := (AHeight - sz) div 2;
+  ADest.CanvasBGRA.StretchDraw(Rect(offX, offY, offX + sz, offY + sz), Icon);
+end;
+
+procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean; AVerticalOffset: Integer);
 var
   Icon: TBGRABitmap;
   sz, offX, offY: Integer;
@@ -401,11 +500,33 @@ begin
     sz := AWidth - IconSideMargin*2;
   if sz<1 then exit;
 
-  offY := (AHeight - sz) div 2;
+  offY := AVerticalOffset + (AHeight - sz) div 2;
   if AtRight then
     offX := AWidth - sz - IconSideMargin
   else
     offX := IconSideMargin;
+
+  Icon.Draw(ACanvas, Rect(offX, offY, offX + sz, offY + sz), False);
+end;
+
+procedure DrawWarningIconAtTB(ACanvas: TCanvas; AWidth, AHeight: Integer; ABottom: Boolean; AHorizontalOffset: Integer);
+var
+  Icon: TBGRABitmap;
+  sz, offX, offY: Integer;
+begin
+  Icon := GetWarningIcon;
+  if (Icon=nil) or Icon.Empty then exit;
+
+  sz := AWidth - IconSideMargin*2;
+  if sz > AHeight - IconSideMargin*2 then
+    sz := AHeight - IconSideMargin*2;
+  if sz<1 then exit;
+
+  offX := AHorizontalOffset + (AWidth - sz) div 2;
+  if ABottom then
+    offY := AHeight - sz - IconSideMargin
+  else
+    offY := IconSideMargin;
 
   Icon.Draw(ACanvas, Rect(offX, offY, offX + sz, offY + sz), False);
 end;
@@ -661,12 +782,17 @@ begin
     end;
     else begin
       //o simbolo tem proporcao 1:1 - usa a menor dimensao do controle-alvo
-      //para que o selo nunca ultrapasse os limites dele.
+      //para que o selo nunca ultrapasse os limites dele. Encolhido por
+      //BadgeEdgeInset (mesmo valor do modo lateral) pra deixar a borda do
+      //proprio controle-alvo aparecer ao redor do selo.
       //the symbol has a 1:1 ratio - uses the target control's smallest
-      //dimension so the badge never overflows its bounds.
+      //dimension so the badge never overflows its bounds. Shrunk by
+      //BadgeEdgeInset (same value as the side-anchored mode) so the target
+      //control's own border shows through around the badge.
       sz := FTargetControl.Width;
       if FTargetControl.Height<sz then
         sz := FTargetControl.Height;
+      sz := sz - BadgeEdgeInset*2;
       if sz<1 then
         sz := 1;
 

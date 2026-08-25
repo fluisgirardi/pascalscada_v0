@@ -65,6 +65,13 @@ type
     FBodyColor: TColor;
     FUpdateShape,
     FShouldRedraw:Boolean;
+    //: ultimo estado de falha usado pra decidir se a MASCARA de shape
+    //: precisa ser recalculada - so' importa pra descendentes que
+    //: sobrescrevem NeedsShapeRebuildOnFault como @true.
+    //: last fault state used to decide whether the shape MASK needs
+    //: recalculating - only matters for descendants that override
+    //: NeedsShapeRebuildOnFault to @true.
+    FLastFaultForShape: Boolean;
 
     FBorderWidth:Integer;
     FControlArea:TBGRABitmap;
@@ -110,6 +117,24 @@ type
     procedure InvalidateShape; virtual;
     procedure DrawControl; virtual;
     procedure UpdateShape; virtual;
+    {$IFDEF PORTUGUES}
+    //: Desenha o icone de falha quando o controle esta com problema de comunicacao. Centralizado por padrao - descendentes com formas estreitas no meio (ex. valvulas) podem sobrescrever pra escolher um lado que nao seja cortado pelo SetShape.
+    {$ELSE}
+    //: Draws the fault icon when the control has a communication problem. Centered by default - descendants with shapes that are narrow in the middle (e.g. valves) can override to pick a side that doesn't get clipped by SetShape.
+    {$ENDIF}
+    procedure DrawFaultIcon; virtual;
+    {$IFDEF PORTUGUES}
+    //: Alternativa a DrawFaultIcon pra formas SEM nenhuma area larga o suficiente pro icone (ex.: tubos finos de SVG) - desenha DENTRO de FControlArea, antes do SetShape calcular a mascara, entao o proprio icone alarga a area visivel em vez de ser cortado por ela. So' roda quando NeedsShapeRebuildOnFault retorna @true. Sem efeito por padrao (corpo vazio).
+    {$ELSE}
+    //: Alternative to DrawFaultIcon for shapes with NO area wide enough for the icon (e.g. thin SVG pipes) - draws INSIDE FControlArea, before SetShape computes the mask, so the icon itself widens the visible area instead of being clipped by it. Only runs when NeedsShapeRebuildOnFault returns @true. No-op by default (empty body).
+    {$ENDIF}
+    procedure DrawFaultIconIntoArea; virtual;
+    {$IFDEF PORTUGUES}
+    //: @true faz o Paint forcar um recalculo completo da forma (DrawControl+UpdateShape, incluindo DrawFaultIconIntoArea) sempre que o estado de falha muda - use junto com DrawFaultIconIntoArea. @false (padrao) preserva o comportamento antigo, mais barato, pra formas que ja tem area suficiente pro DrawFaultIcon simples.
+    {$ELSE}
+    //: @true makes Paint force a full shape recalculation (DrawControl+UpdateShape, including DrawFaultIconIntoArea) whenever the fault state changes - use together with DrawFaultIconIntoArea. @false (default) preserves the old, cheaper behavior for shapes that already have enough room for the simple DrawFaultIcon.
+    {$ENDIF}
+    function NeedsShapeRebuildOnFault: Boolean; virtual;
     procedure Paint; override;
     procedure Resize; override;
     procedure CMHitTest(var Message: TCMHittest) ; message CM_HITTEST;
@@ -901,11 +926,36 @@ begin
   {$ENDIF}
 end;
 
-procedure THMIBasicControl.Paint;
+procedure THMIBasicControl.DrawFaultIcon;
 begin
+  DrawWarningIcon(Canvas, Width, Height);
+end;
+
+procedure THMIBasicControl.DrawFaultIconIntoArea;
+begin
+  //no-op por padrao / no-op by default
+end;
+
+function THMIBasicControl.NeedsShapeRebuildOnFault: Boolean;
+begin
+  Result := False;
+end;
+
+procedure THMIBasicControl.Paint;
+var
+  faulted: Boolean;
+begin
+  faulted := Assigned(FCommIndicator) and FCommIndicator.Faulted;
+  if NeedsShapeRebuildOnFault and (faulted<>FLastFaultForShape) then begin
+    FLastFaultForShape := faulted;
+    FUpdateShape := true;
+  end;
+
   if assigned(FControlArea) then begin
     if FControlArea.Empty Or FUpdateShape then begin
       DrawControl;
+      if faulted then
+        DrawFaultIconIntoArea;
       {$IF defined(LCLqt) or defined(LCLQt5)}
       Color:=clBackground;
       {$ELSE}
@@ -917,6 +967,8 @@ begin
 
     if FShouldRedraw then begin
       DrawControl;
+      if faulted then
+        DrawFaultIconIntoArea;
       FShouldRedraw:=false;
     end;
 
@@ -924,8 +976,8 @@ begin
       FControlArea.Draw(Canvas, 0, 0, False);
   end;
 
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIcon(Canvas, Width, Height);
+  if faulted then
+    DrawFaultIcon;
 
   inherited Paint;
 end;

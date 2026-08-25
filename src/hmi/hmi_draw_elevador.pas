@@ -24,6 +24,7 @@ type
     procedure SetFooterColor(AValue: TColor);
     procedure SetHeadColor(AValue: TColor);
     procedure DrawControl; override;
+    procedure DrawFaultIcon; override;
   public
     constructor Create(AOwner: TComponent); override;
   protected
@@ -459,6 +460,23 @@ begin
                                             FBodyWidth+(BorderWidth/2))]);
   FControlArea.CanvasBGRA.PolylineF([PointF(FBodyWidth,   Height-BodyWidth-(BorderWidth/2)),
                                      PointF(2*FBodyWidth, Height-BodyWidth-(BorderWidth/2))]);
+end;
+
+procedure THMICustomElevadorBasico.DrawFaultIcon;
+begin
+  //a coluna central (o "corpo" do elevador) fica de x=BodyWidth a
+  //2*BodyWidth-1 (ver DrawControl), independente de HeadAtLeft - largura
+  //fixa em pixels, nao proporcional ao controle. Limita o icone a essa
+  //largura (bem mais estreita que o controle inteiro) pra nao ficar
+  //cortado pelo SetShape nas laterais, onde so cabeca/pe aparecem perto do
+  //topo/base.
+  //the center column (the elevator's "body") spans x=BodyWidth to
+  //2*BodyWidth-1 (see DrawControl), regardless of HeadAtLeft - a fixed
+  //pixel width, not proportional to the control. Caps the icon to that
+  //width (much narrower than the whole control) so it doesn't get clipped
+  //by SetShape on the sides, where only the head/foot show up near the
+  //top/bottom.
+  DrawWarningIconCentered(Canvas, FBodyWidth, Height, FBodyWidth, 0);
 end;
 
 constructor THMICustomElevadorBasico.Create(AOwner: TComponent);
