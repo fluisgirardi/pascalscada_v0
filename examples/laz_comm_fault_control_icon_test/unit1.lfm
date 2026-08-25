@@ -1,0 +1,600 @@
+object Form1: TForm1
+  Left = 2170
+  Height = 556
+  Top = 250
+  Width = 1115
+  Caption = 'Form1'
+  ClientHeight = 556
+  ClientWidth = 1115
+  LCLVersion = '4.9.0.0'
+  OnCreate = FormCreate
+  object HMILabel1: THMILabel
+    Left = 234
+    Height = 33
+    Top = 81
+    Width = 158
+    Alignment = taCenter
+    Color = clGradientActiveCaption
+    Enabled = True
+    Layout = tlCenter
+    ParentColor = False
+    Transparent = False
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    FormatDateTimeOptions = []
+  end
+  object HMIEdit1: THMIEdit
+    Left = 234
+    Height = 28
+    Top = 128
+    Width = 80
+    Color = clWindow
+    Enabled = True
+    Font.Color = clWindowText
+    ParentFont = False
+    TabOrder = 0
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    EnableMinValue = False
+    EnableMaxValue = False
+  end
+  object HMIRadioGroup1: THMIRadioGroup
+    Left = 234
+    Height = 105
+    Top = 176
+    Width = 185
+    AutoFill = True
+    Caption = 'HMIRadioGroup1'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    Enabled = True
+    ItemIndex = -1
+    TabOrder = 1
+    PLCTag = PLCTagNumber1
+  end
+  object HMIAnimation1: THMIAnimation
+    Left = 112
+    Height = 90
+    Top = 224
+    Width = 90
+    Zones = <>
+    PLCTag = PLCTagNumber1
+    Enabled = True
+  end
+  object HMICheckBox1: THMICheckBox
+    Left = 232
+    Height = 23
+    Top = 40
+    Width = 113
+    Enabled = True
+    ParentColor = False
+    TabOrder = 2
+    PLCTag = PLCTagNumber1
+    CaptionFalse = 'teste teste ste '
+    CaptionTrue = 'teste teste ste '
+    CaptionGrayed = 'teste teste ste '
+    ValueTrue = 1
+  end
+  object HMIUpDown1: THMIUpDown
+    Left = 432
+    Height = 47
+    Top = 104
+    Width = 33
+    Enabled = False
+    Increment = 1
+    Max = 100
+    TabOrder = 3
+    PLCTag = PLCTagNumber1
+  end
+  object HMIComboBox1: THMIComboBox
+    Left = 234
+    Height = 30
+    Top = 288
+    Width = 182
+    ItemHeight = 0
+    PLCTag = PLCTagNumber1
+    TabOrder = 4
+  end
+  object HMILinkedFlowElevator1: THMILinkedFlowElevator
+    Left = 432
+    Height = 144
+    Top = 165
+    Width = 48
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+    BodyWidth = 16
+  end
+  object HMIForkedFlowValve1: THMIForkedFlowValve
+    Left = 160
+    Height = 64
+    Top = 128
+    Width = 71
+    ColorAndFlowStates = <>
+    PLCTag = PLCTagNumber1
+    Proportional = False
+    Stretch = True
+    Orientation = ffvRight
+  end
+  object HMILinkedFlowPump1: THMILinkedFlowPump
+    Left = 391
+    Height = 50
+    Top = 20
+    Width = 71
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+  end
+  object HMILinkedFlowValve1: THMILinkedFlowValve
+    Left = 24
+    Height = 82
+    Top = 227
+    Width = 77
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+    Mirrored = True
+    ValveBodyPercent = 0.7
+  end
+  object HMIProgressBar1: THMIProgressBar
+    Left = 526
+    Height = 24
+    Top = 32
+    Width = 98
+    Enabled = True
+    PLCTag = PLCTagNumber1
+  end
+  object HMITrackBar1: THMITrackBar
+    Left = 520
+    Height = 37
+    Top = 104
+    Width = 48
+    Enabled = True
+    TabOrder = 10
+    PLCTag = PLCTagNumber1
+  end
+  object HMIBandeja1: THMIBandeja
+    Left = 520
+    Height = 50
+    Top = 200
+    Width = 170
+    TabOrder = 11
+  end
+  object HMIFlowImage1: THMIFlowImage
+    Left = 704
+    Height = 90
+    Top = 40
+    Width = 90
+    InputPoint.X = 0
+    InputPoint.Y = 0
+    OutputPoint.X = 0
+    OutputPoint.Y = 0
+  end
+  object HMIScrollBar1: THMIScrollBar
+    Left = 568
+    Height = 13
+    Top = 289
+    Width = 247
+    Enabled = True
+    PageSize = 0
+    TabOrder = 12
+    PLCTag = PLCTagNumber1
+  end
+  object StaticText1: TStaticText
+    Left = 171
+    Height = 17
+    Top = 339
+    Width = 65
+    Caption = 'StaticText1'
+    TabOrder = 13
+  end
+  object HMIText1: THMIText
+    Left = 744
+    Height = 17
+    Top = 195
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    FormatDateTimeOptions = []
+    Zones = <>
+  end
+  object HMIText2: THMIText
+    Left = 336
+    Height = 36
+    Top = 124
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    FormatDateTimeOptions = []
+    Zones = <>
+  end
+  object TIPropertyGrid1: TTIPropertyGrid
+    Left = 832
+    Height = 556
+    Top = 0
+    Width = 283
+    Align = alRight
+    CheckboxForBoolean = False
+    DefaultValueFont.Color = clWindowText
+    Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar, tkHelper, tkFile, tkClassRef, tkPointer]
+    Indent = 9
+    NameFont.Color = clWindowText
+    TIObject = PLCTagNumber1
+    ValueFont.Color = clMaroon
+  end
+  object HMIRadioButton1: THMIRadioButton
+    Left = 234
+    Height = 23
+    Top = 5
+    Width = 56
+    Enabled = True
+    ParentColor = False
+    TabOrder = 15
+    PLCTag = PLCTagNumber1
+    CaptionFalse = 'teste'
+    CaptionTrue = 'teste'
+    CaptionGrayed = 'teste'
+    ValueTrue = 1
+  end
+  object HMIFitaBasica1: THMIFitaBasica
+    Left = 520
+    Height = 12
+    Top = 320
+    Width = 192
+    BodyHeight = 12
+    BodyColor = clSilver
+  end
+  object HMIElevadorBasico1: THMIElevadorBasico
+    Left = 480
+    Height = 117
+    Top = 203
+    Width = 40
+  end
+  object HMIRedlerBasico1: THMIRedlerBasico
+    Left = 520
+    Height = 16
+    Top = 343
+    Width = 204
+    BodyHeight = 16
+    BodyColor = clSilver
+  end
+  object HMIRoscaBasica1: THMIRoscaBasica
+    Left = 550
+    Height = 12
+    Top = 266
+    Width = 187
+    BodyColor = clSilver
+  end
+  object HMIPolyline1: THMIPolyline
+    Left = 592
+    Height = 95
+    Top = 96
+    Width = 86
+    PointCoordinates = <>
+  end
+  object HMIBasicValve1: THMIBasicValve
+    Left = 296
+    Height = 88
+    Top = 336
+    Width = 68
+    ValveBodyPercent = 0.7
+  end
+  object HMIBasicEletricMotor1: THMIBasicEletricMotor
+    Left = 64
+    Height = 52
+    Top = 328
+    Width = 70
+    Mirrored = True
+  end
+  object HMIFlowPolyline1: THMIFlowPolyline
+    Left = 754
+    Height = 39
+    Top = 221
+    Width = 37
+    PointCoordinates = <>
+    AutoStartPointDirection = pdVertical
+    AutoStartPointOffset = 0
+    AutoEndPointDirection = pdVertical
+    AutoEndPointOffset = 0
+    AutoHeightDistribution = 50
+    MultipleColorBehavior = cmbLastColor
+    MultipleColorsReplace = clBlack
+    FlowSource = <>
+  end
+  object HMILinkedFlowPump2: THMILinkedFlowPump
+    Left = 6
+    Height = 45
+    Top = 322
+    Width = 55
+    ColorAndFlowStates = <>
+    Mirrored = True
+  end
+  object HMIBasicVectorControl1: THMIBasicVectorControl
+    Left = 704
+    Height = 54
+    Top = 144
+    Width = 61
+    Stretch = False
+    Proportional = False
+  end
+  object HMIFlowVectorControl1: THMIFlowVectorControl
+    Left = 639
+    Height = 57
+    Top = 28
+    Width = 60
+    ColorAndFlowStates = <>
+    FlowOutputPolylines = <>
+    PLCTag = PLCTagNumber1
+    Proportional = False
+    Stretch = False
+  end
+  object HMITransparentButton1: THMITransparentButton
+    Left = 432
+    Height = 52
+    Top = 336
+    Width = 62
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 50
+    Top = 0
+    Width = 170
+    Caption = 'Panel1'
+    TabOrder = 28
+  end
+  object HMIThreeWayFlowValve1: THMIThreeWayFlowValve
+    Left = 509
+    Height = 112
+    Top = 392
+    Width = 169
+    ColorAndFlowStates = <>
+    PLCTag = PLCTagNumber1
+    Proportional = False
+    Stretch = True
+  end
+  object HMIFlowVectorControl2: THMIFlowVectorControl
+    Left = 376
+    Height = 112
+    Top = 360
+    Width = 136
+    ColorAndFlowStates = <>
+    FlowOutputPolylines = <>
+    PLCTag = PLCTagNumber1
+    Proportional = False
+    Stretch = True
+    SVGContents.Strings = (
+      '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+      '<!-- Created with Inkscape (http://www.inkscape.org/) -->'
+      ''
+      '<svg'
+      '   width="44"'
+      '   height="44"'
+      '   viewBox="0 0 11.641666 11.641667"'
+      '   version="1.1"'
+      '   id="svg18161"'
+      '   inkscape:version="1.3 (1:1.3+202307231459+0e150ed6c4)"'
+      '   sodipodi:docname="forked_valve_left.svg"'
+      '   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"'
+      '   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"'
+      '   xmlns="http://www.w3.org/2000/svg"'
+      '   xmlns:svg="http://www.w3.org/2000/svg"'
+      '   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"'
+      '   xmlns:cc="http://creativecommons.org/ns#"'
+      '   xmlns:dc="http://purl.org/dc/elements/1.1/">'
+      '  <defs'
+      '     id="defs18155" />'
+      '  <sodipodi:namedview'
+      '     id="base"'
+      '     pagecolor="#ffffff"'
+      '     bordercolor="#666666"'
+      '     borderopacity="1.0"'
+      '     inkscape:pageopacity="0.0"'
+      '     inkscape:pageshadow="2"'
+      '     inkscape:zoom="16"'
+      '     inkscape:cx="25.03125"'
+      '     inkscape:cy="22.1875"'
+      '     inkscape:document-units="px"'
+      '     inkscape:current-layer="layer1"'
+      '     showgrid="false"'
+      '     units="px"'
+      '     inkscape:window-width="1920"'
+      '     inkscape:window-height="1021"'
+      '     inkscape:window-x="0"'
+      '     inkscape:window-y="0"'
+      '     inkscape:window-maximized="1"'
+      '     inkscape:showpageshadow="2"'
+      '     inkscape:pagecheckerboard="0"'
+      '     inkscape:deskcolor="#d1d1d1" />'
+      '  <metadata'
+      '     id="metadata18158">'
+      '    <rdf:RDF>'
+      '      <cc:Work'
+      '         rdf:about="">'
+      '        <dc:format>image/svg+xml</dc:format>'
+      '        <dc:type'
+      '           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />'
+      '        <dc:title />'
+      '      </cc:Work>'
+      '    </rdf:RDF>'
+      '  </metadata>'
+      '  <g'
+      '     inkscape:label="Camada 1"'
+      '     inkscape:groupmode="layer"'
+      '     id="layer1"'
+      '     transform="translate(0,-285.35832)">'
+      '    <path'
+      '       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:0.98000004;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.79374993;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"'
+      '       d="m 8.202146,288.7979 v 6.08542 H 7.4083961 v -6.08542 z"'
+      '       id="pathRight"'
+      '       inkscape:connector-curvature="0"'
+      '       inkscape:label="#pathRight" />'
+      '    <path'
+      '       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:0.98000004;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.79374993;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"'
+      '       d="m 8.202146,288.79792 v 0.79375 H 1.5875633 v -0.79375 z"'
+      '       id="pathLeft"'
+      '       inkscape:connector-curvature="0" />'
+      '    <path'
+      '       transform="matrix(-0.12892726,0,0,0.07417652,47.579012,271.09703)"'
+      '       sodipodi:type="star"'
+      '       style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:2.70555816;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"'
+      '       id="RightArrow"'
+      '       sodipodi:sides="3"'
+      '       sodipodi:cx="308.49753"'
+      '       sodipodi:cy="314.95084"'
+      '       sodipodi:r1="33.579025"'
+      '       sodipodi:r2="16.789513"'
+      '       sodipodi:arg1="1.5707963"'
+      '       sodipodi:arg2="2.6179939"'
+      '       inkscape:flatsided="true"'
+      '       inkscape:rounded="0"'
+      '       inkscape:randomized="0"'
+      '       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z"'
+      '       inkscape:transform-center-y="2.1943685"'
+      '       inkscape:label="#RightArrow" />'
+      '    <path'
+      '       d="m 308.49753,348.52986 -29.08029,-50.36854 58.16058,0 z"'
+      '       inkscape:randomized="0"'
+      '       inkscape:rounded="0"'
+      '       inkscape:flatsided="true"'
+      '       sodipodi:arg2="2.6179939"'
+      '       sodipodi:arg1="1.5707963"'
+      '       sodipodi:r2="16.789513"'
+      '       sodipodi:r1="33.579025"'
+      '       sodipodi:cy="314.95084"'
+      '       sodipodi:cx="308.49753"'
+      '       sodipodi:sides="3"'
+      '       id="LeftArrow"'
+      '       style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:2.70555782;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"'
+      '       sodipodi:type="star"'
+      '       transform="matrix(0,-0.12892724,-0.07417655,0,25.90293,328.96853)"'
+      '       inkscape:transform-center-x="-2.1963938"'
+      '       inkscape:transform-center-y="-7.5862073e-06" />'
+      '    <path'
+      '       inkscape:label="#pathJoin"'
+      '       inkscape:connector-curvature="0"'
+      '       id="pathJoin"'
+      '       d="m 8.2021464,288.79792 v 0.79375 h -0.79375 v -0.79375 z"'
+      '       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:0.98000004;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.79374993;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate" />'
+      '  </g>'
+      '</svg>'
+    )
+  end
+  object HMIScrollBar2: THMIScrollBar
+    Left = 464
+    Height = 13
+    Top = 528
+    Width = 121
+    Enabled = True
+    PageSize = 0
+    TabOrder = 31
+    PLCTag = PLCTagNumber2
+  end
+  object HMILabel2: THMILabel
+    Left = 624
+    Height = 17
+    Top = 520
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber2
+    FormatDateTimeOptions = []
+  end
+  object BrokenTCPConnection: TTCP_UDPPort
+    Active = True
+    Host = '127.0.0.1'
+    Port = 502
+    ExclusiveDevice = True
+    Left = 88
+    Top = 16
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{57C6632E-3B0F-4563-87BC-0644D6093269}'
+    CommReadErrors = 357476
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 1
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 3
+    MemWriteFunction = 16
+    ProtocolDriver = ModBusTCPDriver1
+    UpdateTime = 100
+    LongAddress = 'BlocoSimbolico_4.Var1'
+    TagType = pttLongInt
+    SwapBytes = True
+    SwapWords = True
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 88
+    Top = 144
+  end
+  object ModBusTCPDriver1: TModBusTCPDriver
+    CommunicationPort = BrokenTCPConnection
+    ReadOnly = False
+    Left = 88
+    Top = 72
+  end
+  object HMIColorPropertyConnector1: THMIColorPropertyConnector
+    Conditions = <    
+      item
+        IncludeValue1 = True
+        IncludeValue2 = True
+        ZoneType = ztEqual
+        DefaultZone = False
+        ZoneResult = clMoneyGreen
+      end>
+    AffectedObjects = <    
+      item
+        Tag = 0
+        TargetObject = Panel1
+        TargetObjectProperty = 'Color'
+      end>
+    Left = 385
+    Top = 459
+  end
+  object PLCTagNumber2: TPLCTagNumber
+    TagGUID = '{D497E6C3-539A-4D0B-8519-C7A6D0C40854}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 776
+    Top = 160
+  end
+  object HMIControlDislocatorAnimation2_1: THMIControlDislocatorAnimation2
+    P0_X = 0
+    P0_Y = 0
+    P1_X = 200
+    P1_Y = 200
+    Control = Panel1
+    EnableXMin = False
+    EnableXMax = False
+    EnableYMin = False
+    EnableYMax = False
+    MinXValue = 0
+    MaxXValue = 0
+    MinYValue = 0
+    MaxYValue = 0
+    Gets_P0_Position = 'Gets initial position'
+    Gets_P1_Position = 'Gets final position'
+    GoTo_P0_Position = 'Controls go to P0 position'
+    PLCTagX = PLCTagNumber2
+    PLCTagy = PLCTagNumber2
+    ValueP1x = 200
+    ValueP1y = 200
+    Left = 16
+    Top = 128
+  end
+end
