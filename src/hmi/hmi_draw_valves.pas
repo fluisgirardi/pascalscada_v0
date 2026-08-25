@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  hmi_draw_basiccontrol, BGRABitmap, BGRABitmapTypes;
+  hmi_draw_basiccontrol, BGRABitmap, BGRABitmapTypes, hmi_commfaultbadge;
 
 type
 
@@ -22,6 +22,9 @@ type
     procedure SetValveType(AValue: TValveType);
   protected
     procedure DrawControl; override;
+    procedure DrawFaultIcon; override;
+    //: @seealso(THMICustomBasicValve.DrawFaultIcon)
+    function DrawFaultIconBothEnds: Boolean; virtual;
 
     property Mirrored:Boolean read FMirrored write SetMirrored default false;
     property ValveBodyPercent:Double read FValveBodyPercent write SetValveBodyPercent;
@@ -248,6 +251,72 @@ begin
       FControlArea.VerticalFlip
     else
       FControlArea.HorizontalFlip;
+  end;
+end;
+
+function THMICustomBasicValve.DrawFaultIconBothEnds: Boolean;
+begin
+  Result := False;
+end;
+
+procedure THMICustomBasicValve.DrawFaultIcon;
+const
+  IconBandPercent = 0.65;
+var
+  bandSize, bandOffset, iconAreaSize, iconPos: Integer;
+  bothEnds: Boolean;
+begin
+  //vtPneumaticDrawer desenha um retangulo cheio (sem a "borboleta" recortada
+  //por ValveBodyPercent/Mirrored) - o controle inteiro fica visivel, entao
+  //o centralizado padrao ja funciona bem ali.
+  //vtPneumaticDrawer draws a full rectangle (no "bowtie" carved out by
+  //ValveBodyPercent/Mirrored) - the whole control stays visible, so the
+  //default centered draw already works fine there.
+  if FValveType=vtPneumaticDrawer then begin
+    inherited DrawFaultIcon;
+    exit;
+  end;
+
+  //a "borboleta" (ver DrawControl) so existe dentro de uma FAIXA que ocupa
+  //ValveBodyPercent da altura (valvula deitada, Width>=Height) ou da
+  //largura (valvula em pe) do controle - fora dela e' mascarado pelo
+  //SetShape e nunca aparece. A faixa fica na ponta de y/x maior por
+  //padrao, ou na ponta oposta se Mirrored. Dentro da faixa, a borboleta
+  //fecha num ponto bem no meio - entao desenha o icone perto de UMA ponta
+  //(nao no centro), do tamanho da propria faixa.
+  //the "bowtie" (see DrawControl) only exists within a STRIP that takes up
+  //ValveBodyPercent of the height (horizontal valve, Width>=Height) or the
+  //width (vertical valve) of the control - outside it, SetShape masks it
+  //out and it never shows. The strip sits at the larger-y/x end by
+  //default, or the opposite end if Mirrored. Within the strip, the bowtie
+  //pinches to a point right in the middle - so draw the icon near ONE end
+  //(not the center), sized to IconBandPercent of the strip's size, still
+  //centered within the full strip.
+  bothEnds := DrawFaultIconBothEnds;
+  if Width>=Height then begin
+    bandSize := Round(FValveBodyPercent*Height);
+    if bandSize<1 then bandSize := 1;
+    if FMirrored then
+      bandOffset := 0
+    else
+      bandOffset := Height - bandSize;
+    iconAreaSize := Round(bandSize*IconBandPercent);
+    iconPos := bandOffset + (bandSize-iconAreaSize) div 2;
+    DrawWarningIconAt(Canvas, Width, iconAreaSize, False, iconPos);
+    if bothEnds then
+      DrawWarningIconAt(Canvas, Width, iconAreaSize, True, iconPos);
+  end else begin
+    bandSize := Round(FValveBodyPercent*Width);
+    if bandSize<1 then bandSize := 1;
+    if FMirrored then
+      bandOffset := 0
+    else
+      bandOffset := Width - bandSize;
+    iconAreaSize := Round(bandSize*IconBandPercent);
+    iconPos := bandOffset + (bandSize-iconAreaSize) div 2;
+    DrawWarningIconAtTB(Canvas, iconAreaSize, Height, False, iconPos);
+    if bothEnds then
+      DrawWarningIconAtTB(Canvas, iconAreaSize, Height, True, iconPos);
   end;
 end;
 

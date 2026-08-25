@@ -53,6 +53,7 @@ type
     procedure UpdateValve; override;
     property PLCTag:TPLCTag read FPLCTag write SetHMITag;
     procedure Loaded; override;
+    function DrawFaultIconBothEnds: Boolean; override;
   public
     destructor Destroy; override;
   end;
@@ -134,6 +135,11 @@ procedure THMICustomLinkedFlowValve.Loaded;
 begin
   inherited Loaded;
   TagChangeCallBack(Self);
+end;
+
+function THMICustomLinkedFlowValve.DrawFaultIconBothEnds: Boolean;
+begin
+  Result := True;
 end;
 
 procedure THMICustomLinkedFlowValve.UpdateValveDelayed(Data: PtrInt);

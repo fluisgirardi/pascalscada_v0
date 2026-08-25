@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  hmi_draw_basiccontrol, BGRABitmap, BGRABitmapTypes;
+  hmi_draw_basiccontrol, BGRABitmap, BGRABitmapTypes, hmi_commfaultbadge;
 
 type
 
@@ -18,6 +18,7 @@ type
     procedure SetMirrored(AValue: Boolean);
   protected
     procedure DrawControl; override;
+    procedure DrawFaultIcon; override;
     property Mirrored: Boolean Read FMirrored Write SetMirrored Default false;
     property DrawPump: Boolean read FDrawPump write SetDrawPump default true;
   public
@@ -147,6 +148,45 @@ begin
   end;
 
 
+end;
+
+procedure THMICustomBasicEletricMotor.DrawFaultIcon;
+const
+  //corpo do motor ocupa de x=0.19w ate x=w (ver DrawControl) - a bomba (se
+  //desenhada) fica no restante, x=0..0.19w, que fica de fora do centro do
+  //corpo do motor.
+  //motor body spans from x=0.19w to x=w (see DrawControl) - the pump (if
+  //drawn) sits in the remainder, x=0..0.19w, which is left out of the
+  //motor body's center.
+  MotorBodyFraction = 0.81; //1 - 0.19
+var
+  bodySize, bodyOffset: Integer;
+begin
+  if Width>=Height then begin
+    bodySize := Round(MotorBodyFraction*Width);
+    if bodySize<1 then bodySize := 1;
+    if FMirrored then
+      bodyOffset := 0
+    else
+      bodyOffset := Width - bodySize;
+    DrawWarningIconCentered(Canvas, bodySize, Height, bodyOffset, 0);
+  end else begin
+    //controle vertical: o desenho e' feito na horizontal e depois rotacionado
+    //(RotateCCW se nao Mirrored, RotateCW se Mirrored) - o lado que fica com
+    //o corpo do motor apos a rotacao e' o melhor palpite sem poder testar
+    //visualmente aqui; avise se ficar do lado errado.
+    //vertical control: the drawing is done horizontally and then rotated
+    //(RotateCCW if not Mirrored, RotateCW if Mirrored) - which end ends up
+    //with the motor body after rotation is a best guess without being able
+    //to visually test here; let me know if it lands on the wrong side.
+    bodySize := Round(MotorBodyFraction*Height);
+    if bodySize<1 then bodySize := 1;
+    if FMirrored then
+      bodyOffset := Height - bodySize
+    else
+      bodyOffset := 0;
+    DrawWarningIconCentered(Canvas, Width, bodySize, 0, bodyOffset);
+  end;
 end;
 
 constructor THMICustomBasicEletricMotor.Create(AOwner: TComponent);

@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, hmi_draw_basiccontrol, BGRASVG, BGRASVGShapes, BGRASVGType,
   TextStrings, Graphics, BGRAUnits, BGRABitmapTypes, hmi_polyline,
   hmi_flow_zones, hmibasiccolletion, HMIZones, hmi_animation_timers, hsutils,
-  PLCTag;
+  PLCTag, hmi_commfaultbadge;
 
 type
 
@@ -152,6 +152,9 @@ type
     procedure UpdateDrawAndFlow;
     procedure SetHMITag(t: TPLCTag); override;
     procedure Loaded; override;
+    procedure DrawFaultIcon; override;
+    procedure DrawFaultIconIntoArea; override;
+    function NeedsShapeRebuildOnFault: Boolean; override;
     property ColorAndFlowStates:THMIVectorFlowZones read FStates write SetStates;
     property InputFlowPolyline:THMIFlowPolyline read FInputFlowPolyline write SetInputFlowPolyline;
     property FlowOutputPolylines:THMIOutputCollection read FFlowOutputs write SetFlowOutputs;
@@ -1032,6 +1035,49 @@ begin
     UpdateDrawAndFlow;
   end;
   FPLCTag := t;
+  if Assigned(FCommFaultLink) then
+    FCommFaultLink.SetTag(t);
+end;
+
+procedure THMICustomFlowVectorControl.DrawFaultIcon;
+begin
+  //no-op: o icone ja' foi desenhado dentro de FControlArea por
+  //DrawFaultIconIntoArea (ver NeedsShapeRebuildOnFault) - desenhar de novo
+  //aqui (no Canvas do widget, depois da mascara ja aplicada) duplicaria.
+  //no-op: the icon was already drawn inside FControlArea by
+  //DrawFaultIconIntoArea (see NeedsShapeRebuildOnFault) - drawing it again
+  //here (on the widget's own Canvas, after the mask is already applied)
+  //would duplicate it.
+end;
+
+procedure THMICustomFlowVectorControl.DrawFaultIconIntoArea;
+begin
+  //os desenhos dessa familia sao SVGs de tubos finos (ver
+  //forked_valve_right.svg/left.svg) sem nenhuma area larga o bastante pro
+  //icone sem ser cortado pelo SetShape - entao desenha DENTRO de
+  //FControlArea, antes da mascara ser calculada a partir dela, pra o
+  //proprio icone alargar a area visivel em vez de ser cortado por ela.
+  //this family's drawings are thin-pipe SVGs (see
+  //forked_valve_right.svg/left.svg) with no area wide enough for the icon
+  //without SetShape clipping it - so it draws INSIDE FControlArea, before
+  //the mask is computed from it, so the icon itself widens the visible
+  //area instead of being clipped by it.
+  //
+  //DrawWarningIconOnBitmap (CanvasBGRA, dmDrawWithTransparency), nao
+  //DrawWarningIcon(FControlArea.Canvas,...): .Canvas e' um TBitmap de
+  //compatibilidade que nao entende alpha - o icone saia opaco (fundo preto
+  //em vez de transparente) onde a mascara foi alargada pra incluir ele.
+  //DrawWarningIconOnBitmap (CanvasBGRA, dmDrawWithTransparency), not
+  //DrawWarningIcon(FControlArea.Canvas,...): .Canvas is a compatibility
+  //TBitmap that doesn't understand alpha - the icon came out opaque (black
+  //background instead of transparent) where the mask was widened to
+  //include it.
+  DrawWarningIconOnBitmap(FControlArea, FControlArea.Width, FControlArea.Height);
+end;
+
+function THMICustomFlowVectorControl.NeedsShapeRebuildOnFault: Boolean;
+begin
+  Result := True;
 end;
 
 procedure THMICustomFlowVectorControl.Loaded;
