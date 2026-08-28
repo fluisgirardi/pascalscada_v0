@@ -17,7 +17,7 @@ uses
   tagcollection, tcp_udpport, UserScale, ValueProcessor, WestASCIIDriver, 
   numexprtag, plcstructstring, socketserver, S7PlusTypes, S7PlusVLQ, 
   S7PlusCodec, S7PlusConnection, S7PlusFamily, S7PlusSSL, S7PlusTypeInfo, 
-  LazarusPackageIntf;
+  LGXDriver, LazarusPackageIntf;
 
 implementation
 
