@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="49">
+    <Files Count="50">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -228,6 +228,10 @@
         <Filename Value="src\scada\s7plustypeinfo.pas"/>
         <UnitName Value="S7PlusTypeInfo"/>
       </Item49>
+      <Item50>
+        <Filename Value="src\scada\lgxdriver.pas"/>
+        <UnitName Value="LGXDriver"/>
+      </Item50>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
