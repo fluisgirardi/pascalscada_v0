@@ -32,7 +32,7 @@ uses
   IBoxDriver, tcp_udpport, ModBusTCP, PLCStruct, PLCStructElement, ISOTCPDriver,
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
-  numexprtag, plcstructstring, S7PlusFamily,
+  numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -55,7 +55,8 @@ begin
                                            TIBoxDriver,
                                            TISOTCPDriver,
                                            TMelsecTCPDriver,
-                                           TS7CommPlusDriver]);
+                                           TS7CommPlusDriver,
+                                           TLGXDriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
                                            TLinearScaleProcessor,
                                            TUserScale,
