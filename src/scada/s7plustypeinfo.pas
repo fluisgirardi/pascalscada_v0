@@ -156,6 +156,13 @@ type
     Name:String;
     Lids:TS7PlusLIDArray;
     SoftDataType:Byte;
+    //: The variable's own type-layout CRC, as parsed from its PVartypeElement (0 if the
+    //: node has no Vte, e.g. the whole-DB/area root). A plain GetMultiVariables read/write
+    //: accepts 0 here ("skip layout check"), but a Subscription's reference list is a
+    //: persistent object bound to the layout for as long as it lives - passing 0 there was
+    //: rejected by the PLC ("Download error"); see TS7PlusConnection.
+    //: BuildSubscriptionReferenceList, which is the one caller that actually needs this.
+    SymbolCrc:Cardinal;
     //: Cumulative byte offset from the DB/area root (sum of every ancestor's own
     //: OffsetInfo.NonOptAddr along the struct-nesting path - the classic, byte-addressable
     //: layout, not OptAddr's runtime-internal one), used to slice a member's bytes out of an
@@ -854,6 +861,7 @@ begin
     Info.Name := Names;
     Info.Lids := NewLids;
     Info.SoftDataType := Node.SoftDataType;
+    if Node.HasVte then Info.SymbolCrc := Node.Vte.SymbolCrc else Info.SymbolCrc := 0;
     Info.ByteOffset := NewByteOffset;
     SetLength(Result_, Length(Result_)+1);
     Result_[High(Result_)] := Info;
@@ -869,6 +877,7 @@ begin
   Info.Name := Names;
   Info.Lids := NewLids;
   Info.SoftDataType := Node.SoftDataType;
+  if Node.HasVte then Info.SymbolCrc := Node.Vte.SymbolCrc else Info.SymbolCrc := 0;
   Info.ByteOffset := NewByteOffset;
   SetLength(Result_, Length(Result_)+1);
   Result_[High(Result_)] := Info;

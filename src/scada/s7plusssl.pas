@@ -124,11 +124,16 @@ type
   TFn_EVP_CIPHER_CTX_new = function:Pointer; cdecl;
   TFn_EVP_CIPHER_CTX_free = procedure(ctx:Pointer); cdecl;
   TFn_EVP_aes_256_cbc = function:Pointer; cdecl;
+  TFn_EVP_aes_128_ecb = function:Pointer; cdecl;
   TFn_EVP_EncryptInit_ex = function(ctx:Pointer; cipher:Pointer; impl_:Pointer;
                                      const key:PByte; const iv:PByte):cint; cdecl;
   TFn_EVP_EncryptUpdate = function(ctx:Pointer; outb:PByte; outl:pcint;
                                     const inb:PByte; inl:cint):cint; cdecl;
   TFn_EVP_EncryptFinal_ex = function(ctx:Pointer; outb:PByte; outl:pcint):cint; cdecl;
+  TFn_EVP_CIPHER_CTX_set_padding = function(ctx:Pointer; padding:cint):cint; cdecl;
+  TFn_RAND_bytes = function(buf:PByte; num_:cint):cint; cdecl;
+  TFn_HMAC = function(evp_md:Pointer; const key:Pointer; key_len:cint; const d:PByte; n:csize_t;
+                       md:PByte; md_len:pcuint):PByte; cdecl;
 
 var
   //-- libssl
@@ -165,14 +170,20 @@ var
   EVP_CIPHER_CTX_new:TFn_EVP_CIPHER_CTX_new;
   EVP_CIPHER_CTX_free:TFn_EVP_CIPHER_CTX_free;
   EVP_aes_256_cbc:TFn_EVP_aes_256_cbc;
+  EVP_aes_128_ecb:TFn_EVP_aes_128_ecb;
   EVP_EncryptInit_ex:TFn_EVP_EncryptInit_ex;
   EVP_EncryptUpdate:TFn_EVP_EncryptUpdate;
   EVP_EncryptFinal_ex:TFn_EVP_EncryptFinal_ex;
+  EVP_CIPHER_CTX_set_padding:TFn_EVP_CIPHER_CTX_set_padding;
+  RAND_bytes:TFn_RAND_bytes;
+  HMAC_:TFn_HMAC;
 
 //: BIO_ctrl_pending() macro equivalent: how many bytes are buffered and ready to read.
 function S7PlusBIOCtrlPending(b:PBIO):clong;
 //: SSL_CTX_set_min_proto_version() macro equivalent.
 function S7PlusSSLCtxSetMinProtoVersion(ctx:PSSLCTX; version:cint):clong;
+//: SSL_CTX_set_max_proto_version() macro equivalent.
+function S7PlusSSLCtxSetMaxProtoVersion(ctx:PSSLCTX; version:cint):clong;
 //: SSL_CTX_set1_groups_list() macro equivalent (restricts the offered EC groups).
 function S7PlusSSLCtxSet1GroupsList(ctx:PSSLCTX; const AStr:PAnsiChar):clong;
 
@@ -183,6 +194,17 @@ function S7PlusSHA256(const Data:TBytes):TBytes;
 //: AES-256-CBC encryption of Plaintext (Key must be 32 bytes, IV at least 16 - only the
 //: first 16 are used), with PKCS7 padding (EVP's default). Empty result on any failure.
 function S7PlusAES256CBCEncrypt(const Key, IV, Plaintext:TBytes):TBytes;
+//: AES-128-ECB encryption of Plaintext (Key must be 16 bytes, Plaintext a multiple of 16
+//: bytes) - padding disabled (matches Python's `cryptography` ECB mode, which never pads
+//: implicitly). Used by the S7CommPlus SessionKey handshake (HarpoS7-derived, see
+//: session_auth/s7plusharpoaes.pas) as a building block for its own non-standard CTR mode -
+//: never as a standalone cipher. Empty result on any failure.
+function S7PlusAES128ECBEncrypt(const Key, Plaintext:TBytes):TBytes;
+//: Count cryptographically random bytes (OpenSSL RAND_bytes) - used for the
+//: SessionKey handshake's client-generated key material. Empty result on failure.
+function S7PlusRandomBytes(Count:Integer):TBytes;
+//: HMAC-SHA256(Key, Data) - 32 bytes. Empty result on any failure/unloaded lib.
+function S7PlusHMACSHA256(const Key, Data:TBytes):TBytes;
 
 implementation
 
@@ -281,9 +303,13 @@ begin
   EVP_CIPHER_CTX_new   := TFn_EVP_CIPHER_CTX_new(Bind(CryptoLib, 'EVP_CIPHER_CTX_new', Missing));
   EVP_CIPHER_CTX_free  := TFn_EVP_CIPHER_CTX_free(Bind(CryptoLib, 'EVP_CIPHER_CTX_free', Missing));
   EVP_aes_256_cbc      := TFn_EVP_aes_256_cbc(Bind(CryptoLib, 'EVP_aes_256_cbc', Missing));
+  EVP_aes_128_ecb      := TFn_EVP_aes_128_ecb(Bind(CryptoLib, 'EVP_aes_128_ecb', Missing));
   EVP_EncryptInit_ex   := TFn_EVP_EncryptInit_ex(Bind(CryptoLib, 'EVP_EncryptInit_ex', Missing));
   EVP_EncryptUpdate    := TFn_EVP_EncryptUpdate(Bind(CryptoLib, 'EVP_EncryptUpdate', Missing));
   EVP_EncryptFinal_ex  := TFn_EVP_EncryptFinal_ex(Bind(CryptoLib, 'EVP_EncryptFinal_ex', Missing));
+  EVP_CIPHER_CTX_set_padding := TFn_EVP_CIPHER_CTX_set_padding(Bind(CryptoLib, 'EVP_CIPHER_CTX_set_padding', Missing));
+  RAND_bytes := TFn_RAND_bytes(Bind(CryptoLib, 'RAND_bytes', Missing));
+  HMAC_ := TFn_HMAC(Bind(CryptoLib, 'HMAC', Missing));
 
   if Missing<>'' then begin
     LoadError := 'Simbolo OpenSSL nao encontrado: '+Missing+'.';
@@ -326,6 +352,11 @@ end;
 function S7PlusSSLCtxSetMinProtoVersion(ctx:PSSLCTX; version:cint):clong;
 begin
   Result := SSL_CTX_ctrl(ctx, SSL_CTRL_SET_MIN_PROTO_VERSION, version, nil);
+end;
+
+function S7PlusSSLCtxSetMaxProtoVersion(ctx:PSSLCTX; version:cint):clong;
+begin
+  Result := SSL_CTX_ctrl(ctx, SSL_CTRL_SET_MAX_PROTO_VERSION, version, nil);
 end;
 
 function S7PlusSSLCtxSet1GroupsList(ctx:PSSLCTX; const AStr:PAnsiChar):clong;
@@ -391,6 +422,67 @@ begin
     if Length(Result)>0 then Move(OutBuf[0], Result[0], Length(Result));
   finally
     EVP_CIPHER_CTX_free(Ctx);
+  end;
+end;
+
+function S7PlusAES128ECBEncrypt(const Key, Plaintext:TBytes):TBytes;
+var
+  Ctx:Pointer;
+  OutBuf:array of Byte;
+  OutLen1, OutLen2:cint;
+  InPtr:PByte;
+begin
+  SetLength(Result, 0);
+  if (Length(Key)<>16) or ((Length(Plaintext) mod 16)<>0) then exit;
+  if not S7PlusSSLLoaded then exit;
+
+  Ctx := EVP_CIPHER_CTX_new();
+  if Ctx=nil then exit;
+  try
+    if EVP_EncryptInit_ex(Ctx, EVP_aes_128_ecb(), nil, @Key[0], nil)<>1 then exit;
+    EVP_CIPHER_CTX_set_padding(Ctx, 0);
+
+    SetLength(OutBuf, Length(Plaintext)+16);
+    OutLen1 := 0;
+    if Length(Plaintext)>0 then InPtr := @Plaintext[0] else InPtr := nil;
+    if EVP_EncryptUpdate(Ctx, @OutBuf[0], @OutLen1, InPtr, Length(Plaintext))<>1 then exit;
+
+    OutLen2 := 0;
+    if EVP_EncryptFinal_ex(Ctx, @OutBuf[OutLen1], @OutLen2)<>1 then exit;
+
+    SetLength(Result, OutLen1+OutLen2);
+    if Length(Result)>0 then Move(OutBuf[0], Result[0], Length(Result));
+  finally
+    EVP_CIPHER_CTX_free(Ctx);
+  end;
+end;
+
+function S7PlusRandomBytes(Count:Integer):TBytes;
+begin
+  SetLength(Result, 0);
+  if Count<=0 then exit;
+  if not S7PlusSSLLoaded then exit;
+  SetLength(Result, Count);
+  if RAND_bytes(@Result[0], Count)<>1 then begin
+    SetLength(Result, 0);
+    exit;
+  end;
+end;
+
+function S7PlusHMACSHA256(const Key, Data:TBytes):TBytes;
+var
+  MdLen:cuint;
+  KeyPtr, DataPtr:Pointer;
+begin
+  SetLength(Result, 0);
+  if not S7PlusSSLLoaded then exit;
+  SetLength(Result, 32);
+  MdLen := 0;
+  if Length(Key)>0 then KeyPtr := @Key[0] else KeyPtr := nil;
+  if Length(Data)>0 then DataPtr := @Data[0] else DataPtr := nil;
+  if HMAC_(EVP_sha256(), KeyPtr, Length(Key), PByte(DataPtr), Length(Data), @Result[0], @MdLen)=nil then begin
+    SetLength(Result, 0);
+    exit;
   end;
 end;
 

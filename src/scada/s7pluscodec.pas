@@ -135,6 +135,13 @@ function ParseCreateObjectSessionId(const Body:TBytes; out SessionId:Cardinal; o
 //: Returns the raw typed value (flags+datatype+data) to echo back verbatim, or nil if absent.
 function ParseServerSessionVersion(const Payload:TBytes):TBytes;
 
+//: Scans a CreateObject (or similar) response payload for an arbitrary attribute id,
+//: decoding its value (via DecodePValueToBytes - so a WSTRING comes back as its raw
+//: character bytes, a USInt array as its raw element bytes, etc, NOT the framed
+//: flags+datatype+data of ParseServerSessionVersion). Returns false if the attribute
+//: isn't present.
+function ParseAttributeRawValue(const Payload:TBytes; WantedAttrId:Cardinal; out RawValue:TBytes):Boolean;
+
 implementation
 
 function BytesConcat(const A, B:TBytes):TBytes;
@@ -843,6 +850,54 @@ begin
         SetLength(Result, EndOff-ValueStart);
         if Length(Result)>0 then
           Move(Payload[ValueStart], Result[0], Length(Result));
+        exit;
+      end else
+        Offset := SkipTypedValue(Payload, Offset+2, DataType, Flags);
+
+    end else if Tag=S7PlusElement_StartOfObject then begin
+      inc(Offset);
+      if (Offset+4)>Length(Payload) then break;
+      Offset := Offset+4; //RelationId (fixed)
+      for i:=1 to 3 do begin //ClassId, ClassFlags, AttributeId (each VLQ)
+        DecodeUInt32VLQ(Payload, Offset, c);
+        Offset := Offset+c;
+      end;
+
+    end else if Tag=S7PlusElement_TerminatingObject then
+      inc(Offset)
+    else if Tag=$00 then
+      inc(Offset)
+    else
+      inc(Offset); //unknown tag - skip
+  end;
+end;
+
+function ParseAttributeRawValue(const Payload:TBytes; WantedAttrId:Cardinal; out RawValue:TBytes):Boolean;
+var
+  Offset, c, i, Consumed:Integer;
+  Tag:Byte;
+  AttrId:Cardinal;
+  Flags, DataType:Byte;
+begin
+  Result := false;
+  SetLength(RawValue, 0);
+  Offset := 0;
+  while Offset<Length(Payload) do begin
+    Tag := Payload[Offset];
+
+    if Tag=S7PlusElement_Attribute then begin
+      inc(Offset);
+      if Offset>=Length(Payload) then break;
+      AttrId := DecodeUInt32VLQ(Payload, Offset, c);
+      Offset := Offset+c;
+
+      if (Offset+2)>Length(Payload) then break;
+      Flags := Payload[Offset];
+      DataType := Payload[Offset+1];
+
+      if AttrId=WantedAttrId then begin
+        RawValue := DecodePValueToBytes(Payload, Offset, Consumed);
+        Result := true;
         exit;
       end else
         Offset := SkipTypedValue(Payload, Offset+2, DataType, Flags);
