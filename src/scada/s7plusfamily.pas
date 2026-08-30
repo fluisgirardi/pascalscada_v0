@@ -188,7 +188,9 @@ type
     //: Direct (low-level, not yet wired into the tag/scan framework) access to
     //: subscriptions - see TS7PlusConnection.SubscriptionCreate/SubscriptionSetCreditLimit/
     //: SubscriptionDelete/ParseNotification.
-    function SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):TProtocolIOResult;
+    function SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word;
+                                 RouteMode:Byte=$14; UseFixedRelationId:Boolean=false;
+                                 IncludeAttr1055:Boolean=true; CreditLimitOverride:SmallInt=10):TProtocolIOResult;
     function SubscriptionSetCreditLimit(Limit:SmallInt):TProtocolIOResult;
     function SubscriptionDelete:TProtocolIOResult;
     //: Blocks (up to CommunicationPort's own configured Timeout) for one incoming frame
@@ -1248,7 +1250,9 @@ begin
   end;
 end;
 
-function TS7CommPlusDriver.SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):TProtocolIOResult;
+function TS7CommPlusDriver.SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word;
+                                               RouteMode:Byte; UseFixedRelationId:Boolean;
+                                               IncludeAttr1055:Boolean; CreditLimitOverride:SmallInt):TProtocolIOResult;
 begin
   LockDriverIO;
   try
@@ -1256,7 +1260,7 @@ begin
       Result := ioCommError;
       exit;
     end;
-    if FConnection.SubscriptionCreate(Items, CycleTimeMs) then
+    if FConnection.SubscriptionCreate(Items, CycleTimeMs, RouteMode, UseFixedRelationId, IncludeAttr1055, CreditLimitOverride) then
       Result := ioOk
     else
       Result := ioCommError;

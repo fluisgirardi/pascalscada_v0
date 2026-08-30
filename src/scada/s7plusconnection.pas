@@ -34,7 +34,7 @@ interface
 
 uses
   Classes, SysUtils, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
-  S7PlusTypeInfo;
+  S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth;
 
 type
   ES7PlusError = class(Exception);
@@ -50,6 +50,10 @@ type
   TS7PlusMultiReadItem = record
     AccessArea:Cardinal;
     Lids:TS7PlusLIDArray;
+    //: Only used by BuildSubscriptionReferenceList (a plain GetMultiVariables read ignores
+    //: this) - the variable's real SymbolCrc from BrowseDB/BrowseNativeArea's TS7PlusVarInfo.
+    //: Defaults to 0 (a normal read's "skip layout check"), which is wrong for subscriptions.
+    SymbolCrc:Cardinal;
   end;
   TS7PlusMultiReadItemArray = array of TS7PlusMultiReadItem;
 
@@ -84,6 +88,18 @@ type
     FProtocolVersion:Byte;
     FConnected:Boolean;
     FServerSessionVersion:TBytes;
+    //: AttrId 233 ("00:xxxxxxxxxxxxxxxx") and AttrId 303 (20-byte nonce), both seen in
+    //: CreateObject's response alongside ServerSessionVersion - present on firmware that
+    //: requires the legitimation handshake (SetupSession attribute 1830) even though
+    //: ServerSessionVersion is also present (contradicts python-snap7's own assumption
+    //: that the two are mutually exclusive - confirmed empirically wrong against a real
+    //: S7-1513 FW2.9.2). Empty/nil when the PLC doesn't send them.
+    FServerFingerprint:AnsiString;
+    FServerChallenge:TBytes;
+    //: 24-byte key HarpoS7's DeriveSessionKey produces from the legitimation exchange -
+    //: kept for future packet-integrity use once the exact framing that consumes it is
+    //: understood; not used yet.
+    FHarpoSessionKey:TBytes;
     FSessionSetupOK:Boolean;
     FSrcRef:Word;
     FLastReturnValue:QWord;
@@ -100,6 +116,17 @@ type
     FRecvBuf:TBytes;
 
     //-- Subscriptions (on-change notifications, V2+) --------------------------
+    //: ObjectId the PLC assigned to the nested ClassSubscriptions container created
+    //: alongside the session in CreateSession (see the second StartOfObject/
+    //: TerminatingObject pair in its request body) - CreateObject's response there
+    //: returns TWO object ids (session, then this container), but the shared
+    //: ParseCreateObjectSessionId helper only kept the first. Confirmed against real
+    //: hardware to be the missing "parent object" a Subscription's CreateObject needs
+    //: (SubscriptionCreate's envelope "unknown value 1", previously hardcoded 0, was
+    //: rejected as "download: no parent object!"/"Download error (IDs & states [main,
+    //: sub, TI, next])!"). Also what the reference's SubscriptionDelete calls "SessionId2"
+    //: and deletes by - NOT the connection's own FSessionId.
+    FSubscriptionsContainerObjectId:Cardinal;
     FSubscriptionObjectId:Cardinal;
     FSubscriptionRelationId:Cardinal;
     FSubscriptionChangeCounter:Byte;
@@ -266,7 +293,13 @@ type
     //: BuildSubscriptionReferenceList. CycleTimeMs is the PLC-side sampling interval
     //: (~100ms minimum in practice). On success, SubscriptionObjectId identifies the
     //: subscription for SubscriptionSetCreditLimit/SubscriptionDelete.
-    function SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):Boolean;
+    //: RouteMode/UseFixedRelationId/IncludeAttr1055/CreditLimitOverride are exploratory
+    //: knobs (default to the values already validated as correct against the reference and
+    //: real hardware) - see the "Download error (IDs & states [main, sub, TI, next])!"
+    //: investigation in s7commplus_subscription_test.lpr's combo-sweep mode.
+    function SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word;
+                                 RouteMode:Byte=$14; UseFixedRelationId:Boolean=false;
+                                 IncludeAttr1055:Boolean=true; CreditLimitOverride:SmallInt=10):Boolean;
     //: Renews the subscription's notification "credit" - the PLC stops pushing
     //: Notifications once NotificationCreditTick reaches the last limit set, so this must
     //: be called again (with a higher limit) before that happens to keep updates flowing.
@@ -630,12 +663,20 @@ begin
 
   //Matches the cipher/group/option set known to be accepted by S7-1200/1500 firmware
   //(TIA Portal V15+): TLS >=1.2, ECDHE/AES-GCM preferred, EC groups restricted to
-  //X25519/P-256 (the PLC RSTs the connection on unsupported groups like X448/ffdhe*).
+  //P-256/X25519/P-384 (the PLC RSTs the connection on unsupported groups like X448/
+  //ffdhe*). P-256 listed FIRST: OpenSSL only pre-generates a proactive TLS 1.3 key_share
+  //for the first group in this list (the rest are only advertised in supported_groups,
+  //needing a HelloRetryRequest to actually get used) - confirmed against a S7-1513 FW
+  //2.9.2 that RSTs the connection right after ClientHello when the only key_share offered
+  //is X25519 (its embedded TLS stack apparently doesn't do HelloRetryRequest and needs a
+  //key_share it can use immediately). P-256 is supported near-universally, including by
+  //that older firmware, so putting it first keeps both old and new firmware happy without
+  //needing a second round trip.
   S7PlusSSLCtxSetMinProtoVersion(FSSLCtx, TLS1_2_VERSION);
   SSL_CTX_set_cipher_list(FSSLCtx,
     'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:'+
     'AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256');
-  S7PlusSSLCtxSet1GroupsList(FSSLCtx, 'X25519');
+  S7PlusSSLCtxSet1GroupsList(FSSLCtx, 'P-256:X25519:P-384');
   SSL_CTX_set_options(FSSLCtx, SSL_OP_NO_TICKET or SSL_OP_NO_ENCRYPT_THEN_MAC or SSL_OP_NO_EXTENDED_MASTER_SECRET);
   //No CA/device certificate provisioned yet (out of scope for now) - accept whatever
   //certificate the PLC presents, same as the reference implementation without tls_ca.
@@ -899,10 +940,12 @@ var
   Version:Byte;
   DataLen:Word;
   Consumed, BodyOffset:Integer;
-  RespBody:TBytes;
+  RespBody, RawAttrBytes:TBytes;
   SessId:Cardinal;
   RetVal:QWord;
   HasSessId:Boolean;
+  ObjCount, i, c:Integer;
+  ObjId:Cardinal;
 begin
   Result := false;
   Seq := NextSequenceNumber;
@@ -945,6 +988,7 @@ begin
   if Length(ResponseFrame)<4 then exit;
 
   Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+  Debug(Format('CreateSession: PLC ofereceu version=V%d (antes de qualquer override)',[Version]));
   Response := BytesCopy(ResponseFrame, Consumed, DataLen);
   if Length(Response)<10 then exit; //CreateObject response too short
 
@@ -956,6 +1000,31 @@ begin
   else if Length(Response)>=13 then
     FSessionId := DecodeUInt32(Response, 9); //best-effort fallback, mirrors reference driver
 
+  //ParseCreateObjectSessionId only keeps the FIRST of possibly several object ids in the
+  //response - the request above creates the session AND (nested inside it) a
+  //ClassSubscriptions container, so a successful response carries two: [0]=session,
+  //[1]=that container. Re-walk the same list here (independently, since
+  //ParseCreateObjectSessionId's own BodyOffset already points past all of them on return)
+  //to also capture the second one - see FSubscriptionsContainerObjectId.
+  FSubscriptionsContainerObjectId := 0;
+  ObjCount := 0;
+  if HasSessId then begin
+    RetVal := DecodeUInt64VLQ(RespBody, 0, c); //re-skip ReturnValue the same way
+    BodyOffset := c;
+    if BodyOffset<Length(RespBody) then
+      ObjCount := RespBody[BodyOffset]
+    else
+      ObjCount := 0;
+    inc(BodyOffset);
+    for i:=1 to ObjCount do begin
+      ObjId := DecodeUInt32VLQ(RespBody, BodyOffset, c);
+      BodyOffset := BodyOffset+c;
+      if i=2 then FSubscriptionsContainerObjectId := ObjId;
+    end;
+  end;
+  Debug(Format('CreateSession: ObjCount=%d sessionId=0x%.8x subscriptionsContainerObjectId=0x%.8x',
+               [ObjCount, FSessionId, FSubscriptionsContainerObjectId]));
+
   FProtocolVersion := Version;
   FLastReturnValue := RetVal;
 
@@ -963,8 +1032,17 @@ begin
   //still try SetupSession and report failure through SessionSetupOK.
   FServerSessionVersion := ParseServerSessionVersion(BytesCopy(Response, 10+BodyOffset, Length(Response)-(10+BodyOffset)));
 
-  Debug(Format('CreateObject: version=V%d sessionId=0x%.8x returnValue=%d serverSessionVersionLen=%d',
-               [Version, FSessionId, RetVal, Length(FServerSessionVersion)]));
+  SetLength(FServerChallenge, 0);
+  FServerFingerprint := '';
+  if ParseAttributeRawValue(BytesCopy(Response, 10+BodyOffset, Length(Response)-(10+BodyOffset)),
+                             S7PlusObjId_ServerCertificateFingerprint, RawAttrBytes) then
+    FServerFingerprint := StringOf(RawAttrBytes);
+  if ParseAttributeRawValue(BytesCopy(Response, 10+BodyOffset, Length(Response)-(10+BodyOffset)),
+                             S7PlusObjId_ServerSessionRequest, RawAttrBytes) then
+    FServerChallenge := RawAttrBytes;
+
+  Debug(Format('CreateObject: version=V%d sessionId=0x%.8x returnValue=%d serverSessionVersionLen=%d fingerprint=%s challengeLen=%d',
+               [Version, FSessionId, RetVal, Length(FServerSessionVersion), FServerFingerprint, Length(FServerChallenge)]));
   if Length(FServerSessionVersion)>0 then
     Debug('CreateObject: ServerSessionVersion = '+S7PlusHexStr(FServerSessionVersion));
 
@@ -981,19 +1059,71 @@ var
   RespPayload:TBytes;
   RetVal:QWord;
   c:Integer;
+  AttrCount:Integer;
+  NeedsLegitimation:Boolean;
+  Family:TS7PlusHarpoKeyFamily;
+  KeyId:String;
+  PublicKey, LegitBlob:TBytes;
 begin
   Result := false;
   if Length(FServerSessionVersion)=0 then exit;
 
+  //Confirmed live against a real S7-1513 FW2.9.2 (.211): even though ServerSessionVersion
+  //is present (which python-snap7's own reference assumes means the legitimation
+  //handshake is NOT needed), this firmware still RSTs a SetupSession that only echoes
+  //attribute 306 - it also expects attribute 1830 with the HarpoS7 SecurityKeyEncryptedKey
+  //blob, built from the fingerprint (attribute 233) and 20-byte nonce (attribute 303,
+  //S7PlusObjId_ServerSessionRequest) CreateObject's response already carried.
+  NeedsLegitimation := (FServerFingerprint<>'') and (Length(FServerChallenge)=20);
+  if NeedsLegitimation then begin
+    try
+      //S7PlusRandomBytes (used throughout the Harpo key/blob generation) silently
+      //returns empty if OpenSSL isn't loaded yet - normally done by ActivateTLS, which
+      //this path skips entirely when UseTLS=false.
+      if not S7PlusSSLLoaded then begin
+        if not S7PlusSSLLoad then
+          raise Exception.Create('nao foi possivel carregar OpenSSL: '+S7PlusSSLLoadError);
+      end;
+      ParseFingerprint(FServerFingerprint, Family, KeyId);
+      PublicKey := GetPublicKey(FServerFingerprint);
+      AuthenticateRealPlc(FServerChallenge, PublicKey, Family, LegitBlob, FHarpoSessionKey);
+      Debug(Format('SetupSession: blob de legitimacao construido (fingerprint=%s, %d bytes)',
+                   [FServerFingerprint, Length(LegitBlob)]));
+    except
+      on E:Exception do begin
+        Debug('SetupSession: falha ao construir blob de legitimacao: '+E.Message);
+        NeedsLegitimation := false;
+      end;
+    end;
+  end;
+
   Seq := NextSequenceNumber;
   Header := EncodeRequestHeader(S7PlusFunc_SetMultiVariables, Seq, FSessionId, $36);
 
+  if NeedsLegitimation then AttrCount := 2 else AttrCount := 1;
+
   Payload := EncodeUInt32(FSessionId); //InObjectId
   Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //item count
-  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //address field count
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(AttrCount)); //address field count
   Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_ServerSessionVersion));
   Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //ItemNumber=1
   Payload := BytesConcat(Payload, FServerSessionVersion); //echoed verbatim
+
+  if NeedsLegitimation then begin
+    Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_SessionSetupLegitimation));
+    Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //ItemNumber=1
+    //Tried both EncodePValueByteArray (flat USINT/BYTE array) and EncodePValueBlob (BLOB
+    //type) here against the real .211 - both produce the identical decoded ReturnValue
+    //(errorcode=-32, genericerrorcode=8, servererror flag set), so the PLC's rejection
+    //isn't about this wrapper choice. Sending attribute 1830 ALONE (no 306) instead
+    //produces a DIFFERENT decoded error (errorcode=-2, genericerrorcode=9, extra
+    //"ServerSession" string in the response) - proof the PLC is genuinely evaluating
+    //attribute-specific content along this path, not just rejecting the frame shape
+    //outright, but the exact struct layout attribute 1830 expects is still unconfirmed
+    //(see SUBSCRIPTIONS_INVESTIGATION.md).
+    Payload := BytesConcat(Payload, EncodePValueByteArray(LegitBlob));
+  end;
+
   Payload := BytesConcat(Payload, BytesOf([$00])); //fill byte
   Payload := BytesConcat(Payload, EncodeObjectQualifier);
   Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
@@ -1017,7 +1147,11 @@ begin
   RetVal := DecodeUInt64VLQ(RespPayload, 0, c);
   FLastReturnValue := RetVal;
   Result := RetVal=0;
-  Debug(Format('SetupSession: returnValue=%d -> %s',[RetVal, BoolToStr(Result,true)]));
+  if Result then
+    Debug(Format('SetupSession: returnValue=%d -> %s',[RetVal, BoolToStr(Result,true)]))
+  else
+    Debug(Format('SetupSession: returnValue=%d (0x%.16x) -> False: %s',
+                 [RetVal, RetVal, ExtractErrorText(BytesCopy(RespPayload, c, Length(RespPayload)-c))]));
 end;
 
 //===========================================================================
@@ -1044,10 +1178,13 @@ begin
 
   if not CreateSession then exit; //frame header still says V1; TLS (if active) already wraps it
 
-  //Matches the reference driver: once TLS is active, subsequent PDUs use ProtocolVersion
-  //V2 regardless of what CreateObject's response header said.
-  if FTLSActive then
-    FProtocolVersion := S7PlusVersion_V2;
+  //Previously gated on FTLSActive ("once TLS is active, subsequent PDUs use V2"), matching
+  //both available references (C# and python-snap7) - but confirmed WRONG against a real
+  //S7-1513 FW2.9.2/TIA Portal V15 capture: TIA escalates to V2 for SetupSession right after
+  //CreateObject regardless of whether TLS is active (that capture is fully plaintext, no TLS
+  //records at all, yet SetupSession's S7+ header already says V2). The escalation is tied to
+  //CreateObject having succeeded, not to TLS.
+  FProtocolVersion := S7PlusVersion_V2;
 
   if Length(FServerSessionVersion)>0 then
     FSessionSetupOK := SetupSession
@@ -1060,11 +1197,10 @@ begin
     if not FTLSActive then
       Debug('Connect: PLC negociou V3 mas TLS nao esta ativo - a conexao pode nao funcionar.');
   end else if FProtocolVersion=S7PlusVersion_V2 then begin
-    if not FTLSActive then begin
-      Debug('Connect: PLC negociou V2 mas TLS nao esta ativo (V2 exige TLS) - abortando.');
-      FConnected := false;
-      exit;
-    end;
+    //Previously aborted here if TLS wasn't active ("V2 exige TLS") - also confirmed wrong by
+    //the same TIA capture (V2 SetupSession succeeded, and IntegrityId-tracked reads/writes
+    //kept working, entirely without TLS). IntegrityId is a plain per-read/write wire counter,
+    //unrelated to encryption - no reason it would require TLS.
     FWithIntegrityId := true;
     FIntegrityIdRead := 0;
     FIntegrityIdWrite := 0;
@@ -1541,7 +1677,7 @@ end;
 
 //: Mirrors GetSubscriptionListArray: a UDInt array (Flags=$20) encoding
 //: [create-header][unsubscribe-count=0][subscribe-count], then per item
-//: [head][refid][0][AccessArea][SymbolCrc=0][AccessSubArea][Lids...], where head packs
+//: [head][refid][0][AccessArea][SymbolCrc][AccessSubArea][Lids...], where head packs
 //: "1+LID count" into its low 16 bits (the "1" accounts for AccessSubArea).
 function TS7PlusConnection.BuildSubscriptionReferenceList(const Items:TS7PlusMultiReadItemArray):TBytes;
 var
@@ -1572,7 +1708,12 @@ begin
     AddVal(Cardinal(i+1)); //1-based reference id
     AddVal(0); //unknown 1
     AddVal(Items[i].AccessArea);
-    AddVal(0); //SymbolCrc (0 = skip layout check)
+    //SymbolCrc: unlike a plain read/write (SymbolCrc=0 is accepted there, "skip layout
+    //check"), the reference (Subscriptions/Subscription.cs's GetSubscriptionListArray) uses
+    //the variable's real SymbolCrc here, not 0 - a subscription is a persistent object bound
+    //to the layout for as long as it lives, so the PLC appears to enforce the check strictly.
+    //Caller must fill Items[i].SymbolCrc from BrowseDB/BrowseNativeArea's TS7PlusVarInfo.
+    AddVal(Items[i].SymbolCrc);
     AddVal(AccessSubArea);
     for j:=0 to High(Items[i].Lids) do
       AddVal(Items[i].Lids[j]);
@@ -1583,13 +1724,16 @@ begin
   if n=0 then; //silence unused-var warning on some FPC versions
 end;
 
-function TS7PlusConnection.SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word):Boolean;
+function TS7PlusConnection.SubscriptionCreate(const Items:TS7PlusMultiReadItemArray; CycleTimeMs:Word;
+                                               RouteMode:Byte; UseFixedRelationId:Boolean;
+                                               IncludeAttr1055:Boolean; CreditLimitOverride:SmallInt):Boolean;
 var
   Attrs:TS7PlusPObjectAttributeArray;
   ObjBytes, Payload, Resp:TBytes;
-  BodyOffset, IntegrityTail:Integer;
+  BodyOffset, IntegrityTail, c:Integer;
   RetVal:QWord;
   ObjectId:Cardinal;
+  ErrText:String;
 
   procedure AddAttr(AttrId:Cardinal; const Value:TBytes);
   var n:Integer;
@@ -1608,7 +1752,10 @@ begin
   //hardware (PLC rejected it: "Download error (IDs & states [main, sub, TI, next])!") - use
   //the same GetNewRIDOnServer sentinel our own (already-validated) session CreateObject uses
   //to have the PLC assign a fresh RID instead of guessing one ourselves.
-  FSubscriptionRelationId := S7PlusObjId_GetNewRIDOnServer;
+  if UseFixedRelationId then
+    FSubscriptionRelationId := $7FFFC001
+  else
+    FSubscriptionRelationId := S7PlusObjId_GetNewRIDOnServer;
   Inc(FSubscriptionChangeCounter);
   if FSubscriptionChangeCounter=0 then FSubscriptionChangeCounter := 1; //keep it non-zero
 
@@ -1617,35 +1764,57 @@ begin
   AddAttr(S7PlusObjId_SubscriptionFunctionClassId, EncodeValuePUSInt(0));
   AddAttr(S7PlusObjId_SubscriptionMissedSendings, EncodeValuePUInt(0));
   AddAttr(S7PlusObjId_SubscriptionSubsystemError, EncodeValuePLInt(0));
-  AddAttr(S7PlusObjId_SubscriptionRouteMode, EncodeValuePUSInt($14));
+  AddAttr(S7PlusObjId_SubscriptionRouteMode, EncodeValuePUSInt(RouteMode));
   AddAttr(S7PlusObjId_SubscriptionActive, EncodeValuePBool(true));
   AddAttr(S7PlusObjId_SubscriptionReferenceList, BuildSubscriptionReferenceList(Items));
   AddAttr(S7PlusObjId_SubscriptionCycleTime, EncodeValuePUDInt(CycleTimeMs));
   AddAttr(S7PlusObjId_SubscriptionDisabled, EncodeValuePUSInt(0));
   AddAttr(S7PlusObjId_SubscriptionCount, EncodeValuePUSInt(0));
-  FSubscriptionCreditLimit := 10;
+  FSubscriptionCreditLimit := CreditLimitOverride;
   AddAttr(S7PlusObjId_SubscriptionCreditLimit, EncodeValuePInt(FSubscriptionCreditLimit));
   AddAttr(S7PlusObjId_SubscriptionTicks, EncodeValuePUInt(65535));
-  AddAttr(1055, EncodeValuePUSInt(0)); //unknown - reference notes it works without setting it too
+  if IncludeAttr1055 then
+    AddAttr(1055, EncodeValuePUSInt(0)); //unknown - reference notes it works without setting it too
 
   ObjBytes := EncodePObject(FSubscriptionRelationId, S7PlusObjId_ClassSubscription, 0, 0, Attrs);
 
   Payload := EncodeUInt32(FSessionId); //RequestId
   Payload := BytesConcat(Payload, EncodeValuePUDInt(0)); //RequestValue = ValueUDInt(0)
-  Payload := BytesConcat(Payload, EncodeUInt32(0)); //unknown value 1
+  //Previously hardcoded 0 here ("unknown value 1") - confirmed against real hardware to be
+  //the parent object the PLC complained was missing ("download: no parent object!"): the
+  //ClassSubscriptions container CreateSession creates alongside the session (see
+  //FSubscriptionsContainerObjectId).
+  Payload := BytesConcat(Payload, EncodeUInt32(FSubscriptionsContainerObjectId));
   Payload := BytesConcat(Payload, ObjBytes);
   Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
 
   IntegrityTail := Length(ObjBytes)+4; //IntegrityId splices right before [Object][padding]
   if not SendRequest(S7PlusFunc_CreateObject, Payload, Resp, IntegrityTail) then exit;
 
-  Result := ParseCreateObjectSessionId(Resp, ObjectId, BodyOffset, RetVal) and (RetVal=0);
+  //Decode the ReturnValue ourselves first (same convention as every other response - see
+  //ParseSingleReadResponse) so a nonzero value can be paired with ExtractErrorText: on
+  //failure the PLC's CreateObject response isn't shaped like the success case
+  //ParseCreateObjectSessionId expects (ReturnValue+ObjectCount+ObjectIds) - it's
+  //ReturnValue followed by ResponseExtension PObjects carrying the human-readable error
+  //text (e.g. "Download error (IDs & states [main, sub, TI, next])!"), same shape the
+  //read/write error paths already handle.
+  RetVal := DecodeUInt64VLQ(Resp, 0, c);
   FLastReturnValue := RetVal;
-  if Result then begin
-    FSubscriptionObjectId := ObjectId;
-    Debug(Format('SubscriptionCreate: sucesso, ObjectId=%d, %d itens',[ObjectId,Length(Items)]));
-  end else
-    Debug(Format('SubscriptionCreate: falha (returnValue=%d)',[RetVal]));
+  if RetVal=0 then begin
+    Result := ParseCreateObjectSessionId(Resp, ObjectId, BodyOffset, RetVal) and (RetVal=0);
+    if Result then begin
+      FSubscriptionObjectId := ObjectId;
+      Debug(Format('SubscriptionCreate: sucesso, ObjectId=%d, %d itens',[ObjectId,Length(Items)]));
+    end else
+      Debug('SubscriptionCreate: falha ao interpretar resposta de sucesso (returnValue=0)');
+  end else begin
+    Result := false;
+    ErrText := ExtractErrorText(BytesCopy(Resp, c, Length(Resp)-c));
+    if ErrText<>'' then
+      Debug(Format('SubscriptionCreate: falha (returnValue=%d): %s',[RetVal, ErrText]))
+    else
+      Debug(Format('SubscriptionCreate: falha (returnValue=%d)',[RetVal]));
+  end;
 end;
 
 function TS7PlusConnection.SubscriptionSetCreditLimit(Limit:SmallInt):Boolean;
@@ -1672,9 +1841,14 @@ function TS7PlusConnection.SubscriptionDelete:Boolean;
 var
   Payload, Resp:TBytes;
 begin
-  //The reference deletes via the SESSION id, not the subscription's own ObjectId - mirrored
-  //here as-is even though it looks unusual, since it's what's confirmed to work there.
-  Payload := EncodeUInt32(FSessionId); //DeleteObjectId
+  //The reference deletes via "SessionId2", not the subscription's own ObjectId - that name
+  //had us fooled into using FSessionId (the connection's actual session id) here, which is
+  //wrong: SessionId2 is the ClassSubscriptions container's ObjectId (see
+  //FSubscriptionsContainerObjectId) - the same "parent object" SubscriptionCreate's envelope
+  //needs. Deleting it tears down the whole container, not just this one subscription -
+  //matches the reference's own "basically a test" scope, but means a fresh
+  //FSubscriptionsContainerObjectId won't be available again until the next new session.
+  Payload := EncodeUInt32(FSubscriptionsContainerObjectId); //DeleteObjectId
   Payload := BytesConcat(Payload, BytesOf([$00]));
   Payload := BytesConcat(Payload, EncodeObjectQualifier);
   Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding

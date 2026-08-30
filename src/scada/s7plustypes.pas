@@ -96,6 +96,14 @@ const
   S7PlusObjId_ServerSessionVersion     = 306;
 
   //-- Legitimation (password authentication, V2+ with TLS) ---------------------
+  //: Same numeric id as S7PlusIds_ObjectVariableTypeName above - attribute ids are
+  //: reused across unrelated object/message contexts in this protocol, confirmed
+  //: against a real CreateObject response from a S7-1513 FW2.9.2 that doesn't
+  //: require TLS: attribute 233 there carries a "family:fingerprint" string
+  //: (eg "00:181B7B0847D11694") in the exact shape S7PlusHarpoKeys.ParseFingerprint
+  //: expects, identifying the public key needed for the SessionKey/legitimation
+  //: handshake (attribute 1830) alongside the 20-byte nonce at ServerSessionRequest.
+  S7PlusObjId_ServerCertificateFingerprint = 233;
   S7PlusObjId_ServerSessionRequest       = 303;
   S7PlusObjId_ServerSessionResponse      = 304;
   S7PlusObjId_SessionSetupLegitimation   = 1830;
