@@ -34,7 +34,7 @@ interface
 
 uses
   Classes, SysUtils, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
-  S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth;
+  S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta;
 
 type
   ES7PlusError = class(Exception);
@@ -1049,6 +1049,78 @@ begin
   Result := true;
 end;
 
+//: Reads B[Offset..Offset+7] (stored little-endian, as every 8-byte key-id in the blob
+//: is) and returns them reinterpreted as a big-endian QWord - matches a real TIA Portal
+//: SetupSession capture byte-for-byte (see BuildAttr1830Value).
+function QWordFromLEBytesReversed(const B:TBytes; Offset:Integer):QWord;
+var i:Integer;
+begin
+  Result := 0;
+  for i:=7 downto 0 do
+    Result := (Result shl 8) or B[Offset+i];
+end;
+
+//: Builds the value for attribute 1830 (SessionSetupLegitimation) - decoded byte-for-byte
+//: from a real TIA Portal V15 capture against this exact PLC (2026-08-30, see
+//: SUBSCRIPTIONS_INVESTIGATION.md): a STRUCT(id=1800) with 5 members, not the flat byte
+//: array/BLOB previously guessed (which the PLC accepted structurally but rejected with
+//: an undocumented error). Two nested STRUCT(id=1825) members carry the public and
+//: symmetric key identities as 64-bit ints - each is exactly the matching 8-byte KeyId
+//: already embedded (little-endian) in the blob's own plaintext metadata header
+//: (S7PlusHarpoBlobMeta.WriteMetadata: offset 32 for the server/public key, offset 16 for
+//: the client/symmetric key), just reinterpreted big-endian. Confirmed identical across
+//: 4 independent real sessions except for the client/symmetric key id (expected - a fresh
+//: session key is generated every connection) and the blob itself.
+function BuildAttr1830Value(const LegitBlob:TBytes; ServerKeyId:QWord; PublicKeyFlags:Cardinal):TBytes;
+var
+  ClientKeyId:QWord;
+begin
+  ClientKeyId := QWordFromLEBytesReversed(LegitBlob, 16);
+
+  Result := BytesOf([$00, S7PlusType_STRUCT]);
+  Result := BytesConcat(Result, EncodeUInt32(1800));
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1801));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_UDINT]));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0));
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1802));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_USINT, 0]));
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1803));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_STRUCT]));
+  Result := BytesConcat(Result, EncodeUInt32(1825));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1826));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_ULINT]));
+  Result := BytesConcat(Result, EncodeUInt64VLQ(ServerKeyId));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1827));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_UDINT]));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(PublicKeyFlags));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1828));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_UDINT]));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0)); //terminator, struct 1825 (key 1803)
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1804));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_STRUCT]));
+  Result := BytesConcat(Result, EncodeUInt32(1825));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1826));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_ULINT]));
+  Result := BytesConcat(Result, EncodeUInt64VLQ(ClientKeyId));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1827));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_UDINT]));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(65537)); //fixed - identical in all 4 real sessions
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1828));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_UDINT]));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0)); //terminator, struct 1825 (key 1804)
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1805));
+  Result := BytesConcat(Result, EncodePValueBlob(LegitBlob));
+
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0)); //terminator, struct 1800
+end;
+
 function TS7PlusConnection.SetupSession:Boolean;
 var
   Seq:Word;
@@ -1058,11 +1130,12 @@ var
   Consumed:Integer;
   RespPayload:TBytes;
   RetVal:QWord;
-  c:Integer;
-  AttrCount:Integer;
+  c, i:Integer;
+  AttrIds:array of Cardinal;
   NeedsLegitimation:Boolean;
   Family:TS7PlusHarpoKeyFamily;
   KeyId:String;
+  ServerKeyId:QWord;
   PublicKey, LegitBlob:TBytes;
 begin
   Result := false;
@@ -1085,6 +1158,7 @@ begin
           raise Exception.Create('nao foi possivel carregar OpenSSL: '+S7PlusSSLLoadError);
       end;
       ParseFingerprint(FServerFingerprint, Family, KeyId);
+      ServerKeyId := StrToQWord('$'+KeyId);
       PublicKey := GetPublicKey(FServerFingerprint);
       AuthenticateRealPlc(FServerChallenge, PublicKey, Family, LegitBlob, FHarpoSessionKey);
       Debug(Format('SetupSession: blob de legitimacao construido (fingerprint=%s, %d bytes)',
@@ -1100,28 +1174,41 @@ begin
   Seq := NextSequenceNumber;
   Header := EncodeRequestHeader(S7PlusFunc_SetMultiVariables, Seq, FSessionId, $36);
 
-  if NeedsLegitimation then AttrCount := 2 else AttrCount := 1;
+  //Wire shape decoded byte-for-byte (2026-08-30) from a real TIA Portal V15 capture of a
+  //SUCCESSFUL SetupSession against this same PLC (SUBSCRIPTIONS_INVESTIGATION.md): the
+  //AttrIds are listed ALL UP FRONT (not interleaved as [AttrId,ItemNumber,Value] per
+  //attribute, which is what every earlier guess here got wrong), THEN one
+  //[ItemNumber VLQ][Value] pair per attribute, in the same order. ItemNumber is
+  //per-attribute (1,2,3,...), not shared. Attribute 299's value is always the literal
+  //UDINT 1 (not an echo of whatever CreateObject sent for that same id) - confirmed
+  //identical across all 4 independent sessions in the capture.
+  if NeedsLegitimation then begin
+    SetLength(AttrIds, 3);
+    AttrIds[0] := S7PlusObjId_SessionSetupLegitimation;
+    AttrIds[1] := S7PlusObjId_ServerSessionVersion;
+    AttrIds[2] := 299;
+  end else begin
+    SetLength(AttrIds, 1);
+    AttrIds[0] := S7PlusObjId_ServerSessionVersion;
+  end;
 
   Payload := EncodeUInt32(FSessionId); //InObjectId
-  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //item count
-  Payload := BytesConcat(Payload, EncodeUInt32VLQ(AttrCount)); //address field count
-  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_ServerSessionVersion));
-  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //ItemNumber=1
-  Payload := BytesConcat(Payload, FServerSessionVersion); //echoed verbatim
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Length(AttrIds))); //item count
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Length(AttrIds))); //field count
+  for i:=0 to High(AttrIds) do
+    Payload := BytesConcat(Payload, EncodeUInt32VLQ(AttrIds[i]));
 
-  if NeedsLegitimation then begin
-    Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_SessionSetupLegitimation));
-    Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //ItemNumber=1
-    //Tried both EncodePValueByteArray (flat USINT/BYTE array) and EncodePValueBlob (BLOB
-    //type) here against the real .211 - both produce the identical decoded ReturnValue
-    //(errorcode=-32, genericerrorcode=8, servererror flag set), so the PLC's rejection
-    //isn't about this wrapper choice. Sending attribute 1830 ALONE (no 306) instead
-    //produces a DIFFERENT decoded error (errorcode=-2, genericerrorcode=9, extra
-    //"ServerSession" string in the response) - proof the PLC is genuinely evaluating
-    //attribute-specific content along this path, not just rejecting the frame shape
-    //outright, but the exact struct layout attribute 1830 expects is still unconfirmed
-    //(see SUBSCRIPTIONS_INVESTIGATION.md).
-    Payload := BytesConcat(Payload, EncodePValueByteArray(LegitBlob));
+  for i:=0 to High(AttrIds) do begin
+    Payload := BytesConcat(Payload, EncodeUInt32VLQ(i+1)); //ItemNumber
+    case AttrIds[i] of
+      S7PlusObjId_SessionSetupLegitimation:
+        Payload := BytesConcat(Payload, BuildAttr1830Value(LegitBlob, ServerKeyId,
+                                           S7PlusHarpoBlobMeta.GetPublicKeyFlags(Family)));
+      S7PlusObjId_ServerSessionVersion:
+        Payload := BytesConcat(Payload, FServerSessionVersion); //echoed verbatim
+      299:
+        Payload := BytesConcat(Payload, BytesConcat(BytesOf([$00, S7PlusType_UDINT]), EncodeUInt32VLQ(1)));
+    end;
   end;
 
   Payload := BytesConcat(Payload, BytesOf([$00])); //fill byte
