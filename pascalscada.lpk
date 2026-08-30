@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="50">
+    <Files Count="95">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -232,6 +232,186 @@
         <Filename Value="src\scada\lgxdriver.pas"/>
         <UnitName Value="LGXDriver"/>
       </Item50>
+      <Item51>
+        <Filename Value="src\scada\s7plusharpoaesctr.pas"/>
+        <UnitName Value="S7PlusHarpoAesCtr"/>
+      </Item51>
+      <Item52>
+        <Filename Value="src\scada\s7plusharpoauth.pas"/>
+        <UnitName Value="S7PlusHarpoAuth"/>
+      </Item52>
+      <Item53>
+        <Filename Value="src\scada\s7plusharpoauthenticator.pas"/>
+        <UnitName Value="S7PlusHarpoAuthenticator"/>
+      </Item53>
+      <Item54>
+        <Filename Value="src\scada\s7plusharpobigint.pas"/>
+        <UnitName Value="S7PlusHarpoBigInt"/>
+      </Item54>
+      <Item55>
+        <Filename Value="src\scada\s7plusharpobigintx.pas"/>
+        <UnitName Value="S7PlusHarpoBigIntX"/>
+      </Item55>
+      <Item56>
+        <Filename Value="src\scada\s7plusharpoblobmeta.pas"/>
+        <UnitName Value="S7PlusHarpoBlobMeta"/>
+      </Item56>
+      <Item57>
+        <Filename Value="src\scada\s7plusharpofamily0data.pas"/>
+        <UnitName Value="S7PlusHarpoFamily0Data"/>
+      </Item57>
+      <Item58>
+        <Filename Value="src\scada\s7plusharpofamily0transforms.pas"/>
+        <UnitName Value="S7PlusHarpoFamily0Transforms"/>
+      </Item58>
+      <Item59>
+        <Filename Value="src\scada\s7plusharpofingerprint.pas"/>
+        <UnitName Value="S7PlusHarpoFingerprint"/>
+      </Item59>
+      <Item60>
+        <Filename Value="src\scada\s7plusharpohash.pas"/>
+        <UnitName Value="S7PlusHarpoHash"/>
+      </Item60>
+      <Item61>
+        <Filename Value="src\scada\s7plusharpokeyderiv.pas"/>
+        <UnitName Value="S7PlusHarpoKeyDeriv"/>
+      </Item61>
+      <Item62>
+        <Filename Value="src\scada\s7plusharpokeys.pas"/>
+        <UnitName Value="S7PlusHarpoKeys"/>
+      </Item62>
+      <Item63>
+        <Filename Value="src\scada\s7plusharpolegacyauth.pas"/>
+        <UnitName Value="S7PlusHarpoLegacyAuth"/>
+      </Item63>
+      <Item64>
+        <Filename Value="src\scada\s7plusharpolutgen.pas"/>
+        <UnitName Value="S7PlusHarpoLutGen"/>
+      </Item64>
+      <Item65>
+        <Filename Value="src\scada\s7plusharpomonolith1.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith1"/>
+      </Item65>
+      <Item66>
+        <Filename Value="src\scada\s7plusharpomonolith10.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith10"/>
+      </Item66>
+      <Item67>
+        <Filename Value="src\scada\s7plusharpomonolith11.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith11"/>
+      </Item67>
+      <Item68>
+        <Filename Value="src\scada\s7plusharpomonolith2.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith2"/>
+      </Item68>
+      <Item69>
+        <Filename Value="src\scada\s7plusharpomonolith3.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith3"/>
+      </Item69>
+      <Item70>
+        <Filename Value="src\scada\s7plusharpomonolith4.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith4"/>
+      </Item70>
+      <Item71>
+        <Filename Value="src\scada\s7plusharpomonolith5.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith5"/>
+      </Item71>
+      <Item72>
+        <Filename Value="src\scada\s7plusharpomonolith6.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith6"/>
+      </Item72>
+      <Item73>
+        <Filename Value="src\scada\s7plusharpomonolith7.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith7"/>
+      </Item73>
+      <Item74>
+        <Filename Value="src\scada\s7plusharpomonolith8.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith8"/>
+      </Item74>
+      <Item75>
+        <Filename Value="src\scada\s7plusharpomonolith9.pas"/>
+        <UnitName Value="S7PlusHarpoMonolith9"/>
+      </Item75>
+      <Item76>
+        <Filename Value="src\scada\s7plusharpomonolithwrappers.pas"/>
+        <UnitName Value="S7PlusHarpoMonolithWrappers"/>
+      </Item76>
+      <Item77>
+        <Filename Value="src\scada\s7plusharponinepart1.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart1"/>
+      </Item77>
+      <Item78>
+        <Filename Value="src\scada\s7plusharponinepart10.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart10"/>
+      </Item78>
+      <Item79>
+        <Filename Value="src\scada\s7plusharponinepart11.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart11"/>
+      </Item79>
+      <Item80>
+        <Filename Value="src\scada\s7plusharponinepart2.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart2"/>
+      </Item80>
+      <Item81>
+        <Filename Value="src\scada\s7plusharponinepart3.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart3"/>
+      </Item81>
+      <Item82>
+        <Filename Value="src\scada\s7plusharponinepart4.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart4"/>
+      </Item82>
+      <Item83>
+        <Filename Value="src\scada\s7plusharponinepart5.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart5"/>
+      </Item83>
+      <Item84>
+        <Filename Value="src\scada\s7plusharponinepart6.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart6"/>
+      </Item84>
+      <Item85>
+        <Filename Value="src\scada\s7plusharponinepart7.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart7"/>
+      </Item85>
+      <Item86>
+        <Filename Value="src\scada\s7plusharponinepart8.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart8"/>
+      </Item86>
+      <Item87>
+        <Filename Value="src\scada\s7plusharponinepart9.pas"/>
+        <UnitName Value="S7PlusHarpoNinePart9"/>
+      </Item87>
+      <Item88>
+        <Filename Value="src\scada\s7plusharporandom.pas"/>
+        <UnitName Value="S7PlusHarpoRandom"/>
+      </Item88>
+      <Item89>
+        <Filename Value="src\scada\s7plusharposeedtransform.pas"/>
+        <UnitName Value="S7PlusHarpoSeedTransform"/>
+      </Item89>
+      <Item90>
+        <Filename Value="src\scada\s7plusharpotenpart1.pas"/>
+        <UnitName Value="S7PlusHarpoTenPart1"/>
+      </Item90>
+      <Item91>
+        <Filename Value="src\scada\s7plusharpotenpart2.pas"/>
+        <UnitName Value="S7PlusHarpoTenPart2"/>
+      </Item91>
+      <Item92>
+        <Filename Value="src\scada\s7plusharpotenpart3.pas"/>
+        <UnitName Value="S7PlusHarpoTenPart3"/>
+      </Item92>
+      <Item93>
+        <Filename Value="src\scada\s7plusharpotransform12.pas"/>
+        <UnitName Value="S7PlusHarpoTransform12"/>
+      </Item93>
+      <Item94>
+        <Filename Value="src\scada\s7plusharpotransform7.pas"/>
+        <UnitName Value="S7PlusHarpoTransform7"/>
+      </Item94>
+      <Item95>
+        <Filename Value="src\scada\s7plusharpoutil.pas"/>
+        <UnitName Value="S7PlusHarpoUtil"/>
+      </Item95>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
