@@ -301,7 +301,7 @@ begin
 
   WasConnected := FConnection.Connected;
   if not WasConnected then
-    FConnection.Connect;
+    FConnection.Connect(FPassword);
 
   Result := FConnection.Connected;
 

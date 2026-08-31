@@ -69,6 +69,10 @@ function EncodeTypedValueRID(Value:Cardinal):TBytes;
 
 //: Fixed ObjectQualifier structure appended to GetMultiVariables/SetMultiVariables requests.
 function EncodeObjectQualifier:TBytes;
+//: V1-initial ObjectQualifier variant (fixed-width UInt32 KeyQualifier, no VLQ terminator
+//: byte) used by the post-SessionKey session-activation and legitimation exchanges -
+//: matches TIA Portal's own S7p.cs EncodeObjectQualifier for ProtocolVersion.V1.
+function EncodeObjectQualifierV1(KeyQualifier:Cardinal):TBytes;
 
 //: Encodes an ItemAddress (variable address) used by GetMultiVariables/SetMultiVariables.
 function EncodeItemAddress(AccessArea, AccessSubArea:Cardinal; const Lids:array of Cardinal; SymbolCrc:Cardinal=0):TS7PlusItemAddress;
@@ -326,6 +330,20 @@ begin
   Result := BytesConcat(Result, BytesOf([$00]));
 end;
 
+function EncodeObjectQualifierV1(KeyQualifier:Cardinal):TBytes;
+begin
+  Result := EncodeUInt32(S7PlusIds_ObjectQualifier);
+  Result := BytesConcat(Result, EncodeUInt32VLQ(S7PlusIds_ParentRID));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_RID]));
+  Result := BytesConcat(Result, EncodeUInt32(0));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(S7PlusIds_CompositionAID));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_AID]));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(0));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(S7PlusIds_KeyQualifier));
+  Result := BytesConcat(Result, BytesOf([$00, S7PlusType_UDINT]));
+  Result := BytesConcat(Result, EncodeUInt32(KeyQualifier)); //fixed-width, no VLQ terminator
+end;
+
 function EncodeItemAddress(AccessArea, AccessSubArea:Cardinal; const Lids:array of Cardinal; SymbolCrc:Cardinal):TS7PlusItemAddress;
 var
   i:Integer;
@@ -452,14 +470,20 @@ begin
   Result := BytesOf([$00, S7PlusType_USINT, V]);
 end;
 
+//: UINT/INT are fixed 2-byte raw big-endian values on the wire (matches
+//: DecodePValueToBytes's own S7PlusType_UINT/INT case) - NOT VLQ. A previous VLQ
+//: encoding here (1 byte for small values like 0) desynchronized every subsequent
+//: attribute in TS7PlusConnection.SubscriptionCreate's PObject, the real cause behind
+//: its generic "Download error" on real hardware (confirmed live 2026-08-31 by
+//: comparing byte-for-byte against python-snap7's working build_subscription_request).
 function EncodeValuePUInt(V:Word):TBytes;
 begin
-  Result := BytesConcat(BytesOf([$00, S7PlusType_UINT]), EncodeUInt32VLQ(V));
+  Result := BytesConcat(BytesOf([$00, S7PlusType_UINT]), EncodeUInt16(V));
 end;
 
 function EncodeValuePInt(V:SmallInt):TBytes;
 begin
-  Result := BytesConcat(BytesOf([$00, S7PlusType_INT]), EncodeInt32VLQ(V));
+  Result := BytesConcat(BytesOf([$00, S7PlusType_INT]), EncodeUInt16(Word(V)));
 end;
 
 function EncodeValuePUDInt(V:Cardinal):TBytes;
@@ -472,16 +496,23 @@ begin
   Result := BytesConcat(BytesOf([$00, S7PlusType_LINT]), EncodeInt64VLQ(V));
 end;
 
+//: WSTRING here is one byte per character (confirmed against both a real PLC's own
+//: WSTRING values - eg the OMS/firmware version strings in CreateObject's response,
+//: which DecodePValueToBytes already reads as raw single-byte-per-char - and, live,
+//: against python-snap7's build_subscription_request: its "Subscription_<n>" name value
+//: is plain ASCII bytes, length-prefixed by character count) - NOT UTF-16, despite the
+//: name. A previous 2-bytes-per-char (UTF-16BE) encoding here declared a correct
+//: character-count length but sent twice that many data bytes, desynchronizing every
+//: attribute parsed after it - the likely real cause of SubscriptionCreate's generic
+//: "Download error" on .210, confirmed fixed live 2026-08-31.
 function EncodeValuePWString(const S:UnicodeString):TBytes;
 var
   i:Integer;
   Chars:TBytes;
 begin
-  SetLength(Chars, Length(S)*2);
-  for i:=1 to Length(S) do begin
-    Chars[(i-1)*2]   := Hi(Word(S[i]));
-    Chars[(i-1)*2+1] := Lo(Word(S[i]));
-  end;
+  SetLength(Chars, Length(S));
+  for i:=1 to Length(S) do
+    Chars[i-1] := Byte(Word(S[i]) and $FF);
   Result := BytesOf([$00, S7PlusType_WSTRING]);
   Result := BytesConcat(Result, EncodeUInt32VLQ(Length(S)));
   Result := BytesConcat(Result, Chars);

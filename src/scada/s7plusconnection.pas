@@ -34,7 +34,8 @@ interface
 
 uses
   Classes, SysUtils, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
-  S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta;
+  S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
+  S7PlusHarpoLegitimate;
 
 type
   ES7PlusError = class(Exception);
@@ -97,9 +98,13 @@ type
     FServerFingerprint:AnsiString;
     FServerChallenge:TBytes;
     //: 24-byte key HarpoS7's DeriveSessionKey produces from the legitimation exchange -
-    //: kept for future packet-integrity use once the exact framing that consumes it is
-    //: understood; not used yet.
+    //: also the input to PostAuthLegitimation's challenge-solving step.
     FHarpoSessionKey:TBytes;
+    //: PLC public key/family resolved during SetupSession's SecurityKey blob build -
+    //: kept for PostAuthLegitimation, which needs the same key to solve its own
+    //: (separate) challenge.
+    FHarpoAuthPublicKey:TBytes;
+    FHarpoAuthFamily:TS7PlusHarpoKeyFamily;
     FSessionSetupOK:Boolean;
     FSrcRef:Word;
     FLastReturnValue:QWord;
@@ -172,6 +177,16 @@ type
     function InitSSL:Boolean;
     function CreateSession:Boolean;
     function SetupSession:Boolean;
+    //: V1-initial SessionKey handshake, post-SetupSession steps - see python-snap7's
+    //: _session_activate: writes USINT(5) to address 323 on the session object. Required
+    //: before any data operation on a PLC that needed the SecurityKey blob.
+    function SessionActivate:Boolean;
+    //: V1-initial SessionKey handshake, final step - see python-snap7's
+    //: _post_auth_legitimation: re-reads the 20-byte challenge from address 303, solves
+    //: it (S7PlusHarpoLegitimate.SolveLegitimateChallengeRealPlc), writes the 248-byte
+    //: result to address 1846. Required before the PLC allows any data operation on a
+    //: session that went through the SecurityKey blob exchange.
+    function PostAuthLegitimation(const Password:AnsiString):Boolean;
 
     //-- payload builders/parsers ----------------------------------------------
     function BuildAreaPayload(AccessArea, AccessSubArea:Cardinal; Start:Integer; const WriteData:TBytes; IsWrite:Boolean; SizeIfRead:Integer):TBytes;
@@ -226,7 +241,9 @@ type
     destructor Destroy; override;
 
     //: Establishes the COTP connection and the S7CommPlus V1 session (CreateObject+SetupSession).
-    function Connect:Boolean;
+    //: Password is only used on a V1-initial/no-TLS SecurityKey session (see
+    //: PostAuthLegitimation) - ignored otherwise, matching every PLC that doesn't need it.
+    function Connect(const Password:AnsiString=''):Boolean;
     procedure Disconnect;
 
     //: Sends a request and returns the response payload (after the 10-byte response header).
@@ -1141,13 +1158,20 @@ begin
   Result := false;
   if Length(FServerSessionVersion)=0 then exit;
 
-  //Confirmed live against a real S7-1513 FW2.9.2 (.211): even though ServerSessionVersion
-  //is present (which python-snap7's own reference assumes means the legitimation
-  //handshake is NOT needed), this firmware still RSTs a SetupSession that only echoes
-  //attribute 306 - it also expects attribute 1830 with the HarpoS7 SecurityKeyEncryptedKey
-  //blob, built from the fingerprint (attribute 233) and 20-byte nonce (attribute 303,
-  //S7PlusObjId_ServerSessionRequest) CreateObject's response already carried.
-  NeedsLegitimation := (FServerFingerprint<>'') and (Length(FServerChallenge)=20);
+  //Confirmed live against a real S7-1513 FW2.9.2 (.211, no TLS): even though
+  //ServerSessionVersion is present (which python-snap7's own reference assumes means
+  //the legitimation handshake is NOT needed), this firmware still RSTs a SetupSession
+  //that only echoes attribute 306 - it also expects attribute 1830 with the HarpoS7
+  //SecurityKeyEncryptedKey blob, built from the fingerprint (attribute 233) and 20-byte
+  //nonce (attribute 303, S7PlusObjId_ServerSessionRequest) CreateObject's response
+  //already carried.
+  //Gated on "not FTLSActive": .210 (real TLS active) ALSO sends the fingerprint/challenge
+  //in CreateObject, but attempting this same legitimation there gets the TLS connection
+  //dropped right after SetupSession is sent - regressing a path that was already fully
+  //validated (session/browse/read/write, no legitimation needed). TLS already provides
+  //its own server authentication (certificate), so the plaintext-only SessionKey
+  //handshake is presumably specifically the substitute for that when TLS isn't used.
+  NeedsLegitimation := (not FTLSActive) and (FServerFingerprint<>'') and (Length(FServerChallenge)=20);
   if NeedsLegitimation then begin
     try
       //S7PlusRandomBytes (used throughout the Harpo key/blob generation) silently
@@ -1161,6 +1185,8 @@ begin
       ServerKeyId := StrToQWord('$'+KeyId);
       PublicKey := GetPublicKey(FServerFingerprint);
       AuthenticateRealPlc(FServerChallenge, PublicKey, Family, LegitBlob, FHarpoSessionKey);
+      FHarpoAuthPublicKey := PublicKey;
+      FHarpoAuthFamily := Family;
       Debug(Format('SetupSession: blob de legitimacao construido (fingerprint=%s, %d bytes)',
                    [FServerFingerprint, Length(LegitBlob)]));
     except
@@ -1172,21 +1198,28 @@ begin
   end;
 
   Seq := NextSequenceNumber;
-  Header := EncodeRequestHeader(S7PlusFunc_SetMultiVariables, Seq, FSessionId, $36);
+  //TransportFlags=$34 (not $36) - confirmed 2026-08-31 against a real, live-successful
+  //SetupSession from python-snap7 (which hardcodes 0x34 here unconditionally, unlike its
+  //own generic send_request's 0x34/0x36 branch): our .211 SetupSession kept getting
+  //rejected with a "ServerSession"-class error even with an otherwise byte-perfect
+  //attribute 1830 struct, and this was the one remaining difference from the working
+  //Python request.
+  Header := EncodeRequestHeader(S7PlusFunc_SetMultiVariables, Seq, FSessionId, $34);
 
   //Wire shape decoded byte-for-byte (2026-08-30) from a real TIA Portal V15 capture of a
   //SUCCESSFUL SetupSession against this same PLC (SUBSCRIPTIONS_INVESTIGATION.md): the
   //AttrIds are listed ALL UP FRONT (not interleaved as [AttrId,ItemNumber,Value] per
   //attribute, which is what every earlier guess here got wrong), THEN one
   //[ItemNumber VLQ][Value] pair per attribute, in the same order. ItemNumber is
-  //per-attribute (1,2,3,...), not shared. Attribute 299's value is always the literal
-  //UDINT 1 (not an echo of whatever CreateObject sent for that same id) - confirmed
-  //identical across all 4 independent sessions in the capture.
+  //per-attribute (1,2,...), not shared.
+  //Attribute 299 dropped 2026-08-31: the TIA capture above included it (as a literal
+  //UDINT 1), but python-snap7's own live-successful SetupSession against this same PLC
+  //never sends it at all (just [1830,306], ItemCount=2) - apparently optional/ignored by
+  //the PLC either way; omitted here to match the reference actually exercised live.
   if NeedsLegitimation then begin
-    SetLength(AttrIds, 3);
+    SetLength(AttrIds, 2);
     AttrIds[0] := S7PlusObjId_SessionSetupLegitimation;
     AttrIds[1] := S7PlusObjId_ServerSessionVersion;
-    AttrIds[2] := 299;
   end else begin
     SetLength(AttrIds, 1);
     AttrIds[0] := S7PlusObjId_ServerSessionVersion;
@@ -1241,11 +1274,129 @@ begin
                  [RetVal, RetVal, ExtractErrorText(BytesCopy(RespPayload, c, Length(RespPayload)-c))]));
 end;
 
+//: Ported from python-snap7's _session_activate (validated live against a real .211 -
+//: matches TIA Portal frame 17 of TIAPortalWatchDB7.pcapng, GH-710): writes USINT(5) to
+//: address 323 on the session object, using the V1-fixed-width ObjectQualifier
+//: (KeyQualifier = the sequence number in use just before this request, not this
+//: request's own - matches the reference's self._sequence_number read before
+//: send_request internally advances it).
+function TS7PlusConnection.SessionActivate:Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Payload := EncodeUInt32(FSessionId);
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //AddressCount
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(323));
+  Payload := BytesConcat(Payload, BytesOf([$00, S7PlusType_USINT]));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(5));
+  Payload := BytesConcat(Payload, EncodeObjectQualifierV1(FSequenceNumber));
+  Payload := BytesConcat(Payload, BytesOf([0,0,0])); //trailing zeros; IntegrityId splices before these
+
+  Result := SendRequest(S7PlusFunc_SetVariable, Payload, Resp, 3);
+  if Result then
+    Debug('SessionActivate: OK')
+  else
+    Debug('SessionActivate: falha ao enviar/receber');
+end;
+
+//: Ported from python-snap7's _post_auth_legitimation (validated live against a real
+//: .211): re-reads the 20-byte challenge from address 303 (a fresh one, distinct from
+//: the one CreateObject carried), solves it via S7PlusHarpoLegitimate, writes the
+//: 248-byte solved blob to address 1846. Required before the PLC allows any data
+//: operation on a session that went through the SecurityKey blob exchange.
+function TS7PlusConnection.PostAuthLegitimation(const Password:AnsiString):Boolean;
+var
+  Payload, Resp, LegitChallenge, LegitBlob, Svs:TBytes;
+  Offset_, c:Integer;
+  RetVal:QWord;
+  Len_:Cardinal;
+begin
+  Result := false;
+
+  //Step 1: re-read the legitimation challenge from address 303.
+  Payload := EncodeUInt32(FSessionId);
+  Payload := BytesConcat(Payload, BytesOf([$20, S7PlusType_UDINT]));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //field count
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_ServerSessionRequest));
+  Payload := BytesConcat(Payload, EncodeObjectQualifierV1(FSequenceNumber));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //seq_field
+  Payload := BytesConcat(Payload, BytesOf([0,0,0])); //fill
+
+  if not SendRequest(S7PlusFunc_GetVarSubstreamed, Payload, Resp, 3) then begin
+    Debug('PostAuthLegitimation: falha ao ler desafio (endereco 303)');
+    exit;
+  end;
+
+  //Response shape, AFTER SendRequest's own IntegrityId strip (2026-08-31 fix - see its
+  //comment): ReturnValue(VLQ) + Flags(1) + DataType(1) + Length(VLQ) + data. python-
+  //snap7's own inline ad-hoc parser here has a real bug (double-counts IntegrityId,
+  //since its generic send_request ALSO already strips it) that happens to fail its own
+  //"length==20" sanity check and silently fall back to the session's original challenge;
+  //traced live 2026-08-31 against a real .211 that this re-read DOES return a genuinely
+  //different 20-byte value than the original, and using this correctly-parsed one - not
+  //the original - is what the PLC actually expects here.
+  LegitChallenge := nil;
+  Offset_ := 0;
+  DecodeUInt64VLQ(Resp, Offset_, c); Inc(Offset_, c); //ReturnValue
+  if Offset_+2<=Length(Resp) then begin
+    Inc(Offset_, 2); //Flags, DataType (already known to be $10/USINT array here)
+    Len_ := DecodeUInt32VLQ(Resp, Offset_, c); Inc(Offset_, c);
+    if (Len_=20) and (Offset_+Integer(Len_)<=Length(Resp)) then
+      LegitChallenge := BytesCopy(Resp, Offset_, 20);
+  end;
+
+  if Length(LegitChallenge)<20 then begin
+    Debug('PostAuthLegitimation: nao foi possivel decodificar o desafio lido');
+    exit;
+  end;
+  //Step 2: solve the challenge.
+  if (Length(FHarpoSessionKey)=0) or (Length(FHarpoAuthPublicKey)=0) then begin
+    Debug('PostAuthLegitimation: sem session key / chave publica (SetupSession nao rodou a legitimacao)');
+    exit;
+  end;
+  try
+    LegitBlob := SolveLegitimateChallengeRealPlc(LegitChallenge, FHarpoAuthPublicKey, FHarpoAuthFamily,
+                                                  FHarpoSessionKey, Password);
+  except
+    on E:Exception do begin
+      Debug('PostAuthLegitimation: falha ao resolver desafio: '+E.Message);
+      exit;
+    end;
+  end;
+
+  //Step 3: write the solved blob to address 1846 (S7PlusObjId_Legitimate).
+  Svs := EncodeUInt32(FSessionId);
+  Svs := BytesConcat(Svs, BytesOf([$20, S7PlusType_UDINT]));
+  Svs := BytesConcat(Svs, EncodeUInt32VLQ(1));
+  Svs := BytesConcat(Svs, EncodeUInt32VLQ(S7PlusObjId_Legitimate));
+  Svs := BytesConcat(Svs, EncodeObjectQualifierV1(FSequenceNumber));
+  Svs := BytesConcat(Svs, EncodeUInt32VLQ(1));
+  Svs := BytesConcat(Svs, EncodePValueBlob(LegitBlob));
+  Svs := BytesConcat(Svs, EncodeUInt32VLQ(FSequenceNumber));
+  Svs := BytesConcat(Svs, BytesOf([0,0,0]));
+
+  if not SendRequest(S7PlusFunc_SetVarSubstreamed, Svs, Resp, 3) then begin
+    Debug('PostAuthLegitimation: falha ao enviar blob resolvido (endereco 1846)');
+    exit;
+  end;
+
+  if Length(Resp)>=1 then begin
+    RetVal := DecodeUInt64VLQ(Resp, 0, c);
+    if (RetVal and QWord($8000000000000000))<>0 then begin
+      Debug(Format('PostAuthLegitimation: rejeitado pela PLC (returnValue=0x%.16x)',[RetVal]));
+      exit;
+    end;
+  end;
+
+  Result := true;
+  Debug('PostAuthLegitimation: OK');
+end;
+
 //===========================================================================
 // Public connect/disconnect
 //===========================================================================
 
-function TS7PlusConnection.Connect:Boolean;
+function TS7PlusConnection.Connect(const Password:AnsiString):Boolean;
 begin
   Result := false;
   FSessionSetupOK := false;
@@ -1294,8 +1445,21 @@ begin
     Debug('Connect: rastreamento de IntegrityId habilitado (V2).');
   end;
 
-  Result := true;
   FConnected := true;
+
+  //V1-initial/no-TLS SecurityKey sessions (FHarpoSessionKey set by SetupSession) need two
+  //more steps before the PLC allows any data operation - see SessionActivate/
+  //PostAuthLegitimation's own comments. Ported from python-snap7's connect(): `if
+  //self._session_key is not None and self._session_setup_ok: self._session_activate();
+  //self._post_auth_legitimation(password)`.
+  if FSessionSetupOK and (Length(FHarpoSessionKey)>0) then begin
+    if not SessionActivate then
+      Debug('Connect: falha na ativacao de sessao (SessionActivate) - operacoes de dados podem continuar bloqueadas.')
+    else if not PostAuthLegitimation(Password) then
+      Debug('Connect: falha na legitimacao pos-autenticacao (PostAuthLegitimation) - operacoes de dados podem continuar bloqueadas.');
+  end;
+
+  Result := true;
   Debug(Format('Connect: OK - version=V%d sessionId=0x%.8x sessionSetupOK=%s tls=%s',
                [FProtocolVersion, FSessionId, BoolToStr(FSessionSetupOK,true), BoolToStr(FTLSActive,true)]));
 end;
@@ -1322,10 +1486,10 @@ function TS7PlusConnection.SendRequest(FunctionCode:Word; const Payload:TBytes; 
 var
   Seq:Word;
   TransportFlags:Byte;
-  Header, ActualPayload, Request, Frame, ResponseFrame, Response, IntegrityBytes:TBytes;
+  Header, ActualPayload, Request, Frame, ResponseFrame, Response, IntegrityBytes, FrameData:TBytes;
   Version:Byte;
   DataLen:Word;
-  Consumed:Integer;
+  Consumed, HashLen, c:Integer;
   IsReadFunc:Boolean;
 begin
   Result := false;
@@ -1333,7 +1497,9 @@ begin
   if not FConnected then exit;
 
   Seq := NextSequenceNumber;
-  if (FunctionCode=S7PlusFunc_GetMultiVariables) or (FunctionCode=S7PlusFunc_Explore) then
+  //After a successful SessionKey/legitimation handshake (FHarpoSessionKey<>nil), TIA
+  //Portal uses transport flags 0x34 for every request, not just GetMultiVariables/Explore.
+  if (Length(FHarpoSessionKey)>0) or (FunctionCode=S7PlusFunc_GetMultiVariables) or (FunctionCode=S7PlusFunc_Explore) then
     TransportFlags := $34
   else
     TransportFlags := $36;
@@ -1363,8 +1529,22 @@ begin
   Header := EncodeRequestHeader(FunctionCode, Seq, FSessionId, TransportFlags);
   Request := BytesConcat(Header, ActualPayload);
 
-  Frame := BytesConcat(EncodeS7PlusHeader(FProtocolVersion, Length(Request)), Request);
-  Frame := BytesConcat(Frame, EncodeS7PlusHeader(FProtocolVersion, 0)); //trailer
+  //Once a SessionKey/legitimation handshake has produced FHarpoSessionKey, TIA Portal
+  //switches EVERY subsequent frame to V3 framing with a 32-byte HMAC-SHA256 digest
+  //(computed over the whole request, keyed with the session key's first 24 bytes)
+  //prepended before the request bytes - confirmed live 2026-08-31: SessionActivate's
+  //plain V2 frame was accepted, but the PLC dropped the connection on the very next
+  //(also plain V2) frame, matching python-snap7's send_request doing exactly this
+  //switch unconditionally as soon as self._session_key is not None.
+  if Length(FHarpoSessionKey)>0 then begin
+    FrameData := BytesConcat(BytesOf([$20]), S7PlusHMACSHA256(Copy(FHarpoSessionKey,0,24), Request));
+    FrameData := BytesConcat(FrameData, Request);
+    Frame := BytesConcat(EncodeS7PlusHeader(S7PlusVersion_V3, Length(FrameData)), FrameData);
+    Frame := BytesConcat(Frame, EncodeS7PlusHeader(S7PlusVersion_V3, 0)); //trailer
+  end else begin
+    Frame := BytesConcat(EncodeS7PlusHeader(FProtocolVersion, Length(Request)), Request);
+    Frame := BytesConcat(Frame, EncodeS7PlusHeader(FProtocolVersion, 0)); //trailer
+  end;
 
   Debug(Format('SendRequest: functionCode=$%.4x seq=%d',[FunctionCode,Seq])+' payload='+S7PlusHexStr(ActualPayload));
 
@@ -1406,12 +1586,32 @@ begin
 
   Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
   Response := BytesCopy(ResponseFrame, Consumed, DataLen);
+
+  //V3 responses carry a [hashLen byte][hashLen-byte HMAC] prefix before the actual
+  //10-byte response header + payload - strip it (matches python-snap7's send_request).
+  if (Version=S7PlusVersion_V3) and (Length(Response)>33) then begin
+    HashLen := Response[0];
+    if 1+HashLen<Length(Response) then
+      Response := BytesCopy(Response, 1+HashLen, Length(Response)-(1+HashLen));
+  end;
+
   if Length(Response)<10 then begin
     Debug('SendRequest: resposta menor que o cabecalho de 10 bytes');
     exit;
   end;
 
   RespPayload := BytesCopy(Response, 10, Length(Response)-10);
+
+  //SessionKey/HMAC (V3) responses prepend an IntegrityId VLQ before the actual
+  //ReturnValue - ordinary V2 responses don't carry this. Missing this strip was
+  //confirmed live 2026-08-31 to make PostAuthLegitimation always misread a garbled
+  //[IntegrityId+ReturnValue] blob as if it were the ReturnValue alone - reliably
+  //producing a sign-bit-set (looks like failure) value regardless of the real result.
+  if (Length(FHarpoSessionKey)>0) and (Length(RespPayload)>1) then begin
+    DecodeUInt32VLQ(RespPayload, 0, c);
+    RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+  end;
+
   Result := true;
   Debug('SendRequest: respPayload='+S7PlusHexStr(RespPayload));
 end;
@@ -1795,12 +1995,17 @@ begin
     AddVal(Cardinal(i+1)); //1-based reference id
     AddVal(0); //unknown 1
     AddVal(Items[i].AccessArea);
-    //SymbolCrc: unlike a plain read/write (SymbolCrc=0 is accepted there, "skip layout
-    //check"), the reference (Subscriptions/Subscription.cs's GetSubscriptionListArray) uses
-    //the variable's real SymbolCrc here, not 0 - a subscription is a persistent object bound
-    //to the layout for as long as it lives, so the PLC appears to enforce the check strictly.
-    //Caller must fill Items[i].SymbolCrc from BrowseDB/BrowseNativeArea's TS7PlusVarInfo.
-    AddVal(Items[i].SymbolCrc);
+    //SymbolCrc=0 (not the variable's real SymbolCrc): a prior comment here claimed the
+    //opposite ("the reference uses the real SymbolCrc, unlike a plain read/write") based
+    //on reading the C# reference's source, but that was never actually confirmed against
+    //a working subscription - confirmed live 2026-08-31, comparing byte-for-byte against
+    //python-snap7's build_subscription_request (proven working: real values received),
+    //that it sends 0 for every item here, same as a plain read/write. Sending the real
+    //SymbolCrc instead was the actual cause of every item coming back with per-item error
+    //status 0x13 in the notification (subscription created fine, but no item ever
+    //produced a value) - the PLC's subscription layout check apparently does NOT match
+    //this the way EXPLORE walks report it.
+    AddVal(0);
     AddVal(AccessSubArea);
     for j:=0 to High(Items[i].Lids) do
       AddVal(Items[i].Lids[j]);
@@ -1834,11 +2039,13 @@ var
 begin
   Result := false;
 
-  //The reference hardcodes RelationId=0x7fffc001 here, with its own comment admitting it's
-  //an unverified guess ("TODO! Unknown value!"). That was confirmed wrong against real
-  //hardware (PLC rejected it: "Download error (IDs & states [main, sub, TI, next])!") - use
-  //the same GetNewRIDOnServer sentinel our own (already-validated) session CreateObject uses
-  //to have the PLC assign a fresh RID instead of guessing one ourselves.
+  //Both a fixed RelationId (0x7FFFC001, what the reference driver hardcodes) and
+  //GetNewRIDOnServer (letting the PLC assign one) are confirmed working live against
+  //.210 (2026-08-31) - the earlier "Download error" this comment used to blame on
+  //RelationId was actually caused by three unrelated wire-encoding bugs elsewhere in
+  //this function and in EncodeValuePWString/EncodeValuePUInt/EncodeValuePInt (see their
+  //comments) that desynchronized the whole attribute list; GetNewRIDOnServer stays the
+  //default since it avoids any chance of RelationId collision across sessions.
   if UseFixedRelationId then
     FSubscriptionRelationId := $7FFFC001
   else
@@ -1865,13 +2072,18 @@ begin
 
   ObjBytes := EncodePObject(FSubscriptionRelationId, S7PlusObjId_ClassSubscription, 0, 0, Attrs);
 
-  Payload := EncodeUInt32(FSessionId); //RequestId
+  //InObjectId/second-field order fixed 2026-08-31 by comparing byte-for-byte against
+  //python-snap7's build_subscription_request (upstream branches feat/710-v1-subscription-
+  //data + fix-v1-sessionkey-challenge-layout merged locally), confirmed live to actually
+  //create a working subscription (real notifications received) against .210: InObjectId is
+  //the ClassSubscriptions container (FSubscriptionsContainerObjectId, the parent object
+  //CreateSession creates alongside the session - see that field's comment), and the second
+  //4-byte field is plain zero padding, NOT the container id as this previously had it
+  //(swapped) - that earlier version was the actual cause of "download: no parent object!",
+  //not a wrong RelationId as originally suspected.
+  Payload := EncodeUInt32(FSubscriptionsContainerObjectId); //InObjectId
   Payload := BytesConcat(Payload, EncodeValuePUDInt(0)); //RequestValue = ValueUDInt(0)
-  //Previously hardcoded 0 here ("unknown value 1") - confirmed against real hardware to be
-  //the parent object the PLC complained was missing ("download: no parent object!"): the
-  //ClassSubscriptions container CreateSession creates alongside the session (see
-  //FSubscriptionsContainerObjectId).
-  Payload := BytesConcat(Payload, EncodeUInt32(FSubscriptionsContainerObjectId));
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //padding
   Payload := BytesConcat(Payload, ObjBytes);
   Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
 
