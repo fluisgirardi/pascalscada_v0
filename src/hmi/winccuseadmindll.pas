@@ -69,16 +69,26 @@ begin
 
   FHandle:=LoadLibrary(PAnsiChar(LibraryFileName));
   if FHandle=0 then
-    raise Exception.Create(SWinCCAreInstalled);
+    RaiseLastOSError;
 
   LoadProcs;
 end;
 
 destructor TUseAdminDLL.Destroy;
 begin
-  if FHandle<>0 then begin
-    FreeLibrary(FHandle);
-    FHandle:=0;
+  if FHandle<>NilHandle then begin
+    PWRTLogin                  :=nil;
+    PWRTLogout                 :=nil;
+    PWRTGetCurrentUser         :=nil;
+    PWRTGetLoginPriority       :=nil;
+    PWRTPermissionToString     :=nil;
+    PWRTCheckPermission        :=nil;
+    PWRTCheckPermissionOnArea  :=nil;
+    PWRTCheckPermissionOnAreaID:=nil;
+    PWRTSilentLogin            :=nil;
+    UnloadLibrary(FHandle);
+    //FreeLibrary(FHandle);
+    FHandle:=NilHandle;
   end;
   inherited Destroy;
 end;

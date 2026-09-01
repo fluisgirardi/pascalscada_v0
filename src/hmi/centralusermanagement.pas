@@ -45,12 +45,14 @@ type
     FUseSSL: Boolean;
     FCacheUpdateCount:Integer;
     FCheckUserChangedThread:TCheckUserChangeThread;
+    FLastError: UTF8String;
     function CheckServerUserChanged(out ChangeData: UTF8String): Integer;
     function GetCacheUptCount: Integer;
     function PostMethod(aAPIEndpoint: String; aJsonData: TJSONData;
       var ReturnData: UTF8String): Boolean;
     function PostMethodInt(aAPIEndpoint: String; aJsonData: TJSONData;
       var ReturnData: UTF8String): Integer;
+    function ExtractServerErrorText(const JsonBody: UTF8String): UTF8String;
     procedure RemoteUserChanged(aUID:integer; aUserName:String; AuthData: TJSONObject);
     procedure RemoteUserChangedRemotely(Data: PtrInt);
     procedure setAuthServer(AValue: String);
@@ -127,7 +129,7 @@ const
 
 implementation
 
-uses DateUtils, Dialogs;
+uses DateUtils, Dialogs, hsstrings;
 
 { TCheckUserChangeThread }
 
@@ -215,6 +217,7 @@ var
   wc: TFPHTTPClient;
   ms, sl: TStringStream;
 begin
+  FLastError:='';
   wc:=TFPHTTPClient.Create(Self);
   try
     ms:=TStringStream.Create(aJsonData.AsJSON);
@@ -226,6 +229,8 @@ begin
         try
           wc.Post(ifthen(FUseSSL,'https','http')+'://'+FAuthServer+':'+FAuthServerPort.ToString+'/'+aAPIEndpoint, sl);
         except
+          on E:Exception do
+            FLastError:=E.Message;
         end;
         sl.Position:=0;
         ReturnData:=sl.DataString;
@@ -239,6 +244,27 @@ begin
     end;
   finally
     FreeAndNil(wc);
+  end;
+end;
+
+function TCentralUserManagement.ExtractServerErrorText(const JsonBody: UTF8String): UTF8String;
+var
+  Data: TJSONData;
+  ErrField: TJSONString;
+begin
+  Result:='';
+  if Trim(JsonBody)='' then
+    exit;
+  try
+    Data:=GetJSON(JsonBody);
+  except
+    exit;
+  end;
+  try
+    if (Data is TJSONObject) and TJSONObject(Data).Find('error', ErrField) then
+      Result:=ErrField.AsString;
+  finally
+    FreeAndNil(Data);
   end;
 end;
 
@@ -338,34 +364,57 @@ var
   UserInfo: UTF8String;
   UserData: TJSONData;
   aUID:TJSONNumber;
+  httpStatus: Integer;
+  ServerErr: UTF8String;
 begin
+  FLastLoginError:='';
   jobj:=TJSONObject.Create;
   try
     jobj.Add(_User, User);
     jobj.Add(_Password, Pass);
-    if PostMethod(_checkuserpwd, jobj, UserInfo) then begin
-      try
-        UserData:=GetJSON(UserInfo);
-      except
+    httpStatus:=PostMethodInt(_checkuserpwd, jobj, UserInfo);
+    case httpStatus of
+      200: begin
+        try
+          UserData:=GetJSON(UserInfo);
+        except
+          FLastLoginError:=SLoginInvalidServerResponse;
+          exit(false);
+        end;
+        try
+          if LoginAction and Assigned(FCachedAuthorizations) then
+            FreeAndNil(FCachedAuthorizations);
+
+          if (UserData is TJSONObject) and TJSONObject(UserData).Find(_uid,aUID) then begin
+            UserID:=aUID.AsInteger;
+            if LoginAction and TJSONObject(UserData).Find(_authorizations,FCachedAuthorizations) then
+              FCachedAuthorizations:=TJSONObject(FCachedAuthorizations.Clone);
+            exit(True);
+          end else begin
+            FLastLoginError:=SLoginInvalidServerResponse;
+            exit(false);
+          end;
+        finally
+          if Assigned(UserData) then
+            FreeAndNil(UserData);
+        end;
+      end;
+      401: begin
+        FLastLoginError:=SInvalidUserOrPassword;
         exit(false);
       end;
-      try
-        if LoginAction and Assigned(FCachedAuthorizations) then
-          FreeAndNil(FCachedAuthorizations);
-
-        if (UserData is TJSONObject) and TJSONObject(UserData).Find(_uid,aUID) then begin
-          UserID:=aUID.AsInteger;
-          if LoginAction and TJSONObject(UserData).Find(_authorizations,FCachedAuthorizations) then
-            FCachedAuthorizations:=TJSONObject(FCachedAuthorizations.Clone);
-          exit(True);
-        end else
-          exit(false);
-      finally
-        if Assigned(UserData) then
-          FreeAndNil(UserData);
+      0: begin
+        FLastLoginError:=Format(SLoginServerUnreachable, [IfThen(FLastError<>'', FLastError, _CannotConnectOnSecServer)]);
+        exit(false);
       end;
-    end else
-      exit(false);
+      else begin
+        ServerErr:=ExtractServerErrorText(UserInfo);
+        if ServerErr='' then
+          ServerErr:='HTTP '+IntToStr(httpStatus);
+        FLastLoginError:=Format(SLoginServerError, [ServerErr]);
+        exit(false);
+      end;
+    end;
   finally
     FreeAndNil(jobj);
   end;
