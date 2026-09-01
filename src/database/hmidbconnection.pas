@@ -299,6 +299,7 @@ type
     FQuery:TSQLQuery;
     FLibLoader:TSQLDBLibraryLoader;
     FCS:TCriticalSection;
+    FSpoolerCS:TCriticalSection;
     FSQLSpooler:TProcessSQLCommandThread;
     function  GetPendingSQLCmds: Integer;
     function  getProperties: TStrings;
@@ -670,6 +671,7 @@ constructor THMIDBConnection.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FCS:=TCriticalSection.Create;
+  FSpoolerCS:=TCriticalSection.Create;
   FConnection:=TSQLConnector.Create(nil);
   FTransaction:=TSQLTransaction.Create(nil);
   FTransaction.Database:=FConnection;
@@ -689,24 +691,48 @@ begin
 end;
 
 destructor  THMIDBConnection.Destroy;
+var
+  spooler:TProcessSQLCommandThread;
 begin
   inherited Destroy;
-  //destroi a thread
-  //
-  //Destroys the thread.
-  FSQLSpooler.Terminate;
-  while FSQLSpooler.WaitEnd(1)<>wrSignaled do
-    if MainThreadID=GetCurrentThreadID then
-      CheckSynchronize(1)
-    else
-      Sleep(1);
 
-  FreeAndNil(FSQLSpooler);
+  //remove a referência a thread sob lock, para que nenhuma outra thread
+  //(ex.: THMIAlarmLogger/THMIEventLogger chamando ExecSQL) possa obter um
+  //ponteiro válido para FSQLSpooler depois deste ponto e usá-lo enquanto ele
+  //é destruído mais abaixo.
+  //
+  //remove the reference to the thread under lock, so no other thread
+  //(e.g. THMIAlarmLogger/THMIEventLogger calling ExecSQL) can grab a valid
+  //pointer to FSQLSpooler past this point and use it while it's destroyed
+  //below.
+  FSpoolerCS.Enter;
+  try
+    spooler:=FSQLSpooler;
+    FSQLSpooler:=nil;
+  finally
+    FSpoolerCS.Leave;
+  end;
+
+  if spooler<>nil then begin
+    //destroi a thread
+    //
+    //Destroys the thread.
+    spooler.Terminate;
+    while spooler.WaitEnd(1)<>wrSignaled do
+      if MainThreadID=GetCurrentThreadID then
+        CheckSynchronize(1)
+      else
+        Sleep(1);
+
+    spooler.Destroy;
+  end;
+
   FreeAndNil(FQuery);
   FreeAndNil(FTransaction);
   FreeAndNil(FConnection);
   FreeAndNil(FLibLoader);
   FreeAndNil(FProperties);
+  FSpoolerCS.Destroy;
   FCS.Destroy;
 end;
 
@@ -780,15 +806,28 @@ end;
 
 function THMIDBConnection.GetPendingSQLCmds: Integer;
 begin
-  result := FSQLSpooler.PendingMsgs;
+  FSpoolerCS.Enter;
+  try
+    if Assigned(FSQLSpooler) then
+      result := FSQLSpooler.PendingMsgs
+    else
+      result := 0;
+  finally
+    FSpoolerCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.ExecSQL(sql: UTF8String;
   ReturnDatasetCallback: TReturnDataSetProc; ReturnSync: Boolean;
   NewConnection: Boolean);
 begin
-  if Assigned(FSQLSpooler) THEN
-    FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync, NewConnection);
+  FSpoolerCS.Enter;
+  try
+    if Assigned(FSQLSpooler) THEN
+      FSQLSpooler.ExecSQLWithResultSet(sql, ReturnDatasetCallback, ReturnSync, NewConnection);
+  finally
+    FSpoolerCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.ExecTransaction(
@@ -797,8 +836,13 @@ procedure THMIDBConnection.ExecTransaction(
   FreeStatemensAfterExecute: Boolean; ReturnSync: Boolean;
   NewConnection: Boolean);
 begin
-  if Assigned(FSQLSpooler) THEN
-    FSQLSpooler.ExecTransaction(statements,ReturnTransactionResult,FreeStatemensAfterExecute,ReturnSync,NewConnection);
+  FSpoolerCS.Enter;
+  try
+    if Assigned(FSQLSpooler) THEN
+      FSQLSpooler.ExecTransaction(statements,ReturnTransactionResult,FreeStatemensAfterExecute,ReturnSync,NewConnection);
+  finally
+    FSpoolerCS.Leave;
+  end;
 end;
 
 procedure THMIDBConnection.StartTransaction(NewConnection: Boolean);
@@ -900,7 +944,15 @@ begin
           try
             FQuery.ExecSQL
           except
+            //propaga para o handler externo fazer o rollback: SQLdb exige
+            //transação explícita, então um comando que falha não pode cair
+            //para o Commit logo abaixo (diferente do autocommit do Zeos).
+            //
+            //re-raise so the outer handler runs the rollback: SQLdb requires
+            //an explicit transaction, so a failed command must not fall
+            //through to the Commit below (unlike Zeos' per-command autocommit).
             Error := true;
+            raise;
           end;
         end else begin
 
