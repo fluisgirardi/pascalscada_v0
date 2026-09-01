@@ -36,6 +36,7 @@ type
     FSuccessfulLogin:TNotifyEvent;
     FFailureLogin:TNotifyEvent;
     FUserChanged:TUserChangedEvent;
+    FLastLoginError:UTF8String;
 
     FRegisteredSecurityCodes:TStringList;
 
@@ -100,6 +101,9 @@ type
     property UserLogged:Boolean read GetLoggedUser;
     property CurrentUserName:UTF8String read GetCurrentUserName;
     property CurrentUserLogin:UTF8String read GetCurrentUserLogin;
+
+    //: Message returned by the server describing why the last login/CheckUserAndPassword call failed, when available.
+    property LastLoginError:UTF8String read FLastLoginError;
   end;
 
 const
@@ -205,6 +209,8 @@ begin
             DoUserChanged;
           end else begin
             DoFailureLogin;
+            if Trim(FLastLoginError)<>'' then
+              MessageDlg(SLoginErrorTitle, FLastLoginError, mtError, [mbOK], 0);
             inc(retries);
             if (FLoginRetries>0) and (retries>=FLoginRetries) then begin
               frmLoginDlg.DisableEntry;
