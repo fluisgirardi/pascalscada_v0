@@ -163,6 +163,11 @@ resourcestring
   SAccessDenied                 = 'Acesso negado!';
   SRequiredPerm                 = 'Permissão necessária:'+LineEnding+'%s';
   SRemoveChipCard               = 'Remova o cartão da leitora para continuar';
+  SLoginErrorTitle              = 'Falha no login';
+  SInvalidUserOrPassword        = 'Usuário ou senha inválidos.';
+  SLoginServerUnreachable       = 'Não foi possível conectar ao servidor de autenticação: %s';
+  SLoginServerError             = 'O servidor de autenticação retornou um erro: %s';
+  SLoginInvalidServerResponse   = 'O servidor de autenticação retornou uma resposta inválida.';
 
   SMBTBStatiomAddress           = 'Qual o endereço (nó) da estação (CLP) que contem as memórias que se deseja mapear?';
   SMBTBTagType                  = 'Qual o tipo de memória você deseja criar como tag?';
@@ -314,6 +319,11 @@ resourcestring
   SAccessDenied                 = 'Access denied!';
   SRequiredPerm                 = 'Authorization required:'+LineEnding+'%s';
   SRemoveChipCard               = 'Remove the card from the reader to continue';
+  SLoginErrorTitle              = 'Login failed';
+  SInvalidUserOrPassword        = 'Invalid user or password.';
+  SLoginServerUnreachable       = 'Could not connect to the authentication server: %s';
+  SLoginServerError             = 'The authentication server returned an error: %s';
+  SLoginInvalidServerResponse   = 'The authentication server returned an invalid response.';
 
   SMBTBStatiomAddress           = 'What are the address of your Modbus Device?';
   SMBTBTagType                  = 'What are the tag type you want use in your application?';
