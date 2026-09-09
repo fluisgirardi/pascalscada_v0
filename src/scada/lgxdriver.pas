@@ -992,13 +992,29 @@ type
     Navega a lista de tags do CLP (tags de controlador, tags de programa,
     membros de UDTs e elementos de arrays) e devolve uma cópia dela.
 
-    Requer que a porta de comunicação esteja ativa. Pode ser chamada em tempo
-    de projeto, desde que a porta de comunicação esteja ativa.
+    @bold(A porta de comunicação precisa estar ativa). Se CommunicationPort
+    for @nil ou estiver inativa, o método retorna @false sem tentar nada. Como
+    o TTCP_UDPPort não é um dispositivo exclusivo, ele conecta de verdade
+    quando Active é ligado em tempo de projeto, e por isso este método também
+    funciona dentro da IDE (é assim que o Tag Builder lê a lista de tags).
+
+    @bold(A chamada é síncrona e bloqueante): ela pausa as threads de scan do
+    driver, conversa com o CLP e só retorna quando a navegação termina. Num
+    CLP com muitos tags isso leva vários segundos, e a thread que chamou fica
+    parada esse tempo todo - em tempo de projeto, é a IDE que fica parada.
+
+    A lista fica em cache por porta de comunicação: a primeira chamada navega
+    o CLP e as seguintes devolvem a mesma lista, até que ForceReload seja
+    @true ou ClearTagListCache seja chamado.
 
     @param(aTagList TLGXTagInfoArray. Recebe a cópia da lista de tags do CLP.)
     @param(ForceReload Boolean. Se @true, descarta a lista lida anteriormente
            e navega o CLP novamente.)
-    @returns(@true se a lista de tags foi lida por completo.)
+    @returns(@true se a lista de tags foi lida por completo. @false se a porta
+             está inativa, se a conexão CIP não pôde ser aberta, ou se a
+             navegação foi interrompida no meio - nesse último caso aTagList
+             traz os tags que deram tempo de ser lidos.)
+    @seealso(ClearTagListCache)
     }
     function BrowseTagList(out aTagList:TLGXTagInfoArray;
                            ForceReload:Boolean = false):Boolean;
