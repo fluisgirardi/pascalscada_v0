@@ -4,12 +4,72 @@
   @abstract(Unit do assistente de importação de tags de CLPs Rockwell
             Compact/ControlLogix (Ethernet/IP - CIP).)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  A lista de tags é lida @bold(online), do CLP, através de
+  TLGXDriver.BrowseTagList. Isso tem duas consequências:
+
+  @unorderedList(
+    @item(A porta de comunicação do driver precisa estar ativa (Active=true)
+          quando o assistente é aberto. Em tempo de projeto isso funciona
+          porque o TTCP_UDPPort não é um dispositivo exclusivo e conecta de
+          verdade dentro da IDE. Sem a porta ativa o assistente avisa e não
+          lê nada.)
+    @item(A leitura é síncrona: enquanto o CLP é navegado, a IDE fica parada.
+          Num CLP com muitos tags isso leva vários segundos.)
+  )
+
+  O que o assistente @bold(não) importa, e por quê:
+
+  @unorderedList(
+    @item(@bold(Arrays de BOOL): no Logix eles são empacotados em DWORDs, e o
+          TLGXDriver ainda não desempacota os bits. Importar geraria tags que
+          leem valores errados, então eles são contados como ignorados.)
+    @item(@bold(Estruturas/UDTs) que não sejam STRING: não existe um tag do
+          PascalSCADA que represente uma UDT inteira. Os membros da UDT são
+          oferecidos individualmente na lista, cada um com o seu caminho
+          simbólico (@code(Tanque.nivel)).)
+    @item(@bold(Tipos internos do CLP) (marcados com TYPE_IS_SYSTEM).)
+  )
+
+  As STRINGs do Logix são estruturas com os membros LEN (DINT) e DATA
+  (SINT[n]). Como o TPLCString ainda não implementa o formato stROCKWELL, o
+  assistente cria um TPLCString com StringType=stC apontando o LongAddress
+  para o membro DATA da estrutura, que é o que funciona hoje.
 }
 {$ELSE}
 {:
   @abstract(Unit of the tag import wizard of Rockwell Compact/ControlLogix
             PLCs (Ethernet/IP - CIP).)
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  The tag list is read @bold(online), from the PLC, through
+  TLGXDriver.BrowseTagList. This has two consequences:
+
+  @unorderedList(
+    @item(The communication port of the driver must be active (Active=true)
+          when the wizard is opened. At design time this works because the
+          TTCP_UDPPort is not an exclusive device and really connects inside
+          the IDE. Without an active port the wizard warns and reads nothing.)
+    @item(The read is synchronous: while the PLC is being browsed, the IDE is
+          frozen. On a PLC with many tags this takes several seconds.)
+  )
+
+  What the wizard does @bold(not) import, and why:
+
+  @unorderedList(
+    @item(@bold(BOOL arrays): on Logix they are packed into DWORDs, and the
+          TLGXDriver does not unpack the bits yet. Importing them would create
+          tags reading wrong values, so they are counted as skipped.)
+    @item(@bold(Structures/UDTs) other than STRING: there is no PascalSCADA tag
+          representing a whole UDT. The UDT members are offered individually on
+          the list, each one with its own symbolic path (@code(Tank.level)).)
+    @item(@bold(PLC internal types) (flagged with TYPE_IS_SYSTEM).)
+  )
+
+  Logix STRINGs are structures with the members LEN (DINT) and DATA (SINT[n]).
+  As TPLCString does not implement the stROCKWELL format yet, the wizard
+  creates a TPLCString with StringType=stC pointing the LongAddress to the DATA
+  member of the structure, which is what works today.
 }
 {$ENDIF}
 unit ulgxtagbuilder;
@@ -310,8 +370,12 @@ begin
     end;
 
     if (FTagList[c].num_dimensions>0) and (FTagList[c].elem_count>1) then begin
-      //arrays de BOOL são empacotados em DWORDs pelo CLP, o que o driver
-      //ainda não sabe desempacotar. Melhor não gerar tags quebrados.
+      { TODO : arrays de BOOL sao empacotados em DWORDs pelo CLP, e o
+               TLGXDriver ainda nao desempacota os bits na leitura. Enquanto
+               isso nao existir, e melhor ignorar do que gerar um TPLCBlock
+               que le valores errados. Quando o driver souber desempacotar,
+               o certo aqui e criar um TPLCBlock de DWORDs mais os TTagBit
+               correspondentes. }
       if (FTagList[c].aType and $FF)=TAG_CIP_TYPE_BOOL then begin
         inc(FSkippedCount);
         continue;
@@ -590,6 +654,11 @@ begin
     if (c>High(FChecked)) or (not FChecked[c]) then continue;
     if FKind[c]=lgxtkUnsupported then continue;
 
+    //"STRINGs como TPLCString" é uma opção de mapeamento, e não um filtro de
+    //exibição: desligada, nenhum TPLCString é criado, mesmo que a estrutura
+    //tenha sido marcada antes de desligar a opção.
+    if (FKind[c]=lgxtkString) and (not chkStringsAsPLCString.Checked) then continue;
+
     Result[count].Kind    :=FKind[c];
     Result[count].Scan    :=spinScan.Value;
     Result[count].TagType :=pttDefault;
@@ -598,7 +667,10 @@ begin
 
     case FKind[c] of
       lgxtkString: begin
-        //o TPLCString lê o membro DATA (SINT[n]) da estrutura STRING.
+        //o TPLCString lê o membro DATA (SINT[n]) da estrutura STRING, e não a
+        //estrutura inteira: o formato stROCKWELL (LEN+DATA) ainda não está
+        //implementado no TPLCString, e o DATA do Logix vem preenchido com
+        //zeros depois do último caractere, o que o stC entende.
         if not FindTag(LowerCase(FTagList[c].name)+'.data', dataIdx) then continue;
         Result[count].TagPath:=FTagList[dataIdx].name;
         Result[count].Size   :=FStringElements[c]-1;

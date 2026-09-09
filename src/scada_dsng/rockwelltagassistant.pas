@@ -6,6 +6,32 @@
 
   Lê a lista de tags diretamente do CLP (Ethernet/IP - CIP) e cria os tags
   correspondentes no formulário/datamodule que contém o driver de protocolo.
+
+  Como usar: com o TLGXDriver ligado a um TTCP_UDPPort @bold(ativo)
+  (Active=true, o que também vale em tempo de projeto), clique com o botão
+  direito no driver e escolha @italic(Tag Builder).
+
+  O que é criado para cada tag do CLP:
+
+  @unorderedList(
+    @item(Tag simples (DINT, REAL, BOOL, LINT, ...): um TPLCTagNumber com o
+          TagType equivalente e Size=1.)
+    @item(Array (@code(Receita[10])): um TPLCBlock com o TagType do elemento e
+          Size igual ao número de elementos.)
+    @item(STRING: um TPLCString com StringType=stC, LongAddress apontando para
+          o membro DATA da estrutura e StringSize igual ao tamanho do DATA
+          menos um.)
+    @item(Membro de UDT: um tag individual, endereçado pelo caminho simbólico
+          (@code(Tanque.nivel)).)
+  )
+
+  Em todos os casos o ProtocolDriver é atribuído por último, depois do
+  LongAddress e do tamanho, para que o driver já enxergue o endereço do tag
+  quando ele for registrado.
+
+  As limitações do assistente (porta ativa, leitura bloqueante, arrays de BOOL
+  e UDTs não importados, STRING lida pelo membro DATA) estão documentadas na
+  unit ulgxtagbuilder.
 }
 {$ELSE}
 {:
@@ -14,6 +40,31 @@
 
   Reads the tag list directly from the PLC (Ethernet/IP - CIP) and creates the
   matching tags on the form/datamodule that owns the protocol driver.
+
+  How to use it: with the TLGXDriver linked to an @bold(active) TTCP_UDPPort
+  (Active=true, which also applies at design time), right click the driver and
+  choose @italic(Tag Builder).
+
+  What is created for each PLC tag:
+
+  @unorderedList(
+    @item(Simple tag (DINT, REAL, BOOL, LINT, ...): a TPLCTagNumber with the
+          matching TagType and Size=1.)
+    @item(Array (@code(Recipe[10])): a TPLCBlock with the TagType of the
+          element and Size equal to the element count.)
+    @item(STRING: a TPLCString with StringType=stC, LongAddress pointing to the
+          DATA member of the structure and StringSize equal to the DATA size
+          minus one.)
+    @item(UDT member: an individual tag, addressed by its symbolic path
+          (@code(Tank.level)).)
+  )
+
+  On every case the ProtocolDriver is assigned last, after the LongAddress and
+  the size, so the driver already sees the tag address when it gets registered.
+
+  The wizard limitations (active port, blocking read, BOOL arrays and UDTs not
+  imported, STRING read through the DATA member) are documented on the
+  ulgxtagbuilder unit.
 }
 {$ENDIF}
 unit rockwelltagassistant;
