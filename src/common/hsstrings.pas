@@ -196,6 +196,45 @@ resourcestring
   SMBTBLabel6                   = 'Qtd. de digitos';
   SMBTBLabel7                   = 'Escala';
   STagIdxMoreSizeExceedStructLen= 'Indice do item da estrutura mais o seu tamanho excedem o tamanho da área de dados da estrutura';
+
+  //////////////////////////////////////////////////////////////////////////////
+  // ASSISTENTE DE IMPORTACAO DE TAGS DE CLPs ROCKWELL COMPACT/CONTROLLOGIX
+  //////////////////////////////////////////////////////////////////////////////
+  SLGXTBCaption                 = 'Rockwell Compact/ControlLogix - Importação de tags';
+  SLGXTBBrowse                  = 'Ler a lista de tags do CLP';
+  SLGXTBForceReload             = 'Reler do CLP';
+  SLGXTBFilter                  = 'Filtro';
+  SLGXTBKindFilter              = 'Tipo';
+  SLGXTBShowArrayElements       = 'Mostrar elementos de arrays';
+  SLGXTBShowStructMembers       = 'Mostrar membros de estruturas';
+  SLGXTBShowProgramTags         = 'Mostrar tags de programa';
+  SLGXTBStringsAsPLCString      = 'STRINGs como TPLCString';
+  SLGXTBScan                    = 'Tempo de atualização (ms)';
+  SLGXTBPrefix                  = 'Prefixo do nome dos componentes';
+  SLGXTBCheckAll                = 'Marcar todos';
+  SLGXTBUncheckAll              = 'Desmarcar todos';
+  SLGXTBInvert                  = 'Inverter seleção';
+  SLGXTBImport                  = 'Importar';
+  SLGXTBCancel                  = 'Cancelar';
+  SLGXTBColTag                  = 'Tag';
+  SLGXTBColType                 = 'Tipo';
+  SLGXTBColElements             = 'Elementos';
+  SLGXTBColBytes                = 'Bytes';
+  SLGXTBColWillBeCreatedAs      = 'Será criado como';
+  SLGXTBKindAll                 = 'Todos';
+  SLGXTBKindNumber              = 'Numéricos';
+  SLGXTBKindArray               = 'Arrays';
+  SLGXTBKindString              = 'Strings';
+  SLGXTBReadTagListFirst        = 'Leia a lista de tags do CLP primeiro.';
+  SLGXTBReadingTagList          = 'Lendo a lista de tags do CLP...';
+  SLGXTBNothingRead             = 'Nenhum tag foi lido do CLP.';
+  SLGXTBTagsRead                = '%d tag(s) lido(s) do CLP, %d ignorado(s).';
+  SLGXTBTagsReadPartially       = '%d tag(s) lido(s) do CLP (lista incompleta), %d ignorado(s).';
+  SLGXTBSelectedCount           = '%d tag(s) selecionado(s) de %d exibido(s).';
+  SLGXTBWithoutDriver           = 'Sem um driver de protocolo Rockwell Compact/ControlLogix válido!';
+  SLGXTBPortMustBeActive        = 'A porta de comunicação do driver precisa estar ativa (Active=true) para ler a lista de tags do CLP.';
+  SLGXTBSelectAtLeastOne        = 'Selecione ao menos um tag para importar!';
+  SLGXTBOnlyLGXDriver           = 'O driver de protocolo precisa ser uma instância de TLGXDriver.';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -352,6 +391,45 @@ resourcestring
   SMBTBLabel6                   = 'Qtd. de digitos';
   SMBTBLabel7                   = 'Scale';
   STagIdxMoreSizeExceedStructLen= 'Struct item index more struct item size exceeds the data length of the struct';
+
+  //////////////////////////////////////////////////////////////////////////////
+  // ROCKWELL COMPACT/CONTROLLOGIX TAG IMPORT WIZARD
+  //////////////////////////////////////////////////////////////////////////////
+  SLGXTBCaption                 = 'Rockwell Compact/ControlLogix - Tag import';
+  SLGXTBBrowse                  = 'Read the tag list from the PLC';
+  SLGXTBForceReload             = 'Reload from the PLC';
+  SLGXTBFilter                  = 'Filter';
+  SLGXTBKindFilter              = 'Kind';
+  SLGXTBShowArrayElements       = 'Show array elements';
+  SLGXTBShowStructMembers       = 'Show structure members';
+  SLGXTBShowProgramTags         = 'Show program tags';
+  SLGXTBStringsAsPLCString      = 'STRINGs as TPLCString';
+  SLGXTBScan                    = 'Update rate (ms)';
+  SLGXTBPrefix                  = 'Prefix of the component names';
+  SLGXTBCheckAll                = 'Check all';
+  SLGXTBUncheckAll              = 'Uncheck all';
+  SLGXTBInvert                  = 'Invert selection';
+  SLGXTBImport                  = 'Import';
+  SLGXTBCancel                  = 'Cancel';
+  SLGXTBColTag                  = 'Tag';
+  SLGXTBColType                 = 'Type';
+  SLGXTBColElements             = 'Elements';
+  SLGXTBColBytes                = 'Bytes';
+  SLGXTBColWillBeCreatedAs      = 'Will be created as';
+  SLGXTBKindAll                 = 'All';
+  SLGXTBKindNumber              = 'Numeric';
+  SLGXTBKindArray               = 'Arrays';
+  SLGXTBKindString              = 'Strings';
+  SLGXTBReadTagListFirst        = 'Read the tag list from the PLC first.';
+  SLGXTBReadingTagList          = 'Reading the tag list from the PLC...';
+  SLGXTBNothingRead             = 'No tag was read from the PLC.';
+  SLGXTBTagsRead                = '%d tag(s) read from the PLC, %d skipped.';
+  SLGXTBTagsReadPartially       = '%d tag(s) read from the PLC (incomplete list), %d skipped.';
+  SLGXTBSelectedCount           = '%d tag(s) selected of %d shown.';
+  SLGXTBWithoutDriver           = 'Without a valid Rockwell Compact/ControlLogix protocol driver!';
+  SLGXTBPortMustBeActive        = 'The communication port of the protocol driver must be active (Active=true) to read the tag list from the PLC.';
+  SLGXTBSelectAtLeastOne        = 'Select at least one tag to import!';
+  SLGXTBOnlyLGXDriver           = 'The protocol driver must be an instance of TLGXDriver.';
   {$ENDIF}
 
 {$IFNDEF FPC}
