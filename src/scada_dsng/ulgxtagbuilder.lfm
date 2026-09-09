@@ -1,0 +1,282 @@
+object frmLGXTagBuilder: TfrmLGXTagBuilder
+  Left = 320
+  Height = 580
+  Top = 140
+  Width = 860
+  BorderIcons = [biSystemMenu]
+  Caption = 'Rockwell Compact/ControlLogix - Tag Builder'
+  ClientHeight = 580
+  ClientWidth = 860
+  Constraints.MinHeight = 480
+  Constraints.MinWidth = 700
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  Position = poScreenCenter
+  LCLVersion = '2.0.12.0'
+  object pnlTop: TPanel
+    Left = 0
+    Height = 108
+    Top = 0
+    Width = 860
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 108
+    ClientWidth = 860
+    TabOrder = 0
+    object btnBrowse: TButton
+      Left = 8
+      Height = 27
+      Top = 8
+      Width = 200
+      Caption = 'Read the tag list from the PLC'
+      OnClick = btnBrowseClick
+      TabOrder = 0
+    end
+    object chkForceReload: TCheckBox
+      Left = 216
+      Height = 21
+      Top = 11
+      Width = 200
+      Caption = 'Reload from the PLC'
+      TabOrder = 1
+    end
+    object lblStatus: TLabel
+      Left = 424
+      Height = 17
+      Top = 13
+      Width = 424
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      Caption = 'Read the tag list from the PLC first.'
+      ParentColor = False
+    end
+    object lblFilter: TLabel
+      Left = 8
+      Height = 17
+      Top = 46
+      Width = 40
+      Caption = 'Filter'
+      ParentColor = False
+    end
+    object edtFilter: TEdit
+      Left = 56
+      Height = 27
+      Top = 42
+      Width = 240
+      OnChange = FilterChanged
+      TabOrder = 2
+    end
+    object lblKindFilter: TLabel
+      Left = 312
+      Height = 17
+      Top = 46
+      Width = 40
+      Caption = 'Kind'
+      ParentColor = False
+    end
+    object cboKindFilter: TComboBox
+      Left = 360
+      Height = 29
+      Top = 42
+      Width = 180
+      ItemHeight = 0
+      OnChange = FilterChanged
+      Style = csDropDownList
+      TabOrder = 3
+    end
+    object chkShowArrayElements: TCheckBox
+      Left = 8
+      Height = 21
+      Top = 79
+      Width = 210
+      Caption = 'Show array elements'
+      OnChange = FilterChanged
+      TabOrder = 4
+    end
+    object chkShowStructMembers: TCheckBox
+      Left = 224
+      Height = 21
+      Top = 79
+      Width = 210
+      Caption = 'Show structure members'
+      Checked = True
+      OnChange = FilterChanged
+      State = cbChecked
+      TabOrder = 5
+    end
+    object chkShowProgramTags: TCheckBox
+      Left = 440
+      Height = 21
+      Top = 79
+      Width = 190
+      Caption = 'Show program tags'
+      Checked = True
+      OnChange = FilterChanged
+      State = cbChecked
+      TabOrder = 6
+    end
+    object chkStringsAsPLCString: TCheckBox
+      Left = 636
+      Height = 21
+      Top = 79
+      Width = 212
+      Anchors = [akTop, akLeft, akRight]
+      Caption = 'STRINGs as TPLCString'
+      Checked = True
+      OnChange = FilterChanged
+      State = cbChecked
+      TabOrder = 7
+    end
+  end
+  object lvTags: TListView
+    Left = 0
+    Height = 340
+    Top = 108
+    Width = 860
+    Align = alClient
+    Checkboxes = True
+    Columns = <    
+      item
+        Caption = 'Tag'
+        Width = 340
+      end    
+      item
+        Caption = 'Type'
+        Width = 100
+      end    
+      item
+        Alignment = taRightJustify
+        Caption = 'Elements'
+        Width = 90
+      end    
+      item
+        Alignment = taRightJustify
+        Caption = 'Bytes'
+        Width = 90
+      end    
+      item
+        Caption = 'Will be created as'
+        Width = 200
+      end>
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 1
+    ViewStyle = vsReport
+    OnClick = lvTagsClick
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Height = 132
+    Top = 448
+    Width = 860
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 132
+    ClientWidth = 860
+    TabOrder = 2
+    object btnCheckAll: TButton
+      Left = 8
+      Height = 27
+      Top = 8
+      Width = 130
+      Caption = 'Check all'
+      OnClick = btnCheckAllClick
+      TabOrder = 0
+    end
+    object btnUncheckAll: TButton
+      Left = 146
+      Height = 27
+      Top = 8
+      Width = 130
+      Caption = 'Uncheck all'
+      OnClick = btnUncheckAllClick
+      TabOrder = 1
+    end
+    object btnInvert: TButton
+      Left = 284
+      Height = 27
+      Top = 8
+      Width = 130
+      Caption = 'Invert selection'
+      OnClick = btnInvertClick
+      TabOrder = 2
+    end
+    object lblSelected: TLabel
+      Left = 424
+      Height = 17
+      Top = 13
+      Width = 424
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      Caption = '0 tag(s) selected'
+      ParentColor = False
+    end
+    object lblScan: TLabel
+      Left = 8
+      Height = 17
+      Top = 51
+      Width = 150
+      Caption = 'Update rate (ms)'
+      ParentColor = False
+    end
+    object spinScan: TSpinEdit
+      Left = 164
+      Height = 27
+      Top = 47
+      Width = 110
+      MaxValue = 3600000
+      MinValue = 10
+      TabOrder = 3
+      Value = 1000
+    end
+    object lblPrefix: TLabel
+      Left = 292
+      Height = 17
+      Top = 51
+      Width = 190
+      Caption = 'Prefix of the component names'
+      ParentColor = False
+    end
+    object edtPrefix: TEdit
+      Left = 488
+      Height = 27
+      Top = 47
+      Width = 150
+      TabOrder = 4
+      Text = 'tag'
+    end
+    object pnlButtons: TPanel
+      Left = 0
+      Height = 44
+      Top = 88
+      Width = 860
+      Align = alBottom
+      BevelOuter = bvNone
+      ClientHeight = 44
+      ClientWidth = 860
+      TabOrder = 5
+      object btnOK: TButton
+        Left = 632
+        Height = 30
+        Top = 6
+        Width = 106
+        Anchors = [akTop, akRight]
+        Caption = 'Import'
+        Default = True
+        OnClick = btnOKClick
+        TabOrder = 0
+      end
+      object btnCancel: TButton
+        Left = 746
+        Height = 30
+        Top = 6
+        Width = 106
+        Anchors = [akTop, akRight]
+        Cancel = True
+        Caption = 'Cancel'
+        ModalResult = 2
+        TabOrder = 1
+      end
+    end
+  end
+end
