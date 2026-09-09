@@ -802,6 +802,9 @@ type
   TLGXProgramList = specialize TFPGList<string>;
   TLGXTagMap = specialize TFPGMap<String, TLGXTag>;
 
+  //: Cópia da lista de tags lida do CLP, usada pelo Tag Builder.
+  TLGXTagInfoArray = array of TLGXTag;
+
   { TCIPListTagsRply }
 
   TCIPListTagsRply = class(TDecodeOnlyCIPPDU)
@@ -984,6 +987,30 @@ type
     function TagListLoaded:Boolean;
 
     function LastTagListed:String;
+
+    {:
+    Navega a lista de tags do CLP (tags de controlador, tags de programa,
+    membros de UDTs e elementos de arrays) e devolve uma cópia dela.
+
+    Requer que a porta de comunicação esteja ativa. Pode ser chamada em tempo
+    de projeto, desde que a porta de comunicação esteja ativa.
+
+    @param(aTagList TLGXTagInfoArray. Recebe a cópia da lista de tags do CLP.)
+    @param(ForceReload Boolean. Se @true, descarta a lista lida anteriormente
+           e navega o CLP novamente.)
+    @returns(@true se a lista de tags foi lida por completo.)
+    }
+    function BrowseTagList(out aTagList:TLGXTagInfoArray;
+                           ForceReload:Boolean = false):Boolean;
+
+    //: Descarta a lista de tags lida do CLP, forçando uma nova leitura.
+    procedure ClearTagListCache;
+
+    //: @seealso(TProtocolDriver.OpenTagEditor)
+    procedure OpenTagEditor(InsertHook:TAddTagInEditorHook;
+                            CreateProc:TCreateTagProc); override;
+    //: @seealso(TProtocolDriver.HasTabBuilderEditor)
+    function  HasTabBuilderEditor:Boolean; override;
   published
     property ReadSomethingAlways;
     property ReadOnly;
@@ -1014,11 +1041,38 @@ const
   TAG_CIP_TYPE_STRING      = $00D0; //* 88-byte string, with 82 bytes of data, 4-byte count and 2 bytes of padding */
   TAG_CIP_TYPE_DWORD       = $00D3; //* Unsigned 32-bit integer value */
 
+//: Diz se o tipo CIP informado é uma estrutura (UDT).
+function LGXTypeIsStruct(aCIPType:Word):Boolean;
+
+//: Diz se o tipo CIP informado é um tipo interno/reservado do CLP.
+function LGXTypeIsSystem(aCIPType:Word):Boolean;
+
+//: Retorna o número de dimensões (0..3) codificado no tipo CIP.
+function LGXTypeDimensions(aCIPType:Word):Byte;
+
+//: Retorna o nome do tipo CIP, como visto no Studio 5000/RSLogix.
+function LGXTypeName(aCIPType:Word):String;
+
+{:
+Converte um tipo CIP no tipo de tag equivalente do PascalSCADA.
+@returns(@false se o tipo CIP não tem equivalente numérico, caso de estruturas.)
+}
+function LGXTypeToTagType(aCIPType:Word; out aTagType:TTagType):Boolean;
+
+//: Retorna o tamanho, em bytes, de um elemento do tipo CIP informado.
+function LGXTypeSizeInBytes(aCIPType:Word):Integer;
+
+{:
+Registra a ferramenta Tag Builder dos CLPs Rockwell Compact/ControlLogix.
+@seealso(TLGXDriver.OpenTagEditor)
+}
+procedure SetTagBuilderToolForRockwellLogixProtocol(TagBuilderTool:TOpenTagEditor);
+
 implementation
 
 {/$DEFINE TEST}
 
-uses syncobjs, CommPort;
+uses syncobjs, CommPort, pascalScadaMTPCPU;
 
 function EncodeTagPath(aPath:String):BYTES;
   function EncodeStringSeg(aStr:String):BYTES;
@@ -2980,6 +3034,7 @@ type
 var
   FLGXGlobalMutex:TCriticalSection;
   FPLCData:TPLCDataMap;
+  LGXTagBuilderEditor:TOpenTagEditor = nil;
 
 { TLGXDriver }
 
@@ -3087,6 +3142,116 @@ begin
       FLGXGlobalMutex.Leave;
     end;
   end;
+end;
+
+function TLGXDriver.BrowseTagList(out aTagList: TLGXTagInfoArray;
+  ForceReload: Boolean): Boolean;
+var
+  idx, c: Integer;
+  plcData: PLGXPLCResources = nil;
+begin
+  Result:=false;
+  SetLength(aTagList,0);
+
+  if (InterlockedExchange(FTerminating,FTerminating)<>0) or (csDestroying in ComponentState) then
+    exit;
+
+  if (not Assigned(PCommPort)) or (not PCommPort.ReallyActive) then
+    exit;
+
+  try
+    //tenta entrar no Mutex
+    //try enter on mutex
+    while not FPause.ResetEvent do
+      CrossThreadSwitch;
+
+    FWriteCS.Enter;
+    FReadCS.Enter;
+    try
+      if ForceReload then
+        ClearTagListCache;
+
+      //abre a sessão/conexão CIP, caso ainda não esteja aberta.
+      if GetConnectionID=0 then exit;
+
+      LoadLGXTagList;
+
+      FLGXGlobalMutex.Enter;
+      try
+        if FPLCData.Find(PCommPort.getPortId,idx) then
+          plcData:=FPLCData.Data[idx];
+      finally
+        FLGXGlobalMutex.Leave;
+      end;
+
+      if not Assigned(plcData) then exit;
+
+      plcData^.Mutex.Enter;
+      try
+        SetLength(aTagList, plcData^.TagList.Count);
+        for c:=0 to plcData^.TagList.Count-1 do
+          aTagList[c]:=plcData^.TagList.Data[c];
+        Result:=plcData^.FullyLoaded;
+      finally
+        plcData^.Mutex.Leave;
+      end;
+    finally
+      FReadCS.Leave;
+      FWriteCS.Leave;
+    end;
+  finally
+    FPause.SetEvent;
+  end;
+end;
+
+procedure TLGXDriver.ClearTagListCache;
+var
+  idx, u, f: Integer;
+  plcData: PLGXPLCResources = nil;
+begin
+  if not Assigned(PCommPort) then exit;
+
+  FLGXGlobalMutex.Enter;
+  try
+    if FPLCData.Find(PCommPort.getPortId,idx) then
+      plcData:=FPLCData.Data[idx];
+  finally
+    FLGXGlobalMutex.Leave;
+  end;
+
+  if not Assigned(plcData) then exit;
+
+  plcData^.Mutex.Enter;
+  try
+    plcData^.TagList.Clear;
+
+    for u:=plcData^.UDTList.Count-1 downto 0 do begin
+      for f:=plcData^.UDTList.Data[u]^.fields.Count-1 downto 0 do
+        Dispose(plcData^.UDTList.Data[u]^.fields[f]);
+      plcData^.UDTList.Data[u]^.fields.Clear;
+      Dispose(plcData^.UDTList.Data[u]);
+    end;
+    plcData^.UDTList.Clear;
+
+    plcData^.LastTagAdded:='';
+    plcData^.FullyLoaded :=false;
+  finally
+    plcData^.Mutex.Leave;
+  end;
+end;
+
+procedure TLGXDriver.OpenTagEditor(InsertHook: TAddTagInEditorHook;
+  CreateProc: TCreateTagProc);
+begin
+  if Assigned(LGXTagBuilderEditor) then
+    LGXTagBuilderEditor(Self, Self.Owner, InsertHook, CreateProc)
+  else
+    inherited OpenTagEditor(InsertHook, CreateProc);
+end;
+
+function TLGXDriver.HasTabBuilderEditor: Boolean;
+begin
+  Result:=true;
 end;
 
 function TLGXDriver.NotifyThisEvents: TNotifyThisEvents;
@@ -4762,6 +4927,96 @@ begin
     $ff: Exit(ioIllegalMemoryAddress);
     else exit(ioUnknownError);
   end;
+end;
+
+function LGXTypeIsStruct(aCIPType: Word): Boolean;
+begin
+  Result:=(aCIPType and TYPE_IS_STRUCT)=TYPE_IS_STRUCT;
+end;
+
+function LGXTypeIsSystem(aCIPType: Word): Boolean;
+begin
+  Result:=(aCIPType and TYPE_IS_SYSTEM)=TYPE_IS_SYSTEM;
+end;
+
+function LGXTypeDimensions(aCIPType: Word): Byte;
+begin
+  Result:=(aCIPType and TAG_DIM_MASK) shr 13;
+end;
+
+function LGXTypeName(aCIPType: Word): String;
+begin
+  if LGXTypeIsStruct(aCIPType) then
+    Exit('STRUCT/UDT');
+
+  case aCIPType and $FF of
+    TAG_CIP_TYPE_BOOL  : Result:='BOOL';
+    TAG_CIP_TYPE_SINT  : Result:='SINT';
+    TAG_CIP_TYPE_INT   : Result:='INT';
+    TAG_CIP_TYPE_DINT  : Result:='DINT';
+    TAG_CIP_TYPE_LINT  : Result:='LINT';
+    TAG_CIP_TYPE_USINT : Result:='USINT';
+    TAG_CIP_TYPE_UINT  : Result:='UINT';
+    TAG_CIP_TYPE_UDINT : Result:='UDINT';
+    TAG_CIP_TYPE_ULINT : Result:='ULINT';
+    TAG_CIP_TYPE_REAL  : Result:='REAL';
+    TAG_CIP_TYPE_LREAL : Result:='LREAL';
+    TAG_CIP_TYPE_STRING: Result:='STRING';
+    TAG_CIP_TYPE_DWORD : Result:='DWORD';
+    else                 Result:='0x'+IntToHex(aCIPType and $FF,4);
+  end;
+end;
+
+function LGXTypeToTagType(aCIPType: Word; out aTagType: TTagType): Boolean;
+begin
+  aTagType:=pttDefault;
+
+  if LGXTypeIsStruct(aCIPType) then
+    Exit(false);
+
+  Result:=true;
+  case aCIPType and $FF of
+    TAG_CIP_TYPE_BOOL,
+    TAG_CIP_TYPE_USINT : aTagType:=pttByte;
+    TAG_CIP_TYPE_SINT  : aTagType:=pttShortInt;
+    TAG_CIP_TYPE_INT   : aTagType:=pttSmallInt;
+    TAG_CIP_TYPE_UINT  : aTagType:=pttWord;
+    TAG_CIP_TYPE_DINT  : aTagType:=pttLongInt;
+    TAG_CIP_TYPE_UDINT,
+    TAG_CIP_TYPE_DWORD : aTagType:=pttDWord;
+    TAG_CIP_TYPE_LINT  : aTagType:=pttInt64;
+    TAG_CIP_TYPE_ULINT : aTagType:=pttQWord;
+    TAG_CIP_TYPE_REAL  : aTagType:=pttFloat;
+    TAG_CIP_TYPE_LREAL : aTagType:=pttDouble;
+    else                 Result:=false;
+  end;
+end;
+
+function LGXTypeSizeInBytes(aCIPType: Word): Integer;
+begin
+  case aCIPType and $FF of
+    TAG_CIP_TYPE_BOOL,
+    TAG_CIP_TYPE_SINT,
+    TAG_CIP_TYPE_USINT : Result:=1;
+    TAG_CIP_TYPE_INT,
+    TAG_CIP_TYPE_UINT  : Result:=2;
+    TAG_CIP_TYPE_DINT,
+    TAG_CIP_TYPE_UDINT,
+    TAG_CIP_TYPE_DWORD,
+    TAG_CIP_TYPE_REAL  : Result:=4;
+    TAG_CIP_TYPE_LINT,
+    TAG_CIP_TYPE_ULINT,
+    TAG_CIP_TYPE_LREAL : Result:=8;
+    else                 Result:=1;
+  end;
+end;
+
+procedure SetTagBuilderToolForRockwellLogixProtocol(TagBuilderTool: TOpenTagEditor);
+begin
+  if Assigned(LGXTagBuilderEditor) then
+    raise Exception.Create('A Tag Builder editor for Rockwell Compact/ControlLogix protocol was already assigned.')
+  else
+    LGXTagBuilderEditor:=TagBuilderTool;
 end;
 
 initialization
