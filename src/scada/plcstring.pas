@@ -69,6 +69,14 @@ type
   @value(stSIEMENS String no formato SIEMENS, onde os dois primeiros bytes da
   cadeia informam o tamanho máximo e quantos bytes desse tamanho já foram usados.)
   @value(stC A string só termina quando o código ASCII 0 é encontrado.)
+  @value(stROCKWELL String no formato Rockwell Logix (estrutura STRING, com o
+  membro LEN, um DINT com o tamanho usado, seguido do membro DATA, um SINT[n]
+  com os caracteres). @bold(Ainda não implementado): esse valor está reservado,
+  mas a codificação/decodificação ainda não foi escrita, e um TPLCString
+  configurado com ele devolve uma string vazia. Para ler uma STRING de um CLP
+  Rockwell use stC apontando o LongAddress para o membro DATA da estrutura
+  (@code(MinhaString.DATA)), que é o que o assistente de importação de tags
+  Rockwell faz.)
   }
   {$ELSE}
   {:
@@ -78,6 +86,13 @@ type
   @value(stSIEMENS String on SIEMENS format. The first byte tells the maximum
   size of string and the second byte tells the actual length of the string.)
   @value(stC The string finishes when a ASCII char 0 (string terminator) is found.)
+  @value(stROCKWELL String on Rockwell Logix format (a STRING structure, with a
+  LEN member, a DINT holding the used length, followed by the DATA member, a
+  SINT[n] holding the characters). @bold(Not implemented yet): this value is
+  reserved, but the encoding/decoding was not written yet, and a TPLCString set
+  to it returns an empty string. To read a STRING from a Rockwell PLC use stC
+  pointing the LongAddress to the DATA member of the structure
+  (@code(MyString.DATA)), which is what the Rockwell tag import wizard does.)
   }
   {$ENDIF}
   TPLCStringTypes = (stSIEMENS, stC, stROCKWELL);
@@ -886,6 +901,10 @@ begin
 
   //calcula o tamanho da string conforme o tipo
   //calculate the string size depending of the format.
+  { TODO : stROCKWELL nao esta implementado: cai no else e o bloco fica com 1
+           byte, fazendo o TPLCString devolver sempre uma string vazia. Ate que
+           a estrutura STRING (LEN:DINT + DATA:SINT[n]) seja codificada aqui e
+           em StringToRaw/RawToString, use stC apontando para o membro DATA. }
   case PStringType of
     stSIEMENS:
       strlen := (PStringSize + 2)*PByteSize;
