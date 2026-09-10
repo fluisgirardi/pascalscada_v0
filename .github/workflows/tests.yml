@@ -1,0 +1,168 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+    paths-ignore: ["docs/**", "examples/**", "artwork/**", "**.md"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ---------------------------------------------------------------
+  # Windows 64, Windows 32 e Linux 64: runners nativos do GitHub.
+  # Compila a arvore inteira (inclusive HMI) e roda a suite.
+  # ---------------------------------------------------------------
+  desktop:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: win64
+            os: windows-latest
+            widgetset: win32
+            laz-url: "https://sourceforge.net/projects/lazarus/files/Lazarus Windows 64 bits/Lazarus 4.2/lazarus-4.2-fpc-3.2.2-win64.exe"
+
+          - name: win32
+            os: windows-latest
+            widgetset: win32
+            laz-url: "https://sourceforge.net/projects/lazarus/files/Lazarus Windows 32 bits/Lazarus 4.2/lazarus-4.2-fpc-3.2.2-win32.exe"
+
+          - name: linux64
+            os: ubuntu-latest
+            widgetset: gtk2
+            laz-url: "https://sourceforge.net/projects/lazarus/files/Lazarus Linux amd64 DEB/Lazarus 4.2/lazarus-project_4.2.0-0_amd64.deb"
+            fpc-url: |
+              https://sourceforge.net/projects/lazarus/files/Lazarus Linux amd64 DEB/Lazarus 4.2/fpc-laz_3.2.2-210709_amd64.deb
+              https://sourceforge.net/projects/lazarus/files/Lazarus Linux amd64 DEB/Lazarus 4.2/fpc-src_3.2.2-210709_amd64.deb
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bibliotecas de desenvolvimento (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk2.0-dev
+
+      - name: Instalar Lazarus / FPC
+        uses: ollydev/setup-lazarus@v4
+        with:
+          laz-url: ${{ matrix.laz-url }}
+          fpc-url: ${{ matrix.fpc-url }}
+
+      - name: BGRABitmap (dependencia de pascalscada_hmi)
+        run: |
+          git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
+          lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+
+      - name: Registrar os pacotes do PascalSCADA
+        run: |
+          for pkg in pascalscada_common.lpk \
+                     pascalscada.lpk \
+                     pascalscada_db.lpk \
+                     pascalscada_dsng.lpk \
+                     pascalscada_hmi.lpk \
+                     pascalscada_full.lpk; do
+            lazbuild --add-package-link "$pkg"
+          done
+
+      - name: Compilar o nucleo (common + scada + db)
+        run: |
+          lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_common.lpk
+          lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada.lpk
+          lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_db.lpk
+
+      - name: Compilar a parte grafica (dsng + hmi + full)
+        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_full.lpk
+
+      - name: Compilar a suite de testes
+        # nogui: o runner e console, nao precisa de widgetset grafico
+        run: lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
+
+      - name: Rodar os testes
+        run: |
+          BIN=tests/bin/pascalscada_tests
+          [ -f "$BIN.exe" ] && BIN="$BIN.exe"
+          "$BIN" --all --format=plain
+          "$BIN" --all --format=xml --file="tests/results-${{ matrix.name }}.xml"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-${{ matrix.name }}
+          path: tests/results-*.xml
+
+  # ---------------------------------------------------------------
+  # Linux 32: nao existe runner i386, mas um container i386 roda
+  # nativo sobre o kernel x86_64 do runner (sem emulacao).
+  # Aqui so o nucleo nao-grafico, que e onde 32 bits importa.
+  # ---------------------------------------------------------------
+  linux32:
+    name: linux32
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compilar e testar dentro de um container i386
+        run: |
+          docker run --rm --platform linux/386 \
+            -v "$PWD":/src -w /src \
+            i386/debian:bookworm \
+            bash -euxc '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq
+              apt-get install -y -qq lazarus lcl-nogui
+
+              lazbuild --add-package-link pascalscada_common.lpk
+              lazbuild --add-package-link pascalscada.lpk
+              lazbuild --add-package-link pascalscada_db.lpk
+
+              lazbuild --build-all --widgetset=nogui pascalscada_common.lpk
+              lazbuild --build-all --widgetset=nogui pascalscada.lpk
+              lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
+
+              tests/bin/pascalscada_tests --all --format=plain
+              tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux32.xml
+            '
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-linux32
+          path: tests/results-*.xml
+
+  # ---------------------------------------------------------------
+  # FreeBSD 64: VM completa dentro do runner Ubuntu.
+  # Compila direto com fpc: as unidades testadas nao puxam a LCL.
+  # ---------------------------------------------------------------
+  freebsd64:
+    name: freebsd64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compilar e testar no FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14"
+          usesh: true
+          copyback: false
+          prepare: |
+            pkg install -y fpc
+          run: |
+            cd tests
+            mkdir -p units bin
+            fpc -MObjFPC -Scghi -O1 -vewq \
+              -Fu../src/scada -Fu../src/common \
+              -FUunits -obin/pascalscada_tests pascalscada_tests.lpr
+            ./bin/pascalscada_tests --all --format=plain
