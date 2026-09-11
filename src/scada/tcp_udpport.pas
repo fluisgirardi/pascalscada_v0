@@ -102,6 +102,7 @@ type
   TTCP_UDPPort = class(TCommPortDriver)
   private
     fPortID:TPortUniqueID;
+    fPortIDCS:TCriticalSection;
     FHostName:AnsiString;
     FPortNumber:LongInt;
     FTimeout:LongInt;
@@ -426,6 +427,7 @@ end;
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
+  fPortIDCS:=TCriticalSection.Create;
   FPortNumber:=102;
   FTimeout:=1000;
   {$IF defined(WIN32) or defined(WIN64)}
@@ -450,6 +452,7 @@ begin
   FConnectThread.Terminate;
   FConnectThread.WaitEnd;
   FreeAndNil(FConnectThread);
+  FreeAndNil(fPortIDCS);
   inherited Destroy;
 end;
 
@@ -484,10 +487,15 @@ end;
 
 function TTCP_UDPPort.getPortId: TPortUniqueID;
 begin
-  {$IFNDEF CPUARM}
-  { TODO : ARMHF this not works }
-  InterlockedExchange64(Result, fPortID);
-  {$ENDIF}
+  //the 64 bit interlocked functions are not available on every target
+  //(the RTL declares them only under {$ifdef cpu64}), so the port id is
+  //serialized by a lock on all platforms.
+  fPortIDCS.Enter;
+  try
+    Result:=fPortID;
+  finally
+    fPortIDCS.Leave;
+  end;
 end;
 
 class function TTCP_UDPPort.ValidIPv4(aIPv4: String): Boolean;
@@ -635,10 +643,12 @@ begin
 
   PWord(@abytes[4])^:=FPortNumber;
 
-  {$IFNDEF CPUARM}
-  { TODO : ARMHF this not works }
-  InterlockedExchange64(fPortID, aID);
-  {$ENDIF}
+  fPortIDCS.Enter;
+  try
+    fPortID:=aID;
+  finally
+    fPortIDCS.Leave;
+  end;
 end;
 
 procedure TTCP_UDPPort.setEnableAutoReconnect(v:Boolean);
