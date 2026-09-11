@@ -102,7 +102,9 @@ type
   TTCP_UDPPort = class(TCommPortDriver)
   private
     fPortID:TPortUniqueID;
-    fPortIDCS:TCriticalSection;
+    //qualified with the unit name because the Windows unit also declares a
+    //TCriticalSection (the win32 api record) and it comes later on the uses.
+    fPortIDCS:syncobjs.TCriticalSection;
     FHostName:AnsiString;
     FPortNumber:LongInt;
     FTimeout:LongInt;
@@ -427,7 +429,7 @@ end;
 constructor TTCP_UDPPort.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
-  fPortIDCS:=TCriticalSection.Create;
+  fPortIDCS:=syncobjs.TCriticalSection.Create;
   FPortNumber:=102;
   FTimeout:=1000;
   {$IF defined(WIN32) or defined(WIN64)}
