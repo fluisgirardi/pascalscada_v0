@@ -142,6 +142,91 @@ jobs:
           path: tests/results-*.xml
 
   # ---------------------------------------------------------------
+  # Linux ARM 64 (aarch64): runner ARM nativo do GitHub, sem emulacao.
+  # O label ubuntu-24.04-arm existe de graca em repositorio publico;
+  # em repositorio privado depende do plano (Team/Enterprise). Se nao
+  # estiver disponivel, trocar por ubuntu-latest + a receita de QEMU
+  # usada no job linux-armhf, com --platform linux/arm64.
+  # Mesma cobertura do linux32: nucleo nao-grafico + suite.
+  # ---------------------------------------------------------------
+  linux-aarch64:
+    name: linux-aarch64
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Lazarus/FPC da distribuicao
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lazarus lcl-nogui
+
+      - name: Compilar o nucleo e a suite
+        run: |
+          lazbuild --add-package-link pascalscada_common.lpk
+          lazbuild --add-package-link pascalscada.lpk
+          lazbuild --add-package-link pascalscada_db.lpk
+
+          lazbuild --build-all --widgetset=nogui pascalscada_common.lpk
+          lazbuild --build-all --widgetset=nogui pascalscada.lpk
+          lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
+
+      - name: Rodar os testes
+        run: |
+          tests/bin/pascalscada_tests --all --format=plain
+          tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux-aarch64.xml
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-linux-aarch64
+          path: tests/results-*.xml
+
+  # ---------------------------------------------------------------
+  # Linux ARM 32 (armhf): nao existe runner ARM 32 e os runners ARM 64
+  # do GitHub nao executam codigo AArch32, entao aqui e container
+  # armhf sobre QEMU. E o job mais lento da matriz.
+  # ---------------------------------------------------------------
+  linux-armhf:
+    name: linux-armhf
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Habilitar a emulacao ARM 32
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+
+      - name: Compilar e testar dentro de um container armhf
+        run: |
+          docker run --rm --platform linux/arm/v7 \
+            -v "$PWD":/src -w /src \
+            arm32v7/debian:bookworm \
+            bash -euxc '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq
+              apt-get install -y -qq lazarus lcl-nogui
+
+              lazbuild --add-package-link pascalscada_common.lpk
+              lazbuild --add-package-link pascalscada.lpk
+              lazbuild --add-package-link pascalscada_db.lpk
+
+              lazbuild --build-all --widgetset=nogui pascalscada_common.lpk
+              lazbuild --build-all --widgetset=nogui pascalscada.lpk
+              lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
+
+              tests/bin/pascalscada_tests --all --format=plain
+              tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux-armhf.xml
+            '
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-linux-armhf
+          path: tests/results-*.xml
+
+  # ---------------------------------------------------------------
   # FreeBSD 64: VM completa dentro do runner Ubuntu.
   # Compila direto com fpc: as unidades testadas nao puxam a LCL.
   # ---------------------------------------------------------------
