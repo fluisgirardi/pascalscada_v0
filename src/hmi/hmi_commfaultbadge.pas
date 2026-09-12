@@ -345,31 +345,6 @@ procedure DrawWarningIconAtTB(ACanvas: TCanvas; AWidth, AHeight: Integer; ABotto
 {$ENDIF}
 function WarningIconMarginWidth(AHeight: Integer): Integer;
 
-{$IFDEF PORTUGUES}
-{:
-Desenha o icone de aviso centralizado sobre AControl, usando a DC recebida
-num WMPaint (LM_PAINT). Alguns widgets GTK2 simples (ex.: TCheckBox,
-TScrollBar, TTrackBar em certos temas) nao tem janela (GdkWindow) propria -
-compartilham a do pai - e nesse caso a DC do WMPaint tem origem no PAI, nao
-no controle, fazendo um desenho ingenuo em (0,0) cair na origem do
-formulario em vez de sobre o controle. Esta rotina detecta esse caso
-(Parent.Handle=Handle) e compensa deslocando a origem da DC antes de
-desenhar.
-}
-{$ELSE}
-{:
-Draws the warning icon centered over AControl, using the DC received in a
-WMPaint (LM_PAINT). Some simple GTK2 widgets (e.g. TCheckBox, TScrollBar,
-TTrackBar under certain themes) have no window of their own (GdkWindow) -
-they share their parent's - and in that case the WMPaint's DC has its
-origin at the PARENT, not the control, so a naive draw at (0,0) lands at
-the form's origin instead of over the control. This routine detects that
-case (Parent.Handle=Handle) and compensates by shifting the DC's origin
-before drawing.
-}
-{$ENDIF}
-procedure DrawWarningIconOnControlDC(AControl: TWinControl; ADC: HDC);
-
 implementation
 
 const
@@ -547,61 +522,6 @@ begin
   sz := AHeight - IconSideMargin*2;
   if sz<1 then sz := 0;
   Result := sz + IconSideMargin*2;
-end;
-
-procedure DrawWarningIconOnControlDC(AControl: TWinControl; ADC: HDC);
-var
-  cnv: TCanvas;
-  Icon: TBGRABitmap;
-  sz, BaseX, BaseY, offX, offY: Integer;
-begin
-  Icon := GetWarningIcon;
-  if (Icon=nil) or Icon.Empty then exit;
-
-  //SetWindowOrgEx nao surtia efeito (ou surtia efeito errado) porque
-  //TBGRABitmap.Draw desenha direto na superficie GDK/Cairo, sem passar
-  //pela transformacao logica->device que a LCL emula pro resto do GDI -
-  //entao calculamos o retangulo final ja deslocado nos mesmos, em vez de
-  //depender de transformacao nenhuma da DC.
-  //SetWindowOrgEx had no effect (or the wrong effect) because
-  //TBGRABitmap.Draw draws straight onto the GDK/Cairo surface, without
-  //going through the logical->device transform the LCL emulates for the
-  //rest of the GDI - so we compute the final, already-shifted rect
-  //ourselves instead of relying on any DC transform.
-  //
-  //Nao da' pra confiar em "o controle tem janela propria" (Handle<>
-  //Parent.Handle e' sempre verdade - Handle e' so o ponteiro do GtkWidget,
-  //nao indica se ele tem GdkWindow propria) nem em csOpaque isoladamente
-  //(consertou o THMIScrollBar, mas THMICheckBox/THMITrackBar continuaram
-  //desenhando relativo ao formulario mesmo sem csOpaque) - testes ao vivo
-  //confirmaram que os tres controles que chamam esta rotina tem esse
-  //comportamento (a DC do WMPaint acaba sendo relativa ao formulario, nao
-  //ao controle), entao aplicamos o deslocamento sempre.
-  //Can't rely on "the control has its own window" (Handle<>Parent.Handle
-  //is always true - Handle is just the GtkWidget pointer, it doesn't
-  //indicate whether it has its own GdkWindow) nor on csOpaque alone (fixed
-  //THMIScrollBar, but THMICheckBox/THMITrackBar kept drawing relative to
-  //the form even without csOpaque) - live testing confirmed all three
-  //controls that call this routine have this behavior (the WMPaint's DC
-  //ends up relative to the form, not the control), so we always apply the
-  //offset.
-  BaseX := AControl.Left;
-  BaseY := AControl.Top;
-
-  sz := AControl.ClientWidth;
-  if AControl.ClientHeight<sz then sz := AControl.ClientHeight;
-  if sz<1 then exit;
-
-  offX := BaseX + (AControl.ClientWidth  - sz) div 2;
-  offY := BaseY + (AControl.ClientHeight - sz) div 2;
-
-  cnv := TCanvas.Create;
-  try
-    cnv.Handle := ADC;
-    Icon.Draw(cnv, Rect(offX, offY, offX + sz, offY + sz), False);
-  finally
-    cnv.Free;
-  end;
 end;
 
 { THMIInlineFaultIndicator }

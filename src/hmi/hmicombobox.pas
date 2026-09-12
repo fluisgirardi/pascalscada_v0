@@ -31,14 +31,13 @@ type
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
   protected
     FTag:TPLCTag;
-    FCommIndicator:THMIInlineFaultIndicator;
+    FCommBadge:THMICommBadgeController;
     FCommFaultLink:THMITagFaultBadgeLink;
     FSecurityCode: UTF8String;
     FAllowSetIndex,
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
 
-    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     //: @exclude
     procedure Select; override;
     //: @exclude
@@ -350,8 +349,9 @@ begin
   FIsEnabled:=true;
   FAllowSetIndex:=false;
 
-  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
+  FCommBadge:=THMICommBadgeController.Create;
+  FCommBadge.SetTarget(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
 end;
 
 destructor THMIComboBox.Destroy;
@@ -373,24 +373,8 @@ begin
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommIndicator);
+  FreeAndNil(FCommBadge);
   inherited Destroy;
-end;
-
-procedure THMIComboBox.WMPaint(var Msg: TLMPaint);
-var
-  cnv: TCanvas;
-begin
-  inherited;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
-    cnv := TCanvas.Create;
-    try
-      cnv.Handle := Msg.DC;
-      DrawWarningIcon(cnv, ClientWidth, ClientHeight);
-    finally
-      cnv.Free;
-    end;
-  end;
 end;
 
 procedure THMIComboBox.RefreshCombo(Data: PtrInt);
