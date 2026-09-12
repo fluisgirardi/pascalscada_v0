@@ -79,6 +79,17 @@ var
    debug:string;
    {$ENDIF}
 begin
+  //o pedido e' montado pelo proprio driver e diz o que foi perguntado: leitura
+  //e escrita de bit ocupam 22 bytes, escrita de palavra 23. Sem eles os testes
+  //abaixo indexariam o vetor fora dos seus limites.
+  //the request is built by the driver itself and says what was asked: reads and
+  //bit writes are 22 bytes long, word writes 23. Without them the tests below
+  //would index the array out of bounds.
+  if Length(pkg.BufferToWrite)<22 then begin
+    Result:=ioDriverError;
+    exit;
+  end;
+
   //se algumas das IOs falhou,
   //if some IO fail.
   Result:=ioOk;
@@ -169,10 +180,14 @@ begin
       begin
         SetLength(values,len);
 
+        //a escrita de bit monta um pedido de 22 bytes, entao o indice 22 nao
+        //existe nele - ler os dois era passar do fim do vetor.
+        //a bit write builds a 22 byte request, so index 22 is not there -
+        //reading both was running past the end of the array.
         i := 0;
         while (i<len) do
         begin
-           values[i] := pkg.BufferToWrite[21] + pkg.BufferToWrite[22];
+           values[i] := pkg.BufferToWrite[21];
            inc(i);
         end;
 
@@ -290,7 +305,10 @@ begin
         i := 0;
         while (i<len) do
         begin
-          values[i] := pkg.BufferToWrite[21] + pkg.BufferToWrite[22];
+          if Length(pkg.BufferToWrite)>=23 then
+            values[i] := pkg.BufferToWrite[21] + pkg.BufferToWrite[22]
+          else
+            values[i] := pkg.BufferToWrite[21];
           inc(i);
         end;
 

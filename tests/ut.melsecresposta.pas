@@ -87,6 +87,7 @@ type
     //resposta curta / short response
     procedure RespostaMenorQueOCabecalhoEhRecusada;
     procedure RespostaComCabecalhoMasSemDadoEhRecusada;
+    procedure PedidoMenorQueOMinimoNaoEhDecodificado;
   end;
 
 implementation
@@ -390,6 +391,20 @@ begin
     AssertEquals('cabecalho mais '+IntToStr(n)+' bytes de dado', Ord(ioCommError),
                  Ord(FDrv.Decodificar(PedidoDeLeitura(0, $A8, 100, 2),
                                       Resposta(Copy(BytesOf('0B 0A 0D 0C'), 0, n)), valores)));
+end;
+
+procedure TTestMelsecResposta.PedidoMenorQueOMinimoNaoEhDecodificado;
+var
+  valores:TArrayOfDouble;
+  pedido:BYTES;
+begin
+  //o pedido diz o endereco, o dispositivo e a quantidade: o menor que o driver
+  //monta tem 22 bytes, e os ramos de escrita chegavam a ler o byte 22 de um
+  //pedido que so' vai ate' o 21
+  pedido:=Copy(PedidoDeLeitura(0, $A8, 100, 2), 0, 12);
+
+  AssertEquals('pedido incompleto', Ord(ioDriverError),
+               Ord(FDrv.Decodificar(pedido, Resposta(BytesOf('0B 0A 0D 0C')), valores)));
 end;
 
 initialization

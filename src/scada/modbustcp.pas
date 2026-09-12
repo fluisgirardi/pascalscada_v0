@@ -309,12 +309,24 @@ function TModBusTCPDriver.DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TP
 var
    i,c,c2,plc:LongInt;
    address, len:Cardinal;
+   declarado:LongInt;
    foundPLC:Boolean;
    aux:TPLCMemoryManager;
    {$IFDEF FDEBUG}
    debug:string;
    {$ENDIF}
 begin
+  //o pedido e' montado pelo proprio driver e diz o que foi perguntado: sem os
+  //8 bytes do menor deles (leitura de status) nao ha o que decodificar, e os
+  //testes abaixo indexariam o vetor fora dos seus limites.
+  //the request is built by the driver itself and says what was asked: without
+  //the 8 bytes of the smallest one (read status) there is nothing to decode,
+  //and the tests below would index the array out of bounds.
+  if Length(pkg.BufferToWrite)<8 then begin
+    Result:=ioDriverError;
+    exit;
+  end;
+
   //se algumas das IOs falhou,
   //if some IO fail.
   Result:=ioOk;
@@ -383,6 +395,27 @@ begin
     address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
     len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
   end;
+
+  //nas leituras a resposta declara no nono byte quantos bytes de dado traz.
+  //Sem conferir isso contra o que foi pedido, um quadro pela metade era
+  //decodificado assim mesmo e os registradores que faltavam viravam zero.
+  //on reads the response declares in its ninth byte how many data bytes it
+  //carries. Without checking that against what was asked, a half frame was
+  //decoded anyway and the missing registers silently became zero.
+  if (Result=ioOk) then
+    case pkg.BufferToRead[7] of
+      $01,$02,$03,$04: begin
+        if pkg.BufferToRead[7] in [$01,$02] then
+          declarado := (LongInt(len)+7) div 8  //bits, de oito em oito / eight per byte
+        else
+          declarado := LongInt(len)*2;         //palavras de dois bytes / two byte words
+
+        if (Length(pkg.BufferToRead)<9) or
+           (pkg.BufferToRead[8]<>declarado) or
+           (Length(pkg.BufferToRead)<(9+declarado)) then
+          Result := ioCommError;
+      end;
+    end;
 
   //comeca a decodificar o pacote...
   //decodes the packet.

@@ -51,6 +51,9 @@ type
     procedure TimeoutNaLeituraViraTimeout;
     procedure RespostaIncompletaComCabecalhoValidoNaoEhAceita;
     procedure RespostaMenorQueOCabecalhoEhRecusada;
+    procedure ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
+    procedure QuadroQueNaoTrazOsBytesQueDeclaraEhRecusado;
+    procedure PedidoMenorQueOMinimoNaoEhDecodificado;
   end;
 
 implementation
@@ -214,6 +217,41 @@ begin
                  Ord(FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                                              resp), vals)));
   end;
+end;
+
+procedure TTestModBusTCP.ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+begin
+  //pedimos 2 registradores, ou seja 4 bytes, e a resposta declara 2. Antes o
+  //driver decodificava assim mesmo e o registrador que faltava virava zero
+  res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                               BytesOf('00 00 00 00 00 05 01 03 02 00 0A')), vals);
+  AssertEquals('contagem menor que a pedida', Ord(ioCommError), Ord(res));
+end;
+
+procedure TTestModBusTCP.QuadroQueNaoTrazOsBytesQueDeclaraEhRecusado;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+begin
+  //a contagem esta certa, mas o quadro acaba antes: declara 4 bytes e traz 2
+  res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                               BytesOf('00 00 00 00 00 07 01 03 04 00 0A')), vals);
+  AssertEquals('quadro truncado', Ord(ioCommError), Ord(res));
+end;
+
+procedure TTestModBusTCP.PedidoMenorQueOMinimoNaoEhDecodificado;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+begin
+  //sem o pedido nao da' para saber o que foi perguntado; o menor que o driver
+  //monta tem 8 bytes
+  res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00'),
+                               BytesOf('00 00 00 00 00 07 01 03 04 00 0A 00 14')), vals);
+  AssertEquals('pedido incompleto', Ord(ioDriverError), Ord(res));
 end;
 
 initialization
