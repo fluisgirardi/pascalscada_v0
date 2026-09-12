@@ -29,7 +29,8 @@ uses
   ut.tcp_udpport,
   ut.westasciidriver,
   ut.melsectcp,
-  ut.iboxdriver;
+  ut.iboxdriver,
+  ut.s7familyresposta;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

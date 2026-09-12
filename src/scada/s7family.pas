@@ -864,12 +864,12 @@ begin
 end;
 
 destructor TSiemensProtocolFamily.Destroy;
-var
-  c: Integer;
 begin
   inherited Destroy; //stops all drivers first.
-  for c:=0 to High(FPLCs) do
-    DeletePLC(c);
+  //DeletePLC encurta o vetor a cada chamada, entao percorrer do fim para o
+  //comeco e' a unica forma de passar por todos os CLPs.
+  while Length(FPLCs)>0 do
+    DeletePLC(High(FPLCs));
 end;
 
 function  TSiemensProtocolFamily.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
