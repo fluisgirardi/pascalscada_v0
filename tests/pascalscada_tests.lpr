@@ -9,6 +9,7 @@ uses
   testsupport.bytes,
   testsupport.protocol,
   testsupport.fakeport,
+  testsupport.faketag,
   //casos de teste / test cases
   ut.crc16utils,
   ut.hsutils,
@@ -31,7 +32,8 @@ uses
   ut.melsectcp,
   ut.iboxdriver,
   ut.s7familyresposta,
-  ut.melsecresposta;
+  ut.melsecresposta,
+  ut.tagbit;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
