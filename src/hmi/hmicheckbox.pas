@@ -46,7 +46,7 @@ type
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
-    FCommIndicator:THMIInlineFaultIndicator;
+    FCommBadge:THMICommBadgeController;
     FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -59,7 +59,6 @@ type
     FOtherValues:TOtherValues;
 
     FSecurityCode:UTF8String;
-    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     function  GetTagValue:Double;
@@ -511,8 +510,9 @@ begin
   FWriteTrue := true;
   FWriteFalse := true;
 
-  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
+  FCommBadge:=THMICommBadgeController.Create;
+  FCommBadge.SetTarget(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
 end;
 
 destructor THMICheckBox.Destroy;
@@ -529,7 +529,7 @@ begin
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommIndicator);
+  FreeAndNil(FCommBadge);
   FreeAndNil(FFontFalse);
   FreeAndNil(FFontTrue);
   FreeAndNil(FFontGrayed);
@@ -791,13 +791,6 @@ begin
   UpdateTagValue;
 end;
 {$ENDIF}
-
-procedure THMICheckBox.WMPaint(var Msg: TLMPaint);
-begin
-  inherited;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIconOnControlDC(Self, Msg.DC);
-end;
 
 procedure THMICheckBox.SetSecurityCode(sc: UTF8String);
 begin

@@ -40,14 +40,13 @@ type
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     Ftag:TPLCTag;
-    FCommIndicator:THMIInlineFaultIndicator;
+    FCommBadge:THMICommBadgeController;
     FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FModified:Boolean;
 
     FSecurityCode:UTF8String;
-    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     function  GetPosition:LongInt;
@@ -162,8 +161,9 @@ begin
   end;
   FIsEnabled:=true;
 
-  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
+  FCommBadge:=THMICommBadgeController.Create;
+  FCommBadge.SetTarget(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
 end;
 
 destructor THMITrackBar.Destroy;
@@ -180,15 +180,8 @@ begin
   if Assigned(FTag) then
     Ftag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommIndicator);
+  FreeAndNil(FCommBadge);
   inherited Destroy;
-end;
-
-procedure THMITrackBar.WMPaint(var Msg: TLMPaint);
-begin
-  inherited;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIconOnControlDC(Self, Msg.DC);
 end;
 
 procedure THMITrackBar.Loaded;
