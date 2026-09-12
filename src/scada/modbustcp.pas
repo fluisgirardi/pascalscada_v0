@@ -82,7 +82,7 @@ type
 
 implementation
 
-uses Math, PLCMemoryManager, SysUtils, crossdatetime{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses Math, PLCMemoryManager, SysUtils{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 constructor TModBusTCPDriver.Create(AOwner: TComponent);
 begin
@@ -311,6 +311,9 @@ var
    address, len:Cardinal;
    foundPLC:Boolean;
    aux:TPLCMemoryManager;
+   {$IFDEF FDEBUG}
+   debug:string;
+   {$ENDIF}
 begin
   //se algumas das IOs falhou,
   //if some IO fail.

@@ -162,7 +162,7 @@ type
 
 implementation
 
-uses hsstrings, pascalScadaMTPCPU{$IFDEF FDEBUG}, LCLProc{$ENDIF};
+uses pascalScadaMTPCPU{$IFDEF FDEBUG}, LCLProc{$ENDIF};
 
 ////////////////////////////////////////////////////////////////////////////////
 //                   inicio das declarações da TScanThread

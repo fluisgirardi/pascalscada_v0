@@ -32,7 +32,7 @@ interface
 
 uses
   Classes, SysUtils, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort,
-  CommTypes, S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
+  S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
   PLCString;
 
 const

@@ -17,7 +17,7 @@ unit socketserver;
 interface
 
 uses
-  Classes, SysUtils, socket_types, CrossEvent, crossthreads,
+  Classes, SysUtils, CrossEvent, crossthreads,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}
@@ -28,7 +28,7 @@ uses
     sockets_w32_w64
   {$ELSE}
   {$IF defined(FPC) AND (defined(UNIX) or defined(WINCE))}
-  , Sockets {$IFDEF UNIX}  , sockets_unix, netdb, Unix{$ENDIF}
+  , Sockets {$IFDEF UNIX}  , netdb, Unix{$ENDIF}
             {$IFDEF WINCE} , sockets_wince {$ENDIF}
             {$IFDEF FDEBUG}, LCLProc{$ENDIF}
   {$IFEND}

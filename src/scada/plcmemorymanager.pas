@@ -561,7 +561,7 @@ type
 
 implementation
 
-uses Math, hsstrings, crossdatetime;
+uses Math, hsstrings;
 
 constructor TRegisterRange.Create(AdrStart,AdrEnd:Cardinal);
 begin

@@ -23,7 +23,7 @@ unit mutexserver;
 interface
 
 uses
-  Classes, SysUtils, socket_types, CrossEvent, crossthreads, socketserver,
+  Classes, SysUtils, socket_types, crossthreads, socketserver,
   syncobjs
   {$IF defined(WIN32) or defined(WIN64)} //delphi or lazarus over windows
     {$IFDEF FPC}

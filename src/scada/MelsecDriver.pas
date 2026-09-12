@@ -157,7 +157,7 @@ type
 
 implementation
 
-uses crossdatetime, pascalScadaMTPCPU;
+uses pascalScadaMTPCPU;
 
 procedure TMelsecDriver.BuildTagRec(plc, func, startaddress, size: LongInt;
   var tr: TTagRec);

@@ -339,7 +339,7 @@ type
 
 implementation
 
-uses crossdatetime, pascalScadaMTPCPU, math, dateutils;
+uses pascalScadaMTPCPU, math, dateutils;
 
 function SortGenericTagList(const Item1, Item2: TReqItem): Integer;
 var

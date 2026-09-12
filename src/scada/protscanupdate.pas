@@ -157,7 +157,7 @@ type
 
 implementation
 
-uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings, crossdatetime,
+uses {$IFDEF FDEBUG}LCLProc,{$ENDIF} ProtocolDriver, hsstrings,
   dateutils;
 
 ////////////////////////////////////////////////////////////////////////////////

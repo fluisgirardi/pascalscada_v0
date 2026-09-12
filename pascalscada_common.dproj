@@ -85,7 +85,6 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="src\common\pascalScadaMTPCPU.pas"/>
         <DCCReference Include="src\common\collections.pas"/>
-        <DCCReference Include="src\common\crossdatetime.pas"/>
         <DCCReference Include="src\common\crossevent.pas"/>
         <DCCReference Include="src\common\hsstrings.pas"/>
         <DCCReference Include="src\common\hsutils.pas"/>

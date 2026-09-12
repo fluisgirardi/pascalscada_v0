@@ -30,47 +30,43 @@
     <Description Value="Common methods for all PascalSCADA packages"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="10">
+    <Files Count="9">
       <Item1>
-        <Filename Value="src/common/crossdatetime.pas"/>
-        <UnitName Value="crossdatetime"/>
-      </Item1>
-      <Item2>
         <Filename Value="src/common/crossevent.pas"/>
         <UnitName Value="CrossEvent"/>
-      </Item2>
-      <Item3>
+      </Item1>
+      <Item2>
         <Filename Value="src/common/hsstrings.pas"/>
         <UnitName Value="hsstrings"/>
-      </Item3>
-      <Item4>
+      </Item2>
+      <Item3>
         <Filename Value="src/common/hsutils.pas"/>
         <UnitName Value="hsutils"/>
-      </Item4>
-      <Item5>
+      </Item3>
+      <Item4>
         <Filename Value="src/common/messagespool.pas"/>
         <UnitName Value="MessageSpool"/>
-      </Item5>
-      <Item6>
+      </Item4>
+      <Item5>
         <Filename Value="src/common/pascalScadaMTPCPU.pas"/>
         <UnitName Value="pascalScadaMTPCPU"/>
-      </Item6>
-      <Item7>
+      </Item5>
+      <Item6>
         <Filename Value="src/common/pscada_common.pas"/>
         <UnitName Value="pscada_common"/>
-      </Item7>
-      <Item8>
+      </Item6>
+      <Item7>
         <Filename Value="src/common/pscommontypes.pas"/>
         <UnitName Value="pscommontypes"/>
-      </Item8>
-      <Item9>
+      </Item7>
+      <Item8>
         <Filename Value="src/common/pscadaversion.pas"/>
         <UnitName Value="pSCADAVersion"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="src/common/crossthreads.pas"/>
         <UnitName Value="crossthreads"/>
-      </Item10>
+      </Item9>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

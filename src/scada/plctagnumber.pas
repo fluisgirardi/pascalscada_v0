@@ -144,7 +144,7 @@ type
 
 implementation
 
-uses hsstrings, math, crossdatetime, dateutils;
+uses hsstrings, math, dateutils;
 
 function TPLCTagNumber.IsMyCallBack(Cback: TTagCommandCallBack): Boolean;
 begin

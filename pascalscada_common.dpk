@@ -34,7 +34,6 @@ requires
 contains
   pascalScadaMTPCPU in 'src\common\pascalScadaMTPCPU.pas',
   collections in 'src\common\collections.pas',
-  crossdatetime in 'src\common\crossdatetime.pas',
   crossevent in 'src\common\crossevent.pas',
   hsstrings in 'src\common\hsstrings.pas',
   hsutils in 'src\common\hsutils.pas',

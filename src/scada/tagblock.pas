@@ -94,8 +94,6 @@ type
 
 implementation
 
-uses crossdatetime;
-
 function TTagBlock.ScanRead: Int64;
 var
   tr:TTagRec;

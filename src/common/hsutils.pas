@@ -35,7 +35,6 @@ function ExplodeString(delimiter:string; str:string; limit:integer=MaxInt):TStri
 
 implementation
 
-uses math;
 
 function Power(Base:LongInt; Expoent:Cardinal):Cardinal;
 var

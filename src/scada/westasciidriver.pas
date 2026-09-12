@@ -325,7 +325,7 @@ var
 implementation
 
 uses PLCTagNumber, math, dateutils, hsstrings,
-  crossdatetime, pascalScadaMTPCPU;
+  pascalScadaMTPCPU;
 
 constructor TWestASCIIDriver.Create(AOwner:TComponent);
 begin

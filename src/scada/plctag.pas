@@ -724,7 +724,7 @@ type
 
 implementation
 
-uses hsutils, hsstrings, dateutils, crossdatetime;
+uses hsutils, hsstrings, dateutils;
 
 constructor TPLCTag.Create(AOwner:TComponent);
 begin
