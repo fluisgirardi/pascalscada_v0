@@ -1096,6 +1096,13 @@ function EncodeTagPath(aPath:String):BYTES;
     c: Integer;
   begin
     SetLength(Result,Length(aStr) + (Length(aStr) MOD 2) + 2);
+    //zera antes de escrever: o FPC reaproveita o buffer do destino entre as
+    //chamadas, e sem isto o byte de enchimento de um nome de tamanho impar
+    //saia com um caractere do segmento codificado antes dele.
+    //clear before writing: FPC reuses the destination buffer across calls, and
+    //without this the pad byte of an odd length name came out carrying a
+    //character from the segment encoded before it.
+    FillChar(Result[0], Length(Result), 0);
     Result[0]:=$91;
     Result[1]:=Length(aStr);
     for c:=1 to Length(aStr) do
@@ -5044,6 +5051,14 @@ initialization
 finalization
 
   FLGXGlobalMutex.Enter;
+  try
+    { TODO : liberar o conteudo do mapa - os recursos de cada CLP (UDTs e
+      listas de tags) continuam por liberar; aqui se libera o mapa em si. }
+    FreeAndNil(FPLCData);
+  finally
+    FLGXGlobalMutex.Leave;
+  end;
+  FreeAndNil(FLGXGlobalMutex);
 
   { TODO : liberar toda a memoria alocada previamente... }
   //for c:=FLGXUDTList.Count-1 downto 0 do begin
