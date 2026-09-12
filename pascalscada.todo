@@ -2,3 +2,7 @@
 {TODO 5 -oFabio -cProtocolos : Criar o objetos de tela (botões, edits, labels, drop-dows, listviews)}
 {TODO 2 -oFabio -cProtocolos : Criar o objeto base de Tags de comunicação}
 {TODO 1 -oFabio -cProtocolos : Criar o objeto base de um protocolo de comunicação}
+{TODO 3 -oFabio -cRockwell : TLGXDriver: desempacotar arrays de BOOL (o Logix armazena BOOL[n] empacotado em DWORDs). Enquanto isso nao existir, o Tag Builder Rockwell ignora esses tags em vez de gerar tags que leem valores errados.}
+{TODO 3 -oFabio -cRockwell : TPLCString: implementar o formato stROCKWELL (estrutura STRING do Logix: LEN:DINT + DATA:SINT[n]). Hoje o valor existe no enum mas nao e codificado/decodificado, e o Tag Builder Rockwell contorna isso usando stC apontado para o membro DATA.}
+{TODO 4 -oFabio -cRockwell : Tag Builder Rockwell: navegar a lista de tags do CLP em uma thread, com progresso e cancelamento. Hoje TLGXDriver.BrowseTagList e sincrona e trava a IDE enquanto o CLP e navegado.}
+{TODO 4 -oFabio -cRockwell : Tag Builder Rockwell: importar UDTs como TPLCStruct + TPLCStructItem, em vez de oferecer so os membros individualmente.}
