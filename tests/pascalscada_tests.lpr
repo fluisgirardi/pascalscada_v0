@@ -21,7 +21,8 @@ uses
   ut.s7family,
   ut.protocoldriver,
   ut.plcstring,
-  ut.messagespool;
+  ut.messagespool,
+  ut.plcmemorymanager2;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
