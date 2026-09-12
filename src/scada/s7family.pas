@@ -1277,15 +1277,30 @@ begin
   p := PS7Req(@param[00]);
 
   with p^ do begin
+    //o endereco do item vai sempre em bits, EXCETO para contadores e
+    //temporizadores, onde o campo carrega o numero do elemento. Todo ramo
+    //precisa atribuir intStart: ele e' um absolute sobre uma variavel local,
+    //e deixar de atribuir manda lixo de pilha no endereco.
+    //
+    //the item address is always in bits, EXCEPT for counters and timers, where
+    //the field carries the element number. Every branch must assign intStart:
+    //it is an absolute over a local variable, and not assigning it sends stack
+    //garbage as the address.
     case iArea of
       vtS7_200_AnInput, vtS7_200_AnOutput:
-        WordLen:=4;
+        begin
+          WordLen:=4;
+          intStart:=iStart*8;
+        end;
 
       vtS7_Counter,
       vtS7_Timer,
       vtS7_200_Counter,
       vtS7_200_Timer:
-        WordLen:=iArea;
+        begin
+          WordLen:=iArea;
+          intStart:=iStart;
+        end;
       else
         intStart:=iStart*8;
     end;
@@ -1343,9 +1358,14 @@ begin
 
   with p^ do begin
     case iArea of
+      //vide AddToReadRequest: todo ramo precisa atribuir intStart, e so
+      //contador/temporizador enderecam por numero de elemento.
+      //see AddToReadRequest: every branch must assign intStart, and only
+      //counters/timers are addressed by element number.
       vtS7_200_AnInput, vtS7_200_AnOutput:
         begin
           WordLen:=4;
+          intStart:=iStart*8;
           ReqLength := SwapBytesInWord((bufferLen+1) div 2);
         end;
       vtS7_Counter,
@@ -1354,6 +1374,7 @@ begin
       vtS7_200_Timer:
         begin
           WordLen:=iArea;
+          intStart:=iStart;
           ReqLength := SwapBytesInWord((bufferLen+1) div 2);
         end;
       else
