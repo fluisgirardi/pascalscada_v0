@@ -1286,11 +1286,28 @@ begin
     //the field carries the element number. Every branch must assign intStart:
     //it is an absolute over a local variable, and not assigning it sends stack
     //garbage as the address.
+    //O campo de contagem do item e' em ELEMENTOS, nao em bytes - conferido
+    //contra o snap7 (Items[0].Length = NumElements, com DataSizeByte 2 para
+    //contador e temporizador) e contra o libnodave (daveReadBytes com 4 em
+    //daveCounter devolve 4 contadores, lidos de dois em dois bytes). Para as
+    //areas de byte um elemento e' um byte, mas para contador, temporizador e
+    //as analogicas do S7-200 cada elemento ocupa dois, entao o tamanho pedido
+    //em bytes precisa ser convertido - do mesmo jeito que
+    //AddParamToWriteRequest ja fazia.
+    //
+    //The item's count field is in ELEMENTS, not bytes - checked against snap7
+    //(Items[0].Length = NumElements, with DataSizeByte 2 for counter and
+    //timer) and against libnodave (daveReadBytes with 4 on daveCounter returns
+    //4 counters, read two bytes at a time). For byte areas one element is one
+    //byte, but for counters, timers and the S7-200 analog areas each element
+    //takes two, so the size requested in bytes has to be converted - the same
+    //way AddParamToWriteRequest already did.
     case iArea of
       vtS7_200_AnInput, vtS7_200_AnOutput:
         begin
           WordLen:=4;
           intStart:=iStart*8;
+          ReqLength:=SwapBytesInWord((iByteCount+1) div 2);
         end;
 
       vtS7_Counter,
@@ -1300,12 +1317,15 @@ begin
         begin
           WordLen:=iArea;
           intStart:=iStart;
+          ReqLength:=SwapBytesInWord((iByteCount+1) div 2);
         end;
       else
-        intStart:=iStart*8;
+        begin
+          intStart:=iStart*8;
+          ReqLength:=SwapBytesInWord(iByteCount);
+        end;
     end;
 
-    ReqLength   :=SwapBytesInWord(iByteCount);
     DBNumber    :=SwapBytesInWord(iDBnum);
     AreaCode    :=iArea;
     HiBytes     :=0;

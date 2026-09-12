@@ -78,17 +78,17 @@ var
 const
   VETOR = '123456789';
 begin
-  Ignore('divergencia conhecida: a tabela usada em CRC8_Maxim nao e refletida, ' +
-         'entao o resultado nao bate com o CRC-8/MAXIM padrao. ' +
-         'Remova este Ignore depois de decidir se corrige a tabela ou renomeia a funcao.');
-
   data := nil;
   SetLength(data, Length(VETOR));
   for i := 1 to Length(VETOR) do
     data[i-1] := Ord(VETOR[i]);
 
-  { valor de conferencia catalogado para CRC-8/MAXIM }
+  { valor de conferencia catalogado para CRC-8/MAXIM (poly $31 refletido) }
   AssertEquals('CRC-8/MAXIM de "123456789"', $A1, CRC8_Maxim(data, 0));
+
+  { a tabela nao refletida dava $A2 aqui - e o que este teste impede de voltar }
+  AssertFalse('nao pode ser o resultado da tabela nao refletida',
+              CRC8_Maxim(data, 0)=$A2);
 end;
 
 initialization
