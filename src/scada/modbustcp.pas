@@ -328,7 +328,7 @@ begin
       Result := ioCommError;
   end;
 
-  if (Result<>ioOk)then
+  if (Result=ioOk)then
     case pkg.ReadIOResult of
       iorTimeOut:
         Result:=ioTimeOut;
@@ -339,6 +339,17 @@ begin
         Result := ioCommError;
     end;
   
+  //o cabecalho MBAP ocupa 7 bytes e a funcao vem no oitavo: abaixo disso nao
+  //ha o que conferir. A comparacao logo abaixo indexava o buffer sem olhar o
+  //tamanho - lia fora do vetor numa resposta curta, e numa resposta vazia dava
+  //violacao de acesso.
+  //the MBAP header is 7 bytes and the function code is the eighth: any less
+  //than that has nothing to check. The comparison below used to index the
+  //buffer without looking at its length - reading past the end on a short
+  //response, and faulting on an empty one.
+  if (Result=ioOk) AND (Length(pkg.BufferToRead)<8) then
+    Result := ioCommError;
+
   //se o endereco retornado nao conferem com o selecionado...
   //if the address in the incoming packet is different of the requested
   if (Result=ioOk) AND (pkg.BufferToWrite[6]<>pkg.BufferToRead[6]) then begin
@@ -361,6 +372,18 @@ begin
       break;
     end;
 
+  //endereco e quantidade saem do pedido e valem tanto para gravar os valores
+  //quanto para marcar a falha na area, entao ficam fora do if de resultado -
+  //os ramos de falha os usavam sem nunca terem atribuido valor a eles.
+  //address and length come from the request and are needed both to store the
+  //values and to mark the fault, so they are computed outside the result test.
+  address := 0;
+  len     := 0;
+  if Length(pkg.BufferToWrite)>=12 then begin
+    address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
+    len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
+  end;
+
   //comeca a decodificar o pacote...
   //decodes the packet.
 
@@ -382,8 +405,6 @@ begin
       end;
 
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
-        len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
         SetLength(Values,len);
 
         i := 0;
@@ -418,8 +439,6 @@ begin
       end;
 
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
-        len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
         SetLength(Values,len);
 
         // data are ok
@@ -441,7 +460,6 @@ begin
     // decodes a write to a single coil
     $05: begin
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[8] * 256) + pkg.BufferToWrite[9];
         SetLength(values,1);
 
         if (pkg.BufferToWrite[10]=0) and (pkg.BufferToWrite[11]=0) then
@@ -460,7 +478,6 @@ begin
     // decodes a write to a single register
     $06: begin
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[8] * 256) + pkg.BufferToWrite[9];
         SetLength(values,1);
 
         values[0] := pkg.BufferToWrite[10]*256+pkg.BufferToWrite[11];
@@ -488,8 +505,6 @@ begin
     // decodes a write to multiple coils.
     $0F: begin
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[08] * 256) + pkg.BufferToWrite[09];
-        len     := (pkg.BufferToWrite[10] * 256) + pkg.BufferToWrite[11];
 
         SetLength(values,len);
 
@@ -517,8 +532,6 @@ begin
     // decodes a write to a multiple registers
     $10: begin
       if Result=ioOk then begin
-        address := (pkg.BufferToWrite[08] * 256) + pkg.BufferToWrite[09];
-        len     := (pkg.BufferToWrite[10] * 256) + pkg.BufferToWrite[11];
 
         SetLength(values,len);
 
@@ -565,9 +578,6 @@ begin
             Result := ioCommError;
         end;
       end;
-
-      address := (pkg.BufferToWrite[08] shl 8) + pkg.BufferToWrite[09];
-      len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
 
       case pkg.BufferToWrite[7] of
         $01: begin
