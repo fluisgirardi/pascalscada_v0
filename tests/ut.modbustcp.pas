@@ -49,6 +49,8 @@ type
     procedure RespostaComExcecaoViraOErroCorrespondente;
     procedure RespostaDeOutraUnidadeViraErroDeComunicacao;
     procedure TimeoutNaLeituraViraTimeout;
+    procedure RespostaIncompletaComCabecalhoValidoNaoEhAceita;
+    procedure RespostaMenorQueOCabecalhoEhRecusada;
   end;
 
 implementation
@@ -174,6 +176,44 @@ begin
 
   res:=FDrv.Decode(pkg, vals);
   AssertEquals('timeout', Ord(ioTimeOut), Ord(res));
+end;
+
+procedure TTestModBusTCP.RespostaIncompletaComCabecalhoValidoNaoEhAceita;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+  pkg:TIOPacket;
+begin
+  //o pior caso do timeout: chegou o comeco da resposta, com a unidade e a
+  //funcao certas, e o resto nao veio. Conferir so' os campos nao basta - o
+  //driver tem que olhar o resultado da leitura, senao entrega o que sobrou
+  //no buffer como se fossem registradores do equipamento
+  pkg:=IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                   BytesOf('00 00 00 00 00 07 01 03 04 00 00 00 00'));
+  pkg.ReadIOResult:=iorTimeOut;
+  pkg.Received:=9;
+
+  res:=FDrv.Decode(pkg, vals);
+  AssertEquals('leitura incompleta', Ord(ioTimeOut), Ord(res));
+end;
+
+procedure TTestModBusTCP.RespostaMenorQueOCabecalhoEhRecusada;
+var
+  vals:TArrayOfDouble;
+  resp:BYTES;
+  n:LongInt;
+begin
+  //o cabecalho MBAP tem 7 bytes e a funcao vem no oitavo. Abaixo disso o
+  //driver conferia a unidade indexando o buffer sem olhar o tamanho: lia fora
+  //do vetor, e com a resposta vazia dava violacao de acesso
+  for n:=0 to 7 do begin
+    SetLength(resp, n);
+    if n>0 then FillChar(resp[0], n, 0);
+
+    AssertEquals('resposta de '+IntToStr(n)+' bytes', Ord(ioCommError),
+                 Ord(FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                                             resp), vals)));
+  end;
 end;
 
 initialization

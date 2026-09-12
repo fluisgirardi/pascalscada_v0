@@ -83,6 +83,10 @@ type
 
     //o que volta pelo parametro de saida / what comes back through the out param
     procedure ValoresDevolvidosTemUmPorPonto;
+
+    //resposta curta / short response
+    procedure RespostaMenorQueOCabecalhoEhRecusada;
+    procedure RespostaComCabecalhoMasSemDadoEhRecusada;
   end;
 
 implementation
@@ -355,6 +359,37 @@ begin
                    Resposta(BytesOf('01 00 02 00 03 00')), valores);
 
   AssertEquals('tres pontos pedidos, tres valores', 3, Length(valores));
+end;
+
+procedure TTestMelsecResposta.RespostaMenorQueOCabecalhoEhRecusada;
+var
+  valores:TArrayOfDouble;
+  resp:BYTES;
+  n:LongInt;
+begin
+  //antes do primeiro dado vem 11 bytes de cabecalho. Com menos que isso nao ha
+  //o que conferir, e indexar o buffer seria ler fora dele
+  for n:=0 to 10 do begin
+    SetLength(resp, n);
+    if n>0 then FillChar(resp[0], n, 0);
+
+    AssertEquals('resposta de '+IntToStr(n)+' bytes', Ord(ioCommError),
+                 Ord(FDrv.Decodificar(PedidoDeLeitura(0, $A8, 100, 2), resp, valores)));
+  end;
+end;
+
+procedure TTestMelsecResposta.RespostaComCabecalhoMasSemDadoEhRecusada;
+var
+  valores:TArrayOfDouble;
+  n:LongInt;
+begin
+  //cabecalho inteiro e codigo de termino zero, mas os dois registradores
+  //pedidos precisam de quatro bytes atras dele: 11 a 14 sao respostas pela
+  //metade, e metade nao serve
+  for n:=0 to 3 do
+    AssertEquals('cabecalho mais '+IntToStr(n)+' bytes de dado', Ord(ioCommError),
+                 Ord(FDrv.Decodificar(PedidoDeLeitura(0, $A8, 100, 2),
+                                      Resposta(Copy(BytesOf('0B 0A 0D 0C'), 0, n)), valores)));
 end;
 
 initialization
