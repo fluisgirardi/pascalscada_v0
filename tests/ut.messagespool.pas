@@ -61,8 +61,8 @@ type
     procedure PrioritariaNaFilaVaziaContinuaPrimeira;
     procedure PrioritariaDepoisDeTudoLidoVoltaAFuncionar;
 
-    //defeito conhecido / known defect
     procedure PrioritariaFuraAFilaComUmaMensagemSo;
+    procedure PrioritariaEntraNoFimDaFilaDePrioritarias;
 
     //filtro por faixa de id / id range filter
     procedure FiltroPegaSoAMensagemDaFaixa;
@@ -232,21 +232,25 @@ end;
 
 procedure TTestMessageSpool.PrioritariaFuraAFilaComUmaMensagemSo;
 begin
-  Ignore('defeito conhecido: em TMessageSpool.PostMessage, quando a fila tem ' +
-         'EXATAMENTE uma mensagem o codigo cai no ramo "if FirstMessage = ' +
-         'LastMsg" e anexa a nova mensagem no fim, sem olhar a marca de ' +
-         'prioridade - que so e' + #39 + ' considerada no ramo de duas ou mais ' +
-         'mensagens. Efeito: com uma normal esperando, uma prioritaria sai ' +
-         'DEPOIS dela; com duas normais esperando, sai antes, como deveria. ' +
-         'Correcao: nesse ramo, se Priority, inserir a mensagem antes da ' +
-         'primeira normal (o mesmo tratamento do ramo de duas ou mais). ' +
-         'Remova este Ignore depois de corrigir.');
-
+  //com UMA mensagem na fila o caminho era outro, e ignorava a prioridade
   Posta(1);
   Posta(9, true);
 
   AssertEquals('a prioritaria tem que passar na frente', 9, ProximoId);
   AssertEquals('e a normal vem depois',                  1, ProximoId);
+end;
+
+procedure TTestMessageSpool.PrioritariaEntraNoFimDaFilaDePrioritarias;
+begin
+  //com uma prioritaria sozinha na fila, outra prioritaria vai depois dela -
+  //nao ha normal nenhuma para furar
+  Posta(8, true);
+  Posta(9, true);
+  Posta(1);
+
+  AssertEquals('a primeira prioritaria', 8, ProximoId);
+  AssertEquals('a segunda prioritaria',  9, ProximoId);
+  AssertEquals('e so entao a normal',    1, ProximoId);
 end;
 
 procedure TTestMessageSpool.FiltroPegaSoAMensagemDaFaixa;

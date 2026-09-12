@@ -382,41 +382,44 @@ begin
     //se existem msgs na fila.
     //if the queue is not empty.
 
-    //e se existe só uma msg
-    //if exists only one message on the queue.
-    if FirstMessage = LastMsg then begin
-      FirstMessage^.NextMsg := msg;
-      msg^.PriorMsg := FirstMessage;
-      LastMsg := msg;
-      if (not Priority) and (NormalMsgs=nil) then
-        NormalMsgs := msg;
-    end else begin
-      //se existirem duas ou mais mensagens na fila...
-      //if exists two or more messages on queue.
-      if Priority then
-        if NormalMsgs=nil then begin
-          LastMsg^.NextMsg := msg;
-          msg^.PriorMsg := LastMsg;
-          LastMsg := msg;
-        end else begin
-          aux := NormalMsgs^.PriorMsg;
-          //se é nulo, é a primeira msg
-          //if is nil, is the first message.
-          if aux=nil then
-            FirstMessage := msg
-          else
-            aux^.NextMsg :=  msg;
-          msg^.PriorMsg := aux;
-          msg^.NextMsg := NormalMsgs;
-          NormalMsgs^.PriorMsg := msg;
-        end
-      else begin
+    //Aqui havia um caso especial para "existe so uma msg" que anexava a
+    //mensagem no fim sem olhar a prioridade: uma prioritaria postada com uma
+    //unica mensagem na fila saia depois dela, ao contrario do que acontecia
+    //com a fila vazia ou com duas ou mais. O tratamento abaixo ja cobre a fila
+    //de uma mensagem em todas as combinacoes, entao o caso especial foi
+    //removido em vez de duplicar a logica.
+    //
+    //There used to be a special case for "only one message on the queue" here
+    //that appended the message without looking at the priority flag: a
+    //priority message posted with a single message queued came out after it,
+    //unlike what happened with an empty queue or with two or more. The code
+    //below already covers a one-message queue in every combination, so the
+    //special case was removed instead of duplicating it.
+    //trata a fila com uma ou mais mensagens
+    //handles a queue with one or more messages
+    if Priority then
+      if NormalMsgs=nil then begin
         LastMsg^.NextMsg := msg;
         msg^.PriorMsg := LastMsg;
         LastMsg := msg;
-        if (NormalMsgs=nil) then
-          NormalMsgs := msg;
-      end;
+      end else begin
+        aux := NormalMsgs^.PriorMsg;
+        //se é nulo, é a primeira msg
+        //if is nil, is the first message.
+        if aux=nil then
+          FirstMessage := msg
+        else
+          aux^.NextMsg :=  msg;
+        msg^.PriorMsg := aux;
+        msg^.NextMsg := NormalMsgs;
+        NormalMsgs^.PriorMsg := msg;
+      end
+    else begin
+      LastMsg^.NextMsg := msg;
+      msg^.PriorMsg := LastMsg;
+      LastMsg := msg;
+      if (NormalMsgs=nil) then
+        NormalMsgs := msg;
     end;
   end;
 
