@@ -1117,7 +1117,12 @@ var
 begin
   //read only protocol.
   if GetIsReadOnly then begin
-    tagrec.CallBack(0, Values,GetTickCount64,tcScanWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    //o callback e' opcional em toda a API: testar antes de chamar, como faz o
+    //caminho normal logo abaixo.
+    //the callback is optional all over the API: test before calling it, the
+    //same way the normal path below does.
+    if assigned(tagrec.CallBack) then
+      tagrec.CallBack(0, Values,GetTickCount64,tcScanWrite,ioReadOnlyProtocol,tagrec.RealOffset);
     Result:=0;
     exit;
   end;
@@ -1200,7 +1205,10 @@ var
   res:TProtocolIOResult;
 begin
   if GetIsReadOnly then begin
-    tagrec.CallBack(0, Values,GetTickCount64,tcWrite,ioReadOnlyProtocol,tagrec.RealOffset);
+    //vide ScanWrite: callback opcional, testar antes de chamar.
+    //see ScanWrite: the callback is optional, test before calling it.
+    if assigned(tagrec.CallBack) then
+      tagrec.CallBack(0, Values,GetTickCount64,tcWrite,ioReadOnlyProtocol,tagrec.RealOffset);
     exit;
   end;
 

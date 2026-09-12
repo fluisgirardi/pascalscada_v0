@@ -460,14 +460,6 @@ var
   valores:TArrayOfDouble;
   semCallback:TTagRec;
 begin
-  Ignore('defeito conhecido: em TProtocolDriver.Write (e em ScanWrite) a recusa ' +
-         'por protocolo somente-leitura chama tagrec.CallBack sem testar se ele ' +
-         'existe, enquanto o caminho normal, quatro linhas abaixo, faz ' +
-         '"if assigned(tagrec.CallBack)". Com callback nulo o resultado e'#39' ' +
-         'EAccessViolation em $00000000 - confirmado por este teste. Correcao: ' +
-         'envolver as duas chamadas com if assigned(). Remova este Ignore depois ' +
-         'de corrigir.');
-
   SetLength(valores, 1);
   valores[0]:=1;
 
@@ -475,9 +467,13 @@ begin
   //de chamar, e a recusa por somente-leitura tem que fazer o mesmo.
   semCallback:=TagRecFor(1, 3, 6, 0, 1);
   FDrv.ReadOnly:=true;
+
+  //sem callback nao ha' a quem avisar, mas tambem nao pode estourar
   FDrv.Write(semCallback, valores);
+  FDrv.ScanWrite(semCallback, valores);
 
   AssertEquals('o driver nao pode ser chamado', 0, FDrv.Escritas);
+  AssertEquals('e ninguem foi chamado de volta', 0, FCallbacks);
 end;
 
 procedure TTestProtocolDriver.CadastroEmLoteNaoTrava;
