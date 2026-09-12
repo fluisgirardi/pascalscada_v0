@@ -261,19 +261,19 @@ jobs:
             # pelo instalador oficial), entao precisa de --lazarusdir.
             # Procuramos o lcl.lpk no disco em vez de consultar o pacote pelo
             # nome: o nome registrado depende do flavor e ja mudou uma vez.
-            # O diretorio procurado e' o que contem lcl/lcl.lpk, e o caminho
-            # do pacote e' versionado (lazarus-4.8). Qualquer candidato so
-            # vale depois de conferido - foi passar um caminho sem conferir
+            # O caminho do pacote e' versionado (lazarus-4.8), e no Lazarus 4.x
+            # o lcl.lpk mora em lcl/interfaces/ - nao em lcl/. E' esse arquivo
+            # que confirma o candidato; passar um caminho sem conferir foi o
             # que fez o lazbuild reclamar de "directory lcl not found".
             LAZDIR=""
             for d in /usr/local/share/lazarus /usr/local/share/lazarus-* \
                      /usr/local/lib/lazarus /usr/local/lib/lazarus-*; do
-              if [ -f "$d/lcl/lcl.lpk" ]; then LAZDIR="$d"; break; fi
+              if [ -f "$d/lcl/interfaces/lcl.lpk" ]; then LAZDIR="$d"; break; fi
             done
             if [ -z "$LAZDIR" ]; then
               for f in $(find /usr/local -type f -name lcl.lpk 2>/dev/null); do
-                d=${f%/lcl/lcl.lpk}
-                if [ "$d" != "$f" ] && [ -f "$d/lcl/lcl.lpk" ]; then LAZDIR="$d"; break; fi
+                d=${f%/lcl/interfaces/lcl.lpk}
+                if [ "$d" != "$f" ] && [ -d "$d/lcl" ]; then LAZDIR="$d"; break; fi
               done
             fi
             if [ -z "$LAZDIR" ]; then
@@ -284,7 +284,7 @@ jobs:
               find /usr/local -type f -name lcl.lpk 2>/dev/null || true
               exit 1
             fi
-            echo "lazarus em $LAZDIR (lcl.lpk: $LAZDIR/lcl/lcl.lpk)"
+            echo "lazarus em $LAZDIR (lcl.lpk: $LAZDIR/lcl/interfaces/lcl.lpk)"
 
             LAZ="lazbuild --lazarusdir=$LAZDIR"
 
