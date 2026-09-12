@@ -99,6 +99,7 @@ type
     procedure TemporizadorUsaASuaPropriaArea;
     procedure EscritaEmContadorTambemUsaONumeroDoElemento;
     procedure AreaAnalogicaDoS7200EnderecaEmBits;
+    procedure LeituraEEscritaDevemConcordarNoTamanhoDoContador;
   end;
 
 implementation
@@ -470,6 +471,37 @@ begin
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 04 00 02 00 00 06 00 00 10'),
                    msg);
+end;
+
+procedure TTestS7Family.LeituraEEscritaDevemConcordarNoTamanhoDoContador;
+var
+  msgLeitura, msgEscrita:BYTES;
+begin
+  Ignore('divergencia conhecida: no item de contador/temporizador o campo de ' +
+         'contagem e'#39' em ELEMENTOS (cada um de 2 bytes na resposta), mas os dois ' +
+         'caminhos entendem o tamanho recebido de formas diferentes: a leitura ' +
+         'repassa o tamanho como esta (AddToReadRequest: ReqLength:=iByteCount) ' +
+         'enquanto a escrita divide por dois (AddParamToWriteRequest: ' +
+         '(bufferLen+1) div 2). Como o driver mede todo tag em bytes ' +
+         '(SizeOfTag devolve 8 bits/ptByte) e guarda contadores num ' +
+         'TPLCMemoryManager de 1 unidade por endereco, a leitura pede o dobro de ' +
+         'elementos e a resposta volta com o dobro de bytes que o buffer previu. ' +
+         'Corrigir so' + #39 + ' esta divisao nao resolve: o endereco e'#39' por elemento e o ' +
+         'tamanho por byte, entao o modelo do caminho de contador/temporizador ' +
+         'precisa ser decidido inteiro (elementos de 2 bytes) - inclui o ' +
+         'IncomingPacketSize e o SetValues das areas Counters/Timers.');
+
+  //duas unidades de tamanho, dos dois lados
+  msgLeitura:=nil;
+  FDrv.PrepRead(msgLeitura);
+  FDrv.AddReadItem(msgLeitura, vtS7_Counter, 0, 5, 2);
+
+  msgEscrita:=nil;
+  FDrv.PrepWrite(msgEscrita);
+  FDrv.AddWriteParam(msgEscrita, vtS7_Counter, 0, 5, BytesOf('00 0A'));
+
+  //byte 17 do frame = parte baixa da contagem de elementos do item
+  AssertEquals('contagem de elementos no item', msgLeitura[17], msgEscrita[17]);
 end;
 
 initialization
