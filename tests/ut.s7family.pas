@@ -93,8 +93,12 @@ type
     procedure SetupPduInformaOsTamanhos;
     procedure SetupPduDeTipoDoisTemCabecalhoDeDozeBytes;
 
-    //defeito conhecido / known defect
-    procedure ContadorDeveEnderecarOContadorPedido;
+    //contadores, temporizadores e areas do S7-200 / counters, timers and S7-200 areas
+    procedure ContadorEhEnderecadoPeloNumeroDoElemento;
+    procedure ContadoresDiferentesGeramPedidosDiferentes;
+    procedure TemporizadorUsaASuaPropriaArea;
+    procedure EscritaEmContadorTambemUsaONumeroDoElemento;
+    procedure AreaAnalogicaDoS7200EnderecaEmBits;
   end;
 
 implementation
@@ -383,18 +387,29 @@ begin
   AssertEquals('tamanho do parametro', 2, pdu.param_len);
 end;
 
-procedure TTestS7Family.ContadorDeveEnderecarOContadorPedido;
+procedure TTestS7Family.ContadorEhEnderecadoPeloNumeroDoElemento;
+var
+  msg:BYTES;
+begin
+  msg:=nil;
+  FDrv.PrepRead(msg);
+  FDrv.AddReadItem(msg, vtS7_Counter, 0, 3, 1);
+
+  //contadores e temporizadores sao os unicos que nao convertem o endereco
+  //para bits: o campo leva o numero do elemento. O tipo tambem muda de $02
+  //(byte) para $1C (contador), e a area e' a mesma $1C.
+  AssertBytesEqual('leitura do contador 3',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
+                           '12 0A 10 1C 00 01 00 00 1C 00 00 03'),
+                   msg);
+end;
+
+procedure TTestS7Family.ContadoresDiferentesGeramPedidosDiferentes;
 var
   msgA, msgB:BYTES;
 begin
-  Ignore('defeito conhecido: em AddToReadRequest (e em AddParamToWriteRequest) o ' +
-         'endereco inicial so e' + #39 + ' calculado no ramo "else" do case de areas; ' +
-         'para contadores e temporizadores (e para as areas analogicas do S7-200) a ' +
-         'variavel intStart fica sem valor e os tres bytes de endereco do item saem ' +
-         'com lixo de pilha. Efeito: le/escreve um contador arbitrario. Correcao ' +
-         'provavel: atribuir intStart:=iStart nesses ramos (numero do elemento, sem ' +
-         'multiplicar por 8). Remova este Ignore depois de corrigir.');
-
+  //o sintoma do defeito que existia aqui: o numero do contador nao entrava no
+  //frame, entao qualquer contador gerava o mesmo pedido.
   msgA:=nil;
   FDrv.PrepRead(msgA);
   FDrv.AddReadItem(msgA, vtS7_Counter, 0, 3, 1);
@@ -403,9 +418,58 @@ begin
   FDrv.PrepRead(msgB);
   FDrv.AddReadItem(msgB, vtS7_Counter, 0, 99, 1);
 
-  //contadores diferentes tem que gerar pedidos diferentes
-  AssertFalse('o contador 3 e o 99 geraram o mesmo pedido',
-              HexOf(msgA)=HexOf(msgB));
+  AssertFalse('o contador 3 e o 99 geraram o mesmo pedido', HexOf(msgA)=HexOf(msgB));
+  AssertBytesEqual('leitura do contador 99',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
+                           '12 0A 10 1C 00 01 00 00 1C 00 00 63'),
+                   msgB);
+end;
+
+procedure TTestS7Family.TemporizadorUsaASuaPropriaArea;
+var
+  msg:BYTES;
+begin
+  msg:=nil;
+  FDrv.PrepRead(msg);
+  FDrv.AddReadItem(msg, vtS7_Timer, 0, 7, 1);
+
+  //temporizador: tipo e area $1D, e o numero do elemento sem converter
+  AssertBytesEqual('leitura do temporizador 7',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
+                           '12 0A 10 1D 00 01 00 00 1D 00 00 07'),
+                   msg);
+end;
+
+procedure TTestS7Family.EscritaEmContadorTambemUsaONumeroDoElemento;
+var
+  msg:BYTES;
+begin
+  msg:=nil;
+  FDrv.PrepWrite(msg);
+  FDrv.AddWriteParam(msg, vtS7_Counter, 0, 5, BytesOf('00 0A'));
+
+  //o mesmo calculo de endereco vale na montagem do pedido de escrita, que
+  //tem o seu proprio case de areas; o tamanho aqui e' contado em elementos.
+  AssertBytesEqual('escrita no contador 5',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 05 01' +
+                           '12 0A 10 1C 00 01 00 00 1C 00 00 05'),
+                   msg);
+end;
+
+procedure TTestS7Family.AreaAnalogicaDoS7200EnderecaEmBits;
+var
+  msg:BYTES;
+begin
+  msg:=nil;
+  FDrv.PrepRead(msg);
+  FDrv.AddReadItem(msg, vtS7_200_AnInput, 0, 2, 2);
+
+  //area analogica do S7-200: e' area de word (tipo $04), mas o endereco
+  //continua em bits como nas demais - byte 2 = bit 16 = $10.
+  AssertBytesEqual('leitura de AIW2',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
+                           '12 0A 10 04 00 02 00 00 06 00 00 10'),
+                   msg);
 end;
 
 initialization
