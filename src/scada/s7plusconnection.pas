@@ -105,6 +105,10 @@ type
     //: (separate) challenge.
     FHarpoAuthPublicKey:TBytes;
     FHarpoAuthFamily:TS7PlusHarpoKeyFamily;
+    //: Incrementing "RequestId" byte seen on each of TIA's post-legitimation system
+    //: CreateObjects (ChangeCounter=4, then 5, 6, ... for the system Subscription_* ones)
+    //: - a different counter than ItemNumber/IntegrityId, starts at 4 for the first one.
+    FTiaSysObjectRequestId:Cardinal;
     FSessionSetupOK:Boolean;
     FSrcRef:Word;
     FLastReturnValue:QWord;
@@ -187,8 +191,62 @@ type
     //: result to address 1846. Required before the PLC allows any data operation on a
     //: session that went through the SecurityKey blob exchange.
     function PostAuthLegitimation(const Password:AnsiString):Boolean;
+    //: Generic single-address V1 GetVarSubstreamed read, reused by the TIA-observed
+    //: post-legitimation sequence below (each call in that sequence targets a different
+    //: InObjectId/address/seq_field, unlike PostAuthLegitimation's own hardcoded one).
+    function GetVarSubstreamedRaw(InObjectId, Address, SeqField:Cardinal; out RawResp:TBytes):Boolean;
+    function CreateChangeCounterObject:Boolean;
+    function CreateEmptySystemSubscription(CycleTimeMs:Cardinal; RouteMode:Byte; FunctionClassId:Byte; CreditLimit:SmallInt):Boolean;
+    //: GetLink(InObjectId, Attr) - resolves a fixed system RID's "link" attribute to a list
+    //: of related object RIDs. TIA uses InObjectId=11 (a fixed, always-present system
+    //: object) with Attr=2699 to get the RID backing DB-value monitoring (TisMonitorJob) -
+    //: see GetDB4Fingerprint/CreateTisMonitorJob.
+    function GetLinkRaw(InObjectId, Attr:Cardinal; out RIDs:TS7PlusLIDArray):Boolean;
+    //: Generic "read N raw attribute fields off an object" (the GetMultiVariables shape
+    //: TIA uses for system objects addressed by field id, not by symbolic LID - distinct
+    //: from BuildSymbolicPayload/BuildMultiSymbolicReadPayload which are LID-based).
+    function GetMultiVariablesFields(InObjectId:Cardinal; const FieldIds:array of Cardinal; out Results:TS7PlusMultiReadResultArray):Boolean;
+    //: Fetches DB4's live "fingerprint" chunk (13 bytes, itself read out of field 9505 off
+    //: the RID GetLink(11,2699) resolves) that TIA embeds verbatim into every
+    //: TisMonitorJob it creates for that DB - see CreateTisMonitorJob. Confirmed byte-for-
+    //: byte identical between the read and 2 different real TisMonitorJob captures.
+    function GetDB4Fingerprint(out Fingerprint:TBytes):Boolean;
+    //: CreateTisMonitorJob is declared in the public section below (Lids are the plain
+    //: LIDs, e.g. from BrowseDB on a PLC where that works, of the DB4 members to monitor;
+    //: each becomes a 12-byte record [LID+$58][fixed 7-byte type tag][countdown][$80]
+    //: [offset], offsets packed 4 bytes apart starting at 20 - reverse-engineered
+    //: 2026-08-31 from 2 real TIA captures with different monitored-item counts).
+    //: TIA Portal, after PostAuthLegitimation succeeds, reads a handful of session/system
+    //: attributes (300=ServerSessionClientRID, 1842=EffectiveProtectionLevel, and two
+    //: fixed small-RID system objects) before EXPLORE/GetMultiVariables are accepted -
+    //: decoded byte-for-byte from a real TIA V15 capture against this exact PLC
+    //: (subscription_capture2.pcapng). Skips the CreateObject "SPL_PlcProgram_
+    //: ChangeCounter"/GetLink/batch-GetMultiVariables/Subscription_* objects also seen in
+    //: that capture - those look Watch-Table-UI-specific (not needed for Subscriptions
+    //: created from code, which already works end-to-end against .210 without any of
+    //: this). If EXPLORE still fails after this, those are the next things to try.
+    function PostLegitimationSessionInfo:Boolean;
+    //: Returns True if Payload (a SystemEvent frame's data section, Version=0xFE) is
+    //: safe to ignore (matches python-snap7's _check_system_event): a bare 16-byte
+    //: payload, or one without a Struct(0x17) tag at offset 16, is purely informational.
+    //: A Struct payload is only fatal if its ReturnValue member (id 0x9D71) is negative.
+    function IsNonFatalSystemEvent(const Payload:TBytes):Boolean;
+    //: Reads one full application response frame, transparently consuming (and logging)
+    //: any non-fatal SystemEvent frames (Version=0xFE) received while waiting - matches
+    //: python-snap7's _recv_response_frame. Confirmed live 2026-08-31: the PLC can send
+    //: an unsolicited SystemEvent in between our request and its real response, and
+    //: treating that SystemEvent AS the response (the previous behaviour here) silently
+    //: discarded the real one.
+    function RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
 
     //-- payload builders/parsers ----------------------------------------------
+    //: Picks the V1 fixed-width ObjectQualifier (KeyQualifier=1, matching TIA's own V1
+    //: session-info reads byte-for-byte) when running under the legacy V1-initial/SecurityKey
+    //: regime (FHarpoSessionKey set), otherwise the normal V2 VLQ-terminated one - every
+    //: request builder that embeds an ObjectQualifier should go through this instead of
+    //: calling EncodeObjectQualifier directly, so V1-only PLCs get the right wire shape
+    //: everywhere, not just in the hand-ported GetVarSubstreamedRaw/SessionActivate calls.
+    function CurrentObjectQualifier:TBytes;
     function BuildAreaPayload(AccessArea, AccessSubArea:Cardinal; Start:Integer; const WriteData:TBytes; IsWrite:Boolean; SizeIfRead:Integer):TBytes;
     function BuildSymbolicPayload(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const WriteData:TBytes; IsWrite:Boolean; SymbolCrc:Cardinal; WriteSoftDataType:Byte=0):TBytes;
     function ParseSingleReadResponse(const Response:TBytes; out Data:TBytes):Boolean;
@@ -253,6 +311,16 @@ type
     function SendRequest(FunctionCode:Word; const Payload:TBytes; out RespPayload:TBytes;
                          IntegrityTail:Integer=4; Reassemble:Boolean=false):Boolean;
 
+    //: DIAGNOSTIC: sends a caller-provided request body verbatim (header + V3/HMAC framing
+    //: added, but NO IntegrityId splicing - the body is sent exactly as given). Used by the
+    //: block-download replay experiment to re-send captured TIA transaction requests. If
+    //: PatchIntegrityAtEnd>=0, our own IntegrityId(write) VLQ is spliced at position
+    //: Length(Body)-PatchIntegrityAtEnd (mirroring SendRequest) and the counter advanced;
+    //: pass -1 to send with no integrity at all (sequenced ops carry none). Reassemble picks
+    //: the multi-fragment response path (for Explore).
+    function SendReplayRaw(FunctionCode:Word; const Body:TBytes; PatchIntegrityAtEnd:Integer;
+                           out RespPayload:TBytes; Reassemble:Boolean=false):Boolean;
+
     //: Reads raw bytes from a controller memory area (M/I/Q/counters/timers), by native RID.
     //: Only works for areas/DBs whose value isn't symbol/LID addressed (rare in practice -
     //: see ReadSymbolic). Kept for Phase 1 compatibility/diagnostics.
@@ -265,6 +333,12 @@ type
     function DBRead(DBNumber, Start, Size:Integer; out Data:TBytes):Boolean;
     //: Writes raw bytes to a data block by byte offset. See DBRead's caveat.
     function DBWrite(DBNumber, Start:Integer; const Data:TBytes):Boolean;
+    //: Creates a "TisMonitorJob" system object - the mechanism TIA Portal's DB declaration-
+    //: table "Monitor all" actually uses to read live DB values on the V1-initial/
+    //: SecurityKey firmware fallback, where the normal class-1001 Subscription is rejected
+    //: with a constant fatal SystemEvent regardless of addressing style. See the private
+    //: declaration below for the full explanation.
+    function CreateTisMonitorJob(const Lids:array of Cardinal; out JobRID:Cardinal):Boolean;
 
     //-- Symbolic (LID-based) access - the only way to reliably read/write DB variables
     //-- and native-area (M/I/Q/Timers/Counters) named tags on real S7-1200/1500 firmware.
@@ -1280,6 +1354,302 @@ end;
 //: (KeyQualifier = the sequence number in use just before this request, not this
 //: request's own - matches the reference's self._sequence_number read before
 //: send_request internally advances it).
+function TS7PlusConnection.GetVarSubstreamedRaw(InObjectId, Address, SeqField:Cardinal; out RawResp:TBytes):Boolean;
+var
+  Payload:TBytes;
+begin
+  Payload := EncodeUInt32(InObjectId);
+  Payload := BytesConcat(Payload, BytesOf([$20, S7PlusType_UDINT]));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //field count
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Address));
+  //KeyQualifier is fixed at 1 for every read in this TIA-observed post-legitimation
+  //sequence (confirmed byte-for-byte across all 5 real reads in the capture, even
+  //though seq_field itself increments 1..5) - NOT derived from FSequenceNumber, unlike
+  //SessionActivate/PostAuthLegitimation's own ObjectQualifier usage.
+  Payload := BytesConcat(Payload, EncodeObjectQualifierV1(1));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(SeqField));
+  Payload := BytesConcat(Payload, BytesOf([0,0,0])); //fill; IntegrityId splices before these
+
+  Result := SendRequest(S7PlusFunc_GetVarSubstreamed, Payload, RawResp, 3);
+end;
+
+//: TIA Portal creates this object (inside the ClassSubscriptions container, same
+//: CreateObject shape as SubscriptionCreate's own) right after the 5 reads in
+//: PostLegitimationSessionInfo, before EXPLORE/GetMultiVariables are accepted - decoded
+//: byte-for-byte from the same real TIA V15 capture (subscription_capture2.pcapng). Its
+//: SubscriptionReferenceList isn't the normal per-variable one (SymbolCrc/AccessArea/
+//: Lids) - it's some other fixed system reference whose exact meaning isn't understood
+//: yet, so those 9 UDINT values are reproduced verbatim rather than derived.
+function TS7PlusConnection.CreateChangeCounterObject:Boolean;
+var
+  Attrs:TS7PlusPObjectAttributeArray;
+  ObjBytes, Payload, Resp:TBytes;
+  RefListValues:array[0..8] of Cardinal;
+
+  procedure AddAttr(AttrId:Cardinal; const Value:TBytes);
+  var n:Integer;
+  begin
+    n := Length(Attrs);
+    SetLength(Attrs, n+1);
+    Attrs[n].AttrId := AttrId;
+    Attrs[n].Value := Value;
+  end;
+
+begin
+  RefListValues[0] := $80010000;
+  RefListValues[1] := 0;
+  RefListValues[2] := 1;
+  RefListValues[3] := $80150001;
+  RefListValues[4] := 1;
+  RefListValues[5] := 1;
+  RefListValues[6] := 3;
+  RefListValues[7] := 0;
+  RefListValues[8] := $9AF;
+
+  SetLength(Attrs, 0);
+  AddAttr(S7PlusIds_ObjectVariableTypeName, EncodeValuePWString('SPL_PlcProgram_ChangeCounter'));
+  AddAttr(S7PlusObjId_SubscriptionFunctionClassId, EncodeValuePUSInt(1));
+  AddAttr(S7PlusObjId_SubscriptionMissedSendings, EncodeValuePUInt(0));
+  AddAttr(S7PlusObjId_SubscriptionSubsystemError, EncodeValuePLInt(0));
+  AddAttr(S7PlusObjId_SubscriptionRouteMode, EncodeValuePUSInt(1));
+  AddAttr(S7PlusObjId_SubscriptionActive, EncodeValuePBool(true));
+  AddAttr(S7PlusObjId_SubscriptionReferenceList, EncodeValuePUDIntArray(RefListValues, $20));
+  AddAttr(S7PlusObjId_SubscriptionCycleTime, EncodeValuePUDInt(0));
+  AddAttr(S7PlusObjId_SubscriptionDisabled, EncodeValuePUSInt(0));
+  AddAttr(S7PlusObjId_SubscriptionCount, EncodeValuePUSInt(0));
+  AddAttr(S7PlusObjId_SubscriptionCreditLimit, EncodeValuePInt(-1));
+  AddAttr(S7PlusObjId_SubscriptionTicks, EncodeValuePUInt(65535));
+  AddAttr(1055, EncodeValuePUSInt(0));
+
+  ObjBytes := EncodePObject(S7PlusObjId_GetNewRIDOnServer, S7PlusObjId_ClassSubscription, 0, 0, Attrs);
+
+  Payload := EncodeUInt32(FSubscriptionsContainerObjectId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeValuePUDInt(0)); //RequestValue = ValueUDInt(0)
+  //4 zero padding bytes + an incrementing "RequestId" byte before the object starts -
+  //present verbatim in the real capture for this and the system Subscription_* objects
+  //(4, then 5, 6, ...) but NOT for a normal user SubscriptionCreate (which only has the
+  //4 zero bytes and no 5th byte); meaning unconfirmed, reproduced as observed.
+  Payload := BytesConcat(Payload, BytesOf([0,0,0,0]));
+  Payload := BytesConcat(Payload, BytesOf([Byte(FTiaSysObjectRequestId)]));
+  Inc(FTiaSysObjectRequestId);
+  Payload := BytesConcat(Payload, ObjBytes);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  Result := SendRequest(S7PlusFunc_CreateObject, Payload, Resp, Length(ObjBytes)+4);
+  if Result then
+    Debug('CreateChangeCounterObject: OK')
+  else
+    Debug('CreateChangeCounterObject: falha');
+end;
+
+//: The two "Subscription_<n>" objects TIA creates right after ChangeCounter, both empty
+//: (SubscriptionReferenceList = [changeCounterHead, 0 unsubscribe, 0 subscribe] - no
+//: actual items) with different cycle/route/function-class/credit-limit parameters -
+//: decoded byte-for-byte from the same real capture. Only the simpler of the two
+//: (no nested sub-object) is reproduced here.
+function TS7PlusConnection.CreateEmptySystemSubscription(CycleTimeMs:Cardinal; RouteMode:Byte;
+                                                           FunctionClassId:Byte; CreditLimit:SmallInt):Boolean;
+var
+  Attrs:TS7PlusPObjectAttributeArray;
+  ObjBytes, Payload, Resp:TBytes;
+  RefListValues:array[0..2] of Cardinal;
+
+  procedure AddAttr(AttrId:Cardinal; const Value:TBytes);
+  var n:Integer;
+  begin
+    n := Length(Attrs);
+    SetLength(Attrs, n+1);
+    Attrs[n].AttrId := AttrId;
+    Attrs[n].Value := Value;
+  end;
+
+begin
+  RefListValues[0] := $80010000;
+  RefListValues[1] := 0;
+  RefListValues[2] := 0;
+
+  SetLength(Attrs, 0);
+  AddAttr(S7PlusIds_ObjectVariableTypeName, EncodeValuePWString('Subscription_'+IntToStr(FSubscriptionChangeCounter)));
+  AddAttr(S7PlusObjId_SubscriptionFunctionClassId, EncodeValuePUSInt(FunctionClassId));
+  AddAttr(S7PlusObjId_SubscriptionMissedSendings, EncodeValuePUInt(0));
+  AddAttr(S7PlusObjId_SubscriptionSubsystemError, EncodeValuePLInt(0));
+  AddAttr(S7PlusObjId_SubscriptionRouteMode, EncodeValuePUSInt(RouteMode));
+  AddAttr(S7PlusObjId_SubscriptionActive, EncodeValuePBool(true));
+  AddAttr(S7PlusObjId_SubscriptionReferenceList, EncodeValuePUDIntArray(RefListValues, $20));
+  AddAttr(S7PlusObjId_SubscriptionCycleTime, EncodeValuePUDInt(CycleTimeMs));
+  AddAttr(S7PlusObjId_SubscriptionDisabled, EncodeValuePUSInt(0));
+  AddAttr(S7PlusObjId_SubscriptionCount, EncodeValuePUSInt(0));
+  AddAttr(S7PlusObjId_SubscriptionCreditLimit, EncodeValuePInt(CreditLimit));
+  AddAttr(S7PlusObjId_SubscriptionTicks, EncodeValuePUInt(65535));
+  AddAttr(1055, EncodeValuePUSInt(0));
+
+  ObjBytes := EncodePObject(S7PlusObjId_GetNewRIDOnServer, S7PlusObjId_ClassSubscription, 0, 0, Attrs);
+
+  Payload := EncodeUInt32(FSubscriptionsContainerObjectId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeValuePUDInt(0)); //RequestValue = ValueUDInt(0)
+  Payload := BytesConcat(Payload, BytesOf([0,0,0,0]));
+  Payload := BytesConcat(Payload, BytesOf([Byte(FTiaSysObjectRequestId)]));
+  Inc(FTiaSysObjectRequestId);
+  Payload := BytesConcat(Payload, ObjBytes);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  Result := SendRequest(S7PlusFunc_CreateObject, Payload, Resp, Length(ObjBytes)+4);
+  if Result then
+    Debug('CreateEmptySystemSubscription: OK')
+  else
+    Debug('CreateEmptySystemSubscription: falha');
+end;
+
+function TS7PlusConnection.GetLinkRaw(InObjectId, Attr:Cardinal; out RIDs:TS7PlusLIDArray):Boolean;
+var
+  Payload, Resp:TBytes;
+  Offset, c, i:Integer;
+  ItemCount:Cardinal;
+begin
+  Result := false;
+  SetLength(RIDs, 0);
+  Payload := EncodeUInt32(InObjectId);
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Attr));
+  Payload := BytesConcat(Payload, BytesOf([0,0]));
+  Payload := BytesConcat(Payload, BytesOf([0,0,0])); //fill; IntegrityId splices before these
+  if not SendRequest(S7PlusFunc_GetLink, Payload, Resp, 3) then exit;
+  Offset := 0;
+  ItemCount := DecodeUInt32VLQ(Resp, Offset, c);
+  Offset := Offset+c;
+  if Integer(ItemCount)<0 then exit;
+  SetLength(RIDs, ItemCount);
+  for i:=0 to Integer(ItemCount)-1 do begin
+    if Offset+4>Length(Resp) then begin
+      SetLength(RIDs, 0);
+      exit;
+    end;
+    RIDs[i] := DecodeUInt32(Resp, Offset);
+    Offset := Offset+4;
+  end;
+  Result := true;
+end;
+
+function TS7PlusConnection.GetMultiVariablesFields(InObjectId:Cardinal; const FieldIds:array of Cardinal; out Results:TS7PlusMultiReadResultArray):Boolean;
+var
+  Payload, Resp:TBytes;
+  i:Integer;
+begin
+  Payload := EncodeUInt32(InObjectId);
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Length(FieldIds)));
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(Length(FieldIds)));
+  for i:=0 to High(FieldIds) do
+    Payload := BytesConcat(Payload, EncodeUInt32VLQ(FieldIds[i]));
+  Payload := BytesConcat(Payload, CurrentObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+  Result := SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp);
+  if not Result then exit;
+  Result := ParseMultiReadResponse(Resp, Length(FieldIds), Results);
+end;
+
+//: DB4's live fingerprint (13 bytes) - read out of field 9505 off the RID that
+//: GetLink(11,2699) resolves, at a fixed offset (skipping that field's own 4-byte
+//: "40 <size> 32 <count>"-shaped preamble). Confirmed byte-for-byte identical between
+//: this read and the same 13 bytes embedded in 2 different real TisMonitorJob captures
+//: (21 and 23 monitored items respectively) - see CreateTisMonitorJob.
+function TS7PlusConnection.GetDB4Fingerprint(out Fingerprint:TBytes):Boolean;
+const
+  FieldIds:array[0..4] of Cardinal = (9500, 9501, 9506, 9505, 9507);
+var
+  RIDs:TS7PlusLIDArray;
+  Results:TS7PlusMultiReadResultArray;
+begin
+  Result := false;
+  SetLength(Fingerprint, 0);
+  if not GetLinkRaw(11, 2699, RIDs) or (Length(RIDs)=0) then begin
+    Debug('GetDB4Fingerprint: falha no GetLink(11,2699)');
+    exit;
+  end;
+  if not GetMultiVariablesFields(RIDs[0], FieldIds, Results) then begin
+    Debug('GetDB4Fingerprint: falha ao ler os campos do objeto de tipo');
+    exit;
+  end;
+  if (Length(Results)<4) or (not Results[3].Ok) or (Length(Results[3].Data)<17) then begin
+    Debug('GetDB4Fingerprint: campo 9505 ausente ou curto demais');
+    exit;
+  end;
+  Fingerprint := Copy(Results[3].Data, 4, 13);
+  Result := true;
+end;
+
+function TS7PlusConnection.CreateTisMonitorJob(const Lids:array of Cardinal; out JobRID:Cardinal):Boolean;
+var
+  Fingerprint, BlobData, Payload, Resp, ObjBytes:TBytes;
+  Attrs:TS7PlusPObjectAttributeArray;
+  N, i, Offs, TotalLen:Integer;
+  RelId:Cardinal;
+begin
+  Result := false;
+  JobRID := 0;
+  if not GetDB4Fingerprint(Fingerprint) then begin
+    Debug('CreateTisMonitorJob: falha ao obter a fingerprint da DB');
+    exit;
+  end;
+
+  N := Length(Lids);
+  TotalLen := 20 + 4*N; //ResponsePrefix(20) + N x 4-byte values
+  SetLength(BlobData, 0);
+  BlobData := BytesConcat(BlobData, BytesOf([$40, Byte(TotalLen+20)]));
+  BlobData := BytesConcat(BlobData, BytesOf([$32, $01]));
+  BlobData := BytesConcat(BlobData, Fingerprint);
+  BlobData := BytesConcat(BlobData, BytesOf([$80, $10]));
+  for i:=0 to N-1 do begin
+    Offs := 20 + i*4;
+    BlobData := BytesConcat(BlobData, BytesOf([Byte(Lids[i]+$58)]));
+    BlobData := BytesConcat(BlobData, BytesOf([$04,$03,$F0,$00,$05,$D0,$12]));
+    BlobData := BytesConcat(BlobData, BytesOf([Byte(TotalLen-Offs)]));
+    BlobData := BytesConcat(BlobData, BytesOf([$80, Byte(Offs)]));
+  end;
+
+  SetLength(Attrs, 2);
+  Attrs[0].AttrId := S7PlusIds_ObjectVariableTypeName;
+  Attrs[0].Value := EncodeValuePWString('TisMonitorJob_'+IntToStr(FTiaSysObjectRequestId));
+  Attrs[1].AttrId := 2693;
+  Attrs[1].Value := EncodePValueBlob(BlobData);
+
+  RelId := $7FFFC000 + FTiaSysObjectRequestId;
+  ObjBytes := EncodePObject(RelId, 2709, 0, 0, Attrs);
+
+  Payload := EncodeUInt32(FSubscriptionsContainerObjectId);
+  Payload := BytesConcat(Payload, EncodeValuePUDInt(0));
+  Payload := BytesConcat(Payload, BytesOf([0,0,0,0]));
+  Payload := BytesConcat(Payload, BytesOf([Byte(FTiaSysObjectRequestId)]));
+  Inc(FTiaSysObjectRequestId);
+  Payload := BytesConcat(Payload, ObjBytes);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  Result := SendRequest(S7PlusFunc_CreateObject, Payload, Resp, Length(ObjBytes)+4);
+  if Result then begin
+    if Length(Resp)>=8 then
+      JobRID := DecodeUInt32(Resp, Length(Resp)-8); //best-effort, verified against live response
+    Debug(Format('CreateTisMonitorJob: OK jobRID=0x%.8x',[JobRID]));
+  end else
+    Debug('CreateTisMonitorJob: falha');
+end;
+
+function TS7PlusConnection.PostLegitimationSessionInfo:Boolean;
+var
+  Resp:TBytes;
+begin
+  Result := false;
+  if not GetVarSubstreamedRaw(FSessionId, 300, 1, Resp) then exit;
+  if not GetVarSubstreamedRaw($31, 3753, 2, Resp) then exit;
+  if not GetVarSubstreamedRaw(FSessionId, 1842, 3, Resp) then exit;
+  if not GetVarSubstreamedRaw(FSessionId, 300, 4, Resp) then exit;
+  if not GetVarSubstreamedRaw(FSessionId, 1842, 5, Resp) then exit;
+  FTiaSysObjectRequestId := 4;
+  if not CreateChangeCounterObject then exit;
+  if not GetVarSubstreamedRaw(FSessionId, 300, 6, Resp) then exit;
+  if not GetVarSubstreamedRaw(FSessionId, 1842, 7, Resp) then exit;
+  if not CreateEmptySystemSubscription(900, 1, 3, -1) then exit;
+  Result := true;
+  Debug('PostLegitimationSessionInfo: OK');
+end;
+
 function TS7PlusConnection.SessionActivate:Boolean;
 var
   Payload, Resp:TBytes;
@@ -1455,8 +1825,21 @@ begin
   if FSessionSetupOK and (Length(FHarpoSessionKey)>0) then begin
     if not SessionActivate then
       Debug('Connect: falha na ativacao de sessao (SessionActivate) - operacoes de dados podem continuar bloqueadas.')
-    else if not PostAuthLegitimation(Password) then
-      Debug('Connect: falha na legitimacao pos-autenticacao (PostAuthLegitimation) - operacoes de dados podem continuar bloqueadas.');
+    else begin
+      //TIA Portal never does this read(303)/write(1846) exchange at all (confirmed
+      //2026-08-31 against a real TIA V15 capture: its first post-activation read already
+      //uses IntegrityId(read)=0) - it authenticates via a different channel (a configured
+      //communication certificate) that skips this entirely. Re-tested 2026-08-31: calling
+      //PostAuthLegitimation here - even though the PLC accepts it and returns a positive
+      //retval - poisons the session: the very same GetVarSubstreamedRaw(300) read that
+      //succeeds when PostAuthLegitimation is skipped instead comes back with the exact
+      //same FATAL SystemEvent as the later DB reads (member 0x9D71 = A2013B00029BFF88).
+      //So PostAuthLegitimation must stay skipped entirely, matching TIA's own behavior.
+      FIntegrityIdRead := 0;
+      FIntegrityIdWrite := 0;
+      if not PostLegitimationSessionInfo then
+        Debug('Connect: falha na leitura de info pos-legitimacao - EXPLORE/leituras podem continuar bloqueadas.');
+    end;
   end;
 
   Result := true;
@@ -1480,6 +1863,89 @@ end;
 //===========================================================================
 // Generic request/response
 //===========================================================================
+
+const
+  S7PlusVersion_SystemEvent = $FE;
+  S7PlusSystemEventReturnValueId = $9D71; //: 40305 - matches python-snap7's _SYSTEM_EVENT_RETURN_VALUE_ID.
+
+function TS7PlusConnection.IsNonFatalSystemEvent(const Payload:TBytes):Boolean;
+var
+  Offset, c, MemberId:Integer;
+  Flags, DataType:Byte;
+  Size_:Integer;
+  RawVal:QWord;
+  Signed:Int64;
+begin
+  Result := true; //unrecognized/malformed shapes are treated as non-fatal, same as the reference falling through to "return None".
+  if Length(Payload)<16 then exit;
+  if Length(Payload)=16 then exit;
+  if (Length(Payload)<20) or (DecodeUInt32(Payload, 16)<>Cardinal(S7PlusType_STRUCT)) then exit;
+
+  Offset := 24;
+  while Offset+4<=Length(Payload) do begin
+    MemberId := DecodeUInt32(Payload, Offset);
+    Inc(Offset, 4);
+    if MemberId=0 then break;
+    if Offset+4>Length(Payload) then exit;
+    Flags := Payload[Offset+1];
+    DataType := Payload[Offset+3];
+    Inc(Offset, 4);
+    case DataType of
+      $01,$02,$06,$0A: Size_ := 1;
+      $03,$07,$0B: Size_ := 2;
+      $04,$08,$0C,$0E,$12,$13: Size_ := 4;
+      $05,$09,$0D,$0F,$10,$11: Size_ := 8;
+    else
+      exit; //unknown scalar type - can't reliably keep walking, treat as non-fatal (best-effort)
+    end;
+    if Offset+Size_>Length(Payload) then exit;
+    if MemberId=S7PlusSystemEventReturnValueId then begin
+      RawVal := 0;
+      for c:=0 to Size_-1 do RawVal := (RawVal shl 8) or Payload[Offset+c];
+      if Size_<8 then begin
+        Signed := Int64(RawVal);
+        if (RawVal and (QWord(1) shl (Size_*8-1)))<>0 then
+          Signed := Signed - (Int64(1) shl (Size_*8));
+      end else
+        Signed := Int64(RawVal);
+      Result := Signed>=0;
+      exit;
+    end;
+    Inc(Offset, Size_);
+    if Flags=0 then; //silence unused-var warning - Flags isn't otherwise consulted, matching the reference
+  end;
+  //A Struct payload that never carries a ReturnValue member is fatal (matches the
+  //reference: "S7CommPlus SystemEvent Struct has no ReturnValue").
+  Result := false;
+end;
+
+function TS7PlusConnection.RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
+const
+  MaxSystemEvents = 8;
+var
+  Attempt, Consumed:Integer;
+  Version:Byte;
+  DataLen:Word;
+  EventBody:TBytes;
+begin
+  Result := false;
+  for Attempt:=1 to MaxSystemEvents+1 do begin
+    if LogicalRecv(ResponseFrame)<>iorOK then exit;
+    if Length(ResponseFrame)<4 then exit;
+    Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+    if Version<>S7PlusVersion_SystemEvent then begin
+      Result := true;
+      exit;
+    end;
+    EventBody := BytesCopy(ResponseFrame, Consumed, DataLen);
+    if not IsNonFatalSystemEvent(EventBody) then begin
+      Debug('RecvApplicationFrame: SystemEvent FATAL recebido: '+S7PlusHexStr(EventBody));
+      exit;
+    end;
+    Debug(Format('RecvApplicationFrame: SystemEvent nao-fatal ignorado (%d bytes)',[Length(EventBody)]));
+  end;
+  Debug('RecvApplicationFrame: excesso de SystemEvents consecutivos');
+end;
 
 function TS7PlusConnection.SendRequest(FunctionCode:Word; const Payload:TBytes; out RespPayload:TBytes;
                                         IntegrityTail:Integer; Reassemble:Boolean):Boolean;
@@ -1575,7 +2041,7 @@ begin
     exit;
   end;
 
-  if LogicalRecv(ResponseFrame)<>iorOK then begin
+  if not RecvApplicationFrame(ResponseFrame) then begin
     Debug('SendRequest: falha ao receber resposta');
     exit;
   end;
@@ -1614,6 +2080,90 @@ begin
 
   Result := true;
   Debug('SendRequest: respPayload='+S7PlusHexStr(RespPayload));
+end;
+
+function TS7PlusConnection.SendReplayRaw(FunctionCode:Word; const Body:TBytes; PatchIntegrityAtEnd:Integer;
+                                          out RespPayload:TBytes; Reassemble:Boolean):Boolean;
+var
+  Seq:Word;
+  TransportFlags:Byte;
+  Header, ActualPayload, Request, Frame, ResponseFrame, Response, IntegrityBytes, FrameData:TBytes;
+  Version:Byte;
+  DataLen:Word;
+  Consumed, HashLen, c:Integer;
+begin
+  Result := false;
+  SetLength(RespPayload, 0);
+  if not FConnected then exit;
+
+  Seq := NextSequenceNumber;
+  TransportFlags := $34; //V3/SessionKey regime always uses 0x34
+
+  if PatchIntegrityAtEnd>=0 then begin
+    IntegrityBytes := EncodeUInt32VLQ(FIntegrityIdWrite);
+    if Length(Body)>=PatchIntegrityAtEnd then
+      ActualPayload := BytesConcat(BytesConcat(BytesCopy(Body,0,Length(Body)-PatchIntegrityAtEnd), IntegrityBytes), BytesCopy(Body,Length(Body)-PatchIntegrityAtEnd,PatchIntegrityAtEnd))
+    else
+      ActualPayload := Body;
+    Debug(Format('SendReplayRaw: IntegrityId(write)=%d spliced @end-%d',[FIntegrityIdWrite,PatchIntegrityAtEnd]));
+  end else
+    ActualPayload := Body;
+
+  Header := EncodeRequestHeader(FunctionCode, Seq, FSessionId, TransportFlags);
+  Request := BytesConcat(Header, ActualPayload);
+
+  if Length(FHarpoSessionKey)>0 then begin
+    FrameData := BytesConcat(BytesOf([$20]), S7PlusHMACSHA256(Copy(FHarpoSessionKey,0,24), Request));
+    FrameData := BytesConcat(FrameData, Request);
+    Frame := BytesConcat(EncodeS7PlusHeader(S7PlusVersion_V3, Length(FrameData)), FrameData);
+    Frame := BytesConcat(Frame, EncodeS7PlusHeader(S7PlusVersion_V3, 0));
+  end else begin
+    Frame := BytesConcat(EncodeS7PlusHeader(FProtocolVersion, Length(Request)), Request);
+    Frame := BytesConcat(Frame, EncodeS7PlusHeader(FProtocolVersion, 0));
+  end;
+
+  Debug(Format('SendReplayRaw: functionCode=$%.4x seq=%d bodylen=%d',[FunctionCode,Seq,Length(ActualPayload)]));
+
+  if not LogicalSend(Frame) then begin
+    Debug('SendReplayRaw: falha ao enviar');
+    exit;
+  end;
+
+  if PatchIntegrityAtEnd>=0 then
+    FIntegrityIdWrite := (FIntegrityIdWrite+1) and $FFFFFFFF;
+
+  if Reassemble then begin
+    if not ReassembledRecv(Response) then begin
+      Debug('SendReplayRaw: falha ao reassemblar resposta');
+      exit;
+    end;
+    if Length(Response)<10 then exit;
+    RespPayload := BytesCopy(Response, 10, Length(Response)-10);
+    Result := true;
+    exit;
+  end;
+
+  if not RecvApplicationFrame(ResponseFrame) then begin
+    Debug('SendReplayRaw: falha ao receber resposta');
+    exit;
+  end;
+  if Length(ResponseFrame)<4 then exit;
+
+  Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+  Response := BytesCopy(ResponseFrame, Consumed, DataLen);
+  if (Version=S7PlusVersion_V3) and (Length(Response)>33) then begin
+    HashLen := Response[0];
+    if 1+HashLen<Length(Response) then
+      Response := BytesCopy(Response, 1+HashLen, Length(Response)-(1+HashLen));
+  end;
+  if Length(Response)<10 then exit;
+  RespPayload := BytesCopy(Response, 10, Length(Response)-10);
+  if (Length(FHarpoSessionKey)>0) and (Length(RespPayload)>1) then begin
+    DecodeUInt32VLQ(RespPayload, 0, c);
+    RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+  end;
+  Result := true;
+  Debug('SendReplayRaw: respPayload='+S7PlusHexStr(RespPayload));
 end;
 
 function TS7PlusConnection.ExtractErrorText(const Data:TBytes):String;
@@ -2304,6 +2854,14 @@ begin
   Result := true;
 end;
 
+function TS7PlusConnection.CurrentObjectQualifier:TBytes;
+begin
+  if Length(FHarpoSessionKey)>0 then
+    Result := EncodeObjectQualifierV1(1)
+  else
+    Result := EncodeObjectQualifier;
+end;
+
 //===========================================================================
 // Area / DB read-write (GetMultiVariables / SetMultiVariables, single item)
 //===========================================================================
@@ -2334,7 +2892,7 @@ begin
     Result := BytesConcat(Result, BytesOf([$00]));
   end;
 
-  Result := BytesConcat(Result, EncodeObjectQualifier);
+  Result := BytesConcat(Result, CurrentObjectQualifier);
   Result := BytesConcat(Result, EncodeUInt32VLQ(1));
   Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
 end;
@@ -2486,7 +3044,7 @@ begin
     Result := BytesConcat(Result, BytesOf([$00]));
   end;
 
-  Result := BytesConcat(Result, EncodeObjectQualifier);
+  Result := BytesConcat(Result, CurrentObjectQualifier);
   //The reference implementation only appends this VLQ(1) for writes
   //(_build_symbolic_write_payload) - reads (_build_symbolic_read_payload) omit it
   //entirely (with_integrity=False). Including it unconditionally made every
@@ -2527,7 +3085,7 @@ begin
   Result := BytesConcat(Result, EncodeUInt32VLQ(Length(Items))); //item count
   Result := BytesConcat(Result, EncodeUInt32VLQ(TotalFieldCount));
   Result := BytesConcat(Result, AllAddrData);
-  Result := BytesConcat(Result, EncodeObjectQualifier);
+  Result := BytesConcat(Result, CurrentObjectQualifier);
   Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
 end;
 
