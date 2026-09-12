@@ -19,7 +19,8 @@ uses
   ut.s7pluscodec,
   ut.s7plustypeinfo,
   ut.s7family,
-  ut.protocoldriver;
+  ut.protocoldriver,
+  ut.plcstring;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

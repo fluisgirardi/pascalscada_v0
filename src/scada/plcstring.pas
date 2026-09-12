@@ -837,7 +837,11 @@ end;
 
 procedure TPLCString.SetStringSize(asize:Cardinal);
 begin
-   if (PByteSize=8) and (size>255) or ((PByteSize=7) and (asize>127)) or ((PStringType=stROCKWELL) and (asize>84)) then
+   //asize e' o valor pedido; "size" seria o tamanho atual do bloco, herdado de
+   //TTagBlock - conferir o limite contra ele deixava passar qualquer tamanho.
+   //asize is the requested value; "size" would be the block's current size,
+   //inherited from TTagBlock - checking the bound against it let any size in.
+   if ((PByteSize=8) and (asize>255)) or ((PByteSize=7) and (asize>127)) or ((PStringType=stROCKWELL) and (asize>84)) then
      raise Exception.Create(SstringSizeOutOfBounds);
    PStringSize := asize;
    SetBlockSize(CalcBlockSize(false));
