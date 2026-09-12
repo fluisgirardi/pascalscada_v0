@@ -16,7 +16,8 @@ uses
   ut.modbusrtu,
   ut.modbustcp,
   ut.s7plusvlq,
-  ut.s7pluscodec;
+  ut.s7pluscodec,
+  ut.s7plustypeinfo;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
