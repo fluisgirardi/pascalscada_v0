@@ -72,6 +72,8 @@ function TMelsecTCPDriver.DecodePkg(pkg: TIOPacket;
 var
    i,c,c2,plc:LongInt;
    address, len:Cardinal;
+   endcode:LongInt;
+   umValor:TArrayOfDouble;
    foundPLC:Boolean;
    {$IFDEF FDEBUG}
    debug:string;
@@ -90,7 +92,7 @@ begin
       Result := ioCommError;
   end;
 
-  if (Result<>ioOk)then
+  if (Result=ioOk)then
     case pkg.ReadIOResult of
       iorTimeOut:
         Result:=ioTimeOut;
@@ -100,6 +102,12 @@ begin
       iorPortError:
         Result := ioCommError;
     end;
+
+  //a resposta tem 11 bytes de cabecalho antes do primeiro dado: subcabecalho,
+  //rede, CLP, modulo de E/S, estacao, tamanho e o codigo de termino.
+  //the response header is 11 bytes long before the first data byte.
+  if (Result=ioOk) AND (Length(pkg.BufferToRead)<11) then
+    Result := ioCommError;
 
   //se o endereco retornado nao conferem com o selecionado...
   //if the address in the incoming packet is different of the requested
@@ -114,6 +122,16 @@ begin
     Result := ioCommError;
   end;
 
+  //codigo de termino: zero e' sucesso, qualquer outro valor e' recusa do CLP
+  //e o que vem atras dele nao e' dado.
+  //end code: zero means success, anything else is a refusal from the PLC and
+  //what follows it is not data.
+  if (Result=ioOk) then begin
+    endcode := pkg.BufferToRead[9] + (pkg.BufferToRead[10] shl 8);
+    if endcode<>0 then
+      Result := ioPLCError;
+  end;
+
   //procura o plc
   //search de PLC
   foundPLC := false;
@@ -123,6 +141,21 @@ begin
       foundPLC := true;
       break;
     end;
+
+  //endereco e quantidade saem do pedido e valem tanto para gravar os valores
+  //quanto para marcar a falha na area, entao ficam fora do if de resultado -
+  //os ramos de falha os usavam sem nunca terem atribuido valor a eles.
+  //address and length come from the request and are needed both to store the
+  //values and to mark the fault, so they are computed outside the result test.
+  address := 0;
+  len     := 0;
+  if Length(pkg.BufferToWrite)>=22 then begin
+    address := pkg.BufferToWrite[15] + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
+    if (pkg.BufferToWrite[12] = 4) then  //leitura / read
+      len := pkg.BufferToWrite[19]
+    else
+      len := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
+  end;
 
   //comeca a decodificar o pacote...
   //decodes the packet.
@@ -134,9 +167,6 @@ begin
     begin
       if Result=ioOk then
       begin
-        address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
-        len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
-
         SetLength(values,len);
 
         i := 0;
@@ -182,18 +212,20 @@ begin
       //where the data decoded will be stored.
       if Result=ioOk then
       begin
-        address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
-        len := pkg.BufferToWrite[19];
         SetLength(Values,len);
-
-        i := 0;
+        SetLength(umValor,1);
 
         for I := 0 to len - 1 do
         begin
-          SetLength(Values,1);
           c2 := (i div 2) + 11;
+          if c2>=Length(pkg.BufferToRead) then begin
+            //resposta mais curta do que o pedido: o que falta nao foi lido
+            //response shorter than the request: the rest was not read
+            Result := ioCommError;
+            break;
+          end;
           if (i mod 2 = 0) then
-            Values[0]:= byte(pkg.BufferToRead[c2] shr 4)
+            umValor[0]:= byte(pkg.BufferToRead[c2] shr 4)
           else
           begin
             c := LongInt(byte(pkg.BufferToRead[c2]));
@@ -201,19 +233,20 @@ begin
               c := 1;
             if c = 16 then
               c := 0;
-            Values[0] := c;
+            umValor[0] := c;
           end;
+          Values[i] := umValor[0];
           if Length(PMelsecPLC)>0 then
           begin
             case pkg.BufferToWrite[18] of
-              144: PMelsecPLC[0].OutPuts_M.SetValues(address,1,1,Values,Result);
-              145: PMelsecPLC[0].OutPuts_SM.SetValues(address,1,1,Values,Result);
-              146: PMelsecPLC[0].OutPuts_L.SetValues(address,1,1,Values,Result);
-              147: PMelsecPLC[0].OutPuts_F.SetValues(address,1,1,Values,Result);
-              148: PMelsecPLC[0].OutPuts_V.SetValues(address,1,1,Values,Result);
-              156: PMelsecPLC[0].OutPuts_X.SetValues(address,1,1,Values,Result);
-              157: PMelsecPLC[0].OutPuts_Y.SetValues(address,1,1,Values,Result);
-              160: PMelsecPLC[0].OutPuts_B.SetValues(address,1,1,Values,Result);
+              144: PMelsecPLC[0].OutPuts_M.SetValues(address,1,1,umValor,Result);
+              145: PMelsecPLC[0].OutPuts_SM.SetValues(address,1,1,umValor,Result);
+              146: PMelsecPLC[0].OutPuts_L.SetValues(address,1,1,umValor,Result);
+              147: PMelsecPLC[0].OutPuts_F.SetValues(address,1,1,umValor,Result);
+              148: PMelsecPLC[0].OutPuts_V.SetValues(address,1,1,umValor,Result);
+              156: PMelsecPLC[0].OutPuts_X.SetValues(address,1,1,umValor,Result);
+              157: PMelsecPLC[0].OutPuts_Y.SetValues(address,1,1,umValor,Result);
+              160: PMelsecPLC[0].OutPuts_B.SetValues(address,1,1,umValor,Result);
             end;
           end;
           address := address + 1;
@@ -252,9 +285,6 @@ begin
     begin
       if Result=ioOk then
       begin
-        address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
-        len     := (pkg.BufferToWrite[10] shl 8) + pkg.BufferToWrite[11];
-
         SetLength(values,len);
 
         i := 0;
@@ -287,21 +317,25 @@ begin
     begin
       if Result=ioOk then
       begin
-        address := (pkg.BufferToWrite[15]) + (pkg.BufferToWrite[16] shl 8) + (pkg.BufferToWrite[17] shl 16);
-        len     := pkg.BufferToWrite[19];
-
         SetLength(Values,len);
+        SetLength(umValor,1);
 
         for i:=0 to Len-1 do
         begin
-          SetLength(Values,1);
-          Values[0]:=(LongInt(pkg.BufferToRead[11+(i*2)])) + LongInt(pkg.BufferToRead[12+i*2] shl 8);
+          if (12+i*2)>=Length(pkg.BufferToRead) then begin
+            //resposta mais curta do que o pedido: o que falta nao foi lido
+            //response shorter than the request: the rest was not read
+            Result := ioCommError;
+            break;
+          end;
+          umValor[0]:=(LongInt(pkg.BufferToRead[11+(i*2)])) + LongInt(pkg.BufferToRead[12+i*2] shl 8);
+          Values[i]:=umValor[0];
 
           if Length(PMelsecPLC)>0 then
           begin
             case pkg.BufferToWrite[18] of
-              168: PMelsecPLC[0].Registers_D.SetValues(address,1,1,Values,Result);
-              169: PMelsecPLC[0].Registers_SD.SetValues(address,1,1,Values,Result);
+              168: PMelsecPLC[0].Registers_D.SetValues(address,1,1,umValor,Result);
+              169: PMelsecPLC[0].Registers_SD.SetValues(address,1,1,umValor,Result);
             end;
           end;
           address := address + 1;
