@@ -99,7 +99,10 @@ type
     procedure TemporizadorUsaASuaPropriaArea;
     procedure EscritaEmContadorTambemUsaONumeroDoElemento;
     procedure AreaAnalogicaDoS7200EnderecaEmBits;
-    procedure LeituraEEscritaDevemConcordarNoTamanhoDoContador;
+    procedure LeituraEEscritaConcordamNoTamanhoDoContador;
+    procedure TamanhoDoItemDeContadorVaiEmElementos;
+    procedure AreaAnalogicaDoS7200TambemContaEmElementos;
+    procedure AreaDeBytesContaEmBytes;
   end;
 
 implementation
@@ -466,31 +469,18 @@ begin
   FDrv.AddReadItem(msg, vtS7_200_AnInput, 0, 2, 2);
 
   //area analogica do S7-200: e' area de word (tipo $04), mas o endereco
-  //continua em bits como nas demais - byte 2 = bit 16 = $10.
+  //continua em bits como nas demais - byte 2 = bit 16 = $10. Os 2 bytes
+  //pedidos viram 1 word na contagem do item.
   AssertBytesEqual('leitura de AIW2',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
-                           '12 0A 10 04 00 02 00 00 06 00 00 10'),
+                           '12 0A 10 04 00 01 00 00 06 00 00 10'),
                    msg);
 end;
 
-procedure TTestS7Family.LeituraEEscritaDevemConcordarNoTamanhoDoContador;
+procedure TTestS7Family.LeituraEEscritaConcordamNoTamanhoDoContador;
 var
   msgLeitura, msgEscrita:BYTES;
 begin
-  Ignore('divergencia conhecida: no item de contador/temporizador o campo de ' +
-         'contagem e'#39' em ELEMENTOS (cada um de 2 bytes na resposta), mas os dois ' +
-         'caminhos entendem o tamanho recebido de formas diferentes: a leitura ' +
-         'repassa o tamanho como esta (AddToReadRequest: ReqLength:=iByteCount) ' +
-         'enquanto a escrita divide por dois (AddParamToWriteRequest: ' +
-         '(bufferLen+1) div 2). Como o driver mede todo tag em bytes ' +
-         '(SizeOfTag devolve 8 bits/ptByte) e guarda contadores num ' +
-         'TPLCMemoryManager de 1 unidade por endereco, a leitura pede o dobro de ' +
-         'elementos e a resposta volta com o dobro de bytes que o buffer previu. ' +
-         'Corrigir so' + #39 + ' esta divisao nao resolve: o endereco e'#39' por elemento e o ' +
-         'tamanho por byte, entao o modelo do caminho de contador/temporizador ' +
-         'precisa ser decidido inteiro (elementos de 2 bytes) - inclui o ' +
-         'IncomingPacketSize e o SetValues das areas Counters/Timers.');
-
   //duas unidades de tamanho, dos dois lados
   msgLeitura:=nil;
   FDrv.PrepRead(msgLeitura);
@@ -502,6 +492,52 @@ begin
 
   //byte 17 do frame = parte baixa da contagem de elementos do item
   AssertEquals('contagem de elementos no item', msgLeitura[17], msgEscrita[17]);
+end;
+
+procedure TTestS7Family.TamanhoDoItemDeContadorVaiEmElementos;
+var
+  msg:BYTES;
+begin
+  //cada contador ocupa dois bytes, entao 4 bytes pedidos sao 2 contadores -
+  //conferido contra o snap7 e o libnodave
+  msg:=nil;
+  FDrv.PrepRead(msg);
+  FDrv.AddReadItem(msg, vtS7_Counter, 0, 5, 4);
+
+  AssertBytesEqual('leitura de 2 contadores a partir do 5',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
+                           '12 0A 10 1C 00 02 00 00 1C 00 00 05'),
+                   msg);
+end;
+
+procedure TTestS7Family.AreaAnalogicaDoS7200TambemContaEmElementos;
+var
+  msg:BYTES;
+begin
+  //area de word: 4 bytes sao 2 words
+  msg:=nil;
+  FDrv.PrepRead(msg);
+  FDrv.AddReadItem(msg, vtS7_200_AnInput, 0, 2, 4);
+
+  AssertBytesEqual('leitura de 2 words analogicas',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
+                           '12 0A 10 04 00 02 00 00 06 00 00 10'),
+                   msg);
+end;
+
+procedure TTestS7Family.AreaDeBytesContaEmBytes;
+var
+  msg:BYTES;
+begin
+  //nas areas de byte um elemento e' um byte: a conversao nao pode valer aqui
+  msg:=nil;
+  FDrv.PrepRead(msg);
+  FDrv.AddReadItem(msg, vtS7_DB, 1, 0, 4);
+
+  AssertBytesEqual('leitura de 4 bytes de DB',
+                   BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
+                           '12 0A 10 02 00 04 00 01 84 00 00 00'),
+                   msg);
 end;
 
 initialization
