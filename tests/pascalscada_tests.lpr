@@ -23,7 +23,9 @@ uses
   ut.plcstring,
   ut.messagespool,
   ut.plcmemorymanager2,
-  ut.crossevent;
+  ut.crossevent,
+  ut.commtypes,
+  ut.lgxdriver;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
