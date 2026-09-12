@@ -11,7 +11,8 @@ uses
   bitmappertagassistant, blockstructtagassistant, comptagedt, 
   modbustagassistant, scadapropeditor, scadareg, siemenstagassistant, 
   ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, 
-  ustructuremapper, uwesttagbuilder, westasciitagassistant, LazarusPackageIntf;
+  ustructuremapper, uwesttagbuilder, westasciitagassistant, 
+  rockwelltagassistant, ulgxtagbuilder, LazarusPackageIntf;
 
 implementation
 
