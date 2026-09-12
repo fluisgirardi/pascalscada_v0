@@ -430,6 +430,7 @@ var
   c, h:LongInt;
   found: Boolean;
 begin
+  found:=false;
   h:=High(FControls);
   for c:=0 to h do
     if FControls[c]=control then begin

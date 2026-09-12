@@ -202,6 +202,12 @@ var
   h, i: Integer;
   found:Boolean;
 begin
+  //sem zerar, found chega aqui com lixo da pilha e a remocao de algo que nao
+  //esta na lista escreve em FFlowDest[i] com i passando do fim do vetor.
+  //without clearing it, found arrives holding stack garbage and removing
+  //something that is not on the list writes to FFlowDest[i] with i past the
+  //end of the array.
+  found:=false;
   h:=High(FFlowDest);
   for i:=0 to h do
     if FFlowDest[i]=WhoRemove then begin
