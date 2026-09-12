@@ -30,7 +30,8 @@ uses
   ut.westasciidriver,
   ut.melsectcp,
   ut.iboxdriver,
-  ut.s7familyresposta;
+  ut.s7familyresposta,
+  ut.melsecresposta;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
