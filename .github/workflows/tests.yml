@@ -261,22 +261,30 @@ jobs:
             # pelo instalador oficial), entao precisa de --lazarusdir.
             # Procuramos o lcl.lpk no disco em vez de consultar o pacote pelo
             # nome: o nome registrado depende do flavor e ja mudou uma vez.
+            # O diretorio procurado e' o que contem lcl/lcl.lpk, e o caminho
+            # do pacote e' versionado (lazarus-4.8). Qualquer candidato so
+            # vale depois de conferido - foi passar um caminho sem conferir
+            # que fez o lazbuild reclamar de "directory lcl not found".
             LAZDIR=""
-            for d in /usr/local/share/lazarus /usr/local/lib/lazarus; do
-              [ -f "$d/lcl/lcl.lpk" ] && LAZDIR="$d" && break
+            for d in /usr/local/share/lazarus /usr/local/share/lazarus-* \
+                     /usr/local/lib/lazarus /usr/local/lib/lazarus-*; do
+              if [ -f "$d/lcl/lcl.lpk" ]; then LAZDIR="$d"; break; fi
             done
             if [ -z "$LAZDIR" ]; then
-              LCLLPK=$(find /usr/local -type f -name lcl.lpk 2>/dev/null | head -1)
-              [ -n "$LCLLPK" ] && LAZDIR=$(dirname "$(dirname "$LCLLPK")")
+              for f in $(find /usr/local -type f -name lcl.lpk 2>/dev/null); do
+                d=${f%/lcl/lcl.lpk}
+                if [ "$d" != "$f" ] && [ -f "$d/lcl/lcl.lpk" ]; then LAZDIR="$d"; break; fi
+              done
             fi
             if [ -z "$LAZDIR" ]; then
               echo "nao encontrei o diretorio do lazarus. diagnostico:"
               pkg info | grep -i laz || echo "(nenhum pacote com 'laz' no nome)"
               command -v lazbuild || echo "(lazbuild fora do PATH)"
               ls -d /usr/local/share/lazarus* /usr/local/lib/lazarus* 2>/dev/null || true
+              find /usr/local -type f -name lcl.lpk 2>/dev/null || true
               exit 1
             fi
-            echo "lazarus em $LAZDIR"
+            echo "lazarus em $LAZDIR (lcl.lpk: $LAZDIR/lcl/lcl.lpk)"
 
             LAZ="lazbuild --lazarusdir=$LAZDIR"
 
