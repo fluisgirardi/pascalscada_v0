@@ -253,12 +253,25 @@ jobs:
           prepare: |
             pkg install -y lazarus-gtk2
           run: |
-            lazbuild --add-package-link pascalscada_common.lpk
-            lazbuild --add-package-link pascalscada.lpk
-            lazbuild --add-package-link pascalscada_db.lpk
+            set -e
 
-            lazbuild --build-all --widgetset=nogui pascalscada_common.lpk
-            lazbuild --build-all --widgetset=nogui pascalscada.lpk
-            lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
+            # O lazbuild do pacote nao sabe sozinho onde o Lazarus foi
+            # instalado ("Invalid Lazarus directory": ele procura o diretorio
+            # lcl a partir de um caminho que so existe numa instalacao feita
+            # pelo instalador oficial). Descobrimos pelo proprio pacote, em
+            # vez de fixar /usr/local/share/lazarus na unha.
+            LAZDIR=$(pkg info -l lazarus-gtk2 | sed -n 's#^\(/.*\)/lcl/.*#\1#p' | head -1)
+            : "${LAZDIR:?nao encontrei o diretorio do lazarus no pacote}"
+            echo "lazarus em $LAZDIR"
+
+            LAZ="lazbuild --lazarusdir=$LAZDIR"
+
+            $LAZ --add-package-link pascalscada_common.lpk
+            $LAZ --add-package-link pascalscada.lpk
+            $LAZ --add-package-link pascalscada_db.lpk
+
+            $LAZ --build-all --widgetset=nogui pascalscada_common.lpk
+            $LAZ --build-all --widgetset=nogui pascalscada.lpk
+            $LAZ --build-all --widgetset=nogui tests/pascalscada_tests.lpi
 
             tests/bin/pascalscada_tests --all --format=plain
