@@ -706,7 +706,7 @@ type
     @seealso(TProtocolIOResult)
     }
     {$ENDIF}
-    property LastASyncWriteStatus:TProtocolIOResult Read PLastASyncWriteCmdResult;
+    property LastASyncWriteStatus:TProtocolIOResult Read GetLastASyncWriteStatus;
   end;
 
   TManagedTags = array of TPLCTag;

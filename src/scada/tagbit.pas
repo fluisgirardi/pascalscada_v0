@@ -110,6 +110,15 @@ type
     //: @exclude
     destructor  Destroy; override;
 
+    //: @seealso(TPLCTag.ScanRead)
+    function  ScanRead:Int64; override;
+    //: @seealso(TPLCTag.ScanWrite)
+    function  ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal; const IgnoreAutoWrite:Boolean = false):Int64; overload; override;
+    //: @seealso(TPLCTag.Read)
+    procedure Read; override;
+    //: @seealso(TPLCTag.Write)
+    procedure Write(Values:TArrayOfDouble; Count, Offset:Cardinal); overload; override;
+
   published
 
     {$IFDEF PORTUGUES}
@@ -195,9 +204,14 @@ begin
     number.AddWriteFaultHandler(@WriteFaultCallBack);
     number.AddTagChangeHandler(@TagChangeCallBack);
     number.AddRemoveTagHandler(@RemoveTagCallBack);
-    TagChangeCallBack(self);
   end;
+  //o vinculo tem que estar de pe' antes de avisar: TagChangeCallBack sai pelo
+  //if PNumber<>nil, e era chamado aqui com PNumber ainda valendo o antigo.
+  //the link must be in place before notifying: TagChangeCallBack leaves at the
+  //if PNumber<>nil, and used to be called here with PNumber still the old one.
   PNumber:=number;
+  if (number<>nil) then
+    TagChangeCallBack(self);
 end;
 
 function TTagBit.GetValueRaw:Double;
@@ -296,6 +310,53 @@ begin
         else
           Value := SetBits(Value,bitValue);
      end;
+end;
+
+type
+  //Read e ScanRead sao protegidos em TPLCTag e cada tag concreto os republica.
+  //Este tipo auxiliar alcanca os dois a partir de uma referencia TPLCNumber,
+  //sem o tag de bits ter que saber qual e' a classe do tag de origem.
+  //Read and ScanRead are protected in TPLCTag and every concrete tag
+  //republishes them. This helper type reaches both from a TPLCNumber
+  //reference, without the bit tag having to know the source tag's class.
+  TTagDeOrigem = class(TPLCNumber);
+
+procedure TTagBit.Read;
+begin
+  //ler um tag de bits e' mandar ler o tag de origem: e' ele quem fala com o
+  //equipamento.
+  //reading a bit tag means reading the source tag: it is the one talking to
+  //the device.
+  if Assigned(PNumber) then
+    TTagDeOrigem(PNumber).Read;
+end;
+
+function TTagBit.ScanRead:Int64;
+begin
+  if Assigned(PNumber) then
+    Result:=TTagDeOrigem(PNumber).ScanRead
+  else
+    Result:=-1;
+end;
+
+procedure TTagBit.Write(Values:TArrayOfDouble; Count, Offset:Cardinal);
+begin
+  //escrever recompoe a palavra e entrega ao tag de origem, o mesmo caminho de
+  //atribuir Value. Quem decide entre escrita sincrona e de varredura e' ele.
+  //writing rebuilds the word and hands it to the source tag, the same path as
+  //assigning Value. The source decides between a sync and a scan write.
+  if Length(Values)>0 then
+    SetValueRaw(Values[0]);
+end;
+
+function TTagBit.ScanWrite(Values:TArrayOfDouble; Count, Offset:Cardinal; const IgnoreAutoWrite:Boolean):Int64;
+begin
+  Result:=-1;
+  if Length(Values)=0 then exit;
+
+  SetValueRaw(Values[0]);
+  if Assigned(PNumber) then
+    Result:=0;
 end;
 
 function TTagBit.GetBits(avalue: double): Double;
