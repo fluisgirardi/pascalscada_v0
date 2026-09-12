@@ -82,6 +82,12 @@ type
 
     //tamanho do que falta no buffer / remaining buffer size
     procedure ExcecaoDeixaSoOCRCNoBuffer;
+
+    //quadros malformados / malformed frames
+    procedure RespostaMenorQueOMinimoEhRecusada;
+    procedure PedidoVazioNaoDerrubaODriver;
+    procedure ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
+    procedure RelatorioDeEscravoComContagemMenorQueQuatroNaoTransborda;
   end;
 
   {$IFDEF PORTUGUES}
@@ -98,7 +104,7 @@ type
   }
   {$ENDIF}
 
-  { TTestModBusRTUComPorta }
+{ TTestModBusRTUComPorta }
 
   TTestModBusRTUComPorta = class(TTestCase)
   private
@@ -342,6 +348,52 @@ begin
 end;
 
 { TTestModBusRTUComPorta }
+
+procedure TTestModBusRTU.RespostaMenorQueOMinimoEhRecusada;
+var
+  vals:TArrayOfDouble;
+  resp:BYTES;
+  n:LongInt;
+begin
+  //um quadro RTU tem no minimo escravo, funcao e os dois bytes de CRC
+  for n:=0 to 3 do begin
+    SetLength(resp, n);
+    if n>0 then FillChar(resp[0], n, 0);
+
+    AssertEquals('resposta de '+IntToStr(n)+' bytes', Ord(ioCommError),
+                 Ord(FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'), resp), vals)));
+  end;
+end;
+
+procedure TTestModBusRTU.PedidoVazioNaoDerrubaODriver;
+var
+  vals:TArrayOfDouble;
+begin
+  //sem pedido nao da' para saber o que foi perguntado, mas o driver tem que
+  //dizer isso, nao estourar
+  AssertEquals('pedido vazio', Ord(ioDriverError),
+               Ord(FDrv.Decode(IOPacketFor(nil, BytesOf('01 03 04 00 0A 00 14 DA 3E')), vals)));
+end;
+
+procedure TTestModBusRTU.ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
+var
+  vals:TArrayOfDouble;
+  res:TProtocolIOResult;
+begin
+  //pedimos 2 registradores (4 bytes de dado) e a resposta traz 1, com CRC valido
+  res:=FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'),
+                               BytesOf('01 03 02 00 0A 38 43')), vals);
+  AssertEquals('contagem menor que a pedida', Ord(ioCommError), Ord(res));
+end;
+
+procedure TTestModBusRTU.RelatorioDeEscravoComContagemMenorQueQuatroNaoTransborda;
+var
+  vals:TArrayOfDouble;
+begin
+  //relatorio de escravo com contagem zero
+  FDrv.Decode(IOPacketFor(BytesOf('01 11 C0 2C'), BytesOf('01 11 00 2C 50')), vals);
+  AssertTrue('quantidade de valores tem que ser plausivel', Length(vals)<1024);
+end;
 
 procedure TTestModBusRTUComPorta.SetUp;
 begin

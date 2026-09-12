@@ -291,9 +291,23 @@ function TModBusRTUDriver.DecodePkg(pkg:TIOPacket; out values:TArrayOfDouble):TP
 var
    i,c,c2,plc:LongInt;
    address, len:Cardinal;
+   declarado:LongInt;
    foundPLC:Boolean;
    aux:TPLCMemoryManager;
 begin
+  //o pedido e' montado pelo proprio driver e diz o que foi perguntado: o menor
+  //deles tem 4 bytes (escravo, funcao e os dois de CRC). Sem isso os testes
+  //abaixo indexariam o vetor fora dos seus limites - com o pedido vazio, sobre
+  //ponteiro nulo.
+  //the request is built by the driver itself and says what was asked: the
+  //smallest one is 4 bytes (slave, function and the two CRC bytes). Without it
+  //the tests below would index the array out of bounds - on an empty request,
+  //over a nil pointer.
+  if Length(pkg.BufferToWrite)<4 then begin
+    Result:=ioDriverError;
+    exit;
+  end;
+
   //se algumas das IOs falhou,
   //if some IO fail.
   Result:=ioOk;
@@ -319,7 +333,7 @@ begin
         Result := ioCommError;
     end;
 
-  if (Length(pkg.BufferToWrite)=0) or (Length(pkg.BufferToRead)=0) then
+  if Length(pkg.BufferToRead)=0 then
     Result:=ioDriverError;
   
   //se o endereco retornado nao conferem com o selecionado...
@@ -342,6 +356,19 @@ begin
       break;
     end;
 
+  //endereco e quantidade saem do pedido e valem tanto para gravar os valores
+  //quanto para marcar a falha na area, entao ficam fora dos ramos e com o
+  //tamanho do vetor conferido.
+  //address and length come from the request and are needed both to store the
+  //values and to mark the fault, so they are computed once, with the array
+  //length checked.
+  address := 0;
+  len     := 0;
+  if Length(pkg.BufferToWrite)>=6 then begin
+    address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
+    len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
+  end;
+
   //comeca a decodificar o pacote...
   //decodes the packet.
 
@@ -351,6 +378,30 @@ begin
     SetLength(pkg.BufferToRead, 2);
     pkg.BufferToRead[1]:=0;
   end;
+
+  //nas leituras a resposta declara no terceiro byte quantos bytes de dado
+  //traz. Sem conferir isso contra o que foi pedido, uma resposta com menos
+  //registradores que os pedidos era decodificada assim mesmo, e o que faltava
+  //saia dos bytes seguintes do quadro - o CRC, ou memoria alem do vetor.
+  //on reads the response declares in its third byte how many data bytes it
+  //carries. Without checking that against what was asked, a response with
+  //fewer registers than requested was decoded anyway, and what was missing
+  //came from the bytes that follow - the CRC, or memory past the array.
+  if (Result=ioOk) then
+    case pkg.BufferToRead[1] of
+      $01,$02,$03,$04: begin
+        if pkg.BufferToRead[1] in [$01,$02] then
+          declarado := (LongInt(len)+7) div 8  //bits, de oito em oito / eight per byte
+        else
+          declarado := LongInt(len)*2;         //palavras de dois bytes / two byte words
+
+        if (Length(pkg.BufferToRead)<3) or
+           (pkg.BufferToRead[2]<>declarado) or
+           (Length(pkg.BufferToRead)<(3+declarado)) then
+          Result := ioCommError;
+      end;
+    end;
+
   case pkg.BufferToRead[1] of
     $01,$02: begin
       //acerta onde vao ser colocados os valores decodificados...
@@ -362,8 +413,6 @@ begin
           aux := PModbusPLC[plc].Inputs;
       end;
 
-      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
       if Result=ioOk then begin
         SetLength(Values,len);
 
@@ -398,8 +447,6 @@ begin
           aux := PModbusPLC[plc].AnalogReg;
       end;
 
-      address := Cardinal((pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3]);
-      len     := Cardinal((pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5]);
 
       if Result=ioOk then begin
         SetLength(Values,len);
@@ -422,8 +469,21 @@ begin
         aux := PModbusPLC[plc].Registers;
       end;
 
+      //a quantidade e' a contagem declarada menos os quatro bytes fixos do
+      //relatorio. Sendo Cardinal, uma contagem menor que quatro dava a volta e
+      //virava quase quatro bilhoes de valores.
+      //the count is the declared byte count minus the four fixed bytes of the
+      //report. Being a Cardinal, a count below four wrapped around into almost
+      //four billion values.
       address := 0;
-      len     := Cardinal(pkg.BufferToRead[2])-4;
+      len     := 0;
+      if (Length(pkg.BufferToRead)<3) or (pkg.BufferToRead[2]<4) then
+        Result := ioCommError
+      else begin
+        len := Cardinal(pkg.BufferToRead[2])-4;
+        if Length(pkg.BufferToRead)<(3+LongInt(len)) then
+          Result := ioCommError;
+      end;
 
       if Result=ioOk then begin
         SetLength(Values,len);
@@ -443,7 +503,6 @@ begin
     // decodifica a escrita de uma saida digital
     // decodes a write to a single coil
     $05: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
       if Result=ioOk then begin
 
         SetLength(values,1);
@@ -463,7 +522,6 @@ begin
     // decodifica a escrita de um registro
     // decodes a write to a single register
     $06: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
       if Result=ioOk then begin
         SetLength(values,1);
 
@@ -490,8 +548,6 @@ begin
     // decodifica a escrita de multiplos saidas digitais
     // decodes a write to multiple coils.
     $0F: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
       if Result=ioOk then begin
         SetLength(values,len);
 
@@ -517,8 +573,6 @@ begin
     // decodifica a escrita de multiplos registros
     // decodes a write to a multiple registers
     $10: begin
-      address := (pkg.BufferToWrite[2] * 256) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] * 256) + pkg.BufferToWrite[5];
       if Result=ioOk then begin
 
         SetLength(values,len);
@@ -566,8 +620,6 @@ begin
         end;
       end;
 
-      address := (pkg.BufferToWrite[2] shl 8) + pkg.BufferToWrite[3];
-      len     := (pkg.BufferToWrite[4] shl 8) + pkg.BufferToWrite[5];
 
       case pkg.BufferToWrite[1] of
         $01: begin
