@@ -423,8 +423,20 @@ begin
   if SP<>nil then
      SP.AddQueueItem(self);
 
-  DisplayName:=SP.Name;
   SProcessor := SP;
+
+  //DisplayName apenas avisa a colecao de que o item mudou - o nome em si sai
+  //de GetDisplayName, que le SProcessor. Por isso a atribuicao acima vem
+  //primeiro. E SP pode ser nulo: limpar a escala do item e' operacao valida, e
+  //era aqui que SP.Name estourava.
+  //DisplayName only tells the collection the item changed - the name itself
+  //comes from GetDisplayName, which reads SProcessor. That is why the
+  //assignment above comes first. And SP may be nil: clearing the item's scale
+  //is a valid operation, and this is where SP.Name used to fault.
+  if SP<>nil then
+    DisplayName:=SP.Name
+  else
+    DisplayName:=SEmpty;
 end;
 
 function TScaleQueueItem.GetDisplayName: AnsiString;
