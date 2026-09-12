@@ -228,7 +228,9 @@ jobs:
 
   # ---------------------------------------------------------------
   # FreeBSD 64: VM completa dentro do runner Ubuntu.
-  # Compila direto com fpc: as unidades testadas nao puxam a LCL.
+  # Usa lazbuild, e nao fpc puro: os testes de driver passam por
+  # plcstring, que depende de LazUTF8 (LazUtils), entao o Lazarus
+  # precisa estar instalado de qualquer forma.
   # ---------------------------------------------------------------
   freebsd64:
     name: freebsd64
@@ -243,11 +245,14 @@ jobs:
           usesh: true
           copyback: false
           prepare: |
-            pkg install -y fpc
+            pkg install -y lazarus
           run: |
-            cd tests
-            mkdir -p units bin
-            fpc -MObjFPC -Scghi -O1 -vewq \
-              -Fu../src/scada -Fu../src/common \
-              -FUunits -obin/pascalscada_tests pascalscada_tests.lpr
-            ./bin/pascalscada_tests --all --format=plain
+            lazbuild --add-package-link pascalscada_common.lpk
+            lazbuild --add-package-link pascalscada.lpk
+            lazbuild --add-package-link pascalscada_db.lpk
+
+            lazbuild --build-all --widgetset=nogui pascalscada_common.lpk
+            lazbuild --build-all --widgetset=nogui pascalscada.lpk
+            lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
+
+            tests/bin/pascalscada_tests --all --format=plain

@@ -5,9 +5,16 @@ program pascalscada_tests;
 uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
   Classes, consoletestrunner,
+  //apoio aos testes / test support
+  testsupport.bytes,
+  testsupport.protocol,
+  testsupport.fakeport,
+  //casos de teste / test cases
   ut.crc16utils,
   ut.hsutils,
-  ut.plcmemorymanager;
+  ut.plcmemorymanager,
+  ut.modbusrtu,
+  ut.modbustcp;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
