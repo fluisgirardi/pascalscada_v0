@@ -36,7 +36,8 @@ uses
   ut.melsecresposta,
   ut.tagbit,
   ut.commport,
-  ut.tag;
+  ut.tag,
+  ut.valueprocessor;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
