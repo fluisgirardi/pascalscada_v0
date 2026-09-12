@@ -14,7 +14,9 @@ uses
   ut.hsutils,
   ut.plcmemorymanager,
   ut.modbusrtu,
-  ut.modbustcp;
+  ut.modbustcp,
+  ut.s7plusvlq,
+  ut.s7pluscodec;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

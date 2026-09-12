@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="9">
+    <Units Count="11">
       <Unit0>
         <Filename Value="pascalscada_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -67,6 +67,14 @@
         <Filename Value="ut.modbustcp.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit8>
+      <Unit9>
+        <Filename Value="ut.s7plusvlq.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="ut.s7pluscodec.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit10>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
