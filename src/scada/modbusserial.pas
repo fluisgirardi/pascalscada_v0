@@ -77,7 +77,7 @@ type
 
 implementation
 
-uses Math, PLCMemoryManager, SysUtils, crossdatetime;
+uses Math, PLCMemoryManager, SysUtils;
 
 constructor TModBusRTUDriver.Create(AOwner: TComponent);
 begin

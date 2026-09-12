@@ -1050,7 +1050,7 @@ const
 
 implementation
 
-uses SysUtils, ProtocolDriver, hsstrings, crossdatetime, pascalScadaMTPCPU;
+uses SysUtils, ProtocolDriver, hsstrings, pascalScadaMTPCPU;
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1986,7 +1986,7 @@ begin
 
   try
     FS:=TStringStream.Create('');
-    timestamp := FormatDateTime('mmm-dd hh:nn:ss.zzz',CrossNow);
+    timestamp := FormatDateTime('mmm-dd hh:nn:ss.zzz',Now);
     if cmd=iocRead then begin
       fs.WriteString(timestamp+', '+TranslateCmdName(cmd)+', Result='+TranslateResultName(Packet.ReadIOResult) +', Received: '+bufferToHex(Packet.BufferToRead)+LineEnding);
     end;

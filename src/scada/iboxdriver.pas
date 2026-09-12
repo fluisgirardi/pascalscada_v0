@@ -233,7 +233,7 @@ type
 
 implementation
 
-uses PLCTagNumber, dateutils, math, hsstrings, crossdatetime;
+uses PLCTagNumber, dateutils, math, hsstrings;
 
 destructor  TIBoxDriver.Destroy;
 begin

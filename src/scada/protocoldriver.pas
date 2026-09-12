@@ -762,7 +762,7 @@ var
 
 implementation
 
-uses dateutils, PLCTag, hsstrings, math, crossdatetime, pascalScadaMTPCPU;
+uses dateutils, PLCTag, hsstrings, math, pascalScadaMTPCPU;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver

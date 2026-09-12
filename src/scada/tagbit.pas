@@ -156,7 +156,7 @@ type
 
 implementation
 
-uses hsstrings, crossdatetime;
+uses hsstrings;
 
 constructor TTagBit.Create(AOwner:TComponent);
 begin

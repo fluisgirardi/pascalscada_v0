@@ -8,7 +8,7 @@ interface
 uses
   Classes, SysUtils, fgl, Math, ctypes, DateUtils, ProtocolDriver,
   PLCMemoryManager, Tag, ProtocolTypes, commtypes, PLCTagNumber, PLCBlock,
-  PLCString, crossdatetime, hsutils;
+  PLCString, hsutils;
 
 type
 

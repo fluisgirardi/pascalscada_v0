@@ -33,7 +33,7 @@ unit Tag;
 interface
 
 uses
-  SysUtils, Classes, crossthreads, MessageSpool, CrossEvent;
+  SysUtils, Classes, crossthreads, CrossEvent;
 
 {$IFNDEF FPC}
 const

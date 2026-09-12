@@ -436,7 +436,7 @@ var PortPrefix:array[0..0] of AnsiString = ('tty.');
 
 implementation
 
-uses hsstrings{$IFDEF UNIX}, crossdatetime{$ENDIF};
+uses hsstrings;
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;
