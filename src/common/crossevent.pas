@@ -286,6 +286,7 @@ var
   errres : cint;
   timespec : ttimespec;
   tnow : timeval;
+  sinalizado : Boolean; //estado do evento antes do auto-reset zerar / event state before the auto reset clears it
 {$IFEND}
 begin
   {$if defined(NeedCrossEvents)}
@@ -322,6 +323,19 @@ begin
        errres:=pthread_cond_timedwait(@FEvent.condvar, @FEvent.mutex, @timespec);
   end;
 
+  //guarda o estado ANTES do auto-reset: era aqui que o evento automatico se
+  //perdia - zerava o isset e logo abaixo classificava o resultado por ele,
+  //entao uma espera bem sucedida voltava como wrError. O sinal era consumido
+  //certo; so o retorno saia errado. No windows isso nao acontece porque o
+  //WaitFor delega ao WaitForSingleObject.
+  //
+  //keeps the state BEFORE the auto reset: this is where the auto reset event
+  //used to lose itself - it cleared isset and then classified the result by
+  //it, so a successful wait came back as wrError. The signal was consumed
+  //correctly; only the return value was wrong. On windows this does not
+  //happen because WaitFor delegates to WaitForSingleObject.
+  sinalizado := FEvent.isset;
+
   if (FManualReset=false) then
     FEvent.isset := false;
 
@@ -330,7 +344,7 @@ begin
   if FEvent.IsDestroing then
      Result := wrAbandoned
   else
-    if FEvent.isset then
+    if sinalizado then
       Result := wrSignaled
     else begin
       if errres=ESysETIMEDOUT then
