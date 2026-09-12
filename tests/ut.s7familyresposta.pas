@@ -1,0 +1,344 @@
+{$i ../src/common/language.inc}
+{$IFDEF PORTUGUES}
+{:
+  @abstract(Testes da interpretacao de resposta do TSiemensProtocolFamily.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Diferente da montagem do pedido, a decodificacao nao devolve nada: ela grava
+  os valores nos gerenciadores de memoria internos do driver. Os testes fecham
+  o ciclo em dois passos, os dois por metodos protegidos que uma sonda expoe -
+  UpdateMemoryManager recebe a resposta bruta, e DoGetValue le de volta o que
+  foi guardado. E' o mesmo caminho que o driver percorre numa varredura, sem
+  porta e sem CLP.
+
+  As PDUs de resposta seguem o formato S7comm: cabecalho de 12 bytes (tipo 3
+  carrega o codigo de erro), o parametro com a funcao e a contagem de itens, e
+  cada item de dado com codigo de retorno, tipo de transporte, tamanho e os
+  bytes.
+}
+{$ELSE}
+{:
+  @abstract(TSiemensProtocolFamily response parsing tests.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+
+  Unlike request building, decoding returns nothing: it stores the values in
+  the driver's internal memory managers. These tests close the loop in two
+  steps, both through protected methods a probe exposes - UpdateMemoryManager
+  takes the raw answer, and DoGetValue reads back what was stored. It is the
+  same path the driver walks on a scan, with no port and no PLC.
+
+  The response PDUs follow the S7comm format: a 12 byte header (type 3 carries
+  the error code), the parameter with function and item count, and each data
+  item with its return code, transport size, length and bytes.
+}
+{$ENDIF}
+unit ut.s7familyresposta;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, fpcunit, testregistry,
+  commtypes, Tag, ProtocolTypes, s7types, s7family, PLCMemoryManager,
+  testsupport.bytes, testsupport.protocol;
+
+type
+
+  { TS7RespostaProbe }
+
+  TS7RespostaProbe = class(TSiemensProtocolFamily)
+  public
+    function  CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
+    procedure PrepararDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
+    procedure Decodificar(const aResposta:BYTES; const aReqList:TS7ReqList);
+    function  LerDoGerenciador(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
+  end;
+
+  { TS7DescarteProbe }
+
+  //conta as remocoes que o destrutor faz, para provar que ele passa por todos
+  //os CLPs e nao so por parte deles
+  //a contagem fica fora da instancia porque quem conta e' o destrutor: quando
+  //ha o que ler, o objeto ja nao existe
+  TS7DescarteProbe = class(TSiemensProtocolFamily)
+  public
+    function  CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
+    procedure DeletePLC(PLCIndex:Integer); override;
+  end;
+
+  { TTestS7FamilyResposta }
+
+  TTestS7FamilyResposta = class(TTestCase)
+  private
+    FDrv:TS7RespostaProbe;
+    FPLC:LongInt;
+    FEstacao:LongInt;
+    function  ListaDeUmItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
+    function  PedidoDeDB(aEndereco, aTamanho:LongInt):TTagRec;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure RespostaDeDbChegaNoGerenciador;
+    procedure TamanhoEmBitsEhConvertidoParaBytes;
+    procedure TamanhoJaEmBytesNaoEhDividido;
+    procedure ErroDoCLPViraResultadoDeProtocolo;
+    procedure RespostaDeOutraFuncaoEhIgnorada;
+    procedure MaisItensNaRespostaDoQueNoPedidoNaoTransborda;
+
+    //ciclo de vida / lifecycle
+    procedure DestrutorRemoveTodosOsCLPs;
+  end;
+
+implementation
+
+var
+  DescarteRemovidos:LongInt = 0;
+  DescarteIndiceInvalido:Boolean = false;
+
+{ TS7DescarteProbe }
+
+function TS7DescarteProbe.CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
+begin
+  Result:=CreatePLC(aRack, aSlot, aEstacao);
+end;
+
+procedure TS7DescarteProbe.DeletePLC(PLCIndex:Integer);
+begin
+  //DeletePLC ignora indice fora da faixa em silencio: sem esta marca, um
+  //destrutor que pedisse indices inexistentes passaria por certo
+  if (PLCIndex<0) or (PLCIndex>High(FPLCs)) then
+    DescarteIndiceInvalido:=true
+  else
+    inc(DescarteRemovidos);
+  inherited DeletePLC(PLCIndex);
+end;
+
+{ TS7RespostaProbe }
+
+function TS7RespostaProbe.CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
+begin
+  Result:=CreatePLC(aRack, aSlot, aEstacao);
+end;
+
+procedure TS7RespostaProbe.PrepararDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
+var
+  db:LongInt;
+begin
+  //registra o DB e os enderecos que o gerenciador vai guardar, como um tag
+  //faria ao ser cadastrado no driver
+  db:=Length(FPLCs[aPLC].DBs);
+  SetLength(FPLCs[aPLC].DBs, db+1);
+  FPLCs[aPLC].DBs[db].DBNum:=aDBNum;
+  FPLCs[aPLC].DBs[db].DBArea:=TPLCMemoryManager.Create;
+  FPLCs[aPLC].DBs[db].DBArea.MaxBlockItems:=FPLCs[aPLC].MaxBlockSize;
+  FPLCs[aPLC].DBs[db].DBArea.AddAddress(aEndereco, aTamanho, 1, 1000);
+end;
+
+procedure TS7RespostaProbe.Decodificar(const aResposta:BYTES; const aReqList:TS7ReqList);
+var
+  pedido, resposta:BYTES;
+  lista:TS7ReqList;
+  valores:TArrayOfDouble;
+begin
+  pedido:=nil;
+  resposta:=Copy(aResposta, 0, Length(aResposta));
+  lista:=aReqList;
+  valores:=nil;
+  UpdateMemoryManager(resposta, pedido, false, lista, valores);
+end;
+
+function TS7RespostaProbe.LerDoGerenciador(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
+var
+  leitura:TScanReadRec;
+begin
+  leitura.Values:=nil;
+  leitura.LastQueryResult:=ioNone;
+  leitura.ClkMonotonicTStamp:=0;
+
+  DoGetValue(aTagRec, leitura);
+
+  aResultado:=leitura.LastQueryResult;
+  Result:=leitura.Values;
+end;
+
+{ TTestS7FamilyResposta }
+
+//Criar o driver custa meio segundo (o destrutor espera as threads de
+//varredura). Em vez de um driver por teste, um driver para a classe e um CLP
+//novo por teste: cada um recebe a sua estacao, entao os gerenciadores de
+//memoria de um teste nao enxergam os do outro.
+var
+  DriverCompartilhado:TS7RespostaProbe = nil;
+  UltimaEstacao:LongInt = 0;
+
+procedure TTestS7FamilyResposta.SetUp;
+begin
+  if DriverCompartilhado=nil then
+    DriverCompartilhado:=TS7RespostaProbe.Create(nil);
+  FDrv:=DriverCompartilhado;
+
+  inc(UltimaEstacao);
+  FEstacao:=UltimaEstacao;
+  FPLC:=FDrv.CriarCLP(0, 2, FEstacao);
+  FDrv.PrepararDB(FPLC, 1, 0, 4);
+end;
+
+procedure TTestS7FamilyResposta.TearDown;
+begin
+  FDrv:=nil;
+end;
+
+function TTestS7FamilyResposta.ListaDeUmItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
+begin
+  SetLength(Result, 1);
+  Result[0].PLCIdx      :=FPLC;
+  Result[0].DBIdx       :=aDBIdx;
+  Result[0].ReqType     :=vtS7_DB;
+  Result[0].StartAddress:=aEndereco;
+  Result[0].Size        :=aTamanho;
+end;
+
+function TTestS7FamilyResposta.PedidoDeDB(aEndereco, aTamanho:LongInt):TTagRec;
+begin
+  //funcao 4 = area de DB na numeracao interna do driver
+  Result:=TagRecFor(FEstacao, 4, 0, aEndereco, aTamanho);
+  Result.Rack   :=0;
+  Result.Slot   :=2;
+  Result.File_DB:=1;
+end;
+
+procedure TTestS7FamilyResposta.RespostaDeDbChegaNoGerenciador;
+var
+  valores:TArrayOfDouble;
+  res:TProtocolIOResult;
+begin
+  //cabecalho tipo 3 (12 bytes), parametro "leitura, 1 item", e o item de dado
+  //com codigo $FF, transporte 4 (contado em bits), 32 bits e os quatro bytes
+  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
+                           '04 01' +
+                           'FF 04 00 20 0A 0B 0C 0D'),
+                   ListaDeUmItem(0, 0, 4));
+
+  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+
+  AssertEquals('leitura sem falha', Ord(ioOk), Ord(res));
+  AssertEquals('quantidade de valores', 4, Length(valores));
+  AssertEquals('primeiro byte', $0A, valores[0], 0);
+  AssertEquals('segundo byte',  $0B, valores[1], 0);
+  AssertEquals('terceiro byte', $0C, valores[2], 0);
+  AssertEquals('quarto byte',   $0D, valores[3], 0);
+end;
+
+procedure TTestS7FamilyResposta.TamanhoEmBitsEhConvertidoParaBytes;
+var
+  valores:TArrayOfDouble;
+  res:TProtocolIOResult;
+begin
+  //transporte 4 declara o tamanho em BITS: 16 bits sao 2 bytes
+  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 06 00 00' +
+                           '04 01' +
+                           'FF 04 00 10 AA BB'),
+                   ListaDeUmItem(0, 0, 2));
+
+  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 2), res);
+
+  AssertEquals('dois bytes guardados', $AA, valores[0], 0);
+  AssertEquals('e o segundo',          $BB, valores[1], 0);
+end;
+
+procedure TTestS7FamilyResposta.TamanhoJaEmBytesNaoEhDividido;
+var
+  valores:TArrayOfDouble;
+  res:TProtocolIOResult;
+begin
+  //transporte 3 e 9 ja vem em bytes: 2 significa dois bytes, nao dois bits
+  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 06 00 00' +
+                           '04 01' +
+                           'FF 09 00 02 11 22'),
+                   ListaDeUmItem(0, 0, 2));
+
+  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 2), res);
+
+  AssertEquals('primeiro byte', $11, valores[0], 0);
+  AssertEquals('segundo byte',  $22, valores[1], 0);
+end;
+
+procedure TTestS7FamilyResposta.ErroDoCLPViraResultadoDeProtocolo;
+var
+  valores:TArrayOfDouble;
+  res:TProtocolIOResult;
+begin
+  //codigo $05 = endereco de memoria invalido; a falha tem que ficar guardada
+  //na area, para quem ler depois saber que o valor nao vale
+  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 04 00 00' +
+                           '04 01' +
+                           '05 00 00 00'),
+                   ListaDeUmItem(0, 0, 4));
+
+  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+  AssertEquals('falha propagada', Ord(ioIllegalMemoryAddress), Ord(res));
+end;
+
+procedure TTestS7FamilyResposta.RespostaDeOutraFuncaoEhIgnorada;
+var
+  valores:TArrayOfDouble;
+  res:TProtocolIOResult;
+begin
+  //parametro com funcao de escrita ($05) numa decodificacao de leitura:
+  //o driver tem que largar o pacote sem gravar nada
+  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
+                           '05 01' +
+                           'FF 04 00 20 0A 0B 0C 0D'),
+                   ListaDeUmItem(0, 0, 4));
+
+  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+  AssertTrue('nada pode ter sido gravado', (Length(valores)=0) or (valores[0]<>$0A));
+end;
+
+procedure TTestS7FamilyResposta.MaisItensNaRespostaDoQueNoPedidoNaoTransborda;
+var
+  valores:TArrayOfDouble;
+  res:TProtocolIOResult;
+begin
+  //a resposta diz ter 3 itens, mas so pedimos 1: o driver nao pode andar
+  //alem da lista de requisicoes
+  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
+                           '04 03' +
+                           'FF 04 00 20 0A 0B 0C 0D'),
+                   ListaDeUmItem(0, 0, 4));
+
+  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+  AssertEquals('o item pedido foi processado', $0A, valores[0], 0);
+end;
+
+procedure TTestS7FamilyResposta.DestrutorRemoveTodosOsCLPs;
+var
+  drv:TS7DescarteProbe;
+begin
+  //DeletePLC encurta o vetor a cada chamada; um laco que fixasse o limite no
+  //inicio deixaria metade dos CLPs (e os gerenciadores de memoria deles) para
+  //tras
+  DescarteRemovidos:=0;
+  DescarteIndiceInvalido:=false;
+
+  drv:=TS7DescarteProbe.Create(nil);
+  drv.CriarCLP(0, 2, 1);
+  drv.CriarCLP(0, 2, 2);
+  drv.CriarCLP(0, 2, 3);
+  drv.CriarCLP(0, 2, 4);
+
+  drv.Free;
+
+  AssertEquals('os quatro CLPs foram removidos', 4, DescarteRemovidos);
+  AssertFalse ('nenhum indice fora da faixa', DescarteIndiceInvalido);
+end;
+
+initialization
+  RegisterTest(TTestS7FamilyResposta);
+
+finalization
+  FreeAndNil(DriverCompartilhado);
+
+end.
