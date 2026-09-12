@@ -1223,11 +1223,28 @@ end;
 destructor TCommPortDriver.Destroy;
 var
   c:LongInt;
+  protocolosACopia:array of TComponent;
+  avisadosACopia:IPortDriverEventNotificationArray;
 begin
-  for c:=0 to High(Protocols) do
-    TProtocolDriver(Protocols[c]).CommunicationPort := nil;
-  for c:=0 to High(EventInterfaces) do
-    EventInterfaces[c].DoPortRemoved(self);
+  //avisar um driver faz ele soltar esta porta, e soltar chama DelProtocol, que
+  //troca o ultimo pela posicao removida e encurta o vetor. Percorrendo o vetor
+  //original o laco deixava para tras o driver que tinha sido movido - que
+  //ficava com um ponteiro para esta porta, ja' destruida - e passava do fim
+  //dele. Avisa-se sobre uma copia, e o original vai se esvaziando sozinho.
+  //notifying a driver makes it release this port, and releasing calls
+  //DelProtocol, which swaps the last entry into the removed slot and shrinks
+  //the array. Walking the original array left behind the driver that had been
+  //moved - holding a pointer to this very port, already gone - and ran past
+  //its end. The notification walks a copy, and the original empties itself.
+  protocolosACopia:=Copy(Protocols, 0, Length(Protocols));
+  for c:=0 to High(protocolosACopia) do
+    TProtocolDriver(protocolosACopia[c]).CommunicationPort := nil;
+  SetLength(protocolosACopia, 0);
+
+  avisadosACopia:=Copy(EventInterfaces, 0, Length(EventInterfaces));
+  for c:=0 to High(avisadosACopia) do
+    avisadosACopia[c].DoPortRemoved(self);
+  SetLength(avisadosACopia, 0);
   PEventUpdater.Terminate;
   while PEventUpdater.WaitEnd(1)<>wrSignaled do
     Sleep(1);

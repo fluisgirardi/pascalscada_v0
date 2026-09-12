@@ -32,7 +32,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  commtypes, Tag, ProtocolTypes, iboxdriver,
+  commtypes, Tag, ProtocolTypes, iboxdriver, PLCTagNumber,
   testsupport.bytes, testsupport.protocol, testsupport.fakeport;
 
 type
@@ -41,7 +41,8 @@ type
 
   TIBoxProbe = class(TIBoxDriver)
   public
-    function Ler(const aTag:TTagRec; out aValores:TArrayOfDouble):TProtocolIOResult;
+    function  Ler(const aTag:TTagRec; out aValores:TArrayOfDouble):TProtocolIOResult;
+    procedure RemoverTag(aTag:TTag);
   end;
 
   { TTestIBoxDriver }
@@ -69,6 +70,9 @@ type
     procedure NivelDeCombustivelVemEmMeioPorCento;
     procedure RespostaComSomaErradaEhRecusada;
     procedure RespostaDeOutraEstacaoEhRecusada;
+
+    //remocao de tag / tag removal
+    procedure RemoverTagDeEstacaoDesconhecidaNaoFazNada;
   end;
 
 implementation
@@ -78,6 +82,11 @@ implementation
 function TIBoxProbe.Ler(const aTag:TTagRec; out aValores:TArrayOfDouble):TProtocolIOResult;
 begin
   Result:=DoRead(aTag, aValores, true);
+end;
+
+procedure TIBoxProbe.RemoverTag(aTag:TTag);
+begin
+  DoDelTag(aTag);
 end;
 
 { TTestIBoxDriver }
@@ -208,6 +217,23 @@ begin
 
   AssertEquals('estacao errada', Ord(ioCommError),
                Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
+end;
+
+procedure TTestIBoxDriver.RemoverTagDeEstacaoDesconhecidaNaoFazNada;
+var
+  tag:TPLCTagNumber;
+begin
+  //nenhum tag foi cadastrado, entao a lista de estacoes esta' vazia. Remover
+  //um tag daqui nao pode indexar essa lista
+  tag:=TPLCTagNumber.Create(nil);
+  try
+    tag.PLCStation:=7;
+    tag.MemAddress:=96;
+
+    FDrv.RemoverTag(tag);
+  finally
+    tag.Free;
+  end;
 end;
 
 initialization

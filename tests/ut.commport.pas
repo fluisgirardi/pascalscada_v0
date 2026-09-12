@@ -37,7 +37,7 @@ interface
 uses
   Classes, SysUtils, fpcunit, testregistry,
   CommPort, commtypes,
-  testsupport.bytes, testsupport.fakeport;
+  testsupport.bytes, testsupport.fakeport, testsupport.fakedriver;
 
 type
 
@@ -100,6 +100,14 @@ type
     procedure ChamadaDeVoltaRecebeOPacotePronto;
     procedure ChamadaDeVoltaNaoAconteceComAPortaFechada;
     procedure ChamadaDeVoltaComAPortaFechadaNaoDesequilibra;
+
+    //drivers pendurados na porta / drivers attached to the port
+    procedure DriverPenduradoSeRegistraNaPorta;
+    procedure DriverPenduradoDuasVezesNaoDuplica;
+    procedure TrocarDePortaTiraDaAnterior;
+    procedure PortaDestruidaSoltaOUnicoDriver;
+    procedure PortaDestruidaSoltaOsDoisDrivers;
+    procedure PortaDestruidaSoltaTodosOsDrivers;
   end;
 
 implementation
@@ -405,6 +413,118 @@ begin
                        @GuardarPacote, nil, nil, @ContarComeco, @ContarFim);
 
   AssertEquals('um comeco tem que ter um fim', FComecos, FFins);
+end;
+
+procedure TTestCommPort.DriverPenduradoSeRegistraNaPorta;
+var
+  drv:TFakeProtocolDriver;
+begin
+  drv:=TFakeProtocolDriver.Create(nil);
+  try
+    drv.CommunicationPort:=FPorta;
+    AssertTrue('o driver ficou com a porta', drv.CommunicationPort=FPorta);
+  finally
+    drv.Free;
+  end;
+end;
+
+procedure TTestCommPort.DriverPenduradoDuasVezesNaoDuplica;
+var
+  drv:TFakeProtocolDriver;
+begin
+  //atribuir a mesma porta de novo nao pode criar um segundo registro
+  drv:=TFakeProtocolDriver.Create(nil);
+  try
+    drv.CommunicationPort:=FPorta;
+    drv.CommunicationPort:=FPorta;
+    AssertTrue('continua na mesma porta', drv.CommunicationPort=FPorta);
+  finally
+    drv.Free;
+  end;
+end;
+
+procedure TTestCommPort.TrocarDePortaTiraDaAnterior;
+var
+  drv:TFakeProtocolDriver;
+  outra:TFakeCommPort;
+begin
+  outra:=TFakeCommPort.Create(nil);
+  drv  :=TFakeProtocolDriver.Create(nil);
+  try
+    drv.CommunicationPort:=FPorta;
+    drv.CommunicationPort:=outra;
+    AssertTrue('trocou de porta', drv.CommunicationPort=outra);
+
+    //a porta antiga nao pode mais achar que tem este driver: destrui-la nao
+    //pode mexer em quem ja' saiu
+    FreeAndNil(FPorta);
+    AssertTrue('a porta antiga saiu sem levar o driver', drv.CommunicationPort=outra);
+  finally
+    drv.Free;
+    outra.Free;
+  end;
+end;
+
+procedure TTestCommPort.PortaDestruidaSoltaOUnicoDriver;
+var
+  drv:TFakeProtocolDriver;
+begin
+  drv:=TFakeProtocolDriver.Create(nil);
+  try
+    drv.CommunicationPort:=FPorta;
+    FreeAndNil(FPorta);
+
+    AssertTrue('o driver tem que ter largado a porta destruida',
+               drv.CommunicationPort=nil);
+  finally
+    drv.Free;
+  end;
+end;
+
+procedure TTestCommPort.PortaDestruidaSoltaOsDoisDrivers;
+var
+  a, b:TFakeProtocolDriver;
+begin
+  a:=TFakeProtocolDriver.Create(nil);
+  b:=TFakeProtocolDriver.Create(nil);
+  try
+    a.CommunicationPort:=FPorta;
+    b.CommunicationPort:=FPorta;
+
+    FreeAndNil(FPorta);
+
+    AssertTrue('primeiro driver', a.CommunicationPort=nil);
+    AssertTrue('segundo driver',  b.CommunicationPort=nil);
+  finally
+    a.Free;
+    b.Free;
+  end;
+end;
+
+procedure TTestCommPort.PortaDestruidaSoltaTodosOsDrivers;
+var
+  a, b, c:TFakeProtocolDriver;
+begin
+  //uma porta com mais de um protocolo pendurado e' arranjo comum. Nenhum deles
+  //pode sobrar com um ponteiro para a porta que acabou de ser destruida
+  a:=TFakeProtocolDriver.Create(nil);
+  b:=TFakeProtocolDriver.Create(nil);
+  c:=TFakeProtocolDriver.Create(nil);
+  try
+    a.CommunicationPort:=FPorta;
+    b.CommunicationPort:=FPorta;
+    c.CommunicationPort:=FPorta;
+
+    FreeAndNil(FPorta);
+
+    AssertTrue('primeiro driver',  a.CommunicationPort=nil);
+    AssertTrue('segundo driver',   b.CommunicationPort=nil);
+    AssertTrue('terceiro driver',  c.CommunicationPort=nil);
+  finally
+    a.Free;
+    b.Free;
+    c.Free;
+  end;
 end;
 
 initialization

@@ -414,6 +414,12 @@ begin
     if not (PLCStation in [0..255]) then exit;
     if not (MemAddress in [0,96,168,200..205,247]) then exit;
 
+    //sem zerar, found chega aqui com lixo da pilha: uma estacao que nao esta
+    //na lista podia passar do teste abaixo e indexar PStations fora da faixa.
+    //without clearing it, found arrives holding stack garbage: a station that
+    //is not on the list could get past the test below and index PStations out
+    //of range.
+    found := false;
     h:=High(PStations);
     for plc := 0 to h do
       if PStations[plc].Address=PLCStation then begin

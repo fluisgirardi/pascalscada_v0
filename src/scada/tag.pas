@@ -1074,7 +1074,14 @@ destructor TTag.Destroy;
 var
   c:LongInt;
 begin
-  for c := 0 to high(FTagRemovalNotificationList) do
+  //avisar um ouvinte pode faze-lo largar os seus ganchos neste tag, e largar
+  //encurta esta mesma lista - do fim para o comeco nenhum ouvinte fica para
+  //tras. E' o que RemoveAllHandlersFromObject faz, logo abaixo, nas seis listas.
+  //notifying a listener may make it drop its handlers on this tag, and
+  //dropping shrinks this very list - walking backwards leaves no listener
+  //behind. It is what RemoveAllHandlersFromObject does, just below, on all six
+  //lists.
+  for c := high(FTagRemovalNotificationList) downto 0 do
     FTagRemovalNotificationList[c](Self);
 
   SetLength(FReadOKNotificationList,0);
