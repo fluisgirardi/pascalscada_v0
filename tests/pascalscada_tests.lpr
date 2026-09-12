@@ -33,7 +33,8 @@ uses
   ut.iboxdriver,
   ut.s7familyresposta,
   ut.melsecresposta,
-  ut.tagbit;
+  ut.tagbit,
+  ut.commport;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
