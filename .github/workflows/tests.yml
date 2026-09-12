@@ -230,7 +230,13 @@ jobs:
   # FreeBSD 64: VM completa dentro do runner Ubuntu.
   # Usa lazbuild, e nao fpc puro: os testes de driver passam por
   # plcstring, que depende de LazUTF8 (LazUtils), entao o Lazarus
-  # precisa estar instalado de qualquer forma.
+  # precisa estar instalado de qualquer forma. O pacote nao se chama
+  # "lazarus" - so existe com o flavor no nome, e o gtk2 e' o padrao
+  # do port (nada disso e' usado aqui: compilamos com --widgetset=nogui).
+  #
+  # Se um dia as dependencias graficas do pacote pesarem demais, da' pra
+  # voltar ao fpc puro acrescentando as unidades do LazUtils a mao:
+  #   fpc ... -Fu<lazarus>/components/lazutils -Fi<lazarus>/components/lazutils
   # ---------------------------------------------------------------
   freebsd64:
     name: freebsd64
@@ -245,7 +251,7 @@ jobs:
           usesh: true
           copyback: false
           prepare: |
-            pkg install -y lazarus
+            pkg install -y lazarus-gtk2
           run: |
             lazbuild --add-package-link pascalscada_common.lpk
             lazbuild --add-package-link pascalscada.lpk
