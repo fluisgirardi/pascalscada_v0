@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="12"/>
+    <Version Value="13"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
       <Title Value="project1"/>
@@ -14,14 +14,14 @@
       <Icon Value="0"/>
     </General>
     <MacroValues Count="1">
-      <Macro2 Name="LCLWidgetType" Value="qt6"/>
+      <Macro3 Name="LCLWidgetType" Value="qt5"/>
     </MacroValues>
     <BuildModes>
       <Item Name="Default" Default="True"/>
       <SharedMatrixOptions Count="3">
         <Item1 ID="496198072727" Type="IDEMacro" MacroName="LCLWidgetType" Value="gtk3"/>
-        <Item2 ID="516975520754" Modes="Default" Type="IDEMacro" MacroName="LCLWidgetType" Value="qt6"/>
-        <Item3 ID="512279178509" Type="IDEMacro" MacroName="LCLWidgetType" Value="qt5"/>
+        <Item2 ID="516975520754" Type="IDEMacro" MacroName="LCLWidgetType" Value="qt6"/>
+        <Item3 ID="512279178509" Modes="Default" Type="IDEMacro" MacroName="LCLWidgetType" Value="qt5"/>
       </SharedMatrixOptions>
     </BuildModes>
     <PublishOptions>

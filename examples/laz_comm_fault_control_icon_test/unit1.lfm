@@ -1,17 +1,28 @@
 object Form1: TForm1
   Left = 2170
-  Height = 556
+  Height = 1182
   Top = 250
-  Width = 1115
+  Width = 1995
   Caption = 'Form1'
-  ClientHeight = 556
-  ClientWidth = 1115
-  LCLVersion = '4.9.0.0'
+  ClientHeight = 1182
+  ClientWidth = 1995
+  LCLVersion = '4.0.0.1'
   OnCreate = FormCreate
+  object Lbl_HMILabel1: TLabel
+    Left = 16
+    Height = 44
+    Top = 16
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILabel'#13#10'HMILabel1'
+    Layout = tlCenter
+    WordWrap = True
+  end
   object HMILabel1: THMILabel
-    Left = 234
+    Left = 67
     Height = 33
-    Top = 81
+    Top = 64
     Width = 158
     Alignment = taCenter
     Color = clGradientActiveCaption
@@ -23,10 +34,42 @@ object Form1: TForm1
     PLCTag = PLCTagNumber1
     FormatDateTimeOptions = []
   end
+  object Lbl_HMILabel2: TLabel
+    Left = 296
+    Height = 44
+    Top = 16
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILabel'#13#10'HMILabel2'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMILabel2: THMILabel
+    Left = 393
+    Height = 17
+    Top = 64
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber2
+    FormatDateTimeOptions = []
+  end
+  object Lbl_HMIEdit1: TLabel
+    Left = 576
+    Height = 44
+    Top = 16
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIEdit'#13#10'HMIEdit1'
+    Layout = tlCenter
+    WordWrap = True
+  end
   object HMIEdit1: THMIEdit
-    Left = 234
+    Left = 666
     Height = 28
-    Top = 128
+    Top = 64
     Width = 80
     Color = clWindow
     Enabled = True
@@ -38,10 +81,21 @@ object Form1: TForm1
     EnableMinValue = False
     EnableMaxValue = False
   end
+  object Lbl_HMIRadioGroup1: TLabel
+    Left = 856
+    Height = 44
+    Top = 16
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIRadioGroup'#13#10'HMIRadioGroup1'
+    Layout = tlCenter
+    WordWrap = True
+  end
   object HMIRadioGroup1: THMIRadioGroup
-    Left = 234
+    Left = 893
     Height = 105
-    Top = 176
+    Top = 64
     Width = 185
     AutoFill = True
     Caption = 'HMIRadioGroup1'
@@ -57,19 +111,41 @@ object Form1: TForm1
     TabOrder = 1
     PLCTag = PLCTagNumber1
   end
+  object Lbl_HMIAnimation1: TLabel
+    Left = 1136
+    Height = 44
+    Top = 16
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIAnimation'#13#10'HMIAnimation1'
+    Layout = tlCenter
+    WordWrap = True
+  end
   object HMIAnimation1: THMIAnimation
-    Left = 112
+    Left = 1221
     Height = 90
-    Top = 224
+    Top = 64
     Width = 90
     Zones = <>
     PLCTag = PLCTagNumber1
     Enabled = True
   end
+  object Lbl_HMICheckBox1: TLabel
+    Left = 1416
+    Height = 44
+    Top = 16
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMICheckBox'#13#10'HMICheckBox1'
+    Layout = tlCenter
+    WordWrap = True
+  end
   object HMICheckBox1: THMICheckBox
-    Left = 232
+    Left = 1489
     Height = 23
-    Top = 40
+    Top = 64
     Width = 113
     Enabled = True
     ParentColor = False
@@ -80,156 +156,21 @@ object Form1: TForm1
     CaptionGrayed = 'teste teste ste '
     ValueTrue = 1
   end
-  object HMIUpDown1: THMIUpDown
-    Left = 432
-    Height = 47
-    Top = 104
-    Width = 33
-    Enabled = False
-    Increment = 1
-    Max = 100
-    TabOrder = 3
-    PLCTag = PLCTagNumber1
-  end
-  object HMIComboBox1: THMIComboBox
-    Left = 234
-    Height = 30
-    Top = 288
-    Width = 182
-    ItemHeight = 0
-    PLCTag = PLCTagNumber1
-    TabOrder = 4
-  end
-  object HMILinkedFlowElevator1: THMILinkedFlowElevator
-    Left = 432
-    Height = 144
-    Top = 165
-    Width = 48
-    PLCTag = PLCTagNumber1
-    ColorAndFlowStates = <>
-    BodyWidth = 16
-  end
-  object HMIForkedFlowValve1: THMIForkedFlowValve
-    Left = 160
-    Height = 64
-    Top = 128
-    Width = 71
-    ColorAndFlowStates = <>
-    PLCTag = PLCTagNumber1
-    Proportional = False
-    Stretch = True
-    Orientation = ffvRight
-  end
-  object HMILinkedFlowPump1: THMILinkedFlowPump
-    Left = 391
-    Height = 50
-    Top = 20
-    Width = 71
-    PLCTag = PLCTagNumber1
-    ColorAndFlowStates = <>
-  end
-  object HMILinkedFlowValve1: THMILinkedFlowValve
-    Left = 24
-    Height = 82
-    Top = 227
-    Width = 77
-    PLCTag = PLCTagNumber1
-    ColorAndFlowStates = <>
-    Mirrored = True
-    ValveBodyPercent = 0.7
-  end
-  object HMIProgressBar1: THMIProgressBar
-    Left = 526
-    Height = 24
-    Top = 32
-    Width = 98
-    Enabled = True
-    PLCTag = PLCTagNumber1
-  end
-  object HMITrackBar1: THMITrackBar
-    Left = 520
-    Height = 37
-    Top = 104
-    Width = 48
-    Enabled = True
-    TabOrder = 10
-    PLCTag = PLCTagNumber1
-  end
-  object HMIBandeja1: THMIBandeja
-    Left = 520
-    Height = 50
-    Top = 200
-    Width = 170
-    TabOrder = 11
-  end
-  object HMIFlowImage1: THMIFlowImage
-    Left = 704
-    Height = 90
-    Top = 40
-    Width = 90
-    InputPoint.X = 0
-    InputPoint.Y = 0
-    OutputPoint.X = 0
-    OutputPoint.Y = 0
-  end
-  object HMIScrollBar1: THMIScrollBar
-    Left = 568
-    Height = 13
-    Top = 289
-    Width = 247
-    Enabled = True
-    PageSize = 0
-    TabOrder = 12
-    PLCTag = PLCTagNumber1
-  end
-  object StaticText1: TStaticText
-    Left = 171
-    Height = 17
-    Top = 339
-    Width = 65
-    Caption = 'StaticText1'
-    TabOrder = 13
-  end
-  object HMIText1: THMIText
-    Left = 744
-    Height = 17
-    Top = 195
-    Width = 65
-    Enabled = True
-    NumberFormat = '#0.0'
-    PLCTag = PLCTagNumber1
-    FormatDateTimeOptions = []
-    Zones = <>
-  end
-  object HMIText2: THMIText
-    Left = 336
-    Height = 36
-    Top = 124
-    Width = 65
-    Enabled = True
-    NumberFormat = '#0.0'
-    PLCTag = PLCTagNumber1
-    FormatDateTimeOptions = []
-    Zones = <>
-  end
-  object TIPropertyGrid1: TTIPropertyGrid
-    Left = 832
-    Height = 556
-    Top = 0
-    Width = 283
-    Align = alRight
-    CheckboxForBoolean = False
-    DefaultValueFont.Color = clWindowText
-    Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar, tkHelper, tkFile, tkClassRef, tkPointer]
-    Indent = 9
-    NameFont.Color = clWindowText
-    TIObject = PLCTagNumber1
-    ValueFont.Color = clMaroon
+  object Lbl_HMIRadioButton1: TLabel
+    Left = 16
+    Height = 44
+    Top = 226
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIRadioButton'#13#10'HMIRadioButton1'
+    Layout = tlCenter
+    WordWrap = True
   end
   object HMIRadioButton1: THMIRadioButton
-    Left = 234
+    Left = 118
     Height = 23
-    Top = 5
+    Top = 274
     Width = 56
     Enabled = True
     ParentColor = False
@@ -240,91 +181,415 @@ object Form1: TForm1
     CaptionGrayed = 'teste'
     ValueTrue = 1
   end
-  object HMIFitaBasica1: THMIFitaBasica
-    Left = 520
-    Height = 12
-    Top = 320
-    Width = 192
-    BodyHeight = 12
-    BodyColor = clSilver
-  end
-  object HMIElevadorBasico1: THMIElevadorBasico
-    Left = 480
-    Height = 117
-    Top = 203
-    Width = 40
-  end
-  object HMIRedlerBasico1: THMIRedlerBasico
-    Left = 520
-    Height = 16
-    Top = 343
-    Width = 204
-    BodyHeight = 16
-    BodyColor = clSilver
-  end
-  object HMIRoscaBasica1: THMIRoscaBasica
-    Left = 550
-    Height = 12
-    Top = 266
-    Width = 187
-    BodyColor = clSilver
-  end
-  object HMIPolyline1: THMIPolyline
-    Left = 592
-    Height = 95
-    Top = 96
-    Width = 86
-    PointCoordinates = <>
-  end
-  object HMIBasicValve1: THMIBasicValve
+  object Lbl_HMIUpDown1: TLabel
     Left = 296
-    Height = 88
-    Top = 336
-    Width = 68
+    Height = 44
+    Top = 226
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIUpDown'#13#10'HMIUpDown1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIUpDown1: THMIUpDown
+    Left = 409
+    Height = 47
+    Top = 274
+    Width = 33
+    Enabled = False
+    Increment = 1
+    Max = 100
+    TabOrder = 3
+    PLCTag = PLCTagNumber1
+  end
+  object Lbl_HMIComboBox1: TLabel
+    Left = 576
+    Height = 44
+    Top = 226
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIComboBox'#13#10'HMIComboBox1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIComboBox1: THMIComboBox
+    Left = 615
+    Height = 30
+    Top = 274
+    Width = 182
+    ItemHeight = 0
+    PLCTag = PLCTagNumber1
+    TabOrder = 4
+  end
+  object Lbl_HMIProgressBar1: TLabel
+    Left = 856
+    Height = 44
+    Top = 226
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIProgressBar'#13#10'HMIProgressBar1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIProgressBar1: THMIProgressBar
+    Left = 937
+    Height = 24
+    Top = 274
+    Width = 98
+    Enabled = True
+    PLCTag = PLCTagNumber1
+  end
+  object Lbl_HMITrackBar1: TLabel
+    Left = 1136
+    Height = 44
+    Top = 226
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMITrackBar'#13#10'HMITrackBar1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMITrackBar1: THMITrackBar
+    Left = 1242
+    Height = 37
+    Top = 274
+    Width = 48
+    Enabled = True
+    TabOrder = 10
+    PLCTag = PLCTagNumber1
+  end
+  object Lbl_HMIScrollBar1: TLabel
+    Left = 1416
+    Height = 44
+    Top = 226
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIScrollBar'#13#10'HMIScrollBar1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIScrollBar1: THMIScrollBar
+    Left = 1422
+    Height = 13
+    Top = 274
+    Width = 247
+    Enabled = True
+    PageSize = 0
+    TabOrder = 12
+    PLCTag = PLCTagNumber1
+  end
+  object Lbl_HMIScrollBar2: TLabel
+    Left = 16
+    Height = 44
+    Top = 436
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIScrollBar'#13#10'HMIScrollBar2'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIScrollBar2: THMIScrollBar
+    Left = 85
+    Height = 13
+    Top = 484
+    Width = 121
+    Enabled = True
+    PageSize = 0
+    TabOrder = 31
+    PLCTag = PLCTagNumber2
+  end
+  object Lbl_HMIText1: TLabel
+    Left = 296
+    Height = 44
+    Top = 436
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIText'#13#10'HMIText1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIText1: THMIText
+    Left = 393
+    Height = 17
+    Top = 484
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    FormatDateTimeOptions = []
+    Zones = <>
+  end
+  object Lbl_HMIText2: TLabel
+    Left = 576
+    Height = 44
+    Top = 436
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIText'#13#10'HMIText2'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIText2: THMIText
+    Left = 673
+    Height = 36
+    Top = 484
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    FormatDateTimeOptions = []
+    Zones = <>
+  end
+  object Lbl_HMILinkedFlowValve1: TLabel
+    Left = 856
+    Height = 44
+    Top = 436
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowValve'#13#10'HMILinkedFlowValve1'#13#10'Vertical / Mirrored'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMILinkedFlowValve1: THMILinkedFlowValve
+    Left = 947
+    Height = 82
+    Top = 484
+    Width = 77
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+    Mirrored = True
     ValveBodyPercent = 0.7
   end
-  object HMIBasicEletricMotor1: THMIBasicEletricMotor
-    Left = 64
-    Height = 52
-    Top = 328
-    Width = 70
-    Mirrored = True
+  object Lbl_HMILinkedFlowValve2: TLabel
+    Left = 1136
+    Height = 44
+    Top = 436
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowValve'#13#10'HMILinkedFlowValve2'#13#10'Horizontal / Not mirrored'
+    Layout = tlCenter
+    WordWrap = True
   end
-  object HMIFlowPolyline1: THMIFlowPolyline
-    Left = 754
-    Height = 39
-    Top = 221
-    Width = 37
-    PointCoordinates = <>
-    AutoStartPointDirection = pdVertical
-    AutoStartPointOffset = 0
-    AutoEndPointDirection = pdVertical
-    AutoEndPointOffset = 0
-    AutoHeightDistribution = 50
-    MultipleColorBehavior = cmbLastColor
-    MultipleColorsReplace = clBlack
-    FlowSource = <>
+  object HMILinkedFlowValve2: THMILinkedFlowValve
+    Left = 1216
+    Height = 70
+    Top = 484
+    Width = 100
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+    Mirrored = False
+    ValveBodyPercent = 0.7
+  end
+  object Lbl_HMILinkedFlowValve3: TLabel
+    Left = 1416
+    Height = 44
+    Top = 436
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowValve'#13#10'HMILinkedFlowValve3'#13#10'Horizontal / Mirrored'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMILinkedFlowValve3: THMILinkedFlowValve
+    Left = 1496
+    Height = 70
+    Top = 484
+    Width = 100
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+    Mirrored = True
+    ValveBodyPercent = 0.7
+  end
+  object Lbl_HMILinkedFlowValve4: TLabel
+    Left = 16
+    Height = 44
+    Top = 646
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowValve'#13#10'HMILinkedFlowValve4'#13#10'Vertical / Not mirrored'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMILinkedFlowValve4: THMILinkedFlowValve
+    Left = 111
+    Height = 100
+    Top = 694
+    Width = 70
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+    Mirrored = False
+    ValveBodyPercent = 0.7
+  end
+  object Lbl_HMILinkedFlowPump1: TLabel
+    Left = 296
+    Height = 44
+    Top = 646
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowPump'#13#10'HMILinkedFlowPump1'#13#10'Horizontal / Not mirrored'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMILinkedFlowPump1: THMILinkedFlowPump
+    Left = 390
+    Height = 50
+    Top = 694
+    Width = 71
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+  end
+  object Lbl_HMILinkedFlowPump2: TLabel
+    Left = 576
+    Height = 44
+    Top = 646
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowPump'#13#10'HMILinkedFlowPump2'#13#10'Horizontal / Mirrored'
+    Layout = tlCenter
+    WordWrap = True
   end
   object HMILinkedFlowPump2: THMILinkedFlowPump
-    Left = 6
-    Height = 45
-    Top = 322
-    Width = 55
+    Left = 670
+    Height = 50
+    Top = 694
+    Width = 71
+    PLCTag = PLCTagNumber1
     ColorAndFlowStates = <>
     Mirrored = True
   end
-  object HMIBasicVectorControl1: THMIBasicVectorControl
-    Left = 704
-    Height = 54
-    Top = 144
-    Width = 61
-    Stretch = False
+  object Lbl_HMILinkedFlowPump3: TLabel
+    Left = 856
+    Height = 44
+    Top = 646
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowPump'#13#10'HMILinkedFlowPump3'#13#10'Vertical / Not mirrored'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMILinkedFlowPump3: THMILinkedFlowPump
+    Left = 961
+    Height = 71
+    Top = 694
+    Width = 50
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+  end
+  object Lbl_HMILinkedFlowElevator1: TLabel
+    Left = 1136
+    Height = 44
+    Top = 646
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMILinkedFlowElevator'#13#10'HMILinkedFlowElevator1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMILinkedFlowElevator1: THMILinkedFlowElevator
+    Left = 1242
+    Height = 144
+    Top = 694
+    Width = 48
+    PLCTag = PLCTagNumber1
+    ColorAndFlowStates = <>
+    BodyWidth = 16
+  end
+  object Lbl_HMIForkedFlowValve1: TLabel
+    Left = 1416
+    Height = 44
+    Top = 646
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIForkedFlowValve'#13#10'HMIForkedFlowValve1'#13#10'Orientation = ffvRight'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIForkedFlowValve1: THMIForkedFlowValve
+    Left = 1510
+    Height = 64
+    Top = 694
+    Width = 71
+    ColorAndFlowStates = <>
+    PLCTag = PLCTagNumber1
     Proportional = False
+    Stretch = True
+    Orientation = ffvRight
+  end
+  object Lbl_HMIForkedFlowValve2: TLabel
+    Left = 16
+    Height = 44
+    Top = 856
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIForkedFlowValve'#13#10'HMIForkedFlowValve2'#13#10'Orientation = ffvLeft'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIForkedFlowValve2: THMIForkedFlowValve
+    Left = 110
+    Height = 64
+    Top = 904
+    Width = 71
+    ColorAndFlowStates = <>
+    PLCTag = PLCTagNumber1
+    Proportional = False
+    Stretch = True
+    Orientation = ffvLeft
+  end
+  object Lbl_HMIThreeWayFlowValve1: TLabel
+    Left = 296
+    Height = 44
+    Top = 856
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIThreeWayFlowValve'#13#10'HMIThreeWayFlowValve1'
+    Layout = tlCenter
+    WordWrap = True
+  end
+  object HMIThreeWayFlowValve1: THMIThreeWayFlowValve
+    Left = 341
+    Height = 112
+    Top = 904
+    Width = 169
+    ColorAndFlowStates = <>
+    PLCTag = PLCTagNumber1
+    Proportional = False
+    Stretch = True
+  end
+  object Lbl_HMIFlowVectorControl1: TLabel
+    Left = 576
+    Height = 44
+    Top = 856
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIFlowVectorControl'#13#10'HMIFlowVectorControl1'
+    Layout = tlCenter
+    WordWrap = True
   end
   object HMIFlowVectorControl1: THMIFlowVectorControl
-    Left = 639
+    Left = 676
     Height = 57
-    Top = 28
+    Top = 904
     Width = 60
     ColorAndFlowStates = <>
     FlowOutputPolylines = <>
@@ -332,34 +597,21 @@ object Form1: TForm1
     Proportional = False
     Stretch = False
   end
-  object HMITransparentButton1: THMITransparentButton
-    Left = 432
-    Height = 52
-    Top = 336
-    Width = 62
-  end
-  object Panel1: TPanel
-    Left = 0
-    Height = 50
-    Top = 0
-    Width = 170
-    Caption = 'Panel1'
-    TabOrder = 28
-  end
-  object HMIThreeWayFlowValve1: THMIThreeWayFlowValve
-    Left = 509
-    Height = 112
-    Top = 392
-    Width = 169
-    ColorAndFlowStates = <>
-    PLCTag = PLCTagNumber1
-    Proportional = False
-    Stretch = True
+  object Lbl_HMIFlowVectorControl2: TLabel
+    Left = 856
+    Height = 44
+    Top = 856
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'THMIFlowVectorControl'#13#10'HMIFlowVectorControl2'
+    Layout = tlCenter
+    WordWrap = True
   end
   object HMIFlowVectorControl2: THMIFlowVectorControl
-    Left = 376
+    Left = 918
     Height = 112
-    Top = 360
+    Top = 904
     Width = 136
     ColorAndFlowStates = <>
     FlowOutputPolylines = <>
@@ -483,37 +735,36 @@ object Form1: TForm1
       '</svg>'
     )
   end
-  object HMIScrollBar2: THMIScrollBar
-    Left = 464
-    Height = 13
-    Top = 528
-    Width = 121
-    Enabled = True
-    PageSize = 0
-    TabOrder = 31
-    PLCTag = PLCTagNumber2
+  object Lbl_Panel1: TLabel
+    Left = 1136
+    Height = 44
+    Top = 856
+    Width = 260
+    Alignment = taCenter
+    AutoSize = False
+    Caption = 'TPanel'#13#10'Panel1'
+    Layout = tlCenter
+    WordWrap = True
   end
-  object HMILabel2: THMILabel
-    Left = 624
-    Height = 17
-    Top = 520
-    Width = 65
-    Enabled = True
-    NumberFormat = '#0.0'
-    PLCTag = PLCTagNumber2
-    FormatDateTimeOptions = []
+  object Panel1: TPanel
+    Left = 1181
+    Height = 50
+    Top = 904
+    Width = 170
+    Caption = 'Panel1'
+    TabOrder = 28
   end
   object BrokenTCPConnection: TTCP_UDPPort
     Active = True
     Host = '127.0.0.1'
     Port = 502
     ExclusiveDevice = True
-    Left = 88
-    Top = 16
+    Left = 16
+    Top = 1086
   end
   object PLCTagNumber1: TPLCTagNumber
     TagGUID = '{57C6632E-3B0F-4563-87BC-0644D6093269}'
-    CommReadErrors = 357476
+    CommReadErrors = 358108
     PLCRack = 0
     PLCSlot = 0
     PLCStation = 1
@@ -530,14 +781,14 @@ object Form1: TForm1
     SwapWords = True
     EnableMaxValue = False
     EnableMinValue = False
-    Left = 88
-    Top = 144
+    Left = 116
+    Top = 1086
   end
   object ModBusTCPDriver1: TModBusTCPDriver
     CommunicationPort = BrokenTCPConnection
     ReadOnly = False
-    Left = 88
-    Top = 72
+    Left = 216
+    Top = 1086
   end
   object HMIColorPropertyConnector1: THMIColorPropertyConnector
     Conditions = <    
@@ -554,8 +805,8 @@ object Form1: TForm1
         TargetObject = Panel1
         TargetObjectProperty = 'Color'
       end>
-    Left = 385
-    Top = 459
+    Left = 316
+    Top = 1086
   end
   object PLCTagNumber2: TPLCTagNumber
     TagGUID = '{D497E6C3-539A-4D0B-8519-C7A6D0C40854}'
@@ -570,8 +821,8 @@ object Form1: TForm1
     LongAddress = ''
     EnableMaxValue = False
     EnableMinValue = False
-    Left = 776
-    Top = 160
+    Left = 416
+    Top = 1086
   end
   object HMIControlDislocatorAnimation2_1: THMIControlDislocatorAnimation2
     P0_X = 0
@@ -594,7 +845,21 @@ object Form1: TForm1
     PLCTagy = PLCTagNumber2
     ValueP1x = 200
     ValueP1y = 200
-    Left = 16
-    Top = 128
+    Left = 516
+    Top = 1086
+  end
+  object TIPropertyGrid1: TTIPropertyGrid
+    Left = 832
+    Height = 556
+    Top = 0
+    Width = 283
+    Align = alRight
+    CheckboxForBoolean = False
+    DefaultValueFont.Color = clWindowText
+    Filter = [tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkMethod, tkSString, tkLString, tkAString, tkWString, tkVariant, tkArray, tkRecord, tkInterface, tkClass, tkObject, tkWChar, tkBool, tkInt64, tkQWord, tkDynArray, tkInterfaceRaw, tkProcVar, tkUString, tkUChar, tkHelper, tkFile, tkClassRef, tkPointer]
+    Indent = 9
+    NameFont.Color = clWindowText
+    TIObject = PLCTagNumber1
+    ValueFont.Color = clMaroon
   end
 end

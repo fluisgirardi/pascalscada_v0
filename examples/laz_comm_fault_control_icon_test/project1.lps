@@ -1,67 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="12"/>
+    <Version Value="13"/>
     <BuildModes Active="Default"/>
     <Units>
       <Unit>
         <Filename Value="project1.lpr"/>
-        <IsPartOfProject Value="True"/>
+        <UsageCount Value="178"/>
         <EditorIndex Value="-1"/>
         <CursorPos Y="15"/>
-        <UsageCount Value="178"/>
       </Unit>
       <Unit>
         <Filename Value="unit1.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form1"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-        <UnitName Value="Unit1"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="26"/>
-        <CursorPos X="55" Y="60"/>
-        <UsageCount Value="178"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
+        <UsageCount Value="178"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="28"/>
+        <CursorPos X="55" Y="60"/>
       </Unit>
       <Unit>
-        <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/src/hmi/hmiedit.pas"/>
+        <Filename Value="../../src/hmi/hmiedit.pas"/>
         <UnitName Value="HMIEdit"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="455"/>
         <CursorPos X="20" Y="466"/>
-        <UsageCount Value="6"/>
       </Unit>
       <Unit>
         <Filename Value="unit1.lfm"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="196"/>
         <CursorPos X="16" Y="217"/>
-        <UsageCount Value="6"/>
-        <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit>
       <Unit>
-        <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/src/hmi/hmibasiceletricmotor.pas"/>
+        <Filename Value="../../src/hmi/hmibasiceletricmotor.pas"/>
         <UnitName Value="HMIBasicEletricMotor"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="3" Y="71"/>
-        <UsageCount Value="6"/>
       </Unit>
       <Unit>
-        <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/src/hmi/hmi_draw_basiccontrol.pas"/>
+        <Filename Value="../../src/hmi/hmi_draw_basiccontrol.pas"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="141"/>
         <CursorPos X="43" Y="143"/>
-        <UsageCount Value="6"/>
       </Unit>
       <Unit>
-        <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/BGRABitmap/bgrabitmap/bgrareadpng.pas"/>
+        <Filename Value="../../../../../fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/BGRABitmap/bgrabitmap/bgrareadpng.pas"/>
         <UnitName Value="BGRAReadPng"/>
+        <UsageCount Value="10"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="297"/>
         <CursorPos Y="318"/>
-        <UsageCount Value="10"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="18">
