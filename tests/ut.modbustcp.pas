@@ -1,0 +1,182 @@
+{$i ../src/common/language.inc}
+{$IFDEF PORTUGUES}
+{:
+  @abstract(Testes do TModBusTCPDriver: cabecalho MBAP e interpretacao das
+            respostas.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ELSE}
+{:
+  @abstract(TModBusTCPDriver tests: MBAP header and response parsing.)
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+}
+{$ENDIF}
+unit ut.modbustcp;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, fpcunit, testregistry,
+  commtypes, Tag, modbustcp,
+  testsupport.bytes, testsupport.protocol;
+
+type
+
+  { TModBusTCPProbe }
+
+  TModBusTCPProbe = class(TModBusTCPDriver)
+  public
+    function Encode(aTag:TTagRec; aToWrite:TArrayOfDouble; var aResultLen:LongInt):BYTES;
+    function Decode(aPkg:TIOPacket; out aValues:TArrayOfDouble):TProtocolIOResult;
+  end;
+
+  { TTestModBusTCP }
+
+  TTestModBusTCP = class(TTestCase)
+  private
+    FDrv:TModBusTCPProbe;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure LeituraDeRegistradoresMontaOFrameComMBAP;
+    procedure LeituraDeRegistradoresPrediz13BytesDeResposta;
+    procedure EscritaDeMultiplosRegistradoresMontaOFrame;
+    procedure CampoDeTamanhoContaOsBytesDepoisDele;
+    procedure RespostaDeRegistradoresViraValores;
+    procedure RespostaComExcecaoViraOErroCorrespondente;
+    procedure RespostaDeOutraUnidadeViraErroDeComunicacao;
+    procedure TimeoutNaLeituraViraTimeout;
+  end;
+
+implementation
+
+{ TModBusTCPProbe }
+
+function TModBusTCPProbe.Encode(aTag:TTagRec; aToWrite:TArrayOfDouble; var aResultLen:LongInt):BYTES;
+begin
+  Result:=EncodePkg(aTag, aToWrite, aResultLen);
+end;
+
+function TModBusTCPProbe.Decode(aPkg:TIOPacket; out aValues:TArrayOfDouble):TProtocolIOResult;
+begin
+  Result:=DecodePkg(aPkg, aValues);
+end;
+
+{ TTestModBusTCP }
+
+procedure TTestModBusTCP.SetUp;
+begin
+  FDrv:=TModBusTCPProbe.Create(nil);
+end;
+
+procedure TTestModBusTCP.TearDown;
+begin
+  FreeAndNil(FDrv);
+end;
+
+procedure TTestModBusTCP.LeituraDeRegistradoresMontaOFrameComMBAP;
+var
+  len:LongInt;
+begin
+  //MBAP: transacao 0000, protocolo 0000, tamanho 0006, unidade 01. Sem CRC.
+  AssertBytesEqual('pedido de leitura 03',
+                   BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                   FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len));
+end;
+
+procedure TTestModBusTCP.LeituraDeRegistradoresPrediz13BytesDeResposta;
+var
+  len:LongInt;
+begin
+  //6 de MBAP + unidade + funcao + contagem + 2 words = 13
+  FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len);
+  AssertEquals('tamanho previsto da resposta', 13, len);
+end;
+
+procedure TTestModBusTCP.EscritaDeMultiplosRegistradoresMontaOFrame;
+var
+  len:LongInt;
+  vals:TArrayOfDouble;
+begin
+  SetLength(vals,2);
+  vals[0]:=10;
+  vals[1]:=20;
+  AssertBytesEqual('escrita 16',
+                   BytesOf('00 00 00 00 00 0B 01 10 00 00 00 02 04 00 0A 00 14'),
+                   FDrv.Encode(TagRecFor(1, 0, $10, 0, 2), vals, len));
+end;
+
+procedure TTestModBusTCP.CampoDeTamanhoContaOsBytesDepoisDele;
+var
+  len:LongInt;
+  vals:TArrayOfDouble;
+  frame:BYTES;
+  declarado:LongInt;
+begin
+  SetLength(vals,2);
+  vals[0]:=10;
+  vals[1]:=20;
+  frame:=FDrv.Encode(TagRecFor(1, 0, $10, 0, 2), vals, len);
+
+  declarado:=(frame[4] shl 8) + frame[5];
+  AssertEquals('campo de tamanho x bytes apos o campo',
+               Length(frame)-6, declarado);
+end;
+
+procedure TTestModBusTCP.RespostaDeRegistradoresViraValores;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+begin
+  res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                               BytesOf('00 00 00 00 00 07 01 03 04 00 0A 00 14')), vals);
+  AssertEquals('resultado', Ord(ioOk), Ord(res));
+  AssertEquals('quantidade de valores', 2, Length(vals));
+  AssertEquals('primeiro registro', 10, vals[0], 0);
+  AssertEquals('segundo registro',  20, vals[1], 0);
+end;
+
+procedure TTestModBusTCP.RespostaComExcecaoViraOErroCorrespondente;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+begin
+  res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                               BytesOf('00 00 00 00 00 03 01 83 02')), vals);
+  AssertEquals('excecao 02', Ord(ioIllegalRegAddress), Ord(res));
+end;
+
+procedure TTestModBusTCP.RespostaDeOutraUnidadeViraErroDeComunicacao;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+begin
+  //pedimos a unidade 1 e respondeu a unidade 2
+  res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                               BytesOf('00 00 00 00 00 07 02 03 04 00 0A 00 14')), vals);
+  AssertEquals('unidade errada', Ord(ioCommError), Ord(res));
+end;
+
+procedure TTestModBusTCP.TimeoutNaLeituraViraTimeout;
+var
+  res:TProtocolIOResult;
+  vals:TArrayOfDouble;
+  pkg:TIOPacket;
+begin
+  //a porta entrega o buffer do tamanho pedido, zerado, e avisa o timeout
+  pkg:=IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
+                   BytesOf('00 00 00 00 00 00 00 00 00 00 00 00 00'));
+  pkg.ReadIOResult:=iorTimeOut;
+  pkg.Received:=0;
+
+  res:=FDrv.Decode(pkg, vals);
+  AssertEquals('timeout', Ord(ioTimeOut), Ord(res));
+end;
+
+initialization
+  RegisterTest(TTestModBusTCP);
+
+end.

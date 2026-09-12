@@ -8,3 +8,5 @@ examples/**/backup/
 examples/**/*.o
 examples/**/*.ppu
 examples/**/*.exe
+tests/bin/
+tests/units/
