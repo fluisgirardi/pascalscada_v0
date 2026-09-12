@@ -20,7 +20,8 @@ uses
   ut.s7plustypeinfo,
   ut.s7family,
   ut.protocoldriver,
-  ut.plcstring;
+  ut.plcstring,
+  ut.messagespool;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
