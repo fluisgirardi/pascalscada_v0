@@ -1729,11 +1729,6 @@ begin
 
     PIOCmdCS.Enter;
     InIOCmdCS:=true;
-    //if (not ReallyActive) then
-       //exit;
-
-    if Assigned(OnBegin) then
-      OnBegin(Self);
 
     inc(PPacketID);
 
@@ -1757,7 +1752,19 @@ begin
     SetLength(PPacket^.BufferToRead,BytesToRead);
 
     if (not ReallyActive) then
-    exit;
+      exit;
+
+    //o aviso de comeco solta a secao critica de quem chamou, e o de fim a
+    //retoma: os dois tem que andar juntos. Ficava antes do teste acima, entao
+    //com a porta fechada o comeco era dado e o fim nunca vinha - uma vez por
+    //ciclo de varredura, enquanto o equipamento estivesse fora do ar.
+    //the begin notification releases the caller's critical section and the end
+    //one takes it back: the two must travel together. It used to sit before the
+    //test above, so with the port closed the begin was given and the end never
+    //came - once per scan cycle, for as long as the device stayed down.
+    if Assigned(OnBegin) then
+      OnBegin(Self);
+
     //executes the I/O command.
     InternalIOCommand(Cmd,@PPacket^);
 

@@ -54,6 +54,8 @@ type
     FNextResponse:LongInt;
     FPosInResponse:LongInt;
     FWritten:array of BYTES;
+    FFalharAoAbrir, FFalharAoFechar, FConfiguracaoOK:Boolean;
+    FLimpezasDeBuffer:LongInt;
     function  GetPendingResponses:LongInt;
     function  GetWriteCount:LongInt;
   protected
@@ -122,6 +124,48 @@ type
     //: How many queued responses were not consumed yet.
     {$ENDIF}
     property  PendingResponses:LongInt read GetPendingResponses;
+
+    {$IFDEF PORTUGUES}
+    //: Faz a proxima abertura da porta falhar, como um dispositivo ausente.
+    {$ELSE}
+    //: Makes the next port open fail, like a missing device.
+    {$ENDIF}
+    property  FalharAoAbrir:Boolean read FFalharAoAbrir write FFalharAoAbrir;
+
+    {$IFDEF PORTUGUES}
+    //: Faz o fechamento da porta falhar.
+    {$ELSE}
+    //: Makes closing the port fail.
+    {$ENDIF}
+    property  FalharAoFechar:Boolean read FFalharAoFechar write FFalharAoFechar;
+
+    {$IFDEF PORTUGUES}
+    //: Quando falso, a porta se declara mal configurada.
+    {$ELSE}
+    //: When false, the port declares itself misconfigured.
+    {$ENDIF}
+    property  ConfiguracaoOK:Boolean read FConfiguracaoOK write FConfiguracaoOK;
+
+    {$IFDEF PORTUGUES}
+    //: Quantas vezes os buffers foram limpos.
+    {$ELSE}
+    //: How many times the buffers were cleared.
+    {$ENDIF}
+    property  LimpezasDeBuffer:LongInt read FLimpezasDeBuffer;
+  published
+    //os avisos sao protegidos na classe base; cada porta concreta os republica
+    //the notifications are protected in the base class; every concrete port
+    //republishes them
+    property OnCommPortOpened;
+    property OnCommPortOpenError;
+    property OnCommPortClosed;
+    property OnCommPortCloseError;
+    property OnCommErrorReading;
+    property OnCommErrorWriting;
+    property OnCommPortDisconnected;
+    property ReadRetries;
+    property WriteRetries;
+    property ClearBuffersOnCommErrors;
   end;
 
 implementation
@@ -131,6 +175,10 @@ begin
   inherited Create(AOwner);
   FNextResponse:=0;
   FPosInResponse:=0;
+  FFalharAoAbrir:=false;
+  FFalharAoFechar:=false;
+  FConfiguracaoOK:=true;
+  FLimpezasDeBuffer:=0;
 end;
 
 procedure TFakeCommPort.QueueResponse(const aResponse:BYTES);
@@ -257,21 +305,22 @@ end;
 
 procedure TFakeCommPort.PortStart(var Ok:Boolean);
 begin
-  Ok:=true;
+  Ok:=not FFalharAoAbrir;
 end;
 
 procedure TFakeCommPort.PortStop(var Ok:Boolean);
 begin
-  Ok:=true;
+  Ok:=not FFalharAoFechar;
 end;
 
 function TFakeCommPort.ComSettingsOK:Boolean;
 begin
-  Result:=true;
+  Result:=FConfiguracaoOK;
 end;
 
 procedure TFakeCommPort.ClearALLBuffers;
 begin
+  inc(FLimpezasDeBuffer);
   SetLength(FWritten,0);
 end;
 
