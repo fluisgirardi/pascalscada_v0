@@ -25,6 +25,7 @@
             <Filename Value="webserverWCC"/>
           </Target>
           <SearchPaths>
+            <OtherUnitFiles Value="..\..\src\hmi"/>
             <IncludeFiles Value="$(ProjOutDir)"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
