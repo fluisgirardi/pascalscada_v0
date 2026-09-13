@@ -140,23 +140,48 @@ end;
 
 procedure TpSCADACoreAffinityThreadWithLoop.WaitLoopStarts;
 begin
+  //FStartLoop e FEndLoop sao sinalizados dentro do Execute, e as tres esperas
+  //abaixo aguardam por eles sem prazo. So' que a RTL nao chama Execute quando a
+  //thread foi criada suspensa e ja' esta terminada na hora em que enfim e'
+  //escalonada - ver "if not(LThread.FTerminated)" em rtl/unix/tthread.inc.
+  //Nesse caso os eventos nunca vem e a espera nao acaba mais. Finished, que a
+  //RTL marca com o Execute tendo rodado ou nao, e' a saida: e' so' leitura, e
+  //nao toca nos objetos de evento, que a esta altura ja' podem ter sido
+  //liberados por quem esperava.
+  //FStartLoop and FEndLoop are signaled inside Execute, and the three waits
+  //below wait on them with no deadline. But the RTL does not call Execute when
+  //the thread was created suspended and is already terminated by the time it
+  //finally gets scheduled - see "if not(LThread.FTerminated)" in
+  //rtl/unix/tthread.inc. In that case the events never come and the wait never
+  //ends. Finished, which the RTL sets whether Execute ran or not, is the way
+  //out: it is read only, and does not touch the event objects, which by then
+  //may already have been freed by whoever was waiting.
   if Assigned(FStartLoop) then
-    while FStartLoop.WaitFor($FFFFFFFF)<>wrSignaled do
+    while (FStartLoop.WaitFor(1)<>wrSignaled) and (not Finished) do
       CheckSynchronize(1);
 end;
 
 procedure TpSCADACoreAffinityThreadWithLoop.WaitForLoopTerminates;
 begin
+  //: @seealso(WaitLoopStarts) para o porque do teste de Finished
   if Assigned(self.FEndLoop) and (MainThreadID=GetCurrentThreadId) then
-    while FEndLoop.WaitFor(1)<>wrSignaled do
+    while (FEndLoop.WaitFor(1)<>wrSignaled) and (not Finished) do
       CheckSynchronize(1);
 end;
 
 function TpSCADACoreAffinityThreadWithLoop.WaitEnd(const Timeout: Integer
   ): TWaitResult;
 begin
-  Result:=wrAbandoned;
   Result:=FEndLoop.WaitFor(Timeout);
+
+  //quem chama isto o faz em laco, ate' vir wrSignaled. A thread pode ter
+  //acabado sem passar pelo Execute, e ai o evento nunca vem - mas ela acabou.
+  //: @seealso(WaitLoopStarts)
+  //callers loop on this until wrSignaled comes. The thread may have finished
+  //without going through Execute, in which case the event never comes - but it
+  //did finish.
+  if (Result<>wrSignaled) and Finished then
+    Result:=wrSignaled;
 end;
 
 { TMultiCoreThread }
