@@ -26,7 +26,8 @@ uses
   ut.hmizones,
   ut.propertyconnector,
   ut.colorconnector,
-  ut.commfaultbadge;
+  ut.commfaultbadge,
+  ut.dislocator;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

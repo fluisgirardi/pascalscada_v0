@@ -597,16 +597,17 @@ procedure THMICustomControlDislocatorAnimation.SetControl(t:TControl);
 begin
   if t=FTarget then exit;
 
-  if assigned(t) then
-     t.RemoveFreeNotification(Self);
-
   if FTarget<>nil then begin
     FTarget.Left:=FStartLeft;
     FTarget.Top:=FStartTop;
-    FTarget.FreeNotification(Self);
+    FTarget.RemoveFreeNotification(Self);
   end;
 
   FTarget:=t;
+
+  if FTarget<>nil then
+    FTarget.FreeNotification(Self);
+
   if Assigned(FCommBadge) then
     FCommBadge.SetTarget(FTarget);
   MoveObject(0);
