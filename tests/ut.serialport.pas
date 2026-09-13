@@ -63,11 +63,20 @@ type
     procedure EsperaEntreEscritaELeituraDeFabrica;
     procedure TempoLimiteDeFabricaConfereComOQueAPropriedadeDeclara;
 
+    {$IFDEF UNIX}
     //diretorio de dispositivos / device directory
+    //
+    //So' existe em Unix: no Windows a porta se chama COM1, sem diretorio, e o
+    //construtor nem inicializa o prefixo - a propria documentacao da
+    //propriedade diz que ali ela nao serve para nada.
+    //Unix only: on Windows the port is called COM1, with no directory, and the
+    //constructor does not even initialize the prefix - the property's own
+    //documentation says it is useless there.
     procedure DiretorioDeDispositivosDeFabrica;
     procedure DiretorioVazioVoltaAoPadrao;
     procedure DiretorioNenhumVoltaAoPadrao;
     procedure DiretorioEscolhidoEhGuardado;
+    {$ENDIF}
 
     //nome da porta / port name
     procedure NomeDePortaDesconhecidoNaoEhAceito;
@@ -194,6 +203,7 @@ begin
   AssertEquals('tempo limite', 100, FPorta.Timeout);
 end;
 
+{$IFDEF UNIX}
 procedure TTestSerialPort.DiretorioDeDispositivosDeFabrica;
 begin
   AssertEquals('diretorio de dispositivos', '/dev/', FPorta.DevDir);
@@ -220,6 +230,7 @@ begin
   FPorta.DevDir:='/tmp/portas/';
   AssertEquals('diretorio escolhido', '/tmp/portas/', FPorta.DevDir);
 end;
+{$ENDIF}
 
 procedure TTestSerialPort.NomeDePortaDesconhecidoNaoEhAceito;
 begin
