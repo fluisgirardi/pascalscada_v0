@@ -35,7 +35,7 @@ cd "$RAIZ" || exit 1
 REGISTRO="$(mktemp)"
 trap 'rm -f "$REGISTRO"' EXIT
 
-echo "== registrando os pacotes do PascalSCADA"
+echo "== registering the PascalSCADA packages"
 for pkg in pascalscada_common.lpk pascalscada.lpk pascalscada_db.lpk \
            pascalscada_dsng.lpk pascalscada_hmi.lpk pascalscada_full.lpk; do
     $LAZBUILD --add-package-link "$pkg" >/dev/null 2>&1
@@ -60,7 +60,7 @@ fi
 # pacotes que vem com o proprio Lazarus, quando o diretorio dele e' conhecido
 # packages shipped with Lazarus itself, when its directory is known
 if [ -n "${LAZARUSDIR:-}" ] && [ -d "$LAZARUSDIR/components" ]; then
-    echo "== pacotes do Lazarus em $LAZARUSDIR"
+    echo "== Lazarus packages at $LAZARUSDIR"
     for pkg in components/rtticontrols/runtimetypeinfocontrols.lpk \
                components/tachart/tachartlazaruspkg.lpk \
                components/sqldb/sqldblaz.lpk; do
@@ -73,7 +73,7 @@ ok=0
 pulados=0
 falhas=0
 
-echo "== compilando os exemplos (widgetset=$WIDGETSET, sistema=$ALVO)"
+echo "== building the examples (widgetset=$WIDGETSET, system=$ALVO)"
 for projeto in $(find examples -name "*.lpi" | sort); do
 
     motivo=$(grep -a -v '^[[:space:]]*#' "$EXCECOES" 2>/dev/null | \
@@ -81,7 +81,7 @@ for projeto in $(find examples -name "*.lpi" | sort); do
                  '($1==alvo || $1=="todos") && $2==proj {$1="";$2="";sub(/^ +/,"");print;exit}')
     if [ -n "$motivo" ]; then
         pulados=$((pulados+1))
-        echo "  pulado  $projeto  ($motivo)"
+        echo "  skipped $projeto  ($motivo)"
         continue
     fi
 
@@ -98,21 +98,21 @@ for projeto in $(find examples -name "*.lpi" | sort); do
     quebrado=$(echo "$saida" | grep -a -o 'Broken dependency: [^ ]*' | head -1)
     if [ -n "$quebrado" ]; then
         pulados=$((pulados+1))
-        echo "  pulado  $projeto  ($quebrado)"
+        echo "  skipped $projeto  ($quebrado)"
         continue
     fi
 
     falhas=$((falhas+1))
-    echo "  FALHOU  $projeto"
+    echo "  FAILED  $projeto"
     echo "$saida" | grep -a -iE "error|fatal" | head -3 | sed 's/^/            /'
     echo "$projeto" >> "$REGISTRO"
 done
 
 echo
-echo "== resumo: $ok compilaram, $pulados pulados, $falhas falharam"
+echo "== summary: $ok built, $pulados skipped, $falhas failed"
 
 if [ "$falhas" -gt 0 ]; then
-    echo "exemplos que falharam:"
+    echo "examples that failed:"
     sed 's/^/  /' "$REGISTRO"
     exit 1
 fi

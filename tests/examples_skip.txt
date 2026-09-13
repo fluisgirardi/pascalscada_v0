@@ -11,7 +11,7 @@
 # or "todos" for every one. Missing third party packages do NOT belong here:
 # the sweep already skips whatever reports "Broken dependency" on its own.
 
-linux    examples/laz_user_management_with_WinCC/usermanagement_wincc.lpi  fala com o WinCC da Siemens, que so existe em Windows
-freebsd  examples/laz_user_management_with_WinCC/usermanagement_wincc.lpi  fala com o WinCC da Siemens, que so existe em Windows
-linux    examples/laz_security_webserver_WinCC/webserverWCC.lpi            fala com o WinCC da Siemens, que so existe em Windows
-freebsd  examples/laz_security_webserver_WinCC/webserverWCC.lpi            fala com o WinCC da Siemens, que so existe em Windows
+linux    examples/laz_user_management_with_WinCC/usermanagement_wincc.lpi  talks to Siemens' WinCC, which only exists on Windows
+freebsd  examples/laz_user_management_with_WinCC/usermanagement_wincc.lpi  talks to Siemens' WinCC, which only exists on Windows
+linux    examples/laz_security_webserver_WinCC/webserverWCC.lpi            talks to Siemens' WinCC, which only exists on Windows
+freebsd  examples/laz_security_webserver_WinCC/webserverWCC.lpi            talks to Siemens' WinCC, which only exists on Windows
