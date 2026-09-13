@@ -414,8 +414,21 @@ end;
 
 procedure TConnectThread.WaitEnd;
 begin
-  while not (FEnd.WaitFor(5)=wrSignaled) do
-    CheckSynchronize(5);
+  //FEnd so' e' sinalizado no fim do Execute - e a RTL nao chama Execute quando
+  //a thread foi criada suspensa e ja' esta terminada na hora em que enfim e'
+  //escalonada (ver "if not(LThread.FTerminated)" em rtl/unix/tthread.inc).
+  //Destruir a porta logo depois de cria-la caia exatamente nisso: o evento
+  //nunca vinha e este laco nao terminava mais. TThread.WaitFor espera a thread
+  //acabar de verdade, tenha o Execute rodado ou nao, e ja' faz por dentro o
+  //CheckSynchronize que era feito aqui a mao.
+  //FEnd is only signaled at the end of Execute - and the RTL does not call
+  //Execute when the thread was created suspended and is already terminated by
+  //the time it finally gets scheduled (see "if not(LThread.FTerminated)" in
+  //rtl/unix/tthread.inc). Destroying the port right after creating it fell
+  //exactly into that: the event never came and this loop never ended.
+  //TThread.WaitFor waits for the thread to actually finish, whether Execute ran
+  //or not, and already does the CheckSynchronize that was done here by hand.
+  WaitFor;
 end;
 
 procedure TConnectThread.StopAutoReconnect;

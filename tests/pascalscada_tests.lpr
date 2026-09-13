@@ -11,6 +11,7 @@ uses
   testsupport.fakeport,
   testsupport.faketag,
   testsupport.fakedriver,
+  testsupport.fakeserver,
   //casos de teste / test cases
   ut.crc16utils,
   ut.hsutils,

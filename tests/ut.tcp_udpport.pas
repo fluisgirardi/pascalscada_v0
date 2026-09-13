@@ -29,7 +29,8 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  CommPort, socket_types, tcp_udpport;
+  CommPort, commtypes, socket_types, tcp_udpport,
+  testsupport.bytes, testsupport.fakeserver;
 
 type
 
@@ -65,6 +66,54 @@ type
     procedure IdMudaComOTipoDePorta;
     procedure IdEhEstavelParaAMesmaConfiguracao;
     procedure PortaSemEnderecoEhMarcadaComoIncompleta;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  A mesma porta, agora falando com um equipamento de verdade: um servidor de
+  teste ouvindo numa porta efemera de 127.0.0.1. E' o unico jeito de exercitar
+  o que a porta de rede realmente faz - conectar, mandar, receber, perceber que
+  o outro lado sumiu e voltar sozinha.
+  }
+  {$ELSE}
+  {:
+  The same port, now talking to a real device: a test server listening on an
+  ephemeral port of 127.0.0.1. It is the only way to exercise what the network
+  port actually does - connect, send, receive, notice the other end is gone and
+  come back on its own.
+  }
+  {$ENDIF}
+
+  { TTestTcpUdpPortComServidor }
+
+  TTestTcpUdpPortComServidor = class(TTestCase)
+  private
+    FServidor:TServidorDeTeste;
+    FPorta:TTCP_UDPPort;
+    //: espera a porta conectar, ou desistir no prazo
+    function  EsperarConexao(aPrazoMs:LongInt):Boolean;
+    function  EsperarDesconexao(aPrazoMs:LongInt):Boolean;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    //conexao / connecting
+    procedure ConectaNoServidor;
+    procedure PortaNuncaAbertaNaoEstaConectada;
+    procedure SemNinguemOuvindoNaoConecta;
+    procedure FecharAPortaEncerraAConexao;
+
+    //ida e volta / round trip
+    procedure OQueOMotoristaEscreveChegaNoServidor;
+    procedure ARespostaDoServidorVoltaParaOMotorista;
+    procedure SemRespostaOResultadoEhTimeout;
+
+    //o equipamento some / the device goes away
+    procedure EquipamentoQueSomeDerrubaAConexao;
+    procedure DepoisDeCairAPortaVoltaSozinha;
+
+    //ciclo de vida / lifecycle
+    procedure DestruirLogoDepoisDeCriarNaoPodeTravar;
   end;
 
 implementation
@@ -234,8 +283,188 @@ begin
                FPorta.getPortId <> IdDe('192.168.0.10', 102, ptTCP));
 end;
 
+{ TTestTcpUdpPortComServidor }
+
+const
+  DRIVER_DE_TESTE = 77;
+
+procedure TTestTcpUdpPortComServidor.SetUp;
+begin
+  FServidor:=TServidorDeTeste.Create;
+
+  FPorta:=TTCP_UDPPort.Create(nil);
+  FPorta.Host                 :='127.0.0.1';
+  FPorta.Port                 :=FServidor.Porta;
+  FPorta.PortType             :=ptTCP;
+  FPorta.Timeout              :=300;
+  FPorta.ReconnectRetryInterval:=200;
+end;
+
+procedure TTestTcpUdpPortComServidor.TearDown;
+begin
+  FreeAndNil(FPorta);
+  FreeAndNil(FServidor);
+end;
+
+function TTestTcpUdpPortComServidor.EsperarConexao(aPrazoMs:LongInt):Boolean;
+var
+  gasto:LongInt;
+begin
+  gasto:=0;
+  while (not FPorta.ReallyActive) and (gasto<aPrazoMs) do begin
+    Sleep(5);
+    inc(gasto, 5);
+  end;
+  Result:=FPorta.ReallyActive;
+end;
+
+function TTestTcpUdpPortComServidor.EsperarDesconexao(aPrazoMs:LongInt):Boolean;
+var
+  gasto:LongInt;
+begin
+  gasto:=0;
+  while FPorta.ReallyActive and (gasto<aPrazoMs) do begin
+    Sleep(5);
+    inc(gasto, 5);
+  end;
+  Result:=not FPorta.ReallyActive;
+end;
+
+procedure TTestTcpUdpPortComServidor.ConectaNoServidor;
+begin
+  FPorta.Active:=true;
+
+  AssertTrue('a porta tem que conectar',        EsperarConexao(3000));
+  AssertTrue('e o servidor tem que ver alguem', FServidor.EsperarConexoes(1, 1000));
+end;
+
+procedure TTestTcpUdpPortComServidor.PortaNuncaAbertaNaoEstaConectada;
+begin
+  AssertFalse('sem abrir, nao ha soquete', FPorta.ReallyActive);
+  AssertEquals('e o servidor nao viu ninguem', 0, FServidor.Conexoes);
+end;
+
+procedure TTestTcpUdpPortComServidor.SemNinguemOuvindoNaoConecta;
+begin
+  //aponta para a porta do servidor depois de derruba-lo: nao ha quem atenda
+  FreeAndNil(FServidor);
+
+  FPorta.Active:=true;
+
+  AssertFalse('nao pode se dizer conectada', EsperarConexao(700));
+end;
+
+procedure TTestTcpUdpPortComServidor.FecharAPortaEncerraAConexao;
+begin
+  FPorta.Active:=true;
+  AssertTrue('conectou', EsperarConexao(3000));
+
+  FPorta.Active:=false;
+
+  //PortStop nao fecha o soquete: posta um pedido para a thread de conexao, que
+  //fecha quando chegar a vez dela. O que importa e' que feche
+  AssertTrue('a conexao tem que ser encerrada', EsperarDesconexao(3000));
+  AssertFalse('e a porta fica fechada',         FPorta.Active);
+end;
+
+procedure TTestTcpUdpPortComServidor.OQueOMotoristaEscreveChegaNoServidor;
+var
+  pkg:TIOPacket;
+begin
+  FPorta.Active:=true;
+  AssertTrue('conectou', EsperarConexao(3000));
+
+  FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertTrue('os bytes chegaram', FServidor.EsperarBytes(4, 1000));
+  AssertBytesEqual('e sao os mesmos', BytesOf('01 02 03 04'), FServidor.Recebido);
+end;
+
+procedure TTestTcpUdpPortComServidor.ARespostaDoServidorVoltaParaOMotorista;
+var
+  pkg:TIOPacket;
+begin
+  FServidor.EnfileirarResposta(BytesOf('AA BB CC'));
+
+  FPorta.Active:=true;
+  AssertTrue('conectou', EsperarConexao(3000));
+
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('leitura ok',      Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertEquals('tres bytes',      3, pkg.Received);
+  AssertBytesEqual('a resposta',  BytesOf('AA BB CC'), pkg.BufferToRead);
+end;
+
+procedure TTestTcpUdpPortComServidor.SemRespostaOResultadoEhTimeout;
+var
+  pkg:TIOPacket;
+begin
+  //o servidor recebe mas nao responde nada
+  FPorta.Active:=true;
+  AssertTrue('conectou', EsperarConexao(3000));
+
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('a escrita saiu',      Ord(iorOK),      Ord(pkg.WriteIOResult));
+  AssertEquals('a resposta nao veio', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+end;
+
+procedure TTestTcpUdpPortComServidor.EquipamentoQueSomeDerrubaAConexao;
+var
+  pkg:TIOPacket;
+begin
+  //sem reconexao automatica, para medir so' a queda
+  FPorta.EnableAutoReconnect:=false;
+  FPorta.Active:=true;
+  AssertTrue('conectou', EsperarConexao(3000));
+
+  FServidor.SoltarAConexao;
+
+  //o soquete so' descobre que caiu quando tenta usar
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertTrue('a porta tem que perceber que caiu', EsperarDesconexao(3000));
+end;
+
+procedure TTestTcpUdpPortComServidor.DepoisDeCairAPortaVoltaSozinha;
+var
+  pkg:TIOPacket;
+begin
+  //e' o que mantem a supervisao viva quando o equipamento reinicia
+  FPorta.Active:=true;
+  AssertTrue('conectou', EsperarConexao(3000));
+
+  FServidor.SoltarAConexao;
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+  AssertTrue('caiu', EsperarDesconexao(3000));
+
+  AssertTrue('e voltou sozinha',      EsperarConexao(5000));
+  AssertTrue('com uma nova conexao',  FServidor.EsperarConexoes(2, 1000));
+end;
+
+procedure TTestTcpUdpPortComServidor.DestruirLogoDepoisDeCriarNaoPodeTravar;
+var
+  c:LongInt;
+  porta:TTCP_UDPPort;
+begin
+  //criar e destruir em sequencia, que e' o que um programa faz ao reconfigurar
+  //a comunicacao
+  for c:=1 to 20 do begin
+    porta:=TTCP_UDPPort.Create(nil);
+    porta.Host:='127.0.0.1';
+    porta.Port:=59000;
+    porta.Free;
+  end;
+
+  AssertTrue('vinte portas criadas e destruidas em sequencia', true);
+end;
+
 initialization
   RegisterTest(TTestTcpUdpPort);
+  RegisterTest(TTestTcpUdpPortComServidor);
 
 finalization
   FreeAndNil(PortaCompartilhada);
