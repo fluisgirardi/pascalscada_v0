@@ -76,6 +76,12 @@ type
     //avisos / notifications
     procedure MudancaDeValorAvisaQuemEscuta;
     procedure LeituraComOsMesmosValoresNaoAvisa;
+
+    //os comandos sem driver ligado / the commands with no driver attached
+    procedure VarreduraDeLeituraSemDriverNaoTemIdentificador;
+    procedure LeituraSemDriverNaoFazNada;
+    procedure EscritaSemDriverVoltaPeloCallback;
+    procedure EscritaDeZeroValoresNaoFazNada;
   end;
 
   { TTestPLCBlockElement }
@@ -246,6 +252,43 @@ begin
 end;
 
 { TTestPLCBlockElement }
+
+procedure TTestPLCBlock.VarreduraDeLeituraSemDriverNaoTemIdentificador;
+begin
+  //sem driver nao ha pedido a numerar: menos um e' o "nao fiz nada" que os
+  //tags conferem
+  AssertEquals('sem driver', -1, FBloco.ScanRead);
+end;
+
+procedure TTestPLCBlock.LeituraSemDriverNaoFazNada;
+begin
+  //nao ha o que entregar, e o bloco nao pode inventar valor nenhum
+  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
+
+  FBloco.Read;
+
+  AssertEquals('os valores ficam como estavam', 10, FBloco.ValueRaw[0], 0);
+end;
+
+procedure TTestPLCBlock.EscritaSemDriverVoltaPeloCallback;
+begin
+  //sem driver a escrita volta pelo proprio callback, com ioNullDriver, e o
+  //bloco guarda o que foi escrito
+  FBloco.Write(Valores([7, 8]), 2, 0);
+
+  AssertEquals('primeiro', 7, FBloco.ValueRaw[0], 0);
+  AssertEquals('segundo',  8, FBloco.ValueRaw[1], 0);
+end;
+
+procedure TTestPLCBlock.EscritaDeZeroValoresNaoFazNada;
+begin
+  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
+
+  FBloco.Write(Valores([99]), 0, 0);
+  AssertEquals('nada foi escrito', 10, FBloco.ValueRaw[0], 0);
+
+  AssertEquals('e a varredura tambem nao', -1, FBloco.ScanWrite(Valores([99]), 0, 0));
+end;
 
 procedure TTestPLCBlockElement.SetUp;
 begin

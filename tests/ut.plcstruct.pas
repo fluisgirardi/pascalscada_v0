@@ -36,7 +36,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  Tag, ProtocolTypes, PLCStruct, PLCStructElement;
+  Tag, ProtocolTypes, PLCStruct, PLCStructElement, PLCStructString, PLCString;
 
 type
 
@@ -127,6 +127,53 @@ type
     procedure ItemAcompanhaAMudancaDaEstrutura;
     procedure EstruturaDestruidaDesligaOVinculo;
     procedure SemEstruturaGuardaOValorLocalmente;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  O texto dentro da estrutura. Cada fabricante guarda texto do seu jeito: o C
+  termina no zero, o Siemens poe tamanho maximo e atual na frente, o Rockwell
+  poe o tamanho numa palavra dupla. O tag precisa saber qual e', e reservar o
+  cabecalho de cada um dentro da estrutura.
+  }
+  {$ELSE}
+  {:
+  Text inside the struct. Every maker stores text its own way: the C one ends
+  at the zero byte, the Siemens one puts maximum and current length up front,
+  the Rockwell one puts the length in a double word. The tag has to know which,
+  and to reserve each one's header inside the struct.
+  }
+  {$ENDIF}
+
+  { TTestPLCStructString }
+
+  TTestPLCStructString = class(TTestCase)
+  private
+    FEstrutura:TEstruturaProbe;
+    FTexto:TPLCStructString;
+    FAvisos:LongInt;
+    procedure ContarAviso(Sender:TObject);
+    procedure Configurar(aTipo:TPLCStringTypes; aIndice, aTamanho:Cardinal);
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    //os tres formatos / the three formats
+    procedure TextoNoFormatoCTerminaNoZero;
+    procedure TextoNoFormatoCRespeitaOTamanhoMaximo;
+    procedure TextoNoFormatoSiemensEhLido;
+    procedure TextoNoFormatoRockwellUsaOTamanhoDaFrente;
+
+    //deslocamento e mudanca / offset and change
+    procedure TextoEhLidoNoDeslocamentoEscolhido;
+    procedure MudancaNaEstruturaAtualizaOTexto;
+
+    //o que cabe / what fits
+    procedure CadaFormatoReservaOSeuCabecalho;
+    procedure DeslocamentoQueNaoCabeEhIgnoradoEmSilencio;
+
+    //ciclo de vida / lifecycle
+    procedure EstruturaDestruidaDesligaOVinculo;
   end;
 
 implementation
@@ -460,8 +507,141 @@ begin
   AssertEquals('valor guardado', 9, FItem.Value, 0);
 end;
 
+{ TTestPLCStructString }
+
+procedure TTestPLCStructString.SetUp;
+begin
+  FEstrutura:=TEstruturaProbe.Create(nil);
+  FEstrutura.Size:=16;
+
+  FTexto:=TPLCStructString.Create(nil);
+  FAvisos:=0;
+end;
+
+procedure TTestPLCStructString.TearDown;
+begin
+  FreeAndNil(FTexto);
+  FreeAndNil(FEstrutura);
+end;
+
+procedure TTestPLCStructString.ContarAviso(Sender:TObject);
+begin
+  inc(FAvisos);
+end;
+
+procedure TTestPLCStructString.Configurar(aTipo:TPLCStringTypes; aIndice, aTamanho:Cardinal);
+begin
+  FTexto.PLCBlock  :=FEstrutura;
+  FTexto.StringType:=aTipo;
+  FTexto.StringSize:=aTamanho;
+  FTexto.Index     :=aIndice;
+end;
+
+procedure TTestPLCStructString.TextoNoFormatoCTerminaNoZero;
+begin
+  Configurar(stC, 0, 8);
+  FEstrutura.ChegouDaVarredura([Ord('o'), Ord('l'), Ord('a'), 0, Ord('x'), Ord('y')]);
+
+  AssertEquals('para no zero', 'ola', FTexto.Value);
+end;
+
+procedure TTestPLCStructString.TextoNoFormatoCRespeitaOTamanhoMaximo;
+begin
+  //sem zero nenhum, o tamanho declarado e' o que limita
+  Configurar(stC, 0, 3);
+  FEstrutura.ChegouDaVarredura([Ord('a'), Ord('b'), Ord('c'), Ord('d'), Ord('e')]);
+
+  AssertEquals('tres caracteres', 'abc', FTexto.Value);
+end;
+
+procedure TTestPLCStructString.TextoNoFormatoSiemensEhLido;
+begin
+  //tamanho maximo, tamanho atual, caracteres
+  Configurar(stSIEMENS, 0, 10);
+  FEstrutura.ChegouDaVarredura([10, 3, Ord('a'), Ord('b'), Ord('c'), 0, 0]);
+
+  AssertEquals('texto siemens', 'abc', FTexto.Value);
+end;
+
+procedure TTestPLCStructString.TextoNoFormatoRockwellUsaOTamanhoDaFrente;
+begin
+  //palavra dupla com o tamanho, depois os caracteres
+  Configurar(stROCKWELL, 0, 8);
+  FEstrutura.ChegouDaVarredura([4, 0, 0, 0, Ord('c'), Ord('a'), Ord('s'), Ord('a'), Ord('x')]);
+
+  AssertEquals('texto rockwell', 'casa', FTexto.Value);
+end;
+
+procedure TTestPLCStructString.TextoEhLidoNoDeslocamentoEscolhido;
+begin
+  Configurar(stC, 4, 8);
+  FEstrutura.ChegouDaVarredura([0, 0, 0, 0, Ord('l'), Ord('a'), Ord('h'), 0]);
+
+  AssertEquals('no deslocamento quatro', 'lah', FTexto.Value);
+end;
+
+procedure TTestPLCStructString.MudancaNaEstruturaAtualizaOTexto;
+begin
+  Configurar(stC, 0, 8);
+  FEstrutura.ChegouDaVarredura([Ord('u'), Ord('m'), 0]);
+  AssertEquals('antes', 'um', FTexto.Value);
+
+  FTexto.AddTagChangeHandler(@ContarAviso);
+  FAvisos:=0;
+
+  FEstrutura.ChegouDaVarredura([Ord('d'), Ord('o'), Ord('i'), Ord('s'), 0]);
+
+  AssertEquals('depois',  'dois', FTexto.Value);
+  AssertTrue  ('e avisou', FAvisos>0);
+end;
+
+procedure TTestPLCStructString.CadaFormatoReservaOSeuCabecalho;
+begin
+  //numa estrutura de 16 bytes: o C gasta um byte com o zero final, o Siemens
+  //dois com os tamanhos, o Rockwell quatro com a palavra dupla
+  FTexto.PLCBlock:=FEstrutura;
+
+  FTexto.StringType:=stC;
+  FTexto.StringSize:=15;
+  AssertEquals('C cabe com 15', 15, FTexto.StringSize);
+
+  FTexto.StringType:=stSIEMENS;
+  FTexto.StringSize:=14;
+  AssertEquals('siemens cabe com 14', 14, FTexto.StringSize);
+
+  FTexto.StringType:=stROCKWELL;
+  FTexto.StringSize:=12;
+  AssertEquals('rockwell cabe com 12', 12, FTexto.StringSize);
+end;
+
+procedure TTestPLCStructString.DeslocamentoQueNaoCabeEhIgnoradoEmSilencio;
+begin
+  //o que nao cabe nao levanta erro: a propriedade simplesmente nao muda
+  Configurar(stC, 0, 8);
+
+  FTexto.Index:=12;
+  AssertEquals('o deslocamento anterior fica', 0, FTexto.Index);
+end;
+
+procedure TTestPLCStructString.EstruturaDestruidaDesligaOVinculo;
+var
+  estrutura:TEstruturaProbe;
+begin
+  estrutura:=TEstruturaProbe.Create(nil);
+  estrutura.Size:=16;
+
+  FTexto.PLCBlock  :=estrutura;
+  FTexto.StringType:=stC;
+  FTexto.StringSize:=8;
+
+  FreeAndNil(estrutura);
+
+  AssertTrue('o vinculo tem que ter sido desfeito', FTexto.PLCBlock=nil);
+end;
+
 initialization
   RegisterTest(TTestPLCStruct);
   RegisterTest(TTestPLCStructItem);
+  RegisterTest(TTestPLCStructString);
 
 end.
