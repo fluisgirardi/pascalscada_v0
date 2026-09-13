@@ -24,7 +24,8 @@ uses
   //casos de teste / test cases
   ut.usermanagement,
   ut.hmizones,
-  ut.propertyconnector;
+  ut.propertyconnector,
+  ut.colorconnector;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
