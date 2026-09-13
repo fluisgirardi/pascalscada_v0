@@ -261,8 +261,16 @@ begin
     PBlock.ValueRaw[PIndex] := aValue;
     PValueRaw := aValue;
   end else
-    if PValueRaw<>Value then begin
-      PValueRaw:=Value;
+    //sem bloco, o valor fica aqui mesmo. Usava a propriedade Value no lugar do
+    //parametro: Value le de volta o proprio PValueRaw, entao a comparacao era
+    //sempre falsa, o campo era atribuido a ele mesmo e o valor que chegou se
+    //perdia - junto com o aviso de mudanca.
+    //with no block the value stays here. It used the Value property instead of
+    //the parameter: Value reads PValueRaw back, so the test was always false,
+    //the field was assigned to itself and the incoming value was lost - along
+    //with the change notification.
+    if PValueRaw<>aValue then begin
+      PValueRaw:=aValue;
       NotifyChange;
     end;
 end;
