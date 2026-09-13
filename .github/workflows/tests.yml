@@ -154,6 +154,32 @@ jobs:
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
+      - name: BGRAControls (used by two examples)
+        run: |
+          git clone --depth 1 https://github.com/bgrabitmap/bgracontrols.git ../bgracontrols
+          lazbuild --add-package-link ../bgracontrols/bgracontrols.lpk
+
+      - name: Zeos (used by nine examples)
+        # The zip the Online Package Manager serves, which is the 8.0 release
+        # the examples were written against, and which builds clean with the
+        # FPC 3.2.2 installed above. Not the git mirror: its 8.0-patches branch
+        # has moved past the release and stops on ZCbor.pas ("identifier idents
+        # no member Create") with a 3.2 compiler.
+        # zcomponent alone is not enough either: lazbuild resolves a package's
+        # own dependencies through registered links, and zcomponent pulls
+        # zcore, zdbc, zplain and zparsesql.
+        run: |
+          curl -sSL -o ZeosDBO.zip https://packages.lazarus-ide.org/ZeosDBO.zip
+          if command -v unzip >/dev/null; then
+            unzip -q ZeosDBO.zip -d ..
+          else
+            7z x -o.. ZeosDBO.zip >/dev/null
+          fi
+          rm -f ZeosDBO.zip
+          for pkg in ../zeosdbo/packages/lazarus/*.lpk; do
+            lazbuild --add-package-link "$pkg"
+          done
+
       - name: Build the examples
         # The sweep finds the Lazarus directory on its own and registers the
         # packages shipped with it (TAChart, RTTIControls, SQLdb). Missing
