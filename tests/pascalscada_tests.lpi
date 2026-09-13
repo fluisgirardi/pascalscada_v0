@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="32">
+    <Units Count="33">
       <Unit0>
         <Filename Value="pascalscada_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -159,6 +159,10 @@
         <Filename Value="ut.valueprocessor.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit31>
+      <Unit32>
+        <Filename Value="testsupport.fakeserver.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit32>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
