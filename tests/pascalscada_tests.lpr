@@ -44,7 +44,8 @@ uses
   ut.serialport,
   ut.plcblock,
   ut.plctagnumber,
-  ut.numexprtag;
+  ut.numexprtag,
+  ut.escalas;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
