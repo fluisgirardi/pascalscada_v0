@@ -749,7 +749,7 @@ begin
   RefreshLastOSError;
   //abre a porta
   //open the serial port
-  PPortHandle := fpopen('/dev/'+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
+  PPortHandle := fpopen(PPortDirPrefix+PPortName, O_RDWR or O_NOCTTY or O_NONBLOCK);
   if PPortHandle<0 then begin
      {$IFDEF UNIX}
      writeln('Failed to open serial port '+PPortName);
