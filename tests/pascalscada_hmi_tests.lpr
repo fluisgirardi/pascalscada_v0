@@ -19,7 +19,8 @@ uses
   Interfaces,
   Classes, consoletestrunner,
   //casos de teste / test cases
-  ut.usermanagement;
+  ut.usermanagement,
+  ut.hmizones;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

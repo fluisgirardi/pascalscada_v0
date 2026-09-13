@@ -81,6 +81,33 @@ type
      property DefaultZone:Boolean read FDefaultZone write SetAsDefaultZone;
   public
      procedure AssignTo(Dest: TPersistent); override;
+
+     {$IFDEF PORTUGUES}
+     {:
+     Poe os dois valores de uma vez. Value1 e Value2 sozinhos trocam de lugar
+     para manter Value1<=Value2, entao escrever um e depois o outro pode
+     deixar o valor onde nao se quer: numa zona nova, com Value2 valendo zero,
+     Value1:=10 empurra o 10 para o Value2. @name aplica a ordem uma vez so e
+     avisa a mudanca uma vez so.
+     @param(v1 Double. Valor principal.)
+     @param(v2 Double. Valor secundario.)
+     @seealso(Value1)
+     @seealso(Value2)
+     }
+     {$ELSE}
+     {:
+     Sets both values at once. Value1 and Value2 on their own swap places to
+     keep Value1<=Value2, so writing one and then the other may leave the
+     value where it was not wanted: on a new zone, with Value2 at zero,
+     Value1:=10 pushes the 10 into Value2. @name applies the ordering once and
+     notifies the change once.
+     @param(v1 Double. Main value.)
+     @param(v2 Double. Secundary value.)
+     @seealso(Value1)
+     @seealso(Value2)
+     }
+     {$ENDIF}
+     procedure SetValues(v1, v2:Double);
   published
      {$IFDEF PORTUGUES}
      {:
@@ -806,7 +833,7 @@ end;
 
 procedure TAnimationZone.SetBlinkWithZoneNumber(v:LongInt);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FBlinkWithIndex:=v;
       exit;
    end;
@@ -827,7 +854,7 @@ end;
 
 procedure TAnimationZone.SetBlinkTime(v:Cardinal);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FBlinkTime:=v;
       exit;
    end;
@@ -877,10 +904,18 @@ begin
 end;
 
 constructor TAnimationZone.Create(aCollection: TCollection);
+var
+  estadoDoDono:TComponentState;
 begin
   inherited Create(aCollection);
   FBlinkWithIndex := -1;
-  if (([csDesigning]*(Collection.Owner as TComponent).ComponentState)=[]) or (([csReading,csLoading]*(Collection.Owner as TComponent).ComponentState)<>[]) then begin
+  //a colecao aceita qualquer TPersistent como dono, inclusive nil; sem esta
+  //conferencia o construtor cai num ponteiro nulo
+  if Collection.Owner is TComponent then
+    estadoDoDono:=TComponent(Collection.Owner).ComponentState
+  else
+    estadoDoDono:=[];
+  if (([csDesigning]*estadoDoDono)=[]) or (([csReading,csLoading]*estadoDoDono)<>[]) then begin
     FValue1:=0;
     FValue2:=0;
   end else begin
@@ -933,7 +968,7 @@ end;
 
 procedure TZone.SetV1(v:Double);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FValue1:=v;
       exit;
    end;
@@ -954,7 +989,7 @@ end;
 
 procedure TZone.SetV2(v:Double);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FValue2:=v;
       exit;
    end;
@@ -968,9 +1003,36 @@ begin
    NotifyChange;
 end;
 
+procedure TZone.SetValues(v1, v2:Double);
+begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+      FValue1:=v1;
+      FValue2:=v2;
+      exit;
+   end;
+
+   if (v1=FValue1) and (v2=FValue2) then exit;
+
+   if FZoneType=ztBit then begin
+      if (v1>31) or (v1<0) then
+         raise Exception.Create(SztBitcomparationValue1MustBeBetween0And31);
+      FValue1 := Int(v1);
+      FValue2 := v2;
+   end else
+      if v1>v2 then begin
+         FValue1 := v2;
+         FValue2 := v1;
+      end else begin
+         FValue1 := v1;
+         FValue2 := v2;
+      end;
+
+   NotifyChange;
+end;
+
 procedure TZone.SetIncV1(v:Boolean);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FIncludeV1:=v;
       exit;
    end;
@@ -982,7 +1044,7 @@ end;
 
 procedure TZone.SetIncV2(v:Boolean);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FIncludeV2:=v;
       exit;
    end;
@@ -996,7 +1058,7 @@ procedure TZone.SetAsDefaultZone(v:Boolean);
 var
    c:LongInt;
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FDefaultZone:=v;
       exit;
    end;
@@ -1015,7 +1077,7 @@ end;
 
 procedure TZone.SetZoneType(zt:TZoneTypes);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FZoneType:=zt;
       exit;
    end;
@@ -1351,7 +1413,7 @@ end;
 
 procedure TGraphicZone.SetImageList(il:TImageList);
 begin
-   if [csReading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
+   if [csReading,csLoading]*THMIBasicColletion(Collection).CollectionState<>[] then begin
       FImageList:=il;
       exit;
    end;
