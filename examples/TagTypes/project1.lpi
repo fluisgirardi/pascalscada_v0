@@ -30,14 +30,17 @@
         </Mode0>
       </Modes>
     </RunParams>
-    <RequiredPackages Count="2">
+    <RequiredPackages Count="3">
       <Item1>
-        <PackageName Value="pascalscada"/>
-        <MinVersion Minor="7" Valid="True"/>
+        <PackageName Value="pascalscada_hmi"/>
       </Item1>
       <Item2>
-        <PackageName Value="LCL"/>
+        <PackageName Value="pascalscada"/>
+        <MinVersion Minor="7" Valid="True"/>
       </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
     </RequiredPackages>
     <Units Count="34">
       <Unit0>
