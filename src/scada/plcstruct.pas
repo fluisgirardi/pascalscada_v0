@@ -317,12 +317,20 @@ begin
   if ((Offset<0) or ((Offset+7)>High(PValues))) then
     raise Exception.Create(SoutOfBounds);
 
+  //quem chama diz como quer ler. Estas quatro chamadas passavam SwapWords, a
+  //propriedade publicada do tag, e com isso o parametro aSwapWords era
+  //ignorado: uma leitura de 64 bits saia na ordem que estivesse na propriedade,
+  //nao na pedida. Atingia GetQWord, GetInt64 e GetDouble.
+  //the caller says how to read. These four calls used to pass SwapWords, the
+  //tag's published property, which made the aSwapWords parameter useless: a 64
+  //bit read came out in whatever order the property held, not the one asked
+  //for. It affected GetQWord, GetInt64 and GetDouble.
   if aSwapDWords then begin
-    aDWords[0]:=GetLongWord(Offset+4,aSwapBytes,SwapWords);
-    aDWords[1]:=GetLongWord(Offset+0,aSwapBytes,SwapWords);
+    aDWords[0]:=GetLongWord(Offset+4,aSwapBytes,aSwapWords);
+    aDWords[1]:=GetLongWord(Offset+0,aSwapBytes,aSwapWords);
   end else begin
-    aDWords[0]:=GetLongWord(Offset+0,aSwapBytes,SwapWords);
-    aDWords[1]:=GetLongWord(Offset+4,aSwapBytes,SwapWords);
+    aDWords[0]:=GetLongWord(Offset+0,aSwapBytes,aSwapWords);
+    aDWords[1]:=GetLongWord(Offset+4,aSwapBytes,aSwapWords);
   end;
 
   Result:=aResult;
@@ -341,7 +349,15 @@ var
   aResQWord:QWord absolute aResult;
 begin
   aResQWord:=GetQWord(Offset,aSwapBytes,aSwapWords,aSwapDWords);
-  Result:=aResQWord;
+  //aResult ocupa o mesmo espaco de aResQWord: e' ele que devolve os bits
+  //relidos como ponto flutuante. Devolver aResQWord converte o numero inteiro,
+  //e o padrao de 1.0 sai valendo 4.6E18. GetSingle, logo acima, ja' fazia
+  //assim.
+  //aResult occupies the same storage as aResQWord: it is the one giving back
+  //the bits read as a floating point number. Returning aResQWord converts the
+  //integer instead, and the bit pattern of 1.0 comes out as 4.6E18. GetSingle,
+  //just above, already did it this way.
+  Result:=aResult;
 end;
 
 function TPLCStruct.GetSiemensString(Offset: Integer; MaxStringSize: Integer
@@ -355,7 +371,15 @@ begin
   curSize:=GetByte(Offset+1);
 
   Result:='';
-  limit:=min(min(min(curSize,maxSize),MaxStringSize),Size-Offset);
+  //os caracteres comecam dois bytes depois do deslocamento - os dois do
+  //cabecalho -, entao o que resta para eles e' Size-Offset-2. Contando os dois
+  //a mais, um texto perto do fim da estrutura levava GetByte a passar do fim e
+  //derrubava a leitura com excecao em vez de devolver o que cabe.
+  //the characters start two bytes past the offset - the two header ones - so
+  //what is left for them is Size-Offset-2. Counting those two as well made a
+  //string near the end of the struct push GetByte past the end, bringing the
+  //read down with an exception instead of giving back what fits.
+  limit:=min(min(min(curSize,maxSize),MaxStringSize),Size-Offset-2);
   for i:=0 to limit-1 do begin
     b:=GetByte(Offset+2+i);
     if b=0 then break;
