@@ -133,23 +133,23 @@ end;
 
 procedure TTestValueProcessor.FilaVaziaDevolveOValorSemMexer;
 begin
-  AssertEquals('ida',   7, FFila.SetInGetOut(nil, 7), 0);
-  AssertEquals('volta', 7, FFila.SetOutGetIn(nil, 7), 0);
+  AssertEquals('there',   7, FFila.SetInGetOut(nil, 7), 0);
+  AssertEquals('back', 7, FFila.SetOutGetIn(nil, 7), 0);
 end;
 
 procedure TTestValueProcessor.ItemSemEscalaNaoMexeNoValor;
 begin
   //item na fila sem processador associado e' um elo neutro
   NovoItem(nil);
-  AssertEquals('ida',   7, FFila.SetInGetOut(nil, 7), 0);
-  AssertEquals('volta', 7, FFila.SetOutGetIn(nil, 7), 0);
+  AssertEquals('there',   7, FFila.SetInGetOut(nil, 7), 0);
+  AssertEquals('back', 7, FFila.SetOutGetIn(nil, 7), 0);
 end;
 
 procedure TTestValueProcessor.UmaEscalaNaFilaEhAplicada;
 begin
   NovoItem(FDobra);
-  AssertEquals('ida',   14, FFila.SetInGetOut(nil, 7), 0);
-  AssertEquals('volta',  7, FFila.SetOutGetIn(nil, 14), 0);
+  AssertEquals('there',   14, FFila.SetInGetOut(nil, 7), 0);
+  AssertEquals('back',  7, FFila.SetOutGetIn(nil, 14), 0);
 end;
 
 procedure TTestValueProcessor.DuasEscalasSaoAplicadasNaOrdemDaFila;
@@ -159,7 +159,7 @@ begin
   NovoItem(FDobra);
   NovoItem(FSoma);
 
-  AssertEquals('ida', 24, FFila.SetInGetOut(nil, 7), 0);
+  AssertEquals('there', 24, FFila.SetInGetOut(nil, 7), 0);
 end;
 
 procedure TTestValueProcessor.OCaminhoDeVoltaDesfazODeIda;
@@ -168,7 +168,7 @@ begin
   NovoItem(FDobra);
   NovoItem(FSoma);
 
-  AssertEquals('volta desfaz a ida', 7, FFila.SetOutGetIn(nil, FFila.SetInGetOut(nil, 7)), 0);
+  AssertEquals('the way back undoes the way there', 7, FFila.SetOutGetIn(nil, FFila.SetInGetOut(nil, 7)), 0);
 end;
 
 procedure TTestValueProcessor.ItemNovoNaoTemEscala;
@@ -176,7 +176,7 @@ var
   item:TScaleQueueItem;
 begin
   item:=FFila.ScalesQueue.Add;
-  AssertTrue('item recem criado', item.ScaleProcessor=nil);
+  AssertTrue('item just created', item.ScaleProcessor=nil);
 end;
 
 procedure TTestValueProcessor.TrocarAEscalaDoItem;
@@ -186,8 +186,8 @@ begin
   item:=NovoItem(FDobra);
   item.ScaleProcessor:=FSoma;
 
-  AssertTrue  ('a escala trocou', item.ScaleProcessor=FSoma);
-  AssertEquals('e o valor segue a nova', 17, FFila.SetInGetOut(nil, 7), 0);
+  AssertTrue  ('the scale changed', item.ScaleProcessor=FSoma);
+  AssertEquals('and the value follows the new one', 17, FFila.SetInGetOut(nil, 7), 0);
 end;
 
 procedure TTestValueProcessor.LimparAEscalaDoItem;
@@ -198,8 +198,8 @@ begin
   item:=NovoItem(FDobra);
   item.ScaleProcessor:=nil;
 
-  AssertTrue  ('sem escala',            item.ScaleProcessor=nil);
-  AssertEquals('valor passa sem mexer', 7, FFila.SetInGetOut(nil, 7), 0);
+  AssertTrue  ('no scale',            item.ScaleProcessor=nil);
+  AssertEquals('the value goes through untouched', 7, FFila.SetInGetOut(nil, 7), 0);
 end;
 
 procedure TTestValueProcessor.AFilaNaoPodeApontarParaOProprioDono;
@@ -217,7 +217,7 @@ begin
       recusou:=true;
   end;
 
-  AssertTrue('a propria fila tem que ser recusada', recusou);
+  AssertTrue('the queue itself must be refused', recusou);
 end;
 
 initialization

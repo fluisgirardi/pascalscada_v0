@@ -27,7 +27,7 @@ var
   r: TStringArray;
 begin
   r := ExplodeString('.', '192.168.0.1');
-  AssertEquals('quantidade de campos', 4, Length(r));
+  AssertEquals('number of fields', 4, Length(r));
   AssertEquals('192', r[0]);
   AssertEquals('1', r[3]);
 end;
@@ -37,7 +37,7 @@ var
   r: TStringArray;
 begin
   r := ExplodeString('/', 'a/b/c/d', 2);
-  AssertEquals('quantidade de campos', 2, Length(r));
+  AssertEquals('number of fields', 2, Length(r));
   AssertEquals('a', r[0]);
   AssertEquals('b/c/d', r[1]);
 end;

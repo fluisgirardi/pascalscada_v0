@@ -119,7 +119,7 @@ var
   len:LongInt;
 begin
   //funcao $09 = registradores D; 2 palavras a partir de D100
-  AssertBytesEqual('leitura de D100, 2 palavras',
+  AssertBytesEqual('read of D100, 2 words',
                    BytesOf('50 00' +          //subcabecalho
                            '00' +             //numero da rede
                            'FF' +             //numero do CLP
@@ -141,7 +141,7 @@ var
   len:LongInt;
 begin
   //funcao $01 = memoria M (bits): o subcomando muda para 1
-  AssertBytesEqual('leitura de 16 bits de M0',
+  AssertBytesEqual('read of 16 bits from M0',
                    BytesOf('50 00 00 FF FF 03 00 0C 00 10 00 01 04' +
                            '01 00' +          //subcomando: por bit
                            '00 00 00' +       //endereco 0
@@ -159,9 +159,9 @@ begin
   //endereco $012345 ocupa os tres bytes, do menos para o mais significativo
   quadro:=FDrv.Encode(TagRecFor(1, $09, 0, $012345, 1), nil, len);
 
-  AssertEquals('byte baixo',  $45, quadro[15]);
-  AssertEquals('byte medio',  $23, quadro[16]);
-  AssertEquals('byte alto',   $01, quadro[17]);
+  AssertEquals('low byte',  $45, quadro[15]);
+  AssertEquals('middle byte',  $23, quadro[16]);
+  AssertEquals('high byte',   $01, quadro[17]);
 end;
 
 procedure TTestMelsecTCP.QuantidadeDePontosVaiEmDoisBytes;
@@ -172,8 +172,8 @@ begin
   //300 pontos = $012C
   quadro:=FDrv.Encode(TagRecFor(1, $09, 0, 0, 300), nil, len);
 
-  AssertEquals('byte baixo', $2C, quadro[19]);
-  AssertEquals('byte alto',  $01, quadro[20]);
+  AssertEquals('low byte', $2C, quadro[19]);
+  AssertEquals('high byte',  $01, quadro[20]);
 end;
 
 procedure TTestMelsecTCP.CadaAreaTemOSeuCodigoDeDispositivo;
@@ -197,10 +197,10 @@ var
 begin
   //9 bytes de cabecalho mais duas palavras
   FDrv.Encode(TagRecFor(1, $09, 0, 0, 2), nil, len);
-  AssertEquals('2 registradores', 13, len);
+  AssertEquals('2 registers', 13, len);
 
   FDrv.Encode(TagRecFor(1, $09, 0, 0, 10), nil, len);
-  AssertEquals('10 registradores', 29, len);
+  AssertEquals('10 registers', 29, len);
 end;
 
 procedure TTestMelsecTCP.RespostaDeBitsEmpacotaOitoPorByte;
@@ -224,8 +224,8 @@ begin
   //funcao fora da tabela: nada e' montado, e nada se espera de volta
   quadro:=FDrv.Encode(TagRecFor(1, $42, 0, 0, 1), nil, len);
 
-  AssertEquals('quadro vazio', 0, Length(quadro));
-  AssertEquals('nada a receber', 0, len);
+  AssertEquals('empty frame', 0, Length(quadro));
+  AssertEquals('nothing to receive', 0, len);
 end;
 
 initialization

@@ -299,8 +299,8 @@ begin
       on E:Exception do
         recusou:=true;
     end;
-    AssertTrue('tag sem IScanableTagInterface deve ser recusado', recusou);
-    AssertEquals('e nao pode entrar na lista', 0, FDrv.TagCount);
+    AssertTrue('a tag with no IScanableTagInterface must be refused', recusou);
+    AssertEquals('and it must not enter the list', 0, FDrv.TagCount);
   finally
     semScan.Free;
   end;
@@ -309,10 +309,10 @@ end;
 procedure TTestProtocolDriver.TagCadastradoEntraNaLista;
 begin
   FDrv.AddTag(FTag);
-  AssertEquals('quantidade de tags', 1, FDrv.TagCount);
-  AssertTrue  ('o driver reconhece o tag', FDrv.IsMyTag(FTag));
-  AssertSame  ('o tag da lista', FTag, FDrv.Tag[0]);
-  AssertEquals('nome do tag', 'TagDeTeste', FDrv.TagName[0]);
+  AssertEquals('number of tags', 1, FDrv.TagCount);
+  AssertTrue  ('the driver knows the tag', FDrv.IsMyTag(FTag));
+  AssertSame  ('the tag in the list', FTag, FDrv.Tag[0]);
+  AssertEquals('tag name', 'TagDeTeste', FDrv.TagName[0]);
 end;
 
 procedure TTestProtocolDriver.TagCadastradoDuasVezesEhRecusado;
@@ -329,16 +329,16 @@ begin
       recusou:=true;
   end;
 
-  AssertTrue  ('cadastro repetido deve ser recusado', recusou);
-  AssertEquals('e o tag continua uma vez so na lista', 1, FDrv.TagCount);
+  AssertTrue  ('registering twice must be refused', recusou);
+  AssertEquals('and the tag is still in the list only once', 1, FDrv.TagCount);
 end;
 
 procedure TTestProtocolDriver.TagRemovidoSaiDaLista;
 begin
   FDrv.AddTag(FTag);
   FDrv.RemoveTag(FTag);
-  AssertEquals('quantidade de tags', 0, FDrv.TagCount);
-  AssertFalse ('o driver nao reconhece mais o tag', FDrv.IsMyTag(FTag));
+  AssertEquals('number of tags', 0, FDrv.TagCount);
+  AssertFalse ('the driver no longer knows the tag', FDrv.IsMyTag(FTag));
 end;
 
 procedure TTestProtocolDriver.RemoverTagDeOutroDriverNaoQuebra;
@@ -351,7 +351,7 @@ begin
   try
     //remover um tag que nunca foi cadastrado e' inocuo, nao erro
     FDrv.RemoveTag(outro);
-    AssertEquals('a lista nao muda', 1, FDrv.TagCount);
+    AssertEquals('the list does not change', 1, FDrv.TagCount);
   finally
     outro.Free; //nunca entrou na lista, entao pode ir embora direto
   end;
@@ -361,26 +361,26 @@ procedure TTestProtocolDriver.CadastroMarcaAValidadeDoTag;
 begin
   //o gancho protegido e' onde os drivers dizem se o endereco do tag serve
   FDrv.CadastrarTag(FTag, true);
-  AssertTrue('tag cadastrado como valido', FTag.Valido);
+  AssertTrue('tag registered as valid', FTag.Valido);
 end;
 
 procedure TTestProtocolDriver.RemocaoInvalidaOTag;
 begin
   FDrv.CadastrarTag(FTag, true);
   FDrv.RemoveTag(FTag);
-  AssertFalse('tag removido deixa de ser valido', FTag.Valido);
+  AssertFalse('a removed tag stops being valid', FTag.Valido);
 end;
 
 procedure TTestProtocolDriver.TagEhEncontradoPeloNome;
 begin
   FDrv.AddTag(FTag);
-  AssertSame('busca pelo nome', FTag, FDrv.TagByName['TagDeTeste']);
+  AssertSame('lookup by name', FTag, FDrv.TagByName['TagDeTeste']);
 end;
 
 procedure TTestProtocolDriver.NomeInexistenteDevolveNulo;
 begin
   FDrv.AddTag(FTag);
-  AssertTrue('nome que nao existe', FDrv.TagByName['NaoExiste']=nil);
+  AssertTrue('a name that does not exist', FDrv.TagByName['NaoExiste']=nil);
 end;
 
 procedure TTestProtocolDriver.IndiceForaDaListaEstoura;
@@ -396,16 +396,16 @@ begin
     on E:Exception do
       estourou:=true;
   end;
-  AssertTrue('indice fora da lista deve levantar excecao', estourou);
+  AssertTrue('an index outside the list must raise an exception', estourou);
 end;
 
 procedure TTestProtocolDriver.LeituraChamaODriverEAvisaPeloCallback;
 begin
   FDrv.Read(TagRecComCallback);
 
-  AssertEquals('chamadas ao DoRead do driver', 1, FDrv.Leituras);
-  AssertEquals('callbacks recebidos', 1, FCallbacks);
-  AssertEquals('comando informado', Ord(tcRead), Ord(FUltimoComando));
+  AssertEquals('calls to the driver DoRead', 1, FDrv.Leituras);
+  AssertEquals('callbacks received', 1, FCallbacks);
+  AssertEquals('command reported', Ord(tcRead), Ord(FUltimoComando));
 end;
 
 procedure TTestProtocolDriver.EscritaChamaODriverComOsValores;
@@ -418,11 +418,11 @@ begin
 
   FDrv.Write(TagRecComCallback, valores);
 
-  AssertEquals('chamadas ao DoWrite do driver', 1, FDrv.Escritas);
-  AssertEquals('quantidade de valores repassados', 2, Length(FDrv.UltimosValores));
-  AssertEquals('primeiro valor', 10, FDrv.UltimosValores[0], 0);
-  AssertEquals('segundo valor',  20, FDrv.UltimosValores[1], 0);
-  AssertEquals('comando informado', Ord(tcWrite), Ord(FUltimoComando));
+  AssertEquals('calls to the driver DoWrite', 1, FDrv.Escritas);
+  AssertEquals('number of values passed on', 2, Length(FDrv.UltimosValores));
+  AssertEquals('first value', 10, FDrv.UltimosValores[0], 0);
+  AssertEquals('second value',  20, FDrv.UltimosValores[1], 0);
+  AssertEquals('command reported', Ord(tcWrite), Ord(FUltimoComando));
 end;
 
 procedure TTestProtocolDriver.ResultadoDoDriverChegaNoCallback;
@@ -430,7 +430,7 @@ begin
   //o que o driver concreto devolve tem que chegar inteiro em quem pediu
   FDrv.ResultadoProgramado:=ioTimeOut;
   FDrv.Read(TagRecComCallback);
-  AssertEquals('resultado no callback', Ord(ioTimeOut), Ord(FUltimoResultado));
+  AssertEquals('result in the callback', Ord(ioTimeOut), Ord(FUltimoResultado));
 end;
 
 procedure TTestProtocolDriver.SomenteLeituraNaoChamaAEscritaDoDriver;
@@ -443,16 +443,16 @@ begin
   FDrv.ReadOnly:=true;
   FDrv.Write(TagRecComCallback, valores);
 
-  AssertEquals('o driver nao pode ser chamado', 0, FDrv.Escritas);
-  AssertEquals('mas quem pediu tem que ser avisado', 1, FCallbacks);
-  AssertEquals('motivo da recusa', Ord(ioReadOnlyProtocol), Ord(FUltimoResultado));
+  AssertEquals('the driver must not be called', 0, FDrv.Escritas);
+  AssertEquals('but whoever asked must be told', 1, FCallbacks);
+  AssertEquals('reason for the refusal', Ord(ioReadOnlyProtocol), Ord(FUltimoResultado));
 end;
 
 procedure TTestProtocolDriver.SomenteLeituraAindaLe;
 begin
   FDrv.ReadOnly:=true;
   FDrv.Read(TagRecComCallback);
-  AssertEquals('leitura continua permitida', 1, FDrv.Leituras);
+  AssertEquals('reading is still allowed', 1, FDrv.Leituras);
 end;
 
 procedure TTestProtocolDriver.SomenteLeituraSemCallbackNaoPodeEstourar;
@@ -472,8 +472,8 @@ begin
   FDrv.Write(semCallback, valores);
   FDrv.ScanWrite(semCallback, valores);
 
-  AssertEquals('o driver nao pode ser chamado', 0, FDrv.Escritas);
-  AssertEquals('e ninguem foi chamado de volta', 0, FCallbacks);
+  AssertEquals('the driver must not be called', 0, FDrv.Escritas);
+  AssertEquals('and nobody was called back', 0, FCallbacks);
 end;
 
 procedure TTestProtocolDriver.CadastroEmLoteNaoTrava;
@@ -492,11 +492,11 @@ begin
       FDrv.StopUpdateMultipleTags;
     end;
 
-    AssertEquals('os dois tags entraram', 2, FDrv.TagCount);
+    AssertEquals('both tags went in', 2, FDrv.TagCount);
 
     //e depois do lote o cadastro normal continua funcionando
     FDrv.RemoveTag(outro);
-    AssertEquals('um tag restante', 1, FDrv.TagCount);
+    AssertEquals('one tag left', 1, FDrv.TagCount);
   finally
     outro.Free;
   end;
@@ -513,26 +513,26 @@ begin
 
   FDrv.CopiarPacote(origem, destino);
 
-  AssertEquals('identificador',      77, destino.PacketID);
-  AssertEquals('bytes a escrever',   2,  destino.ToWrite);
-  AssertEquals('bytes escritos',     2,  destino.Written);
-  AssertEquals('tentativas',         3,  destino.WriteRetries);
-  AssertEquals('espera entre comandos', 25, destino.DelayBetweenCommand);
-  AssertEquals('bytes a ler',        3,  destino.ToRead);
-  AssertEquals('bytes lidos',        3,  destino.Received);
-  AssertEquals('resultado da escrita', Ord(iorOK), Ord(destino.WriteIOResult));
-  AssertEquals('resultado da leitura', Ord(iorOK), Ord(destino.ReadIOResult));
-  AssertBytesEqual('buffer de escrita', BytesOf('01 02'),    destino.BufferToWrite);
-  AssertBytesEqual('buffer de leitura', BytesOf('03 04 05'), destino.BufferToRead);
+  AssertEquals('identifier',      77, destino.PacketID);
+  AssertEquals('bytes to write',   2,  destino.ToWrite);
+  AssertEquals('bytes written',     2,  destino.Written);
+  AssertEquals('retries',         3,  destino.WriteRetries);
+  AssertEquals('delay between commands', 25, destino.DelayBetweenCommand);
+  AssertEquals('bytes to read',        3,  destino.ToRead);
+  AssertEquals('bytes read',        3,  destino.Received);
+  AssertEquals('write result', Ord(iorOK), Ord(destino.WriteIOResult));
+  AssertEquals('read result', Ord(iorOK), Ord(destino.ReadIOResult));
+  AssertBytesEqual('write buffer', BytesOf('01 02'),    destino.BufferToWrite);
+  AssertBytesEqual('read buffer', BytesOf('03 04 05'), destino.BufferToRead);
 end;
 
 procedure TTestProtocolDriver.PadroesDaBase;
 begin
   //a base pressupoe driver que fala por uma porta externa e nao anuncia
   //evento nenhum; quem precisa, sobrescreve.
-  AssertTrue  ('precisa de porta externa', FDrv.NeedsExternalPort);
-  AssertEquals('endereco literal vazio', '', FDrv.LiteralTagAddress(FTag));
-  AssertFalse ('sem editor de tags', FDrv.HasTabBuilderEditor);
+  AssertTrue  ('needs an external port', FDrv.NeedsExternalPort);
+  AssertEquals('empty literal address', '', FDrv.LiteralTagAddress(FTag));
+  AssertFalse ('no tag editor', FDrv.HasTabBuilderEditor);
 end;
 
 initialization

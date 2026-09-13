@@ -188,7 +188,7 @@ begin
   FDrv.Header(msg, 1);
   //$32 identifica a PDU; depois tipo, dois reservados, numero, e os dois
   //tamanhos (parametro e dado), ainda zerados.
-  AssertBytesEqual('cabecalho tipo 1', BytesOf('32 01 00 00 00 00 00 00 00 00'), msg);
+  AssertBytesEqual('type 1 header', BytesOf('32 01 00 00 00 00 00 00 00 00'), msg);
 end;
 
 procedure TTestS7Family.CabecalhoTipoDoisReservaOsBytesDeErro;
@@ -198,7 +198,7 @@ begin
   msg:=nil;
   FDrv.Header(msg, 2);
   //tipos 2 e 3 tem dois bytes a mais, para o codigo de erro
-  AssertBytesEqual('cabecalho tipo 2', BytesOf('32 02 00 00 00 00 00 00 00 00 00 00'), msg);
+  AssertBytesEqual('type 2 header', BytesOf('32 02 00 00 00 00 00 00 00 00 00 00'), msg);
 end;
 
 procedure TTestS7Family.TrocaDeBytesEmWord;
@@ -217,7 +217,7 @@ begin
   msg:=nil;
   FDrv.PrepRead(msg);
   //tamanho de parametro 2 (big-endian nos bytes 6 e 7), funcao $04, zero itens
-  AssertBytesEqual('pedido de leitura vazio',
+  AssertBytesEqual('empty read request',
                    BytesOf('32 01 00 00 00 00 00 02 00 00 04 00'), msg);
 end;
 
@@ -227,7 +227,7 @@ var
 begin
   msg:=nil;
   FDrv.PrepWrite(msg);
-  AssertBytesEqual('pedido de escrita vazio',
+  AssertBytesEqual('empty write request',
                    BytesOf('32 01 00 00 00 00 00 02 00 00 05 00'), msg);
 end;
 
@@ -241,7 +241,7 @@ begin
 
   //item: 12 0A 10 = especificacao de variavel; 02 = por byte; 00 02 = dois
   //bytes; 00 01 = DB 1; 84 = area de DB; 00 00 00 = bit zero.
-  AssertBytesEqual('leitura de DB1.DBB0, 2 bytes',
+  AssertBytesEqual('read of DB1.DBB0, 2 bytes',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00' +   //cabecalho, parametro com 14
                            '04 01' +                           //funcao de leitura, 1 item
                            '12 0A 10 02 00 02 00 01 84 00 00 00'),
@@ -257,7 +257,7 @@ begin
   FDrv.AddReadItem(msg, vtS7_DB, 1, 10, 4);
 
   //byte 10 vira bit 80 = $50 - o endereco no item e' sempre em bits
-  AssertBytesEqual('leitura a partir do byte 10',
+  AssertBytesEqual('read starting at byte 10',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 02 00 04 00 01 84 00 00 50'),
                    msg);
@@ -272,7 +272,7 @@ begin
   FDrv.AddReadItem(msg, vtS7_DB, 1, 8192, 2);
 
   //8192 bytes = 65536 bits = $010000: nao cabe em dois bytes, e o campo tem tres
-  AssertBytesEqual('leitura a partir do byte 8192',
+  AssertBytesEqual('read starting at byte 8192',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 02 00 02 00 01 84 01 00 00'),
                    msg);
@@ -287,7 +287,7 @@ begin
   FDrv.AddReadItem(msg, vtS7_Flags, 0, 4, 2);
 
   //area $83 (merkers), sem DB, byte 4 = bit 32 = $20
-  AssertBytesEqual('leitura de MB4',
+  AssertBytesEqual('read of MB4',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 02 00 02 00 00 83 00 00 20'),
                    msg);
@@ -303,7 +303,7 @@ begin
   FDrv.AddReadItem(msg, vtS7_DB, 2, 4, 2);
 
   //dois itens: contagem 02 e tamanho de parametro $1A = 2 + 12 + 12
-  AssertBytesEqual('duas leituras num pedido so',
+  AssertBytesEqual('two reads in a single request',
                    BytesOf('32 01 00 00 00 00 00 1A 00 00' +
                            '04 02' +
                            '12 0A 10 02 00 02 00 01 84 00 00 00' +
@@ -323,7 +323,7 @@ begin
   FDrv.AddWriteData (msg, vtS7_DB, 1, 0, buffer);
 
   //o bloco de dado leva $04 (contado em bits) e o tamanho 00 10 = 16 bits
-  AssertBytesEqual('escrita de 2 bytes em DB1.DBB0',
+  AssertBytesEqual('write of 2 bytes to DB1.DBB0',
                    BytesOf('32 01 00 00 00 00 00 0E 00 06' +   //parametro 14, dado 6
                            '05 01' +                           //funcao de escrita, 1 item
                            '12 0A 10 02 00 02 00 01 84 00 00 00' +
@@ -341,7 +341,7 @@ begin
   FDrv.PutParam(msg, BytesOf('CC'));
 
   //o tamanho do parametro acumula, e o segundo bloco entra depois do primeiro
-  AssertBytesEqual('dois parametros',
+  AssertBytesEqual('two parameters',
                    BytesOf('32 01 00 00 00 00 00 03 00 00 AA BB CC'), msg);
 end;
 
@@ -355,7 +355,7 @@ begin
   FDrv.PutData (msg, BytesOf('11 22 33'));
 
   //tamanho de parametro 2 e de dado 3, nessa ordem no cabecalho
-  AssertBytesEqual('parametro e dado',
+  AssertBytesEqual('parameter and data',
                    BytesOf('32 01 00 00 00 00 00 02 00 03 AA BB 11 22 33'), msg);
 end;
 
@@ -370,10 +370,10 @@ begin
   FDrv.PutParam(msg, BytesOf('AA BB'));
   FDrv.PutData (msg, BytesOf('11 22 33'));
 
-  AssertTrue('a PDU deve ser reconhecida', FDrv.ReadPDU(msg, pdu, err));
-  AssertEquals('tamanho do cabecalho',  10, pdu.header_len);
-  AssertEquals('tamanho do parametro',  2,  pdu.param_len);
-  AssertEquals('tamanho do dado',       3,  pdu.data_len);
+  AssertTrue('the PDU must be recognised', FDrv.ReadPDU(msg, pdu, err));
+  AssertEquals('header size',  10, pdu.header_len);
+  AssertEquals('parameter size',  2,  pdu.param_len);
+  AssertEquals('data size',       3,  pdu.data_len);
 end;
 
 procedure TTestS7Family.SetupPduDeTipoDoisTemCabecalhoDeDozeBytes;
@@ -386,9 +386,9 @@ begin
   FDrv.Header(msg, 2);
   FDrv.PutParam(msg, BytesOf('AA BB'));
 
-  AssertTrue('a PDU deve ser reconhecida', FDrv.ReadPDU(msg, pdu, err));
-  AssertEquals('cabecalho de tipo 2', 12, pdu.header_len);
-  AssertEquals('tamanho do parametro', 2, pdu.param_len);
+  AssertTrue('the PDU must be recognised', FDrv.ReadPDU(msg, pdu, err));
+  AssertEquals('type 2 header', 12, pdu.header_len);
+  AssertEquals('parameter size', 2, pdu.param_len);
 end;
 
 procedure TTestS7Family.ContadorEhEnderecadoPeloNumeroDoElemento;
@@ -402,7 +402,7 @@ begin
   //contadores e temporizadores sao os unicos que nao convertem o endereco
   //para bits: o campo leva o numero do elemento. O tipo tambem muda de $02
   //(byte) para $1C (contador), e a area e' a mesma $1C.
-  AssertBytesEqual('leitura do contador 3',
+  AssertBytesEqual('read of counter 3',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 1C 00 01 00 00 1C 00 00 03'),
                    msg);
@@ -422,8 +422,8 @@ begin
   FDrv.PrepRead(msgB);
   FDrv.AddReadItem(msgB, vtS7_Counter, 0, 99, 1);
 
-  AssertFalse('o contador 3 e o 99 geraram o mesmo pedido', HexOf(msgA)=HexOf(msgB));
-  AssertBytesEqual('leitura do contador 99',
+  AssertFalse('counter 3 and counter 99 produced the same request', HexOf(msgA)=HexOf(msgB));
+  AssertBytesEqual('read of counter 99',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 1C 00 01 00 00 1C 00 00 63'),
                    msgB);
@@ -438,7 +438,7 @@ begin
   FDrv.AddReadItem(msg, vtS7_Timer, 0, 7, 1);
 
   //temporizador: tipo e area $1D, e o numero do elemento sem converter
-  AssertBytesEqual('leitura do temporizador 7',
+  AssertBytesEqual('read of timer 7',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 1D 00 01 00 00 1D 00 00 07'),
                    msg);
@@ -454,7 +454,7 @@ begin
 
   //o mesmo calculo de endereco vale na montagem do pedido de escrita, que
   //tem o seu proprio case de areas; o tamanho aqui e' contado em elementos.
-  AssertBytesEqual('escrita no contador 5',
+  AssertBytesEqual('write to counter 5',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 05 01' +
                            '12 0A 10 1C 00 01 00 00 1C 00 00 05'),
                    msg);
@@ -471,7 +471,7 @@ begin
   //area analogica do S7-200: e' area de word (tipo $04), mas o endereco
   //continua em bits como nas demais - byte 2 = bit 16 = $10. Os 2 bytes
   //pedidos viram 1 word na contagem do item.
-  AssertBytesEqual('leitura de AIW2',
+  AssertBytesEqual('read of AIW2',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 04 00 01 00 00 06 00 00 10'),
                    msg);
@@ -491,7 +491,7 @@ begin
   FDrv.AddWriteParam(msgEscrita, vtS7_Counter, 0, 5, BytesOf('00 0A'));
 
   //byte 17 do frame = parte baixa da contagem de elementos do item
-  AssertEquals('contagem de elementos no item', msgLeitura[17], msgEscrita[17]);
+  AssertEquals('element count in the item', msgLeitura[17], msgEscrita[17]);
 end;
 
 procedure TTestS7Family.TamanhoDoItemDeContadorVaiEmElementos;
@@ -504,7 +504,7 @@ begin
   FDrv.PrepRead(msg);
   FDrv.AddReadItem(msg, vtS7_Counter, 0, 5, 4);
 
-  AssertBytesEqual('leitura de 2 contadores a partir do 5',
+  AssertBytesEqual('read of 2 counters starting at 5',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 1C 00 02 00 00 1C 00 00 05'),
                    msg);
@@ -519,7 +519,7 @@ begin
   FDrv.PrepRead(msg);
   FDrv.AddReadItem(msg, vtS7_200_AnInput, 0, 2, 4);
 
-  AssertBytesEqual('leitura de 2 words analogicas',
+  AssertBytesEqual('read of 2 analog words',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 04 00 02 00 00 06 00 00 10'),
                    msg);
@@ -534,7 +534,7 @@ begin
   FDrv.PrepRead(msg);
   FDrv.AddReadItem(msg, vtS7_DB, 1, 0, 4);
 
-  AssertBytesEqual('leitura de 4 bytes de DB',
+  AssertBytesEqual('read of 4 bytes from a DB',
                    BytesOf('32 01 00 00 00 00 00 0E 00 00 04 01' +
                            '12 0A 10 02 00 04 00 01 84 00 00 00'),
                    msg);

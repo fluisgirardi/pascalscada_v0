@@ -186,48 +186,48 @@ end;
 
 procedure TTestTcpUdpPort.EnderecosValidosSaoAceitos;
 begin
-  AssertTrue('endereco comum',        TTCP_UDPPort.ValidIPv4('192.168.0.10'));
-  AssertTrue('zeros no meio valem',   TTCP_UDPPort.ValidIPv4('10.0.0.1'));
-  AssertTrue('255 no meio vale',      TTCP_UDPPort.ValidIPv4('1.255.255.1'));
-  AssertTrue('limites por octeto',    TTCP_UDPPort.ValidIPv4('1.0.255.254'));
+  AssertTrue('an ordinary address',        TTCP_UDPPort.ValidIPv4('192.168.0.10'));
+  AssertTrue('zeros in the middle are fine',   TTCP_UDPPort.ValidIPv4('10.0.0.1'));
+  AssertTrue('255 in the middle is fine',      TTCP_UDPPort.ValidIPv4('1.255.255.1'));
+  AssertTrue('per octet bounds',    TTCP_UDPPort.ValidIPv4('1.0.255.254'));
 end;
 
 procedure TTestTcpUdpPort.PrimeiroOctetoNaoPodeSerZeroNem255;
 begin
   //rede 0 e broadcast nao endereçam equipamento nenhum
-  AssertFalse('comeca com 0',   TTCP_UDPPort.ValidIPv4('0.168.0.10'));
-  AssertFalse('comeca com 255', TTCP_UDPPort.ValidIPv4('255.168.0.10'));
+  AssertFalse('starts with 0',   TTCP_UDPPort.ValidIPv4('0.168.0.10'));
+  AssertFalse('starts with 255', TTCP_UDPPort.ValidIPv4('255.168.0.10'));
 end;
 
 procedure TTestTcpUdpPort.UltimoOctetoNaoPodeSerZeroNem255;
 begin
   //.0 e' a propria rede e .255 e' o broadcast dela
-  AssertFalse('termina em 0',   TTCP_UDPPort.ValidIPv4('192.168.0.0'));
-  AssertFalse('termina em 255', TTCP_UDPPort.ValidIPv4('192.168.0.255'));
+  AssertFalse('ends in 0',   TTCP_UDPPort.ValidIPv4('192.168.0.0'));
+  AssertFalse('ends in 255', TTCP_UDPPort.ValidIPv4('192.168.0.255'));
 end;
 
 procedure TTestTcpUdpPort.PrecisaTerQuatroOctetos;
 begin
-  AssertFalse('so tres',  TTCP_UDPPort.ValidIPv4('192.168.1'));
-  AssertFalse('cinco',    TTCP_UDPPort.ValidIPv4('192.168.1.1.1'));
-  AssertFalse('um so',    TTCP_UDPPort.ValidIPv4('192'));
+  AssertFalse('only three',  TTCP_UDPPort.ValidIPv4('192.168.1'));
+  AssertFalse('five',    TTCP_UDPPort.ValidIPv4('192.168.1.1.1'));
+  AssertFalse('only one',    TTCP_UDPPort.ValidIPv4('192'));
 end;
 
 procedure TTestTcpUdpPort.OctetoForaDaFaixaEhRecusado;
 begin
-  AssertFalse('acima de 255', TTCP_UDPPort.ValidIPv4('192.168.1.300'));
-  AssertFalse('negativo',     TTCP_UDPPort.ValidIPv4('192.168.-1.10'));
+  AssertFalse('over 255', TTCP_UDPPort.ValidIPv4('192.168.1.300'));
+  AssertFalse('negative',     TTCP_UDPPort.ValidIPv4('192.168.-1.10'));
 end;
 
 procedure TTestTcpUdpPort.OctetoNaoNumericoEhRecusado;
 begin
-  AssertFalse('letra',     TTCP_UDPPort.ValidIPv4('192.168.1.a'));
-  AssertFalse('vazio',     TTCP_UDPPort.ValidIPv4('192.168..1'));
+  AssertFalse('a letter',     TTCP_UDPPort.ValidIPv4('192.168.1.a'));
+  AssertFalse('empty',     TTCP_UDPPort.ValidIPv4('192.168..1'));
 end;
 
 procedure TTestTcpUdpPort.TextoVazioNaoEhEnderecoValido;
 begin
-  AssertFalse('vazio', TTCP_UDPPort.ValidIPv4(''));
+  AssertFalse('empty', TTCP_UDPPort.ValidIPv4(''));
 end;
 
 procedure TTestTcpUdpPort.NomeDeHostEhRecusado;
@@ -243,7 +243,7 @@ begin
     on E:Exception do
       recusou:=true;
   end;
-  AssertTrue('nome de host deve ser recusado', recusou);
+  AssertTrue('a host name must be refused', recusou);
 end;
 
 procedure TTestTcpUdpPort.EnderecoRecusadoNaoApagaOAnterior;
@@ -254,7 +254,7 @@ begin
   except
     on E:Exception do ;
   end;
-  AssertEquals('o endereco anterior fica de pe', '192.168.0.10', FPorta.Host);
+  AssertEquals('the previous address stands', '192.168.0.10', FPorta.Host);
 end;
 
 procedure TTestTcpUdpPort.EnderecoVazioEhAceito;
@@ -262,35 +262,35 @@ begin
   //porta recem criada, ou limpa, e' estado valido: so nao da' para conectar
   FPorta.Host:='192.168.0.10';
   FPorta.Host:='';
-  AssertEquals('endereco limpo', '', FPorta.Host);
+  AssertEquals('address cleared', '', FPorta.Host);
 end;
 
 procedure TTestTcpUdpPort.PadroesDaPorta;
 begin
-  AssertEquals('porta padrao do S7', 102, FPorta.Port);
-  AssertEquals('tipo padrao',        Ord(ptTCP), Ord(FPorta.PortType));
+  AssertEquals('the S7 default port', 102, FPorta.Port);
+  AssertEquals('default type',        Ord(ptTCP), Ord(FPorta.PortType));
 end;
 
 procedure TTestTcpUdpPort.IdMudaComOEndereco;
 begin
-  AssertTrue('enderecos diferentes, ids diferentes',
+  AssertTrue('different addresses, different ids',
              IdDe('192.168.0.10', 102, ptTCP) <> IdDe('192.168.0.11', 102, ptTCP));
 end;
 
 procedure TTestTcpUdpPort.IdMudaComONumeroDaPorta;
 begin
   //mesmo equipamento, servicos diferentes
-  AssertTrue('portas diferentes, ids diferentes',
+  AssertTrue('different ports, different ids',
              IdDe('192.168.0.10', 102, ptTCP) <> IdDe('192.168.0.10', 502, ptTCP));
 end;
 
 procedure TTestTcpUdpPort.IdMudaComOTipoDePorta;
 begin
-  AssertTrue('TCP e UDP no mesmo endereco e porta sao portas distintas',
+  AssertTrue('TCP and UDP on the same address and port are distinct ports',
              IdDe('192.168.0.10', 102, ptTCP) <> IdDe('192.168.0.10', 102, ptUDP));
 
-  AssertEquals('marca do TCP', 2, ByteDeTipo(IdDe('192.168.0.10', 102, ptTCP)));
-  AssertEquals('marca do UDP', 3, ByteDeTipo(IdDe('192.168.0.10', 102, ptUDP)));
+  AssertEquals('the TCP mark', 2, ByteDeTipo(IdDe('192.168.0.10', 102, ptTCP)));
+  AssertEquals('the UDP mark', 3, ByteDeTipo(IdDe('192.168.0.10', 102, ptUDP)));
 end;
 
 procedure TTestTcpUdpPort.IdEhEstavelParaAMesmaConfiguracao;
@@ -299,8 +299,8 @@ var
 begin
   //ler duas vezes tem que dar o mesmo valor - e' chave de mapa
   primeiro:=IdDe('192.168.0.10', 102, ptTCP);
-  AssertTrue('mesma leitura', primeiro = FPorta.getPortId);
-  AssertTrue('mesma configuracao', primeiro = IdDe('192.168.0.10', 102, ptTCP));
+  AssertTrue('same reading', primeiro = FPorta.getPortId);
+  AssertTrue('same settings', primeiro = IdDe('192.168.0.10', 102, ptTCP));
 end;
 
 procedure TTestTcpUdpPort.PortaSemEnderecoEhMarcadaComoIncompleta;
@@ -310,8 +310,8 @@ begin
   FPorta.Host:='';
   FPorta.PortType:=ptTCP;
 
-  AssertEquals('tipo TCP com a marca de incompleta', $82, ByteDeTipo(FPorta.getPortId));
-  AssertTrue  ('e difere de uma porta configurada',
+  AssertEquals('TCP type with the incomplete mark', $82, ByteDeTipo(FPorta.getPortId));
+  AssertTrue  ('and it differs from a configured port',
                FPorta.getPortId <> IdDe('192.168.0.10', 102, ptTCP));
 end;
 
@@ -366,14 +366,14 @@ procedure TTestTcpUdpPortComServidor.ConectaNoServidor;
 begin
   FPorta.Active:=true;
 
-  AssertTrue('a porta tem que conectar',        EsperarConexao(3000));
-  AssertTrue('e o servidor tem que ver alguem', FServidor.EsperarConexoes(1, 1000));
+  AssertTrue('the port must connect',        EsperarConexao(3000));
+  AssertTrue('and the server must see someone', FServidor.EsperarConexoes(1, 1000));
 end;
 
 procedure TTestTcpUdpPortComServidor.PortaNuncaAbertaNaoEstaConectada;
 begin
-  AssertFalse('sem abrir, nao ha soquete', FPorta.ReallyActive);
-  AssertEquals('e o servidor nao viu ninguem', 0, FServidor.Conexoes);
+  AssertFalse('without opening there is no socket', FPorta.ReallyActive);
+  AssertEquals('and the server saw nobody', 0, FServidor.Conexoes);
 end;
 
 procedure TTestTcpUdpPortComServidor.SemNinguemOuvindoNaoConecta;
@@ -383,20 +383,20 @@ begin
 
   FPorta.Active:=true;
 
-  AssertFalse('nao pode se dizer conectada', EsperarConexao(700));
+  AssertFalse('it cannot claim to be connected', EsperarConexao(700));
 end;
 
 procedure TTestTcpUdpPortComServidor.FecharAPortaEncerraAConexao;
 begin
   FPorta.Active:=true;
-  AssertTrue('conectou', EsperarConexao(3000));
+  AssertTrue('connected', EsperarConexao(3000));
 
   FPorta.Active:=false;
 
   //PortStop nao fecha o soquete: posta um pedido para a thread de conexao, que
   //fecha quando chegar a vez dela. O que importa e' que feche
-  AssertTrue('a conexao tem que ser encerrada', EsperarDesconexao(3000));
-  AssertFalse('e a porta fica fechada',         FPorta.Active);
+  AssertTrue('the connection must be closed', EsperarDesconexao(3000));
+  AssertFalse('and the port stays closed',         FPorta.Active);
 end;
 
 procedure TTestTcpUdpPortComServidor.OQueOMotoristaEscreveChegaNoServidor;
@@ -404,12 +404,12 @@ var
   pkg:TIOPacket;
 begin
   FPorta.Active:=true;
-  AssertTrue('conectou', EsperarConexao(3000));
+  AssertTrue('connected', EsperarConexao(3000));
 
   FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertTrue('os bytes chegaram', FServidor.EsperarBytes(4, 1000));
-  AssertBytesEqual('e sao os mesmos', BytesOf('01 02 03 04'), FServidor.Recebido);
+  AssertTrue('the bytes arrived', FServidor.EsperarBytes(4, 1000));
+  AssertBytesEqual('and they are the same', BytesOf('01 02 03 04'), FServidor.Recebido);
 end;
 
 procedure TTestTcpUdpPortComServidor.ARespostaDoServidorVoltaParaOMotorista;
@@ -419,13 +419,13 @@ begin
   FServidor.EnfileirarResposta(BytesOf('AA BB CC'));
 
   FPorta.Active:=true;
-  AssertTrue('conectou', EsperarConexao(3000));
+  AssertTrue('connected', EsperarConexao(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertEquals('leitura ok',      Ord(iorOK), Ord(pkg.ReadIOResult));
-  AssertEquals('tres bytes',      3, pkg.Received);
-  AssertBytesEqual('a resposta',  BytesOf('AA BB CC'), pkg.BufferToRead);
+  AssertEquals('read ok',      Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertEquals('three bytes',      3, pkg.Received);
+  AssertBytesEqual('the answer',  BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
 procedure TTestTcpUdpPortComServidor.SemRespostaOResultadoEhTimeout;
@@ -434,12 +434,12 @@ var
 begin
   //o servidor recebe mas nao responde nada
   FPorta.Active:=true;
-  AssertTrue('conectou', EsperarConexao(3000));
+  AssertTrue('connected', EsperarConexao(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertEquals('a escrita saiu',      Ord(iorOK),      Ord(pkg.WriteIOResult));
-  AssertEquals('a resposta nao veio', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+  AssertEquals('the write went out',      Ord(iorOK),      Ord(pkg.WriteIOResult));
+  AssertEquals('the answer did not come', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
 end;
 
 procedure TTestTcpUdpPortComServidor.EquipamentoQueSomeDerrubaAConexao;
@@ -449,7 +449,7 @@ begin
   //sem reconexao automatica, para medir so' a queda
   FPorta.EnableAutoReconnect:=false;
   FPorta.Active:=true;
-  AssertTrue('conectou', EsperarConexao(3000));
+  AssertTrue('connected', EsperarConexao(3000));
 
   FServidor.SoltarAConexao;
 
@@ -457,7 +457,7 @@ begin
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertTrue('a porta tem que perceber que caiu', EsperarDesconexao(3000));
+  AssertTrue('the port must notice it dropped', EsperarDesconexao(3000));
 end;
 
 procedure TTestTcpUdpPortComServidor.DepoisDeCairAPortaVoltaSozinha;
@@ -466,15 +466,15 @@ var
 begin
   //e' o que mantem a supervisao viva quando o equipamento reinicia
   FPorta.Active:=true;
-  AssertTrue('conectou', EsperarConexao(3000));
+  AssertTrue('connected', EsperarConexao(3000));
 
   FServidor.SoltarAConexao;
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
-  AssertTrue('caiu', EsperarDesconexao(3000));
+  AssertTrue('dropped', EsperarDesconexao(3000));
 
-  AssertTrue('e voltou sozinha',      EsperarConexao(5000));
-  AssertTrue('com uma nova conexao',  FServidor.EsperarConexoes(2, 1000));
+  AssertTrue('and it came back on its own',      EsperarConexao(5000));
+  AssertTrue('with a new connection',  FServidor.EsperarConexoes(2, 1000));
 end;
 
 procedure TTestTcpUdpPortComServidor.DestruirLogoDepoisDeCriarNaoPodeTravar;
@@ -491,7 +491,7 @@ begin
     porta.Free;
   end;
 
-  AssertTrue('vinte portas criadas e destruidas em sequencia', true);
+  AssertTrue('twenty ports created and destroyed in a row', true);
 end;
 
 { TTestTcpUdpPortEmDatagrama }
@@ -529,7 +529,7 @@ end;
 procedure TTestTcpUdpPortEmDatagrama.PortaDeDatagramaFicaAtiva;
 begin
   FPorta.Active:=true;
-  AssertTrue('a porta de datagrama tem que ficar ativa', EsperarConexao(3000));
+  AssertTrue('the datagram port must become active', EsperarConexao(3000));
 end;
 
 procedure TTestTcpUdpPortEmDatagrama.OQueOMotoristaEscreveChegaNoServidor;
@@ -537,12 +537,12 @@ var
   pkg:TIOPacket;
 begin
   FPorta.Active:=true;
-  AssertTrue('ativa', EsperarConexao(3000));
+  AssertTrue('active', EsperarConexao(3000));
 
   FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertTrue('o datagrama chegou', FServidor.EsperarBytes(4, 1000));
-  AssertBytesEqual('e e o mesmo', BytesOf('01 02 03 04'), FServidor.Recebido);
+  AssertTrue('the datagram arrived', FServidor.EsperarBytes(4, 1000));
+  AssertBytesEqual('and it is the same one', BytesOf('01 02 03 04'), FServidor.Recebido);
 end;
 
 procedure TTestTcpUdpPortEmDatagrama.ARespostaDoServidorVoltaParaOMotorista;
@@ -552,13 +552,13 @@ begin
   FServidor.EnfileirarResposta(BytesOf('AA BB CC'));
 
   FPorta.Active:=true;
-  AssertTrue('ativa', EsperarConexao(3000));
+  AssertTrue('active', EsperarConexao(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertEquals('leitura ok',     Ord(iorOK), Ord(pkg.ReadIOResult));
-  AssertEquals('tres bytes',     3, pkg.Received);
-  AssertBytesEqual('a resposta', BytesOf('AA BB CC'), pkg.BufferToRead);
+  AssertEquals('read ok',     Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertEquals('three bytes',     3, pkg.Received);
+  AssertBytesEqual('the answer', BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
 procedure TTestTcpUdpPortEmDatagrama.SemRespostaOResultadoEhTimeout;
@@ -567,12 +567,12 @@ var
 begin
   //em datagrama a perda e' o caso comum, nao a excecao
   FPorta.Active:=true;
-  AssertTrue('ativa', EsperarConexao(3000));
+  AssertTrue('active', EsperarConexao(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertEquals('a escrita saiu',      Ord(iorOK),      Ord(pkg.WriteIOResult));
-  AssertEquals('a resposta nao veio', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+  AssertEquals('the write went out',      Ord(iorOK),      Ord(pkg.WriteIOResult));
+  AssertEquals('the answer did not come', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
 end;
 
 procedure TTestTcpUdpPortEmDatagrama.OTipoDePortaSeparaOsIdentificadores;
@@ -584,7 +584,7 @@ begin
   emTcp:=FPorta.getPortId;
 
   FPorta.PortType:=ptUDP;
-  AssertTrue('TCP e UDP no mesmo destino sao portas distintas', emTcp<>FPorta.getPortId);
+  AssertTrue('TCP and UDP to the same destination are distinct ports', emTcp<>FPorta.getPortId);
 end;
 
 initialization

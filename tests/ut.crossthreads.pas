@@ -92,7 +92,7 @@ begin
     t.Free;
   end;
 
-  AssertTrue('cinquenta threads criadas e destruidas em sequencia', true);
+  AssertTrue('fifty threads created and destroyed in a row', true);
 end;
 
 procedure TTestCrossThreads.DestruirDepoisDoLacoComecarNaoPodeTravar;
@@ -106,7 +106,7 @@ begin
     t.WaitLoopStarts;
     Sleep(20);
 
-    AssertTrue('o laco tem que ter dado voltas', t.Voltas>0);
+    AssertTrue('the loop must have gone round', t.Voltas>0);
   finally
     t.Free;
   end;
@@ -124,7 +124,7 @@ begin
     t.Terminate;
     t.WaitLoopStarts;
 
-    AssertTrue('a espera pelo inicio tem que voltar', true);
+    AssertTrue('the wait for the start must return', true);
   finally
     t.Free;
   end;

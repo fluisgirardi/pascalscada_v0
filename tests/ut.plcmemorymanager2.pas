@@ -114,8 +114,8 @@ begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.AddAddress(0, 10, 1, 1000);
 
-  AssertEquals('um bloco so', 1, Length(FMM.Blocks));
-  AssertEquals('e o mesmo tamanho', 10, FMM.Size);
+  AssertEquals('a single block', 1, Length(FMM.Blocks));
+  AssertEquals('and the same size', 10, FMM.Size);
 end;
 
 procedure TTestGerenciadorDeMemoria.RemoverTudoDesfazOsBlocos;
@@ -123,8 +123,8 @@ begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.RemoveAddress(0, 10, 1);
 
-  AssertEquals('sem blocos', 0, Length(FMM.Blocks));
-  AssertEquals('tamanho zerado', 0, FMM.Size);
+  AssertEquals('no blocks', 0, Length(FMM.Blocks));
+  AssertEquals('size zeroed', 0, FMM.Size);
 end;
 
 procedure TTestGerenciadorDeMemoria.RemocaoNoMeioQuebraOBlocoEmDois;
@@ -133,9 +133,9 @@ begin
   FMM.AddAddress(0, 20, 1, 1000);
   FMM.RemoveAddress(6, 8, 1);
 
-  AssertEquals('dois blocos', 2, Length(FMM.Blocks));
-  AssertEquals('fim do primeiro',   5,  FMM.Blocks[0].AddressEnd);
-  AssertEquals('inicio do segundo', 14, FMM.Blocks[1].AddressStart);
+  AssertEquals('two blocks', 2, Length(FMM.Blocks));
+  AssertEquals('end of the first one',   5,  FMM.Blocks[0].AddressEnd);
+  AssertEquals('start of the second one', 14, FMM.Blocks[1].AddressStart);
 end;
 
 procedure TTestGerenciadorDeMemoria.BuracoDoTamanhoDoLimiteAindaUne;
@@ -144,8 +144,8 @@ begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.AddAddress(15, 2, 1, 1000);
 
-  AssertEquals('buraco de 5 deve unir', 1, Length(FMM.Blocks));
-  AssertEquals('fim do bloco', 16, FMM.Blocks[0].AddressEnd);
+  AssertEquals('a hole of 5 must join', 1, Length(FMM.Blocks));
+  AssertEquals('end of the block', 16, FMM.Blocks[0].AddressEnd);
 end;
 
 procedure TTestGerenciadorDeMemoria.BuracoUmAlemDoLimiteSepara;
@@ -154,7 +154,7 @@ begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.AddAddress(16, 2, 1, 1000);
 
-  AssertEquals('buraco de 6 deve separar', 2, Length(FMM.Blocks));
+  AssertEquals('a hole of 6 must split', 2, Length(FMM.Blocks));
 end;
 
 procedure TTestGerenciadorDeMemoria.TamanhoContaOBuracoEngolido;
@@ -164,9 +164,9 @@ begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.AddAddress(13, 2, 1, 1000);
 
-  AssertEquals('um bloco', 1, Length(FMM.Blocks));
-  AssertEquals('bloco vai de 0 a 14', 14, FMM.Blocks[0].AddressEnd);
-  AssertEquals('12 enderecos pedidos, 15 lidos', 15, FMM.Size);
+  AssertEquals('one block', 1, Length(FMM.Blocks));
+  AssertEquals('the block goes from 0 to 14', 14, FMM.Blocks[0].AddressEnd);
+  AssertEquals('12 addresses asked for, 15 read', 15, FMM.Size);
 end;
 
 procedure TTestGerenciadorDeMemoria.RegSizeMultiplicaAQuantidadeDeEnderecos;
@@ -175,9 +175,9 @@ begin
   //2 variaveis de 2 bytes = 4 enderecos, nao 2.
   FMM.AddAddress(0, 2, 2, 1000);
 
-  AssertEquals('um bloco', 1, Length(FMM.Blocks));
-  AssertEquals('quatro enderecos', 4, FMM.Size);
-  AssertEquals('de 0 a 3', 3, FMM.Blocks[0].AddressEnd);
+  AssertEquals('one block', 1, Length(FMM.Blocks));
+  AssertEquals('four addresses', 4, FMM.Size);
+  AssertEquals('from 0 to 3', 3, FMM.Blocks[0].AddressEnd);
 end;
 
 procedure TTestGerenciadorDeMemoria.RemocaoPrecisaDoMesmoRegSize;
@@ -186,10 +186,10 @@ begin
   FMM.AddAddress(0, 2, 2, 1000);
   FMM.RemoveAddress(0, 2, 1);
 
-  AssertEquals('sobraram dois enderecos', 2, FMM.Size);
+  AssertEquals('two addresses are left', 2, FMM.Size);
 
   FMM.RemoveAddress(2, 2, 1);
-  AssertEquals('agora esvaziou', 0, FMM.Size);
+  AssertEquals('now it is empty', 0, FMM.Size);
 end;
 
 procedure TTestGerenciadorDeMemoria.ValoresGravadosSaoLidosDeVolta;
@@ -202,9 +202,9 @@ begin
 
   lidos:=LeBloco(0, 4, res);
 
-  AssertEquals('resultado guardado', Ord(ioOk), Ord(res));
-  AssertEquals('primeiro valor', 10, lidos[0], 0);
-  AssertEquals('ultimo valor',   40, lidos[3], 0);
+  AssertEquals('result kept', Ord(ioOk), Ord(res));
+  AssertEquals('first value', 10, lidos[0], 0);
+  AssertEquals('last value',   40, lidos[3], 0);
 end;
 
 procedure TTestGerenciadorDeMemoria.EscritaCobrindoDoisBlocosPreencheOsDois;
@@ -215,18 +215,18 @@ begin
   //dois blocos separados, e uma resposta que cobre os dois
   FMM.AddAddress(0, 4, 1, 1000);
   FMM.AddAddress(20, 4, 1, 1000);
-  AssertEquals('dois blocos', 2, Length(FMM.Blocks));
+  AssertEquals('two blocks', 2, Length(FMM.Blocks));
 
   FMM.SetValues(0, 24, 1,
                 Valores([1,2,3,4, 0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0, 21,22,23,24]),
                 ioOk);
 
   lidos:=LeBloco(0, 4, res);
-  AssertEquals('primeiro bloco', 1, lidos[0], 0);
+  AssertEquals('first block', 1, lidos[0], 0);
 
   lidos:=LeBloco(20, 4, res);
-  AssertEquals('segundo bloco, primeiro valor', 21, lidos[0], 0);
-  AssertEquals('segundo bloco, ultimo valor',   24, lidos[3], 0);
+  AssertEquals('second block, first value', 21, lidos[0], 0);
+  AssertEquals('second block, last value',   24, lidos[3], 0);
 end;
 
 procedure TTestGerenciadorDeMemoria.EscritaForaDosBlocosNaoDerruba;
@@ -241,7 +241,7 @@ begin
   FMM.SetValues(500, 4, 1, Valores([1,2,3,4]), ioOk);
 
   lidos:=LeBloco(0, 4, res);
-  AssertEquals('o bloco existente continua intacto', 10, lidos[0], 0);
+  AssertEquals('the existing block stays untouched', 10, lidos[0], 0);
 end;
 
 procedure TTestGerenciadorDeMemoria.LeituraParcialAvisaPeloRetorno;
@@ -259,12 +259,12 @@ begin
   res:=ioNone;
   carimbo:=0;
   retorno:=FMM.GetValues(0, 4, 1, lidos, res, carimbo);
-  AssertEquals('cobertura total', 0, retorno);
+  AssertEquals('full coverage', 0, retorno);
 
   //pedir alem do que existe: cobertura parcial
   SetLength(lidos, 8);
   retorno:=FMM.GetValues(0, 8, 1, lidos, res, carimbo);
-  AssertTrue('cobertura parcial tem que ser sinalizada', retorno<>0);
+  AssertTrue('partial coverage must be flagged', retorno<>0);
 end;
 
 procedure TTestGerenciadorDeMemoria.FalhaFicaGuardadaNoBloco;
@@ -278,7 +278,7 @@ begin
   FMM.SetFault(0, 4, 1, ioTimeOut);
 
   lidos:=LeBloco(0, 4, res);
-  AssertEquals('quem le depois precisa saber da falha', Ord(ioTimeOut), Ord(res));
+  AssertEquals('whoever reads later needs to know about the failure', Ord(ioTimeOut), Ord(res));
 end;
 
 procedure TTestGerenciadorDeMemoria.TamanhoDoSetValuesVemDoVetorNaoDoParametro;
@@ -293,7 +293,7 @@ begin
   FMM.SetValues(0, 1, 1, Valores([10, 20, 30, 40]), ioOk);
 
   lidos:=LeBloco(0, 4, res);
-  AssertEquals('o quarto valor tambem foi gravado', 40, lidos[3], 0);
+  AssertEquals('the fourth value was stored too', 40, lidos[3], 0);
 end;
 
 procedure TTestGerenciadorDeMemoria.BlocoRecemCriadoJaNasceCarimbado;
@@ -303,9 +303,9 @@ begin
   //disso ao acrescentar um tag com o driver ja rodando.
   FMM.AddAddress(0, 4, 1, 1000);
 
-  AssertFalse ('nao pede leitura imediata', FMM.Blocks[0].NeedRefresh);
-  AssertTrue  ('o carimbo e recente', FMM.Blocks[0].MilisecondsFromLastUpdate<1000);
-  AssertEquals('e herda o tempo de scan pedido', 1000, FMM.Blocks[0].ScanTime);
+  AssertFalse ('does not ask for an immediate read', FMM.Blocks[0].NeedRefresh);
+  AssertTrue  ('the timestamp is recent', FMM.Blocks[0].MilisecondsFromLastUpdate<1000);
+  AssertEquals('and it inherits the scan time asked for', 1000, FMM.Blocks[0].ScanTime);
 end;
 
 procedure TTestGerenciadorDeMemoria.MenorTempoDeScanVenceEntreOsBlocos;
@@ -314,7 +314,7 @@ begin
   FMM.AddAddress(0, 4, 1, 1000);
   FMM.AddAddress(20, 4, 1, 250);
 
-  AssertEquals('menor tempo de scan', 250, FMM.MinScanTime);
+  AssertEquals('shortest scan time', 250, FMM.MinScanTime);
 end;
 
 initialization

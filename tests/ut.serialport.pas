@@ -183,15 +183,15 @@ end;
 procedure TTestSerialPort.VelocidadeEFormatoDeFabrica;
 begin
   //19200 8N1, que e' o que a maioria dos equipamentos usa
-  AssertEquals('velocidade',      Ord(br19200), Ord(FPorta.BaudRate));
-  AssertEquals('bits de dados',   Ord(db8),     Ord(FPorta.DataBits));
-  AssertEquals('paridade',        Ord(spNone),  Ord(FPorta.Paridade));
-  AssertEquals('bits de parada',  Ord(sb1),     Ord(FPorta.StopBits));
+  AssertEquals('speed',      Ord(br19200), Ord(FPorta.BaudRate));
+  AssertEquals('data bits',   Ord(db8),     Ord(FPorta.DataBits));
+  AssertEquals('parity',        Ord(spNone),  Ord(FPorta.Paridade));
+  AssertEquals('stop bits',  Ord(sb1),     Ord(FPorta.StopBits));
 end;
 
 procedure TTestSerialPort.EsperaEntreEscritaELeituraDeFabrica;
 begin
-  AssertEquals('espera entre escrever e ler', 20, FPorta.WriteReadDelay);
+  AssertEquals('delay between writing and reading', 20, FPorta.WriteReadDelay);
 end;
 
 procedure TTestSerialPort.TempoLimiteDeFabricaConfereComOQueAPropriedadeDeclara;
@@ -200,20 +200,20 @@ begin
   //decidir o que precisa ir para o arquivo de formulario: o que for igual a
   //ele nao e' gravado. Se o construtor comeca com outro valor, quem escolher
   //justamente o valor declarado perde a escolha na proxima abertura
-  AssertEquals('tempo limite', 100, FPorta.Timeout);
+  AssertEquals('timeout', 100, FPorta.Timeout);
 end;
 
 {$IFDEF UNIX}
 procedure TTestSerialPort.DiretorioDeDispositivosDeFabrica;
 begin
-  AssertEquals('diretorio de dispositivos', '/dev/', FPorta.DevDir);
+  AssertEquals('device directory', '/dev/', FPorta.DevDir);
 end;
 
 procedure TTestSerialPort.DiretorioVazioVoltaAoPadrao;
 begin
   FPorta.DevDir:='/tmp/';
   FPorta.DevDir:='';
-  AssertEquals('vazio volta ao padrao', '/dev/', FPorta.DevDir);
+  AssertEquals('empty goes back to the default', '/dev/', FPorta.DevDir);
 end;
 
 procedure TTestSerialPort.DiretorioNenhumVoltaAoPadrao;
@@ -221,21 +221,21 @@ begin
   //"(none)" e' o que o editor de propriedades entrega quando nada foi escolhido
   FPorta.DevDir:='/tmp/';
   FPorta.DevDir:='(none)';
-  AssertEquals('nenhum volta ao padrao', '/dev/', FPorta.DevDir);
+  AssertEquals('none goes back to the default', '/dev/', FPorta.DevDir);
 end;
 
 procedure TTestSerialPort.DiretorioEscolhidoEhGuardado;
 begin
   //existe para quem usa emulador de porta serial fora de /dev
   FPorta.DevDir:='/tmp/portas/';
-  AssertEquals('diretorio escolhido', '/tmp/portas/', FPorta.DevDir);
+  AssertEquals('chosen directory', '/tmp/portas/', FPorta.DevDir);
 end;
 {$ENDIF}
 
 procedure TTestSerialPort.NomeDePortaDesconhecidoNaoEhAceito;
 begin
   FPorta.COMPort:='naoexisteestaporta';
-  AssertEquals('nome desconhecido nao entra', '', FPorta.COMPort);
+  AssertEquals('an unknown name does not get in', '', FPorta.COMPort);
 end;
 
 procedure TTestSerialPort.NomeDePortaDesconhecidoNaoApagaOAnterior;
@@ -245,7 +245,7 @@ begin
   FPorta.AcceptAnyPortName:=false;
 
   FPorta.COMPort:='naoexisteestaporta';
-  AssertEquals('o nome anterior fica de pe', 'ttyS0', FPorta.COMPort);
+  AssertEquals('the previous name stands', 'ttyS0', FPorta.COMPort);
 end;
 
 procedure TTestSerialPort.AceitarQualquerNomeAbreMaoDaConferencia;
@@ -255,7 +255,7 @@ begin
   FPorta.AcceptAnyPortName:=true;
   FPorta.COMPort:='umnomequalquer';
 
-  AssertEquals('nome aceito sem conferencia', 'umnomequalquer', FPorta.COMPort);
+  AssertEquals('name accepted without checking', 'umnomequalquer', FPorta.COMPort);
 end;
 
 procedure TTestSerialPort.NomeVazioLimpaAPorta;
@@ -265,7 +265,7 @@ begin
   FPorta.AcceptAnyPortName:=false;
 
   FPorta.COMPort:='';
-  AssertEquals('nome vazio limpa', '', FPorta.COMPort);
+  AssertEquals('an empty name clears it', '', FPorta.COMPort);
 end;
 
 procedure TTestSerialPort.PortaNovaEstaFechada;
@@ -281,12 +281,12 @@ begin
   FPorta.MarcarComoEmProjeto;
   FPorta.Active:=true;
 
-  AssertFalse('em projeto, nao abre de fato', FPorta.ReallyActive);
+  AssertFalse('at design time it does not really open', FPorta.ReallyActive);
 end;
 
 procedure TTestSerialPort.SemNomeDePortaAConfiguracaoNaoServe;
 begin
-  AssertFalse('sem nome de porta nao ha o que abrir', FPorta.ConfiguracaoAceitavel);
+  AssertFalse('with no port name there is nothing to open', FPorta.ConfiguracaoAceitavel);
 end;
 
 procedure TTestSerialPort.PortasDiferentesTemIdentificadoresDiferentes;
@@ -303,7 +303,7 @@ begin
     outra.AcceptAnyPortName:=true;
     outra.COMPort:='ttyS1';
 
-    AssertTrue('duas portas seriais distintas', FPorta.getPortId<>outra.getPortId);
+    AssertTrue('two distinct serial ports', FPorta.getPortId<>outra.getPortId);
   finally
     outra.Free;
   end;
@@ -319,7 +319,7 @@ begin
   AssertEquals('ttyS3',    3,  NumeroDoId(IdDe('ttyS3')));
   AssertEquals('cuau1',    1,  NumeroDoId(IdDe('cuau1')));
 
-  AssertEquals('e a marca de porta serial', 1, ByteDeTipo(IdDe('COM1')));
+  AssertEquals('and the serial port mark', 1, ByteDeTipo(IdDe('COM1')));
 end;
 
 procedure TTestSerialPort.MesmoNumeroComPrefixoDiferenteNaoSeConfunde;
@@ -330,21 +330,21 @@ begin
   //que separa-las, senao quem indexa por ele mistura as duas
   umUsb:=IdDe('ttyUSB0');
 
-  AssertTrue('ttyUSB0 e ttyS0',   umUsb<>IdDe('ttyS0'));
-  AssertTrue('ttyUSB0 e ttyADV0', umUsb<>IdDe('ttyADV0'));
+  AssertTrue('ttyUSB0 and ttyS0',   umUsb<>IdDe('ttyS0'));
+  AssertTrue('ttyUSB0 and ttyADV0', umUsb<>IdDe('ttyADV0'));
 end;
 
 procedure TTestSerialPort.PortaSemNomeEhMarcadaComoIncompleta;
 begin
   //sem nome de porta o identificador leva o bit alto ligado, como na porta de
   //rede sem endereco
-  AssertEquals('serial com a marca de incompleta', $81, ByteDeTipo(FPorta.getPortId));
+  AssertEquals('serial with the incomplete mark', $81, ByteDeTipo(FPorta.getPortId));
 end;
 
 procedure TTestSerialPort.NomeSemNumeroEhMarcadoComoIncompleto;
 begin
   //um nome sem digito nenhum nao identifica porta alguma
-  AssertEquals('nome sem numero', $81, ByteDeTipo(IdDe('umnomesemnumero')));
+  AssertEquals('name with no number', $81, ByteDeTipo(IdDe('umnomesemnumero')));
 end;
 
 procedure TTestSerialPort.IdentificadorEhEstavelParaAMesmaPorta;
@@ -353,8 +353,8 @@ var
 begin
   //e' chave de mapa: ler duas vezes tem que dar o mesmo valor
   primeiro:=IdDe('ttyUSB0');
-  AssertTrue('mesma leitura',      primeiro=FPorta.getPortId);
-  AssertTrue('mesma configuracao', primeiro=IdDe('ttyUSB0'));
+  AssertTrue('same reading',      primeiro=FPorta.getPortId);
+  AssertTrue('same settings', primeiro=IdDe('ttyUSB0'));
 end;
 
 {$IFDEF UNIX}
@@ -390,7 +390,7 @@ begin
   ApontarAPortaParaODispositivo;
   FPorta.Active:=true;
 
-  AssertTrue('a porta tem que abrir', FPorta.ReallyActive);
+  AssertTrue('the port must open', FPorta.ReallyActive);
 end;
 
 procedure TTestSerialPortComDispositivo.OQueODriverEscreveChegaNoDispositivo;
@@ -399,11 +399,11 @@ var
 begin
   ApontarAPortaParaODispositivo;
   FPorta.Active:=true;
-  AssertTrue('abriu', FPorta.ReallyActive);
+  AssertTrue('opened', FPorta.ReallyActive);
 
   FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertBytesEqual('o que saiu pelo fio', BytesOf('01 02 03 04'),
+  AssertBytesEqual('what went out on the wire', BytesOf('01 02 03 04'),
                    FDispositivo.LerOQueFoiEscrito(4, 1000));
 end;
 
@@ -413,15 +413,15 @@ var
 begin
   ApontarAPortaParaODispositivo;
   FPorta.Active:=true;
-  AssertTrue('abriu', FPorta.ReallyActive);
+  AssertTrue('opened', FPorta.ReallyActive);
 
   FDispositivo.Responder(BytesOf('AA BB CC'));
 
   FPorta.IOCommandSync(iocRead, 0, nil, 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertEquals('leitura ok',   Ord(iorOK), Ord(pkg.ReadIOResult));
-  AssertEquals('tres bytes',   3, pkg.Received);
-  AssertBytesEqual('o que veio', BytesOf('AA BB CC'), pkg.BufferToRead);
+  AssertEquals('read ok',   Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertEquals('three bytes',   3, pkg.Received);
+  AssertBytesEqual('what came back', BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
 procedure TTestSerialPortComDispositivo.SemRespostaOResultadoEhTimeout;
@@ -431,22 +431,22 @@ begin
   //o equipamento nao mandou nada: o driver tem que desistir no prazo
   ApontarAPortaParaODispositivo;
   FPorta.Active:=true;
-  AssertTrue('abriu', FPorta.ReallyActive);
+  AssertTrue('opened', FPorta.ReallyActive);
 
   FPorta.IOCommandSync(iocRead, 0, nil, 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertEquals('sem resposta', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
-  AssertEquals('nada lido',    0, pkg.Received);
+  AssertEquals('no answer', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+  AssertEquals('nothing read',    0, pkg.Received);
 end;
 
 procedure TTestSerialPortComDispositivo.FecharAPortaDeixaDeEstarAtiva;
 begin
   ApontarAPortaParaODispositivo;
   FPorta.Active:=true;
-  AssertTrue('abriu', FPorta.ReallyActive);
+  AssertTrue('opened', FPorta.ReallyActive);
 
   FPorta.Active:=false;
-  AssertFalse('fechou', FPorta.ReallyActive);
+  AssertFalse('closed', FPorta.ReallyActive);
 end;
 
 procedure TTestSerialPortComDispositivo.AVelocidadeEscolhidaChegaNoDispositivo;
@@ -456,9 +456,9 @@ begin
   ApontarAPortaParaODispositivo;
   FPorta.BaudRate:=br9600;
   FPorta.Active:=true;
-  AssertTrue('abriu', FPorta.ReallyActive);
+  AssertTrue('opened', FPorta.ReallyActive);
 
-  AssertEquals('9600 no dispositivo', B9600, FDispositivo.CodigoDeVelocidade);
+  AssertEquals('9600 on the device', B9600, FDispositivo.CodigoDeVelocidade);
 end;
 
 procedure TTestSerialPortComDispositivo.MudarAVelocidadeMudaODispositivo;
@@ -468,10 +468,10 @@ begin
   ApontarAPortaParaODispositivo;
   FPorta.BaudRate:=br19200;
   FPorta.Active:=true;
-  AssertTrue('abriu', FPorta.ReallyActive);
+  AssertTrue('opened', FPorta.ReallyActive);
 
-  AssertEquals('19200 no dispositivo', B19200, FDispositivo.CodigoDeVelocidade);
-  AssertTrue  ('e e diferente de 9600', B9600<>FDispositivo.CodigoDeVelocidade);
+  AssertEquals('19200 on the device', B19200, FDispositivo.CodigoDeVelocidade);
+  AssertTrue  ('and it differs from 9600', B9600<>FDispositivo.CodigoDeVelocidade);
 end;
 
 procedure TTestSerialPortComDispositivo.OsBitsDeParadaEscolhidosChegamNoDispositivo;
@@ -479,9 +479,9 @@ begin
   ApontarAPortaParaODispositivo;
   FPorta.StopBits:=sb2;
   FPorta.Active:=true;
-  AssertTrue('abriu', FPorta.ReallyActive);
+  AssertTrue('opened', FPorta.ReallyActive);
 
-  AssertTrue('dois bits de parada', FDispositivo.TemDoisBitsDeParada);
+  AssertTrue('two stop bits', FDispositivo.TemDoisBitsDeParada);
 end;
 
 {$ENDIF}

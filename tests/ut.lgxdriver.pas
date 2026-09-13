@@ -140,7 +140,7 @@ procedure TTestLGXDriver.TagDeProgramaEhUmSegmentoSo;
 begin
   //"Program:MainProgram" tem 19 caracteres e vale como um nome unico - os dois
   //pontos nao separam nada aqui, so o ponto separa.
-  AssertBytesEqual('tag de programa',
+  AssertBytesEqual('program tag',
                    BytesOf('91 13' +                                   //segmento de 19 caracteres
                            '50 72 6F 67 72 61 6D 3A' +                 //"Program:"
                            '4D 61 69 6E 50 72 6F 67 72 61 6D' +        //"MainProgram"
@@ -167,30 +167,30 @@ begin
     on E:Exception do
       recusou:=true;
   end;
-  AssertTrue('caminho acima do limite deve ser recusado', recusou);
+  AssertTrue('a path over the limit must be refused', recusou);
 end;
 
 procedure TTestLGXDriver.EstruturaEhReconhecidaPeloBitAlto;
 begin
   //bit $8000 ligado = estrutura/UDT
-  AssertTrue ('com o bit de estrutura', LGXTypeIsStruct($8FCE));
-  AssertFalse('DINT nao e estrutura',   LGXTypeIsStruct($00C4));
+  AssertTrue ('with the structure bit', LGXTypeIsStruct($8FCE));
+  AssertFalse('DINT is not a structure',   LGXTypeIsStruct($00C4));
 end;
 
 procedure TTestLGXDriver.TipoDeSistemaEhReconhecido;
 begin
   //bit $1000 = tipo interno do CLP, que o construtor de tags ignora
-  AssertTrue ('com o bit de sistema', LGXTypeIsSystem($10C4));
-  AssertFalse('DINT comum',           LGXTypeIsSystem($00C4));
+  AssertTrue ('with the system bit', LGXTypeIsSystem($10C4));
+  AssertFalse('plain DINT',           LGXTypeIsSystem($00C4));
 end;
 
 procedure TTestLGXDriver.DimensoesVemDosDoisBitsAcimaDoTipo;
 begin
   //bits 13 e 14 guardam de 0 a 3 dimensoes
-  AssertEquals('escalar',      0, LGXTypeDimensions($00C4));
-  AssertEquals('uma dimensao', 1, LGXTypeDimensions($20C4));
-  AssertEquals('duas',         2, LGXTypeDimensions($40C4));
-  AssertEquals('tres',         3, LGXTypeDimensions($60C4));
+  AssertEquals('scalar',      0, LGXTypeDimensions($00C4));
+  AssertEquals('one dimension', 1, LGXTypeDimensions($20C4));
+  AssertEquals('two',         2, LGXTypeDimensions($40C4));
+  AssertEquals('three',         3, LGXTypeDimensions($60C4));
 end;
 
 procedure TTestLGXDriver.NomeDoTipoSegueOStudio;
@@ -201,28 +201,28 @@ begin
   AssertEquals('lreal', 'LREAL', LGXTypeName($00CB));
 
   //estrutura tem nome proprio, independente do resto do codigo
-  AssertEquals('estrutura', 'STRUCT/UDT', LGXTypeName($8FCE));
+  AssertEquals('structure', 'STRUCT/UDT', LGXTypeName($8FCE));
 
   //tipo que o driver nao conhece aparece em hexa, para nao mentir um nome
-  AssertEquals('desconhecido', '0x00EE', LGXTypeName($00EE));
+  AssertEquals('unknown', '0x00EE', LGXTypeName($00EE));
 end;
 
 procedure TTestLGXDriver.TipoCipViraTipoDeTagDoPascalSCADA;
 var
   tipo:TTagType;
 begin
-  AssertTrue  ('dint convertido',  LGXTypeToTagType($00C4, tipo));
+  AssertTrue  ('dint converted',  LGXTypeToTagType($00C4, tipo));
   AssertEquals('dint', Ord(pttLongInt), Ord(tipo));
 
-  AssertTrue  ('real convertido',  LGXTypeToTagType($00CA, tipo));
+  AssertTrue  ('real converted',  LGXTypeToTagType($00CA, tipo));
   AssertEquals('real', Ord(pttFloat), Ord(tipo));
 
-  AssertTrue  ('lint convertido',  LGXTypeToTagType($00C5, tipo));
+  AssertTrue  ('lint converted',  LGXTypeToTagType($00C5, tipo));
   AssertEquals('lint', Ord(pttInt64), Ord(tipo));
 
   //as dimensoes nao atrapalham: o tipo continua sendo lido dos 8 bits baixos
-  AssertTrue  ('dint em array',    LGXTypeToTagType($20C4, tipo));
-  AssertEquals('dint em array', Ord(pttLongInt), Ord(tipo));
+  AssertTrue  ('dint in an array',    LGXTypeToTagType($20C4, tipo));
+  AssertEquals('dint in an array', Ord(pttLongInt), Ord(tipo));
 end;
 
 procedure TTestLGXDriver.EstruturaNaoTemTipoDeTagEquivalente;
@@ -230,7 +230,7 @@ var
   tipo:TTagType;
 begin
   //estrutura nao tem valor numerico unico: quem chama precisa saber disso
-  AssertFalse('estrutura', LGXTypeToTagType($8FCE, tipo));
+  AssertFalse('structure', LGXTypeToTagType($8FCE, tipo));
 end;
 
 procedure TTestLGXDriver.TamanhoEmBytesPorTipo;
@@ -245,7 +245,7 @@ begin
 
   //tipo desconhecido cai em 1 byte - inclusive STRING, que na pratica ocupa
   //bem mais; quem trata string nao passa por aqui
-  AssertEquals('desconhecido', 1, LGXTypeSizeInBytes($00EE));
+  AssertEquals('unknown', 1, LGXTypeSizeInBytes($00EE));
 end;
 
 procedure TTestLGXDriver.EnchimentoDoSegmentoEhSempreZero;
@@ -253,7 +253,7 @@ begin
   //nome impar depois de um nome maior: o enchimento nao pode herdar nada do
   //segmento anterior
   AssertBytesEqual('AAAA.B', BytesOf('91 04 41 41 41 41 91 01 42 00'), Caminho('AAAA.B'));
-  AssertBytesEqual('tag de programa com membro impar',
+  AssertBytesEqual('program tag with an odd member',
                    BytesOf('91 13 50 72 6F 67 72 61 6D 3A 4D 61 69 6E 50 72 6F 67 72 61 6D 00' +
                            '91 03 54 61 67 00'),
                    Caminho('Program:MainProgram.Tag'));
@@ -261,16 +261,16 @@ end;
 
 procedure TTestLGXDriver.CaminhoCodificadoDeveriaSerLegivelDeVolta;
 begin
-  Ignore('lacuna conhecida: DecodeTagPath e'#39' um esqueleto - nao atribui o ' +
-         'Result e devolve string vazia (o proprio codigo tem o comentario ' +
-         '"TODO: Decodificar o indecodificavel?"). Ela e'#39' o leitor da ' +
-         'propriedade RequestPath em quatro classes de pedido ' +
-         '(TCIPReadTagReq, TCIPReadTagFragReq, TCIPWriteTagReq e ' +
-         'TCIPWriteTagFragReq), entao ler esse caminho de volta sempre devolve ' +
-         'vazio. Remova este Ignore quando o decodificador for escrito.');
+  Ignore('known gap: DecodeTagPath is a skeleton - it never assigns ' +
+         'Result and returns an empty string (the code itself carries the ' +
+         'comment "TODO: Decodificar o indecodificavel?"). It is the getter ' +
+         'of the RequestPath property in four request classes ' +
+         '(TCIPReadTagReq, TCIPReadTagFragReq, TCIPWriteTagReq and ' +
+         'TCIPWriteTagFragReq), so reading that path back always gives an ' +
+         'empty string. Remove this Ignore once the decoder is written.');
 
   FPedido.RequestPath:='MyTag';
-  AssertEquals('ida e volta do caminho', 'MyTag', FPedido.RequestPath);
+  AssertEquals('round trip of the path', 'MyTag', FPedido.RequestPath);
 end;
 
 initialization

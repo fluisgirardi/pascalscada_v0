@@ -55,9 +55,9 @@ var
 begin
   pkg := FrameLeitura;
   crc := Calcul_crc(pkg);
-  AssertEquals('valor do CRC16', $CDC5, crc);
-  AssertEquals('byte baixo do CRC', $C5, pkg[6]);
-  AssertEquals('byte alto do CRC',  $CD, pkg[7]);
+  AssertEquals('CRC16 value', $CDC5, crc);
+  AssertEquals('low byte of the CRC', $C5, pkg[6]);
+  AssertEquals('high byte of the CRC',  $CD, pkg[7]);
 end;
 
 procedure TTestCRC16Utils.CRCFechaComOProprioCalculo;
@@ -66,7 +66,7 @@ var
 begin
   pkg := FrameLeitura;
   Calcul_crc(pkg);
-  AssertTrue('Test_crc deve aceitar um frame com CRC valido', Test_crc(pkg));
+  AssertTrue('Test_crc must accept a frame with a valid CRC', Test_crc(pkg));
 end;
 
 procedure TTestCRC16Utils.CRCIndependeDaArquitetura;
@@ -82,7 +82,7 @@ begin
   pkg[256] := 0; pkg[257] := 0;
   crc := Calcul_crc(pkg);
   { valor fixo: se mudar entre 32 e 64 bits, ha problema de tipo/shift }
-  AssertEquals('CRC de 0..255', $DE6C, crc);
+  AssertEquals('CRC of 0..255', $DE6C, crc);
 end;
 
 { As rotinas de CRC8 desta unit nao sao usadas em nenhum ponto do projeto -
@@ -116,7 +116,7 @@ var
   data: BYTES;
 begin
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/SMBUS de "123456789"', $F4, CRC8_Default(data, $00));
+  AssertEquals('CRC-8/SMBUS of "123456789"', $F4, CRC8_Default(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_DVBS2SegueOPadrao;
@@ -124,19 +124,19 @@ var
   data: BYTES;
 begin
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/DVB-S2 de "123456789"', $BC, CRC8_DVBS2(data, $00));
+  AssertEquals('CRC-8/DVB-S2 of "123456789"', $BC, CRC8_DVBS2(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_MaximSegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/MAXIM-DOW: a implementacao devolve $A2 onde o catalogo diz $A1. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/MAXIM-DOW: the implementation returns $A2 where the catalogue says $A1. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/MAXIM-DOW de "123456789"', $A1, CRC8_Maxim(data, $00));
+  AssertEquals('CRC-8/MAXIM-DOW of "123456789"', $A1, CRC8_Maxim(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_ITUSegueOPadrao;
@@ -144,91 +144,91 @@ var
   data: BYTES;
 begin
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/I-432-1/ITU de "123456789"', $A1, CRC8_ITU(data, $00));
+  AssertEquals('CRC-8/I-432-1/ITU of "123456789"', $A1, CRC8_ITU(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_DARCSegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/DARC: a implementacao devolve $B2 onde o catalogo diz $15. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/DARC: the implementation returns $B2 where the catalogue says $15. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/DARC de "123456789"', $15, CRC8_DARC(data, $00));
+  AssertEquals('CRC-8/DARC of "123456789"', $15, CRC8_DARC(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_BLUETOOTHSegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/BLUETOOTH: a implementacao devolve $43 onde o catalogo diz $26. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/BLUETOOTH: the implementation returns $43 where the catalogue says $26. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/BLUETOOTH de "123456789"', $26, CRC8_BLUETOOTH(data, $00));
+  AssertEquals('CRC-8/BLUETOOTH of "123456789"', $26, CRC8_BLUETOOTH(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_CDMA2000SegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/CDMA2000: a implementacao devolve $FE onde o catalogo diz $DA. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/CDMA2000: the implementation returns $FE where the catalogue says $DA. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/CDMA2000 de "123456789"', $DA, CRC8_CDMA2000(data, $FF));
+  AssertEquals('CRC-8/CDMA2000 of "123456789"', $DA, CRC8_CDMA2000(data, $FF));
 end;
 
 procedure TTestCRC16Utils.CRC8_ROHCSegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/ROHC: a implementacao devolve $FB onde o catalogo diz $D0. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/ROHC: the implementation returns $FB where the catalogue says $D0. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/ROHC de "123456789"', $D0, CRC8_ROHC(data, $FF));
+  AssertEquals('CRC-8/ROHC of "123456789"', $D0, CRC8_ROHC(data, $FF));
 end;
 
 procedure TTestCRC16Utils.CRC8_WCDMASegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/WCDMA: a implementacao devolve $3C onde o catalogo diz $25. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/WCDMA: the implementation returns $3C where the catalogue says $25. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/WCDMA de "123456789"', $25, CRC8_WCDMA(data, $00));
+  AssertEquals('CRC-8/WCDMA of "123456789"', $25, CRC8_WCDMA(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_OPENSAFETYSegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/OPENSAFETY: a implementacao devolve $32 onde o catalogo diz $3E. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/OPENSAFETY: the implementation returns $32 where the catalogue says $3E. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/OPENSAFETY de "123456789"', $3E, CRC8_OPENSAFETY(data, $00));
+  AssertEquals('CRC-8/OPENSAFETY of "123456789"', $3E, CRC8_OPENSAFETY(data, $00));
 end;
 
 procedure TTestCRC16Utils.CRC8_AUTOSARSegueOPadrao;
 var
   data: BYTES;
 begin
-  Ignore('CRC-8/AUTOSAR: a implementacao devolve $A1 onde o catalogo diz $DF. ' +
-         'Rotina sem uso no projeto; remova este Ignore ao corrigir ou ao ' +
-         'confirmar a variante.');
+  Ignore('CRC-8/AUTOSAR: the implementation returns $A1 where the catalogue says $DF. ' +
+         'Routine unused in the project; remove this Ignore once it is fixed ' +
+         'or the variant is confirmed.');
 
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/AUTOSAR de "123456789"', $DF, CRC8_AUTOSAR(data, $FF));
+  AssertEquals('CRC-8/AUTOSAR of "123456789"', $DF, CRC8_AUTOSAR(data, $FF));
 end;
 
 procedure TTestCRC16Utils.CRC8_ICODESegueOPadrao;
@@ -236,7 +236,7 @@ var
   data: BYTES;
 begin
   data := VetorDeConferencia;
-  AssertEquals('CRC-8/I-CODE de "123456789"', $7E, CRC8_ICODE(data, $FD));
+  AssertEquals('CRC-8/I-CODE of "123456789"', $7E, CRC8_ICODE(data, $FD));
 end;
 
 initialization

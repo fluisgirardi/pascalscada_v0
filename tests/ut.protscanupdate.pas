@@ -167,9 +167,9 @@ begin
   pedido:=PedidoDeTeste;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('o pedido tem que ser atendido', EsperarEntregas(1, 3000));
-  AssertEquals('o driver foi chamado uma vez',   1,   FPedidos);
-  AssertEquals('e com o endereco pedido',        100, FTagRecVisto.Address);
+  AssertTrue  ('the request must be served', EsperarEntregas(1, 3000));
+  AssertEquals('the driver was called once',   1,   FPedidos);
+  AssertEquals('and with the address asked for',        100, FTagRecVisto.Address);
 end;
 
 procedure TTestScanUpdate.OValorDoDriverEhEntregueAoTag;
@@ -180,9 +180,9 @@ begin
   pedido:=PedidoDeTeste;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('entregue',        EsperarEntregas(1, 3000));
-  AssertEquals('um valor',        1,  Length(FUltimosValores));
-  AssertEquals('o valor do driver', 42, FUltimosValores[0], 0);
+  AssertTrue  ('delivered',        EsperarEntregas(1, 3000));
+  AssertEquals('one value',        1,  Length(FUltimosValores));
+  AssertEquals('the value from the driver', 42, FUltimosValores[0], 0);
 end;
 
 procedure TTestScanUpdate.OComandoEntregueEhDeVarredura;
@@ -192,8 +192,8 @@ begin
   pedido:=PedidoDeTeste;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('entregue', EsperarEntregas(1, 3000));
-  AssertEquals('comando',  Ord(tcScanRead), Ord(FUltimoComando));
+  AssertTrue  ('delivered', EsperarEntregas(1, 3000));
+  AssertEquals('command',  Ord(tcScanRead), Ord(FUltimoComando));
 end;
 
 procedure TTestScanUpdate.OResultadoDoDriverEhRepassado;
@@ -205,8 +205,8 @@ begin
   pedido:=PedidoDeTeste;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('entregue',  EsperarEntregas(1, 3000));
-  AssertEquals('resultado', Ord(ioTimeOut), Ord(FUltimoResultado));
+  AssertTrue  ('delivered',  EsperarEntregas(1, 3000));
+  AssertEquals('result', Ord(ioTimeOut), Ord(FUltimoResultado));
 end;
 
 procedure TTestScanUpdate.SemGanchoOResultadoEhErroDeDriver;
@@ -218,9 +218,9 @@ begin
   pedido:=PedidoDeTeste;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('entregue mesmo assim', EsperarEntregas(1, 3000));
-  AssertEquals('erro de driver',       Ord(ioDriverError), Ord(FUltimoResultado));
-  AssertEquals('e o driver nao foi chamado', 0, FPedidos);
+  AssertTrue  ('delivered all the same', EsperarEntregas(1, 3000));
+  AssertEquals('driver error',       Ord(ioDriverError), Ord(FUltimoResultado));
+  AssertEquals('and the driver was not called', 0, FPedidos);
 end;
 
 procedure TTestScanUpdate.OIdentificadorDoPedidoEhRepassado;
@@ -231,8 +231,8 @@ begin
   pedido:=PedidoDeTeste;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('entregue', EsperarEntregas(1, 3000));
-  AssertEquals('identificador', 77, FUltimoReqID);
+  AssertTrue  ('delivered', EsperarEntregas(1, 3000));
+  AssertEquals('identifier', 77, FUltimoReqID);
 end;
 
 procedure TTestScanUpdate.ODeslocamentoRealEhRepassado;
@@ -244,8 +244,8 @@ begin
   pedido.RealOffset:=5;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('entregue',      EsperarEntregas(1, 3000));
-  AssertEquals('deslocamento',  5, FUltimoDeslocamento);
+  AssertTrue  ('delivered',      EsperarEntregas(1, 3000));
+  AssertEquals('offset',  5, FUltimoDeslocamento);
 end;
 
 procedure TTestScanUpdate.VariosPedidosSaoTodosEntregues;
@@ -259,8 +259,8 @@ begin
   for c:=1 to 5 do
     FPonte.ScanRead(pedido);
 
-  AssertTrue  ('as cinco entregas', EsperarEntregas(5, 5000));
-  AssertEquals('o driver foi chamado cinco vezes', 5, FPedidos);
+  AssertTrue  ('the five deliveries', EsperarEntregas(5, 5000));
+  AssertEquals('the driver was called five times', 5, FPedidos);
 end;
 
 initialization

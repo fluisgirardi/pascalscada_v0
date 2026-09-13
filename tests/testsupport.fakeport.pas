@@ -231,7 +231,7 @@ end;
 function TFakeCommPort.WrittenFrame(aIndex:LongInt):BYTES;
 begin
   if (aIndex<0) or (aIndex>High(FWritten)) then
-    raise Exception.CreateFmt('TFakeCommPort: escrita %d nao existe, houve %d escrita(s)',
+    raise Exception.CreateFmt('TFakeCommPort: write %d does not exist, there were %d write(s)',
                               [aIndex, Length(FWritten)]);
   Result:=FWritten[aIndex];
 end;

@@ -150,19 +150,19 @@ begin
   {$IFDEF UNIX}
   FMestre:=posix_openpt(O_RDWR or O_NOCTTY);
   if FMestre<0 then
-    raise Exception.Create('serial de mentira: nao consegui abrir o pseudo-terminal');
+    raise Exception.Create('fake serial: could not open the pseudo terminal');
 
   if (grantpt(FMestre)<>0) or (unlockpt(FMestre)<>0) then begin
     FpClose(FMestre);
     FMestre:=-1;
-    raise Exception.Create('serial de mentira: nao consegui liberar o pseudo-terminal');
+    raise Exception.Create('fake serial: could not unlock the pseudo terminal');
   end;
 
   nome:=ptsname(FMestre);
   if nome=nil then begin
     FpClose(FMestre);
     FMestre:=-1;
-    raise Exception.Create('serial de mentira: nao descobri o nome do lado escravo');
+    raise Exception.Create('fake serial: could not find the name of the slave side');
   end;
   FCaminhoEscravo:=StrPas(nome);
 

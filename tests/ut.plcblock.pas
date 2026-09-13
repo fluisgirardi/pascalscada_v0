@@ -147,24 +147,24 @@ end;
 
 procedure TTestPLCBlock.TamanhoMudaAQuantidadeDeValores;
 begin
-  AssertEquals('tamanho inicial', 4, FBloco.Size);
+  AssertEquals('initial size', 4, FBloco.Size);
 
   FBloco.Size:=7;
-  AssertEquals('tamanho novo',    7, FBloco.Size);
-  AssertEquals('valores',         7, Length(FBloco.ValuesRaw));
+  AssertEquals('new size',    7, FBloco.Size);
+  AssertEquals('values',         7, Length(FBloco.ValuesRaw));
 end;
 
 procedure TTestPLCBlock.TamanhoZeroEhIgnorado;
 begin
   //um bloco de tamanho zero nao le nada: o tamanho anterior fica de pe
   FBloco.Size:=0;
-  AssertEquals('tamanho continua', 4, FBloco.Size);
+  AssertEquals('the size is still', 4, FBloco.Size);
 end;
 
 procedure TTestPLCBlock.ValoresNovosComecamEmZero;
 begin
   FBloco.Size:=6;
-  AssertEquals('valor novo', 0, FBloco.ValueRaw[5], 0);
+  AssertEquals('new value', 0, FBloco.ValueRaw[5], 0);
 end;
 
 procedure TTestPLCBlock.IndiceNegativoEhRecusado;
@@ -178,7 +178,7 @@ begin
   except
     on E:Exception do recusou:=true;
   end;
-  AssertTrue('indice negativo', recusou);
+  AssertTrue('negative index', recusou);
 end;
 
 procedure TTestPLCBlock.IndiceAlemDoFimEhRecusado;
@@ -192,17 +192,17 @@ begin
   except
     on E:Exception do recusou:=true;
   end;
-  AssertTrue('indice alem do fim', recusou);
+  AssertTrue('index past the end', recusou);
 end;
 
 procedure TTestPLCBlock.VarreduraGuardaOsValores;
 begin
   FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
 
-  AssertEquals('primeiro', 10, FBloco.ValueRaw[0], 0);
-  AssertEquals('segundo',  20, FBloco.ValueRaw[1], 0);
-  AssertEquals('terceiro', 30, FBloco.ValueRaw[2], 0);
-  AssertEquals('quarto',   40, FBloco.ValueRaw[3], 0);
+  AssertEquals('first', 10, FBloco.ValueRaw[0], 0);
+  AssertEquals('second',  20, FBloco.ValueRaw[1], 0);
+  AssertEquals('third', 30, FBloco.ValueRaw[2], 0);
+  AssertEquals('fourth',   40, FBloco.ValueRaw[3], 0);
 end;
 
 procedure TTestPLCBlock.VarreduraComDeslocamentoGuardaNoLugarCerto;
@@ -210,9 +210,9 @@ begin
   //um driver pode entregar so' um pedaco do bloco, dizendo de onde ele comeca
   FBloco.ChegouDaVarredura(Valores([77, 88]), 2);
 
-  AssertEquals('nao mexeu no comeco', 0,  FBloco.ValueRaw[0], 0);
-  AssertEquals('terceiro',            77, FBloco.ValueRaw[2], 0);
-  AssertEquals('quarto',              88, FBloco.ValueRaw[3], 0);
+  AssertEquals('did not touch the beginning', 0,  FBloco.ValueRaw[0], 0);
+  AssertEquals('third',            77, FBloco.ValueRaw[2], 0);
+  AssertEquals('fourth',              88, FBloco.ValueRaw[3], 0);
 end;
 
 procedure TTestPLCBlock.MaisValoresDoQueCabeNaoTransborda;
@@ -221,8 +221,8 @@ begin
   //nao pode escrever fora do vetor
   FBloco.ChegouDaVarredura(Valores([1, 2, 3, 4, 5, 6]), 0);
 
-  AssertEquals('o que coube', 4, FBloco.ValueRaw[3], 0);
-  AssertEquals('tamanho intacto', 4, FBloco.Size);
+  AssertEquals('what fitted', 4, FBloco.ValueRaw[3], 0);
+  AssertEquals('size untouched', 4, FBloco.Size);
 end;
 
 procedure TTestPLCBlock.FalhaNaLeituraNaoMudaOsValores;
@@ -230,7 +230,7 @@ begin
   FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
   FBloco.ChegouDaVarredura(Valores([99, 99, 99, 99]), 0, ioTimeOut);
 
-  AssertEquals('valor antigo fica', 10, FBloco.ValueRaw[0], 0);
+  AssertEquals('the old value stays', 10, FBloco.ValueRaw[0], 0);
 end;
 
 procedure TTestPLCBlock.MudancaDeValorAvisaQuemEscuta;
@@ -238,7 +238,7 @@ begin
   FBloco.AddTagChangeHandler(@ContarAviso);
   FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
 
-  AssertTrue('mudanca tem que avisar', FAvisos>0);
+  AssertTrue('a change must notify', FAvisos>0);
 end;
 
 procedure TTestPLCBlock.LeituraComOsMesmosValoresNaoAvisa;
@@ -248,7 +248,7 @@ begin
   FAvisos:=0;
 
   FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
-  AssertEquals('nada mudou, nada a avisar', 0, FAvisos);
+  AssertEquals('nothing changed, nothing to notify', 0, FAvisos);
 end;
 
 { TTestPLCBlockElement }
@@ -257,7 +257,7 @@ procedure TTestPLCBlock.VarreduraDeLeituraSemDriverNaoTemIdentificador;
 begin
   //sem driver nao ha pedido a numerar: menos um e' o "nao fiz nada" que os
   //tags conferem
-  AssertEquals('sem driver', -1, FBloco.ScanRead);
+  AssertEquals('no driver', -1, FBloco.ScanRead);
 end;
 
 procedure TTestPLCBlock.LeituraSemDriverNaoFazNada;
@@ -267,7 +267,7 @@ begin
 
   FBloco.Read;
 
-  AssertEquals('os valores ficam como estavam', 10, FBloco.ValueRaw[0], 0);
+  AssertEquals('the values stay as they were', 10, FBloco.ValueRaw[0], 0);
 end;
 
 procedure TTestPLCBlock.EscritaSemDriverVoltaPeloCallback;
@@ -276,8 +276,8 @@ begin
   //bloco guarda o que foi escrito
   FBloco.Write(Valores([7, 8]), 2, 0);
 
-  AssertEquals('primeiro', 7, FBloco.ValueRaw[0], 0);
-  AssertEquals('segundo',  8, FBloco.ValueRaw[1], 0);
+  AssertEquals('first', 7, FBloco.ValueRaw[0], 0);
+  AssertEquals('second',  8, FBloco.ValueRaw[1], 0);
 end;
 
 procedure TTestPLCBlock.EscritaDeZeroValoresNaoFazNada;
@@ -285,9 +285,9 @@ begin
   FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
 
   FBloco.Write(Valores([99]), 0, 0);
-  AssertEquals('nada foi escrito', 10, FBloco.ValueRaw[0], 0);
+  AssertEquals('nothing was written', 10, FBloco.ValueRaw[0], 0);
 
-  AssertEquals('e a varredura tambem nao', -1, FBloco.ScanWrite(Valores([99]), 0, 0));
+  AssertEquals('and neither was the scan', -1, FBloco.ScanWrite(Valores([99]), 0, 0));
 end;
 
 procedure TTestPLCBlockElement.SetUp;
@@ -317,7 +317,7 @@ begin
   FElemento.Index   :=2;
 
   FBloco.ValueRaw[2]:=55;
-  AssertEquals('o elemento le do bloco', 55, FElemento.Value, 0);
+  AssertEquals('the element reads from the block', 55, FElemento.Value, 0);
 end;
 
 procedure TTestPLCBlockElement.ElementoAcompanhaAMudancaDoBloco;
@@ -329,8 +329,8 @@ begin
 
   FBloco.ChegouDaVarredura(Valores([0, 42, 0, 0]), 0);
 
-  AssertEquals('valor novo',        42, FElemento.Value, 0);
-  AssertTrue  ('e avisou a mudanca', FAvisos>0);
+  AssertEquals('new value',        42, FElemento.Value, 0);
+  AssertTrue  ('and reported the change', FAvisos>0);
 end;
 
 procedure TTestPLCBlockElement.EscreverNoElementoMudaOBloco;
@@ -339,7 +339,7 @@ begin
   FElemento.Index   :=3;
 
   FElemento.Value:=17;
-  AssertEquals('o bloco recebeu', 17, FBloco.ValueRaw[3], 0);
+  AssertEquals('the block got', 17, FBloco.ValueRaw[3], 0);
 end;
 
 procedure TTestPLCBlockElement.IndiceAlemDoBlocoEhRecusado;
@@ -354,7 +354,7 @@ begin
   except
     on E:Exception do recusou:=true;
   end;
-  AssertTrue('indice alem do bloco', recusou);
+  AssertTrue('index past the block', recusou);
 end;
 
 procedure TTestPLCBlockElement.IndiceEscolhidoAntesDoBlocoEhConferidoDepois;
@@ -364,7 +364,7 @@ begin
   FElemento.Index   :=9;
   FElemento.PLCBlock:=FBloco;
 
-  AssertTrue('o indice tem que caber no bloco', FElemento.Index<FBloco.Size);
+  AssertTrue('the index must fit in the block', FElemento.Index<FBloco.Size);
 end;
 
 procedure TTestPLCBlockElement.BlocoDestruidoDesligaOVinculo;
@@ -378,13 +378,13 @@ begin
 
   FreeAndNil(bloco);
 
-  AssertTrue('o vinculo tem que ter sido desfeito', FElemento.PLCBlock=nil);
+  AssertTrue('the link must have been broken', FElemento.PLCBlock=nil);
 end;
 
 procedure TTestPLCBlockElement.SemBlocoGuardaOValorLocalmente;
 begin
   FElemento.Value:=8;
-  AssertEquals('valor guardado', 8, FElemento.Value, 0);
+  AssertEquals('value kept', 8, FElemento.Value, 0);
 end;
 
 initialization

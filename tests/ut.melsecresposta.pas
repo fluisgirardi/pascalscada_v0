@@ -239,8 +239,8 @@ begin
 
   valores:=FDrv.LerDoGerenciador(TagRecFor(1, $09, 0, 100, 2), res);
 
-  AssertEquals('leitura sem falha', Ord(ioOk), Ord(res));
-  AssertEquals('dois registradores', 2, Length(valores));
+  AssertEquals('read with no failure', Ord(ioOk), Ord(res));
+  AssertEquals('two registers', 2, Length(valores));
   AssertEquals('D100', $0A0B, valores[0], 0);
   AssertEquals('D101', $0C0D, valores[1], 0);
 end;
@@ -257,7 +257,7 @@ begin
                    Resposta(BytesOf('34 12')), valores);
 
   valores:=FDrv.LerDoGerenciador(TagRecFor(1, $09, 0, 300, 1), res);
-  AssertEquals('palavra montada ao contrario', $1234, valores[0], 0);
+  AssertEquals('word assembled the other way round', $1234, valores[0], 0);
 end;
 
 procedure TTestMelsecResposta.EnderecoAvancaACadaRegistrador;
@@ -305,7 +305,7 @@ begin
   pkg:=IOPacketFor(PedidoDeLeitura(0, $A8, 100, 2), Resposta(BytesOf('00 00 00 00')));
   pkg.WriteIOResult:=iorTimeOut;
 
-  AssertEquals('timeout na escrita', Ord(ioTimeOut),
+  AssertEquals('timeout on the write', Ord(ioTimeOut),
                Ord(FDrv.DecodificarPacote(pkg, valores)));
 end;
 
@@ -318,7 +318,7 @@ begin
   resp:=Resposta(BytesOf('00 00 00 00'));
   resp[6]:=$07;
 
-  AssertEquals('canal trocado', Ord(ioCommError),
+  AssertEquals('channel swapped', Ord(ioCommError),
                Ord(FDrv.Decodificar(PedidoDeLeitura(0, $A8, 100, 2), resp, valores)));
 end;
 
@@ -334,7 +334,7 @@ begin
   pkg.ReadIOResult:=iorTimeOut;
   pkg.Received:=0;
 
-  AssertEquals('timeout na leitura', Ord(ioTimeOut),
+  AssertEquals('timeout on the read', Ord(ioTimeOut),
                Ord(FDrv.DecodificarPacote(pkg, valores)));
 end;
 
@@ -344,7 +344,7 @@ var
 begin
   //codigo de termino $0055: o CLP recusou o pedido e nao ha dado nenhum
   //atras dele
-  AssertTrue('erro do CLP nao pode virar ioOk',
+  AssertTrue('a PLC error cannot turn into ioOk',
              FDrv.Decodificar(PedidoDeLeitura(0, $A8, 100, 2),
                               Resposta(BytesOf(''), $0055), valores) <> ioOk);
 end;
@@ -359,7 +359,7 @@ begin
   FDrv.Decodificar(PedidoDeLeitura(0, $A8, 500, 3),
                    Resposta(BytesOf('01 00 02 00 03 00')), valores);
 
-  AssertEquals('tres pontos pedidos, tres valores', 3, Length(valores));
+  AssertEquals('three points asked for, three values', 3, Length(valores));
 end;
 
 procedure TTestMelsecResposta.RespostaMenorQueOCabecalhoEhRecusada;
@@ -374,7 +374,7 @@ begin
     SetLength(resp, n);
     if n>0 then FillChar(resp[0], n, 0);
 
-    AssertEquals('resposta de '+IntToStr(n)+' bytes', Ord(ioCommError),
+    AssertEquals('answer of '+IntToStr(n)+' bytes', Ord(ioCommError),
                  Ord(FDrv.Decodificar(PedidoDeLeitura(0, $A8, 100, 2), resp, valores)));
   end;
 end;
@@ -388,7 +388,7 @@ begin
   //pedidos precisam de quatro bytes atras dele: 11 a 14 sao respostas pela
   //metade, e metade nao serve
   for n:=0 to 3 do
-    AssertEquals('cabecalho mais '+IntToStr(n)+' bytes de dado', Ord(ioCommError),
+    AssertEquals('header plus '+IntToStr(n)+' bytes de dado', Ord(ioCommError),
                  Ord(FDrv.Decodificar(PedidoDeLeitura(0, $A8, 100, 2),
                                       Resposta(Copy(BytesOf('0B 0A 0D 0C'), 0, n)), valores)));
 end;
@@ -403,7 +403,7 @@ begin
   //pedido que so' vai ate' o 21
   pedido:=Copy(PedidoDeLeitura(0, $A8, 100, 2), 0, 12);
 
-  AssertEquals('pedido incompleto', Ord(ioDriverError),
+  AssertEquals('incomplete request', Ord(ioDriverError),
                Ord(FDrv.Decodificar(pedido, Resposta(BytesOf('0B 0A 0D 0C')), valores)));
 end;
 

@@ -98,7 +98,7 @@ var
   i, consumido:Integer;
 begin
   for i:=0 to High(VALORES) do
-    AssertEquals('ida e volta de '+IntToStr(VALORES[i]),
+    AssertEquals('round trip of '+IntToStr(VALORES[i]),
                  Int64(VALORES[i]),
                  Int64(DecodeUInt32VLQ(EncodeUInt32VLQ(VALORES[i]), 0, consumido)));
 end;
@@ -110,10 +110,10 @@ begin
   //o decodificador precisa dizer onde termina o valor: e' assim que quem
   //chama anda pelo resto da mensagem.
   DecodeUInt32VLQ(BytesOf('82 2C FF FF'), 0, consumido);
-  AssertEquals('bytes consumidos', 2, consumido);
+  AssertEquals('bytes consumed', 2, consumido);
 
   DecodeUInt32VLQ(BytesOf('7F FF FF'), 0, consumido);
-  AssertEquals('valor de um byte so', 1, consumido);
+  AssertEquals('value in a single byte', 1, consumido);
 end;
 
 procedure TTestS7PlusVLQ.DecodeSemDadoSuficienteReclama;
@@ -129,7 +129,7 @@ begin
     on E:Exception do
       reclamou:=true;
   end;
-  AssertTrue('VLQ truncado deve levantar excecao', reclamou);
+  AssertTrue('a truncated VLQ must raise an exception', reclamou);
 end;
 
 procedure TTestS7PlusVLQ.Int32VaiEVoltaIncluindoNegativos;
@@ -139,7 +139,7 @@ var
   i, consumido:Integer;
 begin
   for i:=0 to High(VALORES) do
-    AssertEquals('ida e volta de '+IntToStr(VALORES[i]),
+    AssertEquals('round trip of '+IntToStr(VALORES[i]),
                  Int64(VALORES[i]),
                  Int64(DecodeInt32VLQ(EncodeInt32VLQ(VALORES[i]), 0, consumido)));
 end;
@@ -151,7 +151,7 @@ var
   i, consumido:Integer;
 begin
   for i:=0 to High(VALORES) do
-    AssertEquals('ida e volta de '+IntToStr(VALORES[i]),
+    AssertEquals('round trip of '+IntToStr(VALORES[i]),
                  VALORES[i],
                  DecodeUInt64VLQ(EncodeUInt64VLQ(VALORES[i]), 0, consumido));
 end;
@@ -163,7 +163,7 @@ var
   i, consumido:Integer;
 begin
   for i:=0 to High(VALORES) do
-    AssertEquals('ida e volta de '+IntToStr(VALORES[i]),
+    AssertEquals('round trip of '+IntToStr(VALORES[i]),
                  VALORES[i],
                  DecodeInt64VLQ(EncodeInt64VLQ(VALORES[i]), 0, consumido));
 end;

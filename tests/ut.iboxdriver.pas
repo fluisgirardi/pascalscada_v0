@@ -116,9 +116,9 @@ var
   valores:TArrayOfDouble;
 begin
   //endereco de estacao cabe num byte
-  AssertEquals('estacao 300', Ord(ioIllegalStationAddress),
+  AssertEquals('station 300', Ord(ioIllegalStationAddress),
                Ord(FDrv.Ler(PedidoPara(300, 96), valores)));
-  AssertEquals('nada foi enviado', 0, FPorta.WriteCount);
+  AssertEquals('nothing was sent', 0, FPorta.WriteCount);
 end;
 
 procedure TTestIBoxDriver.EnderecoNaoSuportadoEhRecusado;
@@ -126,9 +126,9 @@ var
   valores:TArrayOfDouble;
 begin
   //so os PIDs conhecidos sao aceitos; o resto nem chega na porta
-  AssertEquals('endereco 5', Ord(ioIllegalRegAddress),
+  AssertEquals('address 5', Ord(ioIllegalRegAddress),
                Ord(FDrv.Ler(PedidoPara(1, 5), valores)));
-  AssertEquals('nada foi enviado', 0, FPorta.WriteCount);
+  AssertEquals('nothing was sent', 0, FPorta.WriteCount);
 end;
 
 procedure TTestIBoxDriver.SubelementoForaDaFaixaEhRecusado;
@@ -140,7 +140,7 @@ begin
   pedido:=PedidoPara(1, 200);
   pedido.SubElement:=20;
 
-  AssertEquals('subelemento 20', Ord(ioIllegalRegAddress),
+  AssertEquals('subelement 20', Ord(ioIllegalRegAddress),
                Ord(FDrv.Ler(pedido, valores)));
 end;
 
@@ -151,7 +151,7 @@ var
 begin
   semPorta:=TIBoxProbe.Create(nil);
   try
-    AssertEquals('driver sem porta', Ord(ioNullDriver),
+    AssertEquals('driver with no port', Ord(ioNullDriver),
                  Ord(semPorta.Ler(PedidoPara(1, 96), valores)));
   finally
     semPorta.Free;
@@ -166,8 +166,8 @@ begin
   FPorta.QueueResponse(BytesOf('01 60 64 3B'));
   FDrv.Ler(PedidoPara(1, 96), valores);
 
-  AssertEquals('uma escrita', 1, FPorta.WriteCount);
-  AssertBytesEqual('pedido do PID 96', BytesOf('01 00 60 9F'), FPorta.WrittenFrame(0));
+  AssertEquals('one write', 1, FPorta.WriteCount);
+  AssertBytesEqual('request for PID 96', BytesOf('01 00 60 9F'), FPorta.WrittenFrame(0));
 end;
 
 procedure TTestIBoxDriver.SomaDeVerificacaoEhOComplementoDeDois;
@@ -178,7 +178,7 @@ begin
   //$9E para a 2
   FPorta.QueueResponse(BytesOf('02 60 64 3A'));
   FDrv.Ler(PedidoPara(2, 96), valores);
-  AssertBytesEqual('estacao 2', BytesOf('02 00 60 9E'), FPorta.WrittenFrame(0));
+  AssertBytesEqual('station 2', BytesOf('02 00 60 9E'), FPorta.WrittenFrame(0));
 
   FPorta.Reset;
   FPorta.QueueResponse(BytesOf('01 A8 00 57'));
@@ -193,8 +193,8 @@ begin
   //o byte de dado vale meio por cento por unidade: $64 = 100 = 50%
   FPorta.QueueResponse(BytesOf('01 60 64 3B'));
 
-  AssertEquals('leitura aceita', Ord(ioOk), Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
-  AssertEquals('nivel em porcento', 50, valores[0], 0);
+  AssertEquals('read accepted', Ord(ioOk), Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
+  AssertEquals('level in percent', 50, valores[0], 0);
 end;
 
 procedure TTestIBoxDriver.RespostaComSomaErradaEhRecusada;
@@ -204,7 +204,7 @@ begin
   //mesma resposta, com o ultimo byte trocado
   FPorta.QueueResponse(BytesOf('01 60 64 3C'));
 
-  AssertEquals('soma invalida', Ord(ioCommError),
+  AssertEquals('invalid checksum', Ord(ioCommError),
                Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
 end;
 
@@ -215,7 +215,7 @@ begin
   //perguntamos a estacao 1 e respondeu a 2, com soma valida
   FPorta.QueueResponse(BytesOf('02 60 64 3A'));
 
-  AssertEquals('estacao errada', Ord(ioCommError),
+  AssertEquals('wrong station', Ord(ioCommError),
                Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
 end;
 

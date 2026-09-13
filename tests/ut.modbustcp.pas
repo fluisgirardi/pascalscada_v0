@@ -87,7 +87,7 @@ var
   len:LongInt;
 begin
   //MBAP: transacao 0000, protocolo 0000, tamanho 0006, unidade 01. Sem CRC.
-  AssertBytesEqual('pedido de leitura 03',
+  AssertBytesEqual('read request 03',
                    BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                    FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len));
 end;
@@ -98,7 +98,7 @@ var
 begin
   //6 de MBAP + unidade + funcao + contagem + 2 words = 13
   FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len);
-  AssertEquals('tamanho previsto da resposta', 13, len);
+  AssertEquals('expected response size', 13, len);
 end;
 
 procedure TTestModBusTCP.EscritaDeMultiplosRegistradoresMontaOFrame;
@@ -109,7 +109,7 @@ begin
   SetLength(vals,2);
   vals[0]:=10;
   vals[1]:=20;
-  AssertBytesEqual('escrita 16',
+  AssertBytesEqual('write 16',
                    BytesOf('00 00 00 00 00 0B 01 10 00 00 00 02 04 00 0A 00 14'),
                    FDrv.Encode(TagRecFor(1, 0, $10, 0, 2), vals, len));
 end;
@@ -127,7 +127,7 @@ begin
   frame:=FDrv.Encode(TagRecFor(1, 0, $10, 0, 2), vals, len);
 
   declarado:=(frame[4] shl 8) + frame[5];
-  AssertEquals('campo de tamanho x bytes apos o campo',
+  AssertEquals('length field vs bytes after the field',
                Length(frame)-6, declarado);
 end;
 
@@ -138,10 +138,10 @@ var
 begin
   res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                                BytesOf('00 00 00 00 00 07 01 03 04 00 0A 00 14')), vals);
-  AssertEquals('resultado', Ord(ioOk), Ord(res));
-  AssertEquals('quantidade de valores', 2, Length(vals));
-  AssertEquals('primeiro registro', 10, vals[0], 0);
-  AssertEquals('segundo registro',  20, vals[1], 0);
+  AssertEquals('result', Ord(ioOk), Ord(res));
+  AssertEquals('number of values', 2, Length(vals));
+  AssertEquals('first register', 10, vals[0], 0);
+  AssertEquals('second register',  20, vals[1], 0);
 end;
 
 procedure TTestModBusTCP.RespostaComExcecaoViraOErroCorrespondente;
@@ -151,7 +151,7 @@ var
 begin
   res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                                BytesOf('00 00 00 00 00 03 01 83 02')), vals);
-  AssertEquals('excecao 02', Ord(ioIllegalRegAddress), Ord(res));
+  AssertEquals('exception 02', Ord(ioIllegalRegAddress), Ord(res));
 end;
 
 procedure TTestModBusTCP.RespostaDeOutraUnidadeViraErroDeComunicacao;
@@ -162,7 +162,7 @@ begin
   //pedimos a unidade 1 e respondeu a unidade 2
   res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                                BytesOf('00 00 00 00 00 07 02 03 04 00 0A 00 14')), vals);
-  AssertEquals('unidade errada', Ord(ioCommError), Ord(res));
+  AssertEquals('wrong unit', Ord(ioCommError), Ord(res));
 end;
 
 procedure TTestModBusTCP.TimeoutNaLeituraViraTimeout;
@@ -197,7 +197,7 @@ begin
   pkg.Received:=9;
 
   res:=FDrv.Decode(pkg, vals);
-  AssertEquals('leitura incompleta', Ord(ioTimeOut), Ord(res));
+  AssertEquals('incomplete read', Ord(ioTimeOut), Ord(res));
 end;
 
 procedure TTestModBusTCP.RespostaMenorQueOCabecalhoEhRecusada;
@@ -213,7 +213,7 @@ begin
     SetLength(resp, n);
     if n>0 then FillChar(resp[0], n, 0);
 
-    AssertEquals('resposta de '+IntToStr(n)+' bytes', Ord(ioCommError),
+    AssertEquals('answer of '+IntToStr(n)+' bytes', Ord(ioCommError),
                  Ord(FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                                              resp), vals)));
   end;
@@ -228,7 +228,7 @@ begin
   //driver decodificava assim mesmo e o registrador que faltava virava zero
   res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                                BytesOf('00 00 00 00 00 05 01 03 02 00 0A')), vals);
-  AssertEquals('contagem menor que a pedida', Ord(ioCommError), Ord(res));
+  AssertEquals('count smaller than the one asked for', Ord(ioCommError), Ord(res));
 end;
 
 procedure TTestModBusTCP.QuadroQueNaoTrazOsBytesQueDeclaraEhRecusado;
@@ -239,7 +239,7 @@ begin
   //a contagem esta certa, mas o quadro acaba antes: declara 4 bytes e traz 2
   res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00 00 00 06 01 03 00 00 00 02'),
                                BytesOf('00 00 00 00 00 07 01 03 04 00 0A')), vals);
-  AssertEquals('quadro truncado', Ord(ioCommError), Ord(res));
+  AssertEquals('truncated frame', Ord(ioCommError), Ord(res));
 end;
 
 procedure TTestModBusTCP.PedidoMenorQueOMinimoNaoEhDecodificado;
@@ -251,7 +251,7 @@ begin
   //monta tem 8 bytes
   res:=FDrv.Decode(IOPacketFor(BytesOf('00 00 00'),
                                BytesOf('00 00 00 00 00 07 01 03 04 00 0A 00 14')), vals);
-  AssertEquals('pedido incompleto', Ord(ioDriverError), Ord(res));
+  AssertEquals('incomplete request', Ord(ioDriverError), Ord(res));
 end;
 
 initialization
