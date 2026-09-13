@@ -168,7 +168,13 @@ var
   notify:Boolean;
   data, converted_value:TArrayOfDouble;
 begin
-  Result:=0;
+  //sem estrutura vinculada o valor e' o que esta' guardado aqui, como faz o
+  //TPLCBlockElement. Comecando em zero, o item ficava preso em zero enquanto
+  //nao houvesse estrutura - em tempo de projeto, ou depois dela ser removida.
+  //with no struct attached the value is whatever is kept here, the way
+  //TPLCBlockElement does it. Starting at zero left the item stuck at zero for
+  //as long as there was no struct - at design time, or after it was removed.
+  Result:=PValueRaw;
   if Assigned(PBlock) then begin
     if FCurrentWordSize>=8 then begin
       SetLength(data,1);
@@ -230,8 +236,16 @@ begin
     SetLength(blkvalues,0);
     SetLength(values,0);
   end else
-    if PValueRaw<>Value then begin
-      PValueRaw:=Value;
+    //usava a propriedade Value no lugar do parametro: Value le de volta o
+    //proprio PValueRaw, entao a comparacao era sempre falsa, o campo era
+    //atribuido a ele mesmo e o valor que chegou se perdia - junto com o aviso
+    //de mudanca. Mesmo deslize que havia no TPLCBlockElement.
+    //it used the Value property instead of the parameter: Value reads PValueRaw
+    //back, so the test was always false, the field was assigned to itself and
+    //the incoming value was lost - along with the change notification. The same
+    //slip TPLCBlockElement had.
+    if PValueRaw<>aValue then begin
+      PValueRaw:=aValue;
       NotifyChange;
     end;
 end;
