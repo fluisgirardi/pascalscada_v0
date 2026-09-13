@@ -41,7 +41,8 @@ uses
   ut.tag,
   ut.valueprocessor,
   ut.crossthreads,
-  ut.serialport;
+  ut.serialport,
+  ut.plcblock;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
