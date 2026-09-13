@@ -1,0 +1,17 @@
+# Exemplos que nao devem ser compilados em determinados sistemas.
+# Examples that must not be built on a given system.
+#
+#   <sistema>  <caminho do .lpi>  <motivo>
+#
+# <sistema> e' o TargetOS passado ao varredor (linux, win32, win64, freebsd)
+# ou "todos". Pacotes de terceiros que faltam NAO entram aqui: o varredor ja
+# pula sozinho quem acusa "Broken dependency".
+#
+# <sistema> is the TargetOS given to the sweep (linux, win32, win64, freebsd)
+# or "todos" for every one. Missing third party packages do NOT belong here:
+# the sweep already skips whatever reports "Broken dependency" on its own.
+
+linux    examples/laz_user_management_with_WinCC/usermanagement_wincc.lpi  fala com o WinCC da Siemens, que so existe em Windows
+freebsd  examples/laz_user_management_with_WinCC/usermanagement_wincc.lpi  fala com o WinCC da Siemens, que so existe em Windows
+linux    examples/laz_security_webserver_WinCC/webserverWCC.lpi            fala com o WinCC da Siemens, que so existe em Windows
+freebsd  examples/laz_security_webserver_WinCC/webserverWCC.lpi            fala com o WinCC da Siemens, que so existe em Windows
