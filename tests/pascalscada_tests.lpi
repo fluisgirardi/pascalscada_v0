@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="35">
+    <Units Count="36">
       <Unit0>
         <Filename Value="pascalscada_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -171,6 +171,10 @@
         <Filename Value="ut.serialport.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit34>
+      <Unit35>
+        <Filename Value="testsupport.fakeserial.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit35>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

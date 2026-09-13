@@ -29,7 +29,8 @@ unit ut.serialport;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, CommPort, serialport;
+  Classes, SysUtils, fpcunit, testregistry, CommPort, commtypes, serialport,
+  testsupport.bytes, testsupport.fakeserial;
 
 type
 
@@ -86,6 +87,38 @@ type
     procedure PortaSemNomeEhMarcadaComoIncompleta;
     procedure NomeSemNumeroEhMarcadoComoIncompleto;
     procedure IdentificadorEhEstavelParaAMesmaPorta;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  A mesma porta, agora aberta de verdade sobre um par de pseudo-terminais. E'
+  a unica forma de exercitar o que so' existe quando ha' um dispositivo do
+  outro lado: abrir, escrever, ler e fechar.
+  }
+  {$ELSE}
+  {:
+  The same port, now really opened over a pseudo terminal pair. It is the only
+  way to exercise what only exists when there is a device on the other side:
+  opening, writing, reading and closing.
+  }
+  {$ENDIF}
+
+  { TTestSerialPortComDispositivo }
+
+  TTestSerialPortComDispositivo = class(TTestCase)
+  private
+    FDispositivo:TSerialDeMentira;
+    FPorta:TSerialProbe;
+    procedure ApontarAPortaParaODispositivo;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure AbrirAPortaSobreODispositivo;
+    procedure OQueODriverEscreveChegaNoDispositivo;
+    procedure OQueODispositivoMandaEhLidoPeloDriver;
+    procedure SemRespostaOResultadoEhTimeout;
+    procedure FecharAPortaDeixaDeEstarAtiva;
   end;
 
 implementation
@@ -306,7 +339,102 @@ begin
   AssertTrue('mesma configuracao', primeiro=IdDe('ttyUSB0'));
 end;
 
+{ TTestSerialPortComDispositivo }
+
+const
+  DRIVER_DE_TESTE = 91;
+
+procedure TTestSerialPortComDispositivo.SetUp;
+begin
+  FDispositivo:=TSerialDeMentira.Create;
+
+  FPorta:=TSerialProbe.Create(nil);
+  FPorta.AcceptAnyPortName:=true;
+  FPorta.Timeout:=300;
+end;
+
+procedure TTestSerialPortComDispositivo.TearDown;
+begin
+  FreeAndNil(FPorta);
+  FreeAndNil(FDispositivo);
+end;
+
+procedure TTestSerialPortComDispositivo.ApontarAPortaParaODispositivo;
+begin
+  //o lado escravo do par aparece em /dev/pts: e' para isso que DevDir existe
+  FPorta.DevDir :=FDispositivo.Diretorio;
+  FPorta.COMPort:=FDispositivo.NomeDoDispositivo;
+end;
+
+procedure TTestSerialPortComDispositivo.AbrirAPortaSobreODispositivo;
+begin
+  ApontarAPortaParaODispositivo;
+  FPorta.Active:=true;
+
+  AssertTrue('a porta tem que abrir', FPorta.ReallyActive);
+end;
+
+procedure TTestSerialPortComDispositivo.OQueODriverEscreveChegaNoDispositivo;
+var
+  pkg:TIOPacket;
+begin
+  ApontarAPortaParaODispositivo;
+  FPorta.Active:=true;
+  AssertTrue('abriu', FPorta.ReallyActive);
+
+  FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertBytesEqual('o que saiu pelo fio', BytesOf('01 02 03 04'),
+                   FDispositivo.LerOQueFoiEscrito(4, 1000));
+end;
+
+procedure TTestSerialPortComDispositivo.OQueODispositivoMandaEhLidoPeloDriver;
+var
+  pkg:TIOPacket;
+begin
+  ApontarAPortaParaODispositivo;
+  FPorta.Active:=true;
+  AssertTrue('abriu', FPorta.ReallyActive);
+
+  FDispositivo.Responder(BytesOf('AA BB CC'));
+
+  FPorta.IOCommandSync(iocRead, 0, nil, 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('leitura ok',   Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertEquals('tres bytes',   3, pkg.Received);
+  AssertBytesEqual('o que veio', BytesOf('AA BB CC'), pkg.BufferToRead);
+end;
+
+procedure TTestSerialPortComDispositivo.SemRespostaOResultadoEhTimeout;
+var
+  pkg:TIOPacket;
+begin
+  //o equipamento nao mandou nada: o driver tem que desistir no prazo
+  ApontarAPortaParaODispositivo;
+  FPorta.Active:=true;
+  AssertTrue('abriu', FPorta.ReallyActive);
+
+  FPorta.IOCommandSync(iocRead, 0, nil, 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('sem resposta', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+  AssertEquals('nada lido',    0, pkg.Received);
+end;
+
+procedure TTestSerialPortComDispositivo.FecharAPortaDeixaDeEstarAtiva;
+begin
+  ApontarAPortaParaODispositivo;
+  FPorta.Active:=true;
+  AssertTrue('abriu', FPorta.ReallyActive);
+
+  FPorta.Active:=false;
+  AssertFalse('fechou', FPorta.ReallyActive);
+end;
+
 initialization
   RegisterTest(TTestSerialPort);
+  {$IFDEF UNIX}
+  //par de pseudo-terminais so' existe em Unix
+  RegisterTest(TTestSerialPortComDispositivo);
+  {$ENDIF}
 
 end.
