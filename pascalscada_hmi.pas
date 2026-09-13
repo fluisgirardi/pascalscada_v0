@@ -21,7 +21,8 @@ uses
   hmi_draw_flow_valve, hmi_draw_flow_pump, hmi_tachart_tag_source_list, 
   tagstatuslist, ChipCardReader, HMIFlowImage, hmifaceplatecontainer, 
   hmifaceplatedsgn, HMIBandeja, CentralUserManagement, HMIEventLogger, 
-  HMIAlarmLogger, hmi_commfaultbadge, LazarusPackageIntf;
+  HMIAlarmLogger, hmi_commfaultbadge, hmi_animation_timers, 
+  hmi_draw_basic_vector_control, TagLinkedSeriesSource, LazarusPackageIntf;
 
 implementation
 

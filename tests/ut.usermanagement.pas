@@ -55,16 +55,21 @@ type
 
   { TUserManagementProbe }
 
-  //O TCustomizedUserManagement republica SuccessfulLogin e FailureLogin, mas
-  //deixa UserChanged e a sobrecarga CanAccess(codigo, usuario) protegidos -
-  //nenhum programa alcanca esses dois de fora. A sonda os expoe.
+  //A sobrecarga CanAccess(codigo, usuario) e' protegida de proposito: um
+  //plugin de seguranca nao deve ser consultado direto. Quem pergunta e'
+  //sempre GetControlSecurityManager.CanAccess, que repassa ao plugin
+  //instalado - e' por ele que passam os testes de permissao logo abaixo. A
+  //sonda alcanca a sobrecarga so porque em producao quem a chama e'
+  //CheckIfUserIsAllowed, que abre um dialogo modal e nao cabe num teste.
   //
-  //TCustomizedUserManagement republishes SuccessfulLogin and FailureLogin but
-  //leaves UserChanged and the CanAccess(code, user) overload protected - no
-  //program reaches those two from outside. The probe exposes them.
+  //The CanAccess(code, user) overload is protected on purpose: a security
+  //plugin is not meant to be asked directly. The one who asks is always
+  //GetControlSecurityManager.CanAccess, which passes the question on to the
+  //installed plugin - that is the path the permission tests below take. The
+  //probe reaches the overload only because in production its caller is
+  //CheckIfUserIsAllowed, which opens a modal dialog and does not fit a test.
   TUserManagementProbe = class(TCustomizedUserManagement)
   public
-    property UserChanged;
     function CanAccessAs(sc:UTF8String; aUID:Integer):Boolean;
   end;
 
@@ -109,6 +114,7 @@ type
     procedure TheLoggedUserLoginIsReadableBack;
     procedure LoginWithTheWrongPasswordKeepsNobodyIn;
     procedure LoginCarriesTheUserIdBack;
+    procedure TheThreeLoginEventsArePublished;
     procedure ASuccessfulLoginNotifiesAndReportsTheChange;
     procedure AFailedLoginDoesNotLetAnybodyIn;
     procedure AFailedLoginCallsTheFailureHook;
@@ -142,7 +148,7 @@ type
 
 implementation
 
-uses hsstrings;
+uses hsstrings, typinfo;
 
 { TUserManagementProbe }
 
@@ -317,6 +323,15 @@ begin
   AssertEquals('e ficou guardado', 7, FUsers.UID);
 end;
 
+procedure TTestUserManagement.TheThreeLoginEventsArePublished;
+begin
+  //os tres avisos de entrada e saida andam juntos; publicado e' o que deixa o
+  //evento aparecer no object inspector e ser gravado no .lfm
+  AssertTrue('SuccessfulLogin', GetPropInfo(FUsers, 'SuccessfulLogin')<>nil);
+  AssertTrue('FailureLogin',    GetPropInfo(FUsers, 'FailureLogin')<>nil);
+  AssertTrue('UserChanged',     GetPropInfo(FUsers, 'UserChanged')<>nil);
+end;
+
 procedure TTestUserManagement.ASuccessfulLoginNotifiesAndReportsTheChange;
 var
   uid:Integer;
@@ -470,8 +485,8 @@ end;
 procedure TTestUserManagement.AnEmptyCodeIsAlwaysAllowed;
 begin
   //controle sem codigo de seguranca nao e' protegido por ninguem
-  AssertTrue('codigo vazio', FUsers.CanAccess(''));
-  AssertTrue('so espacos', FUsers.CanAccess('   '));
+  AssertTrue('codigo vazio', GetControlSecurityManager.CanAccess(''));
+  AssertTrue('so espacos',   GetControlSecurityManager.CanAccess('   '));
 end;
 
 procedure TTestUserManagement.WithNobodyLoggedInNoCodeIsAllowed;
@@ -480,7 +495,8 @@ begin
   FGrantedCode:='abrir_valvula';
 
   //o evento so e' consultado com usuario logado
-  AssertFalse('sem usuario, sem permissao', FUsers.CanAccess('abrir_valvula'));
+  AssertFalse('sem usuario, sem permissao',
+              GetControlSecurityManager.CanAccess('abrir_valvula'));
 end;
 
 procedure TTestUserManagement.TheEventDecidesForTheLoggedUser;
@@ -492,14 +508,18 @@ begin
   uid:=-1;
   FUsers.Login('fabio', 'segredo', uid);
 
-  AssertTrue('o codigo liberado passa',   FUsers.CanAccess('abrir_valvula'));
-  AssertFalse('o outro nao',              FUsers.CanAccess('parar_motor'));
+  AssertTrue('o codigo liberado passa',
+             GetControlSecurityManager.CanAccess('abrir_valvula'));
+  AssertFalse('o outro nao',
+              GetControlSecurityManager.CanAccess('parar_motor'));
 end;
 
 procedure TTestUserManagement.PermissionByUserIdAsksTheOtherEvent;
 begin
-  //a sobrecarga com identificador serve para autorizar em nome de um usuario
-  //que nao esta' logado - e' o que a tela de permissao especial usa
+  //a sobrecarga com identificador autoriza em nome de um usuario que nao esta
+  //logado. Ela e' protegida: em producao quem a chama e' o proprio
+  //CheckIfUserIsAllowed, depois de pedir usuario e senha na tela de permissao
+  //especial. Nenhum programa a chama direto
   FUsers.OnUIDCanAccess:=@AnswerUIDCanAccess;
   FGrantedCode:='abrir_valvula';
 

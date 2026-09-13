@@ -61,6 +61,7 @@ type
 
     property SuccessfulLogin;
     property FailureLogin;
+    property UserChanged;
 
   published
     property OnCheckUserAndPass    :TCheckUserAndPasswordEvent read FCheckUserAndPasswordEvent write FCheckUserAndPasswordEvent;
