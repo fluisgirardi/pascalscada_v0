@@ -285,7 +285,7 @@ type
     {$ELSE}
     {: How many time a read or write operation can take. }
     {$ENDIF}
-    property Timeout:LongInt read PTimeout write SetTimeOut stored true default 5;
+    property Timeout:LongInt read PTimeout write SetTimeOut stored true default 100;
 
     {$IFDEF PORTUGUES}
     {: Informa o tempo em milisegundos entre uma leitura e uma escrita. }
@@ -1357,9 +1357,62 @@ begin
 end;
 
 function TSerialPortDriver.getPortId: TPortUniqueID;
+var
+  aID:TPortUniqueID = 0;
+  abytes:array[0..7] of byte absolute aID;
+  prefixo:AnsiString;
+  numero:LongInt;
+  c:LongInt;
 begin
-  Result:=inherited getPortId;
-  {TODO}
+  //Mesma convencao da porta de rede: o byte mais significativo diz o tipo da
+  //porta - la' 2 e' TCP e 3 e' UDP -, e o bit alto dele marca porta
+  //incompleta. A serial e' 1, entao um identificador de serial nunca se
+  //confunde com um de rede, o que importa porque ha' quem indexe um mapa so'
+  //por este valor, sem olhar o tipo da porta.
+  //Same convention as the network port: the most significant byte tells the
+  //port kind - there 2 is TCP and 3 is UDP -, and its high bit marks an
+  //incomplete port. Serial is 1, so a serial id never collides with a network
+  //one, which matters because there is code indexing a single map by this
+  //value alone, with no regard for the port kind.
+  aID:=0;
+  abytes[7]:=1;
+
+  if Trim(PPortName)='' then begin
+    abytes[7]:=abytes[7] or $80;
+    Result:=aID;
+    exit;
+  end;
+
+  //o numero da porta e' a sequencia de digitos no fim do nome: COM1 da' 1,
+  //COM12 da' 12, ttyUSB0 da' 0, ttyS3 da' 3.
+  //the port number is the run of digits at the end of the name: COM1 gives 1,
+  //COM12 gives 12, ttyUSB0 gives 0, ttyS3 gives 3.
+  c:=Length(PPortName);
+  while (c>0) and (PPortName[c] in ['0'..'9']) do
+    dec(c);
+
+  numero:=-1;
+  if c<Length(PPortName) then
+    numero:=StrToIntDef(Copy(PPortName, c+1, Length(PPortName)-c), -1);
+
+  if numero<0 then begin
+    //nome sem numero nenhum: nao ha' o que identificar
+    abytes[7]:=abytes[7] or $80;
+    numero:=0;
+  end;
+
+  PLongWord(@abytes[0])^:=LongWord(numero);
+
+  //so' o numero nao basta: ttyS0 e ttyUSB0 sao portas diferentes com o mesmo
+  //numero. O que vem antes dos digitos entra somado num byte para separa-las.
+  //the number alone is not enough: ttyS0 and ttyUSB0 are different ports with
+  //the same number. What comes before the digits is summed into one byte to
+  //keep them apart.
+  prefixo:=UpperCase(Copy(PPortName, 1, c));
+  for c:=1 to Length(prefixo) do
+    abytes[6]:=Byte(abytes[6]+Ord(prefixo[c]));
+
+  Result:=aID;
 end;
 
 function TSerialPortDriver.GetPendingInputBytes: LongInt;
