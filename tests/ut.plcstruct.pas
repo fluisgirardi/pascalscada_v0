@@ -36,7 +36,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  Tag, ProtocolTypes, PLCStruct;
+  Tag, ProtocolTypes, PLCStruct, PLCStructElement;
 
 type
 
@@ -83,6 +83,50 @@ type
     procedure TextoSiemensTemTamanhoMaximoEAtual;
     procedure TextoSiemensParaNoTamanhoAtual;
     procedure TextoSiemensNoFimDaEstruturaNaoEstoura;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  O item da estrutura: uma janela tipada num deslocamento dela. E' ele que
+  transforma os bytes crus no valor que o projeto usa, e quem diz quantos
+  bytes ler e' o tipo escolhido no item, nao a estrutura.
+  }
+  {$ELSE}
+  {:
+  The struct item: a typed window at an offset of it. It is what turns the raw
+  bytes into the value the project uses, and what says how many bytes to read
+  is the type chosen on the item, not the struct.
+  }
+  {$ENDIF}
+
+  { TTestPLCStructItem }
+
+  TTestPLCStructItem = class(TTestCase)
+  private
+    FEstrutura:TEstruturaProbe;
+    FItem:TPLCStructItem;
+    FAvisos:LongInt;
+    procedure ContarAviso(Sender:TObject);
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    //leitura tipada / typed reading
+    procedure ItemDeByteLeUmByte;
+    procedure ItemDePalavraLeDoisBytes;
+    procedure ItemDePalavraDuplaLeQuatroBytes;
+    procedure ItemDePontoFlutuanteLeQuatroBytes;
+    procedure ItemLeNoDeslocamentoEscolhido;
+    procedure TrocarOTipoTrocaQuantosBytesSaoLidos;
+
+    //limites / bounds
+    procedure DeslocamentoQueNaoCabeNaEstruturaEhRecusado;
+    procedure UltimoDeslocamentoQueCabeEhAceito;
+
+    //ciclo de vida / lifecycle
+    procedure ItemAcompanhaAMudancaDaEstrutura;
+    procedure EstruturaDestruidaDesligaOVinculo;
+    procedure SemEstruturaGuardaOValorLocalmente;
   end;
 
 implementation
@@ -268,7 +312,156 @@ begin
   AssertEquals('o que cabe', 'ab', texto);
 end;
 
+{ TTestPLCStructItem }
+
+procedure TTestPLCStructItem.SetUp;
+begin
+  FEstrutura:=TEstruturaProbe.Create(nil);
+  FEstrutura.Size:=16;
+
+  FItem:=TPLCStructItem.Create(nil);
+  FAvisos:=0;
+end;
+
+procedure TTestPLCStructItem.TearDown;
+begin
+  FreeAndNil(FItem);
+  FreeAndNil(FEstrutura);
+end;
+
+procedure TTestPLCStructItem.ContarAviso(Sender:TObject);
+begin
+  inc(FAvisos);
+end;
+
+procedure TTestPLCStructItem.ItemDeByteLeUmByte;
+begin
+  FEstrutura.ChegouDaVarredura([$0A, $0B, $0C, $0D]);
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttByte;
+  FItem.Index   :=0;
+
+  AssertEquals('um byte', $0A, FItem.Value, 0);
+end;
+
+procedure TTestPLCStructItem.ItemDePalavraLeDoisBytes;
+begin
+  FEstrutura.ChegouDaVarredura([$34, $12, $00, $00]);
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttWord;
+  FItem.Index   :=0;
+
+  AssertEquals('uma palavra', $1234, FItem.Value, 0);
+end;
+
+procedure TTestPLCStructItem.ItemDePalavraDuplaLeQuatroBytes;
+begin
+  FEstrutura.ChegouDaVarredura([$78, $56, $34, $12]);
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttDWord;
+  FItem.Index   :=0;
+
+  AssertEquals('uma palavra dupla', $12345678, FItem.Value, 0);
+end;
+
+procedure TTestPLCStructItem.ItemDePontoFlutuanteLeQuatroBytes;
+begin
+  //1.0 em ponto flutuante simples
+  FEstrutura.ChegouDaVarredura([$00, $00, $80, $3F]);
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttFloat;
+  FItem.Index   :=0;
+
+  AssertEquals('um', 1, FItem.Value, 0.0001);
+end;
+
+procedure TTestPLCStructItem.ItemLeNoDeslocamentoEscolhido;
+begin
+  //e' assim que se mapeia um membro no meio da estrutura
+  FEstrutura.ChegouDaVarredura([$00, $00, $00, $00, $EF, $BE]);
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttWord;
+  FItem.Index   :=4;
+
+  AssertEquals('no deslocamento quatro', $BEEF, FItem.Value, 0);
+end;
+
+procedure TTestPLCStructItem.TrocarOTipoTrocaQuantosBytesSaoLidos;
+begin
+  FEstrutura.ChegouDaVarredura([$34, $12, $00, $00]);
+  FItem.PLCBlock:=FEstrutura;
+  FItem.Index   :=0;
+
+  FItem.TagType:=pttByte;
+  AssertEquals('como byte',   $34,   FItem.Value, 0);
+
+  FItem.TagType:=pttWord;
+  AssertEquals('como palavra', $1234, FItem.Value, 0);
+end;
+
+procedure TTestPLCStructItem.DeslocamentoQueNaoCabeNaEstruturaEhRecusado;
+var
+  recusou:Boolean;
+begin
+  //uma palavra dupla no byte 14 de uma estrutura de 16 passa do fim
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttDWord;
+
+  recusou:=false;
+  try
+    FItem.Index:=14;
+  except
+    on E:Exception do recusou:=true;
+  end;
+  AssertTrue('deslocamento que nao cabe', recusou);
+end;
+
+procedure TTestPLCStructItem.UltimoDeslocamentoQueCabeEhAceito;
+begin
+  //a mesma palavra dupla no byte 12 cabe exatamente
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttDWord;
+  FItem.Index   :=12;
+
+  AssertEquals('ultimo que cabe', 12, FItem.Index);
+end;
+
+procedure TTestPLCStructItem.ItemAcompanhaAMudancaDaEstrutura;
+begin
+  FItem.PLCBlock:=FEstrutura;
+  FItem.TagType :=pttByte;
+  FItem.Index   :=1;
+
+  FEstrutura.ChegouDaVarredura([$00, $42]);
+  AssertEquals('valor novo', $42, FItem.Value, 0);
+end;
+
+procedure TTestPLCStructItem.EstruturaDestruidaDesligaOVinculo;
+var
+  estrutura:TEstruturaProbe;
+begin
+  estrutura:=TEstruturaProbe.Create(nil);
+  estrutura.Size:=8;
+  FItem.PLCBlock:=estrutura;
+  FItem.TagType :=pttByte;
+  FItem.Index   :=0;
+
+  FreeAndNil(estrutura);
+
+  AssertTrue('o vinculo tem que ter sido desfeito', FItem.PLCBlock=nil);
+end;
+
+procedure TTestPLCStructItem.SemEstruturaGuardaOValorLocalmente;
+begin
+  //sem estrutura o item ainda e' um tag: guarda o que escrevem nele
+  FItem.TagType:=pttByte;
+  FItem.Value  :=9;
+
+  AssertEquals('valor guardado', 9, FItem.Value, 0);
+end;
+
 initialization
   RegisterTest(TTestPLCStruct);
+  RegisterTest(TTestPLCStructItem);
 
 end.
