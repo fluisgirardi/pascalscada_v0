@@ -223,12 +223,12 @@ begin
 
   valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
 
-  AssertEquals('leitura sem falha', Ord(ioOk), Ord(res));
-  AssertEquals('quantidade de valores', 4, Length(valores));
-  AssertEquals('primeiro byte', $0A, valores[0], 0);
-  AssertEquals('segundo byte',  $0B, valores[1], 0);
-  AssertEquals('terceiro byte', $0C, valores[2], 0);
-  AssertEquals('quarto byte',   $0D, valores[3], 0);
+  AssertEquals('read with no failure', Ord(ioOk), Ord(res));
+  AssertEquals('number of values', 4, Length(valores));
+  AssertEquals('first byte', $0A, valores[0], 0);
+  AssertEquals('second byte',  $0B, valores[1], 0);
+  AssertEquals('third byte', $0C, valores[2], 0);
+  AssertEquals('fourth byte',   $0D, valores[3], 0);
 end;
 
 procedure TTestS7FamilyResposta.TamanhoEmBitsEhConvertidoParaBytes;
@@ -244,8 +244,8 @@ begin
 
   valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 2), res);
 
-  AssertEquals('dois bytes guardados', $AA, valores[0], 0);
-  AssertEquals('e o segundo',          $BB, valores[1], 0);
+  AssertEquals('two bytes kept', $AA, valores[0], 0);
+  AssertEquals('and the second one',          $BB, valores[1], 0);
 end;
 
 procedure TTestS7FamilyResposta.TamanhoJaEmBytesNaoEhDividido;
@@ -261,8 +261,8 @@ begin
 
   valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 2), res);
 
-  AssertEquals('primeiro byte', $11, valores[0], 0);
-  AssertEquals('segundo byte',  $22, valores[1], 0);
+  AssertEquals('first byte', $11, valores[0], 0);
+  AssertEquals('second byte',  $22, valores[1], 0);
 end;
 
 procedure TTestS7FamilyResposta.ErroDoCLPViraResultadoDeProtocolo;
@@ -278,7 +278,7 @@ begin
                    ListaDeUmItem(0, 0, 4));
 
   valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
-  AssertEquals('falha propagada', Ord(ioIllegalMemoryAddress), Ord(res));
+  AssertEquals('failure passed on', Ord(ioIllegalMemoryAddress), Ord(res));
 end;
 
 procedure TTestS7FamilyResposta.RespostaDeOutraFuncaoEhIgnorada;
@@ -294,7 +294,7 @@ begin
                    ListaDeUmItem(0, 0, 4));
 
   valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
-  AssertTrue('nada pode ter sido gravado', (Length(valores)=0) or (valores[0]<>$0A));
+  AssertTrue('nothing can have been stored', (Length(valores)=0) or (valores[0]<>$0A));
 end;
 
 procedure TTestS7FamilyResposta.MaisItensNaRespostaDoQueNoPedidoNaoTransborda;
@@ -310,7 +310,7 @@ begin
                    ListaDeUmItem(0, 0, 4));
 
   valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
-  AssertEquals('o item pedido foi processado', $0A, valores[0], 0);
+  AssertEquals('the item asked for was processed', $0A, valores[0], 0);
 end;
 
 procedure TTestS7FamilyResposta.DestrutorRemoveTodosOsCLPs;
@@ -331,8 +331,8 @@ begin
 
   drv.Free;
 
-  AssertEquals('os quatro CLPs foram removidos', 4, DescarteRemovidos);
-  AssertFalse ('nenhum indice fora da faixa', DescarteIndiceInvalido);
+  AssertEquals('all four PLCs were removed', 4, DescarteRemovidos);
+  AssertFalse ('no index out of range', DescarteIndiceInvalido);
 end;
 
 initialization

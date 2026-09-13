@@ -98,7 +98,7 @@ implementation
 procedure TTestS7PlusCodec.CabecalhoTemIdVersaoETamanho;
 begin
   //o $72 = id do protocolo S7CommPlus
-  AssertBytesEqual('cabecalho', BytesOf('72 01 01 23'), EncodeS7PlusHeader($01, $0123));
+  AssertBytesEqual('header', BytesOf('72 01 01 23'), EncodeS7PlusHeader($01, $0123));
 end;
 
 procedure TTestS7PlusCodec.CabecalhoVoltaComVersaoETamanho;
@@ -108,9 +108,9 @@ var
   consumido:Integer;
 begin
   consumido:=DecodeS7PlusHeader(BytesOf('72 02 00 10 AA BB'), 0, versao, tamanho);
-  AssertEquals('bytes consumidos', 4, consumido);
-  AssertEquals('versao', 2, versao);
-  AssertEquals('tamanho', 16, tamanho);
+  AssertEquals('bytes consumed', 4, consumido);
+  AssertEquals('version', 2, versao);
+  AssertEquals('size', 16, tamanho);
 end;
 
 procedure TTestS7PlusCodec.CabecalhoComIdErradoReclama;
@@ -126,7 +126,7 @@ begin
     on E:Exception do
       reclamou:=true;
   end;
-  AssertTrue('id de protocolo diferente de $72 deve reclamar', reclamou);
+  AssertTrue('a protocol id other than $72 must complain', reclamou);
 end;
 
 procedure TTestS7PlusCodec.CabecalhoTruncadoReclama;
@@ -142,13 +142,13 @@ begin
     on E:Exception do
       reclamou:=true;
   end;
-  AssertTrue('cabecalho com menos de 4 bytes deve reclamar', reclamou);
+  AssertTrue('a header shorter than 4 bytes must complain', reclamou);
 end;
 
 procedure TTestS7PlusCodec.CabecalhoDePedidoTemQuatorzeBytes;
 begin
   //opcode $31 (request), funcao $04BB, sequencia 2, sessao $12345678, flags $36
-  AssertBytesEqual('cabecalho de pedido',
+  AssertBytesEqual('request header',
                    BytesOf('31 00 00 04 BB 00 00 00 02 12 34 56 78 36'),
                    EncodeRequestHeader($04BB, $0002, $12345678, $36));
 end;
@@ -159,11 +159,11 @@ var
 begin
   cab:=DecodeResponseHeader(BytesOf('32 00 00 04 BB 00 00 00 07 36'), 0);
   AssertEquals('opcode', $32, cab.Opcode);
-  AssertEquals('funcao', $04BB, cab.FunctionCode);
-  AssertEquals('sequencia', 7, cab.SequenceNumber);
-  AssertEquals('flags de transporte', $36, cab.TransportFlags);
+  AssertEquals('function', $04BB, cab.FunctionCode);
+  AssertEquals('sequence', 7, cab.SequenceNumber);
+  AssertEquals('transport flags', $36, cab.TransportFlags);
   //a resposta nao repete o id de sessao
-  AssertEquals('id de sessao', 0, cab.SessionId);
+  AssertEquals('session id', 0, cab.SessionId);
 end;
 
 procedure TTestS7PlusCodec.CabecalhoDeRespostaTruncadoReclama;
@@ -177,7 +177,7 @@ begin
     on E:Exception do
       reclamou:=true;
   end;
-  AssertTrue('resposta com menos de 10 bytes deve reclamar', reclamou);
+  AssertTrue('an answer shorter than 10 bytes must complain', reclamou);
 end;
 
 procedure TTestS7PlusCodec.InteirosSaoBigEndian;
@@ -197,7 +197,7 @@ begin
                DecodeUInt64(BytesOf('01 02 03 04 05 06 07 08'), 0));
 
   //com deslocamento, que e' como o codec anda pela mensagem
-  AssertEquals('uint16 com offset', $5678, DecodeUInt16(BytesOf('12 34 56 78'), 2));
+  AssertEquals('uint16 with an offset', $5678, DecodeUInt16(BytesOf('12 34 56 78'), 2));
 end;
 
 procedure TTestS7PlusCodec.FloatsSeguemIEEE754BigEndian;
@@ -227,8 +227,8 @@ end;
 
 procedure TTestS7PlusCodec.ValorTipadoBoolNormalizaParaZeroOuUm;
 begin
-  AssertBytesEqual('bool verdadeiro', BytesOf('01 01'), EncodeTypedValueUInt($01, 7));
-  AssertBytesEqual('bool falso',      BytesOf('01 00'), EncodeTypedValueUInt($01, 0));
+  AssertBytesEqual('bool true', BytesOf('01 01'), EncodeTypedValueUInt($01, 7));
+  AssertBytesEqual('bool false',      BytesOf('01 00'), EncodeTypedValueUInt($01, 0));
 end;
 
 procedure TTestS7PlusCodec.ValorTipadoComTipoNaoSuportadoReclama;
@@ -243,7 +243,7 @@ begin
     on E:Exception do
       reclamou:=true;
   end;
-  AssertTrue('tipo nao suportado deve reclamar', reclamou);
+  AssertTrue('an unsupported type must complain', reclamou);
 end;
 
 procedure TTestS7PlusCodec.RIDTemQuatroBytesFixos;
@@ -261,7 +261,7 @@ end;
 procedure TTestS7PlusCodec.ArrayDeBytesUsaOFlagDeArray;
 begin
   //flags $10 (array), tipo $0A (Byte), contagem 2, dados
-  AssertBytesEqual('array de bytes', BytesOf('10 0A 02 AA BB'),
+  AssertBytesEqual('array of bytes', BytesOf('10 0A 02 AA BB'),
                    EncodePValueByteArray(BytesOf('AA BB')));
 end;
 
@@ -304,7 +304,7 @@ end;
 procedure TTestS7PlusCodec.EscritaDeTipoDesconhecidoCaiNoArrayDeBytes;
 begin
   //SoftDataType 0 (desconhecido) usa o array de bytes generico
-  AssertBytesEqual('tipo desconhecido', BytesOf('10 0A 02 AA BB'),
+  AssertBytesEqual('unknown type', BytesOf('10 0A 02 AA BB'),
                    EncodeTypedWriteValue(0, BytesOf('AA BB')));
 end;
 
@@ -332,7 +332,7 @@ end;
 procedure TTestS7PlusCodec.ArrayDeUDIntRespeitaOFlagPedido;
 begin
   //flags $20 = "Addressarray", usado pelo GetVarSubstreamed e pela Subscription
-  AssertBytesEqual('array de udint', BytesOf('20 04 02 01 82 2C'),
+  AssertBytesEqual('array of udint', BytesOf('20 04 02 01 82 2C'),
                    EncodeValuePUDIntArray([1, 300], $20));
 end;
 
@@ -356,7 +356,7 @@ begin
 
   //o $A1 abre, $A3 marca atributo, $A2 fecha. ClassId 300 e o atributo 1234
   //vao em VLQ; o RelationId e' fixo de 4 bytes.
-  AssertBytesEqual('objeto',
+  AssertBytesEqual('object',
                    BytesOf('A1 12 34 56 78 82 2C 00 00 A3 89 52 00 02 07 A2'),
                    EncodePObject($12345678, 300, 0, 0, atributos));
 end;
@@ -375,9 +375,9 @@ begin
   objeto:=EncodePObject($00000001, 300, 0, 0, atributos);
 
   //achar o segundo atributo exige pular corretamente o primeiro
-  AssertTrue('atributo 1234 deve ser encontrado',
+  AssertTrue('attribute 1234 must be found',
              ParseAttributeRawValue(objeto, 1234, valor));
-  AssertBytesEqual('valor do atributo', BytesOf('00 00 01 2C'), valor);
+  AssertBytesEqual('attribute value', BytesOf('00 00 01 2C'), valor);
 end;
 
 procedure TTestS7PlusCodec.AtributoAusenteDevolveFalso;
@@ -390,15 +390,15 @@ begin
   atributos[0].Value :=EncodeValuePUSInt(7);
 
   objeto:=EncodePObject($00000001, 300, 0, 0, atributos);
-  AssertFalse('atributo inexistente', ParseAttributeRawValue(objeto, 999, valor));
-  AssertEquals('valor deve vir vazio', 0, Length(valor));
+  AssertFalse('attribute that does not exist', ParseAttributeRawValue(objeto, 999, valor));
+  AssertEquals('the value must come back empty', 0, Length(valor));
 end;
 
 procedure TTestS7PlusCodec.QualificadorV1TerminaComUDIntDeTamanhoFixo;
 begin
   //ObjectQualifier 1256, ParentRID 1257, CompositionAID 1258, KeyQualifier 1259.
   //Na variante V1 o KeyQualifier vai em 4 bytes fixos e sem terminador.
-  AssertBytesEqual('qualificador v1',
+  AssertBytesEqual('v1 qualifier',
                    BytesOf('00 00 04 E8 89 69 00 12 00 00 00 00 89 6A 00 13 00 89 6B 00 04 00 00 00 05'),
                    EncodeObjectQualifierV1(5));
 end;
@@ -409,18 +409,18 @@ var
 begin
   //crc 0, area 300, (numero de lids + 1), subarea 1, lid 2
   ender:=EncodeItemAddress(300, 1, [2], 0);
-  AssertBytesEqual('endereco', BytesOf('00 82 2C 02 01 02'), ender.Data);
+  AssertBytesEqual('address', BytesOf('00 82 2C 02 01 02'), ender.Data);
   //o contador informado ao PLC inclui crc, area, contagem, subarea e cada lid
-  AssertEquals('campos', 5, ender.FieldCount);
+  AssertEquals('fields', 5, ender.FieldCount);
 end;
 
 procedure TTestS7PlusCodec.PValueDeUDIntVoltaComQuatroBytes;
 var
   consumido:Integer;
 begin
-  AssertBytesEqual('udint decodificado', BytesOf('00 00 01 2C'),
+  AssertBytesEqual('udint decoded', BytesOf('00 00 01 2C'),
                    DecodePValueToBytes(BytesOf('00 04 82 2C'), 0, consumido));
-  AssertEquals('bytes consumidos', 4, consumido);
+  AssertEquals('bytes consumed', 4, consumido);
 end;
 
 initialization

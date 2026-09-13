@@ -100,7 +100,7 @@ begin
   ouvinte:=TOuvinte.Create(tag, false);
   try
     FreeAndNil(tag);
-    AssertTrue('o ouvinte tem que ter sido avisado', ouvinte.Avisado);
+    AssertTrue('the listener must have been told', ouvinte.Avisado);
   finally
     ouvinte.Free;
     tag.Free;
@@ -122,9 +122,9 @@ begin
   try
     FreeAndNil(tag);
 
-    AssertTrue('primeiro ouvinte', primeiro.Avisado);
-    AssertTrue('segundo ouvinte',  segundo.Avisado);
-    AssertTrue('terceiro ouvinte', terceiro.Avisado);
+    AssertTrue('first listener', primeiro.Avisado);
+    AssertTrue('second listener',  segundo.Avisado);
+    AssertTrue('third listener', terceiro.Avisado);
   finally
     primeiro.Free;
     segundo.Free;
@@ -145,7 +145,7 @@ begin
     tag.RemoveAllHandlersFromObject(ouvinte);
     FreeAndNil(tag);
 
-    AssertFalse('ouvinte desligado nao recebe aviso', ouvinte.Avisado);
+    AssertFalse('a detached listener gets no notification', ouvinte.Avisado);
   finally
     ouvinte.Free;
     tag.Free;

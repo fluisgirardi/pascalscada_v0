@@ -122,7 +122,7 @@ procedure TTestCrossEvent.ManualCriadoSinalizadoJaLibera;
 begin
   //criado ja sinalizado: quem espera nao espera nada
   FEvento:=TCrossEvent.Create(true, true);
-  AssertEquals('espera em evento sinalizado', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
+  AssertEquals('waiting on a signalled event', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
 end;
 
 procedure TTestCrossEvent.ManualNaoSeResetaSozinho;
@@ -130,8 +130,8 @@ begin
   //no evento manual o sinal fica de pe ate alguem resetar
   FEvento:=TCrossEvent.Create(true, true);
 
-  AssertEquals('primeira espera', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
-  AssertEquals('segunda espera',  'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
+  AssertEquals('first wait', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
+  AssertEquals('second wait',  'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
 end;
 
 procedure TTestCrossEvent.ResetVoltaASegurarAEspera;
@@ -139,23 +139,23 @@ begin
   FEvento:=TCrossEvent.Create(true, true);
   FEvento.ResetEvent;
 
-  AssertEquals('depois do reset', 'wrTimeout', NomeDo(FEvento.WaitFor(200)));
+  AssertEquals('after the reset', 'wrTimeout', NomeDo(FEvento.WaitFor(200)));
 end;
 
 procedure TTestCrossEvent.SinalizarDepoisLibera;
 begin
   //criado sem sinal, sinalizado na sequencia
   FEvento:=TCrossEvent.Create(true, false);
-  AssertEquals('antes do sinal', 'wrTimeout', NomeDo(FEvento.WaitFor(100)));
+  AssertEquals('before the signal', 'wrTimeout', NomeDo(FEvento.WaitFor(100)));
 
   FEvento.SetEvent;
-  AssertEquals('depois do sinal', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
+  AssertEquals('after the signal', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
 end;
 
 procedure TTestCrossEvent.SemSinalAEsperaDaTimeout;
 begin
   FEvento:=TCrossEvent.Create(true, false);
-  AssertEquals('sem sinal nenhum', 'wrTimeout', NomeDo(FEvento.WaitFor(100)));
+  AssertEquals('with no signal at all', 'wrTimeout', NomeDo(FEvento.WaitFor(100)));
 end;
 
 procedure TTestCrossEvent.TimeoutNaoRetornaAntesDoTempoPedido;
@@ -170,7 +170,7 @@ begin
   FEvento.WaitFor(300);
   decorrido:=GetTickCount64-inicio;
 
-  AssertTrue('esperou menos do que pediu: '+IntToStr(decorrido)+' ms', decorrido>=250);
+  AssertTrue('waited less than asked: '+IntToStr(decorrido)+' ms', decorrido>=250);
 end;
 
 procedure TTestCrossEvent.AutomaticoSeResetaDepoisDeLiberar;
@@ -179,7 +179,7 @@ begin
   FEvento:=TCrossEvent.Create(false, true);
   FEvento.WaitFor(1000);
 
-  AssertEquals('o sinal foi consumido', 'wrTimeout', NomeDo(FEvento.WaitFor(200)));
+  AssertEquals('the signal was consumed', 'wrTimeout', NomeDo(FEvento.WaitFor(200)));
 end;
 
 procedure TTestCrossEvent.AutomaticoSinalizadoDizSinalizado;
@@ -187,18 +187,18 @@ begin
   //criado ja sinalizado: o auto-reset consome o sinal, mas quem esperou tem
   //que saber que foi sinal, e nao erro
   FEvento:=TCrossEvent.Create(false, true);
-  AssertEquals('automatico sinalizado', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
+  AssertEquals('auto reset, signalled', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
 end;
 
 procedure TTestCrossEvent.AutomaticoSinalizadoDepoisTambemDizSinalizado;
 begin
   //e o mesmo pelo caminho do SetEvent, que e' como as threads usam
   FEvento:=TCrossEvent.Create(false, false);
-  AssertEquals('antes do sinal', 'wrTimeout', NomeDo(FEvento.WaitFor(100)));
+  AssertEquals('before the signal', 'wrTimeout', NomeDo(FEvento.WaitFor(100)));
 
   FEvento.SetEvent;
-  AssertEquals('depois do sinal', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
-  AssertEquals('e o sinal foi consumido', 'wrTimeout', NomeDo(FEvento.WaitFor(200)));
+  AssertEquals('after the signal', 'wrSignaled', NomeDo(FEvento.WaitFor(1000)));
+  AssertEquals('and the signal was consumed', 'wrTimeout', NomeDo(FEvento.WaitFor(200)));
 end;
 
 procedure TTestCrossEvent.SinalDeOutraThreadAcordaAEspera;
@@ -212,7 +212,7 @@ begin
   sinalizador:=TSinalizador.Create(FEvento, 50);
   try
     resultado:=FEvento.WaitFor(10000);
-    AssertEquals('a espera tem que ser acordada', 'wrSignaled', NomeDo(resultado));
+    AssertEquals('the wait must be woken up', 'wrSignaled', NomeDo(resultado));
   finally
     sinalizador.WaitFor;
     sinalizador.Free;

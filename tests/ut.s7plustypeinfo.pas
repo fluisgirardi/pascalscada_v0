@@ -113,7 +113,7 @@ begin
   AssertFalse('variant',      IsSoftDataTypeSupported(SDT_VARIANT));
   AssertFalse('dtl',          IsSoftDataTypeSupported(SDT_DTL));
   AssertFalse('void',         IsSoftDataTypeSupported(0));
-  AssertFalse('desconhecido', IsSoftDataTypeSupported(SDT_UNKNOWN));
+  AssertFalse('unknown', IsSoftDataTypeSupported(SDT_UNKNOWN));
 end;
 
 procedure TTestS7PlusTypeInfo.TamanhoDosTiposEscalares;
@@ -135,7 +135,7 @@ begin
   //os dois bytes a mais sao o cabecalho classico do S7: tamanho maximo e atual
   AssertEquals('string[10]',  12, S7PlusDataTypeSize(SDT_STRING, 10));
   AssertEquals('wstring[4]',   6, S7PlusDataTypeSize(SDT_WSTRING, 4));
-  AssertEquals('string sem tamanho', 2, S7PlusDataTypeSize(SDT_STRING));
+  AssertEquals('string with no length', 2, S7PlusDataTypeSize(SDT_STRING));
 end;
 
 procedure TTestS7PlusTypeInfo.TipoSemTamanhoConhecidoDaZero;
@@ -143,7 +143,7 @@ begin
   //zero aqui e' o sinal de "nao sei medir isso", nao um tipo de zero byte
   AssertEquals('array',        0, S7PlusDataTypeSize(SDT_ARRAY));
   AssertEquals('struct',       0, S7PlusDataTypeSize(SDT_STRUCT));
-  AssertEquals('desconhecido', 0, S7PlusDataTypeSize(SDT_UNKNOWN));
+  AssertEquals('unknown', 0, S7PlusDataTypeSize(SDT_UNKNOWN));
 end;
 
 procedure TTestS7PlusTypeInfo.TipoDeOffsetInfoVemDosQuatroBitsAltos;
@@ -153,13 +153,13 @@ begin
   FillChar(el, SizeOf(el), 0);
 
   el.AttributeFlags:=$8000;
-  AssertEquals('tipo 8', 8, S7PlusVteOffsetInfoType(el));
+  AssertEquals('type 8', 8, S7PlusVteOffsetInfoType(el));
 
   el.AttributeFlags:=$3ABC;
-  AssertEquals('tipo 3', 3, S7PlusVteOffsetInfoType(el));
+  AssertEquals('type 3', 3, S7PlusVteOffsetInfoType(el));
 
   el.AttributeFlags:=$0FFF;
-  AssertEquals('tipo 0', 0, S7PlusVteOffsetInfoType(el));
+  AssertEquals('type 0', 0, S7PlusVteOffsetInfoType(el));
 end;
 
 procedure TTestS7PlusTypeInfo.BitOffsetOtimizadoVemDosTresBitsBaixos;
@@ -184,15 +184,15 @@ begin
 
   //o $53 = 0101 0011: nao otimizado 5, otimizado 3, sem o bit de classico
   el.BitOffsetInfoFlags:=$53;
-  AssertEquals('nao otimizado', 5, S7PlusVteNonOptBitOffset(el));
-  AssertEquals('otimizado',     3, S7PlusVteOptBitOffset(el));
-  AssertFalse ('classico',         S7PlusVteClassic(el));
+  AssertEquals('not optimised', 5, S7PlusVteNonOptBitOffset(el));
+  AssertEquals('optimised',     3, S7PlusVteOptBitOffset(el));
+  AssertFalse ('classic',         S7PlusVteClassic(el));
 
   //o $5B = 0101 1011: mesmos offsets, agora com o bit $08 de bloco classico
   el.BitOffsetInfoFlags:=$5B;
-  AssertEquals('nao otimizado', 5, S7PlusVteNonOptBitOffset(el));
-  AssertEquals('otimizado',     3, S7PlusVteOptBitOffset(el));
-  AssertTrue  ('classico',         S7PlusVteClassic(el));
+  AssertEquals('not optimised', 5, S7PlusVteNonOptBitOffset(el));
+  AssertEquals('optimised',     3, S7PlusVteOptBitOffset(el));
+  AssertTrue  ('classic',         S7PlusVteClassic(el));
 end;
 
 procedure TTestS7PlusTypeInfo.OffsetInfoTipo8LeOtimizadoPrimeiro;
@@ -202,10 +202,10 @@ var
 begin
   //little-endian: 01 00 = 1, 02 00 = 2
   fim:=ParseOffsetInfo(BytesOf('01 00 02 00'), 0, 8, info);
-  AssertEquals('otimizado',     1, info.OptAddr);
-  AssertEquals('nao otimizado', 2, info.NonOptAddr);
-  AssertEquals('bytes lidos',   4, fim);
-  AssertEquals('codigo',        8, info.Code);
+  AssertEquals('optimised',     1, info.OptAddr);
+  AssertEquals('not optimised', 2, info.NonOptAddr);
+  AssertEquals('bytes read',   4, fim);
+  AssertEquals('code',        8, info.Code);
 end;
 
 procedure TTestS7PlusTypeInfo.OffsetInfoTipo1InverteAOrdem;
@@ -214,8 +214,8 @@ var
 begin
   //mesmos bytes do teste anterior: no tipo 1 (legado) a ordem e' a inversa
   ParseOffsetInfo(BytesOf('01 00 02 00'), 0, 1, info);
-  AssertEquals('nao otimizado', 1, info.NonOptAddr);
-  AssertEquals('otimizado',     2, info.OptAddr);
+  AssertEquals('not optimised', 1, info.NonOptAddr);
+  AssertEquals('optimised',     2, info.OptAddr);
 end;
 
 procedure TTestS7PlusTypeInfo.OffsetInfoDeArrayTrazLimiteInferiorEContagem;
@@ -227,12 +227,12 @@ begin
   //limite inferior=-5 (FB FF FF FF em complemento de dois), contagem=10
   fim:=ParseOffsetInfo(BytesOf('00 00 00 00 0A 00 00 00 14 00 00 00 FB FF FF FF 0A 00 00 00'),
                        0, 3, info);
-  AssertEquals('otimizado',        10, info.OptAddr);
-  AssertEquals('nao otimizado',    20, info.NonOptAddr);
-  AssertEquals('limite inferior',  -5, info.ArrayLowerBound);
-  AssertEquals('quantos elementos',10, info.ArrayElementCount);
-  AssertTrue  ('marcado como uma dimensao', info.Is1Dim);
-  AssertEquals('bytes lidos',      20, fim);
+  AssertEquals('optimised',        10, info.OptAddr);
+  AssertEquals('not optimised',    20, info.NonOptAddr);
+  AssertEquals('lower bound',  -5, info.ArrayLowerBound);
+  AssertEquals('how many elements',10, info.ArrayElementCount);
+  AssertTrue  ('marked as one dimension', info.Is1Dim);
+  AssertEquals('bytes read',      20, fim);
 end;
 
 procedure TTestS7PlusTypeInfo.ElementoDeVartypeMisturaLittleEBigEndian;
@@ -252,12 +252,12 @@ begin
 
   AssertEquals('lid',            5, el.Lid);
   AssertEquals('crc',            Int64($12345678), Int64(el.SymbolCrc));
-  AssertEquals('tipo',           SDT_INT, el.SoftDataType);
-  AssertEquals('tipo de offset', 8, S7PlusVteOffsetInfoType(el));
-  AssertEquals('bit otimizado',  5, S7PlusVteAttributeBitOffset(el));
-  AssertEquals('otimizado',      10, el.OffsetInfo.OptAddr);
-  AssertEquals('nao otimizado',  20, el.OffsetInfo.NonOptAddr);
-  AssertEquals('bytes lidos',    16, fim);
+  AssertEquals('type',           SDT_INT, el.SoftDataType);
+  AssertEquals('offset type', 8, S7PlusVteOffsetInfoType(el));
+  AssertEquals('optimised bit',  5, S7PlusVteAttributeBitOffset(el));
+  AssertEquals('optimised',      10, el.OffsetInfo.OptAddr);
+  AssertEquals('not optimised',  20, el.OffsetInfo.NonOptAddr);
+  AssertEquals('bytes read',    16, fim);
 end;
 
 procedure TTestS7PlusTypeInfo.ListaDeVartypePulaOIdInicialDoPrimeiroBloco;
@@ -272,8 +272,8 @@ begin
                            '00 00'),                       //bloco vazio encerra a lista
                    0, elementos);
 
-  AssertEquals('quantidade de elementos', 1, Length(elementos));
-  AssertEquals('lid do elemento', 5, elementos[0].Lid);
+  AssertEquals('number of elements', 1, Length(elementos));
+  AssertEquals('lid of the element', 5, elementos[0].Lid);
 end;
 
 procedure TTestS7PlusTypeInfo.ListaDeNomesLeTamanhoEZeroFinal;
@@ -287,9 +287,9 @@ begin
                            '00 00'),
                    0, nomes);
 
-  AssertEquals('quantidade de nomes', 2, Length(nomes));
-  AssertEquals('primeiro nome', 'AB',  nomes[0]);
-  AssertEquals('segundo nome',  'CDE', nomes[1]);
+  AssertEquals('number of names', 2, Length(nomes));
+  AssertEquals('first name', 'AB',  nomes[0]);
+  AssertEquals('second name',  'CDE', nomes[1]);
 end;
 
 procedure TTestS7PlusTypeInfo.ObjetoSemAberturaReclama;
@@ -304,7 +304,7 @@ begin
     on E:Exception do
       reclamou:=true;
   end;
-  AssertTrue('sem o $A1 de abertura deve reclamar', reclamou);
+  AssertTrue('without the opening $A1 it must complain', reclamou);
 end;
 
 procedure TTestS7PlusTypeInfo.AtributosDoObjetoSaoLidos;
@@ -321,12 +321,12 @@ begin
 
   ParseS7PlusObject(EncodePObject($00000001, 534, 0, 0, atributos), 0, obj);
 
-  AssertEquals('id de relacao', 1, obj.RelationId);
-  AssertEquals('classe', 534, obj.ClassId);
-  AssertEquals('quantidade de atributos', 2, Length(obj.AttrIds));
+  AssertEquals('relation id', 1, obj.RelationId);
+  AssertEquals('class', 534, obj.ClassId);
+  AssertEquals('number of attributes', 2, Length(obj.AttrIds));
 
-  AssertTrue('atributo 1234 encontrado', S7PlusObjectAttr(obj, 1234, valor));
-  AssertBytesEqual('valor do atributo', BytesOf('00 00 01 2C'), valor);
+  AssertTrue('attribute 1234 found', S7PlusObjectAttr(obj, 1234, valor));
+  AssertBytesEqual('attribute value', BytesOf('00 00 01 2C'), valor);
 end;
 
 procedure TTestS7PlusTypeInfo.AtributoAusenteNoObjetoDevolveFalso;
@@ -340,7 +340,7 @@ begin
   atributos[0].Value :=EncodeValuePUSInt(7);
 
   ParseS7PlusObject(EncodePObject($00000001, 534, 0, 0, atributos), 0, obj);
-  AssertFalse('atributo inexistente', S7PlusObjectAttr(obj, 999, valor));
+  AssertFalse('attribute that does not exist', S7PlusObjectAttr(obj, 999, valor));
 end;
 
 procedure TTestS7PlusTypeInfo.ObjetoAninhadoEhEncontradoPelaClasse;
@@ -360,14 +360,14 @@ begin
                     BytesOf('A2'));
 
   ParseS7PlusObjectList(externo, 0, objetos);
-  AssertEquals('um objeto na raiz', 1, Length(objetos));
-  AssertEquals('um filho', 1, Length(objetos[0].Objects));
+  AssertEquals('one object at the root', 1, Length(objetos));
+  AssertEquals('one child', 1, Length(objetos[0].Objects));
 
   //a busca precisa descer na arvore, nao so olhar a raiz
-  AssertTrue('classe 534 encontrada', S7PlusFindContainer(objetos, 534, achado));
-  AssertEquals('id de relacao do achado', 2, achado.RelationId);
+  AssertTrue('class 534 found', S7PlusFindContainer(objetos, 534, achado));
+  AssertEquals('relation id of the one found', 2, achado.RelationId);
 
-  AssertFalse('classe inexistente', S7PlusFindContainer(objetos, 999, achado));
+  AssertFalse('class that does not exist', S7PlusFindContainer(objetos, 999, achado));
 end;
 
 procedure TTestS7PlusTypeInfo.ObjetosIrmaosSaoPercorridos;
@@ -383,10 +383,10 @@ begin
 
   fim:=ParseS7PlusObjectList(dados, 0, objetos);
 
-  AssertEquals('dois objetos irmaos', 2, Length(objetos));
-  AssertEquals('classe do primeiro', 300, objetos[0].ClassId);
-  AssertEquals('classe do segundo',  534, objetos[1].ClassId);
-  AssertEquals('consumiu tudo', Length(dados), fim);
+  AssertEquals('two sibling objects', 2, Length(objetos));
+  AssertEquals('class of the first one', 300, objetos[0].ClassId);
+  AssertEquals('class of the second one',  534, objetos[1].ClassId);
+  AssertEquals('consumed everything', Length(dados), fim);
 end;
 
 procedure TTestS7PlusTypeInfo.LidsSaoFormatadosEmHexaSeparadosPorPonto;
@@ -398,10 +398,10 @@ begin
   lids[0]:=1;
   lids[1]:=10;
   lids[2]:=255;
-  AssertEquals('caminho de lids', '1.A.FF', S7PlusFormatLids(lids));
+  AssertEquals('path of lids', '1.A.FF', S7PlusFormatLids(lids));
 
   SetLength(vazio, 0);
-  AssertEquals('caminho vazio', '', S7PlusFormatLids(vazio));
+  AssertEquals('empty path', '', S7PlusFormatLids(vazio));
 end;
 
 initialization

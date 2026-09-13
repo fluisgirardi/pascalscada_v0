@@ -204,18 +204,18 @@ begin
 
   FSocket:=fpSocket(AF_INET, SOCK_DGRAM, 0);
   if FSocket<0 then
-    raise Exception.Create('servidor udp de teste: nao consegui criar o soquete');
+    raise Exception.Create('test udp server: could not create the socket');
 
   endereco.sin_family     :=AF_INET;
   endereco.sin_port       :=htons(0);
   endereco.sin_addr.s_addr:=htonl($7F000001);
 
   if fpBind(FSocket, @endereco, SizeOf(endereco))<>0 then
-    raise Exception.Create('servidor udp de teste: nao consegui reservar a porta');
+    raise Exception.Create('test udp server: could not bind the port');
 
   tam:=SizeOf(endereco);
   if fpGetSockName(FSocket, @endereco, @tam)<>0 then
-    raise Exception.Create('servidor udp de teste: nao descobri a porta escolhida');
+    raise Exception.Create('test udp server: could not find the port it was given');
   FPorta:=htons(endereco.sin_port);
 
   FThread:=TThreadDoServidorUDP.Create(Self);
@@ -362,7 +362,7 @@ begin
 
   FOuvinte:=fpSocket(AF_INET, SOCK_STREAM, 0);
   if FOuvinte<0 then
-    raise Exception.Create('servidor de teste: nao consegui criar o soquete');
+    raise Exception.Create('test server: could not create the socket');
 
   reusar:=1;
   fpSetSockOpt(FOuvinte, SOL_SOCKET, SO_REUSEADDR, @reusar, SizeOf(reusar));
@@ -372,14 +372,14 @@ begin
   endereco.sin_addr.s_addr:=htonl($7F000001);  //127.0.0.1
 
   if fpBind(FOuvinte, @endereco, SizeOf(endereco))<>0 then
-    raise Exception.Create('servidor de teste: nao consegui reservar a porta');
+    raise Exception.Create('test server: could not bind the port');
 
   if fpListen(FOuvinte, 4)<>0 then
-    raise Exception.Create('servidor de teste: nao consegui ouvir a porta');
+    raise Exception.Create('test server: could not listen on the port');
 
   tam:=SizeOf(endereco);
   if fpGetSockName(FOuvinte, @endereco, @tam)<>0 then
-    raise Exception.Create('servidor de teste: nao descobri a porta escolhida');
+    raise Exception.Create('test server: could not find the port it was given');
   FPorta:=htons(endereco.sin_port);
 
   FThread:=TThreadDoServidor.Create(Self);

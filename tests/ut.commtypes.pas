@@ -50,27 +50,27 @@ implementation
 procedure TTestCommTypes.JuncaoPreservaAOrdemDosDois;
 begin
   //o segundo pedaco entra depois do primeiro, sem embaralhar
-  AssertBytesEqual('juncao', BytesOf('01 02 03 AA BB'),
+  AssertBytesEqual('concatenation', BytesOf('01 02 03 AA BB'),
                    ConcatenateBYTES(BytesOf('01 02 03'), BytesOf('AA BB')));
 end;
 
 procedure TTestCommTypes.JuncaoComOPrimeiroVazioDevolveOSegundo;
 begin
   //acontece de verdade: a primeira etapa da leitura pode voltar vazia
-  AssertBytesEqual('primeiro vazio', BytesOf('AA BB'),
+  AssertBytesEqual('first one empty', BytesOf('AA BB'),
                    ConcatenateBYTES(nil, BytesOf('AA BB')));
 end;
 
 procedure TTestCommTypes.JuncaoComOSegundoVazioDevolveOPrimeiro;
 begin
   //e a segunda tambem, quando nao falta nada para ler
-  AssertBytesEqual('segundo vazio', BytesOf('01 02 03'),
+  AssertBytesEqual('second one empty', BytesOf('01 02 03'),
                    ConcatenateBYTES(BytesOf('01 02 03'), nil));
 end;
 
 procedure TTestCommTypes.JuncaoDeDoisVaziosDaVazio;
 begin
-  AssertEquals('nada com nada', 0, Length(ConcatenateBYTES(nil, nil)));
+  AssertEquals('nothing with nothing', 0, Length(ConcatenateBYTES(nil, nil)));
 end;
 
 procedure TTestCommTypes.TamanhoEhASomaDosDois;
@@ -93,8 +93,8 @@ begin
   juntos[0]:=$FF;
   juntos[3]:=$FF;
 
-  AssertBytesEqual('a primeira fonte fica intacta', BytesOf('01 02'), primeiro);
-  AssertBytesEqual('a segunda fonte fica intacta',  BytesOf('AA BB'), segundo);
+  AssertBytesEqual('the first source stays untouched', BytesOf('01 02'), primeiro);
+  AssertBytesEqual('the second source stays untouched',  BytesOf('AA BB'), segundo);
 end;
 
 initialization

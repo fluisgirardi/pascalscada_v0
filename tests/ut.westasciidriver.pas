@@ -85,8 +85,8 @@ begin
   FPorta.QueueResponse(BytesOf('4C 30 31 3F 41 2A'));
   FDrv.DeviceActive(1);
 
-  AssertEquals('uma escrita na porta', 1, FPorta.WriteCount);
-  AssertBytesEqual('frame de presenca',
+  AssertEquals('one write to the port', 1, FPorta.WriteCount);
+  AssertBytesEqual('presence frame',
                    BytesOf('4C 30 31 3F 3F 2A'), FPorta.WrittenFrame(0));
 end;
 
@@ -95,19 +95,19 @@ begin
   //42 vira "42"; enderecos de um digito levam zero a esquerda
   FPorta.QueueResponse(BytesOf('4C 34 32 3F 41 2A'));
   FDrv.DeviceActive(42);
-  AssertBytesEqual('endereco 42', BytesOf('4C 34 32 3F 3F 2A'), FPorta.WrittenFrame(0));
+  AssertBytesEqual('address 42', BytesOf('4C 34 32 3F 3F 2A'), FPorta.WrittenFrame(0));
 
   FPorta.Reset;
   FPorta.QueueResponse(BytesOf('4C 30 39 3F 41 2A'));
   FDrv.DeviceActive(9);
-  AssertBytesEqual('endereco 9', BytesOf('4C 30 39 3F 3F 2A'), FPorta.WrittenFrame(0));
+  AssertBytesEqual('address 9', BytesOf('4C 30 39 3F 3F 2A'), FPorta.WrittenFrame(0));
 end;
 
 procedure TTestWestASCIIDriver.RespostaPositivaConfirmaOEquipamento;
 begin
   //o equipamento devolve o mesmo endereco com "A" no lugar do segundo "?"
   FPorta.QueueResponse(BytesOf('4C 30 31 3F 41 2A'));
-  AssertEquals('equipamento presente', Ord(ioOk), Ord(FDrv.DeviceActive(1)));
+  AssertEquals('device present', Ord(ioOk), Ord(FDrv.DeviceActive(1)));
 end;
 
 procedure TTestWestASCIIDriver.RespostaNoFormatoCurtoTambemEhAceita;
@@ -115,27 +115,27 @@ begin
   //ha equipamentos que respondem so com o digito das unidades; o driver
   //aceita as duas formas
   FPorta.QueueResponse(BytesOf('4C 31 3F 41 2A 00'));
-  AssertEquals('formato curto', Ord(ioOk), Ord(FDrv.DeviceActive(1)));
+  AssertEquals('short format', Ord(ioOk), Ord(FDrv.DeviceActive(1)));
 end;
 
 procedure TTestWestASCIIDriver.RespostaDeOutroEnderecoEhRecusada;
 begin
   //perguntamos ao 1 e respondeu o 2
   FPorta.QueueResponse(BytesOf('4C 30 32 3F 41 2A'));
-  AssertEquals('endereco errado', Ord(ioCommError), Ord(FDrv.DeviceActive(1)));
+  AssertEquals('wrong address', Ord(ioCommError), Ord(FDrv.DeviceActive(1)));
 end;
 
 procedure TTestWestASCIIDriver.RespostaComLixoEhRecusada;
 begin
   FPorta.QueueResponse(BytesOf('FF FF FF FF FF FF'));
-  AssertEquals('resposta sem sentido', Ord(ioCommError), Ord(FDrv.DeviceActive(1)));
+  AssertEquals('answer that makes no sense', Ord(ioCommError), Ord(FDrv.DeviceActive(1)));
 end;
 
 procedure TTestWestASCIIDriver.SemRespostaViraTimeout;
 begin
   //nada enfileirado: o equipamento nao respondeu
   AssertEquals('timeout', Ord(ioTimeOut), Ord(FDrv.DeviceActive(1)));
-  AssertEquals('mas o pedido chegou a ser enviado', 1, FPorta.WriteCount);
+  AssertEquals('but the request did get sent', 1, FPorta.WriteCount);
 end;
 
 procedure TTestWestASCIIDriver.SemPortaDeComunicacaoNaoTentaFalar;
@@ -144,7 +144,7 @@ var
 begin
   semPorta:=TWestASCIIDriver.Create(nil);
   try
-    AssertEquals('driver sem porta', Ord(ioNullDriver), Ord(semPorta.DeviceActive(1)));
+    AssertEquals('driver with no port', Ord(ioNullDriver), Ord(semPorta.DeviceActive(1)));
   finally
     semPorta.Free;
   end;

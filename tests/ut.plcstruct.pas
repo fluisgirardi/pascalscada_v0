@@ -210,8 +210,8 @@ procedure TTestPLCStruct.ByteNoDeslocamentoPedido;
 begin
   FEstrutura.ChegouDaVarredura([$0A, $0B, $0C, $0D]);
 
-  AssertEquals('primeiro', $0A, FEstrutura.GetByte(0));
-  AssertEquals('terceiro', $0C, FEstrutura.GetByte(2));
+  AssertEquals('first', $0A, FEstrutura.GetByte(0));
+  AssertEquals('third', $0C, FEstrutura.GetByte(2));
 end;
 
 procedure TTestPLCStruct.ByteAlemDoFimEhRecusado;
@@ -225,28 +225,28 @@ begin
   except
     on E:Exception do recusou:=true;
   end;
-  AssertTrue('byte alem do fim', recusou);
+  AssertTrue('byte past the end', recusou);
 end;
 
 procedure TTestPLCStruct.PalavraNaOrdemDoProcessador;
 begin
   //sem troca, o primeiro byte e' o menos significativo
   FEstrutura.ChegouDaVarredura([$34, $12]);
-  AssertEquals('palavra', $1234, FEstrutura.GetWord(0, false));
+  AssertEquals('word', $1234, FEstrutura.GetWord(0, false));
 end;
 
 procedure TTestPLCStruct.PalavraComBytesTrocados;
 begin
   //com troca, o primeiro byte e' o mais significativo - a ordem do S7
   FEstrutura.ChegouDaVarredura([$12, $34]);
-  AssertEquals('palavra trocada', $1234, FEstrutura.GetWord(0, true));
+  AssertEquals('word swapped', $1234, FEstrutura.GetWord(0, true));
 end;
 
 procedure TTestPLCStruct.PalavraComSinal;
 begin
   //$FFFF vale menos um quando lido com sinal
   FEstrutura.ChegouDaVarredura([$FF, $FF]);
-  AssertEquals('menos um', -1, FEstrutura.GetSmallInt(0, false));
+  AssertEquals('minus one', -1, FEstrutura.GetSmallInt(0, false));
 end;
 
 procedure TTestPLCStruct.PalavraAlemDoFimEhRecusada;
@@ -261,54 +261,54 @@ begin
   except
     on E:Exception do recusou:=true;
   end;
-  AssertTrue('palavra alem do fim', recusou);
+  AssertTrue('word past the end', recusou);
 end;
 
 procedure TTestPLCStruct.PalavraDuplaNaOrdemDoProcessador;
 begin
   FEstrutura.ChegouDaVarredura([$78, $56, $34, $12]);
-  AssertEquals('palavra dupla', $12345678, FEstrutura.GetLongWord(0, false, false));
+  AssertEquals('double word', $12345678, FEstrutura.GetLongWord(0, false, false));
 end;
 
 procedure TTestPLCStruct.PalavraDuplaComPalavrasTrocadas;
 begin
   //so' as palavras trocadas: cada metade fica na ordem do processador
   FEstrutura.ChegouDaVarredura([$34, $12, $78, $56]);
-  AssertEquals('palavras trocadas', $12345678, FEstrutura.GetLongWord(0, false, true));
+  AssertEquals('words swapped', $12345678, FEstrutura.GetLongWord(0, false, true));
 end;
 
 procedure TTestPLCStruct.PalavraDuplaComBytesEPalavrasTrocados;
 begin
   //tudo trocado e' a ordem de rede, byte mais significativo primeiro
   FEstrutura.ChegouDaVarredura([$12, $34, $56, $78]);
-  AssertEquals('ordem de rede', $12345678, FEstrutura.GetLongWord(0, true, true));
+  AssertEquals('network order', $12345678, FEstrutura.GetLongWord(0, true, true));
 end;
 
 procedure TTestPLCStruct.InteiroComSinalDePalavraDupla;
 begin
   FEstrutura.ChegouDaVarredura([$FF, $FF, $FF, $FF]);
-  AssertEquals('menos um', -1, FEstrutura.GetLongInt(0, false, false));
+  AssertEquals('minus one', -1, FEstrutura.GetLongInt(0, false, false));
 end;
 
 procedure TTestPLCStruct.PontoFlutuanteSimples;
 begin
   //1.0 em ponto flutuante simples e' $3F800000
   FEstrutura.ChegouDaVarredura([$00, $00, $80, $3F]);
-  AssertEquals('um', 1, FEstrutura.GetSingle(0, false, false), 0.0001);
+  AssertEquals('one', 1, FEstrutura.GetSingle(0, false, false), 0.0001);
 end;
 
 procedure TTestPLCStruct.PontoFlutuanteSimplesComTrocaCompleta;
 begin
   //o mesmo 1.0 na ordem de rede, que e' como o S7 entrega
   FEstrutura.ChegouDaVarredura([$3F, $80, $00, $00]);
-  AssertEquals('um', 1, FEstrutura.GetSingle(0, true, true), 0.0001);
+  AssertEquals('one', 1, FEstrutura.GetSingle(0, true, true), 0.0001);
 end;
 
 procedure TTestPLCStruct.PontoFlutuanteDuplo;
 begin
   //1.0 em ponto flutuante duplo e' $3FF0000000000000
   FEstrutura.ChegouDaVarredura([$00, $00, $00, $00, $00, $00, $F0, $3F]);
-  AssertEquals('um', 1, FEstrutura.GetDouble(0, false, false, false), 0.0001);
+  AssertEquals('one', 1, FEstrutura.GetDouble(0, false, false, false), 0.0001);
 end;
 
 procedure TTestPLCStruct.TrocaDePalavrasEmSessentaEQuatroBitsEhRespeitada;
@@ -318,9 +318,9 @@ begin
   //bloco e' de bytes crus e cada leitura escolhe a sua ordem
   FEstrutura.ChegouDaVarredura([$01, $02, $03, $04, $05, $06, $07, $08]);
 
-  AssertTrue('sem troca de palavras',
+  AssertTrue('no word swapping',
              QWord($0807060504030201) = FEstrutura.GetQWord(0, false, false, false));
-  AssertTrue('com troca de palavras',
+  AssertTrue('with word swapping',
              QWord($0605080702010403) = FEstrutura.GetQWord(0, false, true, false));
 end;
 
@@ -328,14 +328,14 @@ procedure TTestPLCStruct.TextoSiemensTemTamanhoMaximoEAtual;
 begin
   //o formato do S7: tamanho maximo, tamanho atual e os caracteres
   FEstrutura.ChegouDaVarredura([10, 3, Ord('a'), Ord('b'), Ord('c'), 0, 0, 0]);
-  AssertEquals('texto', 'abc', FEstrutura.GetSiemensString(0));
+  AssertEquals('text', 'abc', FEstrutura.GetSiemensString(0));
 end;
 
 procedure TTestPLCStruct.TextoSiemensParaNoTamanhoAtual;
 begin
   //o que vem depois do tamanho atual e' resto de escrita anterior, nao texto
   FEstrutura.ChegouDaVarredura([10, 2, Ord('a'), Ord('b'), Ord('c'), Ord('d')]);
-  AssertEquals('so o que foi declarado', 'ab', FEstrutura.GetSiemensString(0));
+  AssertEquals('only what was declared', 'ab', FEstrutura.GetSiemensString(0));
 end;
 
 procedure TTestPLCStruct.TextoSiemensNoFimDaEstruturaNaoEstoura;
@@ -355,8 +355,8 @@ begin
     on E:Exception do estourou:=true;
   end;
 
-  AssertFalse('a leitura nao pode estourar', estourou);
-  AssertEquals('o que cabe', 'ab', texto);
+  AssertFalse('the read must not overrun', estourou);
+  AssertEquals('what fits', 'ab', texto);
 end;
 
 { TTestPLCStructItem }
@@ -388,7 +388,7 @@ begin
   FItem.TagType :=pttByte;
   FItem.Index   :=0;
 
-  AssertEquals('um byte', $0A, FItem.Value, 0);
+  AssertEquals('one byte', $0A, FItem.Value, 0);
 end;
 
 procedure TTestPLCStructItem.ItemDePalavraLeDoisBytes;
@@ -398,7 +398,7 @@ begin
   FItem.TagType :=pttWord;
   FItem.Index   :=0;
 
-  AssertEquals('uma palavra', $1234, FItem.Value, 0);
+  AssertEquals('one word', $1234, FItem.Value, 0);
 end;
 
 procedure TTestPLCStructItem.ItemDePalavraDuplaLeQuatroBytes;
@@ -408,7 +408,7 @@ begin
   FItem.TagType :=pttDWord;
   FItem.Index   :=0;
 
-  AssertEquals('uma palavra dupla', $12345678, FItem.Value, 0);
+  AssertEquals('one double word', $12345678, FItem.Value, 0);
 end;
 
 procedure TTestPLCStructItem.ItemDePontoFlutuanteLeQuatroBytes;
@@ -419,7 +419,7 @@ begin
   FItem.TagType :=pttFloat;
   FItem.Index   :=0;
 
-  AssertEquals('um', 1, FItem.Value, 0.0001);
+  AssertEquals('one', 1, FItem.Value, 0.0001);
 end;
 
 procedure TTestPLCStructItem.ItemLeNoDeslocamentoEscolhido;
@@ -430,7 +430,7 @@ begin
   FItem.TagType :=pttWord;
   FItem.Index   :=4;
 
-  AssertEquals('no deslocamento quatro', $BEEF, FItem.Value, 0);
+  AssertEquals('at offset four', $BEEF, FItem.Value, 0);
 end;
 
 procedure TTestPLCStructItem.TrocarOTipoTrocaQuantosBytesSaoLidos;
@@ -440,10 +440,10 @@ begin
   FItem.Index   :=0;
 
   FItem.TagType:=pttByte;
-  AssertEquals('como byte',   $34,   FItem.Value, 0);
+  AssertEquals('as a byte',   $34,   FItem.Value, 0);
 
   FItem.TagType:=pttWord;
-  AssertEquals('como palavra', $1234, FItem.Value, 0);
+  AssertEquals('as a word', $1234, FItem.Value, 0);
 end;
 
 procedure TTestPLCStructItem.DeslocamentoQueNaoCabeNaEstruturaEhRecusado;
@@ -460,7 +460,7 @@ begin
   except
     on E:Exception do recusou:=true;
   end;
-  AssertTrue('deslocamento que nao cabe', recusou);
+  AssertTrue('an offset that does not fit', recusou);
 end;
 
 procedure TTestPLCStructItem.UltimoDeslocamentoQueCabeEhAceito;
@@ -470,7 +470,7 @@ begin
   FItem.TagType :=pttDWord;
   FItem.Index   :=12;
 
-  AssertEquals('ultimo que cabe', 12, FItem.Index);
+  AssertEquals('the last one that fits', 12, FItem.Index);
 end;
 
 procedure TTestPLCStructItem.ItemAcompanhaAMudancaDaEstrutura;
@@ -480,7 +480,7 @@ begin
   FItem.Index   :=1;
 
   FEstrutura.ChegouDaVarredura([$00, $42]);
-  AssertEquals('valor novo', $42, FItem.Value, 0);
+  AssertEquals('new value', $42, FItem.Value, 0);
 end;
 
 procedure TTestPLCStructItem.EstruturaDestruidaDesligaOVinculo;
@@ -495,7 +495,7 @@ begin
 
   FreeAndNil(estrutura);
 
-  AssertTrue('o vinculo tem que ter sido desfeito', FItem.PLCBlock=nil);
+  AssertTrue('the link must have been broken', FItem.PLCBlock=nil);
 end;
 
 procedure TTestPLCStructItem.SemEstruturaGuardaOValorLocalmente;
@@ -504,7 +504,7 @@ begin
   FItem.TagType:=pttByte;
   FItem.Value  :=9;
 
-  AssertEquals('valor guardado', 9, FItem.Value, 0);
+  AssertEquals('value kept', 9, FItem.Value, 0);
 end;
 
 { TTestPLCStructString }
@@ -542,7 +542,7 @@ begin
   Configurar(stC, 0, 8);
   FEstrutura.ChegouDaVarredura([Ord('o'), Ord('l'), Ord('a'), 0, Ord('x'), Ord('y')]);
 
-  AssertEquals('para no zero', 'ola', FTexto.Value);
+  AssertEquals('stops at the zero', 'ola', FTexto.Value);
 end;
 
 procedure TTestPLCStructString.TextoNoFormatoCRespeitaOTamanhoMaximo;
@@ -551,7 +551,7 @@ begin
   Configurar(stC, 0, 3);
   FEstrutura.ChegouDaVarredura([Ord('a'), Ord('b'), Ord('c'), Ord('d'), Ord('e')]);
 
-  AssertEquals('tres caracteres', 'abc', FTexto.Value);
+  AssertEquals('three characters', 'abc', FTexto.Value);
 end;
 
 procedure TTestPLCStructString.TextoNoFormatoSiemensEhLido;
@@ -560,7 +560,7 @@ begin
   Configurar(stSIEMENS, 0, 10);
   FEstrutura.ChegouDaVarredura([10, 3, Ord('a'), Ord('b'), Ord('c'), 0, 0]);
 
-  AssertEquals('texto siemens', 'abc', FTexto.Value);
+  AssertEquals('siemens text', 'abc', FTexto.Value);
 end;
 
 procedure TTestPLCStructString.TextoNoFormatoRockwellUsaOTamanhoDaFrente;
@@ -569,7 +569,7 @@ begin
   Configurar(stROCKWELL, 0, 8);
   FEstrutura.ChegouDaVarredura([4, 0, 0, 0, Ord('c'), Ord('a'), Ord('s'), Ord('a'), Ord('x')]);
 
-  AssertEquals('texto rockwell', 'casa', FTexto.Value);
+  AssertEquals('rockwell text', 'casa', FTexto.Value);
 end;
 
 procedure TTestPLCStructString.TextoEhLidoNoDeslocamentoEscolhido;
@@ -577,22 +577,22 @@ begin
   Configurar(stC, 4, 8);
   FEstrutura.ChegouDaVarredura([0, 0, 0, 0, Ord('l'), Ord('a'), Ord('h'), 0]);
 
-  AssertEquals('no deslocamento quatro', 'lah', FTexto.Value);
+  AssertEquals('at offset four', 'lah', FTexto.Value);
 end;
 
 procedure TTestPLCStructString.MudancaNaEstruturaAtualizaOTexto;
 begin
   Configurar(stC, 0, 8);
   FEstrutura.ChegouDaVarredura([Ord('u'), Ord('m'), 0]);
-  AssertEquals('antes', 'um', FTexto.Value);
+  AssertEquals('before', 'um', FTexto.Value);
 
   FTexto.AddTagChangeHandler(@ContarAviso);
   FAvisos:=0;
 
   FEstrutura.ChegouDaVarredura([Ord('d'), Ord('o'), Ord('i'), Ord('s'), 0]);
 
-  AssertEquals('depois',  'dois', FTexto.Value);
-  AssertTrue  ('e avisou', FAvisos>0);
+  AssertEquals('after',  'dois', FTexto.Value);
+  AssertTrue  ('and it notified', FAvisos>0);
 end;
 
 procedure TTestPLCStructString.CadaFormatoReservaOSeuCabecalho;
@@ -603,15 +603,15 @@ begin
 
   FTexto.StringType:=stC;
   FTexto.StringSize:=15;
-  AssertEquals('C cabe com 15', 15, FTexto.StringSize);
+  AssertEquals('C fits with 15', 15, FTexto.StringSize);
 
   FTexto.StringType:=stSIEMENS;
   FTexto.StringSize:=14;
-  AssertEquals('siemens cabe com 14', 14, FTexto.StringSize);
+  AssertEquals('siemens fits with 14', 14, FTexto.StringSize);
 
   FTexto.StringType:=stROCKWELL;
   FTexto.StringSize:=12;
-  AssertEquals('rockwell cabe com 12', 12, FTexto.StringSize);
+  AssertEquals('rockwell fits with 12', 12, FTexto.StringSize);
 end;
 
 procedure TTestPLCStructString.DeslocamentoQueNaoCabeEhIgnoradoEmSilencio;
@@ -620,7 +620,7 @@ begin
   Configurar(stC, 0, 8);
 
   FTexto.Index:=12;
-  AssertEquals('o deslocamento anterior fica', 0, FTexto.Index);
+  AssertEquals('the previous offset stays', 0, FTexto.Index);
 end;
 
 procedure TTestPLCStructString.EstruturaDestruidaDesligaOVinculo;
@@ -636,7 +636,7 @@ begin
 
   FreeAndNil(estrutura);
 
-  AssertTrue('o vinculo tem que ter sido desfeito', FTexto.PLCBlock=nil);
+  AssertTrue('the link must have been broken', FTexto.PLCBlock=nil);
 end;
 
 initialization

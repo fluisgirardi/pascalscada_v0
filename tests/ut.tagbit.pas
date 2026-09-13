@@ -119,37 +119,37 @@ procedure TTestTagBit.BitUnicoSaiComoZeroOuUm;
 begin
   //5 = 101: os bits 0 e 2 estao ligados, o 1 nao
   Recorte(0, 0, 5);
-  AssertEquals('bit 0 de 5', 1, FBit.Value, 0);
+  AssertEquals('bit 0 of 5', 1, FBit.Value, 0);
 
   Recorte(1, 1, 5);
-  AssertEquals('bit 1 de 5', 0, FBit.Value, 0);
+  AssertEquals('bit 1 of 5', 0, FBit.Value, 0);
 
   Recorte(2, 2, 5);
-  AssertEquals('bit 2 de 5', 1, FBit.Value, 0);
+  AssertEquals('bit 2 of 5', 1, FBit.Value, 0);
 end;
 
 procedure TTestTagBit.FaixaDeBitsSaiDeslocadaParaADireita;
 begin
   //o valor $F0 = 11110000: a faixa 4..7 vale 15, nao 240
   Recorte(4, 7, $F0);
-  AssertEquals('nibble alto de $F0', 15, FBit.Value, 0);
+  AssertEquals('high nibble of $F0', 15, FBit.Value, 0);
 
   //e a faixa 8..15 do valor $1234 e' $12
   Recorte(8, 15, $1234);
-  AssertEquals('byte alto de $1234', $12, FBit.Value, 0);
+  AssertEquals('high byte of $1234', $12, FBit.Value, 0);
 end;
 
 procedure TTestTagBit.ExemplosDaDocumentacao;
 begin
   //os tres exemplos escritos no cabecalho da unit, com o tag valendo 5
   Recorte(1, 2, 5);
-  AssertEquals('1..2 de 5', 2, FBit.Value, 0);
+  AssertEquals('1..2 of 5', 2, FBit.Value, 0);
 
   Recorte(0, 2, 5);
-  AssertEquals('0..2 de 5', 5, FBit.Value, 0);
+  AssertEquals('0..2 of 5', 5, FBit.Value, 0);
 
   Recorte(0, 1, 5);
-  AssertEquals('0..1 de 5', 1, FBit.Value, 0);
+  AssertEquals('0..1 of 5', 1, FBit.Value, 0);
 end;
 
 procedure TTestTagBit.BitsAltosDaPalavraDe64;
@@ -159,7 +159,7 @@ begin
   AssertEquals('bit 32', 1, FBit.Value, 0);
 
   Recorte(32, 35, 64424509440.0);   //$F00000000
-  AssertEquals('faixa 32..35', 15, FBit.Value, 0);
+  AssertEquals('range 32..35', 15, FBit.Value, 0);
 end;
 
 procedure TTestTagBit.EscritaVoltaParaOTagDeOrigem;
@@ -167,11 +167,11 @@ begin
   //ligar o bit 1 de um valor 5 da' 7
   Recorte(1, 1, 5);
   FBit.Value:=1;
-  AssertEquals('origem depois de ligar o bit 1', 7, FOrigem.Value, 0);
+  AssertEquals('source after setting bit 1', 7, FOrigem.Value, 0);
 
   //e desligar devolve o 5
   FBit.Value:=0;
-  AssertEquals('origem depois de desligar', 5, FOrigem.Value, 0);
+  AssertEquals('source after clearing it', 5, FOrigem.Value, 0);
 end;
 
 procedure TTestTagBit.EscritaNaoTocaNosOutrosBits;
@@ -179,7 +179,7 @@ begin
   //o valor $FF com o bit 3 desligado vira $F7
   Recorte(3, 3, $FF);
   FBit.Value:=0;
-  AssertEquals('so o bit 3 mudou', $F7, FOrigem.Value, 0);
+  AssertEquals('only bit 3 changed', $F7, FOrigem.Value, 0);
 end;
 
 procedure TTestTagBit.EscritaDeFaixaEntraDeslocada;
@@ -187,7 +187,7 @@ begin
   //escrever 5 na faixa 4..7 de um valor zerado poe $50
   Recorte(4, 7, 0);
   FBit.Value:=5;
-  AssertEquals('5 deslocado para o nibble alto', $50, FOrigem.Value, 0);
+  AssertEquals('5 shifted into the high nibble', $50, FOrigem.Value, 0);
 end;
 
 procedure TTestTagBit.EscritaMaiorQueAFaixaNaoTransborda;
@@ -195,7 +195,7 @@ begin
   //a faixa 0..1 so' guarda dois bits: escrever 7 nao pode vazar para o bit 2
   Recorte(0, 1, 0);
   FBit.Value:=7;
-  AssertEquals('o que nao cabe fica de fora', 3, FOrigem.Value, 0);
+  AssertEquals('what does not fit is left out', 3, FOrigem.Value, 0);
 end;
 
 procedure TTestTagBit.SemOrigemGuardaOValorLocalmente;
@@ -204,19 +204,19 @@ begin
   FBit.StartBit:=0;
   FBit.EndBit  :=3;
   FBit.Value   :=9;
-  AssertEquals('valor guardado', 9, FBit.Value, 0);
+  AssertEquals('value kept', 9, FBit.Value, 0);
 end;
 
 procedure TTestTagBit.SemOrigemOEstadoDaLeituraDizQueNaoHaBloco;
 begin
-  AssertEquals('leitura assincrona',  Ord(ioNullTagBlock), Ord(FBit.LastASyncReadStatus));
-  AssertEquals('leitura sincrona',    Ord(ioNullTagBlock), Ord(FBit.LastSyncReadStatus));
-  AssertEquals('escrita sincrona',    Ord(ioNullTagBlock), Ord(FBit.LastSyncWriteStatus));
+  AssertEquals('asynchronous read',  Ord(ioNullTagBlock), Ord(FBit.LastASyncReadStatus));
+  AssertEquals('synchronous read',    Ord(ioNullTagBlock), Ord(FBit.LastSyncReadStatus));
+  AssertEquals('synchronous write',    Ord(ioNullTagBlock), Ord(FBit.LastSyncWriteStatus));
 end;
 
 procedure TTestTagBit.SemOrigemOEstadoDaEscritaAssincronaDizQueNaoHaBloco;
 begin
-  AssertEquals('escrita assincrona', Ord(ioNullTagBlock), Ord(FBit.LastASyncWriteStatus));
+  AssertEquals('asynchronous write', Ord(ioNullTagBlock), Ord(FBit.LastASyncWriteStatus));
 end;
 
 procedure TTestTagBit.MudancaNosBitsObservadosAvisa;
@@ -227,7 +227,7 @@ begin
 
   //5 -> 7 liga o bit 1
   FOrigem.ChegouDoCLP(7);
-  AssertTrue('mudanca no bit observado tem que avisar', FAvisos>0);
+  AssertTrue('a change in the watched bit must notify', FAvisos>0);
 end;
 
 procedure TTestTagBit.MudancaForaDosBitsObservadosNaoAvisa;
@@ -241,7 +241,7 @@ begin
 
   //5 -> 13: mudou o bit 3, o bit 1 continua desligado
   FOrigem.ChegouDoCLP(13);
-  AssertEquals('bit observado nao mudou', 0, FAvisos);
+  AssertEquals('the watched bit did not change', 0, FAvisos);
 end;
 
 procedure TTestTagBit.VincularOrigemAtualizaOValorGuardado;
@@ -254,7 +254,7 @@ begin
   FAvisos:=0;
   FBit.PLCTag:=FOrigem;
 
-  AssertTrue('vincular a origem tem que avisar quem escuta', FAvisos>0);
+  AssertTrue('linking the source must notify the listener', FAvisos>0);
 end;
 
 procedure TTestTagBit.OrigemDestruidaDesligaOVinculo;
@@ -266,12 +266,12 @@ begin
   FBit.EndBit  :=0;
   FBit.StartBit:=0;
   FBit.PLCTag  :=origem;
-  AssertEquals('lendo da origem', 1, FBit.Value, 0);
+  AssertEquals('reading from the source', 1, FBit.Value, 0);
 
   FreeAndNil(origem);
 
   //o tag de bits tem que ter largado o vinculo, nao guardado um ponteiro morto
-  AssertTrue('o vinculo tem que ter sido desfeito', FBit.PLCTag=nil);
+  AssertTrue('the link must have been broken', FBit.PLCTag=nil);
 end;
 
 procedure TTestTagBit.ComandoDeLeituraVaiParaAOrigem;
@@ -281,7 +281,7 @@ begin
   Recorte(1, 1, 5);
 
   FBit.Read;
-  AssertEquals('a origem recebeu o pedido de leitura', 1, FOrigem.Leituras);
+  AssertEquals('the source got the read request', 1, FOrigem.Leituras);
 end;
 
 procedure TTestTagBit.SemOrigemOsComandosNaoFazemNada;
@@ -294,8 +294,8 @@ begin
 
   FBit.Read;
   FBit.Write(valores, 1, 0);
-  AssertEquals('varredura sem origem', -1, FBit.ScanRead);
-  AssertEquals('escrita de varredura sem origem', -1, FBit.ScanWrite(valores, 1, 0));
+  AssertEquals('scan with no source', -1, FBit.ScanRead);
+  AssertEquals('scan write with no source', -1, FBit.ScanWrite(valores, 1, 0));
 end;
 
 procedure TTestTagBit.ComandoDeEscritaVaiParaAOrigem;
@@ -308,7 +308,7 @@ begin
   FBit.Value:=1;
 
   FBit.Write;
-  AssertEquals('a origem recebeu a escrita', 7, FOrigem.Value, 0);
+  AssertEquals('the source got the write', 7, FOrigem.Value, 0);
 end;
 
 procedure TTestTagBit.ComandoDeEscritaDeVarreduraVaiParaAOrigem;
@@ -317,7 +317,7 @@ begin
   FBit.Value:=1;
 
   FBit.ScanWrite;
-  AssertEquals('a origem recebeu a escrita de varredura', 7, FOrigem.Value, 0);
+  AssertEquals('the source got the scan write', 7, FOrigem.Value, 0);
 end;
 
 initialization

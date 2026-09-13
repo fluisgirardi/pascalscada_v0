@@ -120,7 +120,7 @@ end;
 procedure TTestNumExprTag.ExpressaoConstanteEhCalculada;
 begin
   FExpr.Expression:='2+3';
-  AssertEquals('constante', 5, FExpr.Value, 0);
+  AssertEquals('constant', 5, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.ExpressaoComUmaVariavel;
@@ -129,7 +129,7 @@ begin
   FExpr.A:=FA;
   FExpr.Expression:='A*2';
 
-  AssertEquals('uma variavel', 20, FExpr.Value, 0);
+  AssertEquals('one variable', 20, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.ExpressaoComDuasVariaveis;
@@ -140,7 +140,7 @@ begin
   FExpr.B:=FB;
   FExpr.Expression:='A-B';
 
-  AssertEquals('duas variaveis', 6, FExpr.Value, 0);
+  AssertEquals('two variables', 6, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.FuncaoMatematicaEhAceita;
@@ -149,7 +149,7 @@ begin
   FExpr.A:=FA;
   FExpr.Expression:='sqrt(A)';
 
-  AssertEquals('raiz quadrada', 3, FExpr.Value, 0.0001);
+  AssertEquals('square root', 3, FExpr.Value, 0.0001);
 end;
 
 procedure TTestNumExprTag.FuncaoIfThenEscolheOValor;
@@ -158,10 +158,10 @@ begin
   FA.ChegouDoCLP(10);
   FExpr.A:=FA;
   FExpr.Expression:='ifthen(A>5, 100, 200)';
-  AssertEquals('condicao verdadeira', 100, FExpr.Value, 0);
+  AssertEquals('true condition', 100, FExpr.Value, 0);
 
   FA.ChegouDoCLP(1);
-  AssertEquals('condicao falsa', 200, FExpr.Value, 0);
+  AssertEquals('false condition', 200, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.ResultadoInteiroNaoViraLixo;
@@ -172,13 +172,13 @@ begin
   FExpr.A:=FA;
 
   FExpr.Expression:='10';
-  AssertEquals('constante inteira', 10, FExpr.Value, 0);
+  AssertEquals('integer constant', 10, FExpr.Value, 0);
 
   FExpr.Expression:='round(A/2)';
-  AssertEquals('arredondamento',     4, FExpr.Value, 0);
+  AssertEquals('rounding',     4, FExpr.Value, 0);
 
   FExpr.Expression:='trunc(A/2)';
-  AssertEquals('truncamento',        3, FExpr.Value, 0);
+  AssertEquals('truncation',        3, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.ComparacaoDiretaValeUmOuZero;
@@ -188,21 +188,21 @@ begin
   FExpr.A:=FA;
 
   FExpr.Expression:='A>5';
-  AssertEquals('verdadeiro vale um', 1, FExpr.Value, 0);
+  AssertEquals('true is one', 1, FExpr.Value, 0);
 
   FA.ChegouDoCLP(1);
-  AssertEquals('falso vale zero',    0, FExpr.Value, 0);
+  AssertEquals('false is zero',    0, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.ResultadoDeTextoEhErro;
 begin
   //texto nao vira valor de tag: tem que virar erro, nao numero estranho
   FExpr.Expression:='5';
-  AssertEquals('valor bom antes', 5, FExpr.Value, 0);
+  AssertEquals('good value before', 5, FExpr.Value, 0);
 
   FExpr.Expression:='"abc"';
-  AssertTrue  ('resultado de texto e erro', FExpr.LastEvalutionError<>'OK');
-  AssertEquals('e o valor anterior fica',   5, FExpr.Value, 0);
+  AssertTrue  ('a text result is an error', FExpr.LastEvalutionError<>'OK');
+  AssertEquals('and the previous value stays',   5, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.MudarOTagDeOrigemRecalcula;
@@ -210,10 +210,10 @@ begin
   FA.ChegouDoCLP(10);
   FExpr.A:=FA;
   FExpr.Expression:='A*2';
-  AssertEquals('antes', 20, FExpr.Value, 0);
+  AssertEquals('before', 20, FExpr.Value, 0);
 
   FA.ChegouDoCLP(30);
-  AssertEquals('depois da mudanca na origem', 60, FExpr.Value, 0);
+  AssertEquals('after the change at the source', 60, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.MudarAExpressaoRecalcula;
@@ -221,10 +221,10 @@ begin
   FA.ChegouDoCLP(10);
   FExpr.A:=FA;
   FExpr.Expression:='A*2';
-  AssertEquals('antes', 20, FExpr.Value, 0);
+  AssertEquals('before', 20, FExpr.Value, 0);
 
   FExpr.Expression:='A+1';
-  AssertEquals('depois de mudar a expressao', 11, FExpr.Value, 0);
+  AssertEquals('after changing the expression', 11, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.MudancaNoValorAvisaQuemEscuta;
@@ -237,28 +237,28 @@ begin
   FAvisos:=0;
 
   FA.ChegouDoCLP(30);
-  AssertTrue('o valor mudou, tem que avisar', FAvisos>0);
+  AssertTrue('the value changed, it must notify', FAvisos>0);
 end;
 
 procedure TTestNumExprTag.ExpressaoNovaComecaSemErro;
 begin
   FExpr.Expression:='1+1';
-  AssertEquals('sem erro', 'OK', FExpr.LastEvalutionError);
+  AssertEquals('no error', 'OK', FExpr.LastEvalutionError);
 end;
 
 procedure TTestNumExprTag.ExpressaoInvalidaGuardaOErro;
 begin
   FExpr.Expression:='2+*3';
-  AssertTrue('o erro tem que ficar guardado', FExpr.LastEvalutionError<>'OK');
+  AssertTrue('the error must be kept', FExpr.LastEvalutionError<>'OK');
 end;
 
 procedure TTestNumExprTag.ExpressaoInvalidaNaoMudaOValor;
 begin
   FExpr.Expression:='7';
-  AssertEquals('valor bom', 7, FExpr.Value, 0);
+  AssertEquals('good value', 7, FExpr.Value, 0);
 
   FExpr.Expression:='2+*3';
-  AssertEquals('o valor anterior fica de pe', 7, FExpr.Value, 0);
+  AssertEquals('the previous value stands', 7, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.ExpressaoInvalidaAvisaFalhaDeLeitura;
@@ -266,24 +266,24 @@ begin
   FExpr.AddReadFaultHandler(@ContarFalhaDeLeitura);
   FExpr.Expression:='2+*3';
 
-  AssertTrue('quem escuta tem que saber', FFalhasDeLeitura>0);
+  AssertTrue('the listener must be told', FFalhasDeLeitura>0);
 end;
 
 procedure TTestNumExprTag.ExpressaoBoaDepoisDeUmaRuimLimpaOErro;
 begin
   FExpr.Expression:='2+*3';
-  AssertTrue('erro guardado', FExpr.LastEvalutionError<>'OK');
+  AssertTrue('error kept', FExpr.LastEvalutionError<>'OK');
 
   FExpr.Expression:='4+4';
-  AssertEquals('erro limpo', 'OK', FExpr.LastEvalutionError);
-  AssertEquals('e o valor novo', 8, FExpr.Value, 0);
+  AssertEquals('error cleared', 'OK', FExpr.LastEvalutionError);
+  AssertEquals('and the new value', 8, FExpr.Value, 0);
 end;
 
 procedure TTestNumExprTag.VariavelNaoLigadaEhErro;
 begin
   //A so' existe na expressao se houver um tag ligado nela
   FExpr.Expression:='A*2';
-  AssertTrue('variavel sem tag', FExpr.LastEvalutionError<>'OK');
+  AssertTrue('variable with no tag', FExpr.LastEvalutionError<>'OK');
 end;
 
 procedure TTestNumExprTag.EscreverNoTagCalculadoEhRecusado;
@@ -293,8 +293,8 @@ begin
 
   FExpr.Value:=99;
 
-  AssertEquals('o valor calculado nao muda', 7, FExpr.Value, 0);
-  AssertTrue  ('e a escrita e recusada',     FFalhasDeEscrita>0);
+  AssertEquals('the computed value does not change', 7, FExpr.Value, 0);
+  AssertTrue  ('and the write is refused',     FFalhasDeEscrita>0);
 end;
 
 procedure TTestNumExprTag.TagDeOrigemDestruidoDesligaOVinculo;
@@ -305,11 +305,11 @@ begin
   origem.ChegouDoCLP(5);
   FExpr.A:=origem;
   FExpr.Expression:='A';
-  AssertEquals('lendo da origem', 5, FExpr.Value, 0);
+  AssertEquals('reading from the source', 5, FExpr.Value, 0);
 
   FreeAndNil(origem);
 
-  AssertTrue('o vinculo tem que ter sido desfeito', FExpr.A=nil);
+  AssertTrue('the link must have been broken', FExpr.A=nil);
 end;
 
 initialization

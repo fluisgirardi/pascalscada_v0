@@ -167,7 +167,7 @@ var
   len:LongInt;
 begin
   //escravo 1, ler 2 holding registers a partir de 0
-  AssertBytesEqual('pedido de leitura 03',
+  AssertBytesEqual('read request 03',
                    BytesOf('01 03 00 00 00 02 C4 0B'),
                    FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len));
 end;
@@ -178,14 +178,14 @@ var
 begin
   //endereco + funcao + contagem + 2 words + crc = 9
   FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len);
-  AssertEquals('tamanho previsto da resposta', 9, len);
+  AssertEquals('expected response size', 9, len);
 end;
 
 procedure TTestModBusRTU.LeituraDeCoilsMontaOFrame;
 var
   len:LongInt;
 begin
-  AssertBytesEqual('pedido de leitura 01',
+  AssertBytesEqual('read request 01',
                    BytesOf('01 01 00 00 00 0A BC 0D'),
                    FDrv.Encode(TagRecFor(1, $01, 0, 0, 10), nil, len));
 end;
@@ -209,8 +209,8 @@ var
   frame:BYTES;
 begin
   frame:=FDrv.Encode(TagRecFor(1, $42, 0, 0, 2), nil, len);
-  AssertEquals('frame vazio', 0, Length(frame));
-  AssertEquals('nada a receber', 0, len);
+  AssertEquals('empty frame', 0, Length(frame));
+  AssertEquals('nothing to receive', 0, len);
 end;
 
 procedure TTestModBusRTU.EscritaDeRegistradorUnicoMontaOFrame;
@@ -220,10 +220,10 @@ var
 begin
   SetLength(vals,1);
   vals[0]:=1234; //em hexa, 04 D2
-  AssertBytesEqual('escrita 06',
+  AssertBytesEqual('write 06',
                    BytesOf('01 06 00 0A 04 D2 2B 55'),
                    FDrv.Encode(TagRecFor(1, 0, $06, 10, 1), vals, len));
-  AssertEquals('eco da escrita tem 8 bytes', 8, len);
+  AssertEquals('the write echo is 8 bytes', 8, len);
 end;
 
 procedure TTestModBusRTU.EscritaDeCoilLigadoUsaFF00;
@@ -233,7 +233,7 @@ var
 begin
   SetLength(vals,1);
   vals[0]:=1;
-  AssertBytesEqual('escrita 05 ligado',
+  AssertBytesEqual('write 05, on',
                    BytesOf('01 05 00 03 FF 00 7C 3A'),
                    FDrv.Encode(TagRecFor(1, 0, $05, 3, 1), vals, len));
 end;
@@ -245,7 +245,7 @@ var
 begin
   SetLength(vals,1);
   vals[0]:=0;
-  AssertBytesEqual('escrita 05 desligado',
+  AssertBytesEqual('write 05, off',
                    BytesOf('01 05 00 03 00 00 3D CA'),
                    FDrv.Encode(TagRecFor(1, 0, $05, 3, 1), vals, len));
 end;
@@ -258,7 +258,7 @@ begin
   SetLength(vals,2);
   vals[0]:=10;
   vals[1]:=20;
-  AssertBytesEqual('escrita 16',
+  AssertBytesEqual('write 16',
                    BytesOf('01 10 00 00 00 02 04 00 0A 00 14 D3 A2'),
                    FDrv.Encode(TagRecFor(1, 0, $10, 0, 2), vals, len));
 end;
@@ -270,10 +270,10 @@ var
 begin
   res:=FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'),
                                BytesOf('01 03 04 00 0A 00 14 DA 3E')), vals);
-  AssertEquals('resultado', Ord(ioOk), Ord(res));
-  AssertEquals('quantidade de valores', 2, Length(vals));
-  AssertEquals('primeiro registro', 10, vals[0], 0);
-  AssertEquals('segundo registro',  20, vals[1], 0);
+  AssertEquals('result', Ord(ioOk), Ord(res));
+  AssertEquals('number of values', 2, Length(vals));
+  AssertEquals('first register', 10, vals[0], 0);
+  AssertEquals('second register',  20, vals[1], 0);
 end;
 
 procedure TTestModBusRTU.RespostaDeCoilsViraBits;
@@ -286,8 +286,8 @@ begin
   //byte $35 = 0011 0101 -> bits 0,2,4,5 ligados; byte $02 -> bit 9 ligado
   res:=FDrv.Decode(IOPacketFor(BytesOf('01 01 00 00 00 0A BC 0D'),
                                BytesOf('01 01 02 35 02 2F 6D')), vals);
-  AssertEquals('resultado', Ord(ioOk), Ord(res));
-  AssertEquals('quantidade de bits', 10, Length(vals));
+  AssertEquals('result', Ord(ioOk), Ord(res));
+  AssertEquals('number of bits', 10, Length(vals));
   for i:=0 to High(esperado) do
     AssertEquals('bit '+IntToStr(i), esperado[i], vals[i], 0);
 end;
@@ -300,7 +300,7 @@ begin
   //resposta com a funcao 03 marcada com o bit $80 e codigo 02 = endereco ilegal
   res:=FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'),
                                BytesOf('01 83 02 C0 F1')), vals);
-  AssertEquals('excecao 02', Ord(ioIllegalRegAddress), Ord(res));
+  AssertEquals('exception 02', Ord(ioIllegalRegAddress), Ord(res));
 end;
 
 procedure TTestModBusRTU.RespostaComCRCErradoViraErroDeComunicacao;
@@ -311,7 +311,7 @@ begin
   //mesmo frame do teste de registradores, com o ultimo byte do CRC trocado
   res:=FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'),
                                BytesOf('01 03 04 00 0A 00 14 DA 3F')), vals);
-  AssertEquals('crc invalido', Ord(ioCommError), Ord(res));
+  AssertEquals('invalid crc', Ord(ioCommError), Ord(res));
 end;
 
 procedure TTestModBusRTU.RespostaDeOutroEscravoViraErroDeComunicacao;
@@ -322,7 +322,7 @@ begin
   //pedimos ao escravo 1 e respondeu o escravo 2
   res:=FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'),
                                BytesOf('02 03 04 00 0A 00 14 E9 3E')), vals);
-  AssertEquals('escravo errado', Ord(ioCommError), Ord(res));
+  AssertEquals('wrong slave', Ord(ioCommError), Ord(res));
 end;
 
 procedure TTestModBusRTU.TimeoutNaLeituraViraTimeout;
@@ -344,7 +344,7 @@ end;
 procedure TTestModBusRTU.ExcecaoDeixaSoOCRCNoBuffer;
 begin
   //lido o cabecalho de uma excecao, so faltam os 2 bytes de CRC
-  AssertEquals('resto de uma excecao', 2, FDrv.Remaining(BytesOf('01 83 02')));
+  AssertEquals('leftover of an exception', 2, FDrv.Remaining(BytesOf('01 83 02')));
 end;
 
 { TTestModBusRTUComPorta }
@@ -360,7 +360,7 @@ begin
     SetLength(resp, n);
     if n>0 then FillChar(resp[0], n, 0);
 
-    AssertEquals('resposta de '+IntToStr(n)+' bytes', Ord(ioCommError),
+    AssertEquals('answer of '+IntToStr(n)+' bytes', Ord(ioCommError),
                  Ord(FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'), resp), vals)));
   end;
 end;
@@ -371,7 +371,7 @@ var
 begin
   //sem pedido nao da' para saber o que foi perguntado, mas o driver tem que
   //dizer isso, nao estourar
-  AssertEquals('pedido vazio', Ord(ioDriverError),
+  AssertEquals('empty request', Ord(ioDriverError),
                Ord(FDrv.Decode(IOPacketFor(nil, BytesOf('01 03 04 00 0A 00 14 DA 3E')), vals)));
 end;
 
@@ -383,7 +383,7 @@ begin
   //pedimos 2 registradores (4 bytes de dado) e a resposta traz 1, com CRC valido
   res:=FDrv.Decode(IOPacketFor(BytesOf('01 03 00 00 00 02 C4 0B'),
                                BytesOf('01 03 02 00 0A 38 43')), vals);
-  AssertEquals('contagem menor que a pedida', Ord(ioCommError), Ord(res));
+  AssertEquals('count smaller than the one asked for', Ord(ioCommError), Ord(res));
 end;
 
 procedure TTestModBusRTU.RelatorioDeEscravoComContagemMenorQueQuatroNaoTransborda;
@@ -392,7 +392,7 @@ var
 begin
   //relatorio de escravo com contagem zero
   FDrv.Decode(IOPacketFor(BytesOf('01 11 C0 2C'), BytesOf('01 11 00 2C 50')), vals);
-  AssertTrue('quantidade de valores tem que ser plausivel', Length(vals)<1024);
+  AssertTrue('the number of values must be plausible', Length(vals)<1024);
 end;
 
 procedure TTestModBusRTUComPorta.SetUp;
@@ -419,14 +419,14 @@ begin
 
   res:=FDrv.ReadSync(TagRecFor(1, $03, 0, 0, 2), vals);
 
-  AssertEquals('resultado', Ord(ioOk), Ord(res));
-  AssertBytesEqual('frame que saiu pela porta',
+  AssertEquals('result', Ord(ioOk), Ord(res));
+  AssertBytesEqual('frame that went out through the port',
                    BytesOf('01 03 00 00 00 02 C4 0B'),
                    FPort.LastWrittenFrame);
-  AssertEquals('quantidade de valores', 2, Length(vals));
-  AssertEquals('primeiro registro', 10, vals[0], 0);
-  AssertEquals('segundo registro',  20, vals[1], 0);
-  AssertEquals('resposta consumida por inteiro', 0, FPort.PendingResponses);
+  AssertEquals('number of values', 2, Length(vals));
+  AssertEquals('first register', 10, vals[0], 0);
+  AssertEquals('second register',  20, vals[1], 0);
+  AssertEquals('answer consumed whole', 0, FPort.PendingResponses);
 end;
 
 procedure TTestModBusRTUComPorta.LeituraEhFeitaEmDuasEtapas;
@@ -437,7 +437,7 @@ begin
   //de bytes, quanto ainda falta - uma unica escrita, duas leituras.
   FPort.QueueResponse(BytesOf('01 03 04 00 0A 00 14 DA 3E'));
   FDrv.ReadSync(TagRecFor(1, $03, 0, 0, 2), vals);
-  AssertEquals('escritas na porta', 1, FPort.WriteCount);
+  AssertEquals('writes to the port', 1, FPort.WriteCount);
 end;
 
 procedure TTestModBusRTUComPorta.EscritaVaiEVoltaPelaPorta;
@@ -453,8 +453,8 @@ begin
 
   res:=FDrv.WriteSync(TagRecFor(1, 0, $06, 10, 1), vals);
 
-  AssertEquals('resultado', Ord(ioOk), Ord(res));
-  AssertBytesEqual('frame que saiu pela porta',
+  AssertEquals('result', Ord(ioOk), Ord(res));
+  AssertBytesEqual('frame that went out through the port',
                    BytesOf('01 06 00 0A 04 D2 2B 55'),
                    FPort.LastWrittenFrame);
 end;
@@ -478,7 +478,7 @@ begin
   semPorta:=TModBusRTUProbe.Create(nil);
   try
     res:=semPorta.ReadSync(TagRecFor(1, $03, 0, 0, 2), vals);
-    AssertEquals('driver sem porta', Ord(ioNullDriver), Ord(res));
+    AssertEquals('driver with no port', Ord(ioNullDriver), Ord(res));
   finally
     semPorta.Free;
   end;

@@ -197,15 +197,15 @@ end;
 
 procedure TTestCommPort.PortaNovaNaoEstaTravada;
 begin
-  AssertFalse('porta recem criada', FPorta.Locked);
-  AssertEquals('sem dono', 0, FPorta.LockedBy);
+  AssertFalse('port just created', FPorta.Locked);
+  AssertEquals('no owner', 0, FPorta.LockedBy);
 end;
 
 procedure TTestCommPort.TravarMarcaODono;
 begin
-  AssertTrue ('travou',      FPorta.Lock(DRIVER_A));
-  AssertTrue ('esta travada', FPorta.Locked);
-  AssertEquals('dono',        DRIVER_A, FPorta.LockedBy);
+  AssertTrue ('locked',      FPorta.Lock(DRIVER_A));
+  AssertTrue ('is locked', FPorta.Locked);
+  AssertEquals('owner',        DRIVER_A, FPorta.LockedBy);
 end;
 
 procedure TTestCommPort.OutroDriverNaoConsegueTravar;
@@ -213,35 +213,35 @@ begin
   //e' disso que depende nao embaralhar quadros de dois protocolos na mesma
   //porta
   FPorta.Lock(DRIVER_A);
-  AssertFalse('o segundo driver nao pode travar', FPorta.Lock(DRIVER_B));
-  AssertEquals('o dono continua o primeiro', DRIVER_A, FPorta.LockedBy);
+  AssertFalse('the second driver cannot lock', FPorta.Lock(DRIVER_B));
+  AssertEquals('the owner is still the first one', DRIVER_A, FPorta.LockedBy);
 end;
 
 procedure TTestCommPort.TravarDuasVezesNaoEmpilha;
 begin
   //travar nao e' reentrante: quem ja' travou e pede de novo recebe nao
   FPorta.Lock(DRIVER_A);
-  AssertFalse('segunda trava do mesmo dono', FPorta.Lock(DRIVER_A));
+  AssertFalse('second lock by the same owner', FPorta.Lock(DRIVER_A));
 end;
 
 procedure TTestCommPort.DestravarComOutroIdNaoDestrava;
 begin
   FPorta.Lock(DRIVER_A);
-  AssertFalse('outro driver destravando', FPorta.Unlock(DRIVER_B));
-  AssertTrue ('continua travada',         FPorta.Locked);
+  AssertFalse('another driver unlocking', FPorta.Unlock(DRIVER_B));
+  AssertTrue ('still locked',         FPorta.Locked);
 end;
 
 procedure TTestCommPort.DestravarComOIdCertoLibera;
 begin
   FPorta.Lock(DRIVER_A);
-  AssertTrue ('destravou',        FPorta.Unlock(DRIVER_A));
-  AssertFalse('nao esta travada', FPorta.Locked);
-  AssertTrue ('e outro ja pode travar', FPorta.Lock(DRIVER_B));
+  AssertTrue ('unlocked',        FPorta.Unlock(DRIVER_A));
+  AssertFalse('is not locked', FPorta.Locked);
+  AssertTrue ('and another one can lock now', FPorta.Lock(DRIVER_B));
 end;
 
 procedure TTestCommPort.DestravarPortaLivreNaoReclama;
 begin
-  AssertTrue('destravar porta livre', FPorta.Unlock(DRIVER_A));
+  AssertTrue('unlocking a free port', FPorta.Unlock(DRIVER_A));
 end;
 
 procedure TTestCommPort.PortaNovaEstaFechada;
@@ -253,11 +253,11 @@ end;
 procedure TTestCommPort.AbrirEFechar;
 begin
   FPorta.Active:=true;
-  AssertTrue('aberta', FPorta.Active);
-  AssertTrue('de fato aberta', FPorta.ReallyActive);
+  AssertTrue('open', FPorta.Active);
+  AssertTrue('really open', FPorta.ReallyActive);
 
   FPorta.Active:=false;
-  AssertFalse('fechada', FPorta.Active);
+  AssertFalse('closed', FPorta.Active);
 end;
 
 procedure TTestCommPort.AberturaQueFalhaNaoDeixaAPortaAtiva;
@@ -276,7 +276,7 @@ begin
   FPorta.FalharAoFechar:=true;
   FPorta.Active:=false;
 
-  AssertTrue('fechar falhou, entao continua aberta', FPorta.Active);
+  AssertTrue('closing failed, so it is still open', FPorta.Active);
 end;
 
 procedure TTestCommPort.AbrirAvisaQuemEscuta;
@@ -284,8 +284,8 @@ begin
   LigarOsContadores;
   FPorta.Active:=true;
 
-  AssertEquals('avisou que abriu', 1, FAberta);
-  AssertEquals('sem aviso de erro', 0, FErroAoAbrir);
+  AssertEquals('reported the open', 1, FAberta);
+  AssertEquals('no error reported', 0, FErroAoAbrir);
 end;
 
 procedure TTestCommPort.FecharAvisaQuemEscuta;
@@ -294,8 +294,8 @@ begin
   LigarOsContadores;
   FPorta.Active:=false;
 
-  AssertEquals('avisou que fechou', 1, FFechada);
-  AssertEquals('sem aviso de erro', 0, FErroAoFechar);
+  AssertEquals('reported the close', 1, FFechada);
+  AssertEquals('no error reported', 0, FErroAoFechar);
 end;
 
 procedure TTestCommPort.AberturaQueFalhaAvisaOErro;
@@ -304,8 +304,8 @@ begin
   FPorta.FalharAoAbrir:=true;
   FPorta.Active:=true;
 
-  AssertEquals('avisou o erro',      1, FErroAoAbrir);
-  AssertEquals('e nao disse que abriu', 0, FAberta);
+  AssertEquals('reported the error',      1, FErroAoAbrir);
+  AssertEquals('and did not report an open', 0, FAberta);
 end;
 
 procedure TTestCommPort.FechamentoQueFalhaAvisaOErro;
@@ -315,8 +315,8 @@ begin
   FPorta.FalharAoFechar:=true;
   FPorta.Active:=false;
 
-  AssertEquals('avisou o erro',        1, FErroAoFechar);
-  AssertEquals('e nao disse que fechou', 0, FFechada);
+  AssertEquals('reported the error',        1, FErroAoFechar);
+  AssertEquals('and did not report a close', 0, FFechada);
 end;
 
 procedure TTestCommPort.ComandoComAPortaFechadaDevolveZero;
@@ -324,7 +324,7 @@ var
   pkg:TIOPacket;
 begin
   //zero e' o "nao fiz nada" que os drivers conferem antes de olhar o pacote
-  AssertEquals('porta fechada', 0,
+  AssertEquals('port closed', 0,
                FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 4,
                                     DRIVER_A, 0, @pkg));
 end;
@@ -338,8 +338,8 @@ begin
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 4, DRIVER_A, 0, @pkg);
 
-  AssertBytesEqual('o que foi escrito', BytesOf('01 02'), FPorta.LastWrittenFrame);
-  AssertBytesEqual('o que foi lido',    BytesOf('AA BB CC DD'), pkg.BufferToRead);
+  AssertBytesEqual('what was written', BytesOf('01 02'), FPorta.LastWrittenFrame);
+  AssertBytesEqual('what was read',    BytesOf('AA BB CC DD'), pkg.BufferToRead);
 end;
 
 procedure TTestCommPort.OIdDoComandoCresceACadaChamada;
@@ -354,8 +354,8 @@ begin
   primeiro:=FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('01'), 1, DRIVER_A, 0, @pkg);
   segundo :=FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('01'), 1, DRIVER_A, 0, @pkg);
 
-  AssertTrue('o primeiro id nao pode ser zero', primeiro<>0);
-  AssertTrue('cada comando tem o seu id',       segundo>primeiro);
+  AssertTrue('the first id cannot be zero', primeiro<>0);
+  AssertTrue('each command has its own id',       segundo>primeiro);
 end;
 
 procedure TTestCommPort.BytesEscritosELidosSaoContados;
@@ -367,12 +367,12 @@ begin
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_A, 0, @pkg);
 
-  AssertEquals('pedidos para escrever', 2, pkg.ToWrite);
-  AssertEquals('escritos',              2, pkg.Written);
-  AssertEquals('pedidos para ler',      3, pkg.ToRead);
-  AssertEquals('lidos',                 3, pkg.Received);
-  AssertEquals('escrita ok', Ord(iorOK), Ord(pkg.WriteIOResult));
-  AssertEquals('leitura ok', Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertEquals('bytes asked to write', 2, pkg.ToWrite);
+  AssertEquals('bytes written',              2, pkg.Written);
+  AssertEquals('bytes asked to read',      3, pkg.ToRead);
+  AssertEquals('bytes read',                 3, pkg.Received);
+  AssertEquals('write ok', Ord(iorOK), Ord(pkg.WriteIOResult));
+  AssertEquals('read ok', Ord(iorOK), Ord(pkg.ReadIOResult));
 end;
 
 procedure TTestCommPort.SemRespostaOResultadoDeLeituraEhTimeout;
@@ -383,9 +383,9 @@ begin
 
   FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('01'), 4, DRIVER_A, 0, @pkg);
 
-  AssertEquals('a escrita saiu',    Ord(iorOK),      Ord(pkg.WriteIOResult));
-  AssertEquals('a resposta nao veio', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
-  AssertEquals('nada lido', 0, pkg.Received);
+  AssertEquals('the write went out',    Ord(iorOK),      Ord(pkg.WriteIOResult));
+  AssertEquals('the answer did not come', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+  AssertEquals('nothing read', 0, pkg.Received);
 end;
 
 procedure TTestCommPort.ComandoComAPortaFechadaNaoTocaNosBuffers;
@@ -394,9 +394,9 @@ var
 begin
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 4, DRIVER_A, 0, @pkg);
 
-  AssertEquals('nada escrito na porta', 0, FPorta.WriteCount);
-  AssertEquals('escrita sem resultado', Ord(iorNone), Ord(pkg.WriteIOResult));
-  AssertEquals('leitura sem resultado', Ord(iorNone), Ord(pkg.ReadIOResult));
+  AssertEquals('nothing written to the port', 0, FPorta.WriteCount);
+  AssertEquals('write with no result', Ord(iorNone), Ord(pkg.WriteIOResult));
+  AssertEquals('read with no result', Ord(iorNone), Ord(pkg.ReadIOResult));
 end;
 
 procedure TTestCommPort.OperacaoDemoradaAvisaComecoEFim;
@@ -411,8 +411,8 @@ begin
   FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('01'), 1, DRIVER_A, 0, @pkg,
                        @ContarComeco, @ContarFim);
 
-  AssertEquals('avisou o comeco', 1, FComecos);
-  AssertEquals('avisou o fim',    1, FFins);
+  AssertEquals('reported the start', 1, FComecos);
+  AssertEquals('reported the end',    1, FFins);
 end;
 
 procedure TTestCommPort.OperacaoDemoradaComAPortaFechadaNaoDesequilibra;
@@ -424,7 +424,7 @@ begin
   FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('01'), 1, DRIVER_A, 0, @pkg,
                        @ContarComeco, @ContarFim);
 
-  AssertEquals('um comeco tem que ter um fim', FComecos, FFins);
+  AssertEquals('a start must have an end', FComecos, FFins);
 end;
 
 procedure TTestCommPort.ChamadaDeVoltaRecebeOPacotePronto;
@@ -437,9 +437,9 @@ begin
   FPorta.IOCommandSync(iocWriteRead, BytesOf('01 02'), 2, 2, DRIVER_A, 0,
                        @GuardarPacote, nil, nil);
 
-  AssertEquals('chamou uma vez', 1, FChamadas);
-  AssertBytesEqual('o que foi lido', BytesOf('AA BB'), FPacoteRecebido.BufferToRead);
-  AssertEquals('leitura ok', Ord(iorOK), Ord(FPacoteRecebido.ReadIOResult));
+  AssertEquals('called once', 1, FChamadas);
+  AssertBytesEqual('what was read', BytesOf('AA BB'), FPacoteRecebido.BufferToRead);
+  AssertEquals('read ok', Ord(iorOK), Ord(FPacoteRecebido.ReadIOResult));
 end;
 
 procedure TTestCommPort.ChamadaDeVoltaNaoAconteceComAPortaFechada;
@@ -447,7 +447,7 @@ begin
   FPorta.IOCommandSync(iocWriteRead, BytesOf('01 02'), 2, 2, DRIVER_A, 0,
                        @GuardarPacote, nil, nil);
 
-  AssertEquals('porta fechada, nada a entregar', 0, FChamadas);
+  AssertEquals('port closed, nothing to deliver', 0, FChamadas);
 end;
 
 procedure TTestCommPort.ChamadaDeVoltaComAPortaFechadaNaoDesequilibra;
@@ -455,7 +455,7 @@ begin
   FPorta.IOCommandSync(iocWriteRead, BytesOf('01 02'), 2, 2, DRIVER_A, 0,
                        @GuardarPacote, nil, nil, @ContarComeco, @ContarFim);
 
-  AssertEquals('um comeco tem que ter um fim', FComecos, FFins);
+  AssertEquals('a start must have an end', FComecos, FFins);
 end;
 
 procedure TTestCommPort.DriverPenduradoSeRegistraNaPorta;
@@ -465,7 +465,7 @@ begin
   drv:=TFakeProtocolDriver.Create(nil);
   try
     drv.CommunicationPort:=FPorta;
-    AssertTrue('o driver ficou com a porta', drv.CommunicationPort=FPorta);
+    AssertTrue('the driver kept the port', drv.CommunicationPort=FPorta);
   finally
     drv.Free;
   end;
@@ -480,7 +480,7 @@ begin
   try
     drv.CommunicationPort:=FPorta;
     drv.CommunicationPort:=FPorta;
-    AssertTrue('continua na mesma porta', drv.CommunicationPort=FPorta);
+    AssertTrue('still on the same port', drv.CommunicationPort=FPorta);
   finally
     drv.Free;
   end;
@@ -496,12 +496,12 @@ begin
   try
     drv.CommunicationPort:=FPorta;
     drv.CommunicationPort:=outra;
-    AssertTrue('trocou de porta', drv.CommunicationPort=outra);
+    AssertTrue('changed port', drv.CommunicationPort=outra);
 
     //a porta antiga nao pode mais achar que tem este driver: destrui-la nao
     //pode mexer em quem ja' saiu
     FreeAndNil(FPorta);
-    AssertTrue('a porta antiga saiu sem levar o driver', drv.CommunicationPort=outra);
+    AssertTrue('the old port left without taking the driver', drv.CommunicationPort=outra);
   finally
     drv.Free;
     outra.Free;
@@ -517,7 +517,7 @@ begin
     drv.CommunicationPort:=FPorta;
     FreeAndNil(FPorta);
 
-    AssertTrue('o driver tem que ter largado a porta destruida',
+    AssertTrue('the driver must have dropped the destroyed port',
                drv.CommunicationPort=nil);
   finally
     drv.Free;
@@ -536,8 +536,8 @@ begin
 
     FreeAndNil(FPorta);
 
-    AssertTrue('primeiro driver', a.CommunicationPort=nil);
-    AssertTrue('segundo driver',  b.CommunicationPort=nil);
+    AssertTrue('first driver', a.CommunicationPort=nil);
+    AssertTrue('second driver',  b.CommunicationPort=nil);
   finally
     a.Free;
     b.Free;
@@ -560,9 +560,9 @@ begin
 
     FreeAndNil(FPorta);
 
-    AssertTrue('primeiro driver',  a.CommunicationPort=nil);
-    AssertTrue('segundo driver',   b.CommunicationPort=nil);
-    AssertTrue('terceiro driver',  c.CommunicationPort=nil);
+    AssertTrue('first driver',  a.CommunicationPort=nil);
+    AssertTrue('second driver',   b.CommunicationPort=nil);
+    AssertTrue('third driver',  c.CommunicationPort=nil);
   finally
     a.Free;
     b.Free;
@@ -605,8 +605,8 @@ end;
 
 procedure TTestCommPort.ContadoresComecamZerados;
 begin
-  AssertEquals('recebidos',   0, FPorta.RXBytes);
-  AssertEquals('transmitidos', 0, FPorta.TXBytes);
+  AssertEquals('received',   0, FPorta.RXBytes);
+  AssertEquals('transmitted', 0, FPorta.TXBytes);
 end;
 
 procedure TTestCommPort.BytesSaoAcumuladosEntreComandos;
@@ -618,12 +618,12 @@ begin
   FPorta.QueueResponse(BytesOf('DD'));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_A, 0, @pkg);
-  AssertEquals('depois do primeiro, transmitidos', 2, FPorta.TXBytes);
-  AssertEquals('depois do primeiro, recebidos',    3, FPorta.RXBytes);
+  AssertEquals('after the first one, transmitted', 2, FPorta.TXBytes);
+  AssertEquals('after the first one, received',    3, FPorta.RXBytes);
 
   FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('03'), 1, DRIVER_A, 0, @pkg);
-  AssertEquals('os contadores somam', 3, FPorta.TXBytes);
-  AssertEquals('os contadores somam', 4, FPorta.RXBytes);
+  AssertEquals('the counters add up', 3, FPorta.TXBytes);
+  AssertEquals('the counters add up', 4, FPorta.RXBytes);
 end;
 
 procedure TTestCommPort.ComandoQueNaoAconteceNaoContaBytes;
@@ -633,8 +633,8 @@ begin
   //porta fechada: nada foi para o fio, nada pode ser contado
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_A, 0, @pkg);
 
-  AssertEquals('transmitidos', 0, FPorta.TXBytes);
-  AssertEquals('recebidos',    0, FPorta.RXBytes);
+  AssertEquals('transmitted', 0, FPorta.TXBytes);
+  AssertEquals('received',    0, FPorta.RXBytes);
 end;
 
 procedure TTestCommPort.UltimoQuadroFicaGuardadoEmHexa;
@@ -647,8 +647,8 @@ begin
   FPorta.QueueResponse(BytesOf('AA BB'));
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
 
-  AssertEquals('enviado',  '01 02 ', FPorta.Traffic_send);
-  AssertEquals('recebido', 'AA BB ', FPorta.Traffic_receiver);
+  AssertEquals('sent',  '01 02 ', FPorta.Traffic_send);
+  AssertEquals('received', 'AA BB ', FPorta.Traffic_receiver);
 end;
 
 procedure TTestCommPort.UltimoQuadroNaoMisturaComandosAnteriores;
@@ -664,7 +664,7 @@ begin
   FPorta.IOCommandSync(iocRead, 0, nil, 2, DRIVER_A, 0, @pkg);
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
 
-  AssertEquals('recebido no ultimo comando', 'AA BB ', FPorta.Traffic_receiver);
+  AssertEquals('received on the last command', 'AA BB ', FPorta.Traffic_receiver);
 end;
 
 procedure TTestCommPort.UltimoQuadroEnviadoAcompanhaAEscritaPura;
@@ -679,22 +679,22 @@ begin
 
   FPorta.IOCommandSync(iocWrite, 2, BytesOf('03 04'), 0, DRIVER_A, 0, @pkg);
 
-  AssertEquals('enviado na escrita pura', '03 04 ', FPorta.Traffic_send);
+  AssertEquals('sent on a pure write', '03 04 ', FPorta.Traffic_send);
 end;
 
 procedure TTestCommPort.LimparBuffersChegaNaPortaConcreta;
 begin
   //a classe base nao limpa nada por conta propria: ela repassa a limpeza para
   //a porta concreta, que e' quem sabe o que ha para esvaziar
-  AssertEquals('nenhuma limpeza ainda', 0, FPorta.LimpezasDeBuffer);
+  AssertEquals('no flush yet', 0, FPorta.LimpezasDeBuffer);
 
   FPorta.LimparBuffers;
-  AssertEquals('a porta concreta foi chamada', 1, FPorta.LimpezasDeBuffer);
+  AssertEquals('the concrete port was called', 1, FPorta.LimpezasDeBuffer);
 end;
 
 procedure TTestCommPort.LimparNaFalhaVemLigadoDeFabrica;
 begin
-  AssertTrue('limpar os buffers em erro de comunicacao', FPorta.ClearBuffersOnCommErrors);
+  AssertTrue('flush the buffers on a communication error', FPorta.ClearBuffersOnCommErrors);
 end;
 
 procedure TTestCommPort.ErroDeLeituraAvisaQuemEscuta;
@@ -704,9 +704,9 @@ begin
 
   FPorta.AvisarErroDeEntradaESaida(false, iorTimeOut);
 
-  AssertEquals('avisou a leitura',        1, FErrosDeLeitura);
-  AssertEquals('e nao a escrita',         0, FErrosDeEscrita);
-  AssertEquals('com o erro que aconteceu', Ord(iorTimeOut), Ord(FUltimoErro));
+  AssertEquals('reported the read',        1, FErrosDeLeitura);
+  AssertEquals('and not the write',         0, FErrosDeEscrita);
+  AssertEquals('with the error that happened', Ord(iorTimeOut), Ord(FUltimoErro));
 end;
 
 procedure TTestCommPort.ErroDeEscritaAvisaQuemEscuta;
@@ -716,9 +716,9 @@ begin
 
   FPorta.AvisarErroDeEntradaESaida(true, iorPortError);
 
-  AssertEquals('avisou a escrita',        1, FErrosDeEscrita);
-  AssertEquals('e nao a leitura',         0, FErrosDeLeitura);
-  AssertEquals('com o erro que aconteceu', Ord(iorPortError), Ord(FUltimoErro));
+  AssertEquals('reported the write',        1, FErrosDeEscrita);
+  AssertEquals('and not the read',         0, FErrosDeLeitura);
+  AssertEquals('with the error that happened', Ord(iorPortError), Ord(FUltimoErro));
 end;
 
 procedure TTestCommPort.DesconexaoAvisaQuemEscuta;
@@ -726,7 +726,7 @@ begin
   FPorta.OnCommPortDisconnected:=@ContarDesconexao;
   FPorta.AvisarDesconexao;
 
-  AssertEquals('avisou a desconexao', 1, FDesconexoes);
+  AssertEquals('reported the disconnection', 1, FDesconexoes);
 end;
 
 procedure TTestCommPort.PortaExclusivaNaoAbreEmTempoDeProjeto;
@@ -738,8 +738,8 @@ begin
 
   FPorta.Active:=true;
 
-  AssertTrue ('a propriedade aceita o valor',  FPorta.Active);
-  AssertFalse('mas a porta nao esta de fato aberta', FPorta.ReallyActive);
+  AssertTrue ('the property takes the value',  FPorta.Active);
+  AssertFalse('but the port is not really open', FPorta.ReallyActive);
 end;
 
 procedure TTestCommPort.PortaNaoExclusivaAbreEmTempoDeProjeto;
@@ -748,7 +748,7 @@ begin
   FPorta.MarcarComoEmProjeto;
   FPorta.Active:=true;
 
-  AssertTrue('aberta de fato', FPorta.ReallyActive);
+  AssertTrue('really open', FPorta.ReallyActive);
 end;
 
 procedure TTestCommPort.LigarORegistroCriaOArquivo;
@@ -756,8 +756,8 @@ begin
   FPorta.LogFile:=FArquivoDeLog;
   FPorta.LogIOActions:=true;
 
-  AssertTrue ('o arquivo tem que existir', FileExists(FArquivoDeLog));
-  AssertTrue ('e o registro ficou ligado', FPorta.LogIOActions);
+  AssertTrue ('the file must exist', FileExists(FArquivoDeLog));
+  AssertTrue ('and logging stayed on', FPorta.LogIOActions);
 end;
 
 procedure TTestCommPort.CadaComandoDeixaUmaLinhaNoRegistro;
@@ -774,8 +774,8 @@ begin
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
   FPorta.LogIOActions:=false;
 
-  AssertTrue('o que foi escrito esta no registro', Pos('01 02', ConteudoDoLog)>0);
-  AssertTrue('o que foi lido tambem',              Pos('AA BB', ConteudoDoLog)>0);
+  AssertTrue('what was written is in the log', Pos('01 02', ConteudoDoLog)>0);
+  AssertTrue('what was read too',              Pos('AA BB', ConteudoDoLog)>0);
 end;
 
 procedure TTestCommPort.RegistroDesligadoNaoEscreveNada;
@@ -788,7 +788,7 @@ begin
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
 
-  AssertFalse('sem registro ligado, nem arquivo existe', FileExists(FArquivoDeLog));
+  AssertFalse('with logging off there is no file either', FileExists(FArquivoDeLog));
 end;
 
 procedure TTestCommPort.TrocarDeArquivoComORegistroLigado;
@@ -805,12 +805,12 @@ begin
   try
     //trocar o arquivo tem que fechar o anterior e seguir registrando no novo
     FPorta.LogFile:=segundo;
-    AssertTrue('o registro continua ligado', FPorta.LogIOActions);
+    AssertTrue('logging is still on', FPorta.LogIOActions);
 
     FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
     FPorta.LogIOActions:=false;
 
-    AssertTrue('o arquivo novo foi criado', FileExists(segundo));
+    AssertTrue('the new file was created', FileExists(segundo));
   finally
     if FileExists(segundo) then DeleteFile(segundo);
   end;
@@ -836,7 +836,7 @@ begin
   //o que prova isto e' o contador de blocos nao liberados no fim da rodada:
   //com o destrutor abandonando o arquivo, esta porta deixava dois blocos para
   //tras. O teste existe para que a porta seja destruida assim.
-  AssertTrue('a porta foi destruida com o registro ligado', true);
+  AssertTrue('the port was destroyed with logging on', true);
 end;
 
 initialization
