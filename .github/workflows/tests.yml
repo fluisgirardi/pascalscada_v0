@@ -14,8 +14,8 @@ concurrency:
 jobs:
 
   # ---------------------------------------------------------------
-  # Windows 64, Windows 32 e Linux 64: runners nativos do GitHub.
-  # Compila a arvore inteira (inclusive HMI) e roda a suite.
+  # Windows 64, Windows 32 and Linux 64: GitHub's own native runners.
+  # Builds the whole tree (HMI included) and runs the suite.
   # ---------------------------------------------------------------
   desktop:
     name: ${{ matrix.name }}
@@ -48,24 +48,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Bibliotecas de desenvolvimento (Linux)
+      - name: Development libraries (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libgtk2.0-dev
 
-      - name: Instalar Lazarus / FPC
+      - name: Install Lazarus / FPC
         uses: ollydev/setup-lazarus@v4
         with:
           laz-url: ${{ matrix.laz-url }}
           fpc-url: ${{ matrix.fpc-url }}
 
-      - name: BGRABitmap (dependencia de pascalscada_hmi)
+      - name: BGRABitmap (pascalscada_hmi dependency)
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
-      - name: Registrar os pacotes do PascalSCADA
+      - name: Register the PascalSCADA packages
         run: |
           for pkg in pascalscada_common.lpk \
                      pascalscada.lpk \
@@ -76,20 +76,20 @@ jobs:
             lazbuild --add-package-link "$pkg"
           done
 
-      - name: Compilar o nucleo (common + scada + db)
+      - name: Build the core (common + scada + db)
         run: |
           lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_common.lpk
           lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada.lpk
           lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_db.lpk
 
-      - name: Compilar a parte grafica (dsng + hmi + full)
+      - name: Build the graphical part (dsng + hmi + full)
         run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_full.lpk
 
-      - name: Compilar a suite de testes
-        # nogui: o runner e console, nao precisa de widgetset grafico
+      - name: Build the test suite
+        # nogui: the runner is a console, no graphical widgetset needed
         run: lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
 
-      - name: Rodar os testes
+      - name: Run the tests
         run: |
           BIN=tests/bin/pascalscada_tests
           [ -f "$BIN.exe" ] && BIN="$BIN.exe"
@@ -103,11 +103,11 @@ jobs:
           path: tests/results-*.xml
 
   # ---------------------------------------------------------------
-  # Exemplos: compila todos os projetos de examples/ com a biblioteca
-  # recem construida. Nao roda nenhum deles - quase todos sao
-  # aplicacoes graficas que abrem uma janela e ficam la esperando.
-  # O que este job pega e o exemplo que ficou para tras quando a
-  # biblioteca mudou de nome de classe, de pacote ou de assinatura.
+  # Examples: builds every project under examples/ against the library
+  # just built. It runs none of them - nearly all are GUI applications
+  # that open a window and sit there waiting. What this job catches is
+  # the example left behind when the library renamed a class, moved a
+  # unit to another package or changed a signature.
   # ---------------------------------------------------------------
   examples:
     name: examples-${{ matrix.name }}
@@ -137,33 +137,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Bibliotecas de desenvolvimento (Linux)
+      - name: Development libraries (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libgtk2.0-dev
 
-      - name: Instalar Lazarus / FPC
+      - name: Install Lazarus / FPC
         uses: ollydev/setup-lazarus@v4
         with:
           laz-url: ${{ matrix.laz-url }}
           fpc-url: ${{ matrix.fpc-url }}
 
-      - name: BGRABitmap (dependencia de pascalscada_hmi)
+      - name: BGRABitmap (pascalscada_hmi dependency)
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
-      - name: Compilar os exemplos
-        # O varredor acha o diretorio do Lazarus sozinho e registra os pacotes
-        # que vem com ele (TAChart, RTTIControls, SQLdb). Os de terceiros
-        # que faltarem (Zeos, industrial) saem como pulados, nao como falha.
+      - name: Build the examples
+        # The sweep finds the Lazarus directory on its own and registers the
+        # packages shipped with it (TAChart, RTTIControls, SQLdb). Missing
+        # third party ones (Zeos, industrial) come out as skipped, not as a
+        # failure.
         run: tests/build_examples.sh ${{ matrix.widgetset }} ${{ matrix.targetos }}
 
   # ---------------------------------------------------------------
-  # Linux 32: nao existe runner i386, mas um container i386 roda
-  # nativo sobre o kernel x86_64 do runner (sem emulacao).
-  # Aqui so o nucleo nao-grafico, que e onde 32 bits importa.
+  # Linux 32: there is no i386 runner, but an i386 container runs
+  # natively on the runner's x86_64 kernel (no emulation).
+  # Only the non-graphical core here, which is where 32 bits matters.
   # ---------------------------------------------------------------
   linux32:
     name: linux32
@@ -171,7 +172,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compilar e testar dentro de um container i386
+      - name: Build and test inside an i386 container
         run: |
           docker run --rm --platform linux/386 \
             -v "$PWD":/src -w /src \
@@ -200,12 +201,12 @@ jobs:
           path: tests/results-*.xml
 
   # ---------------------------------------------------------------
-  # Linux ARM 64 (aarch64): runner ARM nativo do GitHub, sem emulacao.
-  # O label ubuntu-24.04-arm existe de graca em repositorio publico;
-  # em repositorio privado depende do plano (Team/Enterprise). Se nao
-  # estiver disponivel, trocar por ubuntu-latest + a receita de QEMU
-  # usada no job linux-armhf, com --platform linux/arm64.
-  # Mesma cobertura do linux32: nucleo nao-grafico + suite.
+  # Linux ARM 64 (aarch64): GitHub's native ARM runner, no emulation.
+  # The ubuntu-24.04-arm label is free on a public repository; on a
+  # private one it depends on the plan (Team/Enterprise). If it is not
+  # available, swap it for ubuntu-latest plus the QEMU recipe used by
+  # the linux-armhf job, with --platform linux/arm64.
+  # Same coverage as linux32: non-graphical core + suite.
   # ---------------------------------------------------------------
   linux-aarch64:
     name: linux-aarch64
@@ -213,12 +214,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar Lazarus/FPC da distribuicao
+      - name: Install the distribution's Lazarus/FPC
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lazarus lcl-nogui
 
-      - name: Compilar o nucleo e a suite
+      - name: Build the core and the suite
         run: |
           lazbuild --add-package-link pascalscada_common.lpk
           lazbuild --add-package-link pascalscada.lpk
@@ -228,7 +229,7 @@ jobs:
           lazbuild --build-all --widgetset=nogui pascalscada.lpk
           lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
 
-      - name: Rodar os testes
+      - name: Run the tests
         run: |
           tests/bin/pascalscada_tests --all --format=plain
           tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux-aarch64.xml
@@ -240,9 +241,9 @@ jobs:
           path: tests/results-*.xml
 
   # ---------------------------------------------------------------
-  # Linux ARM 32 (armhf): nao existe runner ARM 32 e os runners ARM 64
-  # do GitHub nao executam codigo AArch32, entao aqui e container
-  # armhf sobre QEMU. E o job mais lento da matriz.
+  # Linux ARM 32 (armhf): there is no ARM 32 runner and GitHub's ARM 64
+  # runners do not execute AArch32 code, so this is an armhf container
+  # over QEMU. It is the slowest job in the matrix.
   # ---------------------------------------------------------------
   linux-armhf:
     name: linux-armhf
@@ -251,12 +252,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Habilitar a emulacao ARM 32
+      - name: Enable ARM 32 emulation
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm
 
-      - name: Compilar e testar dentro de um container armhf
+      - name: Build and test inside an armhf container
         run: |
           docker run --rm --platform linux/arm/v7 \
             -v "$PWD":/src -w /src \
@@ -285,15 +286,15 @@ jobs:
           path: tests/results-*.xml
 
   # ---------------------------------------------------------------
-  # FreeBSD 64: VM completa dentro do runner Ubuntu.
-  # Usa lazbuild, e nao fpc puro: os testes de driver passam por
-  # plcstring, que depende de LazUTF8 (LazUtils), entao o Lazarus
-  # precisa estar instalado de qualquer forma. O pacote nao se chama
-  # "lazarus" - so existe com o flavor no nome, e o gtk2 e' o padrao
-  # do port (nada disso e' usado aqui: compilamos com --widgetset=nogui).
+  # FreeBSD 64: a full VM inside the Ubuntu runner.
+  # Uses lazbuild rather than plain fpc: the driver tests go through
+  # plcstring, which depends on LazUTF8 (LazUtils), so Lazarus has to be
+  # installed either way. The package is not called "lazarus" - it only
+  # exists with the flavor in the name, and gtk2 is the port's default
+  # (none of which is used here: we build with --widgetset=nogui).
   #
-  # Se um dia as dependencias graficas do pacote pesarem demais, da' pra
-  # voltar ao fpc puro acrescentando as unidades do LazUtils a mao:
+  # If one day the package's graphical dependencies get too heavy, going
+  # back to plain fpc means adding the LazUtils units by hand:
   #   fpc ... -Fu<lazarus>/components/lazutils -Fi<lazarus>/components/lazutils
   # ---------------------------------------------------------------
   freebsd64:
@@ -302,7 +303,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compilar e testar no FreeBSD
+      - name: Build and test on FreeBSD
         uses: vmactions/freebsd-vm@v1
         with:
           release: "14"
@@ -313,16 +314,17 @@ jobs:
           run: |
             set -e
 
-            # O lazbuild do pacote nao sabe sozinho onde o Lazarus foi
-            # instalado ("Invalid Lazarus directory": ele procura o diretorio
-            # lcl a partir de um caminho que so existe numa instalacao feita
-            # pelo instalador oficial), entao precisa de --lazarusdir.
-            # Procuramos o lcl.lpk no disco em vez de consultar o pacote pelo
-            # nome: o nome registrado depende do flavor e ja mudou uma vez.
-            # O caminho do pacote e' versionado (lazarus-4.8), e no Lazarus 4.x
-            # o lcl.lpk mora em lcl/interfaces/ - nao em lcl/. E' esse arquivo
-            # que confirma o candidato; passar um caminho sem conferir foi o
-            # que fez o lazbuild reclamar de "directory lcl not found".
+            # The packaged lazbuild cannot find on its own where Lazarus
+            # was installed ("Invalid Lazarus directory": it looks for the lcl
+            # directory from a path that only exists in an install made by the
+            # official installer), so it needs --lazarusdir.
+            # We look for lcl.lpk on disk instead of asking the package manager
+            # by name: the registered name depends on the flavor and has
+            # already changed once. The package path is versioned
+            # (lazarus-4.8), and on Lazarus 4.x lcl.lpk lives in
+            # lcl/interfaces/ - not in lcl/. That file is what confirms the
+            # candidate; handing over a path without checking it is what made
+            # lazbuild complain about "directory lcl not found".
             LAZDIR=""
             for d in /usr/local/share/lazarus /usr/local/share/lazarus-* \
                      /usr/local/lib/lazarus /usr/local/lib/lazarus-*; do
@@ -335,14 +337,14 @@ jobs:
               done
             fi
             if [ -z "$LAZDIR" ]; then
-              echo "nao encontrei o diretorio do lazarus. diagnostico:"
-              pkg info | grep -i laz || echo "(nenhum pacote com 'laz' no nome)"
-              command -v lazbuild || echo "(lazbuild fora do PATH)"
+              echo "could not find the lazarus directory. diagnostics:"
+              pkg info | grep -i laz || echo "(no package with 'laz' in the name)"
+              command -v lazbuild || echo "(lazbuild not in PATH)"
               ls -d /usr/local/share/lazarus* /usr/local/lib/lazarus* 2>/dev/null || true
               find /usr/local -type f -name lcl.lpk 2>/dev/null || true
               exit 1
             fi
-            echo "lazarus em $LAZDIR (lcl.lpk: $LAZDIR/lcl/interfaces/lcl.lpk)"
+            echo "lazarus at $LAZDIR (lcl.lpk: $LAZDIR/lcl/interfaces/lcl.lpk)"
 
             LAZ="lazbuild --lazarusdir=$LAZDIR"
 
