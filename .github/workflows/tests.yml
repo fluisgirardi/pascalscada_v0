@@ -96,6 +96,18 @@ jobs:
           "$BIN" --all --format=plain
           "$BIN" --all --format=xml --file="tests/results-${{ matrix.name }}.xml"
 
+      - name: Build the HMI test suite
+        # A separate binary: it pulls BGRABitmap in, which only this job has.
+        # The 32 bit, ARM and FreeBSD jobs keep to pascalscada_tests.
+        run: lazbuild --build-all --widgetset=nogui tests/pascalscada_hmi_tests.lpi
+
+      - name: Run the HMI tests
+        run: |
+          BIN=tests/bin/pascalscada_hmi_tests
+          [ -f "$BIN.exe" ] && BIN="$BIN.exe"
+          "$BIN" --all --format=plain
+          "$BIN" --all --format=xml --file="tests/results-hmi-${{ matrix.name }}.xml"
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -122,13 +122,17 @@ end;
 function TCustomizedUserManagement.GetCurrentUserLogin: UTF8String;
 begin
   Result:='';
-  if FLoggedUser then
+  if FLoggedUser then begin
+    //o Login da classe base ja guardou o login; o evento e um refinamento,
+    //nao a unica fonte
+    Result:=FCurrentUserLogin;
     try
       if Assigned(FGetUserLogin) then
         FGetUserLogin(Result);
     except
-      Result:='';
+      Result:=FCurrentUserLogin;
     end;
+  end;
 end;
 
 function TCustomizedUserManagement.CanAccess(sc: UTF8String; aUID: Integer

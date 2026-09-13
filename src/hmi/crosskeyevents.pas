@@ -384,6 +384,10 @@ uses {$IFDEF FPC}LCLType{$ENDIF};
 uses {$IFDEF FPC}LCLType{$ENDIF};
 {$IFEND}
 
+{$IF defined(LCLNoGUI)}
+uses {$IFDEF FPC}LCLType{$ENDIF};
+{$IFEND}
+
 {$IF defined(LCLFPGUI)}
 uses {$IFDEF FPC}LCLType{$ENDIF};
 {$IFEND}
