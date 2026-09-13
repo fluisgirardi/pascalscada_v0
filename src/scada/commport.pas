@@ -183,8 +183,6 @@ type
     FReadRetries: Cardinal;
     FWriteRetries: Cardinal;
 
-    FTraffic_receiver_1 :AnsiString;
-    FTraffic_receiver_2 :AnsiString;
     FTraffic_receiver :AnsiString;
     FTraffic_send :AnsiString;
 
@@ -1250,6 +1248,15 @@ begin
     Sleep(1);
   PEventUpdater.Destroy;
   Active := false;
+
+  //o registro de trafego ficava aberto: destruir a porta com ele ligado
+  //abandonava o TFileStream e o descritor de arquivo. Tem que vir antes de
+  //PIOCmdCS, que e' onde SetLogActions entra.
+  //the traffic log was left open: destroying the port with it on abandoned the
+  //TFileStream and the file descriptor. This has to come before PIOCmdCS,
+  //which is what SetLogActions enters.
+  LogIOActions := false;
+
   SetLength(Protocols,0);
   PIOCmdCS.Destroy;
   PLockCS.Destroy;
@@ -1939,7 +1946,7 @@ begin
       FLogFileStream:=TFileStream.Create(FLogFile,fmOpenReadWrite+fmShareDenyWrite);
       FLogFileStream.Position:=FLogFileStream.Size;
     end else
-      FLogFileStream.Destroy;
+      FreeAndNil(FLogFileStream);
     canopen:=true;
   finally
     FLogActions:=Log and canopen;
@@ -2046,16 +2053,21 @@ procedure  TCommPortDriver.Traffic(cmd:TIOCommand; Packet:TIOPacket);
   end;
 
 begin
-    if cmd=iocRead then begin
-      FTraffic_receiver_1 :=  bufferToHex(Packet.BufferToRead);
-    end;
+  //estas duas propriedades mostram o que passou pelo fio no ultimo comando.
+  //Antes, o trecho lido era guardado em dois acumuladores que nunca eram
+  //limpos e depois emendados, entao uma leitura pura seguida de um escreve-le
+  //mostrava os dois quadros grudados; e iocWrite e iocReadWrite nao
+  //atualizavam nada, deixando a tela com o quadro do comando anterior.
+  //these two properties show what went over the wire on the last command.
+  //Before, the part read was kept in two accumulators that were never cleared
+  //and then concatenated, so a plain read followed by a write-read showed both
+  //frames glued together; and iocWrite and iocReadWrite updated nothing,
+  //leaving the previous command's frame on screen.
+  if cmd in [iocWrite, iocWriteRead, iocReadWrite] then
+    FTraffic_send := bufferToHex(Packet.BufferToWrite);
 
-    if cmd=iocWriteRead then begin
-      FTraffic_send := bufferToHex(Packet.BufferToWrite);
-      FTraffic_receiver_2 :=  bufferToHex(Packet.BufferToRead);
-
-    end;
-    FTraffic_receiver := FTraffic_receiver_2 + FTraffic_receiver_1;
+  if cmd in [iocRead, iocWriteRead, iocReadWrite] then
+    FTraffic_receiver := bufferToHex(Packet.BufferToRead);
 end;
 
 end.

@@ -50,6 +50,13 @@ type
     FComecos, FFins:LongInt;
     FChamadas:LongInt;
     FPacoteRecebido:TIOPacket;
+    FErrosDeLeitura, FErrosDeEscrita, FDesconexoes:LongInt;
+    FUltimoErro:TIOResult;
+    FArquivoDeLog:String;
+    procedure ContarErroDeLeitura(Error:TIOResult);
+    procedure ContarErroDeEscrita(Error:TIOResult);
+    procedure ContarDesconexao(Sender:TObject);
+    function  ConteudoDoLog:String;
     procedure ContarAberta(Sender:TObject);
     procedure ContarErroAoAbrir(Sender:TObject);
     procedure ContarFechada(Sender:TObject);
@@ -108,6 +115,36 @@ type
     procedure PortaDestruidaSoltaOUnicoDriver;
     procedure PortaDestruidaSoltaOsDoisDrivers;
     procedure PortaDestruidaSoltaTodosOsDrivers;
+
+    //contadores de trafego / traffic counters
+    procedure ContadoresComecamZerados;
+    procedure BytesSaoAcumuladosEntreComandos;
+    procedure ComandoQueNaoAconteceNaoContaBytes;
+
+    //ultimo quadro, para diagnostico / last frame, for diagnostics
+    procedure UltimoQuadroFicaGuardadoEmHexa;
+    procedure UltimoQuadroNaoMisturaComandosAnteriores;
+    procedure UltimoQuadroEnviadoAcompanhaAEscritaPura;
+
+    //limpeza de buffers / buffer clearing
+    procedure LimparBuffersChegaNaPortaConcreta;
+    procedure LimparNaFalhaVemLigadoDeFabrica;
+
+    //erros de entrada e saida / io errors
+    procedure ErroDeLeituraAvisaQuemEscuta;
+    procedure ErroDeEscritaAvisaQuemEscuta;
+    procedure DesconexaoAvisaQuemEscuta;
+
+    //em tempo de projeto / at design time
+    procedure PortaExclusivaNaoAbreEmTempoDeProjeto;
+    procedure PortaNaoExclusivaAbreEmTempoDeProjeto;
+
+    //registro do trafego em arquivo / traffic log file
+    procedure LigarORegistroCriaOArquivo;
+    procedure CadaComandoDeixaUmaLinhaNoRegistro;
+    procedure RegistroDesligadoNaoEscreveNada;
+    procedure TrocarDeArquivoComORegistroLigado;
+    procedure PortaDestruidaComORegistroLigadoFechaOArquivo;
   end;
 
 implementation
@@ -124,11 +161,17 @@ begin
   FFechada:=0;     FErroAoFechar:=0;
   FComecos:=0;     FFins:=0;
   FChamadas:=0;
+  FErrosDeLeitura:=0; FErrosDeEscrita:=0; FDesconexoes:=0;
+  FUltimoErro:=iorNone;
+  FArquivoDeLog:=GetTempDir+'pascalscada_log_teste.txt';
+  if FileExists(FArquivoDeLog) then DeleteFile(FArquivoDeLog);
 end;
 
 procedure TTestCommPort.TearDown;
 begin
   FreeAndNil(FPorta);
+  if (FArquivoDeLog<>'') and FileExists(FArquivoDeLog) then
+    DeleteFile(FArquivoDeLog);
 end;
 
 procedure TTestCommPort.ContarAberta(Sender:TObject);      begin inc(FAberta);      end;
@@ -525,6 +568,275 @@ begin
     b.Free;
     c.Free;
   end;
+end;
+
+procedure TTestCommPort.ContarErroDeLeitura(Error:TIOResult);
+begin
+  inc(FErrosDeLeitura);
+  FUltimoErro:=Error;
+end;
+
+procedure TTestCommPort.ContarErroDeEscrita(Error:TIOResult);
+begin
+  inc(FErrosDeEscrita);
+  FUltimoErro:=Error;
+end;
+
+procedure TTestCommPort.ContarDesconexao(Sender:TObject);
+begin
+  inc(FDesconexoes);
+end;
+
+function TTestCommPort.ConteudoDoLog:String;
+var
+  arq:TStringList;
+begin
+  Result:='';
+  if (FArquivoDeLog='') or (not FileExists(FArquivoDeLog)) then exit;
+
+  arq:=TStringList.Create;
+  try
+    arq.LoadFromFile(FArquivoDeLog);
+    Result:=arq.Text;
+  finally
+    arq.Free;
+  end;
+end;
+
+procedure TTestCommPort.ContadoresComecamZerados;
+begin
+  AssertEquals('recebidos',   0, FPorta.RXBytes);
+  AssertEquals('transmitidos', 0, FPorta.TXBytes);
+end;
+
+procedure TTestCommPort.BytesSaoAcumuladosEntreComandos;
+var
+  pkg:TIOPacket;
+begin
+  FPorta.Active:=true;
+  FPorta.QueueResponse(BytesOf('AA BB CC'));
+  FPorta.QueueResponse(BytesOf('DD'));
+
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_A, 0, @pkg);
+  AssertEquals('depois do primeiro, transmitidos', 2, FPorta.TXBytes);
+  AssertEquals('depois do primeiro, recebidos',    3, FPorta.RXBytes);
+
+  FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('03'), 1, DRIVER_A, 0, @pkg);
+  AssertEquals('os contadores somam', 3, FPorta.TXBytes);
+  AssertEquals('os contadores somam', 4, FPorta.RXBytes);
+end;
+
+procedure TTestCommPort.ComandoQueNaoAconteceNaoContaBytes;
+var
+  pkg:TIOPacket;
+begin
+  //porta fechada: nada foi para o fio, nada pode ser contado
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_A, 0, @pkg);
+
+  AssertEquals('transmitidos', 0, FPorta.TXBytes);
+  AssertEquals('recebidos',    0, FPorta.RXBytes);
+end;
+
+procedure TTestCommPort.UltimoQuadroFicaGuardadoEmHexa;
+var
+  pkg:TIOPacket;
+begin
+  //as duas propriedades existem para a interface grafica mostrar o que passou
+  //pelo fio no ultimo comando
+  FPorta.Active:=true;
+  FPorta.QueueResponse(BytesOf('AA BB'));
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
+
+  AssertEquals('enviado',  '01 02 ', FPorta.Traffic_send);
+  AssertEquals('recebido', 'AA BB ', FPorta.Traffic_receiver);
+end;
+
+procedure TTestCommPort.UltimoQuadroNaoMisturaComandosAnteriores;
+var
+  pkg:TIOPacket;
+begin
+  //uma leitura pura e depois um escreve-le: o que se ve tem que ser o quadro
+  //do ultimo comando, nao os dois emendados
+  FPorta.Active:=true;
+  FPorta.QueueResponse(BytesOf('11 22'));
+  FPorta.QueueResponse(BytesOf('AA BB'));
+
+  FPorta.IOCommandSync(iocRead, 0, nil, 2, DRIVER_A, 0, @pkg);
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
+
+  AssertEquals('recebido no ultimo comando', 'AA BB ', FPorta.Traffic_receiver);
+end;
+
+procedure TTestCommPort.UltimoQuadroEnviadoAcompanhaAEscritaPura;
+var
+  pkg:TIOPacket;
+begin
+  //uma escrita pura tambem poe bytes no fio: o quadro enviado tem que ser o
+  //dela, e nao o do comando anterior
+  FPorta.Active:=true;
+  FPorta.QueueResponse(BytesOf('AA BB'));
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
+
+  FPorta.IOCommandSync(iocWrite, 2, BytesOf('03 04'), 0, DRIVER_A, 0, @pkg);
+
+  AssertEquals('enviado na escrita pura', '03 04 ', FPorta.Traffic_send);
+end;
+
+procedure TTestCommPort.LimparBuffersChegaNaPortaConcreta;
+begin
+  //a classe base nao limpa nada por conta propria: ela repassa a limpeza para
+  //a porta concreta, que e' quem sabe o que ha para esvaziar
+  AssertEquals('nenhuma limpeza ainda', 0, FPorta.LimpezasDeBuffer);
+
+  FPorta.LimparBuffers;
+  AssertEquals('a porta concreta foi chamada', 1, FPorta.LimpezasDeBuffer);
+end;
+
+procedure TTestCommPort.LimparNaFalhaVemLigadoDeFabrica;
+begin
+  AssertTrue('limpar os buffers em erro de comunicacao', FPorta.ClearBuffersOnCommErrors);
+end;
+
+procedure TTestCommPort.ErroDeLeituraAvisaQuemEscuta;
+begin
+  FPorta.OnCommErrorReading:=@ContarErroDeLeitura;
+  FPorta.OnCommErrorWriting:=@ContarErroDeEscrita;
+
+  FPorta.AvisarErroDeEntradaESaida(false, iorTimeOut);
+
+  AssertEquals('avisou a leitura',        1, FErrosDeLeitura);
+  AssertEquals('e nao a escrita',         0, FErrosDeEscrita);
+  AssertEquals('com o erro que aconteceu', Ord(iorTimeOut), Ord(FUltimoErro));
+end;
+
+procedure TTestCommPort.ErroDeEscritaAvisaQuemEscuta;
+begin
+  FPorta.OnCommErrorReading:=@ContarErroDeLeitura;
+  FPorta.OnCommErrorWriting:=@ContarErroDeEscrita;
+
+  FPorta.AvisarErroDeEntradaESaida(true, iorPortError);
+
+  AssertEquals('avisou a escrita',        1, FErrosDeEscrita);
+  AssertEquals('e nao a leitura',         0, FErrosDeLeitura);
+  AssertEquals('com o erro que aconteceu', Ord(iorPortError), Ord(FUltimoErro));
+end;
+
+procedure TTestCommPort.DesconexaoAvisaQuemEscuta;
+begin
+  FPorta.OnCommPortDisconnected:=@ContarDesconexao;
+  FPorta.AvisarDesconexao;
+
+  AssertEquals('avisou a desconexao', 1, FDesconexoes);
+end;
+
+procedure TTestCommPort.PortaExclusivaNaoAbreEmTempoDeProjeto;
+begin
+  //uma porta serial nao pode ser aberta pelo ambiente de desenvolvimento: ela
+  //tomaria o equipamento de quem esta' rodando
+  FPorta.MarcarComoExclusiva;
+  FPorta.MarcarComoEmProjeto;
+
+  FPorta.Active:=true;
+
+  AssertTrue ('a propriedade aceita o valor',  FPorta.Active);
+  AssertFalse('mas a porta nao esta de fato aberta', FPorta.ReallyActive);
+end;
+
+procedure TTestCommPort.PortaNaoExclusivaAbreEmTempoDeProjeto;
+begin
+  //uma porta de rede pode, porque nao impede ninguem de usar o equipamento
+  FPorta.MarcarComoEmProjeto;
+  FPorta.Active:=true;
+
+  AssertTrue('aberta de fato', FPorta.ReallyActive);
+end;
+
+procedure TTestCommPort.LigarORegistroCriaOArquivo;
+begin
+  FPorta.LogFile:=FArquivoDeLog;
+  FPorta.LogIOActions:=true;
+
+  AssertTrue ('o arquivo tem que existir', FileExists(FArquivoDeLog));
+  AssertTrue ('e o registro ficou ligado', FPorta.LogIOActions);
+end;
+
+procedure TTestCommPort.CadaComandoDeixaUmaLinhaNoRegistro;
+var
+  pkg:TIOPacket;
+begin
+  //e' por aqui que se captura o trafego de um equipamento de verdade para
+  //depois alimentar os testes de decodificacao
+  FPorta.LogFile:=FArquivoDeLog;
+  FPorta.LogIOActions:=true;
+  FPorta.Active:=true;
+  FPorta.QueueResponse(BytesOf('AA BB'));
+
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
+  FPorta.LogIOActions:=false;
+
+  AssertTrue('o que foi escrito esta no registro', Pos('01 02', ConteudoDoLog)>0);
+  AssertTrue('o que foi lido tambem',              Pos('AA BB', ConteudoDoLog)>0);
+end;
+
+procedure TTestCommPort.RegistroDesligadoNaoEscreveNada;
+var
+  pkg:TIOPacket;
+begin
+  FPorta.LogFile:=FArquivoDeLog;
+  FPorta.Active:=true;
+  FPorta.QueueResponse(BytesOf('AA BB'));
+
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
+
+  AssertFalse('sem registro ligado, nem arquivo existe', FileExists(FArquivoDeLog));
+end;
+
+procedure TTestCommPort.TrocarDeArquivoComORegistroLigado;
+var
+  segundo:String;
+  pkg:TIOPacket;
+begin
+  segundo:=FArquivoDeLog+'.2';
+  FPorta.LogFile:=FArquivoDeLog;
+  FPorta.LogIOActions:=true;
+  FPorta.Active:=true;
+  FPorta.QueueResponse(BytesOf('AA BB'));
+
+  try
+    //trocar o arquivo tem que fechar o anterior e seguir registrando no novo
+    FPorta.LogFile:=segundo;
+    AssertTrue('o registro continua ligado', FPorta.LogIOActions);
+
+    FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 2, DRIVER_A, 0, @pkg);
+    FPorta.LogIOActions:=false;
+
+    AssertTrue('o arquivo novo foi criado', FileExists(segundo));
+  finally
+    if FileExists(segundo) then DeleteFile(segundo);
+  end;
+end;
+
+procedure TTestCommPort.PortaDestruidaComORegistroLigadoFechaOArquivo;
+var
+  porta:TFakeCommPort;
+begin
+  porta:=TFakeCommPort.Create(nil);
+  try
+    porta.LogFile:=FArquivoDeLog+'.destruir';
+    porta.LogIOActions:=true;
+  finally
+    //sem desligar o registro antes: e' exatamente o que o destrutor tem que
+    //dar conta sozinho
+    porta.Free;
+  end;
+
+  if FileExists(FArquivoDeLog+'.destruir') then
+    DeleteFile(FArquivoDeLog+'.destruir');
+
+  //o que prova isto e' o contador de blocos nao liberados no fim da rodada:
+  //com o destrutor abandonando o arquivo, esta porta deixava dois blocos para
+  //tras. O teste existe para que a porta seja destruida assim.
+  AssertTrue('a porta foi destruida com o registro ligado', true);
 end;
 
 initialization

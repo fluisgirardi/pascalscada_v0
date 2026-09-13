@@ -152,6 +152,28 @@ type
     //: How many times the buffers were cleared.
     {$ENDIF}
     property  LimpezasDeBuffer:LongInt read FLimpezasDeBuffer;
+
+    {$IFDEF PORTUGUES}
+    //: Marca a porta como de uso exclusivo, como e' a serial.
+    {$ELSE}
+    //: Marks the port as an exclusive device, the way a serial port is.
+    {$ENDIF}
+    procedure MarcarComoExclusiva;
+
+    {$IFDEF PORTUGUES}
+    //: Poe o componente em tempo de projeto, como o ambiente faz.
+    {$ELSE}
+    //: Puts the component in design time, the way the IDE does.
+    {$ENDIF}
+    procedure MarcarComoEmProjeto;
+
+    //estes tres sao protegidos na classe base e quem os chama e' a porta
+    //concreta; a de mentira os expoe para poderem ser exercitados
+    //these three are protected in the base class and it is the concrete port
+    //that calls them; the fake one exposes them so they can be exercised
+    procedure LimparBuffers;
+    procedure AvisarErroDeEntradaESaida(aNaEscrita:Boolean; aErro:TIOResult);
+    procedure AvisarDesconexao;
   published
     //os avisos sao protegidos na classe base; cada porta concreta os republica
     //the notifications are protected in the base class; every concrete port
@@ -322,6 +344,32 @@ procedure TFakeCommPort.ClearALLBuffers;
 begin
   inc(FLimpezasDeBuffer);
   SetLength(FWritten,0);
+end;
+
+procedure TFakeCommPort.MarcarComoExclusiva;
+begin
+  FExclusiveDevice:=true;
+end;
+
+procedure TFakeCommPort.MarcarComoEmProjeto;
+begin
+  //SetDesigning e' protegido em TComponent
+  SetDesigning(true, false);
+end;
+
+procedure TFakeCommPort.LimparBuffers;
+begin
+  InternalClearALLBuffers;
+end;
+
+procedure TFakeCommPort.AvisarErroDeEntradaESaida(aNaEscrita:Boolean; aErro:TIOResult);
+begin
+  CommError(aNaEscrita, aErro);
+end;
+
+procedure TFakeCommPort.AvisarDesconexao;
+begin
+  CommPortDisconected;
 end;
 
 end.
