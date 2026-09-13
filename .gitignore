@@ -10,6 +10,7 @@ examples/**/*.ppu
 examples/**/*.exe
 tests/bin/
 tests/units/
+tests/units_hmi/
 
 # lixo que o varredor de exemplos deixa pelo caminho
 # leftovers from the example sweep

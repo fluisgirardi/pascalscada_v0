@@ -250,7 +250,8 @@ begin
     GetControlSecurityManager.UpdateControls;
     DoSuccessfulLogin;
     DoUserChanged;
-  end;
+  end else
+    DoFailureLogin;
 end;
 
 procedure   TBasicUserManagement.Logout;
