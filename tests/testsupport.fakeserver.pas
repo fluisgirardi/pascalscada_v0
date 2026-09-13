@@ -104,9 +104,56 @@ type
     property Conexoes:LongInt read GetConexoes;
   end;
 
+  { TServidorUDPDeTeste }
+
+  {$IFDEF PORTUGUES}
+  {:
+  O mesmo equipamento de mentira, agora em datagrama. Nao ha' conexao a
+  aceitar: o servidor fica esperando datagramas e responde para quem mandou.
+  }
+  {$ELSE}
+  {:
+  The same fake device, now over datagrams. There is no connection to accept:
+  the server waits for datagrams and answers whoever sent them.
+  }
+  {$ENDIF}
+  TServidorUDPDeTeste = class
+  private
+    FSocket:LongInt;
+    FPorta:LongInt;
+    FCS:TCriticalSection;
+    FThread:TThread;
+    FRecebido:BYTES;
+    FRespostas:array of BYTES;
+    FProximaResposta:LongInt;
+    FTerminou:Boolean;
+    function  Parando:Boolean;
+    function  GetRecebido:BYTES;
+    function  ProximaResposta(out aResposta:BYTES):Boolean;
+  public
+    constructor Create;
+    destructor  Destroy; override;
+    procedure Servir;
+    procedure EnfileirarResposta(const aResposta:BYTES);
+    function  EsperarBytes(aQuantos, aPrazoMs:LongInt):Boolean;
+    property  Porta:LongInt read FPorta;
+    property  Recebido:BYTES read GetRecebido;
+  end;
+
 implementation
 
 type
+
+  { TThreadDoServidorUDP }
+
+  TThreadDoServidorUDP = class(TThread)
+  private
+    FDono:TServidorUDPDeTeste;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(aDono:TServidorUDPDeTeste);
+  end;
 
   { TThreadDoServidor }
 
@@ -129,6 +176,173 @@ end;
 procedure TThreadDoServidor.Execute;
 begin
   FDono.Servir;
+end;
+
+constructor TThreadDoServidorUDP.Create(aDono:TServidorUDPDeTeste);
+begin
+  FDono:=aDono;
+  FreeOnTerminate:=false;
+  inherited Create(false);
+end;
+
+procedure TThreadDoServidorUDP.Execute;
+begin
+  FDono.Servir;
+end;
+
+{ TServidorUDPDeTeste }
+
+constructor TServidorUDPDeTeste.Create;
+var
+  endereco:TInetSockAddr;
+  tam:LongInt;
+begin
+  inherited Create;
+  FCS:=TCriticalSection.Create;
+  FProximaResposta:=0;
+  FTerminou:=false;
+
+  FSocket:=fpSocket(AF_INET, SOCK_DGRAM, 0);
+  if FSocket<0 then
+    raise Exception.Create('servidor udp de teste: nao consegui criar o soquete');
+
+  endereco.sin_family     :=AF_INET;
+  endereco.sin_port       :=htons(0);
+  endereco.sin_addr.s_addr:=htonl($7F000001);
+
+  if fpBind(FSocket, @endereco, SizeOf(endereco))<>0 then
+    raise Exception.Create('servidor udp de teste: nao consegui reservar a porta');
+
+  tam:=SizeOf(endereco);
+  if fpGetSockName(FSocket, @endereco, @tam)<>0 then
+    raise Exception.Create('servidor udp de teste: nao descobri a porta escolhida');
+  FPorta:=htons(endereco.sin_port);
+
+  FThread:=TThreadDoServidorUDP.Create(Self);
+end;
+
+destructor TServidorUDPDeTeste.Destroy;
+var
+  acordar:LongInt;
+  endereco:TInetSockAddr;
+  nada:Byte;
+begin
+  FCS.Enter;
+  try
+    FTerminou:=true;
+  finally
+    FCS.Leave;
+  end;
+
+  if FThread<>nil then begin
+    FThread.Terminate;
+
+    //a thread esta' parada esperando datagrama: um datagrama a acorda
+    //the thread is sitting on a recvfrom: a datagram wakes it up
+    acordar:=fpSocket(AF_INET, SOCK_DGRAM, 0);
+    if acordar>=0 then begin
+      endereco.sin_family     :=AF_INET;
+      endereco.sin_port       :=htons(FPorta);
+      endereco.sin_addr.s_addr:=htonl($7F000001);
+      nada:=0;
+      fpSendTo(acordar, @nada, 1, 0, @endereco, SizeOf(endereco));
+      CloseSocket(acordar);
+    end;
+
+    FThread.WaitFor;
+    FreeAndNil(FThread);
+  end;
+
+  if FSocket>=0 then
+    CloseSocket(FSocket);
+
+  FreeAndNil(FCS);
+  inherited Destroy;
+end;
+
+procedure TServidorUDPDeTeste.Servir;
+var
+  buf:array[0..1023] of Byte;
+  quem:TInetSockAddr;
+  tam, lidos, antes:LongInt;
+  resposta:BYTES;
+begin
+  while not Parando do begin
+    tam:=SizeOf(quem);
+    lidos:=fpRecvFrom(FSocket, @buf[0], SizeOf(buf), 0, @quem, @tam);
+
+    if Parando or (lidos<=0) then break;
+
+    FCS.Enter;
+    try
+      antes:=Length(FRecebido);
+      SetLength(FRecebido, antes+lidos);
+      Move(buf[0], FRecebido[antes], lidos);
+    finally
+      FCS.Leave;
+    end;
+
+    if ProximaResposta(resposta) and (Length(resposta)>0) then
+      fpSendTo(FSocket, @resposta[0], Length(resposta), 0, @quem, tam);
+  end;
+end;
+
+function TServidorUDPDeTeste.Parando:Boolean;
+begin
+  FCS.Enter;
+  try
+    Result:=FTerminou;
+  finally
+    FCS.Leave;
+  end;
+end;
+
+function TServidorUDPDeTeste.GetRecebido:BYTES;
+begin
+  FCS.Enter;
+  try
+    Result:=Copy(FRecebido, 0, Length(FRecebido));
+  finally
+    FCS.Leave;
+  end;
+end;
+
+function TServidorUDPDeTeste.ProximaResposta(out aResposta:BYTES):Boolean;
+begin
+  aResposta:=nil;
+  FCS.Enter;
+  try
+    Result:=FProximaResposta<=High(FRespostas);
+    if Result then begin
+      aResposta:=Copy(FRespostas[FProximaResposta], 0, Length(FRespostas[FProximaResposta]));
+      inc(FProximaResposta);
+    end;
+  finally
+    FCS.Leave;
+  end;
+end;
+
+procedure TServidorUDPDeTeste.EnfileirarResposta(const aResposta:BYTES);
+begin
+  FCS.Enter;
+  try
+    SetLength(FRespostas, Length(FRespostas)+1);
+    FRespostas[High(FRespostas)]:=Copy(aResposta, 0, Length(aResposta));
+  finally
+    FCS.Leave;
+  end;
+end;
+
+function TServidorUDPDeTeste.EsperarBytes(aQuantos, aPrazoMs:LongInt):Boolean;
+var
+  gasto:LongInt;
+begin
+  gasto:=0;
+  while (Length(GetRecebido)<aQuantos) and (gasto<aPrazoMs) do begin
+    Sleep(5);
+    inc(gasto, 5);
+  end;
+  Result:=Length(GetRecebido)>=aQuantos;
 end;
 
 { TServidorDeTeste }

@@ -116,6 +116,38 @@ type
     procedure DestruirLogoDepoisDeCriarNaoPodeTravar;
   end;
 
+  {$IFDEF PORTUGUES}
+  {:
+  A mesma porta em datagrama. Nao ha' conexao para cair nem para refazer: o
+  soquete e' ligado ao destino e os datagramas vao e voltam. O que muda de
+  verdade e' que o equipamento nunca "some" - some o datagrama.
+  }
+  {$ELSE}
+  {:
+  The same port over datagrams. There is no connection to drop nor to rebuild:
+  the socket is bound to the destination and datagrams go and come back. What
+  really changes is that the device never "goes away" - the datagram does.
+  }
+  {$ENDIF}
+
+  { TTestTcpUdpPortEmDatagrama }
+
+  TTestTcpUdpPortEmDatagrama = class(TTestCase)
+  private
+    FServidor:TServidorUDPDeTeste;
+    FPorta:TTCP_UDPPort;
+    function  EsperarConexao(aPrazoMs:LongInt):Boolean;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure PortaDeDatagramaFicaAtiva;
+    procedure OQueOMotoristaEscreveChegaNoServidor;
+    procedure ARespostaDoServidorVoltaParaOMotorista;
+    procedure SemRespostaOResultadoEhTimeout;
+    procedure OTipoDePortaSeparaOsIdentificadores;
+  end;
+
 implementation
 
 //Cada TTCP_UDPPort sobe uma thread de reconexao, e o destrutor espera ela
@@ -462,9 +494,103 @@ begin
   AssertTrue('vinte portas criadas e destruidas em sequencia', true);
 end;
 
+{ TTestTcpUdpPortEmDatagrama }
+
+procedure TTestTcpUdpPortEmDatagrama.SetUp;
+begin
+  FServidor:=TServidorUDPDeTeste.Create;
+
+  FPorta:=TTCP_UDPPort.Create(nil);
+  FPorta.Host                 :='127.0.0.1';
+  FPorta.Port                 :=FServidor.Porta;
+  FPorta.PortType             :=ptUDP;
+  FPorta.Timeout              :=300;
+  FPorta.ReconnectRetryInterval:=200;
+end;
+
+procedure TTestTcpUdpPortEmDatagrama.TearDown;
+begin
+  FreeAndNil(FPorta);
+  FreeAndNil(FServidor);
+end;
+
+function TTestTcpUdpPortEmDatagrama.EsperarConexao(aPrazoMs:LongInt):Boolean;
+var
+  gasto:LongInt;
+begin
+  gasto:=0;
+  while (not FPorta.ReallyActive) and (gasto<aPrazoMs) do begin
+    Sleep(5);
+    inc(gasto, 5);
+  end;
+  Result:=FPorta.ReallyActive;
+end;
+
+procedure TTestTcpUdpPortEmDatagrama.PortaDeDatagramaFicaAtiva;
+begin
+  FPorta.Active:=true;
+  AssertTrue('a porta de datagrama tem que ficar ativa', EsperarConexao(3000));
+end;
+
+procedure TTestTcpUdpPortEmDatagrama.OQueOMotoristaEscreveChegaNoServidor;
+var
+  pkg:TIOPacket;
+begin
+  FPorta.Active:=true;
+  AssertTrue('ativa', EsperarConexao(3000));
+
+  FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertTrue('o datagrama chegou', FServidor.EsperarBytes(4, 1000));
+  AssertBytesEqual('e e o mesmo', BytesOf('01 02 03 04'), FServidor.Recebido);
+end;
+
+procedure TTestTcpUdpPortEmDatagrama.ARespostaDoServidorVoltaParaOMotorista;
+var
+  pkg:TIOPacket;
+begin
+  FServidor.EnfileirarResposta(BytesOf('AA BB CC'));
+
+  FPorta.Active:=true;
+  AssertTrue('ativa', EsperarConexao(3000));
+
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('leitura ok',     Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertEquals('tres bytes',     3, pkg.Received);
+  AssertBytesEqual('a resposta', BytesOf('AA BB CC'), pkg.BufferToRead);
+end;
+
+procedure TTestTcpUdpPortEmDatagrama.SemRespostaOResultadoEhTimeout;
+var
+  pkg:TIOPacket;
+begin
+  //em datagrama a perda e' o caso comum, nao a excecao
+  FPorta.Active:=true;
+  AssertTrue('ativa', EsperarConexao(3000));
+
+  FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('a escrita saiu',      Ord(iorOK),      Ord(pkg.WriteIOResult));
+  AssertEquals('a resposta nao veio', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+end;
+
+procedure TTestTcpUdpPortEmDatagrama.OTipoDePortaSeparaOsIdentificadores;
+var
+  emTcp:TPortUniqueID;
+begin
+  //mesmo endereco e mesma porta, protocolos diferentes: sao dois destinos
+  FPorta.PortType:=ptTCP;
+  emTcp:=FPorta.getPortId;
+
+  FPorta.PortType:=ptUDP;
+  AssertTrue('TCP e UDP no mesmo destino sao portas distintas', emTcp<>FPorta.getPortId);
+end;
+
 initialization
   RegisterTest(TTestTcpUdpPort);
   RegisterTest(TTestTcpUdpPortComServidor);
+  RegisterTest(TTestTcpUdpPortEmDatagrama);
 
 finalization
   FreeAndNil(PortaCompartilhada);
