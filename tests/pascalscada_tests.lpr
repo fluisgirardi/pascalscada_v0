@@ -45,7 +45,8 @@ uses
   ut.plcblock,
   ut.plctagnumber,
   ut.numexprtag,
-  ut.escalas;
+  ut.escalas,
+  ut.protscanupdate;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
