@@ -288,7 +288,7 @@ begin
       cliIPAddr:=IPToString(ARequest.Connection.Socket.RemoteAddress.sin_addr);
       AddToLog(etInfo,  cliIPAddr, ARequest.Method.ToUpper.Trim+' '+ARequest.URL);
 
-      if ARequest.URL.Contains('/checkuserpwd', true) then
+      if ARequest.URL.ToLower.Contains('/checkuserpwd') then
         AddToLog(etDebug, cliIPAddr, 'Request content: Login attempt. Request data omitted')
       else
         AddToLog(etDebug, cliIPAddr, 'Request content: '+ARequest.Content);
