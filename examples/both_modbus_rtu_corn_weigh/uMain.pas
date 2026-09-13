@@ -81,7 +81,7 @@ end;
 
 procedure TForm1.Timer2Timer(Sender: TObject);
 begin
-  Label4.Caption:=FormatFloat('#0',DM.TCP_UDPPort1.CommandsPerSecond);
+  Label4.Caption:=FormatFloat('#0',DM.SerialPortDriver1.CommandsPerSecond);
 end;
 {$IFDEF FPC}
 initialization
