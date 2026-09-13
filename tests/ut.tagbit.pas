@@ -48,41 +48,41 @@ type
     FOrigem:TFakeNumber;
     FBit:TTagBit;
     FAvisos:LongInt;
-    procedure ContarAviso(Sender:TObject);
+    procedure CountNotification(Sender:TObject);
     //: prepara o recorte e poe um valor na origem
-    procedure Recorte(aInicio, aFim:LongInt; aValorDaOrigem:Double);
+    procedure SliceOf(aInicio, aFim:LongInt; aValorDaOrigem:Double);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //leitura / reading
-    procedure BitUnicoSaiComoZeroOuUm;
-    procedure FaixaDeBitsSaiDeslocadaParaADireita;
-    procedure ExemplosDaDocumentacao;
-    procedure BitsAltosDaPalavraDe64;
+    procedure ASingleBitComesOutAsZeroOrOne;
+    procedure ABitRangeComesOutShiftedRight;
+    procedure ExamplesFromTheDocumentation;
+    procedure TheHighBitsOfTheSixtyFourBitWord;
 
     //escrita / writing
-    procedure EscritaVoltaParaOTagDeOrigem;
-    procedure EscritaNaoTocaNosOutrosBits;
-    procedure EscritaDeFaixaEntraDeslocada;
-    procedure EscritaMaiorQueAFaixaNaoTransborda;
+    procedure AWriteGoesBackToTheSourceTag;
+    procedure AWriteDoesNotTouchTheOtherBits;
+    procedure ARangeWriteGoesInShifted;
+    procedure AWriteBiggerThanTheRangeDoesNotOverflow;
 
     //sem tag de origem / with no source tag
-    procedure SemOrigemGuardaOValorLocalmente;
-    procedure SemOrigemOEstadoDaLeituraDizQueNaoHaBloco;
-    procedure SemOrigemOEstadoDaEscritaAssincronaDizQueNaoHaBloco;
+    procedure WithNoSourceItKeepsTheValueLocally;
+    procedure WithNoSourceTheReadStatusSaysThereIsNoBlock;
+    procedure WithNoSourceTheAsyncWriteStatusSaysThereIsNoBlock;
 
     //avisos de mudanca / change notifications
-    procedure MudancaNosBitsObservadosAvisa;
-    procedure MudancaForaDosBitsObservadosNaoAvisa;
-    procedure VincularOrigemAtualizaOValorGuardado;
-    procedure OrigemDestruidaDesligaOVinculo;
+    procedure AChangeInTheWatchedBitsNotifies;
+    procedure AChangeOutsideTheWatchedBitsDoesNotNotify;
+    procedure LinkingTheSourceUpdatesTheValueKept;
+    procedure ADestroyedSourceBreaksTheLink;
 
     //comandos de leitura e escrita / read and write commands
-    procedure ComandoDeLeituraVaiParaAOrigem;
-    procedure SemOrigemOsComandosNaoFazemNada;
-    procedure ComandoDeEscritaVaiParaAOrigem;
-    procedure ComandoDeEscritaDeVarreduraVaiParaAOrigem;
+    procedure AReadCommandGoesToTheSource;
+    procedure WithNoSourceTheCommandsDoNothing;
+    procedure AWriteCommandGoesToTheSource;
+    procedure AScanWriteCommandGoesToTheSource;
   end;
 
 implementation
@@ -100,12 +100,12 @@ begin
   FreeAndNil(FOrigem);
 end;
 
-procedure TTestTagBit.ContarAviso(Sender:TObject);
+procedure TTestTagBit.CountNotification(Sender:TObject);
 begin
   inc(FAvisos);
 end;
 
-procedure TTestTagBit.Recorte(aInicio, aFim:LongInt; aValorDaOrigem:Double);
+procedure TTestTagBit.SliceOf(aInicio, aFim:LongInt; aValorDaOrigem:Double);
 begin
   //o fim primeiro: a mascara e' refeita a cada atribuicao, e uma faixa com o
   //inicio depois do fim nao cobre bit nenhum
@@ -115,57 +115,57 @@ begin
   FBit.PLCTag  :=FOrigem;
 end;
 
-procedure TTestTagBit.BitUnicoSaiComoZeroOuUm;
+procedure TTestTagBit.ASingleBitComesOutAsZeroOrOne;
 begin
   //5 = 101: os bits 0 e 2 estao ligados, o 1 nao
-  Recorte(0, 0, 5);
+  SliceOf(0, 0, 5);
   AssertEquals('bit 0 of 5', 1, FBit.Value, 0);
 
-  Recorte(1, 1, 5);
+  SliceOf(1, 1, 5);
   AssertEquals('bit 1 of 5', 0, FBit.Value, 0);
 
-  Recorte(2, 2, 5);
+  SliceOf(2, 2, 5);
   AssertEquals('bit 2 of 5', 1, FBit.Value, 0);
 end;
 
-procedure TTestTagBit.FaixaDeBitsSaiDeslocadaParaADireita;
+procedure TTestTagBit.ABitRangeComesOutShiftedRight;
 begin
   //o valor $F0 = 11110000: a faixa 4..7 vale 15, nao 240
-  Recorte(4, 7, $F0);
+  SliceOf(4, 7, $F0);
   AssertEquals('high nibble of $F0', 15, FBit.Value, 0);
 
   //e a faixa 8..15 do valor $1234 e' $12
-  Recorte(8, 15, $1234);
+  SliceOf(8, 15, $1234);
   AssertEquals('high byte of $1234', $12, FBit.Value, 0);
 end;
 
-procedure TTestTagBit.ExemplosDaDocumentacao;
+procedure TTestTagBit.ExamplesFromTheDocumentation;
 begin
   //os tres exemplos escritos no cabecalho da unit, com o tag valendo 5
-  Recorte(1, 2, 5);
+  SliceOf(1, 2, 5);
   AssertEquals('1..2 of 5', 2, FBit.Value, 0);
 
-  Recorte(0, 2, 5);
+  SliceOf(0, 2, 5);
   AssertEquals('0..2 of 5', 5, FBit.Value, 0);
 
-  Recorte(0, 1, 5);
+  SliceOf(0, 1, 5);
   AssertEquals('0..1 of 5', 1, FBit.Value, 0);
 end;
 
-procedure TTestTagBit.BitsAltosDaPalavraDe64;
+procedure TTestTagBit.TheHighBitsOfTheSixtyFourBitWord;
 begin
   //a mascara e' de 64 bits: o bit 32 tem que ser alcancavel
-  Recorte(32, 32, 4294967296.0);
+  SliceOf(32, 32, 4294967296.0);
   AssertEquals('bit 32', 1, FBit.Value, 0);
 
-  Recorte(32, 35, 64424509440.0);   //$F00000000
+  SliceOf(32, 35, 64424509440.0);   //$F00000000
   AssertEquals('range 32..35', 15, FBit.Value, 0);
 end;
 
-procedure TTestTagBit.EscritaVoltaParaOTagDeOrigem;
+procedure TTestTagBit.AWriteGoesBackToTheSourceTag;
 begin
   //ligar o bit 1 de um valor 5 da' 7
-  Recorte(1, 1, 5);
+  SliceOf(1, 1, 5);
   FBit.Value:=1;
   AssertEquals('source after setting bit 1', 7, FOrigem.Value, 0);
 
@@ -174,31 +174,31 @@ begin
   AssertEquals('source after clearing it', 5, FOrigem.Value, 0);
 end;
 
-procedure TTestTagBit.EscritaNaoTocaNosOutrosBits;
+procedure TTestTagBit.AWriteDoesNotTouchTheOtherBits;
 begin
   //o valor $FF com o bit 3 desligado vira $F7
-  Recorte(3, 3, $FF);
+  SliceOf(3, 3, $FF);
   FBit.Value:=0;
   AssertEquals('only bit 3 changed', $F7, FOrigem.Value, 0);
 end;
 
-procedure TTestTagBit.EscritaDeFaixaEntraDeslocada;
+procedure TTestTagBit.ARangeWriteGoesInShifted;
 begin
   //escrever 5 na faixa 4..7 de um valor zerado poe $50
-  Recorte(4, 7, 0);
+  SliceOf(4, 7, 0);
   FBit.Value:=5;
   AssertEquals('5 shifted into the high nibble', $50, FOrigem.Value, 0);
 end;
 
-procedure TTestTagBit.EscritaMaiorQueAFaixaNaoTransborda;
+procedure TTestTagBit.AWriteBiggerThanTheRangeDoesNotOverflow;
 begin
   //a faixa 0..1 so' guarda dois bits: escrever 7 nao pode vazar para o bit 2
-  Recorte(0, 1, 0);
+  SliceOf(0, 1, 0);
   FBit.Value:=7;
   AssertEquals('what does not fit is left out', 3, FOrigem.Value, 0);
 end;
 
-procedure TTestTagBit.SemOrigemGuardaOValorLocalmente;
+procedure TTestTagBit.WithNoSourceItKeepsTheValueLocally;
 begin
   //sem tag de origem o tag de bits ainda e' um tag: guarda o que escrevem
   FBit.StartBit:=0;
@@ -207,22 +207,22 @@ begin
   AssertEquals('value kept', 9, FBit.Value, 0);
 end;
 
-procedure TTestTagBit.SemOrigemOEstadoDaLeituraDizQueNaoHaBloco;
+procedure TTestTagBit.WithNoSourceTheReadStatusSaysThereIsNoBlock;
 begin
   AssertEquals('asynchronous read',  Ord(ioNullTagBlock), Ord(FBit.LastASyncReadStatus));
   AssertEquals('synchronous read',    Ord(ioNullTagBlock), Ord(FBit.LastSyncReadStatus));
   AssertEquals('synchronous write',    Ord(ioNullTagBlock), Ord(FBit.LastSyncWriteStatus));
 end;
 
-procedure TTestTagBit.SemOrigemOEstadoDaEscritaAssincronaDizQueNaoHaBloco;
+procedure TTestTagBit.WithNoSourceTheAsyncWriteStatusSaysThereIsNoBlock;
 begin
   AssertEquals('asynchronous write', Ord(ioNullTagBlock), Ord(FBit.LastASyncWriteStatus));
 end;
 
-procedure TTestTagBit.MudancaNosBitsObservadosAvisa;
+procedure TTestTagBit.AChangeInTheWatchedBitsNotifies;
 begin
-  Recorte(1, 1, 5);
-  FBit.AddTagChangeHandler(@ContarAviso);
+  SliceOf(1, 1, 5);
+  FBit.AddTagChangeHandler(@CountNotification);
   FAvisos:=0;
 
   //5 -> 7 liga o bit 1
@@ -230,10 +230,10 @@ begin
   AssertTrue('a change in the watched bit must notify', FAvisos>0);
 end;
 
-procedure TTestTagBit.MudancaForaDosBitsObservadosNaoAvisa;
+procedure TTestTagBit.AChangeOutsideTheWatchedBitsDoesNotNotify;
 begin
-  Recorte(1, 1, 5);
-  FBit.AddTagChangeHandler(@ContarAviso);
+  SliceOf(1, 1, 5);
+  FBit.AddTagChangeHandler(@CountNotification);
 
   //a primeira atualizacao sempre avisa; o que interessa aqui e' a seguinte
   FOrigem.ChegouDoCLP(5);
@@ -244,20 +244,20 @@ begin
   AssertEquals('the watched bit did not change', 0, FAvisos);
 end;
 
-procedure TTestTagBit.VincularOrigemAtualizaOValorGuardado;
+procedure TTestTagBit.LinkingTheSourceUpdatesTheValueKept;
 begin
   FBit.EndBit  :=0;
   FBit.StartBit:=0;
   FOrigem.ChegouDoCLP(5);
 
-  FBit.AddTagChangeHandler(@ContarAviso);
+  FBit.AddTagChangeHandler(@CountNotification);
   FAvisos:=0;
   FBit.PLCTag:=FOrigem;
 
   AssertTrue('linking the source must notify the listener', FAvisos>0);
 end;
 
-procedure TTestTagBit.OrigemDestruidaDesligaOVinculo;
+procedure TTestTagBit.ADestroyedSourceBreaksTheLink;
 var
   origem:TFakeNumber;
 begin
@@ -274,17 +274,17 @@ begin
   AssertTrue('the link must have been broken', FBit.PLCTag=nil);
 end;
 
-procedure TTestTagBit.ComandoDeLeituraVaiParaAOrigem;
+procedure TTestTagBit.AReadCommandGoesToTheSource;
 begin
   //quem manda ler um tag de bits esta' mandando ler o tag de origem: e' o
   //unico dos dois que fala com o equipamento
-  Recorte(1, 1, 5);
+  SliceOf(1, 1, 5);
 
   FBit.Read;
   AssertEquals('the source got the read request', 1, FOrigem.Leituras);
 end;
 
-procedure TTestTagBit.SemOrigemOsComandosNaoFazemNada;
+procedure TTestTagBit.WithNoSourceTheCommandsDoNothing;
 var
   valores:TArrayOfDouble;
 begin
@@ -298,22 +298,22 @@ begin
   AssertEquals('scan write with no source', -1, FBit.ScanWrite(valores, 1, 0));
 end;
 
-procedure TTestTagBit.ComandoDeEscritaVaiParaAOrigem;
+procedure TTestTagBit.AWriteCommandGoesToTheSource;
 begin
   //Write sem parametros e' o que a interface grafica chama para mandar o valor
   //ao equipamento. Em TPLCNumber ele repassa para Write(valores,1,0), que o
   //TTagBit nao implementa - o TPLCBlockElement, que e' o mesmo arranjo para
   //tags de bloco, repassa Read, Write, ScanRead e ScanWrite ao tag pai
-  Recorte(1, 1, 5);
+  SliceOf(1, 1, 5);
   FBit.Value:=1;
 
   FBit.Write;
   AssertEquals('the source got the write', 7, FOrigem.Value, 0);
 end;
 
-procedure TTestTagBit.ComandoDeEscritaDeVarreduraVaiParaAOrigem;
+procedure TTestTagBit.AScanWriteCommandGoesToTheSource;
 begin
-  Recorte(1, 1, 5);
+  SliceOf(1, 1, 5);
   FBit.Value:=1;
 
   FBit.ScanWrite;

@@ -39,59 +39,59 @@ type
   TTestS7PlusVLQ = class(TTestCase)
   published
     //uint32
-    procedure ZeroCabeEmUmByte;
-    procedure CentoEVinteSeteEhOMaiorDeUmByte;
-    procedure CentoEVinteOitoPassaParaDoisBytes;
-    procedure TrezentosSeguemBase128BigEndian;
-    procedure DezesseisMilTrezentosEOitentaETresEhOMaiorDeDoisBytes;
-    procedure MaiorUInt32UsaCincoBytes;
-    procedure UInt32VaiEVolta;
-    procedure DecodeInformaQuantosBytesConsumiu;
-    procedure DecodeSemDadoSuficienteReclama;
+    procedure ZeroFitsInOneByte;
+    procedure OneHundredAndTwentySevenIsTheLargestInOneByte;
+    procedure OneHundredAndTwentyEightMovesToTwoBytes;
+    procedure ThreeHundredFollowsBase128BigEndian;
+    procedure SixteenThousandThreeHundredAndEightyThreeIsTheLargestInTwoBytes;
+    procedure TheLargestUInt32UsesFiveBytes;
+    procedure UInt32GoesOutAndComesBack;
+    procedure DecodeReportsHowManyBytesItConsumed;
+    procedure DecodeWithNotEnoughDataComplains;
 
     //int32 / int64 / uint64
-    procedure Int32VaiEVoltaIncluindoNegativos;
-    procedure UInt64VaiEVolta;
-    procedure Int64VaiEVoltaIncluindoNegativos;
+    procedure Int32GoesOutAndComesBackNegativesIncluded;
+    procedure UInt64GoesOutAndComesBack;
+    procedure Int64GoesOutAndComesBackNegativesIncluded;
   end;
 
 implementation
 
-procedure TTestS7PlusVLQ.ZeroCabeEmUmByte;
+procedure TTestS7PlusVLQ.ZeroFitsInOneByte;
 begin
   AssertBytesEqual('zero', BytesOf('00'), EncodeUInt32VLQ(0));
 end;
 
-procedure TTestS7PlusVLQ.CentoEVinteSeteEhOMaiorDeUmByte;
+procedure TTestS7PlusVLQ.OneHundredAndTwentySevenIsTheLargestInOneByte;
 begin
   AssertBytesEqual('127', BytesOf('7F'), EncodeUInt32VLQ(127));
 end;
 
-procedure TTestS7PlusVLQ.CentoEVinteOitoPassaParaDoisBytes;
+procedure TTestS7PlusVLQ.OneHundredAndTwentyEightMovesToTwoBytes;
 begin
   //o bit $80 do primeiro byte diz "tem mais"
   AssertBytesEqual('128', BytesOf('81 00'), EncodeUInt32VLQ(128));
 end;
 
-procedure TTestS7PlusVLQ.TrezentosSeguemBase128BigEndian;
+procedure TTestS7PlusVLQ.ThreeHundredFollowsBase128BigEndian;
 begin
   //300 = 10 0101100 -> grupo alto 2, grupo baixo $2C
   AssertBytesEqual('300', BytesOf('82 2C'), EncodeUInt32VLQ(300));
 end;
 
-procedure TTestS7PlusVLQ.DezesseisMilTrezentosEOitentaETresEhOMaiorDeDoisBytes;
+procedure TTestS7PlusVLQ.SixteenThousandThreeHundredAndEightyThreeIsTheLargestInTwoBytes;
 begin
   AssertBytesEqual('16383', BytesOf('FF 7F'), EncodeUInt32VLQ(16383));
   AssertBytesEqual('16384', BytesOf('81 80 00'), EncodeUInt32VLQ(16384));
 end;
 
-procedure TTestS7PlusVLQ.MaiorUInt32UsaCincoBytes;
+procedure TTestS7PlusVLQ.TheLargestUInt32UsesFiveBytes;
 begin
   //32 bits nao cabem em 4 grupos de 7, entao o maior valor gasta 5 bytes
   AssertBytesEqual('$FFFFFFFF', BytesOf('8F FF FF FF 7F'), EncodeUInt32VLQ($FFFFFFFF));
 end;
 
-procedure TTestS7PlusVLQ.UInt32VaiEVolta;
+procedure TTestS7PlusVLQ.UInt32GoesOutAndComesBack;
 const
   VALORES:array[0..8] of Cardinal = (0, 1, 127, 128, 300, 16383, 16384, 2097152, $FFFFFFFF);
 var
@@ -103,7 +103,7 @@ begin
                  Int64(DecodeUInt32VLQ(EncodeUInt32VLQ(VALORES[i]), 0, consumido)));
 end;
 
-procedure TTestS7PlusVLQ.DecodeInformaQuantosBytesConsumiu;
+procedure TTestS7PlusVLQ.DecodeReportsHowManyBytesItConsumed;
 var
   consumido:Integer;
 begin
@@ -116,7 +116,7 @@ begin
   AssertEquals('value in a single byte', 1, consumido);
 end;
 
-procedure TTestS7PlusVLQ.DecodeSemDadoSuficienteReclama;
+procedure TTestS7PlusVLQ.DecodeWithNotEnoughDataComplains;
 var
   consumido:Integer;
   reclamou:Boolean;
@@ -132,7 +132,7 @@ begin
   AssertTrue('a truncated VLQ must raise an exception', reclamou);
 end;
 
-procedure TTestS7PlusVLQ.Int32VaiEVoltaIncluindoNegativos;
+procedure TTestS7PlusVLQ.Int32GoesOutAndComesBackNegativesIncluded;
 const
   VALORES:array[0..9] of LongInt = (0, 1, -1, 63, -64, 64, 1000, -1000, 2147483647, -2147483647);
 var
@@ -144,7 +144,7 @@ begin
                  Int64(DecodeInt32VLQ(EncodeInt32VLQ(VALORES[i]), 0, consumido)));
 end;
 
-procedure TTestS7PlusVLQ.UInt64VaiEVolta;
+procedure TTestS7PlusVLQ.UInt64GoesOutAndComesBack;
 const
   VALORES:array[0..5] of QWord = (0, 1, 127, 128, QWord(4294967296), QWord($FFFFFFFFFFFFFFFF));
 var
@@ -156,7 +156,7 @@ begin
                  DecodeUInt64VLQ(EncodeUInt64VLQ(VALORES[i]), 0, consumido));
 end;
 
-procedure TTestS7PlusVLQ.Int64VaiEVoltaIncluindoNegativos;
+procedure TTestS7PlusVLQ.Int64GoesOutAndComesBackNegativesIncluded;
 const
   VALORES:array[0..7] of Int64 = (0, 1, -1, 63, -64, 1000000000000, -1000000000000, -9223372036854775807);
 var

@@ -46,41 +46,41 @@ type
     FExpr:TNumericExprTag;
     FA, FB:TFakeNumber;
     FAvisos, FFalhasDeLeitura, FFalhasDeEscrita:LongInt;
-    procedure ContarAviso(Sender:TObject);
-    procedure ContarFalhaDeLeitura(Sender:TObject);
-    procedure ContarFalhaDeEscrita(Sender:TObject);
+    procedure CountNotification(Sender:TObject);
+    procedure CountReadFailure(Sender:TObject);
+    procedure CountWriteFailure(Sender:TObject);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //avaliacao / evaluation
-    procedure ExpressaoConstanteEhCalculada;
-    procedure ExpressaoComUmaVariavel;
-    procedure ExpressaoComDuasVariaveis;
-    procedure FuncaoMatematicaEhAceita;
-    procedure FuncaoIfThenEscolheOValor;
-    procedure ResultadoInteiroNaoViraLixo;
-    procedure ComparacaoDiretaValeUmOuZero;
-    procedure ResultadoDeTextoEhErro;
+    procedure AConstantExpressionIsEvaluated;
+    procedure AnExpressionWithOneVariable;
+    procedure AnExpressionWithTwoVariables;
+    procedure AMathFunctionIsAccepted;
+    procedure TheIfThenFunctionPicksTheValue;
+    procedure AnIntegerResultDoesNotTurnIntoGarbage;
+    procedure ADirectComparisonIsOneOrZero;
+    procedure ATextResultIsAnError;
 
     //recalculo / recalculation
-    procedure MudarOTagDeOrigemRecalcula;
-    procedure MudarAExpressaoRecalcula;
-    procedure MudancaNoValorAvisaQuemEscuta;
+    procedure ChangingTheSourceTagRecomputes;
+    procedure ChangingTheExpressionRecomputes;
+    procedure AChangeInTheValueNotifiesTheListener;
 
     //erros / errors
-    procedure ExpressaoNovaComecaSemErro;
-    procedure ExpressaoInvalidaGuardaOErro;
-    procedure ExpressaoInvalidaNaoMudaOValor;
-    procedure ExpressaoInvalidaAvisaFalhaDeLeitura;
-    procedure ExpressaoBoaDepoisDeUmaRuimLimpaOErro;
-    procedure VariavelNaoLigadaEhErro;
+    procedure ANewExpressionStartsWithNoError;
+    procedure AnInvalidExpressionKeepsTheError;
+    procedure AnInvalidExpressionDoesNotChangeTheValue;
+    procedure AnInvalidExpressionReportsAReadFailure;
+    procedure AGoodExpressionAfterABadOneClearsTheError;
+    procedure AnUnboundVariableIsAnError;
 
     //escrita / writing
-    procedure EscreverNoTagCalculadoEhRecusado;
+    procedure WritingToTheComputedTagIsRefused;
 
     //ciclo de vida / lifecycle
-    procedure TagDeOrigemDestruidoDesligaOVinculo;
+    procedure ADestroyedSourceTagBreaksTheLink;
   end;
 
 implementation
@@ -102,28 +102,28 @@ begin
   FreeAndNil(FB);
 end;
 
-procedure TTestNumExprTag.ContarAviso(Sender:TObject);
+procedure TTestNumExprTag.CountNotification(Sender:TObject);
 begin
   inc(FAvisos);
 end;
 
-procedure TTestNumExprTag.ContarFalhaDeLeitura(Sender:TObject);
+procedure TTestNumExprTag.CountReadFailure(Sender:TObject);
 begin
   inc(FFalhasDeLeitura);
 end;
 
-procedure TTestNumExprTag.ContarFalhaDeEscrita(Sender:TObject);
+procedure TTestNumExprTag.CountWriteFailure(Sender:TObject);
 begin
   inc(FFalhasDeEscrita);
 end;
 
-procedure TTestNumExprTag.ExpressaoConstanteEhCalculada;
+procedure TTestNumExprTag.AConstantExpressionIsEvaluated;
 begin
   FExpr.Expression:='2+3';
   AssertEquals('constant', 5, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.ExpressaoComUmaVariavel;
+procedure TTestNumExprTag.AnExpressionWithOneVariable;
 begin
   FA.ChegouDoCLP(10);
   FExpr.A:=FA;
@@ -132,7 +132,7 @@ begin
   AssertEquals('one variable', 20, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.ExpressaoComDuasVariaveis;
+procedure TTestNumExprTag.AnExpressionWithTwoVariables;
 begin
   FA.ChegouDoCLP(10);
   FB.ChegouDoCLP(4);
@@ -143,7 +143,7 @@ begin
   AssertEquals('two variables', 6, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.FuncaoMatematicaEhAceita;
+procedure TTestNumExprTag.AMathFunctionIsAccepted;
 begin
   FA.ChegouDoCLP(9);
   FExpr.A:=FA;
@@ -152,7 +152,7 @@ begin
   AssertEquals('square root', 3, FExpr.Value, 0.0001);
 end;
 
-procedure TTestNumExprTag.FuncaoIfThenEscolheOValor;
+procedure TTestNumExprTag.TheIfThenFunctionPicksTheValue;
 begin
   //ifthen e' acrescentada pela propria unit, nao vem do avaliador
   FA.ChegouDoCLP(10);
@@ -164,7 +164,7 @@ begin
   AssertEquals('false condition', 200, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.ResultadoInteiroNaoViraLixo;
+procedure TTestNumExprTag.AnIntegerResultDoesNotTurnIntoGarbage;
 begin
   //o avaliador devolve um registro variante: ler o campo de ponto flutuante
   //de um resultado inteiro devolve os bits do inteiro
@@ -181,7 +181,7 @@ begin
   AssertEquals('truncation',        3, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.ComparacaoDiretaValeUmOuZero;
+procedure TTestNumExprTag.ADirectComparisonIsOneOrZero;
 begin
   //escrever a comparacao direto e' natural num tag de supervisao
   FA.ChegouDoCLP(10);
@@ -194,7 +194,7 @@ begin
   AssertEquals('false is zero',    0, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.ResultadoDeTextoEhErro;
+procedure TTestNumExprTag.ATextResultIsAnError;
 begin
   //texto nao vira valor de tag: tem que virar erro, nao numero estranho
   FExpr.Expression:='5';
@@ -205,7 +205,7 @@ begin
   AssertEquals('and the previous value stays',   5, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.MudarOTagDeOrigemRecalcula;
+procedure TTestNumExprTag.ChangingTheSourceTagRecomputes;
 begin
   FA.ChegouDoCLP(10);
   FExpr.A:=FA;
@@ -216,7 +216,7 @@ begin
   AssertEquals('after the change at the source', 60, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.MudarAExpressaoRecalcula;
+procedure TTestNumExprTag.ChangingTheExpressionRecomputes;
 begin
   FA.ChegouDoCLP(10);
   FExpr.A:=FA;
@@ -227,32 +227,32 @@ begin
   AssertEquals('after changing the expression', 11, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.MudancaNoValorAvisaQuemEscuta;
+procedure TTestNumExprTag.AChangeInTheValueNotifiesTheListener;
 begin
   FA.ChegouDoCLP(10);
   FExpr.A:=FA;
   FExpr.Expression:='A*2';
 
-  FExpr.AddTagChangeHandler(@ContarAviso);
+  FExpr.AddTagChangeHandler(@CountNotification);
   FAvisos:=0;
 
   FA.ChegouDoCLP(30);
   AssertTrue('the value changed, it must notify', FAvisos>0);
 end;
 
-procedure TTestNumExprTag.ExpressaoNovaComecaSemErro;
+procedure TTestNumExprTag.ANewExpressionStartsWithNoError;
 begin
   FExpr.Expression:='1+1';
   AssertEquals('no error', 'OK', FExpr.LastEvalutionError);
 end;
 
-procedure TTestNumExprTag.ExpressaoInvalidaGuardaOErro;
+procedure TTestNumExprTag.AnInvalidExpressionKeepsTheError;
 begin
   FExpr.Expression:='2+*3';
   AssertTrue('the error must be kept', FExpr.LastEvalutionError<>'OK');
 end;
 
-procedure TTestNumExprTag.ExpressaoInvalidaNaoMudaOValor;
+procedure TTestNumExprTag.AnInvalidExpressionDoesNotChangeTheValue;
 begin
   FExpr.Expression:='7';
   AssertEquals('good value', 7, FExpr.Value, 0);
@@ -261,15 +261,15 @@ begin
   AssertEquals('the previous value stands', 7, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.ExpressaoInvalidaAvisaFalhaDeLeitura;
+procedure TTestNumExprTag.AnInvalidExpressionReportsAReadFailure;
 begin
-  FExpr.AddReadFaultHandler(@ContarFalhaDeLeitura);
+  FExpr.AddReadFaultHandler(@CountReadFailure);
   FExpr.Expression:='2+*3';
 
   AssertTrue('the listener must be told', FFalhasDeLeitura>0);
 end;
 
-procedure TTestNumExprTag.ExpressaoBoaDepoisDeUmaRuimLimpaOErro;
+procedure TTestNumExprTag.AGoodExpressionAfterABadOneClearsTheError;
 begin
   FExpr.Expression:='2+*3';
   AssertTrue('error kept', FExpr.LastEvalutionError<>'OK');
@@ -279,17 +279,17 @@ begin
   AssertEquals('and the new value', 8, FExpr.Value, 0);
 end;
 
-procedure TTestNumExprTag.VariavelNaoLigadaEhErro;
+procedure TTestNumExprTag.AnUnboundVariableIsAnError;
 begin
   //A so' existe na expressao se houver um tag ligado nela
   FExpr.Expression:='A*2';
   AssertTrue('variable with no tag', FExpr.LastEvalutionError<>'OK');
 end;
 
-procedure TTestNumExprTag.EscreverNoTagCalculadoEhRecusado;
+procedure TTestNumExprTag.WritingToTheComputedTagIsRefused;
 begin
   FExpr.Expression:='7';
-  FExpr.AddWriteFaultHandler(@ContarFalhaDeEscrita);
+  FExpr.AddWriteFaultHandler(@CountWriteFailure);
 
   FExpr.Value:=99;
 
@@ -297,7 +297,7 @@ begin
   AssertTrue  ('and the write is refused',     FFalhasDeEscrita>0);
 end;
 
-procedure TTestNumExprTag.TagDeOrigemDestruidoDesligaOVinculo;
+procedure TTestNumExprTag.ADestroyedSourceTagBreaksTheLink;
 var
   origem:TFakeNumber;
 begin

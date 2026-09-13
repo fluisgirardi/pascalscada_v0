@@ -37,50 +37,50 @@ type
 
   TTestCommTypes = class(TTestCase)
   published
-    procedure JuncaoPreservaAOrdemDosDois;
-    procedure JuncaoComOPrimeiroVazioDevolveOSegundo;
-    procedure JuncaoComOSegundoVazioDevolveOPrimeiro;
-    procedure JuncaoDeDoisVaziosDaVazio;
-    procedure TamanhoEhASomaDosDois;
-    procedure ResultadoNaoCompartilhaMemoriaComAsFontes;
+    procedure ConcatenationKeepsTheOrderOfBoth;
+    procedure ConcatenationWithAnEmptyFirstGivesTheSecond;
+    procedure ConcatenationWithAnEmptySecondGivesTheFirst;
+    procedure ConcatenationOfTwoEmptiesGivesEmpty;
+    procedure TheSizeIsTheSumOfBoth;
+    procedure TheResultSharesNoMemoryWithTheSources;
   end;
 
 implementation
 
-procedure TTestCommTypes.JuncaoPreservaAOrdemDosDois;
+procedure TTestCommTypes.ConcatenationKeepsTheOrderOfBoth;
 begin
   //o segundo pedaco entra depois do primeiro, sem embaralhar
   AssertBytesEqual('concatenation', BytesOf('01 02 03 AA BB'),
                    ConcatenateBYTES(BytesOf('01 02 03'), BytesOf('AA BB')));
 end;
 
-procedure TTestCommTypes.JuncaoComOPrimeiroVazioDevolveOSegundo;
+procedure TTestCommTypes.ConcatenationWithAnEmptyFirstGivesTheSecond;
 begin
   //acontece de verdade: a primeira etapa da leitura pode voltar vazia
   AssertBytesEqual('first one empty', BytesOf('AA BB'),
                    ConcatenateBYTES(nil, BytesOf('AA BB')));
 end;
 
-procedure TTestCommTypes.JuncaoComOSegundoVazioDevolveOPrimeiro;
+procedure TTestCommTypes.ConcatenationWithAnEmptySecondGivesTheFirst;
 begin
   //e a segunda tambem, quando nao falta nada para ler
   AssertBytesEqual('second one empty', BytesOf('01 02 03'),
                    ConcatenateBYTES(BytesOf('01 02 03'), nil));
 end;
 
-procedure TTestCommTypes.JuncaoDeDoisVaziosDaVazio;
+procedure TTestCommTypes.ConcatenationOfTwoEmptiesGivesEmpty;
 begin
   AssertEquals('nothing with nothing', 0, Length(ConcatenateBYTES(nil, nil)));
 end;
 
-procedure TTestCommTypes.TamanhoEhASomaDosDois;
+procedure TTestCommTypes.TheSizeIsTheSumOfBoth;
 begin
   AssertEquals('3 + 2', 5, Length(ConcatenateBYTES(BytesOf('01 02 03'), BytesOf('AA BB'))));
   AssertEquals('0 + 2', 2, Length(ConcatenateBYTES(nil, BytesOf('AA BB'))));
   AssertEquals('3 + 0', 3, Length(ConcatenateBYTES(BytesOf('01 02 03'), nil)));
 end;
 
-procedure TTestCommTypes.ResultadoNaoCompartilhaMemoriaComAsFontes;
+procedure TTestCommTypes.TheResultSharesNoMemoryWithTheSources;
 var
   primeiro, segundo, juntos:BYTES;
 begin

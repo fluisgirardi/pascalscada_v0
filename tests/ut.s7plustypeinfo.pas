@@ -40,36 +40,36 @@ type
   TTestS7PlusTypeInfo = class(TTestCase)
   published
     //tabela de tipos / type table
-    procedure TiposEscalaresConhecidosSaoSuportados;
-    procedure TiposEstruturaisNaoSaoSuportados;
-    procedure TamanhoDosTiposEscalares;
-    procedure StringSomaDoisAoTamanhoDeclarado;
-    procedure TipoSemTamanhoConhecidoDaZero;
+    procedure KnownScalarTypesAreSupported;
+    procedure StructuralTypesAreNotSupported;
+    procedure TheSizeOfTheScalarTypes;
+    procedure StringAddsTwoToTheDeclaredLength;
+    procedure ATypeWithNoKnownSizeGivesZero;
 
     //campos de bits do VartypeElement / VartypeElement bit fields
-    procedure TipoDeOffsetInfoVemDosQuatroBitsAltos;
-    procedure BitOffsetOtimizadoVemDosTresBitsBaixos;
-    procedure BitOffsetsEModoClassicoVemDoByteDeFlags;
+    procedure TheOffsetInfoTypeComesFromTheFourHighBits;
+    procedure TheOptimisedBitOffsetComesFromTheThreeLowBits;
+    procedure BitOffsetsAndClassicModeComeFromTheFlagsByte;
 
     //offset info (little-endian) / offset info (little endian)
-    procedure OffsetInfoTipo8LeOtimizadoPrimeiro;
-    procedure OffsetInfoTipo1InverteAOrdem;
-    procedure OffsetInfoDeArrayTrazLimiteInferiorEContagem;
+    procedure OffsetInfoType8ReadsTheOptimisedOneFirst;
+    procedure OffsetInfoType1ReversesTheOrder;
+    procedure ArrayOffsetInfoCarriesTheLowerBoundAndTheCount;
 
     //elementos e listas / elements and lists
-    procedure ElementoDeVartypeMisturaLittleEBigEndian;
-    procedure ListaDeVartypePulaOIdInicialDoPrimeiroBloco;
-    procedure ListaDeNomesLeTamanhoEZeroFinal;
+    procedure AVartypeElementMixesLittleAndBigEndian;
+    procedure AVartypeListSkipsTheStartingIdOfTheFirstBlock;
+    procedure ANameListReadsTheLengthAndTheTrailingZero;
 
     //objetos / objects
-    procedure ObjetoSemAberturaReclama;
-    procedure AtributosDoObjetoSaoLidos;
-    procedure AtributoAusenteNoObjetoDevolveFalso;
-    procedure ObjetoAninhadoEhEncontradoPelaClasse;
-    procedure ObjetosIrmaosSaoPercorridos;
+    procedure AnObjectWithNoOpeningComplains;
+    procedure TheObjectAttributesAreRead;
+    procedure AMissingAttributeInTheObjectReturnsFalse;
+    procedure ANestedObjectIsFoundByItsClass;
+    procedure SiblingObjectsAreWalked;
 
     //formatacao / formatting
-    procedure LidsSaoFormatadosEmHexaSeparadosPorPonto;
+    procedure LidsAreFormattedInHexSeparatedByDots;
   end;
 
 implementation
@@ -94,7 +94,7 @@ const
   SDT_DTL     = 67;
   SDT_UNKNOWN = 255;
 
-procedure TTestS7PlusTypeInfo.TiposEscalaresConhecidosSaoSuportados;
+procedure TTestS7PlusTypeInfo.KnownScalarTypesAreSupported;
 begin
   AssertTrue('bool',   IsSoftDataTypeSupported(SDT_BOOL));
   AssertTrue('int',    IsSoftDataTypeSupported(SDT_INT));
@@ -104,7 +104,7 @@ begin
   AssertTrue('udint',  IsSoftDataTypeSupported(SDT_UDINT));
 end;
 
-procedure TTestS7PlusTypeInfo.TiposEstruturaisNaoSaoSuportados;
+procedure TTestS7PlusTypeInfo.StructuralTypesAreNotSupported;
 begin
   //array e struct nao sao lidos como valor: sao nos da arvore, e quem os
   //atravessa e' o construtor da lista achatada.
@@ -116,7 +116,7 @@ begin
   AssertFalse('unknown', IsSoftDataTypeSupported(SDT_UNKNOWN));
 end;
 
-procedure TTestS7PlusTypeInfo.TamanhoDosTiposEscalares;
+procedure TTestS7PlusTypeInfo.TheSizeOfTheScalarTypes;
 begin
   AssertEquals('bool',    1,  S7PlusDataTypeSize(SDT_BOOL));
   AssertEquals('byte',    1,  S7PlusDataTypeSize(SDT_BYTE));
@@ -130,7 +130,7 @@ begin
   AssertEquals('dtl',     12, S7PlusDataTypeSize(SDT_DTL));
 end;
 
-procedure TTestS7PlusTypeInfo.StringSomaDoisAoTamanhoDeclarado;
+procedure TTestS7PlusTypeInfo.StringAddsTwoToTheDeclaredLength;
 begin
   //os dois bytes a mais sao o cabecalho classico do S7: tamanho maximo e atual
   AssertEquals('string[10]',  12, S7PlusDataTypeSize(SDT_STRING, 10));
@@ -138,7 +138,7 @@ begin
   AssertEquals('string with no length', 2, S7PlusDataTypeSize(SDT_STRING));
 end;
 
-procedure TTestS7PlusTypeInfo.TipoSemTamanhoConhecidoDaZero;
+procedure TTestS7PlusTypeInfo.ATypeWithNoKnownSizeGivesZero;
 begin
   //zero aqui e' o sinal de "nao sei medir isso", nao um tipo de zero byte
   AssertEquals('array',        0, S7PlusDataTypeSize(SDT_ARRAY));
@@ -146,7 +146,7 @@ begin
   AssertEquals('unknown', 0, S7PlusDataTypeSize(SDT_UNKNOWN));
 end;
 
-procedure TTestS7PlusTypeInfo.TipoDeOffsetInfoVemDosQuatroBitsAltos;
+procedure TTestS7PlusTypeInfo.TheOffsetInfoTypeComesFromTheFourHighBits;
 var
   el:TS7PlusVartypeElement;
 begin
@@ -162,7 +162,7 @@ begin
   AssertEquals('type 0', 0, S7PlusVteOffsetInfoType(el));
 end;
 
-procedure TTestS7PlusTypeInfo.BitOffsetOtimizadoVemDosTresBitsBaixos;
+procedure TTestS7PlusTypeInfo.TheOptimisedBitOffsetComesFromTheThreeLowBits;
 var
   el:TS7PlusVartypeElement;
 begin
@@ -176,7 +176,7 @@ begin
   AssertEquals('bit 0', 0, S7PlusVteAttributeBitOffset(el));
 end;
 
-procedure TTestS7PlusTypeInfo.BitOffsetsEModoClassicoVemDoByteDeFlags;
+procedure TTestS7PlusTypeInfo.BitOffsetsAndClassicModeComeFromTheFlagsByte;
 var
   el:TS7PlusVartypeElement;
 begin
@@ -195,7 +195,7 @@ begin
   AssertTrue  ('classic',         S7PlusVteClassic(el));
 end;
 
-procedure TTestS7PlusTypeInfo.OffsetInfoTipo8LeOtimizadoPrimeiro;
+procedure TTestS7PlusTypeInfo.OffsetInfoType8ReadsTheOptimisedOneFirst;
 var
   info:TS7PlusOffsetInfo;
   fim:Integer;
@@ -208,7 +208,7 @@ begin
   AssertEquals('code',        8, info.Code);
 end;
 
-procedure TTestS7PlusTypeInfo.OffsetInfoTipo1InverteAOrdem;
+procedure TTestS7PlusTypeInfo.OffsetInfoType1ReversesTheOrder;
 var
   info:TS7PlusOffsetInfo;
 begin
@@ -218,7 +218,7 @@ begin
   AssertEquals('optimised',     2, info.OptAddr);
 end;
 
-procedure TTestS7PlusTypeInfo.OffsetInfoDeArrayTrazLimiteInferiorEContagem;
+procedure TTestS7PlusTypeInfo.ArrayOffsetInfoCarriesTheLowerBoundAndTheCount;
 var
   info:TS7PlusOffsetInfo;
   fim:Integer;
@@ -235,7 +235,7 @@ begin
   AssertEquals('bytes read',      20, fim);
 end;
 
-procedure TTestS7PlusTypeInfo.ElementoDeVartypeMisturaLittleEBigEndian;
+procedure TTestS7PlusTypeInfo.AVartypeElementMixesLittleAndBigEndian;
 var
   el:TS7PlusVartypeElement;
   fim:Integer;
@@ -260,7 +260,7 @@ begin
   AssertEquals('bytes read',    16, fim);
 end;
 
-procedure TTestS7PlusTypeInfo.ListaDeVartypePulaOIdInicialDoPrimeiroBloco;
+procedure TTestS7PlusTypeInfo.AVartypeListSkipsTheStartingIdOfTheFirstBlock;
 var
   elementos:TS7PlusVartypeElementArray;
 begin
@@ -276,7 +276,7 @@ begin
   AssertEquals('lid of the element', 5, elementos[0].Lid);
 end;
 
-procedure TTestS7PlusTypeInfo.ListaDeNomesLeTamanhoEZeroFinal;
+procedure TTestS7PlusTypeInfo.ANameListReadsTheLengthAndTheTrailingZero;
 var
   nomes:TStringArray;
 begin
@@ -292,7 +292,7 @@ begin
   AssertEquals('second name',  'CDE', nomes[1]);
 end;
 
-procedure TTestS7PlusTypeInfo.ObjetoSemAberturaReclama;
+procedure TTestS7PlusTypeInfo.AnObjectWithNoOpeningComplains;
 var
   obj:TS7PlusObject;
   reclamou:Boolean;
@@ -307,7 +307,7 @@ begin
   AssertTrue('without the opening $A1 it must complain', reclamou);
 end;
 
-procedure TTestS7PlusTypeInfo.AtributosDoObjetoSaoLidos;
+procedure TTestS7PlusTypeInfo.TheObjectAttributesAreRead;
 var
   obj:TS7PlusObject;
   atributos:TS7PlusPObjectAttributeArray;
@@ -329,7 +329,7 @@ begin
   AssertBytesEqual('attribute value', BytesOf('00 00 01 2C'), valor);
 end;
 
-procedure TTestS7PlusTypeInfo.AtributoAusenteNoObjetoDevolveFalso;
+procedure TTestS7PlusTypeInfo.AMissingAttributeInTheObjectReturnsFalse;
 var
   obj:TS7PlusObject;
   atributos:TS7PlusPObjectAttributeArray;
@@ -343,7 +343,7 @@ begin
   AssertFalse('attribute that does not exist', S7PlusObjectAttr(obj, 999, valor));
 end;
 
-procedure TTestS7PlusTypeInfo.ObjetoAninhadoEhEncontradoPelaClasse;
+procedure TTestS7PlusTypeInfo.ANestedObjectIsFoundByItsClass;
 var
   objetos:TS7PlusObjectArray;
   achado:TS7PlusObject;
@@ -370,7 +370,7 @@ begin
   AssertFalse('class that does not exist', S7PlusFindContainer(objetos, 999, achado));
 end;
 
-procedure TTestS7PlusTypeInfo.ObjetosIrmaosSaoPercorridos;
+procedure TTestS7PlusTypeInfo.SiblingObjectsAreWalked;
 var
   objetos:TS7PlusObjectArray;
   atributos:TS7PlusPObjectAttributeArray;
@@ -389,7 +389,7 @@ begin
   AssertEquals('consumed everything', Length(dados), fim);
 end;
 
-procedure TTestS7PlusTypeInfo.LidsSaoFormatadosEmHexaSeparadosPorPonto;
+procedure TTestS7PlusTypeInfo.LidsAreFormattedInHexSeparatedByDots;
 var
   lids:TS7PlusLIDArray;
   vazio:TS7PlusLIDArray;

@@ -60,9 +60,9 @@ type
 
   TTestCrossThreads = class(TTestCase)
   published
-    procedure DestruirLogoDepoisDeIniciarNaoPodeTravar;
-    procedure DestruirDepoisDoLacoComecarNaoPodeTravar;
-    procedure EsperarOLacoComecarNaoTravaComAThreadJaTerminada;
+    procedure DestroyingRightAfterStartingMustNotHang;
+    procedure DestroyingAfterTheLoopStartedMustNotHang;
+    procedure WaitingForTheLoopToStartDoesNotHangOnAFinishedThread;
   end;
 
 implementation
@@ -77,7 +77,7 @@ end;
 
 { TTestCrossThreads }
 
-procedure TTestCrossThreads.DestruirLogoDepoisDeIniciarNaoPodeTravar;
+procedure TTestCrossThreads.DestroyingRightAfterStartingMustNotHang;
 var
   c:LongInt;
   t:TLacoDeTeste;
@@ -95,7 +95,7 @@ begin
   AssertTrue('fifty threads created and destroyed in a row', true);
 end;
 
-procedure TTestCrossThreads.DestruirDepoisDoLacoComecarNaoPodeTravar;
+procedure TTestCrossThreads.DestroyingAfterTheLoopStartedMustNotHang;
 var
   t:TLacoDeTeste;
 begin
@@ -112,7 +112,7 @@ begin
   end;
 end;
 
-procedure TTestCrossThreads.EsperarOLacoComecarNaoTravaComAThreadJaTerminada;
+procedure TTestCrossThreads.WaitingForTheLoopToStartDoesNotHangOnAFinishedThread;
 var
   t:TLacoDeTeste;
 begin

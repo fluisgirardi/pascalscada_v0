@@ -91,8 +91,8 @@ type
     constructor Create(AOwner:TComponent); override;
     function  SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
     //expoe o gancho protegido, que e' o que os drivers de verdade sobrescrevem
-    procedure CadastrarTag(aTag:TTag; aValido:Boolean);
-    procedure CopiarPacote(const aOrigem:TIOPacket; var aDestino:TIOPacket);
+    procedure RegisterTagIn(aTag:TTag; aValido:Boolean);
+    procedure CopyPacket(const aOrigem:TIOPacket; var aDestino:TIOPacket);
   end;
 
   { TTestProtocolDriver }
@@ -105,44 +105,44 @@ type
     FCallbacks:LongInt;
     FUltimoResultado:TProtocolIOResult;
     FUltimoComando:TTagCommand;
-    procedure Retorno(const ReqID:LongWord; Values:TArrayOfDouble;
+    procedure CallbackIn(const ReqID:LongWord; Values:TArrayOfDouble;
                       ValuesTimeStamp:QWord; TagCommand:TTagCommand;
                       LastResult:TProtocolIOResult; OffSet:LongInt);
-    function  TagRecComCallback:TTagRec;
+    function  TagRecWithCallback:TTagRec;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //cadastro de tags / tag registration
-    procedure TagSemInterfaceDeScanEhRecusado;
-    procedure TagCadastradoEntraNaLista;
-    procedure TagCadastradoDuasVezesEhRecusado;
-    procedure TagRemovidoSaiDaLista;
-    procedure RemoverTagDeOutroDriverNaoQuebra;
-    procedure CadastroMarcaAValidadeDoTag;
-    procedure RemocaoInvalidaOTag;
+    procedure ATagWithNoScanInterfaceIsRefused;
+    procedure ARegisteredTagEntersTheList;
+    procedure ATagRegisteredTwiceIsRefused;
+    procedure ARemovedTagLeavesTheList;
+    procedure RemovingATagOfAnotherDriverDoesNotBreak;
+    procedure RegisteringMarksTheTagAsValid;
+    procedure RemovalInvalidatesTheTag;
 
     //acesso a lista / list access
-    procedure TagEhEncontradoPeloNome;
-    procedure NomeInexistenteDevolveNulo;
-    procedure IndiceForaDaListaEstoura;
+    procedure ATagIsFoundByName;
+    procedure ANameThatDoesNotExistReturnsNil;
+    procedure AnIndexOutsideTheListRaises;
 
     //despacho de leitura e escrita / read and write dispatching
-    procedure LeituraChamaODriverEAvisaPeloCallback;
-    procedure EscritaChamaODriverComOsValores;
-    procedure ResultadoDoDriverChegaNoCallback;
+    procedure AReadCallsTheDriverAndReportsThroughTheCallback;
+    procedure AWriteCallsTheDriverWithTheValues;
+    procedure TheDriverResultReachesTheCallback;
 
     //modo somente leitura / read only mode
-    procedure SomenteLeituraNaoChamaAEscritaDoDriver;
-    procedure SomenteLeituraAindaLe;
-    procedure SomenteLeituraSemCallbackNaoPodeEstourar;
+    procedure ReadOnlyDoesNotCallTheDriverWrite;
+    procedure ReadOnlyStillReads;
+    procedure ReadOnlyWithNoCallbackMustNotRaise;
 
     //atualizacao em lote / batch update
-    procedure CadastroEmLoteNaoTrava;
+    procedure RegisteringInBulkDoesNotHang;
 
     //utilitarios / helpers
-    procedure CopiaDePacoteLevaTodosOsCampos;
-    procedure PadroesDaBase;
+    procedure CopyingAPacketTakesEveryField;
+    procedure BaseDefaults;
   end;
 
 implementation
@@ -235,19 +235,19 @@ begin
   Result:=8;
 end;
 
-procedure TDriverDeTeste.CadastrarTag(aTag:TTag; aValido:Boolean);
+procedure TDriverDeTeste.RegisterTagIn(aTag:TTag; aValido:Boolean);
 begin
   DoAddTag(aTag, aValido);
 end;
 
-procedure TDriverDeTeste.CopiarPacote(const aOrigem:TIOPacket; var aDestino:TIOPacket);
+procedure TDriverDeTeste.CopyPacket(const aOrigem:TIOPacket; var aDestino:TIOPacket);
 begin
   CopyIOPacket(aOrigem, aDestino);
 end;
 
 { TTestProtocolDriver }
 
-procedure TTestProtocolDriver.Retorno(const ReqID:LongWord; Values:TArrayOfDouble;
+procedure TTestProtocolDriver.CallbackIn(const ReqID:LongWord; Values:TArrayOfDouble;
   ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult;
   OffSet:LongInt);
 begin
@@ -256,10 +256,10 @@ begin
   FUltimoComando:=TagCommand;
 end;
 
-function TTestProtocolDriver.TagRecComCallback:TTagRec;
+function TTestProtocolDriver.TagRecWithCallback:TTagRec;
 begin
   Result:=TagRecFor(1, 3, 6, 0, 1);
-  Result.CallBack:=@Retorno;
+  Result.CallBack:=@CallbackIn;
 end;
 
 procedure TTestProtocolDriver.SetUp;
@@ -284,7 +284,7 @@ begin
   FreeAndNil(FDrv);
 end;
 
-procedure TTestProtocolDriver.TagSemInterfaceDeScanEhRecusado;
+procedure TTestProtocolDriver.ATagWithNoScanInterfaceIsRefused;
 var
   semScan:TTagSemScan;
   recusou:Boolean;
@@ -306,7 +306,7 @@ begin
   end;
 end;
 
-procedure TTestProtocolDriver.TagCadastradoEntraNaLista;
+procedure TTestProtocolDriver.ARegisteredTagEntersTheList;
 begin
   FDrv.AddTag(FTag);
   AssertEquals('number of tags', 1, FDrv.TagCount);
@@ -315,7 +315,7 @@ begin
   AssertEquals('tag name', 'TagDeTeste', FDrv.TagName[0]);
 end;
 
-procedure TTestProtocolDriver.TagCadastradoDuasVezesEhRecusado;
+procedure TTestProtocolDriver.ATagRegisteredTwiceIsRefused;
 var
   recusou:Boolean;
 begin
@@ -333,7 +333,7 @@ begin
   AssertEquals('and the tag is still in the list only once', 1, FDrv.TagCount);
 end;
 
-procedure TTestProtocolDriver.TagRemovidoSaiDaLista;
+procedure TTestProtocolDriver.ARemovedTagLeavesTheList;
 begin
   FDrv.AddTag(FTag);
   FDrv.RemoveTag(FTag);
@@ -341,7 +341,7 @@ begin
   AssertFalse ('the driver no longer knows the tag', FDrv.IsMyTag(FTag));
 end;
 
-procedure TTestProtocolDriver.RemoverTagDeOutroDriverNaoQuebra;
+procedure TTestProtocolDriver.RemovingATagOfAnotherDriverDoesNotBreak;
 var
   outro:TTagDeTeste;
 begin
@@ -357,33 +357,33 @@ begin
   end;
 end;
 
-procedure TTestProtocolDriver.CadastroMarcaAValidadeDoTag;
+procedure TTestProtocolDriver.RegisteringMarksTheTagAsValid;
 begin
   //o gancho protegido e' onde os drivers dizem se o endereco do tag serve
-  FDrv.CadastrarTag(FTag, true);
+  FDrv.RegisterTagIn(FTag, true);
   AssertTrue('tag registered as valid', FTag.Valido);
 end;
 
-procedure TTestProtocolDriver.RemocaoInvalidaOTag;
+procedure TTestProtocolDriver.RemovalInvalidatesTheTag;
 begin
-  FDrv.CadastrarTag(FTag, true);
+  FDrv.RegisterTagIn(FTag, true);
   FDrv.RemoveTag(FTag);
   AssertFalse('a removed tag stops being valid', FTag.Valido);
 end;
 
-procedure TTestProtocolDriver.TagEhEncontradoPeloNome;
+procedure TTestProtocolDriver.ATagIsFoundByName;
 begin
   FDrv.AddTag(FTag);
   AssertSame('lookup by name', FTag, FDrv.TagByName['TagDeTeste']);
 end;
 
-procedure TTestProtocolDriver.NomeInexistenteDevolveNulo;
+procedure TTestProtocolDriver.ANameThatDoesNotExistReturnsNil;
 begin
   FDrv.AddTag(FTag);
   AssertTrue('a name that does not exist', FDrv.TagByName['NaoExiste']=nil);
 end;
 
-procedure TTestProtocolDriver.IndiceForaDaListaEstoura;
+procedure TTestProtocolDriver.AnIndexOutsideTheListRaises;
 var
   estourou:Boolean;
 begin
@@ -399,16 +399,16 @@ begin
   AssertTrue('an index outside the list must raise an exception', estourou);
 end;
 
-procedure TTestProtocolDriver.LeituraChamaODriverEAvisaPeloCallback;
+procedure TTestProtocolDriver.AReadCallsTheDriverAndReportsThroughTheCallback;
 begin
-  FDrv.Read(TagRecComCallback);
+  FDrv.Read(TagRecWithCallback);
 
   AssertEquals('calls to the driver DoRead', 1, FDrv.Leituras);
   AssertEquals('callbacks received', 1, FCallbacks);
   AssertEquals('command reported', Ord(tcRead), Ord(FUltimoComando));
 end;
 
-procedure TTestProtocolDriver.EscritaChamaODriverComOsValores;
+procedure TTestProtocolDriver.AWriteCallsTheDriverWithTheValues;
 var
   valores:TArrayOfDouble;
 begin
@@ -416,7 +416,7 @@ begin
   valores[0]:=10;
   valores[1]:=20;
 
-  FDrv.Write(TagRecComCallback, valores);
+  FDrv.Write(TagRecWithCallback, valores);
 
   AssertEquals('calls to the driver DoWrite', 1, FDrv.Escritas);
   AssertEquals('number of values passed on', 2, Length(FDrv.UltimosValores));
@@ -425,15 +425,15 @@ begin
   AssertEquals('command reported', Ord(tcWrite), Ord(FUltimoComando));
 end;
 
-procedure TTestProtocolDriver.ResultadoDoDriverChegaNoCallback;
+procedure TTestProtocolDriver.TheDriverResultReachesTheCallback;
 begin
   //o que o driver concreto devolve tem que chegar inteiro em quem pediu
   FDrv.ResultadoProgramado:=ioTimeOut;
-  FDrv.Read(TagRecComCallback);
+  FDrv.Read(TagRecWithCallback);
   AssertEquals('result in the callback', Ord(ioTimeOut), Ord(FUltimoResultado));
 end;
 
-procedure TTestProtocolDriver.SomenteLeituraNaoChamaAEscritaDoDriver;
+procedure TTestProtocolDriver.ReadOnlyDoesNotCallTheDriverWrite;
 var
   valores:TArrayOfDouble;
 begin
@@ -441,21 +441,21 @@ begin
   valores[0]:=1;
 
   FDrv.ReadOnly:=true;
-  FDrv.Write(TagRecComCallback, valores);
+  FDrv.Write(TagRecWithCallback, valores);
 
   AssertEquals('the driver must not be called', 0, FDrv.Escritas);
   AssertEquals('but whoever asked must be told', 1, FCallbacks);
   AssertEquals('reason for the refusal', Ord(ioReadOnlyProtocol), Ord(FUltimoResultado));
 end;
 
-procedure TTestProtocolDriver.SomenteLeituraAindaLe;
+procedure TTestProtocolDriver.ReadOnlyStillReads;
 begin
   FDrv.ReadOnly:=true;
-  FDrv.Read(TagRecComCallback);
+  FDrv.Read(TagRecWithCallback);
   AssertEquals('reading is still allowed', 1, FDrv.Leituras);
 end;
 
-procedure TTestProtocolDriver.SomenteLeituraSemCallbackNaoPodeEstourar;
+procedure TTestProtocolDriver.ReadOnlyWithNoCallbackMustNotRaise;
 var
   valores:TArrayOfDouble;
   semCallback:TTagRec;
@@ -476,7 +476,7 @@ begin
   AssertEquals('and nobody was called back', 0, FCallbacks);
 end;
 
-procedure TTestProtocolDriver.CadastroEmLoteNaoTrava;
+procedure TTestProtocolDriver.RegisteringInBulkDoesNotHang;
 var
   outro:TTagDeTeste;
 begin
@@ -502,7 +502,7 @@ begin
   end;
 end;
 
-procedure TTestProtocolDriver.CopiaDePacoteLevaTodosOsCampos;
+procedure TTestProtocolDriver.CopyingAPacketTakesEveryField;
 var
   origem, destino:TIOPacket;
 begin
@@ -511,7 +511,7 @@ begin
   origem.WriteRetries:=3;
   origem.DelayBetweenCommand:=25;
 
-  FDrv.CopiarPacote(origem, destino);
+  FDrv.CopyPacket(origem, destino);
 
   AssertEquals('identifier',      77, destino.PacketID);
   AssertEquals('bytes to write',   2,  destino.ToWrite);
@@ -526,7 +526,7 @@ begin
   AssertBytesEqual('read buffer', BytesOf('03 04 05'), destino.BufferToRead);
 end;
 
-procedure TTestProtocolDriver.PadroesDaBase;
+procedure TTestProtocolDriver.BaseDefaults;
 begin
   //a base pressupoe driver que fala por uma porta externa e nao anuncia
   //evento nenhum; quem precisa, sobrescreve.

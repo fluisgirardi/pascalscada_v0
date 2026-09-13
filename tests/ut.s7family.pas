@@ -69,40 +69,40 @@ type
     procedure TearDown; override;
   published
     //cabecalho / header
-    procedure CabecalhoDePduTemDezBytes;
-    procedure CabecalhoTipoDoisReservaOsBytesDeErro;
-    procedure TrocaDeBytesEmWord;
+    procedure APduHeaderIsTenBytes;
+    procedure ATypeTwoHeaderReservesTheErrorBytes;
+    procedure ByteSwappingInAWord;
 
     //pedidos de leitura / read requests
-    procedure PedidoDeLeituraUsaAFuncao04;
-    procedure ItemDeLeituraDeDbMontaOFrame;
-    procedure EnderecoInicialVaiEmBits;
-    procedure EnderecoGrandeUsaOTerceiroByte;
-    procedure AreaDeMerkersNaoLevaNumeroDeDb;
-    procedure CadaItemIncrementaAContagemEOTamanho;
+    procedure AReadRequestUsesFunction04;
+    procedure ADbReadItemBuildsTheFrame;
+    procedure TheStartAddressGoesInBits;
+    procedure ABigAddressUsesTheThirdByte;
+    procedure TheMerkerAreaCarriesNoDbNumber;
+    procedure EveryItemBumpsTheCountAndTheSize;
 
     //pedidos de escrita / write requests
-    procedure PedidoDeEscritaUsaAFuncao05;
-    procedure EscritaLevaParametroEDado;
+    procedure AWriteRequestUsesFunction05;
+    procedure AWriteCarriesParameterAndData;
 
     //blocos de parametro e dado / parameter and data blocks
-    procedure ParametrosSaoConcatenadosNaOrdem;
-    procedure DadoEntraDepoisDoParametro;
+    procedure TheParametersAreConcatenatedInOrder;
+    procedure TheDataGoesInAfterTheParameter;
 
     //leitura do cabecalho / header parsing
-    procedure SetupPduInformaOsTamanhos;
-    procedure SetupPduDeTipoDoisTemCabecalhoDeDozeBytes;
+    procedure SetupPduReportsTheSizes;
+    procedure ATypeTwoSetupPduHasATwelveByteHeader;
 
     //contadores, temporizadores e areas do S7-200 / counters, timers and S7-200 areas
-    procedure ContadorEhEnderecadoPeloNumeroDoElemento;
-    procedure ContadoresDiferentesGeramPedidosDiferentes;
-    procedure TemporizadorUsaASuaPropriaArea;
-    procedure EscritaEmContadorTambemUsaONumeroDoElemento;
-    procedure AreaAnalogicaDoS7200EnderecaEmBits;
-    procedure LeituraEEscritaConcordamNoTamanhoDoContador;
-    procedure TamanhoDoItemDeContadorVaiEmElementos;
-    procedure AreaAnalogicaDoS7200TambemContaEmElementos;
-    procedure AreaDeBytesContaEmBytes;
+    procedure ACounterIsAddressedByElementNumber;
+    procedure DifferentCountersProduceDifferentRequests;
+    procedure ATimerUsesItsOwnArea;
+    procedure WritingToACounterAlsoUsesTheElementNumber;
+    procedure TheS7200AnalogAreaAddressesInBits;
+    procedure ReadAndWriteAgreeOnTheCounterSize;
+    procedure TheCounterItemSizeGoesInElements;
+    procedure TheS7200AnalogAreaAlsoCountsInElements;
+    procedure AByteAreaCountsInBytes;
   end;
 
 implementation
@@ -180,7 +180,7 @@ begin
   FDrv:=nil;
 end;
 
-procedure TTestS7Family.CabecalhoDePduTemDezBytes;
+procedure TTestS7Family.APduHeaderIsTenBytes;
 var
   msg:BYTES;
 begin
@@ -191,7 +191,7 @@ begin
   AssertBytesEqual('type 1 header', BytesOf('32 01 00 00 00 00 00 00 00 00'), msg);
 end;
 
-procedure TTestS7Family.CabecalhoTipoDoisReservaOsBytesDeErro;
+procedure TTestS7Family.ATypeTwoHeaderReservesTheErrorBytes;
 var
   msg:BYTES;
 begin
@@ -201,7 +201,7 @@ begin
   AssertBytesEqual('type 2 header', BytesOf('32 02 00 00 00 00 00 00 00 00 00 00'), msg);
 end;
 
-procedure TTestS7Family.TrocaDeBytesEmWord;
+procedure TTestS7Family.ByteSwappingInAWord;
 begin
   //a PDU e' big-endian; os records sao lidos na ordem da maquina, entao todo
   //campo de 16 bits passa por aqui.
@@ -210,7 +210,7 @@ begin
   AssertEquals('0000', $0000, FDrv.Swap($0000));
 end;
 
-procedure TTestS7Family.PedidoDeLeituraUsaAFuncao04;
+procedure TTestS7Family.AReadRequestUsesFunction04;
 var
   msg:BYTES;
 begin
@@ -221,7 +221,7 @@ begin
                    BytesOf('32 01 00 00 00 00 00 02 00 00 04 00'), msg);
 end;
 
-procedure TTestS7Family.PedidoDeEscritaUsaAFuncao05;
+procedure TTestS7Family.AWriteRequestUsesFunction05;
 var
   msg:BYTES;
 begin
@@ -231,7 +231,7 @@ begin
                    BytesOf('32 01 00 00 00 00 00 02 00 00 05 00'), msg);
 end;
 
-procedure TTestS7Family.ItemDeLeituraDeDbMontaOFrame;
+procedure TTestS7Family.ADbReadItemBuildsTheFrame;
 var
   msg:BYTES;
 begin
@@ -248,7 +248,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.EnderecoInicialVaiEmBits;
+procedure TTestS7Family.TheStartAddressGoesInBits;
 var
   msg:BYTES;
 begin
@@ -263,7 +263,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.EnderecoGrandeUsaOTerceiroByte;
+procedure TTestS7Family.ABigAddressUsesTheThirdByte;
 var
   msg:BYTES;
 begin
@@ -278,7 +278,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.AreaDeMerkersNaoLevaNumeroDeDb;
+procedure TTestS7Family.TheMerkerAreaCarriesNoDbNumber;
 var
   msg:BYTES;
 begin
@@ -293,7 +293,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.CadaItemIncrementaAContagemEOTamanho;
+procedure TTestS7Family.EveryItemBumpsTheCountAndTheSize;
 var
   msg:BYTES;
 begin
@@ -311,7 +311,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.EscritaLevaParametroEDado;
+procedure TTestS7Family.AWriteCarriesParameterAndData;
 var
   msg, buffer:BYTES;
 begin
@@ -331,7 +331,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.ParametrosSaoConcatenadosNaOrdem;
+procedure TTestS7Family.TheParametersAreConcatenatedInOrder;
 var
   msg:BYTES;
 begin
@@ -345,7 +345,7 @@ begin
                    BytesOf('32 01 00 00 00 00 00 03 00 00 AA BB CC'), msg);
 end;
 
-procedure TTestS7Family.DadoEntraDepoisDoParametro;
+procedure TTestS7Family.TheDataGoesInAfterTheParameter;
 var
   msg:BYTES;
 begin
@@ -359,7 +359,7 @@ begin
                    BytesOf('32 01 00 00 00 00 00 02 00 03 AA BB 11 22 33'), msg);
 end;
 
-procedure TTestS7Family.SetupPduInformaOsTamanhos;
+procedure TTestS7Family.SetupPduReportsTheSizes;
 var
   msg:BYTES;
   pdu:TPDU;
@@ -376,7 +376,7 @@ begin
   AssertEquals('data size',       3,  pdu.data_len);
 end;
 
-procedure TTestS7Family.SetupPduDeTipoDoisTemCabecalhoDeDozeBytes;
+procedure TTestS7Family.ATypeTwoSetupPduHasATwelveByteHeader;
 var
   msg:BYTES;
   pdu:TPDU;
@@ -391,7 +391,7 @@ begin
   AssertEquals('parameter size', 2, pdu.param_len);
 end;
 
-procedure TTestS7Family.ContadorEhEnderecadoPeloNumeroDoElemento;
+procedure TTestS7Family.ACounterIsAddressedByElementNumber;
 var
   msg:BYTES;
 begin
@@ -408,7 +408,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.ContadoresDiferentesGeramPedidosDiferentes;
+procedure TTestS7Family.DifferentCountersProduceDifferentRequests;
 var
   msgA, msgB:BYTES;
 begin
@@ -429,7 +429,7 @@ begin
                    msgB);
 end;
 
-procedure TTestS7Family.TemporizadorUsaASuaPropriaArea;
+procedure TTestS7Family.ATimerUsesItsOwnArea;
 var
   msg:BYTES;
 begin
@@ -444,7 +444,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.EscritaEmContadorTambemUsaONumeroDoElemento;
+procedure TTestS7Family.WritingToACounterAlsoUsesTheElementNumber;
 var
   msg:BYTES;
 begin
@@ -460,7 +460,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.AreaAnalogicaDoS7200EnderecaEmBits;
+procedure TTestS7Family.TheS7200AnalogAreaAddressesInBits;
 var
   msg:BYTES;
 begin
@@ -477,7 +477,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.LeituraEEscritaConcordamNoTamanhoDoContador;
+procedure TTestS7Family.ReadAndWriteAgreeOnTheCounterSize;
 var
   msgLeitura, msgEscrita:BYTES;
 begin
@@ -494,7 +494,7 @@ begin
   AssertEquals('element count in the item', msgLeitura[17], msgEscrita[17]);
 end;
 
-procedure TTestS7Family.TamanhoDoItemDeContadorVaiEmElementos;
+procedure TTestS7Family.TheCounterItemSizeGoesInElements;
 var
   msg:BYTES;
 begin
@@ -510,7 +510,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.AreaAnalogicaDoS7200TambemContaEmElementos;
+procedure TTestS7Family.TheS7200AnalogAreaAlsoCountsInElements;
 var
   msg:BYTES;
 begin
@@ -525,7 +525,7 @@ begin
                    msg);
 end;
 
-procedure TTestS7Family.AreaDeBytesContaEmBytes;
+procedure TTestS7Family.AByteAreaCountsInBytes;
 var
   msg:BYTES;
 begin

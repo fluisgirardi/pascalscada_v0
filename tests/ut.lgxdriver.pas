@@ -49,35 +49,35 @@ type
   private
     FPedido:TCIPReadTagFragReq;
     //: codifica o caminho pela API publica e devolve os bytes gerados
-    function  Caminho(const aTag:String):BYTES;
+    function  PathOf(const aTag:String):BYTES;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //caminho simbolico / symbolic path
-    procedure NomeSimplesViraSegmentoAnsi;
-    procedure NomeDeTamanhoParNaoLevaEnchimento;
-    procedure MembroDeEstruturaGeraUmSegmentoPorParte;
-    procedure IndiceAteDuzentosECinquentaECincoCabeEmUmByte;
-    procedure IndiceMaiorUsaSegmentoDeDoisBytes;
-    procedure ArrayDeVariasDimensoesGeraUmIndicePorDimensao;
-    procedure TagDeProgramaEhUmSegmentoSo;
-    procedure EnchimentoEhZeroQuandoOAnteriorEhMenor;
-    procedure CaminhoLongoDemaisEhRecusado;
+    procedure APlainNameBecomesAnAnsiSegment;
+    procedure AnEvenLengthNameTakesNoPadding;
+    procedure AStructureMemberGivesOneSegmentPerPart;
+    procedure AnIndexUpToTwoHundredAndFiftyFiveFitsInOneByte;
+    procedure ABiggerIndexUsesATwoByteSegment;
+    procedure AMultiDimensionalArrayGivesOneIndexPerDimension;
+    procedure AProgramTagIsASingleSegment;
+    procedure ThePaddingIsZeroWhenThePreviousOneIsSmaller;
+    procedure APathThatIsTooLongIsRefused;
 
     //classificacao de tipos CIP / CIP type classification
-    procedure EstruturaEhReconhecidaPeloBitAlto;
-    procedure TipoDeSistemaEhReconhecido;
-    procedure DimensoesVemDosDoisBitsAcimaDoTipo;
-    procedure NomeDoTipoSegueOStudio;
-    procedure TipoCipViraTipoDeTagDoPascalSCADA;
-    procedure EstruturaNaoTemTipoDeTagEquivalente;
-    procedure TamanhoEmBytesPorTipo;
+    procedure AStructureIsRecognisedByTheHighBit;
+    procedure ASystemTypeIsRecognised;
+    procedure TheDimensionsComeFromTheTwoBitsAboveTheType;
+    procedure TheTypeNameFollowsTheStudio;
+    procedure ACipTypeBecomesAPascalSCADATagType;
+    procedure AStructureHasNoMatchingTagType;
+    procedure SizeInBytesPerType;
 
-    procedure EnchimentoDoSegmentoEhSempreZero;
+    procedure TheSegmentPaddingIsAlwaysZero;
 
     //lacuna conhecida / known gap
-    procedure CaminhoCodificadoDeveriaSerLegivelDeVolta;
+    procedure AnEncodedPathShouldBeReadableBack;
   end;
 
 implementation
@@ -92,51 +92,51 @@ begin
   FreeAndNil(FPedido);
 end;
 
-function TTestLGXDriver.Caminho(const aTag:String):BYTES;
+function TTestLGXDriver.PathOf(const aTag:String):BYTES;
 begin
   FPedido.RequestPath:=aTag;
   Result:=FPedido.ReqPathData;
 end;
 
-procedure TTestLGXDriver.NomeSimplesViraSegmentoAnsi;
+procedure TTestLGXDriver.APlainNameBecomesAnAnsiSegment;
 begin
   //$91, tamanho 5, os caracteres de "MyTag", e um byte de enchimento porque
   //o segmento tem que terminar em fronteira de palavra
-  AssertBytesEqual('MyTag', BytesOf('91 05 4D 79 54 61 67 00'), Caminho('MyTag'));
+  AssertBytesEqual('MyTag', BytesOf('91 05 4D 79 54 61 67 00'), PathOf('MyTag'));
 end;
 
-procedure TTestLGXDriver.NomeDeTamanhoParNaoLevaEnchimento;
+procedure TTestLGXDriver.AnEvenLengthNameTakesNoPadding;
 begin
-  AssertBytesEqual('Ab', BytesOf('91 02 41 62'), Caminho('Ab'));
+  AssertBytesEqual('Ab', BytesOf('91 02 41 62'), PathOf('Ab'));
 end;
 
-procedure TTestLGXDriver.MembroDeEstruturaGeraUmSegmentoPorParte;
+procedure TTestLGXDriver.AStructureMemberGivesOneSegmentPerPart;
 begin
   //cada parte separada por ponto vira o seu proprio segmento
-  AssertBytesEqual('A.B', BytesOf('91 01 41 00 91 01 42 00'), Caminho('A.B'));
+  AssertBytesEqual('A.B', BytesOf('91 01 41 00 91 01 42 00'), PathOf('A.B'));
 end;
 
-procedure TTestLGXDriver.IndiceAteDuzentosECinquentaECincoCabeEmUmByte;
+procedure TTestLGXDriver.AnIndexUpToTwoHundredAndFiftyFiveFitsInOneByte;
 begin
   //$28 = indice de um byte
-  AssertBytesEqual('Tag[5]', BytesOf('91 03 54 61 67 00 28 05'), Caminho('Tag[5]'));
-  AssertBytesEqual('Tag[255]', BytesOf('91 03 54 61 67 00 28 FF'), Caminho('Tag[255]'));
+  AssertBytesEqual('Tag[5]', BytesOf('91 03 54 61 67 00 28 05'), PathOf('Tag[5]'));
+  AssertBytesEqual('Tag[255]', BytesOf('91 03 54 61 67 00 28 FF'), PathOf('Tag[255]'));
 end;
 
-procedure TTestLGXDriver.IndiceMaiorUsaSegmentoDeDoisBytes;
+procedure TTestLGXDriver.ABiggerIndexUsesATwoByteSegment;
 begin
   //$29 = indice de dois bytes, e o valor vai em little-endian (300 = $012C)
-  AssertBytesEqual('Tag[300]', BytesOf('91 03 54 61 67 00 29 00 2C 01'), Caminho('Tag[300]'));
-  AssertBytesEqual('Tag[256]', BytesOf('91 03 54 61 67 00 29 00 00 01'), Caminho('Tag[256]'));
+  AssertBytesEqual('Tag[300]', BytesOf('91 03 54 61 67 00 29 00 2C 01'), PathOf('Tag[300]'));
+  AssertBytesEqual('Tag[256]', BytesOf('91 03 54 61 67 00 29 00 00 01'), PathOf('Tag[256]'));
 end;
 
-procedure TTestLGXDriver.ArrayDeVariasDimensoesGeraUmIndicePorDimensao;
+procedure TTestLGXDriver.AMultiDimensionalArrayGivesOneIndexPerDimension;
 begin
   //array de duas dimensoes: um segmento de indice para cada
-  AssertBytesEqual('Tag[1,2]', BytesOf('91 03 54 61 67 00 28 01 28 02'), Caminho('Tag[1,2]'));
+  AssertBytesEqual('Tag[1,2]', BytesOf('91 03 54 61 67 00 28 01 28 02'), PathOf('Tag[1,2]'));
 end;
 
-procedure TTestLGXDriver.TagDeProgramaEhUmSegmentoSo;
+procedure TTestLGXDriver.AProgramTagIsASingleSegment;
 begin
   //"Program:MainProgram" tem 19 caracteres e vale como um nome unico - os dois
   //pontos nao separam nada aqui, so o ponto separa.
@@ -146,23 +146,23 @@ begin
                            '4D 61 69 6E 50 72 6F 67 72 61 6D' +        //"MainProgram"
                            '00' +                                      //enchimento
                            '91 02 41 62'),                             //"Ab"
-                   Caminho('Program:MainProgram.Ab'));
+                   PathOf('Program:MainProgram.Ab'));
 end;
 
-procedure TTestLGXDriver.EnchimentoEhZeroQuandoOAnteriorEhMenor;
+procedure TTestLGXDriver.ThePaddingIsZeroWhenThePreviousOneIsSmaller;
 begin
   //o lado que funciona: com o segmento anterior menor, o enchimento sai zerado
-  AssertBytesEqual('A.Tag', BytesOf('91 01 41 00 91 03 54 61 67 00'), Caminho('A.Tag'));
+  AssertBytesEqual('A.Tag', BytesOf('91 01 41 00 91 03 54 61 67 00'), PathOf('A.Tag'));
 end;
 
-procedure TTestLGXDriver.CaminhoLongoDemaisEhRecusado;
+procedure TTestLGXDriver.APathThatIsTooLongIsRefused;
 var
   recusou:Boolean;
 begin
   //acima de 200 caracteres o codificador recusa em vez de gerar lixo
   recusou:=false;
   try
-    Caminho(StringOfChar('A', 250));
+    PathOf(StringOfChar('A', 250));
   except
     on E:Exception do
       recusou:=true;
@@ -170,21 +170,21 @@ begin
   AssertTrue('a path over the limit must be refused', recusou);
 end;
 
-procedure TTestLGXDriver.EstruturaEhReconhecidaPeloBitAlto;
+procedure TTestLGXDriver.AStructureIsRecognisedByTheHighBit;
 begin
   //bit $8000 ligado = estrutura/UDT
   AssertTrue ('with the structure bit', LGXTypeIsStruct($8FCE));
   AssertFalse('DINT is not a structure',   LGXTypeIsStruct($00C4));
 end;
 
-procedure TTestLGXDriver.TipoDeSistemaEhReconhecido;
+procedure TTestLGXDriver.ASystemTypeIsRecognised;
 begin
   //bit $1000 = tipo interno do CLP, que o construtor de tags ignora
   AssertTrue ('with the system bit', LGXTypeIsSystem($10C4));
   AssertFalse('plain DINT',           LGXTypeIsSystem($00C4));
 end;
 
-procedure TTestLGXDriver.DimensoesVemDosDoisBitsAcimaDoTipo;
+procedure TTestLGXDriver.TheDimensionsComeFromTheTwoBitsAboveTheType;
 begin
   //bits 13 e 14 guardam de 0 a 3 dimensoes
   AssertEquals('scalar',      0, LGXTypeDimensions($00C4));
@@ -193,7 +193,7 @@ begin
   AssertEquals('three',         3, LGXTypeDimensions($60C4));
 end;
 
-procedure TTestLGXDriver.NomeDoTipoSegueOStudio;
+procedure TTestLGXDriver.TheTypeNameFollowsTheStudio;
 begin
   AssertEquals('bool',  'BOOL',  LGXTypeName($00C1));
   AssertEquals('dint',  'DINT',  LGXTypeName($00C4));
@@ -207,7 +207,7 @@ begin
   AssertEquals('unknown', '0x00EE', LGXTypeName($00EE));
 end;
 
-procedure TTestLGXDriver.TipoCipViraTipoDeTagDoPascalSCADA;
+procedure TTestLGXDriver.ACipTypeBecomesAPascalSCADATagType;
 var
   tipo:TTagType;
 begin
@@ -225,7 +225,7 @@ begin
   AssertEquals('dint in an array', Ord(pttLongInt), Ord(tipo));
 end;
 
-procedure TTestLGXDriver.EstruturaNaoTemTipoDeTagEquivalente;
+procedure TTestLGXDriver.AStructureHasNoMatchingTagType;
 var
   tipo:TTagType;
 begin
@@ -233,7 +233,7 @@ begin
   AssertFalse('structure', LGXTypeToTagType($8FCE, tipo));
 end;
 
-procedure TTestLGXDriver.TamanhoEmBytesPorTipo;
+procedure TTestLGXDriver.SizeInBytesPerType;
 begin
   AssertEquals('bool',  1, LGXTypeSizeInBytes($00C1));
   AssertEquals('sint',  1, LGXTypeSizeInBytes($00C2));
@@ -248,18 +248,18 @@ begin
   AssertEquals('unknown', 1, LGXTypeSizeInBytes($00EE));
 end;
 
-procedure TTestLGXDriver.EnchimentoDoSegmentoEhSempreZero;
+procedure TTestLGXDriver.TheSegmentPaddingIsAlwaysZero;
 begin
   //nome impar depois de um nome maior: o enchimento nao pode herdar nada do
   //segmento anterior
-  AssertBytesEqual('AAAA.B', BytesOf('91 04 41 41 41 41 91 01 42 00'), Caminho('AAAA.B'));
+  AssertBytesEqual('AAAA.B', BytesOf('91 04 41 41 41 41 91 01 42 00'), PathOf('AAAA.B'));
   AssertBytesEqual('program tag with an odd member',
                    BytesOf('91 13 50 72 6F 67 72 61 6D 3A 4D 61 69 6E 50 72 6F 67 72 61 6D 00' +
                            '91 03 54 61 67 00'),
-                   Caminho('Program:MainProgram.Tag'));
+                   PathOf('Program:MainProgram.Tag'));
 end;
 
-procedure TTestLGXDriver.CaminhoCodificadoDeveriaSerLegivelDeVolta;
+procedure TTestLGXDriver.AnEncodedPathShouldBeReadableBack;
 begin
   Ignore('known gap: DecodeTagPath is a skeleton - it never assigns ' +
          'Result and returns an empty string (the code itself carries the ' +

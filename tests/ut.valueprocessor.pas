@@ -63,23 +63,23 @@ type
     FFila:TScalesQueue;
     FDobra:TEscalaQueDobra;
     FSoma:TEscalaQueSoma10;
-    function  NovoItem(aEscala:TScaleProcessor):TScaleQueueItem;
+    function  NewItem(aEscala:TScaleProcessor):TScaleQueueItem;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //encadeamento / chaining
-    procedure FilaVaziaDevolveOValorSemMexer;
-    procedure ItemSemEscalaNaoMexeNoValor;
-    procedure UmaEscalaNaFilaEhAplicada;
-    procedure DuasEscalasSaoAplicadasNaOrdemDaFila;
-    procedure OCaminhoDeVoltaDesfazODeIda;
+    procedure AnEmptyQueueReturnsTheValueUntouched;
+    procedure AnItemWithNoScaleDoesNotTouchTheValue;
+    procedure OneScaleInTheQueueIsApplied;
+    procedure TwoScalesAreAppliedInQueueOrder;
+    procedure TheWayBackUndoesTheWayThere;
 
     //o vinculo do item com a escala / the item's link to its scale
-    procedure ItemNovoNaoTemEscala;
-    procedure TrocarAEscalaDoItem;
-    procedure LimparAEscalaDoItem;
-    procedure AFilaNaoPodeApontarParaOProprioDono;
+    procedure ANewItemHasNoScale;
+    procedure ChangingTheScaleOfTheItem;
+    procedure ClearingTheScaleOfTheItem;
+    procedure TheQueueCannotPointAtItsOwnOwner;
   end;
 
 implementation
@@ -124,54 +124,54 @@ begin
   FreeAndNil(FSoma);
 end;
 
-function TTestValueProcessor.NovoItem(aEscala:TScaleProcessor):TScaleQueueItem;
+function TTestValueProcessor.NewItem(aEscala:TScaleProcessor):TScaleQueueItem;
 begin
   Result:=FFila.ScalesQueue.Add;
   if aEscala<>nil then
     Result.ScaleProcessor:=aEscala;
 end;
 
-procedure TTestValueProcessor.FilaVaziaDevolveOValorSemMexer;
+procedure TTestValueProcessor.AnEmptyQueueReturnsTheValueUntouched;
 begin
   AssertEquals('there',   7, FFila.SetInGetOut(nil, 7), 0);
   AssertEquals('back', 7, FFila.SetOutGetIn(nil, 7), 0);
 end;
 
-procedure TTestValueProcessor.ItemSemEscalaNaoMexeNoValor;
+procedure TTestValueProcessor.AnItemWithNoScaleDoesNotTouchTheValue;
 begin
   //item na fila sem processador associado e' um elo neutro
-  NovoItem(nil);
+  NewItem(nil);
   AssertEquals('there',   7, FFila.SetInGetOut(nil, 7), 0);
   AssertEquals('back', 7, FFila.SetOutGetIn(nil, 7), 0);
 end;
 
-procedure TTestValueProcessor.UmaEscalaNaFilaEhAplicada;
+procedure TTestValueProcessor.OneScaleInTheQueueIsApplied;
 begin
-  NovoItem(FDobra);
+  NewItem(FDobra);
   AssertEquals('there',   14, FFila.SetInGetOut(nil, 7), 0);
   AssertEquals('back',  7, FFila.SetOutGetIn(nil, 14), 0);
 end;
 
-procedure TTestValueProcessor.DuasEscalasSaoAplicadasNaOrdemDaFila;
+procedure TTestValueProcessor.TwoScalesAreAppliedInQueueOrder;
 begin
   //do equipamento para o usuario: primeiro item primeiro. 7 dobra para 14 e
   //depois soma 10, dando 24
-  NovoItem(FDobra);
-  NovoItem(FSoma);
+  NewItem(FDobra);
+  NewItem(FSoma);
 
   AssertEquals('there', 24, FFila.SetInGetOut(nil, 7), 0);
 end;
 
-procedure TTestValueProcessor.OCaminhoDeVoltaDesfazODeIda;
+procedure TTestValueProcessor.TheWayBackUndoesTheWayThere;
 begin
   //a volta percorre a fila ao contrario: sem isso ela nao desfaria a ida
-  NovoItem(FDobra);
-  NovoItem(FSoma);
+  NewItem(FDobra);
+  NewItem(FSoma);
 
   AssertEquals('the way back undoes the way there', 7, FFila.SetOutGetIn(nil, FFila.SetInGetOut(nil, 7)), 0);
 end;
 
-procedure TTestValueProcessor.ItemNovoNaoTemEscala;
+procedure TTestValueProcessor.ANewItemHasNoScale;
 var
   item:TScaleQueueItem;
 begin
@@ -179,30 +179,30 @@ begin
   AssertTrue('item just created', item.ScaleProcessor=nil);
 end;
 
-procedure TTestValueProcessor.TrocarAEscalaDoItem;
+procedure TTestValueProcessor.ChangingTheScaleOfTheItem;
 var
   item:TScaleQueueItem;
 begin
-  item:=NovoItem(FDobra);
+  item:=NewItem(FDobra);
   item.ScaleProcessor:=FSoma;
 
   AssertTrue  ('the scale changed', item.ScaleProcessor=FSoma);
   AssertEquals('and the value follows the new one', 17, FFila.SetInGetOut(nil, 7), 0);
 end;
 
-procedure TTestValueProcessor.LimparAEscalaDoItem;
+procedure TTestValueProcessor.ClearingTheScaleOfTheItem;
 var
   item:TScaleQueueItem;
 begin
   //desfazer o vinculo e' operacao valida: o item volta a ser um elo neutro
-  item:=NovoItem(FDobra);
+  item:=NewItem(FDobra);
   item.ScaleProcessor:=nil;
 
   AssertTrue  ('no scale',            item.ScaleProcessor=nil);
   AssertEquals('the value goes through untouched', 7, FFila.SetInGetOut(nil, 7), 0);
 end;
 
-procedure TTestValueProcessor.AFilaNaoPodeApontarParaOProprioDono;
+procedure TTestValueProcessor.TheQueueCannotPointAtItsOwnOwner;
 var
   item:TScaleQueueItem;
   recusou:Boolean;

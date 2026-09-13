@@ -39,33 +39,33 @@ type
   TTestTcpUdpPort = class(TTestCase)
   private
     FPorta:TTCP_UDPPort;
-    function  IdDe(const aEndereco:String; aPorta:LongInt; aTipo:TPortType):TPortUniqueID;
-    function  ByteDeTipo(aId:TPortUniqueID):Byte;
+    function  IdOf(const aEndereco:String; aPorta:LongInt; aTipo:TPortType):TPortUniqueID;
+    function  TypeByteOf(aId:TPortUniqueID):Byte;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //validacao de endereco / address validation
-    procedure EnderecosValidosSaoAceitos;
-    procedure PrimeiroOctetoNaoPodeSerZeroNem255;
-    procedure UltimoOctetoNaoPodeSerZeroNem255;
-    procedure PrecisaTerQuatroOctetos;
-    procedure OctetoForaDaFaixaEhRecusado;
-    procedure OctetoNaoNumericoEhRecusado;
-    procedure TextoVazioNaoEhEnderecoValido;
+    procedure ValidAddressesAreAccepted;
+    procedure TheFirstOctetCannotBeZeroOr255;
+    procedure TheLastOctetCannotBeZeroOr255;
+    procedure ItMustHaveFourOctets;
+    procedure AnOctetOutOfRangeIsRefused;
+    procedure ANonNumericOctetIsRefused;
+    procedure EmptyTextIsNotAValidAddress;
 
     //atribuicao do endereco / assigning the address
-    procedure NomeDeHostEhRecusado;
-    procedure EnderecoRecusadoNaoApagaOAnterior;
-    procedure EnderecoVazioEhAceito;
+    procedure AHostNameIsRefused;
+    procedure ARefusedAddressDoesNotEraseThePreviousOne;
+    procedure AnEmptyAddressIsAccepted;
 
     //identificador da porta / the port id
-    procedure PadroesDaPorta;
-    procedure IdMudaComOEndereco;
-    procedure IdMudaComONumeroDaPorta;
-    procedure IdMudaComOTipoDePorta;
-    procedure IdEhEstavelParaAMesmaConfiguracao;
-    procedure PortaSemEnderecoEhMarcadaComoIncompleta;
+    procedure PortDefaults;
+    procedure TheIdChangesWithTheAddress;
+    procedure TheIdChangesWithThePortNumber;
+    procedure TheIdChangesWithThePortType;
+    procedure TheIdIsStableForTheSameSettings;
+    procedure APortWithNoAddressIsMarkedIncomplete;
   end;
 
   {$IFDEF PORTUGUES}
@@ -91,29 +91,29 @@ type
     FServidor:TServidorDeTeste;
     FPorta:TTCP_UDPPort;
     //: espera a porta conectar, ou desistir no prazo
-    function  EsperarConexao(aPrazoMs:LongInt):Boolean;
-    function  EsperarDesconexao(aPrazoMs:LongInt):Boolean;
+    function  WaitForConnection(aPrazoMs:LongInt):Boolean;
+    function  WaitForDisconnection(aPrazoMs:LongInt):Boolean;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //conexao / connecting
-    procedure ConectaNoServidor;
-    procedure PortaNuncaAbertaNaoEstaConectada;
-    procedure SemNinguemOuvindoNaoConecta;
-    procedure FecharAPortaEncerraAConexao;
+    procedure ConnectToTheServer;
+    procedure APortNeverOpenedIsNotConnected;
+    procedure WithNobodyListeningItDoesNotConnect;
+    procedure ClosingThePortEndsTheConnection;
 
     //ida e volta / round trip
-    procedure OQueOMotoristaEscreveChegaNoServidor;
-    procedure ARespostaDoServidorVoltaParaOMotorista;
-    procedure SemRespostaOResultadoEhTimeout;
+    procedure WhatTheDriverWritesReachesTheServer;
+    procedure TheServerAnswerComesBackToTheDriver;
+    procedure WithNoAnswerTheResultIsTimeout;
 
     //o equipamento some / the device goes away
-    procedure EquipamentoQueSomeDerrubaAConexao;
-    procedure DepoisDeCairAPortaVoltaSozinha;
+    procedure ADeviceThatDisappearsDropsTheConnection;
+    procedure AfterDroppingThePortComesBackOnItsOwn;
 
     //ciclo de vida / lifecycle
-    procedure DestruirLogoDepoisDeCriarNaoPodeTravar;
+    procedure DestroyingRightAfterCreatingMustNotHang;
   end;
 
   {$IFDEF PORTUGUES}
@@ -136,16 +136,16 @@ type
   private
     FServidor:TServidorUDPDeTeste;
     FPorta:TTCP_UDPPort;
-    function  EsperarConexao(aPrazoMs:LongInt):Boolean;
+    function  WaitForConnection(aPrazoMs:LongInt):Boolean;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure PortaDeDatagramaFicaAtiva;
-    procedure OQueOMotoristaEscreveChegaNoServidor;
-    procedure ARespostaDoServidorVoltaParaOMotorista;
-    procedure SemRespostaOResultadoEhTimeout;
-    procedure OTipoDePortaSeparaOsIdentificadores;
+    procedure ADatagramPortBecomesActive;
+    procedure WhatTheDriverWritesReachesTheServer;
+    procedure TheServerAnswerComesBackToTheDriver;
+    procedure WithNoAnswerTheResultIsTimeout;
+    procedure ThePortTypeSeparatesTheIdentifiers;
   end;
 
 implementation
@@ -170,7 +170,7 @@ begin
   FPorta:=nil;
 end;
 
-function TTestTcpUdpPort.IdDe(const aEndereco:String; aPorta:LongInt; aTipo:TPortType):TPortUniqueID;
+function TTestTcpUdpPort.IdOf(const aEndereco:String; aPorta:LongInt; aTipo:TPortType):TPortUniqueID;
 begin
   FPorta.Host:=aEndereco;
   FPorta.Port:=aPorta;
@@ -178,13 +178,13 @@ begin
   Result:=FPorta.getPortId;
 end;
 
-function TTestTcpUdpPort.ByteDeTipo(aId:TPortUniqueID):Byte;
+function TTestTcpUdpPort.TypeByteOf(aId:TPortUniqueID):Byte;
 begin
   //o byte mais significativo guarda o tipo da porta e a marca de incompleta
   Result:=(aId shr 56) and $FF;
 end;
 
-procedure TTestTcpUdpPort.EnderecosValidosSaoAceitos;
+procedure TTestTcpUdpPort.ValidAddressesAreAccepted;
 begin
   AssertTrue('an ordinary address',        TTCP_UDPPort.ValidIPv4('192.168.0.10'));
   AssertTrue('zeros in the middle are fine',   TTCP_UDPPort.ValidIPv4('10.0.0.1'));
@@ -192,45 +192,45 @@ begin
   AssertTrue('per octet bounds',    TTCP_UDPPort.ValidIPv4('1.0.255.254'));
 end;
 
-procedure TTestTcpUdpPort.PrimeiroOctetoNaoPodeSerZeroNem255;
+procedure TTestTcpUdpPort.TheFirstOctetCannotBeZeroOr255;
 begin
   //rede 0 e broadcast nao endereçam equipamento nenhum
   AssertFalse('starts with 0',   TTCP_UDPPort.ValidIPv4('0.168.0.10'));
   AssertFalse('starts with 255', TTCP_UDPPort.ValidIPv4('255.168.0.10'));
 end;
 
-procedure TTestTcpUdpPort.UltimoOctetoNaoPodeSerZeroNem255;
+procedure TTestTcpUdpPort.TheLastOctetCannotBeZeroOr255;
 begin
   //.0 e' a propria rede e .255 e' o broadcast dela
   AssertFalse('ends in 0',   TTCP_UDPPort.ValidIPv4('192.168.0.0'));
   AssertFalse('ends in 255', TTCP_UDPPort.ValidIPv4('192.168.0.255'));
 end;
 
-procedure TTestTcpUdpPort.PrecisaTerQuatroOctetos;
+procedure TTestTcpUdpPort.ItMustHaveFourOctets;
 begin
   AssertFalse('only three',  TTCP_UDPPort.ValidIPv4('192.168.1'));
   AssertFalse('five',    TTCP_UDPPort.ValidIPv4('192.168.1.1.1'));
   AssertFalse('only one',    TTCP_UDPPort.ValidIPv4('192'));
 end;
 
-procedure TTestTcpUdpPort.OctetoForaDaFaixaEhRecusado;
+procedure TTestTcpUdpPort.AnOctetOutOfRangeIsRefused;
 begin
   AssertFalse('over 255', TTCP_UDPPort.ValidIPv4('192.168.1.300'));
   AssertFalse('negative',     TTCP_UDPPort.ValidIPv4('192.168.-1.10'));
 end;
 
-procedure TTestTcpUdpPort.OctetoNaoNumericoEhRecusado;
+procedure TTestTcpUdpPort.ANonNumericOctetIsRefused;
 begin
   AssertFalse('a letter',     TTCP_UDPPort.ValidIPv4('192.168.1.a'));
   AssertFalse('empty',     TTCP_UDPPort.ValidIPv4('192.168..1'));
 end;
 
-procedure TTestTcpUdpPort.TextoVazioNaoEhEnderecoValido;
+procedure TTestTcpUdpPort.EmptyTextIsNotAValidAddress;
 begin
   AssertFalse('empty', TTCP_UDPPort.ValidIPv4(''));
 end;
 
-procedure TTestTcpUdpPort.NomeDeHostEhRecusado;
+procedure TTestTcpUdpPort.AHostNameIsRefused;
 var
   recusou:Boolean;
 begin
@@ -246,7 +246,7 @@ begin
   AssertTrue('a host name must be refused', recusou);
 end;
 
-procedure TTestTcpUdpPort.EnderecoRecusadoNaoApagaOAnterior;
+procedure TTestTcpUdpPort.ARefusedAddressDoesNotEraseThePreviousOne;
 begin
   FPorta.Host:='192.168.0.10';
   try
@@ -257,7 +257,7 @@ begin
   AssertEquals('the previous address stands', '192.168.0.10', FPorta.Host);
 end;
 
-procedure TTestTcpUdpPort.EnderecoVazioEhAceito;
+procedure TTestTcpUdpPort.AnEmptyAddressIsAccepted;
 begin
   //porta recem criada, ou limpa, e' estado valido: so nao da' para conectar
   FPorta.Host:='192.168.0.10';
@@ -265,54 +265,54 @@ begin
   AssertEquals('address cleared', '', FPorta.Host);
 end;
 
-procedure TTestTcpUdpPort.PadroesDaPorta;
+procedure TTestTcpUdpPort.PortDefaults;
 begin
   AssertEquals('the S7 default port', 102, FPorta.Port);
   AssertEquals('default type',        Ord(ptTCP), Ord(FPorta.PortType));
 end;
 
-procedure TTestTcpUdpPort.IdMudaComOEndereco;
+procedure TTestTcpUdpPort.TheIdChangesWithTheAddress;
 begin
   AssertTrue('different addresses, different ids',
-             IdDe('192.168.0.10', 102, ptTCP) <> IdDe('192.168.0.11', 102, ptTCP));
+             IdOf('192.168.0.10', 102, ptTCP) <> IdOf('192.168.0.11', 102, ptTCP));
 end;
 
-procedure TTestTcpUdpPort.IdMudaComONumeroDaPorta;
+procedure TTestTcpUdpPort.TheIdChangesWithThePortNumber;
 begin
   //mesmo equipamento, servicos diferentes
   AssertTrue('different ports, different ids',
-             IdDe('192.168.0.10', 102, ptTCP) <> IdDe('192.168.0.10', 502, ptTCP));
+             IdOf('192.168.0.10', 102, ptTCP) <> IdOf('192.168.0.10', 502, ptTCP));
 end;
 
-procedure TTestTcpUdpPort.IdMudaComOTipoDePorta;
+procedure TTestTcpUdpPort.TheIdChangesWithThePortType;
 begin
   AssertTrue('TCP and UDP on the same address and port are distinct ports',
-             IdDe('192.168.0.10', 102, ptTCP) <> IdDe('192.168.0.10', 102, ptUDP));
+             IdOf('192.168.0.10', 102, ptTCP) <> IdOf('192.168.0.10', 102, ptUDP));
 
-  AssertEquals('the TCP mark', 2, ByteDeTipo(IdDe('192.168.0.10', 102, ptTCP)));
-  AssertEquals('the UDP mark', 3, ByteDeTipo(IdDe('192.168.0.10', 102, ptUDP)));
+  AssertEquals('the TCP mark', 2, TypeByteOf(IdOf('192.168.0.10', 102, ptTCP)));
+  AssertEquals('the UDP mark', 3, TypeByteOf(IdOf('192.168.0.10', 102, ptUDP)));
 end;
 
-procedure TTestTcpUdpPort.IdEhEstavelParaAMesmaConfiguracao;
+procedure TTestTcpUdpPort.TheIdIsStableForTheSameSettings;
 var
   primeiro:TPortUniqueID;
 begin
   //ler duas vezes tem que dar o mesmo valor - e' chave de mapa
-  primeiro:=IdDe('192.168.0.10', 102, ptTCP);
+  primeiro:=IdOf('192.168.0.10', 102, ptTCP);
   AssertTrue('same reading', primeiro = FPorta.getPortId);
-  AssertTrue('same settings', primeiro = IdDe('192.168.0.10', 102, ptTCP));
+  AssertTrue('same settings', primeiro = IdOf('192.168.0.10', 102, ptTCP));
 end;
 
-procedure TTestTcpUdpPort.PortaSemEnderecoEhMarcadaComoIncompleta;
+procedure TTestTcpUdpPort.APortWithNoAddressIsMarkedIncomplete;
 begin
   //sem endereco o id leva o bit alto ligado, distinguindo-o de qualquer porta
   //configurada de verdade
   FPorta.Host:='';
   FPorta.PortType:=ptTCP;
 
-  AssertEquals('TCP type with the incomplete mark', $82, ByteDeTipo(FPorta.getPortId));
+  AssertEquals('TCP type with the incomplete mark', $82, TypeByteOf(FPorta.getPortId));
   AssertTrue  ('and it differs from a configured port',
-               FPorta.getPortId <> IdDe('192.168.0.10', 102, ptTCP));
+               FPorta.getPortId <> IdOf('192.168.0.10', 102, ptTCP));
 end;
 
 { TTestTcpUdpPortComServidor }
@@ -338,7 +338,7 @@ begin
   FreeAndNil(FServidor);
 end;
 
-function TTestTcpUdpPortComServidor.EsperarConexao(aPrazoMs:LongInt):Boolean;
+function TTestTcpUdpPortComServidor.WaitForConnection(aPrazoMs:LongInt):Boolean;
 var
   gasto:LongInt;
 begin
@@ -350,7 +350,7 @@ begin
   Result:=FPorta.ReallyActive;
 end;
 
-function TTestTcpUdpPortComServidor.EsperarDesconexao(aPrazoMs:LongInt):Boolean;
+function TTestTcpUdpPortComServidor.WaitForDisconnection(aPrazoMs:LongInt):Boolean;
 var
   gasto:LongInt;
 begin
@@ -362,49 +362,49 @@ begin
   Result:=not FPorta.ReallyActive;
 end;
 
-procedure TTestTcpUdpPortComServidor.ConectaNoServidor;
+procedure TTestTcpUdpPortComServidor.ConnectToTheServer;
 begin
   FPorta.Active:=true;
 
-  AssertTrue('the port must connect',        EsperarConexao(3000));
+  AssertTrue('the port must connect',        WaitForConnection(3000));
   AssertTrue('and the server must see someone', FServidor.EsperarConexoes(1, 1000));
 end;
 
-procedure TTestTcpUdpPortComServidor.PortaNuncaAbertaNaoEstaConectada;
+procedure TTestTcpUdpPortComServidor.APortNeverOpenedIsNotConnected;
 begin
   AssertFalse('without opening there is no socket', FPorta.ReallyActive);
   AssertEquals('and the server saw nobody', 0, FServidor.Conexoes);
 end;
 
-procedure TTestTcpUdpPortComServidor.SemNinguemOuvindoNaoConecta;
+procedure TTestTcpUdpPortComServidor.WithNobodyListeningItDoesNotConnect;
 begin
   //aponta para a porta do servidor depois de derruba-lo: nao ha quem atenda
   FreeAndNil(FServidor);
 
   FPorta.Active:=true;
 
-  AssertFalse('it cannot claim to be connected', EsperarConexao(700));
+  AssertFalse('it cannot claim to be connected', WaitForConnection(700));
 end;
 
-procedure TTestTcpUdpPortComServidor.FecharAPortaEncerraAConexao;
+procedure TTestTcpUdpPortComServidor.ClosingThePortEndsTheConnection;
 begin
   FPorta.Active:=true;
-  AssertTrue('connected', EsperarConexao(3000));
+  AssertTrue('connected', WaitForConnection(3000));
 
   FPorta.Active:=false;
 
   //PortStop nao fecha o soquete: posta um pedido para a thread de conexao, que
   //fecha quando chegar a vez dela. O que importa e' que feche
-  AssertTrue('the connection must be closed', EsperarDesconexao(3000));
+  AssertTrue('the connection must be closed', WaitForDisconnection(3000));
   AssertFalse('and the port stays closed',         FPorta.Active);
 end;
 
-procedure TTestTcpUdpPortComServidor.OQueOMotoristaEscreveChegaNoServidor;
+procedure TTestTcpUdpPortComServidor.WhatTheDriverWritesReachesTheServer;
 var
   pkg:TIOPacket;
 begin
   FPorta.Active:=true;
-  AssertTrue('connected', EsperarConexao(3000));
+  AssertTrue('connected', WaitForConnection(3000));
 
   FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
 
@@ -412,14 +412,14 @@ begin
   AssertBytesEqual('and they are the same', BytesOf('01 02 03 04'), FServidor.Recebido);
 end;
 
-procedure TTestTcpUdpPortComServidor.ARespostaDoServidorVoltaParaOMotorista;
+procedure TTestTcpUdpPortComServidor.TheServerAnswerComesBackToTheDriver;
 var
   pkg:TIOPacket;
 begin
   FServidor.EnfileirarResposta(BytesOf('AA BB CC'));
 
   FPorta.Active:=true;
-  AssertTrue('connected', EsperarConexao(3000));
+  AssertTrue('connected', WaitForConnection(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
@@ -428,13 +428,13 @@ begin
   AssertBytesEqual('the answer',  BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
-procedure TTestTcpUdpPortComServidor.SemRespostaOResultadoEhTimeout;
+procedure TTestTcpUdpPortComServidor.WithNoAnswerTheResultIsTimeout;
 var
   pkg:TIOPacket;
 begin
   //o servidor recebe mas nao responde nada
   FPorta.Active:=true;
-  AssertTrue('connected', EsperarConexao(3000));
+  AssertTrue('connected', WaitForConnection(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
@@ -442,14 +442,14 @@ begin
   AssertEquals('the answer did not come', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
 end;
 
-procedure TTestTcpUdpPortComServidor.EquipamentoQueSomeDerrubaAConexao;
+procedure TTestTcpUdpPortComServidor.ADeviceThatDisappearsDropsTheConnection;
 var
   pkg:TIOPacket;
 begin
   //sem reconexao automatica, para medir so' a queda
   FPorta.EnableAutoReconnect:=false;
   FPorta.Active:=true;
-  AssertTrue('connected', EsperarConexao(3000));
+  AssertTrue('connected', WaitForConnection(3000));
 
   FServidor.SoltarAConexao;
 
@@ -457,27 +457,27 @@ begin
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
-  AssertTrue('the port must notice it dropped', EsperarDesconexao(3000));
+  AssertTrue('the port must notice it dropped', WaitForDisconnection(3000));
 end;
 
-procedure TTestTcpUdpPortComServidor.DepoisDeCairAPortaVoltaSozinha;
+procedure TTestTcpUdpPortComServidor.AfterDroppingThePortComesBackOnItsOwn;
 var
   pkg:TIOPacket;
 begin
   //e' o que mantem a supervisao viva quando o equipamento reinicia
   FPorta.Active:=true;
-  AssertTrue('connected', EsperarConexao(3000));
+  AssertTrue('connected', WaitForConnection(3000));
 
   FServidor.SoltarAConexao;
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
-  AssertTrue('dropped', EsperarDesconexao(3000));
+  AssertTrue('dropped', WaitForDisconnection(3000));
 
-  AssertTrue('and it came back on its own',      EsperarConexao(5000));
+  AssertTrue('and it came back on its own',      WaitForConnection(5000));
   AssertTrue('with a new connection',  FServidor.EsperarConexoes(2, 1000));
 end;
 
-procedure TTestTcpUdpPortComServidor.DestruirLogoDepoisDeCriarNaoPodeTravar;
+procedure TTestTcpUdpPortComServidor.DestroyingRightAfterCreatingMustNotHang;
 var
   c:LongInt;
   porta:TTCP_UDPPort;
@@ -514,7 +514,7 @@ begin
   FreeAndNil(FServidor);
 end;
 
-function TTestTcpUdpPortEmDatagrama.EsperarConexao(aPrazoMs:LongInt):Boolean;
+function TTestTcpUdpPortEmDatagrama.WaitForConnection(aPrazoMs:LongInt):Boolean;
 var
   gasto:LongInt;
 begin
@@ -526,18 +526,18 @@ begin
   Result:=FPorta.ReallyActive;
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.PortaDeDatagramaFicaAtiva;
+procedure TTestTcpUdpPortEmDatagrama.ADatagramPortBecomesActive;
 begin
   FPorta.Active:=true;
-  AssertTrue('the datagram port must become active', EsperarConexao(3000));
+  AssertTrue('the datagram port must become active', WaitForConnection(3000));
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.OQueOMotoristaEscreveChegaNoServidor;
+procedure TTestTcpUdpPortEmDatagrama.WhatTheDriverWritesReachesTheServer;
 var
   pkg:TIOPacket;
 begin
   FPorta.Active:=true;
-  AssertTrue('active', EsperarConexao(3000));
+  AssertTrue('active', WaitForConnection(3000));
 
   FPorta.IOCommandSync(iocWrite, 4, BytesOf('01 02 03 04'), 0, DRIVER_DE_TESTE, 0, @pkg);
 
@@ -545,14 +545,14 @@ begin
   AssertBytesEqual('and it is the same one', BytesOf('01 02 03 04'), FServidor.Recebido);
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.ARespostaDoServidorVoltaParaOMotorista;
+procedure TTestTcpUdpPortEmDatagrama.TheServerAnswerComesBackToTheDriver;
 var
   pkg:TIOPacket;
 begin
   FServidor.EnfileirarResposta(BytesOf('AA BB CC'));
 
   FPorta.Active:=true;
-  AssertTrue('active', EsperarConexao(3000));
+  AssertTrue('active', WaitForConnection(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
@@ -561,13 +561,13 @@ begin
   AssertBytesEqual('the answer', BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.SemRespostaOResultadoEhTimeout;
+procedure TTestTcpUdpPortEmDatagrama.WithNoAnswerTheResultIsTimeout;
 var
   pkg:TIOPacket;
 begin
   //em datagrama a perda e' o caso comum, nao a excecao
   FPorta.Active:=true;
-  AssertTrue('active', EsperarConexao(3000));
+  AssertTrue('active', WaitForConnection(3000));
 
   FPorta.IOCommandSync(iocWriteRead, 2, BytesOf('01 02'), 3, DRIVER_DE_TESTE, 0, @pkg);
 
@@ -575,7 +575,7 @@ begin
   AssertEquals('the answer did not come', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.OTipoDePortaSeparaOsIdentificadores;
+procedure TTestTcpUdpPortEmDatagrama.ThePortTypeSeparatesTheIdentifiers;
 var
   emTcp:TPortUniqueID;
 begin

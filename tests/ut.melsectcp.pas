@@ -54,26 +54,26 @@ type
   private
     FDrv:TMelsecProbe;
     //: byte do codigo de dispositivo dentro do quadro
-    function  CodigoDeDispositivo(aFuncaoDeLeitura:LongInt):Byte;
+    function  DeviceCodeOf(aFuncaoDeLeitura:LongInt):Byte;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //quadro de leitura / read frame
-    procedure LeituraDeRegistradoresMontaOQuadro;
-    procedure LeituraDeBitsUsaOutroSubcomando;
-    procedure EnderecoVaiEmTresBytes;
-    procedure QuantidadeDePontosVaiEmDoisBytes;
+    procedure ARegisterReadBuildsTheFrame;
+    procedure ABitReadUsesAnotherSubcommand;
+    procedure TheAddressGoesInThreeBytes;
+    procedure ThePointCountGoesInTwoBytes;
 
     //codigos de dispositivo / device codes
-    procedure CadaAreaTemOSeuCodigoDeDispositivo;
+    procedure EveryAreaHasItsOwnDeviceCode;
 
     //tamanho previsto da resposta / expected response size
-    procedure RespostaDeRegistradoresTemDoisBytesPorPonto;
-    procedure RespostaDeBitsEmpacotaOitoPorByte;
+    procedure ARegisterAnswerHasTwoBytesPerPoint;
+    procedure ABitAnswerPacksEightPerByte;
 
     //funcao desconhecida / unknown function
-    procedure FuncaoDesconhecidaNaoGeraQuadro;
+    procedure AnUnknownFunctionBuildsNoFrame;
   end;
 
 implementation
@@ -105,7 +105,7 @@ begin
   FDrv:=nil;
 end;
 
-function TTestMelsecTCP.CodigoDeDispositivo(aFuncaoDeLeitura:LongInt):Byte;
+function TTestMelsecTCP.DeviceCodeOf(aFuncaoDeLeitura:LongInt):Byte;
 var
   len:LongInt;
   quadro:BYTES;
@@ -114,7 +114,7 @@ begin
   Result:=quadro[18];
 end;
 
-procedure TTestMelsecTCP.LeituraDeRegistradoresMontaOQuadro;
+procedure TTestMelsecTCP.ARegisterReadBuildsTheFrame;
 var
   len:LongInt;
 begin
@@ -136,7 +136,7 @@ begin
                    FDrv.Encode(TagRecFor(1, $09, 0, 100, 2), nil, len));
 end;
 
-procedure TTestMelsecTCP.LeituraDeBitsUsaOutroSubcomando;
+procedure TTestMelsecTCP.ABitReadUsesAnotherSubcommand;
 var
   len:LongInt;
 begin
@@ -151,7 +151,7 @@ begin
                    FDrv.Encode(TagRecFor(1, $01, 0, 0, 16), nil, len));
 end;
 
-procedure TTestMelsecTCP.EnderecoVaiEmTresBytes;
+procedure TTestMelsecTCP.TheAddressGoesInThreeBytes;
 var
   len:LongInt;
   quadro:BYTES;
@@ -164,7 +164,7 @@ begin
   AssertEquals('high byte',   $01, quadro[17]);
 end;
 
-procedure TTestMelsecTCP.QuantidadeDePontosVaiEmDoisBytes;
+procedure TTestMelsecTCP.ThePointCountGoesInTwoBytes;
 var
   len:LongInt;
   quadro:BYTES;
@@ -176,22 +176,22 @@ begin
   AssertEquals('high byte',  $01, quadro[20]);
 end;
 
-procedure TTestMelsecTCP.CadaAreaTemOSeuCodigoDeDispositivo;
+procedure TTestMelsecTCP.EveryAreaHasItsOwnDeviceCode;
 begin
   //os codigos do MC protocol, um por area de memoria
-  AssertEquals('M',  $90, CodigoDeDispositivo($01));
-  AssertEquals('SM', $91, CodigoDeDispositivo($02));
-  AssertEquals('L',  $92, CodigoDeDispositivo($03));
-  AssertEquals('F',  $93, CodigoDeDispositivo($04));
-  AssertEquals('V',  $94, CodigoDeDispositivo($05));
-  AssertEquals('X',  $9C, CodigoDeDispositivo($06));
-  AssertEquals('Y',  $9D, CodigoDeDispositivo($07));
-  AssertEquals('B',  $A0, CodigoDeDispositivo($08));
-  AssertEquals('D',  $A8, CodigoDeDispositivo($09));
-  AssertEquals('SD', $A9, CodigoDeDispositivo($10));
+  AssertEquals('M',  $90, DeviceCodeOf($01));
+  AssertEquals('SM', $91, DeviceCodeOf($02));
+  AssertEquals('L',  $92, DeviceCodeOf($03));
+  AssertEquals('F',  $93, DeviceCodeOf($04));
+  AssertEquals('V',  $94, DeviceCodeOf($05));
+  AssertEquals('X',  $9C, DeviceCodeOf($06));
+  AssertEquals('Y',  $9D, DeviceCodeOf($07));
+  AssertEquals('B',  $A0, DeviceCodeOf($08));
+  AssertEquals('D',  $A8, DeviceCodeOf($09));
+  AssertEquals('SD', $A9, DeviceCodeOf($10));
 end;
 
-procedure TTestMelsecTCP.RespostaDeRegistradoresTemDoisBytesPorPonto;
+procedure TTestMelsecTCP.ARegisterAnswerHasTwoBytesPerPoint;
 var
   len:LongInt;
 begin
@@ -203,7 +203,7 @@ begin
   AssertEquals('10 registers', 29, len);
 end;
 
-procedure TTestMelsecTCP.RespostaDeBitsEmpacotaOitoPorByte;
+procedure TTestMelsecTCP.ABitAnswerPacksEightPerByte;
 var
   len:LongInt;
 begin
@@ -216,7 +216,7 @@ begin
   AssertEquals('17 bits', 12, len);
 end;
 
-procedure TTestMelsecTCP.FuncaoDesconhecidaNaoGeraQuadro;
+procedure TTestMelsecTCP.AnUnknownFunctionBuildsNoFrame;
 var
   len:LongInt;
   quadro:BYTES;

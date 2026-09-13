@@ -14,15 +14,15 @@ type
 
   TTestHsUtils = class(TTestCase)
   published
-    procedure ExplodeSeparaTodosOsCampos;
-    procedure ExplodeRespeitaOLimite;
-    procedure ExplodeSemDelimitadorRetornaAStringInteira;
-    procedure PotenciaDeInteiros;
+    procedure ExplodeSplitsEveryField;
+    procedure ExplodeHonoursTheLimit;
+    procedure ExplodeWithNoDelimiterReturnsTheWholeString;
+    procedure IntegerPower;
   end;
 
 implementation
 
-procedure TTestHsUtils.ExplodeSeparaTodosOsCampos;
+procedure TTestHsUtils.ExplodeSplitsEveryField;
 var
   r: TStringArray;
 begin
@@ -32,7 +32,7 @@ begin
   AssertEquals('1', r[3]);
 end;
 
-procedure TTestHsUtils.ExplodeRespeitaOLimite;
+procedure TTestHsUtils.ExplodeHonoursTheLimit;
 var
   r: TStringArray;
 begin
@@ -42,7 +42,7 @@ begin
   AssertEquals('b/c/d', r[1]);
 end;
 
-procedure TTestHsUtils.ExplodeSemDelimitadorRetornaAStringInteira;
+procedure TTestHsUtils.ExplodeWithNoDelimiterReturnsTheWholeString;
 var
   r: TStringArray;
 begin
@@ -51,7 +51,7 @@ begin
   AssertEquals('texto', r[0]);
 end;
 
-procedure TTestHsUtils.PotenciaDeInteiros;
+procedure TTestHsUtils.IntegerPower;
 begin
   AssertEquals('2^0',  1, Power(2, 0));
   AssertEquals('2^8',  256, Power(2, 8));
