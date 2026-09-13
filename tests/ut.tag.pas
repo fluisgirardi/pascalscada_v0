@@ -33,12 +33,12 @@ uses
 
 type
 
-  { TTagSimples }
+  { TSimpleTag }
 
   //: um tag concreto qualquer: TTag nao tem nada de abstrato a implementar
-  TTagSimples = class(TTag);
+  TSimpleTag = class(TTag);
 
-  { TOuvinte }
+  { TListener }
 
   {$IFDEF PORTUGUES}
   //: Ouvinte que, ao saber que o tag vai embora, larga os seus ganchos - que
@@ -47,7 +47,7 @@ type
   //: A listener that, on learning the tag is going away, drops its handlers -
   //  which is what RemoveAllHandlersFromObject is there for.
   {$ENDIF}
-  TOuvinte = class
+  TListener = class
   private
     FTag:TTag;
     FAvisado:Boolean;
@@ -69,9 +69,9 @@ type
 
 implementation
 
-{ TOuvinte }
+{ TListener }
 
-constructor TOuvinte.Create(aTag:TTag; aLargarOsGanchos:Boolean);
+constructor TListener.Create(aTag:TTag; aLargarOsGanchos:Boolean);
 begin
   inherited Create;
   FTag:=aTag;
@@ -80,7 +80,7 @@ begin
   FTag.AddRemoveTagHandler(@RemovalNotice);
 end;
 
-procedure TOuvinte.RemovalNotice(Sender:TObject);
+procedure TListener.RemovalNotice(Sender:TObject);
 begin
   FAvisado:=true;
   if FLargarOsGanchos and (FTag<>nil) then begin
@@ -93,11 +93,11 @@ end;
 
 procedure TTestTag.TheRemovalNoticeReachesTheListener;
 var
-  tag:TTagSimples;
-  ouvinte:TOuvinte;
+  tag:TSimpleTag;
+  ouvinte:TListener;
 begin
-  tag:=TTagSimples.Create(nil);
-  ouvinte:=TOuvinte.Create(tag, false);
+  tag:=TSimpleTag.Create(nil);
+  ouvinte:=TListener.Create(tag, false);
   try
     FreeAndNil(tag);
     AssertTrue('the listener must have been told', ouvinte.Avisado);
@@ -109,16 +109,16 @@ end;
 
 procedure TTestTag.AListenerThatDropsItsHooksDoesNotHideTheOthers;
 var
-  tag:TTagSimples;
-  primeiro, segundo, terceiro:TOuvinte;
+  tag:TSimpleTag;
+  primeiro, segundo, terceiro:TListener;
 begin
   //o primeiro ouvinte larga os ganchos ao ser avisado, o que tira a entrada
   //dele da lista que o destrutor esta' percorrendo. Os outros dois nao podem
   //ficar sem aviso por causa disso
-  tag:=TTagSimples.Create(nil);
-  primeiro:=TOuvinte.Create(tag, true);
-  segundo :=TOuvinte.Create(tag, false);
-  terceiro:=TOuvinte.Create(tag, false);
+  tag:=TSimpleTag.Create(nil);
+  primeiro:=TListener.Create(tag, true);
+  segundo :=TListener.Create(tag, false);
+  terceiro:=TListener.Create(tag, false);
   try
     FreeAndNil(tag);
 
@@ -135,12 +135,12 @@ end;
 
 procedure TTestTag.HooksDroppedEarlierAreNotNotified;
 var
-  tag:TTagSimples;
-  ouvinte:TOuvinte;
+  tag:TSimpleTag;
+  ouvinte:TListener;
 begin
   //quem se desligou antes da hora nao pode receber o aviso
-  tag:=TTagSimples.Create(nil);
-  ouvinte:=TOuvinte.Create(tag, false);
+  tag:=TSimpleTag.Create(nil);
+  ouvinte:=TListener.Create(tag, false);
   try
     tag.RemoveAllHandlersFromObject(ouvinte);
     FreeAndNil(tag);

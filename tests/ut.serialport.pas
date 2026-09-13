@@ -113,9 +113,9 @@ type
   }
   {$ENDIF}
 
-  { TTestSerialPortComDispositivo }
+  { TTestSerialPortOverADevice }
 
-  TTestSerialPortComDispositivo = class(TTestCase)
+  TTestSerialPortOverADevice = class(TTestCase)
   private
     FDispositivo:TSerialDeMentira;
     FPorta:TSerialProbe;
@@ -358,12 +358,12 @@ begin
 end;
 
 {$IFDEF UNIX}
-{ TTestSerialPortComDispositivo }
+{ TTestSerialPortOverADevice }
 
 const
   DRIVER_DE_TESTE = 91;
 
-procedure TTestSerialPortComDispositivo.SetUp;
+procedure TTestSerialPortOverADevice.SetUp;
 begin
   FDispositivo:=TSerialDeMentira.Create;
 
@@ -372,20 +372,20 @@ begin
   FPorta.Timeout:=300;
 end;
 
-procedure TTestSerialPortComDispositivo.TearDown;
+procedure TTestSerialPortOverADevice.TearDown;
 begin
   FreeAndNil(FPorta);
   FreeAndNil(FDispositivo);
 end;
 
-procedure TTestSerialPortComDispositivo.PointThePortAtTheDevice;
+procedure TTestSerialPortOverADevice.PointThePortAtTheDevice;
 begin
   //o lado escravo do par aparece em /dev/pts: e' para isso que DevDir existe
   FPorta.DevDir :=FDispositivo.Diretorio;
   FPorta.COMPort:=FDispositivo.NomeDoDispositivo;
 end;
 
-procedure TTestSerialPortComDispositivo.OpeningThePortOverTheDevice;
+procedure TTestSerialPortOverADevice.OpeningThePortOverTheDevice;
 begin
   PointThePortAtTheDevice;
   FPorta.Active:=true;
@@ -393,7 +393,7 @@ begin
   AssertTrue('the port must open', FPorta.ReallyActive);
 end;
 
-procedure TTestSerialPortComDispositivo.WhatTheDriverWritesReachesTheDevice;
+procedure TTestSerialPortOverADevice.WhatTheDriverWritesReachesTheDevice;
 var
   pkg:TIOPacket;
 begin
@@ -407,7 +407,7 @@ begin
                    FDispositivo.LerOQueFoiEscrito(4, 1000));
 end;
 
-procedure TTestSerialPortComDispositivo.WhatTheDeviceSendsIsReadByTheDriver;
+procedure TTestSerialPortOverADevice.WhatTheDeviceSendsIsReadByTheDriver;
 var
   pkg:TIOPacket;
 begin
@@ -424,7 +424,7 @@ begin
   AssertBytesEqual('what came back', BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
-procedure TTestSerialPortComDispositivo.WithNoAnswerTheResultIsTimeout;
+procedure TTestSerialPortOverADevice.WithNoAnswerTheResultIsTimeout;
 var
   pkg:TIOPacket;
 begin
@@ -439,7 +439,7 @@ begin
   AssertEquals('nothing read',    0, pkg.Received);
 end;
 
-procedure TTestSerialPortComDispositivo.ClosingThePortStopsItBeingActive;
+procedure TTestSerialPortOverADevice.ClosingThePortStopsItBeingActive;
 begin
   PointThePortAtTheDevice;
   FPorta.Active:=true;
@@ -449,7 +449,7 @@ begin
   AssertFalse('closed', FPorta.ReallyActive);
 end;
 
-procedure TTestSerialPortComDispositivo.TheChosenSpeedReachesTheDevice;
+procedure TTestSerialPortOverADevice.TheChosenSpeedReachesTheDevice;
 begin
   //guardar o valor na propriedade nao basta: ele tem que virar ajuste do
   //dispositivo, senao o equipamento conversa numa velocidade e o driver noutra
@@ -461,7 +461,7 @@ begin
   AssertEquals('9600 on the device', B9600, FDispositivo.CodigoDeVelocidade);
 end;
 
-procedure TTestSerialPortComDispositivo.ChangingTheSpeedChangesTheDevice;
+procedure TTestSerialPortOverADevice.ChangingTheSpeedChangesTheDevice;
 begin
   //duas velocidades diferentes tem que dar dois ajustes diferentes no
   //dispositivo, senao a escolha nao esta' indo a lugar nenhum
@@ -474,7 +474,7 @@ begin
   AssertTrue  ('and it differs from 9600', B9600<>FDispositivo.CodigoDeVelocidade);
 end;
 
-procedure TTestSerialPortComDispositivo.TheChosenStopBitsReachTheDevice;
+procedure TTestSerialPortOverADevice.TheChosenStopBitsReachTheDevice;
 begin
   PointThePortAtTheDevice;
   FPorta.StopBits:=sb2;
@@ -490,7 +490,7 @@ initialization
   RegisterTest(TTestSerialPort);
   {$IFDEF UNIX}
   //par de pseudo-terminais so' existe em Unix
-  RegisterTest(TTestSerialPortComDispositivo);
+  RegisterTest(TTestSerialPortOverADevice);
   {$ENDIF}
 
 end.

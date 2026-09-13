@@ -84,9 +84,9 @@ type
   }
   {$ENDIF}
 
-  { TTestTcpUdpPortComServidor }
+  { TTestTcpUdpPortOverAServer }
 
-  TTestTcpUdpPortComServidor = class(TTestCase)
+  TTestTcpUdpPortOverAServer = class(TTestCase)
   private
     FServidor:TServidorDeTeste;
     FPorta:TTCP_UDPPort;
@@ -130,9 +130,9 @@ type
   }
   {$ENDIF}
 
-  { TTestTcpUdpPortEmDatagrama }
+  { TTestTcpUdpPortOnDatagram }
 
-  TTestTcpUdpPortEmDatagrama = class(TTestCase)
+  TTestTcpUdpPortOnDatagram = class(TTestCase)
   private
     FServidor:TServidorUDPDeTeste;
     FPorta:TTCP_UDPPort;
@@ -315,12 +315,12 @@ begin
                FPorta.getPortId <> IdOf('192.168.0.10', 102, ptTCP));
 end;
 
-{ TTestTcpUdpPortComServidor }
+{ TTestTcpUdpPortOverAServer }
 
 const
   DRIVER_DE_TESTE = 77;
 
-procedure TTestTcpUdpPortComServidor.SetUp;
+procedure TTestTcpUdpPortOverAServer.SetUp;
 begin
   FServidor:=TServidorDeTeste.Create;
 
@@ -332,13 +332,13 @@ begin
   FPorta.ReconnectRetryInterval:=200;
 end;
 
-procedure TTestTcpUdpPortComServidor.TearDown;
+procedure TTestTcpUdpPortOverAServer.TearDown;
 begin
   FreeAndNil(FPorta);
   FreeAndNil(FServidor);
 end;
 
-function TTestTcpUdpPortComServidor.WaitForConnection(aPrazoMs:LongInt):Boolean;
+function TTestTcpUdpPortOverAServer.WaitForConnection(aPrazoMs:LongInt):Boolean;
 var
   gasto:LongInt;
 begin
@@ -350,7 +350,7 @@ begin
   Result:=FPorta.ReallyActive;
 end;
 
-function TTestTcpUdpPortComServidor.WaitForDisconnection(aPrazoMs:LongInt):Boolean;
+function TTestTcpUdpPortOverAServer.WaitForDisconnection(aPrazoMs:LongInt):Boolean;
 var
   gasto:LongInt;
 begin
@@ -362,7 +362,7 @@ begin
   Result:=not FPorta.ReallyActive;
 end;
 
-procedure TTestTcpUdpPortComServidor.ConnectToTheServer;
+procedure TTestTcpUdpPortOverAServer.ConnectToTheServer;
 begin
   FPorta.Active:=true;
 
@@ -370,13 +370,13 @@ begin
   AssertTrue('and the server must see someone', FServidor.EsperarConexoes(1, 1000));
 end;
 
-procedure TTestTcpUdpPortComServidor.APortNeverOpenedIsNotConnected;
+procedure TTestTcpUdpPortOverAServer.APortNeverOpenedIsNotConnected;
 begin
   AssertFalse('without opening there is no socket', FPorta.ReallyActive);
   AssertEquals('and the server saw nobody', 0, FServidor.Conexoes);
 end;
 
-procedure TTestTcpUdpPortComServidor.WithNobodyListeningItDoesNotConnect;
+procedure TTestTcpUdpPortOverAServer.WithNobodyListeningItDoesNotConnect;
 begin
   //aponta para a porta do servidor depois de derruba-lo: nao ha quem atenda
   FreeAndNil(FServidor);
@@ -386,7 +386,7 @@ begin
   AssertFalse('it cannot claim to be connected', WaitForConnection(700));
 end;
 
-procedure TTestTcpUdpPortComServidor.ClosingThePortEndsTheConnection;
+procedure TTestTcpUdpPortOverAServer.ClosingThePortEndsTheConnection;
 begin
   FPorta.Active:=true;
   AssertTrue('connected', WaitForConnection(3000));
@@ -399,7 +399,7 @@ begin
   AssertFalse('and the port stays closed',         FPorta.Active);
 end;
 
-procedure TTestTcpUdpPortComServidor.WhatTheDriverWritesReachesTheServer;
+procedure TTestTcpUdpPortOverAServer.WhatTheDriverWritesReachesTheServer;
 var
   pkg:TIOPacket;
 begin
@@ -412,7 +412,7 @@ begin
   AssertBytesEqual('and they are the same', BytesOf('01 02 03 04'), FServidor.Recebido);
 end;
 
-procedure TTestTcpUdpPortComServidor.TheServerAnswerComesBackToTheDriver;
+procedure TTestTcpUdpPortOverAServer.TheServerAnswerComesBackToTheDriver;
 var
   pkg:TIOPacket;
 begin
@@ -428,7 +428,7 @@ begin
   AssertBytesEqual('the answer',  BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
-procedure TTestTcpUdpPortComServidor.WithNoAnswerTheResultIsTimeout;
+procedure TTestTcpUdpPortOverAServer.WithNoAnswerTheResultIsTimeout;
 var
   pkg:TIOPacket;
 begin
@@ -442,7 +442,7 @@ begin
   AssertEquals('the answer did not come', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
 end;
 
-procedure TTestTcpUdpPortComServidor.ADeviceThatDisappearsDropsTheConnection;
+procedure TTestTcpUdpPortOverAServer.ADeviceThatDisappearsDropsTheConnection;
 var
   pkg:TIOPacket;
 begin
@@ -460,7 +460,7 @@ begin
   AssertTrue('the port must notice it dropped', WaitForDisconnection(3000));
 end;
 
-procedure TTestTcpUdpPortComServidor.AfterDroppingThePortComesBackOnItsOwn;
+procedure TTestTcpUdpPortOverAServer.AfterDroppingThePortComesBackOnItsOwn;
 var
   pkg:TIOPacket;
 begin
@@ -477,7 +477,7 @@ begin
   AssertTrue('with a new connection',  FServidor.EsperarConexoes(2, 1000));
 end;
 
-procedure TTestTcpUdpPortComServidor.DestroyingRightAfterCreatingMustNotHang;
+procedure TTestTcpUdpPortOverAServer.DestroyingRightAfterCreatingMustNotHang;
 var
   c:LongInt;
   porta:TTCP_UDPPort;
@@ -494,9 +494,9 @@ begin
   AssertTrue('twenty ports created and destroyed in a row', true);
 end;
 
-{ TTestTcpUdpPortEmDatagrama }
+{ TTestTcpUdpPortOnDatagram }
 
-procedure TTestTcpUdpPortEmDatagrama.SetUp;
+procedure TTestTcpUdpPortOnDatagram.SetUp;
 begin
   FServidor:=TServidorUDPDeTeste.Create;
 
@@ -508,13 +508,13 @@ begin
   FPorta.ReconnectRetryInterval:=200;
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.TearDown;
+procedure TTestTcpUdpPortOnDatagram.TearDown;
 begin
   FreeAndNil(FPorta);
   FreeAndNil(FServidor);
 end;
 
-function TTestTcpUdpPortEmDatagrama.WaitForConnection(aPrazoMs:LongInt):Boolean;
+function TTestTcpUdpPortOnDatagram.WaitForConnection(aPrazoMs:LongInt):Boolean;
 var
   gasto:LongInt;
 begin
@@ -526,13 +526,13 @@ begin
   Result:=FPorta.ReallyActive;
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.ADatagramPortBecomesActive;
+procedure TTestTcpUdpPortOnDatagram.ADatagramPortBecomesActive;
 begin
   FPorta.Active:=true;
   AssertTrue('the datagram port must become active', WaitForConnection(3000));
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.WhatTheDriverWritesReachesTheServer;
+procedure TTestTcpUdpPortOnDatagram.WhatTheDriverWritesReachesTheServer;
 var
   pkg:TIOPacket;
 begin
@@ -545,7 +545,7 @@ begin
   AssertBytesEqual('and it is the same one', BytesOf('01 02 03 04'), FServidor.Recebido);
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.TheServerAnswerComesBackToTheDriver;
+procedure TTestTcpUdpPortOnDatagram.TheServerAnswerComesBackToTheDriver;
 var
   pkg:TIOPacket;
 begin
@@ -561,7 +561,7 @@ begin
   AssertBytesEqual('the answer', BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.WithNoAnswerTheResultIsTimeout;
+procedure TTestTcpUdpPortOnDatagram.WithNoAnswerTheResultIsTimeout;
 var
   pkg:TIOPacket;
 begin
@@ -575,7 +575,7 @@ begin
   AssertEquals('the answer did not come', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
 end;
 
-procedure TTestTcpUdpPortEmDatagrama.ThePortTypeSeparatesTheIdentifiers;
+procedure TTestTcpUdpPortOnDatagram.ThePortTypeSeparatesTheIdentifiers;
 var
   emTcp:TPortUniqueID;
 begin
@@ -589,8 +589,8 @@ end;
 
 initialization
   RegisterTest(TTestTcpUdpPort);
-  RegisterTest(TTestTcpUdpPortComServidor);
-  RegisterTest(TTestTcpUdpPortEmDatagrama);
+  RegisterTest(TTestTcpUdpPortOverAServer);
+  RegisterTest(TTestTcpUdpPortOnDatagram);
 
 finalization
   FreeAndNil(PortaCompartilhada);

@@ -44,10 +44,10 @@ uses
 
 type
 
-  { TLacoDeTeste }
+  { TTestLoop }
 
   //: thread de laco que so' conta voltas
-  TLacoDeTeste = class(TpSCADACoreAffinityThreadWithLoop)
+  TTestLoop = class(TpSCADACoreAffinityThreadWithLoop)
   private
     FVoltas:LongInt;
   protected
@@ -67,9 +67,9 @@ type
 
 implementation
 
-{ TLacoDeTeste }
+{ TTestLoop }
 
-procedure TLacoDeTeste.Loop;
+procedure TTestLoop.Loop;
 begin
   inc(FVoltas);
   Sleep(1);
@@ -80,14 +80,14 @@ end;
 procedure TTestCrossThreads.DestroyingRightAfterStartingMustNotHang;
 var
   c:LongInt;
-  t:TLacoDeTeste;
+  t:TTestLoop;
 begin
   //ATENCAO: se a correcao for desfeita este teste nao falha - ele TRAVA a
   //rodada, porque a espera pelo fim da thread nao termina mais.
   //WARNING: if the fix is undone this test does not fail - it HANGS the run,
   //because the wait for the thread to finish never ends.
   for c:=1 to 50 do begin
-    t:=TLacoDeTeste.Create(true);
+    t:=TTestLoop.Create(true);
     t.Start;
     t.Free;
   end;
@@ -97,10 +97,10 @@ end;
 
 procedure TTestCrossThreads.DestroyingAfterTheLoopStartedMustNotHang;
 var
-  t:TLacoDeTeste;
+  t:TTestLoop;
 begin
   //o caminho normal: a thread roda um pouco antes de ser destruida
-  t:=TLacoDeTeste.Create(true);
+  t:=TTestLoop.Create(true);
   try
     t.Start;
     t.WaitLoopStarts;
@@ -114,11 +114,11 @@ end;
 
 procedure TTestCrossThreads.WaitingForTheLoopToStartDoesNotHangOnAFinishedThread;
 var
-  t:TLacoDeTeste;
+  t:TTestLoop;
 begin
   //esperar pelo inicio de um laco que nunca vai comecar tem que voltar, nao
   //ficar preso: a thread acabou sem nunca ter rodado
-  t:=TLacoDeTeste.Create(true);
+  t:=TTestLoop.Create(true);
   try
     t.Start;
     t.Terminate;

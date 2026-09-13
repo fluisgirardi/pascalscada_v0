@@ -40,9 +40,9 @@ uses
 
 type
 
-  { TTestEscalaLinear }
+  { TTestLinearScale }
 
-  TTestEscalaLinear = class(TTestCase)
+  TTestLinearScale = class(TTestCase)
   private
     FEscala:TLinearScaleProcessor;
     //: configura as duas faixas de uma vez
@@ -69,9 +69,9 @@ type
     procedure AnEngineeringRangeWithNoSpanDoesNotDivideByZero;
   end;
 
-  { TTestEscalaDoUsuario }
+  { TTestUserScale }
 
-  TTestEscalaDoUsuario = class(TTestCase)
+  TTestUserScale = class(TTestCase)
   private
     FEscala:TUserScale;
     FChamadasDeIda, FChamadasDeVolta:LongInt;
@@ -91,19 +91,19 @@ type
 
 implementation
 
-{ TTestEscalaLinear }
+{ TTestLinearScale }
 
-procedure TTestEscalaLinear.SetUp;
+procedure TTestLinearScale.SetUp;
 begin
   FEscala:=TLinearScaleProcessor.Create(nil);
 end;
 
-procedure TTestEscalaLinear.TearDown;
+procedure TTestLinearScale.TearDown;
 begin
   FreeAndNil(FEscala);
 end;
 
-procedure TTestEscalaLinear.Ranges(aPlcMin, aPlcMax, aSysMin, aSysMax:Double);
+procedure TTestLinearScale.Ranges(aPlcMin, aPlcMax, aSysMin, aSysMax:Double);
 begin
   FEscala.PLCMin:=aPlcMin;
   FEscala.PLCMax:=aPlcMax;
@@ -111,7 +111,7 @@ begin
   FEscala.SysMax:=aSysMax;
 end;
 
-procedure TTestEscalaLinear.FactoryDefaults;
+procedure TTestLinearScale.FactoryDefaults;
 begin
   //a faixa de fabrica e' a de um conversor de 15 bits para 0 a 100 por cento
   AssertEquals('device minimum', 0,     FEscala.PLCMin, 0);
@@ -120,18 +120,18 @@ begin
   AssertEquals('engineering maximum',  100,   FEscala.SysMax, 0);
 end;
 
-procedure TTestEscalaLinear.TheEndsOfTheRangeMatchTheEndsOfTheScale;
+procedure TTestLinearScale.TheEndsOfTheRangeMatchTheEndsOfTheScale;
 begin
   AssertEquals('bottom of the scale',  0,   FEscala.SetInGetOut(nil, 0),     0.0001);
   AssertEquals('top of the scale',   100, FEscala.SetInGetOut(nil, 32000), 0.0001);
 end;
 
-procedure TTestEscalaLinear.TheMiddleOfTheRangeGivesHalfTheScale;
+procedure TTestLinearScale.TheMiddleOfTheRangeGivesHalfTheScale;
 begin
   AssertEquals('middle of the range', 50, FEscala.SetInGetOut(nil, 16000), 0.0001);
 end;
 
-procedure TTestEscalaLinear.ARangeWithAnOffsetFromFourToTwenty;
+procedure TTestLinearScale.ARangeWithAnOffsetFromFourToTwenty;
 begin
   //a faixa classica de corrente: 4 mA e' zero por cento, 20 mA e' cem
   Ranges(4, 20, 0, 100);
@@ -141,7 +141,7 @@ begin
   AssertEquals('twenty milliamps',   100, FEscala.SetInGetOut(nil, 20), 0.0001);
 end;
 
-procedure TTestEscalaLinear.AnInvertedDeviceRange;
+procedure TTestLinearScale.AnInvertedDeviceRange;
 begin
   //ha' equipamento que entrega a faixa ao contrario
   Ranges(32000, 0, 0, 100);
@@ -150,7 +150,7 @@ begin
   AssertEquals('the minimum is one hundred',                 100, FEscala.SetInGetOut(nil, 0),     0.0001);
 end;
 
-procedure TTestEscalaLinear.AValueOutsideTheRangeIsExtrapolated;
+procedure TTestLinearScale.AValueOutsideTheRangeIsExtrapolated;
 begin
   //a escala nao corta o valor na faixa: ela prolonga a reta. Quem precisar de
   //corte usa os limites do tag
@@ -158,7 +158,7 @@ begin
   AssertEquals('below the bottom', -50, FEscala.SetInGetOut(nil, -16000), 0.0001);
 end;
 
-procedure TTestEscalaLinear.TheWayBackUndoesTheWayThere;
+procedure TTestLinearScale.TheWayBackUndoesTheWayThere;
 begin
   Ranges(4, 20, -40, 120);
 
@@ -166,13 +166,13 @@ begin
   AssertEquals('round trip at 13', 13, FEscala.SetOutGetIn(nil, FEscala.SetInGetOut(nil, 13)), 0.0001);
 end;
 
-procedure TTestEscalaLinear.TheWayBackUndoesTheWayThereOnAnInvertedRange;
+procedure TTestLinearScale.TheWayBackUndoesTheWayThereOnAnInvertedRange;
 begin
   Ranges(32000, 0, 0, 100);
   AssertEquals('round trip', 12345, FEscala.SetOutGetIn(nil, FEscala.SetInGetOut(nil, 12345)), 0.0001);
 end;
 
-procedure TTestEscalaLinear.ADeviceRangeWithNoSpanDoesNotDivideByZero;
+procedure TTestLinearScale.ADeviceRangeWithNoSpanDoesNotDivideByZero;
 begin
   //faixa mal configurada nao pode derrubar a leitura
   Ranges(100, 100, 0, 100);
@@ -180,16 +180,16 @@ begin
   AssertEquals('on the point itself', 0, FEscala.SetInGetOut(nil, 100), 0.0001);
 end;
 
-procedure TTestEscalaLinear.AnEngineeringRangeWithNoSpanDoesNotDivideByZero;
+procedure TTestLinearScale.AnEngineeringRangeWithNoSpanDoesNotDivideByZero;
 begin
   Ranges(0, 32000, 50, 50);
 
   AssertEquals('on the point itself', 0, FEscala.SetOutGetIn(nil, 50), 0.0001);
 end;
 
-{ TTestEscalaDoUsuario }
+{ TTestUserScale }
 
-procedure TTestEscalaDoUsuario.SetUp;
+procedure TTestUserScale.SetUp;
 begin
   FEscala:=TUserScale.Create(nil);
   FChamadasDeIda:=0;
@@ -198,12 +198,12 @@ begin
   FResultadoQueChegou:=0;
 end;
 
-procedure TTestEscalaDoUsuario.TearDown;
+procedure TTestUserScale.TearDown;
 begin
   FreeAndNil(FEscala);
 end;
 
-procedure TTestEscalaDoUsuario.FromTheDeviceToTheUser(Sender:TObject; const Entrada:Double; var Saida:Double);
+procedure TTestUserScale.FromTheDeviceToTheUser(Sender:TObject; const Entrada:Double; var Saida:Double);
 begin
   inc(FChamadasDeIda);
   FEntradaVista:=Entrada;
@@ -211,19 +211,19 @@ begin
   Saida:=Entrada*10;
 end;
 
-procedure TTestEscalaDoUsuario.FromTheUserToTheDevice(Sender:TObject; const Entrada:Double; var Saida:Double);
+procedure TTestUserScale.FromTheUserToTheDevice(Sender:TObject; const Entrada:Double; var Saida:Double);
 begin
   inc(FChamadasDeVolta);
   Saida:=Entrada/10;
 end;
 
-procedure TTestEscalaDoUsuario.WithNoHookTheValueGoesThroughUntouched;
+procedure TTestUserScale.WithNoHookTheValueGoesThroughUntouched;
 begin
   AssertEquals('there',   7, FEscala.SetInGetOut(nil, 7), 0);
   AssertEquals('back', 7, FEscala.SetOutGetIn(nil, 7), 0);
 end;
 
-procedure TTestEscalaDoUsuario.TheHookOnTheWayThereIsCalled;
+procedure TTestUserScale.TheHookOnTheWayThereIsCalled;
 begin
   FEscala.OnPLCToUser:=@FromTheDeviceToTheUser;
 
@@ -232,7 +232,7 @@ begin
   AssertEquals('without touching the other one',    0, FChamadasDeVolta);
 end;
 
-procedure TTestEscalaDoUsuario.TheHookOnTheWayBackIsCalled;
+procedure TTestUserScale.TheHookOnTheWayBackIsCalled;
 begin
   FEscala.OnUserToPLC:=@FromTheUserToTheDevice;
 
@@ -241,7 +241,7 @@ begin
   AssertEquals('without touching the other one',    0, FChamadasDeIda);
 end;
 
-procedure TTestEscalaDoUsuario.TheHookGetsTheInputValue;
+procedure TTestUserScale.TheHookGetsTheInputValue;
 begin
   FEscala.OnPLCToUser:=@FromTheDeviceToTheUser;
   FEscala.SetInGetOut(nil, 42);
@@ -249,7 +249,7 @@ begin
   AssertEquals('the hook saw the input', 42, FEntradaVista, 0);
 end;
 
-procedure TTestEscalaDoUsuario.TheResultReachesTheHookAlreadyHoldingTheInputValue;
+procedure TTestUserScale.TheResultReachesTheHookAlreadyHoldingTheInputValue;
 begin
   //um gancho que nao mexe na saida deixa o valor passar: e' o que garante isso
   FEscala.OnPLCToUser:=@FromTheDeviceToTheUser;
@@ -259,7 +259,7 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestEscalaLinear);
-  RegisterTest(TTestEscalaDoUsuario);
+  RegisterTest(TTestLinearScale);
+  RegisterTest(TTestUserScale);
 
 end.

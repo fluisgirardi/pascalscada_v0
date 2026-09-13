@@ -44,9 +44,9 @@ uses
 
 type
 
-  { TMelsecRespostaProbe }
+  { TMelsecAnswerProbe }
 
-  TMelsecRespostaProbe = class(TMelsecTCPDriver)
+  TMelsecAnswerProbe = class(TMelsecTCPDriver)
   public
     procedure NewPLC(aEstacao:LongInt);
     procedure RegisterD(aEndereco, aTamanho:LongInt);
@@ -56,11 +56,11 @@ type
     function  ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
   end;
 
-  { TTestMelsecResposta }
+  { TTestMelsecAnswer }
 
-  TTestMelsecResposta = class(TTestCase)
+  TTestMelsecAnswer = class(TTestCase)
   private
-    FDrv:TMelsecRespostaProbe;
+    FDrv:TMelsecAnswerProbe;
     //: quadro de pedido de leitura, como EncodePkg o monta
     function  ReadRequest(aSubComando, aDispositivo, aEndereco, aQuantidade:LongInt):BYTES;
     //: quadro de resposta com codigo de termino zero e os dados dados
@@ -92,9 +92,9 @@ type
 
 implementation
 
-{ TMelsecRespostaProbe }
+{ TMelsecAnswerProbe }
 
-procedure TMelsecRespostaProbe.NewPLC(aEstacao:LongInt);
+procedure TMelsecAnswerProbe.NewPLC(aEstacao:LongInt);
 var
   plc:LongInt;
 
@@ -121,27 +121,27 @@ begin
   PMelsecPLC[plc].Registers_SD:=NovoGerenciador;
 end;
 
-procedure TMelsecRespostaProbe.RegisterD(aEndereco, aTamanho:LongInt);
+procedure TMelsecAnswerProbe.RegisterD(aEndereco, aTamanho:LongInt);
 begin
   PMelsecPLC[0].Registers_D.AddAddress(aEndereco, aTamanho, 1, 1000);
 end;
 
-procedure TMelsecRespostaProbe.RegisterM(aEndereco, aTamanho:LongInt);
+procedure TMelsecAnswerProbe.RegisterM(aEndereco, aTamanho:LongInt);
 begin
   PMelsecPLC[0].OutPuts_M.AddAddress(aEndereco, aTamanho, 1, 1000);
 end;
 
-function TMelsecRespostaProbe.DecodeIt(const aPedido, aResposta:BYTES; out aValores:TArrayOfDouble):TProtocolIOResult;
+function TMelsecAnswerProbe.DecodeIt(const aPedido, aResposta:BYTES; out aValores:TArrayOfDouble):TProtocolIOResult;
 begin
   Result:=DecodePkg(IOPacketFor(aPedido, aResposta), aValores);
 end;
 
-function TMelsecRespostaProbe.DecodePacket(aPkg:TIOPacket; out aValores:TArrayOfDouble):TProtocolIOResult;
+function TMelsecAnswerProbe.DecodePacket(aPkg:TIOPacket; out aValores:TArrayOfDouble):TProtocolIOResult;
 begin
   Result:=DecodePkg(aPkg, aValores);
 end;
 
-function TMelsecRespostaProbe.ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
+function TMelsecAnswerProbe.ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
 var
   leitura:TScanReadRec;
 begin
@@ -155,29 +155,29 @@ begin
   Result:=leitura.Values;
 end;
 
-{ TTestMelsecResposta }
+{ TTestMelsecAnswer }
 
 //DecodePkg escreve sempre em PMelsecPLC[0], entao aqui nao da' para separar
 //os testes por estacao como no S7: e' um so' CLP, e cada teste usa a sua
 //faixa de enderecos.
 var
-  DriverCompartilhado:TMelsecRespostaProbe = nil;
+  DriverCompartilhado:TMelsecAnswerProbe = nil;
 
-procedure TTestMelsecResposta.SetUp;
+procedure TTestMelsecAnswer.SetUp;
 begin
   if DriverCompartilhado=nil then begin
-    DriverCompartilhado:=TMelsecRespostaProbe.Create(nil);
+    DriverCompartilhado:=TMelsecAnswerProbe.Create(nil);
     DriverCompartilhado.NewPLC(1);
   end;
   FDrv:=DriverCompartilhado;
 end;
 
-procedure TTestMelsecResposta.TearDown;
+procedure TTestMelsecAnswer.TearDown;
 begin
   FDrv:=nil;
 end;
 
-function TTestMelsecResposta.ReadRequest(aSubComando, aDispositivo, aEndereco, aQuantidade:LongInt):BYTES;
+function TTestMelsecAnswer.ReadRequest(aSubComando, aDispositivo, aEndereco, aQuantidade:LongInt):BYTES;
 begin
   Result:=nil;
   SetLength(Result, 22);
@@ -205,7 +205,7 @@ begin
   Result[21]:=$00;
 end;
 
-function TTestMelsecResposta.AnswerOf(const aDados:BYTES; aCodigoDeTermino:LongInt=0):BYTES;
+function TTestMelsecAnswer.AnswerOf(const aDados:BYTES; aCodigoDeTermino:LongInt=0):BYTES;
 var
   c:LongInt;
 begin
@@ -226,7 +226,7 @@ begin
     Result[11+c]:=aDados[c];
 end;
 
-procedure TTestMelsecResposta.ARegisterReadReachesTheManager;
+procedure TTestMelsecAnswer.ARegisterReadReachesTheManager;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -245,7 +245,7 @@ begin
   AssertEquals('D101', $0C0D, valores[1], 0);
 end;
 
-procedure TTestMelsecResposta.ARegisterComesLowByteFirst;
+procedure TTestMelsecAnswer.ARegisterComesLowByteFirst;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -260,7 +260,7 @@ begin
   AssertEquals('word assembled the other way round', $1234, valores[0], 0);
 end;
 
-procedure TTestMelsecResposta.TheAddressMovesOnWithEveryRegister;
+procedure TTestMelsecAnswer.TheAddressMovesOnWithEveryRegister;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -277,7 +277,7 @@ begin
   AssertEquals('D402', 3, valores[2], 0);
 end;
 
-procedure TTestMelsecResposta.ABitReadReachesTheManager;
+procedure TTestMelsecAnswer.ABitReadReachesTheManager;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -296,7 +296,7 @@ begin
   AssertEquals('M3', 1, valores[3], 0);
 end;
 
-procedure TTestMelsecResposta.AWriteFailureBecomesAProtocolResult;
+procedure TTestMelsecAnswer.AWriteFailureBecomesAProtocolResult;
 var
   valores:TArrayOfDouble;
   pkg:TIOPacket;
@@ -309,7 +309,7 @@ begin
                Ord(FDrv.DecodePacket(pkg, valores)));
 end;
 
-procedure TTestMelsecResposta.ADifferentChannelInTheAnswerIsRefused;
+procedure TTestMelsecAnswer.ADifferentChannelInTheAnswerIsRefused;
 var
   valores:TArrayOfDouble;
   resp:BYTES;
@@ -322,7 +322,7 @@ begin
                Ord(FDrv.DecodeIt(ReadRequest(0, $A8, 100, 2), resp, valores)));
 end;
 
-procedure TTestMelsecResposta.ATimeoutOnTheReadBecomesATimeout;
+procedure TTestMelsecAnswer.ATimeoutOnTheReadBecomesATimeout;
 var
   valores:TArrayOfDouble;
   pkg:TIOPacket;
@@ -338,7 +338,7 @@ begin
                Ord(FDrv.DecodePacket(pkg, valores)));
 end;
 
-procedure TTestMelsecResposta.ANonZeroEndCodeIsAnError;
+procedure TTestMelsecAnswer.ANonZeroEndCodeIsAnError;
 var
   valores:TArrayOfDouble;
 begin
@@ -349,7 +349,7 @@ begin
                               AnswerOf(BytesOf(''), $0055), valores) <> ioOk);
 end;
 
-procedure TTestMelsecResposta.TheValuesReturnedHaveOnePerPoint;
+procedure TTestMelsecAnswer.TheValuesReturnedHaveOnePerPoint;
 var
   valores:TArrayOfDouble;
 begin
@@ -362,7 +362,7 @@ begin
   AssertEquals('three points asked for, three values', 3, Length(valores));
 end;
 
-procedure TTestMelsecResposta.AnAnswerShorterThanTheHeaderIsRefused;
+procedure TTestMelsecAnswer.AnAnswerShorterThanTheHeaderIsRefused;
 var
   valores:TArrayOfDouble;
   resp:BYTES;
@@ -379,7 +379,7 @@ begin
   end;
 end;
 
-procedure TTestMelsecResposta.AnAnswerWithAHeaderButNoDataIsRefused;
+procedure TTestMelsecAnswer.AnAnswerWithAHeaderButNoDataIsRefused;
 var
   valores:TArrayOfDouble;
   n:LongInt;
@@ -393,7 +393,7 @@ begin
                                       AnswerOf(Copy(BytesOf('0B 0A 0D 0C'), 0, n)), valores)));
 end;
 
-procedure TTestMelsecResposta.ARequestBelowTheMinimumIsNotDecoded;
+procedure TTestMelsecAnswer.ARequestBelowTheMinimumIsNotDecoded;
 var
   valores:TArrayOfDouble;
   pedido:BYTES;
@@ -408,7 +408,7 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestMelsecResposta);
+  RegisterTest(TTestMelsecAnswer);
 
 finalization
   FreeAndNil(DriverCompartilhado);

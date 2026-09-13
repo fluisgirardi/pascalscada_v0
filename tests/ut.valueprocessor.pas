@@ -39,18 +39,18 @@ uses
 
 type
 
-  { TEscalaQueDobra }
+  { TScaleThatDoubles }
 
   //: escala de teste: dobra na ida, divide na volta
-  TEscalaQueDobra = class(TScaleProcessor)
+  TScaleThatDoubles = class(TScaleProcessor)
   public
     function SetInGetOut(Sender:TComponent; aInput:Double):Double; override;
     function SetOutGetIn(Sender:TComponent; aOutput:Double):Double; override;
   end;
 
-  { TEscalaQueSoma10 }
+  { TScaleThatAdds10 }
 
-  TEscalaQueSoma10 = class(TScaleProcessor)
+  TScaleThatAdds10 = class(TScaleProcessor)
   public
     function SetInGetOut(Sender:TComponent; aInput:Double):Double; override;
     function SetOutGetIn(Sender:TComponent; aOutput:Double):Double; override;
@@ -61,8 +61,8 @@ type
   TTestValueProcessor = class(TTestCase)
   private
     FFila:TScalesQueue;
-    FDobra:TEscalaQueDobra;
-    FSoma:TEscalaQueSoma10;
+    FDobra:TScaleThatDoubles;
+    FSoma:TScaleThatAdds10;
     function  NewItem(aEscala:TScaleProcessor):TScaleQueueItem;
   protected
     procedure SetUp; override;
@@ -84,26 +84,26 @@ type
 
 implementation
 
-{ TEscalaQueDobra }
+{ TScaleThatDoubles }
 
-function TEscalaQueDobra.SetInGetOut(Sender:TComponent; aInput:Double):Double;
+function TScaleThatDoubles.SetInGetOut(Sender:TComponent; aInput:Double):Double;
 begin
   Result:=aInput*2;
 end;
 
-function TEscalaQueDobra.SetOutGetIn(Sender:TComponent; aOutput:Double):Double;
+function TScaleThatDoubles.SetOutGetIn(Sender:TComponent; aOutput:Double):Double;
 begin
   Result:=aOutput/2;
 end;
 
-{ TEscalaQueSoma10 }
+{ TScaleThatAdds10 }
 
-function TEscalaQueSoma10.SetInGetOut(Sender:TComponent; aInput:Double):Double;
+function TScaleThatAdds10.SetInGetOut(Sender:TComponent; aInput:Double):Double;
 begin
   Result:=aInput+10;
 end;
 
-function TEscalaQueSoma10.SetOutGetIn(Sender:TComponent; aOutput:Double):Double;
+function TScaleThatAdds10.SetOutGetIn(Sender:TComponent; aOutput:Double):Double;
 begin
   Result:=aOutput-10;
 end;
@@ -113,8 +113,8 @@ end;
 procedure TTestValueProcessor.SetUp;
 begin
   FFila :=TScalesQueue.Create(nil);
-  FDobra:=TEscalaQueDobra.Create(nil);
-  FSoma :=TEscalaQueSoma10.Create(nil);
+  FDobra:=TScaleThatDoubles.Create(nil);
+  FSoma :=TScaleThatAdds10.Create(nil);
 end;
 
 procedure TTestValueProcessor.TearDown;
