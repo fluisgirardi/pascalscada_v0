@@ -151,6 +151,7 @@ procedure TNumericExprTag.CalculateValue;
 var
   FParser: TFPExpressionParser;
   exprValue: TExprFloat;
+  resultado: TFPExpressionResult;
 begin
   if [csLoading,csReading]*ComponentState=[] then begin
     FParser := TFpExpressionParser.Create(self);
@@ -192,7 +193,45 @@ begin
       FLastEvalutionError:='OK';
       try
         FParser.Expression:=FExpr;
-        exprValue:=FParser.Evaluate.ResFloat;
+        resultado:=FParser.Evaluate;
+
+        //TFPExpressionResult e' um registro variante: ResInteger, ResFloat e os
+        //demais dividem o mesmo espaco. Ler ResFloat de um resultado que nao e'
+        //float devolve os bits do outro campo lidos como ponto flutuante - uma
+        //expressao como 2+3 saia valendo 2.47E-323, que e' o inteiro 5 relido
+        //assim. So' nao aparecia com variavel na expressao porque as variaveis
+        //sao declaradas como float, e isso arrasta o resultado inteiro para
+        //float. O tipo do resultado tem que ser olhado antes de ler.
+        //TFPExpressionResult is a variant record: ResInteger, ResFloat and the
+        //others share the same storage. Reading ResFloat from a result that is
+        //not a float gives back the other field's bits read as a floating point
+        //number - an expression like 2+3 came out as 2.47E-323, which is the
+        //integer 5 read that way. It only stayed hidden when the expression had
+        //variables, because those are declared as floats and that pulls an
+        //integer result up to float. The result type has to be looked at first.
+        case resultado.ResultType of
+          rtFloat:
+            exprValue:=resultado.ResFloat;
+          rtInteger:
+            exprValue:=resultado.ResInteger;
+          rtDateTime:
+            exprValue:=resultado.ResDateTime;
+          //uma comparacao escrita direto, como A>5, vale um ou zero
+          //a comparison written directly, like A>5, is worth one or zero
+          rtBoolean:
+            if resultado.ResBoolean then
+              exprValue:=1
+            else
+              exprValue:=0;
+          {$IF FPC_FULLVERSION>=030200}
+          rtCurrency:
+            exprValue:=resultado.ResCurrency;
+          {$IFEND}
+          else
+            //texto nao vira valor de tag
+            //text does not become a tag value
+            raise Exception.Create(SinvalidType);
+        end;
         if exprValue<>PValueRaw then begin
           PValueRaw:=exprValue;
           PClockMonotonicTimeStamp:=GetTickCount64;

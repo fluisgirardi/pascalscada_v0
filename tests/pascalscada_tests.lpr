@@ -43,7 +43,8 @@ uses
   ut.crossthreads,
   ut.serialport,
   ut.plcblock,
-  ut.plctagnumber;
+  ut.plctagnumber,
+  ut.numexprtag;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
