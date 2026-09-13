@@ -72,12 +72,7 @@ type
 
 implementation
 
-uses ControlSecurityManager, hsstrings, StrUtils, StdCtrls
-     {$IFDEF FPC}
-     , TextStrings
-     {$ELSE}
-     , hmitextstrings
-     {$ENDIF};
+uses ControlSecurityManager, hsstrings, StrUtils, StdCtrls, TextStrings;
 
 constructor TWinCCUserManagement.Create(AOwner: TComponent);
 begin
