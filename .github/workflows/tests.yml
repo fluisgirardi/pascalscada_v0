@@ -3,7 +3,7 @@ name: tests
 on:
   push:
     branches: [master]
-    paths-ignore: ["docs/**", "examples/**", "artwork/**", "**.md"]
+    paths-ignore: ["docs/**", "artwork/**", "**.md"]
   pull_request:
   workflow_dispatch:
 
@@ -101,6 +101,64 @@ jobs:
         with:
           name: results-${{ matrix.name }}
           path: tests/results-*.xml
+
+  # ---------------------------------------------------------------
+  # Exemplos: compila todos os projetos de examples/ com a biblioteca
+  # recem construida. Nao roda nenhum deles - quase todos sao
+  # aplicacoes graficas que abrem uma janela e ficam la esperando.
+  # O que este job pega e o exemplo que ficou para tras quando a
+  # biblioteca mudou de nome de classe, de pacote ou de assinatura.
+  # ---------------------------------------------------------------
+  examples:
+    name: examples-${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux64
+            os: ubuntu-latest
+            widgetset: gtk2
+            targetos: linux
+            laz-url: "https://sourceforge.net/projects/lazarus/files/Lazarus Linux amd64 DEB/Lazarus 4.2/lazarus-project_4.2.0-0_amd64.deb"
+            fpc-url: |
+              https://sourceforge.net/projects/lazarus/files/Lazarus Linux amd64 DEB/Lazarus 4.2/fpc-laz_3.2.2-210709_amd64.deb
+              https://sourceforge.net/projects/lazarus/files/Lazarus Linux amd64 DEB/Lazarus 4.2/fpc-src_3.2.2-210709_amd64.deb
+
+          - name: win64
+            os: windows-latest
+            widgetset: win32
+            targetos: win64
+            laz-url: "https://sourceforge.net/projects/lazarus/files/Lazarus Windows 64 bits/Lazarus 4.2/lazarus-4.2-fpc-3.2.2-win64.exe"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bibliotecas de desenvolvimento (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgtk2.0-dev
+
+      - name: Instalar Lazarus / FPC
+        uses: ollydev/setup-lazarus@v4
+        with:
+          laz-url: ${{ matrix.laz-url }}
+          fpc-url: ${{ matrix.fpc-url }}
+
+      - name: BGRABitmap (dependencia de pascalscada_hmi)
+        run: |
+          git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
+          lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+
+      - name: Compilar os exemplos
+        # O varredor acha o diretorio do Lazarus sozinho e registra os pacotes
+        # que vem com ele (TAChart, RTTIControls, SQLdb). Os de terceiros
+        # que faltarem (Zeos, industrial) saem como pulados, nao como falha.
+        run: tests/build_examples.sh ${{ matrix.widgetset }} ${{ matrix.targetos }}
 
   # ---------------------------------------------------------------
   # Linux 32: nao existe runner i386, mas um container i386 roda
