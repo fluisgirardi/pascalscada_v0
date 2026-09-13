@@ -38,9 +38,9 @@ type
   //: Thread that signals the event after a while.
   {$ENDIF}
 
-  { TSinalizador }
+  { TSignaller }
 
-  TSinalizador = class(TThread)
+  TSignaller = class(TThread)
   private
     FEvento:TCrossEvent;
     FEspera:Cardinal;
@@ -83,9 +83,9 @@ type
 
 implementation
 
-{ TSinalizador }
+{ TSignaller }
 
-constructor TSinalizador.Create(aEvento:TCrossEvent; aEsperaMs:Cardinal);
+constructor TSignaller.Create(aEvento:TCrossEvent; aEsperaMs:Cardinal);
 begin
   FEvento:=aEvento;
   FEspera:=aEsperaMs;
@@ -93,7 +93,7 @@ begin
   inherited Create(false);
 end;
 
-procedure TSinalizador.Execute;
+procedure TSignaller.Execute;
 begin
   Sleep(FEspera);
   FEvento.SetEvent;
@@ -203,13 +203,13 @@ end;
 
 procedure TTestCrossEvent.ASignalFromAnotherThreadWakesTheWait;
 var
-  sinalizador:TSinalizador;
+  sinalizador:TSignaller;
   resultado:TWaitResult;
 begin
   //o uso de verdade: uma thread dorme no evento ate outra ter trabalho pra ela
   FEvento:=TCrossEvent.Create(true, false);
 
-  sinalizador:=TSinalizador.Create(FEvento, 50);
+  sinalizador:=TSignaller.Create(FEvento, 50);
   try
     resultado:=FEvento.WaitFor(10000);
     AssertEquals('the wait must be woken up', 'wrSignaled', NameOf(resultado));

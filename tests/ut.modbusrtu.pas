@@ -104,9 +104,9 @@ type
   }
   {$ENDIF}
 
-{ TTestModBusRTUComPorta }
+{ TTestModBusRTUOverAPort }
 
-  TTestModBusRTUComPorta = class(TTestCase)
+  TTestModBusRTUOverAPort = class(TTestCase)
   private
     FPort:TFakeCommPort;
     FDrv:TModBusRTUProbe;
@@ -347,7 +347,7 @@ begin
   AssertEquals('leftover of an exception', 2, FDrv.Remaining(BytesOf('01 83 02')));
 end;
 
-{ TTestModBusRTUComPorta }
+{ TTestModBusRTUOverAPort }
 
 procedure TTestModBusRTU.AnAnswerBelowTheMinimumIsRefused;
 var
@@ -395,7 +395,7 @@ begin
   AssertTrue('the number of values must be plausible', Length(vals)<1024);
 end;
 
-procedure TTestModBusRTUComPorta.SetUp;
+procedure TTestModBusRTUOverAPort.SetUp;
 begin
   FPort:=TFakeCommPort.Create(nil);
   FPort.Active:=true;
@@ -404,13 +404,13 @@ begin
   FDrv.CommunicationPort:=FPort;
 end;
 
-procedure TTestModBusRTUComPorta.TearDown;
+procedure TTestModBusRTUOverAPort.TearDown;
 begin
   FreeAndNil(FDrv);
   FreeAndNil(FPort);
 end;
 
-procedure TTestModBusRTUComPorta.AReadGoesOutAndBackThroughThePort;
+procedure TTestModBusRTUOverAPort.AReadGoesOutAndBackThroughThePort;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -429,7 +429,7 @@ begin
   AssertEquals('answer consumed whole', 0, FPort.PendingResponses);
 end;
 
-procedure TTestModBusRTUComPorta.AReadIsDoneInTwoSteps;
+procedure TTestModBusRTUOverAPort.AReadIsDoneInTwoSteps;
 var
   vals:TArrayOfDouble;
 begin
@@ -440,7 +440,7 @@ begin
   AssertEquals('writes to the port', 1, FPort.WriteCount);
 end;
 
-procedure TTestModBusRTUComPorta.AWriteGoesOutAndBackThroughThePort;
+procedure TTestModBusRTUOverAPort.AWriteGoesOutAndBackThroughThePort;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -459,7 +459,7 @@ begin
                    FPort.LastWrittenFrame);
 end;
 
-procedure TTestModBusRTUComPorta.WithNoAnswerTheResultIsTimeout;
+procedure TTestModBusRTUOverAPort.WithNoAnswerTheResultIsTimeout;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -469,7 +469,7 @@ begin
   AssertEquals('timeout', Ord(ioTimeOut), Ord(res));
 end;
 
-procedure TTestModBusRTUComPorta.WithNoPortTheResultIsNullDriver;
+procedure TTestModBusRTUOverAPort.WithNoPortTheResultIsNullDriver;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -486,6 +486,6 @@ end;
 
 initialization
   RegisterTest(TTestModBusRTU);
-  RegisterTest(TTestModBusRTUComPorta);
+  RegisterTest(TTestModBusRTUOverAPort);
 
 end.

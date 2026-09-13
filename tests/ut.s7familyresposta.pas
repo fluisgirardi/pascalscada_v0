@@ -45,9 +45,9 @@ uses
 
 type
 
-  { TS7RespostaProbe }
+  { TS7AnswerProbe }
 
-  TS7RespostaProbe = class(TSiemensProtocolFamily)
+  TS7AnswerProbe = class(TSiemensProtocolFamily)
   public
     function  NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
     procedure PrepareDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
@@ -55,23 +55,23 @@ type
     function  ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
   end;
 
-  { TS7DescarteProbe }
+  { TS7DisposalProbe }
 
   //conta as remocoes que o destrutor faz, para provar que ele passa por todos
   //os CLPs e nao so por parte deles
   //a contagem fica fora da instancia porque quem conta e' o destrutor: quando
   //ha o que ler, o objeto ja nao existe
-  TS7DescarteProbe = class(TSiemensProtocolFamily)
+  TS7DisposalProbe = class(TSiemensProtocolFamily)
   public
     function  NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
     procedure DeletePLC(PLCIndex:Integer); override;
   end;
 
-  { TTestS7FamilyResposta }
+  { TTestS7FamilyAnswer }
 
-  TTestS7FamilyResposta = class(TTestCase)
+  TTestS7FamilyAnswer = class(TTestCase)
   private
-    FDrv:TS7RespostaProbe;
+    FDrv:TS7AnswerProbe;
     FPLC:LongInt;
     FEstacao:LongInt;
     function  ListOfOneItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
@@ -97,14 +97,14 @@ var
   DescarteRemovidos:LongInt = 0;
   DescarteIndiceInvalido:Boolean = false;
 
-{ TS7DescarteProbe }
+{ TS7DisposalProbe }
 
-function TS7DescarteProbe.NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
+function TS7DisposalProbe.NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
 begin
   Result:=CreatePLC(aRack, aSlot, aEstacao);
 end;
 
-procedure TS7DescarteProbe.DeletePLC(PLCIndex:Integer);
+procedure TS7DisposalProbe.DeletePLC(PLCIndex:Integer);
 begin
   //DeletePLC ignora indice fora da faixa em silencio: sem esta marca, um
   //destrutor que pedisse indices inexistentes passaria por certo
@@ -115,14 +115,14 @@ begin
   inherited DeletePLC(PLCIndex);
 end;
 
-{ TS7RespostaProbe }
+{ TS7AnswerProbe }
 
-function TS7RespostaProbe.NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
+function TS7AnswerProbe.NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
 begin
   Result:=CreatePLC(aRack, aSlot, aEstacao);
 end;
 
-procedure TS7RespostaProbe.PrepareDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
+procedure TS7AnswerProbe.PrepareDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
 var
   db:LongInt;
 begin
@@ -136,7 +136,7 @@ begin
   FPLCs[aPLC].DBs[db].DBArea.AddAddress(aEndereco, aTamanho, 1, 1000);
 end;
 
-procedure TS7RespostaProbe.DecodeIt(const aResposta:BYTES; const aReqList:TS7ReqList);
+procedure TS7AnswerProbe.DecodeIt(const aResposta:BYTES; const aReqList:TS7ReqList);
 var
   pedido, resposta:BYTES;
   lista:TS7ReqList;
@@ -149,7 +149,7 @@ begin
   UpdateMemoryManager(resposta, pedido, false, lista, valores);
 end;
 
-function TS7RespostaProbe.ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
+function TS7AnswerProbe.ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
 var
   leitura:TScanReadRec;
 begin
@@ -163,20 +163,20 @@ begin
   Result:=leitura.Values;
 end;
 
-{ TTestS7FamilyResposta }
+{ TTestS7FamilyAnswer }
 
 //Criar o driver custa meio segundo (o destrutor espera as threads de
 //varredura). Em vez de um driver por teste, um driver para a classe e um CLP
 //novo por teste: cada um recebe a sua estacao, entao os gerenciadores de
 //memoria de um teste nao enxergam os do outro.
 var
-  DriverCompartilhado:TS7RespostaProbe = nil;
+  DriverCompartilhado:TS7AnswerProbe = nil;
   UltimaEstacao:LongInt = 0;
 
-procedure TTestS7FamilyResposta.SetUp;
+procedure TTestS7FamilyAnswer.SetUp;
 begin
   if DriverCompartilhado=nil then
-    DriverCompartilhado:=TS7RespostaProbe.Create(nil);
+    DriverCompartilhado:=TS7AnswerProbe.Create(nil);
   FDrv:=DriverCompartilhado;
 
   inc(UltimaEstacao);
@@ -185,12 +185,12 @@ begin
   FDrv.PrepareDB(FPLC, 1, 0, 4);
 end;
 
-procedure TTestS7FamilyResposta.TearDown;
+procedure TTestS7FamilyAnswer.TearDown;
 begin
   FDrv:=nil;
 end;
 
-function TTestS7FamilyResposta.ListOfOneItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
+function TTestS7FamilyAnswer.ListOfOneItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
 begin
   SetLength(Result, 1);
   Result[0].PLCIdx      :=FPLC;
@@ -200,7 +200,7 @@ begin
   Result[0].Size        :=aTamanho;
 end;
 
-function TTestS7FamilyResposta.DBRequest(aEndereco, aTamanho:LongInt):TTagRec;
+function TTestS7FamilyAnswer.DBRequest(aEndereco, aTamanho:LongInt):TTagRec;
 begin
   //funcao 4 = area de DB na numeracao interna do driver
   Result:=TagRecFor(FEstacao, 4, 0, aEndereco, aTamanho);
@@ -209,7 +209,7 @@ begin
   Result.File_DB:=1;
 end;
 
-procedure TTestS7FamilyResposta.ADbAnswerReachesTheManager;
+procedure TTestS7FamilyAnswer.ADbAnswerReachesTheManager;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -231,7 +231,7 @@ begin
   AssertEquals('fourth byte',   $0D, valores[3], 0);
 end;
 
-procedure TTestS7FamilyResposta.ASizeInBitsIsConvertedToBytes;
+procedure TTestS7FamilyAnswer.ASizeInBitsIsConvertedToBytes;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -248,7 +248,7 @@ begin
   AssertEquals('and the second one',          $BB, valores[1], 0);
 end;
 
-procedure TTestS7FamilyResposta.ASizeAlreadyInBytesIsNotDivided;
+procedure TTestS7FamilyAnswer.ASizeAlreadyInBytesIsNotDivided;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -265,7 +265,7 @@ begin
   AssertEquals('second byte',  $22, valores[1], 0);
 end;
 
-procedure TTestS7FamilyResposta.APLCErrorBecomesAProtocolResult;
+procedure TTestS7FamilyAnswer.APLCErrorBecomesAProtocolResult;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -281,7 +281,7 @@ begin
   AssertEquals('failure passed on', Ord(ioIllegalMemoryAddress), Ord(res));
 end;
 
-procedure TTestS7FamilyResposta.AnAnswerFromAnotherFunctionIsIgnored;
+procedure TTestS7FamilyAnswer.AnAnswerFromAnotherFunctionIsIgnored;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -297,7 +297,7 @@ begin
   AssertTrue('nothing can have been stored', (Length(valores)=0) or (valores[0]<>$0A));
 end;
 
-procedure TTestS7FamilyResposta.MoreItemsInTheAnswerThanInTheRequestDoNotOverflow;
+procedure TTestS7FamilyAnswer.MoreItemsInTheAnswerThanInTheRequestDoNotOverflow;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -313,9 +313,9 @@ begin
   AssertEquals('the item asked for was processed', $0A, valores[0], 0);
 end;
 
-procedure TTestS7FamilyResposta.TheDestructorRemovesEveryPLC;
+procedure TTestS7FamilyAnswer.TheDestructorRemovesEveryPLC;
 var
-  drv:TS7DescarteProbe;
+  drv:TS7DisposalProbe;
 begin
   //DeletePLC encurta o vetor a cada chamada; um laco que fixasse o limite no
   //inicio deixaria metade dos CLPs (e os gerenciadores de memoria deles) para
@@ -323,7 +323,7 @@ begin
   DescarteRemovidos:=0;
   DescarteIndiceInvalido:=false;
 
-  drv:=TS7DescarteProbe.Create(nil);
+  drv:=TS7DisposalProbe.Create(nil);
   drv.NewPLC(0, 2, 1);
   drv.NewPLC(0, 2, 2);
   drv.NewPLC(0, 2, 3);
@@ -336,7 +336,7 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestS7FamilyResposta);
+  RegisterTest(TTestS7FamilyAnswer);
 
 finalization
   FreeAndNil(DriverCompartilhado);

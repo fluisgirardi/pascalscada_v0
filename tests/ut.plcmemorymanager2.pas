@@ -39,9 +39,9 @@ uses
 
 type
 
-  { TTestGerenciadorDeMemoria }
+  { TTestMemoryManager }
 
-  TTestGerenciadorDeMemoria = class(TTestCase)
+  TTestMemoryManager = class(TTestCase)
   private
     FMM:TPLCMemoryManager;
     function  ValuesOf(const aValores:array of Double):TArrayOfDouble;
@@ -77,19 +77,19 @@ type
 
 implementation
 
-procedure TTestGerenciadorDeMemoria.SetUp;
+procedure TTestMemoryManager.SetUp;
 begin
   FMM:=TPLCMemoryManager.Create;
   FMM.MaxHole:=5;
   FMM.MaxBlockItems:=100;
 end;
 
-procedure TTestGerenciadorDeMemoria.TearDown;
+procedure TTestMemoryManager.TearDown;
 begin
   FreeAndNil(FMM);
 end;
 
-function TTestGerenciadorDeMemoria.ValuesOf(const aValores:array of Double):TArrayOfDouble;
+function TTestMemoryManager.ValuesOf(const aValores:array of Double):TArrayOfDouble;
 var
   i:LongInt;
 begin
@@ -98,7 +98,7 @@ begin
     Result[i]:=aValores[i];
 end;
 
-function TTestGerenciadorDeMemoria.ReadBlock(aInicio, aTamanho:LongInt; out aResultado:TProtocolIOResult):TArrayOfDouble;
+function TTestMemoryManager.ReadBlock(aInicio, aTamanho:LongInt; out aResultado:TProtocolIOResult):TArrayOfDouble;
 var
   carimbo:QWord;
 begin
@@ -108,7 +108,7 @@ begin
   FMM.GetValues(aInicio, aTamanho, 1, Result, aResultado, carimbo);
 end;
 
-procedure TTestGerenciadorDeMemoria.RepeatedAddressesDoNotDuplicate;
+procedure TTestMemoryManager.RepeatedAddressesDoNotDuplicate;
 begin
   //dois tags pedindo a mesma faixa nao podem dobrar o que se le do CLP
   FMM.AddAddress(0, 10, 1, 1000);
@@ -118,7 +118,7 @@ begin
   AssertEquals('and the same size', 10, FMM.Size);
 end;
 
-procedure TTestGerenciadorDeMemoria.RemovingEverythingUndoesTheBlocks;
+procedure TTestMemoryManager.RemovingEverythingUndoesTheBlocks;
 begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.RemoveAddress(0, 10, 1);
@@ -127,7 +127,7 @@ begin
   AssertEquals('size zeroed', 0, FMM.Size);
 end;
 
-procedure TTestGerenciadorDeMemoria.ARemovalInTheMiddleBreaksTheBlockInTwo;
+procedure TTestMemoryManager.ARemovalInTheMiddleBreaksTheBlockInTwo;
 begin
   //tirar o miolo tem que abrir um buraco maior que o limite
   FMM.AddAddress(0, 20, 1, 1000);
@@ -138,7 +138,7 @@ begin
   AssertEquals('start of the second one', 14, FMM.Blocks[1].AddressStart);
 end;
 
-procedure TTestGerenciadorDeMemoria.AHoleTheSizeOfTheLimitStillJoins;
+procedure TTestMemoryManager.AHoleTheSizeOfTheLimitStillJoins;
 begin
   //MaxHole=5: enderecos 0..9 e 15..16 deixam um buraco de exatamente 5
   FMM.AddAddress(0, 10, 1, 1000);
@@ -148,7 +148,7 @@ begin
   AssertEquals('end of the block', 16, FMM.Blocks[0].AddressEnd);
 end;
 
-procedure TTestGerenciadorDeMemoria.AHoleOneOverTheLimitSplits;
+procedure TTestMemoryManager.AHoleOneOverTheLimitSplits;
 begin
   //um a mais e o bloco se parte
   FMM.AddAddress(0, 10, 1, 1000);
@@ -157,7 +157,7 @@ begin
   AssertEquals('a hole of 6 must split', 2, Length(FMM.Blocks));
 end;
 
-procedure TTestGerenciadorDeMemoria.TheSizeCountsTheSwallowedHole;
+procedure TTestMemoryManager.TheSizeCountsTheSwallowedHole;
 begin
   //Size soma a extensao dos blocos, nao os enderecos pedidos: o buraco
   //engolido tambem e' lido do CLP, entao conta como trafego.
@@ -169,7 +169,7 @@ begin
   AssertEquals('12 addresses asked for, 15 read', 15, FMM.Size);
 end;
 
-procedure TTestGerenciadorDeMemoria.RegSizeMultipliesTheNumberOfAddresses;
+procedure TTestMemoryManager.RegSizeMultipliesTheNumberOfAddresses;
 begin
   //RegSize e' quantas palavras minimas do equipamento cada variavel ocupa:
   //2 variaveis de 2 bytes = 4 enderecos, nao 2.
@@ -180,7 +180,7 @@ begin
   AssertEquals('from 0 to 3', 3, FMM.Blocks[0].AddressEnd);
 end;
 
-procedure TTestGerenciadorDeMemoria.ARemovalNeedsTheSameRegSize;
+procedure TTestMemoryManager.ARemovalNeedsTheSameRegSize;
 begin
   //quem removeu com RegSize menor deixa sobra para tras
   FMM.AddAddress(0, 2, 2, 1000);
@@ -192,7 +192,7 @@ begin
   AssertEquals('now it is empty', 0, FMM.Size);
 end;
 
-procedure TTestGerenciadorDeMemoria.StoredValuesAreReadBack;
+procedure TTestMemoryManager.StoredValuesAreReadBack;
 var
   lidos:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -207,7 +207,7 @@ begin
   AssertEquals('last value',   40, lidos[3], 0);
 end;
 
-procedure TTestGerenciadorDeMemoria.AWriteSpanningTwoBlocksFillsBoth;
+procedure TTestMemoryManager.AWriteSpanningTwoBlocksFillsBoth;
 var
   lidos:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -229,7 +229,7 @@ begin
   AssertEquals('second block, last value',   24, lidos[3], 0);
 end;
 
-procedure TTestGerenciadorDeMemoria.AWriteOutsideTheBlocksDoesNotCrash;
+procedure TTestMemoryManager.AWriteOutsideTheBlocksDoesNotCrash;
 var
   lidos:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -244,7 +244,7 @@ begin
   AssertEquals('the existing block stays untouched', 10, lidos[0], 0);
 end;
 
-procedure TTestGerenciadorDeMemoria.APartialReadReportsThroughTheReturn;
+procedure TTestMemoryManager.APartialReadReportsThroughTheReturn;
 var
   lidos:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -267,7 +267,7 @@ begin
   AssertTrue('partial coverage must be flagged', retorno<>0);
 end;
 
-procedure TTestGerenciadorDeMemoria.TheFailureIsKeptInTheBlock;
+procedure TTestMemoryManager.TheFailureIsKeptInTheBlock;
 var
   lidos:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -281,7 +281,7 @@ begin
   AssertEquals('whoever reads later needs to know about the failure', Ord(ioTimeOut), Ord(res));
 end;
 
-procedure TTestGerenciadorDeMemoria.TheSetValuesSizeComesFromTheArrayNotTheParameter;
+procedure TTestMemoryManager.TheSetValuesSizeComesFromTheArrayNotTheParameter;
 var
   lidos:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -296,7 +296,7 @@ begin
   AssertEquals('the fourth value was stored too', 40, lidos[3], 0);
 end;
 
-procedure TTestGerenciadorDeMemoria.ABlockJustCreatedIsBornTimestamped;
+procedure TTestMemoryManager.ABlockJustCreatedIsBornTimestamped;
 begin
   //um bloco recem montado ja vem com o carimbo de atualizado, entao nao pede
   //leitura imediata: a primeira vem depois de um periodo de scan. Vale saber
@@ -308,7 +308,7 @@ begin
   AssertEquals('and it inherits the scan time asked for', 1000, FMM.Blocks[0].ScanTime);
 end;
 
-procedure TTestGerenciadorDeMemoria.TheShortestScanTimeWinsAmongTheBlocks;
+procedure TTestMemoryManager.TheShortestScanTimeWinsAmongTheBlocks;
 begin
   //o driver varre no ritmo do tag mais exigente
   FMM.AddAddress(0, 4, 1, 1000);
@@ -318,6 +318,6 @@ begin
 end;
 
 initialization
-  RegisterTest(TTestGerenciadorDeMemoria);
+  RegisterTest(TTestMemoryManager);
 
 end.

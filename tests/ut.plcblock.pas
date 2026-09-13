@@ -38,9 +38,9 @@ uses
 
 type
 
-  { TBlocoProbe }
+  { TBlockProbe }
 
-  TBlocoProbe = class(TPLCBlock)
+  TBlockProbe = class(TPLCBlock)
   public
     //: entrega valores ao bloco como uma varredura faria
     procedure CameFromTheScan(const aValores:TArrayOfDouble; aDeslocamento:LongInt;
@@ -51,7 +51,7 @@ type
 
   TTestPLCBlock = class(TTestCase)
   private
-    FBloco:TBlocoProbe;
+    FBloco:TBlockProbe;
     FAvisos:LongInt;
     procedure CountNotification(Sender:TObject);
   protected
@@ -88,7 +88,7 @@ type
 
   TTestPLCBlockElement = class(TTestCase)
   private
-    FBloco:TBlocoProbe;
+    FBloco:TBlockProbe;
     FElemento:TPLCBlockElement;
     FAvisos:LongInt;
     procedure CountNotification(Sender:TObject);
@@ -118,9 +118,9 @@ begin
     Result[c]:=aValores[c];
 end;
 
-{ TBlocoProbe }
+{ TBlockProbe }
 
-procedure TBlocoProbe.CameFromTheScan(const aValores:TArrayOfDouble; aDeslocamento:LongInt;
+procedure TBlockProbe.CameFromTheScan(const aValores:TArrayOfDouble; aDeslocamento:LongInt;
                                         aResultado:TProtocolIOResult = ioOk);
 begin
   TagCommandCallBack(0, aValores, GetTickCount64, tcScanRead, aResultado, aDeslocamento);
@@ -130,7 +130,7 @@ end;
 
 procedure TTestPLCBlock.SetUp;
 begin
-  FBloco:=TBlocoProbe.Create(nil);
+  FBloco:=TBlockProbe.Create(nil);
   FBloco.Size:=4;
   FAvisos:=0;
 end;
@@ -292,7 +292,7 @@ end;
 
 procedure TTestPLCBlockElement.SetUp;
 begin
-  FBloco:=TBlocoProbe.Create(nil);
+  FBloco:=TBlockProbe.Create(nil);
   FBloco.Size:=4;
 
   FElemento:=TPLCBlockElement.Create(nil);
@@ -369,9 +369,9 @@ end;
 
 procedure TTestPLCBlockElement.ADestroyedBlockBreaksTheLink;
 var
-  bloco:TBlocoProbe;
+  bloco:TBlockProbe;
 begin
-  bloco:=TBlocoProbe.Create(nil);
+  bloco:=TBlockProbe.Create(nil);
   bloco.Size:=2;
   FElemento.PLCBlock:=bloco;
   FElemento.Index   :=1;

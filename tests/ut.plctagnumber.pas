@@ -38,10 +38,10 @@ uses
 
 type
 
-  { TEscalaQueDobra }
+  { TScaleThatDoubles }
 
   //: escala de teste: o valor do CLP vale o dobro para o usuario
-  TEscalaQueDobra = class(TScaleProcessor)
+  TScaleThatDoubles = class(TScaleProcessor)
   public
     function SetInGetOut(Sender:TComponent; aInput:Double):Double; override;
     function SetOutGetIn(Sender:TComponent; aOutput:Double):Double; override;
@@ -60,7 +60,7 @@ type
   TTestPLCTagNumber = class(TTestCase)
   private
     FTag:TTagProbe;
-    FEscala:TEscalaQueDobra;
+    FEscala:TScaleThatDoubles;
     FAvisos, FFalhasDeEscrita:LongInt;
     procedure CountNotification(Sender:TObject);
     procedure CountWriteFailure(Sender:TObject);
@@ -101,15 +101,15 @@ type
 
 implementation
 
-{ TEscalaQueDobra }
+{ TScaleThatDoubles }
 
-function TEscalaQueDobra.SetInGetOut(Sender:TComponent; aInput:Double):Double;
+function TScaleThatDoubles.SetInGetOut(Sender:TComponent; aInput:Double):Double;
 begin
   //do equipamento para o usuario
   Result:=aInput*2;
 end;
 
-function TEscalaQueDobra.SetOutGetIn(Sender:TComponent; aOutput:Double):Double;
+function TScaleThatDoubles.SetOutGetIn(Sender:TComponent; aOutput:Double):Double;
 begin
   //do usuario para o equipamento
   Result:=aOutput/2;
@@ -131,7 +131,7 @@ end;
 procedure TTestPLCTagNumber.SetUp;
 begin
   FTag:=TTagProbe.Create(nil);
-  FEscala:=TEscalaQueDobra.Create(nil);
+  FEscala:=TScaleThatDoubles.Create(nil);
   FAvisos:=0;
   FFalhasDeEscrita:=0;
 end;

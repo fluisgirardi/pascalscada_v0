@@ -40,9 +40,9 @@ uses
 
 type
 
-  { TEstruturaProbe }
+  { TStructProbe }
 
-  TEstruturaProbe = class(TPLCStruct)
+  TStructProbe = class(TPLCStruct)
   public
     //: poe os bytes na estrutura como uma varredura faria
     procedure CameFromTheScan(const aBytes:array of Byte);
@@ -52,7 +52,7 @@ type
 
   TTestPLCStruct = class(TTestCase)
   private
-    FEstrutura:TEstruturaProbe;
+    FEstrutura:TStructProbe;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -103,7 +103,7 @@ type
 
   TTestPLCStructItem = class(TTestCase)
   private
-    FEstrutura:TEstruturaProbe;
+    FEstrutura:TStructProbe;
     FItem:TPLCStructItem;
     FAvisos:LongInt;
     procedure CountNotification(Sender:TObject);
@@ -149,7 +149,7 @@ type
 
   TTestPLCStructString = class(TTestCase)
   private
-    FEstrutura:TEstruturaProbe;
+    FEstrutura:TStructProbe;
     FTexto:TPLCStructString;
     FAvisos:LongInt;
     procedure CountNotification(Sender:TObject);
@@ -178,9 +178,9 @@ type
 
 implementation
 
-{ TEstruturaProbe }
+{ TStructProbe }
 
-procedure TEstruturaProbe.CameFromTheScan(const aBytes:array of Byte);
+procedure TStructProbe.CameFromTheScan(const aBytes:array of Byte);
 var
   valores:TArrayOfDouble;
   c:LongInt;
@@ -197,7 +197,7 @@ end;
 
 procedure TTestPLCStruct.SetUp;
 begin
-  FEstrutura:=TEstruturaProbe.Create(nil);
+  FEstrutura:=TStructProbe.Create(nil);
   FEstrutura.Size:=16;
 end;
 
@@ -363,7 +363,7 @@ end;
 
 procedure TTestPLCStructItem.SetUp;
 begin
-  FEstrutura:=TEstruturaProbe.Create(nil);
+  FEstrutura:=TStructProbe.Create(nil);
   FEstrutura.Size:=16;
 
   FItem:=TPLCStructItem.Create(nil);
@@ -485,9 +485,9 @@ end;
 
 procedure TTestPLCStructItem.ADestroyedStructureBreaksTheLink;
 var
-  estrutura:TEstruturaProbe;
+  estrutura:TStructProbe;
 begin
-  estrutura:=TEstruturaProbe.Create(nil);
+  estrutura:=TStructProbe.Create(nil);
   estrutura.Size:=8;
   FItem.PLCBlock:=estrutura;
   FItem.TagType :=pttByte;
@@ -511,7 +511,7 @@ end;
 
 procedure TTestPLCStructString.SetUp;
 begin
-  FEstrutura:=TEstruturaProbe.Create(nil);
+  FEstrutura:=TStructProbe.Create(nil);
   FEstrutura.Size:=16;
 
   FTexto:=TPLCStructString.Create(nil);
@@ -625,9 +625,9 @@ end;
 
 procedure TTestPLCStructString.ADestroyedStructureBreaksTheLink;
 var
-  estrutura:TEstruturaProbe;
+  estrutura:TStructProbe;
 begin
-  estrutura:=TEstruturaProbe.Create(nil);
+  estrutura:=TStructProbe.Create(nil);
   estrutura.Size:=16;
 
   FTexto.PLCBlock  :=estrutura;

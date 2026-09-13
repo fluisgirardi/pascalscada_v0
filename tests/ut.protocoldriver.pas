@@ -42,9 +42,9 @@ type
   //: Minimal tag: just what the base requires to accept a tag.
   {$ENDIF}
 
-  { TTagDeTeste }
+  { TSampleTag }
 
-  TTagDeTeste = class(TTag, IScanableTagInterface)
+  TSampleTag = class(TTag, IScanableTagInterface)
   private
     FValido:Boolean;
   public
@@ -65,7 +65,7 @@ type
   {$ELSE}
   //: A tag not implementing the scan interface - the base must refuse it.
   {$ENDIF}
-  TTagSemScan = class(TTag);
+  TTagWithoutScan = class(TTag);
 
   {$IFDEF PORTUGUES}
   //: Driver falso: fecha os metodos abstratos e anota o que foi chamado.
@@ -73,9 +73,9 @@ type
   //: Fake driver: closes the abstract methods and records what was called.
   {$ENDIF}
 
-  { TDriverDeTeste }
+  { TTestDriver }
 
-  TDriverDeTeste = class(TProtocolDriver)
+  TTestDriver = class(TProtocolDriver)
   public
     Leituras, Escritas:LongInt;
     UltimoTagRec:TTagRec;
@@ -99,8 +99,8 @@ type
 
   TTestProtocolDriver = class(TTestCase)
   private
-    FDrv:TDriverDeTeste;
-    FTag:TTagDeTeste;
+    FDrv:TTestDriver;
+    FTag:TSampleTag;
     //anotacoes do callback / callback bookkeeping
     FCallbacks:LongInt;
     FUltimoResultado:TProtocolIOResult;
@@ -147,51 +147,51 @@ type
 
 implementation
 
-{ TTagDeTeste }
+{ TSampleTag }
 
-function TTagDeTeste.RemainingMiliseconds:Int64;
+function TSampleTag.RemainingMiliseconds:Int64;
 begin
   Result:=0;
 end;
 
-function TTagDeTeste.RemainingMilisecondsForNextScan:Int64;
+function TSampleTag.RemainingMilisecondsForNextScan:Int64;
 begin
   Result:=0;
 end;
 
-function TTagDeTeste.IsValidTag:Boolean;
+function TSampleTag.IsValidTag:Boolean;
 begin
   Result:=FValido;
 end;
 
-function TTagDeTeste.IsMyCallBack(Cback:TTagCommandCallBack):Boolean;
+function TSampleTag.IsMyCallBack(Cback:TTagCommandCallBack):Boolean;
 begin
   Result:=false;
 end;
 
-procedure TTagDeTeste.SetTagValidity(TagValidity:Boolean);
+procedure TSampleTag.SetTagValidity(TagValidity:Boolean);
 begin
   FValido:=TagValidity;
 end;
 
-procedure TTagDeTeste.BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
+procedure TSampleTag.BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
 begin
   tr:=TagRecFor(1, 3, 0, 0, 1);
 end;
 
-function TTagDeTeste.GetLastUpdateTimestamp:QWord;
+function TSampleTag.GetLastUpdateTimestamp:QWord;
 begin
   Result:=0;
 end;
 
-function TTagDeTeste.GetUpdateTime:Int64;
+function TSampleTag.GetUpdateTime:Int64;
 begin
   Result:=1000;
 end;
 
-{ TDriverDeTeste }
+{ TTestDriver }
 
-constructor TDriverDeTeste.Create(AOwner:TComponent);
+constructor TTestDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   Leituras:=0;
@@ -200,19 +200,19 @@ begin
   ValorProgramado:=0;
 end;
 
-procedure TDriverDeTeste.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
+procedure TTestDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 begin
   NeedSleep:=1;
 end;
 
-procedure TDriverDeTeste.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
+procedure TTestDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
 begin
   SetLength(values.Values, 1);
   values.Values[0]:=ValorProgramado;
   values.LastQueryResult:=ResultadoProgramado;
 end;
 
-function TDriverDeTeste.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+function TTestDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 begin
   inc(Escritas);
   UltimoTagRec:=tagrec;
@@ -220,7 +220,7 @@ begin
   Result:=ResultadoProgramado;
 end;
 
-function TDriverDeTeste.DoRead(const tagrec:TTagRec; out Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
+function TTestDriver.DoRead(const tagrec:TTagRec; out Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 begin
   inc(Leituras);
   UltimoTagRec:=tagrec;
@@ -229,18 +229,18 @@ begin
   Result:=ResultadoProgramado;
 end;
 
-function TDriverDeTeste.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
+function TTestDriver.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
 begin
   ProtocolTagType:=ptByte;
   Result:=8;
 end;
 
-procedure TDriverDeTeste.RegisterTagIn(aTag:TTag; aValido:Boolean);
+procedure TTestDriver.RegisterTagIn(aTag:TTag; aValido:Boolean);
 begin
   DoAddTag(aTag, aValido);
 end;
 
-procedure TDriverDeTeste.CopyPacket(const aOrigem:TIOPacket; var aDestino:TIOPacket);
+procedure TTestDriver.CopyPacket(const aOrigem:TIOPacket; var aDestino:TIOPacket);
 begin
   CopyIOPacket(aOrigem, aDestino);
 end;
@@ -264,8 +264,8 @@ end;
 
 procedure TTestProtocolDriver.SetUp;
 begin
-  FDrv:=TDriverDeTeste.Create(nil);
-  FTag:=TTagDeTeste.Create(nil);
+  FDrv:=TTestDriver.Create(nil);
+  FTag:=TSampleTag.Create(nil);
   FTag.Name:='TagDeTeste';
   FCallbacks:=0;
   FUltimoResultado:=ioNone;
@@ -286,11 +286,11 @@ end;
 
 procedure TTestProtocolDriver.ATagWithNoScanInterfaceIsRefused;
 var
-  semScan:TTagSemScan;
+  semScan:TTagWithoutScan;
   recusou:Boolean;
 begin
   //um tag que nao pode ser varrido nao tem o que fazer num driver
-  semScan:=TTagSemScan.Create(nil);
+  semScan:=TTagWithoutScan.Create(nil);
   try
     recusou:=false;
     try
@@ -343,11 +343,11 @@ end;
 
 procedure TTestProtocolDriver.RemovingATagOfAnotherDriverDoesNotBreak;
 var
-  outro:TTagDeTeste;
+  outro:TSampleTag;
 begin
   FDrv.AddTag(FTag);
 
-  outro:=TTagDeTeste.Create(nil);
+  outro:=TSampleTag.Create(nil);
   try
     //remover um tag que nunca foi cadastrado e' inocuo, nao erro
     FDrv.RemoveTag(outro);
@@ -478,11 +478,11 @@ end;
 
 procedure TTestProtocolDriver.RegisteringInBulkDoesNotHang;
 var
-  outro:TTagDeTeste;
+  outro:TSampleTag;
 begin
   //StartUpdateMultipleTags pega os mutexes uma vez so; os AddTag de dentro
   //nao podem tentar pegar de novo, senao o driver trava.
-  outro:=TTagDeTeste.Create(nil);
+  outro:=TSampleTag.Create(nil);
   try
     FDrv.StartUpdateMultipleTags;
     try
