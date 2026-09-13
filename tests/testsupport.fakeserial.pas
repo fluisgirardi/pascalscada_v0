@@ -38,7 +38,7 @@ interface
 
 uses
   Classes, SysUtils, commtypes
-  {$IFDEF UNIX}, BaseUnix, Unix{$ENDIF};
+  {$IFDEF UNIX}, BaseUnix, Unix, termio{$ENDIF};
 
 type
 
@@ -87,6 +87,37 @@ type
     {$ENDIF}
     function  NomeDoDispositivo:String;
 
+    {$IFDEF PORTUGUES}
+    {:
+    Os ajustes que o driver de fato aplicou ao dispositivo. O par de
+    pseudo-terminais compartilha um unico termios, entao ler pelo lado mestre
+    devolve o que foi configurado no lado escravo.
+    }
+    {$ELSE}
+    {:
+    The settings the driver actually applied to the device. The pseudo terminal
+    pair shares a single termios, so reading from the master side gives back
+    what was configured on the slave side.
+    }
+    {$ENDIF}
+    {$IFDEF PORTUGUES}
+    //  ATENCAO: um pseudo-terminal nao tem UART. O nucleo aceita a velocidade e
+    //  os bits de parada, mas forca CS8 e desliga a paridade, seja qual for o
+    //  pedido - conferido com um programa que ajusta o termios direto, sem a
+    //  biblioteca no meio. Por isso bits de dados e paridade nao sao medidos
+    //  aqui: o que se veria seria o limite do pseudo-terminal, nao o que o
+    //  driver pediu.
+    {$ELSE}
+    //  WARNING: a pseudo terminal has no UART. The kernel takes the speed and
+    //  the stop bits, but forces CS8 and clears parity whatever is asked -
+    //  checked with a program setting termios directly, with no library in
+    //  between. That is why character size and parity are not measured here:
+    //  what one would see is the pseudo terminal's limit, not what the driver
+    //  asked for.
+    {$ENDIF}
+    function  CodigoDeVelocidade:Cardinal;
+    function  TemDoisBitsDeParada:Boolean;
+
     //: caminho inteiro do lado escravo
     property  CaminhoEscravo:String read FCaminhoEscravo;
   end;
@@ -98,6 +129,12 @@ function posix_openpt(oflag:LongInt):LongInt; cdecl; external 'c' name 'posix_op
 function grantpt(fd:LongInt):LongInt;         cdecl; external 'c' name 'grantpt';
 function unlockpt(fd:LongInt):LongInt;        cdecl; external 'c' name 'unlockpt';
 function ptsname(fd:LongInt):PChar;           cdecl; external 'c' name 'ptsname';
+//nao ha' declaracao pascal desta na RTL, nem em linux nem em freebsd. O
+//parametro e' ponteiro para a estrutura: declara-lo como registro devolve lixo.
+//there is no pascal declaration for this in the RTL, neither on linux nor on
+//freebsd. The parameter is a pointer to the struct: declaring it as a record
+//gives back garbage.
+function cfgetospeed(t:Pointer):Cardinal; cdecl; external 'c' name 'cfgetospeed';
 {$ENDIF}
 
 constructor TSerialDeMentira.Create;
@@ -187,6 +224,29 @@ begin
   SetLength(Result, total);
   {$ENDIF}
 end;
+
+{$IFDEF UNIX}
+function TSerialDeMentira.CodigoDeVelocidade:Cardinal;
+var
+  t:termios;
+begin
+  Result:=0;
+  if (FMestre>=0) and (tcgetattr(FMestre, t)=0) then
+    Result:=cfgetospeed(@t);
+end;
+
+function TSerialDeMentira.TemDoisBitsDeParada:Boolean;
+var
+  t:termios;
+begin
+  Result:=false;
+  if (FMestre>=0) and (tcgetattr(FMestre, t)=0) then
+    Result:=(t.c_cflag and CSTOPB)<>0;
+end;
+{$ELSE}
+function TSerialDeMentira.CodigoDeVelocidade:Cardinal;   begin Result:=0;     end;
+function TSerialDeMentira.TemDoisBitsDeParada:Boolean;   begin Result:=false; end;
+{$ENDIF}
 
 function TSerialDeMentira.Diretorio:String;
 begin

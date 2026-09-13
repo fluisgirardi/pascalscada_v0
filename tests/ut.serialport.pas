@@ -30,7 +30,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry, CommPort, commtypes, serialport,
-  testsupport.bytes, testsupport.fakeserial;
+  testsupport.bytes, testsupport.fakeserial{$IFDEF UNIX}, termio{$ENDIF};
 
 type
 
@@ -89,6 +89,7 @@ type
     procedure IdentificadorEhEstavelParaAMesmaPorta;
   end;
 
+  {$IFDEF UNIX}
   {$IFDEF PORTUGUES}
   {:
   A mesma porta, agora aberta de verdade sobre um par de pseudo-terminais. E'
@@ -119,7 +120,13 @@ type
     procedure OQueODispositivoMandaEhLidoPeloDriver;
     procedure SemRespostaOResultadoEhTimeout;
     procedure FecharAPortaDeixaDeEstarAtiva;
+
+    //a configuracao chegando ao dispositivo / settings reaching the device
+    procedure AVelocidadeEscolhidaChegaNoDispositivo;
+    procedure MudarAVelocidadeMudaODispositivo;
+    procedure OsBitsDeParadaEscolhidosChegamNoDispositivo;
   end;
+  {$ENDIF}
 
 implementation
 
@@ -339,6 +346,7 @@ begin
   AssertTrue('mesma configuracao', primeiro=IdDe('ttyUSB0'));
 end;
 
+{$IFDEF UNIX}
 { TTestSerialPortComDispositivo }
 
 const
@@ -429,6 +437,43 @@ begin
   FPorta.Active:=false;
   AssertFalse('fechou', FPorta.ReallyActive);
 end;
+
+procedure TTestSerialPortComDispositivo.AVelocidadeEscolhidaChegaNoDispositivo;
+begin
+  //guardar o valor na propriedade nao basta: ele tem que virar ajuste do
+  //dispositivo, senao o equipamento conversa numa velocidade e o driver noutra
+  ApontarAPortaParaODispositivo;
+  FPorta.BaudRate:=br9600;
+  FPorta.Active:=true;
+  AssertTrue('abriu', FPorta.ReallyActive);
+
+  AssertEquals('9600 no dispositivo', B9600, FDispositivo.CodigoDeVelocidade);
+end;
+
+procedure TTestSerialPortComDispositivo.MudarAVelocidadeMudaODispositivo;
+begin
+  //duas velocidades diferentes tem que dar dois ajustes diferentes no
+  //dispositivo, senao a escolha nao esta' indo a lugar nenhum
+  ApontarAPortaParaODispositivo;
+  FPorta.BaudRate:=br19200;
+  FPorta.Active:=true;
+  AssertTrue('abriu', FPorta.ReallyActive);
+
+  AssertEquals('19200 no dispositivo', B19200, FDispositivo.CodigoDeVelocidade);
+  AssertTrue  ('e e diferente de 9600', B9600<>FDispositivo.CodigoDeVelocidade);
+end;
+
+procedure TTestSerialPortComDispositivo.OsBitsDeParadaEscolhidosChegamNoDispositivo;
+begin
+  ApontarAPortaParaODispositivo;
+  FPorta.StopBits:=sb2;
+  FPorta.Active:=true;
+  AssertTrue('abriu', FPorta.ReallyActive);
+
+  AssertTrue('dois bits de parada', FDispositivo.TemDoisBitsDeParada);
+end;
+
+{$ENDIF}
 
 initialization
   RegisterTest(TTestSerialPort);
