@@ -49,10 +49,10 @@ type
 
   TS7RespostaProbe = class(TSiemensProtocolFamily)
   public
-    function  CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
-    procedure PrepararDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
-    procedure Decodificar(const aResposta:BYTES; const aReqList:TS7ReqList);
-    function  LerDoGerenciador(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
+    function  NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
+    procedure PrepareDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
+    procedure DecodeIt(const aResposta:BYTES; const aReqList:TS7ReqList);
+    function  ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
   end;
 
   { TS7DescarteProbe }
@@ -63,7 +63,7 @@ type
   //ha o que ler, o objeto ja nao existe
   TS7DescarteProbe = class(TSiemensProtocolFamily)
   public
-    function  CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
+    function  NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
     procedure DeletePLC(PLCIndex:Integer); override;
   end;
 
@@ -74,21 +74,21 @@ type
     FDrv:TS7RespostaProbe;
     FPLC:LongInt;
     FEstacao:LongInt;
-    function  ListaDeUmItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
-    function  PedidoDeDB(aEndereco, aTamanho:LongInt):TTagRec;
+    function  ListOfOneItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
+    function  DBRequest(aEndereco, aTamanho:LongInt):TTagRec;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure RespostaDeDbChegaNoGerenciador;
-    procedure TamanhoEmBitsEhConvertidoParaBytes;
-    procedure TamanhoJaEmBytesNaoEhDividido;
-    procedure ErroDoCLPViraResultadoDeProtocolo;
-    procedure RespostaDeOutraFuncaoEhIgnorada;
-    procedure MaisItensNaRespostaDoQueNoPedidoNaoTransborda;
+    procedure ADbAnswerReachesTheManager;
+    procedure ASizeInBitsIsConvertedToBytes;
+    procedure ASizeAlreadyInBytesIsNotDivided;
+    procedure APLCErrorBecomesAProtocolResult;
+    procedure AnAnswerFromAnotherFunctionIsIgnored;
+    procedure MoreItemsInTheAnswerThanInTheRequestDoNotOverflow;
 
     //ciclo de vida / lifecycle
-    procedure DestrutorRemoveTodosOsCLPs;
+    procedure TheDestructorRemovesEveryPLC;
   end;
 
 implementation
@@ -99,7 +99,7 @@ var
 
 { TS7DescarteProbe }
 
-function TS7DescarteProbe.CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
+function TS7DescarteProbe.NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
 begin
   Result:=CreatePLC(aRack, aSlot, aEstacao);
 end;
@@ -117,12 +117,12 @@ end;
 
 { TS7RespostaProbe }
 
-function TS7RespostaProbe.CriarCLP(aRack, aSlot, aEstacao:LongInt):LongInt;
+function TS7RespostaProbe.NewPLC(aRack, aSlot, aEstacao:LongInt):LongInt;
 begin
   Result:=CreatePLC(aRack, aSlot, aEstacao);
 end;
 
-procedure TS7RespostaProbe.PrepararDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
+procedure TS7RespostaProbe.PrepareDB(aPLC, aDBNum, aEndereco, aTamanho:LongInt);
 var
   db:LongInt;
 begin
@@ -136,7 +136,7 @@ begin
   FPLCs[aPLC].DBs[db].DBArea.AddAddress(aEndereco, aTamanho, 1, 1000);
 end;
 
-procedure TS7RespostaProbe.Decodificar(const aResposta:BYTES; const aReqList:TS7ReqList);
+procedure TS7RespostaProbe.DecodeIt(const aResposta:BYTES; const aReqList:TS7ReqList);
 var
   pedido, resposta:BYTES;
   lista:TS7ReqList;
@@ -149,7 +149,7 @@ begin
   UpdateMemoryManager(resposta, pedido, false, lista, valores);
 end;
 
-function TS7RespostaProbe.LerDoGerenciador(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
+function TS7RespostaProbe.ReadFromTheManager(const aTagRec:TTagRec; out aResultado:TProtocolIOResult):TArrayOfDouble;
 var
   leitura:TScanReadRec;
 begin
@@ -181,8 +181,8 @@ begin
 
   inc(UltimaEstacao);
   FEstacao:=UltimaEstacao;
-  FPLC:=FDrv.CriarCLP(0, 2, FEstacao);
-  FDrv.PrepararDB(FPLC, 1, 0, 4);
+  FPLC:=FDrv.NewPLC(0, 2, FEstacao);
+  FDrv.PrepareDB(FPLC, 1, 0, 4);
 end;
 
 procedure TTestS7FamilyResposta.TearDown;
@@ -190,7 +190,7 @@ begin
   FDrv:=nil;
 end;
 
-function TTestS7FamilyResposta.ListaDeUmItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
+function TTestS7FamilyResposta.ListOfOneItem(aDBIdx, aEndereco, aTamanho:LongInt):TS7ReqList;
 begin
   SetLength(Result, 1);
   Result[0].PLCIdx      :=FPLC;
@@ -200,7 +200,7 @@ begin
   Result[0].Size        :=aTamanho;
 end;
 
-function TTestS7FamilyResposta.PedidoDeDB(aEndereco, aTamanho:LongInt):TTagRec;
+function TTestS7FamilyResposta.DBRequest(aEndereco, aTamanho:LongInt):TTagRec;
 begin
   //funcao 4 = area de DB na numeracao interna do driver
   Result:=TagRecFor(FEstacao, 4, 0, aEndereco, aTamanho);
@@ -209,19 +209,19 @@ begin
   Result.File_DB:=1;
 end;
 
-procedure TTestS7FamilyResposta.RespostaDeDbChegaNoGerenciador;
+procedure TTestS7FamilyResposta.ADbAnswerReachesTheManager;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
 begin
   //cabecalho tipo 3 (12 bytes), parametro "leitura, 1 item", e o item de dado
   //com codigo $FF, transporte 4 (contado em bits), 32 bits e os quatro bytes
-  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
+  FDrv.DecodeIt(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
                            '04 01' +
                            'FF 04 00 20 0A 0B 0C 0D'),
-                   ListaDeUmItem(0, 0, 4));
+                   ListOfOneItem(0, 0, 4));
 
-  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+  valores:=FDrv.ReadFromTheManager(DBRequest(0, 4), res);
 
   AssertEquals('read with no failure', Ord(ioOk), Ord(res));
   AssertEquals('number of values', 4, Length(valores));
@@ -231,89 +231,89 @@ begin
   AssertEquals('fourth byte',   $0D, valores[3], 0);
 end;
 
-procedure TTestS7FamilyResposta.TamanhoEmBitsEhConvertidoParaBytes;
+procedure TTestS7FamilyResposta.ASizeInBitsIsConvertedToBytes;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
 begin
   //transporte 4 declara o tamanho em BITS: 16 bits sao 2 bytes
-  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 06 00 00' +
+  FDrv.DecodeIt(BytesOf('32 03 00 00 00 00 00 02 00 06 00 00' +
                            '04 01' +
                            'FF 04 00 10 AA BB'),
-                   ListaDeUmItem(0, 0, 2));
+                   ListOfOneItem(0, 0, 2));
 
-  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 2), res);
+  valores:=FDrv.ReadFromTheManager(DBRequest(0, 2), res);
 
   AssertEquals('two bytes kept', $AA, valores[0], 0);
   AssertEquals('and the second one',          $BB, valores[1], 0);
 end;
 
-procedure TTestS7FamilyResposta.TamanhoJaEmBytesNaoEhDividido;
+procedure TTestS7FamilyResposta.ASizeAlreadyInBytesIsNotDivided;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
 begin
   //transporte 3 e 9 ja vem em bytes: 2 significa dois bytes, nao dois bits
-  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 06 00 00' +
+  FDrv.DecodeIt(BytesOf('32 03 00 00 00 00 00 02 00 06 00 00' +
                            '04 01' +
                            'FF 09 00 02 11 22'),
-                   ListaDeUmItem(0, 0, 2));
+                   ListOfOneItem(0, 0, 2));
 
-  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 2), res);
+  valores:=FDrv.ReadFromTheManager(DBRequest(0, 2), res);
 
   AssertEquals('first byte', $11, valores[0], 0);
   AssertEquals('second byte',  $22, valores[1], 0);
 end;
 
-procedure TTestS7FamilyResposta.ErroDoCLPViraResultadoDeProtocolo;
+procedure TTestS7FamilyResposta.APLCErrorBecomesAProtocolResult;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
 begin
   //codigo $05 = endereco de memoria invalido; a falha tem que ficar guardada
   //na area, para quem ler depois saber que o valor nao vale
-  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 04 00 00' +
+  FDrv.DecodeIt(BytesOf('32 03 00 00 00 00 00 02 00 04 00 00' +
                            '04 01' +
                            '05 00 00 00'),
-                   ListaDeUmItem(0, 0, 4));
+                   ListOfOneItem(0, 0, 4));
 
-  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+  valores:=FDrv.ReadFromTheManager(DBRequest(0, 4), res);
   AssertEquals('failure passed on', Ord(ioIllegalMemoryAddress), Ord(res));
 end;
 
-procedure TTestS7FamilyResposta.RespostaDeOutraFuncaoEhIgnorada;
+procedure TTestS7FamilyResposta.AnAnswerFromAnotherFunctionIsIgnored;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
 begin
   //parametro com funcao de escrita ($05) numa decodificacao de leitura:
   //o driver tem que largar o pacote sem gravar nada
-  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
+  FDrv.DecodeIt(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
                            '05 01' +
                            'FF 04 00 20 0A 0B 0C 0D'),
-                   ListaDeUmItem(0, 0, 4));
+                   ListOfOneItem(0, 0, 4));
 
-  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+  valores:=FDrv.ReadFromTheManager(DBRequest(0, 4), res);
   AssertTrue('nothing can have been stored', (Length(valores)=0) or (valores[0]<>$0A));
 end;
 
-procedure TTestS7FamilyResposta.MaisItensNaRespostaDoQueNoPedidoNaoTransborda;
+procedure TTestS7FamilyResposta.MoreItemsInTheAnswerThanInTheRequestDoNotOverflow;
 var
   valores:TArrayOfDouble;
   res:TProtocolIOResult;
 begin
   //a resposta diz ter 3 itens, mas so pedimos 1: o driver nao pode andar
   //alem da lista de requisicoes
-  FDrv.Decodificar(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
+  FDrv.DecodeIt(BytesOf('32 03 00 00 00 00 00 02 00 08 00 00' +
                            '04 03' +
                            'FF 04 00 20 0A 0B 0C 0D'),
-                   ListaDeUmItem(0, 0, 4));
+                   ListOfOneItem(0, 0, 4));
 
-  valores:=FDrv.LerDoGerenciador(PedidoDeDB(0, 4), res);
+  valores:=FDrv.ReadFromTheManager(DBRequest(0, 4), res);
   AssertEquals('the item asked for was processed', $0A, valores[0], 0);
 end;
 
-procedure TTestS7FamilyResposta.DestrutorRemoveTodosOsCLPs;
+procedure TTestS7FamilyResposta.TheDestructorRemovesEveryPLC;
 var
   drv:TS7DescarteProbe;
 begin
@@ -324,10 +324,10 @@ begin
   DescarteIndiceInvalido:=false;
 
   drv:=TS7DescarteProbe.Create(nil);
-  drv.CriarCLP(0, 2, 1);
-  drv.CriarCLP(0, 2, 2);
-  drv.CriarCLP(0, 2, 3);
-  drv.CriarCLP(0, 2, 4);
+  drv.NewPLC(0, 2, 1);
+  drv.NewPLC(0, 2, 2);
+  drv.NewPLC(0, 2, 3);
+  drv.NewPLC(0, 2, 4);
 
   drv.Free;
 

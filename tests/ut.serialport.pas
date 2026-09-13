@@ -39,9 +39,9 @@ type
   TSerialProbe = class(TSerialPortDriver)
   public
     //: ComSettingsOK e' protegido: e' a porta concreta que se declara pronta
-    function  ConfiguracaoAceitavel:Boolean;
+    function  SettingsAreAcceptable:Boolean;
     //: SetDesigning e' protegido em TComponent
-    procedure MarcarComoEmProjeto;
+    procedure MarkAsDesignTime;
   end;
 
   { TTestSerialPort }
@@ -50,18 +50,18 @@ type
   private
     FPorta:TSerialProbe;
     //: o numero da porta fica nos quatro bytes baixos do identificador
-    function  NumeroDoId(aId:TPortUniqueID):LongWord;
+    function  NumberOfTheId(aId:TPortUniqueID):LongWord;
     //: e o tipo da porta, com a marca de incompleta, no byte mais alto
-    function  ByteDeTipo(aId:TPortUniqueID):Byte;
-    function  IdDe(const aNome:String):TPortUniqueID;
+    function  TypeByteOf(aId:TPortUniqueID):Byte;
+    function  IdOf(const aNome:String):TPortUniqueID;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //valores de fabrica / factory values
-    procedure VelocidadeEFormatoDeFabrica;
-    procedure EsperaEntreEscritaELeituraDeFabrica;
-    procedure TempoLimiteDeFabricaConfereComOQueAPropriedadeDeclara;
+    procedure SpeedAndFormatOutOfTheBox;
+    procedure DelayBetweenWriteAndReadOutOfTheBox;
+    procedure TheDefaultTimeoutAgreesWithWhatThePropertyDeclares;
 
     {$IFDEF UNIX}
     //diretorio de dispositivos / device directory
@@ -72,30 +72,30 @@ type
     //Unix only: on Windows the port is called COM1, with no directory, and the
     //constructor does not even initialize the prefix - the property's own
     //documentation says it is useless there.
-    procedure DiretorioDeDispositivosDeFabrica;
-    procedure DiretorioVazioVoltaAoPadrao;
-    procedure DiretorioNenhumVoltaAoPadrao;
-    procedure DiretorioEscolhidoEhGuardado;
+    procedure TheDeviceDirectoryOutOfTheBox;
+    procedure AnEmptyDirectoryGoesBackToTheDefault;
+    procedure NoDirectoryAtAllGoesBackToTheDefault;
+    procedure TheChosenDirectoryIsKept;
     {$ENDIF}
 
     //nome da porta / port name
-    procedure NomeDePortaDesconhecidoNaoEhAceito;
-    procedure NomeDePortaDesconhecidoNaoApagaOAnterior;
-    procedure AceitarQualquerNomeAbreMaoDaConferencia;
-    procedure NomeVazioLimpaAPorta;
+    procedure AnUnknownPortNameIsNotAccepted;
+    procedure AnUnknownPortNameDoesNotEraseThePreviousOne;
+    procedure AcceptingAnyNameGivesUpTheCheck;
+    procedure AnEmptyNameClearsThePort;
 
     //estado / state
-    procedure PortaNovaEstaFechada;
-    procedure PortaSerialEhDispositivoExclusivo;
-    procedure SemNomeDePortaAConfiguracaoNaoServe;
+    procedure ANewPortIsClosed;
+    procedure ASerialPortIsAnExclusiveDevice;
+    procedure WithNoPortNameTheSettingsAreNotGoodEnough;
 
     //identificacao / identification
-    procedure PortasDiferentesTemIdentificadoresDiferentes;
-    procedure OIdentificadorCarregaONumeroDaPorta;
-    procedure MesmoNumeroComPrefixoDiferenteNaoSeConfunde;
-    procedure PortaSemNomeEhMarcadaComoIncompleta;
-    procedure NomeSemNumeroEhMarcadoComoIncompleto;
-    procedure IdentificadorEhEstavelParaAMesmaPorta;
+    procedure DifferentPortsHaveDifferentIdentifiers;
+    procedure TheIdentifierCarriesThePortNumber;
+    procedure TheSameNumberWithADifferentPrefixIsNotConfused;
+    procedure APortWithNoNameIsMarkedIncomplete;
+    procedure ANameWithNoNumberIsMarkedIncomplete;
+    procedure TheIdentifierIsStableForTheSamePort;
   end;
 
   {$IFDEF UNIX}
@@ -119,21 +119,21 @@ type
   private
     FDispositivo:TSerialDeMentira;
     FPorta:TSerialProbe;
-    procedure ApontarAPortaParaODispositivo;
+    procedure PointThePortAtTheDevice;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure AbrirAPortaSobreODispositivo;
-    procedure OQueODriverEscreveChegaNoDispositivo;
-    procedure OQueODispositivoMandaEhLidoPeloDriver;
-    procedure SemRespostaOResultadoEhTimeout;
-    procedure FecharAPortaDeixaDeEstarAtiva;
+    procedure OpeningThePortOverTheDevice;
+    procedure WhatTheDriverWritesReachesTheDevice;
+    procedure WhatTheDeviceSendsIsReadByTheDriver;
+    procedure WithNoAnswerTheResultIsTimeout;
+    procedure ClosingThePortStopsItBeingActive;
 
     //a configuracao chegando ao dispositivo / settings reaching the device
-    procedure AVelocidadeEscolhidaChegaNoDispositivo;
-    procedure MudarAVelocidadeMudaODispositivo;
-    procedure OsBitsDeParadaEscolhidosChegamNoDispositivo;
+    procedure TheChosenSpeedReachesTheDevice;
+    procedure ChangingTheSpeedChangesTheDevice;
+    procedure TheChosenStopBitsReachTheDevice;
   end;
   {$ENDIF}
 
@@ -141,12 +141,12 @@ implementation
 
 { TSerialProbe }
 
-function TSerialProbe.ConfiguracaoAceitavel:Boolean;
+function TSerialProbe.SettingsAreAcceptable:Boolean;
 begin
   Result:=ComSettingsOK;
 end;
 
-procedure TSerialProbe.MarcarComoEmProjeto;
+procedure TSerialProbe.MarkAsDesignTime;
 begin
   SetDesigning(true, false);
 end;
@@ -163,24 +163,24 @@ begin
   FreeAndNil(FPorta);
 end;
 
-function TTestSerialPort.NumeroDoId(aId:TPortUniqueID):LongWord;
+function TTestSerialPort.NumberOfTheId(aId:TPortUniqueID):LongWord;
 begin
   Result:=LongWord(QWord(aId) and $FFFFFFFF);
 end;
 
-function TTestSerialPort.ByteDeTipo(aId:TPortUniqueID):Byte;
+function TTestSerialPort.TypeByteOf(aId:TPortUniqueID):Byte;
 begin
   Result:=(QWord(aId) shr 56) and $FF;
 end;
 
-function TTestSerialPort.IdDe(const aNome:String):TPortUniqueID;
+function TTestSerialPort.IdOf(const aNome:String):TPortUniqueID;
 begin
   FPorta.AcceptAnyPortName:=true;
   FPorta.COMPort:=aNome;
   Result:=FPorta.getPortId;
 end;
 
-procedure TTestSerialPort.VelocidadeEFormatoDeFabrica;
+procedure TTestSerialPort.SpeedAndFormatOutOfTheBox;
 begin
   //19200 8N1, que e' o que a maioria dos equipamentos usa
   AssertEquals('speed',      Ord(br19200), Ord(FPorta.BaudRate));
@@ -189,12 +189,12 @@ begin
   AssertEquals('stop bits',  Ord(sb1),     Ord(FPorta.StopBits));
 end;
 
-procedure TTestSerialPort.EsperaEntreEscritaELeituraDeFabrica;
+procedure TTestSerialPort.DelayBetweenWriteAndReadOutOfTheBox;
 begin
   AssertEquals('delay between writing and reading', 20, FPorta.WriteReadDelay);
 end;
 
-procedure TTestSerialPort.TempoLimiteDeFabricaConfereComOQueAPropriedadeDeclara;
+procedure TTestSerialPort.TheDefaultTimeoutAgreesWithWhatThePropertyDeclares;
 begin
   //o valor declarado na propriedade e' o que o mecanismo de gravacao usa para
   //decidir o que precisa ir para o arquivo de formulario: o que for igual a
@@ -204,19 +204,19 @@ begin
 end;
 
 {$IFDEF UNIX}
-procedure TTestSerialPort.DiretorioDeDispositivosDeFabrica;
+procedure TTestSerialPort.TheDeviceDirectoryOutOfTheBox;
 begin
   AssertEquals('device directory', '/dev/', FPorta.DevDir);
 end;
 
-procedure TTestSerialPort.DiretorioVazioVoltaAoPadrao;
+procedure TTestSerialPort.AnEmptyDirectoryGoesBackToTheDefault;
 begin
   FPorta.DevDir:='/tmp/';
   FPorta.DevDir:='';
   AssertEquals('empty goes back to the default', '/dev/', FPorta.DevDir);
 end;
 
-procedure TTestSerialPort.DiretorioNenhumVoltaAoPadrao;
+procedure TTestSerialPort.NoDirectoryAtAllGoesBackToTheDefault;
 begin
   //"(none)" e' o que o editor de propriedades entrega quando nada foi escolhido
   FPorta.DevDir:='/tmp/';
@@ -224,7 +224,7 @@ begin
   AssertEquals('none goes back to the default', '/dev/', FPorta.DevDir);
 end;
 
-procedure TTestSerialPort.DiretorioEscolhidoEhGuardado;
+procedure TTestSerialPort.TheChosenDirectoryIsKept;
 begin
   //existe para quem usa emulador de porta serial fora de /dev
   FPorta.DevDir:='/tmp/portas/';
@@ -232,13 +232,13 @@ begin
 end;
 {$ENDIF}
 
-procedure TTestSerialPort.NomeDePortaDesconhecidoNaoEhAceito;
+procedure TTestSerialPort.AnUnknownPortNameIsNotAccepted;
 begin
   FPorta.COMPort:='naoexisteestaporta';
   AssertEquals('an unknown name does not get in', '', FPorta.COMPort);
 end;
 
-procedure TTestSerialPort.NomeDePortaDesconhecidoNaoApagaOAnterior;
+procedure TTestSerialPort.AnUnknownPortNameDoesNotEraseThePreviousOne;
 begin
   FPorta.AcceptAnyPortName:=true;
   FPorta.COMPort:='ttyS0';
@@ -248,7 +248,7 @@ begin
   AssertEquals('the previous name stands', 'ttyS0', FPorta.COMPort);
 end;
 
-procedure TTestSerialPort.AceitarQualquerNomeAbreMaoDaConferencia;
+procedure TTestSerialPort.AcceptingAnyNameGivesUpTheCheck;
 begin
   //e' assim que se usa um emulador de porta, ou um dispositivo com nome fora
   //dos prefixos que a unit conhece
@@ -258,7 +258,7 @@ begin
   AssertEquals('name accepted without checking', 'umnomequalquer', FPorta.COMPort);
 end;
 
-procedure TTestSerialPort.NomeVazioLimpaAPorta;
+procedure TTestSerialPort.AnEmptyNameClearsThePort;
 begin
   FPorta.AcceptAnyPortName:=true;
   FPorta.COMPort:='ttyS0';
@@ -268,28 +268,28 @@ begin
   AssertEquals('an empty name clears it', '', FPorta.COMPort);
 end;
 
-procedure TTestSerialPort.PortaNovaEstaFechada;
+procedure TTestSerialPort.ANewPortIsClosed;
 begin
   AssertFalse('Active',       FPorta.Active);
   AssertFalse('ReallyActive', FPorta.ReallyActive);
 end;
 
-procedure TTestSerialPort.PortaSerialEhDispositivoExclusivo;
+procedure TTestSerialPort.ASerialPortIsAnExclusiveDevice;
 begin
   //dispositivo exclusivo nao e' aberto em tempo de projeto: abrir tomaria o
   //equipamento de quem esta' rodando
-  FPorta.MarcarComoEmProjeto;
+  FPorta.MarkAsDesignTime;
   FPorta.Active:=true;
 
   AssertFalse('at design time it does not really open', FPorta.ReallyActive);
 end;
 
-procedure TTestSerialPort.SemNomeDePortaAConfiguracaoNaoServe;
+procedure TTestSerialPort.WithNoPortNameTheSettingsAreNotGoodEnough;
 begin
-  AssertFalse('with no port name there is nothing to open', FPorta.ConfiguracaoAceitavel);
+  AssertFalse('with no port name there is nothing to open', FPorta.SettingsAreAcceptable);
 end;
 
-procedure TTestSerialPort.PortasDiferentesTemIdentificadoresDiferentes;
+procedure TTestSerialPort.DifferentPortsHaveDifferentIdentifiers;
 var
   outra:TSerialProbe;
 begin
@@ -309,52 +309,52 @@ begin
   end;
 end;
 
-procedure TTestSerialPort.OIdentificadorCarregaONumeroDaPorta;
+procedure TTestSerialPort.TheIdentifierCarriesThePortNumber;
 begin
   //o numero da porta e' o que vem depois das letras: COM1 da' 1, ttyUSB0 da' 0
-  AssertEquals('COM1',     1,  NumeroDoId(IdDe('COM1')));
-  AssertEquals('COM2',     2,  NumeroDoId(IdDe('COM2')));
-  AssertEquals('COM12',    12, NumeroDoId(IdDe('COM12')));
-  AssertEquals('ttyUSB0',  0,  NumeroDoId(IdDe('ttyUSB0')));
-  AssertEquals('ttyS3',    3,  NumeroDoId(IdDe('ttyS3')));
-  AssertEquals('cuau1',    1,  NumeroDoId(IdDe('cuau1')));
+  AssertEquals('COM1',     1,  NumberOfTheId(IdOf('COM1')));
+  AssertEquals('COM2',     2,  NumberOfTheId(IdOf('COM2')));
+  AssertEquals('COM12',    12, NumberOfTheId(IdOf('COM12')));
+  AssertEquals('ttyUSB0',  0,  NumberOfTheId(IdOf('ttyUSB0')));
+  AssertEquals('ttyS3',    3,  NumberOfTheId(IdOf('ttyS3')));
+  AssertEquals('cuau1',    1,  NumberOfTheId(IdOf('cuau1')));
 
-  AssertEquals('and the serial port mark', 1, ByteDeTipo(IdDe('COM1')));
+  AssertEquals('and the serial port mark', 1, TypeByteOf(IdOf('COM1')));
 end;
 
-procedure TTestSerialPort.MesmoNumeroComPrefixoDiferenteNaoSeConfunde;
+procedure TTestSerialPort.TheSameNumberWithADifferentPrefixIsNotConfused;
 var
   umUsb:TPortUniqueID;
 begin
   //ttyS0 e ttyUSB0 sao duas portas, com o mesmo numero: o identificador tem
   //que separa-las, senao quem indexa por ele mistura as duas
-  umUsb:=IdDe('ttyUSB0');
+  umUsb:=IdOf('ttyUSB0');
 
-  AssertTrue('ttyUSB0 and ttyS0',   umUsb<>IdDe('ttyS0'));
-  AssertTrue('ttyUSB0 and ttyADV0', umUsb<>IdDe('ttyADV0'));
+  AssertTrue('ttyUSB0 and ttyS0',   umUsb<>IdOf('ttyS0'));
+  AssertTrue('ttyUSB0 and ttyADV0', umUsb<>IdOf('ttyADV0'));
 end;
 
-procedure TTestSerialPort.PortaSemNomeEhMarcadaComoIncompleta;
+procedure TTestSerialPort.APortWithNoNameIsMarkedIncomplete;
 begin
   //sem nome de porta o identificador leva o bit alto ligado, como na porta de
   //rede sem endereco
-  AssertEquals('serial with the incomplete mark', $81, ByteDeTipo(FPorta.getPortId));
+  AssertEquals('serial with the incomplete mark', $81, TypeByteOf(FPorta.getPortId));
 end;
 
-procedure TTestSerialPort.NomeSemNumeroEhMarcadoComoIncompleto;
+procedure TTestSerialPort.ANameWithNoNumberIsMarkedIncomplete;
 begin
   //um nome sem digito nenhum nao identifica porta alguma
-  AssertEquals('name with no number', $81, ByteDeTipo(IdDe('umnomesemnumero')));
+  AssertEquals('name with no number', $81, TypeByteOf(IdOf('umnomesemnumero')));
 end;
 
-procedure TTestSerialPort.IdentificadorEhEstavelParaAMesmaPorta;
+procedure TTestSerialPort.TheIdentifierIsStableForTheSamePort;
 var
   primeiro:TPortUniqueID;
 begin
   //e' chave de mapa: ler duas vezes tem que dar o mesmo valor
-  primeiro:=IdDe('ttyUSB0');
+  primeiro:=IdOf('ttyUSB0');
   AssertTrue('same reading',      primeiro=FPorta.getPortId);
-  AssertTrue('same settings', primeiro=IdDe('ttyUSB0'));
+  AssertTrue('same settings', primeiro=IdOf('ttyUSB0'));
 end;
 
 {$IFDEF UNIX}
@@ -378,26 +378,26 @@ begin
   FreeAndNil(FDispositivo);
 end;
 
-procedure TTestSerialPortComDispositivo.ApontarAPortaParaODispositivo;
+procedure TTestSerialPortComDispositivo.PointThePortAtTheDevice;
 begin
   //o lado escravo do par aparece em /dev/pts: e' para isso que DevDir existe
   FPorta.DevDir :=FDispositivo.Diretorio;
   FPorta.COMPort:=FDispositivo.NomeDoDispositivo;
 end;
 
-procedure TTestSerialPortComDispositivo.AbrirAPortaSobreODispositivo;
+procedure TTestSerialPortComDispositivo.OpeningThePortOverTheDevice;
 begin
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.Active:=true;
 
   AssertTrue('the port must open', FPorta.ReallyActive);
 end;
 
-procedure TTestSerialPortComDispositivo.OQueODriverEscreveChegaNoDispositivo;
+procedure TTestSerialPortComDispositivo.WhatTheDriverWritesReachesTheDevice;
 var
   pkg:TIOPacket;
 begin
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.Active:=true;
   AssertTrue('opened', FPorta.ReallyActive);
 
@@ -407,11 +407,11 @@ begin
                    FDispositivo.LerOQueFoiEscrito(4, 1000));
 end;
 
-procedure TTestSerialPortComDispositivo.OQueODispositivoMandaEhLidoPeloDriver;
+procedure TTestSerialPortComDispositivo.WhatTheDeviceSendsIsReadByTheDriver;
 var
   pkg:TIOPacket;
 begin
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.Active:=true;
   AssertTrue('opened', FPorta.ReallyActive);
 
@@ -424,12 +424,12 @@ begin
   AssertBytesEqual('what came back', BytesOf('AA BB CC'), pkg.BufferToRead);
 end;
 
-procedure TTestSerialPortComDispositivo.SemRespostaOResultadoEhTimeout;
+procedure TTestSerialPortComDispositivo.WithNoAnswerTheResultIsTimeout;
 var
   pkg:TIOPacket;
 begin
   //o equipamento nao mandou nada: o driver tem que desistir no prazo
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.Active:=true;
   AssertTrue('opened', FPorta.ReallyActive);
 
@@ -439,9 +439,9 @@ begin
   AssertEquals('nothing read',    0, pkg.Received);
 end;
 
-procedure TTestSerialPortComDispositivo.FecharAPortaDeixaDeEstarAtiva;
+procedure TTestSerialPortComDispositivo.ClosingThePortStopsItBeingActive;
 begin
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.Active:=true;
   AssertTrue('opened', FPorta.ReallyActive);
 
@@ -449,11 +449,11 @@ begin
   AssertFalse('closed', FPorta.ReallyActive);
 end;
 
-procedure TTestSerialPortComDispositivo.AVelocidadeEscolhidaChegaNoDispositivo;
+procedure TTestSerialPortComDispositivo.TheChosenSpeedReachesTheDevice;
 begin
   //guardar o valor na propriedade nao basta: ele tem que virar ajuste do
   //dispositivo, senao o equipamento conversa numa velocidade e o driver noutra
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.BaudRate:=br9600;
   FPorta.Active:=true;
   AssertTrue('opened', FPorta.ReallyActive);
@@ -461,11 +461,11 @@ begin
   AssertEquals('9600 on the device', B9600, FDispositivo.CodigoDeVelocidade);
 end;
 
-procedure TTestSerialPortComDispositivo.MudarAVelocidadeMudaODispositivo;
+procedure TTestSerialPortComDispositivo.ChangingTheSpeedChangesTheDevice;
 begin
   //duas velocidades diferentes tem que dar dois ajustes diferentes no
   //dispositivo, senao a escolha nao esta' indo a lugar nenhum
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.BaudRate:=br19200;
   FPorta.Active:=true;
   AssertTrue('opened', FPorta.ReallyActive);
@@ -474,9 +474,9 @@ begin
   AssertTrue  ('and it differs from 9600', B9600<>FDispositivo.CodigoDeVelocidade);
 end;
 
-procedure TTestSerialPortComDispositivo.OsBitsDeParadaEscolhidosChegamNoDispositivo;
+procedure TTestSerialPortComDispositivo.TheChosenStopBitsReachTheDevice;
 begin
-  ApontarAPortaParaODispositivo;
+  PointThePortAtTheDevice;
   FPorta.StopBits:=sb2;
   FPorta.Active:=true;
   AssertTrue('opened', FPorta.ReallyActive);

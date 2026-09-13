@@ -54,7 +54,7 @@ type
     FLargarOsGanchos:Boolean;
   public
     constructor Create(aTag:TTag; aLargarOsGanchos:Boolean);
-    procedure AvisoDeRemocao(Sender:TObject);
+    procedure RemovalNotice(Sender:TObject);
     property  Avisado:Boolean read FAvisado;
   end;
 
@@ -62,9 +62,9 @@ type
 
   TTestTag = class(TTestCase)
   published
-    procedure AvisoDeRemocaoChegaAoOuvinte;
-    procedure OuvinteQueLargaOsGanchosNaoEsconderOsOutros;
-    procedure GanchosLargadosAntesNaoSaoAvisados;
+    procedure TheRemovalNoticeReachesTheListener;
+    procedure AListenerThatDropsItsHooksDoesNotHideTheOthers;
+    procedure HooksDroppedEarlierAreNotNotified;
   end;
 
 implementation
@@ -77,10 +77,10 @@ begin
   FTag:=aTag;
   FAvisado:=false;
   FLargarOsGanchos:=aLargarOsGanchos;
-  FTag.AddRemoveTagHandler(@AvisoDeRemocao);
+  FTag.AddRemoveTagHandler(@RemovalNotice);
 end;
 
-procedure TOuvinte.AvisoDeRemocao(Sender:TObject);
+procedure TOuvinte.RemovalNotice(Sender:TObject);
 begin
   FAvisado:=true;
   if FLargarOsGanchos and (FTag<>nil) then begin
@@ -91,7 +91,7 @@ end;
 
 { TTestTag }
 
-procedure TTestTag.AvisoDeRemocaoChegaAoOuvinte;
+procedure TTestTag.TheRemovalNoticeReachesTheListener;
 var
   tag:TTagSimples;
   ouvinte:TOuvinte;
@@ -107,7 +107,7 @@ begin
   end;
 end;
 
-procedure TTestTag.OuvinteQueLargaOsGanchosNaoEsconderOsOutros;
+procedure TTestTag.AListenerThatDropsItsHooksDoesNotHideTheOthers;
 var
   tag:TTagSimples;
   primeiro, segundo, terceiro:TOuvinte;
@@ -133,7 +133,7 @@ begin
   end;
 end;
 
-procedure TTestTag.GanchosLargadosAntesNaoSaoAvisados;
+procedure TTestTag.HooksDroppedEarlierAreNotNotified;
 var
   tag:TTagSimples;
   ouvinte:TOuvinte;

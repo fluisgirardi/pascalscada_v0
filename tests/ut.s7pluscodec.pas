@@ -42,66 +42,66 @@ type
   TTestS7PlusCodec = class(TTestCase)
   published
     //cabecalho do quadro / frame header
-    procedure CabecalhoTemIdVersaoETamanho;
-    procedure CabecalhoVoltaComVersaoETamanho;
-    procedure CabecalhoComIdErradoReclama;
-    procedure CabecalhoTruncadoReclama;
+    procedure TheHeaderHasIdVersionAndLength;
+    procedure TheHeaderComesBackWithVersionAndLength;
+    procedure AHeaderWithTheWrongIdComplains;
+    procedure ATruncatedHeaderComplains;
 
     //cabecalhos de pedido e resposta / request and response headers
-    procedure CabecalhoDePedidoTemQuatorzeBytes;
-    procedure CabecalhoDeRespostaEhLidoDeVolta;
-    procedure CabecalhoDeRespostaTruncadoReclama;
+    procedure ARequestHeaderIsFourteenBytes;
+    procedure AnAnswerHeaderIsReadBack;
+    procedure ATruncatedAnswerHeaderComplains;
 
     //primitivas de tamanho fixo / fixed width primitives
-    procedure InteirosSaoBigEndian;
-    procedure InteirosVoltamDoBigEndian;
-    procedure FloatsSeguemIEEE754BigEndian;
-    procedure FloatsVaoEVoltam;
+    procedure IntegersAreBigEndian;
+    procedure IntegersComeBackFromBigEndian;
+    procedure FloatsFollowIEEE754BigEndian;
+    procedure FloatsGoOutAndComeBack;
 
     //valores tipados / typed values
-    procedure ValorTipadoUDIntUsaVLQ;
-    procedure ValorTipadoDWordUsaQuatroBytesFixos;
-    procedure ValorTipadoBoolNormalizaParaZeroOuUm;
-    procedure ValorTipadoComTipoNaoSuportadoReclama;
-    procedure RIDTemQuatroBytesFixos;
+    procedure ATypedUDIntValueUsesVLQ;
+    procedure ATypedDWordValueUsesFourFixedBytes;
+    procedure ATypedBoolValueIsNormalisedToZeroOrOne;
+    procedure ATypedValueWithAnUnsupportedTypeComplains;
+    procedure ARIDIsFourFixedBytes;
 
     //PValues de escrita / write PValues
-    procedure BlobLevaRaizZeroETamanho;
-    procedure ArrayDeBytesUsaOFlagDeArray;
-    procedure EscritaDeDIntViraVLQAssinado;
-    procedure EscritaDeDIntNegativoViraVLQAssinado;
-    procedure EscritaDeRealPassaOsBytesDireto;
-    procedure EscritaDeBoolUsaOUltimoByte;
-    procedure EscritaDeStringUsaArrayDeUSInt;
-    procedure EscritaDeTipoDesconhecidoCaiNoArrayDeBytes;
+    procedure ABlobCarriesRootZeroAndLength;
+    procedure AByteArrayUsesTheArrayFlag;
+    procedure WritingADIntBecomesASignedVLQ;
+    procedure WritingANegativeDIntBecomesASignedVLQ;
+    procedure WritingARealPassesTheBytesStraightThrough;
+    procedure WritingABoolUsesTheLastByte;
+    procedure WritingAStringUsesAnArrayOfUSInt;
+    procedure WritingAnUnknownTypeFallsBackToAByteArray;
 
     //PValues escalares / scalar PValues
-    procedure UIntEIntSaoDoisBytesFixos;
-    procedure UDIntUsaVLQ;
-    procedure WStringEhUmBytePorCaractere;
-    procedure ArrayDeUDIntRespeitaOFlagPedido;
-    procedure LIntVaiEVoltaPeloDecodificador;
+    procedure UIntAndIntAreTwoFixedBytes;
+    procedure UDIntUsesVLQ;
+    procedure AWStringIsOneBytePerCharacter;
+    procedure AnArrayOfUDIntHonoursTheFlagAskedFor;
+    procedure ALIntGoesOutAndBackThroughTheDecoder;
 
     //objetos / objects
-    procedure ObjetoTemAberturaAtributosEFechamento;
-    procedure AtributoEhEncontradoNoObjeto;
-    procedure AtributoAusenteDevolveFalso;
-    procedure QualificadorV1TerminaComUDIntDeTamanhoFixo;
-    procedure EnderecoDeItemContaOsCampos;
+    procedure AnObjectHasAnOpeningAttributesAndAClosing;
+    procedure AnAttributeIsFoundInTheObject;
+    procedure AMissingAttributeReturnsFalse;
+    procedure AV1QualifierEndsWithAFixedSizeUDInt;
+    procedure AnItemAddressCountsTheFields;
 
     //decodificacao de PValue / PValue decoding
-    procedure PValueDeUDIntVoltaComQuatroBytes;
+    procedure AUDIntPValueComesBackWithFourBytes;
   end;
 
 implementation
 
-procedure TTestS7PlusCodec.CabecalhoTemIdVersaoETamanho;
+procedure TTestS7PlusCodec.TheHeaderHasIdVersionAndLength;
 begin
   //o $72 = id do protocolo S7CommPlus
   AssertBytesEqual('header', BytesOf('72 01 01 23'), EncodeS7PlusHeader($01, $0123));
 end;
 
-procedure TTestS7PlusCodec.CabecalhoVoltaComVersaoETamanho;
+procedure TTestS7PlusCodec.TheHeaderComesBackWithVersionAndLength;
 var
   versao:Byte;
   tamanho:Word;
@@ -113,7 +113,7 @@ begin
   AssertEquals('size', 16, tamanho);
 end;
 
-procedure TTestS7PlusCodec.CabecalhoComIdErradoReclama;
+procedure TTestS7PlusCodec.AHeaderWithTheWrongIdComplains;
 var
   versao:Byte;
   tamanho:Word;
@@ -129,7 +129,7 @@ begin
   AssertTrue('a protocol id other than $72 must complain', reclamou);
 end;
 
-procedure TTestS7PlusCodec.CabecalhoTruncadoReclama;
+procedure TTestS7PlusCodec.ATruncatedHeaderComplains;
 var
   versao:Byte;
   tamanho:Word;
@@ -145,7 +145,7 @@ begin
   AssertTrue('a header shorter than 4 bytes must complain', reclamou);
 end;
 
-procedure TTestS7PlusCodec.CabecalhoDePedidoTemQuatorzeBytes;
+procedure TTestS7PlusCodec.ARequestHeaderIsFourteenBytes;
 begin
   //opcode $31 (request), funcao $04BB, sequencia 2, sessao $12345678, flags $36
   AssertBytesEqual('request header',
@@ -153,7 +153,7 @@ begin
                    EncodeRequestHeader($04BB, $0002, $12345678, $36));
 end;
 
-procedure TTestS7PlusCodec.CabecalhoDeRespostaEhLidoDeVolta;
+procedure TTestS7PlusCodec.AnAnswerHeaderIsReadBack;
 var
   cab:TS7PlusResponseHeader;
 begin
@@ -166,7 +166,7 @@ begin
   AssertEquals('session id', 0, cab.SessionId);
 end;
 
-procedure TTestS7PlusCodec.CabecalhoDeRespostaTruncadoReclama;
+procedure TTestS7PlusCodec.ATruncatedAnswerHeaderComplains;
 var
   reclamou:Boolean;
 begin
@@ -180,7 +180,7 @@ begin
   AssertTrue('an answer shorter than 10 bytes must complain', reclamou);
 end;
 
-procedure TTestS7PlusCodec.InteirosSaoBigEndian;
+procedure TTestS7PlusCodec.IntegersAreBigEndian;
 begin
   AssertBytesEqual('uint8',  BytesOf('7F'), EncodeUInt8($7F));
   AssertBytesEqual('uint16', BytesOf('12 34'), EncodeUInt16($1234));
@@ -189,7 +189,7 @@ begin
                    EncodeUInt64(QWord($0102030405060708)));
 end;
 
-procedure TTestS7PlusCodec.InteirosVoltamDoBigEndian;
+procedure TTestS7PlusCodec.IntegersComeBackFromBigEndian;
 begin
   AssertEquals('uint16', $1234, DecodeUInt16(BytesOf('12 34'), 0));
   AssertEquals('uint32', Int64($12345678), Int64(DecodeUInt32(BytesOf('12 34 56 78'), 0)));
@@ -200,38 +200,38 @@ begin
   AssertEquals('uint16 with an offset', $5678, DecodeUInt16(BytesOf('12 34 56 78'), 2));
 end;
 
-procedure TTestS7PlusCodec.FloatsSeguemIEEE754BigEndian;
+procedure TTestS7PlusCodec.FloatsFollowIEEE754BigEndian;
 begin
   AssertBytesEqual('single 1.0',  BytesOf('3F 80 00 00'), EncodeFloat32(1.0));
   AssertBytesEqual('single -12.5', BytesOf('C1 48 00 00'), EncodeFloat32(-12.5));
   AssertBytesEqual('double 1.0',  BytesOf('3F F0 00 00 00 00 00 00'), EncodeFloat64(1.0));
 end;
 
-procedure TTestS7PlusCodec.FloatsVaoEVoltam;
+procedure TTestS7PlusCodec.FloatsGoOutAndComeBack;
 begin
   AssertEquals('single', 3.5, DecodeFloat32(EncodeFloat32(3.5), 0), 0);
   AssertEquals('double', -0.125, DecodeFloat64(EncodeFloat64(-0.125), 0), 0);
 end;
 
-procedure TTestS7PlusCodec.ValorTipadoUDIntUsaVLQ;
+procedure TTestS7PlusCodec.ATypedUDIntValueUsesVLQ;
 begin
   //o $04 = UDInt, valor 300 em VLQ
   AssertBytesEqual('udint', BytesOf('04 82 2C'), EncodeTypedValueUInt($04, 300));
 end;
 
-procedure TTestS7PlusCodec.ValorTipadoDWordUsaQuatroBytesFixos;
+procedure TTestS7PlusCodec.ATypedDWordValueUsesFourFixedBytes;
 begin
   //o $0C = DWord: mesmo valor, largura fixa
   AssertBytesEqual('dword', BytesOf('0C 00 00 01 2C'), EncodeTypedValueUInt($0C, 300));
 end;
 
-procedure TTestS7PlusCodec.ValorTipadoBoolNormalizaParaZeroOuUm;
+procedure TTestS7PlusCodec.ATypedBoolValueIsNormalisedToZeroOrOne;
 begin
   AssertBytesEqual('bool true', BytesOf('01 01'), EncodeTypedValueUInt($01, 7));
   AssertBytesEqual('bool false',      BytesOf('01 00'), EncodeTypedValueUInt($01, 0));
 end;
 
-procedure TTestS7PlusCodec.ValorTipadoComTipoNaoSuportadoReclama;
+procedure TTestS7PlusCodec.ATypedValueWithAnUnsupportedTypeComplains;
 var
   reclamou:Boolean;
 begin
@@ -246,54 +246,54 @@ begin
   AssertTrue('an unsupported type must complain', reclamou);
 end;
 
-procedure TTestS7PlusCodec.RIDTemQuatroBytesFixos;
+procedure TTestS7PlusCodec.ARIDIsFourFixedBytes;
 begin
   //o $12 = RID
   AssertBytesEqual('rid', BytesOf('12 12 34 56 78'), EncodeTypedValueRID($12345678));
 end;
 
-procedure TTestS7PlusCodec.BlobLevaRaizZeroETamanho;
+procedure TTestS7PlusCodec.ABlobCarriesRootZeroAndLength;
 begin
   //flags $00, tipo $14 (Blob), raiz 0, tamanho 2, dados
   AssertBytesEqual('blob', BytesOf('00 14 00 02 AA BB'), EncodePValueBlob(BytesOf('AA BB')));
 end;
 
-procedure TTestS7PlusCodec.ArrayDeBytesUsaOFlagDeArray;
+procedure TTestS7PlusCodec.AByteArrayUsesTheArrayFlag;
 begin
   //flags $10 (array), tipo $0A (Byte), contagem 2, dados
   AssertBytesEqual('array of bytes', BytesOf('10 0A 02 AA BB'),
                    EncodePValueByteArray(BytesOf('AA BB')));
 end;
 
-procedure TTestS7PlusCodec.EscritaDeDIntViraVLQAssinado;
+procedure TTestS7PlusCodec.WritingADIntBecomesASignedVLQ;
 begin
   //SoftDataType 7 = DINT; 300 cru em big-endian vira tipo $08 + VLQ assinado
   AssertBytesEqual('dint 300', BytesOf('00 08 82 2C'),
                    EncodeTypedWriteValue(7, BytesOf('00 00 01 2C')));
 end;
 
-procedure TTestS7PlusCodec.EscritaDeDIntNegativoViraVLQAssinado;
+procedure TTestS7PlusCodec.WritingANegativeDIntBecomesASignedVLQ;
 begin
   //-1 cru = FF FF FF FF; o VLQ assinado de -1 e' um unico byte $7F
   AssertBytesEqual('dint -1', BytesOf('00 08 7F'),
                    EncodeTypedWriteValue(7, BytesOf('FF FF FF FF')));
 end;
 
-procedure TTestS7PlusCodec.EscritaDeRealPassaOsBytesDireto;
+procedure TTestS7PlusCodec.WritingARealPassesTheBytesStraightThrough;
 begin
   //SoftDataType 8 = REAL: o padrao IEEE-754 vai como esta
   AssertBytesEqual('real 1.0', BytesOf('00 0E 3F 80 00 00'),
                    EncodeTypedWriteValue(8, BytesOf('3F 80 00 00')));
 end;
 
-procedure TTestS7PlusCodec.EscritaDeBoolUsaOUltimoByte;
+procedure TTestS7PlusCodec.WritingABoolUsesTheLastByte;
 begin
   //SoftDataType 1 = BOOL: aproveita so o byte menos significativo
   AssertBytesEqual('bool', BytesOf('00 01 01'),
                    EncodeTypedWriteValue(1, BytesOf('00 01')));
 end;
 
-procedure TTestS7PlusCodec.EscritaDeStringUsaArrayDeUSInt;
+procedure TTestS7PlusCodec.WritingAStringUsesAnArrayOfUSInt;
 begin
   //SoftDataType 19 = STRING: array de USInt ($10 $02) com a sequencia
   //classica do S7 [tamanho maximo][tamanho atual][caracteres]
@@ -301,14 +301,14 @@ begin
                    EncodeTypedWriteValue(19, BytesOf('FF 02 41 42')));
 end;
 
-procedure TTestS7PlusCodec.EscritaDeTipoDesconhecidoCaiNoArrayDeBytes;
+procedure TTestS7PlusCodec.WritingAnUnknownTypeFallsBackToAByteArray;
 begin
   //SoftDataType 0 (desconhecido) usa o array de bytes generico
   AssertBytesEqual('unknown type', BytesOf('10 0A 02 AA BB'),
                    EncodeTypedWriteValue(0, BytesOf('AA BB')));
 end;
 
-procedure TTestS7PlusCodec.UIntEIntSaoDoisBytesFixos;
+procedure TTestS7PlusCodec.UIntAndIntAreTwoFixedBytes;
 begin
   //cerca de regressao: um VLQ aqui gastaria 1 byte para o zero e desalinharia
   //todos os atributos seguintes do objeto.
@@ -317,26 +317,26 @@ begin
   AssertBytesEqual('int -2',  BytesOf('00 07 FF FE'), EncodeValuePInt(-2));
 end;
 
-procedure TTestS7PlusCodec.UDIntUsaVLQ;
+procedure TTestS7PlusCodec.UDIntUsesVLQ;
 begin
   AssertBytesEqual('udint 300', BytesOf('00 04 82 2C'), EncodeValuePUDInt(300));
 end;
 
-procedure TTestS7PlusCodec.WStringEhUmBytePorCaractere;
+procedure TTestS7PlusCodec.AWStringIsOneBytePerCharacter;
 begin
   //cerca de regressao: apesar do nome, aqui WSTRING e' um byte por caractere;
   //em UTF-16 o tamanho declarado (2) nao bateria com os 4 bytes enviados.
   AssertBytesEqual('wstring AB', BytesOf('00 15 02 41 42'), EncodeValuePWString('AB'));
 end;
 
-procedure TTestS7PlusCodec.ArrayDeUDIntRespeitaOFlagPedido;
+procedure TTestS7PlusCodec.AnArrayOfUDIntHonoursTheFlagAskedFor;
 begin
   //flags $20 = "Addressarray", usado pelo GetVarSubstreamed e pela Subscription
   AssertBytesEqual('array of udint', BytesOf('20 04 02 01 82 2C'),
                    EncodeValuePUDIntArray([1, 300], $20));
 end;
 
-procedure TTestS7PlusCodec.LIntVaiEVoltaPeloDecodificador;
+procedure TTestS7PlusCodec.ALIntGoesOutAndBackThroughTheDecoder;
 var
   consumido:Integer;
 begin
@@ -346,7 +346,7 @@ begin
                    DecodePValueToBytes(EncodeValuePLInt(-1), 0, consumido));
 end;
 
-procedure TTestS7PlusCodec.ObjetoTemAberturaAtributosEFechamento;
+procedure TTestS7PlusCodec.AnObjectHasAnOpeningAttributesAndAClosing;
 var
   atributos:TS7PlusPObjectAttributeArray;
 begin
@@ -361,7 +361,7 @@ begin
                    EncodePObject($12345678, 300, 0, 0, atributos));
 end;
 
-procedure TTestS7PlusCodec.AtributoEhEncontradoNoObjeto;
+procedure TTestS7PlusCodec.AnAttributeIsFoundInTheObject;
 var
   objeto, valor:TBytes;
   atributos:TS7PlusPObjectAttributeArray;
@@ -380,7 +380,7 @@ begin
   AssertBytesEqual('attribute value', BytesOf('00 00 01 2C'), valor);
 end;
 
-procedure TTestS7PlusCodec.AtributoAusenteDevolveFalso;
+procedure TTestS7PlusCodec.AMissingAttributeReturnsFalse;
 var
   objeto, valor:TBytes;
   atributos:TS7PlusPObjectAttributeArray;
@@ -394,7 +394,7 @@ begin
   AssertEquals('the value must come back empty', 0, Length(valor));
 end;
 
-procedure TTestS7PlusCodec.QualificadorV1TerminaComUDIntDeTamanhoFixo;
+procedure TTestS7PlusCodec.AV1QualifierEndsWithAFixedSizeUDInt;
 begin
   //ObjectQualifier 1256, ParentRID 1257, CompositionAID 1258, KeyQualifier 1259.
   //Na variante V1 o KeyQualifier vai em 4 bytes fixos e sem terminador.
@@ -403,7 +403,7 @@ begin
                    EncodeObjectQualifierV1(5));
 end;
 
-procedure TTestS7PlusCodec.EnderecoDeItemContaOsCampos;
+procedure TTestS7PlusCodec.AnItemAddressCountsTheFields;
 var
   ender:TS7PlusItemAddress;
 begin
@@ -414,7 +414,7 @@ begin
   AssertEquals('fields', 5, ender.FieldCount);
 end;
 
-procedure TTestS7PlusCodec.PValueDeUDIntVoltaComQuatroBytes;
+procedure TTestS7PlusCodec.AUDIntPValueComesBackWithFourBytes;
 var
   consumido:Integer;
 begin

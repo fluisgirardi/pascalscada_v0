@@ -19,10 +19,10 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure UmIntervaloViraUmBlocoUnico;
-    procedure BuracoPequenoUneOsBlocos;
-    procedure BuracoGrandeSeparaOsBlocos;
-    procedure LimiteDeItensQuebraOBloco;
+    procedure OneRangeBecomesASingleBlock;
+    procedure ASmallHoleJoinsTheBlocks;
+    procedure ABigHoleSplitsTheBlocks;
+    procedure TheItemLimitBreaksTheBlock;
   end;
 
 implementation
@@ -39,7 +39,7 @@ begin
   FreeAndNil(FMM);
 end;
 
-procedure TTestPLCMemoryManager.UmIntervaloViraUmBlocoUnico;
+procedure TTestPLCMemoryManager.OneRangeBecomesASingleBlock;
 begin
   FMM.AddAddress(0, 10, 1, 1000);
   AssertEquals('number of blocks', 1, Length(FMM.Blocks));
@@ -48,7 +48,7 @@ begin
   AssertEquals('total size', 10, FMM.Size);
 end;
 
-procedure TTestPLCMemoryManager.BuracoPequenoUneOsBlocos;
+procedure TTestPLCMemoryManager.ASmallHoleJoinsTheBlocks;
 begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.AddAddress(13, 2, 1, 1000);
@@ -56,14 +56,14 @@ begin
   AssertEquals('end address', 14, FMM.Blocks[0].AddressEnd);
 end;
 
-procedure TTestPLCMemoryManager.BuracoGrandeSeparaOsBlocos;
+procedure TTestPLCMemoryManager.ABigHoleSplitsTheBlocks;
 begin
   FMM.AddAddress(0, 10, 1, 1000);
   FMM.AddAddress(100, 2, 1, 1000);
   AssertEquals('a big hole must split', 2, Length(FMM.Blocks));
 end;
 
-procedure TTestPLCMemoryManager.LimiteDeItensQuebraOBloco;
+procedure TTestPLCMemoryManager.TheItemLimitBreaksTheBlock;
 begin
   FMM.MaxBlockItems := 20;
   FMM.AddAddress(0, 50, 1, 1000);

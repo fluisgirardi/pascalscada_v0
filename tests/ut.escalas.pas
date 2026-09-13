@@ -46,27 +46,27 @@ type
   private
     FEscala:TLinearScaleProcessor;
     //: configura as duas faixas de uma vez
-    procedure Faixas(aPlcMin, aPlcMax, aSysMin, aSysMax:Double);
+    procedure Ranges(aPlcMin, aPlcMax, aSysMin, aSysMax:Double);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure PadroesDeFabrica;
+    procedure FactoryDefaults;
 
     //interpolacao / interpolation
-    procedure ExtremosDaFaixaBatemComOsExtremosDaEscala;
-    procedure MeioDaFaixaDaMetadeDaEscala;
-    procedure FaixaComDeslocamentoDeQuatroAVinte;
-    procedure FaixaDoEquipamentoInvertida;
-    procedure ValorForaDaFaixaEhExtrapolado;
+    procedure TheEndsOfTheRangeMatchTheEndsOfTheScale;
+    procedure TheMiddleOfTheRangeGivesHalfTheScale;
+    procedure ARangeWithAnOffsetFromFourToTwenty;
+    procedure AnInvertedDeviceRange;
+    procedure AValueOutsideTheRangeIsExtrapolated;
 
     //ida e volta / round trip
-    procedure OCaminhoDeVoltaDesfazODeIda;
-    procedure OCaminhoDeVoltaDesfazODeIdaComFaixaInvertida;
+    procedure TheWayBackUndoesTheWayThere;
+    procedure TheWayBackUndoesTheWayThereOnAnInvertedRange;
 
     //faixas degeneradas / degenerate ranges
-    procedure FaixaDoEquipamentoSemAmplitudeNaoDividePorZero;
-    procedure FaixaDeEngenhariaSemAmplitudeNaoDividePorZero;
+    procedure ADeviceRangeWithNoSpanDoesNotDivideByZero;
+    procedure AnEngineeringRangeWithNoSpanDoesNotDivideByZero;
   end;
 
   { TTestEscalaDoUsuario }
@@ -76,17 +76,17 @@ type
     FEscala:TUserScale;
     FChamadasDeIda, FChamadasDeVolta:LongInt;
     FEntradaVista, FResultadoQueChegou:Double;
-    procedure DoEquipamentoParaOUsuario(Sender:TObject; const Entrada:Double; var Saida:Double);
-    procedure DoUsuarioParaOEquipamento(Sender:TObject; const Entrada:Double; var Saida:Double);
+    procedure FromTheDeviceToTheUser(Sender:TObject; const Entrada:Double; var Saida:Double);
+    procedure FromTheUserToTheDevice(Sender:TObject; const Entrada:Double; var Saida:Double);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure SemGanchoOValorPassaSemMexer;
-    procedure OGanchoDeIdaEhChamado;
-    procedure OGanchoDeVoltaEhChamado;
-    procedure OGanchoRecebeOValorDeEntrada;
-    procedure OResultadoChegaAoGanchoJaComOValorDeEntrada;
+    procedure WithNoHookTheValueGoesThroughUntouched;
+    procedure TheHookOnTheWayThereIsCalled;
+    procedure TheHookOnTheWayBackIsCalled;
+    procedure TheHookGetsTheInputValue;
+    procedure TheResultReachesTheHookAlreadyHoldingTheInputValue;
   end;
 
 implementation
@@ -103,7 +103,7 @@ begin
   FreeAndNil(FEscala);
 end;
 
-procedure TTestEscalaLinear.Faixas(aPlcMin, aPlcMax, aSysMin, aSysMax:Double);
+procedure TTestEscalaLinear.Ranges(aPlcMin, aPlcMax, aSysMin, aSysMax:Double);
 begin
   FEscala.PLCMin:=aPlcMin;
   FEscala.PLCMax:=aPlcMax;
@@ -111,7 +111,7 @@ begin
   FEscala.SysMax:=aSysMax;
 end;
 
-procedure TTestEscalaLinear.PadroesDeFabrica;
+procedure TTestEscalaLinear.FactoryDefaults;
 begin
   //a faixa de fabrica e' a de um conversor de 15 bits para 0 a 100 por cento
   AssertEquals('device minimum', 0,     FEscala.PLCMin, 0);
@@ -120,37 +120,37 @@ begin
   AssertEquals('engineering maximum',  100,   FEscala.SysMax, 0);
 end;
 
-procedure TTestEscalaLinear.ExtremosDaFaixaBatemComOsExtremosDaEscala;
+procedure TTestEscalaLinear.TheEndsOfTheRangeMatchTheEndsOfTheScale;
 begin
   AssertEquals('bottom of the scale',  0,   FEscala.SetInGetOut(nil, 0),     0.0001);
   AssertEquals('top of the scale',   100, FEscala.SetInGetOut(nil, 32000), 0.0001);
 end;
 
-procedure TTestEscalaLinear.MeioDaFaixaDaMetadeDaEscala;
+procedure TTestEscalaLinear.TheMiddleOfTheRangeGivesHalfTheScale;
 begin
   AssertEquals('middle of the range', 50, FEscala.SetInGetOut(nil, 16000), 0.0001);
 end;
 
-procedure TTestEscalaLinear.FaixaComDeslocamentoDeQuatroAVinte;
+procedure TTestEscalaLinear.ARangeWithAnOffsetFromFourToTwenty;
 begin
   //a faixa classica de corrente: 4 mA e' zero por cento, 20 mA e' cem
-  Faixas(4, 20, 0, 100);
+  Ranges(4, 20, 0, 100);
 
   AssertEquals('four milliamps',  0,   FEscala.SetInGetOut(nil, 4),  0.0001);
   AssertEquals('twelve milliamps',    50,  FEscala.SetInGetOut(nil, 12), 0.0001);
   AssertEquals('twenty milliamps',   100, FEscala.SetInGetOut(nil, 20), 0.0001);
 end;
 
-procedure TTestEscalaLinear.FaixaDoEquipamentoInvertida;
+procedure TTestEscalaLinear.AnInvertedDeviceRange;
 begin
   //ha' equipamento que entrega a faixa ao contrario
-  Faixas(32000, 0, 0, 100);
+  Ranges(32000, 0, 0, 100);
 
   AssertEquals('the device maximum is zero', 0,   FEscala.SetInGetOut(nil, 32000), 0.0001);
   AssertEquals('the minimum is one hundred',                 100, FEscala.SetInGetOut(nil, 0),     0.0001);
 end;
 
-procedure TTestEscalaLinear.ValorForaDaFaixaEhExtrapolado;
+procedure TTestEscalaLinear.AValueOutsideTheRangeIsExtrapolated;
 begin
   //a escala nao corta o valor na faixa: ela prolonga a reta. Quem precisar de
   //corte usa os limites do tag
@@ -158,31 +158,31 @@ begin
   AssertEquals('below the bottom', -50, FEscala.SetInGetOut(nil, -16000), 0.0001);
 end;
 
-procedure TTestEscalaLinear.OCaminhoDeVoltaDesfazODeIda;
+procedure TTestEscalaLinear.TheWayBackUndoesTheWayThere;
 begin
-  Faixas(4, 20, -40, 120);
+  Ranges(4, 20, -40, 120);
 
   AssertEquals('round trip at 7',  7,  FEscala.SetOutGetIn(nil, FEscala.SetInGetOut(nil, 7)),  0.0001);
   AssertEquals('round trip at 13', 13, FEscala.SetOutGetIn(nil, FEscala.SetInGetOut(nil, 13)), 0.0001);
 end;
 
-procedure TTestEscalaLinear.OCaminhoDeVoltaDesfazODeIdaComFaixaInvertida;
+procedure TTestEscalaLinear.TheWayBackUndoesTheWayThereOnAnInvertedRange;
 begin
-  Faixas(32000, 0, 0, 100);
+  Ranges(32000, 0, 0, 100);
   AssertEquals('round trip', 12345, FEscala.SetOutGetIn(nil, FEscala.SetInGetOut(nil, 12345)), 0.0001);
 end;
 
-procedure TTestEscalaLinear.FaixaDoEquipamentoSemAmplitudeNaoDividePorZero;
+procedure TTestEscalaLinear.ADeviceRangeWithNoSpanDoesNotDivideByZero;
 begin
   //faixa mal configurada nao pode derrubar a leitura
-  Faixas(100, 100, 0, 100);
+  Ranges(100, 100, 0, 100);
 
   AssertEquals('on the point itself', 0, FEscala.SetInGetOut(nil, 100), 0.0001);
 end;
 
-procedure TTestEscalaLinear.FaixaDeEngenhariaSemAmplitudeNaoDividePorZero;
+procedure TTestEscalaLinear.AnEngineeringRangeWithNoSpanDoesNotDivideByZero;
 begin
-  Faixas(0, 32000, 50, 50);
+  Ranges(0, 32000, 50, 50);
 
   AssertEquals('on the point itself', 0, FEscala.SetOutGetIn(nil, 50), 0.0001);
 end;
@@ -203,7 +203,7 @@ begin
   FreeAndNil(FEscala);
 end;
 
-procedure TTestEscalaDoUsuario.DoEquipamentoParaOUsuario(Sender:TObject; const Entrada:Double; var Saida:Double);
+procedure TTestEscalaDoUsuario.FromTheDeviceToTheUser(Sender:TObject; const Entrada:Double; var Saida:Double);
 begin
   inc(FChamadasDeIda);
   FEntradaVista:=Entrada;
@@ -211,48 +211,48 @@ begin
   Saida:=Entrada*10;
 end;
 
-procedure TTestEscalaDoUsuario.DoUsuarioParaOEquipamento(Sender:TObject; const Entrada:Double; var Saida:Double);
+procedure TTestEscalaDoUsuario.FromTheUserToTheDevice(Sender:TObject; const Entrada:Double; var Saida:Double);
 begin
   inc(FChamadasDeVolta);
   Saida:=Entrada/10;
 end;
 
-procedure TTestEscalaDoUsuario.SemGanchoOValorPassaSemMexer;
+procedure TTestEscalaDoUsuario.WithNoHookTheValueGoesThroughUntouched;
 begin
   AssertEquals('there',   7, FEscala.SetInGetOut(nil, 7), 0);
   AssertEquals('back', 7, FEscala.SetOutGetIn(nil, 7), 0);
 end;
 
-procedure TTestEscalaDoUsuario.OGanchoDeIdaEhChamado;
+procedure TTestEscalaDoUsuario.TheHookOnTheWayThereIsCalled;
 begin
-  FEscala.OnPLCToUser:=@DoEquipamentoParaOUsuario;
+  FEscala.OnPLCToUser:=@FromTheDeviceToTheUser;
 
   AssertEquals('the hook did the maths', 50, FEscala.SetInGetOut(nil, 5), 0);
   AssertEquals('and was called once', 1, FChamadasDeIda);
   AssertEquals('without touching the other one',    0, FChamadasDeVolta);
 end;
 
-procedure TTestEscalaDoUsuario.OGanchoDeVoltaEhChamado;
+procedure TTestEscalaDoUsuario.TheHookOnTheWayBackIsCalled;
 begin
-  FEscala.OnUserToPLC:=@DoUsuarioParaOEquipamento;
+  FEscala.OnUserToPLC:=@FromTheUserToTheDevice;
 
   AssertEquals('the hook did the maths', 5, FEscala.SetOutGetIn(nil, 50), 0);
   AssertEquals('and was called once', 1, FChamadasDeVolta);
   AssertEquals('without touching the other one',    0, FChamadasDeIda);
 end;
 
-procedure TTestEscalaDoUsuario.OGanchoRecebeOValorDeEntrada;
+procedure TTestEscalaDoUsuario.TheHookGetsTheInputValue;
 begin
-  FEscala.OnPLCToUser:=@DoEquipamentoParaOUsuario;
+  FEscala.OnPLCToUser:=@FromTheDeviceToTheUser;
   FEscala.SetInGetOut(nil, 42);
 
   AssertEquals('the hook saw the input', 42, FEntradaVista, 0);
 end;
 
-procedure TTestEscalaDoUsuario.OResultadoChegaAoGanchoJaComOValorDeEntrada;
+procedure TTestEscalaDoUsuario.TheResultReachesTheHookAlreadyHoldingTheInputValue;
 begin
   //um gancho que nao mexe na saida deixa o valor passar: e' o que garante isso
-  FEscala.OnPLCToUser:=@DoEquipamentoParaOUsuario;
+  FEscala.OnPLCToUser:=@FromTheDeviceToTheUser;
   FEscala.SetInGetOut(nil, 42);
 
   AssertEquals('the output arrives already equal to the input', 42, FResultadoQueChegou, 0);

@@ -43,7 +43,7 @@ type
   TBlocoProbe = class(TPLCBlock)
   public
     //: entrega valores ao bloco como uma varredura faria
-    procedure ChegouDaVarredura(const aValores:TArrayOfDouble; aDeslocamento:LongInt;
+    procedure CameFromTheScan(const aValores:TArrayOfDouble; aDeslocamento:LongInt;
                                 aResultado:TProtocolIOResult = ioOk);
   end;
 
@@ -53,35 +53,35 @@ type
   private
     FBloco:TBlocoProbe;
     FAvisos:LongInt;
-    procedure ContarAviso(Sender:TObject);
+    procedure CountNotification(Sender:TObject);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //tamanho / size
-    procedure TamanhoMudaAQuantidadeDeValores;
-    procedure TamanhoZeroEhIgnorado;
-    procedure ValoresNovosComecamEmZero;
+    procedure TheSizeChangesHowManyValuesThereAre;
+    procedure ASizeOfZeroIsIgnored;
+    procedure NewValuesStartAtZero;
 
     //acesso aos valores / value access
-    procedure IndiceNegativoEhRecusado;
-    procedure IndiceAlemDoFimEhRecusado;
+    procedure ANegativeIndexIsRefused;
+    procedure AnIndexPastTheEndIsRefused;
 
     //valores vindos da varredura / values coming from a scan
-    procedure VarreduraGuardaOsValores;
-    procedure VarreduraComDeslocamentoGuardaNoLugarCerto;
-    procedure MaisValoresDoQueCabeNaoTransborda;
-    procedure FalhaNaLeituraNaoMudaOsValores;
+    procedure TheScanKeepsTheValues;
+    procedure AScanWithAnOffsetStoresInTheRightPlace;
+    procedure MoreValuesThanFitDoNotOverflow;
+    procedure AFailedReadDoesNotChangeTheValues;
 
     //avisos / notifications
-    procedure MudancaDeValorAvisaQuemEscuta;
-    procedure LeituraComOsMesmosValoresNaoAvisa;
+    procedure AValueChangeNotifiesTheListener;
+    procedure AReadWithTheSameValuesDoesNotNotify;
 
     //os comandos sem driver ligado / the commands with no driver attached
-    procedure VarreduraDeLeituraSemDriverNaoTemIdentificador;
-    procedure LeituraSemDriverNaoFazNada;
-    procedure EscritaSemDriverVoltaPeloCallback;
-    procedure EscritaDeZeroValoresNaoFazNada;
+    procedure AScanReadWithNoDriverHasNoIdentifier;
+    procedure AReadWithNoDriverDoesNothing;
+    procedure AWriteWithNoDriverComesBackThroughTheCallback;
+    procedure WritingZeroValuesDoesNothing;
   end;
 
   { TTestPLCBlockElement }
@@ -91,24 +91,24 @@ type
     FBloco:TBlocoProbe;
     FElemento:TPLCBlockElement;
     FAvisos:LongInt;
-    procedure ContarAviso(Sender:TObject);
+    procedure CountNotification(Sender:TObject);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure ElementoLeOValorDoBloco;
-    procedure ElementoAcompanhaAMudancaDoBloco;
-    procedure EscreverNoElementoMudaOBloco;
-    procedure IndiceAlemDoBlocoEhRecusado;
-    procedure IndiceEscolhidoAntesDoBlocoEhConferidoDepois;
-    procedure BlocoDestruidoDesligaOVinculo;
-    procedure SemBlocoGuardaOValorLocalmente;
+    procedure TheElementReadsTheValueFromTheBlock;
+    procedure TheElementFollowsTheBlockChange;
+    procedure WritingToTheElementChangesTheBlock;
+    procedure AnIndexPastTheBlockIsRefused;
+    procedure AnIndexChosenBeforeTheBlockIsCheckedLater;
+    procedure ADestroyedBlockBreaksTheLink;
+    procedure WithNoBlockItKeepsTheValueLocally;
   end;
 
 implementation
 
 //: monta o vetor que um driver entregaria
-function Valores(const aValores:array of Double):TArrayOfDouble;
+function ValuesOf(const aValores:array of Double):TArrayOfDouble;
 var
   c:LongInt;
 begin
@@ -120,7 +120,7 @@ end;
 
 { TBlocoProbe }
 
-procedure TBlocoProbe.ChegouDaVarredura(const aValores:TArrayOfDouble; aDeslocamento:LongInt;
+procedure TBlocoProbe.CameFromTheScan(const aValores:TArrayOfDouble; aDeslocamento:LongInt;
                                         aResultado:TProtocolIOResult = ioOk);
 begin
   TagCommandCallBack(0, aValores, GetTickCount64, tcScanRead, aResultado, aDeslocamento);
@@ -140,12 +140,12 @@ begin
   FreeAndNil(FBloco);
 end;
 
-procedure TTestPLCBlock.ContarAviso(Sender:TObject);
+procedure TTestPLCBlock.CountNotification(Sender:TObject);
 begin
   inc(FAvisos);
 end;
 
-procedure TTestPLCBlock.TamanhoMudaAQuantidadeDeValores;
+procedure TTestPLCBlock.TheSizeChangesHowManyValuesThereAre;
 begin
   AssertEquals('initial size', 4, FBloco.Size);
 
@@ -154,20 +154,20 @@ begin
   AssertEquals('values',         7, Length(FBloco.ValuesRaw));
 end;
 
-procedure TTestPLCBlock.TamanhoZeroEhIgnorado;
+procedure TTestPLCBlock.ASizeOfZeroIsIgnored;
 begin
   //um bloco de tamanho zero nao le nada: o tamanho anterior fica de pe
   FBloco.Size:=0;
   AssertEquals('the size is still', 4, FBloco.Size);
 end;
 
-procedure TTestPLCBlock.ValoresNovosComecamEmZero;
+procedure TTestPLCBlock.NewValuesStartAtZero;
 begin
   FBloco.Size:=6;
   AssertEquals('new value', 0, FBloco.ValueRaw[5], 0);
 end;
 
-procedure TTestPLCBlock.IndiceNegativoEhRecusado;
+procedure TTestPLCBlock.ANegativeIndexIsRefused;
 var
   recusou:Boolean;
   lixo:Double;
@@ -181,7 +181,7 @@ begin
   AssertTrue('negative index', recusou);
 end;
 
-procedure TTestPLCBlock.IndiceAlemDoFimEhRecusado;
+procedure TTestPLCBlock.AnIndexPastTheEndIsRefused;
 var
   recusou:Boolean;
   lixo:Double;
@@ -195,9 +195,9 @@ begin
   AssertTrue('index past the end', recusou);
 end;
 
-procedure TTestPLCBlock.VarreduraGuardaOsValores;
+procedure TTestPLCBlock.TheScanKeepsTheValues;
 begin
-  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
+  FBloco.CameFromTheScan(ValuesOf([10, 20, 30, 40]), 0);
 
   AssertEquals('first', 10, FBloco.ValueRaw[0], 0);
   AssertEquals('second',  20, FBloco.ValueRaw[1], 0);
@@ -205,89 +205,89 @@ begin
   AssertEquals('fourth',   40, FBloco.ValueRaw[3], 0);
 end;
 
-procedure TTestPLCBlock.VarreduraComDeslocamentoGuardaNoLugarCerto;
+procedure TTestPLCBlock.AScanWithAnOffsetStoresInTheRightPlace;
 begin
   //um driver pode entregar so' um pedaco do bloco, dizendo de onde ele comeca
-  FBloco.ChegouDaVarredura(Valores([77, 88]), 2);
+  FBloco.CameFromTheScan(ValuesOf([77, 88]), 2);
 
   AssertEquals('did not touch the beginning', 0,  FBloco.ValueRaw[0], 0);
   AssertEquals('third',            77, FBloco.ValueRaw[2], 0);
   AssertEquals('fourth',              88, FBloco.ValueRaw[3], 0);
 end;
 
-procedure TTestPLCBlock.MaisValoresDoQueCabeNaoTransborda;
+procedure TTestPLCBlock.MoreValuesThanFitDoNotOverflow;
 begin
   //o driver mandou mais do que o bloco comporta: o que cabe entra, o resto
   //nao pode escrever fora do vetor
-  FBloco.ChegouDaVarredura(Valores([1, 2, 3, 4, 5, 6]), 0);
+  FBloco.CameFromTheScan(ValuesOf([1, 2, 3, 4, 5, 6]), 0);
 
   AssertEquals('what fitted', 4, FBloco.ValueRaw[3], 0);
   AssertEquals('size untouched', 4, FBloco.Size);
 end;
 
-procedure TTestPLCBlock.FalhaNaLeituraNaoMudaOsValores;
+procedure TTestPLCBlock.AFailedReadDoesNotChangeTheValues;
 begin
-  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
-  FBloco.ChegouDaVarredura(Valores([99, 99, 99, 99]), 0, ioTimeOut);
+  FBloco.CameFromTheScan(ValuesOf([10, 20, 30, 40]), 0);
+  FBloco.CameFromTheScan(ValuesOf([99, 99, 99, 99]), 0, ioTimeOut);
 
   AssertEquals('the old value stays', 10, FBloco.ValueRaw[0], 0);
 end;
 
-procedure TTestPLCBlock.MudancaDeValorAvisaQuemEscuta;
+procedure TTestPLCBlock.AValueChangeNotifiesTheListener;
 begin
-  FBloco.AddTagChangeHandler(@ContarAviso);
-  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
+  FBloco.AddTagChangeHandler(@CountNotification);
+  FBloco.CameFromTheScan(ValuesOf([10, 20, 30, 40]), 0);
 
   AssertTrue('a change must notify', FAvisos>0);
 end;
 
-procedure TTestPLCBlock.LeituraComOsMesmosValoresNaoAvisa;
+procedure TTestPLCBlock.AReadWithTheSameValuesDoesNotNotify;
 begin
-  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
-  FBloco.AddTagChangeHandler(@ContarAviso);
+  FBloco.CameFromTheScan(ValuesOf([10, 20, 30, 40]), 0);
+  FBloco.AddTagChangeHandler(@CountNotification);
   FAvisos:=0;
 
-  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
+  FBloco.CameFromTheScan(ValuesOf([10, 20, 30, 40]), 0);
   AssertEquals('nothing changed, nothing to notify', 0, FAvisos);
 end;
 
 { TTestPLCBlockElement }
 
-procedure TTestPLCBlock.VarreduraDeLeituraSemDriverNaoTemIdentificador;
+procedure TTestPLCBlock.AScanReadWithNoDriverHasNoIdentifier;
 begin
   //sem driver nao ha pedido a numerar: menos um e' o "nao fiz nada" que os
   //tags conferem
   AssertEquals('no driver', -1, FBloco.ScanRead);
 end;
 
-procedure TTestPLCBlock.LeituraSemDriverNaoFazNada;
+procedure TTestPLCBlock.AReadWithNoDriverDoesNothing;
 begin
   //nao ha o que entregar, e o bloco nao pode inventar valor nenhum
-  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
+  FBloco.CameFromTheScan(ValuesOf([10, 20, 30, 40]), 0);
 
   FBloco.Read;
 
   AssertEquals('the values stay as they were', 10, FBloco.ValueRaw[0], 0);
 end;
 
-procedure TTestPLCBlock.EscritaSemDriverVoltaPeloCallback;
+procedure TTestPLCBlock.AWriteWithNoDriverComesBackThroughTheCallback;
 begin
   //sem driver a escrita volta pelo proprio callback, com ioNullDriver, e o
   //bloco guarda o que foi escrito
-  FBloco.Write(Valores([7, 8]), 2, 0);
+  FBloco.Write(ValuesOf([7, 8]), 2, 0);
 
   AssertEquals('first', 7, FBloco.ValueRaw[0], 0);
   AssertEquals('second',  8, FBloco.ValueRaw[1], 0);
 end;
 
-procedure TTestPLCBlock.EscritaDeZeroValoresNaoFazNada;
+procedure TTestPLCBlock.WritingZeroValuesDoesNothing;
 begin
-  FBloco.ChegouDaVarredura(Valores([10, 20, 30, 40]), 0);
+  FBloco.CameFromTheScan(ValuesOf([10, 20, 30, 40]), 0);
 
-  FBloco.Write(Valores([99]), 0, 0);
+  FBloco.Write(ValuesOf([99]), 0, 0);
   AssertEquals('nothing was written', 10, FBloco.ValueRaw[0], 0);
 
-  AssertEquals('and neither was the scan', -1, FBloco.ScanWrite(Valores([99]), 0, 0));
+  AssertEquals('and neither was the scan', -1, FBloco.ScanWrite(ValuesOf([99]), 0, 0));
 end;
 
 procedure TTestPLCBlockElement.SetUp;
@@ -305,14 +305,14 @@ begin
   FreeAndNil(FBloco);
 end;
 
-procedure TTestPLCBlockElement.ContarAviso(Sender:TObject);
+procedure TTestPLCBlockElement.CountNotification(Sender:TObject);
 begin
   inc(FAvisos);
 end;
 
-procedure TTestPLCBlockElement.ElementoLeOValorDoBloco;
+procedure TTestPLCBlockElement.TheElementReadsTheValueFromTheBlock;
 begin
-  FBloco.ChegouDaVarredura(nil, 0);
+  FBloco.CameFromTheScan(nil, 0);
   FElemento.PLCBlock:=FBloco;
   FElemento.Index   :=2;
 
@@ -320,20 +320,20 @@ begin
   AssertEquals('the element reads from the block', 55, FElemento.Value, 0);
 end;
 
-procedure TTestPLCBlockElement.ElementoAcompanhaAMudancaDoBloco;
+procedure TTestPLCBlockElement.TheElementFollowsTheBlockChange;
 begin
   FElemento.PLCBlock:=FBloco;
   FElemento.Index   :=1;
-  FElemento.AddTagChangeHandler(@ContarAviso);
+  FElemento.AddTagChangeHandler(@CountNotification);
   FAvisos:=0;
 
-  FBloco.ChegouDaVarredura(Valores([0, 42, 0, 0]), 0);
+  FBloco.CameFromTheScan(ValuesOf([0, 42, 0, 0]), 0);
 
   AssertEquals('new value',        42, FElemento.Value, 0);
   AssertTrue  ('and reported the change', FAvisos>0);
 end;
 
-procedure TTestPLCBlockElement.EscreverNoElementoMudaOBloco;
+procedure TTestPLCBlockElement.WritingToTheElementChangesTheBlock;
 begin
   FElemento.PLCBlock:=FBloco;
   FElemento.Index   :=3;
@@ -342,7 +342,7 @@ begin
   AssertEquals('the block got', 17, FBloco.ValueRaw[3], 0);
 end;
 
-procedure TTestPLCBlockElement.IndiceAlemDoBlocoEhRecusado;
+procedure TTestPLCBlockElement.AnIndexPastTheBlockIsRefused;
 var
   recusou:Boolean;
 begin
@@ -357,7 +357,7 @@ begin
   AssertTrue('index past the block', recusou);
 end;
 
-procedure TTestPLCBlockElement.IndiceEscolhidoAntesDoBlocoEhConferidoDepois;
+procedure TTestPLCBlockElement.AnIndexChosenBeforeTheBlockIsCheckedLater;
 begin
   //sem bloco qualquer indice e' aceito; ao vincular um bloco menor que ele, o
   //elemento fica apontando para fora
@@ -367,7 +367,7 @@ begin
   AssertTrue('the index must fit in the block', FElemento.Index<FBloco.Size);
 end;
 
-procedure TTestPLCBlockElement.BlocoDestruidoDesligaOVinculo;
+procedure TTestPLCBlockElement.ADestroyedBlockBreaksTheLink;
 var
   bloco:TBlocoProbe;
 begin
@@ -381,7 +381,7 @@ begin
   AssertTrue('the link must have been broken', FElemento.PLCBlock=nil);
 end;
 
-procedure TTestPLCBlockElement.SemBlocoGuardaOValorLocalmente;
+procedure TTestPLCBlockElement.WithNoBlockItKeepsTheValueLocally;
 begin
   FElemento.Value:=8;
   AssertEquals('value kept', 8, FElemento.Value, 0);

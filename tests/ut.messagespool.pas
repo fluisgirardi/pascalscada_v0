@@ -38,39 +38,39 @@ type
   private
     FFila:TMessageSpool;
     //: tira a proxima mensagem da fila e devolve o seu id (0 se a fila estiver vazia)
-    function  ProximoId:Cardinal;
-    procedure Posta(aId:Cardinal; aPrioritaria:Boolean = false);
+    function  NextId:Cardinal;
+    procedure PostIt(aId:Cardinal; aPrioritaria:Boolean = false);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //fila vazia / empty queue
-    procedure FilaNovaEstaVazia;
-    procedure LeituraDeFilaVaziaNaoAchaNada;
+    procedure ANewQueueIsEmpty;
+    procedure ReadingAnEmptyQueueFindsNothing;
 
     //ida e volta / round trip
-    procedure MensagemPostadaEhEncontrada;
-    procedure LeituraSemRemoverDeixaAMensagemNaFila;
-    procedure LeituraComRemocaoTiraDaFila;
-    procedure ParametrosSaoPreservados;
+    procedure APostedMessageIsFound;
+    procedure ReadingWithoutRemovingLeavesTheMessageInTheQueue;
+    procedure ReadingWithRemovalTakesItOutOfTheQueue;
+    procedure TheParametersAreKept;
 
     //ordem / ordering
-    procedure MensagensNormaisSaemNaOrdemEmQueEntraram;
-    procedure MensagemPrioritariaFuraAFila;
-    procedure PrioritariasMantemAOrdemEntreSi;
-    procedure PrioritariaNaFilaVaziaContinuaPrimeira;
-    procedure PrioritariaDepoisDeTudoLidoVoltaAFuncionar;
+    procedure NormalMessagesComeOutInTheOrderTheyWentIn;
+    procedure APriorityMessageJumpsTheQueue;
+    procedure PriorityMessagesKeepTheirOrderAmongThemselves;
+    procedure APriorityMessageInAnEmptyQueueIsStillFirst;
+    procedure APriorityMessageAfterEverythingWasReadWorksAgain;
 
-    procedure PrioritariaFuraAFilaComUmaMensagemSo;
-    procedure PrioritariaEntraNoFimDaFilaDePrioritarias;
+    procedure APriorityMessageJumpsAQueueOfASingleMessage;
+    procedure APriorityMessageGoesToTheEndOfThePriorityQueue;
 
     //filtro por faixa de id / id range filter
-    procedure FiltroPegaSoAMensagemDaFaixa;
-    procedure FiltroSemCorrespondenciaNaoRemoveNada;
-    procedure FaixaZeradaPegaAPrimeiraMensagem;
+    procedure TheFilterTakesOnlyTheMessageInTheRange;
+    procedure AFilterWithNoMatchRemovesNothing;
+    procedure AZeroedRangeTakesTheFirstMessage;
 
     //contagem / count
-    procedure ContagemAcompanhaAsOperacoes;
+    procedure TheCountFollowsTheOperations;
   end;
 
 implementation
@@ -87,12 +87,12 @@ begin
   FreeAndNil(FFila);
 end;
 
-procedure TTestMessageSpool.Posta(aId:Cardinal; aPrioritaria:Boolean);
+procedure TTestMessageSpool.PostIt(aId:Cardinal; aPrioritaria:Boolean);
 begin
   FFila.PostMessage(aId, nil, nil, aPrioritaria);
 end;
 
-function TTestMessageSpool.ProximoId:Cardinal;
+function TTestMessageSpool.NextId:Cardinal;
 var
   msg:TMSMsg;
 begin
@@ -102,49 +102,49 @@ begin
     Result:=0;
 end;
 
-procedure TTestMessageSpool.FilaNovaEstaVazia;
+procedure TTestMessageSpool.ANewQueueIsEmpty;
 begin
   AssertEquals('queue just created', 0, FFila.GetMsgCount);
 end;
 
-procedure TTestMessageSpool.LeituraDeFilaVaziaNaoAchaNada;
+procedure TTestMessageSpool.ReadingAnEmptyQueueFindsNothing;
 var
   msg:TMSMsg;
 begin
   AssertFalse('there is nothing to read', FFila.PeekMessage(msg, 0, 0, true));
 end;
 
-procedure TTestMessageSpool.MensagemPostadaEhEncontrada;
+procedure TTestMessageSpool.APostedMessageIsFound;
 var
   msg:TMSMsg;
 begin
-  Posta(42);
+  PostIt(42);
   AssertTrue  ('the message must be found', FFila.PeekMessage(msg, 0, 0, false));
   AssertEquals('identifier', 42, msg.MsgID);
 end;
 
-procedure TTestMessageSpool.LeituraSemRemoverDeixaAMensagemNaFila;
+procedure TTestMessageSpool.ReadingWithoutRemovingLeavesTheMessageInTheQueue;
 var
   msg:TMSMsg;
 begin
-  Posta(42);
+  PostIt(42);
   FFila.PeekMessage(msg, 0, 0, false);
 
   AssertEquals('the message is still in the queue', 1, FFila.GetMsgCount);
   AssertTrue  ('and can be read again', FFila.PeekMessage(msg, 0, 0, false));
 end;
 
-procedure TTestMessageSpool.LeituraComRemocaoTiraDaFila;
+procedure TTestMessageSpool.ReadingWithRemovalTakesItOutOfTheQueue;
 var
   msg:TMSMsg;
 begin
-  Posta(42);
+  PostIt(42);
   AssertTrue  ('the first read finds it', FFila.PeekMessage(msg, 0, 0, true));
   AssertEquals('queue emptied', 0, FFila.GetMsgCount);
   AssertFalse ('the second read does not find it', FFila.PeekMessage(msg, 0, 0, true));
 end;
 
-procedure TTestMessageSpool.ParametrosSaoPreservados;
+procedure TTestMessageSpool.TheParametersAreKept;
 var
   msg:TMSMsg;
   w, l:Pointer;
@@ -162,144 +162,144 @@ begin
   AssertTrue  ('priority flag', msg.Priority);
 end;
 
-procedure TTestMessageSpool.MensagensNormaisSaemNaOrdemEmQueEntraram;
+procedure TTestMessageSpool.NormalMessagesComeOutInTheOrderTheyWentIn;
 begin
-  Posta(1);
-  Posta(2);
-  Posta(3);
+  PostIt(1);
+  PostIt(2);
+  PostIt(3);
 
-  AssertEquals('first', 1, ProximoId);
-  AssertEquals('second',  2, ProximoId);
-  AssertEquals('third', 3, ProximoId);
+  AssertEquals('first', 1, NextId);
+  AssertEquals('second',  2, NextId);
+  AssertEquals('third', 3, NextId);
   AssertEquals('queue empty at the end', 0, FFila.GetMsgCount);
 end;
 
-procedure TTestMessageSpool.MensagemPrioritariaFuraAFila;
+procedure TTestMessageSpool.APriorityMessageJumpsTheQueue;
 begin
-  Posta(1);
-  Posta(2);
-  Posta(9, true);
+  PostIt(1);
+  PostIt(2);
+  PostIt(9, true);
 
   //a prioritaria passa na frente das normais que ja estavam esperando
-  AssertEquals('the priority one first', 9, ProximoId);
-  AssertEquals('then the oldest one', 1, ProximoId);
-  AssertEquals('and the next one',         2, ProximoId);
+  AssertEquals('the priority one first', 9, NextId);
+  AssertEquals('then the oldest one', 1, NextId);
+  AssertEquals('and the next one',         2, NextId);
 end;
 
-procedure TTestMessageSpool.PrioritariasMantemAOrdemEntreSi;
+procedure TTestMessageSpool.PriorityMessagesKeepTheirOrderAmongThemselves;
 begin
-  Posta(1);
-  Posta(2);
-  Posta(8, true);
-  Posta(9, true);
+  PostIt(1);
+  PostIt(2);
+  PostIt(8, true);
+  PostIt(9, true);
 
   //entre prioritarias vale a ordem de chegada; as normais ficam depois,
   //tambem na ordem em que entraram
-  AssertEquals('first priority one', 8, ProximoId);
-  AssertEquals('second priority one',  9, ProximoId);
-  AssertEquals('first normal one',      1, ProximoId);
-  AssertEquals('second normal one',       2, ProximoId);
+  AssertEquals('first priority one', 8, NextId);
+  AssertEquals('second priority one',  9, NextId);
+  AssertEquals('first normal one',      1, NextId);
+  AssertEquals('second normal one',       2, NextId);
 end;
 
-procedure TTestMessageSpool.PrioritariaNaFilaVaziaContinuaPrimeira;
+procedure TTestMessageSpool.APriorityMessageInAnEmptyQueueIsStillFirst;
 begin
-  Posta(9, true);
-  Posta(1);
+  PostIt(9, true);
+  PostIt(1);
 
-  AssertEquals('priority', 9, ProximoId);
-  AssertEquals('normal',      1, ProximoId);
+  AssertEquals('priority', 9, NextId);
+  AssertEquals('normal',      1, NextId);
 end;
 
-procedure TTestMessageSpool.PrioritariaDepoisDeTudoLidoVoltaAFuncionar;
+procedure TTestMessageSpool.APriorityMessageAfterEverythingWasReadWorksAgain;
 begin
   //esvaziar a fila tem que deixar os tres ponteiros internos coerentes:
   //se a marca da primeira mensagem normal ficar para tras, a proxima
   //prioritaria e' inserida no lugar errado.
-  Posta(1);
-  Posta(2);
-  AssertEquals('first', 1, ProximoId);
-  AssertEquals('second',  2, ProximoId);
+  PostIt(1);
+  PostIt(2);
+  AssertEquals('first', 1, NextId);
+  AssertEquals('second',  2, NextId);
   AssertEquals('empty queue', 0, FFila.GetMsgCount);
 
-  Posta(3);
-  Posta(4);
-  Posta(9, true);
+  PostIt(3);
+  PostIt(4);
+  PostIt(9, true);
 
-  AssertEquals('the priority one goes first', 9, ProximoId);
-  AssertEquals('and then the normal ones',   3, ProximoId);
-  AssertEquals('in arrival order',   4, ProximoId);
+  AssertEquals('the priority one goes first', 9, NextId);
+  AssertEquals('and then the normal ones',   3, NextId);
+  AssertEquals('in arrival order',   4, NextId);
 end;
 
-procedure TTestMessageSpool.PrioritariaFuraAFilaComUmaMensagemSo;
+procedure TTestMessageSpool.APriorityMessageJumpsAQueueOfASingleMessage;
 begin
   //com UMA mensagem na fila o caminho era outro, e ignorava a prioridade
-  Posta(1);
-  Posta(9, true);
+  PostIt(1);
+  PostIt(9, true);
 
-  AssertEquals('the priority one must go to the front', 9, ProximoId);
-  AssertEquals('and the normal one comes after',                  1, ProximoId);
+  AssertEquals('the priority one must go to the front', 9, NextId);
+  AssertEquals('and the normal one comes after',                  1, NextId);
 end;
 
-procedure TTestMessageSpool.PrioritariaEntraNoFimDaFilaDePrioritarias;
+procedure TTestMessageSpool.APriorityMessageGoesToTheEndOfThePriorityQueue;
 begin
   //com uma prioritaria sozinha na fila, outra prioritaria vai depois dela -
   //nao ha normal nenhuma para furar
-  Posta(8, true);
-  Posta(9, true);
-  Posta(1);
+  PostIt(8, true);
+  PostIt(9, true);
+  PostIt(1);
 
-  AssertEquals('the first priority one', 8, ProximoId);
-  AssertEquals('the second priority one',  9, ProximoId);
-  AssertEquals('and only then the normal one',    1, ProximoId);
+  AssertEquals('the first priority one', 8, NextId);
+  AssertEquals('the second priority one',  9, NextId);
+  AssertEquals('and only then the normal one',    1, NextId);
 end;
 
-procedure TTestMessageSpool.FiltroPegaSoAMensagemDaFaixa;
+procedure TTestMessageSpool.TheFilterTakesOnlyTheMessageInTheRange;
 var
   msg:TMSMsg;
 begin
-  Posta(10);
-  Posta(20);
-  Posta(30);
+  PostIt(10);
+  PostIt(20);
+  PostIt(30);
 
   AssertTrue  ('the range must find the middle one', FFila.PeekMessage(msg, 20, 20, true));
   AssertEquals('identifier', 20, msg.MsgID);
   AssertEquals('two are left', 2, FFila.GetMsgCount);
 
   //e as outras continuam na ordem, com a fila religada corretamente
-  AssertEquals('first one left', 10, ProximoId);
-  AssertEquals('second one left',  30, ProximoId);
+  AssertEquals('first one left', 10, NextId);
+  AssertEquals('second one left',  30, NextId);
 end;
 
-procedure TTestMessageSpool.FiltroSemCorrespondenciaNaoRemoveNada;
+procedure TTestMessageSpool.AFilterWithNoMatchRemovesNothing;
 var
   msg:TMSMsg;
 begin
-  Posta(10);
+  PostIt(10);
 
   AssertFalse ('range outside what exists', FFila.PeekMessage(msg, 100, 200, true));
   AssertEquals('the message is still there', 1, FFila.GetMsgCount);
 end;
 
-procedure TTestMessageSpool.FaixaZeradaPegaAPrimeiraMensagem;
+procedure TTestMessageSpool.AZeroedRangeTakesTheFirstMessage;
 var
   msg:TMSMsg;
 begin
   //faixa 0..0 significa "qualquer mensagem"
-  Posta(10);
-  Posta(20);
+  PostIt(10);
+  PostIt(20);
 
   AssertTrue  ('no filter', FFila.PeekMessage(msg, 0, 0, true));
   AssertEquals('the first one in the queue', 10, msg.MsgID);
 end;
 
-procedure TTestMessageSpool.ContagemAcompanhaAsOperacoes;
+procedure TTestMessageSpool.TheCountFollowsTheOperations;
 var
   msg:TMSMsg;
 begin
   AssertEquals('empty', 0, FFila.GetMsgCount);
 
-  Posta(1);
-  Posta(2, true);
+  PostIt(1);
+  PostIt(2, true);
   AssertEquals('two posted', 2, FFila.GetMsgCount);
 
   FFila.PeekMessage(msg, 0, 0, false);

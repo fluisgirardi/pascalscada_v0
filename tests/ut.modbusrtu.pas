@@ -60,34 +60,34 @@ type
     procedure TearDown; override;
   published
     //montagem de pedidos de leitura / read request building
-    procedure LeituraDeRegistradoresMontaOFrame;
-    procedure LeituraDeRegistradoresPrediz9BytesDeResposta;
-    procedure LeituraDeCoilsMontaOFrame;
-    procedure LeituraDeCoilsArredondaOTamanhoDaRespostaParaCima;
-    procedure FuncaoDeLeituraDesconhecidaNaoGeraFrame;
+    procedure ARegisterReadBuildsTheFrame;
+    procedure ARegisterReadPredicts9AnswerBytes;
+    procedure ACoilReadBuildsTheFrame;
+    procedure ACoilReadRoundsTheAnswerSizeUp;
+    procedure AnUnknownReadFunctionBuildsNoFrame;
 
     //montagem de pedidos de escrita / write request building
-    procedure EscritaDeRegistradorUnicoMontaOFrame;
-    procedure EscritaDeCoilLigadoUsaFF00;
-    procedure EscritaDeCoilDesligadoUsaZeros;
-    procedure EscritaDeMultiplosRegistradoresMontaOFrame;
+    procedure ASingleRegisterWriteBuildsTheFrame;
+    procedure WritingACoilOnUsesFF00;
+    procedure WritingACoilOffUsesZeros;
+    procedure AMultipleRegisterWriteBuildsTheFrame;
 
     //interpretacao das respostas / response parsing
-    procedure RespostaDeRegistradoresViraValores;
-    procedure RespostaDeCoilsViraBits;
-    procedure RespostaComExcecaoViraOErroCorrespondente;
-    procedure RespostaComCRCErradoViraErroDeComunicacao;
-    procedure RespostaDeOutroEscravoViraErroDeComunicacao;
-    procedure TimeoutNaLeituraViraTimeout;
+    procedure ARegisterAnswerBecomesValues;
+    procedure ACoilAnswerBecomesBits;
+    procedure AnAnswerWithAnExceptionBecomesTheMatchingError;
+    procedure AnAnswerWithAWrongCRCBecomesACommunicationError;
+    procedure AnAnswerFromAnotherSlaveBecomesACommunicationError;
+    procedure ATimeoutOnTheReadBecomesATimeout;
 
     //tamanho do que falta no buffer / remaining buffer size
-    procedure ExcecaoDeixaSoOCRCNoBuffer;
+    procedure AnExceptionLeavesOnlyTheCRCInTheBuffer;
 
     //quadros malformados / malformed frames
-    procedure RespostaMenorQueOMinimoEhRecusada;
-    procedure PedidoVazioNaoDerrubaODriver;
-    procedure ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
-    procedure RelatorioDeEscravoComContagemMenorQueQuatroNaoTransborda;
+    procedure AnAnswerBelowTheMinimumIsRefused;
+    procedure AnEmptyRequestDoesNotBringTheDriverDown;
+    procedure AByteCountThatDoesNotMatchTheRequestIsRefused;
+    procedure ASlaveReportWithACountBelowFourDoesNotUnderflow;
   end;
 
   {$IFDEF PORTUGUES}
@@ -114,11 +114,11 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure LeituraVaiEVoltaPelaPorta;
-    procedure LeituraEhFeitaEmDuasEtapas;
-    procedure EscritaVaiEVoltaPelaPorta;
-    procedure SemRespostaOResultadoEhTimeout;
-    procedure SemPortaOResultadoEhNullDriver;
+    procedure AReadGoesOutAndBackThroughThePort;
+    procedure AReadIsDoneInTwoSteps;
+    procedure AWriteGoesOutAndBackThroughThePort;
+    procedure WithNoAnswerTheResultIsTimeout;
+    procedure WithNoPortTheResultIsNullDriver;
   end;
 
 implementation
@@ -162,7 +162,7 @@ begin
   FreeAndNil(FDrv);
 end;
 
-procedure TTestModBusRTU.LeituraDeRegistradoresMontaOFrame;
+procedure TTestModBusRTU.ARegisterReadBuildsTheFrame;
 var
   len:LongInt;
 begin
@@ -172,7 +172,7 @@ begin
                    FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len));
 end;
 
-procedure TTestModBusRTU.LeituraDeRegistradoresPrediz9BytesDeResposta;
+procedure TTestModBusRTU.ARegisterReadPredicts9AnswerBytes;
 var
   len:LongInt;
 begin
@@ -181,7 +181,7 @@ begin
   AssertEquals('expected response size', 9, len);
 end;
 
-procedure TTestModBusRTU.LeituraDeCoilsMontaOFrame;
+procedure TTestModBusRTU.ACoilReadBuildsTheFrame;
 var
   len:LongInt;
 begin
@@ -190,7 +190,7 @@ begin
                    FDrv.Encode(TagRecFor(1, $01, 0, 0, 10), nil, len));
 end;
 
-procedure TTestModBusRTU.LeituraDeCoilsArredondaOTamanhoDaRespostaParaCima;
+procedure TTestModBusRTU.ACoilReadRoundsTheAnswerSizeUp;
 var
   len:LongInt;
 begin
@@ -203,7 +203,7 @@ begin
   AssertEquals('8 coils', 6, len);
 end;
 
-procedure TTestModBusRTU.FuncaoDeLeituraDesconhecidaNaoGeraFrame;
+procedure TTestModBusRTU.AnUnknownReadFunctionBuildsNoFrame;
 var
   len:LongInt;
   frame:BYTES;
@@ -213,7 +213,7 @@ begin
   AssertEquals('nothing to receive', 0, len);
 end;
 
-procedure TTestModBusRTU.EscritaDeRegistradorUnicoMontaOFrame;
+procedure TTestModBusRTU.ASingleRegisterWriteBuildsTheFrame;
 var
   len:LongInt;
   vals:TArrayOfDouble;
@@ -226,7 +226,7 @@ begin
   AssertEquals('the write echo is 8 bytes', 8, len);
 end;
 
-procedure TTestModBusRTU.EscritaDeCoilLigadoUsaFF00;
+procedure TTestModBusRTU.WritingACoilOnUsesFF00;
 var
   len:LongInt;
   vals:TArrayOfDouble;
@@ -238,7 +238,7 @@ begin
                    FDrv.Encode(TagRecFor(1, 0, $05, 3, 1), vals, len));
 end;
 
-procedure TTestModBusRTU.EscritaDeCoilDesligadoUsaZeros;
+procedure TTestModBusRTU.WritingACoilOffUsesZeros;
 var
   len:LongInt;
   vals:TArrayOfDouble;
@@ -250,7 +250,7 @@ begin
                    FDrv.Encode(TagRecFor(1, 0, $05, 3, 1), vals, len));
 end;
 
-procedure TTestModBusRTU.EscritaDeMultiplosRegistradoresMontaOFrame;
+procedure TTestModBusRTU.AMultipleRegisterWriteBuildsTheFrame;
 var
   len:LongInt;
   vals:TArrayOfDouble;
@@ -263,7 +263,7 @@ begin
                    FDrv.Encode(TagRecFor(1, 0, $10, 0, 2), vals, len));
 end;
 
-procedure TTestModBusRTU.RespostaDeRegistradoresViraValores;
+procedure TTestModBusRTU.ARegisterAnswerBecomesValues;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -276,7 +276,7 @@ begin
   AssertEquals('second register',  20, vals[1], 0);
 end;
 
-procedure TTestModBusRTU.RespostaDeCoilsViraBits;
+procedure TTestModBusRTU.ACoilAnswerBecomesBits;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -292,7 +292,7 @@ begin
     AssertEquals('bit '+IntToStr(i), esperado[i], vals[i], 0);
 end;
 
-procedure TTestModBusRTU.RespostaComExcecaoViraOErroCorrespondente;
+procedure TTestModBusRTU.AnAnswerWithAnExceptionBecomesTheMatchingError;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -303,7 +303,7 @@ begin
   AssertEquals('exception 02', Ord(ioIllegalRegAddress), Ord(res));
 end;
 
-procedure TTestModBusRTU.RespostaComCRCErradoViraErroDeComunicacao;
+procedure TTestModBusRTU.AnAnswerWithAWrongCRCBecomesACommunicationError;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -314,7 +314,7 @@ begin
   AssertEquals('invalid crc', Ord(ioCommError), Ord(res));
 end;
 
-procedure TTestModBusRTU.RespostaDeOutroEscravoViraErroDeComunicacao;
+procedure TTestModBusRTU.AnAnswerFromAnotherSlaveBecomesACommunicationError;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -325,7 +325,7 @@ begin
   AssertEquals('wrong slave', Ord(ioCommError), Ord(res));
 end;
 
-procedure TTestModBusRTU.TimeoutNaLeituraViraTimeout;
+procedure TTestModBusRTU.ATimeoutOnTheReadBecomesATimeout;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -341,7 +341,7 @@ begin
   AssertEquals('timeout', Ord(ioTimeOut), Ord(res));
 end;
 
-procedure TTestModBusRTU.ExcecaoDeixaSoOCRCNoBuffer;
+procedure TTestModBusRTU.AnExceptionLeavesOnlyTheCRCInTheBuffer;
 begin
   //lido o cabecalho de uma excecao, so faltam os 2 bytes de CRC
   AssertEquals('leftover of an exception', 2, FDrv.Remaining(BytesOf('01 83 02')));
@@ -349,7 +349,7 @@ end;
 
 { TTestModBusRTUComPorta }
 
-procedure TTestModBusRTU.RespostaMenorQueOMinimoEhRecusada;
+procedure TTestModBusRTU.AnAnswerBelowTheMinimumIsRefused;
 var
   vals:TArrayOfDouble;
   resp:BYTES;
@@ -365,7 +365,7 @@ begin
   end;
 end;
 
-procedure TTestModBusRTU.PedidoVazioNaoDerrubaODriver;
+procedure TTestModBusRTU.AnEmptyRequestDoesNotBringTheDriverDown;
 var
   vals:TArrayOfDouble;
 begin
@@ -375,7 +375,7 @@ begin
                Ord(FDrv.Decode(IOPacketFor(nil, BytesOf('01 03 04 00 0A 00 14 DA 3E')), vals)));
 end;
 
-procedure TTestModBusRTU.ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
+procedure TTestModBusRTU.AByteCountThatDoesNotMatchTheRequestIsRefused;
 var
   vals:TArrayOfDouble;
   res:TProtocolIOResult;
@@ -386,7 +386,7 @@ begin
   AssertEquals('count smaller than the one asked for', Ord(ioCommError), Ord(res));
 end;
 
-procedure TTestModBusRTU.RelatorioDeEscravoComContagemMenorQueQuatroNaoTransborda;
+procedure TTestModBusRTU.ASlaveReportWithACountBelowFourDoesNotUnderflow;
 var
   vals:TArrayOfDouble;
 begin
@@ -410,7 +410,7 @@ begin
   FreeAndNil(FPort);
 end;
 
-procedure TTestModBusRTUComPorta.LeituraVaiEVoltaPelaPorta;
+procedure TTestModBusRTUComPorta.AReadGoesOutAndBackThroughThePort;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -429,7 +429,7 @@ begin
   AssertEquals('answer consumed whole', 0, FPort.PendingResponses);
 end;
 
-procedure TTestModBusRTUComPorta.LeituraEhFeitaEmDuasEtapas;
+procedure TTestModBusRTUComPorta.AReadIsDoneInTwoSteps;
 var
   vals:TArrayOfDouble;
 begin
@@ -440,7 +440,7 @@ begin
   AssertEquals('writes to the port', 1, FPort.WriteCount);
 end;
 
-procedure TTestModBusRTUComPorta.EscritaVaiEVoltaPelaPorta;
+procedure TTestModBusRTUComPorta.AWriteGoesOutAndBackThroughThePort;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -459,7 +459,7 @@ begin
                    FPort.LastWrittenFrame);
 end;
 
-procedure TTestModBusRTUComPorta.SemRespostaOResultadoEhTimeout;
+procedure TTestModBusRTUComPorta.WithNoAnswerTheResultIsTimeout;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -469,7 +469,7 @@ begin
   AssertEquals('timeout', Ord(ioTimeOut), Ord(res));
 end;
 
-procedure TTestModBusRTUComPorta.SemPortaOResultadoEhNullDriver;
+procedure TTestModBusRTUComPorta.WithNoPortTheResultIsNullDriver;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;

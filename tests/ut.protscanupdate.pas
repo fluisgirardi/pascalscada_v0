@@ -59,24 +59,24 @@ type
     FUltimoDeslocamento:LongInt;
     FUltimosValores:TArrayOfDouble;
 
-    procedure BuscarValores(const aTagRec:TTagRec; var aValores:TScanReadRec);
-    procedure Entregar(const ReqID:LongWord; Values:TArrayOfDouble;
+    procedure FetchValues(const aTagRec:TTagRec; var aValores:TScanReadRec);
+    procedure DeliverTo(const ReqID:LongWord; Values:TArrayOfDouble;
                        ValuesTimeStamp:QWord; TagCommand:TTagCommand;
                        LastResult:TProtocolIOResult; OffSet:LongInt);
-    function  EsperarEntregas(aQuantas, aPrazoMs:LongInt):Boolean;
-    function  PedidoDeTeste:TTagRec;
+    function  WaitForDeliveries(aQuantas, aPrazoMs:LongInt):Boolean;
+    function  TestRequest:TTagRec;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure OPedidoChegaAoDriverForaDaThreadPrincipal;
-    procedure OValorDoDriverEhEntregueAoTag;
-    procedure OComandoEntregueEhDeVarredura;
-    procedure OResultadoDoDriverEhRepassado;
-    procedure SemGanchoOResultadoEhErroDeDriver;
-    procedure OIdentificadorDoPedidoEhRepassado;
-    procedure ODeslocamentoRealEhRepassado;
-    procedure VariosPedidosSaoTodosEntregues;
+    procedure TheRequestReachesTheDriverOffTheMainThread;
+    procedure TheDriverValueIsDeliveredToTheTag;
+    procedure TheCommandDeliveredIsAScanCommand;
+    procedure TheDriverResultIsPassedOn;
+    procedure WithNoHookTheResultIsADriverError;
+    procedure TheRequestIdentifierIsPassedOn;
+    procedure TheRealOffsetIsPassedOn;
+    procedure ManyRequestsAreAllDelivered;
   end;
 
 implementation
@@ -102,7 +102,7 @@ begin
   FUltimosValores:=nil;
 
   FPonte:=TScanUpdate.Create(true, DonoCompartilhado, nil);
-  FPonte.OnGetValue:=@BuscarValores;
+  FPonte.OnGetValue:=@FetchValues;
   FPonte.WakeUp;
   FPonte.WaitLoopStarts;
 end;
@@ -115,7 +115,7 @@ begin
   end;
 end;
 
-procedure TTestScanUpdate.BuscarValores(const aTagRec:TTagRec; var aValores:TScanReadRec);
+procedure TTestScanUpdate.FetchValues(const aTagRec:TTagRec; var aValores:TScanReadRec);
 begin
   inc(FPedidos);
   FTagRecVisto:=aTagRec;
@@ -126,7 +126,7 @@ begin
   aValores.ClkMonotonicTStamp:=GetTickCount64;
 end;
 
-procedure TTestScanUpdate.Entregar(const ReqID:LongWord; Values:TArrayOfDouble;
+procedure TTestScanUpdate.DeliverTo(const ReqID:LongWord; Values:TArrayOfDouble;
                                    ValuesTimeStamp:QWord; TagCommand:TTagCommand;
                                    LastResult:TProtocolIOResult; OffSet:LongInt);
 begin
@@ -138,7 +138,7 @@ begin
   FUltimosValores    :=Copy(Values, 0, Length(Values));
 end;
 
-function TTestScanUpdate.EsperarEntregas(aQuantas, aPrazoMs:LongInt):Boolean;
+function TTestScanUpdate.WaitForDeliveries(aQuantas, aPrazoMs:LongInt):Boolean;
 var
   gasto:LongInt;
 begin
@@ -152,114 +152,114 @@ begin
   Result:=FEntregas>=aQuantas;
 end;
 
-function TTestScanUpdate.PedidoDeTeste:TTagRec;
+function TTestScanUpdate.TestRequest:TTagRec;
 begin
   Result:=TagRecFor(1, 3, 0, 100, 1);
   Result.ID        :=77;
   Result.RealOffset:=0;
-  Result.CallBack  :=@Entregar;
+  Result.CallBack  :=@DeliverTo;
 end;
 
-procedure TTestScanUpdate.OPedidoChegaAoDriverForaDaThreadPrincipal;
+procedure TTestScanUpdate.TheRequestReachesTheDriverOffTheMainThread;
 var
   pedido:TTagRec;
 begin
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('the request must be served', EsperarEntregas(1, 3000));
+  AssertTrue  ('the request must be served', WaitForDeliveries(1, 3000));
   AssertEquals('the driver was called once',   1,   FPedidos);
   AssertEquals('and with the address asked for',        100, FTagRecVisto.Address);
 end;
 
-procedure TTestScanUpdate.OValorDoDriverEhEntregueAoTag;
+procedure TTestScanUpdate.TheDriverValueIsDeliveredToTheTag;
 var
   pedido:TTagRec;
 begin
   FValorAEntregar:=42;
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('delivered',        EsperarEntregas(1, 3000));
+  AssertTrue  ('delivered',        WaitForDeliveries(1, 3000));
   AssertEquals('one value',        1,  Length(FUltimosValores));
   AssertEquals('the value from the driver', 42, FUltimosValores[0], 0);
 end;
 
-procedure TTestScanUpdate.OComandoEntregueEhDeVarredura;
+procedure TTestScanUpdate.TheCommandDeliveredIsAScanCommand;
 var
   pedido:TTagRec;
 begin
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('delivered', EsperarEntregas(1, 3000));
+  AssertTrue  ('delivered', WaitForDeliveries(1, 3000));
   AssertEquals('command',  Ord(tcScanRead), Ord(FUltimoComando));
 end;
 
-procedure TTestScanUpdate.OResultadoDoDriverEhRepassado;
+procedure TTestScanUpdate.TheDriverResultIsPassedOn;
 var
   pedido:TTagRec;
 begin
   //o tag precisa saber que a leitura falhou, nao so' nao receber valor
   FResultadoAEntregar:=ioTimeOut;
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('delivered',  EsperarEntregas(1, 3000));
+  AssertTrue  ('delivered',  WaitForDeliveries(1, 3000));
   AssertEquals('result', Ord(ioTimeOut), Ord(FUltimoResultado));
 end;
 
-procedure TTestScanUpdate.SemGanchoOResultadoEhErroDeDriver;
+procedure TTestScanUpdate.WithNoHookTheResultIsADriverError;
 var
   pedido:TTagRec;
 begin
   //sem ninguem para atender, a ponte tem que dizer que nao ha driver
   FPonte.OnGetValue:=nil;
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('delivered all the same', EsperarEntregas(1, 3000));
+  AssertTrue  ('delivered all the same', WaitForDeliveries(1, 3000));
   AssertEquals('driver error',       Ord(ioDriverError), Ord(FUltimoResultado));
   AssertEquals('and the driver was not called', 0, FPedidos);
 end;
 
-procedure TTestScanUpdate.OIdentificadorDoPedidoEhRepassado;
+procedure TTestScanUpdate.TheRequestIdentifierIsPassedOn;
 var
   pedido:TTagRec;
 begin
   //e' por ele que o tag reconhece a resposta do seu proprio pedido
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('delivered', EsperarEntregas(1, 3000));
+  AssertTrue  ('delivered', WaitForDeliveries(1, 3000));
   AssertEquals('identifier', 77, FUltimoReqID);
 end;
 
-procedure TTestScanUpdate.ODeslocamentoRealEhRepassado;
+procedure TTestScanUpdate.TheRealOffsetIsPassedOn;
 var
   pedido:TTagRec;
 begin
   //o deslocamento diz em que ponto do tag os valores entram
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   pedido.RealOffset:=5;
   FPonte.ScanRead(pedido);
 
-  AssertTrue  ('delivered',      EsperarEntregas(1, 3000));
+  AssertTrue  ('delivered',      WaitForDeliveries(1, 3000));
   AssertEquals('offset',  5, FUltimoDeslocamento);
 end;
 
-procedure TTestScanUpdate.VariosPedidosSaoTodosEntregues;
+procedure TTestScanUpdate.ManyRequestsAreAllDelivered;
 var
   pedido:TTagRec;
   c:LongInt;
 begin
   //a ponte junta os pendentes numa ida so' a thread principal: nenhum pode
   //ficar pelo caminho
-  pedido:=PedidoDeTeste;
+  pedido:=TestRequest;
   for c:=1 to 5 do
     FPonte.ScanRead(pedido);
 
-  AssertTrue  ('the five deliveries', EsperarEntregas(5, 5000));
+  AssertTrue  ('the five deliveries', WaitForDeliveries(5, 5000));
   AssertEquals('the driver was called five times', 5, FPedidos);
 end;
 

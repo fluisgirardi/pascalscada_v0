@@ -14,24 +14,24 @@ type
 
   TTestCRC16Utils = class(TTestCase)
   published
-    procedure CalculaCRCDeUmaLeituraModbus;
-    procedure CRCFechaComOProprioCalculo;
-    procedure CRCIndependeDaArquitetura;
+    procedure ComputesTheCRCOfAModbusRead;
+    procedure TheCRCCheckAgreesWithTheComputation;
+    procedure TheCRCDoesNotDependOnTheArchitecture;
 
     { as 12 variantes de CRC8: as 8 que divergem do catalogo estao ignoradas,
       veja o comentario no inicio da secao de implementacao }
-    procedure CRC8_DefaultSegueOPadrao;
-    procedure CRC8_DVBS2SegueOPadrao;
-    procedure CRC8_MaximSegueOPadrao;
-    procedure CRC8_ITUSegueOPadrao;
-    procedure CRC8_DARCSegueOPadrao;
-    procedure CRC8_BLUETOOTHSegueOPadrao;
-    procedure CRC8_CDMA2000SegueOPadrao;
-    procedure CRC8_ROHCSegueOPadrao;
-    procedure CRC8_WCDMASegueOPadrao;
-    procedure CRC8_OPENSAFETYSegueOPadrao;
-    procedure CRC8_AUTOSARSegueOPadrao;
-    procedure CRC8_ICODESegueOPadrao;
+    procedure CRC8_DefaultFollowsTheStandard;
+    procedure CRC8_DVBS2FollowsTheStandard;
+    procedure CRC8_MaximFollowsTheStandard;
+    procedure CRC8_ITUFollowsTheStandard;
+    procedure CRC8_DARCFollowsTheStandard;
+    procedure CRC8_BLUETOOTHFollowsTheStandard;
+    procedure CRC8_CDMA2000FollowsTheStandard;
+    procedure CRC8_ROHCFollowsTheStandard;
+    procedure CRC8_WCDMAFollowsTheStandard;
+    procedure CRC8_OPENSAFETYFollowsTheStandard;
+    procedure CRC8_AUTOSARFollowsTheStandard;
+    procedure CRC8_ICODEFollowsTheStandard;
   end;
 
 implementation
@@ -48,7 +48,7 @@ begin
   Result[6] := $00; Result[7] := $00;
 end;
 
-procedure TTestCRC16Utils.CalculaCRCDeUmaLeituraModbus;
+procedure TTestCRC16Utils.ComputesTheCRCOfAModbusRead;
 var
   pkg: BYTES;
   crc: Cardinal;
@@ -60,7 +60,7 @@ begin
   AssertEquals('high byte of the CRC',  $CD, pkg[7]);
 end;
 
-procedure TTestCRC16Utils.CRCFechaComOProprioCalculo;
+procedure TTestCRC16Utils.TheCRCCheckAgreesWithTheComputation;
 var
   pkg: BYTES;
 begin
@@ -69,7 +69,7 @@ begin
   AssertTrue('Test_crc must accept a frame with a valid CRC', Test_crc(pkg));
 end;
 
-procedure TTestCRC16Utils.CRCIndependeDaArquitetura;
+procedure TTestCRC16Utils.TheCRCDoesNotDependOnTheArchitecture;
 var
   pkg: BYTES;
   i: Integer;
@@ -99,7 +99,7 @@ end;
   gerador certo (CRC8_GenerateTable com RefIn, CRC8_Calc com RefOut/XorOut),
   que nenhuma delas usa. }
 
-function VetorDeConferencia: BYTES;
+function CheckVector: BYTES;
 const
   VETOR = '123456789';
 var
@@ -111,23 +111,23 @@ begin
     Result[i-1] := Ord(VETOR[i]);
 end;
 
-procedure TTestCRC16Utils.CRC8_DefaultSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_DefaultFollowsTheStandard;
 var
   data: BYTES;
 begin
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/SMBUS of "123456789"', $F4, CRC8_Default(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_DVBS2SegueOPadrao;
+procedure TTestCRC16Utils.CRC8_DVBS2FollowsTheStandard;
 var
   data: BYTES;
 begin
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/DVB-S2 of "123456789"', $BC, CRC8_DVBS2(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_MaximSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_MaximFollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -135,19 +135,19 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/MAXIM-DOW of "123456789"', $A1, CRC8_Maxim(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_ITUSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_ITUFollowsTheStandard;
 var
   data: BYTES;
 begin
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/I-432-1/ITU of "123456789"', $A1, CRC8_ITU(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_DARCSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_DARCFollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -155,11 +155,11 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/DARC of "123456789"', $15, CRC8_DARC(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_BLUETOOTHSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_BLUETOOTHFollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -167,11 +167,11 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/BLUETOOTH of "123456789"', $26, CRC8_BLUETOOTH(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_CDMA2000SegueOPadrao;
+procedure TTestCRC16Utils.CRC8_CDMA2000FollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -179,11 +179,11 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/CDMA2000 of "123456789"', $DA, CRC8_CDMA2000(data, $FF));
 end;
 
-procedure TTestCRC16Utils.CRC8_ROHCSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_ROHCFollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -191,11 +191,11 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/ROHC of "123456789"', $D0, CRC8_ROHC(data, $FF));
 end;
 
-procedure TTestCRC16Utils.CRC8_WCDMASegueOPadrao;
+procedure TTestCRC16Utils.CRC8_WCDMAFollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -203,11 +203,11 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/WCDMA of "123456789"', $25, CRC8_WCDMA(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_OPENSAFETYSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_OPENSAFETYFollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -215,11 +215,11 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/OPENSAFETY of "123456789"', $3E, CRC8_OPENSAFETY(data, $00));
 end;
 
-procedure TTestCRC16Utils.CRC8_AUTOSARSegueOPadrao;
+procedure TTestCRC16Utils.CRC8_AUTOSARFollowsTheStandard;
 var
   data: BYTES;
 begin
@@ -227,15 +227,15 @@ begin
          'Routine unused in the project; remove this Ignore once it is fixed ' +
          'or the variant is confirmed.');
 
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/AUTOSAR of "123456789"', $DF, CRC8_AUTOSAR(data, $FF));
 end;
 
-procedure TTestCRC16Utils.CRC8_ICODESegueOPadrao;
+procedure TTestCRC16Utils.CRC8_ICODEFollowsTheStandard;
 var
   data: BYTES;
 begin
-  data := VetorDeConferencia;
+  data := CheckVector;
   AssertEquals('CRC-8/I-CODE of "123456789"', $7E, CRC8_ICODE(data, $FD));
 end;
 

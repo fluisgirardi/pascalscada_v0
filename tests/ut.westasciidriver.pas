@@ -48,18 +48,18 @@ type
     procedure TearDown; override;
   published
     //montagem do pedido / request building
-    procedure PedidoDePresencaMontaOFrame;
-    procedure EnderecoVaiSempreComDoisDigitos;
+    procedure APresenceRequestBuildsTheFrame;
+    procedure TheAddressAlwaysGoesWithTwoDigits;
 
     //interpretacao da resposta / response parsing
-    procedure RespostaPositivaConfirmaOEquipamento;
-    procedure RespostaNoFormatoCurtoTambemEhAceita;
-    procedure RespostaDeOutroEnderecoEhRecusada;
-    procedure RespostaComLixoEhRecusada;
-    procedure SemRespostaViraTimeout;
+    procedure APositiveAnswerConfirmsTheDevice;
+    procedure AnAnswerInTheShortFormatIsAlsoAccepted;
+    procedure AnAnswerFromAnotherAddressIsRefused;
+    procedure AnAnswerFullOfGarbageIsRefused;
+    procedure WithNoAnswerItBecomesATimeout;
 
     //sem porta / with no port
-    procedure SemPortaDeComunicacaoNaoTentaFalar;
+    procedure WithNoCommunicationPortItDoesNotTryToTalk;
   end;
 
 implementation
@@ -79,7 +79,7 @@ begin
   FreeAndNil(FPorta);
 end;
 
-procedure TTestWestASCIIDriver.PedidoDePresencaMontaOFrame;
+procedure TTestWestASCIIDriver.APresenceRequestBuildsTheFrame;
 begin
   //"L" (4C), endereco 01, "??" e "*" de fim
   FPorta.QueueResponse(BytesOf('4C 30 31 3F 41 2A'));
@@ -90,7 +90,7 @@ begin
                    BytesOf('4C 30 31 3F 3F 2A'), FPorta.WrittenFrame(0));
 end;
 
-procedure TTestWestASCIIDriver.EnderecoVaiSempreComDoisDigitos;
+procedure TTestWestASCIIDriver.TheAddressAlwaysGoesWithTwoDigits;
 begin
   //42 vira "42"; enderecos de um digito levam zero a esquerda
   FPorta.QueueResponse(BytesOf('4C 34 32 3F 41 2A'));
@@ -103,14 +103,14 @@ begin
   AssertBytesEqual('address 9', BytesOf('4C 30 39 3F 3F 2A'), FPorta.WrittenFrame(0));
 end;
 
-procedure TTestWestASCIIDriver.RespostaPositivaConfirmaOEquipamento;
+procedure TTestWestASCIIDriver.APositiveAnswerConfirmsTheDevice;
 begin
   //o equipamento devolve o mesmo endereco com "A" no lugar do segundo "?"
   FPorta.QueueResponse(BytesOf('4C 30 31 3F 41 2A'));
   AssertEquals('device present', Ord(ioOk), Ord(FDrv.DeviceActive(1)));
 end;
 
-procedure TTestWestASCIIDriver.RespostaNoFormatoCurtoTambemEhAceita;
+procedure TTestWestASCIIDriver.AnAnswerInTheShortFormatIsAlsoAccepted;
 begin
   //ha equipamentos que respondem so com o digito das unidades; o driver
   //aceita as duas formas
@@ -118,27 +118,27 @@ begin
   AssertEquals('short format', Ord(ioOk), Ord(FDrv.DeviceActive(1)));
 end;
 
-procedure TTestWestASCIIDriver.RespostaDeOutroEnderecoEhRecusada;
+procedure TTestWestASCIIDriver.AnAnswerFromAnotherAddressIsRefused;
 begin
   //perguntamos ao 1 e respondeu o 2
   FPorta.QueueResponse(BytesOf('4C 30 32 3F 41 2A'));
   AssertEquals('wrong address', Ord(ioCommError), Ord(FDrv.DeviceActive(1)));
 end;
 
-procedure TTestWestASCIIDriver.RespostaComLixoEhRecusada;
+procedure TTestWestASCIIDriver.AnAnswerFullOfGarbageIsRefused;
 begin
   FPorta.QueueResponse(BytesOf('FF FF FF FF FF FF'));
   AssertEquals('answer that makes no sense', Ord(ioCommError), Ord(FDrv.DeviceActive(1)));
 end;
 
-procedure TTestWestASCIIDriver.SemRespostaViraTimeout;
+procedure TTestWestASCIIDriver.WithNoAnswerItBecomesATimeout;
 begin
   //nada enfileirado: o equipamento nao respondeu
   AssertEquals('timeout', Ord(ioTimeOut), Ord(FDrv.DeviceActive(1)));
   AssertEquals('but the request did get sent', 1, FPorta.WriteCount);
 end;
 
-procedure TTestWestASCIIDriver.SemPortaDeComunicacaoNaoTentaFalar;
+procedure TTestWestASCIIDriver.WithNoCommunicationPortItDoesNotTryToTalk;
 var
   semPorta:TWestASCIIDriver;
 begin

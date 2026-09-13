@@ -52,7 +52,7 @@ type
   TTagProbe = class(TPLCTagNumber)
   public
     //: entrega um valor ao tag como uma varredura faria
-    procedure ChegouDaVarredura(aValor:Double; aResultado:TProtocolIOResult = ioOk);
+    procedure CameFromTheScan(aValor:Double; aResultado:TProtocolIOResult = ioOk);
   end;
 
   { TTestPLCTagNumber }
@@ -62,41 +62,41 @@ type
     FTag:TTagProbe;
     FEscala:TEscalaQueDobra;
     FAvisos, FFalhasDeEscrita:LongInt;
-    procedure ContarAviso(Sender:TObject);
-    procedure ContarFalhaDeEscrita(Sender:TObject);
+    procedure CountNotification(Sender:TObject);
+    procedure CountWriteFailure(Sender:TObject);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //valores vindos da varredura / values coming from a scan
-    procedure ValorDaVarreduraFicaGuardado;
-    procedure FalhaNaLeituraNaoMudaOValor;
-    procedure MudancaDeValorAvisaQuemEscuta;
-    procedure LeituraComOMesmoValorNaoAvisa;
+    procedure TheValueFromTheScanIsKept;
+    procedure AFailedReadDoesNotChangeTheValue;
+    procedure AValueChangeNotifiesTheListener;
+    procedure AReadWithTheSameValueDoesNotNotify;
 
     //escrita sem driver / writing with no driver
-    procedure SemDriverOValorEscritoFicaGuardado;
+    procedure WithNoDriverTheValueWrittenIsKept;
 
     //limites de faixa / range limits
-    procedure LimitesDesligadosDeixamPassarQualquerValor;
-    procedure ValorAbaixoDoMinimoEhRecusado;
-    procedure ValorAcimaDoMaximoEhRecusado;
-    procedure ValorNaFaixaEhAceito;
-    procedure ValorRecusadoAvisaFalhaDeEscrita;
-    procedure ValorRecusadoNaoChegaAMudarOTag;
-    procedure MinimoMaiorQueOMaximoEhRecusado;
+    procedure WithTheLimitsOffAnyValueGoesThrough;
+    procedure AValueBelowTheMinimumIsRefused;
+    procedure AValueAboveTheMaximumIsRefused;
+    procedure AValueInsideTheRangeIsAccepted;
+    procedure ARefusedValueReportsAWriteFailure;
+    procedure ARefusedValueNeverChangesTheTag;
+    procedure AMinimumAboveTheMaximumIsRefused;
 
     //escala de engenharia / engineering scale
-    procedure AEscalaEhAplicadaNaLeitura;
-    procedure AEscalaEhDesfeitaNaEscrita;
-    procedure OValorPuroNaoPassaPelaEscala;
-    procedure OsLimitesValemNaEscalaDeEngenharia;
+    procedure TheScaleIsAppliedOnTheRead;
+    procedure TheScaleIsUndoneOnTheWrite;
+    procedure TheRawValueDoesNotGoThroughTheScale;
+    procedure TheLimitsApplyInEngineeringUnits;
 
     //valor em texto / value as text
-    procedure TextoComPrefixoESufixo;
-    procedure TextoComFormatoNumerico;
-    procedure TextoSemFormatoUsaOPadrao;
-    procedure TextoComFormatoDeHoraUsaOValorEmMilissegundos;
+    procedure TextWithAPrefixAndASuffix;
+    procedure TextWithANumericFormat;
+    procedure TextWithNoFormatUsesTheDefault;
+    procedure TextWithATimeFormatUsesTheValueInMilliseconds;
   end;
 
 implementation
@@ -117,7 +117,7 @@ end;
 
 { TTagProbe }
 
-procedure TTagProbe.ChegouDaVarredura(aValor:Double; aResultado:TProtocolIOResult = ioOk);
+procedure TTagProbe.CameFromTheScan(aValor:Double; aResultado:TProtocolIOResult = ioOk);
 var
   valores:TArrayOfDouble;
 begin
@@ -142,63 +142,63 @@ begin
   FreeAndNil(FEscala);
 end;
 
-procedure TTestPLCTagNumber.ContarAviso(Sender:TObject);
+procedure TTestPLCTagNumber.CountNotification(Sender:TObject);
 begin
   inc(FAvisos);
 end;
 
-procedure TTestPLCTagNumber.ContarFalhaDeEscrita(Sender:TObject);
+procedure TTestPLCTagNumber.CountWriteFailure(Sender:TObject);
 begin
   inc(FFalhasDeEscrita);
 end;
 
-procedure TTestPLCTagNumber.ValorDaVarreduraFicaGuardado;
+procedure TTestPLCTagNumber.TheValueFromTheScanIsKept;
 begin
-  FTag.ChegouDaVarredura(42);
+  FTag.CameFromTheScan(42);
   AssertEquals('value from the scan', 42, FTag.Value, 0);
 end;
 
-procedure TTestPLCTagNumber.FalhaNaLeituraNaoMudaOValor;
+procedure TTestPLCTagNumber.AFailedReadDoesNotChangeTheValue;
 begin
-  FTag.ChegouDaVarredura(42);
-  FTag.ChegouDaVarredura(99, ioTimeOut);
+  FTag.CameFromTheScan(42);
+  FTag.CameFromTheScan(99, ioTimeOut);
 
   AssertEquals('the good value stays', 42, FTag.Value, 0);
 end;
 
-procedure TTestPLCTagNumber.MudancaDeValorAvisaQuemEscuta;
+procedure TTestPLCTagNumber.AValueChangeNotifiesTheListener;
 begin
-  FTag.AddTagChangeHandler(@ContarAviso);
-  FTag.ChegouDaVarredura(42);
+  FTag.AddTagChangeHandler(@CountNotification);
+  FTag.CameFromTheScan(42);
 
   AssertTrue('a change must notify', FAvisos>0);
 end;
 
-procedure TTestPLCTagNumber.LeituraComOMesmoValorNaoAvisa;
+procedure TTestPLCTagNumber.AReadWithTheSameValueDoesNotNotify;
 begin
-  FTag.ChegouDaVarredura(42);
-  FTag.AddTagChangeHandler(@ContarAviso);
+  FTag.CameFromTheScan(42);
+  FTag.AddTagChangeHandler(@CountNotification);
   FAvisos:=0;
 
-  FTag.ChegouDaVarredura(42);
+  FTag.CameFromTheScan(42);
   AssertEquals('nothing changed, nothing to notify', 0, FAvisos);
 end;
 
-procedure TTestPLCTagNumber.SemDriverOValorEscritoFicaGuardado;
+procedure TTestPLCTagNumber.WithNoDriverTheValueWrittenIsKept;
 begin
   //sem driver a escrita volta pelo proprio callback, com ioNullDriver
   FTag.Value:=17;
   AssertEquals('value kept', 17, FTag.Value, 0);
 end;
 
-procedure TTestPLCTagNumber.LimitesDesligadosDeixamPassarQualquerValor;
+procedure TTestPLCTagNumber.WithTheLimitsOffAnyValueGoesThrough;
 begin
   FTag.SetMinMaxValues(0, 10);
   FTag.Value:=1000;
   AssertEquals('with the limits off', 1000, FTag.Value, 0);
 end;
 
-procedure TTestPLCTagNumber.ValorAbaixoDoMinimoEhRecusado;
+procedure TTestPLCTagNumber.AValueBelowTheMinimumIsRefused;
 var
   recusou:Boolean;
 begin
@@ -214,7 +214,7 @@ begin
   AssertTrue('below the minimum', recusou);
 end;
 
-procedure TTestPLCTagNumber.ValorAcimaDoMaximoEhRecusado;
+procedure TTestPLCTagNumber.AValueAboveTheMaximumIsRefused;
 var
   recusou:Boolean;
 begin
@@ -230,7 +230,7 @@ begin
   AssertTrue('above the maximum', recusou);
 end;
 
-procedure TTestPLCTagNumber.ValorNaFaixaEhAceito;
+procedure TTestPLCTagNumber.AValueInsideTheRangeIsAccepted;
 begin
   FTag.SetMinMaxValues(0, 100);
   FTag.EnableMinValue:=true;
@@ -240,11 +240,11 @@ begin
   AssertEquals('value inside the range', 50, FTag.Value, 0);
 end;
 
-procedure TTestPLCTagNumber.ValorRecusadoAvisaFalhaDeEscrita;
+procedure TTestPLCTagNumber.ARefusedValueReportsAWriteFailure;
 begin
   FTag.SetMinMaxValues(0, 100);
   FTag.EnableMaxValue:=true;
-  FTag.AddWriteFaultHandler(@ContarFalhaDeEscrita);
+  FTag.AddWriteFaultHandler(@CountWriteFailure);
 
   try
     FTag.Value:=200;
@@ -255,9 +255,9 @@ begin
   AssertTrue('the listener must be told about the refusal', FFalhasDeEscrita>0);
 end;
 
-procedure TTestPLCTagNumber.ValorRecusadoNaoChegaAMudarOTag;
+procedure TTestPLCTagNumber.ARefusedValueNeverChangesTheTag;
 begin
-  FTag.ChegouDaVarredura(10);
+  FTag.CameFromTheScan(10);
   FTag.SetMinMaxValues(0, 100);
   FTag.EnableMaxValue:=true;
 
@@ -270,7 +270,7 @@ begin
   AssertEquals('the previous value stands', 10, FTag.Value, 0);
 end;
 
-procedure TTestPLCTagNumber.MinimoMaiorQueOMaximoEhRecusado;
+procedure TTestPLCTagNumber.AMinimumAboveTheMaximumIsRefused;
 var
   recusou:Boolean;
 begin
@@ -283,16 +283,16 @@ begin
   AssertTrue('inverted range', recusou);
 end;
 
-procedure TTestPLCTagNumber.AEscalaEhAplicadaNaLeitura;
+procedure TTestPLCTagNumber.TheScaleIsAppliedOnTheRead;
 begin
   //o equipamento manda 21, o usuario ve 42
   FTag.ScaleProcessor:=FEscala;
-  FTag.ChegouDaVarredura(21);
+  FTag.CameFromTheScan(21);
 
   AssertEquals('value in engineering units', 42, FTag.Value, 0);
 end;
 
-procedure TTestPLCTagNumber.AEscalaEhDesfeitaNaEscrita;
+procedure TTestPLCTagNumber.TheScaleIsUndoneOnTheWrite;
 begin
   //o usuario escreve 42, o equipamento recebe 21
   FTag.ScaleProcessor:=FEscala;
@@ -301,15 +301,15 @@ begin
   AssertEquals('raw value', 21, FTag.ValueRaw, 0);
 end;
 
-procedure TTestPLCTagNumber.OValorPuroNaoPassaPelaEscala;
+procedure TTestPLCTagNumber.TheRawValueDoesNotGoThroughTheScale;
 begin
   FTag.ScaleProcessor:=FEscala;
-  FTag.ChegouDaVarredura(21);
+  FTag.CameFromTheScan(21);
 
   AssertEquals('the raw value is what came from the device', 21, FTag.ValueRaw, 0);
 end;
 
-procedure TTestPLCTagNumber.OsLimitesValemNaEscalaDeEngenharia;
+procedure TTestPLCTagNumber.TheLimitsApplyInEngineeringUnits;
 var
   recusou:Boolean;
 begin
@@ -331,28 +331,28 @@ begin
   AssertEquals('at the limit', 50, FTag.ValueRaw, 0);
 end;
 
-procedure TTestPLCTagNumber.TextoComPrefixoESufixo;
+procedure TTestPLCTagNumber.TextWithAPrefixAndASuffix;
 begin
-  FTag.ChegouDaVarredura(25);
+  FTag.CameFromTheScan(25);
   AssertEquals('with a prefix and a suffix', 'T= 25 C', FTag.GetValueAsText('T= ', ' C', ''));
 end;
 
-procedure TTestPLCTagNumber.TextoComFormatoNumerico;
+procedure TTestPLCTagNumber.TextWithANumericFormat;
 begin
-  FTag.ChegouDaVarredura(3.14159);
+  FTag.CameFromTheScan(3.14159);
   AssertEquals('two decimal places', '3.14', FTag.GetValueAsText('', '', '0.00'));
 end;
 
-procedure TTestPLCTagNumber.TextoSemFormatoUsaOPadrao;
+procedure TTestPLCTagNumber.TextWithNoFormatUsesTheDefault;
 begin
-  FTag.ChegouDaVarredura(7);
+  FTag.CameFromTheScan(7);
   AssertEquals('no format', '7', FTag.GetValueAsText('', '', ''));
 end;
 
-procedure TTestPLCTagNumber.TextoComFormatoDeHoraUsaOValorEmMilissegundos;
+procedure TTestPLCTagNumber.TextWithATimeFormatUsesTheValueInMilliseconds;
 begin
   //com formato de data ou hora o valor e' lido como milissegundos
-  FTag.ChegouDaVarredura(3661000);
+  FTag.CameFromTheScan(3661000);
   AssertEquals('one hour, one minute and one second', '01:01:01',
                FTag.GetValueAsText('', '', 'hh:nn:ss'));
 end;

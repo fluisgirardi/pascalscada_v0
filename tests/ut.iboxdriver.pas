@@ -41,8 +41,8 @@ type
 
   TIBoxProbe = class(TIBoxDriver)
   public
-    function  Ler(const aTag:TTagRec; out aValores:TArrayOfDouble):TProtocolIOResult;
-    procedure RemoverTag(aTag:TTag);
+    function  ReadIt(const aTag:TTagRec; out aValores:TArrayOfDouble):TProtocolIOResult;
+    procedure RemoveTag(aTag:TTag);
   end;
 
   { TTestIBoxDriver }
@@ -51,40 +51,40 @@ type
   private
     FPorta:TFakeCommPort;
     FDrv:TIBoxProbe;
-    function  PedidoPara(aEstacao, aEndereco:LongInt):TTagRec;
+    function  RequestFor(aEstacao, aEndereco:LongInt):TTagRec;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     //validacao antes de falar com a porta / validation before touching the port
-    procedure EstacaoForaDaFaixaEhRecusada;
-    procedure EnderecoNaoSuportadoEhRecusado;
-    procedure SubelementoForaDaFaixaEhRecusado;
-    procedure SemPortaDeComunicacaoNaoTentaFalar;
+    procedure AStationOutOfRangeIsRefused;
+    procedure AnUnsupportedAddressIsRefused;
+    procedure ASubelementOutOfRangeIsRefused;
+    procedure WithNoCommunicationPortItDoesNotTryToTalk;
 
     //quadro enviado / frame sent
-    procedure PedidoDeNivelDeCombustivelMontaOQuadro;
-    procedure SomaDeVerificacaoEhOComplementoDeDois;
+    procedure AFuelLevelRequestBuildsTheFrame;
+    procedure TheChecksumIsTheTwosComplement;
 
     //resposta / response
-    procedure NivelDeCombustivelVemEmMeioPorCento;
-    procedure RespostaComSomaErradaEhRecusada;
-    procedure RespostaDeOutraEstacaoEhRecusada;
+    procedure TheFuelLevelComesInHalfPercentSteps;
+    procedure AnAnswerWithAWrongChecksumIsRefused;
+    procedure AnAnswerFromAnotherStationIsRefused;
 
     //remocao de tag / tag removal
-    procedure RemoverTagDeEstacaoDesconhecidaNaoFazNada;
+    procedure RemovingATagOfAnUnknownStationDoesNothing;
   end;
 
 implementation
 
 { TIBoxProbe }
 
-function TIBoxProbe.Ler(const aTag:TTagRec; out aValores:TArrayOfDouble):TProtocolIOResult;
+function TIBoxProbe.ReadIt(const aTag:TTagRec; out aValores:TArrayOfDouble):TProtocolIOResult;
 begin
   Result:=DoRead(aTag, aValores, true);
 end;
 
-procedure TIBoxProbe.RemoverTag(aTag:TTag);
+procedure TIBoxProbe.RemoveTag(aTag:TTag);
 begin
   DoDelTag(aTag);
 end;
@@ -106,45 +106,45 @@ begin
   FreeAndNil(FPorta);
 end;
 
-function TTestIBoxDriver.PedidoPara(aEstacao, aEndereco:LongInt):TTagRec;
+function TTestIBoxDriver.RequestFor(aEstacao, aEndereco:LongInt):TTagRec;
 begin
   Result:=TagRecFor(aEstacao, 0, 0, aEndereco, 1);
 end;
 
-procedure TTestIBoxDriver.EstacaoForaDaFaixaEhRecusada;
+procedure TTestIBoxDriver.AStationOutOfRangeIsRefused;
 var
   valores:TArrayOfDouble;
 begin
   //endereco de estacao cabe num byte
   AssertEquals('station 300', Ord(ioIllegalStationAddress),
-               Ord(FDrv.Ler(PedidoPara(300, 96), valores)));
+               Ord(FDrv.ReadIt(RequestFor(300, 96), valores)));
   AssertEquals('nothing was sent', 0, FPorta.WriteCount);
 end;
 
-procedure TTestIBoxDriver.EnderecoNaoSuportadoEhRecusado;
+procedure TTestIBoxDriver.AnUnsupportedAddressIsRefused;
 var
   valores:TArrayOfDouble;
 begin
   //so os PIDs conhecidos sao aceitos; o resto nem chega na porta
   AssertEquals('address 5', Ord(ioIllegalRegAddress),
-               Ord(FDrv.Ler(PedidoPara(1, 5), valores)));
+               Ord(FDrv.ReadIt(RequestFor(1, 5), valores)));
   AssertEquals('nothing was sent', 0, FPorta.WriteCount);
 end;
 
-procedure TTestIBoxDriver.SubelementoForaDaFaixaEhRecusado;
+procedure TTestIBoxDriver.ASubelementOutOfRangeIsRefused;
 var
   valores:TArrayOfDouble;
   pedido:TTagRec;
 begin
   //nos registradores 200 a 202 o subelemento escolhe o campo, de 0 a 16
-  pedido:=PedidoPara(1, 200);
+  pedido:=RequestFor(1, 200);
   pedido.SubElement:=20;
 
   AssertEquals('subelement 20', Ord(ioIllegalRegAddress),
-               Ord(FDrv.Ler(pedido, valores)));
+               Ord(FDrv.ReadIt(pedido, valores)));
 end;
 
-procedure TTestIBoxDriver.SemPortaDeComunicacaoNaoTentaFalar;
+procedure TTestIBoxDriver.WithNoCommunicationPortItDoesNotTryToTalk;
 var
   valores:TArrayOfDouble;
   semPorta:TIBoxProbe;
@@ -152,52 +152,52 @@ begin
   semPorta:=TIBoxProbe.Create(nil);
   try
     AssertEquals('driver with no port', Ord(ioNullDriver),
-                 Ord(semPorta.Ler(PedidoPara(1, 96), valores)));
+                 Ord(semPorta.ReadIt(RequestFor(1, 96), valores)));
   finally
     semPorta.Free;
   end;
 end;
 
-procedure TTestIBoxDriver.PedidoDeNivelDeCombustivelMontaOQuadro;
+procedure TTestIBoxDriver.AFuelLevelRequestBuildsTheFrame;
 var
   valores:TArrayOfDouble;
 begin
   //estacao, zero, o PID pedido e a soma de verificacao
   FPorta.QueueResponse(BytesOf('01 60 64 3B'));
-  FDrv.Ler(PedidoPara(1, 96), valores);
+  FDrv.ReadIt(RequestFor(1, 96), valores);
 
   AssertEquals('one write', 1, FPorta.WriteCount);
   AssertBytesEqual('request for PID 96', BytesOf('01 00 60 9F'), FPorta.WrittenFrame(0));
 end;
 
-procedure TTestIBoxDriver.SomaDeVerificacaoEhOComplementoDeDois;
+procedure TTestIBoxDriver.TheChecksumIsTheTwosComplement;
 var
   valores:TArrayOfDouble;
 begin
   //mudar a estacao muda a soma na mesma medida: $9F para a estacao 1,
   //$9E para a 2
   FPorta.QueueResponse(BytesOf('02 60 64 3A'));
-  FDrv.Ler(PedidoPara(2, 96), valores);
+  FDrv.ReadIt(RequestFor(2, 96), valores);
   AssertBytesEqual('station 2', BytesOf('02 00 60 9E'), FPorta.WrittenFrame(0));
 
   FPorta.Reset;
   FPorta.QueueResponse(BytesOf('01 A8 00 57'));
-  FDrv.Ler(PedidoPara(1, 168), valores);
+  FDrv.ReadIt(RequestFor(1, 168), valores);
   AssertBytesEqual('PID 168', BytesOf('01 00 A8 57'), FPorta.WrittenFrame(0));
 end;
 
-procedure TTestIBoxDriver.NivelDeCombustivelVemEmMeioPorCento;
+procedure TTestIBoxDriver.TheFuelLevelComesInHalfPercentSteps;
 var
   valores:TArrayOfDouble;
 begin
   //o byte de dado vale meio por cento por unidade: $64 = 100 = 50%
   FPorta.QueueResponse(BytesOf('01 60 64 3B'));
 
-  AssertEquals('read accepted', Ord(ioOk), Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
+  AssertEquals('read accepted', Ord(ioOk), Ord(FDrv.ReadIt(RequestFor(1, 96), valores)));
   AssertEquals('level in percent', 50, valores[0], 0);
 end;
 
-procedure TTestIBoxDriver.RespostaComSomaErradaEhRecusada;
+procedure TTestIBoxDriver.AnAnswerWithAWrongChecksumIsRefused;
 var
   valores:TArrayOfDouble;
 begin
@@ -205,10 +205,10 @@ begin
   FPorta.QueueResponse(BytesOf('01 60 64 3C'));
 
   AssertEquals('invalid checksum', Ord(ioCommError),
-               Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
+               Ord(FDrv.ReadIt(RequestFor(1, 96), valores)));
 end;
 
-procedure TTestIBoxDriver.RespostaDeOutraEstacaoEhRecusada;
+procedure TTestIBoxDriver.AnAnswerFromAnotherStationIsRefused;
 var
   valores:TArrayOfDouble;
 begin
@@ -216,10 +216,10 @@ begin
   FPorta.QueueResponse(BytesOf('02 60 64 3A'));
 
   AssertEquals('wrong station', Ord(ioCommError),
-               Ord(FDrv.Ler(PedidoPara(1, 96), valores)));
+               Ord(FDrv.ReadIt(RequestFor(1, 96), valores)));
 end;
 
-procedure TTestIBoxDriver.RemoverTagDeEstacaoDesconhecidaNaoFazNada;
+procedure TTestIBoxDriver.RemovingATagOfAnUnknownStationDoesNothing;
 var
   tag:TPLCTagNumber;
 begin
@@ -230,7 +230,7 @@ begin
     tag.PLCStation:=7;
     tag.MemAddress:=96;
 
-    FDrv.RemoverTag(tag);
+    FDrv.RemoveTag(tag);
   finally
     tag.Free;
   end;

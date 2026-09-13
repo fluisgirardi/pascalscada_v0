@@ -41,19 +41,19 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure LeituraDeRegistradoresMontaOFrameComMBAP;
-    procedure LeituraDeRegistradoresPrediz13BytesDeResposta;
-    procedure EscritaDeMultiplosRegistradoresMontaOFrame;
-    procedure CampoDeTamanhoContaOsBytesDepoisDele;
-    procedure RespostaDeRegistradoresViraValores;
-    procedure RespostaComExcecaoViraOErroCorrespondente;
-    procedure RespostaDeOutraUnidadeViraErroDeComunicacao;
-    procedure TimeoutNaLeituraViraTimeout;
-    procedure RespostaIncompletaComCabecalhoValidoNaoEhAceita;
-    procedure RespostaMenorQueOCabecalhoEhRecusada;
-    procedure ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
-    procedure QuadroQueNaoTrazOsBytesQueDeclaraEhRecusado;
-    procedure PedidoMenorQueOMinimoNaoEhDecodificado;
+    procedure ARegisterReadBuildsTheFrameWithMBAP;
+    procedure ARegisterReadPredicts13AnswerBytes;
+    procedure AMultipleRegisterWriteBuildsTheFrame;
+    procedure TheLengthFieldCountsTheBytesAfterIt;
+    procedure ARegisterAnswerBecomesValues;
+    procedure AnAnswerWithAnExceptionBecomesTheMatchingError;
+    procedure AnAnswerFromAnotherUnitBecomesACommunicationError;
+    procedure ATimeoutOnTheReadBecomesATimeout;
+    procedure AnIncompleteAnswerWithAValidHeaderIsNotAccepted;
+    procedure AnAnswerShorterThanTheHeaderIsRefused;
+    procedure AByteCountThatDoesNotMatchTheRequestIsRefused;
+    procedure AFrameThatDoesNotCarryTheBytesItDeclaresIsRefused;
+    procedure ARequestBelowTheMinimumIsNotDecoded;
   end;
 
 implementation
@@ -82,7 +82,7 @@ begin
   FreeAndNil(FDrv);
 end;
 
-procedure TTestModBusTCP.LeituraDeRegistradoresMontaOFrameComMBAP;
+procedure TTestModBusTCP.ARegisterReadBuildsTheFrameWithMBAP;
 var
   len:LongInt;
 begin
@@ -92,7 +92,7 @@ begin
                    FDrv.Encode(TagRecFor(1, $03, 0, 0, 2), nil, len));
 end;
 
-procedure TTestModBusTCP.LeituraDeRegistradoresPrediz13BytesDeResposta;
+procedure TTestModBusTCP.ARegisterReadPredicts13AnswerBytes;
 var
   len:LongInt;
 begin
@@ -101,7 +101,7 @@ begin
   AssertEquals('expected response size', 13, len);
 end;
 
-procedure TTestModBusTCP.EscritaDeMultiplosRegistradoresMontaOFrame;
+procedure TTestModBusTCP.AMultipleRegisterWriteBuildsTheFrame;
 var
   len:LongInt;
   vals:TArrayOfDouble;
@@ -114,7 +114,7 @@ begin
                    FDrv.Encode(TagRecFor(1, 0, $10, 0, 2), vals, len));
 end;
 
-procedure TTestModBusTCP.CampoDeTamanhoContaOsBytesDepoisDele;
+procedure TTestModBusTCP.TheLengthFieldCountsTheBytesAfterIt;
 var
   len:LongInt;
   vals:TArrayOfDouble;
@@ -131,7 +131,7 @@ begin
                Length(frame)-6, declarado);
 end;
 
-procedure TTestModBusTCP.RespostaDeRegistradoresViraValores;
+procedure TTestModBusTCP.ARegisterAnswerBecomesValues;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -144,7 +144,7 @@ begin
   AssertEquals('second register',  20, vals[1], 0);
 end;
 
-procedure TTestModBusTCP.RespostaComExcecaoViraOErroCorrespondente;
+procedure TTestModBusTCP.AnAnswerWithAnExceptionBecomesTheMatchingError;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -154,7 +154,7 @@ begin
   AssertEquals('exception 02', Ord(ioIllegalRegAddress), Ord(res));
 end;
 
-procedure TTestModBusTCP.RespostaDeOutraUnidadeViraErroDeComunicacao;
+procedure TTestModBusTCP.AnAnswerFromAnotherUnitBecomesACommunicationError;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -165,7 +165,7 @@ begin
   AssertEquals('wrong unit', Ord(ioCommError), Ord(res));
 end;
 
-procedure TTestModBusTCP.TimeoutNaLeituraViraTimeout;
+procedure TTestModBusTCP.ATimeoutOnTheReadBecomesATimeout;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -181,7 +181,7 @@ begin
   AssertEquals('timeout', Ord(ioTimeOut), Ord(res));
 end;
 
-procedure TTestModBusTCP.RespostaIncompletaComCabecalhoValidoNaoEhAceita;
+procedure TTestModBusTCP.AnIncompleteAnswerWithAValidHeaderIsNotAccepted;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -200,7 +200,7 @@ begin
   AssertEquals('incomplete read', Ord(ioTimeOut), Ord(res));
 end;
 
-procedure TTestModBusTCP.RespostaMenorQueOCabecalhoEhRecusada;
+procedure TTestModBusTCP.AnAnswerShorterThanTheHeaderIsRefused;
 var
   vals:TArrayOfDouble;
   resp:BYTES;
@@ -219,7 +219,7 @@ begin
   end;
 end;
 
-procedure TTestModBusTCP.ContagemDeBytesQueNaoBateComOPedidoEhRecusada;
+procedure TTestModBusTCP.AByteCountThatDoesNotMatchTheRequestIsRefused;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -231,7 +231,7 @@ begin
   AssertEquals('count smaller than the one asked for', Ord(ioCommError), Ord(res));
 end;
 
-procedure TTestModBusTCP.QuadroQueNaoTrazOsBytesQueDeclaraEhRecusado;
+procedure TTestModBusTCP.AFrameThatDoesNotCarryTheBytesItDeclaresIsRefused;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
@@ -242,7 +242,7 @@ begin
   AssertEquals('truncated frame', Ord(ioCommError), Ord(res));
 end;
 
-procedure TTestModBusTCP.PedidoMenorQueOMinimoNaoEhDecodificado;
+procedure TTestModBusTCP.ARequestBelowTheMinimumIsNotDecoded;
 var
   res:TProtocolIOResult;
   vals:TArrayOfDouble;
