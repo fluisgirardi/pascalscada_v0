@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada_hmi"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="7">
+    <Units Count="8">
       <Unit0>
         <Filename Value="pascalscada_hmi_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -59,6 +59,10 @@
         <Filename Value="ut.commfaultbadge.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="ut.dislocator.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit7>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
