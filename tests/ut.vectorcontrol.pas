@@ -93,6 +93,7 @@ type
     procedure AnRGBWithLettersOutOfTheHexRangeIsRefused;
     procedure AnUnknownPropertyIsRefused;
     procedure AnOutputThatIsNotANumberIsRefused;
+    procedure AnOutputBelowOneIsRefused;
     procedure AStopOpacityOutOfRangeIsRefused;
     procedure ALineWithNoValueIsRefused;
 
@@ -304,6 +305,16 @@ end;
 procedure TTestVectorFlowStatements.AnOutputThatIsNotANumberIsRefused;
 begin
   AssertFalse('saida sem numero', THMIVectorFlowZone.ValidStatement('flow.output=primeira'));
+end;
+
+procedure TTestVectorFlowStatements.AnOutputBelowOneIsRefused;
+begin
+  //as saidas sao contadas a partir de 1; o que nao aponta para saida nenhuma
+  //tem que ser recusado na hora de digitar, e nao virar uma linha calada
+  //outputs are counted from 1; what points at no output at all has to be
+  //refused while it is typed, instead of becoming a silent line
+  AssertFalse('saida zero',     THMIVectorFlowZone.ValidStatement('flow.output=0'));
+  AssertFalse('saida negativa', THMIVectorFlowZone.ValidStatement('flow.output=-1'));
 end;
 
 procedure TTestVectorFlowStatements.AStopOpacityOutOfRangeIsRefused;

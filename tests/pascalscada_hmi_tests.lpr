@@ -40,7 +40,8 @@ uses
   ut.hmipolyline,
   ut.vectorcontrol,
   ut.flowvalve,
-  ut.flowelevator;
+  ut.flowelevator,
+  ut.numericcontrols;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

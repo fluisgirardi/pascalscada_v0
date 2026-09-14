@@ -256,12 +256,24 @@ begin
       FLastPosition:=ScrollPos;
 
       if (ScrollCode=scEndScroll) then begin
-         {$IF defined(WIN32) or defined(WIN64)}
+         //soltou: o valor do CLP volta a mandar na posicao.
+         //let go: the PLC value rules the position again.
          FBusy:=false;
+         {$IF defined(WIN32) or defined(WIN64)}
          FCmdCount:=0;
          WriteFlag:=true;
          {$IFEND}
       end else begin
+         //a barra esta na mao do operador: o valor que chegar do CLP nao pode
+         //puxar o cursor de onde ele esta' arrastando. Sem ligar a bandeira
+         //aqui, o RefreshScrollBar reposicionava no meio do arrasto - e com
+         //UpdateOnMove os dois brigavam, um escrevendo e o outro voltando.
+         //the bar is in the operator's hand: a value arriving from the PLC
+         //must not pull the thumb away from where they are dragging. Without
+         //raising the flag here, RefreshScrollBar repositioned it mid drag -
+         //and with UpdateOnMove the two fought, one writing and the other
+         //putting it back.
+         FBusy:=true;
          inc(FCmdCount);
          if FCmdCount>5 then begin
             if FUpdateOnMove then
@@ -281,6 +293,13 @@ end;
 procedure THMIScrollBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt);
 begin
   try
+    //fora do Windows e' aqui que o arrasto termina: o scEndScroll do widget
+    //nao e' garantido, entao a bandeira tem que baixar tambem por este
+    //caminho, senao o controle congela no ultimo valor arrastado.
+    //outside Windows this is where the drag ends: the widget's scEndScroll is
+    //not guaranteed, so the flag has to come down through this path too,
+    //otherwise the control freezes on the last dragged value.
+    FBusy:=false;
     WriteValue(FLastPosition);
   finally
     inherited MouseUp(Button, Shift, X, Y);

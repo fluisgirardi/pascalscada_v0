@@ -62,6 +62,7 @@ type
     procedure SetZoneResult(AValue: TColor);
   protected
     function GetDisplayName: AnsiString; override;
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property DefaultZone;
     property ZoneResult:TColor read FResult write SetZoneResult;
@@ -523,6 +524,14 @@ begin
   if FResult=AValue then Exit;
   FResult:=AValue;
   NotifyChange;
+end;
+
+procedure TColorZone.AssignTo(Dest: TPersistent);
+begin
+  inherited AssignTo(Dest);
+
+  if Dest is TColorZone then
+    TColorZone(Dest).FResult:=FResult;
 end;
 
 function TColorZone.GetDisplayName: AnsiString;
