@@ -71,6 +71,7 @@ type
     FBlock:Boolean;
     FSent:AnsiString;
     FSendCount:LongInt;
+    FAskCount:LongInt;
     procedure BeforeSend(Sender:TObject; Value:TTranslateString; var SendIt:Boolean);
     procedure AfterSend(Sender:TObject; Value:TTranslateString);
     procedure TagValueIs(v:Double);
@@ -95,7 +96,7 @@ type
     procedure PressingEnterSendsWhatWasTyped;
     procedure PressingEnterWithoutTheSettingDoesNotSend;
     procedure LeavingTheFieldSendsWhatWasTyped;
-    procedure TextThatIsNotANumberIsNotSent;
+    procedure TextThatIsNotANumberIsRefusedWhileTyping;
     procedure AValueAboveTheMaximumIsRefused;
     procedure AValueBelowTheMinimumIsRefused;
     procedure WithTheLimitsOffAnyValueGoesThrough;
@@ -103,8 +104,13 @@ type
     procedure ARefusedValueDoesNotFreezeTheBoxOnExit;
 
     //os avisos / the notifications
+    procedure TheBeforeEventIsNotAskedAboutAValueOutOfRange;
     procedure TheBeforeEventCanRefuseTheWrite;
     procedure TheAfterEventTellsWhatWasSent;
+
+    //envio a cada tecla / send on every keystroke
+    procedure SendingOnEveryChangeWritesWhatIsTyped;
+    procedure ANumberBeingTypedDoesNotRaiseWhilePassingOutOfRange;
 
     //os limites / the limits
     procedure TheMinimumMustBeLessThanTheMaximum;
@@ -112,6 +118,8 @@ type
 
     //o tag / the tag
     procedure ADestroyedTagLetsGoOfTheEdit;
+    procedure ClearingTheTagEmptiesTheBox;
+    procedure ADestroyedTagEmptiesTheBox;
     procedure WithNoTagNothingIsSent;
 
     //seguranca / security
@@ -181,6 +189,7 @@ begin
   FBlock:=false;
   FSent:='';
   FSendCount:=0;
+  FAskCount:=0;
   //um formulario de verdade: o Edit precisa de janela para o texto, o foco e
   //a marca de modificado se comportarem como em producao
   //a real form: the Edit needs a window for the text, the focus and the
@@ -201,6 +210,7 @@ end;
 
 procedure TTestHMIEdit.BeforeSend(Sender:TObject; Value:TTranslateString; var SendIt:Boolean);
 begin
+  inc(FAskCount);
   SendIt:=not FBlock;
 end;
 
@@ -347,16 +357,18 @@ begin
   AssertEquals('o tag recebeu', 99, FTag.Value, 0.0001);
 end;
 
-procedure TTestHMIEdit.TextThatIsNotANumberIsNotSent;
+procedure TTestHMIEdit.TextThatIsNotANumberIsRefusedWhileTyping;
 begin
+  //a primeira linha de defesa e' o proprio tag: o que ele nao aceita como
+  //valor e' desfeito na hora em que se digita, e nunca chega a ser enviado
+  //the first line of defence is the tag itself: what it does not accept as a
+  //value is undone as it is typed, and never gets sent at all
   TagValueIs(42);
   FEdit.EnterTheField;
-  TEdit(FEdit).Text:='abc';
-  FEdit.Modified:=true;
 
-  FEdit.PressEnter;
+  FEdit.TypeText('abc');
 
-  AssertEquals('o tag ficou como estava', 42, FTag.Value, 0.0001);
+  AssertEquals('o texto voltou ao ultimo valor bom', '42.0', FEdit.Text);
 end;
 
 procedure TTestHMIEdit.AValueAboveTheMaximumIsRefused;
@@ -467,6 +479,63 @@ begin
   AssertEquals('voltou a mostrar o CLP', '7.0', FEdit.Text);
 end;
 
+procedure TTestHMIEdit.TheBeforeEventIsNotAskedAboutAValueOutOfRange;
+begin
+  FEdit.MaxValue:=100;
+  FEdit.EnableMaxValue:=true;
+  TagValueIs(42);
+  FEdit.BeforeSendAValueToTag:=@BeforeSend;
+  FEdit.EnterTheField;
+  FEdit.TypeText('150');
+
+  try
+    FEdit.PressEnter;
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+
+  AssertEquals('nao perguntou nada', 0, FAskCount);
+end;
+
+procedure TTestHMIEdit.SendingOnEveryChangeWritesWhatIsTyped;
+begin
+  FEdit.SendValueWhen:=[scAnyChange];
+  TagValueIs(42);
+  FEdit.EnterTheField;
+
+  FEdit.TypeText('99');
+
+  AssertEquals('foi na hora', 99, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIEdit.ANumberBeingTypedDoesNotRaiseWhilePassingOutOfRange;
+begin
+  //digitando "150" num campo de ate' 100, o numero passa por 1 e 15 antes de
+  //chegar a 150; nenhum desses passos pode abrir caixa de erro na cara do
+  //operador
+  //typing "150" on a field capped at 100, the number goes through 1 and 15
+  //before reaching 150; none of those steps may throw an error box at the
+  //operator
+  FEdit.SendValueWhen:=[scAnyChange];
+  FEdit.MaxValue:=100;
+  FEdit.MinValue:=50;
+  FEdit.EnableMaxValue:=true;
+  FEdit.EnableMinValue:=true;
+  TagValueIs(60);
+  FEdit.EnterTheField;
+
+  FEdit.TypeText('1');
+  FEdit.TypeText('15');
+  FEdit.TypeText('150');
+
+  AssertEquals('nada fora da faixa foi escrito', 60, FTag.Value, 0.0001);
+
+  FEdit.TypeText('75');
+
+  AssertEquals('e o valor valido foi', 75, FTag.Value, 0.0001);
+end;
+
 procedure TTestHMIEdit.TheBeforeEventCanRefuseTheWrite;
 begin
   TagValueIs(42);
@@ -523,6 +592,25 @@ begin
   end;
 
   AssertEquals('o maximo continua onde estava', 100, FEdit.MaxValue, 0.0001);
+end;
+
+procedure TTestHMIEdit.ClearingTheTagEmptiesTheBox;
+begin
+  TagValueIs(42);
+  AssertEquals('mostrando o valor', '42.0', FEdit.Text);
+
+  FEdit.PLCTag:=nil;
+
+  AssertEquals('sem tag, sem valor', '', FEdit.Text);
+end;
+
+procedure TTestHMIEdit.ADestroyedTagEmptiesTheBox;
+begin
+  TagValueIs(42);
+
+  FreeAndNil(FTag);
+
+  AssertEquals('sem tag, sem valor', '', FEdit.Text);
 end;
 
 procedure TTestHMIEdit.ADestroyedTagLetsGoOfTheEdit;

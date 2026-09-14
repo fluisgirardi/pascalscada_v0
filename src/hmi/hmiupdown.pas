@@ -244,7 +244,13 @@ procedure THMIUpDown.RefreshUpDown(Data: PtrInt);
 begin
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-    FPosition := (FTag as ITagNumeric).Value;
+    FPosition := (FTag as ITagNumeric).Value
+  else
+    //sem tag nao ha' leitura: a posicao mostrada nao pode continuar sendo a
+    //ultima lida de um tag que nao existe mais.
+    //with no tag there is no reading: the shown position cannot go on being
+    //the last one read from a tag that is not there anymore.
+    FPosition := 0;
 
   inherited Position:=50;
 end;
@@ -288,9 +294,9 @@ begin
       t.AddTagChangeHandler(@TagChangeCallBack);
       t.AddRemoveTagHandler(@RemoveTagCallBack);
       FTag := t;
-      RefreshUpDown(0);
    end;
    FTag := t;
+   RefreshUpDown(0);
    if Assigned(FCommFaultLink) then
      FCommFaultLink.SetTag(t);
 end;
@@ -429,8 +435,10 @@ end;
 
 procedure THMIUpDown.RemoveTagCallBack(Sender: TObject);
 begin
-  if Ftag=Sender then
+  if Ftag=Sender then begin
     FTag:=nil;
+    RefreshUpDown(0);
+  end;
 end;
 
 end.

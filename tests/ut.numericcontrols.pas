@@ -109,6 +109,8 @@ type
     //o tag / the tag
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheBar;
+    procedure ClearingTheTagTakesTheBarToTheMinimum;
+    procedure ADestroyedTagTakesTheBarToTheMinimum;
 
     //seguranca / security
     procedure WithoutPermissionTheBarIsDisabled;
@@ -135,6 +137,7 @@ type
     procedure AfterLettingGoThePLCMovesItAgain;
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheScrollBar;
+    procedure ClearingTheTagTakesTheScrollBarToTheMinimum;
     procedure WithoutPermissionTheScrollBarIsDisabled;
   end;
 
@@ -176,6 +179,7 @@ type
     procedure WithNoTagAClickWritesNothing;
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheUpDown;
+    procedure ClearingTheTagZeroesThePosition;
 
     //seguranca / security
     procedure WithoutPermissionTheUpDownIsDisabled;
@@ -434,6 +438,31 @@ begin
   AssertTrue('a barra soltou o tag', FBar.PLCTag=nil);
 end;
 
+procedure TTestHMITrackBar.ClearingTheTagTakesTheBarToTheMinimum;
+begin
+  //sem tag nao ha' leitura: a barra parada onde estava continua parecendo
+  //leitura viva de um tag que nao existe mais
+  //with no tag there is no reading: the bar left where it was still reads like
+  //a live value from a tag that is not there anymore
+  TTrackBar(FBar).Min:=10;
+  TagValueIs(42);
+  AssertEquals('na posicao do tag', 42, FBar.Position);
+
+  FBar.PLCTag:=nil;
+
+  AssertEquals('sem tag, no minimo', TTrackBar(FBar).Min, FBar.Position);
+end;
+
+procedure TTestHMITrackBar.ADestroyedTagTakesTheBarToTheMinimum;
+begin
+  TTrackBar(FBar).Min:=10;
+  TagValueIs(42);
+
+  FreeAndNil(FTag);
+
+  AssertEquals('sem tag, no minimo', TTrackBar(FBar).Min, FBar.Position);
+end;
+
 procedure TTestHMITrackBar.WithoutPermissionTheBarIsDisabled;
 var
   users:TUserManagementForTest;
@@ -588,6 +617,17 @@ begin
   FreeAndNil(FTag);
 
   AssertTrue('a barra soltou o tag', FBar.PLCTag=nil);
+end;
+
+procedure TTestHMIScrollBar.ClearingTheTagTakesTheScrollBarToTheMinimum;
+begin
+  TScrollBar(FBar).Min:=10;
+  TagValueIs(42);
+  AssertEquals('na posicao do tag', 42, TScrollBar(FBar).Position);
+
+  FBar.PLCTag:=nil;
+
+  AssertEquals('sem tag, no minimo', 10, TScrollBar(FBar).Position);
 end;
 
 procedure TTestHMIScrollBar.WithoutPermissionTheScrollBarIsDisabled;
@@ -809,6 +849,16 @@ begin
   FreeAndNil(FTag);
 
   AssertTrue('o controle soltou o tag', FUpDown.PLCTag=nil);
+end;
+
+procedure TTestHMIUpDown.ClearingTheTagZeroesThePosition;
+begin
+  TagValueIs(10);
+  AssertEquals('na posicao do tag', 10, FUpDown.Position, 0.0001);
+
+  FUpDown.PLCTag:=nil;
+
+  AssertEquals('sem tag, sem posicao', 0, FUpDown.Position, 0.0001);
 end;
 
 procedure TTestHMIUpDown.WithoutPermissionTheUpDownIsDisabled;

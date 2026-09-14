@@ -89,9 +89,14 @@ type
     procedure AToggleButtonNeverLooksPressed;
     procedure WithNoTagAClickWritesNothing;
 
+    //os valores / the values
+    procedure ANewButtonComesWithUsableValues;
+
     //o tag / the tag
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheButton;
+    procedure ClearingTheTagShowsTheUnknownState;
+    procedure ADestroyedTagShowsTheUnknownState;
 
     //seguranca / security
     procedure WithoutPermissionTheButtonIsDisabled;
@@ -336,6 +341,22 @@ begin
   AssertEquals('nada escrito', 0, FTag.Escritas);
 end;
 
+procedure TTestHMIButton.ANewButtonComesWithUsableValues;
+var
+  novo:TButtonProbe;
+begin
+  //criado por codigo: com ValueDown igual a ValueUp o botao fica
+  //permanentemente afundado e todo clique escreve o mesmo valor
+  //created from code: with ValueDown equal to ValueUp the button stays pressed
+  //forever and every click writes the same value
+  novo:=TButtonProbe.Create(nil);
+  try
+    AssertTrue('os dois valores sao diferentes', novo.ValueDown<>novo.ValueUp);
+  finally
+    novo.Free;
+  end;
+end;
+
 procedure TTestHMIButton.ATagThatIsNotNumericIsRefused;
 var
   tagDeTexto:TPLCString;
@@ -355,6 +376,33 @@ begin
   finally
     tagDeTexto.Free;
   end;
+end;
+
+procedure TTestHMIButton.ClearingTheTagShowsTheUnknownState;
+begin
+  //sem tag, o valor nao e' nem o de ligado nem o de desligado: e' o mesmo
+  //caso de OtherValuesIs
+  //with no tag the value is neither the on nor the off one: it is the same
+  //case as OtherValuesIs
+  FButton.OtherValuesIs:=IsGrayed;
+  FButton.PLCTag:=FTag;
+  TagValueIs(1);
+  AssertEquals('mostrando ligado', 'LIGADO', FButton.Caption);
+
+  FButton.PLCTag:=nil;
+
+  AssertEquals('sem tag, indefinido', '?', FButton.Caption);
+end;
+
+procedure TTestHMIButton.ADestroyedTagShowsTheUnknownState;
+begin
+  FButton.OtherValuesIs:=IsGrayed;
+  FButton.PLCTag:=FTag;
+  TagValueIs(1);
+
+  FreeAndNil(FTag);
+
+  AssertEquals('sem tag, indefinido', '?', FButton.Caption);
 end;
 
 procedure TTestHMIButton.ADestroyedTagLetsGoOfTheButton;

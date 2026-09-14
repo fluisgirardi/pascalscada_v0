@@ -300,14 +300,17 @@ begin
     t.AddWriteFaultHandler(@WriteFaultCallBack);
     t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
-    RefreshTagValue;
   end;
   FTag := t;
+  //sem tag nao ha' leitura: o controle mostra o seu estado de "sem valor"
+  //em vez de deixar na tela o ultimo numero lido, que continuaria parecendo
+  //leitura viva.
+  //with no tag there is no reading: the control shows its "no value" state
+  //instead of leaving the last number read on screen, which would go on looking
+  //like a live reading.
+  RefreshTagValue;
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
-
-  if (FTag=nil) and (csDesigning in ComponentState) then
-    inherited Caption := SWithoutTag;
 end;
 
 procedure THMILabel.SetPrefix(s: TCaption);
@@ -387,8 +390,14 @@ end;
 
 procedure THMILabel.RemoveTagCallBack(Sender: TObject);
 begin
-  if FTag=Sender then
+  if FTag=Sender then begin
     FTag := nil;
+    //o tag destruido e' o caminho mais comum em tela viva, e ate' agora
+    //deixava o ultimo valor escrito no controle.
+    //the destroyed tag is the most common path on a live screen, and until now
+    //it left the last value written on the control.
+    RefreshTagValue;
+  end;
 end;
 
 end.

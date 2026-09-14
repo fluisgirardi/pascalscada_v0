@@ -69,6 +69,8 @@ type
     procedure ATagThatIsNotReadableIsRefused;
     procedure ChangingTagsFollowsTheNewOne;
     procedure ADestroyedTagLetsGoOfTheLabel;
+    procedure ClearingTheTagEmptiesTheCaption;
+    procedure ADestroyedTagEmptiesTheCaption;
 
     //seguranca / security
     procedure ANewLabelIsEnabled;
@@ -257,6 +259,31 @@ begin
     FLabel.PLCTag:=nil;
     outro.Free;
   end;
+end;
+
+procedure TTestHMILabel.ClearingTheTagEmptiesTheCaption;
+begin
+  //sem tag nao ha' leitura: deixar o ultimo valor na tela e' pior do que nao
+  //mostrar nada, porque continua parecendo leitura viva
+  //with no tag there is no reading: leaving the last value on screen is worse
+  //than showing nothing, because it still reads like a live value
+  FLabel.PLCTag:=FTag;
+  TagValueIs(42);
+  AssertEquals('mostrando o valor', '42.0', FLabel.Caption);
+
+  FLabel.PLCTag:=nil;
+
+  AssertEquals('sem tag, sem valor', '', FLabel.Caption);
+end;
+
+procedure TTestHMILabel.ADestroyedTagEmptiesTheCaption;
+begin
+  FLabel.PLCTag:=FTag;
+  TagValueIs(42);
+
+  FreeAndNil(FTag);
+
+  AssertEquals('sem tag, sem valor', '', FLabel.Caption);
 end;
 
 procedure TTestHMILabel.ADestroyedTagLetsGoOfTheLabel;

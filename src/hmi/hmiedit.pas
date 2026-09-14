@@ -135,7 +135,7 @@ type
     procedure SetPrefix(s:TCaption);
     procedure SetSufix(s:TCaption);
 
-    procedure SendValue(txt:TCaption);
+    procedure SendValue(txt:TCaption; RefuseSilently:Boolean = false);
 
     procedure WriteFaultCallBack(Sender:TObject);
     procedure TagChangeCallBack(Sender:TObject);
@@ -649,17 +649,12 @@ begin
     t.AddTagChangeHandler(@TagChangeCallBack);
     t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
-    RefreshTagValue(0);
   end;
   FTag := t;
+  Modified := false;
+  RefreshTagValue(0);
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
-
-  if (FTag=nil) and (csDesigning in ComponentState) then begin
-    inherited Text := SWithoutTag;
-    Modified := false;
-  end;
-
 end;
 
 function  THMIEdit.GetHMITag:TPLCTag;
@@ -813,7 +808,25 @@ end;
 
 procedure THMIEdit.RefreshTagValue(DataPtr: PtrInt);
 begin
-  if ([csReading,csLoading,csDestroying]*ComponentState<>[]) or (FTag=nil) or Modified then begin
+  if ([csReading,csLoading,csDestroying]*ComponentState<>[]) or Modified then begin
+    exit;
+  end;
+
+  if FTag=nil then begin
+    //sem tag nao ha' leitura: o controle mostra o seu estado de "sem valor"
+    //em vez de deixar na tela o ultimo numero lido, que continuaria parecendo
+    //leitura viva.
+    //with no tag there is no reading: the control shows its "no value" state
+    //instead of leaving the last number read on screen, which would go on looking
+    //like a live reading.
+    FBlockChange := true;
+    if (csDesigning in ComponentState) then
+      inherited Text := SWithoutTag
+    else
+      inherited Text := '';
+    oldValue := inherited Text;
+    Modified := false;
+    FBlockChange := false;
     exit;
   end;
 
@@ -838,7 +851,7 @@ begin
   end;
 end;
 
-procedure THMIEdit.SendValue(txt: TCaption);
+procedure THMIEdit.SendValue(txt: TCaption; RefuseSilently:Boolean);
 var
   x:Double;
 
@@ -867,20 +880,37 @@ begin
      (not Modified) then
      exit;
 
-  if not SendIt then exit;
-
   if Supports(FTag, ITagNumeric) then begin
+    //o texto e a faixa antes do evento: a aplicacao e' consultada sobre um
+    //valor que pode mesmo ser escrito, e nao sobre algo que nem numero e'.
+    //text and range before the event: the application is asked about a value
+    //that can really be written, not about something that is not even a
+    //number.
     if not TryStrToFloat(Txt,x) then begin
       inherited Text:=oldValue;
       exit;
     end;
-    if (FEnableMax and (x>FMaxLimit)) or (FEnableMin and (x<FMinLimit)) then
+    if (FEnableMax and (x>FMaxLimit)) or (FEnableMin and (x<FMinLimit)) then begin
+      //no modo scAnyChange o envio acontece a cada tecla, e um numero em
+      //construcao passa por fora da faixa no caminho: "150" num campo de ate'
+      //100 levantaria erro em "1", "15" e "150". Ali a recusa e' calada - o
+      //valor simplesmente nao vai.
+      //in scAnyChange mode the send happens on every keystroke, and a number
+      //being typed goes out of range on its way: "150" on a field capped at
+      //100 would raise on "1", "15" and "150". There the refusal is silent -
+      //the value simply does not go.
+      if RefuseSilently then exit;
       raise Exception.Create(SoutOfBounds);
+    end;
+
+    if not SendIt then exit;
 
     (FTag as ITagNumeric).Value := x;
     DoAfterSendValue;
     exit;
   end;
+
+  if not SendIt then exit;
 
   if Supports(FTag, ITagString) then begin
     (FTag as ITagString).Value := Txt;
@@ -983,7 +1013,7 @@ begin
   end;
 
   if (scAnyChange in FSend) then
-    SendValue(Text);
+    SendValue(Text, true);
 
   inherited Change;
 end;
@@ -1001,8 +1031,15 @@ end;
 
 procedure THMIEdit.RemoveTagCallBack(Sender: TObject);
 begin
-  if Ftag=Sender then
+  if Ftag=Sender then begin
     FTag:=nil;
+    //o tag destruido e' o caminho mais comum em tela viva, e ate' agora
+    //deixava o ultimo valor escrito na caixa.
+    //the destroyed tag is the most common path on a live screen, and until now
+    //it left the last value written on the box.
+    Modified := false;
+    RefreshTagValue(0);
+  end;
 end;
 
 end.

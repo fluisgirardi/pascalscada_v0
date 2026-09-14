@@ -195,7 +195,13 @@ procedure THMITrackBar.RefreshTagValue(DataPtr: PtrInt);
 begin
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTag<>nil) AND Supports(Ftag, ITagNumeric) then
-    inherited Position := Trunc((Ftag as ITagNumeric).Value);
+    inherited Position := Trunc((Ftag as ITagNumeric).Value)
+  else
+    //sem tag nao ha' leitura: a barra parada onde estava continua parecendo
+    //leitura viva de um tag que nao existe mais.
+    //with no tag there is no reading: the bar left where it was still reads
+    //like a live value from a tag that is not there anymore.
+    inherited Position := inherited Min;
   FModified:=false;
 end;
 
@@ -220,9 +226,9 @@ begin
     t.AddTagChangeHandler(@TagChangeCallBack);
     t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
-    RefreshTagValue(0);
   end;
   FTag := t;
+  RefreshTagValue(0);
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
 end;
@@ -358,8 +364,10 @@ end;
 
 procedure THMITrackBar.RemoveTagCallBack(Sender: TObject);
 begin
-  if Ftag=Sender then
+  if Ftag=Sender then begin
     FTag:=nil;
+    RefreshTagValue(0);
+  end;
 end;
 
 end.

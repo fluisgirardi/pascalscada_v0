@@ -291,9 +291,9 @@ begin
     t.AddTagChangeHandler(@TagChangeCallBack);
     t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
-    RefreshProgress(0);
   end;
   FTag := t;
+  RefreshProgress(0);
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
   InvalidateDraw;

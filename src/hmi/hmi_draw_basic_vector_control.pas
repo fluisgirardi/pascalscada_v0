@@ -796,8 +796,10 @@ end;
 
 procedure THMICustomFlowVectorControl.RemoveTagCallBack(Sender: TObject);
 begin
-  if FPLCTag=Sender then
+  if FPLCTag=Sender then begin
     FPLCTag:=nil;
+    UpdateDrawAndFlow;
+  end;
 end;
 
 procedure THMICustomFlowVectorControl.BlinkTimer(Sender: TObject);
@@ -1145,9 +1147,17 @@ begin
     t.AddTagChangeHandler(@TagChangeCallBack);
     t.AddRemoveTagHandler(@RemoveTagCallBack);
     FPLCTag := t;
-    UpdateDrawAndFlow;
   end;
   FPLCTag := t;
+  //sem tag nao ha' valor: o Infinity que o recalculo usa nao casa com faixa
+  //nenhuma, entao quem responde e' a zona padrao - onde mora o desenho de
+  //"sem comunicacao". Ate' agora ninguem chamava o recalculo neste caminho
+  //e o desenho do ultimo valor ficava na tela.
+  //with no tag there is no value: the Infinity the recalculation uses matches
+  //no range, so the default zone answers - which is where the "no
+  //communication" drawing lives. Until now nobody called the recalculation on
+  //this path and the last value's drawing stayed on screen.
+  UpdateDrawAndFlow;
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
 end;

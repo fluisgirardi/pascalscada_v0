@@ -153,6 +153,7 @@ type
     //o tag / the tag
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheControl;
+    procedure ClearingTheTagFallsBackToTheDefaultState;
 
     //as colecoes / the collections
     procedure AForkedValveComesWithTwoOutputs;
@@ -701,6 +702,26 @@ begin
   finally
     tagDeTexto.Free;
   end;
+end;
+
+procedure TTestFlowVectorControl.ClearingTheTagFallsBackToTheDefaultState;
+var
+  padrao:THMIVectorFlowZone;
+begin
+  //sem tag nao ha' valor: quem responde e' o estado padrao, onde se poe o
+  //desenho de "sem comunicacao"
+  //with no tag there is no value: the default state answers, which is where
+  //the "no communication" drawing goes
+  NewState(1, 'corpo.fill=#00ff00');
+  padrao:=NewState(9, 'corpo.fill=#808080');
+  padrao.DefaultZone:=true;
+  TagValueIs(1);
+  AssertEquals('mostrando o estado do valor', clLime, FCtrl.FillOf('corpo'));
+
+  FCtrl.PLCTag:=nil;
+  Settle;
+
+  AssertEquals('sem tag, o estado padrao', clGray, FCtrl.FillOf('corpo'));
 end;
 
 procedure TTestFlowVectorControl.ADestroyedTagLetsGoOfTheControl;

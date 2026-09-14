@@ -413,9 +413,13 @@ begin
       t.AddTagChangeHandler(@TagChangeCallBack);
       t.AddWriteFaultHandler(@WriteFaultCallBack);
       FTag := t;
-      RefreshAnimation(0);
    end;
    FTag := t;
+   //sem tag nao ha' leitura: o controle mostra o seu estado de "sem valor"
+   //em vez de deixar na tela o ultimo valor lido.
+   //with no tag there is no reading: the control shows its "no value" state
+   //instead of leaving the last value read on screen.
+   RefreshAnimation(0);
    if Assigned(FCommFaultLink) then
      FCommFaultLink.SetTag(t);
 end;
@@ -529,6 +533,12 @@ end;
 procedure THMIAnimation.RemoveTagCallBack(Sender: TObject);
 begin
   FTag:=nil;
+  //sem tag o RefreshAnimation cai na zona padrao; ate' agora ninguem o
+  //chamava neste caminho e o desenho do ultimo valor ficava na tela.
+  //with no tag RefreshAnimation falls back to the default zone; until now
+  //nobody called it on this path and the last value's drawing stayed on
+  //screen.
+  TagChangeCallBack(Self);
 end;
 
 procedure THMIAnimation.SetEnabled(e:Boolean);

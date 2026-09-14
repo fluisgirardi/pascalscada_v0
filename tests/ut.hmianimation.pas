@@ -72,6 +72,7 @@ type
     //o tag / the tag
     procedure ChangingTagsFollowsTheNewOne;
     procedure ADestroyedTagLetsGoOfTheControl;
+    procedure ClearingTheTagFallsBackToTheDefaultZone;
 
     //seguranca / security
     procedure WithoutPermissionTheControlIsDisabled;
@@ -264,6 +265,27 @@ begin
     FAnim.PLCTag:=nil;
     outro.Free;
   end;
+end;
+
+procedure TTestHMIAnimation.ClearingTheTagFallsBackToTheDefaultZone;
+var
+  aberta, padrao:TGraphicZone;
+begin
+  //sem tag nao ha' valor: quem responde e' a zona padrao, onde mora o desenho
+  //de "sem comunicacao"
+  //with no tag there is no value: the default zone answers, which is where the
+  //"no communication" drawing lives
+  aberta:=NewZone(1);
+  padrao:=NewZone(9);
+  padrao.DefaultZone:=true;
+  FAnim.PLCTag:=FTag;
+  TagValueIs(1);
+  AssertSame('mostrando a zona do valor', aberta, FAnim.CurrentAnimationZone);
+
+  FAnim.PLCTag:=nil;
+  Settle;
+
+  AssertSame('sem tag, a zona padrao', padrao, FAnim.CurrentAnimationZone);
 end;
 
 procedure TTestHMIAnimation.ADestroyedTagLetsGoOfTheControl;

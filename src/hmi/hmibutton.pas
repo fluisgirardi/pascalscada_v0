@@ -219,7 +219,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager;
+uses math, hsstrings, ControlSecurityManager;
 
 constructor THMIButton.Create(AOwner:TComponent);
 begin
@@ -232,13 +232,16 @@ begin
   end;
   TSpeedButton(Self).AllowAllUp:=true;
   TSpeedButton(Self).GroupIndex:=$FAB1016;
-  if csDesigning in componentState then begin
-    FValueDown  := 1;
-    FValueUp := 0;
-  end else begin
-    FValueDown  := 0;
-    FValueUp := 0;
-  end;
+  //os mesmos valores no designer e em runtime: com ValueDown igual a ValueUp,
+  //o TagChangeCallBack casa sempre no primeiro teste e o botao fica
+  //permanentemente afundado, e qualquer clique escreve o mesmo zero. Quem
+  //carrega de um .lfm sobrescreve os dois de qualquer forma.
+  //the same values in the designer and at runtime: with ValueDown equal to
+  //ValueUp, TagChangeCallBack always matches on the first test and the button
+  //stays pressed forever, and any click writes the same zero. Whatever comes
+  //from a .lfm overwrites both anyway.
+  FValueDown := 1;
+  FValueUp   := 0;
   FIsEnabled:=true;
   FClickFlag:=false;
   FGlyphDown:=TBitmap.Create;
@@ -397,9 +400,9 @@ begin
      t.AddRemoveTagHandler(@RemoveTagCallBack);
 
      FTag := t;
-     TagChangeCallBack(self);
   end;
   FTag := t;
+  TagChangeCallBack(self);
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
 end;
@@ -611,7 +614,17 @@ begin
       exit;
    end;
 
-   value := GetTagValue;
+   //sem tag nao ha' leitura: Infinity nao casa com nenhum dos dois valores,
+   //entao o botao cai no tratamento de OtherValues - "esse valor nao e' nem um
+   //nem outro" - em vez de mostrar o ultimo estado lido.
+   //with no tag there is no reading: Infinity matches neither value, so the
+   //button falls into the OtherValues handling - "this value is neither of the
+   //two" - instead of showing the last state read.
+   if FTag=nil then
+      value := Infinity
+   else
+      value := GetTagValue;
+
    if value = FValueDown then
       SetButtonState(bsDown)
    else begin
@@ -632,6 +645,7 @@ end;
 procedure THMIButton.RemoveTagCallBack(Sender: TObject);
 begin
    FTag := nil;
+   TagChangeCallBack(Self);
 end;
 
 end.
