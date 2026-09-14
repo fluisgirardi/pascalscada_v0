@@ -369,6 +369,9 @@ begin
         auxItem.PLCTag.RemoveFreeNotification(Self);
       end;
     end;
+    //a colecao nasce no construtor e nao tem dono que a libere; o event logger
+    //e o conector booleano liberam as deles no mesmo ponto
+    FreeAndNil(FAlarmMessages);
   end;
 
   inherited Destroy;
