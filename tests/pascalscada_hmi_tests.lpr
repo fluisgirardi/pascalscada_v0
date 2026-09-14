@@ -30,7 +30,8 @@ uses
   ut.dislocator,
   ut.eventlogger,
   ut.alarmlogger,
-  ut.tagchartsource;
+  ut.tagchartsource,
+  ut.hmicheckbox;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

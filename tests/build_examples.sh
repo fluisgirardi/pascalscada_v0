@@ -74,7 +74,11 @@ pulados=0
 falhas=0
 
 echo "== building the examples (widgetset=$WIDGETSET, system=$ALVO)"
-for projeto in $(find examples -name "*.lpi" | sort); do
+# -path .../backup/... : a IDE guarda copias antigas nessas pastas, que o
+# .gitignore ja ignora; nao sao exemplos
+# -path .../backup/... : the IDE keeps old copies in those folders, which
+# .gitignore already ignores; they are not examples
+for projeto in $(find examples -name "*.lpi" -not -path "*/backup/*" | sort); do
 
     motivo=$(grep -a -v '^[[:space:]]*#' "$EXCECOES" 2>/dev/null | \
              awk -v alvo="$ALVO" -v proj="$projeto" \
