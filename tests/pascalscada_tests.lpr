@@ -4,7 +4,7 @@ program pascalscada_tests;
 
 uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
-  Classes, consoletestrunner,
+  Classes, SysUtils, consoletestrunner,
   //apoio aos testes / test support
   testsupport.bytes,
   testsupport.protocol,
@@ -57,6 +57,17 @@ var
   App: TPascalSCADATestRunner;
 
 begin
+  //os testes conferem texto formatado (FormatFloat, FloatToStr) contra valores
+  //escritos com ponto. No Windows o FPC le a configuracao regional da maquina,
+  //entao numa maquina configurada em pt-BR o mesmo teste que passa no CI - que
+  //roda en-US - falharia so' pela virgula. O separador fica fixo aqui.
+  //the tests check formatted text (FormatFloat, FloatToStr) against values
+  //written with a dot. On Windows FPC reads the machine's regional settings, so
+  //on a machine set to pt-BR the very test that passes on CI - which runs en-US
+  //- would fail over the comma alone. The separator is pinned here.
+  DefaultFormatSettings.DecimalSeparator:='.';
+  DefaultFormatSettings.ThousandSeparator:=',';
+
   App := TPascalSCADATestRunner.Create(nil);
   App.Initialize;
   App.Title := 'PascalSCADA 0.x - testes automatizados';

@@ -80,6 +80,7 @@ type
 
   TTestHMITrackBar = class(TTestCase)
   private
+    FForm:TForm;
     FBar:TTrackBarProbe;
     FTag:TFakeNumber;
     FBlock:Boolean;
@@ -274,7 +275,16 @@ begin
   FBlock:=false;
   FSent:=-1;
   FSendCount:=0;
-  FBar:=TTrackBarProbe.Create(nil);
+  //com formulario de verdade: no Windows o aviso de mudanca da barra passa
+  //pelo widget, e um controle sem janela mae levanta "Control has no parent
+  //window" ao tentar criar a dele.
+  //with a real form: on Windows the bar's change notification goes through
+  //the widget, and a control with no parent window raises "Control has no
+  //parent window" when it tries to create its own.
+  FForm:=TForm.CreateNew(nil);
+  FForm.Visible:=false;
+  FBar:=TTrackBarProbe.Create(FForm);
+  FBar.Parent:=FForm;
   TTrackBar(FBar).Min:=0;
   TTrackBar(FBar).Max:=100;
   FTag:=TFakeNumber.Create(nil);
@@ -283,7 +293,7 @@ end;
 
 procedure TTestHMITrackBar.TearDown;
 begin
-  FreeAndNil(FBar);
+  FreeAndNil(FForm);
   FreeAndNil(FTag);
 end;
 
