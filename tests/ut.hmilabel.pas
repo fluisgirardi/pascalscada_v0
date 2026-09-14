@@ -293,9 +293,11 @@ procedure TTestHMILabel.TheEnabledPropertyAnswersForTheProgramNotForTheControl;
 var
   users:TUserManagementForTest;
 begin
-  //THMILabel redeclara Enabled lendo o campo do proprio controle, que guarda
-  //o que o PROGRAMA pediu. O estado que vale e o E logico disso com a
-  //permissao, e so se le pelo ancestral
+  //e assim que a seguranca sobre controles e' implementada: o THMILabel
+  //redeclara Enabled guardando o que o PROGRAMA pediu, e o estado que chega
+  //ao controle e' o E logico disso com a permissao do usuario. Por isso as
+  //duas leituras respondem coisas diferentes, e e' a do ancestral que diz se
+  //o controle esta usavel
   users:=TUserManagementForTest.Create(nil);
   try
     users.Granted:='ver_producao';
