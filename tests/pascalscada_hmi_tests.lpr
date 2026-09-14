@@ -28,7 +28,8 @@ uses
   ut.colorconnector,
   ut.commfaultbadge,
   ut.dislocator,
-  ut.eventlogger;
+  ut.eventlogger,
+  ut.alarmlogger;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
