@@ -41,7 +41,8 @@ uses
   ut.vectorcontrol,
   ut.flowvalve,
   ut.flowelevator,
-  ut.numericcontrols;
+  ut.numericcontrols,
+  ut.hmiedit;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

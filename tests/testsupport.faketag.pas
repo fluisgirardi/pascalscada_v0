@@ -107,8 +107,20 @@ begin
 end;
 
 function TFakeNumber.IsValidValue(aValue:Variant):Boolean;
+var
+  aux:Double;
+  aValueStr:AnsiString;
 begin
-  Result:=VarIsNumeric(aValue);
+  //a mesma regra do TPLCTagNumber e do TPLCBlockElement: os controles de
+  //entrada perguntam isso com o TEXTO que o operador digitou, entao recusar
+  //string faria a caixa de edicao devolver tudo que fosse teclado.
+  //the same rule as TPLCTagNumber and TPLCBlockElement: the input controls ask
+  //this with the TEXT the operator typed, so refusing strings would make the
+  //edit box give back everything that was typed.
+  aValueStr:=aValue;
+  Result:=VarIsNumeric(aValue) or
+          (VarIsStr(aValue) and TryStrToFloat(aValueStr,aux)) or
+          VarIsType(aValue, varboolean);
 end;
 
 function TFakeNumber.GetClockMonotonicTimestamp:QWord;
