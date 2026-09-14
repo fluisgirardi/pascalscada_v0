@@ -227,9 +227,15 @@ begin
     t.AddTagChangeHandler(@TagChangeCallBack);
     t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
-    RefreshCombo(0);
   end;
   FTag := t;
+  //sem tag nao ha' leitura: a linha que ficasse marcada continuaria parecendo
+  //o modo em que o processo esta'. O RefreshCombo ja' sabe disso - sem tag ele
+  //nao seleciona nada - so' nao era chamado neste caminho.
+  //with no tag there is no reading: a line left marked would go on looking like
+  //the mode the process is in. RefreshCombo already knows that - with no tag it
+  //selects nothing - it just was not called on this path.
+  RefreshCombo(0);
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
 end;
@@ -259,8 +265,10 @@ end;
 
 procedure THMIComboBox.RemoveTagCallBack(Sender: TObject);
 begin
-  if Ftag=Sender then
+  if Ftag=Sender then begin
     FTag:=nil;
+    RefreshCombo(0);
+  end;
 end;
 
 procedure THMIComboBox.Loaded;
@@ -288,8 +296,14 @@ procedure THMIComboBox.Select;
 
   procedure AfterSendValue;
   begin
+    //o valor que foi para o tag, nao o indice da linha: e' o que o tipo do
+    //evento promete e o que todos os outros controles avisam. Com o item
+    //valendo 30 na terceira linha, o "antes" recebia 30 e o "depois", 2.
+    //the value that went to the tag, not the line index: it is what the event
+    //type promises and what every other control reports. With the item worth
+    //30 on the third line, "before" got 30 and "after" got 2.
     if Assigned(FAfterSendValueToTag) then
-      FAfterSendValueToTag(Self,GetItemIndex);
+      FAfterSendValueToTag(Self,GetItemValue);
   end;
 
 begin
@@ -321,7 +335,21 @@ begin
 end;
 
 procedure THMIComboBox.SetItems(const Value: TStrings);
+var
+  obj: Integer;
 begin
+  //cada linha carrega o numero dela num objeto proprio, e quem os criou tem
+  //que destrui-los: o Destroy ja' fazia essa varredura, e a troca da lista
+  //nao - cada troca em runtime vazava um objeto por linha.
+  //each line carries its own number in an object of its own, and whoever
+  //created them has to destroy them: Destroy already did this sweep and
+  //replacing the list did not - every runtime replacement leaked one object
+  //per line.
+  if Value<>Items then
+    for obj:=0 to Items.Count-1 do
+      if (Items.Objects[obj]<>nil) and (Items.Objects[obj] is TComboboxItemInfo) then
+        Items.Objects[obj].Free;
+
   inherited SetItems(Value);
   RefreshCombo(0);
 end;
