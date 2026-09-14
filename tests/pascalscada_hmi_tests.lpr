@@ -29,7 +29,8 @@ uses
   ut.commfaultbadge,
   ut.dislocator,
   ut.eventlogger,
-  ut.alarmlogger;
+  ut.alarmlogger,
+  ut.tagchartsource;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

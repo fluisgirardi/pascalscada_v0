@@ -150,7 +150,7 @@ begin
       if FUseNowInsteadTagTimestamp then
         x := Now
       else if Assigned(FPLCTag) and Supports(FPLCTag, ITagNumeric) then
-        x := (FPLCTag as ITagNumeric).GetClockMonotonicTimestamp //TODO -o replace by updatetimestamp
+        x := IncMilliSecond(0, Int64((FPLCTag as ITagNumeric).GetClockMonotonicTimestamp)) //TODO -o replace by updatetimestamp
       else
         Exit;
 
@@ -188,7 +188,7 @@ begin
     if FUseNowInsteadTagTimestamp then
       x := Now
     else
-      x := (FPLCTag as ITagNumeric).GetClockMonotonicTimestamp;  //TODO: replace by lastupdate timestamp
+      x := IncMilliSecond(0, Int64((FPLCTag as ITagNumeric).GetClockMonotonicTimestamp));  //TODO: replace by lastupdate timestamp
 
     chart := GetParentChart;
 
@@ -313,7 +313,7 @@ begin
   if FUseNowInsteadTagTimestamp then
     LimitTime := IncMilliSecond(Now, -Int64(FXAxisMaximumInterval))
   else if Assigned(FPLCTag) and Supports(FPLCTag, ITagNumeric) then
-    LimitTime := IncMilliSecond((FPLCTag as ITagNumeric).GetClockMonotonicTimestamp, -Int64(FXAxisMaximumInterval)) //TODO
+    LimitTime := IncMilliSecond(IncMilliSecond(0, Int64((FPLCTag as ITagNumeric).GetClockMonotonicTimestamp)), -Int64(FXAxisMaximumInterval)) //TODO
   else
     Exit;
 
@@ -322,6 +322,9 @@ begin
     ChartItem := PChartDataItem(FData.Items[0]);
     if ChartItem^.X >= LimitTime then
       Break;
+    //o item sai da lista mas continua alocado; quem tira da FData direto tem
+    //que liberar, como faz o proprio TListChartSource.Delete
+    Dispose(ChartItem);
     FData.Delete(0);
   end;
 
@@ -377,7 +380,7 @@ begin
   FEnableXAxisMaxInterval := True;
   FYMinOffset := 0;
   FYMaxOffset := 0;
-  FUseNowInsteadTagTimestamp := False;
+  FUseNowInsteadTagTimestamp := True;
 end;
 
 destructor TTagLinkedSeriesSource.Destroy;

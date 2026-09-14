@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada_hmi"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="10">
+    <Units Count="11">
       <Unit0>
         <Filename Value="pascalscada_hmi_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -71,6 +71,10 @@
         <Filename Value="ut.alarmlogger.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit9>
+      <Unit10>
+        <Filename Value="ut.tagchartsource.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit10>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
