@@ -52,7 +52,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq libgtk2.0-dev
+          sudo apt-get install -y -qq libgtk2.0-dev xvfb
 
       - name: Install Lazarus / FPC
         uses: ollydev/setup-lazarus@v4
@@ -99,14 +99,21 @@ jobs:
       - name: Build the HMI test suite
         # A separate binary: it pulls BGRABitmap in, which only this job has.
         # The 32 bit, ARM and FreeBSD jobs keep to pascalscada_tests.
-        run: lazbuild --build-all --widgetset=nogui tests/pascalscada_hmi_tests.lpi
+        #
+        # Built with a real widgetset, not nogui: seven HMI units create an
+        # LCL TTimer, and nogui has none - creating one raises "No timers
+        # available" before the test can even reach its first assertion.
+        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} tests/pascalscada_hmi_tests.lpi
 
       - name: Run the HMI tests
+        # gtk2 needs a display for its timers, so Linux runs under Xvfb.
+        # The win32 widgetset has timers of its own and needs nothing.
         run: |
           BIN=tests/bin/pascalscada_hmi_tests
-          [ -f "$BIN.exe" ] && BIN="$BIN.exe"
-          "$BIN" --all --format=plain
-          "$BIN" --all --format=xml --file="tests/results-hmi-${{ matrix.name }}.xml"
+          RUN=""
+          if [ -f "$BIN.exe" ]; then BIN="$BIN.exe"; else RUN="xvfb-run -a"; fi
+          $RUN "$BIN" --all --format=plain
+          $RUN "$BIN" --all --format=xml --file="tests/results-hmi-${{ matrix.name }}.xml"
 
       - uses: actions/upload-artifact@v4
         if: always()
