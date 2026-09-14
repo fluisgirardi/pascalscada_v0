@@ -619,6 +619,11 @@ end;
 function    TProcessSQLCommandThread.WaitEnd(Timeout:Cardinal):TWaitResult;
 begin
   Result := FEnd.WaitFor(Timeout);
+  //o FEnd so e sinalizado no fim do Execute, e a RTL pula o Execute inteiro
+  //quando a thread e terminada antes de chegar a ser escalonada. O Finished e
+  //posto pela RTL nos dois casos, entao e ele quem tira o destrutor do laco.
+  if (Result<>wrSignaled) and Finished then
+    Result := wrSignaled;
 end;
 
 procedure TProcessSQLCommandThread.ExecSQLWithoutResultSet(sql: UTF8String;
