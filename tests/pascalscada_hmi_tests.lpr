@@ -39,7 +39,8 @@ uses
   ut.hmibasiccontrol,
   ut.hmipolyline,
   ut.vectorcontrol,
-  ut.flowvalve;
+  ut.flowvalve,
+  ut.flowelevator;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

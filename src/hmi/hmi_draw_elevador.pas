@@ -67,6 +67,8 @@ type
     procedure SetPaintBodyWithFlowColor(AValue: Boolean);
     procedure SetPaintFooterWithFlowColor(AValue: Boolean);
     procedure SetPaintHeaderWithFlowColor(AValue: Boolean);
+  protected
+    procedure AssignTo(Dest: TPersistent); override;
   public
     constructor Create(aCollection: TCollection); override;
   published
@@ -197,7 +199,7 @@ type
 
 implementation
 
-uses ProtocolTypes, hsstrings, forms;
+uses ProtocolTypes, hsstrings, forms, math;
 
 { THMIElevatorFlowZones }
 
@@ -239,6 +241,21 @@ begin
   if FPaintHeaderWithFlowColor=AValue then Exit;
   FPaintHeaderWithFlowColor:=AValue;
   NotifyChange;
+end;
+
+procedure THMIElevatorFlowZone.AssignTo(Dest: TPersistent);
+var
+  aDest: THMIElevatorFlowZone;
+begin
+  inherited AssignTo(Dest);
+
+  if Dest is THMIElevatorFlowZone then begin
+    aDest:=Dest as THMIElevatorFlowZone;
+    aDest.FEmptyColor               :=FEmptyColor;
+    aDest.FPaintBodyWithFlowColor   :=FPaintBodyWithFlowColor;
+    aDest.FPaintHeaderWithFlowColor :=FPaintHeaderWithFlowColor;
+    aDest.FPaintFooterWithFlowColor :=FPaintFooterWithFlowColor;
+  end;
 end;
 
 constructor THMIElevatorFlowZone.Create(aCollection: TCollection);
@@ -295,7 +312,15 @@ end;
 
 procedure THMICustomLinkedFlowElevator.UpdateControlDelayed(Data: PtrInt);
 var
-  value: Double;
+  //sem tag - ou depois do tag ser destruido - value entrava no
+  //GetZoneFromValue com lixo de pilha e o estado escolhido era o que
+  //calhasse. Infinity nao casa com faixa nenhuma, que e' o que "sem valor"
+  //quer dizer, e e' o que a valvula e a bomba ja' usam.
+  //with no tag - or after the tag is destroyed - value went into
+  //GetZoneFromValue holding stack garbage and the state picked was whatever
+  //came up. Infinity matches no range, which is what "no value" means, and is
+  //what the valve and the pump already use.
+  value:Double = Infinity;
   zone: THMIElevatorFlowZone;
 begin
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
@@ -309,7 +334,10 @@ begin
     if FCurrentZone<>nil then begin
        FZoneTimer.Interval := FCurrentZone.BlinkTime;
        FZoneTimer.Enabled :=  FCurrentZone.BlinkWith<>(-1);
-    end;
+    end else
+       //sem estado nenhum o temporizador nao pode ficar ligado.
+       //with no state at all the timer cannot stay on.
+       FZoneTimer.Enabled := false;
   end;
 
   if Assigned(FOnStateChange) then
@@ -541,8 +569,12 @@ end;
 
 procedure THMICustomFlowElevator.UpdateFlow;
 begin
-  if assigned(FCurrentZone) and Assigned(FInputPolyline) and assigned(FOutputPolyline) then begin
-    if FCurrentZone.Flow then begin
+  if assigned(FCurrentZone) and assigned(FOutputPolyline) then begin
+    //sem linha de entrada nao ha' o que passar adiante: a saida fica vazia em
+    //vez de guardar a ultima cor que recebeu.
+    //with no input line there is nothing to pass on: the output goes empty
+    //instead of keeping the last colour it was given.
+    if FCurrentZone.Flow and Assigned(FInputPolyline) then begin
 
       if (FUseStaticBodyColor=false) and FCurrentZone.FPaintBodyWithFlowColor   then begin
         if FInputPolyline.LineColor=FInputPolyline.EmptyColor then
@@ -584,7 +616,25 @@ end;
 
 procedure THMICustomFlowElevator.NextZone(Sender: TObject);
 begin
+  //estava vazio: o temporizador do pisca era ligado pelo estado e rodava sem
+  //fazer nada, com BlinkWith e BlinkTime prometendo no inspetor um
+  //comportamento que nao existia. Mesmo passo a passo da valvula e da bomba.
+  //it used to be empty: the blink timer was turned on by the state and ran
+  //doing nothing, with BlinkWith and BlinkTime promising on the inspector a
+  //behaviour that did not exist. Same steps as the valve and the pump.
+  if FCurrentZone=nil then begin
+    FZoneTimer.Enabled:=false;
+    exit;
+  end;
 
+  if FCurrentZone.BlinkWith<0 then
+    FZoneTimer.Enabled:=false
+  else begin
+    if FZoneTimer.Interval<>THMIElevatorFlowZone(FElevatorStates.Items[FCurrentZone.BlinkWith]).BlinkTime then
+      FZoneTimer.Interval := THMIElevatorFlowZone(FElevatorStates.Items[FCurrentZone.BlinkWith]).BlinkTime;
+    ShowZone(THMIElevatorFlowZone(FElevatorStates.Items[FCurrentZone.BlinkWith]));
+    if not FZoneTimer.Enabled then FZoneTimer.Enabled:=true;
+  end;
 end;
 
 procedure THMICustomFlowElevator.Loaded;
@@ -634,6 +684,9 @@ begin
       FInputPolyline:=nil;
     if AComponent=FOutputPolyline then
       FOutputPolyline:=nil;
+
+    if [csDestroying]*ComponentState=[] then
+      UpdateFlow;
   end;
 end;
 
@@ -681,6 +734,7 @@ procedure THMICustomFlowElevator.NotifyFree(const WhoWasDestroyed: THMIFlowPolyl
 begin
   if WhoWasDestroyed=FInputPolyline then FInputPolyline:=nil;
   if WhoWasDestroyed=FOutputPolyline then FOutputPolyline:=nil;
+  UpdateFlow;
 end;
 
 procedure THMICustomFlowElevator.NotifyChange(const WhoChanged: THMIFlowPolyline);
