@@ -34,7 +34,8 @@ uses
   ut.hmicheckbox,
   ut.hmilabel,
   ut.hmitext,
-  ut.hmianimation;
+  ut.hmianimation,
+  ut.hmiprogressbar;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
