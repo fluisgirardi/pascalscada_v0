@@ -38,7 +38,8 @@ uses
   ut.hmiprogressbar,
   ut.hmibasiccontrol,
   ut.hmipolyline,
-  ut.vectorcontrol;
+  ut.vectorcontrol,
+  ut.flowvalve;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

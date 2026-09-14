@@ -61,7 +61,13 @@ end;
 procedure THMICustomBasicValve.SetValveBodyPercent(AValue: Double);
 begin
   if FValveBodyPercent=AValue then Exit;
-  if (FValveBodyPercent<0) or (FValveBodyPercent>1) then
+  //o valor que chega, nao o que ja esta guardado: conferindo o antigo, o fora
+  //de faixa entrava sem reclamar e depois reprovava todos os seguintes,
+  //inclusive os validos.
+  //the value coming in, not the one already stored: checking the old one let
+  //the out of range value in without complaining and then refused every value
+  //after it, valid ones included.
+  if (AValue<0) or (AValue>1) then
     raise exception.Create('ValveBodyPercent accepts values between [0.0 .. 1.0]');
   FValveBodyPercent:=AValue;
   InvalidateShape;

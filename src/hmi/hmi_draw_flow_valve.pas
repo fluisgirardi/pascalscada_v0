@@ -158,7 +158,12 @@ begin
     if FCurrentZone<>nil then begin
        FZoneTimer.Interval := FCurrentZone.BlinkTime;
        FZoneTimer.Enabled :=  FCurrentZone.BlinkWith<>(-1);
-    end;
+    end else
+       //sem estado nenhum o temporizador nao pode ficar ligado: o NextZone
+       //entra em cima de FCurrentZone nulo.
+       //with no state at all the timer cannot stay on: NextZone would run on
+       //a nil FCurrentZone.
+       FZoneTimer.Enabled := false;
   end;
 end;
 
@@ -194,8 +199,12 @@ end;
 
 procedure THMICustomFlowValve.UpdateFlow;
 begin
-  if assigned(FCurrentZone) and Assigned(FInputPolyline) and assigned(FOutputPolyline) then begin
-    if FCurrentZone.Flow then
+  if assigned(FCurrentZone) and assigned(FOutputPolyline) then begin
+    //sem linha de entrada nao ha' o que passar adiante: a saida fica vazia em
+    //vez de guardar a ultima cor que recebeu.
+    //with no input line there is nothing to pass on: the output goes empty
+    //instead of keeping the last colour it was given.
+    if FCurrentZone.Flow and Assigned(FInputPolyline) then
       FOutputPolyline.LineColor:=FInputPolyline.LineColor
     else
       FOutputPolyline.LineColor:=FOutputPolyline.EmptyColor;
@@ -219,6 +228,7 @@ procedure THMICustomFlowValve.NotifyFree(const WhoWasDestroyed: THMIFlowPolyline
 begin
   if WhoWasDestroyed=FInputPolyline then FInputPolyline:=nil;
   if WhoWasDestroyed=FOutputPolyline then FOutputPolyline:=nil;
+  UpdateFlow;
 end;
 
 procedure THMICustomFlowValve.NotifyChange(const WhoChanged: THMIFlowPolyline);
@@ -294,11 +304,19 @@ begin
 
     if AComponent=FOutputPolyline then
       FOutputPolyline:=nil;
+
+    if [csDestroying]*ComponentState=[] then
+      UpdateFlow;
   end;
 end;
 
 procedure THMICustomFlowValve.NextZone(Sender: TObject);
 begin
+  if FCurrentZone=nil then begin
+    FZoneTimer.Enabled:=false;
+    exit;
+  end;
+
   if FCurrentZone.BlinkWith<0 then
     FZoneTimer.Enabled:=false
   else begin

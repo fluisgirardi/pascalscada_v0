@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada_hmi"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="19">
+    <Units Count="20">
       <Unit0>
         <Filename Value="pascalscada_hmi_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -107,6 +107,10 @@
         <Filename Value="ut.vectorcontrol.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit18>
+      <Unit19>
+        <Filename Value="ut.flowvalve.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit19>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
