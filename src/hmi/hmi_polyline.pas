@@ -20,6 +20,7 @@ type
     procedure setY(AValue: Integer);
   protected
     function GetDisplayName: AnsiString; override;
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property X:Integer read FX write setX;
     property Y:Integer read FY write setY;
@@ -97,6 +98,7 @@ type
     procedure setHMIObject(AValue: THMIFlowPolyline);
   protected
     function GetDisplayName: string; override;
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property HMIObject:THMIFlowPolyline read FHMIObject write setHMIObject;
   end;
@@ -228,6 +230,11 @@ begin
   for i:=0 to FFlowSources.Count-1 do begin
     if THMIFlowSourceCollectionItem(FFlowSources.Items[i]).HMIObject = WhoWasDestroyed then begin
       FFlowSources.Delete(i);
+      //sem recalcular, a linha fica pintada com a cor de uma fonte que nao
+      //existe mais.
+      //without recalculating, the line stays painted with the colour of a
+      //source that does not exist anymore.
+      RecalculateColor;
       exit;
     end;
   end;
@@ -244,12 +251,18 @@ procedure THMIFlowPolyline.SetAutoEndPointDirection(AValue: TPointDirection);
 begin
   if FEndDireciton=AValue then Exit;
   FEndDireciton:=AValue;
+
+  RecalculateMidPoints;
+  InvalidateShape;
 end;
 
 procedure THMIFlowPolyline.SetAutoEndPointOffset(AValue: Integer);
 begin
   if FAutoEndPointOffset=AValue then Exit;
   FAutoEndPointOffset:=AValue;
+
+  RecalculateMidPoints;
+  InvalidateShape;
 end;
 
 procedure THMIFlowPolyline.SetAutoHeightDistribution(AValue: double);
@@ -283,12 +296,18 @@ procedure THMIFlowPolyline.SetAutoStartPointDirection(AValue: TPointDirection);
 begin
   if FStartDireciton=AValue then Exit;
   FStartDireciton:=AValue;
+
+  RecalculateMidPoints;
+  InvalidateShape;
 end;
 
 procedure THMIFlowPolyline.SetAutoStartPointOffset(AValue: Integer);
 begin
   if FAutoStartPointOffset=AValue then Exit;
   FAutoStartPointOffset:=AValue;
+
+  RecalculateMidPoints;
+  InvalidateShape;
 end;
 
 procedure THMIFlowPolyline.SetEmptyColor(AValue: TColor);
@@ -433,6 +452,11 @@ begin
         CalculatedColor:=FEmptyColor;
         for i:=0 to FFlowSources.Count-1 do begin
           fs:=THMIFlowSourceCollectionItem(FFlowSources.Items[i]);
+          //item recem criado na colecao, ou que perdeu a linha, nao tem cor
+          //nenhuma para entrar na conta.
+          //an item just created on the collection, or one that lost its line,
+          //has no colour at all to take part in the calculation.
+          if fs.HMIObject=nil then continue;
           if fs.HMIObject.LineColor=FEmptyColor then continue;
           if CalculatedColor=FEmptyColor then
             CalculatedColor:=fs.HMIObject.LineColor
@@ -480,13 +504,21 @@ procedure THMIFlowPolyline.Notification(AComponent: TComponent;
   Operation: TOperation);
 var
   i: Integer;
+  lost: Boolean;
 begin
   inherited Notification(AComponent, Operation);
   if (Operation=opRemove) and (AComponent<>Self) then begin
+    lost:=false;
     for i:=0 to FFlowSources.Count-1 do
       if THMIFlowSourceCollectionItem(FFlowSources.Items[i]).FHMIObject=AComponent then begin
         THMIFlowSourceCollectionItem(FFlowSources.Items[i]).FHMIObject:=nil;
+        lost:=true;
       end;
+
+    //perder uma fonte muda a conta da cor, como perder qualquer outra.
+    //losing a source changes the colour calculation, like losing any other.
+    if lost and ([csDestroying]*ComponentState=[]) then
+      RecalculateColor;
   end;
 end;
 
@@ -552,6 +584,17 @@ begin
   end;
 end;
 
+procedure THMIFlowSourceCollectionItem.AssignTo(Dest: TPersistent);
+begin
+  if Dest is THMIFlowSourceCollectionItem then
+    //pela propriedade, para o destino se registrar na linha copiada.
+    //through the property, so the destination registers itself on the copied
+    //line.
+    THMIFlowSourceCollectionItem(Dest).HMIObject:=FHMIObject
+  else
+    inherited AssignTo(Dest);
+end;
+
 function THMIFlowSourceCollectionItem.GetDisplayName: string;
 begin
   if Assigned(FHMIObject) then
@@ -594,6 +637,18 @@ begin
   if FY=AValue then Exit;
   FY:=AValue;
   NotifyChange;
+end;
+
+procedure TPointCollectionItem.AssignTo(Dest: TPersistent);
+var
+  aDest: TPointCollectionItem;
+begin
+  if Dest is TPointCollectionItem then begin
+    aDest:=Dest as TPointCollectionItem;
+    aDest.FX:=FX;
+    aDest.FY:=FY;
+  end else
+    inherited AssignTo(Dest);
 end;
 
 function TPointCollectionItem.GetDisplayName: AnsiString;
