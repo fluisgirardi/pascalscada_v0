@@ -120,6 +120,7 @@ type
     //o tag / the tag
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheValve;
+    procedure ClearingTheTagFallsBackToTheDefaultState;
 
     //os estados / the states
     procedure AssigningTheStatesOfAnotherValveCopiesThem;
@@ -152,6 +153,7 @@ type
     procedure LeavingEveryStateStopsTheBlink;
     procedure TheStateChangeEventFires;
     procedure ATagThatIsNotNumericIsRefused;
+    procedure ClearingTheTagFallsBackToTheDefaultState;
   end;
 
 implementation
@@ -485,6 +487,22 @@ begin
   end;
 end;
 
+procedure TTestFlowValve.ClearingTheTagFallsBackToTheDefaultState;
+var
+  padrao:THMIFlowZone;
+begin
+  NewState(1, true, clLime, clGreen);
+  padrao:=NewState(9, false, clGray, clBlack);
+  padrao.DefaultZone:=true;
+  TagValueIs(1);
+  AssertEquals('mostrando o estado do valor', clLime, FValve.BodyColorIs);
+
+  FValve.PLCTag:=nil;
+  Settle;
+
+  AssertEquals('sem tag, o estado padrao', clGray, FValve.BodyColorIs);
+end;
+
 procedure TTestFlowValve.ADestroyedTagLetsGoOfTheValve;
 begin
   FreeAndNil(FTag);
@@ -643,6 +661,22 @@ begin
   TagValueIs(1);
 
   AssertTrue('avisou a troca de estado', FStateChanges>0);
+end;
+
+procedure TTestFlowPump.ClearingTheTagFallsBackToTheDefaultState;
+var
+  padrao:THMIFlowZone;
+begin
+  NewState(1, true, clLime, clGreen);
+  padrao:=NewState(9, false, clGray, clBlack);
+  padrao.DefaultZone:=true;
+  TagValueIs(1);
+  AssertEquals('mostrando o estado do valor', clLime, FPump.CurrentBodyColor);
+
+  FPump.PLCTag:=nil;
+  Settle;
+
+  AssertEquals('sem tag, o estado padrao', clGray, FPump.CurrentBodyColor);
 end;
 
 procedure TTestFlowPump.ATagThatIsNotNumericIsRefused;

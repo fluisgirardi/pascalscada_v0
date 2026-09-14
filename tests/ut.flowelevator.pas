@@ -109,6 +109,7 @@ type
     procedure TheTagValueChoosesTheState;
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheElevator;
+    procedure ClearingTheTagFallsBackToTheDefaultState;
     procedure TheStateChangeEventFires;
 
     //o pisca / the blink
@@ -442,6 +443,22 @@ begin
   finally
     tagDeTexto.Free;
   end;
+end;
+
+procedure TTestFlowElevator.ClearingTheTagFallsBackToTheDefaultState;
+var
+  padrao:THMIElevatorFlowZone;
+begin
+  NewState(1, true, clLime, clGreen);
+  padrao:=NewState(9, false, clGray, clBlack);
+  padrao.DefaultZone:=true;
+  TagValueIs(1);
+  AssertEquals('mostrando o estado do valor', clLime, FElevator.BodyColor);
+
+  FElevator.PLCTag:=nil;
+  Settle;
+
+  AssertEquals('sem tag, o estado padrao', clGray, FElevator.BodyColor);
 end;
 
 procedure TTestFlowElevator.ADestroyedTagLetsGoOfTheElevator;

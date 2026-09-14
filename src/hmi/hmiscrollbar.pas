@@ -168,7 +168,14 @@ procedure THMIScrollBar.RefreshScrollBar(Data: PtrInt);
 begin
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if not FBusy then begin
-    if (FTag=nil) then exit;
+    if (FTag=nil) then begin
+      //sem tag nao ha' leitura: a barra parada onde estava continua parecendo
+      //leitura viva de um tag que nao existe mais.
+      //with no tag there is no reading: the bar left where it was still reads
+      //like a live value from a tag that is not there anymore.
+      Position := Min;
+      exit;
+    end;
 
     if Supports(FTag, ITagNumeric) then
       Position := Trunc((FTag as ITagNumeric).Value);
@@ -212,9 +219,9 @@ begin
       t.AddTagChangeHandler(@TagChangeCallBack);
       t.AddRemoveTagHandler(@RemoveTagCallBack);
       FTag := t;
-      RefreshScrollBar(0);
    end;
    FTag := t;
+   RefreshScrollBar(0);
    if Assigned(FCommFaultLink) then
      FCommFaultLink.SetTag(t);
 end;
@@ -335,8 +342,10 @@ end;
 
 procedure THMIScrollBar.RemoveTagCallBack(Sender: TObject);
 begin
-  if FTag=Sender then
+  if FTag=Sender then begin
     FTag := nil;
+    RefreshScrollBar(0);
+  end;
 end;
 
 end.

@@ -77,6 +77,7 @@ type
     //mudancas / changes
     procedure ChangingTheZoneTextRebuildsTheCaption;
     procedure ADestroyedTagLetsGoOfTheControl;
+    procedure ClearingTheTagFallsBackToNoZone;
   end;
 
 implementation
@@ -269,6 +270,23 @@ begin
   Settle;
 
   AssertEquals('a legenda acompanhou', 'em marcha', FText.Caption);
+end;
+
+procedure TTestHMIText.ClearingTheTagFallsBackToNoZone;
+begin
+  //sem tag nao ha' valor, e sem valor nenhuma zona responde - a nao ser a
+  //zona padrao, se houver uma
+  //with no tag there is no value, and with no value no zone answers - other
+  //than the default zone, if there is one
+  NewZone(1, 'LIGADO');
+  FText.PLCTag:=FTag;
+  TagValueIs(1);
+  AssertEquals('mostrando a zona', 'LIGADO', FText.Caption);
+
+  FText.PLCTag:=nil;
+  Settle;
+
+  AssertEquals('sem tag, sem zona', '', FText.Caption);
 end;
 
 procedure TTestHMIText.ADestroyedTagLetsGoOfTheControl;

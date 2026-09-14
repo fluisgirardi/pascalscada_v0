@@ -81,6 +81,7 @@ type
     procedure ATagThatIsNotNumericIsRefused;
     procedure ChangingTagsFollowsTheNewOne;
     procedure ADestroyedTagLetsGoOfTheBar;
+    procedure ClearingTheTagTakesTheBarToTheMinimum;
 
     //seguranca / security
     procedure WithoutPermissionTheBarIsDisabled;
@@ -241,6 +242,19 @@ begin
     FBar.PLCTag:=nil;
     outro.Free;
   end;
+end;
+
+procedure TTestHMIProgressBar.ClearingTheTagTakesTheBarToTheMinimum;
+begin
+  FBar.Min:=10;
+  FBar.Max:=100;
+  FBar.PLCTag:=FTag;
+  TagValueIs(42);
+  AssertEquals('no valor do tag', 42, FBar.CurrentProgress, 0.0001);
+
+  FBar.PLCTag:=nil;
+
+  AssertEquals('sem tag, no minimo', 10, FBar.CurrentProgress, 0.0001);
 end;
 
 procedure TTestHMIProgressBar.ADestroyedTagLetsGoOfTheBar;

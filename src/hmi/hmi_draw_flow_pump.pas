@@ -116,9 +116,17 @@ begin
     AValue.AddTagChangeHandler(@TagChangeCallBack);
     AValue.AddRemoveTagHandler(@RemoveTagCallBack);
     FPLCTag := AValue;
-    UpdateValve;
   end;
   FPLCTag := AValue;
+  //sem tag nao ha' valor: o Infinity que o recalculo usa nao casa com faixa
+  //nenhuma, entao quem responde e' a zona padrao - onde mora o desenho de
+  //"sem comunicacao". Ate' agora ninguem chamava o recalculo neste caminho
+  //e o desenho do ultimo valor ficava na tela.
+  //with no tag there is no value: the Infinity the recalculation uses matches
+  //no range, so the default zone answers - which is where the "no
+  //communication" drawing lives. Until now nobody called the recalculation on
+  //this path and the last value's drawing stayed on screen.
+  UpdateValve;
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(AValue);
 end;
@@ -135,8 +143,10 @@ end;
 
 procedure THMICustomLinkedFlowPump.RemoveTagCallBack(Sender: TObject);
 begin
-  if FPLCTag=Sender then
+  if FPLCTag=Sender then begin
     FPLCTag:=nil;
+    UpdateValve;
+  end;
 end;
 
 procedure THMICustomLinkedFlowPump.UpdateValve;

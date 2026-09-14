@@ -70,6 +70,8 @@ type
     procedure TheFalseValueUnchecksTheBox;
     procedure CheckedReadsTheTagNotTheControl;
     procedure WithNoTagTheBoxKeepsItsOwnState;
+    procedure LosingTheTagShowsTheUnknownState;
+    procedure ADestroyedTagShowsTheUnknownState;
 
     //os outros valores / the other values
     procedure AnotherValueCanCheckTheBox;
@@ -183,6 +185,31 @@ begin
   finally
     solta.Free;
   end;
+end;
+
+procedure TTestHMICheckBox.LosingTheTagShowsTheUnknownState;
+begin
+  //sem tag nao ha' leitura: o estado passa a ser o mesmo de um valor que nao
+  //e' nem o de marcado nem o de desmarcado
+  //with no tag there is no reading: the state becomes the same as a value that
+  //is neither the checked nor the unchecked one
+  FBox.OtherValuesIS:=IsGrayed;
+  TagValueIs(1);
+  AssertEquals('marcado pelo tag', Ord(cbChecked), Ord(FBox.State));
+
+  FBox.PLCTag:=nil;
+
+  AssertEquals('sem tag, indefinido', Ord(cbGrayed), Ord(FBox.State));
+end;
+
+procedure TTestHMICheckBox.ADestroyedTagShowsTheUnknownState;
+begin
+  FBox.OtherValuesIS:=IsGrayed;
+  TagValueIs(1);
+
+  FreeAndNil(FTag);
+
+  AssertEquals('sem tag, indefinido', Ord(cbGrayed), Ord(FBox.State));
 end;
 
 procedure TTestHMICheckBox.AnotherValueCanCheckTheBox;

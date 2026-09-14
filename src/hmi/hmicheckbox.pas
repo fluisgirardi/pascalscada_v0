@@ -473,7 +473,7 @@ type
 
 implementation
 
-uses hsstrings, ControlSecurityManager, Forms;
+uses math, hsstrings, ControlSecurityManager, Forms;
 
 constructor THMICheckBox.Create(AOwner:TComponent);
 begin
@@ -546,7 +546,18 @@ end;
 
 procedure THMICheckBox.RefreshCheckBox(Data: PtrInt);
 begin
-  if ([csReading, csLoading, csDestroying]*ComponentState<>[]) or (FTag=nil) then begin
+  if ([csReading, csLoading, csDestroying]*ComponentState<>[]) then begin
+    exit;
+  end;
+
+  if FTag=nil then begin
+    //sem tag nao ha' leitura: Infinity nao e' nem o valor de marcado nem o de
+    //desmarcado, entao a caixa cai no tratamento de OtherValues - que e'
+    //exatamente "esse valor nao e' nenhum dos dois".
+    //with no tag there is no reading: Infinity is neither the checked nor the
+    //unchecked value, so the box falls into the OtherValues handling - which
+    //is exactly "this value is neither of the two".
+    RefreshTagValue(Infinity);
     exit;
   end;
 
@@ -580,9 +591,9 @@ begin
     t.AddTagChangeHandler(@TagChangeCallBack);
     t.AddRemoveTagHandler(@RemoveTagCallBack);
     FTag := t;
-    RefreshTagValue(GetTagValue);
   end;
   FTag := t;
+  RefreshCheckBox(0);
   if Assigned(FCommFaultLink) then
     FCommFaultLink.SetTag(t);
 end;
@@ -961,8 +972,10 @@ end;
 
 procedure THMICheckBox.RemoveTagCallBack(Sender: TObject);
 begin
-  if Ftag=Sender then
+  if Ftag=Sender then begin
     FTag:=nil;
+    RefreshCheckBox(0);
+  end;
 end;
 
 end.
