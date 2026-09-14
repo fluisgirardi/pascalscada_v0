@@ -99,6 +99,8 @@ type
     procedure AValueAboveTheMaximumIsRefused;
     procedure AValueBelowTheMinimumIsRefused;
     procedure WithTheLimitsOffAnyValueGoesThrough;
+    procedure ARefusedValueDoesNotFreezeTheBoxOnEnter;
+    procedure ARefusedValueDoesNotFreezeTheBoxOnExit;
 
     //os avisos / the notifications
     procedure TheBeforeEventCanRefuseTheWrite;
@@ -414,6 +416,55 @@ begin
   FEdit.PressEnter;
 
   AssertEquals('o limite desligado nao segura', 150, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIEdit.ARefusedValueDoesNotFreezeTheBoxOnEnter;
+begin
+  //a recusa no Enter, com o campo ainda em foco: se a marca de modificado
+  //ficar de pe', a caixa para de acompanhar o processo ali mesmo
+  //the refusal on Enter, with the field still focused: if the modified mark
+  //stays up, the box stops following the process right there
+  FEdit.FreezeValueOnFocus:=false;
+  FEdit.MaxValue:=100;
+  FEdit.EnableMaxValue:=true;
+  TagValueIs(42);
+  FEdit.EnterTheField;
+  FEdit.TypeText('150');
+
+  try
+    FEdit.PressEnter;
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+
+  TagValueIs(7);
+
+  AssertEquals('voltou a mostrar o CLP', '7.0', FEdit.Text);
+end;
+
+procedure TTestHMIEdit.ARefusedValueDoesNotFreezeTheBoxOnExit;
+begin
+  //o outro caminho de envio: sair do campo sem teclar Enter. A recusa nao
+  //pode levar embora a volta da caixa ao valor do processo.
+  //the other send path: leaving the field without pressing Enter. The refusal
+  //must not take away the box going back to the process value.
+  FEdit.MaxValue:=100;
+  FEdit.EnableMaxValue:=true;
+  TagValueIs(42);
+  FEdit.EnterTheField;
+  FEdit.TypeText('150');
+
+  try
+    FEdit.LeaveTheField;
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+
+  TagValueIs(7);
+
+  AssertEquals('voltou a mostrar o CLP', '7.0', FEdit.Text);
 end;
 
 procedure TTestHMIEdit.TheBeforeEventCanRefuseTheWrite;

@@ -899,9 +899,20 @@ procedure THMIEdit.KeyDown(var Key: Word; shift : TShiftState);
 begin
   if ((scPressEnter in FSend) and (key=VK_RETURN)) or
      ((scPressESC in FSend) and (key=VK_ESCAPE)) then begin
-     SendValue(Text);
-     FFreezedValue := false;
-     Modified := false;
+     //SendValue levanta excecao quando o valor esta' fora da faixa. Sem o
+     //finally, a marca de modificado ficava de pe' e o RefreshTagValue - que
+     //sai logo na entrada quando Modified - nunca mais atualizava a caixa: o
+     //operador seguia vendo o numero recusado enquanto o processo andava.
+     //SendValue raises when the value is out of range. Without the finally,
+     //the modified mark stayed up and RefreshTagValue - which exits right away
+     //when Modified - never refreshed the box again: the operator kept seeing
+     //the refused number while the process moved on.
+     try
+       SendValue(Text);
+     finally
+       FFreezedValue := false;
+       Modified := false;
+     end;
   end;
 
   if ( (not (scPressEnter in FSend)) and (key=VK_RETURN)) or
@@ -921,17 +932,23 @@ begin
 
   FFreezedValue := false;
 
-  if (scLostFocus in FSend) then begin
-     SendValue(Text);
-     Modified := false;
+  try
+    if (scLostFocus in FSend) then
+       SendValue(Text);
+  finally
+    //o mesmo cuidado do KeyDown: a recusa nao pode levar embora a volta da
+    //caixa ao valor do processo, o fechamento do teclado de tela e o DoExit
+    //herdado - que e' quem dispara o OnExit da aplicacao.
+    //the same care as in KeyDown: the refusal must not take away the box
+    //going back to the process value, the on screen keyboard closing and the
+    //inherited DoExit - which is what fires the application's OnExit.
+    Modified := false;
+    RefreshTagValue(0);
+
+    HideScreenKeyboard;
+
+    inherited DoExit;
   end;
-
-  Modified := false;
-  RefreshTagValue(0);
-
-  HideScreenKeyboard;
-
-  inherited DoExit;
 end;
 
 procedure THMIEdit.DoEnter;
