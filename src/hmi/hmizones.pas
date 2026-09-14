@@ -799,6 +799,7 @@ type
     procedure SetColor(AValue: TColor);
   protected
     function GetDisplayName: AnsiString; override;
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property Color:TColor read FColor write SetColor;
   end;
@@ -814,6 +815,14 @@ begin
   if FColor=AValue then Exit;
   FColor:=AValue;
   NotifyChange;
+end;
+
+procedure TColorZone.AssignTo(Dest: TPersistent);
+begin
+   inherited AssignTo(Dest);
+
+   if Dest is TColorZone then
+      TColorZone(Dest).FColor:=FColor;
 end;
 
 function TColorZone.GetDisplayName: AnsiString;

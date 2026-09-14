@@ -37,7 +37,8 @@ uses
   ut.hmianimation,
   ut.hmiprogressbar,
   ut.hmibasiccontrol,
-  ut.hmipolyline;
+  ut.hmipolyline,
+  ut.vectorcontrol;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

@@ -16,13 +16,25 @@ type
 
   THMICustomVectorControl = class(THMIBasicControl)
   private
+    FBackground: TColor;
     FProportional: Boolean;
     FStretch: Boolean;
+    FBlink: Boolean;
+    FBlinkVisible: Boolean;
+    FBlinkColor: TColor;
+    FBlinkTargetID: String;
+    FBlinkOverridden: Boolean;
+    FBlinkSavedColor: TBGRAPixel;
 
     FSVGContents: TStrings;
+    procedure SetBackground(AValue: TColor);
     procedure SetProportional(AValue: Boolean);
     procedure SetStretch(AValue: Boolean);
     procedure SetSVGContents(AValue: TStrings);
+    procedure SetBlink(AValue: Boolean);
+    procedure SetBlinkVisible(AValue: Boolean);
+    procedure SetBlinkColor(AValue: TColor);
+    procedure SetBlinkTargetID(AValue: String);
   protected
     FSVGDrawing: TBGRASVG;
     procedure CheckAutoSize;
@@ -31,9 +43,19 @@ type
     procedure Loaded; override;
     procedure CalculatePreferredSize(var PreferredWidth,
       PreferredHeight: integer; WithThemeSpace: Boolean); override;
+    function FindElementByID(const aSVGId:AnsiString; const SVGContents:TSVGContent; out SVGElement:TSVGElement):Boolean;
+    procedure UpdateBlinkState;
+    property  Background:TColor read FBackground write SetBackground default clNone;
     property  SVGContents:TStrings read FSVGContents write SetSVGContents;
     property  Stretch:Boolean read FStretch write SetStretch;
     property  Proportional:Boolean read FProportional write SetProportional;
+    // Blink: liga/desliga se o alarme/condição (ex: manual) está ativa.
+    // BlinkVisible é o "piscar" em si, alternado por um TTimer externo.
+    // BlinkTargetID é o id do elemento no SVG (o mesmo usado no SVGChanges, ex: 'border').
+    property  Blink:Boolean read FBlink write SetBlink default False;
+    property  BlinkVisible:Boolean read FBlinkVisible write SetBlinkVisible default False;
+    property  BlinkColor:TColor read FBlinkColor write SetBlinkColor default clWhite;
+    property  BlinkTargetID:String read FBlinkTargetID write SetBlinkTargetID;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -79,7 +101,10 @@ type
   THMIVectorFlowZone = class(THMIFlowZone)
   private
     FSVGChanges: TStrings;
+    procedure ClearStatementObjects;
     procedure SetSVGChanges(AValue: TStrings);
+  protected
+    procedure AssignTo(Dest: TPersistent); override;
   public
     constructor Create(aCollection: TCollection); override;
     destructor Destroy; override;
@@ -107,6 +132,7 @@ type
     procedure SetOuputPolyline(AValue: THMIFlowPolyline);
   protected
     function GetDisplayName: string; override;
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property OutputPolyline:THMIFlowPolyline read FOuputPolyline write SetOuputPolyline;
   end;
@@ -212,6 +238,7 @@ type
     property OnClick;
     property Action;
     property AutoSize;
+    property Background;
     property ColorAndFlowStates;
     property InputFlowPolyline;
     property PLCTag;
@@ -231,6 +258,7 @@ type
     constructor Create(AOwner: TComponent); override;
   published
     property AutoSize;
+    property Background;
     property ColorAndFlowStates;
     property InputFlowPolyline;
     property PLCTag;
@@ -245,6 +273,7 @@ type
   THMIBasicVectorControl = class(THMICustomVectorControl)
   published
     property AutoSize;
+    property Background;
     property SVGContents;
     property Stretch;
     property Proportional;
@@ -253,6 +282,11 @@ type
   THMIFlowVectorControl = class(THMICustomFlowVectorControl)
   published
     property AutoSize;
+    property Background;
+    property Blink;
+    property BlinkVisible;
+    property BlinkColor;
+    property BlinkTargetID;
     property ColorAndFlowStates;
     property FlowOutputPolylines;
     property InputFlowPolyline;
@@ -496,6 +530,18 @@ begin
   NotifyChange;
 end;
 
+procedure THMIOutputCollectionItem.AssignTo(Dest: TPersistent);
+begin
+  if Dest is THMIOutputCollectionItem then
+    //pela propriedade, para o destino registrar o aviso de destruicao da
+    //linha copiada.
+    //through the property, so the destination registers the free notification
+    //of the copied line.
+    THMIOutputCollectionItem(Dest).OutputPolyline:=FOuputPolyline
+  else
+    inherited AssignTo(Dest);
+end;
+
 function THMIOutputCollectionItem.GetDisplayName: string;
 begin
   if Assigned(FOuputPolyline) then
@@ -519,17 +565,40 @@ begin
       end;
     end;
 
-    for l:=0 to FSVGChanges.Count-1 do
-      if Assigned(FSVGChanges.Objects[l]) then begin
-        FSVGChanges.Objects[l].Destroy;
-        FSVGChanges.Objects[l]:=nil;
-      end;
+    ClearStatementObjects;
 
     FSVGChanges.Assign(AValue);
     for l:=0 to FSVGChanges.Count-1 do begin
       FSVGChanges.Objects[l]:=CreateStatementObject(FSVGChanges.Strings[l]);
     end;
   end;
+end;
+
+procedure THMIVectorFlowZone.ClearStatementObjects;
+var
+  l: Integer;
+begin
+  //os objetos de instrucao sao criados aqui e ficam pendurados no TStrings,
+  //que nao e' dono deles: quem cria tem que destruir.
+  //the statement objects are created here and hang on the TStrings, which
+  //does not own them: whoever creates them has to destroy them.
+  for l:=0 to FSVGChanges.Count-1 do
+    if Assigned(FSVGChanges.Objects[l]) then begin
+      FSVGChanges.Objects[l].Destroy;
+      FSVGChanges.Objects[l]:=nil;
+    end;
+end;
+
+procedure THMIVectorFlowZone.AssignTo(Dest: TPersistent);
+begin
+  inherited AssignTo(Dest);
+
+  if Dest is THMIVectorFlowZone then
+    //pela propriedade, que revalida as instrucoes e recria os objetos no
+    //destino.
+    //through the property, which revalidates the statements and builds the
+    //objects again on the destination.
+    THMIVectorFlowZone(Dest).SVGChanges:=FSVGChanges;
 end;
 
 constructor THMIVectorFlowZone.Create(aCollection: TCollection);
@@ -540,6 +609,7 @@ end;
 
 destructor THMIVectorFlowZone.Destroy;
 begin
+  ClearStatementObjects;
   FreeAndNil(FSVGChanges);
   inherited Destroy;
 end;
@@ -549,6 +619,7 @@ var
   l: Integer;
 begin
   inherited Loaded;
+  ClearStatementObjects;
   for l:=0 to FSVGChanges.Count-1 do begin
     FSVGChanges.Objects[l]:=CreateStatementObject(FSVGChanges.Strings[l]);
   end;
@@ -633,8 +704,16 @@ begin
   aCleanLine:=LowerCase(aLine);
 
   //default flow output.
+  //com o indice explicito: o texto conta as saidas a partir de 1 e o ShowZone
+  //subtrai 1 para casar com o laco. Sem ele, o default 0 do construtor vira
+  //-1 la', que e' justamente o "nenhuma saida", e a forma curta nao fazia
+  //nada.
+  //with the index spelled out: the text counts the outputs from 1 and
+  //ShowZone subtracts 1 to match the loop. Without it, the constructor's
+  //default 0 becomes -1 there, which is precisely "no output at all", and the
+  //short form did nothing.
   if aCleanLine='flow' then begin
-    Result:=TOutputChange.Create;
+    Result:=TOutputChange.Create(1);
     exit;
   end;
 
@@ -781,6 +860,16 @@ begin
     end else begin
       GetAnimationTimer.RemoveCallback(@BlinkTimer);
     end;
+
+    //aqui, e nao dentro do ShowZone: o que interessa a quem escuta e' a troca
+    //de estado, e o ShowZone e' chamado de novo a cada piscada.
+    //here, not inside ShowZone: what matters to the listener is the change of
+    //state, and ShowZone is called again on every blink.
+    if Assigned(FZoneChanged) then
+      try
+        FZoneChanged(Self);
+      except
+      end;
   end else
     ShowZone(FCurrentZone);
 
@@ -813,6 +902,11 @@ procedure THMICustomFlowVectorControl.NotifyFree(
 begin
   if WhoWasDestroyed=FInputFlowPolyline then begin
     FInputFlowPolyline:=nil;
+    //sem recalcular, as saidas ficam com a cor de uma linha que nao existe
+    //mais.
+    //without recalculating, the outputs stay with the colour of a line that
+    //does not exist anymore.
+    UpdateDrawAndFlow;
     exit;
   end;
 end;
@@ -838,14 +932,25 @@ procedure THMICustomFlowVectorControl.Notification(AComponent: TComponent;
   Operation: TOperation);
 var
   i: Integer;
+  lost: Boolean;
 begin
   inherited Notification(AComponent, Operation);
   if (Operation=opRemove) and (AComponent<>Self) then begin
-    if AComponent=FInputFlowPolyline then
+    lost:=AComponent=FInputFlowPolyline;
+    if lost then
       FInputFlowPolyline:=nil;
     for i:=0 to FFlowOutputs.Count-1 do
-      if THMIOutputCollectionItem(FFlowOutputs.Items[i]).FOuputPolyline=AComponent then
+      if THMIOutputCollectionItem(FFlowOutputs.Items[i]).FOuputPolyline=AComponent then begin
         THMIOutputCollectionItem(FFlowOutputs.Items[i]).FOuputPolyline:=nil;
+        lost:=true;
+      end;
+
+    //perder a entrada ou uma saida muda o que tem para desenhar e para
+    //propagar.
+    //losing the input or an output changes what there is to draw and to
+    //propagate.
+    if lost and ([csDestroying]*ComponentState=[]) then
+      UpdateDrawAndFlow;
   end;
 end;
 
@@ -856,7 +961,6 @@ var
   aSVGElement: TSVGElement       = nil;
   ColorObj: TSVGColorChange      = nil;
   outputChangeObj: TOutputChange = nil;
-  CurrentZoneChanged: Boolean;
 
   function FindSVGElement(const aSVGId:AnsiString; const SVGContents:TSVGContent; out SVGElement:TSVGElement):Boolean;
   var
@@ -948,7 +1052,6 @@ var
   end;
 begin
   ReloadDrawing;
-  CurrentZoneChanged := FCurrentZone<>aZone;
   FCurrentZone:=aZone;
   if aZone<>nil then begin
     for l:=0 to fCurrentZone.FSVGChanges.Count-1 do begin
@@ -985,8 +1088,14 @@ begin
   for o:=0 to FFlowOutputs.Count-1 do
     with FFlowOutputs.Items[o] as THMIOutputCollectionItem do begin
       if (o=FlowOutput) then begin
-        if Assigned(OutputPolyline) and Assigned(FInputFlowPolyline) then begin
-          if FInputFlowPolyline.LineColor=FInputFlowPolyline.EmptyColor then
+        if Assigned(OutputPolyline) then begin
+          //sem linha de entrada nao ha' o que passar: a saida escolhida fica
+          //vazia como as outras, em vez de guardar a ultima cor que recebeu.
+          //with no input line there is nothing to pass on: the chosen output
+          //goes empty like the others, instead of keeping the last colour it
+          //was given.
+          if (FInputFlowPolyline=nil) or
+             (FInputFlowPolyline.LineColor=FInputFlowPolyline.EmptyColor) then
             OutputPolyline.LineColor:=OutputPolyline.EmptyColor
           else
             OutputPolyline.LineColor:=FInputFlowPolyline.LineColor
@@ -1116,6 +1225,116 @@ end;
 
 { THMIBasicVectorControl }
 
+procedure THMICustomVectorControl.SetBackground(AValue: TColor);
+begin
+  if FBackground=AValue then Exit;
+  FBackground:=AValue;
+  if ([csReading,csLoading]*ComponentState)=[] then
+    InvalidateShape;
+end;
+
+procedure THMICustomVectorControl.SetBlink(AValue: Boolean);
+begin
+  if FBlink=AValue then Exit;
+  FBlink:=AValue;
+  if not FBlink then begin
+    // desligou o alarme: garante que a cor original volte ao normal
+    UpdateBlinkState;
+  end;
+  if ([csReading,csLoading]*ComponentState)=[] then
+    InvalidateShape;
+end;
+
+procedure THMICustomVectorControl.SetBlinkVisible(AValue: Boolean);
+begin
+  if FBlinkVisible=AValue then Exit;
+  FBlinkVisible:=AValue;
+  if FBlink and (([csReading,csLoading]*ComponentState)=[]) then begin
+    UpdateBlinkState;
+    InvalidateShape;
+  end;
+end;
+
+procedure THMICustomVectorControl.SetBlinkColor(AValue: TColor);
+begin
+  if FBlinkColor=AValue then Exit;
+  FBlinkColor:=AValue;
+  if FBlink and FBlinkVisible and (([csReading,csLoading]*ComponentState)=[]) then begin
+    UpdateBlinkState;
+    InvalidateShape;
+  end;
+end;
+
+procedure THMICustomVectorControl.SetBlinkTargetID(AValue: String);
+begin
+  if FBlinkTargetID=AValue then Exit;
+  FBlinkTargetID:=AValue;
+end;
+
+// Busca recursiva por id dentro do conteúdo do SVG (mesma lógica usada
+// internamente pelo ColorAndFlowStates para localizar elementos via SVGChanges)
+function THMICustomVectorControl.FindElementByID(const aSVGId: AnsiString;
+  const SVGContents: TSVGContent; out SVGElement: TSVGElement): Boolean;
+var
+  i: Integer;
+  a, b, c: Boolean;
+begin
+  Result:=False;
+  if SVGContents=nil then exit;
+  for i:=0 to SVGContents.ElementCount-1 do begin
+    a:=SVGContents.IsSVGElement[i];
+    if a then
+      b:=SVGContents.Element[i].HasAttribute('id')
+    else
+      b:=false;
+
+    if b then
+      c:=LowerCase(SVGContents.Element[i].Attribute['id'])=aSVGId
+    else
+      c:=false;
+
+    if (a and b and c) then begin
+      Result:=true;
+      SVGElement:=SVGContents.Element[i];
+      exit;
+    end;
+
+    if a and (SVGContents.ElementObject[i] is TSVGGroup) then
+      if FindElementByID(aSVGId, TSVGGroup(SVGContents.ElementObject[i]).Content, SVGElement) then
+        exit(true);
+    if a and (SVGContents.ElementObject[i] is TSVGDefine) then
+      if FindElementByID(aSVGId, TSVGDefine(SVGContents.ElementObject[i]).Content, SVGElement) then
+        exit(true);
+    if a and (SVGContents.ElementObject[i] is TSVGLinearGradient) then
+      if FindElementByID(aSVGId, TSVGLinearGradient(SVGContents.ElementObject[i]).Content, SVGElement) then
+        exit(true);
+  end;
+end;
+
+// Aplica ou restaura a cor de "piscar" diretamente no elemento do SVG
+// identificado por BlinkTargetID (ex: 'border'), sem depender de zonas/estados.
+procedure THMICustomVectorControl.UpdateBlinkState;
+var
+  target: TSVGElement;
+begin
+  if (Trim(FBlinkTargetID)='') or (not Assigned(FSVGDrawing)) then exit;
+
+  if FindElementByID(LowerCase(FBlinkTargetID), FSVGDrawing.Content, target) then begin
+    if FBlink and FBlinkVisible then begin
+      if not FBlinkOverridden then begin
+        FBlinkSavedColor := target.strokeColor;
+        FBlinkOverridden := True;
+      end;
+      target.stroke      := 'stroke';
+      target.strokeColor := ColorToBGRA(FBlinkColor);
+    end else if FBlinkOverridden then begin
+      target.stroke      := 'stroke';
+      target.strokeColor := FBlinkSavedColor;
+      FBlinkOverridden    := False;
+    end;
+  end;
+end;
+
 procedure THMICustomVectorControl.SetSVGContents(AValue: TStrings);
 begin
   if Assigned(AValue) then begin
@@ -1154,6 +1373,17 @@ end;
 procedure THMICustomVectorControl.DrawControl;
 begin
   inherited DrawControl;
+
+  if FBackground<>clNone then begin
+    FControlArea.Canvas2D.fillStyle(FBackground);
+    FControlArea.Canvas2D.fillRect(0, 0, FControlArea.Canvas2D.Width, FControlArea.Canvas2D.Height);
+  end;
+
+  // reaplica a cor de piscar (se ativa) - garante que sobreviva a um
+  // ReloadDrawing disparado por uma mudança de zona/estado desde o último desenho
+  if FBlink then
+    UpdateBlinkState;
+
   if FStretch then begin
     if FProportional then
       FSVGDrawing.StretchDraw(FControlArea.Canvas2D,
@@ -1212,6 +1442,12 @@ end;
 constructor THMICustomVectorControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FBackground:=clNone;
+  FBlink:=False;
+  FBlinkVisible:=False;
+  FBlinkColor:=clWhite;
+  FBlinkTargetID:='border';
+  FBlinkOverridden:=False;
   FSVGDrawing:=TBGRASVG.Create;
   FSVGContents:=TTextStrings.Create;
   ControlStyle := ControlStyle + [csAcceptsControls];

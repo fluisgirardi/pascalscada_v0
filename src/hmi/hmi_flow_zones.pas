@@ -16,6 +16,7 @@ type
     procedure SetFlow(AValue: Boolean);
   protected
     function GetDisplayName: AnsiString; override;
+    procedure AssignTo(Dest: TPersistent); override;
   published
     property Flow:Boolean read FFlow write SetFlow;
     property BorderColor:TColor read FBorderColor write SetBorderColor;
@@ -56,6 +57,19 @@ begin
   if FFlow=AValue then Exit;
   FFlow:=AValue;
   NotifyChange;
+end;
+
+procedure THMIFlowZone.AssignTo(Dest: TPersistent);
+var
+  aDest: THMIFlowZone;
+begin
+  inherited AssignTo(Dest);
+
+  if Dest is THMIFlowZone then begin
+    aDest:=Dest as THMIFlowZone;
+    aDest.FFlow       :=FFlow;
+    aDest.FBorderColor:=FBorderColor;
+  end;
 end;
 
 function THMIFlowZone.GetDisplayName: AnsiString;
