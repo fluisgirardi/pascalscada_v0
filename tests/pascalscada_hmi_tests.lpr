@@ -33,7 +33,8 @@ uses
   ut.tagchartsource,
   ut.hmicheckbox,
   ut.hmilabel,
-  ut.hmitext;
+  ut.hmitext,
+  ut.hmianimation;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
