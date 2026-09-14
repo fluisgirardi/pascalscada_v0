@@ -305,6 +305,21 @@ begin
          SetButtonState(bsDown);
       end;
 
+      //btToogle: inverte o valor do tag e mantem a aparencia solta, como o
+      //TButtonType documenta. Nao tinha ramo nenhum aqui - o tipo aparecia no
+      //inspetor e o botao nao escrevia nada, nunca.
+      //btToogle: inverts the tag value and keeps the released look, as
+      //TButtonType documents. There was no branch at all here - the type
+      //showed up on the inspector and the button never wrote anything.
+      if FButtonType=btToogle then begin
+         if GetTagValue=FValueDown then
+            valuetowrite := FValueUp
+         else
+            valuetowrite := FValueDown;
+         writeflag := true;
+         SetButtonState(bsUp);
+      end;
+
       if (FButtonType=btMomentary) and ((FState=bsDown) or (FState=bsExclusive)) then begin
          SetValue(FValueDown);
          SetButtonState(bsDown);
@@ -368,6 +383,17 @@ begin
 
   //adiona o callback para o novo tag
   if t<>nil then begin
+     //os tres, como em todos os outros controles: sem o de mudanca de valor o
+     //botao lia o tag uma unica vez, na hora de ser ligado, e depois mostrava
+     //o clique do operador em vez do que o processo respondeu - o motor
+     //ligando por outra tela ou por intertravamento nao aparecia aqui.
+     //all three, as in every other control: without the value change one the
+     //button read the tag a single time, when it was linked, and from then on
+     //showed the operator's click instead of what the process answered - the
+     //motor starting from another screen or from an interlock never showed up
+     //here.
+     t.AddWriteFaultHandler(@WriteFaultCallBack);
+     t.AddTagChangeHandler(@TagChangeCallBack);
      t.AddRemoveTagHandler(@RemoveTagCallBack);
 
      FTag := t;
@@ -476,7 +502,15 @@ end;
 
 function THMIButton.GetDown:Boolean;
 begin
-   Result :=  FState = bsDown;
+   //bsExclusive tambem: o construtor sempre define um GroupIndex, e o
+   //SetDown(true) da LCL leva um botao agrupado para bsExclusive, nao para
+   //bsDown. Sem os dois, a propriedade lia false justamente nos dois tipos
+   //que ficam afundados (btJog e btOnOff).
+   //bsExclusive too: the constructor always sets a GroupIndex, and the LCL's
+   //SetDown(true) takes a grouped button to bsExclusive, not to bsDown.
+   //Without both, the property read false on exactly the two types that stay
+   //pressed (btJog and btOnOff).
+   Result := FState in [bsDown, bsExclusive];
 end;
 
 procedure THMIButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt);
@@ -570,6 +604,13 @@ procedure THMIButton.TagChangeCallBack(Sender: TObject);
 var
    value:Double;
 begin
+   //o botao de inversao nunca fica afundado, seja qual for o valor do tag.
+   //the toggle button never stays pressed, whatever the tag's value is.
+   if FButtonType=btToogle then begin
+      SetButtonState(bsUp);
+      exit;
+   end;
+
    value := GetTagValue;
    if value = FValueDown then
       SetButtonState(bsDown)
