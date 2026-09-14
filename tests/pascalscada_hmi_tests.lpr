@@ -31,7 +31,8 @@ uses
   ut.eventlogger,
   ut.alarmlogger,
   ut.tagchartsource,
-  ut.hmicheckbox;
+  ut.hmicheckbox,
+  ut.hmilabel;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
