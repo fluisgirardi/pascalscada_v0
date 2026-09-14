@@ -34,7 +34,7 @@ interface
 
 uses
   Classes, SysUtils, DateUtils, fpcunit, testregistry,
-  TagLinkedSeriesSource,
+  TagLinkedSeriesSource, ProtocolTypes,
   testsupport.faketag;
 
 type
@@ -183,15 +183,23 @@ var
   x:TDateTime;
 begin
   //o carimbo do tag conta milissegundos desde o boot; no eixo ele entra como
-  //tempo decorrido, nao como um numero de dias solto
+  //tempo decorrido - a mesma escala de TDateTime - e nao como o numero cru de
+  //milissegundos.
+  //
+  //NAO comparar com uma data fixa: a primeira versao deste teste exigia
+  //x<EncodeDate(1900,1,1), que sao dois dias, e passou a falhar na primeira
+  //maquina ligada ha' mais de dois dias. O que da' para afirmar sem depender
+  //do relogio de ninguem e' que o valor e' exatamente o carimbo do tag
+  //convertido, e que esta' a decadas de distancia da data de hoje.
   FSource.UseNowInsteadTagTimestamp:=false;
 
   FTag.ChegouDoCLP(10);
 
   x:=FSource.Item[0]^.X;
-  AssertTrue('e tempo decorrido, nao uma data de milhares de anos',
-             x<EncodeDate(1900,1,1));
+  AssertEquals('o carimbo do tag na escala de data',
+               IncMilliSecond(0, Int64((FTag as ITagInterface).GetClockMonotonicTimestamp)), x, 1e-9);
   AssertTrue('e e maior que zero', x>0);
+  AssertTrue('e nao e a data de hoje', x < (Date-3650));
 end;
 
 procedure TTestTagChartSource.OldPointsLeaveTheWindow;
