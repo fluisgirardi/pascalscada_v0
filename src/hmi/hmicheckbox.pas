@@ -617,39 +617,44 @@ end;
 
 procedure THMICheckBox.RefreshTagValue(x:Double);
 begin
-  if x=FValueTrue then begin
-    inherited State := cbChecked;
-    inherited Font.Assign(FFontTrue);
-    inherited Color := FColorTrue;
-    inherited Caption := FCaptionTrue;
-  end else begin
-    if x=FValueFalse then begin
-      inherited State := cbUnchecked;
-      inherited Font.Assign(FFontFalse);
-      inherited Color := FColorFalse;
-      inherited Caption := FCaptionFalse;
+  Updating;
+  try
+    if x=FValueTrue then begin
+      inherited State := cbChecked;
+      inherited Font.Assign(FFontTrue);
+      inherited Color := FColorTrue;
+      inherited Caption := FCaptionTrue;
     end else begin
-      case FOtherValues of
-        isChecked: begin
-          inherited State := cbChecked;
-          inherited Font.Assign(FFontTrue);
-          inherited Color := FColorTrue;
-          inherited Caption := FCaptionTrue;
-        end;
-        isUnchecked: begin
-          inherited State := cbUnchecked;
-          inherited Font.Assign(FFontFalse);
-          inherited Color := FColorFalse;
-          inherited Caption := FCaptionFalse;
-        end;
-        IsGrayed: begin
-          inherited State := cbGrayed;
-          inherited Font.Assign(FFontGrayed);
-          inherited Color := FColorGrayed;
-          inherited Caption := FCaptionGrayed;
+      if x=FValueFalse then begin
+        inherited State := cbUnchecked;
+        inherited Font.Assign(FFontFalse);
+        inherited Color := FColorFalse;
+        inherited Caption := FCaptionFalse;
+      end else begin
+        case FOtherValues of
+          isChecked: begin
+            inherited State := cbChecked;
+            inherited Font.Assign(FFontTrue);
+            inherited Color := FColorTrue;
+            inherited Caption := FCaptionTrue;
+          end;
+          isUnchecked: begin
+            inherited State := cbUnchecked;
+            inherited Font.Assign(FFontFalse);
+            inherited Color := FColorFalse;
+            inherited Caption := FCaptionFalse;
+          end;
+          IsGrayed: begin
+            inherited State := cbGrayed;
+            inherited Font.Assign(FFontGrayed);
+            inherited Color := FColorGrayed;
+            inherited Caption := FCaptionGrayed;
+          end;
         end;
       end;
     end;
+  finally
+    Updated;
   end;
 end;
 
@@ -718,8 +723,10 @@ end;
 
 procedure THMICheckBox.SetChecked(Value: Boolean);
 begin
+  //o inherited ja passa pelo EditingDone, que chama o UpdateTagValue; chamar
+  //aqui de novo mandava o valor duas vezes para o tag e pedia confirmacao
+  //duas vezes ao operador
   inherited SetChecked(Value);
-  UpdateTagValue;
 end;
 
 procedure THMICheckBox.UpdateTagValue;
@@ -774,7 +781,7 @@ end;
 {$IFDEF FPC}
 procedure THMICheckBox.DoOnChange;
 begin
-  if [csLoading,csDestroying]*ComponentState<>[] then begin
+  if [csLoading,csDestroying, csUpdating]*ComponentState<>[] then begin
     exit;
   end;
 
