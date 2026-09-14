@@ -35,7 +35,8 @@ uses
   ut.hmilabel,
   ut.hmitext,
   ut.hmianimation,
-  ut.hmiprogressbar;
+  ut.hmiprogressbar,
+  ut.hmibasiccontrol;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
