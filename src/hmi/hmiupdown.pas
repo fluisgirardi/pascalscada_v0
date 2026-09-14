@@ -202,7 +202,13 @@ begin
     FMax := 100;
     FMin := 0;
   end else begin
-    FIncrement := 0;
+    //1, nao 0: criado por codigo o controle precisa de um incremento valido
+    //de saida, senao os dois botoes somam e subtraem nada ate' alguem
+    //atribuir um.
+    //1, not 0: created from code the control needs a valid increment from the
+    //start, otherwise both buttons add and subtract nothing until someone
+    //assigns one.
+    FIncrement := 1;
     FPosition  := 0;
     FMax       := 0;
     FMin       := 0;
@@ -336,10 +342,15 @@ var
 
   function SendIt(ivalue:Double):Boolean;
   begin
+    //SendIt e' parametro var: sem o valor inicial, um manipulador que
+    //nao atribua - ou que so' atribua em alguns ramos - deixa a decisao
+    //de escrever no CLP por conta do lixo da pilha.
+    //SendIt is a var parameter: with no initial value, a handler that
+    //does not assign it - or assigns it on some branches only - leaves the
+    //decision of writing to the PLC up to stack garbage.
+    Result:=true;
     if Assigned(FBeforeSendValueToTag) then
-      FBeforeSendValueToTag(Self,ivalue,Result)
-    else
-      Result:=true;
+      FBeforeSendValueToTag(Self,ivalue,Result);
   end;
 begin
    if FTag=nil then exit;
@@ -369,12 +380,21 @@ end;
 
 procedure THMIUpDown.SetPosition(v:Double);
 begin
-
+  //de proposito vazio: Position espelha o valor do tag, e escrever no tag e'
+  //pelos botoes, nao pela propriedade.
+  //deliberately empty: Position mirrors the tag's value, and writing to the
+  //tag goes through the buttons, not through the property.
 end;
 
 procedure THMIUpDown.SetIncrement(v:Double);
 begin
-   if (Increment<=0) and ([csReading, csLoading]*ComponentState=[]) then
+   //v, nao Increment: conferindo o valor ja' guardado, o incremento invalido
+   //entrava sem reclamar e, dai' em diante, reprovava todos os seguintes -
+   //inclusive os validos.
+   //v, not Increment: checking the value already stored let the invalid
+   //increment in without complaining and, from there on, refused every value
+   //after it - valid ones included.
+   if (v<=0) and ([csReading, csLoading]*ComponentState=[]) then
       raise Exception.Create(SincrementMustBeGreaterThanZero);
 
    FIncrement := v;

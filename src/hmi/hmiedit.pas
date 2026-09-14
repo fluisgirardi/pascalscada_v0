@@ -850,10 +850,15 @@ var
 
   function SendIt:Boolean;
   begin
+    //SendIt e' parametro var: sem o valor inicial, um manipulador que
+    //nao atribua - ou que so' atribua em alguns ramos - deixa a decisao
+    //de escrever no CLP por conta do lixo da pilha.
+    //SendIt is a var parameter: with no initial value, a handler that
+    //does not assign it - or assigns it on some branches only - leaves the
+    //decision of writing to the PLC up to stack garbage.
+    Result:=true;
     if Assigned(FBeforeSendValueToTag) then
-      FBeforeSendValueToTag(Self,Txt,Result)
-    else
-      Result:=true;
+      FBeforeSendValueToTag(Self,Txt,Result);
   end;
 
 begin

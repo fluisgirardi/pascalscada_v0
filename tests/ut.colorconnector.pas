@@ -103,6 +103,9 @@ type
     procedure AnItemWithItsOwnTagIsSkippedByTheConnectorSweep;
     procedure TheItemWithItsOwnTagStillUsesTheSharedConditions;
     procedure ADestroyedItemTagLetsGoOfTheItem;
+
+    //copia das condicoes / copying the conditions
+    procedure AssigningTheConditionsOfAnotherConnectorCopiesThem;
   end;
 
 implementation
@@ -396,6 +399,24 @@ begin
   FreeAndNil(tagDoItem);
 
   AssertTrue('o item largou o tag', item.PLCTag=nil);
+end;
+
+procedure TTestColorConnector.AssigningTheConditionsOfAnotherConnectorCopiesThem;
+var
+  outro:THMIColorPropertyConnector;
+begin
+  NewCondition(1, clRed);
+
+  outro:=THMIColorPropertyConnector.Create(nil);
+  try
+    outro.Conditions:=FConnector.Conditions;
+
+    AssertEquals('uma condicao', 1,     outro.Conditions.Count);
+    AssertEquals('o valor',      1,     TColorZone(outro.Conditions.Items[0]).Value1, 0.0001);
+    AssertEquals('e a cor',      clRed, TColorZone(outro.Conditions.Items[0]).ZoneResult);
+  finally
+    outro.Free;
+  end;
 end;
 
 initialization

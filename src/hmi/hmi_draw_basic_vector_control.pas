@@ -681,7 +681,11 @@ begin
         end;
       end;
       if (LineParts2[0]='flow') and (LineParts2[1]='output') then begin
-        result := TryStrToInt(LineParts1[1],aux);
+        //as saidas sao contadas a partir de 1; zero e negativo passavam na
+        //validacao e depois nao alimentavam saida nenhuma, calados.
+        //outputs are counted from 1; zero and negative passed validation and
+        //then fed no output at all, silently.
+        result := TryStrToInt(LineParts1[1],aux) and (aux >= 1);
       end;
       if (LineParts2[1]='stop-opacity') then begin
         result := TryStrToInt(LineParts1[1],aux) and (aux >= 0) and (aux <= 100);
