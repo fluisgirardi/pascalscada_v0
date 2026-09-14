@@ -43,7 +43,8 @@ uses
   ut.flowelevator,
   ut.numericcontrols,
   ut.hmiedit,
-  ut.hmibutton;
+  ut.hmibutton,
+  ut.hmicombobox;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
