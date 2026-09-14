@@ -348,14 +348,14 @@ begin
                 sqlcmds:=THMIDBConnectionStatementList.Create;
                 DoNewTagEvent(auxItem.PLCTag, auxItem, NewIntID, NewGUID,auxItemEvt, sqlcmds);
                 a:=Assigned(FAsyncDBConnection);
-                b:=FAsyncDBConnection.Connected;
+                b:=a and FAsyncDBConnection.Connected;
                 c1:=(sqlcmds.Count > 0);
                 if a and b and c1 then begin
                   FAsyncDBConnection.ExecTransaction(sqlcmds,nil,true, false);
                   auxItem.PendingUpdate:=false;
                 end else begin
                   FreeAndNil(sqlcmds);
-                  if FAsyncDBConnection.Connected=false then begin
+                  if a and (not b) then begin
                     auxItem.PendingUpdate:=true;
                     auxItem.FLastValueInitialized:=false;
                     if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
