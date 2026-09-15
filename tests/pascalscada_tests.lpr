@@ -50,7 +50,8 @@ uses
   ut.plcstruct,
   ut.mutex,
   ut.tagcollection,
-  ut.isotcp;
+  ut.isotcp,
+  ut.scanthread;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

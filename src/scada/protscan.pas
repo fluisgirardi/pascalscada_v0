@@ -232,8 +232,16 @@ begin
 
           pkg^.RequestResult := FDoSingleScanRead(pkg^.Tag, pkg^.Values);
 
+          //o registro e' de quem pediu e passa a ser da thread: se ha' um
+          //atualizador, ele o leva e o libera; se nao ha', libera-se aqui -
+          //senao cada pedido atendido ficava para tras.
+          //the record is the requester's and becomes the thread's: with an
+          //updater, it takes it and releases it; with none, it is released
+          //here - or every served request was left behind.
           if PScanUpdater<>nil then
-            PScanUpdater.ScanRequestCallBack(pkg, false);
+            PScanUpdater.ScanRequestCallBack(pkg, false)
+          else
+            Dispose(pkg);
         end else                            
           Dispose(PScanReqRec(PMsg.wParam));
       end;
@@ -248,7 +256,9 @@ begin
           pkg^.RequestResult := FDoScanWrite(pkg^.Tag,pkg^.Values);
 
           if PScanUpdater<>nil then
-            PScanUpdater.ScanRequestCallBack(pkg);
+            PScanUpdater.ScanRequestCallBack(pkg)
+          else
+            Dispose(pkg);
         end else
           Dispose(PScanReqRec(PMsg.wParam));
       end;
