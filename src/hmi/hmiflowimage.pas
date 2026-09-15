@@ -48,6 +48,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation);
+      override;
   published
     property InputPoint:TPointPersistent read FInputPoint write SetInputPoint;
     property InputFlowPolyline:THMIFlowPolyline read FInputFlowPolyline write SetInputFlowPolyline;
@@ -103,7 +105,12 @@ begin
       FPoint:=sourceAsTPP.FPoint;
       DoOnChange;
     end;
-  end;
+  end else
+    //fonte de outro tipo nao passa calada: o TPersistent levanta o erro que
+    //diz o que se tentou copiar em que.
+    //a source of another type does not pass silently: TPersistent raises the
+    //error saying what was being copied into what.
+    inherited Assign(Source);
 end;
 
 { THMIFlowImage }
@@ -157,6 +164,27 @@ begin
   UpdateInOutLines;
 end;
 
+procedure THMIFlowImage.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  //os dois setters pedem FreeNotification as linhas, mas ninguem escutava o
+  //aviso: a linha destruida ficava como ponteiro solto e o
+  //UpdateInOutLines - que roda a cada movimento, redimensionamento ou
+  //mudanca de ponto de encaixe - escrevia em memoria liberada.
+  //both setters ask the lines for FreeNotification, but nobody listened: the
+  //destroyed line stayed as a dangling pointer and UpdateInOutLines - which
+  //runs on every move, resize or anchor point change - wrote into freed
+  //memory.
+  if (Operation=opRemove) then begin
+    if AComponent=FInputFlowPolyline then
+      FInputFlowPolyline:=nil;
+
+    if AComponent=FOutputFlowPolyline then
+      FOutputFlowPolyline:=nil;
+  end;
+end;
+
 constructor THMIFlowImage.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -170,9 +198,14 @@ end;
 
 destructor THMIFlowImage.Destroy;
 begin
-  inherited Destroy;
+  //o que e' desta classe sai primeiro: durante o inherited Destroy o
+  //ChangeBounds ainda pode chamar o UpdateInOutLines, que usa estes dois
+  //pontos.
+  //what belongs to this class goes first: during inherited Destroy
+  //ChangeBounds can still call UpdateInOutLines, which uses these two points.
   FreeAndNil(FInputPoint);
   FreeAndNil(FOutputPoint);
+  inherited Destroy;
 end;
 
 end.

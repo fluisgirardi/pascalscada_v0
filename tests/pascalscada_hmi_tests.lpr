@@ -17,6 +17,7 @@ uses
   //Interfaces pulls in the widgetset implementation; without it the LCL is
   //left with no WSRegister* and the binary does not link.
   Interfaces,
+  Forms,
   Classes, SysUtils, consoletestrunner,
   //casos de teste / test cases
   //apoio aos testes / test support
@@ -45,7 +46,8 @@ uses
   ut.hmiedit,
   ut.hmibutton,
   ut.hmicombobox,
-  ut.smallcontrols;
+  ut.smallcontrols,
+  ut.hmiflowimage;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
@@ -65,6 +67,22 @@ begin
   //- would fail over the comma alone. The separator is pinned here.
   DefaultFormatSettings.DecimalSeparator:='.';
   DefaultFormatSettings.ThousandSeparator:=',';
+
+  //os controles comuns do Windows - barra deslizante, incrementador, barra de
+  //progresso - so' existem depois que o widgetset chama InitCommonControlsEx,
+  //e quem chama isso e' o TWin32WidgetSet.AppInit, a partir do
+  //Forms.Application.Initialize. O runner de console e' um TCustomApplication
+  //e nunca passava por ali: criar um TTrackBar de verdade falhava com
+  //"Cannot find window class" no CI do Windows e "Classe inexistente" no wine.
+  //Sem efeito no gtk2, onde o AppInit nao registra classe nenhuma.
+  //Windows' common controls - track bar, up/down, progress bar - only exist
+  //after the widgetset calls InitCommonControlsEx, and what calls it is
+  //TWin32WidgetSet.AppInit, reached from Forms.Application.Initialize. The
+  //console runner is a TCustomApplication and never went through it: creating
+  //a real TTrackBar failed with "Cannot find window class" on the Windows CI
+  //and "Classe inexistente" under wine. No effect on gtk2, where AppInit
+  //registers no classes.
+  Forms.Application.Initialize;
 
   App := TPascalSCADAHMITestRunner.Create(nil);
   App.Initialize;
