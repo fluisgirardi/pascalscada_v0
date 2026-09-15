@@ -71,10 +71,6 @@ var
 begin
   inherited DrawControl;
 
-  FControlArea.CanvasBGRA.Brush.Color:= FBodyColor;
-  FControlArea.CanvasBGRA.Pen.Color  := FBorderColor;
-  FControlArea.CanvasBGRA.Pen.Width  := FBorderWidth;
-
   if Width>=Height then begin
     w:=Width;
     h:=Height;
@@ -87,6 +83,19 @@ begin
 
   aux:=TBGRABitmap.Create(w,h);
   try
+    //o pincel e a caneta sao do bitmap auxiliar, que e' onde se desenha.
+    //Ajustados no FControlArea, como eram, o bocal e a base da bomba e o
+    //risco do motor saiam sempre brancos com um traco preto, fosse qual
+    //fosse a cor do corpo, a da borda e a largura dela.
+    //the brush and the pen belong to the auxiliary bitmap, which is where the
+    //drawing happens. Set on FControlArea, as they used to be, the pump's
+    //nozzle and base and the motor's dividing line always came out white with
+    //a black stroke, whatever the body colour, the border colour and its
+    //width.
+    aux.CanvasBGRA.Brush.Color:= FBodyColor;
+    aux.CanvasBGRA.Pen.Color  := FBorderColor;
+    aux.CanvasBGRA.Pen.Width  := FBorderWidth;
+
     if FDrawPump then begin
       aux.CanvasBGRA.Rectangle(Trunc(0.07*w),0+FBorderWidth,Trunc((0.07*w)+(0.09)*w), Trunc(0.10*h),true);
 
