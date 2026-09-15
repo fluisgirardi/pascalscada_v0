@@ -49,7 +49,8 @@ uses
   ut.protscanupdate,
   ut.plcstruct,
   ut.mutex,
-  ut.tagcollection;
+  ut.tagcollection,
+  ut.isotcp;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
