@@ -249,8 +249,6 @@ begin
     ClientPoint.y:=Message.YPos;
     GlobalPoint:=ClientToScreen(ClientPoint);
     ClientPoint:=ClientToParent(ClientPoint);
-    if (Name='LinhaCondensado') then
-      aControl:=nil;
 
     aControl:= Parent.ControlAtPos(ClientPoint, false, true);
     repeat
@@ -1080,6 +1078,17 @@ begin
   FBorderWidth:=1;
   FControlArea:=TBGRABitmap.Create;
   FIsEnabled:=true;
+  //sem codigo de seguranca ninguem barra o controle. Comecando em falso, o
+  //primeiro Enabled:=true de um controle criado por codigo - ou o repasse de
+  //um clique, que desabilita e reabilita - o deixava desabilitado: o E logico
+  //com a seguranca dava falso. Quem carrega de um .lfm nunca viu isso porque
+  //o Loaded pergunta ao gerenciador e acerta a flag.
+  //with no security code nobody bars the control. Starting at false, the
+  //first Enabled:=true of a control created by code - or the forwarding of a
+  //click, which disables and re-enables - left it disabled: the logical AND
+  //with security gave false. Whatever loads from a .lfm never saw it because
+  //Loaded asks the manager and sets the flag.
+  FIsEnabledBySecurity:=true;
   FOldHeight:=0;
   FOldWidth:=0;
 
