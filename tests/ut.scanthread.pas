@@ -103,7 +103,9 @@ begin
   FWriteAddresses:=nil;
   FLastWriteValues:=nil;
   FLastReadAddress:=-1;
-  FHandlerThread:=0;
+  //TThreadID e' um ponteiro em alguns sistemas (FreeBSD): zero so' com o cast
+  //TThreadID is a pointer on some systems (FreeBSD): zero only through the cast
+  FHandlerThread:=TThreadID(0);
   //sem atualizador: quem responde aos pedidos, aqui, sao os tratadores
   //with no updater: here it is the handlers that answer the requests
   FThread:=TScanThread.Create(true, nil);

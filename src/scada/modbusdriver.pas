@@ -884,7 +884,9 @@ var
   rl:LongInt;
   res:LongInt;
   starts, ends:TNotifyEvent;
+  locked:Boolean;
 begin
+  locked:=false;
   try
     if FMustReleaseResources then begin
       starts:=@HighLatencyOperationWillBegin;
@@ -897,6 +899,14 @@ begin
     pkg := EncodePkg(tagrec,nil,rl);
     if (PCommPort<>nil) and PCommPort.ReallyActive then begin
       PCommPort.Lock(DriverID);
+      //destrancada no finally, como o DoWrite ja' fazia: a saida pela
+      //resposta de outra unidade - o exit mais abaixo - deixava a porta
+      //trancada por este driver, e qualquer outro driver na mesma porta
+      //esperava para sempre
+      //unlocked in the finally, as DoWrite already did: the exit on another
+      //unit's answer - the exit further down - left the port locked by this
+      //driver, and any other driver on the same port waited forever
+      locked:=true;
       res := PCommPort.IOCommandSync(iocWriteRead,Length(pkg),pkg,PFirstRequestLen,DriverID,PInternalDelayBetweenCmds,@IOResult1,starts,ends);
 
       //se o resultado de leitura deu ok, le o resto do pacote.
@@ -935,10 +945,11 @@ begin
         //Result:=ioEmptyPacket;
       end;
 
-      PCommPort.Unlock(DriverID);
     end else
       Result := ioNullDriver;
   finally
+    if locked then
+      PCommPort.Unlock(DriverID);
     SetLength(pkg,0);
     SetLength(IOResult1.BufferToRead,0);
     SetLength(IOResult1.BufferToWrite,0);

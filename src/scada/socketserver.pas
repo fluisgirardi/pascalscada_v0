@@ -51,6 +51,9 @@ type
     {$IF defined(FPC) AND defined(UNIX)}
     ClientSockInfoLen:TSocklen;
     {$ENDIF}
+    {$IF defined(WIN32) or defined(WIN64)}
+    ClientSockInfoLen:LongInt;
+    {$IFEND}
     ClientSockInfo:TSockAddr;
     ClientSocket:TSocket;
     procedure Execute; override;
@@ -241,7 +244,12 @@ begin
 
     //WINDOWS
     {$IF defined(WIN32) or defined(WIN64)}
-    ClientSocket:=  Accept(FServerSocket,nil,nil);
+    //o endereco de quem conectou vai para ClientSockInfo, como no UNIX; com
+    //nil aqui a thread de atendimento nascia sem saber de onde veio o cliente
+    //the connecting peer's address goes into ClientSockInfo, as on UNIX; with
+    //nil here the client thread was born not knowing where the client came from
+    ClientSockInfoLen:=sizeof(ClientSockInfo);
+    ClientSocket:=  Accept(FServerSocket,@ClientSockInfo,@ClientSockInfoLen);
 
     if ClientSocket<>INVALID_SOCKET then
       LaunchNewThread

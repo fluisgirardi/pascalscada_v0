@@ -158,7 +158,7 @@ begin
   FClients:=TList.Create;
   FAdded:=0;
   FRemoved:=0;
-  FAddedOn:=0;
+  FAddedOn:=TThreadID(0); //ponteiro no FreeBSD / a pointer on FreeBSD
 
   FListener:=fpSocket(AF_INET, SOCK_STREAM, 0);
   if FListener<0 then
