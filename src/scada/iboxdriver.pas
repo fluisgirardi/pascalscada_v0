@@ -227,6 +227,8 @@ type
   public
     //constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
+    //: @seealso(TProtocolDriver.SizeOfTag)
+    function  SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
   published
     { Published declarations }
   end;
@@ -674,14 +676,35 @@ begin
   Result := ioIllegalFunction;
 end;
 
+function TIBoxDriver.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
+begin
+  //os valores ja' saem calculados daqui - percentual, horas, decimos de
+  //grau: nao ha' representacao crua a converter, e o tag os usa como estao.
+  //Sem esta implementacao o metodo abstrato da base era chamado ao ligar
+  //qualquer tag ao driver, e o driver nao aceitava tag nenhum.
+  //the values leave here already computed - percent, hours, tenths of a
+  //degree: there is no raw representation to convert, and the tag uses them
+  //as they are. Without this implementation the base's abstract method was
+  //called on attaching any tag to the driver, and the driver took no tag at
+  //all.
+  ProtocolTagType:=ptUnknown;
+  Result:=32;
+end;
+
 function TIBoxDriver.DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
   pkg, pkgtotal:BYTES;
   cmdpkg:TIOPacket;
   plc, offset, bytesRemaim, b2, b3, b4, b5, b6, b7, b8:LongInt;
-  found:Boolean;
+  found, locked:Boolean;
   pid20x:TPID20xRegister;
 begin
+  locked:=false;
+  //os campos que a zona nao mandar tem que ler como zero, nao como o que
+  //estava na pilha
+  //the fields the zone does not send have to read as zero, not as whatever
+  //was on the stack
+  pid20x:=Default(TPID20xRegister);
   if not (tagrec.Station in [0..255]) then begin
     Result := ioIllegalStationAddress;
     exit;
@@ -800,7 +823,14 @@ begin
           end;
         end;
 
+        //trancada para ler o quadro em duas partes sem outro driver no meio;
+        //destrancada no finally, que antes nao existia - a porta ficava
+        //presa a este driver para sempre depois da primeira leitura de zona
+        //locked to read the frame in two parts with no other driver in
+        //between; unlocked in the finally, which did not exist - the port
+        //stayed locked to this driver for good after the first zone read
         PCommPort.Lock(PDriverID);
+        locked:=true;
         if PCommPort.IOCommandSync(iocWriteRead,4,pkg,5,PDriverID,5,@cmdpkg)=0 then begin
           Result:=ioDriverError;
           exit;
@@ -863,6 +893,15 @@ begin
         pid20x.Supply2Active        := ifthen(b3<>0,1,0);
         pid20x.OperatingModeActive  := ifthen(b2<>0,1,0);
 
+        //sem campo nenhum o quadro acabou nos cinco bytes ja' lidos, e o
+        //checksum deles ficava sem conferencia
+        //with no field at all the frame ended in the five bytes already read,
+        //and their checksum went unchecked
+        if (bytesRemaim=0) and (not CheckSumOk(cmdpkg.BufferToRead)) then begin
+          Result := ioCommError;
+          exit;
+        end;
+
         //se sobrou bytes oara ler...
         if bytesRemaim>0 then begin
           //copia os primeiros bytes do pacote
@@ -908,7 +947,11 @@ begin
             inc(offset,2);
           end;
           if pid20x.OperatingModeActive=1 then begin
-            pid20x.OperatingModeActive:=pkgtotal[4+offset];
+            //o valor do modo ia para a marca de presenca, e o modo ficava
+            //sempre em zero
+            //the mode's value went to the presence mark, and the mode stayed
+            //at zero
+            pid20x.OperatingMode:=pkgtotal[4+offset];
             inc(offset,2);
           end;
         end;
@@ -1043,6 +1086,8 @@ begin
       end;
     end;
   finally
+    if locked and Assigned(PCommPort) then
+      PCommPort.Unlock(PDriverID);
     SetLength(pkgtotal,0);
     SetLength(pkg,0);
     SetLength(cmdpkg.BufferToRead,0);
