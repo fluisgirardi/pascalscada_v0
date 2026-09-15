@@ -1166,8 +1166,69 @@ begin
 end;
 
 function DecodeTagPath(aEncPath: BYTES): String;
+var
+  i, len, index: Integer;
+  name: String;
+  inIndex: Boolean;
 begin
-  //TODO: Decodificar o indecodificável?
+  //o inverso exato do EncodeTagPath: segmentos ANSI ($91, tamanho, nome,
+  //enchimento se impar) unidos por ponto, e os indices ($28 um byte, $29 dois
+  //bytes) entre colchetes, separados por virgula quando vem em sequencia.
+  //Era um esqueleto que devolvia texto vazio: ler RequestPath de qualquer
+  //pedido CIP dava ''.
+  //the exact inverse of EncodeTagPath: ANSI segments ($91, length, name, pad
+  //if odd) joined by dots, and the indices ($28 one byte, $29 two bytes) in
+  //brackets, comma separated when they come in a row. It was a skeleton
+  //returning empty text: reading RequestPath of any CIP request gave ''.
+  Result:='';
+  inIndex:=false;
+  i:=0;
+  while i<Length(aEncPath) do begin
+    case aEncPath[i] of
+      $91: begin
+        if i+1>=Length(aEncPath) then break;
+        len:=aEncPath[i+1];
+        if i+2+len>Length(aEncPath) then break;
+        SetLength(name, len);
+        if len>0 then
+          Move(aEncPath[i+2], name[1], len);
+        if inIndex then begin
+          Result:=Result+']';
+          inIndex:=false;
+        end;
+        if Result<>'' then
+          Result:=Result+'.';
+        Result:=Result+name;
+        i:=i+2+len+(len mod 2);
+      end;
+      $28: begin
+        if i+1>=Length(aEncPath) then break;
+        index:=aEncPath[i+1];
+        if inIndex then
+          Result:=Result+','+IntToStr(index)
+        else begin
+          Result:=Result+'['+IntToStr(index);
+          inIndex:=true;
+        end;
+        i:=i+2;
+      end;
+      $29: begin
+        if i+3>=Length(aEncPath) then break;
+        index:=PWord(@aEncPath[i+2])^;
+        if inIndex then
+          Result:=Result+','+IntToStr(index)
+        else begin
+          Result:=Result+'['+IntToStr(index);
+          inIndex:=true;
+        end;
+        i:=i+4;
+      end;
+      else
+        break;
+    end;
+  end;
+  if inIndex then
+    Result:=Result+']';
 end;
 
 { TEIPListServicesData }

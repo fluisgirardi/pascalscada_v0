@@ -644,7 +644,15 @@ end;
 constructor TMutexClient.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FPort:=51342;
+  //a mesma porta que a propriedade declara como "default": e' por ela que o
+  //IDE decide nao gravar a propriedade no .lfm, e ai e' o construtor que
+  //vale ao carregar. Com 51342 aqui e 52321 la', quem escolhia 52321 no IDE
+  //carregava 51342.
+  //the same port the property declares as "default": it is by that value
+  //that the IDE decides not to write the property to the .lfm, and then the
+  //constructor rules on load. With 51342 here and 52321 there, whoever chose
+  //52321 in the IDE loaded 51342.
+  FPort:=52321;
   FActive:=false;
   FConnected:=0;
   FActiveLoaded:=false;

@@ -469,6 +469,17 @@ begin
   if ssAlt in FShitfState   then
     gev.key.state:=gev.key.state or GDK_MOD1_MASK;
 
+  //as teclas do teclado numerico so' sao digitos com o Num Lock ligado: sem
+  //ele no estado, o GDK traduzia KP_7 para KP_Home e KP_Decimal para
+  //KP_Delete - o teclado de tela movia o cursor e apagava em vez de digitar.
+  //O teclado de tela quer o digito, sempre.
+  //the keypad keys are only digits with Num Lock on: without it in the state,
+  //GDK translated KP_7 into KP_Home and KP_Decimal into KP_Delete - the
+  //on-screen keyboard moved the cursor and deleted instead of typing. The
+  //on-screen keyboard wants the digit, always.
+  if (key>=GDK_KEY_KP_Space) and (key<=GDK_KEY_KP_9) then
+    gev.key.state:=gev.key.state or GDK_MOD2_MASK;
+
   gev.key._string:=gdk_keyval_name(key);
 
   gdk_keymap_get_entries_for_keyval(nil,key,{%H-}keys,@nkeys);

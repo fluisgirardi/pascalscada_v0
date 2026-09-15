@@ -42,6 +42,8 @@ type
     function  SettingsAreAcceptable:Boolean;
     //: SetDesigning e' protegido em TComponent
     procedure MarkAsDesignTime;
+    //: ClearALLBuffers e' protegido: a base o chama nos erros de comunicacao
+    procedure FlushEverything;
   end;
 
   { TTestSerialPort }
@@ -134,6 +136,12 @@ type
     procedure TheChosenSpeedReachesTheDevice;
     procedure ChangingTheSpeedChangesTheDevice;
     procedure TheChosenStopBitsReachTheDevice;
+    //os prazos e as falhas / deadlines and failures
+    procedure TheTimeoutIsHonoured;
+    procedure APartialAnswerIsATimeoutButKeepsWhatCame;
+    procedure AWriteAndAReadInOneCommand;
+    procedure OpeningAMissingDeviceFailsAndSaysSo;
+    procedure FlushingDropsWhatTheDeviceSentBefore;
   end;
   {$ENDIF}
 
@@ -144,6 +152,11 @@ implementation
 function TSerialProbe.SettingsAreAcceptable:Boolean;
 begin
   Result:=ComSettingsOK;
+end;
+
+procedure TSerialProbe.FlushEverything;
+begin
+  ClearALLBuffers;
 end;
 
 procedure TSerialProbe.MarkAsDesignTime;
@@ -484,6 +497,109 @@ begin
   AssertTrue('two stop bits', FDispositivo.TemDoisBitsDeParada);
 end;
 
+procedure TTestSerialPortOverADevice.TheTimeoutIsHonoured;
+var
+  pkg:TIOPacket;
+  inicio:QWord;
+  gasto:Int64;
+begin
+  //300 ms de prazo, tres tentativas: a leitura de nada tem que desistir
+  //perto de um segundo - nem antes do prazo, nem muito depois
+  //300 ms deadline, three attempts: reading nothing has to give up around a
+  //second - neither before the deadline nor long after
+  PointThePortAtTheDevice;
+  FPorta.Timeout:=300;
+  FPorta.ReadRetries:=3;
+  FPorta.Active:=true;
+  AssertTrue('opened', FPorta.ReallyActive);
+
+  inicio:=GetTickCount64;
+  FPorta.IOCommandSync(iocRead, 0, nil, 3, DRIVER_DE_TESTE, 0, @pkg);
+  gasto:=GetTickCount64-inicio;
+
+  AssertEquals('timeout', Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+  AssertTrue(Format('nao antes do prazo (%d ms)',[gasto]), gasto>=300);
+  AssertTrue(Format('nem muito depois (%d ms)',[gasto]),   gasto<3000);
+end;
+
+procedure TTestSerialPortOverADevice.APartialAnswerIsATimeoutButKeepsWhatCame;
+var
+  pkg:TIOPacket;
+begin
+  //o equipamento mandou dois de tres bytes: e' timeout, mas os dois que
+  //vieram ficam no pacote para quem quiser diagnosticar
+  //the device sent two of three bytes: it is a timeout, but the two that came
+  //stay in the packet for whoever wants to diagnose
+  PointThePortAtTheDevice;
+  FPorta.Active:=true;
+  AssertTrue('opened', FPorta.ReallyActive);
+  FDispositivo.Responder(BytesOf('AA BB'));
+
+  FPorta.IOCommandSync(iocRead, 0, nil, 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('timeout',        Ord(iorTimeOut), Ord(pkg.ReadIOResult));
+  AssertEquals('dois recebidos', 2, pkg.Received);
+  AssertEquals('o primeiro',     $AA, pkg.BufferToRead[0]);
+  AssertEquals('o segundo',      $BB, pkg.BufferToRead[1]);
+end;
+
+procedure TTestSerialPortOverADevice.AWriteAndAReadInOneCommand;
+var
+  pkg:TIOPacket;
+  escrito:BYTES;
+begin
+  //e' o comando que os drivers mais usam: manda o pedido e espera a resposta
+  //it is the command the drivers use most: send the request and wait for the
+  //answer
+  PointThePortAtTheDevice;
+  FPorta.Active:=true;
+  AssertTrue('opened', FPorta.ReallyActive);
+  FDispositivo.Responder(BytesOf('AA BB'));
+
+  FPorta.IOCommandSync(iocWriteRead, 1, BytesOf('58'), 2, DRIVER_DE_TESTE, 0, @pkg);
+
+  escrito:=FDispositivo.LerOQueFoiEscrito(1, 2000);
+  AssertBytesEqual('o pedido chegou ao dispositivo', BytesOf('58'), escrito);
+  AssertEquals('escrita ok',  Ord(iorOK), Ord(pkg.WriteIOResult));
+  AssertEquals('leitura ok',  Ord(iorOK), Ord(pkg.ReadIOResult));
+  AssertBytesEqual('a resposta voltou', BytesOf('AA BB'), pkg.BufferToRead);
+end;
+
+procedure TTestSerialPortOverADevice.OpeningAMissingDeviceFailsAndSaysSo;
+begin
+  //o nome passa na validacao (qualquer nome vale), mas o dispositivo nao
+  //existe: a porta nao pode se dizer aberta
+  //the name passes validation (any name goes), but the device does not exist:
+  //the port cannot claim to be open
+  FPorta.DevDir :='/tmp';
+  FPorta.COMPort:='pascalscada_porta_que_nao_existe';
+
+  FPorta.Active:=true;
+
+  AssertFalse('nao abriu', FPorta.ReallyActive);
+end;
+
+procedure TTestSerialPortOverADevice.FlushingDropsWhatTheDeviceSentBefore;
+var
+  pkg:TIOPacket;
+begin
+  //depois de um erro a base limpa os buffers: o que ficou pendurado na linha
+  //nao pode ser lido como se fosse a resposta do proximo pedido
+  //after an error the base flushes the buffers: what was left hanging on the
+  //line must not be read as if it were the answer to the next request
+  PointThePortAtTheDevice;
+  FPorta.Timeout:=100;
+  FPorta.ReadRetries:=1;
+  FPorta.Active:=true;
+  AssertTrue('opened', FPorta.ReallyActive);
+  FDispositivo.Responder(BytesOf('11 22 33'));
+  Sleep(100); //da tempo de chegar ao lado do driver / time to reach the driver's side
+
+  FPorta.FlushEverything;
+  FPorta.IOCommandSync(iocRead, 0, nil, 3, DRIVER_DE_TESTE, 0, @pkg);
+
+  AssertEquals('nada para ler', 0, pkg.Received);
+end;
 {$ENDIF}
 
 initialization
