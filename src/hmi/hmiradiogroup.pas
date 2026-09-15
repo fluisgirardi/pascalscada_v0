@@ -43,7 +43,7 @@ type
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FDefaultIndex:LongInt;
-    FIgnore, FLoaded:Boolean;
+    FLastIndex:LongInt;
 
     FSecurityCode:UTF8String;
     procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
@@ -68,6 +68,7 @@ type
     procedure WriteFaultCallBack(Sender:TObject);
     procedure TagChangeCallBack(Sender:TObject);
     procedure RemoveTagCallBack(Sender:TObject);
+    procedure WriteIndexToTag(aIndex:LongInt);
   protected
     {$IFNDEF FPC}
     procedure Click; override;
@@ -148,10 +149,9 @@ begin
     writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
     {$ENDIF}
   end;
-   FIgnore:=false;
-   FLoaded:=false;
    FIsEnabled:=true;
    FDefaultIndex:=-1;
+   FLastIndex:=-1;
 
    FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
    FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
@@ -197,17 +197,29 @@ var
 begin
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
 
-  Value := 0;
+  //sem tag nao ha' leitura: -1 nao e' posicao nenhuma, entao o grupo cai na
+  //opcao padrao - que e' exatamente "esse valor nao e' nenhuma das opcoes".
+  //Com zero no lugar, a primeira opcao ficava marcada sem ninguem ter dito
+  //isso.
+  //with no tag there is no reading: -1 is no position at all, so the group
+  //falls on the default option - which is exactly "this value is none of the
+  //options". With zero here, the first option stayed marked with nobody
+  //having said so.
+  Value := -1;
 
   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
     Value := (FTag as ITagNumeric).Value;
 
-  FIgnore:=true;
-  if (Value>=0) and (Value<Items.Count) then
-    inherited ItemIndex:= Trunc(Value)
-  else
-    inherited ItemIndex := FDefaultIndex;
-  FIgnore:=false;
+  Updating;
+  try
+    if (Value>=0) and (Value<Items.Count) then
+      inherited ItemIndex:= Trunc(Value)
+    else
+      inherited ItemIndex := FDefaultIndex;
+    FLastIndex:=inherited ItemIndex;
+  finally
+    Updated;
+  end;
 end;
 
 procedure THMIRadioGroup.SetSecurityCode(sc: UTF8String);
@@ -247,10 +259,13 @@ begin
       t.AddWriteFaultHandler(@WriteFaultCallBack);
       t.AddTagChangeHandler(@TagChangeCallBack);
       t.AddRemoveTagHandler(@RemoveTagCallBack);
-      FTag := t;
-      RefreshRadioGroup(0);
    end;
    FTag := t;
+   //tambem sem tag: a opcao que ficasse marcada continuaria parecendo o modo
+   //em que o processo esta'
+   //with no tag as well: an option left marked would go on looking like the
+   //mode the process is in
+   RefreshRadioGroup(0);
    if Assigned(FCommFaultLink) then
      FCommFaultLink.SetTag(t);
 end;
@@ -289,19 +304,42 @@ begin
    inherited CheckItemIndexChanged;
    {$ENDIF}
 
-   if [csLoading, csReading, csDestroying]*ComponentState<>[] then
+   //o operador marcou uma opcao. A escrita ja' nao espera pelo Loaded: um
+   //grupo criado em tempo de execucao nunca passa por ele, e nunca escrevia.
+   //Durante a carga do formulario quem segura e' o ComponentState.
+   //
+   //E escreve uma vez por opcao marcada: cada botao do grupo avisa duas vezes
+   //- o clique e a mudanca - e o que foi desmarcado avisa tambem. O TRadioGroup
+   //filtra isso para o OnClick dele, mas nao para quem sobrescreve este
+   //metodo; sem o filtro cada clique do operador ia ao CLP duas ou tres vezes.
+   //the operator marked an option. The write no longer waits for Loaded: a
+   //group created at run time never goes through it, and never wrote. While
+   //the form is loading it is ComponentState that holds it back.
+   //
+   //And it writes once per marked option: each button in the group reports
+   //twice - the click and the change - and the one unmarked reports as well.
+   //TRadioGroup filters that for its own OnClick, but not for whoever
+   //overrides this method; without the filter every operator click went to
+   //the PLC two or three times.
+   if ([csUpdating]*ComponentState<>[]) or (ItemIndex=FLastIndex) then exit;
+
+   FLastIndex:=ItemIndex;
+   WriteIndexToTag(ItemIndex);
+end;
+
+procedure THMIRadioGroup.WriteIndexToTag(aIndex:LongInt);
+begin
+   if [csLoading, csReading, csDesigning, csDestroying]*ComponentState<>[] then
       exit;
 
-   if (FLoaded) and (not FIgnore) then
-     if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-        (FTag as ITagNumeric).Value := ItemIndex;
+   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
+      (FTag as ITagNumeric).Value := aIndex;
 end;
 
 procedure THMIRadioGroup.Loaded;
 begin
    inherited Loaded;
    CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
-   FLoaded:=true;
    TagChangeCallBack(Self);
 end;
 
@@ -321,7 +359,23 @@ end;
 
 procedure THMIRadioGroup.SetIndex(v:LongInt);
 begin
-  inherited ItemIndex := v;
+  //o programa marcando uma opcao vale o mesmo que o operador marcando. So'
+  //que o TRadioGroup so' passa pelo CheckItemIndexChanged quando tem janela:
+  //sem ela, a posicao mudava na tela e o tag nao ficava sabendo. A escrita
+  //fica aqui, uma vez, e o refresh e' silenciado para nao escrever duas.
+  //the program marking an option is worth the same as the operator marking
+  //it. But TRadioGroup only goes through CheckItemIndexChanged when it has a
+  //window: without one the position moved on screen and the tag never heard
+  //of it. The write lives here, once, and the refresh is muted so it does not
+  //write twice.
+  Updating;
+  try
+    inherited ItemIndex := v;
+    FLastIndex:=inherited ItemIndex;
+  finally
+    Updated;
+  end;
+  WriteIndexToTag(v);
 end;
 
 {$IFNDEF FPC}
@@ -345,8 +399,10 @@ end;
 
 procedure THMIRadioGroup.RemoveTagCallBack(Sender: TObject);
 begin
-  if FTag=Sender then
+  if FTag=Sender then begin
     FTag := nil;
+    RefreshRadioGroup(0);
+  end;
 end;
 
 end.

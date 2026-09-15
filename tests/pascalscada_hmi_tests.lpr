@@ -56,7 +56,8 @@ uses
   ut.numerickeyboard,
   ut.alphakeyboard,
   ut.centralusermanagement,
-  ut.hmibandeja;
+  ut.hmibandeja,
+  ut.hmiradiogroup;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
