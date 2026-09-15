@@ -71,6 +71,8 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
+    //criado por codigo / created by code
+    procedure EnablingARuntimeCreatedControlKeepsItEnabled;
     //o que o processo responde / what the process answers
     procedure TheTagValueAtLinkTimeSetsTheLook;
     procedure TheButtonFollowsTheTagValue;
@@ -171,6 +173,21 @@ procedure TTestHMIButton.TagValueIs(v:Double);
 begin
   FTag.ChegouDoCLP(v);
   Settle;
+end;
+
+procedure TTestHMIButton.EnablingARuntimeCreatedControlKeepsItEnabled;
+begin
+  //sem .lfm e sem codigo de seguranca: desabilitar e reabilitar tem que
+  //deixa-lo habilitado. A flag de seguranca nascia falsa, e o E logico
+  //com ela desabilitava o controle no primeiro Enabled:=true.
+  //with no .lfm and no security code: disabling and re-enabling has to
+  //leave it enabled. The security flag was born false, and the logical
+  //AND with it disabled the control on the first Enabled:=true.
+  FButton.Enabled:=false;
+
+  FButton.Enabled:=true;
+
+  AssertTrue('habilitado', TControl(FButton).Enabled);
 end;
 
 procedure TTestHMIButton.TheTagValueAtLinkTimeSetsTheLook;
