@@ -37,6 +37,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, StdCtrls, Forms, LCLType, fpcunit, testregistry,
+  {$IF defined(LCLgtk2)}gdk2,{$IFEND}
   CrossKeyEvents;
 
 type
@@ -94,13 +95,54 @@ type
   private
     FForm:TForm;
     FEdit:TEdit;
+    procedure FocusTheField;
+    procedure TypeAndWait(aKeyboard:TCrossKeyEvents; aKey:Word; const aExpected:String);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     procedure ThisWidgetsetHasAnEmulator;
     procedure TypingALetterReachesTheFocusedField;
+    procedure TypingADigitReachesTheField;
+    procedure TypingAKeypadDigitReachesTheField;
+    procedure TypingTheKeypadMinusReachesTheField;
+    procedure TypingTheDecimalSeparatorReachesTheField;
+    procedure BackspaceErasesTheLastCharacter;
+    procedure ShiftMakesTheLetterUpperCase;
   end;
+
+  {$IF defined(LCLgtk2)}
+  { TGTK2TranslationProbe }
+
+  //a tabela de traducao e' protegida: a sonda a expoe
+  //the translation table is protected: the probe exposes it
+  TGTK2TranslationProbe = class(TGTK2KeyEvents)
+  public
+    function Translate(aKey:Word):LongWord;
+  end;
+
+  { TTestGTK2Translation }
+
+  //do codigo de tecla virtual do LCL para o keysym do GDK: e' o que decide
+  //qual tecla o sistema ve quando o teclado de tela e' tocado
+  //from the LCL virtual key code to the GDK keysym: it is what decides which
+  //key the system sees when the on-screen keyboard is touched
+  TTestGTK2Translation = class(TTestCase)
+  private
+    FProbe:TGTK2TranslationProbe;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure TheDigitsAreTranslated;
+    procedure TheLettersAreTranslatedToLowerCase;
+    procedure TheKeypadDigitsAreTranslated;
+    procedure TheKeypadOperatorsAreTranslated;
+    procedure TheEditingKeysAreTranslated;
+    procedure TheFunctionKeysAreTranslated;
+    procedure AnUnknownKeyIsVoid;
+  end;
+  {$IFEND}
 
 implementation
 
@@ -279,28 +321,40 @@ begin
   end;
 end;
 
+procedure TTestKeyEventsForThisWidgetset.FocusTheField;
+begin
+  FForm.Show;
+  FEdit.SetFocus;
+  Application.ProcessMessages;
+end;
+
+procedure TTestKeyEventsForThisWidgetset.TypeAndWait(aKeyboard:TCrossKeyEvents; aKey:Word; const aExpected:String);
+var
+  limite:QWord;
+begin
+  //o evento vai para a fila do sistema; e' preciso bombear ate' ele voltar
+  //the event goes to the system's queue; it has to be pumped until it comes back
+  aKeyboard.Press(aKey);
+  limite:=GetTickCount64+2000;
+  while (FEdit.Text<>aExpected) and (GetTickCount64<limite) do begin
+    Application.ProcessMessages;
+    Sleep(2);
+  end;
+end;
+
 procedure TTestKeyEventsForThisWidgetset.TypingALetterReachesTheFocusedField;
 var
   teclado:TCrossKeyEvents;
-  limite:QWord;
 begin
   //o caminho inteiro: a tecla desenhada vira evento do sistema e chega ao
   //campo como se tivesse vindo de um teclado de verdade
   //the whole path: the drawn key becomes a system event and reaches the field
   //as if it had come from a real keyboard
-  FForm.Show;
-  FEdit.SetFocus;
-  Application.ProcessMessages;
+  FocusTheField;
 
   teclado:=CreateCrossKeyEvents(FEdit);
   try
-    teclado.Press(VK_A);
-
-    limite:=GetTickCount64+2000;
-    while (FEdit.Text='') and (GetTickCount64<limite) do begin
-      Application.ProcessMessages;
-      Sleep(2);
-    end;
+    TypeAndWait(teclado, VK_A, 'a');
 
     AssertEquals('a letra chegou ao campo', 'a', LowerCase(FEdit.Text));
   finally
@@ -308,8 +362,198 @@ begin
   end;
 end;
 
+procedure TTestKeyEventsForThisWidgetset.TypingADigitReachesTheField;
+var
+  teclado:TCrossKeyEvents;
+begin
+  FocusTheField;
+  teclado:=CreateCrossKeyEvents(FEdit);
+  try
+    TypeAndWait(teclado, VK_5, '5');
+
+    AssertEquals('o digito chegou', '5', FEdit.Text);
+  finally
+    teclado.Free;
+  end;
+end;
+
+procedure TTestKeyEventsForThisWidgetset.TypingAKeypadDigitReachesTheField;
+var
+  teclado:TCrossKeyEvents;
+begin
+  //e' o que o teclado numerico de tela manda
+  //it is what the numeric on-screen keyboard sends
+  FocusTheField;
+  teclado:=CreateCrossKeyEvents(FEdit);
+  try
+    TypeAndWait(teclado, VK_NUMPAD7, '7');
+
+    AssertEquals('o digito do teclado numerico chegou', '7', FEdit.Text);
+  finally
+    teclado.Free;
+  end;
+end;
+
+procedure TTestKeyEventsForThisWidgetset.TypingTheKeypadMinusReachesTheField;
+var
+  teclado:TCrossKeyEvents;
+begin
+  FocusTheField;
+  teclado:=CreateCrossKeyEvents(FEdit);
+  try
+    TypeAndWait(teclado, VK_SUBTRACT, '-');
+
+    AssertEquals('o sinal chegou', '-', FEdit.Text);
+  finally
+    teclado.Free;
+  end;
+end;
+
+procedure TTestKeyEventsForThisWidgetset.TypingTheDecimalSeparatorReachesTheField;
+var
+  teclado:TCrossKeyEvents;
+  limite:QWord;
+begin
+  //e' a tecla do separador decimal do teclado numerico de tela; o caractere
+  //que sai segue o layout da maquina - ponto ou virgula - mas nunca pode
+  //virar um Delete, que era o que acontecia com o Num Lock desligado
+  //it is the decimal separator key of the numeric on-screen keyboard; the
+  //character that comes out follows the machine's layout - point or comma -
+  //but must never turn into a Delete, which is what happened with Num Lock off
+  FocusTheField;
+  teclado:=CreateCrossKeyEvents(FEdit);
+  try
+    teclado.Press(VK_OEM_PERIOD);
+    limite:=GetTickCount64+2000;
+    while (FEdit.Text='') and (GetTickCount64<limite) do begin
+      Application.ProcessMessages;
+      Sleep(2);
+    end;
+
+    AssertTrue('ponto ou virgula: "'+FEdit.Text+'"', (FEdit.Text='.') or (FEdit.Text=','));
+  finally
+    teclado.Free;
+  end;
+end;
+
+procedure TTestKeyEventsForThisWidgetset.BackspaceErasesTheLastCharacter;
+var
+  teclado:TCrossKeyEvents;
+begin
+  FocusTheField;
+  teclado:=CreateCrossKeyEvents(FEdit);
+  try
+    TypeAndWait(teclado, VK_5, '5');
+    TypeAndWait(teclado, VK_6, '56');
+    AssertEquals('dois digitos', '56', FEdit.Text);
+
+    TypeAndWait(teclado, VK_BACK, '5');
+
+    AssertEquals('o ultimo foi apagado', '5', FEdit.Text);
+  finally
+    teclado.Free;
+  end;
+end;
+
+procedure TTestKeyEventsForThisWidgetset.ShiftMakesTheLetterUpperCase;
+var
+  teclado:TCrossKeyEvents;
+begin
+  //os modificadores aplicados entram no estado do evento
+  //the applied modifiers go into the event's state
+  FocusTheField;
+  teclado:=CreateCrossKeyEvents(FEdit);
+  try
+    teclado.Apply([ssShift]);
+    TypeAndWait(teclado, VK_A, 'A');
+    teclado.Unapply([ssShift]);
+
+    AssertEquals('maiuscula', 'A', FEdit.Text);
+  finally
+    teclado.Free;
+  end;
+end;
+
+{$IF defined(LCLgtk2)}
+
+{ TGTK2TranslationProbe }
+
+function TGTK2TranslationProbe.Translate(aKey:Word):LongWord;
+begin
+  Result:=TranlateVirtualKey(aKey);
+end;
+
+{ TTestGTK2Translation }
+
+procedure TTestGTK2Translation.SetUp;
+begin
+  FProbe:=TGTK2TranslationProbe.Create(nil);
+end;
+
+procedure TTestGTK2Translation.TearDown;
+begin
+  FreeAndNil(FProbe);
+end;
+
+procedure TTestGTK2Translation.TheDigitsAreTranslated;
+begin
+  AssertEquals('0', GDK_KEY_0, FProbe.Translate(VK_0));
+  AssertEquals('5', GDK_KEY_5, FProbe.Translate(VK_5));
+  AssertEquals('9', GDK_KEY_9, FProbe.Translate(VK_9));
+end;
+
+procedure TTestGTK2Translation.TheLettersAreTranslatedToLowerCase;
+begin
+  //a caixa vem do shift no evento, nao da tecla
+  //the case comes from the shift in the event, not from the key
+  AssertEquals('a', GDK_KEY_a, FProbe.Translate(VK_A));
+  AssertEquals('z', GDK_KEY_z, FProbe.Translate(VK_Z));
+end;
+
+procedure TTestGTK2Translation.TheKeypadDigitsAreTranslated;
+begin
+  AssertEquals('KP 0', GDK_KEY_KP_0, FProbe.Translate(VK_NUMPAD0));
+  AssertEquals('KP 9', GDK_KEY_KP_9, FProbe.Translate(VK_NUMPAD9));
+end;
+
+procedure TTestGTK2Translation.TheKeypadOperatorsAreTranslated;
+begin
+  //o teclado numerico de tela usa o menos e o ponto do teclado numerico
+  //the numeric on-screen keyboard uses the keypad minus and decimal
+  AssertEquals('menos',   GDK_KEY_KP_Subtract, FProbe.Translate(VK_SUBTRACT));
+  AssertEquals('decimal', GDK_KEY_KP_Decimal,  FProbe.Translate(VK_DECIMAL));
+  AssertEquals('mais',    GDK_KEY_KP_Add,      FProbe.Translate(VK_ADD));
+end;
+
+procedure TTestGTK2Translation.TheEditingKeysAreTranslated;
+begin
+  AssertEquals('backspace', GDK_KEY_BackSpace, FProbe.Translate(VK_BACK));
+  AssertEquals('return',    GDK_KEY_Return,    FProbe.Translate(VK_RETURN));
+  AssertEquals('delete',    GDK_KEY_Delete,    FProbe.Translate(VK_DELETE));
+  AssertEquals('tab',       GDK_KEY_Tab,       FProbe.Translate(VK_TAB));
+  AssertEquals('escape',    GDK_KEY_Escape,    FProbe.Translate(VK_ESCAPE));
+  AssertEquals('espaco',    GDK_KEY_space,     FProbe.Translate(VK_SPACE));
+end;
+
+procedure TTestGTK2Translation.TheFunctionKeysAreTranslated;
+begin
+  AssertEquals('F1',  GDK_KEY_F1,  FProbe.Translate(VK_F1));
+  AssertEquals('F12', GDK_KEY_F12, FProbe.Translate(VK_F12));
+end;
+
+procedure TTestGTK2Translation.AnUnknownKeyIsVoid;
+begin
+  //uma tecla sem traducao nao pode virar uma tecla qualquer
+  //a key with no translation must not turn into some other key
+  AssertEquals('void', GDK_KEY_VoidSymbol, FProbe.Translate(VK_OEM_1));
+end;
+{$IFEND}
+
 initialization
   RegisterTest(TTestCrossKeyEvents);
   RegisterTest(TTestKeyEventsForThisWidgetset);
+  {$IF defined(LCLgtk2)}
+  RegisterTest(TTestGTK2Translation);
+  {$IFEND}
 
 end.

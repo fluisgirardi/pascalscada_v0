@@ -103,6 +103,12 @@ type
 
   { TTestMutexDeRede }
 
+  TMutexClientProbe = class(TMutexClient)
+  public
+    procedure BeginLoading;
+    procedure EndLoading;
+  end;
+
   TTestMutexDeRede = class(TTestCase)
   private
     FServidor:TMutexServer;
@@ -129,6 +135,16 @@ type
 
     //desligado / switched off
     procedure AnInactiveClientAnswersItsDefault;
+
+    //o componente cliente / the client component
+    procedure ANewClientIsInactiveOnTheDeclaredDefaultPort;
+    procedure TheServerAlsoStartsOnItsDeclaredDefaultPort;
+    procedure AnInvalidHostIsRefused;
+    procedure AValidHostIsKeptAndAnEmptyOneClearsIt;
+    procedure HostAndPortCannotChangeWhileActive;
+    procedure LeavingWithNoServerSaysTrue;
+    procedure TheActiveFlagLoadedFromTheFormIsAppliedAfterLoading;
+    procedure WhenTheServerShutsDownTheClientFallsBackToItsDefault;
 
     //resposta fora de hora / an answer out of turn
     procedure AnAnswerOutOfTurnDoesNotHangTheStation;
@@ -260,6 +276,18 @@ begin
   if FSocket>=0 then
     CloseSocket(FSocket);
   FSocket:=-1;
+end;
+
+{ TMutexClientProbe }
+
+procedure TMutexClientProbe.BeginLoading;
+begin
+  Loading;
+end;
+
+procedure TMutexClientProbe.EndLoading;
+begin
+  Loaded;
 end;
 
 { TTestMutexDeRede }
@@ -484,6 +512,145 @@ begin
   finally
     arbitro.Free;
   end;
+end;
+
+procedure TTestMutexDeRede.ANewClientIsInactiveOnTheDeclaredDefaultPort;
+begin
+  //a porta que a propriedade declara como padrao e a que o construtor poe
+  //tem que ser a mesma: e' pelo "default" que o IDE decide nao gravar a
+  //propriedade no .lfm - e ai o construtor e' quem vale ao carregar
+  //the port the property declares as default and the one the constructor
+  //sets have to be the same: it is by the "default" that the IDE decides not
+  //to write the property to the .lfm - and then the constructor rules on load
+  FA:=TMutexClient.Create(nil);
+
+  AssertFalse ('inativo',          FA.Active);
+  AssertEquals('porta padrao',     52321, FA.Port);
+  AssertFalse ('sem comando por padrao', FA.DefaultBehavior);
+  AssertEquals('sem servidor',     '', FA.Host);
+end;
+
+procedure TTestMutexDeRede.TheServerAlsoStartsOnItsDeclaredDefaultPort;
+begin
+  FServidor:=TMutexServer.Create(nil);
+
+  AssertEquals('porta padrao', 52321, FServidor.Port);
+end;
+
+procedure TTestMutexDeRede.AnInvalidHostIsRefused;
+begin
+  FA:=TMutexClient.Create(nil);
+  FA.Host:='10.0.0.1';
+
+  try
+    FA.Host:='servidor';
+    Fail('um nome nao e'' um IPv4');
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+
+  AssertEquals('o anterior ficou', '10.0.0.1', FA.Host);
+end;
+
+procedure TTestMutexDeRede.AValidHostIsKeptAndAnEmptyOneClearsIt;
+begin
+  FA:=TMutexClient.Create(nil);
+
+  FA.Host:='192.168.0.10';
+  AssertEquals('guardado', '192.168.0.10', FA.Host);
+
+  FA.Host:='';
+  AssertEquals('limpo', '', FA.Host);
+end;
+
+procedure TTestMutexDeRede.HostAndPortCannotChangeWhileActive;
+begin
+  //ativo sem servidor: continua ativo, tentando; mudar o alvo por baixo dele
+  //e' recusado
+  //active with no server: it stays active, trying; changing the target under
+  //it is refused
+  FA:=NovoCliente(FPorta, true);
+
+  try
+    FA.Port:=FPorta+1;
+    Fail('a porta nao muda com o cliente ativo');
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+  try
+    FA.Host:='10.0.0.1';
+    Fail('o host nao muda com o cliente ativo');
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+
+  FA.Active:=false;
+  FA.Port:=FPorta+1;
+  AssertEquals('inativo, muda', FPorta+1, FA.Port);
+end;
+
+procedure TTestMutexDeRede.LeavingWithNoServerSaysTrue;
+begin
+  //sem arbitro nao ha' o que soltar; a estacao nao pode ficar presa nisso
+  //with no arbiter there is nothing to release; the station must not get
+  //stuck on it
+  FA:=NovoCliente(FPorta, true);
+
+  AssertTrue(FA.Leave);
+end;
+
+procedure TTestMutexDeRede.TheActiveFlagLoadedFromTheFormIsAppliedAfterLoading;
+var
+  sonda:TMutexClientProbe;
+begin
+  //durante a carga do .lfm a ativacao espera o Loaded - a porta e o host
+  //podem nem ter sido lidos ainda
+  //while the .lfm loads the activation waits for Loaded - the port and the
+  //host may not even have been read yet
+  sonda:=TMutexClientProbe.Create(nil);
+  try
+    sonda.BeginLoading;
+    sonda.Host:='127.0.0.1';
+    sonda.Port:=FPorta;
+    sonda.Active:=true;
+    AssertFalse('carregando, ainda inativo', sonda.Active);
+
+    sonda.EndLoading;
+
+    AssertTrue('carregado, ativo', sonda.Active);
+  finally
+    sonda.Free;
+  end;
+end;
+
+procedure TTestMutexDeRede.WhenTheServerShutsDownTheClientFallsBackToItsDefault;
+var
+  peloPadrao:Boolean;
+  limite:QWord;
+begin
+  //o arbitro desliga: a estacao tem que perceber e voltar a decidir pelo
+  //padrao configurado, em vez de ficar presa numa conexao morta
+  //the arbiter shuts down: the station has to notice and go back to deciding
+  //by the configured default, instead of hanging on a dead connection
+  LigarServidor;
+  FA:=NovoCliente(FPorta, false);
+  peloPadrao:=true;
+  AssertTrue ('assumiu pelo servidor', FA.TryEnter(peloPadrao));
+  AssertFalse('e foi o servidor',      peloPadrao);
+
+  FreeAndNil(FServidor);
+
+  limite:=GetTickCount64+5000;
+  repeat
+    Sleep(50);
+    FA.TryEnter(peloPadrao);
+  until peloPadrao or (GetTickCount64>limite);
+
+  AssertTrue ('voltou ao padrao',          peloPadrao);
+  AssertFalse('e o padrao e'' ficar de fora', FA.TryEnter);
 end;
 
 initialization

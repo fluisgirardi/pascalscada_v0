@@ -75,6 +75,26 @@ type
 
     //a saida / logging out
     procedure LogoutLetsGoOfTheUser;
+    procedure LogoutForgetsThePermissions;
+
+    //sem o cache / without the cache
+    procedure WithoutTheCacheEveryPermissionIsAskedToTheServer;
+    procedure WithoutTheCacheTheServerCanRefuse;
+
+    //os codigos de seguranca / the security codes
+    procedure TheRegisteredCodesComeFromTheServer;
+    procedure AnAnswerThatIsNotAListGivesNoCodes;
+    procedure ACodeOnTheListExists;
+    procedure TheListIsAskedOnceAndKept;
+    procedure RegisteringAnUnknownCodeGoesToTheServer;
+    procedure RegisteringAKnownCodeAsksNothing;
+    procedure ARegistrationTheServerRejectsRaises;
+    procedure ValidatingACodeAsksTheServerOnce;
+    procedure AValidationTheServerRejectsRaises;
+
+    //o servidor fora do ar / the server out of reach
+    procedure AnUnreachableServerRefusesTheLoginQuietly;
+    procedure AnUnreachableServerRaisesWhenAsked;
   end;
 
 implementation
@@ -223,6 +243,201 @@ begin
 
   AssertFalse('saiu', FUsers.UserLogged);
   AssertTrue ('e sem identificador', FUsers.UID<0);
+end;
+
+procedure TTestCentralUserManagement.LogoutForgetsThePermissions;
+begin
+  ServerAnswers(200, '{"uid":7,"authorizations":{"abrir_valvula":true}}');
+  Login('fabio','segredo');
+  FServidor.EsperarRequisicoes(1, 3000);
+  AssertTrue('antes, podia', FUsers.CanAccess('abrir_valvula'));
+
+  FUsers.Logout;
+
+  AssertFalse('depois, nao pode mais', FUsers.CanAccess('abrir_valvula'));
+end;
+
+procedure TTestCentralUserManagement.WithoutTheCacheEveryPermissionIsAskedToTheServer;
+var
+  antes:LongInt;
+begin
+  //sem o cache, cada pergunta vai ao servidor com o usuario e o codigo
+  //without the cache, every question goes to the server with the user and
+  //the code
+  FUsers.UseCachedAuthorizations:=false;
+  ServerAnswers(200, '{"uid":7}');
+  Login('fabio','segredo');
+  FServidor.EsperarRequisicoes(1, 3000);
+  antes:=FServidor.Requisicoes;
+
+  AssertTrue('o servidor deixou', FUsers.CanAccess('abrir_valvula'));
+
+  AssertTrue  ('foi ao servidor',        FServidor.EsperarRequisicoes(antes+1, 3000));
+  AssertEquals('no endereco de permissao', '/uidcanaccess', FServidor.UltimoCaminho);
+  AssertTrue  ('com o usuario',          Pos('"uid" : 7', FServidor.UltimoCorpo)>0);
+  AssertTrue  ('e o codigo',             Pos('abrir_valvula', FServidor.UltimoCorpo)>0);
+end;
+
+procedure TTestCentralUserManagement.WithoutTheCacheTheServerCanRefuse;
+begin
+  FUsers.UseCachedAuthorizations:=false;
+  ServerAnswers(200, '{"uid":7}');
+  Login('fabio','segredo');
+  FServidor.EsperarRequisicoes(1, 3000);
+
+  ServerAnswers(403, '{"error":"no"}');
+
+  AssertFalse('o servidor negou', FUsers.CanAccess('abrir_valvula'));
+end;
+
+procedure TTestCentralUserManagement.TheRegisteredCodesComeFromTheServer;
+var
+  codigos:TStringList;
+begin
+  ServerAnswers(200, '["abrir_valvula","parar_motor"]');
+
+  codigos:=FUsers.GetRegisteredAccessCodes;
+  try
+    AssertEquals('no endereco de enumerar', '/enumsecuritycodes', FServidor.UltimoCaminho);
+    AssertEquals('dois codigos',   2, codigos.Count);
+    AssertEquals('o primeiro',     'abrir_valvula', codigos[0]);
+    AssertEquals('o segundo',      'parar_motor',   codigos[1]);
+  finally
+    codigos.Free;
+  end;
+end;
+
+procedure TTestCentralUserManagement.AnAnswerThatIsNotAListGivesNoCodes;
+var
+  codigos:TStringList;
+begin
+  ServerAnswers(200, '{"oops":1}');
+
+  codigos:=FUsers.GetRegisteredAccessCodes;
+  try
+    AssertEquals('nenhum codigo', 0, codigos.Count);
+  finally
+    codigos.Free;
+  end;
+end;
+
+procedure TTestCentralUserManagement.ACodeOnTheListExists;
+begin
+  ServerAnswers(200, '["abrir_valvula"]');
+
+  AssertTrue ('esta na lista',     FUsers.SecurityCodeExists('abrir_valvula'));
+  AssertFalse('nao esta na lista', FUsers.SecurityCodeExists('parar_motor'));
+end;
+
+procedure TTestCentralUserManagement.TheListIsAskedOnceAndKept;
+var
+  antes:LongInt;
+begin
+  //a lista vale por cinco minutos: as telas perguntam por dezenas de codigos
+  //e o servidor nao pode ser consultado a cada um
+  //the list is good for five minutes: screens ask about dozens of codes and
+  //the server cannot be asked on every one
+  ServerAnswers(200, '["abrir_valvula"]');
+  FUsers.SecurityCodeExists('abrir_valvula');
+  antes:=FServidor.Requisicoes;
+
+  FUsers.SecurityCodeExists('parar_motor');
+  FUsers.SecurityCodeExists('abrir_valvula');
+
+  AssertEquals('sem consultar de novo', antes, FServidor.Requisicoes);
+end;
+
+procedure TTestCentralUserManagement.RegisteringAnUnknownCodeGoesToTheServer;
+begin
+  ServerAnswers(200, '[]');
+  FUsers.SecurityCodeExists('x'); //carrega a lista vazia / loads the empty list
+
+  FUsers.RegisterSecurityCode('parar_motor');
+
+  AssertEquals('no endereco de registrar', '/registersecuritycode', FServidor.UltimoCaminho);
+  AssertTrue  ('com o codigo', Pos('parar_motor', FServidor.UltimoCorpo)>0);
+end;
+
+procedure TTestCentralUserManagement.RegisteringAKnownCodeAsksNothing;
+var
+  antes:LongInt;
+begin
+  ServerAnswers(200, '["parar_motor"]');
+  FUsers.SecurityCodeExists('parar_motor');
+  antes:=FServidor.Requisicoes;
+
+  FUsers.RegisterSecurityCode('parar_motor');
+
+  AssertEquals('nada foi pedido', antes, FServidor.Requisicoes);
+end;
+
+procedure TTestCentralUserManagement.ARegistrationTheServerRejectsRaises;
+begin
+  ServerAnswers(200, '[]');
+  FUsers.SecurityCodeExists('x');
+  ServerAnswers(405, '{"error":"rejected"}');
+
+  try
+    FUsers.RegisterSecurityCode('parar_motor');
+    Fail('a recusa do servidor tem que subir');
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+end;
+
+procedure TTestCentralUserManagement.ValidatingACodeAsksTheServerOnce;
+var
+  antes:LongInt;
+begin
+  ServerAnswers(200, '{}');
+
+  FUsers.ValidateSecurityCode('parar_motor');
+  AssertEquals('no endereco de validar', '/validadesecuritycode', FServidor.UltimoCaminho);
+  antes:=FServidor.Requisicoes;
+
+  FUsers.ValidateSecurityCode('parar_motor');
+
+  AssertEquals('validado uma vez, guardado', antes, FServidor.Requisicoes);
+end;
+
+procedure TTestCentralUserManagement.AValidationTheServerRejectsRaises;
+begin
+  ServerAnswers(405, '{"error":"rejected"}');
+
+  try
+    FUsers.ValidateSecurityCode('parar_motor');
+    Fail('a recusa do servidor tem que subir');
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
+end;
+
+procedure TTestCentralUserManagement.AnUnreachableServerRefusesTheLoginQuietly;
+begin
+  //porta sem ninguem: a conexao e' recusada na hora; por padrao o login so'
+  //falha, sem excecao
+  //a port with nobody on it: the connection is refused at once; by default
+  //the login only fails, no exception
+  FUsers.AuthServerPort:=FServidor.Porta+1;
+
+  AssertFalse('nao entrou', Login('fabio','segredo'));
+  AssertFalse('ninguem logado', FUsers.UserLogged);
+end;
+
+procedure TTestCentralUserManagement.AnUnreachableServerRaisesWhenAsked;
+begin
+  FUsers.AuthServerPort:=FServidor.Porta+1;
+  FUsers.RaiseExceptOnConnFailure:=true;
+
+  try
+    FUsers.ValidateSecurityCode('parar_motor');
+    Fail('sem servidor, com a opcao ligada, tem que subir');
+  except
+    on EAssertionFailedError do raise;
+    on Exception do ;
+  end;
 end;
 
 initialization

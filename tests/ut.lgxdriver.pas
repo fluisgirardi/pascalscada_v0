@@ -78,6 +78,8 @@ type
 
     //lacuna conhecida / known gap
     procedure AnEncodedPathShouldBeReadableBack;
+    procedure EveryKindOfPathComesBackAsItWent;
+    procedure ATruncatedPathDecodesWhatIsWhole;
   end;
 
 implementation
@@ -261,16 +263,32 @@ end;
 
 procedure TTestLGXDriver.AnEncodedPathShouldBeReadableBack;
 begin
-  Ignore('known gap: DecodeTagPath is a skeleton - it never assigns ' +
-         'Result and returns an empty string (the code itself carries the ' +
-         'comment "TODO: Decodificar o indecodificavel?"). It is the getter ' +
-         'of the RequestPath property in four request classes ' +
-         '(TCIPReadTagReq, TCIPReadTagFragReq, TCIPWriteTagReq and ' +
-         'TCIPWriteTagFragReq), so reading that path back always gives an ' +
-         'empty string. Remove this Ignore once the decoder is written.');
-
+  //e' o caminho que o IDE e o depurador leem de volta dos pedidos CIP
+  //it is the path the IDE and the debugger read back from the CIP requests
   FPedido.RequestPath:='MyTag';
   AssertEquals('round trip of the path', 'MyTag', FPedido.RequestPath);
+end;
+
+procedure TTestLGXDriver.EveryKindOfPathComesBackAsItWent;
+const
+  Caminhos: array[0..5] of String = ('A.B', 'Tag[5]', 'Tag[300]', 'Tag[256]', 'Tag[1,2]', 'Program:MainProgram.Motor.Speed[3]');
+var
+  c:Integer;
+begin
+  for c:=0 to High(Caminhos) do begin
+    FPedido.RequestPath:=Caminhos[c];
+    AssertEquals(Caminhos[c], Caminhos[c], FPedido.RequestPath);
+  end;
+end;
+
+procedure TTestLGXDriver.ATruncatedPathDecodesWhatIsWhole;
+begin
+  //um segmento cortado no meio nao pode ler alem do buffer: para no que
+  //estava inteiro
+  //a segment cut in the middle must not read past the buffer: it stops at
+  //what was whole
+  FPedido.ReqPathData:=BytesOf('91 01 41 00 91 05 42');
+  AssertEquals('so o primeiro', 'A', FPedido.RequestPath);
 end;
 
 initialization
