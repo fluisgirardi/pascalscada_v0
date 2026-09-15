@@ -52,7 +52,8 @@ uses
   ut.tagcollection,
   ut.isotcp,
   ut.scanthread,
-  ut.socketserver;
+  ut.socketserver,
+  ut.mtpcpu;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

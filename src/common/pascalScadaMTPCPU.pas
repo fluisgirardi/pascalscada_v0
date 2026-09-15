@@ -117,6 +117,12 @@ end;
 {$ELSEIF defined(linux)}
   begin
     Result:=sysconf(_SC_NPROCESSORS_ONLN);
+    //sysconf devolve -1 quando falha; quem decide como esperar precisa de um
+    //numero de processadores de verdade
+    //sysconf gives back -1 when it fails; whoever decides how to wait needs a
+    //real processor count
+    if Result<1 then
+      Result:=1;
   end;
 {$ELSE}
   begin
