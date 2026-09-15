@@ -336,8 +336,17 @@ end;
 
 destructor TpsHMIfrmAlphaKeyboard.Destroy;
 begin
-  ModifierRelease;
-  Fkeyboard.destroy;
+  //o mesmo do teclado numerico: quando o construtor recusa o alvo nulo, este
+  //destrutor roda com o emulador de teclas ainda nil - soltar os modificadores
+  //e destruir direto viravam access violation, e o formulario meio construido
+  //ficava na memoria.
+  //same as the numeric keyboard: when the constructor refuses the nil target,
+  //this destructor runs with the key emulator still nil - releasing the
+  //modifiers and destroying it directly both turned into access violations, and
+  //the half built form stayed in memory.
+  if Assigned(Fkeyboard) then
+    ModifierRelease;
+  FreeAndNil(Fkeyboard);
   if LastAlphaKeyboard=Self then
     LastAlphaKeyboard:=nil;
 
