@@ -349,6 +349,7 @@ var
   retries, BytesRead:LongInt;
   resget:TIOResult;
 begin
+  Result := false;
   if (PCommPort=nil) or (PCommPort.ReallyActive=false) then exit;
 
   Result := Inherited exchange(CPU, msgOut, msgIn, IsWrite);
@@ -375,12 +376,19 @@ begin
 
     BytesRead:=0;
     resget := getResponse(msgIn, BytesRead);
+    //o timeout tambem conta como tentativa. Antes so' os outros erros
+    //contavam, e um CLP mudo - cabo fora sem reset TCP, firewall descartando
+    //- era timeout atras de timeout, e a varredura ficava presa aqui para
+    //sempre.
+    //a timeout counts as an attempt as well. Before, only the other errors
+    //counted, and a silent PLC - cable out with no TCP reset, a firewall
+    //dropping packets - was timeout after timeout, and the scan stayed stuck
+    //here forever.
     while (resget<>iorOk) and (retries<3) do begin
 
-      if resget<>iorTimeOut then
-        Inc(retries)
-      else
+      if resget=iorTimeOut then
         Sleep(5);
+      Inc(retries);
 
       resget := getResponse(msgIn, BytesRead);
     end;
