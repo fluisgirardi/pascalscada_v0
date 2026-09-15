@@ -52,7 +52,8 @@ uses
   ut.animationtimers,
   ut.crosskeyevents,
   ut.keyboardmanager,
-  ut.numerickeyboard;
+  ut.numerickeyboard,
+  ut.alphakeyboard;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
