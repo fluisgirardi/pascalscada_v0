@@ -186,8 +186,14 @@ var
   aux: LongInt;
 begin
   if Assigned(FBorderColorPLCTag) then begin
+    //BevelColor nos dois ramos: com a conversao propria da aplicacao - o
+    //caminho de quem tem tabela de cores da planta - a cor da borda ia parar no
+    //fundo, e a borda ficava sem pintura nenhuma.
+    //BevelColor on both branches: with the application's own conversion - the
+    //path taken by whoever has the plant's colour table - the border colour
+    //ended up on the background, and the border was left unpainted.
     if Assigned(fOnConvertDintToColor) then
-      Color:=fOnConvertDintToColor(Self, Trunc(FBorderColorPLCTag.Value), aux)
+      BevelColor:=fOnConvertDintToColor(Self, Trunc(FBorderColorPLCTag.Value), aux)
     else
       BevelColor:=DIntToColor(Trunc(FBorderColorPLCTag.Value), aux);
   end;
