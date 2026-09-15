@@ -44,7 +44,8 @@ uses
   ut.numericcontrols,
   ut.hmiedit,
   ut.hmibutton,
-  ut.hmicombobox;
+  ut.hmicombobox,
+  ut.smallcontrols;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
