@@ -59,7 +59,8 @@ uses
   ut.hmibandeja,
   ut.hmiradiogroup,
   ut.eletricmotor,
-  ut.faceplate;
+  ut.faceplate,
+  ut.hmimouse;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

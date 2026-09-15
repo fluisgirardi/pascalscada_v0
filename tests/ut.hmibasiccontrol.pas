@@ -83,6 +83,7 @@ type
   published
     //o E logico / the logical AND
     procedure ANewControlIsEnabled;
+    procedure EnablingARuntimeCreatedControlKeepsItEnabled;
     procedure AnEmptyCodeLeavesItEnabled;
     procedure WithoutPermissionTheControlIsDisabled;
     procedure WithPermissionTheControlStaysEnabled;
@@ -141,6 +142,21 @@ end;
 procedure TTestHMIBasicControl.ANewControlIsEnabled;
 begin
   AssertTrue('sem codigo, habilitado', TControl(FControl).Enabled);
+end;
+
+procedure TTestHMIBasicControl.EnablingARuntimeCreatedControlKeepsItEnabled;
+begin
+  //criado por codigo, sem .lfm e sem codigo de seguranca: desabilitar e
+  //reabilitar tem que deixa-lo habilitado - e' o que o repasse de um clique
+  //faz a cada clique fora do desenho
+  //created by code, with no .lfm and no security code: disabling and
+  //re-enabling has to leave it enabled - it is what forwarding a click does
+  //on every click outside the drawing
+  FControl.Enabled:=false;
+
+  FControl.Enabled:=true;
+
+  AssertTrue('habilitado', FControl.Enabled);
 end;
 
 procedure TTestHMIBasicControl.AnEmptyCodeLeavesItEnabled;
