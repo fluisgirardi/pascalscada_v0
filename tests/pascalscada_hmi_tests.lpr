@@ -57,7 +57,8 @@ uses
   ut.alphakeyboard,
   ut.centralusermanagement,
   ut.hmibandeja,
-  ut.hmiradiogroup;
+  ut.hmiradiogroup,
+  ut.eletricmotor;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
