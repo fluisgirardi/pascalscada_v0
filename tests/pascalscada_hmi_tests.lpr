@@ -50,7 +50,9 @@ uses
   ut.hmiflowimage,
   ut.horizontalcontrols,
   ut.animationtimers,
-  ut.crosskeyevents;
+  ut.crosskeyevents,
+  ut.keyboardmanager,
+  ut.numerickeyboard;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

@@ -129,7 +129,17 @@ destructor TpsHMIfrmNumericKeyBoard.Destroy;
 begin
   if LastNumericKeyBoard=Self then
     LastNumericKeyBoard:=nil;
-  keyboard.Destroy;
+  //FreeAndNil, nao Destroy: quando o construtor recusa o alvo nulo, o FPC
+  //chama este destrutor para desfazer o que ja' foi construido - e o emulador
+  //de teclas ainda e' nil nesse ponto. O Destroy direto virava access
+  //violation, a recusa limpa sumia e o formulario meio construido - dezoito
+  //botoes - ficava todo na memoria.
+  //FreeAndNil, not Destroy: when the constructor refuses the nil target, FPC
+  //calls this destructor to undo what was already built - and the key emulator
+  //is still nil at that point. The direct Destroy turned into an access
+  //violation, the clean refusal vanished and the half built form - eighteen
+  //buttons - stayed in memory.
+  FreeAndNil(keyboard);
 
   if Assigned(FTarget) then
     FTarget.RemoveFreeNotification(Self);
