@@ -208,6 +208,9 @@ begin
     inherited Caption := SWithoutTag;
   AutoSize:=False;
   FIsEnabled:=true;
+  //: @seealso(THMIBasicControl.Create) sobre a flag de seguranca nascer verdadeira
+  //: @seealso(THMIBasicControl.Create) on the security flag being born true
+  FIsEnabledBySecurity:=true;
   FNumberFormat := '#0.0';
 
   FCommIndicator:=THMIInlineFaultIndicator.Create(Self);

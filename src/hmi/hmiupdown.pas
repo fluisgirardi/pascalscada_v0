@@ -196,6 +196,14 @@ begin
     writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
     {$ENDIF}
   end;
+  //nenhuma das duas era inicializada: um THMIUpDown criado por codigo ja'
+  //nascia dizendo Enabled=false, e o primeiro Enabled:=true o desabilitava
+  //de verdade. @seealso(THMIBasicControl.Create)
+  //neither was initialised: a THMIUpDown created by code was born saying
+  //Enabled=false, and the first Enabled:=true disabled it for real.
+  //@seealso(THMIBasicControl.Create)
+  FIsEnabled:=true;
+  FIsEnabledBySecurity:=true;
   if csDesigning in ComponentState then begin
     FIncrement := 1;
     FPosition := 0;

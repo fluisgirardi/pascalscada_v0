@@ -219,6 +219,9 @@ begin
     {$ENDIF}
   end;
    FIsEnabled:=true;
+   //: @seealso(THMIBasicControl.Create) sobre a flag de seguranca nascer verdadeira
+   //: @seealso(THMIBasicControl.Create) on the security flag being born true
+   FIsEnabledBySecurity:=true;
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=@NeedComState;
    FAnimationZones.OnCollectionItemChange:=@ZoneChange;
