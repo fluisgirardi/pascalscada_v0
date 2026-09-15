@@ -125,7 +125,6 @@ type
     //: @exclude
     procedure UpdateTagValue;
 
-    procedure Click; override;
     procedure Loaded; override;
   public
     //: @exclude
@@ -775,14 +774,6 @@ begin
         DoAfterSendValue(FValueFalse);
       end;
     end;
-end;
-
-procedure THMICheckBox.Click;
-begin
-  if Name='batata' then
-    inherited Click
-  else
-    inherited Click
 end;
 
 procedure THMICheckBox.Loaded;

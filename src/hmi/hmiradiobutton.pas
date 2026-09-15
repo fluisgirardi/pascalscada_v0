@@ -35,8 +35,6 @@ type
   }
   {$ENDIF}
   THMIRadioButton = class(THMICheckBox)
-  private
-    FRegInSecMan:Boolean;
   protected
   {$IFDEF FPC}
     //: @exclude
@@ -63,13 +61,15 @@ uses ControlSecurityManager;
 
 constructor THMIRadioButton.Create(AOwner:TComponent);
 begin
+  //sem cadastrar de novo no gerenciador de seguranca: o construtor do
+  //THMICheckBox ja' fez isso, e o RegisterControl so' acrescenta ao vetor -
+  //nao deduplica. Cadastrado duas vezes, o controle era reavaliado duas vezes
+  //a cada troca de usuario.
+  //no registering with the security manager again: THMICheckBox's constructor
+  //already did it, and RegisterControl only appends to the array - it does not
+  //deduplicate. Registered twice, the control was re-evaluated twice on every
+  //change of user.
   inherited Create(AOwner);
-  FRegInSecMan:=GetControlSecurityManager.RegisterControl(Self as IHMIInterface);
-  if not FRegInSecMan then begin
-    {$IFNDEF WINDOWS}
-    writeln('FIX-ME: Failed to register class ',ClassName,' instace with name="',Name,'" in the ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
-    {$ENDIF}
-  end;
   {$IFDEF FPC}
   fCompStyle := csRadioButton;
   {$ENDIF}
@@ -79,13 +79,7 @@ end;
 
 destructor THMIRadioButton.Destroy;
 begin
-  if FRegInSecMan then
-    GetControlSecurityManager.UnRegisterControl(Self as IHMIInterface)
-  else begin
-    {$IFNDEF WINDOWS}
-    writeln('FIX-ME: Why class ',ClassName,', instace name="',Name,'" ins''t registered in ControlSecurityManager?',{$i %FILE%},':',{$i %LINE%});
-    {$ENDIF}
-  end;
+  //o desregistro tambem e' do ancestral / unregistering is the ancestor's too
   inherited Destroy;
 end;
 

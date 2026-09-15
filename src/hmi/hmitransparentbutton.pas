@@ -13,8 +13,6 @@ type
   private
     //procedure DoMouseUp(var Message: TLMMouse; Button: TMouseButton);
     procedure WMLButtonUp(var Message: TLMLButtonUp); message LM_LBUTTONUP;
-  protected
-    procedure Paint; override;
   published
     property OnClick;
     property OnMouseUp;
@@ -25,15 +23,14 @@ implementation
 
 { THMITransparentButton }
 
-procedure THMITransparentButton.Paint;
-begin
-  FControlArea := TBGRABitmap.Create(Width,Height);
-  try
-    inherited Paint;
-  finally
-    FreeAndNil(FControlArea);
-  end;
-end;
+//sem Paint proprio: o DrawControl da base ja' atribui um bitmap vazio do
+//tamanho do controle - transparente, que e' todo o ponto deste botao. O
+//override que existia aqui criava um bitmap por conta propria, vazava o da
+//base e deixava o campo nulo depois de pintar.
+//no Paint of its own: the base's DrawControl already assigns an empty bitmap
+//the size of the control - transparent, which is this button's whole point.
+//The override that used to be here built a bitmap of its own, leaked the
+//base's one and left the field nil after painting.
 
 procedure THMITransparentButton.WMLButtonUp(var Message: TLMLButtonUp);
 begin
