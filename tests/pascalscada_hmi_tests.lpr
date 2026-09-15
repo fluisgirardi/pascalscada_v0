@@ -47,7 +47,8 @@ uses
   ut.hmibutton,
   ut.hmicombobox,
   ut.smallcontrols,
-  ut.hmiflowimage;
+  ut.hmiflowimage,
+  ut.horizontalcontrols;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
