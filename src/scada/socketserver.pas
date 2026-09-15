@@ -120,9 +120,19 @@ end;
 procedure TSocketClientThread.Terminate;
 begin
   TpSCADACoreAffinityThread(self).Terminate;
+  //FEnd so' e' sinalizado dentro do Execute, e a RTL nao chama Execute quando a
+  //thread criada suspensa ja' esta' terminada na hora em que enfim e' escalonada
+  //- ver "if not(LThread.FTerminated)" em rtl/unix/tthread.inc. Sem olhar
+  //Finished, que a RTL marca com o Execute tendo rodado ou nao, desligar o
+  //servidor logo depois de ligar trava para sempre aqui.
+  //FEnd is only signaled inside Execute, and the RTL does not call Execute when
+  //a thread created suspended is already terminated by the time it finally gets
+  //scheduled - see "if not(LThread.FTerminated)" in rtl/unix/tthread.inc.
+  //Without looking at Finished, which the RTL sets whether Execute ran or not,
+  //shutting the server down right after starting it hangs here forever.
   repeat
      CheckSynchronize(1);
-  until WaitEnd(1)=wrSignaled;
+  until (WaitEnd(1)=wrSignaled) or Finished;
   FEnd.Destroy;
 end;
 
@@ -196,9 +206,10 @@ end;
 procedure TSocketAcceptThread.Terminate;
 begin
   TpSCADACoreAffinityThread(self).Terminate;
+  //: @seealso(TSocketClientThread.Terminate) para o porque do teste de Finished
   repeat
      CheckSynchronize(1);
-  until WaitEnd(1)=wrSignaled;
+  until (WaitEnd(1)=wrSignaled) or Finished;
   FEnd.Destroy;
 end;
 

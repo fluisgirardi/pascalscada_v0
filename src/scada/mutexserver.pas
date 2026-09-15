@@ -82,8 +82,13 @@ type
     FSocket: TSocket;
     FMutex:TCriticalSection;
     FAcceptThread:TAcceptThread;
-    FClients:Array of TClientThread;
+    FClients,
+    //threads que ja' acabaram sozinhas e ainda nao foram liberadas
+    //threads that already finished on their own and were not freed yet
+    FFinishedClients:Array of TClientThread;
     procedure setActive(AValue: Boolean);
+    procedure ForgetClientThread(aThread:TClientThread);
+    procedure FreeFinishedClients;
     procedure SetPort(AValue: Word);
     procedure AddClientThread(Sender:TObject);
     procedure RemoveClientThread(Sender:TObject);
@@ -253,7 +258,7 @@ var
 {$IFEND}
 
   reuse_addr:LongInt;
-  ct: LongInt;
+  clientthread: TClientThread;
 begin
   reuse_addr:=1;
 
@@ -345,10 +350,24 @@ begin
     CloseSocket(FSocket);
 
     //destroy all client threads...
-    for ct:=High(FClients) downto 0 do begin
-      FClients[ct].Terminate;
-      //FClients[ct].de;
+    //Terminate so' espera a thread acabar. Sem liberar o objeto, cada estacao
+    //que passou pelo servidor fica na memoria ate' o processo morrer.
+    //Terminate only waits for the thread to finish. Without freeing the object,
+    //every station that ever connected stays in memory until the process dies.
+    while Length(FClients)>0 do begin
+      clientthread:=FClients[High(FClients)];
+      clientthread.Terminate;
+      //durante o Terminate a propria thread pode ter se anunciado como acabada
+      //e entrado na outra lista: tem que sair das duas antes de ser liberada,
+      //senao a varredura do fim acha um ponteiro para memoria ja' devolvida.
+      //during Terminate the thread itself may have announced it finished and
+      //gone into the other list: it has to leave both before being freed, or
+      //the sweep at the end finds a pointer to memory already given back.
+      ForgetClientThread(clientthread);
+      clientthread.Free;
     end;
+
+    FreeFinishedClients;
   end;
   FActive:=AValue;
 end;
@@ -385,6 +404,8 @@ begin
     SetLength(FClients, i+1);
     FClients[i]:=TClientThread(Sender);
   end;
+
+  FreeFinishedClients;
 end;
 
 procedure TMutexServer.RemoveClientThread(Sender: TObject);
@@ -409,6 +430,53 @@ begin
     h:=High(FClients);
     FClients[i]:=FClients[h];
     SetLength(FClients, h);
+  end;
+
+  //a estacao saiu sozinha: a thread some da lista, mas o objeto continua vivo.
+  //Ela ainda esta' dentro do proprio Execute agora, entao so' da' para liberar
+  //depois - na proxima conexao ou no desligamento do servidor.
+  //the station left on its own: the thread goes off the list, but the object is
+  //still alive. It is inside its own Execute right now, so it can only be freed
+  //later - on the next connection or when the server is shut down.
+  h:=Length(FFinishedClients);
+  SetLength(FFinishedClients, h+1);
+  FFinishedClients[h]:=TClientThread(Sender);
+end;
+
+procedure TMutexServer.ForgetClientThread(aThread:TClientThread);
+var
+  i, h: LongInt;
+begin
+  for i:=High(FClients) downto 0 do
+    if FClients[i]=aThread then begin
+      h:=High(FClients);
+      FClients[i]:=FClients[h];
+      SetLength(FClients, h);
+    end;
+
+  for i:=High(FFinishedClients) downto 0 do
+    if FFinishedClients[i]=aThread then begin
+      h:=High(FFinishedClients);
+      FFinishedClients[i]:=FFinishedClients[h];
+      SetLength(FFinishedClients, h);
+    end;
+end;
+
+procedure TMutexServer.FreeFinishedClients;
+var
+  i: LongInt;
+  clientthread: TClientThread;
+begin
+  for i:=High(FFinishedClients) downto 0 do begin
+    clientthread:=FFinishedClients[i];
+    //Finished e' a RTL dizendo que o Execute ja' voltou: so' ai' da' para
+    //liberar o objeto da thread.
+    //Finished is the RTL saying Execute already returned: only then can the
+    //thread object be freed.
+    if not clientthread.Finished then continue;
+    ForgetClientThread(clientthread);
+    clientthread.Terminate;
+    clientthread.Free;
   end;
 end;
 
