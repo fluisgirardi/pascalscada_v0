@@ -41,7 +41,7 @@ unit ut.hmicheckbox;
 interface
 
 uses
-  Classes, SysUtils, Forms, StdCtrls, Graphics, fpcunit, testregistry,
+  Classes, SysUtils, Forms, Controls, StdCtrls, Graphics, fpcunit, testregistry,
   HMICheckBox, HMITypes,
   testsupport.faketag;
 
@@ -65,6 +65,8 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
+    //criado por codigo / created by code
+    procedure EnablingARuntimeCreatedControlKeepsItEnabled;
     //leitura: do tag para a caixa / reading: from the tag to the box
     procedure TheTrueValueChecksTheBox;
     procedure TheFalseValueUnchecksTheBox;
@@ -147,6 +149,21 @@ begin
   //o aviso do tag agenda a atualizacao na fila da aplicacao; num teste de
   //console e' preciso drenar essa fila na mao
   Application.ProcessMessages;
+end;
+
+procedure TTestHMICheckBox.EnablingARuntimeCreatedControlKeepsItEnabled;
+begin
+  //sem .lfm e sem codigo de seguranca: desabilitar e reabilitar tem que
+  //deixa-lo habilitado. A flag de seguranca nascia falsa, e o E logico
+  //com ela desabilitava o controle no primeiro Enabled:=true.
+  //with no .lfm and no security code: disabling and re-enabling has to
+  //leave it enabled. The security flag was born false, and the logical
+  //AND with it disabled the control on the first Enabled:=true.
+  FBox.Enabled:=false;
+
+  FBox.Enabled:=true;
+
+  AssertTrue('habilitado', TControl(FBox).Enabled);
 end;
 
 procedure TTestHMICheckBox.TheTrueValueChecksTheBox;

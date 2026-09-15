@@ -94,6 +94,8 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
+    //criado por codigo / created by code
+    procedure EnablingARuntimeCreatedControlKeepsItEnabled;
     //o que vem do CLP / what comes from the PLC
     procedure TheTagValueMovesTheBar;
     procedure ANewValueFromThePLCMovesTheBarAgain;
@@ -129,6 +131,8 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
+    //criado por codigo / created by code
+    procedure EnablingARuntimeCreatedControlKeepsItEnabled;
     procedure TheTagValueMovesTheScrollBar;
     procedure LettingGoWritesThePositionToTheTag;
     procedure WhileDraggingNothingIsWrittenByDefault;
@@ -158,6 +162,8 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
+    //criado por codigo / created by code
+    procedure EnablingARuntimeCreatedControlKeepsItEnabled;
     //o incremento / the increment
     procedure TheIncrementIsKept;
     procedure AnIncrementOfZeroIsRefused;
@@ -323,6 +329,21 @@ procedure TTestHMITrackBar.TagValueIs(v:Double);
 begin
   FTag.ChegouDoCLP(v);
   Settle;
+end;
+
+procedure TTestHMITrackBar.EnablingARuntimeCreatedControlKeepsItEnabled;
+begin
+  //sem .lfm e sem codigo de seguranca: desabilitar e reabilitar tem que
+  //deixa-lo habilitado. A flag de seguranca nascia falsa, e o E logico
+  //com ela desabilitava o controle no primeiro Enabled:=true.
+  //with no .lfm and no security code: disabling and re-enabling has to
+  //leave it enabled. The security flag was born false, and the logical
+  //AND with it disabled the control on the first Enabled:=true.
+  FBar.Enabled:=false;
+
+  FBar.Enabled:=true;
+
+  AssertTrue('habilitado', TControl(FBar).Enabled);
 end;
 
 procedure TTestHMITrackBar.TheTagValueMovesTheBar;
@@ -524,6 +545,21 @@ begin
   Settle;
 end;
 
+procedure TTestHMIScrollBar.EnablingARuntimeCreatedControlKeepsItEnabled;
+begin
+  //sem .lfm e sem codigo de seguranca: desabilitar e reabilitar tem que
+  //deixa-lo habilitado. A flag de seguranca nascia falsa, e o E logico
+  //com ela desabilitava o controle no primeiro Enabled:=true.
+  //with no .lfm and no security code: disabling and re-enabling has to
+  //leave it enabled. The security flag was born false, and the logical
+  //AND with it disabled the control on the first Enabled:=true.
+  FBar.Enabled:=false;
+
+  FBar.Enabled:=true;
+
+  AssertTrue('habilitado', TControl(FBar).Enabled);
+end;
+
 procedure TTestHMIScrollBar.TheTagValueMovesTheScrollBar;
 begin
   TagValueIs(42);
@@ -684,6 +720,21 @@ procedure TTestHMIUpDown.TagValueIs(v:Double);
 begin
   FTag.ChegouDoCLP(v);
   Settle;
+end;
+
+procedure TTestHMIUpDown.EnablingARuntimeCreatedControlKeepsItEnabled;
+begin
+  //sem .lfm e sem codigo de seguranca: desabilitar e reabilitar tem que
+  //deixa-lo habilitado. A flag de seguranca nascia falsa, e o E logico
+  //com ela desabilitava o controle no primeiro Enabled:=true.
+  //with no .lfm and no security code: disabling and re-enabling has to
+  //leave it enabled. The security flag was born false, and the logical
+  //AND with it disabled the control on the first Enabled:=true.
+  FUpDown.Enabled:=false;
+
+  FUpDown.Enabled:=true;
+
+  AssertTrue('habilitado', TControl(FUpDown).Enabled);
 end;
 
 procedure TTestHMIUpDown.TheIncrementIsKept;
