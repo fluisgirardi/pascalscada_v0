@@ -195,8 +195,18 @@ procedure EnableGroup(Group:TList; EnableGroup:Boolean);
 var
   i: Integer;
 begin
+  //atribui, nao mistura com o estado anterior: "Enabled and Mostrar" e' um
+  //trinco de uma via - uma vez desabilitado, o grupo nunca mais voltava. Na
+  //primeira montagem isso nao aparecia, porque os botoes nascem habilitados
+  //pelo LFM; aparecia no reaproveitamento da janela, quando o mesmo campo
+  //passa a pedir um grupo que antes tinha dispensado.
+  //assign, do not mix with the previous state: "Enabled and Show" is a one way
+  //latch - once disabled, the group never came back. It did not show on the
+  //first build, because the buttons come enabled from the LFM; it showed when
+  //the window is reused, when the same field starts asking for a group it had
+  //passed on before.
   for i:=0 to Group.Count-1 do begin
-    TSpeedButton(Group.Items[i]).Enabled:=TSpeedButton(Group.Items[i]).Enabled and EnableGroup;
+    TSpeedButton(Group.Items[i]).Enabled:=EnableGroup;
   end;
 end;
 
@@ -287,11 +297,17 @@ begin
   FNavigationKeyGroup.Add(Btn_Left);
   FNavigationKeyGroup.Add(Btn_Rigth);
 
-  Btn_Caps.Enabled:=Btn_Caps.Enabled and ShowCaps;
-  Btn_Tab.Enabled:=Btn_Tab.Enabled and ShowTab;
-  Btn_Shift.Enabled:=Btn_Shift.Enabled and ShowShift and ShowSymbols;
-  Btn_Ctrl.Enabled:=Btn_Ctrl.Enabled and ShowCtrl;
-  Btn_Alt.Enabled:=Btn_Alt.Enabled and ShowAlt;
+  //os mesmos dois caminhos dizendo a mesma coisa: aqui o "and" era inofensivo,
+  //porque os botoes nascem habilitados pelo LFM, mas deixar as duas formas
+  //lado a lado e' o que fazia o trinco passar despercebido no reaproveitamento.
+  //both paths saying the same thing: here the "and" was harmless, because the
+  //buttons come enabled from the LFM, but having the two forms side by side is
+  //what let the latch go unnoticed on the reuse path.
+  Btn_Caps.Enabled:=ShowCaps;
+  Btn_Tab.Enabled:=ShowTab;
+  Btn_Shift.Enabled:=ShowShift and ShowSymbols;
+  Btn_Ctrl.Enabled:=ShowCtrl;
+  Btn_Alt.Enabled:=ShowAlt;
 
   EnableGroup(FNavigationKeyGroup, ShowNavigation);
   EnableGroup(FFastNavigationKeyGroup, ShowFastNavigation);
@@ -311,11 +327,15 @@ begin
     LastAlphaKeyboard.ControlStyle:=LastAlphaKeyboard.ControlStyle+[csNoFocus];
     LastAlphaKeyboard.FFormOwner:=GetParentForm(Target);
 
-    LastAlphaKeyboard.Btn_Caps.Enabled :=LastAlphaKeyboard.Btn_Caps.Enabled and ShowCaps;
-    LastAlphaKeyboard.Btn_Tab.Enabled  :=LastAlphaKeyboard.Btn_Tab.Enabled and ShowTab;
-    LastAlphaKeyboard.Btn_Shift.Enabled:=LastAlphaKeyboard.Btn_Shift.Enabled and ShowShift and ShowSymbols;
-    LastAlphaKeyboard.Btn_Ctrl.Enabled :=LastAlphaKeyboard.Btn_Ctrl.Enabled and ShowCtrl;
-    LastAlphaKeyboard.Btn_Alt.Enabled  :=LastAlphaKeyboard.Btn_Alt.Enabled and ShowAlt;
+    //mesma correcao do EnableGroup: o estado anterior da janela nao entra na
+    //conta, so' o que esta' sendo pedido agora.
+    //same fix as in EnableGroup: the window's previous state does not take part,
+    //only what is being asked for now.
+    LastAlphaKeyboard.Btn_Caps.Enabled :=ShowCaps;
+    LastAlphaKeyboard.Btn_Tab.Enabled  :=ShowTab;
+    LastAlphaKeyboard.Btn_Shift.Enabled:=ShowShift and ShowSymbols;
+    LastAlphaKeyboard.Btn_Ctrl.Enabled :=ShowCtrl;
+    LastAlphaKeyboard.Btn_Alt.Enabled  :=ShowAlt;
 
     EnableGroup(LastAlphaKeyboard.FNavigationKeyGroup,     ShowNavigation);
     EnableGroup(LastAlphaKeyboard.FFastNavigationKeyGroup, ShowFastNavigation);
