@@ -657,11 +657,14 @@ begin
       break;
     end;
 
-  if Length({%H-}Values)>0 then
-    Result := ParameterValue(tagrec.Station,ParameterList[tagrec.Address].ParameterID,Values[0],dec)
-  else begin
-    Result := ioDriverError;
-  end;
+  //Values e' um parametro "out": chega sempre vazio, e testar o tamanho dele
+  //fazia a leitura sincrona - tag.Read - devolver ioDriverError sem nunca
+  //falar com o controlador. O que se le e' um valor so'.
+  //Values is an "out" parameter: it always arrives empty, and testing its
+  //length made the synchronous read - tag.Read - answer ioDriverError without
+  //ever talking to the controller. What is read is a single value.
+  SetLength({%H-}Values,1);
+  Result := ParameterValue(tagrec.Station,ParameterList[tagrec.Address].ParameterID,Values[0],dec);
 
   if foundplc then
     with FWestDevices[plc].Registers[tagrec.Address] do begin
@@ -826,58 +829,36 @@ end;
 
 function  TWestASCIIDriver.DoubleToWestAuto(var buffer:Array of Byte; const Value:Double):TProtocolIOResult;
 var
-   caso:BYTE;
-   numaux:Extended;
-   c:LongInt;
+   dec, c:LongInt;
+   n:Int64;
    aux:AnsiString;
 begin
-  caso:=255;
+  Result := ioIllegalValue;
+  if (Value>=10000) or (Value<=-10000) then exit;
 
-  if (Value>=10000) or (Value<=-10000) then begin
-    Result := ioIllegalValue;
-    exit;
-  end;
-
-  caso:=IfThen((Value>=1000) and (Value<10000),$30,caso);
-  caso:=IfThen((Value>=100) and (Value<1000),$31,caso);
-  caso:=IfThen((Value>=10) and (Value<100),$32,caso);
-  caso:=IfThen((Value>=0) and (Value<10),$33,caso);
-
-  caso:=IfThen((Value<=-1000) and (Value>-10000),$35,caso);
-  caso:=IfThen((Value<=-100) and (Value>-1000),$36,caso);
-  caso:=IfThen((Value<=-10) and (Value>-100),$37,caso);
-  caso:=IfThen((Value < 0) and (Value>-10),$38,caso);
-
-  case caso of
-    $30:
-      numaux := Value;
-    $31:
-      numaux := Value*10;
-    $32:
-      numaux := Value*100;
-    $33:
-      numaux := Value*1000;
-    $35:
-      numaux := Value*(-1);
-    $36:
-      numaux := Value*(-10);
-    $37:
-      numaux := Value*(-100);
-    $38:
-      numaux := Value*(-1000);
-    else begin
-      Result := ioIllegalValue;
+  //o maior numero de casas em que os quatro digitos, JA' ARREDONDADOS, ainda
+  //cabem. Antes as casas eram escolhidas pela grandeza do valor e o
+  //arredondamento vinha depois: 999.96 ganhava uma casa, virava "10000",
+  //perdia o quinto digito e ia como "1000" com uma casa - que o controlador
+  //le como 100.0.
+  //the most decimal places in which the four digits, ALREADY ROUNDED, still
+  //fit. Before, the places were chosen by the magnitude and the rounding came
+  //afterwards: 999.96 got one place, became "10000", lost the fifth digit and
+  //went as "1000" with one place - which the controller reads as 100.0.
+  for dec:=3 downto 0 do begin
+    n:=Round(Abs(Value)*IntPower(10,dec));
+    if n<=9999 then begin
+      aux := Format('%.4d',[n]);
+      for c:=0 to 3 do
+        buffer[c] := Ord(aux[1+c]);
+      if Value<0 then
+        buffer[4] := $35+dec
+      else
+        buffer[4] := $30+dec;
+      Result := ioOk;
       exit;
     end;
   end;
-
-   aux := FormatFloat('0000',Abs(numaux));
-
-   for c:=0 to 3 do
-      buffer[c] := StrToInt(aux[1+c])+48;
-
-   buffer[4] := caso;
-   Result := ioOk;
 end;
 
 function  TWestASCIIDriver.DoubleToWestManual(var buffer:Array of Byte; const Value:Double; const dec:BYTE):TProtocolIOResult;
@@ -932,10 +913,16 @@ begin
       end;
    end;
 
-   aux := FormatFloat('0000',Abs(numaux));
+   //arredondado, o valor pode passar a cinco digitos: nao cabe no quadro
+   //rounded, the value may reach five digits: it does not fit the frame
+   if Round(Abs(numaux))>9999 then begin
+      Result := ioIllegalValue;
+      exit;
+   end;
+   aux := Format('%.4d',[Round(Abs(numaux))]);
 
    for c:=0 to 3 do
-      buffer[c] := StrToInt(aux[1+c])+48;
+      buffer[c] := Ord(aux[1+c]);
 
    buffer[4] := caso;
    Result := ioOk;

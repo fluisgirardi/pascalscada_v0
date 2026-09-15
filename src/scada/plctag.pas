@@ -816,7 +816,18 @@ begin
     GetNewProtocolTagSize;
 
     if Self.PAutoRead then
-      P.AddTag(self);
+      try
+        P.AddTag(self);
+      except
+        //o driver recusou o tag (um driver que so' aceita numeros recebendo
+        //um texto, por exemplo): o tag nao pode ficar apontando para ele, ou
+        //o proprio Destroy tentaria se descadastrar e levantaria de novo.
+        //the driver refused the tag (a numbers-only driver given a string,
+        //for instance): the tag must not keep pointing at it, or its own
+        //Destroy would try to unregister and raise again.
+        PProtocolDriver := nil;
+        raise;
+      end;
   end;
 end;
 
