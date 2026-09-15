@@ -18,6 +18,12 @@ type
     procedure UpdateShape; override;
 
   published
+    //a altura do corpo e' a espessura desenhada da rosca; a fita e o redler ja'
+    //a publicavam e so' aqui ela ficava presa nos 12px do construtor.
+    //the body height is the drawn thickness of the screw; the belt and the
+    //redler already published it and only here was it stuck at the
+    //constructor's 12px.
+    property BodyHeight;
     property BorderColor;
     property BodyColor;
     property OnClick;
