@@ -61,6 +61,7 @@ type
                        ServerSocket:TSocket;
                        AddClientThread,
                        RemoveClientThread:TNotifyEvent);
+    destructor Destroy; override;
   end;
 
   { TSocketClientThread }
@@ -71,8 +72,11 @@ type
     FSocket:TSocket;
     FEnd:TCrossEvent;
     FRemoveClientThread:TNotifyEvent;
+    FExecuted,
+    FSocketClosed:Boolean;
     function WaitEnd(timeout:Cardinal): TWaitResult;
     procedure ClientFinished;
+    procedure CloseSocketIfNeverExecuted;
   protected
     procedure Execute; override;
     procedure ThreadLoop; virtual;
@@ -82,6 +86,7 @@ type
                        ClientSocket:TSocket;
                        ClientSockinfo:TSockAddr;
                        RemoveClientThread:TNotifyEvent); virtual;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -90,6 +95,11 @@ implementation
 
 function TSocketClientThread.WaitEnd(timeout: Cardinal): TWaitResult;
 begin
+  //sem o evento - ja' liberado por um Terminate anterior - nao ha' o que
+  //esperar
+  //with no event - already released by an earlier Terminate - there is
+  //nothing to wait for
+  if FEnd=nil then exit(wrSignaled);
   Result := FEnd.WaitFor(timeout);
 end;
 
@@ -101,10 +111,12 @@ end;
 
 procedure TSocketClientThread.Execute;
 begin
+  FExecuted:=true;
   ThreadLoop;
 
   //Close the socket.
   CloseSocket(FSocket);
+  FSocketClosed:=true;
 
   //remove the connection thread from the main thread list.
   Synchronize(@ClientFinished);
@@ -133,7 +145,30 @@ begin
   repeat
      CheckSynchronize(1);
   until (WaitEnd(1)=wrSignaled) or Finished;
-  FEnd.Destroy;
+  CloseSocketIfNeverExecuted;
+  //liberado e zerado: um segundo Terminate - ou o destrutor - encontra nil,
+  //nao um objeto morto
+  //released and cleared: a second Terminate - or the destructor - finds nil,
+  //not a dead object
+  FreeAndNil(FEnd);
+end;
+
+procedure TSocketClientThread.CloseSocketIfNeverExecuted;
+begin
+  //a RTL pula o Execute de uma thread criada suspensa que ja' esta'
+  //terminada quando enfim e' escalonada - e' o que acontece com um cliente
+  //que conecta no instante em que o servidor desliga. Sem o Execute, o
+  //socket aceito nao era fechado por ninguem e ficava aberto ate' o processo
+  //morrer, com o cliente do outro lado pendurado.
+  //the RTL skips Execute on a thread created suspended that is already
+  //terminated by the time it finally gets scheduled - which is what happens
+  //to a client connecting the instant the server shuts down. With no Execute
+  //the accepted socket was closed by nobody and stayed open until the process
+  //died, with the client on the other side left hanging.
+  if Finished and (not FExecuted) and (not FSocketClosed) then begin
+    CloseSocket(FSocket);
+    FSocketClosed:=true;
+  end;
 end;
 
 constructor TSocketClientThread.Create(CreateSuspended: Boolean;
@@ -145,13 +180,32 @@ begin
   FClientInfo         := ClientSockinfo;
   FEnd                := TCrossEvent.Create(true, false);
   FRemoveClientThread :=RemoveClientThread;
+  FExecuted           :=false;
+  FSocketClosed       :=false;
   FEnd.ResetEvent;
+end;
+
+destructor TSocketClientThread.Destroy;
+begin
+  //o TThread.Destroy termina e espera a thread, que ainda sinaliza o evento
+  //ao sair: o evento so' pode ir embora depois dele. E' o caminho de quem
+  //libera a thread sem passar pelo Terminate daqui, que era onde o evento
+  //ia embora - e ficava para tras.
+  //TThread.Destroy terminates and waits for the thread, which still signals
+  //the event on its way out: the event may only go after it. It is the path
+  //of whoever frees the thread without going through this unit's Terminate,
+  //which was where the event went - and was otherwise left behind.
+  inherited Destroy;
+  CloseSocketIfNeverExecuted;
+  FreeAndNil(FEnd);
 end;
 
 { TSocketAcceptThread }
 
 function TSocketAcceptThread.WaitEnd(timeout: Cardinal): TWaitResult;
 begin
+  //: @seealso(TSocketClientThread.WaitEnd)
+  if FEnd=nil then exit(wrSignaled);
   Result := FEnd.WaitFor(timeout);
 end;
 
@@ -210,7 +264,8 @@ begin
   repeat
      CheckSynchronize(1);
   until (WaitEnd(1)=wrSignaled) or Finished;
-  FEnd.Destroy;
+  //: @seealso(TSocketClientThread.Terminate)
+  FreeAndNil(FEnd);
 end;
 
 constructor TSocketAcceptThread.Create(CreateSuspended: Boolean;
@@ -223,6 +278,13 @@ begin
   FEnd                := TCrossEvent.Create(true, false);
 
   FEnd.ResetEvent;
+end;
+
+destructor TSocketAcceptThread.Destroy;
+begin
+  //: @seealso(TSocketClientThread.Destroy)
+  inherited Destroy;
+  FreeAndNil(FEnd);
 end;
 
 end.
