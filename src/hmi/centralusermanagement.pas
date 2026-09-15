@@ -503,6 +503,18 @@ begin
     Application.RemoveAllHandlersOfObject(Self);
   if Assigned(FValidatedSC) then
     FreeAndNil(FValidatedSC);
+  //os outros dois ficavam para tras: o FCachedAuthorizations e' criado a cada
+  //Logout e clonado a cada login, e o FRegisteredSC e' a lista de codigos que
+  //o servidor conhece, criada pelo SecurityCodeExists. No caminho normal -
+  //abrir a tela, logar, fechar a tela - sempre sobrava um de cada.
+  //the other two were left behind: FCachedAuthorizations is created on every
+  //Logout and cloned on every login, and FRegisteredSC is the list of codes the
+  //server knows, built by SecurityCodeExists. On the ordinary path - open the
+  //screen, log in, close the screen - one of each was left every time.
+  if Assigned(FCachedAuthorizations) then
+    FreeAndNil(FCachedAuthorizations);
+  if Assigned(FRegisteredSC) then
+    FreeAndNil(FRegisteredSC);
   inherited Destroy;
 end;
 

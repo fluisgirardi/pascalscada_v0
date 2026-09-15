@@ -22,6 +22,7 @@ uses
   //casos de teste / test cases
   //apoio aos testes / test support
   testsupport.faketag,
+  testsupport.httpstub,
   //casos de teste / test cases
   ut.usermanagement,
   ut.hmizones,
@@ -53,7 +54,8 @@ uses
   ut.crosskeyevents,
   ut.keyboardmanager,
   ut.numerickeyboard,
-  ut.alphakeyboard;
+  ut.alphakeyboard,
+  ut.centralusermanagement;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
