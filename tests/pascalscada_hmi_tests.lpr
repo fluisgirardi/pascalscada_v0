@@ -49,7 +49,8 @@ uses
   ut.smallcontrols,
   ut.hmiflowimage,
   ut.horizontalcontrols,
-  ut.animationtimers;
+  ut.animationtimers,
+  ut.crosskeyevents;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)

@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada_hmi"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="29">
+    <Units Count="30">
       <Unit0>
         <Filename Value="pascalscada_hmi_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -147,6 +147,10 @@
         <Filename Value="ut.animationtimers.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit28>
+      <Unit29>
+        <Filename Value="ut.crosskeyevents.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit29>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
