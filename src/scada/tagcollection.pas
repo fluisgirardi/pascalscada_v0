@@ -196,10 +196,16 @@ begin
   if Ftag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
 
+  //os avisos sao pedidos ao tag NOVO. Pedidos ao FTag, como eram, o primeiro
+  //tag de um item era um acesso a nil, e a troca deixava o antigo falando
+  //pelo item e o novo mudo.
+  //the notices are requested from the NEW tag. Requested from FTag, as they
+  //used to be, the first tag of an item was a nil access, and swapping left
+  //the old one speaking for the item and the new one silent.
   if t<>nil then begin
-    FTag.AddRemoveTagHandler(@RemoveTagCallBack);
-    FTag.AddWriteFaultHandler(@WriteFaultCallBack);
-    FTag.AddTagChangeHandler(@TagChangeCallBack);
+    t.AddRemoveTagHandler(@RemoveTagCallBack);
+    t.AddWriteFaultHandler(@WriteFaultCallBack);
+    t.AddTagChangeHandler(@TagChangeCallBack);
   end;
 
   FTag:=t;
@@ -243,8 +249,12 @@ end;
 
 procedure TTagCollectionItem.RemoveTagCallBack(Sender: TObject);
 begin
-  if FTag=sender then
+  //perder o tag e' uma mudanca no item tanto quanto ganhar um
+  //losing the tag is as much a change to the item as gaining one
+  if FTag=sender then begin
     FTag := nil;
+    NotifyChange;
+  end;
 end;
 
 function TTagCollectionItem.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};

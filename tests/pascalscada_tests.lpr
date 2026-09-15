@@ -48,7 +48,8 @@ uses
   ut.escalas,
   ut.protscanupdate,
   ut.plcstruct,
-  ut.mutex;
+  ut.mutex,
+  ut.tagcollection;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)
