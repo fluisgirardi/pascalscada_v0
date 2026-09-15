@@ -375,6 +375,9 @@ begin
   end;
   SetStyle(csDropDownList);
   FIsEnabled:=true;
+  //: @seealso(THMIBasicControl.Create) sobre a flag de seguranca nascer verdadeira
+  //: @seealso(THMIBasicControl.Create) on the security flag being born true
+  FIsEnabledBySecurity:=true;
   FAllowSetIndex:=false;
 
   FCommBadge:=THMICommBadgeController.Create;

@@ -437,6 +437,9 @@ begin
   FIsEnabled := inherited Enabled;
   FSend := [scLostFocus, scPressEnter];
   FIsEnabled:=true;
+  //: @seealso(THMIBasicControl.Create) sobre a flag de seguranca nascer verdadeira
+  //: @seealso(THMIBasicControl.Create) on the security flag being born true
+  FIsEnabledBySecurity:=true;
   if (csDesigning in ComponentState) then begin
     inherited Text := SWithoutTag;
     Modified := false;
