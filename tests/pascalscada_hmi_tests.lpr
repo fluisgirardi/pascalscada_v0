@@ -48,7 +48,8 @@ uses
   ut.hmicombobox,
   ut.smallcontrols,
   ut.hmiflowimage,
-  ut.horizontalcontrols;
+  ut.horizontalcontrols,
+  ut.animationtimers;
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
