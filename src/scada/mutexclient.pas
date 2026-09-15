@@ -168,6 +168,11 @@ var
 begin
   FEnd.ResetEvent;
   LastPingSent:=GetTickCount64;
+  //os case 20/21 saem do Execute com exit, e sem o finally ninguem sinaliza
+  //FEnd: quem chamou Disconnect fica esperando o fim para sempre.
+  //the 20/21 cases leave Execute through exit, and with no finally nobody
+  //signals FEnd: whoever called Disconnect waits for the end forever.
+  try
   while (not Terminated) AND (not Quit) do begin
     FSocketMutex.Enter;
     try
@@ -201,7 +206,14 @@ begin
 
     Sleep(1);
   end;
-  FEnd.SetEvent;
+  finally
+    //quem sai de cena sem avisar deixa o cliente achando que ainda tem conexao,
+    //e ai' ele nunca reconecta.
+    //whoever leaves without saying so leaves the client thinking it still has a
+    //connection, and then it never reconnects.
+    ConnectionIsGone;
+    FEnd.SetEvent;
+  end;
 end;
 
 procedure TMutexClientThread.DisconnectFromServer;
@@ -218,7 +230,13 @@ end;
 
 procedure TMutexClientThread.WaitEnd;
 begin
-  while not (FEnd.WaitFor(10)=wrSignaled) do
+  //Finished, que a RTL marca com o Execute tendo rodado ou nao, e' a saida para
+  //a thread criada suspensa que ja' estava terminada quando enfim foi escalonada
+  //- ver "if not(LThread.FTerminated)" em rtl/unix/tthread.inc.
+  //Finished, which the RTL sets whether Execute ran or not, is the way out for a
+  //thread created suspended that was already terminated by the time it finally
+  //got scheduled - see "if not(LThread.FTerminated)" in rtl/unix/tthread.inc.
+  while (FEnd.WaitFor(10)<>wrSignaled) and (not Finished) do
     CheckSynchronize();
 end;
 
@@ -369,6 +387,13 @@ begin
 
   if FConnected<>0 then exit;
 
+  //a thread de uma conexao que ja' caiu ainda pode estar aqui esperando quem a
+  //libere: a vez e' de quem chega agora.
+  //the thread of a connection that already dropped may still be here waiting for
+  //someone to free it: the turn belongs to whoever is arriving now.
+  if FConnectionStatusThread<>nil then
+    Disconnect;
+
   socketOpen:=false;
 
   try
@@ -463,8 +488,13 @@ begin
     end;
     FConnected:=1;
     FConnectionStatusThread:=TMutexClientThread.Create(true, FSocket);
-    FConnectionStatusThread.FreeOnTerminate:=true;
-    FConnectionStatusThread.OnTerminate:=@ConnectionFinished;
+    //a thread e' do cliente, nao dela mesma: com FreeOnTerminate a RTL decide
+    //liberar o objeto no meio do Disconnect e quem estava desligando acaba
+    //mexendo em memoria ja' devolvida.
+    //the thread belongs to the client, not to itself: with FreeOnTerminate the
+    //RTL decides to free the object in the middle of Disconnect and whoever was
+    //shutting down ends up touching memory already given back.
+    FConnectionStatusThread.FreeOnTerminate:=false;
     FConnectionStatusThread.onConnectionBroken:=@ConnectionFinished;
     FConnectionStatusThread.onServerHasBeenFinished:=@ConnectionFinished;
 
@@ -481,17 +511,21 @@ procedure TMutexClient.Disconnect;
 var
   threadinstance: TMutexClientThread;
 begin
+  threadinstance:=FConnectionStatusThread;
+  FConnectionStatusThread:=nil;
+
+  if threadinstance<>nil then begin
+    //avisar o servidor so' faz sentido enquanto a thread ainda roda; se ela ja'
+    //acabou sozinha, o que falta e' liberar o objeto.
+    //telling the server only makes sense while the thread is still running; if
+    //it already ended on its own, what is left is freeing the object.
+    if not threadinstance.Finished then
+      threadinstance.DisconnectFromServer;
+    threadinstance.WaitEnd;
+    threadinstance.Free;
+  end;
+
   if FConnected<>0 then begin
-    if FConnectionStatusThread<>nil then begin
-      threadinstance:=FConnectionStatusThread;
-      with threadinstance do begin
-        FreeOnTerminate:=false;
-        DisconnectFromServer;
-        WaitEnd;
-        Destroy;
-      end;
-    end;
-    FConnectionStatusThread:=nil;
     CloseSocket(FSocket);
     FConnected:=0;
   end;
@@ -573,8 +607,15 @@ end;
 
 procedure TMutexClient.ConnectionFinished(Sender: TObject);
 begin
+  //sem a guarda, a segunda chamada fecha o descritor 0 - a entrada padrao do
+  //processo - porque FSocket ja' foi zerado na primeira. E a referencia da
+  //thread fica: e' o Disconnect que libera o objeto.
+  //without the guard, the second call closes descriptor 0 - the process's own
+  //standard input - because FSocket was already zeroed by the first. And the
+  //thread reference stays: freeing the object is up to Disconnect.
+  if InterLockedExchange(FConnected,0)=0 then exit;
+
   CloseSocket(FSocket);
-  InterLockedExchange(FConnected,0);
 
   //TSocket 32 bits sized
   {$IF sizeof(TSocket)=4}
@@ -584,8 +625,6 @@ begin
   {$IF sizeof(TSocket)=8}
   InterLockedExchange64(Int64(FSocket), 0);
   {$IFEND}
-
-  InterlockedExchangePointer(Pointer(FConnectionStatusThread),nil);
 end;
 
 {$IFDEF FPC}
