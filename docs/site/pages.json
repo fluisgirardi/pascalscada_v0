@@ -242,6 +242,19 @@
         "after": "protocol-drivers"
       },
       "menu_item": 1105
+    },
+    {
+      "slug": "expressions-in-properties",
+      "id": null,
+      "title": {
+        "en": "Expressions in the Object Inspector",
+        "pb": "Expressões no Object Inspector"
+      },
+      "menu": {
+        "parent": 170,
+        "after": "tags"
+      },
+      "menu_item": null
     }
   ],
   "menu_parents": {
