@@ -197,6 +197,9 @@ type
       procedure DoUp(Key: LongWord); override;
       //: @seealso(TCrossKeyEvents.TranlateVirtualKey)
       function TranlateVirtualKey(Key: Word): LongWord; override;
+      //: Traduz o codigo da tecla virtual no caractere do WM_CHAR.
+      //: Translates the virtual-key code into the WM_CHAR character.
+      function KeyToChar(Key: LongWord): LongWord;
       procedure Apply(Shift: TShiftState); override;
       procedure Unapply(Shift: TShiftState); override;
   public
@@ -1299,16 +1302,53 @@ end;
 {$IFEND}
 
 {$IF defined(LCLwin32) OR (not defined(FPC))}
-procedure TWindowsKeyEvents.DoDown(Key: LongWord);
+function TWindowsKeyEvents.KeyToChar(Key: LongWord): LongWord;
 begin
-  if (Key in [VK_A..VK_Z]) and (FShitfState = []) then
-    Key := Key+32;
+  //o WM_CHAR leva o caractere, nao o codigo da tecla virtual: para letras e
+  //digitos os dois coincidem, mas o teclado numerico, o sinal e o separador
+  //decimal precisam ser traduzidos - senao saem 'g', 'm' e '¾' no lugar de
+  //'7', '-' e '.'
+  //WM_CHAR carries the character, not the virtual-key code: for letters and
+  //digits the two coincide, but the numeric keypad, the minus sign and the
+  //decimal separator have to be translated - otherwise 'g', 'm' and '¾'
+  //come out instead of '7', '-' and '.'
+  case Key of
+    VK_A..VK_Z:
+      if ssShift in FShitfState then
+        Result := Key
+      else
+        Result := Key+32;
+    VK_0..VK_9, VK_SPACE, VK_RETURN, VK_BACK, VK_TAB, VK_ESCAPE:
+      Result := Key;
+    VK_NUMPAD0..VK_NUMPAD9:
+      Result := Key-VK_NUMPAD0+Ord('0');
+    VK_DECIMAL:
+      Result := Ord(DefaultFormatSettings.DecimalSeparator);
+    VK_OEM_PERIOD:
+      Result := Ord('.');
+    VK_OEM_COMMA:
+      Result := Ord(',');
+    VK_SUBTRACT, VK_OEM_MINUS:
+      Result := Ord('-');
+    VK_ADD, VK_OEM_PLUS:
+      Result := Ord('+');
+    VK_MULTIPLY:
+      Result := Ord('*');
+    VK_DIVIDE:
+      Result := Ord('/');
+  else
+    Result := 0;
+  end;
+end;
 
+procedure TWindowsKeyEvents.DoDown(Key: LongWord);
+var
+  ch:LongWord;
+begin
   SendMessage(FTarget.Handle,WM_KEYDOWN,Key,0);
-  if (Key<>VK_DELETE) then
-    SendMessage(FTarget.Handle,WM_CHAR,Key,0);
-  //if (Key<>VK_DELETE) AND (Key in [VK_0..VK_9,PSVK_DECIMAL,PSVK_BACK,PSVK_SUBTRACT]) then
-  //  SendMessage(FTarget.Handle,WM_CHAR,Key,0);
+  ch:=KeyToChar(Key);
+  if ch<>0 then
+    SendMessage(FTarget.Handle,WM_CHAR,ch,0);
 end;
 
 procedure TWindowsKeyEvents.DoUp(Key: LongWord);
