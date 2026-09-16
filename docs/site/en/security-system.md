@@ -33,7 +33,7 @@ Properties and events available on every user manager:
 | `UserLogged`, `CurrentUserLogin`, `CurrentUserName`, `UID`, `LoggedSince` | State of the current login (read-only). |
 | `LoginRetries` | Password attempts before the dialog freezes (0 = never freezes). |
 | `LoginFrozenTime` | Freeze time, in ms. |
-| `ChipCardReader` | Card/RFID reader for password-less login — see [RFID reader login](/rfid-reader/). |
+| `ChipCardReader` | Card/RFID reader for password-less login — see [RFID card login](#rfid). |
 | `SuccessfulLogin`, `FailureLogin` | Events for successful and failed logins (for auditing, e.g. with the [event logger](/event-and-alarm-loggers/)). |
 | `UserChanged` | `(Sender, OldUsername, NewUserName)` event fired on login and logout. |
 
@@ -109,7 +109,7 @@ Since WinCC identifies authorizations by number (1 = *User administration*, 2 = 
 
 A WinCC user holding authorization 2 has access to every control with `SecurityCode = "setpoints"`. Codes not in the list are rejected.
 
-##### Security actions
+##### Security actions {#actions}
 
 On the **PascalSCADA User Management** tab of the `TActionList` editor (*New standard action*) there are six ready-made actions to hook to buttons, menu items and toolbars:
 
@@ -123,6 +123,46 @@ On the **PascalSCADA User Management** tab of the `TActionList` editor (*New sta
 | `TPascalSCADACheckSpecialTokenAction` | **Supervisor signature**: on execution, if the logged-in user lacks the `SecurityCode` (or always, with `RequireLoginAlways = True`), it opens a dialog asking for the user and password of **another** user who has the code. Only then does it fire `OnExecute`; the login of whoever authorized it is left in `AuthorizedBy` for you to record in the log. The logged-in user does not change. |
 
 The action's `Hint` is shown in the signature dialog as the explanation of what is being authorized.
+
+##### RFID card login {#rfid}
+
+Besides user and password, the login dialog accepts an **RFID card**: the operator holds the card to the reader and is in, without typing anything. Two parts make it work — a reader component linked to the user manager's **`ChipCardReader`** property, and the event that validates the card code.
+
+The ready-made reader is `TSycRFIDReader`, from the **`pascalscada_externallibs_hmi`** package (*PascalSCADA User Management* palette), for the **Sycreader** 125 kHz/13.56 MHz USB readers — the inexpensive readers that present themselves to the system as a keyboard and "type" the card number. Since the reader is read through `libhidapi` straight from the HID device, it **no longer** types into the system: the code goes to PascalSCADA only. Before using it:
+
+1. **Linux and FreeBSD only** (macOS should work, untested). It does not work on Windows — do not even install the package there.
+2. Install the library: `sudo apt install libhidapi-dev` (Debian/Ubuntu/Mint). The package links against `hidapi-libusb`; without it Lazarus will not start after the package is installed.
+3. Copy `src/external_libs_hmi/99-zzzrfid.rules` to `/etc/udev/rules.d/` and plug the reader again. The rule detaches the reader from the keyboard driver (`usbhid`) and grants any user access to the device. Without it the reader keeps typing the code into whatever field has focus and `TSycRFIDReader` cannot open it.
+4. Install the `pascalscada_externallibs_hmi.lpk` package in Lazarus.
+
+`TSycRFIDReader` properties:
+
+| Property | Default | Description |
+|---|---|---|
+| `VendorID` | `$FFFF` | USB VID of the reader. |
+| `ProductID` | `$0035` | USB PID of the reader. |
+| `SerialNumber` | empty | Serial number, to pick a specific reader when there is more than one. |
+
+The defaults are those of the Sycreader *SYC ID&IC USB Reader*; check yours with `lsusb`. Any other HID reader that sends the code as keystrokes followed by Enter also works, adjusting VID/PID and the udev rule.
+
+To wire it up:
+
+1. Drop a `TSycRFIDReader` on the form and point your user manager's `ChipCardReader` to it.
+2. On the `TCustomizedUserManagement`, implement **`OnCheckUserChipCard`**:
+
+```pascal
+procedure TForm1.UserManagementCheckUserChipCard(aChipCardCode: UTF8String;
+  var userlogin: UTF8String; var UserID: Integer; var ValidChipCard: Boolean;
+  LoginAction: Boolean);
+begin
+  // aChipCardCode is the number printed/stored on the card, as text
+  ValidChipCard := Users.FindByCard(aChipCardCode, userlogin, UserID);
+end;
+```
+
+The login dialog flow becomes: if a card is sitting on the reader, the warning *"Remove the card from the reader to continue"* shows; with the reader empty, the dialog opens and listens — the operator may type user and password **or** hold the card. A card read closes the dialog, calls `OnCheckUserChipCard` and, if valid, logs in with the returned `userlogin`/`UserID`. The [supervisor signature](#actions) (`TPascalSCADACheckSpecialTokenAction`) accepts cards too.
+
+For another kind of reader (serial, TCP, NFC), derive from `TChipCardReader` (unit `ChipCardReader`) and implement `InitializeChipCard`, `ChipCardReady`, `IsEmptyChipCard`, `ChipCardRead` and `FinishChipCard`; the user manager does not know which reader is behind it.
 
 ##### Step by step
 
@@ -143,3 +183,10 @@ if GetControlSecurityManager.CanAccess('recipes') then
 
 GetControlSecurityManager.TryAccess('maintenance');  // exception if not allowed
 ```
+
+##### Related examples
+
+* `examples/laz_custom_user_management` — a minimal `TCustomizedUserManagement` with three hard-coded users, `TPascalSCADASecureAction` on menus and `THMIEdit`s with `SecurityCode`.
+* `examples/laz_customusermanagement` — a complete implementation: users, groups and permissions in PostgreSQL, with every management screen.
+* `examples/laz_security_webserver_WinCC` — an HTTP server exposing `TWinCCUserManagement` to the network, and the `TCentralUserManagement` client in the `client` folder.
+* `examples/laz_user_management_with_WinCC` — `TWinCCUserManagement` used directly, with `AuthorizationList`.

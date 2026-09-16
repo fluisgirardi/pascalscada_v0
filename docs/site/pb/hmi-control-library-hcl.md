@@ -167,4 +167,16 @@ Uma tela mínima para um motor: estado, velocidade e comando.
 
 Sem uma linha de código, a tela mostra o estado, a velocidade, aceita o setpoint dentro da faixa, liga e desliga o motor e colore a forma — e tudo isso fica desabilitado para um usuário sem o código `operacao`.
 
+
+##### Exemplos relacionados
+
+* `examples/laz_weg_twp03_full_project` — projeto completo de supervisão de um CLP WEG TPW03 por Modbus RTU: `THMIEdit`, `THMICheckBox`, `THMILabel` e blocos em telas reais.
+* `examples/both_modbus_rtu_corn_weigh` — sinótico de pesagem com `THMIAnimation`, `THMIText`, `TTagBit` e blocos (Lazarus e Delphi).
+* `examples/laz_modbus_tcp_example` — `THMIEdit`, `THMICheckBox`, `THMIText` e `THMILabel` sobre um bloco Modbus TCP.
+* `examples/laz_comm_fault_control_icon_test` — o selo de falha de comunicação em cada tipo de controle.
+* `examples/laz_isotcp_hourmeter` — `THMIAnimation` com `TImageList` e zonas piscando.
+* `examples/hmi_bandeja` — `THMIBandeja` com cores e texto vindos do CLP.
+* `examples/hmi_flowvectorcontrol` e `examples/laz_svg_example` — `THMIFlowVectorControl` recolorindo elementos de um SVG por zona (veja [Controles de fluxo](/pb/flow-controls/)).
+* `examples/laz_numericexpr` — `THMITrackBar` e `THMILabel` em volta de um `TNumericExprTag`.
+
 Outras páginas da HCl: [Controles de fluxo](/pb/flow-controls/), [Registradores de eventos e alarmes](/pb/event-and-alarm-loggers/), [Teclado virtual](/pb/keyboard-manager/) e [Sistema de segurança](/pb/security-system/).

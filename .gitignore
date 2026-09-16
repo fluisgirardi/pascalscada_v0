@@ -60,3 +60,5 @@ examples/**/link*.res
 /examples/laz_weg_twp03_full_project/lazarus_proj/TPW03
 /examples/laz_west6100_plus_demonstration/west
 /examples/teste_individuais/teste_individuais
+docs/site/build/
+__pycache__/

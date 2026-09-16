@@ -32,6 +32,8 @@ Usage:
     tools/publish_docs.py --import slug [...]       reverse path: download the live page in both
                                                     languages and write docs/site/<lang>/<slug>.md
                                                     (existing .md files are kept unless --force)
+    tools/publish_docs.py --history slug            list the WordPress revisions of the page (needs credentials)
+    tools/publish_docs.py --import --revision ID slug   import the text stored in that revision instead of the live page
 """
 import argparse
 import base64
@@ -138,14 +140,23 @@ def qtx(parts):
     return "".join(f"[:{lang}]{text}" for lang, text in parts.items()) + "[:]"
 
 
-def render_page(page, langs, cache, upload):
+def link_examples(md, base):
+    """`examples/<name>` in backticks -> link to the example folder on GitHub."""
+    if not base:
+        return md
+    return re.sub(r"`examples/([A-Za-z0-9_\-]+)((?:/[^`]*)?)`",
+                  lambda m: f"[`examples/{m.group(1)}{m.group(2)}`]({base}{m.group(1)})", md)
+
+
+def render_page(page, langs, cache, upload, examples_base=None):
     """Returns (title_qtx, content_qtx, per-language html) or None if Markdown is missing."""
     htmls = {}
     for lang in langs:
         src = SITE / lang / f"{page['slug']}.md"
         if not src.exists():
             return None
-        htmls[lang] = resolve_images(md_to_html(src.read_text(encoding="utf-8")), cache, upload)
+        md = link_examples(src.read_text(encoding="utf-8"), examples_base)
+        htmls[lang] = resolve_images(md_to_html(md), cache, upload)
     title = qtx({lang: page["title"][lang] for lang in langs})
     return title, qtx(htmls), htmls
 
@@ -215,6 +226,32 @@ def fetch_rendered(page_id, lang):
     return d["title"]["rendered"], d["content"]["rendered"]
 
 
+def split_qtx(raw):
+    """Splits a qTranslate-XT string ([:en]...[:pb]...[:]) into {lang: text}."""
+    parts = {}
+    for m in re.finditer(r"\[:([a-z]{2})\](.*?)(?=\[:[a-z]{2}\]|\[:\]|$)", raw, re.S):
+        parts[m.group(1)] = m.group(2)
+    return parts or {"en": raw}
+
+
+def list_revisions(page_id):
+    revs = wp_get(f"/pages/{page_id}/revisions", context="edit", per_page=100)
+    for r in revs:
+        parts = split_qtx(r["content"]["raw"])
+        sizes = ", ".join(f"{lang} {len(strip_tags(t).strip())} chars" for lang, t in sorted(parts.items()))
+        print(f"  revision {r['id']:>6}  {r['modified'][:16]}  {sizes}")
+    if not revs:
+        print("  no revisions stored")
+
+
+def fetch_revision(page_id, revision_id, lang):
+    r = wp_get(f"/pages/{page_id}/revisions/{revision_id}", context="edit")
+    parts = split_qtx(r["content"]["raw"])
+    if lang not in parts:
+        die(f"revision {revision_id} has no [:{lang}] block (has: {', '.join(parts)})")
+    return r["title"]["raw"], parts[lang]
+
+
 def html_to_markdown(html_text):
     """WordPress HTML -> Markdown in the conventions of docs/site (##### headings, anchors kept)."""
     import html2text
@@ -276,13 +313,16 @@ def html_to_markdown(html_text):
     return md
 
 
-def import_page(page, langs, force):
+def import_page(page, langs, force, revision=None):
     for lang in langs:
         dst = SITE / lang / f"{page['slug']}.md"
         if dst.exists() and not force:
             print(f"  {lang}: {dst.relative_to(ROOT)} exists, kept (use --force to overwrite)")
             continue
-        title, html_text = fetch_rendered(page["id"], lang)
+        if revision:
+            title, html_text = fetch_revision(page["id"], revision, lang)
+        else:
+            title, html_text = fetch_rendered(page["id"], lang)
         md = html_to_markdown(html_text)
         dst.write_text(md, encoding="utf-8")
         print(f"  {lang}: wrote {dst.relative_to(ROOT)} ({len(md)} chars) — title on site: {html.unescape(title)}")
@@ -355,6 +395,8 @@ def main():
     ap.add_argument("--menu", action="store_true", help="only add/reposition the page's Documentation menu item")
     ap.add_argument("--import", dest="do_import", action="store_true", help="download the live page (both languages) into docs/site/<lang>/<slug>.md")
     ap.add_argument("--force", action="store_true", help="with --import: overwrite existing .md files")
+    ap.add_argument("--history", action="store_true", help="list the WordPress revisions of the page (needs credentials)")
+    ap.add_argument("--revision", type=int, default=None, help="with --import: take the text from this revision id")
     args = ap.parse_args()
 
     manifest = load_manifest()
@@ -378,11 +420,17 @@ def main():
 
     for page in selected:
         print(f"== {page['slug']} (id {page['id']})")
+        if args.history:
+            if page["id"] is None:
+                print("  not on the site yet")
+            else:
+                list_revisions(page["id"])
+            continue
         if args.do_import:
             if page["id"] is None:
                 print("  not on the site yet, nothing to import")
             else:
-                import_page(page, langs, args.force)
+                import_page(page, langs, args.force, args.revision)
             continue
         if args.menu:
             if not page.get("menu"):
@@ -390,7 +438,7 @@ def main():
             else:
                 ensure_menu_item(page, manifest)
             continue
-        rendered = render_page(page, langs, cache, upload)
+        rendered = render_page(page, langs, cache, upload, manifest.get("examples_base"))
         if rendered is None:
             print("  skipped: Markdown missing for one of the languages")
             continue

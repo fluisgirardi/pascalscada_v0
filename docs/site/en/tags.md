@@ -252,3 +252,12 @@ end;
 ```
 
 Link `ProtocolDriver` after setting the address: when it receives the driver, the tag registers itself in the driver's scan with the address it has at that moment. To remove it, just `t.Free` — the tag unregisters from the driver and from the controls linked to it.
+
+##### Related examples
+
+* `examples/TagTypes` — the same Modbus block read with every `TagType` (`pttByte` to `pttDouble`) and the `SwapBytes`/`SwapWords` combinations, with `TPLCBlockElement` and `TPLCStructItem` side by side; the best place to see the effect of each type.
+* `examples/laz_isotcp_mapping_bits_from_other_tag` — one `pttByte` `TPLCTagNumber` and one `TTagBit` per bit.
+* `examples/laz_numericexpr` — `TNumericExprTag` adding two tags driven by `THMITrackBar`s.
+* `examples/laz_modbus_tcp_example` — `TPLCBlock` + `TPLCBlockElement`, `TPLCTagNumber` and input controls over Modbus TCP.
+* `examples/laz_console_app` — tags and a Modbus TCP driver in a console application, without the LCL (a datamodule and no forms).
+* `examples/hmi_bandeja` — `TPLCStruct` with `TPLCStructItem` and `TPLCStructString` mapping a Siemens DB.

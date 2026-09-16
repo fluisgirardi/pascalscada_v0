@@ -1,5 +1,5 @@
 {
-  "_comment": "Manifest of www.pascalscada.com documentation pages. 'id' is the WordPress page ID (null = not created yet). Each entry has one Markdown file per language under docs/site/<lang>/<slug>.md. qTranslate-XT language codes: en, pb. 'menu' says where a NEW page goes in the site's Documentation menu: parent is the id of the parent menu item (170 = 'How to use', 908 = 'Protocol drivers'), 'after' the slug it follows; 'menu_item' is filled by the publisher once the item is created.",
+  "_comment": "Manifest of www.pascalscada.com documentation pages. 'id' is the WordPress page ID (null = not created yet). Each entry has one Markdown file per language under docs/site/<lang>/<slug>.md. qTranslate-XT language codes: en, pb. 'menu' says where a NEW page goes in the site's Documentation menu: parent is the id of the parent menu item (170 = 'How to use', 908 = 'Protocol drivers'), 'after' the slug it follows; 'menu_item' is filled by the publisher once the item is created. Any `examples/<name>` in backticks in the Markdown is turned into a link to examples_base + <name> by the publisher.",
   "languages": [
     "en",
     "pb"
@@ -229,23 +229,11 @@
         "after": "flow-controls"
       },
       "menu_item": null
-    },
-    {
-      "slug": "rfid-reader",
-      "id": null,
-      "title": {
-        "en": "RFID reader login",
-        "pb": "Login por leitor RFID"
-      },
-      "menu": {
-        "parent": 170,
-        "after": "security-system"
-      },
-      "menu_item": null
     }
   ],
   "menu_parents": {
     "how-to-use": 170,
     "protocol-drivers": 908
-  }
+  },
+  "examples_base": "https://github.com/fluisgirardi/pascalscada_v0/tree/master/examples/"
 }

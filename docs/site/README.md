@@ -22,6 +22,9 @@ Conventions for the Markdown:
   `##### TPLCTagNumber {#TPLCTagNumber}` → `/tags/#TPLCTagNumber`.
 * Internal links are site-relative: `/scale-processors/` in `en`,
   `/pb/scale-processors/` in `pb`.
+* Write `` `examples/<name>` `` (in backticks) to cite an example: the publisher turns it into a
+  link to `examples_base` + `<name>` from `pages.json` (the GitHub folder). End every page with a
+  "Related examples" section.
 * Component icons already in the Media Library are referenced by their
   `http://www.pascalscada.com/wp-content/uploads/...` URL; new ones go in
   `img/` (copied from `artwork/24x24png/`) and are uploaded on first publish.
