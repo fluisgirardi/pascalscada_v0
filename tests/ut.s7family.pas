@@ -32,8 +32,8 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  commtypes, s7types, s7family,
-  testsupport.bytes;
+  commtypes, s7types, s7family, ISOTCPDriver, ProtocolTypes, Tag,
+  testsupport.bytes, testsupport.fakeport;
 
 type
 
@@ -57,6 +57,50 @@ type
     procedure PutData(var aMsg:BYTES; const aData:BYTES);
     function  ReadPDU(var aMsg:BYTES; out aPDU:TPDU; out aError:Integer):Boolean;
     function  Swap(aWord:Word):Word;
+  end;
+
+
+  { TS7PortProbe }
+
+  //um driver ISOTCP concreto (o s7family e' abstrato: quem implementa o
+  //transporte e' o ISOTCP) com a varredura desligada e DoRead/DoWrite abertos,
+  //tomando as secoes criticas como Read/Write da base fariam
+  //a concrete ISOTCP driver (s7family is abstract: the ISOTCP is what
+  //implements the transport) with the scan off and DoRead/DoWrite exposed,
+  //taking the critical sections as the base's Read/Write would
+  TS7PortProbe = class(TISOTCPDriver)
+  protected
+    procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
+  public
+    function ReadDB(aDBNum, aAddress, aSize:LongInt; out aValues:TArrayOfDouble):TProtocolIOResult;
+    function WriteDB(aDBNum, aAddress:LongInt; const aValues:array of Double):TProtocolIOResult;
+  end;
+
+  { TTestS7ReadWriteOverAPort }
+
+  //o caminho inteiro do s7family pela porta de mentira: conecta (ISO connect +
+  //negociacao de PDU), le e escreve DBs
+  //the whole s7family path through the fake port: it connects (ISO connect +
+  //PDU negotiation), reads and writes DBs
+  TTestS7ReadWriteOverAPort = class(TTestCase)
+  private
+    FPort:TFakeCommPort;
+    FDrv:TS7PortProbe;
+    procedure QueueConnectAndNegotiate;
+    procedure QueueReadReply(aRetCode:Byte; const aData:array of Byte);
+    procedure QueueWriteReply(aRetCode:Byte);
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure AReadConnectsNegotiatesThenReturnsTheBytes;
+    procedure TheConnectionAndNegotiationHappenOnlyOnce;
+    procedure TheReadRequestAsksForTheFunctionAndDb;
+    procedure APlcErrorOnReadBecomesAProtocolResult;
+    procedure WithNoNegotiationTheReadFails;
+    procedure AWriteSendsTheValuesAndSucceeds;
+    procedure TheWriteRequestCarriesTheDataBytes;
+    procedure APlcErrorOnWriteBecomesAProtocolResult;
   end;
 
   { TTestS7Family }
@@ -540,8 +584,259 @@ begin
                    msg);
 end;
 
+
+{ TS7PortProbe }
+
+procedure TS7PortProbe.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
+begin
+  NeedSleep:=500;
+end;
+
+function TS7PortProbe.ReadDB(aDBNum, aAddress, aSize:LongInt; out aValues:TArrayOfDouble):TProtocolIOResult;
+var
+  tr:TTagRec;
+begin
+  FillChar(tr, SizeOf(tr), 0);
+  tr.ReadFunction:=4; //DB
+  tr.File_DB:=aDBNum;
+  tr.Address:=aAddress;
+  tr.Size:=aSize;
+  FWriteCS.Enter;
+  FReadCS.Enter;
+  try
+    Result:=DoRead(tr, aValues, true);
+  finally
+    FReadCS.Leave;
+    FWriteCS.Leave;
+  end;
+end;
+
+function TS7PortProbe.WriteDB(aDBNum, aAddress:LongInt; const aValues:array of Double):TProtocolIOResult;
+var
+  tr:TTagRec;
+  v:TArrayOfDouble;
+  i:Integer;
+begin
+  FillChar(tr, SizeOf(tr), 0);
+  tr.ReadFunction:=4;
+  tr.File_DB:=aDBNum;
+  tr.Address:=aAddress;
+  tr.Size:=Length(aValues);
+  SetLength(v, Length(aValues));
+  for i:=0 to High(aValues) do v[i]:=aValues[i];
+  FWriteCS.Enter;
+  FReadCS.Enter;
+  try
+    Result:=DoWrite(tr, v, true);
+  finally
+    FReadCS.Leave;
+    FWriteCS.Leave;
+  end;
+end;
+
+{ TTestS7ReadWriteOverAPort }
+
+//: verdadeiro se o quadro contem o byte dado / true if the frame holds the byte
+function HasByte(const aFrame:BYTES; aByte:Byte):Boolean;
+var
+  i:Integer;
+begin
+  Result:=false;
+  for i:=0 to High(aFrame) do
+    if aFrame[i]=aByte then
+      exit(true);
+end;
+
+procedure TTestS7ReadWriteOverAPort.SetUp;
+begin
+  FPort:=TFakeCommPort.Create(nil);
+  FPort.Active:=true;
+  FDrv:=TS7PortProbe.Create(nil);
+  FDrv.CommunicationPort:=FPort;
+end;
+
+procedure TTestS7ReadWriteOverAPort.TearDown;
+begin
+  FreeAndNil(FDrv);
+  FreeAndNil(FPort);
+end;
+
+procedure TTestS7ReadWriteOverAPort.QueueConnectAndNegotiate;
+begin
+  //COTP Connect Confirm (22 bytes) e a resposta da negociacao dizendo PDU 240
+  //COTP Connect Confirm (22 bytes) and the negotiation reply saying PDU 240
+  FPort.QueueResponse(BytesOf('03 00 00 16 11 D0 00 01 00 01 00 C0 01 0A C1 02 01 00 C2 02 01 02'));
+  FPort.QueueResponse(BytesOf('03 00 00 1B 02 F0 80 32 03 00 00 00 00 00 08 00 00 00 00 F0 00 00 01 00 01 00 F0'));
+end;
+
+procedure TTestS7ReadWriteOverAPort.QueueReadReply(aRetCode:Byte; const aData:array of Byte);
+var
+  s7, frame:BYTES;
+  i, datalen, total:Integer;
+begin
+  //cabecalho S7 tipo 3 (12 bytes: P,tipo,a,b, number, param_len, data_len,
+  //error), parametro "leitura, 1 item", e o item de dado: codigo de retorno e,
+  //se sucesso, transporte 4 (bits), o tamanho em bits e os bytes
+  //S7 type-3 header (12 bytes: P,type,a,b, number, param_len, data_len,
+  //error), "read, 1 item" parameter, and the data item: return code and, on
+  //success, transport 4 (bits), the size in bits and the bytes
+  if aRetCode=$FF then
+    datalen:=4+Length(aData)
+  else
+    datalen:=1;
+  SetLength(s7, 12+2+datalen);
+  s7[0]:=$32; s7[1]:=$03;                          //P, tipo 3
+  s7[6]:=0;  s7[7]:=2;                             //param_len = 2 (big endian)
+  s7[8]:=Hi(Word(datalen)); s7[9]:=Lo(Word(datalen)); //data_len (big endian)
+  s7[12]:=$04; s7[13]:=$01;                        //param: read, 1 item
+  s7[14]:=aRetCode;
+  if aRetCode=$FF then begin
+    s7[15]:=$04;                                   //transporte 4 (bits)
+    s7[16]:=Hi(Word(Length(aData)*8)); s7[17]:=Lo(Word(Length(aData)*8));
+    for i:=0 to High(aData) do s7[18+i]:=aData[i];
+  end;
+  total:=7+Length(s7);
+  SetLength(frame, total);
+  frame[0]:=$03; frame[1]:=0; frame[2]:=Hi(Word(total)); frame[3]:=Lo(Word(total));
+  frame[4]:=$02; frame[5]:=$F0; frame[6]:=$80;
+  Move(s7[0], frame[7], Length(s7));
+  FPort.QueueResponse(frame);
+end;
+
+procedure TTestS7ReadWriteOverAPort.QueueWriteReply(aRetCode:Byte);
+var
+  s7, frame:BYTES;
+  total:Integer;
+begin
+  //resposta de escrita: parametro "escrita, 1 item" e um byte de status
+  //write reply: "write, 1 item" parameter and one status byte
+  SetLength(s7, 12+2+1);
+  s7[0]:=$32; s7[1]:=$03;   //P, tipo 3
+  s7[6]:=0; s7[7]:=2;       //param_len = 2 (big endian)
+  s7[8]:=0; s7[9]:=1;       //data_len = 1 (big endian)
+  s7[12]:=$05; s7[13]:=$01; //param: write, 1 item
+  s7[14]:=aRetCode;         //status
+  total:=7+Length(s7);
+  SetLength(frame, total);
+  frame[0]:=$03; frame[1]:=0; frame[2]:=Hi(Word(total)); frame[3]:=Lo(Word(total));
+  frame[4]:=$02; frame[5]:=$F0; frame[6]:=$80;
+  Move(s7[0], frame[7], Length(s7));
+  FPort.QueueResponse(frame);
+end;
+
+procedure TTestS7ReadWriteOverAPort.AReadConnectsNegotiatesThenReturnsTheBytes;
+var
+  v:TArrayOfDouble;
+begin
+  QueueConnectAndNegotiate;
+  QueueReadReply($FF, [$0A,$0B,$0C,$0D]);
+
+  AssertEquals('leu', Ord(ioOk), Ord(FDrv.ReadDB(1, 0, 4, v)));
+  AssertEquals('quatro bytes', 4, Length(v));
+  AssertEquals('primeiro', $0A, v[0], 0);
+  AssertEquals('ultimo',   $0D, v[3], 0);
+  AssertEquals('tudo consumido', 0, FPort.PendingResponses);
+end;
+
+procedure TTestS7ReadWriteOverAPort.TheConnectionAndNegotiationHappenOnlyOnce;
+var
+  v:TArrayOfDouble;
+begin
+  //conexao e negociacao ficam guardadas no CLP: a segunda leitura so' manda o
+  //pedido de leitura
+  //the connection and negotiation are kept on the PLC: the second read only
+  //sends the read request
+  QueueConnectAndNegotiate;
+  QueueReadReply($FF, [1,2,3,4]);
+  FDrv.ReadDB(1, 0, 4, v);
+  AssertEquals('connect, negocia, leitura', 3, FPort.WriteCount);
+
+  QueueReadReply($FF, [9,9,9,9]);
+  FDrv.ReadDB(1, 0, 4, v);
+
+  AssertEquals('mais uma so', 4, FPort.WriteCount);
+  AssertEquals('o novo valor', 9, v[0], 0);
+end;
+
+procedure TTestS7ReadWriteOverAPort.TheReadRequestAsksForTheFunctionAndDb;
+var
+  v:TArrayOfDouble;
+  req:BYTES;
+begin
+  //o pedido que sai (3a escrita) leva a funcao de leitura ($04) e a area DB
+  //the request that goes out (3rd write) carries the read function ($04) and
+  //the DB area
+  QueueConnectAndNegotiate;
+  QueueReadReply($FF, [$0A,$0B,$0C,$0D]);
+  FDrv.ReadDB(5, 0, 4, v);
+
+  req:=FPort.WrittenFrame(2);
+  //depois do TPKT(4)+COTP(3)+cabecalho S7 de pedido(10) vem o parametro; o
+  //primeiro byte do parametro e' a funcao ($04)
+  //after TPKT(4)+COTP(3)+request S7 header(10) comes the parameter; its first
+  //byte is the function ($04)
+  AssertEquals('funcao de leitura', $04, req[7+10]);
+  AssertTrue  ('o numero do DB (5) aparece no pedido', HasByte(req, 5));
+end;
+
+procedure TTestS7ReadWriteOverAPort.APlcErrorOnReadBecomesAProtocolResult;
+var
+  v:TArrayOfDouble;
+begin
+  //codigo $0A: area/endereco fora da faixa - o CLP recusa a leitura
+  //code $0A: area/address out of range - the PLC refuses the read
+  QueueConnectAndNegotiate;
+  QueueReadReply($0A, []);
+
+  AssertTrue('nao foi ok', FDrv.ReadDB(1, 0, 4, v)<>ioOk);
+end;
+
+procedure TTestS7ReadWriteOverAPort.WithNoNegotiationTheReadFails;
+var
+  v:TArrayOfDouble;
+begin
+  //aceita a conexao mas fica mudo na negociacao: sem PDU negociada nao le
+  //accepts the connection but goes silent on the negotiation: with no
+  //negotiated PDU it does not read
+  FPort.QueueResponse(BytesOf('03 00 00 16 11 D0 00 01 00 01 00 C0 01 0A C1 02 01 00 C2 02 01 02'));
+
+  AssertTrue('nao leu', FDrv.ReadDB(1, 0, 4, v)<>ioOk);
+end;
+
+procedure TTestS7ReadWriteOverAPort.AWriteSendsTheValuesAndSucceeds;
+begin
+  QueueConnectAndNegotiate;
+  QueueWriteReply($FF);
+
+  AssertEquals('escreveu', Ord(ioOk), Ord(FDrv.WriteDB(1, 0, [$0A,$0B])));
+end;
+
+procedure TTestS7ReadWriteOverAPort.TheWriteRequestCarriesTheDataBytes;
+var
+  req:BYTES;
+begin
+  //os bytes escritos vao no pedido de SendUnitData/escrita
+  //the written bytes go in the SendUnitData/write request
+  QueueConnectAndNegotiate;
+  QueueWriteReply($FF);
+  FDrv.WriteDB(1, 0, [$AA,$BB]);
+
+  req:=FPort.WrittenFrame(2);
+  AssertTrue('o byte AA no pedido', HasByte(req, $AA));
+  AssertTrue('o byte BB no pedido', HasByte(req, $BB));
+end;
+
+procedure TTestS7ReadWriteOverAPort.APlcErrorOnWriteBecomesAProtocolResult;
+begin
+  QueueConnectAndNegotiate;
+  QueueWriteReply($0A);
+
+  AssertTrue('nao foi ok', FDrv.WriteDB(1, 0, [$0A,$0B])<>ioOk);
+end;
+
 initialization
   RegisterTest(TTestS7Family);
+  RegisterTest(TTestS7ReadWriteOverAPort);
 
 finalization
   FreeAndNil(DriverCompartilhado);
