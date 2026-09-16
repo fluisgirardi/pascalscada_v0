@@ -1,0 +1,29 @@
+{
+  "_comment": "Manifest of www.pascalscada.com documentation pages. 'id' is the WordPress page ID (null = not created yet). Each entry has one Markdown file per language under docs/site/<lang>/<slug>.md. qTranslate-XT language codes: en, pb.",
+  "languages": ["en", "pb"],
+  "pages": [
+    { "slug": "how-install-pascalscada",       "id": 35,   "title": { "en": "How to install PascalSCADA",           "pb": "Como instalar o PascalSCADA" } },
+    { "slug": "communication-ports",           "id": 167,  "title": { "en": "Communication ports",                  "pb": "Portas de comunicação" } },
+    { "slug": "protocol-drivers",              "id": 409,  "title": { "en": "Protocol drivers – a general overview", "pb": "Drivers de protocolo – visão geral" } },
+    { "slug": "s7-protocol-over-isotcp",       "id": 425,  "title": { "en": "S7 Protocol over ISOTCP",              "pb": "Protocolo S7 sobre ISOTCP" } },
+    { "slug": "modbus-rtu-and-tcp",            "id": 429,  "title": { "en": "Modbus RTU and TCP",                   "pb": "Modbus RTU e TCP" } },
+    { "slug": "mitsubishi-melsec-tcp",         "id": 433,  "title": { "en": "Mitsubishi Melsec TCP",                "pb": "Mitsubishi Melsec TCP" } },
+    { "slug": "west-ascii",                    "id": 431,  "title": { "en": "West ASCII",                           "pb": "West ASCII" } },
+    { "slug": "tags",                          "id": 439,  "title": { "en": "Tags",                                 "pb": "Tags" } },
+    { "slug": "scale-processors",              "id": 442,  "title": { "en": "Scale processors",                     "pb": "Processadores de escala" } },
+    { "slug": "hmi-control-library-hcl",       "id": 444,  "title": { "en": "HMI Control Library (HCl)",            "pb": "Biblioteca de controles HMI (HCl)" } },
+    { "slug": "security-system",               "id": 446,  "title": { "en": "Security system",                      "pb": "Sistema de segurança" } },
+    { "slug": "tmutexserver-and-tmutexclient", "id": 448,  "title": { "en": "TMutexServer and TMutexClient",        "pb": "TMutexServer e TMutexClient" } },
+    { "slug": "hmidbconnection",               "id": 450,  "title": { "en": "HMIDBConnection",                      "pb": "HMIDBConnection" } },
+    { "slug": "faq",                           "id": 788,  "title": { "en": "FAQ",                                  "pb": "FAQ" } },
+
+    { "slug": "s7commplus",                    "id": null, "title": { "en": "S7CommPlus (S7-1200/1500)",            "pb": "S7CommPlus (S7-1200/1500)" } },
+    { "slug": "ethernet-ip-logix",             "id": null, "title": { "en": "EtherNet/IP – Rockwell Logix",         "pb": "EtherNet/IP – Rockwell Logix" } },
+    { "slug": "ibox",                          "id": null, "title": { "en": "IBox",                                 "pb": "IBox" } },
+    { "slug": "numeric-expression-tag",        "id": null, "title": { "en": "Numeric expression tag",               "pb": "Tag de expressão numérica" } },
+    { "slug": "event-and-alarm-loggers",       "id": null, "title": { "en": "Event and alarm loggers",              "pb": "Registradores de eventos e alarmes" } },
+    { "slug": "flow-controls",                 "id": null, "title": { "en": "Flow controls",                        "pb": "Controles de fluxo" } },
+    { "slug": "keyboard-manager",              "id": null, "title": { "en": "On-screen keyboard",                   "pb": "Teclado virtual" } },
+    { "slug": "rfid-reader",                   "id": null, "title": { "en": "RFID reader login",                    "pb": "Login por leitor RFID" } }
+  ]
+}
