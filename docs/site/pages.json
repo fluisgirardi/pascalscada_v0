@@ -245,16 +245,16 @@
     },
     {
       "slug": "expressions-in-properties",
-      "id": null,
+      "id": 1134,
       "title": {
         "en": "Expressions in the Object Inspector",
         "pb": "Expressões no Object Inspector"
       },
       "menu": {
         "parent": 170,
-        "after": "tags"
+        "after": "numeric-expression-tag"
       },
-      "menu_item": null
+      "menu_item": 1135
     }
   ],
   "menu_parents": {

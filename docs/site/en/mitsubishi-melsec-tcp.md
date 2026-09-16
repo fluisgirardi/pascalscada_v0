@@ -65,7 +65,7 @@ Timers, counters (`T`, `C`, `ST`), link registers (`W`, `R`, `ZR`) and the `SB`/
 
 Data types:
 
-| In the PLC | `TagType` | Note |
+| In the PLC | TagType | Note |
 |---|---|---|
 | Relay (M, X, Y…) | `pttDefault` | One device = one bit; `Value` is 0 or 1. A `TPLCBlock` with `Size = n` reads n consecutive relays. |
 | 16-bit `D` | `pttDefault`, `pttSmallInt` or `pttWord` | One register. |
@@ -75,7 +75,7 @@ Data types:
 
 Examples:
 
-| MELSEC address | `MemReadFunction` / `MemWriteFunction` | `MemAddress` | `TagType` |
+| MELSEC address | MemReadFunction / MemWriteFunction | MemAddress | TagType |
 |---|---|---|---|
 | `M100` | 1 | 100 | `pttDefault` |
 | `X1A` | 6 | 26 | `pttDefault` |

@@ -27,7 +27,7 @@ Vários controles (`THMIText`, `THMIAnimation`, os conectores de propriedade e o
 
 A condição de cada zona é definida por `ZoneType`, `Value1`, `Value2`, `IncludeValue1` e `IncludeValue2`:
 
-| `ZoneType` | A zona é selecionada quando… |
+| ZoneType | A zona é selecionada quando… |
 |---|---|
 | `ztEqual` | valor do tag = `Value1` |
 | `ztNotEqual` | valor do tag ≠ `Value1` |

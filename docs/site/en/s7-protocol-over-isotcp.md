@@ -38,7 +38,7 @@ The fastest way to get to step 3 is to right-click the `TISOTCPDriver` and choos
 
 Rack/slot values that work in most cases:
 
-| CPU | `PLCRack` | `PLCSlot` |
+| CPU | PLCRack | PLCSlot |
 |---|---|---|
 | S7-300 (CPU with built-in PN or CP 343-1) | 0 | 2 |
 | S7-400 | 0 | physical slot of the CPU (usually 2 or 3) |
@@ -94,7 +94,7 @@ Area codes for `MemReadFunction`:
 
 S7 data types and the matching `TagType`:
 
-| PLC type | Bytes | `TagType` | `SwapBytes` | `SwapWords` | `SwapDWords` |
+| PLC type | Bytes | TagType | SwapBytes | SwapWords | SwapDWords |
 |---|---|---|---|---|---|
 | `BOOL` | – | `pttByte` on the tag + one [`TTagBit`](/tags/#TTagBit) per bit | | | |
 | `BYTE`, `CHAR`, `USINT` | 1 | `pttByte` | | | |
@@ -113,7 +113,7 @@ Siemens PLCs store values in **big-endian** and PascalSCADA assembles bytes in m
 
 Examples:
 
-| S7 address | `MemReadFunction` | `MemFile_DB` | `MemAddress` | `TagType` | Swaps |
+| S7 address | MemReadFunction | MemFile_DB | MemAddress | TagType | Swaps |
 |---|---|---|---|---|---|
 | `IB3` | 1 | 0 | 3 | `pttByte` | – |
 | `Q0.5` | 2 | 0 | 0 | `pttByte` + `TTagBit` with `StartBit = EndBit = 5` | – |
