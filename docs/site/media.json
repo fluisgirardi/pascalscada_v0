@@ -1,4 +1,6 @@
 {
+  "TCentralUserManagement.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TCentralUserManagement.png",
+  "TCustomizedUserManagement.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TCustomizedUserManagement.png",
   "THMIAnimation.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/THMIAnimation.png",
   "THMIBasicEletricMotor.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/THMIBasicEletricMotor.png",
   "THMIBasicValve.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/THMIBasicValve.png",
@@ -22,7 +24,11 @@
   "THMITransparentButton.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/THMITransparentButton.png",
   "THMIUpDown.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/THMIUpDown.png",
   "TISOTCPDriver.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TISOTCPDriver.png",
+  "TLinearScaleProcessor.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TLinearScaleProcessor.png",
   "TNumericExprTag.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TNumericExprTag.png",
   "TPLCStructString.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TPLCStructString.png",
-  "TTCP_UDPPort.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TTCP_UDPPort.png"
+  "TScalesQueue.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TScalesQueue.png",
+  "TTCP_UDPPort.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TTCP_UDPPort.png",
+  "TUserScale.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TUserScale.png",
+  "TWinCCUserManagement.png": "https://www.pascalscada.com/wp-content/uploads/2026/09/TWinCCUserManagement.png"
 }

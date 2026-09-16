@@ -167,4 +167,16 @@ A minimal screen for a motor: state, speed and command.
 
 Without a line of code the screen shows the state and the speed, accepts the setpoint within range, switches the motor on and off and colours the shape — and all of it is disabled for a user without the `operation` code.
 
+
+##### Related examples
+
+* `examples/laz_weg_twp03_full_project` — a complete supervisory project for a WEG TPW03 PLC over Modbus RTU: `THMIEdit`, `THMICheckBox`, `THMILabel` and blocks on real screens.
+* `examples/both_modbus_rtu_corn_weigh` — a weighing mimic with `THMIAnimation`, `THMIText`, `TTagBit` and blocks (Lazarus and Delphi).
+* `examples/laz_modbus_tcp_example` — `THMIEdit`, `THMICheckBox`, `THMIText` and `THMILabel` over a Modbus TCP block.
+* `examples/laz_comm_fault_control_icon_test` — the communication-fault badge on every kind of control.
+* `examples/laz_isotcp_hourmeter` — `THMIAnimation` with a `TImageList` and blinking zones.
+* `examples/hmi_bandeja` — `THMIBandeja` with colours and text coming from the PLC.
+* `examples/hmi_flowvectorcontrol` and `examples/laz_svg_example` — `THMIFlowVectorControl` recolouring SVG elements per zone (see [Flow controls](/flow-controls/)).
+* `examples/laz_numericexpr` — `THMITrackBar` and `THMILabel` around a `TNumericExprTag`.
+
 Other HCl pages: [Flow controls](/flow-controls/), [Event and alarm loggers](/event-and-alarm-loggers/), [On-screen keyboard](/keyboard-manager/) and [Security system](/security-system/).

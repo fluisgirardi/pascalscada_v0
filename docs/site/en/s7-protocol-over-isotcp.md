@@ -207,3 +207,12 @@ More examples in the repository: `examples/laz_isotcp_demonstration` (DB with bl
 | Writes fail with `ioReadOnlyProtocol` or `ioObjectAccessNotAllowed` | `ReadOnly = True` on the driver, or the CPU is write-protected/password protected. |
 | Works on an S7-300 but not on a LOGO! | Force `ForcePDUSize = pdu240` and check the server connection TSAP in LOGO!Soft. |
 | Timers/counters read as zero | `TagType` must be `pttWord` on those areas. |
+
+##### Related examples
+
+* `examples/laz_isotcp_demonstration` — a DB with `TPLCBlock`, elements, `TPLCString` and bits, with `THMIEdit`/`THMIText` (a Delphi version is in `examples/delphi_isotcp_demonstration`).
+* `examples/laz_isotcp_hourmeter` — hour meters read from blocks with dozens of `TTagBit`s and `THMIAnimation`, with writes.
+* `examples/laz_isotcp_mapping_bits_from_other_tag` — `DB1.DBB0` with one `TTagBit` per bit.
+* `examples/laz_isotcp_performance` — thousands of block elements to measure the update rate and the effect of the PDU size.
+* `examples/demo_logo8` — LOGO! 8: the V area as DB1, `ForcePDUSize = pdu240`.
+* `examples/hmi_bandeja` — `TPLCStruct` over a DB, with `THMIBandeja`.
