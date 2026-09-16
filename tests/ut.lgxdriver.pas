@@ -38,10 +38,74 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  commtypes, Tag, ProtocolTypes, LGXDriver,
-  testsupport.bytes;
+  commtypes, Tag, ProtocolTypes, PLCTagNumber, LGXDriver,
+  testsupport.bytes, testsupport.fakeport;
 
 type
+
+
+  { TRawCIP }
+
+  //um PDU CIP que devolve os bytes que se der a ele: e' o que preenche o lugar
+  //dos pacotes de resposta CIP, que a unidade so' sabe decodificar
+  //a CIP PDU that gives back whatever bytes it is handed: it fills the place
+  //of the CIP reply packets, which the unit only knows how to decode
+  TRawCIP = class(TCIPPDU)
+  public
+    Raw:BYTES;
+    function getPacket:BYTES; override;
+  end;
+
+  { TLGXProbe }
+
+  //a varredura do LGX e' uma thread enorme; a sonda a desliga e abre DoRead e
+  //DoWrite, que a base chama de dentro da varredura
+  //the LGX scan is a huge thread; the probe turns it off and opens DoRead and
+  //DoWrite, which the base calls from inside the scan
+  TLGXProbe = class(TLGXDriver)
+  protected
+    procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
+  public
+    function ReadNow(const aTag:AnsiString; aSize:LongInt; out aValues:TArrayOfDouble):TProtocolIOResult;
+    function WriteNow(const aTag:AnsiString; const aValues:array of Double):TProtocolIOResult;
+  end;
+
+  { TTestLGXOverAPort }
+
+  //o caminho inteiro pela porta de mentira: abrir sessao (RegisterSession),
+  //abrir a conexao (ForwardOpen) e ler/escrever tags por SendUnitData
+  //the whole path through the fake port: opening the session
+  //(RegisterSession), the connection (ForwardOpen) and reading/writing tags
+  //through SendUnitData
+  TTestLGXOverAPort = class(TTestCase)
+  private
+    FPort:TFakeCommPort;
+    FDrv:TLGXProbe;
+    procedure QueueRegSession(aHandle:LongWord);
+    procedure QueueForwardOpen(aConnID:LongWord);
+    procedure QueueShortForwardOpen;
+    procedure QueueRegAndFO;
+    procedure QueueReadReply(aStatus:Byte; aDataType:Word; const aData:array of Byte);
+    procedure QueueWriteFragReply(aStatus:Byte);
+    procedure QueueWriteReply(aStatus:Byte);
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    //a leitura / the read
+    procedure AReadOpensSessionAndConnectionThenReturnsTheValue;
+    procedure TheSessionAndConnectionAreOpenedOnlyOnce;
+    procedure TheReadRequestCarriesTheServiceAndThePath;
+    procedure AFragmentedReadIsStitchedFromTwoReplies;
+    procedure ACIPErrorStatusBecomesTheMappedResult;
+    procedure ARefusedSessionMakesTheReadFail;
+    procedure ARefusedConnectionMakesTheReadFail;
+
+    //a escrita / the write
+    procedure AWriteDiscoversTheTypeThenWrites;
+    procedure ABoolWriteUsesTheWriteTagService;
+    procedure AWriteErrorStatusBecomesTheMappedResult;
+  end;
 
   { TTestLGXDriver }
 
@@ -291,7 +355,325 @@ begin
   AssertEquals('so o primeiro', 'A', FPedido.RequestPath);
 end;
 
+
+{ TRawCIP }
+
+function TRawCIP.getPacket:BYTES;
+begin
+  Result:=Raw;
+end;
+
+{ TLGXProbe }
+
+procedure TLGXProbe.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
+begin
+  NeedSleep:=500;
+end;
+
+function TLGXProbe.ReadNow(const aTag:AnsiString; aSize:LongInt; out aValues:TArrayOfDouble):TProtocolIOResult;
+var
+  tr:TTagRec;
+begin
+  FillChar(tr, SizeOf(tr), 0);
+  tr.Path:=aTag;
+  tr.Size:=aSize;
+  Result:=DoRead(tr, aValues, true);
+end;
+
+function TLGXProbe.WriteNow(const aTag:AnsiString; const aValues:array of Double):TProtocolIOResult;
+var
+  tr:TTagRec;
+  v:TArrayOfDouble;
+  i:Integer;
+begin
+  FillChar(tr, SizeOf(tr), 0);
+  tr.Path:=aTag;
+  tr.Size:=Length(aValues);
+  SetLength(v, Length(aValues));
+  for i:=0 to High(aValues) do v[i]:=aValues[i];
+  Result:=DoWrite(tr, v, true);
+end;
+
+{ helpers that build the reply frames with the driver's own encoders }
+
+//: uma resposta de SendRRData (ForwardOpen), com o CIP dado no lugar do pacote
+//: a SendRRData (ForwardOpen) reply, with the given CIP in the packet's place
+function FrameSendRR(const aCIP:BYTES):BYTES;
+var
+  rr:TEIPSendRRDataPDU;
+  raw:TRawCIP;
+  un:TCPFUnconnectedDataItem;
+begin
+  rr:=TEIPSendRRDataPDU.Create;
+  try
+    rr.SessionHandler:=$01020304;
+    rr.SendRRDataCmdData.EncapsuledCPF.Add(TCPFNullAddressItem.Create);
+    un:=TCPFUnconnectedDataItem.Create;
+    raw:=TRawCIP.Create;
+    raw.Raw:=aCIP;
+    un.Add(raw);
+    rr.SendRRDataCmdData.EncapsuledCPF.Add(un);
+    Result:=rr.getPacket;
+  finally
+    rr.Free;
+  end;
+end;
+
+//: uma resposta de SendUnitData, com o CIP dado no item de dados conectado
+//: a SendUnitData reply, with the given CIP in the connected data item
+function FrameSendUnit(const aCIP:BYTES):BYTES;
+var
+  ud:TEIPSendUnitDataPDU;
+  raw:TRawCIP;
+  addr:TCPFAddressItem;
+  cdi:TCPFConnectedDataItem;
+begin
+  ud:=TEIPSendUnitDataPDU.Create;
+  try
+    ud.SessionHandler:=$01020304;
+    addr:=TCPFAddressItem.Create;
+    addr.ConnectionID:=$11223344;
+    ud.SendUnitDataCmdData.EncapsuledCPF.Add(addr);
+    cdi:=TCPFConnectedDataItem.Create;
+    raw:=TRawCIP.Create;
+    raw.Raw:=aCIP;
+    cdi.Add(raw);
+    ud.SendUnitDataCmdData.EncapsuledCPF.Add(cdi);
+    Result:=ud.getPacket;
+  finally
+    ud.Free;
+  end;
+end;
+
+function ForwardOpenCIP(aConnID:LongWord):BYTES;
+begin
+  //servico $d4, status 0, e a resposta de sucesso: OT_ConnID e o resto zerado
+  //service $d4, status 0, and the success reply: OT_ConnID and the rest zeroed
+  SetLength(Result, 4+26);
+  FillChar(Result[0], Length(Result), 0);
+  Result[0]:=$d4;
+  PLongWord(@Result[4])^:=aConnID; //OT_ConnID
+end;
+
+{ TTestLGXOverAPort }
+
+procedure TTestLGXOverAPort.SetUp;
+begin
+  FPort:=TFakeCommPort.Create(nil);
+  FPort.Active:=true;
+  FDrv:=TLGXProbe.Create(nil);
+  FDrv.CommunicationPort:=FPort;
+end;
+
+procedure TTestLGXOverAPort.TearDown;
+begin
+  FreeAndNil(FDrv);
+  FreeAndNil(FPort);
+end;
+
+procedure TTestLGXOverAPort.QueueRegSession(aHandle:LongWord);
+var
+  reg:TEIPRegSessionPDU;
+begin
+  //o proprio pacote de RegisterSession, com o handle que o "CLP" devolveria
+  //the RegisterSession packet itself, with the handle the "PLC" would give back
+  reg:=TEIPRegSessionPDU.Create;
+  try
+    reg.SessionHandler:=aHandle;
+    FPort.QueueResponse(reg.getPacket);
+  finally
+    reg.Free;
+  end;
+end;
+
+procedure TTestLGXOverAPort.QueueForwardOpen(aConnID:LongWord);
+begin
+  FPort.QueueResponse(FrameSendRR(ForwardOpenCIP(aConnID)));
+end;
+
+procedure TTestLGXOverAPort.QueueShortForwardOpen;
+begin
+  //um quadro curto demais: o driver espera 70 bytes e desiste da conexao
+  //a frame too short: the driver expects 70 bytes and gives up on the connection
+  FPort.QueueResponse(BytesOf('6F 00 00 00 04 03 02 01 00 00'));
+end;
+
+procedure TTestLGXOverAPort.QueueRegAndFO;
+begin
+  QueueRegSession($01020304);
+  QueueForwardOpen($11223344);
+end;
+
+procedure TTestLGXOverAPort.QueueReadReply(aStatus:Byte; aDataType:Word; const aData:array of Byte);
+var
+  cip:BYTES;
+  i:Integer;
+begin
+  SetLength(cip, 6+Length(aData));
+  cip[0]:=$d2; cip[1]:=0; cip[2]:=aStatus; cip[3]:=0;
+  PWord(@cip[4])^:=aDataType;
+  for i:=0 to High(aData) do cip[6+i]:=aData[i];
+  FPort.QueueResponse(FrameSendUnit(cip));
+end;
+
+procedure TTestLGXOverAPort.QueueWriteFragReply(aStatus:Byte);
+begin
+  FPort.QueueResponse(FrameSendUnit(BytesOf('D3 00 '+IntToHex(aStatus,2)+' 00')));
+end;
+
+procedure TTestLGXOverAPort.QueueWriteReply(aStatus:Byte);
+begin
+  FPort.QueueResponse(FrameSendUnit(BytesOf('CD 00 '+IntToHex(aStatus,2)+' 00')));
+end;
+
+procedure TTestLGXOverAPort.AReadOpensSessionAndConnectionThenReturnsTheValue;
+var
+  v:TArrayOfDouble;
+begin
+  QueueRegAndFO;
+  QueueReadReply(0, TAG_CIP_TYPE_DINT, [42,0,0,0]);
+
+  AssertEquals('leu', Ord(ioOk), Ord(FDrv.ReadNow('MyTag', 4, v)));
+  AssertEquals('quatro bytes',  4,  Length(v));
+  AssertEquals('o valor',       42, v[0], 0);
+  AssertEquals('tudo consumido', 0, FPort.PendingResponses);
+end;
+
+procedure TTestLGXOverAPort.TheSessionAndConnectionAreOpenedOnlyOnce;
+var
+  v:TArrayOfDouble;
+begin
+  //RegisterSession e ForwardOpen sao guardados: a segunda leitura so' manda o
+  //SendUnitData
+  //RegisterSession and ForwardOpen are cached: the second read only sends the
+  //SendUnitData
+  QueueRegAndFO;
+  QueueReadReply(0, TAG_CIP_TYPE_DINT, [1,0,0,0]);
+  FDrv.ReadNow('MyTag', 4, v);
+  AssertEquals('tres idas na primeira: reg, fo, leitura', 3, FPort.WriteCount);
+
+  QueueReadReply(0, TAG_CIP_TYPE_DINT, [2,0,0,0]);
+  FDrv.ReadNow('MyTag', 4, v);
+
+  AssertEquals('mais uma so',   4, FPort.WriteCount);
+  AssertEquals('o novo valor',  2, v[0], 0);
+end;
+
+procedure TTestLGXOverAPort.TheReadRequestCarriesTheServiceAndThePath;
+var
+  v:TArrayOfDouble;
+  req:BYTES;
+  comoTexto:AnsiString;
+begin
+  //o SendUnitData que sai leva o servico de leitura fragmentada ($52) e o
+  //caminho do tag no CIP; e' a terceira escrita (reg, fo, leitura)
+  //the SendUnitData that goes out carries the fragmented read service ($52)
+  //and the tag path in the CIP; it is the third write (reg, fo, read)
+  QueueRegAndFO;
+  QueueReadReply(0, TAG_CIP_TYPE_DINT, [42,0,0,0]);
+  FDrv.ReadNow('MyTag', 4, v);
+
+  req:=FPort.WrittenFrame(2);
+  //o CIP comeca depois do cabecalho (24) + SendUnitData (6) + CPF (2) +
+  //item de endereco (8) + cabecalho do item conectado (6) = 46
+  //the CIP starts after header (24) + SendUnitData (6) + CPF (2) + address
+  //item (8) + connected item header (6) = 46
+  AssertEquals('servico read tag fragmented', $52, req[46]);
+  SetString(comoTexto, PAnsiChar(@req[0]), Length(req));
+  AssertTrue  ('o nome do tag no pedido', Pos('MyTag', comoTexto)>0);
+end;
+
+procedure TTestLGXOverAPort.AFragmentedReadIsStitchedFromTwoReplies;
+var
+  v:TArrayOfDouble;
+begin
+  //o CLP responde em dois pedacos: status $06 "ha' mais", depois $00; o driver
+  //pede de novo e junta
+  //the PLC answers in two pieces: status $06 "more to come", then $00; the
+  //driver asks again and stitches
+  QueueRegAndFO;
+  QueueReadReply($06, TAG_CIP_TYPE_DINT, [10,20]);
+  QueueReadReply($00, TAG_CIP_TYPE_DINT, [30,40]);
+
+  AssertEquals('leu', Ord(ioOk), Ord(FDrv.ReadNow('MyTag', 4, v)));
+  AssertEquals('quatro bytes juntados', 4, Length(v));
+  AssertEquals('do primeiro pedaco', 10, v[0], 0);
+  AssertEquals('do segundo pedaco',  30, v[2], 0);
+end;
+
+procedure TTestLGXOverAPort.ACIPErrorStatusBecomesTheMappedResult;
+var
+  v:TArrayOfDouble;
+begin
+  //$05 e' "objeto inexistente" - o tag nao existe no CLP
+  //$05 is "object does not exist" - the tag is not in the PLC
+  QueueRegAndFO;
+  QueueReadReply($05, 0, []);
+
+  AssertEquals(Ord(ioObjectNotExists), Ord(FDrv.ReadNow('MyTag', 4, v)));
+end;
+
+procedure TTestLGXOverAPort.ARefusedSessionMakesTheReadFail;
+var
+  v:TArrayOfDouble;
+begin
+  //handle zero: o CLP recusou a sessao, nao ha' como ler
+  //handle zero: the PLC refused the session, there is no way to read
+  QueueRegSession(0);
+
+  AssertTrue('nao leu', FDrv.ReadNow('MyTag', 4, v)<>ioOk);
+end;
+
+procedure TTestLGXOverAPort.ARefusedConnectionMakesTheReadFail;
+var
+  v:TArrayOfDouble;
+begin
+  //sessao aberta, mas o ForwardOpen nao veio inteiro: sem conexao, sem leitura
+  //session open, but the ForwardOpen did not come whole: no connection, no read
+  QueueRegSession($01020304);
+  QueueShortForwardOpen;
+
+  AssertTrue('nao leu', FDrv.ReadNow('MyTag', 4, v)<>ioOk);
+end;
+
+procedure TTestLGXOverAPort.AWriteDiscoversTheTypeThenWrites;
+begin
+  //o tag e' desconhecido: o driver le uma vez para descobrir o tipo e so'
+  //depois escreve
+  //the tag is unknown: the driver reads once to discover the type and only
+  //then writes
+  QueueRegAndFO;
+  QueueReadReply(0, TAG_CIP_TYPE_DINT, [0,0,0,0]); //descoberta do tipo / type discovery
+  QueueWriteFragReply(0);
+
+  AssertEquals('escreveu', Ord(ioOk), Ord(FDrv.WriteNow('MyTag', [42,0,0,0])));
+  AssertEquals('reg, fo, descoberta, escrita', 4, FPort.WriteCount);
+end;
+
+procedure TTestLGXOverAPort.ABoolWriteUsesTheWriteTagService;
+begin
+  //descoberto como BOOL, a escrita usa o servico Write Tag ($4d), respondido
+  //com $cd
+  //discovered as BOOL, the write uses the Write Tag service ($4d), answered
+  //with $cd
+  QueueRegAndFO;
+  QueueReadReply(0, TAG_CIP_TYPE_BOOL, [0]);
+  QueueWriteReply(0);
+
+  AssertEquals('escreveu', Ord(ioOk), Ord(FDrv.WriteNow('MyBool', [1])));
+end;
+
+procedure TTestLGXOverAPort.AWriteErrorStatusBecomesTheMappedResult;
+begin
+  QueueRegAndFO;
+  QueueReadReply(0, TAG_CIP_TYPE_DINT, [0,0,0,0]);
+  QueueWriteFragReply($05);
+
+  AssertEquals(Ord(ioObjectNotExists), Ord(FDrv.WriteNow('MyTag', [42,0,0,0])));
+end;
+
 initialization
   RegisterTest(TTestLGXDriver);
+  RegisterTest(TTestLGXOverAPort);
 
 end.

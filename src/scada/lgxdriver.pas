@@ -4801,15 +4801,26 @@ begin
     exit(ioOk);
   end else begin
     Writeln('FIX-ME: got status ',inttohex(RplySt),' when reading tag "',tagrec.Path,'" ',{$i %FILE%},':',{$i %LINE%});
+    //o mapeamento do erro e a saida nao podem depender de o tag estar na
+    //lista local: um tag que ainda nao foi guardado (leitura avulsa, primeira
+    //varredura) caia fora do case sem exit e devolvia Result nao
+    //inicializado. Guarda-se a falha quando o tag existe; o resultado sai
+    //sempre.
+    //the error mapping and the exit must not depend on the tag being in the
+    //local list: a tag not yet stored (a one-off read, the first scan) fell
+    //out of the case with no exit and returned an uninitialised Result. The
+    //fault is stored when the tag exists; the result is always returned.
     case RplySt of
-      $04: if FTagList.Find(tagrec.Path.ToLower,idx) then begin FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,ioIllegalRegAddress,true);    exit(ioIllegalRegAddress);    end;
-      $05: if FTagList.Find(tagrec.Path.ToLower,idx) then begin FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,ioObjectNotExists,true);      exit(ioObjectNotExists);      end;
-      $13: if FTagList.Find(tagrec.Path.ToLower,idx) then begin FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,ioIllegalRequest,true);       exit(ioIllegalRequest);       end;
-      $26: if FTagList.Find(tagrec.Path.ToLower,idx) then begin FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,ioIllegalRegAddress,true);    exit(ioIllegalRegAddress);    end;
-      $fe: if FTagList.Find(tagrec.Path.ToLower,idx) then begin FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,ioCommError,true);            exit(ioCommError);            end;
-      $ff: if FTagList.Find(tagrec.Path.ToLower,idx) then begin FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,ioIllegalMemoryAddress,true); exit(ioIllegalMemoryAddress); end;
-      else if FTagList.Find(tagrec.Path.ToLower,idx) then begin FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,ioUnknownError,true);         exit(ioUnknownError);         end;
+      $04: Result:=ioIllegalRegAddress;
+      $05: Result:=ioObjectNotExists;
+      $13: Result:=ioIllegalRequest;
+      $26: Result:=ioIllegalRegAddress;
+      $fe: Result:=ioCommError;
+      $ff: Result:=ioIllegalMemoryAddress;
+      else Result:=ioUnknownError;
     end;
+    if FTagList.Find(tagrec.Path.ToLower,idx) then
+      FTagList.Data[idx]^.mm.SetFault(0,tagrec.Size,1,Result,true);
   end;
 end;
 
@@ -4887,6 +4898,13 @@ begin
 
         if RplySt in [0,6] then begin
           ehand:=rreply.DataType;
+          //etype vem so' do caminho do tag conhecido; no caminho do tag
+          //desconhecido ficava sem valor, e a escolha bool/nao-bool e o
+          //DType da escrita saiam de memoria nao inicializada.
+          //etype was set only on the known-tag path; on the unknown-tag path
+          //it was left uninitialised, and the bool/non-bool choice and the
+          //write's DType came from uninitialised memory.
+          etype:=rreply.DataType;
           esize:=-1;
         end else
           exit(ioIllegalRegAddress);
