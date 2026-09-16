@@ -1132,6 +1132,13 @@ var
 begin
   x:=DefaultFormatSettings;
   x.DateSeparator:='-';
+  //o ':' da mascara e' trocado pelo TimeSeparator da maquina; sem forca-lo,
+  //uma maquina cujo separador de hora nao seja ':' produz um literal invalido
+  //(ex.: '03.04.05'). o mesmo vale para o '-' da data, ja fixado acima.
+  //the ':' in the mask is replaced by the machine's TimeSeparator; without
+  //forcing it, a machine whose time separator is not ':' produces an invalid
+  //literal (e.g. '03.04.05'). the same holds for the date '-', already set above.
+  x.TimeSeparator:=':';
   result:=''''+FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',aDateTime, x)+'''';
 end;
 
@@ -1172,7 +1179,13 @@ end;
 
 class function THMIDBConnection.FormatSQLUUID(aUUID: TGuid): String;
 begin
-  Result:=''''+GUIDToString(aUUID)+'''';
+  //GUIDToString devolve o UUID entre chaves ({...}); a maioria dos bancos
+  //(MySQL, SQLite, Firebird) e o SQL padrao rejeitam as chaves no literal, e o
+  //PostgreSQL as aceita com ou sem - entao emitimos os 36 caracteres sem elas.
+  //GUIDToString returns the UUID wrapped in braces ({...}); most engines
+  //(MySQL, SQLite, Firebird) and standard SQL reject the braces in the literal,
+  //and PostgreSQL takes it with or without - so we emit the 36 chars without them.
+  Result:=''''+Copy(GUIDToString(aUUID),2,36)+'''';
 end;
 
 end.
