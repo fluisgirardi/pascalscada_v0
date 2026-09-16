@@ -6,6 +6,15 @@
   ],
   "pages": [
     {
+      "slug": "intro",
+      "id": 901,
+      "title": {
+        "en": "Intro",
+        "pb": "Intro"
+      },
+      "menu_item": null
+    },
+    {
       "slug": "how-install-pascalscada",
       "id": 35,
       "title": {
