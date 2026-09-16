@@ -217,9 +217,18 @@ def verify(page_id, expected_htmls):
 
 # --------------------------------------------------------------------------- import
 def fetch_rendered(page_id, lang):
-    """Public rendered HTML of a page in one language (no credentials needed)."""
+    """Public rendered HTML of a page in one language (no credentials needed).
+    Drafts are not public: those are fetched authenticated, from the raw multilingual content."""
     prefix = "" if lang == "en" else f"/{lang}"
     r = requests.get(f"{WP_URL}{prefix}/wp-json/wp/v2/pages/{page_id}", params={"_fields": "content,title"}, timeout=60)
+    if r.status_code in (401, 403, 404):
+        print(f"  page {page_id} is not public ({r.status_code}), fetching it authenticated")
+        d = wp_get(f"/pages/{page_id}", context="edit")
+        parts = split_qtx(d["content"]["raw"])
+        titles = split_qtx(d["title"]["raw"])
+        if lang not in parts:
+            die(f"page {page_id} has no [:{lang}] block (has: {', '.join(parts)})")
+        return titles.get(lang, d["title"]["raw"]), parts[lang]
     if r.status_code != 200:
         die(f"GET page {page_id} ({lang}) failed ({r.status_code})")
     d = r.json()
