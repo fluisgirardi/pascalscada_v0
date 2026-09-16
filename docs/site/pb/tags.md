@@ -56,7 +56,7 @@ Todo tag de comunicação tem o mesmo conjunto de propriedades de endereço. **O
 | `MemReadFunction` | Função Modbus de leitura (1, 2, 3, 4) | Área de memória (1 = I, 2 = Q, 3 = M, 4 = DB…) | Tipo de dispositivo (M, SM, L, X, Y, D…) | – | – |
 | `MemWriteFunction` | Função Modbus de escrita (5, 6, 15, 16) | – | Tipo de dispositivo (mesmo código da leitura) | – | – |
 | `MemAddress` | Endereço do registrador/coil | Endereço do byte | Endereço do dispositivo | Parâmetro (West) / PID (IBox) | – |
-| `MemSubElement` | – | Bit dentro do byte | – | – | – |
+| `MemSubElement` | – | – (bits: use `TTagBit`) | – | – | – |
 | `LongAddress` | – | – | – | – | Nome simbólico do tag no CLP (`Motor1.Speed`, `"DB10".Setpoint`) |
 | `Retries` | Tentativas antes de declarar falha (todos os drivers) | | | | |
 

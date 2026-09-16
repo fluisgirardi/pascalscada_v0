@@ -56,7 +56,7 @@ Every communication tag has the same set of addressing properties. **The meaning
 | `MemReadFunction` | Modbus read function (1, 2, 3, 4) | Memory area (1 = I, 2 = Q, 3 = M, 4 = DB…) | Device type (M, SM, L, X, Y, D…) | – | – |
 | `MemWriteFunction` | Modbus write function (5, 6, 15, 16) | – | Device type (same code as read) | – | – |
 | `MemAddress` | Register/coil address | Byte address | Device address | Parameter (West) / PID (IBox) | – |
-| `MemSubElement` | – | Bit within the byte | – | – | – |
+| `MemSubElement` | – | – (bits: use `TTagBit`) | – | – | – |
 | `LongAddress` | – | – | – | – | Symbolic tag name in the PLC (`Motor1.Speed`, `"DB10".Setpoint`) |
 | `Retries` | Attempts before declaring a failure (all drivers) | | | | |
 
