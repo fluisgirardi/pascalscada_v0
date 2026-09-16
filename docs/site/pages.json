@@ -180,7 +180,7 @@
     },
     {
       "slug": "numeric-expression-tag",
-      "id": null,
+      "id": 1150,
       "title": {
         "en": "Numeric expression tag",
         "pb": "Tag de expressão numérica"
@@ -189,7 +189,7 @@
         "parent": 170,
         "after": "tags"
       },
-      "menu_item": null
+      "menu_item": 1151
     },
     {
       "slug": "event-and-alarm-loggers",
