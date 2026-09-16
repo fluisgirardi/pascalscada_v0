@@ -1,83 +1,128 @@
 ##### Introduction
 
-First of all, fell free to send corrections or alternative ways to this method 🙂
+First of all, feel free to send corrections or alternative ways to this method 🙂
 
-The main goal of this page is instruct how to install the latest PascalSCADA snapshot on the latest **Lazarus** version. Why I don’t explains how install it on Delphi or on a outdated Lazarus version, is question to another page, or feel free to send the instructions to install it on the desired IDE.
+The main goal of this page is to show how to install the current PascalSCADA on the current **Lazarus** version. Installing it on outdated Lazarus versions is a matter for another page — or feel free to write the instructions for the IDE you want.
 
-**Warning** : The current PascalSCADA package will install others packages together with PascalSCADA. The packages are:
+**Warning**: PascalSCADA depends on other packages, which must be installed (or will be installed along with it):
 
-  * ZeosLib 7.2
-  * BGRABitmap
-  * BGRAControls
+* **BGRABitmap** — used by the HCl drawn controls. Available in Lazarus' *Online Package Manager*.
+* **TAChart** — used by `TTagLinkedSeriesSource`. Ships with Lazarus.
+* **SQLDB** (`SQLDBLaz`) — used by `THMIDBConnection`. Ships with Lazarus. *ZeosLib is no longer required since version 0.7.7.*
 
-So, if you dislike some of these packages, feel free to create a new package without the undesired package.
+**DOUBLE WARNING:** PascalSCADA is not like other SCADA systems. It is a package, plugin or add-on (call it what you like) that lets Lazarus build HMI/SCADA applications. So an installer with "Next", "Next" and "Finish" buttons is not available.
 
-**BIG Warning 2:** The PascalSCADA isn’t like others SCADA systems. It’s a package, plugin or a add-on (you name it) for Lazarus to enable it to create HMI/SCADA applications. So, a wizard with Next, Next then finish buttons will be not available.
+##### **What do I need before starting?**
 
-##### **What I need before start?**
+1. **Lazarus** 2.0 or newer, with **Free Pascal 3.0 or newer** — PascalSCADA is developed and tested with FPC 3.2.2 and the latest stable Lazarus. On Windows, get Lazarus from the official page: [http://www.lazarus-ide.org/](http://www.lazarus-ide.org/). On Linux/FreeBSD, get it from your distribution's software repository or, for the newest version, with [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe).
+2. **The PascalSCADA code**, from one of two sources:
+    * **GitHub** (recommended — it is where development happens): `git clone https://github.com/fluisgirardi/pascalscada_v0.git`, or download the [master branch ZIP](https://github.com/fluisgirardi/pascalscada_v0/archive/refs/heads/master.zip) and unpack it in a folder of your choice.
+    * Lazarus' **Online Package Manager** (*Package → Online Package Manager*): search for *PascalSCADA*. It is the shortest path, but the package published there is version 0.7.7 (2021); GitHub has the latest fixes and drivers.
+3. A program to unpack `.zip` files, if you don't use `git`.
 
-  1. Latest Lazarus version. If you are a Windows user, you can get Lazarus from: <http://www.lazarus-ide.org/>. If you are a Linux/FreeBSD user, you can get it from your package system.
-  2. Latest PascalSCADA: available on [this link](<http://www.pascalscada.com/download/>).
-  3. WinRAR or something else that can decompress .bz2 files.
+The SourceForge and SVN mentioned in older versions of this page are no longer used.
+
+##### The packages
+
+The PascalSCADA folder holds seven `.lpk` files:
+
+| Package | Contains | Depends on |
+|---|---|---|
+| `pascalscada_common.lpk` | Threads, events, CRC, strings — the base of everything, no LCL. | FCL |
+| `pascalscada.lpk` | Communication ports, protocol drivers, tags and scales. Works without the LCL (console applications and services). | `pascalscada_common` |
+| `pascalscada_db.lpk` | `THMIDBConnection` and `TFPSBufDataSet`. | `SQLDBLaz` |
+| `pascalscada_dsng.lpk` | The design-time part: palette registration, Tag Builders, property editors. | `pascalscada`, `IDEIntf` |
+| `pascalscada_hmi.lpk` | The HMI control library (HCl), security, loggers, on-screen keyboard. | `pascalscada`, `pascalscada_db`, `pascalscada_dsng`, `BGRABitmapPack`, `TAChartLazarusPkg` |
+| `pascalscada_full.lpk` | **Meta-package**: installs `pascalscada_dsng`, `pascalscada_hmi` and `pascalscada_db` at once. The one you install. | the three above |
+| `pascalscada_externallibs_hmi.lpk` | **Optional**, Linux/FreeBSD only: the `TSycRFIDReader` RFID reader. Requires `libhidapi` on the system (`sudo apt install libhidapi-dev`) — without it Lazarus does not start after installing this package. See [Security system](/security-system/#rfid). | `pascalscada_hmi` |
 
 ##### Installing…
 
-Well, the first to be installed is Lazarus. I don’t want explain how to install Lazarus on any OS/platform that exists on this world, because install Lazarus is a very simple task, both on Windows (With wizard next, next and finish) or on Linux (Linux Mint 17.3 here: sudo apt-get install….). At the end of Lazarus install process, you should open it and see something similar to this:
+Well, the first thing to do is to install Lazarus. I don't want to explain how to install Lazarus on every operating system/platform in this world, because installing Lazarus is a very simple task, both on Windows (with the "Next", "Next", "Finish" installer) and on Linux (`sudo apt install lazarus`). At the end of the Lazarus installation, open it and you should see something like this:
 
-[![Fresh Lazarus installation](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_034-300x168.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_034.png>)Fresh Lazarus installation
+[![Clean Lazarus installation](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_051-300x167.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_051.png>)Clean Lazarus installation
 
-If you see your fresh Lazarus similar to this, you are on the right way. The next step is install the PascalSCADA package. Please forget the Lazarus by a moment. Go to your Downloads folder and find the downloaded PascalSCADA and extract it to a folder of your choice.
+If your freshly installed Lazarus looks like the picture above, you are on the right track.
 
-After extract your file, return to Lazarus and select the menu bellow:
+**Install BGRABitmap first**: *Package → Online Package Manager*, tick *BGRABitmap* and click *Install*. Lazarus downloads, compiles and rebuilds itself. (If you are going to install PascalSCADA through the OPM, skip this step — it resolves the dependency by itself.)
 
-[![Installing a new package on Lazarus IDE](http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-14-000414-300x170.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-14-000414.png>)Installing a new package on Lazarus IDE
+The next step is to install the PascalSCADA package. Please forget Lazarus for a moment. Go to the folder where you cloned or unpacked PascalSCADA.
 
-Click on this menu. A open file dialog will be showed:
+Then, back in Lazarus, open the menu shown below (*Package → Open Package File (.lpk)*):
 
-[![Find PascalSCADA on your file system](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_035-300x170.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_035.png>)Find PascalSCADA on your file system
+[![Installing a new package in Lazarus](http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-16-000338-300x165.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-16-000338.png>)Installing a new package in Lazarus
 
-Navigate to the folder where you extracted the PascalSCADA. You should see the following files:
+Click it and a file dialog shows up:
 
-  * pascalscada_common.lpk
-  * pascalscada_full.lpk
-  * pascalscada.lpk
-  * pascalscada_db.lpk
-  * pascalscada_hmi.lpk
+[![Finding the PascalSCADA files](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_052-300x165.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_052.png>)Finding the PascalSCADA files
 
-If you don’t see one of these files, check your downloaded file, paths. If everything is ok, you should see a screen like this:
+Browse to the PascalSCADA folder. It must contain the seven `.lpk` files of the table above. If you don't see one of them, check the downloaded file, paths, etc. If everything is OK, your screen should look like this:
 
-[![Find PascalSCADA on your file system \(complete view\)](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_036-300x168.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_036.png>)Find PascalSCADA on your file system (complete view)
+[![Finding the PascalSCADA files \(full view\)](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_053-300x166.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_053.png>)Finding the PascalSCADA files (full view)
 
-Select the file “pascalscada_full.lpk” then open it. The package window of pascalscada_full file will be displayed:
+Select **`pascalscada_full.lpk`** and open it. The `pascalscada_full` package window shows up:
 
-[![PascalSCADA package opened](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_038-300x167.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_038.png>)PascalSCADA package opened
+[![PascalSCADA full-install package opened](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_054-300x165.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_054.png>)PascalSCADA full-install package opened
 
-The last step, is install it into your IDE. To do this, click on button “Use &gt;&gt;” then select install.
+The last step is to install the package into your IDE. Click the "Use >>" button and then the "Install" menu, as shown below:
 
-[![Installing PascalSCADA on your Lazarus IDE](http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-14-002536-300x168.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-14-002536.png>)Installing PascalSCADA on your Lazarus IDE
+[![Installing PascalSCADA into the Lazarus IDE](http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-16-001819-300x167.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-16-001819.png>)Installing PascalSCADA into the Lazarus IDE
 
-￼
+`pascalscada_full` is a meta-package, used only to make the full installation of PascalSCADA into your Lazarus IDE simple. Because of that, you will be bothered by a few messages:
 
-The package pascalscada_full is a metapackage, used only to make a complete install of PascalSCADA on your Lazarus. Because of this, you will be bored with some messages:
+[![PascalSCADA meta-package: needed to simplify the full installation](http://www.pascalscada.com/wp-content/uploads/2016/07/Não-é-um-pacote-de-instalação_055-300x123.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Não-é-um-pacote-de-instalação_055.png>)PascalSCADA meta-package: needed to simplify the full installation
 
-[![Metapackage: used to make easy the complete install of PascalSCADA](http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-14-003209-300x123.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Captura-de-tela-de-2016-07-14-003209.png>)Metapackage: used to make easy the complete install of PascalSCADA
+Click "Install it, I like the fat" to carry on. The next screen lists every package that will be installed into your IDE during the process:
 
-Click on “Install it, I like the fat” to continue the install. The next screen display a list with all packages that will be installed into your IDE, as displayed below:
+[![List of the additional packages that will be installed](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_056-300x167.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_056.png>)List of the additional packages that will be installed
 
-[![List of all packages that will be installed together with PascalSCADA](http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_040-300x169.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Seleção_040.png>)List of all packages that will be installed together with PascalSCADA
+A closer picture (the current list is `pascalscada_common`, `pascalscada`, `pascalscada_db`, `pascalscada_dsng` and `pascalscada_hmi`; the screenshot is from a version that still included ZeosLib):
 
-More detailed view:
+[![List of the additional packages that will be installed](http://www.pascalscada.com/wp-content/uploads/2016/07/Pacotes-instalados-automaticamente_057-300x204.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Pacotes-instalados-automaticamente_057.png>)List of the additional packages that will be installed
 
-[![List of all packages that will be installed together with PascalSCADA](http://www.pascalscada.com/wp-content/uploads/2016/07/Automatically-installed-packages_041-300x204.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Automatically-installed-packages_041.png>)List of all packages that will be installed together with PascalSCADA
+Click OK to continue and reach the final question about rebuilding the IDE:
 
-Click on OK to continue the install and get the final question, about the IDE recompile process, as you can see below:
+[![Confirming the Lazarus rebuild](http://www.pascalscada.com/wp-content/uploads/2016/07/Reconstruir-Lazarus_058-300x102.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Reconstruir-Lazarus_058.png>)Confirming the Lazarus rebuild
 
-[![Rebuild Lazarus confirmation](http://www.pascalscada.com/wp-content/uploads/2016/07/Rebuild-Lazarus_042-300x102.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Rebuild-Lazarus_042.png>)Rebuild Lazarus confirmation
+To finish, click "Yes". The installation starts and your IDE is rebuilt. When the rebuild ends, Lazarus restarts. **If you have a project with unsaved changes, be careful!!**
 
-To continue, click on “Yes”. The installation process will be started and your IDE will be recompiled. At the end of recompile process, the IDE will restarted. **If you have a project with unsaved changes, take care!!**
+After the IDE restarts, you should find the following component palettes in your Lazarus:
 
-After the restart, depending of your PascalSCADA version, you should see the following component palete on your Lazarus:
+[![PascalSCADA installed: communication ports tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_059-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_059.png>)PascalSCADA installed: communication ports tab [![PascalSCADA installed: protocols tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_060-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_060.png>)PascalSCADA installed: protocols tab [![PascalSCADA installed: utilities tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_061-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_061.png>)PascalSCADA installed: utilities tab [![PascalSCADA installed: tags tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_062-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_062.png>)PascalSCADA installed: tags tab [![PascalSCADA installed: screen controls tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_063-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_063.png>)PascalSCADA installed: screen controls tab [![PascalSCADA installed: user management and security tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_064-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_064.png>)PascalSCADA installed: user management and security tab [![PascalSCADA installed: database tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_065-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_065.png>)PascalSCADA installed: database tab [![PascalSCADA installed: FreePascal inherited components tab](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_066-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_066.png>)PascalSCADA installed: FreePascal inherited components tab
 
-[![PascalSCADA installed: communication port components palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_043-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_043.png>)PascalSCADA installed: communication port components palette [![PascalSCADA installed: communication protocol components palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_044-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_044.png>)PascalSCADA installed: communication protocol components palette [![PascalSCADA installed: utility components palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_045-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_045.png>)PascalSCADA installed: utility components palette [![PascalSCADA installed: tags palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_046-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_046.png>)PascalSCADA installed: tags palette [![PascalSCADA installed: screen controls palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_047-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_047.png>)PascalSCADA installed: screen controls palette [![PascalSCADA installed: user management and security components palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_048-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_048.png>)PascalSCADA installed: user management and security components palette [![PascalSCADA installed: database components palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_049-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_049.png>)PascalSCADA installed: database components palette [![PascalSCADA installed: FreePascal components palette](http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_050-300x27.png)](<http://www.pascalscada.com/wp-content/uploads/2016/07/Lazarus-IDE-v1.6-project1_050.png>)PascalSCADA installed: FreePascal components palette
+If you can see these palettes, congratulations, you have successfully installed PascalSCADA into your Lazarus IDE. To be sure, open and build one of the examples — `examples/laz_modbus_tcp_example` is a good start.
 
-If you see these tabs, congrats, you successfully installed the PascalSCADA on your Lazarus IDE.
+##### Installing from the command line
+
+For those who prefer the terminal, or to set up a build machine without opening the IDE, `lazbuild` does the same in two commands, from the PascalSCADA folder:
+
+```
+lazbuild --add-package pascalscada_full.lpk
+lazbuild --build-ide=
+```
+
+The first registers the meta-package (and, through dependencies, the others) with the IDE; the second rebuilds Lazarus with them. BGRABitmap must be registered beforehand (installed through the OPM, or `lazbuild --add-package path/to/bgrabitmappack.lpk`).
+
+##### Linux: permissions and libraries
+
+* **Serial ports**: the user running the application must belong to the group owning the ports (`dialout` on Debian/Ubuntu, `uucp` on other distributions): `sudo usermod -aG dialout $USER`, then log in again. See [Communication ports](/communication-ports/).
+* **RFID reader** (`pascalscada_externallibs_hmi`): `libhidapi-dev` and the udev rule described in [Security system](/security-system/#rfid).
+* **Databases** (`THMIDBConnection`): the client library of the chosen database (`libpq`, `libmariadb`/`libmysqlclient`, `libsqlite3`, …) must be installed — SQLDB loads it at run time.
+
+##### Updating
+
+If you installed from GitHub: `git pull` in the PascalSCADA folder, then *Package → Open Package File* on `pascalscada_full.lpk` → *Use >> → Install* (or `lazbuild --build-ide=`), and the IDE rebuilds with the new code. Through the OPM, use the OPM's own *Update* button.
+
+##### What about Delphi?
+
+The code keeps its Delphi directives and there are `.dpr` examples in the repository, but **there are no ready-made Delphi packages (`.dpk`)**, and the current version is developed and tested on Lazarus/Free Pascal only. To use it on Delphi, expect to assemble the package yourself — and send the fixes.
+
+##### Common problems
+
+| Symptom | Likely cause |
+|---|---|
+| "Package BGRABitmapPack not found" while installing | BGRABitmap was not installed first. Install it through the OPM and try again. |
+| The IDE does not start after installing `pascalscada_externallibs_hmi` | `libhidapi` is missing on the system (or you are on Windows, where this package does not work). Start Lazarus with `--skip-last-project`, uninstall the package and rebuild. |
+| `Cannot find unit tcp_udpport` (or another unit) when building a project | The project lacks the package in its dependencies: *Project → Project Inspector → Add → New Requirement* and add `pascalscada_hmi` (or just `pascalscada`, for applications without the LCL). |
+| Palettes show up but the components have no icon | Resources not regenerated after an update — rebuild the IDE (*Tools → Build Lazarus with Profile*). |
+| Compilation error on an old Lazarus/FPC | Update: FPC 3.0 and Lazarus 2.0 are the minimum; 3.2.2 and the current stable Lazarus are recommended. |
