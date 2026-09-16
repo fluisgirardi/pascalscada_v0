@@ -68,7 +68,7 @@ A forma mais rápida de acertar o endereçamento é o **Tag Builder**: clique co
 
 A propriedade **`TagType`** diz como o driver deve interpretar os bytes lidos do equipamento:
 
-| `TagType` | Tamanho | Interpretação |
+| TagType | Tamanho | Interpretação |
 |---|---|---|
 | `pttDefault` | depende do driver | O "tamanho natural" do protocolo: 16 bits no Modbus, 8 bits no S7, etc. |
 | `pttShortInt` / `pttByte` | 8 bits | Inteiro com / sem sinal |
@@ -202,7 +202,7 @@ Assim como no bloco, `AutoWrite = False` + `WriteDirect` grava a estrutura intei
 
 ![](http://www.pascalscada.com/wp-content/uploads/2016/08/tagbit.png) Extrai um intervalo de bits de outro tag numérico (`PLCTag`), sem gerar comunicação adicional. `StartBit` é o bit menos significativo e `EndBit` o mais significativo do intervalo (ambos a partir de 0, máximo 31; `EndBit >= StartBit`). O valor do `TTagBit` é o intervalo deslocado para a direita:
 
-| Valor do tag origem | `StartBit` | `EndBit` | Valor do `TTagBit` |
+| Valor do tag origem | StartBit | EndBit | Valor do TTagBit |
 |---|---|---|---|
 | 5 (`101b`) | 0 | 0 | 1 |
 | 5 (`101b`) | 0 | 2 | 5 |

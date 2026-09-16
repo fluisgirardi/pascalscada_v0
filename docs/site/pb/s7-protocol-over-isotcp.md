@@ -38,7 +38,7 @@ O jeito mais rápido de chegar ao passo 3 é clicar com o botão direito no `TIS
 
 Valores de rack/slot que funcionam na maioria dos casos:
 
-| CPU | `PLCRack` | `PLCSlot` |
+| CPU | PLCRack | PLCSlot |
 |---|---|---|
 | S7-300 (CPU com PN integrada ou CP 343-1) | 0 | 2 |
 | S7-400 | 0 | slot físico da CPU (normalmente 2 ou 3) |
@@ -94,7 +94,7 @@ Códigos de área para `MemReadFunction`:
 
 Tipos de dados S7 e o `TagType` correspondente:
 
-| Tipo no CLP | Bytes | `TagType` | `SwapBytes` | `SwapWords` | `SwapDWords` |
+| Tipo no CLP | Bytes | TagType | SwapBytes | SwapWords | SwapDWords |
 |---|---|---|---|---|---|
 | `BOOL` | – | `pttByte` no tag + um [`TTagBit`](/pb/tags/#TTagBit) por bit | | | |
 | `BYTE`, `CHAR`, `USINT` | 1 | `pttByte` | | | |
@@ -113,7 +113,7 @@ Os CLPs Siemens guardam os valores em **big-endian** e o PascalSCADA monta os by
 
 Exemplos:
 
-| Endereço S7 | `MemReadFunction` | `MemFile_DB` | `MemAddress` | `TagType` | Swaps |
+| Endereço S7 | MemReadFunction | MemFile_DB | MemAddress | TagType | Swaps |
 |---|---|---|---|---|---|
 | `IB3` | 1 | 0 | 3 | `pttByte` | – |
 | `Q0.5` | 2 | 0 | 0 | `pttByte` + `TTagBit` com `StartBit = EndBit = 5` | – |

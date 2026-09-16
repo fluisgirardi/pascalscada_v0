@@ -47,7 +47,7 @@ Basta configurar as propriedades `PLCMin`, `PLCMax`, `SysMin` e `SysMax` com os 
 
 Abaixo está uma lista de alguns exemplos de conversões usando a classe `TLinearScaleProcessor`:
 
-| Nome | `PLCMin` | `PLCMax` | `SysMin` | `SysMax` |
+| Nome | PLCMin | PLCMax | SysMin | SysMax |
 |---|---|---|---|---|
 | Milissegundos (CLP) → segundos (Supervisão) | 0 | 1000 | 0 | 1 |
 | Segundos (CLP) → minutos (Supervisão) | 0 | 60 | 0 | 1 |

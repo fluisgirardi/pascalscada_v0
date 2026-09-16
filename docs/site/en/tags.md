@@ -68,7 +68,7 @@ The fastest way to get addressing right is the **Tag Builder**: right-click the 
 
 The **`TagType`** property tells the driver how to interpret the bytes read from the device:
 
-| `TagType` | Size | Interpretation |
+| TagType | Size | Interpretation |
 |---|---|---|
 | `pttDefault` | driver dependent | The protocol's "natural size": 16 bits on Modbus, 8 bits on S7, and so on. |
 | `pttShortInt` / `pttByte` | 8 bits | Signed / unsigned integer |
@@ -202,7 +202,7 @@ As with blocks, `AutoWrite = False` + `WriteDirect` writes the whole structure i
 
 ![](http://www.pascalscada.com/wp-content/uploads/2016/08/tagbit.png) Extracts a range of bits from another numeric tag (`PLCTag`), with no extra communication. `StartBit` is the least significant and `EndBit` the most significant bit of the range (both from 0, at most 31; `EndBit >= StartBit`). The `TTagBit` value is the range shifted right:
 
-| Source tag value | `StartBit` | `EndBit` | `TTagBit` value |
+| Source tag value | StartBit | EndBit | TTagBit value |
 |---|---|---|---|
 | 5 (`101b`) | 0 | 0 | 1 |
 | 5 (`101b`) | 0 | 2 | 5 |

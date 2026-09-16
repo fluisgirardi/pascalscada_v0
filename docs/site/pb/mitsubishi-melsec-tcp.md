@@ -65,7 +65,7 @@ Timers, contadores (`T`, `C`, `ST`), registradores de link (`W`, `R`, `ZR`) e as
 
 Tipos de dados:
 
-| No CLP | `TagType` | Observação |
+| No CLP | TagType | Observação |
 |---|---|---|
 | Relé (M, X, Y…) | `pttDefault` | Um dispositivo = um bit; `Value` é 0 ou 1. `TPLCBlock` com `Size = n` lê n relés consecutivos. |
 | `D` de 16 bits | `pttDefault`, `pttSmallInt` ou `pttWord` | Um registrador. |
@@ -75,7 +75,7 @@ Tipos de dados:
 
 Exemplos:
 
-| Endereço MELSEC | `MemReadFunction` / `MemWriteFunction` | `MemAddress` | `TagType` |
+| Endereço MELSEC | MemReadFunction / MemWriteFunction | MemAddress | TagType |
 |---|---|---|---|
 | `M100` | 1 | 100 | `pttDefault` |
 | `X1A` | 6 | 26 | `pttDefault` |

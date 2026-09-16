@@ -47,7 +47,7 @@ Just set `PLCMin`, `PLCMax`, `SysMin` and `SysMax` with your scale data. To test
 
 Below is a list of some conversions using `TLinearScaleProcessor`:
 
-| Name | `PLCMin` | `PLCMax` | `SysMin` | `SysMax` |
+| Name | PLCMin | PLCMax | SysMin | SysMax |
 |---|---|---|---|---|
 | Milliseconds (PLC) → seconds (Supervisory) | 0 | 1000 | 0 | 1 |
 | Seconds (PLC) → minutes (Supervisory) | 0 | 60 | 0 | 1 |
