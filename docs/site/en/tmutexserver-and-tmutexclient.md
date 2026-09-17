@@ -77,14 +77,14 @@ Put this code on the OnClick event of the Button1 button:
 ```pascal
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-if Button1.Color=clLime then begin
-if MutexClient1.Leave then
-Button1.Color:=clDefault;
-end else begin
-if MutexClient1.TryEnter then begin
-Button1.Color:=clLime;
-end;
-end;
+  if Button1.Color = clLime then begin
+    if MutexClient1.Leave then
+      Button1.Color := clDefault;
+  end else begin
+    if MutexClient1.TryEnter then begin
+      Button1.Color := clLime;
+    end;
+  end;
 end;
 ```
 
@@ -93,14 +93,14 @@ Repeat the procedure and insert this code into the OnClick event of the Button2:
 ```pascal
 procedure TForm1.Button2Click(Sender: TObject);
 begin
-if Button2.Color=clLime then begin
-if MutexClient2.Leave then
-Button2.Color:=clDefault;
-end else begin
-if MutexClient2.TryEnter then begin
-Button2.Color:=clLime;
-end;
-end;
+  if Button2.Color = clLime then begin
+    if MutexClient2.Leave then
+      Button2.Color := clDefault;
+  end else begin
+    if MutexClient2.TryEnter then begin
+      Button2.Color := clLime;
+    end;
+  end;
 end;
 ```
 
