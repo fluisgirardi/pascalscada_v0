@@ -92,8 +92,24 @@ def save_media_cache(c):
     MEDIA_CACHE.write_text(json.dumps(c, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+CODE_BLOCK_RE = re.compile(r'<pre><code class="language-(\w+)">(.*?)\n?</code></pre>', re.S)
+
+
+def code_blocks_to_shortcode(html_text):
+    """Turns <pre><code class="language-X">...</code></pre> (from a ```X fence) into
+    the site's own [X tabsize="2"]...[/X] syntax-highlighter shortcode, unescaping
+    the HTML entities the fenced-code renderer added."""
+
+    def repl(m):
+        lang, code = m.group(1), html.unescape(m.group(2))
+        return f'[{lang} tabsize="2"]{code}[/{lang}]'
+
+    return CODE_BLOCK_RE.sub(repl, html_text)
+
+
 def md_to_html(text):
-    return markdown.markdown(text, extensions=MD_EXTENSIONS, output_format="html")
+    rendered = markdown.markdown(text, extensions=MD_EXTENSIONS, output_format="html")
+    return code_blocks_to_shortcode(rendered)
 
 
 IMG_RE = re.compile(r'(<img\b[^>]*\bsrc=")img/([^"]+)(")')
