@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="48">
+    <Units Count="49">
       <Unit0>
         <Filename Value="pascalscada_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -223,6 +223,10 @@
         <Filename Value="ut.mtpcpu.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit47>
+      <Unit48>
+        <Filename Value="ut.propvalueparsing.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit48>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

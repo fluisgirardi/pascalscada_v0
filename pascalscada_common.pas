@@ -8,8 +8,8 @@ unit pascalscada_common;
 interface
 
 uses
-  CrossEvent, hsstrings, hsutils, MessageSpool, 
-  pascalScadaMTPCPU, pscada_common, pscommontypes, pSCADAVersion, crossthreads;
+  CrossEvent, hsstrings, hsutils, MessageSpool, pascalScadaMTPCPU, 
+  pscada_common, pscommontypes, pSCADAVersion, crossthreads, PropValueParsing;
 
 implementation
 

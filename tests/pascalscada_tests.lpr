@@ -16,6 +16,7 @@ uses
   //casos de teste / test cases
   ut.crc16utils,
   ut.hsutils,
+  ut.propvalueparsing,
   ut.plcmemorymanager,
   ut.modbusrtu,
   ut.modbustcp,
