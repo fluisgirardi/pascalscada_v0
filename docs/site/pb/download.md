@@ -10,6 +10,8 @@ git clone https://github.com/fluisgirardi/pascalscada_v0.git
 
 Ou, sem `git`, baixe o [ZIP do branch master](https://github.com/fluisgirardi/pascalscada_v0/archive/refs/heads/master.zip) e descompacte numa pasta de sua escolha.
 
+**Atenção**: instalando pelo GitHub, algumas dependências precisam ser baixadas e instaladas **antes** do PascalSCADA — principalmente o **BGRABitmap**, usado pelos controles gráficos da HCl (pelo *Online Package Manager* do Lazarus). Sem ele instalado primeiro, o pacote do PascalSCADA não compila. Veja a lista completa de dependências em [Como instalar o PascalSCADA](/pb/how-install-pascalscada/#packages).
+
 **Online Package Manager do Lazarus**
 
 Pelo *Package → Online Package Manager* do Lazarus, procure por *PascalSCADA* e instale direto pela IDE, sem baixar nada manualmente. Hoje o pacote publicado ali é a versão **0.7.7** (2021) — mais antiga que o código do GitHub. Uma atualização do pacote no OPM, já com os drivers novos e as correções recentes, está prevista para as próximas semanas.

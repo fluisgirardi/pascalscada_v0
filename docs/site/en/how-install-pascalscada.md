@@ -22,7 +22,7 @@ The main goal of this page is to show how to install the current PascalSCADA on 
 
 The SourceForge and SVN mentioned in older versions of this page are no longer used.
 
-##### The packages
+##### The packages {#packages}
 
 The PascalSCADA folder holds seven `.lpk` files:
 

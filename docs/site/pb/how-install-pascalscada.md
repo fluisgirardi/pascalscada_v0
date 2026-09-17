@@ -22,7 +22,7 @@ O objetivo principal desta página é ensinar como instalar a versão atual do P
 
 O SourceForge e o SVN citados em versões antigas desta página não são mais usados.
 
-##### Os pacotes
+##### Os pacotes {#packages}
 
 Na pasta do PascalSCADA existem sete arquivos `.lpk`:
 

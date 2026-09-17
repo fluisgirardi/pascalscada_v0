@@ -10,6 +10,8 @@ git clone https://github.com/fluisgirardi/pascalscada_v0.git
 
 Or, without `git`, download the [master branch ZIP](https://github.com/fluisgirardi/pascalscada_v0/archive/refs/heads/master.zip) and unpack it in a folder of your choice.
 
+**Note**: installing from GitHub, some dependencies must be downloaded and installed **before** PascalSCADA — most importantly **BGRABitmap**, used by the HCl's drawn controls (through Lazarus' *Online Package Manager*). Without it installed first, the PascalSCADA package will not compile. See the full dependency list in [How to install PascalSCADA](/how-install-pascalscada/#packages).
+
 **Lazarus' Online Package Manager**
 
 Through Lazarus' *Package → Online Package Manager*, search for *PascalSCADA* and install it straight from the IDE, with nothing to download by hand. The package published there is currently version **0.7.7** (2021) — older than the GitHub code. An OPM package update, with the new drivers and the recent fixes, is planned for the coming weeks.
