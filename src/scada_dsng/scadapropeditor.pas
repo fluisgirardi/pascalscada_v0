@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SerialPort, PLCBlockElement, PLCStruct, Tag,
   bitmappertagassistant, blockstructtagassistant, ProtocolDriver,
-  PLCNumber, plcstructstring, comptagedt, fpexprpars,
+  PLCNumber, plcstructstring, comptagedt, fpexprpars, PropValueParsing,
 
   {$IF defined(WIN32) or defined(WIN64) OR defined(WINCE)}
   Windows,
@@ -357,21 +357,37 @@ end;
 
 procedure TIntegerExpressionPropertyEditor.SetValue(const NewValue: ansistring);
 var
-  aux: Longint;
+  aux: Int64;
   parser: TFPExpressionParser;
   rt: TFPExpressionResult;
   i: Integer;
 begin
-  if (not (NewValue[1] in ['+','-','*','/'])) and TryStrToInt(NewValue,aux) then
-    inherited SetValue(NewValue)
-  else begin
+  //Nao delegamos um literal simples para "inherited SetValue": o
+  //TIntegerPropertyEditor do Lazarus grava o valor com SetOrdValue(integer(L)),
+  //que trunca para 32 bits e le os bounds errados quando a propriedade e' de
+  //64 bits (caso do TComponent.Tag, PtrInt=Int64 em plataformas de 64 bits) -
+  //digitar um Tag comum podia ser recusado com "Value must be between 0 and
+  //2147483647". Usamos nosso proprio SetValue(index, Int64), que grava via
+  //SetOrdProp e respeita a largura real do tipo.
+  //
+  //We do not delegate a plain literal to "inherited SetValue": Lazarus'
+  //TIntegerPropertyEditor stores the value with SetOrdValue(integer(L)),
+  //which truncates to 32 bits and reads the wrong bounds when the property
+  //is 64 bits wide (TComponent.Tag's case, PtrInt=Int64 on 64-bit platforms)
+  //- typing an ordinary Tag value could be refused with "Value must be
+  //between 0 and 2147483647". We use our own SetValue(index, Int64), which
+  //writes through SetOrdProp and honours the type's real width.
+  if TryParsePlainIntegerLiteral(NewValue, aux) then begin
+    for i:=0 to PropCount-1 do
+      SetValue(i, aux);
+  end else begin
     parser:=TFPExpressionParser.Create(nil);
     try
       parser.BuiltIns:=[bcMath];
       for i:=0 to PropCount-1 do begin
         RegisterExpressionVariables(i, parser);
 
-        if (NewValue[1]='+') or (NewValue[1]='-') or (NewValue[1]='*') or (NewValue[1]='/')  then begin
+        if IsRelativeExpression(NewValue) then begin
           parser.Expression:=OrdValueToVisualValue(GetOrdValueAt(i))+NewValue
         end else
           parser.Expression:=NewValue;

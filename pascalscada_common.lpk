@@ -30,7 +30,7 @@
     <Description Value="Common methods for all PascalSCADA packages"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="9">
+    <Files Count="10">
       <Item1>
         <Filename Value="src/common/crossevent.pas"/>
         <UnitName Value="CrossEvent"/>
@@ -67,6 +67,10 @@
         <Filename Value="src/common/crossthreads.pas"/>
         <UnitName Value="crossthreads"/>
       </Item9>
+      <Item10>
+        <Filename Value="src/common/propvalueparsing.pas"/>
+        <UnitName Value="PropValueParsing"/>
+      </Item10>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
