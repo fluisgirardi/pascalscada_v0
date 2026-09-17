@@ -255,6 +255,15 @@
         "after": "numeric-expression-tag"
       },
       "menu_item": 1135
+    },
+    {
+      "slug": "download",
+      "id": 10,
+      "title": {
+        "en": "Download",
+        "pb": "Download"
+      },
+      "menu_item": 13
     }
   ],
   "menu_parents": {
