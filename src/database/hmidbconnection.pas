@@ -550,9 +550,10 @@ begin
         if not Assigned(fRollbackTransaction) then exit;
         if not Assigned(fOnExecSQL) then exit;
 
+        err:=false;
+        ferror:=nil;
         try
           fStartTransaction(statements^.NewConnection);
-          ferror:=nil;
           try
             fLineError:=0;
             for s:=0 to statements^.statements.Count-1 do begin
@@ -567,19 +568,45 @@ begin
             end;
           end;
         finally
-          if (err=false) and (ferror=nil) then
-            fCommitTransaction()
-          else
-            fRollbackTransaction();
+          //Commit/Rollback podem levantar excecao se a conexao caiu; se
+          //escapassem daqui a thread morreria e a fila nunca mais seria
+          //consumida.
+          //
+          //Commit/Rollback may raise if the connection dropped; if they
+          //escaped from here the thread would die and the queue would never
+          //be consumed again.
+          try
+            if (err=false) and (ferror=nil) then
+              fCommitTransaction()
+            else
+              fRollbackTransaction();
+          except
+            on e:Exception do begin
+              err:=true;
+              if ferror=nil then
+                ferror:=e;
+              {$IFNDEF WINDOWS}
+              writeln('Commit/Rollback exception: ', e.Message);
+              {$ENDIF}
+            end;
+          end;
 
-          if Assigned(statements^.ReturnTransactionResult) then begin
-            if statements^.ReturnSync then
-              Synchronize(@ReturnStatementsResults)
-            else begin
-              if (err=false) and (ferror=nil) then
-                statements^.ReturnTransactionResult(self, statements^.statements, True, -1, nil)
-              else
-                statements^.ReturnTransactionResult(self, statements^.statements, false, fLineError, ferror)
+          try
+            if Assigned(statements^.ReturnTransactionResult) then begin
+              if statements^.ReturnSync then
+                Synchronize(@ReturnStatementsResults)
+              else begin
+                if (err=false) and (ferror=nil) then
+                  statements^.ReturnTransactionResult(self, statements^.statements, True, -1, nil)
+                else
+                  statements^.ReturnTransactionResult(self, statements^.statements, false, fLineError, ferror)
+              end;
+            end;
+          except
+            on e:Exception do begin
+              {$IFNDEF WINDOWS}
+              writeln('ReturnTransactionResult exception: ', e.Message);
+              {$ENDIF}
             end;
           end;
         end;
