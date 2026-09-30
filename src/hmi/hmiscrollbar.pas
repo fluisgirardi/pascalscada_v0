@@ -45,6 +45,8 @@ type
     FLastPosition:LongInt;
 
     FSecurityCode:UTF8String;
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
     procedure SetSecurityCode(sc:UTF8String);
 
     //: @seealso(IHMIInterface.SetHMITag)
@@ -73,6 +75,8 @@ type
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt); override;
     {$IFEND}
     procedure Loaded; override;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     //: @exclude
     constructor Create(AOwner: TComponent); override;
@@ -160,6 +164,13 @@ end;
 
 procedure THMIScrollBar.RefreshScrollBar(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if not FBusy then begin
     if (FTag=nil) then begin

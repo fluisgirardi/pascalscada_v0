@@ -55,6 +55,7 @@ type
   //state did to the valve can be checked.
   TValveProbe = class(THMILinkedFlowValve)
   public
+    property SimulateAppShutdown;
     function  BodyColorIs:TColor;
     function  BorderColorIs:TColor;
     function  Blinking:Boolean;
@@ -64,6 +65,7 @@ type
 
   TPumpProbe = class(THMILinkedFlowPump)
   public
+    property SimulateAppShutdown;
     function  BorderColorIs:TColor;
     function  Blinking:Boolean;
   end;
@@ -127,6 +129,9 @@ type
 
     //seguranca / security
     procedure WithoutPermissionTheValveIsDisabled;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
   { TTestFlowPump }
@@ -154,6 +159,9 @@ type
     procedure TheStateChangeEventFires;
     procedure ATagThatIsNotNumericIsRefused;
     procedure ClearingTheTagFallsBackToTheDefaultState;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -529,6 +537,26 @@ begin
   end;
 end;
 
+procedure TTestFlowValve.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  NewState(0, false, clRed,  clMaroon);
+  NewState(1, true,  clLime, clGreen);
+
+  TagValueIs(0);
+  AssertEquals('fechada antes do encerramento', clRed, FValve.BodyColorIs);
+
+  FTag.ChegouDoCLP(1);
+
+  FValve.SimulateAppShutdown:=true;
+  try
+    Settle;
+  finally
+    FValve.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('o estado nao mudou', clRed, FValve.BodyColorIs);
+end;
+
 procedure TTestFlowValve.WithoutPermissionTheValveIsDisabled;
 var
   users:TUserManagementForTest;
@@ -697,6 +725,26 @@ begin
   finally
     tagDeTexto.Free;
   end;
+end;
+
+procedure TTestFlowPump.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  NewState(0, false, clRed,  clMaroon);
+  NewState(1, true,  clLime, clGreen);
+
+  TagValueIs(0);
+  AssertEquals('parada antes do encerramento', clRed, FPump.CurrentBodyColor);
+
+  FTag.ChegouDoCLP(1);
+
+  FPump.SimulateAppShutdown:=true;
+  try
+    Settle;
+  finally
+    FPump.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('o estado nao mudou', clRed, FPump.CurrentBodyColor);
 end;
 
 initialization

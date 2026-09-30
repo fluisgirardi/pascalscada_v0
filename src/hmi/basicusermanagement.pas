@@ -42,6 +42,9 @@ type
 
     frmLoginDlg:TpsHMIfrmUserAuthentication;
 
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
+
     function  GetLoginTime:TDateTime;
     procedure SetInactiveTimeOut({%H-}t:Cardinal);
     procedure UnfreezeLogin(Sender:TObject);
@@ -77,6 +80,8 @@ type
     procedure WaitForEmptyChipCard; virtual;
     procedure StartDelayedChipCardRead;
     procedure StopDelayedChipCardRead;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     constructor Create(AOwner:TComponent); override;
     destructor  Destroy; override;
@@ -436,6 +441,14 @@ end;
 
 procedure TBasicUserManagement.ChipCardReaderProc(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   if assigned(FChipCardReader) and Assigned(frmLoginDlg) then begin
     if FChipCardReader.ChipCardRead(frmLoginDlg.ChipCardCode) then begin
       frmLoginDlg.ModalResult:=mrOKChipCard;

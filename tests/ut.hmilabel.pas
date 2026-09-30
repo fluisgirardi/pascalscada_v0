@@ -78,6 +78,9 @@ type
     procedure ANewLabelIsEnabled;
     procedure WithoutPermissionTheLabelIsDisabled;
     procedure TheEnabledPropertyAnswersForTheProgramNotForTheControl;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -85,6 +88,16 @@ implementation
 uses HMITypes;
 
 type
+
+  { TLabelAccess }
+
+  //: eleva SimulateAppShutdown (protected) a public, pro teste conseguir
+  //: setar / raises SimulateAppShutdown (protected) to public, so the test
+  //: can set it
+  TLabelAccess = class(THMILabel)
+  public
+    property SimulateAppShutdown;
+  end;
 
   { TUserManagementForTest }
 
@@ -352,6 +365,30 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMILabel.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) e o teste
+  //AQueuedRefreshDoesNothingDuringAppShutdown em ut.hmianimation.pas para o
+  //porque deste guard.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) and the
+  //AQueuedRefreshDoesNothingDuringAppShutdown test in ut.hmianimation.pas
+  //for why this guard exists.
+  FLabel.PLCTag:=FTag;
+  TagValueIs(42);
+  AssertEquals('legenda antes do encerramento', '42.0', FLabel.Caption);
+
+  FTag.ChegouDoCLP(99);
+
+  TLabelAccess(FLabel).SimulateAppShutdown:=true;
+  try
+    FLabel.RefreshLabel(0);
+  finally
+    TLabelAccess(FLabel).SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('a legenda nao mudou', '42.0', FLabel.Caption);
 end;
 
 initialization

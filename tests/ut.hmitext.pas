@@ -78,9 +78,25 @@ type
     procedure ChangingTheZoneTextRebuildsTheCaption;
     procedure ADestroyedTagLetsGoOfTheControl;
     procedure ClearingTheTagFallsBackToNoZone;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
+
+type
+
+  { TTextAccess }
+
+  //: eleva SimulateAppShutdown (protected, herdada de THMILabel) a public,
+  //: pro teste conseguir setar
+  //: raises SimulateAppShutdown (protected, inherited from THMILabel) to
+  //: public, so the test can set it
+  TTextAccess = class(THMIText)
+  public
+    property SimulateAppShutdown;
+  end;
 
 { TTestHMIText }
 
@@ -297,6 +313,35 @@ begin
   FreeAndNil(FTag);
 
   AssertTrue('o controle largou o tag', FText.PLCTag=nil);
+end;
+
+procedure TTestHMIText.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) e o teste
+  //AQueuedRefreshDoesNothingDuringAppShutdown em ut.hmianimation.pas para o
+  //porque deste guard - uma chamada enfileirada via
+  //Application.QueueAsyncCall que so' e' atendida durante o encerramento do
+  //app tem que virar um no-op.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) and the
+  //AQueuedRefreshDoesNothingDuringAppShutdown test in ut.hmianimation.pas
+  //for why this guard exists - a call queued via Application.QueueAsyncCall
+  //that only gets handled during app shutdown must become a no-op.
+  NewZone(0, 'parado');
+  NewZone(1, 'ligado');
+  FText.PLCTag:=FTag;
+  TagValueIs(0);
+  AssertEquals('legenda antes do encerramento', 'parado', FText.Caption);
+
+  FTag.ChegouDoCLP(1); //muda o valor do tag, mas RefreshText e' chamado direto abaixo, nao via Settle
+
+  TTextAccess(FText).SimulateAppShutdown:=true;
+  try
+    FText.RefreshText(0); //e' o que TApplication.Destroy faz com qualquer chamada ainda pendente na fila
+  finally
+    TTextAccess(FText).SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('a legenda nao mudou', 'parado', FText.Caption);
 end;
 
 initialization

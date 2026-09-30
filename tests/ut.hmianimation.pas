@@ -87,6 +87,17 @@ implementation
 
 type
 
+  { TAnimationAccess }
+
+  //: so' eleva a visibilidade de SimulateAppShutdown (protected em
+  //: THMIAnimation) pra publica, pro teste conseguir setar / just raises
+  //: SimulateAppShutdown's visibility (protected in THMIAnimation) to
+  //: public, so the test can set it
+  TAnimationAccess = class(THMIAnimation)
+  public
+    property SimulateAppShutdown;
+  end;
+
   { TUserManagementForTest }
 
   TUserManagementForTest = class(TCustomizedUserManagement)
@@ -353,7 +364,8 @@ begin
   //Application.Flags (TApplication.SetFlags filtra e so' deixa
   //AppNoExceptionMessages passar por Application.Flags:=...) nao tem como
   //ser simulados daqui de fora - por isso o teste usa
-  //AnimationSimulateAppShutdown, exposta so' para isso.
+  //TAnimationAccess(FAnim).SimulateAppShutdown (protected em THMIAnimation,
+  //elevada a public so' pela subclasse TAnimationAccess acima).
   //TApplication.Destroy includes AppDoNotCallAsyncQueue in Flags BEFORE
   //flushing the pending Application.QueueAsyncCall queue (see
   //lcl/include/application.inc: Include(FFlags,AppDoNotCallAsyncQueue);
@@ -369,7 +381,8 @@ begin
   //Application.Flags (TApplication.SetFlags filters and only lets
   //AppNoExceptionMessages through Application.Flags:=...) can't be
   //simulated from out here - that is why the test uses
-  //AnimationSimulateAppShutdown, exposed just for this.
+  //TAnimationAccess(FAnim).SimulateAppShutdown (protected in THMIAnimation,
+  //raised to public only by the TAnimationAccess subclass above).
   fechada:=NewZone(0);
   NewZone(1); //aberta - a zona que RefreshAnimation escolheria se nao fosse barrado / the zone RefreshAnimation would pick if not blocked
   FAnim.PLCTag:=FTag;
@@ -387,7 +400,7 @@ begin
   FChangeCount:=0;
   FAnim.ZoneChanged:=@OnZoneChanged;
 
-  AnimationSimulateAppShutdown:=true;
+  TAnimationAccess(FAnim).SimulateAppShutdown:=true;
   try
     //e' o que TApplication.Destroy faz com qualquer chamada ainda pendente
     //na fila: executa-la diretamente, ja' no meio do encerramento.
@@ -395,7 +408,7 @@ begin
     //the queue: run it directly, already in the middle of shutting down.
     FAnim.RefreshAnimation(0);
   finally
-    AnimationSimulateAppShutdown:=false;
+    TAnimationAccess(FAnim).SimulateAppShutdown:=false;
   end;
 
   AssertSame('a zona nao mudou', fechada, FAnim.CurrentAnimationZone);

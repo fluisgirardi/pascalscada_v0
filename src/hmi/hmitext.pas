@@ -165,6 +165,22 @@ end;
 
 procedure THMIText.RefreshText(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o porque
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall que
+  //so' e' atendida durante o encerramento do app (TApplication.Destroy
+  //esvaziando a fila pendente) acha hmi_animation_timers ja' finalizada
+  //(inicializa antes de Interfaces, entao finaliza antes dela) e
+  //GetAnimationTimer nil, derrubando o processo ao acessar fTimerList em
+  //ShowDefaultZone/SetValue/BlinkTimer.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for why this guard
+  //exists: a call queued via Application.QueueAsyncCall that only gets
+  //handled during app shutdown (TApplication.Destroy flushing the pending
+  //queue) finds hmi_animation_timers already finalized (it initializes
+  //before Interfaces, so it finalizes before it too) and GetAnimationTimer
+  //nil, crashing the process when ShowDefaultZone/SetValue/BlinkTimer touch
+  //fTimerList.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   if [csLoading,csReading,csDestroying]*ComponentState=[] then begin
      if FTag=nil then begin
        ShowDefaultZone;

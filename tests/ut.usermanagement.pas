@@ -73,6 +73,19 @@ type
     function CanAccessAs(sc:UTF8String; aUID:Integer):Boolean;
   end;
 
+  //ChipCardReaderProc tambem ganhou o guard de encerramento (ver
+  //hmianimation.pas), mas nao tem teste de regressao aqui: so' e'
+  //enfileirado a partir de StartDelayedChipCardRead, chamado de dentro do
+  //dialogo modal de login (frmLoginDlg, privado a basicusermanagement.pas) -
+  //o mesmo motivo pelo qual CanAccess(codigo, usuario) acima nao e'
+  //exercitado direto.
+  //
+  //ChipCardReaderProc also got the shutdown guard (see hmianimation.pas),
+  //but has no regression test here: it is only queued from
+  //StartDelayedChipCardRead, called from inside the modal login dialog
+  //(frmLoginDlg, private to basicusermanagement.pas) - the same reason
+  //CanAccess(code, user) above is not exercised directly.
+
   { TTestUserManagement }
 
   TTestUserManagement = class(TTestCase)

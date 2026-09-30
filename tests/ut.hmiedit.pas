@@ -59,6 +59,9 @@ type
     procedure PressEsc;
     procedure EnterTheField;
     procedure LeaveTheField;
+    //: eleva SimulateAppShutdown (protected) a public / raises
+    //: SimulateAppShutdown (protected) to public
+    property SimulateAppShutdown;
   end;
 
   { TTestHMIEdit }
@@ -127,6 +130,9 @@ type
     //seguranca / security
     procedure WithoutPermissionTheEditIsDisabled;
     procedure PermissionDoesNotOverrideTheProgramsEnabled;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -680,6 +686,33 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMIEdit.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) e o teste
+  //AQueuedRefreshDoesNothingDuringAppShutdown em ut.hmianimation.pas para o
+  //porque deste guard. RefreshTagValue e' privado nesta unit, entao o
+  //disparo tem que ser pela fila de verdade (ChegouDoCLP sem Settle, depois
+  //Settle com a flag ja' marcada).
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) and the
+  //AQueuedRefreshDoesNothingDuringAppShutdown test in ut.hmianimation.pas
+  //for why this guard exists. RefreshTagValue is private in this unit, so
+  //the trigger has to go through the real queue (ChegouDoCLP without
+  //Settle, then Settle with the flag already set).
+  TagValueIs(42);
+  AssertEquals('texto antes do encerramento', '42.0', FEdit.Text);
+
+  FTag.ChegouDoCLP(7);
+
+  FEdit.SimulateAppShutdown:=true;
+  try
+    Settle;
+  finally
+    FEdit.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('o texto nao mudou', '42.0', FEdit.Text);
 end;
 
 initialization

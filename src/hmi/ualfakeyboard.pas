@@ -129,8 +129,12 @@ type
     FFastNavigationKeyGroup:TList;
     FReturnCloseKeyBoard:Boolean;
     fStartedAt:TDateTime;
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
     procedure DoClose(var CloseAction: TCloseAction); override;
     procedure GotoBetterPositionDelayed(Data: PtrInt);
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     constructor Create(TheOwner: TComponent;
                        Target:TWinControl;
@@ -605,6 +609,14 @@ end;
 
 procedure TpsHMIfrmAlphaKeyboard.GotoBetterPositionDelayed(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   GotoBetterPosition;
 end;
 

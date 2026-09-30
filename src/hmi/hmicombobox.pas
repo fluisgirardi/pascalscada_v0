@@ -34,6 +34,8 @@ type
     FAllowSetIndex,
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
 
     //: @exclude
     procedure Select; override;
@@ -64,6 +66,8 @@ type
     procedure TagChangeCallBack(Sender:TObject); virtual;
     procedure RemoveTagCallBack(Sender:TObject); virtual;
     procedure Loaded; override;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -406,6 +410,14 @@ var
   found: Boolean;
   obj: Integer;
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   NewIndex:=-1;
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTag<>nil) and Supports(FTag, ITagNumeric) then begin

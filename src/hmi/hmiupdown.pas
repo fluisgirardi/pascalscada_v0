@@ -46,6 +46,8 @@ type
     FEnableMax, FEnableMin:Boolean;
 
     FSecurityCode:UTF8String;
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
     procedure SetSecurityCode(sc:UTF8String);
 
     //implements the IHMIInterface interface
@@ -76,6 +78,8 @@ type
     procedure Loaded; override;
     //: @exclude
     procedure Click(Button: TUDBtnType); override;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -232,6 +236,13 @@ end;
 
 procedure THMIUpDown.RefreshUpDown(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
     FPosition := (FTag as ITagNumeric).Value

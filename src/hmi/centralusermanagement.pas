@@ -309,8 +309,14 @@ begin
       Dispose(aux);
   end;
 
-  if updateCtrls then
-    GetControlSecurityManager.UpdateControls;;
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard - so' protege a chamada abaixo (nao a funcao inteira) pra
+  //nao pular o Dispose(aux) acima em caso de encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard - it only protects the call below (not the whole
+  //function) so it doesn't skip the Dispose(aux) above on app shutdown.
+  if updateCtrls and not (FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags)) then
+    GetControlSecurityManager.UpdateControls;
 
 end;
 
@@ -354,6 +360,18 @@ end;
 
 procedure TCentralUserManagement.UpdateControlSecureState(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall que
+  //so' e' atendida durante o encerramento do app pode achar o singleton de
+  //ControlSecurityManager ja' finalizado (mesmo padrao de ordem de
+  //finalizacao de unit).
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall that
+  //only gets handled during app shutdown may find the
+  //ControlSecurityManager singleton already finalized (same unit
+  //finalization-order pattern).
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   GetControlSecurityManager.UpdateControls;
 end;
 
@@ -451,28 +469,32 @@ begin
         exit;
       end;
 
-      if (CentralData is TJSONObject) then begin
-        if TJSONObject(CentralData).Find(_uid,jUID) then begin
-          if FUID<>jUID.AsInteger then begin
-            if TJSONObject(CentralData).Find(_authorizations, jAux) then begin
-              if Assigned(FCachedAuthorizations) then
-                FreeAndNil(FCachedAuthorizations);
-              FCachedAuthorizations:=TJSONObject(jAux.Clone);
+      try
+        if (CentralData is TJSONObject) then begin
+          if TJSONObject(CentralData).Find(_uid,jUID) then begin
+            if FUID<>jUID.AsInteger then begin
+              if TJSONObject(CentralData).Find(_authorizations, jAux) then begin
+                if Assigned(FCachedAuthorizations) then
+                  FreeAndNil(FCachedAuthorizations);
+                FCachedAuthorizations:=TJSONObject(jAux.Clone);
+              end;
+
+              //delay a Control security refresh
+              if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
+                Application.QueueAsyncCall(@UpdateControlSecureState,0);
             end;
-
-            //delay a Control security refresh
-            if Application.Flags*[AppDoNotCallAsyncQueue]=[] then
-              Application.QueueAsyncCall(@UpdateControlSecureState,0);
+            Result:=FCachedAuthorizations.Find(sc, aBoolVar);
+            FUID:=jUID.AsInteger;
           end;
-          Result:=FCachedAuthorizations.Find(sc, aBoolVar);
-          FUID:=jUID.AsInteger;
-        end;
 
-        if TJSONObject(CentralData).Find(_login,jLogin) then begin
-          FCurrentUserLogin:=jLogin.AsString;
-        end;
+          if TJSONObject(CentralData).Find(_login,jLogin) then begin
+            FCurrentUserLogin:=jLogin.AsString;
+          end;
 
-        exit;
+          exit;
+        end;
+      finally
+        CentralData.Free;
       end;
     end;
   finally

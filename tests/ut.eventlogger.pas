@@ -35,11 +35,21 @@ unit ut.eventlogger;
 interface
 
 uses
-  Classes, SysUtils, Graphics, fpcunit, testregistry,
+  Classes, SysUtils, Graphics, Forms, fpcunit, testregistry,
   HMIEventLogger, HMIDBConnection,
   testsupport.faketag;
 
 type
+
+  { TEventLoggerProbe }
+
+  //SimulateAppShutdown e' protegido; a sonda so' o expoe, sem nada de novo.
+  //
+  //SimulateAppShutdown is protected; the probe only exposes it, nothing new.
+  TEventLoggerProbe = class(THMIEventLogger)
+  public
+    property SimulateAppShutdown;
+  end;
 
   { TTestEventDescriptions }
 
@@ -71,6 +81,10 @@ type
     FIdAnswer:Boolean;
 
     procedure OnNew(Sender:TObject; TagItem:TEventTagColletionItem;
+                    EventIntID:Int64; EventGUID:TGuid;
+                    EventDesc:TEventCollectionItem;
+                    var NewTagEventSQL:THMIDBConnectionStatementList);
+    procedure OnNewWithSQL(Sender:TObject; TagItem:TEventTagColletionItem;
                     EventIntID:Int64; EventGUID:TGuid;
                     EventDesc:TEventCollectionItem;
                     var NewTagEventSQL:THMIDBConnectionStatementList);
@@ -106,6 +120,9 @@ type
 
     //sem banco / with no database
     procedure WithNoDatabaseConnectionAnEventDoesNotCrash;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -214,6 +231,20 @@ procedure TTestEventLogger.OnFinished(Sender:TObject; EventIntID:Int64;
 begin
   inc(FFinishedCount);
   FLastFinishedIntID:=EventIntID;
+end;
+
+procedure TTestEventLogger.OnNewWithSQL(Sender:TObject; TagItem:TEventTagColletionItem;
+  EventIntID:Int64; EventGUID:TGuid; EventDesc:TEventCollectionItem;
+  var NewTagEventSQL:THMIDBConnectionStatementList);
+begin
+  inc(FNewCount);
+  FLastDesc:=EventDesc;
+  FLastIntID:=EventIntID;
+  //sem isso sqlcmds.Count fica em zero, e o logger nunca acha que tem algo
+  //pendente para gravar quando o banco estiver desconectado
+  //without this sqlcmds.Count stays at zero, and the logger never thinks
+  //there is anything pending to save while the database is disconnected
+  NewTagEventSQL.Add('insert into events values (1)');
 end;
 
 function TTestEventLogger.OnNewId(var EventIntID:Int64; var EventGUID:TGuid):Boolean;
@@ -399,6 +430,37 @@ begin
   FTag.ChegouDoCLP(3);
 
   AssertEquals('o evento nasceu mesmo sem banco', 1, FNewCount);
+end;
+
+procedure TTestEventLogger.AQueuedRefreshDoesNothingDuringAppShutdown;
+var
+  db:THMIDBConnection;
+begin
+  db:=THMIDBConnection.Create(nil);
+  try
+    NewDescription(3, 'falta de fase');
+    FLogger.OnNewTagEvent:=@OnNewWithSQL;
+    FLogger.AsyncDBConnection:=db;
+
+    //banco associado mas desconectado: o evento fica pendente e uma nova
+    //tentativa e' enfileirada na fila da aplicacao, sem assenta-la ainda
+    //database attached but disconnected: the event stays pending and a
+    //retry is queued on the application queue, without settling it yet
+    FTag.ChegouDoCLP(3);
+    AssertEquals('um evento antes do encerramento', 1, FNewCount);
+
+    TEventLoggerProbe(FLogger).SimulateAppShutdown:=true;
+    try
+      Application.ProcessMessages;
+    finally
+      TEventLoggerProbe(FLogger).SimulateAppShutdown:=false;
+    end;
+
+    AssertEquals('nenhuma nova tentativa', 1, FNewCount);
+  finally
+    FLogger.AsyncDBConnection:=nil;
+    db.Free;
+  end;
 end;
 
 initialization

@@ -51,6 +51,7 @@ type
   //exposes them so the blink can be checked without waiting for the clock.
   TElevatorProbe = class(THMILinkedFlowElevator)
   public
+    property SimulateAppShutdown;
     function  Blinking:Boolean;
     procedure FireBlink;
   end;
@@ -123,6 +124,9 @@ type
 
     //seguranca / security
     procedure WithoutPermissionTheElevatorIsDisabled;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -581,6 +585,26 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestFlowElevator.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  NewState(0, false, clRed,  clMaroon);
+  NewState(1, true,  clLime, clGreen);
+
+  TagValueIs(0);
+  AssertEquals('parado antes do encerramento', clRed, FElevator.BodyColor);
+
+  FTag.ChegouDoCLP(1);
+
+  FElevator.SimulateAppShutdown:=true;
+  try
+    Settle;
+  finally
+    FElevator.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('o estado nao mudou', clRed, FElevator.BodyColor);
 end;
 
 initialization

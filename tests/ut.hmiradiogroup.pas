@@ -51,6 +51,9 @@ type
   TRadioGroupProbe = class(THMIRadioGroup)
   public
     procedure Pick(aIndex:Integer);
+    //: eleva SimulateAppShutdown (protected) a public / raises
+    //: SimulateAppShutdown (protected) to public
+    property SimulateAppShutdown;
   end;
 
   { TRefusingNumber }
@@ -114,6 +117,9 @@ type
     procedure WithoutPermissionTheGroupIsDisabled;
     procedure WithPermissionTheGroupIsEnabled;
     procedure PermissionDoesNotOverrideEnabledFalse;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -505,6 +511,31 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMIRadioGroup.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) e o teste
+  //AQueuedRefreshDoesNothingDuringAppShutdown em ut.hmianimation.pas para o
+  //porque deste guard.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) and the
+  //AQueuedRefreshDoesNothingDuringAppShutdown test in ut.hmianimation.pas
+  //for why this guard exists.
+  ThreeModes;
+  FGroup.PLCTag:=FTag;
+  TagValueIs(1);
+  AssertEquals('opcao antes do encerramento', 1, FGroup.ItemIndex);
+
+  FTag.ChegouDoCLP(2);
+
+  FGroup.SimulateAppShutdown:=true;
+  try
+    FGroup.RefreshRadioGroup(0);
+  finally
+    FGroup.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('a opcao nao mudou', 1, FGroup.ItemIndex);
 end;
 
 initialization

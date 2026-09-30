@@ -49,6 +49,9 @@ type
   TComboProbe = class(THMIComboBox)
   public
     procedure Pick(aIndex:Integer);
+    //: eleva SimulateAppShutdown (protected) a public / raises
+    //: SimulateAppShutdown (protected) to public
+    property SimulateAppShutdown;
   end;
 
   { TTestHMIComboBox }
@@ -101,6 +104,9 @@ type
 
     //seguranca / security
     procedure WithoutPermissionTheComboIsDisabled;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -443,6 +449,31 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMIComboBox.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) e o teste
+  //AQueuedRefreshDoesNothingDuringAppShutdown em ut.hmianimation.pas para o
+  //porque deste guard.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) and the
+  //AQueuedRefreshDoesNothingDuringAppShutdown test in ut.hmianimation.pas
+  //for why this guard exists.
+  ThreeModes;
+  FCombo.PLCTag:=FTag;
+  TagValueIs(20);
+  AssertEquals('linha antes do encerramento', 1, FCombo.ItemIndex);
+
+  FTag.ChegouDoCLP(30);
+
+  FCombo.SimulateAppShutdown:=true;
+  try
+    FCombo.RefreshCombo(0);
+  finally
+    FCombo.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('a linha nao mudou', 1, FCombo.ItemIndex);
 end;
 
 initialization

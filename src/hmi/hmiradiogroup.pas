@@ -43,6 +43,8 @@ type
     FLastIndex:LongInt;
 
     FSecurityCode:UTF8String;
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
     procedure SetSecurityCode(sc:UTF8String);
 
     //: @seealso(IHMIInterface.SetHMITag)
@@ -75,6 +77,8 @@ type
     procedure CheckItemIndexChanged; {$IFDEF FPC} override; {$ENDIF}
     //: @exclude
     procedure Loaded; override;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -174,6 +178,13 @@ procedure THMIRadioGroup.RefreshRadioGroup(Data: PtrInt);
 var
    Value:Double;
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
 
   //sem tag nao ha' leitura: -1 nao e' posicao nenhuma, entao o grupo cai na
