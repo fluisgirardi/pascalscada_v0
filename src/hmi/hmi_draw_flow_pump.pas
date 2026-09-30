@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, hmi_flow_zones, HMIBasicEletricMotor, hmi_polyline, HMIZones,
-  PLCTag, Tag, ExtCtrls,Graphics, hmi_commfaultbadge;
+  PLCTag, Tag, ExtCtrls,Graphics;
 
 type
 
@@ -127,8 +127,6 @@ begin
   //communication" drawing lives. Until now nobody called the recalculation on
   //this path and the last value's drawing stayed on screen.
   UpdateValve;
-  if Assigned(FCommFaultLink) then
-    FCommFaultLink.SetTag(AValue);
 end;
 
 procedure THMICustomLinkedFlowPump.WriteFaultCallBack(Sender: TObject);

@@ -28,7 +28,6 @@ uses
   ut.hmizones,
   ut.propertyconnector,
   ut.colorconnector,
-  ut.commfaultbadge,
   ut.dislocator,
   ut.eventlogger,
   ut.alarmlogger,

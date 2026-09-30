@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, hmi_flow_zones, HMI_Draw_Valves, hmi_polyline, HMIZones,
-  PLCTag, Tag, ExtCtrls, hmi_commfaultbadge;
+  PLCTag, Tag, ExtCtrls;
 
 type
   THMICustomFlowValve = class(THMICustomBasicValve, IColorChangeNotification)
@@ -112,8 +112,6 @@ begin
   //communication" drawing lives. Until now nobody called the recalculation on
   //this path and the last value's drawing stayed on screen.
   UpdateValve;
-  if Assigned(FCommFaultLink) then
-    FCommFaultLink.SetTag(AValue);
 end;
 
 procedure THMICustomLinkedFlowValve.WriteFaultCallBack(Sender: TObject);
