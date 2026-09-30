@@ -108,6 +108,8 @@ type
     procedure TagFromListChanged(Sender: TObject);
     procedure FinishAllEventsDelayed;
   protected
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
     procedure FinishCurrentEvent(aItem: TEventTagColletionItem);
     procedure Loaded; override;
     procedure DoTagEventFinished(Sender:TObject; EventIntID:Int64; EventGUID:TGuid; var FinishEventSQL:String); virtual;
@@ -116,6 +118,8 @@ type
       EventDesc: TEventCollectionItem;
   var NewEventSQL: THMIDBConnectionStatementList); virtual;
     function  GenerateNewEventID(var EventIntID:Int64; var EventGUID:TGuid):Boolean; virtual;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -307,6 +311,14 @@ end;
 
 procedure THMICustomEventLogger.TagChangedDelayed2(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   TagFromListChanged(TObject(Data));
 end;
 
@@ -322,7 +334,7 @@ var
   sqlcmds: THMIDBConnectionStatementList;
   b, a, c1: Boolean;
 begin
-  if ([csReading,csLoading,csDesignInstance,csDesigning]*ComponentState<>[]) then
+  if ([csReading,csLoading,csDesignInstance,csDesigning,csDestroying]*ComponentState<>[]) then
     exit;
 
   if Assigned(FEventTags) then begin

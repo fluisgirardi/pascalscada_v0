@@ -40,6 +40,21 @@ uses
 
 type
 
+  { TAlphaKeyboardProbe }
+
+  //GotoBetterPositionDelayed e SimulateAppShutdown sao protegidos; a sonda os
+  //expoe sem precisar de um construtor proprio - o teste so' faz um typecast
+  //em cima do teclado que CreateOrGetLast ja' devolveu.
+  //
+  //GotoBetterPositionDelayed and SimulateAppShutdown are protected; the probe
+  //exposes them without needing its own constructor - the test just
+  //typecasts the keyboard CreateOrGetLast already returned.
+  TAlphaKeyboardProbe = class(TpsHMIfrmAlphaKeyboard)
+  public
+    property SimulateAppShutdown;
+    procedure FireGotoBetterPositionDelayed;
+  end;
+
   { TTestAlphaKeyboard }
 
   TTestAlphaKeyboard = class(TTestCase)
@@ -69,9 +84,19 @@ type
 
     //digitar / typing
     procedure PressingALetterTypesItIntoTheField;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
+
+{ TAlphaKeyboardProbe }
+
+procedure TAlphaKeyboardProbe.FireGotoBetterPositionDelayed;
+begin
+  GotoBetterPositionDelayed(0);
+end;
 
 { TTestAlphaKeyboard }
 
@@ -218,6 +243,27 @@ begin
   FKeyboard.Btn_K.Click;
 
   AssertTrue('a letra chegou ao campo', WaitForText('k'));
+end;
+
+procedure TTestAlphaKeyboard.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //o reposicionamento especial so' vale para o campo de login, num
+  //formulario com esse nome exato
+  //the special repositioning only applies to the login field, on a form
+  //with that exact name
+  FForm.Name:='psHMIfrmUserAuthentication';
+  FForm.Top:=50;
+  NewKeyboard(true, true, true, false);
+
+  FForm.Top:=50;
+  TAlphaKeyboardProbe(FKeyboard).SimulateAppShutdown:=true;
+  try
+    TAlphaKeyboardProbe(FKeyboard).FireGotoBetterPositionDelayed;
+  finally
+    TAlphaKeyboardProbe(FKeyboard).SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('nao reposicionou', 50, FForm.Top);
 end;
 
 initialization

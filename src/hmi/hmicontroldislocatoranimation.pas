@@ -56,6 +56,9 @@ type
     FGetPositionP1,
     FGoToP0:UTF8String;
 
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
+
     procedure SetStartLeft(v:LongInt);
     procedure SetStartTop(v:LongInt);
     procedure SetEndLeft(v:LongInt);
@@ -84,6 +87,8 @@ type
     //@exclude
     procedure Loaded; override;
     procedure SetPLCTag(t:TPLCNumber);
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
 
     procedure SetValueStart(v:Double); virtual;
     procedure SetValueEnd(v:Double); virtual;
@@ -318,6 +323,13 @@ procedure THMIControlDislocatorAnimation2.MoveObject(DataPtr: PtrInt);
 var
   outX, outY:Double;
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTarget=nil) or (FTag=nil) or (FTagY=nil) then exit;
 
@@ -469,6 +481,13 @@ procedure THMICustomControlDislocatorAnimation.MoveObject(DataPtr: PtrInt);
 var
   outX, outY:Double;
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if (FTarget=nil) or (FTag=nil) then exit;
 

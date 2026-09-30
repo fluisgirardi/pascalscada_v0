@@ -60,6 +60,7 @@ type
   private
     function  Find(const aId:AnsiString):TSVGElement;
   public
+    property SimulateAppShutdown;
     function FillOf(const aId:AnsiString):TColor;
     function BorderOf(const aId:AnsiString):TColor;
   end;
@@ -160,6 +161,9 @@ type
     procedure AThreeWayValveComesWithThreeOutputs;
     procedure AssigningTheOutputsOfAnotherControlCopiesThem;
     procedure AssigningTheStatesOfAnotherControlCopiesThem;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -801,6 +805,26 @@ begin
   finally
     outro.Free;
   end;
+end;
+
+procedure TTestFlowVectorControl.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  NewState(1, 'flow.output=1');
+  FInput.LineColor:=clRed;
+
+  TagValueIs(0);
+  AssertEquals('vazia antes do encerramento', FOut1.EmptyColor, FOut1.LineColor);
+
+  FTag.ChegouDoCLP(1);
+
+  FCtrl.SimulateAppShutdown:=true;
+  try
+    Settle;
+  finally
+    FCtrl.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('o fluxo nao mudou', FOut1.EmptyColor, FOut1.LineColor);
 end;
 
 initialization

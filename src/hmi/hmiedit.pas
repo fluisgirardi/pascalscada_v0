@@ -83,6 +83,8 @@ type
     FMinLimit, FMaxLimit:Double;
 
     FSecurityCode:UTF8String;
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
     procedure SetSecurityCode(sc:UTF8String);
 
     procedure RemoveHMITag(Sender:TObject);
@@ -149,6 +151,8 @@ type
     //: @exclude
     procedure SetAlignment(Value: TAlignment);
     {$ENDIF}
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -677,6 +681,14 @@ end;
 
 procedure THMIEdit.RefreshTagValue(DataPtr: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   if ([csReading,csLoading,csDestroying]*ComponentState<>[]) or Modified then begin
     exit;
   end;

@@ -55,6 +55,7 @@ type
   //directly, which is what the property setters already do.
   TDislocatorProbe = class(THMIControlDislocatorAnimation)
   public
+    property SimulateAppShutdown;
     procedure MoveNow;
   end;
 
@@ -62,6 +63,7 @@ type
 
   TDislocator2Probe = class(THMIControlDislocatorAnimation2)
   public
+    property SimulateAppShutdown;
     procedure MoveNow;
   end;
 
@@ -97,6 +99,9 @@ type
     procedure ChangingAPointMovesItAtOnce;
     procedure ADestroyedTagLetsGoOfTheAnimation;
     procedure ADestroyedControlLetsGoOfTheAnimation;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedMoveDoesNothingDuringAppShutdown;
   end;
 
   { TTestDislocator2 }
@@ -114,6 +119,9 @@ type
     procedure MovingOnlyTheVerticalTagMovesOnlyTheTop;
     procedure WithOnlyOneOfTheTwoTagsNothingMoves;
     procedure TheTwoAxesHaveTheirOwnValueRanges;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedMoveDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -361,6 +369,25 @@ begin
   AssertTrue('a animacao largou o controle', FAnim.Control=nil);
 end;
 
+procedure TTestDislocator.AQueuedMoveDoesNothingDuringAppShutdown;
+begin
+  SetUpAStraightTrack;
+  FTag.ChegouDoCLP(0);
+  FAnim.MoveNow;
+  AssertEquals('esquerda antes do encerramento', 10, FControl.Left);
+
+  FTag.ChegouDoCLP(100);
+
+  FAnim.SimulateAppShutdown:=true;
+  try
+    FAnim.MoveNow;
+  finally
+    FAnim.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('nao moveu', 10, FControl.Left);
+end;
+
 { TTestDislocator2 }
 
 procedure TTestDislocator2.SetUp;
@@ -444,6 +471,27 @@ begin
 
   AssertEquals('meio da horizontal', 60,  FControl.Left);
   AssertEquals('meio da vertical',   120, FControl.Top);
+end;
+
+procedure TTestDislocator2.AQueuedMoveDoesNothingDuringAppShutdown;
+begin
+  FAnim.PLCTagX:=FTagX;
+  FAnim.PLCTagy:=FTagY;
+  FTagX.ChegouDoCLP(0);
+  FTagY.ChegouDoCLP(0);
+  FAnim.MoveNow;
+  AssertEquals('esquerda antes do encerramento', 10, FControl.Left);
+
+  FTagX.ChegouDoCLP(100);
+
+  FAnim.SimulateAppShutdown:=true;
+  try
+    FAnim.MoveNow;
+  finally
+    FAnim.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('nao moveu', 10, FControl.Left);
 end;
 
 initialization

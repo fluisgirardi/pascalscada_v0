@@ -54,6 +54,20 @@ type
 
     FSecurityCode:UTF8String;
     FZoneChanged: TZoneChanged;
+    {$IFDEF PORTUGUES}
+    //: simula, so' para testes automatizados, a janela de encerramento do
+    //: app que RefreshAnimation precisa detectar (Application.Terminated
+    //: nao tem setter publico, e TApplication.SetFlags filtra e so' deixa
+    //: AppNoExceptionMessages passar por Application.Flags:=...). Fica
+    //: falso o tempo todo fora de teste.
+    {$ELSE}
+    //: simulates, for automated tests only, the app-shutdown window that
+    //: RefreshAnimation needs to detect (Application.Terminated has no
+    //: public setter, and TApplication.SetFlags filters and only lets
+    //: AppNoExceptionMessages through Application.Flags:=...). Stays false
+    //: at all times outside of tests.
+    {$ENDIF}
+    FSimulateAppShutdown: Boolean;
     function GetAnimationZone: TAnimationZone;
     procedure SetSecurityCode(sc:UTF8String);
 
@@ -71,6 +85,9 @@ type
     procedure ShowZone(zone:TGraphicZone);
     //: @exclude
     procedure SetTestValue(v:Double);
+
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
 
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -200,28 +217,6 @@ type
     property ZoneChanged:TZoneChanged read FZoneChanged write FZoneChanged;
   end;
 
-{$IFDEF PORTUGUES}
-{:
-Simula, so' para testes automatizados, a janela de encerramento do app que
-RefreshAnimation precisa detectar (Application.Terminated e
-AppDoNotCallAsyncQueue em Application.Flags nao tem como ser simulados de
-fora: Terminated nao tem setter publico, e TApplication.SetFlags filtra e so'
-deixa AppNoExceptionMessages passar por Application.Flags:=...). Fica falso
-o tempo todo fora de teste.
-}
-{$ELSE}
-{:
-Simulates, for automated tests only, the app-shutdown window that
-RefreshAnimation needs to detect (Application.Terminated and
-AppDoNotCallAsyncQueue in Application.Flags can't be simulated from the
-outside: Terminated has no public setter, and TApplication.SetFlags filters
-and only lets AppNoExceptionMessages through Application.Flags:=...). Stays
-false at all times outside of tests.
-}
-{$ENDIF}
-var
-  AnimationSimulateAppShutdown: Boolean = False;
-
 implementation
 
 uses hsstrings, ControlSecurityManager, Forms, hmi_animation_timers;
@@ -286,7 +281,7 @@ begin
    //before it too) and GetAnimationTimer returns nil, crashing when
    //ShowDefaultZone/BlinkTimer touch fTimerList. Terminated is also checked
    //as an extra safety net for other shutdown paths.
-   if AnimationSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+   if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
 
    if [csReading,csDestroying,csLoading]*ComponentState=[] then begin
       if FTag=nil then begin

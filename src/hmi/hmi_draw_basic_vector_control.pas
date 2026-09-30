@@ -849,6 +849,18 @@ var
   zone: THMIVectorFlowZone;
   value:Double = Infinity;
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o porque
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall que
+  //so' e' atendida durante o encerramento do app acha hmi_animation_timers
+  //ja' finalizada e GetAnimationTimer nil, derrubando o processo logo
+  //abaixo em AddTimerCallback/RemoveCallback.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for why this guard
+  //exists: a call queued via Application.QueueAsyncCall that only gets
+  //handled during app shutdown finds hmi_animation_timers already
+  //finalized and GetAnimationTimer nil, crashing the process right below
+  //in AddTimerCallback/RemoveCallback.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   if [csReading,csLoading,csDestroying]*ComponentState<>[] then exit;
   if Assigned(FPLCTag) and Supports(FPLCTag, ITagNumeric) then
     value:=(FPLCTag as ITagNumeric).GetValue;

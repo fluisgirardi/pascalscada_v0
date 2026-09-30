@@ -102,9 +102,24 @@ type
 
     //desligamento / detaching
     procedure ADestroyedTagLetsGoOfTheBox;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
+
+type
+
+  { TCheckBoxAccess }
+
+  //: eleva SimulateAppShutdown (protected) a public, pro teste conseguir
+  //: setar / raises SimulateAppShutdown (protected) to public, so the test
+  //: can set it
+  TCheckBoxAccess = class(THMICheckBox)
+  public
+    property SimulateAppShutdown;
+  end;
 
 { TTestHMICheckBox }
 
@@ -409,6 +424,29 @@ begin
   FreeAndNil(FTag);
 
   AssertTrue('a caixa largou o tag', FBox.PLCTag=nil);
+end;
+
+procedure TTestHMICheckBox.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) e o teste
+  //AQueuedRefreshDoesNothingDuringAppShutdown em ut.hmianimation.pas para o
+  //porque deste guard.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) and the
+  //AQueuedRefreshDoesNothingDuringAppShutdown test in ut.hmianimation.pas
+  //for why this guard exists.
+  TagValueIs(1);
+  AssertEquals('marcada antes do encerramento', Ord(cbChecked), Ord(FBox.State));
+
+  FTag.ChegouDoCLP(0);
+
+  TCheckBoxAccess(FBox).SimulateAppShutdown:=true;
+  try
+    FBox.RefreshCheckBox(0);
+  finally
+    TCheckBoxAccess(FBox).SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('o estado nao mudou', Ord(cbChecked), Ord(FBox.State));
 end;
 
 initialization

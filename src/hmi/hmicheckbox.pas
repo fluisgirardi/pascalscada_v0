@@ -57,6 +57,8 @@ type
     FOtherValues:TOtherValues;
 
     FSecurityCode:UTF8String;
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
     procedure SetSecurityCode(sc:UTF8String);
 
     function  GetTagValue:Double;
@@ -124,6 +126,8 @@ type
     procedure UpdateTagValue;
 
     procedure Loaded; override;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -540,6 +544,14 @@ end;
 
 procedure THMICheckBox.RefreshCheckBox(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   if ([csReading, csLoading, csDestroying]*ComponentState<>[]) then begin
     exit;
   end;

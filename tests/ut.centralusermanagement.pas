@@ -49,6 +49,26 @@ type
 
   { TTestCentralUserManagement }
 
+  //RemoteUserChangedRemotely e UpdateControlSecureState tambem ganharam o
+  //guard de encerramento (ver hmianimation.pas), mas nao tem teste de
+  //regressao aqui: os dois so' sao enfileirados a partir de
+  //UseCentralUserAsLocalUser=true, que liga uma thread de verdade
+  //(TCheckUserChangeThread) consultando o servidor. Contra o servidor de
+  //mentira deste arquivo - que responde na hora, sem o long-poll de um
+  //servidor real - essa thread gira sem parar inundando a fila da
+  //aplicacao, deixando o teste ~100x mais lento e vazando memoria em
+  //CheckServerUserChanged por causa da corrida com o TearDown. Sem um jeito
+  //seguro de ligar a flag sem a thread, ficou de fora.
+  //
+  //RemoteUserChangedRemotely and UpdateControlSecureState also got the
+  //shutdown guard (see hmianimation.pas), but have no regression test here:
+  //both are only queued from UseCentralUserAsLocalUser=true, which starts a
+  //real thread (TCheckUserChangeThread) polling the server. Against this
+  //file's fake server - which answers at once, without a real server's
+  //long-poll - that thread spins non-stop flooding the app queue, making
+  //the test ~100x slower and leaking memory in CheckServerUserChanged from
+  //the race with TearDown. With no safe way to set the flag without the
+  //thread, it was left out.
   TTestCentralUserManagement = class(TTestCase)
   private
     FServidor:TServidorHTTPDeTeste;

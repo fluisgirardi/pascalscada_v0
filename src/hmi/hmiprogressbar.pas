@@ -148,6 +148,13 @@ end;
 procedure THMIProgressBar.RefreshProgress(Data: PtrInt);
 begin
   FRefreshPending:=false;
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
   if ([csReading,csLoading,csDestroying]*ComponentState<>[]) or (FTag=nil) then
     exit;
 

@@ -51,7 +51,13 @@ type
   //Progress is protected: in production only the paint routine asks for it.
   //The probe exposes it so the value being shown can be checked.
   TProgressBarProbe = class(THMIProgressBar)
+  private
+    FInvalidateCount:Integer;
+  protected
+    procedure InvalidateDraw; override;
   public
+    property SimulateAppShutdown;
+    property InvalidateCount:Integer read FInvalidateCount;
     function CurrentProgress:Double;
   end;
 
@@ -85,6 +91,9 @@ type
 
     //seguranca / security
     procedure WithoutPermissionTheBarIsDisabled;
+
+    //encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -108,6 +117,12 @@ begin
 end;
 
 { TProgressBarProbe }
+
+procedure TProgressBarProbe.InvalidateDraw;
+begin
+  inherited InvalidateDraw;
+  Inc(FInvalidateCount);
+end;
 
 function TProgressBarProbe.CurrentProgress:Double;
 begin
@@ -280,6 +295,26 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMIProgressBar.AQueuedRefreshDoesNothingDuringAppShutdown;
+var
+  antes:Integer;
+begin
+  FBar.PLCTag:=FTag;
+  TagValueIs(10);
+
+  FTag.ChegouDoCLP(77);
+  antes:=FBar.InvalidateCount;
+
+  FBar.SimulateAppShutdown:=true;
+  try
+    FBar.RefreshProgress(0);
+  finally
+    FBar.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('nenhum redesenho disparado', antes, FBar.InvalidateCount);
 end;
 
 initialization

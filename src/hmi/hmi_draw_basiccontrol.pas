@@ -68,6 +68,9 @@ type
 
     FOldWidth, FOldHeight:Integer;
 
+    //: @exclude
+    FSimulateAppShutdown: Boolean;
+
     function  IsControlArea(X,Y:Integer):Boolean; virtual;
     procedure ForwardMouseMessage(var Message:TLMMouse); virtual;
 
@@ -118,6 +121,22 @@ type
     property BorderColor:TColor read FBorderColor write SetBorderColor default clBlack;
     property BorderWidth:Integer read FBorderWidth write SetBorderWidth default 1;
     property BodyColor:TColor read FBodyColor write SetBodyColor default clSilver;
+    {$IFDEF PORTUGUES}
+    //: simula, so' para testes automatizados, a janela de encerramento do
+    //: app que callbacks enfileirados via Application.QueueAsyncCall
+    //: precisam detectar (Application.Terminated nao tem setter publico, e
+    //: TApplication.SetFlags filtra e so' deixa AppNoExceptionMessages
+    //: passar por Application.Flags:=...). Fica falso o tempo todo fora de
+    //: teste.
+    {$ELSE}
+    //: simulates, for automated tests only, the app-shutdown window that
+    //: callbacks queued via Application.QueueAsyncCall need to detect
+    //: (Application.Terminated has no public setter, and
+    //: TApplication.SetFlags filters and only lets AppNoExceptionMessages
+    //: through Application.Flags:=...). Stays false at all times outside of
+    //: tests.
+    {$ENDIF}
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;

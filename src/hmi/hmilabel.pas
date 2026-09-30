@@ -68,6 +68,8 @@ type
     //: @exclude
     FTag:TPLCTag;
     //: @exclude
+    FSimulateAppShutdown: Boolean;
+    //: @exclude
     procedure SetEnabled(e:Boolean); override;
     //: @exclude
     procedure SetHMITag(t:TPLCTag); virtual;
@@ -79,6 +81,8 @@ type
     procedure TagChangeCallBack(Sender:TObject); virtual;
 
     procedure Loaded; override;
+    //: @exclude
+    property SimulateAppShutdown: Boolean read FSimulateAppShutdown write FSimulateAppShutdown;
 
   public
     //: @exclude
@@ -226,6 +230,14 @@ end;
 
 procedure THMILabel.RefreshLabel(Data: PtrInt);
 begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) para o padrao
+  //deste guard: uma chamada enfileirada via Application.QueueAsyncCall pode
+  //so' ser atendida durante o encerramento do app.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) for the pattern
+  //behind this guard: a call queued via Application.QueueAsyncCall may only
+  //get handled during app shutdown.
+  if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
   RefreshTagValue;
 end;
 

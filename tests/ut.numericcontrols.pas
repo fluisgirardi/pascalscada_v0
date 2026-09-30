@@ -58,6 +58,11 @@ type
     procedure MoveTo(p:LongInt);
     procedure Touch;
     procedure Send;
+    //: eleva SimulateAppShutdown (protected em THMITrackBar) a public, pro
+    //: teste conseguir setar
+    //: raises SimulateAppShutdown (protected in THMITrackBar) to public, so
+    //: the test can set it
+    property SimulateAppShutdown;
   end;
 
   { TScrollBarProbe }
@@ -66,6 +71,8 @@ type
   public
     procedure DragTo(p:LongInt);
     procedure LetGo(p:LongInt);
+    //: eleva SimulateAppShutdown a public / raises SimulateAppShutdown to public
+    property SimulateAppShutdown;
   end;
 
   { TUpDownProbe }
@@ -74,6 +81,8 @@ type
   public
     procedure ClickUp;
     procedure ClickDown;
+    //: eleva SimulateAppShutdown a public / raises SimulateAppShutdown to public
+    property SimulateAppShutdown;
   end;
 
   { TTestHMITrackBar }
@@ -117,6 +126,9 @@ type
     //seguranca / security
     procedure WithoutPermissionTheBarIsDisabled;
     procedure PermissionDoesNotOverrideTheProgramsEnabled;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
   { TTestHMIScrollBar }
@@ -143,6 +155,9 @@ type
     procedure ADestroyedTagLetsGoOfTheScrollBar;
     procedure ClearingTheTagTakesTheScrollBarToTheMinimum;
     procedure WithoutPermissionTheScrollBarIsDisabled;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
   { TTestHMIUpDown }
@@ -189,6 +204,9 @@ type
 
     //seguranca / security
     procedure WithoutPermissionTheUpDownIsDisabled;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -517,6 +535,44 @@ begin
   end;
 end;
 
+procedure TTestHMITrackBar.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver THMIAnimation.RefreshAnimation (hmianimation.pas) e o teste
+  //AQueuedRefreshDoesNothingDuringAppShutdown em ut.hmianimation.pas para o
+  //porque deste guard - uma chamada enfileirada via
+  //Application.QueueAsyncCall que so' e' atendida durante o encerramento do
+  //app tem que virar um no-op. RefreshTagValue e' privado nesta unit, entao
+  //ao contrario do teste de THMIAnimation, aqui o disparo tem que ser pela
+  //fila de verdade (ChegouDoCLP sem Settle, depois Settle com a flag ja'
+  //marcada) - um ponteiro de metodo enfileirado nao respeita visibilidade
+  //na hora de ser chamado.
+  //see THMIAnimation.RefreshAnimation (hmianimation.pas) and the
+  //AQueuedRefreshDoesNothingDuringAppShutdown test in ut.hmianimation.pas
+  //for why this guard exists - a call queued via Application.QueueAsyncCall
+  //that only gets handled during app shutdown must become a no-op.
+  //RefreshTagValue is private in this unit, so unlike THMIAnimation's test,
+  //here the trigger has to go through the real queue (ChegouDoCLP without
+  //Settle, then Settle with the flag already set) - a queued method pointer
+  //doesn't respect visibility when it is called.
+  TagValueIs(10);
+  AssertEquals('posicao antes do encerramento', 10, FBar.Position);
+
+  //o valor muda, mas Settle nao e' chamado aqui de proposito - o refresh
+  //fica pendente na fila.
+  //the value changes, but Settle is deliberately not called here - the
+  //refresh stays pending in the queue.
+  FTag.ChegouDoCLP(77);
+
+  FBar.SimulateAppShutdown:=true;
+  try
+    Settle; //e' aqui que a chamada pendente e' atendida, ja' "durante o encerramento" / this is where the pending call gets handled, already "during shutdown"
+  finally
+    FBar.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('a posicao nao mudou', 10, FBar.Position);
+end;
+
 { TTestHMIScrollBar }
 
 procedure TTestHMIScrollBar.SetUp;
@@ -680,6 +736,25 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMIScrollBar.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver o mesmo teste em TTestHMITrackBar acima / see the same test in
+  //TTestHMITrackBar above
+  TagValueIs(10);
+  AssertEquals('posicao antes do encerramento', 10, TScrollBar(FBar).Position);
+
+  FTag.ChegouDoCLP(77);
+
+  FBar.SimulateAppShutdown:=true;
+  try
+    Settle;
+  finally
+    FBar.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('a posicao nao mudou', 10, TScrollBar(FBar).Position);
 end;
 
 { TTestHMIUpDown }
@@ -926,6 +1001,25 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMIUpDown.AQueuedRefreshDoesNothingDuringAppShutdown;
+begin
+  //ver o mesmo teste em TTestHMITrackBar acima / see the same test in
+  //TTestHMITrackBar above
+  TagValueIs(10);
+  AssertEquals('posicao antes do encerramento', 10, FUpDown.Position, 0.0001);
+
+  FTag.ChegouDoCLP(77);
+
+  FUpDown.SimulateAppShutdown:=true;
+  try
+    Settle;
+  finally
+    FUpDown.SimulateAppShutdown:=false;
+  end;
+
+  AssertEquals('a posicao nao mudou', 10, FUpDown.Position, 0.0001);
 end;
 
 initialization
