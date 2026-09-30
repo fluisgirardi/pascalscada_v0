@@ -200,6 +200,28 @@ type
     property ZoneChanged:TZoneChanged read FZoneChanged write FZoneChanged;
   end;
 
+{$IFDEF PORTUGUES}
+{:
+Simula, so' para testes automatizados, a janela de encerramento do app que
+RefreshAnimation precisa detectar (Application.Terminated e
+AppDoNotCallAsyncQueue em Application.Flags nao tem como ser simulados de
+fora: Terminated nao tem setter publico, e TApplication.SetFlags filtra e so'
+deixa AppNoExceptionMessages passar por Application.Flags:=...). Fica falso
+o tempo todo fora de teste.
+}
+{$ELSE}
+{:
+Simulates, for automated tests only, the app-shutdown window that
+RefreshAnimation needs to detect (Application.Terminated and
+AppDoNotCallAsyncQueue in Application.Flags can't be simulated from the
+outside: Terminated has no public setter, and TApplication.SetFlags filters
+and only lets AppNoExceptionMessages through Application.Flags:=...). Stays
+false at all times outside of tests.
+}
+{$ENDIF}
+var
+  AnimationSimulateAppShutdown: Boolean = False;
+
 implementation
 
 uses hsstrings, ControlSecurityManager, Forms, hmi_animation_timers;
@@ -244,6 +266,28 @@ end;
 
 procedure THMIAnimation.RefreshAnimation(Data: PtrInt);
 begin
+   //esta chamada pode vir de uma Application.QueueAsyncCall enfileirada
+   //durante o funcionamento normal e nunca processada a tempo - se ela so'
+   //for atendida durante o encerramento do app, TApplication.Destroy ja'
+   //incluiu AppDoNotCallAsyncQueue em Flags ANTES de esvaziar a fila
+   //pendente (ver application.inc: Include(FFlags,AppDoNotCallAsyncQueue);
+   //ProcessAsyncCallQueue;) - e a essa altura hmi_animation_timers ja' rodou
+   //sua finalization (inicializa antes de Interfaces, entao finaliza antes
+   //dela) e GetAnimationTimer retorna nil, derrubando o app ao acessar
+   //fTimerList em ShowDefaultZone/BlinkTimer. Terminated e' checado tambem
+   //como rede de seguranca extra para outros caminhos de encerramento.
+   //this call can come from an Application.QueueAsyncCall queued during
+   //normal operation and never processed in time - if it only gets handled
+   //during app shutdown, TApplication.Destroy has already included
+   //AppDoNotCallAsyncQueue in Flags BEFORE flushing the pending queue (see
+   //application.inc: Include(FFlags,AppDoNotCallAsyncQueue);
+   //ProcessAsyncCallQueue;) - and by then hmi_animation_timers has already
+   //run its finalization (it initializes before Interfaces, so it finalizes
+   //before it too) and GetAnimationTimer returns nil, crashing when
+   //ShowDefaultZone/BlinkTimer touch fTimerList. Terminated is also checked
+   //as an extra safety net for other shutdown paths.
+   if AnimationSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
+
    if [csReading,csDestroying,csLoading]*ComponentState=[] then begin
       if FTag=nil then begin
         ShowDefaultZone;
