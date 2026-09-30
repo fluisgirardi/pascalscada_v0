@@ -78,6 +78,9 @@ type
 
     //seguranca / security
     procedure WithoutPermissionTheControlIsDisabled;
+
+    //o encerramento do app / app shutdown
+    procedure AQueuedRefreshDoesNothingDuringAppShutdown;
   end;
 
 implementation
@@ -329,6 +332,74 @@ begin
   finally
     users.Free;
   end;
+end;
+
+procedure TTestHMIAnimation.AQueuedRefreshDoesNothingDuringAppShutdown;
+var
+  fechada:TGraphicZone;
+begin
+  //TApplication.Destroy inclui AppDoNotCallAsyncQueue em Flags ANTES de
+  //esvaziar a fila de Application.QueueAsyncCall pendente (ver
+  //lcl/include/application.inc: Include(FFlags,AppDoNotCallAsyncQueue);
+  //ProcessAsyncCallQueue;). E' exatamente essa janela que faz um
+  //RefreshAnimation enfileirado durante o funcionamento normal - e nunca
+  //processado a tempo - ser atendido so' durante o encerramento do app,
+  //quando hmi_animation_timers ja' liberou seu gerenciador de timers
+  //global (GetAnimationTimer volta nil) e ShowDefaultZone/SetValue
+  //derrubariam o processo. RefreshAnimation tem que virar um no-op nessa
+  //janela, sem tocar zona nem temporizador nenhum.
+  //
+  //Application.Terminated (sem setter publico) e AppDoNotCallAsyncQueue em
+  //Application.Flags (TApplication.SetFlags filtra e so' deixa
+  //AppNoExceptionMessages passar por Application.Flags:=...) nao tem como
+  //ser simulados daqui de fora - por isso o teste usa
+  //AnimationSimulateAppShutdown, exposta so' para isso.
+  //TApplication.Destroy includes AppDoNotCallAsyncQueue in Flags BEFORE
+  //flushing the pending Application.QueueAsyncCall queue (see
+  //lcl/include/application.inc: Include(FFlags,AppDoNotCallAsyncQueue);
+  //ProcessAsyncCallQueue;). That is exactly the window that lets a
+  //RefreshAnimation queued during normal operation - and never processed in
+  //time - only get handled during app shutdown, when hmi_animation_timers
+  //has already released its global timer manager (GetAnimationTimer comes
+  //back nil) and ShowDefaultZone/SetValue would crash the process.
+  //RefreshAnimation must become a no-op in that window, touching neither
+  //zone nor timer.
+  //
+  //Application.Terminated (no public setter) and AppDoNotCallAsyncQueue in
+  //Application.Flags (TApplication.SetFlags filters and only lets
+  //AppNoExceptionMessages through Application.Flags:=...) can't be
+  //simulated from out here - that is why the test uses
+  //AnimationSimulateAppShutdown, exposed just for this.
+  fechada:=NewZone(0);
+  NewZone(1); //aberta - a zona que RefreshAnimation escolheria se nao fosse barrado / the zone RefreshAnimation would pick if not blocked
+  FAnim.PLCTag:=FTag;
+  TagValueIs(0);
+  AssertSame('zona antes do encerramento', fechada, FAnim.CurrentAnimationZone);
+
+  //o valor muda, mas o aviso que levaria a um RefreshAnimation fica
+  //pendente - Settle (Application.ProcessMessages) nao e' chamado aqui de
+  //proposito.
+  //the value changes, but the notification that would lead to a
+  //RefreshAnimation stays pending - Settle (Application.ProcessMessages) is
+  //deliberately not called here.
+  FTag.ChegouDoCLP(1);
+
+  FChangeCount:=0;
+  FAnim.ZoneChanged:=@OnZoneChanged;
+
+  AnimationSimulateAppShutdown:=true;
+  try
+    //e' o que TApplication.Destroy faz com qualquer chamada ainda pendente
+    //na fila: executa-la diretamente, ja' no meio do encerramento.
+    //this is what TApplication.Destroy does with any call still pending in
+    //the queue: run it directly, already in the middle of shutting down.
+    FAnim.RefreshAnimation(0);
+  finally
+    AnimationSimulateAppShutdown:=false;
+  end;
+
+  AssertSame('a zona nao mudou', fechada, FAnim.CurrentAnimationZone);
+  AssertEquals('nenhum aviso disparado', 0, FChangeCount);
 end;
 
 initialization
