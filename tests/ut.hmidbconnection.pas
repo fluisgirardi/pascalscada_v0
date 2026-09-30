@@ -33,7 +33,7 @@ unit ut.hmidbconnection;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, HMIDBConnection;
+  Classes, SysUtils, fpcunit, testregistry, HMIDBConnection, psbufdataset;
 
 type
 
@@ -96,6 +96,51 @@ type
     procedure TheCatalogRoundTrips;
     procedure ReadOnlyRoundTrips;
     procedure ThePropertiesCanBeAssigned;
+  end;
+
+  { TFakeDBBackend }
+
+  //simula o "motor" que a thread de comandos chama para abrir, confirmar e
+  //desfazer uma transacao. CommitTransaction pode ser mandado levantar,
+  //simulando uma conexao que caiu no meio do commit - e' esse o cenario que
+  //derrubava a thread antes do guard em TProcessSQLCommandThread.ProcessMessages.
+  //
+  //simulates the "engine" the command thread calls to start, commit and roll
+  //back a transaction. CommitTransaction can be told to raise, simulating a
+  //connection that dropped mid-commit - that is the scenario that used to
+  //kill the thread before the guard in
+  //TProcessSQLCommandThread.ProcessMessages.
+  TFakeDBBackend = class
+  private
+    FRaiseOnCommit:Boolean;
+    FResultCount:Integer; //mexido pela thread da fila, lido pelo teste / touched by the queue thread, read by the test
+    FLastSuccess:Boolean;
+    FLastLineOfError:Integer;
+    FLastError:Exception;
+  public
+    procedure ExecSQL(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean; NewConnection:Boolean);
+    procedure StartTransaction(NewConnection:Boolean);
+    procedure CommitTransaction;
+    procedure RollbackTransaction;
+    procedure ReturnResult(Sender:TObject; aStatements:THMIDBConnectionStatementList; Sucess:Boolean; LineOfError:Integer; Error:Exception);
+    property RaiseOnCommit:Boolean read FRaiseOnCommit write FRaiseOnCommit;
+    property ResultCount:Integer read FResultCount;
+    property LastSuccess:Boolean read FLastSuccess;
+  end;
+
+  { TTestProcessSQLCommandThread }
+
+  TTestProcessSQLCommandThread = class(TTestCase)
+  private
+    FBackend:TFakeDBBackend;
+    FThread:TProcessSQLCommandThread;
+    function NewStatements(const sql:UTF8String):THMIDBConnectionStatementList;
+    function WaitForResult(aCount, aTimeoutMs:Integer):Boolean;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure ACommitExceptionDoesNotKillTheQueue;
   end;
 
 implementation
@@ -402,8 +447,103 @@ begin
   end;
 end;
 
+{ TFakeDBBackend }
+
+procedure TFakeDBBackend.ExecSQL(sqlcmd:Utf8String; outputdataset:TFPSBufDataSet; out Error:Boolean; NewConnection:Boolean);
+begin
+  Error:=false;
+end;
+
+procedure TFakeDBBackend.StartTransaction(NewConnection:Boolean);
+begin
+  //nada a preparar / nothing to prepare
+end;
+
+procedure TFakeDBBackend.CommitTransaction;
+begin
+  if FRaiseOnCommit then
+    raise Exception.Create('conexao caiu no commit');
+end;
+
+procedure TFakeDBBackend.RollbackTransaction;
+begin
+  //neste cenario o commit e' quem falha; o rollback nao chega a ser chamado
+  //in this scenario the commit is what fails; the rollback is never reached
+end;
+
+procedure TFakeDBBackend.ReturnResult(Sender:TObject; aStatements:THMIDBConnectionStatementList; Sucess:Boolean; LineOfError:Integer; Error:Exception);
+begin
+  FLastSuccess:=Sucess;
+  FLastLineOfError:=LineOfError;
+  FLastError:=Error;
+  InterlockedIncrement(FResultCount);
+end;
+
+{ TTestProcessSQLCommandThread }
+
+procedure TTestProcessSQLCommandThread.SetUp;
+begin
+  FBackend:=TFakeDBBackend.Create;
+  FThread:=TProcessSQLCommandThread.Create(true, @FBackend.ExecSQL,
+              @FBackend.StartTransaction, @FBackend.CommitTransaction,
+              @FBackend.RollbackTransaction);
+  FThread.WakeUp;
+end;
+
+procedure TTestProcessSQLCommandThread.TearDown;
+begin
+  FThread.Terminate;
+  FThread.WaitEnd(3000);
+  FreeAndNil(FThread);
+  FreeAndNil(FBackend);
+end;
+
+function TTestProcessSQLCommandThread.NewStatements(const sql:UTF8String):THMIDBConnectionStatementList;
+begin
+  Result:=THMIDBConnectionStatementList.Create;
+  Result.Add(sql);
+end;
+
+function TTestProcessSQLCommandThread.WaitForResult(aCount, aTimeoutMs:Integer):Boolean;
+var
+  limite:QWord;
+begin
+  limite:=GetTickCount64+aTimeoutMs;
+  while (FBackend.ResultCount<aCount) and (GetTickCount64<limite) do
+    Sleep(5);
+  Result:=FBackend.ResultCount>=aCount;
+end;
+
+procedure TTestProcessSQLCommandThread.ACommitExceptionDoesNotKillTheQueue;
+begin
+  //primeira transacao: o commit levanta, simulando a conexao caindo bem na
+  //hora de confirmar
+  //first transaction: the commit raises, simulating the connection dropping
+  //right at confirm time
+  FBackend.RaiseOnCommit:=true;
+  FThread.ExecTransaction(NewStatements('insert into t values (1)'),
+    @FBackend.ReturnResult, true, false, false);
+
+  AssertTrue('a primeira transacao respondeu', WaitForResult(1, 3000));
+  AssertFalse('e veio com erro', FBackend.LastSuccess);
+
+  //antes do guard em ProcessMessages, a excecao do commit escapava do
+  //Execute e a thread morria aqui - a segunda transacao ficaria parada na
+  //fila para sempre
+  //before the guard in ProcessMessages, the commit exception escaped
+  //Execute and the thread died here - the second transaction would sit in
+  //the queue forever
+  FBackend.RaiseOnCommit:=false;
+  FThread.ExecTransaction(NewStatements('insert into t values (2)'),
+    @FBackend.ReturnResult, true, false, false);
+
+  AssertTrue('a segunda transacao tambem respondeu', WaitForResult(2, 3000));
+  AssertTrue('e dessa vez sem erro', FBackend.LastSuccess);
+end;
+
 initialization
   RegisterTest(TTestSQLFormatting);
   RegisterTest(TTestDBConnectionComponent);
+  RegisterTest(TTestProcessSQLCommandThread);
 
 end.
