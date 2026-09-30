@@ -40,17 +40,7 @@ type
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     FTag:TPLCTag;
-    //: selo em janela separada, nao desenho inline: o TUpDown no GTK2 e'
-    //: emulado com dois TSpeedButton como FILHOS reais do controle, que
-    //: sempre pintam por cima do que o proprio TUpDown desenhar (Paint ou
-    //: WMPaint, tanto faz) - so uma janela irma, fora dessa hierarquia de
-    //: filhos, fica reconhecivel por cima dos botoes.
-    //: separate-window badge, not inline drawing: TUpDown on GTK2 is
-    //: emulated with two TSpeedButton as real CHILDREN of the control,
-    //: which always paint over whatever TUpDown itself draws (Paint or
-    //: WMPaint, either way) - only a sibling window, outside that child
-    //: hierarchy, stays visible over the buttons.
-    FCommBadge:THMICommBadgeController;
+    FCommIndicator:THMIInlineFaultIndicator;
     FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -89,6 +79,8 @@ type
     procedure Loaded; override;
     //: @exclude
     procedure Click(Button: TUDBtnType); override;
+    //: @exclude
+    procedure Paint; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -225,9 +217,8 @@ begin
   FEnableMin := false;
   FEnableMax := false;
 
-  FCommBadge:=THMICommBadgeController.Create;
-  FCommBadge.SetTarget(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMIUpDown.Destroy;
@@ -244,7 +235,7 @@ begin
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommBadge);
+  FreeAndNil(FCommIndicator);
   inherited Destroy;
 end;
 
@@ -342,6 +333,13 @@ begin
   inherited Loaded;
   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   TagChangeCallBack(Self);
+end;
+
+procedure THMIUpDown.Paint;
+begin
+  inherited Paint;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
+    DrawWarningIcon(Canvas, Width, Height);
 end;
 
 procedure THMIUpDown.Click(Button: TUDBtnType);

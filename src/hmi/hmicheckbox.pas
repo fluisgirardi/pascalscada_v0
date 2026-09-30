@@ -810,10 +810,19 @@ end;
 {$ENDIF}
 
 procedure THMICheckBox.WMPaint(var Msg: TLMPaint);
+var
+  cnv: TCanvas;
 begin
   inherited;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIconOnControlDC(Self, Msg.DC);
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
+    cnv := TCanvas.Create;
+    try
+      cnv.Handle := Msg.DC;
+      DrawWarningIcon(cnv, ClientWidth, ClientHeight);
+    finally
+      cnv.Free;
+    end;
+  end;
 end;
 
 procedure THMICheckBox.SetSecurityCode(sc: UTF8String);
