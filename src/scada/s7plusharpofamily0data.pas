@@ -5,8 +5,7 @@ unit S7PlusHarpoFamily0Data;
 //: Constant tables for the HarpoS7-derived Family-0 transforms/fingerprint,
 //: ported from python-snap7's session_auth/family0/_generated/data (vendored
 //: verbatim from bonk-dev/HarpoS7, MIT). Binary tables are embedded as base64
-//: (decoded once at unit init), matching this project's existing pattern for
-//: embedding binary blobs (see hmi_commfaultbadge.pas's icon PNG).
+//: (decoded once at unit init).
 
 interface
 

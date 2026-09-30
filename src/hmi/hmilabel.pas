@@ -15,8 +15,7 @@ unit HMILabel;
 interface
 
 uses
-  SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes, Tag,
-  hmi_commfaultbadge;
+  SysUtils, Classes, Controls, StdCtrls, PLCTag, HMITypes, ProtocolTypes, Tag;
 
 type
 
@@ -69,10 +68,6 @@ type
     //: @exclude
     FTag:TPLCTag;
     //: @exclude
-    FCommIndicator:THMIInlineFaultIndicator;
-    //: @exclude
-    FCommFaultLink:THMITagFaultBadgeLink;
-    //: @exclude
     procedure SetEnabled(e:Boolean); override;
     //: @exclude
     procedure SetHMITag(t:TPLCTag); virtual;
@@ -84,7 +79,6 @@ type
     procedure TagChangeCallBack(Sender:TObject); virtual;
 
     procedure Loaded; override;
-    procedure Paint; override;
 
   public
     //: @exclude
@@ -212,9 +206,6 @@ begin
   //: @seealso(THMIBasicControl.Create) on the security flag being born true
   FIsEnabledBySecurity:=true;
   FNumberFormat := '#0.0';
-
-  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor  THMILabel.Destroy;
@@ -230,21 +221,12 @@ begin
   Application.RemoveAsyncCalls(Self);
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
-  FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommIndicator);
   inherited Destroy;
 end;
 
 procedure THMILabel.RefreshLabel(Data: PtrInt);
 begin
   RefreshTagValue;
-end;
-
-procedure THMILabel.Paint;
-begin
-  inherited Paint;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIcon(Canvas, Width, Height);
 end;
 
 procedure THMILabel.SetSecurityCode(sc: UTF8String);
@@ -312,8 +294,6 @@ begin
   //instead of leaving the last number read on screen, which would go on looking
   //like a live reading.
   RefreshTagValue;
-  if Assigned(FCommFaultLink) then
-    FCommFaultLink.SetTag(t);
 end;
 
 procedure THMILabel.SetPrefix(s: TCaption);

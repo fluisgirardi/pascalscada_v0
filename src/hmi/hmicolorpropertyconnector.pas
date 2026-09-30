@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, sysutils, HMIZones, hmiobjectcolletion, ProtocolTypes, HMITypes,
-  Tag, PLCTag, Graphics, Controls, hmi_commfaultbadge;
+  Tag, PLCTag, Graphics;
 
 type
   //forward class declaration.
@@ -108,8 +108,6 @@ type
   private
     FTag:TPLCTag;
     FirstReadOk:Boolean;
-    FCommBadge:THMICommBadgeController;
-    FCommFaultLink:THMITagFaultBadgeLink;
 
     function  QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
     function _AddRef: LongInt; {$IF (defined(WINDOWS) or defined(WIN32) or defined(WIN64)) OR ((not defined(FPC)) OR (FPC_FULLVERSION<20501)))}stdcall{$ELSE}cdecl{$IFEND};
@@ -122,11 +120,8 @@ type
 
     procedure RecalculateObjectsProperties;
     procedure SetHMITag(AValue: TPLCTag);
-    //: resolve o tag efetivo (próprio, ou o do conector) e religa o selo / resolves the effective tag (own, or the connector's) and re-links the badge
-    procedure RefreshFaultLinkTag;
   protected
     function GetDisplayName: AnsiString; override;
-    procedure DoTargetObjectChanged; override;
   public
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
@@ -210,8 +205,6 @@ begin
 end;
 
 procedure THMIColorPropertyConnector.SetHMITag(AValue: TPLCTag);
-var
-  i: Integer;
 begin
   if FTag=AValue then Exit;
 
@@ -234,10 +227,6 @@ begin
     RecalculateObjectsProperties;
   end;
   FTag:=AValue;
-
-  if Assigned(FObjects) then
-    for i:=0 to FObjects.Count-1 do
-      TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).RefreshFaultLinkTag;
 end;
 
 procedure THMIColorPropertyConnector.SetObjects(
@@ -257,14 +246,9 @@ begin
 end;
 
 procedure THMIColorPropertyConnector.RemoveTagCallBack(Sender: TObject);
-var
-  i: Integer;
 begin
   if Sender=FTag then begin
      FTag:=nil;
-     if Assigned(FObjects) then
-       for i:=0 to FObjects.Count-1 do
-         TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).RefreshFaultLinkTag;
   end;
 end;
 
@@ -307,9 +291,6 @@ begin
     if AComponent=FTag then begin
       FTag.RemoveAllHandlersFromObject(Self);
       FTag:=nil;
-      if Assigned(FObjects) then
-        for i:=0 to FObjects.Count-1 do
-          TObjectWithColorPropetiesColletionItem(FObjects.Items[i]).RefreshFaultLinkTag;
     end;
   end;
   inherited Notification(AComponent, Operation);
@@ -429,7 +410,6 @@ begin
     RecalculateObjectsProperties;
   end;
   FTag:=AValue;
-  RefreshFaultLinkTag;
 end;
 
 function TObjectWithColorPropetiesColletionItem.GetDisplayName: AnsiString;
@@ -447,36 +427,13 @@ begin
   fRequiredTypeName:=PTypeInfo(TypeInfo(TColor))^.Name;
   fRequiredTypeKind:=PTypeInfo(TypeInfo(TColor))^.Kind;
   FirstReadOk:=true;
-  FCommBadge:=THMICommBadgeController.Create;
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
 end;
 
 destructor TObjectWithColorPropetiesColletionItem.Destroy;
 begin
   if Assigned(FTag) then
     FTag.RemoveAllHandlersFromObject(Self);
-  FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommBadge);
   inherited Destroy;
-end;
-
-procedure TObjectWithColorPropetiesColletionItem.DoTargetObjectChanged;
-begin
-  if TargetObject is TControl then
-    FCommBadge.SetTarget(TControl(TargetObject))
-  else
-    FCommBadge.SetTarget(nil);
-  RefreshFaultLinkTag;
-end;
-
-procedure TObjectWithColorPropetiesColletionItem.RefreshFaultLinkTag;
-begin
-  if Assigned(FTag) then
-    FCommFaultLink.SetTag(FTag)
-  else if (Collection<>nil) and (Collection.Owner is THMIColorPropertyConnector) then
-    FCommFaultLink.SetTag(THMIColorPropertyConnector(Collection.Owner).PLCTag)
-  else
-    FCommFaultLink.SetTag(nil);
 end;
 
 procedure TObjectWithColorPropetiesColletionItem.ApplyResult(Result: TColor);
@@ -490,7 +447,6 @@ begin
   inherited Loaded;
   if Assigned(FTag) then
     RecalculateObjectsProperties;
-  RefreshFaultLinkTag;
 end;
 
 { TObjectWithColorPropetiesColletion }

@@ -17,7 +17,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, LinearScaleProcessor, PLCNumber, Tag,
-  ProtocolTypes, hmi_commfaultbadge;
+  ProtocolTypes;
 
 type
 
@@ -47,8 +47,6 @@ type
     FXLinearScale,
     FYLinearScale:TLinearScaleProcessor;
     FTag, FTagLoaded:TPLCNumber;
-    FCommBadge:THMICommBadgeController;
-    FCommFaultLink:THMITagFaultBadgeLink;
     FMinX, FMaxX,
     FMinY, FMaxY:Boolean;
     FMinXValue, FMaxXValue,
@@ -242,7 +240,6 @@ type
     FEndValueY: Double;
     FStartValueY: Double;
     FTagY, FTagYLoaded: TPLCNumber;
-    FCommFaultLinkY:THMITagFaultBadgeLink;
     procedure SetValueEndY(AValue: Double);
     procedure SetValueStartY(AValue: Double);
   protected
@@ -252,7 +249,6 @@ type
     procedure SetValueStart(v:Double); override;
     procedure SetValueEnd(v:Double); override;
   public
-    constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
     {$IFDEF PORTUGUES}
@@ -381,8 +377,6 @@ begin
     MoveObject(0);
   end;
   FTagY := t;
-  if Assigned(FCommFaultLinkY) then
-    FCommFaultLinkY.SetTag(t);
 end;
 
 procedure THMIControlDislocatorAnimation2.Loaded;
@@ -404,17 +398,10 @@ begin
   MoveObject(0);
 end;
 
-constructor THMIControlDislocatorAnimation2.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  FCommFaultLinkY:=THMITagFaultBadgeLink.Create(FCommBadge);
-end;
-
 destructor THMIControlDislocatorAnimation2.Destroy;
 begin
   if Assigned(FTagY) then
      FTagY.RemoveAllHandlersFromObject(Self);
-  FreeAndNil(FCommFaultLinkY);
   inherited Destroy;
 end;
 
@@ -426,8 +413,6 @@ begin
   FGoToP0:=SGotoP0;
   FXLinearScale:=TLinearScaleProcessor.Create(Self);
   FYLinearScale:=TLinearScaleProcessor.Create(Self);
-  FCommBadge:=THMICommBadgeController.Create;
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
 end;
 
 destructor  THMICustomControlDislocatorAnimation.Destroy;
@@ -435,8 +420,6 @@ begin
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
 
-  FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommBadge);
   FXLinearScale.Destroy;
   FYLinearScale.Destroy;
   Application.RemoveAsyncCalls(Self);
@@ -588,8 +571,6 @@ begin
     MoveObject(0);
   end;
   FTag := t;
-  if Assigned(FCommFaultLink) then
-    FCommFaultLink.SetTag(t);
 end;
 
 procedure THMICustomControlDislocatorAnimation.SetControl(t:TControl);
@@ -607,19 +588,14 @@ begin
   if FTarget<>nil then
     FTarget.FreeNotification(Self);
 
-  if Assigned(FCommBadge) then
-    FCommBadge.SetTarget(FTarget);
   MoveObject(0);
 end;
 
 procedure THMICustomControlDislocatorAnimation.Notification(
   AComponent: TComponent; Operation: TOperation);
 begin
-  if (AComponent=FTarget) and (Operation=opRemove) then begin
+  if (AComponent=FTarget) and (Operation=opRemove) then
      FTarget:=nil;
-     if Assigned(FCommBadge) then
-       FCommBadge.SetTarget(nil);
-  end;
   inherited Notification(AComponent, Operation);
 end;
 

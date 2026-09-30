@@ -17,8 +17,7 @@ unit HMITrackBar;
 interface
 
 uses
-  SysUtils, Classes, Controls, ComCtrls, PLCTag, ProtocolTypes, HMITypes, Tag,
-  hmi_commfaultbadge, Graphics
+  SysUtils, Classes, Controls, ComCtrls, PLCTag, ProtocolTypes, HMITypes, Tag
   {$IFDEF FPC}, LMessages{$ENDIF};
 
 type
@@ -40,14 +39,11 @@ type
     FAfterSendValueToTag: TAfterSendNumericValueToTagEvent;
     FBeforeSendValueToTag: TBeforeSendNumericValueToTagEvent;
     Ftag:TPLCTag;
-    FCommIndicator:THMIInlineFaultIndicator;
-    FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FModified:Boolean;
 
     FSecurityCode:UTF8String;
-    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     function  GetPosition:LongInt;
@@ -164,9 +160,6 @@ begin
   //: @seealso(THMIBasicControl.Create) sobre a flag de seguranca nascer verdadeira
   //: @seealso(THMIBasicControl.Create) on the security flag being born true
   FIsEnabledBySecurity:=true;
-
-  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMITrackBar.Destroy;
@@ -182,25 +175,7 @@ begin
   Application.RemoveAsyncCalls(Self);
   if Assigned(FTag) then
     Ftag.RemoveAllHandlersFromObject(Self);
-  FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommIndicator);
   inherited Destroy;
-end;
-
-procedure THMITrackBar.WMPaint(var Msg: TLMPaint);
-var
-  cnv: TCanvas;
-begin
-  inherited;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then begin
-    cnv := TCanvas.Create;
-    try
-      cnv.Handle := Msg.DC;
-      DrawWarningIcon(cnv, ClientWidth, ClientHeight);
-    finally
-      cnv.Free;
-    end;
-  end;
 end;
 
 procedure THMITrackBar.Loaded;
@@ -248,8 +223,6 @@ begin
   end;
   FTag := t;
   RefreshTagValue(0);
-  if Assigned(FCommFaultLink) then
-    FCommFaultLink.SetTag(t);
 end;
 
 function THMITrackBar.GetHMITag: TPLCTag;

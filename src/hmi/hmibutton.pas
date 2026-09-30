@@ -10,8 +10,7 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, LMessages, {$ENDIF}Controls,
-  Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag,
-  hmi_commfaultbadge;
+  Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag;
 
 type
   {$IFDEF PORTUGUES}
@@ -26,8 +25,6 @@ type
   private 
     FRegInSecMan:Boolean;
     FTag:TPLCTag;
-    FCommIndicator:THMIInlineFaultIndicator;
-    FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FClickFlag:Boolean;
@@ -100,7 +97,6 @@ type
     procedure SetValueDown(v:Double);
     procedure SetValueUp(v:Double);
     procedure Loaded; override;
-    procedure Paint; override;
   public
     //: @exclude
     constructor Create(AOwner:TComponent); override;
@@ -253,9 +249,6 @@ begin
   FColorDown:=clBtnFace;
   FColorUp:= clBtnFace;
   FColorGrayed:=clBtnShadow;
-
-  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMIButton.Destroy;
@@ -270,8 +263,6 @@ begin
 
    if FTag<>nil then
       FTag.RemoveAllHandlersFromObject(Self);
-   FreeAndNil(FCommFaultLink);
-   FreeAndNil(FCommIndicator);
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
@@ -406,8 +397,6 @@ begin
   end;
   FTag := t;
   TagChangeCallBack(self);
-  if Assigned(FCommFaultLink) then
-    FCommFaultLink.SetTag(t);
 end;
 
 function  THMIButton.GetHMITag:TPLCTag;
@@ -592,13 +581,6 @@ procedure THMIButton.Loaded;
 begin
   inherited Loaded;
   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
-end;
-
-procedure THMIButton.Paint;
-begin
-  inherited Paint;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIcon(Canvas, Width, Height);
 end;
 
 procedure THMIButton.WriteFaultCallBack(Sender: TObject);

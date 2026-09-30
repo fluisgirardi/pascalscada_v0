@@ -6,8 +6,7 @@ interface
 
 uses
   Controls, sysutils, Graphics, Classes, hmi_draw_basiccontrol, BGRABitmap,
-  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones,
-  hmi_commfaultbadge;
+  BGRABitmapTypes, hmi_polyline, hmi_flow_zones, ExtCtrls, PLCTag, HMIZones;
 
 type
 
@@ -297,8 +296,6 @@ begin
   //communication" drawing lives. Until now nobody called the recalculation on
   //this path and the last value's drawing stayed on screen.
   UpdateControl;
-  if Assigned(FCommFaultLink) then
-    FCommFaultLink.SetTag(AValue);
 end;
 
 procedure THMICustomLinkedFlowElevator.WriteFaultCallBack(Sender: TObject);

@@ -16,8 +16,7 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources,{$ENDIF} Controls, Graphics,
-  Dialogs, ExtCtrls, HMIZones, HMITypes, PLCTag, ProtocolTypes, Tag,
-  hmi_commfaultbadge;
+  Dialogs, ExtCtrls, HMIZones, HMITypes, PLCTag, ProtocolTypes, Tag;
 
 type
   TZoneChanged = procedure(Sender:TObject; ZoneIndex:Integer) of object;
@@ -47,8 +46,6 @@ type
   protected
     FAnimationZones:TGraphicZones;
     FTag:TPLCTag;
-    FCommIndicator:THMIInlineFaultIndicator;
-    FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FTestValue:Double;
@@ -92,8 +89,6 @@ type
 
     //: @exclude
     procedure Loaded; override;
-    //: @exclude
-    procedure Paint; override;
 
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
@@ -225,9 +220,6 @@ begin
    FAnimationZones:=TGraphicZones.Create(Self);
    FAnimationZones.OnNeedCompState:=@NeedComState;
    FAnimationZones.OnCollectionItemChange:=@ZoneChange;
-
-   FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
-   FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMIAnimation.Destroy;
@@ -246,8 +238,6 @@ begin
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
 
-  FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommIndicator);
   FreeAndNil(FAnimationZones);
   inherited Destroy;
 end;
@@ -423,8 +413,6 @@ begin
    //with no tag there is no reading: the control shows its "no value" state
    //instead of leaving the last value read on screen.
    RefreshAnimation(0);
-   if Assigned(FCommFaultLink) then
-     FCommFaultLink.SetTag(t);
 end;
 
 function  THMIAnimation.GetHMITag:TPLCTag;
@@ -450,13 +438,6 @@ begin
   CanBeAccessed(GetControlSecurityManager.CanAccess(GetControlSecurityCode));
   FAnimationZones.Loaded;
   TagChangeCallBack(FTag);
-end;
-
-procedure THMIAnimation.Paint;
-begin
-  inherited Paint;
-  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
-    DrawWarningIcon(Canvas, Width, Height);
 end;
 
 procedure THMIAnimation.Notification(AComponent: TComponent;
