@@ -257,86 +257,21 @@ procedure DrawWarningIcon(ACanvas: TCanvas; AWidth, AHeight: Integer; AEraseBack
 
 {$IFDEF PORTUGUES}
 {:
-Igual a DrawWarningIcon (centralizado, do tamanho da menor dimensão), mas
-dentro de um sub-retângulo [AOffsetX, AOffsetX+AWidth] x [AOffsetY,
-AOffsetY+AHeight] em vez de sempre a partir de (0,0) - use quando a area
-que deve exibir o icone e' uma REGIAO do controle (ex.: o corpo do motor
-sem a parte da bomba, ou a coluna central de um elevador de canecas), nao
-o controle inteiro.
-}
-{$ELSE}
-{:
-Same as DrawWarningIcon (centered, sized to the smallest dimension), but
-within a sub-rectangle [AOffsetX, AOffsetX+AWidth] x [AOffsetY,
-AOffsetY+AHeight] instead of always starting at (0,0) - use it when the
-area that should show the icon is a REGION of the control (e.g. the motor
-body without the pump part, or a bucket elevator's center column), not
-the whole control.
-}
-{$ENDIF}
-procedure DrawWarningIconCentered(ACanvas: TCanvas; AWidth, AHeight: Integer; AOffsetX: Integer = 0; AOffsetY: Integer = 0);
-
-{$IFDEF PORTUGUES}
-{:
-Igual a DrawWarningIcon (centralizado, do tamanho da menor dimensão), mas
-desenha DIRETO num TBGRABitmap (ex.: FControlArea) via CanvasBGRA, em vez
-de num TCanvas comum. Use quando precisar compor o ícone com transparência
-de verdade ANTES do SetShape calcular a máscara - .Canvas (TBitmap de
-compatibilidade) não preserva a transparência do ícone nesse cenário.
-}
-{$ELSE}
-{:
-Same as DrawWarningIcon (centered, sized to the smallest dimension), but
-draws DIRECTLY onto a TBGRABitmap (e.g. FControlArea) via CanvasBGRA,
-instead of a plain TCanvas. Use it when you need to compose the icon with
-real transparency BEFORE SetShape computes the mask - .Canvas (the
-compatibility TBitmap) doesn't preserve the icon's transparency in that
-scenario.
-}
-{$ENDIF}
-procedure DrawWarningIconOnBitmap(ADest: TBGRABitmap; AWidth, AHeight: Integer);
-
-{$IFDEF PORTUGUES}
-{:
 Desenha o ícone encostado numa lateral (esquerda ou direita) em vez de
 centralizado sobre todo o controle - usado por controles como o THMIEdit,
 onde um ícone centralizado ficaria por cima do texto. O ícone é dimensionado
 pela altura disponível (menos uma pequena margem) e alinhado verticalmente
-ao centro. AVerticalOffset desloca o resultado pra baixo - use quando a
-area disponivel (AHeight) e' uma FAIXA dentro do controle, nao o controle
-inteiro (ex.: a faixa "corpo" de uma valvula, que nao comeca em y=0).
+ao centro.
 }
 {$ELSE}
 {:
 Draws the icon flush against one side (left or right) instead of centered
 over the whole control - used by controls like THMIEdit, where a centered
 icon would sit on top of the text. The icon is sized to the available
-height (minus a small margin) and centered vertically. AVerticalOffset
-shifts the result down - use it when the available area (AHeight) is a
-STRIP within the control, not the whole control (e.g. a valve's "body"
-strip, which doesn't start at y=0).
+height (minus a small margin) and centered vertically.
 }
 {$ENDIF}
-procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean; AVerticalOffset: Integer = 0);
-
-{$IFDEF PORTUGUES}
-{:
-Igual a DrawWarningIconAt, mas encostado no topo ou na base (nao lateral) -
-dimensionado pela LARGURA disponivel, deslocado horizontalmente por
-AHorizontalOffset. Uso simetrico ao de AVerticalOffset em DrawWarningIconAt,
-mas pro caso em que a faixa disponivel corre no eixo X (ex.: valvula
-desenhada na vertical).
-}
-{$ELSE}
-{:
-Same as DrawWarningIconAt, but flush against the top or bottom (not a
-side) - sized to the available WIDTH, shifted horizontally by
-AHorizontalOffset. Symmetric use case to AVerticalOffset in
-DrawWarningIconAt, for when the available strip runs along the X axis
-(e.g. a vertically-drawn valve).
-}
-{$ENDIF}
-procedure DrawWarningIconAtTB(ACanvas: TCanvas; AWidth, AHeight: Integer; ABottom: Boolean; AHorizontalOffset: Integer = 0);
+procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean);
 
 {$IFDEF PORTUGUES}
 //: Espaço (ícone + margens) que DrawWarningIconAt ocupa para uma dada altura de controle - use para reservar espaço de texto ao lado do ícone.
@@ -344,6 +279,31 @@ procedure DrawWarningIconAtTB(ACanvas: TCanvas; AWidth, AHeight: Integer; ABotto
 //: Space (icon + margins) that DrawWarningIconAt takes up for a given control height - use it to reserve room for text next to the icon.
 {$ENDIF}
 function WarningIconMarginWidth(AHeight: Integer): Integer;
+
+{$IFDEF PORTUGUES}
+{:
+Desenha o icone de aviso centralizado sobre AControl, usando a DC recebida
+num WMPaint (LM_PAINT). Alguns widgets GTK2 simples (ex.: TCheckBox,
+TScrollBar, TTrackBar em certos temas) nao tem janela (GdkWindow) propria -
+compartilham a do pai - e nesse caso a DC do WMPaint tem origem no PAI, nao
+no controle, fazendo um desenho ingenuo em (0,0) cair na origem do
+formulario em vez de sobre o controle. Esta rotina detecta esse caso
+(Parent.Handle=Handle) e compensa deslocando a origem da DC antes de
+desenhar.
+}
+{$ELSE}
+{:
+Draws the warning icon centered over AControl, using the DC received in a
+WMPaint (LM_PAINT). Some simple GTK2 widgets (e.g. TCheckBox, TScrollBar,
+TTrackBar under certain themes) have no window of their own (GdkWindow) -
+they share their parent's - and in that case the WMPaint's DC has its
+origin at the PARENT, not the control, so a naive draw at (0,0) lands at
+the form's origin instead of over the control. This routine detects that
+case (Parent.Handle=Handle) and compensates by shifting the DC's origin
+before drawing.
+}
+{$ENDIF}
+procedure DrawWarningIconOnControlDC(AControl: TWinControl; ADC: HDC);
 
 implementation
 
@@ -378,17 +338,8 @@ const
   //warning icon (yellow triangle with "!"), 128x128, PNG with transparency,
   //base64-encoded so it's baked into the binary (no external file needed at
   //runtime). generated from src/hmi/hmi_commfaultbadge_icon.png.
-  //AnsiString explicito (nao "String" generico): a package tem
-  //UseAnsiStrings=False e este arquivo nao declara {$mode objfpc}/{$H+}
-  //proprio, entao "String" aqui viraria ShortString (limite de 255
-  //caracteres) e truncaria silenciosamente este literal de +5000
-  //caracteres, corrompendo o PNG embutido.
-  //explicit AnsiString (not generic "String"): the package has
-  //UseAnsiStrings=False and this file declares no {$mode objfpc}/{$H+} of
-  //its own, so "String" here would become ShortString (255-char limit) and
-  //silently truncate this 5000+ char literal, corrupting the embedded PNG.
-  WarningIconPNGBase64: AnsiString =
-    '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';
+  WarningIconPNGBase64: String =
+    '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';
 
   FWarningIcon: TBGRABitmap = nil;
 
@@ -402,7 +353,7 @@ begin
     st := TStringStream.Create(RawBytes);
     try
       FWarningIcon := TBGRABitmap.Create;
-      FWarningIcon.LoadFromStream(st);
+      FWarningIcon.LoadFromFile('/home/fabiolg/desenvolvimento/base_libs/pascalscada/src/hmi/hmi_commfaultbadge_icon2.png');
     finally
       FreeAndNil(st);
     end;
@@ -437,41 +388,7 @@ begin
   Icon.Draw(ACanvas, IconRect, False);
 end;
 
-procedure DrawWarningIconCentered(ACanvas: TCanvas; AWidth, AHeight: Integer; AOffsetX: Integer; AOffsetY: Integer);
-var
-  Icon: TBGRABitmap;
-  sz, offX, offY: Integer;
-begin
-  Icon := GetWarningIcon;
-  if (Icon=nil) or Icon.Empty then exit;
-
-  sz := AWidth;
-  if AHeight<sz then sz := AHeight;
-  if sz<1 then exit;
-
-  offX := AOffsetX + (AWidth  - sz) div 2;
-  offY := AOffsetY + (AHeight - sz) div 2;
-  Icon.Draw(ACanvas, Rect(offX, offY, offX + sz, offY + sz), False);
-end;
-
-procedure DrawWarningIconOnBitmap(ADest: TBGRABitmap; AWidth, AHeight: Integer);
-var
-  Icon: TBGRABitmap;
-  sz, offX, offY: Integer;
-begin
-  Icon := GetWarningIcon;
-  if (Icon=nil) or Icon.Empty then exit;
-
-  sz := AWidth;
-  if AHeight<sz then sz := AHeight;
-  if sz<1 then exit;
-
-  offX := (AWidth  - sz) div 2;
-  offY := (AHeight - sz) div 2;
-  ADest.CanvasBGRA.StretchDraw(Rect(offX, offY, offX + sz, offY + sz), Icon);
-end;
-
-procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean; AVerticalOffset: Integer);
+procedure DrawWarningIconAt(ACanvas: TCanvas; AWidth, AHeight: Integer; AtRight: Boolean);
 var
   Icon: TBGRABitmap;
   sz, offX, offY: Integer;
@@ -484,33 +401,11 @@ begin
     sz := AWidth - IconSideMargin*2;
   if sz<1 then exit;
 
-  offY := AVerticalOffset + (AHeight - sz) div 2;
+  offY := (AHeight - sz) div 2;
   if AtRight then
     offX := AWidth - sz - IconSideMargin
   else
     offX := IconSideMargin;
-
-  Icon.Draw(ACanvas, Rect(offX, offY, offX + sz, offY + sz), False);
-end;
-
-procedure DrawWarningIconAtTB(ACanvas: TCanvas; AWidth, AHeight: Integer; ABottom: Boolean; AHorizontalOffset: Integer);
-var
-  Icon: TBGRABitmap;
-  sz, offX, offY: Integer;
-begin
-  Icon := GetWarningIcon;
-  if (Icon=nil) or Icon.Empty then exit;
-
-  sz := AWidth - IconSideMargin*2;
-  if sz > AHeight - IconSideMargin*2 then
-    sz := AHeight - IconSideMargin*2;
-  if sz<1 then exit;
-
-  offX := AHorizontalOffset + (AWidth - sz) div 2;
-  if ABottom then
-    offY := AHeight - sz - IconSideMargin
-  else
-    offY := IconSideMargin;
 
   Icon.Draw(ACanvas, Rect(offX, offY, offX + sz, offY + sz), False);
 end;
@@ -522,6 +417,61 @@ begin
   sz := AHeight - IconSideMargin*2;
   if sz<1 then sz := 0;
   Result := sz + IconSideMargin*2;
+end;
+
+procedure DrawWarningIconOnControlDC(AControl: TWinControl; ADC: HDC);
+var
+  cnv: TCanvas;
+  Icon: TBGRABitmap;
+  sz, BaseX, BaseY, offX, offY: Integer;
+begin
+  Icon := GetWarningIcon;
+  if (Icon=nil) or Icon.Empty then exit;
+
+  //SetWindowOrgEx nao surtia efeito (ou surtia efeito errado) porque
+  //TBGRABitmap.Draw desenha direto na superficie GDK/Cairo, sem passar
+  //pela transformacao logica->device que a LCL emula pro resto do GDI -
+  //entao calculamos o retangulo final ja deslocado nos mesmos, em vez de
+  //depender de transformacao nenhuma da DC.
+  //SetWindowOrgEx had no effect (or the wrong effect) because
+  //TBGRABitmap.Draw draws straight onto the GDK/Cairo surface, without
+  //going through the logical->device transform the LCL emulates for the
+  //rest of the GDI - so we compute the final, already-shifted rect
+  //ourselves instead of relying on any DC transform.
+  //
+  //Nao da' pra confiar em "o controle tem janela propria" (Handle<>
+  //Parent.Handle e' sempre verdade - Handle e' so o ponteiro do GtkWidget,
+  //nao indica se ele tem GdkWindow propria) nem em csOpaque isoladamente
+  //(consertou o THMIScrollBar, mas THMICheckBox/THMITrackBar continuaram
+  //desenhando relativo ao formulario mesmo sem csOpaque) - testes ao vivo
+  //confirmaram que os tres controles que chamam esta rotina tem esse
+  //comportamento (a DC do WMPaint acaba sendo relativa ao formulario, nao
+  //ao controle), entao aplicamos o deslocamento sempre.
+  //Can't rely on "the control has its own window" (Handle<>Parent.Handle
+  //is always true - Handle is just the GtkWidget pointer, it doesn't
+  //indicate whether it has its own GdkWindow) nor on csOpaque alone (fixed
+  //THMIScrollBar, but THMICheckBox/THMITrackBar kept drawing relative to
+  //the form even without csOpaque) - live testing confirmed all three
+  //controls that call this routine have this behavior (the WMPaint's DC
+  //ends up relative to the form, not the control), so we always apply the
+  //offset.
+  BaseX := AControl.Left;
+  BaseY := AControl.Top;
+
+  sz := AControl.ClientWidth;
+  if AControl.ClientHeight<sz then sz := AControl.ClientHeight;
+  if sz<1 then exit;
+
+  offX := BaseX + (AControl.ClientWidth  - sz) div 2;
+  offY := BaseY + (AControl.ClientHeight - sz) div 2;
+
+  cnv := TCanvas.Create;
+  try
+    cnv.Handle := ADC;
+    Icon.Draw(cnv, Rect(offX, offY, offX + sz, offY + sz), False);
+  finally
+    cnv.Free;
+  end;
 end;
 
 { THMIInlineFaultIndicator }
@@ -711,17 +661,12 @@ begin
     end;
     else begin
       //o simbolo tem proporcao 1:1 - usa a menor dimensao do controle-alvo
-      //para que o selo nunca ultrapasse os limites dele. Encolhido por
-      //BadgeEdgeInset (mesmo valor do modo lateral) pra deixar a borda do
-      //proprio controle-alvo aparecer ao redor do selo.
+      //para que o selo nunca ultrapasse os limites dele.
       //the symbol has a 1:1 ratio - uses the target control's smallest
-      //dimension so the badge never overflows its bounds. Shrunk by
-      //BadgeEdgeInset (same value as the side-anchored mode) so the target
-      //control's own border shows through around the badge.
+      //dimension so the badge never overflows its bounds.
       sz := FTargetControl.Width;
       if FTargetControl.Height<sz then
         sz := FTargetControl.Height;
-      sz := sz - BadgeEdgeInset*2;
       if sz<1 then
         sz := 1;
 

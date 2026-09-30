@@ -38,7 +38,7 @@ type
   private 
     FRegInSecMan:Boolean;
     FTag:TPLCTag;
-    FCommBadge:THMICommBadgeController;
+    FCommIndicator:THMIInlineFaultIndicator;
     FCommFaultLink:THMITagFaultBadgeLink;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
@@ -48,6 +48,7 @@ type
     FLastPosition:LongInt;
 
     FSecurityCode:UTF8String;
+    procedure WMPaint(var Msg: TLMPaint); message LM_PAINT;
     procedure SetSecurityCode(sc:UTF8String);
 
     //: @seealso(IHMIInterface.SetHMITag)
@@ -144,9 +145,8 @@ begin
   //: @seealso(THMIBasicControl.Create) on the security flag being born true
   FIsEnabledBySecurity:=true;
 
-  FCommBadge:=THMICommBadgeController.Create;
-  FCommBadge.SetTarget(Self);
-  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommBadge);
+  FCommIndicator:=THMIInlineFaultIndicator.Create(Self);
+  FCommFaultLink:=THMITagFaultBadgeLink.Create(FCommIndicator);
 end;
 
 destructor THMIScrollBar.Destroy;
@@ -163,8 +163,15 @@ begin
   if FTag<>nil then
     FTag.RemoveAllHandlersFromObject(Self);
   FreeAndNil(FCommFaultLink);
-  FreeAndNil(FCommBadge);
+  FreeAndNil(FCommIndicator);
   inherited Destroy;
+end;
+
+procedure THMIScrollBar.WMPaint(var Msg: TLMPaint);
+begin
+  inherited;
+  if Assigned(FCommIndicator) and FCommIndicator.Faulted then
+    DrawWarningIconOnControlDC(Self, Msg.DC);
 end;
 
 procedure THMIScrollBar.RefreshScrollBar(Data: PtrInt);

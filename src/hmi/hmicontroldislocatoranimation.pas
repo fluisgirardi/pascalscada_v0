@@ -388,7 +388,6 @@ end;
 procedure THMIControlDislocatorAnimation2.Loaded;
 begin
   inherited Loaded;
-  SetPLCTagY(FTagYLoaded);
 end;
 
 procedure THMIControlDislocatorAnimation2.SetValueStart(v: Double);
