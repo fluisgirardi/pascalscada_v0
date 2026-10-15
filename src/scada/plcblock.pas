@@ -206,7 +206,10 @@ begin
         if LastResult in [ioOk, ioNullDriver] then begin
           for c := low(TagValues) to High(TagValues) do begin
             if (c+Offset<Length(PValues)) then begin
-              notify := notify or (PValues[c+Offset]<>TagValues[c]) or (IsNan(TagValues[c]) and (not IsNaN(PValues[c+Offset])));
+              //NaN<>NaN e' sempre verdadeiro, ver TPLCStructItem.GetValueRaw.
+              //NaN<>NaN is always true, see TPLCStructItem.GetValueRaw.
+              notify := notify or (IsNan(TagValues[c])<>IsNan(PValues[c+Offset])) or
+                        ((not IsNan(TagValues[c])) and (PValues[c+Offset]<>TagValues[c]));
               PValues[c+Offset]:=TagValues[c]
             end else begin
               {$IFNDEF WINDOWS}
