@@ -310,7 +310,10 @@ var
   notify:Boolean;
 begin
   if Assigned(PBlock) then begin
-    notify := (PValueRaw<>PBlock.ValueRaw[PIndex]) or (IsNan(PBlock.ValueRaw[PIndex]) and (not IsNan(PValueRaw)));
+    //NaN<>NaN e' sempre verdadeiro, ver TPLCStructItem.GetValueRaw.
+    //NaN<>NaN is always true, see TPLCStructItem.GetValueRaw.
+    notify := (IsNan(PBlock.ValueRaw[PIndex])<>IsNan(PValueRaw)) or
+              ((not IsNan(PValueRaw)) and (PValueRaw<>PBlock.ValueRaw[PIndex]));
     PValueRaw := PBlock.ValueRaw[PIndex];
     PClockMonotonicTimeStamp := PBlock.ClockMonotonicTimeStamp;
 
@@ -326,7 +329,10 @@ var
   notify:Boolean;
 begin
   if Assigned(PBlock) then begin
-    notify := (PValueRaw<>PBlock.ValueRaw[PIndex]) or (IsNan(PBlock.ValueRaw[PIndex]) and (not IsNan(PValueRaw)));
+    //NaN<>NaN e' sempre verdadeiro, ver TPLCStructItem.GetValueRaw.
+    //NaN<>NaN is always true, see TPLCStructItem.GetValueRaw.
+    notify := (IsNan(PBlock.ValueRaw[PIndex])<>IsNan(PValueRaw)) or
+              ((not IsNan(PValueRaw)) and (PValueRaw<>PBlock.ValueRaw[PIndex]));
     PValueRaw := PBlock.ValueRaw[PIndex];
     PClockMonotonicTimeStamp := PBlock.ClockMonotonicTimeStamp;
 
