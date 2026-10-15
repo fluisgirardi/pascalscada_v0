@@ -2789,6 +2789,7 @@ end;
 
 function  TSiemensProtocolFamily.GetTagInfo(tagobj:TTag):TTagRec;
 begin
+  FillByte(Result,SizeOf(Result), 0);
   if tagobj is TPLCTagNumber then begin
     with Result do begin
       Rack:=TPLCTagNumber(TagObj).PLCRack;

@@ -204,8 +204,12 @@ begin
 
     if Length(converted_value)<=0 then exit;
 
-    notify := (IsNan(converted_value[0]) and (not IsNan(PValueRaw))) or
-              ((not IsNan(converted_value[0])) and IsNan(PValueRaw)) or (PValueRaw<>converted_value[0]) ;
+    //NaN<>NaN e' sempre verdadeiro: um valor NaN no CLP notificava a cada
+    //leitura, e quem relia o valor no aviso (THMILabel) entrava em laco infinito.
+    //NaN<>NaN is always true: a NaN value in the PLC notified on every read,
+    //and whoever read the value back on the notification (THMILabel) looped forever.
+    notify := (IsNan(converted_value[0])<>IsNan(PValueRaw)) or
+              ((not IsNan(converted_value[0])) and (PValueRaw<>converted_value[0]));
     PValueRaw := converted_value[0];
     PClockMonotonicTimeStamp := PBlock.ClockMonotonicTimeStamp;
 
