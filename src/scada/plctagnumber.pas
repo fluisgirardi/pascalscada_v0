@@ -318,7 +318,10 @@ begin
         PClockMonotonicTimeStamp := ValuesTimeStamp;
 
         if (Length(TagValues)>0) and (LastResult in [ioOk, ioNullDriver]) then begin
-          notify := (PValueRaw<>TagValues[0]) OR (IsNan(TagValues[0]) and (not IsNaN(PValueRaw)));
+          //NaN<>NaN e' sempre verdadeiro, ver TPLCStructItem.GetValueRaw.
+          //NaN<>NaN is always true, see TPLCStructItem.GetValueRaw.
+          notify := (IsNan(TagValues[0])<>IsNan(PValueRaw)) or
+                    ((not IsNan(TagValues[0])) and (PValueRaw<>TagValues[0]));
           PValueRaw := TagValues[0];
           if (TagCommand<>tcInternalUpdate) AND (LastResult=ioOk) then begin
             PModified:=False;

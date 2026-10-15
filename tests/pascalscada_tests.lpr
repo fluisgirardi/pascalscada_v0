@@ -49,6 +49,7 @@ uses
   ut.escalas,
   ut.protscanupdate,
   ut.plcstruct,
+  ut.nanvalues,
   ut.mutex,
   ut.tagcollection,
   ut.isotcp,
