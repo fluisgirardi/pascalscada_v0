@@ -160,7 +160,12 @@ const
 
 implementation
 
-uses DateUtils, Dialogs, hsstrings, sockets;
+uses DateUtils, Dialogs, hsstrings, sockets{$IFDEF WINDOWS}, Windows{$ENDIF};
+
+{$IFDEF WINDOWS}
+function CancelIoEx(hFile: THandle; lpOverlapped: Pointer): BOOL; stdcall;
+  external 'kernel32.dll' name 'CancelIoEx';
+{$ENDIF}
 
 { TAbortableHTTPClient }
 
@@ -216,8 +221,16 @@ begin
   Terminate;
   EnterCriticalSection(FSocketCS);
   try
-    if Assigned(FHandler) and Assigned(FHandler.Socket) then
+    if Assigned(FHandler) and Assigned(FHandler.Socket) then begin
       fpshutdown(FHandler.Socket.Handle, SHUT_RDWR);
+      //no Windows o shutdown nao acorda um recv() bloqueado em outra thread
+      //(no Linux acorda); o CancelIoEx cancela a leitura pendente.
+      //on Windows shutdown doesn't wake a recv() blocked in another thread
+      //(on Linux it does); CancelIoEx cancels the pending read.
+      {$IFDEF WINDOWS}
+      CancelIoEx(THandle(FHandler.Socket.Handle), nil);
+      {$ENDIF}
+    end;
   finally
     LeaveCriticalSection(FSocketCS);
   end;
