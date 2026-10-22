@@ -47,6 +47,7 @@ type
   TPascalSCADACheckSpecialTokenAction = class(TAction)
   private
     FAuthorizedBy: UTF8String;
+    FOnLoginFailedOrNotAuthorized: TNotifyEvent;
     FRequireLoginAlways: Boolean;
     FSecurityCode: UTF8String;
     procedure SetSecurityCode(AValue: UTF8String);
@@ -57,6 +58,7 @@ type
     property AuthorizedBy:UTF8String read FAuthorizedBy;
     property SecurityCode:UTF8String read FSecurityCode write SetSecurityCode;
     property RequireLoginAlways:Boolean read FRequireLoginAlways write FRequireLoginAlways;
+    property OnLoginFailedOrNotAuthorized:TNotifyEvent read FOnLoginFailedOrNotAuthorized write FOnLoginFailedOrNotAuthorized;
   end;
 
   { TPascalSCADAUserManagementAction }
@@ -206,8 +208,14 @@ function TPascalSCADACheckSpecialTokenAction.Execute: Boolean;
 begin
   if GetControlSecurityManager.CheckIfUserIsAllowed(FSecurityCode, FRequireLoginAlways, FAuthorizedBy, Hint) then
     Result:=inherited Execute
-  else
-    Result:=false;
+  else begin
+    try
+      if Assigned(FOnLoginFailedOrNotAuthorized) then
+        FOnLoginFailedOrNotAuthorized(Self);
+    finally
+      Result:=false;
+    end;
+  end;
 end;
 
 function TPascalSCADACheckSpecialTokenAction.HandlesTarget(Target: TObject
