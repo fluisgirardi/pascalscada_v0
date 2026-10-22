@@ -6,7 +6,7 @@ interface
 
 uses
   BasicUserManagement, ControlSecurityManager, fpjson, jsonparser, StrUtils,
-  Classes, fphttpclient, SysUtils, Forms, fpopenssl, sslsockets, opensslsockets;
+  Classes, fphttpclient, SysUtils, Forms, fpopenssl, ssockets, sslsockets, opensslsockets;
 
 type
   TCheckUserChanges = function(out ChangeData:UTF8String):Integer of object;
@@ -18,6 +18,30 @@ type
     AuthData:TJSONObject;
   end;
   PSyncRec = ^TSyncRec;
+
+  { TAbortableHTTPClient }
+
+  //TFPHTTPClient.Terminate so' liga uma flag, nao desbloqueia um recv() em
+  //andamento (long-poll do userchanged). Abort derruba o socket para que o
+  //Post retorne na hora.
+  //TFPHTTPClient.Terminate only sets a flag, it doesn't unblock a pending
+  //recv() (userchanged long-poll). Abort shuts the socket down so Post
+  //returns right away.
+  TAbortableHTTPClient = class(TFPHTTPClient)
+  private
+    FSocketCS: TRTLCriticalSection;
+    FNewHandler,
+    FHandler: TSocketHandler;
+    procedure HandlerCreated(Sender: TObject; AHandler: TSocketHandler);
+  protected
+    procedure ConnectToServer(const AHost: AnsiString; APort: Integer;
+      UseSSL: Boolean=False); override;
+    procedure DisconnectFromServer; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    procedure Abort;
+  end;
 
   TCheckUserChangeThread = class(TThread)
   private
@@ -46,12 +70,17 @@ type
     FCacheUpdateCount:Integer;
     FCheckUserChangedThread:TCheckUserChangeThread;
     FLastError: UTF8String;
+    FPollClientCS: TRTLCriticalSection;
+    FPollClient: TAbortableHTTPClient;
+    FPollAborted: Boolean;
+    procedure AbortPollClient;
+    procedure StopCheckUserChangedThread;
     function CheckServerUserChanged(out ChangeData: UTF8String): Integer;
     function GetCacheUptCount: Integer;
     function PostMethod(aAPIEndpoint: String; aJsonData: TJSONData;
       var ReturnData: UTF8String): Boolean;
     function PostMethodInt(aAPIEndpoint: String; aJsonData: TJSONData;
-      var ReturnData: UTF8String): Integer;
+      var ReturnData: UTF8String; aIsPollRequest: Boolean = false): Integer;
     function ExtractServerErrorText(const JsonBody: UTF8String): UTF8String;
     procedure RemoteUserChanged(aUID:integer; aUserName:String; AuthData: TJSONObject);
     procedure RemoteUserChangedRemotely(Data: PtrInt);
@@ -66,6 +95,7 @@ type
     FUseCentralUserAsLocalUserLoading: Boolean;
     FValidatedSC: TStringList;
     FRegisteredSCLastQuery: QWord;
+    function GetLoggedUser: Boolean; override;
     function CheckUserAndPassword(User, Pass:UTF8String; out UserID:Integer; LoginAction:Boolean):Boolean; override;
     function CanAccess(sc: UTF8String; aUID: Integer): Boolean; override; overload;
     procedure Loaded; override;
@@ -82,6 +112,7 @@ type
     function SecurityCodeExists(sc: UTF8String): Boolean; override;
 
     function  CanAccess(sc:UTF8String):Boolean; override;
+
   published
     property UID;
     property ChipCardReader;
@@ -129,7 +160,68 @@ const
 
 implementation
 
-uses DateUtils, Dialogs, hsstrings;
+uses DateUtils, Dialogs, hsstrings, sockets;
+
+{ TAbortableHTTPClient }
+
+constructor TAbortableHTTPClient.Create(AOwner: TComponent);
+begin
+  InitCriticalSection(FSocketCS);
+  inherited Create(AOwner);
+  AfterSocketHandlerCreate:=@HandlerCreated;
+end;
+
+procedure TAbortableHTTPClient.HandlerCreated(Sender: TObject;
+  AHandler: TSocketHandler);
+begin
+  FNewHandler:=AHandler;
+end;
+
+procedure TAbortableHTTPClient.ConnectToServer(const AHost: AnsiString;
+  APort: Integer; UseSSL: Boolean);
+begin
+  FNewHandler:=nil;
+  inherited ConnectToServer(AHost, APort, UseSSL);
+  //so' publica o handler depois do connect: se o connect falhar o
+  //TFPHTTPClient libera o socket sem passar pelo DisconnectFromServer.
+  //only publish the handler after connect: if connect fails TFPHTTPClient
+  //frees the socket without going through DisconnectFromServer.
+  EnterCriticalSection(FSocketCS);
+  try
+    FHandler:=FNewHandler;
+  finally
+    LeaveCriticalSection(FSocketCS);
+  end;
+end;
+
+destructor TAbortableHTTPClient.Destroy;
+begin
+  inherited Destroy;
+  DoneCriticalSection(FSocketCS);
+end;
+
+procedure TAbortableHTTPClient.DisconnectFromServer;
+begin
+  EnterCriticalSection(FSocketCS);
+  try
+    FHandler:=nil;
+    inherited DisconnectFromServer;
+  finally
+    LeaveCriticalSection(FSocketCS);
+  end;
+end;
+
+procedure TAbortableHTTPClient.Abort;
+begin
+  Terminate;
+  EnterCriticalSection(FSocketCS);
+  try
+    if Assigned(FHandler) and Assigned(FHandler.Socket) then
+      fpshutdown(FHandler.Socket.Handle, SHUT_RDWR);
+  finally
+    LeaveCriticalSection(FSocketCS);
+  end;
+end;
 
 { TCheckUserChangeThread }
 
@@ -199,7 +291,7 @@ begin
   jobj:=TJSONObject.Create;
   try
     jobj.Add('wait',FWait); //fist cycle dont have to wait.
-    Result:=PostMethodInt(_userchanged, jobj, ChangeData);
+    Result:=PostMethodInt(_userchanged, jobj, ChangeData, true);
     FWait:=Result=200;
   finally
     FreeAndNil(jobj);
@@ -212,13 +304,31 @@ begin
 end;
 
 function TCentralUserManagement.PostMethodInt(aAPIEndpoint: String;
-  aJsonData: TJSONData; var ReturnData: UTF8String): Integer;
+  aJsonData: TJSONData; var ReturnData: UTF8String; aIsPollRequest: Boolean
+  ): Integer;
 var
-  wc: TFPHTTPClient;
+  wc: TAbortableHTTPClient;
   ms, sl: TStringStream;
 begin
   FLastError:='';
-  wc:=TFPHTTPClient.Create(Self);
+  //sem Owner: com Self como Owner o destrutor do componente liberava o
+  //cliente enquanto a thread de userchanged ainda estava dentro do Post.
+  //no Owner: with Self as Owner the component destructor freed the client
+  //while the userchanged thread was still inside Post.
+  wc:=TAbortableHTTPClient.Create(nil);
+  if aIsPollRequest then begin
+    wc.ConnectTimeout:=5000;
+    EnterCriticalSection(FPollClientCS);
+    try
+      if FPollAborted then begin
+        FreeAndNil(wc);
+        exit(0);
+      end;
+      FPollClient:=wc;
+    finally
+      LeaveCriticalSection(FPollClientCS);
+    end;
+  end;
   try
     ms:=TStringStream.Create(aJsonData.AsJSON);
     try
@@ -243,8 +353,42 @@ begin
       FreeAndNil(ms);
     end;
   finally
+    if aIsPollRequest then begin
+      EnterCriticalSection(FPollClientCS);
+      try
+        FPollClient:=nil;
+      finally
+        LeaveCriticalSection(FPollClientCS);
+      end;
+    end;
     FreeAndNil(wc);
   end;
+end;
+
+procedure TCentralUserManagement.AbortPollClient;
+begin
+  EnterCriticalSection(FPollClientCS);
+  try
+    FPollAborted:=true;
+    if Assigned(FPollClient) then
+      FPollClient.Abort;
+  finally
+    LeaveCriticalSection(FPollClientCS);
+  end;
+end;
+
+procedure TCentralUserManagement.StopCheckUserChangedThread;
+begin
+  if not Assigned(FCheckUserChangedThread) then exit;
+  FCheckUserChangedThread.Terminate;
+  AbortPollClient;
+  //espera a thread sair: ela chama metodos deste objeto (CheckServerUserChanged,
+  //RemoteUserChanged), entao nao pode sobreviver ao destrutor.
+  //wait for the thread to exit: it calls methods of this object
+  //(CheckServerUserChanged, RemoteUserChanged), so it must not outlive the
+  //destructor.
+  FCheckUserChangedThread.WaitFor;
+  FreeAndNil(FCheckUserChangedThread);
 end;
 
 function TCentralUserManagement.ExtractServerErrorText(const JsonBody: UTF8String): UTF8String;
@@ -345,17 +489,13 @@ begin
   GetControlSecurityManager.UpdateControls;
   if AValue then begin
     FWait:=false;
+    FPollAborted:=false;
     FCheckUserChangedThread := TCheckUserChangeThread.Create(true);
     FCheckUserChangedThread.CheckUserChanged:=@CheckServerUserChanged;
     FCheckUserChangedThread.OnUserChanged:=@RemoteUserChanged;
-    FCheckUserChangedThread.FreeOnTerminate:=true;
     FCheckUserChangedThread.Start;
-  end else begin
-    FCheckUserChangedThread.CheckUserChanged:=nil;
-    FCheckUserChangedThread.OnUserChanged:=nil;
-    FCheckUserChangedThread.Terminate;
-    FCheckUserChangedThread:=Nil;
-  end;
+  end else
+    StopCheckUserChangedThread;
 end;
 
 procedure TCentralUserManagement.UpdateControlSecureState(Data: PtrInt);
@@ -373,6 +513,11 @@ begin
   if FSimulateAppShutdown or Application.Terminated or (AppDoNotCallAsyncQueue in Application.Flags) then exit;
 
   GetControlSecurityManager.UpdateControls;
+end;
+
+function TCentralUserManagement.GetLoggedUser: Boolean;
+begin
+  Result:=FUID<>-1;
 end;
 
 function TCentralUserManagement.CheckUserAndPassword(User, Pass: UTF8String;
@@ -510,6 +655,7 @@ end;
 
 constructor TCentralUserManagement.Create(AOwner: TComponent);
 begin
+  InitCriticalSection(FPollClientCS);
   inherited Create(AOwner);
   FWait:=false;
   FRaiseExceptOnConnFailure:=false;
@@ -519,8 +665,7 @@ end;
 
 destructor TCentralUserManagement.Destroy;
 begin
-  if Assigned(FCheckUserChangedThread) then
-    SetUseCentralUserAsLocalUser(false);
+  StopCheckUserChangedThread;
   if Assigned(Application) then
     Application.RemoveAllHandlersOfObject(Self);
   if Assigned(FValidatedSC) then
@@ -538,6 +683,7 @@ begin
   if Assigned(FRegisteredSC) then
     FreeAndNil(FRegisteredSC);
   inherited Destroy;
+  DoneCriticalSection(FPollClientCS);
 end;
 
 function TCentralUserManagement.GetRegisteredAccessCodes: TStringList;
