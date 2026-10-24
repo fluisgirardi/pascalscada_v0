@@ -924,6 +924,27 @@ type
 
     {$IFDEF PORTUGUES}
     {:
+    Espera ate @code(TimeoutMs) milisegundos por dados para ler, SEM consumi-los e SEM
+    contar como erro de comunicacao se nada chegar. Permite a um driver que recebe
+    mensagens espontaneas do equipamento (ex.: notificacoes do S7CommPlus) verificar se
+    ha algo antes de iniciar uma leitura bloqueante. Retorna verdadeiro se ha dados
+    disponiveis. A implementacao padrao retorna sempre verdadeiro (sem como saber, deixa
+    a leitura normal decidir).
+    }
+    {$ELSE}
+    {:
+    Waits up to @code(TimeoutMs) milliseconds for data to read, WITHOUT consuming it
+    and WITHOUT counting as a communication error if nothing arrives. Lets a driver
+    that receives unsolicited messages from the device (e.g. S7CommPlus notifications)
+    check whether there is anything before starting a blocking read. Returns true if
+    data is available. The default implementation always returns true (no way to know,
+    so the normal read decides).
+    }
+    {$ENDIF}
+    function WaitForData(TimeoutMs:LongInt):Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
     Encerra o handle da porta aberta e abre um novo handle.
     }
     {$ELSE}
@@ -1553,6 +1574,11 @@ begin
   finally
     PLockCS.Leave;
   end;
+end;
+
+function TCommPortDriver.WaitForData(TimeoutMs:LongInt):Boolean;
+begin
+  Result := true;
 end;
 
 function TCommPortDriver.ReallyActive:Boolean;

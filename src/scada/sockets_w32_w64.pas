@@ -28,6 +28,22 @@ uses
 
   {$IFDEF PORTUGUES}
   {:
+  Espera ate @code(timeout) milisegundos (-1 = indefinidamente) pelo socket ter algo
+  para ler, SEM ler nada. Retorna >0 se ha dados (ou se o par fechou/erro pendente, que
+  a proxima leitura reporta), 0 se estourou o tempo, <0 em caso de erro.
+  }
+  {$ELSE}
+  {:
+  Waits up to @code(timeout) milliseconds (-1 = forever) for the socket to have
+  something to read, WITHOUT reading anything. Returns >0 if there is data (or the
+  peer closed / an error is pending, which the next read reports), 0 on timeout, <0
+  on failure.
+  }
+  {$ENDIF}
+  function socket_wait_readable(sock:Tsocket; timeout: LongInt):LongInt;
+
+  {$IFDEF PORTUGUES}
+  {:
   Função que envia dados ao socket. Seus parametros são identicos a da função
   send/fpsend, adicionado do parametro timeout, que diz o tempo máximo para
   enviar todos os dados.
@@ -156,6 +172,24 @@ begin
     end else
       Result := -1;
   end;
+end;
+
+function socket_wait_readable(sock:Tsocket; timeout: LongInt):LongInt;
+var
+  sel:TFDSet;
+  tv : TTimeVal;
+  p:ptimeval;
+begin
+  if timeout<0 then
+    p:=nil
+  else begin
+    tv.tv_Sec:=timeout div 1000;
+    tv.tv_Usec:=(timeout mod 1000)*1000;
+    p:=@tv;
+  end;
+  FD_ZERO(sel);
+  FD_SET(sock, sel);
+  Result:=select(sock, @sel, nil, nil, p);
 end;
 
 function socket_recv(sock:Tsocket; buf:PByte; len: Cardinal; flags, timeout: LongInt):LongInt;

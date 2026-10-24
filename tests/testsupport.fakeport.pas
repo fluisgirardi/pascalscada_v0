@@ -75,6 +75,9 @@ type
     procedure ClearALLBuffers; override;
   public
     constructor Create(AOwner:TComponent); override;
+    //: Like a real socket: there is data when a response is queued (a queued timeout counts
+    //: too - the read that follows is what reports it).
+    function  WaitForData(TimeoutMs:LongInt):Boolean; override;
 
     {$IFDEF PORTUGUES}
     //: Enfileira a proxima resposta que a porta vai devolver numa leitura.
@@ -247,6 +250,11 @@ end;
 function TFakeCommPort.GetWriteCount:LongInt;
 begin
   Result:=Length(FWritten);
+end;
+
+function TFakeCommPort.WaitForData(TimeoutMs:LongInt):Boolean;
+begin
+  Result:=GetPendingResponses>0;
 end;
 
 function TFakeCommPort.GetPendingResponses:LongInt;
