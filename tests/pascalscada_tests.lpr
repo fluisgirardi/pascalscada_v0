@@ -22,6 +22,8 @@ uses
   ut.modbustcp,
   ut.s7plusvlq,
   ut.s7pluscodec,
+  ut.s7plusconnection,
+  ut.s7plusonchange,
   ut.s7plustypeinfo,
   ut.s7family,
   ut.protocoldriver,

@@ -91,6 +91,21 @@ type
     //-- ByteOffset. See TS7CommPlusDriver.ResolvePath and DoScanRead.
     IsComposite:Boolean;
     CompositeItems:TS7PlusCompositeItemArray;
+    //-- On-change delivery: a tag with RefreshTime=0 is not polled, the PLC pushes it
+    //-- through a subscription (see TS7CommPlusDriver.ManageSubscriptions). Data,
+    //-- LastResult and LastScanTimeStamp are then updated by notifications instead of by
+    //-- DoScanRead's batched read.
+    OnChange:Boolean;
+    Subscribed:Boolean;   //covered by a live subscription (cleared when the session is lost)
+    SubFallback:Boolean;  //the subscription could not be created: polled instead, slowly
+    SubRefBase:Cardinal;  //RefId of this entry's first item; a composite's member j is SubRefBase+j
+  end;
+
+  //-- One subscription object created on the PLC. NextCreditLimit follows the PLC's
+  //-- CreditTick so a long-running subscription is never starved of credit.
+  TS7PlusSubscriptionState = record
+    ObjectId:Cardinal;
+    NextCreditLimit:SmallInt;
   end;
 
   //-- Cache of a DB's or native area's flat variable list (Name/Lids/SoftDataType), so
@@ -117,6 +132,15 @@ type
     FDBNameCache:TS7PlusDataBlockInfoArray;
     FDBNameCacheLoaded:Boolean;
 
+    //-- On-change tags (RefreshTime=0) delivered through subscriptions.
+    FSubs:array of TS7PlusSubscriptionState;
+    FSubNextRefId:Cardinal;
+    FSubFailCount:Integer;
+    FSubRetryAt:QWord;
+    FSubResetPending:Boolean; //set by whoever notices the session is gone, consumed by the scan thread
+    FSubCycleMs:Integer;
+    FSubCreditLimit:SmallInt;
+
     function GetUseTLS:Boolean;
     procedure SetUseTLS(AValue:Boolean);
     function GetExploreDelayMs:Integer;
@@ -138,6 +162,13 @@ type
     function IsLidsPrefix(const Prefix, Full:TS7PlusLIDArray):Boolean;
     procedure TryDeduplicateEntry(EntryIdx:Integer);
     function ReadComposite(const Items:TS7PlusCompositeItemArray; out Data:TBytes):Boolean;
+
+    //-- On-change tags (subscriptions).
+    function EntryItemCount(Idx:Integer):Integer;
+    function FindEntryByRefId(RefId:Cardinal; out EntryIdx, ItemIdx:Integer):Boolean;
+    procedure ManageSubscriptions(Now_:QWord);
+    procedure PumpNotifications(WaitMs:LongInt);
+    procedure RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
   protected
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -145,6 +176,16 @@ type
     function DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
     procedure DoDelTag(TagObj:TTag); override;
+
+    //-- On-change bookkeeping steps that ManageSubscriptions/the scan thread drive; protected
+    //-- so the tests can drive them without a PLC.
+    //: Records that the entry of Path is covered by a subscription whose first item has id RefBase.
+    function MarkSubscribed(const Path:AnsiString; RefBase:Cardinal):Boolean;
+    //: Stands in for path resolution (which needs the PLC): marks the entry of Path resolved,
+    //: as a composite of Composite members when any are given.
+    function MarkResolved(const Path:AnsiString; const Composite:TS7PlusCompositeItemArray):Boolean;
+    //: The session is gone (or brand new), and with it every subscription - see the body.
+    procedure ResetSubscriptions;
 
     procedure PortDisconnected(Sender:TObject); override;
     procedure PortClosed(Sender:TObject); override;
@@ -199,9 +240,20 @@ type
     //: the scan thread must not race on the same connection, so nothing else should be
     //: expecting a reply while this is pending. ioOk with CreditTick/Values populated on
     //: success.
-    function SubscriptionWaitNotification(out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):TProtocolIOResult;
+    function SubscriptionWaitNotification(out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):TProtocolIOResult; overload;
+    //: Same as above, also returning the items the PLC reported as failed (Errors) instead of a value.
+    function SubscriptionWaitNotification(out CreditTick:Byte; out Values:TS7PlusNotificationValueArray;
+                                          out Errors:TS7PlusNotificationErrorArray):TProtocolIOResult; overload;
     //: Uploads (reads) a compiled block's raw body - see TS7PlusConnection.UploadBlock.
     function UploadBlock(BlockType, BlockNumber:Cardinal; out Data:TBytes):TProtocolIOResult;
+
+    //: Applies one parsed notification to the on-change tags: each value becomes its tag's
+    //: new data (stamped Now_, which is what makes the framework push it to the tag), each
+    //: per-item error marks its tag as failed. Ids that match no tag (a tag removed while its
+    //: subscription lives on) are ignored. Called by the scan thread; public so the
+    //: bookkeeping can be unit tested without a PLC.
+    procedure ProcessNotification(const Values:TS7PlusNotificationValueArray;
+                                  const Errors:TS7PlusNotificationErrorArray; Now_:QWord);
 
     //: True when the S7CommPlus session is established (and, if UseTLS, the TLS tunnel
     //: is active and IntegrityId tracking is enabled).
@@ -219,6 +271,15 @@ type
     //: S7-1200/1500 firmware from TIA Portal V15+ for anything beyond the initial
     //: handshake. Default true; set to false only for known-legacy V1-only firmware.
     property UseTLS:Boolean read GetUseTLS write SetUseTLS default true;
+    //: Sampling cycle, in milliseconds, of the subscriptions that deliver tags whose
+    //: RefreshTime is 0 (on change). The PLC reports nothing faster than this; the
+    //: lowest value seen to work is 100.
+    property SubscriptionCycleMs:Integer read FSubCycleMs write FSubCycleMs default 100;
+    //: Notification credit of those subscriptions. A positive value is renewed
+    //: automatically (the PLC stops sending once its CreditTick reaches the limit); -1 asks
+    //: for unlimited credit with no renewal (documented by the S7CommPlusDriver author, not
+    //: yet validated here). Default 10, the value real S7-1500 PLCs are known to accept.
+    property SubscriptionCreditLimit:SmallInt read FSubCreditLimit write FSubCreditLimit default 10;
     //: PLC password for legitimation (V2+ with TLS) - some PLCs (protection level "Full
     //: access with password" in TIA Portal) reject writes from an unauthenticated session
     //: even though reads stay open. When set (non-empty), the driver calls Authenticate
@@ -242,6 +303,9 @@ begin
   inherited Create(AOwner);
   FConnection := nil;
   FUseTLS := true;
+  FSubCycleMs := 100;
+  FSubCreditLimit := 10;
+  FSubNextRefId := 1;
 end;
 
 destructor TS7CommPlusDriver.Destroy;
@@ -305,6 +369,10 @@ begin
 
   Result := FConnection.Connected;
 
+  //A new session starts with no subscriptions at all.
+  if Result and (not WasConnected) then
+    FSubResetPending := true;
+
   //Authenticate once per freshly-established connection (not on every EnsureConnected call -
   //this runs on every scan tick even with no tags due). Password='' (default) means the PLC
   //doesn't need legitimation - skip entirely, matching every PLC that doesn't require it.
@@ -337,6 +405,7 @@ end;
 
 procedure TS7CommPlusDriver.PortDisconnected(Sender:TObject);
 begin
+  FSubResetPending := true;
   if FConnection<>nil then
     FConnection.Disconnect;
   inherited PortDisconnected(Sender);
@@ -344,6 +413,7 @@ end;
 
 procedure TS7CommPlusDriver.PortClosed(Sender:TObject);
 begin
+  FSubResetPending := true;
   if FConnection<>nil then
     FConnection.Disconnect;
   inherited PortClosed(Sender);
@@ -584,6 +654,9 @@ var
   CanBeDerived:Boolean;
 begin
   if FScanList[EntryIdx].ByteOffset=-1 then exit; //offset unknown (e.g. inside an array)
+  //An on-change entry gets its own subscribed items: it neither piggybacks on a polled
+  //container nor lets others piggyback on it (its data only changes with notifications).
+  if FScanList[EntryIdx].OnChange then exit;
 
   CanBeDerived := not (TS7PlusSoftDataType(FScanList[EntryIdx].SoftDataType) in [sdtSTRING, sdtWSTRING]);
 
@@ -592,7 +665,7 @@ begin
     BestLen := -1;
     for i:=0 to High(FScanList) do begin
       if i=EntryIdx then continue;
-      if FScanList[i].IsDerived or (not FScanList[i].Resolved) then continue;
+      if FScanList[i].IsDerived or (not FScanList[i].Resolved) or FScanList[i].OnChange then continue;
       if FScanList[i].AccessArea<>FScanList[EntryIdx].AccessArea then continue;
       if FScanList[i].ByteOffset=-1 then continue;
       if IsLidsPrefix(FScanList[i].Lids, FScanList[EntryIdx].Lids) and (Length(FScanList[i].Lids)>BestLen) then begin
@@ -612,7 +685,7 @@ begin
   //This entry stayed independent - does it cover any EXISTING independent entries?
   for i:=0 to High(FScanList) do begin
     if i=EntryIdx then continue;
-    if FScanList[i].IsDerived or (not FScanList[i].Resolved) then continue;
+    if FScanList[i].IsDerived or (not FScanList[i].Resolved) or FScanList[i].OnChange then continue;
     if FScanList[i].AccessArea<>FScanList[EntryIdx].AccessArea then continue;
     if FScanList[i].ByteOffset=-1 then continue;
     if TS7PlusSoftDataType(FScanList[i].SoftDataType) in [sdtSTRING, sdtWSTRING] then continue;
@@ -675,6 +748,7 @@ begin
     if Supports(TagObj, IScanableTagInterface) then begin
       (TagObj as IScanableTagInterface).BuildTagRec(tr, 0, 0);
       Entry.UpdateRate := tr.UpdateTime;
+      Entry.OnChange := tr.UpdateTime=0;
     end;
     Idx := Length(FScanList);
     SetLength(FScanList, Idx+1);
@@ -723,6 +797,8 @@ const
   //("whole DB") entry counts as just one against this cap even though it expands into many
   //wire items below - it's still a single logical tag coming due.
   MaxBatchSize = 50;
+  //How often an on-change tag is polled when its subscription could not be created.
+  SubFallbackPollMs = 1000;
 type
   //-- Which scan-list entry a given batched wire item belongs to, and (for a composite
   //-- entry's own members) where in that entry's assembled Data its bytes get spliced.
@@ -740,6 +816,7 @@ var
   Owners:array of TBatchOwner;
   ok:Boolean;
   NeedLen:Integer;
+  Rate:Int64;
 begin
   NeedSleep := 0;
 
@@ -747,6 +824,9 @@ begin
     NeedSleep := 100;
     exit;
   end;
+
+  if FSubResetPending then
+    ResetSubscriptions;
 
   Now_ := GetTickCount64;
 
@@ -761,6 +841,11 @@ begin
       end;
     end;
 
+  //On-change tags: subscribe what just became resolvable, and take in whatever the PLC has
+  //already pushed (including notifications that arrived while a request was in flight).
+  ManageSubscriptions(Now_);
+  PumpNotifications(0);
+
   //Collect every resolved, independently-scanned tag (derived ones piggyback on their
   //container's read - see TryDeduplicateEntry - and are never picked here) that's
   //currently due, and read all of them in a single batched GetMultiVariables request -
@@ -768,7 +853,13 @@ begin
   SetLength(DueIndices, 0);
   for i:=0 to High(FScanList) do
     if FScanList[i].Resolved and (not FScanList[i].IsDerived) then begin
-      Elapsed := Int64(Now_-FScanList[i].LastScanTimeStamp) - FScanList[i].UpdateRate;
+      Rate := FScanList[i].UpdateRate;
+      if FScanList[i].OnChange then begin
+        //Delivered by notifications, polled only if there is no subscription for it.
+        if not FScanList[i].SubFallback then continue;
+        Rate := SubFallbackPollMs;
+      end;
+      Elapsed := Int64(Now_-FScanList[i].LastScanTimeStamp) - Rate;
       if (FScanList[i].LastScanTimeStamp=0) or (Elapsed>=0) then begin
         SetLength(DueIndices, Length(DueIndices)+1);
         DueIndices[High(DueIndices)] := i;
@@ -777,7 +868,12 @@ begin
     end;
 
   if Length(DueIndices)=0 then begin
-    NeedSleep := 20;
+    if Length(FSubs)>0 then
+      //Nothing to poll: the idle wait is spent listening for notifications instead of
+      //sleeping, so a change is picked up as soon as the PLC sends it.
+      PumpNotifications(20)
+    else
+      NeedSleep := 20;
     exit;
   end;
 
@@ -840,6 +936,268 @@ begin
         FScanList[EntryIdx].Data[Owners[i].CompByteOffset+b] := Results[i].Data[b];
     end else
       FScanList[EntryIdx].Data := Results[i].Data;
+  end;
+end;
+
+//===========================================================================
+// On-change tags (RefreshTime=0): subscriptions and notifications
+//===========================================================================
+
+//: How many wire items (= distinct reference ids) an entry subscribes: one per member of a
+//: "whole DB/area" composite, one otherwise.
+function TS7CommPlusDriver.EntryItemCount(Idx:Integer):Integer;
+begin
+  if FScanList[Idx].IsComposite then
+    Result := Length(FScanList[Idx].CompositeItems)
+  else
+    Result := 1;
+end;
+
+function TS7CommPlusDriver.FindEntryByRefId(RefId:Cardinal; out EntryIdx, ItemIdx:Integer):Boolean;
+var
+  i:Integer;
+begin
+  Result := false;
+  EntryIdx := -1;
+  ItemIdx := -1;
+  for i:=0 to High(FScanList) do
+    if FScanList[i].Subscribed and (RefId>=FScanList[i].SubRefBase) and
+       (RefId<FScanList[i].SubRefBase+Cardinal(EntryItemCount(i))) then begin
+      EntryIdx := i;
+      ItemIdx := Integer(RefId-FScanList[i].SubRefBase);
+      Result := true;
+      exit;
+    end;
+end;
+
+function TS7CommPlusDriver.MarkSubscribed(const Path:AnsiString; RefBase:Cardinal):Boolean;
+var
+  Idx:Integer;
+begin
+  Result := FindScanEntry(Path, Idx);
+  if Result then begin
+    FScanList[Idx].SubRefBase := RefBase;
+    FScanList[Idx].Subscribed := true;
+  end;
+end;
+
+function TS7CommPlusDriver.MarkResolved(const Path:AnsiString; const Composite:TS7PlusCompositeItemArray):Boolean;
+var
+  Idx:Integer;
+begin
+  Result := FindScanEntry(Path, Idx);
+  if Result then begin
+    FScanList[Idx].Resolved := true;
+    FScanList[Idx].CompositeItems := Composite;
+    FScanList[Idx].IsComposite := Length(Composite)>0;
+  end;
+end;
+
+//: The session is gone (or brand new), and with it every subscription: forget them and let
+//: ManageSubscriptions create them again. Tags keep their last value but are flagged as
+//: failed until the new subscription delivers one.
+procedure TS7CommPlusDriver.ResetSubscriptions;
+var
+  i:Integer;
+  Now_:QWord;
+begin
+  FSubResetPending := false;
+  SetLength(FSubs, 0);
+  FSubFailCount := 0;
+  FSubRetryAt := 0;
+  Now_ := GetTickCount64;
+  for i:=0 to High(FScanList) do
+    if FScanList[i].OnChange then begin
+      if FScanList[i].Subscribed then begin
+        FScanList[i].LastResult := ioCommError;
+        FScanList[i].LastScanTimeStamp := Now_;
+      end;
+      FScanList[i].Subscribed := false;
+      FScanList[i].SubFallback := false;
+    end;
+end;
+
+//: Creates the subscriptions for the on-change tags that became resolvable and are not
+//: subscribed yet. Several subscription objects may coexist (one per call), so tags added
+//: later get their own without touching the ones already running - deleting a subscription
+//: would tear down the whole container (see TS7PlusConnection.SubscriptionDelete). Reference
+//: ids are unique across all of them, so a notification identifies its tag by id alone.
+//: A tag whose subscription cannot be created is polled instead (SubFallback) rather than
+//: left silent.
+procedure TS7CommPlusDriver.ManageSubscriptions(Now_:QWord);
+const
+  MaxItemsPerSubscription = 50;
+  MaxCreateAttempts = 3;
+  RetryDelayMs = 2000;
+var
+  Pending:array of Integer;
+  Items:TS7PlusMultiReadItemArray;
+  i, j, k, FirstPending, n:Integer;
+  Idx:Integer;
+  NextId:Cardinal;
+  St:TS7PlusSubscriptionState;
+begin
+  SetLength(Pending, 0);
+  for i:=0 to High(FScanList) do
+    if FScanList[i].OnChange and FScanList[i].Resolved and (not FScanList[i].Subscribed) and
+       (not FScanList[i].SubFallback) then begin
+      SetLength(Pending, Length(Pending)+1);
+      Pending[High(Pending)] := i;
+    end;
+  if Length(Pending)=0 then exit;
+  if Now_<FSubRetryAt then exit;
+
+  if not FConnection.HasSubscriptionContainer then begin
+    ConnDebug(Self, 'ManageSubscriptions: sessao sem container de subscricoes - tags RefreshTime=0 serao lidas por polling.');
+    for i:=0 to High(Pending) do
+      FScanList[Pending[i]].SubFallback := true;
+    exit;
+  end;
+
+  FirstPending := 0;
+  while FirstPending<=High(Pending) do begin
+    //Group whole entries (a composite keeps all its members together) up to the item cap.
+    SetLength(Items, 0);
+    NextId := FSubNextRefId;
+    k := FirstPending;
+    while k<=High(Pending) do begin
+      Idx := Pending[k];
+      if (Length(Items)>0) and (Length(Items)+EntryItemCount(Idx)>MaxItemsPerSubscription) then break;
+      n := Length(Items);
+      SetLength(Items, n+EntryItemCount(Idx));
+      if FScanList[Idx].IsComposite then begin
+        for j:=0 to High(FScanList[Idx].CompositeItems) do begin
+          Items[n+j].AccessArea := FScanList[Idx].CompositeItems[j].AccessArea;
+          Items[n+j].Lids := FScanList[Idx].CompositeItems[j].Lids;
+          Items[n+j].RefId := NextId;
+          Inc(NextId);
+        end;
+      end else begin
+        Items[n].AccessArea := FScanList[Idx].AccessArea;
+        Items[n].Lids := FScanList[Idx].Lids;
+        Items[n].RefId := NextId;
+        Inc(NextId);
+      end;
+      Inc(k);
+    end;
+
+    if FConnection.SubscriptionCreate(Items, FSubCycleMs, $14, false, true, FSubCreditLimit) then begin
+      St.ObjectId := FConnection.LastSubscriptionObjectId;
+      St.NextCreditLimit := FSubCreditLimit;
+      SetLength(FSubs, Length(FSubs)+1);
+      FSubs[High(FSubs)] := St;
+
+      NextId := FSubNextRefId;
+      for i:=FirstPending to k-1 do begin
+        MarkSubscribed(FScanList[Pending[i]].Path, NextId);
+        Inc(NextId, EntryItemCount(Pending[i]));
+      end;
+      FSubNextRefId := NextId;
+      FSubFailCount := 0;
+      ConnDebug(Self, Format('ManageSubscriptions: subscricao 0x%.8x criada com %d itens (%d tags)',
+                             [St.ObjectId, Length(Items), k-FirstPending]));
+    end else begin
+      Inc(FSubFailCount);
+      FSubRetryAt := Now_+RetryDelayMs;
+      ConnDebug(Self, Format('ManageSubscriptions: falha ao criar subscricao (tentativa %d de %d)',
+                             [FSubFailCount, MaxCreateAttempts]));
+      if FSubFailCount>=MaxCreateAttempts then begin
+        for i:=FirstPending to High(Pending) do
+          FScanList[Pending[i]].SubFallback := true;
+        FSubFailCount := 0;
+        ConnDebug(Self, 'ManageSubscriptions: desistindo - tags RefreshTime=0 pendentes serao lidas por polling.');
+      end;
+      exit;
+    end;
+    FirstPending := k;
+  end;
+end;
+
+procedure TS7CommPlusDriver.ProcessNotification(const Values:TS7PlusNotificationValueArray;
+                                                const Errors:TS7PlusNotificationErrorArray; Now_:QWord);
+var
+  i, b, NeedLen, EntryIdx, ItemIdx, Off:Integer;
+  Touched:array of Boolean;
+begin
+  SetLength(Touched, Length(FScanList));
+  for i:=0 to High(Touched) do
+    Touched[i] := false;
+
+  for i:=0 to High(Values) do begin
+    if not FindEntryByRefId(Values[i].RefId, EntryIdx, ItemIdx) then continue;
+    if FScanList[EntryIdx].IsComposite then begin
+      //Only the members that changed are sent: splice them into what is already there.
+      Off := FScanList[EntryIdx].CompositeItems[ItemIdx].ByteOffset;
+      NeedLen := Off+Length(Values[i].Data);
+      if NeedLen>Length(FScanList[EntryIdx].Data) then
+        SetLength(FScanList[EntryIdx].Data, NeedLen);
+      for b:=0 to High(Values[i].Data) do
+        FScanList[EntryIdx].Data[Off+b] := Values[i].Data[b];
+    end else
+      FScanList[EntryIdx].Data := Values[i].Data;
+    FScanList[EntryIdx].LastResult := ioOk;
+    Touched[EntryIdx] := true;
+  end;
+
+  //After the values: within one notification an error outweighs a value of the same tag.
+  for i:=0 to High(Errors) do begin
+    if not FindEntryByRefId(Errors[i].RefId, EntryIdx, ItemIdx) then continue;
+    FScanList[EntryIdx].LastResult := ioCommError;
+    Touched[EntryIdx] := true;
+  end;
+
+  //The new timestamp is what tells the framework there is something to push to the tag.
+  for i:=0 to High(Touched) do
+    if Touched[i] then
+      FScanList[i].LastScanTimeStamp := Now_;
+end;
+
+//: A positive credit limit stops the PLC once the notification CreditTick reaches it, so it
+//: is raised ahead of the tick, by 5 each time - the rule the S7CommPlusDriver author's own
+//: long-running loop uses. -1 (unlimited) needs nothing.
+procedure TS7CommPlusDriver.RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
+var
+  i:Integer;
+begin
+  if FSubCreditLimit<=0 then exit;
+  for i:=0 to High(FSubs) do
+    if FSubs[i].ObjectId=SubscriptionId then begin
+      if CreditTick>=FSubs[i].NextCreditLimit-1 then begin
+        FSubs[i].NextCreditLimit := (FSubs[i].NextCreditLimit+5) mod 255;
+        ConnDebug(Self, Format('Subscricao 0x%.8x: CreditTick=%d, novo limite de credito %d',
+                               [SubscriptionId, CreditTick, FSubs[i].NextCreditLimit]));
+        FConnection.SubscriptionSetCreditLimitFor(SubscriptionId, FSubs[i].NextCreditLimit);
+      end;
+      exit;
+    end;
+end;
+
+//: Takes in notifications: the first waits up to WaitMs for one to arrive, the rest only
+//: drain what is already there. Bounded, so a flood cannot starve the polled tags.
+procedure TS7CommPlusDriver.PumpNotifications(WaitMs:LongInt);
+const
+  MaxPerCall = 64;
+var
+  Got:Boolean;
+  Credit:Byte;
+  Values:TS7PlusNotificationValueArray;
+  Errors:TS7PlusNotificationErrorArray;
+  n:Integer;
+begin
+  if (FConnection=nil) or (not FConnection.Connected) then exit;
+  if (Length(FSubs)=0) and (FConnection.PendingNotificationCount=0) then exit;
+
+  for n:=1 to MaxPerCall do begin
+    if not FConnection.PollNotification(WaitMs, Got, Credit, Values, Errors) then begin
+      //Data was there and could not be read: the stream is no longer trustworthy.
+      ConnDebug(Self, 'PumpNotifications: falha ao receber notificacao - subscricoes serao recriadas.');
+      FSubResetPending := true;
+      exit;
+    end;
+    if not Got then exit;
+    ProcessNotification(Values, Errors, GetTickCount64);
+    RenewCredit(FConnection.LastNotificationSubscriptionId, Credit);
+    WaitMs := 0;
   end;
 end;
 
@@ -1305,9 +1663,18 @@ end;
 
 function TS7CommPlusDriver.SubscriptionWaitNotification(out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):TProtocolIOResult;
 var
+  Errors:TS7PlusNotificationErrorArray;
+begin
+  Result := SubscriptionWaitNotification(CreditTick, Values, Errors);
+end;
+
+function TS7CommPlusDriver.SubscriptionWaitNotification(out CreditTick:Byte; out Values:TS7PlusNotificationValueArray;
+                                                         out Errors:TS7PlusNotificationErrorArray):TProtocolIOResult;
+var
   FrameBody:TBytes;
 begin
   SetLength(Values, 0);
+  SetLength(Errors, 0);
   CreditTick := 0;
   LockDriverIO;
   try
@@ -1319,7 +1686,7 @@ begin
       Result := ioCommError;
       exit;
     end;
-    if FConnection.ParseNotification(FrameBody, CreditTick, Values) then
+    if FConnection.ParseNotification(FrameBody, CreditTick, Values, Errors) then
       Result := ioOk
     else
       Result := ioCommError;

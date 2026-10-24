@@ -165,6 +165,9 @@ type
     //: @seealso TCommPortDriver.ReallyActive
     function ReallyActive: Boolean; override;
 
+    //: @seealso TCommPortDriver.WaitForData
+    function WaitForData(TimeoutMs:LongInt):Boolean; override;
+
     //: @seealso TCommPortDriver.RenewHandle
     procedure RenewHandle; override;
 
@@ -469,6 +472,20 @@ begin
   FreeAndNil(FConnectThread);
   FreeAndNil(fPortIDCS);
   inherited Destroy;
+end;
+
+function TTCP_UDPPort.WaitForData(TimeoutMs:LongInt):Boolean;
+var
+  s:Tsocket;
+begin
+  s := FSocket;
+  //no socket yet/anymore: let the regular read report the failure properly.
+  if {$IFDEF WINDOWS}s=INVALID_SOCKET{$ELSE}s<0{$ENDIF} then begin
+    Result := true;
+    exit;
+  end;
+  //<0 (poll failure) also returns true for the same reason: the read will say what is wrong.
+  Result := socket_wait_readable(s, TimeoutMs)<>0;
 end;
 
 function TTCP_UDPPort.ReallyActive: Boolean;

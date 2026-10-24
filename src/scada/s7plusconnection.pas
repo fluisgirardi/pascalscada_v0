@@ -55,6 +55,10 @@ type
     //: this) - the variable's real SymbolCrc from BrowseDB/BrowseNativeArea's TS7PlusVarInfo.
     //: Defaults to 0 (a normal read's "skip layout check"), which is wrong for subscriptions.
     SymbolCrc:Cardinal;
+    //: Only used by BuildSubscriptionReferenceList: the id the PLC echoes back in each
+    //: notification for this item. 0 = the item's 1-based position in the request. Set it
+    //: when several subscriptions share one connection so ids stay unique across all of them.
+    RefId:Cardinal;
   end;
   TS7PlusMultiReadItemArray = array of TS7PlusMultiReadItem;
 
@@ -76,6 +80,16 @@ type
     Data:TBytes;
   end;
   TS7PlusNotificationValueArray = array of TS7PlusNotificationValue;
+
+  //: One per-item error out of a parsed Notification: the PLC could not deliver RefId
+  //: (same 1-based id as TS7PlusNotificationValue.RefId) and says why with Status
+  //: ($13 or $03). Seen live as the symptom of a wrong SymbolCrc in the reference list:
+  //: the subscription is created fine, but every item reports an error instead of a value.
+  TS7PlusNotificationError = record
+    RefId:Cardinal;
+    Status:Byte;
+  end;
+  TS7PlusNotificationErrorArray = array of TS7PlusNotificationError;
 
   { TS7PlusConnection }
 
@@ -123,6 +137,13 @@ type
     FWithIntegrityId:Boolean;
     FIntegrityIdRead, FIntegrityIdWrite:Cardinal;
     FRecvBuf:TBytes;
+    //: Notification frames (body only, V3 hash prefix already stripped) that arrived while
+    //: a request/response exchange was waiting for its own reply - see RecvApplicationFrame.
+    //: Delivered in order by PollNotification/WaitForFrame.
+    FNotifQueue:array of TBytes;
+    //: Header fields of the last notification ParseNotification understood.
+    FLastNotifSubscriptionId:Cardinal;
+    FLastNotifSequence:Cardinal;
 
     //-- Subscriptions (on-change notifications, V2+) --------------------------
     //: ObjectId the PLC assigned to the nested ClassSubscriptions container created
@@ -176,6 +197,12 @@ type
     //: responses split across several PDUs: [$72][ver][len:2][data] with no per-fragment
     //: trailer; a trailing len=0 fragment ends the sequence). Returns the concatenated data.
     function ReassembledRecv(out Data:TBytes):Boolean;
+    function ReassembledRecvOnce(out Data:TBytes):Boolean;
+    //: True when a fully reassembled message is an unsolicited Notification rather than a
+    //: reply: its first byte is the Notification opcode, or (V3) the $20 hash length byte,
+    //: 32 hash bytes, then the opcode. Exact byte checks only - a reply never starts with
+    //: that opcode, so there is no way to mistake one for the other.
+    class function IsNotificationMessage(const Data:TBytes):Boolean;
 
     //-- S7CommPlus session handshake (V1/V2) ----------------------------------
     function InitSSL:Boolean;
@@ -237,7 +264,10 @@ type
     //: an unsolicited SystemEvent in between our request and its real response, and
     //: treating that SystemEvent AS the response (the previous behaviour here) silently
     //: discarded the real one.
-    function RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
+    //: Application body of a received frame (header consumed, V3 hash prefix stripped).
+    function FrameApplicationBody(const Frame:TBytes; out Version:Byte):TBytes;
+    procedure QueueNotification(const Body:TBytes);
+    function PopNotification(out Body:TBytes):Boolean;
 
     //-- payload builders/parsers ----------------------------------------------
     //: Picks the V1 fixed-width ObjectQualifier (KeyQualifier=1, matching TIA's own V1
@@ -291,9 +321,16 @@ type
     //: GetSubscriptionListArray): a UDInt array (Flags=$20, the same "Addressarray" flavor
     //: GetVarSubstreamedRequest uses) encoding a create/unsubscribe header followed by, per
     //: item, its 1-based reference id and full symbolic address (AccessArea/SymbolCrc/
-    //: AccessSubArea/Lids). Items[i]'s reference id is i+1 - callers use that same mapping
+    //: AccessSubArea/Lids). Items[i]'s reference id is its RefId, or i+1 when that is 0 - callers use that same mapping
     //: to route Notification values back to their originating item.
     function BuildSubscriptionReferenceList(const Items:TS7PlusMultiReadItemArray):TBytes;
+  protected
+    //: Receives the next frame that is a reply (not a system event, not a notification:
+    //: those are skipped or, for notifications, queued for PollNotification).
+    function RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
+    //: Marks the connection as established without a handshake. Only for tests, which feed
+    //: frames through a fake port and never speak to a PLC.
+    procedure AssumeConnected;
   public
     constructor Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
     destructor Destroy; override;
@@ -403,13 +440,45 @@ type
     //: opcode of whatever LogicalRecv returns before assuming it's a reply to their own
     //: last request). Values are keyed by the same 1-based reference id
     //: BuildSubscriptionReferenceList assigned to each subscribed item.
-    function ParseNotification(const Frame:TBytes; out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):Boolean;
+    function ParseNotification(const Frame:TBytes; out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):Boolean; overload;
+    //: Same as above, also reporting the items the PLC flagged with an error status (no value).
+    function ParseNotification(const Frame:TBytes; out CreditTick:Byte; out Values:TS7PlusNotificationValueArray;
+                               out Errors:TS7PlusNotificationErrorArray):Boolean; overload;
+    //: V3 frames carry a [hashLen byte][hashLen-byte HMAC] prefix before the actual body.
+    //: Returns Body without it (unchanged for other versions, or when Body already starts at
+    //: a Notification opcode). SendRequest strips the same prefix from ordinary responses.
+    class function StripV3HashPrefix(Version:Byte; const Body:TBytes):TBytes;
     //: Blocks (up to the CommPort's own configured Timeout) for one incoming frame and
     //: returns its body starting at the Opcode byte (same slice ParseNotification expects,
     //: or what SendRequest would treat as a response body's Opcode..TransportFlags prefix).
     //: Only meaningful when nothing else is concurrently expecting a reply on this
     //: connection - see SubscriptionWaitNotification in TS7CommPlusDriver.
     function WaitForFrame(out FrameBody:TBytes):Boolean;
+    //: Waits up to WaitMs for the next notification and parses it. Queued notifications
+    //: (the ones that arrived during another request's round-trip) come first and never
+    //: wait. Got=false with a True result means nothing arrived in time (not an error:
+    //: unlike WaitForFrame this does not run into the port's read timeout nor count a
+    //: communication error). A False result is a real failure (connection broken, or a
+    //: frame that could not be read) - the caller should treat the session as lost.
+    //: Frames that are neither notifications nor ignorable system events are discarded.
+    function PollNotification(WaitMs:LongInt; out Got:Boolean; out CreditTick:Byte;
+                              out Values:TS7PlusNotificationValueArray;
+                              out Errors:TS7PlusNotificationErrorArray):Boolean;
+    //: How many notifications are waiting in the queue (see PollNotification).
+    function PendingNotificationCount:Integer;
+    //: ObjectId the PLC assigned to the most recent successful SubscriptionCreate.
+    property LastSubscriptionObjectId:Cardinal read FSubscriptionObjectId;
+    //: True when the session got the ClassSubscriptions container a subscription needs as
+    //: its parent object (not the case for every session, e.g. the legacy V1 one).
+    function HasSubscriptionContainer:Boolean;
+    //: Subscription object id and notification sequence number of the last notification
+    //: ParseNotification understood (a connection can hold several subscriptions; the
+    //: credit of each is tracked separately).
+    property LastNotificationSubscriptionId:Cardinal read FLastNotifSubscriptionId;
+    property LastNotificationSequence:Cardinal read FLastNotifSequence;
+    //: Same as SubscriptionSetCreditLimit, for a specific subscription object (a
+    //: connection can hold several: one per SubscriptionCreate).
+    function SubscriptionSetCreditLimitFor(ObjectId:Cardinal; Limit:SmallInt):Boolean;
 
     //-- Block upload (read-only, Phase 4 first slice) ------------------------
     //: Uploads (reads) a compiled block's raw body from the PLC via GetVarSubStreamed, using
@@ -924,7 +993,35 @@ begin
   end;
 end;
 
+class function TS7PlusConnection.IsNotificationMessage(const Data:TBytes):Boolean;
+begin
+  Result := ((Length(Data)>0) and (Data[0]=S7PlusOpcode_Notification)) or
+            ((Length(Data)>33) and (Data[0]=$20) and (Data[33]=S7PlusOpcode_Notification));
+end;
+
+//: Receives one complete reply (all its fragments). A Notification that arrives instead of
+//: (or before) the reply is queued for PollNotification and the wait continues - it is
+//: judged on the whole reassembled message, never on a fragment's version byte (see the
+//: note in ReassembledRecvOnce about why fragments must not be second-guessed).
 function TS7PlusConnection.ReassembledRecv(out Data:TBytes):Boolean;
+const
+  MaxInterleavedNotifications = 256;
+var
+  Notifications:Integer;
+begin
+  Notifications := 0;
+  repeat
+    Result := ReassembledRecvOnce(Data);
+    if (not Result) or (not IsNotificationMessage(Data)) then exit;
+    Debug(Format('ReassembledRecv: notificacao intercalada enfileirada (%d bytes)',[Length(Data)]));
+    QueueNotification(StripV3HashPrefix(S7PlusVersion_V3, Data));
+    Inc(Notifications);
+  until Notifications>MaxInterleavedNotifications;
+  Debug('ReassembledRecv: excesso de notificacoes antes da resposta');
+  Result := false;
+end;
+
+function TS7PlusConnection.ReassembledRecvOnce(out Data:TBytes):Boolean;
 const
   MaxFragments = 4096;
   MaxTotalBytes = 16*1024*1024;
@@ -1857,6 +1954,7 @@ begin
   FIntegrityIdRead := 0;
   FIntegrityIdWrite := 0;
   SetLength(FServerSessionVersion, 0);
+  SetLength(FNotifQueue, 0);
   ReleaseTLS;
 end;
 
@@ -1919,32 +2017,120 @@ begin
   Result := false;
 end;
 
+function TS7PlusConnection.FrameApplicationBody(const Frame:TBytes; out Version:Byte):TBytes;
+var
+  Consumed:Integer;
+  DataLen:Word;
+begin
+  SetLength(Result, 0);
+  Version := 0;
+  if Length(Frame)<4 then exit;
+  Consumed := DecodeS7PlusHeader(Frame, 0, Version, DataLen);
+  if Consumed+DataLen>Length(Frame) then exit;
+  Result := StripV3HashPrefix(Version, BytesCopy(Frame, Consumed, DataLen));
+end;
+
+procedure TS7PlusConnection.QueueNotification(const Body:TBytes);
+const
+  MaxQueued = 512;
+var
+  n, i:Integer;
+begin
+  n := Length(FNotifQueue);
+  if n>=MaxQueued then begin
+    //Never grow without bound if nobody is polling: drop the oldest.
+    Debug('QueueNotification: fila cheia, descartando a notificacao mais antiga');
+    for i:=1 to n-1 do
+      FNotifQueue[i-1] := FNotifQueue[i];
+    n := n-1;
+    SetLength(FNotifQueue, n);
+  end;
+  SetLength(FNotifQueue, n+1);
+  FNotifQueue[n] := Body;
+end;
+
+function TS7PlusConnection.PopNotification(out Body:TBytes):Boolean;
+var
+  i:Integer;
+begin
+  Result := Length(FNotifQueue)>0;
+  if not Result then begin
+    SetLength(Body, 0);
+    exit;
+  end;
+  Body := FNotifQueue[0];
+  for i:=1 to High(FNotifQueue) do
+    FNotifQueue[i-1] := FNotifQueue[i];
+  SetLength(FNotifQueue, Length(FNotifQueue)-1);
+end;
+
+function TS7PlusConnection.PendingNotificationCount:Integer;
+begin
+  Result := Length(FNotifQueue);
+end;
+
+procedure TS7PlusConnection.AssumeConnected;
+begin
+  FConnected := true;
+end;
+
+function TS7PlusConnection.HasSubscriptionContainer:Boolean;
+begin
+  Result := FSubscriptionsContainerObjectId<>0;
+end;
+
 function TS7PlusConnection.RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
 const
   MaxSystemEvents = 8;
+  //Notifications are legitimate traffic (an active subscription can deliver several while
+  //a request waits for its reply), so they get their own, much larger, allowance: it only
+  //exists to stop a misbehaving peer from keeping us here forever.
+  MaxInterleavedNotifications = 256;
 var
-  Attempt, Consumed:Integer;
+  SystemEvents, Notifications, Consumed:Integer;
   Version:Byte;
   DataLen:Word;
-  EventBody:TBytes;
+  EventBody, AppBody:TBytes;
 begin
   Result := false;
-  for Attempt:=1 to MaxSystemEvents+1 do begin
+  SystemEvents := 0;
+  Notifications := 0;
+  while true do begin
     if LogicalRecv(ResponseFrame)<>iorOK then exit;
     if Length(ResponseFrame)<4 then exit;
     Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
-    if Version<>S7PlusVersion_SystemEvent then begin
-      Result := true;
-      exit;
+    if Version=S7PlusVersion_SystemEvent then begin
+      EventBody := BytesCopy(ResponseFrame, Consumed, DataLen);
+      if not IsNonFatalSystemEvent(EventBody) then begin
+        Debug('RecvApplicationFrame: SystemEvent FATAL recebido: '+S7PlusHexStr(EventBody));
+        exit;
+      end;
+      Debug(Format('RecvApplicationFrame: SystemEvent nao-fatal ignorado (%d bytes)',[Length(EventBody)]));
+      Inc(SystemEvents);
+      if SystemEvents>MaxSystemEvents then begin
+        Debug('RecvApplicationFrame: excesso de SystemEvents consecutivos');
+        exit;
+      end;
+      continue;
     end;
-    EventBody := BytesCopy(ResponseFrame, Consumed, DataLen);
-    if not IsNonFatalSystemEvent(EventBody) then begin
-      Debug('RecvApplicationFrame: SystemEvent FATAL recebido: '+S7PlusHexStr(EventBody));
-      exit;
+
+    //An unsolicited notification can show up where this request's reply was expected.
+    //It is not the reply: keep it for PollNotification and go on waiting.
+    AppBody := FrameApplicationBody(ResponseFrame, Version);
+    if (Length(AppBody)>0) and (AppBody[0]=S7PlusOpcode_Notification) then begin
+      Debug(Format('RecvApplicationFrame: notificacao intercalada enfileirada (%d bytes)',[Length(AppBody)]));
+      QueueNotification(AppBody);
+      Inc(Notifications);
+      if Notifications>MaxInterleavedNotifications then begin
+        Debug('RecvApplicationFrame: excesso de notificacoes antes da resposta');
+        exit;
+      end;
+      continue;
     end;
-    Debug(Format('RecvApplicationFrame: SystemEvent nao-fatal ignorado (%d bytes)',[Length(EventBody)]));
+
+    Result := true;
+    exit;
   end;
-  Debug('RecvApplicationFrame: excesso de SystemEvents consecutivos');
 end;
 
 function TS7PlusConnection.SendRequest(FunctionCode:Word; const Payload:TBytes; out RespPayload:TBytes;
@@ -2542,7 +2728,10 @@ begin
 
     Head := $80040000 or Cardinal(1+Length(Items[i].Lids));
     AddVal(Head);
-    AddVal(Cardinal(i+1)); //1-based reference id
+    if Items[i].RefId<>0 then
+      AddVal(Items[i].RefId)
+    else
+      AddVal(Cardinal(i+1)); //1-based reference id
     AddVal(0); //unknown 1
     AddVal(Items[i].AccessArea);
     //SymbolCrc=0 (not the variable's real SymbolCrc): a prior comment here claimed the
@@ -2667,10 +2856,15 @@ begin
 end;
 
 function TS7PlusConnection.SubscriptionSetCreditLimit(Limit:SmallInt):Boolean;
+begin
+  Result := SubscriptionSetCreditLimitFor(FSubscriptionObjectId, Limit);
+end;
+
+function TS7PlusConnection.SubscriptionSetCreditLimitFor(ObjectId:Cardinal; Limit:SmallInt):Boolean;
 var
   Payload, Resp:TBytes;
 begin
-  Payload := EncodeUInt32(FSubscriptionObjectId); //InObjectId
+  Payload := EncodeUInt32(ObjectId); //InObjectId
   Payload := BytesConcat(Payload, EncodeUInt32VLQ(1)); //count, always 1
   Payload := BytesConcat(Payload, EncodeUInt32VLQ(S7PlusObjId_SubscriptionCreditLimit));
   Payload := BytesConcat(Payload, EncodeValuePInt(Limit));
@@ -2714,6 +2908,26 @@ end;
 //: anything else aborts the parse and returns false rather than risk mis-parsing.
 function TS7PlusConnection.ParseNotification(const Frame:TBytes; out CreditTick:Byte; out Values:TS7PlusNotificationValueArray):Boolean;
 var
+  Errors:TS7PlusNotificationErrorArray;
+begin
+  Result := ParseNotification(Frame, CreditTick, Values, Errors);
+end;
+
+class function TS7PlusConnection.StripV3HashPrefix(Version:Byte; const Body:TBytes):TBytes;
+var
+  HashLen:Integer;
+begin
+  Result := Body;
+  if (Version=S7PlusVersion_V3) and (Length(Body)>0) and (Body[0]<>S7PlusOpcode_Notification) then begin
+    HashLen := Body[0];
+    if 1+HashLen<Length(Body) then
+      Result := BytesCopy(Body, 1+HashLen, Length(Body)-(1+HashLen));
+  end;
+end;
+
+function TS7PlusConnection.ParseNotification(const Frame:TBytes; out CreditTick:Byte; out Values:TS7PlusNotificationValueArray;
+                                              out Errors:TS7PlusNotificationErrorArray):Boolean;
+var
   Offset, c, n:Integer;
   ChangeCounter, ItemTag:Byte;
   RefId:Cardinal;
@@ -2721,6 +2935,7 @@ var
 begin
   Result := false;
   SetLength(Values, 0);
+  SetLength(Errors, 0);
   CreditTick := 0;
 
   Offset := 0;
@@ -2729,14 +2944,15 @@ begin
   Inc(Offset);
 
   if (Offset+10)>Length(Frame) then exit;
-  Offset := Offset+4; //SubscriptionObjectId - not needed, we only track one subscription
+  FLastNotifSubscriptionId := DecodeUInt32(Frame, Offset);
+  Offset := Offset+4;
   Offset := Offset+6; //3x UInt16 unknown
 
   if Offset>=Length(Frame) then exit;
   CreditTick := Frame[Offset];
   Inc(Offset);
 
-  DecodeUInt32VLQ(Frame, Offset, c); //NotificationSequenceNumber - not surfaced yet
+  FLastNotifSequence := DecodeUInt32VLQ(Frame, Offset, c);
   Offset := Offset+c;
 
   if Offset>=Length(Frame) then exit;
@@ -2781,8 +2997,12 @@ begin
         Offset := Offset+4; //dummy value, unused
       end;
       $13, $03: begin
-        //Per-item error report (RefId + a small error code) - not surfaced per-item yet.
+        //Per-item error report: RefId, the tag itself being the error status.
         if (Offset+4)>Length(Frame) then exit;
+        n := Length(Errors);
+        SetLength(Errors, n+1);
+        Errors[n].RefId := DecodeUInt32(Frame, Offset);
+        Errors[n].Status := ItemTag;
         Offset := Offset+4;
       end;
     else
@@ -2803,11 +3023,72 @@ var
 begin
   Result := false;
   SetLength(FrameBody, 0);
+  //Notifications that arrived during another request's round-trip are older than anything
+  //still on the wire.
+  if PopNotification(FrameBody) then begin
+    Result := true;
+    exit;
+  end;
   if LogicalRecv(ResponseFrame)<>iorOK then exit;
   if Length(ResponseFrame)<4 then exit;
   Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
-  FrameBody := BytesCopy(ResponseFrame, Consumed, DataLen);
+  FrameBody := StripV3HashPrefix(Version, BytesCopy(ResponseFrame, Consumed, DataLen));
   Result := true;
+end;
+
+function TS7PlusConnection.PollNotification(WaitMs:LongInt; out Got:Boolean; out CreditTick:Byte;
+                                             out Values:TS7PlusNotificationValueArray;
+                                             out Errors:TS7PlusNotificationErrorArray):Boolean;
+var
+  Frame, Body:TBytes;
+  Version:Byte;
+  Attempt, Consumed:Integer;
+  DataLen:Word;
+begin
+  Result := true;
+  Got := false;
+  CreditTick := 0;
+  SetLength(Values, 0);
+  SetLength(Errors, 0);
+  if not FConnected then begin
+    Result := false;
+    exit;
+  end;
+
+  //Bounded: a burst of system events / strays must not hold the scan thread here.
+  for Attempt:=1 to 16 do begin
+    if not PopNotification(Body) then begin
+      //Nothing queued. Look at the wire without consuming it, so that "nothing arrived"
+      //is not a read timeout (which the port would count as a communication error).
+      if not FCommPort.WaitForData(WaitMs) then exit;
+      if LogicalRecv(Frame)<>iorOK then begin
+        Debug('PollNotification: falha ao ler o frame');
+        Result := false;
+        exit;
+      end;
+      if Length(Frame)<4 then exit;
+      Consumed := DecodeS7PlusHeader(Frame, 0, Version, DataLen);
+      if Version=S7PlusVersion_SystemEvent then begin
+        if not IsNonFatalSystemEvent(BytesCopy(Frame, Consumed, DataLen)) then begin
+          Debug('PollNotification: SystemEvent FATAL recebido');
+          Result := false;
+          exit;
+        end;
+        WaitMs := 0; //already know there was traffic: only drain what is already here
+        continue;
+      end;
+      Body := FrameApplicationBody(Frame, Version);
+    end;
+
+    if (Length(Body)>0) and (Body[0]=S7PlusOpcode_Notification) then begin
+      Got := ParseNotification(Body, CreditTick, Values, Errors);
+      if not Got then
+        Debug('PollNotification: notificacao nao interpretada: '+S7PlusHexStr(Body));
+      exit;
+    end;
+    Debug('PollNotification: frame que nao e notificacao descartado: '+S7PlusHexStr(Body));
+    WaitMs := 0;
+  end;
 end;
 
 function TS7PlusConnection.UploadBlock(BlockType, BlockNumber:Cardinal; out Data:TBytes):Boolean;

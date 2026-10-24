@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <UserPkgLinks Version="3" Count="30">
+    <Item1>
+      <Name Value="atflatcontrols_package"/>
+      <Version Major="2" Minor="3"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/ATFlatControls/atflatcontrols/atflatcontrols_package.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item1>
+    <Item2>
+      <Name Value="BGRABitmapPack"/>
+      <Version Major="11" Minor="6" Release="6"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/BGRABitmap/bgrabitmap/bgrabitmappack.lpk"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item2>
+    <Item3>
+      <Name Value="bgracontrols"/>
+      <Version Major="9" Release="2"/>
+      <Filename Value="/tmp/claude-1000/-home-fabiolg-desenvolvimento-base-libs-pascalscada/89300103-1ccd-4b98-b7bf-982fec4fc0a5/scratchpad/bgracontrols/bgracontrols.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item3>
+    <Item4>
+      <Name Value="dcpcrypt"/>
+      <Version Major="2" Release="4" Build="2"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/DCPcrypt/dcpcrypt.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:44"/>
+    </Item4>
+    <Item5>
+      <Name Value="fptelegram"/>
+      <Version Release="5"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/FpTelegram/fptelegram.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item5>
+    <Item6>
+      <Name Value="fptelegram_dt"/>
+      <Version Release="1" Build="3"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/FpTelegram/fptelegram_dt.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item6>
+    <Item7>
+      <Name Value="frce"/>
+      <Version Major="4"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/fortesreport-ce4/Packages/frce.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item7>
+    <Item8>
+      <Name Value="industrial"/>
+      <Version Minor="6" Release="4"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/IndustrialStuff/industrial.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item8>
+    <Item9>
+      <Name Value="laz_fpspreadsheet"/>
+      <Version Major="2"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/FPSpreadsheet/laz_fpspreadsheet.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item9>
+    <Item10>
+      <Name Value="laz_fpspreadsheet_visual"/>
+      <Version Major="2"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/FPSpreadsheet/laz_fpspreadsheet_visual.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item10>
+    <Item11>
+      <Name Value="laz_fpspreadsheet_visual_dsgn"/>
+      <Version Major="2"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/FPSpreadsheet/laz_fpspreadsheet_visual_dsgn.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item11>
+    <Item12>
+      <Name Value="laz_synapse"/>
+      <Version Major="40" Minor="1"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/synapse40.1/laz_synapse.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item12>
+    <Item13>
+      <Name Value="pascalscada"/>
+      <Version Minor="7" Release="7"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/pascalscada.lpk"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item13>
+    <Item14>
+      <Name Value="pascalscada_common"/>
+      <Version Minor="7" Release="7"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/pascalscada_common.lpk"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item14>
+    <Item15>
+      <Name Value="pascalscada_db"/>
+      <Version Minor="7" Release="7"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/pascalscada_db.lpk"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item15>
+    <Item16>
+      <Name Value="pascalscada_dsng"/>
+      <Version Minor="7" Release="7"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/pascalscada_dsng.lpk"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item16>
+    <Item17>
+      <Name Value="pascalscada_externallibs_hmi"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/pascalscada_externallibs_hmi.lpk"/>
+      <LastUsed Value="2026/09/13 13:21:55"/>
+    </Item17>
+    <Item18>
+      <Name Value="pascalscada_full"/>
+      <Version Minor="7" Release="7"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/pascalscada_full.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item18>
+    <Item19>
+      <Name Value="pascalscada_hmi"/>
+      <Version Minor="7" Release="7"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/pascalscada/pascalscada_hmi.lpk"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item19>
+    <Item20>
+      <Name Value="popupSystem"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/base_libs/EditorAcionamentos/src/popupSystem/popupsystem.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item20>
+    <Item21>
+      <Name Value="syWebSocket"/>
+      <Filename Value="/home/fabiolg/desenvolvimento/sywebsocket/sywebsocket.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item21>
+    <Item22>
+      <Name Value="tycontrols"/>
+      <Version Major="2" Minor="2"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/TyControls/tycontrols.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item22>
+    <Item23>
+      <Name Value="tycontrols_dt"/>
+      <Version Major="2" Minor="2"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/TyControls/tycontrols_dt.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item23>
+    <Item24>
+      <Name Value="uniqueinstance_package"/>
+      <Version Major="1" Minor="1"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/uniqueinstance/uniqueinstance_package.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item24>
+    <Item25>
+      <Name Value="zcomponent"/>
+      <Version Major="8"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/zeosdbo/packages/lazarus/zcomponent.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item25>
+    <Item26>
+      <Name Value="zcomponentdesign"/>
+      <Version Major="8"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/zeosdbo/packages/lazarus/zcomponentdesign.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item26>
+    <Item27>
+      <Name Value="zcore"/>
+      <Version Major="8"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/zeosdbo/packages/lazarus/zcore.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item27>
+    <Item28>
+      <Name Value="zdbc"/>
+      <Version Major="8"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/zeosdbo/packages/lazarus/zdbc.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item28>
+    <Item29>
+      <Name Value="zparsesql"/>
+      <Version Major="8"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/zeosdbo/packages/lazarus/zparsesql.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item29>
+    <Item30>
+      <Name Value="zplain"/>
+      <Version Major="8"/>
+      <Filename Value="/home/fabiolg/fpclaz/Ffix_Lfix/config_lazarus/onlinepackagemanager/packages/zeosdbo/packages/lazarus/zplain.lpk"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item30>
+  </UserPkgLinks>
+  <GlobalPkgLinks Version="3" Count="57">
+    <Item1>
+      <Name Value="anchordocking"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item1>
+    <Item2>
+      <Name Value="anchordockingdsgn"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item2>
+    <Item3>
+      <Name Value="buildintf"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item3>
+    <Item4>
+      <Name Value="cairocanvas_pkg"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item4>
+    <Item5>
+      <Name Value="chmhelppkg"/>
+      <Version Minor="2" Release="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item5>
+    <Item6>
+      <Name Value="cmdlinedebuggerbase"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item6>
+    <Item7>
+      <Name Value="codetools"/>
+      <Version Major="1" Release="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item7>
+    <Item8>
+      <Name Value="cody"/>
+      <Version Major="1" Minor="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item8>
+    <Item9>
+      <Name Value="datetimectrls"/>
+      <Version Major="1" Minor="5" Release="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item9>
+    <Item10>
+      <Name Value="datetimectrlsdsgn"/>
+      <Version Major="1" Minor="5" Release="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item10>
+    <Item11>
+      <Name Value="dbflaz"/>
+      <Version Minor="1" Release="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item11>
+    <Item12>
+      <Name Value="debuggerintf"/>
+      <Version Minor="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item12>
+    <Item13>
+      <Name Value="dockedformeditor"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item13>
+    <Item14>
+      <Name Value="editormacroscript"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item14>
+    <Item15>
+      <Name Value="externhelp"/>
+      <Version Major="1" Minor="3"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item15>
+    <Item16>
+      <Name Value="fcl"/>
+      <Version Major="1" Release="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item16>
+    <Item17>
+      <Name Value="fpcunitide"/>
+      <Version Minor="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item17>
+    <Item18>
+      <Name Value="fpdebug"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item18>
+    <Item19>
+      <Name Value="freetypelaz"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item19>
+    <Item20>
+      <Name Value="ideconfig"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item20>
+    <Item21>
+      <Name Value="idedebugger"/>
+      <Version Release="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item21>
+    <Item22>
+      <Name Value="ideintf"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item22>
+    <Item23>
+      <Name Value="idepackager"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item23>
+    <Item24>
+      <Name Value="ideproject"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item24>
+    <Item25>
+      <Name Value="ideutilspkg"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item25>
+    <Item26>
+      <Name Value="instantfpclaz"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item26>
+    <Item27>
+      <Name Value="jcfbase"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item27>
+    <Item28>
+      <Name Value="jcfidelazarus"/>
+      <Version Major="2"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item28>
+    <Item29>
+      <Name Value="laz.virtualtreeview_package"/>
+      <Version Major="5" Minor="5" Release="3" Build="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item29>
+    <Item30>
+      <Name Value="lazcontroldsgn"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item30>
+    <Item31>
+      <Name Value="lazcontrols"/>
+      <Version Major="1" Release="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item31>
+    <Item32>
+      <Name Value="lazdaemon"/>
+      <Version Minor="9" Release="9"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item32>
+    <Item33>
+      <Name Value="lazdebuggerfp"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item33>
+    <Item34>
+      <Name Value="lazdebuggerfplldb"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item34>
+    <Item35>
+      <Name Value="lazdebuggergdbmi"/>
+      <Version Minor="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item35>
+    <Item36>
+      <Name Value="lazdebuggerintf"/>
+      <Version Release="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item36>
+    <Item37>
+      <Name Value="lazdebuggerlldb"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item37>
+    <Item38>
+      <Name Value="lazedit"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item38>
+    <Item39>
+      <Name Value="lazmouseandkeyinput"/>
+      <Version Minor="9"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item39>
+    <Item40>
+      <Name Value="laztestinsight"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item40>
+    <Item41>
+      <Name Value="lazutils"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item41>
+    <Item42>
+      <Name Value="lcl"/>
+      <Version Major="4" Minor="9"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item42>
+    <Item43>
+      <Name Value="lclbase"/>
+      <Version Major="4" Minor="9"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item43>
+    <Item44>
+      <Name Value="lclextensions_package"/>
+      <Version Minor="6" Release="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item44>
+    <Item45>
+      <Name Value="leakview"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item45>
+    <Item46>
+      <Name Value="lhelpcontrolpkg"/>
+      <Version Minor="2"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item46>
+    <Item47>
+      <Name Value="memdslaz"/>
+      <Version Major="1" Minor="2" Release="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item47>
+    <Item48>
+      <Name Value="onlinepackagemanager"/>
+      <Version Major="1" Release="1" Build="2"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item48>
+    <Item49>
+      <Name Value="pascalscript"/>
+      <Version Build="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item49>
+    <Item50>
+      <Name Value="printer4lazarus"/>
+      <Version Minor="5"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item50>
+    <Item51>
+      <Name Value="projtemplates"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item51>
+    <Item52>
+      <Name Value="runtimetypeinfocontrols"/>
+      <Version Minor="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item52>
+    <Item53>
+      <Name Value="sdflaz"/>
+      <Version Minor="1" Release="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item53>
+    <Item54>
+      <Name Value="sqldblaz"/>
+      <Version Major="1" Release="2"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item54>
+    <Item55>
+      <Name Value="synedit"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:31"/>
+    </Item55>
+    <Item56>
+      <Name Value="syneditdsgn"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/29 20:48:43"/>
+    </Item56>
+    <Item57>
+      <Name Value="tachartlazaruspkg"/>
+      <Version Major="1"/>
+      <LastUsed Value="2026/09/30 01:15:32"/>
+    </Item57>
+  </GlobalPkgLinks>
+</CONFIG>
