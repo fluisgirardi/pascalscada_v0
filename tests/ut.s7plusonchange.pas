@@ -48,6 +48,8 @@ type
     procedure Apply(const Values:TS7PlusNotificationValueArray; const Errors:TS7PlusNotificationErrorArray; Now_:QWord);
     procedure LoseSession;
     function ValueOf(const Path:AnsiString; Size:LongInt = 0):TScanReadRec;
+    function Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
+    function WriteSizeOf(SoftDataType:Byte):Integer;
   end;
 
   { TTestS7PlusOnChange }
@@ -77,6 +79,15 @@ type
     procedure LosingTheSessionFlagsTheTagAndForgetsTheIds;
     procedure TheRequestAndScanLimitsHaveTheirDefaults;
     procedure TheLimitsCannotBeSetBelowOne;
+  private
+    function Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
+    function Bytes(const B:array of Byte):TArrayOfDouble;
+  published
+    procedure WriteSizesFollowTheScalarTypes;
+    procedure AWholeDbWriteIsCutAtEachMembersOffset;
+    procedure MembersThatCannotBeWrittenAreSkipped;
+    procedure MembersBeyondTheTagsBytesAreSkipped;
+    procedure ExpandingAppendsToTheItemsAlreadyThere;
   end;
 
 implementation
@@ -112,6 +123,16 @@ begin
   tr.Size := Size;
   FillChar(Result, SizeOf(Result), 0);
   DoGetValue(tr, Result);
+end;
+
+function TS7DriverProbe.Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
+begin
+  Result := ExpandCompositeWrite(Composite, Values, Items);
+end;
+
+function TS7DriverProbe.WriteSizeOf(SoftDataType:Byte):Integer;
+begin
+  Result := CompositeWriteSize(SoftDataType);
 end;
 
 { TTestS7PlusOnChange }
@@ -343,6 +364,108 @@ begin
   AssertEquals('items per subscription', 1, FDriver.MaxItemsPerSubscription);
   FDriver.MaxItemsPerRequest := 250;
   AssertEquals('and a larger one is kept', 250, FDriver.MaxItemsPerRequest);
+end;
+
+function TTestS7PlusOnChange.Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  Result.AccessArea := $8A0E0004;
+  SetLength(Result.Lids, 1);
+  Result.Lids[0] := LidTag;
+  Result.ByteOffset := Offset;
+  Result.SoftDataType := SoftDataType;
+  Result.WriteSize := FDriver.WriteSizeOf(SoftDataType);
+end;
+
+function TTestS7PlusOnChange.Bytes(const B:array of Byte):TArrayOfDouble;
+var
+  i:Integer;
+begin
+  SetLength(Result, Length(B));
+  for i:=0 to High(B) do
+    Result[i] := B[i];
+end;
+
+procedure TTestS7PlusOnChange.WriteSizesFollowTheScalarTypes;
+begin
+  AssertEquals('BYTE', 1, FDriver.WriteSizeOf(2));
+  AssertEquals('INT', 2, FDriver.WriteSizeOf(5));
+  AssertEquals('WORD', 2, FDriver.WriteSizeOf(4));
+  AssertEquals('DINT', 4, FDriver.WriteSizeOf(7));
+  AssertEquals('REAL', 4, FDriver.WriteSizeOf(8));
+  AssertEquals('LREAL', 8, FDriver.WriteSizeOf(48));
+  AssertEquals('LWORD', 8, FDriver.WriteSizeOf(51));
+  AssertEquals('BOOL shares its byte', 0, FDriver.WriteSizeOf(1));
+  AssertEquals('STRING', 0, FDriver.WriteSizeOf(19));
+  AssertEquals('unknown', 0, FDriver.WriteSizeOf(0));
+end;
+
+procedure TTestS7PlusOnChange.AWholeDbWriteIsCutAtEachMembersOffset;
+var
+  Members:TS7PlusCompositeItemArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Members, 3);
+  Members[0] := Member(0, 7, 11);  //DINT at 0
+  Members[1] := Member(4, 5, 12);  //INT at 4
+  Members[2] := Member(6, 2, 13);  //BYTE at 6
+  SetLength(Items, 0);
+  AssertEquals('items', 3, FDriver.Expand(Members, Bytes([1,2,3,4, 5,6, 7]), Items));
+  AssertEquals('count', 3, Length(Items));
+  AssertEquals('dint len', 4, Length(Items[0].Data));
+  AssertEquals('dint b0', 1, Items[0].Data[0]);
+  AssertEquals('dint b3', 4, Items[0].Data[3]);
+  AssertEquals('dint type', 7, Items[0].SoftDataType);
+  AssertEquals('dint lid', 11, Items[0].Lids[0]);
+  AssertEquals('dint area', $8A0E0004, Items[0].AccessArea);
+  AssertEquals('int len', 2, Length(Items[1].Data));
+  AssertEquals('int b0', 5, Items[1].Data[0]);
+  AssertEquals('int b1', 6, Items[1].Data[1]);
+  AssertEquals('byte len', 1, Length(Items[2].Data));
+  AssertEquals('byte', 7, Items[2].Data[0]);
+end;
+
+procedure TTestS7PlusOnChange.MembersThatCannotBeWrittenAreSkipped;
+var
+  Members:TS7PlusCompositeItemArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Members, 3);
+  Members[0] := Member(0, 1, 11);  //BOOL
+  Members[1] := Member(2, 7, 12);  //DINT
+  Members[2] := Member(6, 19, 13); //STRING
+  SetLength(Items, 0);
+  AssertEquals('only the DINT', 1, FDriver.Expand(Members, Bytes([0,0, 9,8,7,6, 0,0,0,0]), Items));
+  AssertEquals('lid', 12, Items[0].Lids[0]);
+  AssertEquals('b0', 9, Items[0].Data[0]);
+end;
+
+procedure TTestS7PlusOnChange.MembersBeyondTheTagsBytesAreSkipped;
+var
+  Members:TS7PlusCompositeItemArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Members, 2);
+  Members[0] := Member(0, 7, 11);
+  Members[1] := Member(4, 7, 12);
+  SetLength(Items, 0);
+  //6 bytes: the second DINT would end at byte 8
+  AssertEquals('items', 1, FDriver.Expand(Members, Bytes([1,2,3,4,5,6]), Items));
+  AssertEquals('lid', 11, Items[0].Lids[0]);
+  AssertEquals('nothing to write', 0, FDriver.Expand(Members, Bytes([1,2]), Items));
+end;
+
+procedure TTestS7PlusOnChange.ExpandingAppendsToTheItemsAlreadyThere;
+var
+  Members:TS7PlusCompositeItemArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Members, 1);
+  Members[0] := Member(0, 2, 11);
+  SetLength(Items, 2);
+  AssertEquals('added', 1, FDriver.Expand(Members, Bytes([5]), Items));
+  AssertEquals('total', 3, Length(Items));
+  AssertEquals('appended last', 11, Items[2].Lids[0]);
 end;
 
 initialization

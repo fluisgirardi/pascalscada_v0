@@ -59,6 +59,11 @@ type
     AccessArea:Cardinal;
     Lids:TS7PlusLIDArray;
     ByteOffset:Integer;
+    //-- Used to write the entry back: SoftDataType types the member's PValue, WriteSize is its
+    //-- byte width in the assembled buffer. WriteSize=0: not writable as a member (BOOL, whose
+    //-- byte is shared with other bits, STRING, structs, unknown types) - skipped on write.
+    SoftDataType:Byte;
+    WriteSize:Integer;
   end;
   TS7PlusCompositeItemArray = array of TS7PlusCompositeItem;
 
@@ -174,6 +179,12 @@ type
     procedure PumpNotifications(WaitMs:LongInt);
     procedure RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
   protected
+    function CompositeWriteSize(SoftDataType:Byte):Integer;
+    //: Appends to Items one write per writable member of a whole-DB/area entry, each cut out
+    //: of Values (the tag's bytes, laid out like ReadComposite assembles them) at its
+    //: ByteOffset. Members that are not writable or lie beyond Values are left out.
+    //: Returns how many were appended.
+    function ExpandCompositeWrite(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
     function DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
@@ -627,6 +638,8 @@ begin
       CompositeItems[CIdx].AccessArea := AccessArea;
       CompositeItems[CIdx].Lids := Vars[i].Lids;
       CompositeItems[CIdx].ByteOffset := Vars[i].ByteOffset;
+      CompositeItems[CIdx].SoftDataType := Vars[i].SoftDataType;
+      CompositeItems[CIdx].WriteSize := CompositeWriteSize(Vars[i].SoftDataType);
     end;
     //Insertion sort by ByteOffset ascending - composing "starting from the first element" is
     //what makes truncating the assembled buffer to the tag's own configured Size meaningful.
@@ -755,6 +768,36 @@ end;
 //: synchronous DoRead path; DoScanRead does its own equivalent expansion inline so a
 //: composite tag's members can share the same GetMultiVariables round-trip as any other due
 //: tag in the same scan tick, instead of a separate request just for this Path.
+function TS7CommPlusDriver.CompositeWriteSize(SoftDataType:Byte):Integer;
+begin
+  //The scalar types EncodeTypedWriteValue knows (BOOL and STRING are left out on purpose).
+  case SoftDataType of
+    2,3,4,5,6,7,8,48,49,50,51,52,53,54,55: Result := S7PlusDataTypeSize(SoftDataType, 0);
+  else
+    Result := 0;
+  end;
+end;
+
+function TS7CommPlusDriver.ExpandCompositeWrite(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
+var
+  i, b, k:Integer;
+begin
+  Result := 0;
+  for i:=0 to High(Composite) do begin
+    if (Composite[i].WriteSize<=0) or (Composite[i].ByteOffset<0) or
+       (Composite[i].ByteOffset+Composite[i].WriteSize>Length(Values)) then continue;
+    k := Length(Items);
+    SetLength(Items, k+1);
+    Items[k].AccessArea := Composite[i].AccessArea;
+    Items[k].Lids := Composite[i].Lids;
+    Items[k].SoftDataType := Composite[i].SoftDataType;
+    SetLength(Items[k].Data, Composite[i].WriteSize);
+    for b:=0 to Composite[i].WriteSize-1 do
+      Items[k].Data[b] := Trunc(Values[Composite[i].ByteOffset+b]) and $FF;
+    Inc(Result);
+  end;
+end;
+
 function TS7CommPlusDriver.ReadComposite(const Items:TS7PlusCompositeItemArray; out Data:TBytes):Boolean;
 var
   ReqItems:TS7PlusMultiReadItemArray;
@@ -1381,6 +1424,8 @@ var
   DummyOffset:Integer;
   WriteSoftDataType:Byte;
   DummyComposite:TS7PlusCompositeItemArray;
+  CompItems:TS7PlusMultiWriteItemArray;
+  CompResults:TS7PlusMultiWriteResultArray;
 begin
   if not EnsureConnected then begin
     Result := ioCommError;
@@ -1392,15 +1437,30 @@ begin
     Data[i] := Trunc(Values[i]) and $FF;
 
   //Symbolic (Path) tags: resolve and write by LID, bypassing the numeric addressing below.
-  //Writing a bare-root ("whole DB/area") Path isn't supported - ResolvePath still returns
-  //the root's own empty LID path in that case, so this just writes to the root object as
-  //before (the same no-op-ish metadata target it always was for a bare Path). The resolved
+  //A bare-root ("whole DB/area") Path is written member by member (see ExpandCompositeWrite):
+  //the tag's bytes are cut at each scalar member's ByteOffset; BOOL, STRING and struct members
+  //are not written. The resolved
   //SoftDataType is required so WriteSymbolic can encode the value as the target's own typed
   //PValue (ValueDInt, ValueReal, ...) - a generic byte-array/blob value is rejected by the
   //PLC outright, confirmed against real hardware.
   if tagrec.Path<>'' then begin
-    if ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite) and
-       FConnection.WriteSymbolic(AccessArea, Lids, Data, 0, WriteSoftDataType) then
+    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite) then begin
+      Result := ioCommError;
+      exit;
+    end;
+    //Whole DB/area: one write per scalar member, in as few requests as possible.
+    if Length(DummyComposite)>0 then begin
+      SetLength(CompItems, 0);
+      if (ExpandCompositeWrite(DummyComposite, Values, CompItems)>0) and
+         FConnection.WriteMultipleSymbolic(CompItems, CompResults) then begin
+        Result := ioOk;
+        for i:=0 to High(CompItems) do
+          if (i>High(CompResults)) or (not CompResults[i].Ok) then Result := ioCommError;
+      end else
+        Result := ioCommError;
+      exit;
+    end;
+    if FConnection.WriteSymbolic(AccessArea, Lids, Data, 0, WriteSoftDataType) then
       Result := ioOk
     else
       Result := ioCommError;
@@ -1425,7 +1485,7 @@ var
   Items:TS7PlusMultiWriteItemArray;
   Results:TS7PlusMultiWriteResultArray;
   Owner:array of Integer;  //Items[k] belongs to Writes[Owner[k]]
-  i, k, b:Integer;
+  i, k, b, n:Integer;
   Lids:TS7PlusLIDArray;
   AccessArea:Cardinal;
   DummyOffset:Integer;
@@ -1450,6 +1510,20 @@ begin
       Writes[i].Result := ioCommError; //same answer DoWrite gives for a Path it cannot resolve
       continue;
     end;
+    if Length(DummyComposite)>0 then begin
+      //Whole DB/area: its scalar members join the batch, all owned by this write.
+      k := Length(Items);
+      n := ExpandCompositeWrite(DummyComposite, Writes[i].Values, Items);
+      if n=0 then begin
+        Writes[i].Result := ioCommError;
+        continue;
+      end;
+      SetLength(Owner, Length(Items));
+      for b:=k to High(Items) do
+        Owner[b] := i;
+      Writes[i].Result := ioOk;
+      continue;
+    end;
     k := Length(Items);
     SetLength(Items, k+1);
     SetLength(Owner, k+1);
@@ -1460,7 +1534,7 @@ begin
     SetLength(Items[k].Data, Length(Writes[i].Values));
     for b:=0 to High(Writes[i].Values) do
       Items[k].Data[b] := Trunc(Writes[i].Values[b]) and $FF;
-    Writes[i].Result := ioNone;
+    Writes[i].Result := ioOk;
   end;
 
   if Length(Items)=0 then exit;
@@ -1468,10 +1542,9 @@ begin
   //Result=false: a request failed as a whole; Results still says what the earlier ones did,
   //and anything not Ok counts as a failed write either way.
   FConnection.WriteMultipleSymbolic(Items, Results);
+  //A write is Ok only when every item it contributed (several for a whole DB) was written.
   for k:=0 to High(Items) do
-    if (k<=High(Results)) and Results[k].Ok then
-      Writes[Owner[k]].Result := ioOk
-    else
+    if (k>High(Results)) or (not Results[k].Ok) then
       Writes[Owner[k]].Result := ioCommError;
 end;
 
