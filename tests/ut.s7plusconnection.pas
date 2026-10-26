@@ -48,6 +48,7 @@ type
     function NextReply(out Frame:TBytes):Boolean;
     procedure SessionIsUp;
     procedure CountIntegrityIds;
+    function SendBody(Version:Byte; const Body:TBytes):Boolean;
     function WritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
     function WriteReply(const Response:TBytes; N:Integer; out Results:TS7PlusMultiWriteResultArray):Boolean;
   end;
@@ -95,6 +96,35 @@ type
     procedure DisconnectingForgetsTheQueue;
   end;
 
+  { TTestS7PlusFragments }
+
+  TTestS7PlusFragments = class(TTestCase)
+  private
+    FPort:TFakeCommPort;
+    FConn:TS7ConnectionProbe;
+    function Pattern(N:Integer):TBytes;
+    function ReadItems(N:Integer):TS7PlusMultiReadItemArray;
+    procedure QueueReadReply(FirstItem, Count:Integer);
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure ABodyThatFitsGoesOutAsOnePacketWithItsTrailer;
+    procedure ABiggerBodyIsSplitAndOnlyTheLastFragmentHasTheTrailer;
+    procedure TheFragmentsCarryTheWholeBodyInOrder;
+    procedure ABodyOfExactlyOneFragmentIsNotSplit;
+    procedure ARequestOfMoreItemsThanOnePacketCanHoldIsSentInFragments;
+    procedure AFragmentedReplyIsHandedBackAsOneFrame;
+    procedure AShortFrameWithNoTrailerIsNotWaitedOn;
+    procedure ABigFrameThatHasItsTrailerIsLeftAlone;
+    procedure AFragmentedNotificationIsReassembledByPolling;
+    procedure ReadingMoreItemsThanTheLimitIsSplitIntoRequests;
+    procedure TheLimitIsHonouredWhateverItsValue;
+    procedure AFailingRequestKeepsWhatTheEarlierOnesRead;
+    procedure TheDefaultLimitIsTheMeasuredOne;
+    procedure TheLimitCannotBeLessThanOne;
+  end;
+
   { TTestS7PlusMultiWrite }
 
   TTestS7PlusMultiWrite = class(TTestCase)
@@ -103,6 +133,7 @@ type
     FConn:TS7ConnectionProbe;
     function Item(DB, Start:Integer; const DataHex:String; SoftType:Byte):TS7PlusMultiWriteItem;
     procedure QueueReply(const PayloadHex:String);
+    function RequestsSent:Integer;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -123,8 +154,9 @@ type
     procedure ATruncatedReplyDoesNotRaise;
     procedure AnEmptyBatchSendsNothing;
     procedure WritingGoesOutInOneRequestAndReportsPerItem;
-    procedure MoreThanFiftyItemsGoOutInSeveralRequests;
+    procedure MoreItemsThanTheLimitGoOutInSeveralRequests;
     procedure AFailedLaterRequestKeepsWhatEarlierOnesDid;
+    procedure TheWriteLimitIsTheConfiguredOne;
   end;
 
 implementation
@@ -139,6 +171,11 @@ end;
 procedure TS7ConnectionProbe.SessionIsUp;
 begin
   AssumeConnected;
+end;
+
+function TS7ConnectionProbe.SendBody(Version:Byte; const Body:TBytes):Boolean;
+begin
+  Result := SendFragmented(Version, Body);
 end;
 
 procedure TS7ConnectionProbe.CountIntegrityIds;
@@ -304,23 +341,33 @@ begin
   AssertBytesEqual('ref 9', BytesOf('00'), Values[2].Data);
 end;
 
-//One TPKT/COTP frame carrying one S7CommPlus message of the given version.
-function TpktOf(Version:Byte; const Body:TBytes):TBytes;
+//One TPKT/COTP frame carrying S7CommPlus data of the given version: [header][body] and, when
+//WithTrailer, the trailer - the last (or only) fragment of a message has it, earlier ones do not.
+function TpktPart(Version:Byte; const Body:TBytes; WithTrailer:Boolean):TBytes;
 var
   Msg:TBytes;
-  Len, i:Integer;
+  Len, i, Extra:Integer;
 begin
   Len := Length(Body);
-  SetLength(Msg, 4+Len+4);
+  Extra := 0;
+  if WithTrailer then Extra := 4;
+  SetLength(Msg, 4+Len+Extra);
   Msg[0] := $72; Msg[1] := Version; Msg[2] := Len shr 8; Msg[3] := Len and $FF;
   for i:=0 to Len-1 do
     Msg[4+i] := Body[i];
-  Msg[4+Len] := $72; Msg[5+Len] := Version; Msg[6+Len] := 0; Msg[7+Len] := 0;
+  if WithTrailer then begin
+    Msg[4+Len] := $72; Msg[5+Len] := Version; Msg[6+Len] := 0; Msg[7+Len] := 0;
+  end;
   SetLength(Result, 7+Length(Msg));
   Result[0] := 3; Result[1] := 0; Result[2] := Length(Result) shr 8; Result[3] := Length(Result) and $FF;
   Result[4] := 2; Result[5] := $F0; Result[6] := $80;
   for i:=0 to High(Msg) do
     Result[7+i] := Msg[i];
+end;
+
+function TpktOf(Version:Byte; const Body:TBytes):TBytes;
+begin
+  Result := TpktPart(Version, Body, true);
 end;
 
 const
@@ -523,6 +570,287 @@ const
   //ours: the same qualifier, then VLQ(1), then the padding
   OUR_TAIL = '00000004e88969001200000000896a001300896b00040000' + '01' + '00000000';
 
+{ TTestS7PlusFragments }
+
+procedure TTestS7PlusFragments.SetUp;
+begin
+  inherited SetUp;
+  FPort := TFakeCommPort.Create(nil);
+  FPort.Active := true;
+  FConn := TS7ConnectionProbe.Create(FPort, 1);
+  FConn.UseTLS := false;
+  FConn.SessionIsUp;
+end;
+
+procedure TTestS7PlusFragments.TearDown;
+begin
+  FConn.Free;
+  FPort.Free;
+  inherited TearDown;
+end;
+
+function TTestS7PlusFragments.Pattern(N:Integer):TBytes;
+var
+  i:Integer;
+begin
+  SetLength(Result, N);
+  for i:=0 to N-1 do
+    Result[i] := (i*7+3) and $FF;
+end;
+
+function TTestS7PlusFragments.ReadItems(N:Integer):TS7PlusMultiReadItemArray;
+var
+  i:Integer;
+begin
+  SetLength(Result, N);
+  for i:=0 to N-1 do begin
+    Result[i].AccessArea := $8A0E0004;
+    SetLength(Result[i].Lids, 2);
+    Result[i].Lids[0] := 1+i;
+    Result[i].Lids[1] := 4;
+  end;
+end;
+
+//The reply of a read of Count items whose first is numbered 1: ReturnValue 0, then
+//[item number][USInt value] for each, closing zeros of the values and of the error list.
+procedure TTestS7PlusFragments.QueueReadReply(FirstItem, Count:Integer);
+var
+  Hex:String;
+  i:Integer;
+begin
+  Hex := '32 0000 0000 0000 0001 34 00 ';
+  for i:=1 to Count do
+    Hex := Hex + IntToHex(i, 2) + ' 00 02 ' + IntToHex((FirstItem+i-1) and $FF, 2) + ' ';
+  Hex := Hex + '00 00';
+  FPort.QueueResponse(TpktOf(S7PlusVersion_V2, BytesOf(Hex)));
+end;
+
+procedure TTestS7PlusFragments.ABodyThatFitsGoesOutAsOnePacketWithItsTrailer;
+var
+  Body, Sent:TBytes;
+begin
+  Body := Pattern(500);
+  AssertTrue('sent', FConn.SendBody(S7PlusVersion_V2, Body));
+  AssertEquals('one packet', 1, FPort.WriteCount);
+  Sent := FPort.WrittenFrame(0);
+  //TPKT+COTP (7), header (4), data, trailer (4)
+  AssertEquals('size', 7+4+500+4, Length(Sent));
+  AssertEquals('header length', 500, Sent[9]*256+Sent[10]);
+  AssertEquals('trailer id', $72, Sent[Length(Sent)-4]);
+  AssertEquals('trailer length', 0, Sent[Length(Sent)-1]+Sent[Length(Sent)-2]);
+end;
+
+procedure TTestS7PlusFragments.ABodyOfExactlyOneFragmentIsNotSplit;
+begin
+  AssertTrue('sent', FConn.SendBody(S7PlusVersion_V2, Pattern(987)));
+  AssertEquals('one packet', 1, FPort.WriteCount);
+  AssertTrue('sent bigger by one', FConn.SendBody(S7PlusVersion_V2, Pattern(988)));
+  AssertEquals('that one needs two', 3, FPort.WriteCount);
+end;
+
+procedure TTestS7PlusFragments.ABiggerBodyIsSplitAndOnlyTheLastFragmentHasTheTrailer;
+var
+  F0, F1, F2:TBytes;
+begin
+  AssertTrue('sent', FConn.SendBody(S7PlusVersion_V2, Pattern(2500)));
+  AssertEquals('three packets (987+987+526)', 3, FPort.WriteCount);
+  F0 := FPort.WrittenFrame(0);
+  F1 := FPort.WrittenFrame(1);
+  F2 := FPort.WrittenFrame(2);
+  AssertEquals('first fragment',  987, F0[9]*256+F0[10]);
+  AssertEquals('second fragment', 987, F1[9]*256+F1[10]);
+  AssertEquals('third fragment',  526, F2[9]*256+F2[10]);
+  //only the last one is followed by the trailer
+  AssertEquals('first has no trailer',  7+4+987, Length(F0));
+  AssertEquals('second has no trailer', 7+4+987, Length(F1));
+  AssertEquals('last has it',           7+4+526+4, Length(F2));
+  AssertEquals('version of each', S7PlusVersion_V2, F1[8]);
+end;
+
+procedure TTestS7PlusFragments.TheFragmentsCarryTheWholeBodyInOrder;
+var
+  Body, Joined, F:TBytes;
+  i, k:Integer;
+begin
+  Body := Pattern(2500);
+  AssertTrue('sent', FConn.SendBody(S7PlusVersion_V2, Body));
+  SetLength(Joined, 0);
+  for k:=0 to FPort.WriteCount-1 do begin
+    F := FPort.WrittenFrame(k);
+    Joined := BytesCat(Joined, Copy(F, 11, F[9]*256+F[10]));
+  end;
+  AssertEquals('same length', Length(Body), Length(Joined));
+  for i:=0 to High(Body) do
+    if Body[i]<>Joined[i] then
+      Fail('byte '+IntToStr(i)+' differs');
+end;
+
+procedure TTestS7PlusFragments.ARequestOfMoreItemsThanOnePacketCanHoldIsSentInFragments;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+begin
+  //100 items are ~1 KB of payload: more than a 987 byte fragment holds
+  Items := ReadItems(100);
+  QueueReadReply(0, 100);
+  AssertTrue('read', FConn.ReadMultipleSymbolic(Items, R));
+  AssertTrue('sent in more than one packet', FPort.WriteCount>=2);
+  AssertEquals('all items answered', 100, Length(R));
+  AssertTrue('first', R[0].Ok);
+  AssertTrue('last', R[99].Ok);
+end;
+
+procedure TTestS7PlusFragments.AFragmentedReplyIsHandedBackAsOneFrame;
+var
+  First, Second, Frame:TBytes;
+  Hex:String;
+  i:Integer;
+begin
+  //a reply bigger than a PDU: 950 bytes in a first fragment with no trailer, then the rest
+  //with the trailer
+  Hex := '32 0000 0000 0000 0001 34 ';
+  for i:=1 to 940 do
+    Hex := Hex + '5A ';
+  First := BytesOf(Hex);
+  Second := BytesOf('01 02 03 04 05 06 07 08 09 0A');
+  FPort.QueueResponse(TpktPart(S7PlusVersion_V2, First, false));
+  FPort.QueueResponse(TpktPart(S7PlusVersion_V2, Second, true));
+
+  AssertTrue('reply received', FConn.NextReply(Frame));
+  //one frame: header with the TOTAL length, all the data
+  AssertEquals('total length', Length(First)+Length(Second), Frame[2]*256+Frame[3]);
+  AssertEquals('begins with the first fragment', $32, Frame[4]);
+  AssertEquals('ends with the second', $0A, Frame[Length(Frame)-1]);
+  AssertEquals('nothing left to read', 0, FPort.PendingResponses);
+end;
+
+procedure TTestS7PlusFragments.AShortFrameWithNoTrailerIsNotWaitedOn;
+var
+  Frame:TBytes;
+begin
+  //only a BIG fragment can be the start of a longer message: a short one is a whole frame, and
+  //waiting for more would just time out
+  FPort.QueueResponse(TpktPart(S7PlusVersion_V2, BytesOf('32 0000 0000 0000 0001 34 00 00'), false));
+  AssertTrue('reply received', FConn.NextReply(Frame));
+  AssertEquals('as it came', 4+12, Length(Frame));
+end;
+
+procedure TTestS7PlusFragments.ABigFrameThatHasItsTrailerIsLeftAlone;
+var
+  Frame:TBytes;
+  Hex:String;
+  i:Integer;
+begin
+  Hex := '32 0000 0000 0000 0001 34 ';
+  for i:=1 to 940 do
+    Hex := Hex + '5A ';
+  FPort.QueueResponse(TpktOf(S7PlusVersion_V2, BytesOf(Hex)));
+  FPort.QueueResponse(TpktOf(S7PlusVersion_V2, BytesOf('32 0000 0000 0000 0002 34 00 00')));
+  AssertTrue('first reply', FConn.NextReply(Frame));
+  AssertEquals('only the first was taken', 1, FPort.PendingResponses);
+end;
+
+procedure TTestS7PlusFragments.AFragmentedNotificationIsReassembledByPolling;
+var
+  Hex:String;
+  i:Integer;
+  Got:Boolean;
+  Credit:Byte;
+  Values:TS7PlusNotificationValueArray;
+  Errors:TS7PlusNotificationErrorArray;
+  Whole:TBytes;
+  Cut:Integer;
+begin
+  //a notification carrying 130 USInt values: ~1 KB, so the PLC sends it in two fragments
+  Hex := '33 70400025 0004 0000 0000 03 09 01 ';
+  for i:=1 to 130 do
+    Hex := Hex + '92 ' + IntToHex(i, 8) + ' 00 02 ' + IntToHex(i and $FF, 2) + ' ';
+  Hex := Hex + '00';
+  Whole := BytesOf(Hex);
+  Cut := 920;
+  FPort.QueueResponse(TpktPart(S7PlusVersion_V2, Copy(Whole, 0, Cut), false));
+  FPort.QueueResponse(TpktPart(S7PlusVersion_V2, Copy(Whole, Cut, Length(Whole)-Cut), true));
+
+  AssertTrue('poll', FConn.PollNotification(0, Got, Credit, Values, Errors));
+  AssertTrue('delivered', Got);
+  AssertEquals('every value', 130, Length(Values));
+  AssertEquals('first ref', 1, Values[0].RefId);
+  AssertEquals('last ref', 130, Values[129].RefId);
+end;
+
+procedure TTestS7PlusFragments.ReadingMoreItemsThanTheLimitIsSplitIntoRequests;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+  i:Integer;
+begin
+  Items := ReadItems(250);
+  QueueReadReply(0, 100);
+  QueueReadReply(100, 100);
+  QueueReadReply(200, 50);
+  AssertTrue('read', FConn.ReadMultipleSymbolic(Items, R));
+  AssertEquals('results for every item', 250, Length(R));
+  for i:=0 to 249 do
+    AssertTrue('item '+IntToStr(i), R[i].Ok);
+  //each reply numbers its own items from 1: the value says which request it came from
+  AssertEquals('first request',  0,   Trunc(R[0].Data[0]));
+  AssertEquals('second request', 100, Trunc(R[100].Data[0]));
+  AssertEquals('third request',  200 and $FF, Trunc(R[200].Data[0]));
+  AssertEquals('last item', (200+49) and $FF, Trunc(R[249].Data[0]));
+end;
+
+procedure TTestS7PlusFragments.TheLimitIsHonouredWhateverItsValue;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+  F:TBytes;
+begin
+  FConn.MaxItemsPerRequest := 7;
+  Items := ReadItems(15);
+  QueueReadReply(0, 7);
+  QueueReadReply(7, 7);
+  QueueReadReply(14, 1);
+  AssertTrue('read', FConn.ReadMultipleSymbolic(Items, R));
+  AssertEquals('three requests (7+7+1)', 3, FPort.WriteCount);
+  //the item count of each request: the byte after the 4 byte InObjectId of the payload, which
+  //follows TPKT+COTP (7), the S7CommPlus header (4) and the 14 byte request header
+  F := FPort.WrittenFrame(0);
+  AssertEquals('first request item count', 7, F[7+4+14+4]);
+  F := FPort.WrittenFrame(2);
+  AssertEquals('last request item count', 1, F[7+4+14+4]);
+end;
+
+procedure TTestS7PlusFragments.AFailingRequestKeepsWhatTheEarlierOnesRead;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+  i:Integer;
+begin
+  Items := ReadItems(150);
+  QueueReadReply(0, 100);
+  FPort.QueueResponse(TpktOf(S7PlusVersion_V2, BytesOf('32 0000 0000 0000 0001 34 81 00'))); //refused
+  AssertFalse('failed as a whole', FConn.ReadMultipleSymbolic(Items, R));
+  AssertEquals('results for every item', 150, Length(R));
+  for i:=0 to 99 do
+    AssertTrue('read before the failure '+IntToStr(i), R[i].Ok);
+  for i:=100 to 149 do
+    AssertFalse('not read '+IntToStr(i), R[i].Ok);
+end;
+
+procedure TTestS7PlusFragments.TheDefaultLimitIsTheMeasuredOne;
+begin
+  AssertEquals('the limit measured on a PLCSim', 100, S7PlusDefaultMaxItemsPerRequest);
+  AssertEquals('the connection starts with it', 100, FConn.MaxItemsPerRequest);
+end;
+
+procedure TTestS7PlusFragments.TheLimitCannotBeLessThanOne;
+begin
+  FConn.MaxItemsPerRequest := 0;
+  AssertEquals('zero becomes one', 1, FConn.MaxItemsPerRequest);
+  FConn.MaxItemsPerRequest := -5;
+  AssertEquals('negative becomes one', 1, FConn.MaxItemsPerRequest);
+end;
+
 { TTestS7PlusMultiWrite }
 
 procedure TTestS7PlusMultiWrite.SetUp;
@@ -550,6 +878,21 @@ begin
   Result.Lids[1] := Length(BytesOf(DataHex));
   Result.Data := BytesOf(DataHex);
   Result.SoftDataType := SoftType;
+end;
+
+//How many REQUESTS went out: a request bigger than a PDU is several packets, and only its last
+//packet ends with the trailer [$72][version][0][0].
+function TTestS7PlusMultiWrite.RequestsSent:Integer;
+var
+  k:Integer;
+  F:TBytes;
+begin
+  Result := 0;
+  for k:=0 to FPort.WriteCount-1 do begin
+    F := FPort.WrittenFrame(k);
+    if (Length(F)>=4) and (F[Length(F)-4]=$72) and (F[Length(F)-2]=0) and (F[Length(F)-1]=0) then
+      Inc(Result);
+  end;
 end;
 
 //A reply: the 10 byte response header the connection strips, then the payload.
@@ -776,12 +1119,13 @@ begin
   AssertTrue('item 3', R[2].Ok);
 end;
 
-procedure TTestS7PlusMultiWrite.MoreThanFiftyItemsGoOutInSeveralRequests;
+procedure TTestS7PlusMultiWrite.MoreItemsThanTheLimitGoOutInSeveralRequests;
 var
   R:TS7PlusMultiWriteResultArray;
   Items:TS7PlusMultiWriteItemArray;
   i:Integer;
 begin
+  FConn.MaxItemsPerRequest := 50; //the batches below are 50+50+20
   SetLength(Items, 120);
   for i:=0 to 119 do
     Items[i] := Item(4, i*4, '00 00 00 01', 7);
@@ -809,6 +1153,7 @@ var
   Items:TS7PlusMultiWriteItemArray;
   i:Integer;
 begin
+  FConn.MaxItemsPerRequest := 50;
   SetLength(Items, 60);
   for i:=0 to 59 do
     Items[i] := Item(4, i*4, '00 00 00 01', 7);
@@ -821,9 +1166,32 @@ begin
   AssertFalse('second request did not', R[50].Ok);
 end;
 
+procedure TTestS7PlusMultiWrite.TheWriteLimitIsTheConfiguredOne;
+var
+  R:TS7PlusMultiWriteResultArray;
+  Items:TS7PlusMultiWriteItemArray;
+  i:Integer;
+begin
+  //default 100: 100 items are one request, 101 are two
+  SetLength(Items, 100);
+  for i:=0 to 99 do
+    Items[i] := Item(4, i*4, '00 00 00 01', 7);
+  QueueReply('00 00');
+  AssertTrue('100 items', FConn.WriteMultipleSymbolic(Items, R));
+  AssertEquals('one request', 1, RequestsSent);
+
+  SetLength(Items, 101);
+  Items[100] := Item(4, 400, '00 00 00 01', 7);
+  QueueReply('00 00');
+  QueueReply('00 00');
+  AssertTrue('101 items', FConn.WriteMultipleSymbolic(Items, R));
+  AssertEquals('two more requests', 3, RequestsSent);
+end;
+
 initialization
   RegisterTest(TTestS7PlusNotification);
   RegisterTest(TTestS7PlusNotificationQueue);
+  RegisterTest(TTestS7PlusFragments);
   RegisterTest(TTestS7PlusMultiWrite);
 
 end.
