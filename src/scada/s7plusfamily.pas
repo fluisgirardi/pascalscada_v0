@@ -173,6 +173,10 @@ type
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
     function DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
+    //: Gathers the symbolic (Path) writes of the batch into as few SetMultiVariables requests
+    //: as possible (see TS7PlusConnection.WriteMultipleSymbolic); tags addressed numerically
+    //: (DB/area + offset) are still written one by one, as DoWrite does.
+    procedure DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean); override;
     function DoRead (const tagrec:TTagRec; out   Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
     procedure DoAddTag(TagObj:TTag; TagValid:Boolean); override;
     procedure DoDelTag(TagObj:TTag); override;
@@ -1375,6 +1379,61 @@ begin
     Result := ioOk
   else
     Result := ioCommError;
+end;
+
+procedure TS7CommPlusDriver.DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean);
+var
+  Items:TS7PlusMultiWriteItemArray;
+  Results:TS7PlusMultiWriteResultArray;
+  Owner:array of Integer;  //Items[k] belongs to Writes[Owner[k]]
+  i, k, b:Integer;
+  Lids:TS7PlusLIDArray;
+  AccessArea:Cardinal;
+  DummyOffset:Integer;
+  SoftType:Byte;
+  DummyComposite:TS7PlusCompositeItemArray;
+begin
+  if not EnsureConnected then begin
+    for i:=0 to High(Writes) do
+      Writes[i].Result := ioCommError;
+    exit;
+  end;
+
+  SetLength(Items, 0);
+  SetLength(Owner, 0);
+  for i:=0 to High(Writes) do begin
+    if Writes[i].Tag.Path='' then begin
+      //numeric addressing: nothing to gather, the single write already does it
+      Writes[i].Result := DoWrite(Writes[i].Tag, Writes[i].Values, Sync);
+      continue;
+    end;
+    if not ResolvePath(Writes[i].Tag.Path, AccessArea, Lids, DummyOffset, SoftType, DummyComposite) then begin
+      Writes[i].Result := ioCommError; //same answer DoWrite gives for a Path it cannot resolve
+      continue;
+    end;
+    k := Length(Items);
+    SetLength(Items, k+1);
+    SetLength(Owner, k+1);
+    Owner[k] := i;
+    Items[k].AccessArea := AccessArea;
+    Items[k].Lids := Lids;
+    Items[k].SoftDataType := SoftType;
+    SetLength(Items[k].Data, Length(Writes[i].Values));
+    for b:=0 to High(Writes[i].Values) do
+      Items[k].Data[b] := Trunc(Writes[i].Values[b]) and $FF;
+    Writes[i].Result := ioNone;
+  end;
+
+  if Length(Items)=0 then exit;
+
+  //Result=false: a request failed as a whole; Results still says what the earlier ones did,
+  //and anything not Ok counts as a failed write either way.
+  FConnection.WriteMultipleSymbolic(Items, Results);
+  for k:=0 to High(Items) do
+    if (k<=High(Results)) and Results[k].Ok then
+      Writes[Owner[k]].Result := ioOk
+    else
+      Writes[Owner[k]].Result := ioCommError;
 end;
 
 function TS7CommPlusDriver.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;

@@ -348,9 +348,14 @@ type
     //: Receives the next frame that is a reply (not a system event, not a notification:
     //: those are skipped or, for notifications, queued for PollNotification).
     function RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
+    //: True when SendRequest puts the real IntegrityId into the request (V2+ sessions with
+    //: tracking enabled) - the payload builders must then NOT carry an IntegrityId of their own.
+    function IntegrityIdIsSpliced:Boolean;
     //: Marks the connection as established without a handshake. Only for tests, which feed
     //: frames through a fake port and never speak to a PLC.
     procedure AssumeConnected;
+    //: Turns on IntegrityId counting as a V2 session does after its setup (counters at 0). Only for tests.
+    procedure AssumeIntegrityTracking;
     //: SetMultiVariables request payload for N symbolic items: the item count, the SUM of the
     //: items' field counts, every item's address back-to-back, then [item number][typed value]
     //: per item and a closing $00 - the same shape as the single-item write (N=1 is byte for
@@ -2106,6 +2111,19 @@ begin
   Result := Length(FNotifQueue);
 end;
 
+procedure TS7PlusConnection.AssumeIntegrityTracking;
+begin
+  FProtocolVersion := S7PlusVersion_V2;
+  FWithIntegrityId := true;
+  FIntegrityIdRead := 0;
+  FIntegrityIdWrite := 0;
+end;
+
+function TS7PlusConnection.IntegrityIdIsSpliced:Boolean;
+begin
+  Result := FWithIntegrityId and (FProtocolVersion>=S7PlusVersion_V2);
+end;
+
 procedure TS7PlusConnection.AssumeConnected;
 begin
   FConnected := true;
@@ -3211,7 +3229,12 @@ begin
   end;
 
   Result := BytesConcat(Result, CurrentObjectQualifier);
-  Result := BytesConcat(Result, EncodeUInt32VLQ(1));
+  //Stand-in IntegrityId only for sessions that do not count one (see BuildSymbolicPayload:
+  //next to the real one SendRequest splices in, the PLC took this fixed 1 for the IntegrityId
+  //and dropped the session on the second request). Not validated live: the PLCs available so
+  //far do not serve numeric DB/area addressing at all.
+  if not IntegrityIdIsSpliced then
+    Result := BytesConcat(Result, EncodeUInt32VLQ(1));
   Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
 end;
 
@@ -3363,11 +3386,14 @@ begin
   end;
 
   Result := BytesConcat(Result, CurrentObjectQualifier);
-  //The reference implementation only appends this VLQ(1) for writes
-  //(_build_symbolic_write_payload) - reads (_build_symbolic_read_payload) omit it
-  //entirely (with_integrity=False). Including it unconditionally made every
-  //symbolic GetMultiVariables (read) request 1 byte longer than the PLC expects.
-  if IsWrite then
+  //A write carries an IntegrityId after the qualifier (the reference's _build_symbolic_write_payload
+  //wrote a fixed VLQ(1); reads omit it - including it unconditionally made every symbolic
+  //GetMultiVariables request 1 byte longer than the PLC expects). On sessions where SendRequest
+  //splices the REAL, counting IntegrityId in right here, this fixed one must go: the PLC read
+  //it as the IntegrityId, so every write after the first one repeated "1" instead of counting
+  //up and the PLC dropped the session (confirmed live: the second write of a session always
+  //failed). Only a session without IntegrityId tracking still needs the stand-in.
+  if IsWrite and (not IntegrityIdIsSpliced) then
     Result := BytesConcat(Result, EncodeUInt32VLQ(1));
   Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
 end;
@@ -3510,7 +3536,8 @@ begin
   Result := BytesConcat(Result, AllValues);
   Result := BytesConcat(Result, BytesOf([$00]));
   Result := BytesConcat(Result, CurrentObjectQualifier);
-  Result := BytesConcat(Result, EncodeUInt32VLQ(1)); //same closing as the single-item write
+  if not IntegrityIdIsSpliced then //same closing as the single-item write (see BuildSymbolicPayload)
+    Result := BytesConcat(Result, EncodeUInt32VLQ(1));
   Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
 end;
 

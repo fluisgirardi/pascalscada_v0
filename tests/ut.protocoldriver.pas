@@ -82,6 +82,10 @@ type
     UltimosValores:TArrayOfDouble;
     ResultadoProgramado:TProtocolIOResult;
     ValorProgramado:Double;
+    //resultado e endereco de cada DoWrite, na ordem em que foram chamados
+    //result for, and address of, each DoWrite call, in the order they were made
+    ResultadosPorEscrita:array of TProtocolIOResult;
+    EnderecosEscritos:array of LongInt;
   protected
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -95,6 +99,18 @@ type
     procedure CopyPacket(const aOrigem:TIOPacket; var aDestino:TIOPacket);
   end;
 
+  { TTestBatchDriver }
+
+  //Um driver que sabe reunir as escritas: sobrescreve DoMultiWrite e nao usa DoWrite.
+  //A driver that knows how to gather writes: overrides DoMultiWrite and never uses DoWrite.
+  TTestBatchDriver = class(TTestDriver)
+  public
+    MultiCalls, LastBatchSize:LongInt;
+    LastSync:Boolean;
+  protected
+    procedure DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean); override;
+  end;
+
   { TTestProtocolDriver }
 
   TTestProtocolDriver = class(TTestCase)
@@ -105,10 +121,14 @@ type
     FCallbacks:LongInt;
     FUltimoResultado:TProtocolIOResult;
     FUltimoComando:TTagCommand;
+    FResultadosDosCallbacks:array of TProtocolIOResult;
+    FIdsDosCallbacks:array of LongWord;
     procedure CallbackIn(const ReqID:LongWord; Values:TArrayOfDouble;
                       ValuesTimeStamp:QWord; TagCommand:TTagCommand;
                       LastResult:TProtocolIOResult; OffSet:LongInt);
     function  TagRecWithCallback:TTagRec;
+    function  WriteAt(aAddress:LongInt; aValue:Double; aWithCallback:Boolean = true):TMultiWriteRec;
+    function  WaitForCallbacks(aCount, aDeadlineMs:LongInt):Boolean;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -131,6 +151,19 @@ type
     procedure AReadCallsTheDriverAndReportsThroughTheCallback;
     procedure AWriteCallsTheDriverWithTheValues;
     procedure TheDriverResultReachesTheCallback;
+
+    //escrita em lote / batch write
+    procedure AMultiWriteByDefaultWritesEachItemInOrder;
+    procedure EachItemOfAMultiWriteKeepsItsOwnResult;
+    procedure EachItemOfAMultiWriteIsReportedThroughItsOwnCallback;
+    procedure AnItemWithNoCallbackIsWrittenAllTheSame;
+    procedure AnEmptyMultiWriteDoesNothing;
+    procedure ADriverThatBatchesGetsOneCallWithAllTheItems;
+    procedure ReadOnlyRefusesEveryItemOfAMultiWrite;
+    procedure ReadOnlyRefusesAScanMultiWriteAndTellsEachTag;
+    procedure AScanMultiWriteReachesTheDriverAndEachTagGetsItsResult;
+    procedure AScanMultiWriteGivesEachItemItsOwnRequestNumber;
+    procedure AnEmptyScanMultiWriteDoesNothing;
 
     //modo somente leitura / read only mode
     procedure ReadOnlyDoesNotCallTheDriverWrite;
@@ -217,7 +250,12 @@ begin
   inc(Escritas);
   UltimoTagRec:=tagrec;
   UltimosValores:=Copy(Values, 0, Length(Values));
-  Result:=ResultadoProgramado;
+  SetLength(EnderecosEscritos, Length(EnderecosEscritos)+1);
+  EnderecosEscritos[High(EnderecosEscritos)]:=tagrec.Address;
+  if Escritas<=Length(ResultadosPorEscrita) then
+    Result:=ResultadosPorEscrita[Escritas-1]
+  else
+    Result:=ResultadoProgramado;
 end;
 
 function TTestDriver.DoRead(const tagrec:TTagRec; out Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
@@ -233,6 +271,19 @@ function TTestDriver.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:T
 begin
   ProtocolTagType:=ptByte;
   Result:=8;
+end;
+
+{ TTestBatchDriver }
+
+procedure TTestBatchDriver.DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean);
+var
+  i:LongInt;
+begin
+  inc(MultiCalls);
+  LastBatchSize:=Length(Writes);
+  LastSync:=Sync;
+  for i:=0 to High(Writes) do
+    Writes[i].Result:=ioOk;
 end;
 
 procedure TTestDriver.RegisterTagIn(aTag:TTag; aValido:Boolean);
@@ -254,6 +305,10 @@ begin
   inc(FCallbacks);
   FUltimoResultado:=LastResult;
   FUltimoComando:=TagCommand;
+  SetLength(FResultadosDosCallbacks, Length(FResultadosDosCallbacks)+1);
+  FResultadosDosCallbacks[High(FResultadosDosCallbacks)]:=LastResult;
+  SetLength(FIdsDosCallbacks, Length(FIdsDosCallbacks)+1);
+  FIdsDosCallbacks[High(FIdsDosCallbacks)]:=ReqID;
 end;
 
 function TTestProtocolDriver.TagRecWithCallback:TTagRec;
@@ -269,6 +324,8 @@ begin
   FTag.Name:='TagDeTeste';
   FCallbacks:=0;
   FUltimoResultado:=ioNone;
+  SetLength(FResultadosDosCallbacks, 0);
+  SetLength(FIdsDosCallbacks, 0);
 end;
 
 procedure TTestProtocolDriver.TearDown;
@@ -431,6 +488,233 @@ begin
   FDrv.ResultadoProgramado:=ioTimeOut;
   FDrv.Read(TagRecWithCallback);
   AssertEquals('result in the callback', Ord(ioTimeOut), Ord(FUltimoResultado));
+end;
+
+function TTestProtocolDriver.WriteAt(aAddress:LongInt; aValue:Double; aWithCallback:Boolean):TMultiWriteRec;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  Result.Tag:=TagRecFor(1, 3, 6, aAddress, 1);
+  if aWithCallback then
+    Result.Tag.CallBack:=@CallbackIn;
+  SetLength(Result.Values, 1);
+  Result.Values[0]:=aValue;
+  Result.Result:=ioNone;
+end;
+
+//Os resultados das escritas por scan chegam em lote pela thread principal: o teste
+//precisa bombear a fila de sincronizacao enquanto espera.
+//Scan write results arrive in a batch through the main thread: the test has to pump
+//the synchronization queue while it waits.
+function TTestProtocolDriver.WaitForCallbacks(aCount, aDeadlineMs:LongInt):Boolean;
+var
+  inicio:QWord;
+begin
+  inicio:=GetTickCount64;
+  while (FCallbacks<aCount) and (GetTickCount64-inicio<QWord(aDeadlineMs)) do begin
+    CheckSynchronize(5);
+    Sleep(2);
+  end;
+  Result:=FCallbacks>=aCount;
+end;
+
+procedure TTestProtocolDriver.AMultiWriteByDefaultWritesEachItemInOrder;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 3);
+  lote[0]:=WriteAt(10, 1);
+  lote[1]:=WriteAt(20, 2);
+  lote[2]:=WriteAt(30, 3);
+
+  FDrv.MultiWrite(lote);
+
+  //quem nao sobrescreve DoMultiWrite continua escrevendo um a um, na ordem pedida
+  AssertEquals('one DoWrite per item', 3, FDrv.Escritas);
+  AssertEquals('first',  10, FDrv.EnderecosEscritos[0]);
+  AssertEquals('second', 20, FDrv.EnderecosEscritos[1]);
+  AssertEquals('third',  30, FDrv.EnderecosEscritos[2]);
+  AssertEquals('last values', 3, FDrv.UltimosValores[0], 0);
+end;
+
+procedure TTestProtocolDriver.EachItemOfAMultiWriteKeepsItsOwnResult;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 3);
+  lote[0]:=WriteAt(10, 1);
+  lote[1]:=WriteAt(20, 2);
+  lote[2]:=WriteAt(30, 3);
+  SetLength(FDrv.ResultadosPorEscrita, 3);
+  FDrv.ResultadosPorEscrita[0]:=ioOk;
+  FDrv.ResultadosPorEscrita[1]:=ioTimeOut;
+  FDrv.ResultadosPorEscrita[2]:=ioOk;
+
+  FDrv.MultiWrite(lote);
+
+  //uma escrita que falha nao impede nem altera as outras
+  AssertEquals('item 1', Ord(ioOk),      Ord(lote[0].Result));
+  AssertEquals('item 2', Ord(ioTimeOut), Ord(lote[1].Result));
+  AssertEquals('item 3', Ord(ioOk),      Ord(lote[2].Result));
+  AssertEquals('all three were attempted', 3, FDrv.Escritas);
+end;
+
+procedure TTestProtocolDriver.EachItemOfAMultiWriteIsReportedThroughItsOwnCallback;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 3);
+  lote[0]:=WriteAt(10, 1);
+  lote[1]:=WriteAt(20, 2);
+  lote[2]:=WriteAt(30, 3);
+  SetLength(FDrv.ResultadosPorEscrita, 3);
+  FDrv.ResultadosPorEscrita[0]:=ioOk;
+  FDrv.ResultadosPorEscrita[1]:=ioTimeOut;
+  FDrv.ResultadosPorEscrita[2]:=ioOk;
+
+  FDrv.MultiWrite(lote);
+
+  AssertEquals('one callback per item', 3, FCallbacks);
+  AssertEquals('as a synchronous write', Ord(tcWrite), Ord(FUltimoComando));
+  AssertEquals('callback 1', Ord(ioOk),      Ord(FResultadosDosCallbacks[0]));
+  AssertEquals('callback 2', Ord(ioTimeOut), Ord(FResultadosDosCallbacks[1]));
+  AssertEquals('callback 3', Ord(ioOk),      Ord(FResultadosDosCallbacks[2]));
+end;
+
+procedure TTestProtocolDriver.AnItemWithNoCallbackIsWrittenAllTheSame;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 2);
+  lote[0]:=WriteAt(10, 1, false);
+  lote[1]:=WriteAt(20, 2, true);
+
+  FDrv.MultiWrite(lote);
+
+  AssertEquals('both written', 2, FDrv.Escritas);
+  AssertEquals('only the one with a callback is told', 1, FCallbacks);
+end;
+
+procedure TTestProtocolDriver.AnEmptyMultiWriteDoesNothing;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 0);
+  FDrv.MultiWrite(lote);
+  AssertEquals('nothing written', 0, FDrv.Escritas);
+  AssertEquals('nobody told', 0, FCallbacks);
+end;
+
+procedure TTestProtocolDriver.ADriverThatBatchesGetsOneCallWithAllTheItems;
+var
+  drv:TTestBatchDriver;
+  lote:TMultiWriteArray;
+begin
+  drv:=TTestBatchDriver.Create(nil);
+  try
+    SetLength(lote, 3);
+    lote[0]:=WriteAt(10, 1);
+    lote[1]:=WriteAt(20, 2);
+    lote[2]:=WriteAt(30, 3);
+
+    drv.MultiWrite(lote);
+
+    AssertEquals('one DoMultiWrite',        1, drv.MultiCalls);
+    AssertEquals('with every item',         3, drv.LastBatchSize);
+    AssertTrue  ('synchronously',           drv.LastSync);
+    AssertEquals('DoWrite is not used',     0, drv.Escritas);
+    AssertEquals('results come from the driver', Ord(ioOk), Ord(lote[1].Result));
+    AssertEquals('and still one callback each', 3, FCallbacks);
+  finally
+    drv.Free;
+  end;
+end;
+
+procedure TTestProtocolDriver.ReadOnlyRefusesEveryItemOfAMultiWrite;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 2);
+  lote[0]:=WriteAt(10, 1);
+  lote[1]:=WriteAt(20, 2);
+
+  FDrv.ReadOnly:=true;
+  FDrv.MultiWrite(lote);
+
+  AssertEquals('the driver must not be called', 0, FDrv.Escritas);
+  AssertEquals('every tag is told', 2, FCallbacks);
+  AssertEquals('item 1', Ord(ioReadOnlyProtocol), Ord(lote[0].Result));
+  AssertEquals('item 2', Ord(ioReadOnlyProtocol), Ord(lote[1].Result));
+  AssertEquals('reason in the callback', Ord(ioReadOnlyProtocol), Ord(FUltimoResultado));
+end;
+
+procedure TTestProtocolDriver.ReadOnlyRefusesAScanMultiWriteAndTellsEachTag;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 2);
+  lote[0]:=WriteAt(10, 1);
+  lote[1]:=WriteAt(20, 2);
+
+  FDrv.ReadOnly:=true;
+  AssertEquals('no request number', 0, FDrv.ScanMultiWrite(lote));
+
+  AssertEquals('the driver must not be called', 0, FDrv.Escritas);
+  AssertEquals('every tag is told', 2, FCallbacks);
+  AssertEquals('as a scan write', Ord(tcScanWrite), Ord(FUltimoComando));
+  AssertEquals('reason', Ord(ioReadOnlyProtocol), Ord(FUltimoResultado));
+end;
+
+procedure TTestProtocolDriver.AScanMultiWriteReachesTheDriverAndEachTagGetsItsResult;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 3);
+  lote[0]:=WriteAt(10, 1);
+  lote[1]:=WriteAt(20, 2);
+  lote[2]:=WriteAt(30, 3);
+  SetLength(FDrv.ResultadosPorEscrita, 3);
+  FDrv.ResultadosPorEscrita[0]:=ioOk;
+  FDrv.ResultadosPorEscrita[1]:=ioTimeOut;
+  FDrv.ResultadosPorEscrita[2]:=ioOk;
+
+  AssertTrue('a request number', FDrv.ScanMultiWrite(lote)<>0);
+
+  //a escrita acontece na thread do driver e o resultado volta pela thread de atualizacao
+  AssertTrue  ('every tag was told', WaitForCallbacks(3, 3000));
+  AssertEquals('all three were written', 3, FDrv.Escritas);
+  AssertEquals('in order', 10, FDrv.EnderecosEscritos[0]);
+  AssertEquals('in order', 30, FDrv.EnderecosEscritos[2]);
+  AssertEquals('as a scan write', Ord(tcScanWrite), Ord(FUltimoComando));
+  AssertEquals('callback 1', Ord(ioOk),      Ord(FResultadosDosCallbacks[0]));
+  AssertEquals('callback 2', Ord(ioTimeOut), Ord(FResultadosDosCallbacks[1]));
+  AssertEquals('callback 3', Ord(ioOk),      Ord(FResultadosDosCallbacks[2]));
+end;
+
+procedure TTestProtocolDriver.AScanMultiWriteGivesEachItemItsOwnRequestNumber;
+var
+  lote:TMultiWriteArray;
+  primeiro:Cardinal;
+begin
+  SetLength(lote, 3);
+  lote[0]:=WriteAt(10, 1);
+  lote[1]:=WriteAt(20, 2);
+  lote[2]:=WriteAt(30, 3);
+
+  primeiro:=FDrv.ScanMultiWrite(lote);
+
+  AssertTrue('every tag was told', WaitForCallbacks(3, 3000));
+  AssertEquals('first item',  primeiro,     FIdsDosCallbacks[0]);
+  AssertEquals('second item', primeiro+1,   FIdsDosCallbacks[1]);
+  AssertEquals('third item',  primeiro+2,   FIdsDosCallbacks[2]);
+end;
+
+procedure TTestProtocolDriver.AnEmptyScanMultiWriteDoesNothing;
+var
+  lote:TMultiWriteArray;
+begin
+  SetLength(lote, 0);
+  AssertEquals('no request number', 0, FDrv.ScanMultiWrite(lote));
+  AssertEquals('nothing written', 0, FDrv.Escritas);
 end;
 
 procedure TTestProtocolDriver.ReadOnlyDoesNotCallTheDriverWrite;

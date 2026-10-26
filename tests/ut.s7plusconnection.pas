@@ -47,6 +47,7 @@ type
   public
     function NextReply(out Frame:TBytes):Boolean;
     procedure SessionIsUp;
+    procedure CountIntegrityIds;
     function WritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
     function WriteReply(const Response:TBytes; N:Integer; out Results:TS7PlusMultiWriteResultArray):Boolean;
   end;
@@ -108,6 +109,10 @@ type
   published
     procedure OneItemIsTheSingleWritePayloadByteForByte;
     procedure MixedItemsMatchTheUpstreamEncoderByteForByte;
+    procedure WithIntegrityCountingTheOneItemPayloadIsUpstreamsByteForByte;
+    procedure WithIntegrityCountingTheMixedPayloadIsUpstreamsByteForByte;
+    procedure EveryWriteOfASessionCarriesItsOwnCountingIntegrityId;
+    procedure WithoutIntegrityCountingTheWriteKeepsItsStandInId;
     procedure AReplyWithNoErrorListTakesEveryItem;
     procedure ErrorsInTheReplyMarkOnlyTheirItems;
     procedure ASetReturnValueWithNoItemListFailsTheWholeBatch;
@@ -134,6 +139,11 @@ end;
 procedure TS7ConnectionProbe.SessionIsUp;
 begin
   AssumeConnected;
+end;
+
+procedure TS7ConnectionProbe.CountIntegrityIds;
+begin
+  AssumeIntegrityTracking;
 end;
 
 function TS7ConnectionProbe.WritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
@@ -499,8 +509,8 @@ const
   //S7CommPlus module moved to its own library), for items (db, start, data, type):
   //  one:   (4, 0, 4242 as DINT)
   //  mixed: (4,0,-5 DINT) (4,4,300 INT) (2,8,1.5 REAL) (4,12,TRUE BOOL) (1,16,70000 UDINT) (4,20,127 USINT)
-  //Upstream's tail is  <object qualifier><4 zero bytes>; ours has one more VLQ(1) between the
-  //two, the closing the single-item write has always had (validated against real hardware).
+  //Upstream's tail is  <object qualifier><4 zero bytes> and the real IntegrityId goes between the
+  //two. A session that does not count IntegrityIds still gets a fixed VLQ(1) there (OUR_TAIL).
   UPSTREAM_ONE =
     '0000000001060088d0b880040393760104010008a112';
   UPSTREAM_MIXED =
@@ -569,6 +579,79 @@ begin
   Items[4] := Item(1, 16, '00 01 11 70', 54{UDINT});
   Items[5] := Item(4, 20, '7F',          52{USINT});
   AssertBytesEqual('mixed', BytesOf(UPSTREAM_MIXED + OUR_TAIL), FConn.WritePayload(Items));
+end;
+
+procedure TTestS7PlusMultiWrite.WithIntegrityCountingTheOneItemPayloadIsUpstreamsByteForByte;
+var
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  //On a V2 session SendRequest splices the real IntegrityId in, so the payload itself must NOT
+  //carry one: with a fixed "1" of its own, the PLC took that for the IntegrityId, and every
+  //write after the first one repeated it and got the session dropped (seen on a PLCSim).
+  FConn.CountIntegrityIds;
+  SetLength(Items, 1);
+  Items[0] := Item(4, 0, '00 00 10 92', 7{DINT});
+  AssertBytesEqual('one item', BytesOf(UPSTREAM_ONE + UPSTREAM_TAIL), FConn.WritePayload(Items));
+end;
+
+procedure TTestS7PlusMultiWrite.WithIntegrityCountingTheMixedPayloadIsUpstreamsByteForByte;
+var
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  FConn.CountIntegrityIds;
+  SetLength(Items, 6);
+  Items[0] := Item(4, 0,  'FF FF FF FB', 7{DINT});
+  Items[1] := Item(4, 4,  '01 2C',       5{INT});
+  Items[2] := Item(2, 8,  '3F C0 00 00', 8{REAL});
+  Items[3] := Item(4, 12, '01',          1{BOOL});
+  Items[4] := Item(1, 16, '00 01 11 70', 54{UDINT});
+  Items[5] := Item(4, 20, '7F',          52{USINT});
+  AssertBytesEqual('mixed', BytesOf(UPSTREAM_MIXED + UPSTREAM_TAIL), FConn.WritePayload(Items));
+end;
+
+procedure TTestS7PlusMultiWrite.EveryWriteOfASessionCarriesItsOwnCountingIntegrityId;
+var
+  R:TS7PlusMultiWriteResultArray;
+  Items:TS7PlusMultiWriteItemArray;
+  F:TBytes;
+begin
+  FConn.CountIntegrityIds;
+  SetLength(Items, 1);
+  Items[0] := Item(4, 0, '00 00 10 92', 7);
+  QueueReply('00 00');
+  QueueReply('00 00');
+  QueueReply('00 00');
+
+  AssertTrue('write 1', FConn.WriteMultipleSymbolic(Items, R));
+  AssertTrue('write 2', FConn.WriteMultipleSymbolic(Items, R));
+  AssertTrue('write 3', FConn.WriteMultipleSymbolic(Items, R));
+
+  //the frame ends with  <IntegrityId> 00 00 00 00 <trailer 72 02 00 00>; the byte before the
+  //id is the end of the object qualifier ($00), not a stand-in $01
+  AssertEquals('three requests', 3, FPort.WriteCount);
+  F := FPort.WrittenFrame(0);
+  AssertEquals('first id',  0, F[Length(F)-9]);
+  AssertEquals('no stand-in before it (1)', 0, F[Length(F)-10]);
+  F := FPort.WrittenFrame(1);
+  AssertEquals('second id', 1, F[Length(F)-9]);
+  AssertEquals('no stand-in before it (2)', 0, F[Length(F)-10]);
+  F := FPort.WrittenFrame(2);
+  AssertEquals('third id',  2, F[Length(F)-9]);
+end;
+
+procedure TTestS7PlusMultiWrite.WithoutIntegrityCountingTheWriteKeepsItsStandInId;
+var
+  R:TS7PlusMultiWriteResultArray;
+  Items:TS7PlusMultiWriteItemArray;
+  F:TBytes;
+begin
+  //sessions that do not count (V1) still need the id the payload carries itself
+  SetLength(Items, 1);
+  Items[0] := Item(4, 0, '00 00 10 92', 7);
+  QueueReply('00 00');
+  AssertTrue('write', FConn.WriteMultipleSymbolic(Items, R));
+  F := FPort.WrittenFrame(0);
+  AssertEquals('stand-in id', 1, F[Length(F)-9]);
 end;
 
 procedure TTestS7PlusMultiWrite.AReplyWithNoErrorListTakesEveryItem;

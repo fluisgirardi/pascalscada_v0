@@ -49,6 +49,7 @@ type
 
     FDoScanRead:TScanReadProc;
     FDoScanWrite:TScanWriteProc;
+    FDoScanMultiWrite:TScanMultiWriteProc;
 
     FMinScan:Cardinal;
     FSpool:TMessageSpool;
@@ -97,6 +98,21 @@ type
     }
     {$ENDIF}
     procedure ScanWrite(SWPkg:PScanReqRec);
+
+    {$IFDEF PORTUGUES}
+    {:
+    Solicita um lote de escritas por scan para a thread do driver de protocolo: o lote e'
+    atendido de uma vez (OnDoScanMultiWrite) e depois cada pedido segue como uma escrita
+    por scan comum. A thread passa a ser a dona de SWPkg e dos pedidos que ele contem.
+    }
+    {$ELSE}
+    {:
+    Put a batch of scan writes to be processed by the protocol driver thread: the batch is
+    served at once (OnDoScanMultiWrite) and then each request goes on as an ordinary scan
+    write. The thread becomes the owner of SWPkg and of the requests it holds.
+    }
+    {$ENDIF}
+    procedure ScanMultiWrite(SWPkg:PScanMultiReqRec);
 
     {$IFDEF PORTUGUES}
     {:
@@ -150,6 +166,19 @@ type
     }
     {$ENDIF}
     property OnDoScanWrite:TScanWriteProc read FDoScanWrite write FDoScanWrite;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Evento chamado para executar um lote de escritas por scan.
+    @seealso(TScanMultiWriteProc)
+    }
+    {$ELSE}
+    {:
+    Event called to execute a batch of scan writes.
+    @seealso(TScanMultiWriteProc)
+    }
+    {$ENDIF}
+    property OnDoScanMultiWrite:TScanMultiWriteProc read FDoScanMultiWrite write FDoScanMultiWrite;
 
     {$IFDEF PORTUGUES}
     //: Evento chamado para realizar a leitura de valoes de um tag.
@@ -220,9 +249,33 @@ procedure TScanThread.CheckScanWriteCmd;
 var
   PMsg:TMSMsg;
   pkg:PScanReqRec;
+  multi:PScanMultiReqRec;
+  i:LongInt;
 begin
-  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_SINGLESCANREAD,true) do begin
+  while (not Terminated) and FSpool.PeekMessage(PMsg,PSM_TAGSCANWRITE,PSM_TAGSCANMULTIWRITE,true) do begin
     case PMsg.MsgID of
+      PSM_TAGSCANMULTIWRITE: begin
+        multi := PScanMultiReqRec(PMsg.wParam);
+        if Assigned(FDoScanMultiWrite) then begin
+          FWaitToWrite.WaitFor(1);
+          FWaitToWrite.ResetEvent;
+          try
+            FDoScanMultiWrite(multi^.Requests);
+          except
+            //whoever asked still has to be answered (each request carries its own result)
+          end;
+        end;
+        //each request now goes on exactly like a single scan write: with an updater it takes
+        //the record and releases it, with none it is released here
+        for i:=0 to High(multi^.Requests) do
+          if Assigned(FDoScanMultiWrite) and (PScanUpdater<>nil) then
+            PScanUpdater.ScanRequestCallBack(multi^.Requests[i])
+          else
+            Dispose(multi^.Requests[i]);
+        SetLength(multi^.Requests, 0);
+        Dispose(multi);
+      end;
+
       PSM_SINGLESCANREAD: begin
         if Assigned(FDoSingleScanRead) then begin
           FWaitToWrite.WaitFor(1); //TODO -oFabio: Why we should wait 1ms?
@@ -281,6 +334,14 @@ begin
   //envia a mensagem
   //sends the message.
   FSpool.PostMessage(PSM_TAGSCANWRITE,SWPkg,nil,true);
+  FWaitToWrite.SetEvent;
+end;
+
+procedure TScanThread.ScanMultiWrite(SWPkg: PScanMultiReqRec);
+begin
+  WaitLoopStarts;
+
+  FSpool.PostMessage(PSM_TAGSCANMULTIWRITE,SWPkg,nil,true);
   FWaitToWrite.SetEvent;
 end;
 
