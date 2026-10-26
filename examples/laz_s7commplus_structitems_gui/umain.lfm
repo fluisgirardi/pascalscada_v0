@@ -83,6 +83,16 @@ object FormMain: TFormMain
       TabOrder = 3
       Text = '500'
     end
+    object CheckVar26: TCheckBox
+      Left = 592
+      Height = 21
+      Top = 46
+      Width = 120
+      Caption = 'Var26 (struct)'
+      Checked = True
+      State = cbChecked
+      TabOrder = 5
+    end
     object ButtonConnect: TButton
       Left = 592
       Height = 29

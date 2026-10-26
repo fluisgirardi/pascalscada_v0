@@ -73,7 +73,7 @@ type
     Resolved:Boolean;
     AccessArea:Cardinal;
     Lids:TS7PlusLIDArray;
-    ByteOffset:Integer;   //cumulative, from resolution - see TS7PlusVarInfo.ByteOffset. -1=unknown.
+    ByteOffset:Integer;   //the resolved ImageOffset (position in the PLC memory image, see TS7PlusVarInfo.ImageOffset) - used by the read-dedup. -1=unknown.
     SoftDataType:Byte;
     Data:TBytes;
     LastResult:TProtocolIOResult;
@@ -657,7 +657,10 @@ begin
   for i:=0 to High(Vars) do
     if Vars[i].Name=CanonicalPath then begin
       Lids := Vars[i].Lids;
-      ByteOffset := Vars[i].ByteOffset;
+      //The position in the PLC's memory image (TS7PlusVarInfo.ImageOffset), not the classic
+      //offset: the only user is the read-dedup, which cuts a member out of its struct's
+      //already-read bytes, and an optimized struct is laid out by size, not by declaration.
+      ByteOffset := Vars[i].ImageOffset;
       SoftDataType := Vars[i].SoftDataType;
       Result := true;
       exit;
