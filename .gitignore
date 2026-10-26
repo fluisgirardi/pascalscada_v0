@@ -53,6 +53,7 @@ examples/**/link*.res
 /examples/laz_s7commplus_phase2_test/s7commplus_dedup_test
 /examples/laz_s7commplus_phase2_test/s7commplus_dl_replay_test
 /examples/laz_s7commplus_phase2_test/s7commplus_listdbs_test
+/examples/laz_s7commplus_phase2_test/s7commplus_multiwrite_test
 /examples/laz_s7commplus_phase2_test/s7commplus_onchange_test
 /examples/laz_s7commplus_phase2_test/s7commplus_phase2_test
 /examples/laz_s7commplus_phase2_test/s7commplus_scanbatch_test

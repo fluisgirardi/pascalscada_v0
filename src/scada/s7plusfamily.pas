@@ -220,6 +220,10 @@ type
     //: to encode Data as the target's own typed PValue (ValueDInt, ValueReal, ...) rather
     //: than a generic byte array, which the PLC rejects outright. Default 0 falls back to a
     //: byte array (only correct for genuine byte-array-typed targets).
+    //: Writes several symbolic items in as few requests as possible - see
+    //: TS7PlusConnection.WriteMultipleSymbolic. ioOk with Results[i].Ok per item; ioCommError
+    //: when a request failed as a whole (then Results says which items were taken before it).
+    function WriteMultipleSymbolic(const Items:TS7PlusMultiWriteItemArray; out Results:TS7PlusMultiWriteResultArray):TProtocolIOResult;
     function WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SoftDataType:Byte=0):TProtocolIOResult;
     //: Reads several symbolic items in one round-trip - see TS7PlusConnection.ReadMultipleSymbolic.
     function ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):TProtocolIOResult;
@@ -1566,6 +1570,24 @@ begin
       exit;
     end;
     if FConnection.ReadMultipleSymbolic(Items, Results) then
+      Result := ioOk
+    else
+      Result := ioCommError;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.WriteMultipleSymbolic(const Items:TS7PlusMultiWriteItemArray; out Results:TS7PlusMultiWriteResultArray):TProtocolIOResult;
+begin
+  SetLength(Results, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := ioCommError;
+      exit;
+    end;
+    if FConnection.WriteMultipleSymbolic(Items, Results) then
       Result := ioOk
     else
       Result := ioCommError;

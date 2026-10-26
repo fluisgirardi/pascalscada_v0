@@ -3,8 +3,10 @@ program s7commplus_onchange_test;
 {: Tags "on change": TPLCTagNumber com RefreshTime=0 recebem o valor por NOTIFICACAO de uma
    subscricao do CLP, sem polling. O driver cria a subscricao sozinho assim que resolve o Path.
 
-   Uso: s7commplus_onchange_test <ip-do-clp> <path>[:tipo] [<path>[:tipo] ...] [-t segundos]
+   Uso: s7commplus_onchange_test <ip-do-clp> <path>[:tipo][@ms] [<path>[:tipo][@ms] ...] [-t segundos]
    tipo: dint (padrao), int, byte, real
+   @ms:  o tag e' lido por POLLING a cada <ms> (em vez de on change) - serve para misturar os
+         dois no mesmo driver e forcar notificacoes a chegarem no meio de uma leitura.
    Exemplo: s7commplus_onchange_test 192.168.137.210 DB4.Var1 DB4.Var2:int DB4.Var3:real -t 120
 
    Mude os valores no CLP/simulador (tabela de observacao do TIA, ou um programa) enquanto
@@ -60,7 +62,7 @@ var
   Sink:TDebugSink;
   Watched:array of TWatched;
   Host, Spec, PathPart, TypePart:String;
-  Seconds, WaitMs, i, p:Integer;
+  Seconds, WaitMs, i, p, Refresh:Integer;
   Silent:Boolean;
 
 begin
@@ -83,6 +85,12 @@ begin
     Watched[High(Watched)] := TWatched.Create;
     Watched[High(Watched)].Tag_ := TPLCTagNumber.Create(nil);
     Spec := ParamStr(i);
+    Refresh := 0;
+    p := Pos('@', Spec);
+    if p>0 then begin
+      Refresh := StrToIntDef(Copy(Spec, p+1, MaxInt), 0);
+      Spec := Copy(Spec, 1, p-1);
+    end;
     p := Pos(':', Spec);
     if p>0 then begin
       PathPart := Copy(Spec, 1, p-1);
@@ -98,7 +106,7 @@ begin
       else if TypePart='real' then begin TagType := pttFloat; SwapBytes := true; SwapWords := true; end
       else begin TagType := pttLongInt; SwapBytes := true; SwapWords := true; end;
       OnUpdate := @Watched[High(Watched)].TagUpdated;
-      RefreshTime := 0; //<- on change
+      RefreshTime := Refresh; //0 = on change
       LongAddress := PathPart;
     end;
     Inc(i);
@@ -134,7 +142,7 @@ begin
     StartedAt := GetTickCount64;
     for i:=0 to High(Watched) do begin
       Watched[i].Tag_.ProtocolDriver := Driver;
-      WriteLn(Format('Tag %s (Path=%s, RefreshTime=0) ligado ao driver.', [Watched[i].Tag_.Name, Watched[i].Tag_.LongAddress]));
+      WriteLn(Format('Tag %s (Path=%s, RefreshTime=%d) ligado ao driver.', [Watched[i].Tag_.Name, Watched[i].Tag_.LongAddress, Watched[i].Tag_.RefreshTime]));
     end;
     WriteLn(Format('=== Observando por %d s. Mude os valores no CLP. ===', [Seconds]));
 
