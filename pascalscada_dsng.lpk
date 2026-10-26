@@ -21,7 +21,7 @@
       </Linking>
     </CompilerOptions>
     <Version Minor="7" Release="7"/>
-    <Files Count="16">
+    <Files Count="18">
       <Item1>
         <Filename Value="src/scada_dsng/bitmappertagassistant.pas"/>
         <UnitName Value="bitmappertagassistant"/>
@@ -88,6 +88,14 @@
         <Filename Value="src/scada_dsng/ulgxtagbuilder.pas"/>
         <UnitName Value="ulgxtagbuilder"/>
       </Item16>
+      <Item17>
+        <Filename Value="src/scada_dsng/s7plustagassistant.pas"/>
+        <UnitName Value="s7plustagassistant"/>
+      </Item17>
+      <Item18>
+        <Filename Value="src/scada_dsng/us7plustagbuilder.pas"/>
+        <UnitName Value="us7plustagbuilder"/>
+      </Item18>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

@@ -788,7 +788,10 @@ end;
 
 procedure TTCP_UDPPort.PortStart(var Ok:Boolean);
 begin
-  if ([csDesigning]*ComponentState=[]) or FExclusiveDevice then
+  //at design time only an exclusive device is left closed (see TCommPortDriver.SetActive,
+  //which never gets here for it): a network port may connect inside the IDE, which is what
+  //lets the Tag Builders read the PLC.
+  if ([csDesigning]*ComponentState=[]) or (not FExclusiveDevice) then
     FConnectThread.Connect;
   Ok:=true;
 end;
@@ -838,7 +841,11 @@ end;
 
 procedure TTCP_UDPPort.PortStop(var Ok:Boolean);
 begin
-  if (([csDesigning,csDestroying]*ComponentState=[]) or FExclusiveDevice) and Assigned(FConnectThread) then
+  //a destroyed port closes its socket on its own; the other ones, at design time too (a
+  //non-exclusive port may be connected there, see PortStart), ask the connection thread to
+  if (not (csDestroying in ComponentState)) and
+     (([csDesigning]*ComponentState=[]) or (not FExclusiveDevice)) and
+     Assigned(FConnectThread) then
     FConnectThread.Disconnect;
   Ok:=true;
 end;

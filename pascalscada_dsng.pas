@@ -12,7 +12,8 @@ uses
   modbustagassistant, scadapropeditor, scadareg, siemenstagassistant, 
   ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, 
   ustructuremapper, uwesttagbuilder, westasciitagassistant, 
-  rockwelltagassistant, ulgxtagbuilder, LazarusPackageIntf;
+  rockwelltagassistant, ulgxtagbuilder, s7plustagassistant, us7plustagbuilder, 
+  LazarusPackageIntf;
 
 implementation
 

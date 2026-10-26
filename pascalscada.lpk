@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="96">
+    <Files Count="97">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -416,6 +416,10 @@
         <Filename Value="src\scada\s7plusharpolegitimate.pas"/>
         <UnitName Value="S7PlusHarpoLegitimate"/>
       </Item96>
+      <Item97>
+        <Filename Value="src\scada\s7plustagplan.pas"/>
+        <UnitName Value="S7PlusTagPlan"/>
+      </Item97>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

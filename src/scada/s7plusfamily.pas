@@ -35,6 +35,10 @@ uses
   S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
   PLCString;
 
+//: Registers the Tag Builder tool of the S7CommPlus protocol (the design package does it,
+//: since the tool has forms) - see TS7CommPlusDriver.OpenTagEditor.
+procedure SetTagBuilderToolForS7CommPlusProtocol(TagBuilderTool:TOpenTagEditor);
+
 const
   //-- Phase 1 addressing convention for TTagRec.ReadFunction/WriteFunction.
   //-- Symbolic Path-based addressing (Phase 2) will replace this.
@@ -232,6 +236,10 @@ type
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
     //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and number.
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
+    //: @seealso(TProtocolDriver.OpenTagEditor)
+    procedure OpenTagEditor(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); override;
+    //: @seealso(TProtocolDriver.HasTabBuilderEditor)
+    function HasTabBuilderEditor:Boolean; override;
     //: Reads a variable's raw bytes by its resolved LID path (see BrowseDB/BrowseNativeArea).
     function ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
     //: Writes a variable's raw bytes by its resolved LID path.
@@ -334,6 +342,17 @@ type
   end;
 
 implementation
+
+var
+  S7PlusTagBuilderEditor:TOpenTagEditor = nil;
+
+procedure SetTagBuilderToolForS7CommPlusProtocol(TagBuilderTool:TOpenTagEditor);
+begin
+  if Assigned(S7PlusTagBuilderEditor) then
+    raise Exception.Create('A Tag Builder editor for the S7CommPlus protocol was already assigned.')
+  else
+    S7PlusTagBuilderEditor := TagBuilderTool;
+end;
 
 { TS7CommPlusDriver }
 
@@ -1714,6 +1733,19 @@ begin
   finally
     UnlockDriverIO;
   end;
+end;
+
+procedure TS7CommPlusDriver.OpenTagEditor(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
+begin
+  if Assigned(S7PlusTagBuilderEditor) then
+    S7PlusTagBuilderEditor(Self, Self.Owner, InsertHook, CreateProc)
+  else
+    inherited OpenTagEditor(InsertHook, CreateProc);
+end;
+
+function TS7CommPlusDriver.HasTabBuilderEditor:Boolean;
+begin
+  Result := true;
 end;
 
 function TS7CommPlusDriver.ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
