@@ -1,0 +1,49 @@
+﻿DATA_BLOCK "BlocoSimbolico_4"
+{ DB_Accessible_From_OPC_UA := 'FALSE' ;
+ DB_Accessible_From_Webserver := 'FALSE' ;
+ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      Var1 : DInt;
+      Var2 : DInt;
+      Var3 : DInt;
+      Var4 : DInt;
+      Var5 : DInt;
+      Var6 : DInt;
+      Var7 : DInt;
+      Var8 : DInt;
+      Var9 : DInt;
+      Var10 : DInt;
+      Var11 : DInt;
+      Var12 : DInt;
+      Var13 : DInt;
+      Var14 : DInt;
+      Var15 : DInt;
+      Var16 : DInt;
+      Var17 : DInt;
+      Var18 : DInt;
+      Var19 : DInt;
+      Var20 : DInt;
+      Var21 : DInt;
+      Var22 : DInt;
+      Var23 : DInt;
+      Var24 : DInt;
+      Var25 : DInt;
+      Var26 : Struct
+         v1 : Byte;
+         v2 : Word;
+         v3 : DWord;
+         v4 : Bool;
+         Static_1 : Real;
+         Static_2 : Bool;
+         Static_3 : Bool;
+         Static_4 : Bool;
+      END_STRUCT;
+   END_VAR
+
+
+BEGIN
+
+END_DATA_BLOCK
+

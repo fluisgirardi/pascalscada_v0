@@ -1,0 +1,123 @@
+object FormMain: TFormMain
+  Left = 300
+  Height = 640
+  Top = 100
+  Width = 720
+  Caption = 'S7CommPlus - DB lido por TPLCStruct + TPLCStructItem'
+  ClientHeight = 640
+  ClientWidth = 720
+  OnClose = FormClose
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  LCLVersion = '2.0.11.0'
+  object PanelTop: TPanel
+    Left = 0
+    Height = 76
+    Top = 0
+    Width = 720
+    Align = alTop
+    ClientHeight = 76
+    ClientWidth = 720
+    TabOrder = 0
+    object LabelHost: TLabel
+      Left = 8
+      Height = 17
+      Top = 10
+      Width = 18
+      Caption = 'IP:'
+      ParentColor = False
+    end
+    object EditHost: TEdit
+      Left = 32
+      Height = 29
+      Top = 6
+      Width = 130
+      TabOrder = 0
+      Text = '192.168.56.2'
+    end
+    object LabelDb: TLabel
+      Left = 176
+      Height = 17
+      Top = 10
+      Width = 20
+      Caption = 'DB:'
+      ParentColor = False
+    end
+    object EditDb: TEdit
+      Left = 202
+      Height = 29
+      Top = 6
+      Width = 100
+      TabOrder = 1
+      Text = 'DB4'
+    end
+    object LabelMembers: TLabel
+      Left = 316
+      Height = 17
+      Top = 10
+      Width = 60
+      Caption = 'Membros:'
+      ParentColor = False
+    end
+    object EditMembers: TEdit
+      Left = 380
+      Height = 29
+      Top = 6
+      Width = 48
+      TabOrder = 2
+      Text = '25'
+    end
+    object LabelRefresh: TLabel
+      Left = 442
+      Height = 17
+      Top = 10
+      Width = 74
+      Caption = 'Refresh (ms):'
+      ParentColor = False
+    end
+    object EditRefresh: TEdit
+      Left = 522
+      Height = 29
+      Top = 6
+      Width = 56
+      TabOrder = 3
+      Text = '500'
+    end
+    object ButtonConnect: TButton
+      Left = 592
+      Height = 29
+      Top = 6
+      Width = 120
+      Caption = 'Conectar'
+      OnClick = ButtonConnectClick
+      TabOrder = 4
+    end
+    object LabelStatus: TLabel
+      Left = 8
+      Height = 17
+      Top = 48
+      Width = 90
+      Caption = 'Desconectado.'
+      ParentColor = False
+    end
+  end
+  object Grid: TStringGrid
+    Left = 0
+    Height = 564
+    Top = 76
+    Width = 720
+    Align = alClient
+    ColCount = 5
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goSmoothScroll]
+    RowCount = 1
+    TabOrder = 1
+    ColWidths = (
+      110
+      70
+      150
+      180
+      100
+    )
+  end
+end
