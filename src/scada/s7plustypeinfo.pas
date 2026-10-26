@@ -172,6 +172,20 @@ type
     //: are explicitly not computed for LID addressing today), so those never participate
     //: in the dedup optimization and are always read independently.
     ByteOffset:Integer;
+    //: Bit within the byte at ByteOffset (0..7) - only meaningful for BOOL members, which
+    //: share a byte with the next ones; 0 for everything else. Read from the low 3 bits of
+    //: the element's AttributeFlags (confirmed on a PLC: three BOOLs of one struct, all at
+    //: byte 114, came out as bits 0, 1, 2; the BitOffsetInfoFlags fields were 0 for all).
+    BitOffset:Byte;
+    //: Where the member sits in the PLC's memory image of the DB/area: the sum of the
+    //: OptAddr of the element and of every ancestor. Unlike ByteOffset (the classic layout),
+    //: this follows an "optimized" struct's real order - the PLC lays its members out by size
+    //: (4-byte ones, then 2, then 1, then BOOLs one byte each), not by declaration - so the
+    //: difference between a member's and its struct's ImageOffset is where the member is in
+    //: the bytes a read of that struct returns (confirmed on a PLC: DB4.Var26's v3 DWord at
+    //: 0, Static_1 at 4, v2 at 8, v1 at 10, BOOLs at 11..14, against ByteOffset's 0, 10, 2, 4,
+    //: 8..14). For a classic DB both layouts agree. -1: not known (inside an array, no Vte).
+    ImageOffset:Integer;
   end;
   TS7PlusVarInfoArray = array of TS7PlusVarInfo;
 
@@ -795,12 +809,12 @@ begin
   end;
 end;
 
-procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset:Integer; var Result_:TS7PlusVarInfoArray); forward;
+procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset, ImageOffset:Integer; var Result_:TS7PlusVarInfoArray); forward;
 
-procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset:Integer; var Result_:TS7PlusVarInfoArray);
+procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset, ImageOffset:Integer; var Result_:TS7PlusVarInfoArray);
 var
   NewLids:TS7PlusLIDArray;
-  NewByteOffset:Integer;
+  NewByteOffset, NewImageOffset:Integer;
   i:Integer;
   Info:TS7PlusVarInfo;
 begin
@@ -812,6 +826,7 @@ begin
       Names := Names + Node.Name;
       NewLids := Lids;
       NewByteOffset := 0;
+      NewImageOffset := 0;
     end;
     ntArray, ntStructArray: begin
       //Array element byte offsets are not computed today (see S7PlusAddSubnodes/
@@ -831,12 +846,17 @@ begin
         NewLids[High(NewLids)] := 1;
       end;
       NewByteOffset := -1;
+      NewImageOffset := -1;
     end;
   else //UNDEFINED / VAR member
     Names := Names + '.' + Node.Name;
     SetLength(NewLids, Length(Lids)+1);
     if Length(Lids)>0 then Move(Lids[0], NewLids[0], Length(Lids)*SizeOf(Cardinal));
     NewLids[High(NewLids)] := Node.AccessId;
+    if (ImageOffset=-1) or (not Node.HasVte) then
+      NewImageOffset := -1
+    else
+      NewImageOffset := ImageOffset + Integer(Node.Vte.OffsetInfo.OptAddr);
     if (ByteOffset=-1) or (not Node.HasVte) then
       NewByteOffset := -1
     else
@@ -863,11 +883,13 @@ begin
     Info.SoftDataType := Node.SoftDataType;
     if Node.HasVte then Info.SymbolCrc := Node.Vte.SymbolCrc else Info.SymbolCrc := 0;
     Info.ByteOffset := NewByteOffset;
+    Info.BitOffset := 0;
+    Info.ImageOffset := NewImageOffset;
     SetLength(Result_, Length(Result_)+1);
     Result_[High(Result_)] := Info;
 
     for i:=0 to High(Node.Children) do
-      S7PlusWalk(Node.Children[i], Names, NewLids, NewByteOffset, Result_);
+      S7PlusWalk(Node.Children[i], Names, NewLids, NewByteOffset, NewImageOffset, Result_);
     exit;
   end;
 
@@ -879,6 +901,11 @@ begin
   Info.SoftDataType := Node.SoftDataType;
   if Node.HasVte then Info.SymbolCrc := Node.Vte.SymbolCrc else Info.SymbolCrc := 0;
   Info.ByteOffset := NewByteOffset;
+  if Node.HasVte and (NewByteOffset<>-1) then
+    Info.BitOffset := S7PlusVteAttributeBitOffset(Node.Vte)
+  else
+    Info.BitOffset := 0;
+  Info.ImageOffset := NewImageOffset;
   SetLength(Result_, Length(Result_)+1);
   Result_[High(Result_)] := Info;
 end;
@@ -892,7 +919,7 @@ begin
   SetLength(EmptyLids, 0);
   for i:=0 to High(RootNodes) do begin
     if Length(RootNodes[i].Children)=0 then continue;
-    S7PlusWalk(RootNodes[i], '', EmptyLids, 0, Result);
+    S7PlusWalk(RootNodes[i], '', EmptyLids, 0, 0, Result);
   end;
 end;
 

@@ -39,6 +39,8 @@ type
 
   TTestS7PlusTypeInfo = class(TTestCase)
   published
+    procedure AnOptimizedStructsMembersAreLocatedByTheirOptAddr;
+    procedure AMemberOfAnArrayHasNoImageOffset;
     //tabela de tipos / type table
     procedure KnownScalarTypesAreSupported;
     procedure StructuralTypesAreNotSupported;
@@ -402,6 +404,86 @@ begin
 
   SetLength(vazio, 0);
   AssertEquals('empty path', '', S7PlusFormatLids(vazio));
+end;
+
+procedure TTestS7PlusTypeInfo.AnOptimizedStructsMembersAreLocatedByTheirOptAddr;
+var
+  Root:TS7PlusNode;
+  St:TS7PlusNode;
+  Flat:TS7PlusVarInfoArray;
+  i:Integer;
+
+  function Member(const AName:String; ASoftType:Byte; ANonOpt, AOpt:Cardinal):TS7PlusNode;
+  begin
+    FillChar(Result, SizeOf(Result), 0);
+    Result.NodeType := ntVar;
+    Result.Name := AName;
+    Result.SoftDataType := ASoftType;
+    Result.HasVte := true;
+    Result.Vte.OffsetInfo.NonOptAddr := ANonOpt;
+    Result.Vte.OffsetInfo.OptAddr := AOpt;
+  end;
+
+  //index in Flat of the variable with this name (-1: none)
+  function IndexOf(const AName:String):Integer;
+  var
+    k:Integer;
+  begin
+    Result := -1;
+    for k:=0 to High(Flat) do
+      if Flat[k].Name=AName then Result := k;
+  end;
+begin
+  //DB4 of the test PLC: Var1 (DInt) then Var26 Struct{v1 Byte, v2 Word, v3 DWord}, optimized:
+  //the struct is laid out v3, v2, v1 although declared v1, v2, v3
+  FillChar(Root, SizeOf(Root), 0);
+  Root.NodeType := ntRoot;
+  Root.Name := 'DB4';
+  St := Member('Var26', 17, 4, 104);
+  SetLength(St.Children, 3);
+  St.Children[0] := Member('v1', 2, 4, 6);
+  St.Children[1] := Member('v2', 4, 6, 4);
+  St.Children[2] := Member('v3', 6, 8, 0);
+  SetLength(Root.Children, 2);
+  Root.Children[0] := Member('Var1', 7, 0, 4);
+  Root.Children[1] := St;
+
+  Flat := S7PlusBuildFlatList(TS7PlusNodeArray.Create(Root));
+  AssertEquals('classic offset keeps the declared order', 4, Flat[IndexOf('DB4.Var26.v1')].ByteOffset - Flat[IndexOf('DB4.Var26')].ByteOffset);
+  AssertEquals('v3 classic', 8, Flat[IndexOf('DB4.Var26.v3')].ByteOffset - Flat[IndexOf('DB4.Var26')].ByteOffset);
+  AssertEquals('image: the struct', 104, Flat[IndexOf('DB4.Var26')].ImageOffset);
+  AssertEquals('image: v3 first', 104, Flat[IndexOf('DB4.Var26.v3')].ImageOffset);
+  AssertEquals('image: v2 next', 108, Flat[IndexOf('DB4.Var26.v2')].ImageOffset);
+  AssertEquals('image: v1 last', 110, Flat[IndexOf('DB4.Var26.v1')].ImageOffset);
+  AssertEquals('image: a top level member', 4, Flat[IndexOf('DB4.Var1')].ImageOffset);
+  i := Flat[IndexOf('DB4.Var26.v1')].ImageOffset - Flat[IndexOf('DB4.Var26')].ImageOffset;
+  AssertEquals('v1 inside the struct bytes', 6, i);
+end;
+
+procedure TTestS7PlusTypeInfo.AMemberOfAnArrayHasNoImageOffset;
+var
+  Root, Arr:TS7PlusNode;
+  Flat:TS7PlusVarInfoArray;
+  i:Integer;
+begin
+  FillChar(Root, SizeOf(Root), 0);
+  Root.NodeType := ntRoot;
+  Root.Name := 'DB1';
+  FillChar(Arr, SizeOf(Arr), 0);
+  Arr.NodeType := ntArray;
+  Arr.Name := '[0]';
+  SetLength(Arr.Children, 1);
+  FillChar(Arr.Children[0], SizeOf(Arr.Children[0]), 0);
+  Arr.Children[0].NodeType := ntVar;
+  Arr.Children[0].Name := 'x';
+  Arr.Children[0].SoftDataType := 7;
+  Arr.Children[0].HasVte := true;
+  SetLength(Root.Children, 1);
+  Root.Children[0] := Arr;
+  Flat := S7PlusBuildFlatList(TS7PlusNodeArray.Create(Root));
+  for i:=0 to High(Flat) do
+    if Flat[i].SoftDataType=7 then
+      AssertEquals('unknown inside an array', -1, Flat[i].ImageOffset);
 end;
 
 initialization
