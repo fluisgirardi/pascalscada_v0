@@ -52,13 +52,16 @@ type
     FScans:LongInt;
     FSleepToAsk:LongInt;
     FRaiseOnFirstScan:Boolean;
-    FWrites, FReads:LongInt;
+    FWrites, FReads, FMultiWrites:LongInt;
+    FMultiSizes:array of LongInt;
+    FMultiAddresses:array of LongInt;
     FWriteAddresses:array of LongInt;
     FLastWriteValues:TArrayOfDouble;
     FLastReadAddress:LongInt;
     FHandlerThread:TThreadID;
     procedure ScanRead(Sender:TObject; var NeedSleep:LongInt);
     function  ScanWrite(const Tag:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
+    procedure MultiWrite(const Requests:TScanReqRecArray);
     function  SingleRead(var Tag:TTagRec; var values:TArrayOfDouble):TProtocolIOResult;
     function  NewRequest(aAddress:LongInt; const aValues:array of Double):PScanReqRec;
     function  WaitUntil(var aCounter:LongInt; aAtLeast, aDeadlineMs:LongInt):Boolean;
@@ -80,6 +83,10 @@ type
     //os pedidos / the requests
     procedure AScanWriteReachesTheWriteHandler;
     procedure TheWriteHandlerRunsOffTheMainThread;
+    procedure AScanMultiWriteReachesTheBatchHandlerAsOneCall;
+    procedure TheBatchHandlerRunsOffTheMainThread;
+    procedure TwoBatchesAreServedInOrder;
+    procedure WithNoBatchHandlerTheBatchIsDropped;
     procedure ASingleReadReachesTheReadHandler;
     procedure ManyWritesAreServedInOrder;
     procedure WithNoWriteHandlerTheRequestIsDropped;
@@ -100,6 +107,9 @@ begin
   FRaiseOnFirstScan:=false;
   FWrites:=0;
   FReads:=0;
+  FMultiWrites:=0;
+  FMultiSizes:=nil;
+  FMultiAddresses:=nil;
   FWriteAddresses:=nil;
   FLastWriteValues:=nil;
   FLastReadAddress:=-1;
@@ -111,6 +121,7 @@ begin
   FThread:=TScanThread.Create(true, nil);
   FThread.OnDoScanRead:=@ScanRead;
   FThread.OnDoScanWrite:=@ScanWrite;
+  FThread.OnDoScanMultiWrite:=@MultiWrite;
   FThread.OnDoSingleScanRead:=@SingleRead;
 end;
 
@@ -250,6 +261,82 @@ begin
 
   AssertTrue('rodou',              FScans>=2);
   AssertTrue('mas nao desenfreada', FScans<=8);
+end;
+
+procedure TTestScanThread.MultiWrite(const Requests:TScanReqRecArray);
+var
+  c:LongInt;
+begin
+  FHandlerThread:=GetCurrentThreadId;
+  SetLength(FMultiSizes, Length(FMultiSizes)+1);
+  FMultiSizes[High(FMultiSizes)]:=Length(Requests);
+  for c:=0 to High(Requests) do begin
+    SetLength(FMultiAddresses, Length(FMultiAddresses)+1);
+    FMultiAddresses[High(FMultiAddresses)]:=Requests[c]^.Tag.Address;
+    Requests[c]^.RequestResult:=ioOk;
+  end;
+  InterLockedIncrement(FMultiWrites);
+end;
+
+function NewBatch(const Requests:array of PScanReqRec):PScanMultiReqRec;
+var
+  c:LongInt;
+begin
+  New(Result);
+  SetLength(Result^.Requests, Length(Requests));
+  for c:=0 to High(Requests) do
+    Result^.Requests[c]:=Requests[c];
+end;
+
+procedure TTestScanThread.AScanMultiWriteReachesTheBatchHandlerAsOneCall;
+begin
+  Start;
+
+  FThread.ScanMultiWrite(NewBatch([NewRequest(1, [1]), NewRequest(2, [2]), NewRequest(3, [3])]));
+
+  AssertTrue  ('served',                  WaitUntil(FMultiWrites, 1, 2000));
+  AssertEquals('as one call',             1, Length(FMultiSizes));
+  AssertEquals('with every request',      3, FMultiSizes[0]);
+  AssertEquals('in order (1)',            1, FMultiAddresses[0]);
+  AssertEquals('in order (2)',            2, FMultiAddresses[1]);
+  AssertEquals('in order (3)',            3, FMultiAddresses[2]);
+  AssertEquals('not as single writes',    0, FWrites);
+end;
+
+procedure TTestScanThread.TheBatchHandlerRunsOffTheMainThread;
+begin
+  Start;
+  FThread.ScanMultiWrite(NewBatch([NewRequest(1, [1])]));
+  AssertTrue('served', WaitUntil(FMultiWrites, 1, 2000));
+  AssertTrue('off the main thread', FHandlerThread<>MainThreadID);
+end;
+
+procedure TTestScanThread.TwoBatchesAreServedInOrder;
+begin
+  Start;
+  FThread.ScanMultiWrite(NewBatch([NewRequest(1, [1]), NewRequest(2, [2])]));
+  FThread.ScanMultiWrite(NewBatch([NewRequest(3, [3])]));
+
+  AssertTrue  ('both served', WaitUntil(FMultiWrites, 2, 3000));
+  AssertEquals('first batch',  2, FMultiSizes[0]);
+  AssertEquals('second batch', 1, FMultiSizes[1]);
+  AssertEquals('order (1)', 1, FMultiAddresses[0]);
+  AssertEquals('order (3)', 3, FMultiAddresses[2]);
+end;
+
+procedure TTestScanThread.WithNoBatchHandlerTheBatchIsDropped;
+begin
+  //ninguem para atender: os registros tem que ser liberados mesmo assim (o heaptrc
+  //no fim da suite e' quem confere)
+  //nobody to serve it: the records have to be released all the same (the heaptrc at the
+  //end of the suite is what checks it)
+  FThread.OnDoScanMultiWrite:=nil;
+  Start;
+
+  FThread.ScanMultiWrite(NewBatch([NewRequest(1, [1]), NewRequest(2, [2])]));
+
+  WaitUntil(FScans, 5, 2000);
+  AssertEquals('nobody served it', 0, FMultiWrites);
 end;
 
 procedure TTestScanThread.AScanWriteReachesTheWriteHandler;

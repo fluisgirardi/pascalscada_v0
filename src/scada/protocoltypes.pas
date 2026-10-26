@@ -173,6 +173,58 @@ type
 
   {$IFDEF PORTUGUES}
   {:
+  Uma escrita de um tag dentro de um lote (TProtocolDriver.MultiWrite/ScanMultiWrite).
+  @member Tag Estrutura com as informações do tag que será escrito.
+  @member Values Valores a escrever.
+  @member Result Resultado dessa escrita, preenchido pelo driver (cada item tem o seu).
+  }
+  {$ELSE}
+  {:
+  One tag write inside a batch (TProtocolDriver.MultiWrite/ScanMultiWrite).
+  @member Tag Record with informations about the tag.
+  @member Values Values to be written.
+  @member Result I/O result of this write, filled by the driver (each item has its own).
+  }
+  {$ENDIF}
+  TMultiWriteRec = record
+    Tag:TTagRec;
+    Values:TArrayOfDouble;
+    Result:TProtocolIOResult;
+  end;
+  TMultiWriteArray = array of TMultiWriteRec;
+
+  {$IFDEF PORTUGUES}
+  //: Pedidos de escrita por scan de um lote; cada ponteiro e' um pedido normal (TScanReqRec).
+  {$ELSE}
+  //: Scan write requests of one batch; each pointer is an ordinary request (TScanReqRec).
+  {$ENDIF}
+  TScanReqRecArray = array of PScanReqRec;
+
+  {$IFDEF PORTUGUES}
+  //: Mensagem de um lote de escritas por scan, enviada a thread do driver (PSM_TAGSCANMULTIWRITE).
+  {$ELSE}
+  //: Message of a batch of scan writes sent to the driver thread (PSM_TAGSCANMULTIWRITE).
+  {$ENDIF}
+  TScanMultiReqRec = record
+    Requests:TScanReqRecArray;
+  end;
+  PScanMultiReqRec = ^TScanMultiReqRec;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Define o procedimento responsavel por executar um lote de escritas por Scan. Preenche o
+  RequestResult de cada pedido; a entrega aos tags e' feita por quem chama.
+  }
+  {$ELSE}
+  {:
+  Defines the procedure that executes a batch of scan writes. It fills each request's
+  RequestResult; delivering the results to the tags is up to the caller.
+  }
+  {$ENDIF}
+  TScanMultiWriteProc = procedure(const Requests:TScanReqRecArray) of object;
+
+  {$IFDEF PORTUGUES}
+  {:
   Define a função responsável por executar uma escrita por Scan.
   @param(Tag TTagRec: estrutura que contem as informações do tag que vai ser escrito.)
   @param(values TArrayOfDouble: Array com os valores que devem ser escritos.)
@@ -436,6 +488,13 @@ const
   //: Identifies a message that does a scan write.
   {$ENDIF}
   PSM_SINGLESCANREAD =  206;
+
+  {$IFDEF PORTUGUES}
+  //: Constante de mensagem para um lote de escritas de valores de tags por scan
+  {$ELSE}
+  //: Identifies a message that does a batch of scan writes.
+  {$ENDIF}
+  PSM_TAGSCANMULTIWRITE =  207;
 
 implementation
 

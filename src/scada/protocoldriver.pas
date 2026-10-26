@@ -120,6 +120,7 @@ type
     //metodo chamado pela thred de scan de escrita para escrever valores no dispositivo.
     //procedure called by the scan write thread to write data on your device.
     function  SafeScanWrite(const TagRec:TTagRec; const values:TArrayOfDouble):TProtocolIOResult;
+    procedure SafeScanMultiWrite(const Requests:TScanReqRecArray);
     //metodo chamado para atualizar o valor de um tag (simples ou bloco)
     //procedure called to update the value of an tag (single or block)
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
@@ -494,6 +495,35 @@ type
 
     {$IFDEF PORTUGUES}
     {:
+    Função chamada para escrever os valores de VARIOS tags no equipamento de uma vez. A
+    implementação padrão chama DoWrite uma vez por item, na ordem; um driver que consegue
+    reunir as escritas numa só requisição (S7CommPlus, por exemplo) a sobrescreve.
+
+    Cada item tem o seu próprio Result: uma escrita que falha não impede nem altera as
+    outras. O driver tem que preencher o Result de TODOS os itens.
+
+    @param(Writes TMultiWriteArray. As escritas a fazer; o Result de cada uma é preenchido.)
+    @param(Sync Boolean. Verdadeiro quando chamada por MultiWrite (síncrona), falso quando
+           vem da thread de scan (ScanMultiWrite).)
+    }
+    {$ELSE}
+    {:
+    Function called to write the values of SEVERAL tags on the device at once. The default
+    implementation calls DoWrite once per item, in order; a driver that can gather the
+    writes into a single request (S7CommPlus, for instance) overrides it.
+
+    Each item has its own Result: a write that fails neither prevents nor changes the
+    others. The driver must fill the Result of EVERY item.
+
+    @param(Writes TMultiWriteArray. The writes to do; each one's Result is filled in.)
+    @param(Sync Boolean. True when called by MultiWrite (synchronous), false when it comes
+           from the scan thread (ScanMultiWrite).)
+    }
+    {$ENDIF}
+    procedure DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
     Função chamada para ler valores do equipamento.
 
     @param(tagrec TTagRec. Estrutura com informações do tag.)
@@ -636,6 +666,27 @@ type
 
     {$IFDEF PORTUGUES}
     {:
+    Solicita a escrita por scan (assincrona) de VARIOS tags, atendida de uma vez pelo driver
+    (DoMultiWrite). Cada item segue como uma escrita por scan comum: tem o seu numero de
+    pedido (Tag.ID, em ordem a partir do retornado) e o seu callback recebe o seu proprio
+    resultado.
+    @param(Writes TMultiWriteArray. Os tags e valores a escrever; o campo Result e' ignorado.)
+    @returns(Cardinal. Numero do pedido do primeiro item, ou 0 se nada foi pedido.)
+    }
+    {$ELSE}
+    {:
+    Write values of SEVERAL tags @bold(asynchronous) using the scan of the protocol driver,
+    served at once by the driver (DoMultiWrite). Each item goes on as an ordinary scan
+    write: it has its own request number (Tag.ID, in order from the one returned) and its
+    callback gets its own result.
+    @param(Writes TMultiWriteArray. The tags and values to write; the Result field is ignored.)
+    @returns(Cardinal. The request number of the first item, or 0 if nothing was requested.)
+    }
+    {$ENDIF}
+    function  ScanMultiWrite(const Writes:TMultiWriteArray):Cardinal;
+
+    {$IFDEF PORTUGUES}
+    {:
     Solicita a leitura (sincrona) de um tag.
     @param(tagrec TTagRec. Estrutura com as informações do tag que se deseja ler.)
     }
@@ -661,6 +712,23 @@ type
     }
     {$ENDIF}
     procedure Write(const tagrec:TTagRec; const Values:TArrayOfDouble);
+
+    {$IFDEF PORTUGUES}
+    {:
+    Escreve os valores de varios tags (sincrono), reunidos pelo driver quando ele sabe fazer
+    isso (DoMultiWrite). O Result de cada item diz como foi aquela escrita, e o callback de
+    cada tag (se houver) recebe o seu proprio resultado.
+    @param(Writes TMultiWriteArray. Os tags e valores a escrever; o Result e' preenchido.)
+    }
+    {$ELSE}
+    {:
+    Write the values of several tags (synchronous), gathered by the driver when it knows
+    how (DoMultiWrite). Each item's Result says how that write went, and each tag's callback
+    (if any) gets its own result.
+    @param(Writes TMultiWriteArray. The tags and values to write; Result is filled in.)
+    }
+    {$ENDIF}
+    procedure MultiWrite(var Writes:TMultiWriteArray);
 
     {$IFDEF PORTUGUES}
     //: Retorna o endereço literal de um tag.
@@ -806,6 +874,7 @@ begin
   {$ENDIF}
   PScanReadThread.OnDoScanRead       := @SafeScanRead;
   PScanReadThread.OnDoScanWrite      := @SafeScanWrite;
+  PScanReadThread.OnDoScanMultiWrite := @SafeScanMultiWrite;
   PScanReadThread.OnDoSingleScanRead := @SafeSingleScanRead;
 end;
 
@@ -1231,6 +1300,116 @@ begin
   end;
 end;
 
+procedure TProtocolDriver.DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean);
+var
+  i:LongInt;
+begin
+  for i:=0 to High(Writes) do
+    Writes[i].Result := DoWrite(Writes[i].Tag, Writes[i].Values, Sync);
+end;
+
+procedure TProtocolDriver.MultiWrite(var Writes:TMultiWriteArray);
+var
+  i:LongInt;
+begin
+  if Length(Writes)=0 then exit;
+
+  if GetIsReadOnly then begin
+    for i:=0 to High(Writes) do begin
+      Writes[i].Result := ioReadOnlyProtocol;
+      //vide Write: callback opcional, testar antes de chamar.
+      //see Write: the callback is optional, test before calling it.
+      if assigned(Writes[i].Tag.CallBack) then
+        Writes[i].Tag.CallBack(0, Writes[i].Values, GetTickCount64, tcWrite, ioReadOnlyProtocol, Writes[i].Tag.RealOffset);
+    end;
+    exit;
+  end;
+
+  try
+    //tenta entrar no Mutex
+    //try enter on mutex
+    while not FPause.ResetEvent do
+      CrossThreadSwitch;
+
+    FWriteCS.Enter;
+    FReadCS.Enter;
+
+    DoMultiWrite(Writes, true);
+    for i:=0 to High(Writes) do
+      if assigned(Writes[i].Tag.CallBack) then
+        Writes[i].Tag.CallBack(0, Writes[i].Values, GetTickCount64, tcWrite, Writes[i].Result, Writes[i].Tag.RealOffset);
+  finally
+    FReadCS.Leave;
+    FWriteCS.Leave;
+    FPause.SetEvent;
+  end;
+end;
+
+function TProtocolDriver.ScanMultiWrite(const Writes:TMultiWriteArray):Cardinal;
+var
+  multi:PScanMultiReqRec;
+  pkg:PScanReqRec;
+  i:LongInt;
+begin
+  Result := 0;
+  if Length(Writes)=0 then exit;
+
+  //read only protocol.
+  if GetIsReadOnly then begin
+    for i:=0 to High(Writes) do
+      if assigned(Writes[i].Tag.CallBack) then
+        Writes[i].Tag.CallBack(0, Writes[i].Values, GetTickCount64, tcScanWrite, ioReadOnlyProtocol, Writes[i].Tag.RealOffset);
+    exit;
+  end;
+
+  try
+    PCallersCS.Enter;
+    //verifica se esta em edição, caso positivo evita o comando.
+    //check if is in design-time.
+    if (csReading in ComponentState) or
+       (csDestroying in ComponentState) then
+       exit;
+
+    New(multi);
+    SetLength(multi^.Requests, Length(Writes));
+    for i:=0 to High(Writes) do begin
+      //cada item e' um pedido de escrita por scan completo, igual ao de ScanWrite: e' assim
+      //que o resultado chega ao tag pelo mesmo caminho de sempre.
+      //each item is a complete scan write request, the same as ScanWrite's: that is how the
+      //result reaches the tag through the usual path.
+      if FScanWriteID=$FFFFFFFF then
+         FScanWriteID := 1
+      else
+         inc(FScanWriteID);
+
+      New(pkg);
+      FillByte(pkg^,SizeOf(Pkg^),0);
+      pkg^.Tag:=Writes[i].Tag;
+      pkg^.Tag.Path:=Writes[i].Tag.Path;
+      pkg^.Tag.ID:=FScanWriteID;
+      pkg^.Values := Writes[i].Values;
+      pkg^.RequestResult:=ioNone;
+      pkg^.ClkMonotonicTStamp:=GetTickCount64;
+      multi^.Requests[i] := pkg;
+      if i=0 then
+        Result := FScanWriteID;
+    end;
+
+    if (PScanReadThread<>nil) then begin
+      PScanReadThread.ScanMultiWrite(multi);
+      CrossThreadSwitch;
+    end else begin
+      for i:=0 to High(multi^.Requests) do
+        Dispose(multi^.Requests[i]);
+      SetLength(multi^.Requests, 0);
+      Dispose(multi);
+      Result := 0;
+    end;
+  finally
+    PCallersCS.Leave;
+  end;
+end;
+
 function TProtocolDriver.LiteralTagAddress(aTag: TTag; aBlockTag: TTag):AnsiString;
 begin
   Result:='';
@@ -1312,6 +1491,44 @@ begin
     FWriteCS.Leave;
     FPause.SetEvent;
   end;
+end;
+
+procedure TProtocolDriver.SafeScanMultiWrite(const Requests:TScanReqRecArray);
+var
+  Writes:TMultiWriteArray;
+  i:LongInt;
+begin
+  if GetIsReadOnly then begin
+    for i:=0 to High(Requests) do
+      Requests[i]^.RequestResult := ioReadOnlyProtocol;
+    exit;
+  end;
+
+  SetLength(Writes, Length(Requests));
+  for i:=0 to High(Requests) do begin
+    Writes[i].Tag := Requests[i]^.Tag;
+    Writes[i].Values := Requests[i]^.Values;
+    Writes[i].Result := ioNone;
+  end;
+
+  try
+    //tenta entrar no Mutex
+    //try enter on mutex
+    while not FPause.ResetEvent do
+      CrossThreadSwitch;
+
+    FWriteCS.Enter;
+    FReadCS.Enter;
+
+    DoMultiWrite(Writes, false);
+  finally
+    FReadCS.Leave;
+    FWriteCS.Leave;
+    FPause.SetEvent;
+  end;
+
+  for i:=0 to High(Requests) do
+    Requests[i]^.RequestResult := Writes[i].Result;
 end;
 
 function  TProtocolDriver.SafeSingleScanRead(var TagRec:TTagRec; var values:TArrayOfDouble):TProtocolIOResult;

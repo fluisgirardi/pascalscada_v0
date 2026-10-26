@@ -50,6 +50,7 @@ examples/**/link*.res
 /examples/laz_security_webserver_WinCC/client/project1
 /examples/laz_s7commplus_phase1_test/s7commplus_phase1_test
 /examples/laz_s7commplus_phase2_test/s7commplus_batch_test
+/examples/laz_s7commplus_phase2_test/s7commplus_basemultiwrite_test
 /examples/laz_s7commplus_phase2_test/s7commplus_dedup_test
 /examples/laz_s7commplus_phase2_test/s7commplus_dl_replay_test
 /examples/laz_s7commplus_phase2_test/s7commplus_listdbs_test
