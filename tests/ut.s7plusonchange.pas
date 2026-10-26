@@ -75,6 +75,8 @@ type
     procedure ACompositeMemberOnlyChangesItsOwnBytes;
     procedure ACompositeKeepsTheMembersThatDidNotChange;
     procedure LosingTheSessionFlagsTheTagAndForgetsTheIds;
+    procedure TheRequestAndScanLimitsHaveTheirDefaults;
+    procedure TheLimitsCannotBeSetBelowOne;
   end;
 
 implementation
@@ -320,6 +322,27 @@ begin
   Notify([Value(1, '02')], [], 900);
   R := FDriver.ValueOf('DB4.Var1');
   AssertEquals('still failed', Ord(ioCommError), Ord(R.LastQueryResult));
+end;
+
+procedure TTestS7PlusOnChange.TheRequestAndScanLimitsHaveTheirDefaults;
+begin
+  //100 items per request is what a PLC was measured to accept; a subscription is bounded by
+  //size (~2000 items measured) so it gets a conservative 500
+  AssertEquals('items per request', 100, FDriver.MaxItemsPerRequest);
+  AssertEquals('tags per scan round', 500, FDriver.MaxTagsPerScan);
+  AssertEquals('items per subscription', 500, FDriver.MaxItemsPerSubscription);
+end;
+
+procedure TTestS7PlusOnChange.TheLimitsCannotBeSetBelowOne;
+begin
+  FDriver.MaxItemsPerRequest := 0;
+  FDriver.MaxTagsPerScan := -3;
+  FDriver.MaxItemsPerSubscription := 0;
+  AssertEquals('items per request', 1, FDriver.MaxItemsPerRequest);
+  AssertEquals('tags per scan round', 1, FDriver.MaxTagsPerScan);
+  AssertEquals('items per subscription', 1, FDriver.MaxItemsPerSubscription);
+  FDriver.MaxItemsPerRequest := 250;
+  AssertEquals('and a larger one is kept', 250, FDriver.MaxItemsPerRequest);
 end;
 
 initialization

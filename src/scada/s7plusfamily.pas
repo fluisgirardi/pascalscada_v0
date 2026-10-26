@@ -140,9 +140,13 @@ type
     FSubResetPending:Boolean; //set by whoever notices the session is gone, consumed by the scan thread
     FSubCycleMs:Integer;
     FSubCreditLimit:SmallInt;
+    FMaxItemsPerRequest, FMaxTagsPerScan, FMaxItemsPerSubscription:Integer;
 
     function GetUseTLS:Boolean;
     procedure SetUseTLS(AValue:Boolean);
+    procedure SetMaxItemsPerRequest(AValue:Integer);
+    procedure SetMaxTagsPerScan(AValue:Integer);
+    procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
     procedure SetExploreDelayMs(AValue:Integer);
     function EnsureConnected:Boolean;
@@ -279,6 +283,22 @@ type
     //: S7-1200/1500 firmware from TIA Portal V15+ for anything beyond the initial
     //: handshake. Default true; set to false only for known-legacy V1-only firmware.
     property UseTLS:Boolean read GetUseTLS write SetUseTLS default true;
+    //: Most items sent to the PLC in ONE read or write request. A bigger batch (many tags due at
+    //: once, a WriteMultipleSymbolic with many items) is split into several requests, so this
+    //: bounds the request, not how many tags a scan can serve. Default 100: a PLC refuses
+    //: requests with more items than it supports (101 was refused when measured on a PLCSim; the
+    //: protocol documentation gives no figure, so check the PLC at hand before raising it).
+    property MaxItemsPerRequest:Integer read FMaxItemsPerRequest write SetMaxItemsPerRequest default S7PlusDefaultMaxItemsPerRequest;
+    //: Most tags read in ONE scan round (each round = the requests needed for that many tags).
+    //: Tags beyond it stay due and are served by the next round, so this only paces catch-up
+    //: after a burst (right after connecting, for instance) and bounds how long a round holds
+    //: the connection; it never drops a tag. A "whole DB" tag counts as one. Default 500.
+    property MaxTagsPerScan:Integer read FMaxTagsPerScan write SetMaxTagsPerScan default 500;
+    //: Most items in ONE subscription (one CreateObject request, and the size of its first
+    //: notification). Tags beyond it get a subscription of their own. Default 500. Unlike the
+    //: request limit this one is about size: a PLCSim took 2000 two-LID items (~32 KB) and refused
+    //: 2005, so how many fit depends on how long the tags' LID paths are.
+    property MaxItemsPerSubscription:Integer read FMaxItemsPerSubscription write SetMaxItemsPerSubscription default 500;
     //: Sampling cycle, in milliseconds, of the subscriptions that deliver tags whose
     //: RefreshTime is 0 (on change). The PLC reports nothing faster than this; the
     //: lowest value seen to work is 100.
@@ -313,6 +333,9 @@ begin
   FUseTLS := true;
   FSubCycleMs := 100;
   FSubCreditLimit := 10;
+  FMaxItemsPerRequest := S7PlusDefaultMaxItemsPerRequest;
+  FMaxTagsPerScan := 500;
+  FMaxItemsPerSubscription := 500;
   FSubNextRefId := 1;
 end;
 
@@ -345,6 +368,26 @@ begin
     FConnection.UseTLS := AValue;
 end;
 
+procedure TS7CommPlusDriver.SetMaxItemsPerRequest(AValue:Integer);
+begin
+  if AValue<1 then AValue := 1;
+  FMaxItemsPerRequest := AValue;
+  if FConnection<>nil then
+    FConnection.MaxItemsPerRequest := AValue;
+end;
+
+procedure TS7CommPlusDriver.SetMaxTagsPerScan(AValue:Integer);
+begin
+  if AValue<1 then AValue := 1;
+  FMaxTagsPerScan := AValue;
+end;
+
+procedure TS7CommPlusDriver.SetMaxItemsPerSubscription(AValue:Integer);
+begin
+  if AValue<1 then AValue := 1;
+  FMaxItemsPerSubscription := AValue;
+end;
+
 function TS7CommPlusDriver.GetExploreDelayMs:Integer;
 begin
   Result := FExploreDelayMs;
@@ -369,6 +412,7 @@ begin
     FConnection.OnDebug := ConnDebug;
     FConnection.UseTLS := FUseTLS;
     FConnection.ExploreDelayMs := FExploreDelayMs;
+    FConnection.MaxItemsPerRequest := FMaxItemsPerRequest;
   end;
 
   WasConnected := FConnection.Connected;
@@ -798,13 +842,6 @@ end;
 
 procedure TS7CommPlusDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 const
-  //Caps how many due tags get batched into a single GetMultiVariables request. Bounds
-  //worst-case request/response size if a large burst of tags all come due at once (e.g.
-  //right after connecting); anything past the cap is still overdue and gets swept up on
-  //the very next tick(s), so this only paces catch-up, it never drops a tag. A composite
-  //("whole DB") entry counts as just one against this cap even though it expands into many
-  //wire items below - it's still a single logical tag coming due.
-  MaxBatchSize = 50;
   //How often an on-change tag is polled when its subscription could not be created.
   SubFallbackPollMs = 1000;
 type
@@ -871,7 +908,7 @@ begin
       if (FScanList[i].LastScanTimeStamp=0) or (Elapsed>=0) then begin
         SetLength(DueIndices, Length(DueIndices)+1);
         DueIndices[High(DueIndices)] := i;
-        if Length(DueIndices)>=MaxBatchSize then break;
+        if Length(DueIndices)>=FMaxTagsPerScan then break;
       end;
     end;
 
@@ -924,7 +961,10 @@ begin
     FScanList[DueIndices[i]].LastResult := ioOk;
   end;
 
-  if not ok then begin
+  //ReadMultipleSymbolic splits the batch into requests of MaxItemsPerRequest items; when one
+  //fails, the items of the requests before it still hold their data and every other item is
+  //not Ok - the per-item loop below turns exactly those into failed reads.
+  if (not ok) and (Length(Results)<>Length(Items)) then begin
     for i:=0 to High(DueIndices) do
       FScanList[DueIndices[i]].LastResult := ioCommError;
     exit;
@@ -1034,7 +1074,6 @@ end;
 //: left silent.
 procedure TS7CommPlusDriver.ManageSubscriptions(Now_:QWord);
 const
-  MaxItemsPerSubscription = 50;
   MaxCreateAttempts = 3;
   RetryDelayMs = 2000;
 var
@@ -1070,7 +1109,7 @@ begin
     k := FirstPending;
     while k<=High(Pending) do begin
       Idx := Pending[k];
-      if (Length(Items)>0) and (Length(Items)+EntryItemCount(Idx)>MaxItemsPerSubscription) then break;
+      if (Length(Items)>0) and (Length(Items)+EntryItemCount(Idx)>FMaxItemsPerSubscription) then break;
       n := Length(Items);
       SetLength(Items, n+EntryItemCount(Idx));
       if FScanList[Idx].IsComposite then begin

@@ -37,6 +37,11 @@ uses
   S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
   S7PlusHarpoLegitimate;
 
+const
+  //: Default of TS7PlusConnection.MaxItemsPerRequest: the largest number of items a PLC took in
+  //: one Get/SetMultiVariables request when measured (101 was refused with an error code).
+  S7PlusDefaultMaxItemsPerRequest = 100;
+
 type
   ES7PlusError = class(Exception);
 
@@ -187,6 +192,8 @@ type
     FTypeInfoCached:Boolean;
     FTypeInfoObjects:TS7PlusObjectArray;
     FExploreDelayMs:Integer;
+    FMaxItemsPerRequest:Integer;
+    procedure SetMaxItemsPerRequest(AValue:Integer);
 
     function EnsureTypeInfoObjects:Boolean;
     //: Reads LID=1 of a DB to get its type-info RID (0 if the DB has no readable value) -
@@ -348,6 +355,15 @@ type
     //: Receives the next frame that is a reply (not a system event, not a notification:
     //: those are skipped or, for notifications, queued for PollNotification).
     function RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
+    //: Sends one S7CommPlus message of the given version, split into fragments that fit the
+    //: PDU (S7PlusMaxFragmentSize): each fragment is [$72][version][length] + its share of Body,
+    //: sent as a packet of its own, and only the last one is followed by the trailer
+    //: [$72][version][0][0] - as the reference driver does (SendS7plusPDUdata).
+    function SendFragmented(Version:Byte; const Body:TBytes):Boolean;
+    //: Frame is a received packet. When it is the first fragment of a message (big, and with no
+    //: trailer after its data) takes in the following fragments and replaces Frame with ONE frame
+    //: holding all of the message's data, so callers never see a fragmented message.
+    function CompleteFragments(var Frame:TBytes):Boolean;
     //: True when SendRequest puts the real IntegrityId into the request (V2+ sessions with
     //: tracking enabled) - the payload builders must then NOT carry an IntegrityId of their own.
     function IntegrityIdIsSpliced:Boolean;
@@ -426,8 +442,8 @@ type
     //: Results[i].Ok, since the PLC can report individual items as failed within an
     //: otherwise-successful batch (e.g. one bad LID among several good ones).
     function ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):Boolean;
-    //: Writes several symbolic items (any DBs/areas) in as few requests as possible (50 items
-    //: each). Result=false means a request failed as a whole (comm error, or the PLC rejected
+    //: Writes several symbolic items (any DBs/areas) in as few requests as possible
+    //: (MaxItemsPerRequest items each). Result=false means a request failed as a whole (comm error, or the PLC rejected
     //: it outright): Results then holds what the earlier requests did, and the items of the
     //: failed one and after it are not Ok - some items may already have been written, check
     //: Results. On Result=true each item's own Results[i].Ok says whether the PLC took it.
@@ -552,6 +568,12 @@ type
     //: whether the PLC needs breathing room between the preceding GetMultiVariables
     //: call and Explore. Default 0 (no delay).
     property ExploreDelayMs:Integer read FExploreDelayMs write FExploreDelayMs;
+    //: Most items sent in ONE GetMultiVariables/SetMultiVariables request; ReadMultipleSymbolic
+    //: and WriteMultipleSymbolic split bigger batches into several requests. Default 100
+    //: (S7PlusDefaultMaxItemsPerRequest): the PLC refuses a request with 101 or more items with
+    //: an error code - measured on a PLCSim; the reference drivers do not document a limit, so
+    //: raise it only after checking the PLC at hand. Minimum 1.
+    property MaxItemsPerRequest:Integer read FMaxItemsPerRequest write SetMaxItemsPerRequest;
   end;
 
 //: Formats bytes as a space-separated hex string, for debug traces.
@@ -626,9 +648,16 @@ end;
 
 { TS7PlusConnection }
 
+procedure TS7PlusConnection.SetMaxItemsPerRequest(AValue:Integer);
+begin
+  if AValue<1 then AValue := 1;
+  FMaxItemsPerRequest := AValue;
+end;
+
 constructor TS7PlusConnection.Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
 begin
   inherited Create;
+  FMaxItemsPerRequest := S7PlusDefaultMaxItemsPerRequest;
   FCommPort := ACommPort;
   FDriverID := ADriverID;
   FSequenceNumber := 0;
@@ -2005,6 +2034,13 @@ end;
 //===========================================================================
 
 const
+  //Largest S7CommPlus data share of one fragment: the 1024 byte PDU requested at COTP connect
+  //(CotpConnect) minus 4 TPKT, 3 ISO, 5+17 of TLS record overhead, 4 of S7CommPlus header and
+  //4 of trailer (the trailer has to fit into the last PDU) - the reference driver's MaxSize.
+  //A request bigger than this in ONE packet makes the PLC drop the connection.
+  S7PlusMaxFragmentSize = 1024 - 4 - 3 - 5 - 17 - 4 - 4;
+  //A received fragment this big, with no trailer after it, is not the end of the message.
+  S7PlusFullFragmentMin = 900;
   S7PlusVersion_SystemEvent = $FE;
   S7PlusSystemEventReturnValueId = $9D71; //: 40305 - matches python-snap7's _SYSTEM_EVENT_RETURN_VALUE_ID.
 
@@ -2134,6 +2170,65 @@ begin
   Result := FSubscriptionsContainerObjectId<>0;
 end;
 
+function TS7PlusConnection.SendFragmented(Version:Byte; const Body:TBytes):Boolean;
+var
+  Pos, N:Integer;
+  Fragment:TBytes;
+begin
+  Result := false;
+  Pos := 0;
+  repeat
+    N := Length(Body)-Pos;
+    if N>S7PlusMaxFragmentSize then N := S7PlusMaxFragmentSize;
+    Fragment := BytesConcat(EncodeS7PlusHeader(Version, N), BytesCopy(Body, Pos, N));
+    Inc(Pos, N);
+    if Pos>=Length(Body) then
+      Fragment := BytesConcat(Fragment, EncodeS7PlusHeader(Version, 0)); //trailer, last fragment only
+    if not LogicalSend(Fragment) then exit;
+  until Pos>=Length(Body);
+  Result := true;
+end;
+
+function TS7PlusConnection.CompleteFragments(var Frame:TBytes):Boolean;
+var
+  Consumed, Consumed2:Integer;
+  Version, Version2:Byte;
+  DataLen, DataLen2:Word;
+  AllData, NextFrame:TBytes;
+  More:Boolean;
+begin
+  Result := true;
+  if Length(Frame)<4 then exit;
+  Consumed := DecodeS7PlusHeader(Frame, 0, Version, DataLen);
+  if Version=S7PlusVersion_SystemEvent then exit;
+  //Only a big fragment with nothing after its data can be a first fragment: the last one of a
+  //message is always followed by the trailer, and ordinary short frames stay untouched.
+  if (Length(Frame)<>Consumed+DataLen) or (DataLen<S7PlusFullFragmentMin) then exit;
+
+  AllData := BytesCopy(Frame, Consumed, DataLen);
+  repeat
+    if LogicalRecv(NextFrame)<>iorOK then begin
+      Debug('CompleteFragments: falha ao ler um fragmento seguinte');
+      Result := false;
+      exit;
+    end;
+    if Length(NextFrame)<4 then begin
+      Result := false;
+      exit;
+    end;
+    Consumed2 := DecodeS7PlusHeader(NextFrame, 0, Version2, DataLen2);
+    AllData := BytesConcat(AllData, BytesCopy(NextFrame, Consumed2, DataLen2));
+    More := (Length(NextFrame)=Consumed2+DataLen2) and (DataLen2>=S7PlusFullFragmentMin);
+  until not More;
+  if Length(AllData)>$FFFF then begin
+    Debug(Format('CompleteFragments: mensagem fragmentada grande demais (%d bytes)',[Length(AllData)]));
+    Result := false;
+    exit;
+  end;
+  Debug(Format('CompleteFragments: mensagem remontada de fragmentos (%d bytes)',[Length(AllData)]));
+  Frame := BytesConcat(EncodeS7PlusHeader(Version, Length(AllData)), AllData);
+end;
+
 function TS7PlusConnection.RecvApplicationFrame(out ResponseFrame:TBytes):Boolean;
 const
   MaxSystemEvents = 8;
@@ -2169,6 +2264,10 @@ begin
       continue;
     end;
 
+    //A message bigger than one PDU arrives in fragments (see CompleteFragments).
+    if not CompleteFragments(ResponseFrame) then exit;
+    Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
+
     //An unsolicited notification can show up where this request's reply was expected.
     //It is not the reply: keep it for PollNotification and go on waiting.
     AppBody := FrameApplicationBody(ResponseFrame, Version);
@@ -2194,7 +2293,7 @@ var
   Seq:Word;
   TransportFlags:Byte;
   Header, ActualPayload, Request, Frame, ResponseFrame, Response, IntegrityBytes, FrameData:TBytes;
-  Version:Byte;
+  Version, SendVersion:Byte;
   DataLen:Word;
   Consumed, HashLen, c:Integer;
   IsReadFunc:Boolean;
@@ -2246,16 +2345,15 @@ begin
   if Length(FHarpoSessionKey)>0 then begin
     FrameData := BytesConcat(BytesOf([$20]), S7PlusHMACSHA256(Copy(FHarpoSessionKey,0,24), Request));
     FrameData := BytesConcat(FrameData, Request);
-    Frame := BytesConcat(EncodeS7PlusHeader(S7PlusVersion_V3, Length(FrameData)), FrameData);
-    Frame := BytesConcat(Frame, EncodeS7PlusHeader(S7PlusVersion_V3, 0)); //trailer
+    SendVersion := S7PlusVersion_V3;
   end else begin
-    Frame := BytesConcat(EncodeS7PlusHeader(FProtocolVersion, Length(Request)), Request);
-    Frame := BytesConcat(Frame, EncodeS7PlusHeader(FProtocolVersion, 0)); //trailer
+    FrameData := Request;
+    SendVersion := FProtocolVersion;
   end;
 
   Debug(Format('SendRequest: functionCode=$%.4x seq=%d',[FunctionCode,Seq])+' payload='+S7PlusHexStr(ActualPayload));
 
-  if not LogicalSend(Frame) then begin
+  if not SendFragmented(SendVersion, FrameData) then begin
     Debug('SendRequest: falha ao enviar');
     exit;
   end;
@@ -3086,6 +3184,7 @@ begin
   end;
   if LogicalRecv(ResponseFrame)<>iorOK then exit;
   if Length(ResponseFrame)<4 then exit;
+  if not CompleteFragments(ResponseFrame) then exit;
   Consumed := DecodeS7PlusHeader(ResponseFrame, 0, Version, DataLen);
   FrameBody := StripV3HashPrefix(Version, BytesCopy(ResponseFrame, Consumed, DataLen));
   Result := true;
@@ -3122,6 +3221,10 @@ begin
         exit;
       end;
       if Length(Frame)<4 then exit;
+      if not CompleteFragments(Frame) then begin
+        Result := false;
+        exit;
+      end;
       Consumed := DecodeS7PlusHeader(Frame, 0, Version, DataLen);
       if Version=S7PlusVersion_SystemEvent then begin
         if not IsNonFatalSystemEvent(BytesCopy(Frame, Consumed, DataLen)) then begin
@@ -3497,13 +3600,36 @@ end;
 
 function TS7PlusConnection.ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):Boolean;
 var
+  Chunk:TS7PlusMultiReadItemArray;
+  ChunkResults:TS7PlusMultiReadResultArray;
   Payload, Resp:TBytes;
+  First, N, i:Integer;
 begin
-  SetLength(Results, 0);
-  if Length(Items)=0 then exit(true);
-  Payload := BuildMultiSymbolicReadPayload(Items);
-  if not SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp) then exit(false);
-  Result := ParseMultiReadResponse(Resp, Length(Items), Results);
+  SetLength(Results, Length(Items));
+  for i:=0 to High(Items) do begin
+    SetLength(Results[i].Data, 0);
+    Results[i].Ok := false;
+  end;
+  Result := true;
+
+  First := 0;
+  while First<Length(Items) do begin
+    N := Length(Items)-First;
+    if N>FMaxItemsPerRequest then N := FMaxItemsPerRequest;
+    SetLength(Chunk, N);
+    for i:=0 to N-1 do
+      Chunk[i] := Items[First+i];
+
+    Payload := BuildMultiSymbolicReadPayload(Chunk);
+    if (not SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp)) or
+       (not ParseMultiReadResponse(Resp, N, ChunkResults)) then begin
+      Result := false;
+      exit; //the items of this request and after it stay not Ok; earlier ones keep their data
+    end;
+    for i:=0 to N-1 do
+      Results[First+i] := ChunkResults[i];
+    Inc(First, N);
+  end;
 end;
 
 function TS7PlusConnection.BuildMultiSymbolicWritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
@@ -3619,8 +3745,6 @@ begin
 end;
 
 function TS7PlusConnection.WriteMultipleSymbolic(const Items:TS7PlusMultiWriteItemArray; out Results:TS7PlusMultiWriteResultArray):Boolean;
-const
-  MaxItemsPerRequest = 50;
 var
   Chunk:TS7PlusMultiWriteItemArray;
   ChunkResults:TS7PlusMultiWriteResultArray;
@@ -3637,7 +3761,7 @@ begin
   First := 0;
   while First<Length(Items) do begin
     N := Length(Items)-First;
-    if N>MaxItemsPerRequest then N := MaxItemsPerRequest;
+    if N>FMaxItemsPerRequest then N := FMaxItemsPerRequest;
     SetLength(Chunk, N);
     for i:=0 to N-1 do
       Chunk[i] := Items[First+i];
