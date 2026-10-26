@@ -47,6 +47,8 @@ type
   public
     function NextReply(out Frame:TBytes):Boolean;
     procedure SessionIsUp;
+    function WritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
+    function WriteReply(const Response:TBytes; N:Integer; out Results:TS7PlusMultiWriteResultArray):Boolean;
   end;
 
   { TTestS7PlusNotification }
@@ -92,6 +94,34 @@ type
     procedure DisconnectingForgetsTheQueue;
   end;
 
+  { TTestS7PlusMultiWrite }
+
+  TTestS7PlusMultiWrite = class(TTestCase)
+  private
+    FPort:TFakeCommPort;
+    FConn:TS7ConnectionProbe;
+    function Item(DB, Start:Integer; const DataHex:String; SoftType:Byte):TS7PlusMultiWriteItem;
+    procedure QueueReply(const PayloadHex:String);
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
+  published
+    procedure OneItemIsTheSingleWritePayloadByteForByte;
+    procedure MixedItemsMatchTheUpstreamEncoderByteForByte;
+    procedure AReplyWithNoErrorListTakesEveryItem;
+    procedure ErrorsInTheReplyMarkOnlyTheirItems;
+    procedure ASetReturnValueWithNoItemListFailsTheWholeBatch;
+    procedure ASetReturnValueWithAnItemListIsAPartialSuccess;
+    procedure TheRealPLCReplyForOneBadItemIsAPartialSuccess;
+    procedure AnErrorTextObjectAfterTheReturnValueIsNotAnItemList;
+    procedure ErrorsForItemsOutOfRangeAreIgnored;
+    procedure ATruncatedReplyDoesNotRaise;
+    procedure AnEmptyBatchSendsNothing;
+    procedure WritingGoesOutInOneRequestAndReportsPerItem;
+    procedure MoreThanFiftyItemsGoOutInSeveralRequests;
+    procedure AFailedLaterRequestKeepsWhatEarlierOnesDid;
+  end;
+
 implementation
 
 { TS7ConnectionProbe }
@@ -104,6 +134,16 @@ end;
 procedure TS7ConnectionProbe.SessionIsUp;
 begin
   AssumeConnected;
+end;
+
+function TS7ConnectionProbe.WritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
+begin
+  Result := BuildMultiSymbolicWritePayload(Items);
+end;
+
+function TS7ConnectionProbe.WriteReply(const Response:TBytes; N:Integer; out Results:TS7PlusMultiWriteResultArray):Boolean;
+begin
+  Result := ParseMultiWriteResponse(Response, N, Results);
 end;
 
 const
@@ -252,6 +292,25 @@ begin
   AssertBytesEqual('ref 7', BytesOf('01000006278ab08c18c456364dfc0dd0800000000f000000'), Values[0].Data);
   AssertBytesEqual('ref 8', BytesOf('00'), Values[1].Data);
   AssertBytesEqual('ref 9', BytesOf('00'), Values[2].Data);
+end;
+
+//One TPKT/COTP frame carrying one S7CommPlus message of the given version.
+function TpktOf(Version:Byte; const Body:TBytes):TBytes;
+var
+  Msg:TBytes;
+  Len, i:Integer;
+begin
+  Len := Length(Body);
+  SetLength(Msg, 4+Len+4);
+  Msg[0] := $72; Msg[1] := Version; Msg[2] := Len shr 8; Msg[3] := Len and $FF;
+  for i:=0 to Len-1 do
+    Msg[4+i] := Body[i];
+  Msg[4+Len] := $72; Msg[5+Len] := Version; Msg[6+Len] := 0; Msg[7+Len] := 0;
+  SetLength(Result, 7+Length(Msg));
+  Result[0] := 3; Result[1] := 0; Result[2] := Length(Result) shr 8; Result[3] := Length(Result) and $FF;
+  Result[4] := 2; Result[5] := $F0; Result[6] := $80;
+  for i:=0 to High(Msg) do
+    Result[7+i] := Msg[i];
 end;
 
 const
@@ -435,8 +494,253 @@ begin
   AssertEquals('forgotten', 0, FConn.PendingNotificationCount);
 end;
 
+const
+  //Payloads built by python-snap7's _build_write_payload (the last version before the
+  //S7CommPlus module moved to its own library), for items (db, start, data, type):
+  //  one:   (4, 0, 4242 as DINT)
+  //  mixed: (4,0,-5 DINT) (4,4,300 INT) (2,8,1.5 REAL) (4,12,TRUE BOOL) (1,16,70000 UDINT) (4,20,127 USINT)
+  //Upstream's tail is  <object qualifier><4 zero bytes>; ours has one more VLQ(1) between the
+  //two, the closing the single-item write has always had (validated against real hardware).
+  UPSTREAM_ONE =
+    '0000000001060088d0b880040393760104010008a112';
+  UPSTREAM_MIXED =
+    '0000000006240088d0b8800403937601040088d0b8800403937605020088d0b8800203937609040088d0b880040393760d01' +
+    '0088d0b8800103937611040088d0b88004039376150101' +
+    '00087b020007012c03000e3fc000000400010105000484a2700600027f';
+  //(the closing $00 of the value list is the first byte of the tails below)
+  //object qualifier + trailing padding, as upstream ends the payload
+  UPSTREAM_TAIL = '00000004e88969001200000000896a001300896b0004000000000000';
+  //ours: the same qualifier, then VLQ(1), then the padding
+  OUR_TAIL = '00000004e88969001200000000896a001300896b00040000' + '01' + '00000000';
+
+{ TTestS7PlusMultiWrite }
+
+procedure TTestS7PlusMultiWrite.SetUp;
+begin
+  inherited SetUp;
+  FPort := TFakeCommPort.Create(nil);
+  FPort.Active := true;
+  FConn := TS7ConnectionProbe.Create(FPort, 1);
+  FConn.UseTLS := false;
+  FConn.SessionIsUp;
+end;
+
+procedure TTestS7PlusMultiWrite.TearDown;
+begin
+  FConn.Free;
+  FPort.Free;
+  inherited TearDown;
+end;
+
+function TTestS7PlusMultiWrite.Item(DB, Start:Integer; const DataHex:String; SoftType:Byte):TS7PlusMultiWriteItem;
+begin
+  Result.AccessArea := $8A0E0000 + Cardinal(DB);
+  SetLength(Result.Lids, 2);
+  Result.Lids[0] := Start+1;
+  Result.Lids[1] := Length(BytesOf(DataHex));
+  Result.Data := BytesOf(DataHex);
+  Result.SoftDataType := SoftType;
+end;
+
+//A reply: the 10 byte response header the connection strips, then the payload.
+procedure TTestS7PlusMultiWrite.QueueReply(const PayloadHex:String);
+begin
+  FPort.QueueResponse(TpktOf(S7PlusVersion_V2, BytesOf('32 0000 0000 0000 0001 34 ' + PayloadHex)));
+end;
+
+procedure TTestS7PlusMultiWrite.OneItemIsTheSingleWritePayloadByteForByte;
+var
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Items, 1);
+  Items[0] := Item(4, 0, '00 00 10 92', 7{DINT});
+  AssertBytesEqual('one item', BytesOf(UPSTREAM_ONE + OUR_TAIL), FConn.WritePayload(Items));
+end;
+
+procedure TTestS7PlusMultiWrite.MixedItemsMatchTheUpstreamEncoderByteForByte;
+var
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Items, 6);
+  Items[0] := Item(4, 0,  'FF FF FF FB', 7{DINT});
+  Items[1] := Item(4, 4,  '01 2C',       5{INT});
+  Items[2] := Item(2, 8,  '3F C0 00 00', 8{REAL});
+  Items[3] := Item(4, 12, '01',          1{BOOL});
+  Items[4] := Item(1, 16, '00 01 11 70', 54{UDINT});
+  Items[5] := Item(4, 20, '7F',          52{USINT});
+  AssertBytesEqual('mixed', BytesOf(UPSTREAM_MIXED + OUR_TAIL), FConn.WritePayload(Items));
+end;
+
+procedure TTestS7PlusMultiWrite.AReplyWithNoErrorListTakesEveryItem;
+var
+  R:TS7PlusMultiWriteResultArray;
+  i:Integer;
+begin
+  AssertTrue('parsed', FConn.WriteReply(BytesOf('00 00'), 3, R));
+  AssertEquals('count', 3, Length(R));
+  for i:=0 to 2 do
+    AssertTrue('item '+IntToStr(i), R[i].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.ErrorsInTheReplyMarkOnlyTheirItems;
+var
+  R:TS7PlusMultiWriteResultArray;
+begin
+  //ReturnValue 0, then item 2 failed with error 5, item 3 with error 300 ($82 $2C), end
+  AssertTrue('parsed', FConn.WriteReply(BytesOf('00 02 05 03 82 2C 00'), 4, R));
+  AssertTrue('item 1 ok', R[0].Ok);
+  AssertFalse('item 2 failed', R[1].Ok);
+  AssertEquals('item 2 error', 5, R[1].ErrorValue);
+  AssertFalse('item 3 failed', R[2].Ok);
+  AssertEquals('item 3 error', 300, R[2].ErrorValue);
+  AssertTrue('item 4 ok', R[3].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.ASetReturnValueWithNoItemListFailsTheWholeBatch;
+var
+  R:TS7PlusMultiWriteResultArray;
+  i:Integer;
+begin
+  AssertFalse('rejected as a whole', FConn.WriteReply(BytesOf('81 00'), 2, R));
+  for i:=0 to 1 do
+    AssertFalse('item '+IntToStr(i)+' not taken', R[i].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.ASetReturnValueWithAnItemListIsAPartialSuccess;
+var
+  R:TS7PlusMultiWriteResultArray;
+begin
+  //ReturnValue 128, then item 2 refused with error 5, end of list
+  AssertTrue('partial success', FConn.WriteReply(BytesOf('81 00 02 05 00'), 3, R));
+  AssertTrue('item 1 written', R[0].Ok);
+  AssertFalse('item 2 refused', R[1].Ok);
+  AssertEquals('item 2 error', 5, R[1].ErrorValue);
+  AssertTrue('item 3 written', R[2].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.TheRealPLCReplyForOneBadItemIsAPartialSuccess;
+var
+  R:TS7PlusMultiWriteResultArray;
+  i:Integer;
+begin
+  //Captured from a PLCSim: a batch of 6 whose 6th item had a LID that does not exist. The
+  //ReturnValue is an error, the list names item 6, and items 1-5 had been written.
+  AssertTrue('partial success', FConn.WriteReply(
+    BytesOf('90 8B 90 80 80 83 C8 80 13 06 C0 D3 D1 80 80 A6 B9 FF 01 00 06 00 00 00 00'), 6, R));
+  for i:=0 to 4 do
+    AssertTrue('item '+IntToStr(i+1)+' written', R[i].Ok);
+  AssertFalse('item 6 refused', R[5].Ok);
+  AssertTrue('with an error value', R[5].ErrorValue<>0);
+end;
+
+procedure TTestS7PlusMultiWrite.AnErrorTextObjectAfterTheReturnValueIsNotAnItemList;
+var
+  R:TS7PlusMultiWriteResultArray;
+  i:Integer;
+begin
+  //ReturnValue, then a StartOfObject ($A1...) like the error texts PLCs send: not a list, so
+  //the whole request failed
+  AssertFalse('whole failure', FConn.WriteReply(BytesOf('81 00 A1 00 00 00 66 90 2B 10'), 3, R));
+  for i:=0 to 2 do
+    AssertFalse('item '+IntToStr(i+1), R[i].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.ErrorsForItemsOutOfRangeAreIgnored;
+var
+  R:TS7PlusMultiWriteResultArray;
+begin
+  AssertTrue('parsed', FConn.WriteReply(BytesOf('00 09 01 00'), 2, R));
+  AssertTrue('item 1', R[0].Ok);
+  AssertTrue('item 2', R[1].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.ATruncatedReplyDoesNotRaise;
+var
+  R:TS7PlusMultiWriteResultArray;
+begin
+  //item number with no error value after it
+  AssertTrue('parsed', FConn.WriteReply(BytesOf('00 02'), 3, R));
+  AssertEquals('count', 3, Length(R));
+  AssertFalse('empty reply is a failure', FConn.WriteReply(BytesOf(''), 3, R));
+end;
+
+procedure TTestS7PlusMultiWrite.AnEmptyBatchSendsNothing;
+var
+  R:TS7PlusMultiWriteResultArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Items, 0);
+  AssertTrue('ok', FConn.WriteMultipleSymbolic(Items, R));
+  AssertEquals('no results', 0, Length(R));
+  AssertEquals('nothing sent', 0, FPort.WriteCount);
+end;
+
+procedure TTestS7PlusMultiWrite.WritingGoesOutInOneRequestAndReportsPerItem;
+var
+  R:TS7PlusMultiWriteResultArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Items, 3);
+  Items[0] := Item(4, 0, '00 00 00 01', 7);
+  Items[1] := Item(4, 4, '00 00 00 02', 7);
+  Items[2] := Item(4, 8, '00 00 00 03', 7);
+  QueueReply('00 02 07 00'); //item 2 refused
+  AssertTrue('request ok', FConn.WriteMultipleSymbolic(Items, R));
+  AssertEquals('one request', 1, FPort.WriteCount);
+  AssertTrue('item 1', R[0].Ok);
+  AssertFalse('item 2', R[1].Ok);
+  AssertEquals('item 2 error', 7, R[1].ErrorValue);
+  AssertTrue('item 3', R[2].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.MoreThanFiftyItemsGoOutInSeveralRequests;
+var
+  R:TS7PlusMultiWriteResultArray;
+  Items:TS7PlusMultiWriteItemArray;
+  i:Integer;
+begin
+  SetLength(Items, 120);
+  for i:=0 to 119 do
+    Items[i] := Item(4, i*4, '00 00 00 01', 7);
+  QueueReply('00 00');
+  QueueReply('00 03 09 51 04 00'); //second request: its item 3 refused (error 9); "$51" is out of range
+  QueueReply('00 00');
+  AssertTrue('ok', FConn.WriteMultipleSymbolic(Items, R));
+  AssertEquals('three requests (50+50+20)', 3, FPort.WriteCount);
+  AssertEquals('results', 120, Length(R));
+  AssertTrue('item 1', R[0].Ok);
+  AssertTrue('item 50', R[49].Ok);
+  //the error list of the second request numbers items within THAT request: its item 3 is
+  //item 53 of the batch; the out of range number 81 must not touch anything
+  AssertFalse('item 3 of the second request', R[52].Ok);
+  AssertEquals('its error', 9, R[52].ErrorValue);
+  AssertTrue('neighbour before', R[51].Ok);
+  AssertTrue('neighbour after', R[53].Ok);
+  AssertTrue('item 100', R[99].Ok);
+  AssertTrue('last', R[119].Ok);
+end;
+
+procedure TTestS7PlusMultiWrite.AFailedLaterRequestKeepsWhatEarlierOnesDid;
+var
+  R:TS7PlusMultiWriteResultArray;
+  Items:TS7PlusMultiWriteItemArray;
+  i:Integer;
+begin
+  SetLength(Items, 60);
+  for i:=0 to 59 do
+    Items[i] := Item(4, i*4, '00 00 00 01', 7);
+  QueueReply('00 00');
+  QueueReply('81 00'); //the second request is rejected as a whole
+  AssertFalse('failed as a whole', FConn.WriteMultipleSymbolic(Items, R));
+  AssertEquals('results kept', 60, Length(R));
+  AssertTrue('first request took its items', R[0].Ok);
+  AssertTrue('first request took its items (last)', R[49].Ok);
+  AssertFalse('second request did not', R[50].Ok);
+end;
+
 initialization
   RegisterTest(TTestS7PlusNotification);
   RegisterTest(TTestS7PlusNotificationQueue);
+  RegisterTest(TTestS7PlusMultiWrite);
 
 end.

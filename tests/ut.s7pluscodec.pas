@@ -72,6 +72,14 @@ type
     procedure WritingANegativeDIntBecomesASignedVLQ;
     procedure WritingARealPassesTheBytesStraightThrough;
     procedure WritingABoolUsesTheLastByte;
+    procedure WritingAnIntIsTwoFixedBytesNotAVLQ;
+    procedure WritingANegativeIntIsTwoFixedBytes;
+    procedure WritingAUIntAndAWordAreTwoFixedBytes;
+    procedure WritingADWordIsFourFixedBytes;
+    procedure WritingALWordIsEightFixedBytes;
+    procedure AFixedWidthValueKeepsTheLowOrderBytes;
+    procedure AFixedWidthValueSmallerThanItsWidthIsLeftPadded;
+    procedure WritingAUDIntStillBecomesAnUnsignedVLQ;
     procedure WritingAStringUsesAnArrayOfUSInt;
     procedure WritingAnUnknownTypeFallsBackToAByteArray;
 
@@ -291,6 +299,60 @@ begin
   //SoftDataType 1 = BOOL: aproveita so o byte menos significativo
   AssertBytesEqual('bool', BytesOf('00 01 01'),
                    EncodeTypedWriteValue(1, BytesOf('00 01')));
+end;
+
+procedure TTestS7PlusCodec.WritingAnIntIsTwoFixedBytesNotAVLQ;
+begin
+  //SoftDataType 5 = INT: tipo $07, dois bytes fixos - 300 e' 01 2C, nao o VLQ 82 2C.
+  //Era VLQ ate' ser conferido com ValueInt da referencia (EncodeInt16) e com o
+  //encode_pvalue_typed do python-snap7; so DINT/LINT/UDINT/ULINT sao VLQ.
+  AssertBytesEqual('int 300', BytesOf('00 07 01 2C'),
+                   EncodeTypedWriteValue(5, BytesOf('01 2C')));
+end;
+
+procedure TTestS7PlusCodec.WritingANegativeIntIsTwoFixedBytes;
+begin
+  AssertBytesEqual('int -200', BytesOf('00 07 FF 38'),
+                   EncodeTypedWriteValue(5, BytesOf('FF 38')));
+end;
+
+procedure TTestS7PlusCodec.WritingAUIntAndAWordAreTwoFixedBytes;
+begin
+  AssertBytesEqual('uint', BytesOf('00 03 FF FF'), EncodeTypedWriteValue(53, BytesOf('FF FF')));
+  AssertBytesEqual('word', BytesOf('00 0B 12 34'), EncodeTypedWriteValue(4, BytesOf('12 34')));
+end;
+
+procedure TTestS7PlusCodec.WritingADWordIsFourFixedBytes;
+begin
+  AssertBytesEqual('dword', BytesOf('00 0C DE AD BE EF'), EncodeTypedWriteValue(6, BytesOf('DE AD BE EF')));
+end;
+
+procedure TTestS7PlusCodec.WritingALWordIsEightFixedBytes;
+begin
+  AssertBytesEqual('lword', BytesOf('00 0D 01 02 03 04 05 06 07 08'),
+                   EncodeTypedWriteValue(51, BytesOf('01 02 03 04 05 06 07 08')));
+end;
+
+procedure TTestS7PlusCodec.AFixedWidthValueKeepsTheLowOrderBytes;
+begin
+  //o buffer cru do tag pode ser maior que o tipo: vale o fim (big-endian)
+  AssertBytesEqual('int from 4 bytes', BytesOf('00 07 01 2C'),
+                   EncodeTypedWriteValue(5, BytesOf('00 00 01 2C')));
+end;
+
+procedure TTestS7PlusCodec.AFixedWidthValueSmallerThanItsWidthIsLeftPadded;
+begin
+  AssertBytesEqual('word from 1 byte', BytesOf('00 0B 00 7F'),
+                   EncodeTypedWriteValue(4, BytesOf('7F')));
+  AssertBytesEqual('word from nothing', BytesOf('00 0B 00 00'),
+                   EncodeTypedWriteValue(4, BytesOf('')));
+end;
+
+procedure TTestS7PlusCodec.WritingAUDIntStillBecomesAnUnsignedVLQ;
+begin
+  //SoftDataType 54 = UDINT: 300 vira VLQ 82 2C (tipo $04)
+  AssertBytesEqual('udint 300', BytesOf('00 04 82 2C'),
+                   EncodeTypedWriteValue(54, BytesOf('00 00 01 2C')));
 end;
 
 procedure TTestS7PlusCodec.WritingAStringUsesAnArrayOfUSInt;

@@ -72,6 +72,26 @@ type
   end;
   TS7PlusMultiReadResultArray = array of TS7PlusMultiReadResult;
 
+  //: One item of a batched write (WriteMultipleSymbolic): the same addressing as a read item,
+  //: plus the raw big-endian bytes to write and the target's SoftDataType (from BrowseDB), which
+  //: the PLC needs to accept the value - it is encoded as the target's own typed PValue, never as
+  //: a generic byte array (see EncodeTypedWriteValue).
+  TS7PlusMultiWriteItem = record
+    AccessArea:Cardinal;
+    Lids:TS7PlusLIDArray;
+    Data:TBytes;
+    SoftDataType:Byte;
+  end;
+  TS7PlusMultiWriteItemArray = array of TS7PlusMultiWriteItem;
+
+  //: One item's outcome of a batched write. Ok=false: the PLC refused that item (ErrorValue is
+  //: the code it gave) while the rest of the batch may have been written.
+  TS7PlusMultiWriteResult = record
+    Ok:Boolean;
+    ErrorValue:QWord;
+  end;
+  TS7PlusMultiWriteResultArray = array of TS7PlusMultiWriteResult;
+
   //: One value out of a parsed Notification (Core/Notification.cs): RefId is the same
   //: 1-based id BuildSubscriptionReferenceList assigned to the subscribed item, Data its
   //: raw bytes (same convention as TS7PlusMultiReadResult.Data).
@@ -331,6 +351,17 @@ type
     //: Marks the connection as established without a handshake. Only for tests, which feed
     //: frames through a fake port and never speak to a PLC.
     procedure AssumeConnected;
+    //: SetMultiVariables request payload for N symbolic items: the item count, the SUM of the
+    //: items' field counts, every item's address back-to-back, then [item number][typed value]
+    //: per item and a closing $00 - the same shape as the single-item write (N=1 is byte for
+    //: byte what BuildSymbolicPayload builds), as in the reference's _build_write_payload.
+    function BuildMultiSymbolicWritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
+    //: Reads a SetMultiVariables reply: the overall ReturnValue, then [ItemNr VLQ][ErrValue VLQ64]
+    //: pairs ended by ItemNr=0 (1-based, in request order) - as in the reference's
+    //: _parse_write_response, except that a nonzero ReturnValue followed by a well formed list
+    //: of failed items is a partial success (what a PLC really answers when one item of a
+    //: batch is bad; the other items are written). Result=false only for a whole-request failure.
+    function ParseMultiWriteResponse(const Response:TBytes; ItemCount:Integer; out Results:TS7PlusMultiWriteResultArray):Boolean;
   public
     constructor Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
     destructor Destroy; override;
@@ -390,6 +421,12 @@ type
     //: Results[i].Ok, since the PLC can report individual items as failed within an
     //: otherwise-successful batch (e.g. one bad LID among several good ones).
     function ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):Boolean;
+    //: Writes several symbolic items (any DBs/areas) in as few requests as possible (50 items
+    //: each). Result=false means a request failed as a whole (comm error, or the PLC rejected
+    //: it outright): Results then holds what the earlier requests did, and the items of the
+    //: failed one and after it are not Ok - some items may already have been written, check
+    //: Results. On Result=true each item's own Results[i].Ok says whether the PLC took it.
+    function WriteMultipleSymbolic(const Items:TS7PlusMultiWriteItemArray; out Results:TS7PlusMultiWriteResultArray):Boolean;
     //: Sends an EXPLORE request for ExploreId (a RID) and reassembles the (possibly
     //: multi-fragment) response payload.
     function Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
@@ -3441,6 +3478,153 @@ begin
   Payload := BuildMultiSymbolicReadPayload(Items);
   if not SendRequest(S7PlusFunc_GetMultiVariables, Payload, Resp) then exit(false);
   Result := ParseMultiReadResponse(Resp, Length(Items), Results);
+end;
+
+function TS7PlusConnection.BuildMultiSymbolicWritePayload(const Items:TS7PlusMultiWriteItemArray):TBytes;
+var
+  i:Integer;
+  AccessSubArea:Cardinal;
+  Addr:TS7PlusItemAddress;
+  AllAddrData, AllValues:TBytes;
+  TotalFieldCount:Cardinal;
+begin
+  TotalFieldCount := 0;
+  SetLength(AllAddrData, 0);
+  SetLength(AllValues, 0);
+  for i:=0 to High(Items) do begin
+    if Items[i].AccessArea>=S7PlusIds_DBAccessAreaBase then
+      AccessSubArea := S7PlusIds_DBValueActual
+    else
+      AccessSubArea := S7PlusIds_ControllerAreaValueActual;
+    Addr := EncodeItemAddress(Items[i].AccessArea, AccessSubArea, Items[i].Lids, 0);
+    Inc(TotalFieldCount, Cardinal(Addr.FieldCount));
+    AllAddrData := BytesConcat(AllAddrData, Addr.Data);
+    AllValues := BytesConcat(AllValues, EncodeUInt32VLQ(i+1)); //item number, 1-based
+    AllValues := BytesConcat(AllValues, EncodeTypedWriteValue(Items[i].SoftDataType, Items[i].Data));
+  end;
+
+  Result := EncodeUInt32(0); //InObjectId
+  Result := BytesConcat(Result, EncodeUInt32VLQ(Length(Items)));
+  Result := BytesConcat(Result, EncodeUInt32VLQ(TotalFieldCount));
+  Result := BytesConcat(Result, AllAddrData);
+  Result := BytesConcat(Result, AllValues);
+  Result := BytesConcat(Result, BytesOf([$00]));
+  Result := BytesConcat(Result, CurrentObjectQualifier);
+  Result := BytesConcat(Result, EncodeUInt32VLQ(1)); //same closing as the single-item write
+  Result := BytesConcat(Result, EncodeUInt32(0)); //trailing padding
+end;
+
+function TS7PlusConnection.ParseMultiWriteResponse(const Response:TBytes; ItemCount:Integer; out Results:TS7PlusMultiWriteResultArray):Boolean;
+var
+  Offset, c, i, Listed:Integer;
+  RetVal, ErrVal:QWord;
+  ItemNr:Cardinal;
+  ErrText:String;
+  Terminated:Boolean;
+  AfterRetVal:Integer;
+begin
+  Result := false;
+  SetLength(Results, ItemCount);
+  for i:=0 to ItemCount-1 do begin
+    Results[i].Ok := false;
+    Results[i].ErrorValue := 0;
+  end;
+  if Length(Response)=0 then exit;
+
+  Offset := 0;
+  RetVal := DecodeUInt64VLQ(Response, Offset, c);
+  Offset := Offset+c;
+  AfterRetVal := Offset;
+  FLastReturnValue := RetVal;
+  Terminated := false;
+
+  //Whole request accepted unless the ReturnValue says otherwise: every item is Ok except
+  //the ones the error list names.
+  for i:=0 to ItemCount-1 do
+    Results[i].Ok := true;
+
+  //The list is [ItemNr VLQ][ErrValue VLQ64] pairs ended by ItemNr=0, 1-based in request order.
+  Listed := 0;
+  while Offset<Length(Response) do begin
+    ItemNr := DecodeUInt32VLQ(Response, Offset, c);
+    Offset := Offset+c;
+    if ItemNr=0 then begin
+      Terminated := true;
+      break;
+    end;
+    if (ItemNr>Cardinal(ItemCount)) or (Offset>=Length(Response)) then break; //not an error list
+    ErrVal := DecodeUInt64VLQ(Response, Offset, c);
+    Offset := Offset+c;
+    Results[ItemNr-1].Ok := false;
+    Results[ItemNr-1].ErrorValue := ErrVal;
+    Inc(Listed);
+  end;
+
+  if RetVal=0 then begin
+    Result := true;
+    exit;
+  end;
+
+  //A nonzero ReturnValue with a well formed list that names items is "some items failed" -
+  //confirmed against a PLC: with one bad LID in a batch it answered with an error ReturnValue
+  //and listed exactly that item, and every other item HAD been written. Anything else (no
+  //list, a malformed one, an error text object) is a failure of the whole request.
+  if Terminated and (Listed>0) then begin
+    Debug(Format('ParseMultiWriteResponse: ReturnValue=%d com %d item(ns) recusado(s) - sucesso parcial',[RetVal,Listed]));
+    Result := true;
+    exit;
+  end;
+
+  for i:=0 to ItemCount-1 do begin
+    Results[i].Ok := false;
+    Results[i].ErrorValue := 0;
+  end;
+  //The text is only for the log: a malformed tail must not turn into an exception here.
+  try
+    ErrText := ExtractErrorText(BytesCopy(Response, AfterRetVal, Length(Response)-AfterRetVal));
+  except
+    ErrText := '';
+  end;
+  if ErrText<>'' then
+    Debug(Format('ParseMultiWriteResponse: PLC retornou erro (returnValue=%d): %s',[RetVal,ErrText]))
+  else
+    Debug(Format('ParseMultiWriteResponse: PLC retornou erro (returnValue=%d)',[RetVal]));
+end;
+
+function TS7PlusConnection.WriteMultipleSymbolic(const Items:TS7PlusMultiWriteItemArray; out Results:TS7PlusMultiWriteResultArray):Boolean;
+const
+  MaxItemsPerRequest = 50;
+var
+  Chunk:TS7PlusMultiWriteItemArray;
+  ChunkResults:TS7PlusMultiWriteResultArray;
+  Payload, Resp:TBytes;
+  First, N, i:Integer;
+begin
+  SetLength(Results, Length(Items));
+  for i:=0 to High(Items) do begin
+    Results[i].Ok := false;
+    Results[i].ErrorValue := 0;
+  end;
+  Result := true;
+
+  First := 0;
+  while First<Length(Items) do begin
+    N := Length(Items)-First;
+    if N>MaxItemsPerRequest then N := MaxItemsPerRequest;
+    SetLength(Chunk, N);
+    for i:=0 to N-1 do
+      Chunk[i] := Items[First+i];
+
+    Payload := BuildMultiSymbolicWritePayload(Chunk);
+    if (not SendRequest(S7PlusFunc_SetMultiVariables, Payload, Resp)) or
+       (not ParseMultiWriteResponse(Resp, N, ChunkResults)) then begin
+      Result := false;
+      exit;
+    end;
+    for i:=0 to N-1 do
+      Results[First+i] := ChunkResults[i];
+    Inc(First, N);
+  end;
 end;
 
 function TS7PlusConnection.ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes; SymbolCrc:Cardinal):Boolean;

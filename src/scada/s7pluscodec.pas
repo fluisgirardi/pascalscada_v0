@@ -397,22 +397,29 @@ end;
 function EncodeTypedWriteValue(SoftDataType:Byte; const RawData:TBytes):TBytes;
 var
   WireType:Byte;
-  Kind:(wkNone, wkRawByte, wkRawFloat, wkUnsignedVLQ, wkSignedVLQ, wkUSIntArray);
+  Kind:(wkNone, wkRawByte, wkRawFloat, wkRawFixed, wkUnsignedVLQ, wkSignedVLQ, wkUSIntArray);
+  FixedSize, i:Integer;
 begin
   Kind := wkNone;
+  FixedSize := 0;
   case SoftDataType of
     1{sdtBOOL}:  begin WireType := S7PlusType_BOOL;  Kind := wkRawByte; end;
     2{sdtBYTE}:  begin WireType := S7PlusType_BYTE;  Kind := wkRawByte; end;
     3{sdtCHAR}:  begin WireType := S7PlusType_USINT; Kind := wkRawByte; end;
     52{sdtUSINT}:begin WireType := S7PlusType_USINT; Kind := wkRawByte; end;
     55{sdtSINT}: begin WireType := S7PlusType_SINT;  Kind := wkRawByte; end;
-    4{sdtWORD}:  begin WireType := S7PlusType_WORD;  Kind := wkUnsignedVLQ; end;
-    53{sdtUINT}: begin WireType := S7PlusType_UINT;  Kind := wkUnsignedVLQ; end;
-    6{sdtDWORD}: begin WireType := S7PlusType_DWORD; Kind := wkUnsignedVLQ; end;
+    //WORD/UINT/INT/DWORD/LWORD are fixed width big-endian on the wire, NOT VLQ (only DINT,
+    //LINT, UDINT and ULINT are) - per the reference's ValueWord/ValueUInt/ValueInt (EncodeUInt16/
+    //EncodeInt16), ValueDWord (EncodeUInt32) and ValueLWord (EncodeUInt64), and python-snap7's
+    //encode_pvalue_typed. These used to be VLQ here, a latent bug: only DINT and REAL had been
+    //validated against a PLC.
+    4{sdtWORD}:  begin WireType := S7PlusType_WORD;  Kind := wkRawFixed; FixedSize := 2; end;
+    53{sdtUINT}: begin WireType := S7PlusType_UINT;  Kind := wkRawFixed; FixedSize := 2; end;
+    6{sdtDWORD}: begin WireType := S7PlusType_DWORD; Kind := wkRawFixed; FixedSize := 4; end;
     54{sdtUDINT}:begin WireType := S7PlusType_UDINT; Kind := wkUnsignedVLQ; end;
     49{sdtULINT}:begin WireType := S7PlusType_ULINT; Kind := wkUnsignedVLQ; end;
-    51{sdtLWORD}:begin WireType := S7PlusType_LWORD; Kind := wkUnsignedVLQ; end;
-    5{sdtINT}:   begin WireType := S7PlusType_INT;   Kind := wkSignedVLQ; end;
+    51{sdtLWORD}:begin WireType := S7PlusType_LWORD; Kind := wkRawFixed; FixedSize := 8; end;
+    5{sdtINT}:   begin WireType := S7PlusType_INT;   Kind := wkRawFixed; FixedSize := 2; end;
     7{sdtDINT}:  begin WireType := S7PlusType_DINT;  Kind := wkSignedVLQ; end;
     50{sdtLINT}: begin WireType := S7PlusType_LINT;  Kind := wkSignedVLQ; end;
     8{sdtREAL}:  begin WireType := S7PlusType_REAL;  Kind := wkRawFloat; end;
@@ -435,6 +442,17 @@ begin
     wkRawFloat: begin
       Result := BytesOf([$00, WireType]);
       Result := BytesConcat(Result, RawData); //IEEE-754 bit pattern, passed through as-is
+    end;
+    wkRawFixed: begin
+      //exactly FixedSize bytes: the low-order bytes of RawData, left-padded with zeros
+      Result := BytesOf([$00, WireType]);
+      SetLength(Result, 2+FixedSize);
+      for i:=0 to FixedSize-1 do
+        Result[2+i] := 0;
+      if Length(RawData)>=FixedSize then
+        Move(RawData[Length(RawData)-FixedSize], Result[2], FixedSize)
+      else if Length(RawData)>0 then
+        Move(RawData[0], Result[2+FixedSize-Length(RawData)], Length(RawData));
     end;
     wkUnsignedVLQ: begin
       Result := BytesOf([$00, WireType]);
