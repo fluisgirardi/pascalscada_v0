@@ -235,6 +235,40 @@ resourcestring
   SLGXTBPortMustBeActive        = 'A porta de comunicação do driver precisa estar ativa (Active=true) para ler a lista de tags do CLP.';
   SLGXTBSelectAtLeastOne        = 'Selecione ao menos um tag para importar!';
   SLGXTBOnlyLGXDriver           = 'O driver de protocolo precisa ser uma instância de TLGXDriver.';
+
+  //////////////////////////////////////////////////////////////////////////////
+  // ASSISTENTE DE IMPORTACAO DE TAGS DO S7COMMPLUS (S7-1200/1500)
+  //////////////////////////////////////////////////////////////////////////////
+  SS7PTBCaption                 = 'S7CommPlus - Importação de tags';
+  SS7PTBBrowse                  = 'Ler as variáveis do CLP';
+  SS7PTBSymbolicNames           = 'Usar o nome simbólico do DB';
+  SS7PTBIncludeAreas            = 'Incluir as áreas I, Q e M';
+  SS7PTBFilter                  = 'Filtro';
+  SS7PTBShowStructMembers       = 'Mostrar membros de estruturas';
+  SS7PTBShowSkipped             = 'Mostrar as variáveis que não viram tag';
+  SS7PTBScan                    = 'Tempo de atualização (ms; 0 = por mudança)';
+  SS7PTBPrefix                  = 'Prefixo do nome dos componentes';
+  SS7PTBCheckAll                = 'Marcar todos';
+  SS7PTBUncheckAll              = 'Desmarcar todos';
+  SS7PTBInvert                  = 'Inverter seleção';
+  SS7PTBImport                  = 'Importar';
+  SS7PTBCancel                  = 'Cancelar';
+  SS7PTBColVariable             = 'Variável';
+  SS7PTBColType                 = 'Tipo';
+  SS7PTBColWillBeCreatedAs      = 'Será criado como';
+  SS7PTBSkipNotAScalar          = 'não vira tag: estrutura (use os membros)';
+  SS7PTBSkipUnsupportedType     = 'não vira tag: tipo não suportado';
+  SS7PTBSkipArrayElement        = 'não vira tag: elemento de array';
+  SS7PTBReadFirst               = 'Leia as variáveis do CLP primeiro.';
+  SS7PTBReading                 = 'Lendo as variáveis do CLP (pode demorar)...';
+  SS7PTBNothingRead             = 'Nenhuma variável foi lida do CLP.';
+  SS7PTBVarsRead                = '%d variável(is) lida(s) de %d bloco(s)/área(s); %d não viram tag.';
+  SS7PTBSelectedCount           = '%d tag(s) selecionado(s) de %d exibido(s).';
+  SS7PTBWithoutDriver           = 'Sem um driver de protocolo S7CommPlus válido!';
+  SS7PTBPortMustBeActive        = 'A porta de comunicação do driver precisa estar ativa (Active=true) para ler as variáveis do CLP.';
+  SS7PTBSelectAtLeastOne        = 'Selecione ao menos um tag para importar!';
+  SS7PTBOnlyS7PlusDriver        = 'O driver de protocolo precisa ser uma instância de TS7CommPlusDriver.';
+  SS7PTBBrowseFailed            = 'Não foi possível ler a lista de DBs do CLP.';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -430,6 +464,40 @@ resourcestring
   SLGXTBPortMustBeActive        = 'The communication port of the protocol driver must be active (Active=true) to read the tag list from the PLC.';
   SLGXTBSelectAtLeastOne        = 'Select at least one tag to import!';
   SLGXTBOnlyLGXDriver           = 'The protocol driver must be an instance of TLGXDriver.';
+
+  //////////////////////////////////////////////////////////////////////////////
+  // S7COMMPLUS (S7-1200/1500) TAG IMPORT WIZARD
+  //////////////////////////////////////////////////////////////////////////////
+  SS7PTBCaption                 = 'S7CommPlus - Tag import';
+  SS7PTBBrowse                  = 'Read the variables from the PLC';
+  SS7PTBSymbolicNames           = 'Use the DB symbolic name';
+  SS7PTBIncludeAreas            = 'Include the I, Q and M areas';
+  SS7PTBFilter                  = 'Filter';
+  SS7PTBShowStructMembers       = 'Show structure members';
+  SS7PTBShowSkipped             = 'Show the variables that do not become a tag';
+  SS7PTBScan                    = 'Update rate (ms; 0 = on change)';
+  SS7PTBPrefix                  = 'Prefix of the component names';
+  SS7PTBCheckAll                = 'Check all';
+  SS7PTBUncheckAll              = 'Uncheck all';
+  SS7PTBInvert                  = 'Invert selection';
+  SS7PTBImport                  = 'Import';
+  SS7PTBCancel                  = 'Cancel';
+  SS7PTBColVariable             = 'Variable';
+  SS7PTBColType                 = 'Type';
+  SS7PTBColWillBeCreatedAs      = 'Will be created as';
+  SS7PTBSkipNotAScalar          = 'not a tag: structure (use its members)';
+  SS7PTBSkipUnsupportedType     = 'not a tag: unsupported type';
+  SS7PTBSkipArrayElement        = 'not a tag: array element';
+  SS7PTBReadFirst               = 'Read the variables from the PLC first.';
+  SS7PTBReading                 = 'Reading the variables from the PLC (may take a while)...';
+  SS7PTBNothingRead             = 'No variable was read from the PLC.';
+  SS7PTBVarsRead                = '%d variable(s) read from %d block(s)/area(s); %d do not become a tag.';
+  SS7PTBSelectedCount           = '%d tag(s) selected of %d shown.';
+  SS7PTBWithoutDriver           = 'Without a valid S7CommPlus protocol driver!';
+  SS7PTBPortMustBeActive        = 'The communication port of the protocol driver must be active (Active=true) to read the variables from the PLC.';
+  SS7PTBSelectAtLeastOne        = 'Select at least one tag to import!';
+  SS7PTBOnlyS7PlusDriver        = 'The protocol driver must be an instance of TS7CommPlusDriver.';
+  SS7PTBBrowseFailed            = 'Could not read the DB list from the PLC.';
   {$ENDIF}
 
 {$IFNDEF FPC}

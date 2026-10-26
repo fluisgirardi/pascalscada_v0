@@ -24,6 +24,7 @@ uses
   ut.s7pluscodec,
   ut.s7plusconnection,
   ut.s7plusonchange,
+  ut.s7plustagplan,
   ut.s7plustypeinfo,
   ut.s7family,
   ut.protocoldriver,

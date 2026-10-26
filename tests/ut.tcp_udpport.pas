@@ -84,6 +84,14 @@ type
   }
   {$ENDIF}
 
+  { TDesigningPort }
+
+  //a port the way the IDE has it: SetDesigning is protected in TComponent
+  TDesigningPort = class(TTCP_UDPPort)
+  public
+    procedure InTheIDE;
+  end;
+
   { TTestTcpUdpPortOverAServer }
 
   TTestTcpUdpPortOverAServer = class(TTestCase)
@@ -114,6 +122,11 @@ type
 
     //ciclo de vida / lifecycle
     procedure DestroyingRightAfterCreatingMustNotHang;
+
+    //em tempo de projeto / at design time
+    procedure ANonExclusivePortConnectsAtDesignTime;
+    procedure AnExclusivePortStaysClosedAtDesignTime;
+    procedure ClosingADesignTimePortEndsTheConnection;
   end;
 
   {$IFDEF PORTUGUES}
@@ -492,6 +505,95 @@ begin
   end;
 
   AssertTrue('twenty ports created and destroyed in a row', true);
+end;
+
+procedure TTestTcpUdpPortOverAServer.ANonExclusivePortConnectsAtDesignTime;
+var
+  porta:TDesigningPort;
+  gasto:LongInt;
+begin
+  //o assistente de tags (Tag Builder) le o CLP pela porta dentro da IDE
+  porta:=TDesigningPort.Create(nil);
+  try
+    porta.InTheIDE;
+    porta.Host:='127.0.0.1';
+    porta.Port:=FServidor.Porta;
+    porta.Timeout:=300;
+
+    porta.Active:=true;
+
+    gasto:=0;
+    while (not porta.ReallyActive) and (gasto<3000) do begin
+      Sleep(5);
+      inc(gasto, 5);
+    end;
+    AssertTrue('connected inside the IDE', porta.ReallyActive);
+    AssertTrue('and the server saw it', FServidor.EsperarConexoes(1, 1000));
+  finally
+    porta.Free;
+  end;
+end;
+
+procedure TTestTcpUdpPortOverAServer.AnExclusivePortStaysClosedAtDesignTime;
+var
+  porta:TDesigningPort;
+begin
+  porta:=TDesigningPort.Create(nil);
+  try
+    porta.InTheIDE;
+    porta.Host:='127.0.0.1';
+    porta.Port:=FServidor.Porta;
+    porta.Timeout:=300;
+    porta.ExclusiveDevice:=true;
+
+    porta.Active:=true;
+    Sleep(300);
+
+    AssertTrue ('the property takes the value', porta.Active);
+    AssertFalse('but there is no socket', porta.ReallyActive);
+    AssertEquals('and the server saw nobody', 0, FServidor.Conexoes);
+  finally
+    porta.Free;
+  end;
+end;
+
+procedure TTestTcpUdpPortOverAServer.ClosingADesignTimePortEndsTheConnection;
+var
+  porta:TDesigningPort;
+  gasto:LongInt;
+begin
+  porta:=TDesigningPort.Create(nil);
+  try
+    porta.InTheIDE;
+    porta.Host:='127.0.0.1';
+    porta.Port:=FServidor.Porta;
+    porta.Timeout:=300;
+    porta.Active:=true;
+    gasto:=0;
+    while (not porta.ReallyActive) and (gasto<3000) do begin
+      Sleep(5);
+      inc(gasto, 5);
+    end;
+    AssertTrue('connected', porta.ReallyActive);
+
+    porta.Active:=false;
+
+    gasto:=0;
+    while porta.ReallyActive and (gasto<3000) do begin
+      Sleep(5);
+      inc(gasto, 5);
+    end;
+    AssertFalse('the connection must be closed', porta.ReallyActive);
+  finally
+    porta.Free;
+  end;
+end;
+
+{ TDesigningPort }
+
+procedure TDesigningPort.InTheIDE;
+begin
+  SetDesigning(true, false);
 end;
 
 { TTestTcpUdpPortOnDatagram }

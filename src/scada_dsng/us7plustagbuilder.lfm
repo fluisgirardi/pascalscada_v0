@@ -1,0 +1,241 @@
+object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
+  Left = 320
+  Height = 580
+  Top = 140
+  Width = 860
+  BorderIcons = [biSystemMenu]
+  Caption = 'S7CommPlus - Tag Builder'
+  ClientHeight = 580
+  ClientWidth = 860
+  Constraints.MinHeight = 480
+  Constraints.MinWidth = 700
+  OnCreate = FormCreate
+    Position = poScreenCenter
+  LCLVersion = '2.0.12.0'
+  object pnlTop: TPanel
+    Left = 0
+    Height = 108
+    Top = 0
+    Width = 860
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 108
+    ClientWidth = 860
+    TabOrder = 0
+    object btnBrowse: TButton
+      Left = 8
+      Height = 27
+      Top = 8
+      Width = 200
+      Caption = 'Read the variables from the PLC'
+      OnClick = btnBrowseClick
+      TabOrder = 0
+    end
+    object chkSymbolicNames: TCheckBox
+      Left = 216
+      Height = 21
+      Top = 11
+      Width = 200
+      Caption = 'Use the DB symbolic name'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+    end
+    object lblStatus: TLabel
+      Left = 424
+      Height = 17
+      Top = 13
+      Width = 424
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      Caption = 'Read the variables from the PLC first.'
+      ParentColor = False
+    end
+    object lblFilter: TLabel
+      Left = 8
+      Height = 17
+      Top = 46
+      Width = 40
+      Caption = 'Filter'
+      ParentColor = False
+    end
+    object edtFilter: TEdit
+      Left = 56
+      Height = 27
+      Top = 42
+      Width = 240
+      OnChange = FilterChanged
+      TabOrder = 2
+    end
+    object chkShowStructMembers: TCheckBox
+      Left = 8
+      Height = 21
+      Top = 79
+      Width = 210
+      Caption = 'Show structure members'
+      Checked = True
+      OnChange = FilterChanged
+      State = cbChecked
+      TabOrder = 4
+    end
+    object chkShowSkipped: TCheckBox
+      Left = 224
+      Height = 21
+      Top = 79
+      Width = 300
+      Caption = 'Show the variables that do not become a tag'
+      OnChange = FilterChanged
+      TabOrder = 5
+    end
+    object chkIncludeAreas: TCheckBox
+      Left = 540
+      Height = 21
+      Top = 79
+      Width = 300
+      Anchors = [akTop, akLeft, akRight]
+      Caption = 'Include the I, Q and M areas'
+      TabOrder = 6
+    end
+  end
+  object lvTags: TListView
+    Left = 0
+    Height = 340
+    Top = 108
+    Width = 860
+    Align = alClient
+    Checkboxes = True
+    Columns = <    
+      item
+        Caption = 'Variable'
+        Width = 400
+      end    
+      item
+        Caption = 'Type'
+        Width = 110
+      end    
+      item
+        Caption = 'Will be created as'
+        Width = 300
+      end>
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 1
+    ViewStyle = vsReport
+    OnClick = lvTagsClick
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Height = 132
+    Top = 448
+    Width = 860
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 132
+    ClientWidth = 860
+    TabOrder = 2
+    object btnCheckAll: TButton
+      Left = 8
+      Height = 27
+      Top = 8
+      Width = 130
+      Caption = 'Check all'
+      OnClick = btnCheckAllClick
+      TabOrder = 0
+    end
+    object btnUncheckAll: TButton
+      Left = 146
+      Height = 27
+      Top = 8
+      Width = 130
+      Caption = 'Uncheck all'
+      OnClick = btnUncheckAllClick
+      TabOrder = 1
+    end
+    object btnInvert: TButton
+      Left = 284
+      Height = 27
+      Top = 8
+      Width = 130
+      Caption = 'Invert selection'
+      OnClick = btnInvertClick
+      TabOrder = 2
+    end
+    object lblSelected: TLabel
+      Left = 424
+      Height = 17
+      Top = 13
+      Width = 424
+      Anchors = [akTop, akLeft, akRight]
+      AutoSize = False
+      Caption = '0 tag(s) selected'
+      ParentColor = False
+    end
+    object lblScan: TLabel
+      Left = 8
+      Height = 17
+      Top = 51
+      Width = 240
+      Caption = 'Update rate (ms; 0 = on change)'
+      ParentColor = False
+    end
+    object spinScan: TSpinEdit
+      Left = 250
+      Height = 27
+      Top = 47
+      Width = 100
+      MaxValue = 3600000
+      MinValue = 0
+      TabOrder = 3
+      Value = 1000
+    end
+    object lblPrefix: TLabel
+      Left = 370
+      Height = 17
+      Top = 51
+      Width = 190
+      Caption = 'Prefix of the component names'
+      ParentColor = False
+    end
+    object edtPrefix: TEdit
+      Left = 566
+      Height = 27
+      Top = 47
+      Width = 150
+      TabOrder = 4
+      Text = 'tag'
+    end
+    object pnlButtons: TPanel
+      Left = 0
+      Height = 44
+      Top = 88
+      Width = 860
+      Align = alBottom
+      BevelOuter = bvNone
+      ClientHeight = 44
+      ClientWidth = 860
+      TabOrder = 5
+      object btnOK: TButton
+        Left = 632
+        Height = 30
+        Top = 6
+        Width = 106
+        Anchors = [akTop, akRight]
+        Caption = 'Import'
+        Default = True
+        OnClick = btnOKClick
+        TabOrder = 0
+      end
+      object btnCancel: TButton
+        Left = 746
+        Height = 30
+        Top = 6
+        Width = 106
+        Anchors = [akTop, akRight]
+        Cancel = True
+        Caption = 'Cancel'
+        ModalResult = 2
+        TabOrder = 1
+      end
+    end
+  end
+end
