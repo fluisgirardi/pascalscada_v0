@@ -74,6 +74,9 @@ type
     Skip:TS7PlusSkipReason;
     //: Membro de uma estrutura (mais de um nível abaixo do DB/área).
     Nested:Boolean;
+    //: Array de escalares: vira um TPLCBlock com ElementCount elementos (ver S7PlusMarkArrays).
+    IsArray:Boolean;
+    ElementCount:LongInt;
   end;
   TS7PlusCandidateArray = array of TS7PlusCandidate;
 
@@ -89,6 +92,9 @@ type
     SwapBytes, SwapWords, SwapDWords:Boolean;
     //: Tempo de atualização em ms; 0 = por mudança (subscrição).
     Scan:LongInt;
+    //: True: um TPLCBlock de Size elementos de TagType; False: um TPLCTagNumber.
+    IsBlock:Boolean;
+    Size:LongInt;
   end;
   TS7PlusImportItems = array of TS7PlusImportItem;
 
@@ -126,6 +132,17 @@ function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String):TS7PlusC
 function S7PlusSuggestedName(const Path, Prefix:String):String;
 
 {$IFDEF PORTUGUES}
+//: Acha os arrays de escalares na lista (o PLC lista o array e, logo depois, cada
+//: elemento como Nome[i]): o array passa a ser IsArray com o número de elementos, e os
+//: elementos continuam não virando tag. Chamar depois de classificar a lista toda.
+{$ELSE}
+//: Finds the arrays of scalars on the list (the PLC lists the array and, right after it,
+//: each element as Name[i]): the array becomes IsArray with its element count, and the
+//: elements still do not become tags. Call it once the whole list is classified.
+{$ENDIF}
+procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);
+
+{$IFDEF PORTUGUES}
 //: Os níveis de um caminho (BlocoSimbolico_4.Var26.v1 -> BlocoSimbolico_4, Var26, v1),
 //: que são os níveis da árvore do assistente. O que está entre colchetes (índices de
 //: array) fica no nível do array, mesmo que tenha ponto.
@@ -137,6 +154,30 @@ function S7PlusSuggestedName(const Path, Prefix:String):String;
 function S7PlusSplitPath(const Path:String):TStringArray;
 
 implementation
+
+procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);
+var
+  i, j, Count:Integer;
+  Rest:String;
+begin
+  for i:=0 to High(Candidates) do begin
+    if Candidates[i].Skip<>srNone then continue;
+    Count := 0;
+    j := i+1;
+    //the elements follow their array on the list: Name[...] with nothing after the ']'
+    while (j<=High(Candidates)) and (Candidates[j].Skip=srArrayElement) and
+          (Pos(Candidates[i].Path+'[', Candidates[j].Path)=1) do begin
+      Rest := Copy(Candidates[j].Path, Length(Candidates[i].Path)+1, MaxInt);
+      if (Rest<>'') and (Rest[Length(Rest)]=']') and (Pos('.', Rest)=0) then
+        Inc(Count);
+      Inc(j);
+    end;
+    if Count>0 then begin
+      Candidates[i].IsArray := true;
+      Candidates[i].ElementCount := Count;
+    end;
+  end;
+end;
 
 function S7PlusSplitPath(const Path:String):TStringArray;
 var
@@ -253,6 +294,8 @@ begin
   Result.SwapWords := false;
   Result.SwapDWords := false;
   Result.Skip := srNone;
+  Result.IsArray := false;
+  Result.ElementCount := 0;
 
   if (DBName<>'') and StartsWithDBNumber(V.Name, RestStart) then
     Result.Path := DBName + Copy(V.Name, RestStart, MaxInt);

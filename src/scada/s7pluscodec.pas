@@ -568,8 +568,10 @@ begin
   case DataType of
     S7PlusType_BOOL, S7PlusType_USINT, S7PlusType_BYTE, S7PlusType_SINT: Result := 1;
     S7PlusType_UINT, S7PlusType_WORD, S7PlusType_INT: Result := 2;
-    S7PlusType_REAL: Result := 4;
-    S7PlusType_LREAL, S7PlusType_TIMESTAMP: Result := 8;
+    //DWORD/LWORD are fixed width on the wire, like WORD (only the UDINT/DINT/ULINT/LINT
+    //family is VLQ) - an array of them used to be read as VLQ and came back mangled
+    S7PlusType_REAL, S7PlusType_DWORD: Result := 4;
+    S7PlusType_LREAL, S7PlusType_LWORD, S7PlusType_TIMESTAMP: Result := 8;
     S7PlusType_RID: Result := 4;
   else
     Result := 0; //variable length (VLQ encoded)
@@ -609,11 +611,33 @@ begin
         Move(Data[Offset+Consumed], Result[0], Count*ElemSize);
       Consumed := Consumed + Count*ElemSize;
     end else begin
+      //the VLQ family: each element comes out the way a scalar of the same type does
+      //(fixed width big-endian), so an array reads like the same bytes of a struct would
       SetLength(Result, 0);
       for i:=1 to Count do begin
-        val32 := DecodeUInt32VLQ(Data, Offset+Consumed, c);
+        case DataType of
+          S7PlusType_DINT: begin
+            sval32 := DecodeInt32VLQ(Data, Offset+Consumed, c);
+            TmpResult := EncodeUInt32(Cardinal(sval32));
+          end;
+          S7PlusType_ULINT: begin
+            val64 := DecodeUInt64VLQ(Data, Offset+Consumed, c);
+            TmpResult := EncodeUInt64(val64);
+          end;
+          S7PlusType_LINT, S7PlusType_TIMESPAN: begin
+            sval64 := DecodeInt64VLQ(Data, Offset+Consumed, c);
+            TmpResult := EncodeUInt64(QWord(sval64));
+          end;
+        else
+          //UDINT, AID and anything else of unknown width
+          val32 := DecodeUInt32VLQ(Data, Offset+Consumed, c);
+          if DataType=S7PlusType_UDINT then
+            TmpResult := EncodeUInt32(val32)
+          else
+            TmpResult := EncodeUInt32VLQ(val32);
+        end;
         Consumed := Consumed + c;
-        Result := BytesConcat(Result, EncodeUInt32VLQ(val32));
+        Result := BytesConcat(Result, TmpResult);
       end;
     end;
     exit;

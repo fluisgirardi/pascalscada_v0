@@ -32,7 +32,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  S7PlusCodec,
+  S7PlusCodec, S7PlusVLQ,
   testsupport.bytes;
 
 type
@@ -88,6 +88,12 @@ type
     procedure UDIntUsesVLQ;
     procedure AWStringIsOneBytePerCharacter;
     procedure AnArrayOfUDIntHonoursTheFlagAskedFor;
+    procedure AnArrayOfDWordIsFixedWidth;
+    procedure AnArrayOfLWordIsFixedWidth;
+    procedure AnArrayOfDIntComesOutAsFixedWidthSigned;
+    procedure AnArrayOfUDIntComesOutAsFixedWidth;
+    procedure AnArrayOfLIntAndULIntComeOutAsFixedWidth;
+    procedure AnArrayOfRealsAndWordsStillComeOutRaw;
     procedure ALIntGoesOutAndBackThroughTheDecoder;
 
     //objetos / objects
@@ -396,6 +402,74 @@ begin
   //flags $20 = "Addressarray", usado pelo GetVarSubstreamed e pela Subscription
   AssertBytesEqual('array of udint', BytesOf('20 04 02 01 82 2C'),
                    EncodeValuePUDIntArray([1, 300], $20));
+end;
+
+procedure TTestS7PlusCodec.AnArrayOfDWordIsFixedWidth;
+var
+  c:Integer;
+begin
+  //flags $10 (array), type $0C (DWord), 2 elements, 4 bytes each - read from a DB5.Teste
+  //(Array of DWord) on a PLC, where 20 elements came back as 20 bytes
+  AssertBytesEqual('dword array', BytesOf('00 00 00 01 CA FE BA BE'),
+                   DecodePValueToBytes(BytesOf('10 0C 02 00 00 00 01 CA FE BA BE'), 0, c));
+  AssertEquals('consumed all', 11, c);
+end;
+
+procedure TTestS7PlusCodec.AnArrayOfLWordIsFixedWidth;
+var
+  c:Integer;
+begin
+  AssertBytesEqual('lword array', BytesOf('01 02 03 04 05 06 07 08'),
+                   DecodePValueToBytes(BytesOf('10 0D 01 01 02 03 04 05 06 07 08'), 0, c));
+  AssertEquals('consumed all', 11, c);
+end;
+
+procedure TTestS7PlusCodec.AnArrayOfDIntComesOutAsFixedWidthSigned;
+var
+  c:Integer;
+  data:TBytes;
+begin
+  data:=BytesCat(BytesCat(BytesCat(BytesOf('10 08 03'), EncodeInt32VLQ(1)), EncodeInt32VLQ(-1)), EncodeInt32VLQ(70000));
+  AssertBytesEqual('dint array', BytesOf('00 00 00 01 FF FF FF FF 00 01 11 70'),
+                   DecodePValueToBytes(data, 0, c));
+  AssertEquals('consumed all', Length(data), c);
+end;
+
+procedure TTestS7PlusCodec.AnArrayOfUDIntComesOutAsFixedWidth;
+var
+  c:Integer;
+  data:TBytes;
+begin
+  data:=BytesCat(BytesCat(BytesOf('10 04 02'), EncodeUInt32VLQ(1)), EncodeUInt32VLQ($CAFEBABE));
+  AssertBytesEqual('udint array', BytesOf('00 00 00 01 CA FE BA BE'),
+                   DecodePValueToBytes(data, 0, c));
+  AssertEquals('consumed all', Length(data), c);
+end;
+
+procedure TTestS7PlusCodec.AnArrayOfLIntAndULIntComeOutAsFixedWidth;
+var
+  c:Integer;
+  data:TBytes;
+begin
+  data:=BytesCat(BytesCat(BytesOf('10 09 02'), EncodeInt64VLQ(-2)), EncodeInt64VLQ(5));
+  AssertBytesEqual('lint array', BytesOf('FF FF FF FF FF FF FF FE 00 00 00 00 00 00 00 05'),
+                   DecodePValueToBytes(data, 0, c));
+  AssertEquals('lint consumed all', Length(data), c);
+
+  data:=BytesCat(BytesOf('10 05 02'), BytesCat(EncodeUInt64VLQ(1), EncodeUInt64VLQ($1122334455667788)));
+  AssertBytesEqual('ulint array', BytesOf('00 00 00 00 00 00 00 01 11 22 33 44 55 66 77 88'),
+                   DecodePValueToBytes(data, 0, c));
+  AssertEquals('ulint consumed all', Length(data), c);
+end;
+
+procedure TTestS7PlusCodec.AnArrayOfRealsAndWordsStillComeOutRaw;
+var
+  c:Integer;
+begin
+  AssertBytesEqual('reals', BytesOf('3F 80 00 00 40 00 00 00'),
+                   DecodePValueToBytes(BytesOf('10 0E 02 3F 80 00 00 40 00 00 00'), 0, c));
+  AssertBytesEqual('words', BytesOf('01 02 03 04'),
+                   DecodePValueToBytes(BytesOf('10 0B 02 01 02 03 04'), 0, c));
 end;
 
 procedure TTestS7PlusCodec.ALIntGoesOutAndBackThroughTheDecoder;
