@@ -1,0 +1,162 @@
+object FormMain: TFormMain
+  Left = 280
+  Height = 620
+  Top = 90
+  Width = 1000
+  Caption = 'ListTags - lista os tags de um CLP (Siemens S7CommPlus ou Rockwell)'
+  ClientHeight = 620
+  ClientWidth = 1000
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  Position = poScreenCenter
+  LCLVersion = '2.0.11.0'
+  object PanelTop: TPanel
+    Left = 0
+    Height = 80
+    Top = 0
+    Width = 1000
+    Align = alTop
+    ClientHeight = 80
+    ClientWidth = 1000
+    TabOrder = 0
+    object LabelDriver: TLabel
+      Left = 8
+      Height = 17
+      Top = 12
+      Width = 46
+      Caption = 'Driver:'
+      ParentColor = False
+    end
+    object ComboDriver: TComboBox
+      Left = 60
+      Height = 29
+      Top = 8
+      Width = 290
+      ItemHeight = 0
+      OnChange = ComboDriverChange
+      Style = csDropDownList
+      TabOrder = 0
+    end
+    object LabelHost: TLabel
+      Left = 366
+      Height = 17
+      Top = 12
+      Width = 18
+      Caption = 'IP:'
+      ParentColor = False
+    end
+    object EditHost: TEdit
+      Left = 390
+      Height = 29
+      Top = 8
+      Width = 140
+      TabOrder = 1
+      Text = '192.168.56.2'
+    end
+    object LabelPort: TLabel
+      Left = 546
+      Height = 17
+      Top = 12
+      Width = 37
+      Caption = 'Porta:'
+      ParentColor = False
+    end
+    object EditPort: TEdit
+      Left = 590
+      Height = 29
+      Top = 8
+      Width = 64
+      TabOrder = 2
+      Text = '102'
+    end
+    object ButtonList: TButton
+      Left = 674
+      Height = 29
+      Top = 8
+      Width = 170
+      Caption = 'Conectar e listar os tags'
+      OnClick = ButtonListClick
+      TabOrder = 3
+    end
+    object LabelFilter: TLabel
+      Left = 8
+      Height = 17
+      Top = 48
+      Width = 40
+      Caption = 'Filtro:'
+      ParentColor = False
+    end
+    object EditFilter: TEdit
+      Left = 60
+      Height = 29
+      Top = 44
+      Width = 290
+      OnChange = FilterChanged
+      TabOrder = 4
+    end
+    object CheckOnlyTags: TCheckBox
+      Left = 366
+      Height = 21
+      Top = 48
+      Width = 400
+      Caption = 'So o que vira tag (escalar, array, string); sem estruturas'
+      OnChange = FilterChanged
+      TabOrder = 5
+    end
+  end
+  object ListTagsView: TListView
+    Left = 0
+    Height = 516
+    Top = 80
+    Width = 1000
+    Align = alClient
+    Columns = <    
+      item
+        Caption = 'Path'
+        Width = 360
+      end    
+      item
+        Caption = 'Tipo (kind)'
+        Width = 90
+      end    
+      item
+        Caption = 'Tipo no CLP'
+        Width = 90
+      end    
+      item
+        Caption = 'TagType'
+        Width = 80
+      end    
+      item
+        Alignment = taRightJustify
+        Caption = 'Elem.'
+        Width = 60
+      end    
+      item
+        Alignment = taRightJustify
+        Caption = 'Bytes'
+        Width = 70
+      end    
+      item
+        Caption = 'Swap'
+        Width = 60
+      end    
+      item
+        Caption = 'Grupo'
+        Width = 180
+      end>
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 1
+    ViewStyle = vsReport
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Height = 24
+    Top = 596
+    Width = 1000
+    Panels = <>
+    SimplePanel = True
+    SimpleText = 'Escolha o driver, informe o IP e clique em "Conectar e listar os tags".'
+  end
+end
