@@ -32,7 +32,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry, S7PlusTypes,
-  Tag, ProtocolTypes, PLCTagNumber,
+  Tag, ProtocolTypes, PLCTagNumber, CommTypes,
   S7PlusFamily, S7PlusConnection,
   testsupport.bytes;
 
@@ -58,6 +58,7 @@ type
     procedure ClearAuth;
     function  ReadAuthPending:Boolean;
     procedure SetAuthPending(AValue:Boolean);
+    function  WantedPortEvents:TNotifyThisEvents;
   end;
 
   { TTestS7PlusOnChange }
@@ -100,6 +101,7 @@ type
     procedure ChangingUsernameOrPasswordSchedulesANewLogin;
     procedure SettingTheSameCredentialsSchedulesNothing;
     procedure AuthWithNoConnectionStoresTheCredentialsAndFails;
+    procedure ThePortTellsTheDriverWhenItClosesOrDropsTheConnection;
   private
     function Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
     function Bytes(const B:array of Byte):TArrayOfDouble;
@@ -185,6 +187,11 @@ end;
 procedure TS7DriverProbe.SetAuthPending(AValue:Boolean);
 begin
   AuthPending := AValue;
+end;
+
+function TS7DriverProbe.WantedPortEvents:TNotifyThisEvents;
+begin
+  Result:=NotifyThisEvents;
 end;
 
 function TS7DriverProbe.WriteSizeOf(SoftDataType:Byte):Integer;
@@ -662,6 +669,14 @@ begin
   AssertEquals('added', 1, FDriver.Expand(Members, Bytes([5]), Items));
   AssertEquals('total', 3, Length(Items));
   AssertEquals('appended last', 11, Items[2].Lids[0]);
+end;
+
+procedure TTestS7PlusOnChange.ThePortTellsTheDriverWhenItClosesOrDropsTheConnection;
+begin
+  //the base class asks for no port events: without these two the session stayed "open" over a
+  //TCP connection that was gone, and nothing was made again when the port came back
+  AssertTrue('closing', ntePortClosed in FDriver.WantedPortEvents);
+  AssertTrue('dropping', ntePortDisconnected in FDriver.WantedPortEvents);
 end;
 
 initialization
