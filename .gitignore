@@ -69,6 +69,7 @@ examples/**/link*.res
 /examples/laz_s7commplus_phase2_test/s7commplus_wholedb_test
 /examples/laz_s7commplus_phase2_test/s7commplus_wholedb_write_test
 /examples/laz_s7commplus_phase2_test/s7commplus_structitems_test
+/examples/laz_s7commplus_phase2_test/s7commplus_listtags_test
 /examples/laz_s7commplus_structitems_gui/s7commplus_structitems_gui
 /examples/laz_s7commplus_phase2_test/s7commplus_write_diag
 /examples/laz_security_webserver_WinCC/metodos

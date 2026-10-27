@@ -47,7 +47,7 @@ unit S7PlusTagPlan;
 interface
 
 uses
-  Classes, SysUtils, Types, Tag, S7PlusTypeInfo;
+  Classes, SysUtils, Types, Tag, ProtocolTypes, S7PlusTypeInfo;
 
 type
   {$IFDEF PORTUGUES}
@@ -136,6 +136,29 @@ function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String):TS7PlusC
 //: prefixBlocoSimbolico_4_Var26_v1).
 {$ENDIF}
 function S7PlusSuggestedName(const Path, Prefix:String):String;
+
+{$IFDEF PORTUGUES}
+//: Classifica as variáveis de um DB ou área (a lista de BrowseDB/BrowseNativeArea) e as
+//: acrescenta a Candidates. A raiz (o próprio DB/área) não é uma variável e fica de fora.
+//: DBName: o nome simbólico do DB, ou '' para ficar com o número.
+{$ELSE}
+//: Classifies the variables of a DB or area (the BrowseDB/BrowseNativeArea list) and adds
+//: them to Candidates. The root (the DB/area itself) is not a variable and is left out.
+//: DBName: the symbolic name of the DB, or '' to keep the number.
+{$ENDIF}
+procedure S7PlusAddBrowsed(var Candidates:TS7PlusCandidateArray; const Vars:TS7PlusVarInfoArray;
+                           const DBName:String);
+
+{$IFDEF PORTUGUES}
+//: A lista de candidatos no formato comum de TProtocolDriver.ListTags: os DBs (como
+//: tkStructure, com o tamanho da leitura do DB inteiro) e, depois, cada variável. Elementos
+//: de array ficam de fora (o array os cobre); chamar S7PlusMarkArrays antes.
+{$ELSE}
+//: The candidates in the common format of TProtocolDriver.ListTags: the DBs (as
+//: tkStructure, with the size of a whole DB read) and then each variable. Array elements
+//: are left out (the array covers them); call S7PlusMarkArrays first.
+{$ENDIF}
+function S7PlusTagInfosOf(const Candidates:TS7PlusCandidateArray):TPLCTagInfoArray;
 
 {$IFDEF PORTUGUES}
 //: True para o nome de uma área de processo (IArea, QArea, MArea, S7Timers, S7Counters).
@@ -274,6 +297,116 @@ begin
       Extent := Candidates[i].ImageOffset-Candidates[Self_].ImageOffset+LeafSize(Candidates[i], Exact);
   end;
   Result := Extent;
+end;
+
+procedure S7PlusAddBrowsed(var Candidates:TS7PlusCandidateArray; const Vars:TS7PlusVarInfoArray;
+  const DBName:String);
+var
+  c, n:Integer;
+begin
+  for c:=0 to High(Vars) do begin
+    //the DB/area root itself ("DB4") is not a variable
+    if Pos('.', Vars[c].Name)=0 then continue;
+    n := Length(Candidates);
+    SetLength(Candidates, n+1);
+    Candidates[n] := S7PlusClassifyVar(Vars[c], DBName);
+  end;
+end;
+
+function JoinLevels(const Levels:TStringArray; Count:Integer):String;
+var
+  i:Integer;
+begin
+  Result := '';
+  for i:=0 to Count-1 do begin
+    if i>0 then Result := Result+'.';
+    Result := Result+Levels[i];
+  end;
+end;
+
+function S7PlusTagInfosOf(const Candidates:TS7PlusCandidateArray):TPLCTagInfoArray;
+var
+  i, n:Integer;
+  Levels:TStringArray;
+  Seen:TStringList;
+  Exact:Boolean;
+  Info:TPLCTagInfo;
+begin
+  SetLength(Result, 0);
+  Seen := TStringList.Create;
+  try
+    Seen.CaseSensitive := false;
+
+    //the DBs first, each one a structure the size of a whole DB read
+    for i:=0 to High(Candidates) do begin
+      Levels := S7PlusSplitPath(Candidates[i].Path);
+      if (Length(Levels)=0) or S7PlusIsAreaName(Levels[0]) or (Seen.IndexOf(Levels[0])>=0) then continue;
+      Seen.Add(Levels[0]);
+      FillChar(Info, SizeOf(Info), 0);
+      Info.Path := Levels[0];
+      Info.Name := Levels[0];
+      Info.Group := Levels[0];
+      Info.Kind := tkStructure;
+      Info.NativeType := 'DB';
+      Info.TagType := pttDefault;
+      Info.ElementCount := 1;
+      Info.SizeInBytes := S7PlusContainerSize(Candidates, Levels[0], true, Exact);
+      SetLength(Result, Length(Result)+1);
+      Result[High(Result)] := Info;
+    end;
+
+    for i:=0 to High(Candidates) do begin
+      //an element of an array is covered by the array
+      if Candidates[i].Skip=srArrayElement then continue;
+      Levels := S7PlusSplitPath(Candidates[i].Path);
+      if Length(Levels)=0 then continue;
+
+      FillChar(Info, SizeOf(Info), 0);
+      Info.Path := Candidates[i].Path;
+      Info.Name := Levels[High(Levels)];
+      Info.ParentPath := JoinLevels(Levels, High(Levels));
+      Info.Group := Levels[0];
+      Info.NativeType := S7PlusSoftTypeName(Candidates[i].SoftDataType);
+      Info.TagType := pttDefault;
+      Info.ElementCount := 1;
+      n := S7PlusDataTypeSize(Candidates[i].SoftDataType, 0);
+
+      case Candidates[i].Skip of
+        srNone: begin
+          Info.TagType := Candidates[i].TagType;
+          Info.SwapBytes := Candidates[i].SwapBytes;
+          Info.SwapWords := Candidates[i].SwapWords;
+          Info.SwapDWords := Candidates[i].SwapDWords;
+          if Candidates[i].IsArray then begin
+            Info.Kind := tkArray;
+            Info.ElementCount := Candidates[i].ElementCount;
+            Info.SizeInBytes := Candidates[i].ElementCount*n;
+          end else begin
+            Info.Kind := tkScalar;
+            Info.SizeInBytes := n;
+          end;
+        end;
+        srNotAScalar: begin
+          Info.Kind := tkStructure;
+          Info.SizeInBytes := S7PlusContainerSize(Candidates, Candidates[i].Path, false, Exact);
+        end;
+        srUnsupportedType: begin
+          if TS7PlusSoftDataType(Candidates[i].SoftDataType) in [sdtSTRING, sdtWSTRING] then begin
+            Info.Kind := tkString;
+            Info.ElementCount := 0;     //the maximum length is not on the list
+          end else begin
+            Info.Kind := tkUnsupported;
+            Info.SizeInBytes := n;
+          end;
+        end;
+      end;
+
+      SetLength(Result, Length(Result)+1);
+      Result[High(Result)] := Info;
+    end;
+  finally
+    Seen.Free;
+  end;
 end;
 
 procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);

@@ -779,6 +779,52 @@ type
     //: Tell to the protocol editor if the current protocol has a tab builder tool defined.
     {$ENDIF}
     function HasTabBuilderEditor:Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    //: Diz se este driver sabe listar os tags do equipamento (ListTags).
+    {$ELSE}
+    //: Tells whether this driver knows how to list the device's tags (ListTags).
+    {$ENDIF}
+    function SupportsListTags:Boolean; virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+      Lista os tags do equipamento, num formato que é o mesmo para qualquer driver que
+      saiba fazer isso (ver SupportsListTags): o que o Tag Builder lê, mas para uso em
+      tempo de execução - por exemplo, uma aplicação que monta a lista de tags sozinha.
+
+      A porta de comunicação precisa estar ativa; a leitura é síncrona e pode levar
+      segundos num equipamento grande. A lista traz as estruturas (tkStructure) e
+      os membros delas como entradas próprias; elementos de array e tipos internos do
+      equipamento ficam de fora.
+
+      @param(Tags Recebe a lista. Vazia se nada foi lido.)
+      @param(ForceReload Se @true, descarta uma lista que o driver tenha guardado e lê
+             de novo (nos drivers que guardam).)
+      @returns(ioOk: a lista está completa. ioPartialOk: veio só o que deu tempo de ler.
+               ioIllegalFunction: o driver não sabe listar. Outro valor: não foi possível
+               ler - porta inativa, sem conexão.)
+    }
+    {$ELSE}
+    {:
+      Lists the device's tags, in a format that is the same for every driver that knows
+      how to do it (see SupportsListTags): what the Tag Builder reads, but for use at
+      run time - for instance an application that builds its own tag list.
+
+      The communication port must be active; the read is synchronous and may take
+      seconds on a big device. The list has the structures (tkStructure) and their
+      members as entries of their own; array elements and the device's internal types
+      are left out.
+
+      @param(Tags Receives the list. Empty if nothing was read.)
+      @param(ForceReload When @true, drops a list the driver has kept and reads again
+             (on the drivers that keep one).)
+      @returns(ioOk: the list is complete. ioPartialOk: only what could be read in time.
+               ioIllegalFunction: the driver does not know how to list. Any other value:
+               it could not be read - port not active, no connection.)
+    }
+    {$ENDIF}
+    function ListTags(out Tags:TPLCTagInfoArray; ForceReload:Boolean = false):TProtocolIOResult; virtual;
   published
     {$IFDEF PORTUGUES}
     {:
@@ -1424,6 +1470,17 @@ end;
 function TProtocolDriver.HasTabBuilderEditor: Boolean;
 begin
   Result:=False;
+end;
+
+function TProtocolDriver.SupportsListTags: Boolean;
+begin
+  Result:=false;
+end;
+
+function TProtocolDriver.ListTags(out Tags: TPLCTagInfoArray; ForceReload: Boolean): TProtocolIOResult;
+begin
+  SetLength(Tags, 0);
+  Result:=ioIllegalFunction;
 end;
 
 procedure TProtocolDriver.CommPortCallBack(var Result:TIOPacket);

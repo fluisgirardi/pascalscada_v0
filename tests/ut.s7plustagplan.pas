@@ -21,7 +21,7 @@ unit ut.s7plustagplan;
 interface
 
 uses
-  Classes, SysUtils, Types, fpcunit, testregistry, Tag, S7PlusTypeInfo, S7PlusTagPlan;
+  Classes, SysUtils, Types, fpcunit, testregistry, Tag, ProtocolTypes, S7PlusTypeInfo, S7PlusTagPlan;
 
 type
 
@@ -67,6 +67,12 @@ type
     procedure AStringMakesTheSizeInexact;
     procedure AnAreaTagNameKeepsItsDots;
     procedure AnAreaPathIsTwoLevels;
+    procedure TagInfosStartWithTheDBsAsStructures;
+    procedure AScalarKeepsItsTypeAndSwapsInTheCommonFormat;
+    procedure AStructureIsListedWithItsSizeAndItsMembersAfterIt;
+    procedure AnArrayIsOneEntryAndItsElementsAreLeftOut;
+    procedure AStringIsATkStringWithUnknownLength;
+    procedure AnAreaTagHasTheAreaAsItsParent;
   end;
 
 implementation
@@ -459,6 +465,103 @@ begin
   AssertEquals('name', 'D01SS1~Ready (automatic)', L[1]);
   //a DB is not an area: its members split as before
   AssertEquals('DB', 3, Length(S7PlusSplitPath('DB4.Var26.v1')));
+end;
+
+function FindInfo(const A:TPLCTagInfoArray; const APath:String):Integer;
+var
+  i:Integer;
+begin
+  Result := -1;
+  for i:=0 to High(A) do
+    if A[i].Path=APath then Result := i;
+end;
+
+procedure TTestS7PlusTagPlan.TagInfosStartWithTheDBsAsStructures;
+var
+  A:TPLCTagInfoArray;
+begin
+  A := S7PlusTagInfosOf(Db4Like);
+  AssertTrue('the first entry is the DB', A[0].Kind=tkStructure);
+  AssertEquals('path', 'DB4', A[0].Path);
+  AssertEquals('group', 'DB4', A[0].Group);
+  AssertEquals('what the TPLCStruct of the whole DB needs', 115, A[0].SizeInBytes);
+  AssertEquals('listed once', 1, Length(A)-Length(S7PlusTagInfosOf(Db4Like))+1);
+end;
+
+procedure TTestS7PlusTagPlan.AScalarKeepsItsTypeAndSwapsInTheCommonFormat;
+var
+  A:TPLCTagInfoArray;
+  i:Integer;
+begin
+  A := S7PlusTagInfosOf(Db4Like);
+  i := FindInfo(A, 'DB4.Var1');
+  AssertTrue('scalar', A[i].Kind=tkScalar);
+  AssertTrue('DInt', A[i].TagType=pttLongInt);
+  AssertTrue('big-endian PLC', A[i].SwapBytes and A[i].SwapWords);
+  AssertEquals('type name', 'DInt', A[i].NativeType);
+  AssertEquals('four bytes', 4, A[i].SizeInBytes);
+  AssertEquals('parent is the DB', 'DB4', A[i].ParentPath);
+  AssertEquals('name', 'Var1', A[i].Name);
+end;
+
+procedure TTestS7PlusTagPlan.AStructureIsListedWithItsSizeAndItsMembersAfterIt;
+var
+  A:TPLCTagInfoArray;
+  s, m:Integer;
+begin
+  A := S7PlusTagInfosOf(Db4Like);
+  s := FindInfo(A, 'DB4.Var26');
+  m := FindInfo(A, 'DB4.Var26.v2');
+  AssertTrue('structure', A[s].Kind=tkStructure);
+  AssertEquals('what a read of it returns', 15, A[s].SizeInBytes);
+  AssertTrue('the member comes after', m>s);
+  AssertEquals('member parent', 'DB4.Var26', A[m].ParentPath);
+  AssertTrue('member is a word', A[m].TagType=pttWord);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayIsOneEntryAndItsElementsAreLeftOut;
+var
+  L:TS7PlusCandidateArray;
+  A:TPLCTagInfoArray;
+  i:Integer;
+begin
+  L := ListOf(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.Teste[2]'], [6, 6, 6, 6], false);
+  A := S7PlusTagInfosOf(L);
+  i := FindInfo(A, 'DB5.Teste');
+  AssertTrue('array', A[i].Kind=tkArray);
+  AssertEquals('three elements', 3, A[i].ElementCount);
+  AssertEquals('twelve bytes', 12, A[i].SizeInBytes);
+  AssertTrue('DWord', A[i].TagType=pttDWord);
+  AssertEquals('the elements are not listed', -1, FindInfo(A, 'DB5.Teste[1]'));
+end;
+
+procedure TTestS7PlusTagPlan.AStringIsATkStringWithUnknownLength;
+var
+  L:TS7PlusCandidateArray;
+  A:TPLCTagInfoArray;
+  i:Integer;
+begin
+  L := ListOf(['DB5.Nome', 'DB5.Data'], [19, 9], false);
+  A := S7PlusTagInfosOf(L);
+  i := FindInfo(A, 'DB5.Nome');
+  AssertTrue('string', A[i].Kind=tkString);
+  AssertEquals('the maximum length is unknown', 0, A[i].ElementCount);
+  AssertTrue('a date has no tag type', A[FindInfo(A, 'DB5.Data')].Kind=tkUnsupported);
+end;
+
+procedure TTestS7PlusTagPlan.AnAreaTagHasTheAreaAsItsParent;
+var
+  L:TS7PlusCandidateArray;
+  A:TPLCTagInfoArray;
+  i:Integer;
+begin
+  L := ListOf(['MArea.Clock_2.5Hz'], [1], false);
+  A := S7PlusTagInfosOf(L);
+  AssertEquals('no DB entry for an area', 1, Length(A));
+  AssertEquals('name keeps its dot', 'Clock_2.5Hz', A[0].Name);
+  AssertEquals('parent', 'MArea', A[0].ParentPath);
+  AssertEquals('group', 'MArea', A[0].Group);
+  AssertTrue('a bool reads as a byte', A[0].TagType=pttByte);
 end;
 
 initialization

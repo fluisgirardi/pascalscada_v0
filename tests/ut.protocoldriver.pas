@@ -134,6 +134,7 @@ type
     procedure TearDown; override;
   published
     //cadastro de tags / tag registration
+    procedure ADriverThatCannotListTagsSaysSo;
     procedure ATagWithNoScanInterfaceIsRefused;
     procedure ARegisteredTagEntersTheList;
     procedure ATagRegisteredTwiceIsRefused;
@@ -817,6 +818,17 @@ begin
   AssertTrue  ('needs an external port', FDrv.NeedsExternalPort);
   AssertEquals('empty literal address', '', FDrv.LiteralTagAddress(FTag));
   AssertFalse ('no tag editor', FDrv.HasTabBuilderEditor);
+end;
+
+procedure TTestProtocolDriver.ADriverThatCannotListTagsSaysSo;
+var
+  tags:TPLCTagInfoArray;
+begin
+  //the default: a driver that does not know how to list its device's tags
+  SetLength(tags, 3);
+  AssertFalse('it does not support listing', FDrv.SupportsListTags);
+  AssertTrue ('ListTags refuses', FDrv.ListTags(tags)=ioIllegalFunction);
+  AssertEquals('and leaves the list empty', 0, Length(tags));
 end;
 
 initialization
