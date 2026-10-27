@@ -232,7 +232,17 @@ var
 begin
   Result:=0;
   if (FMestre>=0) and (tcgetattr(FMestre, t)=0) then
+    {$IFDEF LINUX}
+    //o codigo da velocidade esta' em CBAUD|CBAUDEX do c_cflag. Perguntar a' libc
+    //(cfgetospeed) deu lixo num runner do CI: o termios dela e' maior que o do
+    //RTL e uma libc nova le' a velocidade fora da nossa estrutura.
+    //the speed code lives in the CBAUD|CBAUDEX bits of c_cflag. Asking libc
+    //(cfgetospeed) gave garbage on a CI runner: its termios is bigger than the
+    //RTL's and a newer libc reads the speed outside our structure.
+    Result:=t.c_cflag and $100F;
+    {$ELSE}
     Result:=cfgetospeed(@t);
+    {$ENDIF}
 end;
 
 function TSerialDeMentira.TemDoisBitsDeParada:Boolean;
