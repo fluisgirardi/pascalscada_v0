@@ -154,7 +154,7 @@ type
     function  Decoration(aIndex:LongInt):String;
     function  SizeText(const aPath:String; aIsDBRoot:Boolean):String;
     function  AreaLabel(const aArea:String):String;
-    procedure AddVars(const Vars:TS7PlusVarInfoArray; const aBlockName:String);
+    procedure AddVars(const Vars:TS7PlusVarInfoArray; const aBlockName:String; aAccessArea:Cardinal);
   public
     {$IFDEF PORTUGUES}
     //: Driver de protocolo de onde as variáveis serão lidas.
@@ -325,11 +325,17 @@ end;
 function TfrmS7PlusTagBuilder.Decoration(aIndex: LongInt): String;
 begin
   Result:=' : '+S7PlusSoftTypeName(FCandidates[aIndex].SoftDataType);
+  if FCandidates[aIndex].IsString and (FCandidates[aIndex].StringLength>=0) then
+    Result:=Result+'['+IntToStr(FCandidates[aIndex].StringLength)+']';
   if FCandidates[aIndex].IsArray then
     Result:=Result+'['+IntToStr(FCandidates[aIndex].ElementCount)+']';
+  if FCandidates[aIndex].IsStructArray then
+    Result:=Result+'['+IntToStr(FCandidates[aIndex].ElementCount)+'] ('+
+            Format(SS7PTBBytes,[FCandidates[aIndex].ElementCount*FCandidates[aIndex].ElementSize])+')';
   case FCandidates[aIndex].Skip of
     srUnsupportedType: Result:=Result+'   ('+SS7PTBSkipUnsupportedType+')';
     srArrayElement:    Result:=Result+'   ('+SS7PTBSkipArrayElement+')';
+    srStringLength:    Result:=Result+'   ('+SS7PTBSkipStringLength+')';
   end;
 end;
 
@@ -605,7 +611,7 @@ begin
 end;
 
 procedure TfrmS7PlusTagBuilder.AddVars(const Vars: TS7PlusVarInfoArray;
-  const aBlockName: String);
+  const aBlockName: String; aAccessArea: Cardinal);
 var
   c, n: LongInt;
 begin
@@ -614,7 +620,7 @@ begin
     if Pos('.', Vars[c].Name)=0 then continue;
     n:=Length(FCandidates);
     SetLength(FCandidates, n+1);
-    FCandidates[n]:=S7PlusClassifyVar(Vars[c], aBlockName);
+    FCandidates[n]:=S7PlusClassifyVar(Vars[c], aBlockName, aAccessArea);
     //a structure is not "skipped": its members are the tags
     if not (FCandidates[n].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
   end;
@@ -703,21 +709,22 @@ begin
       if res=ioAuthError then authMissing:=true;
       if res<>ioOk then continue;
       if chkSymbolicNames.Checked then aName:=blocks[c].Name else aName:='';
-      AddVars(vars, aName);
+      AddVars(vars, aName, S7PlusIds_DBAccessAreaBase+blocks[c].Number);
       inc(FBlocksRead);
     end;
 
     if chkIncludeAreas.Checked then begin
       if FDriver.BrowseNativeArea(S7PlusIds_NativeIAreaRID, S7PlusTiRid_IArea, 'IArea', vars)=ioOk then begin
-        AddVars(vars, ''); inc(FBlocksRead);
+        AddVars(vars, '', S7PlusIds_NativeIAreaRID); inc(FBlocksRead);
       end;
       if FDriver.BrowseNativeArea(S7PlusIds_NativeQAreaRID, S7PlusTiRid_QArea, 'QArea', vars)=ioOk then begin
-        AddVars(vars, ''); inc(FBlocksRead);
+        AddVars(vars, '', S7PlusIds_NativeQAreaRID); inc(FBlocksRead);
       end;
       if FDriver.BrowseNativeArea(S7PlusIds_NativeMAreaRID, S7PlusTiRid_MArea, 'MArea', vars)=ioOk then begin
-        AddVars(vars, ''); inc(FBlocksRead);
+        AddVars(vars, '', S7PlusIds_NativeMAreaRID); inc(FBlocksRead);
       end;
     end;
+
   finally
     FDriver.OnDebug:=oldDebug;
     Screen.Cursor:=oldCursor;
@@ -735,6 +742,9 @@ var
 begin
   FCandidates:=aCandidates;
   S7PlusMarkArrays(FCandidates);
+  //the maximum length of each STRING is in its value: read them once
+  if Assigned(FDriver) then
+    FDriver.ResolveStringLengths(FCandidates);
   FBlocksRead:=aBlocksRead;
 
   FSkippedCount:=0;
@@ -795,7 +805,7 @@ end;
 
 function TfrmS7PlusTagBuilder.GetImportPlan: TS7PlusImportItems;
 var
-  c, k, count: LongInt;
+  c, k, m, n, count: LongInt;
 begin
   Result:=nil;
   SetLength(Result, Length(FCandidates));
@@ -813,6 +823,32 @@ begin
     Result[count].SwapDWords:= FCandidates[c].SwapDWords;
     Result[count].Scan      := spinScan.Value;
     Result[count].IsBlock   := FCandidates[c].IsArray;
+    Result[count].IsStruct  := FCandidates[c].IsStructArray;
+    SetLength(Result[count].StructItems, 0);
+    if FCandidates[c].IsStructArray then begin
+      Result[count].Size := FCandidates[c].ElementCount*FCandidates[c].ElementSize;
+      //an item per member of each element, each at its place in the bytes of the struct
+      if chkCreateElements.Checked then
+        for k:=0 to FCandidates[c].ElementCount-1 do
+          for m:=0 to High(FCandidates[c].Members) do begin
+            if not FCandidates[c].Members[m].Supported then continue;
+            if FCandidates[c].Members[m].IsString and (FCandidates[c].Members[m].StringLength<0) then continue;
+            n:=Length(Result[count].StructItems);
+            SetLength(Result[count].StructItems, n+1);
+            Result[count].StructItems[n].CompName   := S7PlusSuggestedName(FCandidates[c].ElementPaths[k]+'.'+FCandidates[c].Members[m].Name, edtPrefix.Text);
+            Result[count].StructItems[n].Offset     := k*FCandidates[c].ElementSize+FCandidates[c].Members[m].Offset;
+            Result[count].StructItems[n].TagType    := FCandidates[c].Members[m].TagType;
+            Result[count].StructItems[n].SwapBytes  := FCandidates[c].Members[m].SwapBytes;
+            Result[count].StructItems[n].SwapWords  := FCandidates[c].Members[m].SwapWords;
+            Result[count].StructItems[n].SwapDWords := FCandidates[c].Members[m].SwapDWords;
+            Result[count].StructItems[n].IsString   := FCandidates[c].Members[m].IsString;
+            Result[count].StructItems[n].StringSize := FCandidates[c].Members[m].StringLength;
+          end;
+      inc(count);
+      continue;
+    end;
+    Result[count].IsString  := FCandidates[c].IsString;
+    Result[count].StringSize:= FCandidates[c].StringLength;
     SetLength(Result[count].ElementNames, 0);
     if FCandidates[c].IsArray then begin
       Result[count].Size    := FCandidates[c].ElementCount;

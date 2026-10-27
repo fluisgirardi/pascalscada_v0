@@ -148,6 +148,9 @@ type
     RelationId:Cardinal;
     HasVte:Boolean;
     Vte:TS7PlusVartypeElement;
+    //: ntStructArray: where this element starts, counted from the start of the array
+    //: (index x the size of the structure).
+    ElemOffset:Integer;
     Children:array of TS7PlusNode;
   end;
   TS7PlusNodeArray = array of TS7PlusNode;
@@ -642,6 +645,33 @@ end;
 
 procedure S7PlusAddSubnodes(var Node:TS7PlusNode; const Obj:TS7PlusObject; const Objects:TS7PlusObjectArray); forward;
 
+//The size of a structure type counted from its members (classic layout: the end of the last
+//member, rounded up to an even number of bytes), for a type that does not say its size
+//(TComSize). 0 when a member has no known size (a nested structure or array, an unknown type).
+function S7PlusStructExtent(const StructType:TS7PlusObject; const Objects:TS7PlusObjectArray):Integer;
+var
+  Tmp:TS7PlusNode;
+  i, Sz, End_:Integer;
+begin
+  Result := 0;
+  FillChar(Tmp, SizeOf(Tmp), 0);
+  S7PlusAddSubnodes(Tmp, StructType, Objects);
+  for i:=0 to High(Tmp.Children) do begin
+    if (not Tmp.Children[i].HasVte) or (Length(Tmp.Children[i].Children)>0) then begin
+      Result := 0;
+      exit;
+    end;
+    Sz := S7PlusDataTypeSize(Tmp.Children[i].SoftDataType, Tmp.Children[i].Vte.OffsetInfo.Unspecified1);
+    if Sz=0 then begin
+      Result := 0;
+      exit;
+    end;
+    End_ := Integer(Tmp.Children[i].Vte.OffsetInfo.NonOptAddr)+Sz;
+    if End_>Result then Result := End_;
+  end;
+  if Odd(Result) then Inc(Result);
+end;
+
 procedure S7PlusAddMDimSubnodes(var Subnode:TS7PlusNode; const Vte:TS7PlusVartypeElement; const Oi:TS7PlusOffsetInfo; const Objects:TS7PlusObjectArray);
 var
   Counts:TS7PlusDim6Cardinal;
@@ -664,6 +694,9 @@ begin
     Stride := S7PlusTComSize(HasStructType, StructType)
   else
     Stride := S7PlusDataTypeSize(Vte.SoftDataType, Oi.Unspecified1);
+  //the structure type does not always say its size: work it out from its members
+  if Oi.HasRelation and HasStructType and (Stride=0) then
+    Stride := S7PlusStructExtent(StructType, Objects);
 
   for i:=0 to 5 do Xx[i] := 0;
   ArrId := 0;
@@ -675,11 +708,12 @@ begin
       if j>0 then Label_ := Label_+',';
     end;
     Label_ := Label_+']';
-    ElemOff := (N-1)*Stride; //kept for parity with the reference; not used for LID addressing
+    ElemOff := (N-1)*Stride; //only used for the byte offsets of an array of structures (not for LID addressing)
 
     FillChar(ArrNode, SizeOf(ArrNode), 0);
     if Oi.HasRelation then begin
       ArrNode.NodeType := ntStructArray;
+      ArrNode.ElemOffset := ElemOff;
       ArrNode.Name := Label_;
       ArrNode.AccessId := ArrId;
       ArrNode.SoftDataType := Vte.SoftDataType;
@@ -750,8 +784,12 @@ begin
         if Oi.HasRelation then begin
           HasStructType := S7PlusFindTypeObject(Objects, Oi.RelationId, StructType);
           Stride := S7PlusTComSize(HasStructType, StructType);
+          //the structure type does not always say its size: work it out from its members
+          if HasStructType and (Stride=0) then
+            Stride := S7PlusStructExtent(StructType, Objects);
           FillChar(ArrNode, SizeOf(ArrNode), 0);
           ArrNode.NodeType := ntStructArray;
+          ArrNode.ElemOffset := Elem*Stride;
           ArrNode.Name := Label_;
           ArrNode.AccessId := Elem;
           ArrNode.SoftDataType := Vte.SoftDataType;
@@ -847,6 +885,11 @@ begin
       end;
       NewByteOffset := -1;
       NewImageOffset := -1;
+      //An element of an array of STRUCTURES is placed after the ones before it, each as big as
+      //the structure, and its members have their own offsets inside it: both are known.
+      //(An array of scalars keeps no offsets: its elements are addressed through the array.)
+      if (Node.NodeType=ntStructArray) and (ByteOffset<>-1) then
+        NewByteOffset := ByteOffset + Node.ElemOffset;
     end;
   else //UNDEFINED / VAR member
     Names := Names + '.' + Node.Name;

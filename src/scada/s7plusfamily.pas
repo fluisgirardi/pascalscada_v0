@@ -197,6 +197,15 @@ type
     function GetCachedAreaVars(AreaRID, TiRid:Cardinal; const AreaName:String; var Cache:TS7PlusVarInfoArray; var Browsed:Boolean; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetDBNumberByName(const Name:AnsiString; out DBNumber:Integer):Boolean;
     function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray):Boolean;
+    //: True for an array of structures ("DB4.Arr") or one element of it ("DB4.Arr[2]").
+    function IsStructArrayPath(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString):Boolean;
+    //: Adds, as composite items, every member of the elements of an array of structures (or of
+    //: one element) at its classic byte offset minus BaseOffset - reading the structure as a
+    //: whole does not work for an array of structures (the PLC answers with a value this driver
+    //: does not decode), so it is read member by member and put together.
+    procedure AddStructArrayMembers(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString;
+                                    AccessArea:Cardinal; BaseOffset:Integer;
+                                    var Items:TS7PlusCompositeItemArray);
     function TagPathOf(TagObj:TTag; out Path:AnsiString):Boolean;
     function FindScanEntry(const Path:AnsiString; out Index:Integer):Boolean;
     function IsLidsPrefix(const Prefix, Full:TS7PlusLIDArray):Boolean;
@@ -298,6 +307,10 @@ type
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
     //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and number.
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
+    //: Reads the value of every STRING on the candidates list (S7PlusAddBrowsed) once and sets
+    //: its StringLength (the maximum, the first byte of the value); the ones that cannot be read
+    //: become srStringLength (not tags). ioOk, ioPartialOk when some could not be read.
+    function ResolveStringLengths(var Candidates:TS7PlusCandidateArray):TProtocolIOResult;
     //: @seealso(TProtocolDriver.OpenTagEditor)
     procedure OpenTagEditor(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); override;
     //: @seealso(TProtocolDriver.HasTabBuilderEditor)
@@ -827,6 +840,56 @@ begin
     end;
 end;
 
+function TS7CommPlusDriver.IsStructArrayPath(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString):Boolean;
+var
+  i:Integer;
+  IsStruct:Boolean;
+begin
+  Result := false;
+  IsStruct := false;
+  for i:=0 to High(Vars) do
+    if (Vars[i].Name=CanonicalPath) and (TS7PlusSoftDataType(Vars[i].SoftDataType)=sdtSTRUCT) and
+       (Vars[i].ByteOffset>=0) then
+      IsStruct := true;
+  if not IsStruct then exit;
+  //an element ("Arr[2]") or an array of structures (its elements are listed right after it)
+  if (CanonicalPath<>'') and (CanonicalPath[Length(CanonicalPath)]=']') then begin
+    Result := true;
+    exit;
+  end;
+  for i:=0 to High(Vars) do
+    if (Length(Vars[i].Name)>Length(CanonicalPath)) and
+       (Copy(Vars[i].Name, 1, Length(CanonicalPath)+1)=CanonicalPath+'[') and
+       (TS7PlusSoftDataType(Vars[i].SoftDataType)=sdtSTRUCT) then begin
+      Result := true;
+      exit;
+    end;
+end;
+
+procedure TS7CommPlusDriver.AddStructArrayMembers(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString;
+  AccessArea:Cardinal; BaseOffset:Integer; var Items:TS7PlusCompositeItemArray);
+var
+  i, n:Integer;
+  Prefix:AnsiString;
+begin
+  if CanonicalPath[Length(CanonicalPath)]=']' then
+    Prefix := CanonicalPath+'.'
+  else
+    Prefix := CanonicalPath+'[';
+  for i:=0 to High(Vars) do begin
+    if Copy(Vars[i].Name, 1, Length(Prefix))<>Prefix then continue;
+    if TS7PlusSoftDataType(Vars[i].SoftDataType)=sdtSTRUCT then continue;   //an element: its members are the leaves
+    if Vars[i].ByteOffset<0 then continue;
+    n := Length(Items);
+    SetLength(Items, n+1);
+    Items[n].AccessArea := AccessArea;
+    Items[n].Lids := Vars[i].Lids;
+    Items[n].ByteOffset := Vars[i].ByteOffset-BaseOffset;
+    Items[n].SoftDataType := Vars[i].SoftDataType;
+    Items[n].WriteSize := CompositeWriteSize(Vars[i].SoftDataType);
+  end;
+end;
+
 function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray):Boolean;
 var
   DotPos, DBNumber, i, j, CIdx:Integer;
@@ -905,6 +968,12 @@ begin
       Rest := Copy(Vars[i].Name, Length(CanonicalPath)+2, MaxInt);
       if (Rest='') or (Pos('.', Rest)>0) then continue; //not a direct (top-level) member
 
+      //an array of structures cannot be read as a whole: its members are read one by one
+      if IsStructArrayPath(Vars, Vars[i].Name) then begin
+        AddStructArrayMembers(Vars, Vars[i].Name, AccessArea, 0, CompositeItems);
+        continue;
+      end;
+
       CIdx := Length(CompositeItems);
       SetLength(CompositeItems, CIdx+1);
       CompositeItems[CIdx].AccessArea := AccessArea;
@@ -915,6 +984,26 @@ begin
     end;
     //Insertion sort by ByteOffset ascending - composing "starting from the first element" is
     //what makes truncating the assembled buffer to the tag's own configured Size meaningful.
+    for i:=1 to High(CompositeItems) do begin
+      Tmp := CompositeItems[i];
+      j := i;
+      while (j>0) and (CompositeItems[j-1].ByteOffset>Tmp.ByteOffset) do begin
+        CompositeItems[j] := CompositeItems[j-1];
+        Dec(j);
+      end;
+      CompositeItems[j] := Tmp;
+    end;
+  end;
+
+  //An array of structures ("DB4.Arr") or one element of it ("DB4.Arr[2]"): a "structure" tag
+  //over it reads the members one by one and puts them together at their classic offsets,
+  //counted from the start of the array (or of the element).
+  if (DotPos>0) and IsStructArrayPath(Vars, CanonicalPath) then begin
+    for i:=0 to High(Vars) do
+      if Vars[i].Name=CanonicalPath then begin
+        AddStructArrayMembers(Vars, CanonicalPath, AccessArea, Vars[i].ByteOffset, CompositeItems);
+        break;
+      end;
     for i:=1 to High(CompositeItems) do begin
       Tmp := CompositeItems[i];
       j := i;
@@ -2066,6 +2155,86 @@ begin
   Result := true;
 end;
 
+function TS7CommPlusDriver.ResolveStringLengths(var Candidates:TS7PlusCandidateArray):TProtocolIOResult;
+var
+  TCand, TMem:array of Integer;     //what each item is for: the candidate and, for a member of an array of structures, which
+  Items:TS7PlusMultiReadItemArray;
+  Results:TS7PlusMultiReadResultArray;
+  i, m, n, Len:Integer;
+  Failed:Boolean;
+  Area:Cardinal;
+  ItemLids:TS7PlusLIDArray;
+
+  procedure AddTarget(ACand, AMem:Integer; AArea:Cardinal; const ALids:TS7PlusLIDArray);
+  begin
+    SetLength(TCand, Length(TCand)+1);
+    SetLength(TMem, Length(TMem)+1);
+    TCand[High(TCand)] := ACand;
+    TMem[High(TMem)] := AMem;
+    SetLength(Items, Length(Items)+1);
+    FillChar(Items[High(Items)], SizeOf(Items[High(Items)]), 0);
+    Items[High(Items)].AccessArea := AArea;
+    Items[High(Items)].Lids := ALids;
+  end;
+
+begin
+  SetLength(TCand, 0);
+  SetLength(TMem, 0);
+  SetLength(Items, 0);
+  Failed := false;
+  Result := ioOk;
+
+  for i:=0 to High(Candidates) do begin
+    //a STRING variable
+    if Candidates[i].IsString and (Candidates[i].StringLength<0) and (Candidates[i].Skip=srNone) then begin
+      if (Candidates[i].AccessArea<>0) and (Length(Candidates[i].Lids)>0) then
+        AddTarget(i, -1, Candidates[i].AccessArea, Candidates[i].Lids)
+      else begin
+        Candidates[i].Skip := srStringLength;
+        Failed := true;
+      end;
+    end;
+    //the STRING members of the structure of an array of structures: the first element tells
+    if Candidates[i].IsStructArray then
+      for m:=0 to High(Candidates[i].Members) do
+        if Candidates[i].Members[m].IsString and (Candidates[i].Members[m].StringLength<0) and
+           Candidates[i].Members[m].Supported then begin
+          if (Candidates[i].Members[m].AccessArea<>0) and (Length(Candidates[i].Members[m].Lids)>0) then
+            AddTarget(i, m, Candidates[i].Members[m].AccessArea, Candidates[i].Members[m].Lids)
+          else begin
+            Candidates[i].Members[m].Supported := false;
+            Failed := true;
+          end;
+        end;
+  end;
+  if Length(Items)=0 then begin
+    if Failed then Result := ioPartialOk;
+    exit;
+  end;
+
+  SetLength(Results, 0);
+  Result := ReadMultipleSymbolic(Items, Results);
+
+  for n:=0 to High(TCand) do begin
+    Len := -1;
+    if (Result=ioOk) and (n<=High(Results)) and Results[n].Ok and S7PlusStringLengthOf(Results[n].Data, Len) then begin
+      if TMem[n]<0 then
+        Candidates[TCand[n]].StringLength := Len
+      else
+        Candidates[TCand[n]].Members[TMem[n]].StringLength := Len;
+    end else begin
+      Failed := true;
+      if TMem[n]<0 then
+        Candidates[TCand[n]].Skip := srStringLength
+      else
+        Candidates[TCand[n]].Members[TMem[n]].Supported := false;
+    end;
+  end;
+
+  if Failed and (Result=ioOk) then
+    Result := ioPartialOk;
+end;
+
 function TS7CommPlusDriver.ListTags(out Tags:TPLCTagInfoArray; ForceReload:Boolean):TProtocolIOResult;
 var
   Blocks:TS7PlusDataBlockInfoArray;
@@ -2077,7 +2246,7 @@ var
   procedure BrowseArea(AreaRID, TiRid:Cardinal; const AreaName:String);
   begin
     if BrowseNativeArea(AreaRID, TiRid, AreaName, Vars)=ioOk then
-      S7PlusAddBrowsed(Cands, Vars, '')
+      S7PlusAddBrowsed(Cands, Vars, '', AreaRID)
     else
       Partial := true;
   end;
@@ -2092,7 +2261,7 @@ begin
 
   for i:=0 to High(Blocks) do
     if BrowseDB(Blocks[i].Number, Vars)=ioOk then
-      S7PlusAddBrowsed(Cands, Vars, Blocks[i].Name)   //'' (no symbolic name) keeps DB<n>
+      S7PlusAddBrowsed(Cands, Vars, Blocks[i].Name, S7PlusIds_DBAccessAreaBase+Blocks[i].Number)   //'' (no symbolic name) keeps DB<n>
     else
       Partial := true;
 
@@ -2101,6 +2270,9 @@ begin
   BrowseArea(S7PlusIds_NativeMAreaRID, S7PlusTiRid_MArea, 'MArea');
 
   S7PlusMarkArrays(Cands);
+  //the maximum length of each STRING is in its value
+  if ResolveStringLengths(Cands)<>ioOk then
+    Partial := true;
   Tags := S7PlusTagInfosOf(Cands);
 
   if Partial and SessionNeedsAuth then

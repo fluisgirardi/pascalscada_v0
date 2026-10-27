@@ -265,6 +265,7 @@ resourcestring
   SS7PTBSkipNotAScalar          = 'não vira tag: estrutura (use os membros)';
   SS7PTBSkipUnsupportedType     = 'não vira tag: tipo não suportado';
   SS7PTBSkipArrayElement        = 'não vira tag: elemento de array';
+  SS7PTBSkipStringLength        = 'não vira tag: não foi possível ler o tamanho da STRING';
   SS7PTBReadFirst               = 'Leia as variáveis do CLP primeiro.';
   SS7PTBReading                 = 'Lendo as variáveis do CLP (pode demorar)...';
   SS7PTBNothingRead             = 'Nenhuma variável foi lida do CLP.';
@@ -503,6 +504,7 @@ resourcestring
   SS7PTBSkipNotAScalar          = 'not a tag: structure (use its members)';
   SS7PTBSkipUnsupportedType     = 'not a tag: unsupported type';
   SS7PTBSkipArrayElement        = 'not a tag: array element';
+  SS7PTBSkipStringLength        = 'not a tag: the STRING length could not be read';
   SS7PTBReadFirst               = 'Read the variables from the PLC first.';
   SS7PTBReading                 = 'Reading the variables from the PLC (may take a while)...';
   SS7PTBNothingRead             = 'No variable was read from the PLC.';
