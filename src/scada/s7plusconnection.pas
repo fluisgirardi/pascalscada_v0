@@ -64,6 +64,10 @@ type
     //: notification for this item. 0 = the item's 1-based position in the request. Set it
     //: when several subscriptions share one connection so ids stay unique across all of them.
     RefId:Cardinal;
+    //: Bytes this item's value is expected to take in the reply (TS7PlusVarInfo.DataSize);
+    //: 0 = not known (S7PlusUnknownItemBytes is assumed). ReadMultipleSymbolic keeps the
+    //: reply of each request inside one PDU with it.
+    ExpectedSize:Integer;
   end;
   TS7PlusMultiReadItemArray = array of TS7PlusMultiReadItem;
 
@@ -150,6 +154,8 @@ type
     FTiaSysObjectRequestId:Cardinal;
     FSessionSetupOK:Boolean;
     FSrcRef:Word;
+    FTpduCode:Byte;      //TPDU size asked for at the COTP connect ($0A = 1024 bytes)
+    FTpduBytes:Integer;  //the TPDU size in use (what the PLC confirmed)
     FLastReturnValue:QWord;
     FOnDebug:TS7PlusDebugEvent;
 
@@ -562,6 +568,12 @@ type
     //: Whether to activate TLS (after InitSSL, before CreateObject). Most S7-1200/1500
     //: firmware from TIA Portal V15+ requires this for anything beyond the initial
     //: handshake - default true. Set to false only for known-legacy V1-only firmware.
+    //: TPDU size asked for at the COTP connect, as the ISO 8073 code: $07=128, $08=256, $09=512,
+    //: $0A=1024 (default), $0B=2048, $0C=4096, $0D=8192. The PLC answers with the one it takes;
+    //: a bigger TPDU makes every PDU of the session bigger (fragments, replies).
+    property TpduSizeCode:Byte read FTpduCode write FTpduCode;
+    //: The TPDU size in bytes the PLC confirmed (1024 until a connection is made).
+    property TpduBytes:Integer read FTpduBytes;
     property UseTLS:Boolean read FUseTLS write FUseTLS;
     //: True once the TLS tunnel is established and in use for all further messages.
     property TLSActive:Boolean read FTLSActive;
@@ -668,6 +680,8 @@ begin
   FConnected := false;
   FSessionSetupOK := false;
   FSrcRef := $0001;
+  FTpduCode := $0A;
+  FTpduBytes := 1024;
   //Most S7-1200/1500 firmware from TIA Portal V15+ requires TLS for anything beyond
   //the initial handshake (InitSSL/CreateObject) - default to on.
   FUseTLS := true;
@@ -721,8 +735,8 @@ begin
     RemoteTSAPBytes[i-1] := Byte(S7PlusRemoteTSAP[i]);
   CalledTSAP := BytesConcat(BytesOf([$C2, Length(RemoteTSAPBytes)]), RemoteTSAPBytes);
 
-  //-- Requested TPDU size: code $0A = 1024 bytes.
-  PDUSizeParam := BytesOf([$C0, 1, $0A]);
+  //-- Requested TPDU size (default code $0A = 1024 bytes).
+  PDUSizeParam := BytesOf([$C0, 1, FTpduCode]);
 
   Params := BytesConcat(BytesConcat(CallingTSAP, CalledTSAP), PDUSizeParam);
 
@@ -765,6 +779,17 @@ begin
     Debug('COTP CC << PDU nao e Connection Confirm ($D0)');
     exit;
   end;
+
+  //-- The TPDU size the PLC takes: parameter $C0 of the Connection Confirm (it may be smaller).
+  FTpduBytes := 1 shl 10;
+  i := 6;       //after length, type, dst-ref(2), src-ref(2), class
+  while i+1<Length(IOResult2.BufferToRead) do begin
+    if (IOResult2.BufferToRead[i]=$C0) and (IOResult2.BufferToRead[i+1]=1) and (i+2<Length(IOResult2.BufferToRead)) and
+       (IOResult2.BufferToRead[i+2]>=7) and (IOResult2.BufferToRead[i+2]<=$0D) then
+      FTpduBytes := 1 shl IOResult2.BufferToRead[i+2];
+    Inc(i, 2+IOResult2.BufferToRead[i+1]);
+  end;
+  Debug(Format('COTP: TPDU pedido %d, confirmado %d bytes.', [1 shl FTpduCode, FTpduBytes]));
 
   Result := true;
   FConnected := true;
@@ -2040,9 +2065,19 @@ const
   //(CotpConnect) minus 4 TPKT, 3 ISO, 5+17 of TLS record overhead, 4 of S7CommPlus header and
   //4 of trailer (the trailer has to fit into the last PDU) - the reference driver's MaxSize.
   //A request bigger than this in ONE packet makes the PLC drop the connection.
-  S7PlusMaxFragmentSize = 1024 - 4 - 3 - 5 - 17 - 4 - 4;
-  //A received fragment this big, with no trailer after it, is not the end of the message.
-  S7PlusFullFragmentMin = 900;
+  //(the TPDU size is the one the PLC confirmed: TpduBytes - S7PlusFragmentOverhead)
+  S7PlusFragmentOverhead = 4 + 3 + 5 + 17 + 4 + 4;
+  S7PlusMaxFragmentSize = 1024 - S7PlusFragmentOverhead;
+  //A received fragment this big, with no trailer after it, is not the end of the message
+  //(TpduBytes - S7PlusFullFragmentMargin).
+  S7PlusFullFragmentMargin = 124;
+  //What the reply of a batched read takes besides the values: a fixed part, and per item the
+  //item number, the PValue header and its length.
+  S7PlusReplyHeaderBytes = 16;
+  S7PlusReplyItemOverhead = 8;
+  //Assumed size of an item whose size is not known (a structure).
+  S7PlusUnknownItemBytes = 32;
+  S7PlusFullFragmentMin = 1024 - S7PlusFullFragmentMargin;
   S7PlusVersion_SystemEvent = $FE;
   S7PlusSystemEventReturnValueId = $9D71; //: 40305 - matches python-snap7's _SYSTEM_EVENT_RETURN_VALUE_ID.
 
@@ -2181,7 +2216,7 @@ begin
   Pos := 0;
   repeat
     N := Length(Body)-Pos;
-    if N>S7PlusMaxFragmentSize then N := S7PlusMaxFragmentSize;
+    if N>FTpduBytes-S7PlusFragmentOverhead then N := FTpduBytes-S7PlusFragmentOverhead;
     Fragment := BytesConcat(EncodeS7PlusHeader(Version, N), BytesCopy(Body, Pos, N));
     Inc(Pos, N);
     if Pos>=Length(Body) then
@@ -2205,7 +2240,7 @@ begin
   if Version=S7PlusVersion_SystemEvent then exit;
   //Only a big fragment with nothing after its data can be a first fragment: the last one of a
   //message is always followed by the trailer, and ordinary short frames stay untouched.
-  if (Length(Frame)<>Consumed+DataLen) or (DataLen<S7PlusFullFragmentMin) then exit;
+  if (Length(Frame)<>Consumed+DataLen) or (DataLen<FTpduBytes-S7PlusFullFragmentMargin) then exit;
 
   AllData := BytesCopy(Frame, Consumed, DataLen);
   repeat
@@ -2220,7 +2255,7 @@ begin
     end;
     Consumed2 := DecodeS7PlusHeader(NextFrame, 0, Version2, DataLen2);
     AllData := BytesConcat(AllData, BytesCopy(NextFrame, Consumed2, DataLen2));
-    More := (Length(NextFrame)=Consumed2+DataLen2) and (DataLen2>=S7PlusFullFragmentMin);
+    More := (Length(NextFrame)=Consumed2+DataLen2) and (DataLen2>=FTpduBytes-S7PlusFullFragmentMargin);
   until not More;
   if Length(AllData)>$FFFF then begin
     Debug(Format('CompleteFragments: mensagem fragmentada grande demais (%d bytes)',[Length(AllData)]));
@@ -3612,7 +3647,7 @@ var
   Chunk:TS7PlusMultiReadItemArray;
   ChunkResults:TS7PlusMultiReadResultArray;
   Payload, Resp:TBytes;
-  First, N, i:Integer;
+  First, N, i, Bytes, ItemBytes, Budget:Integer;
 begin
   SetLength(Results, Length(Items));
   for i:=0 to High(Items) do begin
@@ -3623,8 +3658,20 @@ begin
 
   First := 0;
   while First<Length(Items) do begin
-    N := Length(Items)-First;
-    if N>FMaxItemsPerRequest then N := FMaxItemsPerRequest;
+    //As many items as the item limit and the reply allow: a reply that does not fit one PDU
+    //(measured on a PLCSim: more than ~990 bytes) is answered with a fatal system event that
+    //ends the session. One item alone goes out whatever its size.
+    Budget := FTpduBytes-S7PlusFragmentOverhead-S7PlusReplyHeaderBytes;
+    N := 0;
+    Bytes := 0;
+    while (First+N<Length(Items)) and (N<FMaxItemsPerRequest) do begin
+      ItemBytes := Items[First+N].ExpectedSize;
+      if ItemBytes<=0 then ItemBytes := S7PlusUnknownItemBytes;
+      Inc(ItemBytes, S7PlusReplyItemOverhead);
+      if (N>0) and (Bytes+ItemBytes>Budget) then break;
+      Inc(Bytes, ItemBytes);
+      Inc(N);
+    end;
     SetLength(Chunk, N);
     for i:=0 to N-1 do
       Chunk[i] := Items[First+i];

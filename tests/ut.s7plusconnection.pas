@@ -123,6 +123,10 @@ type
     procedure AFailingRequestKeepsWhatTheEarlierOnesRead;
     procedure TheDefaultLimitIsTheMeasuredOne;
     procedure TheLimitCannotBeLessThanOne;
+    procedure ABatchOfBigValuesIsSplitByTheSizeOfTheReply;
+    procedure AnItemBiggerThanTheReplyGoesOutAlone;
+    procedure ItemsOfUnknownSizeAreCountedAsThirtyTwoBytes;
+    procedure SmallItemsStillFillARequestUpToTheItemLimit;
   end;
 
   { TTestS7PlusMultiWrite }
@@ -608,6 +612,7 @@ begin
     SetLength(Result[i].Lids, 2);
     Result[i].Lids[0] := 1+i;
     Result[i].Lids[1] := 4;
+    Result[i].ExpectedSize := 1;       //the replies the tests queue carry one byte per item
   end;
 end;
 
@@ -1186,6 +1191,84 @@ begin
   QueueReply('00 00');
   AssertTrue('101 items', FConn.WriteMultipleSymbolic(Items, R));
   AssertEquals('two more requests', 3, RequestsSent);
+end;
+
+procedure TTestS7PlusFragments.ABatchOfBigValuesIsSplitByTheSizeOfTheReply;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+  F:TBytes;
+  i:Integer;
+begin
+  //a reply that does not fit one PDU (~990 bytes on a PLCSim) is answered with a fatal system
+  //event that ends the session: 10 items of 102 bytes must not go in one request
+  Items := ReadItems(10);
+  for i:=0 to 9 do
+    Items[i].ExpectedSize := 102;
+  QueueReadReply(0, 8);
+  QueueReadReply(8, 2);
+  AssertTrue('read', FConn.ReadMultipleSymbolic(Items, R));
+  AssertEquals('two requests (8+2)', 2, FPort.WriteCount);
+  F := FPort.WrittenFrame(0);
+  AssertEquals('first request item count', 8, F[7+4+14+4]);
+  F := FPort.WrittenFrame(1);
+  AssertEquals('second request item count', 2, F[7+4+14+4]);
+  AssertEquals('results for every item', 10, Length(R));
+end;
+
+procedure TTestS7PlusFragments.AnItemBiggerThanTheReplyGoesOutAlone;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+  F:TBytes;
+  i:Integer;
+begin
+  Items := ReadItems(3);
+  for i:=0 to 2 do
+    Items[i].ExpectedSize := 2000;
+  QueueReadReply(0, 1);
+  QueueReadReply(1, 1);
+  QueueReadReply(2, 1);
+  AssertTrue('read', FConn.ReadMultipleSymbolic(Items, R));
+  AssertEquals('one request each', 3, FPort.WriteCount);
+  F := FPort.WrittenFrame(1);
+  AssertEquals('one item', 1, F[7+4+14+4]);
+end;
+
+procedure TTestS7PlusFragments.ItemsOfUnknownSizeAreCountedAsThirtyTwoBytes;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+  F:TBytes;
+  i:Integer;
+begin
+  //32 + 8 of overhead = 40 bytes each: 24 fit in the 971 left of a PDU
+  Items := ReadItems(40);
+  for i:=0 to 39 do
+    Items[i].ExpectedSize := 0;
+  QueueReadReply(0, 24);
+  QueueReadReply(24, 16);
+  AssertTrue('read', FConn.ReadMultipleSymbolic(Items, R));
+  AssertEquals('two requests', 2, FPort.WriteCount);
+  F := FPort.WrittenFrame(0);
+  AssertEquals('24 in the first', 24, F[7+4+14+4]);
+end;
+
+procedure TTestS7PlusFragments.SmallItemsStillFillARequestUpToTheItemLimit;
+var
+  Items:TS7PlusMultiReadItemArray;
+  R:TS7PlusMultiReadResultArray;
+  F:TBytes;
+  i:Integer;
+begin
+  Items := ReadItems(100);
+  for i:=0 to 99 do
+    Items[i].ExpectedSize := 4;       //12 bytes each: 100 of them are 1200 > 971, so 80 fit
+  QueueReadReply(0, 80);
+  QueueReadReply(80, 20);
+  AssertTrue('read', FConn.ReadMultipleSymbolic(Items, R));
+  F := FPort.WrittenFrame(0);
+  AssertEquals('80 4-byte DInts fit one reply', 80, F[7+4+14+4]);
 end;
 
 initialization
