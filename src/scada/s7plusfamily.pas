@@ -31,7 +31,7 @@ unit S7PlusFamily;
 interface
 
 uses
-  Classes, SysUtils, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort,
+  Classes, SysUtils, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort, CommTypes,
   S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
   PLCString, S7PlusTagPlan;
 
@@ -253,6 +253,7 @@ type
     property Legitimated:Boolean read FLegitimated write FLegitimated;
     property AuthPending:Boolean read FAuthPending write FAuthPending;
 
+    function NotifyThisEvents:TNotifyThisEvents; override;
     procedure PortDisconnected(Sender:TObject); override;
     procedure PortClosed(Sender:TObject); override;
   public
@@ -701,6 +702,14 @@ begin
   FReadCS.Leave;
   FWriteCS.Leave;
   FPause.SetEvent;
+end;
+
+//: Without this the port never tells the driver it was closed or lost (the base class asks
+//: for no events): the session kept "connected" over a TCP connection that was gone, and no
+//: new session, login or subscription was made when the port came back.
+function TS7CommPlusDriver.NotifyThisEvents:TNotifyThisEvents;
+begin
+  Result := [ntePortClosed, ntePortDisconnected];
 end;
 
 procedure TS7CommPlusDriver.PortDisconnected(Sender:TObject);
