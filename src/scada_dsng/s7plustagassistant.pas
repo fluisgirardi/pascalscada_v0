@@ -52,7 +52,7 @@ implementation
 
 uses
   Classes, SysUtils, Controls, Tag, ProtocolTypes, ProtocolDriver, PLCTagNumber,
-  S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, hsstrings;
+  PLCBlock, S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, hsstrings;
 
 function UniqueComponentName(aOwner: TComponent; const aBaseName: String): String;
 var
@@ -84,6 +84,7 @@ var
   c:LongInt;
   aOwner:TComponent;
   aNumber:TPLCTagNumber;
+  aBlock:TPLCBlock;
 begin
   if not (aProtocolDriver is TS7CommPlusDriver) then
     raise Exception.Create(SS7PTBOnlyS7PlusDriver);
@@ -97,6 +98,27 @@ begin
     plan:=frmTb.GetImportPlan;
 
     for c:=0 to High(plan) do begin
+      if plan[c].IsBlock then begin
+        //an array of scalars: one block of Size elements
+        aBlock:=TPLCBlock(CreateProc(TPLCBlock));
+
+        aOwner:=aBlock.Owner;
+        if aOwner=nil then aOwner:=aOwnerOfNewTags;
+
+        aBlock.Name           := UniqueComponentName(aOwner, plan[c].CompName);
+        aBlock.LongAddress    := plan[c].Path;
+        aBlock.TagType        := plan[c].TagType;
+        aBlock.SwapBytes      := plan[c].SwapBytes;
+        aBlock.SwapWords      := plan[c].SwapWords;
+        aBlock.SwapDWords     := plan[c].SwapDWords;
+        aBlock.Size           := plan[c].Size;
+        aBlock.RefreshTime    := plan[c].Scan;
+        aBlock.ProtocolDriver := TProtocolDriver(aProtocolDriver);
+
+        InsertHook(aBlock);
+        continue;
+      end;
+
       aNumber:=TPLCTagNumber(CreateProc(TPLCTagNumber));
 
       aOwner:=aNumber.Owner;

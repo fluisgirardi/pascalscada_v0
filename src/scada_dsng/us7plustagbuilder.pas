@@ -300,6 +300,8 @@ end;
 function TfrmS7PlusTagBuilder.Decoration(aIndex: LongInt): String;
 begin
   Result:=' : '+S7PlusSoftTypeName(FCandidates[aIndex].SoftDataType);
+  if FCandidates[aIndex].IsArray then
+    Result:=Result+'['+IntToStr(FCandidates[aIndex].ElementCount)+']';
   case FCandidates[aIndex].Skip of
     srUnsupportedType: Result:=Result+'   ('+SS7PTBSkipUnsupportedType+')';
     srArrayElement:    Result:=Result+'   ('+SS7PTBSkipArrayElement+')';
@@ -426,11 +428,20 @@ var
 begin
   info:=InfoOf(aNode);
 
+  //an array is one tag whatever is listed below it (its elements, when shown)
+  if IsTaggable(aNode) then begin
+    child:=aNode.GetFirstChild;
+    while Assigned(child) do begin
+      UpdateNodeState(child);
+      child:=child.GetNextSibling;
+    end;
+    if FChecked[info.Index] then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
+    aNode.StateIndex:=Result;
+    exit;
+  end;
+
   if not aNode.HasChildren then begin
-    if IsTaggable(aNode) then begin
-      if FChecked[info.Index] then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
-    end else
-      Result:=-1;
+    Result:=-1;
     aNode.StateIndex:=Result;
     exit;
   end;
@@ -474,10 +485,11 @@ var
   child: TTreeNode;
 begin
   Result:=true;
-  if not aNode.HasChildren then begin
-    if IsTaggable(aNode) then Result:=FChecked[InfoOf(aNode).Index];
+  if IsTaggable(aNode) then begin
+    Result:=FChecked[InfoOf(aNode).Index];
     exit;
   end;
+  if not aNode.HasChildren then exit;
   child:=aNode.GetFirstChild;
   while Assigned(child) do begin
     if not BranchAllChecked(child) then begin
@@ -492,8 +504,8 @@ procedure TfrmS7PlusTagBuilder.SetBranch(aNode: TTreeNode; aValue: Boolean);
 var
   child: TTreeNode;
 begin
-  if not aNode.HasChildren then begin
-    if IsTaggable(aNode) then FChecked[InfoOf(aNode).Index]:=aValue;
+  if IsTaggable(aNode) then begin
+    FChecked[InfoOf(aNode).Index]:=aValue;
     exit;
   end;
   child:=aNode.GetFirstChild;
@@ -540,7 +552,7 @@ var
 begin
   for c:=0 to tvTags.Items.Count-1 do begin
     n:=tvTags.Items[c];
-    if (not n.HasChildren) and IsTaggable(n) then
+    if IsTaggable(n) then
       case aMode of
         0: FChecked[InfoOf(n).Index]:=true;
         1: FChecked[InfoOf(n).Index]:=false;
@@ -680,6 +692,7 @@ var
   c:LongInt;
 begin
   FCandidates:=aCandidates;
+  S7PlusMarkArrays(FCandidates);
   FBlocksRead:=aBlocksRead;
 
   FSkippedCount:=0;
@@ -757,6 +770,11 @@ begin
     Result[count].SwapWords := FCandidates[c].SwapWords;
     Result[count].SwapDWords:= FCandidates[c].SwapDWords;
     Result[count].Scan      := spinScan.Value;
+    Result[count].IsBlock   := FCandidates[c].IsArray;
+    if FCandidates[c].IsArray then
+      Result[count].Size    := FCandidates[c].ElementCount
+    else
+      Result[count].Size    := 1;
     inc(count);
   end;
 

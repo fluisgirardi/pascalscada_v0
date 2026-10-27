@@ -55,6 +55,11 @@ type
     procedure ADotInsideBracketsDoesNotSplit;
     procedure ASingleLevelIsOneSegment;
     procedure AnEmptyPathHasNoLevels;
+    procedure AnArrayOfScalarsIsMarkedWithItsElementCount;
+    procedure ElementsOfAnArrayStaySkipped;
+    procedure AScalarWithoutElementsIsNotAnArray;
+    procedure ASecondArrayDoesNotTakeTheElementsOfTheFirst;
+    procedure AMultiDimensionalArrayCountsEveryElement;
   end;
 
 implementation
@@ -275,6 +280,72 @@ end;
 procedure TTestS7PlusTagPlan.AnEmptyPathHasNoLevels;
 begin
   AssertEquals('count', 0, Length(S7PlusSplitPath('')));
+end;
+
+function ListOf(const Names:array of String; const Types:array of Byte; ASubst:Boolean):TS7PlusCandidateArray;
+var
+  i:Integer;
+  V:TS7PlusVarInfo;
+begin
+  SetLength(Result, Length(Names));
+  for i:=0 to High(Names) do begin
+    FillChar(V, SizeOf(V), 0);
+    V.Name := Names[i];
+    V.SoftDataType := Types[i];
+    Result[i] := S7PlusClassifyVar(V, '');
+  end;
+  S7PlusMarkArrays(Result);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayOfScalarsIsMarkedWithItsElementCount;
+var
+  L:TS7PlusCandidateArray;
+begin
+  //DB5 of the test PLC: Teste, Array[0..3] of DWord (the PLC lists the array, then its elements)
+  L := ListOf(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.Teste[2]', 'DB5.Teste[3]'],
+              [6, 6, 6, 6, 6], false);
+  AssertTrue('the array is one tag', L[0].Skip=srNone);
+  AssertTrue('and is an array', L[0].IsArray);
+  AssertEquals('four elements', 4, L[0].ElementCount);
+end;
+
+procedure TTestS7PlusTagPlan.ElementsOfAnArrayStaySkipped;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListOf(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]'], [6, 6, 6], false);
+  AssertTrue('element 0', L[1].Skip=srArrayElement);
+  AssertTrue('element 1', L[2].Skip=srArrayElement);
+  AssertFalse('an element is not an array', L[1].IsArray);
+end;
+
+procedure TTestS7PlusTagPlan.AScalarWithoutElementsIsNotAnArray;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListOf(['DB4.Var1', 'DB4.Var2'], [7, 7], false);
+  AssertFalse('Var1', L[0].IsArray);
+  AssertEquals('no elements', 0, L[0].ElementCount);
+end;
+
+procedure TTestS7PlusTagPlan.ASecondArrayDoesNotTakeTheElementsOfTheFirst;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListOf(['DB5.A', 'DB5.A[0]', 'DB5.A[1]', 'DB5.B', 'DB5.B[0]', 'DB5.B[1]', 'DB5.B[2]'],
+              [7, 7, 7, 8, 8, 8, 8], false);
+  AssertEquals('A', 2, L[0].ElementCount);
+  AssertEquals('B', 3, L[3].ElementCount);
+end;
+
+procedure TTestS7PlusTagPlan.AMultiDimensionalArrayCountsEveryElement;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListOf(['DB5.M', 'DB5.M[0,0]', 'DB5.M[0,1]', 'DB5.M[1,0]', 'DB5.M[1,1]'],
+              [5, 5, 5, 5, 5], false);
+  AssertTrue('array', L[0].IsArray);
+  AssertEquals('2 x 2 elements', 4, L[0].ElementCount);
 end;
 
 initialization
