@@ -219,13 +219,18 @@ jobs:
 
       - name: Build and test inside an i386 container
         run: |
-          docker run --rm --platform linux/386 \
+          docker run --rm --network host --platform linux/386 \
             -v "$PWD":/src -w /src \
             i386/debian:bookworm \
             bash -euxc '
               export DEBIAN_FRONTEND=noninteractive
-              apt-get update -qq
-              apt-get install -y -qq lazarus lcl-nogui
+              # the runner's network blinks now and then (DNS in the container):
+              # try three times before giving up
+              for try in 1 2 3; do
+                apt-get update -qq && apt-get install -y -qq lazarus lcl-nogui && break
+                sleep 15
+              done
+              command -v lazbuild
 
               lazbuild --add-package-link pascalscada_common.lpk
               lazbuild --add-package-link pascalscada.lpk
@@ -304,13 +309,18 @@ jobs:
 
       - name: Build and test inside an armhf container
         run: |
-          docker run --rm --platform linux/arm/v7 \
+          docker run --rm --network host --platform linux/arm/v7 \
             -v "$PWD":/src -w /src \
             arm32v7/debian:bookworm \
             bash -euxc '
               export DEBIAN_FRONTEND=noninteractive
-              apt-get update -qq
-              apt-get install -y -qq lazarus lcl-nogui
+              # the runner's network blinks now and then (DNS in the container):
+              # try three times before giving up
+              for try in 1 2 3; do
+                apt-get update -qq && apt-get install -y -qq lazarus lcl-nogui && break
+                sleep 15
+              done
+              command -v lazbuild
 
               lazbuild --add-package-link pascalscada_common.lpk
               lazbuild --add-package-link pascalscada.lpk
