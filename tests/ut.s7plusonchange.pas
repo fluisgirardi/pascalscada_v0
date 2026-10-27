@@ -79,6 +79,7 @@ type
     procedure LosingTheSessionFlagsTheTagAndForgetsTheIds;
     procedure TheRequestAndScanLimitsHaveTheirDefaults;
     procedure TheLimitsCannotBeSetBelowOne;
+    procedure TheSubscriptionCycleDefaultsTo100AndNeverGoesBelowIt;
   private
     function Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
     function Bytes(const B:array of Byte):TArrayOfDouble;
@@ -352,6 +353,24 @@ begin
   AssertEquals('items per request', 100, FDriver.MaxItemsPerRequest);
   AssertEquals('tags per scan round', 500, FDriver.MaxTagsPerScan);
   AssertEquals('items per subscription', 500, FDriver.MaxItemsPerSubscription);
+end;
+
+procedure TTestS7PlusOnChange.TheSubscriptionCycleDefaultsTo100AndNeverGoesBelowIt;
+begin
+  AssertEquals('default', 100, FDriver.SubscriptionCycleMs);
+  AssertEquals('the minimum a PLC took', 100, S7PlusMinSubscriptionCycleMs);
+  FDriver.SubscriptionCycleMs := 20;
+  AssertEquals('20 ms is set to the minimum', 100, FDriver.SubscriptionCycleMs);
+  FDriver.SubscriptionCycleMs := 99;
+  AssertEquals('so is 99', 100, FDriver.SubscriptionCycleMs);
+  FDriver.SubscriptionCycleMs := 0;
+  AssertEquals('and zero', 100, FDriver.SubscriptionCycleMs);
+  FDriver.SubscriptionCycleMs := -5;
+  AssertEquals('and a negative one', 100, FDriver.SubscriptionCycleMs);
+  FDriver.SubscriptionCycleMs := 100;
+  AssertEquals('100 is accepted', 100, FDriver.SubscriptionCycleMs);
+  FDriver.SubscriptionCycleMs := 250;
+  AssertEquals('and a longer one is kept', 250, FDriver.SubscriptionCycleMs);
 end;
 
 procedure TTestS7PlusOnChange.TheLimitsCannotBeSetBelowOne;

@@ -40,6 +40,10 @@ uses
 procedure SetTagBuilderToolForS7CommPlusProtocol(TagBuilderTool:TOpenTagEditor);
 
 const
+  //: Smallest subscription cycle a PLC was seen to accept (a PLCSim refused 90 ms and below,
+  //: for DB tags and for process area tags alike). SubscriptionCycleMs never goes below it.
+  S7PlusMinSubscriptionCycleMs = 100;
+
   //-- Phase 1 addressing convention for TTagRec.ReadFunction/WriteFunction.
   //-- Symbolic Path-based addressing (Phase 2) will replace this.
   S7PlusRF_DB       = 1;
@@ -154,6 +158,7 @@ type
     function GetUseTLS:Boolean;
     procedure SetUseTLS(AValue:Boolean);
     procedure SetMaxItemsPerRequest(AValue:Integer);
+    procedure SetSubCycleMs(AValue:Integer);
     procedure SetMaxTagsPerScan(AValue:Integer);
     procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
@@ -319,9 +324,13 @@ type
     //: 2005, so how many fit depends on how long the tags' LID paths are.
     property MaxItemsPerSubscription:Integer read FMaxItemsPerSubscription write SetMaxItemsPerSubscription default 500;
     //: Sampling cycle, in milliseconds, of the subscriptions that deliver tags whose
-    //: RefreshTime is 0 (on change). The PLC reports nothing faster than this; the
-    //: lowest value seen to work is 100.
-    property SubscriptionCycleMs:Integer read FSubCycleMs write FSubCycleMs default 100;
+    //: RefreshTime is 0 (on change): how often the PLC looks for a change, so a value that
+    //: flips faster than half of it can go unnoticed (a 10 Hz clock flips every 50 ms: with
+    //: 100 ms it is always seen in the same state). The PLC takes nothing below 100
+    //: (S7PlusMinSubscriptionCycleMs; a shorter subscription is refused and the tags fall
+    //: back to 1 s polling), so a lower value is set to 100. For something faster, give the
+    //: tag a RefreshTime above 0 (polling).
+    property SubscriptionCycleMs:Integer read FSubCycleMs write SetSubCycleMs default 100;
     //: Notification credit of those subscriptions. A positive value is renewed
     //: automatically (the PLC stops sending once its CreditTick reaches the limit); -1 asks
     //: for unlimited credit with no renewal (documented by the S7CommPlusDriver author, not
@@ -1137,6 +1146,13 @@ end;
 //: ids are unique across all of them, so a notification identifies its tag by id alone.
 //: A tag whose subscription cannot be created is polled instead (SubFallback) rather than
 //: left silent.
+procedure TS7CommPlusDriver.SetSubCycleMs(AValue:Integer);
+begin
+  if AValue<S7PlusMinSubscriptionCycleMs then
+    AValue := S7PlusMinSubscriptionCycleMs;
+  FSubCycleMs := AValue;
+end;
+
 procedure TS7CommPlusDriver.ManageSubscriptions(Now_:QWord);
 const
   MaxCreateAttempts = 3;
