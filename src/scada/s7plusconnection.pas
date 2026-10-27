@@ -3307,6 +3307,13 @@ end;
 // Area / DB read-write (GetMultiVariables / SetMultiVariables, single item)
 //===========================================================================
 
+//TODO: numeric DB/area addressing (ReadDB/WriteDB/ReadArea/WriteArea and tags with
+//MemFile_DB + MemAddress) is NOT served by the PLCSim, even logged in and on a non-optimized DB
+//(checked 2026-10-27; python-snap7 builds the very same [Start+1, Size] address). The PLC takes
+//the two LIDs as symbolic ids: LID 1 returns the type-info RID (ioOk with 4 wrong bytes at offset
+//0), any other LID is an item error. Planned: emulate it through the browse (a member's classic
+//ByteOffset is the true layout of a non-optimized DB; named I/Q/M tags only for areas; writes of
+//whole members only), or at least fail the numeric read instead of returning the RID.
 function TS7PlusConnection.BuildAreaPayload(AccessArea, AccessSubArea:Cardinal; Start:Integer; const WriteData:TBytes; IsWrite:Boolean; SizeIfRead:Integer):TBytes;
 var
   Addr:TS7PlusItemAddress;

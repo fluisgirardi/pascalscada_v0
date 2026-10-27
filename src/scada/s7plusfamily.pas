@@ -1645,6 +1645,8 @@ begin
     exit;
   end;
 
+  //TODO: numeric addressing does not work on the PLCSim (see BuildAreaPayload); until it is
+  //emulated through the browse, a tag without Path gets wrong data at offset 0 or an error.
   if tagrec.ReadFunction=S7PlusRF_DB then
     ok := FConnection.DBRead(tagrec.File_DB, tagrec.Address, tagrec.Size, Data)
   else if AreaRIDOf(tagrec.ReadFunction, AreaRID) then
