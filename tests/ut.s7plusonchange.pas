@@ -59,6 +59,13 @@ type
     function  ReadAuthPending:Boolean;
     procedure SetAuthPending(AValue:Boolean);
     function  WantedPortEvents:TNotifyThisEvents;
+    //subscription watchdog
+    procedure AddSub(ObjectId:Cardinal; Now_:QWord);
+    procedure TouchSub(ObjectId:Cardinal; Now_:QWord);
+    procedure Watch(Now_:QWord);
+    function  ResetScheduled:Boolean;
+    procedure SetResetScheduled(AValue:Boolean);
+    function  TimeoutNow:Integer;
   end;
 
   { TTestS7PlusOnChange }
@@ -102,6 +109,14 @@ type
     procedure SettingTheSameCredentialsSchedulesNothing;
     procedure AuthWithNoConnectionStoresTheCredentialsAndFails;
     procedure ThePortTellsTheDriverWhenItClosesOrDropsTheConnection;
+    procedure ASilentSubscriptionMakesTheSubscriptionsBeCreatedAgain;
+    procedure ASubscriptionThatKeepsNotifyingIsLeftAlone;
+    procedure ANotificationRestartsTheSilence;
+    procedure OnlyTheSilentOneOfSeveralSubscriptionsTriggersIt;
+    procedure ZeroTurnsTheWatchdogOff;
+    procedure TheTimeoutIsNeverUnderTenCycles;
+    procedure ANegativeTimeoutIsZero;
+    procedure WithNoSubscriptionsThereIsNothingToWatch;
   private
     function Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
     function Bytes(const B:array of Byte):TArrayOfDouble;
@@ -192,6 +207,36 @@ end;
 function TS7DriverProbe.WantedPortEvents:TNotifyThisEvents;
 begin
   Result:=NotifyThisEvents;
+end;
+
+procedure TS7DriverProbe.AddSub(ObjectId:Cardinal; Now_:QWord);
+begin
+  RegisterSubscription(ObjectId, 10, Now_);
+end;
+
+procedure TS7DriverProbe.TouchSub(ObjectId:Cardinal; Now_:QWord);
+begin
+  TouchSubscription(ObjectId, Now_);
+end;
+
+procedure TS7DriverProbe.Watch(Now_:QWord);
+begin
+  CheckSubscriptionWatchdog(Now_);
+end;
+
+function TS7DriverProbe.ResetScheduled:Boolean;
+begin
+  Result:=SubResetPending;
+end;
+
+procedure TS7DriverProbe.SetResetScheduled(AValue:Boolean);
+begin
+  SubResetPending:=AValue;
+end;
+
+function TS7DriverProbe.TimeoutNow:Integer;
+begin
+  Result:=SubscriptionTimeoutMsNow;
 end;
 
 function TS7DriverProbe.WriteSizeOf(SoftDataType:Byte):Integer;
@@ -677,6 +722,84 @@ begin
   //TCP connection that was gone, and nothing was made again when the port came back
   AssertTrue('closing', ntePortClosed in FDriver.WantedPortEvents);
   AssertTrue('dropping', ntePortDisconnected in FDriver.WantedPortEvents);
+end;
+
+procedure TTestS7PlusOnChange.ASilentSubscriptionMakesTheSubscriptionsBeCreatedAgain;
+begin
+  //a live subscription notifies every cycle: silence past the timeout means it was lost
+  FDriver.AddSub($70000001, 1000);
+  FDriver.SetResetScheduled(false);
+  FDriver.Watch(1000+5001);
+  AssertTrue('silent for more than 5 s', FDriver.ResetScheduled);
+end;
+
+procedure TTestS7PlusOnChange.ASubscriptionThatKeepsNotifyingIsLeftAlone;
+begin
+  FDriver.AddSub($70000001, 1000);
+  FDriver.SetResetScheduled(false);
+  FDriver.Watch(1000+5000);
+  AssertFalse('exactly at the timeout is still fine', FDriver.ResetScheduled);
+  FDriver.Watch(1000+2000);
+  AssertFalse('and so is less', FDriver.ResetScheduled);
+end;
+
+procedure TTestS7PlusOnChange.ANotificationRestartsTheSilence;
+begin
+  FDriver.AddSub($70000001, 1000);
+  FDriver.TouchSub($70000001, 5000);
+  FDriver.SetResetScheduled(false);
+  FDriver.Watch(5000+4000);
+  AssertFalse('counted from the last notification', FDriver.ResetScheduled);
+  FDriver.Watch(5000+5001);
+  AssertTrue('and it runs out from there', FDriver.ResetScheduled);
+end;
+
+procedure TTestS7PlusOnChange.OnlyTheSilentOneOfSeveralSubscriptionsTriggersIt;
+begin
+  FDriver.AddSub($70000001, 1000);
+  FDriver.AddSub($70000002, 1000);
+  FDriver.TouchSub($70000001, 9000);
+  FDriver.SetResetScheduled(false);
+  FDriver.Watch(9000+100);
+  AssertTrue('the second one has been silent since 1000', FDriver.ResetScheduled);
+  FDriver.SetResetScheduled(false);
+  FDriver.TouchSub($70000002, 9050);
+  FDriver.Watch(9000+100);
+  AssertFalse('both alive', FDriver.ResetScheduled);
+end;
+
+procedure TTestS7PlusOnChange.ZeroTurnsTheWatchdogOff;
+begin
+  FDriver.SubscriptionTimeoutMs := 0;
+  FDriver.AddSub($70000001, 1000);
+  FDriver.SetResetScheduled(false);
+  FDriver.Watch(1000+600000);
+  AssertFalse('never fires', FDriver.ResetScheduled);
+  AssertEquals('and asks for no timeout', 0, FDriver.TimeoutNow);
+end;
+
+procedure TTestS7PlusOnChange.TheTimeoutIsNeverUnderTenCycles;
+begin
+  AssertEquals('default', 5000, FDriver.SubscriptionTimeoutMs);
+  FDriver.SubscriptionTimeoutMs := 500;
+  AssertEquals('10 cycles of 100 ms', 1000, FDriver.TimeoutNow);
+  FDriver.SubscriptionCycleMs := 300;
+  AssertEquals('10 cycles of 300 ms', 3000, FDriver.TimeoutNow);
+  FDriver.SubscriptionTimeoutMs := 8000;
+  AssertEquals('a bigger one is kept', 8000, FDriver.TimeoutNow);
+end;
+
+procedure TTestS7PlusOnChange.ANegativeTimeoutIsZero;
+begin
+  FDriver.SubscriptionTimeoutMs := -1;
+  AssertEquals(0, FDriver.SubscriptionTimeoutMs);
+end;
+
+procedure TTestS7PlusOnChange.WithNoSubscriptionsThereIsNothingToWatch;
+begin
+  FDriver.SetResetScheduled(false);
+  FDriver.Watch(999999999);
+  AssertFalse(FDriver.ResetScheduled);
 end;
 
 initialization

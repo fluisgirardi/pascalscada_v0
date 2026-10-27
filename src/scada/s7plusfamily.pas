@@ -43,6 +43,10 @@ const
   //: Smallest subscription cycle a PLC was seen to accept (a PLCSim refused 90 ms and below,
   //: for DB tags and for process area tags alike). SubscriptionCycleMs never goes below it.
   S7PlusMinSubscriptionCycleMs = 100;
+  //: A live subscription notifies on every cycle, even with nothing changed (measured on a
+  //: PLCSim: one notification per 100 ms cycle, CreditTick counting them). SubscriptionTimeoutMs
+  //: is never shorter than this many cycles.
+  S7PlusSubTimeoutMinCycles = 10;
 
   //: How long Username/Password must stay unchanged before an open session logs in again,
   //: so that they can be set one after the other without a login with half of the new pair.
@@ -127,6 +131,7 @@ type
   TS7PlusSubscriptionState = record
     ObjectId:Cardinal;
     NextCreditLimit:SmallInt;
+    LastNotificationAt:QWord;   //GetTickCount64 of its creation, then of every notification
   end;
 
   //-- Cache of a DB's or native area's flat variable list (Name/Lids/SoftDataType), so
@@ -166,6 +171,7 @@ type
     FSubResetPending:Boolean; //set by whoever notices the session is gone, consumed by the scan thread
     FSubCycleMs:Integer;
     FSubCreditLimit:SmallInt;
+    FSubTimeoutMs:Integer;
     FMaxItemsPerRequest, FMaxTagsPerScan, FMaxItemsPerSubscription:Integer;
 
     function GetUseTLS:Boolean;
@@ -174,6 +180,7 @@ type
     procedure SetUsername(const AValue:AnsiString);
     procedure SetPassword(const AValue:AnsiString);
     procedure SetSubCycleMs(AValue:Integer);
+    procedure SetSubTimeoutMs(AValue:Integer);
     procedure SetMaxTagsPerScan(AValue:Integer);
     procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
@@ -252,7 +259,18 @@ type
     property AccessLevel:Cardinal read FAccessLevel write FAccessLevel;
     property Legitimated:Boolean read FLegitimated write FLegitimated;
     property AuthPending:Boolean read FAuthPending write FAuthPending;
+    property SubResetPending:Boolean read FSubResetPending write FSubResetPending;
 
+    //: Notes a subscription made on the PLC (state kept for the credit renewal and the watchdog).
+    procedure RegisterSubscription(ObjectId:Cardinal; CreditLimit:SmallInt; Now_:QWord);
+    //: A notification arrived for the subscription: it is alive.
+    procedure TouchSubscription(ObjectId:Cardinal; Now_:QWord);
+    //: How long a subscription may stay silent: SubscriptionTimeoutMs, but never under
+    //: S7PlusSubTimeoutMinCycles cycles; 0 = watchdog off.
+    function SubscriptionTimeoutMsNow:Integer;
+    //: Watchdog: a subscription silent for longer than that while the session stays up (the
+    //: PLC dropped it, ran out of credit, ...) makes the subscriptions be created again.
+    procedure CheckSubscriptionWatchdog(Now_:QWord);
     function NotifyThisEvents:TNotifyThisEvents; override;
     procedure PortDisconnected(Sender:TObject); override;
     procedure PortClosed(Sender:TObject); override;
@@ -392,6 +410,13 @@ type
     //: for unlimited credit with no renewal (documented by the S7CommPlusDriver author, not
     //: yet validated here). Default 10, the value real S7-1500 PLCs are known to accept.
     property SubscriptionCreditLimit:SmallInt read FSubCreditLimit write FSubCreditLimit default 10;
+    //: Watchdog of the subscriptions, in milliseconds: a live subscription notifies on every
+    //: cycle even when no value changed, so one that says nothing for this long, with the
+    //: session still answering, was lost (dropped by the PLC, out of credit...): the driver
+    //: creates the subscriptions again (the tags are flagged as failed until the new ones deliver
+    //: the current values). Never less than 10 cycles (SubscriptionCycleMs). 0 turns it off.
+    //: Default 5000.
+    property SubscriptionTimeoutMs:Integer read FSubTimeoutMs write SetSubTimeoutMs default 5000;
     //: PLC password for legitimation (V2+ with TLS) - some PLCs (protection level "Full
     //: access with password" in TIA Portal) reject writes from an unauthenticated session
     //: even though reads stay open. When set (non-empty), the driver calls Authenticate
@@ -430,6 +455,7 @@ begin
   FUseTLS := true;
   FSubCycleMs := 100;
   FSubCreditLimit := 10;
+  FSubTimeoutMs := 5000;
   FMaxItemsPerRequest := S7PlusDefaultMaxItemsPerRequest;
   FMaxTagsPerScan := 500;
   FMaxItemsPerSubscription := 500;
@@ -1182,6 +1208,7 @@ begin
   //already pushed (including notifications that arrived while a request was in flight).
   ManageSubscriptions(Now_);
   PumpNotifications(0);
+  CheckSubscriptionWatchdog(GetTickCount64);
   MarkAuthErrors(Now_);
 
   //Collect every resolved, independently-scanned tag (derived ones piggyback on their
@@ -1372,6 +1399,56 @@ begin
   FSubCycleMs := AValue;
 end;
 
+procedure TS7CommPlusDriver.SetSubTimeoutMs(AValue:Integer);
+begin
+  if AValue<0 then
+    AValue := 0;
+  FSubTimeoutMs := AValue;
+end;
+
+procedure TS7CommPlusDriver.RegisterSubscription(ObjectId:Cardinal; CreditLimit:SmallInt; Now_:QWord);
+begin
+  SetLength(FSubs, Length(FSubs)+1);
+  FSubs[High(FSubs)].ObjectId := ObjectId;
+  FSubs[High(FSubs)].NextCreditLimit := CreditLimit;
+  FSubs[High(FSubs)].LastNotificationAt := Now_;
+end;
+
+procedure TS7CommPlusDriver.TouchSubscription(ObjectId:Cardinal; Now_:QWord);
+var
+  i:Integer;
+begin
+  for i:=0 to High(FSubs) do
+    if FSubs[i].ObjectId=ObjectId then begin
+      FSubs[i].LastNotificationAt := Now_;
+      exit;
+    end;
+end;
+
+function TS7CommPlusDriver.SubscriptionTimeoutMsNow:Integer;
+begin
+  Result := FSubTimeoutMs;
+  if (Result>0) and (Result<S7PlusSubTimeoutMinCycles*FSubCycleMs) then
+    Result := S7PlusSubTimeoutMinCycles*FSubCycleMs;
+end;
+
+procedure TS7CommPlusDriver.CheckSubscriptionWatchdog(Now_:QWord);
+var
+  i, Limit:Integer;
+begin
+  Limit := SubscriptionTimeoutMsNow;
+  if (Limit=0) or FSubResetPending or (Length(FSubs)=0) then exit;
+  //notifications still waiting to be taken in are not silence
+  if (FConnection<>nil) and (FConnection.PendingNotificationCount>0) then exit;
+  for i:=0 to High(FSubs) do
+    if Int64(Now_)-Int64(FSubs[i].LastNotificationAt)>Limit then begin
+      ConnDebug(Self, Format('Subscricao 0x%.8x: sem notificacoes ha mais de %d ms - subscricoes serao recriadas.',
+                             [FSubs[i].ObjectId, Limit]));
+      FSubResetPending := true;
+      exit;
+    end;
+end;
+
 procedure TS7CommPlusDriver.ManageSubscriptions(Now_:QWord);
 const
   MaxCreateAttempts = 3;
@@ -1430,9 +1507,7 @@ begin
 
     if FConnection.SubscriptionCreate(Items, FSubCycleMs, $14, false, true, FSubCreditLimit) then begin
       St.ObjectId := FConnection.LastSubscriptionObjectId;
-      St.NextCreditLimit := FSubCreditLimit;
-      SetLength(FSubs, Length(FSubs)+1);
-      FSubs[High(FSubs)] := St;
+      RegisterSubscription(St.ObjectId, FSubCreditLimit, Now_);
 
       NextId := FSubNextRefId;
       for i:=FirstPending to k-1 do begin
@@ -1543,6 +1618,7 @@ begin
     end;
     if not Got then exit;
     ProcessNotification(Values, Errors, GetTickCount64);
+    TouchSubscription(FConnection.LastNotificationSubscriptionId, GetTickCount64);
     RenewCredit(FConnection.LastNotificationSubscriptionId, Credit);
     WaitMs := 0;
   end;
