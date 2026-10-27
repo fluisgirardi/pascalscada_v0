@@ -247,6 +247,7 @@ resourcestring
   SS7PTBExpandAll               = 'Expandir tudo';
   SS7PTBCollapseAll             = 'Recolher tudo';
   SS7PTBShowSkipped             = 'Mostrar as variáveis que não viram tag';
+  SS7PTBCreateElements          = 'Criar também os elementos dos arrays (TPLCBlockElement)';
   SS7PTBScan                    = 'Tempo de atualização (ms; 0 = por mudança)';
   SS7PTBPrefix                  = 'Prefixo do nome dos componentes';
   SS7PTBCheckAll                = 'Marcar todos';
@@ -476,6 +477,7 @@ resourcestring
   SS7PTBExpandAll               = 'Expand all';
   SS7PTBCollapseAll             = 'Collapse all';
   SS7PTBShowSkipped             = 'Show the variables that do not become a tag';
+  SS7PTBCreateElements          = 'Also create the array elements (TPLCBlockElement)';
   SS7PTBScan                    = 'Update rate (ms; 0 = on change)';
   SS7PTBPrefix                  = 'Prefix of the component names';
   SS7PTBCheckAll                = 'Check all';

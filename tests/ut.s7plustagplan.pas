@@ -60,6 +60,7 @@ type
     procedure AScalarWithoutElementsIsNotAnArray;
     procedure ASecondArrayDoesNotTakeTheElementsOfTheFirst;
     procedure AMultiDimensionalArrayCountsEveryElement;
+    procedure AnArrayKnowsThePathOfEachElementInListingOrder;
   end;
 
 implementation
@@ -346,6 +347,19 @@ begin
               [5, 5, 5, 5, 5], false);
   AssertTrue('array', L[0].IsArray);
   AssertEquals('2 x 2 elements', 4, L[0].ElementCount);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayKnowsThePathOfEachElementInListingOrder;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListOf(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.Teste[2]'], [6, 6, 6, 6], false);
+  AssertEquals('count', 3, Length(L[0].ElementPaths));
+  AssertEquals('first', 'DB5.Teste[0]', L[0].ElementPaths[0]);
+  AssertEquals('last', 'DB5.Teste[2]', L[0].ElementPaths[2]);
+  //what the wizard turns them into
+  AssertEquals('component name', 'tag_DB5_Teste_2', S7PlusSuggestedName(L[0].ElementPaths[2], 'tag_'));
+  AssertEquals('multi dimensional', 'DB5_M_1_0', S7PlusSuggestedName('DB5.M[1,0]', ''));
 end;
 
 initialization

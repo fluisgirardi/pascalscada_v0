@@ -77,6 +77,8 @@ type
     //: Array de escalares: vira um TPLCBlock com ElementCount elementos (ver S7PlusMarkArrays).
     IsArray:Boolean;
     ElementCount:LongInt;
+    //: Caminho de cada elemento do array, na ordem em que o CLP os lista (a ordem do bloco).
+    ElementPaths:TStringArray;
   end;
   TS7PlusCandidateArray = array of TS7PlusCandidate;
 
@@ -95,6 +97,8 @@ type
     //: True: um TPLCBlock de Size elementos de TagType; False: um TPLCTagNumber.
     IsBlock:Boolean;
     Size:LongInt;
+    //: Nome de componente de cada elemento do bloco (vazio: não criar os elementos).
+    ElementNames:TStringArray;
   end;
   TS7PlusImportItems = array of TS7PlusImportItem;
 
@@ -163,13 +167,17 @@ begin
   for i:=0 to High(Candidates) do begin
     if Candidates[i].Skip<>srNone then continue;
     Count := 0;
+    SetLength(Candidates[i].ElementPaths, 0);
     j := i+1;
     //the elements follow their array on the list: Name[...] with nothing after the ']'
     while (j<=High(Candidates)) and (Candidates[j].Skip=srArrayElement) and
           (Pos(Candidates[i].Path+'[', Candidates[j].Path)=1) do begin
       Rest := Copy(Candidates[j].Path, Length(Candidates[i].Path)+1, MaxInt);
-      if (Rest<>'') and (Rest[Length(Rest)]=']') and (Pos('.', Rest)=0) then
+      if (Rest<>'') and (Rest[Length(Rest)]=']') and (Pos('.', Rest)=0) then begin
+        SetLength(Candidates[i].ElementPaths, Count+1);
+        Candidates[i].ElementPaths[Count] := Candidates[j].Path;
         Inc(Count);
+      end;
       Inc(j);
     end;
     if Count>0 then begin
@@ -296,6 +304,7 @@ begin
   Result.Skip := srNone;
   Result.IsArray := false;
   Result.ElementCount := 0;
+  SetLength(Result.ElementPaths, 0);
 
   if (DBName<>'') and StartsWithDBNumber(V.Name, RestStart) then
     Result.Path := DBName + Copy(V.Name, RestStart, MaxInt);

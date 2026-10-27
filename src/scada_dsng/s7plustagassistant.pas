@@ -52,7 +52,7 @@ implementation
 
 uses
   Classes, SysUtils, Controls, Tag, ProtocolTypes, ProtocolDriver, PLCTagNumber,
-  PLCBlock, S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, hsstrings;
+  PLCBlock, PLCBlockElement, S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, hsstrings;
 
 function UniqueComponentName(aOwner: TComponent; const aBaseName: String): String;
 var
@@ -85,6 +85,8 @@ var
   aOwner:TComponent;
   aNumber:TPLCTagNumber;
   aBlock:TPLCBlock;
+  anElement:TPLCBlockElement;
+  k:LongInt;
 begin
   if not (aProtocolDriver is TS7CommPlusDriver) then
     raise Exception.Create(SS7PTBOnlyS7PlusDriver);
@@ -116,6 +118,20 @@ begin
         aBlock.ProtocolDriver := TProtocolDriver(aProtocolDriver);
 
         InsertHook(aBlock);
+
+        //the elements of the array, each one reading its place in the block
+        for k:=0 to High(plan[c].ElementNames) do begin
+          anElement:=TPLCBlockElement(CreateProc(TPLCBlockElement));
+
+          aOwner:=anElement.Owner;
+          if aOwner=nil then aOwner:=aOwnerOfNewTags;
+
+          anElement.Name    := UniqueComponentName(aOwner, plan[c].ElementNames[k]);
+          anElement.PLCBlock:= aBlock;
+          anElement.Index   := k;
+
+          InsertHook(anElement);
+        end;
         continue;
       end;
 
