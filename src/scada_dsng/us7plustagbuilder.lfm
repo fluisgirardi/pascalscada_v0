@@ -102,6 +102,8 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
       Width = 250
       Anchors = [akTop, akLeft, akRight]
       Caption = 'Include the I, Q and M areas'
+      Checked = True
+      State = cbChecked
       TabOrder = 6
     end
   end
