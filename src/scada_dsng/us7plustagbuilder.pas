@@ -152,6 +152,8 @@ type
     procedure UpdateSelectedCount;
     function  PassFilters(aIndex:LongInt):Boolean;
     function  Decoration(aIndex:LongInt):String;
+    function  SizeText(const aPath:String; aIsDBRoot:Boolean):String;
+    function  AreaLabel(const aArea:String):String;
     procedure AddVars(const Vars:TS7PlusVarInfoArray; const aBlockName:String);
   public
     {$IFDEF PORTUGUES}
@@ -298,6 +300,27 @@ begin
   Result:=true;
 end;
 
+//bytes of a DB or a structure, as the wizard shows them
+function TfrmS7PlusTagBuilder.SizeText(const aPath: String; aIsDBRoot: Boolean): String;
+var
+  size: LongInt;
+  exact: Boolean;
+begin
+  size:=S7PlusContainerSize(FCandidates, aPath, aIsDBRoot, exact);
+  if exact then Result:=Format(SS7PTBBytes,[size])
+  else Result:=Format(SS7PTBAtLeastBytes,[size]);
+end;
+
+function TfrmS7PlusTagBuilder.AreaLabel(const aArea: String): String;
+begin
+  if SameText(aArea,'IArea') then Result:=SS7PTBAreaInputs
+  else if SameText(aArea,'QArea') then Result:=SS7PTBAreaOutputs
+  else if SameText(aArea,'MArea') then Result:=SS7PTBAreaFlags
+  else if SameText(aArea,'S7Timers') then Result:=SS7PTBAreaTimers
+  else if SameText(aArea,'S7Counters') then Result:=SS7PTBAreaCounters
+  else Result:='';
+end;
+
 //what follows the name on the tree: the PLC type, and why a variable is not a tag
 function TfrmS7PlusTagBuilder.Decoration(aIndex: LongInt): String;
 begin
@@ -390,9 +413,14 @@ begin
 
             aText:=levels[k];
             if k<High(levels) then begin
-              //a level above the variable: a DB/area or a structure
-              if structIdx.Find(key, p) then
-                aText:=aText+' : '+S7PlusSoftTypeName(FCandidates[PtrInt(structIdx.Objects[p])].SoftDataType);
+              //a level above the variable: an area, a DB or a structure, with its size
+              if (k=0) and S7PlusIsAreaName(levels[0]) then
+                aText:=aText+' : '+AreaLabel(levels[0])
+              else if k=0 then
+                aText:=aText+' : '+SizeText(key, true)
+              else if structIdx.Find(key, p) then
+                aText:=aText+' : '+S7PlusSoftTypeName(FCandidates[PtrInt(structIdx.Objects[p])].SoftDataType)+
+                       ' ('+SizeText(key, false)+')';
             end else begin
               info.Index:=c;
               aText:=aText+Decoration(c);

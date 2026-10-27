@@ -61,6 +61,12 @@ type
     procedure ASecondArrayDoesNotTakeTheElementsOfTheFirst;
     procedure AMultiDimensionalArrayCountsEveryElement;
     procedure AnArrayKnowsThePathOfEachElementInListingOrder;
+    procedure AStructSizeIsWhatAReadOfItReturns;
+    procedure ADBSizeIsTheWholeDBReadWithClassicOffsets;
+    procedure AnArrayInsideAStructCountsAllItsElements;
+    procedure AStringMakesTheSizeInexact;
+    procedure AnAreaTagNameKeepsItsDots;
+    procedure AnAreaPathIsTwoLevels;
   end;
 
 implementation
@@ -360,6 +366,99 @@ begin
   //what the wizard turns them into
   AssertEquals('component name', 'tag_DB5_Teste_2', S7PlusSuggestedName(L[0].ElementPaths[2], 'tag_'));
   AssertEquals('multi dimensional', 'DB5_M_1_0', S7PlusSuggestedName('DB5.M[1,0]', ''));
+end;
+
+function ListSized(const Names:array of String; const Types:array of Byte;
+  const ByteOffs, ImageOffs:array of Integer):TS7PlusCandidateArray;
+var
+  i:Integer;
+  V:TS7PlusVarInfo;
+begin
+  SetLength(Result, Length(Names));
+  for i:=0 to High(Names) do begin
+    FillChar(V, SizeOf(V), 0);
+    V.Name := Names[i];
+    V.SoftDataType := Types[i];
+    V.ByteOffset := ByteOffs[i];
+    V.ImageOffset := ImageOffs[i];
+    Result[i] := S7PlusClassifyVar(V, '');
+  end;
+  S7PlusMarkArrays(Result);
+end;
+
+//DB4 of the test PLC (Var25 DInt, then Var26 Struct{v1 Byte, v2 Word, v3 DWord, v4 Bool,
+//Static_1 Real, Static_2..4 Bool}), optimized: the PLC lays Var26 out by size
+function Db4Like:TS7PlusCandidateArray;
+begin
+  Result := ListSized(
+    ['DB4.Var1', 'DB4.Var25', 'DB4.Var26', 'DB4.Var26.v1', 'DB4.Var26.v2', 'DB4.Var26.v3', 'DB4.Var26.v4',
+     'DB4.Var26.Static_1', 'DB4.Var26.Static_2', 'DB4.Var26.Static_3', 'DB4.Var26.Static_4'],
+    [7, 7, 17, 2, 4, 6, 40, 8, 40, 40, 40],
+    [0, 96, 100, 100, 102, 104, 108, 110, 114, 114, 114],
+    [4, 100, 104, 114, 112, 104, 115, 108, 116, 117, 118]);
+end;
+
+procedure TTestS7PlusTagPlan.AStructSizeIsWhatAReadOfItReturns;
+var
+  Exact:Boolean;
+begin
+  //v3 DWord @0, Static_1 Real @4, v2 Word @8, v1 Byte @10, four Bool @11..14 = 15 bytes
+  AssertEquals('Var26', 15, S7PlusContainerSize(Db4Like, 'DB4.Var26', false, Exact));
+  AssertTrue('exact', Exact);
+end;
+
+procedure TTestS7PlusTagPlan.ADBSizeIsTheWholeDBReadWithClassicOffsets;
+var
+  Exact:Boolean;
+begin
+  //Var25 @96 (4) and Var26 @100 (15 bytes): 115, what the TPLCStruct of the whole DB needs
+  AssertEquals('DB4', 115, S7PlusContainerSize(Db4Like, 'DB4', true, Exact));
+  AssertTrue('exact', Exact);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayInsideAStructCountsAllItsElements;
+var
+  L:TS7PlusCandidateArray;
+  Exact:Boolean;
+begin
+  //S: Struct{ a: Array[0..2] of DWord, b: Byte } - the elements are covered by the array
+  L := ListSized(['DB5.S', 'DB5.S.a', 'DB5.S.a[0]', 'DB5.S.a[1]', 'DB5.S.a[2]', 'DB5.S.b'],
+                 [17, 6, 6, 6, 6, 2],
+                 [0, 0, -1, -1, -1, 12],
+                 [0, 0, -1, -1, -1, 12]);
+  AssertEquals('3 x 4 + 1', 13, S7PlusContainerSize(L, 'DB5.S', false, Exact));
+  AssertTrue('exact', Exact);
+end;
+
+procedure TTestS7PlusTagPlan.AStringMakesTheSizeInexact;
+var
+  L:TS7PlusCandidateArray;
+  Exact:Boolean;
+begin
+  L := ListSized(['DB5.S', 'DB5.S.n', 'DB5.S.x'], [17, 19, 7], [0, 0, 256], [0, 0, 256]);
+  S7PlusContainerSize(L, 'DB5.S', false, Exact);
+  AssertFalse('the length of a String is not on the list', Exact);
+end;
+
+procedure TTestS7PlusTagPlan.AnAreaTagNameKeepsItsDots;
+var
+  L:TStringArray;
+begin
+  L := S7PlusSplitPath('MArea.Clock_2.5Hz');
+  AssertEquals('two levels', 2, Length(L));
+  AssertEquals('area', 'MArea', L[0]);
+  AssertEquals('the whole name', 'Clock_2.5Hz', L[1]);
+end;
+
+procedure TTestS7PlusTagPlan.AnAreaPathIsTwoLevels;
+var
+  L:TStringArray;
+begin
+  L := S7PlusSplitPath('IArea.D01SS1~Ready (automatic)');
+  AssertEquals('two levels', 2, Length(L));
+  AssertEquals('name', 'D01SS1~Ready (automatic)', L[1]);
+  //a DB is not an area: its members split as before
+  AssertEquals('DB', 3, Length(S7PlusSplitPath('DB4.Var26.v1')));
 end;
 
 initialization

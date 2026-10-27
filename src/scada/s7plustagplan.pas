@@ -79,6 +79,8 @@ type
     ElementCount:LongInt;
     //: Caminho de cada elemento do array, na ordem em que o CLP os lista (a ordem do bloco).
     ElementPaths:TStringArray;
+    //: Posição no layout clássico e na imagem de memória do CLP (ver TS7PlusVarInfo); -1 = desconhecida.
+    ByteOffset, ImageOffset:Integer;
   end;
   TS7PlusCandidateArray = array of TS7PlusCandidate;
 
@@ -136,6 +138,30 @@ function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String):TS7PlusC
 function S7PlusSuggestedName(const Path, Prefix:String):String;
 
 {$IFDEF PORTUGUES}
+//: True para o nome de uma área de processo (IArea, QArea, MArea, S7Timers, S7Counters).
+{$ELSE}
+//: True for the name of a process area (IArea, QArea, MArea, S7Timers, S7Counters).
+{$ENDIF}
+function S7PlusIsAreaName(const S:String):Boolean;
+
+{$IFDEF PORTUGUES}
+//: Tamanho em bytes de um DB (IsDBRoot) ou de uma estrutura, a partir dos membros listados.
+//: Estrutura: os bytes que uma leitura dela devolve (o layout real do CLP, que num DB
+//: otimizado ordena os membros por tamanho). DB: os bytes da leitura do DB inteiro (o
+//: TPLCStruct), ou seja, os membros de primeiro nível nos offsets clássicos. Exact=False
+//: quando há algo de tamanho desconhecido (STRING, array de estruturas): o tamanho é então
+//: um mínimo.
+{$ELSE}
+//: Size in bytes of a DB (IsDBRoot) or of a structure, worked out from the members listed.
+//: Structure: the bytes a read of it returns (the PLC's real layout, which in an optimized
+//: DB orders the members by size). DB: the bytes of a whole DB read (the TPLCStruct), i.e.
+//: the top level members at their classic offsets. Exact=False when something has an
+//: unknown size (STRING, an array of structures): the size is then a minimum.
+{$ENDIF}
+function S7PlusContainerSize(const Candidates:TS7PlusCandidateArray; const Path:String;
+                             IsDBRoot:Boolean; out Exact:Boolean):LongInt;
+
+{$IFDEF PORTUGUES}
 //: Acha os arrays de escalares na lista (o PLC lista o array e, logo depois, cada
 //: elemento como Nome[i]): o array passa a ser IsArray com o número de elementos, e os
 //: elementos continuam não virando tag. Chamar depois de classificar a lista toda.
@@ -158,6 +184,97 @@ procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);
 function S7PlusSplitPath(const Path:String):TStringArray;
 
 implementation
+
+//bytes a variable takes in the block that holds it; Exact=False when its width is not known
+function LeafSize(const C:TS7PlusCandidate; var Exact:Boolean):LongInt;
+var
+  One:LongInt;
+begin
+  One := S7PlusDataTypeSize(C.SoftDataType, 0);
+  if TS7PlusSoftDataType(C.SoftDataType) in [sdtSTRING, sdtWSTRING] then
+    Exact := false;      //the maximum length is not on the list
+  if One=0 then
+    Exact := false;
+  if C.IsArray then
+    Result := C.ElementCount*One
+  else
+    Result := One;
+end;
+
+function StructSizeOf(const Candidates:TS7PlusCandidateArray; const Path:String;
+                      var Exact:Boolean):LongInt; forward;
+
+function S7PlusContainerSize(const Candidates:TS7PlusCandidateArray; const Path:String;
+  IsDBRoot:Boolean; out Exact:Boolean):LongInt;
+var
+  i, Extent, ChildSize:LongInt;
+  Prefix, Rest:String;
+begin
+  Exact := true;
+  Result := 0;
+  if not IsDBRoot then begin
+    Result := StructSizeOf(Candidates, Path, Exact);
+    exit;
+  end;
+
+  //a whole DB read puts every top level member at its classic offset
+  Prefix := Path+'.';
+  Extent := 0;
+  for i:=0 to High(Candidates) do begin
+    if Pos(Prefix, Candidates[i].Path)<>1 then continue;
+    Rest := Copy(Candidates[i].Path, Length(Prefix)+1, MaxInt);
+    if (Rest='') or (Pos('.', Rest)>0) or (Candidates[i].Skip=srArrayElement) then continue;
+    if Candidates[i].ByteOffset<0 then begin
+      Exact := false;
+      continue;
+    end;
+    if Candidates[i].Skip=srNotAScalar then
+      ChildSize := StructSizeOf(Candidates, Candidates[i].Path, Exact)
+    else
+      ChildSize := LeafSize(Candidates[i], Exact);
+    if Candidates[i].ByteOffset+ChildSize>Extent then
+      Extent := Candidates[i].ByteOffset+ChildSize;
+  end;
+  Result := Extent;
+end;
+
+function StructSizeOf(const Candidates:TS7PlusCandidateArray; const Path:String;
+  var Exact:Boolean):LongInt;
+var
+  i, Self_, Extent:LongInt;
+  Prefix, Rest:String;
+begin
+  Result := 0;
+  Self_ := -1;
+  for i:=0 to High(Candidates) do
+    if Candidates[i].Path=Path then Self_ := i;
+  if (Self_<0) or (Candidates[Self_].ImageOffset<0) then begin
+    Exact := false;
+    exit;
+  end;
+
+  Prefix := Path+'.';
+  Extent := 0;
+  for i:=0 to High(Candidates) do begin
+    if Pos(Prefix, Candidates[i].Path)<>1 then continue;
+    //a structure inside is measured through its own leaves
+    if Candidates[i].Skip=srNotAScalar then continue;
+    if Candidates[i].Skip=srArrayElement then begin
+      //an element of an array of scalars is covered by its array; one of an array of
+      //structures ("T[0].x") is not known
+      Rest := Copy(Candidates[i].Path, Length(Prefix)+1, MaxInt);
+      if (Rest='') or (Rest[Length(Rest)]<>']') then Exact := false;
+      continue;
+    end;
+    if Candidates[i].ImageOffset<0 then begin
+      Exact := false;
+      continue;
+    end;
+    if Candidates[i].ImageOffset-Candidates[Self_].ImageOffset+LeafSize(Candidates[i], Exact)>Extent then
+      Extent := Candidates[i].ImageOffset-Candidates[Self_].ImageOffset+LeafSize(Candidates[i], Exact);
+  end;
+  Result := Extent;
+end;
 
 procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);
 var
@@ -187,12 +304,27 @@ begin
   end;
 end;
 
+function S7PlusIsAreaName(const S:String):Boolean;
+begin
+  Result := SameText(S, 'IArea') or SameText(S, 'QArea') or SameText(S, 'MArea') or
+            SameText(S, 'S7Timers') or SameText(S, 'S7Counters');
+end;
+
 function S7PlusSplitPath(const Path:String):TStringArray;
 var
-  i, Depth, Start:Integer;
+  i, Depth, Start, FirstDot:Integer;
 begin
   SetLength(Result, 0);
   if Path='' then exit;
+  //a process area holds flat, named tags, and a tag name may have dots in it
+  //(MArea.Clock_2.5Hz): the area is one level and the whole name the other
+  FirstDot := Pos('.', Path);
+  if (FirstDot>0) and S7PlusIsAreaName(Copy(Path, 1, FirstDot-1)) then begin
+    SetLength(Result, 2);
+    Result[0] := Copy(Path, 1, FirstDot-1);
+    Result[1] := Copy(Path, FirstDot+1, MaxInt);
+    exit;
+  end;
   Depth := 0;
   Start := 1;
   for i:=1 to Length(Path) do begin
@@ -305,6 +437,8 @@ begin
   Result.IsArray := false;
   Result.ElementCount := 0;
   SetLength(Result.ElementPaths, 0);
+  Result.ByteOffset := V.ByteOffset;
+  Result.ImageOffset := V.ImageOffset;
 
   if (DBName<>'') and StartsWithDBNumber(V.Name, RestStart) then
     Result.Path := DBName + Copy(V.Name, RestStart, MaxInt);
