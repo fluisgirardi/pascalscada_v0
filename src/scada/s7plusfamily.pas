@@ -44,6 +44,14 @@ const
   //: for DB tags and for process area tags alike). SubscriptionCycleMs never goes below it.
   S7PlusMinSubscriptionCycleMs = 100;
 
+  //: How long Username/Password must stay unchanged before an open session logs in again,
+  //: so that they can be set one after the other without a login with half of the new pair.
+  S7PlusAuthSettleMs = 500;
+
+  //: Pause after asking the port for a new connection, before waiting for it: the port's
+  //: connection thread works in steps of 250 ms and closes the old socket before opening the new.
+  S7PlusReconnectGapMs = 800;
+
   //-- Phase 1 addressing convention for TTagRec.ReadFunction/WriteFunction.
   //-- Symbolic Path-based addressing (Phase 2) will replace this.
   S7PlusRF_DB       = 1;
@@ -137,6 +145,11 @@ type
     FUseTLS:Boolean;
     FExploreDelayMs:Integer;
     FUsername, FPassword:AnsiString;
+    FAccessLevel:Cardinal;      //the session's protection level (S7PlusAccessLevel_*), 0 = unknown
+    FLegitimated:Boolean;       //the session logged in with Username/Password
+    FAuthPending:Boolean;       //Username/Password changed: log in again once they settle
+    FAuthChangedAt:QWord;
+    FSessionTainted:Boolean;    //a login was refused on this session: the PLC takes no second one on it
 
     FScanList:array of TS7PlusScanEntry;
     FDBCache:array of TS7PlusDBCacheEntry;
@@ -158,6 +171,8 @@ type
     function GetUseTLS:Boolean;
     procedure SetUseTLS(AValue:Boolean);
     procedure SetMaxItemsPerRequest(AValue:Integer);
+    procedure SetUsername(const AValue:AnsiString);
+    procedure SetPassword(const AValue:AnsiString);
     procedure SetSubCycleMs(AValue:Integer);
     procedure SetMaxTagsPerScan(AValue:Integer);
     procedure SetMaxItemsPerSubscription(AValue:Integer);
@@ -215,6 +230,29 @@ type
     //: The session is gone (or brand new), and with it every subscription - see the body.
     procedure ResetSubscriptions;
 
+    //-- Authentication state: what the session may do, and what the tags are told about it.
+    //: True when the PLC protects what the session needs (its protection level is above full
+    //: access) and the session has not logged in: every failure then is an authentication one.
+    function SessionNeedsAuth:Boolean;
+    //: The result of a failed operation: ioAuthError when SessionNeedsAuth, else ioCommError.
+    function FailResult:TProtocolIOResult;
+    //: Logs the open session in with the given credentials. True when the PLC accepted them
+    //: (or the session needed none).
+    function AuthenticateSession(const APassword, AUsername:AnsiString):Boolean;
+    //: Closes the session and the TCP connection under it and opens them again. Needed to log
+    //: in again after a refused login: a PLC (seen on a PLCSim) refuses every login after a
+    //: failed one on the same session, whatever the password. False if the port did not come back.
+    function RestartSession:Boolean;
+    //: Tells the tags that cannot be read for lack of authentication (path not resolved, no
+    //: notification delivered) with ioAuthError - see SessionNeedsAuth.
+    procedure MarkAuthErrors(Now_:QWord);
+    //: The session logged in: what was refused for lack of authentication is tried again.
+    procedure ClearAuthErrors;
+    //-- The authentication state, readable and settable by the tests (and by descendants).
+    property AccessLevel:Cardinal read FAccessLevel write FAccessLevel;
+    property Legitimated:Boolean read FLegitimated write FLegitimated;
+    property AuthPending:Boolean read FAuthPending write FAuthPending;
+
     procedure PortDisconnected(Sender:TObject); override;
     procedure PortClosed(Sender:TObject); override;
   public
@@ -270,6 +308,12 @@ type
     function WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SoftDataType:Byte=0):TProtocolIOResult;
     //: Reads several symbolic items in one round-trip - see TS7PlusConnection.ReadMultipleSymbolic.
     function ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):TProtocolIOResult;
+    //: Sets Username and Password in one step and logs the session in with them: with a session
+    //: open it logs in again right now (without waiting for the properties to settle); with none
+    //: it opens one, which logs in by itself. ioOk: the session has access; ioAuthError: the PLC
+    //: refused the credentials, or wants some; ioCommError: no connection. The tags that waited
+    //: for authentication are read again and the on-change ones subscribed again.
+    function Auth(const AUsername, APassword:AnsiString):TProtocolIOResult;
     //: Performs PLC password authentication (legitimation) - see TS7PlusConnection.Authenticate.
     //: Needed by some PLCs before writes are accepted (reads can remain open/unauthenticated).
     function Authenticate(const Password:AnsiString; const Username:AnsiString=''):TProtocolIOResult;
@@ -351,14 +395,16 @@ type
     //: access with password" in TIA Portal) reject writes from an unauthenticated session
     //: even though reads stay open. When set (non-empty), the driver calls Authenticate
     //: automatically right after each new connection is established (see EnsureConnected).
-    //: Leave empty to skip legitimation entirely (the default - matches every PLC that
+    //: Changing it while a session is open logs in again with the new value (a moment after
+    //: the last change, so Username and Password can be set one after the other; Auth does
+    //: both at once). Leave empty to skip legitimation entirely (the default - matches every PLC that
     //: doesn't require it). Currently only the challenge-retrieval step of legitimation is
     //: confirmed working against real hardware; the PLC still rejects the encrypted
     //: response as of this writing - see TS7PlusConnection.Authenticate.
-    property Password:AnsiString read FPassword write FPassword;
+    property Password:AnsiString read FPassword write SetPassword;
     //: Optional username for "new"-style (AES-256-CBC) legitimation. Leave empty for a
     //: plain password login (the common case) - see Password.
-    property Username:AnsiString read FUsername write FUsername;
+    property Username:AnsiString read FUsername write SetUsername;
   end;
 
 implementation
@@ -466,21 +512,173 @@ begin
   end;
 
   WasConnected := FConnection.Connected;
-  if not WasConnected then
+  if not WasConnected then begin
+    //a new session starts from nothing: no access known, no login, no subscriptions
+    FAccessLevel := 0;
+    FLegitimated := false;
+    FSessionTainted := false;
     FConnection.Connect(FPassword);
+  end;
 
   Result := FConnection.Connected;
+  if not Result then exit;
 
-  //A new session starts with no subscriptions at all.
-  if Result and (not WasConnected) then
+  if not WasConnected then begin
     FSubResetPending := true;
+    FAuthPending := false;
 
-  //Authenticate once per freshly-established connection (not on every EnsureConnected call -
-  //this runs on every scan tick even with no tags due). Password='' (default) means the PLC
-  //doesn't need legitimation - skip entirely, matching every PLC that doesn't require it.
-  if Result and (not WasConnected) and (FPassword<>'') then begin
-    if not FConnection.Authenticate(FPassword, FUsername) then
-      ConnDebug(Self, 'EnsureConnected: falha na legitimacao (Username/Password) - writes podem continuar bloqueados pelo CLP.');
+    //What the session may do, so that a failure can say "authentication" and not "comm error".
+    if not FConnection.GetEffectiveProtectionLevel(FAccessLevel) then
+      FAccessLevel := 0;
+
+    //Authenticate once per freshly-established connection (not on every EnsureConnected call -
+    //this runs on every scan tick even with no tags due). Password='' (default) means the PLC
+    //doesn't need legitimation - skip entirely, matching every PLC that doesn't require it.
+    if FPassword<>'' then
+      if not AuthenticateSession(FPassword, FUsername) then
+        ConnDebug(Self, 'EnsureConnected: falha na legitimacao (Username/Password) - writes podem continuar bloqueados pelo CLP.');
+  end else if FAuthPending and (GetTickCount64-FAuthChangedAt>=S7PlusAuthSettleMs) then begin
+    //Username/Password changed on an open session: log in again with the new pair
+    FAuthPending := false;
+    if FPassword<>'' then begin
+      if FSessionTainted then begin
+        //the last login was refused: only a new session takes another one
+        if RestartSession then
+          Result := EnsureConnected    //opens the session and logs in by itself
+        else
+          Result := false;
+      end else if not AuthenticateSession(FPassword, FUsername) then
+        ConnDebug(Self, 'EnsureConnected: falha na legitimacao com as novas credenciais (Username/Password).');
+    end;
+  end;
+end;
+
+procedure TS7CommPlusDriver.SetUsername(const AValue:AnsiString);
+begin
+  if AValue=FUsername then exit;
+  FUsername := AValue;
+  FAuthPending := true;
+  FAuthChangedAt := GetTickCount64;
+end;
+
+procedure TS7CommPlusDriver.SetPassword(const AValue:AnsiString);
+begin
+  if AValue=FPassword then exit;
+  FPassword := AValue;
+  FAuthPending := true;
+  FAuthChangedAt := GetTickCount64;
+end;
+
+function TS7CommPlusDriver.SessionNeedsAuth:Boolean;
+begin
+  Result := (FAccessLevel>S7PlusAccessLevel_FullAccess) and (not FLegitimated);
+end;
+
+function TS7CommPlusDriver.FailResult:TProtocolIOResult;
+begin
+  if SessionNeedsAuth then
+    Result := ioAuthError
+  else
+    Result := ioCommError;
+end;
+
+function TS7CommPlusDriver.AuthenticateSession(const APassword, AUsername:AnsiString):Boolean;
+var
+  Level:Cardinal;
+begin
+  Result := FConnection.Authenticate(APassword, AUsername);
+  FLegitimated := Result;
+  if not Result then begin
+    FSessionTainted := true;
+    exit;
+  end;
+
+  if FConnection.GetEffectiveProtectionLevel(Level) then
+    FAccessLevel := Level;
+  //what was refused before the login is worth another try, and the subscriptions made
+  //under the old access level deliver nothing: they are made again
+  FSubResetPending := true;
+  ClearAuthErrors;
+end;
+
+procedure TS7CommPlusDriver.MarkAuthErrors(Now_:QWord);
+var
+  i:Integer;
+begin
+  if not SessionNeedsAuth then exit;
+  for i:=0 to High(FScanList) do begin
+    //a tag that has not been read (path not resolved, no notification yet) is waiting for the
+    //login; one that reads fine is left alone, and so is one that fails for another reason
+    if FScanList[i].LastResult=ioOk then continue;
+    if FScanList[i].LastResult=ioAuthError then continue;
+    if (not FScanList[i].Resolved) or FScanList[i].OnChange then begin
+      FScanList[i].LastResult := ioAuthError;
+      FScanList[i].LastScanTimeStamp := Now_;    //what makes the framework deliver it
+    end;
+  end;
+end;
+
+procedure TS7CommPlusDriver.ClearAuthErrors;
+var
+  i:Integer;
+begin
+  for i:=0 to High(FScanList) do
+    if FScanList[i].LastResult=ioAuthError then begin
+      FScanList[i].LastResult := ioNullDriver;
+      FScanList[i].LastResolveAttempt := 0;     //resolve it again at once
+    end;
+end;
+
+function TS7CommPlusDriver.RestartSession:Boolean;
+var
+  Waited:Integer;
+begin
+  Result := false;
+  if (FConnection=nil) or (PCommPort=nil) then exit;
+  ConnDebug(Self, 'RestartSession: reabrindo a sessao (o CLP nao aceita uma nova legitimacao apos uma recusada).');
+  FConnection.Disconnect;           //our side of the session
+  FSessionTainted := false;
+  FSubResetPending := true;
+  PCommPort.RenewHandle;            //the TCP connection under it
+  Sleep(S7PlusReconnectGapMs);
+  Waited := 0;
+  while (not PCommPort.ReallyActive) and (Waited<5000) do begin
+    Sleep(50);
+    Inc(Waited, 50);
+  end;
+  Result := PCommPort.ReallyActive;
+end;
+
+function TS7CommPlusDriver.Auth(const AUsername, APassword:AnsiString):TProtocolIOResult;
+begin
+  LockDriverIO;
+  try
+    FUsername := AUsername;
+    FPassword := APassword;
+    FAuthPending := false;
+
+    //a refused login spoils the session for the next one: start over
+    if (FConnection<>nil) and FConnection.Connected and FSessionTainted and (APassword<>'') then
+      RestartSession;
+
+    if (FConnection<>nil) and FConnection.Connected then begin
+      //an open session logs in again, now
+      if APassword<>'' then
+        if not AuthenticateSession(APassword, AUsername) then
+          ConnDebug(Self, 'Auth: falha na legitimacao (Username/Password).');
+    end else if not EnsureConnected then begin
+      //no session: nothing to log in to
+      Result := ioCommError;
+      exit;
+    end;
+    //(a session opened just now has already logged in, see EnsureConnected)
+
+    if SessionNeedsAuth then
+      Result := ioAuthError
+    else
+      Result := ioOk;
+  finally
+    UnlockDriverIO;
   end;
 end;
 
@@ -975,6 +1173,7 @@ begin
   //already pushed (including notifications that arrived while a request was in flight).
   ManageSubscriptions(Now_);
   PumpNotifications(0);
+  MarkAuthErrors(Now_);
 
   //Collect every resolved, independently-scanned tag (derived ones piggyback on their
   //container's read - see TryDeduplicateEntry - and are never picked here) that's
@@ -1051,14 +1250,14 @@ begin
   //not Ok - the per-item loop below turns exactly those into failed reads.
   if (not ok) and (Length(Results)<>Length(Items)) then begin
     for i:=0 to High(DueIndices) do
-      FScanList[DueIndices[i]].LastResult := ioCommError;
+      FScanList[DueIndices[i]].LastResult := FailResult;
     exit;
   end;
 
   for i:=0 to High(Items) do begin
     EntryIdx := Owners[i].EntryIdx;
     if (i>High(Results)) or (not Results[i].Ok) then begin
-      FScanList[EntryIdx].LastResult := ioCommError;
+      FScanList[EntryIdx].LastResult := FailResult;
       continue;
     end;
     if Owners[i].IsCompositeItem then begin
@@ -1142,7 +1341,7 @@ begin
   for i:=0 to High(FScanList) do
     if FScanList[i].OnChange then begin
       if FScanList[i].Subscribed then begin
-        FScanList[i].LastResult := ioCommError;
+        FScanList[i].LastResult := FailResult;
         FScanList[i].LastScanTimeStamp := Now_;
       end;
       FScanList[i].Subscribed := false;
@@ -1281,7 +1480,7 @@ begin
   //After the values: within one notification an error outweighs a value of the same tag.
   for i:=0 to High(Errors) do begin
     if not FindEntryByRefId(Errors[i].RefId, EntryIdx, ItemIdx) then continue;
-    FScanList[EntryIdx].LastResult := ioCommError;
+    FScanList[EntryIdx].LastResult := FailResult;
     Touched[EntryIdx] := true;
   end;
 
@@ -1415,7 +1614,7 @@ begin
   SetLength(Values,0);
 
   if not EnsureConnected then begin
-    Result := ioCommError;
+    Result := FailResult;
     exit;
   end;
 
@@ -1426,7 +1625,7 @@ begin
   //multi-item request instead of the (otherwise meaningless) empty-LID ReadSymbolic.
   if tagrec.Path<>'' then begin
     if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType, CompositeItems) then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if Length(CompositeItems)>0 then
@@ -1442,7 +1641,7 @@ begin
         Values[i] := Data[i];
       Result := ioOk;
     end else
-      Result := ioCommError;
+      Result := FailResult;
     exit;
   end;
 
@@ -1459,7 +1658,7 @@ begin
       Values[i] := Data[i];
     Result := ioOk;
   end else
-    Result := ioCommError;
+    Result := FailResult;
 end;
 
 function TS7CommPlusDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
@@ -1477,7 +1676,7 @@ var
   CompResults:TS7PlusMultiWriteResultArray;
 begin
   if not EnsureConnected then begin
-    Result := ioCommError;
+    Result := FailResult;
     exit;
   end;
 
@@ -1494,7 +1693,7 @@ begin
   //PLC outright, confirmed against real hardware.
   if tagrec.Path<>'' then begin
     if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite) then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     //Whole DB/area: one write per scalar member, in as few requests as possible.
@@ -1504,15 +1703,15 @@ begin
          FConnection.WriteMultipleSymbolic(CompItems, CompResults) then begin
         Result := ioOk;
         for i:=0 to High(CompItems) do
-          if (i>High(CompResults)) or (not CompResults[i].Ok) then Result := ioCommError;
+          if (i>High(CompResults)) or (not CompResults[i].Ok) then Result := FailResult;
       end else
-        Result := ioCommError;
+        Result := FailResult;
       exit;
     end;
     if FConnection.WriteSymbolic(AccessArea, Lids, Data, 0, WriteSoftDataType) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
     exit;
   end;
 
@@ -1526,7 +1725,7 @@ begin
   if ok then
     Result := ioOk
   else
-    Result := ioCommError;
+    Result := FailResult;
 end;
 
 procedure TS7CommPlusDriver.DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean);
@@ -1543,7 +1742,7 @@ var
 begin
   if not EnsureConnected then begin
     for i:=0 to High(Writes) do
-      Writes[i].Result := ioCommError;
+      Writes[i].Result := FailResult;
     exit;
   end;
 
@@ -1556,7 +1755,7 @@ begin
       continue;
     end;
     if not ResolvePath(Writes[i].Tag.Path, AccessArea, Lids, DummyOffset, SoftType, DummyComposite) then begin
-      Writes[i].Result := ioCommError; //same answer DoWrite gives for a Path it cannot resolve
+      Writes[i].Result := FailResult; //same answer DoWrite gives for a Path it cannot resolve
       continue;
     end;
     if Length(DummyComposite)>0 then begin
@@ -1564,7 +1763,7 @@ begin
       k := Length(Items);
       n := ExpandCompositeWrite(DummyComposite, Writes[i].Values, Items);
       if n=0 then begin
-        Writes[i].Result := ioCommError;
+        Writes[i].Result := FailResult;
         continue;
       end;
       SetLength(Owner, Length(Items));
@@ -1594,7 +1793,7 @@ begin
   //A write is Ok only when every item it contributed (several for a whole DB) was written.
   for k:=0 to High(Items) do
     if (k>High(Results)) or (not Results[k].Ok) then
-      Writes[Owner[k]].Result := ioCommError;
+      Writes[Owner[k]].Result := FailResult;
 end;
 
 function TS7CommPlusDriver.SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE;
@@ -1714,13 +1913,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.BrowseDB(DBNumber, Vars) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1732,13 +1931,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.BrowseNativeArea(AreaRID, TiRid, AreaName, Vars) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1750,13 +1949,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.ListDataBlocks(Blocks) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1817,7 +2016,12 @@ begin
   S7PlusMarkArrays(Cands);
   Tags := S7PlusTagInfosOf(Cands);
 
-  if Partial then Result := ioPartialOk else Result := ioOk;
+  if Partial and SessionNeedsAuth then
+    Result := ioAuthError
+  else if Partial then
+    Result := ioPartialOk
+  else
+    Result := ioOk;
 end;
 
 function TS7CommPlusDriver.ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
@@ -1826,13 +2030,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.ReadSymbolic(AccessArea, Lids, Data) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1844,13 +2048,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.ReadMultipleSymbolic(Items, Results) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1862,13 +2066,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.WriteMultipleSymbolic(Items, Results) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1879,13 +2083,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.WriteSymbolic(AccessArea, Lids, Data, 0, SoftDataType) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1899,10 +2103,10 @@ begin
       Result := ioCommError;
       exit;
     end;
-    if FConnection.Authenticate(Password, Username) then
+    if AuthenticateSession(Password, Username) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := ioAuthError;
   finally
     UnlockDriverIO;
   end;
@@ -1915,13 +2119,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.SubscriptionCreate(Items, CycleTimeMs, RouteMode, UseFixedRelationId, IncludeAttr1055, CreditLimitOverride) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1932,13 +2136,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.SubscriptionSetCreditLimit(Limit) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1949,13 +2153,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.SubscriptionDelete then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -1979,17 +2183,17 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if not FConnection.WaitForFrame(FrameBody) then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.ParseNotification(FrameBody, CreditTick, Values, Errors) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;
@@ -2001,13 +2205,13 @@ begin
   LockDriverIO;
   try
     if not EnsureConnected then begin
-      Result := ioCommError;
+      Result := FailResult;
       exit;
     end;
     if FConnection.UploadBlock(BlockType, BlockNumber, Data) then
       Result := ioOk
     else
-      Result := ioCommError;
+      Result := FailResult;
   finally
     UnlockDriverIO;
   end;

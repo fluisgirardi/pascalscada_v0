@@ -645,6 +645,8 @@ procedure TfrmS7PlusTagBuilder.btnBrowseClick(Sender: TObject);
 var
   oldCursor:TCursor;
   oldDebug:TS7PlusDebugEvent;
+  res:TProtocolIOResult;
+  authMissing:Boolean;
   blocks:TS7PlusDataBlockInfoArray;
   vars:TS7PlusVarInfoArray;
   c:LongInt;
@@ -682,16 +684,24 @@ begin
       exit;
     end;
 
-    if FDriver.ListDataBlocks(blocks)<>ioOk then begin
+    authMissing:=false;
+    res:=FDriver.ListDataBlocks(blocks);
+    if res<>ioOk then begin
       Screen.Cursor:=oldCursor;
-      MessageDlg(SS7PTBBrowseFailed+LineEnding+LineEnding+SS7PTBDetails+LineEnding+
-                 FDriverLog.Text, mtError, [mbOK], 0);
+      //the PLC wants a login: say that, not just "could not read"
+      if res=ioAuthError then
+        MessageDlg(SS7PTBAuthRequired, mtError, [mbOK], 0)
+      else
+        MessageDlg(SS7PTBBrowseFailed+LineEnding+LineEnding+SS7PTBDetails+LineEnding+
+                   FDriverLog.Text, mtError, [mbOK], 0);
       lblStatus.Caption:=SS7PTBNothingRead;
       exit;
     end;
 
     for c:=0 to High(blocks) do begin
-      if FDriver.BrowseDB(blocks[c].Number, vars)<>ioOk then continue;
+      res:=FDriver.BrowseDB(blocks[c].Number, vars);
+      if res=ioAuthError then authMissing:=true;
+      if res<>ioOk then continue;
       if chkSymbolicNames.Checked then aName:=blocks[c].Name else aName:='';
       AddVars(vars, aName);
       inc(FBlocksRead);
@@ -714,6 +724,8 @@ begin
   end;
 
   LoadCandidates(FCandidates, FBlocksRead);
+  if authMissing then
+    MessageDlg(SS7PTBAuthRequired, mtWarning, [mbOK], 0);
 end;
 
 procedure TfrmS7PlusTagBuilder.LoadCandidates(const aCandidates: TS7PlusCandidateArray;

@@ -7,6 +7,7 @@ program s7commplus_onchange_test;
    tipo: dint (padrao), int, byte, real
    @ms:  o tag e' lido por POLLING a cada <ms> (em vez de on change) - serve para misturar os
          dois no mesmo driver e forcar notificacoes a chegarem no meio de uma leitura.
+   -u/-p: usuario e senha da legitimacao (PLC com nivel de acesso protegido)
    -c ms: SubscriptionCycleMs (de quanto em quanto tempo o CLP olha se algo mudou; padrao e minimo 100:
          um valor menor e' ajustado para 100)
    Exemplo: s7commplus_onchange_test 192.168.137.210 DB4.Var1 DB4.Var2:int DB4.Var3:real -t 120
@@ -65,22 +66,35 @@ var
   Watched:array of TWatched;
   Host, Spec, PathPart, TypePart:String;
   Seconds, WaitMs, i, p, Refresh, CycleMs:Integer;
+  UserName, PassWord:String;
   Silent:Boolean;
 
 begin
   if ParamCount<2 then begin
-    WriteLn('Uso: ', ExtractFileName(ParamStr(0)), ' <ip-do-clp> <path>[:tipo] [<path>[:tipo] ...] [-t segundos] [-c ciclo-ms]');
+    WriteLn('Uso: ', ExtractFileName(ParamStr(0)), ' <ip-do-clp> <path>[:tipo] [<path>[:tipo] ...] [-t segundos] [-c ciclo-ms] [-u usuario -p senha]');
     Halt(1);
   end;
 
   Host := ParamStr(1);
   Seconds := 60;
   CycleMs := 0;  //0 = the driver's own default (SubscriptionCycleMs)
+  UserName := '';
+  PassWord := '';
   SetLength(Watched, 0);
   i := 2;
   while i<=ParamCount do begin
     if ParamStr(i)='-t' then begin
       Seconds := StrToIntDef(ParamStr(i+1), Seconds);
+      Inc(i, 2);
+      continue;
+    end;
+    if ParamStr(i)='-u' then begin
+      UserName := ParamStr(i+1);
+      Inc(i, 2);
+      continue;
+    end;
+    if ParamStr(i)='-p' then begin
+      PassWord := ParamStr(i+1);
       Inc(i, 2);
       continue;
     end;
@@ -133,6 +147,10 @@ begin
     Port.Timeout := 8000;
     Driver.CommunicationPort := Port;
     if CycleMs>0 then Driver.SubscriptionCycleMs := CycleMs;
+    if PassWord<>'' then begin
+      Driver.Username := UserName;
+      Driver.Password := PassWord;
+    end;
     Driver.OnDebug := @Sink.OnDebug;
 
     WriteLn('Abrindo porta TCP com ', Host, ':102 ...');

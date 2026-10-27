@@ -317,27 +317,6 @@ type
     //: GetVariableSubrangeStreamed"). Returns them joined by " | ", or '' if none found.
     function ExtractErrorText(const Data:TBytes):String;
 
-    //-- Legitimation (password authentication, V2+ with TLS) - see Authenticate.
-    //: Derives the 32-byte OMS exporter secret from the active TLS session (RFC 5705,
-    //: label "EXPERIMENTAL_OMS"), used as the AES-256-CBC key material for "new"-style
-    //: legitimation. Requires TLS to be active.
-    function GetOMSSecret(out Secret:TBytes):Boolean;
-    //: Serializes the {LegitimationType, Username, Password/PasswordHash} ValueStruct sent
-    //: (encrypted, for the "new" style) as the legitimation response payload.
-    function BuildLegitimationPayload(const Password, Username:AnsiString):TBytes;
-    //: Legacy response: SHA-1(password) XORed with the challenge (first 20 bytes).
-    function BuildLegacyLegitimationResponse(const Password:AnsiString; const Challenge:TBytes):TBytes;
-    //: New-style response: the legitimation payload, AES-256-CBC encrypted with
-    //: key=SHA-256(OmsSecret) and iv=challenge[:16].
-    function BuildNewLegitimationResponse(const Password:AnsiString; const Challenge, OmsSecret:TBytes; const Username:AnsiString):TBytes;
-    //: Requests the legitimation challenge from the PLC (GetVarSubStreamed on
-    //: ServerSessionRequest).
-    function GetLegitimationChallenge(out Challenge:TBytes):Boolean;
-    //: Requests the session's current access level (GetVarSubStreamed on
-    //: EffectiveProtectionLevel) - the reference always checks this before attempting
-    //: legitimation, and skips it entirely if already at FullAccess (1). See
-    //: S7PlusAccessLevel_* constants.
-    function GetEffectiveProtectionLevel(out AccessLevel:Cardinal):Boolean;
     //: Sends the AES-256-CBC encrypted response (SetVariable on Legitimate).
     function SendLegitimationNew(const EncryptedResponse:TBytes):Boolean;
     //: Sends the legacy SHA-1/XOR response (SetVariable on ServerSessionResponse).
@@ -384,6 +363,29 @@ type
     //: batch is bad; the other items are written). Result=false only for a whole-request failure.
     function ParseMultiWriteResponse(const Response:TBytes; ItemCount:Integer; out Results:TS7PlusMultiWriteResultArray):Boolean;
   public
+
+    //-- Legitimation (password authentication, V2+ with TLS) - see Authenticate.
+    //: Derives the 32-byte OMS exporter secret from the active TLS session (RFC 5705,
+    //: label "EXPERIMENTAL_OMS"), used as the AES-256-CBC key material for "new"-style
+    //: legitimation. Requires TLS to be active.
+    function GetOMSSecret(out Secret:TBytes):Boolean;
+    //: Serializes the {LegitimationType, Username, Password/PasswordHash} ValueStruct sent
+    //: (encrypted, for the "new" style) as the legitimation response payload.
+    function BuildLegitimationPayload(const Password, Username:AnsiString):TBytes;
+    //: Legacy response: SHA-1(password) XORed with the challenge (first 20 bytes).
+    function BuildLegacyLegitimationResponse(const Password:AnsiString; const Challenge:TBytes):TBytes;
+    //: New-style response: the legitimation payload, AES-256-CBC encrypted with
+    //: key=SHA-256(OmsSecret) and iv=challenge[:16].
+    function BuildNewLegitimationResponse(const Password:AnsiString; const Challenge, OmsSecret:TBytes; const Username:AnsiString):TBytes;
+    //: Requests the legitimation challenge from the PLC (GetVarSubStreamed on
+    //: ServerSessionRequest).
+    function GetLegitimationChallenge(out Challenge:TBytes):Boolean;
+    //: Requests the session's current access level (GetVarSubStreamed on
+    //: EffectiveProtectionLevel) - the reference always checks this before attempting
+    //: legitimation, and skips it entirely if already at FullAccess (1). See
+    //: S7PlusAccessLevel_* constants.
+    function GetEffectiveProtectionLevel(out AccessLevel:Cardinal):Boolean;
+
     constructor Create(ACommPort:TCommPortDriver; ADriverID:Cardinal);
     destructor Destroy; override;
 

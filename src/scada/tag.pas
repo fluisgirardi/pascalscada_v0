@@ -150,6 +150,7 @@ type
   @value(ioUnknownError           Um código de erro desconhecido foi retornado.)
   @value(ioEmptyPacket            Um pacote vazio (sem dados) foi retornado.)
   @value(ioPartialOk              Uma ação teve sucesso parcial.)
+  @value(ioAuthError              O equipamento exige autenticação (usuário/senha) e a sessão não a tem.)
   }
   {$ELSE}
   {:
@@ -174,6 +175,7 @@ type
   @value(ioUnknownError           A invalid error code was returned.)
   @value(ioEmptyPacket            A empty packet was returned.)
   @value(ioPartialOk              An action was partially successful.)
+  @value(ioAuthError              The device requires authentication (user/password) and the session has none.)
   }
   {$ENDIF}
   TProtocolIOResult = (ioNone, ioOk, ioDriverError, ioCommError, ioTimeOut,
@@ -185,7 +187,8 @@ type
                        ioAcknowledge, ioMemoryParityError, ioIllegalRegSize,
                        ioGatewayUnavailable, ioDeviceGatewayFailedToRespond,
                        ioReadOnlyProtocol, ioCommPortClosed, ioNullCommPort,
-                       ioConnectPLCFailed, ioAdapterInitFail, ioNullTagBlock);
+                       ioConnectPLCFailed, ioAdapterInitFail, ioNullTagBlock,
+                       ioAuthError);
 
   TProtocolIOResultHelper = type helper for TProtocolIOResult
     function ToString: string;
