@@ -10,6 +10,7 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
   Constraints.MinHeight = 480
   Constraints.MinWidth = 700
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
     Position = poScreenCenter
   LCLVersion = '2.0.12.0'
   object pnlTop: TPanel
@@ -67,19 +68,26 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
       OnChange = FilterChanged
       TabOrder = 2
     end
-    object chkShowStructMembers: TCheckBox
+    object btnExpandAll: TButton
       Left = 8
-      Height = 21
-      Top = 79
-      Width = 210
-      Caption = 'Show structure members'
-      Checked = True
-      OnChange = FilterChanged
-      State = cbChecked
+      Height = 27
+      Top = 75
+      Width = 130
+      Caption = 'Expand all'
+      OnClick = btnExpandAllClick
       TabOrder = 4
     end
+    object btnCollapseAll: TButton
+      Left = 146
+      Height = 27
+      Top = 75
+      Width = 130
+      Caption = 'Collapse all'
+      OnClick = btnCollapseAllClick
+      TabOrder = 7
+    end
     object chkShowSkipped: TCheckBox
-      Left = 224
+      Left = 292
       Height = 21
       Top = 79
       Width = 300
@@ -88,40 +96,26 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
       TabOrder = 5
     end
     object chkIncludeAreas: TCheckBox
-      Left = 540
+      Left = 600
       Height = 21
       Top = 79
-      Width = 300
+      Width = 250
       Anchors = [akTop, akLeft, akRight]
       Caption = 'Include the I, Q and M areas'
       TabOrder = 6
     end
   end
-  object lvTags: TListView
+  object tvTags: TTreeView
     Left = 0
     Height = 340
     Top = 108
     Width = 860
     Align = alClient
-    Checkboxes = True
-    Columns = <    
-      item
-        Caption = 'Variable'
-        Width = 400
-      end    
-      item
-        Caption = 'Type'
-        Width = 110
-      end    
-      item
-        Caption = 'Will be created as'
-        Width = 300
-      end>
     ReadOnly = True
-    RowSelect = True
     TabOrder = 1
-    ViewStyle = vsReport
-    OnClick = lvTagsClick
+    OnKeyDown = tvTagsKeyDown
+    OnMouseDown = tvTagsMouseDown
+    Options = [tvoAutoItemHeight, tvoHideSelection, tvoReadOnly, tvoRowSelect, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
   end
   object pnlBottom: TPanel
     Left = 0

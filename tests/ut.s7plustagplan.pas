@@ -21,7 +21,7 @@ unit ut.s7plustagplan;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, Tag, S7PlusTypeInfo, S7PlusTagPlan;
+  Classes, SysUtils, Types, fpcunit, testregistry, Tag, S7PlusTypeInfo, S7PlusTagPlan;
 
 type
 
@@ -51,6 +51,10 @@ type
     procedure ANameThatStartsWithADigitGetsAnUnderscore;
     procedure AnEmptyPathGivesTag;
     procedure ThePrefixIsKept;
+    procedure APathSplitsIntoItsLevels;
+    procedure ADotInsideBracketsDoesNotSplit;
+    procedure ASingleLevelIsOneSegment;
+    procedure AnEmptyPathHasNoLevels;
   end;
 
 implementation
@@ -236,6 +240,41 @@ end;
 procedure TTestS7PlusTagPlan.ThePrefixIsKept;
 begin
   AssertEquals('prefix', 's7_DB4_Var1', S7PlusSuggestedName('DB4.Var1', 's7_'));
+end;
+
+procedure TTestS7PlusTagPlan.APathSplitsIntoItsLevels;
+var
+  L:TStringArray;
+begin
+  L := S7PlusSplitPath('BlocoSimbolico_4.Var26.v1');
+  AssertEquals('count', 3, Length(L));
+  AssertEquals('db', 'BlocoSimbolico_4', L[0]);
+  AssertEquals('struct', 'Var26', L[1]);
+  AssertEquals('member', 'v1', L[2]);
+end;
+
+procedure TTestS7PlusTagPlan.ADotInsideBracketsDoesNotSplit;
+var
+  L:TStringArray;
+begin
+  L := S7PlusSplitPath('DB2.Tabela[1.5].x');
+  AssertEquals('count', 3, Length(L));
+  AssertEquals('array level', 'Tabela[1.5]', L[1]);
+  AssertEquals('member', 'x', L[2]);
+end;
+
+procedure TTestS7PlusTagPlan.ASingleLevelIsOneSegment;
+var
+  L:TStringArray;
+begin
+  L := S7PlusSplitPath('DB4');
+  AssertEquals('count', 1, Length(L));
+  AssertEquals('segment', 'DB4', L[0]);
+end;
+
+procedure TTestS7PlusTagPlan.AnEmptyPathHasNoLevels;
+begin
+  AssertEquals('count', 0, Length(S7PlusSplitPath('')));
 end;
 
 initialization
