@@ -421,6 +421,7 @@ Com os sete métodos escritos, falta o driver aparecer na paleta:
 3. **Ícone**: um PNG de 24×24 chamado `TProtocoloFicticio.png` em `artwork/24x24png/` (e o SVG em `artwork/scalable/`); rode `artwork/generateres.sh` para regerar o arquivo de recursos.
 4. **Tag Builder (opcional)**: o assistente que cria tags pelo botão direito no driver. Como ele tem forms (LCL), ele fica no pacote de design (`scada_dsng`), não na unit do driver: o driver expõe `HasTabBuilderEditor`/`OpenTagEditor` e uma variável global `SetTagBuilderToolFor…ProtocolFamily` que o pacote de design preenche na inicialização — veja `modbustagassistant.pas` e `siemenstagassistant.pas` como modelo. Sem ele o driver funciona normalmente, só não tem o item de menu.
 5. **`LiteralTagAddress`** (opcional): sobrescreva para o Object Inspector mostrar o endereço no formato do seu protocolo (`DB5.DBW20`, `40001`) na dica do tag.
+6. **`ListTags`** (opcional): se o equipamento sabe dizer quais tags tem, sobrescreva `SupportsListTags` (devolvendo `true`) e `ListTags(out Tags: TPLCTagInfoArray; ForceReload: Boolean)`. Todo driver que faz isso devolve os mesmos registros `TPLCTagInfo` (caminho para a `LongAddress`, tipo - escalar, array, estrutura, string -, `TagType`, `Swap*`, número de elementos, tamanho em bytes), e assim uma aplicação lista os tags de qualquer um deles por uma variável `TProtocolDriver`. Deixe a conversão numa função simples (veja `LGXTagListToTagInfos` e `S7PlusTagInfosOf`) para testá-la sem o equipamento.
 
 ##### Testando sem o equipamento
 

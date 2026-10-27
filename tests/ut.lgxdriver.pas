@@ -129,6 +129,17 @@ type
     procedure ThePaddingIsZeroWhenThePreviousOneIsSmaller;
     procedure APathThatIsTooLongIsRefused;
 
+    //lista de tags no formato comum / tag list in the common format
+    procedure ListTagsReadsThePLCThroughBrowseTagList;
+    procedure ASimpleTagIsAScalarWithItsTagType;
+    procedure AnArrayIsOneEntryWithItsElementCount;
+    procedure ABoolArrayIsNotSupported;
+    procedure AStringIsOneEntryOnItsDataMember;
+    procedure AStructureAndItsMembersAreListedSeparately;
+    procedure AProgramTagCarriesItsProgramInTheGroup;
+    procedure ArrayElementsAndSystemTypesAreLeftOut;
+    procedure AnUnknownTypeIsUnsupported;
+
     //classificacao de tipos CIP / CIP type classification
     procedure AStructureIsRecognisedByTheHighBit;
     procedure ASystemTypeIsRecognised;
@@ -670,6 +681,157 @@ begin
   QueueWriteFragReply($05);
 
   AssertEquals(Ord(ioObjectNotExists), Ord(FDrv.WriteNow('MyTag', [42,0,0,0])));
+end;
+
+//---- ListTags ----------------------------------------------------------------
+
+function LGXEntry(const aName:String; aType:Word; aElemSize:Integer = 4; aElemCount:Word = 1;
+  aDims:Byte = 0):TLGXTag;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  Result.name:=aName;
+  Result.aType:=aType;
+  Result.elem_size:=aElemSize;
+  Result.elem_count:=aElemCount;
+  Result.num_dimensions:=aDims;
+end;
+
+procedure TTestLGXDriver.ListTagsReadsThePLCThroughBrowseTagList;
+var
+  drv:TLGXDriver;
+  tags:TPLCTagInfoArray;
+begin
+  drv:=TLGXDriver.Create(nil);
+  try
+    AssertTrue('Rockwell can list its tags', drv.SupportsListTags);
+    //no port: nothing can be read
+    AssertTrue('without a port it cannot', drv.ListTags(tags)=ioCommError);
+    AssertEquals('and the list is empty', 0, Length(tags));
+  finally
+    drv.Free;
+  end;
+end;
+
+procedure TTestLGXDriver.ASimpleTagIsAScalarWithItsTagType;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 1);
+  l[0]:=LGXEntry('Contador', TAG_CIP_TYPE_DINT);
+  r:=LGXTagListToTagInfos(l);
+  AssertEquals('one entry', 1, Length(r));
+  AssertTrue('scalar', r[0].Kind=tkScalar);
+  AssertTrue('DINT is a long int', r[0].TagType=pttLongInt);
+  AssertEquals('path', 'Contador', r[0].Path);
+  AssertEquals('name', 'Contador', r[0].Name);
+  AssertEquals('top level', '', r[0].ParentPath);
+  AssertEquals('type name', 'DINT', r[0].NativeType);
+  AssertEquals('four bytes', 4, r[0].SizeInBytes);
+  AssertFalse('little-endian: no swap', r[0].SwapBytes);
+end;
+
+procedure TTestLGXDriver.AnArrayIsOneEntryWithItsElementCount;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 1);
+  l[0]:=LGXEntry('Receita', TAG_CIP_TYPE_REAL, 4, 10, 1);
+  r:=LGXTagListToTagInfos(l);
+  AssertTrue('array', r[0].Kind=tkArray);
+  AssertTrue('of floats', r[0].TagType=pttFloat);
+  AssertEquals('ten elements', 10, r[0].ElementCount);
+  AssertEquals('forty bytes', 40, r[0].SizeInBytes);
+end;
+
+procedure TTestLGXDriver.ABoolArrayIsNotSupported;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 1);
+  l[0]:=LGXEntry('Bits', TAG_CIP_TYPE_BOOL, 1, 32, 1);
+  r:=LGXTagListToTagInfos(l);
+  AssertTrue('the driver does not unpack the bits', r[0].Kind=tkUnsupported);
+end;
+
+procedure TTestLGXDriver.AStringIsOneEntryOnItsDataMember;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 3);
+  l[0]:=LGXEntry('Nome', TYPE_IS_STRUCT or $0FCE, 88);
+  l[1]:=LGXEntry('Nome.LEN', TAG_CIP_TYPE_DINT);
+  l[2]:=LGXEntry('Nome.DATA', TAG_CIP_TYPE_SINT, 1, 82, 1);
+  r:=LGXTagListToTagInfos(l);
+  AssertEquals('LEN and DATA are not tags of their own', 1, Length(r));
+  AssertTrue('string', r[0].Kind=tkString);
+  AssertEquals('the TPLCString reads DATA', 'Nome.DATA', r[0].Path);
+  AssertEquals('name', 'Nome', r[0].Name);
+  AssertEquals('81 characters', 81, r[0].ElementCount);
+  AssertEquals('type name', 'STRING', r[0].NativeType);
+end;
+
+procedure TTestLGXDriver.AStructureAndItsMembersAreListedSeparately;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 3);
+  l[0]:=LGXEntry('Tanque', TYPE_IS_STRUCT or $0123, 12);
+  l[1]:=LGXEntry('Tanque.nivel', TAG_CIP_TYPE_REAL);
+  l[2]:=LGXEntry('Tanque.bomba', TAG_CIP_TYPE_DINT);
+  r:=LGXTagListToTagInfos(l);
+  AssertEquals('three entries', 3, Length(r));
+  AssertTrue('the UDT', r[0].Kind=tkStructure);
+  AssertEquals('twelve bytes', 12, r[0].SizeInBytes);
+  AssertTrue('its member', r[1].Kind=tkScalar);
+  AssertEquals('member path', 'Tanque.nivel', r[1].Path);
+  AssertEquals('member name', 'nivel', r[1].Name);
+  AssertEquals('member parent', 'Tanque', r[1].ParentPath);
+end;
+
+procedure TTestLGXDriver.AProgramTagCarriesItsProgramInTheGroup;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 2);
+  l[0]:=LGXEntry('Program:Main.Contador', TAG_CIP_TYPE_DINT);
+  l[1]:=LGXEntry('Global', TAG_CIP_TYPE_DINT);
+  r:=LGXTagListToTagInfos(l);
+  AssertEquals('program', 'Program:Main', r[0].Group);
+  AssertEquals('name', 'Contador', r[0].Name);
+  AssertEquals('top level inside the program', '', r[0].ParentPath);
+  AssertEquals('path is the whole name', 'Program:Main.Contador', r[0].Path);
+  AssertEquals('a controller tag has no group', '', r[1].Group);
+end;
+
+procedure TTestLGXDriver.ArrayElementsAndSystemTypesAreLeftOut;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 3);
+  l[0]:=LGXEntry('Tabela', TAG_CIP_TYPE_DINT, 4, 3, 1);
+  l[1]:=LGXEntry('Tabela[1]', TAG_CIP_TYPE_DINT);
+  l[2]:=LGXEntry('__interno', TAG_CIP_TYPE_DINT or TYPE_IS_SYSTEM);
+  r:=LGXTagListToTagInfos(l);
+  AssertEquals('only the array', 1, Length(r));
+  AssertEquals('Tabela', 'Tabela', r[0].Path);
+end;
+
+procedure TTestLGXDriver.AnUnknownTypeIsUnsupported;
+var
+  l:TLGXTagInfoArray;
+  r:TPLCTagInfoArray;
+begin
+  SetLength(l, 1);
+  l[0]:=LGXEntry('Estranho', $00FF);
+  r:=LGXTagListToTagInfos(l);
+  AssertTrue('no numeric equivalent', r[0].Kind=tkUnsupported);
 end;
 
 initialization

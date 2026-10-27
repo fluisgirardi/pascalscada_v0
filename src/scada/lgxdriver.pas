@@ -1027,6 +1027,20 @@ type
                             CreateProc:TCreateTagProc); override;
     //: @seealso(TProtocolDriver.HasTabBuilderEditor)
     function  HasTabBuilderEditor:Boolean; override;
+    //: @seealso(TProtocolDriver.SupportsListTags)
+    function  SupportsListTags:Boolean; override;
+    {:
+    Lista os tags do CLP no formato comum de TProtocolDriver.ListTags (a mesma lista de
+    BrowseTagList, que fica em cache: ForceReload a descarta). Um tag simples é um
+    tkScalar; um array, um tkArray; uma STRING (a estrutura com LEN e DATA), um tkString
+    cujo Path é o do membro DATA e ElementCount o número máximo de caracteres; qualquer
+    outra estrutura (UDT), um tkStructure, e os membros dela vêm como entradas próprias
+    (Tanque.nivel). Tags de programa levam o programa em Group (Program:Main). Elementos
+    de array, os membros LEN/DATA de uma STRING e os tipos internos do CLP ficam de fora;
+    arrays de BOOL (empacotados em DWORDs) vêm como tkUnsupported.
+    ioPartialOk: a navegação foi interrompida no meio.
+    }
+    function  ListTags(out Tags:TPLCTagInfoArray; ForceReload:Boolean = false):TProtocolIOResult; override;
   published
     property ReadSomethingAlways;
     property ReadOnly;
@@ -1077,6 +1091,12 @@ function LGXTypeToTagType(aCIPType:Word; out aTagType:TTagType):Boolean;
 
 //: Retorna o tamanho, em bytes, de um elemento do tipo CIP informado.
 function LGXTypeSizeInBytes(aCIPType:Word):Integer;
+
+{:
+Converte a lista de tags de BrowseTagList no formato comum de TProtocolDriver.ListTags
+(ver TLGXDriver.ListTags para as regras).
+}
+function LGXTagListToTagInfos(const aTagList:TLGXTagInfoArray):TPLCTagInfoArray;
 
 {:
 Registra a ferramenta Tag Builder dos CLPs Rockwell Compact/ControlLogix.
@@ -3338,6 +3358,29 @@ begin
   Result:=true;
 end;
 
+function TLGXDriver.SupportsListTags: Boolean;
+begin
+  Result:=true;
+end;
+
+function TLGXDriver.ListTags(out Tags: TPLCTagInfoArray; ForceReload: Boolean): TProtocolIOResult;
+var
+  aList:TLGXTagInfoArray;
+  complete:Boolean;
+begin
+  SetLength(Tags, 0);
+  complete:=BrowseTagList(aList, ForceReload);
+
+  //BrowseTagList returns what it read even when it was interrupted
+  if Length(aList)=0 then begin
+    Result:=ioCommError;
+    exit;
+  end;
+
+  Tags:=LGXTagListToTagInfos(aList);
+  if complete then Result:=ioOk else Result:=ioPartialOk;
+end;
+
 function TLGXDriver.NotifyThisEvents: TNotifyThisEvents;
 begin
   Result:=[ntePortClosed, ntePortDisconnected];
@@ -5110,6 +5153,150 @@ begin
     TAG_CIP_TYPE_ULINT,
     TAG_CIP_TYPE_LREAL : Result:=8;
     else                 Result:=1;
+  end;
+end;
+
+//a Path is split at the dots outside of "[...]" (array indexes)
+function LGXSplitName(const aName:String):TStringArray;
+var
+  c, depth, start:Integer;
+begin
+  SetLength(Result, 0);
+  depth:=0;
+  start:=1;
+  for c:=1 to Length(aName) do
+    case aName[c] of
+      '[': inc(depth);
+      ']': if depth>0 then dec(depth);
+      '.': if depth=0 then begin
+        SetLength(Result, Length(Result)+1);
+        Result[High(Result)]:=Copy(aName, start, c-start);
+        start:=c+1;
+      end;
+    end;
+  SetLength(Result, Length(Result)+1);
+  Result[High(Result)]:=Copy(aName, start, MaxInt);
+end;
+
+function LGXTagListToTagInfos(const aTagList:TLGXTagInfoArray):TPLCTagInfoArray;
+var
+  c, k, dataIdx, lenIdx, count, parentIdx:LongInt;
+  names:TStringList;     //lower case name -> index on aTagList
+  isString:array of Boolean;   //the structure is a STRING (LEN + DATA)
+  levels:TStringArray;
+  info:TPLCTagInfo;
+  aTagType:TTagType;
+  parentName, lname:String;
+
+  function Find(const aLowerName:String; out aIndex:LongInt):Boolean;
+  var
+    idx:Integer;
+  begin
+    Result:=names.Find(aLowerName, idx);
+    if Result then aIndex:=LongInt(PtrInt(names.Objects[idx])) else aIndex:=-1;
+  end;
+
+  function JoinLevels(aCount:Integer):String;
+  var
+    i:Integer;
+  begin
+    Result:='';
+    for i:=0 to aCount-1 do begin
+      if i>0 then Result:=Result+'.';
+      Result:=Result+levels[i];
+    end;
+  end;
+
+begin
+  SetLength(Result, 0);
+  names:=TStringList.Create;
+  try
+    names.Sorted:=true;
+    names.Duplicates:=dupIgnore;
+    for c:=0 to High(aTagList) do
+      names.AddObject(LowerCase(aTagList[c].name), TObject(PtrInt(c)));
+
+    //a Logix STRING is a structure with a LEN (DINT) and a DATA (SINT[n]) member
+    SetLength(isString, Length(aTagList));
+    for c:=0 to High(aTagList) do begin
+      isString[c]:=false;
+      if not LGXTypeIsStruct(aTagList[c].aType) then continue;
+      lname:=LowerCase(aTagList[c].name);
+      if not (Find(lname+'.data', dataIdx) and Find(lname+'.len', lenIdx)) then continue;
+      isString[c]:=((aTagList[dataIdx].aType and $FF)=TAG_CIP_TYPE_SINT) and
+                   (aTagList[dataIdx].elem_count>1);
+    end;
+
+    count:=0;
+    SetLength(Result, Length(aTagList));
+    for c:=0 to High(aTagList) do begin
+      if LGXTypeIsSystem(aTagList[c].aType) then continue;
+      //elements of an array (and what is inside them) are covered by the array tag
+      if Pos('[', aTagList[c].name)>0 then continue;
+
+      levels:=LGXSplitName(aTagList[c].name);
+
+      //the LEN and DATA of a STRING are the string, not tags of their own
+      if Length(levels)>1 then begin
+        parentName:=JoinLevels(High(levels));
+        if Find(LowerCase(parentName), parentIdx) and isString[parentIdx] then continue;
+      end;
+
+      FillChar(info, SizeOf(info), 0);
+      info.Path:=aTagList[c].name;
+      info.Name:=levels[High(levels)];
+      info.ParentPath:=JoinLevels(High(levels));
+      info.TagType:=pttDefault;
+      info.ElementCount:=1;
+      info.NativeType:=LGXTypeName(aTagList[c].aType);
+
+      //a program tag is "Program:<program>.<tag>": its group is the program
+      if (Pos('program:', LowerCase(levels[0]))=1) and (Length(levels)>1) then begin
+        info.Group:=levels[0];
+        if Length(levels)=2 then info.ParentPath:='' ;
+        if Length(levels)>2 then info.ParentPath:=JoinLevels(High(levels));
+      end else
+        info.Group:='';
+
+      if aTagList[c].elem_count>0 then
+        info.SizeInBytes:=aTagList[c].elem_count*aTagList[c].elem_size
+      else
+        info.SizeInBytes:=aTagList[c].elem_size;
+
+      if LGXTypeIsStruct(aTagList[c].aType) then begin
+        if isString[c] then begin
+          //the TPLCString reads the DATA member
+          Find(LowerCase(aTagList[c].name)+'.data', dataIdx);
+          info.Kind:=tkString;
+          info.Path:=aTagList[dataIdx].name;
+          info.NativeType:='STRING';
+          info.ElementCount:=aTagList[dataIdx].elem_count-1;
+          info.SizeInBytes:=aTagList[dataIdx].elem_count;
+        end else
+          info.Kind:=tkStructure;
+      end else if not LGXTypeToTagType(aTagList[c].aType, aTagType) then
+        info.Kind:=tkUnsupported
+      else begin
+        info.TagType:=aTagType;
+        if (aTagList[c].num_dimensions>0) and (aTagList[c].elem_count>1) then begin
+          //BOOL arrays are packed into DWORDs and the driver does not unpack the bits
+          if (aTagList[c].aType and $FF)=TAG_CIP_TYPE_BOOL then begin
+            info.Kind:=tkUnsupported;
+            info.TagType:=pttDefault;
+          end else begin
+            info.Kind:=tkArray;
+            info.ElementCount:=aTagList[c].elem_count;
+          end;
+        end else
+          info.Kind:=tkScalar;
+      end;
+
+      Result[count]:=info;
+      inc(count);
+    end;
+    SetLength(Result, count);
+  finally
+    names.Free;
   end;
 end;
 

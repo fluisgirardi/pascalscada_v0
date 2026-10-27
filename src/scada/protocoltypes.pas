@@ -81,6 +81,99 @@ type
                      );
 
   {$IFDEF PORTUGUES}
+  {:
+    Que tipo de coisa um tag listado do CLP é, na visão de quem vai criar um tag
+    do PascalSCADA para ele.
+    @value(tkScalar Um valor só: TPLCTagNumber, com TagType.)
+    @value(tkArray Vários valores do mesmo tipo: TPLCBlock com ElementCount elementos.)
+    @value(tkStructure DB ou estrutura (UDT): não é um valor, é o nível que agrupa os
+          membros, que vêm na lista como entradas próprias. SizeInBytes é o tamanho.)
+    @value(tkString Texto: TPLCString. ElementCount é o número máximo de caracteres,
+          0 quando o CLP não informa.)
+    @value(tkUnsupported Existe no CLP mas o driver não lê (tipo sem equivalente).)
+  }
+  {$ELSE}
+  {:
+    What a tag listed from the PLC is, for whoever is going to create a PascalSCADA
+    tag for it.
+    @value(tkScalar A single value: TPLCTagNumber, with TagType.)
+    @value(tkArray Several values of the same type: TPLCBlock with ElementCount elements.)
+    @value(tkStructure A DB or a structure (UDT): not a value, the level that groups
+          its members, which come on the list as entries of their own. SizeInBytes is
+          its size.)
+    @value(tkString Text: TPLCString. ElementCount is the maximum number of characters,
+          0 when the PLC does not say.)
+    @value(tkUnsupported It exists in the PLC but the driver cannot read it (a type with
+          no equivalent).)
+  }
+  {$ENDIF}
+  TPLCTagKind = (tkScalar, tkArray, tkStructure, tkString, tkUnsupported);
+
+  {$IFDEF PORTUGUES}
+  {:
+    Um tag do CLP, como TProtocolDriver.ListTags o devolve - o mesmo formato para todos
+    os drivers que sabem listar os tags do equipamento.
+  }
+  {$ELSE}
+  {:
+    A PLC tag, as TProtocolDriver.ListTags returns it - the same format for every
+    driver that knows how to list the device's tags.
+  }
+  {$ENDIF}
+  TPLCTagInfo = record
+    {$IFDEF PORTUGUES}
+    //: Endereço do tag, o que vai na LongAddress do tag do PascalSCADA.
+    {$ELSE}
+    //: Tag address, what goes in the LongAddress of the PascalSCADA tag.
+    {$ENDIF}
+    Path:String;
+    //: Name (the last level of Path).
+    Name:String;
+    //: Path of the structure/DB that holds it ('' at the top level).
+    ParentPath:String;
+    {$IFDEF PORTUGUES}
+    //: Onde ele mora: o DB ou a área (S7), o programa do controlador (Rockwell); '' se nenhum.
+    {$ELSE}
+    //: Where it lives: the DB or the area (S7), the controller program (Rockwell); '' if none.
+    {$ENDIF}
+    Group:String;
+    Kind:TPLCTagKind;
+    {$IFDEF PORTUGUES}
+    //: Nome do tipo no CLP (DInt, Real, STRING...).
+    {$ELSE}
+    //: Name of the type in the PLC (DInt, Real, STRING...).
+    {$ENDIF}
+    NativeType:String;
+    {$IFDEF PORTUGUES}
+    //: TagType do tag que o lê (tkScalar e tkArray); pttDefault nos demais.
+    {$ELSE}
+    //: TagType of the tag that reads it (tkScalar and tkArray); pttDefault on the others.
+    {$ENDIF}
+    TagType:TTagType;
+    {$IFDEF PORTUGUES}
+    //: Elementos de um tkArray (1 nos demais); caracteres de um tkString, se conhecido.
+    {$ELSE}
+    //: Elements of a tkArray (1 on the others); characters of a tkString, if known.
+    {$ENDIF}
+    ElementCount:LongInt;
+    {$IFDEF PORTUGUES}
+    //: Tamanho em bytes; 0 se desconhecido. Em um tkStructure, ao menos isso se não for exato.
+    {$ELSE}
+    //: Size in bytes; 0 if unknown. On a tkStructure, at least this when it is not exact.
+    {$ENDIF}
+    SizeInBytes:LongInt;
+    {$IFDEF PORTUGUES}
+    //: Os Swap* que o tag precisa para ler o valor certo (o CLP S7 manda big-endian).
+    {$ELSE}
+    //: The Swap* the tag needs to read the right value (an S7 PLC sends big-endian).
+    {$ENDIF}
+    SwapBytes, SwapWords, SwapDWords:Boolean;
+  end;
+
+  //: Lista de tags de um CLP.
+  TPLCTagInfoArray = array of TPLCTagInfo;
+
+  {$IFDEF PORTUGUES}
   //: Adiciona um tag no editor de formulário do Delphi/Lazarus.
   {$ELSE}
   //: Add a tag in the form editor of Delphi/Lazarus.

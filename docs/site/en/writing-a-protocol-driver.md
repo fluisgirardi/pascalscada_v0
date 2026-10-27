@@ -420,6 +420,7 @@ With the seven methods written, the driver still has to show up on the palette:
 3. **Icon**: a 24×24 PNG named `TDummyProtocol.png` in `artwork/24x24png/` (and the SVG in `artwork/scalable/`); run `artwork/generateres.sh` to regenerate the resource file.
 4. **Tag Builder (optional)**: the wizard that creates tags from the driver's context menu. Since it has forms (LCL), it lives in the design package (`scada_dsng`), not in the driver unit: the driver exposes `HasTabBuilderEditor`/`OpenTagEditor` and a global `SetTagBuilderToolFor…ProtocolFamily` that the design package fills at initialization — see `modbustagassistant.pas` and `siemenstagassistant.pas` as models. Without it the driver works normally, it just lacks the menu item.
 5. **`LiteralTagAddress`** (optional): override it so the Object Inspector shows the address in your protocol's notation (`DB5.DBW20`, `40001`) in the tag hint.
+6. **`ListTags`** (optional): if the device can tell which tags it has, override `SupportsListTags` (return `true`) and `ListTags(out Tags: TPLCTagInfoArray; ForceReload: Boolean)`. Every driver that does it returns the same `TPLCTagInfo` records (path for `LongAddress`, kind - scalar, array, structure, string -, `TagType`, `Swap*`, element count, size in bytes), so an application can list the tags of any of them through a `TProtocolDriver` variable. Keep the conversion in a plain function (see `LGXTagListToTagInfos` and `S7PlusTagInfosOf`) so it can be tested without the device.
 
 ##### Testing without the device
 

@@ -33,7 +33,7 @@ interface
 uses
   Classes, SysUtils, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort,
   S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
-  PLCString;
+  PLCString, S7PlusTagPlan;
 
 //: Registers the Tag Builder tool of the S7CommPlus protocol (the design package does it,
 //: since the tool has forms) - see TS7CommPlusDriver.OpenTagEditor.
@@ -245,6 +245,17 @@ type
     procedure OpenTagEditor(InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc); override;
     //: @seealso(TProtocolDriver.HasTabBuilderEditor)
     function HasTabBuilderEditor:Boolean; override;
+    //: @seealso(TProtocolDriver.SupportsListTags)
+    function SupportsListTags:Boolean; override;
+    //: Lists every DB of the PLC (each as a tkStructure with the size of a whole DB read)
+    //: and the variables in them, plus the I, Q and M process areas, in the common format of
+    //: TProtocolDriver.ListTags. The path is symbolic, with the TIA Portal name of the DB
+    //: (BlocoSimbolico_4.Var26.v1). A scalar is a tkScalar with its TagType and the Swap* the
+    //: big-endian PLC needs, an array of scalars a tkArray (its elements are left out), a
+    //: structure a tkStructure whose members follow as entries of their own, a STRING a
+    //: tkString (the maximum length is not known: ElementCount 0). Every call reads the PLC
+    //: again (ForceReload has nothing to drop). ioPartialOk: a DB or area could not be browsed.
+    function ListTags(out Tags:TPLCTagInfoArray; ForceReload:Boolean = false):TProtocolIOResult; override;
     //: Reads a variable's raw bytes by its resolved LID path (see BrowseDB/BrowseNativeArea).
     function ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
     //: Writes a variable's raw bytes by its resolved LID path.
@@ -1762,6 +1773,51 @@ end;
 function TS7CommPlusDriver.HasTabBuilderEditor:Boolean;
 begin
   Result := true;
+end;
+
+function TS7CommPlusDriver.SupportsListTags:Boolean;
+begin
+  Result := true;
+end;
+
+function TS7CommPlusDriver.ListTags(out Tags:TPLCTagInfoArray; ForceReload:Boolean):TProtocolIOResult;
+var
+  Blocks:TS7PlusDataBlockInfoArray;
+  Vars:TS7PlusVarInfoArray;
+  Cands:TS7PlusCandidateArray;
+  i:Integer;
+  Partial:Boolean;
+
+  procedure BrowseArea(AreaRID, TiRid:Cardinal; const AreaName:String);
+  begin
+    if BrowseNativeArea(AreaRID, TiRid, AreaName, Vars)=ioOk then
+      S7PlusAddBrowsed(Cands, Vars, '')
+    else
+      Partial := true;
+  end;
+
+begin
+  SetLength(Tags, 0);
+  SetLength(Cands, 0);
+  Partial := false;
+
+  Result := ListDataBlocks(Blocks);
+  if Result<>ioOk then exit;
+
+  for i:=0 to High(Blocks) do
+    if BrowseDB(Blocks[i].Number, Vars)=ioOk then
+      S7PlusAddBrowsed(Cands, Vars, Blocks[i].Name)   //'' (no symbolic name) keeps DB<n>
+    else
+      Partial := true;
+
+  BrowseArea(S7PlusIds_NativeIAreaRID, S7PlusTiRid_IArea, 'IArea');
+  BrowseArea(S7PlusIds_NativeQAreaRID, S7PlusTiRid_QArea, 'QArea');
+  BrowseArea(S7PlusIds_NativeMAreaRID, S7PlusTiRid_MArea, 'MArea');
+
+  S7PlusMarkArrays(Cands);
+  Tags := S7PlusTagInfosOf(Cands);
+
+  if Partial then Result := ioPartialOk else Result := ioOk;
 end;
 
 function TS7CommPlusDriver.ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
