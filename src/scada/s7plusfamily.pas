@@ -84,6 +84,8 @@ type
     //-- byte is shared with other bits, STRING, structs, unknown types) - skipped on write.
     SoftDataType:Byte;
     WriteSize:Integer;
+    //-- Bytes a read of this member returns (TS7PlusVarInfo.DataSize), 0 = not known.
+    ReadSize:Integer;
   end;
   TS7PlusCompositeItemArray = array of TS7PlusCompositeItem;
 
@@ -95,6 +97,7 @@ type
     Lids:TS7PlusLIDArray;
     ByteOffset:Integer;   //the resolved ImageOffset (position in the PLC memory image, see TS7PlusVarInfo.ImageOffset) - used by the read-dedup. -1=unknown.
     SoftDataType:Byte;
+    ReadSize:Integer;     //bytes a read of it returns (TS7PlusVarInfo.DataSize), 0 = not known
     Data:TBytes;
     LastResult:TProtocolIOResult;
     LastScanTimeStamp:QWord;
@@ -196,7 +199,7 @@ type
     function GetCachedDBVars(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetCachedAreaVars(AreaRID, TiRid:Cardinal; const AreaName:String; var Cache:TS7PlusVarInfoArray; var Browsed:Boolean; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetDBNumberByName(const Name:AnsiString; out DBNumber:Integer):Boolean;
-    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray):Boolean;
+    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray; out DataSize:Integer):Boolean;
     //: True for an array of structures ("DB4.Arr") or one element of it ("DB4.Arr[2]").
     function IsStructArrayPath(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString):Boolean;
     //: Adds, as composite items, every member of the elements of an array of structures (or of
@@ -887,10 +890,11 @@ begin
     Items[n].ByteOffset := Vars[i].ByteOffset-BaseOffset;
     Items[n].SoftDataType := Vars[i].SoftDataType;
     Items[n].WriteSize := CompositeWriteSize(Vars[i].SoftDataType);
+    Items[n].ReadSize := Vars[i].DataSize;
   end;
 end;
 
-function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray):Boolean;
+function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray; out DataSize:Integer):Boolean;
 var
   DotPos, DBNumber, i, j, CIdx:Integer;
   AreaName, CanonicalPath, Rest:AnsiString;
@@ -903,6 +907,7 @@ begin
   AccessArea := 0;
   ByteOffset := -1;
   SoftDataType := 0;
+  DataSize := 0;
   SetLength(CompositeItems, 0);
 
   DotPos := Pos('.', Path);
@@ -981,6 +986,7 @@ begin
       CompositeItems[CIdx].ByteOffset := Vars[i].ByteOffset;
       CompositeItems[CIdx].SoftDataType := Vars[i].SoftDataType;
       CompositeItems[CIdx].WriteSize := CompositeWriteSize(Vars[i].SoftDataType);
+      CompositeItems[CIdx].ReadSize := Vars[i].DataSize;
     end;
     //Insertion sort by ByteOffset ascending - composing "starting from the first element" is
     //what makes truncating the assembled buffer to the tag's own configured Size meaningful.
@@ -1023,6 +1029,7 @@ begin
       //already-read bytes, and an optimized struct is laid out by size, not by declaration.
       ByteOffset := Vars[i].ImageOffset;
       SoftDataType := Vars[i].SoftDataType;
+      DataSize := Vars[i].DataSize;
       Result := true;
       exit;
     end;
@@ -1176,6 +1183,7 @@ begin
   for i:=0 to High(Items) do begin
     ReqItems[i].AccessArea := Items[i].AccessArea;
     ReqItems[i].Lids := Items[i].Lids;
+    ReqItems[i].ExpectedSize := Items[i].ReadSize;
   end;
 
   if not FConnection.ReadMultipleSymbolic(ReqItems, Results) then exit;
@@ -1286,7 +1294,7 @@ begin
   for i:=0 to High(FScanList) do
     if (not FScanList[i].Resolved) and (Now_-FScanList[i].LastResolveAttempt>=5000) then begin
       FScanList[i].LastResolveAttempt := Now_;
-      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids, FScanList[i].ByteOffset, FScanList[i].SoftDataType, FScanList[i].CompositeItems) then begin
+      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids, FScanList[i].ByteOffset, FScanList[i].SoftDataType, FScanList[i].CompositeItems, FScanList[i].ReadSize) then begin
         FScanList[i].Resolved := true;
         FScanList[i].IsComposite := Length(FScanList[i].CompositeItems)>0;
         TryDeduplicateEntry(i);
@@ -1345,6 +1353,7 @@ begin
         SetLength(Owners, ItemIdx+1);
         Items[ItemIdx].AccessArea := FScanList[EntryIdx].CompositeItems[j].AccessArea;
         Items[ItemIdx].Lids := FScanList[EntryIdx].CompositeItems[j].Lids;
+        Items[ItemIdx].ExpectedSize := FScanList[EntryIdx].CompositeItems[j].ReadSize;
         Owners[ItemIdx].EntryIdx := EntryIdx;
         Owners[ItemIdx].IsCompositeItem := true;
         Owners[ItemIdx].CompByteOffset := FScanList[EntryIdx].CompositeItems[j].ByteOffset;
@@ -1355,6 +1364,7 @@ begin
       SetLength(Owners, ItemIdx+1);
       Items[ItemIdx].AccessArea := FScanList[EntryIdx].AccessArea;
       Items[ItemIdx].Lids := FScanList[EntryIdx].Lids;
+      Items[ItemIdx].ExpectedSize := FScanList[EntryIdx].ReadSize;
       Owners[ItemIdx].EntryIdx := EntryIdx;
       Owners[ItemIdx].IsCompositeItem := false;
     end;
@@ -1780,7 +1790,7 @@ var
   AreaRID:Cardinal;
   AccessArea:Cardinal;
   Lids:TS7PlusLIDArray;
-  DummyOffset:Integer;
+  DummyOffset, DummySize:Integer;
   DummyType:Byte;
   CompositeItems:TS7PlusCompositeItemArray;
   Len:Integer;
@@ -1798,7 +1808,7 @@ begin
   //("whole DB/area") Path resolves with a non-empty CompositeItems - read via a batched
   //multi-item request instead of the (otherwise meaningless) empty-LID ReadSymbolic.
   if tagrec.Path<>'' then begin
-    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType, CompositeItems) then begin
+    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType, CompositeItems, DummySize) then begin
       Result := FailResult;
       exit;
     end;
@@ -1845,7 +1855,7 @@ var
   AreaRID:Cardinal;
   AccessArea:Cardinal;
   Lids:TS7PlusLIDArray;
-  DummyOffset:Integer;
+  DummyOffset, DummySize:Integer;
   WriteSoftDataType:Byte;
   DummyComposite:TS7PlusCompositeItemArray;
   CompItems:TS7PlusMultiWriteItemArray;
@@ -1868,7 +1878,7 @@ begin
   //PValue (ValueDInt, ValueReal, ...) - a generic byte-array/blob value is rejected by the
   //PLC outright, confirmed against real hardware.
   if tagrec.Path<>'' then begin
-    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite) then begin
+    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite, DummySize) then begin
       Result := FailResult;
       exit;
     end;
@@ -1912,7 +1922,7 @@ var
   i, k, b, n:Integer;
   Lids:TS7PlusLIDArray;
   AccessArea:Cardinal;
-  DummyOffset:Integer;
+  DummyOffset, DummySize:Integer;
   SoftType:Byte;
   DummyComposite:TS7PlusCompositeItemArray;
 begin
@@ -1930,7 +1940,7 @@ begin
       Writes[i].Result := DoWrite(Writes[i].Tag, Writes[i].Values, Sync);
       continue;
     end;
-    if not ResolvePath(Writes[i].Tag.Path, AccessArea, Lids, DummyOffset, SoftType, DummyComposite) then begin
+    if not ResolvePath(Writes[i].Tag.Path, AccessArea, Lids, DummyOffset, SoftType, DummyComposite, DummySize) then begin
       Writes[i].Result := FailResult; //same answer DoWrite gives for a Path it cannot resolve
       continue;
     end;
@@ -2175,6 +2185,7 @@ var
     FillChar(Items[High(Items)], SizeOf(Items[High(Items)]), 0);
     Items[High(Items)].AccessArea := AArea;
     Items[High(Items)].Lids := ALids;
+    Items[High(Items)].ExpectedSize := 256;     //the length is what is being asked: assume the biggest String
   end;
 
 begin

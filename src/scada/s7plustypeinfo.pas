@@ -189,6 +189,10 @@ type
     //: 0, Static_1 at 4, v2 at 8, v1 at 10, BOOLs at 11..14, against ByteOffset's 0, 10, 2, 4,
     //: 8..14). For a classic DB both layouts agree. -1: not known (inside an array, no Vte).
     ImageOffset:Integer;
+    //: Bytes a read of this variable returns (a STRING: maximum length + 2; an array of
+    //: scalars: count x element); 0 = not known (a structure, a multi-dimensional array).
+    //: Used to keep the reply of a batched read inside one PDU.
+    DataSize:Integer;
   end;
   TS7PlusVarInfoArray = array of TS7PlusVarInfo;
 
@@ -928,6 +932,11 @@ begin
     Info.ByteOffset := NewByteOffset;
     Info.BitOffset := 0;
     Info.ImageOffset := NewImageOffset;
+    Info.DataSize := 0;
+    //an array of scalars is read whole: count x element
+    if Node.HasVte and Node.Vte.OffsetInfo.Is1Dim and (not Node.Vte.OffsetInfo.HasRelation) then
+      Info.DataSize := Integer(Node.Vte.OffsetInfo.ArrayElementCount)*
+                       S7PlusDataTypeSize(Node.SoftDataType, Node.Vte.OffsetInfo.Unspecified1);
     SetLength(Result_, Length(Result_)+1);
     Result_[High(Result_)] := Info;
 
@@ -949,6 +958,10 @@ begin
   else
     Info.BitOffset := 0;
   Info.ImageOffset := NewImageOffset;
+  if Node.HasVte then
+    Info.DataSize := S7PlusDataTypeSize(Node.SoftDataType, Node.Vte.OffsetInfo.Unspecified1)
+  else
+    Info.DataSize := 0;
   SetLength(Result_, Length(Result_)+1);
   Result_[High(Result_)] := Info;
 end;
