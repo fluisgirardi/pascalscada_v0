@@ -72,6 +72,21 @@ type
     procedure AStructureIsListedWithItsSizeAndItsMembersAfterIt;
     procedure AnArrayIsOneEntryAndItsElementsAreLeftOut;
     procedure AStringIsATkStringWithUnknownLength;
+    procedure AStringBecomesATagOnceItsLengthIsKnown;
+    procedure TheLengthOfAStringIsItsFirstByte;
+    procedure AValueThatDoesNotFitTheLengthGivesNoLength;
+    procedure AStringKeepsItsAddressToBeRead;
+    procedure ASizedStringKeepsTheSizeExact;
+    procedure AStringWithNoLengthReadIsListedAsAString;
+    procedure AnArrayOfStringsIsNotATag;
+    procedure AnArrayOfStructuresBecomesOneStructTag;
+    procedure TheElementsOfAnArrayOfStructuresStayHidden;
+    procedure AnArrayOfStructuresHasItsSizeInTheCommonList;
+    procedure AWholeDBCountsTheArrayOfStructures;
+    procedure AStructureInsideTheElementIsNotHandled;
+    procedure OneElementIsSizedFromItsMembers;
+    procedure AStringMemberOfTheElementIsMarked;
+    procedure MarkingTwiceKeepsTheArrayOfStructuresAsIs;
     procedure AnAreaTagHasTheAreaAsItsParent;
   end;
 
@@ -190,7 +205,7 @@ end;
 
 procedure TTestS7PlusTagPlan.AnUnsupportedTypeIsSkippedForItsOwnReason;
 begin
-  AssertTrue('string', S7PlusClassifyVar(Var_('DB4.Nome', 19), '').Skip=srUnsupportedType);
+  AssertTrue('wstring', S7PlusClassifyVar(Var_('DB4.Nome', 62), '').Skip=srUnsupportedType);
   AssertTrue('date', S7PlusClassifyVar(Var_('DB4.Quando', 9), '').Skip=srUnsupportedType);
 end;
 
@@ -562,6 +577,236 @@ begin
   AssertEquals('parent', 'MArea', A[0].ParentPath);
   AssertEquals('group', 'MArea', A[0].Group);
   AssertTrue('a bool reads as a byte', A[0].TagType=pttByte);
+end;
+
+procedure TTestS7PlusTagPlan.AStringBecomesATagOnceItsLengthIsKnown;
+var
+  C:TS7PlusCandidate;
+  L:TS7PlusCandidateArray;
+  A:TPLCTagInfoArray;
+  i:Integer;
+begin
+  C := S7PlusClassifyVar(Var_('DB4.Nome', 19), '');
+  AssertTrue('a string is a tag', C.Skip=srNone);
+  AssertTrue('a TPLCString', C.IsString);
+  AssertEquals('length not read yet', -1, C.StringLength);
+  L := ListOf(['DB5.Nome'], [19], false);
+  L[0].StringLength := 50;
+  A := S7PlusTagInfosOf(L);
+  i := FindInfo(A, 'DB5.Nome');
+  AssertTrue('string', A[i].Kind=tkString);
+  AssertEquals('maximum length', 50, A[i].ElementCount);
+  AssertEquals('maximum, current length and the characters', 52, A[i].SizeInBytes);
+end;
+
+procedure TTestS7PlusTagPlan.TheLengthOfAStringIsItsFirstByte;
+var
+  D:TBytes;
+  Len:LongInt;
+begin
+  //the value of a String[50]: maximum, current length, 50 characters
+  SetLength(D, 52);
+  FillChar(D[0], 52, 0);
+  D[0] := 50;
+  D[1] := 10;
+  AssertTrue(S7PlusStringLengthOf(D, Len));
+  AssertEquals(50, Len);
+  //the default String[254]
+  SetLength(D, 256);
+  FillChar(D[0], 256, 0);
+  D[0] := 254;
+  AssertTrue(S7PlusStringLengthOf(D, Len));
+  AssertEquals(254, Len);
+end;
+
+procedure TTestS7PlusTagPlan.AValueThatDoesNotFitTheLengthGivesNoLength;
+var
+  D:TBytes;
+  Len:LongInt;
+begin
+  SetLength(D, 0);
+  AssertFalse('nothing', S7PlusStringLengthOf(D, Len));
+  AssertEquals(-1, Len);
+  SetLength(D, 1);
+  D[0] := 5;
+  AssertFalse('one byte', S7PlusStringLengthOf(D, Len));
+  SetLength(D, 10);
+  FillChar(D[0], 10, 0);
+  D[0] := 50;
+  AssertFalse('claims 50 characters in 10 bytes', S7PlusStringLengthOf(D, Len));
+end;
+
+procedure TTestS7PlusTagPlan.AStringKeepsItsAddressToBeRead;
+var
+  V:TS7PlusVarInfo;
+  C:TS7PlusCandidate;
+begin
+  V := Var_('DB4.Var26.ItemStruct', 19);
+  SetLength(V.Lids, 2);
+  V.Lids[0] := $1A;
+  V.Lids[1] := $16;
+  C := S7PlusClassifyVar(V, '', $8A0E0004);
+  AssertEquals($8A0E0004, C.AccessArea);
+  AssertEquals(2, Length(C.Lids));
+  AssertEquals($16, C.Lids[1]);
+end;
+
+procedure TTestS7PlusTagPlan.ASizedStringKeepsTheSizeExact;
+var
+  L:TS7PlusCandidateArray;
+  Exact:Boolean;
+  Size:LongInt;
+begin
+  L := ListSized(['DB5.S', 'DB5.S.n', 'DB5.S.x'], [17, 19, 7], [0, 0, 56], [0, 0, 56]);
+  L[1].StringLength := 50;
+  Size := S7PlusContainerSize(L, 'DB5.S', false, Exact);
+  AssertTrue('the length is known now', Exact);
+  AssertEquals('the string (52) and a DInt after it', 56+4, Size);
+end;
+
+procedure TTestS7PlusTagPlan.AStringWithNoLengthReadIsListedAsAString;
+var
+  L:TS7PlusCandidateArray;
+  A:TPLCTagInfoArray;
+  i:Integer;
+begin
+  L := ListOf(['DB5.Nome'], [19], false);
+  L[0].IsString := false;
+  L[0].Skip := srStringLength;
+  A := S7PlusTagInfosOf(L);
+  i := FindInfo(A, 'DB5.Nome');
+  AssertTrue(A[i].Kind=tkString);
+  AssertEquals(0, A[i].ElementCount);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayOfStringsIsNotATag;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListOf(['DB5.Nomes', 'DB5.Nomes[0]', 'DB5.Nomes[1]'], [19, 19, 19], false);
+  S7PlusMarkArrays(L);
+  AssertTrue('the array of strings is not a tag', L[0].Skip=srUnsupportedType);
+  AssertFalse('and not a TPLCString', L[0].IsString);
+  AssertFalse('nor a block', L[0].IsArray);
+end;
+
+function StructArrayList(WithString:Boolean):TS7PlusCandidateArray;
+begin
+  //the way the PLC lists DB4.var28: Array[0..1] of Struct (Dint1 DInt, aBool Bool, aInt Int)
+  if WithString then
+    Result := ListSized(['DB4.var28', 'DB4.var28[0]', 'DB4.var28[0].Dint1', 'DB4.var28[0].Nome',
+                         'DB4.var28[1]', 'DB4.var28[1].Dint1', 'DB4.var28[1].Nome'],
+                        [17, 17, 7, 19, 17, 7, 19],
+                        [526, 526, 526, 530, 584, 584, 588],
+                        [276, -1, -1, -1, -1, -1, -1])
+  else
+    Result := ListSized(['DB4.var28', 'DB4.var28[0]', 'DB4.var28[0].Dint1', 'DB4.var28[0].aBool', 'DB4.var28[0].aInt',
+                         'DB4.var28[1]', 'DB4.var28[1].Dint1', 'DB4.var28[1].aBool', 'DB4.var28[1].aInt'],
+                        [17, 17, 7, 40, 5, 17, 7, 40, 5],
+                        [526, 526, 526, 530, 532, 534, 534, 538, 540],
+                        [276, -1, -1, -1, -1, -1, -1, -1, -1]);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayOfStructuresBecomesOneStructTag;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := StructArrayList(false);
+  AssertTrue('the array is a struct tag', L[0].IsStructArray);
+  AssertTrue('and a tag', L[0].Skip=srNone);
+  AssertEquals('elements', 2, L[0].ElementCount);
+  AssertEquals('the PLC stride between two elements', 8, L[0].ElementSize);
+  AssertEquals('members of one element', 3, Length(L[0].Members));
+  AssertEquals('Dint1 at 0', 0, L[0].Members[0].Offset);
+  AssertTrue('Dint1 is a DInt', L[0].Members[0].TagType=pttLongInt);
+  AssertTrue('and is swapped', L[0].Members[0].SwapBytes and L[0].Members[0].SwapWords);
+  AssertEquals('aBool at 4', 4, L[0].Members[1].Offset);
+  AssertTrue('a Bool is a byte', L[0].Members[1].TagType=pttByte);
+  AssertEquals('aInt at 6', 6, L[0].Members[2].Offset);
+  AssertTrue('aInt is an Int', L[0].Members[2].TagType=pttSmallInt);
+  AssertEquals('the path of each element', 'DB4.var28[1]', L[0].ElementPaths[1]);
+end;
+
+procedure TTestS7PlusTagPlan.TheElementsOfAnArrayOfStructuresStayHidden;
+var
+  L:TS7PlusCandidateArray;
+  i:Integer;
+begin
+  L := StructArrayList(false);
+  for i:=1 to High(L) do
+    AssertTrue(L[i].Path+' is not a tag of its own', L[i].Skip=srArrayElement);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayOfStructuresHasItsSizeInTheCommonList;
+var
+  L:TS7PlusCandidateArray;
+  A:TPLCTagInfoArray;
+  i:Integer;
+begin
+  L := StructArrayList(false);
+  A := S7PlusTagInfosOf(L);
+  i := FindInfo(A, 'DB4.var28');
+  AssertTrue('a structure', A[i].Kind=tkStructure);
+  AssertEquals('elements', 2, A[i].ElementCount);
+  AssertEquals('bytes', 16, A[i].SizeInBytes);
+end;
+
+procedure TTestS7PlusTagPlan.AWholeDBCountsTheArrayOfStructures;
+var
+  L:TS7PlusCandidateArray;
+  Exact:Boolean;
+begin
+  L := StructArrayList(false);
+  AssertEquals('the array starts at 526 and has 2 x 8 bytes', 526+16, S7PlusContainerSize(L, 'DB4', true, Exact));
+  AssertTrue(Exact);
+end;
+
+procedure TTestS7PlusTagPlan.AStructureInsideTheElementIsNotHandled;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListSized(['DB4.arr', 'DB4.arr[0]', 'DB4.arr[0].in', 'DB4.arr[0].in.x'],
+                 [17, 17, 17, 7], [0, 0, 0, 0], [0, -1, -1, -1]);
+  AssertFalse('stays as it was', L[0].IsStructArray);
+  AssertTrue(L[0].Skip=srNotAScalar);
+end;
+
+procedure TTestS7PlusTagPlan.OneElementIsSizedFromItsMembers;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListSized(['DB4.one', 'DB4.one[0]', 'DB4.one[0].Dint1', 'DB4.one[0].aBool', 'DB4.one[0].aInt'],
+                 [17, 17, 7, 40, 5], [100, 100, 100, 104, 106], [0, -1, -1, -1, -1]);
+  AssertTrue(L[0].IsStructArray);
+  AssertEquals('the end of aInt (8), already even', 8, L[0].ElementSize);
+  L := ListSized(['DB4.one', 'DB4.one[0]', 'DB4.one[0].Dint1', 'DB4.one[0].aBool'],
+                 [17, 17, 7, 40], [100, 100, 100, 104], [0, -1, -1, -1]);
+  AssertEquals('5 bytes rounded up to even', 6, L[0].ElementSize);
+end;
+
+procedure TTestS7PlusTagPlan.AStringMemberOfTheElementIsMarked;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := StructArrayList(true);
+  AssertTrue(L[0].IsStructArray);
+  AssertEquals('the stride is what separates the elements', 58, L[0].ElementSize);
+  AssertEquals(2, Length(L[0].Members));
+  AssertTrue('Nome is a string', L[0].Members[1].IsString);
+  AssertTrue('and an item', L[0].Members[1].Supported);
+  AssertEquals('its length is read from the PLC', -1, L[0].Members[1].StringLength);
+  AssertEquals('at 4', 4, L[0].Members[1].Offset);
+end;
+
+procedure TTestS7PlusTagPlan.MarkingTwiceKeepsTheArrayOfStructuresAsIs;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := StructArrayList(false);
+  S7PlusMarkArrays(L);
+  AssertTrue('still a struct array', L[0].IsStructArray);
+  AssertFalse('and not a block of scalars', L[0].IsArray);
+  AssertEquals(2, L[0].ElementCount);
 end;
 
 initialization

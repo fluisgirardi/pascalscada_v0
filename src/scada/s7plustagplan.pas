@@ -15,8 +15,11 @@
   TPLCTagNumber. Os valores vêm do CLP em big-endian, por isso o tag liga
   SwapBytes (2, 4 ou 8 bytes), SwapWords (4 ou 8) e SwapDWords (8).
 
-  O que não vira tag, e por quê: STRING/WSTRING (o tamanho máximo não vem na
-  lista), tipos de data/hora, estruturas inteiras (os membros aparecem um a um),
+  STRING vira um TPLCString (StringType=stSIEMENS): o tamanho máximo não vem na
+  lista, então o driver lê o valor uma vez (ResolveStringLengths) e o primeiro byte
+  dele é esse máximo; sem essa leitura (srStringLength) a STRING não vira tag.
+
+  O que não vira tag, e por quê: WSTRING, tipos de data/hora, estruturas inteiras (os membros aparecem um a um),
   elementos de array e tipos internos.
 }
 {$ELSE}
@@ -35,8 +38,12 @@
   TPLCTagNumber. The PLC sends the values big-endian, so the tag turns on
   SwapBytes (2, 4 or 8 bytes), SwapWords (4 or 8) and SwapDWords (8).
 
-  What does not become a tag, and why: STRING/WSTRING (the maximum length is not
-  on the list), date/time types, whole structures (their members are offered one
+  A STRING becomes a TPLCString (StringType=stSIEMENS): the maximum length is not
+  on the list, so the driver reads the value once (ResolveStringLengths) and its
+  first byte is that maximum; without that read (srStringLength) the STRING does
+  not become a tag.
+
+  What does not become a tag, and why: WSTRING, date/time types, whole structures (their members are offered one
   by one), array elements and internal types.
 }
 {$ENDIF}
@@ -55,13 +62,37 @@ type
   {$ELSE}
   //: Why a PLC variable does not become a tag.
   {$ENDIF}
-  TS7PlusSkipReason = (srNone, srNotAScalar, srUnsupportedType, srArrayElement);
+  TS7PlusSkipReason = (srNone, srNotAScalar, srUnsupportedType, srArrayElement, srStringLength);
 
   {$IFDEF PORTUGUES}
   //: Uma variável do CLP e o que dela dá para fazer.
   {$ELSE}
   //: A PLC variable and what can be done with it.
   {$ENDIF}
+  {$IFDEF PORTUGUES}
+  //: Um membro de uma estrutura que se repete num array de estruturas (o de um elemento só).
+  {$ELSE}
+  //: A member of the structure repeated in an array of structures (of one element only).
+  {$ENDIF}
+  TS7PlusStructMember = record
+    //: Nome dentro do elemento (Dint1 em Arr[0].Dint1).
+    Name:String;
+    //: Posição, em bytes, a partir do começo do elemento.
+    Offset:LongInt;
+    SoftDataType:Byte;
+    //: False: tipo que não vira item (data/hora, estrutura dentro da estrutura...).
+    Supported:Boolean;
+    TagType:TTagType;
+    SwapBytes, SwapWords, SwapDWords:Boolean;
+    //: STRING: vira um TPLCStructString; StringLength como em TS7PlusCandidate.
+    IsString:Boolean;
+    StringLength:LongInt;
+    //: Onde ler o membro do primeiro elemento (para o tamanho de uma STRING).
+    AccessArea:Cardinal;
+    Lids:TS7PlusLIDArray;
+  end;
+  TS7PlusStructMemberArray = array of TS7PlusStructMember;
+
   TS7PlusCandidate = record
     //: Caminho simbólico do tag (LongAddress), ex. BlocoSimbolico_4.Var26.v1.
     Path:String;
@@ -81,6 +112,19 @@ type
     ElementPaths:TStringArray;
     //: Posição no layout clássico e na imagem de memória do CLP (ver TS7PlusVarInfo); -1 = desconhecida.
     ByteOffset, ImageOffset:Integer;
+    //: STRING do CLP: vira um TPLCString. StringLength = o máximo de caracteres (o primeiro
+    //: byte do valor), -1 enquanto não foi lido (ver TS7CommPlusDriver.ResolveStringLengths).
+    IsString:Boolean;
+    StringLength:LongInt;
+    //: Onde ler a variável pelo caminho simbólico (área de acesso e LIDs), para o que precisa
+    //: do valor (o tamanho de uma STRING). AccessArea=0: não informada.
+    AccessArea:Cardinal;
+    Lids:TS7PlusLIDArray;
+    //: Array de estruturas: vira um TPLCStruct do array todo (ElementCount x ElementSize bytes)
+    //: e, se pedido, um item por membro de cada elemento (Members é o de um elemento só).
+    IsStructArray:Boolean;
+    ElementSize:LongInt;
+    Members:TS7PlusStructMemberArray;
   end;
   TS7PlusCandidateArray = array of TS7PlusCandidate;
 
@@ -89,6 +133,21 @@ type
   {$ELSE}
   //: A tag that will be created on the form/datamodule.
   {$ENDIF}
+  {$IFDEF PORTUGUES}
+  //: Um item (TPLCStructItem ou TPLCStructString) de um TPLCStruct que será criado.
+  {$ELSE}
+  //: An item (TPLCStructItem or TPLCStructString) of a TPLCStruct to be created.
+  {$ENDIF}
+  TS7PlusImportStructItem = record
+    CompName:String;
+    Offset:LongInt;
+    TagType:TTagType;
+    SwapBytes, SwapWords, SwapDWords:Boolean;
+    IsString:Boolean;
+    StringSize:LongInt;
+  end;
+  TS7PlusImportStructItems = array of TS7PlusImportStructItem;
+
   TS7PlusImportItem = record
     Path:String;
     CompName:String;
@@ -101,6 +160,12 @@ type
     Size:LongInt;
     //: Nome de componente de cada elemento do bloco (vazio: não criar os elementos).
     ElementNames:TStringArray;
+    //: True: um TPLCString (stSIEMENS) de StringSize caracteres.
+    IsString:Boolean;
+    StringSize:LongInt;
+    //: True: um TPLCStruct de Size bytes (um array de estruturas) com os itens abaixo.
+    IsStruct:Boolean;
+    StructItems:TS7PlusImportStructItems;
   end;
   TS7PlusImportItems = array of TS7PlusImportItem;
 
@@ -126,7 +191,16 @@ function S7PlusSoftTypeName(SoftDataType:Byte):String;
 //: Classifies a variable read from the PLC. DBName: the symbolic name of its DB
 //: ('' keeps the number, e.g. DB4); it replaces the start of the path.
 {$ENDIF}
-function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String):TS7PlusCandidate;
+function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String; AccessArea:Cardinal=0):TS7PlusCandidate;
+
+{$IFDEF PORTUGUES}
+//: O comprimento máximo de uma STRING a partir dos bytes do valor lido: o primeiro byte é o
+//: máximo e o valor tem máximo+2 bytes (máximo, atual, caracteres). False se não bate.
+{$ELSE}
+//: The maximum length of a STRING from the bytes of its value: the first byte is the maximum
+//: and the value has maximum+2 bytes (maximum, current, characters). False if it does not fit.
+{$ENDIF}
+function S7PlusStringLengthOf(const Data:TBytes; out MaxLength:LongInt):Boolean;
 
 {$IFDEF PORTUGUES}
 //: Nome de componente válido a partir de um caminho (BlocoSimbolico_4.Var26.v1 ->
@@ -147,7 +221,7 @@ function S7PlusSuggestedName(const Path, Prefix:String):String;
 //: DBName: the symbolic name of the DB, or '' to keep the number.
 {$ENDIF}
 procedure S7PlusAddBrowsed(var Candidates:TS7PlusCandidateArray; const Vars:TS7PlusVarInfoArray;
-                           const DBName:String);
+                           const DBName:String; AccessArea:Cardinal=0);
 
 {$IFDEF PORTUGUES}
 //: A lista de candidatos no formato comum de TProtocolDriver.ListTags: os DBs (como
@@ -214,11 +288,17 @@ var
   One:LongInt;
 begin
   One := S7PlusDataTypeSize(C.SoftDataType, 0);
-  if TS7PlusSoftDataType(C.SoftDataType) in [sdtSTRING, sdtWSTRING] then
-    Exact := false;      //the maximum length is not on the list
+  if C.IsStructArray then
+    One := C.ElementSize
+  else if C.IsString and (C.StringLength>=0) then
+    One := C.StringLength+2     //read from the PLC: maximum, current length, characters
+  else if TS7PlusSoftDataType(C.SoftDataType) in [sdtSTRING, sdtWSTRING] then
+    Exact := false;      //the maximum length is not known
   if One=0 then
     Exact := false;
-  if C.IsArray then
+  if C.IsStructArray then
+    Result := C.ElementCount*C.ElementSize
+  else if C.IsArray then
     Result := C.ElementCount*One
   else
     Result := One;
@@ -289,6 +369,10 @@ begin
       if (Rest='') or (Rest[Length(Rest)]<>']') then Exact := false;
       continue;
     end;
+    //an array of structures counts in the classic layout; in the real image it may be laid out
+    //differently
+    if Candidates[i].IsStructArray then
+      Exact := false;
     if Candidates[i].ImageOffset<0 then begin
       Exact := false;
       continue;
@@ -300,7 +384,7 @@ begin
 end;
 
 procedure S7PlusAddBrowsed(var Candidates:TS7PlusCandidateArray; const Vars:TS7PlusVarInfoArray;
-  const DBName:String);
+  const DBName:String; AccessArea:Cardinal);
 var
   c, n:Integer;
 begin
@@ -309,7 +393,7 @@ begin
     if Pos('.', Vars[c].Name)=0 then continue;
     n := Length(Candidates);
     SetLength(Candidates, n+1);
-    Candidates[n] := S7PlusClassifyVar(Vars[c], DBName);
+    Candidates[n] := S7PlusClassifyVar(Vars[c], DBName, AccessArea);
   end;
 end;
 
@@ -377,7 +461,20 @@ begin
           Info.SwapBytes := Candidates[i].SwapBytes;
           Info.SwapWords := Candidates[i].SwapWords;
           Info.SwapDWords := Candidates[i].SwapDWords;
-          if Candidates[i].IsArray then begin
+          if Candidates[i].IsStructArray then begin
+            Info.Kind := tkStructure;
+            Info.TagType := pttDefault;
+            Info.ElementCount := Candidates[i].ElementCount;
+            Info.SizeInBytes := Candidates[i].ElementCount*Candidates[i].ElementSize;
+          end else if Candidates[i].IsString then begin
+            Info.Kind := tkString;
+            Info.TagType := pttDefault;
+            if Candidates[i].StringLength>=0 then begin
+              Info.ElementCount := Candidates[i].StringLength;
+              Info.SizeInBytes := Candidates[i].StringLength+2;
+            end else
+              Info.ElementCount := 0;     //not read from the PLC
+          end else if Candidates[i].IsArray then begin
             Info.Kind := tkArray;
             Info.ElementCount := Candidates[i].ElementCount;
             Info.SizeInBytes := Candidates[i].ElementCount*n;
@@ -389,6 +486,10 @@ begin
         srNotAScalar: begin
           Info.Kind := tkStructure;
           Info.SizeInBytes := S7PlusContainerSize(Candidates, Candidates[i].Path, false, Exact);
+        end;
+        srStringLength: begin
+          Info.Kind := tkString;
+          Info.ElementCount := 0;
         end;
         srUnsupportedType: begin
           if TS7PlusSoftDataType(Candidates[i].SoftDataType) in [sdtSTRING, sdtWSTRING] then begin
@@ -409,6 +510,8 @@ begin
   end;
 end;
 
+function StructArrayOf(var Candidates:TS7PlusCandidateArray; ArrIdx:Integer):Boolean; forward;
+
 procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);
 var
   i, j, Count:Integer;
@@ -416,6 +519,7 @@ var
 begin
   for i:=0 to High(Candidates) do begin
     if Candidates[i].Skip<>srNone then continue;
+    if Candidates[i].IsStructArray then continue;      //found already: its elements are structures
     Count := 0;
     SetLength(Candidates[i].ElementPaths, 0);
     j := i+1;
@@ -430,11 +534,100 @@ begin
       end;
       Inc(j);
     end;
-    if Count>0 then begin
+    if (Count>0) and Candidates[i].IsString then begin
+      //an array of STRINGs: not a tag (one TPLCString reads one string)
+      Candidates[i].IsString := false;
+      Candidates[i].Skip := srUnsupportedType;
+    end else if Count>0 then begin
       Candidates[i].IsArray := true;
       Candidates[i].ElementCount := Count;
     end;
   end;
+
+  //arrays of structures: the array is listed as a structure, and its elements right after it
+  for i:=0 to High(Candidates) do
+    if (Candidates[i].Skip=srNotAScalar) and (not Candidates[i].IsStructArray) and
+       (TS7PlusSoftDataType(Candidates[i].SoftDataType)=sdtSTRUCT) and
+       (Candidates[i].ByteOffset>=0) and (Pos('[', Candidates[i].Path)=0) and
+       StructArrayOf(Candidates, i) then begin
+      Candidates[i].IsStructArray := true;
+      Candidates[i].Skip := srNone;
+    end;
+end;
+
+//The structure repeated in an array of structures, from the members of its first element.
+//False when it has something this does not handle (a structure or an array inside it).
+function StructArrayOf(var Candidates:TS7PlusCandidateArray; ArrIdx:Integer):Boolean;
+var
+  j, k, Count, ElemStart, Extent, End_:Integer;
+  Rest, Prefix0:String;
+  ElemIdx:array of Integer;
+  M:TS7PlusStructMember;
+begin
+  Result := false;
+  SetLength(ElemIdx, 0);
+  Count := 0;
+  j := ArrIdx+1;
+  while (j<=High(Candidates)) and (Pos(Candidates[ArrIdx].Path+'[', Candidates[j].Path)=1) do begin
+    Rest := Copy(Candidates[j].Path, Length(Candidates[ArrIdx].Path)+1, MaxInt);
+    //"[n]" with nothing after the bracket: an element
+    if (Rest<>'') and (Rest[Length(Rest)]=']') and (Pos('.', Rest)=0) and
+       (TS7PlusSoftDataType(Candidates[j].SoftDataType)=sdtSTRUCT) then begin
+      SetLength(ElemIdx, Count+1);
+      ElemIdx[Count] := j;
+      Inc(Count);
+    end;
+    Inc(j);
+  end;
+  if Count=0 then exit;
+  if Candidates[ElemIdx[0]].ByteOffset<0 then exit;   //offsets inside the array not known
+
+  ElemStart := Candidates[ElemIdx[0]].ByteOffset;
+  Prefix0 := Candidates[ElemIdx[0]].Path+'.';
+  Extent := 0;
+  SetLength(Candidates[ArrIdx].Members, 0);
+  for k:=ElemIdx[0]+1 to High(Candidates) do begin
+    if Pos(Prefix0, Candidates[k].Path)<>1 then break;
+    Rest := Copy(Candidates[k].Path, Length(Prefix0)+1, MaxInt);
+    //a structure or an array inside the element: not handled
+    if (Pos('.', Rest)>0) or (Pos('[', Rest)>0) or
+       (TS7PlusSoftDataType(Candidates[k].SoftDataType)=sdtSTRUCT) then exit;
+    if Candidates[k].ByteOffset<0 then exit;
+
+    Finalize(M);                //it holds strings and an array: FillChar alone would leak the last ones
+    FillChar(M, SizeOf(M), 0);
+    M.Name := Rest;
+    M.Offset := Candidates[k].ByteOffset-ElemStart;
+    M.SoftDataType := Candidates[k].SoftDataType;
+    M.StringLength := -1;
+    M.AccessArea := Candidates[k].AccessArea;
+    M.Lids := Candidates[k].Lids;
+    if TS7PlusSoftDataType(M.SoftDataType)=sdtSTRING then begin
+      M.IsString := true;
+      M.Supported := true;
+      End_ := M.Offset;      //its size is added once the length is read
+    end else begin
+      M.Supported := S7PlusTagTypeOf(M.SoftDataType, M.TagType, M.SwapBytes, M.SwapWords, M.SwapDWords);
+      End_ := M.Offset+S7PlusDataTypeSize(M.SoftDataType, 0);
+    end;
+    if End_>Extent then Extent := End_;
+    SetLength(Candidates[ArrIdx].Members, Length(Candidates[ArrIdx].Members)+1);
+    Candidates[ArrIdx].Members[High(Candidates[ArrIdx].Members)] := M;
+  end;
+
+  Candidates[ArrIdx].ElementCount := Count;
+  SetLength(Candidates[ArrIdx].ElementPaths, Count);
+  for k:=0 to Count-1 do
+    Candidates[ArrIdx].ElementPaths[k] := Candidates[ElemIdx[k]].Path;
+  //the size of an element: what separates the first two (the PLC's own stride), or the end of
+  //its last member rounded up to an even number of bytes
+  if (Count>=2) and (Candidates[ElemIdx[1]].ByteOffset>ElemStart) then
+    Candidates[ArrIdx].ElementSize := Candidates[ElemIdx[1]].ByteOffset-ElemStart
+  else begin
+    if Odd(Extent) then Inc(Extent);
+    Candidates[ArrIdx].ElementSize := Extent;
+  end;
+  Result := true;
 end;
 
 function S7PlusIsAreaName(const S:String):Boolean;
@@ -556,7 +749,7 @@ begin
   Result := true;
 end;
 
-function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String):TS7PlusCandidate;
+function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String; AccessArea:Cardinal):TS7PlusCandidate;
 var
   RestStart, Depth, i:Integer;
 begin
@@ -572,6 +765,13 @@ begin
   SetLength(Result.ElementPaths, 0);
   Result.ByteOffset := V.ByteOffset;
   Result.ImageOffset := V.ImageOffset;
+  Result.IsString := false;
+  Result.StringLength := -1;
+  Result.AccessArea := AccessArea;
+  Result.Lids := V.Lids;
+  Result.IsStructArray := false;
+  Result.ElementSize := 0;
+  SetLength(Result.Members, 0);
 
   if (DBName<>'') and StartsWithDBNumber(V.Name, RestStart) then
     Result.Path := DBName + Copy(V.Name, RestStart, MaxInt);
@@ -590,8 +790,21 @@ begin
     Result.Skip := srNotAScalar;
     exit;
   end;
+  if TS7PlusSoftDataType(V.SoftDataType)=sdtSTRING then begin
+    //a TPLCString; its length comes from reading the value (ResolveStringLengths)
+    Result.IsString := true;
+    exit;
+  end;
   if not S7PlusTagTypeOf(V.SoftDataType, Result.TagType, Result.SwapBytes, Result.SwapWords, Result.SwapDWords) then
     Result.Skip := srUnsupportedType;
+end;
+
+function S7PlusStringLengthOf(const Data:TBytes; out MaxLength:LongInt):Boolean;
+begin
+  MaxLength := -1;
+  Result := (Length(Data)>=2) and (Length(Data)=Data[0]+2);
+  if Result then
+    MaxLength := Data[0];
 end;
 
 function S7PlusSuggestedName(const Path, Prefix:String):String;

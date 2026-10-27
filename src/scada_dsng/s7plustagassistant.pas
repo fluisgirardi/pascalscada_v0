@@ -52,7 +52,7 @@ implementation
 
 uses
   Classes, SysUtils, Controls, Tag, ProtocolTypes, ProtocolDriver, PLCTagNumber,
-  PLCBlock, PLCBlockElement, S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, hsstrings;
+  PLCBlock, PLCBlockElement, PLCString, PLCStruct, PLCStructElement, PLCStructString, S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, hsstrings;
 
 function UniqueComponentName(aOwner: TComponent; const aBaseName: String): String;
 var
@@ -86,6 +86,10 @@ var
   aNumber:TPLCTagNumber;
   aBlock:TPLCBlock;
   anElement:TPLCBlockElement;
+  aString:TPLCString;
+  aStruct:TPLCStruct;
+  aItem:TPLCStructItem;
+  aStructString:TPLCStructString;
   k:LongInt;
 begin
   if not (aProtocolDriver is TS7CommPlusDriver) then
@@ -100,6 +104,56 @@ begin
     plan:=frmTb.GetImportPlan;
 
     for c:=0 to High(plan) do begin
+      if plan[c].IsStruct then begin
+        //an array of structures: one TPLCStruct over the whole array, with one item per member
+        //of each element, each at its place in the bytes of the struct
+        aStruct:=TPLCStruct(CreateProc(TPLCStruct));
+
+        aOwner:=aStruct.Owner;
+        if aOwner=nil then aOwner:=aOwnerOfNewTags;
+
+        aStruct.Name           := UniqueComponentName(aOwner, plan[c].CompName);
+        aStruct.LongAddress    := plan[c].Path;
+        aStruct.Size           := plan[c].Size;
+        aStruct.RefreshTime    := plan[c].Scan;
+        aStruct.ProtocolDriver := TProtocolDriver(aProtocolDriver);
+
+        InsertHook(aStruct);
+
+        for k:=0 to High(plan[c].StructItems) do begin
+          if plan[c].StructItems[k].IsString then begin
+            aStructString:=TPLCStructString(CreateProc(TPLCStructString));
+
+            aOwner:=aStructString.Owner;
+            if aOwner=nil then aOwner:=aOwnerOfNewTags;
+
+            aStructString.Name       := UniqueComponentName(aOwner, plan[c].StructItems[k].CompName);
+            aStructString.PLCBlock   := aStruct;
+            aStructString.Index      := plan[c].StructItems[k].Offset;
+            aStructString.StringType := stSIEMENS;
+            aStructString.StringSize := plan[c].StructItems[k].StringSize;
+
+            InsertHook(aStructString);
+          end else begin
+            aItem:=TPLCStructItem(CreateProc(TPLCStructItem));
+
+            aOwner:=aItem.Owner;
+            if aOwner=nil then aOwner:=aOwnerOfNewTags;
+
+            aItem.Name       := UniqueComponentName(aOwner, plan[c].StructItems[k].CompName);
+            aItem.PLCBlock   := aStruct;
+            aItem.Index      := plan[c].StructItems[k].Offset;
+            aItem.TagType    := plan[c].StructItems[k].TagType;
+            aItem.SwapBytes  := plan[c].StructItems[k].SwapBytes;
+            aItem.SwapWords  := plan[c].StructItems[k].SwapWords;
+            aItem.SwapDWords := plan[c].StructItems[k].SwapDWords;
+
+            InsertHook(aItem);
+          end;
+        end;
+        continue;
+      end;
+
       if plan[c].IsBlock then begin
         //an array of scalars: one block of Size elements
         aBlock:=TPLCBlock(CreateProc(TPLCBlock));
@@ -132,6 +186,24 @@ begin
 
           InsertHook(anElement);
         end;
+        continue;
+      end;
+
+      if plan[c].IsString then begin
+        //a STRING: the PLC keeps it as maximum length, current length and the characters
+        aString:=TPLCString(CreateProc(TPLCString));
+
+        aOwner:=aString.Owner;
+        if aOwner=nil then aOwner:=aOwnerOfNewTags;
+
+        aString.Name           := UniqueComponentName(aOwner, plan[c].CompName);
+        aString.LongAddress    := plan[c].Path;
+        aString.StringType     := stSIEMENS;
+        aString.StringSize     := plan[c].StringSize;
+        aString.RefreshTime    := plan[c].Scan;
+        aString.ProtocolDriver := TProtocolDriver(aProtocolDriver);
+
+        InsertHook(aString);
         continue;
       end;
 
