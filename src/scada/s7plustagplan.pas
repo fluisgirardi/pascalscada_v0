@@ -47,7 +47,7 @@ unit S7PlusTagPlan;
 interface
 
 uses
-  Classes, SysUtils, Tag, S7PlusTypeInfo;
+  Classes, SysUtils, Types, Tag, S7PlusTypeInfo;
 
 type
   {$IFDEF PORTUGUES}
@@ -125,7 +125,41 @@ function S7PlusClassifyVar(const V:TS7PlusVarInfo; const DBName:String):TS7PlusC
 {$ENDIF}
 function S7PlusSuggestedName(const Path, Prefix:String):String;
 
+{$IFDEF PORTUGUES}
+//: Os níveis de um caminho (BlocoSimbolico_4.Var26.v1 -> BlocoSimbolico_4, Var26, v1),
+//: que são os níveis da árvore do assistente. O que está entre colchetes (índices de
+//: array) fica no nível do array, mesmo que tenha ponto.
+{$ELSE}
+//: The levels of a path (BlocoSimbolico_4.Var26.v1 -> BlocoSimbolico_4, Var26, v1),
+//: which are the levels of the wizard tree. What is between brackets (array indexes)
+//: stays in the array's level, even if it has a dot.
+{$ENDIF}
+function S7PlusSplitPath(const Path:String):TStringArray;
+
 implementation
+
+function S7PlusSplitPath(const Path:String):TStringArray;
+var
+  i, Depth, Start:Integer;
+begin
+  SetLength(Result, 0);
+  if Path='' then exit;
+  Depth := 0;
+  Start := 1;
+  for i:=1 to Length(Path) do begin
+    case Path[i] of
+      '[': Inc(Depth);
+      ']': if Depth>0 then Dec(Depth);
+      '.': if Depth=0 then begin
+        SetLength(Result, Length(Result)+1);
+        Result[High(Result)] := Copy(Path, Start, i-Start);
+        Start := i+1;
+      end;
+    end;
+  end;
+  SetLength(Result, Length(Result)+1);
+  Result[High(Result)] := Copy(Path, Start, MaxInt);
+end;
 
 function S7PlusTagTypeOf(SoftDataType:Byte; out TagType:TTagType;
   out SwapBytes, SwapWords, SwapDWords:Boolean):Boolean;

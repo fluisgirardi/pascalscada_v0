@@ -244,7 +244,8 @@ resourcestring
   SS7PTBSymbolicNames           = 'Usar o nome simbólico do DB';
   SS7PTBIncludeAreas            = 'Incluir as áreas I, Q e M';
   SS7PTBFilter                  = 'Filtro';
-  SS7PTBShowStructMembers       = 'Mostrar membros de estruturas';
+  SS7PTBExpandAll               = 'Expandir tudo';
+  SS7PTBCollapseAll             = 'Recolher tudo';
   SS7PTBShowSkipped             = 'Mostrar as variáveis que não viram tag';
   SS7PTBScan                    = 'Tempo de atualização (ms; 0 = por mudança)';
   SS7PTBPrefix                  = 'Prefixo do nome dos componentes';
@@ -253,9 +254,6 @@ resourcestring
   SS7PTBInvert                  = 'Inverter seleção';
   SS7PTBImport                  = 'Importar';
   SS7PTBCancel                  = 'Cancelar';
-  SS7PTBColVariable             = 'Variável';
-  SS7PTBColType                 = 'Tipo';
-  SS7PTBColWillBeCreatedAs      = 'Será criado como';
   SS7PTBSkipNotAScalar          = 'não vira tag: estrutura (use os membros)';
   SS7PTBSkipUnsupportedType     = 'não vira tag: tipo não suportado';
   SS7PTBSkipArrayElement        = 'não vira tag: elemento de array';
@@ -269,6 +267,8 @@ resourcestring
   SS7PTBSelectAtLeastOne        = 'Selecione ao menos um tag para importar!';
   SS7PTBOnlyS7PlusDriver        = 'O driver de protocolo precisa ser uma instância de TS7CommPlusDriver.';
   SS7PTBBrowseFailed            = 'Não foi possível ler a lista de DBs do CLP.';
+  SS7PTBPortNotConnected        = 'A porta de comunicação está ativa, mas não conectou ao CLP. Confira o Host e a Port da porta e se o CLP aceita a conexão (outras sessões abertas, firewall).';
+  SS7PTBDetails                 = 'Mensagens do driver:';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -473,7 +473,8 @@ resourcestring
   SS7PTBSymbolicNames           = 'Use the DB symbolic name';
   SS7PTBIncludeAreas            = 'Include the I, Q and M areas';
   SS7PTBFilter                  = 'Filter';
-  SS7PTBShowStructMembers       = 'Show structure members';
+  SS7PTBExpandAll               = 'Expand all';
+  SS7PTBCollapseAll             = 'Collapse all';
   SS7PTBShowSkipped             = 'Show the variables that do not become a tag';
   SS7PTBScan                    = 'Update rate (ms; 0 = on change)';
   SS7PTBPrefix                  = 'Prefix of the component names';
@@ -482,9 +483,6 @@ resourcestring
   SS7PTBInvert                  = 'Invert selection';
   SS7PTBImport                  = 'Import';
   SS7PTBCancel                  = 'Cancel';
-  SS7PTBColVariable             = 'Variable';
-  SS7PTBColType                 = 'Type';
-  SS7PTBColWillBeCreatedAs      = 'Will be created as';
   SS7PTBSkipNotAScalar          = 'not a tag: structure (use its members)';
   SS7PTBSkipUnsupportedType     = 'not a tag: unsupported type';
   SS7PTBSkipArrayElement        = 'not a tag: array element';
@@ -498,6 +496,8 @@ resourcestring
   SS7PTBSelectAtLeastOne        = 'Select at least one tag to import!';
   SS7PTBOnlyS7PlusDriver        = 'The protocol driver must be an instance of TS7CommPlusDriver.';
   SS7PTBBrowseFailed            = 'Could not read the DB list from the PLC.';
+  SS7PTBPortNotConnected        = 'The communication port is active, but it did not connect to the PLC. Check the port Host and Port and whether the PLC accepts the connection (other open sessions, firewall).';
+  SS7PTBDetails                 = 'Driver messages:';
   {$ENDIF}
 
 {$IFNDEF FPC}
