@@ -96,6 +96,7 @@ type
     btnInvert: TButton;
     btnOK: TButton;
     btnUncheckAll: TButton;
+    chkCreateElements: TCheckBox;
     chkIncludeAreas: TCheckBox;
     chkShowSkipped: TCheckBox;
     chkSymbolicNames: TCheckBox;
@@ -208,6 +209,7 @@ begin
   btnExpandAll.Caption        := SS7PTBExpandAll;
   btnCollapseAll.Caption      := SS7PTBCollapseAll;
   chkShowSkipped.Caption      := SS7PTBShowSkipped;
+  chkCreateElements.Caption   := SS7PTBCreateElements;
   lblScan.Caption             := SS7PTBScan;
   lblPrefix.Caption           := SS7PTBPrefix;
   btnCheckAll.Caption         := SS7PTBCheckAll;
@@ -753,7 +755,7 @@ end;
 
 function TfrmS7PlusTagBuilder.GetImportPlan: TS7PlusImportItems;
 var
-  c, count: LongInt;
+  c, k, count: LongInt;
 begin
   Result:=nil;
   SetLength(Result, Length(FCandidates));
@@ -771,9 +773,16 @@ begin
     Result[count].SwapDWords:= FCandidates[c].SwapDWords;
     Result[count].Scan      := spinScan.Value;
     Result[count].IsBlock   := FCandidates[c].IsArray;
-    if FCandidates[c].IsArray then
-      Result[count].Size    := FCandidates[c].ElementCount
-    else
+    SetLength(Result[count].ElementNames, 0);
+    if FCandidates[c].IsArray then begin
+      Result[count].Size    := FCandidates[c].ElementCount;
+      //one TPLCBlockElement per element, named after the element's own path
+      if chkCreateElements.Checked then begin
+        SetLength(Result[count].ElementNames, Length(FCandidates[c].ElementPaths));
+        for k:=0 to High(FCandidates[c].ElementPaths) do
+          Result[count].ElementNames[k]:=S7PlusSuggestedName(FCandidates[c].ElementPaths[k], edtPrefix.Text);
+      end;
+    end else
       Result[count].Size    := 1;
     inc(count);
   end;

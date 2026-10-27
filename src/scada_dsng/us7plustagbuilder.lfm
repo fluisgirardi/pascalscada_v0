@@ -119,14 +119,24 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
   end
   object pnlBottom: TPanel
     Left = 0
-    Height = 132
-    Top = 448
+    Height = 160
+    Top = 420
     Width = 860
     Align = alBottom
     BevelOuter = bvNone
-    ClientHeight = 132
+    ClientHeight = 160
     ClientWidth = 860
     TabOrder = 2
+    object chkCreateElements: TCheckBox
+      Left = 8
+      Height = 21
+      Top = 82
+      Width = 520
+      Caption = 'Also create the array elements (TPLCBlockElement)'
+      Checked = True
+      State = cbChecked
+      TabOrder = 6
+    end
     object btnCheckAll: TButton
       Left = 8
       Height = 27
