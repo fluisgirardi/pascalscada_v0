@@ -68,6 +68,7 @@ examples/**/link*.res
 /examples/laz_s7commplus_phase2_test/s7commplus_uploadblock_test
 /examples/laz_s7commplus_phase2_test/s7commplus_wholedb_test
 /examples/laz_s7commplus_phase2_test/s7commplus_wholedb_write_test
+/examples/laz_s7commplus_phase2_test/s7commplus_wholedb_read_test
 /examples/laz_s7commplus_phase2_test/s7commplus_structitems_test
 /examples/laz_s7commplus_phase2_test/s7commplus_listtags_test
 /examples/laz_listtags_generic/listtags_generic
