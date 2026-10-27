@@ -224,7 +224,7 @@ jobs:
             i386/debian:bookworm \
             bash -euxc '
               export DEBIAN_FRONTEND=noninteractive
-              # the runner's network blinks now and then (DNS in the container):
+              # the network of the runner blinks now and then (DNS in the container):
               # try three times before giving up
               for try in 1 2 3; do
                 apt-get update -qq && apt-get install -y -qq lazarus lcl-nogui && break
@@ -314,7 +314,7 @@ jobs:
             arm32v7/debian:bookworm \
             bash -euxc '
               export DEBIAN_FRONTEND=noninteractive
-              # the runner's network blinks now and then (DNS in the container):
+              # the network of the runner blinks now and then (DNS in the container):
               # try three times before giving up
               for try in 1 2 3; do
                 apt-get update -qq && apt-get install -y -qq lazarus lcl-nogui && break
