@@ -31,7 +31,7 @@ unit ut.s7plusonchange;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry,
+  Classes, SysUtils, fpcunit, testregistry, S7PlusTypes,
   Tag, ProtocolTypes, PLCTagNumber,
   S7PlusFamily, S7PlusConnection,
   testsupport.bytes;
@@ -50,6 +50,14 @@ type
     function ValueOf(const Path:AnsiString; Size:LongInt = 0):TScanReadRec;
     function Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
     function WriteSizeOf(SoftDataType:Byte):Integer;
+    //authentication state / what the tests drive
+    procedure SetAccess(ALevel:Cardinal; ALegitimated:Boolean);
+    function  NeedsAuth:Boolean;
+    function  Fail:TProtocolIOResult;
+    procedure MarkAuth(Now_:QWord);
+    procedure ClearAuth;
+    function  ReadAuthPending:Boolean;
+    procedure SetAuthPending(AValue:Boolean);
   end;
 
   { TTestS7PlusOnChange }
@@ -80,6 +88,18 @@ type
     procedure TheRequestAndScanLimitsHaveTheirDefaults;
     procedure TheLimitsCannotBeSetBelowOne;
     procedure TheSubscriptionCycleDefaultsTo100AndNeverGoesBelowIt;
+    //autenticacao / authentication
+    procedure ASessionWithNoKnownProtectionNeedsNoLogin;
+    procedure FullAccessNeedsNoLogin;
+    procedure NoAccessNeedsALoginUntilTheSessionLogsIn;
+    procedure AFailureIsAnAuthErrorOnlyWhenTheLoginIsMissing;
+    procedure ATagThatCannotBeResolvedIsToldItNeedsALogin;
+    procedure ATagThatReadsFineIsLeftAlone;
+    procedure NothingIsMarkedWhileTheSessionHasAccess;
+    procedure TheLoginReleasesTheTagsThatWaitedForIt;
+    procedure ChangingUsernameOrPasswordSchedulesANewLogin;
+    procedure SettingTheSameCredentialsSchedulesNothing;
+    procedure AuthWithNoConnectionStoresTheCredentialsAndFails;
   private
     function Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
     function Bytes(const B:array of Byte):TArrayOfDouble;
@@ -129,6 +149,42 @@ end;
 function TS7DriverProbe.Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
 begin
   Result := ExpandCompositeWrite(Composite, Values, Items);
+end;
+
+procedure TS7DriverProbe.SetAccess(ALevel:Cardinal; ALegitimated:Boolean);
+begin
+  AccessLevel := ALevel;
+  Legitimated := ALegitimated;
+end;
+
+function TS7DriverProbe.NeedsAuth:Boolean;
+begin
+  Result := SessionNeedsAuth;
+end;
+
+function TS7DriverProbe.Fail:TProtocolIOResult;
+begin
+  Result := FailResult;
+end;
+
+procedure TS7DriverProbe.MarkAuth(Now_:QWord);
+begin
+  MarkAuthErrors(Now_);
+end;
+
+procedure TS7DriverProbe.ClearAuth;
+begin
+  ClearAuthErrors;
+end;
+
+function TS7DriverProbe.ReadAuthPending:Boolean;
+begin
+  Result := AuthPending;
+end;
+
+procedure TS7DriverProbe.SetAuthPending(AValue:Boolean);
+begin
+  AuthPending := AValue;
 end;
 
 function TS7DriverProbe.WriteSizeOf(SoftDataType:Byte):Integer;
@@ -353,6 +409,127 @@ begin
   AssertEquals('items per request', 100, FDriver.MaxItemsPerRequest);
   AssertEquals('tags per scan round', 500, FDriver.MaxTagsPerScan);
   AssertEquals('items per subscription', 500, FDriver.MaxItemsPerSubscription);
+end;
+
+procedure TTestS7PlusOnChange.ASessionWithNoKnownProtectionNeedsNoLogin;
+begin
+  //nothing is known until a session reports its protection level
+  AssertFalse('no level', FDriver.NeedsAuth);
+  AssertTrue ('so a failure is a comm error', FDriver.Fail=ioCommError);
+end;
+
+procedure TTestS7PlusOnChange.FullAccessNeedsNoLogin;
+begin
+  FDriver.SetAccess(S7PlusAccessLevel_FullAccess, false);
+  AssertFalse('full access', FDriver.NeedsAuth);
+  AssertTrue ('a failure is a comm error', FDriver.Fail=ioCommError);
+end;
+
+procedure TTestS7PlusOnChange.NoAccessNeedsALoginUntilTheSessionLogsIn;
+begin
+  FDriver.SetAccess(S7PlusAccessLevel_NoAccess, false);
+  AssertTrue('no access, no login', FDriver.NeedsAuth);
+  FDriver.SetAccess(S7PlusAccessLevel_NoAccess, true);
+  AssertFalse('logged in', FDriver.NeedsAuth);
+  FDriver.SetAccess(S7PlusAccessLevel_ReadAccess, false);
+  AssertTrue('read only without a login also needs one (writes are refused)', FDriver.NeedsAuth);
+end;
+
+procedure TTestS7PlusOnChange.AFailureIsAnAuthErrorOnlyWhenTheLoginIsMissing;
+begin
+  FDriver.SetAccess(S7PlusAccessLevel_NoAccess, false);
+  AssertTrue('missing login', FDriver.Fail=ioAuthError);
+  FDriver.SetAccess(S7PlusAccessLevel_NoAccess, true);
+  AssertTrue('logged in: an ordinary failure', FDriver.Fail=ioCommError);
+end;
+
+procedure TTestS7PlusOnChange.ATagThatCannotBeResolvedIsToldItNeedsALogin;
+var
+  R:TScanReadRec;
+begin
+  NewTag('DB4.Var1', 500);
+  FDriver.SetAccess(S7PlusAccessLevel_NoAccess, false);
+  FDriver.MarkAuth(1000);
+  R := FDriver.ValueOf('DB4.Var1');
+  AssertTrue('the tag is told', R.LastQueryResult=ioAuthError);
+  AssertEquals('as a failed read', 1, R.ReadFaults);
+  AssertEquals('and the framework gets a new stamp to deliver it', 1000, Int64(R.ClkMonotonicTStamp));
+end;
+
+procedure TTestS7PlusOnChange.ATagThatReadsFineIsLeftAlone;
+var
+  Members:TS7PlusCompositeItemArray;
+  R:TScanReadRec;
+begin
+  //a tag the PLC does answer (here: through a notification) keeps its own result
+  SetLength(Members, 0);
+  NewTag('DB4.Var1', 0);
+  FDriver.Resolved('DB4.Var1', Members);
+  FDriver.Attach('DB4.Var1', 10);
+  Notify([Value(10, '00 00 00 05')], [], 500);
+  FDriver.SetAccess(S7PlusAccessLevel_ReadAccess, false);
+  FDriver.MarkAuth(2000);
+  R := FDriver.ValueOf('DB4.Var1');
+  AssertTrue('still ok', R.LastQueryResult=ioOk);
+end;
+
+procedure TTestS7PlusOnChange.NothingIsMarkedWhileTheSessionHasAccess;
+var
+  R:TScanReadRec;
+begin
+  NewTag('DB4.Var1', 500);
+  FDriver.SetAccess(S7PlusAccessLevel_FullAccess, false);
+  FDriver.MarkAuth(1000);
+  R := FDriver.ValueOf('DB4.Var1');
+  AssertFalse('not an authentication problem', R.LastQueryResult=ioAuthError);
+end;
+
+procedure TTestS7PlusOnChange.TheLoginReleasesTheTagsThatWaitedForIt;
+var
+  R:TScanReadRec;
+begin
+  NewTag('DB4.Var1', 500);
+  FDriver.SetAccess(S7PlusAccessLevel_NoAccess, false);
+  FDriver.MarkAuth(1000);
+  AssertTrue('waiting', FDriver.ValueOf('DB4.Var1').LastQueryResult=ioAuthError);
+
+  FDriver.SetAccess(S7PlusAccessLevel_NoAccess, true);
+  FDriver.ClearAuth;
+  R := FDriver.ValueOf('DB4.Var1');
+  AssertFalse('no longer an authentication error', R.LastQueryResult=ioAuthError);
+
+  //and a later pass marks nothing: the session has logged in
+  FDriver.MarkAuth(3000);
+  AssertFalse('still released', FDriver.ValueOf('DB4.Var1').LastQueryResult=ioAuthError);
+end;
+
+procedure TTestS7PlusOnChange.ChangingUsernameOrPasswordSchedulesANewLogin;
+begin
+  FDriver.SetAuthPending(false);
+  FDriver.Password := 'abc';
+  AssertTrue('password', FDriver.ReadAuthPending);
+  FDriver.SetAuthPending(false);
+  FDriver.Username := 'User';
+  AssertTrue('username', FDriver.ReadAuthPending);
+end;
+
+procedure TTestS7PlusOnChange.SettingTheSameCredentialsSchedulesNothing;
+begin
+  FDriver.Username := 'User';
+  FDriver.Password := 'abc';
+  FDriver.SetAuthPending(false);
+  FDriver.Username := 'User';
+  FDriver.Password := 'abc';
+  AssertFalse('same values: no new login', FDriver.ReadAuthPending);
+end;
+
+procedure TTestS7PlusOnChange.AuthWithNoConnectionStoresTheCredentialsAndFails;
+begin
+  //no port: there is no session to log in to
+  AssertTrue('no connection', FDriver.Auth('User', 'abc')=ioCommError);
+  AssertEquals('username kept', 'User', FDriver.Username);
+  AssertEquals('password kept', 'abc', FDriver.Password);
+  AssertFalse('and no second login is waiting', FDriver.ReadAuthPending);
 end;
 
 procedure TTestS7PlusOnChange.TheSubscriptionCycleDefaultsTo100AndNeverGoesBelowIt;

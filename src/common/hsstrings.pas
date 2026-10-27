@@ -275,6 +275,7 @@ resourcestring
   SS7PTBSelectAtLeastOne        = 'Selecione ao menos um tag para importar!';
   SS7PTBOnlyS7PlusDriver        = 'O driver de protocolo precisa ser uma instância de TS7CommPlusDriver.';
   SS7PTBBrowseFailed            = 'Não foi possível ler a lista de DBs do CLP.';
+  SS7PTBAuthRequired            = 'O CLP exige autenticação: o que está protegido não foi lido. Informe Username e Password no driver (ou chame Auth(usuario, senha)) e leia de novo.';
   SS7PTBPortNotConnected        = 'A porta de comunicação está ativa, mas não conectou ao CLP. Confira o Host e a Port da porta e se o CLP aceita a conexão (outras sessões abertas, firewall).';
   SS7PTBDetails                 = 'Mensagens do driver:';
   {$ELSE}
@@ -512,6 +513,7 @@ resourcestring
   SS7PTBSelectAtLeastOne        = 'Select at least one tag to import!';
   SS7PTBOnlyS7PlusDriver        = 'The protocol driver must be an instance of TS7CommPlusDriver.';
   SS7PTBBrowseFailed            = 'Could not read the DB list from the PLC.';
+  SS7PTBAuthRequired            = 'The PLC requires authentication: what is protected was not read. Set Username and Password on the driver (or call Auth(user, password)) and read again.';
   SS7PTBPortNotConnected        = 'The communication port is active, but it did not connect to the PLC. Check the port Host and Port and whether the PLC accepts the connection (other open sessions, firewall).';
   SS7PTBDetails                 = 'Driver messages:';
   {$ENDIF}
