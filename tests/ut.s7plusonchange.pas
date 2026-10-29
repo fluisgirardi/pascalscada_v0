@@ -66,6 +66,11 @@ type
     function  ResetScheduled:Boolean;
     procedure SetResetScheduled(AValue:Boolean);
     function  TimeoutNow:Integer;
+    function  IsResolved(const Path:AnsiString):Boolean;
+    function  BrowsedDBs:Integer;
+    //the program as the PLC shows it: two DBs, each with the modification time of its type
+    function  Observe(const Sig:String; Rid1:Cardinal; Has1:Boolean; Time1:Cardinal;
+                      Rid2:Cardinal; Has2:Boolean; Time2:Cardinal):Boolean;
   end;
 
   { TTestS7PlusOnChange }
@@ -117,6 +122,19 @@ type
     procedure TheTimeoutIsNeverUnderTenCycles;
     procedure ANegativeTimeoutIsZero;
     procedure WithNoSubscriptionsThereIsNothingToWatch;
+    procedure RefreshingTheCachesMakesTheTagsResolveAgain;
+    procedure RefreshingTheCachesSubscribesAgain;
+    procedure RefreshingTheCachesKeepsTheTags;
+    procedure RefreshingWithNothingBrowsedIsHarmless;
+    procedure TheFirstObservationOfTheProgramIsTheBaseline;
+    procedure AnUnchangedProgramIsNotAChange;
+    procedure AnotherListOfDBsIsAChange;
+    procedure AnotherModificationTimeOfAnyDBIsAChange;
+    procedure ATimeThatStoppedAnsweringIsAChange;
+    procedure ATypeThatNeverHadATimeIsNotWatchedByIt;
+    procedure ADBBrowsedLaterJoinsTheBaseline;
+    procedure AChangeDropsTheCachesAndLearnsAgain;
+    procedure TheProgramCheckIntervalIsAtLeastASecondOrOff;
   private
     function Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
     function Bytes(const B:array of Byte):TArrayOfDouble;
@@ -237,6 +255,46 @@ end;
 function TS7DriverProbe.TimeoutNow:Integer;
 begin
   Result:=SubscriptionTimeoutMsNow;
+end;
+
+function TS7DriverProbe.IsResolved(const Path:AnsiString):Boolean;
+begin
+  Result:=EntryResolved(Path);
+end;
+
+function TS7DriverProbe.BrowsedDBs:Integer;
+begin
+  Result:=BrowsedDBCount;
+end;
+
+function TS7DriverProbe.Observe(const Sig:String; Rid1:Cardinal; Has1:Boolean; Time1:Cardinal;
+  Rid2:Cardinal; Has2:Boolean; Time2:Cardinal):Boolean;
+var
+  T:TS7PlusTypeTimeArray;
+  procedure Fill(Idx:Integer; Rid:Cardinal; Has:Boolean; V:Cardinal);
+  begin
+    T[Idx].TiRid := Rid;
+    T[Idx].HasTime := Has;
+    SetLength(T[Idx].Time, 0);
+    if Has then begin
+      SetLength(T[Idx].Time, 4);
+      T[Idx].Time[0] := V shr 24;
+      T[Idx].Time[1] := (V shr 16) and $FF;
+      T[Idx].Time[2] := (V shr 8) and $FF;
+      T[Idx].Time[3] := V and $FF;
+    end;
+  end;
+begin
+  SetLength(T, 0);
+  if Rid1<>0 then begin
+    SetLength(T, 1);
+    Fill(0, Rid1, Has1, Time1);
+  end;
+  if Rid2<>0 then begin
+    SetLength(T, Length(T)+1);
+    Fill(High(T), Rid2, Has2, Time2);
+  end;
+  Result:=NoteProgram(Sig, T);
 end;
 
 function TS7DriverProbe.WriteSizeOf(SoftDataType:Byte):Integer;
@@ -800,6 +858,128 @@ begin
   FDriver.SetResetScheduled(false);
   FDriver.Watch(999999999);
   AssertFalse(FDriver.ResetScheduled);
+end;
+
+procedure TTestS7PlusOnChange.RefreshingTheCachesMakesTheTagsResolveAgain;
+var
+  C:TS7PlusCompositeItemArray;
+begin
+  //after a download the address of a tag (LIDs, offsets) may be another: it is resolved again
+  SetLength(C, 0);
+  NewTag('DB4.Var1', 0);
+  AssertTrue(FDriver.Resolved('DB4.Var1', C));
+  AssertTrue('resolved', FDriver.IsResolved('DB4.Var1'));
+  FDriver.RefreshCaches;
+  AssertFalse('not any more', FDriver.IsResolved('DB4.Var1'));
+end;
+
+procedure TTestS7PlusOnChange.RefreshingTheCachesSubscribesAgain;
+begin
+  NewTag('DB4.Var1', 0);
+  FDriver.SetResetScheduled(false);
+  FDriver.RefreshCaches;
+  AssertTrue('the subscriptions are made again', FDriver.ResetScheduled);
+end;
+
+procedure TTestS7PlusOnChange.RefreshingTheCachesKeepsTheTags;
+var
+  C:TS7PlusCompositeItemArray;
+begin
+  SetLength(C, 0);
+  NewTag('DB4.Var1', 0);
+  NewTag('DB4.Var2', 500);
+  FDriver.RefreshCaches;
+  //still registered: a new resolution brings them back
+  AssertTrue('Var1 is still there', FDriver.Resolved('DB4.Var1', C));
+  AssertTrue('Var2 is still there', FDriver.Resolved('DB4.Var2', C));
+  AssertTrue(FDriver.IsResolved('DB4.Var1') and FDriver.IsResolved('DB4.Var2'));
+end;
+
+procedure TTestS7PlusOnChange.RefreshingWithNothingBrowsedIsHarmless;
+begin
+  AssertEquals('nothing browsed', 0, FDriver.BrowsedDBs);
+  FDriver.RefreshCaches;
+  FDriver.RefreshCaches;
+  AssertEquals(0, FDriver.BrowsedDBs);
+end;
+
+procedure TTestS7PlusOnChange.TheFirstObservationOfTheProgramIsTheBaseline;
+begin
+  AssertFalse('nothing to compare with yet', FDriver.Observe('a', 1, true, 100, 2, true, 200));
+end;
+
+procedure TTestS7PlusOnChange.AnUnchangedProgramIsNotAChange;
+begin
+  FDriver.Observe('a', 1, true, 100, 2, true, 200);
+  AssertFalse(FDriver.Observe('a', 1, true, 100, 2, true, 200));
+  AssertFalse('and again', FDriver.Observe('a', 1, true, 100, 2, true, 200));
+end;
+
+procedure TTestS7PlusOnChange.AnotherListOfDBsIsAChange;
+begin
+  FDriver.Observe('a', 1, true, 100, 2, true, 200);
+  AssertTrue('a DB was added or removed', FDriver.Observe('b', 1, true, 100, 2, true, 200));
+end;
+
+procedure TTestS7PlusOnChange.AnotherModificationTimeOfAnyDBIsAChange;
+begin
+  FDriver.Observe('a', 1, true, 100, 2, true, 200);
+  AssertTrue('the second DB was downloaded again', FDriver.Observe('a', 1, true, 100, 2, true, 201));
+  FDriver.Observe('a', 1, true, 100, 2, true, 200);
+  AssertTrue('the first one', FDriver.Observe('a', 1, true, 101, 2, true, 200));
+end;
+
+procedure TTestS7PlusOnChange.ATimeThatStoppedAnsweringIsAChange;
+begin
+  FDriver.Observe('a', 1, true, 100, 2, true, 200);
+  //a download may have replaced the type: the object is not the one that was asked about
+  AssertTrue('the time is not reported now', FDriver.Observe('a', 1, true, 100, 2, false, 0));
+end;
+
+procedure TTestS7PlusOnChange.ATypeThatNeverHadATimeIsNotWatchedByIt;
+begin
+  FDriver.Observe('a', 1, true, 100, 2, false, 0);
+  AssertFalse('a PLC that does not report it is checked by the list only',
+              FDriver.Observe('a', 1, true, 100, 2, false, 0));
+  AssertTrue('and still by the list', FDriver.Observe('b', 1, true, 100, 2, false, 0));
+end;
+
+procedure TTestS7PlusOnChange.ADBBrowsedLaterJoinsTheBaseline;
+begin
+  FDriver.Observe('a', 1, true, 100, 0, false, 0);
+  AssertFalse('a second DB browsed after the baseline', FDriver.Observe('a', 1, true, 100, 2, true, 200));
+  AssertFalse('is the same now', FDriver.Observe('a', 1, true, 100, 2, true, 200));
+  AssertTrue('and a change of its time counts', FDriver.Observe('a', 1, true, 100, 2, true, 999));
+end;
+
+procedure TTestS7PlusOnChange.AChangeDropsTheCachesAndLearnsAgain;
+var
+  C:TS7PlusCompositeItemArray;
+begin
+  SetLength(C, 0);
+  NewTag('DB4.Var1', 0);
+  FDriver.Resolved('DB4.Var1', C);
+  FDriver.SetResetScheduled(false);
+  FDriver.Observe('a', 1, true, 100, 2, true, 200);
+  AssertTrue(FDriver.Observe('b', 1, true, 100, 2, true, 200));
+  AssertFalse('the tag is resolved again', FDriver.IsResolved('DB4.Var1'));
+  AssertTrue('and subscribes again', FDriver.ResetScheduled);
+  //what the program is now is the new baseline
+  AssertFalse(FDriver.Observe('b', 1, true, 100, 2, true, 200));
+  AssertFalse(FDriver.Observe('b', 1, true, 100, 2, true, 200));
+end;
+
+procedure TTestS7PlusOnChange.TheProgramCheckIntervalIsAtLeastASecondOrOff;
+begin
+  AssertEquals('default', 10000, FDriver.ProgramCheckIntervalMs);
+  FDriver.ProgramCheckIntervalMs := 500;
+  AssertEquals('a smaller one is a second', 1000, FDriver.ProgramCheckIntervalMs);
+  FDriver.ProgramCheckIntervalMs := 0;
+  AssertEquals('zero turns it off', 0, FDriver.ProgramCheckIntervalMs);
+  FDriver.ProgramCheckIntervalMs := -3;
+  AssertEquals('negative too', 0, FDriver.ProgramCheckIntervalMs);
+  FDriver.ProgramCheckIntervalMs := 30000;
+  AssertEquals(30000, FDriver.ProgramCheckIntervalMs);
 end;
 
 initialization

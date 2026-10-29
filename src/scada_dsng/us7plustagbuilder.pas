@@ -691,6 +691,8 @@ begin
     end;
 
     authMissing:=false;
+    //a download to the PLC since the last read adds and changes DBs and types: read it all again
+    FDriver.RefreshCaches;
     res:=FDriver.ListDataBlocks(blocks);
     if res<>ioOk then begin
       Screen.Cursor:=oldCursor;

@@ -141,8 +141,17 @@ type
   //-- resolving many tags on the same DB/area doesn't re-EXPLORE for every single tag.
   TS7PlusDBCacheEntry = record
     DBNumber:Cardinal;
+    TiRid:Cardinal;           //the type-info object of the DB (to ask its modification time)
     Vars:TS7PlusVarInfoArray;
   end;
+
+  //-- The modification time of the type-info object of a DB the driver keeps browsed.
+  TS7PlusTypeTime = record
+    TiRid:Cardinal;
+    HasTime:Boolean;          //the PLC reported one
+    Time:TBytes;
+  end;
+  TS7PlusTypeTimeArray = array of TS7PlusTypeTime;
 
   { TS7CommPlusDriver }
 
@@ -175,6 +184,12 @@ type
     FSubCycleMs:Integer;
     FSubCreditLimit:SmallInt;
     FSubTimeoutMs:Integer;
+    //-- What the program looked like when the browse caches were built, to tell when it changes.
+    FProgramCheckMs:Integer;
+    FLastProgramCheck:QWord;
+    FProgramKnown:Boolean;
+    FProgramSignature:String;
+    FTypeTimes:TS7PlusTypeTimeArray;
     FMaxItemsPerRequest, FMaxTagsPerScan, FMaxItemsPerSubscription:Integer;
 
     function GetUseTLS:Boolean;
@@ -184,6 +199,9 @@ type
     procedure SetPassword(const AValue:AnsiString);
     procedure SetSubCycleMs(AValue:Integer);
     procedure SetSubTimeoutMs(AValue:Integer);
+    procedure SetProgramCheckMs(AValue:Integer);
+    //: RefreshCaches without the I/O lock, for the scan thread (which has it already).
+    procedure DropCaches;
     procedure SetMaxTagsPerScan(AValue:Integer);
     procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
@@ -246,6 +264,17 @@ type
     //: Stands in for path resolution (which needs the PLC): marks the entry of Path resolved,
     //: as a composite of Composite members when any are given.
     function MarkResolved(const Path:AnsiString; const Composite:TS7PlusCompositeItemArray):Boolean;
+    //: Whether the entry of Path is resolved, and how many DBs the driver keeps browsed (tests).
+    function EntryResolved(const Path:AnsiString):Boolean;
+    //: What the program looks like now (the signature of the DB list and the modification time of
+    //: the type of each DB kept browsed) against what it looked like when the caches were built.
+    //: The first observation is the baseline. A difference drops the caches (DropCaches).
+    //: True when the program changed.
+    function NoteProgram(const Signature:String; const Times:TS7PlusTypeTimeArray):Boolean;
+    //: Reads that observation from the PLC at most every ProgramCheckIntervalMs and calls
+    //: NoteProgram: 1 + N small requests (N = DBs kept browsed).
+    procedure CheckProgramChange(Now_:QWord);
+    function BrowsedDBCount:Integer;
     //: The session is gone (or brand new), and with it every subscription - see the body.
     procedure ResetSubscriptions;
 
@@ -310,6 +339,12 @@ type
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
     //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and number.
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
+    //: Drops everything the driver keeps from browsing the PLC: the type information, the
+    //: variables of each DB and process area, the DB names. Call it after a download to the PLC
+    //: (a new DB, a changed one), or the browse keeps answering with the program as it was when
+    //: it was first read. The tags already created are resolved again at the next scan (their
+    //: address may have changed) and the on-change ones subscribe again.
+    procedure RefreshCaches;
     //: Reads the value of every STRING on the candidates list (S7PlusAddBrowsed) once and sets
     //: its StringLength (the maximum, the first byte of the value); the ones that cannot be read
     //: become srStringLength (not tags). ioOk, ioPartialOk when some could not be read.
@@ -326,8 +361,9 @@ type
     //: (BlocoSimbolico_4.Var26.v1). A scalar is a tkScalar with its TagType and the Swap* the
     //: big-endian PLC needs, an array of scalars a tkArray (its elements are left out), a
     //: structure a tkStructure whose members follow as entries of their own, a STRING a
-    //: tkString (the maximum length is not known: ElementCount 0). Every call reads the PLC
-    //: again (ForceReload has nothing to drop). ioPartialOk: a DB or area could not be browsed.
+    //: tkString with its maximum length. ForceReload=True calls RefreshCaches first: use it after a
+    //: download to the PLC, otherwise the type information read at the first browse is used.
+    //: ioPartialOk: a DB or area could not be browsed.
     function ListTags(out Tags:TPLCTagInfoArray; ForceReload:Boolean = false):TProtocolIOResult; override;
     //: Reads a variable's raw bytes by its resolved LID path (see BrowseDB/BrowseNativeArea).
     function ReadSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; out Data:TBytes):TProtocolIOResult;
@@ -433,6 +469,16 @@ type
     //: the current values). Never less than 10 cycles (SubscriptionCycleMs). 0 turns it off.
     //: Default 5000.
     property SubscriptionTimeoutMs:Integer read FSubTimeoutMs write SetSubTimeoutMs default 5000;
+    //: How often, in milliseconds, the driver looks for a download to the PLC while there are tags
+    //: in use: it compares the list of DBs and the modification time of the type of each DB
+    //: kept browsed with what they were when the tags were resolved; if something differs, the
+    //: addresses of the tags are resolved again and the on-change tags subscribe again. It costs
+    //: 1 + N small requests (N = DBs browsed). 0 turns it off; a smaller value than 1000 is set
+    //: to 1000. Default 10000. This narrows the window in which an address of a program that
+    //: was replaced is still used; it does not close it (a change that leaves the DB list and the
+    //: modification time of the types as they were, or a PLC that does not report the time, goes
+    //: unnoticed). RefreshCaches forces it.
+    property ProgramCheckIntervalMs:Integer read FProgramCheckMs write SetProgramCheckMs default 10000;
     //: PLC password for legitimation (V2+ with TLS) - some PLCs (protection level "Full
     //: access with password" in TIA Portal) reject writes from an unauthenticated session
     //: even though reads stay open. When set (non-empty), the driver calls Authenticate
@@ -472,6 +518,7 @@ begin
   FSubCycleMs := 100;
   FSubCreditLimit := 10;
   FSubTimeoutMs := 5000;
+  FProgramCheckMs := 10000;
   FMaxItemsPerRequest := S7PlusDefaultMaxItemsPerRequest;
   FMaxTagsPerScan := 500;
   FMaxItemsPerSubscription := 500;
@@ -805,6 +852,7 @@ begin
   idx := Length(FDBCache);
   SetLength(FDBCache, idx+1);
   FDBCache[idx].DBNumber := DBNumber;
+  FDBCache[idx].TiRid := FConnection.LastBrowseTiRid;
   FDBCache[idx].Vars := Vars;
 end;
 
@@ -1306,6 +1354,7 @@ begin
   ManageSubscriptions(Now_);
   PumpNotifications(0);
   CheckSubscriptionWatchdog(GetTickCount64);
+  CheckProgramChange(GetTickCount64);
   MarkAuthErrors(Now_);
 
   //Collect every resolved, independently-scanned tag (derived ones piggyback on their
@@ -1446,6 +1495,18 @@ begin
     FScanList[Idx].SubRefBase := RefBase;
     FScanList[Idx].Subscribed := true;
   end;
+end;
+
+function TS7CommPlusDriver.EntryResolved(const Path:AnsiString):Boolean;
+var
+  Idx:Integer;
+begin
+  Result := FindScanEntry(Path, Idx) and FScanList[Idx].Resolved;
+end;
+
+function TS7CommPlusDriver.BrowsedDBCount:Integer;
+begin
+  Result := Length(FDBCache);
 end;
 
 function TS7CommPlusDriver.MarkResolved(const Path:AnsiString; const Composite:TS7PlusCompositeItemArray):Boolean;
@@ -2129,6 +2190,151 @@ begin
   end;
 end;
 
+procedure TS7CommPlusDriver.RefreshCaches;
+begin
+  LockDriverIO;
+  try
+    DropCaches;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+procedure TS7CommPlusDriver.SetProgramCheckMs(AValue:Integer);
+begin
+  if AValue<=0 then
+    AValue := 0
+  else if AValue<1000 then
+    AValue := 1000;
+  FProgramCheckMs := AValue;
+end;
+
+procedure TS7CommPlusDriver.DropCaches;
+var
+  i:Integer;
+begin
+  begin
+    if FConnection<>nil then
+      FConnection.RefreshTypeInfo;
+    SetLength(FDBCache, 0);
+    SetLength(FDBNameCache, 0);
+    FDBNameCacheLoaded := false;
+    SetLength(FIAreaVars, 0);
+    SetLength(FQAreaVars, 0);
+    SetLength(FMAreaVars, 0);
+    SetLength(FTimersVars, 0);
+    SetLength(FCountersVars, 0);
+    FIAreaBrowsed := false;
+    FQAreaBrowsed := false;
+    FMAreaBrowsed := false;
+    FTimersBrowsed := false;
+    FCountersBrowsed := false;
+
+    //the tags: their address (LIDs, offsets, which tag reads inside which) may be another now
+    for i:=0 to High(FScanList) do begin
+      FScanList[i].Resolved := false;
+      FScanList[i].LastResolveAttempt := 0;
+      FScanList[i].IsDerived := false;
+      FScanList[i].ContainerPath := '';
+      FScanList[i].DerivedOffset := 0;
+      FScanList[i].DerivedLen := 0;
+      FScanList[i].IsComposite := false;
+      SetLength(FScanList[i].CompositeItems, 0);
+      SetLength(FScanList[i].Lids, 0);
+      FScanList[i].ByteOffset := -1;
+    end;
+    //and so is what the PLC subscribed: the subscriptions are made again
+    FSubResetPending := true;
+    //what the program looked like is learned again when the caches are filled
+    FProgramKnown := false;
+    FProgramSignature := '';
+    SetLength(FTypeTimes, 0);
+  end;
+end;
+
+function TS7CommPlusDriver.NoteProgram(const Signature:String; const Times:TS7PlusTypeTimeArray):Boolean;
+var
+  i, j, n:Integer;
+  Found, Changed:Boolean;
+begin
+  Result := false;
+  if not FProgramKnown then begin
+    FProgramKnown := true;
+    FProgramSignature := Signature;
+    FTypeTimes := Copy(Times, 0, Length(Times));
+    n := 0;
+    for i:=0 to High(Times) do
+      if Times[i].HasTime then Inc(n);
+    ConnDebug(Self, Format('CheckProgramChange: referencia aprendida - %d DBs navegados, %d com data de modificacao.',
+                           [Length(Times), n]));
+    exit;
+  end;
+
+  Changed := Signature<>FProgramSignature;
+  //the time of the type of each DB kept: another one, or not answered any more, is a download
+  if not Changed then
+    for i:=0 to High(FTypeTimes) do begin
+      if not FTypeTimes[i].HasTime then continue;       //the PLC never reported one for it
+      Found := false;
+      for j:=0 to High(Times) do
+        if Times[j].TiRid=FTypeTimes[i].TiRid then begin
+          Found := true;
+          if (not Times[j].HasTime) or (Length(Times[j].Time)<>Length(FTypeTimes[i].Time)) or
+             ((Length(Times[j].Time)>0) and (not CompareMem(@Times[j].Time[0], @FTypeTimes[i].Time[0], Length(Times[j].Time)))) then
+            Changed := true;
+          break;
+        end;
+      if not Found then Changed := true;
+      if Changed then break;
+    end;
+
+  if Changed then begin
+    DropCaches;
+    Result := true;
+    exit;
+  end;
+
+  //a DB browsed after the baseline: its time is the baseline from now on
+  for j:=0 to High(Times) do begin
+    Found := false;
+    for i:=0 to High(FTypeTimes) do
+      if FTypeTimes[i].TiRid=Times[j].TiRid then Found := true;
+    if not Found then begin
+      n := Length(FTypeTimes);
+      SetLength(FTypeTimes, n+1);
+      FTypeTimes[n] := Times[j];
+    end;
+  end;
+end;
+
+procedure TS7CommPlusDriver.CheckProgramChange(Now_:QWord);
+var
+  Blocks:TS7PlusDataBlockInfoArray;
+  Times:TS7PlusTypeTimeArray;
+  i, n:Integer;
+  Value:TBytes;
+begin
+  if (FProgramCheckMs<=0) or (FConnection=nil) or (not FConnection.Connected) then exit;
+  //nothing browsed, nothing to keep right
+  if Length(FDBCache)=0 then exit;
+  if (FLastProgramCheck<>0) and (Int64(Now_)-Int64(FLastProgramCheck)<FProgramCheckMs) then exit;
+  FLastProgramCheck := Now_;
+
+  if not FConnection.ListDataBlocks(Blocks) then exit;
+  SetLength(Times, 0);
+  for i:=0 to High(FDBCache) do begin
+    if FDBCache[i].TiRid=0 then continue;
+    if not FConnection.ReadTypeInfoModTime(FDBCache[i].TiRid, Value) then exit;   //a failed request is not a change
+    n := Length(Times);
+    SetLength(Times, n+1);
+    Times[n].TiRid := FDBCache[i].TiRid;
+    Times[n].Time := Value;
+    Times[n].HasTime := Length(Value)>0;
+  end;
+  if NoteProgram(S7PlusBlockSignature(Blocks), Times) then
+    ConnDebug(Self, 'CheckProgramChange: o programa do CLP mudou - enderecos dos tags serao resolvidos de novo.');
+end;
+
 function TS7CommPlusDriver.ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
 begin
   SetLength(Blocks, 0);
@@ -2266,6 +2472,8 @@ begin
   SetLength(Tags, 0);
   SetLength(Cands, 0);
   Partial := false;
+  if ForceReload then
+    RefreshCaches;
 
   Result := ListDataBlocks(Blocks);
   if Result<>ioOk then exit;
