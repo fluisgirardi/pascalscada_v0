@@ -804,66 +804,10 @@ begin
 end;
 
 function TfrmS7PlusTagBuilder.GetImportPlan: TS7PlusImportItems;
-var
-  c, k, m, n, count: LongInt;
 begin
-  Result:=nil;
-  SetLength(Result, Length(FCandidates));
-  count:=0;
-
-  for c:=0 to High(FCandidates) do begin
-    if (c>High(FChecked)) or (not FChecked[c]) then continue;
-    if FCandidates[c].Skip<>srNone then continue;
-
-    Result[count].Path      := FCandidates[c].Path;
-    Result[count].CompName  := S7PlusSuggestedName(FCandidates[c].Path, edtPrefix.Text);
-    Result[count].TagType   := FCandidates[c].TagType;
-    Result[count].SwapBytes := FCandidates[c].SwapBytes;
-    Result[count].SwapWords := FCandidates[c].SwapWords;
-    Result[count].SwapDWords:= FCandidates[c].SwapDWords;
-    Result[count].Scan      := spinScan.Value;
-    Result[count].IsBlock   := FCandidates[c].IsArray;
-    Result[count].IsStruct  := FCandidates[c].IsStructArray;
-    SetLength(Result[count].StructItems, 0);
-    if FCandidates[c].IsStructArray then begin
-      Result[count].Size := FCandidates[c].ElementCount*FCandidates[c].ElementSize;
-      //an item per member of each element, each at its place in the bytes of the struct
-      if chkCreateElements.Checked then
-        for k:=0 to FCandidates[c].ElementCount-1 do
-          for m:=0 to High(FCandidates[c].Members) do begin
-            if not FCandidates[c].Members[m].Supported then continue;
-            if FCandidates[c].Members[m].IsString and (FCandidates[c].Members[m].StringLength<0) then continue;
-            n:=Length(Result[count].StructItems);
-            SetLength(Result[count].StructItems, n+1);
-            Result[count].StructItems[n].CompName   := S7PlusSuggestedName(FCandidates[c].ElementPaths[k]+'.'+FCandidates[c].Members[m].Name, edtPrefix.Text);
-            Result[count].StructItems[n].Offset     := k*FCandidates[c].ElementSize+FCandidates[c].Members[m].Offset;
-            Result[count].StructItems[n].TagType    := FCandidates[c].Members[m].TagType;
-            Result[count].StructItems[n].SwapBytes  := FCandidates[c].Members[m].SwapBytes;
-            Result[count].StructItems[n].SwapWords  := FCandidates[c].Members[m].SwapWords;
-            Result[count].StructItems[n].SwapDWords := FCandidates[c].Members[m].SwapDWords;
-            Result[count].StructItems[n].IsString   := FCandidates[c].Members[m].IsString;
-            Result[count].StructItems[n].StringSize := FCandidates[c].Members[m].StringLength;
-          end;
-      inc(count);
-      continue;
-    end;
-    Result[count].IsString  := FCandidates[c].IsString;
-    Result[count].StringSize:= FCandidates[c].StringLength;
-    SetLength(Result[count].ElementNames, 0);
-    if FCandidates[c].IsArray then begin
-      Result[count].Size    := FCandidates[c].ElementCount;
-      //one TPLCBlockElement per element, named after the element's own path
-      if chkCreateElements.Checked then begin
-        SetLength(Result[count].ElementNames, Length(FCandidates[c].ElementPaths));
-        for k:=0 to High(FCandidates[c].ElementPaths) do
-          Result[count].ElementNames[k]:=S7PlusSuggestedName(FCandidates[c].ElementPaths[k], edtPrefix.Text);
-      end;
-    end else
-      Result[count].Size    := 1;
-    inc(count);
-  end;
-
-  SetLength(Result, count);
+  //a DB becomes one structure (with an item per ticked variable); the areas stay loose tags
+  Result:=S7PlusBuildImportPlan(FCandidates, FChecked, edtPrefix.Text, spinScan.Value,
+                                chkCreateElements.Checked);
 end;
 
 end.

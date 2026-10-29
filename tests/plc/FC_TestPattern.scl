@@ -1,0 +1,69 @@
+﻿FUNCTION "FC_TestPattern" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      i : Int;
+   END_VAR
+
+
+BEGIN
+	// Carrega os valores diferentes por elemento (os da declaracao valem igual para todos os elementos).
+	// Roda na primeira chamada e sempre que "TestDB_Dyn".LoadPattern for escrito com TRUE.
+	// Loads the per element values (the declaration start values are the same for every element).
+	// Runs on the first call and whenever "TestDB_Dyn".LoadPattern is written TRUE.
+	IF (NOT "TestDB_Dyn".PatternLoaded) OR "TestDB_Dyn".LoadPattern THEN
+	  FOR #i := 0 TO 4 DO
+	    "TestDB_Opt".Rec_Small[#i].Dint1 := 1000 + #i;
+	    "TestDB_Opt".Rec_Small[#i].aBool := (#i MOD 2) = 1;
+	    "TestDB_Opt".Rec_Small[#i].aInt := -10 - #i;
+	  END_FOR;
+	  FOR #i := 0 TO 19 DO
+	    "TestDB_Opt".Rec_Text[#i].Dint1 := 2000 + #i;
+	    "TestDB_Opt".Rec_Text[#i].aBool := (#i MOD 3) = 0;
+	    "TestDB_Opt".Rec_Text[#i].aInt := 100 + #i;
+	    "TestDB_Opt".Rec_Text[#i].Name := 'record';
+	  END_FOR;
+	  FOR #i := 0 TO 3 DO
+	    "TestDB_Opt".Motors[#i].Run := (#i MOD 2) = 0;
+	    "TestDB_Opt".Motors[#i].Speed := INT_TO_REAL(#i) * 10.0 + 0.5;
+	    "TestDB_Opt".Motors[#i].Counter := 5000 + #i;
+	    "TestDB_Opt".Motors[#i].Name := 'motor';
+	  END_FOR;
+	  FOR #i := 0 TO 2 DO
+	    "TestDB_Opt".Mix.Deep[#i].x := 300 + #i;
+	    "TestDB_Opt".Mix.Deep[#i].y := 0 - #i;
+	  END_FOR;
+	  FOR #i := 0 TO 4 DO
+	    "TestDB_NonOpt".Rec_Small[#i].Dint1 := 1000 + #i;
+	    "TestDB_NonOpt".Rec_Small[#i].aBool := (#i MOD 2) = 1;
+	    "TestDB_NonOpt".Rec_Small[#i].aInt := -10 - #i;
+	  END_FOR;
+	  FOR #i := 0 TO 19 DO
+	    "TestDB_NonOpt".Rec_Text[#i].Dint1 := 2000 + #i;
+	    "TestDB_NonOpt".Rec_Text[#i].aBool := (#i MOD 3) = 0;
+	    "TestDB_NonOpt".Rec_Text[#i].aInt := 100 + #i;
+	    "TestDB_NonOpt".Rec_Text[#i].Name := 'record';
+	  END_FOR;
+	  FOR #i := 0 TO 3 DO
+	    "TestDB_NonOpt".Motors[#i].Run := (#i MOD 2) = 0;
+	    "TestDB_NonOpt".Motors[#i].Speed := INT_TO_REAL(#i) * 10.0 + 0.5;
+	    "TestDB_NonOpt".Motors[#i].Counter := 5000 + #i;
+	    "TestDB_NonOpt".Motors[#i].Name := 'motor';
+	  END_FOR;
+	  FOR #i := 0 TO 2 DO
+	    "TestDB_NonOpt".Mix.Deep[#i].x := 300 + #i;
+	    "TestDB_NonOpt".Mix.Deep[#i].y := 0 - #i;
+	  END_FOR;
+	  FOR #i := 0 TO 499 DO
+	    "TestDB_Big".Arr_Big[#i] := 100000 + #i;
+	  END_FOR;
+	  FOR #i := 0 TO 599 DO
+	    "TestDB_Big".Arr_Bytes600[#i] := INT_TO_BYTE(#i MOD 256);
+	  END_FOR;
+	  FOR #i := 0 TO 9 DO
+	    "TestDB_Big".Texts[#i].Value := 9000 + #i;
+	  END_FOR;
+	  "TestDB_Dyn".PatternLoaded := true;
+	  "TestDB_Dyn".LoadPattern := false;
+	END_IF;
+END_FUNCTION

@@ -1,0 +1,93 @@
+﻿DATA_BLOCK "TestDB_Opt"
+{ DB_Accessible_From_OPC_UA := 'FALSE' ;
+ DB_Accessible_From_Webserver := 'FALSE' ;
+ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      // ---- Escalares de primeiro nivel, um de cada tipo / top level scalars, one of each type
+      Bool_1 : Bool := true;
+      Bool_2 : Bool := false;
+      Bool_3 : Bool := true;
+      Byte_1 : Byte := 16#12;
+      Char_1 : Char := 'A';
+      SInt_1 : SInt := -5;
+      USInt_1 : USInt := 200;
+      Word_1 : Word := 16#1234;
+      Int_1 : Int := -1234;
+      UInt_1 : UInt := 60000;
+      DWord_1 : DWord := 16#DEADBEEF;
+      DInt_1 : DInt := -123456;
+      UDInt_1 : UDInt := 4000000000;
+      Real_1 : Real := 3.14;
+      LWord_1 : LWord := 16#0123456789ABCDEF;
+      LInt_1 : LInt := -1234567890123;
+      ULInt_1 : ULInt := 12345678901234;
+      LReal_1 : LReal := 2.718281828;
+      Bool_4 : Bool := true;
+      // ---- Tipos que o Tag Builder nao transforma em tag / types the Tag Builder does not turn into a tag
+      Time_1 : Time := T#1s500ms;
+      Date_1 : Date := D#2024-01-01;
+      TimeOfDay_1 : Time_Of_Day := TOD#10:20:30;
+      DTL_1 : DTL := DTL#2024-05-06-07:08:09.123;
+      WString_1 : WString[10] := WSTRING#'wide';
+      // ---- STRING: tamanhos 10, 50, padrao (254) e vazia / STRINGs: 10, 50, default (254) and empty
+      String_Short : String[10] := 'hello';
+      String_Mid : String[50] := 'middle string value';
+      String_Default : String := 'default text';
+      String_Empty : String[20] := '';
+      // ---- Arrays de escalares / arrays of scalars
+      Arr_DInt : Array[0..9] of DInt := [100, 101, 102, 103, 104, 105, 106, 107, 108, 109];
+      Arr_Real : Array[0..4] of Real := [0.5, 1.5, 2.5, 3.5, 4.5];
+      Arr_Byte : Array[0..15] of Byte := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      Arr_Bool : Array[0..7] of Bool := [true, false, true, false, true, false, true, false];
+      Arr_NegLow : Array[-2..2] of Int := [-20, -10, 0, 10, 20];
+      Arr_LReal : Array[0..1] of LReal := [1.25, 2.5];
+      Arr_Word100 : Array[0..99] of Word := [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099];
+      Arr_Str : Array[0..2] of String[20] := ['str0', 'str1', 'str2'];
+      Arr_2D : Array[0..2, 0..3] of Int := [11, 12, 13, 14, 21, 22, 23, 24, 31, 32, 33, 34];
+      // ---- Estrutura mista (como o Var26 do DB4), com texto e estrutura interna / mixed structure with texts and an inner structure
+      Mix : Struct
+         v1 : Byte := 16#11;
+         v2 : Word := 16#2222;
+         v3 : DWord := 16#33333333;
+         v4 : Bool := true;
+         Static_1 : Real := 1.5;
+         Static_2 : Bool := false;
+         Static_3 : Bool := true;
+         Static_4 : Bool := false;
+         Text : String[50] := 'mix text';
+         Text_2 : String[100] := 'second text';
+         Inner : Struct
+            a : DInt := 4444;
+            b : Int := 55;
+            c : Byte := 6;
+            d : Bool := true;
+            e : String[10] := 'inner';
+         END_STRUCT;
+         Counts : Array[0..3] of Int := [1, 2, 3, 4];
+         Deep : Array[0..2] of Struct
+            x : DInt := 7;
+            y : Int := 8;
+         END_STRUCT;
+      END_STRUCT;
+      // ---- Arrays de estruturas / arrays of structures (valores por elemento: FC_TestPattern)
+      Rec_Small : Array[0..4] of Struct
+         Dint1 : DInt := 1000;
+         aBool : Bool := true;
+         aInt : Int := -42;
+      END_STRUCT;
+      Rec_Text : Array[0..19] of Struct
+         Dint1 : DInt := 2000;
+         aBool : Bool := true;
+         aInt : Int := 100;
+         Name : String := 'record';
+      END_STRUCT;
+      Motors : Array[0..3] of "UDT_TestMotor";
+      Motor_One : "UDT_TestMotor";
+   END_VAR
+
+
+BEGIN
+
+END_DATA_BLOCK

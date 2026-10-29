@@ -1,0 +1,41 @@
+﻿FUNCTION_BLOCK "FB_TestDynamics"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      Run : Bool := true;
+   END_VAR
+
+   VAR 
+      cycles : DInt;
+   END_VAR
+
+
+BEGIN
+	// Contador, pisca-pisca, rampa e texto que mudam sozinhos / counter, blinker, ramp and text that change by themselves
+	IF #Run AND "TestDB_Dyn".Enable THEN
+	  "TestDB_Dyn".Counter := "TestDB_Dyn".Counter + "TestDB_Dyn".Step;
+	  #cycles := #cycles + 1;
+	  IF #cycles >= 50 THEN
+	    #cycles := 0;
+	    "TestDB_Dyn".Blink := NOT "TestDB_Dyn".Blink;
+	    IF "TestDB_Dyn".Blink THEN
+	      "TestDB_Dyn".Text := 'TICK';
+	    ELSE
+	      "TestDB_Dyn".Text := 'TOCK';
+	    END_IF;
+	  END_IF;
+	  "TestDB_Dyn".Ramp := "TestDB_Dyn".Ramp + 0.5;
+	  IF "TestDB_Dyn".Ramp > 100.0 THEN
+	    "TestDB_Dyn".Ramp := 0.0;
+	  END_IF;
+	END_IF;
+	
+	// Escrever TRUE em Reset zera o contador e o CLP desliga o bit / writing TRUE to Reset clears the counter and the PLC clears the bit
+	IF "TestDB_Dyn".Reset THEN
+	  "TestDB_Dyn".Counter := 0;
+	  "TestDB_Dyn".Reset := false;
+	END_IF;
+	
+	// O CLP responde ao que foi escrito (ida e volta) / the PLC answers what was written (round trip)
+	"TestDB_Dyn".Echo_Out := "TestDB_Dyn".Echo_In + 1;
+END_FUNCTION_BLOCK

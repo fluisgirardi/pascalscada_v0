@@ -19,6 +19,11 @@
   lista, então o driver lê o valor uma vez (ResolveStringLengths) e o primeiro byte
   dele é esse máximo; sem essa leitura (srStringLength) a STRING não vira tag.
 
+  Tudo o que é de um DATABLOCK é importado como uma ESTRUTURA, e não como tags soltos
+  (S7PlusBuildImportPlan): um TPLCStruct por DB, lido inteiro numa só varredura (o caminho é
+  o nome do DB), com um TPLCStructItem (TPLCStructString para STRING) por variável marcada,
+  cada um no seu byte da estrutura. As áreas I, Q e M continuam tags soltos.
+
   O que não vira tag, e por quê: WSTRING, tipos de data/hora, estruturas inteiras (os membros aparecem um a um),
   elementos de array e tipos internos.
 }
@@ -42,6 +47,11 @@
   on the list, so the driver reads the value once (ResolveStringLengths) and its
   first byte is that maximum; without that read (srStringLength) the STRING does
   not become a tag.
+
+  Everything that belongs to a DATABLOCK is imported as a STRUCTURE, not as loose tags
+  (S7PlusBuildImportPlan): one TPLCStruct per DB, read whole in one scan (its path is the
+  DB name), with one TPLCStructItem (TPLCStructString for a STRING) per ticked variable,
+  each at its own byte of the structure. The I, Q and M areas stay loose tags.
 
   What does not become a tag, and why: WSTRING, date/time types, whole structures (their members are offered one
   by one), array elements and internal types.
@@ -268,6 +278,26 @@ function S7PlusContainerSize(const Candidates:TS7PlusCandidateArray; const Path:
 //: elements still do not become tags. Call it once the whole list is classified.
 {$ENDIF}
 procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);
+
+{$IFDEF PORTUGUES}
+//: O plano de importação do Tag Builder a partir dos candidatos marcados (Checked, na ordem de
+//: Candidates). Cada DB com algo marcado vira UM item IsStruct (um TPLCStruct do DB inteiro, com
+//: o tamanho da leitura do DB todo) com um StructItem por variável: os de primeiro nível no byte
+//: clássico (ByteOffset); os de dentro de uma estrutura no byte dela mais a distância na imagem
+//: de memória (a estrutura é lida com o layout real do CLP); os elementos de arrays e de arrays
+//: de estruturas só com CreateElements. Fora de um DB (áreas I, Q, M) cada variável é um tag solto
+//: (TPLCTagNumber, TPLCBlock ou TPLCString).
+{$ELSE}
+//: The Tag Builder import plan from the ticked candidates (Checked, in the order of Candidates).
+//: Every DB with something ticked becomes ONE IsStruct item (a TPLCStruct of the whole DB, sized
+//: as a whole DB read) with a StructItem per variable: top level ones at their classic byte
+//: (ByteOffset); the ones inside a structure at its byte plus their distance in the memory image
+//: (the structure is read in the PLC's real layout); the elements of arrays and of arrays of
+//: structures only with CreateElements. Outside a DB (the I, Q, M areas) each variable is a loose
+//: tag (TPLCTagNumber, TPLCBlock or TPLCString).
+{$ENDIF}
+function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+                               const Prefix:String; Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems;
 
 {$IFDEF PORTUGUES}
 //: Os níveis de um caminho (BlocoSimbolico_4.Var26.v1 -> BlocoSimbolico_4, Var26, v1),
@@ -628,6 +658,181 @@ begin
     Candidates[ArrIdx].ElementSize := Extent;
   end;
   Result := true;
+end;
+
+//The byte of a variable of a DB in the structure that reads the whole DB: a top level variable
+//is at its classic byte; one inside a structure is at the byte of the top level structure (read
+//whole, in the PLC's real layout) plus its distance to it in the memory image.
+function DBOffsetOf(const Candidates:TS7PlusCandidateArray; Idx:Integer; out Off:Integer):Boolean;
+var
+  Levels:TStringArray;
+  T:Integer;
+  TPath:String;
+begin
+  Result := false;
+  Off := 0;
+  Levels := S7PlusSplitPath(Candidates[Idx].Path);
+  if Length(Levels)<2 then exit;
+  if Length(Levels)=2 then begin
+    if Candidates[Idx].ByteOffset<0 then exit;
+    Off := Candidates[Idx].ByteOffset;
+    Result := true;
+    exit;
+  end;
+  TPath := Levels[0]+'.'+Levels[1];
+  for T:=0 to High(Candidates) do
+    if Candidates[T].Path=TPath then begin
+      if (Candidates[T].ByteOffset<0) or (Candidates[T].ImageOffset<0) or (Candidates[Idx].ImageOffset<0) then exit;
+      Off := Candidates[T].ByteOffset+(Candidates[Idx].ImageOffset-Candidates[T].ImageOffset);
+      Result := true;
+      exit;
+    end;
+end;
+
+function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+  const Prefix:String; Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems;
+var
+  Plan:TS7PlusImportItems;
+  Roots:TStringList;
+  Ends:array of LongInt;       //per plan entry that is a structure: where its last item ends
+  c, k, m, p, n, Off, ElemSize, FinalCount:Integer;
+  Levels:TStringArray;
+  Exact:Boolean;
+  Size:LongInt;
+
+  function NewEntry:Integer;
+  begin
+    Result := Length(Plan);
+    SetLength(Plan, Result+1);
+    SetLength(Ends, Result+1);
+    FillChar(Plan[Result], SizeOf(Plan[Result]), 0);
+    Ends[Result] := 0;
+    Plan[Result].Scan := Scan;
+  end;
+
+  procedure AddItem(Entry:Integer; const AName:String; AOffset:LongInt; ATagType:TTagType;
+                    ASwapB, ASwapW, ASwapD, AIsString:Boolean; AStringSize, AByteSize:LongInt);
+  var
+    q:Integer;
+  begin
+    q := Length(Plan[Entry].StructItems);
+    SetLength(Plan[Entry].StructItems, q+1);
+    Plan[Entry].StructItems[q].CompName   := AName;
+    Plan[Entry].StructItems[q].Offset     := AOffset;
+    Plan[Entry].StructItems[q].TagType    := ATagType;
+    Plan[Entry].StructItems[q].SwapBytes  := ASwapB;
+    Plan[Entry].StructItems[q].SwapWords  := ASwapW;
+    Plan[Entry].StructItems[q].SwapDWords := ASwapD;
+    Plan[Entry].StructItems[q].IsString   := AIsString;
+    Plan[Entry].StructItems[q].StringSize := AStringSize;
+    if AOffset+AByteSize>Ends[Entry] then Ends[Entry] := AOffset+AByteSize;
+  end;
+
+begin
+  SetLength(Plan, 0);
+  SetLength(Ends, 0);
+  Roots := TStringList.Create;
+  try
+    Roots.CaseSensitive := false;
+    for c:=0 to High(Candidates) do begin
+      if (c>High(Checked)) or (not Checked[c]) then continue;
+      if Candidates[c].Skip<>srNone then continue;
+      Levels := S7PlusSplitPath(Candidates[c].Path);
+      if Length(Levels)=0 then continue;
+
+      if S7PlusIsAreaName(Levels[0]) then begin
+        //an area: loose tags, as always
+        n := NewEntry;
+        Plan[n].Path       := Candidates[c].Path;
+        Plan[n].CompName   := S7PlusSuggestedName(Candidates[c].Path, Prefix);
+        Plan[n].TagType    := Candidates[c].TagType;
+        Plan[n].SwapBytes  := Candidates[c].SwapBytes;
+        Plan[n].SwapWords  := Candidates[c].SwapWords;
+        Plan[n].SwapDWords := Candidates[c].SwapDWords;
+        Plan[n].IsBlock    := Candidates[c].IsArray;
+        Plan[n].IsString   := Candidates[c].IsString;
+        Plan[n].StringSize := Candidates[c].StringLength;
+        Plan[n].Size       := 1;
+        if Candidates[c].IsArray then begin
+          Plan[n].Size := Candidates[c].ElementCount;
+          if CreateElements then begin
+            SetLength(Plan[n].ElementNames, Length(Candidates[c].ElementPaths));
+            for k:=0 to High(Candidates[c].ElementPaths) do
+              Plan[n].ElementNames[k] := S7PlusSuggestedName(Candidates[c].ElementPaths[k], Prefix);
+          end;
+        end;
+        continue;
+      end;
+
+      //a variable of a DB: an item of the structure of that DB
+      p := Roots.IndexOf(Levels[0]);
+      if p<0 then begin
+        n := NewEntry;
+        Plan[n].Path     := Levels[0];
+        Plan[n].CompName := S7PlusSuggestedName(Levels[0], Prefix);
+        Plan[n].IsStruct := true;
+        p := Roots.AddObject(Levels[0], TObject(PtrInt(n)));
+      end;
+      n := PtrInt(Roots.Objects[p]);
+
+      if Candidates[c].IsStructArray then begin
+        //an array of structures: an item per member of each element (classic bytes)
+        if CreateElements and (Length(Levels)=2) and (Candidates[c].ByteOffset>=0) then
+          for k:=0 to Candidates[c].ElementCount-1 do
+            for m:=0 to High(Candidates[c].Members) do begin
+              if not Candidates[c].Members[m].Supported then continue;
+              if Candidates[c].Members[m].IsString and (Candidates[c].Members[m].StringLength<0) then continue;
+              Off := Candidates[c].ByteOffset+k*Candidates[c].ElementSize+Candidates[c].Members[m].Offset;
+              if Candidates[c].Members[m].IsString then
+                AddItem(n, S7PlusSuggestedName(Candidates[c].ElementPaths[k]+'.'+Candidates[c].Members[m].Name, Prefix),
+                        Off, pttDefault, false, false, false, true, Candidates[c].Members[m].StringLength,
+                        Candidates[c].Members[m].StringLength+2)
+              else
+                AddItem(n, S7PlusSuggestedName(Candidates[c].ElementPaths[k]+'.'+Candidates[c].Members[m].Name, Prefix),
+                        Off, Candidates[c].Members[m].TagType, Candidates[c].Members[m].SwapBytes,
+                        Candidates[c].Members[m].SwapWords, Candidates[c].Members[m].SwapDWords, false, 0,
+                        S7PlusDataTypeSize(Candidates[c].Members[m].SoftDataType, 0));
+            end;
+        continue;
+      end;
+
+      if not DBOffsetOf(Candidates, c, Off) then continue;
+
+      if Candidates[c].IsArray then begin
+        //an array of scalars: one item per element
+        ElemSize := S7PlusDataTypeSize(Candidates[c].SoftDataType, 0);
+        if CreateElements and (ElemSize>0) then
+          for k:=0 to High(Candidates[c].ElementPaths) do
+            AddItem(n, S7PlusSuggestedName(Candidates[c].ElementPaths[k], Prefix), Off+k*ElemSize,
+                    Candidates[c].TagType, Candidates[c].SwapBytes, Candidates[c].SwapWords,
+                    Candidates[c].SwapDWords, false, 0, ElemSize);
+      end else if Candidates[c].IsString then begin
+        if Candidates[c].StringLength>=0 then
+          AddItem(n, S7PlusSuggestedName(Candidates[c].Path, Prefix), Off, pttDefault, false, false, false,
+                  true, Candidates[c].StringLength, Candidates[c].StringLength+2);
+      end else
+        AddItem(n, S7PlusSuggestedName(Candidates[c].Path, Prefix), Off, Candidates[c].TagType,
+                Candidates[c].SwapBytes, Candidates[c].SwapWords, Candidates[c].SwapDWords, false, 0,
+                S7PlusDataTypeSize(Candidates[c].SoftDataType, 0));
+    end;
+
+    //the size of each structure: a whole DB read, or where its last item ends if that is further
+    FinalCount := 0;
+    SetLength(Result, Length(Plan));
+    for c:=0 to High(Plan) do begin
+      if Plan[c].IsStruct then begin
+        if Length(Plan[c].StructItems)=0 then continue;      //nothing to put in it
+        Size := S7PlusContainerSize(Candidates, Plan[c].Path, true, Exact);
+        if Ends[c]>Size then Size := Ends[c];
+        Plan[c].Size := Size;
+      end;
+      Result[FinalCount] := Plan[c];
+      Inc(FinalCount);
+    end;
+    SetLength(Result, FinalCount);
+  finally
+    Roots.Free;
+  end;
 end;
 
 function S7PlusIsAreaName(const S:String):Boolean;
