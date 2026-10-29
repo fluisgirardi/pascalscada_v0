@@ -131,6 +131,7 @@ type
     FSessionId:Cardinal;
     FProtocolVersion:Byte;
     FConnected:Boolean;
+    FStreamLost:Boolean;
     FServerSessionVersion:TBytes;
     //: AttrId 233 ("00:xxxxxxxxxxxxxxxx") and AttrId 303 (20-byte nonce), both seen in
     //: CreateObject's response alongside ServerSessionVersion - present on firmware that
@@ -224,6 +225,7 @@ type
     function ActivateTLS:Boolean;
     procedure TLSFlushOutgoing;
     function TLSReadIncoming:Boolean;
+    procedure DropStream;
     procedure ReleaseTLS;
     //: Routes a logical S7CommPlus frame through TLS (if active) or straight to the
     //: raw COTP transport (if not) - every session-handshake/request method below
@@ -580,6 +582,10 @@ type
     function UploadBlock(BlockType, BlockNumber:Cardinal; out Data:TBytes):Boolean;
 
     property Connected:Boolean read FConnected;
+    //: A request failed on the wire (send, receive or reassembly): the bytes of the stream can
+    //: no longer be trusted, so the session was dropped (Connected=false) and only a new TCP
+    //: connection can carry another one. Cleared by Connect.
+    property StreamLost:Boolean read FStreamLost;
     property SessionId:Cardinal read FSessionId;
     property ProtocolVersion:Byte read FProtocolVersion;
     property SessionSetupOK:Boolean read FSessionSetupOK;
@@ -2019,6 +2025,7 @@ end;
 function TS7PlusConnection.Connect(const Password:AnsiString):Boolean;
 begin
   Result := false;
+  FStreamLost := false;
   FSessionSetupOK := false;
   FWithIntegrityId := false;
   FIntegrityIdRead := 0;
@@ -2096,6 +2103,13 @@ begin
   Result := true;
   Debug(Format('Connect: OK - version=V%d sessionId=0x%.8x sessionSetupOK=%s tls=%s',
                [FProtocolVersion, FSessionId, BoolToStr(FSessionSetupOK,true), BoolToStr(FTLSActive,true)]));
+end;
+
+procedure TS7PlusConnection.DropStream;
+begin
+  Debug('DropStream: falha de E/S - a sessao foi descartada, so uma nova conexao TCP serve.');
+  Disconnect;
+  FStreamLost := true;
 end;
 
 procedure TS7PlusConnection.Disconnect;
@@ -2448,6 +2462,7 @@ begin
 
   if not SendFragmented(SendVersion, FrameData) then begin
     Debug('SendRequest: falha ao enviar');
+    DropStream;
     exit;
   end;
 
@@ -2461,6 +2476,7 @@ begin
   if Reassemble then begin
     if not ReassembledRecv(Response) then begin
       Debug('SendRequest: falha ao reassemblar resposta multi-fragmento');
+      DropStream;
       exit;
     end;
     if Length(Response)<10 then begin
@@ -2474,7 +2490,8 @@ begin
   end;
 
   if not RecvApplicationFrame(ResponseFrame) then begin
-    Debug('SendRequest: falha ao receber resposta');
+    Debug(Format('SendRequest: falha ao receber resposta (funcao $%.4x)',[FunctionCode]));
+    DropStream;
     exit;
   end;
   if Length(ResponseFrame)<4 then begin
@@ -2558,6 +2575,7 @@ begin
 
   if not LogicalSend(Frame) then begin
     Debug('SendReplayRaw: falha ao enviar');
+    DropStream;
     exit;
   end;
 
@@ -2567,6 +2585,7 @@ begin
   if Reassemble then begin
     if not ReassembledRecv(Response) then begin
       Debug('SendReplayRaw: falha ao reassemblar resposta');
+      DropStream;
       exit;
     end;
     if Length(Response)<10 then exit;
@@ -2577,6 +2596,7 @@ begin
 
   if not RecvApplicationFrame(ResponseFrame) then begin
     Debug('SendReplayRaw: falha ao receber resposta');
+    DropStream;
     exit;
   end;
   if Length(ResponseFrame)<4 then exit;
