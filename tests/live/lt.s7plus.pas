@@ -119,6 +119,15 @@ type
     procedure TheTagsComeBackAfterThePortIsClosedAndOpened;
   end;
 
+  { TTestLiveReadSomethingAlways }
+
+  TTestLiveReadSomethingAlways = class(TLiveCase)
+  private
+    function SlowTagUpdates(AlwaysOn:Boolean):Integer;
+  published
+    procedure ASlowTagIsServedByTheRequestsOfAFastOne;
+  end;
+
   { TTestLiveCertificate }
 
   TTestLiveCertificate = class(TLiveCase)
@@ -1291,6 +1300,66 @@ begin
   end;
 end;
 
+//--- TTestLiveReadSomethingAlways ----------------------------------------------------------
+
+//How many different values the PLC counter (CountValue, read every 5 s) shows in 2.5 s while a
+//fast tag (Cycles, 50 ms) keeps the driver reading.
+function TTestLiveReadSomethingAlways.SlowTagUpdates(AlwaysOn:Boolean):Integer;
+var
+  Port:TTCP_UDPPort;
+  Drv:TS7CommPlusDriver;
+  Fast, Slow:TPLCTagNumber;
+  t0:QWord;
+  Last:Double;
+begin
+  Result := 0;
+  OpenPort(Port, Drv);
+  Fast := TPLCTagNumber.Create(nil);
+  Slow := TPLCTagNumber.Create(nil);
+  try
+    Drv.ReadSomethingAlways := AlwaysOn;
+    Fast.Name := 'live_rsa_fast';
+    Fast.TagType := pttLongInt;
+    Fast.SwapBytes := true;
+    Fast.SwapWords := true;
+    Fast.RefreshTime := 50;
+    Fast.LongAddress := 'TestDB_Dyn.Cycles';
+    Fast.ProtocolDriver := Drv;
+    Slow.Name := 'live_rsa_slow';
+    Slow.TagType := pttLongInt;
+    Slow.SwapBytes := true;
+    Slow.SwapWords := true;
+    Slow.RefreshTime := 5000;
+    Slow.LongAddress := 'TestDB_Dyn.CountValue';
+    Slow.ProtocolDriver := Drv;
+    Pump(1500);                       //resolved and read once
+    Last := Slow.Value;
+    t0 := GetTickCount64;
+    while GetTickCount64-t0<2500 do begin
+      Pump(20);
+      if Slow.Value<>Last then begin
+        Inc(Result);
+        Last := Slow.Value;
+      end;
+    end;
+  finally
+    Slow.Free;
+    Fast.Free;
+    Drv.Free;
+    Port.Free;
+  end;
+end;
+
+procedure TTestLiveReadSomethingAlways.ASlowTagIsServedByTheRequestsOfAFastOne;
+var
+  Off, On_:Integer;
+begin
+  Off := SlowTagUpdates(false);
+  On_ := SlowTagUpdates(true);
+  AssertTrue('without it the 5 s tag stays put (changed '+IntToStr(Off)+' times)', Off<=1);
+  AssertTrue('with it the 5 s tag follows the fast one (changed '+IntToStr(On_)+' times)', On_>=10);
+end;
+
 //--- TTestLiveCertificate ------------------------------------------------------------------
 
 const
@@ -1364,8 +1433,8 @@ procedure TTestLiveZZRestore.ZZLoadPatternRestoresThePerElementValues;
 var
   B:TBytes;
 begin
-  AssertTrue(WriteRaw('TestDB_Opt', 'Rec_Small[1].Dint1', BEBytes(1, 4)));
-  AssertTrue(WriteRaw('TestDB_Dyn', 'LoadPattern', BEBytes(1, 1)));
+  AssertTrue('writes the first element', WriteRaw('TestDB_Opt', 'Rec_Small[1].Dint1', BEBytes(1, 4)));
+  AssertTrue('writes the command', WriteRaw('TestDB_Dyn', 'LoadPattern', BEBytes(1, 1)));
   Sleep(500);
   AssertTrue(RawOf('TestDB_Opt', 'Rec_Small[1].Dint1', B));
   AssertEquals('the pattern is back', 1001, BEValue(B, true));
@@ -1379,6 +1448,7 @@ initialization
   RegisterTest(TTestLiveWrites);
   RegisterTest(TTestLiveTags);
   RegisterTest(TTestLiveReconnect);
+  RegisterTest(TTestLiveReadSomethingAlways);
   RegisterTest(TTestLiveCertificate);
   RegisterTest(TTestLiveZZRestore);
 

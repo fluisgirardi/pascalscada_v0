@@ -203,6 +203,9 @@ type
     FExploreDelayMs:Integer;
     FMaxItemsPerRequest:Integer;
     procedure SetMaxItemsPerRequest(AValue:Integer);
+    //Items of Items[First..] that go in ONE request (the item limit and the size of the reply);
+    //Bytes is what their reply takes. One item alone goes out whatever its size.
+    function PackReadRequest(const Items:TS7PlusMultiReadItemArray; First:Integer; out Bytes:Integer):Integer;
 
     function EnsureTypeInfoObjects:Boolean;
     //: Reads LID=1 of a DB to get its type-info RID (0 if the DB has no readable value) -
@@ -453,6 +456,13 @@ type
     //: Results[i].Ok, since the PLC can report individual items as failed within an
     //: otherwise-successful batch (e.g. one bad LID among several good ones).
     function ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):Boolean;
+    //: What is left in the LAST request ReadMultipleSymbolic would send for Items: how many more
+    //: items and how many bytes of reply (the reply of an item takes its ExpectedSize, or
+    //: S7PlusUnknownItemBytes, plus S7PlusReplyItemOverhead). With no items, a whole empty
+    //: request is left. Items added up to that room go in the same round-trip, at no cost.
+    procedure ReadRoomLeft(const Items:TS7PlusMultiReadItemArray; out ItemsLeft, BytesLeft:Integer);
+    //: The reply bytes an item takes in the budget of a request (see ReadRoomLeft).
+    class function ReadItemReplyBytes(const Item:TS7PlusMultiReadItem):Integer;
     //: Writes several symbolic items (any DBs/areas) in as few requests as possible
     //: (MaxItemsPerRequest items each). Result=false means a request failed as a whole (comm error, or the PLC rejected
     //: it outright): Results then holds what the earlier requests did, and the items of the
@@ -3688,12 +3698,58 @@ begin
   Result := true;
 end;
 
+class function TS7PlusConnection.ReadItemReplyBytes(const Item:TS7PlusMultiReadItem):Integer;
+begin
+  Result := Item.ExpectedSize;
+  if Result<=0 then Result := S7PlusUnknownItemBytes;
+  Inc(Result, S7PlusReplyItemOverhead);
+end;
+
+function TS7PlusConnection.PackReadRequest(const Items:TS7PlusMultiReadItemArray; First:Integer; out Bytes:Integer):Integer;
+var
+  Budget, ItemBytes:Integer;
+begin
+  //As many items as the item limit and the reply allow: a reply that does not fit one PDU
+  //(measured on a PLCSim: more than ~990 bytes) is answered with a fatal system event that
+  //ends the session. One item alone goes out whatever its size.
+  Budget := FTpduBytes-S7PlusFragmentOverhead-S7PlusReplyHeaderBytes;
+  Result := 0;
+  Bytes := 0;
+  while (First+Result<Length(Items)) and (Result<FMaxItemsPerRequest) do begin
+    ItemBytes := ReadItemReplyBytes(Items[First+Result]);
+    if (Result>0) and (Bytes+ItemBytes>Budget) then break;
+    Inc(Bytes, ItemBytes);
+    Inc(Result);
+  end;
+end;
+
+procedure TS7PlusConnection.ReadRoomLeft(const Items:TS7PlusMultiReadItemArray; out ItemsLeft, BytesLeft:Integer);
+var
+  First, N, Bytes:Integer;
+begin
+  First := 0;
+  N := 0;
+  Bytes := 0;
+  while First<Length(Items) do begin
+    N := PackReadRequest(Items, First, Bytes);
+    Inc(First, N);
+  end;
+  if Length(Items)=0 then begin
+    N := 0;
+    Bytes := 0;
+  end;
+  ItemsLeft := FMaxItemsPerRequest-N;
+  BytesLeft := FTpduBytes-S7PlusFragmentOverhead-S7PlusReplyHeaderBytes-Bytes;
+  if ItemsLeft<0 then ItemsLeft := 0;
+  if BytesLeft<0 then BytesLeft := 0;
+end;
+
 function TS7PlusConnection.ReadMultipleSymbolic(const Items:TS7PlusMultiReadItemArray; out Results:TS7PlusMultiReadResultArray):Boolean;
 var
   Chunk:TS7PlusMultiReadItemArray;
   ChunkResults:TS7PlusMultiReadResultArray;
   Payload, Resp:TBytes;
-  First, N, i, Bytes, ItemBytes, Budget:Integer;
+  First, N, i, Bytes:Integer;
 begin
   SetLength(Results, Length(Items));
   for i:=0 to High(Items) do begin
@@ -3704,20 +3760,7 @@ begin
 
   First := 0;
   while First<Length(Items) do begin
-    //As many items as the item limit and the reply allow: a reply that does not fit one PDU
-    //(measured on a PLCSim: more than ~990 bytes) is answered with a fatal system event that
-    //ends the session. One item alone goes out whatever its size.
-    Budget := FTpduBytes-S7PlusFragmentOverhead-S7PlusReplyHeaderBytes;
-    N := 0;
-    Bytes := 0;
-    while (First+N<Length(Items)) and (N<FMaxItemsPerRequest) do begin
-      ItemBytes := Items[First+N].ExpectedSize;
-      if ItemBytes<=0 then ItemBytes := S7PlusUnknownItemBytes;
-      Inc(ItemBytes, S7PlusReplyItemOverhead);
-      if (N>0) and (Bytes+ItemBytes>Budget) then break;
-      Inc(Bytes, ItemBytes);
-      Inc(N);
-    end;
+    N := PackReadRequest(Items, First, Bytes);
     SetLength(Chunk, N);
     for i:=0 to N-1 do
       Chunk[i] := Items[First+i];
