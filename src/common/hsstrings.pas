@@ -247,7 +247,7 @@ resourcestring
   SS7PTBExpandAll               = 'Expandir tudo';
   SS7PTBCollapseAll             = 'Recolher tudo';
   SS7PTBShowSkipped             = 'Mostrar as variáveis que não viram tag';
-  SS7PTBCreateElements          = 'Criar também os elementos dos arrays (TPLCBlockElement)';
+  SS7PTBCreateElements          = 'Criar também os itens dos elementos dos arrays';
   SS7PTBBytes                   = '%d bytes';
   SS7PTBAtLeastBytes            = 'ao menos %d bytes';
   SS7PTBAreaInputs              = 'Entradas (I)';
@@ -486,7 +486,7 @@ resourcestring
   SS7PTBExpandAll               = 'Expand all';
   SS7PTBCollapseAll             = 'Collapse all';
   SS7PTBShowSkipped             = 'Show the variables that do not become a tag';
-  SS7PTBCreateElements          = 'Also create the array elements (TPLCBlockElement)';
+  SS7PTBCreateElements          = 'Also create the items of the array elements';
   SS7PTBBytes                   = '%d bytes';
   SS7PTBAtLeastBytes            = 'at least %d bytes';
   SS7PTBAreaInputs              = 'Inputs (I)';

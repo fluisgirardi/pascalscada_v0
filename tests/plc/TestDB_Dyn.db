@@ -1,0 +1,28 @@
+﻿DATA_BLOCK "TestDB_Dyn"
+{ DB_Accessible_From_OPC_UA := 'FALSE' ;
+ DB_Accessible_From_Webserver := 'FALSE' ;
+ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      // ---- Valores que o PROPRIO CLP muda (FC_TestDynamics) / values the PLC itself changes
+      Counter : DInt := 0;
+      Blink : Bool := false;
+      Ramp : Real := 0.0;
+      Text : String[20] := 'TOCK';
+      Cycles : DInt := 0;
+      // ---- Comandos que o teste ESCREVE e o CLP obedece / commands the test WRITES and the PLC follows
+      Enable : Bool := true;
+      Step : DInt := 1;
+      Reset : Bool := false;
+      Echo_In : DInt := 0;
+      Echo_Out : DInt := 1;
+      // ---- Restaura os valores por elemento / restores the per element values
+      LoadPattern : Bool := false;
+      PatternLoaded : Bool := false;
+   END_VAR
+
+
+BEGIN
+
+END_DATA_BLOCK

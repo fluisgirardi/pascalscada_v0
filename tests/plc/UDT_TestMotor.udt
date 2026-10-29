@@ -1,0 +1,11 @@
+﻿TYPE "UDT_TestMotor"
+VERSION : 0.1
+   STRUCT
+      Run : Bool := true;
+      Speed : Real := 12.5;
+      Counter : DInt := 5000;
+      Status : Word := 16#00A0;
+      Name : String[20] := 'motor';
+   END_STRUCT;
+
+END_TYPE

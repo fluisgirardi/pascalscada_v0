@@ -1,0 +1,20 @@
+﻿DATA_BLOCK "TestDB_Big"
+{ DB_Accessible_From_OPC_UA := 'FALSE' ;
+ DB_Accessible_From_Webserver := 'FALSE' ;
+ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      // ---- Valores maiores que uma PDU (1024 bytes) / values bigger than one PDU (1024 bytes)
+      Arr_Big : Array[0..499] of DInt;
+      Arr_Bytes600 : Array[0..599] of Byte;
+      Texts : Array[0..9] of Struct
+         Name : String := 'text';
+         Value : DInt := 9000;
+      END_STRUCT;
+   END_VAR
+
+
+BEGIN
+
+END_DATA_BLOCK
