@@ -697,6 +697,10 @@ begin
     FAccessLevel := 0;
     FLegitimated := false;
     FSessionTainted := false;
+    //the last session died on the wire (a desynchronised stream): a new COTP connection over the
+    //same TCP connection would read the leftovers of the old one
+    if FConnection.StreamLost then
+      if not RestartSession then exit;
     FConnection.Connect(FPassword);
   end;
 
