@@ -125,6 +125,7 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
     Align = alClient
     ReadOnly = True
     TabOrder = 1
+    OnExpanding = tvTagsExpanding
     OnKeyDown = tvTagsKeyDown
     OnMouseDown = tvTagsMouseDown
     Options = [tvoAutoItemHeight, tvoHideSelection, tvoReadOnly, tvoRowSelect, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
