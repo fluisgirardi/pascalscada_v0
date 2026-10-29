@@ -153,6 +153,14 @@ type
   end;
   TS7PlusTypeTimeArray = array of TS7PlusTypeTime;
 
+  //-- A DB browsed (by a tag's path or by BrowseDB, e.g. the Tag Builder) and its type-info object:
+  //-- the program is checked against what these looked like.
+  TS7PlusWatchedDB = record
+    DBNumber:Cardinal;
+    TiRid:Cardinal;
+  end;
+  TS7PlusWatchedDBArray = array of TS7PlusWatchedDB;
+
   { TS7CommPlusDriver }
 
   TS7CommPlusDriver = class(TProtocolDriver)
@@ -190,6 +198,7 @@ type
     FProgramKnown:Boolean;
     FProgramSignature:String;
     FTypeTimes:TS7PlusTypeTimeArray;
+    FWatch:TS7PlusWatchedDBArray;
     FMaxItemsPerRequest, FMaxTagsPerScan, FMaxItemsPerSubscription:Integer;
 
     function GetUseTLS:Boolean;
@@ -202,6 +211,11 @@ type
     procedure SetProgramCheckMs(AValue:Integer);
     //: RefreshCaches without the I/O lock, for the scan thread (which has it already).
     procedure DropCaches;
+    //: A DB was browsed: it is watched from now on, and what its type looked like is learned
+    //: (with the list of DBs, if that is not known yet).
+    procedure LearnProgram(DBNumber, TiRid:Cardinal);
+    //: Compares the list of DBs just read, and the time of every watched type, with what they were.
+    procedure CheckProgramNow(const Blocks:TS7PlusDataBlockInfoArray);
     procedure SetMaxTagsPerScan(AValue:Integer);
     procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
@@ -271,6 +285,9 @@ type
     //: The first observation is the baseline. A difference drops the caches (DropCaches).
     //: True when the program changed.
     function NoteProgram(const Signature:String; const Times:TS7PlusTypeTimeArray):Boolean;
+    //: Puts a DB on the list of the watched ones (no I/O) and says how many there are (tests).
+    procedure WatchDB(DBNumber, TiRid:Cardinal);
+    function WatchedDBCount:Integer;
     //: Reads that observation from the PLC at most every ProgramCheckIntervalMs and calls
     //: NoteProgram: 1 + N small requests (N = DBs kept browsed).
     procedure CheckProgramChange(Now_:QWord);
@@ -854,6 +871,7 @@ begin
   FDBCache[idx].DBNumber := DBNumber;
   FDBCache[idx].TiRid := FConnection.LastBrowseTiRid;
   FDBCache[idx].Vars := Vars;
+  LearnProgram(DBNumber, FConnection.LastBrowseTiRid);
 end;
 
 function TS7CommPlusDriver.GetCachedAreaVars(AreaRID, TiRid:Cardinal; const AreaName:String; var Cache:TS7PlusVarInfoArray; var Browsed:Boolean; out Vars:TS7PlusVarInfoArray):Boolean;
@@ -2163,9 +2181,10 @@ begin
       Result := FailResult;
       exit;
     end;
-    if FConnection.BrowseDB(DBNumber, Vars) then
-      Result := ioOk
-    else
+    if FConnection.BrowseDB(DBNumber, Vars) then begin
+      Result := ioOk;
+      LearnProgram(DBNumber, FConnection.LastBrowseTiRid);
+    end else
       Result := FailResult;
   finally
     UnlockDriverIO;
@@ -2249,6 +2268,7 @@ begin
     FProgramKnown := false;
     FProgramSignature := '';
     SetLength(FTypeTimes, 0);
+    SetLength(FWatch, 0);
   end;
 end;
 
@@ -2307,32 +2327,98 @@ begin
   end;
 end;
 
+procedure TS7CommPlusDriver.WatchDB(DBNumber, TiRid:Cardinal);
+var
+  i, n:Integer;
+begin
+  if TiRid=0 then exit;
+  for i:=0 to High(FWatch) do
+    if FWatch[i].DBNumber=DBNumber then begin
+      FWatch[i].TiRid := TiRid;
+      exit;
+    end;
+  n := Length(FWatch);
+  SetLength(FWatch, n+1);
+  FWatch[n].DBNumber := DBNumber;
+  FWatch[n].TiRid := TiRid;
+end;
+
+function TS7CommPlusDriver.WatchedDBCount:Integer;
+begin
+  Result := Length(FWatch);
+end;
+
+procedure TS7CommPlusDriver.LearnProgram(DBNumber, TiRid:Cardinal);
+var
+  Blocks:TS7PlusDataBlockInfoArray;
+  Value:TBytes;
+  T:TS7PlusTypeTime;
+  i, n:Integer;
+  Known:Boolean;
+begin
+  if (FConnection=nil) or (TiRid=0) then exit;
+  WatchDB(DBNumber, TiRid);
+
+  //the list of DBs the program had when the first one was browsed
+  if not FProgramKnown then
+    if FConnection.ListDataBlocks(Blocks) then begin
+      FProgramKnown := true;
+      FProgramSignature := S7PlusBlockSignature(Blocks);
+    end;
+
+  //the time of this type, learned once
+  Known := false;
+  for i:=0 to High(FTypeTimes) do
+    if FTypeTimes[i].TiRid=TiRid then Known := true;
+  if Known then exit;
+  if not FConnection.ReadTypeInfoModTime(TiRid, Value) then exit;
+  T.TiRid := TiRid;
+  T.Time := Value;
+  T.HasTime := Length(Value)>0;
+  n := Length(FTypeTimes);
+  SetLength(FTypeTimes, n+1);
+  FTypeTimes[n] := T;
+end;
+
+procedure TS7CommPlusDriver.CheckProgramNow(const Blocks:TS7PlusDataBlockInfoArray);
+var
+  Times:TS7PlusTypeTimeArray;
+  Empty:TS7PlusTypeTimeArray;
+  i, n:Integer;
+  Value:TBytes;
+  Sig:String;
+begin
+  if FConnection=nil then exit;
+  Sig := S7PlusBlockSignature(Blocks);
+  SetLength(Times, 0);
+  SetLength(Empty, 0);
+  for i:=0 to High(FWatch) do begin
+    if not FConnection.ReadTypeInfoModTime(FWatch[i].TiRid, Value) then exit;   //a failed request is not a change
+    n := Length(Times);
+    SetLength(Times, n+1);
+    Times[n].TiRid := FWatch[i].TiRid;
+    Times[n].Time := Value;
+    Times[n].HasTime := Length(Value)>0;
+  end;
+  if NoteProgram(Sig, Times) then begin
+    ConnDebug(Self, 'CheckProgramNow: o programa do CLP mudou - os tipos serao lidos de novo e os tags resolvidos de novo.');
+    //the list just read is the new baseline
+    NoteProgram(Sig, Empty);
+  end;
+end;
+
 procedure TS7CommPlusDriver.CheckProgramChange(Now_:QWord);
 var
   Blocks:TS7PlusDataBlockInfoArray;
-  Times:TS7PlusTypeTimeArray;
-  i, n:Integer;
-  Value:TBytes;
 begin
   if (FProgramCheckMs<=0) or (FConnection=nil) or (not FConnection.Connected) then exit;
   //nothing browsed, nothing to keep right
-  if Length(FDBCache)=0 then exit;
+  if Length(FWatch)=0 then exit;
   if (FLastProgramCheck<>0) and (Int64(Now_)-Int64(FLastProgramCheck)<FProgramCheckMs) then exit;
   FLastProgramCheck := Now_;
 
   if not FConnection.ListDataBlocks(Blocks) then exit;
-  SetLength(Times, 0);
-  for i:=0 to High(FDBCache) do begin
-    if FDBCache[i].TiRid=0 then continue;
-    if not FConnection.ReadTypeInfoModTime(FDBCache[i].TiRid, Value) then exit;   //a failed request is not a change
-    n := Length(Times);
-    SetLength(Times, n+1);
-    Times[n].TiRid := FDBCache[i].TiRid;
-    Times[n].Time := Value;
-    Times[n].HasTime := Length(Value)>0;
-  end;
-  if NoteProgram(S7PlusBlockSignature(Blocks), Times) then
-    ConnDebug(Self, 'CheckProgramChange: o programa do CLP mudou - enderecos dos tags serao resolvidos de novo.');
+  CheckProgramNow(Blocks);
 end;
 
 function TS7CommPlusDriver.ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
@@ -2344,9 +2430,12 @@ begin
       Result := FailResult;
       exit;
     end;
-    if FConnection.ListDataBlocks(Blocks) then
-      Result := ioOk
-    else
+    if FConnection.ListDataBlocks(Blocks) then begin
+      Result := ioOk;
+      //a download since the DBs were last browsed (or since this was last asked): the browse
+      //that follows must not use the old types
+      CheckProgramNow(Blocks);
+    end else
       Result := FailResult;
   finally
     UnlockDriverIO;
