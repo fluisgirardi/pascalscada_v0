@@ -126,6 +126,11 @@ type
     OnChange:Boolean;
     Subscribed:Boolean;   //covered by a live subscription (cleared when the session is lost)
     SubFallback:Boolean;  //the subscription could not be created: polled instead, slowly
+    //-- A new subscription: its current value is read once, by DoScanRead. The PLC is not trusted
+    //-- to send the initial value of a subscription it may think it already has (a PLCSim reuses
+    //-- the object id of the subscription of a session that was cut, and then says nothing until
+    //-- the value changes - the tag kept the value it had before the outage for as long as that took).
+    InitialRead:Boolean;
     SubRefBase:Cardinal;  //RefId of this entry's first item; a composite's member j is SubRefBase+j
   end;
 
@@ -495,9 +500,9 @@ type
     //: the size of the reply, see MaxItemsPerRequest): the room is free, so those tags get
     //: fresher values for no extra round-trip. They are taken by the time since their last read,
     //: the oldest first; one that does not fit is skipped. A round with nothing due reads nothing,
-    //: and tags that are on change are not touched. Unlike the other drivers (S7 ISO, Modbus) the
-    //: default here is false. @seealso(TProtocolDriver.ReadSomethingAlways)
-    property ReadSomethingAlways default false;
+    //: and tags that are on change are not touched. Default true, as in the other drivers
+    //: (S7 ISO, Modbus). @seealso(TProtocolDriver.ReadSomethingAlways)
+    property ReadSomethingAlways default true;
     //: When true no write reaches the PLC: every write (tags, WriteMultipleSymbolic through the
     //: tags) is answered with ioReadOnlyProtocol. @seealso(TProtocolDriver.ReadOnly)
     property ReadOnly;
@@ -588,7 +593,7 @@ begin
   inherited Create(AOwner);
   FConnection := nil;
   FUseTLS := true;
-  PReadSomethingAlways := false;
+  PReadSomethingAlways := true;
   PDeliverReadAhead := true;      //DoScanRead reads tags ahead of their time: their values must reach the tags
 
   FSubCycleMs := 100;
@@ -1531,6 +1536,7 @@ var
   ok:Boolean;
   NeedLen:Integer;
   Rate:Int64;
+  InitRead:Boolean;
   RoomItems, RoomBytes:Integer;
   Cands:TS7PlusFillCandidateArray;
   Fillers:TIntegerDynArray;
@@ -1605,13 +1611,14 @@ begin
   for i:=0 to High(FScanList) do
     if FScanList[i].Resolved and (not FScanList[i].IsDerived) then begin
       Rate := FScanList[i].UpdateRate;
-      if FScanList[i].OnChange then begin
+      InitRead := FScanList[i].OnChange and FScanList[i].Subscribed and FScanList[i].InitialRead;
+      if FScanList[i].OnChange and (not InitRead) then begin
         //Delivered by notifications, polled only if there is no subscription for it.
         if not FScanList[i].SubFallback then continue;
         Rate := SubFallbackPollMs;
       end;
       Elapsed := Int64(Now_-FScanList[i].LastScanTimeStamp) - Rate;
-      if (FScanList[i].LastScanTimeStamp=0) or (Elapsed>=0) then begin
+      if InitRead or (FScanList[i].LastScanTimeStamp=0) or (Elapsed>=0) then begin
         SetLength(DueIndices, Length(DueIndices)+1);
         DueIndices[High(DueIndices)] := i;
         if Length(DueIndices)>=FMaxTagsPerScan then break;
@@ -1686,6 +1693,11 @@ begin
     exit;
   end;
 
+  //(an initial read that failed stays due: it is tried again next round)
+  for i:=0 to High(DueIndices) do
+    if FScanList[DueIndices[i]].InitialRead and (FScanList[DueIndices[i]].LastResult=ioOk) then
+      FScanList[DueIndices[i]].InitialRead := false;
+
   for i:=0 to High(Items) do begin
     EntryIdx := Owners[i].EntryIdx;
     if (i>High(Results)) or (not Results[i].Ok) then begin
@@ -1742,6 +1754,7 @@ begin
   if Result then begin
     FScanList[Idx].SubRefBase := RefBase;
     FScanList[Idx].Subscribed := true;
+    FScanList[Idx].InitialRead := true;
   end;
 end;
 
@@ -2075,7 +2088,6 @@ begin
 
   values.ClkMonotonicTStamp := FScanList[Idx].LastScanTimeStamp;
   values.LastQueryResult := FScanList[Idx].LastResult;
-
   if FScanList[Idx].LastResult=ioOk then begin
     Len := Length(FScanList[Idx].Data);
     if FScanList[Idx].IsComposite and (TagRec.Size>0) and (TagRec.Size<Len) then

@@ -190,6 +190,8 @@ type
     }
     {$ENDIF}
     PDeliverReadAhead:Boolean;
+    //The last pass of GetMultipleValues found the port closed (see PortRecovered there).
+    PPortWasInError:Boolean;
 
     {$IFDEF PORTUGUES}
     //: Faltando comentário
@@ -1650,7 +1652,7 @@ var
   tr:TTagRec;
   remainingMs, waitDue:Int64;
   ScanReadRec:TScanReadRec;
-  doneOne, PortError:Boolean;
+  doneOne, PortError, PortRecovered:Boolean;
   ErrorStatus: TProtocolIOResult;
 begin
   doneOne:=false;
@@ -1683,6 +1685,8 @@ begin
     end;
 
     IntTagCount := TagCount;
+    PortRecovered := PPortWasInError and (not PortError);
+    PPortWasInError := PortError;
 
     for t:=0 to TagCount-1 do begin
       if Supports(Tag[t], IScanableTagInterface) then begin
@@ -1720,6 +1724,15 @@ begin
               ScanReadRec.RealOffset:=0;
             end else
               DoGetValue(tr, ScanReadRec);
+
+            //The port came back after an outage: the stamp of what the driver read can be older than
+            //the stamp of the last error handed to the tag (the error is stamped when it is handed
+            //over, the pass may have started with the port still closed). The tag would drop that
+            //value and, for a tag that is only told when its value changes, keep the old one for
+            //good. The first pass after the outage hands over what the driver has, newer or not.
+            if PortRecovered and (ScanReadRec.LastQueryResult=ioOk) and
+               (ScanReadRec.ClkMonotonicTStamp<=tagiface.GetLastUpdateTimestamp) then
+              ScanReadRec.ClkMonotonicTStamp:=tagiface.GetLastUpdateTimestamp+1;
 
             if (remainingMs<=0) and (ScanReadRec.ClkMonotonicTStamp<=tagiface.GetLastUpdateTimestamp) then begin
               //A tag whose time has come and that the driver has not read yet. It must not be left
