@@ -5,7 +5,7 @@ VERSION : 0.1
 BEGIN
 	// Contador, pisca-pisca, rampa e texto que mudam sozinhos / counter, blinker, ramp and text that change by themselves
 	IF "TestDB_Dyn".Enable THEN
-	  "TestDB_Dyn".Counter := "TestDB_Dyn".Counter + "TestDB_Dyn".Step;
+	  "TestDB_Dyn".CountValue := "TestDB_Dyn".CountValue + "TestDB_Dyn".StepSize;
 	  "TestDB_Dyn".Cycles := "TestDB_Dyn".Cycles + 1;
 	  IF "TestDB_Dyn".Cycles >= 50 THEN
 	    "TestDB_Dyn".Cycles := 0;
@@ -22,10 +22,10 @@ BEGIN
 	  END_IF;
 	END_IF;
 	
-	// Escrever TRUE em Reset zera o contador e o CLP desliga o bit / writing TRUE to Reset clears the counter and the PLC clears the bit
-	IF "TestDB_Dyn".Reset THEN
-	  "TestDB_Dyn".Counter := 0;
-	  "TestDB_Dyn".Reset := false;
+	// Escrever TRUE em ResetCmd zera o contador e o CLP desliga o bit / writing TRUE to ResetCmd clears the counter and the PLC clears the bit
+	IF "TestDB_Dyn".ResetCmd THEN
+	  "TestDB_Dyn".CountValue := 0;
+	  "TestDB_Dyn".ResetCmd := false;
 	END_IF;
 	
 	// O CLP responde ao que foi escrito (ida e volta) / the PLC answers what was written (round trip)

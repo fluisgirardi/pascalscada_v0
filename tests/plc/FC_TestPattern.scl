@@ -26,7 +26,7 @@ BEGIN
 	  FOR #i := 0 TO 3 DO
 	    "TestDB_Opt".Motors[#i].Run := (#i MOD 2) = 0;
 	    "TestDB_Opt".Motors[#i].Speed := INT_TO_REAL(#i) * 10.0 + 0.5;
-	    "TestDB_Opt".Motors[#i].Counter := 5000 + #i;
+	    "TestDB_Opt".Motors[#i].Total := 5000 + #i;
 	    "TestDB_Opt".Motors[#i].Name := 'motor';
 	  END_FOR;
 	  FOR #i := 0 TO 2 DO
@@ -47,7 +47,7 @@ BEGIN
 	  FOR #i := 0 TO 3 DO
 	    "TestDB_NonOpt".Motors[#i].Run := (#i MOD 2) = 0;
 	    "TestDB_NonOpt".Motors[#i].Speed := INT_TO_REAL(#i) * 10.0 + 0.5;
-	    "TestDB_NonOpt".Motors[#i].Counter := 5000 + #i;
+	    "TestDB_NonOpt".Motors[#i].Total := 5000 + #i;
 	    "TestDB_NonOpt".Motors[#i].Name := 'motor';
 	  END_FOR;
 	  FOR #i := 0 TO 2 DO

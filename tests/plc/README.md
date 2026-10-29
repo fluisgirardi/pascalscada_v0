@@ -20,9 +20,6 @@ the data the live tests of the S7CommPlus driver and of the Tag Builder need. Ev
 | `FC_TestDynamics.scl` | Faz `TestDB_Dyn` mudar sozinho / makes `TestDB_Dyn` change by itself |
 | `FC_TestPattern.scl` | Carrega os valores por elemento dos arrays de estruturas (a declaração só dá o mesmo valor a todos) / loads the per element values of the arrays of structures |
 
-`FB_TestDynamics.scl` é de uma versão anterior e **pode ser apagado**; vale o `FC_TestDynamics.scl`.
-`FB_TestDynamics.scl` is from an earlier version and **can be deleted**; `FC_TestDynamics.scl` replaces it.
-
 ## Como importar / How to import
 
 1. No TIA Portal: *Fontes externas* → *Adicionar nova fonte externa* → escolha os 7 arquivos. / *External source files* → *Add new external file* → pick the 7 files.
@@ -67,8 +64,8 @@ To restore after a test that wrote: write `TRUE` to `"TestDB_Dyn".LoadPattern`.
 | Array de estruturas **dentro** de estrutura (o Tag Builder não importa) / nested array of structures | `Mix.Deep[0..2].x`, `.y` | `300+i`, `-i` (depois do padrão / after the pattern; antes: `7`, `8`) |
 | Array de estruturas, sem texto (passo de 8 bytes no layout clássico) / array of structures | `Rec_Small[0..4].Dint1`, `.aBool`, `.aInt` | `1000+i`, `i mod 2 = 1`, `-10-i` |
 | Array de estruturas, com STRING (passo de 264 bytes) | `Rec_Text[0..19].Dint1`, `.aBool`, `.aInt`, `.Name` | `2000+i`, `i mod 3 = 0`, `100+i`, `'record'` |
-| Array de UDT | `Motors[0..3].Run`, `.Speed`, `.Counter`, `.Name` | `i mod 2 = 0`, `10*i+0.5`, `5000+i`, `'motor'` |
-| UDT solto / a single UDT | `Motor_One.Run`, `.Speed`, `.Counter`, `.Status`, `.Name` | `true`, `12.5`, `5000`, `16#00A0`, `'motor'` |
+| Array de UDT | `Motors[0..3].Run`, `.Speed`, `.Total`, `.Name` | `i mod 2 = 0`, `10*i+0.5`, `5000+i`, `'motor'` |
+| UDT solto / a single UDT | `Motor_One.Run`, `.Speed`, `.Total`, `.Status`, `.Name` | `true`, `12.5`, `5000`, `16#00A0`, `'motor'` |
 
 (`i` é o índice do elemento. Os valores por elemento dos arrays de estruturas vêm do `FC_TestPattern`.)
 (`i` is the element index. The per element values of the arrays of structures come from `FC_TestPattern`.)
@@ -92,20 +89,20 @@ bigger than the PDU).
 
 | Variável | Quem escreve | Comportamento / Behaviour |
 |---|---|---|
-| `Counter` (DInt) | CLP | `+ Step` a cada ciclo de OB1 / per OB1 cycle; zerado por `Reset` |
+| `CountValue` (DInt) | CLP | `+ StepSize` a cada ciclo de OB1 / per OB1 cycle; zerado por `ResetCmd` |
 | `Blink` (Bool) | CLP | inverte a cada 50 ciclos / flips every 50 cycles |
 | `Text` (String[20]) | CLP | `'TICK'` quando `Blink`, `'TOCK'` senão / when not |
 | `Ramp` (Real) | CLP | `+0.5` por ciclo, volta a `0.0` acima de `100.0` / per cycle, back to 0.0 above 100.0 |
 | `Cycles` (DInt) | CLP | conta os ciclos até 50 / counts cycles up to 50 |
-| `Enable` (Bool, `true`) | teste / test | `false` congela `Counter`, `Blink`, `Text`, `Ramp` / freezes them |
-| `Step` (DInt, `1`) | teste | passo do `Counter` / step of `Counter` |
-| `Reset` (Bool) | teste | `TRUE` zera `Counter`; o CLP volta o bit a `false` / the PLC clears the bit |
+| `Enable` (Bool, `true`) | teste / test | `false` congela `CountValue`, `Blink`, `Text`, `Ramp` / freezes them |
+| `StepSize` (DInt, `1`) | teste | passo do `CountValue` / step of `CountValue` |
+| `ResetCmd` (Bool) | teste | `TRUE` zera `CountValue`; o CLP volta o bit a `false` / the PLC clears the bit |
 | `Echo_In` / `Echo_Out` (DInt) | teste / CLP | `Echo_Out = Echo_In + 1` (ida e volta / round trip) |
 | `LoadPattern` (Bool) | teste | `TRUE` recarrega os valores por elemento; o CLP volta o bit a `false` |
 | `PatternLoaded` (Bool) | CLP | `true` depois do primeiro carregamento / after the first load |
 
-O ciclo de OB1 em RUN é de poucos ms; para ver mudanças devagar use `Enable`/`Step`, ou o `Ramp`.
-OB1 cycles in RUN take a few ms; to watch changes slowly use `Enable`/`Step`, or `Ramp`.
+O ciclo de OB1 em RUN é de poucos ms; para ver mudanças devagar use `Enable`/`StepSize`, ou o `Ramp`.
+OB1 cycles in RUN take a few ms; to watch changes slowly use `Enable`/`StepSize`, or `Ramp`.
 
 ## Áreas de processo (I, Q, M) / Process areas
 
