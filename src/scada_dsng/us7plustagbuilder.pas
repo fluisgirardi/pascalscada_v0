@@ -5,14 +5,17 @@
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   A lista de variáveis é lida @bold(online), do CLP: TS7CommPlusDriver.ListDataBlocks
-  para saber quais DBs existem e TS7CommPlusDriver.BrowseDB para as variáveis de cada
-  um (mais as áreas I, Q e M, se pedido). Isso tem duas consequências:
+  para saber quais DBs existem (mais as áreas I, Q e M, se pedido) e
+  TS7CommPlusDriver.BrowseDB para as variáveis de cada um. Só o primeiro nível (os DBs e as
+  áreas) é lido ao clicar em "Ler as variáveis do CLP"; as variáveis de um DB são lidas
+  quando ele é aberto na árvore (no +) ou marcado. Isso tem três consequências:
 
   @unorderedList(
     @item(A porta de comunicação do driver precisa estar ativa (Active=true) quando o
           assistente é aberto. Sem ela o assistente avisa e não lê nada.)
-    @item(A leitura é síncrona: a IDE fica parada enquanto o CLP é navegado, o que num
-          CLP com muitos DBs leva alguns segundos.)
+    @item(A leitura é síncrona: a IDE fica parada enquanto o CLP é navegado, mas só pelo
+          tempo de um DB de cada vez.)
+    @item(O filtro e "Expandir tudo" valem para os DBs já carregados.)
   )
 
   As variáveis aparecem numa árvore: DB (ou área), depois as estruturas e as variáveis
@@ -34,14 +37,18 @@
   @author(Fabio Luis Girardi <fabio@pascalscada.com>)
 
   The variable list is read @bold(online), from the PLC: TS7CommPlusDriver.ListDataBlocks
-  tells which DBs exist and TS7CommPlusDriver.BrowseDB gives the variables of each one
-  (plus the I, Q and M areas, if asked). This has two consequences:
+  tells which DBs exist (plus the I, Q and M areas, if asked) and
+  TS7CommPlusDriver.BrowseDB gives the variables of each one. Only the first level (the DBs
+  and the areas) is read when "Read the variables from the PLC" is pressed; the variables of
+  a DB are read when it is opened on the tree (the +) or checked. This has three
+  consequences:
 
   @unorderedList(
     @item(The communication port of the driver must be active (Active=true) when the
           wizard is opened. Without it the wizard warns and reads nothing.)
-    @item(The read is synchronous: the IDE is frozen while the PLC is browsed, which on
-          a PLC with many DBs takes a few seconds.)
+    @item(The read is synchronous: the IDE is frozen while the PLC is browsed, but only
+          for the time of one DB at a time.)
+    @item(The filter and "Expand all" work on the DBs already loaded.)
   )
 
   The variables show on a tree: DB (or area), then the structures and the variables
@@ -82,7 +89,23 @@ type
   TS7PlusNodeInfo = class
   public
     Index:LongInt;
+    Block:LongInt;   //>=0: the node is the root of that block (a DB or an area)
     Key:String;      //the path up to this level, to restore what was expanded
+  end;
+
+  //a DB or an area of the first level: its variables are only read when it is opened
+  TS7PlusBlockEntry = record
+    Key:String;                 //first level of the paths of its variables (DB name or number, area)
+    IsArea:Boolean;
+    Number:Cardinal;            //DB number
+    DBName:String;              //name given to the paths ('' = the DB<number> the PLC uses)
+    AreaRID, AreaTiRid:Cardinal;
+    AreaName:String;
+    AccessArea:Cardinal;
+    Loaded:Boolean;
+    First, Count:LongInt;       //its variables on FCandidates
+    Cands:TS7PlusCandidateArray;//the same, to measure the structures of this block only
+    SizeStr:String;             //size of a DB, once loaded
   end;
 
   { TfrmS7PlusTagBuilder }
@@ -123,6 +146,7 @@ type
     procedure FilterChanged(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure tvTagsExpanding(Sender: TObject; Node: TTreeNode; var AllowExpansion: Boolean);
     procedure tvTagsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tvTagsMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -133,16 +157,22 @@ type
     FInfos:TObjectList;          //owns the TS7PlusNodeInfo of the nodes
     FStateImages:TImageList;     //0 = unchecked, 1 = checked, 2 = partially checked
     FShownTags:LongInt;          //taggable variables on the tree now
-    FBlocksRead:LongInt;
+    FBlocks:array of TS7PlusBlockEntry;
+    FSymbolic:Boolean;           //the DB names of the list read, as asked when it was read
+    FLoading:Boolean;            //a block is being read
     FSkippedCount:LongInt;
     FDriverLog:TStringList;      //what the driver said while the wizard talked to the PLC
     procedure DriverDebug(Sender:TObject; const Msg:String);
-    procedure ShowProgress(aDone, aTotal:LongInt; const aWhat:String);
     function  WaitForConnection(aTimeoutMs:LongInt):Boolean;
     procedure MakeStateImages;
     function  InfoOf(aNode:TTreeNode):TS7PlusNodeInfo;
     function  IsTaggable(aNode:TTreeNode):Boolean;
     procedure RebuildTree;
+    procedure BuildBlock(aBlock:LongInt; aRoot:TTreeNode);
+    function  LoadBlock(aBlock:LongInt; aRoot:TTreeNode):Boolean;
+    function  IsPending(aNode:TTreeNode):Boolean;
+    function  RootText(aBlock:LongInt):String;
+    procedure UpdateStatus;
     procedure RestoreExpansion(aExpanded:TStringList; aExpandAll:Boolean);
     procedure SaveExpansion(aExpanded:TStringList);
     procedure UpdateStates;
@@ -154,9 +184,8 @@ type
     procedure UpdateSelectedCount;
     function  PassFilters(aIndex:LongInt):Boolean;
     function  Decoration(aIndex:LongInt):String;
-    function  SizeText(const aPath:String; aIsDBRoot:Boolean):String;
+    function  SizeText(const aCands:TS7PlusCandidateArray; const aPath:String; aIsDBRoot:Boolean):String;
     function  AreaLabel(const aArea:String):String;
-    procedure AddVars(const Vars:TS7PlusVarInfoArray; const aBlockName:String; aAccessArea:Cardinal);
   public
     {$IFDEF PORTUGUES}
     //: Driver de protocolo de onde as variáveis serão lidas.
@@ -199,7 +228,6 @@ procedure TfrmS7PlusTagBuilder.FormCreate(Sender: TObject);
 begin
   FInfos:=TObjectList.Create(true);
   FDriverLog:=TStringList.Create;
-  FBlocksRead:=0;
   FSkippedCount:=0;
   FShownTags:=0;
   MakeStateImages;
@@ -306,12 +334,13 @@ begin
 end;
 
 //bytes of a DB or a structure, as the wizard shows them
-function TfrmS7PlusTagBuilder.SizeText(const aPath: String; aIsDBRoot: Boolean): String;
+function TfrmS7PlusTagBuilder.SizeText(const aCands: TS7PlusCandidateArray;
+  const aPath: String; aIsDBRoot: Boolean): String;
 var
   size: LongInt;
   exact: Boolean;
 begin
-  size:=S7PlusContainerSize(FCandidates, aPath, aIsDBRoot, exact);
+  size:=S7PlusContainerSize(aCands, aPath, aIsDBRoot, exact);
   if exact then Result:=Format(SS7PTBBytes,[size])
   else Result:=Format(SS7PTBAtLeastBytes,[size]);
 end;
@@ -365,13 +394,80 @@ var
 begin
   for c:=0 to tvTags.Items.Count-1 do begin
     n:=tvTags.Items[c];
-    if not n.HasChildren then continue;
+    if (not n.HasChildren) or IsPending(n) then continue;
     if aExpandAll or (aExpanded.IndexOf(InfoOf(n).Key)>=0) then
       n.Expanded:=true;
   end;
 end;
 
+//a node of a block whose variables were not read yet: it has one placeholder child, to show the +
+function TfrmS7PlusTagBuilder.IsPending(aNode: TTreeNode): Boolean;
+var
+  info:TS7PlusNodeInfo;
+begin
+  info:=InfoOf(aNode);
+  Result:=Assigned(info) and (info.Block>=0) and (not FBlocks[info.Block].Loaded);
+end;
+
+function TfrmS7PlusTagBuilder.RootText(aBlock: LongInt): String;
+begin
+  Result:=FBlocks[aBlock].Key;
+  if FBlocks[aBlock].IsArea then
+    Result:=Result+' : '+AreaLabel(Result)
+  else if FBlocks[aBlock].Loaded then
+    Result:=Result+' : '+FBlocks[aBlock].SizeStr;
+end;
+
+//the first level is always there; the variables of a block hang from its node once it is read
 procedure TfrmS7PlusTagBuilder.RebuildTree;
+var
+  c: LongInt;
+  info: TS7PlusNodeInfo;
+  node: TTreeNode;
+  expanded: TStringList;
+  aFilter: Boolean;
+begin
+  expanded:=TStringList.Create;
+  try
+    SaveExpansion(expanded);
+    aFilter:=Trim(edtFilter.Text)<>'';
+
+    tvTags.Items.BeginUpdate;
+    try
+      tvTags.Items.Clear;
+      FInfos.Clear;
+      FShownTags:=0;
+
+      for c:=0 to High(FBlocks) do begin
+        info:=TS7PlusNodeInfo.Create;
+        info.Key:=FBlocks[c].Key;
+        info.Index:=-1;
+        info.Block:=c;
+        FInfos.Add(info);
+
+        node:=tvTags.Items.AddChild(nil, RootText(c));
+        node.Data:=info;
+        if FBlocks[c].Loaded then begin
+          BuildBlock(c, node);
+          //a filter shows what it found
+          if aFilter and (not node.HasChildren) then node.Delete;
+        end else
+          tvTags.Items.AddChild(node, '...');
+      end;
+    finally
+      tvTags.Items.EndUpdate;
+    end;
+
+    //a filter shows what it found; without one, only what the user had opened stays open
+    RestoreExpansion(expanded, aFilter);
+    UpdateStates;
+  finally
+    expanded.Free;
+  end;
+end;
+
+//the structures and variables of a block that was read, under its node
+procedure TfrmS7PlusTagBuilder.BuildBlock(aBlock: LongInt; aRoot: TTreeNode);
 var
   c, k, p: LongInt;
   levels: TStringArray;
@@ -380,82 +476,176 @@ var
   aParent, node: TTreeNode;
   info: TS7PlusNodeInfo;
   key, aText: String;
-  expanded: TStringList;
 begin
-  expanded:=TStringList.Create;
   structIdx:=TStringList.Create;
   nodes:=TStringList.Create;
+  tvTags.Items.BeginUpdate;
   try
     structIdx.Sorted:=true;
     structIdx.Duplicates:=dupIgnore;
     nodes.Sorted:=true;
     nodes.Duplicates:=dupIgnore;
+    nodes.AddObject(FBlocks[aBlock].Key, aRoot);
 
-    SaveExpansion(expanded);
+    //the type of a structure is shown on its level
+    for c:=FBlocks[aBlock].First to FBlocks[aBlock].First+FBlocks[aBlock].Count-1 do
+      if FCandidates[c].Skip=srNotAScalar then
+        structIdx.AddObject(FCandidates[c].Path, TObject(PtrInt(c)));
 
-    tvTags.Items.BeginUpdate;
-    try
-      tvTags.Items.Clear;
-      FInfos.Clear;
-      FShownTags:=0;
+    for c:=FBlocks[aBlock].First to FBlocks[aBlock].First+FBlocks[aBlock].Count-1 do begin
+      if not PassFilters(c) then continue;
 
-      //the type of a structure is shown on its level
-      for c:=0 to High(FCandidates) do
-        if FCandidates[c].Skip=srNotAScalar then
-          structIdx.AddObject(FCandidates[c].Path, TObject(PtrInt(c)));
+      levels:=S7PlusSplitPath(FCandidates[c].Path);
+      aParent:=nil;
+      key:='';
+      for k:=0 to High(levels) do begin
+        if key<>'' then key:=key+'.';
+        key:=key+levels[k];
 
-      for c:=0 to High(FCandidates) do begin
-        if not PassFilters(c) then continue;
+        if nodes.Find(key, p) then
+          node:=TTreeNode(nodes.Objects[p])
+        else begin
+          info:=TS7PlusNodeInfo.Create;
+          info.Key:=key;
+          info.Index:=-1;
+          info.Block:=-1;
+          FInfos.Add(info);
 
-        levels:=S7PlusSplitPath(FCandidates[c].Path);
-        aParent:=nil;
-        key:='';
-        for k:=0 to High(levels) do begin
-          if key<>'' then key:=key+'.';
-          key:=key+levels[k];
-
-          if nodes.Find(key, p) then
-            node:=TTreeNode(nodes.Objects[p])
-          else begin
-            info:=TS7PlusNodeInfo.Create;
-            info.Key:=key;
-            info.Index:=-1;
-            FInfos.Add(info);
-
-            aText:=levels[k];
-            if k<High(levels) then begin
-              //a level above the variable: an area, a DB or a structure, with its size
-              if (k=0) and S7PlusIsAreaName(levels[0]) then
-                aText:=aText+' : '+AreaLabel(levels[0])
-              else if k=0 then
-                aText:=aText+' : '+SizeText(key, true)
-              else if structIdx.Find(key, p) then
-                aText:=aText+' : '+S7PlusSoftTypeName(FCandidates[PtrInt(structIdx.Objects[p])].SoftDataType)+
-                       ' ('+SizeText(key, false)+')';
-            end else begin
-              info.Index:=c;
-              aText:=aText+Decoration(c);
-              inc(FShownTags, Ord(FCandidates[c].Skip=srNone));
-            end;
-
-            node:=tvTags.Items.AddChild(aParent, aText);
-            node.Data:=info;
-            nodes.AddObject(key, node);
+          aText:=levels[k];
+          if k<High(levels) then begin
+            //a level above the variable: a structure, with its size
+            if structIdx.Find(key, p) then
+              aText:=aText+' : '+S7PlusSoftTypeName(FCandidates[PtrInt(structIdx.Objects[p])].SoftDataType)+
+                     ' ('+SizeText(FBlocks[aBlock].Cands, key, false)+')';
+          end else begin
+            info.Index:=c;
+            aText:=aText+Decoration(c);
+            inc(FShownTags, Ord(FCandidates[c].Skip=srNone));
           end;
-          aParent:=node;
-        end;
-      end;
-    finally
-      tvTags.Items.EndUpdate;
-    end;
 
-    //a filter shows what it found; without one, only what the user had opened stays open
-    RestoreExpansion(expanded, Trim(edtFilter.Text)<>'');
-    UpdateStates;
+          node:=tvTags.Items.AddChild(aParent, aText);
+          node.Data:=info;
+          nodes.AddObject(key, node);
+        end;
+        aParent:=node;
+      end;
+    end;
   finally
+    tvTags.Items.EndUpdate;
     nodes.Free;
     structIdx.Free;
-    expanded.Free;
+  end;
+end;
+
+//reads the variables of a block from the PLC and hangs them from its node (aRoot is the node
+//being opened: it is the one that cannot be rebuilt). False when they could not be read.
+function TfrmS7PlusTagBuilder.LoadBlock(aBlock: LongInt; aRoot: TTreeNode): Boolean;
+var
+  res:TProtocolIOResult;
+  oldCursor:TCursor;
+  oldDebug:TS7PlusDebugEvent;
+  vars:TS7PlusVarInfoArray;
+  local:TS7PlusCandidateArray;
+  c, first:LongInt;
+begin
+  Result:=FBlocks[aBlock].Loaded;
+  if Result or FLoading or (not Assigned(FDriver)) then exit;
+
+  FLoading:=true;
+  oldCursor:=Screen.Cursor;
+  Screen.Cursor:=crHourGlass;
+  oldDebug:=FDriver.OnDebug;
+  FDriverLog.Clear;
+  FDriver.OnDebug:=@DriverDebug;
+  pbProgress.Style:=pbstMarquee;
+  pbProgress.Visible:=true;
+  btnBrowse.Enabled:=false;
+  try
+    lblStatus.Caption:=Format(SS7PTBReadingBlock,[FBlocks[aBlock].Key]);
+    pbProgress.Repaint;
+    Application.ProcessMessages;
+
+    if FBlocks[aBlock].IsArea then
+      res:=FDriver.BrowseNativeArea(FBlocks[aBlock].AreaRID, FBlocks[aBlock].AreaTiRid,
+                                    FBlocks[aBlock].AreaName, vars)
+    else
+      res:=FDriver.BrowseDB(FBlocks[aBlock].Number, vars);
+
+    if res<>ioOk then begin
+      Screen.Cursor:=oldCursor;
+      if res=ioAuthError then
+        MessageDlg(SS7PTBAuthRequired, mtError, [mbOK], 0)
+      else
+        MessageDlg(Format(SS7PTBBlockFailed,[FBlocks[aBlock].Key])+LineEnding+LineEnding+
+                   SS7PTBDetails+LineEnding+FDriverLog.Text, mtError, [mbOK], 0);
+      UpdateStatus;
+      exit;
+    end;
+
+    SetLength(local, 0);
+    S7PlusAddBrowsed(local, vars, FBlocks[aBlock].DBName, FBlocks[aBlock].AccessArea);
+    S7PlusMarkArrays(local);
+    //the maximum length of each STRING is in its value: read them once
+    lblStatus.Caption:=SS7PTBReadingStrings;
+    Application.ProcessMessages;
+    FDriver.ResolveStringLengths(local);
+
+    first:=Length(FCandidates);
+    SetLength(FCandidates, first+Length(local));
+    SetLength(FChecked, Length(FCandidates));
+    for c:=0 to High(local) do begin
+      FCandidates[first+c]:=local[c];
+      FChecked[first+c]:=false;
+      if not (local[c].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
+    end;
+
+    FBlocks[aBlock].First:=first;
+    FBlocks[aBlock].Count:=Length(local);
+    FBlocks[aBlock].Cands:=local;
+    if not FBlocks[aBlock].IsArea then
+      FBlocks[aBlock].SizeStr:=SizeText(local, FBlocks[aBlock].Key, true);
+    FBlocks[aBlock].Loaded:=true;
+
+    //the placeholder gives way to the variables
+    aRoot.DeleteChildren;
+    aRoot.Text:=RootText(aBlock);
+    BuildBlock(aBlock, aRoot);
+    UpdateStates;
+    UpdateStatus;
+    Result:=true;
+  finally
+    pbProgress.Visible:=false;
+    btnBrowse.Enabled:=true;
+    FDriver.OnDebug:=oldDebug;
+    Screen.Cursor:=oldCursor;
+    FLoading:=false;
+  end;
+end;
+
+procedure TfrmS7PlusTagBuilder.tvTagsExpanding(Sender: TObject; Node: TTreeNode;
+  var AllowExpansion: Boolean);
+begin
+  if IsPending(Node) then
+    AllowExpansion:=LoadBlock(InfoOf(Node).Block, Node);
+end;
+
+procedure TfrmS7PlusTagBuilder.UpdateStatus;
+var
+  c, nRead: LongInt;
+begin
+  if Length(FBlocks)=0 then begin
+    lblStatus.Caption:=SS7PTBNothingRead;
+    exit;
+  end;
+  nRead:=0;
+  for c:=0 to High(FBlocks) do
+    if FBlocks[c].Loaded then inc(nRead);
+
+  lblStatus.Caption:=Format(SS7PTBBlocksInfo,[Length(FBlocks), nRead, Length(FCandidates), FSkippedCount]);
+  if nRead<Length(FBlocks) then begin
+    lblStatus.Caption:=lblStatus.Caption+' '+SS7PTBOpenToRead;
+    if Trim(edtFilter.Text)<>'' then
+      lblStatus.Caption:=lblStatus.Caption+' '+SS7PTBFilterLoadedOnly;
   end;
 end;
 
@@ -468,6 +658,13 @@ var
   info: TS7PlusNodeInfo;
 begin
   info:=InfoOf(aNode);
+
+  //a block not read yet: unchecked until it is (ticking it reads it)
+  if IsPending(aNode) then begin
+    Result:=STATE_UNCHECKED;
+    aNode.StateIndex:=Result;
+    exit;
+  end;
 
   //an array is one tag whatever is listed below it (its elements, when shown)
   if IsTaggable(aNode) then begin
@@ -560,6 +757,7 @@ end;
 //was all checked already
 procedure TfrmS7PlusTagBuilder.ToggleNode(aNode: TTreeNode);
 begin
+  if IsPending(aNode) and (not LoadBlock(InfoOf(aNode).Block, aNode)) then exit;
   if aNode.StateIndex<0 then exit;
   SetBranch(aNode, not BranchAllChecked(aNode));
   UpdateStates;
@@ -615,22 +813,6 @@ begin
   btnOK.Enabled:=total>0;
 end;
 
-procedure TfrmS7PlusTagBuilder.AddVars(const Vars: TS7PlusVarInfoArray;
-  const aBlockName: String; aAccessArea: Cardinal);
-var
-  c, n: LongInt;
-begin
-  for c:=0 to High(Vars) do begin
-    //the DB/area root itself ("DB4") is not a variable
-    if Pos('.', Vars[c].Name)=0 then continue;
-    n:=Length(FCandidates);
-    SetLength(FCandidates, n+1);
-    FCandidates[n]:=S7PlusClassifyVar(Vars[c], aBlockName, aAccessArea);
-    //a structure is not "skipped": its members are the tags
-    if not (FCandidates[n].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
-  end;
-end;
-
 procedure TfrmS7PlusTagBuilder.DriverDebug(Sender: TObject; const Msg: String);
 begin
   //only the last lines matter: they say why a connection or a read failed
@@ -653,27 +835,13 @@ begin
 end;
 
 //what the read is doing now: the bar counts the DBs and areas, the text says which one
-procedure TfrmS7PlusTagBuilder.ShowProgress(aDone, aTotal:LongInt; const aWhat:String);
-begin
-  pbProgress.Max:=aTotal;
-  pbProgress.Position:=aDone;
-  lblStatus.Caption:=Format(SS7PTBReadingBlock,[aWhat, aDone+1, aTotal]);
-  pbProgress.Repaint;
-  lblStatus.Repaint;
-  Application.ProcessMessages;
-end;
-
 procedure TfrmS7PlusTagBuilder.btnBrowseClick(Sender: TObject);
 var
   oldCursor:TCursor;
   oldDebug:TS7PlusDebugEvent;
   res:TProtocolIOResult;
-  authMissing:Boolean;
   blocks:TS7PlusDataBlockInfoArray;
-  vars:TS7PlusVarInfoArray;
-  c:LongInt;
-  aName:String;
-  total, done:LongInt;
+  c, n:LongInt;
 begin
   if not Assigned(FDriver) then begin
     MessageDlg(SS7PTBWithoutDriver, mtError, [mbOK], 0);
@@ -687,7 +855,8 @@ begin
   end;
 
   SetLength(FCandidates, 0);
-  FBlocksRead:=0;
+  SetLength(FChecked, 0);
+  SetLength(FBlocks, 0);
   FSkippedCount:=0;
 
   oldCursor:=Screen.Cursor;
@@ -695,12 +864,12 @@ begin
   oldDebug:=FDriver.OnDebug;
   FDriverLog.Clear;
   FDriver.OnDebug:=@DriverDebug;
+  //busy from the start: connecting and listing the DBs have no count
+  pbProgress.Style:=pbstMarquee;
+  pbProgress.Visible:=true;
+  btnBrowse.Enabled:=false;
   try
     lblStatus.Caption:=SS7PTBReading;
-    //busy from the start: connecting and listing the DBs have no count either
-    pbProgress.Style:=pbstMarquee;
-    pbProgress.Visible:=true;
-    btnBrowse.Enabled:=false;
     Application.ProcessMessages;
 
     //Active only says the port was asked to open: at design time the socket may not be there
@@ -708,98 +877,115 @@ begin
       Screen.Cursor:=oldCursor;
       MessageDlg(SS7PTBPortNotConnected, mtError, [mbOK], 0);
       lblStatus.Caption:=SS7PTBNothingRead;
+      RebuildTree;
       exit;
     end;
 
-    authMissing:=false;
     //a download to the PLC since the last read adds and changes DBs and types: read it all again
     FDriver.RefreshCaches;
     res:=FDriver.ListDataBlocks(blocks);
     if res<>ioOk then begin
       Screen.Cursor:=oldCursor;
-      //the PLC wants a login: say that, not just "could not read"
       if res=ioAuthError then
         MessageDlg(SS7PTBAuthRequired, mtError, [mbOK], 0)
       else
         MessageDlg(SS7PTBBrowseFailed+LineEnding+LineEnding+SS7PTBDetails+LineEnding+
                    FDriverLog.Text, mtError, [mbOK], 0);
       lblStatus.Caption:=SS7PTBNothingRead;
+      RebuildTree;
       exit;
     end;
 
-    total:=Length(blocks);
-    if chkIncludeAreas.Checked then inc(total, 3);
-    done:=0;
-    pbProgress.Style:=pbstNormal;
-
+    //only the first level: the variables of each one are read when it is opened
+    FSymbolic:=chkSymbolicNames.Checked;
+    n:=Length(blocks);
+    if chkIncludeAreas.Checked then inc(n, 3);
+    SetLength(FBlocks, n);
     for c:=0 to High(blocks) do begin
-      ShowProgress(done, total, blocks[c].Name);
-      inc(done);
-      res:=FDriver.BrowseDB(blocks[c].Number, vars);
-      if res=ioAuthError then authMissing:=true;
-      if res<>ioOk then continue;
-      if chkSymbolicNames.Checked then aName:=blocks[c].Name else aName:='';
-      AddVars(vars, aName, S7PlusIds_DBAccessAreaBase+blocks[c].Number);
-      inc(FBlocksRead);
+      FBlocks[c].Number:=blocks[c].Number;
+      FBlocks[c].AccessArea:=S7PlusIds_DBAccessAreaBase+blocks[c].Number;
+      if FSymbolic and (blocks[c].Name<>'') then begin
+        FBlocks[c].Key:=blocks[c].Name;
+        FBlocks[c].DBName:=blocks[c].Name;
+      end else
+        FBlocks[c].Key:='DB'+IntToStr(blocks[c].Number);
     end;
-
     if chkIncludeAreas.Checked then begin
-      ShowProgress(done, total, 'I'); inc(done);
-      if FDriver.BrowseNativeArea(S7PlusIds_NativeIAreaRID, S7PlusTiRid_IArea, 'IArea', vars)=ioOk then begin
-        AddVars(vars, '', S7PlusIds_NativeIAreaRID); inc(FBlocksRead);
-      end;
-      ShowProgress(done, total, 'Q'); inc(done);
-      if FDriver.BrowseNativeArea(S7PlusIds_NativeQAreaRID, S7PlusTiRid_QArea, 'QArea', vars)=ioOk then begin
-        AddVars(vars, '', S7PlusIds_NativeQAreaRID); inc(FBlocksRead);
-      end;
-      ShowProgress(done, total, 'M'); inc(done);
-      if FDriver.BrowseNativeArea(S7PlusIds_NativeMAreaRID, S7PlusTiRid_MArea, 'MArea', vars)=ioOk then begin
-        AddVars(vars, '', S7PlusIds_NativeMAreaRID); inc(FBlocksRead);
-      end;
+      n:=Length(blocks);
+      FBlocks[n].IsArea:=true;
+      FBlocks[n].Key:='IArea';
+      FBlocks[n].AreaName:='IArea';
+      FBlocks[n].AreaRID:=S7PlusIds_NativeIAreaRID;
+      FBlocks[n].AreaTiRid:=S7PlusTiRid_IArea;
+      FBlocks[n].AccessArea:=S7PlusIds_NativeIAreaRID;
+      FBlocks[n+1].IsArea:=true;
+      FBlocks[n+1].Key:='QArea';
+      FBlocks[n+1].AreaName:='QArea';
+      FBlocks[n+1].AreaRID:=S7PlusIds_NativeQAreaRID;
+      FBlocks[n+1].AreaTiRid:=S7PlusTiRid_QArea;
+      FBlocks[n+1].AccessArea:=S7PlusIds_NativeQAreaRID;
+      FBlocks[n+2].IsArea:=true;
+      FBlocks[n+2].Key:='MArea';
+      FBlocks[n+2].AreaName:='MArea';
+      FBlocks[n+2].AreaRID:=S7PlusIds_NativeMAreaRID;
+      FBlocks[n+2].AreaTiRid:=S7PlusTiRid_MArea;
+      FBlocks[n+2].AccessArea:=S7PlusIds_NativeMAreaRID;
     end;
-
-    //what is left (the STRING lengths) has no count: the bar just says it is busy
-    pbProgress.Style:=pbstMarquee;
-    lblStatus.Caption:=SS7PTBReadingStrings;
-    Application.ProcessMessages;
-    LoadCandidates(FCandidates, FBlocksRead);
+    RebuildTree;
+    UpdateStatus;
   finally
     pbProgress.Visible:=false;
     btnBrowse.Enabled:=true;
     FDriver.OnDebug:=oldDebug;
     Screen.Cursor:=oldCursor;
   end;
-
-  if authMissing then
-    MessageDlg(SS7PTBAuthRequired, mtWarning, [mbOK], 0);
 end;
 
+//Variables already read elsewhere: every DB (or area) on them is taken as read.
 procedure TfrmS7PlusTagBuilder.LoadCandidates(const aCandidates: TS7PlusCandidateArray;
   aBlocksRead: LongInt);
 var
-  c:LongInt;
+  c, n, first:LongInt;
+  levels:TStringArray;
 begin
   FCandidates:=aCandidates;
   S7PlusMarkArrays(FCandidates);
   //the maximum length of each STRING is in its value: read them once
   if Assigned(FDriver) then
     FDriver.ResolveStringLengths(FCandidates);
-  FBlocksRead:=aBlocksRead;
 
   FSkippedCount:=0;
-  for c:=0 to High(FCandidates) do
+  SetLength(FBlocks, 0);
+  SetLength(FChecked, Length(FCandidates));
+  for c:=0 to High(FCandidates) do begin
+    FChecked[c]:=false;
     if not (FCandidates[c].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
 
-  SetLength(FChecked, Length(FCandidates));
-  for c:=0 to High(FChecked) do
-    FChecked[c]:=false;
+    levels:=S7PlusSplitPath(FCandidates[c].Path);
+    if Length(levels)=0 then continue;
+    n:=Length(FBlocks);
+    //the variables of a block come together
+    if (n=0) or (FBlocks[n-1].Key<>levels[0]) then begin
+      SetLength(FBlocks, n+1);
+      FBlocks[n].Key:=levels[0];
+      FBlocks[n].IsArea:=S7PlusIsAreaName(levels[0]);
+      FBlocks[n].First:=c;
+      FBlocks[n].Loaded:=true;
+      n:=n+1;
+    end;
+    inc(FBlocks[n-1].Count);
+  end;
+  for n:=0 to High(FBlocks) do begin
+    first:=FBlocks[n].First;
+    SetLength(FBlocks[n].Cands, FBlocks[n].Count);
+    for c:=0 to FBlocks[n].Count-1 do
+      FBlocks[n].Cands[c]:=FCandidates[first+c];
+    if not FBlocks[n].IsArea then
+      FBlocks[n].SizeStr:=SizeText(FBlocks[n].Cands, FBlocks[n].Key, true);
+  end;
 
   RebuildTree;
-
-  if Length(FCandidates)=0 then
-    lblStatus.Caption:=SS7PTBNothingRead
-  else
-    lblStatus.Caption:=Format(SS7PTBVarsRead,[Length(FCandidates), FBlocksRead, FSkippedCount]);
+  UpdateStatus;
 end;
 
 procedure TfrmS7PlusTagBuilder.btnCheckAllClick(Sender: TObject);
@@ -817,9 +1003,17 @@ begin
   SetAllShown(2);
 end;
 
+//only the blocks already read: opening the others would read the whole PLC
 procedure TfrmS7PlusTagBuilder.btnExpandAllClick(Sender: TObject);
+var
+  none:TStringList;
 begin
-  tvTags.FullExpand;
+  none:=TStringList.Create;
+  try
+    RestoreExpansion(none, true);
+  finally
+    none.Free;
+  end;
 end;
 
 procedure TfrmS7PlusTagBuilder.btnCollapseAllClick(Sender: TObject);
@@ -830,6 +1024,7 @@ end;
 procedure TfrmS7PlusTagBuilder.FilterChanged(Sender: TObject);
 begin
   RebuildTree;
+  if Length(FBlocks)>0 then UpdateStatus;
 end;
 
 procedure TfrmS7PlusTagBuilder.btnOKClick(Sender: TObject);
