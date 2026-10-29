@@ -113,6 +113,7 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
     Top = 108
     Width = 860
     Align = alTop
+    Smooth = True
     TabOrder = 3
     Visible = False
   end
