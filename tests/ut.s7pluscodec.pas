@@ -72,6 +72,7 @@ type
     procedure WritingANegativeDIntBecomesASignedVLQ;
     procedure WritingARealPassesTheBytesStraightThrough;
     procedure WritingABoolUsesTheLastByte;
+    procedure WritingTheBoolOfADBIsWrittenAsABool;
     procedure WritingAnIntIsTwoFixedBytesNotAVLQ;
     procedure WritingANegativeIntIsTwoFixedBytes;
     procedure WritingAUIntAndAWordAreTwoFixedBytes;
@@ -305,6 +306,13 @@ begin
   //SoftDataType 1 = BOOL: aproveita so o byte menos significativo
   AssertBytesEqual('bool', BytesOf('00 01 01'),
                    EncodeTypedWriteValue(1, BytesOf('00 01')));
+end;
+
+procedure TTestS7PlusCodec.WritingTheBoolOfADBIsWrittenAsABool;
+begin
+  //the Bool of a DB is listed as SoftDataType 40 (BBOOL); as a byte array the PLC refuses it
+  AssertBytesEqual('true', BytesOf('00 01 01'), EncodeTypedWriteValue(40, BytesOf('01')));
+  AssertBytesEqual('false', BytesOf('00 01 00'), EncodeTypedWriteValue(40, BytesOf('00')));
 end;
 
 procedure TTestS7PlusCodec.WritingAnIntIsTwoFixedBytesNotAVLQ;

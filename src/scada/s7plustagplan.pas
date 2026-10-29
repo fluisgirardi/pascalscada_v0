@@ -1023,6 +1023,13 @@ begin
     if Path[c] in ['0'..'9', 'a'..'z', 'A'..'Z'] then begin
       Result := Result + Path[c];
       LastWasSep := false;
+    end else if (Path[c]='-') and (c>1) and (Path[c-1] in ['[', ',']) and (c<Length(Path)) and
+                (Path[c+1] in ['0'..'9']) then begin
+      //a negative index (Arr[-2]) is not the same name as the positive one (Arr[2])
+      if not LastWasSep then
+        Result := Result + '_';
+      Result := Result + 'm';
+      LastWasSep := false;
     end else begin
       if not LastWasSep then
         Result := Result + '_';

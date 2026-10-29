@@ -3903,6 +3903,10 @@ begin
     exit;
   end;
   Result := ExtractS7PlusTypeInfoObjects(RespPayload, FTypeInfoObjects);
+  //An answer with no type object is not an answer (a frame that was not the reply, a PLC busy
+  //with something else): caching it would make every browse after it come out empty.
+  if Result and (Length(FTypeInfoObjects)=0) then
+    Result := false;
   FTypeInfoCached := Result;
   Debug(Format('EnsureTypeInfoObjects: %d objetos de tipo carregados',[Length(FTypeInfoObjects)]));
 end;
@@ -3985,8 +3989,12 @@ begin
   SetLength(Value, 0);
   AttrIds[0] := S7PlusExplore_TI_ModificationTime;
   Result := Explore(TiRid, AttrIds, Resp);
-  if Result then
+  if Result then begin
     S7PlusFindObjectAttr(Resp, TiRid, S7PlusExplore_TI_ModificationTime, Value);
+    if Length(Value)=0 then
+      Debug(Format('ReadTypeInfoModTime: $%.8x sem data na resposta (%d bytes): %s',
+                   [TiRid, Length(Resp), Copy(S7PlusHexStr(Resp), 1, 160)]));
+  end;
 end;
 
 procedure TS7PlusConnection.RefreshTypeInfo;

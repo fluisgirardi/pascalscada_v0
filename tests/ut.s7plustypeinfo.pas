@@ -74,9 +74,12 @@ type
     procedure LidsAreFormattedInHexSeparatedByDots;
     procedure TheBlockSignatureDoesNotDependOnTheOrder;
     procedure AnotherNumberNameOrCountChangesTheBlockSignature;
+    procedure AClassicStructsMembersInheritTheClassicLayout;
     procedure AnAttributeIsFoundInTheObjectOfARelation;
     procedure AnAttributeIsFoundInANestedObject;
     procedure NoObjectOrNoAttributeGivesNothing;
+    procedure AnA1ByteInThePreambleIsNotTakenForAnObject;
+    procedure AnA1ByteInThePreambleDoesNotHideTheTypeInfoContainer;
   end;
 
 implementation
@@ -586,6 +589,84 @@ begin
   SetLength(V, 0);
   AssertFalse('an empty reply', S7PlusFindObjectAttr(V, $00000042, S7PlusExplore_TI_ModificationTime, V));
   AssertEquals('nothing came out', 0, Length(V));
+end;
+
+procedure TTestS7PlusTypeInfo.AClassicStructsMembersInheritTheClassicLayout;
+var
+  Root, St:TS7PlusNode;
+  Flat:TS7PlusVarInfoArray;
+
+  function Member(const AName:String; ASoftType:Byte; ANonOpt, AOpt:Cardinal; AFlags:Byte):TS7PlusNode;
+  begin
+    FillChar(Result, SizeOf(Result), 0);
+    Result.NodeType := ntVar;
+    Result.Name := AName;
+    Result.SoftDataType := ASoftType;
+    Result.HasVte := true;
+    Result.Vte.OffsetInfo.NonOptAddr := ANonOpt;
+    Result.Vte.OffsetInfo.OptAddr := AOpt;
+    Result.Vte.BitOffsetInfoFlags := AFlags;
+  end;
+
+  function ImageOf(const AName:String):Integer;
+  var
+    k:Integer;
+  begin
+    Result := -99;
+    for k:=0 to High(Flat) do
+      if Flat[k].Name=AName then Result := Flat[k].ImageOffset;
+  end;
+begin
+  //a DB with "optimized access" off: only the node of the structure carries the classic flag ($08),
+  //its members say nothing - but the PLC answers a read of the structure in the classic order, so
+  //the image of each member is its classic offset (OptAddr, here the order by size, means nothing)
+  FillChar(Root, SizeOf(Root), 0);
+  Root.NodeType := ntRoot;
+  Root.Name := 'DB7';
+  St := Member('Mix', 17, 844, 844, $08);
+  SetLength(St.Children, 3);
+  St.Children[0] := Member('v1', 2, 0, 62, 0);
+  St.Children[1] := Member('v2', 4, 2, 60, 0);
+  St.Children[2] := Member('v3', 6, 4, 0, 0);
+  SetLength(Root.Children, 1);
+  Root.Children[0] := St;
+
+  Flat := S7PlusBuildFlatList(TS7PlusNodeArray.Create(Root));
+  AssertEquals('the structure', 844, ImageOf('DB7.Mix'));
+  AssertEquals('v1 first, as declared', 844, ImageOf('DB7.Mix.v1'));
+  AssertEquals('v2 after the padding', 846, ImageOf('DB7.Mix.v2'));
+  AssertEquals('v3', 848, ImageOf('DB7.Mix.v3'));
+end;
+
+procedure TTestS7PlusTypeInfo.AnA1ByteInThePreambleIsNotTakenForAnObject;
+var
+  Attrs:TS7PlusPObjectAttributeArray;
+  Reply, V:TBytes;
+begin
+  //the preamble of an EXPLORE reply holds a request counter in VLQ; a counter whose first byte is
+  //$A1 looks like the start of an object (it happened on a PLC, once the counter was over 4224)
+  SetLength(Attrs, 1);
+  Attrs[0].AttrId := S7PlusExplore_TI_ModificationTime;
+  Attrs[0].Value := EncodeValuePUDInt(300);
+  Reply := BytesCat(BytesOf('00 00 00 02 19 A1 11'), EncodePObject($92000002, 534, 0, 0, Attrs));
+  AssertTrue('found past the false start', S7PlusFindObjectAttr(Reply, $92000002, S7PlusExplore_TI_ModificationTime, V));
+  AssertBytesEqual('its value', BytesOf('00 00 01 2C'), V);
+end;
+
+procedure TTestS7PlusTypeInfo.AnA1ByteInThePreambleDoesNotHideTheTypeInfoContainer;
+var
+  Attrs:TS7PlusPObjectAttributeArray;
+  Inner, Outer, Reply:TBytes;
+  Objs:TS7PlusObjectArray;
+begin
+  SetLength(Attrs, 1);
+  Attrs[0].AttrId := 10;
+  Attrs[0].Value := EncodeValuePUSInt(7);
+  Inner := EncodePObject($00000002, 534, 0, 0, Attrs);
+  Outer := BytesCat(BytesCat(BytesOf('A1 00 00 00 01 82 2C 00 00'), Inner), BytesOf('A2'));
+  Reply := BytesCat(BytesOf('00 00 00 02 19 A1 13'), Outer);
+  AssertTrue('the container is found past the false start', ExtractS7PlusTypeInfoObjects(Reply, Objs));
+  //(without the later candidates it was "not found", and the driver cached an empty catalogue)
 end;
 
 initialization
