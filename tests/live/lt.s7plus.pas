@@ -1323,6 +1323,7 @@ begin
       Drv.Password := GPassword;
     end;
     Drv.ServerCertificate := ACertificate;
+    Drv.OnDebug := @TSink(GSink).Debug;
     Port.Active := true;
     w := 0;
     while (not Port.ReallyActive) and (w<6000) do begin

@@ -2020,6 +2020,7 @@ begin
   if FUseTLS then begin
     if not ActivateTLS then begin
       Debug('Connect: falha ao ativar TLS - abortando conexao.');
+      Disconnect;                //CotpConnect set Connected: without TLS this must not look like a session
       exit;
     end;
   end;
