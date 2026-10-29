@@ -33,6 +33,7 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
+  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -55,6 +56,10 @@ begin
                                            TIBoxDriver,
                                            TISOTCPDriver,
                                            TMelsecTCPDriver,
+                                           TXinJETCPDriver,
+                                           TDeltaTCPDriver,
+                                           TInovanceTCPDriver,
+                                           TH5UTagTCPDriver,
                                            TS7CommPlusDriver,
                                            TLGXDriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
@@ -138,6 +143,8 @@ end;
 initialization
 
 {$I pascalscada.lrs}
+
+{$I xinjeicon.lrs}   // icones do painel de componentes (XPM)
 
 end.
 

@@ -86,6 +86,51 @@ type
   TSVGBorderChange = class(TSVGColorChange);
   TSVGStopColorChange = class(TSVGColorChange);
   TSVGStopOpacityChange = class(TSVGColorChange);
+
+  { TSVGPaintRefChange }
+
+  //: Troca o preenchimento ou o contorno de um elemento por uma referencia de
+  //: paint do proprio SVG, por exemplo id.fill=url(#SVGID_3_): o elemento passa
+  //: a usar o gradiente (linear ou radial) definido em <defs> com aquele id, em
+  //: vez de uma cor solida. Nada e' criado nem removido no SVG, so' o atributo
+  //: fill/stroke do elemento aponta para o gradiente.
+  //: Changes the fill or the stroke of an element to a paint reference of the
+  //: SVG itself, e.g. id.fill=url(#SVGID_3_): the element starts using the
+  //: gradient (linear or radial) defined in <defs> with that id instead of a
+  //: solid colour. Nothing is created or removed in the SVG, only the
+  //: fill/stroke attribute is pointed to the gradient.
+  TSVGPaintRefChange = class(TSVGChange)
+  private
+    FSVGId      : AnsiString;
+    FPaintRef   : string;
+    FIsStroke   : Boolean;
+  public
+    constructor Create(aSVGId:AnsiString; const aPaintRef:string;
+                       aIsStroke:Boolean = False);
+    property SVGID:AnsiString read FSVGId;
+    property PaintRef:string read FPaintRef;
+    property IsStroke:Boolean read FIsStroke;
+  end;
+
+  { TSVGVisibleChange }
+
+  //: Mostra ou esconde um elemento (ou um grupo inteiro) do SVG. Serve para
+  //: desenhos com as duas posicoes ja' presentes no arquivo - um seletor com o
+  //: cabo para a esquerda e para a direita, por exemplo - onde cada estado
+  //: liga um grupo e desliga o outro.
+  //: Shows or hides an element (or a whole group) of the SVG. Meant for
+  //: drawings that already carry both positions in the file - a selector with
+  //: the handle to the left and to the right, for instance - where each state
+  //: turns one group on and the other off.
+  TSVGVisibleChange = class(TSVGChange)
+  private
+    FSVGId    : AnsiString;
+    FVisible  : Boolean;
+  public
+    constructor Create(aSVGId:AnsiString; aVisible:Boolean);
+    property SVGID:AnsiString read FSVGId;
+    property Visible:Boolean read FVisible;
+  end;
   { TOutputChange }
 
   TOutputChange = class(TSVGChange)
@@ -111,6 +156,9 @@ type
     procedure Loaded; override;
     class function ValidRGBHex(aRGBStr:String):Boolean;
     class function RGBHexToColor(aRGBStr:String):TColor;
+    //: true quando o valor e' uma referencia de paint do SVG, tipo url(#grad1)
+    //: true when the value is an SVG paint reference, like url(#grad1)
+    class function IsPaintRef(const aValue:String):Boolean;
     class function ValidStatement(aLine: String): Boolean;
     function CreateStatementObject(aLine: String):TSVGChange;
   published
@@ -498,6 +546,26 @@ begin
   FColorOpacity := aCustomOpacity;
 end;
 
+{ TSVGPaintRefChange }
+
+constructor TSVGPaintRefChange.Create(aSVGId: AnsiString;
+  const aPaintRef: string; aIsStroke: Boolean);
+begin
+  inherited Create;
+  FSVGId    := aSVGId;
+  FPaintRef := aPaintRef;
+  FIsStroke := aIsStroke;
+end;
+
+{ TSVGVisibleChange }
+
+constructor TSVGVisibleChange.Create(aSVGId: AnsiString; aVisible: Boolean);
+begin
+  inherited Create;
+  FSVGId   := aSVGId;
+  FVisible := aVisible;
+end;
+
 { THMIOutputCollection }
 
 constructor THMIOutputCollection.Create(aOwner: TPersistent);
@@ -646,6 +714,15 @@ begin
                      StrToInt('$'+MidStr(aRGBStr,6,2)));
 end;
 
+class function THMIVectorFlowZone.IsPaintRef(const aValue: String): Boolean;
+begin
+  //url(#id) - gradiente/padrao declarado no proprio SVG, normalmente em <defs>.
+  //url(#id) - gradient/pattern declared in the SVG itself, usually in <defs>.
+  Result := (Length(aValue) > 6) and
+            (Copy(aValue, 1, 5) = 'url(#') and
+            (aValue[Length(aValue)] = ')');
+end;
+
 class function THMIVectorFlowZone.ValidStatement(aLine: String): Boolean;
 var
   LineParts1, LineParts2: TStringArray;
@@ -674,7 +751,10 @@ begin
         if (LineParts1[1]='fill') or (LineParts1[1]='border') or (LineParts1[1]='flow') then begin
           Result:=true;
         end else begin
-          Result:=ValidRGBHex(LineParts1[1]);
+          //#RRGGBB ou url(#id) (fill/border apontando para um gradiente do SVG).
+          //#RRGGBB or url(#id) (fill/border pointing to a gradient of the SVG).
+          Result:=ValidRGBHex(LineParts1[1]) or
+                  ((LineParts2[1]<>'stop-color') and IsPaintRef(LineParts1[1]));
         end;
       end;
       if (LineParts2[0]='flow') and (LineParts2[1]='output') then begin
@@ -686,6 +766,10 @@ begin
       end;
       if (LineParts2[1]='stop-opacity') then begin
         result := TryStrToInt(LineParts1[1],aux) and (aux >= 0) and (aux <= 100);
+      end;
+      if (LineParts2[1]='visible') then begin
+        result := (LineParts1[1]='1') or (LineParts1[1]='0') or
+                  (LineParts1[1]='true') or (LineParts1[1]='false');
       end;
     end;
   end;
@@ -700,8 +784,10 @@ var
   aClass: Integer;
   aColor: TColor;
   aColorSource: TColorSource;
+  aPaintRef: string;
 begin
   Result:=Nil;
+  aPaintRef:='';
   aCleanLine:=LowerCase(aLine);
 
   //default flow output.
@@ -732,7 +818,19 @@ begin
       if (LineParts2[1]='border') then AClass:=2;
       if (LineParts2[1]='stop-color') then AClass:=3;
       if (LineParts2[1]='stop-opacity') then AClass:=5;
+      if (LineParts2[1]='visible') then AClass:=6;
       if (LineParts2[0]='flow') and (LineParts2[1]='output') then AClass:=4;
+
+      //mostra/esconde o elemento: visible=1/0/true/false.
+      //shows/hides the element: visible=1/0/true/false.
+      if aClass=6 then begin
+        if (LineParts1[1]='1') or (LineParts1[1]='true') then
+          Result:=TSVGVisibleChange.Create(LineParts2[0], True)
+        else
+          if (LineParts1[1]='0') or (LineParts1[1]='false') then
+            Result:=TSVGVisibleChange.Create(LineParts2[0], False);
+        exit;
+      end;
 
       if aClass in [1..3] then
         case LineParts1[1] of
@@ -752,13 +850,24 @@ begin
               aColor:=RGBHexToColor(LineParts1[1]);
               aColorSource:=csCustom;
             end else
-              aClass:=0;
+              //url(#id): preenchimento/contorno passa a usar o gradiente do SVG.
+              //url(#id): fill/stroke starts using the gradient of the SVG.
+              if (aClass in [1,2]) and IsPaintRef(LineParts1[1]) then
+                aPaintRef:=LineParts1[1]
+              else
+                aClass:=0;
           end;
         end;
 
       case aClass of
-        1: Result:=TSVGFillChange.Create  (LineParts2[0], aColorSource, aColor);
-        2: Result:=TSVGBorderChange.Create(LineParts2[0], aColorSource, aColor);
+        1: if aPaintRef<>'' then
+             Result:=TSVGPaintRefChange.Create(LineParts2[0], aPaintRef, False)
+           else
+             Result:=TSVGFillChange.Create  (LineParts2[0], aColorSource, aColor);
+        2: if aPaintRef<>'' then
+             Result:=TSVGPaintRefChange.Create(LineParts2[0], aPaintRef, True)
+           else
+             Result:=TSVGBorderChange.Create(LineParts2[0], aColorSource, aColor);
         3: Result:=TSVGStopColorChange.Create(LineParts2[0], aColorSource, aColor);
         4: if TryStrToInt(LineParts1[1],aux) then
              Result:=TOutputChange.Create(aux);
@@ -975,6 +1084,10 @@ var
   l, FlowOutput, o: Integer;
   aSVGElement: TSVGElement       = nil;
   ColorObj: TSVGColorChange      = nil;
+  PaintRefObj: TSVGPaintRefChange = nil;
+  VisibleObj: TSVGVisibleChange  = nil;
+  aRefElement: TSVGElement       = nil;
+  aPaintRef: string;
   outputChangeObj: TOutputChange = nil;
 
   function FindSVGElement(const aSVGId:AnsiString; const SVGContents:TSVGContent; out SVGElement:TSVGElement):Boolean;
@@ -1089,6 +1202,44 @@ begin
                   ApplyColorToSVGElement(ColorObj, aSVGElement, FInputFlowPolyline.LineColor);
             end;
         end;
+      end;
+
+      //paint references: the element starts using a gradient declared in the
+      //SVG (id.fill=url(#grad1) / id.border=url(#grad1)).
+      if fCurrentZone.FSVGChanges.Objects[l] is TSVGPaintRefChange then begin
+        PaintRefObj:=TSVGPaintRefChange(fCurrentZone.FSVGChanges.Objects[l]);
+        if FindSVGElement(PaintRefObj.SVGID, FSVGDrawing.Content, aSVGElement) then begin
+          //o texto da instrucao e' guardado em minusculas, mas o dicionario de
+          //ids do BGRASVG e' sensivel a caixa: recupera o id real do elemento
+          //para o url(#...) casar com o gradiente declarado no SVG.
+          //the statement text is stored in lower case, but the BGRASVG id
+          //dictionary is case sensitive: take the real id of the element so the
+          //url(#...) matches the gradient declared in the SVG.
+          aPaintRef:=Copy(PaintRefObj.PaintRef, 6, Length(PaintRefObj.PaintRef)-6);
+          if FindSVGElement(aPaintRef, FSVGDrawing.Content, aRefElement) and
+             aRefElement.HasAttribute('id') then
+            aPaintRef:='url(#'+aRefElement.Attribute['id']+')'
+          else
+            aPaintRef:=PaintRefObj.PaintRef;
+
+          //atribuir pela propriedade: os elementos com gradiente sobrepoem o
+          //setter para descartar o gradiente antigo em cache.
+          //assign through the property: gradient aware elements override the
+          //setter to drop the previously cached gradient.
+          if PaintRefObj.IsStroke then
+            aSVGElement.stroke:=aPaintRef
+          else
+            aSVGElement.fill:=aPaintRef;
+        end;
+      end;
+
+      //show/hide: id.visible=1/0. Two position drawings (a selector with the
+      //handle to the left and to the right) live in the same file and each
+      //state turns one of them on.
+      if fCurrentZone.FSVGChanges.Objects[l] is TSVGVisibleChange then begin
+        VisibleObj:=TSVGVisibleChange(fCurrentZone.FSVGChanges.Objects[l]);
+        if FindSVGElement(VisibleObj.SVGID, FSVGDrawing.Content, aSVGElement) then
+          aSVGElement.Visible:=VisibleObj.Visible;
       end;
 
       //border color changes
@@ -1380,7 +1531,17 @@ begin
                               FControlArea.Canvas2D.Width-1,
                               FControlArea.Canvas2D.Height-1)
   end else
-    FSVGDrawing.Draw(FControlArea.Canvas2D, 0, 0, cuPixel);
+    //Draw(0,0) nao aplica o mapeamento viewBox->viewport: um arquivo com
+    //viewBox maior que a largura declarada (ex: width="64px" e
+    //viewBox="0 0 112.5 109.23", tipico de exportacao de CAD) saia cortado.
+    //StretchDraw com as dimensoes computadas respeita o viewBox e desenha no
+    //tamanho natural, inteiro.
+    //Draw(0,0) does not apply the viewBox->viewport mapping: a file whose
+    //viewBox is bigger than the declared size (e.g. width="64px" and
+    //viewBox="0 0 112.5 109.23", typical of CAD exports) comes out clipped.
+    //StretchDraw with the computed dimensions honours the viewBox and draws
+    //the whole thing at natural size.
+    FSVGDrawing.StretchDraw(FControlArea.Canvas2D, 0, 0, cuPixel);
 end;
 
 procedure THMICustomVectorControl.ReloadDrawing;
