@@ -49,6 +49,13 @@ const
 
   //-- Certificate verification modes.
   SSL_VERIFY_NONE            = $00;
+  SSL_VERIFY_PEER            = $01;
+
+  //-- X509_STORE_set_flags(): trust a certificate of the store even when it is not a root
+  //-- (a self-signed leaf, or an intermediate, given as the only anchor).
+  X509_V_FLAG_PARTIAL_CHAIN  = $80000;
+  //-- SSL_get_verify_result() when the chain was verified.
+  X509_V_OK                  = 0;
 
   //-- SSL_CTX_ctrl()/SSL_ctrl() command codes actually used here.
   SSL_CTRL_SET_MIN_PROTO_VERSION = 123;
@@ -105,6 +112,15 @@ type
   TFn_SSL_get_version = function(assl:PSSL):PAnsiChar; cdecl;
   TFn_SSL_get_current_cipher = function(assl:PSSL):Pointer; cdecl;
   TFn_SSL_CIPHER_get_name = function(cipher:Pointer):PAnsiChar; cdecl;
+  TFn_SSL_CTX_get_cert_store = function(ctx:PSSLCTX):Pointer; cdecl;
+  TFn_SSL_get_verify_result = function(assl:PSSL):clong; cdecl;
+  TFn_SSL_get_peer_certificate = function(assl:PSSL):Pointer; cdecl;
+  TFn_X509_STORE_add_cert = function(store:Pointer; x509:Pointer):cint; cdecl;
+  TFn_X509_STORE_set_flags = function(store:Pointer; flags:culong):cint; cdecl;
+  TFn_d2i_X509 = function(a:PPointer; pp:PPByte; len:clong):Pointer; cdecl;
+  TFn_i2d_X509 = function(x509:Pointer; pp:PPByte):cint; cdecl;
+  TFn_X509_free = procedure(x509:Pointer); cdecl;
+  TFn_X509_verify_cert_error_string = function(n:clong):PAnsiChar; cdecl;
 
   TFn_BIO_new = function(AType:Pointer):PBIO; cdecl;
   TFn_BIO_s_mem = function:Pointer; cdecl;
@@ -156,6 +172,10 @@ var
   SSL_get_version:TFn_SSL_get_version;
   SSL_get_current_cipher:TFn_SSL_get_current_cipher;
   SSL_CIPHER_get_name:TFn_SSL_CIPHER_get_name;
+  SSL_CTX_get_cert_store:TFn_SSL_CTX_get_cert_store;
+  SSL_get_verify_result:TFn_SSL_get_verify_result;
+  //(SSL_get1_peer_certificate in OpenSSL 3, SSL_get_peer_certificate before it: whichever exists)
+  SSL_get_peer_certificate:TFn_SSL_get_peer_certificate;
 
   //-- libcrypto
   BIO_new:TFn_BIO_new;
@@ -164,6 +184,12 @@ var
   BIO_write:TFn_BIO_write;
   BIO_ctrl:TFn_BIO_ctrl;
   BIO_free:TFn_BIO_free;
+  X509_STORE_add_cert:TFn_X509_STORE_add_cert;
+  X509_STORE_set_flags:TFn_X509_STORE_set_flags;
+  d2i_X509:TFn_d2i_X509;
+  i2d_X509:TFn_i2d_X509;
+  X509_free:TFn_X509_free;
+  X509_verify_cert_error_string:TFn_X509_verify_cert_error_string;
   EVP_sha1:TFn_EVP_sha1;
   EVP_sha256:TFn_EVP_sha256;
   EVP_Digest:TFn_EVP_Digest;
@@ -186,6 +212,16 @@ function S7PlusSSLCtxSetMinProtoVersion(ctx:PSSLCTX; version:cint):clong;
 function S7PlusSSLCtxSetMaxProtoVersion(ctx:PSSLCTX; version:cint):clong;
 //: SSL_CTX_set1_groups_list() macro equivalent (restricts the offered EC groups).
 function S7PlusSSLCtxSet1GroupsList(ctx:PSSLCTX; const AStr:PAnsiChar):clong;
+
+//: Puts the X.509 certificates in Certs (DER, one per item) in the trust store of the SSL context,
+//: as anchors that need not be roots (a leaf or an intermediate is enough), and turns on the
+//: verification of the peer. Returns how many were accepted; -1 when one of them is not a
+//: certificate (nothing is trusted then, the caller must not go on).
+function S7PlusSSLCtxTrustCertificates(ctx:PSSLCTX; const Certs:array of TBytes):Integer;
+//: The certificate the peer presented, in DER ('' bytes if none or if the library cannot say).
+function S7PlusSSLPeerCertificateDER(assl:PSSL):TBytes;
+//: Why the verification of the peer failed ('' when it passed or was not asked for).
+function S7PlusSSLVerifyErrorText(assl:PSSL):String;
 
 //: SHA-1 digest of Data (20 bytes), via EVP_Digest. Empty result on any failure/unloaded lib.
 function S7PlusSHA1(const Data:TBytes):TBytes;
@@ -289,6 +325,12 @@ begin
   SSL_get_version            := TFn_SSL_get_version(Bind(SSLLib, 'SSL_get_version', Missing));
   SSL_get_current_cipher     := TFn_SSL_get_current_cipher(Bind(SSLLib, 'SSL_get_current_cipher', Missing));
   SSL_CIPHER_get_name        := TFn_SSL_CIPHER_get_name(Bind(SSLLib, 'SSL_CIPHER_get_name', Missing));
+  SSL_CTX_get_cert_store     := TFn_SSL_CTX_get_cert_store(Bind(SSLLib, 'SSL_CTX_get_cert_store', Missing));
+  SSL_get_verify_result      := TFn_SSL_get_verify_result(Bind(SSLLib, 'SSL_get_verify_result', Missing));
+  //optional: OpenSSL 3 renamed it, and only the display of the certificate the PLC presented needs it
+  SSL_get_peer_certificate   := TFn_SSL_get_peer_certificate(GetProcedureAddress(SSLLib, 'SSL_get1_peer_certificate'));
+  if not Assigned(SSL_get_peer_certificate) then
+    SSL_get_peer_certificate := TFn_SSL_get_peer_certificate(GetProcedureAddress(SSLLib, 'SSL_get_peer_certificate'));
 
   BIO_new    := TFn_BIO_new(Bind(CryptoLib, 'BIO_new', Missing));
   BIO_s_mem  := TFn_BIO_s_mem(Bind(CryptoLib, 'BIO_s_mem', Missing));
@@ -296,6 +338,12 @@ begin
   BIO_write  := TFn_BIO_write(Bind(CryptoLib, 'BIO_write', Missing));
   BIO_ctrl   := TFn_BIO_ctrl(Bind(CryptoLib, 'BIO_ctrl', Missing));
   BIO_free   := TFn_BIO_free(Bind(CryptoLib, 'BIO_free', Missing));
+  X509_STORE_add_cert  := TFn_X509_STORE_add_cert(Bind(CryptoLib, 'X509_STORE_add_cert', Missing));
+  X509_STORE_set_flags := TFn_X509_STORE_set_flags(Bind(CryptoLib, 'X509_STORE_set_flags', Missing));
+  d2i_X509             := TFn_d2i_X509(Bind(CryptoLib, 'd2i_X509', Missing));
+  i2d_X509             := TFn_i2d_X509(Bind(CryptoLib, 'i2d_X509', Missing));
+  X509_free            := TFn_X509_free(Bind(CryptoLib, 'X509_free', Missing));
+  X509_verify_cert_error_string := TFn_X509_verify_cert_error_string(Bind(CryptoLib, 'X509_verify_cert_error_string', Missing));
 
   EVP_sha1             := TFn_EVP_sha1(Bind(CryptoLib, 'EVP_sha1', Missing));
   EVP_sha256           := TFn_EVP_sha256(Bind(CryptoLib, 'EVP_sha256', Missing));
@@ -362,6 +410,61 @@ end;
 function S7PlusSSLCtxSet1GroupsList(ctx:PSSLCTX; const AStr:PAnsiChar):clong;
 begin
   Result := SSL_CTX_ctrl(ctx, SSL_CTRL_SET_GROUPS_LIST, 0, AStr);
+end;
+
+function S7PlusSSLCtxTrustCertificates(ctx:PSSLCTX; const Certs:array of TBytes):Integer;
+var
+  Store, X:Pointer;
+  i:Integer;
+  P:PByte;
+begin
+  Result := -1;
+  if (ctx=nil) or (not S7PlusSSLLoaded) then exit;
+  Store := SSL_CTX_get_cert_store(ctx);
+  if Store=nil then exit;
+  for i:=0 to High(Certs) do begin
+    if Length(Certs[i])=0 then exit;
+    P := @Certs[i][0];
+    X := d2i_X509(nil, @P, Length(Certs[i]));
+    if X=nil then exit;                       //not a certificate
+    X509_STORE_add_cert(Store, X);            //(an equal one already there is not an error worth stopping for)
+    X509_free(X);
+  end;
+  X509_STORE_set_flags(Store, X509_V_FLAG_PARTIAL_CHAIN);
+  SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nil);
+  Result := Length(Certs);
+end;
+
+function S7PlusSSLPeerCertificateDER(assl:PSSL):TBytes;
+var
+  X:Pointer;
+  Len:cint;
+  P:PByte;
+begin
+  SetLength(Result, 0);
+  if (assl=nil) or (not S7PlusSSLLoaded) or (not Assigned(SSL_get_peer_certificate)) then exit;
+  X := SSL_get_peer_certificate(assl);
+  if X=nil then exit;
+  try
+    Len := i2d_X509(X, nil);
+    if Len<=0 then exit;
+    SetLength(Result, Len);
+    P := @Result[0];
+    if i2d_X509(X, @P)<=0 then SetLength(Result, 0);
+  finally
+    X509_free(X);
+  end;
+end;
+
+function S7PlusSSLVerifyErrorText(assl:PSSL):String;
+var
+  R:clong;
+begin
+  Result := '';
+  if (assl=nil) or (not S7PlusSSLLoaded) then exit;
+  R := SSL_get_verify_result(assl);
+  if R<>X509_V_OK then
+    Result := Format('%s (codigo %d)', [String(X509_verify_cert_error_string(R)), R]);
 end;
 
 function S7PlusSHA1(const Data:TBytes):TBytes;

@@ -119,6 +119,18 @@ type
     procedure TheTagsComeBackAfterThePortIsClosedAndOpened;
   end;
 
+  { TTestLiveCertificate }
+
+  TTestLiveCertificate = class(TLiveCase)
+  private
+    function Connects(const ACertificate:AnsiString):Boolean;
+  published
+    procedure ThePlcSendsACertificate;
+    procedure TheCertificateOfThePlcIsAccepted;
+    procedure AnotherCertificateIsRefused;
+    procedure AnInvalidValueFailsClosed;
+  end;
+
   { TTestLiveZZRestore }
 
   TTestLiveZZRestore = class(TLiveCase)
@@ -1279,6 +1291,72 @@ begin
   end;
 end;
 
+//--- TTestLiveCertificate ------------------------------------------------------------------
+
+const
+  //a certificate that is NOT the PLC's (test one, EC P-256, made only for the tests)
+  OtherCertificate =
+    'MIIBkTCCATegAwIBAgIUBvIA5qkHpiHCUMF1pz+r3nLw3kAwCgYIKoZIzj0EAwIwHTEbMBkGA1UEAwwScGFzY2Fsc2NhZGEtdGVzdC1i'
+    + 'MCAXDTI2MTAyOTAyNDQyMloYDzIxMjYxMDA1MDI0NDIyWjAdMRswGQYDVQQDDBJwYXNjYWxzY2FkYS10ZXN0LWIwWTATBgcqhkjOPQIB'
+    + 'BggqhkjOPQMBBwNCAARarWggb14Yj/ZWfpHUHTnqIO2ojpAQanMu1I4+YvQp6vMSvaS7+YgyQ/FzQs7cgkevHEiRi3j30SaF5BKYGLQ3'
+    + 'o1MwUTAdBgNVHQ4EFgQU5xpuwbieTXFz3CNa18WrECp/+WwwHwYDVR0jBBgwFoAU5xpuwbieTXFz3CNa18WrECp/+WwwDwYDVR0TAQH/'
+    + 'BAUwAwEB/zAKBggqhkjOPQQDAgNIADBFAiEAqgwkYNzHz+G4hgm/5rmVicjtBI1UBLSgrcYdznYaH0sCIBnsoUR7DeoBueLOw7G1jkrF'
+    + 'PXfWTkjwhR7ocVj9zmVk';
+
+//Its own session with ServerCertificate set; true when it logs in and lists the DBs.
+function TTestLiveCertificate.Connects(const ACertificate:AnsiString):Boolean;
+var
+  Port:TTCP_UDPPort;
+  Drv:TS7CommPlusDriver;
+  Blocks:TS7PlusDataBlockInfoArray;
+  w:Integer;
+begin
+  Port := TTCP_UDPPort.Create(nil);
+  Drv := TS7CommPlusDriver.Create(nil);
+  try
+    Port.Host := GHost;
+    Port.Port := GPortNumber;
+    Port.Timeout := 8000;
+    Drv.CommunicationPort := Port;
+    if GUser<>'' then begin
+      Drv.Username := GUser;
+      Drv.Password := GPassword;
+    end;
+    Drv.ServerCertificate := ACertificate;
+    Port.Active := true;
+    w := 0;
+    while (not Port.ReallyActive) and (w<6000) do begin
+      Sleep(100);
+      Inc(w, 100);
+    end;
+    Result := Port.ReallyActive and (Drv.ListDataBlocks(Blocks)=ioOk);
+  finally
+    Drv.Free;
+    Port.Free;
+  end;
+end;
+
+procedure TTestLiveCertificate.ThePlcSendsACertificate;
+begin
+  AssertTrue('the shared session (no certificate set) keeps the one the PLC presented',
+    Length(GDriver.PeerCertificate)>200);
+end;
+
+procedure TTestLiveCertificate.TheCertificateOfThePlcIsAccepted;
+begin
+  AssertTrue('trusting the certificate the PLC presented', Connects(GDriver.PeerCertificate));
+end;
+
+procedure TTestLiveCertificate.AnotherCertificateIsRefused;
+begin
+  AssertFalse('trusting only another certificate', Connects(OtherCertificate));
+end;
+
+procedure TTestLiveCertificate.AnInvalidValueFailsClosed;
+begin
+  AssertFalse('a value that is not a certificate does not mean "accept any"', Connects('not a certificate'));
+end;
+
 //--- ZZ ------------------------------------------------------------------------------------
 
 procedure TTestLiveZZRestore.ZZLoadPatternRestoresThePerElementValues;
@@ -1300,6 +1378,7 @@ initialization
   RegisterTest(TTestLiveWrites);
   RegisterTest(TTestLiveTags);
   RegisterTest(TTestLiveReconnect);
+  RegisterTest(TTestLiveCertificate);
   RegisterTest(TTestLiveZZRestore);
 
 finalization

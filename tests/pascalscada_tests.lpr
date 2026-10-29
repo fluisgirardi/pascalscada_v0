@@ -25,6 +25,7 @@ uses
   ut.s7plusconnection,
   ut.s7plusonchange,
   ut.s7plustagplan,
+  ut.s7pluscertificate,
   ut.s7plustypeinfo,
   ut.s7family,
   ut.protocoldriver,

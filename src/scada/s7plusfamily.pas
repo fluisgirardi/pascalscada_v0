@@ -170,6 +170,8 @@ type
     FUseTLS:Boolean;
     FExploreDelayMs:Integer;
     FUsername, FPassword:AnsiString;
+    FServerCertificate:AnsiString;
+    FCertificateChanged:Boolean;   //ServerCertificate changed: the open session is not trusted any more
     FAccessLevel:Cardinal;      //the session's protection level (S7PlusAccessLevel_*), 0 = unknown
     FLegitimated:Boolean;       //the session logged in with Username/Password
     FAuthPending:Boolean;       //Username/Password changed: log in again once they settle
@@ -207,6 +209,8 @@ type
     procedure SetMaxItemsPerRequest(AValue:Integer);
     procedure SetUsername(const AValue:AnsiString);
     procedure SetPassword(const AValue:AnsiString);
+    procedure SetServerCertificate(const AValue:AnsiString);
+    function GetPeerCertificate:AnsiString;
     procedure SetSubCycleMs(AValue:Integer);
     procedure SetSubTimeoutMs(AValue:Integer);
     procedure SetProgramCheckMs(AValue:Integer);
@@ -347,6 +351,10 @@ type
     destructor Destroy; override;
 
     function SizeOfTag(aTag:TTag; isWrite:Boolean; var ProtocolTagType:TProtocolTagType):BYTE; override;
+
+    //: The certificate the PLC presented in the last TLS handshake, as the base64 of its DER
+    //: ('' until a connection was made). Copy it into ServerCertificate to trust that PLC only.
+    property PeerCertificate:AnsiString read GetPeerCertificate;
 
     //-- Phase 1 direct access helpers (numeric addressing, no Path/tag framework yet).
     //: Reads bytes from a native controller memory area (Inputs/Outputs/Flags/Counters/Timers).
@@ -517,6 +525,16 @@ type
     //: confirmed working against real hardware; the PLC still rejects the encrypted
     //: response as of this writing - see TS7PlusConnection.Authenticate.
     property Password:AnsiString read FPassword write SetPassword;
+    //: The certificate(s) of the PLC to trust, as ONE base64 string of the DER (in the Object
+    //: Inspector the "..." button loads it from a .pem/.crt/.cer/.der file; several certificates
+    //: may go in it, e.g. the CA of the project). EMPTY: whatever certificate the PLC presents is
+    //: accepted (as before). With a value, the TLS handshake only succeeds if the certificate the
+    //: PLC presents is one of them or is signed by one of them: a different one - another PLC, or a
+    //: device in between - makes the connection fail (the OnDebug message says why). The name in
+    //: the certificate is NOT compared (PLC certificates rarely carry their IP address). A
+    //: certificate that cannot be read also fails the connection; it never falls back to accepting
+    //: any. Changing it closes the session that is open, so the next one is checked.
+    property ServerCertificate:AnsiString read FServerCertificate write SetServerCertificate;
     //: Optional username for "new"-style (AES-256-CBC) legitimation. Leave empty for a
     //: plain password login (the common case) - see Password.
     property Username:AnsiString read FUsername write SetUsername;
@@ -624,8 +642,17 @@ begin
     FConnection := TS7PlusConnection.Create(PCommPort, DriverID);
     FConnection.OnDebug := ConnDebug;
     FConnection.UseTLS := FUseTLS;
+    FConnection.ServerCertificate := FServerCertificate;
     FConnection.ExploreDelayMs := FExploreDelayMs;
     FConnection.MaxItemsPerRequest := FMaxItemsPerRequest;
+  end;
+
+  //a session opened under another certificate (or none) is not the one that is asked for now
+  if FCertificateChanged then begin
+    FCertificateChanged := false;
+    FConnection.ServerCertificate := FServerCertificate;
+    if FConnection.Connected then
+      RestartSession;
   end;
 
   WasConnected := FConnection.Connected;
@@ -676,6 +703,21 @@ begin
   FUsername := AValue;
   FAuthPending := true;
   FAuthChangedAt := GetTickCount64;
+end;
+
+procedure TS7CommPlusDriver.SetServerCertificate(const AValue:AnsiString);
+begin
+  if AValue=FServerCertificate then exit;
+  FServerCertificate := AValue;
+  //(the connection takes it at the next EnsureConnected, on the scan thread)
+  FCertificateChanged := true;
+end;
+
+function TS7CommPlusDriver.GetPeerCertificate:AnsiString;
+begin
+  Result := '';
+  if FConnection<>nil then
+    Result := FConnection.PeerCertificate;
 end;
 
 procedure TS7CommPlusDriver.SetPassword(const AValue:AnsiString);
