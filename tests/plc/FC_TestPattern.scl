@@ -55,7 +55,7 @@ BEGIN
 	    "TestDB_NonOpt".Mix.Deep[#i].y := 0 - #i;
 	  END_FOR;
 	  FOR #i := 0 TO 499 DO
-	    "TestDB_Big".Arr_Big[#i] := 100000 + #i;
+	    "TestDB_Big".Arr_Big[#i] := 100000 + INT_TO_DINT(#i);
 	  END_FOR;
 	  FOR #i := 0 TO 599 DO
 	    "TestDB_Big".Arr_Bytes600[#i] := INT_TO_BYTE(#i MOD 256);
