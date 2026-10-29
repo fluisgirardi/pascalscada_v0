@@ -196,6 +196,7 @@ type
     //-- Symbolic (LID) resolution cache: the OMS type-info container is expensive to
     //-- EXPLORE (can be a large, multi-fragment response) - fetch it once per connection.
     FTypeInfoCached:Boolean;
+    FLastBrowseTiRid:Cardinal;
     FTypeInfoObjects:TS7PlusObjectArray;
     FExploreDelayMs:Integer;
     FMaxItemsPerRequest:Integer;
@@ -471,6 +472,15 @@ type
     //: DB number, via a structured EXPLORE of the whole PLC program object tree. Used to
     //: resolve a Path given by symbolic DB name (e.g. "BlocoSimbolico_4") to its "DB<n>"
     //: form, since all other Path resolution is number-based.
+    //: Forgets the type information read from the PLC (the structures and UDTs every browse is
+    //: built from, read once per connection): the next BrowseDB/BrowseNativeArea reads it again.
+    //: Needed after a download to the PLC, which adds and changes types.
+    procedure RefreshTypeInfo;
+    //: The modification time (attribute 529) of one type-info object, by a small EXPLORE of its
+    //: own. Result=False: the request failed. Value is empty when the PLC does not report a time.
+    function ReadTypeInfoModTime(TiRid:Cardinal; out Value:TBytes):Boolean;
+    //: The type-info RID of the DB the last successful BrowseDB read.
+    property LastBrowseTiRid:Cardinal read FLastBrowseTiRid;
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;
     //: Performs PLC password authentication (legitimation), required by some PLCs before
     //: SetMultiVariables/DB writes are accepted even though reads are open (a protection
@@ -3932,6 +3942,7 @@ begin
     exit;
   end;
   if not EnsureTypeInfoObjects then exit;
+  FLastBrowseTiRid := TiRid;
 
   SetLength(RootNodes, 1);
   FillChar(RootNodes[0], SizeOf(RootNodes[0]), 0);
@@ -3964,6 +3975,24 @@ begin
   S7PlusBuildTree(RootNodes, FTypeInfoObjects);
   Vars := S7PlusBuildFlatList(RootNodes);
   Debug(Format('BrowseNativeArea: %s -> %d variaveis',[AreaName, Length(Vars)]));
+end;
+
+function TS7PlusConnection.ReadTypeInfoModTime(TiRid:Cardinal; out Value:TBytes):Boolean;
+var
+  Resp:TBytes;
+  AttrIds:array[0..0] of Cardinal;
+begin
+  SetLength(Value, 0);
+  AttrIds[0] := S7PlusExplore_TI_ModificationTime;
+  Result := Explore(TiRid, AttrIds, Resp);
+  if Result then
+    S7PlusFindObjectAttr(Resp, TiRid, S7PlusExplore_TI_ModificationTime, Value);
+end;
+
+procedure TS7PlusConnection.RefreshTypeInfo;
+begin
+  FTypeInfoCached := false;
+  SetLength(FTypeInfoObjects, 0);
 end;
 
 function TS7PlusConnection.ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;

@@ -72,6 +72,11 @@ type
 
     //formatacao / formatting
     procedure LidsAreFormattedInHexSeparatedByDots;
+    procedure TheBlockSignatureDoesNotDependOnTheOrder;
+    procedure AnotherNumberNameOrCountChangesTheBlockSignature;
+    procedure AnAttributeIsFoundInTheObjectOfARelation;
+    procedure AnAttributeIsFoundInANestedObject;
+    procedure NoObjectOrNoAttributeGivesNothing;
   end;
 
 implementation
@@ -484,6 +489,103 @@ begin
   for i:=0 to High(Flat) do
     if Flat[i].SoftDataType=7 then
       AssertEquals('unknown inside an array', -1, Flat[i].ImageOffset);
+end;
+
+function Blk(const AName:String; ANumber, ARid:Cardinal):TS7PlusDataBlockInfo;
+begin
+  Result.Name := AName;
+  Result.Number := ANumber;
+  Result.Rid := ARid;
+end;
+
+procedure TTestS7PlusTypeInfo.TheBlockSignatureDoesNotDependOnTheOrder;
+var
+  A, B:TS7PlusDataBlockInfoArray;
+begin
+  SetLength(A, 2);
+  A[0] := Blk('DB_A', 1, $8A0E0001);
+  A[1] := Blk('DB_B', 2, $8A0E0002);
+  SetLength(B, 2);
+  B[0] := A[1];
+  B[1] := A[0];
+  AssertEquals(S7PlusBlockSignature(A), S7PlusBlockSignature(B));
+end;
+
+procedure TTestS7PlusTypeInfo.AnotherNumberNameOrCountChangesTheBlockSignature;
+var
+  A, B:TS7PlusDataBlockInfoArray;
+  Base:String;
+begin
+  SetLength(A, 2);
+  A[0] := Blk('DB_A', 1, $8A0E0001);
+  A[1] := Blk('DB_B', 2, $8A0E0002);
+  Base := S7PlusBlockSignature(A);
+
+  B := Copy(A, 0, 2);
+  B[1].Number := 3;
+  AssertTrue('another number', Base<>S7PlusBlockSignature(B));
+  B := Copy(A, 0, 2);
+  B[1].Name := 'DB_C';
+  AssertTrue('another name', Base<>S7PlusBlockSignature(B));
+  B := Copy(A, 0, 2);
+  B[1].Rid := $8A0E0009;
+  AssertTrue('another RID', Base<>S7PlusBlockSignature(B));
+  SetLength(B, 1);
+  B[0] := A[0];
+  AssertTrue('a DB less', Base<>S7PlusBlockSignature(B));
+  SetLength(B, 3);
+  B[0] := A[0];
+  B[1] := A[1];
+  B[2] := Blk('DB_New', 4, $8A0E0004);
+  AssertTrue('a DB more', Base<>S7PlusBlockSignature(B));
+end;
+
+function ExploreReplyWith(Relation:Cardinal; AttrId:Cardinal; Value:Cardinal):TBytes;
+var
+  Attrs:TS7PlusPObjectAttributeArray;
+begin
+  SetLength(Attrs, 1);
+  Attrs[0].AttrId := AttrId;
+  Attrs[0].Value := EncodeValuePUDInt(Value);
+  //the ReturnValue (0), then the object
+  Result := BytesCat(BytesOf('00'), EncodePObject(Relation, 534, 0, 0, Attrs));
+end;
+
+procedure TTestS7PlusTypeInfo.AnAttributeIsFoundInTheObjectOfARelation;
+var
+  V:TBytes;
+begin
+  AssertTrue(S7PlusFindObjectAttr(ExploreReplyWith($00000042, S7PlusExplore_TI_ModificationTime, 300), $00000042,
+                                  S7PlusExplore_TI_ModificationTime, V));
+  AssertBytesEqual('the value', BytesOf('00 00 01 2C'), V);
+end;
+
+procedure TTestS7PlusTypeInfo.AnAttributeIsFoundInANestedObject;
+var
+  Attrs:TS7PlusPObjectAttributeArray;
+  Inner, Outer, Reply, V:TBytes;
+begin
+  SetLength(Attrs, 1);
+  Attrs[0].AttrId := S7PlusExplore_TI_ModificationTime;
+  Attrs[0].Value := EncodeValuePUDInt(77);
+  Inner := EncodePObject($00000050, 534, 0, 0, Attrs);
+  Outer := BytesCat(BytesCat(BytesOf('A1 00 00 00 01 82 2C 00 00'), Inner), BytesOf('A2'));
+  Reply := BytesCat(BytesOf('00'), Outer);
+  AssertTrue('the nested one', S7PlusFindObjectAttr(Reply, $00000050, S7PlusExplore_TI_ModificationTime, V));
+  AssertBytesEqual('its value', BytesOf('00 00 00 4D'), V);
+end;
+
+procedure TTestS7PlusTypeInfo.NoObjectOrNoAttributeGivesNothing;
+var
+  V:TBytes;
+  Reply:TBytes;
+begin
+  Reply := ExploreReplyWith($00000042, S7PlusExplore_TI_ModificationTime, 300);
+  AssertFalse('another relation', S7PlusFindObjectAttr(Reply, $00000043, S7PlusExplore_TI_ModificationTime, V));
+  AssertFalse('another attribute', S7PlusFindObjectAttr(Reply, $00000042, 1234, V));
+  SetLength(V, 0);
+  AssertFalse('an empty reply', S7PlusFindObjectAttr(V, $00000042, S7PlusExplore_TI_ModificationTime, V));
+  AssertEquals('nothing came out', 0, Length(V));
 end;
 
 initialization

@@ -55,6 +55,10 @@ type
 const
   S7PlusExplore_ClassOMSTypeInfoContainer = 534;
   S7PlusExplore_TI_TComSize               = 1502;
+  //: Modification time of a type-info object (a ULInt the PLC changes when the type is
+  //: downloaded again); not every PLC reports it. Name from the attribute table of Wireshark's
+  //: S7CommPlus dissector.
+  S7PlusExplore_TI_ModificationTime       = 529;
 
   //-- Native process-area synthetic type-info RIDs (fixed, no lookup needed).
   S7PlusTiRid_IArea     = $90010000;
@@ -220,6 +224,15 @@ function S7PlusBuildFlatList(const RootNodes:TS7PlusNodeArray):TS7PlusVarInfoArr
 //: mapping that Path resolution needs to accept a DB's programming name instead of "DB<n>".
 //: Ported from python-snap7 client._parse_explore_datablocks.
 function S7PlusParseExploreDataBlocks(const Response:TBytes):TS7PlusDataBlockInfoArray;
+
+//: The identity of a list of DBs (name, number, RID of each, in a fixed order), to tell whether
+//: the program of the PLC has other DBs than when it was last read.
+function S7PlusBlockSignature(const Blocks:TS7PlusDataBlockInfoArray):String;
+
+//: Reads, from an EXPLORE reply, the attribute AttrId of the object whose RelationId is
+//: RelationId (searched through the nested objects too). False when the reply has no such
+//: object or the object does not carry the attribute.
+function S7PlusFindObjectAttr(const Response:TBytes; RelationId, AttrId:Cardinal; out Value:TBytes):Boolean;
 
 //: Formats a LID path as dot-separated uppercase hex, matching python-snap7's access_sequence.
 function S7PlusFormatLids(const Lids:TS7PlusLIDArray):String;
@@ -1087,6 +1100,61 @@ begin
     else
       inc(Offset); //response preamble / unhandled element tags (e.g. Relation)
   end;
+end;
+
+function S7PlusBlockSignature(const Blocks:TS7PlusDataBlockInfoArray):String;
+var
+  L:TStringList;
+  i:Integer;
+begin
+  L := TStringList.Create;
+  try
+    for i:=0 to High(Blocks) do
+      L.Add(Format('%s|%d|%d', [Blocks[i].Name, Blocks[i].Number, Blocks[i].Rid]));
+    L.Sort;
+    L.Delimiter := ';';
+    L.StrictDelimiter := true;
+    Result := L.DelimitedText;
+  finally
+    L.Free;
+  end;
+end;
+
+function FindObjectByRelation(const Objects:TS7PlusObjectArray; RelationId:Cardinal; out Found:TS7PlusObject):Boolean;
+var
+  i:Integer;
+begin
+  Result := false;
+  for i:=0 to High(Objects) do begin
+    if Objects[i].RelationId=RelationId then begin
+      Found := Objects[i];
+      Result := true;
+      exit;
+    end;
+    if FindObjectByRelation(Objects[i].Objects, RelationId, Found) then begin
+      Result := true;
+      exit;
+    end;
+  end;
+end;
+
+function S7PlusFindObjectAttr(const Response:TBytes; RelationId, AttrId:Cardinal; out Value:TBytes):Boolean;
+var
+  Offset, c:Integer;
+  AllObjects:TS7PlusObjectArray;
+  Obj:TS7PlusObject;
+begin
+  SetLength(Value, 0);
+  Result := false;
+  if Length(Response)=0 then exit;
+  DecodeUInt32VLQ(Response, 0, c);      //the ReturnValue
+  Offset := c;
+  while (Offset<Length(Response)) and (Response[Offset]<>S7PlusElement_StartOfObject) do
+    inc(Offset);
+  if Offset>=Length(Response) then exit;
+  ParseS7PlusObjectList(Response, Offset, AllObjects);
+  if FindObjectByRelation(AllObjects, RelationId, Obj) then
+    Result := S7PlusObjectAttr(Obj, AttrId, Value);
 end;
 
 end.
