@@ -22,6 +22,11 @@
   dentro delas, como no TIA Portal. Marcar um DB ou uma estrutura marca todas as
   variáveis que viram tag dentro dele (a marca fica parcial quando só algumas estão).
 
+  Um array de estruturas aparece como um tag só (o array todo, um TPLCStruct) e, sob ele,
+  cada elemento (Arr[0], Arr[1]...) como um nível da árvore, com os membros: cada membro de
+  um elemento, em qualquer profundidade (inclusive arrays de estruturas dentro dos elementos),
+  pode virar um tag solto, lido pelo caminho simbólico.
+
   As regras de quem vira tag estão em S7PlusTagPlan (e são testadas sem o IDE): só as
   variáveis escalares viram TPLCTagNumber, já com TagType e Swap* certos para o
   big-endian do CLP. Estruturas, STRINGs, datas e elementos de array não viram tag;
@@ -54,6 +59,11 @@
   The variables show on a tree: DB (or area), then the structures and the variables
   inside them, as in TIA Portal. Checking a DB or a structure checks every variable
   that becomes a tag inside it (the check is partial when only some are).
+
+  An array of structures shows as one tag (the whole array, a TPLCStruct) and, under it, each
+  element (Arr[0], Arr[1]...) as a level of the tree, with its members: every member of an
+  element, at any depth (arrays of structures inside the elements included), can become a
+  loose tag read by its symbolic path.
 
   The rules of what becomes a tag are in S7PlusTagPlan (and are tested without the
   IDE): only scalar variables become a TPLCTagNumber, already with the right TagType and
@@ -475,7 +485,7 @@ var
   nodes: TStringList;         //path of a level -> its node
   aParent, node: TTreeNode;
   info: TS7PlusNodeInfo;
-  key, aText: String;
+  key, baseKey, aText: String;
 begin
   structIdx:=TStringList.Create;
   nodes:=TStringList.Create;
@@ -505,6 +515,11 @@ begin
         if nodes.Find(key, p) then
           node:=TTreeNode(nodes.Objects[p])
         else begin
+          //an element of an array (Arr[2]) hangs from the array (Arr), when that is on the tree
+          if (levels[k]<>'') and (levels[k][Length(levels[k])]=']') and (Pos('[', levels[k])>1) then begin
+            baseKey:=Copy(key, 1, Length(key)-Length(levels[k]))+Copy(levels[k], 1, Pos('[', levels[k])-1);
+            if nodes.Find(baseKey, p) then aParent:=TTreeNode(nodes.Objects[p]);
+          end;
           info:=TS7PlusNodeInfo.Create;
           info.Key:=key;
           info.Index:=-1;
@@ -514,9 +529,12 @@ begin
           aText:=levels[k];
           if k<High(levels) then begin
             //a level above the variable: a structure, with its size
-            if structIdx.Find(key, p) then
-              aText:=aText+' : '+S7PlusSoftTypeName(FCandidates[PtrInt(structIdx.Objects[p])].SoftDataType)+
-                     ' ('+SizeText(FBlocks[aBlock].Cands, key, false)+')';
+            if structIdx.Find(key, p) then begin
+              aText:=aText+' : '+S7PlusSoftTypeName(FCandidates[PtrInt(structIdx.Objects[p])].SoftDataType);
+              //inside an array element there can be thousands of levels: no size for them
+              if Pos('[', key)=0 then
+                aText:=aText+' ('+SizeText(FBlocks[aBlock].Cands, key, false)+')';
+            end;
           end else begin
             info.Index:=c;
             aText:=aText+Decoration(c);
