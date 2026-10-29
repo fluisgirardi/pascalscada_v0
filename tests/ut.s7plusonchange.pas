@@ -68,6 +68,8 @@ type
     function  TimeoutNow:Integer;
     function  IsResolved(const Path:AnsiString):Boolean;
     function  BrowsedDBs:Integer;
+    procedure Watch_(DBNumber, TiRid:Cardinal);
+    function  Watched:Integer;
     //the program as the PLC shows it: two DBs, each with the modification time of its type
     function  Observe(const Sig:String; Rid1:Cardinal; Has1:Boolean; Time1:Cardinal;
                       Rid2:Cardinal; Has2:Boolean; Time2:Cardinal):Boolean;
@@ -135,6 +137,9 @@ type
     procedure ADBBrowsedLaterJoinsTheBaseline;
     procedure AChangeDropsTheCachesAndLearnsAgain;
     procedure TheProgramCheckIntervalIsAtLeastASecondOrOff;
+    procedure ABrowsedDBIsWatchedOnce;
+    procedure ADBWithNoTypeInfoIsNotWatched;
+    procedure AChangeStopsWatchingWhatWasBrowsed;
   private
     function Member(Offset:Integer; SoftDataType:Byte; LidTag:Cardinal):TS7PlusCompositeItem;
     function Bytes(const B:array of Byte):TArrayOfDouble;
@@ -265,6 +270,16 @@ end;
 function TS7DriverProbe.BrowsedDBs:Integer;
 begin
   Result:=BrowsedDBCount;
+end;
+
+procedure TS7DriverProbe.Watch_(DBNumber, TiRid:Cardinal);
+begin
+  WatchDB(DBNumber, TiRid);
+end;
+
+function TS7DriverProbe.Watched:Integer;
+begin
+  Result:=WatchedDBCount;
 end;
 
 function TS7DriverProbe.Observe(const Sig:String; Rid1:Cardinal; Has1:Boolean; Time1:Cardinal;
@@ -980,6 +995,31 @@ begin
   AssertEquals('negative too', 0, FDriver.ProgramCheckIntervalMs);
   FDriver.ProgramCheckIntervalMs := 30000;
   AssertEquals(30000, FDriver.ProgramCheckIntervalMs);
+end;
+
+procedure TTestS7PlusOnChange.ABrowsedDBIsWatchedOnce;
+begin
+  FDriver.Watch_(4, $90010004);
+  FDriver.Watch_(5, $90010005);
+  FDriver.Watch_(4, $90010004);
+  AssertEquals('two DBs', 2, FDriver.Watched);
+  FDriver.Watch_(4, $90010099);
+  AssertEquals('the same DB with another type object is the same DB', 2, FDriver.Watched);
+end;
+
+procedure TTestS7PlusOnChange.ADBWithNoTypeInfoIsNotWatched;
+begin
+  FDriver.Watch_(4, 0);
+  AssertEquals(0, FDriver.Watched);
+end;
+
+procedure TTestS7PlusOnChange.AChangeStopsWatchingWhatWasBrowsed;
+begin
+  FDriver.Watch_(4, 1);
+  FDriver.Watch_(5, 2);
+  FDriver.Observe('a', 1, true, 100, 2, true, 200);
+  AssertTrue(FDriver.Observe('b', 1, true, 100, 2, true, 200));
+  AssertEquals('browsing again watches them again', 0, FDriver.Watched);
 end;
 
 initialization
