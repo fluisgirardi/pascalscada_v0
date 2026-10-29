@@ -35,7 +35,7 @@ interface
 uses
   Classes, SysUtils, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
   S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
-  S7PlusHarpoLegitimate;
+  S7PlusHarpoLegitimate, S7PlusCertificate;
 
 const
   //: Default of TS7PlusConnection.MaxItemsPerRequest: the largest number of items a PLC took in
@@ -161,6 +161,8 @@ type
 
     //-- V2+ TLS/IntegrityId ---------------------------------------------------
     FUseTLS:Boolean;
+    FServerCertificate:AnsiString;
+    FPeerCertificate:AnsiString;
     FTLSActive:Boolean;
     FSSLCtx:PSSLCTX;
     FSSL:PSSL;
@@ -584,6 +586,14 @@ type
     property TpduSizeCode:Byte read FTpduCode write FTpduCode;
     //: The TPDU size in bytes the PLC confirmed (1024 until a connection is made).
     property TpduBytes:Integer read FTpduBytes;
+    //: The certificate(s) of the PLC to trust, as one base64 string of the DER (see
+    //: S7PlusCertificate). Empty: whatever certificate the PLC presents is accepted. With a value,
+    //: the TLS handshake only succeeds if the PLC presents a certificate that chains to one of them
+    //: (or is one of them); the name in the certificate is not compared. Read at each connection.
+    property ServerCertificate:AnsiString read FServerCertificate write FServerCertificate;
+    //: The certificate the PLC presented in the last TLS handshake, as base64 of its DER ('' until
+    //: one succeeded). Copy it into ServerCertificate to trust that very PLC from then on.
+    property PeerCertificate:AnsiString read FPeerCertificate;
     property UseTLS:Boolean read FUseTLS write FUseTLS;
     //: True once the TLS tunnel is established and in use for all further messages.
     property TLSActive:Boolean read FTLSActive;
@@ -914,6 +924,8 @@ function TS7PlusConnection.ActivateTLS:Boolean;
 var
   Ret, Err:cint;
   Retries:Integer;
+  Trusted:TS7PlusCertDERArray;
+  Why:String;
 begin
   Result := false;
 
@@ -946,9 +958,27 @@ begin
     'AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256');
   S7PlusSSLCtxSet1GroupsList(FSSLCtx, 'P-256:X25519:P-384');
   SSL_CTX_set_options(FSSLCtx, SSL_OP_NO_TICKET or SSL_OP_NO_ENCRYPT_THEN_MAC or SSL_OP_NO_EXTENDED_MASTER_SECRET);
-  //No CA/device certificate provisioned yet (out of scope for now) - accept whatever
-  //certificate the PLC presents, same as the reference implementation without tls_ca.
-  SSL_CTX_set_verify(FSSLCtx, SSL_VERIFY_NONE, nil);
+  if FServerCertificate='' then
+    //No certificate configured: accept whatever the PLC presents, as the reference
+    //implementation does without tls_ca.
+    SSL_CTX_set_verify(FSSLCtx, SSL_VERIFY_NONE, nil)
+  else begin
+    //A certificate was configured: the PLC must prove it is that one (or signed by it). If what
+    //is configured cannot be used, the connection fails - it must never fall back to "accept all".
+    if not S7PlusCertBase64ToDER(FServerCertificate, Trusted) then begin
+      Debug('ActivateTLS: ServerCertificate nao e um certificado (base64 de DER) valido - conexao recusada.');
+      SSL_CTX_free(FSSLCtx); FSSLCtx := nil;
+      S7PlusSSLUnload;
+      exit;
+    end;
+    if S7PlusSSLCtxTrustCertificates(FSSLCtx, Trusted)<=0 then begin
+      Debug('ActivateTLS: o OpenSSL nao aceitou o ServerCertificate - conexao recusada.');
+      SSL_CTX_free(FSSLCtx); FSSLCtx := nil;
+      S7PlusSSLUnload;
+      exit;
+    end;
+    Debug(Format('ActivateTLS: verificando o certificado do CLP contra %d certificado(s) configurado(s).', [Length(Trusted)]));
+  end;
 
   FSSL := SSL_new(FSSLCtx);
   if FSSL=nil then begin
@@ -985,6 +1015,9 @@ begin
       TLSFlushOutgoing
     else begin
       Debug(Format('ActivateTLS: handshake falhou (SSL_get_error=%d, ret=%d)',[Err,Ret]));
+      Why := S7PlusSSLVerifyErrorText(FSSL);
+      if Why<>'' then
+        Debug('ActivateTLS: o certificado do CLP nao confere com o ServerCertificate: '+Why);
       ReleaseTLS;
       exit;
     end;
@@ -999,6 +1032,8 @@ begin
   end;
 
   FTLSActive := true;
+  //the certificate the PLC presented, for the user to copy into ServerCertificate
+  FPeerCertificate := S7PlusDerToBase64(S7PlusSSLPeerCertificateDER(FSSL));
   Debug(Format('ActivateTLS: OK - versao=%s cipher=%s',
                [SSL_get_version(FSSL), SSL_CIPHER_get_name(SSL_get_current_cipher(FSSL))]));
   Result := true;
