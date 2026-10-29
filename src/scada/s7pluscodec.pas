@@ -404,6 +404,8 @@ begin
   FixedSize := 0;
   case SoftDataType of
     1{sdtBOOL}:  begin WireType := S7PlusType_BOOL;  Kind := wkRawByte; end;
+    //the Bool of a DB is listed as BBOOL (40): written as a Bool too, or the PLC refuses it
+    40{sdtBBOOL}:begin WireType := S7PlusType_BOOL;  Kind := wkRawByte; end;
     2{sdtBYTE}:  begin WireType := S7PlusType_BYTE;  Kind := wkRawByte; end;
     3{sdtCHAR}:  begin WireType := S7PlusType_USINT; Kind := wkRawByte; end;
     52{sdtUSINT}:begin WireType := S7PlusType_USINT; Kind := wkRawByte; end;

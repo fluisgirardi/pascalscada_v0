@@ -97,6 +97,7 @@ type
     procedure TheMembersOfAnArrayOfStructuresAreItemsAtTheirClassicBytes;
     procedure TheStructureIsAsBigAsTheWholeDBRead;
     procedure TheItemNamesCarryThePrefix;
+    procedure ANegativeIndexIsNotTheSameNameAsThePositiveOne;
     procedure AnAreaTagHasTheAreaAsItsParent;
   end;
 
@@ -973,6 +974,14 @@ begin
   P := S7PlusBuildImportPlan(L, AllChecked(1), 'meu', 0, true);
   AssertEquals('the structure', 'meuDB4', P[0].CompName);
   AssertEquals('the item', 'meuDB4_Var1', P[0].StructItems[0].CompName);
+end;
+
+procedure TTestS7PlusTagPlan.ANegativeIndexIsNotTheSameNameAsThePositiveOne;
+begin
+  AssertEquals('pArr_NegLow_m2', S7PlusSuggestedName('Arr_NegLow[-2]', 'p'));
+  AssertEquals('pArr_NegLow_2', S7PlusSuggestedName('Arr_NegLow[2]', 'p'));
+  AssertEquals('a dash that is not an index stays a separator', 'pA_B', S7PlusSuggestedName('A-B', 'p'));
+  AssertEquals('second dimension', 'pArr_1_m3', S7PlusSuggestedName('Arr[1,-3]', 'p'));
 end;
 
 initialization

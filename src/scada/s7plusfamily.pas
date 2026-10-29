@@ -199,6 +199,7 @@ type
     FProgramSignature:String;
     FTypeTimes:TS7PlusTypeTimeArray;
     FWatch:TS7PlusWatchedDBArray;
+    FProgramChangeWhy:String;
     FMaxItemsPerRequest, FMaxTagsPerScan, FMaxItemsPerSubscription:Integer;
 
     function GetUseTLS:Boolean;
@@ -231,7 +232,7 @@ type
     function GetCachedDBVars(DBNumber:Cardinal; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetCachedAreaVars(AreaRID, TiRid:Cardinal; const AreaName:String; var Cache:TS7PlusVarInfoArray; var Browsed:Boolean; out Vars:TS7PlusVarInfoArray):Boolean;
     function GetDBNumberByName(const Name:AnsiString; out DBNumber:Integer):Boolean;
-    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray; out DataSize:Integer):Boolean;
+    function ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray; out DataSize:Integer; out ElementItems:TS7PlusCompositeItemArray):Boolean;
     //: True for an array of structures ("DB4.Arr") or one element of it ("DB4.Arr[2]").
     function IsStructArrayPath(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString):Boolean;
     //: Adds, as composite items, every member of the elements of an array of structures (or of
@@ -259,7 +260,16 @@ type
     //: of Values (the tag's bytes, laid out like ReadComposite assembles them) at its
     //: ByteOffset. Members that are not writable or lie beyond Values are left out.
     //: Returns how many were appended.
-    function ExpandCompositeWrite(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
+    //: The elements of an array of scalars as write items (see ResolvePath); nothing when it is not
+    //: one, or when the elements listed do not add up to the size of the array.
+    procedure CollectArrayElements(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString;
+                                   AccessArea:Cardinal; ArraySize:Integer; var Items:TS7PlusCompositeItemArray);
+    function ExpandCompositeWrite(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray; BaseOffset:Integer = 0):Integer;
+    //: A write of PART of a symbolic value (one element of an array, from byte Offset): reads the
+    //: current value, puts Values over it from Offset and gives the whole of it back, which is
+    //: what the PLC takes (it writes a variable whole, never a slice of it).
+    function PatchedValue(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; Offset:Integer;
+                          const Values:TArrayOfDouble; out Whole:TBytes):Boolean;
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
     function DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult; override;
@@ -909,6 +919,37 @@ begin
     end;
 end;
 
+procedure TS7CommPlusDriver.CollectArrayElements(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString;
+  AccessArea:Cardinal; ArraySize:Integer; var Items:TS7PlusCompositeItemArray);
+var
+  i, n, ElemSize:Integer;
+  Prefix, Rest:AnsiString;
+  Found:TS7PlusCompositeItemArray;
+begin
+  SetLength(Found, 0);
+  Prefix := CanonicalPath+'[';
+  for i:=0 to High(Vars) do begin
+    if Copy(Vars[i].Name, 1, Length(Prefix))<>Prefix then continue;
+    Rest := Copy(Vars[i].Name, Length(Prefix), MaxInt);          //"[k]"
+    if (Rest='') or (Rest[Length(Rest)]<>']') or (Pos('.', Rest)>0) then continue;
+    ElemSize := S7PlusDataTypeSize(Vars[i].SoftDataType, 0);
+    if (ElemSize<=0) or (TS7PlusSoftDataType(Vars[i].SoftDataType) in [sdtSTRING, sdtWSTRING, sdtSTRUCT]) then begin
+      SetLength(Found, 0);
+      exit;
+    end;
+    n := Length(Found);
+    SetLength(Found, n+1);
+    Found[n].AccessArea := AccessArea;
+    Found[n].Lids := Vars[i].Lids;
+    Found[n].SoftDataType := Vars[i].SoftDataType;
+    Found[n].WriteSize := CompositeWriteSize(Vars[i].SoftDataType);
+    Found[n].ReadSize := ElemSize;
+    Found[n].ByteOffset := n*ElemSize;       //the listing is in index order
+  end;
+  if (Length(Found)=0) or (Length(Found)*Found[0].ReadSize<>ArraySize) then exit;
+  Items := Found;
+end;
+
 function TS7CommPlusDriver.IsStructArrayPath(const Vars:TS7PlusVarInfoArray; const CanonicalPath:AnsiString):Boolean;
 var
   i:Integer;
@@ -960,7 +1001,7 @@ begin
   end;
 end;
 
-function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray; out DataSize:Integer):Boolean;
+function TS7CommPlusDriver.ResolvePath(const Path:AnsiString; out AccessArea:Cardinal; out Lids:TS7PlusLIDArray; out ByteOffset:Integer; out SoftDataType:Byte; out CompositeItems:TS7PlusCompositeItemArray; out DataSize:Integer; out ElementItems:TS7PlusCompositeItemArray):Boolean;
 var
   DotPos, DBNumber, i, j, CIdx:Integer;
   AreaName, CanonicalPath, Rest:AnsiString;
@@ -975,6 +1016,7 @@ begin
   SoftDataType := 0;
   DataSize := 0;
   SetLength(CompositeItems, 0);
+  SetLength(ElementItems, 0);
 
   DotPos := Pos('.', Path);
   if DotPos=1 then exit; //malformed: leading dot
@@ -1097,6 +1139,10 @@ begin
       SoftDataType := Vars[i].SoftDataType;
       DataSize := Vars[i].DataSize;
       Result := true;
+      //An array of scalars: its elements, each at its place in the array's bytes. The PLC takes a
+      //write of one element (by its own address), never a slice of the array.
+      if (Length(CompositeItems)=0) and (DataSize>0) then
+        CollectArrayElements(Vars, CanonicalPath, AccessArea, DataSize, ElementItems);
       exit;
     end;
 end;
@@ -1215,14 +1261,30 @@ begin
   end;
 end;
 
-function TS7CommPlusDriver.ExpandCompositeWrite(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
+function TS7CommPlusDriver.PatchedValue(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; Offset:Integer;
+  const Values:TArrayOfDouble; out Whole:TBytes):Boolean;
+var
+  b:Integer;
+begin
+  Result := false;
+  SetLength(Whole, 0);
+  if (Offset<0) or (not FConnection.ReadSymbolic(AccessArea, Lids, Whole)) then exit;
+  if Offset+Length(Values)>Length(Whole) then exit;       //a slice that does not fit the value
+  for b:=0 to High(Values) do
+    Whole[Offset+b] := Trunc(Values[b]) and $FF;
+  Result := true;
+end;
+
+//Values start at byte BaseOffset of the value the Composite describes (a write of part of it, as
+//an item of a structure does): only the members that lie wholly inside Values are written.
+function TS7CommPlusDriver.ExpandCompositeWrite(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray; BaseOffset:Integer):Integer;
 var
   i, b, k:Integer;
 begin
   Result := 0;
   for i:=0 to High(Composite) do begin
-    if (Composite[i].WriteSize<=0) or (Composite[i].ByteOffset<0) or
-       (Composite[i].ByteOffset+Composite[i].WriteSize>Length(Values)) then continue;
+    if (Composite[i].WriteSize<=0) or (Composite[i].ByteOffset<BaseOffset) or
+       (Composite[i].ByteOffset-BaseOffset+Composite[i].WriteSize>Length(Values)) then continue;
     k := Length(Items);
     SetLength(Items, k+1);
     Items[k].AccessArea := Composite[i].AccessArea;
@@ -1230,7 +1292,7 @@ begin
     Items[k].SoftDataType := Composite[i].SoftDataType;
     SetLength(Items[k].Data, Composite[i].WriteSize);
     for b:=0 to Composite[i].WriteSize-1 do
-      Items[k].Data[b] := Trunc(Values[Composite[i].ByteOffset+b]) and $FF;
+      Items[k].Data[b] := Trunc(Values[Composite[i].ByteOffset-BaseOffset+b]) and $FF;
     Inc(Result);
   end;
 end;
@@ -1334,6 +1396,7 @@ type
     CompByteOffset:Integer;
   end;
 var
+  DummyElements:TS7PlusCompositeItemArray;
   i, j, EntryIdx, ItemIdx, b:Integer;
   Now_, Elapsed:Int64;
   DueIndices:array of Integer;
@@ -1360,7 +1423,7 @@ begin
   for i:=0 to High(FScanList) do
     if (not FScanList[i].Resolved) and (Now_-FScanList[i].LastResolveAttempt>=5000) then begin
       FScanList[i].LastResolveAttempt := Now_;
-      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids, FScanList[i].ByteOffset, FScanList[i].SoftDataType, FScanList[i].CompositeItems, FScanList[i].ReadSize) then begin
+      if ResolvePath(FScanList[i].Path, FScanList[i].AccessArea, FScanList[i].Lids, FScanList[i].ByteOffset, FScanList[i].SoftDataType, FScanList[i].CompositeItems, FScanList[i].ReadSize, DummyElements) then begin
         FScanList[i].Resolved := true;
         FScanList[i].IsComposite := Length(FScanList[i].CompositeItems)>0;
         TryDeduplicateEntry(i);
@@ -1863,6 +1926,7 @@ end;
 
 function TS7CommPlusDriver.DoRead(const tagrec:TTagRec; out Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
+  ElementItems:TS7PlusCompositeItemArray;
   Data:TBytes;
   ok:Boolean;
   i:Integer;
@@ -1887,7 +1951,7 @@ begin
   //("whole DB/area") Path resolves with a non-empty CompositeItems - read via a batched
   //multi-item request instead of the (otherwise meaningless) empty-LID ReadSymbolic.
   if tagrec.Path<>'' then begin
-    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType, CompositeItems, DummySize) then begin
+    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, DummyType, CompositeItems, DummySize, ElementItems) then begin
       Result := FailResult;
       exit;
     end;
@@ -1928,6 +1992,7 @@ end;
 
 function TS7CommPlusDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 var
+  ElementItems:TS7PlusCompositeItemArray;
   Data:TBytes;
   ok:Boolean;
   i:Integer;
@@ -1957,14 +2022,14 @@ begin
   //PValue (ValueDInt, ValueReal, ...) - a generic byte-array/blob value is rejected by the
   //PLC outright, confirmed against real hardware.
   if tagrec.Path<>'' then begin
-    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite, DummySize) then begin
+    if not ResolvePath(tagrec.Path, AccessArea, Lids, DummyOffset, WriteSoftDataType, DummyComposite, DummySize, ElementItems) then begin
       Result := FailResult;
       exit;
     end;
     //Whole DB/area: one write per scalar member, in as few requests as possible.
     if Length(DummyComposite)>0 then begin
       SetLength(CompItems, 0);
-      if (ExpandCompositeWrite(DummyComposite, Values, CompItems)>0) and
+      if (ExpandCompositeWrite(DummyComposite, Values, CompItems, tagrec.OffSet)>0) and
          FConnection.WriteMultipleSymbolic(CompItems, CompResults) then begin
         Result := ioOk;
         for i:=0 to High(CompItems) do
@@ -1973,6 +2038,25 @@ begin
         Result := FailResult;
       exit;
     end;
+    //An array of scalars: written element by element (each by its own address), whole or in part
+    if Length(ElementItems)>0 then begin
+      SetLength(CompItems, 0);
+      if (ExpandCompositeWrite(ElementItems, Values, CompItems, tagrec.OffSet)>0) and
+         FConnection.WriteMultipleSymbolic(CompItems, CompResults) then begin
+        Result := ioOk;
+        for i:=0 to High(CompItems) do
+          if (i>High(CompResults)) or (not CompResults[i].Ok) then Result := FailResult;
+      end else
+        Result := FailResult;
+      exit;
+    end;
+    //Part of a value (a slice of something else): the PLC writes a variable whole, so the rest of
+    //it is read first and written back with the part replaced.
+    if (tagrec.OffSet<>0) or ((DummySize>0) and (Length(Values)<DummySize)) then
+      if not PatchedValue(AccessArea, Lids, tagrec.OffSet, Values, Data) then begin
+        Result := FailResult;
+        exit;
+      end;
     if FConnection.WriteSymbolic(AccessArea, Lids, Data, 0, WriteSoftDataType) then
       Result := ioOk
     else
@@ -1995,6 +2079,7 @@ end;
 
 procedure TS7CommPlusDriver.DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean);
 var
+  ElementItems:TS7PlusCompositeItemArray;
   Items:TS7PlusMultiWriteItemArray;
   Results:TS7PlusMultiWriteResultArray;
   Owner:array of Integer;  //Items[k] belongs to Writes[Owner[k]]
@@ -2019,14 +2104,28 @@ begin
       Writes[i].Result := DoWrite(Writes[i].Tag, Writes[i].Values, Sync);
       continue;
     end;
-    if not ResolvePath(Writes[i].Tag.Path, AccessArea, Lids, DummyOffset, SoftType, DummyComposite, DummySize) then begin
+    if not ResolvePath(Writes[i].Tag.Path, AccessArea, Lids, DummyOffset, SoftType, DummyComposite, DummySize, ElementItems) then begin
       Writes[i].Result := FailResult; //same answer DoWrite gives for a Path it cannot resolve
       continue;
     end;
     if Length(DummyComposite)>0 then begin
       //Whole DB/area: its scalar members join the batch, all owned by this write.
       k := Length(Items);
-      n := ExpandCompositeWrite(DummyComposite, Writes[i].Values, Items);
+      n := ExpandCompositeWrite(DummyComposite, Writes[i].Values, Items, Writes[i].Tag.OffSet);
+      if n=0 then begin
+        Writes[i].Result := FailResult;
+        continue;
+      end;
+      SetLength(Owner, Length(Items));
+      for b:=k to High(Items) do
+        Owner[b] := i;
+      Writes[i].Result := ioOk;
+      continue;
+    end;
+    if Length(ElementItems)>0 then begin
+      //An array of scalars: its elements join the batch, each by its own address
+      k := Length(Items);
+      n := ExpandCompositeWrite(ElementItems, Writes[i].Values, Items, Writes[i].Tag.OffSet);
       if n=0 then begin
         Writes[i].Result := FailResult;
         continue;
@@ -2047,6 +2146,14 @@ begin
     SetLength(Items[k].Data, Length(Writes[i].Values));
     for b:=0 to High(Writes[i].Values) do
       Items[k].Data[b] := Trunc(Writes[i].Values[b]) and $FF;
+    //part of a value: read the rest and write it whole (see PatchedValue)
+    if (Writes[i].Tag.OffSet<>0) or ((DummySize>0) and (Length(Writes[i].Values)<DummySize)) then
+      if not PatchedValue(AccessArea, Lids, Writes[i].Tag.OffSet, Writes[i].Values, Items[k].Data) then begin
+        SetLength(Items, k);
+        SetLength(Owner, k);
+        Writes[i].Result := FailResult;
+        continue;
+      end;
     Writes[i].Result := ioOk;
   end;
 
@@ -2291,6 +2398,7 @@ begin
   end;
 
   Changed := Signature<>FProgramSignature;
+  if Changed then FProgramChangeWhy := 'a lista de DBs mudou: '+FProgramSignature+' -> '+Signature;
   //the time of the type of each DB kept: another one, or not answered any more, is a download
   if not Changed then
     for i:=0 to High(FTypeTimes) do begin
@@ -2302,9 +2410,15 @@ begin
           if (not Times[j].HasTime) or (Length(Times[j].Time)<>Length(FTypeTimes[i].Time)) or
              ((Length(Times[j].Time)>0) and (not CompareMem(@Times[j].Time[0], @FTypeTimes[i].Time[0], Length(Times[j].Time)))) then
             Changed := true;
+          if Changed then
+            FProgramChangeWhy := Format('a data do tipo $%.8x mudou (%d -> %d bytes, ou deixou de ser informada)',
+                                        [FTypeTimes[i].TiRid, Length(FTypeTimes[i].Time), Length(Times[j].Time)]);
           break;
         end;
-      if not Found then Changed := true;
+      if not Found then begin
+        Changed := true;
+        FProgramChangeWhy := Format('tipo $%.8x deixou de ser consultado', [FTypeTimes[i].TiRid]);
+      end;
       if Changed then break;
     end;
 
@@ -2384,9 +2498,19 @@ procedure TS7CommPlusDriver.CheckProgramNow(const Blocks:TS7PlusDataBlockInfoArr
 var
   Times:TS7PlusTypeTimeArray;
   Empty:TS7PlusTypeTimeArray;
-  i, n:Integer;
+  i, n, tries:Integer;
   Value:TBytes;
   Sig:String;
+
+  function BaselineHasTime(ARid:Cardinal):Boolean;
+  var
+    k:Integer;
+  begin
+    Result := false;
+    for k:=0 to High(FTypeTimes) do
+      if (FTypeTimes[k].TiRid=ARid) and FTypeTimes[k].HasTime then Result := true;
+  end;
+
 begin
   if FConnection=nil then exit;
   Sig := S7PlusBlockSignature(Blocks);
@@ -2394,6 +2518,15 @@ begin
   SetLength(Empty, 0);
   for i:=0 to High(FWatch) do begin
     if not FConnection.ReadTypeInfoModTime(FWatch[i].TiRid, Value) then exit;   //a failed request is not a change
+    //The time a type had and that is not in the answer: a download that replaced the type, or an
+    //answer that was not the one asked for (a PLC busy with something else). Ask again a couple
+    //of times before taking it for a change.
+    tries := 0;
+    while (Length(Value)=0) and BaselineHasTime(FWatch[i].TiRid) and (tries<2) do begin
+      Inc(tries);
+      Sleep(100);
+      if not FConnection.ReadTypeInfoModTime(FWatch[i].TiRid, Value) then exit;
+    end;
     n := Length(Times);
     SetLength(Times, n+1);
     Times[n].TiRid := FWatch[i].TiRid;
@@ -2401,7 +2534,7 @@ begin
     Times[n].HasTime := Length(Value)>0;
   end;
   if NoteProgram(Sig, Times) then begin
-    ConnDebug(Self, 'CheckProgramNow: o programa do CLP mudou - os tipos serao lidos de novo e os tags resolvidos de novo.');
+    ConnDebug(Self, 'CheckProgramNow: o programa do CLP mudou ('+FProgramChangeWhy+') - os tipos serao lidos de novo e os tags resolvidos de novo.');
     //the list just read is the new baseline
     NoteProgram(Sig, Empty);
   end;

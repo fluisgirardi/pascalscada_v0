@@ -9,6 +9,7 @@ examples/**/*.exe
 tests/bin/
 tests/units/
 tests/units_hmi/
+tests/units_live/
 
 # lixo que o varredor de exemplos deixa pelo caminho
 # leftovers from the example sweep

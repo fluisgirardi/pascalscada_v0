@@ -33,7 +33,7 @@ interface
 uses
   Classes, SysUtils, fpcunit, testregistry, S7PlusTypes,
   Tag, ProtocolTypes, PLCTagNumber, CommTypes,
-  S7PlusFamily, S7PlusConnection,
+  S7PlusFamily, S7PlusConnection, S7PlusTypeInfo,
   testsupport.bytes;
 
 type
@@ -48,7 +48,7 @@ type
     procedure Apply(const Values:TS7PlusNotificationValueArray; const Errors:TS7PlusNotificationErrorArray; Now_:QWord);
     procedure LoseSession;
     function ValueOf(const Path:AnsiString; Size:LongInt = 0):TScanReadRec;
-    function Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
+    function Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray; BaseOffset:Integer = 0):Integer;
     function WriteSizeOf(SoftDataType:Byte):Integer;
     //authentication state / what the tests drive
     procedure SetAccess(ALevel:Cardinal; ALegitimated:Boolean);
@@ -70,6 +70,7 @@ type
     function  BrowsedDBs:Integer;
     procedure Watch_(DBNumber, TiRid:Cardinal);
     function  Watched:Integer;
+    function  ElementsOf(const Vars:TS7PlusVarInfoArray; const APath:AnsiString; ASize:Integer; out Items:TS7PlusCompositeItemArray):Integer;
     //the program as the PLC shows it: two DBs, each with the modification time of its type
     function  Observe(const Sig:String; Rid1:Cardinal; Has1:Boolean; Time1:Cardinal;
                       Rid2:Cardinal; Has2:Boolean; Time2:Cardinal):Boolean;
@@ -149,6 +150,11 @@ type
     procedure MembersThatCannotBeWrittenAreSkipped;
     procedure MembersBeyondTheTagsBytesAreSkipped;
     procedure ExpandingAppendsToTheItemsAlreadyThere;
+    procedure APartialWriteOnlyReachesTheMembersInsideIt;
+    procedure AWriteOfPartOfTheDBStartsAtItsOwnByte;
+    procedure TheElementsOfAnArrayOfScalarsAreItsWriteItems;
+    procedure ElementsThatDoNotAddUpToTheArrayAreNotUsed;
+    procedure AnArrayOfStringsHasNoElementItems;
   end;
 
 implementation
@@ -186,9 +192,9 @@ begin
   DoGetValue(tr, Result);
 end;
 
-function TS7DriverProbe.Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray):Integer;
+function TS7DriverProbe.Expand(const Composite:TS7PlusCompositeItemArray; const Values:TArrayOfDouble; var Items:TS7PlusMultiWriteItemArray; BaseOffset:Integer):Integer;
 begin
-  Result := ExpandCompositeWrite(Composite, Values, Items);
+  Result := ExpandCompositeWrite(Composite, Values, Items, BaseOffset);
 end;
 
 procedure TS7DriverProbe.SetAccess(ALevel:Cardinal; ALegitimated:Boolean);
@@ -280,6 +286,13 @@ end;
 function TS7DriverProbe.Watched:Integer;
 begin
   Result:=WatchedDBCount;
+end;
+
+function TS7DriverProbe.ElementsOf(const Vars:TS7PlusVarInfoArray; const APath:AnsiString; ASize:Integer; out Items:TS7PlusCompositeItemArray):Integer;
+begin
+  SetLength(Items, 0);
+  CollectArrayElements(Vars, APath, $8A0E0004, ASize, Items);
+  Result:=Length(Items);
 end;
 
 function TS7DriverProbe.Observe(const Sig:String; Rid1:Cardinal; Has1:Boolean; Time1:Cardinal;
@@ -1020,6 +1033,107 @@ begin
   FDriver.Observe('a', 1, true, 100, 2, true, 200);
   AssertTrue(FDriver.Observe('b', 1, true, 100, 2, true, 200));
   AssertEquals('browsing again watches them again', 0, FDriver.Watched);
+end;
+
+procedure TTestS7PlusOnChange.APartialWriteOnlyReachesTheMembersInsideIt;
+var
+  Members:TS7PlusCompositeItemArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Members, 3);
+  Members[0] := Member(0, 7, 11);   //DINT at 0..3
+  Members[1] := Member(4, 5, 12);   //INT at 4..5
+  Members[2] := Member(6, 2, 13);   //BYTE at 6
+  SetLength(Items, 0);
+  //the 4 bytes of an item that sits at byte 4: only the INT and the BYTE lie in 4..7
+  AssertEquals('two members inside', 2, FDriver.Expand(Members, Bytes([9,8, 7]), Items, 4));
+  AssertEquals(2, Length(Items));
+  AssertEquals('the INT', 12, Items[0].Lids[0]);
+  AssertEquals(9, Items[0].Data[0]);
+  AssertEquals(8, Items[0].Data[1]);
+  AssertEquals('the BYTE', 13, Items[1].Lids[0]);
+  AssertEquals(7, Items[1].Data[0]);
+end;
+
+procedure TTestS7PlusOnChange.AWriteOfPartOfTheDBStartsAtItsOwnByte;
+var
+  Members:TS7PlusCompositeItemArray;
+  Items:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Members, 2);
+  Members[0] := Member(0, 7, 11);   //DINT at 0..3
+  Members[1] := Member(4, 7, 12);   //DINT at 4..7
+  SetLength(Items, 0);
+  //4 bytes at byte 4 are the second DINT, not the first
+  AssertEquals(1, FDriver.Expand(Members, Bytes([1,2,3,4]), Items, 4));
+  AssertEquals('the second DInt', 12, Items[0].Lids[0]);
+  AssertEquals(1, Items[0].Data[0]);
+  AssertEquals(4, Items[0].Data[3]);
+  //a write that cuts a member in half reaches neither
+  SetLength(Items, 0);
+  AssertEquals('half of the first and half of the second', 0, FDriver.Expand(Members, Bytes([1,2,3,4]), Items, 2));
+end;
+
+function ArrVar(const AName:String; ASoftType:Byte; ALid:Cardinal):TS7PlusVarInfo;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  Result.Name := AName;
+  Result.SoftDataType := ASoftType;
+  SetLength(Result.Lids, 2);
+  Result.Lids[0] := 7;
+  Result.Lids[1] := ALid;
+end;
+
+procedure TTestS7PlusOnChange.TheElementsOfAnArrayOfScalarsAreItsWriteItems;
+var
+  Vars:TS7PlusVarInfoArray;
+  Items:TS7PlusCompositeItemArray;
+  Wr:TS7PlusMultiWriteItemArray;
+begin
+  SetLength(Vars, 5);
+  Vars[0] := ArrVar('DB4.Arr', 7, 1);          //the array itself
+  Vars[1] := ArrVar('DB4.Arr[0]', 7, 10);
+  Vars[2] := ArrVar('DB4.Arr[1]', 7, 11);
+  Vars[3] := ArrVar('DB4.Arr[2]', 7, 12);
+  Vars[4] := ArrVar('DB4.Other', 7, 99);
+  AssertEquals('three elements of 4 bytes = the array', 3, FDriver.ElementsOf(Vars, 'DB4.Arr', 12, Items));
+  AssertEquals(0, Items[0].ByteOffset);
+  AssertEquals(4, Items[1].ByteOffset);
+  AssertEquals(8, Items[2].ByteOffset);
+  AssertEquals(4, Items[1].WriteSize);
+  AssertEquals(11, Items[1].Lids[1]);
+  //a write of the 4 bytes of element 1 (byte 4 of the array) reaches that element only
+  SetLength(Wr, 0);
+  AssertEquals(1, FDriver.Expand(Items, Bytes([1,2,3,4]), Wr, 4));
+  AssertEquals(11, Wr[0].Lids[1]);
+  AssertEquals(1, Wr[0].Data[0]);
+  //the whole array: three writes
+  SetLength(Wr, 0);
+  AssertEquals(3, FDriver.Expand(Items, Bytes([1,2,3,4, 5,6,7,8, 9,10,11,12]), Wr));
+end;
+
+procedure TTestS7PlusOnChange.ElementsThatDoNotAddUpToTheArrayAreNotUsed;
+var
+  Vars:TS7PlusVarInfoArray;
+  Items:TS7PlusCompositeItemArray;
+begin
+  SetLength(Vars, 3);
+  Vars[0] := ArrVar('DB4.Arr', 7, 1);
+  Vars[1] := ArrVar('DB4.Arr[0]', 7, 10);
+  Vars[2] := ArrVar('DB4.Arr[1]', 7, 11);
+  AssertEquals('2 x 4 is not 12', 0, FDriver.ElementsOf(Vars, 'DB4.Arr', 12, Items));
+  AssertEquals('a path that is no array', 0, FDriver.ElementsOf(Vars, 'DB4.Nothing', 8, Items));
+end;
+
+procedure TTestS7PlusOnChange.AnArrayOfStringsHasNoElementItems;
+var
+  Vars:TS7PlusVarInfoArray;
+  Items:TS7PlusCompositeItemArray;
+begin
+  SetLength(Vars, 2);
+  Vars[0] := ArrVar('DB4.Arr', 19, 1);
+  Vars[1] := ArrVar('DB4.Arr[0]', 19, 10);
+  AssertEquals(0, FDriver.ElementsOf(Vars, 'DB4.Arr', 22, Items));
 end;
 
 initialization

@@ -197,6 +197,10 @@ type
     //: scalars: count x element); 0 = not known (a structure, a multi-dimensional array).
     //: Used to keep the reply of a batched read inside one PDU.
     DataSize:Integer;
+    //: The 4-bit POffsetInfoType and the BitOffsetInfoFlags of the element (what the PLC says of
+    //: how it lays the variable out); 0/0 when the node has no Vte.
+    OffsetInfoType:Byte;
+    BitOffsetFlags:Byte;
   end;
   TS7PlusVarInfoArray = array of TS7PlusVarInfo;
 
@@ -612,9 +616,24 @@ begin
   end;
 end;
 
+//Where the next $A1 (StartOfObject) is at or after From; -1 if there is none.
+function NextObjectStart(const R:TBytes; From:Integer):Integer;
+begin
+  Result := From;
+  while (Result<Length(R)) and (R[Result]<>S7PlusElement_StartOfObject) do
+    inc(Result);
+  if Result>=Length(R) then Result := -1;
+end;
+
+//The preamble of an EXPLORE reply holds a request counter in VLQ, and when its first byte is $A1
+//that byte is taken for the start of an object. So the $A1 bytes are tried one after the other,
+//up to this many, until one of them starts the objects wanted (as the Python library does).
+const
+  MaxObjectStartCandidates = 8;
+
 function ExtractS7PlusTypeInfoObjects(const Response:TBytes; out Objects:TS7PlusObjectArray):Boolean;
 var
-  Offset, c:Integer;
+  Offset, c, Tries:Integer;
   AllObjects:TS7PlusObjectArray;
   Container:TS7PlusObject;
 begin
@@ -623,13 +642,21 @@ begin
   if Length(Response)=0 then exit;
   DecodeUInt32VLQ(Response, 0, c);
   Offset := c;
-  while (Offset<Length(Response)) and (Response[Offset]<>S7PlusElement_StartOfObject) do
+  for Tries:=1 to MaxObjectStartCandidates do begin
+    Offset := NextObjectStart(Response, Offset);
+    if Offset<0 then exit;
+    SetLength(AllObjects, 0);
+    try
+      ParseS7PlusObjectList(Response, Offset, AllObjects);
+    except
+      SetLength(AllObjects, 0);     //not an object after all
+    end;
+    if S7PlusFindContainer(AllObjects, S7PlusExplore_ClassOMSTypeInfoContainer, Container) then begin
+      Objects := Container.Objects;
+      Result := true;
+      exit;
+    end;
     inc(Offset);
-  if Offset>=Length(Response) then exit;
-  ParseS7PlusObjectList(Response, Offset, AllObjects);
-  if S7PlusFindContainer(AllObjects, S7PlusExplore_ClassOMSTypeInfoContainer, Container) then begin
-    Objects := Container.Objects;
-    Result := true;
   end;
 end;
 
@@ -864,15 +891,17 @@ begin
   end;
 end;
 
-procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset, ImageOffset:Integer; var Result_:TS7PlusVarInfoArray); forward;
+procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset, ImageOffset:Integer; Classic:Boolean; var Result_:TS7PlusVarInfoArray); forward;
 
-procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset, ImageOffset:Integer; var Result_:TS7PlusVarInfoArray);
+procedure S7PlusWalk(const Node:TS7PlusNode; Names:String; const Lids:TS7PlusLIDArray; ByteOffset, ImageOffset:Integer; Classic:Boolean; var Result_:TS7PlusVarInfoArray);
 var
+  ThisClassic:Boolean;
   NewLids:TS7PlusLIDArray;
   NewByteOffset, NewImageOffset:Integer;
   i:Integer;
   Info:TS7PlusVarInfo;
 begin
+  ThisClassic := Classic;
   case Node.NodeType of
     ntRoot: begin
       //The root's AccessId is the DB/area's AccessArea (e.g. $8A0E0004), not a LID - it
@@ -915,8 +944,16 @@ begin
     NewLids[High(NewLids)] := Node.AccessId;
     if (ImageOffset=-1) or (not Node.HasVte) then
       NewImageOffset := -1
-    else
-      NewImageOffset := ImageOffset + Integer(Node.Vte.OffsetInfo.OptAddr);
+    else begin
+      //A DB with "optimized block access" off: the PLC answers a read of a structure in the classic
+      //order - the image IS the classic layout (OptAddr means nothing there). Only the node of the
+      //structure carries the flag (BitOffsetInfoFlags $08), not its members: they inherit it.
+      if S7PlusVteClassic(Node.Vte) then ThisClassic := true;
+      if ThisClassic then
+        NewImageOffset := ImageOffset + Integer(Node.Vte.OffsetInfo.NonOptAddr)
+      else
+        NewImageOffset := ImageOffset + Integer(Node.Vte.OffsetInfo.OptAddr);
+    end;
     if (ByteOffset=-1) or (not Node.HasVte) then
       NewByteOffset := -1
     else
@@ -946,6 +983,12 @@ begin
     Info.BitOffset := 0;
     Info.ImageOffset := NewImageOffset;
     Info.DataSize := 0;
+    Info.OffsetInfoType := 0;
+    Info.BitOffsetFlags := 0;
+    if Node.HasVte then begin
+      Info.OffsetInfoType := S7PlusVteOffsetInfoType(Node.Vte);
+      Info.BitOffsetFlags := Node.Vte.BitOffsetInfoFlags;
+    end;
     //an array of scalars is read whole: count x element
     if Node.HasVte and Node.Vte.OffsetInfo.Is1Dim and (not Node.Vte.OffsetInfo.HasRelation) then
       Info.DataSize := Integer(Node.Vte.OffsetInfo.ArrayElementCount)*
@@ -954,7 +997,7 @@ begin
     Result_[High(Result_)] := Info;
 
     for i:=0 to High(Node.Children) do
-      S7PlusWalk(Node.Children[i], Names, NewLids, NewByteOffset, NewImageOffset, Result_);
+      S7PlusWalk(Node.Children[i], Names, NewLids, NewByteOffset, NewImageOffset, ThisClassic, Result_);
     exit;
   end;
 
@@ -975,6 +1018,12 @@ begin
     Info.DataSize := S7PlusDataTypeSize(Node.SoftDataType, Node.Vte.OffsetInfo.Unspecified1)
   else
     Info.DataSize := 0;
+  Info.OffsetInfoType := 0;
+  Info.BitOffsetFlags := 0;
+  if Node.HasVte then begin
+    Info.OffsetInfoType := S7PlusVteOffsetInfoType(Node.Vte);
+    Info.BitOffsetFlags := Node.Vte.BitOffsetInfoFlags;
+  end;
   SetLength(Result_, Length(Result_)+1);
   Result_[High(Result_)] := Info;
 end;
@@ -988,7 +1037,7 @@ begin
   SetLength(EmptyLids, 0);
   for i:=0 to High(RootNodes) do begin
     if Length(RootNodes[i].Children)=0 then continue;
-    S7PlusWalk(RootNodes[i], '', EmptyLids, 0, 0, Result);
+    S7PlusWalk(RootNodes[i], '', EmptyLids, 0, 0, false, Result);
   end;
 end;
 
@@ -1140,7 +1189,7 @@ end;
 
 function S7PlusFindObjectAttr(const Response:TBytes; RelationId, AttrId:Cardinal; out Value:TBytes):Boolean;
 var
-  Offset, c:Integer;
+  Offset, c, Tries:Integer;
   AllObjects:TS7PlusObjectArray;
   Obj:TS7PlusObject;
 begin
@@ -1149,12 +1198,22 @@ begin
   if Length(Response)=0 then exit;
   DecodeUInt32VLQ(Response, 0, c);      //the ReturnValue
   Offset := c;
-  while (Offset<Length(Response)) and (Response[Offset]<>S7PlusElement_StartOfObject) do
+  //see MaxObjectStartCandidates: a $A1 in the counter of the preamble is not an object
+  for Tries:=1 to MaxObjectStartCandidates do begin
+    Offset := NextObjectStart(Response, Offset);
+    if Offset<0 then exit;
+    SetLength(AllObjects, 0);
+    try
+      ParseS7PlusObjectList(Response, Offset, AllObjects);
+    except
+      SetLength(AllObjects, 0);
+    end;
+    if FindObjectByRelation(AllObjects, RelationId, Obj) and S7PlusObjectAttr(Obj, AttrId, Value) then begin
+      Result := true;
+      exit;
+    end;
     inc(Offset);
-  if Offset>=Length(Response) then exit;
-  ParseS7PlusObjectList(Response, Offset, AllObjects);
-  if FindObjectByRelation(AllObjects, RelationId, Obj) then
-    Result := S7PlusObjectAttr(Obj, AttrId, Value);
+  end;
 end;
 
 end.
