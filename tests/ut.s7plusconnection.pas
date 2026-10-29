@@ -34,7 +34,7 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry,
-  S7PlusConnection, S7PlusTypes,
+  Types, Tag, S7PlusConnection, S7PlusFamily, S7PlusTypes, S7PlusTypeInfo,
   testsupport.bytes, testsupport.fakeport;
 
 type
@@ -127,6 +127,17 @@ type
     procedure AnItemBiggerThanTheReplyGoesOutAlone;
     procedure ItemsOfUnknownSizeAreCountedAsThirtyTwoBytes;
     procedure SmallItemsStillFillARequestUpToTheItemLimit;
+    procedure TheRoomLeftInTheLastRequest;
+    procedure FillersAreTheOldestThatFit;
+    procedure FillersNeverCutATagAndRespectTheLimits;
+  end;
+
+  { TTestS7PlusDriverFlags }
+
+  TTestS7PlusDriverFlags = class(TTestCase)
+  published
+    procedure ReadSomethingAlwaysIsOffByDefault;
+    procedure ReadOnlyBlocksTheDirectWrites;
   end;
 
   { TTestS7PlusMultiWrite }
@@ -1271,7 +1282,134 @@ begin
   AssertEquals('80 4-byte DInts fit one reply', 80, F[7+4+14+4]);
 end;
 
+procedure TTestS7PlusFragments.TheRoomLeftInTheLastRequest;
+var
+  Items:TS7PlusMultiReadItemArray;
+  ItemsLeft, BytesLeft, i:Integer;
+begin
+  //nothing to read: a whole empty request is left (971 bytes of reply, 100 items)
+  SetLength(Items, 0);
+  FConn.ReadRoomLeft(Items, ItemsLeft, BytesLeft);
+  AssertEquals('items', 100, ItemsLeft);
+  AssertEquals('bytes', 971, BytesLeft);
+
+  //10 items of 4 bytes take 12 each
+  Items := ReadItems(10);
+  for i:=0 to 9 do Items[i].ExpectedSize := 4;
+  FConn.ReadRoomLeft(Items, ItemsLeft, BytesLeft);
+  AssertEquals('items', 90, ItemsLeft);
+  AssertEquals('bytes', 971-120, BytesLeft);
+
+  //the room is the one of the LAST request: 100 items of 4 bytes are 80 + 20
+  Items := ReadItems(100);
+  for i:=0 to 99 do Items[i].ExpectedSize := 4;
+  FConn.ReadRoomLeft(Items, ItemsLeft, BytesLeft);
+  AssertEquals('items of the second request', 80, ItemsLeft);
+  AssertEquals('bytes of the second request', 971-240, BytesLeft);
+
+  //an item of unknown size counts 32+8
+  Items := ReadItems(1);
+  Items[0].ExpectedSize := 0;
+  FConn.ReadRoomLeft(Items, ItemsLeft, BytesLeft);
+  AssertEquals('unknown', 971-40, BytesLeft);
+
+  //an item bigger than the reply goes alone: nothing is left
+  Items := ReadItems(1);
+  Items[0].ExpectedSize := 2000;
+  FConn.ReadRoomLeft(Items, ItemsLeft, BytesLeft);
+  AssertEquals('items', 99, ItemsLeft);
+  AssertEquals('bytes', 0, BytesLeft);
+end;
+
+function Cand(AIndex:Integer; AAge:Int64; AItems, ABytes:Integer):TS7PlusFillCandidate;
+begin
+  Result.Index := AIndex;
+  Result.Age := AAge;
+  Result.Items := AItems;
+  Result.Bytes := ABytes;
+end;
+
+procedure TTestS7PlusFragments.FillersAreTheOldestThatFit;
+var
+  C:TS7PlusFillCandidateArray;
+  R:TIntegerDynArray;
+begin
+  SetLength(C, 4);
+  C[0] := Cand(10, 100, 1, 12);
+  C[1] := Cand(11, 900, 1, 12);
+  C[2] := Cand(12, 500, 1, 12);
+  C[3] := Cand(13, 500, 1, 12);       //ties with 12: the list order stays
+  R := S7PlusPickFillers(C, 100, 971, 100);
+  AssertEquals('all', 4, Length(R));
+  AssertEquals('oldest', 11, R[0]);
+  AssertEquals('tie 1', 12, R[1]);
+  AssertEquals('tie 2', 13, R[2]);
+  AssertEquals('youngest', 10, R[3]);
+  R := S7PlusPickFillers(C, 100, 971, 2);
+  AssertEquals('MaxCount', 2, Length(R));
+  AssertEquals('first', 11, R[0]);
+  R := S7PlusPickFillers(C, 100, 24, 100);
+  AssertEquals('only two fit in 24 bytes', 2, Length(R));
+  AssertEquals('oldest first', 11, R[0]);
+  AssertEquals('then the next', 12, R[1]);
+  AssertEquals('none', 0, Length(S7PlusPickFillers(nil, 100, 971, 100)));
+end;
+
+procedure TTestS7PlusFragments.FillersNeverCutATagAndRespectTheLimits;
+var
+  C:TS7PlusFillCandidateArray;
+  R:TIntegerDynArray;
+begin
+  SetLength(C, 3);
+  C[0] := Cand(1, 900, 5, 600);       //the oldest is too big for the room: skipped
+  C[1] := Cand(2, 800, 1, 100);
+  C[2] := Cand(3, 700, 3, 200);       //fits in bytes but not in items
+  R := S7PlusPickFillers(C, 2, 300, 100);
+  AssertEquals('one fits', 1, Length(R));
+  AssertEquals('the younger that fits goes', 2, R[0]);
+  AssertEquals('no item room', 0, Length(S7PlusPickFillers(C, 0, 971, 100)));
+  AssertEquals('no byte room', 0, Length(S7PlusPickFillers(C, 100, 0, 100)));
+  AssertEquals('no count', 0, Length(S7PlusPickFillers(C, 100, 971, 0)));
+  R := S7PlusPickFillers(C, 100, 971, 100);
+  AssertEquals('all', 3, Length(R));
+end;
+
+procedure TTestS7PlusDriverFlags.ReadSomethingAlwaysIsOffByDefault;
+var
+  D:TS7CommPlusDriver;
+begin
+  D := TS7CommPlusDriver.Create(nil);
+  try
+    AssertFalse(D.ReadSomethingAlways);
+    AssertFalse(D.ReadOnly);
+  finally
+    D.Free;
+  end;
+end;
+
+procedure TTestS7PlusDriverFlags.ReadOnlyBlocksTheDirectWrites;
+var
+  D:TS7CommPlusDriver;
+  Lids:TS7PlusLIDArray;
+  Items:TS7PlusMultiWriteItemArray;
+  R:TS7PlusMultiWriteResultArray;
+begin
+  D := TS7CommPlusDriver.Create(nil);
+  try
+    D.ReadOnly := true;
+    SetLength(Lids, 0);
+    SetLength(Items, 0);
+    AssertTrue('symbolic', D.WriteSymbolic(0, Lids, nil, 0)=ioReadOnlyProtocol);
+    AssertTrue('multiple', D.WriteMultipleSymbolic(Items, R)=ioReadOnlyProtocol);
+    AssertTrue('DB', D.WriteDB(1, 0, nil)=ioReadOnlyProtocol);
+    AssertTrue('area', D.WriteArea(0, 0, nil)=ioReadOnlyProtocol);
+  finally
+    D.Free;
+  end;
+end;
+
 initialization
+  RegisterTest(TTestS7PlusDriverFlags);
   RegisterTest(TTestS7PlusNotification);
   RegisterTest(TTestS7PlusNotificationQueue);
   RegisterTest(TTestS7PlusFragments);

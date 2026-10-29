@@ -179,6 +179,19 @@ type
     PReadSomethingAlways:Boolean;
 
     {$IFDEF PORTUGUES}
+    {:
+    O driver pode ter lido um tag antes da hora dele (ver ReadSomethingAlways): a thread de
+    atualização entrega o valor se ele for mais novo que o do tag, sem esperar o tempo do tag.
+    }
+    {$ELSE}
+    {:
+    The driver may have read a tag ahead of its time (see ReadSomethingAlways): the update thread
+    hands the value over when it is newer than the tag's, without waiting for the tag's own time.
+    }
+    {$ENDIF}
+    PDeliverReadAhead:Boolean;
+
+    {$IFDEF PORTUGUES}
     //: Faltando comentário
     {$ELSE}
     //: Missing comment.
@@ -1689,7 +1702,12 @@ begin
               first:=false;
             end else
               Result := Min(remainingMs, Result);
-          end else begin
+          end;
+
+          //A driver that reads tags ahead of their time (PDeliverReadAhead) may have a value newer
+          //than the tag's own for a tag that is not due: it is handed over too, without changing
+          //the wait above.
+          if (remainingMs<=0) or (PDeliverReadAhead and PReadSomethingAlways) then begin
 
             tagiface.BuildTagRec(tr,0,0);
             SetLength(ScanReadRec.Values, tr.Size);
@@ -1703,7 +1721,7 @@ begin
             end else
               DoGetValue(tr, ScanReadRec);
 
-            if ScanReadRec.ClkMonotonicTStamp<=tagiface.GetLastUpdateTimestamp then begin
+            if (remainingMs<=0) and (ScanReadRec.ClkMonotonicTStamp<=tagiface.GetLastUpdateTimestamp) then begin
               //A tag whose time has come and that the driver has not read yet. It must not be left
               //out of the wait: if only the tags that got a value counted, a slow tag that did
               //(1000 ms) made the update thread sleep ~1 s while a fast one (15 ms) sat there

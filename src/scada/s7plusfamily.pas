@@ -31,7 +31,7 @@ unit S7PlusFamily;
 interface
 
 uses
-  Classes, SysUtils, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort, CommTypes,
+  Classes, SysUtils, Types, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort, CommTypes,
   S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
   PLCString, S7PlusTagPlan;
 
@@ -163,6 +163,15 @@ type
 
   { TS7CommPlusDriver }
 
+  //: A tag the driver could read along with the request of this round (ReadSomethingAlways).
+  TS7PlusFillCandidate = record
+    Index:Integer;     //its place in the scan list
+    Age:Int64;         //ms since its last read
+    Items:Integer;     //wire items its read takes
+    Bytes:Integer;     //bytes its reply takes in the request
+  end;
+  TS7PlusFillCandidateArray = array of TS7PlusFillCandidate;
+
   TS7CommPlusDriver = class(TProtocolDriver)
   private
     FConnection:TS7PlusConnection;
@@ -250,6 +259,8 @@ type
     function FindScanEntry(const Path:AnsiString; out Index:Integer):Boolean;
     function IsLidsPrefix(const Prefix, Full:TS7PlusLIDArray):Boolean;
     procedure TryDeduplicateEntry(EntryIdx:Integer);
+    //The wire items an entry takes in a batched read: one, or one per member of a composite.
+    function EntryReadItems(EntryIdx:Integer):TS7PlusMultiReadItemArray;
     function ReadComposite(const Items:TS7PlusCompositeItemArray; out Data:TBytes):Boolean;
 
     //-- On-change tags (subscriptions).
@@ -479,6 +490,17 @@ type
     //: after a burst (right after connecting, for instance) and bounds how long a round holds
     //: the connection; it never drops a tag. A "whole DB" tag counts as one. Default 500.
     property MaxTagsPerScan:Integer read FMaxTagsPerScan write SetMaxTagsPerScan default 500;
+    //: When true, a scan round that has to read something also reads the polled tags that are
+    //: NOT due, as long as their replies fit in the request already going out (the item limit and
+    //: the size of the reply, see MaxItemsPerRequest): the room is free, so those tags get
+    //: fresher values for no extra round-trip. They are taken by the time since their last read,
+    //: the oldest first; one that does not fit is skipped. A round with nothing due reads nothing,
+    //: and tags that are on change are not touched. Unlike the other drivers (S7 ISO, Modbus) the
+    //: default here is false. @seealso(TProtocolDriver.ReadSomethingAlways)
+    property ReadSomethingAlways default false;
+    //: When true no write reaches the PLC: every write (tags, WriteMultipleSymbolic through the
+    //: tags) is answered with ioReadOnlyProtocol. @seealso(TProtocolDriver.ReadOnly)
+    property ReadOnly;
     //: Most items in ONE subscription (one CreateObject request, and the size of its first
     //: notification). Tags beyond it get a subscription of their own. Default 500. Unlike the
     //: request limit this one is about size: a PLCSim took 2000 two-LID items (~32 KB) and refused
@@ -540,6 +562,12 @@ type
     property Username:AnsiString read FUsername write SetUsername;
   end;
 
+//: The Index of the candidates that go along in a request that has room for ItemsLeft items and
+//: BytesLeft bytes of reply, at most MaxCount of them: the oldest read first (descending Age; a
+//: tie keeps the scan list order), and one that does not fit is skipped, a younger one that fits
+//: still goes. Candidates are all or nothing: a tag with several items is never cut.
+function S7PlusPickFillers(const Candidates:TS7PlusFillCandidateArray; ItemsLeft, BytesLeft, MaxCount:Integer):TIntegerDynArray;
+
 implementation
 
 var
@@ -560,6 +588,9 @@ begin
   inherited Create(AOwner);
   FConnection := nil;
   FUseTLS := true;
+  PReadSomethingAlways := false;
+  PDeliverReadAhead := true;      //DoScanRead reads tags ahead of their time: their values must reach the tags
+
   FSubCycleMs := 100;
   FSubCreditLimit := 10;
   FSubTimeoutMs := 5000;
@@ -1425,6 +1456,58 @@ end;
 // TProtocolDriver abstract contract
 //===========================================================================
 
+function TS7CommPlusDriver.EntryReadItems(EntryIdx:Integer):TS7PlusMultiReadItemArray;
+var
+  k:Integer;
+begin
+  SetLength(Result, 0);
+  if FScanList[EntryIdx].IsComposite then begin
+    SetLength(Result, Length(FScanList[EntryIdx].CompositeItems));
+    for k:=0 to High(Result) do begin
+      Result[k].AccessArea := FScanList[EntryIdx].CompositeItems[k].AccessArea;
+      Result[k].Lids := FScanList[EntryIdx].CompositeItems[k].Lids;
+      Result[k].ExpectedSize := FScanList[EntryIdx].CompositeItems[k].ReadSize;
+    end;
+  end else begin
+    SetLength(Result, 1);
+    Result[0].AccessArea := FScanList[EntryIdx].AccessArea;
+    Result[0].Lids := FScanList[EntryIdx].Lids;
+    Result[0].ExpectedSize := FScanList[EntryIdx].ReadSize;
+  end;
+end;
+
+function S7PlusPickFillers(const Candidates:TS7PlusFillCandidateArray; ItemsLeft, BytesLeft, MaxCount:Integer):TIntegerDynArray;
+var
+  Order:array of Integer;
+  i, j, Tmp, n:Integer;
+begin
+  SetLength(Result, 0);
+  n := Length(Candidates);
+  if (n=0) or (ItemsLeft<=0) or (BytesLeft<=0) or (MaxCount<=0) then exit;
+  SetLength(Order, n);
+  for i:=0 to n-1 do Order[i] := i;
+  //insertion sort, oldest first; a tie keeps the order of the list (stable)
+  for i:=1 to n-1 do begin
+    Tmp := Order[i];
+    j := i-1;
+    while (j>=0) and (Candidates[Order[j]].Age<Candidates[Tmp].Age) do begin
+      Order[j+1] := Order[j];
+      Dec(j);
+    end;
+    Order[j+1] := Tmp;
+  end;
+  for i:=0 to n-1 do begin
+    if Length(Result)>=MaxCount then break;
+    with Candidates[Order[i]] do begin
+      if (Items<=0) or (Items>ItemsLeft) or (Bytes>BytesLeft) then continue;
+      Dec(ItemsLeft, Items);
+      Dec(BytesLeft, Bytes);
+      SetLength(Result, Length(Result)+1);
+      Result[High(Result)] := Index;
+    end;
+  end;
+end;
+
 procedure TS7CommPlusDriver.DoScanRead(Sender:TObject; var NeedSleep:LongInt);
 const
   //How often an on-change tag is polled when its subscription could not be created.
@@ -1448,6 +1531,40 @@ var
   ok:Boolean;
   NeedLen:Integer;
   Rate:Int64;
+  RoomItems, RoomBytes:Integer;
+  Cands:TS7PlusFillCandidateArray;
+  Fillers:TIntegerDynArray;
+  Extra:TS7PlusMultiReadItemArray;
+  Due:Boolean;
+
+  procedure AddEntryItems(Idx:Integer);
+  var
+    k:Integer;
+  begin
+    if FScanList[Idx].IsComposite then begin
+      for k:=0 to High(FScanList[Idx].CompositeItems) do begin
+        ItemIdx := Length(Items);
+        SetLength(Items, ItemIdx+1);
+        SetLength(Owners, ItemIdx+1);
+        Items[ItemIdx].AccessArea := FScanList[Idx].CompositeItems[k].AccessArea;
+        Items[ItemIdx].Lids := FScanList[Idx].CompositeItems[k].Lids;
+        Items[ItemIdx].ExpectedSize := FScanList[Idx].CompositeItems[k].ReadSize;
+        Owners[ItemIdx].EntryIdx := Idx;
+        Owners[ItemIdx].IsCompositeItem := true;
+        Owners[ItemIdx].CompByteOffset := FScanList[Idx].CompositeItems[k].ByteOffset;
+      end;
+    end else begin
+      ItemIdx := Length(Items);
+      SetLength(Items, ItemIdx+1);
+      SetLength(Owners, ItemIdx+1);
+      Items[ItemIdx].AccessArea := FScanList[Idx].AccessArea;
+      Items[ItemIdx].Lids := FScanList[Idx].Lids;
+      Items[ItemIdx].ExpectedSize := FScanList[Idx].ReadSize;
+      Owners[ItemIdx].EntryIdx := Idx;
+      Owners[ItemIdx].IsCompositeItem := false;
+    end;
+  end;
+
 begin
   NeedSleep := 0;
 
@@ -1516,29 +1633,37 @@ begin
   //still folded into this same round's single GetMultiVariables request.
   SetLength(Items, 0);
   SetLength(Owners, 0);
-  for i:=0 to High(DueIndices) do begin
-    EntryIdx := DueIndices[i];
-    if FScanList[EntryIdx].IsComposite then begin
-      for j:=0 to High(FScanList[EntryIdx].CompositeItems) do begin
-        ItemIdx := Length(Items);
-        SetLength(Items, ItemIdx+1);
-        SetLength(Owners, ItemIdx+1);
-        Items[ItemIdx].AccessArea := FScanList[EntryIdx].CompositeItems[j].AccessArea;
-        Items[ItemIdx].Lids := FScanList[EntryIdx].CompositeItems[j].Lids;
-        Items[ItemIdx].ExpectedSize := FScanList[EntryIdx].CompositeItems[j].ReadSize;
-        Owners[ItemIdx].EntryIdx := EntryIdx;
-        Owners[ItemIdx].IsCompositeItem := true;
-        Owners[ItemIdx].CompByteOffset := FScanList[EntryIdx].CompositeItems[j].ByteOffset;
+  for i:=0 to High(DueIndices) do
+    AddEntryItems(DueIndices[i]);
+
+  //ReadSomethingAlways: the room left in the last request goes to polled tags that are not due.
+  if PReadSomethingAlways and (Length(DueIndices)<FMaxTagsPerScan) then begin
+    FConnection.ReadRoomLeft(Items, RoomItems, RoomBytes);
+    SetLength(Cands, 0);
+    for i:=0 to High(FScanList) do
+      if FScanList[i].Resolved and (not FScanList[i].IsDerived) and (FScanList[i].LastScanTimeStamp<>0) and
+         ((not FScanList[i].OnChange) or FScanList[i].SubFallback) then begin
+        Due := false;
+        for j:=0 to High(DueIndices) do
+          if DueIndices[j]=i then begin
+            Due := true;
+            break;
+          end;
+        if Due then continue;
+        Extra := EntryReadItems(i);
+        SetLength(Cands, Length(Cands)+1);
+        Cands[High(Cands)].Index := i;
+        Cands[High(Cands)].Age := Int64(Now_-FScanList[i].LastScanTimeStamp);
+        Cands[High(Cands)].Items := Length(Extra);
+        Cands[High(Cands)].Bytes := 0;
+        for j:=0 to High(Extra) do
+          Inc(Cands[High(Cands)].Bytes, TS7PlusConnection.ReadItemReplyBytes(Extra[j]));
       end;
-    end else begin
-      ItemIdx := Length(Items);
-      SetLength(Items, ItemIdx+1);
-      SetLength(Owners, ItemIdx+1);
-      Items[ItemIdx].AccessArea := FScanList[EntryIdx].AccessArea;
-      Items[ItemIdx].Lids := FScanList[EntryIdx].Lids;
-      Items[ItemIdx].ExpectedSize := FScanList[EntryIdx].ReadSize;
-      Owners[ItemIdx].EntryIdx := EntryIdx;
-      Owners[ItemIdx].IsCompositeItem := false;
+    Fillers := S7PlusPickFillers(Cands, RoomItems, RoomBytes, FMaxTagsPerScan-Length(DueIndices));
+    for i:=0 to High(Fillers) do begin
+      SetLength(DueIndices, Length(DueIndices)+1);
+      DueIndices[High(DueIndices)] := Fillers[i];
+      AddEntryItems(Fillers[i]);
     end;
   end;
 
@@ -2257,6 +2382,10 @@ var
   Values:TArrayOfDouble;
   i:Integer;
 begin
+  if ReadOnly then begin
+    Result := ioReadOnlyProtocol;
+    exit;
+  end;
   FillChar(tr, SizeOf(tr), 0);
   tr.WriteFunction := ReadFunction;
   tr.Address := Start;
@@ -2303,6 +2432,10 @@ var
   Values:TArrayOfDouble;
   i:Integer;
 begin
+  if ReadOnly then begin
+    Result := ioReadOnlyProtocol;
+    exit;
+  end;
   FillChar(tr, SizeOf(tr), 0);
   tr.WriteFunction := S7PlusRF_DB;
   tr.File_DB := DBNumber;
@@ -2805,6 +2938,10 @@ end;
 function TS7CommPlusDriver.WriteMultipleSymbolic(const Items:TS7PlusMultiWriteItemArray; out Results:TS7PlusMultiWriteResultArray):TProtocolIOResult;
 begin
   SetLength(Results, 0);
+  if ReadOnly then begin
+    Result := ioReadOnlyProtocol;
+    exit;
+  end;
   LockDriverIO;
   try
     if not EnsureConnected then begin
@@ -2822,6 +2959,10 @@ end;
 
 function TS7CommPlusDriver.WriteSymbolic(AccessArea:Cardinal; const Lids:TS7PlusLIDArray; const Data:TBytes; SoftDataType:Byte):TProtocolIOResult;
 begin
+  if ReadOnly then begin
+    Result := ioReadOnlyProtocol;
+    exit;
+  end;
   LockDriverIO;
   try
     if not EnsureConnected then begin
