@@ -89,6 +89,7 @@ type
 
   TfrmS7PlusTagBuilder = class(TForm)
     btnBrowse: TButton;
+    pbProgress: TProgressBar;
     btnCancel: TButton;
     btnCheckAll: TButton;
     btnCollapseAll: TButton;
@@ -136,6 +137,7 @@ type
     FSkippedCount:LongInt;
     FDriverLog:TStringList;      //what the driver said while the wizard talked to the PLC
     procedure DriverDebug(Sender:TObject; const Msg:String);
+    procedure ShowProgress(aDone, aTotal:LongInt; const aWhat:String);
     function  WaitForConnection(aTimeoutMs:LongInt):Boolean;
     procedure MakeStateImages;
     function  InfoOf(aNode:TTreeNode):TS7PlusNodeInfo;
@@ -650,6 +652,15 @@ begin
   Result:=FDriver.CommunicationPort.ReallyActive;
 end;
 
+//what the read is doing now: the bar counts the DBs and areas, the text says which one
+procedure TfrmS7PlusTagBuilder.ShowProgress(aDone, aTotal:LongInt; const aWhat:String);
+begin
+  pbProgress.Max:=aTotal;
+  pbProgress.Position:=aDone;
+  lblStatus.Caption:=Format(SS7PTBReadingBlock,[aWhat, aDone+1, aTotal]);
+  Application.ProcessMessages;
+end;
+
 procedure TfrmS7PlusTagBuilder.btnBrowseClick(Sender: TObject);
 var
   oldCursor:TCursor;
@@ -660,6 +671,7 @@ var
   vars:TS7PlusVarInfoArray;
   c:LongInt;
   aName:String;
+  total, done:LongInt;
 begin
   if not Assigned(FDriver) then begin
     MessageDlg(SS7PTBWithoutDriver, mtError, [mbOK], 0);
@@ -709,7 +721,16 @@ begin
       exit;
     end;
 
+    total:=Length(blocks);
+    if chkIncludeAreas.Checked then inc(total, 3);
+    done:=0;
+    pbProgress.Style:=pbstNormal;
+    pbProgress.Visible:=true;
+    btnBrowse.Enabled:=false;
+
     for c:=0 to High(blocks) do begin
+      ShowProgress(done, total, blocks[c].Name);
+      inc(done);
       res:=FDriver.BrowseDB(blocks[c].Number, vars);
       if res=ioAuthError then authMissing:=true;
       if res<>ioOk then continue;
@@ -719,23 +740,32 @@ begin
     end;
 
     if chkIncludeAreas.Checked then begin
+      ShowProgress(done, total, 'I'); inc(done);
       if FDriver.BrowseNativeArea(S7PlusIds_NativeIAreaRID, S7PlusTiRid_IArea, 'IArea', vars)=ioOk then begin
         AddVars(vars, '', S7PlusIds_NativeIAreaRID); inc(FBlocksRead);
       end;
+      ShowProgress(done, total, 'Q'); inc(done);
       if FDriver.BrowseNativeArea(S7PlusIds_NativeQAreaRID, S7PlusTiRid_QArea, 'QArea', vars)=ioOk then begin
         AddVars(vars, '', S7PlusIds_NativeQAreaRID); inc(FBlocksRead);
       end;
+      ShowProgress(done, total, 'M'); inc(done);
       if FDriver.BrowseNativeArea(S7PlusIds_NativeMAreaRID, S7PlusTiRid_MArea, 'MArea', vars)=ioOk then begin
         AddVars(vars, '', S7PlusIds_NativeMAreaRID); inc(FBlocksRead);
       end;
     end;
 
+    //what is left (the STRING lengths) has no count: the bar just says it is busy
+    pbProgress.Style:=pbstMarquee;
+    lblStatus.Caption:=SS7PTBReadingStrings;
+    Application.ProcessMessages;
+    LoadCandidates(FCandidates, FBlocksRead);
   finally
+    pbProgress.Visible:=false;
+    btnBrowse.Enabled:=true;
     FDriver.OnDebug:=oldDebug;
     Screen.Cursor:=oldCursor;
   end;
 
-  LoadCandidates(FCandidates, FBlocksRead);
   if authMissing then
     MessageDlg(SS7PTBAuthRequired, mtWarning, [mbOK], 0);
 end;

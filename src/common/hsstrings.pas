@@ -268,6 +268,8 @@ resourcestring
   SS7PTBSkipStringLength        = 'não vira tag: não foi possível ler o tamanho da STRING';
   SS7PTBReadFirst               = 'Leia as variáveis do CLP primeiro.';
   SS7PTBReading                 = 'Lendo as variáveis do CLP (pode demorar)...';
+  SS7PTBReadingBlock            = 'Lendo %s (%d de %d)...';
+  SS7PTBReadingStrings          = 'Lendo o tamanho máximo das STRINGs...';
   SS7PTBNothingRead             = 'Nenhuma variável foi lida do CLP.';
   SS7PTBVarsRead                = '%d variável(is) lida(s) de %d bloco(s)/área(s); %d não viram tag.';
   SS7PTBSelectedCount           = '%d tag(s) selecionado(s) de %d exibido(s).';
@@ -519,6 +521,8 @@ resourcestring
   SS7PTBSkipStringLength        = 'not a tag: the STRING length could not be read';
   SS7PTBReadFirst               = 'Read the variables from the PLC first.';
   SS7PTBReading                 = 'Reading the variables from the PLC (may take a while)...';
+  SS7PTBReadingBlock            = 'Reading %s (%d of %d)...';
+  SS7PTBReadingStrings          = 'Reading the maximum length of the STRINGs...';
   SS7PTBNothingRead             = 'No variable was read from the PLC.';
   SS7PTBVarsRead                = '%d variable(s) read from %d block(s)/area(s); %d do not become a tag.';
   SS7PTBSelectedCount           = '%d tag(s) selected of %d shown.';
