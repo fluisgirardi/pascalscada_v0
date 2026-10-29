@@ -658,6 +658,8 @@ begin
   pbProgress.Max:=aTotal;
   pbProgress.Position:=aDone;
   lblStatus.Caption:=Format(SS7PTBReadingBlock,[aWhat, aDone+1, aTotal]);
+  pbProgress.Repaint;
+  lblStatus.Repaint;
   Application.ProcessMessages;
 end;
 
@@ -695,7 +697,11 @@ begin
   FDriver.OnDebug:=@DriverDebug;
   try
     lblStatus.Caption:=SS7PTBReading;
-    lblStatus.Update;
+    //busy from the start: connecting and listing the DBs have no count either
+    pbProgress.Style:=pbstMarquee;
+    pbProgress.Visible:=true;
+    btnBrowse.Enabled:=false;
+    Application.ProcessMessages;
 
     //Active only says the port was asked to open: at design time the socket may not be there
     if not WaitForConnection(5000) then begin
@@ -725,8 +731,6 @@ begin
     if chkIncludeAreas.Checked then inc(total, 3);
     done:=0;
     pbProgress.Style:=pbstNormal;
-    pbProgress.Visible:=true;
-    btnBrowse.Enabled:=false;
 
     for c:=0 to High(blocks) do begin
       ShowProgress(done, total, blocks[c].Name);
