@@ -124,9 +124,6 @@ type
     //metodo chamado para atualizar o valor de um tag (simples ou bloco)
     //procedure called to update the value of an tag (single or block)
     procedure SafeGetValue(const TagRec:TTagRec; var values:TScanReadRec);
-    //metodo chamado para atualizar o valores de varios tags (simples ou bloco)
-    //procedure called to update values of multiples tag (single or block)
-    function  GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):LongInt;
 
     function SafeSingleScanRead(var TagRec: TTagRec; var values: TArrayOfDouble): TProtocolIOResult;
 
@@ -138,6 +135,9 @@ type
     procedure SetIsReadOnly(AValue: Boolean);
     procedure UpdateUserTime(usertime:Double);
   protected
+    //metodo chamado para atualizar o valores de varios tags (simples ou bloco)
+    //procedure called to update values of multiples tag (single or block)
+    function  GetMultipleValues(var MultiValues:TArrayOfScanUpdateRec):LongInt;
 
     {$IFDEF PORTUGUES}
     {:
@@ -877,6 +877,11 @@ var
 implementation
 
 uses dateutils, PLCTag, hsstrings, math, pascalScadaMTPCPU;
+
+const
+  //The longest, in ms, the update thread waits for the driver to read a tag whose time has come
+  //(see TProtocolDriver.GetMultipleValues).
+  MaxWaitForDueTag = 20;
 
 ////////////////////////////////////////////////////////////////////////////////
 //             inicio da implementação de TProtocolDriver
@@ -1630,12 +1635,14 @@ var
   first:Boolean;
   tagiface:IScanableTagInterface;
   tr:TTagRec;
-  remainingMs:Int64;
+  remainingMs, waitDue:Int64;
   ScanReadRec:TScanReadRec;
   doneOne, PortError:Boolean;
   ErrorStatus: TProtocolIOResult;
 begin
   doneOne:=false;
+  //(it was never set: whether the first tag counted depended on what the stack held)
+  first:=true;
   try
     Result:=0;
     valueSet:=-1;
@@ -1695,6 +1702,23 @@ begin
               ScanReadRec.RealOffset:=0;
             end else
               DoGetValue(tr, ScanReadRec);
+
+            if ScanReadRec.ClkMonotonicTStamp<=tagiface.GetLastUpdateTimestamp then begin
+              //A tag whose time has come and that the driver has not read yet. It must not be left
+              //out of the wait: if only the tags that got a value counted, a slow tag that did
+              //(1000 ms) made the update thread sleep ~1 s while a fast one (15 ms) sat there
+              //waiting for its turn - its value then reached the screen once a second. A fraction
+              //of its update time (never over MaxWaitForDueTag, never under 1) is the longest it
+              //has to wait for the driver to read it.
+              waitDue:=tagiface.GetUpdateTime div 4;
+              if waitDue>MaxWaitForDueTag then waitDue:=MaxWaitForDueTag;
+              if waitDue<1 then waitDue:=1;
+              if first then begin
+                Result:=waitDue;
+                first:=false;
+              end else
+                Result:=Min(waitDue, Result);
+            end;
 
             if ScanReadRec.ClkMonotonicTStamp>tagiface.GetLastUpdateTimestamp then begin
               //calcula o tempo para a proxima atualização

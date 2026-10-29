@@ -111,6 +111,41 @@ type
     procedure DoMultiWrite(var Writes:TMultiWriteArray; Sync:Boolean); override;
   end;
 
+  { TTimedTag }
+
+  //A tag with an update time of its own and a value timestamp the test sets.
+  TTimedTag = class(TSampleTag, IScanableTagInterface)
+  public
+    TimeMs:Int64;
+    LastUpdate:QWord;
+    Address:LongInt;
+    function  RemainingMilisecondsForNextScan:Int64;
+    function  GetLastUpdateTimestamp:QWord;
+    function  GetUpdateTime:Int64;
+    procedure BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
+  end;
+
+  { TRemainingTag }
+
+  TRemainingTag = class(TSampleTag, IScanableTagInterface)
+  public
+    Left:Int64;
+    function RemainingMilisecondsForNextScan:Int64;
+  end;
+
+  { TTimedDriver }
+
+  //Hands out a fresh value (stamp now) to the tags whose address is in FreshAddress only; the
+  //other ones the driver "has not read yet".
+  TTimedDriver = class(TTestDriver)
+  public
+    FreshAddress:LongInt;
+    function Wait(var Values:TArrayOfScanUpdateRec):LongInt;
+    function NeedsExternalPort:Boolean; override;
+  protected
+    procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
+  end;
+
   { TTestProtocolDriver }
 
   TTestProtocolDriver = class(TTestCase)
@@ -135,6 +170,9 @@ type
   published
     //cadastro de tags / tag registration
     procedure ADriverThatCannotListTagsSaysSo;
+    procedure ADueTagStillWaitingForTheDriverShortensTheWait;
+    procedure TheWaitFollowsTheShortestOfTheTagsDue;
+    procedure WithNothingDueTheWaitIsTheTimeToTheNextTag;
     procedure ATagWithNoScanInterfaceIsRefused;
     procedure ARegisteredTagEntersTheList;
     procedure ATagRegisteredTwiceIsRefused;
@@ -829,6 +867,131 @@ begin
   AssertFalse('it does not support listing', FDrv.SupportsListTags);
   AssertTrue ('ListTags refuses', FDrv.ListTags(tags)=ioIllegalFunction);
   AssertEquals('and leaves the list empty', 0, Length(tags));
+end;
+
+function TRemainingTag.RemainingMilisecondsForNextScan:Int64;
+begin
+  Result:=Left;
+end;
+
+function TTimedTag.RemainingMilisecondsForNextScan:Int64;
+begin
+  //never scanned: its time has come
+  Result:=0;
+end;
+
+function TTimedTag.GetLastUpdateTimestamp:QWord;
+begin
+  Result:=LastUpdate;
+end;
+
+function TTimedTag.GetUpdateTime:Int64;
+begin
+  Result:=TimeMs;
+end;
+
+procedure TTimedTag.BuildTagRec(out tr:TTagRec; Count, OffSet:LongInt);
+begin
+  tr:=TagRecFor(1, 3, 0, Address, 1);
+end;
+
+procedure TTimedDriver.DoGetValue(TagRec:TTagRec; var values:TScanReadRec);
+begin
+  SetLength(values.Values, 1);
+  values.Values[0]:=0;
+  values.LastQueryResult:=ioOk;
+  if TagRec.Address=FreshAddress then
+    values.ClkMonotonicTStamp:=GetTickCount64
+  else
+    values.ClkMonotonicTStamp:=0;          //nothing new from the driver for this one
+end;
+
+function TTimedDriver.NeedsExternalPort:Boolean;
+begin
+  //no port in these tests: with one needed, every tag would get the "no port" answer, all fresh
+  Result:=false;
+end;
+
+function TTimedDriver.Wait(var Values:TArrayOfScanUpdateRec):LongInt;
+begin
+  Result:=GetMultipleValues(Values);
+end;
+
+procedure TTestProtocolDriver.ADueTagStillWaitingForTheDriverShortensTheWait;
+var
+  Drv:TTimedDriver;
+  Fast, Slow:TTimedTag;
+  Vals:TArrayOfScanUpdateRec;
+  W:LongInt;
+begin
+  //a clock of 15 ms that the driver has not read yet, and a block of 1000 ms that it has: the
+  //update thread must not sleep the 1000 ms of the block while the clock waits (it showed on screen
+  //once a second)
+  Drv:=TTimedDriver.Create(nil);
+  Fast:=TTimedTag.Create(nil);
+  Slow:=TTimedTag.Create(nil);
+  try
+    Fast.Name:='Fast'; Fast.TimeMs:=15;   Fast.Address:=1;
+    Slow.Name:='Slow'; Slow.TimeMs:=1000; Slow.Address:=2;
+    Drv.FreshAddress:=2;                       //only the slow one has a new value
+    Drv.RegisterTagIn(Fast, true);
+    Drv.RegisterTagIn(Slow, true);
+    SetLength(Vals, 0);
+    W:=Drv.Wait(Vals);
+    AssertEquals('the slow one got its value', 1, Length(Vals));
+    AssertTrue('the wait is the clock''s, not the 1000 ms of the block: '+IntToStr(W), (W>=1) and (W<=20));
+  finally
+    Drv.Free;
+    Fast.Free;
+    Slow.Free;
+  end;
+end;
+
+procedure TTestProtocolDriver.TheWaitFollowsTheShortestOfTheTagsDue;
+var
+  Drv:TTimedDriver;
+  A, B:TTimedTag;
+  Vals:TArrayOfScanUpdateRec;
+  W:LongInt;
+begin
+  Drv:=TTimedDriver.Create(nil);
+  A:=TTimedTag.Create(nil);
+  B:=TTimedTag.Create(nil);
+  try
+    A.Name:='A'; A.TimeMs:=40;   A.Address:=1;
+    B.Name:='B'; B.TimeMs:=4000; B.Address:=2;
+    Drv.FreshAddress:=99;                      //none has a new value
+    Drv.RegisterTagIn(A, true);
+    Drv.RegisterTagIn(B, true);
+    SetLength(Vals, 0);
+    W:=Drv.Wait(Vals);
+    AssertEquals('nothing new to deliver', 0, Length(Vals));
+    AssertEquals('a quarter of 40 ms, the shortest', 10, W);
+  finally
+    Drv.Free;
+    A.Free;
+    B.Free;
+  end;
+end;
+
+procedure TTestProtocolDriver.WithNothingDueTheWaitIsTheTimeToTheNextTag;
+var
+  Drv:TTimedDriver;
+  T:TRemainingTag;
+  Vals:TArrayOfScanUpdateRec;
+begin
+  //a tag that is not due: the old rule stays, wait what is left of its time
+  Drv:=TTimedDriver.Create(nil);
+  T:=TRemainingTag.Create(nil);
+  try
+    T.Name:='T'; T.Left:=700;
+    Drv.RegisterTagIn(T, true);
+    SetLength(Vals, 0);
+    AssertEquals(700, Drv.Wait(Vals));
+  finally
+    Drv.Free;
+    T.Free;
+  end;
 end;
 
 initialization
