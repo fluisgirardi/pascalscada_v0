@@ -1263,6 +1263,7 @@ begin
   //its own session: the port is closed and opened under a subscription
   AssertTrue(WriteRaw('TestDB_Dyn', 'Echo_In', BEBytes(777, 4)));
   OpenPort(Port, Drv);
+  Drv.OnDebug := @TSink(GSink).Debug;
   T := TPLCTagNumber.Create(nil);
   try
     T.Name := 'live_rc';
@@ -1317,7 +1318,7 @@ begin
   Fast := TPLCTagNumber.Create(nil);
   Slow := TPLCTagNumber.Create(nil);
   try
-    Drv.ReadSomethingAlways := AlwaysOn;
+    Drv.ReadSomethingAlways := AlwaysOn;       //(on is the default; the test sets both)
     Fast.Name := 'live_rsa_fast';
     Fast.TagType := pttLongInt;
     Fast.SwapBytes := true;
@@ -1449,8 +1450,10 @@ initialization
   RegisterTest(TTestLiveTags);
   RegisterTest(TTestLiveReconnect);
   RegisterTest(TTestLiveReadSomethingAlways);
-  RegisterTest(TTestLiveCertificate);
   RegisterTest(TTestLiveZZRestore);
+  //after the restore: a refused TLS handshake of a second session sometimes disturbs the first one
+  //on a PLCSim (its stream loses sync and the driver does not recover), and ZZ needs it
+  RegisterTest(TTestLiveCertificate);
 
 finalization
   GDriver.Free;

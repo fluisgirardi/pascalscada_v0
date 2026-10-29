@@ -136,7 +136,7 @@ type
 
   TTestS7PlusDriverFlags = class(TTestCase)
   published
-    procedure ReadSomethingAlwaysIsOffByDefault;
+    procedure ReadSomethingAlwaysIsOnByDefault;
     procedure ReadOnlyBlocksTheDirectWrites;
   end;
 
@@ -1374,13 +1374,13 @@ begin
   AssertEquals('all', 3, Length(R));
 end;
 
-procedure TTestS7PlusDriverFlags.ReadSomethingAlwaysIsOffByDefault;
+procedure TTestS7PlusDriverFlags.ReadSomethingAlwaysIsOnByDefault;
 var
   D:TS7CommPlusDriver;
 begin
   D := TS7CommPlusDriver.Create(nil);
   try
-    AssertFalse(D.ReadSomethingAlways);
+    AssertTrue(D.ReadSomethingAlways);
     AssertFalse(D.ReadOnly);
   finally
     D.Free;
