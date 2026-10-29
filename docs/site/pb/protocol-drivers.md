@@ -144,7 +144,7 @@ TPLCBlock<img alt="plcblock" src="http://www.pascalscada.com/wp-content/uploads/
 TPLCString<img alt="plcstring" src="http://www.pascalscada.com/wp-content/uploads/2016/08/plcstring.png"/></td>
 <td>
 <p>LongAddress — caminho simbólico do tag no CLP (ex.: <code>DB4.Var1</code>, <code>MArea.Clock_10Hz</code>)</p></td>
-<td>Endereça pelo nome do tag no programa do CLP, não por offset de memória. Página dedicada em preparação.</td>
+<td>Endereça pelo nome do tag no programa do CLP, não por offset de memória. Página dedicada em preparação.<br/><strong>Requer OpenSSL:</strong> a conexão é TLS 1.3, então o driver carrega o OpenSSL 1.1.1 ou 3.x em tempo de execução. Linux e macOS normalmente já o têm. <strong>No Windows</strong> as DLLs não fazem parte do sistema: baixe o OpenSSL 3.x em <a href="https://slproweb.com/products/Win32OpenSSL.html">slproweb.com/products/Win32OpenSSL.html</a> (outras compilações estão listadas em <a href="https://wiki.openssl.org/index.php/Binaries">wiki.openssl.org/index.php/Binaries</a>) e copie <code>libssl-3-x64.dll</code> e <code>libcrypto-3-x64.dll</code> (programas de 32 bits: <code>libssl-3.dll</code> e <code>libcrypto-3.dll</code>) para a pasta do seu executável &#8212; e do <code>lazarus.exe</code> para usar o Tag Builder na IDE. A arquitetura das DLLs deve ser a mesma do programa. Sem elas a conexão falha.</td>
 </tr>
 <tr>
 <td><strong>TLGXDriver</strong></td>
