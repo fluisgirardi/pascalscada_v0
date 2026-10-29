@@ -135,6 +135,9 @@ type
     IsStructArray:Boolean;
     ElementSize:LongInt;
     Members:TS7PlusStructMemberArray;
+    //: Membro de um elemento de um array (Arr[2].x): quando vira tag é um tag solto, lido pelo
+    //: caminho simbólico (LongAddress), sem depender de offset nenhum.
+    ViaPath:Boolean;
   end;
   TS7PlusCandidateArray = array of TS7PlusCandidate;
 
@@ -470,8 +473,8 @@ begin
     end;
 
     for i:=0 to High(Candidates) do begin
-      //an element of an array is covered by the array
-      if Candidates[i].Skip=srArrayElement then continue;
+      //an element of an array is covered by the array; so is what is inside an element
+      if (Candidates[i].Skip=srArrayElement) or Candidates[i].ViaPath then continue;
       Levels := S7PlusSplitPath(Candidates[i].Path);
       if Length(Levels)=0 then continue;
 
@@ -619,10 +622,12 @@ begin
   for k:=ElemIdx[0]+1 to High(Candidates) do begin
     if Pos(Prefix0, Candidates[k].Path)<>1 then break;
     Rest := Copy(Candidates[k].Path, Length(Prefix0)+1, MaxInt);
-    //a structure or an array inside the element: not handled
-    if (Pos('.', Rest)>0) or (Pos('[', Rest)>0) or
-       (TS7PlusSoftDataType(Candidates[k].SoftDataType)=sdtSTRUCT) then exit;
+    //what is inside the element, however deep (structures and arrays in it), counts by its leaves:
+    //the structures themselves are only levels
+    if TS7PlusSoftDataType(Candidates[k].SoftDataType)=sdtSTRUCT then continue;
     if Candidates[k].ByteOffset<0 then exit;
+    //the head of an array of scalars: its elements (listed next) are the members
+    if (k<High(Candidates)) and (Pos(Candidates[k].Path+'[', Candidates[k+1].Path)=1) then continue;
 
     Finalize(M);                //it holds strings and an array: FillChar alone would leak the last ones
     FillChar(M, SizeOf(M), 0);
@@ -634,7 +639,8 @@ begin
     M.Lids := Candidates[k].Lids;
     if TS7PlusSoftDataType(M.SoftDataType)=sdtSTRING then begin
       M.IsString := true;
-      M.Supported := true;
+      //a STRING deeper in the element would need a read of its own to know its length
+      M.Supported := (Pos('.', Rest)=0) and (Pos('[', Rest)=0);
       End_ := M.Offset;      //its size is added once the length is read
     end else begin
       M.Supported := S7PlusTagTypeOf(M.SoftDataType, M.TagType, M.SwapBytes, M.SwapWords, M.SwapDWords);
@@ -740,8 +746,8 @@ begin
       Levels := S7PlusSplitPath(Candidates[c].Path);
       if Length(Levels)=0 then continue;
 
-      if S7PlusIsAreaName(Levels[0]) then begin
-        //an area: loose tags, as always
+      if S7PlusIsAreaName(Levels[0]) or Candidates[c].ViaPath then begin
+        //an area, or a member inside an element of an array: loose tags, as always
         n := NewEntry;
         Plan[n].Path       := Candidates[c].Path;
         Plan[n].CompName   := S7PlusSuggestedName(Candidates[c].Path, Prefix);
@@ -976,6 +982,7 @@ begin
   Result.Lids := V.Lids;
   Result.IsStructArray := false;
   Result.ElementSize := 0;
+  Result.ViaPath := false;
   SetLength(Result.Members, 0);
 
   if (DBName<>'') and StartsWithDBNumber(V.Name, RestStart) then
@@ -988,14 +995,24 @@ begin
   Result.Nested := Depth>1;
 
   if Pos('[', V.Name)>0 then begin
-    Result.Skip := srArrayElement;
-    exit;
+    //an element itself (Arr[2]): covered by its array
+    if V.Name[Length(V.Name)]=']' then begin
+      Result.Skip := srArrayElement;
+      exit;
+    end;
+    //a member inside an element (Arr[2].x): read by its own symbolic path
+    Result.ViaPath := true;
   end;
   if TS7PlusSoftDataType(V.SoftDataType) in [sdtVOID, sdtSTRUCT, sdtENDSTRUCT, sdtARRAY] then begin
     Result.Skip := srNotAScalar;
     exit;
   end;
   if TS7PlusSoftDataType(V.SoftDataType)=sdtSTRING then begin
+    //inside an element there can be thousands: their lengths are not read
+    if Result.ViaPath then begin
+      Result.Skip := srUnsupportedType;
+      exit;
+    end;
     //a TPLCString; its length comes from reading the value (ResolveStringLengths)
     Result.IsString := true;
     exit;
