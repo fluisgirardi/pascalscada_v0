@@ -6,15 +6,15 @@ VERSION : 0.1
 NON_RETAIN
    VAR 
       // ---- Valores que o PROPRIO CLP muda (FC_TestDynamics) / values the PLC itself changes
-      Counter : DInt := 0;
+      CountValue : DInt := 0;
       Blink : Bool := false;
       Ramp : Real := 0.0;
       Text : String[20] := 'TOCK';
       Cycles : DInt := 0;
       // ---- Comandos que o teste ESCREVE e o CLP obedece / commands the test WRITES and the PLC follows
       Enable : Bool := true;
-      Step : DInt := 1;
-      Reset : Bool := false;
+      StepSize : DInt := 1;
+      ResetCmd : Bool := false;
       Echo_In : DInt := 0;
       Echo_Out : DInt := 1;
       // ---- Restaura os valores por elemento / restores the per element values
