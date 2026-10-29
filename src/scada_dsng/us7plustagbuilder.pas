@@ -201,6 +201,9 @@ begin
   FSkippedCount:=0;
   FShownTags:=0;
   MakeStateImages;
+  //without this the LCL frees the children of a node when it is collapsed: the node then has
+  //nothing under it (no + sign, nothing to check) until the tree is built again
+  tvTags.Items.KeepCollapsedNodes:=true;
   tvTags.StateImages:=FStateImages;
 
   Caption                     := SS7PTBCaption;
