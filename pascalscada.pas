@@ -32,7 +32,9 @@ uses
   S7PlusHarpoNinePart8, S7PlusHarpoNinePart9, S7PlusHarpoRandom, 
   S7PlusHarpoSeedTransform, S7PlusHarpoTenPart1, S7PlusHarpoTenPart2, 
   S7PlusHarpoTenPart3, S7PlusHarpoTransform12, S7PlusHarpoTransform7, 
-  S7PlusHarpoUtil, S7PlusHarpoLegitimate, S7PlusTagPlan, S7PlusCertificate, LazarusPackageIntf;
+  S7PlusHarpoUtil, S7PlusHarpoLegitimate, S7PlusTagPlan, S7PlusCertificate, XinJEDriver, XinJETCP,
+  DeltaDriver, DeltaTCP, InovanceDriver, InovanceTCP, H5UTagDriver, H5UTagTCP,
+  LazarusPackageIntf;
 
 implementation
 

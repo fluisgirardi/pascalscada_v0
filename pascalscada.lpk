@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="98">
+    <Files Count="106">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -424,6 +424,38 @@
         <Filename Value="src\scada\s7pluscertificate.pas"/>
         <UnitName Value="S7PlusCertificate"/>
       </Item98>
+      <Item99>
+        <Filename Value="src\scada\XinJEDriver.pas"/>
+        <UnitName Value="XinJEDriver"/>
+      </Item99>
+      <Item100>
+        <Filename Value="src\scada\XinJETCP.pas"/>
+        <UnitName Value="XinJETCP"/>
+      </Item100>
+      <Item101>
+        <Filename Value="src\scada\DeltaDriver.pas"/>
+        <UnitName Value="DeltaDriver"/>
+      </Item101>
+      <Item102>
+        <Filename Value="src\scada\DeltaTCP.pas"/>
+        <UnitName Value="DeltaTCP"/>
+      </Item102>
+      <Item103>
+        <Filename Value="src\scada\InovanceDriver.pas"/>
+        <UnitName Value="InovanceDriver"/>
+      </Item103>
+      <Item104>
+        <Filename Value="src\scada\InovanceTCP.pas"/>
+        <UnitName Value="InovanceTCP"/>
+      </Item104>
+      <Item105>
+        <Filename Value="src\scada\H5UTagDriver.pas"/>
+        <UnitName Value="H5UTagDriver"/>
+      </Item105>
+      <Item106>
+        <Filename Value="src\scada\H5UTagTCP.pas"/>
+        <UnitName Value="H5UTagTCP"/>
+      </Item106>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
