@@ -21,13 +21,13 @@ BEGIN
 	    "TestDB_Opt".Rec_Text[#i].Dint1 := 2000 + #i;
 	    "TestDB_Opt".Rec_Text[#i].aBool := (#i MOD 3) = 0;
 	    "TestDB_Opt".Rec_Text[#i].aInt := 100 + #i;
-	    "TestDB_Opt".Rec_Text[#i].Name := 'record';
+	    "TestDB_Opt".Rec_Text[#i].Descr := 'record';
 	  END_FOR;
 	  FOR #i := 0 TO 3 DO
 	    "TestDB_Opt".Motors[#i].Run := (#i MOD 2) = 0;
 	    "TestDB_Opt".Motors[#i].Speed := INT_TO_REAL(#i) * 10.0 + 0.5;
 	    "TestDB_Opt".Motors[#i].Total := 5000 + #i;
-	    "TestDB_Opt".Motors[#i].Name := 'motor';
+	    "TestDB_Opt".Motors[#i].Descr := 'motor';
 	  END_FOR;
 	  FOR #i := 0 TO 2 DO
 	    "TestDB_Opt".Mix.Deep[#i].x := 300 + #i;
@@ -42,13 +42,13 @@ BEGIN
 	    "TestDB_NonOpt".Rec_Text[#i].Dint1 := 2000 + #i;
 	    "TestDB_NonOpt".Rec_Text[#i].aBool := (#i MOD 3) = 0;
 	    "TestDB_NonOpt".Rec_Text[#i].aInt := 100 + #i;
-	    "TestDB_NonOpt".Rec_Text[#i].Name := 'record';
+	    "TestDB_NonOpt".Rec_Text[#i].Descr := 'record';
 	  END_FOR;
 	  FOR #i := 0 TO 3 DO
 	    "TestDB_NonOpt".Motors[#i].Run := (#i MOD 2) = 0;
 	    "TestDB_NonOpt".Motors[#i].Speed := INT_TO_REAL(#i) * 10.0 + 0.5;
 	    "TestDB_NonOpt".Motors[#i].Total := 5000 + #i;
-	    "TestDB_NonOpt".Motors[#i].Name := 'motor';
+	    "TestDB_NonOpt".Motors[#i].Descr := 'motor';
 	  END_FOR;
 	  FOR #i := 0 TO 2 DO
 	    "TestDB_NonOpt".Mix.Deep[#i].x := 300 + #i;

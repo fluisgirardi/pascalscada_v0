@@ -9,7 +9,7 @@ NON_RETAIN
       Arr_Big : Array[0..499] of DInt;
       Arr_Bytes600 : Array[0..599] of Byte;
       Texts : Array[0..9] of Struct
-         Name : String := 'text';
+         Descr : String := 'text';
          Value : DInt := 9000;
       END_STRUCT;
    END_VAR
