@@ -15,12 +15,12 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
   LCLVersion = '2.0.12.0'
   object pnlTop: TPanel
     Left = 0
-    Height = 108
+    Height = 120
     Top = 0
     Width = 860
     Align = alTop
     BevelOuter = bvNone
-    ClientHeight = 108
+    ClientHeight = 120
     ClientWidth = 860
     TabOrder = 0
     object btnBrowse: TButton
@@ -106,11 +106,20 @@ object frmS7PlusTagBuilder: TfrmS7PlusTagBuilder
       State = cbChecked
       TabOrder = 6
     end
+    object pbProgress: TProgressBar
+      Left = 8
+      Height = 10
+      Top = 108
+      Width = 844
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 8
+      Visible = False
+    end
   end
   object tvTags: TTreeView
     Left = 0
     Height = 340
-    Top = 108
+    Top = 120
     Width = 860
     Align = alClient
     ReadOnly = True
