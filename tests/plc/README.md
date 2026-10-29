@@ -63,9 +63,9 @@ To restore after a test that wrote: write `TRUE` to `"TestDB_Dyn".LoadPattern`.
 | Array de escalares dentro de estrutura | `Mix.Counts[0..3]` | `1,2,3,4` |
 | Array de estruturas **dentro** de estrutura (o Tag Builder não importa) / nested array of structures | `Mix.Deep[0..2].x`, `.y` | `300+i`, `-i` (depois do padrão / after the pattern; antes: `7`, `8`) |
 | Array de estruturas, sem texto (passo de 8 bytes no layout clássico) / array of structures | `Rec_Small[0..4].Dint1`, `.aBool`, `.aInt` | `1000+i`, `i mod 2 = 1`, `-10-i` |
-| Array de estruturas, com STRING (passo de 264 bytes) | `Rec_Text[0..19].Dint1`, `.aBool`, `.aInt`, `.Name` | `2000+i`, `i mod 3 = 0`, `100+i`, `'record'` |
-| Array de UDT | `Motors[0..3].Run`, `.Speed`, `.Total`, `.Name` | `i mod 2 = 0`, `10*i+0.5`, `5000+i`, `'motor'` |
-| UDT solto / a single UDT | `Motor_One.Run`, `.Speed`, `.Total`, `.Status`, `.Name` | `true`, `12.5`, `5000`, `16#00A0`, `'motor'` |
+| Array de estruturas, com STRING (passo de 264 bytes) | `Rec_Text[0..19].Dint1`, `.aBool`, `.aInt`, `.Descr` | `2000+i`, `i mod 3 = 0`, `100+i`, `'record'` |
+| Array de UDT | `Motors[0..3].Run`, `.Speed`, `.Total`, `.Descr` | `i mod 2 = 0`, `10*i+0.5`, `5000+i`, `'motor'` |
+| UDT solto / a single UDT | `Motor_One.Run`, `.Speed`, `.Total`, `.Status`, `.Descr` | `true`, `12.5`, `5000`, `16#00A0`, `'motor'` |
 
 (`i` é o índice do elemento. Os valores por elemento dos arrays de estruturas vêm do `FC_TestPattern`.)
 (`i` is the element index. The per element values of the arrays of structures come from `FC_TestPattern`.)
@@ -76,7 +76,7 @@ To restore after a test that wrote: write `TRUE` to `"TestDB_Dyn".LoadPattern`.
 |---|---|---|
 | Array de 500 DInt (2000 bytes) em **um** item de leitura / one read item | `Arr_Big[0..499]` | `100000+i` (depois do padrão / after the pattern) |
 | Array de 600 Byte | `Arr_Bytes600[0..599]` | `i mod 256` (depois do padrão) |
-| Array de estruturas com STRING padrão | `Texts[0..9].Name`, `.Value` | `'text'`, `9000+i` |
+| Array de estruturas com STRING padrão | `Texts[0..9].Descr`, `.Value` | `'text'`, `9000+i` |
 
 Atenção: um PLCSim derruba a sessão (evento de sistema fatal) quando a **resposta** de uma leitura em lote passa de
 cerca de 990 bytes; o driver divide as leituras por tamanho. Estes valores servem para provar que isso continua certo

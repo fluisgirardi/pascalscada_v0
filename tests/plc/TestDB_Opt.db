@@ -81,7 +81,7 @@ NON_RETAIN
          Dint1 : DInt := 2000;
          aBool : Bool := true;
          aInt : Int := 100;
-         Name : String := 'record';
+         Descr : String := 'record';
       END_STRUCT;
       Motors : Array[0..3] of "UDT_TestMotor";
       Motor_One : "UDT_TestMotor";

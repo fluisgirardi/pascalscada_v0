@@ -5,7 +5,7 @@ VERSION : 0.1
       Speed : Real := 12.5;
       Total : DInt := 5000;
       Status : Word := 16#00A0;
-      Name : String[20] := 'motor';
+      Descr : String[20] := 'motor';
    END_STRUCT;
 
 END_TYPE
