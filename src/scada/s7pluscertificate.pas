@@ -74,6 +74,28 @@ function S7PlusDerToBase64(const Der:TBytes):String;
 {$ENDIF}
 function S7PlusDerSequenceLength(const Data:TBytes; Offset:Integer):Integer;
 
+{$IFDEF PORTUGUES}
+//: O que um arquivo escolhido como credencial de CLIENTE vira na propriedade ClientCertificate: um
+//: texto PEM fica como está (precisa ter um BEGIN CERTIFICATE; HasKey diz se tem também uma chave
+//: privada) e um arquivo binário (PKCS#12, .p12/.pfx) vira o seu base64 (HasKey=True: a chave vem
+//: dentro). '' se não for nem um nem outro.
+{$ELSE}
+//: What a file picked as the CLIENT credential becomes in the ClientCertificate property: a PEM
+//: text is kept as it is (it needs a BEGIN CERTIFICATE; HasKey says whether a private key is in it
+//: as well) and a binary file (PKCS#12, .p12/.pfx) becomes its base64 (HasKey=True: the key is
+//: inside). '' when it is neither.
+{$ENDIF}
+function S7PlusClientCredentialFromFile(const FileData:TBytes; out HasKey:Boolean):String;
+
+{$IFDEF PORTUGUES}
+//: Os bytes que o OpenSSL recebe a partir da propriedade ClientCertificate: o texto PEM, o arquivo
+//: cujo nome está lá, ou o base64 de um PKCS#12. False, com o motivo em Error, se não for nada disso.
+{$ELSE}
+//: The bytes OpenSSL gets from the ClientCertificate property: the PEM text, the file whose name
+//: is there, or the base64 of a PKCS#12. False, with the reason in Error, when it is none of them.
+{$ENDIF}
+function S7PlusClientCredentialToBytes(const Value:String; out Data:TBytes; out Error:String):Boolean;
+
 implementation
 
 uses
@@ -232,6 +254,74 @@ begin
   Result := false;
   if not DecodeBase64Text(B64, Bytes) then exit;
   Result := SplitDER(Bytes, Certs);
+end;
+
+function S7PlusClientCredentialFromFile(const FileData:TBytes; out HasKey:Boolean):String;
+var
+  Text:String;
+begin
+  Result := '';
+  HasKey := false;
+  if Length(FileData)=0 then exit;
+  Text := BytesToText(FileData);
+  if Pos('-----BEGIN', Text)>0 then begin
+    //a text: it needs a certificate; a key in the same text is welcome
+    if Pos(PemBegin, Text)=0 then exit;
+    HasKey := (Pos('PRIVATE KEY-----', Text)>0);
+    Result := Text;
+    exit;
+  end;
+  //binary: a PKCS#12 is one DER SEQUENCE over the whole file
+  if S7PlusDerSequenceLength(FileData, 0)<>Length(FileData) then exit;
+  HasKey := true;
+  Result := S7PlusDerToBase64(FileData);
+end;
+
+function S7PlusClientCredentialToBytes(const Value:String; out Data:TBytes; out Error:String):Boolean;
+var
+  V:String;
+  FS:TFileStream;
+begin
+  Result := false;
+  Error := '';
+  SetLength(Data, 0);
+  V := Trim(Value);
+  if V='' then begin
+    Error := 'vazio';
+    exit;
+  end;
+  if Pos('-----BEGIN', V)>0 then begin
+    Data := TextToBytes(V);
+    Result := true;
+    exit;
+  end;
+  //a name of a file (PEM or PKCS#12) read when the connection is made, so that the key need not
+  //travel in the form
+  if (Pos(#10, V)=0) and FileExists(V) then begin
+    try
+      FS := TFileStream.Create(V, fmOpenRead or fmShareDenyNone);
+      try
+        SetLength(Data, FS.Size);
+        if Length(Data)>0 then
+          FS.ReadBuffer(Data[0], Length(Data));
+      finally
+        FS.Free;
+      end;
+    except
+      on E:Exception do begin
+        Error := 'nao foi possivel ler o arquivo '+V+': '+E.Message;
+        exit;
+      end;
+    end;
+    Result := Length(Data)>0;
+    if not Result then Error := 'arquivo vazio: '+V;
+    exit;
+  end;
+  if not DecodeBase64Text(V, Data) then begin
+    Error := 'nao e um texto PEM, um arquivo existente nem o base64 de um PKCS#12';
+    exit;
+  end;
+  Result := true;
 end;
 
 end.

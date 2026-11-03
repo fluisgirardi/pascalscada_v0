@@ -163,6 +163,7 @@ type
     //-- V2+ TLS/IntegrityId ---------------------------------------------------
     FUseTLS:Boolean;
     FServerCertificate:AnsiString;
+    FClientCertificate, FClientCertificatePassword:AnsiString;
     FPeerCertificate:AnsiString;
     FTLSActive:Boolean;
     FSSLCtx:PSSLCTX;
@@ -607,6 +608,14 @@ type
     //: the TLS handshake only succeeds if the PLC presents a certificate that chains to one of them
     //: (or is one of them); the name in the certificate is not compared. Read at each connection.
     property ServerCertificate:AnsiString read FServerCertificate write FServerCertificate;
+    //: The certificate THIS side presents when the PLC asks for one (mutual TLS) and its private key:
+    //: a PEM text (the certificate, its chain and the key), the name of a file (PEM or PKCS#12, read
+    //: at each connection) or the base64 of a PKCS#12. Empty: no client certificate. When set but
+    //: unusable (wrong password, key of another certificate...) the connection fails, with the
+    //: reason on OnDebug; it never goes on without it. Read at each connection.
+    property ClientCertificate:AnsiString read FClientCertificate write FClientCertificate;
+    //: The password of an encrypted private key (PEM) or of the PKCS#12 of ClientCertificate.
+    property ClientCertificatePassword:AnsiString read FClientCertificatePassword write FClientCertificatePassword;
     //: The certificate the PLC presented in the last TLS handshake, as base64 of its DER ('' until
     //: one succeeded). Copy it into ServerCertificate to trust that very PLC from then on.
     property PeerCertificate:AnsiString read FPeerCertificate;
@@ -942,6 +951,7 @@ var
   Retries:Integer;
   Trusted:TS7PlusCertDERArray;
   Why:String;
+  Cred:TBytes;
 begin
   Result := false;
 
@@ -974,6 +984,23 @@ begin
     'AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256');
   S7PlusSSLCtxSet1GroupsList(FSSLCtx, 'P-256:X25519:P-384');
   SSL_CTX_set_options(FSSLCtx, SSL_OP_NO_TICKET or SSL_OP_NO_ENCRYPT_THEN_MAC or SSL_OP_NO_EXTENDED_MASTER_SECRET);
+  //The certificate of this side, for a PLC that asks for one. If what is configured cannot be
+  //used, the connection fails: going on without it would only be refused later, with no hint why.
+  if Trim(FClientCertificate)<>'' then begin
+    if not S7PlusClientCredentialToBytes(FClientCertificate, Cred, Why) then begin
+      Debug('ActivateTLS: ClientCertificate invalido ('+Why+') - conexao recusada.');
+      SSL_CTX_free(FSSLCtx); FSSLCtx := nil;
+      S7PlusSSLUnload;
+      exit;
+    end;
+    if not S7PlusSSLCtxUseClientCertificate(FSSLCtx, Cred, FClientCertificatePassword, Why) then begin
+      Debug('ActivateTLS: o OpenSSL nao aceitou o ClientCertificate ('+Why+') - conexao recusada.');
+      SSL_CTX_free(FSSLCtx); FSSLCtx := nil;
+      S7PlusSSLUnload;
+      exit;
+    end;
+    Debug('ActivateTLS: certificado de cliente carregado.');
+  end;
   if FServerCertificate='' then
     //No certificate configured: accept whatever the PLC presents, as the reference
     //implementation does without tls_ca.
@@ -1034,6 +1061,8 @@ begin
       Why := S7PlusSSLVerifyErrorText(FSSL);
       if Why<>'' then
         Debug('ActivateTLS: o certificado do CLP nao confere com o ServerCertificate: '+Why);
+      if Trim(FClientCertificate)<>'' then
+        Debug('ActivateTLS: (um ClientCertificate estava configurado: o CLP pode ter recusado esse certificado)');
       ReleaseTLS;
       exit;
     end;

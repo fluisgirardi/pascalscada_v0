@@ -74,6 +74,7 @@ begin
 
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ServerCertificate', TS7PlusCertificatePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ClientCertificate', TS7PlusClientCertificatePropertyEditor);
   {$IF defined(WIN32) or defined(WIN64)}
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'DevDir', THiddenPropertyEditor);
   {$IFEND}

@@ -185,6 +185,7 @@ type
     FExploreDelayMs:Integer;
     FUsername, FPassword:AnsiString;
     FServerCertificate:AnsiString;
+    FClientCertificate, FClientCertificatePassword:AnsiString;
     FCertificateChanged:Boolean;   //ServerCertificate changed: the open session is not trusted any more
     FAccessLevel:Cardinal;      //the session's protection level (S7PlusAccessLevel_*), 0 = unknown
     FLegitimated:Boolean;       //the session logged in with Username/Password
@@ -224,6 +225,8 @@ type
     procedure SetUsername(const AValue:AnsiString);
     procedure SetPassword(const AValue:AnsiString);
     procedure SetServerCertificate(const AValue:AnsiString);
+    procedure SetClientCertificate(const AValue:AnsiString);
+    procedure SetClientCertificatePassword(const AValue:AnsiString);
     function GetPeerCertificate:AnsiString;
     procedure SetSubCycleMs(AValue:Integer);
     procedure SetSubTimeoutMs(AValue:Integer);
@@ -562,6 +565,16 @@ type
     //: certificate that cannot be read also fails the connection; it never falls back to accepting
     //: any. Changing it closes the session that is open, so the next one is checked.
     property ServerCertificate:AnsiString read FServerCertificate write SetServerCertificate;
+    //: The certificate THIS side presents when the PLC asks for one (mutual TLS), with its private
+    //: key: a PEM text (certificate, chain and key), the name of a file (PEM or PKCS#12, read at each
+    //: connection - the key then stays out of the form) or the base64 of a PKCS#12 (.p12/.pfx). Empty:
+    //: none (the usual case). When set but unusable (wrong ClientCertificatePassword, the key of
+    //: another certificate...) the connection fails, with the reason on OnDebug; it never falls back
+    //: to connecting without it. Changing it closes the session that is open. Needs OpenSSL 1.1.1+
+    //: (a PKCS#12 made with old algorithms, such as RC2, also needs the legacy provider of OpenSSL 3).
+    property ClientCertificate:AnsiString read FClientCertificate write SetClientCertificate;
+    //: The password of an encrypted private key (PEM) or of the PKCS#12 of ClientCertificate.
+    property ClientCertificatePassword:AnsiString read FClientCertificatePassword write SetClientCertificatePassword;
     //: Optional username for "new"-style (AES-256-CBC) legitimation. Leave empty for a
     //: plain password login (the common case) - see Password.
     property Username:AnsiString read FUsername write SetUsername;
@@ -679,6 +692,8 @@ begin
     FConnection.OnDebug := ConnDebug;
     FConnection.UseTLS := FUseTLS;
     FConnection.ServerCertificate := FServerCertificate;
+    FConnection.ClientCertificate := FClientCertificate;
+    FConnection.ClientCertificatePassword := FClientCertificatePassword;
     FConnection.ExploreDelayMs := FExploreDelayMs;
     FConnection.MaxItemsPerRequest := FMaxItemsPerRequest;
   end;
@@ -687,6 +702,8 @@ begin
   if FCertificateChanged then begin
     FCertificateChanged := false;
     FConnection.ServerCertificate := FServerCertificate;
+    FConnection.ClientCertificate := FClientCertificate;
+    FConnection.ClientCertificatePassword := FClientCertificatePassword;
     if FConnection.Connected then
       RestartSession;
   end;
@@ -750,6 +767,20 @@ begin
   if AValue=FServerCertificate then exit;
   FServerCertificate := AValue;
   //(the connection takes it at the next EnsureConnected, on the scan thread)
+  FCertificateChanged := true;
+end;
+
+procedure TS7CommPlusDriver.SetClientCertificate(const AValue:AnsiString);
+begin
+  if AValue=FClientCertificate then exit;
+  FClientCertificate := AValue;
+  FCertificateChanged := true;
+end;
+
+procedure TS7CommPlusDriver.SetClientCertificatePassword(const AValue:AnsiString);
+begin
+  if AValue=FClientCertificatePassword then exit;
+  FClientCertificatePassword := AValue;
   FCertificateChanged := true;
 end;
 

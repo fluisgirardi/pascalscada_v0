@@ -56,6 +56,8 @@ const
   X509_V_FLAG_PARTIAL_CHAIN  = $80000;
   //-- SSL_get_verify_result() when the chain was verified.
   X509_V_OK                  = 0;
+  //-- SSL_CTX_ctrl(): add a certificate to the chain sent along with the own one.
+  SSL_CTRL_EXTRA_CHAIN_CERT  = 14;
 
   //-- SSL_CTX_ctrl()/SSL_ctrl() command codes actually used here.
   SSL_CTRL_SET_MIN_PROTO_VERSION = 123;
@@ -115,12 +117,28 @@ type
   TFn_SSL_CTX_get_cert_store = function(ctx:PSSLCTX):Pointer; cdecl;
   TFn_SSL_get_verify_result = function(assl:PSSL):clong; cdecl;
   TFn_SSL_get_peer_certificate = function(assl:PSSL):Pointer; cdecl;
+  TFn_SSL_get_certificate = function(assl:PSSL):Pointer; cdecl;
+  TFn_SSL_CTX_use_certificate = function(ctx:PSSLCTX; x509:Pointer):cint; cdecl;
+  TFn_SSL_CTX_use_PrivateKey = function(ctx:PSSLCTX; pkey:Pointer):cint; cdecl;
+  TFn_SSL_CTX_check_private_key = function(ctx:PSSLCTX):cint; cdecl;
   TFn_X509_STORE_add_cert = function(store:Pointer; x509:Pointer):cint; cdecl;
   TFn_X509_STORE_set_flags = function(store:Pointer; flags:culong):cint; cdecl;
   TFn_d2i_X509 = function(a:PPointer; pp:PPByte; len:clong):Pointer; cdecl;
   TFn_i2d_X509 = function(x509:Pointer; pp:PPByte):cint; cdecl;
   TFn_X509_free = procedure(x509:Pointer); cdecl;
   TFn_X509_verify_cert_error_string = function(n:clong):PAnsiChar; cdecl;
+  TFn_BIO_new_mem_buf = function(const buf:Pointer; len:cint):PBIO; cdecl;
+  TFn_PEM_read_bio = function(bp:PBIO; x:PPointer; cb:Pointer; u:Pointer):Pointer; cdecl;
+  TFn_EVP_PKEY_free = procedure(pkey:Pointer); cdecl;
+  TFn_d2i_PKCS12 = function(a:PPointer; pp:PPByte; len:clong):Pointer; cdecl;
+  TFn_PKCS12_parse = function(p12:Pointer; const pass:PAnsiChar; pkey:PPointer; cert:PPointer; ca:PPointer):cint; cdecl;
+  TFn_PKCS12_free = procedure(p12:Pointer); cdecl;
+  TFn_sk_num = function(st:Pointer):cint; cdecl;
+  TFn_sk_value = function(st:Pointer; i:cint):Pointer; cdecl;
+  TFn_sk_free = procedure(st:Pointer); cdecl;
+  TFn_ERR_get_error = function:culong; cdecl;
+  TFn_ERR_error_string_n = procedure(e:culong; buf:PAnsiChar; len:csize_t); cdecl;
+  TFn_ERR_clear_error = procedure; cdecl;
 
   TFn_BIO_new = function(AType:Pointer):PBIO; cdecl;
   TFn_BIO_s_mem = function:Pointer; cdecl;
@@ -176,6 +194,10 @@ var
   SSL_get_verify_result:TFn_SSL_get_verify_result;
   //(SSL_get1_peer_certificate in OpenSSL 3, SSL_get_peer_certificate before it: whichever exists)
   SSL_get_peer_certificate:TFn_SSL_get_peer_certificate;
+  SSL_get_certificate:TFn_SSL_get_certificate;
+  SSL_CTX_use_certificate:TFn_SSL_CTX_use_certificate;
+  SSL_CTX_use_PrivateKey:TFn_SSL_CTX_use_PrivateKey;
+  SSL_CTX_check_private_key:TFn_SSL_CTX_check_private_key;
 
   //-- libcrypto
   BIO_new:TFn_BIO_new;
@@ -190,6 +212,19 @@ var
   i2d_X509:TFn_i2d_X509;
   X509_free:TFn_X509_free;
   X509_verify_cert_error_string:TFn_X509_verify_cert_error_string;
+  BIO_new_mem_buf:TFn_BIO_new_mem_buf;
+  PEM_read_bio_X509:TFn_PEM_read_bio;
+  PEM_read_bio_PrivateKey:TFn_PEM_read_bio;
+  EVP_PKEY_free:TFn_EVP_PKEY_free;
+  d2i_PKCS12:TFn_d2i_PKCS12;
+  PKCS12_parse:TFn_PKCS12_parse;
+  PKCS12_free:TFn_PKCS12_free;
+  OPENSSL_sk_num:TFn_sk_num;
+  OPENSSL_sk_value:TFn_sk_value;
+  OPENSSL_sk_free:TFn_sk_free;
+  ERR_get_error:TFn_ERR_get_error;
+  ERR_error_string_n:TFn_ERR_error_string_n;
+  ERR_clear_error:TFn_ERR_clear_error;
   EVP_sha1:TFn_EVP_sha1;
   EVP_sha256:TFn_EVP_sha256;
   EVP_Digest:TFn_EVP_Digest;
@@ -218,6 +253,16 @@ function S7PlusSSLCtxSet1GroupsList(ctx:PSSLCTX; const AStr:PAnsiChar):clong;
 //: verification of the peer. Returns how many were accepted; -1 when one of them is not a
 //: certificate (nothing is trusted then, the caller must not go on).
 function S7PlusSSLCtxTrustCertificates(ctx:PSSLCTX; const Certs:array of TBytes):Integer;
+//: Sets the certificate this side presents when the peer asks for one (mutual TLS) and its private
+//: key. Data is the PEM text (the certificate, the rest of its chain and the key, in any order; an
+//: encrypted key needs Password) or the DER of a PKCS#12 file (.p12/.pfx; Password opens it). The
+//: first certificate is the own one, the others go along as its chain. False, with the reason in
+//: Error, when nothing usable is found, the password is wrong or the key is not the one of the
+//: certificate - the caller must not go on then.
+function S7PlusSSLCtxUseClientCertificate(ctx:PSSLCTX; const Data:TBytes; const Password:AnsiString;
+                                          out Error:String):Boolean;
+//: The certificate this side presents (the one given to S7PlusSSLCtxUseClientCertificate), in DER.
+function S7PlusSSLOwnCertificateDER(assl:PSSL):TBytes;
 //: The certificate the peer presented, in DER ('' bytes if none or if the library cannot say).
 function S7PlusSSLPeerCertificateDER(assl:PSSL):TBytes;
 //: Why the verification of the peer failed ('' when it passed or was not asked for).
@@ -332,6 +377,11 @@ begin
   if not Assigned(SSL_get_peer_certificate) then
     SSL_get_peer_certificate := TFn_SSL_get_peer_certificate(GetProcedureAddress(SSLLib, 'SSL_get_peer_certificate'));
 
+  SSL_get_certificate        := TFn_SSL_get_certificate(Bind(SSLLib, 'SSL_get_certificate', Missing));
+  SSL_CTX_use_certificate    := TFn_SSL_CTX_use_certificate(Bind(SSLLib, 'SSL_CTX_use_certificate', Missing));
+  SSL_CTX_use_PrivateKey     := TFn_SSL_CTX_use_PrivateKey(Bind(SSLLib, 'SSL_CTX_use_PrivateKey', Missing));
+  SSL_CTX_check_private_key  := TFn_SSL_CTX_check_private_key(Bind(SSLLib, 'SSL_CTX_check_private_key', Missing));
+
   BIO_new    := TFn_BIO_new(Bind(CryptoLib, 'BIO_new', Missing));
   BIO_s_mem  := TFn_BIO_s_mem(Bind(CryptoLib, 'BIO_s_mem', Missing));
   BIO_read   := TFn_BIO_read(Bind(CryptoLib, 'BIO_read', Missing));
@@ -344,6 +394,19 @@ begin
   i2d_X509             := TFn_i2d_X509(Bind(CryptoLib, 'i2d_X509', Missing));
   X509_free            := TFn_X509_free(Bind(CryptoLib, 'X509_free', Missing));
   X509_verify_cert_error_string := TFn_X509_verify_cert_error_string(Bind(CryptoLib, 'X509_verify_cert_error_string', Missing));
+  BIO_new_mem_buf      := TFn_BIO_new_mem_buf(Bind(CryptoLib, 'BIO_new_mem_buf', Missing));
+  PEM_read_bio_X509    := TFn_PEM_read_bio(Bind(CryptoLib, 'PEM_read_bio_X509', Missing));
+  PEM_read_bio_PrivateKey := TFn_PEM_read_bio(Bind(CryptoLib, 'PEM_read_bio_PrivateKey', Missing));
+  EVP_PKEY_free        := TFn_EVP_PKEY_free(Bind(CryptoLib, 'EVP_PKEY_free', Missing));
+  d2i_PKCS12           := TFn_d2i_PKCS12(Bind(CryptoLib, 'd2i_PKCS12', Missing));
+  PKCS12_parse         := TFn_PKCS12_parse(Bind(CryptoLib, 'PKCS12_parse', Missing));
+  PKCS12_free          := TFn_PKCS12_free(Bind(CryptoLib, 'PKCS12_free', Missing));
+  OPENSSL_sk_num       := TFn_sk_num(Bind(CryptoLib, 'OPENSSL_sk_num', Missing));
+  OPENSSL_sk_value     := TFn_sk_value(Bind(CryptoLib, 'OPENSSL_sk_value', Missing));
+  OPENSSL_sk_free      := TFn_sk_free(Bind(CryptoLib, 'OPENSSL_sk_free', Missing));
+  ERR_get_error        := TFn_ERR_get_error(Bind(CryptoLib, 'ERR_get_error', Missing));
+  ERR_error_string_n   := TFn_ERR_error_string_n(Bind(CryptoLib, 'ERR_error_string_n', Missing));
+  ERR_clear_error      := TFn_ERR_clear_error(Bind(CryptoLib, 'ERR_clear_error', Missing));
 
   EVP_sha1             := TFn_EVP_sha1(Bind(CryptoLib, 'EVP_sha1', Missing));
   EVP_sha256           := TFn_EVP_sha256(Bind(CryptoLib, 'EVP_sha256', Missing));
@@ -433,6 +496,186 @@ begin
   X509_STORE_set_flags(Store, X509_V_FLAG_PARTIAL_CHAIN);
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nil);
   Result := Length(Certs);
+end;
+
+//the text of the last OpenSSL error on the queue (and clears the queue)
+function LastSSLError:String;
+var
+  E:culong;
+  Buf:array[0..255] of AnsiChar;
+begin
+  Result := '';
+  repeat
+    E := ERR_get_error();
+    if E=0 then break;
+    FillChar(Buf, SizeOf(Buf), 0);
+    ERR_error_string_n(E, @Buf[0], SizeOf(Buf));
+    Result := String(PAnsiChar(@Buf[0]));          //the last one is the most specific
+  until false;
+end;
+
+//a failure that is a wrong password says so
+function PasswordHint(const Err:String):String;
+var
+  L:String;
+begin
+  L := LowerCase(Err);
+  if (Pos('mac verify', L)>0) or (Pos('bad decrypt', L)>0) or (Pos('bad password', L)>0) or
+     (Pos('bad_decrypt', L)>0) then
+    Result := 'senha incorreta ('+Err+')'
+  else
+    Result := Err;
+end;
+
+function DERof(X:Pointer):TBytes;
+var
+  Len:cint;
+  P:PByte;
+begin
+  SetLength(Result, 0);
+  if X=nil then exit;
+  Len := i2d_X509(X, nil);
+  if Len<=0 then exit;
+  SetLength(Result, Len);
+  P := @Result[0];
+  if i2d_X509(X, @P)<=0 then SetLength(Result, 0);
+end;
+
+function S7PlusSSLCtxUseClientCertificate(ctx:PSSLCTX; const Data:TBytes; const Password:AnsiString;
+  out Error:String):Boolean;
+var
+  Bio:PBIO;
+  Own, Key, X, Chain:Pointer;
+  Extra:array of Pointer;
+  P12:Pointer;
+  P:PByte;
+  Text:AnsiString;
+  PassPtr:PAnsiChar;
+  i, N:Integer;
+  IsPEM:Boolean;
+
+  procedure FreeAll;
+  var
+    q:Integer;
+  begin
+    if Own<>nil then X509_free(Own);
+    if Key<>nil then EVP_PKEY_free(Key);
+    for q:=0 to High(Extra) do X509_free(Extra[q]);
+    SetLength(Extra, 0);
+    Own := nil; Key := nil;
+  end;
+
+begin
+  Result := false;
+  Error := '';
+  Own := nil; Key := nil; Chain := nil;
+  SetLength(Extra, 0);
+  if (ctx=nil) or (not S7PlusSSLLoaded) then begin
+    Error := 'OpenSSL nao carregado';
+    exit;
+  end;
+  if Length(Data)=0 then begin
+    Error := 'certificado de cliente vazio';
+    exit;
+  end;
+  ERR_clear_error();
+  //(never nil: with no password given OpenSSL would ask for one on the console)
+  PassPtr := PAnsiChar(Password);
+
+  SetString(Text, PAnsiChar(@Data[0]), Length(Data));
+  IsPEM := Pos('-----BEGIN', Text)>0;
+
+  if IsPEM then begin
+    //the certificates, first the own one and then its chain
+    Bio := BIO_new_mem_buf(@Data[0], Length(Data));
+    if Bio=nil then begin Error := LastSSLError; exit; end;
+    repeat
+      X := PEM_read_bio_X509(Bio, nil, nil, nil);
+      if X=nil then break;
+      if Own=nil then
+        Own := X
+      else begin
+        SetLength(Extra, Length(Extra)+1);
+        Extra[High(Extra)] := X;
+      end;
+    until false;
+    BIO_free(Bio);
+    ERR_clear_error();                  //(the end of the text is how that loop stops)
+    //the key, from the same text; a password on an encrypted one
+    Bio := BIO_new_mem_buf(@Data[0], Length(Data));
+    if Bio=nil then begin Error := LastSSLError; FreeAll; exit; end;
+    Key := PEM_read_bio_PrivateKey(Bio, nil, nil, PassPtr);
+    BIO_free(Bio);
+    if Key=nil then begin
+      Error := PasswordHint(LastSSLError);
+      if Error='' then Error := 'nenhuma chave privada no texto PEM';
+      FreeAll;
+      exit;
+    end;
+  end else begin
+    //a PKCS#12 file
+    P := @Data[0];
+    P12 := d2i_PKCS12(nil, @P, Length(Data));
+    if P12=nil then begin
+      Error := 'nem PEM nem PKCS#12 valido ('+LastSSLError+')';
+      exit;
+    end;
+    try
+      if PKCS12_parse(P12, PassPtr, @Key, @Own, @Chain)<>1 then begin
+        Error := PasswordHint(LastSSLError);
+        if Error='' then Error := 'senha do PKCS#12 incorreta';
+        Key := nil; Own := nil; Chain := nil;
+        exit;
+      end;
+    finally
+      PKCS12_free(P12);
+    end;
+    if Chain<>nil then begin
+      N := OPENSSL_sk_num(Chain);
+      for i:=0 to N-1 do begin
+        X := OPENSSL_sk_value(Chain, i);
+        SetLength(Extra, Length(Extra)+1);
+        Extra[High(Extra)] := X;        //(ours now: only the stack is freed)
+      end;
+      OPENSSL_sk_free(Chain);
+    end;
+  end;
+
+  if Own=nil then begin
+    Error := 'nenhum certificado em PEM/PKCS#12';
+    FreeAll;
+    exit;
+  end;
+  if (SSL_CTX_use_certificate(ctx, Own)<>1) or (SSL_CTX_use_PrivateKey(ctx, Key)<>1) then begin
+    Error := LastSSLError;
+    //(OpenSSL 3 checks the pair already when the key is set)
+    if Pos('mismatch', LowerCase(Error))>0 then
+      Error := 'a chave privada nao e a do certificado ('+Error+')';
+    FreeAll;
+    exit;
+  end;
+  if SSL_CTX_check_private_key(ctx)<>1 then begin
+    Error := 'a chave privada nao e a do certificado ('+LastSSLError+')';
+    FreeAll;
+    exit;
+  end;
+  //(the context keeps its own reference of the certificate and of the key)
+  for i:=0 to High(Extra) do
+    if SSL_CTX_ctrl(ctx, SSL_CTRL_EXTRA_CHAIN_CERT, 0, Extra[i])=1 then
+      Extra[i] := nil                   //taken: the context owns it now
+    else
+      X509_free(Extra[i]);
+  SetLength(Extra, 0);
+  X509_free(Own);
+  EVP_PKEY_free(Key);
+  Result := true;
+end;
+
+function S7PlusSSLOwnCertificateDER(assl:PSSL):TBytes;
+begin
+  SetLength(Result, 0);
+  if (assl=nil) or (not S7PlusSSLLoaded) then exit;
+  Result := DERof(SSL_get_certificate(assl));      //(not a new reference: nothing to free)
 end;
 
 function S7PlusSSLPeerCertificateDER(assl:PSSL):TBytes;
