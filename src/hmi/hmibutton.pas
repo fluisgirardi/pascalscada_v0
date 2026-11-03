@@ -22,9 +22,14 @@ type
   { THMIButton }
 
   THMIButton = class(TSpeedButton, IHMIInterface)
-  private 
+  private
     FRegInSecMan:Boolean;
     FTag:TPLCTag;
+    //tag opcional de retroalimentacao: se informado, e' dele que vem a
+    //aparencia do botao; o clique continua escrevendo em PLCTag.
+    //optional feedback tag: if set, the looks come from it; clicks keep
+    //writing to PLCTag.
+    FFeedbackTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
     FClickFlag:Boolean;
@@ -45,6 +50,17 @@ type
     procedure WriteFaultCallBack(Sender:TObject);
     procedure TagChangeCallBack(Sender:TObject);
     procedure RemoveTagCallBack(Sender:TObject);
+    procedure FeedbackTagChangeCallBack(Sender:TObject);
+    procedure FeedbackRemoveTagCallBack(Sender:TObject);
+    function  GetFeedbackTag:TPLCTag;
+    procedure SetFeedbackTag(t:TPLCTag);
+    procedure SetGlyphUp(v:TBitmap);
+    procedure SetGlyphDown(v:TBitmap);
+    procedure SetGlyphGrayed(v:TBitmap);
+    //: aplica a aparencia de acordo com o tag de exibicao (FeedbackTag se
+    //: houver, senao PLCTag)
+    //: applies the looks from the display tag (FeedbackTag if set, else PLCTag)
+    procedure UpdateState;
   protected
     //: Evita o processamento da mensagem no botão.
     procedure CMButtonPressed(var Message: TMessage); message CM_BUTTONPRESSED;
@@ -197,6 +213,32 @@ type
     property ValueDown:Double read FValueDown write SetValueDown;
     //: Valor do tag que será considerado como botão solto.
     property ValueUp:Double read FValueUp write SetValueUp;
+
+    {:
+    Imagem do botão enquanto afundado (o valor do tag de exibição é igual a
+    ValueDown). PNG com transparência pode ser carregado direto aqui.
+    }
+    property GlyphDown:TBitmap read FGlyphDown write SetGlyphDown;
+    {:
+    Imagem do botão enquanto solto (o valor do tag de exibição é igual a
+    ValueUp).
+    }
+    property GlyphUp:TBitmap read FGlyphUp write SetGlyphUp;
+    {:
+    Imagem do botão quando o valor do tag não é nem ValueDown nem ValueUp.
+    }
+    property GlyphGrayed:TBitmap read FGlyphGrayed write SetGlyphGrayed;
+
+    {:
+    Tag opcional de retroalimentação (ex.: a variável que o CLP devolve dizendo
+    o estado real). Se vazio, a aparência continua vindo de PLCTag. O clique
+    escreve sempre em PLCTag, nunca aqui.
+
+    Optional feedback tag (e.g. the variable the PLC gives back with the real
+    state). Empty: the looks keep coming from PLCTag. Clicks always write to
+    PLCTag, never here.
+    }
+    property FeedbackTag:TPLCTag read GetFeedbackTag write SetFeedbackTag;
     
     //: Retorna se o botão esta precionado ou não. Esconde a propriedade herdada.
     property Down: Boolean read GetDown;
@@ -263,6 +305,8 @@ begin
 
    if FTag<>nil then
       FTag.RemoveAllHandlersFromObject(Self);
+   if (FFeedbackTag<>nil) and (FFeedbackTag<>FTag) then
+      FFeedbackTag.RemoveAllHandlersFromObject(Self);
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
@@ -373,10 +417,16 @@ begin
   if (t<>nil) AND (not Supports(t, ITagNumeric)) then
      raise Exception.Create(SonlyNumericTags);
 
-  //se ja estou associado a um tag, remove
-  if FTag<>nil then begin
+  //se ja estou associado a um tag, remove; o tag de retroalimentacao pode ser
+  //o mesmo objeto, entao limpa os dois e recoloca o que sobrar
+  //if already linked to a tag, remove; the feedback tag can be the same
+  //object, so clean both and put back what survives
+  if FTag<>nil then
      FTag.RemoveAllHandlersFromObject(Self);
-  end;
+  if (FFeedbackTag<>nil) and (FFeedbackTag<>FTag) then
+     FFeedbackTag.RemoveAllHandlersFromObject(Self);
+
+  FTag := t;
 
   //adiona o callback para o novo tag
   if t<>nil then begin
@@ -392,11 +442,16 @@ begin
      t.AddWriteFaultHandler(@WriteFaultCallBack);
      t.AddTagChangeHandler(@TagChangeCallBack);
      t.AddRemoveTagHandler(@RemoveTagCallBack);
-
-     FTag := t;
   end;
-  FTag := t;
-  TagChangeCallBack(self);
+
+  //recoloca os tratadores de retroalimentacao, seja la' qual for o objeto
+  //puts the feedback handlers back, whichever the object is
+  if FFeedbackTag<>nil then begin
+     FFeedbackTag.AddTagChangeHandler(@FeedbackTagChangeCallBack);
+     FFeedbackTag.AddRemoveTagHandler(@FeedbackRemoveTagCallBack);
+  end;
+
+  UpdateState;
 end;
 
 function  THMIButton.GetHMITag:TPLCTag;
@@ -589,26 +644,53 @@ begin
 end;
 
 procedure THMIButton.TagChangeCallBack(Sender: TObject);
+begin
+   //o clique muda o que sera' escrito; a aparencia vem de UpdateState
+   //the click changes what will be written; the looks come from UpdateState
+   UpdateState;
+end;
+
+procedure THMIButton.FeedbackTagChangeCallBack(Sender: TObject);
+begin
+   UpdateState;
+end;
+
+procedure THMIButton.FeedbackRemoveTagCallBack(Sender: TObject);
+begin
+   FFeedbackTag := nil;
+   UpdateState;
+end;
+
+procedure THMIButton.UpdateState;
 var
    value:Double;
 begin
-   //o botao de inversao nunca fica afundado, seja qual for o valor do tag.
-   //the toggle button never stays pressed, whatever the tag's value is.
-   if FButtonType=btToogle then begin
+   //o botao de inversao sem retroalimentacao nunca fica afundado, seja qual
+   //for o valor do tag. Com um tag de retroalimentacao a historia muda: o
+   //clique inverte o valor escrito e a aparencia segue o que o CLP devolveu,
+   //que e' justamente o que se espera de um botao de duas imagens.
+   //the toggle button without feedback never looks pressed, whatever the tag
+   //value. With a feedback tag it changes: the click inverts the written
+   //value and the looks follow what the PLC gave back, which is exactly what
+   //a two-image button is expected to do.
+   if (FButtonType=btToogle) and (FFeedbackTag=nil) then begin
       SetButtonState(bsUp);
       exit;
    end;
 
-   //sem tag nao ha' leitura: Infinity nao casa com nenhum dos dois valores,
-   //entao o botao cai no tratamento de OtherValues - "esse valor nao e' nem um
-   //nem outro" - em vez de mostrar o ultimo estado lido.
-   //with no tag there is no reading: Infinity matches neither value, so the
-   //button falls into the OtherValues handling - "this value is neither of the
-   //two" - instead of showing the last state read.
-   if FTag=nil then
-      value := Infinity
+   //a aparencia vem do tag de retroalimentacao quando houver; sem nenhum dos
+   //dois tags nao ha' leitura: Infinity nao casa com nenhum dos dois valores,
+   //entao o botao cai no tratamento de OtherValues.
+   //the looks come from the feedback tag when there is one; with no tag at
+   //all there is no reading: Infinity matches neither value, so the button
+   //falls into the OtherValues handling.
+   if FFeedbackTag<>nil then
+      value := (FFeedbackTag as ITagNumeric).Value
    else
-      value := GetTagValue;
+      if FTag=nil then
+         value := Infinity
+      else
+         value := GetTagValue;
 
    if value = FValueDown then
       SetButtonState(bsDown)
@@ -627,9 +709,53 @@ begin
    end;
 end;
 
+function THMIButton.GetFeedbackTag:TPLCTag;
+begin
+   Result := FFeedbackTag;
+end;
+
+procedure THMIButton.SetFeedbackTag(t:TPLCTag);
+begin
+   //so' tags numericos, como no PLCTag
+   //numeric tags only, as in PLCTag
+   if (t<>nil) and (not Supports(t, ITagNumeric)) then
+      raise Exception.Create(SonlyNumericTags);
+
+   if (FFeedbackTag<>nil) and (FFeedbackTag<>FTag) then
+      FFeedbackTag.RemoveAllHandlersFromObject(Self);
+
+   FFeedbackTag := t;
+   if t<>nil then begin
+      t.AddTagChangeHandler(@FeedbackTagChangeCallBack);
+      t.AddRemoveTagHandler(@FeedbackRemoveTagCallBack);
+   end;
+   UpdateState;
+end;
+
+procedure THMIButton.SetGlyphUp(v:TBitmap);
+begin
+   FGlyphUp.Assign(v);
+   SetButtonState(FState);
+end;
+
+procedure THMIButton.SetGlyphDown(v:TBitmap);
+begin
+   FGlyphDown.Assign(v);
+   SetButtonState(FState);
+end;
+
+procedure THMIButton.SetGlyphGrayed(v:TBitmap);
+begin
+   FGlyphGrayed.Assign(v);
+   SetButtonState(FState);
+end;
+
 procedure THMIButton.RemoveTagCallBack(Sender: TObject);
 begin
    FTag := nil;
+   //o mesmo objeto pode estar nos dois papeis
+   //the same object can play both roles
+   if FFeedbackTag=Sender then FFeedbackTag := nil;
    TagChangeCallBack(Self);
 end;
 

@@ -65,6 +65,7 @@ type
   private
     FButton:TButtonProbe;
     FTag:TFakeNumber;
+    FTag2:TFakeNumber;
     procedure TagValueIs(v:Double);
     procedure Settle;
   protected
@@ -80,6 +81,14 @@ type
     procedure AnUnknownValueCanShowItDown;
     procedure AnUnknownValueCanShowItUp;
     procedure AnUnknownValueCanShowItGrayed;
+    //retroalimentacao / feedback tag
+    procedure AFeedbackTagDrivesTheLook;
+    procedure TheWriteTagDoesNotDriveTheLookWhenThereIsAFeedbackTag;
+    procedure AToggleButtonWithFeedbackFollowsTheFeedback;
+    procedure ASingleTagOnBothRolesKeepsWorking;
+    procedure AFeedbackTagThatDiesLetsGoOfTheButton;
+    //imagens / bitmaps
+    procedure ABitmapForEachState;
 
     //o que o operador manda / what the operator sends
     procedure PressingAnOnOffButtonDownWritesTheDownValue;
@@ -156,12 +165,14 @@ begin
   FButton.ColorUp:=clRed;
   FButton.ColorGrayed:=clGray;
   FTag:=TFakeNumber.Create(nil);
+  FTag2:=TFakeNumber.Create(nil);
 end;
 
 procedure TTestHMIButton.TearDown;
 begin
   FreeAndNil(FButton);
   FreeAndNil(FTag);
+  FreeAndNil(FTag2);
 end;
 
 procedure TTestHMIButton.Settle;
@@ -429,6 +440,119 @@ begin
   FreeAndNil(FTag);
 
   AssertTrue('o botao soltou o tag', FButton.PLCTag=nil);
+end;
+
+procedure TTestHMIButton.AFeedbackTagDrivesTheLook;
+begin
+  //o CLP devolve o estado real em outra variavel: e' dela que vem a aparencia
+  //the PLC gives the real state back on another variable: the looks come from it
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+
+  FTag2.ChegouDoCLP(1);
+  AssertEquals('retroalimentacao em 1, afundado', 'LIGADO', FButton.Caption);
+
+  FTag2.ChegouDoCLP(0);
+  AssertEquals('retroalimentacao em 0, solto', 'DESLIGADO', FButton.Caption);
+end;
+
+procedure TTestHMIButton.TheWriteTagDoesNotDriveTheLookWhenThereIsAFeedbackTag;
+begin
+  //com retroalimentacao, o valor escrito nao manda na aparencia: o clique
+  //manda 1, mas ate' o CLP devolver, o botao mostra o que o processo respondeu
+  //with a feedback tag, the written value does not rule the looks: the click
+  //sends 1, but until the PLC answers, the button shows what the process said
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+  FTag2.ChegouDoCLP(0);
+
+  FTag.ChegouDoCLP(1);
+
+  AssertEquals('continua solto', 'DESLIGADO', FButton.Caption);
+end;
+
+procedure TTestHMIButton.AToggleButtonWithFeedbackFollowsTheFeedback;
+begin
+  //o botao de inversao com retroalimentacao: cada clique inverte o valor
+  //escrito e a aparencia segue o retorno do CLP
+  //the toggle button with feedback: every click inverts the written value and
+  //the looks follow the PLC's answer
+  FButton.ButtonType:=btToogle;
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+  FTag2.ChegouDoCLP(0);
+
+  FButton.PressTo(bsDown);
+  AssertEquals('primeiro clique escreve 1', 1, FTag.Value, 0.0001);
+  AssertEquals('CLP ainda nao respondeu, solto', 'DESLIGADO', FButton.Caption);
+
+  FTag2.ChegouDoCLP(1);
+  AssertEquals('CLP ligou, afundado', 'LIGADO', FButton.Caption);
+
+  FButton.PressTo(bsUp);
+  AssertEquals('segundo clique escreve 0', 0, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIButton.ASingleTagOnBothRolesKeepsWorking;
+begin
+  //o mesmo tag escrevendo e retroalimentando tem que continuar funcionando
+  //the same tag writing and feeding back must keep working
+  FButton.OtherValuesIs:=IsGrayed;
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag;
+
+  FTag.ChegouDoCLP(1);
+  AssertEquals('um, afundado', 'LIGADO', FButton.Caption);
+
+  FButton.PLCTag:=nil;
+
+  AssertTrue('soltou o papel de escrita', FButton.PLCTag=nil);
+  AssertTrue('a retroalimentacao continua ligada', FButton.FeedbackTag=FTag);
+
+  //e o aviso de mudanca do tag ainda alimenta a aparencia
+  //and the tag's change notice still drives the looks
+  FTag.ChegouDoCLP(0);
+  AssertEquals('zero, solto', 'DESLIGADO', FButton.Caption);
+end;
+
+procedure TTestHMIButton.AFeedbackTagThatDiesLetsGoOfTheButton;
+begin
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+
+  FreeAndNil(FTag2);
+
+  AssertTrue('o botao soltou a retroalimentacao', FButton.FeedbackTag=nil);
+end;
+
+procedure TTestHMIButton.ABitmapForEachState;
+var
+  up, down:TBitmap;
+begin
+  //cada estado com a sua imagem
+  //each state with its own image
+  up:=TBitmap.Create;
+  up.SetSize(8,8);
+  up.Canvas.Brush.Color:=clRed;
+  up.Canvas.FillRect(0,0,8,8);
+  down:=TBitmap.Create;
+  down.SetSize(8,8);
+  down.Canvas.Brush.Color:=clBlue;
+  down.Canvas.FillRect(0,0,8,8);
+  try
+    FButton.PLCTag:=FTag;
+    FButton.GlyphUp:=up;
+    FButton.GlyphDown:=down;
+
+    TagValueIs(0);
+    AssertTrue('estado 0 usa a imagem de solto', FButton.Glyph.Canvas.Pixels[4,4]=clRed);
+
+    TagValueIs(1);
+    AssertTrue('estado 1 usa a imagem de afundado', FButton.Glyph.Canvas.Pixels[4,4]=clBlue);
+  finally
+    up.Free;
+    down.Free;
+  end;
 end;
 
 procedure TTestHMIButton.WithoutPermissionTheButtonIsDisabled;
