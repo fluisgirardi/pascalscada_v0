@@ -167,6 +167,8 @@ type
     //: @exclude
     function  GetDisplayName: AnsiString; override;
   public
+    //: @exclude
+    destructor Destroy; override;
     {$IFDEF PORTUGUES}
     {:
     Procedimento chamado para remover a dependencia de um objeto de escalas que
@@ -466,6 +468,18 @@ end;
 procedure TScaleQueueItem.RemoveScaleProcessor;
 begin
   SProcessor := nil;
+end;
+
+destructor TScaleQueueItem.Destroy;
+begin
+  //a escala guarda o item na sua lista: sem sair dela, a escala que viver mais
+  //que a fila escreveria no item ja liberado (RemoveScaleProcessor) ao ser destruida.
+  //the scale keeps the item in its list: without leaving it, a scale that outlives
+  //the queue would write into the freed item (RemoveScaleProcessor) when destroyed.
+  if SProcessor<>nil then
+    SProcessor.DelQueueItem(Self);
+  SProcessor := nil;
+  inherited Destroy;
 end;
 
 ////////////////////////////////////////////////////////////////////////////////
