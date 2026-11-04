@@ -89,6 +89,7 @@ type
     procedure AFeedbackTagThatDiesLetsGoOfTheButton;
     //imagens / bitmaps
     procedure ABitmapForEachState;
+    procedure AGlyphCanBeLoadedFromAnImageFile;
 
     //o que o operador manda / what the operator sends
     procedure PressingAnOnOffButtonDownWritesTheDownValue;
@@ -552,6 +553,42 @@ begin
   finally
     up.Free;
     down.Free;
+  end;
+end;
+
+procedure TTestHMIButton.AGlyphCanBeLoadedFromAnImageFile;
+var
+  src:TBitmap;
+  fn:String;
+begin
+  //a imagem vem de um arquivo: e' assim que o projetista entrega o PNG do
+  //botao, sem embutir bitmap no .lfm.
+  //the image comes from a file: that is how the designer hands the button PNG
+  //in, with no bitmap embedded in the .lfm.
+  fn:=IncludeTrailingPathDelimiter(GetTempDir)+'pascalscada_glyph_test.bmp';
+  src:=TBitmap.Create;
+  try
+    src.SetSize(6,6);
+    src.Canvas.Brush.Color:=clLime;
+    src.Canvas.FillRect(0,0,6,6);
+    src.SaveToFile(fn);
+  finally
+    src.Free;
+  end;
+  try
+    FButton.PLCTag:=FTag;
+    FButton.GlyphUpFile:=fn;
+
+    TagValueIs(0);
+
+    AssertEquals('largura veio do arquivo', 6, FButton.Glyph.Width);
+    AssertTrue('cor veio do arquivo', FButton.Glyph.Canvas.Pixels[3,3]=clLime);
+    AssertEquals('o caminho fica guardado', fn, FButton.GlyphUpFile);
+
+    FButton.GlyphUpFile:='';
+    AssertEquals('sem arquivo, sem imagem', 0, FButton.GlyphUp.Width);
+  finally
+    DeleteFile(fn);
   end;
 end;
 

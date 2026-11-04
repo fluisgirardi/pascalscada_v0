@@ -27,7 +27,7 @@ uses
   HMIControlDislocatorAnimation, hmiobjectcolletion, Controls,
   ControlSecurityManager, Graphics, scadapropeditor, fpexprpars,
   {$IFDEF FPC}
-    PropEdits, ComponentEditors, GraphPropEdits, ImgList,
+    PropEdits, ComponentEditors, GraphPropEdits, ImgList, ExtDlgs,
     hmibooleanpropertyconnector, hmicolorpropertyconnector, hmi_polyline;
   {$ELSE}
     Types,
@@ -58,6 +58,23 @@ type
     function  GetValue: AnsiString; override;
     procedure Edit; override;
     procedure SetValue(const Value: AnsiString); override;
+  end;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Editor das propriedades <nome>File dos controles: abre uma caixa de
+  seleção de imagem e grava o caminho escolhido.
+  }
+  {$ELSE}
+  {:
+  Editor of the <name>File properties: opens an image picker and stores the
+  chosen path.
+  }
+  {$ENDIF}
+  TImageFileNamePropertyEditor = class(TStringProperty)
+  public
+    function  GetAttributes: TPropertyAttributes; override;
+    procedure Edit; override;
   end;
 
   {$IFDEF FPC}
@@ -415,6 +432,36 @@ begin
    SetStrValue(Value);
    if GetComponent(0) is TGraphicZone then
       TGraphicZone(GetComponent(0)).ImageListAsDefault := false;
+end;
+
+function TImageFileNamePropertyEditor.GetAttributes: TPropertyAttributes;
+begin
+   Result := [paDialog, paRevertable];
+end;
+
+procedure TImageFileNamePropertyEditor.Edit;
+{$IFDEF FPC}
+var
+  od:TOpenPictureDialog;
+{$ELSE}
+var
+  od:TOpenDialog;
+{$ENDIF}
+begin
+   {$IFDEF FPC}
+   od:=TOpenPictureDialog.Create(nil);
+   {$ELSE}
+   od:=TOpenDialog.Create(nil);
+   {$ENDIF}
+   try
+      od.Title:='Imagem';
+      od.Filter:='Imagens|*.png;*.bmp;*.xpm;*.jpg;*.jpeg;*.gif;*.ico|'+
+                 'Todos os arquivos|*.*';
+      if od.Execute then
+         SetStrValue(od.FileName);
+   finally
+      od.Free;
+   end;
 end;
 
 {$IFDEF FPC}

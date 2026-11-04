@@ -38,6 +38,10 @@ type
     FOtherValues:TOtherValues;
     FValueDown, FValueUp:Double;
     FGlyphDown, FGlyphUp, FGlyphGrayed:TBitmap;
+    //caminho do arquivo de imagem de cada estado (png, bmp, xpm, jpg...).
+    //preenchido por GlyphUpFile/GlyphDownFile/GlyphGrayedFile.
+    //image file path of each state, set through GlyphUpFile/...File.
+    FGlyphUpFile, FGlyphDownFile, FGlyphGrayedFile:String;
     FColorDown, FColorUp, FColorGrayed:TColor;
     FCaptionDown, FCaptionUp, FCaptionGrayed:TCaption;
 
@@ -57,6 +61,12 @@ type
     procedure SetGlyphUp(v:TBitmap);
     procedure SetGlyphDown(v:TBitmap);
     procedure SetGlyphGrayed(v:TBitmap);
+    //: carrega a imagem do arquivo para o bitmap do estado. '' limpa o bitmap.
+    //: loads the image file into the state bitmap; '' clears it.
+    procedure LoadGlyphFromFile(aBitmap:TBitmap; const aFileName, aPropertyName:String);
+    procedure SetGlyphUpFile(const v:String);
+    procedure SetGlyphDownFile(const v:String);
+    procedure SetGlyphGrayedFile(const v:String);
     //: aplica a aparencia de acordo com o tag de exibicao (FeedbackTag se
     //: houver, senao PLCTag)
     //: applies the looks from the display tag (FeedbackTag if set, else PLCTag)
@@ -228,6 +238,29 @@ type
     Imagem do botão quando o valor do tag não é nem ValueDown nem ValueUp.
     }
     property GlyphGrayed:TBitmap read FGlyphGrayed write SetGlyphGrayed;
+
+    {:
+    Arquivo da imagem do estado solto (tag de exibição = ValueUp). Aceita PNG
+    com transparência, BMP, XPM e JPG. Basta informar o caminho: o bitmap é
+    carregado na hora. Caminho relativo é procurado na pasta do executável.
+
+    Image file of the released state. PNG with transparency, BMP, XPM and JPG
+    are accepted. Just give the path: the bitmap is loaded immediately.
+    }
+    property GlyphUpFile:String read FGlyphUpFile write SetGlyphUpFile;
+    {:
+    Arquivo da imagem do estado afundado (tag de exibição = ValueDown).
+
+    Image file of the pressed state.
+    }
+    property GlyphDownFile:String read FGlyphDownFile write SetGlyphDownFile;
+    {:
+    Arquivo da imagem do estado indefinido (valor que não é nem ValueUp nem
+    ValueDown, conforme OtherValues).
+
+    Image file of the undefined state.
+    }
+    property GlyphGrayedFile:String read FGlyphGrayedFile write SetGlyphGrayedFile;
 
     {:
     Tag opcional de retroalimentação (ex.: a variável que o CLP devolve dizendo
@@ -747,6 +780,59 @@ end;
 procedure THMIButton.SetGlyphGrayed(v:TBitmap);
 begin
    FGlyphGrayed.Assign(v);
+   SetButtonState(FState);
+end;
+
+procedure THMIButton.LoadGlyphFromFile(aBitmap:TBitmap; const aFileName,
+  aPropertyName:String);
+var
+  aFullName:String;
+  aPicture:TPicture;
+begin
+  if Trim(aFileName)='' then begin
+     aBitmap.SetSize(0,0);
+     exit;
+  end;
+
+  aFullName:=Trim(aFileName);
+  //caminho relativo: procura na pasta do executavel, como o resto do SCADA.
+  //relative path: look in the executable folder, as the rest of SCADA does.
+  if (not FileExists(aFullName)) and (ExtractFileDrive(aFullName)='') then
+     aFullName:=IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))+Trim(aFileName);
+
+  if not FileExists(aFullName) then
+     raise Exception.CreateFmt('%s: imagem nao encontrada / image not found: %s',
+       [aPropertyName, Trim(aFileName)]);
+
+  aPicture:=TPicture.Create;
+  try
+     aPicture.LoadFromFile(aFullName);
+     //Assign copia o alfa, entao o PNG continua transparente no botao.
+     //Assign copies the alpha, so the PNG stays transparent on the button.
+     aBitmap.Assign(aPicture.Graphic);
+  finally
+     aPicture.Free;
+  end;
+end;
+
+procedure THMIButton.SetGlyphUpFile(const v:String);
+begin
+   FGlyphUpFile:=v;
+   LoadGlyphFromFile(FGlyphUp, v, 'GlyphUpFile');
+   SetButtonState(FState);
+end;
+
+procedure THMIButton.SetGlyphDownFile(const v:String);
+begin
+   FGlyphDownFile:=v;
+   LoadGlyphFromFile(FGlyphDown, v, 'GlyphDownFile');
+   SetButtonState(FState);
+end;
+
+procedure THMIButton.SetGlyphGrayedFile(const v:String);
+begin
+   FGlyphGrayedFile:=v;
+   LoadGlyphFromFile(FGlyphGrayed, v, 'GlyphGrayedFile');
    SetButtonState(FState);
 end;
 
