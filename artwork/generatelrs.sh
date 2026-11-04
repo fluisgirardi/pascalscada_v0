@@ -2,7 +2,7 @@
 
 echo "Creating Lazarus Resource (pascalscada.lrs)";
 linha="";
-for l in `find ./24x24png2/ -iname "t*.png"`; do
+for l in `find ./24x24png2/ -iname "t*.png" | sort`; do
   linha="$linha $l";
 done;
 
