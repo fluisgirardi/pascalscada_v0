@@ -88,6 +88,45 @@ HMIComboBox1.Items.AddObject('Rápido', TComboboxItemInfo.Create(nil, 50));
 
 ![](img/THMIUpDown.png) `THMIUpDown` são as setas de incremento/decremento: cada clique soma ou subtrai `Increment` (um `Double`, então serve para passos de 0,1) ao valor do tag, respeitando `Min`/`Max` quando `EnableMin`/`EnableMax` estão ligados. Costuma ser colocado ao lado de um `THMIEdit` ligado ao mesmo tag.
 
+###### THMIButton {#THMIButton}
+
+Um botão de comando que carrega imagens em vez de legenda: escreve num tag quando o operador clica e mostra uma imagem por estado do tag. Aponte o **`PLCTag`** para o tag em que o clique escreve, **`GlyphUpFile`** e **`GlyphDownFile`** para dois arquivos de imagem (PNG com transparência, BMP, XPM ou JPG), e o botão mostra o estado do processo — não o estado do clique. Com o **`FeedbackTag`** apontado para a variável que o CLP devolve, a imagem segue essa variável, então o botão também mostra o motor sendo ligado por outra tela ou por um intertravamento.
+
+`GlyphGrayedFile` é a imagem para qualquer valor que não seja `ValueDown` nem `ValueUp`; `OtherValuesIs` diz o que fazer com esse valor (`isChecked`, `isUnchecked`, `isGrayed`, `isNone`), e `AfterGray` escolhe o estado de um botão desabilitado.
+
+O **`ButtonType`** decide o que o clique manda para o `PLCTag`:
+
+| `ButtonType` | O que escreve |
+|---|---|
+| `btJog` | `ValueDown` (padrão `1`) enquanto o botão do mouse estiver apertado e `ValueUp` (padrão `0`) ao soltar — ou assim que o ponteiro sai do botão com o mouse ainda apertado. Comando momentâneo: apertado = ligado, solto = desligado. |
+| `btSet` | `ValueDown` (padrão `1`) a cada clique. |
+| `btReset` | `ValueUp` (padrão `0`) a cada clique. |
+| `btToogle` | O contrário do valor lido: `1 → 0`, `0 → 1`, a cada clique. |
+
+| Propriedade | Padrão | Descrição |
+|---|---|---|
+| `PLCTag` | | Tag em que o clique escreve. |
+| `FeedbackTag` | | Tag opcional cujo valor comanda a imagem. Vazio = a imagem segue o `PLCTag`. O clique nunca escreve nele. |
+| `ButtonType` | `btJog` | Um dos quatro modos da tabela acima. |
+| `ValueDown` / `ValueUp` | `1` / `0` | Valores escritos pelo clique e valores que selecionam a imagem de afundado/solto. |
+| `GlyphUpFile`, `GlyphDownFile`, `GlyphGrayedFile` | | Imagem de cada estado, carregada assim que o caminho é informado. Caminho relativo é procurado na pasta do executável. |
+| `StretchGlyph` | `False` | Redimensiona a imagem para o tamanho do botão (mantendo a transparência do PNG) sempre que o botão muda de tamanho. Ligue para um painel que acompanha a resolução da tela. |
+| `CaptionUp` / `CaptionDown` / `CaptionGrayed` | | Legenda de cada estado, quando a imagem não basta. |
+| `ColorUp` / `ColorDown` / `ColorGrayed` | `clBtnFace` / `clBtnFace` / `clBtnShadow` | Cor de fundo de cada estado. |
+
+O botão **não desenha friso nem destaque de mouse**: a ideia é a imagem ser o controle inteiro, como nos desenhos de painel. Mantenha `Transparent = True` para um PNG com transparência; com `Transparent = False` a `Color` do estado atual preenche o fundo.
+
+```pascal
+uses hmibutton;
+
+HMIButton1.ButtonType   := btToogle;
+HMIButton1.PLCTag       := Motor_On;
+HMIButton1.FeedbackTag  := Motor_Running;
+HMIButton1.GlyphUpFile  := 'switch_off.png';
+HMIButton1.GlyphDownFile:= 'switch_on.png';
+HMIButton1.StretchGlyph := True;
+```
+
 ###### THMITransparentButton {#THMITransparentButton}
 
 ![](img/THMITransparentButton.png) Um retângulo invisível com `OnClick`/`OnMouseUp` e `SecurityCode`. Coloque-o sobre uma imagem de fundo ou sobre um desenho para criar uma área clicável com controle de acesso — o clique não acontece se o usuário não tiver o código.
