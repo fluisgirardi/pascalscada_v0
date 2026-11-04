@@ -38,7 +38,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, Buttons, Graphics, Forms, fpcunit, testregistry,
-  HMIButton, HMITypes, PLCTag, PLCString,
+  Themes, HMIButton, HMITypes, PLCTag, PLCString,
   ControlSecurityManager, CustomizedUserManagement, testsupport.faketag;
 
 type
@@ -55,8 +55,17 @@ type
   TButtonProbe = class(THMIButton)
   public
     procedure PressTo(bs:TButtonState);
+    //: aperta e solta o botao esquerdo como o widget faz, sem clicar
+    //: presses and releases the left button the way the widget does, no click
+    procedure PressTheMouse;
+    procedure MoveTheMouseTo(aX, aY:Integer);
     procedure ReleaseTheMouse;
     function  StateIs:TButtonState;
+    //: verdadeiro quando o estado de mouse-em-cima desenha igual ao solto:
+    //: sem a moldura de destaque do tema.
+    //: true when the mouse-over state draws like the released one: no theme
+    //: highlight frame.
+    function  HoverDrawsLikeUp:Boolean;
   end;
 
   { TTestHMIButton }
@@ -65,6 +74,7 @@ type
   private
     FButton:TButtonProbe;
     FTag:TFakeNumber;
+    FTag2:TFakeNumber;
     procedure TagValueIs(v:Double);
     procedure Settle;
   protected
@@ -80,16 +90,30 @@ type
     procedure AnUnknownValueCanShowItDown;
     procedure AnUnknownValueCanShowItUp;
     procedure AnUnknownValueCanShowItGrayed;
+    //retroalimentacao / feedback tag
+    procedure AFeedbackTagDrivesTheLook;
+    procedure TheWriteTagDoesNotDriveTheLookWhenThereIsAFeedbackTag;
+    procedure AToggleButtonWithFeedbackFollowsTheFeedback;
+    procedure ASingleTagOnBothRolesKeepsWorking;
+    procedure AFeedbackTagThatDiesLetsGoOfTheButton;
+    //imagens / bitmaps
+    procedure ABitmapForEachState;
+    procedure AGlyphCanBeLoadedFromAnImageFile;
+    procedure AStretchedGlyphFillsTheButton;
+    procedure AStretchedGlyphKeepsTheTransparency;
 
     //o que o operador manda / what the operator sends
-    procedure PressingAnOnOffButtonDownWritesTheDownValue;
-    procedure PressingAnOnOffButtonUpWritesTheUpValue;
-    procedure AMomentaryButtonGoesDownAndComesBack;
+    procedure ASetButtonWritesTheOnValueOnEachClick;
+    procedure AResetButtonWritesTheOffValueOnEachClick;
     procedure AJogButtonWritesTheDownValueWhilePressed;
     procedure ReleasingAJogButtonWritesTheUpValue;
+    procedure LeavingAJogButtonWritesTheUpValue;
+    procedure AClickAloneDoesNotTurnAJogButtonOn;
     procedure AToggleButtonInvertsTheTagValue;
     procedure AToggleButtonNeverLooksPressed;
     procedure WithNoTagAClickWritesNothing;
+    //sem moldura de destaque / no hover highlight
+    procedure TheMouseOverDoesNotHighlightTheButton;
 
     //os valores / the values
     procedure ANewButtonComesWithUsableValues;
@@ -134,12 +158,36 @@ end;
 
 procedure TButtonProbe.ReleaseTheMouse;
 begin
-  MouseUp(mbLeft, [], 0, 0);
+  MouseUp(mbLeft, [], ClientWidth+10, ClientHeight+10);
+end;
+
+procedure TButtonProbe.PressTheMouse;
+begin
+  MouseDown(mbLeft, [ssLeft], ClientWidth div 2, ClientHeight div 2);
+end;
+
+procedure TButtonProbe.MoveTheMouseTo(aX, aY:Integer);
+begin
+  MouseMove([ssLeft], aX, aY);
 end;
 
 function TButtonProbe.StateIs:TButtonState;
 begin
   Result:=FState;
+end;
+
+function TButtonProbe.HoverDrawsLikeUp:Boolean;
+var
+  UpDetails, HotDetails:TThemedElementDetails;
+  SavedState:TButtonState;
+begin
+  SavedState:=FState;
+  FState:=bsUp;
+  UpDetails:=GetDrawDetails;
+  FState:=bsHot;
+  HotDetails:=GetDrawDetails;
+  FState:=SavedState;
+  Result:=ThemedElementDetailsEqual(UpDetails, HotDetails);
 end;
 
 { TTestHMIButton }
@@ -156,12 +204,14 @@ begin
   FButton.ColorUp:=clRed;
   FButton.ColorGrayed:=clGray;
   FTag:=TFakeNumber.Create(nil);
+  FTag2:=TFakeNumber.Create(nil);
 end;
 
 procedure TTestHMIButton.TearDown;
 begin
   FreeAndNil(FButton);
   FreeAndNil(FTag);
+  FreeAndNil(FTag2);
 end;
 
 procedure TTestHMIButton.Settle;
@@ -265,46 +315,43 @@ begin
   AssertEquals('cor de indefinido',   clGray, FButton.Color);
 end;
 
-procedure TTestHMIButton.PressingAnOnOffButtonDownWritesTheDownValue;
+procedure TTestHMIButton.ASetButtonWritesTheOnValueOnEachClick;
 begin
-  FButton.ButtonType:=btOnOff;
+  //btSet: cada clique grava o valor de ligado, duas vezes seguidas
+  //btSet: every click writes the on value, twice in a row
+  FButton.ButtonType:=btSet;
   FButton.PLCTag:=FTag;
 
   FButton.PressTo(bsDown);
+  AssertEquals('primeiro clique ligou', 1, FTag.Value, 0.0001);
 
-  AssertEquals('mandou o valor de ligado', 1, FTag.Value, 0.0001);
+  FButton.PressTo(bsDown);
+  AssertEquals('segundo clique continua em 1', 1, FTag.Value, 0.0001);
+  AssertEquals('duas escritas', 2, FTag.Escritas);
 end;
 
-procedure TTestHMIButton.PressingAnOnOffButtonUpWritesTheUpValue;
+procedure TTestHMIButton.AResetButtonWritesTheOffValueOnEachClick;
 begin
-  FButton.ButtonType:=btOnOff;
+  //btReset: cada clique grava o valor de desligado, com o tag em qualquer
+  //valor
+  //btReset: every click writes the off value, whatever the tag reads
+  FButton.ButtonType:=btReset;
   FButton.PLCTag:=FTag;
   FTag.ChegouDoCLP(1);
 
-  FButton.PressTo(bsUp);
+  FButton.PressTo(bsDown);
 
   AssertEquals('mandou o valor de desligado', 0, FTag.Value, 0.0001);
 end;
 
-procedure TTestHMIButton.AMomentaryButtonGoesDownAndComesBack;
-begin
-  //botao de pulso: manda o valor de ligado e, na mesma batida, o de desligado
-  //momentary button: sends the on value and, in the same beat, the off one
-  FButton.ButtonType:=btMomentary;
-  FButton.PLCTag:=FTag;
-
-  FButton.PressTo(bsDown);
-
-  AssertEquals('terminou desligado', 0, FTag.Value, 0.0001);
-  AssertEquals('duas escritas',      2, FTag.Escritas);
-end;
-
 procedure TTestHMIButton.AJogButtonWritesTheDownValueWhilePressed;
 begin
+  //btJog: o valor de ligado sai no aperto do mouse
+  //btJog: the on value goes out on the mouse press
   FButton.ButtonType:=btJog;
   FButton.PLCTag:=FTag;
 
-  FButton.PressTo(bsDown);
+  FButton.PressTheMouse;
 
   AssertEquals('ligado enquanto pressionado', 1, FTag.Value, 0.0001);
 end;
@@ -313,11 +360,38 @@ procedure TTestHMIButton.ReleasingAJogButtonWritesTheUpValue;
 begin
   FButton.ButtonType:=btJog;
   FButton.PLCTag:=FTag;
-  FButton.PressTo(bsDown);
+  FButton.PressTheMouse;
 
   FButton.ReleaseTheMouse;
 
   AssertEquals('desligou ao soltar', 0, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIButton.LeavingAJogButtonWritesTheUpValue;
+begin
+  //arrastar o ponteiro para fora com o botao apertado tambem desliga
+  //dragging the pointer out with the button held switches it off too
+  FButton.ButtonType:=btJog;
+  FButton.PLCTag:=FTag;
+  FButton.PressTheMouse;
+
+  FButton.MoveTheMouseTo(FButton.ClientWidth+10, FButton.ClientHeight+10);
+
+  AssertEquals('desligou ao sair do botao', 0, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIButton.AClickAloneDoesNotTurnAJogButtonOn;
+begin
+  //o Click da LCL vem depois do MouseUp: se ele escrevesse o valor de ligado
+  //o botao ficaria ligado depois de soltar. Quem trata o aperto e' o MouseDown.
+  //LCL's Click comes after MouseUp: if it wrote the on value the button would
+  //stay on after the release. MouseDown is the one that handles the press.
+  FButton.ButtonType:=btJog;
+  FButton.PLCTag:=FTag;
+
+  FButton.PressTo(bsDown);
+
+  AssertEquals('nenhuma escrita', 0, FTag.Escritas);
 end;
 
 procedure TTestHMIButton.AToggleButtonInvertsTheTagValue;
@@ -351,11 +425,22 @@ end;
 
 procedure TTestHMIButton.WithNoTagAClickWritesNothing;
 begin
-  FButton.ButtonType:=btOnOff;
+  FButton.ButtonType:=btSet;
 
   FButton.PressTo(bsDown);
 
   AssertEquals('nada escrito', 0, FTag.Escritas);
+end;
+
+procedure TTestHMIButton.TheMouseOverDoesNotHighlightTheButton;
+begin
+  //o mouse em cima nao pode mudar o desenho: sem a moldura de destaque do
+  //tema sobre as imagens do botao
+  //the mouse over must not change the drawing: no theme highlight frame on
+  //top of the button images
+  FButton.PLCTag:=FTag;
+
+  AssertTrue('mouse em cima desenha igual ao solto', FButton.HoverDrawsLikeUp);
 end;
 
 procedure TTestHMIButton.ANewButtonComesWithUsableValues;
@@ -429,6 +514,220 @@ begin
   FreeAndNil(FTag);
 
   AssertTrue('o botao soltou o tag', FButton.PLCTag=nil);
+end;
+
+procedure TTestHMIButton.AFeedbackTagDrivesTheLook;
+begin
+  //o CLP devolve o estado real em outra variavel: e' dela que vem a aparencia
+  //the PLC gives the real state back on another variable: the looks come from it
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+
+  FTag2.ChegouDoCLP(1);
+  AssertEquals('retroalimentacao em 1, afundado', 'LIGADO', FButton.Caption);
+
+  FTag2.ChegouDoCLP(0);
+  AssertEquals('retroalimentacao em 0, solto', 'DESLIGADO', FButton.Caption);
+end;
+
+procedure TTestHMIButton.TheWriteTagDoesNotDriveTheLookWhenThereIsAFeedbackTag;
+begin
+  //com retroalimentacao, o valor escrito nao manda na aparencia: o clique
+  //manda 1, mas ate' o CLP devolver, o botao mostra o que o processo respondeu
+  //with a feedback tag, the written value does not rule the looks: the click
+  //sends 1, but until the PLC answers, the button shows what the process said
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+  FTag2.ChegouDoCLP(0);
+
+  FTag.ChegouDoCLP(1);
+
+  AssertEquals('continua solto', 'DESLIGADO', FButton.Caption);
+end;
+
+procedure TTestHMIButton.AToggleButtonWithFeedbackFollowsTheFeedback;
+begin
+  //o botao de inversao com retroalimentacao: cada clique inverte o valor
+  //escrito e a aparencia segue o retorno do CLP
+  //the toggle button with feedback: every click inverts the written value and
+  //the looks follow the PLC's answer
+  FButton.ButtonType:=btToogle;
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+  FTag2.ChegouDoCLP(0);
+
+  FButton.PressTo(bsDown);
+  AssertEquals('primeiro clique escreve 1', 1, FTag.Value, 0.0001);
+  AssertEquals('CLP ainda nao respondeu, solto', 'DESLIGADO', FButton.Caption);
+
+  FTag2.ChegouDoCLP(1);
+  AssertEquals('CLP ligou, afundado', 'LIGADO', FButton.Caption);
+
+  FButton.PressTo(bsUp);
+  AssertEquals('segundo clique escreve 0', 0, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIButton.ASingleTagOnBothRolesKeepsWorking;
+begin
+  //o mesmo tag escrevendo e retroalimentando tem que continuar funcionando
+  //the same tag writing and feeding back must keep working
+  FButton.OtherValuesIs:=IsGrayed;
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag;
+
+  FTag.ChegouDoCLP(1);
+  AssertEquals('um, afundado', 'LIGADO', FButton.Caption);
+
+  FButton.PLCTag:=nil;
+
+  AssertTrue('soltou o papel de escrita', FButton.PLCTag=nil);
+  AssertTrue('a retroalimentacao continua ligada', FButton.FeedbackTag=FTag);
+
+  //e o aviso de mudanca do tag ainda alimenta a aparencia
+  //and the tag's change notice still drives the looks
+  FTag.ChegouDoCLP(0);
+  AssertEquals('zero, solto', 'DESLIGADO', FButton.Caption);
+end;
+
+procedure TTestHMIButton.AFeedbackTagThatDiesLetsGoOfTheButton;
+begin
+  FButton.PLCTag:=FTag;
+  FButton.FeedbackTag:=FTag2;
+
+  FreeAndNil(FTag2);
+
+  AssertTrue('o botao soltou a retroalimentacao', FButton.FeedbackTag=nil);
+end;
+
+procedure TTestHMIButton.ABitmapForEachState;
+var
+  up, down:TBitmap;
+begin
+  //cada estado com a sua imagem
+  //each state with its own image
+  up:=TBitmap.Create;
+  up.SetSize(8,8);
+  up.Canvas.Brush.Color:=clRed;
+  up.Canvas.FillRect(0,0,8,8);
+  down:=TBitmap.Create;
+  down.SetSize(8,8);
+  down.Canvas.Brush.Color:=clBlue;
+  down.Canvas.FillRect(0,0,8,8);
+  try
+    FButton.PLCTag:=FTag;
+    FButton.GlyphUp:=up;
+    FButton.GlyphDown:=down;
+
+    TagValueIs(0);
+    AssertTrue('estado 0 usa a imagem de solto', FButton.Glyph.Canvas.Pixels[4,4]=clRed);
+
+    TagValueIs(1);
+    AssertTrue('estado 1 usa a imagem de afundado', FButton.Glyph.Canvas.Pixels[4,4]=clBlue);
+  finally
+    up.Free;
+    down.Free;
+  end;
+end;
+
+procedure TTestHMIButton.AGlyphCanBeLoadedFromAnImageFile;
+var
+  src:TBitmap;
+  fn:String;
+begin
+  //a imagem vem de um arquivo: e' assim que o projetista entrega o PNG do
+  //botao, sem embutir bitmap no .lfm.
+  //the image comes from a file: that is how the designer hands the button PNG
+  //in, with no bitmap embedded in the .lfm.
+  fn:=IncludeTrailingPathDelimiter(GetTempDir)+'pascalscada_glyph_test.bmp';
+  src:=TBitmap.Create;
+  try
+    src.SetSize(6,6);
+    src.Canvas.Brush.Color:=clLime;
+    src.Canvas.FillRect(0,0,6,6);
+    src.SaveToFile(fn);
+  finally
+    src.Free;
+  end;
+  try
+    FButton.PLCTag:=FTag;
+    FButton.GlyphUpFile:=fn;
+
+    TagValueIs(0);
+
+    AssertEquals('largura veio do arquivo', 6, FButton.Glyph.Width);
+    AssertTrue('cor veio do arquivo', FButton.Glyph.Canvas.Pixels[3,3]=clLime);
+    AssertEquals('o caminho fica guardado', fn, FButton.GlyphUpFile);
+
+    FButton.GlyphUpFile:='';
+    AssertEquals('sem arquivo, sem imagem', 0, FButton.GlyphUp.Width);
+  finally
+    DeleteFile(fn);
+  end;
+end;
+
+procedure TTestHMIButton.AStretchedGlyphFillsTheButton;
+var
+  up:TBitmap;
+begin
+  //StretchGlyph ligado: a imagem acompanha o tamanho do botao.
+  //StretchGlyph on: the image follows the button size.
+  up:=TBitmap.Create;
+  try
+    up.SetSize(8,8);
+    up.Canvas.Brush.Color:=clRed;
+    up.Canvas.FillRect(0,0,8,8);
+
+    FButton.SetBounds(0,0,40,40);
+    FButton.PLCTag:=FTag;
+    TagValueIs(0);
+    FButton.GlyphUp:=up;
+
+    AssertEquals('sem stretch: tamanho original', 8, FButton.Glyph.Width);
+
+    FButton.StretchGlyph:=True;
+    AssertEquals('com stretch: largura do botao', 40, FButton.Glyph.Width);
+    AssertEquals('com stretch: altura do botao', 40, FButton.Glyph.Height);
+
+    FButton.SetBounds(0,0,64,32);
+    AssertEquals('acompanha a nova largura', 64, FButton.Glyph.Width);
+    AssertEquals('acompanha a nova altura', 32, FButton.Glyph.Height);
+
+    FButton.StretchGlyph:=False;
+    AssertEquals('desligado: volta ao original', 8, FButton.Glyph.Width);
+  finally
+    up.Free;
+  end;
+end;
+
+procedure TTestHMIButton.AStretchedGlyphKeepsTheTransparency;
+var
+  up:TBitmap;
+begin
+  //o PNG do botao tem canto transparente: depois de redimensionar o desenho
+  //tem que continuar mostrando o fundo (o TButtonGlyph usa a cor-chave).
+  //the button PNG has a transparent corner: after resizing the drawing must
+  //still show the background (TButtonGlyph uses the colour key).
+  up:=TBitmap.Create;
+  try
+    up.SetSize(8,8);
+    up.Canvas.Brush.Color:=clFuchsia;
+    up.Canvas.FillRect(0,0,8,8);
+    up.Canvas.Brush.Color:=clRed;
+    up.Canvas.FillRect(2,2,6,6);
+    up.Transparent:=True;
+    up.TransparentColor:=clFuchsia;
+
+    FButton.SetBounds(0,0,40,40);
+    FButton.PLCTag:=FTag;
+    TagValueIs(0);
+    FButton.GlyphUp:=up;
+    FButton.StretchGlyph:=True;
+
+    AssertTrue('redimensionado continua transparente', FButton.Glyph.Transparent);
+    AssertEquals('mantem a cor-chave', clFuchsia, FButton.Glyph.TransparentColor);
+  finally
+    up.Free;
+  end;
 end;
 
 procedure TTestHMIButton.WithoutPermissionTheButtonIsDisabled;
