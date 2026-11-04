@@ -5,7 +5,7 @@ if [ -f ../pascalscada.res ]; then
   rm ../pascalscada.res
 fi
 
-for l in `find ./24x24bmp/ -iname "t*.bmp"`; do
+for l in `find ./24x24bmp/ -iname "t*.bmp" | sort`; do
   linha="$linha $l";
 done;
 

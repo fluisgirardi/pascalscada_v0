@@ -87,3 +87,6 @@ examples/**/link*.res
 /examples/teste_individuais/teste_individuais
 docs/site/build/
 __pycache__/
+
+/artwork/24x24bmp/
+/artwork/24x24png2/

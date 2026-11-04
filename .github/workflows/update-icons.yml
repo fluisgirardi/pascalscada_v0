@@ -1,0 +1,53 @@
+name: update-icons
+
+# A component icon (artwork/scalable/*.svg) was added or changed on master:
+# renders the icons again (artwork/generateResources.sh, which needs Inkscape)
+# and opens a pull request with the new 24x24 PNGs and pascalscada.lrs.
+# Needs: Settings > Actions > General > "Allow GitHub Actions to create and
+# approve pull requests".
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "artwork/scalable/**"
+      - "artwork/generateResources.sh"
+      - "artwork/generatelrs.sh"
+      - "artwork/generateres.sh"
+  workflow_dispatch:
+
+concurrency:
+  group: update-icons
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inkscape and ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y inkscape imagemagick
+
+      - name: Render the icons and rebuild the resources
+        run: sh artwork/generateResources.sh
+
+      - name: Pull request with what changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bot/update-icons
+          delete-branch: true
+          add-paths: |
+            artwork/24x24png
+            pascalscada.lrs
+          commit-message: "** Component icons regenerated from artwork/scalable"
+          title: "Component icons regenerated"
+          body: |
+            `artwork/generateResources.sh` ran after a change in `artwork/scalable`.
+            Updates `artwork/24x24png/*.png` and `pascalscada.lrs`.
