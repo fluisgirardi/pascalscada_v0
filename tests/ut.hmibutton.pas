@@ -90,6 +90,8 @@ type
     //imagens / bitmaps
     procedure ABitmapForEachState;
     procedure AGlyphCanBeLoadedFromAnImageFile;
+    procedure AStretchedGlyphFillsTheButton;
+    procedure AStretchedGlyphKeepsTheTransparency;
 
     //o que o operador manda / what the operator sends
     procedure PressingAnOnOffButtonDownWritesTheDownValue;
@@ -589,6 +591,71 @@ begin
     AssertEquals('sem arquivo, sem imagem', 0, FButton.GlyphUp.Width);
   finally
     DeleteFile(fn);
+  end;
+end;
+
+procedure TTestHMIButton.AStretchedGlyphFillsTheButton;
+var
+  up:TBitmap;
+begin
+  //StretchGlyph ligado: a imagem acompanha o tamanho do botao.
+  //StretchGlyph on: the image follows the button size.
+  up:=TBitmap.Create;
+  try
+    up.SetSize(8,8);
+    up.Canvas.Brush.Color:=clRed;
+    up.Canvas.FillRect(0,0,8,8);
+
+    FButton.SetBounds(0,0,40,40);
+    FButton.PLCTag:=FTag;
+    TagValueIs(0);
+    FButton.GlyphUp:=up;
+
+    AssertEquals('sem stretch: tamanho original', 8, FButton.Glyph.Width);
+
+    FButton.StretchGlyph:=True;
+    AssertEquals('com stretch: largura do botao', 40, FButton.Glyph.Width);
+    AssertEquals('com stretch: altura do botao', 40, FButton.Glyph.Height);
+
+    FButton.SetBounds(0,0,64,32);
+    AssertEquals('acompanha a nova largura', 64, FButton.Glyph.Width);
+    AssertEquals('acompanha a nova altura', 32, FButton.Glyph.Height);
+
+    FButton.StretchGlyph:=False;
+    AssertEquals('desligado: volta ao original', 8, FButton.Glyph.Width);
+  finally
+    up.Free;
+  end;
+end;
+
+procedure TTestHMIButton.AStretchedGlyphKeepsTheTransparency;
+var
+  up:TBitmap;
+begin
+  //o PNG do botao tem canto transparente: depois de redimensionar o desenho
+  //tem que continuar mostrando o fundo (o TButtonGlyph usa a cor-chave).
+  //the button PNG has a transparent corner: after resizing the drawing must
+  //still show the background (TButtonGlyph uses the colour key).
+  up:=TBitmap.Create;
+  try
+    up.SetSize(8,8);
+    up.Canvas.Brush.Color:=clFuchsia;
+    up.Canvas.FillRect(0,0,8,8);
+    up.Canvas.Brush.Color:=clRed;
+    up.Canvas.FillRect(2,2,6,6);
+    up.Transparent:=True;
+    up.TransparentColor:=clFuchsia;
+
+    FButton.SetBounds(0,0,40,40);
+    FButton.PLCTag:=FTag;
+    TagValueIs(0);
+    FButton.GlyphUp:=up;
+    FButton.StretchGlyph:=True;
+
+    AssertTrue('redimensionado continua transparente', FButton.Glyph.Transparent);
+    AssertEquals('mantem a cor-chave', clFuchsia, FButton.Glyph.TransparentColor);
+  finally
+    up.Free;
   end;
 end;
 

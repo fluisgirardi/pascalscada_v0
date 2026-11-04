@@ -10,7 +10,8 @@ interface
 
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, LMessages, {$ENDIF}Controls,
-  Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag;
+  Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag
+  {$IFDEF FPC}, GraphType, IntfGraphics, FPImage{$ENDIF};
 
 type
   {$IFDEF PORTUGUES}
@@ -42,6 +43,13 @@ type
     //preenchido por GlyphUpFile/GlyphDownFile/GlyphGrayedFile.
     //image file path of each state, set through GlyphUpFile/...File.
     FGlyphUpFile, FGlyphDownFile, FGlyphGrayedFile:String;
+    //imagens redimensionadas para o tamanho do botao (StretchGlyph=True).
+    //a original fica intacta em FGlyph*; o desenho usa a versao escalada.
+    //glyphs resized to the button size (StretchGlyph=True). The original stays
+    //in FGlyph*; drawing uses the scaled copy.
+    FGlyphUpScaled, FGlyphDownScaled, FGlyphGrayedScaled:TBitmap;
+    FStretchGlyph:Boolean;
+    FScaledGlyphW, FScaledGlyphH:Integer;
     FColorDown, FColorUp, FColorGrayed:TColor;
     FCaptionDown, FCaptionUp, FCaptionGrayed:TCaption;
 
@@ -67,6 +75,18 @@ type
     procedure SetGlyphUpFile(const v:String);
     procedure SetGlyphDownFile(const v:String);
     procedure SetGlyphGrayedFile(const v:String);
+    //: liga/desliga o redimensionamento das imagens ao tamanho do botao.
+    //: turns the glyph rescaling to the button size on/off.
+    procedure SetStretchGlyph(v:Boolean);
+    //: recalcula as imagens escaladas quando o tamanho (ou a imagem) mudou.
+    //: recomputes the scaled glyphs when the size (or the image) changed.
+    procedure RefreshScaledGlyphs;
+    //: redimensiona Src para AWidth x AHeight em Dst, preservando o alfa.
+    //: resizes Src into Dst preserving alpha.
+    procedure ScaleGlyphTo(const Src, Dst:TBitmap; AWidth, AHeight:Integer);
+    //: bitmap que deve ser desenhado no estado informado.
+    //: bitmap that has to be drawn for the given state.
+    function  DisplayGlyph(aState:TButtonState):TBitmap;
     //: aplica a aparencia de acordo com o tag de exibicao (FeedbackTag se
     //: houver, senao PLCTag)
     //: applies the looks from the display tag (FeedbackTag if set, else PLCTag)
@@ -78,6 +98,8 @@ type
     //procedure SetDown(value:Boolean);
     //: @exclude
     procedure SetButtonState(bs:TButtonState);
+    //: @exclude
+    procedure Resize; override;
 
     //: @seealso(IHMIInterface.SetHMITag)
     procedure SetHMITag(t:TPLCTag);                    //seta um tag
@@ -263,6 +285,15 @@ type
     property GlyphGrayedFile:String read FGlyphGrayedFile write SetGlyphGrayedFile;
 
     {:
+    Faz a imagem acompanhar o tamanho do botão: a figura é redimensionada
+    (mantendo a transparência do PNG) sempre que o botão muda de tamanho.
+
+    Makes the image follow the button size: the picture is resized (keeping the
+    PNG transparency) whenever the button is resized.
+    }
+    property StretchGlyph:Boolean read FStretchGlyph write SetStretchGlyph default False;
+
+    {:
     Tag opcional de retroalimentação (ex.: a variável que o CLP devolve dizendo
     o estado real). Se vazio, a aparência continua vindo de PLCTag. O clique
     escreve sempre em PLCTag, nunca aqui.
@@ -321,6 +352,11 @@ begin
   FGlyphDown:=TBitmap.Create;
   FGlyphUp:=TBitmap.Create;
   FGlyphGrayed:=TBitmap.Create;
+  FGlyphDownScaled:=TBitmap.Create;
+  FGlyphUpScaled:=TBitmap.Create;
+  FGlyphGrayedScaled:=TBitmap.Create;
+  FScaledGlyphW:=-1;
+  FScaledGlyphH:=-1;
   FColorDown:=clBtnFace;
   FColorUp:= clBtnFace;
   FColorGrayed:=clBtnShadow;
@@ -343,6 +379,9 @@ begin
    FGlyphDown.Destroy;
    FGlyphUp.Destroy;
    FGlyphGrayed.Destroy;
+   FGlyphDownScaled.Destroy;
+   FGlyphUpScaled.Destroy;
+   FGlyphGrayedScaled.Destroy;
    inherited Destroy;
 end;
 
@@ -534,12 +573,14 @@ end;
 procedure THMIButton.SetButtonState(bs:TButtonState);
 begin
    FState:=bs;
+   if FStretchGlyph then
+      RefreshScaledGlyphs;
    case bs of
       bsUp {$IFDEF FPC}, bsHot{$ENDIF}:
          with TSpeedButton(Self) do begin
             Caption:=CaptionUp;
             Color:=ColorUp;
-            Glyph.Assign(FGlyphUp);
+            Glyph.Assign(DisplayGlyph(bs));
             if FButtonType in [btJog, btOnOff] then
                SetDown(false);
          end;
@@ -547,7 +588,7 @@ begin
          with TSpeedButton(Self) do begin
             Caption:=CaptionGrayed;
             Color:=ColorGrayed;
-            Glyph.Assign(FGlyphGrayed);
+            Glyph.Assign(DisplayGlyph(bs));
             if FButtonType in [btJog, btOnOff] then
                SetDown(false);
          end;
@@ -555,7 +596,7 @@ begin
          with TSpeedButton(Self) do begin
             Caption:=CaptionDown;
             Color:=ColorDown;
-            Glyph.Assign(FGlyphDown);
+            Glyph.Assign(DisplayGlyph(bs));
             if FButtonType in [btJog, btOnOff] then
                SetDown(true);
          end;
@@ -768,18 +809,24 @@ end;
 procedure THMIButton.SetGlyphUp(v:TBitmap);
 begin
    FGlyphUp.Assign(v);
+   FScaledGlyphW:=-1;
+   FScaledGlyphH:=-1;
    SetButtonState(FState);
 end;
 
 procedure THMIButton.SetGlyphDown(v:TBitmap);
 begin
    FGlyphDown.Assign(v);
+   FScaledGlyphW:=-1;
+   FScaledGlyphH:=-1;
    SetButtonState(FState);
 end;
 
 procedure THMIButton.SetGlyphGrayed(v:TBitmap);
 begin
    FGlyphGrayed.Assign(v);
+   FScaledGlyphW:=-1;
+   FScaledGlyphH:=-1;
    SetButtonState(FState);
 end;
 
@@ -819,6 +866,8 @@ procedure THMIButton.SetGlyphUpFile(const v:String);
 begin
    FGlyphUpFile:=v;
    LoadGlyphFromFile(FGlyphUp, v, 'GlyphUpFile');
+   FScaledGlyphW:=-1;
+   FScaledGlyphH:=-1;
    SetButtonState(FState);
 end;
 
@@ -826,6 +875,8 @@ procedure THMIButton.SetGlyphDownFile(const v:String);
 begin
    FGlyphDownFile:=v;
    LoadGlyphFromFile(FGlyphDown, v, 'GlyphDownFile');
+   FScaledGlyphW:=-1;
+   FScaledGlyphH:=-1;
    SetButtonState(FState);
 end;
 
@@ -833,7 +884,175 @@ procedure THMIButton.SetGlyphGrayedFile(const v:String);
 begin
    FGlyphGrayedFile:=v;
    LoadGlyphFromFile(FGlyphGrayed, v, 'GlyphGrayedFile');
+   FScaledGlyphW:=-1;
+   FScaledGlyphH:=-1;
    SetButtonState(FState);
+end;
+
+procedure THMIButton.SetStretchGlyph(v:Boolean);
+begin
+   if FStretchGlyph=v then exit;
+   FStretchGlyph:=v;
+   FScaledGlyphW:=-1;
+   FScaledGlyphH:=-1;
+   SetButtonState(FState);
+end;
+
+procedure THMIButton.Resize;
+begin
+   inherited Resize;
+   if FStretchGlyph then
+      SetButtonState(FState);
+end;
+
+procedure THMIButton.RefreshScaledGlyphs;
+var
+  w, h:Integer;
+begin
+   w:=ClientWidth;
+   h:=ClientHeight;
+   if (w<=0) or (h<=0) then begin
+      if (FScaledGlyphW<>0) or (FScaledGlyphH<>0) then begin
+         FScaledGlyphW:=0;
+         FScaledGlyphH:=0;
+         FGlyphUpScaled.SetSize(0,0);
+         FGlyphDownScaled.SetSize(0,0);
+         FGlyphGrayedScaled.SetSize(0,0);
+      end;
+      exit;
+   end;
+   if (w=FScaledGlyphW) and (h=FScaledGlyphH) then
+      exit;
+   FScaledGlyphW:=w;
+   FScaledGlyphH:=h;
+   ScaleGlyphTo(FGlyphUp, FGlyphUpScaled, w, h);
+   ScaleGlyphTo(FGlyphDown, FGlyphDownScaled, w, h);
+   ScaleGlyphTo(FGlyphGrayed, FGlyphGrayedScaled, w, h);
+end;
+
+procedure THMIButton.ScaleGlyphTo(const Src, Dst:TBitmap; AWidth, AHeight:Integer);
+{$IFDEF FPC}
+var
+  SrcImg, DstImg:TLazIntfImage;
+  x, y:Integer;
+  x0, x1, y0, y1:Integer;
+  fx, fy:Double;
+  w00, w10, w01, w11:Double;
+  c00, c10, c01, c11:TFPColor;
+  a00, a10, a01, a11, aSum:Double;
+  rAcc, gAcc, bAcc:Double;
+  c:TFPColor;
+  HasTransparent:Boolean;
+begin
+   if (Src.Width<=0) or (Src.Height<=0) or (AWidth<=0) or (AHeight<=0) then begin
+      Dst.SetSize(0,0);
+      exit;
+   end;
+   Dst.SetSize(AWidth, AHeight);
+   SrcImg:=Src.CreateIntfImage;
+   DstImg:=Dst.CreateIntfImage;
+   //o bitmap do LCL no Windows pode perder o canal alfa ao passar pelo
+   //handle: os pixels totalmente transparentes tambem viram cor-chave, que e'
+   //o que o TButtonGlyph usa para desenhar o fundo.
+   //the LCL bitmap on Windows may lose the alpha channel through the handle:
+   //fully transparent pixels also become a colour key, which is what
+   //TButtonGlyph uses to let the background show through.
+   HasTransparent:=Src.Transparent;
+   try
+      for y:=0 to AHeight-1 do begin
+         //centro do pixel de destino levado para a grade de origem
+         //destination pixel centre mapped back to the source grid
+         fy:=(y+0.5)*Src.Height/AHeight-0.5;
+         if fy<0 then fy:=0;
+         y0:=Trunc(fy);
+         if y0>Src.Height-1 then y0:=Src.Height-1;
+         y1:=y0+1;
+         if y1>Src.Height-1 then y1:=Src.Height-1;
+         fy:=fy-y0;
+         for x:=0 to AWidth-1 do begin
+            fx:=(x+0.5)*Src.Width/AWidth-0.5;
+            if fx<0 then fx:=0;
+            x0:=Trunc(fx);
+            if x0>Src.Width-1 then x0:=Src.Width-1;
+            x1:=x0+1;
+            if x1>Src.Width-1 then x1:=Src.Width-1;
+            fx:=fx-x0;
+
+            w00:=(1-fx)*(1-fy);
+            w10:=fx*(1-fy);
+            w01:=(1-fx)*fy;
+            w11:=fx*fy;
+
+            c00:=SrcImg.Colors[x0,y0];
+            c10:=SrcImg.Colors[x1,y0];
+            c01:=SrcImg.Colors[x0,y1];
+            c11:=SrcImg.Colors[x1,y1];
+
+            //premultiplicado por alfa: pixel transparente nao puxa o RGB
+            //premultiplied by alpha: a transparent pixel does not drag RGB
+            a00:=w00*c00.alpha;
+            a10:=w10*c10.alpha;
+            a01:=w01*c01.alpha;
+            a11:=w11*c11.alpha;
+            aSum:=a00+a10+a01+a11;
+
+            if aSum>0 then begin
+               rAcc:=a00*c00.red  +a10*c10.red  +a01*c01.red  +a11*c11.red;
+               gAcc:=a00*c00.green+a10*c10.green+a01*c01.green+a11*c11.green;
+               bAcc:=a00*c00.blue +a10*c10.blue +a01*c01.blue +a11*c11.blue;
+               c.red  :=EnsureRange(Round(rAcc/aSum), 0, $FFFF);
+               c.green:=EnsureRange(Round(gAcc/aSum), 0, $FFFF);
+               c.blue :=EnsureRange(Round(bAcc/aSum), 0, $FFFF);
+            end else begin
+               //cor-chave: fucsia, a mesma usada pelo LCL nos bitmaps mascarados
+               //colour key: fuchsia, the same one LCL uses on masked bitmaps
+               HasTransparent:=True;
+               c.red:=$FFFF;
+               c.green:=0;
+               c.blue:=$FFFF;
+            end;
+            c.alpha:=EnsureRange(Round(aSum), 0, $FFFF);
+            DstImg.Colors[x,y]:=c;
+         end;
+      end;
+      Dst.LoadFromIntfImage(DstImg);
+      Dst.Transparent:=HasTransparent;
+      if HasTransparent then
+         Dst.TransparentColor:=clFuchsia;
+   finally
+      SrcImg.Free;
+      DstImg.Free;
+   end;
+end;
+{$ELSE}
+begin
+   if (Src.Width<=0) or (Src.Height<=0) or (AWidth<=0) or (AHeight<=0) then begin
+      Dst.SetSize(0,0);
+      exit;
+   end;
+   Dst.SetSize(AWidth, AHeight);
+   Dst.Canvas.Brush.Style:=bsClear;
+   Dst.Canvas.StretchDraw(Rect(0,0,AWidth,AHeight), Src);
+end;
+{$ENDIF}
+
+function THMIButton.DisplayGlyph(aState:TButtonState):TBitmap;
+begin
+   if not FStretchGlyph then begin
+      case aState of
+         bsDown, bsExclusive: Result:=FGlyphDown;
+         bsDisabled:          Result:=FGlyphGrayed;
+      else
+         Result:=FGlyphUp;
+      end;
+      exit;
+   end;
+   case aState of
+      bsDown, bsExclusive: Result:=FGlyphDownScaled;
+      bsDisabled:          Result:=FGlyphGrayedScaled;
+   else
+      Result:=FGlyphUpScaled;
+   end;
 end;
 
 procedure THMIButton.RemoveTagCallBack(Sender: TObject);
