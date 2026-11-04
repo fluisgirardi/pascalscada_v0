@@ -34,7 +34,7 @@ uses
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   hmibooleanpropertyconnector, HMIComboBox, HMIKeyboardManager,
   hmi_draw_elevador, hmi_draw_fita, hmi_draw_redler, hmi_draw_rosca,
-  hmi_polyline, hmicolorpropertyconnector, HMITransparentButton,
+  hmi_polyline, hmicolorpropertyconnector, HMITransparentButton, HMIButton,
   HMI_Draw_Valves, HMIBasicEletricMotor, hmi_draw_flow_valve,
   hmi_draw_flow_pump, hmi_draw_basic_vector_control, HMIBandeja,
   CentralUserManagement, TagLinkedSeriesSource,
@@ -80,6 +80,10 @@ begin
   RegisterComponents(strControlsPallete,  [THMIBooleanPropertyConnector]);
   RegisterComponents(strControlsPallete,  [THMIColorPropertyConnector]);
   RegisterComponents(strControlsPallete,  [THMITransparentButton]);
+  //o botao de dois estados com imagens (GlyphUp/GlyphDown/GlyphGrayed) e
+  //retroalimentacao (FeedbackTag)
+  //the two-state button with images and feedback
+  RegisterComponents(strControlsPallete,  [THMIButton]);
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   RegisterComponents(strControlsPallete,  [THMIComboBox]);
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);
@@ -143,6 +147,10 @@ begin
   RegisterPropertyEditor(TypeInfo(UTF8String), THMIScrollBar,                            'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), THMIAnimation,                            'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), THMIText,                                 'SecurityCode',                  TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(UTF8String), THMIButton,                               'SecurityCode',                  TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphUpFile',                   TImageFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphDownFile',                 TImageFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphGrayedFile',               TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADASecureAction,                 'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADACheckSpecialTokenAction,      'SecurityCode',                  TSecurityCodePropertyEditor);
 
