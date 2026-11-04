@@ -146,6 +146,12 @@ begin
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADASecureAction,                 'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADACheckSpecialTokenAction,      'SecurityCode',                  TSecurityCodePropertyEditor);
 
+  {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
+  RegisterPropertyEditor(TypeInfo(TStrings),   THMICustomVectorControl,                  'SVGContents',                   TSVGContentsPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(TStrings),   THMIBasicVectorControl,                   'SVGContents',                   TSVGContentsPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(TStrings),   THMIFlowVectorControl,                    'SVGContents',                   TSVGContentsPropertyEditor);
+  {$IFEND}
+
   RegisterPropertyEditor(TypeInfo(Integer),    TControl,                                 'Width',                         TControlPosSizePropertyEditor);
   RegisterPropertyEditor(TypeInfo(Integer),    TControl,                                 'Height',                        TControlPosSizePropertyEditor);
   RegisterPropertyEditor(TypeInfo(Integer),    TControl,                                 'Left',                          TControlPosSizePropertyEditor);

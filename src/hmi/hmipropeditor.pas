@@ -208,9 +208,84 @@ type
                  var parser: TFPExpressionParser); override;
   end;
 
+  {$IFDEF FPC}
+  {$IFDEF PORTUGUES}
+  {:
+  Editor da propriedade SVGContents dos controles vetoriais (somente na IDE): o
+  editor de texto padrao do TStrings, com um botao a mais que carrega o conteudo
+  de um arquivo .svg no lugar do texto.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ELSE}
+  {:
+  Editor of the SVGContents property of the vector controls (IDE only): the
+  standard TStrings text editor, with one more button that loads the content of
+  an .svg file in place of the text.
+  @author(Fabio Luis Girardi <fabio@pascalscada.com>)
+  }
+  {$ENDIF}
+  TSVGContentsPropertyEditor = class(TStringsPropertyEditor)
+  public
+    function CreateDlg(s: TStrings): TStringsPropEditorDlg; override;
+  end;
+  {$ENDIF}
+
 implementation
 
-uses HMITypes;
+uses HMITypes, hsstrings, StdCtrls;
+
+{$IFDEF FPC}
+type
+  //owned by the dialog: holds the memo and answers the click of the new button
+  TSVGLoadHelper = class(TComponent)
+  public
+    Memo: TMemo;
+    procedure LoadClick(Sender: TObject);
+  end;
+
+procedure TSVGLoadHelper.LoadClick(Sender: TObject);
+var
+  od: TOpenDialog;
+begin
+  od:=TOpenDialog.Create(nil);
+  try
+    od.Title:=SSVGLoadTitle;
+    od.Filter:=SSVGLoadFilter;
+    od.Options:=od.Options+[ofFileMustExist];
+    if od.Execute then
+      Memo.Lines.LoadFromFile(od.FileName);
+  finally
+    od.Destroy;
+  end;
+end;
+
+{ TSVGContentsPropertyEditor }
+
+function TSVGContentsPropertyEditor.CreateDlg(s: TStrings): TStringsPropEditorDlg;
+var
+  helper: TSVGLoadHelper;
+  btn: TButton;
+begin
+  Result:=inherited CreateDlg(s);
+
+  helper:=TSVGLoadHelper.Create(Result);
+  helper.Memo:=Result.Memo;
+
+  //below the Save button, same width as the others
+  btn:=TButton.Create(Result);
+  btn.Parent:=Result.TextGroupBox;
+  btn.Caption:=SSVGLoadButton;
+  btn.AutoSize:=true;
+  btn.Anchors:=[akTop,akLeft,akRight];
+  btn.AnchorSideLeft.Control:=Result.SortButton;
+  btn.AnchorSideRight.Control:=Result.SortButton;
+  btn.AnchorSideRight.Side:=asrBottom;
+  btn.AnchorSideTop.Control:=Result.SaveButton;
+  btn.AnchorSideTop.Side:=asrBottom;
+  btn.BorderSpacing.Top:=6;
+  btn.OnClick:=@helper.LoadClick;
+end;
+{$ENDIF}
 
 { TControlPosSizePropertyEditor }
 

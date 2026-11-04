@@ -294,6 +294,9 @@ resourcestring
   SS7PCertLoaded                = '%d certificado(s) carregado(s). Passam a ser os únicos em que o driver confia: um CLP que apresente outro será recusado.';
   SS7PClientTitle               = 'Certificado de cliente';
   SS7PClientFilter              = 'Certificado e chave (*.p12;*.pfx;*.pem;*.crt;*.cer;*.key)|*.p12;*.pfx;*.pem;*.crt;*.cer;*.key|Todos os arquivos|*';
+  SSVGLoadButton                = 'Carregar...';
+  SSVGLoadTitle                 = 'Carregar o SVG de um arquivo';
+  SSVGLoadFilter                = 'Arquivos SVG (*.svg)|*.svg|Todos os arquivos|*';
   SS7PClientKeyFilter           = 'Chave privada (*.key;*.pem)|*.key;*.pem|Todos os arquivos|*';
   SS7PClientEmpty               = '(vazio: sem certificado de cliente)';
   SS7PClientSummaryPEM          = '(PEM: %d certificado(s), %s)';
@@ -565,6 +568,9 @@ resourcestring
   SS7PCertLoaded                = '%d certificate(s) loaded. They are the only ones the driver trusts from now on: a PLC presenting another one will be refused.';
   SS7PClientTitle               = 'Client certificate';
   SS7PClientFilter              = 'Certificate and key (*.p12;*.pfx;*.pem;*.crt;*.cer;*.key)|*.p12;*.pfx;*.pem;*.crt;*.cer;*.key|All files|*';
+  SSVGLoadButton                = 'Load...';
+  SSVGLoadTitle                 = 'Load the SVG from a file';
+  SSVGLoadFilter                = 'SVG files (*.svg)|*.svg|All files|*';
   SS7PClientKeyFilter           = 'Private key (*.key;*.pem)|*.key;*.pem|All files|*';
   SS7PClientEmpty               = '(empty: no client certificate)';
   SS7PClientSummaryPEM          = '(PEM: %d certificate(s), %s)';
