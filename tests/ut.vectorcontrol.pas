@@ -61,8 +61,19 @@ type
     function  Find(const aId:AnsiString):TSVGElement;
   public
     property SimulateAppShutdown;
+    //: recarrega o SVG do texto; util porque atribuir .Text direto nao passa
+    //: pelo SetSVGContents e nao recarrega nada
+    //: reloads the SVG from the text; assigning .Text directly does not go
+    //: through SetSVGContents and reloads nothing
+    procedure ForceReload;
     function FillOf(const aId:AnsiString):TColor;
     function BorderOf(const aId:AnsiString):TColor;
+    //: o atributo fill cru, para ver para onde o elemento aponta
+    //: the raw fill attribute, to see what the element points at
+    function FillAttributeOf(const aId:AnsiString):string;
+    //: o estado de visibilidade depois das instrucoes da zona
+    //: the visibility state after the zone's statements
+    function VisibleOf(const aId:AnsiString):Boolean;
   end;
 
   { TTestVectorFlowStatements }
@@ -82,6 +93,8 @@ type
     procedure AFillTakingTheZoneColourIsValid;
     procedure ABorderStatementIsValid;
     procedure AStopColorStatementIsValid;
+    procedure AFillWithAGradientReferenceIsValid;
+    procedure AVisibleStatementIsValid;
     procedure TheStatementIsCaseInsensitive;
     procedure TheOutputStatementIsValid;
     procedure TheStopOpacityIsValidBetweenZeroAndOneHundred;
@@ -97,6 +110,9 @@ type
     procedure AnOutputBelowOneIsRefused;
     procedure AStopOpacityOutOfRangeIsRefused;
     procedure ALineWithNoValueIsRefused;
+    procedure AGradientReferenceOnAStopColourIsRefused;
+    procedure AMalformedGradientReferenceIsRefused;
+    procedure AnInvalidVisibilityValueIsRefused;
 
     //a leitura da cor / reading the colour
     procedure TheHexColourIsReadChannelByChannel;
@@ -105,6 +121,8 @@ type
     procedure AFillStatementBecomesAFillChange;
     procedure ABorderStatementBecomesABorderChange;
     procedure AStopColorStatementBecomesAStopColorChange;
+    procedure AFillWithAGradientReferenceBecomesAPaintRefChange;
+    procedure AVisibleStatementBecomesAVisibleChange;
     procedure AnOutputStatementBecomesAnOutputChange;
     procedure AStatementTakingTheFlowColourKeepsTheFlowAsTheSource;
 
@@ -151,6 +169,12 @@ type
     //os avisos / the notifications
     procedure ChangingZoneNotifies;
 
+    //o gradiente / the gradient
+    procedure AFillStatementPointsTheElementToTheGradientOfTheSVG;
+
+    //visibilidade / visibility
+    procedure AVisibleStatementShowsAndHidesTheElement;
+
     //o tag / the tag
     procedure ATagThatIsNotNumericIsRefused;
     procedure ADestroyedTagLetsGoOfTheControl;
@@ -175,7 +199,24 @@ const
     '  <rect id="corpo" x="0" y="0" width="40" height="40" fill="#ffffff" stroke="#000000" stroke-width="1"/>'+LineEnding+
     '</svg>';
 
-{ TVectorProbe }
+  UmSVGComDegrade =
+    '<?xml version="1.0" encoding="UTF-8"?>'+LineEnding+
+    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">'+LineEnding+
+    '  <defs>'+LineEnding+
+    '    <linearGradient id="SVGID_3_" x1="0" y1="0" x2="1" y2="0">'+LineEnding+
+    '      <stop id="parada1" offset="0" stop-color="#ff0000"/>'+LineEnding+
+    '      <stop id="parada2" offset="1" stop-color="#0000ff"/>'+LineEnding+
+    '    </linearGradient>'+LineEnding+
+    '  </defs>'+LineEnding+
+    '  <rect id="corpo" x="0" y="0" width="40" height="40" fill="#ffffff" stroke="#000000" stroke-width="1"/>'+LineEnding+
+    '</svg>';
+
+  UmSVGComDoisGrupos =
+    '<?xml version="1.0" encoding="UTF-8"?>'+LineEnding+
+    '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">'+LineEnding+
+    '  <g id="grupo_a"><rect x="0" y="0" width="20" height="40" fill="#00ff00"/></g>'+LineEnding+
+    '  <g id="grupo_b" style="display:none"><rect x="20" y="0" width="20" height="40" fill="#ff0000"/></g>'+LineEnding+
+    '</svg>';
 
 function TVectorProbe.Find(const aId:AnsiString):TSVGElement;
 var
@@ -190,6 +231,33 @@ begin
       Result:=FSVGDrawing.Content.Element[i];
       exit;
     end;
+end;
+
+procedure TVectorProbe.ForceReload;
+begin
+  ReloadDrawing;
+end;
+
+function TVectorProbe.FillAttributeOf(const aId:AnsiString):string;
+var
+  el:TSVGElement;
+begin
+  el:=Find(aId);
+  if el=nil then
+    Result:=''
+  else
+    Result:=el.Attribute['fill'];
+end;
+
+function TVectorProbe.VisibleOf(const aId:AnsiString):Boolean;
+var
+  el:TSVGElement;
+begin
+  el:=Find(aId);
+  if el=nil then
+    Result:=False
+  else
+    Result:=el.Visible;
 end;
 
 function TVectorProbe.FillOf(const aId:AnsiString):TColor;
@@ -257,6 +325,26 @@ end;
 procedure TTestVectorFlowStatements.AStopColorStatementIsValid;
 begin
   AssertTrue('parada do degrade', THMIVectorFlowZone.ValidStatement('parada1.stop-color=#0000ff'));
+end;
+
+procedure TTestVectorFlowStatements.AFillWithAGradientReferenceIsValid;
+begin
+  //url(#id) aponta para um gradiente declarado no proprio SVG.
+  //url(#id) points to a gradient declared in the SVG itself.
+  AssertTrue('gradiente no preenchimento', THMIVectorFlowZone.ValidStatement('corpo.fill=url(#SVGID_3_)'));
+  AssertTrue('gradiente na borda',         THMIVectorFlowZone.ValidStatement('corpo.border=url(#SVGID_3_)'));
+end;
+
+procedure TTestVectorFlowStatements.AVisibleStatementIsValid;
+begin
+  //visible liga/desliga um elemento ou grupo inteiro: desenhos de duas posicoes
+  //tem as duas no mesmo arquivo e cada estado acende uma delas.
+  //visible turns an element or a whole group on/off: two position drawings
+  //carry both in the same file and each state lights one of them.
+  AssertTrue('um',    THMIVectorFlowZone.ValidStatement('corpo.visible=1'));
+  AssertTrue('zero',  THMIVectorFlowZone.ValidStatement('corpo.visible=0'));
+  AssertTrue('true',  THMIVectorFlowZone.ValidStatement('corpo.visible=true'));
+  AssertTrue('false', THMIVectorFlowZone.ValidStatement('corpo.visible=false'));
 end;
 
 procedure TTestVectorFlowStatements.TheStatementIsCaseInsensitive;
@@ -333,6 +421,29 @@ begin
   AssertFalse('sem o igual', THMIVectorFlowZone.ValidStatement('corpo.fill'));
 end;
 
+procedure TTestVectorFlowStatements.AGradientReferenceOnAStopColourIsRefused;
+begin
+  //uma parada de degrade tem cor propria; apontar para outro degrade nao faz
+  //sentido e viraria uma linha calada.
+  //a gradient stop has a colour of its own; pointing it at another gradient
+  //makes no sense and would become a silent line.
+  AssertFalse('parada com url', THMIVectorFlowZone.ValidStatement('parada1.stop-color=url(#SVGID_3_)'));
+end;
+
+procedure TTestVectorFlowStatements.AMalformedGradientReferenceIsRefused;
+begin
+  AssertFalse('sem o parentese final', THMIVectorFlowZone.ValidStatement('corpo.fill=url(#SVGID_3_'));
+  AssertFalse('sem o parentese inicial', THMIVectorFlowZone.ValidStatement('corpo.fill=url#SVGID_3_)'));
+  AssertFalse('sem o #',               THMIVectorFlowZone.ValidStatement('corpo.fill=url(SVGID_3_)'));
+  AssertFalse('url vazio',             THMIVectorFlowZone.ValidStatement('corpo.fill=url()'));
+end;
+
+procedure TTestVectorFlowStatements.AnInvalidVisibilityValueIsRefused;
+begin
+  AssertFalse('dois',  THMIVectorFlowZone.ValidStatement('corpo.visible=2'));
+  AssertFalse('texto', THMIVectorFlowZone.ValidStatement('corpo.visible=visivel'));
+end;
+
 procedure TTestVectorFlowStatements.TheHexColourIsReadChannelByChannel;
 begin
   AssertEquals('vermelho', clRed,  THMIVectorFlowZone.RGBHexToColor('#ff0000'));
@@ -375,6 +486,52 @@ begin
   o:=ObjectOf('parada1.stop-color=#0000ff');
   try
     AssertTrue('e uma mudanca de parada do degrade', o is TSVGStopColorChange);
+  finally
+    o.Free;
+  end;
+end;
+
+procedure TTestVectorFlowStatements.AFillWithAGradientReferenceBecomesAPaintRefChange;
+var
+  o:TSVGChange;
+begin
+  o:=ObjectOf('corpo.fill=url(#SVGID_3_)');
+  try
+    AssertTrue  ('e uma referencia de paint', o is TSVGPaintRefChange);
+    AssertEquals('no preenchimento', False, TSVGPaintRefChange(o).IsStroke);
+    AssertEquals('elemento', 'corpo', string(TSVGPaintRefChange(o).SVGID));
+    AssertEquals('o gradiente', 'url(#svgid_3_)', TSVGPaintRefChange(o).PaintRef);
+  finally
+    o.Free;
+  end;
+
+  //na borda a mesma referencia vira stroke.
+  //on the border the same reference becomes the stroke.
+  o:=ObjectOf('corpo.border=url(#grad1)');
+  try
+    AssertTrue  ('borda tambem e referencia de paint', o is TSVGPaintRefChange);
+    AssertEquals('no contorno', True, TSVGPaintRefChange(o).IsStroke);
+  finally
+    o.Free;
+  end;
+end;
+
+procedure TTestVectorFlowStatements.AVisibleStatementBecomesAVisibleChange;
+var
+  o:TSVGChange;
+begin
+  o:=ObjectOf('corpo.visible=0');
+  try
+    AssertTrue ('e uma mudanca de visibilidade', o is TSVGVisibleChange);
+    AssertFalse('esconde o corpo', TSVGVisibleChange(o).Visible);
+    AssertEquals('elemento', 'corpo', string(TSVGVisibleChange(o).SVGID));
+  finally
+    o.Free;
+  end;
+
+  o:=ObjectOf('corpo.visible=true');
+  try
+    AssertTrue('mostra o corpo', TSVGVisibleChange(o).Visible);
   finally
     o.Free;
   end;
@@ -669,6 +826,36 @@ begin
 
   TagValueIs(1);
   AssertEquals('aberta', clLime, FCtrl.FillOf('corpo'));
+end;
+
+procedure TTestFlowVectorControl.AFillStatementPointsTheElementToTheGradientOfTheSVG;
+begin
+  FCtrl.SVGContents.Text:=UmSVGComDegrade;
+  //a instrucao guarda o texto em minusculas, mas o id do gradiente no SVG tem
+  //maiusculas: o elemento tem que apontar para o id real, senao o BGRASVG nao
+  //acha o gradiente e a forma fica sem preenchimento.
+  //the statement keeps the text in lower case, but the gradient id in the SVG
+  //has capitals: the element must point at the real id, otherwise BGRASVG does
+  //not find the gradient and the shape is left without fill.
+  NewState(1, 'corpo.fill=url(#SVGID_3_)');
+  TagValueIs(1);
+  AssertEquals('aponta para o gradiente do SVG',
+               'url(#SVGID_3_)', FCtrl.FillAttributeOf('corpo'));
+end;
+
+procedure TTestFlowVectorControl.AVisibleStatementShowsAndHidesTheElement;
+begin
+  FCtrl.SVGContents.Text:=UmSVGComDoisGrupos;
+  FCtrl.ForceReload;
+  //estado inicial: A aceso, B apagado pelo style="display:none" do arquivo
+  //initial state: A on, B off by the style="display:none" of the file
+  AssertTrue ('grupo a visivel',   FCtrl.VisibleOf('grupo_a'));
+  AssertFalse('grupo b escondido', FCtrl.VisibleOf('grupo_b'));
+
+  NewState(1, 'grupo_a.visible=0'+LineEnding+'grupo_b.visible=1');
+  TagValueIs(1);
+  AssertFalse('grupo a escondido pela zona', FCtrl.VisibleOf('grupo_a'));
+  AssertTrue ('grupo b mostrado pela zona',  FCtrl.VisibleOf('grupo_b'));
 end;
 
 procedure TTestFlowVectorControl.ChangingZoneNotifies;
