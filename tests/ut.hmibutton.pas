@@ -55,6 +55,10 @@ type
   TButtonProbe = class(THMIButton)
   public
     procedure PressTo(bs:TButtonState);
+    //: aperta e solta o botao esquerdo como o widget faz, sem clicar
+    //: presses and releases the left button the way the widget does, no click
+    procedure PressTheMouse;
+    procedure MoveTheMouseTo(aX, aY:Integer);
     procedure ReleaseTheMouse;
     function  StateIs:TButtonState;
     //: verdadeiro quando o estado de mouse-em-cima desenha igual ao solto:
@@ -103,6 +107,8 @@ type
     procedure AResetButtonWritesTheOffValueOnEachClick;
     procedure AJogButtonWritesTheDownValueWhilePressed;
     procedure ReleasingAJogButtonWritesTheUpValue;
+    procedure LeavingAJogButtonWritesTheUpValue;
+    procedure AClickAloneDoesNotTurnAJogButtonOn;
     procedure AToggleButtonInvertsTheTagValue;
     procedure AToggleButtonNeverLooksPressed;
     procedure WithNoTagAClickWritesNothing;
@@ -152,7 +158,17 @@ end;
 
 procedure TButtonProbe.ReleaseTheMouse;
 begin
-  MouseUp(mbLeft, [], 0, 0);
+  MouseUp(mbLeft, [], ClientWidth+10, ClientHeight+10);
+end;
+
+procedure TButtonProbe.PressTheMouse;
+begin
+  MouseDown(mbLeft, [ssLeft], ClientWidth div 2, ClientHeight div 2);
+end;
+
+procedure TButtonProbe.MoveTheMouseTo(aX, aY:Integer);
+begin
+  MouseMove([ssLeft], aX, aY);
 end;
 
 function TButtonProbe.StateIs:TButtonState;
@@ -330,10 +346,12 @@ end;
 
 procedure TTestHMIButton.AJogButtonWritesTheDownValueWhilePressed;
 begin
+  //btJog: o valor de ligado sai no aperto do mouse
+  //btJog: the on value goes out on the mouse press
   FButton.ButtonType:=btJog;
   FButton.PLCTag:=FTag;
 
-  FButton.PressTo(bsDown);
+  FButton.PressTheMouse;
 
   AssertEquals('ligado enquanto pressionado', 1, FTag.Value, 0.0001);
 end;
@@ -342,11 +360,38 @@ procedure TTestHMIButton.ReleasingAJogButtonWritesTheUpValue;
 begin
   FButton.ButtonType:=btJog;
   FButton.PLCTag:=FTag;
-  FButton.PressTo(bsDown);
+  FButton.PressTheMouse;
 
   FButton.ReleaseTheMouse;
 
   AssertEquals('desligou ao soltar', 0, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIButton.LeavingAJogButtonWritesTheUpValue;
+begin
+  //arrastar o ponteiro para fora com o botao apertado tambem desliga
+  //dragging the pointer out with the button held switches it off too
+  FButton.ButtonType:=btJog;
+  FButton.PLCTag:=FTag;
+  FButton.PressTheMouse;
+
+  FButton.MoveTheMouseTo(FButton.ClientWidth+10, FButton.ClientHeight+10);
+
+  AssertEquals('desligou ao sair do botao', 0, FTag.Value, 0.0001);
+end;
+
+procedure TTestHMIButton.AClickAloneDoesNotTurnAJogButtonOn;
+begin
+  //o Click da LCL vem depois do MouseUp: se ele escrevesse o valor de ligado
+  //o botao ficaria ligado depois de soltar. Quem trata o aperto e' o MouseDown.
+  //LCL's Click comes after MouseUp: if it wrote the on value the button would
+  //stay on after the release. MouseDown is the one that handles the press.
+  FButton.ButtonType:=btJog;
+  FButton.PLCTag:=FTag;
+
+  FButton.PressTo(bsDown);
+
+  AssertEquals('nenhuma escrita', 0, FTag.Escritas);
 end;
 
 procedure TTestHMIButton.AToggleButtonInvertsTheTagValue;

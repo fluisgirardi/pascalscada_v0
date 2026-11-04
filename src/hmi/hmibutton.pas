@@ -33,7 +33,9 @@ type
     FFeedbackTag:TPLCTag;
     FIsEnabled,
     FIsEnabledBySecurity:Boolean;
-    FClickFlag:Boolean;
+    //btJog: aperto do mouse em andamento (o valor de ligado ja' foi escrito)
+    //btJog: mouse press in progress (the on value has already been written)
+    FJogActive:Boolean;
     FAfterGrayed:Boolean;
     FButtonType:TButtonType;
     FOtherValues:TOtherValues;
@@ -100,6 +102,11 @@ type
     //: always draws the normal/pressed state, never the hot one: no highlight
     //: frame the theme draws when the mouse is over the button.
     function GetDrawDetails: TThemedElementDetails; override;
+    //: nao deixa o tema desenhar o fundo do botao: sem friso nem borda em
+    //: nenhum estado, so' a imagem e o texto.
+    //: keeps the theme from drawing the button background: no frame nor
+    //: border in any state, only the picture and the caption.
+    procedure PaintBackground(var PaintRect: TRect); override;
     {$ENDIF}
     //: @exclude
     //procedure SetDown(value:Boolean);
@@ -134,6 +141,10 @@ type
     //: @exclude
     function GetDown:Boolean;
     
+    //: @exclude
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt); override;
+    //: @exclude
+    procedure MouseMove(Shift: TShiftState; X, Y: LongInt); override;
     //: @exclude
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt); override;
 
@@ -355,7 +366,7 @@ begin
   //: @seealso(THMIBasicControl.Create) sobre a flag de seguranca nascer verdadeira
   //: @seealso(THMIBasicControl.Create) on the security flag being born true
   FIsEnabledBySecurity:=true;
-  FClickFlag:=false;
+  FJogActive:=false;
   FGlyphDown:=TBitmap.Create;
   FGlyphUp:=TBitmap.Create;
   FGlyphGrayed:=TBitmap.Create;
@@ -400,16 +411,14 @@ begin
    writeflag:=false;
    try
       //calcula o novo valor do botão..
-      //btJog: grava o valor de ligado enquanto segura e o de desligado ao
-      //soltar (o de soltar acontece em MouseUp).
-      //btJog: writes the on value while held and the off one on release
-      //(the release write happens in MouseUp).
-      if (FButtonType=btJog) and ((FState=bsDown) or (FState=bsExclusive)) then begin
-         valuetowrite := FValueDown;
-         writeflag:=true;
-         FClickFlag:=true;
-         SetButtonState(bsDown);
-      end;
+      //btJog nao escreve no clique: o aperto, o soltar e a saida do mouse sao
+      //tratados em MouseDown/MouseUp/MouseMove. O Click da LCL acontece
+      //depois do MouseUp, entao escrever aqui mandaria o valor de ligado por
+      //ultimo e o botao ficaria ligado depois de soltar.
+      //btJog writes nothing on click: press, release and leaving the mouse
+      //are handled in MouseDown/MouseUp/MouseMove. LCL's Click happens after
+      //MouseUp, so writing here would send the on value last and the button
+      //would stay on after being released.
 
       //btSet: cada clique grava o valor de ligado. A aparencia fica por conta
       //do tag (ou do tag de retroalimentacao).
@@ -580,6 +589,22 @@ begin
    else
       Result := ThemeServices.GetElementDetails(tbPushButtonNormal);
 end;
+
+//o tema desenhava o fundo do botao com friso e borda em todos os estados, e
+//um destaque ainda maior no estado hot. Aqui o fundo e' so' a cor do
+//controle, quando ele nao for transparente; o retangulo fica inteiro para a
+//imagem ocupar tudo.
+//the theme used to draw the button face with a frame and a border in every
+//state, and an even bigger highlight on the hot one. Here the background is
+//just the control colour, when it is not transparent; the rectangle stays
+//whole so the picture fills it.
+procedure THMIButton.PaintBackground(var PaintRect: TRect);
+begin
+   if not Transparent then begin
+      Canvas.Brush.Color := Color;
+      Canvas.FillRect(PaintRect);
+   end;
+end;
 {$ENDIF}
 
 //procedure THMIButton.SetDown(Value: Boolean);
@@ -659,12 +684,63 @@ begin
    Result := FState in [bsDown, bsExclusive];
 end;
 
-procedure THMIButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: LongInt);
+procedure THMIButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+  Y: LongInt);
+begin
+   //herdado primeiro: a LCL marca FState=bsDown e inicia o arrasto
+   //inherited first: the LCL sets FState=bsDown and starts the drag
+   inherited MouseDown(Button, Shift, X, Y);
+   if (csDesigning in ComponentState) or (Button<>mbLeft) then exit;
+   if (FButtonType<>btJog) or (not IsEnabled) then exit;
+
+   //btJog: o valor de ligado sai no aperto e o de desligado em MouseUp,
+   //quando o mouse sai do botao ou quando o clique e' perdido.
+   //btJog: the on value goes out on press and the off one on MouseUp, when
+   //the mouse leaves the button or when the press is lost.
+   FJogActive:=true;
+   SetValue(FValueDown);
+   SetButtonState(bsDown);
+end;
+
+procedure THMIButton.MouseMove(Shift: TShiftState; X, Y: LongInt);
+begin
+   inherited MouseMove(Shift, X, Y);
+   if (csDesigning in ComponentState) or (FButtonType<>btJog) then exit;
+
+   //enquanto o botao do mouse esta' apertado o valor segue a posicao: dentro
+   //do botao e' o de ligado, fora volta para o de desligado. Sem isso o valor
+   //ficaria ligado mesmo arrastando o ponteiro para fora com o mouse apertado.
+   //while the mouse button is held the value follows the position: inside the
+   //button it is the on value, outside it goes back to the off one. Without
+   //this the value would stay on even when dragging the pointer out with the
+   //button held.
+   if (X>=0) and (X<ClientWidth) and (Y>=0) and (Y<ClientHeight) then begin
+      if (ssLeft in Shift) and IsEnabled then begin
+         if not FJogActive then begin
+            FJogActive:=true;
+            SetValue(FValueDown);
+         end;
+         SetButtonState(bsDown);
+      end;
+   end else
+   if FJogActive then begin
+      FJogActive:=false;
+      SetValue(FValueUp);
+      UpdateState;
+   end;
+end;
+
+procedure THMIButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+  Y: LongInt);
 begin
     try
-       if FClickFlag and (FButtonType=btJog) then
+       if (FButtonType=btJog) and FJogActive then begin
+          FJogActive:=false;
           SetValue(FValueUp);
-       FClickFlag:=false;
+          //a aparencia volta a ser a que o tag manda
+          //the looks go back to whatever the tag says
+          UpdateState;
+       end;
     finally
        inherited MouseUp(Button, Shift, X, Y);
     end;
