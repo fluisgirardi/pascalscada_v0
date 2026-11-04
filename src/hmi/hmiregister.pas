@@ -148,6 +148,9 @@ begin
   RegisterPropertyEditor(TypeInfo(UTF8String), THMIAnimation,                            'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), THMIText,                                 'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), THMIButton,                               'SecurityCode',                  TSecurityCodePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphUpFile',                   TImageFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphDownFile',                 TImageFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(AnsiString), THMIButton,                               'GlyphGrayedFile',               TImageFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADASecureAction,                 'SecurityCode',                  TSecurityCodePropertyEditor);
   RegisterPropertyEditor(TypeInfo(UTF8String), TPascalSCADACheckSpecialTokenAction,      'SecurityCode',                  TSecurityCodePropertyEditor);
 
