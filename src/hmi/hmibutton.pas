@@ -11,7 +11,7 @@ interface
 uses
   Classes, SysUtils, {$IFDEF FPC}LResources, LMessages, {$ENDIF}Controls,
   Graphics, Dialogs, Buttons, HMITypes, messages, PLCTag, ProtocolTypes, Tag
-  {$IFDEF FPC}, GraphType, IntfGraphics, FPImage{$ENDIF};
+  {$IFDEF FPC}, GraphType, IntfGraphics, FPImage, Themes{$ENDIF};
 
 type
   {$IFDEF PORTUGUES}
@@ -94,6 +94,13 @@ type
   protected
     //: Evita o processamento da mensagem no botão.
     procedure CMButtonPressed(var Message: TMessage); message CM_BUTTONPRESSED;
+    {$IFDEF FPC}
+    //: desenha sempre o estado normal/pressionado, nunca o de destaque:
+    //: sem a moldura que o tema desenha quando o mouse passa por cima.
+    //: always draws the normal/pressed state, never the hot one: no highlight
+    //: frame the theme draws when the mouse is over the button.
+    function GetDrawDetails: TThemedElementDetails; override;
+    {$ENDIF}
     //: @exclude
     //procedure SetDown(value:Boolean);
     //: @exclude
@@ -393,24 +400,10 @@ begin
    writeflag:=false;
    try
       //calcula o novo valor do botão..
-      if FButtonType = btOnOff  then begin
-         //click é chamado apos a atualização
-         //de FState
-         case FState of
-            bsUp {$IFDEF FPC}, bsHot{$ENDIF}:
-              valuetowrite := FValueUp;
-            bsDown, bsExclusive:
-              valuetowrite := FValueDown;
-            else
-              if FAfterGrayed then
-                 valuetowrite := FValueDown
-              else
-                 valuetowrite := FValueUp;
-         end;
-         writeflag := true;
-         SetButtonState(FState);
-      end;
-      
+      //btJog: grava o valor de ligado enquanto segura e o de desligado ao
+      //soltar (o de soltar acontece em MouseUp).
+      //btJog: writes the on value while held and the off one on release
+      //(the release write happens in MouseUp).
       if (FButtonType=btJog) and ((FState=bsDown) or (FState=bsExclusive)) then begin
          valuetowrite := FValueDown;
          writeflag:=true;
@@ -418,12 +411,29 @@ begin
          SetButtonState(bsDown);
       end;
 
-      //btToogle: inverte o valor do tag e mantem a aparencia solta, como o
-      //TButtonType documenta. Nao tinha ramo nenhum aqui - o tipo aparecia no
-      //inspetor e o botao nao escrevia nada, nunca.
-      //btToogle: inverts the tag value and keeps the released look, as
-      //TButtonType documents. There was no branch at all here - the type
-      //showed up on the inspector and the button never wrote anything.
+      //btSet: cada clique grava o valor de ligado. A aparencia fica por conta
+      //do tag (ou do tag de retroalimentacao).
+      //btSet: every click writes the on value. The looks come from the tag
+      //(or from the feedback tag).
+      if FButtonType=btSet then begin
+         valuetowrite := FValueDown;
+         writeflag := true;
+         SetButtonState(bsUp);
+      end;
+
+      //btReset: cada clique grava o valor de desligado.
+      //btReset: every click writes the off value.
+      if FButtonType=btReset then begin
+         valuetowrite := FValueUp;
+         writeflag := true;
+         SetButtonState(bsUp);
+      end;
+
+      //btToogle: inverte o valor do tag. Se ha' tag de retroalimentacao a
+      //aparencia segue o que o CLP devolveu; sem ele o botao fica sempre
+      //solto.
+      //btToogle: inverts the tag value. With a feedback tag the looks follow
+      //what the PLC gave back; without one the button always looks released.
       if FButtonType=btToogle then begin
          if GetTagValue=FValueDown then
             valuetowrite := FValueUp
@@ -433,15 +443,6 @@ begin
          SetButtonState(bsUp);
       end;
 
-      if (FButtonType=btMomentary) and ((FState=bsDown) or (FState=bsExclusive)) then begin
-         SetValue(FValueDown);
-         SetButtonState(bsDown);
-         Invalidate;
-         valuetowrite := FValueUp;
-         writeflag:=true;
-         SetButtonState(bsUp);
-      end;
-      
       if writeflag then
          SetValue(valuetowrite);
    finally
@@ -560,6 +561,27 @@ begin
    //CM_BUTTONPRESSED de TSpeedButton.
 end;
 
+{$IFDEF FPC}
+//o tema desenha tbPushButtonHot/ttbButtonHot quando o mouse passa por cima e
+//ttbButtonCheckedHot num botao Flat afundado com o mouse em cima - a moldura
+//de destaque que atrapalha as imagens do botao. Aqui so' existem tres
+//aparencias: normal, afundado e desabilitado; nenhuma muda com o mouse.
+//the theme draws the hot elements when the mouse is over the button and the
+//checked-hot one on a sunken Flat button under the mouse - the highlight
+//frame that gets in the way of the button images. Only three looks exist
+//here: normal, sunken and disabled; none of them changes with the mouse.
+function THMIButton.GetDrawDetails: TThemedElementDetails;
+begin
+   if not IsEnabled then
+      Result := ThemeServices.GetElementDetails(tbPushButtonDisabled)
+   else
+   if FState in [bsDown, bsExclusive] then
+      Result := ThemeServices.GetElementDetails(tbPushButtonPressed)
+   else
+      Result := ThemeServices.GetElementDetails(tbPushButtonNormal);
+end;
+{$ENDIF}
+
 //procedure THMIButton.SetDown(Value: Boolean);
 //begin
    //FDown := Value;
@@ -581,7 +603,7 @@ begin
             Caption:=CaptionUp;
             Color:=ColorUp;
             Glyph.Assign(DisplayGlyph(bs));
-            if FButtonType in [btJog, btOnOff] then
+            if FButtonType=btJog then
                SetDown(false);
          end;
       bsDisabled:
@@ -589,7 +611,7 @@ begin
             Caption:=CaptionGrayed;
             Color:=ColorGrayed;
             Glyph.Assign(DisplayGlyph(bs));
-            if FButtonType in [btJog, btOnOff] then
+            if FButtonType=btJog then
                SetDown(false);
          end;
       bsDown, bsExclusive:
@@ -597,7 +619,7 @@ begin
             Caption:=CaptionDown;
             Color:=ColorDown;
             Glyph.Assign(DisplayGlyph(bs));
-            if FButtonType in [btJog, btOnOff] then
+            if FButtonType=btJog then
                SetDown(true);
          end;
    end;
@@ -628,12 +650,12 @@ function THMIButton.GetDown:Boolean;
 begin
    //bsExclusive tambem: o construtor sempre define um GroupIndex, e o
    //SetDown(true) da LCL leva um botao agrupado para bsExclusive, nao para
-   //bsDown. Sem os dois, a propriedade lia false justamente nos dois tipos
-   //que ficam afundados (btJog e btOnOff).
+   //bsDown. Sem os dois, a propriedade lia false justamente nos tipos
+   //que ficam afundados.
    //bsExclusive too: the constructor always sets a GroupIndex, and the LCL's
    //SetDown(true) takes a grouped button to bsExclusive, not to bsDown.
-   //Without both, the property read false on exactly the two types that stay
-   //pressed (btJog and btOnOff).
+   //Without both, the property read false on exactly the types that stay
+   //pressed.
    Result := FState in [bsDown, bsExclusive];
 end;
 

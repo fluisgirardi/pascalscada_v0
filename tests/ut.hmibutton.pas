@@ -38,7 +38,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, Buttons, Graphics, Forms, fpcunit, testregistry,
-  HMIButton, HMITypes, PLCTag, PLCString,
+  Themes, HMIButton, HMITypes, PLCTag, PLCString,
   ControlSecurityManager, CustomizedUserManagement, testsupport.faketag;
 
 type
@@ -57,6 +57,11 @@ type
     procedure PressTo(bs:TButtonState);
     procedure ReleaseTheMouse;
     function  StateIs:TButtonState;
+    //: verdadeiro quando o estado de mouse-em-cima desenha igual ao solto:
+    //: sem a moldura de destaque do tema.
+    //: true when the mouse-over state draws like the released one: no theme
+    //: highlight frame.
+    function  HoverDrawsLikeUp:Boolean;
   end;
 
   { TTestHMIButton }
@@ -94,14 +99,15 @@ type
     procedure AStretchedGlyphKeepsTheTransparency;
 
     //o que o operador manda / what the operator sends
-    procedure PressingAnOnOffButtonDownWritesTheDownValue;
-    procedure PressingAnOnOffButtonUpWritesTheUpValue;
-    procedure AMomentaryButtonGoesDownAndComesBack;
+    procedure ASetButtonWritesTheOnValueOnEachClick;
+    procedure AResetButtonWritesTheOffValueOnEachClick;
     procedure AJogButtonWritesTheDownValueWhilePressed;
     procedure ReleasingAJogButtonWritesTheUpValue;
     procedure AToggleButtonInvertsTheTagValue;
     procedure AToggleButtonNeverLooksPressed;
     procedure WithNoTagAClickWritesNothing;
+    //sem moldura de destaque / no hover highlight
+    procedure TheMouseOverDoesNotHighlightTheButton;
 
     //os valores / the values
     procedure ANewButtonComesWithUsableValues;
@@ -152,6 +158,20 @@ end;
 function TButtonProbe.StateIs:TButtonState;
 begin
   Result:=FState;
+end;
+
+function TButtonProbe.HoverDrawsLikeUp:Boolean;
+var
+  UpDetails, HotDetails:TThemedElementDetails;
+  SavedState:TButtonState;
+begin
+  SavedState:=FState;
+  FState:=bsUp;
+  UpDetails:=GetDrawDetails;
+  FState:=bsHot;
+  HotDetails:=GetDrawDetails;
+  FState:=SavedState;
+  Result:=ThemedElementDetailsEqual(UpDetails, HotDetails);
 end;
 
 { TTestHMIButton }
@@ -279,38 +299,33 @@ begin
   AssertEquals('cor de indefinido',   clGray, FButton.Color);
 end;
 
-procedure TTestHMIButton.PressingAnOnOffButtonDownWritesTheDownValue;
+procedure TTestHMIButton.ASetButtonWritesTheOnValueOnEachClick;
 begin
-  FButton.ButtonType:=btOnOff;
+  //btSet: cada clique grava o valor de ligado, duas vezes seguidas
+  //btSet: every click writes the on value, twice in a row
+  FButton.ButtonType:=btSet;
   FButton.PLCTag:=FTag;
 
   FButton.PressTo(bsDown);
+  AssertEquals('primeiro clique ligou', 1, FTag.Value, 0.0001);
 
-  AssertEquals('mandou o valor de ligado', 1, FTag.Value, 0.0001);
+  FButton.PressTo(bsDown);
+  AssertEquals('segundo clique continua em 1', 1, FTag.Value, 0.0001);
+  AssertEquals('duas escritas', 2, FTag.Escritas);
 end;
 
-procedure TTestHMIButton.PressingAnOnOffButtonUpWritesTheUpValue;
+procedure TTestHMIButton.AResetButtonWritesTheOffValueOnEachClick;
 begin
-  FButton.ButtonType:=btOnOff;
+  //btReset: cada clique grava o valor de desligado, com o tag em qualquer
+  //valor
+  //btReset: every click writes the off value, whatever the tag reads
+  FButton.ButtonType:=btReset;
   FButton.PLCTag:=FTag;
   FTag.ChegouDoCLP(1);
 
-  FButton.PressTo(bsUp);
-
-  AssertEquals('mandou o valor de desligado', 0, FTag.Value, 0.0001);
-end;
-
-procedure TTestHMIButton.AMomentaryButtonGoesDownAndComesBack;
-begin
-  //botao de pulso: manda o valor de ligado e, na mesma batida, o de desligado
-  //momentary button: sends the on value and, in the same beat, the off one
-  FButton.ButtonType:=btMomentary;
-  FButton.PLCTag:=FTag;
-
   FButton.PressTo(bsDown);
 
-  AssertEquals('terminou desligado', 0, FTag.Value, 0.0001);
-  AssertEquals('duas escritas',      2, FTag.Escritas);
+  AssertEquals('mandou o valor de desligado', 0, FTag.Value, 0.0001);
 end;
 
 procedure TTestHMIButton.AJogButtonWritesTheDownValueWhilePressed;
@@ -365,11 +380,22 @@ end;
 
 procedure TTestHMIButton.WithNoTagAClickWritesNothing;
 begin
-  FButton.ButtonType:=btOnOff;
+  FButton.ButtonType:=btSet;
 
   FButton.PressTo(bsDown);
 
   AssertEquals('nada escrito', 0, FTag.Escritas);
+end;
+
+procedure TTestHMIButton.TheMouseOverDoesNotHighlightTheButton;
+begin
+  //o mouse em cima nao pode mudar o desenho: sem a moldura de destaque do
+  //tema sobre as imagens do botao
+  //the mouse over must not change the drawing: no theme highlight frame on
+  //top of the button images
+  FButton.PLCTag:=FTag;
+
+  AssertTrue('mouse em cima desenha igual ao solto', FButton.HoverDrawsLikeUp);
 end;
 
 procedure TTestHMIButton.ANewButtonComesWithUsableValues;

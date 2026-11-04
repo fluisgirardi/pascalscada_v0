@@ -90,32 +90,32 @@ type
   {:
   Define os possíveis tipos de botões.
 
-  @value(btJog o botão irá ficar pressionado enquanto ele for mantido pressionado.)
+  @value(btJog o botão fica pressionado enquanto ele for mantido pressionado:
+         ao apertar grava ValueDown, ao soltar grava ValueUp.)
 
-  @value(btOnOff o botão fica pressionado com um clique e com outro ele é liberado.)
+  @value(btSet cada clique grava ValueDown no tag (liga / seta em 1).)
 
-  @value(btMomentary O botão fica pressionado por alguns instantes e logo
-  em seguinda liberado, mesmo que ele seja mantido pressionado.)
+  @value(btReset cada clique grava ValueUp no tag (desliga / seta em 0).)
 
-  @value(btToogle O botão irá inverter o valor do tag e manter a aparência
-  solta (não pressionado).)
+  @value(btToogle cada clique inverte o valor do tag: se vale ValueDown grava
+  ValueUp e vice-versa.)
   }
   {$ELSE}
   {:
   Define the button kind.
 
-  @value(btJog the button will be pressed while it is held down.)
+  @value(btJog the button stays pressed while it is held down: pressing writes
+  ValueDown, releasing writes ValueUp.)
 
-  @value(btOnOff the button will be pressed with one click and released with other click.)
+  @value(btSet every click writes ValueDown to the tag (switch on / set to 1).)
 
-  @value(btMomentary The button is pressed for a few moments and then following
-         it's released, even it is  keeps pressed.)
+  @value(btReset every click writes ValueUp to the tag (switch off / set to 0).)
 
-  @value(btToogle The button will invert the value of the tag and keep the
-         released appearence.)
+  @value(btToogle every click inverts the tag value: if it reads ValueDown it
+  writes ValueUp and the other way round.)
   }
   {$ENDIF}
-  TButtonType = (btJog, btOnOff, btMomentary, btToogle);
+  TButtonType = (btJog, btSet, btReset, btToogle);
 
 
   {$IFDEF PORTUGUES}
