@@ -972,8 +972,13 @@ begin
   PScanUpdateThread.WaitFor;
   PScanUpdateThread.Destroy;
 
+  //so' um TPLCTag tem RemoveDriver: o driver aceita qualquer TTag escaneavel, e o
+  //cast cego escrevia alem do fim dos que nao sao (corrompia o heap).
+  //only a TPLCTag has RemoveDriver: the driver takes any scannable TTag, and the
+  //blind cast wrote past the end of those that are not (it corrupted the heap).
   for c:=PTags.Count-1 downto 0 do
-    TPLCTag(PTags.Items[c]).RemoveDriver;
+    if TObject(PTags.Items[c]) is TPLCTag then
+      TPLCTag(PTags.Items[c]).RemoveDriver;
 
   SetCommPort(nil);
 
