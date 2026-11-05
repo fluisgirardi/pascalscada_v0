@@ -27,7 +27,9 @@
     @item(Arrays de tipos simples: cada um marcado vira um TPLCBlock, com a opção de criar
           ou não os TPLCBlockElement dos elementos.)
     @item(Estruturas: cada uma marcada vira um TPLCStruct, com a opção de criar ou não os
-          TPLCStructItem dos membros.)
+          TPLCStructItem dos membros. Um DB inteiro também é uma estrutura: marcar o DB
+          cria um TPLCStruct lido pelo nome dele, do tamanho da leitura do DB todo, com um
+          item por variável dele (se a opção estiver ligada).)
     @item(Arrays de estruturas: só o primeiro elemento aparece, com os membros; os membros
           marcados são mapeados (TPLCStructItem) em todos os índices de um TPLCStruct que
           cobre o array inteiro.)
@@ -74,7 +76,9 @@
     @item(Arrays of simple types: each ticked one becomes a TPLCBlock, with the option to
           create or not the TPLCBlockElement of its elements.)
     @item(Structures: each ticked one becomes a TPLCStruct, with the option to create or not
-          the TPLCStructItem of its members.)
+          the TPLCStructItem of its members. A whole DB is a structure too: ticking the DB
+          creates a TPLCStruct read by its name, as big as a whole DB read, with an item per
+          variable of it (if the option is on).)
     @item(Arrays of structures: only the first element shows, with its members; the ticked
           members are mapped (TPLCStructItem) to every index of a TPLCStruct that covers the
           whole array.)
@@ -134,6 +138,7 @@ type
     First, Count:LongInt;       //its variables on FCandidates
     Cands:TS7PlusCandidateArray;//the same, to measure the structures of this block only
     SizeStr:String;             //size of a DB, once loaded
+    Checked:Boolean;            //Structures mode: the whole DB is ticked (one TPLCStruct of it)
   end;
 
   { TfrmS7PlusTagBuilder }
@@ -209,6 +214,9 @@ type
     procedure ResizeChecks;
     procedure ApplyMode;
     function  IsSelectableIdx(aIndex:LongInt):Boolean;
+    function  IsDBRoot(aNode:TTreeNode):Boolean;
+    function  NodeChecked(aNode:TTreeNode):Boolean;
+    procedure SetNodeChecked(aNode:TTreeNode; aValue:Boolean);
     function  LoadBlock(aBlock:LongInt; aRoot:TTreeNode):Boolean;
     function  IsPending(aNode:TTreeNode):Boolean;
     function  RootText(aBlock:LongInt):String;
@@ -343,6 +351,30 @@ begin
   Result:=S7PlusSelectable(FCandidates[aIndex], FMode, FMemOf[aIndex]>=0);
 end;
 
+//in the Structures mode a whole DB is a structure too: one TPLCStruct read by the DB name
+function TfrmS7PlusTagBuilder.IsDBRoot(aNode: TTreeNode): Boolean;
+var
+  info:TS7PlusNodeInfo;
+begin
+  info:=InfoOf(aNode);
+  Result:=(FMode=imStruct) and Assigned(info) and (info.Block>=0) and (not FBlocks[info.Block].IsArea);
+end;
+
+function TfrmS7PlusTagBuilder.NodeChecked(aNode: TTreeNode): Boolean;
+begin
+  if IsDBRoot(aNode) then Result:=FBlocks[InfoOf(aNode).Block].Checked
+  else Result:=FChecks[FMode][InfoOf(aNode).Index];
+end;
+
+//a DB that was not read yet cannot be ticked: its size and variables are not known
+procedure TfrmS7PlusTagBuilder.SetNodeChecked(aNode: TTreeNode; aValue: Boolean);
+begin
+  if IsDBRoot(aNode) then begin
+    if FBlocks[InfoOf(aNode).Block].Loaded then FBlocks[InfoOf(aNode).Block].Checked:=aValue;
+  end else
+    FChecks[FMode][InfoOf(aNode).Index]:=aValue;
+end;
+
 //what the controls say in the mode now: the option, the hint, and the tree
 procedure TfrmS7PlusTagBuilder.ApplyMode;
 begin
@@ -426,7 +458,7 @@ var
   info:TS7PlusNodeInfo;
 begin
   info:=InfoOf(aNode);
-  Result:=Assigned(info) and (info.Index>=0) and IsSelectableIdx(info.Index);
+  Result:=IsDBRoot(aNode) or (Assigned(info) and (info.Index>=0) and IsSelectableIdx(info.Index));
 end;
 
 function TfrmS7PlusTagBuilder.PassFilters(aIndex: LongInt): Boolean;
@@ -569,6 +601,7 @@ begin
 
         node:=tvTags.Items.AddChild(nil, RootText(c));
         node.Data:=info;
+        if (FMode=imStruct) and (not FBlocks[c].IsArea) then inc(FShownTags);
         if FBlocks[c].Loaded then begin
           BuildBlock(c, node);
           //a filter shows what it found
@@ -797,8 +830,8 @@ begin
 
   //only what is a tag has a check mark, and it is ITS OWN: a parent never shows (or takes) the
   //mark of what is under it, so ticking a few elements of an array does not tick the array
-  if (not IsPending(aNode)) and IsTaggable(aNode) then begin
-    if FChecks[FMode][InfoOf(aNode).Index] then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
+  if IsTaggable(aNode) then begin
+    if NodeChecked(aNode) then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
   end else
     Result:=-1;
   aNode.StateIndex:=Result;
@@ -823,7 +856,7 @@ var
   child: TTreeNode;
 begin
   if IsTaggable(aNode) then
-    FChecks[FMode][InfoOf(aNode).Index]:=aValue;
+    SetNodeChecked(aNode, aValue);
   child:=aNode.GetFirstChild;
   while Assigned(child) do begin
     SetBranch(child, aValue);
@@ -837,7 +870,9 @@ end;
 procedure TfrmS7PlusTagBuilder.ToggleNode(aNode: TTreeNode);
 begin
   if not IsTaggable(aNode) then exit;
-  FChecks[FMode][InfoOf(aNode).Index]:=not FChecks[FMode][InfoOf(aNode).Index];
+  //a DB is read when it is ticked (its size and variables are needed)
+  if IsPending(aNode) and (not LoadBlock(InfoOf(aNode).Block, aNode)) then exit;
+  SetNodeChecked(aNode, not NodeChecked(aNode));
   UpdateStates;
 end;
 
@@ -890,9 +925,9 @@ begin
     n:=tvTags.Items[c];
     if IsTaggable(n) then
       case aMode of
-        0: FChecks[FMode][InfoOf(n).Index]:=true;
-        1: FChecks[FMode][InfoOf(n).Index]:=false;
-        2: FChecks[FMode][InfoOf(n).Index]:=not FChecks[FMode][InfoOf(n).Index];
+        0: SetNodeChecked(n, true);
+        1: SetNodeChecked(n, false);
+        2: SetNodeChecked(n, not NodeChecked(n));
       end;
   end;
   UpdateStates;
@@ -911,6 +946,13 @@ begin
         inc(total);
         if m=FMode then inc(here);
       end;
+
+  //the DBs ticked as a whole (Structures mode)
+  for c:=0 to High(FBlocks) do
+    if FBlocks[c].Checked and FBlocks[c].Loaded and (not FBlocks[c].IsArea) then begin
+      inc(total);
+      if FMode=imStruct then inc(here);
+    end;
 
   lblSelected.Caption:=Format(SS7PTBSelectedCount,[here, FShownTags]);
   if total>here then
@@ -1145,7 +1187,7 @@ function TfrmS7PlusTagBuilder.GetImportPlan: TS7PlusImportItems;
 var
   m: TS7PlusImportMode;
   part: TS7PlusImportItems;
-  c, n: LongInt;
+  c, n, k: LongInt;
 begin
   FCreate[FMode]:=chkCreateElements.Checked;
   SetLength(Result, 0);
@@ -1157,6 +1199,17 @@ begin
     for c:=0 to High(part) do
       Result[n+c]:=part[c];
   end;
+
+  //a whole DB ticked in the Structures mode: one TPLCStruct of the DB
+  for c:=0 to High(FBlocks) do
+    if FBlocks[c].Checked and FBlocks[c].Loaded and (not FBlocks[c].IsArea) then begin
+      part:=S7PlusBuildDBStructPlan(FBlocks[c].Cands, FBlocks[c].Key, edtPrefix.Text, spinScan.Value,
+                                    FCreate[imStruct]);
+      n:=Length(Result);
+      SetLength(Result, n+Length(part));
+      for k:=0 to High(part) do
+        Result[n+k]:=part[k];
+    end;
 end;
 
 end.

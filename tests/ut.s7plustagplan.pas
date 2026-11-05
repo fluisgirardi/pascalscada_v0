@@ -108,6 +108,13 @@ type
     procedure StructArrayModeNeedsAMemberTicked;
     procedure StructArrayModeLeavesOutAStringWithoutLength;
     procedure TheNamesCarryThePrefix;
+    procedure AWholeDBIsOneStructureWithAnItemPerVariable;
+    procedure AMemberInsideAStructureOfTheDBIsPlacedByItsDistanceInTheImage;
+    procedure TheItemsOfADBAreOnlyMadeWhenAsked;
+    procedure TheStructureOfADBIsTheWholeDBRead;
+    procedure AnAreaIsNotADBStructure;
+    procedure ADBStructureHasItsStringsAndTheElementsOfItsArrays;
+    procedure ADBStructureHasTheMembersOfEveryIndexOfAnArrayOfStructures;
     procedure ANegativeIndexIsNotTheSameNameAsThePositiveOne;
     procedure AnAreaTagHasTheAreaAsItsParent;
   end;
@@ -1170,6 +1177,97 @@ begin
   AssertEquals('the item', 'meuDB4_Var26_v1', P[0].StructItems[0].CompName);
   P := S7PlusBuildImportPlan(L, Ticked(Length(L), [0]), imSimple, 'meu', 0, true);
   AssertEquals('the tag', 'meuDB4_Var1', P[0].CompName);
+end;
+
+procedure TTestS7PlusTagPlan.AWholeDBIsOneStructureWithAnItemPerVariable;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := ListSized(['DB4.Var1', 'DB4.Var2', 'DB4.Var3'], [7, 7, 7], [0, 4, 8], [4, 8, 12]);
+  P := S7PlusBuildDBStructPlan(L, 'DB4', 'tag', 0, true);
+  AssertEquals(1, Length(P));
+  AssertTrue('a structure', P[0].IsStruct);
+  AssertEquals('read by the DB name', 'DB4', P[0].Path);
+  AssertEquals('an item per variable', 3, Length(P[0].StructItems));
+  AssertEquals('Var2 at byte 4', 4, P[0].StructItems[1].Offset);
+  AssertTrue('a DInt', P[0].StructItems[1].TagType=pttLongInt);
+  AssertTrue('big-endian from the PLC', P[0].StructItems[1].SwapBytes and P[0].StructItems[1].SwapWords);
+  AssertEquals('scanned as asked', 0, P[0].Scan);
+  AssertEquals('the whole DB read', 12, P[0].Size);
+end;
+
+procedure TTestS7PlusTagPlan.AMemberInsideAStructureOfTheDBIsPlacedByItsDistanceInTheImage;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  //Var26 at the classic byte 100 and image 104; v3 (DWord) is the first of it, v1 (Byte) after the others
+  L := ListSized(['DB4.Var26', 'DB4.Var26.v1', 'DB4.Var26.v3'], [17, 2, 6], [100, 100, 104], [104, 114, 104]);
+  P := S7PlusBuildDBStructPlan(L, 'DB4', 'tag', 0, true);
+  AssertEquals('the structure itself is not an item', 2, Length(P[0].StructItems));
+  AssertEquals('v1: 100 + (114 - 104)', 110, P[0].StructItems[0].Offset);
+  AssertEquals('v3: 100 + 0', 100, P[0].StructItems[1].Offset);
+end;
+
+procedure TTestS7PlusTagPlan.TheItemsOfADBAreOnlyMadeWhenAsked;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := ListSized(['DB4.Var1', 'DB4.Var2'], [7, 7], [0, 4], [4, 8]);
+  P := S7PlusBuildDBStructPlan(L, 'DB4', 'tag', 0, false);
+  AssertEquals(1, Length(P));
+  AssertEquals('no items', 0, Length(P[0].StructItems));
+  AssertEquals('but the whole DB is read', 8, P[0].Size);
+end;
+
+procedure TTestS7PlusTagPlan.TheStructureOfADBIsTheWholeDBRead;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := ListSized(['DB4.Var1', 'DB4.Var2', 'DB5.Var1'], [7, 7, 7], [0, 4, 0], [4, 8, 4]);
+  P := S7PlusBuildDBStructPlan(L, 'DB4', 'meu', 0, true);
+  AssertEquals('only the variables of DB4', 2, Length(P[0].StructItems));
+  AssertEquals('meuDB4', P[0].CompName);
+  AssertEquals('meuDB4_Var2', P[0].StructItems[1].CompName);
+end;
+
+procedure TTestS7PlusTagPlan.AnAreaIsNotADBStructure;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := ListSized(['MArea.Clock_10Hz'], [1], [0], [0]);
+  AssertEquals(0, Length(S7PlusBuildDBStructPlan(L, 'MArea', 'tag', 0, true)));
+end;
+
+procedure TTestS7PlusTagPlan.ADBStructureHasItsStringsAndTheElementsOfItsArrays;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := ListSized(['DB4.Nome', 'DB4.Outra', 'DB4.Teste', 'DB4.Teste[0]', 'DB4.Teste[1]'], [19, 19, 6, 6, 6],
+                 [10, 70, 100, -1, -1], [10, 70, 100, -1, -1]);
+  L[0].StringLength := 50;
+  P := S7PlusBuildDBStructPlan(L, 'DB4', 'tag', 0, true);
+  AssertEquals('the string with no length read is left out; the two elements are in', 3, Length(P[0].StructItems));
+  AssertTrue('a text item', P[0].StructItems[0].IsString);
+  AssertEquals(50, P[0].StructItems[0].StringSize);
+  AssertEquals('Teste[1] at 100 + 4', 104, P[0].StructItems[2].Offset);
+end;
+
+procedure TTestS7PlusTagPlan.ADBStructureHasTheMembersOfEveryIndexOfAnArrayOfStructures;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := StructArrayList(false);
+  P := S7PlusBuildDBStructPlan(L, 'DB4', 'tag', 0, true);
+  AssertEquals('2 elements x 3 members', 6, Length(P[0].StructItems));
+  AssertEquals('var28[0].Dint1', 526, P[0].StructItems[0].Offset);
+  AssertEquals('var28[1].aInt', 540, P[0].StructItems[5].Offset);
+  AssertEquals('the DB read covers the array', 526+16, P[0].Size);
 end;
 
 procedure TTestS7PlusTagPlan.ANegativeIndexIsNotTheSameNameAsThePositiveOne;
