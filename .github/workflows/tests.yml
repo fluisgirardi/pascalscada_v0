@@ -241,7 +241,9 @@ jobs:
               lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
 
               tests/bin/pascalscada_tests --all --format=plain
-              tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux32.xml
+              tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux32.xml || { rc=$?; echo "tests exited with $rc"; \
+                grep -n -E "NumberOf(Errors|Failures)" tests/results-linux32.xml; \
+                grep -B4 -A2 -E "<ExceptionClass>E[^I]" tests/results-linux32.xml; exit $rc; }
             '
 
       - uses: actions/upload-artifact@v4
@@ -282,7 +284,9 @@ jobs:
       - name: Run the tests
         run: |
           tests/bin/pascalscada_tests --all --format=plain
-          tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux-aarch64.xml
+          tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux-aarch64.xml || { rc=$?; echo "tests exited with $rc"; \
+            grep -n -E "NumberOf(Errors|Failures)" tests/results-linux-aarch64.xml; \
+            grep -B4 -A2 -E "<ExceptionClass>E[^I]" tests/results-linux-aarch64.xml; exit $rc; }
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -331,7 +335,9 @@ jobs:
               lazbuild --build-all --widgetset=nogui tests/pascalscada_tests.lpi
 
               tests/bin/pascalscada_tests --all --format=plain
-              tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux-armhf.xml
+              tests/bin/pascalscada_tests --all --format=xml --file=tests/results-linux-armhf.xml || { rc=$?; echo "tests exited with $rc"; \
+                grep -n -E "NumberOf(Errors|Failures)" tests/results-linux-armhf.xml; \
+                grep -B4 -A2 -E "<ExceptionClass>E[^I]" tests/results-linux-armhf.xml; exit $rc; }
             '
 
       - uses: actions/upload-artifact@v4
