@@ -181,7 +181,7 @@ Formas de equipamentos desenhadas pelo PascalSCADA (via BGRABitmap, sem imagens 
 | ![](img/THMIElevadorBasico.png) `THMIElevadorBasico` | Elevador de canecas (`HeadAtLeft`, `HeadColor`, `FooterColor`, `BodyWidth`). |
 | ![](img/THMIPolyline.png) `THMIPolyline` | Linha poligonal — tubulação, cabo, fio. Pontos em `PointCoordinates`, `LineColor`, `LineWidth`, `PenStyle`. |
 | `THMIBandeja` | Painel ("bandeja") cujas cores de borda e fundo vêm de tags (`BorderColorPLCTag`, `BackgroundColorPLCTag`, valores `TColor`) e cujo texto vem de um `TPLCStructString` (`BandejaTextPLCTag`). Feito para painéis sinóticos de silos e moegas dirigidos pelo CLP. |
-| `THMIBasicVectorControl` | Desenho **SVG** (`SVGContents`, colado do arquivo) com `Stretch`/`Proportional`. É a base dos controles vetoriais de fluxo, que trocam a cor de elementos do SVG por zona. |
+| `THMIBasicVectorControl` | Desenho **SVG** (`SVGContents`; no editor da propriedade, o botão **Carregar...** lê o conteúdo de um arquivo `.svg`) com `Stretch`/`Proportional`. É a base dos controles vetoriais de fluxo, que trocam a cor de elementos do SVG por zona. |
 
 ##### Gráficos: TTagLinkedSeriesSource
 

@@ -181,7 +181,7 @@ Equipment shapes drawn by PascalSCADA (through BGRABitmap, no external images), 
 | ![](img/THMIElevadorBasico.png) `THMIElevadorBasico` | Bucket elevator (`HeadAtLeft`, `HeadColor`, `FooterColor`, `BodyWidth`). |
 | ![](img/THMIPolyline.png) `THMIPolyline` | Polyline — pipe, cable, wire. Points in `PointCoordinates`, `LineColor`, `LineWidth`, `PenStyle`. |
 | `THMIBandeja` | Panel ("tray") whose border and background colours come from tags (`BorderColorPLCTag`, `BackgroundColorPLCTag`, `TColor` values) and whose text comes from a `TPLCStructString` (`BandejaTextPLCTag`). Made for silo and pit mimic panels driven by the PLC. |
-| `THMIBasicVectorControl` | **SVG** drawing (`SVGContents`, pasted from the file) with `Stretch`/`Proportional`. It is the base of the vector flow controls, which recolour SVG elements per zone. |
+| `THMIBasicVectorControl` | **SVG** drawing (`SVGContents`; in the property editor, the **Load...** button reads the content of an `.svg` file) with `Stretch`/`Proportional`. It is the base of the vector flow controls, which recolour SVG elements per zone. |
 
 ##### Charts: TTagLinkedSeriesSource
 
