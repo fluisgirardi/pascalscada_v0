@@ -19,13 +19,22 @@
   )
 
   As variáveis aparecem numa árvore: DB (ou área), depois as estruturas e as variáveis
-  dentro delas, como no TIA Portal. Marcar um DB ou uma estrutura marca todas as
-  variáveis que viram tag dentro dele (a marca fica parcial quando só algumas estão).
-
-  Um array de estruturas aparece como um tag só (o array todo, um TPLCStruct) e, sob ele,
-  cada elemento (Arr[0], Arr[1]...) como um nível da árvore, com os membros: cada membro de
-  um elemento, em qualquer profundidade (inclusive arrays de estruturas dentro dos elementos),
-  pode virar um tag solto, lido pelo caminho simbólico.
+  dentro delas, como no TIA Portal. O seletor "O que importar" separa a importação em
+  quatro modos, cada um mostrando só o que ele importa:
+  @unorderedList(
+    @item(Tags simples: todos os tags; cada um marcado vira um TPLCTagNumber (um TPLCString
+          para STRING), lido pelo caminho simbólico.)
+    @item(Arrays de tipos simples: cada um marcado vira um TPLCBlock, com a opção de criar
+          ou não os TPLCBlockElement dos elementos.)
+    @item(Estruturas: cada uma marcada vira um TPLCStruct, com a opção de criar ou não os
+          TPLCStructItem dos membros.)
+    @item(Arrays de estruturas: só o primeiro elemento aparece, com os membros; os membros
+          marcados são mapeados (TPLCStructItem) em todos os índices de um TPLCStruct que
+          cobre o array inteiro.)
+  )
+  O que foi marcado em cada modo é guardado: um clique no Importar cria o que foi marcado
+  nos quatro. Marcar um item NÃO marca os subitens dele; o menu de contexto (botão direito)
+  tem "Marcar todos os subitens" e "Desmarcar todos os subitens".
 
   As regras de quem vira tag estão em S7PlusTagPlan (e são testadas sem o IDE): só as
   variáveis escalares viram TPLCTagNumber, já com TagType e Swap* certos para o
@@ -57,13 +66,22 @@
   )
 
   The variables show on a tree: DB (or area), then the structures and the variables
-  inside them, as in TIA Portal. Checking a DB or a structure checks every variable
-  that becomes a tag inside it (the check is partial when only some are).
-
-  An array of structures shows as one tag (the whole array, a TPLCStruct) and, under it, each
-  element (Arr[0], Arr[1]...) as a level of the tree, with its members: every member of an
-  element, at any depth (arrays of structures inside the elements included), can become a
-  loose tag read by its symbolic path.
+  inside them, as in TIA Portal. The "What to import" selector splits the import in four
+  modes, each one showing only what it imports:
+  @unorderedList(
+    @item(Simple tags: every tag; each ticked one becomes a TPLCTagNumber (a TPLCString for
+          a STRING), read by its symbolic path.)
+    @item(Arrays of simple types: each ticked one becomes a TPLCBlock, with the option to
+          create or not the TPLCBlockElement of its elements.)
+    @item(Structures: each ticked one becomes a TPLCStruct, with the option to create or not
+          the TPLCStructItem of its members.)
+    @item(Arrays of structures: only the first element shows, with its members; the ticked
+          members are mapped (TPLCStructItem) to every index of a TPLCStruct that covers the
+          whole array.)
+  )
+  What was ticked in each mode is kept: one click on Import creates what was ticked in all
+  four. Ticking an item does NOT tick its sub-items; the context menu (right button) has
+  "Check all the sub-items" and "Uncheck all the sub-items".
 
   The rules of what becomes a tag are in S7PlusTagPlan (and are tested without the
   IDE): only scalar variables become a TPLCTagNumber, already with the right TagType and
@@ -87,7 +105,7 @@ interface
 uses
   {$IFDEF FPC}LResources,{$ENDIF}
   Classes, SysUtils, StrUtils, Types, Contnrs, Graphics, ImgList, Forms, Controls,
-  Dialogs, StdCtrls, ExtCtrls, ComCtrls, Spin, Tag, ProtocolTypes, S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, S7PlusTagPlan,
+  Dialogs, StdCtrls, ExtCtrls, ComCtrls, Menus, Spin, Tag, ProtocolTypes, S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, S7PlusTagPlan,
   S7PlusFamily;
 
 type
@@ -137,6 +155,7 @@ type
     edtFilter: TEdit;
     edtPrefix: TEdit;
     lblFilter: TLabel;
+    lblModeHint: TLabel;
     lblPrefix: TLabel;
     lblScan: TLabel;
     lblSelected: TLabel;
@@ -144,6 +163,7 @@ type
     pnlBottom: TPanel;
     pnlButtons: TPanel;
     pnlTop: TPanel;
+    rgMode: TRadioGroup;
     spinScan: TSpinEdit;
     tvTags: TTreeView;
     procedure btnBrowseClick(Sender: TObject);
@@ -156,6 +176,8 @@ type
     procedure FilterChanged(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure rgModeClick(Sender: TObject);
+    procedure SubItemsClick(Sender: TObject);
     procedure tvTagsExpanding(Sender: TObject; Node: TTreeNode; var AllowExpansion: Boolean);
     procedure tvTagsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tvTagsMouseDown(Sender: TObject; Button: TMouseButton;
@@ -163,7 +185,12 @@ type
   private
     FDriver:TS7CommPlusDriver;
     FCandidates:TS7PlusCandidateArray;
-    FChecked:array of Boolean;
+    FMode:TS7PlusImportMode;     //what the tree offers now
+    FChecks:array[TS7PlusImportMode] of array of Boolean;   //what is ticked, per mode
+    FCreate:array[TS7PlusImportMode] of Boolean;            //"also create the items", per mode
+    FArrOf, FMemOf:TIntegerDynArray;   //member of the first element of an array of structures (per candidate)
+    FPopup:TPopupMenu;
+    FMiCheckSub, FMiUncheckSub:TMenuItem;
     FInfos:TObjectList;          //owns the TS7PlusNodeInfo of the nodes
     FStateImages:TImageList;     //0 = unchecked, 1 = checked, 2 = partially checked
     FShownTags:LongInt;          //taggable variables on the tree now
@@ -179,6 +206,9 @@ type
     function  IsTaggable(aNode:TTreeNode):Boolean;
     procedure RebuildTree;
     procedure BuildBlock(aBlock:LongInt; aRoot:TTreeNode);
+    procedure ResizeChecks;
+    procedure ApplyMode;
+    function  IsSelectableIdx(aIndex:LongInt):Boolean;
     function  LoadBlock(aBlock:LongInt; aRoot:TTreeNode):Boolean;
     function  IsPending(aNode:TTreeNode):Boolean;
     function  RootText(aBlock:LongInt):String;
@@ -188,7 +218,6 @@ type
     procedure UpdateStates;
     function  UpdateNodeState(aNode:TTreeNode):LongInt;
     procedure SetBranch(aNode:TTreeNode; aValue:Boolean);
-    function  BranchAllChecked(aNode:TTreeNode):Boolean;
     procedure ToggleNode(aNode:TTreeNode);
     procedure SetAllShown(aMode:LongInt);
     procedure UpdateSelectedCount;
@@ -264,7 +293,80 @@ begin
   btnCancel.Caption           := SS7PTBCancel;
 
   lblStatus.Caption:=SS7PTBReadFirst;
-  UpdateSelectedCount;
+
+  rgMode.Caption:=SS7PTBModes;
+  rgMode.Items.Clear;
+  rgMode.Items.Add(SS7PTBModeSimple);
+  rgMode.Items.Add(SS7PTBModeArray);
+  rgMode.Items.Add(SS7PTBModeStruct);
+  rgMode.Items.Add(SS7PTBModeStructArray);
+
+  //a ticked item with sub-items ticks only itself: the sub-items come from this menu
+  FPopup:=TPopupMenu.Create(Self);
+  FMiCheckSub:=TMenuItem.Create(FPopup);
+  FMiCheckSub.Caption:=SS7PTBSelectSubItems;
+  FMiCheckSub.Tag:=1;
+  FMiCheckSub.OnClick:=@SubItemsClick;
+  FPopup.Items.Add(FMiCheckSub);
+  FMiUncheckSub:=TMenuItem.Create(FPopup);
+  FMiUncheckSub.Caption:=SS7PTBUnselectSubItems;
+  FMiUncheckSub.Tag:=0;
+  FMiUncheckSub.OnClick:=@SubItemsClick;
+  FPopup.Items.Add(FMiUncheckSub);
+  tvTags.PopupMenu:=FPopup;
+
+  FMode:=imSimple;
+  FCreate[imSimple]:=false;
+  FCreate[imArray]:=true;
+  FCreate[imStruct]:=true;
+  FCreate[imStructArray]:=true;
+  ApplyMode;
+end;
+
+//the check marks are kept per mode; the arrays grow with the candidates (new ones unticked)
+procedure TfrmS7PlusTagBuilder.ResizeChecks;
+var
+  m:TS7PlusImportMode;
+  old, c:LongInt;
+begin
+  for m:=Low(TS7PlusImportMode) to High(TS7PlusImportMode) do begin
+    old:=Length(FChecks[m]);
+    SetLength(FChecks[m], Length(FCandidates));
+    for c:=old to High(FChecks[m]) do
+      FChecks[m][c]:=false;
+  end;
+  S7PlusMapStructArrayMembers(FCandidates, FArrOf, FMemOf);
+end;
+
+function TfrmS7PlusTagBuilder.IsSelectableIdx(aIndex:LongInt):Boolean;
+begin
+  Result:=S7PlusSelectable(FCandidates[aIndex], FMode, FMemOf[aIndex]>=0);
+end;
+
+//what the controls say in the mode now: the option, the hint, and the tree
+procedure TfrmS7PlusTagBuilder.ApplyMode;
+begin
+  chkCreateElements.Checked:=FCreate[FMode];
+  chkCreateElements.Visible:=FMode in [imArray, imStruct];
+  if FMode=imArray then chkCreateElements.Caption:=SS7PTBCreateBlockElements
+  else chkCreateElements.Caption:=SS7PTBCreateStructItems;
+
+  lblModeHint.Visible:=FMode in [imSimple, imStructArray];
+  if FMode=imSimple then lblModeHint.Caption:=SS7PTBHintSimple
+  else lblModeHint.Caption:=SS7PTBHintStructArray;
+
+  //only the simple tags have variables that are listed and cannot be ticked
+  chkShowSkipped.Enabled:=FMode=imSimple;
+  RebuildTree;
+  if Length(FBlocks)>0 then UpdateStatus;
+end;
+
+procedure TfrmS7PlusTagBuilder.rgModeClick(Sender: TObject);
+begin
+  if rgMode.ItemIndex<0 then exit;
+  FCreate[FMode]:=chkCreateElements.Checked;
+  FMode:=TS7PlusImportMode(rgMode.ItemIndex);
+  ApplyMode;
 end;
 
 procedure TfrmS7PlusTagBuilder.FormDestroy(Sender: TObject);
@@ -324,7 +426,7 @@ var
   info:TS7PlusNodeInfo;
 begin
   info:=InfoOf(aNode);
-  Result:=Assigned(info) and (info.Index>=0) and (FCandidates[info.Index].Skip=srNone);
+  Result:=Assigned(info) and (info.Index>=0) and IsSelectableIdx(info.Index);
 end;
 
 function TfrmS7PlusTagBuilder.PassFilters(aIndex: LongInt): Boolean;
@@ -333,9 +435,19 @@ var
 begin
   Result:=false;
 
-  //structures are never listed on their own: they show as the level that holds their members
-  if FCandidates[aIndex].Skip=srNotAScalar then exit;
-  if (FCandidates[aIndex].Skip<>srNone) and (not chkShowSkipped.Checked) then exit;
+  case FMode of
+    imSimple: begin
+      //structures are never listed on their own: they show as the level that holds their members;
+      //arrays and arrays of structures have a mode of their own
+      if FCandidates[aIndex].Skip=srNotAScalar then exit;
+      if FCandidates[aIndex].IsArray or FCandidates[aIndex].IsStructArray then exit;
+      if (FCandidates[aIndex].Skip<>srNone) and (not chkShowSkipped.Checked) then exit;
+    end;
+    //only what the mode imports; the levels above come from the path
+    imArray, imStruct: if not IsSelectableIdx(aIndex) then exit;
+    //the array (the parent) and the members of its first element
+    imStructArray: if not (S7PlusIsStructArrayHead(FCandidates[aIndex]) or IsSelectableIdx(aIndex)) then exit;
+  end;
 
   aFilter:=Trim(edtFilter.Text);
   if (aFilter<>'') and (Pos(LowerCase(aFilter),LowerCase(FCandidates[aIndex].Path))=0) then exit;
@@ -538,7 +650,9 @@ begin
           end else begin
             info.Index:=c;
             aText:=aText+Decoration(c);
-            inc(FShownTags, Ord(FCandidates[c].Skip=srNone));
+            if FMode=imStruct then
+              aText:=aText+' ('+SizeText(FBlocks[aBlock].Cands, FCandidates[c].Path, false)+')';
+            inc(FShownTags, Ord(IsSelectableIdx(c)));
           end;
 
           node:=tvTags.Items.AddChild(aParent, aText);
@@ -610,12 +724,11 @@ begin
 
     first:=Length(FCandidates);
     SetLength(FCandidates, first+Length(local));
-    SetLength(FChecked, Length(FCandidates));
     for c:=0 to High(local) do begin
       FCandidates[first+c]:=local[c];
-      FChecked[first+c]:=false;
       if not (local[c].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
     end;
+    ResizeChecks;
 
     FBlocks[aBlock].First:=first;
     FBlocks[aBlock].Count:=Length(local);
@@ -691,7 +804,7 @@ begin
       UpdateNodeState(child);
       child:=child.GetNextSibling;
     end;
-    if FChecked[info.Index] then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
+    if FChecks[FMode][info.Index] then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
     aNode.StateIndex:=Result;
     exit;
   end;
@@ -736,34 +849,13 @@ begin
   UpdateSelectedCount;
 end;
 
-function TfrmS7PlusTagBuilder.BranchAllChecked(aNode: TTreeNode): Boolean;
-var
-  child: TTreeNode;
-begin
-  Result:=true;
-  if IsTaggable(aNode) then begin
-    Result:=FChecked[InfoOf(aNode).Index];
-    exit;
-  end;
-  if not aNode.HasChildren then exit;
-  child:=aNode.GetFirstChild;
-  while Assigned(child) do begin
-    if not BranchAllChecked(child) then begin
-      Result:=false;
-      exit;
-    end;
-    child:=child.GetNextSibling;
-  end;
-end;
-
+//ticks (or clears) the node, if it is something to tick, and everything under it
 procedure TfrmS7PlusTagBuilder.SetBranch(aNode: TTreeNode; aValue: Boolean);
 var
   child: TTreeNode;
 begin
-  if IsTaggable(aNode) then begin
-    FChecked[InfoOf(aNode).Index]:=aValue;
-    exit;
-  end;
+  if IsTaggable(aNode) then
+    FChecks[FMode][InfoOf(aNode).Index]:=aValue;
   child:=aNode.GetFirstChild;
   while Assigned(child) do begin
     SetBranch(child, aValue);
@@ -771,13 +863,26 @@ begin
   end;
 end;
 
-//a variable flips; a DB or structure checks everything under it, or clears it when it
-//was all checked already
+//a click flips ONLY that item: ticking something with sub-items does not tick them (the
+//popup menu does). A level that is not a tag on its own (a DB, a plain structure) has no mark
+//of its own to flip: it shows the state of what is under it.
 procedure TfrmS7PlusTagBuilder.ToggleNode(aNode: TTreeNode);
 begin
-  if IsPending(aNode) and (not LoadBlock(InfoOf(aNode).Block, aNode)) then exit;
-  if aNode.StateIndex<0 then exit;
-  SetBranch(aNode, not BranchAllChecked(aNode));
+  if not IsTaggable(aNode) then exit;
+  FChecks[FMode][InfoOf(aNode).Index]:=not FChecks[FMode][InfoOf(aNode).Index];
+  UpdateStates;
+end;
+
+//the popup menu: ticks or clears the node and all its sub-items, reading the DB first if it
+//was not read yet
+procedure TfrmS7PlusTagBuilder.SubItemsClick(Sender: TObject);
+var
+  n: TTreeNode;
+begin
+  n:=tvTags.Selected;
+  if not Assigned(n) then exit;
+  if IsPending(n) and (not LoadBlock(InfoOf(n).Block, n)) then exit;
+  SetBranch(n, TMenuItem(Sender).Tag=1);
   UpdateStates;
 end;
 
@@ -786,6 +891,12 @@ procedure TfrmS7PlusTagBuilder.tvTagsMouseDown(Sender: TObject; Button: TMouseBu
 var
   n: TTreeNode;
 begin
+  if Button=mbRight then begin
+    //the menu acts on the item under the mouse
+    n:=tvTags.GetNodeAt(X, Y);
+    if Assigned(n) then tvTags.Selected:=n;
+    exit;
+  end;
   if Button<>mbLeft then exit;
   if not (htOnStateIcon in tvTags.GetHitTestInfoAt(X, Y)) then exit;
   n:=tvTags.GetNodeAt(X, Y);
@@ -811,9 +922,9 @@ begin
     n:=tvTags.Items[c];
     if IsTaggable(n) then
       case aMode of
-        0: FChecked[InfoOf(n).Index]:=true;
-        1: FChecked[InfoOf(n).Index]:=false;
-        2: FChecked[InfoOf(n).Index]:=not FChecked[InfoOf(n).Index];
+        0: FChecks[FMode][InfoOf(n).Index]:=true;
+        1: FChecks[FMode][InfoOf(n).Index]:=false;
+        2: FChecks[FMode][InfoOf(n).Index]:=not FChecks[FMode][InfoOf(n).Index];
       end;
   end;
   UpdateStates;
@@ -821,13 +932,21 @@ end;
 
 procedure TfrmS7PlusTagBuilder.UpdateSelectedCount;
 var
-  c, total: LongInt;
+  c, total, here: LongInt;
+  m: TS7PlusImportMode;
 begin
   total:=0;
-  for c:=0 to High(FChecked) do
-    if FChecked[c] then inc(total);
+  here:=0;
+  for m:=Low(TS7PlusImportMode) to High(TS7PlusImportMode) do
+    for c:=0 to High(FChecks[m]) do
+      if FChecks[m][c] and S7PlusSelectable(FCandidates[c], m, FMemOf[c]>=0) then begin
+        inc(total);
+        if m=FMode then inc(here);
+      end;
 
-  lblSelected.Caption:=Format(SS7PTBSelectedCount,[total, FShownTags]);
+  lblSelected.Caption:=Format(SS7PTBSelectedCount,[here, FShownTags]);
+  if total>here then
+    lblSelected.Caption:=lblSelected.Caption+Format(SS7PTBOtherModes,[total-here]);
   btnOK.Enabled:=total>0;
 end;
 
@@ -873,7 +992,7 @@ begin
   end;
 
   SetLength(FCandidates, 0);
-  SetLength(FChecked, 0);
+  ResizeChecks;
   SetLength(FBlocks, 0);
   FSkippedCount:=0;
 
@@ -974,9 +1093,8 @@ begin
 
   FSkippedCount:=0;
   SetLength(FBlocks, 0);
-  SetLength(FChecked, Length(FCandidates));
+  ResizeChecks;
   for c:=0 to High(FCandidates) do begin
-    FChecked[c]:=false;
     if not (FCandidates[c].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
 
     levels:=S7PlusSplitPath(FCandidates[c].Path);
@@ -1056,10 +1174,21 @@ begin
 end;
 
 function TfrmS7PlusTagBuilder.GetImportPlan: TS7PlusImportItems;
+var
+  m: TS7PlusImportMode;
+  part: TS7PlusImportItems;
+  c, n: LongInt;
 begin
-  //a DB becomes one structure (with an item per ticked variable); the areas stay loose tags
-  Result:=S7PlusBuildImportPlan(FCandidates, FChecked, edtPrefix.Text, spinScan.Value,
-                                chkCreateElements.Checked);
+  FCreate[FMode]:=chkCreateElements.Checked;
+  SetLength(Result, 0);
+  //what was ticked in each mode: simple tags, arrays, structures, arrays of structures
+  for m:=Low(TS7PlusImportMode) to High(TS7PlusImportMode) do begin
+    part:=S7PlusBuildImportPlan(FCandidates, FChecks[m], m, edtPrefix.Text, spinScan.Value, FCreate[m]);
+    n:=Length(Result);
+    SetLength(Result, n+Length(part));
+    for c:=0 to High(part) do
+      Result[n+c]:=part[c];
+  end;
 end;
 
 end.
