@@ -19,10 +19,18 @@
   lista, então o driver lê o valor uma vez (ResolveStringLengths) e o primeiro byte
   dele é esse máximo; sem essa leitura (srStringLength) a STRING não vira tag.
 
-  Tudo o que é de um DATABLOCK é importado como uma ESTRUTURA, e não como tags soltos
-  (S7PlusBuildImportPlan): um TPLCStruct por DB, lido inteiro numa só varredura (o caminho é
-  o nome do DB), com um TPLCStructItem (TPLCStructString para STRING) por variável marcada,
-  cada um no seu byte da estrutura. As áreas I, Q e M continuam tags soltos.
+  A importação é separada em quatro modos (TS7PlusImportMode, S7PlusBuildImportPlan):
+  @unorderedList(
+    @item(imSimple: todos os tags simples; cada um marcado vira um TPLCTagNumber (um
+          TPLCString, se for STRING).)
+    @item(imArray: só arrays de tipos simples; cada um marcado vira um TPLCBlock, com ou sem
+          os TPLCBlockElement dos elementos.)
+    @item(imStruct: só estruturas; cada uma marcada vira um TPLCStruct (lida pelo caminho
+          dela), com ou sem os TPLCStructItem dos membros, cada um no seu byte.)
+    @item(imStructArray: só arrays de estruturas, com os membros do PRIMEIRO elemento
+          explodidos; os membros marcados são mapeados, como TPLCStructItem, em todos os
+          índices de um TPLCStruct que cobre o array inteiro.)
+  )
 
   O que não vira tag, e por quê: WSTRING, tipos de data/hora, estruturas inteiras (os membros aparecem um a um),
   elementos de array e tipos internos.
@@ -48,10 +56,18 @@
   first byte is that maximum; without that read (srStringLength) the STRING does
   not become a tag.
 
-  Everything that belongs to a DATABLOCK is imported as a STRUCTURE, not as loose tags
-  (S7PlusBuildImportPlan): one TPLCStruct per DB, read whole in one scan (its path is the
-  DB name), with one TPLCStructItem (TPLCStructString for a STRING) per ticked variable,
-  each at its own byte of the structure. The I, Q and M areas stay loose tags.
+  The import is split in four modes (TS7PlusImportMode, S7PlusBuildImportPlan):
+  @unorderedList(
+    @item(imSimple: every simple tag; each ticked one becomes a TPLCTagNumber (a
+          TPLCString, for a STRING).)
+    @item(imArray: only arrays of simple types; each ticked one becomes a TPLCBlock, with
+          or without the TPLCBlockElement of its elements.)
+    @item(imStruct: only structures; each ticked one becomes a TPLCStruct (read by its
+          path), with or without the TPLCStructItem of its members, each at its own byte.)
+    @item(imStructArray: only arrays of structures, with the members of the FIRST element
+          exploded; the ticked members are mapped, as TPLCStructItem, to every index of
+          a TPLCStruct that covers the whole array.)
+  )
 
   What does not become a tag, and why: WSTRING, date/time types, whole structures (their members are offered one
   by one), array elements and internal types.
@@ -182,6 +198,13 @@ type
   end;
   TS7PlusImportItems = array of TS7PlusImportItem;
 
+  {$IFDEF PORTUGUES}
+  //: O que o assistente importa de cada vez: tags simples, arrays de tipos simples, estruturas, arrays de estruturas.
+  {$ELSE}
+  //: What the wizard imports at a time: simple tags, arrays of simple types, structures, arrays of structures.
+  {$ENDIF}
+  TS7PlusImportMode = (imSimple, imArray, imStruct, imStructArray);
+
 {$IFDEF PORTUGUES}
 //: TagType e Swap* de um tipo escalar do CLP. False se o tipo não vira tag.
 {$ELSE}
@@ -283,24 +306,58 @@ function S7PlusContainerSize(const Candidates:TS7PlusCandidateArray; const Path:
 procedure S7PlusMarkArrays(var Candidates:TS7PlusCandidateArray);
 
 {$IFDEF PORTUGUES}
-//: O plano de importação do Tag Builder a partir dos candidatos marcados (Checked, na ordem de
-//: Candidates). Cada DB com algo marcado vira UM item IsStruct (um TPLCStruct do DB inteiro, com
-//: o tamanho da leitura do DB todo) com um StructItem por variável: os de primeiro nível no byte
-//: clássico (ByteOffset); os de dentro de uma estrutura no byte dela mais a distância na imagem
-//: de memória (a estrutura é lida com o layout real do CLP); os elementos de arrays e de arrays
-//: de estruturas só com CreateElements. Fora de um DB (áreas I, Q, M) cada variável é um tag solto
-//: (TPLCTagNumber, TPLCBlock ou TPLCString).
+//: Se a linha (um candidato) pode ser marcada no modo. StructArrayMember: a linha é um membro
+//: do primeiro elemento de um array de estruturas (ver S7PlusMapStructArrayMembers); só o
+//: modo imStructArray usa.
 {$ELSE}
-//: The Tag Builder import plan from the ticked candidates (Checked, in the order of Candidates).
-//: Every DB with something ticked becomes ONE IsStruct item (a TPLCStruct of the whole DB, sized
-//: as a whole DB read) with a StructItem per variable: top level ones at their classic byte
-//: (ByteOffset); the ones inside a structure at its byte plus their distance in the memory image
-//: (the structure is read in the PLC's real layout); the elements of arrays and of arrays of
-//: structures only with CreateElements. Outside a DB (the I, Q, M areas) each variable is a loose
-//: tag (TPLCTagNumber, TPLCBlock or TPLCString).
+//: Whether the row (a candidate) can be ticked in the mode. StructArrayMember: the row is a
+//: member of the first element of an array of structures (see S7PlusMapStructArrayMembers);
+//: only the imStructArray mode uses it.
+{$ENDIF}
+function S7PlusSelectable(const C:TS7PlusCandidate; Mode:TS7PlusImportMode; StructArrayMember:Boolean):Boolean;
+
+{$IFDEF PORTUGUES}
+//: A linha é o array de estruturas em si (o que o modo imStructArray mostra como pai dos membros).
+{$ELSE}
+//: The row is the array of structures itself (what the imStructArray mode shows as the parent
+//: of the members).
+{$ENDIF}
+function S7PlusIsStructArrayHead(const C:TS7PlusCandidate):Boolean;
+
+{$IFDEF PORTUGUES}
+//: Para cada candidato, o array de estruturas (ArrOf) e o membro dele (MemOf, índice em
+//: Members) que ele representa no primeiro elemento (Arr[0].x); -1 nos demais.
+{$ELSE}
+//: For each candidate, the array of structures (ArrOf) and the member of it (MemOf, index into
+//: Members) it stands for in the first element (Arr[0].x); -1 for the others.
+{$ENDIF}
+procedure S7PlusMapStructArrayMembers(const Candidates:TS7PlusCandidateArray;
+                                      out ArrOf, MemOf:TIntegerDynArray);
+
+{$IFDEF PORTUGUES}
+//: O plano de importação do Tag Builder a partir dos candidatos marcados (Checked, na ordem de
+//: Candidates), para UM modo (só entram as linhas que S7PlusSelectable aceita nele).
+//: imSimple: um item por tag (TPLCTagNumber, ou TPLCString para STRING). imArray: um TPLCBlock
+//: por array de escalares, com os nomes dos elementos se CreateElements. imStruct: um TPLCStruct
+//: por estrutura (caminho dela, tamanho de uma leitura dela), e, se CreateElements, um item por
+//: variável dentro dela, no byte dado pela distância na imagem de memória até a estrutura (que é
+//: lida com o layout real do CLP). imStructArray: um TPLCStruct por array de estruturas (o array
+//: todo, ElementCount x ElementSize bytes) com um item por membro marcado em CADA índice, nos
+//: bytes clássicos; CreateElements não vale (os itens são o que foi marcado).
+{$ELSE}
+//: The Tag Builder import plan from the ticked candidates (Checked, in the order of Candidates),
+//: for ONE mode (only the rows S7PlusSelectable accepts in it count). imSimple: an item per
+//: tag (TPLCTagNumber, or TPLCString for a STRING). imArray: a TPLCBlock per array of scalars,
+//: with the element names if CreateElements. imStruct: a TPLCStruct per structure (its path,
+//: the size of a read of it) and, if CreateElements, an item per variable inside it, at the byte
+//: given by the distance in the memory image to the structure (which is read in the PLC's real
+//: layout). imStructArray: a TPLCStruct per array of structures (the whole array, ElementCount x
+//: ElementSize bytes) with an item per ticked member at EVERY index, at the classic bytes;
+//: CreateElements does not apply (the items are what was ticked).
 {$ENDIF}
 function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
-                               const Prefix:String; Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems;
+                               Mode:TS7PlusImportMode; const Prefix:String; Scan:LongInt;
+                               CreateElements:Boolean):TS7PlusImportItems;
 
 {$IFDEF PORTUGUES}
 //: Os níveis de um caminho (BlocoSimbolico_4.Var26.v1 -> BlocoSimbolico_4, Var26, v1),
@@ -666,44 +723,70 @@ begin
   Result := true;
 end;
 
-//The byte of a variable of a DB in the structure that reads the whole DB: a top level variable
-//is at its classic byte; one inside a structure is at the byte of the top level structure (read
-//whole, in the PLC's real layout) plus its distance to it in the memory image.
-function DBOffsetOf(const Candidates:TS7PlusCandidateArray; Idx:Integer; out Off:Integer):Boolean;
-var
-  Levels:TStringArray;
-  T:Integer;
-  TPath:String;
+function S7PlusIsStructArrayHead(const C:TS7PlusCandidate):Boolean;
+begin
+  Result := C.IsStructArray and (C.Skip=srNone);
+end;
+
+function S7PlusSelectable(const C:TS7PlusCandidate; Mode:TS7PlusImportMode; StructArrayMember:Boolean):Boolean;
 begin
   Result := false;
-  Off := 0;
-  Levels := S7PlusSplitPath(Candidates[Idx].Path);
-  if Length(Levels)<2 then exit;
-  if Length(Levels)=2 then begin
-    if Candidates[Idx].ByteOffset<0 then exit;
-    Off := Candidates[Idx].ByteOffset;
-    Result := true;
-    exit;
+  case Mode of
+    imSimple:      Result := (C.Skip=srNone) and (not C.IsArray) and (not C.IsStructArray);
+    imArray:       Result := (C.Skip=srNone) and C.IsArray;
+    //a structure of its own (not one inside an element of an array), with a place in the image
+    imStruct:      Result := (C.Skip=srNotAScalar) and (TS7PlusSoftDataType(C.SoftDataType)=sdtSTRUCT) and
+                             (Pos('[', C.Path)=0) and (C.ImageOffset>=0) and
+                             (Length(S7PlusSplitPath(C.Path))>=2);
+    imStructArray: Result := StructArrayMember;
   end;
-  TPath := Levels[0]+'.'+Levels[1];
-  for T:=0 to High(Candidates) do
-    if Candidates[T].Path=TPath then begin
-      if (Candidates[T].ByteOffset<0) or (Candidates[T].ImageOffset<0) or (Candidates[Idx].ImageOffset<0) then exit;
-      Off := Candidates[T].ByteOffset+(Candidates[Idx].ImageOffset-Candidates[T].ImageOffset);
-      Result := true;
-      exit;
+end;
+
+procedure S7PlusMapStructArrayMembers(const Candidates:TS7PlusCandidateArray;
+  out ArrOf, MemOf:TIntegerDynArray);
+var
+  i, j, m:Integer;
+  Prefix, Rest:String;
+begin
+  SetLength(ArrOf, Length(Candidates));
+  SetLength(MemOf, Length(Candidates));
+  for i:=0 to High(Candidates) do begin
+    ArrOf[i] := -1;
+    MemOf[i] := -1;
+  end;
+
+  for i:=0 to High(Candidates) do begin
+    if not S7PlusIsStructArrayHead(Candidates[i]) then continue;
+    if Length(Candidates[i].ElementPaths)=0 then continue;
+    Prefix := Candidates[i].ElementPaths[0]+'.';
+    //the rows of the elements follow the array on the list
+    j := i+1;
+    while (j<=High(Candidates)) and (Pos(Candidates[i].Path+'[', Candidates[j].Path)=1) do begin
+      if Pos(Prefix, Candidates[j].Path)=1 then begin
+        Rest := Copy(Candidates[j].Path, Length(Prefix)+1, MaxInt);
+        for m:=0 to High(Candidates[i].Members) do
+          if Candidates[i].Members[m].Supported and SameText(Candidates[i].Members[m].Name, Rest) then begin
+            ArrOf[j] := i;
+            MemOf[j] := m;
+            break;
+          end;
+      end;
+      Inc(j);
     end;
+  end;
 end;
 
 function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
-  const Prefix:String; Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems;
+  Mode:TS7PlusImportMode; const Prefix:String; Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems;
 var
   Plan:TS7PlusImportItems;
-  Roots:TStringList;
   Ends:array of LongInt;       //per plan entry that is a structure: where its last item ends
-  c, k, m, p, n, Off, ElemSize, FinalCount:Integer;
-  Levels:TStringArray;
-  Exact:Boolean;
+  ArrOf, MemOf:TIntegerDynArray;
+  Sel:array of array of Boolean;   //per array of structures: the members ticked
+  ArrOrder:array of Integer;       //the arrays of structures, in the order they were first ticked
+  ArrEntry:array of Integer;
+  c, j, k, m, n, ElemSize, Rel:Integer;
+  Exact, AnyTicked:Boolean;
   Size:LongInt;
 
   function NewEntry:Integer;
@@ -734,20 +817,32 @@ var
     if AOffset+AByteSize>Ends[Entry] then Ends[Entry] := AOffset+AByteSize;
   end;
 
+  procedure AddMemberItem(Entry:Integer; const AName:String; AOffset:LongInt; const M:TS7PlusStructMember);
+  begin
+    if M.IsString then begin
+      if M.StringLength>=0 then
+        AddItem(Entry, AName, AOffset, pttDefault, false, false, false, true, M.StringLength, M.StringLength+2);
+    end else
+      AddItem(Entry, AName, AOffset, M.TagType, M.SwapBytes, M.SwapWords, M.SwapDWords, false, 0,
+              S7PlusDataTypeSize(M.SoftDataType, 0));
+  end;
+
 begin
   SetLength(Plan, 0);
   SetLength(Ends, 0);
-  Roots := TStringList.Create;
-  try
-    Roots.CaseSensitive := false;
-    for c:=0 to High(Candidates) do begin
-      if (c>High(Checked)) or (not Checked[c]) then continue;
-      if Candidates[c].Skip<>srNone then continue;
-      Levels := S7PlusSplitPath(Candidates[c].Path);
-      if Length(Levels)=0 then continue;
+  SetLength(ArrOrder, 0);
+  SetLength(ArrEntry, 0);
+  SetLength(Sel, Length(Candidates));
+  S7PlusMapStructArrayMembers(Candidates, ArrOf, MemOf);
 
-      if S7PlusIsAreaName(Levels[0]) or Candidates[c].ViaPath then begin
-        //an area, or a member inside an element of an array: loose tags, as always
+  for c:=0 to High(Candidates) do begin
+    if (c>High(Checked)) or (not Checked[c]) then continue;
+    if not S7PlusSelectable(Candidates[c], Mode, MemOf[c]>=0) then continue;
+
+    case Mode of
+      imSimple, imArray: begin
+        //a STRING whose maximum length was not read has no size to give the tag
+        if Candidates[c].IsString and (Candidates[c].StringLength<0) then continue;
         n := NewEntry;
         Plan[n].Path       := Candidates[c].Path;
         Plan[n].CompName   := S7PlusSuggestedName(Candidates[c].Path, Prefix);
@@ -767,78 +862,88 @@ begin
               Plan[n].ElementNames[k] := S7PlusSuggestedName(Candidates[c].ElementPaths[k], Prefix);
           end;
         end;
-        continue;
       end;
 
-      //a variable of a DB: an item of the structure of that DB
-      p := Roots.IndexOf(Levels[0]);
-      if p<0 then begin
+      imStruct: begin
+        //a TPLCStruct of the structure, read by its path
         n := NewEntry;
-        Plan[n].Path     := Levels[0];
-        Plan[n].CompName := S7PlusSuggestedName(Levels[0], Prefix);
+        Plan[n].Path     := Candidates[c].Path;
+        Plan[n].CompName := S7PlusSuggestedName(Candidates[c].Path, Prefix);
         Plan[n].IsStruct := true;
-        p := Roots.AddObject(Levels[0], TObject(PtrInt(n)));
+        if CreateElements then
+          for j:=0 to High(Candidates) do begin
+            if Pos(Candidates[c].Path+'.', Candidates[j].Path)<>1 then continue;
+            if Candidates[j].Skip<>srNone then continue;
+            //inside an array of structures: not handled here (the array has its own mode)
+            if Candidates[j].ViaPath or Candidates[j].IsStructArray then continue;
+            if Candidates[j].ImageOffset<0 then continue;
+            Rel := Candidates[j].ImageOffset-Candidates[c].ImageOffset;
+            if Rel<0 then continue;
+
+            if Candidates[j].IsArray then begin
+              ElemSize := S7PlusDataTypeSize(Candidates[j].SoftDataType, 0);
+              if ElemSize>0 then
+                for k:=0 to High(Candidates[j].ElementPaths) do
+                  AddItem(n, S7PlusSuggestedName(Candidates[j].ElementPaths[k], Prefix), Rel+k*ElemSize,
+                          Candidates[j].TagType, Candidates[j].SwapBytes, Candidates[j].SwapWords,
+                          Candidates[j].SwapDWords, false, 0, ElemSize);
+            end else if Candidates[j].IsString then begin
+              if Candidates[j].StringLength>=0 then
+                AddItem(n, S7PlusSuggestedName(Candidates[j].Path, Prefix), Rel, pttDefault, false, false,
+                        false, true, Candidates[j].StringLength, Candidates[j].StringLength+2);
+            end else
+              AddItem(n, S7PlusSuggestedName(Candidates[j].Path, Prefix), Rel, Candidates[j].TagType,
+                      Candidates[j].SwapBytes, Candidates[j].SwapWords, Candidates[j].SwapDWords, false, 0,
+                      S7PlusDataTypeSize(Candidates[j].SoftDataType, 0));
+          end;
+        //what a read of the structure returns, or where its last item ends if that is further
+        Size := StructSizeOf(Candidates, Candidates[c].Path, Exact);
+        if Ends[n]>Size then Size := Ends[n];
+        Plan[n].Size := Size;
       end;
-      n := PtrInt(Roots.Objects[p]);
 
-      if Candidates[c].IsStructArray then begin
-        //an array of structures: an item per member of each element (classic bytes)
-        if CreateElements and (Length(Levels)=2) and (Candidates[c].ByteOffset>=0) then
-          for k:=0 to Candidates[c].ElementCount-1 do
-            for m:=0 to High(Candidates[c].Members) do begin
-              if not Candidates[c].Members[m].Supported then continue;
-              if Candidates[c].Members[m].IsString and (Candidates[c].Members[m].StringLength<0) then continue;
-              Off := Candidates[c].ByteOffset+k*Candidates[c].ElementSize+Candidates[c].Members[m].Offset;
-              if Candidates[c].Members[m].IsString then
-                AddItem(n, S7PlusSuggestedName(Candidates[c].ElementPaths[k]+'.'+Candidates[c].Members[m].Name, Prefix),
-                        Off, pttDefault, false, false, false, true, Candidates[c].Members[m].StringLength,
-                        Candidates[c].Members[m].StringLength+2)
-              else
-                AddItem(n, S7PlusSuggestedName(Candidates[c].ElementPaths[k]+'.'+Candidates[c].Members[m].Name, Prefix),
-                        Off, Candidates[c].Members[m].TagType, Candidates[c].Members[m].SwapBytes,
-                        Candidates[c].Members[m].SwapWords, Candidates[c].Members[m].SwapDWords, false, 0,
-                        S7PlusDataTypeSize(Candidates[c].Members[m].SoftDataType, 0));
-            end;
-        continue;
+      imStructArray: begin
+        //only note what was ticked: the structure is made below, once per array
+        k := ArrOf[c];
+        if Length(Sel[k])=0 then begin
+          SetLength(Sel[k], Length(Candidates[k].Members));
+          for m:=0 to High(Sel[k]) do Sel[k][m] := false;
+          SetLength(ArrOrder, Length(ArrOrder)+1);
+          ArrOrder[High(ArrOrder)] := k;
+        end;
+        Sel[k][MemOf[c]] := true;
       end;
-
-      if not DBOffsetOf(Candidates, c, Off) then continue;
-
-      if Candidates[c].IsArray then begin
-        //an array of scalars: one item per element
-        ElemSize := S7PlusDataTypeSize(Candidates[c].SoftDataType, 0);
-        if CreateElements and (ElemSize>0) then
-          for k:=0 to High(Candidates[c].ElementPaths) do
-            AddItem(n, S7PlusSuggestedName(Candidates[c].ElementPaths[k], Prefix), Off+k*ElemSize,
-                    Candidates[c].TagType, Candidates[c].SwapBytes, Candidates[c].SwapWords,
-                    Candidates[c].SwapDWords, false, 0, ElemSize);
-      end else if Candidates[c].IsString then begin
-        if Candidates[c].StringLength>=0 then
-          AddItem(n, S7PlusSuggestedName(Candidates[c].Path, Prefix), Off, pttDefault, false, false, false,
-                  true, Candidates[c].StringLength, Candidates[c].StringLength+2);
-      end else
-        AddItem(n, S7PlusSuggestedName(Candidates[c].Path, Prefix), Off, Candidates[c].TagType,
-                Candidates[c].SwapBytes, Candidates[c].SwapWords, Candidates[c].SwapDWords, false, 0,
-                S7PlusDataTypeSize(Candidates[c].SoftDataType, 0));
     end;
-
-    //the size of each structure: a whole DB read, or where its last item ends if that is further
-    FinalCount := 0;
-    SetLength(Result, Length(Plan));
-    for c:=0 to High(Plan) do begin
-      if Plan[c].IsStruct then begin
-        if Length(Plan[c].StructItems)=0 then continue;      //nothing to put in it
-        Size := S7PlusContainerSize(Candidates, Plan[c].Path, true, Exact);
-        if Ends[c]>Size then Size := Ends[c];
-        Plan[c].Size := Size;
-      end;
-      Result[FinalCount] := Plan[c];
-      Inc(FinalCount);
-    end;
-    SetLength(Result, FinalCount);
-  finally
-    Roots.Free;
   end;
+
+  for j:=0 to High(ArrOrder) do begin
+    k := ArrOrder[j];
+    if (Candidates[k].ElementSize<=0) or (Candidates[k].ElementCount<=0) then continue;
+    AnyTicked := false;
+    for m:=0 to High(Sel[k]) do AnyTicked := AnyTicked or Sel[k][m];
+    if not AnyTicked then continue;
+
+    n := NewEntry;
+    Plan[n].Path     := Candidates[k].Path;
+    Plan[n].CompName := S7PlusSuggestedName(Candidates[k].Path, Prefix);
+    Plan[n].IsStruct := true;
+    Plan[n].Size     := Candidates[k].ElementCount*Candidates[k].ElementSize;
+    //the members ticked on the first element, repeated in every index
+    for c:=0 to Candidates[k].ElementCount-1 do
+      for m:=0 to High(Sel[k]) do
+        if Sel[k][m] then
+          AddMemberItem(n, S7PlusSuggestedName(Candidates[k].ElementPaths[c]+'.'+Candidates[k].Members[m].Name, Prefix),
+                        c*Candidates[k].ElementSize+Candidates[k].Members[m].Offset, Candidates[k].Members[m]);
+    if Length(Plan[n].StructItems)=0 then begin
+      //every ticked member was left out (a STRING whose length is unknown): nothing to read
+      SetLength(Plan, n);
+      SetLength(Ends, n);
+      continue;
+    end;
+    if Ends[n]>Plan[n].Size then Plan[n].Size := Ends[n];
+  end;
+
+  Result := Plan;
 end;
 
 function S7PlusIsAreaName(const S:String):Boolean;
