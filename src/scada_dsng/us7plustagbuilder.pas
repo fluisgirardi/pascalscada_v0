@@ -785,54 +785,22 @@ end;
 function TfrmS7PlusTagBuilder.UpdateNodeState(aNode: TTreeNode): LongInt;
 var
   child: TTreeNode;
-  childState, checked, unchecked: LongInt;
-  info: TS7PlusNodeInfo;
 begin
-  info:=InfoOf(aNode);
-
-  //a block not read yet: unchecked until it is (ticking it reads it)
-  if IsPending(aNode) then begin
-    Result:=STATE_UNCHECKED;
-    aNode.StateIndex:=Result;
-    exit;
-  end;
-
-  //an array is one tag whatever is listed below it (its elements, when shown)
-  if IsTaggable(aNode) then begin
+  //a block not read yet has nothing under it to show
+  if not IsPending(aNode) then begin
     child:=aNode.GetFirstChild;
     while Assigned(child) do begin
       UpdateNodeState(child);
       child:=child.GetNextSibling;
     end;
-    if FChecks[FMode][info.Index] then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
-    aNode.StateIndex:=Result;
-    exit;
   end;
 
-  if not aNode.HasChildren then begin
+  //only what is a tag has a check mark, and it is ITS OWN: a parent never shows (or takes) the
+  //mark of what is under it, so ticking a few elements of an array does not tick the array
+  if (not IsPending(aNode)) and IsTaggable(aNode) then begin
+    if FChecks[FMode][InfoOf(aNode).Index] then Result:=STATE_CHECKED else Result:=STATE_UNCHECKED;
+  end else
     Result:=-1;
-    aNode.StateIndex:=Result;
-    exit;
-  end;
-
-  checked:=0;
-  unchecked:=0;
-  child:=aNode.GetFirstChild;
-  while Assigned(child) do begin
-    childState:=UpdateNodeState(child);
-    case childState of
-      STATE_CHECKED:   inc(checked);
-      STATE_UNCHECKED: inc(unchecked);
-      STATE_PARTIAL:   begin inc(checked); inc(unchecked); end;
-    end;
-    child:=child.GetNextSibling;
-  end;
-
-  if (checked=0) and (unchecked=0) then Result:=-1
-  else if unchecked=0 then Result:=STATE_CHECKED
-  else if checked=0 then Result:=STATE_UNCHECKED
-  else Result:=STATE_PARTIAL;
-
   aNode.StateIndex:=Result;
 end;
 
