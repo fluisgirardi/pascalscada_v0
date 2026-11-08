@@ -357,7 +357,33 @@ procedure S7PlusMapStructArrayMembers(const Candidates:TS7PlusCandidateArray;
 {$ENDIF}
 function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
                                Mode:TS7PlusImportMode; const Prefix:String; Scan:LongInt;
-                               CreateElements:Boolean):TS7PlusImportItems;
+                               CreateElements:Boolean):TS7PlusImportItems; overload;
+
+{$IFDEF PORTUGUES}
+//: O mesmo, com os níveis (pais) marcados: Groups são os caminhos da árvore marcados que não são
+//: um tag do modo (um DB, uma estrutura que só agrupa, o array de estruturas). Um pai marcado,
+//: seja um Groups ou um candidato de Checked, cria TODOS os subitens dele.
+{$ELSE}
+//: The same, with the levels (parents) ticked: Groups are the ticked tree paths that are not a tag
+//: of the mode (a DB, a structure that only groups, the array of structures). A ticked parent,
+//: be it a Groups entry or a candidate of Checked, creates ALL of its sub-items.
+{$ENDIF}
+function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+                               const Groups:array of String; Mode:TS7PlusImportMode; const Prefix:String;
+                               Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems; overload;
+
+{$IFDEF PORTUGUES}
+//: Quais candidatos valem como marcados: os de Checked e todos os que estão abaixo de um pai
+//: marcado (um caminho de Groups ou um candidato de Checked). O pai de um elemento de array
+//: (Arr[0]) é o array (Arr).
+{$ELSE}
+//: Which candidates count as ticked: the ones in Checked and all those under a ticked parent
+//: (a Groups path or a candidate of Checked). The parent of an array element (Arr[0]) is the
+//: array (Arr).
+{$ENDIF}
+function S7PlusEffectiveChecked(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+                                const Groups:array of String):TBooleanDynArray;
+
 
 {$IFDEF PORTUGUES}
 //: Um DB inteiro como UMA estrutura (um TPLCStruct lido pelo nome do DB, do tamanho da leitura do
@@ -794,7 +820,7 @@ begin
   end;
 end;
 
-function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+function PlanOfEffective(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
   Mode:TS7PlusImportMode; const Prefix:String; Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems;
 var
   Plan:TS7PlusImportItems;
@@ -962,6 +988,87 @@ begin
   end;
 
   Result := Plan;
+end;
+
+//the keys the tree gives to the levels above a path (DB, structure, Arr[0]); the parent of an
+//element of an array is the array itself
+procedure AncestorKeys(const Path:String; Keys:TStringList);
+var
+  Levels:TStringArray;
+  k, p:Integer;
+  Key, Base:String;
+begin
+  Keys.Clear;
+  Levels := S7PlusSplitPath(Path);
+  Key := '';
+  for k:=0 to High(Levels)-1 do begin
+    Base := Key;
+    if Base<>'' then Base := Base+'.';
+    p := Pos('[', Levels[k]);
+    if (p>1) and (Levels[k][Length(Levels[k])]=']') then
+      Keys.Add(Base+Copy(Levels[k], 1, p-1));
+    Key := Base+Levels[k];
+    Keys.Add(Key);
+  end;
+  //an element of an array (Arr[0]) is also under the array
+  if Length(Levels)>0 then begin
+    Base := Key;
+    if Base<>'' then Base := Base+'.';
+    p := Pos('[', Levels[High(Levels)]);
+    if (p>1) and (Levels[High(Levels)][Length(Levels[High(Levels)])]=']') then
+      Keys.Add(Base+Copy(Levels[High(Levels)], 1, p-1));
+  end;
+end;
+
+function S7PlusEffectiveChecked(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+  const Groups:array of String):TBooleanDynArray;
+var
+  Cover, Keys:TStringList;
+  c, k, p:Integer;
+begin
+  SetLength(Result, Length(Candidates));
+  Cover := TStringList.Create;
+  Keys := TStringList.Create;
+  try
+    Cover.CaseSensitive := false;
+    Cover.Sorted := true;
+    Cover.Duplicates := dupIgnore;
+    for k:=0 to High(Groups) do
+      Cover.Add(Groups[k]);
+    for c:=0 to High(Candidates) do
+      if (c<=High(Checked)) and Checked[c] then
+        Cover.Add(Candidates[c].Path);
+
+    for c:=0 to High(Candidates) do begin
+      Result[c] := (c<=High(Checked)) and Checked[c];
+      if Result[c] or (Cover.Count=0) then continue;
+      AncestorKeys(Candidates[c].Path, Keys);
+      for k:=0 to Keys.Count-1 do
+        if Cover.Find(Keys[k], p) then begin
+          Result[c] := true;
+          break;
+        end;
+    end;
+  finally
+    Keys.Free;
+    Cover.Free;
+  end;
+end;
+
+function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+  const Groups:array of String; Mode:TS7PlusImportMode; const Prefix:String; Scan:LongInt;
+  CreateElements:Boolean):TS7PlusImportItems;
+var
+  Eff:TBooleanDynArray;
+begin
+  Eff := S7PlusEffectiveChecked(Candidates, Checked, Groups);
+  Result := PlanOfEffective(Candidates, Eff, Mode, Prefix, Scan, CreateElements);
+end;
+
+function S7PlusBuildImportPlan(const Candidates:TS7PlusCandidateArray; const Checked:array of Boolean;
+  Mode:TS7PlusImportMode; const Prefix:String; Scan:LongInt; CreateElements:Boolean):TS7PlusImportItems;
+begin
+  Result := S7PlusBuildImportPlan(Candidates, Checked, [], Mode, Prefix, Scan, CreateElements);
 end;
 
 //The byte of a variable of a DB in the structure that reads the whole DB: a top level variable
