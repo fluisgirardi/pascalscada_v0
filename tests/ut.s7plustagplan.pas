@@ -115,6 +115,12 @@ type
     procedure AnAreaIsNotADBStructure;
     procedure ADBStructureHasItsStringsAndTheElementsOfItsArrays;
     procedure ADBStructureHasTheMembersOfEveryIndexOfAnArrayOfStructures;
+    procedure ATickedParentCreatesAllItsSubItems;
+    procedure AParentTickedAsAGroupCreatesWhatIsUnderIt;
+    procedure TheElementLevelOfAnArrayOfStructuresIsAGroup;
+    procedure ATickedArrayOfStructuresMapsEveryMember;
+    procedure TickedSubItemsDoNotTickTheParent;
+    procedure AGroupThatIsAnArrayCoversItsElements;
     procedure ANegativeIndexIsNotTheSameNameAsThePositiveOne;
     procedure AnAreaTagHasTheAreaAsItsParent;
   end;
@@ -1145,8 +1151,9 @@ var
   P:TS7PlusImportItems;
 begin
   L := StructArrayList(false);
-  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [0, 1, 5, 6]), imStructArray, 'tag', 0, true);
-  AssertEquals('the array, the element and the second element are not members of the first', 0, Length(P));
+  //the second element is not offered, and the element is only a level: nothing to map
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [5, 6]), imStructArray, 'tag', 0, true);
+  AssertEquals(0, Length(P));
 end;
 
 procedure TTestS7PlusTagPlan.StructArrayModeLeavesOutAStringWithoutLength;
@@ -1268,6 +1275,84 @@ begin
   AssertEquals('var28[0].Dint1', 526, P[0].StructItems[0].Offset);
   AssertEquals('var28[1].aInt', 540, P[0].StructItems[5].Offset);
   AssertEquals('the DB read covers the array', 526+16, P[0].Size);
+end;
+
+procedure TTestS7PlusTagPlan.ATickedParentCreatesAllItsSubItems;
+var
+  L:TS7PlusCandidateArray;
+  E:TBooleanDynArray;
+begin
+  L := Db4Like;
+  //only the structure ticked: every member under it counts as ticked, the rest does not
+  E := S7PlusEffectiveChecked(L, Ticked(Length(L), [2]), []);
+  AssertFalse('Var1 is not under it', E[0]);
+  AssertTrue('the structure', E[2]);
+  AssertTrue('v1', E[3]);
+  AssertTrue('Static_4', E[10]);
+end;
+
+procedure TTestS7PlusTagPlan.AParentTickedAsAGroupCreatesWhatIsUnderIt;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := Db4Like;
+  //Var26 is a level of the tree (not a tag in the simple mode): ticked as a group
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4.Var26'], imSimple, 'tag', 0, true);
+  AssertEquals('the 8 members of Var26', 8, Length(P));
+  AssertEquals('DB4.Var26.v1', P[0].Path);
+  //the whole DB ticked
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4'], imSimple, 'tag', 0, true);
+  AssertEquals('every scalar of the DB', 10, Length(P));
+end;
+
+procedure TTestS7PlusTagPlan.TheElementLevelOfAnArrayOfStructuresIsAGroup;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := StructArrayList(false);
+  //the level "var28[1]" of the tree: the simple tags of that element only
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4.var28[1]'], imSimple, 'tag', 0, true);
+  AssertEquals(3, Length(P));
+  AssertEquals('DB4.var28[1].Dint1', P[0].Path);
+end;
+
+procedure TTestS7PlusTagPlan.ATickedArrayOfStructuresMapsEveryMember;
+var
+  L:TS7PlusCandidateArray;
+  P:TS7PlusImportItems;
+begin
+  L := StructArrayList(false);
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), [0]), imStructArray, 'tag', 0, true);
+  AssertEquals(1, Length(P));
+  AssertEquals('3 members x 2 indexes', 6, Length(P[0].StructItems));
+  //and the same when the array is covered by its DB
+  P := S7PlusBuildImportPlan(L, Ticked(Length(L), []), ['DB4'], imStructArray, 'tag', 0, true);
+  AssertEquals(6, Length(P[0].StructItems));
+end;
+
+procedure TTestS7PlusTagPlan.TickedSubItemsDoNotTickTheParent;
+var
+  L:TS7PlusCandidateArray;
+  E:TBooleanDynArray;
+begin
+  L := Db4Like;
+  E := S7PlusEffectiveChecked(L, Ticked(Length(L), [3]), []);
+  AssertTrue(E[3]);
+  AssertFalse('the structure above is not ticked', E[2]);
+  AssertFalse('nor the siblings', E[4]);
+end;
+
+procedure TTestS7PlusTagPlan.AGroupThatIsAnArrayCoversItsElements;
+var
+  L:TS7PlusCandidateArray;
+  E:TBooleanDynArray;
+begin
+  L := ListSized(['DB5.Teste', 'DB5.Teste[0]', 'DB5.Teste[1]', 'DB5.x'], [6, 6, 6, 7], [0, -1, -1, 12], [0, -1, -1, 12]);
+  E := S7PlusEffectiveChecked(L, Ticked(Length(L), [0]), []);
+  AssertTrue('the elements are under the array', E[1] and E[2]);
+  AssertFalse('the other variable is not', E[3]);
 end;
 
 procedure TTestS7PlusTagPlan.ANegativeIndexIsNotTheSameNameAsThePositiveOne;
