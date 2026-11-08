@@ -702,7 +702,7 @@ end;
 //False when it has something this does not handle (a structure or an array inside it).
 function StructArrayOf(var Candidates:TS7PlusCandidateArray; ArrIdx:Integer):Boolean;
 var
-  j, k, Count, ElemStart, Extent, End_:Integer;
+  j, k, Count, ElemStart, Extent, End_, HeadIdx, HeadN, LeafOff:Integer;
   Rest, Prefix0:String;
   ElemIdx:array of Integer;
   M:TS7PlusStructMember;
@@ -728,6 +728,8 @@ begin
   ElemStart := Candidates[ElemIdx[0]].ByteOffset;
   Prefix0 := Candidates[ElemIdx[0]].Path+'.';
   Extent := 0;
+  HeadIdx := -1;
+  HeadN := 0;
   SetLength(Candidates[ArrIdx].Members, 0);
   for k:=ElemIdx[0]+1 to High(Candidates) do begin
     if Pos(Prefix0, Candidates[k].Path)<>1 then break;
@@ -735,14 +737,27 @@ begin
     //what is inside the element, however deep (structures and arrays in it), counts by its leaves:
     //the structures themselves are only levels
     if TS7PlusSoftDataType(Candidates[k].SoftDataType)=sdtSTRUCT then continue;
-    if Candidates[k].ByteOffset<0 then exit;
     //the head of an array of scalars: its elements (listed next) are the members
-    if (k<High(Candidates)) and (Pos(Candidates[k].Path+'[', Candidates[k+1].Path)=1) then continue;
+    if (k<High(Candidates)) and (Pos(Candidates[k].Path+'[', Candidates[k+1].Path)=1) then begin
+      if Candidates[k].ByteOffset<0 then exit;
+      HeadIdx := k;
+      HeadN := 0;
+      continue;
+    end;
+    //an element of an array of scalars has no offset of its own on the PLC's list (-1): it is
+    //where its array is, plus its place in the array (the elements are listed in block order)
+    LeafOff := Candidates[k].ByteOffset;
+    if (LeafOff<0) and (HeadIdx>=0) and (Candidates[k].Skip=srArrayElement) and
+       (Pos(Candidates[HeadIdx].Path+'[', Candidates[k].Path)=1) then begin
+      LeafOff := Candidates[HeadIdx].ByteOffset+HeadN*S7PlusDataTypeSize(Candidates[k].SoftDataType, 0);
+      Inc(HeadN);
+    end;
+    if LeafOff<0 then exit;
 
     Finalize(M);                //it holds strings and an array: FillChar alone would leak the last ones
     FillChar(M, SizeOf(M), 0);
     M.Name := Rest;
-    M.Offset := Candidates[k].ByteOffset-ElemStart;
+    M.Offset := LeafOff-ElemStart;
     M.SoftDataType := Candidates[k].SoftDataType;
     M.StringLength := -1;
     M.AccessArea := Candidates[k].AccessArea;

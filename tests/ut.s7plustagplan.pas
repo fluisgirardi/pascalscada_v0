@@ -125,6 +125,8 @@ type
     procedure ATickedArrayInTheSimpleModeCreatesAllItsElements;
     procedure OnlyTheTickedElementsOfAnArrayAreCreated;
     procedure AnElementOfAnArrayInsideAnElementOfAnArrayOfStructuresIsASimpleTag;
+    procedure AnArrayOfStructuresWhoseElementsHoldAnArrayOfScalarsIsRecognized;
+    procedure TheElementsOfTheInnerArrayAreMembersAtTheirPlaceInTheArray;
     procedure ANegativeIndexIsNotTheSameNameAsThePositiveOne;
     procedure AnAreaTagHasTheAreaAsItsParent;
   end;
@@ -1407,6 +1409,41 @@ begin
                  [17, 17, 5, 5, 5], [0, 0, 0, 0, 2], [0, -1, -1, -1, -1]);
   AssertTrue('V[1]', L[3].IsElement);
   AssertTrue('V is an array of scalars inside the element', L[2].IsArray);
+end;
+
+//the shape of DBCfgs_RO.IPV4Addr_BL on a real PLC: Array[1..2] of Struct { ADDR: Array[1..4] of Byte }; the
+//elements of the inner array have no offset of their own (-1)
+function InnerArrayList:TS7PlusCandidateArray;
+begin
+  Result := ListSized(['DB7.Arr', 'DB7.Arr[1]', 'DB7.Arr[1].ADDR', 'DB7.Arr[1].ADDR[1]', 'DB7.Arr[1].ADDR[2]',
+                       'DB7.Arr[1].ADDR[3]', 'DB7.Arr[1].ADDR[4]',
+                       'DB7.Arr[2]', 'DB7.Arr[2].ADDR', 'DB7.Arr[2].ADDR[1]', 'DB7.Arr[2].ADDR[2]',
+                       'DB7.Arr[2].ADDR[3]', 'DB7.Arr[2].ADDR[4]'],
+                      [17, 17, 2, 2, 2, 2, 2, 17, 2, 2, 2, 2, 2],
+                      [0, 0, 0, -1, -1, -1, -1, 4, 4, -1, -1, -1, -1],
+                      [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]);
+end;
+
+procedure TTestS7PlusTagPlan.AnArrayOfStructuresWhoseElementsHoldAnArrayOfScalarsIsRecognized;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := InnerArrayList;
+  AssertTrue('an array of structures', L[0].IsStructArray);
+  AssertEquals('two elements', 2, L[0].ElementCount);
+  AssertEquals('of 4 bytes', 4, L[0].ElementSize);
+end;
+
+procedure TTestS7PlusTagPlan.TheElementsOfTheInnerArrayAreMembersAtTheirPlaceInTheArray;
+var
+  L:TS7PlusCandidateArray;
+begin
+  L := InnerArrayList;
+  AssertEquals('the four bytes of ADDR', 4, Length(L[0].Members));
+  AssertEquals('ADDR[1]', 'ADDR[1]', L[0].Members[0].Name);
+  AssertEquals('at 0', 0, L[0].Members[0].Offset);
+  AssertEquals('ADDR[4] at 3', 3, L[0].Members[3].Offset);
+  AssertTrue('and an item', L[0].Members[3].Supported);
 end;
 
 procedure TTestS7PlusTagPlan.ANegativeIndexIsNotTheSameNameAsThePositiveOne;
