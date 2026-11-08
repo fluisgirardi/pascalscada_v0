@@ -127,6 +127,7 @@ type
     procedure AnElementOfAnArrayInsideAnElementOfAnArrayOfStructuresIsASimpleTag;
     procedure AnArrayOfStructuresWhoseElementsHoldAnArrayOfScalarsIsRecognized;
     procedure TheElementsOfTheInnerArrayAreMembersAtTheirPlaceInTheArray;
+    procedure HardwareAndConnectionIdsAreWordTags;
     procedure ANegativeIndexIsNotTheSameNameAsThePositiveOne;
     procedure AnAreaTagHasTheAreaAsItsParent;
   end;
@@ -1444,6 +1445,20 @@ begin
   AssertEquals('at 0', 0, L[0].Members[0].Offset);
   AssertEquals('ADDR[4] at 3', 3, L[0].Members[3].Offset);
   AssertTrue('and an item', L[0].Members[3].Supported);
+end;
+
+procedure TTestS7PlusTagPlan.HardwareAndConnectionIdsAreWordTags;
+var
+  T:TTagType;
+  B, W, D:Boolean;
+  c:Byte;
+begin
+  for c in [144, 155, 170] do begin
+    AssertTrue(IntToStr(c), S7PlusTagTypeOf(c, T, B, W, D));
+    AssertTrue('a Word, swapped', (T=pttWord) and B and (not W));
+  end;
+  AssertEquals('HW_ANY', S7PlusSoftTypeName(144));
+  AssertEquals('CONN_OUC', S7PlusSoftTypeName(170));
 end;
 
 procedure TTestS7PlusTagPlan.ANegativeIndexIsNotTheSameNameAsThePositiveOne;
