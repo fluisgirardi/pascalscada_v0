@@ -532,11 +532,12 @@ begin
 
   case FMode of
     imSimple: begin
-      //structures are never listed on their own: they show as the level that holds their members;
-      //arrays and arrays of structures have a mode of their own
+      //structures are never listed on their own: they show as the level that holds their members
       if FCandidates[aIndex].Skip=srNotAScalar then exit;
-      if FCandidates[aIndex].IsArray or FCandidates[aIndex].IsStructArray then exit;
-      if (FCandidates[aIndex].Skip<>srNone) and (not chkShowSkipped.Checked) then exit;
+      //the elements of an array are tags by themselves, and the array (and the array of
+      //structures) is listed as the level that groups them
+      if (FCandidates[aIndex].Skip<>srNone) and (not FCandidates[aIndex].IsElement) and
+         (not chkShowSkipped.Checked) then exit;
     end;
     //only what the mode imports; the levels above come from the path
     imArray, imStruct: if not IsSelectableIdx(aIndex) then exit;
@@ -585,7 +586,8 @@ begin
             Format(SS7PTBBytes,[FCandidates[aIndex].ElementCount*FCandidates[aIndex].ElementSize])+')';
   case FCandidates[aIndex].Skip of
     srUnsupportedType: Result:=Result+'   ('+SS7PTBSkipUnsupportedType+')';
-    srArrayElement:    Result:=Result+'   ('+SS7PTBSkipArrayElement+')';
+    srArrayElement:    if not FCandidates[aIndex].IsElement then
+                         Result:=Result+'   ('+SS7PTBSkipArrayElement+')';
     srStringLength:    Result:=Result+'   ('+SS7PTBSkipStringLength+')';
   end;
 end;
@@ -822,7 +824,7 @@ begin
     SetLength(FCandidates, first+Length(local));
     for c:=0 to High(local) do begin
       FCandidates[first+c]:=local[c];
-      if not (local[c].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
+      if (not (local[c].Skip in [srNone, srNotAScalar])) and (not local[c].IsElement) then inc(FSkippedCount);
     end;
     ResizeChecks;
 
@@ -1187,7 +1189,7 @@ begin
   for m:=Low(TS7PlusImportMode) to High(TS7PlusImportMode) do
     FGroups[m].Clear;
   for c:=0 to High(FCandidates) do begin
-    if not (FCandidates[c].Skip in [srNone, srNotAScalar]) then inc(FSkippedCount);
+    if (not (FCandidates[c].Skip in [srNone, srNotAScalar])) and (not FCandidates[c].IsElement) then inc(FSkippedCount);
 
     levels:=S7PlusSplitPath(FCandidates[c].Path);
     if Length(levels)=0 then continue;
