@@ -145,7 +145,5 @@ initialization
 
 {$I pascalscada.lrs}
 
-{$I xinjeicon.lrs}   // icones do painel de componentes (XPM)
-
 end.
 
