@@ -1265,7 +1265,8 @@ begin
   case TS7PlusSoftDataType(SoftDataType) of
     sdtBOOL, sdtBBOOL, sdtBYTE, sdtCHAR, sdtUSINT: begin TagType := pttByte;     Size := 1; end;
     sdtSINT:                                       begin TagType := pttShortInt; Size := 1; end;
-    sdtWORD, sdtUINT, sdtWCHAR:                    begin TagType := pttWord;     Size := 2; end;
+    sdtWORD, sdtUINT, sdtWCHAR, sdtHWANY, sdtHWINTERFACE, sdtCONNOUC:
+                                                   begin TagType := pttWord;     Size := 2; end;
     sdtINT:                                        begin TagType := pttSmallInt; Size := 2; end;
     sdtDWORD, sdtUDINT:                            begin TagType := pttDWord;    Size := 4; end;
     sdtDINT:                                       begin TagType := pttLongInt;  Size := 4; end;
@@ -1316,6 +1317,9 @@ begin
     sdtLTOD:   Result := 'LTime_Of_Day';
     sdtLDT:    Result := 'LDT';
     sdtDTL:    Result := 'DTL';
+    sdtHWANY:  Result := 'HW_ANY';
+    sdtHWINTERFACE: Result := 'HW_INTERFACE';
+    sdtCONNOUC: Result := 'CONN_OUC';
   else
     Result := '?'+IntToStr(SoftDataType);
   end;
