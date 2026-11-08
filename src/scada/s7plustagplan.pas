@@ -154,6 +154,10 @@ type
     //: Membro de um elemento de um array (Arr[2].x): quando vira tag é um tag solto, lido pelo
     //: caminho simbólico (LongAddress), sem depender de offset nenhum.
     ViaPath:Boolean;
+    //: Elemento de um array de escalares (Arr[2]): continua Skip=srArrayElement (o array o cobre),
+    //: mas no modo de tags simples pode virar um TPLCTagNumber próprio, lido pelo caminho; TagType e
+    //: Swap* valem então (ver S7PlusMarkArrays).
+    IsElement:Boolean;
   end;
   TS7PlusCandidateArray = array of TS7PlusCandidate;
 
@@ -665,6 +669,11 @@ begin
         SetLength(Candidates[i].ElementPaths, Count+1);
         Candidates[i].ElementPaths[Count] := Candidates[j].Path;
         Inc(Count);
+        //an element of an array of scalars is a tag by itself (simple tags mode), by its path
+        if S7PlusTagTypeOf(Candidates[j].SoftDataType, Candidates[j].TagType, Candidates[j].SwapBytes,
+                           Candidates[j].SwapWords, Candidates[j].SwapDWords) and
+           (not Candidates[i].IsString) then
+          Candidates[j].IsElement := true;
       end;
       Inc(j);
     end;
@@ -776,7 +785,7 @@ function S7PlusSelectable(const C:TS7PlusCandidate; Mode:TS7PlusImportMode; Stru
 begin
   Result := false;
   case Mode of
-    imSimple:      Result := (C.Skip=srNone) and (not C.IsArray) and (not C.IsStructArray);
+    imSimple:      Result := ((C.Skip=srNone) and (not C.IsArray) and (not C.IsStructArray)) or C.IsElement;
     imArray:       Result := (C.Skip=srNone) and C.IsArray;
     //a structure of its own (not one inside an element of an array), with a place in the image
     imStruct:      Result := (C.Skip=srNotAScalar) and (TS7PlusSoftDataType(C.SoftDataType)=sdtSTRUCT) and
@@ -1336,6 +1345,7 @@ begin
   Result.IsStructArray := false;
   Result.ElementSize := 0;
   Result.ViaPath := false;
+  Result.IsElement := false;
   SetLength(Result.Members, 0);
 
   if (DBName<>'') and StartsWithDBNumber(V.Name, RestStart) then
