@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of THMIBandeja: a tray (panel) carrying boxes. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>THMIBandeja</title>
+  <g id="layer1">
+    <rect x="9" y="8" width="13" height="13" fill="#d9a441" stroke="#6b4a10" stroke-width="1.5"/>
+    <rect x="25" y="14" width="14" height="7" fill="#d9a441" stroke="#6b4a10" stroke-width="1.5"/>
+    <path d="M 3 24 H 45 L 41 34 H 7 Z" fill="#9e9e9e" stroke="#4d4d4d" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="7" y="34" width="34" height="4" fill="#666666" stroke="#4d4d4d" stroke-width="1.5"/>
+    <path d="M 9 41 H 15 M 33 41 H 39" stroke="#4d4d4d" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>
