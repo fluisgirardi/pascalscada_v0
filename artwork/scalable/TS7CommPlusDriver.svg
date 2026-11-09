@@ -26,7 +26,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="8.3278395"
      inkscape:cx="77.391021"
-     inkscape:cy="47.071032"
+     inkscape:cy="27.858366"
      inkscape:window-width="2560"
      inkscape:window-height="1408"
      inkscape:window-x="1920"
@@ -35,15 +35,29 @@
      inkscape:current-layer="svg2" />
   <title
      id="title1">TS7CommPlusDriver</title>
-  <text
-     xml:space="preserve"
-     style="font-size:13.5746px;font-family:FE-Font;-inkscape-font-specification:FE-Font;writing-mode:lr-tb;direction:ltr;fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827;stroke-linejoin:round"
-     x="4.1202126e-09"
-     y="15.895921"
-     id="text10"><tspan
-       sodipodi:role="line"
-       id="tspan10"
-       style="fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827"
-       x="4.1202126e-09"
-       y="15.895921">S7+</tspan></text>
+  <g
+     id="g11">
+    <text
+       xml:space="preserve"
+       style="font-size:12.6316px;font-family:FE-Font;-inkscape-font-specification:FE-Font;writing-mode:lr-tb;direction:ltr;fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827;stroke-linejoin:round"
+       x="0.83368319"
+       y="9.4535418"
+       id="text10"><tspan
+         sodipodi:role="line"
+         id="tspan10"
+         style="fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827"
+         x="0.83368319"
+         y="9.4535418">S7+</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12.6316px;font-family:FE-Font;-inkscape-font-specification:FE-Font;writing-mode:lr-tb;direction:ltr;fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827;stroke-linejoin:round"
+       x="-1.3969839e-08"
+       y="21.796999"
+       id="text11"><tspan
+         sodipodi:role="line"
+         id="tspan11"
+         style="fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827"
+         x="-1.3969839e-08"
+         y="21.796999">ssL</tspan></text>
+  </g>
 </svg>
