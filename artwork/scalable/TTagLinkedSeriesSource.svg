@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of TTagLinkedSeriesSource: a chart series fed by tags: a line chart with its points. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>TTagLinkedSeriesSource</title>
+  <g id="layer1">
+    <path d="M 6 6 V 42 H 44" fill="none" stroke="#555555" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 8 34 L 18 22 L 27 28 L 40 10" fill="none" stroke="#1e88e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="18" cy="22" r="3" fill="#ffffff" stroke="#1565c0" stroke-width="2"/><circle cx="27" cy="28" r="3" fill="#ffffff" stroke="#1565c0" stroke-width="2"/><circle cx="40" cy="10" r="3" fill="#ffffff" stroke="#1565c0" stroke-width="2"/>
+    <rect x="30" y="34" width="12" height="6" rx="1.5" fill="#43a047" stroke="#1b5e20" stroke-width="1.2"/>
+  </g>
+</svg>

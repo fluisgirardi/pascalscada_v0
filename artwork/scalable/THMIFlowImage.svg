@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of THMIFlowImage: an image whose animation follows the flow. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>THMIFlowImage</title>
+  <g id="layer1">
+    <rect x="4" y="6" width="40" height="30" fill="#e8f1ff" stroke="#666666" stroke-width="2"/>
+    <circle cx="14" cy="14" r="4" fill="#f5b800"/>
+    <path d="M 4 36 L 16 20 L 24 29 L 31 22 L 44 36 Z" fill="#4c9a2a" stroke="#2c5a14" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M 6 43 H 34" stroke="#2a8bf2" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 31 37.5 L 43 43 L 31 48.5 Z" fill="#2a8bf2"/>
+  </g>
+</svg>
