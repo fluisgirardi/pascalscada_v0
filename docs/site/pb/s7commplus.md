@@ -142,6 +142,14 @@ end;
 
 A assinatura de alarmes segue o formato das bibliotecas de referência S7CommPlusDriver e s7commplus; ainda não foi validada em todos os modelos de CLP.
 
+##### Registrando os alarmes do CLP: THMIS7PlusAlarmLogger
+
+O `THMIS7PlusAlarmLogger` (descendente de `THMIAlarmLogger`, paleta *PascalSCADA HMI*) leva esses alarmes para o mesmo fluxo do registro de alarmes por tag: aponte `Driver` para o `TS7CommPlusDriver`, `AsyncDBConnection` para a conexão com o banco, ajuste `LanguageId` (ex.: 1046; 0 = todos os idiomas) e `Active = True`. O driver assina assim que a conexão sobe, e de novo a cada reconexão, e entrega os alarmes ao logger; não há polling no seu código. Cada alarme que chega ganha um ID novo (`OnGenerateNewAlarmID`, ou o contador interno) e dispara `OnS7PlusAlarmIncoming`; quando sai, `OnS7PlusAlarmOutgoing` com o mesmo ID. Os dois recebem o `TS7PlusAlarm` (horário da CPU convertido para a hora local, textos, valores associados) e devolvem o SQL a executar, igual a `OnIncomingAlarm`/`OnOutgoingAlarm`; `OnRefreshActiveAlarms` dispara depois. Os eventos são disparados na thread principal. Os `AlarmMessages` por tag continuam funcionando no mesmo componente.
+
+A cada criação da assinatura o logger recebe primeiro os alarmes que já estavam ativos e os confronta com o que ele tem aberto: um alarme que chegou com a conexão caída é aberto, um que saiu nesse meio tempo é fechado (com o horário em que foi percebido). Os alarmes são identificados pelo ID da CPU; um alarme que chega duas vezes sem sair no meio é registrado uma vez. `SendTexts = False` é para o S7-1200 sem TLS (os alarmes chegam sem os textos).
+
+Para o seu próprio código, `TS7CommPlusDriver.AddAlarmHandler(Handler)` entrega os mesmos alarmes (pela thread de scan; `IsSnapshot = True` para a lista dos que já estavam ativos) e `AlarmRequest(...)` pede a assinatura sem precisar que a conexão já esteja aberta.
+
 ##### Exemplo passo a passo
 
 Ler a temperatura `"Data".Temperature` (`Real`) de um S7-1200 em 192.168.0.10 e escrever o setpoint `"Data".Setpoint` (`Int`):

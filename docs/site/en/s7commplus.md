@@ -142,6 +142,14 @@ end;
 
 The alarm subscription follows the format of the S7CommPlusDriver and s7commplus reference libraries; it is not yet validated against every PLC model.
 
+##### Logging the PLC alarms: THMIS7PlusAlarmLogger
+
+`THMIS7PlusAlarmLogger` (an `THMIAlarmLogger` descendant, *PascalSCADA HMI* palette) takes these alarms into the same flow as the tag based alarm log: set `Driver` to the `TS7CommPlusDriver`, `AsyncDBConnection` to the database connection, `LanguageId` (e.g. 1046; 0 = every language) and `Active = True`. The driver subscribes as soon as the connection is up, and again after every reconnect, and hands the alarms to the logger; there is no polling in your code. Each alarm that comes gets a new ID (`OnGenerateNewAlarmID`, or the internal counter) and raises `OnS7PlusAlarmIncoming`; when it goes, `OnS7PlusAlarmOutgoing` with the same ID. Both receive the `TS7PlusAlarm` (CPU time converted to local time, texts, associated values) and return the SQL to run, exactly like `OnIncomingAlarm`/`OnOutgoingAlarm`; `OnRefreshActiveAlarms` fires afterwards. Events are raised in the main thread. The tag based `AlarmMessages` keep working in the same component.
+
+Each time the subscription is created the logger receives first the alarms that were already active and reconciles them with what it has open: an alarm that came while the connection was down is opened, one that went meanwhile is closed (with the time it was noticed). Alarms are identified by the CPU alarm ID; one alarm coming twice without going in between is logged once. `SendTexts = False` is for an S7-1200 without TLS (the alarms then arrive without texts).
+
+For your own code, `TS7CommPlusDriver.AddAlarmHandler(Handler)` delivers the same alarms (from the scan thread; `IsSnapshot = True` for the list of the ones already active) and `AlarmRequest(...)` asks for the subscription without needing the connection to be open yet.
+
 ##### Step-by-step example
 
 Read the temperature `"Data".Temperature` (`Real`) of an S7-1200 at 192.168.0.10 and write the setpoint `"Data".Setpoint` (`Int`):

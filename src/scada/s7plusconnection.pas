@@ -587,6 +587,8 @@ type
     //: (the ones queued by an earlier PollNotification too); the credit is renewed here. False when the
     //: connection broke. Alarms empty = none arrived.
     function WaitAlarms(WaitMs:LongInt; out Alarms:TS7PlusAlarmArray):Boolean;
+    //: The alarms already received and not yet handed over, without waiting for anything.
+    procedure TakeQueuedAlarms(out Alarms:TS7PlusAlarmArray);
     //: ObjectId the PLC assigned to the most recent successful SubscriptionCreate.
     property LastSubscriptionObjectId:Cardinal read FSubscriptionObjectId;
     //: True when the session got the ClassSubscriptions container a subscription needs as
@@ -4312,6 +4314,12 @@ end;
 function TS7PlusConnection.AlarmSubscriptionActive:Boolean;
 begin
   Result := FAlarmSubObjectId<>0;
+end;
+
+procedure TS7PlusConnection.TakeQueuedAlarms(out Alarms:TS7PlusAlarmArray);
+begin
+  Alarms := FAlarmQueue;
+  SetLength(FAlarmQueue, 0);
 end;
 
 function TS7PlusConnection.WaitAlarms(WaitMs:LongInt; out Alarms:TS7PlusAlarmArray):Boolean;
