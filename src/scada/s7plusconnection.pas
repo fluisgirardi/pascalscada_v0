@@ -33,8 +33,8 @@ unit S7PlusConnection;
 interface
 
 uses
-  Classes, SysUtils, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
-  S7PlusTypeInfo, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
+  Classes, SysUtils, Types, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
+  S7PlusTypeInfo, S7PlusAlarms, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
   S7PlusHarpoLegitimate, S7PlusCertificate;
 
 const
@@ -179,6 +179,12 @@ type
     //: Header fields of the last notification ParseNotification understood.
     FLastNotifSubscriptionId:Cardinal;
     FLastNotifSequence:Cardinal;
+    //: Alarm subscription (AlarmSubscriptionCreate): its object id (0 = none), the languages of the
+    //: texts, the credit limit now in force, and the alarms received and not yet taken.
+    FAlarmSubObjectId:Cardinal;
+    FAlarmNextCredit:SmallInt;
+    FAlarmLanguages:TCardinalDynArray;
+    FAlarmQueue:TS7PlusAlarmArray;
 
     //-- Subscriptions (on-change notifications, V2+) --------------------------
     //: ObjectId the PLC assigned to the nested ClassSubscriptions container created
@@ -310,6 +316,9 @@ type
     function FrameApplicationBody(const Frame:TBytes; out Version:Byte):TBytes;
     procedure QueueNotification(const Body:TBytes);
     function PopNotification(out Body:TBytes):Boolean;
+    //: Takes a notification frame as an alarm notification of the alarm subscription: queues the alarms
+    //: and renews the credit. False when it is not one.
+    function TakeAlarmNotification(const Body:TBytes):Boolean;
 
     //-- payload builders/parsers ----------------------------------------------
     //: Picks the V1 fixed-width ObjectQualifier (KeyQualifier=1, matching TIA's own V1
@@ -475,6 +484,12 @@ type
     //: Sends an EXPLORE request for ExploreId (a RID) and reassembles the (possibly
     //: multi-fragment) response payload.
     function Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+    //: Explore with an ExploreRequestId (the alarm subsystem's EXPLORE names what it wants in it).
+    function ExploreRequest(ExploreId, ExploreRequestId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+    //: Reads the alarms that are active now (EXPLORE of the alarm subsystem, no subscription): the
+    //: DAI objects the PLC keeps, with the texts of the languages asked for (Languages empty = all of
+    //: them; e.g. S7PlusLang_Portuguese_BR). False when the request failed or the reply is not understood.
+    function ReadActiveAlarms(const Languages:array of Cardinal; out Alarms:TS7PlusAlarmArray):Boolean;
     //: Browses a DB's variables via EXPLORE + the compiled type-info tree, returning a
     //: flat list of (name, LID path, softdatatype) - the only reliable way to know a DB
     //: variable's real address on S7CommPlus. The type-info container is cached after the
@@ -557,6 +572,21 @@ type
                               out Errors:TS7PlusNotificationErrorArray):Boolean;
     //: How many notifications are waiting in the queue (see PollNotification).
     function PendingNotificationCount:Integer;
+    //: Subscribes to the alarms (S7-1200/1500): the PLC then sends a notification for each alarm that
+    //: comes or goes, which PollNotification (and so WaitAlarms) collects. Languages are the languages of
+    //: the texts to keep (empty = all). SendTextsAndFilter asks the PLC to send the texts with the
+    //: notification; S7-1200 without TLS refuse it (the creation fails): use False there. CreditLimit as in
+    //: SubscriptionCreate (-1 = unlimited); it is renewed by WaitAlarms. Returns False when the PLC refuses.
+    function AlarmSubscriptionCreate(const Languages:array of Cardinal; SendTextsAndFilter:Boolean=true;
+                                     CreditLimit:SmallInt=10):Boolean;
+    //: Removes the alarm subscription (only that object; the data subscriptions are not touched).
+    function AlarmSubscriptionDelete:Boolean;
+    //: True while there is an alarm subscription in this session.
+    function AlarmSubscriptionActive:Boolean;
+    //: Waits up to WaitMs for the traffic of the alarm subscription and returns the alarms that came in
+    //: (the ones queued by an earlier PollNotification too); the credit is renewed here. False when the
+    //: connection broke. Alarms empty = none arrived.
+    function WaitAlarms(WaitMs:LongInt; out Alarms:TS7PlusAlarmArray):Boolean;
     //: ObjectId the PLC assigned to the most recent successful SubscriptionCreate.
     property LastSubscriptionObjectId:Cardinal read FSubscriptionObjectId;
     //: True when the session got the ClassSubscriptions container a subscription needs as
@@ -2152,6 +2182,9 @@ begin
   FIntegrityIdWrite := 0;
   SetLength(FServerSessionVersion, 0);
   SetLength(FNotifQueue, 0);
+  FAlarmSubObjectId := 0;
+  SetLength(FAlarmLanguages, 0);
+  SetLength(FAlarmQueue, 0);
   ReleaseTLS;
 end;
 
@@ -3381,6 +3414,11 @@ begin
     end;
 
     if (Length(Body)>0) and (Body[0]=S7PlusOpcode_Notification) then begin
+      //with an alarm subscription the notification may be an alarm one: keep its alarms apart
+      if (FAlarmSubObjectId<>0) and TakeAlarmNotification(Body) then begin
+        WaitMs := 0;
+        continue;
+      end;
       Got := ParseNotification(Body, CreditTick, Values, Errors);
       if not Got then
         Debug('PollNotification: notificacao nao interpretada: '+S7PlusHexStr(Body));
@@ -3992,12 +4030,17 @@ begin
 end;
 
 function TS7PlusConnection.Explore(ExploreId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
+begin
+  Result := ExploreRequest(ExploreId, 0, AttributeIds, RespPayload);
+end;
+
+function TS7PlusConnection.ExploreRequest(ExploreId, ExploreRequestId:Cardinal; const AttributeIds:array of Cardinal; out RespPayload:TBytes):Boolean;
 var
   Payload:TBytes;
   i:Integer;
 begin
   Payload := EncodeUInt32(ExploreId); //ExploreId (fixed UInt32, not VLQ)
-  Payload := BytesConcat(Payload, EncodeUInt32VLQ(0)); //ExploreRequestId (0=none)
+  Payload := BytesConcat(Payload, EncodeUInt32VLQ(ExploreRequestId)); //ExploreRequestId (0=none)
   Payload := BytesConcat(Payload, BytesOf([1])); //ExploreChildsRecursive
   Payload := BytesConcat(Payload, BytesOf([1])); //unknown flag - protocol always sends 1
   Payload := BytesConcat(Payload, BytesOf([0])); //ExploreParents
@@ -4146,6 +4189,143 @@ begin
   end;
   Blocks := S7PlusParseExploreDataBlocks(RespPayload);
   Debug(Format('ListDataBlocks: %d DBs encontradas',[Length(Blocks)]));
+end;
+
+function TS7PlusConnection.ReadActiveAlarms(const Languages:array of Cardinal; out Alarms:TS7PlusAlarmArray):Boolean;
+var
+  RespPayload:TBytes;
+  Attrs:TCardinalDynArray;
+begin
+  SetLength(Alarms, 0);
+  Attrs := S7PlusAlarmExploreAttributes;
+  Result := ExploreRequest(S7PlusIds_NativeTheAlarmSubsysRID, S7PlusIds_AlarmSubsystemItsUpdateRelevantDAI, Attrs, RespPayload);
+  if not Result then begin
+    Debug('ReadActiveAlarms: falha ao explorar o subsistema de alarmes');
+    exit;
+  end;
+  Result := S7PlusParseAlarmExplore(RespPayload, Languages, Alarms);
+  if Result then
+    Debug(Format('ReadActiveAlarms: %d alarmes ativos',[Length(Alarms)]))
+  else
+    Debug('ReadActiveAlarms: resposta do subsistema de alarmes invalida ou com erro');
+end;
+
+function TS7PlusConnection.TakeAlarmNotification(const Body:TBytes):Boolean;
+var
+  SubId:Cardinal;
+  Tick:Byte;
+  Alarms:TS7PlusAlarmArray;
+  n, i:Integer;
+begin
+  Result := S7PlusParseAlarmNotification(Body, FAlarmLanguages, SubId, Tick, Alarms);
+  if not Result then exit;
+  n := Length(FAlarmQueue);
+  if n+Length(Alarms)>1024 then begin
+    //nobody takes them: never grow without bound, drop the oldest
+    Debug('TakeAlarmNotification: fila de alarmes cheia, descartando os mais antigos');
+    for i:=Length(Alarms) to n-1 do
+      FAlarmQueue[i-Length(Alarms)] := FAlarmQueue[i];
+    n := n-Length(Alarms);
+    if n<0 then n := 0;
+  end;
+  SetLength(FAlarmQueue, n+Length(Alarms));
+  for i:=0 to High(Alarms) do
+    FAlarmQueue[n+i] := Alarms[i];
+  Debug(Format('Notificacao de alarme: %d alarme(s), CreditTick=%d',[Length(Alarms), Tick]));
+  //renew the credit one tick before it runs out, to keep the flow constant (as the reference does)
+  if (FAlarmNextCredit>0) and (Tick>=FAlarmNextCredit-1) then begin
+    FAlarmNextCredit := (FAlarmNextCredit+5) mod 255;
+    if FAlarmNextCredit=0 then FAlarmNextCredit := 5;
+    Debug(Format('Alarmes: novo limite de credito %d',[FAlarmNextCredit]));
+    SubscriptionSetCreditLimitFor(FAlarmSubObjectId, FAlarmNextCredit);
+  end;
+end;
+
+function TS7PlusConnection.AlarmSubscriptionCreate(const Languages:array of Cardinal; SendTextsAndFilter:Boolean;
+                                                   CreditLimit:SmallInt):Boolean;
+var
+  ObjBytes, Payload, Resp:TBytes;
+  BodyOffset, c, i:Integer;
+  RetVal:QWord;
+  ObjectId:Cardinal;
+  ErrText:String;
+begin
+  Result := false;
+  if FAlarmSubObjectId<>0 then begin
+    Result := true; //already there
+    exit;
+  end;
+  if not HasSubscriptionContainer then begin
+    Debug('AlarmSubscriptionCreate: sessao sem container de subscricoes');
+    exit;
+  end;
+
+  //same envelope as SubscriptionCreate; the object is the alarm subscription with its reference child
+  ObjBytes := S7PlusBuildAlarmSubscriptionObject($7FFFC001, CreditLimit, SendTextsAndFilter, Languages, []);
+  Payload := EncodeUInt32(FSubscriptionsContainerObjectId); //InObjectId
+  Payload := BytesConcat(Payload, EncodeValuePUDInt(0)); //RequestValue
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //padding
+  Payload := BytesConcat(Payload, ObjBytes);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+
+  if not SendRequest(S7PlusFunc_CreateObject, Payload, Resp, Length(ObjBytes)+4) then exit;
+
+  RetVal := DecodeUInt64VLQ(Resp, 0, c);
+  FLastReturnValue := RetVal;
+  if RetVal=0 then begin
+    Result := ParseCreateObjectSessionId(Resp, ObjectId, BodyOffset, RetVal) and (RetVal=0);
+    if Result then begin
+      FAlarmSubObjectId := ObjectId;
+      FAlarmNextCredit := CreditLimit;
+      SetLength(FAlarmLanguages, Length(Languages));
+      for i:=0 to High(Languages) do
+        FAlarmLanguages[i] := Languages[i];
+      Debug(Format('AlarmSubscriptionCreate: sucesso, ObjectId=%d',[ObjectId]));
+    end else
+      Debug('AlarmSubscriptionCreate: falha ao interpretar resposta de sucesso (returnValue=0)');
+  end else begin
+    ErrText := ExtractErrorText(BytesCopy(Resp, c, Length(Resp)-c));
+    if ErrText<>'' then
+      Debug(Format('AlarmSubscriptionCreate: falha (returnValue=%d): %s',[RetVal, ErrText]))
+    else
+      Debug(Format('AlarmSubscriptionCreate: falha (returnValue=%d)',[RetVal]));
+  end;
+end;
+
+function TS7PlusConnection.AlarmSubscriptionDelete:Boolean;
+var
+  Payload, Resp:TBytes;
+begin
+  Result := true;
+  if FAlarmSubObjectId=0 then exit;
+  Payload := EncodeUInt32(FAlarmSubObjectId); //DeleteObjectId
+  Payload := BytesConcat(Payload, BytesOf([$00]));
+  Payload := BytesConcat(Payload, EncodeObjectQualifier);
+  Payload := BytesConcat(Payload, EncodeUInt32(0)); //trailing padding
+  Result := SendRequest(S7PlusFunc_DeleteObject, Payload, Resp);
+  if not Result then
+    Debug('AlarmSubscriptionDelete: falha ao remover a subscricao de alarmes');
+  FAlarmSubObjectId := 0;
+  SetLength(FAlarmQueue, 0);
+end;
+
+function TS7PlusConnection.AlarmSubscriptionActive:Boolean;
+begin
+  Result := FAlarmSubObjectId<>0;
+end;
+
+function TS7PlusConnection.WaitAlarms(WaitMs:LongInt; out Alarms:TS7PlusAlarmArray):Boolean;
+var
+  Got:Boolean;
+  Credit:Byte;
+  Values:TS7PlusNotificationValueArray;
+  Errors:TS7PlusNotificationErrorArray;
+begin
+  SetLength(Alarms, 0);
+  Result := PollNotification(WaitMs, Got, Credit, Values, Errors);
+  //what the poll took in (and what an earlier one left) is handed over once
+  Alarms := FAlarmQueue;
+  SetLength(FAlarmQueue, 0);
 end;
 
 end.

@@ -122,6 +122,26 @@ O `RefreshTime` do tag decide:
 
 As assinaturas são recriadas sozinhas depois de uma sessão perdida ou de uma assinatura derrubada (`SubscriptionTimeoutMs`), e os endereços são resolvidos de novo depois de um download para o CLP (`ProgramCheckIntervalMs`). `RefreshCaches` força isso na hora — chame depois de um download de programa novo se os tags precisam estar certos imediatamente.
 
+##### Alarmes ativos
+
+`ReadActiveAlarms(Languages, Alarms)` do driver devolve os alarmes que estão ativos no CLP agora (S7-1200/1500): um `TS7PlusAlarm` por alarme, com o ID do alarme na CPU, o domínio, o contador de sequência, se é *coming* (chegou) ou *going* (saiu), o horário do evento e do reconhecimento (UTC), os valores associados e os textos de cada idioma. `Languages` é a lista de IDs de idioma (`S7PlusLang_Portuguese_BR` = 1046, `S7PlusLang_English_US` = 1033...); vazia mantém todos os idiomas que o CLP envia. Os textos já trazem os valores associados no lugar das marcas `@1%d@`. É uma única requisição, então pode ser chamada quando se quer um retrato; não cria assinatura e não reconhece os alarmes.
+
+Para ser avisado quando um alarme chega ou sai, assine: `AlarmSubscribe(Languages, SendTexts, CreditLimit)` e chame `AlarmPoll(WaitMs, Alarms)`, que espera até `WaitMs` ms (o driver fica retido nesse tempo, então use um valor curto) e devolve os alarmes que chegaram desde a última chamada; lista vazia com `ioOk` quer dizer que nenhum chegou. Com `SendTexts = True` (padrão) o CLP manda os textos junto com cada notificação; um S7-1200 sem TLS recusa isso, então use `False` nele e leia os textos com `ReadActiveAlarms`. O crédito é renovado sozinho e a assinatura é recriada depois de uma reconexão. `AlarmUnsubscribe` remove a assinatura sem mexer nas assinaturas de dados. Um alarme que já estava ativo quando se assinou não é enviado: pegue esse retrato antes com `ReadActiveAlarms`.
+
+```pascal
+var Alarms: TS7PlusAlarmArray; i: Integer;
+begin
+  Drv.ReadActiveAlarms([S7PlusLang_Portuguese_BR], Alarms);  // o que está ativo agora
+  Drv.AlarmSubscribe([S7PlusLang_Portuguese_BR]);              // e o que muda daqui em diante
+  while not Terminated do
+    if Drv.AlarmPoll(500, Alarms) = ioOk then
+      for i := 0 to High(Alarms) do
+        WriteLn(S7PlusAlarmToString(Alarms[i], S7PlusLang_Portuguese_BR));
+end;
+```
+
+A assinatura de alarmes segue o formato das bibliotecas de referência S7CommPlusDriver e s7commplus; ainda não foi validada em todos os modelos de CLP.
+
 ##### Exemplo passo a passo
 
 Ler a temperatura `"Data".Temperature` (`Real`) de um S7-1200 em 192.168.0.10 e escrever o setpoint `"Data".Setpoint` (`Int`):

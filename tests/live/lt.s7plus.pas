@@ -47,7 +47,7 @@ interface
 uses
   Classes, SysUtils, Math, fpcunit, testregistry,
   Tag, ProtocolTypes, PLCTagNumber, PLCString, PLCBlock, PLCBlockElement, PLCStruct, PLCStructElement, PLCStructString,
-  tcp_udpport, S7PlusFamily, S7PlusConnection, S7PlusTypeInfo, S7PlusTypes, S7PlusTagPlan;
+  tcp_udpport, S7PlusFamily, S7PlusConnection, S7PlusTypeInfo, S7PlusTypes, S7PlusTagPlan, S7PlusAlarms;
 
 type
   { TLiveCase }
@@ -71,6 +71,8 @@ type
     procedure AuthWithTheSameCredentialsIsOk;
     procedure ListTagsDescribesTheTestDBs;
     procedure RepeatedListsOfTheDBsAreNoChange;
+    procedure ReadActiveAlarmsAnswersAndTheSessionLives;
+    procedure AlarmSubscriptionIsAcceptedAndTheSessionLives;
   end;
 
   { TTestLiveReads }
@@ -586,6 +588,44 @@ begin
   if GUser='' then Ignore('No S7PLUS_USER: this PLC needs no login.');
   AssertTrue('logged in again', GDriver.Auth(GUser, GPassword)=ioOk);
   AssertTrue('and it still reads', GDriver.ListDataBlocks(GBlocks)=ioOk);
+end;
+
+procedure TTestLiveConnection.ReadActiveAlarmsAnswersAndTheSessionLives;
+var
+  Alarms:TS7PlusAlarmArray;
+  i:Integer;
+begin
+  //the test PLC may have no active alarm: what is checked is that the request is understood
+  //(ReturnValue 0, a reply that decodes) and that the session is still alive afterwards
+  AssertTrue('alarm subsystem answers', GDriver.ReadActiveAlarms([], Alarms)=ioOk);
+  for i:=0 to High(Alarms) do begin
+    AssertTrue('CPU alarm id of #'+IntToStr(i), Alarms[i].CpuAlarmId<>0);
+    AssertTrue('an event of #'+IntToStr(i), Alarms[i].Event<>aeUnknown);
+    TSink(GSink).Debug(Self, S7PlusAlarmToString(Alarms[i], S7PlusLang_English_US));
+  end;
+  AssertTrue('only one language', GDriver.ReadActiveAlarms([S7PlusLang_Portuguese_BR], Alarms)=ioOk);
+  AssertTrue('and the session is alive', GDriver.ListDataBlocks(GBlocks)=ioOk);
+end;
+
+procedure TTestLiveConnection.AlarmSubscriptionIsAcceptedAndTheSessionLives;
+var
+  Alarms:TS7PlusAlarmArray;
+  i:Integer;
+begin
+  //an S7-1200 without TLS refuses the texts and the domain filter: try with them, then without
+  if GDriver.AlarmSubscribe([S7PlusLang_English_US], true)<>ioOk then
+    AssertTrue('subscription without texts', GDriver.AlarmSubscribe([], false)=ioOk);
+  try
+    //nothing may arrive (no alarm changes while the test runs): what is checked is that the wait
+    //works and gives back a well formed list
+    AssertTrue('wait', GDriver.AlarmPoll(500, Alarms)=ioOk);
+    for i:=0 to High(Alarms) do
+      TSink(GSink).Debug(Self, S7PlusAlarmToString(Alarms[i], S7PlusLang_English_US));
+    AssertTrue('and the data reads still work', GDriver.ListDataBlocks(GBlocks)=ioOk);
+  finally
+    GDriver.AlarmUnsubscribe;
+  end;
+  AssertTrue('and the session is alive after it', GDriver.ListDataBlocks(GBlocks)=ioOk);
 end;
 
 procedure TTestLiveConnection.ListTagsDescribesTheTestDBs;
