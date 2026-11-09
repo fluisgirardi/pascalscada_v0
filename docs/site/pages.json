@@ -141,7 +141,7 @@
     },
     {
       "slug": "s7commplus",
-      "id": null,
+      "id": 1252,
       "title": {
         "en": "S7CommPlus (S7-1200/1500)",
         "pb": "S7CommPlus (S7-1200/1500)"
@@ -150,7 +150,7 @@
         "parent": 908,
         "after": "s7-protocol-over-isotcp"
       },
-      "menu_item": null
+      "menu_item": 1253
     },
     {
       "slug": "ethernet-ip-logix",
