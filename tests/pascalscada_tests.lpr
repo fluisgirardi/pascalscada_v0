@@ -25,6 +25,7 @@ uses
   ut.s7plusconnection,
   ut.s7plusonchange,
   ut.s7plustagplan,
+  ut.s7plusalarms,
   ut.s7pluscertificate,
   ut.s7plusclientcert,
   ut.s7plustypeinfo,

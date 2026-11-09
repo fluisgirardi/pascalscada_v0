@@ -122,6 +122,26 @@ A variable that cannot become a tag is listed with the reason (*not a tag: struc
 
 Subscriptions are recreated by themselves after a lost session or a dropped subscription (`SubscriptionTimeoutMs`), and the addresses are resolved again after a download to the PLC (`ProgramCheckIntervalMs`). `RefreshCaches` forces that immediately — call it after a download of a new program if the tags must be right at once.
 
+##### Active alarms
+
+`ReadActiveAlarms(Languages, Alarms)` of the driver returns the alarms that are active in the PLC now (S7-1200/1500): one `TS7PlusAlarm` per alarm, with the CPU alarm ID, the domain, the sequence counter, whether it is *coming* or *going*, the time of the event and of the acknowledgement (UTC), the associated values and the texts of each language. `Languages` is a list of language IDs (`S7PlusLang_Portuguese_BR` = 1046, `S7PlusLang_English_US` = 1033...); empty keeps every language the PLC sends. The texts already have the associated values in place of the `@1%d@` marks. It is a single request, so it can be called whenever a snapshot is wanted; no subscription is created and the alarms are not acknowledged.
+
+To be told when an alarm comes or goes, subscribe: `AlarmSubscribe(Languages, SendTexts, CreditLimit)` and then call `AlarmPoll(WaitMs, Alarms)`, which waits up to `WaitMs` ms (the driver is held meanwhile, so keep it short) and returns the alarms that arrived since the last call; empty with `ioOk` means none did. `SendTexts = True` (default) makes the PLC send the texts with each notification; an S7-1200 without TLS refuses that, so use `False` there and read the texts with `ReadActiveAlarms`. The credit is renewed on its own and the subscription is created again after a reconnect. `AlarmUnsubscribe` removes it without touching the data subscriptions. An alarm that was already active when subscribing is not sent: take that snapshot with `ReadActiveAlarms` first.
+
+```pascal
+var Alarms: TS7PlusAlarmArray; i: Integer;
+begin
+  Drv.ReadActiveAlarms([S7PlusLang_English_US], Alarms);  // what is active now
+  Drv.AlarmSubscribe([S7PlusLang_English_US]);              // and what changes from now on
+  while not Terminated do
+    if Drv.AlarmPoll(500, Alarms) = ioOk then
+      for i := 0 to High(Alarms) do
+        WriteLn(S7PlusAlarmToString(Alarms[i], S7PlusLang_English_US));
+end;
+```
+
+The alarm subscription follows the format of the S7CommPlusDriver and s7commplus reference libraries; it is not yet validated against every PLC model.
+
 ##### Step-by-step example
 
 Read the temperature `"Data".Temperature` (`Real`) of an S7-1200 at 192.168.0.10 and write the setpoint `"Data".Setpoint` (`Int`):

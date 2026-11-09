@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="7" Release="7"/>
-    <Files Count="106">
+    <Files Count="107">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -456,6 +456,10 @@
         <Filename Value="src\scada\H5UTagTCP.pas"/>
         <UnitName Value="H5UTagTCP"/>
       </Item106>
+      <Item107>
+        <Filename Value="src\scada\s7plusalarms.pas"/>
+        <UnitName Value="S7PlusAlarms"/>
+      </Item107>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
