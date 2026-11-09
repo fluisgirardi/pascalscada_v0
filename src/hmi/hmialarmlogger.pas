@@ -83,6 +83,9 @@ type
       AlarmIntID: Int64; AlarmGUID: TGuid; var OutgoingAlarmSQL: UTF8String); virtual;
     procedure DoFinishAllPendingAlarms(Sender:TObject; var FinishAllPendingAlarmsSQL:UTF8String); virtual;
     function  GenerateNewAlarmID      (var AlarmIntID:Int64; var AlarmGUID:TGuid):Boolean; virtual;
+    //: Sends the SQL to the AsyncDBConnection (if there is one, connected, and the SQL is not empty) and
+    //: raises OnRefreshActiveAlarms when it finishes - what the tag based alarms do on their own.
+    procedure ExecAlarmSQL(const SQL:UTF8String);
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
@@ -331,6 +334,12 @@ procedure THMIAlarmLogger.DoFinishAllPendingAlarms(Sender: TObject;
 begin
   if Assigned(FFinishAllPendingAlarms) then
     FFinishAllPendingAlarms(Sender, FinishAllPendingAlarmsSQL);
+end;
+
+procedure THMIAlarmLogger.ExecAlarmSQL(const SQL:UTF8String);
+begin
+  if Assigned(FAsyncDBConnection) and FAsyncDBConnection.Connected and (UTF8Length(UTF8Trim(SQL))>0) then
+    FAsyncDBConnection.ExecSQL(SQL,@RefreshActiveAlarmTables,false);
 end;
 
 function THMIAlarmLogger.GenerateNewAlarmID(var AlarmIntID: Int64;

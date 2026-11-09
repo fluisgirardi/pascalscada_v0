@@ -33,7 +33,7 @@ interface
 uses
   Classes, SysUtils, Types, pascalScadaMTPCPU, ProtocolDriver, ProtocolTypes, Tag, CommPort, CommTypes,
   S7PlusTypes, S7PlusConnection, S7PlusTypeInfo, PLCTagNumber, PLCBlock,
-  PLCString, S7PlusTagPlan, S7PlusAlarms;
+  PLCString, S7PlusTagPlan, S7PlusAlarms, SyncObjs;
 
 //: Registers the Tag Builder tool of the S7CommPlus protocol (the design package does it,
 //: since the tool has forms) - see TS7CommPlusDriver.OpenTagEditor.
@@ -177,6 +177,11 @@ type
   end;
   TS7PlusFillCandidateArray = array of TS7PlusFillCandidate;
 
+  //: Receives alarms from the driver (see TS7CommPlusDriver.AddAlarmHandler). IsSnapshot is True for the list
+  //: of the alarms that were active when the subscription was created (again): it is the complete state, not
+  //: a change. Called from the scan thread, or from the thread that called AlarmSubscribe.
+  TS7PlusAlarmsHandler = procedure(Sender:TObject; const Alarms:TS7PlusAlarmArray; IsSnapshot:Boolean) of object;
+
   TS7CommPlusDriver = class(TProtocolDriver)
   private
     FConnection:TS7PlusConnection;
@@ -210,6 +215,8 @@ type
     FAlarmLangs:TCardinalDynArray;
     FAlarmCredit:SmallInt;
     FAlarmRetryAt:QWord;
+    FAlarmHandlers:array of TS7PlusAlarmsHandler;
+    FAlarmHandlersCS:TCriticalSection;
     FSubResetPending:Boolean; //set by whoever notices the session is gone, consumed by the scan thread
     FSubCycleMs:Integer;
     FSubCreditLimit:SmallInt;
@@ -282,6 +289,10 @@ type
     procedure ManageSubscriptions(Now_:QWord);
     procedure ManageAlarmSubscription(Now_:QWord);
     procedure PumpNotifications(WaitMs:LongInt);
+    procedure DispatchAlarms(const Alarms:TS7PlusAlarmArray; IsSnapshot:Boolean);
+    procedure DeliverQueuedAlarms;
+    procedure PumpNotificationsRun(WaitMs:LongInt);
+    procedure AfterAlarmSubscription;
     procedure RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
   protected
     function CompositeWriteSize(SoftDataType:Byte):Integer;
@@ -414,6 +425,15 @@ type
                             CreditLimit:SmallInt=10):TProtocolIOResult;
     //: Removes the alarm subscription (the data subscriptions are not touched).
     function AlarmUnsubscribe:TProtocolIOResult;
+    //: Asks for the alarm subscription without talking to the PLC now: it is created by the scan thread as
+    //: soon as the connection is up (and again after each reconnect), so it can be called before the port is
+    //: open (e.g. when a component is loaded). Same parameters as AlarmSubscribe. AlarmUnsubscribe cancels it.
+    procedure AlarmRequest(const Languages:array of Cardinal; SendTexts:Boolean=true; CreditLimit:SmallInt=10);
+    //: Registers a handler for the alarms: the scan thread hands them over as they arrive, and with a
+    //: handler registered AlarmPoll gets nothing (the handler takes them). Each time the subscription is
+    //: created, the alarms that were already active come first, with IsSnapshot=True.
+    procedure AddAlarmHandler(Handler:TS7PlusAlarmsHandler);
+    procedure RemoveAlarmHandler(Handler:TS7PlusAlarmsHandler);
     //: Waits up to WaitMs (ms; the driver is held meanwhile, so keep it short) for alarms and returns
     //: the ones that arrived since the last call (the scan thread also takes them in while it runs). Alarms
     //: empty with ioOk = none arrived. Without an AlarmSubscribe it fails.
@@ -630,6 +650,7 @@ constructor TS7CommPlusDriver.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
   FConnection := nil;
+  FAlarmHandlersCS := TCriticalSection.Create;
   FUseTLS := true;
   PReadSomethingAlways := true;
   PDeliverReadAhead := true;      //DoScanRead reads tags ahead of their time: their values must reach the tags
@@ -648,6 +669,7 @@ destructor TS7CommPlusDriver.Destroy;
 begin
   FreeAndNil(FConnection);
   inherited Destroy;
+  FreeAndNil(FAlarmHandlersCS);
 end;
 
 function TS7CommPlusDriver.GetConnected:Boolean;
@@ -1687,7 +1709,7 @@ begin
     end;
 
   if Length(DueIndices)=0 then begin
-    if Length(FSubs)>0 then
+    if (Length(FSubs)>0) or FConnection.AlarmSubscriptionActive then
       //Nothing to poll: the idle wait is spent listening for notifications instead of
       //sleeping, so a change is picked up as soon as the PLC sends it.
       PumpNotifications(20)
@@ -2079,6 +2101,12 @@ end;
 //: Takes in notifications: the first waits up to WaitMs for one to arrive, the rest only
 //: drain what is already there. Bounded, so a flood cannot starve the polled tags.
 procedure TS7CommPlusDriver.PumpNotifications(WaitMs:LongInt);
+begin
+  PumpNotificationsRun(WaitMs);
+  DeliverQueuedAlarms;
+end;
+
+procedure TS7CommPlusDriver.PumpNotificationsRun(WaitMs:LongInt);
 const
   MaxPerCall = 64;
 var
@@ -2842,13 +2870,110 @@ begin
   end;
 end;
 
+//: The alarms that were active when the subscription came up go to the handlers first, as the complete state.
+procedure TS7CommPlusDriver.AfterAlarmSubscription;
+var
+  Snap:TS7PlusAlarmArray;
+begin
+  if Length(FAlarmHandlers)=0 then exit;
+  if FConnection.ReadActiveAlarms(FAlarmLangs, Snap) then
+    DispatchAlarms(Snap, true)
+  else
+    ConnDebug(Self, 'Falha ao ler os alarmes ativos depois de assinar.');
+end;
+
+procedure TS7CommPlusDriver.DispatchAlarms(const Alarms:TS7PlusAlarmArray; IsSnapshot:Boolean);
+var
+  H:array of TS7PlusAlarmsHandler;
+  i:Integer;
+begin
+  //a snapshot is delivered even when empty: it says that nothing is active
+  if (Length(Alarms)=0) and (not IsSnapshot) then exit;
+  FAlarmHandlersCS.Enter;
+  try
+    SetLength(H, Length(FAlarmHandlers));
+    for i:=0 to High(H) do
+      H[i] := FAlarmHandlers[i];
+  finally
+    FAlarmHandlersCS.Leave;
+  end;
+  for i:=0 to High(H) do
+    try
+      H[i](Self, Alarms, IsSnapshot);
+    except
+      on E:Exception do
+        ConnDebug(Self, 'Excecao no tratador de alarmes: '+E.Message);
+    end;
+end;
+
+procedure TS7CommPlusDriver.DeliverQueuedAlarms;
+var
+  A:TS7PlusAlarmArray;
+begin
+  if (FConnection=nil) or (Length(FAlarmHandlers)=0) then exit;
+  FConnection.TakeQueuedAlarms(A);
+  if Length(A)>0 then
+    DispatchAlarms(A, false);
+end;
+
+procedure TS7CommPlusDriver.AddAlarmHandler(Handler:TS7PlusAlarmsHandler);
+begin
+  FAlarmHandlersCS.Enter;
+  try
+    SetLength(FAlarmHandlers, Length(FAlarmHandlers)+1);
+    FAlarmHandlers[High(FAlarmHandlers)] := Handler;
+  finally
+    FAlarmHandlersCS.Leave;
+  end;
+end;
+
+procedure TS7CommPlusDriver.RemoveAlarmHandler(Handler:TS7PlusAlarmsHandler);
+var
+  i, j:Integer;
+begin
+  FAlarmHandlersCS.Enter;
+  try
+    for i:=High(FAlarmHandlers) downto 0 do
+      if (TMethod(FAlarmHandlers[i]).Code=TMethod(Handler).Code) and
+         (TMethod(FAlarmHandlers[i]).Data=TMethod(Handler).Data) then begin
+        for j:=i+1 to High(FAlarmHandlers) do
+          FAlarmHandlers[j-1] := FAlarmHandlers[j];
+        SetLength(FAlarmHandlers, Length(FAlarmHandlers)-1);
+      end;
+  finally
+    FAlarmHandlersCS.Leave;
+  end;
+end;
+
+procedure TS7CommPlusDriver.AlarmRequest(const Languages:array of Cardinal; SendTexts:Boolean; CreditLimit:SmallInt);
+var
+  i:Integer;
+begin
+  LockDriverIO;
+  try
+    FAlarmTexts := SendTexts;
+    FAlarmCredit := CreditLimit;
+    FAlarmRetryAt := 0;
+    SetLength(FAlarmLangs, Length(Languages));
+    for i:=0 to High(Languages) do
+      FAlarmLangs[i] := Languages[i];
+    //a subscription already running with other parameters is dropped; the scan thread makes the new one
+    if (FConnection<>nil) and FConnection.Connected and FConnection.AlarmSubscriptionActive then
+      FConnection.AlarmSubscriptionDelete;
+    FAlarmWanted := true;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
 procedure TS7CommPlusDriver.ManageAlarmSubscription(Now_:QWord);
 begin
   if (not FAlarmWanted) or FConnection.AlarmSubscriptionActive then exit;
   if Now_<FAlarmRetryAt then exit;
-  if FConnection.AlarmSubscriptionCreate(FAlarmLangs, FAlarmTexts, FAlarmCredit) then
-    ConnDebug(Self, 'Subscricao de alarmes recriada.')
-  else begin
+  if FConnection.AlarmSubscriptionCreate(FAlarmLangs, FAlarmTexts, FAlarmCredit) then begin
+    ConnDebug(Self, 'Subscricao de alarmes criada.');
+    AfterAlarmSubscription;
+  end else begin
     FAlarmRetryAt := Now_+5000;
     ConnDebug(Self, 'Falha ao recriar a subscricao de alarmes - nova tentativa em 5 s.');
   end;
@@ -2876,6 +3001,7 @@ begin
       SetLength(FAlarmLangs, Length(Languages));
       for i:=0 to High(Languages) do
         FAlarmLangs[i] := Languages[i];
+      AfterAlarmSubscription;
       Result := ioOk;
     end else begin
       FAlarmWanted := false;

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of THMIS7PlusAlarmLogger: the alarm logger bell with the S7+ badge. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>THMIS7PlusAlarmLogger</title>
+  <g id="layer1">
+    <rect x="4" y="30" width="40" height="14" rx="2" fill="#ffffff" stroke="#666666" stroke-width="1.5"/>
+    <path d="M 8 34.5 H 40 M 8 39 H 34" stroke="#999999" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 24 4 C 14 4 12 12 12 18 C 12 23 9 25 7 27 H 41 C 39 25 36 23 36 18 C 36 12 34 4 24 4 Z" fill="#f5b800" stroke="#7a2e00" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="24" cy="5" r="2.5" fill="#7a2e00"/>
+    <path d="M 19.5 28 Q 24 36 28.5 28 Z" fill="#c62828" stroke="#7a2e00" stroke-width="1.5" stroke-linejoin="round"/>
+    <rect x="26" y="2" width="20" height="13" rx="3" fill="#00798c" stroke="#ffffff" stroke-width="1.5"/>
+    <text x="36" y="12.5" font-family="DejaVu Sans, Arial, sans-serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#ffffff">S7+</text>
+  </g>
+</svg>

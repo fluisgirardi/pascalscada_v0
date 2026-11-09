@@ -15,7 +15,7 @@ unit hmiregister;
 
 interface
 
-uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger;
+uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger, HMIS7PlusAlarmLogger;
 
 procedure Register;
 
@@ -106,6 +106,7 @@ begin
                                            THMIBandeja,
                                            THMIEventLogger,
                                            THMIAlarmLogger,
+                                           THMIS7PlusAlarmLogger,
                                            TTagLinkedSeriesSource]);
   {$IFEND}
   //RegisterComponents(strControlsPallete,  [THMIButton]);
