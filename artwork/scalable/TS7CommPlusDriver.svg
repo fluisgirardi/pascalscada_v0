@@ -1,23 +1,49 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Component palette icon of TS7CommPlusDriver, redrawn as vector from the 24x24 pixel icon (xinjeicon.lrs): one unit per pixel. -->
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="51.2" height="51.2" viewBox="0 0 24 24" id="svg2">
-  <title>TS7CommPlusDriver</title>
-  <g id="layer1" shape-rendering="crispEdges">
-    <g id="c009999" fill="#009999">
-      <rect x="8" y="8" width="4" height="2"/>
-      <rect x="6" y="10" width="2" height="4"/>
-      <rect x="8" y="14" width="2" height="2"/>
-      <rect x="10" y="16" width="2" height="4"/>
-      <rect x="6" y="20" width="4" height="2"/>
-    </g>
-    <g id="c00bfc4" fill="#00bfc4">
-      <rect x="14" y="8" width="6" height="2"/>
-      <rect x="18" y="10" width="2" height="4"/>
-      <rect x="16" y="14" width="2" height="2"/>
-      <rect x="14" y="16" width="2" height="6"/>
-    </g>
-    <g id="c00e5ea" fill="#00e5ea">
-      <rect x="3" y="22" width="18" height="1"/>
-    </g>
-  </g>
+
+<svg
+   version="1.1"
+   width="51.2"
+   height="51.2"
+   viewBox="0 0 24 24"
+   id="svg2"
+   sodipodi:docname="TS7CommPlusDriver.svg"
+   inkscape:version="1.4.4 (1:1.4.4+202605061436+dcaf3e7d9e)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs10" />
+  <sodipodi:namedview
+     id="namedview10"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="8.3278395"
+     inkscape:cx="77.391021"
+     inkscape:cy="47.071032"
+     inkscape:window-width="2560"
+     inkscape:window-height="1408"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <title
+     id="title1">TS7CommPlusDriver</title>
+  <text
+     xml:space="preserve"
+     style="font-size:13.5746px;font-family:FE-Font;-inkscape-font-specification:FE-Font;writing-mode:lr-tb;direction:ltr;fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827;stroke-linejoin:round"
+     x="4.1202126e-09"
+     y="15.895921"
+     id="text10"><tspan
+       sodipodi:role="line"
+       id="tspan10"
+       style="fill:#00bfc4;fill-opacity:1;stroke:none;stroke-width:8.85827"
+       x="4.1202126e-09"
+       y="15.895921">S7+</tspan></text>
 </svg>
