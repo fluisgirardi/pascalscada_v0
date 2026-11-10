@@ -64,16 +64,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-          # BGRAUnits and BGRABitmapTypes use each other. On the win32 job the pack
-          # leaves a bgraunits.ppu whose bgrabitmaptypes checksum is stale; FPC then
-          # wants to recompile it while building pascalscada_hmi, but only the .ppu
-          # directory is searched and the source is not there (Fatal 10022). So the
-          # pack is built first and its sources are copied next to the .ppu files,
-          # where FPC looks for them. (lazbuild --opt does not reach dependencies.)
-          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-          for d in ../bgrabitmap/bgrabitmap/lib/*/; do
-            cp ../bgrabitmap/bgrabitmap/*.pas ../bgrabitmap/bgrabitmap/*.inc "$d"
-          done
 
       - name: Register the PascalSCADA packages
         run: |
@@ -182,16 +172,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-          # BGRAUnits and BGRABitmapTypes use each other. On the win32 job the pack
-          # leaves a bgraunits.ppu whose bgrabitmaptypes checksum is stale; FPC then
-          # wants to recompile it while building pascalscada_hmi, but only the .ppu
-          # directory is searched and the source is not there (Fatal 10022). So the
-          # pack is built first and its sources are copied next to the .ppu files,
-          # where FPC looks for them. (lazbuild --opt does not reach dependencies.)
-          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-          for d in ../bgrabitmap/bgrabitmap/lib/*/; do
-            cp ../bgrabitmap/bgrabitmap/*.pas ../bgrabitmap/bgrabitmap/*.inc "$d"
-          done
 
       - name: BGRAControls (used by two examples)
         run: |
