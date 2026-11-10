@@ -230,6 +230,10 @@ jobs:
             i386/debian:bookworm \
             bash -euxc '
               export DEBIAN_FRONTEND=noninteractive
+              # With --network host the container inherits the DNS of the runner, which
+              # sometimes answers nothing (all three apt-get tries failed to resolve
+              # deb.debian.org). Use public resolvers; the container copy of the file only.
+              printf "nameserver 1.1.1.1\nnameserver 8.8.8.8\n" > /etc/resolv.conf || true
               # the network of the runner blinks now and then (DNS in the container):
               # try three times before giving up
               for try in 1 2 3; do
@@ -324,6 +328,10 @@ jobs:
             arm32v7/debian:bookworm \
             bash -euxc '
               export DEBIAN_FRONTEND=noninteractive
+              # With --network host the container inherits the DNS of the runner, which
+              # sometimes answers nothing (all three apt-get tries failed to resolve
+              # deb.debian.org). Use public resolvers; the container copy of the file only.
+              printf "nameserver 1.1.1.1\nnameserver 8.8.8.8\n" > /etc/resolv.conf || true
               # the network of the runner blinks now and then (DNS in the container):
               # try three times before giving up
               for try in 1 2 3; do
