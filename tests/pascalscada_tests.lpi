@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="57">
+    <Units Count="58">
       <Unit0>
         <Filename Value="pascalscada_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -262,6 +262,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="ut.s7plusalarmtracker"/>
       </Unit56>
+      <Unit57>
+        <Filename Value="ut.s7plusbasket.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.s7plusbasket"/>
+      </Unit57>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -105,6 +105,8 @@ type
     Name:String;
     //: Posição, em bytes, a partir do começo do elemento.
     Offset:LongInt;
+    //: BOOL: o bit dentro do byte de Offset (0..7); 0 para o resto.
+    BitOffset:Byte;
     SoftDataType:Byte;
     //: False: tipo que não vira item (data/hora, estrutura dentro da estrutura...).
     Supported:Boolean;
@@ -138,6 +140,8 @@ type
     ElementPaths:TStringArray;
     //: Posição no layout clássico e na imagem de memória do CLP (ver TS7PlusVarInfo); -1 = desconhecida.
     ByteOffset, ImageOffset:Integer;
+    //: BOOL: o bit dentro do byte de ByteOffset (0..7); 0 para o resto (ver TS7PlusVarInfo).
+    BitOffset:Byte;
     //: STRING do CLP: vira um TPLCString. StringLength = o máximo de caracteres (o primeiro
     //: byte do valor), -1 enquanto não foi lido (ver TS7CommPlusDriver.ResolveStringLengths).
     IsString:Boolean;
@@ -178,8 +182,24 @@ type
     SwapBytes, SwapWords, SwapDWords:Boolean;
     IsString:Boolean;
     StringSize:LongInt;
+    //: True: o item vem de um BOOL (lido como o byte inteiro, TagType=pttByte); BitIndex é o
+    //: bit dele no byte (0..7). Só informação: quem o usa é S7PlusBasketBuild.
+    IsBool:Boolean;
+    BitIndex:Byte;
   end;
   TS7PlusImportStructItems = array of TS7PlusImportStructItem;
+
+  {$IFDEF PORTUGUES}
+  //: Um TTagBit de um BOOL: SupportName é o item/elemento (de byte) que ele lê, BitIndex o bit.
+  {$ELSE}
+  //: A TTagBit of a BOOL: SupportName is the (byte) item/element it reads, BitIndex the bit.
+  {$ENDIF}
+  TS7PlusImportBitTag = record
+    CompName:String;
+    SupportName:String;
+    BitIndex:Byte;
+  end;
+  TS7PlusImportBitTags = array of TS7PlusImportBitTag;
 
   TS7PlusImportItem = record
     Path:String;
@@ -199,6 +219,11 @@ type
     //: True: um TPLCStruct de Size bytes (um array de estruturas) com os itens abaixo.
     IsStruct:Boolean;
     StructItems:TS7PlusImportStructItems;
+    //: True: o array é de BOOL (um elemento por byte). Só informação, como IsBool acima.
+    ElementIsBool:Boolean;
+    //: Os TTagBit a criar (só S7PlusBasketBuild preenche): um por BOOL, cada um sobre um item
+    //: de byte (de StructItems) ou um elemento de byte (de ElementNames).
+    Bits:TS7PlusImportBitTags;
   end;
   TS7PlusImportItems = array of TS7PlusImportItem;
 
@@ -419,6 +444,11 @@ function S7PlusBuildDBStructPlan(const Candidates:TS7PlusCandidateArray; const D
 function S7PlusSplitPath(const Path:String):TStringArray;
 
 implementation
+
+function IsBoolSoft(SoftDataType:Byte):Boolean;
+begin
+  Result := TS7PlusSoftDataType(SoftDataType) in [sdtBOOL, sdtBBOOL];
+end;
 
 //bytes a variable takes in the block that holds it; Exact=False when its width is not known
 function LeafSize(const C:TS7PlusCandidate; var Exact:Boolean):LongInt;
@@ -758,6 +788,7 @@ begin
     FillChar(M, SizeOf(M), 0);
     M.Name := Rest;
     M.Offset := LeafOff-ElemStart;
+    M.BitOffset := Candidates[k].BitOffset;
     M.SoftDataType := Candidates[k].SoftDataType;
     M.StringLength := -1;
     M.AccessArea := Candidates[k].AccessArea;
@@ -885,14 +916,27 @@ var
     if AOffset+AByteSize>Ends[Entry] then Ends[Entry] := AOffset+AByteSize;
   end;
 
+  //marks the last item added to the entry as coming from a BOOL, at the given bit
+  procedure MarkBool(Entry:Integer; ASoftType, ABit:Byte);
+  var
+    q:Integer;
+  begin
+    q := High(Plan[Entry].StructItems);
+    if (q<0) or (not IsBoolSoft(ASoftType)) then exit;
+    Plan[Entry].StructItems[q].IsBool := true;
+    Plan[Entry].StructItems[q].BitIndex := ABit;
+  end;
+
   procedure AddMemberItem(Entry:Integer; const AName:String; AOffset:LongInt; const M:TS7PlusStructMember);
   begin
     if M.IsString then begin
       if M.StringLength>=0 then
         AddItem(Entry, AName, AOffset, pttDefault, false, false, false, true, M.StringLength, M.StringLength+2);
-    end else
+    end else begin
       AddItem(Entry, AName, AOffset, M.TagType, M.SwapBytes, M.SwapWords, M.SwapDWords, false, 0,
               S7PlusDataTypeSize(M.SoftDataType, 0));
+      MarkBool(Entry, M.SoftDataType, M.BitOffset);
+    end;
   end;
 
 begin
@@ -921,6 +965,7 @@ begin
         Plan[n].IsBlock    := Candidates[c].IsArray;
         Plan[n].IsString   := Candidates[c].IsString;
         Plan[n].StringSize := Candidates[c].StringLength;
+        Plan[n].ElementIsBool := Candidates[c].IsArray and IsBoolSoft(Candidates[c].SoftDataType);
         Plan[n].Size       := 1;
         if Candidates[c].IsArray then begin
           Plan[n].Size := Candidates[c].ElementCount;
@@ -952,17 +997,22 @@ begin
               ElemSize := S7PlusDataTypeSize(Candidates[j].SoftDataType, 0);
               if ElemSize>0 then
                 for k:=0 to High(Candidates[j].ElementPaths) do
-                  AddItem(n, S7PlusSuggestedName(Candidates[j].ElementPaths[k], Prefix), Rel+k*ElemSize,
-                          Candidates[j].TagType, Candidates[j].SwapBytes, Candidates[j].SwapWords,
-                          Candidates[j].SwapDWords, false, 0, ElemSize);
+                  begin
+                    AddItem(n, S7PlusSuggestedName(Candidates[j].ElementPaths[k], Prefix), Rel+k*ElemSize,
+                            Candidates[j].TagType, Candidates[j].SwapBytes, Candidates[j].SwapWords,
+                            Candidates[j].SwapDWords, false, 0, ElemSize);
+                    MarkBool(n, Candidates[j].SoftDataType, 0);
+                  end;
             end else if Candidates[j].IsString then begin
               if Candidates[j].StringLength>=0 then
                 AddItem(n, S7PlusSuggestedName(Candidates[j].Path, Prefix), Rel, pttDefault, false, false,
                         false, true, Candidates[j].StringLength, Candidates[j].StringLength+2);
-            end else
+            end else begin
               AddItem(n, S7PlusSuggestedName(Candidates[j].Path, Prefix), Rel, Candidates[j].TagType,
                       Candidates[j].SwapBytes, Candidates[j].SwapWords, Candidates[j].SwapDWords, false, 0,
                       S7PlusDataTypeSize(Candidates[j].SoftDataType, 0));
+              MarkBool(n, Candidates[j].SoftDataType, Candidates[j].BitOffset);
+            end;
           end;
         //what a read of the structure returns, or where its last item ends if that is further
         Size := StructSizeOf(Candidates, Candidates[c].Path, Exact);
@@ -1151,6 +1201,17 @@ var
     if AOffset+AByteSize>EndMax then EndMax := AOffset+AByteSize;
   end;
 
+  //marks the last item added as coming from a BOOL, at the given bit
+  procedure MarkBool(ASoftType, ABit:Byte);
+  var
+    q:Integer;
+  begin
+    q := High(E.StructItems);
+    if (q<0) or (not IsBoolSoft(ASoftType)) then exit;
+    E.StructItems[q].IsBool := true;
+    E.StructItems[q].BitIndex := ABit;
+  end;
+
 begin
   SetLength(Result, 0);
   if S7PlusIsAreaName(DBKey) then exit;
@@ -1181,11 +1242,13 @@ begin
                 AddItem(S7PlusSuggestedName(Candidates[c].ElementPaths[k]+'.'+Candidates[c].Members[m].Name, Prefix),
                         Off, pttDefault, false, false, false, true, Candidates[c].Members[m].StringLength,
                         Candidates[c].Members[m].StringLength+2)
-              else
+              else begin
                 AddItem(S7PlusSuggestedName(Candidates[c].ElementPaths[k]+'.'+Candidates[c].Members[m].Name, Prefix),
                         Off, Candidates[c].Members[m].TagType, Candidates[c].Members[m].SwapBytes,
                         Candidates[c].Members[m].SwapWords, Candidates[c].Members[m].SwapDWords, false, 0,
                         S7PlusDataTypeSize(Candidates[c].Members[m].SoftDataType, 0));
+                MarkBool(Candidates[c].Members[m].SoftDataType, Candidates[c].Members[m].BitOffset);
+              end;
             end;
         continue;
       end;
@@ -1196,18 +1259,22 @@ begin
         //an array of scalars: one item per element
         ElemSize := S7PlusDataTypeSize(Candidates[c].SoftDataType, 0);
         if ElemSize>0 then
-          for k:=0 to High(Candidates[c].ElementPaths) do
+          for k:=0 to High(Candidates[c].ElementPaths) do begin
             AddItem(S7PlusSuggestedName(Candidates[c].ElementPaths[k], Prefix), Off+k*ElemSize,
                     Candidates[c].TagType, Candidates[c].SwapBytes, Candidates[c].SwapWords,
                     Candidates[c].SwapDWords, false, 0, ElemSize);
+            MarkBool(Candidates[c].SoftDataType, 0);
+          end;
       end else if Candidates[c].IsString then begin
         if Candidates[c].StringLength>=0 then
           AddItem(S7PlusSuggestedName(Candidates[c].Path, Prefix), Off, pttDefault, false, false, false,
                   true, Candidates[c].StringLength, Candidates[c].StringLength+2);
-      end else
+      end else begin
         AddItem(S7PlusSuggestedName(Candidates[c].Path, Prefix), Off, Candidates[c].TagType,
                 Candidates[c].SwapBytes, Candidates[c].SwapWords, Candidates[c].SwapDWords, false, 0,
                 S7PlusDataTypeSize(Candidates[c].SoftDataType, 0));
+        MarkBool(Candidates[c].SoftDataType, Candidates[c].BitOffset);
+      end;
     end;
 
   //a whole DB read, or where the last item ends if that is further
@@ -1357,6 +1424,7 @@ begin
   SetLength(Result.ElementPaths, 0);
   Result.ByteOffset := V.ByteOffset;
   Result.ImageOffset := V.ImageOffset;
+  Result.BitOffset := V.BitOffset;
   Result.IsString := false;
   Result.StringLength := -1;
   Result.AccessArea := AccessArea;
