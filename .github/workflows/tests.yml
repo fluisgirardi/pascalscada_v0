@@ -64,6 +64,16 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+          # BGRAUnits and BGRABitmapTypes use each other. On the win32 job the pack
+          # leaves a bgraunits.ppu whose bgrabitmaptypes checksum is stale; FPC then
+          # wants to recompile it while building pascalscada_hmi, but only the .ppu
+          # directory is searched and the source is not there (Fatal 10022). So the
+          # pack is built first and its sources are copied next to the .ppu files,
+          # where FPC looks for them. (lazbuild --opt does not reach dependencies.)
+          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+          for d in ../bgrabitmap/bgrabitmap/lib/*/; do
+            cp ../bgrabitmap/bgrabitmap/*.pas ../bgrabitmap/bgrabitmap/*.inc "$d"
+          done
 
       - name: Register the PascalSCADA packages
         run: |
@@ -83,7 +93,7 @@ jobs:
           lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_db.lpk
 
       - name: Build the graphical part (dsng + hmi + full)
-        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} --opt=-Fu../bgrabitmap/bgrabitmap pascalscada_full.lpk
+        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_full.lpk
 
       - name: Build the test suite
         # nogui: the runner is a console, no graphical widgetset needed
@@ -103,7 +113,7 @@ jobs:
         # Built with a real widgetset, not nogui: seven HMI units create an
         # LCL TTimer, and nogui has none - creating one raises "No timers
         # available" before the test can even reach its first assertion.
-        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} --opt=-Fu../bgrabitmap/bgrabitmap tests/pascalscada_hmi_tests.lpi
+        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} tests/pascalscada_hmi_tests.lpi
 
       - name: Run the HMI tests
         # gtk2 needs a display for its timers, so Linux runs under Xvfb.
@@ -172,6 +182,16 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+          # BGRAUnits and BGRABitmapTypes use each other. On the win32 job the pack
+          # leaves a bgraunits.ppu whose bgrabitmaptypes checksum is stale; FPC then
+          # wants to recompile it while building pascalscada_hmi, but only the .ppu
+          # directory is searched and the source is not there (Fatal 10022). So the
+          # pack is built first and its sources are copied next to the .ppu files,
+          # where FPC looks for them. (lazbuild --opt does not reach dependencies.)
+          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+          for d in ../bgrabitmap/bgrabitmap/lib/*/; do
+            cp ../bgrabitmap/bgrabitmap/*.pas ../bgrabitmap/bgrabitmap/*.inc "$d"
+          done
 
       - name: BGRAControls (used by two examples)
         run: |
