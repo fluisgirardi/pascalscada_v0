@@ -89,6 +89,7 @@ Which tag class to use:
 | A structure | `TPLCStruct` with one `TPLCStructItem` per member | `DB4.MyStruct` |
 | A whole DB | `TPLCStruct` | `DB4` |
 | An array of structures | `TPLCStruct` covering the array, members mapped to every index | `DB4.Arr` |
+| One element of an array of structures | `TPLCStruct` of its own | `DB4.Arr[1]` |
 
 The **`TagType`** of a `TPLCTagNumber` must match the type the variable has in the PLC, and so must `SwapBytes`/`SwapWords`/`SwapDWords`: the PLC is big-endian, so a 2-byte value needs `SwapBytes`, a 4-byte one `SwapBytes` + `SwapWords`, an 8-byte one all three. The Tag Builder fills these in from the PLC's own type information; only a tag typed by hand can get them wrong.
 
@@ -96,22 +97,29 @@ The **`TagType`** of a `TPLCTagNumber` must match the type the variable has in t
 
 ##### Tag Builder
 
-Right-click the `TS7CommPlusDriver` → **Tag Builder** opens *S7CommPlus – tag import*:
+Right-click the `TS7CommPlusDriver` → **Tag Builder** opens *S7CommPlus – tag import (basket)*. The tree on the left only browses; what will be created lives in the **basket** on the right, where each entry has its own name, scan time and options.
 
-1. Press **Read the variables from the PLC**. The port must be `Active = True` beforehand, otherwise the wizard warns and reads nothing. Only the DB list (plus the I, Q and M areas, if *Include the I, Q and M areas* is ticked) is read at this point; the variables of a DB are read when it is expanded or ticked, and the IDE freezes for the time of one DB.
-2. Choose what to import in **What to import** — each mode shows only what it imports, and what is ticked in each one is kept, so a single **Import** creates everything:
+1. Press **Read the variables from the PLC**. The port must be `Active = True` beforehand, otherwise the wizard warns and reads nothing. Only the DB list (plus the I, Q and M areas, if *Include the I, Q and M areas* is ticked) is read at this point; the variables of a DB are read when it is expanded or added, and the IDE freezes for the time of one DB.
+2. Select what you want on the tree (Shift/Ctrl for several) and press **Add to the basket**, double-click a leaf or drag it into the basket. What an entry becomes depends only on what was added:
 
-| Mode | What each ticked item becomes |
+| What you add | What it becomes |
 |---|---|
-| *Simple tags* | a `TPLCTagNumber` (a `TPLCString` for a `STRING`), read by its symbolic path |
-| *Arrays of simple types* | a `TPLCBlock`, with the option of also creating the `TPLCBlockElement` of its elements |
-| *Structures* | a `TPLCStruct`, with the option of also creating the `TPLCStructItem` of its members. A whole DB is a structure too: ticking the DB creates a `TPLCStruct` read by its name, with an item per top-level variable |
-| *Arrays of structures* | only the first element is shown, with its members; the ticked members are mapped (`TPLCStructItem`) to every index of a `TPLCStruct` that covers the whole array |
+| A simple variable | a `TPLCTagNumber` (a `TPLCString` for a `STRING`), read by its symbolic path |
+| An array of a simple type | a `TPLCBlock`, with the option of also creating the `TPLCBlockElement` of its elements |
+| A structure | a `TPLCStruct`, with the option of also creating the `TPLCStructItem` of its members |
+| An array of structures | a `TPLCStruct` covering the whole array, with the option of mapping the members of the first element (`TPLCStructItem`) to every index |
+| One element of an array of structures (`DB.Arr[1]`) | a `TPLCStruct` of its own, read by the path of the element |
+| A whole DB (the DB node) | a `TPLCStruct` read by the name of the DB, with an item per variable if the children are mapped |
+| An element of an array, or a member inside such an element | a loose `TPLCTagNumber`, read by its path |
 
-3. Set the **scan time** (ms; `0` = on change), the **name prefix** of the created components and, for a block or a structure, whether the elements/items are created too. Ticking an item does not tick its sub-items: the right-button menu has *Check all the sub-items* / *Uncheck all*.
-4. **Import**. The components appear on the form or data module with `ProtocolDriver` already linked.
+   The elements of arrays and their members are on the tree too (turn *Show the array elements* off for a DB with thousands of them). **Add the variables below** adds every simple variable and array under the selected node, one entry each; the *Only the types* list (`Real, DInt`) and the tree filter narrow it. The filter takes a piece of the path, or a mask with `*` and `?`.
+3. **For what is added**: the name prefix, the scan time (ms; `0` = on change) and whether the child items are mapped. They are only the starting values of the new entries: each entry can be changed afterwards.
+4. Edit the entries on the basket. With several selected, the scan time, the prefix and *Map the child items* apply to all of them; the name is edited one at a time, or generated for all by the **name template**: `{name}` is the last level of the path, `{path}` the whole path, `{db}` the DB and `{n}` the number in the selection (`p{name}_{n}`).
+5. **Create the components**. The names are checked first: an invalid name, a repeated one (also among the items, elements and bits that will be created) or one that already exists stops the creation and says which. Adding the same node twice is allowed, as long as the names differ. The components appear on the form or data module with `ProtocolDriver` already linked, and the creation shows a progress bar.
 
-A variable that cannot become a tag is listed with the reason (*not a tag: structure (use the members)*, *type not supported*, *array element*, *could not read the STRING length*) when *Show the variables that do not become tags* is on.
+**Child items and `BOOL`.** A `BOOL` is read from the PLC as the whole byte that holds it, so a `TPLCStructItem` of a `Bool` would show the neighbouring bits too. With the child items mapped, each `BOOL` of a structure or of an array of `Bool` becomes a `TTagBit` over a byte item (`TPLCStructItem`, or `TPLCBlockElement` in a block) that is always created, named `<name>_Byte<offset>`: the `Bool`s that share a byte share that item. An array of `Bool` is assumed to take one byte per element.
+
+A variable that cannot become a tag is listed with the reason (*type not supported*, *could not read the STRING length*) when *Show the variables that do not become tags* is on. The **Classic wizard** button opens the previous wizard, with ticks per mode.
 
 ##### Polling or on change
 
@@ -157,7 +165,7 @@ Read the temperature `"Data".Temperature` (`Real`) of an S7-1200 at 192.168.0.10
 1. In TIA Portal: nothing to change; just note the name of the DB (`Data`) and compile.
 2. Drop a `TTCP_UDPPort`: `Host = 192.168.0.10`, `Port = 102`, `PortType = ptTCP`.
 3. Drop a `TS7CommPlusDriver`: `CommunicationPort = TCP_UDPPort1`, leave `UseTLS = True`.
-4. Right-click the driver → **Tag Builder**: *Read the variables from the PLC*, open the DB `Data`, mode *Simple tags*, tick `Temperature` and `Setpoint`, scan time 500, **Import**.
+4. Right-click the driver → **Tag Builder**: *Read the variables from the PLC*, open the DB `Data`, select `Temperature` and `Setpoint`, set the scan time to 500, **Add to the basket** and then **Create the components**.
 5. Link a `THMILabel` to `Temperature` and a `THMIEdit` to `Setpoint`. Set `Port.Active := True` and run.
 
 The same from code:

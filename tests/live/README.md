@@ -37,7 +37,7 @@ S7PLUS_HOST=192.168.56.2 S7PLUS_USER=User S7PLUS_PASSWORD=... \
 - **Conexão:** login, `Auth`, `ListTags` (tamanho das STRINGs lido do PLC), nenhuma "mudança de programa" falsa.
 - **Leituras:** todos os valores iniciais dos dois DBs (otimizado e não), o padrão do DB grande, valores que o PLC muda, 20 STRINGs numa só chamada.
 - **Escritas:** escalares de todos os tamanhos (inclusive Bool), STRINGs, membros de estrutura e de array de estruturas, elementos de array, o eco e o `ResetCmd` do PLC, `Enable`.
-- **Tags:** o DB inteiro como estrutura montada pelo plano do Tag Builder (por varredura e por mudança), o DB grande em várias requisições, tag numérico e de texto, tag por mudança seguindo o contador, escrita por um item da estrutura, escrita de um elemento de array.
+- **Tags:** o DB inteiro como estrutura montada pelo plano do Tag Builder (por varredura e por mudança), o DB grande em várias requisições, tag numérico e de texto, tag por mudança seguindo o contador, escrita por um item da estrutura, escrita de um elemento de array, e os `TTagBit` de um DB mapeado pela cesta do Tag Builder contra os mesmos Bool lidos pelo caminho.
 - **Reconexão:** a porta é fechada e reaberta sob uma subscrição.
 - **No fim (`ZZ`):** `LoadPattern` recarrega os valores por elemento.
 

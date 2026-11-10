@@ -89,6 +89,7 @@ Que classe de tag usar:
 | Uma estrutura | `TPLCStruct` com um `TPLCStructItem` por membro | `DB4.MyStruct` |
 | Um DB inteiro | `TPLCStruct` | `DB4` |
 | Um array de estruturas | `TPLCStruct` cobrindo o array, com os membros mapeados em todos os índices | `DB4.Arr` |
+| Um elemento de array de estruturas | `TPLCStruct` só dele | `DB4.Arr[1]` |
 
 O **`TagType`** de um `TPLCTagNumber` precisa casar com o tipo que a variável tem no CLP, e o mesmo vale para `SwapBytes`/`SwapWords`/`SwapDWords`: o CLP é big-endian, então um valor de 2 bytes precisa de `SwapBytes`, um de 4 bytes de `SwapBytes` + `SwapWords`, um de 8 bytes dos três. O Tag Builder preenche isso a partir da informação de tipo do próprio CLP; só um tag digitado à mão pode ficar errado.
 
@@ -96,22 +97,29 @@ O **`TagType`** de um `TPLCTagNumber` precisa casar com o tipo que a variável t
 
 ##### Tag Builder
 
-Clique com o botão direito no `TS7CommPlusDriver` → **Tag Builder** abre *S7CommPlus – importação de tags*:
+Clique com o botão direito no `TS7CommPlusDriver` → **Tag Builder** abre *S7CommPlus – importação de tags (cesta)*. A árvore da esquerda só navega; o que será criado fica na **cesta**, à direita, onde cada entrada tem o próprio nome, tempo de atualização e opções.
 
-1. Aperte **Ler as variáveis do CLP**. A porta precisa estar `Active = True` antes, senão o assistente avisa e não lê nada. Só a lista de DBs (mais as áreas I, Q e M, se *Incluir as áreas I, Q e M* estiver marcado) é lida neste momento; as variáveis de um DB são lidas quando ele é expandido ou marcado, e a IDE congela pelo tempo de um DB.
-2. Escolha o que importar em **O que importar** — cada modo mostra só o que ele importa, e o que está marcado em cada um é guardado, então um único **Importar** cria tudo:
+1. Aperte **Ler as variáveis do CLP**. A porta precisa estar `Active = True` antes, senão o assistente avisa e não lê nada. Só a lista de DBs (mais as áreas I, Q e M, se *Incluir as áreas I, Q e M* estiver marcado) é lida neste momento; as variáveis de um DB são lidas quando ele é expandido ou adicionado, e a IDE congela pelo tempo de um DB.
+2. Selecione o que quer na árvore (Shift/Ctrl para vários) e aperte **Adicionar à cesta**, dê dois cliques numa folha ou arraste para a cesta. O que a entrada vira depende só do que foi adicionado:
 
-| Modo | O que cada item marcado vira |
+| O que você adiciona | O que vira |
 |---|---|
-| *Tags simples* | um `TPLCTagNumber` (um `TPLCString` para um `STRING`), lido pelo caminho simbólico |
-| *Arrays de tipos simples* | um `TPLCBlock`, com a opção de criar também os `TPLCBlockElement` dos elementos |
-| *Estruturas* | um `TPLCStruct`, com a opção de criar também os `TPLCStructItem` dos membros. Um DB inteiro também é uma estrutura: marcar o DB cria um `TPLCStruct` lido pelo nome dele, com um item por variável de primeiro nível |
-| *Arrays de estruturas* | só o primeiro elemento aparece, com os membros; os membros marcados são mapeados (`TPLCStructItem`) em todos os índices de um `TPLCStruct` que cobre o array inteiro |
+| Uma variável simples | um `TPLCTagNumber` (um `TPLCString` para um `STRING`), lido pelo caminho simbólico |
+| Um array de tipo simples | um `TPLCBlock`, com a opção de criar também os `TPLCBlockElement` dos elementos |
+| Uma estrutura | um `TPLCStruct`, com a opção de criar também os `TPLCStructItem` dos membros |
+| Um array de estruturas | um `TPLCStruct` cobrindo o array inteiro, com a opção de mapear os membros do primeiro elemento (`TPLCStructItem`) em todos os índices |
+| Um elemento de array de estruturas (`DB.Arr[1]`) | um `TPLCStruct` só dele, lido pelo caminho do elemento |
+| Um DB inteiro (o nó do DB) | um `TPLCStruct` lido pelo nome do DB, com um item por variável se os filhos forem mapeados |
+| Um elemento de array, ou um membro dentro de um desses elementos | um `TPLCTagNumber` solto, lido pelo caminho |
 
-3. Ajuste o **tempo de atualização** (ms; `0` = por mudança), o **prefixo do nome** dos componentes criados e, para um bloco ou uma estrutura, se os elementos/itens são criados também. Marcar um item não marca os subitens: o menu do botão direito tem *Marcar todos os subitens* / *Desmarcar todos os subitens*.
-4. **Importar**. Os componentes aparecem no form ou data module com o `ProtocolDriver` já ligado.
+   Os elementos dos arrays e os membros deles também aparecem na árvore (desligue *Mostrar os elementos dos arrays* num DB com milhares deles). **Adicionar as variáveis abaixo** adiciona toda variável simples e todo array abaixo do nó selecionado, uma entrada para cada; a lista *Só os tipos* (`Real, DInt`) e o filtro da árvore restringem o que entra. O filtro aceita um pedaço do caminho ou uma máscara com `*` e `?`.
+3. **Para o que for adicionado**: o prefixo do nome, o tempo de atualização (ms; `0` = por mudança) e se os itens filhos são mapeados. São só os valores iniciais das entradas novas: cada entrada pode ser alterada depois.
+4. Edite as entradas na cesta. Com várias selecionadas, o tempo de atualização, o prefixo e *Mapear os itens filhos* valem para todas; o nome se edita um de cada vez, ou se gera para todas com o **modelo de nome**: `{name}` é o último nível do caminho, `{path}` o caminho todo, `{db}` o DB e `{n}` o número na seleção (`p{name}_{n}`).
+5. **Criar os componentes**. Antes, os nomes são conferidos: um nome inválido, um repetido (inclusive entre os itens, elementos e bits que serão criados) ou um que já existe interrompe a criação e diz qual é. Adicionar o mesmo nó duas vezes é permitido, desde que os nomes sejam diferentes. Os componentes aparecem no form ou data module com o `ProtocolDriver` já ligado, e a criação mostra uma barra de progresso.
 
-Uma variável que não pode virar tag é listada com o motivo (*não vira tag: estrutura (use os membros)*, *tipo não suportado*, *elemento de array*, *não foi possível ler o tamanho da STRING*) quando *Mostrar as variáveis que não viram tag* está ligado.
+**Itens filhos e `BOOL`.** O CLP entrega um `BOOL` como o byte inteiro que o contém, então um `TPLCStructItem` de um `Bool` mostraria também os bits vizinhos. Com os itens filhos mapeados, cada `BOOL` de uma estrutura, ou de um array de `Bool`, vira um `TTagBit` sobre um item de byte (`TPLCStructItem`, ou `TPLCBlockElement` num bloco) que é sempre criado e se chama `<nome>_Byte<offset>`: os `Bool` que dividem um byte dividem esse item. Um array de `Bool` é tratado como um byte por elemento.
+
+Uma variável que não pode virar tag é listada com o motivo (*tipo não suportado*, *não foi possível ler o tamanho da STRING*) quando *Mostrar as variáveis que não viram tag* está ligado. O botão **Assistente clássico** abre o assistente anterior, com marcas por modo.
 
 ##### Polling ou por mudança
 
@@ -157,7 +165,7 @@ Ler a temperatura `"Data".Temperature` (`Real`) de um S7-1200 em 192.168.0.10 e 
 1. No TIA Portal: nada a mudar; só anote o nome do DB (`Data`) e compile.
 2. Insira um `TTCP_UDPPort`: `Host = 192.168.0.10`, `Port = 102`, `PortType = ptTCP`.
 3. Insira um `TS7CommPlusDriver`: `CommunicationPort = TCP_UDPPort1`, deixe `UseTLS = True`.
-4. Botão direito no driver → **Tag Builder**: *Ler as variáveis do CLP*, abra o DB `Data`, modo *Tags simples*, marque `Temperature` e `Setpoint`, tempo de atualização 500, **Importar**.
+4. Botão direito no driver → **Tag Builder**: *Ler as variáveis do CLP*, abra o DB `Data`, selecione `Temperature` e `Setpoint`, ponha o tempo de atualização em 500, **Adicionar à cesta** e depois **Criar os componentes**.
 5. Ligue um `THMILabel` ao `Temperature` e um `THMIEdit` ao `Setpoint`. Faça `Port.Active := True` e rode.
 
 O mesmo por código:

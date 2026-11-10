@@ -47,7 +47,8 @@ interface
 uses
   Classes, SysUtils, Math, fpcunit, testregistry,
   Tag, ProtocolTypes, PLCTagNumber, PLCString, PLCBlock, PLCBlockElement, PLCStruct, PLCStructElement, PLCStructString,
-  tcp_udpport, S7PlusFamily, S7PlusConnection, S7PlusTypeInfo, S7PlusTypes, S7PlusTagPlan, S7PlusAlarms;
+  PLCNumber, TagBit, tcp_udpport, S7PlusFamily, S7PlusConnection, S7PlusTypeInfo, S7PlusTypes, S7PlusTagPlan,
+  S7PlusBasket, S7PlusAlarms;
 
 type
   { TLiveCase }
@@ -112,6 +113,7 @@ type
     procedure AnOnChangeTagFollowsTheCounter;
     procedure AWholeDBStructureWritesAnItem;
     procedure AnArrayElementTagWritesOnlyItsElement;
+    procedure TheBitsOfABasketDBMatchTheBoolsReadByPath;
   end;
 
   { TTestLiveReconnect }
@@ -1429,6 +1431,112 @@ begin
   finally
     Items.Free;
     Strs.Free;
+  end;
+end;
+
+//The basket maps a whole DB (children on): every Bool becomes a TTagBit over a byte item of the
+//structure. Each bit must read what the same Bool reads as a tag of its own, by its path.
+procedure TTestLiveTags.TheBitsOfABasketDBMatchTheBoolsReadByPath;
+const
+  MaxBits = 20;
+var
+  Cands:TS7PlusCandidateArray;
+  Vars:TS7PlusVarInfoArray;
+  Entries:TS7PlusBasketEntries;
+  Plan:TS7PlusImportItems;
+  St:TPLCStruct;
+  Items, Bits, Refs:TList;
+  It:TPLCStructItem;
+  Support:TPLCStructItem;
+  Bit:TTagBit;
+  Ref:TPLCTagNumber;
+  N, k, q, c, Mismatches:Integer;
+  Msg:String;
+begin
+  SetLength(Cands, 0);
+  Vars := DbVars('TestDB_Opt', N);
+  S7PlusAddBrowsed(Cands, Vars, 'TestDB_Opt', S7PlusIds_DBAccessAreaBase+Cardinal(N));
+  S7PlusMarkArrays(Cands);
+  GDriver.ResolveStringLengths(Cands);
+
+  SetLength(Entries, 1);
+  AssertTrue('a DB can go into the basket', S7PlusBasketNewDBEntry('TestDB_Opt', 'p', 500, true, Entries[0]));
+  Plan := S7PlusBasketBuild(Cands, Entries);
+  AssertEquals('one structure', 1, Length(Plan));
+  AssertTrue('the DB has Bools', Length(Plan[0].Bits)>0);
+
+  St := TPLCStruct.Create(nil);
+  Own(St);                    //freed last: what refers to it is freed before
+  St.Name := 'live_basket_db';
+  St.LongAddress := Plan[0].Path;
+  St.Size := Plan[0].Size;
+  St.RefreshTime := Plan[0].Scan;
+  St.ProtocolDriver := GDriver;
+
+  Items := TList.Create;
+  Bits := TList.Create;
+  Refs := TList.Create;
+  try
+    for k:=0 to High(Plan[0].StructItems) do begin
+      if Plan[0].StructItems[k].IsString then continue;
+      It := TPLCStructItem.Create(nil);
+      Own(It);
+      It.Name := Plan[0].StructItems[k].CompName;
+      It.PLCBlock := St;
+      It.Index := Plan[0].StructItems[k].Offset;
+      It.TagType := Plan[0].StructItems[k].TagType;
+      It.SwapBytes := Plan[0].StructItems[k].SwapBytes;
+      It.SwapWords := Plan[0].StructItems[k].SwapWords;
+      It.SwapDWords := Plan[0].StructItems[k].SwapDWords;
+      Items.Add(It);
+    end;
+
+    for q:=0 to Min(High(Plan[0].Bits), MaxBits-1) do begin
+      Support := nil;
+      for k:=0 to Items.Count-1 do
+        if TPLCStructItem(Items[k]).Name=Plan[0].Bits[q].SupportName then Support := TPLCStructItem(Items[k]);
+      AssertTrue('the byte item of '+Plan[0].Bits[q].CompName, Support<>nil);
+
+      Bit := TTagBit.Create(nil);
+      Own(Bit);
+      Bit.Name := Plan[0].Bits[q].CompName;
+      Bit.PLCTag := Support;
+      Bit.EndBit := Plan[0].Bits[q].BitIndex;
+      Bit.StartBit := Plan[0].Bits[q].BitIndex;
+      Bits.Add(Bit);
+
+      //the same Bool as a tag of its own, by its path
+      Ref := nil;
+      for c:=0 to High(Cands) do
+        if (Cands[c].Skip=srNone) and (TS7PlusSoftDataType(Cands[c].SoftDataType) in [sdtBOOL, sdtBBOOL]) and
+           (S7PlusSuggestedName(Cands[c].Path, 'p')=Plan[0].Bits[q].CompName) then begin
+          Ref := TPLCTagNumber.Create(nil);
+          Own(Ref);
+          Ref.Name := 'live_ref_'+IntToStr(q);
+          Ref.TagType := pttByte;
+          Ref.RefreshTime := 500;
+          Ref.LongAddress := Cands[c].Path;
+          Ref.ProtocolDriver := GDriver;
+          break;
+        end;
+      AssertTrue('the Bool '+Plan[0].Bits[q].CompName+' by its path', Ref<>nil);
+      Refs.Add(Ref);
+    end;
+
+    Pump(5000);
+
+    Mismatches := 0;
+    Msg := '';
+    for q:=0 to Bits.Count-1 do
+      if (Trunc(TTagBit(Bits[q]).Value)<>0) <> (Trunc(TPLCTagNumber(Refs[q]).Value)<>0) then begin
+        Inc(Mismatches);
+        Msg := Msg+' '+TTagBit(Bits[q]).Name;
+      end;
+    AssertEquals('bits that differ from the Bool read by path:'+Msg, 0, Mismatches);
+  finally
+    Refs.Free;
+    Bits.Free;
+    Items.Free;
   end;
 end;
 
