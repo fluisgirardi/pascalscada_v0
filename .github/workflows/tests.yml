@@ -64,6 +64,11 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+          # Built on its own, before PascalSCADA: when it is built inside the same
+          # lazbuild run as pascalscada_hmi, the win32 job found a bgraunits.ppu whose
+          # bgrabitmaptypes checksum had changed and, with only the output directory
+          # in the search path, could not recompile it (Fatal 10022).
+          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
       - name: Register the PascalSCADA packages
         run: |
@@ -172,6 +177,11 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+          # Built on its own, before PascalSCADA: when it is built inside the same
+          # lazbuild run as pascalscada_hmi, the win32 job found a bgraunits.ppu whose
+          # bgrabitmaptypes checksum had changed and, with only the output directory
+          # in the search path, could not recompile it (Fatal 10022).
+          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
       - name: BGRAControls (used by two examples)
         run: |
