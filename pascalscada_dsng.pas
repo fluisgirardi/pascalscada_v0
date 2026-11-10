@@ -13,7 +13,7 @@ uses
   ubitmapper, uelementmapper, uModbusTagBuilder, us7tagbuilder, 
   ustructuremapper, uwesttagbuilder, westasciitagassistant, 
   rockwelltagassistant, ulgxtagbuilder, s7plustagassistant, us7plustagbuilder, 
-  s7pluscertpropedit, LazarusPackageIntf;
+  s7pluscertpropedit, us7plusbasketbuilder, LazarusPackageIntf;
 
 implementation
 

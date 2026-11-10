@@ -2,10 +2,10 @@ object Form1: TForm1
   Left = 555
   Height = 374
   Top = 250
-  Width = 320
+  Width = 466
   Caption = 'Form1'
   ClientHeight = 374
-  ClientWidth = 320
+  ClientWidth = 466
   LCLVersion = '4.9.0.0'
   object HMILabel1: THMILabel
     Left = 24
@@ -37,7 +37,7 @@ object Form1: TForm1
   end
   object tagMArea_Clock_5Hz: TPLCTagNumber
     TagGUID = '{7F69D7B5-4329-496E-A9B8-4C254B05AD13}'
-    CommReadErrors = 1683
+    CommReadErrors = 401929
     PLCRack = 0
     PLCSlot = 0
     PLCStation = 0
@@ -74,7 +74,7 @@ object Form1: TForm1
     User = 'postgres'
     Password = 'Idt2014#'
     ReadOnly = False
-    Left = 103
-    Top = 268
+    Left = 140
+    Top = 248
   end
 end

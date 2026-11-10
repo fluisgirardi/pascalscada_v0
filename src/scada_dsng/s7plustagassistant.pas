@@ -52,7 +52,8 @@ implementation
 
 uses
   Classes, SysUtils, Controls, Tag, ProtocolTypes, ProtocolDriver, PLCTagNumber,
-  PLCBlock, PLCBlockElement, PLCString, PLCStruct, PLCStructElement, PLCStructString, S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, hsstrings;
+  PLCBlock, PLCBlockElement, PLCString, PLCStruct, PLCStructElement, PLCStructString, PLCNumber, TagBit,
+  S7PlusFamily, S7PlusTagPlan, us7plustagbuilder, us7plusbasketbuilder, hsstrings;
 
 function UniqueComponentName(aOwner: TComponent; const aBaseName: String): String;
 var
@@ -74,14 +75,13 @@ begin
   end;
 end;
 
-procedure OpenTagEditor(aProtocolDriver,
-                        aOwnerOfNewTags: TComponent;
-                        InsertHook: TAddTagInEditorHook;
-                        CreateProc: TCreateTagProc);
+//Creates the components of a plan on the form/datamodule. The plan names the byte item/element
+//a TTagBit reads, so what was created is found again by the name it had in the plan (the real
+//name can get a number to stay unique).
+procedure CreateFromPlan(const plan:TS7PlusImportItems; aProtocolDriver, aOwnerOfNewTags:TComponent;
+                         InsertHook:TAddTagInEditorHook; CreateProc:TCreateTagProc);
 var
-  frmTb:TfrmS7PlusTagBuilder;
-  plan:TS7PlusImportItems;
-  c:LongInt;
+  c, k:LongInt;
   aOwner:TComponent;
   aNumber:TPLCTagNumber;
   aBlock:TPLCBlock;
@@ -90,20 +90,40 @@ var
   aStruct:TPLCStruct;
   aItem:TPLCStructItem;
   aStructString:TPLCStructString;
-  k:LongInt;
+  Made:TStringList;
+
+  procedure CreateBits(aPlanItem:LongInt);
+  var
+    q, p:LongInt;
+    aBit:TTagBit;
+  begin
+    for q:=0 to High(plan[aPlanItem].Bits) do begin
+      if not Made.Find(plan[aPlanItem].Bits[q].SupportName, p) then continue;
+
+      aBit:=TTagBit(CreateProc(TTagBit));
+
+      aOwner:=aBit.Owner;
+      if aOwner=nil then aOwner:=aOwnerOfNewTags;
+
+      aBit.Name   := UniqueComponentName(aOwner, plan[aPlanItem].Bits[q].CompName);
+      aBit.PLCTag := TPLCNumber(Made.Objects[p]);
+      //EndBit first: StartBit cannot pass it
+      aBit.EndBit   := plan[aPlanItem].Bits[q].BitIndex;
+      aBit.StartBit := plan[aPlanItem].Bits[q].BitIndex;
+
+      InsertHook(aBit);
+    end;
+  end;
+
 begin
-  if not (aProtocolDriver is TS7CommPlusDriver) then
-    raise Exception.Create(SS7PTBOnlyS7PlusDriver);
-
-  frmTb:=TfrmS7PlusTagBuilder.Create(nil);
+  Made:=TStringList.Create;
   try
-    frmTb.Driver:=TS7CommPlusDriver(aProtocolDriver);
-
-    if frmTb.ShowModal<>mrOK then exit;
-
-    plan:=frmTb.GetImportPlan;
+    Made.CaseSensitive:=false;
+    Made.Sorted:=true;
+    Made.Duplicates:=dupIgnore;
 
     for c:=0 to High(plan) do begin
+      Made.Clear;
       if plan[c].IsStruct then begin
         //an array of structures: one TPLCStruct over the whole array, with one item per member
         //of each element, each at its place in the bytes of the struct
@@ -149,8 +169,10 @@ begin
             aItem.SwapDWords := plan[c].StructItems[k].SwapDWords;
 
             InsertHook(aItem);
+            Made.AddObject(plan[c].StructItems[k].CompName, aItem);
           end;
         end;
+        CreateBits(c);
         continue;
       end;
 
@@ -185,7 +207,9 @@ begin
           anElement.Index   := k;
 
           InsertHook(anElement);
+          Made.AddObject(plan[c].ElementNames[k], anElement);
         end;
+        CreateBits(c);
         continue;
       end;
 
@@ -223,9 +247,57 @@ begin
 
       InsertHook(aNumber);
     end;
+
+  finally
+    Made.Free;
+  end;
+end;
+
+//the classic wizard: ticks per mode
+procedure OpenClassicEditor(aProtocolDriver,
+                            aOwnerOfNewTags: TComponent;
+                            InsertHook: TAddTagInEditorHook;
+                            CreateProc: TCreateTagProc);
+var
+  frmTb:TfrmS7PlusTagBuilder;
+begin
+  frmTb:=TfrmS7PlusTagBuilder.Create(nil);
+  try
+    frmTb.Driver:=TS7CommPlusDriver(aProtocolDriver);
+
+    if frmTb.ShowModal<>mrOK then exit;
+
+    CreateFromPlan(frmTb.GetImportPlan, aProtocolDriver, aOwnerOfNewTags, InsertHook, CreateProc);
   finally
     frmTb.Destroy;
   end;
+end;
+
+//the basket wizard; its "classic wizard" button hands over to the old one
+procedure OpenTagEditor(aProtocolDriver,
+                        aOwnerOfNewTags: TComponent;
+                        InsertHook: TAddTagInEditorHook;
+                        CreateProc: TCreateTagProc);
+var
+  frmBk:TfrmS7PlusBasketBuilder;
+  res:Integer;
+begin
+  if not (aProtocolDriver is TS7CommPlusDriver) then
+    raise Exception.Create(SS7PTBOnlyS7PlusDriver);
+
+  frmBk:=TfrmS7PlusBasketBuilder.Create(nil);
+  try
+    frmBk.Driver:=TS7CommPlusDriver(aProtocolDriver);
+
+    res:=frmBk.ShowModal;
+    if res=mrOK then
+      CreateFromPlan(frmBk.GetImportPlan, aProtocolDriver, aOwnerOfNewTags, InsertHook, CreateProc);
+  finally
+    frmBk.Destroy;
+  end;
+
+  if res=mrRetry then
+    OpenClassicEditor(aProtocolDriver, aOwnerOfNewTags, InsertHook, CreateProc);
 end;
 
 initialization

@@ -34,7 +34,8 @@ uses
   S7PlusHarpoTenPart3, S7PlusHarpoTransform12, S7PlusHarpoTransform7, 
   S7PlusHarpoUtil, S7PlusHarpoLegitimate, S7PlusTagPlan, S7PlusCertificate, 
   XinJEDriver, XinJETCP, DeltaDriver, DeltaTCP, InovanceDriver, InovanceTCP, 
-  H5UTagDriver, H5UTagTCP, S7PlusAlarms, S7PlusAlarmTracker, LazarusPackageIntf;
+  H5UTagDriver, H5UTagTCP, S7PlusAlarms, S7PlusAlarmTracker, S7PlusBasket, 
+  LazarusPackageIntf;
 
 implementation
 
