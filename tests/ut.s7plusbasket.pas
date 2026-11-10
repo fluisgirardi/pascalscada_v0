@@ -50,6 +50,10 @@ type
     procedure AnExistingNameIsAProblem;
     procedure TheNamesOfTheChildrenAreChecked;
     procedure ACleanBasketHasNoProblems;
+    procedure ATemplateFillsTheNameFromThePath;
+    procedure ATypeListFiltersByThePLCType;
+    procedure AnArrayElementIsATagByItsPath;
+    procedure AMemberInsideAStructArrayElementIsATagByItsPath;
   end;
 
 implementation
@@ -502,6 +506,53 @@ var
 begin
   L := Db4Like;
   AssertEquals(0, Length(S7PlusBasketNameProblems(S7PlusBasketBuild(L, nil), ['Button1'])));
+end;
+
+procedure TTestS7PlusBasket.ATemplateFillsTheNameFromThePath;
+begin
+  AssertEquals('DB4_Var26_v1', S7PlusBasketApplyTemplate('{path}', 'DB4.Var26.v1', 1));
+  AssertEquals('pv1_1', S7PlusBasketApplyTemplate('p{name}_{n}', 'DB4.Var26.v1', 1));
+  AssertEquals('DB4x', S7PlusBasketApplyTemplate('{DB}x', 'DB4.Var26.v1', 1));
+  AssertEquals('a template with no token is the name', 'fixed', S7PlusBasketApplyTemplate('fixed', 'DB4.Var1', 3));
+  AssertEquals('an index of an array stays in the name', 'tagArr_2', S7PlusBasketApplyTemplate('tag{name}', 'DB4.Arr[2]', 1));
+end;
+
+procedure TTestS7PlusBasket.ATypeListFiltersByThePLCType;
+begin
+  AssertTrue('an empty list takes all', S7PlusTypeListMatches('', 8));
+  AssertTrue('Real', S7PlusTypeListMatches('Real', 8));
+  AssertTrue('the comparison ignores case and spaces', S7PlusTypeListMatches('dint, REAL', 8));
+  AssertFalse('Int is not Real', S7PlusTypeListMatches('Int,DInt', 8));
+  AssertTrue('DInt', S7PlusTypeListMatches('Int,DInt', 7));
+end;
+
+procedure TTestS7PlusBasket.AnArrayElementIsATagByItsPath;
+var
+  L:TS7PlusCandidateArray;
+  K:TS7PlusBasketKind;
+  I:TS7PlusImportItem;
+begin
+  L := ArrayList;
+  AssertTrue('Arr[0] can be dragged', S7PlusBasketKindOf(L, 5, K));
+  AssertTrue('as a tag', K=bkTag);
+  I := One(L, 5, 'p', 0, false);
+  AssertEquals('DB6.W[0]', I.Path);
+  AssertFalse('not a block', I.IsBlock);
+  AssertEquals('pDB6_W_0', I.CompName);
+end;
+
+procedure TTestS7PlusBasket.AMemberInsideAStructArrayElementIsATagByItsPath;
+var
+  L:TS7PlusCandidateArray;
+  K:TS7PlusBasketKind;
+  I:TS7PlusImportItem;
+begin
+  L := StructArrayList;
+  AssertFalse('the element itself is not', S7PlusBasketKindOf(L, 1, K));
+  AssertTrue('a member of it is', S7PlusBasketKindOf(L, 2, K));
+  I := One(L, 2, 'p', 0, false);
+  AssertEquals('DB4.var28[0].Dint1', I.Path);
+  AssertTrue(I.TagType=pttLongInt);
 end;
 
 initialization

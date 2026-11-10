@@ -354,6 +354,11 @@ resourcestring
   SS7PBKDuplicateName           = 'nome repetido';
   SS7PBKExistsName              = 'já existe';
   SS7PBKTreeHint                = 'Selecione (Shift/Ctrl) e use Adicionar, dê dois cliques ou arraste para a cesta.';
+  SS7PBKShowElements            = 'Mostrar os elementos dos arrays (e os membros deles)';
+  SS7PBKOnlyTypes               = 'Só os tipos (ex.: Real, DInt; vale para "Adicionar abaixo")';
+  SS7PBKEditPrefix              = 'Prefixo (selecionadas)';
+  SS7PBKTemplate                = 'Modelo de nome para as selecionadas: {name} {path} {db} {n}';
+  SS7PBKApplyTemplate           = 'Aplicar o modelo';
   {$ELSE}
   SUpdateThreadWinit = 'The thread does not respond to the INIT command';  //ok
   SCompIsntADriver = 'The component is not a valid protocol driver';    //ok
@@ -668,6 +673,11 @@ resourcestring
   SS7PBKDuplicateName           = 'repeated name';
   SS7PBKExistsName              = 'already exists';
   SS7PBKTreeHint                = 'Select (Shift/Ctrl) and use Add, double click or drag into the basket.';
+  SS7PBKShowElements            = 'Show the array elements (and their members)';
+  SS7PBKOnlyTypes               = 'Only the types (e.g. Real, DInt; applies to "Add the variables below")';
+  SS7PBKEditPrefix              = 'Prefix (selected)';
+  SS7PBKTemplate                = 'Name template for the selected ones: {name} {path} {db} {n}';
+  SS7PBKApplyTemplate           = 'Apply the template';
   {$ENDIF}
 
 {$IFNDEF FPC}

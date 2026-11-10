@@ -48,7 +48,7 @@ interface
 
 uses
   Classes, SysUtils, Types, Contnrs, Math, Graphics, Forms, Controls, Dialogs, StdCtrls, ExtCtrls,
-  ComCtrls, Menus, Spin, Tag, ProtocolTypes, S7PlusTypes, S7PlusConnection, S7PlusTypeInfo,
+  ComCtrls, Menus, Masks, Spin, Tag, ProtocolTypes, S7PlusTypes, S7PlusConnection, S7PlusTypeInfo,
   S7PlusTagPlan, S7PlusBasket, S7PlusFamily;
 
 type
@@ -86,7 +86,7 @@ type
     //top
     pnlTop:TPanel;
     btnBrowse, btnExpandAll, btnCollapseAll, btnClassic:TButton;
-    chkSymbolicNames, chkIncludeAreas, chkShowSkipped:TCheckBox;
+    chkSymbolicNames, chkIncludeAreas, chkShowSkipped, chkShowElements:TCheckBox;
     lblStatus, lblFilter:TLabel;
     edtFilter:TEdit;
     //tree
@@ -97,11 +97,11 @@ type
     popTree:TPopupMenu;
     //basket side
     pnlRight, pnlDefaults, pnlEdit:TPanel;
-    lblDefaults, lblPrefix, lblScan, lblEditName, lblEditScan, lblBasketInfo:TLabel;
-    edtPrefix, edtName:TEdit;
+    lblDefaults, lblPrefix, lblScan, lblTypes, lblEditName, lblEditScan, lblEditPrefix, lblTemplate, lblBasketInfo:TLabel;
+    edtPrefix, edtName, edtTypes, edtEditPrefix, edtTemplate:TEdit;
     spinScan, spinEditScan:TSpinEdit;
     chkMapChildren, chkEditMap:TCheckBox;
-    btnAdd, btnAddBelow, btnRemove, btnClear:TButton;
+    btnAdd, btnAddBelow, btnRemove, btnClear, btnApplyTemplate:TButton;
     lvBasket:TListView;
     tmrSel:TTimer;
     //bottom
@@ -163,6 +163,8 @@ type
     procedure SelTimer(Sender:TObject);
     procedure EditNameChange(Sender:TObject);
     procedure EditScanChange(Sender:TObject);
+    procedure EditPrefixChange(Sender:TObject);
+    procedure ApplyTemplateClick(Sender:TObject);
     procedure EditMapClick(Sender:TObject);
     procedure RemoveClick(Sender:TObject);
     procedure ClearClick(Sender:TObject);
@@ -287,9 +289,9 @@ var
 begin
   Caption := SS7PBKCaption;
   Width := 1100;
-  Height := 720;
+  Height := 800;
   Constraints.MinWidth := 900;
-  Constraints.MinHeight := 520;
+  Constraints.MinHeight := 640;
   Position := poScreenCenter;
   BorderIcons := [biSystemMenu, biMaximize];
 
@@ -309,7 +311,7 @@ begin
   lblProblems.Width := 600;
 
   //----- top
-  pnlTop := MakePanel(Self, alTop, 72);
+  pnlTop := MakePanel(Self, alTop, 104);
   btnBrowse := MakeButton(pnlTop, SS7PTBBrowse, 8, 8, 200, @btnBrowseClick);
   chkSymbolicNames := MakeCheck(pnlTop, SS7PTBSymbolicNames, 216, 11, 220, true);
   chkIncludeAreas := MakeCheck(pnlTop, SS7PTBIncludeAreas, 440, 11, 220, false);
@@ -323,6 +325,8 @@ begin
   edtFilter.OnChange := @FilterChanged;
   chkShowSkipped := MakeCheck(pnlTop, SS7PTBShowSkipped, 264, 45, 300, false);
   chkShowSkipped.OnClick := @FilterChanged;
+  chkShowElements := MakeCheck(pnlTop, SS7PBKShowElements, 8, 76, 420, true);
+  chkShowElements.OnClick := @FilterChanged;
   btnExpandAll := MakeButton(pnlTop, SS7PTBExpandAll, 570, 42, 100, @btnExpandAllClick);
   btnCollapseAll := MakeButton(pnlTop, SS7PTBCollapseAll, 676, 42, 100, @btnCollapseAllClick);
   btnClassic := MakeButton(pnlTop, SS7PBKClassic, 0, 42, 180, nil);
@@ -383,12 +387,17 @@ begin
   spinScan.MinValue := 0;
   spinScan.MaxValue := 3600000;
   spinScan.Value := 1000;
+  lblTypes := MakeLabel(pnlDefaults, SS7PBKOnlyTypes, 8, 106);
+  lblTypes.AutoSize := true;
+  edtTypes := TEdit.Create(Self);
+  edtTypes.Parent := pnlDefaults;
+  edtTypes.SetBounds(8, 124, 200, 27);
   chkMapChildren := MakeCheck(pnlDefaults, SS7PBKMapChildren, 8, 78, 640, true);
-  btnAdd := MakeButton(pnlDefaults, SS7PBKAdd, 8, 104, 190, @AddClick);
-  btnAddBelow := MakeButton(pnlDefaults, SS7PBKAddBelow, 206, 104, 230, @AddBelowClick);
-  pnlDefaults.Height := 138;
+  btnAdd := MakeButton(pnlDefaults, SS7PBKAdd, 8, 160, 190, @AddClick);
+  btnAddBelow := MakeButton(pnlDefaults, SS7PBKAddBelow, 206, 160, 230, @AddBelowClick);
+  pnlDefaults.Height := 196;
 
-  pnlEdit := MakePanel(pnlRight, alBottom, 138);
+  pnlEdit := MakePanel(pnlRight, alBottom, 206);
   lblBasketInfo := MakeLabel(pnlEdit, '', 8, 4);
   lblBasketInfo.AutoSize := false;
   lblBasketInfo.Width := 600;
@@ -406,10 +415,23 @@ begin
   spinEditScan.MinValue := 0;
   spinEditScan.MaxValue := 3600000;
   spinEditScan.OnChange := @EditScanChange;
+  lblEditPrefix := MakeLabel(pnlEdit, SS7PBKEditPrefix, 540, 26);
+  lblEditPrefix.AutoSize := true;
+  edtEditPrefix := TEdit.Create(Self);
+  edtEditPrefix.Parent := pnlEdit;
+  edtEditPrefix.SetBounds(540, 44, 140, 27);
+  edtEditPrefix.OnChange := @EditPrefixChange;
   chkEditMap := MakeCheck(pnlEdit, SS7PBKMapChildren, 8, 78, 640, false);
   chkEditMap.OnClick := @EditMapClick;
-  btnRemove := MakeButton(pnlEdit, SS7PBKRemove, 8, 104, 190, @RemoveClick);
-  btnClear := MakeButton(pnlEdit, SS7PBKClear, 206, 104, 190, @ClearClick);
+  lblTemplate := MakeLabel(pnlEdit, SS7PBKTemplate, 8, 108);
+  lblTemplate.AutoSize := true;
+  edtTemplate := TEdit.Create(Self);
+  edtTemplate.Parent := pnlEdit;
+  edtTemplate.SetBounds(8, 126, 300, 27);
+  edtTemplate.Text := '{path}';
+  btnApplyTemplate := MakeButton(pnlEdit, SS7PBKApplyTemplate, 316, 126, 190, @ApplyTemplateClick);
+  btnRemove := MakeButton(pnlEdit, SS7PBKRemove, 8, 168, 190, @RemoveClick);
+  btnClear := MakeButton(pnlEdit, SS7PBKClear, 206, 168, 190, @ClearClick);
 
   lvBasket := TListView.Create(Self);
   lvBasket.Parent := pnlRight;
@@ -542,14 +564,15 @@ begin
 end;
 
 //a variable is on the tree when it can go into the basket (or, with the option, when it is
-//one the PLC lists but does not become a tag); array elements and what is inside an element of
-//an array are covered by the array and never listed
+//one the PLC lists but does not become a tag)
 function TfrmS7PlusBasketBuilder.ShowCandidate(aIndex:LongInt):Boolean;
 var
   k:TS7PlusBasketKind;
 begin
   Result := false;
-  if Pos('[', FCandidates[aIndex].Path)>0 then exit;
+  //the elements of an array, and what is inside an element of an array of structures, are tags
+  //of their own by path: the option hides them (a DB can have thousands)
+  if (Pos('[', FCandidates[aIndex].Path)>0) and (not chkShowElements.Checked) then exit;
   if S7PlusBasketKindOf(FCandidates, aIndex, k) then
     Result := true
   else
@@ -564,9 +587,13 @@ var
 begin
   Result := ShowCandidate(aIndex);
   if not Result then exit;
-  aFilter := Trim(edtFilter.Text);
-  if (aFilter<>'') and (Pos(LowerCase(aFilter), LowerCase(FCandidates[aIndex].Path))=0) then
-    Result := false;
+  aFilter := LowerCase(Trim(edtFilter.Text));
+  if aFilter='' then exit;
+  //with * or ? the filter is a mask, otherwise a piece of the path
+  if (Pos('*', aFilter)>0) or (Pos('?', aFilter)>0) then
+    Result := MatchesMask(LowerCase(FCandidates[aIndex].Path), '*'+aFilter+'*')
+  else
+    Result := Pos(aFilter, LowerCase(FCandidates[aIndex].Path))>0;
 end;
 
 procedure TfrmS7PlusBasketBuilder.SaveExpansion(aExpanded:TStringList);
@@ -648,9 +675,45 @@ var
   candIdx:TStringList;        //path of a candidate -> its index
   nodes:TStringList;          //path of a level -> its node
   aParent, node:TTreeNode;
-  info:TS7PlusBasketNodeInfo;
-  key, aText:String;
-  kind:TS7PlusBasketKind;
+  key, baseKey, lvl:String;
+
+  //the node of a level, made if it is not there yet; a level that is a variable of the list
+  //(a structure, an array, an element) can be dragged too
+  function NodeOf(const aKey, aLevel:String; aUnder:TTreeNode):TTreeNode;
+  var
+    q:LongInt;
+    info:TS7PlusBasketNodeInfo;
+    kind:TS7PlusBasketKind;
+    aText:String;
+    ci:LongInt;
+  begin
+    if nodes.Find(aKey, q) then begin
+      Result := TTreeNode(nodes.Objects[q]);
+      exit;
+    end;
+    info := TS7PlusBasketNodeInfo.Create;
+    info.Key := aKey;
+    info.Index := -1;
+    info.Block := -1;
+    FInfos.Add(info);
+
+    aText := aLevel;
+    if candIdx.Find(aKey, q) then begin
+      ci := PtrInt(candIdx.Objects[q]);
+      if S7PlusBasketKindOf(FCandidates, ci, kind) then
+        info.Index := ci;
+      aText := aText+Decoration(ci);
+      //the size of a structure; inside an array element there can be thousands: none
+      if (TS7PlusSoftDataType(FCandidates[ci].SoftDataType)=sdtSTRUCT) and
+         (not FCandidates[ci].IsStructArray) and (Pos('[', aKey)=0) then
+        aText := aText+' ('+SizeText(FBlocks[aBlock].Cands, aKey, false)+')';
+    end;
+
+    Result := tvTags.Items.AddChild(aUnder, aText);
+    Result.Data := info;
+    nodes.AddObject(aKey, Result);
+  end;
+
 begin
   candIdx := TStringList.Create;
   nodes := TStringList.Create;
@@ -674,31 +737,17 @@ begin
       for k:=0 to High(levels) do begin
         if key<>'' then key := key+'.';
         key := key+levels[k];
+        lvl := levels[k];
 
         if nodes.Find(key, p) then
           node := TTreeNode(nodes.Objects[p])
         else begin
-          info := TS7PlusBasketNodeInfo.Create;
-          info.Key := key;
-          info.Index := -1;
-          info.Block := -1;
-          FInfos.Add(info);
-
-          aText := levels[k];
-          //a level that is a variable of the list (a structure, an array) can be dragged too
-          if candIdx.Find(key, p) then begin
-            if S7PlusBasketKindOf(FCandidates, PtrInt(candIdx.Objects[p]), kind) then
-              info.Index := PtrInt(candIdx.Objects[p]);
-            aText := aText+Decoration(PtrInt(candIdx.Objects[p]));
-            //the size of a structure; inside an array element there can be thousands: none
-            if (TS7PlusSoftDataType(FCandidates[PtrInt(candIdx.Objects[p])].SoftDataType)=sdtSTRUCT) and
-               (not FCandidates[PtrInt(candIdx.Objects[p])].IsStructArray) and (Pos('[', key)=0) then
-              aText := aText+' ('+SizeText(FBlocks[aBlock].Cands, key, false)+')';
+          //an element of an array (Arr[2]) hangs from the array (Arr), made if it is not there
+          if (lvl<>'') and (lvl[Length(lvl)]=']') and (Pos('[', lvl)>1) then begin
+            baseKey := Copy(key, 1, Length(key)-Length(lvl))+Copy(lvl, 1, Pos('[', lvl)-1);
+            aParent := NodeOf(baseKey, Copy(lvl, 1, Pos('[', lvl)-1), aParent);
           end;
-
-          node := tvTags.Items.AddChild(aParent, aText);
-          node.Data := info;
-          nodes.AddObject(key, node);
+          node := NodeOf(key, lvl, aParent);
         end;
         aParent := node;
       end;
@@ -1084,9 +1133,12 @@ begin
   end;
   for c:=first to last do begin
     if Pos(Pfx, FCandidates[c].Path)<>1 then continue;
+    //the elements of an array come with the array (and are dragged one by one when wanted)
+    if Pos('[', FCandidates[c].Path)>0 then continue;
     if not PassFilter(c) then continue;
     if not S7PlusBasketKindOf(FCandidates, c, kind) then continue;
     if kind=bkStruct then continue;
+    if not S7PlusTypeListMatches(edtTypes.Text, FCandidates[c].SoftDataType) then continue;
     if S7PlusBasketNewEntry(FCandidates, c, edtPrefix.Text, spinScan.Value, chkMapChildren.Checked, E) and
        (FindEntry(E.Path, E.IsDB)<0) then begin
       PushEntry(E);
@@ -1248,12 +1300,15 @@ begin
 
     edtName.Enabled := Length(FSel)=1;
     spinEditScan.Enabled := Length(FSel)>0;
+    edtEditPrefix.Enabled := Length(FSel)>0;
+    btnApplyTemplate.Enabled := Length(FSel)>0;
     btnRemove.Enabled := Length(FSel)>0;
     btnClear.Enabled := FCount>0;
     btnCreate.Enabled := FCount>0;
 
     if Length(FSel)=0 then begin
       edtName.Text := '';
+      edtEditPrefix.Text := '';
       chkEditMap.Enabled := false;
       chkEditMap.Checked := false;
       exit;
@@ -1263,6 +1318,11 @@ begin
       edtName.Text := EntryName(FSel[0])
     else
       edtName.Text := '';
+
+    //the prefix they share; with different ones the field stays empty
+    edtEditPrefix.Text := FEntries[FSel[0]].Prefix;
+    for i:=1 to High(FSel) do
+      if FEntries[FSel[i]].Prefix<>FEntries[FSel[0]].Prefix then edtEditPrefix.Text := '';
 
     sameScan := true;
     for i:=1 to High(FSel) do
@@ -1308,6 +1368,38 @@ begin
   for i:=0 to High(FSel) do
     FEntries[FSel[i]].Scan := spinEditScan.Value;
   lvBasket.Invalidate;
+end;
+
+procedure TfrmS7PlusBasketBuilder.EditPrefixChange(Sender:TObject);
+var
+  i:LongInt;
+begin
+  if FUpdating then exit;
+  for i:=0 to High(FSel) do
+    FEntries[FSel[i]].Prefix := edtEditPrefix.Text;
+  //an entry with no name of its own is named from its prefix
+  if Length(FSel)=1 then begin
+    FUpdating := true;
+    try
+      edtName.Text := EntryName(FSel[0]);
+    finally
+      FUpdating := false;
+    end;
+  end;
+  RefreshProblems;
+end;
+
+//the name of each selected entry from the template, numbered in the order of the basket
+procedure TfrmS7PlusBasketBuilder.ApplyTemplateClick(Sender:TObject);
+var
+  i:LongInt;
+begin
+  CollectSelection;
+  if (Length(FSel)=0) or (Trim(edtTemplate.Text)='') then exit;
+  for i:=0 to High(FSel) do
+    FEntries[FSel[i]].Name := Trim(S7PlusBasketApplyTemplate(edtTemplate.Text, FEntries[FSel[i]].Path, i+1));
+  RefreshProblems;
+  ShowSelection;
 end;
 
 procedure TfrmS7PlusBasketBuilder.EditMapClick(Sender:TObject);

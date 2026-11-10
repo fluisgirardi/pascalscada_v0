@@ -141,7 +141,60 @@ function S7PlusBasketBuild(const Candidates:TS7PlusCandidateArray; const Entries
 {$ENDIF}
 function S7PlusBasketNameProblems(const Items:TS7PlusImportItems; const Existing:array of String):TS7PlusNameProblems;
 
+{$IFDEF PORTUGUES}
+//: Um nome a partir de um modelo: {path} (o caminho todo, no formato dos nomes sugeridos),
+//: {name} (o último nível), {db} (o primeiro nível) e {n} (N). O resultado não é validado.
+{$ELSE}
+//: A name from a template: {path} (the whole path, in the format of the suggested names),
+//: {name} (the last level), {db} (the first level) and {n} (N). The result is not validated.
+{$ENDIF}
+function S7PlusBasketApplyTemplate(const Template, Path:String; N:LongInt):String;
+
+{$IFDEF PORTUGUES}
+//: Se o tipo do CLP está na lista de nomes separados por vírgula (Real, DInt...; a comparação
+//: ignora maiúsculas). Lista vazia aceita todos.
+{$ELSE}
+//: Whether the PLC type is in the comma separated list of names (Real, DInt...; the comparison
+//: ignores case). An empty list accepts all.
+{$ENDIF}
+function S7PlusTypeListMatches(const List:String; SoftDataType:Byte):Boolean;
+
 implementation
+
+function S7PlusBasketApplyTemplate(const Template, Path:String; N:LongInt):String;
+var
+  Levels:TStringArray;
+begin
+  Levels := S7PlusSplitPath(Path);
+  Result := StringReplace(Template, '{path}', S7PlusSuggestedName(Path, ''), [rfReplaceAll, rfIgnoreCase]);
+  if Length(Levels)>0 then begin
+    Result := StringReplace(Result, '{name}', S7PlusSuggestedName(Levels[High(Levels)], ''), [rfReplaceAll, rfIgnoreCase]);
+    Result := StringReplace(Result, '{db}', S7PlusSuggestedName(Levels[0], ''), [rfReplaceAll, rfIgnoreCase]);
+  end;
+  Result := StringReplace(Result, '{n}', IntToStr(N), [rfReplaceAll, rfIgnoreCase]);
+end;
+
+function S7PlusTypeListMatches(const List:String; SoftDataType:Byte):Boolean;
+var
+  Items:TStringList;
+  i:Integer;
+begin
+  Result := Trim(List)='';
+  if Result then exit;
+  Items := TStringList.Create;
+  try
+    Items.StrictDelimiter := true;
+    Items.Delimiter := ',';
+    Items.DelimitedText := List;
+    for i:=0 to Items.Count-1 do
+      if SameText(Trim(Items[i]), S7PlusSoftTypeName(SoftDataType)) then begin
+        Result := true;
+        exit;
+      end;
+  finally
+    Items.Free;
+  end;
+end;
 
 function FindCandidate(const Candidates:TS7PlusCandidateArray; const Path:String):Integer;
 var
