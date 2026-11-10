@@ -234,6 +234,10 @@ jobs:
               # sometimes answers nothing (all three apt-get tries failed to resolve
               # deb.debian.org). Use public resolvers; the container copy of the file only.
               printf "nameserver 1.1.1.1\nnameserver 8.8.8.8\n" > /etc/resolv.conf || true
+              # diagnostics for the log, should the DNS fail again
+              uname -r
+              getent hosts deb.debian.org || echo "DIAG: getent failed"
+              (exec 3<>/dev/tcp/1.1.1.1/53) 2>/dev/null && echo "DIAG: tcp 1.1.1.1:53 ok" || echo "DIAG: tcp 1.1.1.1:53 failed"
               # the network of the runner blinks now and then (DNS in the container):
               # try three times before giving up
               for try in 1 2 3; do
