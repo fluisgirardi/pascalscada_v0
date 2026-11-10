@@ -62,7 +62,10 @@ jobs:
 
       - name: BGRABitmap (pascalscada_hmi dependency)
         run: |
-          git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
+          # Pinned: from v11.6.7 on BGRABitmapTypes uses BGRAUnits, which uses it back, and on the
+          # win32 job (FPC 3.2.2 i386) the pack leaves a stale bgraunits.ppu that cannot be
+          # recompiled while building pascalscada_hmi (Fatal 10022). v11.6.6 has no such cycle.
+          git clone --depth 1 --branch v11.6.6 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
       - name: Register the PascalSCADA packages
@@ -170,7 +173,10 @@ jobs:
 
       - name: BGRABitmap (pascalscada_hmi dependency)
         run: |
-          git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
+          # Pinned: from v11.6.7 on BGRABitmapTypes uses BGRAUnits, which uses it back, and on the
+          # win32 job (FPC 3.2.2 i386) the pack leaves a stale bgraunits.ppu that cannot be
+          # recompiled while building pascalscada_hmi (Fatal 10022). v11.6.6 has no such cycle.
+          git clone --depth 1 --branch v11.6.6 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
       - name: BGRAControls (used by two examples)
