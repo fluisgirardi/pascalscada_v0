@@ -64,11 +64,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-          # Built on its own, before PascalSCADA: when it is built inside the same
-          # lazbuild run as pascalscada_hmi, the win32 job found a bgraunits.ppu whose
-          # bgrabitmaptypes checksum had changed and, with only the output directory
-          # in the search path, could not recompile it (Fatal 10022).
-          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
       - name: Register the PascalSCADA packages
         run: |
@@ -88,7 +83,7 @@ jobs:
           lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_db.lpk
 
       - name: Build the graphical part (dsng + hmi + full)
-        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} pascalscada_full.lpk
+        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} --opt=-Fu../bgrabitmap/bgrabitmap pascalscada_full.lpk
 
       - name: Build the test suite
         # nogui: the runner is a console, no graphical widgetset needed
@@ -108,7 +103,7 @@ jobs:
         # Built with a real widgetset, not nogui: seven HMI units create an
         # LCL TTimer, and nogui has none - creating one raises "No timers
         # available" before the test can even reach its first assertion.
-        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} tests/pascalscada_hmi_tests.lpi
+        run: lazbuild --build-all --widgetset=${{ matrix.widgetset }} --opt=-Fu../bgrabitmap/bgrabitmap tests/pascalscada_hmi_tests.lpi
 
       - name: Run the HMI tests
         # gtk2 needs a display for its timers, so Linux runs under Xvfb.
@@ -177,11 +172,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/bgrabitmap/bgrabitmap.git ../bgrabitmap
           lazbuild --add-package-link ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-          # Built on its own, before PascalSCADA: when it is built inside the same
-          # lazbuild run as pascalscada_hmi, the win32 job found a bgraunits.ppu whose
-          # bgrabitmaptypes checksum had changed and, with only the output directory
-          # in the search path, could not recompile it (Fatal 10022).
-          lazbuild --build-all --widgetset=${{ matrix.widgetset }} ../bgrabitmap/bgrabitmap/bgrabitmappack.lpk
 
       - name: BGRAControls (used by two examples)
         run: |
