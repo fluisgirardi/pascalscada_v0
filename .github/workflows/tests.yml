@@ -225,7 +225,11 @@ jobs:
 
       - name: Build and test inside an i386 container
         run: |
-          docker run --rm --network host --platform linux/386 \
+          # seccomp=unconfined, linux32 only: the native i386 container cannot even open a TCP
+          # connection on the runner (DIAG: tcp 1.1.1.1:53 failed), while armhf (QEMU) works and
+          # the same image works on a desktop. Suspect: the default seccomp profile refusing the
+          # 32 bit socket syscalls. Runner is disposable; remove this if the cause is another.
+          docker run --rm --network host --security-opt seccomp=unconfined --platform linux/386 \
             -v "$PWD":/src -w /src \
             i386/debian:bookworm \
             bash -euxc '
