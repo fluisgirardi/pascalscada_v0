@@ -208,9 +208,33 @@ begin
   Result := -1;
 end;
 
+//The array of structures a candidate is an element of (Arr[1]); False if it is not one.
+function StructArrayHeadOf(const Candidates:TS7PlusCandidateArray; Idx:Integer; out Head:Integer):Boolean;
+var
+  C:TS7PlusCandidate;
+  j, k:Integer;
+begin
+  Result := false;
+  Head := -1;
+  C := Candidates[Idx];
+  if (C.Skip<>srArrayElement) or (TS7PlusSoftDataType(C.SoftDataType)<>sdtSTRUCT) then exit;
+  if (C.Path='') or (C.Path[Length(C.Path)]<>']') then exit;
+  for j:=Idx-1 downto 0 do begin
+    if (not Candidates[j].IsStructArray) or (Pos(Candidates[j].Path+'[', C.Path)<>1) then continue;
+    if Candidates[j].ElementSize<=0 then continue;
+    for k:=0 to High(Candidates[j].ElementPaths) do
+      if SameText(Candidates[j].ElementPaths[k], C.Path) then begin
+        Head := j;
+        Result := true;
+        exit;
+      end;
+  end;
+end;
+
 function S7PlusBasketKindOf(const Candidates:TS7PlusCandidateArray; Idx:Integer;
   out Kind:TS7PlusBasketKind):Boolean;
 var
+  Head:Integer;
   C:TS7PlusCandidate;
 begin
   Result := false;
@@ -220,6 +244,10 @@ begin
   if S7PlusIsStructArrayHead(C) then begin
     Kind := bkStruct;
     Result := (C.ElementSize>0) and (C.ElementCount>0);
+  end else if StructArrayHeadOf(Candidates, Idx, Head) then begin
+    //one element of an array of structures: a TPLCStruct of its own, read by its path
+    Kind := bkStruct;
+    Result := true;
   end else if S7PlusSelectable(C, imArray, false) then begin
     Kind := bkBlock;
     Result := true;
@@ -261,6 +289,53 @@ begin
   Entry.MapChildren := MapChildren;
 end;
 
+//A TPLCStruct of ONE element of an array of structures, read by the path of the element: as big
+//as an element, with the members of the array (those of its first element, at the offsets
+//inside it) when the children are mapped. The items are placed the way the array has them
+//(the PLC's classic bytes).
+procedure ItemOfStructElement(const Head:TS7PlusCandidate; const ElemPath:String;
+  const E:TS7PlusBasketEntry; out Item:TS7PlusImportItem);
+var
+  m, q:Integer;
+  Name:String;
+begin
+  Finalize(Item);
+  FillChar(Item, SizeOf(Item), 0);
+  Item.Path     := ElemPath;
+  Item.CompName := S7PlusSuggestedName(ElemPath, E.Prefix);
+  Item.Scan     := E.Scan;
+  Item.IsStruct := true;
+  Item.Size     := Head.ElementSize;
+  if not E.MapChildren then exit;
+
+  for m:=0 to High(Head.Members) do begin
+    if not Head.Members[m].Supported then continue;
+    Name := S7PlusSuggestedName(ElemPath+'.'+Head.Members[m].Name, E.Prefix);
+    if Head.Members[m].IsString and (Head.Members[m].StringLength<0) then continue;
+    q := Length(Item.StructItems);
+    SetLength(Item.StructItems, q+1);
+    FillChar(Item.StructItems[q], SizeOf(Item.StructItems[q]), 0);
+    Item.StructItems[q].CompName := Name;
+    Item.StructItems[q].Offset   := Head.Members[m].Offset;
+    if Head.Members[m].IsString then begin
+      Item.StructItems[q].IsString   := true;
+      Item.StructItems[q].StringSize := Head.Members[m].StringLength;
+      Item.StructItems[q].TagType    := pttDefault;
+      if Head.Members[m].Offset+Head.Members[m].StringLength+2>Item.Size then
+        Item.Size := Head.Members[m].Offset+Head.Members[m].StringLength+2;
+    end else begin
+      Item.StructItems[q].TagType    := Head.Members[m].TagType;
+      Item.StructItems[q].SwapBytes  := Head.Members[m].SwapBytes;
+      Item.StructItems[q].SwapWords  := Head.Members[m].SwapWords;
+      Item.StructItems[q].SwapDWords := Head.Members[m].SwapDWords;
+      if TS7PlusSoftDataType(Head.Members[m].SoftDataType) in [sdtBOOL, sdtBBOOL] then begin
+        Item.StructItems[q].IsBool   := true;
+        Item.StructItems[q].BitIndex := Head.Members[m].BitOffset;
+      end;
+    end;
+  end;
+end;
+
 //The plan item of one entry before the BOOLs get their bits.
 function ItemOfEntry(const Candidates:TS7PlusCandidateArray; const E:TS7PlusBasketEntry;
   out Item:TS7PlusImportItem):Boolean;
@@ -286,6 +361,12 @@ begin
 
   Idx := FindCandidate(Candidates, E.Path);
   if (Idx<0) or (not S7PlusBasketKindOf(Candidates, Idx, Kind)) then exit;
+
+  if StructArrayHeadOf(Candidates, Idx, Hit) then begin
+    ItemOfStructElement(Candidates[Hit], Candidates[Idx].Path, E, Item);
+    Result := true;
+    exit;
+  end;
 
   SetLength(Checked, Length(Candidates));
   for j:=0 to High(Checked) do Checked[j] := false;

@@ -52,6 +52,8 @@ type
     procedure ACleanBasketHasNoProblems;
     procedure ATemplateFillsTheNameFromThePath;
     procedure ATypeListFiltersByThePLCType;
+    procedure AnElementOfAnArrayOfStructsIsAStructOfItsOwn;
+    procedure AnElementOfAnArrayOfStructsMapsItsMembersOrNot;
     procedure AnArrayElementIsATagByItsPath;
     procedure AMemberInsideAStructArrayElementIsATagByItsPath;
   end;
@@ -181,7 +183,7 @@ var
   K:TS7PlusBasketKind;
 begin
   L := StructArrayList;
-  AssertFalse('an element of an array of structures', S7PlusBasketKindOf(L, 1, K));
+  AssertFalse('the element of an array of scalars is a tag, not a struct', S7PlusBasketKindOf(L, 99, K));
   L := ListSized(['DB7.Nome', 'DB7.Quando'], [19, Ord(sdtDTL)], [0, 0], [0, 0]);
   AssertFalse('a STRING whose length was not read', S7PlusBasketKindOf(L, 0, K));
   L[0].StringLength := 10;
@@ -526,6 +528,42 @@ begin
   AssertTrue('DInt', S7PlusTypeListMatches('Int,DInt', 7));
 end;
 
+procedure TTestS7PlusBasket.AnElementOfAnArrayOfStructsIsAStructOfItsOwn;
+var
+  L:TS7PlusCandidateArray;
+  K:TS7PlusBasketKind;
+  I:TS7PlusImportItem;
+begin
+  L := StructArrayList;
+  AssertTrue('var28[1] can be dragged', S7PlusBasketKindOf(L, 5, K));
+  AssertTrue('as a struct', K=bkStruct);
+  I := One(L, 5, 'p', 500, false);
+  AssertTrue(I.IsStruct);
+  AssertEquals('read by the path of the element', 'DB4.var28[1]', I.Path);
+  AssertEquals('as big as an element', 8, I.Size);
+  AssertEquals('pDB4_var28_1', I.CompName);
+  AssertEquals(500, I.Scan);
+end;
+
+procedure TTestS7PlusBasket.AnElementOfAnArrayOfStructsMapsItsMembersOrNot;
+var
+  L:TS7PlusCandidateArray;
+  I:TS7PlusImportItem;
+begin
+  L := StructArrayList;
+  I := One(L, 5, 'p', 0, true);
+  //Dint1, the byte of aBool and aInt
+  AssertEquals('items', 3, Length(I.StructItems));
+  AssertEquals('Dint1 at 0', 0, I.StructItems[0].Offset);
+  AssertEquals('aInt at 6', 6, I.StructItems[2].Offset);
+  AssertEquals('a bit for aBool', 1, Length(I.Bits));
+  AssertEquals('pDB4_var28_1_aBool', I.Bits[0].CompName);
+  AssertEquals('its byte item is at 4', 4, I.StructItems[1].Offset);
+  I := One(L, 5, 'p', 0, false);
+  AssertEquals('without the items', 0, Length(I.StructItems));
+  AssertEquals('and no bits', 0, Length(I.Bits));
+end;
+
 procedure TTestS7PlusBasket.AnArrayElementIsATagByItsPath;
 var
   L:TS7PlusCandidateArray;
@@ -548,8 +586,8 @@ var
   I:TS7PlusImportItem;
 begin
   L := StructArrayList;
-  AssertFalse('the element itself is not', S7PlusBasketKindOf(L, 1, K));
-  AssertTrue('a member of it is', S7PlusBasketKindOf(L, 2, K));
+  AssertTrue('the element itself is a struct', S7PlusBasketKindOf(L, 1, K) and (K=bkStruct));
+  AssertTrue('a member of it is a tag', S7PlusBasketKindOf(L, 2, K) and (K=bkTag));
   I := One(L, 2, 'p', 0, false);
   AssertEquals('DB4.var28[0].Dint1', I.Path);
   AssertTrue(I.TagType=pttLongInt);
