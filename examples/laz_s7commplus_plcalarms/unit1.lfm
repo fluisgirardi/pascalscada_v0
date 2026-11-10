@@ -1,0 +1,80 @@
+object Form1: TForm1
+  Left = 555
+  Height = 374
+  Top = 250
+  Width = 320
+  Caption = 'Form1'
+  ClientHeight = 374
+  ClientWidth = 320
+  LCLVersion = '4.9.0.0'
+  object HMILabel1: THMILabel
+    Left = 24
+    Height = 17
+    Top = 87
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = tagMArea_Clock_5Hz
+    FormatDateTimeOptions = []
+  end
+  object S7CommPlusDriver1: TS7CommPlusDriver
+    CommunicationPort = TCP_UDPPort1
+    ReadOnly = False
+    Password = 'Abc123cde123'
+    ServerCertificate = 'MIIC7TCCApOgAwIBAgIIKqst3R1UPkwwCgYIKoZIzj0EAwIwfzELMAkGA1UEBhMCREUxEDAOBgNVBAoMB1NpZW1lbnMxITAfBgNVBAsMGEluZHVzdHJpYWwgQ29tbXVuaWNhdGlvbjE7MDkGA1UEAwwyU2llbWVucyBUSUEgUHJvamVjdC0gRmFiUmFjYW9fQkpfMjAyNjA3MDgtIChFQyktMTAwHhcNMjYxMTAzMDA0NTE0WhcNMzcxMDI5MDMwMDAwWjB/MQswCQYDVQQGEwJERTEQMA4GA1UECgwHU2llbWVuczEhMB8GA1UECwwYSW5kdXN0cmlhbCBDb21tdW5pY2F0aW9uMTswOQYDVQQDDDJTaWVtZW5zIFRJQSBQcm9qZWN0LSBGYWJSYWNhb19CSl8yMDI2MDcwOC0gKEVDKS0xMDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABC32Nr1WwadUtJgbkxS7m/x2lJdNxdvnUQtYh7WA1yob8EIwSe//BNkRpVBY44f107hgna9jh91mGZy0/QNbgCWjgfgwgfUwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUT/ej0e12IruoULrwnDlPeyCQov8wgbIGA1UdIwSBqjCBp4AUT/ej0e12IruoULrwnDlPeyCQov+hgYSkgYEwfzELMAkGA1UEBhMCREUxEDAOBgNVBAoMB1NpZW1lbnMxITAfBgNVBAsMGEluZHVzdHJpYWwgQ29tbXVuaWNhdGlvbjE7MDkGA1UEAwwyU2llbWVucyBUSUEgUHJvamVjdC0gRmFiUmFjYW9fQkpfMjAyNjA3MDgtIChFQyktMTCCCCqrLd0dVD5MMA4GA1UdDwEB/wQEAwIBBjAKBggqhkjOPQQDAgNIADBFAiB/tZhRF9U1P7ICCMV7DIANt9IGyzo9dtxF3iFDp/0bbAIhAI69pXxdVV0mM041JtyU0npwopf40dt3ONP/dV9LfuQ5'
+    ClientCertificate = '-----BEGIN CERTIFICATE-----'#10'MIIDUzCCAjugAwIBAgIUR4/JyoOIRD2DcvrvCmzMoTzeeHgwDQYJKoZIhvcNAQEL'#10'BQAwKDEmMCQGA1UEAwwdUGFzY2FsU0NBREEgUzdDb21tUGx1cyBjbGllbnQwHhcN'#10'MjYxMTAzMDAzMTM3WhcNMzYxMDMxMDAzMTM3WjAoMSYwJAYDVQQDDB1QYXNjYWxT'#10'Q0FEQSBTN0NvbW1QbHVzIGNsaWVudDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC'#10'AQoCggEBAMb3aczuT6sjABWeQKkfpw/ItiDKGzcNOnTyqgDQh0GdvDUnB5rppRBP'#10'LQHEY5yC8w7R0j8UwOc8kjBMH3mEcM0mupTF7NMqvRAfyrYKczyI+8N5td9JL75s'#10'BGJCSsqCorSkzHWgpu0DmlOZ8/bKg0nuAkBZpRER5vqDBDuvi0Awvcd8VIFpfo2I'#10'6/osf//VardM139vtSaiugCL/QIZ7CdfzbaHYiu/wwmdD2VHjlEkaeNdS/nvRpOd'#10'CPKUlCcJlJ16PPhk14S7bHExm3kH1cUUqr46bu7XADxFeAorzly2FhQJ/XsoSQJ2'#10'B9l2TL6lezIIVa0zMkfwCAi9DzKhX98CAwEAAaN1MHMwHQYDVR0OBBYEFIdsyW1A'#10'+2Ju0oSnk+UoI5DR/rdDMB8GA1UdIwQYMBaAFIdsyW1A+2Ju0oSnk+UoI5DR/rdD'#10'MA8GA1UdEwEB/wQFMAMBAf8wEwYDVR0lBAwwCgYIKwYBBQUHAwIwCwYDVR0PBAQD'#10'AgWgMA0GCSqGSIb3DQEBCwUAA4IBAQAhIgMhsw+9lrEGOT5FYgosa3Y17INRRY6L'#10'qpV8ef+vvDJKm9k7JLhHIOxB0w14rM6I8F1rB4Z3dPAvcMxMzYDG5V0xJSep9Drx'#10'jeLkjKmgRJBFqZLsPLUb5QQlNeokIUPwg7flKQM8c/6e70YrvBRae8CcfKcQVmE8'#10'3MFVliuutkfDjgP56U4Rb5U/RYfpL4TuZfggu3P7sXEDBmMpvxh/1s7zoBQJspTs'#10'NpBnGvj6q9rdel2YRbB22DaHCT26g/x1L2MoSgAGfBZxEgmq8rPk6iUhdEK/vG6Z'#10'9QzDQtEqM9DaQwY4G560/uGza3a7Fd9Tjc+tqkdW7PjZBE4BU/HL'#10'-----END CERTIFICATE-----'#10'-----BEGIN PRIVATE KEY-----'#10'MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDG92nM7k+rIwAV'#10'nkCpH6cPyLYgyhs3DTp08qoA0IdBnbw1Jwea6aUQTy0BxGOcgvMO0dI/FMDnPJIw'#10'TB95hHDNJrqUxezTKr0QH8q2CnM8iPvDebXfSS++bARiQkrKgqK0pMx1oKbtA5pT'#10'mfP2yoNJ7gJAWaUREeb6gwQ7r4tAML3HfFSBaX6NiOv6LH//1Wq3TNd/b7UmoroA'#10'i/0CGewnX822h2Irv8MJnQ9lR45RJGnjXUv570aTnQjylJQnCZSdejz4ZNeEu2xx'#10'MZt5B9XFFKq+Om7u1wA8RXgKK85cthYUCf17KEkCdgfZdky+pXsyCFWtMzJH8AgI'#10'vQ8yoV/fAgMBAAECggEAARcySxocPibOQ0eKJ+3Vlm3chS1s1ExBbnlo2Go7Iwjn'#10'8PbHTf5PiVliBXkoi0nZIjlcrOaTp7c6lLYPLOhgtPpfZtkqOXX2nL2Dmuhx0qlb'#10'S2YKbPBmyylzR8SaH52VXbvsUg1oWaHGQdGGDNp+dQEeWXDRJ2FdxkFsmBUpBFgV'#10'Cp189LnvOmGeuvRulRfomOnVCaeUrz7qYFSPNagY1Gnhqkh0wdRFWvYi2HcVU63V'#10'i0mH0lQ1I0Xf7S8eFn2MM+lebxIN5SD9DIZmlndW7fy/YrLw1F9RV+gsTd1wD0Pc'#10'3WnxDAcKJc5wtxnA6QYgdUBVEB9DxM9c7+uR4j01rQKBgQDt54A6+QilCZA7wp9c'#10'GNNNM8Qikfe0lBHEdI/6s3IiimXULWmiuk7JqPfyAVklKFa38dogufyEo71d2YZM'#10'8+94kBuXr65WOZyGsQeexb5hbF7N7BaPBV/Zc7mcyvOXrKC/iuQihM6Tos+KsMCF'#10'QADCz/kiG89UgacVueXgZsvYtQKBgQDWGbXa5/ju9FGXpjOz2+vjTNSi9HyhUpiL'#10'eZjOcLDM1hLiZoPKmCogSagskYTaNYoxUosAZvSufwIWtd+9Xx38gwVqds3/s7j7'#10'zwvbigeujJUNsp+K+ycEXp08lrNWnJCsNdxXB3yfCRkowS/2r8/rHTPeLhPSIRMu'#10'QIL+qeTWwwKBgQCIsbOkLuMgsNYHAFTAfiMrAMt5cZV6VHnA/5ia2/CAmDTaLR29'#10'On96r3OHwe6OwxbQqk5C75qAO/Tar9nS7XZzN5ojFfZ95KxjV+Sg/c3d/H6co0Jy'#10'+wuPzkagKJy+UZordIqQqu5nNe06K0TzS0skpIrpZkFCtRxkB2RmA6qs4QKBgEBH'#10'X83lL1uuhoCdKZCqSlvnyT9TX8efYKUfUL1KIAqfivPmC1Nb8+nVs2QOHHDW+jJs'#10'scbhIjzxbNMcr5vPXtVdENcx7A8FClivhMPY4Q2Kr4V5R2UWmlQ5g8OZCybJwrWx'#10'RgHrAYNN2/vcZGYPysCv986Qzuqbe4K7Y5jJsSa5AoGBAIdlG+EG9vqo3P1qnIBt'#10'AF+auic04sp6YOpHTKte6VPGTm9IxNIGlol/3U/unk4CmAaEA3M9HzOhnNQ+Sr1/'#10'j/t3+0jn6WS5hRsqqcjdKsgVqfkjN9a9mLa24kBaZyprnwivBQyM58rd5V8miH/F'#10'2PTCjEv6G+1RLEwVysgulkJ2'#10'-----END PRIVATE KEY-----'#10
+    ClientCertificatePassword = 'segredo'
+    Username = 'gp2e'
+    Left = 140
+    Top = 108
+  end
+  object TCP_UDPPort1: TTCP_UDPPort
+    Active = True
+    Host = '192.168.56.3'
+    ExclusiveDevice = False
+    Left = 140
+    Top = 52
+  end
+  object tagMArea_Clock_5Hz: TPLCTagNumber
+    TagGUID = '{7F69D7B5-4329-496E-A9B8-4C254B05AD13}'
+    CommReadErrors = 1683
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    ProtocolDriver = S7CommPlusDriver1
+    UpdateTime = 0
+    LongAddress = 'MArea.Clock_5Hz'
+    TagType = pttByte
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 264
+    Top = 120
+  end
+  object HMIS7PlusAlarmLogger1: THMIS7PlusAlarmLogger
+    AlarmMessages = <>
+    AsyncDBConnection = HMIDBConnection1
+    OnIncomingAlarm = HMIS7PlusAlarmLogger1IncomingAlarm
+    Driver = S7CommPlusDriver1
+    Active = True
+    OnS7PlusAlarmIncoming = HMIS7PlusAlarmLogger1S7PlusAlarmIncoming
+    OnS7PlusAlarmOutgoing = HMIS7PlusAlarmLogger1S7PlusAlarmOutgoing
+    Left = 140
+    Top = 168
+  end
+  object HMIDBConnection1: THMIDBConnection
+    Connected = False
+    LibraryLocation = ''
+    Protocol = 'postgresql'
+    Database = 'prime_data'
+    User = 'postgres'
+    Password = 'Idt2014#'
+    ReadOnly = False
+    Left = 103
+    Top = 268
+  end
+end
