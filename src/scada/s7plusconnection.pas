@@ -512,6 +512,14 @@ type
     //: The type-info RID of the DB the last successful BrowseDB read.
     property LastBrowseTiRid:Cardinal read FLastBrowseTiRid;
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;
+    //: The attributes AttrIds of one object of the PLC (an EXPLORE of RelationId, e.g. $8A0E0000+DB number
+    //: for a DB), decoded; see S7PlusParseObjectAttrs. Reads the object and everything below it.
+    function ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+      out Values:TS7PlusAttrValues):Boolean;
+    //: Every attribute an EXPLORE of RelationId returns when no attribute list is given (what the
+    //: PLC sends by default), with the ids. For diagnostics.
+    function ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+      out Values:TS7PlusAttrValues):Boolean;
     //: Performs PLC password authentication (legitimation), required by some PLCs before
     //: SetMultiVariables/DB writes are accepted even though reads are open (a protection
     //: level configured in TIA Portal). Must be called after Connect, with TLS active.
@@ -4174,6 +4182,37 @@ procedure TS7PlusConnection.RefreshTypeInfo;
 begin
   FTypeInfoCached := false;
   SetLength(FTypeInfoObjects, 0);
+end;
+
+function TS7PlusConnection.ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+  out Values:TS7PlusAttrValues):Boolean;
+var
+  Resp:TBytes;
+begin
+  SetLength(Values, 0);
+  Result := Explore(RelationId, AttrIds, Resp);
+  if not Result then exit;
+  Result := S7PlusParseObjectAttrs(Resp, RelationId, AttrIds, Values);
+  if not Result then
+    Debug(Format('ReadObjectAttributes: $%.8x not found in the reply (%d bytes): %s',
+                 [RelationId, Length(Resp), Copy(S7PlusHexStr(Resp), 1, 160)]));
+end;
+
+function TS7PlusConnection.ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+  out Values:TS7PlusAttrValues):Boolean;
+var
+  Resp:TBytes;
+  NoAttrs:array of Cardinal;
+begin
+  SetLength(Ids, 0);
+  SetLength(Values, 0);
+  SetLength(NoAttrs, 0);
+  Result := Explore(RelationId, NoAttrs, Resp);
+  if not Result then exit;
+  Result := S7PlusParseObjectAllAttrs(Resp, RelationId, Ids, Values);
+  if not Result then
+    Debug(Format('ReadObjectAllAttributes: $%.8x not found in the reply (%d bytes): %s',
+                 [RelationId, Length(Resp), Copy(S7PlusHexStr(Resp), 1, 160)]));
 end;
 
 function TS7PlusConnection.ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):Boolean;

@@ -410,6 +410,14 @@ type
     function BrowseNativeArea(AreaRID, TiRid:Cardinal; const AreaName:String; out Vars:TS7PlusVarInfoArray):TProtocolIOResult;
     //: Lists every DB in the PLC program with its symbolic (TIA Portal) name and number.
     function ListDataBlocks(out Blocks:TS7PlusDataBlockInfoArray):TProtocolIOResult;
+    //: Reads attributes of one object of the PLC program (an EXPLORE of RelationId; for a DB it is
+    //: S7PlusIds_DBAccessAreaBase + the DB number), decoded as in S7PlusParseObjectAttrs. For diagnostics
+    //: and tools (e.g. the hashes of a block); it reads the object and everything below it.
+    function ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+      out Values:TS7PlusAttrValues):TProtocolIOResult;
+    //: Every attribute an EXPLORE of the object returns by default (with no attribute list), with the ids.
+    function ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+      out Values:TS7PlusAttrValues):TProtocolIOResult;
     //: Reads the alarms that are active in the PLC now (S7-1200/1500: the alarm subsystem's DAI objects), with
     //: the texts of the languages asked for (Languages empty = all; e.g. S7PlusLang_Portuguese_BR = 1046).
     //: Needs no subscription: it is one EXPLORE, so it can be called whenever a snapshot is wanted.
@@ -2846,6 +2854,45 @@ begin
       //that follows must not use the old types
       CheckProgramNow(Blocks);
     end else
+      Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.ReadObjectAttributes(RelationId:Cardinal; const AttrIds:array of Cardinal;
+  out Values:TS7PlusAttrValues):TProtocolIOResult;
+begin
+  SetLength(Values, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.ReadObjectAttributes(RelationId, AttrIds, Values) then
+      Result := ioOk
+    else
+      Result := FailResult;
+  finally
+    UnlockDriverIO;
+  end;
+end;
+
+function TS7CommPlusDriver.ReadObjectAllAttributes(RelationId:Cardinal; out Ids:TCardinalDynArray;
+  out Values:TS7PlusAttrValues):TProtocolIOResult;
+begin
+  SetLength(Ids, 0);
+  SetLength(Values, 0);
+  LockDriverIO;
+  try
+    if not EnsureConnected then begin
+      Result := FailResult;
+      exit;
+    end;
+    if FConnection.ReadObjectAllAttributes(RelationId, Ids, Values) then
+      Result := ioOk
+    else
       Result := FailResult;
   finally
     UnlockDriverIO;

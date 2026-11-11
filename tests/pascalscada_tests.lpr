@@ -26,6 +26,7 @@ uses
   ut.s7plusonchange,
   ut.s7plustagplan,
   ut.s7plusbasket,
+  ut.s7plusblockhash,
   ut.s7plusalarms, ut.s7plusalarmtracker,
   ut.s7pluscertificate,
   ut.s7plusclientcert,

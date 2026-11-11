@@ -130,6 +130,42 @@ type
   end;
   TS7PlusAlarmArray = array of TS7PlusAlarm;
 
+type
+  TS7PlusAttrKind = (akNone, akNumber, akText, akBlob, akStruct, akList);
+
+  //One element of a list (sparse array or array) or one member of a struct attribute: its key, and
+  //a number, the bytes of a blob, or the UTF-8 bytes of a text.
+  TS7PlusAttrItem = record
+    Key:Cardinal;
+    Kind:TS7PlusAttrKind;
+    Num:QWord;
+    Bytes:TBytes;
+  end;
+
+  //The value of an attribute of an object of an EXPLORE reply. Found=False: the object has no such
+  //attribute. Kind akNumber uses Num, akText and akBlob use Bytes, akList (sparse array, array) and
+  //akStruct (members) use Items; Root is the id of a blob or of a struct.
+  TS7PlusAttrValue = record
+    Found:Boolean;
+    Kind:TS7PlusAttrKind;
+    Num:QWord;
+    Root:Cardinal;
+    Bytes:TBytes;
+    Items:array of TS7PlusAttrItem;
+  end;
+  TS7PlusAttrValues = array of TS7PlusAttrValue;
+
+//: The attributes AttrIds of the object with RelationId in the payload of an EXPLORE reply (from the
+//: ReturnValue on), in the order asked. False when the reply is an error or is not well formed, or the
+//: object is not in it; an attribute the object lacks has Found=False.
+function S7PlusParseObjectAttrs(const Response:TBytes; RelationId:Cardinal; const AttrIds:array of Cardinal;
+  out Values:TS7PlusAttrValues):Boolean;
+
+//: Every attribute the object with RelationId carries in an EXPLORE reply, with its id (the ids in
+//: Ids, the values in Values, in the order of the reply). Same conditions as S7PlusParseObjectAttrs.
+function S7PlusParseObjectAllAttrs(const Response:TBytes; RelationId:Cardinal; out Ids:TCardinalDynArray;
+  out Values:TS7PlusAttrValues):Boolean;
+
 //: The attribute IDs asked for by the EXPLORE of the active alarms (the same a notification carries).
 function S7PlusAlarmExploreAttributes:TCardinalDynArray;
 
@@ -914,6 +950,159 @@ begin
     SetLength(Alarms, 0);
     Result := false;
   end;
+end;
+
+function FindObjectByRelation(const Objs:array of TAlarmObject; RelationId:Cardinal):TAlarmObject;
+var
+  i:Integer;
+begin
+  Result := nil;
+  for i:=0 to High(Objs) do begin
+    if Objs[i].RelationId=RelationId then begin
+      Result := Objs[i];
+      exit;
+    end;
+    Result := FindObjectByRelation(Objs[i].Children, RelationId);
+    if Result<>nil then exit;
+  end;
+end;
+
+procedure FillAttrItem(AValue:TAlarmValue; var Item:TS7PlusAttrItem);
+var
+  i:Integer;
+begin
+  Item.Num := 0;
+  SetLength(Item.Bytes, 0);
+  case AValue.Kind of
+    vkNumber: begin Item.Kind := akNumber; Item.Num := AValue.Num; end;
+    vkText: begin
+      Item.Kind := akText;
+      SetLength(Item.Bytes, Length(AValue.Text));
+      if Length(AValue.Text)>0 then Move(AValue.Text[1], Item.Bytes[0], Length(AValue.Text));
+    end;
+    vkBlob: begin Item.Kind := akBlob; Item.Bytes := AValue.Bytes; end;
+    vkStruct: Item.Kind := akStruct;
+    vkList: begin
+      Item.Kind := akList;
+      //a list of numbers (a fixed array of bytes, a struct member) comes as its low bytes, one per element
+      SetLength(Item.Bytes, Length(AValue.Items));
+      for i:=0 to High(AValue.Items) do
+        if AValue.Items[i].Kind=vkNumber then Item.Bytes[i] := Byte(AValue.Items[i].Num and $FF);
+    end;
+  else
+    Item.Kind := akNone;
+  end;
+end;
+
+procedure FillAttrValue(AValue:TAlarmValue; var Dest:TS7PlusAttrValue);
+var
+  i:Integer;
+  Item:TS7PlusAttrItem;
+begin
+  Dest.Found := true;
+  Dest.Root := AValue.RootId;
+  Item.Key := 0;
+  FillAttrItem(AValue, Item);
+  Dest.Kind := Item.Kind;
+  Dest.Num := Item.Num;
+  Dest.Bytes := Item.Bytes;
+  if AValue.Kind in [vkList, vkStruct] then begin
+    SetLength(Dest.Items, Length(AValue.Items));
+    for i:=0 to High(AValue.Items) do begin
+      Dest.Items[i].Key := AValue.Keys[i];
+      FillAttrItem(AValue.Items[i], Dest.Items[i]);
+    end;
+  end;
+end;
+
+function S7PlusParseObjectAllAttrs(const Response:TBytes; RelationId:Cardinal; out Ids:TCardinalDynArray;
+  out Values:TS7PlusAttrValues):Boolean;
+const
+  MaxCandidates = 8;
+var
+  Offset, c, Tries, Start, i:Integer;
+  ReturnValue:QWord;
+  Objs:array of TAlarmObject;
+  Obj:TAlarmObject;
+begin
+  SetLength(Ids, 0);
+  SetLength(Values, 0);
+  Result := false;
+  if Length(Response)=0 then exit;
+  try
+    ReturnValue := DecodeUInt64VLQ(Response, 0, c);
+    if ReturnValue<>0 then exit;
+    Offset := c;
+    if Offset+4>Length(Response) then exit;
+    Offset := Offset+4; //ExploreId
+    for Tries:=1 to MaxCandidates do begin
+      Start := NextObjectStart(Response, Offset);
+      if Start<0 then break;
+      SetLength(Objs, 0);
+      try
+        Offset := Start;
+        while (Offset<Length(Response)) and (Response[Offset]=S7PlusElement_StartOfObject) do begin
+          SetLength(Objs, Length(Objs)+1);
+          Objs[High(Objs)] := nil;
+          Objs[High(Objs)] := ReadObject(Response, Offset);
+        end;
+        Obj := FindObjectByRelation(Objs, RelationId);
+        if Obj<>nil then begin
+          SetLength(Ids, Length(Obj.AttrIds));
+          SetLength(Values, Length(Obj.AttrIds));
+          for i:=0 to High(Obj.AttrIds) do begin
+            Ids[i] := Obj.AttrIds[i];
+            Values[i].Found := false;
+            Values[i].Kind := akNone;
+            Values[i].Num := 0;
+            Values[i].Root := 0;
+            SetLength(Values[i].Bytes, 0);
+            SetLength(Values[i].Items, 0);
+            if Obj.AttrValues[i]<>nil then FillAttrValue(Obj.AttrValues[i], Values[i]);
+          end;
+          Result := true;
+        end else
+          Offset := Start+1;
+      except
+        on Exception do begin
+          Result := false;
+          Offset := Start+1;
+        end;
+      end;
+      for i:=0 to High(Objs) do
+        Objs[i].Free;
+      SetLength(Objs, 0);
+      if Result then break;
+    end;
+  except
+    Result := false;
+  end;
+end;
+
+function S7PlusParseObjectAttrs(const Response:TBytes; RelationId:Cardinal; const AttrIds:array of Cardinal;
+  out Values:TS7PlusAttrValues):Boolean;
+var
+  Ids:TCardinalDynArray;
+  All:TS7PlusAttrValues;
+  i, j:Integer;
+begin
+  SetLength(Values, Length(AttrIds));
+  for i:=0 to High(Values) do begin
+    Values[i].Found := false;
+    Values[i].Kind := akNone;
+    Values[i].Num := 0;
+    Values[i].Root := 0;
+    SetLength(Values[i].Bytes, 0);
+    SetLength(Values[i].Items, 0);
+  end;
+  Result := S7PlusParseObjectAllAttrs(Response, RelationId, Ids, All);
+  if not Result then exit;
+  for i:=0 to High(AttrIds) do
+    for j:=0 to High(Ids) do
+      if Ids[j]=AttrIds[i] then begin
+        Values[i] := All[j];
+        break;
+      end;
 end;
 
 function BytesConcat(const A, B:TBytes):TBytes;
