@@ -1195,7 +1195,16 @@ begin
   FTagType:=newType;
 
   if [csReading,csLoading]*ComponentState=[] then begin
-    UpdateTagSizeOnProtocol;
+    //pergunta de novo ao driver: num driver cujo tamanho de palavra depende do
+    //TagType (OPC UA, que entrega o valor ja convertido) o tamanho antigo deixaria
+    //o tag com o numero errado de valores. Os outros drivers respondem o mesmo.
+    //asks the driver again: on a driver whose word size depends on the TagType
+    //(OPC UA, which hands the value already converted) the old size would leave the
+    //tag with the wrong number of values. The other drivers answer the same.
+    if PProtocolDriver<>nil then
+      GetNewProtocolTagSize
+    else
+      UpdateTagSizeOnProtocol;
     RebuildValues;
   end;
 
