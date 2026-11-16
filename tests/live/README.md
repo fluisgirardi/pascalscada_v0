@@ -47,3 +47,36 @@ Os testes que escrevem devolvem o valor que encontraram. Se um deles for interro
 
 The tests that write put back the value they found. If one is interrupted halfway, write `TRUE` to
 `"TestDB_Dyn".LoadPattern` and check the scalars with `EveryStartValueOfTheOptimizedDB`.
+
+## OPC UA (`lt.opcua.pas`)
+
+Os testes do driver OPC UA rodam também na suíte comum (`tests/pascalscada_tests`, suítes `TTestOPCUAValues`,
+`TTestOPCUADriver`, `TTestOPCUASecurity`) contra um servidor open62541 no próprio processo; são ignorados se a
+libopen62541 1.5 não estiver instalada (`OPEN62541_LIB` aponta o caminho). Os testes ao vivo falam com um servidor
+de verdade (PLCSim, S7-1500, outro).
+
+The OPC UA driver tests also run in the common suite (`tests/pascalscada_tests`, suites `TTestOPCUAValues`,
+`TTestOPCUADriver`, `TTestOPCUASecurity`) against an in-process open62541 server; they are ignored when
+libopen62541 1.5 is not installed (`OPEN62541_LIB` points to it). The live tests talk to a real server
+(PLCSim, S7-1500, other).
+
+```sh
+OPCUA_URL=opc.tcp://192.168.56.2:4840 OPCUA_SECURITY=encrypt OPCUA_USER=... OPCUA_PASSWORD=... \
+OPCUA_WRITE_NODE='ns=3;s="TestDB_Opt"."DInt_1"' OPCUA_CHANGING_NODE='ns=3;s="TestDB_Dyn"."Counter"' \
+  tests/bin/pascalscada_live_tests --suite=TTestLiveOPCUA --format=plain
+```
+
+| Variável / Variable | |
+|---|---|
+| `OPCUA_URL` | endpoint; sem ele os testes são ignorados / without it the tests are ignored |
+| `OPCUA_USER`, `OPCUA_PASSWORD` | login (nunca no repositório / never in the repository) |
+| `OPCUA_SECURITY` | `none` (padrão/default), `sign`, `encrypt` |
+| `OPCUA_TRUSTDIR` | certificados de servidor confiáveis; vazio aceita qualquer / trusted server certificates; empty accepts any |
+| `OPCUA_WRITE_NODE` | nó numérico gravável (escreve +1 e devolve) / writable numeric node (writes +1 and restores it) |
+| `OPCUA_CHANGING_NODE` | nó que muda sozinho / node that changes by itself |
+| `OPCUA_DEBUG` | `1`: mensagens do driver / driver messages |
+
+Com segurança, o servidor precisa confiar no certificado do cliente: o driver gera um em
+`CertificateDir/own/pascalscada-client.der` na primeira conexão (no S7-1500/PLCSim: aceitar o certificado
+rejeitado no TIA Portal / no servidor e baixar de novo). With security, the server has to trust the client
+certificate: the driver generates one in `CertificateDir/own/pascalscada-client.der` on the first connection.
