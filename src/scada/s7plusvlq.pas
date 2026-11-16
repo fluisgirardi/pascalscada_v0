@@ -178,9 +178,12 @@ begin
   end;
   if not Terminated then
     raise Exception.Create('S7PlusVLQ: unterminated int32 VLQ (continuation bit on 5th byte)');
-  if (Acc<(-Int64($80000000))) or (Acc>Int64($7FFFFFFF)) then
-    raise Exception.Create('S7PlusVLQ: int32 VLQ out of range');
-  Result := LongInt(Acc);
+  //Our EncodeInt32VLQ represents large negatives by their 32-bit-wrapped unsigned form
+  //(e.g. -2147483647 as the 0x80000001 bit pattern spread over 5 groups), so take the low
+  //32 bits as a signed int32 - exactly the implicit wrap the original LongInt decode did.
+  //(python-snap7 rejects anything outside int32 range, but that assumes a sign-based
+  //encoding; ours uses wrap, so a magnitude check would wrongly reject valid negatives.)
+  Result := LongInt(Cardinal(QWord(Acc) and QWord($FFFFFFFF)));
 end;
 
 function EncodeUInt64VLQ(Value:QWord):TBytes;
