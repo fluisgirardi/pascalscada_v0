@@ -33,7 +33,7 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
-  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP,
+  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -61,7 +61,8 @@ begin
                                            TInovanceTCPDriver,
                                            TH5UTagTCPDriver,
                                            TS7CommPlusDriver,
-                                           TLGXDriver]);
+                                           TLGXDriver,
+                                           TOPCUADriver]);
   RegisterComponents(strUtilsPallete,     [TScalesQueue,
                                            TLinearScaleProcessor,
                                            TUserScale,
@@ -80,6 +81,11 @@ begin
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ServerCertificate', TS7PlusCertificatePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ClientCertificate', TS7PlusClientCertificatePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'CertificateFile', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'PrivateKeyFile', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'LibraryName', TFileNamePropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'CertificateDir', TDirectoryPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'TrustListDir', TDirectoryPropertyEditor);
   {$IF defined(WIN32) or defined(WIN64)}
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'DevDir', THiddenPropertyEditor);
   {$IFEND}
