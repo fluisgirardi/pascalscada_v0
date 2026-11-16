@@ -4,7 +4,7 @@ interface
 
 uses
   Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs, LCLType,
-  ChipCardReader, crossthreads, hidapi, syncobjs, cp1250;
+  ChipCardReader, crossthreads, {$IFNDEF WINDOWS}hidapi,{$ENDIF} syncobjs, cp1250;
 
 type
   TStrRec = record
@@ -12,6 +12,46 @@ type
   end;
   PStrRec = ^TStrRec;
 
+{$IFDEF WINDOWS}
+  { TSycreaderRFID_RawInputReader
+
+    Windows backend. Windows opens HID keyboards exclusively, so libhidapi
+    can't read the reader there. The keystrokes of the reader are taken from
+    the Raw Input API instead (only the ones of the device that matches
+    VID/PID/SN) and, while the reader is started, a keyboard hook of the main
+    thread drops them before they reach the controls of the application, like
+    the udev rule does on Linux.
+
+    Must be started and stopped from the main thread: the Raw Input window and
+    the keyboard hook live there and depend on its message loop. }
+
+  TSycreaderRFID_RawInputReader = class
+  private
+    FVID,
+    FPID:Word;
+    FSN:String;
+    FStarted,
+    FReady,
+    FHasCur:Boolean;
+    FNextBuffer,
+    FCurBuffer:String;
+    procedure ConfigChanged;
+    procedure SetPID(AValue: Word);
+    procedure SetSN(AValue: String);
+    procedure SetVID(AValue: Word);
+    procedure ProcessKey(aMakeCode, aFlags:Word);
+  public
+    destructor Destroy; override;
+    procedure Start;
+    procedure Stop;
+    function getLastHIDRead(out strBuffer:UTF8String):Boolean;
+    function ReadPending:Boolean;
+    property VID:Word read FVID write SetVID;
+    property PID:Word read FPID write SetPID;
+    property SN:String read FSN write SetSN;
+    property Initialized:Boolean read FReady;
+  end;
+{$ELSE}
   { TSycreaderRFID_USBHIDReader }
 
   TSycreaderRFID_USBHIDReader = class(TpSCADACoreAffinityThreadWithLoop)
@@ -48,12 +88,13 @@ type
     property SN:String read GetSN write SetSN;
     property Initialized:Boolean read GetReady;
   end;
+{$ENDIF}
 
   { TSycRFIDReader }
 
   TSycRFIDReader = class(TChipCardReader)
   private
-    FSycRFIDReader:TSycreaderRFID_USBHIDReader;
+    FSycRFIDReader:{$IFDEF WINDOWS}TSycreaderRFID_RawInputReader{$ELSE}TSycreaderRFID_USBHIDReader{$ENDIF};
     function GetPID: WORD;
     function GetSN: String;
     function GetVID: WORD;
@@ -83,13 +124,497 @@ procedure Register;
 
 implementation
 
-uses hsstrings;
+uses hsstrings{$IFDEF WINDOWS}, Windows{$ENDIF};
 
 procedure Register;
 begin
   RegisterComponents(strUserManagement,[TSycRFIDReader]);
 end;
 
+{$IFDEF WINDOWS}
+// Raw Input gives scan codes (set 1), while the Linux backend gets HID usage
+// codes straight from the keyboard reports. Converting the scan code to the
+// HID usage keeps one decoding (map[] and the terminator rule) for both, and
+// doesn't depend on the keyboard layout of Windows. Zero means "ignore" (the
+// modifiers and the lock keys, that the Linux backend never sees in byte 2).
+const
+  SycScanToHIDUsage:array[$00..$58] of Byte = (
+    $00,$29,$1E,$1F,$20,$21,$22,$23,$24,$25,$26,$27,$2D,$2E,$2A,$2B, // row 00
+    $14,$1A,$08,$15,$17,$1C,$18,$0C,$12,$13,$2F,$30,$28,$00,$04,$16, // row 10
+    $07,$09,$0A,$0B,$0D,$0E,$0F,$33,$34,$35,$00,$31,$1D,$1B,$06,$19, // row 20
+    $05,$11,$10,$36,$37,$38,$00,$55,$00,$2C,$00,$3A,$3B,$3C,$3D,$3E, // row 30
+    $3F,$40,$41,$42,$43,$00,$00,$5F,$60,$61,$56,$5C,$5D,$5E,$57,$59, // row 40
+    $5A,$5B,$62,$63,$00,$00,$64,$44,$45); // row 50
+
+  // keystrokes of the reader not seen by the keyboard hook (the application
+  // wasn't in foreground) are forgotten after this time.
+  SycSwallowTimeout = 1000;
+
+  SycHWND_MESSAGE = HWND(-3);
+  SycWndClassName:UnicodeString = 'PascalSCADA_SycRFIDRawInput';
+
+function HidD_GetSerialNumberString(HidDeviceObject:THandle; Buffer:Pointer;
+  BufferLength:ULONG):ByteBool; stdcall; external 'hid.dll';
+
+function ScanCodeToHIDUsage(aMakeCode:Word; aE0:Boolean):Byte;
+begin
+  Result:=0;
+  if aE0 then begin
+    case aMakeCode of
+      $1C: Result:=$58; //keypad enter
+      $35: Result:=$54; //keypad /
+      $47: Result:=$4A; //home
+      $48: Result:=$52; //up
+      $49: Result:=$4B; //page up
+      $4B: Result:=$50; //left
+      $4D: Result:=$4F; //right
+      $4F: Result:=$4D; //end
+      $50: Result:=$51; //down
+      $51: Result:=$4E; //page down
+      $52: Result:=$49; //insert
+      $53: Result:=$4C; //delete
+    end;
+  end else
+    if aMakeCode<=High(SycScanToHIDUsage) then
+      Result:=SycScanToHIDUsage[aMakeCode];
+end;
+
+type
+  TSycRawDevInfo = record
+    Handle:THandle;
+    VID,
+    PID:Word;
+    Name,
+    SN:UnicodeString;
+    SNRead:Boolean;
+  end;
+
+  TSycSwallowEntry = record
+    Scan:Word;
+    E0,
+    Up:Boolean;
+    Tick:QWord;
+  end;
+
+  { TSycRawInputDispatcher
+
+    Only one Raw Input target is allowed per process for the keyboards, so a
+    single message-only window serves all TSycreaderRFID_RawInputReader
+    instances. It exists while at least one reader is started. }
+
+  TSycRawInputDispatcher = class
+  private
+    FWnd:HWND;
+    FHook:HHOOK;
+    FReaders:TFPList;
+    FDevs:array of TSycRawDevInfo;
+    FSwallow:array of TSycSwallowEntry;
+    function DevIndex(aDev:THandle):Integer;
+    function DeviceMatches(aDev:THandle; aReader:TSycreaderRFID_RawInputReader):Boolean;
+    procedure PruneSwallow;
+    function TakeSwallow(aScan:Word; aE0, aUp:Boolean):Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Attach(aReader:TSycreaderRFID_RawInputReader);
+    function Detach(aReader:TSycreaderRFID_RawInputReader):Boolean;
+    procedure RefreshReady;
+    procedure HandleRawInput(aRawInput:HRAWINPUT);
+    procedure HandleDeviceChange(aChange:WPARAM; aDev:THandle);
+    function HookKey(aScan:Word; aE0, aUp:Boolean):Boolean;
+  end;
+
+var
+  SycDispatcher:TSycRawInputDispatcher = nil;
+  SycWndClassRegistered:Boolean = false;
+
+function SycRawInputWndProc(aWnd:HWND; aMsg:UINT; aWParam:WPARAM;
+  aLParam:LPARAM):LRESULT; stdcall;
+begin
+  if Assigned(SycDispatcher) and (aWnd=SycDispatcher.FWnd) then
+    case aMsg of
+      WM_INPUT:
+        SycDispatcher.HandleRawInput(HRAWINPUT(aLParam));
+      WM_INPUT_DEVICE_CHANGE: begin
+        SycDispatcher.HandleDeviceChange(aWParam, THandle(aLParam));
+        exit(0);
+      end;
+    end;
+  //WM_INPUT also needs DefWindowProc, for the cleanup of the raw input.
+  Result:=DefWindowProcW(aWnd, aMsg, aWParam, aLParam);
+end;
+
+function SycKeyboardHookProc(aCode:longint; aWParam:WPARAM;
+  aLParam:LPARAM):LRESULT; stdcall;
+var
+  flags:PtrUInt;
+begin
+  if (aCode=HC_ACTION) and Assigned(SycDispatcher) then begin
+    flags:=PtrUInt(aLParam);
+    if SycDispatcher.HookKey((flags shr 16) and $FF,
+                             (flags and (1 shl 24))<>0,
+                             (flags and (PtrUInt(1) shl 31))<>0) then
+      exit(1);
+  end;
+  Result:=CallNextHookEx(0, aCode, aWParam, aLParam);
+end;
+
+{ TSycRawInputDispatcher }
+
+constructor TSycRawInputDispatcher.Create;
+var
+  wc:WNDCLASSW;
+  rid:RAWINPUTDEVICE;
+begin
+  inherited Create;
+  FReaders:=TFPList.Create;
+
+  if not SycWndClassRegistered then begin
+    FillChar(wc, SizeOf(wc), 0);
+    wc.lpfnWndProc:=@SycRawInputWndProc;
+    wc.hInstance:=HInstance;
+    wc.lpszClassName:=PWideChar(SycWndClassName);
+    SycWndClassRegistered:=RegisterClassW(wc)<>0;
+  end;
+
+  FWnd:=CreateWindowExW(0, PWideChar(SycWndClassName), nil, 0, 0, 0, 0, 0,
+                        SycHWND_MESSAGE, 0, HInstance, nil);
+  if FWnd<>0 then begin
+    rid.usUsagePage:=1; //generic desktop
+    rid.usUsage:=6;     //keyboard
+    rid.dwFlags:=RIDEV_INPUTSINK or RIDEV_DEVNOTIFY;
+    rid.hwndTarget:=FWnd;
+    if not RegisterRawInputDevices(@rid, 1, SizeOf(rid)) then begin
+      DestroyWindow(FWnd);
+      FWnd:=0;
+    end;
+  end;
+
+  if FWnd<>0 then
+    FHook:=SetWindowsHookExW(WH_KEYBOARD, @SycKeyboardHookProc, 0, GetCurrentThreadId);
+end;
+
+destructor TSycRawInputDispatcher.Destroy;
+var
+  rid:RAWINPUTDEVICE;
+begin
+  if FHook<>0 then
+    UnhookWindowsHookEx(FHook);
+  if FWnd<>0 then begin
+    rid.usUsagePage:=1;
+    rid.usUsage:=6;
+    rid.dwFlags:=RIDEV_REMOVE;
+    rid.hwndTarget:=0;
+    RegisterRawInputDevices(@rid, 1, SizeOf(rid));
+    DestroyWindow(FWnd);
+  end;
+  FreeAndNil(FReaders);
+  inherited Destroy;
+end;
+
+procedure TSycRawInputDispatcher.Attach(aReader: TSycreaderRFID_RawInputReader);
+begin
+  if FReaders.IndexOf(aReader)<0 then
+    FReaders.Add(aReader);
+  RefreshReady;
+end;
+
+function TSycRawInputDispatcher.Detach(aReader: TSycreaderRFID_RawInputReader
+  ): Boolean;
+begin
+  FReaders.Remove(aReader);
+  aReader.FReady:=false;
+  Result:=FReaders.Count=0;
+end;
+
+function TSycRawInputDispatcher.DevIndex(aDev: THandle): Integer;
+var
+  len:UINT;
+  upName:String;
+  p:Integer;
+begin
+  for Result:=0 to High(FDevs) do
+    if FDevs[Result].Handle=aDev then exit;
+
+  Result:=Length(FDevs);
+  SetLength(FDevs, Result+1);
+  FDevs[Result].Handle:=aDev;
+  FDevs[Result].VID:=0;
+  FDevs[Result].PID:=0;
+  FDevs[Result].Name:='';
+  FDevs[Result].SN:='';
+  FDevs[Result].SNRead:=false;
+
+  // \\?\HID#VID_FFFF&PID_0035#7&2a1c...&0&0000#{884b96c3-...}
+  len:=0;
+  if (GetRawInputDeviceInfoW(aDev, RIDI_DEVICENAME, nil, @len)=0) and (len>0) then begin
+    SetLength(FDevs[Result].Name, len);
+    if GetRawInputDeviceInfoW(aDev, RIDI_DEVICENAME, PWideChar(FDevs[Result].Name), @len)<>UINT(-1) then begin
+      FDevs[Result].Name:=PWideChar(FDevs[Result].Name);
+      upName:=UpperCase(String(FDevs[Result].Name));
+      p:=Pos('VID_', upName);
+      if p>0 then FDevs[Result].VID:=StrToIntDef('$'+Copy(upName, p+4, 4), 0);
+      p:=Pos('PID_', upName);
+      if p>0 then FDevs[Result].PID:=StrToIntDef('$'+Copy(upName, p+4, 4), 0);
+    end else
+      FDevs[Result].Name:='';
+  end;
+end;
+
+function TSycRawInputDispatcher.DeviceMatches(aDev: THandle;
+  aReader: TSycreaderRFID_RawInputReader): Boolean;
+var
+  i:Integer;
+  h:THandle;
+  path:UnicodeString;
+  buf:array[0..127] of WideChar;
+begin
+  if aDev=0 then exit(false); //injected (SendInput) keystrokes
+  i:=DevIndex(aDev);
+  if (FDevs[i].VID<>aReader.FVID) or (FDevs[i].PID<>aReader.FPID) then
+    exit(false);
+  if aReader.FSN='' then
+    exit(true);
+
+  if not FDevs[i].SNRead then begin
+    FDevs[i].SNRead:=true;
+    path:=FDevs[i].Name;
+    if Copy(path, 1, 4)='\??\' then path[2]:='\'; //Windows XP
+    //no access rights needed to query the strings, even of a keyboard.
+    h:=CreateFileW(PWideChar(path), 0, FILE_SHARE_READ or FILE_SHARE_WRITE,
+                   nil, OPEN_EXISTING, 0, 0);
+    if h<>INVALID_HANDLE_VALUE then begin
+      FillChar(buf, SizeOf(buf), 0);
+      if HidD_GetSerialNumberString(h, @buf, SizeOf(buf)-SizeOf(WideChar)) then
+        FDevs[i].SN:=PWideChar(@buf);
+      CloseHandle(h);
+    end;
+  end;
+  Result:=FDevs[i].SN=UnicodeString(aReader.FSN);
+end;
+
+procedure TSycRawInputDispatcher.RefreshReady;
+var
+  list:array of RAWINPUTDEVICELIST;
+  n:UINT;
+  i, d, r:Integer;
+  found:Boolean;
+  reader:TSycreaderRFID_RawInputReader;
+begin
+  list:=nil;
+  n:=0;
+  if GetRawInputDeviceList(nil, @n, SizeOf(RAWINPUTDEVICELIST))=0 then begin
+    SetLength(list, n);
+    if (n>0) and (GetRawInputDeviceList(@list[0], @n, SizeOf(RAWINPUTDEVICELIST))=UINT(-1)) then
+      n:=0;
+    SetLength(list, n);
+  end;
+
+  //forget the devices that are gone (handles can be reused).
+  for d:=High(FDevs) downto 0 do begin
+    found:=false;
+    for i:=0 to High(list) do
+      if list[i].hDevice=FDevs[d].Handle then begin
+        found:=true;
+        break;
+      end;
+    if not found then
+      Delete(FDevs, d, 1);
+  end;
+
+  for r:=0 to FReaders.Count-1 do begin
+    reader:=TSycreaderRFID_RawInputReader(FReaders[r]);
+    reader.FReady:=false;
+    if FWnd=0 then continue;
+    for i:=0 to High(list) do
+      if (list[i].dwType=RIM_TYPEKEYBOARD) and DeviceMatches(list[i].hDevice, reader) then begin
+        reader.FReady:=true;
+        break;
+      end;
+  end;
+end;
+
+procedure TSycRawInputDispatcher.HandleRawInput(aRawInput: HRAWINPUT);
+var
+  ri:RAWINPUT;
+  sz:UINT;
+  r:Integer;
+  claimed:Boolean;
+  reader:TSycreaderRFID_RawInputReader;
+begin
+  sz:=SizeOf(ri);
+  if GetRawInputData(aRawInput, RID_INPUT, @ri, @sz, SizeOf(RAWINPUTHEADER))=UINT(-1) then
+    exit;
+  if ri.header.dwType<>RIM_TYPEKEYBOARD then
+    exit;
+
+  claimed:=false;
+  for r:=0 to FReaders.Count-1 do begin
+    reader:=TSycreaderRFID_RawInputReader(FReaders[r]);
+    if DeviceMatches(ri.header.hDevice, reader) then begin
+      //a keystroke means the device is there, even if the arrival was missed.
+      reader.FReady:=true;
+      reader.ProcessKey(ri.data.keyboard.MakeCode, ri.data.keyboard.Flags);
+      claimed:=true;
+    end;
+  end;
+
+  if claimed then begin
+    PruneSwallow;
+    r:=Length(FSwallow);
+    SetLength(FSwallow, r+1);
+    FSwallow[r].Scan:=ri.data.keyboard.MakeCode;
+    FSwallow[r].E0:=(ri.data.keyboard.Flags and RI_KEY_E0)<>0;
+    FSwallow[r].Up:=(ri.data.keyboard.Flags and RI_KEY_BREAK)<>0;
+    FSwallow[r].Tick:=GetTickCount64;
+  end;
+end;
+
+procedure TSycRawInputDispatcher.HandleDeviceChange(aChange: WPARAM;
+  aDev: THandle);
+var
+  i:Integer;
+begin
+  if aChange=GIDC_REMOVAL then
+    for i:=High(FDevs) downto 0 do
+      if FDevs[i].Handle=aDev then
+        Delete(FDevs, i, 1);
+  RefreshReady;
+end;
+
+procedure TSycRawInputDispatcher.PruneSwallow;
+var
+  now_:QWord;
+  i:Integer;
+begin
+  now_:=GetTickCount64;
+  for i:=High(FSwallow) downto 0 do
+    if now_-FSwallow[i].Tick>SycSwallowTimeout then
+      Delete(FSwallow, i, 1);
+end;
+
+function TSycRawInputDispatcher.TakeSwallow(aScan: Word; aE0, aUp: Boolean
+  ): Boolean;
+var
+  i:Integer;
+begin
+  for i:=0 to High(FSwallow) do
+    if (FSwallow[i].Scan=aScan) and (FSwallow[i].E0=aE0) and (FSwallow[i].Up=aUp) then begin
+      Delete(FSwallow, i, 1);
+      exit(true);
+    end;
+  Result:=false;
+end;
+
+function TSycRawInputDispatcher.HookKey(aScan: Word; aE0, aUp: Boolean
+  ): Boolean;
+var
+  msg:TMsg;
+begin
+  PruneSwallow;
+  Result:=TakeSwallow(aScan, aE0, aUp);
+  if Result or (FWnd=0) then exit;
+
+  //the WM_INPUT of this keystroke may still be queued behind it.
+  while PeekMessageW(msg, FWnd, WM_INPUT, WM_INPUT, PM_REMOVE) do
+    DispatchMessageW(msg);
+  Result:=TakeSwallow(aScan, aE0, aUp);
+end;
+
+{ TSycreaderRFID_RawInputReader }
+
+procedure TSycreaderRFID_RawInputReader.ConfigChanged;
+begin
+  FNextBuffer:='';
+  if FStarted and Assigned(SycDispatcher) then
+    SycDispatcher.RefreshReady;
+end;
+
+procedure TSycreaderRFID_RawInputReader.SetPID(AValue: Word);
+begin
+  if FPID=AValue then Exit;
+  FPID:=AValue;
+  ConfigChanged;
+end;
+
+procedure TSycreaderRFID_RawInputReader.SetSN(AValue: String);
+begin
+  if FSN=AValue then Exit;
+  FSN:=AValue;
+  ConfigChanged;
+end;
+
+procedure TSycreaderRFID_RawInputReader.SetVID(AValue: Word);
+begin
+  if FVID=AValue then Exit;
+  FVID:=AValue;
+  ConfigChanged;
+end;
+
+procedure TSycreaderRFID_RawInputReader.ProcessKey(aMakeCode, aFlags: Word);
+var
+  usage:Byte;
+begin
+  //only the key presses, like the Linux backend (a release report has no key).
+  if (aFlags and (RI_KEY_BREAK or RI_KEY_E1))<>0 then exit;
+
+  usage:=ScanCodeToHIDUsage(aMakeCode, (aFlags and RI_KEY_E0)<>0);
+  if usage=0 then exit;
+
+  if usage in [$04..$27,$2c..$38,$59..$62] then
+    FNextBuffer:=FNextBuffer+map[usage]
+  else begin
+    //any other key (the Enter sent by the reader) ends the code.
+    if FNextBuffer<>'' then begin
+      FCurBuffer:=FNextBuffer;
+      FHasCur:=true;
+    end;
+    FNextBuffer:='';
+  end;
+end;
+
+destructor TSycreaderRFID_RawInputReader.Destroy;
+begin
+  Stop;
+  inherited Destroy;
+end;
+
+procedure TSycreaderRFID_RawInputReader.Start;
+begin
+  if FStarted then exit;
+  if SycDispatcher=nil then
+    SycDispatcher:=TSycRawInputDispatcher.Create;
+  FStarted:=true;
+  FNextBuffer:='';
+  SycDispatcher.Attach(Self);
+end;
+
+procedure TSycreaderRFID_RawInputReader.Stop;
+begin
+  if not FStarted then exit;
+  FStarted:=false;
+  if Assigned(SycDispatcher) and SycDispatcher.Detach(Self) then
+    FreeAndNil(SycDispatcher);
+end;
+
+function TSycreaderRFID_RawInputReader.getLastHIDRead(out
+  strBuffer: UTF8String): Boolean;
+begin
+  strBuffer:='';
+  Result:=FHasCur;
+  if Result then begin
+    strBuffer:=FCurBuffer;
+    FCurBuffer:='';
+    FHasCur:=false;
+  end;
+end;
+
+function TSycreaderRFID_RawInputReader.ReadPending: Boolean;
+begin
+  Result:=FHasCur;
+end;
+
+{$ELSE}
 { TSycreaderRFID_USBHIDReader }
 
 function TSycreaderRFID_USBHIDReader.GetPID: Word;
@@ -261,6 +786,7 @@ begin
   auxptr:=InterlockedExchange(FCurBuffer,FCurBuffer);
   Result:=Assigned(auxptr);
 end;
+{$ENDIF}
 
 { TSycRFIDReader }
 
@@ -298,15 +824,23 @@ procedure TSycRFIDReader.Loaded;
 begin
   inherited Loaded;
   if ([csDesigning]*ComponentState)=[] then
+    {$IFDEF WINDOWS}
+    FSycRFIDReader.Start;
+    {$ELSE}
     FSycRFIDReader.WakeUp;
+    {$ENDIF}
 end;
 
 function TSycRFIDReader.InitializeChipCard: Boolean;
 begin
   if ([csDesigning]*ComponentState)=[] then begin
+    {$IFDEF WINDOWS}
+    FSycRFIDReader.Start;
+    {$ELSE}
     FSycRFIDReader.WakeUp;
     FSycRFIDReader.LoopStarted(1000);
-    Result:=FSycRFIDReader.GetReady;
+    {$ENDIF}
+    Result:=FSycRFIDReader.Initialized;
   end else
     exit(true);
 end;
@@ -324,7 +858,7 @@ end;
 
 function TSycRFIDReader.ChipCardReady: Boolean;
 begin
-  Result:=FSycRFIDReader.GetReady;
+  Result:=FSycRFIDReader.Initialized;
 end;
 
 function TSycRFIDReader.ChipCardRead(var aChipCardCode: UTF8String): Boolean;
@@ -340,11 +874,18 @@ end;
 constructor TSycRFIDReader.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  {$IFDEF WINDOWS}
+  FSycRFIDReader:=TSycreaderRFID_RawInputReader.Create;
+  {$ELSE}
   FSycRFIDReader:=TSycreaderRFID_USBHIDReader.Create(true);
+  {$ENDIF}
 end;
 
 destructor TSycRFIDReader.Destroy;
 begin
+  {$IFDEF WINDOWS}
+  FreeAndNil(FSycRFIDReader);
+  {$ELSE}
   if FSycRFIDReader.Suspended then begin
     FSycRFIDReader.WakeUp;
     FSycRFIDReader.LoopStarted(1000);
@@ -355,6 +896,7 @@ begin
   repeat
     CheckSynchronize(10);
   until FSycRFIDReader.WaitEnd(10)=wrSignaled;
+  {$ENDIF}
 
   inherited Destroy;
 end;
@@ -605,4 +1147,10 @@ map[$163] := char(VK_DELETE); //KEY_KPDOT 0x63 // Keypad . and Delete
 //map[$fa] =  KEY_MEDIA_REFRESH 0xfa
 //map[$fb] =  KEY_MEDIA_CALC 0xfb
 
+{$IFDEF WINDOWS}
+finalization
+  FreeAndNil(SycDispatcher);
+  if SycWndClassRegistered then
+    UnregisterClassW(PWideChar(SycWndClassName), HInstance);
+{$ENDIF}
 end.
