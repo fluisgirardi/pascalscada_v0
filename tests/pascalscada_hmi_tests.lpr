@@ -60,7 +60,9 @@ uses
   ut.eletricmotor,
   ut.faceplate,
   ut.hmimouse,
-  ut.hmidbconnection;
+  ut.hmidbconnection,
+  ut.sycreaderkeydecoder{$IFDEF WINDOWS},
+  ut.sycrfidreaderwin{$ENDIF};
 
 type
   TPascalSCADAHMITestRunner = class(TTestRunner)
