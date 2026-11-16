@@ -42,7 +42,7 @@ unit S7PlusBlockHash;
 interface
 
 uses
-  Classes, SysUtils, Types, sha1, S7PlusAlarms;
+  Classes, SysUtils, Types, S7PlusAlarms;
 
 const
   //attribute ids (DataInterface and the block classes of the PLC's object model)
@@ -138,17 +138,69 @@ implementation
 const
   EmptyClassList = '<?xml version="1.0" encoding="utf-8"?><AlarmClassList />';
 
+//Self-contained SHA-1 (RFC 3174). We deliberately do NOT use FPC's `sha1` unit:
+//its 3.2.2 i386 SHA1Transform is miscompiled and returns the wrong digest (CI win32
+//got FBE6F3B7... for SHA-1('abc') instead of A9993E36...; fixed only in 3.2.3). This
+//hash is the IDENTITY of a block, so it must be bit-for-bit identical on every FPC
+//version and CPU width - a plain-Pascal implementation we own guarantees that.
+{$push}{$Q-}{$R-}  //32-bit modular arithmetic: wrap, never raise on overflow/range
+function RolDW(X:Cardinal; N:Byte):Cardinal; inline;
+begin
+  Result := (X shl N) or (X shr (32-N));
+end;
+
 function S7PlusSha1(const Data:TBytes):TBytes;
 var
-  D:TSHA1Digest;
+  H0,H1,H2,H3,H4, a,b,c,d,e, f,k,temp:Cardinal;
+  W:array[0..79] of Cardinal;
+  Msg:TBytes;
+  ml:QWord;
+  i,t,chunk,total,dlen:Integer;
 begin
-  if Length(Data)=0 then
-    D := SHA1String('')
-  else
-    D := SHA1Buffer(Data[0], Length(Data));
+  H0:=$67452301; H1:=$EFCDAB89; H2:=$98BADCFE; H3:=$10325476; H4:=$C3D2E1F0;
+  dlen := Length(Data);
+  ml := QWord(dlen)*8;
+  //pad: 0x80, then zeros until (len mod 64)=56, then the 64-bit big-endian bit length
+  total := dlen+1;
+  while (total mod 64)<>56 do inc(total);
+  SetLength(Msg, total+8);
+  if dlen>0 then Move(Data[0], Msg[0], dlen);
+  Msg[dlen] := $80;
+  for i:=dlen+1 to total-1 do Msg[i] := 0;
+  for i:=0 to 7 do
+    Msg[total+i] := Byte(ml shr (8*(7-i)));
+
+  chunk := 0;
+  while chunk < Length(Msg) do begin
+    for t:=0 to 15 do
+      W[t] := (Cardinal(Msg[chunk+t*4]) shl 24) or (Cardinal(Msg[chunk+t*4+1]) shl 16) or
+              (Cardinal(Msg[chunk+t*4+2]) shl 8) or Cardinal(Msg[chunk+t*4+3]);
+    for t:=16 to 79 do
+      W[t] := RolDW(W[t-3] xor W[t-8] xor W[t-14] xor W[t-16], 1);
+
+    a:=H0; b:=H1; c:=H2; d:=H3; e:=H4;
+    for t:=0 to 79 do begin
+      if t<20 then begin f:=(b and c) or ((not b) and d); k:=$5A827999; end
+      else if t<40 then begin f:=b xor c xor d; k:=$6ED9EBA1; end
+      else if t<60 then begin f:=(b and c) or (b and d) or (c and d); k:=$8F1BBCDC; end
+      else begin f:=b xor c xor d; k:=$CA62C1D6; end;
+      temp := RolDW(a,5) + f + e + k + W[t];
+      e:=d; d:=c; c:=RolDW(b,30); b:=a; a:=temp;
+    end;
+    inc(H0,a); inc(H1,b); inc(H2,c); inc(H3,d); inc(H4,e);
+    inc(chunk,64);
+  end;
+
   SetLength(Result, 20);
-  Move(D[0], Result[0], 20);
+  for i:=0 to 3 do begin
+    Result[i]    := Byte(H0 shr (8*(3-i)));
+    Result[4+i]  := Byte(H1 shr (8*(3-i)));
+    Result[8+i]  := Byte(H2 shr (8*(3-i)));
+    Result[12+i] := Byte(H3 shr (8*(3-i)));
+    Result[16+i] := Byte(H4 shr (8*(3-i)));
+  end;
 end;
+{$pop}
 
 function S7PlusHex(const Data:TBytes):String;
 var
