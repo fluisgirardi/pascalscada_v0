@@ -254,7 +254,6 @@ type
     procedure SetMaxItemsPerSubscription(AValue:Integer);
     function GetExploreDelayMs:Integer;
     procedure SetExploreDelayMs(AValue:Integer);
-    function EnsureConnected:Boolean;
     function GetConnected:Boolean;
     function AreaRIDOf(ReadFunction:LongInt; out AreaRID:Cardinal):Boolean;
     procedure ConnDebug(Sender:TObject; const Msg:String);
@@ -295,6 +294,20 @@ type
     procedure AfterAlarmSubscription;
     procedure RenewCredit(SubscriptionId:Cardinal; CreditTick:Byte);
   protected
+    {$IFDEF PORTUGUES}
+    //: Ponte (somente leitura) para a conexão/sessão viva, para subclasses de download de bloco
+    //: (TGP2ES7CommPlusDriver) emitirem CreateObject/SetMultiVariables sobre a sessão já ativa.
+    //: Chame EnsureConnected antes. Único acréscimo à classe base para o download; a lógica de
+    //: download fica toda na subclasse, em outra unit.
+    {$ELSE}
+    //: Read-only bridge to the live connection/session, so a block-download subclass
+    //: (TGP2ES7CommPlusDriver) can issue CreateObject/SetMultiVariables over the active session.
+    //: Call EnsureConnected first. The only base-class addition for the download; all download
+    //: logic lives in the subclass, in another unit.
+    {$ENDIF}
+    property Connection:TS7PlusConnection read FConnection;
+    //: (moved from private to protected so the download subclass can open the session first).
+    function EnsureConnected:Boolean;
     function CompositeWriteSize(SoftDataType:Byte):Integer;
     //: Appends to Items one write per writable member of a whole-DB/area entry, each cut out
     //: of Values (the tag's bytes, laid out like ReadComposite assembles them) at its

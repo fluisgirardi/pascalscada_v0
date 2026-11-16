@@ -35,12 +35,17 @@ interface
 uses
   Classes, SysUtils, Types, ctypes, CommPort, CommTypes, S7PlusTypes, S7PlusVLQ, S7PlusCodec, S7PlusSSL,
   S7PlusTypeInfo, S7PlusAlarms, S7PlusHarpoKeys, S7PlusHarpoLegacyAuth, S7PlusHarpoBlobMeta,
-  S7PlusHarpoLegitimate, S7PlusCertificate;
+  S7PlusHarpoLegitimate, S7PlusCertificate, S7PlusReturnValue;
 
 const
   //: Default of TS7PlusConnection.MaxItemsPerRequest: the largest number of items a PLC took in
   //: one Get/SetMultiVariables request when measured (101 was refused with an error code).
   S7PlusDefaultMaxItemsPerRequest = 100;
+
+  //: How often a renewing session (see S7PlusFamilyRenewsSessionKey) would refresh its
+  //: SessionKey, in ms (TIA uses ~25 min). A session that never renews (S7-1500/PLCSIM)
+  //: ends on its own ~1h after connect, so a long-lived client must reconnect instead.
+  S7PlusSessionKeyRenewIntervalMs = 25*60*1000;
 
 type
   ES7PlusError = class(Exception);
@@ -158,6 +163,11 @@ type
     FTpduCode:Byte;      //TPDU size asked for at the COTP connect ($0A = 1024 bytes)
     FTpduBytes:Integer;  //the TPDU size in use (what the PLC confirmed)
     FLastReturnValue:QWord;
+    //: Function code (opcode/func) of the last response header SendRequest received.
+    //: A generic-error reply carries S7PlusFunc_Error ($04B1) here even though its first
+    //: payload value has no sign bit and would otherwise read as a success returnValue
+    //: (ported from gijzelaerr/s7commplus _last_response_function, #158).
+    FLastResponseFunction:Word;
     FOnDebug:TS7PlusDebugEvent;
 
     //-- V2+ TLS/IntegrityId ---------------------------------------------------
@@ -266,6 +276,13 @@ type
     //: result to address 1846. Required before the PLC allows any data operation on a
     //: session that went through the SecurityKey blob exchange.
     function PostAuthLegitimation(const Password:AnsiString):Boolean;
+    //: Refreshes the in-session SessionKey by re-running the legitimation (challenge from
+    //: 303, solve, write). Only the S7-1200 key family renews in-session, so this is a
+    //: no-op (returns false) for S7-1500/PLCSIM, which must RECONNECT instead when their
+    //: ~1h session lapses. It is NOT auto-scheduled: on the cert-authenticated TIA sessions
+    //: this driver targets, re-legitimation poisons the session (see Connect's note), so
+    //: renewal is left to an explicit caller. (gijzelaerr/s7commplus #171/#186/#158.)
+    function RenewSessionKey(const Password:AnsiString):Boolean;
     //: Generic single-address V1 GetVarSubstreamed read, reused by the TIA-observed
     //: post-legitimation sequence below (each call in that sequence targets a different
     //: InObjectId/address/seq_field, unlike PostAuthLegitimation's own hardcoded one).
@@ -628,11 +645,19 @@ type
     //: connection can carry another one. Cleared by Connect.
     property StreamLost:Boolean read FStreamLost;
     property SessionId:Cardinal read FSessionId;
+    //: The SubscriptionContainer object id the PLC assigned at session setup (the live equivalent of the
+    //: ES-session container the download references); used to seed the block-download id remap.
+    property SubscriptionsContainerObjectId:Cardinal read FSubscriptionsContainerObjectId;
     property ProtocolVersion:Byte read FProtocolVersion;
     property SessionSetupOK:Boolean read FSessionSetupOK;
     //: Return value (VLQ64) parsed from the last GetMultiVariables/SetMultiVariables
     //: response; 0 means the PLC reported success on that request.
     property LastReturnValue:QWord read FLastReturnValue;
+    //: Function code of the last response header SendRequest read (see FLastResponseFunction).
+    property LastResponseFunction:Word read FLastResponseFunction;
+    //: True when the last response was the generic error frame (S7PlusFunc_Error): the PLC
+    //: refused the request outright, regardless of what its first payload value looks like.
+    function LastResponseWasError:Boolean;
     property OnDebug:TS7PlusDebugEvent read FOnDebug write FOnDebug;
     //: Whether to activate TLS (after InitSSL, before CreateObject). Most S7-1200/1500
     //: firmware from TIA Portal V15+ requires this for anything beyond the initial
@@ -678,7 +703,18 @@ type
 //: Formats bytes as a space-separated hex string, for debug traces.
 function S7PlusHexStr(const B:TBytes):String;
 
+//: Whether a PLC of this key family refreshes its SessionKey in-session (vs. ending the
+//: session, which forces a reconnect). Only the S7-1200 family renews; an S7-1500 without
+//: TLS refuses the key write and drops the link, and PLCSIM resets (gijzelaerr/s7commplus
+//: #186). See S7PlusSessionKeyRenewIntervalMs and TS7PlusConnection.RenewSessionKey.
+function S7PlusFamilyRenewsSessionKey(Family:TS7PlusHarpoKeyFamily):Boolean;
+
 implementation
+
+function S7PlusFamilyRenewsSessionKey(Family:TS7PlusHarpoKeyFamily):Boolean;
+begin
+  Result := Family=hkfS7_1200;
+end;
 
 function S7PlusHexStr(const B:TBytes):String;
 const
@@ -1999,6 +2035,25 @@ end;
 //: the one CreateObject carried), solves it via S7PlusHarpoLegitimate, writes the
 //: 248-byte solved blob to address 1846. Required before the PLC allows any data
 //: operation on a session that went through the SecurityKey blob exchange.
+function TS7PlusConnection.LastResponseWasError:Boolean;
+begin
+  Result := FLastResponseFunction=S7PlusFunc_Error;
+end;
+
+function TS7PlusConnection.RenewSessionKey(const Password:AnsiString):Boolean;
+begin
+  Result := false;
+  if not FConnected then exit;
+  //Gate strictly on the key family: only S7-1200 renews in-session. For S7-1500/PLCSIM
+  //this is a no-op - they must reconnect when the ~1h session lapses. (Not auto-called;
+  //see the declaration's note on cert sessions.)
+  if not S7PlusFamilyRenewsSessionKey(FHarpoAuthFamily) then begin
+    Debug(Format('RenewSessionKey: familia %d nao renova a SessionKey em sessao - ignorado (reconecte)',[Ord(FHarpoAuthFamily)]));
+    exit;
+  end;
+  Result := PostAuthLegitimation(Password);
+end;
+
 function TS7PlusConnection.PostAuthLegitimation(const Password:AnsiString):Boolean;
 var
   Payload, Resp, LegitChallenge, LegitBlob, Svs:TBytes;
@@ -2075,10 +2130,18 @@ begin
     exit;
   end;
 
+  //A generic-error reply (S7PlusFunc_Error) refuses the write even though its first
+  //payload value has no sign bit and would read as a success returnValue - so check the
+  //response function before trusting the value (gijzelaerr/s7commplus #158).
+  if LastResponseWasError then begin
+    Debug('PostAuthLegitimation: rejeitado - PLC respondeu com a funcao de erro generico ($04B1)');
+    exit;
+  end;
+
   if Length(Resp)>=1 then begin
     RetVal := DecodeUInt64VLQ(Resp, 0, c);
-    if (RetVal and QWord($8000000000000000))<>0 then begin
-      Debug(Format('PostAuthLegitimation: rejeitado pela PLC (returnValue=0x%.16x)',[RetVal]));
+    if S7PlusReturnValueFailed(RetVal) then begin
+      Debug('PostAuthLegitimation: rejeitado pela PLC ('+S7PlusDescribeReturnValue(RetVal)+')');
       exit;
     end;
   end;
@@ -2099,6 +2162,7 @@ begin
   FWithIntegrityId := false;
   FIntegrityIdRead := 0;
   FIntegrityIdWrite := 0;
+  FLastResponseFunction := 0;
 
   if not CotpConnect then exit;
   if not InitSSL then exit; //always unencrypted - triggers the PLC to prepare for TLS
@@ -2555,6 +2619,7 @@ begin
       Debug('SendRequest: resposta reassemblada menor que o cabecalho de 10 bytes');
       exit;
     end;
+    FLastResponseFunction := (Response[3] shl 8) or Response[4];
     RespPayload := BytesCopy(Response, 10, Length(Response)-10);
     Result := true;
     Debug(Format('SendRequest: respPayload reassemblado (%d bytes)',[Length(RespPayload)]));
@@ -2587,6 +2652,7 @@ begin
     exit;
   end;
 
+  FLastResponseFunction := (Response[3] shl 8) or Response[4];
   RespPayload := BytesCopy(Response, 10, Length(Response)-10);
 
   //SessionKey/HMAC (V3) responses prepend an IntegrityId VLQ before the actual
@@ -2595,8 +2661,17 @@ begin
   //[IntegrityId+ReturnValue] blob as if it were the ReturnValue alone - reliably
   //producing a sign-bit-set (looks like failure) value regardless of the real result.
   if (Length(FHarpoSessionKey)>0) and (Length(RespPayload)>1) then begin
-    DecodeUInt32VLQ(RespPayload, 0, c);
-    RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    //A rejected legitimation can begin with a value too large for an IntegrityId (a
+    //64-bit ReturnValue), which DecodeUInt32VLQ now rejects as out of range. In that
+    //case leave the payload unstripped so the caller still sees the real ReturnValue
+    //(python-snap7/s7commplus _strip_response_integrity_id does the same, #155).
+    try
+      DecodeUInt32VLQ(RespPayload, 0, c);
+      RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    except
+      on E:Exception do
+        Debug('SendRequest: IntegrityId prefix out of range, resposta deixada sem strip: '+E.Message);
+    end;
   end;
 
   Result := true;
@@ -2683,8 +2758,15 @@ begin
   if Length(Response)<10 then exit;
   RespPayload := BytesCopy(Response, 10, Length(Response)-10);
   if (Length(FHarpoSessionKey)>0) and (Length(RespPayload)>1) then begin
-    DecodeUInt32VLQ(RespPayload, 0, c);
-    RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    //Leave the payload unstripped if the leading value is not a valid IntegrityId
+    //(see the matching note in SendRequest, #155).
+    try
+      DecodeUInt32VLQ(RespPayload, 0, c);
+      RespPayload := BytesCopy(RespPayload, c, Length(RespPayload)-c);
+    except
+      on E:Exception do
+        Debug('SendReplayRaw: IntegrityId prefix out of range, resposta deixada sem strip: '+E.Message);
+    end;
   end;
   Result := true;
   Debug('SendReplayRaw: respPayload='+S7PlusHexStr(RespPayload));
@@ -3742,57 +3824,107 @@ end;
 //: reported it in the errors section instead) just leaves that Results[i].Ok=false.
 function TS7PlusConnection.ParseMultiReadResponse(const Response:TBytes; ItemCount:Integer; out Results:TS7PlusMultiReadResultArray):Boolean;
 var
-  Offset, c, i:Integer;
+  Offset, c:Integer;
   RetVal:QWord;
-  ItemNr:Cardinal;
   ErrText:String;
+  AnyError, Parsed:Boolean;
+
+  procedure ResetResults;
+  var k:Integer;
+  begin
+    SetLength(Results, ItemCount);
+    for k:=0 to ItemCount-1 do begin
+      SetLength(Results[k].Data, 0);
+      Results[k].Ok := false;
+    end;
+  end;
+
+  //Fills Results from the value list, then lets a per-item error override it: the error
+  //wins even when a value is present, which is how a missing DB arrives (empty value +
+  //an error-list entry for the same item - #133). Raises on a malformed/out-of-sync
+  //list. HadError=true when at least one item was flagged failed by the error list.
+  //Mirrors python-snap7/s7commplus client._parse_read_items.
+  function ParseItems(StartOffset:Integer; out HadError:Boolean):Boolean;
+  var o, cc:Integer; Nr:Cardinal;
+  begin
+    HadError := false;
+    o := StartOffset;
+    //Values section.
+    while o<Length(Response) do begin
+      Nr := DecodeUInt32VLQ(Response, o, cc); o := o+cc;
+      if Nr=0 then break;
+      if (Nr>=1) and (Nr<=Cardinal(ItemCount)) then begin
+        Results[Nr-1].Data := DecodePValueToBytes(Response, o, cc);
+        Results[Nr-1].Ok := true;
+        o := o+cc;
+      end else begin
+        //Unexpected item index - still consume its PValue to keep the parse in sync.
+        DecodePValueToBytes(Response, o, cc);
+        o := o+cc;
+      end;
+    end;
+    //Errors section: a per-item error wins over any (usually empty) value.
+    while o<Length(Response) do begin
+      Nr := DecodeUInt32VLQ(Response, o, cc); o := o+cc;
+      if Nr=0 then break;
+      DecodeUInt64VLQ(Response, o, cc); o := o+cc; //per-item error value
+      if (Nr>=1) and (Nr<=Cardinal(ItemCount)) then begin
+        Results[Nr-1].Ok := false;
+        SetLength(Results[Nr-1].Data, 0);
+        HadError := true;
+      end;
+    end;
+    Result := true;
+  end;
+
 begin
   Result := false;
-  SetLength(Results, ItemCount);
-  for i:=0 to ItemCount-1 do begin
-    SetLength(Results[i].Data, 0);
-    Results[i].Ok := false;
-  end;
+  ResetResults;
 
   Offset := 0;
   RetVal := DecodeUInt64VLQ(Response, Offset, c);
   Offset := Offset+c;
   FLastReturnValue := RetVal;
-  if RetVal<>0 then begin
-    ErrText := ExtractErrorText(BytesCopy(Response, Offset, Length(Response)-Offset));
-    if ErrText<>'' then
-      Debug(Format('ParseMultiReadResponse: PLC retornou erro (returnValue=%d): %s',[RetVal,ErrText]))
-    else
-      Debug(Format('ParseMultiReadResponse: PLC retornou erro (returnValue=%d)',[RetVal]));
+
+  if RetVal=0 then begin
+    try
+      Result := ParseItems(Offset, AnyError);
+    except
+      on E:Exception do begin
+        Debug('ParseMultiReadResponse: resposta malformada: '+E.Message);
+        ResetResults;
+        Result := false;
+      end;
+    end;
     exit;
   end;
 
-  //Values section.
-  while Offset<Length(Response) do begin
-    ItemNr := DecodeUInt32VLQ(Response, Offset, c);
-    Offset := Offset+c;
-    if ItemNr=0 then break;
-    if (ItemNr>=1) and (ItemNr<=Cardinal(ItemCount)) then begin
-      Results[ItemNr-1].Data := DecodePValueToBytes(Response, Offset, c);
-      Results[ItemNr-1].Ok := true;
-      Offset := Offset+c;
-    end else begin
-      //Unexpected item index - still consume its PValue to keep the parse in sync.
-      DecodePValueToBytes(Response, Offset, c);
-      Offset := Offset+c;
-    end;
+  //A non-zero ReturnValue is still usable when it is a PARTIAL error: the item lists
+  //parse and at least one item is flagged failed (e.g. 0x20278000009A0013 =
+  //SERVICE_EXECUTED_WITH_PARTIAL_ERROR on an S7-1500 CPU 1512SP-1). Keep the good values
+  //and mark the failed items instead of refusing the whole batch (python-snap7 #145/#133).
+  //A genuine or unparseable error still refuses the request, as before.
+  Parsed := false;
+  AnyError := false;
+  try
+    Parsed := ParseItems(Offset, AnyError);
+  except
+    on E:Exception do
+      Parsed := false;
   end;
 
-  //Errors section (per-item failures within an otherwise-successful batch).
-  while Offset<Length(Response) do begin
-    ItemNr := DecodeUInt32VLQ(Response, Offset, c);
-    Offset := Offset+c;
-    if ItemNr=0 then break;
-    DecodeUInt64VLQ(Response, Offset, c); //error value - not surfaced per-item yet
-    Offset := Offset+c;
+  if Parsed and AnyError then begin
+    Debug('ParseMultiReadResponse: erro parcial ('+S7PlusDescribeReturnValue(RetVal)+'); itens falhos marcados, bons mantidos');
+    Result := true;
+  end else begin
+    ErrText := ExtractErrorText(BytesCopy(Response, Offset, Length(Response)-Offset));
+    if ErrText<>'' then
+      Debug('ParseMultiReadResponse: PLC retornou erro ('+S7PlusDescribeReturnValue(RetVal)+'): '+ErrText)
+    else
+      Debug('ParseMultiReadResponse: PLC retornou erro ('+S7PlusDescribeReturnValue(RetVal)+')');
+    ResetResults;
+    Result := false;
   end;
-
-  Result := true;
 end;
 
 class function TS7PlusConnection.ReadItemReplyBytes(const Item:TS7PlusMultiReadItem):Integer;

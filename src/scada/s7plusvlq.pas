@@ -86,18 +86,31 @@ function DecodeUInt32VLQ(const Data:TBytes; Offset:Integer; out Consumed:Integer
 var
   Octet:Byte;
   i:Integer;
+  Acc:QWord;
+  Terminated:Boolean;
 begin
-  Result := 0;
+  //Accumulate in 64 bits so a 5-group value (up to 35 bits) can be range-checked
+  //before it silently wraps into the 32-bit Result. Matches python-snap7/s7commplus
+  //vlq.decode_uint32_vlq, which rejects an unterminated or out-of-range VLQ (#155).
+  Acc := 0;
   Consumed := 0;
+  Terminated := false;
   for i:=1 to 5 do begin
     if (Offset+Consumed)>=Length(Data) then
       raise Exception.Create('S7PlusVLQ: unexpected end of VLQ data (uint32)');
     Octet := Data[Offset+Consumed];
     inc(Consumed);
-    Result := (Result shl 7) or (Octet and $7F);
-    if (Octet and $80)=0 then
+    Acc := (Acc shl 7) or (Octet and $7F);
+    if (Octet and $80)=0 then begin
+      Terminated := true;
       break;
+    end;
   end;
+  if not Terminated then
+    raise Exception.Create('S7PlusVLQ: unterminated uint32 VLQ (continuation bit on 5th byte)');
+  if Acc>QWord($FFFFFFFF) then
+    raise Exception.Create('S7PlusVLQ: uint32 VLQ out of range');
+  Result := Cardinal(Acc);
 end;
 
 function EncodeInt32VLQ(Value:LongInt):TBytes;
@@ -135,9 +148,15 @@ function DecodeInt32VLQ(const Data:TBytes; Offset:Integer; out Consumed:Integer)
 var
   Octet:Byte;
   Counter:Integer;
+  Acc:Int64;
+  Terminated:Boolean;
 begin
-  Result := 0;
+  //Accumulate in 64 bits so the 35-bit intermediate can be range-checked before it
+  //wraps into the 32-bit Result. Matches python-snap7/s7commplus vlq.decode_int32_vlq,
+  //which rejects an unterminated or out-of-range VLQ (#155).
+  Acc := 0;
   Consumed := 0;
+  Terminated := false;
   for Counter:=1 to 5 do begin
     if (Offset+Consumed)>=Length(Data) then
       raise Exception.Create('S7PlusVLQ: unexpected end of VLQ data (int32)');
@@ -146,15 +165,22 @@ begin
 
     if (Counter=1) and ((Octet and $40)<>0) then begin
       Octet := Octet and $BF;
-      Result := -64;
+      Acc := -64;
     end else
-      Result := Result shl 7;
+      Acc := Acc shl 7;
 
-    Result := Result + (Octet and $7F);
+    Acc := Acc + (Octet and $7F);
 
-    if (Octet and $80)=0 then
+    if (Octet and $80)=0 then begin
+      Terminated := true;
       break;
+    end;
   end;
+  if not Terminated then
+    raise Exception.Create('S7PlusVLQ: unterminated int32 VLQ (continuation bit on 5th byte)');
+  if (Acc<(-Int64($80000000))) or (Acc>Int64($7FFFFFFF)) then
+    raise Exception.Create('S7PlusVLQ: int32 VLQ out of range');
+  Result := LongInt(Acc);
 end;
 
 function EncodeUInt64VLQ(Value:QWord):TBytes;
