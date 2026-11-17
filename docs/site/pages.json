@@ -1,5 +1,5 @@
 {
-  "_comment": "Manifest of www.pascalscada.com documentation pages. 'id' is the WordPress page ID (null = not created yet). Each entry has one Markdown file per language under docs/site/<lang>/<slug>.md. qTranslate-XT language codes: en, pb. 'menu' says where a NEW page goes in the site's Documentation menu: parent is the id of the parent menu item (170 = 'How to use', 908 = 'Protocol drivers'), 'after' the slug it follows; 'menu_item' is filled by the publisher once the item is created. Any `examples/<name>` in backticks in the Markdown is turned into a link to examples_base + <name> by the publisher. 'posts' lists the blog posts (docs/site/posts/<slug>.<lang>.md), published by publish_docs.py --unpublished.",
+  "_comment": "Manifest of www.pascalscada.com documentation pages. 'id' is the WordPress page ID (null = not created yet). Each entry has one Markdown file per language under docs/site/<lang>/<slug>.md. qTranslate-XT language codes: en, pb. 'menu' says where a NEW page goes in the site's Documentation menu: parent is the id of the parent menu item (170 = 'How to use', 908 = 'Protocol drivers'), 'after' the slug it follows; 'menu_item' is filled by the publisher once the item is created. Any `examples/<name>` in backticks in the Markdown is turned into a link to examples_base + <name> by the publisher. 'posts' lists the blog posts (docs/site/posts/<slug>.<lang>.md), published by publish_docs.py --unpublished. 'hold' (a reason) keeps a page or post out of --all and --unpublished until it is removed; naming the slug still publishes it.",
   "languages": [
     "en",
     "pb"
@@ -271,7 +271,7 @@
     },
     {
       "slug": "logging",
-      "id": null,
+      "id": 1313,
       "title": {
         "en": "Logging (TpSCADALogger)",
         "pb": "Log (TpSCADALogger)"
@@ -280,7 +280,8 @@
         "parent": 170,
         "after": "expressions-in-properties"
       },
-      "menu_item": null
+      "menu_item": 1314,
+      "hold": "the logging facility is not in the OPM release yet"
     },
     {
       "slug": "download",

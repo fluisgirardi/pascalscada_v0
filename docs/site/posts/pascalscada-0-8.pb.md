@@ -26,10 +26,6 @@ Todos os drivers ganharam também uma forma comum de listar os tags de um equipa
 
 O `THMIDBConnection` agora usa o **SQLdb** do próprio Free Pascal: o ZeosLib deixou de ser dependência. O componente funciona do mesmo jeito (fila de comandos, thread, resultados de volta na thread principal), e a conexão pode ser renovada a cada transação. Valores de protocolo de projetos antigos com sufixo de versão (`mysql-5.7`) continuam aceitos. Veja [HMIDBConnection](/pb/hmidbconnection/).
 
-##### Log de tudo (0.8.1)
-
-Novidade da 0.8.1: o **`TpSCADALogger`** reúne o que acontece dentro do PascalSCADA — os bytes trafegados, conexões e reconexões, threads de scan, leituras e escritas de tags, eventos disparados, logins, comandos SQL — e manda cada mensagem, conforme **regras** (fonte, classe, categoria, nível), para a tela (**`TpSCADALogMemo`**), para arquivos (por dia, por fonte, por classe…), para um evento, ou para lugar nenhum. Não custa nada enquanto nenhuma regra pede a mensagem. Também serve de **trilha de auditoria**: todo valor que um controle de HMI escreve vai para o log com o usuário que estava logado. Exceções que antes sumiam dentro das threads de scan agora aparecem no log.
-
 ##### Menos defeitos: uma suíte de testes de verdade
 
 O PascalSCADA nunca teve testes automatizados. Agora tem cerca de **2.100**, cobrindo as portas, todos os drivers de protocolo, a camada de tags, os controles de HMI, a segurança e a camada de banco de dados, e eles rodam a cada mudança no **Windows 32/64, Linux 32/64 e FreeBSD**, além de **ARM (armhf e aarch64)**. Todos os exemplos também são compilados no CI, para nenhum deles ficar para trás da biblioteca de novo.

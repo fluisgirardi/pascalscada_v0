@@ -26,10 +26,6 @@ All drivers also gained a common way to list the tags of a device (`TProtocolDri
 
 `THMIDBConnection` now uses Free Pascal's own **SQLdb**: ZeosLib is no longer a dependency. The component works the same way (command queue, thread, results back on the main thread), and connections can be renewed per transaction. Protocol values from older projects with a version suffix (`mysql-5.7`) are still accepted. See [HMIDBConnection](/hmidbconnection/).
 
-##### Logging everything (0.8.1)
-
-New in 0.8.1: **`TpSCADALogger`** collects what happens inside PascalSCADA — bytes on the wire, connections and reconnections, scan threads, tag reads and writes, events fired, logins, SQL commands — and routes each message by **rules** (source, class, category, level) to the screen (**`TpSCADALogMemo`**), to files (per day, per source, per class…), to an event, or nowhere. It costs nothing while no rule asks for a message. It also gives an **audit trail**: every value an HMI control writes is logged with the user who was logged in. Exceptions that used to disappear inside the scan threads now show up in the log.
-
 ##### Fewer bugs: a real test suite
 
 PascalSCADA never had automated tests. Now it has about **2,100**, covering the ports, every protocol driver, the tag layer, the HMI controls, security and the database layer, and they run on every change on **Windows 32/64, Linux 32/64 and FreeBSD**, plus **ARM (armhf and aarch64)**. Every example is also built on the CI, so none of them falls behind the library again.

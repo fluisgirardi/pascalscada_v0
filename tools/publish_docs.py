@@ -31,6 +31,8 @@ Usage:
     tools/publish_docs.py --test slug               publish as a NEW draft "TEST: <title>", verify both languages
     tools/publish_docs.py slug [slug ...]           update/create the real pages
     tools/publish_docs.py --all                     every page whose Markdown exists
+    A page or post with "hold": "<reason>" in the manifest is left out of --all
+    and --unpublished (naming its slug still publishes it).
     tools/publish_docs.py --unpublished             publish every page AND post that is not published yet
                                                     (not on the site, or a draft/pending one); the
                                                     published ones are left alone
@@ -486,6 +488,9 @@ def publish_unpublished(manifest, langs, dry_run):
         rendered = render(item, langs, cache, False, base)
         if rendered is None:
             continue  # no text yet for some language: nothing to publish
+        if item.get("hold"):
+            print(f"== {label} {item['slug']}: held ({item['hold']}), left out")
+            continue
         if not can_read and item["id"] is not None:
             unknown += 1
             continue
@@ -560,6 +565,10 @@ def main():
         selected = [p for p in pages if p["id"] is not None]
     elif args.all:
         selected = [p for p in pages if all((SITE / l / f"{p['slug']}.md").exists() for l in langs)]
+        for p in selected:
+            if p.get("hold"):
+                print(f"== {p['slug']}: held ({p['hold']}), left out")
+        selected = [p for p in selected if not p.get("hold")]
     else:
         if not args.slugs:
             ap.error("give at least one slug, or --all")
