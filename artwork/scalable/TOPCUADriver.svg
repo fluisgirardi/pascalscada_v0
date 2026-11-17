@@ -6,13 +6,34 @@
    id="layer"
    x="0px"
    y="0px"
-   viewBox="0 0 24 24"
+   viewBox="0 0 48 48"
    xml:space="preserve"
-   width="24"
-   height="24"
+   width="48"
+   height="48"
+   sodipodi:docname="TOPCUADriver.svg"
+   inkscape:version="1.4.4 (1:1.4.4+202605061436+dcaf3e7d9e)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+   id="namedview1"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   inkscape:zoom="5.9367507"
+   inkscape:cx="4.7163847"
+   inkscape:cy="24.76102"
+   inkscape:window-width="1920"
+   inkscape:window-height="1008"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="layer" /><defs
    id="defs157" />
 <style
    type="text/css"
@@ -66,7 +87,7 @@
 
 <g
    id="g159"
-   transform="matrix(0.06016931,0,0,0.06016931,-7.6151937,-11.031327)"
+   transform="matrix(0.1244454,0,0,0.1244454,-16.569201,-23.634633)"
    style="stroke-width:0.611988"><g
      id="g158"
      transform="translate(119.45)"
@@ -138,7 +159,7 @@
 	</linearGradient>
 	<polygon
    class="st0"
-   points="39.1,270.4 51.6,282.9 39.1,295.3 26.7,282.9 "
+   points="26.7,282.9 39.1,270.4 51.6,282.9 39.1,295.3 "
    clip-path="url(#SVGID_2_)"
    id="polygon7"
    style="fill:url(#SVGID_3_);stroke-width:0.611988" />
@@ -203,7 +224,7 @@
 	</linearGradient>
 	<polygon
    class="st1"
-   points="63.5,273.3 75.9,285.7 63.5,298.1 51.1,285.7 "
+   points="51.1,285.7 63.5,273.3 75.9,285.7 63.5,298.1 "
    clip-path="url(#SVGID_5_)"
    id="polygon14"
    style="fill:url(#SVGID_6_);stroke-width:0.611988" />
@@ -268,7 +289,7 @@
 	</linearGradient>
 	<polygon
    class="st2"
-   points="54.9,290.2 67.3,302.7 54.9,315.1 42.5,302.7 "
+   points="42.5,302.7 54.9,290.2 67.3,302.7 54.9,315.1 "
    clip-path="url(#SVGID_8_)"
    id="polygon21"
    style="fill:url(#SVGID_9_);stroke-width:0.611988" />
@@ -333,7 +354,7 @@
 	</linearGradient>
 	<polygon
    class="st3"
-   points="88.8,327.2 101.2,339.6 88.8,352 76.4,339.6 "
+   points="76.4,339.6 88.8,327.2 101.2,339.6 88.8,352 "
    clip-path="url(#SVGID_11_)"
    id="polygon28"
    style="fill:url(#SVGID_12_);stroke-width:0.611988" />
@@ -398,7 +419,7 @@
 	</linearGradient>
 	<polygon
    class="st4"
-   points="53.8,306.9 66.2,319.3 53.8,331.7 41.4,319.3 "
+   points="41.4,319.3 53.8,306.9 66.2,319.3 53.8,331.7 "
    clip-path="url(#SVGID_14_)"
    id="polygon35"
    style="fill:url(#SVGID_15_);stroke-width:0.611988" />
@@ -463,7 +484,7 @@
 	</linearGradient>
 	<polygon
    class="st5"
-   points="69,296.8 81.4,309.3 69,321.7 56.6,309.3 "
+   points="56.6,309.3 69,296.8 81.4,309.3 69,321.7 "
    clip-path="url(#SVGID_17_)"
    id="polygon42"
    style="fill:url(#SVGID_18_);stroke-width:0.611988" />
@@ -528,7 +549,7 @@
 	</linearGradient>
 	<polygon
    class="st6"
-   points="86.2,280.5 98.6,292.9 86.2,305.3 73.8,292.9 "
+   points="73.8,292.9 86.2,280.5 98.6,292.9 86.2,305.3 "
    clip-path="url(#SVGID_20_)"
    id="polygon49"
    style="fill:url(#SVGID_21_);stroke-width:0.611988" />
@@ -593,7 +614,7 @@
 	</linearGradient>
 	<polygon
    class="st7"
-   points="104.7,327.9 127.7,350.9 104.7,373.9 81.7,350.9 "
+   points="81.7,350.9 104.7,327.9 127.7,350.9 104.7,373.9 "
    clip-path="url(#SVGID_23_)"
    id="polygon56"
    style="fill:url(#SVGID_24_);stroke-width:0.611988" />
@@ -658,7 +679,7 @@
 	</linearGradient>
 	<polygon
    class="st8"
-   points="73.7,311.1 90.5,327.9 73.7,344.7 56.9,327.9 "
+   points="56.9,327.9 73.7,311.1 90.5,327.9 73.7,344.7 "
    clip-path="url(#SVGID_26_)"
    id="polygon63"
    style="fill:url(#SVGID_27_);stroke-width:0.611988" />
@@ -723,7 +744,7 @@
 	</linearGradient>
 	<polygon
    class="st9"
-   points="118.4,272.1 136.2,289.8 118.4,307.5 100.7,289.8 "
+   points="100.7,289.8 118.4,272.1 136.2,289.8 118.4,307.5 "
    clip-path="url(#SVGID_29_)"
    id="polygon70"
    style="fill:url(#SVGID_30_);stroke-width:0.611988" />
@@ -788,7 +809,7 @@
 	</linearGradient>
 	<polygon
    class="st10"
-   points="106.1,286.5 123.8,304.2 106.1,321.9 88.4,304.2 "
+   points="88.4,304.2 106.1,286.5 123.8,304.2 106.1,321.9 "
    clip-path="url(#SVGID_32_)"
    id="polygon77"
    style="fill:url(#SVGID_33_);stroke-width:0.611988" />
@@ -799,7 +820,7 @@
    id="defs77">
 		<polygon
    id="SVGID_34_"
-   points="142,287 133.1,295.9 142,304.7 150.8,295.9 " />
+   points="150.8,295.9 142,287 133.1,295.9 142,304.7 " />
 	</defs>
 	<clipPath
    id="SVGID_35_">
@@ -848,7 +869,7 @@
 	</linearGradient>
 	<polygon
    class="st11"
-   points="142,278.1 159.7,295.9 142,313.6 124.3,295.9 "
+   points="124.3,295.9 142,278.1 159.7,295.9 142,313.6 "
    clip-path="url(#SVGID_35_)"
    id="polygon84"
    style="fill:url(#SVGID_36_);stroke-width:0.611988" />
@@ -913,7 +934,7 @@
 	</linearGradient>
 	<polygon
    class="st12"
-   points="46.9,262.1 57.3,272.5 46.9,282.9 36.5,272.5 "
+   points="36.5,272.5 46.9,262.1 57.3,272.5 46.9,282.9 "
    clip-path="url(#SVGID_38_)"
    id="polygon91"
    style="fill:url(#SVGID_39_);stroke-width:0.611988" />
@@ -1000,7 +1021,7 @@
 	</linearGradient>
 	<polygon
    class="st13"
-   points="90.9,298.4 113.9,321.4 90.9,344.4 67.9,321.4 "
+   points="67.9,321.4 90.9,298.4 113.9,321.4 90.9,344.4 "
    clip-path="url(#SVGID_41_)"
    id="polygon102"
    style="fill:url(#SVGID_42_);stroke-width:0.611988" />
@@ -1060,7 +1081,7 @@
 	</linearGradient>
 	<polygon
    class="st14"
-   points="111.6,305.1 134.6,328.2 111.6,351.2 88.6,328.2 "
+   points="88.6,328.2 111.6,305.1 134.6,328.2 111.6,351.2 "
    clip-path="url(#SVGID_44_)"
    id="polygon109"
    style="fill:url(#SVGID_45_);stroke-width:0.611988" />
@@ -1120,7 +1141,7 @@
 	</linearGradient>
 	<polygon
    class="st15"
-   points="125.3,286.5 148.4,309.6 125.3,332.6 102.3,309.6 "
+   points="102.3,309.6 125.3,286.5 148.4,309.6 125.3,332.6 "
    clip-path="url(#SVGID_47_)"
    id="polygon116"
    style="fill:url(#SVGID_48_);stroke-width:0.611988" />
@@ -1203,7 +1224,7 @@
 	</linearGradient>
 	<polygon
    class="st16"
-   points="122.2,325.3 145.2,348.3 122.2,371.3 99.2,348.3 "
+   points="99.2,348.3 122.2,325.3 145.2,348.3 122.2,371.3 "
    clip-path="url(#SVGID_50_)"
    id="polygon126"
    style="fill:url(#SVGID_51_);stroke-width:0.611988" />
@@ -1306,7 +1327,7 @@
 	</linearGradient>
 	<polygon
    class="st17"
-   points="135.1,311 158.1,334 135.1,357 112.1,334 "
+   points="112.1,334 135.1,311 158.1,334 135.1,357 "
    clip-path="url(#SVGID_53_)"
    id="polygon141"
    style="fill:url(#SVGID_54_);stroke-width:0.611988" />
@@ -1366,7 +1387,7 @@
 	</linearGradient>
 	<polygon
    class="st18"
-   points="138.1,303.7 155.8,321.4 138.1,339.1 120.4,321.4 "
+   points="120.4,321.4 138.1,303.7 155.8,321.4 138.1,339.1 "
    clip-path="url(#SVGID_56_)"
    id="polygon148"
    style="fill:url(#SVGID_57_);stroke-width:0.611988" />
@@ -1431,7 +1452,7 @@
 	</linearGradient>
 	<polygon
    class="st19"
-   points="143.4,331.6 166.4,354.7 143.4,377.7 120.4,354.7 "
+   points="120.4,354.7 143.4,331.6 166.4,354.7 143.4,377.7 "
    clip-path="url(#SVGID_59_)"
    id="polygon155"
    style="fill:url(#SVGID_60_);stroke-width:0.611988" />
