@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="pascalscada_externallibs_hmi"/>
     <Type Value="RunAndDesignTime"/>
@@ -18,6 +18,8 @@
         </SyntaxOptions>
       </Parsing>
     </CompilerOptions>
+    <Description Value="PascalSCADA package for components that requires links with external libs using load-time linking, that may broke your Lazarus environment due library missing. "/>
+    <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="8"/>
     <Files Count="3">
       <Item2>
@@ -30,6 +32,7 @@
         <UnitName Value="sycreader_keydecoder"/>
       </Item3>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="pascalscada_hmi"/>

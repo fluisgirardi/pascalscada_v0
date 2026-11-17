@@ -1,0 +1,57 @@
+{
+  "UpdateLazPackages" : [
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "pascalscada_hmi.lpk",
+      "Version" : "0.8.0.0"
+    },
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "pascalscada_common.lpk",
+      "Version" : "0.8.0.0"
+    },
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "pascalscada_full.lpk",
+      "Version" : "0.8.0.0"
+    },
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "pascalscada_externallibs_hmi.lpk",
+      "Version" : "0.8.0.0"
+    },
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "pascalscada.lpk",
+      "Version" : "0.8.0.0"
+    },
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "pascalscada_dsng.lpk",
+      "Version" : "0.8.0.0"
+    },
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "pascalscada_db.lpk",
+      "Version" : "0.8.0.0"
+    },
+    {
+      "ForceNotify" : false,
+      "InternalVersion" : 1,
+      "Name" : "fpopen62541.lpk",
+      "Version" : "1.5.0.0"
+    }
+  ],
+  "UpdatePackageData" : {
+    "DisableInOPM" : false,
+    "DownloadZipURL" : "",
+    "Name" : "pascalscada"
+  }
+}
