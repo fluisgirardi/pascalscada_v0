@@ -298,6 +298,13 @@ begin
   FForm.SetBounds(0,0,300,200);
   FEdit:=TEdit.Create(FForm);
   FEdit.Parent:=FForm;
+  //AutoSelect seleciona o texto todo quando o foco chega; se o aviso de foco
+  //chega atrasado (Xvfb sem gerenciador de janelas, no CI), o que ja' foi
+  //digitado fica selecionado e a tecla seguinte o substitui ("56" virava "6")
+  //AutoSelect selects the whole text when the focus arrives; if the focus
+  //notification is late (Xvfb with no window manager, on CI), what was already
+  //typed gets selected and the next key replaces it ("56" became "6")
+  FEdit.AutoSelect:=false;
 end;
 
 procedure TTestKeyEventsForThisWidgetset.TearDown;
@@ -322,10 +329,18 @@ begin
 end;
 
 procedure TTestKeyEventsForThisWidgetset.FocusTheField;
+var
+  limite:QWord;
 begin
   FForm.Show;
   FEdit.SetFocus;
-  Application.ProcessMessages;
+  //o foco chega pela fila do sistema: espera por ele antes da primeira tecla
+  //the focus comes through the system's queue: wait for it before the first key
+  limite:=GetTickCount64+2000;
+  repeat
+    Application.ProcessMessages;
+    Sleep(2);
+  until FEdit.Focused or (GetTickCount64>=limite);
 end;
 
 procedure TTestKeyEventsForThisWidgetset.TypeAndWait(aKeyboard:TCrossKeyEvents; aKey:Word; const aExpected:String);
