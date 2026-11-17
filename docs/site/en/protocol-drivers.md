@@ -147,6 +147,19 @@ TPLCString<img alt="plcstring" src="http://www.pascalscada.com/wp-content/upload
 <td>Addresses by the tag's name in the PLC program, not by a memory offset. Dedicated page in preparation.<br/><strong>OpenSSL required:</strong> the connection is TLS 1.3, so the driver loads OpenSSL 1.1.1 or 3.x at run time. Linux and macOS normally already have it. <strong>On Windows</strong> the DLLs are not part of the system: download OpenSSL 3.x from <a href="https://slproweb.com/products/Win32OpenSSL.html">slproweb.com/products/Win32OpenSSL.html</a> (other builds are listed at <a href="https://wiki.openssl.org/index.php/Binaries">wiki.openssl.org/index.php/Binaries</a>) and copy <code>libssl-3-x64.dll</code> and <code>libcrypto-3-x64.dll</code> (32-bit programs: <code>libssl-3.dll</code> and <code>libcrypto-3.dll</code>) to the folder of your executable &#8212; and of <code>lazarus.exe</code> to use the Tag Builder in the IDE. The DLL bitness must match the program. Without them the connection fails.</td>
 </tr>
 <tr>
+<td><strong>TOPCUADriver</strong></td>
+<td>OPC UA (client)</td>
+<td>1 protocol component for 1 server</td>
+<td>Any OPC UA server: S7-1200/1500 and PLCSim, other PLCs with an OPC UA server, gateways, SCADA systems</td>
+<td>none (the open62541 library opens the connection to <code>EndpointUrl</code>)</td>
+<td>TPLCTagNumber<img alt="plctagnumber" src="http://www.pascalscada.com/wp-content/uploads/2016/08/plctagnumber.png"/><br/>
+TPLCBlock<img alt="plcblock" src="http://www.pascalscada.com/wp-content/uploads/2016/08/plcblock.png"/><br/>
+TPLCString<img alt="plcstring" src="http://www.pascalscada.com/wp-content/uploads/2016/08/plcstring.png"/></td>
+<td>
+<p>LongAddress — the NodeId of the variable (e.g. <code>ns=3;s="DB1"."Speed"</code>, <code>nsu=urn:my:server;i=1001</code>)</p></td>
+<td>Subscriptions or polling, Sign/SignAndEncrypt, user/password, Tag Builder. <strong>Requires the open62541 1.5 library</strong> (<code>libopen62541.so</code> / <code>libopen62541.dll</code>). See <a href="/opc-ua/">OPC UA client</a>.</td>
+</tr>
+<tr>
 <td><strong>TLGXDriver</strong></td>
 <td>EtherNet/IP (CIP), Rockwell/Allen-Bradley</td>
 <td>1 protocol component for 1 PLC</td>

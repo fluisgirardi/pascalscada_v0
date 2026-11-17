@@ -48,7 +48,7 @@ Na prática você raramente chama esses métodos. O que controla o comportamento
 
 Todo tag de comunicação tem o mesmo conjunto de propriedades de endereço. **O significado de cada uma depende do driver de protocolo**, e a página de cada protocolo explica como preenchê-las. Como referência rápida:
 
-| Propriedade | Modbus | S7 (ISOTCP) | Melsec | West ASCII / IBox | Logix / S7CommPlus |
+| Propriedade | Modbus | S7 (ISOTCP) | Melsec | West ASCII / IBox | Logix / S7CommPlus / OPC UA |
 |---|---|---|---|---|---|
 | `PLCStation` | Endereço do escravo (1–247) | – | Número da estação | Endereço do controlador | – |
 | `PLCRack` / `PLCSlot` | – | Rack e slot da CPU | – | – | – |
@@ -57,7 +57,7 @@ Todo tag de comunicação tem o mesmo conjunto de propriedades de endereço. **O
 | `MemWriteFunction` | Função Modbus de escrita (5, 6, 15, 16) | – | Tipo de dispositivo (mesmo código da leitura) | – | – |
 | `MemAddress` | Endereço do registrador/coil | Endereço do byte | Endereço do dispositivo | Parâmetro (West) / PID (IBox) | – |
 | `MemSubElement` | – | – (bits: use `TTagBit`) | – | – | – |
-| `LongAddress` | – | – | – | – | Nome simbólico do tag no CLP (`Motor1.Speed`, `"DB10".Setpoint`) |
+| `LongAddress` | – | – | – | – | Nome simbólico do tag no CLP (`Motor1.Speed`, `"DB10".Setpoint`); no [OPC UA](/pb/opc-ua/), o NodeId (`ns=3;s="DB1"."Speed"`) |
 | `Retries` | Tentativas antes de declarar falha (todos os drivers) | | | | |
 
 A forma mais rápida de acertar o endereçamento é o **Tag Builder**: clique com o botão direito no componente do driver de protocolo (`TModBusTCPDriver`, `TISOTCPDriver`…) e escolha *Tag Builder*. Ele cria os tags já configurados para aquele protocolo.
