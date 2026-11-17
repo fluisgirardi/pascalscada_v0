@@ -502,7 +502,7 @@
       </Item2>
       <Item3>
         <PackageName Value="fpopen62541"/>
-        <DefaultFilename Value="external\fpopen62541\fpopen62541.lpk" Prefer="True"/>
+        <DefaultFilename Value="src\external\fpopen62541\fpopen62541.lpk" Prefer="True"/>
       </Item3>
     </RequiredPkgs>
     <UsageOptions>

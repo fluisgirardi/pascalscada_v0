@@ -70,8 +70,8 @@ jobs:
 
       - name: Register the PascalSCADA packages
         run: |
-          # external/fpopen62541: the OPC UA binding pascalscada.lpk requires (a git subtree)
-          for pkg in external/fpopen62541/fpopen62541.lpk \
+          # src/external/fpopen62541: the OPC UA binding pascalscada.lpk requires (a git subtree)
+          for pkg in src/external/fpopen62541/fpopen62541.lpk \
                      pascalscada_common.lpk \
                      pascalscada.lpk \
                      pascalscada_db.lpk \
@@ -253,7 +253,7 @@ jobs:
               command -v lazbuild
 
               lazbuild --add-package-link pascalscada_common.lpk
-              lazbuild --add-package-link external/fpopen62541/fpopen62541.lpk
+              lazbuild --add-package-link src/external/fpopen62541/fpopen62541.lpk
               lazbuild --add-package-link pascalscada.lpk
               lazbuild --add-package-link pascalscada_db.lpk
 
@@ -295,7 +295,7 @@ jobs:
       - name: Build the core and the suite
         run: |
           lazbuild --add-package-link pascalscada_common.lpk
-          lazbuild --add-package-link external/fpopen62541/fpopen62541.lpk
+          lazbuild --add-package-link src/external/fpopen62541/fpopen62541.lpk
           lazbuild --add-package-link pascalscada.lpk
           lazbuild --add-package-link pascalscada_db.lpk
 
@@ -353,7 +353,7 @@ jobs:
               command -v lazbuild
 
               lazbuild --add-package-link pascalscada_common.lpk
-              lazbuild --add-package-link external/fpopen62541/fpopen62541.lpk
+              lazbuild --add-package-link src/external/fpopen62541/fpopen62541.lpk
               lazbuild --add-package-link pascalscada.lpk
               lazbuild --add-package-link pascalscada_db.lpk
 
@@ -437,7 +437,7 @@ jobs:
             LAZ="lazbuild --lazarusdir=$LAZDIR"
 
             $LAZ --add-package-link pascalscada_common.lpk
-            $LAZ --add-package-link external/fpopen62541/fpopen62541.lpk
+            $LAZ --add-package-link src/external/fpopen62541/fpopen62541.lpk
             $LAZ --add-package-link pascalscada.lpk
             $LAZ --add-package-link pascalscada_db.lpk
 
