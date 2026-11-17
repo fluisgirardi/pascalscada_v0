@@ -154,7 +154,7 @@
     },
     {
       "slug": "opc-ua",
-      "id": null,
+      "id": 1305,
       "title": {
         "en": "OPC UA client",
         "pb": "Cliente OPC UA"
@@ -163,7 +163,7 @@
         "parent": 908,
         "after": "s7commplus"
       },
-      "menu_item": null
+      "menu_item": 1306
     },
     {
       "slug": "ethernet-ip-logix",

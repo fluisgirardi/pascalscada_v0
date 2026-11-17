@@ -33,7 +33,7 @@ uses
   mutexserver, MutexClient, siemenstagassistant, modbustagassistant, MelsecTCP,
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
-  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant,
+  XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant, CommPort,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -86,6 +86,9 @@ begin
   RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'LibraryName', TFileNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'CertificateDir', TDirectoryPropertyEditor);
   RegisterPropertyEditor(TypeInfo(String), TOPCUADriver, 'TrustListDir', TDirectoryPropertyEditor);
+  //the library opens the connection to EndpointUrl: no communication port to pick
+  //(published by TProtocolDriver, a descendant cannot unpublish it - only hide it here)
+  RegisterPropertyEditor(TypeInfo(TCommPortDriver), TOPCUADriver, 'CommunicationPort', THiddenPropertyEditor);
   {$IF defined(WIN32) or defined(WIN64)}
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'DevDir', THiddenPropertyEditor);
   {$IFEND}
