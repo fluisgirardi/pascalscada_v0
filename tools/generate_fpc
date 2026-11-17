@@ -1,0 +1,46 @@
+#!/bin/bash
+# Regenerates statuscodes.inc, nodeids.inc and types_generated.inc from an
+# open62541 (>= 1.4) source tree.
+#
+#   generate_fpc <open62541-source-directory> <destination directory> [layout-check-prefix]
+#
+# The types are generated like the default open62541 build does
+# (UA_ENABLE_DATATYPES_ALL=ON): every type of Opc.Ua.Types.bsd, so the
+# UA_TYPES_* indices match a library built with the default options.
+# With a third argument it also writes <prefix>.c/<prefix>.pas, two programs
+# that print the layout of every generated type (see tools/check_layout).
+if [ $# -lt 2 ] ; then
+  echo "$0 <open62541-source-directory> <destination directory> [layout-check-prefix]"
+  exit 100
+fi
+
+opdir=$(readlink -f "$1/tools/")
+if [ ! -f "$opdir/generate_datatypes.py" ] ; then
+  echo "$opdir/generate_datatypes.py doesn't exist"
+  exit 100
+fi
+
+dstdir=$(readlink -f "$2")
+if [ ! -d "$dstdir" ] ; then
+  echo "$dstdir doesn't exist"
+  exit 100
+fi
+
+layout=()
+if [ -n "$3" ] ; then
+  layout=(--layout-check "$(readlink -f "$3")")
+fi
+
+script="$(readlink -f "$0")"
+srcdir=$(dirname "$script")
+
+set -e
+pushd "${opdir}" >/dev/null
+python3 "${srcdir}/generate_statuscode_fpc.py" schema/StatusCode.csv "${dstdir}/statuscodes"
+python3 "${srcdir}/generate_nodeid_header_fpc.py" schema/NodeIds.csv "${dstdir}/nodeids" "NS0"
+PYTHONDONTWRITEBYTECODE=1 python3 "${srcdir}/generate_datatypes_fpc.py" \
+        --type-bsd=schema/Opc.Ua.Types.bsd \
+        --type-csv=schema/NodeIds.csv \
+        "${layout[@]}" \
+        "${dstdir}/types"
+popd >/dev/null
