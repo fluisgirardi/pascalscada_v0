@@ -1,0 +1,80 @@
+#!/bin/bash
+# Proves that the records of open62541.pas have the memory layout of the C
+# structs of an open62541 build: prints SizeOf/offsetof of every generated type
+# and member (from generate_fpc) and of the hand written records
+# (layout_handwritten.txt) from a C and from a Pascal program, and compares.
+#
+#   check_layout <open62541-source-dir> <open62541-build-dir> <fpc> [work-dir]
+#
+# Example:
+#   tools/check_layout ../open62541 ../open62541/build \
+#        ~/fpclaz/Ffix_Lfix/fpc/bin/x86_64-linux/fpc.sh
+if [ $# -lt 3 ] ; then
+  echo "$0 <open62541-source-dir> <open62541-build-dir> <fpc> [work-dir]"
+  exit 100
+fi
+set -e
+src=$(readlink -f "$1")
+build=$(readlink -f "$2")
+fpc="$3"
+script="$(readlink -f "$0")"
+tools=$(dirname "$script")
+unitdir=$(dirname "$tools")
+work=${4:-$(mktemp -d)}
+mkdir -p "$work"
+work=$(readlink -f "$work")
+
+# generated types (written to the work dir, the .inc files are not touched)
+mkdir -p "$work/gen"
+"$tools/generate_fpc" "$src" "$work/gen" "$work/gentypes" >/dev/null
+if ! cmp -s "$work/gen/types_generated.inc" "$unitdir/types_generated.inc" ; then
+  echo "types_generated.inc differs from what $src generates: run tools/generate_fpc first"
+  exit 1
+fi
+
+# hand written records
+python3 - "$tools/layout_handwritten.txt" "$work/handtypes" <<'EOF'
+import sys
+lst, prefix = sys.argv[1], sys.argv[2]
+c = ["#include <stdio.h>", "#include <stddef.h>", "#include <open62541/client.h>",
+     "#include <open62541/server.h>", "#include <open62541/plugin/create_certificate.h>",
+     "#include <open62541/plugin/accesscontrol_default.h>",
+     "int main(void) {"]
+p = ["program handtypes;", "{$MODE OBJFPC}{$H+}", "uses open62541;", "begin"]
+for line in open(lst):
+    line = line.split('#')[0].split()
+    if not line:
+        continue
+    t = line[0]
+    if len(line) == 1:
+        c.append('  printf("%%s %%u\\n", "%s", (unsigned)sizeof(%s));' % (t, t))
+        p.append("  writeln('%s ', SizeOf(%s));" % (t, t))
+    else:
+        cf = line[1]
+        pf = line[2] if len(line) > 2 else cf
+        c.append('  printf("%%s %%u\\n", "%s.%s", (unsigned)offsetof(%s, %s));' % (t, cf, t, cf))
+        p.append("  writeln('%s.%s ', PtrUInt(@P%s(nil)^.%s));" % (t, cf, t, pf))
+c += ["  return 0;", "}"]
+p += ["end."]
+open(prefix + ".c", "w").write("\n".join(c) + "\n")
+open(prefix + ".pas", "w").write("\n".join(p) + "\n")
+EOF
+
+inc=(-I"$build/src_generated" -I"$src/include" -I"$src/plugins/include" -I"$src/arch")
+rc=0
+for prog in gentypes handtypes ; do
+  gcc -o "$work/${prog}_c" "$work/$prog.c" "${inc[@]}"
+  "$fpc" -O- -FE"$work" -FU"$work" -Fu"$unitdir" -Fi"$unitdir" "$work/$prog.pas" >"$work/$prog.fpc.log" 2>&1 \
+    || { cat "$work/$prog.fpc.log"; exit 1; }
+  "$work/${prog}_c" > "$work/$prog.c.txt"
+  "$work/$prog" > "$work/$prog.pas.txt"
+  n=$(wc -l < "$work/$prog.c.txt")
+  if diff "$work/$prog.c.txt" "$work/$prog.pas.txt" > "$work/$prog.diff" ; then
+    echo "$prog: $n sizes/offsets identical"
+  else
+    echo "$prog: MISMATCH (C < > Pascal)"
+    cat "$work/$prog.diff"
+    rc=1
+  fi
+done
+exit $rc
