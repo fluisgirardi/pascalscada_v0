@@ -161,6 +161,23 @@ const
   //: Default application URI of the client (it goes in the SAN of the generated certificate).
   OPCUADefaultApplicationUri = 'urn:pascalscada:opcua:client';
 
+{$IFDEF PORTUGUES}
+{:
+  Carrega a libopen62541 1.5 (uma vez por processo). Com LibName vazio tenta, nesta ordem:
+  o nome padrão do sistema, o nome com a versão (libopen62541.so.1.5, Linux) e os mesmos
+  nomes na pasta do executável - assim a lib pode ir junto com a aplicação. Em caso de
+  falha devolve false e, em Error, os lugares tentados.
+}
+{$ELSE}
+{:
+  Loads libopen62541 1.5 (once per process). With an empty LibName it tries, in this order:
+  the default system name, the versioned name (libopen62541.so.1.5, Linux) and the same
+  names in the folder of the executable - so the library may ship with the application.
+  On failure returns false and, in Error, the places tried.
+}
+{$ENDIF}
+function OPCUALoadLibrary(const LibName:String; out Error:String):Boolean;
+
 function OPCUAStatusText(Status:UA_StatusCode):String;
 
 {: FPC unmasks the floating point exceptions, C code does not expect them: a division by
@@ -174,6 +191,46 @@ implementation
 
 uses
   {$IFDEF UNIX}Unix{$ELSE}Windows{$ENDIF};
+
+function OPCUALoadLibrary(const LibName:String; out Error:String):Boolean;
+var
+  names:TStringList;
+  exeDir:String;
+  i:Integer;
+begin
+  Error := '';
+  names := TStringList.Create;
+  try
+    if LibName<>'' then
+      names.Add(LibName)
+    else begin
+      exeDir := ExtractFilePath(ParamStr(0));
+      names.Add(libopen62541);
+      {$IFDEF LINUX}
+      //the run time package has no unversioned (-dev) symlink
+      names.Add('libopen62541.so.1.5');
+      {$ENDIF}
+      //dlopen does not look in the folder of the executable (Windows does)
+      names.Add(exeDir+libopen62541);
+      {$IFDEF LINUX}
+      names.Add(exeDir+'libopen62541.so.1.5');
+      {$ENDIF}
+    end;
+    for i:=0 to names.Count-1 do
+      try
+        LoadOpen62541(names[i]);
+        exit(true);
+      except
+        on e:Exception do
+          Error := Error+e.Message+sLineBreak;
+      end;
+    Error := 'libopen62541 1.5 not found. Install it, put it next to the executable or give its path '+
+             '(LibraryName / OPEN62541_LIB).'+sLineBreak+Trim(Error);
+    Result := false;
+  finally
+    names.Free;
+  end;
+end;
 
 function OPCUAStatusText(Status:UA_StatusCode):String;
 begin
@@ -294,25 +351,14 @@ begin
 end;
 
 function TOPCUAClient.LoadLibrary:Boolean;
+var
+  err:String;
 begin
-  if not FLibLoaded then
-    try
-      LoadOpen62541(FLibraryName);
-      FLibLoaded := true;
-    except
-      on e:Exception do begin
-        FLastError := e.Message;
-        //try the versioned name of the run time package (no -dev symlink installed)
-        {$IFDEF LINUX}
-        if FLibraryName='' then
-          try
-            LoadOpen62541('libopen62541.so.1.5');
-            FLibLoaded := true;
-          except
-          end;
-        {$ENDIF}
-      end;
-    end;
+  if not FLibLoaded then begin
+    FLibLoaded := OPCUALoadLibrary(FLibraryName, err);
+    if not FLibLoaded then
+      FLastError := err;
+  end;
   Result := FLibLoaded;
 end;
 

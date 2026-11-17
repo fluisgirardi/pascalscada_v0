@@ -14,7 +14,8 @@ unit umain;
 
    Com seguranca Sign/SignAndEncrypt o driver gera um certificado de cliente na primeira conexao
    (pasta CertificateDir) - no PLCSim/S7-1500 ele precisa ser aceito no TIA Portal.
-   A libopen62541 1.5 tem de estar no caminho de bibliotecas, ou na variavel OPEN62541_LIB.
+   A libopen62541 1.5 tem de estar instalada no sistema, na pasta do executavel ou indicada na
+   variavel OPEN62541_LIB.
 
    Uso: laz_opcua_client [endpoint] - com o endpoint, ja conecta e lista ao abrir.
         laz_opcua_client --teste    - sobe o servidor de teste, conecta e monitora tudo.
@@ -205,7 +206,10 @@ var
   opt:TOPCUATestServerOptions;
 begin
   if FServer<>nil then exit;
-  if not OPCUATestLibraryAvailable(reason) then begin
+  //the same search as the driver (system, versioned name, folder of the executable);
+  //loaded once, OPCUATestLibraryAvailable then finds it loaded
+  if (not OPCUALoadLibrary(GetEnvironmentVariable('OPEN62541_LIB'), reason)) or
+     (not OPCUATestLibraryAvailable(reason)) then begin
     ShowMessage(reason);
     exit;
   end;
@@ -409,7 +413,8 @@ begin
   else if FDriver.Connected then
     LabelStatus.Caption := 'Conectado a '+FDriver.EndpointUrl
   else
-    LabelStatus.Caption := 'Desconectado '+FDriver.LastError;
+    //the first line only: the whole message is in the log
+    LabelStatus.Caption := 'Desconectado: '+Trim(Copy(FDriver.LastError+sLineBreak, 1, Pos(sLineBreak, FDriver.LastError+sLineBreak)-1));
 
   lines := nil;
   FLogLock.Enter;
