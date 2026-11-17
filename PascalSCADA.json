@@ -22,12 +22,12 @@
       "Author" : "Fabio Luis Girardi <fabio@pascalscada.com>",
       "License" : "LGPL v2.1 with linking exception",
       "RelativeFilePath" : "",
-      "VersionAsString" : "0.8.0.0",
+      "VersionAsString" : "0.8.1.0",
       "LazCompatibility" : "3.0.0",
       "FPCCompatibility" : "3.2.2, 3.2.4",
       "SupportedWidgetSet" : "gtk2, qt, qt5, qt6, win32/win64",
       "PackageType" : 0,
-      "DependenciesAsString" : "pascalscada_db(0.8), pascalscada(0.8), pascalscada_common(0.8), pascalscada_dsng(0.8), TAChartLazarusPkg, BGRABitmapPack(9.2.3), IDEIntf, LCL"
+      "DependenciesAsString" : "pascalscada_db(0.8.1), pascalscada(0.8.1), pascalscada_common(0.8.1), pascalscada_dsng(0.8.1), TAChartLazarusPkg, BGRABitmapPack(9.2.3), IDEIntf, LCL"
     },
     {
       "Name" : "pascalscada_common.lpk",
@@ -35,7 +35,7 @@
       "Author" : "Fabio Luis Girardi <fabio@pascalscada.com>",
       "License" : "LGPL v2.1 with linking exception",
       "RelativeFilePath" : "",
-      "VersionAsString" : "0.8.0.0",
+      "VersionAsString" : "0.8.1.0",
       "LazCompatibility" : "3.0.0",
       "FPCCompatibility" : "3.2.2, 3.2.4",
       "SupportedWidgetSet" : "gtk2, qt, qt5, qt6, win32/win64",
@@ -48,12 +48,12 @@
       "Author" : "Fabio Luis Girardi <fabio@pascalscada.com>",
       "License" : "LGPL v2.1 with linking exception",
       "RelativeFilePath" : "",
-      "VersionAsString" : "0.8.0.0",
+      "VersionAsString" : "0.8.1.0",
       "LazCompatibility" : "3.0.0",
       "FPCCompatibility" : "3.2.2, 3.2.4",
       "SupportedWidgetSet" : "gtk2, qt, qt5, qt6, win32/win64",
       "PackageType" : 1,
-      "DependenciesAsString" : "pascalscada_dsng(0.8), pascalscada_hmi(0.8), pascalscada_db(0.8)"
+      "DependenciesAsString" : "pascalscada_dsng(0.8.1), pascalscada_hmi(0.8.1), pascalscada_db(0.8.1)"
     },
     {
       "Name" : "pascalscada_externallibs_hmi.lpk",
@@ -61,7 +61,7 @@
       "Author" : "Fabio Luis Girardi <fabio@pascalscada.com>",
       "License" : "",
       "RelativeFilePath" : "",
-      "VersionAsString" : "0.8.0.0",
+      "VersionAsString" : "0.8.1.0",
       "LazCompatibility" : "3.0.0",
       "FPCCompatibility" : "3.2.2, 3.2.4",
       "SupportedWidgetSet" : "gtk2, qt, qt5, qt6, win32/win64",
@@ -74,12 +74,12 @@
       "Author" : "Fabio Luis Girardi <fabio@pascalscada.com>",
       "License" : "LGPL v2.1 with linking exception",
       "RelativeFilePath" : "",
-      "VersionAsString" : "0.8.0.0",
+      "VersionAsString" : "0.8.1.0",
       "LazCompatibility" : "3.0.0",
       "FPCCompatibility" : "3.2.2, 3.2.4",
       "SupportedWidgetSet" : "gtk2, qt, qt5, qt6, win32/win64",
       "PackageType" : 0,
-      "DependenciesAsString" : "LCLBase, pascalscada_common(0.8), fpopen62541"
+      "DependenciesAsString" : "LCLBase, pascalscada_common(0.8.1), fpopen62541"
     },
     {
       "Name" : "pascalscada_dsng.lpk",
@@ -87,12 +87,12 @@
       "Author" : "",
       "License" : "",
       "RelativeFilePath" : "",
-      "VersionAsString" : "0.8.0.0",
+      "VersionAsString" : "0.8.1.0",
       "LazCompatibility" : "3.0.0",
       "FPCCompatibility" : "3.2.2, 3.2.4",
       "SupportedWidgetSet" : "gtk2, qt, qt5, qt6, win32/win64",
       "PackageType" : 0,
-      "DependenciesAsString" : "IDEIntf, pascalscada(0.8)"
+      "DependenciesAsString" : "IDEIntf, pascalscada(0.8.1)"
     },
     {
       "Name" : "pascalscada_db.lpk",
@@ -100,12 +100,12 @@
       "Author" : "Fabio Luis Girardi <fabio@pascalscada.com>",
       "License" : "LGPL v2.1 with linking exception",
       "RelativeFilePath" : "",
-      "VersionAsString" : "0.8.0.0",
+      "VersionAsString" : "0.8.1.0",
       "LazCompatibility" : "3.0.0",
       "FPCCompatibility" : "3.2.0, 3.2.2, 3.2.4",
       "SupportedWidgetSet" : "gtk2, qt, qt5, qt6, win32/win64",
       "PackageType" : 0,
-      "DependenciesAsString" : "SQLDBLaz, pascalscada_common(0.8), FCL"
+      "DependenciesAsString" : "SQLDBLaz, pascalscada_common(0.8.1), FCL"
     },
     {
       "Name" : "fpopen62541.lpk",

@@ -23,7 +23,7 @@
     </CompilerOptions>
     <Description Value="Package used to register property editors and others tool on Lazarus IDE, to avoid GUI linking."/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="8"/>
+    <Version Minor="8" Release="1"/>
     <Files Count="21">
       <Item1>
         <Filename Value="src/scada_dsng/bitmappertagassistant.pas"/>
@@ -119,7 +119,7 @@
       </Item1>
       <Item2>
         <PackageName Value="pascalscada"/>
-        <MinVersion Minor="8" Valid="True"/>
+        <MinVersion Minor="8" Release="1" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
       </Item2>
     </RequiredPkgs>

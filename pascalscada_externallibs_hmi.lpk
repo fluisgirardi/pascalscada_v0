@@ -20,7 +20,7 @@
     </CompilerOptions>
     <Description Value="PascalSCADA package for components that requires links with external libs using load-time linking, that may broke your Lazarus environment due library missing. "/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="8"/>
+    <Version Minor="8" Release="1"/>
     <Files Count="3">
       <Item2>
         <Filename Value="src\external_libs_hmi\sycreader_rfid_reader.pas"/>
