@@ -114,8 +114,17 @@ A monospaced font keeps the columns aligned. To show the log somewhere else (a l
 | `TTCP_UDPPort` | `lcConnection` / `llInfo` | `connected`, `reconnecting` (`llDebug`: `closing the socket`) |
 | `TS7CommPlusDriver` | `lcProtocol` / `llDebug` | the same messages as `OnDebug` (its connection's included), with the driver as the source |
 | `TOPCUADriver` | `lcProtocol` / the message's level | the same messages as `OnLog`; the driver's `LogLevel` still decides what the library reports |
+| every protocol driver | `lcThread` / `llDebug` | `TScanThread started`, `TScanUpdate finished`… (`llError` when an exception stops a thread) |
+| | `lcScan` / `llError` | an exception during the scan (`scan read raised …`, `tag update raised …`) — these used to be silently swallowed |
+| every tag | `lcTag` / `llDebug` | `scan write requested: [12.5]`, `scan write ok` (`sync` for synchronous writes) |
+| | `lcTag` / `llWarning` | `scan write failed: ioTimeOut`; `read failed: ioCommError` **once** when reading starts failing, and `reading again` (`llInfo`) when it comes back |
+| | `lcTag` / `llTrace` | every read (`scan read ioOk`) and every value change (`value changed: 12.5 (raw 125)`) |
+| | `lcEvent` / `llTrace` | each event assigned and fired: `OnValueChange`, `OnValueChangeFirst`, `OnAsyncValueChange`, `OnReadOk`, `OnReadFail`, `OnWriteOk`, `OnWriteFail`, `OnUpdate` |
+| | `lcEvent` / `llError` | an exception raised while the tag was being updated — usually in your `OnValueChange`. The other tags of the batch are still updated. |
 
-Connection messages carry the port in parentheses: `(192.168.0.10:502 TCP)`, `(COM1 19200 8N1)`. The ports' `LogIOActions`/`LogFile` and the drivers' `OnDebug`/`OnLog` keep working as before. The scan threads, tags, events and the other subsystems will post in the next versions.
+Connection messages carry the port in parentheses: `(192.168.0.10:502 TCP)`, `(COM1 19200 8N1)`. The ports' `LogIOActions`/`LogFile` and the drivers' `OnDebug`/`OnLog` keep working as before. The security system, the database layer and the visual controls will post in the next versions.
+
+A driver's threads start before the driver gets its name (the form sets the properties afterwards), so their *started* messages show the class, as in `Form1.<TModBusTCPDriver>`; everything after that shows the name. `lcTag` and `lcEvent` at `llTrace` produce a line per tag per scan: narrow those rules with `SourceMask`.
 
 ##### Logging from your code
 

@@ -114,8 +114,17 @@ Uma fonte monoespaçada deixa as colunas alinhadas. Para mostrar o log em outro 
 | `TTCP_UDPPort` | `lcConnection` / `llInfo` | `connected`, `reconnecting` (`llDebug`: `closing the socket`) |
 | `TS7CommPlusDriver` | `lcProtocol` / `llDebug` | as mesmas mensagens do `OnDebug` (inclusive as da conexão), com o driver como fonte |
 | `TOPCUADriver` | `lcProtocol` / o nível da mensagem | as mesmas mensagens do `OnLog`; o `LogLevel` do driver continua decidindo o que a biblioteca informa |
+| todo driver de protocolo | `lcThread` / `llDebug` | `TScanThread started`, `TScanUpdate finished`… (`llError` quando uma exceção para uma thread) |
+| | `lcScan` / `llError` | uma exceção durante o scan (`scan read raised …`, `tag update raised …`) — antes elas eram engolidas em silêncio |
+| todo tag | `lcTag` / `llDebug` | `scan write requested: [12.5]`, `scan write ok` (`sync` para escritas síncronas) |
+| | `lcTag` / `llWarning` | `scan write failed: ioTimeOut`; `read failed: ioCommError` **uma vez** quando a leitura passa a falhar, e `reading again` (`llInfo`) quando volta |
+| | `lcTag` / `llTrace` | toda leitura (`scan read ioOk`) e toda mudança de valor (`value changed: 12.5 (raw 125)`) |
+| | `lcEvent` / `llTrace` | cada evento atribuído e disparado: `OnValueChange`, `OnValueChangeFirst`, `OnAsyncValueChange`, `OnReadOk`, `OnReadFail`, `OnWriteOk`, `OnWriteFail`, `OnUpdate` |
+| | `lcEvent` / `llError` | uma exceção levantada enquanto o tag era atualizado — normalmente no seu `OnValueChange`. Os outros tags do lote continuam sendo atualizados. |
 
-As mensagens de conexão trazem a porta entre parênteses: `(192.168.0.10:502 TCP)`, `(COM1 19200 8N1)`. O `LogIOActions`/`LogFile` das portas e o `OnDebug`/`OnLog` dos drivers continuam funcionando como antes. As threads de scan, os tags, os eventos e os demais subsistemas passam a publicar nas próximas versões.
+As mensagens de conexão trazem a porta entre parênteses: `(192.168.0.10:502 TCP)`, `(COM1 19200 8N1)`. O `LogIOActions`/`LogFile` das portas e o `OnDebug`/`OnLog` dos drivers continuam funcionando como antes. O sistema de segurança, a camada de banco de dados e os controles visuais passam a publicar nas próximas versões.
+
+As threads de um driver começam antes de ele receber o nome (o form ajusta as propriedades depois), então as mensagens de *started* mostram a classe, como em `Form1.<TModBusTCPDriver>`; tudo o que vem depois mostra o nome. `lcTag` e `lcEvent` em `llTrace` geram uma linha por tag a cada scan: restrinja essas regras com `SourceMask`.
 
 ##### Publicando do seu código
 

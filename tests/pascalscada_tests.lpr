@@ -68,7 +68,8 @@ uses
   ut.mtpcpu,
   ut.opcuadriver,
   ut.pscadalog,
-  ut.commportlog;
+  ut.commportlog,
+  ut.scanlog;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

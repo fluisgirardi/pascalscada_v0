@@ -138,6 +138,8 @@ type
     function  IsValidValue(Value:Variant):Boolean;
     function  GetClockMonotonicTimestamp:QWord;
   protected
+    //: The text between quotes.
+    function GetLogValueText:AnsiString; override;
     //: @seealso(TTag.AsyncNotifyChange)
     procedure AsyncNotifyChange(data:Pointer); override;
     //: @seealso(TTag.GetValueChangeData)
@@ -272,6 +274,11 @@ type
 implementation
 
 uses variants, hsstrings{$IFDEF FPC}, LazUTF8{$ENDIF};
+
+function TPLCString.GetLogValueText:AnsiString;
+begin
+  Result := '"'+PValue+'"';
+end;
 
 constructor TPLCString.Create(AOwner:TComponent);
 begin
@@ -762,6 +769,8 @@ var
   notify:Boolean;
 begin
   if (csDestroying in ComponentState) then exit;
+  //does not call the inherited one: posts the result here
+  LogCommandResult(TagCommand, LastResult);
   try
     notify := false;
     case TagCommand of

@@ -22,7 +22,7 @@ unit PLCTag;
 interface
 
 uses
-  SysUtils, Classes, Tag, ProtocolDriver, ProtocolTypes, Math;
+  SysUtils, Classes, Tag, ProtocolDriver, ProtocolTypes, Math, pscadalog;
 
 type
 
@@ -45,6 +45,8 @@ type
     FTotalTime, FReadCount:Int64;
     FFirtsRead:Boolean;
     FProtocoloOnLoading:TProtocolDriver;
+    //read state last posted to the log: 0 none yet, 1 ok, 2 failing
+    FLogReadState:Byte;
     function GetLastScanReadReqID: Int64;
     function GetLastScanWriteReqID: Int64;
     procedure RebuildTagGUID;
@@ -436,6 +438,21 @@ type
     //: Procedure called by the protocol driver to update tag values.
     {$ENDIF}
     procedure TagCommandCallBack(const ReqID:LongWord; Values:TArrayOfDouble; ValuesTimeStamp:QWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult; Offset:LongInt); virtual;
+
+    {$IFDEF PORTUGUES}
+    {:
+    Publica o resultado de um comando do tag: escritas sempre (llDebug, ou
+    llWarning na falha), leituras em llTrace e, quando a leitura passa a falhar
+    ou volta, uma vez so' (llWarning / llInfo). Chamado por TagCommandCallBack.
+    }
+    {$ELSE}
+    {:
+    Posts the result of a tag command: writes always (llDebug, or llWarning on
+    failure), reads at llTrace and, when reading starts failing or comes back,
+    once (llWarning / llInfo). Called by TagCommandCallBack.
+    }
+    {$ENDIF}
+    procedure LogCommandResult(TagCommand:TTagCommand; LastResult:TProtocolIOResult);
 
     {$IFDEF PORTUGUES}
     {:
@@ -831,12 +848,46 @@ begin
   end;
 end;
 
+procedure TPLCTag.LogCommandResult(TagCommand:TTagCommand; LastResult:TProtocolIOResult);
+const
+  Kind:array[TTagCommand] of String = ('scan', 'scan', 'sync', 'sync', 'internal', 'single scan');
+begin
+  //a tag without driver is not a failure
+  if LastResult in [ioNone, ioNullDriver] then exit;
+  case TagCommand of
+    tcScanWrite, tcWrite:
+      if LastResult=ioOk then begin
+        if PSLogWants(lcTag, llDebug) then
+          PSLog(Self, lcTag, llDebug, Kind[TagCommand]+' write ok');
+      end else
+        if PSLogWants(lcTag, llWarning) then
+          PSLog(Self, lcTag, llWarning, Kind[TagCommand]+' write failed: '+LastResult.ToString);
+
+    tcScanRead, tcSingleScanRead, tcRead: begin
+      if PSLogWants(lcTag, llTrace) then
+        PSLog(Self, lcTag, llTrace, Kind[TagCommand]+' read '+LastResult.ToString);
+      //only the transitions: a PLC that is down would repeat it on every scan
+      if LastResult=ioOk then begin
+        if FLogReadState=2 then
+          PSLog(Self, lcTag, llInfo, 'reading again');
+        FLogReadState := 1;
+      end else begin
+        if FLogReadState<>2 then
+          PSLog(Self, lcTag, llWarning, 'read failed: '+LastResult.ToString);
+        FLogReadState := 2;
+      end;
+    end;
+  end;
+end;
+
 procedure TPLCTag.TagCommandCallBack(const ReqID: LongWord;
   Values: TArrayOfDouble; ValuesTimeStamp: QWord; TagCommand: TTagCommand;
   LastResult: TProtocolIOResult; Offset: LongInt);
 var
   c, poffset:LongInt;
 begin
+  LogCommandResult(TagCommand, LastResult);
+
   if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) and (ValuesTimeStamp<>PClockMonotonicTimeStamp) then begin
     inc(FTotalTime, (ValuesTimeStamp - PClockMonotonicTimeStamp));
     inc(FReadCount);
