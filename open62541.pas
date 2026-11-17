@@ -1197,7 +1197,7 @@ begin
     LoadedLibName := LibName
   else
     LoadedLibName := libopen62541;
-  open62541LibHandle := LoadLibrary(LoadedLibName);
+  open62541LibHandle := DynLibs.LoadLibrary(LoadedLibName);
   if open62541LibHandle = NilHandle then begin
     RefCount := 0;
     raise EInOutError.CreateFmt('Can not load library "%s". Check your installation.'+sLineBreak+'%s',
