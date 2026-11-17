@@ -121,10 +121,15 @@ Uma fonte monoespaçada deixa as colunas alinhadas. Para mostrar o log em outro 
 | | `lcTag` / `llTrace` | toda leitura (`scan read ioOk`) e toda mudança de valor (`value changed: 12.5 (raw 125)`) |
 | | `lcEvent` / `llTrace` | cada evento atribuído e disparado: `OnValueChange`, `OnValueChangeFirst`, `OnAsyncValueChange`, `OnReadOk`, `OnReadFail`, `OnWriteOk`, `OnWriteFail`, `OnUpdate` |
 | | `lcEvent` / `llError` | uma exceção levantada enquanto o tag era atualizado — normalmente no seu `OnValueChange`. Os outros tags do lote continuam sendo atualizados. |
+| gerenciadores de usuário | `lcSecurity` / `llInfo` | `login: fabio (password)` ou `(chip card)`, `logout: fabio`, `access to "valves" granted to maria (password)` (`llDebug` quando o usuário logado já tem a permissão) |
+| | `lcSecurity` / `llWarning` | `login failed: fabio (password)`, `login blocked for 30000 ms after 3 failures`, `access to "valves" denied to maria`. **A senha nunca vai para o log.** |
+| controles de HMI que escrevem num tag | `lcHMI` / `llInfo` | `wrote 1 to Form1.Valve1 (user fabio)`, com o controle como fonte — uma trilha de auditoria das ações do operador (`THMIEdit`, `THMICheckBox`, `THMIButton`, `THMIRadioGroup`, `THMITrackBar`, `THMIComboBox`, `THMIUpDown`, `THMIScrollBar`) |
+| | `lcHMI` / `llWarning` | `write of 10 to Form1.Valve1 refused (user fabio): <motivo>`, ex.: fora dos limites do tag |
+| `THMIDBConnection` | `lcDatabase` / `llInfo` | `connected (postgresql host/db)`, `disconnected` (`llError` quando falha) |
+| | `lcDatabase` / `llDebug` | `SQL ok (12 rows): select …`, `transaction committed (3 statements)` |
+| | `lcDatabase` / `llWarning`, `llError` | `SQL refused (ReadOnly): …`, `transaction rolled back …`, `SQL failed: <erro>` seguido do SQL, `commit/rollback failed` |
 
-As mensagens de conexão trazem a porta entre parênteses: `(192.168.0.10:502 TCP)`, `(COM1 19200 8N1)`. O `LogIOActions`/`LogFile` das portas e o `OnDebug`/`OnLog` dos drivers continuam funcionando como antes. O sistema de segurança, a camada de banco de dados e os controles visuais passam a publicar nas próximas versões.
-
-As threads de um driver começam antes de ele receber o nome (o form ajusta as propriedades depois), então as mensagens de *started* mostram a classe, como em `Form1.<TModBusTCPDriver>`; tudo o que vem depois mostra o nome. `lcTag` e `lcEvent` em `llTrace` geram uma linha por tag a cada scan: restrinja essas regras com `SourceMask`.
+As mensagens de conexão trazem a porta entre parênteses: `(192.168.0.10:502 TCP)`, `(COM1 19200 8N1)`. O `LogIOActions`/`LogFile` das portas e o `OnDebug`/`OnLog` dos drivers continuam funcionando como antes. As threads de um driver começam antes de ele receber o nome (o form ajusta as propriedades depois), então as mensagens de *started* mostram a classe, como em `Form1.<TModBusTCPDriver>`; tudo o que vem depois mostra o nome. `lcTag` e `lcEvent` em `llTrace` geram uma linha por tag a cada scan: restrinja essas regras com `SourceMask`. `lcDatabase` em `llDebug` grava o texto do SQL, valores inclusive: mantenha isso fora de arquivos que outras pessoas leem se os seus comandos levam dados sensíveis.
 
 ##### Publicando do seu código
 

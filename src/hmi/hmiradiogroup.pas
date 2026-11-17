@@ -321,7 +321,7 @@ begin
       exit;
 
    if (FTag<>nil) AND Supports(FTag, ITagNumeric) then
-      (FTag as ITagNumeric).Value := aIndex;
+      HMIWriteTagNumber(Self, FTag, aIndex);
 end;
 
 procedure THMIRadioGroup.Loaded;

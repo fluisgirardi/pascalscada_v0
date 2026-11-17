@@ -376,7 +376,7 @@ begin
       aValue := FMin;
 
    if Supports(FTag, ITagNumeric) and SendIt(aValue) then begin
-      (FTag as ITagNumeric).Value := aValue;
+      HMIWriteTagNumber(Self, FTag, aValue);
       DoAfterSendValue(aValue);
    end;
 

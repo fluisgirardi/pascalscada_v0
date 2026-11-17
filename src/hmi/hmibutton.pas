@@ -489,7 +489,7 @@ begin
   if FTag=Nil then exit;
 
   if Supports(FTag, ITagNumeric) then
-    (FTag as ITagNumeric).Value := value;
+    HMIWriteTagNumber(Self, FTag, value);
 end;
 
 

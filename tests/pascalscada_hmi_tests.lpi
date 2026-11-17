@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada_hmi"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="43">
+    <Units Count="45">
       <Unit0>
         <Filename Value="pascalscada_hmi_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -204,6 +204,16 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="ut.hmilogmemo"/>
       </Unit42>
+      <Unit43>
+        <Filename Value="testsupport.logcollector.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="testsupport.logcollector"/>
+      </Unit43>
+      <Unit44>
+        <Filename Value="ut.hmilog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.hmilog"/>
+      </Unit44>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

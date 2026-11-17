@@ -116,7 +116,19 @@ const
 
 implementation
 
-uses ControlSecurityManager, hsstrings;
+uses ControlSecurityManager, hsstrings, pscadalog;
+
+//: lcSecurity messages. Never the password: only the login and what happened.
+procedure LogSecurity(Sender:TObject; Level:TpSCADALogLevel; const Msg:String);
+begin
+  if PSLogWants(lcSecurity, Level) then
+    PSLog(Sender, lcSecurity, Level, Msg);
+end;
+
+function HowName(res:Integer):String;
+begin
+  if res=mrOKChipCard then Result := 'chip card' else Result := 'password';
+end;
 
 constructor TBasicUserManagement.Create(AOwner:TComponent);
 begin
@@ -209,15 +221,21 @@ begin
 
             FLoggedSince:=Now;
             Result:=true;
+            LogSecurity(Self, llInfo, Format('login: %s (%s)', [FCurrentUserLogin, HowName(res)]));
             GetControlSecurityManager.UpdateControls;
             DoSuccessfulLogin;
             DoUserChanged;
           end else begin
+            if res=mrOK then
+              LogSecurity(Self, llWarning, Format('login failed: %s (password)', [frmLoginDlg.edtusername.Text]))
+            else
+              LogSecurity(Self, llWarning, 'login failed (chip card)');
             DoFailureLogin;
             if Trim(FLastLoginError)<>'' then
               MessageDlg(SLoginErrorTitle, FLastLoginError, mtError, [mbOK], 0);
             inc(retries);
             if (FLoginRetries>0) and (retries>=FLoginRetries) then begin
+              LogSecurity(Self, llWarning, Format('login blocked for %d ms after %d failures', [LoginFrozenTime, retries]));
               frmLoginDlg.DisableEntry;
               frozenTimer.Enabled:=true;
               frmLoginDlg.ShowModal;
@@ -252,11 +270,14 @@ begin
     FCurrentUserLogin:=Userlogin;
     FLoggedSince:=Now;
     Result:=true;
+    LogSecurity(Self, llInfo, Format('login: %s (password)', [Userlogin]));
     GetControlSecurityManager.UpdateControls;
     DoSuccessfulLogin;
     DoUserChanged;
-  end else
+  end else begin
+    LogSecurity(Self, llWarning, Format('login failed: %s (password)', [Userlogin]));
     DoFailureLogin;
+  end;
 end;
 
 procedure   TBasicUserManagement.Logout;
@@ -264,6 +285,8 @@ var
   AUserChanged:Boolean;
 begin
   AUserChanged := FLoggedUser or (FUID>=0);
+  if AUserChanged then
+    LogSecurity(Self, llInfo, 'logout: '+GetCurrentUserLogin);
   FLoggedUser:=false;
   FCurrentUserName:='';
   FCurrentUserLogin:='';
@@ -329,6 +352,7 @@ begin
   if UserLogged and CanAccess(sc) and (RequireUserLogin=false) then begin
     userlogin:=GetCurrentUserLogin;
     Result:=true;
+    LogSecurity(Self, llDebug, Format('access to "%s" granted to %s (logged in)', [sc, userlogin]));
     exit;
   end;
 
@@ -392,10 +416,22 @@ begin
             else
               userlogin:=aUserLogin;
 
-          end else
+            LogSecurity(Self, llInfo, Format('access to "%s" granted to %s (%s)', [sc, userlogin, HowName(res)]));
+          end else begin
             Result:=false;
+            if res=mrOK then
+              LogSecurity(Self, llWarning, Format('access to "%s" denied to %s', [sc, frmLoginDlg.edtusername.Text]))
+            else
+              LogSecurity(Self, llWarning, Format('access to "%s" denied to %s', [sc, aUserLogin]));
+          end;
+        end else begin
+          if res=mrOK then
+            LogSecurity(Self, llWarning, Format('access to "%s" denied: login failed for %s', [sc, frmLoginDlg.edtusername.Text]))
+          else
+            LogSecurity(Self, llWarning, Format('access to "%s" denied: chip card not accepted', [sc]));
         end;
-      end;
+      end else
+        LogSecurity(Self, llDebug, Format('access to "%s" cancelled', [sc]));
 
     finally
       if Assigned(FChipCardReader) then begin
