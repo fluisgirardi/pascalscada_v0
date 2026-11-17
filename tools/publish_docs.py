@@ -14,6 +14,10 @@ manifest. Pages with a "menu" entry are also added to the site's
 Documentation menu (WP REST menu-items endpoint) right after the sibling named
 in "after"; the created item id is stored in "menu_item".
 
+Blog posts are listed under "posts" in the same manifest, with their text in
+docs/site/posts/<slug>.<lang>.md; --unpublished handles them like the pages
+(no menu). The older tools/publish_post.py still publishes one post by hand.
+
 Local images referenced as img/<file> are uploaded to the Media Library once
 and the resulting URL is cached in docs/site/media.json.
 
@@ -27,6 +31,11 @@ Usage:
     tools/publish_docs.py --test slug               publish as a NEW draft "TEST: <title>", verify both languages
     tools/publish_docs.py slug [slug ...]           update/create the real pages
     tools/publish_docs.py --all                     every page whose Markdown exists
+    tools/publish_docs.py --unpublished             publish every page AND post that is not published yet
+                                                    (not on the site, or a draft/pending one); the
+                                                    published ones are left alone
+    tools/publish_docs.py --unpublished --dry-run   only say what it would do (reads the site's status
+                                                    when the credentials are set, never writes)
     tools/publish_docs.py --verify slug             fetch the live page in both languages and report
     tools/publish_docs.py --menu slug               only add/reposition the page's menu item
     tools/publish_docs.py --import slug [...]       reverse path: download the live page in both
@@ -52,6 +61,7 @@ SITE = ROOT / "docs" / "site"
 MANIFEST = SITE / "pages.json"
 MEDIA_CACHE = SITE / "media.json"
 BUILD = SITE / "build"
+POSTS_DIR = SITE / "posts"
 
 WP_URL = os.environ.get("WP_URL", "https://www.pascalscada.com").rstrip("/")
 API = WP_URL + "/wp-json/wp/v2"
@@ -191,6 +201,22 @@ def wp_post(path, payload):
     if r.status_code not in (200, 201):
         die(f"POST {path} failed ({r.status_code}): {r.text[:500]}")
     return r.json()
+
+
+def wp_get_or_none(path, **params):
+    """Like wp_get, but None when the object does not exist (404/410)."""
+    r = requests.get(API + path, headers=auth_headers(), params=params, timeout=60)
+    if r.status_code in (404, 410):
+        return None
+    if r.status_code != 200:
+        die(f"GET {path} failed ({r.status_code}): {r.text[:300]}")
+    return r.json()
+
+
+def find_by_slug(kind, slug):
+    """Existing page or post ('pages'/'posts') with this slug, any status, or None."""
+    found = wp_get(f"/{kind}", slug=slug, status="publish,draft,pending,private,future", context="edit", per_page=1)
+    return found[0] if found else None
 
 
 def find_page_by_slug(slug):
@@ -408,11 +434,111 @@ def ensure_menu_item(page, manifest):
             wp_post(f"/menu-items/{i['id']}", {"menu_order": k})
 
 
+# --------------------------------------------------------------------------- unpublished
+def render_post(post, langs, cache, upload, examples_base=None):
+    """Like render_page, for docs/site/posts/<slug>.<lang>.md."""
+    htmls = {}
+    for lang in langs:
+        src = POSTS_DIR / f"{post['slug']}.{lang}.md"
+        if not src.exists():
+            return None
+        md = link_examples(src.read_text(encoding="utf-8"), examples_base)
+        htmls[lang] = resolve_images(md_to_html(md), cache, upload)
+    title = qtx({lang: post["title"][lang] for lang in langs})
+    return title, qtx(htmls), htmls
+
+
+def remote_state(kind, item, manifest, can_read):
+    """(id, status) of the item on the site: status None when it is not there.
+    Fills a missing id from the slug. Without credentials only the manifest is known."""
+    if not can_read:
+        return item["id"], (None if item["id"] is None else "unknown")
+    if item["id"] is not None:
+        found = wp_get_or_none(f"/{kind}/{item['id']}", context="edit")
+        if found is not None:
+            return item["id"], found["status"]
+        print(f"  id {item['id']} is no longer on the site, looking for the slug")
+    found = find_by_slug(kind, item["slug"])
+    if found is None:
+        return None, None
+    if item["id"] != found["id"]:
+        item["id"] = found["id"]
+        save_manifest(manifest)
+        print(f"  found on the site by its slug: id {found['id']} (manifest updated)")
+    return found["id"], found["status"]
+
+
+def publish_unpublished(manifest, langs, dry_run):
+    """Publishes every page and post of the manifest that is not published on the site."""
+    can_read = bool(os.environ.get("WP_USER") and os.environ.get("WP_APP_PASSWORD"))
+    if not can_read:
+        if not dry_run:
+            auth_headers()  # dies with the usual message
+        print("(no credentials: the site is not read. Only what has no id in the manifest is listed,")
+        print(" and it may already be on the site - set WP_USER/WP_APP_PASSWORD for the real plan)\n")
+    cache = load_media_cache()
+    base = manifest.get("examples_base")
+    todo = [("pages", p) for p in manifest["pages"]] + [("posts", p) for p in manifest.get("posts", [])]
+    done = skipped = unknown = 0
+    for kind, item in todo:
+        label = "page" if kind == "pages" else "post"
+        render = render_page if kind == "pages" else render_post
+        rendered = render(item, langs, cache, False, base)
+        if rendered is None:
+            continue  # no text yet for some language: nothing to publish
+        if not can_read and item["id"] is not None:
+            unknown += 1
+            continue
+        print(f"== {label} {item['slug']} (id {item['id']})")
+        item_id, status = remote_state(kind, item, manifest, can_read)
+        if status == "publish":
+            print("  already published, left alone")
+            skipped += 1
+            continue
+        if status in ("private", "future"):
+            #hidden or scheduled on purpose: not this command's call
+            print(f"  {status} on the site, left alone (publish it by hand if that is what you want)")
+            skipped += 1
+            continue
+        action = "create and publish" if item_id is None else f"publish (now {status})"
+        if dry_run:
+            print(f"  would {action}")
+            done += 1
+            continue
+        title, content, htmls = render(item, langs, cache, True, base)
+        payload = {"title": title, "content": content, "status": "publish"}
+        if item_id is None:
+            payload["slug"] = item["slug"]
+            created = wp_post(f"/{kind}", payload)
+            item["id"] = created["id"]
+            save_manifest(manifest)
+            print(f"  created and published id {created['id']}: {created['link']}")
+        else:
+            updated = wp_post(f"/{kind}/{item_id}", payload)
+            print(f"  published: {updated['link']}")
+        if kind == "pages":
+            if item.get("menu") and not item.get("menu_item"):
+                ensure_menu_item(item, manifest)
+            verify(item["id"], htmls)
+        done += 1
+    missing = [f"{p['slug']}" for p in manifest["pages"]
+               if not all((SITE / l / f"{p['slug']}.md").exists() for l in langs)]
+    missing += [f"post {p['slug']}" for p in manifest.get("posts", [])
+                if not all((POSTS_DIR / f"{p['slug']}.{l}.md").exists() for l in langs)]
+    verb = "to publish" if dry_run else "published"
+    print(f"\n{done} {verb}, {skipped} left alone.")
+    if unknown:
+        print(f"{unknown} with an id in the manifest were not checked (no credentials).")
+    if missing:
+        print("In the manifest without Markdown in every language (skipped): " + ", ".join(missing))
+
+
 # --------------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("slugs", nargs="*")
     ap.add_argument("--all", action="store_true", help="every page whose Markdown exists")
+    ap.add_argument("--unpublished", action="store_true", help="publish every page and post not published yet")
     ap.add_argument("--dry-run", action="store_true", help="render HTML to docs/site/build/ and stop")
     ap.add_argument("--test", action="store_true", help="publish to a new draft page 'TEST: <title>' instead of the real one")
     ap.add_argument("--verify", action="store_true", help="only fetch the live page and check both languages")
@@ -427,6 +553,9 @@ def main():
     manifest = load_manifest()
     langs = manifest["languages"]
     pages = manifest["pages"]
+    if args.unpublished:
+        publish_unpublished(manifest, langs, args.dry_run)
+        return
     if args.all and args.do_import:
         selected = [p for p in pages if p["id"] is not None]
     elif args.all:
