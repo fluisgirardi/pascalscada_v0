@@ -22,7 +22,7 @@ uses
   tagstatuslist, ChipCardReader, HMIFlowImage, hmifaceplatecontainer, 
   hmifaceplatedsgn, HMIBandeja, CentralUserManagement, HMIEventLogger, 
   HMIAlarmLogger, hmi_animation_timers, hmi_draw_basic_vector_control, 
-  TagLinkedSeriesSource, HMIS7PlusAlarmLogger, LazarusPackageIntf;
+  TagLinkedSeriesSource, HMIS7PlusAlarmLogger, hmilogmemo, LazarusPackageIntf;
 
 implementation
 

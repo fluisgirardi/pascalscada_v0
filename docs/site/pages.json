@@ -270,6 +270,19 @@
       "menu_item": 1135
     },
     {
+      "slug": "logging",
+      "id": null,
+      "title": {
+        "en": "Logging (TpSCADALogger)",
+        "pb": "Log (TpSCADALogger)"
+      },
+      "menu": {
+        "parent": 170,
+        "after": "expressions-in-properties"
+      },
+      "menu_item": null
+    },
+    {
       "slug": "download",
       "id": 10,
       "title": {

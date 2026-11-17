@@ -61,7 +61,8 @@ uses
   ut.faceplate,
   ut.hmimouse,
   ut.hmidbconnection,
-  ut.sycreaderkeydecoder{$IFDEF WINDOWS},
+  ut.sycreaderkeydecoder,
+  ut.hmilogmemo{$IFDEF WINDOWS},
   ut.sycrfidreaderwin{$ENDIF};
 
 type

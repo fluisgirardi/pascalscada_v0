@@ -99,6 +99,7 @@ type
     procedure ADisabledRuleIsIgnored;
     procedure LineFormatIsApplied;
     procedure ThePayloadIsWrittenAsHex;
+    procedure ThreadsAreNumberedInTheOrderTheyPost;
 
     //arquivos / files
     procedure TwoRulesOnTheSameFileWriteTheLineOnce;
@@ -535,14 +536,19 @@ begin
   E := Default(TpSCADALogEntry);
   E.Timestamp := EncodeDate(2026, 11, 17)+EncodeTime(14, 3, 22, 417);
   E.ThreadID := TThreadID(1234);
+  E.ThreadNo := 3;
   E.Category := lcConnection;
   E.Level := llWarning;
   E.Source := PSLogSourceName(src);
   E.SourceClass := src.ClassType;
   E.Msg := 'timeout %data%';
   AssertEquals('default format',
-    '2026-11-17 14:03:22.417 [WARN ] [connection] T#1234 Form1.Drv (TFakeLogDriverA): timeout %data%',
+    '2026-11-17 14:03:22.417 [WARN ] [connection] T3 Form1.Drv (TFakeLogDriverA): timeout %data%',
     L.FormatEntry(E));
+  L.LineFormat := '%thread%/%threadid%';
+  AssertEquals('thread number and id', 'T3/1234', L.FormatEntry(E));
+  E.ThreadNo := 0;
+  AssertEquals('main thread', 'main/1234', L.FormatEntry(E));
   L.LineFormat := '%date% %category%/%level% %msg%';
   AssertEquals('custom format', '2026-11-17 connection/WARN  timeout %data%', L.FormatEntry(E));
   L.LineFormat := '100%% %MSG% %unknown% 50%';
@@ -567,6 +573,35 @@ begin
   PSLog(nil, lcComm, llTrace, 'TX', TBytes.Create($00, $01, $FE));
   AssertTrue('flush', L.Flush);
   AssertEquals('hex', 'TX | 00 01 FE', D.Lines.Text.Trim);
+end;
+
+procedure TTestPSCADALog.ThreadsAreNumberedInTheOrderTheyPost;
+var
+  L:TpSCADALogger;
+  R:TpSCADALogRule;
+  T1, T2:TFloodThread;
+  i, n1, n2:Integer;
+begin
+  L := NewLogger;
+  R := L.Rules.Add;
+  R.Targets := [ltEvent];
+  PSLog(nil, lcUser, llInfo, 'main');
+  T1 := TFloodThread.Create(nil, 2, 'A');
+  T1.WaitFor; T1.Free;
+  T2 := TFloodThread.Create(nil, 2, 'B');
+  T2.WaitFor; T2.Free;
+  AssertTrue('flush', L.Flush);
+  AssertEquals('events', 5, FEvents.Count);
+  AssertEquals('main thread is 0', 0, FEventEntries[0].ThreadNo);
+  n1 := FEventEntries[1].ThreadNo;
+  n2 := FEventEntries[3].ThreadNo;
+  AssertTrue('a thread gets a number', n1>0);
+  AssertEquals('same thread, same number', n1, FEventEntries[2].ThreadNo);
+  //the system may give the second thread the id of the first one, which ended
+  if FEventEntries[3].ThreadID<>FEventEntries[1].ThreadID then
+    AssertTrue('another thread, another number', n2<>n1);
+  for i:=0 to FEvents.Count-1 do
+    AssertTrue('never negative for a posted message', FEventEntries[i].ThreadNo>=0);
 end;
 
 procedure TTestPSCADALog.TwoRulesOnTheSameFileWriteTheLineOnce;

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of TpSCADALogger: a log sheet with the lines going out by three routes (screen, file, event). -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>TpSCADALogger</title>
+  <g id="layer1">
+    <!-- the log sheet -->
+    <path d="M 4 3 H 24 L 30 9 V 45 H 4 Z" fill="#ffffff" stroke="#555555" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M 24 3 V 9 H 30" fill="#dddddd" stroke="#555555" stroke-width="1.5" stroke-linejoin="round"/>
+    <g stroke-width="3" stroke-linecap="round">
+      <path d="M 9 15 H 13" stroke="#2e7d32"/>
+      <path d="M 16 15 H 25" stroke="#888888"/>
+      <path d="M 9 22 H 13" stroke="#f5a000"/>
+      <path d="M 16 22 H 25" stroke="#888888"/>
+      <path d="M 9 29 H 13" stroke="#c62828"/>
+      <path d="M 16 29 H 25" stroke="#888888"/>
+      <path d="M 9 36 H 13" stroke="#2e7d32"/>
+      <path d="M 16 36 H 22" stroke="#888888"/>
+    </g>
+    <!-- the routes -->
+    <g fill="none" stroke="#00798c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 30 26 H 34 M 34 12 V 40 M 34 12 H 38 M 34 26 H 38 M 34 40 H 38"/>
+    </g>
+    <circle cx="42" cy="12" r="4.5" fill="#00798c"/>
+    <circle cx="42" cy="26" r="4.5" fill="#00798c"/>
+    <circle cx="42" cy="40" r="4.5" fill="#00798c"/>
+  </g>
+</svg>

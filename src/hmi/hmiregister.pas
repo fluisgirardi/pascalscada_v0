@@ -15,7 +15,8 @@ unit hmiregister;
 
 interface
 
-uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger, HMIS7PlusAlarmLogger;
+uses hmifaceplatecontainer, HMIEventLogger, HMIAlarmLogger, HMIS7PlusAlarmLogger,
+     hmilogmemo;
 
 procedure Register;
 
@@ -114,6 +115,10 @@ begin
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   RegisterComponents(strUserManagement,   [TWinCCUserManagement]);
   {$IFEND}
+  //destino de tela do TpSCADALogger (registrado no pacote dsng)
+  //screen target of TpSCADALogger (registered by the dsng package)
+  RegisterComponents(strUtilsPallete,     [TpSCADALogMemo]);
+
   RegisterComponents(strUserManagement,   [TCustomizedUserManagement,
                                            TCentralUserManagement
                                           ]);

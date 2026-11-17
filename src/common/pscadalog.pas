@@ -71,6 +71,7 @@ type
     Seq:QWord;            //global order of posting
     Timestamp:TDateTime;
     ThreadID:TThreadID;
+    ThreadNo:Integer;     //0 = main thread, 1, 2... in the order threads first post
     Category:TpSCADALogCategory;
     Level:TpSCADALogLevel;
     Source:String;        //'Form1.ModBusTCP1', or the class name of a non component
@@ -293,8 +294,10 @@ type
     //: A component that implements IpSCADALogDisplay (e.g. TpSCADALogMemo).
     property Display:TComponent read FDisplay write SetDisplay;
     {:
-    Tokens: %time% %date% %level% %category% %thread% %source% %class% %msg%
-    %data% (hex of the payload, empty when there is none).
+    Tokens: %time% %date% %level% %category% %thread% (main, T1, T2... in
+    the order the threads first post; logger for the logger's own messages)
+    %threadid% (the system id) %source% %class% %msg% %data% (hex of the
+    payload, empty when there is none).
     }
     property LineFormat:String read GetLineFormat write SetLineFormat;
     property FlushIntervalMs:Cardinal read FFlushIntervalMs write SetFlushIntervalMs default 200;
@@ -350,7 +353,7 @@ const
   //: PSLogLevelMask value of a category nobody is listening to.
   PSLogNoLevel = 255;
   PSLogAllCategories = [Low(TpSCADALogCategory)..High(TpSCADALogCategory)];
-  PSLogDefaultLineFormat = '%time% [%level%] [%category%] T#%thread% %source% (%class%): %msg%%data%';
+  PSLogDefaultLineFormat = '%time% [%level%] [%category%] %thread% %source% (%class%): %msg%%data%';
 
 var
   {:
@@ -402,13 +405,15 @@ type
   private
     FLock:TCriticalSection;
     FLoggers:TFPList;
+    FThreads:array of TThreadID;
+    function  ThreadNumber(ID:TThreadID):Integer;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Register(L:TpSCADALogger);
     procedure Unregister(L:TpSCADALogger);
     procedure RecalcMask;
-    procedure Emit(const Entry:TpSCADALogEntry);
+    procedure Emit(var Entry:TpSCADALogEntry);
     function  FlushAll(TimeoutMs:Cardinal):Boolean;
   end;
 
@@ -603,6 +608,7 @@ begin
   E.Seq := QWord(InterLockedIncrement64(GlobalSeq));
   E.Timestamp := Now;
   E.ThreadID := GetCurrentThreadId;
+  E.ThreadNo := 0; //numbered by the hub
   E.Category := Category;
   E.Level := Level;
   E.Source := PSLogSourceName(Sender);
@@ -699,13 +705,28 @@ begin
   end;
 end;
 
-procedure TpSCADALogHub.Emit(const Entry:TpSCADALogEntry);
+function TpSCADALogHub.ThreadNumber(ID:TThreadID):Integer;
+var
+  i:Integer;
+begin
+  //called under FLock; a program has few threads, a linear search is enough
+  if ID=MainThreadID then exit(0);
+  for i:=0 to High(FThreads) do
+    if FThreads[i]=ID then exit(i+1);
+  //an id the system reuses after a thread ends keeps the old number
+  SetLength(FThreads, Length(FThreads)+1);
+  FThreads[High(FThreads)] := ID;
+  Result := Length(FThreads);
+end;
+
+procedure TpSCADALogHub.Emit(var Entry:TpSCADALogEntry);
 var
   i:Integer;
   L:TpSCADALogger;
 begin
   FLock.Enter;
   try
+    Entry.ThreadNo := ThreadNumber(Entry.ThreadID);
     for i:=0 to FLoggers.Count-1 do begin
       L := TpSCADALogger(FLoggers[i]);
       if Ord(Entry.Level)>=L.FLevelMask[Entry.Category] then
@@ -1315,7 +1336,13 @@ begin
       'date':     piece := FormatDateTime('yyyy-mm-dd', Entry.Timestamp);
       'level':    piece := LevelNames[Entry.Level];
       'category': piece := CategoryNames[Entry.Category];
-      'thread':   piece := IntToStr(PtrUInt(Entry.ThreadID));
+      'thread':   case Entry.ThreadNo of
+                     0: piece := 'main';
+                    -1: piece := 'logger';
+                  else
+                    piece := 'T'+IntToStr(Entry.ThreadNo);
+                  end;
+      'threadid': piece := IntToStr(PtrUInt(Entry.ThreadID));
       'source':   piece := Entry.Source;
       'class':    if Entry.SourceClass<>nil then piece := Entry.SourceClass.ClassName else piece := '';
       'msg':      piece := Entry.Msg;
@@ -1425,6 +1452,7 @@ begin
     E.Seq := 0;
     E.Timestamp := Now;
     E.ThreadID := GetCurrentThreadId;
+    E.ThreadNo := -1; //the logger's own thread
     E.Category := lcUser;
     E.Level := llWarning;
     E.Source := PSLogSourceName(Self);
