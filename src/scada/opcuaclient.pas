@@ -189,8 +189,11 @@ procedure OPCUARestoreFPU(const Mask:TFPUExceptionMask);
 
 implementation
 
+{$IFDEF UNIX}
 uses
-  {$IFDEF UNIX}Unix{$ELSE}Windows{$ENDIF};
+  Unix; //GetHostName
+{$ENDIF}
+//no Windows unit here: its GetEnvironmentVariable/FindClose would hide the SysUtils ones
 
 function OPCUALoadLibrary(const LibName:String; out Error:String):Boolean;
 var
