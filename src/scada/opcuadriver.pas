@@ -273,7 +273,11 @@ type
 implementation
 
 uses
-  CrossEvent, pascalScadaMTPCPU;
+  CrossEvent, pascalScadaMTPCPU, pscadalog;
+
+const
+  OPCUAToPSLogLevel:array[TOPCUALogLevel] of TpSCADALogLevel =
+    (llTrace, llDebug, llInfo, llWarning, llError, llError, llError);
 
 type
   TPLCTagAccess = class(TPLCTag);
@@ -574,13 +578,19 @@ end;
 
 procedure TOPCUADriver.ClientLog(Sender:TObject; Level:TOPCUALogLevel; const Msg:String);
 begin
+  //the client (open62541) already left out what is below LogLevel
+  if (Level<>ollNone) and PSLogWants(lcProtocol, OPCUAToPSLogLevel[Level]) then
+    PSLog(Self, lcProtocol, OPCUAToPSLogLevel[Level], Msg);
   if Assigned(FOnLog) then
     FOnLog(Self, Level, Msg);
 end;
 
 procedure TOPCUADriver.Log(Level:TOPCUALogLevel; const Msg:String);
 begin
-  if Assigned(FOnLog) and (Level>=FClient.LogLevel) then
+  if Level<FClient.LogLevel then exit;
+  if (Level<>ollNone) and PSLogWants(lcProtocol, OPCUAToPSLogLevel[Level]) then
+    PSLog(Self, lcProtocol, OPCUAToPSLogLevel[Level], Msg);
+  if Assigned(FOnLog) then
     try
       FOnLog(Self, Level, Msg);
     except

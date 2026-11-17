@@ -70,7 +70,7 @@ Os NodeIds das variáveis de uma CPU Siemens têm a forma `ns=3;s="DB1"."Speed"`
 | `PublishingInterval` | 100 | De quanto em quanto tempo, em ms, o servidor manda as mudanças da subscrição. |
 | `MaxItemsPerRequest` | 500 | Máximo de variáveis numa requisição de leitura, escrita ou de itens monitorados; mais que isso é dividido em várias requisições. |
 | `LibraryName` | vazio | Nome ou caminho da biblioteca; vazio faz a busca (veja acima). |
-| `LogLevel` / `OnLog` | `ollWarning` | Mensagens do driver e da biblioteca. O `OnLog` é chamado pelas threads do driver: não mexa no form dentro dele. |
+| `LogLevel` / `OnLog` | `ollWarning` | Mensagens do driver e da biblioteca. O `OnLog` é chamado pelas threads do driver: não mexa no form dentro dele. As mesmas mensagens vão para o [log](/pb/logging/) (`lcProtocol`). |
 | `ReadOnly` | `False` | Nenhuma escrita chega ao servidor. |
 
 Métodos: `Connected`, `LastError`, `ListTags`, `Browse`, `GetVariableInfo`, `GetServerCertificates`, `GetClientCertificate` (veja *Navegando por código*).

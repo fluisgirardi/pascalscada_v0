@@ -102,6 +102,21 @@ Um memo preparado para logs: somente leitura, sem quebra de linha, com barras de
 
 Uma fonte monoespaçada deixa as colunas alinhadas. Para mostrar o log em outro lugar (uma lista, uma grade, uma barra de status) use o evento `OnLog`, ou escreva um componente que implemente `IpSCADALogDisplay` (um método, `AddLogLines(Lines: TStrings)`, chamado na thread principal).
 
+##### O que o PascalSCADA publica
+
+| Quem | Categoria / nível | Mensagens |
+|---|---|---|
+| toda porta de comunicação | `lcComm` / `llTrace` | `TX 12/12 iorOK`, `RX 10/10 iorOK`, com os bytes como dados, na ordem em que a porta os fez. |
+| | `lcComm` / `llWarning` | `read failed: iorTimeOut`, `write failed: …` |
+| | `lcConnection` / `llInfo` | `port started`, `port stopped` |
+| | `lcConnection` / `llError` | `open failed`, `close failed`, com o erro do sistema operacional |
+| | `lcConnection` / `llWarning` | `connection lost` |
+| `TTCP_UDPPort` | `lcConnection` / `llInfo` | `connected`, `reconnecting` (`llDebug`: `closing the socket`) |
+| `TS7CommPlusDriver` | `lcProtocol` / `llDebug` | as mesmas mensagens do `OnDebug` (inclusive as da conexão), com o driver como fonte |
+| `TOPCUADriver` | `lcProtocol` / o nível da mensagem | as mesmas mensagens do `OnLog`; o `LogLevel` do driver continua decidindo o que a biblioteca informa |
+
+As mensagens de conexão trazem a porta entre parênteses: `(192.168.0.10:502 TCP)`, `(COM1 19200 8N1)`. O `LogIOActions`/`LogFile` das portas e o `OnDebug`/`OnLog` dos drivers continuam funcionando como antes. As threads de scan, os tags, os eventos e os demais subsistemas passam a publicar nas próximas versões.
+
 ##### Publicando do seu código
 
 ```pascal

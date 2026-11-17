@@ -204,6 +204,8 @@ type
     procedure NeedSleepBetweenRW; override;
     {: @exclude }
     procedure PortStart(var Ok:Boolean); override;
+    //: 'COM1 19200 8N1'.
+    function LogDescription:String; override;
     {: @exclude }
     procedure PortStop(var Ok:Boolean); override;
     {: @exclude }
@@ -436,7 +438,19 @@ var PortPrefix:array[0..0] of AnsiString = ('tty.');
 
 implementation
 
-uses hsstrings;
+uses hsstrings, TypInfo;
+
+function TSerialPortDriver.LogDescription:String;
+const
+  ParityChar:array[TSerialParity] of Char = ('N', 'O', 'E');
+  StopChar:array[TSerialStopBits] of Char = ('1', '2');
+  DataChar:array[TSerialDataBits] of Char = ('5', '6', '7', '8');
+begin
+  //br19200 -> 19200
+  Result := Format('%s %s %s%s%s', [PPortName,
+                    Copy(GetEnumName(TypeInfo(TSerialBaudRate), Ord(PBaundRate)), 3, MaxInt),
+                    DataChar[PDataBits], ParityChar[PParity], StopChar[PStopBits]]);
+end;
 
 {$IF defined(WIN32) or defined(WIN64) or defined(WINCE)}
 function CTL_CODE( DeviceType, Func, Method, Access:Cardinal):Cardinal;

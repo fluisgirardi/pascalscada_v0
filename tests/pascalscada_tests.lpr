@@ -14,6 +14,7 @@ uses
   testsupport.fakeserver,
   testsupport.fakeserial,
   testsupport.opcuaserver,
+  testsupport.logcollector,
   //casos de teste / test cases
   ut.crc16utils,
   ut.hsutils,
@@ -66,7 +67,8 @@ uses
   ut.socketserver,
   ut.mtpcpu,
   ut.opcuadriver,
-  ut.pscadalog;
+  ut.pscadalog,
+  ut.commportlog;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

@@ -654,6 +654,9 @@ function S7PlusPickFillers(const Candidates:TS7PlusFillCandidateArray; ItemsLeft
 
 implementation
 
+uses
+  pscadalog;
+
 var
   S7PlusTagBuilderEditor:TOpenTagEditor = nil;
 
@@ -700,6 +703,9 @@ end;
 
 procedure TS7CommPlusDriver.ConnDebug(Sender:TObject; const Msg:String);
 begin
+  //the driver is the source, also for the messages of its connection
+  if PSLogWants(lcProtocol, llDebug) then
+    PSLog(Self, lcProtocol, llDebug, Msg);
   if Assigned(FOnDebug) then
     FOnDebug(Self, Msg);
 end;

@@ -13,7 +13,8 @@ interface
 
 uses
   Classes, SysUtils, fpcunit, testregistry, Math, DateUtils, open62541, Tag, ProtocolTypes,
-  PLCTagNumber, PLCBlock, PLCString, OPCUAValues, OPCUAClient, OPCUADriver, testsupport.opcuaserver;
+  PLCTagNumber, PLCBlock, PLCString, OPCUAValues, OPCUAClient, OPCUADriver, testsupport.opcuaserver,
+  pscadalog, testsupport.logcollector;
 
 type
 
@@ -71,6 +72,7 @@ type
     procedure ArraysAreReadIntoBlocks;
     procedure AnIndexRangeAddressReadsOneElement;
     procedure TheNamespaceUriAddressWorks;
+    procedure TheDriverMessagesReachTheLogHub;
     procedure ATextTagReadsAndWrites;
     procedure EveryScalarTypeIsWritten;
     procedure OneElementOfABlockIsWritten;
@@ -546,6 +548,34 @@ begin
   NewDriver;
   t := NumTag(FServer.NodeIdByUri('Int16'));
   AssertTrue('nsu= address'+LineEnding+FLog.Text, WaitValue(t, -1234));
+end;
+
+procedure TTestOPCUADriver.TheDriverMessagesReachTheLogHub;
+var
+  t:TPLCTagNumber;
+  L:TLogCollector;
+  i, mine:Integer;
+begin
+  L := TLogCollector.Create([lcProtocol], llTrace);
+  try
+    StartServer(OPCUATestDefaultOptions);
+    NewDriver;  //LogLevel ollInfo: the client reports its connection
+    FDriver.Name := 'OPCUA1';
+    t := NumTag(FServer.NodeId('Int16'));
+    AssertTrue('connected and read'+LineEnding+FLog.Text, WaitValue(t, -1234));
+    AssertTrue('flush', L.Flush);
+    mine := 0;
+    for i:=0 to L.Count-1 do
+      if L[i].SourceClass=TOPCUADriver then begin
+        Inc(mine);
+        AssertEquals('source', 'OPCUA1', L[i].Source);
+        AssertTrue('the same message reached OnLog: '+L[i].Msg, FLog.IndexOf(L[i].Msg)>=0);
+        AssertTrue('nothing below the driver LogLevel', L[i].Level>=llInfo);
+      end;
+    AssertTrue('the driver posted to the hub'+L.Dump, mine>0);
+  finally
+    L.Free;
+  end;
 end;
 
 procedure TTestOPCUADriver.ATextTagReadsAndWrites;

@@ -70,7 +70,7 @@ The NodeIds of the variables of a Siemens CPU look like `ns=3;s="DB1"."Speed"` â
 | `PublishingInterval` | 100 | How often, in ms, the server sends the changes of the subscription. |
 | `MaxItemsPerRequest` | 500 | Most variables in one read, write or monitored item request; more are split in several requests. |
 | `LibraryName` | empty | Name or path of the library; empty searches it (see above). |
-| `LogLevel` / `OnLog` | `ollWarning` | Messages of the driver and of the library. `OnLog` is called from the driver threads: do not touch the form inside it. |
+| `LogLevel` / `OnLog` | `ollWarning` | Messages of the driver and of the library. `OnLog` is called from the driver threads: do not touch the form inside it. The same messages go to the [logger](/logging/) (`lcProtocol`). |
 | `ReadOnly` | `False` | No write reaches the server. |
 
 Methods: `Connected`, `LastError`, `ListTags`, `Browse`, `GetVariableInfo`, `GetServerCertificates`, `GetClientCertificate` (see *Browsing from code*).
