@@ -65,7 +65,8 @@ uses
   ut.scanthread,
   ut.socketserver,
   ut.mtpcpu,
-  ut.opcuadriver;
+  ut.opcuadriver,
+  ut.pscadalog;
 
 type
   TPascalSCADATestRunner = class(TTestRunner)

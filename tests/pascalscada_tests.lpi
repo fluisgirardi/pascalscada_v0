@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="59">
+    <Units Count="60">
       <Unit0>
         <Filename Value="pascalscada_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -272,6 +272,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="ut.s7plusblockhash"/>
       </Unit58>
+      <Unit59>
+        <Filename Value="ut.pscadalog.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.pscadalog"/>
+      </Unit59>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
