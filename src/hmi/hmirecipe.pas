@@ -603,6 +603,7 @@ begin
   RowCount := 2;
   ColCount := 2;
   DefaultRowHeight := 22;
+  DefaultColWidth := 100;
   ColWidths[0] := 150;
   Options := Options + [goEditing, goColSizing, goTabs];
   RefreshCells;
