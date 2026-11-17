@@ -29,7 +29,7 @@
     </CompilerOptions>
     <Description Value="Common methods for all PascalSCADA packages"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="7"/>
+    <Version Minor="8"/>
     <Files Count="10">
       <Item1>
         <Filename Value="src/common/crossevent.pas"/>

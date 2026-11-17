@@ -28,7 +28,7 @@
     <Description Value="PascalSCADA visual controls
 Built on top of LCL controls, added SCADA features like Tag link and security"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="7"/>
+    <Version Minor="8"/>
     <Files Count="60">
       <Item1>
         <Filename Value="src/hmi/basicusermanagement.pas"/>
@@ -277,23 +277,23 @@ Built on top of LCL controls, added SCADA features like Tag link and security"/>
     <RequiredPkgs Count="8">
       <Item1>
         <PackageName Value="pascalscada_db"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada"/>
         <MaxVersion Minor="7" Release="6"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="pascalscada_common"/>
         <MaxVersion Minor="7" Release="6"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
         <DefaultFilename Value="pascalscada_common.lpk" Prefer="True"/>
       </Item3>
       <Item4>
         <PackageName Value="pascalscada_dsng"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
         <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
       </Item4>
       <Item5>

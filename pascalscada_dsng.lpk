@@ -20,7 +20,7 @@
         </Debugging>
       </Linking>
     </CompilerOptions>
-    <Version Minor="7" Release="7"/>
+    <Version Minor="8"/>
     <Files Count="21">
       <Item1>
         <Filename Value="src/scada_dsng/bitmappertagassistant.pas"/>
@@ -116,7 +116,7 @@
       </Item1>
       <Item2>
         <PackageName Value="pascalscada"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
         <DefaultFilename Value="pascalscada.lpk" Prefer="True"/>
       </Item2>
     </RequiredPkgs>

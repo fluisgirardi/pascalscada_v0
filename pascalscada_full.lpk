@@ -29,23 +29,23 @@
     </CompilerOptions>
     <Description Value="metapackage for complete install of PascalSCADA"/>
     <License Value="LGPL v2.1 with linking exception"/>
-    <Version Minor="7" Release="7"/>
+    <Version Minor="8"/>
     <RequiredPkgs Count="3">
       <Item1>
         <PackageName Value="pascalscada_dsng"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
         <DefaultFilename Value="pascalscada_dsng.lpk" Prefer="True"/>
       </Item1>
       <Item2>
         <PackageName Value="pascalscada_hmi"/>
         <MaxVersion Minor="7" Release="6"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
         <DefaultFilename Value="pascalscada_hmi.lpk" Prefer="True"/>
       </Item2>
       <Item3>
         <PackageName Value="pascalscada_db"/>
         <MaxVersion Minor="7" Release="6"/>
-        <MinVersion Minor="7" Release="7" Valid="True"/>
+        <MinVersion Minor="8" Valid="True"/>
         <DefaultFilename Value="pascalscada_db.lpk" Prefer="True"/>
       </Item3>
     </RequiredPkgs>
