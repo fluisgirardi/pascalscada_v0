@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Component palette icon of TpSCADALogMemo: a window showing coloured log lines, with a scroll bar. -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="48" height="48" viewBox="0 0 48 48" id="svg2">
+  <title>TpSCADALogMemo</title>
+  <g id="layer1">
+    <rect x="2" y="4" width="44" height="40" rx="2" fill="#1e1e1e" stroke="#555555" stroke-width="2"/>
+    <rect x="2" y="4" width="44" height="7" rx="2" fill="#00798c"/>
+    <!-- scroll bar -->
+    <rect x="39" y="13" width="5" height="29" fill="#3a3a3a"/>
+    <rect x="39.5" y="31" width="4" height="10" rx="1" fill="#9e9e9e"/>
+    <g stroke-width="3" stroke-linecap="round">
+      <path d="M 7 17 H 11" stroke="#66bb6a"/>
+      <path d="M 14 17 H 34" stroke="#cfcfcf"/>
+      <path d="M 7 24 H 11" stroke="#ffb300"/>
+      <path d="M 14 24 H 30" stroke="#cfcfcf"/>
+      <path d="M 7 31 H 11" stroke="#ef5350"/>
+      <path d="M 14 31 H 34" stroke="#cfcfcf"/>
+      <path d="M 7 38 H 11" stroke="#66bb6a"/>
+      <path d="M 14 38 H 25" stroke="#cfcfcf"/>
+    </g>
+  </g>
+</svg>

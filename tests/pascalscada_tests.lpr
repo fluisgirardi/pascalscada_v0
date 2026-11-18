@@ -34,6 +34,7 @@ uses
   ut.messagespool,
   ut.plcmemorymanager2,
   ut.crossevent,
+  ut.pscadalog,
   ut.commtypes,
   ut.lgxdriver,
   ut.tcp_udpport,

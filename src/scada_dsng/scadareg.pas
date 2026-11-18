@@ -34,6 +34,7 @@ uses
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
   XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP,
+  SysUtils, pscadalog, ObjInspStrConsts,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -43,6 +44,41 @@ uses
       {$MESSAGE ERROR 'Only Lazarus/Freepascal are supported!'}
     {$ENDIF}
   {$ENDIF}
+type
+  {$IFDEF PORTUGUES}
+  //: Lista em TpSCADALogger.Display so' os componentes que implementam IpSCADALogDisplay.
+  {$ELSE}
+  //: Lists in TpSCADALogger.Display only the components that implement IpSCADALogDisplay.
+  {$ENDIF}
+  TpSCADALogDisplayPropertyEditor = class(TComponentPropertyEditor)
+  private
+    FProc:TGetStrProc;
+    procedure AddIfDisplay(const S:String);
+  public
+    procedure GetValues(Proc:TGetStrProc); override;
+  end;
+
+procedure TpSCADALogDisplayPropertyEditor.AddIfDisplay(const S:String);
+var
+  C:TPersistent;
+begin
+  if S=oisNone then begin
+    FProc(S);
+    exit;
+  end;
+  C := nil;
+  if Assigned(PropertyHook) then
+    C := PropertyHook.GetComponent(S);
+  if (C<>nil) and Supports(C, IpSCADALogDisplay) then
+    FProc(S);
+end;
+
+procedure TpSCADALogDisplayPropertyEditor.GetValues(Proc:TGetStrProc);
+begin
+  FProc := Proc;
+  inherited GetValues(@AddIfDisplay);
+end;
+
 procedure Register;
 var
   Cat: TIDECommandCategory;
@@ -66,7 +102,8 @@ begin
                                            TLinearScaleProcessor,
                                            TUserScale,
                                            TMutexServer,
-                                           TMutexClient]);
+                                           TMutexClient,
+                                           TpSCADALogger]);
   RegisterComponents(strTagsPallete,      [TPLCTagNumber,
                                            TPLCBlock,
                                            TPLCBlockElement,
@@ -78,6 +115,7 @@ begin
                                            TPLCStructString]);
 
   RegisterPropertyEditor(TypeInfo(AnsiString), TSerialPortDriver, 'COMPort', TPortPropertyEditor);
+  RegisterPropertyEditor(TypeInfo(TComponent), TpSCADALogger, 'Display', TpSCADALogDisplayPropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ServerCertificate', TS7PlusCertificatePropertyEditor);
   RegisterPropertyEditor(TypeInfo(AnsiString), TS7CommPlusDriver, 'ClientCertificate', TS7PlusClientCertificatePropertyEditor);
   {$IF defined(WIN32) or defined(WIN64)}

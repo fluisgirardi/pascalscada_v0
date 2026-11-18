@@ -26,7 +26,7 @@ uses
   HMITrackBar, HMIProgressBar, HMIRadioGroup, HMIUpDown, HMIScrollBar,
   HMIAnimation, HMIText, HMIZones, hmipropeditor, HMIControlDislocatorAnimation,
   ControlSecurityManager, ActnList, CustomizedUserManagement, Controls,
-  scadapropeditor, HMIFlowImage, hmifaceplatedsgn,
+  scadapropeditor, HMIFlowImage, hmifaceplatedsgn, hmilogmemo,
   {$IF defined(WINDOWS) or defined(WIN32) or defined(WIN64)}
   WinCCUserManagement,
   {$IFEND}
@@ -97,6 +97,9 @@ begin
   {$IF defined(FPC) AND (not defined(DELPHI4_UP))}
   RegisterComponents(strControlsPallete,  [THMIComboBox]);
   RegisterComponents(strControlsPallete,  [THMIKeyboardManager]);
+  //destino de tela do TpSCADALogger (registrado no pacote dsng)
+  //screen target of TpSCADALogger (registered by the dsng package)
+  RegisterComponents(strUtilsPallete,     [TpSCADALogMemo]);
   RegisterComponents(strControlsPallete,  [THMIFitaBasica,
                                            THMIElevadorBasico,
                                            THMIRedlerBasico,
