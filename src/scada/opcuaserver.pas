@@ -85,6 +85,10 @@ type
     FLastStatus:UA_StatusCode;
     FStatusTag:TPLCTag;
     FCanWrite:Boolean;
+    FIsArray:Boolean;       //a TPLCBlock: an array of its type
+    FIsObject:Boolean;      //a TPLCStruct: an object with a variable per item
+    FParentKey:Integer;     //an item of a published structure (internal)
+    FPublishedId:String;    //NodeId it was published with
     procedure SetDataType(AValue:TOPCUAServerDataType);
     procedure SetDescription(const AValue:String);
     procedure SetFolder(const AValue:String);
@@ -119,6 +123,7 @@ type
 
   TOPCUAServerItems = class(TOwnedCollection)
   private
+    FInternal:Boolean;
     function GetItem(Index:Integer):TOPCUAServerItem;
   protected
     procedure Update(Item:TCollectionItem); override;
@@ -140,6 +145,9 @@ type
     Key:Integer;
     Num:Double;
     Text:UTF8String;
+    //arrays
+    Values:TArrayOfDouble;
+    Offset:Integer;
   end;
 
   //: A write waiting for the result of the tag (internal, main thread).
@@ -151,6 +159,8 @@ type
     ReqID:Int64;
     Num:Double;
     Text:UTF8String;
+    Values:TArrayOfDouble;
+    Offset:Integer;
     Done:Boolean;
     Res:TProtocolIOResult;
   end;
@@ -181,6 +191,7 @@ type
   private
     FActive:Boolean;
     FItems:TOPCUAServerItems;
+    FAutoItems:TOPCUAServerItems; //the items of the published structures
     FLibraryName:String;
     FLogLevel:TOPCUAServerLogLevel;
     FNamespaceUri:String;
@@ -229,10 +240,13 @@ type
     procedure FailPendingWrites(Key:Integer; ResultTag:TPLCTag; Status:UA_StatusCode);
     procedure ReleaseResultTag(ATag:TPLCTag);
     function  ItemByKey(Key:Integer):TOPCUAServerItem;
+    procedure PublishStructItems(Item:TOPCUAServerItem);
+    procedure UnpublishStructItems(Item:TOPCUAServerItem);
+    procedure ForEachItem(ATag:TComponent; Action:Integer);
   protected
     procedure Loaded; override;
     procedure Notification(AComponent:TComponent; Operation:TOperation); override;
-    procedure ItemChanged(Item:TOPCUAServerItem);
+    procedure ItemChanged(Items:TOPCUAServerItems; Item:TOPCUAServerItem);
     procedure ItemRemoving(Item:TOPCUAServerItem);
     procedure SetError(const Msg:String);
   public
@@ -260,7 +274,7 @@ type
 
   { server thread: internal }
 
-  TOPCUAServerCmdKind = (sckAdd, sckRemove, sckValue, sckWriteResult);
+  TOPCUAServerCmdKind = (sckAdd, sckRemove, sckValue, sckWriteResult, sckAddObject, sckRemoveObject);
 
   TOPCUAServerCmd = record
     Kind:TOPCUAServerCmdKind;
@@ -269,12 +283,14 @@ type
     NodeId, BrowseName, Folder, Description:String;
     TypeIndex:Integer;
     IsText:Boolean;
+    IsArray:Boolean;
     Writable:Boolean;
     //write result
     WriteId:Int64;
     //add and value
     Num:Double;
     Text:UTF8String;
+    Values:TArrayOfDouble;
     Status:UA_StatusCode;
     TimeUTC:TDateTime;
   end;
@@ -286,8 +302,10 @@ type
     NodeId:AnsiString;
     TypeIndex:Integer;
     IsText:Boolean;
+    IsArray:Boolean;
     Num:Double;
     Text:UTF8String;
+    Values:TArrayOfDouble;
     Status:UA_StatusCode;
     Time:UA_DateTime;
     Thread:TOPCUAServerThread;
@@ -316,11 +334,13 @@ type
     //writes waiting for their result: id -> the value pointer open62541 gave
     FPending:specialize TDictionary<Int64, PUA_DataValue>;
     FWriteSeq:Int64;
-    function  BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue):UA_StatusCode;
+    function  BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue; const Range:PUA_NumericRange):UA_StatusCode;
     procedure EndWrite(Id:Int64; Status:UA_StatusCode);
     procedure ApplyCmds;
     procedure AddNode(const Cmd:TOPCUAServerCmd);
     procedure RemoveNode(Key:Integer);
+    procedure AddObject(const Cmd:TOPCUAServerCmd);
+    procedure RemoveObject(const Cmd:TOPCUAServerCmd);
     function  EnsureFolder(const Path:AnsiString):Boolean;
     procedure Setup;
     procedure TearDown;
@@ -345,7 +365,8 @@ implementation
 
 uses
   PLCNumber, TagBit, PLCBlock, PLCBlockElement, PLCString, PLCStructString,
-  NumExprTag, ProtocolTypes, ValueProcessor, OPCUAClient, OPCUAValues, pscadalog;
+  PLCStruct, PLCStructElement, NumExprTag, ProtocolTypes, ValueProcessor,
+  OPCUAClient, OPCUAValues, pscadalog;
 
 type
   TPLCTagAccess = class(TPLCTag);
@@ -456,9 +477,20 @@ var
 begin
   Result := false;
   IsText := false;
+  Item.FIsArray := false;
+  Item.FIsObject := false;
   TypeIndex := UA_TYPES_DOUBLE;
   Why := '';
   T := Item.Tag;
+  if T is TPLCStruct then begin
+    Item.FIsObject := true;
+    exit(true);
+  end;
+  if (T is TPLCBlock) and not (T is TPLCString) then begin
+    Item.FIsArray := true;
+    TypeIndex := TagTypeIndex(TPLCTagAccess(T).TagType, T);
+    exit(true);
+  end;
   if (T is TPLCString) or (T is TPLCStructString) then begin
     IsText := true;
     TypeIndex := UA_TYPES_STRING;
@@ -538,19 +570,37 @@ var
   f:UA_Float;
   d:UA_Double;
 begin
+  //a read with no value returns its error (open62541 turns an empty value with a
+  //Good result into BadWaitingForInitialData); with a value the quality goes in it
   Result := UA_STATUSCODE_GOOD;
   try
     n := TOPCUAServerNode(nodeContext);
     value^.flags := value^.flags or UA_DATAVALUE_HASSTATUS;
-    if (range<>nil) and (range^.dimensionsSize>0) then begin
+    if (range<>nil) and (range^.dimensionsSize>0) and not n.IsArray then begin
       value^.status := UA_STATUSCODE_BADINDEXRANGEINVALID;
-      exit;
+      exit(UA_STATUSCODE_BADINDEXRANGEINVALID);
     end;
     if n.Status=UA_STATUSCODE_BADWAITINGFORINITIALDATA then begin
       value^.status := n.Status;
-      exit;
+      exit(n.Status);
     end;
-    if n.IsText then
+    if n.IsArray then begin
+      if (range<>nil) and (range^.dimensionsSize>0) then begin
+        //one dimension; min..max inside the array
+        if (range^.dimensionsSize<>1) or (range^.dimensions^.min>range^.dimensions^.max) then begin
+          value^.status := UA_STATUSCODE_BADINDEXRANGEINVALID;
+          exit(UA_STATUSCODE_BADINDEXRANGEINVALID);
+        end;
+        if range^.dimensions^.min>=UA_UInt32(Length(n.Values)) then begin
+          value^.status := UA_STATUSCODE_BADINDEXRANGENODATA;
+          exit(UA_STATUSCODE_BADINDEXRANGENODATA);
+        end;
+        vals := Copy(n.Values, range^.dimensions^.min,
+                     Min(range^.dimensions^.max, High(n.Values))-range^.dimensions^.min+1);
+      end else
+        vals := n.Values;
+      res := OPCUANumbersToVariant(@UA_TYPES[n.TypeIndex], true, vals, value^.value);
+    end else if n.IsText then
       res := OPCUATextToVariant(@UA_TYPES[n.TypeIndex], n.Text, value^.value)
     else if IsNan(n.Num) and (n.TypeIndex=UA_TYPES_DOUBLE) then begin
       d := n.Num;
@@ -566,7 +616,7 @@ begin
     if res<>ioOk then begin
       //the raw value does not fit the type (e.g. a negative one in an unsigned type)
       value^.status := UA_STATUSCODE_BADOUTOFRANGE;
-      exit;
+      exit(UA_STATUSCODE_BADOUTOFRANGE);
     end;
     value^.flags := value^.flags or UA_DATAVALUE_HASVALUE;
     value^.status := n.Status;
@@ -576,6 +626,7 @@ begin
     end;
   except
     value^.status := UA_STATUSCODE_BADINTERNALERROR;
+    Result := UA_STATUSCODE_BADINTERNALERROR;
   end;
 end;
 
@@ -598,9 +649,7 @@ var
 begin
   try
     n := TOPCUAServerNode(nodeContext);
-    if (range<>nil) and (range^.dimensionsSize>0) then
-      exit(UA_STATUSCODE_BADINDEXRANGEINVALID);
-    Result := n.Thread.BeginWrite(n, value);
+    Result := n.Thread.BeginWrite(n, value, range);
   except
     Result := UA_STATUSCODE_BADINTERNALERROR;
   end;
@@ -749,7 +798,7 @@ procedure TOPCUAServerItems.Update(Item:TCollectionItem);
 begin
   inherited Update(Item);
   if Owner is TOPCUAServer then
-    TOPCUAServer(Owner).ItemChanged(TOPCUAServerItem(Item));
+    TOPCUAServer(Owner).ItemChanged(Self, TOPCUAServerItem(Item));
 end;
 
 procedure TOPCUAServerItems.Notify(Item:TCollectionItem; Action:Classes.TCollectionNotification);
@@ -834,10 +883,13 @@ begin
       sckAdd:    AddNode(cmds[i]);
       sckRemove: RemoveNode(cmds[i].Key);
       sckWriteResult: EndWrite(cmds[i].WriteId, cmds[i].Status);
+      sckAddObject: AddObject(cmds[i]);
+      sckRemoveObject: RemoveObject(cmds[i]);
       sckValue:
         if FNodes.TryGetValue(cmds[i].Key, n) then begin
           n.Num := cmds[i].Num;
           n.Text := cmds[i].Text;
+          n.Values := cmds[i].Values;
           n.Status := cmds[i].Status;
           n.Time := UA_DateTimeFromDateTime(cmds[i].TimeUTC);
         end;
@@ -893,6 +945,7 @@ var
   st:UA_StatusCode;
   idText, folder, browse:AnsiString;
   p:Integer;
+  dims:UA_UInt32;
 begin
   if FNodes.ContainsKey(Cmd.Key) then RemoveNode(Cmd.Key);
   idText := Cmd.NodeId;
@@ -910,6 +963,8 @@ begin
   n.NodeId := idText;
   n.TypeIndex := Cmd.TypeIndex;
   n.IsText := Cmd.IsText;
+  n.IsArray := Cmd.IsArray;
+  n.Values := Cmd.Values;
   n.Num := Cmd.Num;
   n.Text := Cmd.Text;
   n.Status := Cmd.Status;
@@ -918,7 +973,13 @@ begin
 
   attr := UA_VariableAttributes_default;
   attr.dataType := UA_TYPES[Cmd.TypeIndex].typeId;
-  attr.valueRank := UA_VALUERANK_SCALAR;
+  if Cmd.IsArray then begin
+    attr.valueRank := UA_VALUERANK_ONE_DIMENSION;
+    dims := Length(Cmd.Values);
+    attr.arrayDimensions := @dims;
+    attr.arrayDimensionsSize := 1;
+  end else
+    attr.valueRank := UA_VALUERANK_SCALAR;
   attr.displayName := _UA_LOCALIZEDTEXT_ALLOC('', Cmd.BrowseName);
   if Cmd.Description<>'' then
     attr.description := _UA_LOCALIZEDTEXT_ALLOC('', Cmd.Description);
@@ -945,7 +1006,8 @@ begin
   FNodes.Add(Cmd.Key, n);
 end;
 
-function TOPCUAServerThread.BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue):UA_StatusCode;
+function TOPCUAServerThread.BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue;
+  const Range:PUA_NumericRange):UA_StatusCode;
 var
   req:TOPCUAServerWriteRequest;
   vals:TArrayOfDouble;
@@ -956,11 +1018,32 @@ var
 begin
   if (Value^.flags and UA_DATAVALUE_HASVALUE)=0 then
     exit(UA_STATUSCODE_BADTYPEMISMATCH);
-  //the variable has one type, and one value
-  if (Value^.value._type<>@UA_TYPES[Node.TypeIndex]) or not UA_Variant_isScalar(@Value^.value) then
+  if Value^.value._type<>@UA_TYPES[Node.TypeIndex] then
     exit(UA_STATUSCODE_BADTYPEMISMATCH);
   req := Default(TOPCUAServerWriteRequest);
-  if Node.IsText then begin
+  if Node.IsArray then begin
+    //the whole array (or its beginning), or the elements of an index range
+    if OPCUAVariantToNumbers(Value^.value, vals)<>ioOk then exit(UA_STATUSCODE_BADTYPEMISMATCH);
+    if (Range<>nil) and (Range^.dimensionsSize>0) then begin
+      if (Range^.dimensionsSize<>1) or (Range^.dimensions^.min>Range^.dimensions^.max) then
+        exit(UA_STATUSCODE_BADINDEXRANGEINVALID);
+      if (Range^.dimensions^.max>=UA_UInt32(Length(Node.Values))) then
+        exit(UA_STATUSCODE_BADINDEXRANGENODATA);
+      if Length(vals)<>Range^.dimensions^.max-Range^.dimensions^.min+1 then
+        exit(UA_STATUSCODE_BADTYPEMISMATCH);
+      req.Offset := Range^.dimensions^.min;
+    end else begin
+      if UA_Variant_isScalar(@Value^.value) or (Length(vals)=0) or (Length(vals)>Length(Node.Values)) then
+        exit(UA_STATUSCODE_BADTYPEMISMATCH);
+      req.Offset := 0;
+    end;
+    req.Values := vals;
+  end else if (Range<>nil) and (Range^.dimensionsSize>0) then
+    exit(UA_STATUSCODE_BADINDEXRANGEINVALID)
+  else if not UA_Variant_isScalar(@Value^.value) then
+    //the variable has one value
+    exit(UA_STATUSCODE_BADTYPEMISMATCH)
+  else if Node.IsText then begin
     if OPCUAVariantToText(Value^.value, txt)<>ioOk then exit(UA_STATUSCODE_BADTYPEMISMATCH);
     req.Text := txt;
   end else begin
@@ -994,6 +1077,52 @@ begin
   FPending.Remove(Id);
   //BADNOTFOUND when the server gave up on it meanwhile: nothing to do
   UA_Server_setAsyncWriteResult(FServer, v, Status);
+end;
+
+//An object node (a structure) at Cmd.NodeId: its items are variables under it.
+procedure TOPCUAServerThread.AddObject(const Cmd:TOPCUAServerCmd);
+var
+  attr:UA_ObjectAttributes;
+  st:UA_StatusCode;
+  parent:UA_NodeId;
+  idText, folder, browse:AnsiString;
+  p:Integer;
+begin
+  idText := Cmd.NodeId;
+  browse := Cmd.BrowseName;
+  if FFolders.IndexOf(idText)>=0 then exit;
+  p := LastDelimiter('.', idText);
+  if p>0 then folder := Copy(idText, 1, p-1) else folder := '';
+  if not EnsureFolder(folder) then exit;
+  if folder='' then parent := FRootId else parent := UA_NODEID_STRING(FNs, folder);
+  attr := UA_ObjectAttributes_default;
+  attr.displayName := _UA_LOCALIZEDTEXT_ALLOC('', Cmd.BrowseName);
+  if Cmd.Description<>'' then
+    attr.description := _UA_LOCALIZEDTEXT_ALLOC('', Cmd.Description);
+  st := UA_Server_addObjectNode(FServer, UA_NODEID_STRING(FNs, idText), parent,
+          UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES), _UA_QUALIFIEDNAME(FNs, browse),
+          UA_NODEID_NUMERIC(0, UA_NS0ID_BASEOBJECTTYPE), attr, nil, nil);
+  UA_clear(@attr.displayName, @UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
+  if Cmd.Description<>'' then
+    UA_clear(@attr.description, @UA_TYPES[UA_TYPES_LOCALIZEDTEXT]);
+  if st<>UA_STATUSCODE_GOOD then begin
+    FOwner.SetError(Format('object "%s": %s', [idText, OPCUAStatusText(st)]));
+    exit;
+  end;
+  //its items go under it as if it were a folder
+  FFolders.Add(idText);
+end;
+
+procedure TOPCUAServerThread.RemoveObject(const Cmd:TOPCUAServerCmd);
+var
+  idText:AnsiString;
+  idx:Integer;
+begin
+  idText := Cmd.NodeId;
+  idx := FFolders.IndexOf(idText);
+  if idx<0 then exit;
+  FFolders.Delete(idx);
+  UA_Server_deleteNode(FServer, UA_NODEID_STRING(FNs, idText), true);
 end;
 
 procedure TOPCUAServerThread.RemoveNode(Key:Integer);
@@ -1094,6 +1223,8 @@ begin
   FWriteLock := TCriticalSection.Create;
   FPendingWrites := TFPList.Create;
   FItems := TOPCUAServerItems.Create(Self);
+  FAutoItems := TOPCUAServerItems.Create(Self);
+  FAutoItems.FInternal := true;
 end;
 
 destructor TOPCUAServer.Destroy;
@@ -1103,6 +1234,7 @@ begin
   Destroying;
   StopServer;
   TThread.RemoveQueuedEvents(@DeferredStart);
+  FreeAndNil(FAutoItems);
   FreeAndNil(FItems);
   for l in FTagItems.Values do l.Free;
   FreeAndNil(FTagItems);
@@ -1137,10 +1269,38 @@ begin
   inherited Notification(AComponent, Operation);
   if (Operation=opRemove) and (AComponent is TPLCTag) and (FPendingWrites<>nil) then
     FailPendingWrites(0, TPLCTag(AComponent), UA_STATUSCODE_BADCONFIGURATIONERROR);
-  if (Operation=opRemove) and (FItems<>nil) then
-    for i:=0 to FItems.Count-1 do
-      if FItems[i].FTag=AComponent then
-        FItems[i].Tag := nil;
+  if Operation=opRemove then
+    ForEachItem(AComponent, 0);
+end;
+
+{$IFDEF PORTUGUES}
+//: Action 0: os itens do tag o perdem. 1: os itens que tiram o status dele sao publicados de novo.
+{$ELSE}
+//: Action 0: the items of the tag lose it. 1: the items that take their status from it are published again.
+{$ENDIF}
+procedure TOPCUAServer.ForEachItem(ATag:TComponent; Action:Integer);
+  procedure Walk(Items:TOPCUAServerItems);
+  var
+    i:Integer;
+    it:TOPCUAServerItem;
+  begin
+    if Items=nil then exit;
+    i := 0;
+    while i<Items.Count do begin
+      it := Items[i];
+      if (Action=0) and (it.FTag=ATag) then
+        it.Tag := nil
+      else if (Action=1) and (it.FStatusTag=ATag) and (it.FTag<>ATag) then begin
+        UnpublishItem(it);
+        PublishItem(it);
+      end;
+      //removing a structure frees its items: the list may have shrunk
+      if (i<Items.Count) and (Items[i]=it) then Inc(i);
+    end;
+  end;
+begin
+  Walk(FItems);
+  Walk(FAutoItems);
 end;
 
 function TOPCUAServer.GetLastError:String;
@@ -1257,6 +1417,8 @@ begin
   if FThread=nil then exit;
   for i:=0 to FItems.Count-1 do
     UnpublishItem(FItems[i]);
+  for i:=FAutoItems.Count-1 downto 0 do
+    FAutoItems[i].Free;
   //the server cancels what is still waiting when it shuts down
   TThread.RemoveQueuedEvents(@ProcessWrites);
   FWriteLock.Enter;
@@ -1320,10 +1482,22 @@ begin
   end;
   Inc(FNextKey);
   Item.FKey := FNextKey;
+  Item.FPublishedId := Item.NodeIdText;
+  if Item.FIsObject then begin
+    //a structure: an object, and a variable for each of its items
+    LinkTag(Item.Tag, Item);
+    cmd := Default(TOPCUAServerCmd);
+    cmd.Kind := sckAddObject;
+    cmd.NodeId := Item.FPublishedId;
+    cmd.BrowseName := Item.EffectiveNodeName;
+    cmd.Description := Item.Description;
+    FThread.Post(cmd);
+    PublishStructItems(Item);
+    exit;
+  end;
   Item.FStatusTag := StatusTagOf(Item.Tag);
-  //an expression has no device to write to; a string inside a structure is written
-  //through its structure (blocks and structures come later)
-  Item.FCanWrite := Item.Writable and not ((Item.Tag is TNumericExprTag) or (Item.Tag is TPLCStructString));
+  //an expression has no device to write to
+  Item.FCanWrite := Item.Writable and not (Item.Tag is TNumericExprTag);
   LinkTag(Item.Tag, Item);
   if Item.FStatusTag<>Item.Tag then
     LinkTag(Item.FStatusTag, Item);
@@ -1336,9 +1510,69 @@ begin
   cmd.Description := Item.Description;
   cmd.TypeIndex := Item.FTypeIndex;
   cmd.IsText := Item.FIsText;
+  cmd.IsArray := Item.FIsArray;
+  if Item.FIsArray then
+    cmd.Values := Copy(TPLCBlock(Item.Tag).ValuesRaw); //the size of the array
   cmd.Writable := Item.FCanWrite;
   FThread.Post(cmd);
   PostValue(Item);
+end;
+
+//the items of a structure, among the components of its owner (where the Tag Builder puts them)
+procedure TOPCUAServer.PublishStructItems(Item:TOPCUAServerItem);
+var
+  S:TPLCStruct;
+  O:TComponent;
+  found:TFPList;
+  i, j:Integer;
+  C:TComponent;
+  child:TOPCUAServerItem;
+
+  function IndexOf(X:TComponent):Cardinal;
+  begin
+    if X is TPLCStructItem then Result := TPLCStructItem(X).Index
+    else Result := TPLCStructString(X).Index;
+  end;
+
+begin
+  S := TPLCStruct(Item.Tag);
+  O := S.Owner;
+  if O=nil then exit;
+  found := TFPList.Create;
+  try
+    for i:=0 to O.ComponentCount-1 do begin
+      C := O.Components[i];
+      if ((C is TPLCStructItem) and (TPLCStructItem(C).PLCBlock=S)) or
+         ((C is TPLCStructString) and (TPLCStructString(C).PLCBlock=S)) then begin
+        //in the order of the structure
+        j := found.Count;
+        while (j>0) and (IndexOf(TComponent(found[j-1]))>IndexOf(C)) do Dec(j);
+        found.Insert(j, C);
+      end;
+    end;
+    for i:=0 to found.Count-1 do begin
+      C := TComponent(found[i]);
+      child := FAutoItems.Add;
+      child.FTag := TPLCTag(C);
+      C.FreeNotification(Self);
+      child.FNodeName := C.Name;
+      child.FFolder := StringReplace(Item.FPublishedId, '.', '/', [rfReplaceAll]);
+      child.FWritable := Item.Writable;
+      child.FParentKey := Item.FKey;
+      PublishItem(child);
+    end;
+  finally
+    found.Free;
+  end;
+end;
+
+procedure TOPCUAServer.UnpublishStructItems(Item:TOPCUAServerItem);
+var
+  i:Integer;
+begin
+  for i:=FAutoItems.Count-1 downto 0 do
+    if (i<FAutoItems.Count) and (FAutoItems[i].FParentKey=Item.FKey) then
+      FAutoItems[i].Free;
 end;
 
 procedure TOPCUAServer.UnpublishItem(Item:TOPCUAServerItem);
@@ -1348,6 +1582,18 @@ var
 begin
   if not Item.Published then exit;
   key := Item.FKey;
+  if Item.FIsObject then begin
+    UnpublishStructItems(Item);
+    Item.FKey := 0;
+    UnlinkTag(Item.Tag, Item);
+    if FThread<>nil then begin
+      cmd := Default(TOPCUAServerCmd);
+      cmd.Kind := sckRemoveObject;
+      cmd.NodeId := Item.FPublishedId;
+      FThread.Post(cmd);
+    end;
+    exit;
+  end;
   FailPendingWrites(key, nil, UA_STATUSCODE_BADNODEIDUNKNOWN);
   Item.FKey := 0;
   UnlinkTag(Item.Tag, Item);
@@ -1367,7 +1613,7 @@ var
   cmd:TOPCUAServerCmd;
   T:TPLCTag;
 begin
-  if (FThread=nil) or (not Item.Published) then exit;
+  if (FThread=nil) or (not Item.Published) or Item.FIsObject then exit;
   T := Item.Tag;
   cmd := Default(TOPCUAServerCmd);
   cmd.Kind := sckValue;
@@ -1375,7 +1621,9 @@ begin
   cmd.Status := TagStatus(Item);
   cmd.TimeUTC := LocalTimeToUniversal(Now);
   try
-    if Item.FIsText then
+    if Item.FIsArray then
+      cmd.Values := Copy(TPLCBlock(T).ValuesRaw)
+    else if Item.FIsText then
       cmd.Text := (T as ITagString).Value
     else if (Item.DataType=odtScaledDouble) or (T is TNumericExprTag) then
       cmd.Num := TPLCNumber(T).Value
@@ -1417,17 +1665,10 @@ begin
 end;
 
 procedure TOPCUAServer.TagRemoved(Sender:TObject);
-var
-  i:Integer;
 begin
   //the tag is being destroyed: its items lose it (and their variables)
-  for i:=0 to FItems.Count-1 do
-    if FItems[i].FTag=Sender then
-      FItems[i].Tag := nil
-    else if FItems[i].FStatusTag=Sender then begin
-      UnpublishItem(FItems[i]);
-      PublishItem(FItems[i]);
-    end;
+  ForEachItem(TComponent(Sender), 0);
+  ForEachItem(TComponent(Sender), 1);
 end;
 
 function TOPCUAServer.ItemByKey(Key:Integer):TOPCUAServerItem;
@@ -1436,6 +1677,8 @@ var
 begin
   for i:=0 to FItems.Count-1 do
     if FItems[i].FKey=Key then exit(FItems[i]);
+  for i:=0 to FAutoItems.Count-1 do
+    if FAutoItems[i].FKey=Key then exit(FAutoItems[i]);
   Result := nil;
 end;
 
@@ -1544,16 +1787,45 @@ var
   vals:TArrayOfDouble;
   raw, eng, base:Double;
   mask, nv:QWord;
-  bits:Integer;
+  bits, offset:Integer;
   P:TOPCUAServerPendingWrite;
   id:Int64;
+  one:TArrayOfDouble;
 begin
   T := Item.Tag;
   if not Item.FCanWrite then exit(UA_STATUSCODE_BADNOTWRITABLE);
+  offset := 0;
 
-  if T is TPLCString then begin
+  if Item.FIsArray then begin
+    //elements of a block (from Offset on); the block converts them
+    vals := Req.Values;
+    offset := Req.Offset;
+    target := T;
+  end else if T is TPLCStructString then begin
+    //its bytes inside the structure
+    if TPLCStructString(T).PLCBlock=nil then exit(UA_STATUSCODE_BADCONFIGURATIONERROR);
+    if not TPLCStructString(T).EncodeValue(Req.Text, vals) then exit(UA_STATUSCODE_BADCONFIGURATIONERROR);
+    target := TPLCStructString(T).PLCBlock;
+    offset := TPLCStructString(T).Index;
+  end else if T is TPLCString then begin
     vals := TPLCString(T).StringToArrayOfValues(Req.Text);
     target := T;
+  end else if T is TPLCStructItem then begin
+    //encoded into the bytes of the structure by the item's own type
+    if TPLCStructItem(T).PLCBlock=nil then exit(UA_STATUSCODE_BADCONFIGURATIONERROR);
+    if Item.DataType=odtScaledDouble then begin
+      eng := Req.Num;
+      raw := EngToRaw(TPLCNumber(T), eng);
+    end else begin
+      raw := Req.Num;
+      eng := RawToEng(TPLCNumber(T), raw);
+    end;
+    if OutOfLimits(TPLCNumber(T), eng) then exit(UA_STATUSCODE_BADOUTOFRANGE);
+    SetLength(one, 1);
+    one[0] := raw;
+    vals := TPLCTagAccess(T).TagValuesToPLCValues(one, 0);
+    target := TPLCStructItem(T).PLCBlock;
+    offset := TPLCStructItem(T).Index;
   end else if T is TTagBit then begin
     //the bits go into the word of the source, which is what gets written
     src := TTagBit(T).PLCTag;
@@ -1599,12 +1871,14 @@ begin
   P.ResultTag := resultTag;
   P.Num := Req.Num;
   P.Text := Req.Text;
+  P.Values := Req.Values;
+  P.Offset := Req.Offset;
   resultTag.AddCommandResultHandler(@TagCommandResult);
   resultTag.FreeNotification(Self);
   //a tag without driver (or a refused write) answers inside ScanWrite
   FCurrentWrite := P;
   try
-    id := TPLCTagAccess(target).ScanWrite(vals, Length(vals), 0, true);
+    id := TPLCTagAccess(target).ScanWrite(vals, Length(vals), offset, true);
   finally
     FCurrentWrite := nil;
   end;
@@ -1661,6 +1935,7 @@ var
   cmd:TOPCUAServerCmd;
   it:TOPCUAServerItem;
   tg:TPLCTag;
+  i:Integer;
 begin
   FPendingWrites.Remove(P);
   tg := P.ResultTag;
@@ -1674,6 +1949,13 @@ begin
       cmd.Key := P.Key;
       cmd.Num := P.Num;
       cmd.Text := P.Text;
+      if it.FIsArray and (it.Tag is TPLCBlock) then begin
+        //the block (not updated yet) with the elements written
+        cmd.Values := Copy(TPLCBlock(it.Tag).ValuesRaw);
+        for i:=0 to High(P.Values) do
+          if P.Offset+i<=High(cmd.Values) then
+            cmd.Values[P.Offset+i] := P.Values[i];
+      end;
       cmd.Status := UA_STATUSCODE_GOOD;
       cmd.TimeUTC := LocalTimeToUniversal(Now);
       it.FLastStatus := UA_STATUSCODE_GOOD;
@@ -1719,16 +2001,18 @@ begin
     ATag.RemoveFreeNotification(Self);
 end;
 
-procedure TOPCUAServer.ItemChanged(Item:TOPCUAServerItem);
+procedure TOPCUAServer.ItemChanged(Items:TOPCUAServerItems; Item:TOPCUAServerItem);
 var
   i:Integer;
 begin
   if FThread=nil then exit;
   if Item=nil then begin
-    for i:=0 to FItems.Count-1 do begin
-      UnpublishItem(FItems[i]);
-      PublishItem(FItems[i]);
-    end;
+    //items added (or the whole collection assigned): the new ones are published;
+    //the items of the structures are handled by the server itself
+    if Items.FInternal then exit;
+    for i:=0 to Items.Count-1 do
+      if not Items[i].Published then
+        PublishItem(Items[i]);
   end else begin
     UnpublishItem(Item);
     PublishItem(Item);

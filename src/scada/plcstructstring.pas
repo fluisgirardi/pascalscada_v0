@@ -99,6 +99,18 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    {$IFDEF PORTUGUES}
+    {:
+    O texto como os bytes que ele ocupa na estrutura (a partir de Index), no
+    formato e codificacao do tag. False sem estrutura ou com configuracao invalida.
+    }
+    {$ELSE}
+    {:
+    The text as the bytes it takes in the structure (from Index on), in the
+    tag's format and encoding. False with no structure or invalid settings.
+    }
+    {$ENDIF}
+    function EncodeValue(const AValue:UTF8String; out Values:TArrayOfDouble):Boolean;
 
   published
     {$IFDEF PORTUGUES}
@@ -333,9 +345,22 @@ end;
 procedure TPLCStructString.SetValue(AValue: UTF8String);
 var
   aux:TArrayOfDouble;
+begin
+  if EncodeValue(AValue, aux) then
+    PBlock.ScanWrite(aux, Length(aux), PIndex);
+
+  if PValue<>AValue then NotifyChange;
+  PValue:=AValue;
+end;
+
+function TPLCStructString.EncodeValue(const AValue:UTF8String; out Values:TArrayOfDouble):Boolean;
+var
+  aux:TArrayOfDouble;
   limit: Extended;
   c, PCurrStrSize: Integer;
 begin
+  Values := nil;
+  Result := false;
   if Assigned(PBlock) and ValidSettings(PLCBlock.Size,PIndex,PStringSize,PStringType) then begin
     case PStringType of
       stC: begin
@@ -369,11 +394,9 @@ begin
       end
       else exit;
     end;
-    PBlock.ScanWrite(aux, Length(aux), PIndex);
+    Values := aux;
+    Result := true;
   end;
-
-  if PValue<>AValue then NotifyChange;
-  PValue:=AValue;
 end;
 
 procedure TPLCStructString.Loaded;

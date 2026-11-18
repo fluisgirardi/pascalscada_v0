@@ -27,6 +27,7 @@ interface
 uses
   Classes, SysUtils, Math, fpcunit, testregistry,
   open62541, Tag, PLCTag, PLCTagNumber, PLCBlock, PLCString, TagBit, LinearScaleProcessor,
+  PLCStruct, PLCStructElement, PLCStructString,
   OPCUAClient, OPCUAValues, opcuaserver, testsupport.opcuaserver, testsupport.fakeserver, ut.scanlog;
 
 type
@@ -36,16 +37,20 @@ type
   TClientWriter = class(TThread)
   protected
     procedure Execute; override;
+    function  WriteRange(c:PUA_Client; const v:UA_Variant):UA_StatusCode;
   public
     Url, Id:AnsiString;
     Ns:Word;
     TypeIndex:Integer;
     Num:Double;
     Text:UTF8String;
+    Values:TArrayOfDouble;   //array writes (with Range: an index range)
+    Range:AnsiString;
     Status:UA_StatusCode;
     Elapsed:QWord;
     constructor Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString; ATypeIndex:Integer;
-                       ANum:Double; const AText:UTF8String = '');
+                       ANum:Double; const AText:UTF8String = ''; const AValues:TArrayOfDouble = nil;
+                       const ARange:AnsiString = '');
   end;
 
   { TTestOPCUAServer }
@@ -70,6 +75,9 @@ type
     function  Finish(W:TClientWriter; Ms:Integer = 5000):UA_StatusCode;
     function  WriteNode(const Id:String; TypeIndex:Integer; Num:Double; const Text:UTF8String = ''):UA_StatusCode;
     function  NewDriverTag(const AName:String; TT:TTagType; out D:TLogTestDriver):TPLCTagNumber;
+    function  ReadArray(const Id, Range:String; out TypeIndex:Integer; out Vals:TArrayOfDouble):UA_StatusCode;
+    function  NewBlock(const AName:String; TT:TTagType; Size:Integer):TPLCBlock;
+    function  NewStruct(out S:TPLCStruct; out W:TPLCStructItem; out F:TPLCStructItem; out Txt:TPLCStructString):TOPCUAServerItem;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -87,7 +95,7 @@ type
     procedure ARemovedItemDisappears;
     procedure ADestroyedTagDisappears;
     procedure ANotWritableVariableRefusesWrites;
-    procedure AnUnsupportedTagIsReportedAndTheOthersPublished;
+    procedure AnItemThatCannotBeAddedIsReportedAndTheOthersPublished;
     procedure APortInUseDoesNotStart;
     procedure ItStopsAndStartsAgain;
 
@@ -104,6 +112,16 @@ type
     procedure TheServerAnswersOthersWhileAWriteIsPending;
     procedure ARemovedItemEndsItsPendingWrite;
     procedure TheWrittenValueIsReadBackAtOnce;
+
+    //blocks and structures (P4)
+    procedure ABlockIsAnArrayOfItsType;
+    procedure AnIndexRangeReadsPartOfTheArray;
+    procedure AWholeArrayIsWritten;
+    procedure AnIndexRangeWritesPartOfTheArray;
+    procedure AStructureIsAnObjectWithItsItems;
+    procedure AStructItemIsWrittenWithItsOwnType;
+    procedure AStringInsideAStructureIsWritten;
+    procedure RemovingTheStructureRemovesItsItems;
   end;
 
 implementation
@@ -138,8 +156,11 @@ end;
 { TClientWriter }
 
 constructor TClientWriter.Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString;
-  ATypeIndex:Integer; ANum:Double; const AText:UTF8String);
+  ATypeIndex:Integer; ANum:Double; const AText:UTF8String; const AValues:TArrayOfDouble;
+  const ARange:AnsiString);
 begin
+  Values := Copy(AValues);
+  Range := ARange;
   Url := AUrl;
   Ns := ANs;
   Id := AId;
@@ -149,6 +170,28 @@ begin
   Status := UA_STATUSCODE_BADINTERNALERROR;
   FreeOnTerminate := false;
   inherited Create(false);
+end;
+
+function TClientWriter.WriteRange(c:PUA_Client; const v:UA_Variant):UA_StatusCode;
+var
+  item:UA_WriteValue;
+  req:UA_WriteRequest;
+  resp:UA_WriteResponse;
+begin
+  FillChar(item, SizeOf(item), 0);
+  item.nodeId := UA_NODEID_STRING(Ns, Id);
+  item.attributeId := Ord(UA_ATTRIBUTEID_VALUE);
+  item.indexRange := _UA_STRING(Range);
+  item.value.value := v;
+  item.value.flags := UA_DATAVALUE_HASVALUE;
+  UA_WriteRequest_init(req);
+  req.nodesToWrite := @item;
+  req.nodesToWriteSize := 1;
+  resp := UA_Client_Service_write(c, req);
+  Result := resp.responseHeader.serviceResult;
+  if (Result=UA_STATUSCODE_GOOD) and (resp.resultsSize=1) then
+    Result := resp.results^;
+  UA_WriteResponse_clear(resp);
 end;
 
 procedure TClientWriter.Execute;
@@ -166,13 +209,18 @@ begin
     if Status<>UA_STATUSCODE_GOOD then exit;
     if TypeIndex=UA_TYPES_STRING then
       OPCUATextToVariant(@UA_TYPES[TypeIndex], Text, v)
+    else if Values<>nil then
+      OPCUANumbersToVariant(@UA_TYPES[TypeIndex], true, Values, v)
     else begin
       SetLength(vals, 1);
       vals[0] := Num;
       OPCUANumbersToVariant(@UA_TYPES[TypeIndex], false, vals, v);
     end;
     t0 := GetTickCount64;
-    Status := UA_Client_writeValueAttribute(c, UA_NODEID_STRING(Ns, Id), @v);
+    if Range<>'' then
+      Status := WriteRange(c, v)
+    else
+      Status := UA_Client_writeValueAttribute(c, UA_NODEID_STRING(Ns, Id), @v);
     Elapsed := GetTickCount64-t0;
     UA_clear(@v, @UA_TYPES[UA_TYPES_VARIANT]);
     UA_Client_disconnect(c);
@@ -586,16 +634,15 @@ begin
   AssertEquals('tag untouched', 1, T.Value, 0);
 end;
 
-procedure TTestOPCUAServer.AnUnsupportedTagIsReportedAndTheOthersPublished;
-var
-  B:TPLCBlock;
+procedure TTestOPCUAServer.AnItemThatCannotBeAddedIsReportedAndTheOthersPublished;
 begin
-  B := TPLCBlock.Create(FOwner);
-  B.Name := 'Block1';
-  Publish(B);
+  //two items with the same NodeId: the second can not be added
+  Publish(NewTag('Dup1', pttWord), '', 'Same');
+  Publish(NewTag('Dup2', pttWord), '', 'Same');
   Publish(NewTag('Fine', pttWord));
   Start;
-  AssertTrue('reported: '+FServer.LastError, Pos('not supported', FServer.LastError)>0);
+  StatusOf('Fine'); //the server has applied the commands
+  AssertTrue('reported: '+FServer.LastError, Pos('Same', FServer.LastError)>0);
   AssertEquals('the other one is there', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Fine')));
 end;
 
@@ -876,6 +923,213 @@ begin
   AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
                OPCUAStatusText(WriteNode('Echo', UA_TYPES_BYTE, 77)));
   AssertEquals('read back at once', 77, ReadNum('Echo'), 0);
+end;
+
+function TTestOPCUAServer.ReadArray(const Id, Range:String; out TypeIndex:Integer;
+  out Vals:TArrayOfDouble):UA_StatusCode;
+var
+  s:AnsiString;
+  v:UA_Variant;
+  k:Integer;
+begin
+  CheckSynchronize(0);
+  s := Id;
+  TypeIndex := -1;
+  Vals := nil;
+  Result := UA_Client_readValueAttribute_range(FClient, UA_NODEID_STRING(FServer.NamespaceIndex, s), Range, v);
+  if v._type<>nil then
+    for k:=0 to UA_TYPES_COUNT-1 do
+      if v._type=@UA_TYPES[k] then begin
+        TypeIndex := k;
+        break;
+      end;
+  if v.data<>nil then
+    OPCUAVariantToNumbers(v, Vals);
+  UA_clear(@v, @UA_TYPES[UA_TYPES_VARIANT]);
+end;
+
+function TTestOPCUAServer.NewBlock(const AName:String; TT:TTagType; Size:Integer):TPLCBlock;
+var
+  i:Integer;
+  vals:TArrayOfDouble;
+begin
+  Result := TPLCBlock.Create(FOwner);
+  Result.Name := AName;
+  Result.TagType := TT;
+  Result.Size := Size;
+  SetLength(vals, Size);
+  for i:=0 to Size-1 do vals[i] := i+1;
+  Result.ValuesRaw := vals;
+end;
+
+//a 12 byte structure: a Word at 0, a Float at 2 and a C string of 4 bytes at 6
+function TTestOPCUAServer.NewStruct(out S:TPLCStruct; out W:TPLCStructItem; out F:TPLCStructItem;
+  out Txt:TPLCStructString):TOPCUAServerItem;
+begin
+  S := TPLCStruct.Create(FOwner);
+  S.Name := 'Recipe1';
+  S.Size := 12;
+  W := TPLCStructItem.Create(FOwner);
+  W.Name := 'Speed';
+  W.PLCBlock := S;
+  W.TagType := pttWord;
+  W.Index := 0;
+  F := TPLCStructItem.Create(FOwner);
+  F.Name := 'Ratio';
+  F.PLCBlock := S;
+  F.TagType := pttFloat;
+  F.Index := 2;
+  Txt := TPLCStructString.Create(FOwner);
+  Txt.Name := 'Code';
+  Txt.PLCBlock := S;
+  Txt.StringSize := 4;
+  Txt.Index := 6;
+  W.Value := 1234;
+  F.Value := 2.5;
+  Txt.Value := 'ab';
+  Result := Publish(S);
+end;
+
+procedure TTestOPCUAServer.ABlockIsAnArrayOfItsType;
+var
+  ti:Integer;
+  vals:TArrayOfDouble;
+begin
+  Publish(NewBlock('Block1', pttWord, 5));
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ReadArray('Block1', '', ti, vals)));
+  AssertEquals('type', String(UA_TYPES[UA_TYPES_UINT16].typeName), String(UA_TYPES[ti].typeName));
+  AssertEquals('5 elements', 5, Length(vals));
+  AssertEquals('first', 1, vals[0], 0);
+  AssertEquals('last', 5, vals[4], 0);
+end;
+
+procedure TTestOPCUAServer.AnIndexRangeReadsPartOfTheArray;
+var
+  ti:Integer;
+  vals:TArrayOfDouble;
+begin
+  Publish(NewBlock('Block2', pttSmallInt, 6));
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ReadArray('Block2', '2:4', ti, vals)));
+  AssertEquals('3 elements', 3, Length(vals));
+  AssertEquals('element 2', 3, vals[0], 0);
+  AssertEquals('element 4', 5, vals[2], 0);
+  AssertEquals('one element', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ReadArray('Block2', '5', ti, vals)));
+  AssertEquals('it', 6, vals[0], 0);
+  AssertEquals('past the end', OPCUAStatusText(UA_STATUSCODE_BADINDEXRANGENODATA),
+               OPCUAStatusText(ReadArray('Block2', '9:10', ti, vals)));
+end;
+
+procedure TTestOPCUAServer.AWholeArrayIsWritten;
+var
+  B:TPLCBlock;
+  W:TClientWriter;
+  vals:TArrayOfDouble;
+begin
+  B := NewBlock('Block3', pttWord, 4);
+  Publish(B).Writable := true;
+  Start;
+  SetLength(vals, 4);
+  vals[0] := 10; vals[1] := 20; vals[2] := 30; vals[3] := 40;
+  W := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                            'Block3', UA_TYPES_UINT16, 0, '', vals);
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Finish(W)));
+  AssertEquals('element 0', 10, B.ValueRaw[0], 0);
+  AssertEquals('element 3', 40, B.ValueRaw[3], 0);
+end;
+
+procedure TTestOPCUAServer.AnIndexRangeWritesPartOfTheArray;
+var
+  B:TPLCBlock;
+  W:TClientWriter;
+  vals:TArrayOfDouble;
+  ti:Integer;
+  back:TArrayOfDouble;
+begin
+  B := NewBlock('Block4', pttWord, 5);
+  Publish(B).Writable := true;
+  Start;
+  SetLength(vals, 2);
+  vals[0] := 70; vals[1] := 80;
+  W := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                            'Block4', UA_TYPES_UINT16, 0, '', vals, '1:2');
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Finish(W)));
+  AssertEquals('element 0 kept', 1, B.ValueRaw[0], 0);
+  AssertEquals('element 1', 70, B.ValueRaw[1], 0);
+  AssertEquals('element 2', 80, B.ValueRaw[2], 0);
+  AssertEquals('element 3 kept', 4, B.ValueRaw[3], 0);
+  ReadArray('Block4', '', ti, back);
+  AssertEquals('read back at once', 70, back[1], 0);
+end;
+
+procedure TTestOPCUAServer.AStructureIsAnObjectWithItsItems;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+  ti:Integer;
+  n:Double;
+  t:String;
+begin
+  NewStruct(S, W, F, Txt);
+  Start;
+  AssertEquals('the structure is an object (no value)', OPCUAStatusText(UA_STATUSCODE_BADATTRIBUTEIDINVALID),
+               OPCUAStatusText(StatusOf('Recipe1')));
+  CheckType('Recipe1.Speed', UA_TYPES_UINT16);
+  AssertEquals('word', 1234, ReadNum('Recipe1.Speed'), 0);
+  CheckType('Recipe1.Ratio', UA_TYPES_FLOAT);
+  AssertEquals('float', 2.5, ReadNum('Recipe1.Ratio'), 0.0001);
+  CheckType('Recipe1.Code', UA_TYPES_STRING);
+  Read('Recipe1.Code', ti, n, t);
+  AssertEquals('string', 'ab', t);
+end;
+
+procedure TTestOPCUAServer.AStructItemIsWrittenWithItsOwnType;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+begin
+  NewStruct(S, W, F, Txt).Writable := true;
+  Start;
+  AssertEquals('word', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Recipe1.Speed', UA_TYPES_UINT16, 4321)));
+  AssertEquals('float', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Recipe1.Ratio', UA_TYPES_FLOAT, 7.25)));
+  //encoded in the structure by their types: the neighbours are intact
+  AssertEquals('word in the structure', 4321, W.Value, 0);
+  AssertEquals('float in the structure', 7.25, F.Value, 0.0001);
+  AssertEquals('string untouched', 'ab', Txt.Value);
+end;
+
+procedure TTestOPCUAServer.AStringInsideAStructureIsWritten;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+begin
+  NewStruct(S, W, F, Txt).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Recipe1.Code', UA_TYPES_STRING, 0, 'xyz')));
+  AssertEquals('the string', 'xyz', Txt.Value);
+  AssertEquals('the word untouched', 1234, W.Value, 0);
+end;
+
+procedure TTestOPCUAServer.RemovingTheStructureRemovesItsItems;
+var
+  S:TPLCStruct;
+  W, F:TPLCStructItem;
+  Txt:TPLCStructString;
+  it:TOPCUAServerItem;
+begin
+  it := NewStruct(S, W, F, Txt);
+  Start;
+  AssertEquals('there', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Recipe1.Speed')));
+  it.Free;
+  AssertTrue('its items are gone', WaitStatus('Recipe1.Speed', UA_STATUSCODE_BADNODEIDUNKNOWN));
+  AssertTrue('and the object', WaitStatus('Recipe1', UA_STATUSCODE_BADNODEIDUNKNOWN));
 end;
 
 initialization
