@@ -1,0 +1,184 @@
+object Form1: TForm1
+  Left = 438
+  Height = 411
+  Top = 250
+  Width = 792
+  Caption = 'Form1'
+  ClientHeight = 411
+  ClientWidth = 792
+  LCLVersion = '4.8.0.0'
+  object HMIRecipeGrid1: THMIRecipeGrid
+    Left = 73
+    Height = 198
+    Top = 35
+    Width = 525
+    DefaultColWidth = 100
+    DefaultRowHeight = 22
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goSmoothScroll]
+    RowCount = 2
+    TabOrder = 0
+    Fields = <    
+      item
+        PLCTag = PLCTagNumber1
+        MaxValue = 100
+      end    
+      item
+        PLCTag = PLCTagNumber2
+        MaxValue = 100
+      end    
+      item
+        PLCTag = PLCTagNumber3
+        MaxValue = 100
+      end>
+    RecipeFile = 'recipes.ini'
+    NameColumnTitle = 'Recipe'
+    RowNumberTitle = '序号'
+    ColWidths = (
+      40
+      150
+      100
+      100
+      100
+    )
+    Cells = (
+      5
+      0
+      0
+      '序号'
+      1
+      0
+      'Recipe'
+      2
+      0
+      'Field 0'
+      3
+      0
+      'Field 1'
+      4
+      0
+      'Field 2'
+    )
+  end
+  object HMIRecipeButton1: THMIRecipeButton
+    Left = 72
+    Height = 66
+    Top = 274
+    Width = 80
+    Caption = 'Add recipe'
+    ShowHint = True
+    ParentShowHint = False
+    RecipeGrid = HMIRecipeGrid1
+  end
+  object HMIRecipeButton2: THMIRecipeButton
+    Left = 188
+    Height = 59
+    Top = 276
+    Width = 79
+    Caption = 'Delete recipe'
+    ShowHint = True
+    ParentShowHint = False
+    RecipeGrid = HMIRecipeGrid1
+    Command = rcDeleteRecipe
+  end
+  object HMIRecipeButton3: THMIRecipeButton
+    Left = 440
+    Height = 61
+    Top = 279
+    Width = 98
+    Caption = 'Save library'
+    ShowHint = True
+    ParentShowHint = False
+    RecipeGrid = HMIRecipeGrid1
+    Command = rcSaveLibrary
+  end
+  object HMILabel1: THMILabel
+    Left = 616
+    Height = 31
+    Top = 136
+    Width = 43
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber2
+    FormatDateTimeOptions = []
+  end
+  object HMILabel2: THMILabel
+    Left = 616
+    Height = 17
+    Top = 96
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber1
+    FormatDateTimeOptions = []
+  end
+  object HMILabel3: THMILabel
+    Left = 616
+    Height = 17
+    Top = 192
+    Width = 65
+    Enabled = True
+    NumberFormat = '#0.0'
+    PLCTag = PLCTagNumber3
+    FormatDateTimeOptions = []
+  end
+  object HMIRecipeButton4: THMIRecipeButton
+    Left = 287
+    Height = 53
+    Top = 283
+    Width = 99
+    Caption = 'Download'
+    ShowHint = True
+    ParentShowHint = False
+    RecipeGrid = HMIRecipeGrid1
+    Command = rcDownload
+  end
+  object PLCTagNumber1: TPLCTagNumber
+    TagGUID = '{8DD338DD-96E8-4C35-A574-CD3730D3C179}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 696
+    Top = 24
+  end
+  object PLCTagNumber2: TPLCTagNumber
+    TagGUID = '{39544ED1-D729-47C6-B6F8-C8207736809D}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 744
+    Top = 24
+  end
+  object PLCTagNumber3: TPLCTagNumber
+    TagGUID = '{D6D76713-AAE8-496D-9CB1-3739E49AC1C3}'
+    PLCRack = 0
+    PLCSlot = 0
+    PLCStation = 0
+    MemFile_DB = 0
+    MemAddress = 0
+    MemSubElement = 0
+    MemReadFunction = 0
+    MemWriteFunction = 0
+    LongAddress = ''
+    EnableMaxValue = False
+    EnableMinValue = False
+    Left = 644
+    Top = 21
+  end
+end

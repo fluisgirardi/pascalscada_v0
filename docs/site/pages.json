@@ -231,6 +231,19 @@
       "menu_item": null
     },
     {
+      "slug": "hmi-recipe-controls",
+      "id": null,
+      "title": {
+        "en": "Recipe controls (THMIRecipeGrid)",
+        "pb": "Controles de receita (THMIRecipeGrid)"
+      },
+      "menu": {
+        "parent": 170,
+        "after": "keyboard-manager"
+      },
+      "menu_item": null
+    },
+    {
       "slug": "writing-a-protocol-driver",
       "id": 104,
       "title": {
