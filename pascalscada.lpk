@@ -31,7 +31,7 @@
     <Description Value="PascalSCADA main components"/>
     <License Value="LGPL v2.1 with linking exception"/>
     <Version Minor="8" Release="1"/>
-    <Files Count="114">
+    <Files Count="115">
       <Item1>
         <Filename Value="src\scada\MelsecDriver.pas"/>
         <UnitName Value="MelsecDriver"/>
@@ -488,6 +488,10 @@
         <Filename Value="src\scada\opcuadriver.pas"/>
         <UnitName Value="OPCUADriver"/>
       </Item114>
+      <Item115>
+        <Filename Value="src\scada\opcuaserver.pas"/>
+        <UnitName Value="opcuaserver"/>
+      </Item115>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
