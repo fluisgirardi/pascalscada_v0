@@ -31,6 +31,23 @@ uses
 
 type
 
+  { TClientWriter: writes from its own client and thread (the write ends in the main thread) }
+
+  TClientWriter = class(TThread)
+  protected
+    procedure Execute; override;
+  public
+    Url, Id:AnsiString;
+    Ns:Word;
+    TypeIndex:Integer;
+    Num:Double;
+    Text:UTF8String;
+    Status:UA_StatusCode;
+    Elapsed:QWord;
+    constructor Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString; ATypeIndex:Integer;
+                       ANum:Double; const AText:UTF8String = '');
+  end;
+
   { TTestOPCUAServer }
 
   TTestOPCUAServer = class(TTestCase)
@@ -49,6 +66,10 @@ type
     function  WaitStatus(const Id:String; St:UA_StatusCode; Ms:Integer = 3000):Boolean;
     function  WaitNum(const Id:String; V:Double; Ms:Integer = 3000):Boolean;
     procedure CheckType(const Id:String; Expected:Integer);
+    function  StartWriter(const Id:String; TypeIndex:Integer; Num:Double; const Text:UTF8String = ''):TClientWriter;
+    function  Finish(W:TClientWriter; Ms:Integer = 5000):UA_StatusCode;
+    function  WriteNode(const Id:String; TypeIndex:Integer; Num:Double; const Text:UTF8String = ''):UA_StatusCode;
+    function  NewDriverTag(const AName:String; TT:TTagType; out D:TLogTestDriver):TPLCTagNumber;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -69,6 +90,20 @@ type
     procedure AnUnsupportedTagIsReportedAndTheOthersPublished;
     procedure APortInUseDoesNotStart;
     procedure ItStopsAndStartsAgain;
+
+    //writes (P3)
+    procedure AWriteToAMemoryTagIsGood;
+    procedure AWriteReachesTheDeviceAndTheClientWaitsForIt;
+    procedure ADeviceFailureReachesTheClient;
+    procedure ATypeMismatchIsRefused;
+    procedure AValueOutOfTheTagLimitsIsRefusedWithoutWriting;
+    procedure ScaledDoubleWritesTheRawValue;
+    procedure ASingleBitIsWrittenIntoItsWord;
+    procedure ABitRangeIsWrittenIntoItsWord;
+    procedure AStringIsWritten;
+    procedure TheServerAnswersOthersWhileAWriteIsPending;
+    procedure ARemovedItemEndsItsPendingWrite;
+    procedure TheWrittenValueIsReadBackAtOnce;
   end;
 
 implementation
@@ -99,6 +134,52 @@ begin
   end;
 end;
 {$ENDIF}
+
+{ TClientWriter }
+
+constructor TClientWriter.Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString;
+  ATypeIndex:Integer; ANum:Double; const AText:UTF8String);
+begin
+  Url := AUrl;
+  Ns := ANs;
+  Id := AId;
+  TypeIndex := ATypeIndex;
+  Num := ANum;
+  Text := AText;
+  Status := UA_STATUSCODE_BADINTERNALERROR;
+  FreeOnTerminate := false;
+  inherited Create(false);
+end;
+
+procedure TClientWriter.Execute;
+var
+  c:PUA_Client;
+  v:UA_Variant;
+  vals:TArrayOfDouble;
+  t0:QWord;
+begin
+  OPCUAMaskFPU;
+  c := UA_Client_new();
+  try
+    UA_ClientConfig_setDefault(UA_Client_getConfig(c));
+    Status := UA_Client_connect(c, PAnsiChar(Url));
+    if Status<>UA_STATUSCODE_GOOD then exit;
+    if TypeIndex=UA_TYPES_STRING then
+      OPCUATextToVariant(@UA_TYPES[TypeIndex], Text, v)
+    else begin
+      SetLength(vals, 1);
+      vals[0] := Num;
+      OPCUANumbersToVariant(@UA_TYPES[TypeIndex], false, vals, v);
+    end;
+    t0 := GetTickCount64;
+    Status := UA_Client_writeValueAttribute(c, UA_NODEID_STRING(Ns, Id), @v);
+    Elapsed := GetTickCount64-t0;
+    UA_clear(@v, @UA_TYPES[UA_TYPES_VARIANT]);
+    UA_Client_disconnect(c);
+  finally
+    UA_Client_delete(c);
+  end;
+end;
 
 { TTestOPCUAServer }
 
@@ -240,6 +321,40 @@ begin
   st := Read(Id, ti, n, t);
   AssertEquals(Id+' status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
   AssertEquals(Id+' type', String(UA_TYPES[Expected].typeName), String(UA_TYPES[ti].typeName));
+end;
+
+function TTestOPCUAServer.StartWriter(const Id:String; TypeIndex:Integer; Num:Double;
+  const Text:UTF8String):TClientWriter;
+begin
+  Result := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                                 Id, TypeIndex, Num, Text);
+end;
+
+function TTestOPCUAServer.Finish(W:TClientWriter; Ms:Integer):UA_StatusCode;
+var
+  t0:QWord;
+begin
+  //the write is done in this (the main) thread: keep its queue going
+  t0 := GetTickCount64;
+  while (not W.Finished) and (GetTickCount64-t0<QWord(Ms)) do
+    CheckSynchronize(5);
+  W.WaitFor;
+  Result := W.Status;
+  W.Free;
+end;
+
+function TTestOPCUAServer.WriteNode(const Id:String; TypeIndex:Integer; Num:Double;
+  const Text:UTF8String):UA_StatusCode;
+begin
+  Result := Finish(StartWriter(Id, TypeIndex, Num, Text));
+end;
+
+function TTestOPCUAServer.NewDriverTag(const AName:String; TT:TTagType; out D:TLogTestDriver):TPLCTagNumber;
+begin
+  D := TLogTestDriver.Create(FOwner);
+  Result := NewTag(AName, TT);
+  Result.RefreshTime := 20;
+  Result.ProtocolDriver := D;
 end;
 
 procedure TTestOPCUAServer.EachTagTypeBecomesItsNativeType;
@@ -526,6 +641,241 @@ begin
   T.Value := 6;
   Start;
   AssertEquals('published again, current value', 6, ReadNum('Again'), 0);
+end;
+
+procedure TTestOPCUAServer.AWriteToAMemoryTagIsGood;
+var
+  T:TPLCTagNumber;
+begin
+  T := NewTag('Setpoint', pttWord);
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Setpoint', UA_TYPES_UINT16, 42)));
+  AssertEquals('the tag has it', 42, T.Value, 0);
+end;
+
+procedure TTestOPCUAServer.AWriteReachesTheDeviceAndTheClientWaitsForIt;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  st:UA_StatusCode;
+  spent:QWord;
+begin
+  T := NewDriverTag('Speed', pttByte, D);
+  D.WriteDelayMs := 300;
+  Publish(T).Writable := true;
+  Start;
+  W := StartWriter('Speed', UA_TYPES_BYTE, 9);
+  try
+    while not W.Finished do CheckSynchronize(5);
+    st := W.Status;
+    spent := W.Elapsed;
+  finally
+    W.WaitFor;
+    W.Free;
+  end;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  AssertTrue('the client waited for the device ('+IntToStr(spent)+' ms)', spent>=250);
+  AssertEquals('one device write', 1, D.WriteCount);
+  AssertEquals('the value written', 9, D.LastWritten[0], 0);
+end;
+
+procedure TTestOPCUAServer.ADeviceFailureReachesTheClient;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  T := NewDriverTag('Valve', pttByte, D);
+  D.WriteResult := ioCommError;
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('the device failure', OPCUAStatusText(UA_STATUSCODE_BADCOMMUNICATIONERROR),
+               OPCUAStatusText(WriteNode('Valve', UA_TYPES_BYTE, 1)));
+  D.WriteResult := ioTimeOut;
+  AssertEquals('a timeout too', OPCUAStatusText(UA_STATUSCODE_BADCOMMUNICATIONERROR),
+               OPCUAStatusText(WriteNode('Valve', UA_TYPES_BYTE, 1)));
+end;
+
+procedure TTestOPCUAServer.ATypeMismatchIsRefused;
+var
+  T:TPLCTagNumber;
+  st:UA_StatusCode;
+begin
+  T := NewTag('Count', pttWord);
+  T.Value := 3;
+  Publish(T).Writable := true;
+  Start;
+  st := WriteNode('Count', UA_TYPES_INT32, 5);
+  AssertTrue('refused: '+OPCUAStatusText(st), st<>UA_STATUSCODE_GOOD);
+  AssertEquals('tag untouched', 3, T.Value, 0);
+end;
+
+procedure TTestOPCUAServer.AValueOutOfTheTagLimitsIsRefusedWithoutWriting;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  T := NewDriverTag('Limited', pttByte, D);
+  T.EnableMaxValue := true;
+  T.MaxValue := 100;
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('out of the limits', OPCUAStatusText(UA_STATUSCODE_BADOUTOFRANGE),
+               OPCUAStatusText(WriteNode('Limited', UA_TYPES_BYTE, 200)));
+  AssertEquals('the device was not written', 0, D.WriteCount);
+  AssertEquals('inside the limits', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Limited', UA_TYPES_BYTE, 50)));
+end;
+
+procedure TTestOPCUAServer.ScaledDoubleWritesTheRawValue;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  sp:TLinearScaleProcessor;
+begin
+  sp := TLinearScaleProcessor.Create(FOwner);
+  sp.PLCMin := 0;
+  sp.PLCMax := 100;
+  sp.SysMin := 0;
+  sp.SysMax := 1000;
+  T := NewDriverTag('Level', pttByte, D);
+  T.ScaleProcessor := sp;
+  with Publish(T) do begin
+    Writable := true;
+    DataType := odtScaledDouble;
+  end;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Level', UA_TYPES_DOUBLE, 500)));
+  AssertEquals('the raw value reached the device', 50, D.LastWritten[0], 0.0001);
+end;
+
+procedure TTestOPCUAServer.ASingleBitIsWrittenIntoItsWord;
+var
+  W:TPLCTagNumber;
+  B:TTagBit;
+begin
+  W := NewTag('Word1', pttWord);
+  B := TTagBit.Create(FOwner);
+  B.Name := 'Bit1';
+  B.PLCTag := W;
+  B.StartBit := 1;
+  B.EndBit := 1;
+  W.Value := 5;
+  Publish(B).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Bit1', UA_TYPES_BOOLEAN, 1)));
+  AssertEquals('5 with bit 1 set', 7, W.Value, 0);
+  AssertEquals('cleared again', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Bit1', UA_TYPES_BOOLEAN, 0)));
+  AssertEquals('5 again', 5, W.Value, 0);
+end;
+
+procedure TTestOPCUAServer.ABitRangeIsWrittenIntoItsWord;
+var
+  W:TPLCTagNumber;
+  B:TTagBit;
+begin
+  W := NewTag('Word2', pttWord);
+  B := TTagBit.Create(FOwner);
+  B.Name := 'Nibble1';
+  B.PLCTag := W;
+  B.StartBit := 4;
+  B.EndBit := 7;
+  W.Value := $0F0F;
+  Publish(B).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Nibble1', UA_TYPES_UINT16, 3)));
+  AssertEquals('bits 4..7 = 3, the others kept', $0F3F, W.Value, 0);
+  AssertEquals('more than 4 bits hold', OPCUAStatusText(UA_STATUSCODE_BADOUTOFRANGE),
+               OPCUAStatusText(WriteNode('Nibble1', UA_TYPES_UINT16, 16)));
+end;
+
+procedure TTestOPCUAServer.AStringIsWritten;
+var
+  S:TPLCString;
+begin
+  S := TPLCString.Create(FOwner);
+  S.Name := 'Batch';
+  S.StringSize := 20;
+  S.Value := 'old';
+  Publish(S).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Batch', UA_TYPES_STRING, 0, 'new batch')));
+  AssertEquals('the tag has it', 'new batch', S.Value);
+end;
+
+procedure TTestOPCUAServer.TheServerAnswersOthersWhileAWriteIsPending;
+var
+  T, O:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  t0, spent:QWord;
+begin
+  T := NewDriverTag('Slow', pttByte, D);
+  D.WriteDelayMs := 800;
+  Publish(T).Writable := true;
+  O := NewTag('Other', pttWord);
+  O.Value := 11;
+  Publish(O);
+  Start;
+  W := StartWriter('Slow', UA_TYPES_BYTE, 4);
+  try
+    //let the write reach the device
+    t0 := GetTickCount64;
+    while (D.WriteCount=0) and (GetTickCount64-t0<300) do CheckSynchronize(5);
+    Sleep(50);
+    t0 := GetTickCount64;
+    AssertEquals('another variable is read', 11, ReadNum('Other'), 0);
+    spent := GetTickCount64-t0;
+    AssertTrue('right away ('+IntToStr(spent)+' ms)', spent<300);
+    AssertFalse('while the write is still pending', W.Finished);
+  finally
+    AssertEquals('and the write ends good', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(Finish(W)));
+  end;
+end;
+
+procedure TTestOPCUAServer.ARemovedItemEndsItsPendingWrite;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  it:TOPCUAServerItem;
+  t0:QWord;
+begin
+  T := NewDriverTag('Going', pttByte, D);
+  D.WriteDelayMs := 1500;
+  it := Publish(T);
+  it.Writable := true;
+  Start;
+  W := StartWriter('Going', UA_TYPES_BYTE, 2);
+  t0 := GetTickCount64;
+  while (D.WriteCount=0) and (GetTickCount64-t0<1000) do CheckSynchronize(5);
+  //the device is still busy: the item goes away
+  t0 := GetTickCount64;
+  while (GetTickCount64-t0<100) do CheckSynchronize(5);
+  it.Free;
+  AssertEquals('ended right away, not after the device', OPCUAStatusText(UA_STATUSCODE_BADNODEIDUNKNOWN),
+               OPCUAStatusText(Finish(W, 1000)));
+end;
+
+procedure TTestOPCUAServer.TheWrittenValueIsReadBackAtOnce;
+var
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+begin
+  T := NewDriverTag('Echo', pttByte, D);
+  T.RefreshTime := 5000; //no scan to bring it in
+  Publish(T).Writable := true;
+  Start;
+  AssertEquals('status', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteNode('Echo', UA_TYPES_BYTE, 77)));
+  AssertEquals('read back at once', 77, ReadNum('Echo'), 0);
 end;
 
 initialization

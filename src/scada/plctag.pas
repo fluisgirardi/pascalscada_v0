@@ -26,6 +26,24 @@ uses
 
 type
 
+  TPLCTag = class;
+
+  {$IFDEF PORTUGUES}
+  {:
+  Resultado de um comando de um tag (leitura ou escrita), com o id da
+  requisicao que o driver devolveu (ScanWrite/ScanRead). Chamado na thread
+  principal, antes de o tag aplicar os valores.
+  }
+  {$ELSE}
+  {:
+  Result of a command of a tag (read or write), with the id of the request the
+  driver returned (ScanWrite/ScanRead). Called in the main thread, before the
+  tag applies the values.
+  }
+  {$ENDIF}
+  TTagCommandResultEvent = procedure(Sender:TPLCTag; TagCommand:TTagCommand; ReqID:LongWord;
+                                     LastResult:TProtocolIOResult) of object;
+
   {$IFDEF PORTUGUES}
   {:
   @abstract(Classe base para todos os tags de comunicação.)
@@ -47,6 +65,7 @@ type
     FProtocoloOnLoading:TProtocolDriver;
     //read state last posted to the log: 0 none yet, 1 ok, 2 failing
     FLogReadState:Byte;
+    FCommandResultHandlers:array of TTagCommandResultEvent;
     function GetLastScanReadReqID: Int64;
     function GetLastScanWriteReqID: Int64;
     procedure RebuildTagGUID;
@@ -443,16 +462,18 @@ type
     {:
     Publica o resultado de um comando do tag: escritas sempre (llDebug, ou
     llWarning na falha), leituras em llTrace e, quando a leitura passa a falhar
-    ou volta, uma vez so' (llWarning / llInfo). Chamado por TagCommandCallBack.
+    ou volta, uma vez so' (llWarning / llInfo); antes, avisa os handlers de
+    AddCommandResultHandler. Chamado por TagCommandCallBack.
     }
     {$ELSE}
     {:
     Posts the result of a tag command: writes always (llDebug, or llWarning on
     failure), reads at llTrace and, when reading starts failing or comes back,
-    once (llWarning / llInfo). Called by TagCommandCallBack.
+    once (llWarning / llInfo); before that it tells the handlers of
+    AddCommandResultHandler. Called by TagCommandCallBack.
     }
     {$ENDIF}
-    procedure LogCommandResult(TagCommand:TTagCommand; LastResult:TProtocolIOResult);
+    procedure LogCommandResult(ReqID:LongWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult);
 
     {$IFDEF PORTUGUES}
     {:
@@ -647,6 +668,13 @@ type
     {$ENDIF}
     property LastScanWriteReqID:Int64 read GetLastScanWriteReqID;
   public
+    {$IFDEF PORTUGUES}
+    //: Passa a receber o resultado de cada comando do tag (veja TTagCommandResultEvent).
+    {$ELSE}
+    //: Starts getting the result of each command of the tag (see TTagCommandResultEvent).
+    {$ENDIF}
+    procedure AddCommandResultHandler(Handler:TTagCommandResultEvent);
+    procedure RemoveCommandResultHandler(Handler:TTagCommandResultEvent);
     //: @exclude
     constructor Create(AOwner:TComponent); override;
     //: @exclude
@@ -848,10 +876,44 @@ begin
   end;
 end;
 
-procedure TPLCTag.LogCommandResult(TagCommand:TTagCommand; LastResult:TProtocolIOResult);
+procedure TPLCTag.AddCommandResultHandler(Handler:TTagCommandResultEvent);
+var
+  i:Integer;
+begin
+  for i:=0 to High(FCommandResultHandlers) do
+    if (TMethod(FCommandResultHandlers[i]).Code=TMethod(Handler).Code) and
+       (TMethod(FCommandResultHandlers[i]).Data=TMethod(Handler).Data) then
+      exit;
+  SetLength(FCommandResultHandlers, Length(FCommandResultHandlers)+1);
+  FCommandResultHandlers[High(FCommandResultHandlers)] := Handler;
+end;
+
+procedure TPLCTag.RemoveCommandResultHandler(Handler:TTagCommandResultEvent);
+var
+  i, j:Integer;
+begin
+  for i:=High(FCommandResultHandlers) downto 0 do
+    if (TMethod(FCommandResultHandlers[i]).Code=TMethod(Handler).Code) and
+       (TMethod(FCommandResultHandlers[i]).Data=TMethod(Handler).Data) then begin
+      for j:=i to High(FCommandResultHandlers)-1 do
+        FCommandResultHandlers[j] := FCommandResultHandlers[j+1];
+      SetLength(FCommandResultHandlers, Length(FCommandResultHandlers)-1);
+    end;
+end;
+
+procedure TPLCTag.LogCommandResult(ReqID:LongWord; TagCommand:TTagCommand; LastResult:TProtocolIOResult);
 const
   Kind:array[TTagCommand] of String = ('scan', 'scan', 'sync', 'sync', 'internal', 'single scan');
+var
+  handlers:array of TTagCommandResultEvent;
+  i:Integer;
 begin
+  //the handlers may remove themselves while called: a copy is walked
+  if Length(FCommandResultHandlers)>0 then begin
+    handlers := Copy(FCommandResultHandlers);
+    for i:=0 to High(handlers) do
+      handlers[i](Self, TagCommand, ReqID, LastResult);
+  end;
   //a tag without driver is not a failure
   if LastResult in [ioNone, ioNullDriver] then exit;
   case TagCommand of
@@ -886,7 +948,7 @@ procedure TPLCTag.TagCommandCallBack(const ReqID: LongWord;
 var
   c, poffset:LongInt;
 begin
-  LogCommandResult(TagCommand, LastResult);
+  LogCommandResult(ReqID, TagCommand, LastResult);
 
   if (not FFirtsRead) and (TagCommand =tcScanRead) and (LastResult=ioOk) and (ValuesTimeStamp<>PClockMonotonicTimeStamp) then begin
     inc(FTotalTime, (ValuesTimeStamp - PClockMonotonicTimeStamp));

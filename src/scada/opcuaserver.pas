@@ -84,6 +84,7 @@ type
     FIsText:Boolean;
     FLastStatus:UA_StatusCode;
     FStatusTag:TPLCTag;
+    FCanWrite:Boolean;
     procedure SetDataType(AValue:TOPCUAServerDataType);
     procedure SetDescription(const AValue:String);
     procedure SetFolder(const AValue:String);
@@ -133,6 +134,27 @@ type
   TOPCUAServerThread = class;
   TOPCUAServerTagMap = specialize TDictionary<TPLCTag, TFPList>;
 
+  //: A write of a client, from the server thread to the main thread (internal).
+  TOPCUAServerWriteRequest = record
+    Id:Int64;
+    Key:Integer;
+    Num:Double;
+    Text:UTF8String;
+  end;
+
+  //: A write waiting for the result of the tag (internal, main thread).
+  TOPCUAServerPendingWrite = class
+  public
+    Id:Int64;
+    Key:Integer;
+    ResultTag:TPLCTag;
+    ReqID:Int64;
+    Num:Double;
+    Text:UTF8String;
+    Done:Boolean;
+    Res:TProtocolIOResult;
+  end;
+
   {$IFDEF PORTUGUES}
   //: Nivel minimo das mensagens do open62541 que vao para o log (lcProtocol).
   {$ELSE}
@@ -172,6 +194,13 @@ type
     FNamespaceIndex:Word;
     //tag -> items that publish it or take their status from it
     FTagItems:TOPCUAServerTagMap;
+    //writes of the clients: queued by the server thread, done in the main thread
+    FWriteLock:TCriticalSection;
+    FWriteQueue:array of TOPCUAServerWriteRequest;
+    FWriteQueueCount:Integer;
+    FWriteQueued:Boolean;
+    FPendingWrites:TFPList;     //TOPCUAServerPendingWrite waiting for the tag's result
+    FCurrentWrite:TOPCUAServerPendingWrite;
     function  GetLastError:String;
     function  GetRunning:Boolean;
     procedure SetActive(AValue:Boolean);
@@ -192,6 +221,14 @@ type
     procedure TagReadDone(Sender:TObject);
     procedure TagRemoved(Sender:TObject);
     procedure DoInactiveCheck;
+    procedure QueueWrite(const Req:TOPCUAServerWriteRequest);
+    procedure ProcessWrites;
+    function  StartWrite(Item:TOPCUAServerItem; const Req:TOPCUAServerWriteRequest):UA_StatusCode;
+    procedure TagCommandResult(Sender:TPLCTag; TagCommand:TTagCommand; ReqID:LongWord; LastResult:TProtocolIOResult);
+    procedure CompleteWrite(P:TOPCUAServerPendingWrite; Status:UA_StatusCode);
+    procedure FailPendingWrites(Key:Integer; ResultTag:TPLCTag; Status:UA_StatusCode);
+    procedure ReleaseResultTag(ATag:TPLCTag);
+    function  ItemByKey(Key:Integer):TOPCUAServerItem;
   protected
     procedure Loaded; override;
     procedure Notification(AComponent:TComponent; Operation:TOperation); override;
@@ -223,7 +260,7 @@ type
 
   { server thread: internal }
 
-  TOPCUAServerCmdKind = (sckAdd, sckRemove, sckValue);
+  TOPCUAServerCmdKind = (sckAdd, sckRemove, sckValue, sckWriteResult);
 
   TOPCUAServerCmd = record
     Kind:TOPCUAServerCmdKind;
@@ -232,6 +269,9 @@ type
     NodeId, BrowseName, Folder, Description:String;
     TypeIndex:Integer;
     IsText:Boolean;
+    Writable:Boolean;
+    //write result
+    WriteId:Int64;
     //add and value
     Num:Double;
     Text:UTF8String;
@@ -250,6 +290,7 @@ type
     Text:UTF8String;
     Status:UA_StatusCode;
     Time:UA_DateTime;
+    Thread:TOPCUAServerThread;
   end;
   TOPCUAServerNodeMap = specialize TDictionary<Integer, TOPCUAServerNode>;
 
@@ -272,6 +313,11 @@ type
     FStartError:String;
     FNodes:TOPCUAServerNodeMap;
     FFolders:TStringList;
+    //writes waiting for their result: id -> the value pointer open62541 gave
+    FPending:specialize TDictionary<Int64, PUA_DataValue>;
+    FWriteSeq:Int64;
+    function  BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue):UA_StatusCode;
+    procedure EndWrite(Id:Int64; Status:UA_StatusCode);
     procedure ApplyCmds;
     procedure AddNode(const Cmd:TOPCUAServerCmd);
     procedure RemoveNode(Key:Integer);
@@ -299,10 +345,11 @@ implementation
 
 uses
   PLCNumber, TagBit, PLCBlock, PLCBlockElement, PLCString, PLCStructString,
-  NumExprTag, ProtocolTypes, OPCUAClient, OPCUAValues, pscadalog;
+  NumExprTag, ProtocolTypes, ValueProcessor, OPCUAClient, OPCUAValues, pscadalog;
 
 type
   TPLCTagAccess = class(TPLCTag);
+  TPLCNumberAccess = class(TPLCNumber);
 
 const
   StartTimeoutMs = 10000;
@@ -532,6 +579,33 @@ begin
   end;
 end;
 
+{$IFDEF PORTUGUES}
+{:
+Escrita de um cliente (thread do servidor): confere o valor e o entrega a
+thread principal; o resultado do tag chega depois (setAsyncWriteResult).
+}
+{$ELSE}
+{:
+Write of a client (server thread): checks the value and hands it to the main
+thread; the tag's result comes later (setAsyncWriteResult).
+}
+{$ENDIF}
+function NodeWrite(server:PUA_Server; const sessionId:PUA_NodeId; sessionContext:Pointer;
+  const nodeId:PUA_NodeId; nodeContext:Pointer; const range:PUA_NumericRange;
+  const value:PUA_DataValue):UA_StatusCode; cdecl;
+var
+  n:TOPCUAServerNode;
+begin
+  try
+    n := TOPCUAServerNode(nodeContext);
+    if (range<>nil) and (range^.dimensionsSize>0) then
+      exit(UA_STATUSCODE_BADINDEXRANGEINVALID);
+    Result := n.Thread.BeginWrite(n, value);
+  except
+    Result := UA_STATUSCODE_BADINTERNALERROR;
+  end;
+end;
+
 { TOPCUAServerItem }
 
 constructor TOPCUAServerItem.Create(ACollection:TCollection);
@@ -699,6 +773,7 @@ begin
   FNodes := TOPCUAServerNodeMap.Create;
   FFolders := TStringList.Create;
   FFolders.Sorted := true;
+  FPending := specialize TDictionary<Int64, PUA_DataValue>.Create;
   FillChar(FLogger, SizeOf(FLogger), 0);
   FLogger.log := @ServerLog;
   FLogger.context := Self;
@@ -714,6 +789,7 @@ begin
   for n in FNodes.Values do n.Free;
   FNodes.Free;
   FFolders.Free;
+  FPending.Free;
   FStarted.Free;
   FWake.Free;
   FLock.Free;
@@ -757,6 +833,7 @@ begin
     case cmds[i].Kind of
       sckAdd:    AddNode(cmds[i]);
       sckRemove: RemoveNode(cmds[i].Key);
+      sckWriteResult: EndWrite(cmds[i].WriteId, cmds[i].Status);
       sckValue:
         if FNodes.TryGetValue(cmds[i].Key, n) then begin
           n.Num := cmds[i].Num;
@@ -837,6 +914,7 @@ begin
   n.Text := Cmd.Text;
   n.Status := Cmd.Status;
   n.Time := UA_DateTimeFromDateTime(Cmd.TimeUTC);
+  n.Thread := Self;
 
   attr := UA_VariableAttributes_default;
   attr.dataType := UA_TYPES[Cmd.TypeIndex].typeId;
@@ -844,10 +922,15 @@ begin
   attr.displayName := _UA_LOCALIZEDTEXT_ALLOC('', Cmd.BrowseName);
   if Cmd.Description<>'' then
     attr.description := _UA_LOCALIZEDTEXT_ALLOC('', Cmd.Description);
-  attr.accessLevel := UA_ACCESSLEVELMASK_READ;
-  attr.userAccessLevel := attr.accessLevel;
   src.read := @NodeRead;
-  src.write := nil;
+  if Cmd.Writable then begin
+    attr.accessLevel := UA_ACCESSLEVELMASK_READ or UA_ACCESSLEVELMASK_WRITE;
+    src.write := @NodeWrite;
+  end else begin
+    attr.accessLevel := UA_ACCESSLEVELMASK_READ;
+    src.write := nil;
+  end;
+  attr.userAccessLevel := attr.accessLevel;
   st := UA_Server_addCallbackValueSourceVariableNode(FServer, UA_NODEID_STRING(FNs, idText), parent,
           UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES), _UA_QUALIFIEDNAME(FNs, browse),
           UA_NODEID_NUMERIC(0, UA_NS0ID_BASEDATAVARIABLETYPE), attr, src, n, nil);
@@ -860,6 +943,57 @@ begin
     exit;
   end;
   FNodes.Add(Cmd.Key, n);
+end;
+
+function TOPCUAServerThread.BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue):UA_StatusCode;
+var
+  req:TOPCUAServerWriteRequest;
+  vals:TArrayOfDouble;
+  txt:UTF8String;
+  id:Int64;
+  stale:Int64;
+  pair:specialize TPair<Int64, PUA_DataValue>;
+begin
+  if (Value^.flags and UA_DATAVALUE_HASVALUE)=0 then
+    exit(UA_STATUSCODE_BADTYPEMISMATCH);
+  //the variable has one type, and one value
+  if (Value^.value._type<>@UA_TYPES[Node.TypeIndex]) or not UA_Variant_isScalar(@Value^.value) then
+    exit(UA_STATUSCODE_BADTYPEMISMATCH);
+  req := Default(TOPCUAServerWriteRequest);
+  if Node.IsText then begin
+    if OPCUAVariantToText(Value^.value, txt)<>ioOk then exit(UA_STATUSCODE_BADTYPEMISMATCH);
+    req.Text := txt;
+  end else begin
+    if (OPCUAVariantToNumbers(Value^.value, vals)<>ioOk) or (Length(vals)<>1) then
+      exit(UA_STATUSCODE_BADTYPEMISMATCH);
+    req.Num := vals[0];
+  end;
+  //an operation cancelled by the server (timeout, session closed) is not told to
+  //us: if its memory came back for this one, the old entry is dead
+  stale := 0;
+  for pair in FPending do
+    if pair.Value=Value then begin
+      stale := pair.Key;
+      break;
+    end;
+  if stale<>0 then FPending.Remove(stale);
+  Inc(FWriteSeq);
+  id := FWriteSeq;
+  FPending.Add(id, Value);
+  req.Id := id;
+  req.Key := Node.Key;
+  FOwner.QueueWrite(req);
+  Result := UA_STATUSCODE_GOODCOMPLETESASYNCHRONOUSLY;
+end;
+
+procedure TOPCUAServerThread.EndWrite(Id:Int64; Status:UA_StatusCode);
+var
+  v:PUA_DataValue;
+begin
+  if not FPending.TryGetValue(Id, v) then exit;
+  FPending.Remove(Id);
+  //BADNOTFOUND when the server gave up on it meanwhile: nothing to do
+  UA_Server_setAsyncWriteResult(FServer, v, Status);
 end;
 
 procedure TOPCUAServerThread.RemoveNode(Key:Integer);
@@ -957,6 +1091,8 @@ begin
   FLogLevel := oslWarning;
   FErrorLock := TCriticalSection.Create;
   FTagItems := TOPCUAServerTagMap.Create;
+  FWriteLock := TCriticalSection.Create;
+  FPendingWrites := TFPList.Create;
   FItems := TOPCUAServerItems.Create(Self);
 end;
 
@@ -970,6 +1106,8 @@ begin
   FreeAndNil(FItems);
   for l in FTagItems.Values do l.Free;
   FreeAndNil(FTagItems);
+  FreeAndNil(FPendingWrites);
+  FreeAndNil(FWriteLock);
   FreeAndNil(FErrorLock);
   inherited Destroy;
 end;
@@ -997,6 +1135,8 @@ var
   i:Integer;
 begin
   inherited Notification(AComponent, Operation);
+  if (Operation=opRemove) and (AComponent is TPLCTag) and (FPendingWrites<>nil) then
+    FailPendingWrites(0, TPLCTag(AComponent), UA_STATUSCODE_BADCONFIGURATIONERROR);
   if (Operation=opRemove) and (FItems<>nil) then
     for i:=0 to FItems.Count-1 do
       if FItems[i].FTag=AComponent then
@@ -1117,6 +1257,17 @@ begin
   if FThread=nil then exit;
   for i:=0 to FItems.Count-1 do
     UnpublishItem(FItems[i]);
+  //the server cancels what is still waiting when it shuts down
+  TThread.RemoveQueuedEvents(@ProcessWrites);
+  FWriteLock.Enter;
+  try
+    FWriteQueue := nil;
+    FWriteQueueCount := 0;
+    FWriteQueued := false;
+  finally
+    FWriteLock.Leave;
+  end;
+  FailPendingWrites(0, nil, UA_STATUSCODE_BADSHUTDOWN);
   FThread.Terminate;
   FThread.FWake.SetEvent;
   FThread.WaitFor;
@@ -1170,6 +1321,9 @@ begin
   Inc(FNextKey);
   Item.FKey := FNextKey;
   Item.FStatusTag := StatusTagOf(Item.Tag);
+  //an expression has no device to write to; a string inside a structure is written
+  //through its structure (blocks and structures come later)
+  Item.FCanWrite := Item.Writable and not ((Item.Tag is TNumericExprTag) or (Item.Tag is TPLCStructString));
   LinkTag(Item.Tag, Item);
   if Item.FStatusTag<>Item.Tag then
     LinkTag(Item.FStatusTag, Item);
@@ -1182,6 +1336,7 @@ begin
   cmd.Description := Item.Description;
   cmd.TypeIndex := Item.FTypeIndex;
   cmd.IsText := Item.FIsText;
+  cmd.Writable := Item.FCanWrite;
   FThread.Post(cmd);
   PostValue(Item);
 end;
@@ -1193,6 +1348,7 @@ var
 begin
   if not Item.Published then exit;
   key := Item.FKey;
+  FailPendingWrites(key, nil, UA_STATUSCODE_BADNODEIDUNKNOWN);
   Item.FKey := 0;
   UnlinkTag(Item.Tag, Item);
   if (Item.FStatusTag<>nil) and (Item.FStatusTag<>Item.Tag) then
@@ -1272,6 +1428,295 @@ begin
       UnpublishItem(FItems[i]);
       PublishItem(FItems[i]);
     end;
+end;
+
+function TOPCUAServer.ItemByKey(Key:Integer):TOPCUAServerItem;
+var
+  i:Integer;
+begin
+  for i:=0 to FItems.Count-1 do
+    if FItems[i].FKey=Key then exit(FItems[i]);
+  Result := nil;
+end;
+
+//server thread
+procedure TOPCUAServer.QueueWrite(const Req:TOPCUAServerWriteRequest);
+var
+  wake:Boolean;
+begin
+  FWriteLock.Enter;
+  try
+    if FWriteQueueCount>=Length(FWriteQueue) then
+      SetLength(FWriteQueue, 16+2*FWriteQueueCount);
+    FWriteQueue[FWriteQueueCount] := Req;
+    Inc(FWriteQueueCount);
+    wake := not FWriteQueued;
+    FWriteQueued := true;
+  finally
+    FWriteLock.Leave;
+  end;
+  if wake then
+    TThread.Queue(nil, @ProcessWrites);
+end;
+
+//main thread
+procedure TOPCUAServer.ProcessWrites;
+var
+  reqs:array of TOPCUAServerWriteRequest;
+  count, i:Integer;
+  it:TOPCUAServerItem;
+  st:UA_StatusCode;
+  cmd:TOPCUAServerCmd;
+begin
+  FWriteLock.Enter;
+  try
+    reqs := FWriteQueue;
+    count := FWriteQueueCount;
+    FWriteQueue := nil;
+    FWriteQueueCount := 0;
+    FWriteQueued := false;
+  finally
+    FWriteLock.Leave;
+  end;
+  for i:=0 to count-1 do begin
+    if FThread=nil then exit;
+    it := ItemByKey(reqs[i].Key);
+    if (it=nil) or (it.Tag=nil) then
+      st := UA_STATUSCODE_BADNODEIDUNKNOWN
+    else
+      try
+        st := StartWrite(it, reqs[i]);
+      except
+        on E:Exception do begin
+          SetError(Format('write to "%s": %s', [it.NodeIdText, E.Message]));
+          st := UA_STATUSCODE_BADINTERNALERROR;
+        end;
+      end;
+    if st=UA_STATUSCODE_GOODCOMPLETESASYNCHRONOUSLY then continue; //the tag answers later
+    cmd := Default(TOPCUAServerCmd);
+    cmd.Kind := sckWriteResult;
+    cmd.WriteId := reqs[i].Id;
+    cmd.Status := st;
+    FThread.Post(cmd);
+  end;
+end;
+
+//engineering value of a raw value, and back (through the scale processor)
+function RawToEng(T:TPLCNumber; Raw:Double):Double;
+begin
+  if TPLCNumberAccess(T).PScaleProcessor<>nil then
+    Result := TPLCNumberAccess(T).PScaleProcessor.SetInGetOut(T, Raw)
+  else
+    Result := Raw;
+end;
+
+function EngToRaw(T:TPLCNumber; Eng:Double):Double;
+begin
+  if TPLCNumberAccess(T).PScaleProcessor<>nil then
+    Result := TPLCNumberAccess(T).PScaleProcessor.SetOutGetIn(T, Eng)
+  else
+    Result := Eng;
+end;
+
+function OutOfLimits(T:TPLCNumber; Eng:Double):Boolean;
+begin
+  Result := (TPLCNumberAccess(T).FEnableMin and (Eng<TPLCNumberAccess(T).FMinLimit)) or
+            (TPLCNumberAccess(T).FEnableMax and (Eng>TPLCNumberAccess(T).FMaxLimit));
+end;
+
+{$IFDEF PORTUGUES}
+{:
+Comeca a escrita de um cliente no tag do item: converte o valor para o que o
+tag recebe e pede um ScanWrite ao tag que fala com o driver. Devolve o status
+final, ou GOODCOMPLETESASYNCHRONOUSLY quando o resultado vem depois.
+}
+{$ELSE}
+{:
+Starts the write of a client to the item's tag: converts the value to what the
+tag takes and asks a ScanWrite of the tag that talks to the driver. Returns the
+final status, or GOODCOMPLETESASYNCHRONOUSLY when the result comes later.
+}
+{$ENDIF}
+function TOPCUAServer.StartWrite(Item:TOPCUAServerItem; const Req:TOPCUAServerWriteRequest):UA_StatusCode;
+var
+  T, target, resultTag:TPLCTag;
+  src:TPLCNumber;
+  vals:TArrayOfDouble;
+  raw, eng, base:Double;
+  mask, nv:QWord;
+  bits:Integer;
+  P:TOPCUAServerPendingWrite;
+  id:Int64;
+begin
+  T := Item.Tag;
+  if not Item.FCanWrite then exit(UA_STATUSCODE_BADNOTWRITABLE);
+
+  if T is TPLCString then begin
+    vals := TPLCString(T).StringToArrayOfValues(Req.Text);
+    target := T;
+  end else if T is TTagBit then begin
+    //the bits go into the word of the source, which is what gets written
+    src := TTagBit(T).PLCTag;
+    if src=nil then exit(UA_STATUSCODE_BADCONFIGURATIONERROR);
+    bits := TTagBit(T).EndBit-TTagBit(T).StartBit+1;
+    if bits>=64 then mask := High(QWord) else mask := (QWord(1) shl bits)-1;
+    if (Req.Num<0) or (Req.Num>mask) then exit(UA_STATUSCODE_BADOUTOFRANGE);
+    mask := mask shl TTagBit(T).StartBit;
+    if TTagBit(T).UseRawValue then base := src.ValueRaw else base := src.Value;
+    nv := (QWord(Trunc(base)) and not mask) or ((QWord(Trunc(Req.Num)) shl TTagBit(T).StartBit) and mask);
+    if TTagBit(T).UseRawValue then
+      raw := nv
+    else begin
+      if OutOfLimits(src, nv) then exit(UA_STATUSCODE_BADOUTOFRANGE);
+      raw := EngToRaw(src, nv);
+    end;
+    SetLength(vals, 1);
+    vals[0] := raw;
+    target := src;
+  end else if T is TPLCNumber then begin
+    if Item.DataType=odtScaledDouble then begin
+      eng := Req.Num;
+      raw := EngToRaw(TPLCNumber(T), eng);
+    end else begin
+      raw := Req.Num;
+      eng := RawToEng(TPLCNumber(T), raw);
+    end;
+    if OutOfLimits(TPLCNumber(T), eng) then exit(UA_STATUSCODE_BADOUTOFRANGE);
+    SetLength(vals, 1);
+    vals[0] := raw;
+    target := T;
+  end else
+    exit(UA_STATUSCODE_BADNOTWRITABLE);
+
+  //the result comes on the tag that issues the driver write: the block of an element
+  resultTag := StatusTagOf(target);
+  if (target is TTagBit) or (resultTag=nil) then
+    exit(UA_STATUSCODE_BADCONFIGURATIONERROR);
+
+  P := TOPCUAServerPendingWrite.Create;
+  P.Id := Req.Id;
+  P.Key := Item.FKey;
+  P.ResultTag := resultTag;
+  P.Num := Req.Num;
+  P.Text := Req.Text;
+  resultTag.AddCommandResultHandler(@TagCommandResult);
+  resultTag.FreeNotification(Self);
+  //a tag without driver (or a refused write) answers inside ScanWrite
+  FCurrentWrite := P;
+  try
+    id := TPLCTagAccess(target).ScanWrite(vals, Length(vals), 0, true);
+  finally
+    FCurrentWrite := nil;
+  end;
+  if P.Done then begin
+    Result := OPCUAServerStatusOf(P.Res);
+    if Result=UA_STATUSCODE_GOOD then begin
+      //the written value, ahead of the change notification
+      FPendingWrites.Add(P);
+      CompleteWrite(P, Result);
+      exit(UA_STATUSCODE_GOODCOMPLETESASYNCHRONOUSLY); //CompleteWrite posted the result
+    end;
+    P.Free;
+    ReleaseResultTag(resultTag);
+    exit;
+  end;
+  if id<=0 then begin
+    P.Free;
+    ReleaseResultTag(resultTag);
+    exit(UA_STATUSCODE_BADINTERNALERROR);
+  end;
+  P.ReqID := id;
+  FPendingWrites.Add(P);
+  Result := UA_STATUSCODE_GOODCOMPLETESASYNCHRONOUSLY;
+end;
+
+procedure TOPCUAServer.TagCommandResult(Sender:TPLCTag; TagCommand:TTagCommand; ReqID:LongWord;
+  LastResult:TProtocolIOResult);
+var
+  i:Integer;
+  P:TOPCUAServerPendingWrite;
+begin
+  if not (TagCommand in [tcScanWrite, tcWrite]) then exit;
+  if (FCurrentWrite<>nil) and (FCurrentWrite.ResultTag=Sender) and not FCurrentWrite.Done then begin
+    FCurrentWrite.Done := true;
+    FCurrentWrite.Res := LastResult;
+    exit;
+  end;
+  for i:=0 to FPendingWrites.Count-1 do begin
+    P := TOPCUAServerPendingWrite(FPendingWrites[i]);
+    if (P.ResultTag=Sender) and (P.ReqID=ReqID) then begin
+      CompleteWrite(P, OPCUAServerStatusOf(LastResult));
+      exit;
+    end;
+  end;
+end;
+
+{$IFDEF PORTUGUES}
+//: Entrega o resultado de uma escrita pendente (e, se deu certo, o valor escrito) e a descarta.
+{$ELSE}
+//: Hands the result of a pending write (and, when good, the written value) over and drops it.
+{$ENDIF}
+procedure TOPCUAServer.CompleteWrite(P:TOPCUAServerPendingWrite; Status:UA_StatusCode);
+var
+  cmd:TOPCUAServerCmd;
+  it:TOPCUAServerItem;
+  tg:TPLCTag;
+begin
+  FPendingWrites.Remove(P);
+  tg := P.ResultTag;
+  if FThread<>nil then begin
+    it := ItemByKey(P.Key);
+    if (Status=UA_STATUSCODE_GOOD) and (it<>nil) then begin
+      //the client that wrote reads its value back right away: the mirror gets it
+      //before the result (the tag tells its change a moment later)
+      cmd := Default(TOPCUAServerCmd);
+      cmd.Kind := sckValue;
+      cmd.Key := P.Key;
+      cmd.Num := P.Num;
+      cmd.Text := P.Text;
+      cmd.Status := UA_STATUSCODE_GOOD;
+      cmd.TimeUTC := LocalTimeToUniversal(Now);
+      it.FLastStatus := UA_STATUSCODE_GOOD;
+      FThread.Post(cmd);
+    end;
+    cmd := Default(TOPCUAServerCmd);
+    cmd.Kind := sckWriteResult;
+    cmd.WriteId := P.Id;
+    cmd.Status := Status;
+    FThread.Post(cmd);
+  end;
+  P.Free;
+  ReleaseResultTag(tg);
+end;
+
+procedure TOPCUAServer.FailPendingWrites(Key:Integer; ResultTag:TPLCTag; Status:UA_StatusCode);
+var
+  i:Integer;
+  P:TOPCUAServerPendingWrite;
+begin
+  for i:=FPendingWrites.Count-1 downto 0 do begin
+    if i>=FPendingWrites.Count then continue;
+    P := TOPCUAServerPendingWrite(FPendingWrites[i]);
+    if ((Key=0) and (ResultTag=nil)) or ((Key<>0) and (P.Key=Key)) or
+       ((ResultTag<>nil) and (P.ResultTag=ResultTag)) then begin
+      if ResultTag<>nil then P.ResultTag := nil; //being destroyed: not touched again
+      CompleteWrite(P, Status);
+    end;
+  end;
+end;
+
+procedure TOPCUAServer.ReleaseResultTag(ATag:TPLCTag);
+var
+  i:Integer;
+begin
+  if ATag=nil then exit;
+  for i:=0 to FPendingWrites.Count-1 do
+    if TOPCUAServerPendingWrite(FPendingWrites[i]).ResultTag=ATag then exit;
+  if csDestroying in ATag.ComponentState then exit;
+  ATag.RemoveCommandResultHandler(@TagCommandResult);
+  //the free notification stays when the tag is also a published one
+  if not FTagItems.ContainsKey(ATag) then
+    ATag.RemoveFreeNotification(Self);
 end;
 
 procedure TOPCUAServer.ItemChanged(Item:TOPCUAServerItem);

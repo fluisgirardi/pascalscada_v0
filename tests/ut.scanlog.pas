@@ -42,6 +42,10 @@ type
     ReadResult, WriteResult:TProtocolIOResult;
     Value:Double;
     RaiseInScanRead:Boolean;
+    //writes: how long the "device" takes, how many and the last values (scan thread)
+    WriteDelayMs:Integer;
+    WriteCount:Integer;
+    LastWritten:TArrayOfDouble;
   protected
     procedure DoScanRead(Sender:TObject; var NeedSleep:LongInt); override;
     procedure DoGetValue(TagRec:TTagRec; var values:TScanReadRec); override;
@@ -116,7 +120,12 @@ end;
 
 function TLogTestDriver.DoWrite(const tagrec:TTagRec; const Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
 begin
+  if WriteDelayMs>0 then Sleep(WriteDelayMs);
+  LastWritten := Copy(Values);
+  Inc(WriteCount);
   Result := WriteResult;
+  //what was written is what is read back
+  if (Result=ioOk) and (Length(Values)>0) then Value := Values[0];
 end;
 
 function TLogTestDriver.DoRead(const tagrec:TTagRec; out Values:TArrayOfDouble; Sync:Boolean):TProtocolIOResult;
