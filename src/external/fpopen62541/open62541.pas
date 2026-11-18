@@ -629,6 +629,15 @@ type
   end;
   PUA_UsernamePasswordLogin = ^UA_UsernamePasswordLogin;
 
+  (* Login of a session (UA_AccessControl_defaultWithLoginCallback): userName is
+   * empty for an anonymous login; the password comes decrypted. What is put in
+   * sessionContext reaches the callbacks of that session (value sources...); the
+   * default access control frees nothing of it. Not GOOD refuses the login. *)
+  UA_UsernamePasswordLoginCallback = function(const userName: PUA_String; const password: PUA_ByteString;
+                                              usernamePasswordLoginSize: size_t;
+                                              const usernamePasswordLogin: PUA_UsernamePasswordLogin;
+                                              sessionContext: PPointer; loginContext: Pointer): UA_StatusCode; cdecl;
+
   (* Value source of a variable whose value lives in the application: the
    * server asks read for every read (and for the sampling of the monitored
    * items) and hands every write of a client to write (nil = not writable).
@@ -876,6 +885,12 @@ var
                                                            const trustList: PUA_ByteString; trustListSize: size_t;
                                                            const issuerList: PUA_ByteString; issuerListSize: size_t;
                                                            const revocationList: PUA_ByteString; revocationListSize: size_t): UA_StatusCode; cdecl;
+  (* The same, without the None policy (no endpoint without security) *)
+  UA_ServerConfig_setDefaultWithSecureSecurityPolicies: function(conf: PUA_ServerConfig; portNumber: UA_UInt16;
+                                                           const certificate, privateKey: PUA_ByteString;
+                                                           const trustList: PUA_ByteString; trustListSize: size_t;
+                                                           const issuerList: PUA_ByteString; issuerListSize: size_t;
+                                                           const revocationList: PUA_ByteString; revocationListSize: size_t): UA_StatusCode; cdecl;
   {$ENDIF}
   { ---------------- }
   { --- server.h --- }
@@ -907,6 +922,10 @@ var
                                       targetNodeId: UA_ExpandedNodeId; deleteBidirectional: UA_Boolean): UA_StatusCode; cdecl;
   UA_AccessControl_default: function(config: PUA_ServerConfig; allowAnonymous: UA_Boolean; const userTokenPolicyUri: PUA_String;
                                      usernamePasswordLoginSize: size_t; const usernamePasswordLogin: PUA_UsernamePasswordLogin): UA_StatusCode; cdecl;
+  UA_AccessControl_defaultWithLoginCallback: function(config: PUA_ServerConfig; allowAnonymous: UA_Boolean;
+                                     const userTokenPolicyUri: PUA_String;
+                                     usernamePasswordLoginSize: size_t; const usernamePasswordLogin: PUA_UsernamePasswordLogin;
+                                     loginCallback: UA_UsernamePasswordLoginCallback; loginContext: Pointer): UA_StatusCode; cdecl;
   UA_Server_writeValue: function(server: PUA_Server; nodeId: UA_NodeId; value: UA_Variant): UA_StatusCode; cdecl;
   UA_Server_readValue: function(server: PUA_Server; nodeId: UA_NodeId; outValue: PUA_Variant): UA_StatusCode; cdecl;
   UA_Server_addCallbackValueSourceVariableNode: function(server: PUA_Server; requestedNewNodeId, parentNodeId, referenceTypeId: UA_NodeId;
@@ -918,6 +937,11 @@ var
   UA_Server_setAsyncWriteResult: function(server: PUA_Server; const value: PUA_DataValue; result: UA_StatusCode): UA_StatusCode; cdecl;
   UA_Server_setAsyncReadResult: function(server: PUA_Server; result: PUA_DataValue): UA_StatusCode; cdecl;
   UA_Server_deleteNode: function(server: PUA_Server; nodeId: UA_NodeId; deleteReferences: UA_Boolean): UA_StatusCode; cdecl;
+  (* OPTIONAL (nil when the library was built without JSON): updates the fields
+   * of the configuration present in a JSON text, e.g.
+   * {"securityPolicyNoneDiscoveryOnly": true, "asyncOperationTimeout": 30000.0}
+   * - a way to reach fields of UA_ServerConfig this binding does not declare. *)
+  UA_ServerConfig_updateFromFile: function(config: PUA_ServerConfig; const json_config: UA_ByteString): UA_StatusCode; cdecl;
   {$ENDIF}
 
 (* Loads the library (reference counted). Raises EInOutError when it can not be
@@ -1167,6 +1191,7 @@ begin
   Add('UA_ServerConfig_setMinimalCustomBuffer', @@UA_ServerConfig_setMinimalCustomBuffer);
   {$IFDEF UA_ENABLE_ENCRYPTION}
   Add('UA_ServerConfig_setDefaultWithSecurityPolicies', @@UA_ServerConfig_setDefaultWithSecurityPolicies);
+  Add('UA_ServerConfig_setDefaultWithSecureSecurityPolicies', @@UA_ServerConfig_setDefaultWithSecureSecurityPolicies);
   {$ENDIF}
   Add('UA_Server_delete', @@UA_Server_delete);
   Add('UA_Server_getConfig', @@UA_Server_getConfig);
@@ -1183,6 +1208,7 @@ begin
   Add('UA_Server_addReference', @@UA_Server_addReference);
   Add('UA_Server_deleteReference', @@UA_Server_deleteReference);
   Add('UA_AccessControl_default', @@UA_AccessControl_default);
+  Add('UA_AccessControl_defaultWithLoginCallback', @@UA_AccessControl_defaultWithLoginCallback);
   Add('UA_Server_writeValue', @@UA_Server_writeValue);
   Add('UA_Server_readValue', @@UA_Server_readValue);
   Add('UA_Server_addCallbackValueSourceVariableNode', @@UA_Server_addCallbackValueSourceVariableNode);
@@ -1199,6 +1225,9 @@ var
 begin
   for imp in Imports do
     imp.Addr^ := nil;
+  {$IFDEF ENABLE_SERVER}
+  UA_ServerConfig_updateFromFile := nil;
+  {$ENDIF}
   UA_TYPES := nil;
 end;
 
@@ -1254,6 +1283,10 @@ begin
       if imp.Addr^ = nil then
         missing := missing + ' ' + imp.Name;
     end;
+    {$IFDEF ENABLE_SERVER}
+    //optional: a library built without JSON does not have it
+    UA_ServerConfig_updateFromFile := GetProcedureAddress(open62541LibHandle, 'UA_ServerConfig_updateFromFile');
+    {$ENDIF}
     UA_TYPES := GetProcedureAddress(open62541LibHandle, 'UA_TYPES');
     if UA_TYPES = nil then
       missing := missing + ' UA_TYPES';

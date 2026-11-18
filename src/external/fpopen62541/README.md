@@ -51,6 +51,19 @@ keeps serving the other requests meanwhile. An operation the server already canc
 session closed) answers `BADNOTFOUND` and is not touched. `tools/valuesource_test.pas` shows and
 checks all of it with a server and clients in one process.
 
+### Logins and configuration fields
+
+`UA_AccessControl_defaultWithLoginCallback` sends every login through a Pascal function, with the
+user name and the password already decrypted; what it stores in `sessionContext` reaches the
+callbacks of that session (the default access control frees nothing of it). open62541 offers the
+username login only when the list of logins is not empty, even with a callback, and takes a
+password only encrypted with the server certificate (a secure policy must exist).
+
+`UA_ServerConfig_updateFromFile` is **optional** (nil when the library was built without JSON): it
+updates the fields of `UA_ServerConfig` given in a JSON text - a way to reach the ones this binding
+does not declare, e.g. `{"securityPolicyNoneDiscoveryOnly": true, "asyncOperationTimeout": 30000}`.
+Write numbers without a decimal point: they are read with the C locale of the process.
+
 ## Building the library
 
 ```sh

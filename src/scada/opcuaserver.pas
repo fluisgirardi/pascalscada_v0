@@ -55,7 +55,38 @@ type
   {$ENDIF}
   TOPCUAServerDataType = (odtNative, odtScaledDouble);
 
+  {$IFDEF PORTUGUES}
+  {:
+  Endpoints do servidor.
+  @value(ossNone So' sem seguranca (padrao).)
+  @value(ossNoneAndSecure Sem seguranca e com Sign/SignAndEncrypt (todas as politicas do open62541).)
+  @value(ossSecureOnly Dados so' com Sign/SignAndEncrypt; o endpoint sem seguranca fica so' para a descoberta (o cliente pega o certificado).)
+  }
+  {$ELSE}
+  {:
+  Endpoints of the server.
+  @value(ossNone Without security only (default).)
+  @value(ossNoneAndSecure Without security and with Sign/SignAndEncrypt (every policy of open62541).)
+  @value(ossSecureOnly Data only with Sign/SignAndEncrypt; the endpoint without security is left for discovery only (the client gets the certificate there).)
+  }
+  {$ENDIF}
+  TOPCUAServerSecurity = (ossNone, ossNoneAndSecure, ossSecureOnly);
+
   TOPCUAServer = class;
+  TOPCUAServerItem = class;
+
+  {$IFDEF PORTUGUES}
+  //: Login de um cliente (thread principal): Accepted ja' vem com o resultado da lista Users.
+  {$ELSE}
+  //: Login of a client (main thread): Accepted comes with the result of the Users list.
+  {$ENDIF}
+  TOPCUAServerCheckUserEvent = procedure(Sender:TObject; const User, Password:String; var Accepted:Boolean) of object;
+  {$IFDEF PORTUGUES}
+  //: Escrita de um cliente num item (thread principal). User vazio: login anonimo.
+  {$ELSE}
+  //: Write of a client to an item (main thread). An empty User: anonymous login.
+  {$ENDIF}
+  TOPCUAServerCanWriteEvent = procedure(Sender:TObject; Item:TOPCUAServerItem; const User:String; var Allowed:Boolean) of object;
 
   { TOPCUAServerItem }
 
@@ -143,6 +174,7 @@ type
   TOPCUAServerWriteRequest = record
     Id:Int64;
     Key:Integer;
+    User:String;
     Num:Double;
     Text:UTF8String;
     //arrays
@@ -192,6 +224,14 @@ type
     FActive:Boolean;
     FItems:TOPCUAServerItems;
     FAutoItems:TOPCUAServerItems; //the items of the published structures
+    FSecurity:TOPCUAServerSecurity;
+    FCertificateDir:String;
+    FTrustListDir:String;
+    FAllowAnonymous:Boolean;
+    FUsers:TStringList;
+    FOnCheckUser:TOPCUAServerCheckUserEvent;
+    FOnCanWrite:TOPCUAServerCanWriteEvent;
+    FWriteTimeoutMs:Cardinal;
     FLibraryName:String;
     FLogLevel:TOPCUAServerLogLevel;
     FNamespaceUri:String;
@@ -212,6 +252,12 @@ type
     FWriteQueued:Boolean;
     FPendingWrites:TFPList;     //TOPCUAServerPendingWrite waiting for the tag's result
     FCurrentWrite:TOPCUAServerPendingWrite;
+    procedure SetUsers(AValue:TStrings);
+    function  GetUsers:TStrings;
+    procedure SetSecurity(AValue:TOPCUAServerSecurity);
+    procedure SetAllowAnonymous(AValue:Boolean);
+    procedure SetCertificateDir(const AValue:String);
+    procedure SetTrustListDir(const AValue:String);
     function  GetLastError:String;
     function  GetRunning:Boolean;
     procedure SetActive(AValue:Boolean);
@@ -270,6 +316,27 @@ type
     property LibraryName:String read FLibraryName write SetLibraryName;
     property LogLevel:TOPCUAServerLogLevel read FLogLevel write FLogLevel default oslWarning;
     property Items:TOPCUAServerItems read FItems write SetItems;
+    //: Endpoints without and/or with security (Sign/SignAndEncrypt).
+    property Security:TOPCUAServerSecurity read FSecurity write SetSecurity default ossNone;
+    {:
+    Where the server certificate is kept (server_cert.der, server_key.der): created
+    (self-signed) on the first secure start; replace them by your own if you wish.
+    }
+    property CertificateDir:String read FCertificateDir write SetCertificateDir;
+    //: Client certificates accepted (.der/.pem/.crt/.cer); empty accepts any client.
+    property TrustListDir:String read FTrustListDir write SetTrustListDir;
+    property AllowAnonymous:Boolean read FAllowAnonymous write SetAllowAnonymous default true;
+    //: Users that may log in, one per line: login=password (needs Security other than ossNone).
+    property Users:TStrings read GetUsers write SetUsers;
+    //: Decides a login (main thread); Accepted comes with the result of Users.
+    property OnCheckUser:TOPCUAServerCheckUserEvent read FOnCheckUser write FOnCheckUser;
+    {:
+    Longest wait for the device's result of a write; the client then gets
+    BadTimeout. 0 keeps the open62541 default (2 minutes).
+    }
+    property WriteTimeoutMs:Cardinal read FWriteTimeoutMs write FWriteTimeoutMs default 0;
+    //: Decides each write of a client (main thread); refused writes get BadUserAccessDenied.
+    property OnCanWrite:TOPCUAServerCanWriteEvent read FOnCanWrite write FOnCanWrite;
   end;
 
   { server thread: internal }
@@ -334,7 +401,23 @@ type
     //writes waiting for their result: id -> the value pointer open62541 gave
     FPending:specialize TDictionary<Int64, PUA_DataValue>;
     FWriteSeq:Int64;
-    function  BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue; const Range:PUA_NumericRange):UA_StatusCode;
+    //security, copied from the owner when created
+    FSecurity:TOPCUAServerSecurity;
+    FCertificateDir, FTrustListDir:String;
+    FAllowAnonymous:Boolean;
+    FUsers:TStringList;
+    FUseCheckUser:Boolean;
+    FWriteTimeoutMs:Cardinal;
+    //names of the users logged in: a session context is the index+1 of its name (0 anonymous)
+    FUserNames:TStringList;
+    FCheckUser, FCheckPassword:String;
+    FCheckAccepted:Boolean;
+    procedure DoCheckUser;
+    function  CheckLogin(const User, Password:String):Boolean;
+    function  UserOf(SessionContext:Pointer):String;
+    procedure SetupSecurity(Conf:PUA_ServerConfig);
+    function  BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue; const Range:PUA_NumericRange;
+                         SessionContext:Pointer):UA_StatusCode;
     procedure EndWrite(Id:Int64; Status:UA_StatusCode);
     procedure ApplyCmds;
     procedure AddNode(const Cmd:TOPCUAServerCmd);
@@ -366,7 +449,53 @@ implementation
 uses
   PLCNumber, TagBit, PLCBlock, PLCBlockElement, PLCString, PLCStructString,
   PLCStruct, PLCStructElement, NumExprTag, ProtocolTypes, ValueProcessor,
-  OPCUAClient, OPCUAValues, pscadalog;
+  OPCUAClient, OPCUAValues, pscadalog{$IFDEF UNIX}, Unix{$ENDIF};
+
+function HostName:AnsiString;
+begin
+  {$IFDEF UNIX}
+  Result := GetHostName;
+  {$ELSE}
+  Result := GetEnvironmentVariable('COMPUTERNAME');
+  {$ENDIF}
+  if Result='' then Result := 'localhost';
+end;
+
+function ReadFileBytes(const FileName:String; out Data:RawByteString):Boolean;
+var
+  fs:TFileStream;
+begin
+  Data := '';
+  Result := false;
+  if not FileExists(FileName) then exit;
+  fs := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(Data, fs.Size);
+    if fs.Size>0 then fs.ReadBuffer(Data[1], fs.Size);
+    Result := fs.Size>0;
+  finally
+    fs.Free;
+  end;
+end;
+
+procedure WriteFileBytes(const FileName:String; const Data:RawByteString);
+var
+  fs:TFileStream;
+begin
+  ForceDirectories(ExtractFileDir(FileName));
+  fs := TFileStream.Create(FileName, fmCreate);
+  try
+    if Data<>'' then fs.WriteBuffer(Data[1], Length(Data));
+  finally
+    fs.Free;
+  end;
+end;
+
+function AsByteString(const S:RawByteString):UA_ByteString;
+begin
+  Result.length := Length(S);
+  if S<>'' then Result.data := @S[1] else Result.data := nil;
+end;
 
 type
   TPLCTagAccess = class(TPLCTag);
@@ -649,7 +778,57 @@ var
 begin
   try
     n := TOPCUAServerNode(nodeContext);
-    Result := n.Thread.BeginWrite(n, value, range);
+    Result := n.Thread.BeginWrite(n, value, range, sessionContext);
+  except
+    Result := UA_STATUSCODE_BADINTERNALERROR;
+  end;
+end;
+
+{$IFDEF PORTUGUES}
+{:
+Login de uma sessao (thread do servidor). O contexto da sessao guarda o
+usuario (o indice+1 do nome em FUserNames; 0 = anonimo), que as escritas leem.
+}
+{$ELSE}
+{:
+Login of a session (server thread). The session context keeps the user (the
+index+1 of the name in FUserNames; 0 = anonymous), which the writes read.
+}
+{$ENDIF}
+function ServerLogin(const userName:PUA_String; const password:PUA_ByteString;
+  usernamePasswordLoginSize:open62541.size_t; const usernamePasswordLogin:PUA_UsernamePasswordLogin;
+  sessionContext:PPointer; loginContext:Pointer):UA_StatusCode; cdecl;
+var
+  t:TOPCUAServerThread;
+  user, pass:String;
+  idx:Integer;
+begin
+  try
+    t := TOPCUAServerThread(loginContext);
+    user := '';
+    pass := '';
+    if (userName<>nil) and (userName^.length>0) then begin
+      SetString(user, PAnsiChar(userName^.data), userName^.length);
+      SetCodePage(RawByteString(user), CP_UTF8, false);
+    end;
+    if (password<>nil) and (password^.length>0) then
+      SetString(pass, PAnsiChar(password^.data), password^.length);
+    if user='' then begin
+      //anonymous (refused before this when AllowAnonymous is off)
+      sessionContext^ := nil;
+      exit(UA_STATUSCODE_GOOD);
+    end;
+    if not t.CheckLogin(user, pass) then begin
+      if PSLogWants(lcSecurity, llWarning) then
+        PSLog(t.FOwner, lcSecurity, llWarning, 'OPC UA login failed: '+user);
+      exit(UA_STATUSCODE_BADUSERACCESSDENIED);
+    end;
+    idx := t.FUserNames.IndexOf(user);
+    if idx<0 then idx := t.FUserNames.Add(user);
+    sessionContext^ := Pointer(PtrUInt(idx+1));
+    if PSLogWants(lcSecurity, llInfo) then
+      PSLog(t.FOwner, lcSecurity, llInfo, 'OPC UA login: '+user);
+    Result := UA_STATUSCODE_GOOD;
   except
     Result := UA_STATUSCODE_BADINTERNALERROR;
   end;
@@ -823,6 +1002,15 @@ begin
   FFolders := TStringList.Create;
   FFolders.Sorted := true;
   FPending := specialize TDictionary<Int64, PUA_DataValue>.Create;
+  FSecurity := AOwner.FSecurity;
+  FCertificateDir := AOwner.FCertificateDir;
+  FTrustListDir := AOwner.FTrustListDir;
+  FAllowAnonymous := AOwner.FAllowAnonymous;
+  FUsers := TStringList.Create;
+  FUsers.Assign(AOwner.FUsers);
+  FUseCheckUser := Assigned(AOwner.FOnCheckUser);
+  FWriteTimeoutMs := AOwner.FWriteTimeoutMs;
+  FUserNames := TStringList.Create;
   FillChar(FLogger, SizeOf(FLogger), 0);
   FLogger.log := @ServerLog;
   FLogger.context := Self;
@@ -839,6 +1027,8 @@ begin
   FNodes.Free;
   FFolders.Free;
   FPending.Free;
+  FUsers.Free;
+  FUserNames.Free;
   FStarted.Free;
   FWake.Free;
   FLock.Free;
@@ -1006,8 +1196,162 @@ begin
   FNodes.Add(Cmd.Key, n);
 end;
 
+function TOPCUAServerThread.UserOf(SessionContext:Pointer):String;
+var
+  idx:PtrUInt;
+begin
+  idx := PtrUInt(SessionContext);
+  if (idx>0) and (idx<=PtrUInt(FUserNames.Count)) then
+    Result := FUserNames[idx-1]
+  else
+    Result := '';
+end;
+
+//main thread (Synchronize)
+procedure TOPCUAServerThread.DoCheckUser;
+begin
+  if Assigned(FOwner.FOnCheckUser) then
+    FOwner.FOnCheckUser(FOwner, FCheckUser, FCheckPassword, FCheckAccepted);
+end;
+
+function TOPCUAServerThread.CheckLogin(const User, Password:String):Boolean;
+var
+  i:Integer;
+begin
+  Result := false;
+  for i:=0 to FUsers.Count-1 do
+    if (FUsers.Names[i]=User) and (FUsers.ValueFromIndex[i]=Password) then begin
+      Result := true;
+      break;
+    end;
+  if FUseCheckUser then begin
+    FCheckUser := User;
+    FCheckPassword := Password;
+    FCheckAccepted := Result;
+    Synchronize(@DoCheckUser);
+    Result := FCheckAccepted;
+    FCheckPassword := '';
+  end;
+end;
+
+procedure TOPCUAServerThread.SetupSecurity(Conf:PUA_ServerConfig);
+var
+  st:UA_StatusCode;
+  dir, certFile, keyFile, ext:String;
+  cert, key:RawByteString;
+  certBS, keyBS:UA_ByteString;
+  trust:array of RawByteString;
+  trustBS:array of UA_ByteString;
+  sr:TSearchRec;
+  n, i:Integer;
+  subject:array[0..2] of AnsiString;
+  san:array[0..2] of AnsiString;
+  subj:array[0..2] of UA_String;
+  alt:array[0..2] of UA_String;
+  outCert, outKey:UA_ByteString;
+  json:RawByteString;
+  dummy:UA_UsernamePasswordLogin;
+  dummyName:AnsiString;
+begin
+  dummyName := '#pascalscada';
+  if FSecurity=ossNone then begin
+    st := UA_ServerConfig_setMinimal(Conf, FPort, nil);
+    if st<>UA_STATUSCODE_GOOD then
+      raise Exception.Create('server configuration: '+OPCUAStatusText(st));
+  end else begin
+    {$IF DECLARED(UA_ServerConfig_setDefaultWithSecurityPolicies)}
+    //the certificate is kept, so that the clients need to trust it only once
+    dir := IncludeTrailingPathDelimiter(FCertificateDir);
+    certFile := dir+'server_cert.der';
+    keyFile := dir+'server_key.der';
+    if not (ReadFileBytes(certFile, cert) and ReadFileBytes(keyFile, key)) then begin
+      subject[0] := 'C=BR';
+      subject[1] := 'O=PascalSCADA';
+      subject[2] := 'CN='+FServerName+'@'+HostName;
+      //the application URI the server reports (the open62541 default)
+      san[0] := 'URI:urn:open62541.server.application';
+      san[1] := 'DNS:'+HostName;
+      san[2] := 'DNS:localhost';
+      for i:=0 to 2 do subj[i] := _UA_STRING(subject[i]);
+      for i:=0 to 2 do alt[i] := _UA_STRING(san[i]);
+      FillChar(outCert, SizeOf(outCert), 0);
+      FillChar(outKey, SizeOf(outKey), 0);
+      st := UA_CreateCertificate(@FLogger, @subj[0], 3, @alt[0], 3, UA_CERTIFICATEFORMAT_DER, nil, @outKey, @outCert);
+      if st<>UA_STATUSCODE_GOOD then
+        raise Exception.Create('server certificate: '+OPCUAStatusText(st));
+      try
+        SetString(cert, PAnsiChar(outCert.data), outCert.length);
+        SetString(key, PAnsiChar(outKey.data), outKey.length);
+      finally
+        UA_clear(@outCert, @UA_TYPES[UA_TYPES_BYTESTRING]);
+        UA_clear(@outKey, @UA_TYPES[UA_TYPES_BYTESTRING]);
+      end;
+      WriteFileBytes(certFile, cert);
+      WriteFileBytes(keyFile, key);
+    end;
+    //accepted client certificates (none: any client)
+    n := 0;
+    trust := nil;
+    if (FTrustListDir<>'') and (FindFirst(IncludeTrailingPathDelimiter(FTrustListDir)+'*', faAnyFile, sr)=0) then
+      try
+        repeat
+          ext := LowerCase(ExtractFileExt(sr.Name));
+          if ((sr.Attr and faDirectory)=0) and ((ext='.der') or (ext='.pem') or (ext='.crt') or (ext='.cer')) then begin
+            SetLength(trust, n+1);
+            if ReadFileBytes(IncludeTrailingPathDelimiter(FTrustListDir)+sr.Name, trust[n]) then
+              Inc(n);
+          end;
+        until FindNext(sr)<>0;
+      finally
+        FindClose(sr);
+      end;
+    SetLength(trustBS, n);
+    for i:=0 to n-1 do trustBS[i] := AsByteString(trust[i]);
+    certBS := AsByteString(cert);
+    keyBS := AsByteString(key);
+    //ossSecureOnly keeps the None endpoint for the discovery only (below): without
+    //it a client can not get the certificate of the server
+    st := UA_ServerConfig_setDefaultWithSecurityPolicies(Conf, FPort, @certBS, @keyBS,
+            PUA_ByteString(Pointer(trustBS)), n, nil, 0, nil, 0);
+    if st<>UA_STATUSCODE_GOOD then
+      raise Exception.Create('secure server configuration: '+OPCUAStatusText(st));
+    {$ELSE}
+    raise Exception.Create('this binding was built without encryption');
+    {$IFEND}
+  end;
+  //what UA_ServerConfig fields this binding does not reach, through JSON
+  json := '';
+  if FSecurity=ossSecureOnly then
+    json := '"securityPolicyNoneDiscoveryOnly": true';
+  if FWriteTimeoutMs>0 then begin
+    if json<>'' then json := json+', ';
+    //an integer: open62541 reads a decimal point with the C locale of the process
+    //(a pt-BR one takes a comma, and "500.0" would not be a number)
+    json := json+Format('"asyncOperationTimeout": %d', [FWriteTimeoutMs]);
+  end;
+  if json<>'' then begin
+    if not Assigned(UA_ServerConfig_updateFromFile) then
+      raise Exception.Create('this libopen62541 was built without JSON: ossSecureOnly and WriteTimeoutMs are not available');
+    json := '{'+json+'}';
+    st := UA_ServerConfig_updateFromFile(Conf, AsByteString(json));
+    if st<>UA_STATUSCODE_GOOD then
+      raise Exception.Create('server configuration (JSON '+json+'): '+OPCUAStatusText(st));
+  end;
+
+  //logins: anonymous and/or users, through ServerLogin (it also keeps the session's user).
+  //open62541 offers the username login only with a non empty list: ServerLogin checks it
+  dummy.username := _UA_STRING(dummyName);
+  dummy.password := _UA_STRING(dummyName);
+  if (FUsers.Count>0) or FUseCheckUser then
+    st := UA_AccessControl_defaultWithLoginCallback(Conf, FAllowAnonymous, nil, 1, @dummy, @ServerLogin, Self)
+  else
+    st := UA_AccessControl_defaultWithLoginCallback(Conf, FAllowAnonymous, nil, 0, nil, @ServerLogin, Self);
+  if st<>UA_STATUSCODE_GOOD then
+    raise Exception.Create('access control: '+OPCUAStatusText(st));
+end;
+
 function TOPCUAServerThread.BeginWrite(Node:TOPCUAServerNode; const Value:PUA_DataValue;
-  const Range:PUA_NumericRange):UA_StatusCode;
+  const Range:PUA_NumericRange; SessionContext:Pointer):UA_StatusCode;
 var
   req:TOPCUAServerWriteRequest;
   vals:TArrayOfDouble;
@@ -1065,6 +1409,7 @@ begin
   FPending.Add(id, Value);
   req.Id := id;
   req.Key := Node.Key;
+  req.User := UserOf(SessionContext);
   FOwner.QueueWrite(req);
   Result := UA_STATUSCODE_GOODCOMPLETESASYNCHRONOUSLY;
 end;
@@ -1147,9 +1492,7 @@ begin
   FServer := UA_Server_new();
   if FServer=nil then raise Exception.Create('UA_Server_new failed');
   conf := UA_Server_getConfig(FServer);
-  st := UA_ServerConfig_setMinimal(conf, FPort, nil);
-  if st<>UA_STATUSCODE_GOOD then
-    raise Exception.Create('server configuration: '+OPCUAStatusText(st));
+  SetupSecurity(conf);
   //the default logger is shared (event loop, PKI...): it is not replaced, its
   //log function and context are; its memory is still released by the library
   if conf^.logging<>nil then begin
@@ -1225,6 +1568,9 @@ begin
   FItems := TOPCUAServerItems.Create(Self);
   FAutoItems := TOPCUAServerItems.Create(Self);
   FAutoItems.FInternal := true;
+  FAllowAnonymous := true;
+  FUsers := TStringList.Create;
+  FCertificateDir := IncludeTrailingPathDelimiter(GetAppConfigDir(false))+'opcua-server-pki';
 end;
 
 destructor TOPCUAServer.Destroy;
@@ -1236,6 +1582,7 @@ begin
   TThread.RemoveQueuedEvents(@DeferredStart);
   FreeAndNil(FAutoItems);
   FreeAndNil(FItems);
+  FreeAndNil(FUsers);
   for l in FTagItems.Values do l.Free;
   FreeAndNil(FTagItems);
   FreeAndNil(FPendingWrites);
@@ -1348,6 +1695,45 @@ begin
     StopServer;
 end;
 
+function TOPCUAServer.GetUsers:TStrings;
+begin
+  Result := FUsers;
+end;
+
+procedure TOPCUAServer.SetUsers(AValue:TStrings);
+begin
+  DoInactiveCheck;
+  FUsers.Assign(AValue);
+end;
+
+procedure TOPCUAServer.SetSecurity(AValue:TOPCUAServerSecurity);
+begin
+  if FSecurity=AValue then exit;
+  DoInactiveCheck;
+  FSecurity := AValue;
+end;
+
+procedure TOPCUAServer.SetAllowAnonymous(AValue:Boolean);
+begin
+  if FAllowAnonymous=AValue then exit;
+  DoInactiveCheck;
+  FAllowAnonymous := AValue;
+end;
+
+procedure TOPCUAServer.SetCertificateDir(const AValue:String);
+begin
+  if FCertificateDir=AValue then exit;
+  DoInactiveCheck;
+  FCertificateDir := AValue;
+end;
+
+procedure TOPCUAServer.SetTrustListDir(const AValue:String);
+begin
+  if FTrustListDir=AValue then exit;
+  DoInactiveCheck;
+  FTrustListDir := AValue;
+end;
+
 procedure TOPCUAServer.SetItems(AValue:TOPCUAServerItems);
 begin
   FItems.Assign(AValue);
@@ -1389,6 +1775,12 @@ var
 begin
   if FThread<>nil then exit;
   SetError('');
+  //open62541 takes a password only encrypted with the server certificate
+  if (FSecurity=ossNone) and ((FUsers.Count>0) or Assigned(FOnCheckUser)) then begin
+    SetError('OPC UA server: user logins need Security ossNoneAndSecure or ossSecureOnly '+
+             '(the password travels encrypted with the server certificate)');
+    exit;
+  end;
   if not OPCUALoadLibrary(FLibraryName, err) then begin
     SetError(err);
     exit;
@@ -1791,9 +2183,22 @@ var
   P:TOPCUAServerPendingWrite;
   id:Int64;
   one:TArrayOfDouble;
+  allowed:Boolean;
 begin
   T := Item.Tag;
   if not Item.FCanWrite then exit(UA_STATUSCODE_BADNOTWRITABLE);
+  if Assigned(FOnCanWrite) then begin
+    allowed := true;
+    FOnCanWrite(Self, Item, Req.User, allowed);
+    if not allowed then begin
+      if PSLogWants(lcSecurity, llWarning) then
+        if Req.User='' then
+          PSLog(Self, lcSecurity, llWarning, Format('OPC UA write to "%s" refused (anonymous)', [Item.NodeIdText]))
+        else
+          PSLog(Self, lcSecurity, llWarning, Format('OPC UA write to "%s" refused to %s', [Item.NodeIdText, Req.User]));
+      exit(UA_STATUSCODE_BADUSERACCESSDENIED);
+    end;
+  end;
   offset := 0;
 
   if Item.FIsArray then begin

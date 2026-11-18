@@ -46,11 +46,15 @@ type
     Text:UTF8String;
     Values:TArrayOfDouble;   //array writes (with Range: an index range)
     Range:AnsiString;
+    User, Password:AnsiString;
+    CertDir:String;          //not empty: a secure (SignAndEncrypt) TOPCUAClient keeping its certificate here
+    ConnectStatus:UA_StatusCode;
     Status:UA_StatusCode;
     Elapsed:QWord;
     constructor Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString; ATypeIndex:Integer;
                        ANum:Double; const AText:UTF8String = ''; const AValues:TArrayOfDouble = nil;
-                       const ARange:AnsiString = '');
+                       const ARange:AnsiString = ''; const AUser:AnsiString = ''; const APassword:AnsiString = '';
+                       const ACertDir:String = '');
   end;
 
   { TTestOPCUAServer }
@@ -61,6 +65,8 @@ type
     FServer:TOPCUAServer;
     FClient:PUA_Client;
     FFPU:TFPUExceptionMask;
+    FUsersSeen:TStringList;
+    FSecClient:TOPCUAClient;
     function  NewTag(const AName:String; TT:TTagType):TPLCTagNumber;
     function  Publish(ATag:TPLCTag; const AFolder:String = ''; const ANodeName:String = ''):TOPCUAServerItem;
     procedure Start;
@@ -77,6 +83,14 @@ type
     function  NewDriverTag(const AName:String; TT:TTagType; out D:TLogTestDriver):TPLCTagNumber;
     function  ReadArray(const Id, Range:String; out TypeIndex:Integer; out Vals:TArrayOfDouble):UA_StatusCode;
     function  NewBlock(const AName:String; TT:TTagType; Size:Integer):TPLCBlock;
+    procedure CheckUserEvent(Sender:TObject; const User, Password:String; var Accepted:Boolean);
+    procedure CanWriteEvent(Sender:TObject; Item:TOPCUAServerItem; const User:String; var Allowed:Boolean);
+    function  ConnectAs(const User, Password:AnsiString):UA_StatusCode;
+    function  ConnectPlain:UA_StatusCode;
+    function  WriteAs(const Id:String; TypeIndex:Integer; Num:Double; const User, Password:AnsiString;
+                      out ConnectStatus:UA_StatusCode):UA_StatusCode;
+    function  TempDir(const Suffix:String):String;
+    procedure Secure;
     function  NewStruct(out S:TPLCStruct; out W:TPLCStructItem; out F:TPLCStructItem; out Txt:TPLCStructString):TOPCUAServerItem;
   protected
     procedure SetUp; override;
@@ -122,6 +136,16 @@ type
     procedure AStructItemIsWrittenWithItsOwnType;
     procedure AStringInsideAStructureIsWritten;
     procedure RemovingTheStructureRemovesItsItems;
+
+    //security (P5)
+    procedure UsersWithoutSecurityDoNotStart;
+    procedure AnonymousCanBeRefused;
+    procedure AUserOfTheListLogsIn;
+    procedure OnCheckUserDecidesTheLogin;
+    procedure OnCanWriteGetsTheUserOfTheSession;
+    procedure SecureEndpointsUseAKeptCertificate;
+    procedure SecureOnlyRefusesAnInsecureConnection;
+    procedure ASlowDeviceWriteTimesOut;
   end;
 
 implementation
@@ -153,14 +177,34 @@ begin
 end;
 {$ENDIF}
 
+procedure DeleteTree(const Dir:String);
+var
+  sr:TSearchRec;
+begin
+  if FindFirst(IncludeTrailingPathDelimiter(Dir)+'*', faAnyFile, sr)=0 then begin
+    repeat
+      if (sr.Name<>'.') and (sr.Name<>'..') then
+        if (sr.Attr and faDirectory)<>0 then
+          DeleteTree(IncludeTrailingPathDelimiter(Dir)+sr.Name)
+        else
+          DeleteFile(IncludeTrailingPathDelimiter(Dir)+sr.Name);
+    until FindNext(sr)<>0;
+    FindClose(sr);
+  end;
+  RemoveDir(Dir);
+end;
+
 { TClientWriter }
 
 constructor TClientWriter.Create(const AUrl:AnsiString; ANs:Word; const AId:AnsiString;
   ATypeIndex:Integer; ANum:Double; const AText:UTF8String; const AValues:TArrayOfDouble;
-  const ARange:AnsiString);
+  const ARange:AnsiString; const AUser:AnsiString; const APassword:AnsiString; const ACertDir:String);
 begin
+  CertDir := ACertDir;
   Values := Copy(AValues);
   Range := ARange;
+  User := AUser;
+  Password := APassword;
   Url := AUrl;
   Ns := ANs;
   Id := AId;
@@ -200,13 +244,32 @@ var
   v:UA_Variant;
   vals:TArrayOfDouble;
   t0:QWord;
+  oc:TOPCUAClient;
 begin
   OPCUAMaskFPU;
-  c := UA_Client_new();
+  oc := nil;
+  c := nil;
   try
-    UA_ClientConfig_setDefault(UA_Client_getConfig(c));
-    Status := UA_Client_connect(c, PAnsiChar(Url));
-    if Status<>UA_STATUSCODE_GOOD then exit;
+    if CertDir<>'' then begin
+      //a password travels encrypted: a secure session
+      oc := TOPCUAClient.Create;
+      oc.LibraryName := GetEnvironmentVariable('OPEN62541_LIB');
+      oc.EndpointUrl := Url;
+      oc.SecurityMode := osmSignAndEncrypt;
+      oc.CertificateDir := CertDir;
+      oc.Username := User;
+      oc.Password := Password;
+      Status := oc.Connect;
+      ConnectStatus := Status;
+      if Status<>UA_STATUSCODE_GOOD then exit;
+      c := oc.Handle;
+    end else begin
+      c := UA_Client_new();
+      UA_ClientConfig_setDefault(UA_Client_getConfig(c));
+      Status := UA_Client_connect(c, PAnsiChar(Url));
+      ConnectStatus := Status;
+      if Status<>UA_STATUSCODE_GOOD then exit;
+    end;
     if TypeIndex=UA_TYPES_STRING then
       OPCUATextToVariant(@UA_TYPES[TypeIndex], Text, v)
     else if Values<>nil then
@@ -223,9 +286,13 @@ begin
       Status := UA_Client_writeValueAttribute(c, UA_NODEID_STRING(Ns, Id), @v);
     Elapsed := GetTickCount64-t0;
     UA_clear(@v, @UA_TYPES[UA_TYPES_VARIANT]);
-    UA_Client_disconnect(c);
   finally
-    UA_Client_delete(c);
+    if oc<>nil then
+      oc.Free
+    else if c<>nil then begin
+      UA_Client_disconnect(c);
+      UA_Client_delete(c);
+    end;
   end;
 end;
 
@@ -253,7 +320,11 @@ begin
     UA_Client_delete(FClient);
     FClient := nil;
   end;
+  FreeAndNil(FSecClient);
   FreeAndNil(FOwner);
+  FreeAndNil(FUsersSeen);
+  DeleteTree(TempDir('srvcert'));
+  DeleteTree(TempDir('clicert'));
   OPCUARestoreFPU(FFPU);
 end;
 
@@ -1130,6 +1201,282 @@ begin
   it.Free;
   AssertTrue('its items are gone', WaitStatus('Recipe1.Speed', UA_STATUSCODE_BADNODEIDUNKNOWN));
   AssertTrue('and the object', WaitStatus('Recipe1', UA_STATUSCODE_BADNODEIDUNKNOWN));
+end;
+
+procedure TTestOPCUAServer.CheckUserEvent(Sender:TObject; const User, Password:String; var Accepted:Boolean);
+begin
+  if FUsersSeen=nil then FUsersSeen := TStringList.Create;
+  FUsersSeen.Add(User);
+  //called in the main thread
+  if GetCurrentThreadId<>MainThreadID then Accepted := false
+  else Accepted := (User='maria') and (Password='segredo');
+end;
+
+procedure TTestOPCUAServer.CanWriteEvent(Sender:TObject; Item:TOPCUAServerItem; const User:String; var Allowed:Boolean);
+begin
+  if FUsersSeen=nil then FUsersSeen := TStringList.Create;
+  FUsersSeen.Add(User);
+  Allowed := User='op';
+end;
+
+//a session without security, anonymous (FClient)
+function TTestOPCUAServer.ConnectPlain:UA_StatusCode;
+begin
+  if FClient<>nil then begin
+    UA_Client_disconnect(FClient);
+    UA_Client_delete(FClient);
+  end;
+  FClient := UA_Client_new();
+  UA_ClientConfig_setDefault(UA_Client_getConfig(FClient));
+  Result := UA_Client_connect(FClient, PAnsiChar('opc.tcp://localhost:'+IntToStr(FServer.Port)));
+end;
+
+//a secure session (the password travels encrypted)
+function TTestOPCUAServer.ConnectAs(const User, Password:AnsiString):UA_StatusCode;
+begin
+  FreeAndNil(FSecClient);
+  FSecClient := TOPCUAClient.Create;
+  FSecClient.LibraryName := FServer.LibraryName;
+  FSecClient.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+  FSecClient.SecurityMode := osmSignAndEncrypt;
+  FSecClient.CertificateDir := TempDir('clicert');
+  FSecClient.Username := User;
+  FSecClient.Password := Password;
+  Result := FSecClient.Connect;
+end;
+
+function TTestOPCUAServer.WriteAs(const Id:String; TypeIndex:Integer; Num:Double;
+  const User, Password:AnsiString; out ConnectStatus:UA_StatusCode):UA_StatusCode;
+var
+  W:TClientWriter;
+begin
+  W := TClientWriter.Create('opc.tcp://localhost:'+IntToStr(FServer.Port), FServer.NamespaceIndex,
+                            Id, TypeIndex, Num, '', nil, '', User, Password, TempDir('clicert'));
+  ConnectStatus := UA_STATUSCODE_BADINTERNALERROR;
+  try
+    while not W.Finished do CheckSynchronize(5);
+    W.WaitFor;
+    ConnectStatus := W.ConnectStatus;
+    Result := W.Status;
+  finally
+    W.Free;
+  end;
+end;
+
+procedure TTestOPCUAServer.Secure;
+begin
+  FServer.Security := ossNoneAndSecure;
+  FServer.CertificateDir := TempDir('srvcert');
+end;
+
+function TTestOPCUAServer.TempDir(const Suffix:String):String;
+begin
+  Result := IncludeTrailingPathDelimiter(GetTempDir(false))+'pscada-opcuasrv-'+IntToStr(GetProcessID)+'-'+Suffix;
+end;
+
+procedure TTestOPCUAServer.UsersWithoutSecurityDoNotStart;
+begin
+  FServer.Users.Add('op=123');
+  FServer.Active := true;
+  AssertFalse('not running', FServer.Running);
+  AssertTrue('the reason: '+FServer.LastError, Pos('Security', FServer.LastError)>0);
+end;
+
+procedure TTestOPCUAServer.AnonymousCanBeRefused;
+begin
+  Secure;
+  FServer.AllowAnonymous := false;
+  FServer.Users.Add('op=123');
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  AssertTrue('anonymous refused', ConnectAs('', '')<>UA_STATUSCODE_GOOD);
+  AssertEquals('a user logs in', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('op', '123')));
+end;
+
+procedure TTestOPCUAServer.AUserOfTheListLogsIn;
+begin
+  Secure;
+  FServer.Users.Add('op=123');
+  FServer.Users.Add('chefe=abc');
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  AssertEquals('op', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('op', '123')));
+  AssertEquals('chefe', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('chefe', 'abc')));
+  AssertTrue('wrong password refused', ConnectAs('op', 'abc')<>UA_STATUSCODE_GOOD);
+  AssertTrue('unknown user refused', ConnectAs('ninguem', '123')<>UA_STATUSCODE_GOOD);
+end;
+
+procedure TTestOPCUAServer.OnCheckUserDecidesTheLogin;
+var
+  T:TPLCTagNumber;
+  cst, st:UA_StatusCode;
+begin
+  T := NewTag('Pressure', pttWord);
+  Publish(T).Writable := true;
+  Secure;
+  FServer.OnCheckUser := @CheckUserEvent;
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  //an anonymous session creates the client certificate (no event for it)
+  AssertEquals('anonymous', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectAs('', '')));
+  FreeAndNil(FSecClient);
+  //the event runs in the main thread: the clients connect from their own thread
+  st := WriteAs('Pressure', UA_TYPES_UINT16, 5, 'maria', 'segredo', cst);
+  AssertEquals('accepted by the event (in the main thread)', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(cst));
+  AssertEquals('and wrote', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+  WriteAs('Pressure', UA_TYPES_UINT16, 6, 'joao', 'x', cst);
+  AssertTrue('refused by the event: '+OPCUAStatusText(cst), cst<>UA_STATUSCODE_GOOD);
+  AssertTrue('the event saw both', (FUsersSeen<>nil) and (FUsersSeen.IndexOf('maria')>=0) and (FUsersSeen.IndexOf('joao')>=0));
+end;
+
+procedure TTestOPCUAServer.OnCanWriteGetsTheUserOfTheSession;
+var
+  T:TPLCTagNumber;
+  cst:UA_StatusCode;
+begin
+  T := NewTag('Setpoint2', pttWord);
+  T.Value := 1;
+  Publish(T).Writable := true;
+  Secure;
+  FServer.Users.Add('op=1');
+  FServer.Users.Add('viewer=2');
+  FServer.OnCanWrite := @CanWriteEvent;
+  FServer.Active := true;
+  AssertTrue('running: '+FServer.LastError, FServer.Running);
+  AssertEquals('op may write', OPCUAStatusText(UA_STATUSCODE_GOOD),
+               OPCUAStatusText(WriteAs('Setpoint2', UA_TYPES_UINT16, 2, 'op', '1', cst)));
+  AssertEquals('viewer may not', OPCUAStatusText(UA_STATUSCODE_BADUSERACCESSDENIED),
+               OPCUAStatusText(WriteAs('Setpoint2', UA_TYPES_UINT16, 3, 'viewer', '2', cst)));
+  AssertEquals('anonymous may not', OPCUAStatusText(UA_STATUSCODE_BADUSERACCESSDENIED),
+               OPCUAStatusText(WriteAs('Setpoint2', UA_TYPES_UINT16, 4, '', '', cst)));
+  AssertEquals('the tag got only the allowed write', 2, T.Value, 0);
+  AssertEquals('three writes asked', 3, FUsersSeen.Count);
+  AssertEquals('op', 'op', FUsersSeen[0]);
+  AssertEquals('viewer', 'viewer', FUsersSeen[1]);
+  AssertEquals('anonymous is an empty user', '', FUsersSeen[2]);
+end;
+
+procedure TTestOPCUAServer.SecureEndpointsUseAKeptCertificate;
+var
+  dir, cdir:String;
+  first, again:RawByteString;
+  C:TOPCUAClient;
+  st:UA_StatusCode;
+
+  function FileText(const F:String):RawByteString;
+  var
+    fs:TFileStream;
+  begin
+    Result := '';
+    if not FileExists(F) then exit;
+    fs := TFileStream.Create(F, fmOpenRead);
+    try
+      SetLength(Result, fs.Size);
+      if fs.Size>0 then fs.ReadBuffer(Result[1], fs.Size);
+    finally
+      fs.Free;
+    end;
+  end;
+
+begin
+  dir := TempDir('srv');
+  cdir := TempDir('cli');
+  try
+    Publish(NewTag('Secret', pttWord));
+    FServer.Security := ossNoneAndSecure;
+    FServer.CertificateDir := dir;
+    FServer.Active := true;
+    AssertTrue('running: '+FServer.LastError, FServer.Running);
+    first := FileText(IncludeTrailingPathDelimiter(dir)+'server_cert.der');
+    AssertTrue('a certificate was created', first<>'');
+    AssertTrue('and its key', FileExists(IncludeTrailingPathDelimiter(dir)+'server_key.der'));
+    AssertEquals('None still connects', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(ConnectPlain));
+
+    C := TOPCUAClient.Create;
+    try
+      C.LibraryName := FServer.LibraryName;
+      C.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+      C.SecurityMode := osmSignAndEncrypt;
+      C.CertificateDir := cdir;
+      st := C.Connect;
+      AssertEquals('SignAndEncrypt connects: '+C.LastError, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(st));
+      C.Disconnect;
+    finally
+      C.Free;
+    end;
+
+    UA_Client_disconnect(FClient);
+    UA_Client_delete(FClient);
+    FClient := nil;
+    FServer.Active := false;
+    FServer.Active := true;
+    again := FileText(IncludeTrailingPathDelimiter(dir)+'server_cert.der');
+    AssertTrue('the same certificate on the next start', again=first);
+  finally
+    DeleteTree(dir);
+    DeleteTree(cdir);
+  end;
+end;
+
+procedure TTestOPCUAServer.SecureOnlyRefusesAnInsecureConnection;
+var
+  dir, cdir:String;
+  C:TOPCUAClient;
+begin
+  dir := TempDir('srv2');
+  cdir := TempDir('cli2');
+  try
+    FServer.Security := ossSecureOnly;
+    FServer.CertificateDir := dir;
+    FServer.Active := true;
+    AssertTrue('running: '+FServer.LastError, FServer.Running);
+    AssertTrue('no session without security', ConnectPlain<>UA_STATUSCODE_GOOD);
+    C := TOPCUAClient.Create;
+    try
+      C.LibraryName := FServer.LibraryName;
+      C.EndpointUrl := 'opc.tcp://localhost:'+IntToStr(FServer.Port);
+      C.SecurityMode := osmSignAndEncrypt;
+      C.CertificateDir := cdir;
+      AssertEquals('a secure one connects: '+C.LastError, OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(C.Connect));
+      C.Disconnect;
+    finally
+      C.Free;
+    end;
+  finally
+    DeleteTree(dir);
+    DeleteTree(cdir);
+  end;
+end;
+
+procedure TTestOPCUAServer.ASlowDeviceWriteTimesOut;
+var
+  t0:QWord;
+  T:TPLCTagNumber;
+  D:TLogTestDriver;
+  W:TClientWriter;
+  st:UA_StatusCode;
+  spent:QWord;
+begin
+  T := NewDriverTag('Sluggish', pttByte, D);
+  D.WriteDelayMs := 1500;
+  Publish(T).Writable := true;
+  FServer.WriteTimeoutMs := 500;
+  Start;
+  W := StartWriter('Sluggish', UA_TYPES_BYTE, 3);
+  try
+    while not W.Finished do CheckSynchronize(5);
+    st := W.Status;
+    spent := W.Elapsed;
+  finally
+    W.WaitFor;
+    W.Free;
+  end;
+  AssertEquals('timed out', OPCUAStatusText(UA_STATUSCODE_BADTIMEOUT), OPCUAStatusText(st));
+  AssertTrue('before the device answered ('+IntToStr(spent)+' ms)', spent<1400);
+  //the late result of the device is dropped without harm
+  t0 := GetTickCount64;
+  while GetTickCount64-t0<1500 do CheckSynchronize(10);
+  AssertEquals('still serving', OPCUAStatusText(UA_STATUSCODE_GOOD), OPCUAStatusText(StatusOf('Sluggish')));
 end;
 
 initialization
