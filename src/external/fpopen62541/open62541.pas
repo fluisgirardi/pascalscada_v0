@@ -629,6 +629,30 @@ type
   end;
   PUA_UsernamePasswordLogin = ^UA_UsernamePasswordLogin;
 
+  (* Value source of a variable whose value lives in the application: the
+   * server asks read for every read (and for the sampling of the monitored
+   * items) and hands every write of a client to write (nil = not writable).
+   * Both may return UA_STATUSCODE_GOODCOMPLETESASYNCHRONOUSLY and give the
+   * result later with UA_Server_setAsyncReadResult/UA_Server_setAsyncWriteResult
+   * (the pointer given to the callback identifies the operation).
+   * The status for the client goes in value^.status (read) or in the
+   * returned code (write). *)
+  UA_CallbackValueSource_read = function(server: PUA_Server; const sessionId: PUA_NodeId;
+                                         sessionContext: Pointer; const nodeId: PUA_NodeId;
+                                         nodeContext: Pointer; includeSourceTimeStamp: UA_Boolean;
+                                         const range: PUA_NumericRange; value: PUA_DataValue): UA_StatusCode; cdecl;
+  UA_CallbackValueSource_write = function(server: PUA_Server; const sessionId: PUA_NodeId;
+                                          sessionContext: Pointer; const nodeId: PUA_NodeId;
+                                          nodeContext: Pointer; const range: PUA_NumericRange;
+                                          const value: PUA_DataValue): UA_StatusCode; cdecl;
+  UA_CallbackValueSource = record
+    read: UA_CallbackValueSource_read;
+    write: UA_CallbackValueSource_write;
+  end;
+  PUA_CallbackValueSource = ^UA_CallbackValueSource;
+  (* name of open62541 before 1.5 *)
+  UA_DataSource = UA_CallbackValueSource;
+
   UA_MethodCallback = function(server: PUA_Server;
                                const sessionId: PUA_NodeId; sessionContext: Pointer;
                                const methodId: PUA_NodeId; methodContext: Pointer;
@@ -885,6 +909,15 @@ var
                                      usernamePasswordLoginSize: size_t; const usernamePasswordLogin: PUA_UsernamePasswordLogin): UA_StatusCode; cdecl;
   UA_Server_writeValue: function(server: PUA_Server; nodeId: UA_NodeId; value: UA_Variant): UA_StatusCode; cdecl;
   UA_Server_readValue: function(server: PUA_Server; nodeId: UA_NodeId; outValue: PUA_Variant): UA_StatusCode; cdecl;
+  UA_Server_addCallbackValueSourceVariableNode: function(server: PUA_Server; requestedNewNodeId, parentNodeId, referenceTypeId: UA_NodeId;
+                                      browseName: UA_QualifiedName; typeDefinition: UA_NodeId; attr: UA_VariableAttributes;
+                                      evs: UA_CallbackValueSource; nodeContext: Pointer; outNewNodeId: PUA_NodeId): UA_StatusCode; cdecl;
+  UA_Server_setVariableNode_callbackValueSource: function(server: PUA_Server; nodeId: UA_NodeId; evs: UA_CallbackValueSource): UA_StatusCode; cdecl;
+  (* value is the pointer the write callback got; BADNOTFOUND when the
+   * operation is no longer waiting (cancelled by the server or timed out). *)
+  UA_Server_setAsyncWriteResult: function(server: PUA_Server; const value: PUA_DataValue; result: UA_StatusCode): UA_StatusCode; cdecl;
+  UA_Server_setAsyncReadResult: function(server: PUA_Server; result: PUA_DataValue): UA_StatusCode; cdecl;
+  UA_Server_deleteNode: function(server: PUA_Server; nodeId: UA_NodeId; deleteReferences: UA_Boolean): UA_StatusCode; cdecl;
   {$ENDIF}
 
 (* Loads the library (reference counted). Raises EInOutError when it can not be
@@ -994,6 +1027,12 @@ procedure UA_WriteResponse_clear(var p: UA_WriteResponse);
 (* Connect to the server and create+activate a Session with the given username and password. *)
 function UA_Client_connectUsername(client: PUA_Client; const endpointUrl, username, password: AnsiString): UA_StatusCode;
 function UA_Client_readValueAttribute_range(client: PUA_Client; const nodeId: UA_NodeId; const indexRange: AnsiString; out outValue: UA_Variant): UA_StatusCode;
+{$IFDEF ENABLE_SERVER}
+(* Name of UA_Server_addCallbackValueSourceVariableNode before open62541 1.5 *)
+function UA_Server_addDataSourceVariableNode(server: PUA_Server; requestedNewNodeId, parentNodeId, referenceTypeId: UA_NodeId;
+                                             browseName: UA_QualifiedName; typeDefinition: UA_NodeId; attr: UA_VariableAttributes;
+                                             dataSource: UA_DataSource; nodeContext: Pointer; outNewNodeId: PUA_NodeId): UA_StatusCode;
+{$ENDIF}
 {$IFDEF UA_ENABLE_SUBSCRIPTIONS}
 function UA_CreateSubscriptionRequest_default(): UA_CreateSubscriptionRequest;
 function UA_MonitoredItemCreateRequest_default(nodeId: UA_NodeId): UA_MonitoredItemCreateRequest;
@@ -1146,6 +1185,11 @@ begin
   Add('UA_AccessControl_default', @@UA_AccessControl_default);
   Add('UA_Server_writeValue', @@UA_Server_writeValue);
   Add('UA_Server_readValue', @@UA_Server_readValue);
+  Add('UA_Server_addCallbackValueSourceVariableNode', @@UA_Server_addCallbackValueSourceVariableNode);
+  Add('UA_Server_setVariableNode_callbackValueSource', @@UA_Server_setVariableNode_callbackValueSource);
+  Add('UA_Server_setAsyncWriteResult', @@UA_Server_setAsyncWriteResult);
+  Add('UA_Server_setAsyncReadResult', @@UA_Server_setAsyncReadResult);
+  Add('UA_Server_deleteNode', @@UA_Server_deleteNode);
   {$ENDIF}
 end;
 
@@ -1791,6 +1835,16 @@ begin
   end;
   UA_ReadResponse_clear(response);
 end;
+
+{$IFDEF ENABLE_SERVER}
+function UA_Server_addDataSourceVariableNode(server: PUA_Server; requestedNewNodeId, parentNodeId, referenceTypeId: UA_NodeId;
+                                             browseName: UA_QualifiedName; typeDefinition: UA_NodeId; attr: UA_VariableAttributes;
+                                             dataSource: UA_DataSource; nodeContext: Pointer; outNewNodeId: PUA_NodeId): UA_StatusCode;
+begin
+  Result := UA_Server_addCallbackValueSourceVariableNode(server, requestedNewNodeId, parentNodeId, referenceTypeId,
+                                                        browseName, typeDefinition, attr, dataSource, nodeContext, outNewNodeId);
+end;
+{$ENDIF}
 
 {$IFDEF UA_ENABLE_SUBSCRIPTIONS}
 function UA_CreateSubscriptionRequest_default(): UA_CreateSubscriptionRequest;
