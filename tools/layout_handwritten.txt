@@ -124,3 +124,6 @@ UA_ApplicationNotificationType
 UA_CertificateFormat
 UA_UsernamePasswordLogin
 UA_UsernamePasswordLogin password
+UA_CallbackValueSource
+UA_CallbackValueSource read
+UA_CallbackValueSource write

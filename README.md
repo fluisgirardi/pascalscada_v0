@@ -37,6 +37,20 @@ Notes for Free Pascal code calling the library:
   callbacks as `Pointer(MyArray)`, not `@MyArray[0]`.
 - The log callback receives the C `va_list` as a pointer: format it with `UA_FormatLogMessage`.
 
+### Variables whose value lives in the application
+
+`UA_Server_addCallbackValueSourceVariableNode` (old name `UA_Server_addDataSourceVariableNode`)
+adds a variable with a `UA_CallbackValueSource`: the server calls `read` for every read (and for
+the sampling of monitored items) and `write` for every write of a client (`nil` = not writable).
+`write` returns the status the client gets, so a value can be refused (`BadOutOfRange`...).
+
+Both callbacks may also return `UA_STATUSCODE_GOODCOMPLETESASYNCHRONOUSLY` and give the result
+later with `UA_Server_setAsyncWriteResult(server, value, status)` / `UA_Server_setAsyncReadResult`,
+where `value` is the pointer the callback got. The client waits for that result and the server
+keeps serving the other requests meanwhile. An operation the server already cancelled (timeout,
+session closed) answers `BADNOTFOUND` and is not touched. `tools/valuesource_test.pas` shows and
+checks all of it with a server and clients in one process.
+
 ## Building the library
 
 ```sh
@@ -74,7 +88,7 @@ and compares their output:
 ```sh
 tools/check_layout <open62541-source-dir> <open62541-build-dir> <path-to-fpc>
 # gentypes: 1722 sizes/offsets identical
-# handtypes: 122 sizes/offsets identical
+# handtypes: 125 sizes/offsets identical
 ```
 
 Run it after changing a record and on every new open62541 version / target.
