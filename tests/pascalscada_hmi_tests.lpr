@@ -64,7 +64,8 @@ uses
   ut.hmidbconnection,
   ut.sycreaderkeydecoder,
   ut.hmilogmemo,
-  ut.hmilog{$IFDEF WINDOWS},
+  ut.hmilog,
+  ut.opcuaserveredt{$IFDEF WINDOWS},
   ut.sycrfidreaderwin{$ENDIF};
 
 type

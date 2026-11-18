@@ -30,7 +30,7 @@
         <PackageName Value="pascalscada_hmi"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="45">
+    <Units Count="46">
       <Unit0>
         <Filename Value="pascalscada_hmi_tests.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -214,6 +214,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="ut.hmilog"/>
       </Unit44>
+      <Unit45>
+        <Filename Value="ut.opcuaserveredt.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ut.opcuaserveredt"/>
+      </Unit45>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

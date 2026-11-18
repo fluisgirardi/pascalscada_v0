@@ -34,7 +34,7 @@ uses
   westasciitagassistant, bitmappertagassistant, blockstructtagassistant,
   rockwelltagassistant, s7plustagassistant, s7pluscertpropedit, numexprtag, plcstructstring, S7PlusFamily, LGXDriver,
   XinJETCP, DeltaTCP, InovanceTCP, H5UTagTCP, OPCUADriver, opcuatagassistant, CommPort,
-  SysUtils, pscadalog, ObjInspStrConsts,
+  SysUtils, pscadalog, ObjInspStrConsts, opcuaserver, opcuaserveredt,
   {$IFDEF FPC}
     LResources, PropEdits, ComponentEditors, IDECommands, MenuIntf, LCLType;
   {$ELSE}
@@ -104,7 +104,8 @@ begin
                                            TUserScale,
                                            TMutexServer,
                                            TMutexClient,
-                                           TpSCADALogger]);
+                                           TpSCADALogger,
+                                           TOPCUAServer]);
   RegisterComponents(strTagsPallete,      [TPLCTagNumber,
                                            TPLCBlock,
                                            TPLCBlockElement,
@@ -179,6 +180,7 @@ begin
   //RegisterPropertyEditor(TypeInfo(Cardinal),   TComponent,     'Tag'            , TWinControlBoundsEditor);
 
   RegisterComponentEditor(TProtocolDriver,    TProtocolDriverComponentEditor);
+  RegisterComponentEditor(TOPCUAServer,       TOPCUAServerComponentEditor);
   RegisterComponentEditor(TPLCNumberMappable, TTagBitMapperComponentEditor);
   RegisterComponentEditor(TPLCBlock,          TBlockElementMapperComponentEditor);
 

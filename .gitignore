@@ -49,6 +49,7 @@ examples/**/link*.res
 /examples/laz_networkmutex/network_mutex_example
 /examples/laz_numericexpr/project1
 /examples/laz_opcua_client/laz_opcua_client
+/examples/laz_opcua_server/laz_opcua_server
 /examples/laz_opcua_hmi/laz_opcua_hmi
 /examples/laz_save_restore_serial_port_properties/project1
 /examples/laz_security_webserver_WinCC/client/project1

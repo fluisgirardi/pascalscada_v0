@@ -166,6 +166,20 @@
       "menu_item": 1306
     },
     {
+      "slug": "opc-ua-server",
+      "id": null,
+      "title": {
+        "en": "OPC UA server (TOPCUAServer)",
+        "pb": "Servidor OPC UA (TOPCUAServer)"
+      },
+      "menu": {
+        "parent": 908,
+        "after": "opc-ua"
+      },
+      "menu_item": null,
+      "hold": "the OPC UA server is not in the OPM release yet"
+    },
+    {
       "slug": "ethernet-ip-logix",
       "id": null,
       "title": {
