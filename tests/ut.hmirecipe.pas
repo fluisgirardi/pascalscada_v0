@@ -79,6 +79,7 @@ type
     procedure ManyFieldsCreatedAtRuntimeStayInRange;
     procedure StreamingFourFieldsFromALfmStaysInRange;
     procedure StreamingTheUserLfmVerbatim;
+    procedure ColumnsAddedByMistakeAreDropped;
     procedure AnEmptyGridKeepsOneUsableParameterColumn;
     procedure StreamingAStaleSingleColumnEmptyGridHeals;
   end;
@@ -565,6 +566,86 @@ const
       '    )' + LineEnding +
       '  end' + LineEnding +
       'end' + LineEnding;
+
+procedure TTestHMIRecipe.ColumnsAddedByMistakeAreDropped;
+var
+  lfm: TStringStream;
+  bin: TMemoryStream;
+  Reader: TReader;
+  Grid: THMIRecipeGrid;
+begin
+  //o Columns e' o modo de colunas da LCL: com itens dentro, o ColCount fica
+  //travado e qualquer ajuste levanta EGridException "Use Columns property
+  //to add/remove columns". Na grade de receitas as colunas vem dos Fields,
+  //entao um Columns preenchido por engano tem que ser descartado em vez de
+  //derrubar o programa - inclusive quando veio gravado no .lfm.
+  //
+  //Columns is the LCL column mode: with items inside, ColCount is locked and
+  //any adjustment raises EGridException "Use Columns property to add/remove
+  //columns". In the recipe grid the columns come from Fields, so a Columns
+  //filled by mistake must be dropped instead of taking the program down -
+  //including when it came stored in the .lfm.
+  Grid := FGrid;
+  Grid.Columns.Add;
+  Grid.Columns.Add;
+  AssertEquals('duas colunas na mao', 2, Grid.Columns.Count);
+
+  Grid.RefreshCells;
+  AssertEquals('as colunas da LCL foram descartadas', 0,
+               Grid.Columns.Count);
+  AssertEquals('e o Fields voltou a mandar', 3, Grid.ColCount);
+  AssertEquals('cabecalho da primeira coluna de parametro', 'Temperature',
+               Grid.Cells[1, 0]);
+
+  //e o mesmo conteudo vindo de um .lfm, no caminho de leitura do formulario.
+  //and the same content coming from an .lfm, on the form reading path.
+  lfm := TStringStream.Create(
+    'object HMIRecipeGrid1: THMIRecipeGrid' + LineEnding +
+    '  Left = 0' + LineEnding +
+    '  Height = 200' + LineEnding +
+    '  Top = 0' + LineEnding +
+    '  Width = 400' + LineEnding +
+    '  RowCount = 2' + LineEnding +
+    '  Columns = <' + LineEnding +
+    '    item' + LineEnding +
+    '      Width = 100' + LineEnding +
+    '    end' + LineEnding +
+    '    item' + LineEnding +
+    '      Width = 100' + LineEnding +
+    '    end>' + LineEnding +
+    '  Fields = <' + LineEnding +
+    '    item' + LineEnding +
+    '      Name = ''A''' + LineEnding +
+    '    end' + LineEnding +
+    '    item' + LineEnding +
+    '      Name = ''B''' + LineEnding +
+    '    end' + LineEnding +
+    '    item' + LineEnding +
+    '      Name = ''C''' + LineEnding +
+    '    end>' + LineEnding +
+    'end');
+  bin := TMemoryStream.Create;
+  try
+    LRSObjectTextToBinary(lfm, bin);
+    bin.Position := 0;
+    Reader := TReader.Create(bin, 4096);
+    try
+      Grid := THMIRecipeGrid(Reader.ReadRootComponent(nil));
+      try
+        AssertEquals('o .lfm com Columns carregou', 0, Grid.Columns.Count);
+        AssertEquals('tres campos + nome', 4, Grid.ColCount);
+        AssertEquals('ultimo cabecalho', 'C', Grid.Cells[3, 0]);
+      finally
+        Grid.Free;
+      end;
+    finally
+      Reader.Free;
+    end;
+  finally
+    lfm.Free;
+    bin.Free;
+  end;
+end;
 
 procedure TTestHMIRecipe.StreamingTheUserLfmVerbatim;
 var

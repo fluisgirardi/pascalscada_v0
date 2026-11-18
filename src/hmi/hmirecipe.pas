@@ -795,6 +795,20 @@ begin
   if csDestroying in ComponentState then exit;
   FUpdating := True;
   try
+    //a grade nao usa o modo de colunas da LCL: as colunas sao os Fields.
+    //com itens em Columns o ColCount fica travado e o ajuste abaixo levanta
+    //EGridException "Use Columns property to add/remove columns"; limpar
+    //aqui faz um Columns preenchido por engano (ate' gravado no .lfm) ser
+    //descartado em vez de derrubar o programa.
+    //
+    //the grid does not use the LCL column mode: the columns are the Fields.
+    //with items in Columns the ColCount is locked and the adjustment below
+    //raises EGridException "Use Columns property to add/remove columns";
+    //clearing here makes a Columns filled by mistake (even stored in the
+    //.lfm) be dropped instead of taking the program down.
+    if Columns.Count > 0 then
+      Columns.Clear;
+
     //minimo duas colunas (nome + uma de parametro, vazia) e duas linhas
     //(cabecalho + uma de receita): uma grade de coluna unica faria qualquer
     //leitura de Cells[1,x] - nossa, do LCL ou do usuario - levantar
